@@ -12,10 +12,10 @@ describe('markerWidthPx', () => {
     [1.9, 1.5],
     [2, 2.5],
     [2.5, 2.5],
-    [3.2, 4],
-    [5, 6],
-    [8, 9],
-    [40, 9],
+    [3.2, 2.5],
+    [4, 2.5],
+    [9, 2.5],
+    [40, 2.5],
   ])('a %s px ink line takes the %s px marker', (px, preset) => {
     expect(markerWidthPx(px)).toBe(preset);
   });

@@ -60,7 +60,7 @@ export function QuickPenRows({
           name: w.label,
           content: <PenWidthIcon width={w.id} />,
         }))}
-        // All six widths in one row, thinnest first.
+        // All three widths in one row, thinnest first.
         columns={WHITEBOARD_PEN_WIDTHS.length}
         value={pen.width.value}
         onChoose={quickStyle.setPenWidth}

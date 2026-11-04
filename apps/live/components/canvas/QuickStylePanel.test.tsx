@@ -276,6 +276,18 @@ describe('QuickStylePanel on a whiteboard: the marker rows', () => {
   });
   const second = heldPenStyle(DEFAULT_WHITEBOARD_PREFS.pens[1]!, PALETTE);
 
+  // docs/specs/023-draw-mode/draw-mode.md "Pens": a stroke wider than Bold marks no width.
+  it('keeps the three widths, none marked, for a stroke wider than Bold', () => {
+    const quickStyle = api({ ...second, width: { value: null } });
+    render(<QuickStylePanel quickStyle={quickStyle} hidden={false} />);
+    const width = screen.getByRole('radiogroup', { name: 'Marker width' });
+    const radios = within(width).getAllByRole('radio');
+    expect(radios.map((r) => r.getAttribute('aria-label'))).toEqual(['Fine', 'Medium', 'Bold']);
+    expect(radios.map((r) => r.getAttribute('aria-checked'))).toEqual(['false', 'false', 'false']);
+    fireEvent.click(within(width).getByRole('radio', { name: 'Bold' }));
+    expect(quickStyle.setPenWidth).toHaveBeenCalledWith('bold');
+  });
+
   it('styles the pen in hand, with nothing selected, and offers no Clear Styles', () => {
     const quickStyle = api(second);
     render(<QuickStylePanel quickStyle={quickStyle} hidden={false} />);
@@ -291,11 +303,9 @@ describe('QuickStylePanel on a whiteboard: the marker rows', () => {
       within(width)
         .getAllByRole('radio')
         .map((r) => r.getAttribute('aria-label')),
-    ).toEqual(['Fine', 'Medium', 'Bold', 'Thick', 'Heavy', 'Broad']);
+    ).toEqual(['Fine', 'Medium', 'Bold']);
     fireEvent.click(within(width).getByRole('radio', { name: 'Bold' }));
     expect(quickStyle.setPenWidth).toHaveBeenCalledWith('bold');
-    fireEvent.click(within(width).getByRole('radio', { name: 'Broad' }));
-    expect(quickStyle.setPenWidth).toHaveBeenCalledWith('broad');
     expect(screen.queryByTestId('quick-style-clear')).toBeNull();
   });
 

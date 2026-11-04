@@ -29,7 +29,7 @@ export type WhiteboardPenId = 'main' | 'second' | 'third';
 // is in px, derived from a named preset.
 export type WhiteboardPen = { id: WhiteboardPenId; colour: PenColour | null; width: number };
 // A marker width's preset name, stored in place of its px.
-export type PenWidthId = 'fine' | 'medium' | 'bold' | 'thick' | 'heavy' | 'broad';
+export type PenWidthId = 'fine' | 'medium' | 'bold';
 export type WhiteboardEraserMode = 'stroke' | 'partial';
 export type WhiteboardPrefs = {
   pens: WhiteboardPen[];
@@ -41,17 +41,17 @@ export type WhiteboardPrefs = {
 };
 
 // Subtle at 100%: a line, not a felt tip. Tuned with the operator: Medium is
-// 1.5 px, a notch either side. Thick, Heavy and Broad step up by about half
-// again each, for felt-tip and poster marks. The floor is 1 px, the least
-// `penWidth` validates; Broad sits far below its 100 px ceiling.
+// 1.5 px, a notch either side. The floor is 1 px, the least `penWidth` validates.
 export const WHITEBOARD_PEN_WIDTHS: readonly { id: PenWidthId; label: string; px: number }[] = [
   { id: 'fine', label: 'Fine', px: 1 },
   { id: 'medium', label: 'Medium', px: 1.5 },
   { id: 'bold', label: 'Bold', px: 2.5 },
-  { id: 'thick', label: 'Thick', px: 4 },
-  { id: 'heavy', label: 'Heavy', px: 6 },
-  { id: 'broad', label: 'Broad', px: 9 },
 ];
+// Widths once offered and no longer: a pen stored with one reads as Bold, the strongest offered.
+const RETIRED_PEN_WIDTHS: readonly string[] = ['thick', 'heavy', 'broad'];
+const BOLD_PX = 2.5;
+const isRetiredWidth = (v: unknown): v is string =>
+  typeof v === 'string' && RETIRED_PEN_WIDTHS.includes(v);
 const MEDIUM_PX = 1.5;
 
 // The fixed colours the second and third pens had before stock colours were named: a stored one is
@@ -132,9 +132,15 @@ function colourOf(v: unknown): PenColour | null | undefined {
   return LEGACY_PEN_COLOURS[hex] ?? hex;
 }
 // Widths are stored by preset NAME, so retuning a preset's px never
-// reinterprets somebody's choice; anything else (a bare px) falls back.
-const widthPxOf = (v: unknown): number | undefined =>
-  WHITEBOARD_PEN_WIDTHS.find((w) => w.id === v)?.px;
+// reinterprets somebody's choice; a retired name reads as Bold, anything
+// else (a bare px) falls back.
+function widthPxOf(v: unknown): number | undefined {
+  const preset = WHITEBOARD_PEN_WIDTHS.find((w) => w.id === v);
+  if (preset) return preset.px;
+  if (!isRetiredWidth(v)) return undefined;
+  console.warn(`[whiteboard] pen width retired: ${v} → bold`);
+  return BOLD_PX;
+}
 
 const orPreset = (colour: PenColour | null | undefined, preset: PenColour | null) =>
   colour === undefined ? preset : colour;
@@ -180,7 +186,15 @@ export function loadWhiteboardPrefs(): WhiteboardPrefs {
   if (raw === null) return DEFAULT_WHITEBOARD_PREFS;
   const json = safeJson(raw);
   if (!json || typeof json !== 'object') console.warn('[whiteboard] prefs reset: unreadable');
-  return parseWhiteboardPrefs(json);
+  const prefs = parseWhiteboardPrefs(json);
+  // Written back at once, so a retired width migrates (and logs) once, not on every load.
+  if (holdsRetiredWidth(json)) saveWhiteboardPrefs(prefs);
+  return prefs;
+}
+
+function holdsRetiredWidth(json: unknown): boolean {
+  const pens = storedRecord(json)?.pens;
+  return Array.isArray(pens) && pens.some((p) => isRetiredWidth(storedRecord(p)?.width));
 }
 
 export function saveWhiteboardPrefs(prefs: WhiteboardPrefs): void {

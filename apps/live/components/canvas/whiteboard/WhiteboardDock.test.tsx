@@ -193,13 +193,16 @@ describe('WhiteboardDock drawing tools', () => {
 
   // docs/specs/023-draw-mode/draw-mode.md "Pens": each width reads apart, drawn as the quick style
   // panel draws it (PenWidthIcon), not to scale, where 1 and 1.5 px looked the same.
-  it('draws the six widths apart in the flyout, as the quick style panel does', () => {
+  it('draws the three widths apart in the flyout, as the quick style panel does', () => {
     renderDock();
     fireEvent.click(screen.getByRole('button', { name: 'Marker 1, medium' }));
-    const pictures = ['Fine', 'Medium', 'Bold', 'Thick', 'Heavy', 'Broad'].map(
+    const pictures = ['Fine', 'Medium', 'Bold'].map(
       (name) => screen.getByRole('button', { name }).querySelector('svg')!.outerHTML,
     );
-    expect(new Set(pictures).size).toBe(6);
+    expect(new Set(pictures).size).toBe(3);
+    for (const name of ['Thick', 'Heavy', 'Broad']) {
+      expect(screen.queryByRole('button', { name })).toBeNull();
+    }
     const { container } = render(<PenWidthIcon width="fine" />);
     expect(container.querySelector('svg')!.outerHTML).toBe(pictures[0]);
   });

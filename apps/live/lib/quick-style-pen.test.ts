@@ -73,6 +73,19 @@ describe('strokesPenStyle', () => {
     expect(mixed.width.value).toBeNull();
   });
 
+  // docs/specs/023-draw-mode/draw-mode.md "Pens": a stroke wider than Bold marks no width.
+  it('marks no width for a stroke wider than Bold, drawn with a retired width', () => {
+    for (const penWidth of [4, 6, 9]) {
+      expect(strokesPenStyle([stroke({ penWidth })], palette)!.width.value).toBeNull();
+    }
+  });
+
+  it('keeps a wide stroke as drawn until a width is chosen, then sets that width', () => {
+    const broad = stroke({ penWidth: 9 });
+    expect(applyPenStyle(broad, { colour: 'red' })).toMatchObject({ penWidth: 9 });
+    expect(applyPenStyle(broad, { width: 'bold' })).toMatchObject({ penWidth: 2.5 });
+  });
+
   it('is absent without a pen stroke', () => {
     expect(strokesPenStyle([createShape('square', 0, 0)], palette)).toBeUndefined();
   });
@@ -111,10 +124,9 @@ describe('applyPenStyle', () => {
   });
 
   it('sets the width in px from its name', () => {
+    expect(applyPenStyle(stroke(), { width: 'fine' })).toMatchObject({ penWidth: 1 });
+    expect(applyPenStyle(stroke(), { width: 'medium' })).toMatchObject({ penWidth: 1.5 });
     expect(applyPenStyle(stroke(), { width: 'bold' })).toMatchObject({ penWidth: 2.5 });
-    expect(applyPenStyle(stroke(), { width: 'thick' })).toMatchObject({ penWidth: 4 });
-    expect(applyPenStyle(stroke(), { width: 'heavy' })).toMatchObject({ penWidth: 6 });
-    expect(applyPenStyle(stroke(), { width: 'broad' })).toMatchObject({ penWidth: 9 });
   });
 
   it('leaves anything but a pen stroke alone', () => {
