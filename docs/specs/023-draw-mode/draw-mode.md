@@ -81,8 +81,8 @@ pointing at the button that opened it, on the edge facing the dock, over its but
   offer on a whiteboard ([Corner radius](../008-canvas/corner-radius.md)).
   A restyle on a whiteboard never feeds the style memory Structured mode uses; the
   board's own memory remembers a stock colour by name.
-  Selected pen strokes get **Marker colour** and **Marker width** (the six widths, Fine to
-  Broad, in one row). The quick style panel is **quick choices first, one row per setting**:
+  Selected pen strokes get **Marker colour** and **Marker width** (the three widths, Fine,
+  Medium and Bold, in one row). The quick style panel is **quick choices first, one row per setting**:
   **Marker colour** is Ink and the eight hued stock colours, adaptive like the marker's picker,
   then **More colours**, which opens the full colour picker
   ([Colour picker](../004-interface-design/colour-picker.md#quick-style)). **Custom colours live
@@ -305,16 +305,23 @@ Explorer Home's Jump Back In.
 - **Markers 2 and 3 are adjustable**: their flyouts change both
   colour and width. They start as **blue** (second) and **red** (third), and
   keep their place and name whatever colour they are given.
-- **Widths**, on every pen including Marker 1, six in all (`WHITEBOARD_PEN_WIDTHS`, the width at
+- **Widths**, on every pen including Marker 1, three in all (`WHITEBOARD_PEN_WIDTHS`, the width at
   medium pressure): **Fine** (1 px), **Medium** (1.5 px, the default) and **Bold** (2.5 px), a
   subtle line at 100%, not a felt tip (tuned with the operator: Medium is what Fine was, each step
-  one notch thinner); then three progressively stronger, each about half again the last, for
-  felt-tip and poster marks: **Thick** (4 px), **Heavy** (6 px) and **Broad** (9 px). The width is recorded as the stroke's `penWidth`, which every
+  one notch thinner). Three are enough: the same pen set serves a quick sketch and a drawing game
+  alike. The width is recorded as the stroke's `penWidth`, which every
   freehand renderer honours; choosing a border width from an element's menu
   afterwards replaces it. A pen stores its width as the preset's name, not its
   px, so retuning the px never reinterprets a stored choice.
+  - **Retired widths**: **Thick** (4 px), **Heavy** (6 px) and **Broad** (9 px) were once offered.
+    A pen stored with one of their names reads as **Bold**, the strongest width offered, says so
+    in the log and is stored back as Bold, so it migrates once; it is never dropped to Medium nor left unreadable. Strokes already drawn with
+    them keep their `penWidth` exactly: ink stays as it was drawn, only the choices offered change.
+  - **A stroke wider than Bold** (a retired width, or any `penWidth` that is no preset) shows in
+    the quick style panel's Marker width row with **no width marked**, as a mixed selection does;
+    the row keeps its three options, and choosing one sets it.
   - **Each width is pictured the same wherever it is chosen** (the marker's popover and the quick
-    style panel's Marker width row, `PenWidthIcon`): as a line in six even steps, thinnest first,
+    style panel's Marker width row, `PenWidthIcon`): as a line in three even steps, thinnest first,
     not to scale. Drawn to scale, 1 and 1.5 px looked identical in the popover.
 - **The markers outside Sketch mode:** the Toolbar strip's Search offers Marker 1, 2 and 3 in the
   other modes ([Toolbar layout](../007-editor/toolbar-layout.md#search-every-element-type)), each
@@ -356,7 +363,7 @@ Explorer Home's Jump Back In.
     to see on the dark board") and offers a nearby version that is not, as
     a swatch to press. **The warning's line is always reserved**, empty
     until needed, so it never shifts the picker.
-  - **Width:** Fine, Medium, Bold, Thick, Heavy, Broad.
+  - **Width:** Fine, Medium, Bold.
   - Each swatch has its name as its tooltip and accessible name ("Blue",
     "#ff6b00"); arrow keys move focus through every swatch and +
     (wrapping), Enter picks, Escape closes.

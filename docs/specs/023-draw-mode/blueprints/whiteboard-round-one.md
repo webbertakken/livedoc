@@ -63,7 +63,7 @@ Scope, by file:
 | Ink              | `PEN_INK` / `WHITEBOARD_INK`, by name `'ink'`      | The drawing colour; unpainted strokes and text draw in it     |
 | Background       | `WhiteboardBackground` (`plain/dots/grid`)         | The person's Draw pattern, the synced `drawPattern`           |
 | Pen              | `WhiteboardPen`                                    | Main, second or third: id, colour (`null` = ink), width in px |
-| Pen width        | `WHITEBOARD_PEN_WIDTHS` (`PenWidthId`, 6 names)    | 1, 1.5, 2.5, 4, 6, 9 px, as `penWidth`; stored by name        |
+| Pen width        | `WHITEBOARD_PEN_WIDTHS` (`PenWidthId`, 3 names)    | 1, 1.5, 2.5 px, as `penWidth`; stored by name                 |
 | Pen intent       | `PendingDraw` freehand `variant: 'whiteboard'`     | The held pen, with its colour, width and recognition          |
 | Dock             | `WhiteboardDock`                                   | Top- or bottom-centre tool groups (whiteboard-dock.md)        |
 | Dock tool        | `WhiteboardTool`                                   | `select/pen/eraser/sticky/text/shape`                         |
@@ -831,8 +831,10 @@ and `{ type: 'arrow'; ends?: ArrowEnds }`.
 Parsing rejects: a non-object or unparseable prefs value → defaults; a pen whose id is unknown →
 dropped and refilled from defaults; a colour that is neither a `PenColourName` nor a `#rrggbb` (an old
 fixed colour reads as its name), or any colour on the main pen → the pen's default colour (the ink
-is a valid colour for any pen); a width that is not a preset NAME (`fine`, `medium`, `bold`, `thick`, `heavy`, `broad`; widths are stored
-by name so the px can be retuned) → Medium; an unknown `activePenId` or
+is a valid colour for any pen); a retired width NAME (`thick`, `heavy`, `broad`, `RETIRED_PEN_WIDTHS`) → Bold, logged
+`[whiteboard] pen width retired: <name> → bold` (warn), and `loadWhiteboardPrefs` writes the migrated prefs back at once
+(`holdsRetiredWidth`) so the migration logs once; any other width that is not a preset NAME
+(`fine`, `medium`, `bold`; widths are stored by name so the px can be retuned) → Medium; an unknown `activePenId` or
 `eraserMode` → default; `recognise` not a boolean → `false`.
 
 ## Data and persistence
@@ -918,7 +920,7 @@ validated saves (`validate.ts` bounds `penWidth`). Colours written by a pen come
   layout size before paint, since the pop-in starts at `scale(0)`): `offDock` in
   [whiteboard-dock](whiteboard-dock.md).
 - Dock buttons and flyout options carry the house `Tooltip` (their accessible name).
-- Copy: buttons "Select", "Marker 1", "Marker 2", "Marker 3" (2 and 3 adding their colour, e.g. "Marker 2, blue, medium"; `PEN_NAMES`), "Eraser", "Sticky note", "Text", "Shapes", "Shape recognition"; pen flyout "Colour" (second and third pens only), "Width" with "Fine", "Medium", "Bold", "Thick", "Heavy", "Broad"; eraser flyout
+- Copy: buttons "Select", "Marker 1", "Marker 2", "Marker 3" (2 and 3 adding their colour, e.g. "Marker 2, blue, medium"; `PEN_NAMES`), "Eraser", "Sticky note", "Text", "Shapes", "Shape recognition"; pen flyout "Colour" (second and third pens only), "Width" with "Fine", "Medium", "Bold"; eraser flyout
   "Stroke", "Partial" with hints "Remove whole strokes" / "Erase part of a stroke"; Settings flyout
   "Background" with "Plain", "Dots", "Grid"; the template card "Whiteboard", "Free drawing without distractions"
 - Recognition chip: a pill 44 px tall and at least 44 px wide, `px-4`, `text-sm` medium, full
@@ -974,6 +976,7 @@ validated saves (`validate.ts` bounds `penWidth`). Colours written by a pen come
 | `penColour` validated; projected per board; kept by erase pieces                              | `validate.test.ts`, `whiteboard.test.ts`, `whiteboard-stroke.test.ts`                    |
 | Canvas and export draw the named colour for the canvas                                        | `apps/live/lib/stock-colour-projector.test.ts`, `export-as-seen.test.ts`                 |
 | Marker prefs: ink for any marker, names, custom hex, old colours read as names                | `apps/live/lib/whiteboard-prefs.test.ts`                                                 |
+| Three widths; retired widths read as Bold, logged once; wider strokes mark none               | `whiteboard-prefs.test.ts`, `quick-style-pen.test.ts`, `whiteboard-pen-widths.spec.ts`   |
 | Commit records a name or a hex                                                                | `apps/live/hooks/canvas/commit-freehand.test.ts`                                         |
 | Picker: standard row by name, Ink as null, custom in force, reserved warning                  | `components/canvas/whiteboard/ColourPicker.test.tsx`, `lib/hsv.test.ts`                  |
 | Marker glyph and cursor in the resolved colour, ink included                                  | `WhiteboardDock.test.tsx`, `useWhiteboardPenCursor.test.tsx`                             |

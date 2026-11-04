@@ -26,19 +26,16 @@ describe('whiteboard pens', () => {
     expect(new Set(pens.map((p) => p.width))).toEqual(new Set([1.5]));
   });
 
-  it('keeps the widths subtle around Medium (1.5 px), then three progressively stronger', () => {
-    expect(WHITEBOARD_PEN_WIDTHS.map((w) => [w.label, w.px])).toEqual([
-      ['Fine', 1],
-      ['Medium', 1.5],
-      ['Bold', 2.5],
-      ['Thick', 4],
-      ['Heavy', 6],
-      ['Broad', 9],
+  it('offers three subtle widths around Medium (1.5 px): Fine, Medium and Bold', () => {
+    expect(WHITEBOARD_PEN_WIDTHS.map((w) => [w.id, w.label, w.px])).toEqual([
+      ['fine', 'Fine', 1],
+      ['medium', 'Medium', 1.5],
+      ['bold', 'Bold', 2.5],
     ]);
   });
 
-  it('stores and reads back each of the stronger widths by name', () => {
-    for (const w of WHITEBOARD_PEN_WIDTHS.slice(3)) {
+  it('stores and reads back each width by name', () => {
+    for (const w of WHITEBOARD_PEN_WIDTHS) {
       const prefs = {
         ...DEFAULT_WHITEBOARD_PREFS,
         pens: DEFAULT_WHITEBOARD_PREFS.pens.map((p) => ({ ...p, width: w.px })),
@@ -46,6 +43,41 @@ describe('whiteboard pens', () => {
       saveWhiteboardPrefs(prefs);
       expect(loadWhiteboardPrefs().pens.map((p) => p.width)).toEqual([w.px, w.px, w.px]);
     }
+  });
+
+  it.each(['thick', 'heavy', 'broad'])(
+    'reads a stored retired %s width as Bold, logged',
+    (name) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      localStorage.setItem(
+        'livedoc:v2:whiteboard-pens',
+        JSON.stringify({
+          pens: [
+            { id: 'main', colour: null, width: name },
+            { id: 'second', colour: 'blue', width: 'fine' },
+            { id: 'third', colour: 'red', width: name },
+          ],
+        }),
+      );
+      expect(loadWhiteboardPrefs().pens.map((p) => p.width)).toEqual([2.5, 1, 2.5]);
+      expect(warn).toHaveBeenCalledWith(`[whiteboard] pen width retired: ${name} → bold`);
+      expect(warn).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it('migrates a retired width once: loading writes it back as Bold, so the next load is quiet', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    localStorage.setItem(
+      'livedoc:v2:whiteboard-pens',
+      JSON.stringify({ pens: [{ id: 'second', colour: 'blue', width: 'broad' }] }),
+    );
+    loadWhiteboardPrefs();
+    expect(loadWhiteboardPrefs().pens.map((p) => p.width)).toEqual([1.5, 2.5, 1.5]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    const stored = JSON.parse(localStorage.getItem('livedoc:v2:whiteboard-pens')!) as {
+      pens: { width: string }[];
+    };
+    expect(stored.pens.map((p) => p.width)).toEqual(['medium', 'bold', 'medium']);
   });
 
   it('lets only the second and third pens change colour; the main pen stays the default', () => {
