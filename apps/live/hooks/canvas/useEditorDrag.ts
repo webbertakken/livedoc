@@ -33,6 +33,7 @@ import {
 } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
 import { mindConnectionOnRelease } from './mind-connect-on-release';
+import { mindDropGuide, mindDropNow, mindDropOnRelease } from './mind-drop-on-release';
 import { trackDuplicated } from '@/lib/element-telemetry';
 import { isTechIconId } from '@/lib/tech-icons';
 import { iconDropSide, type DragState } from '@/lib/canvas';
@@ -397,7 +398,6 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
             laneHeld: laneAnchorId !== null,
           });
           setLanePreview(move.lane);
-          scheduleGuides(move.guides, move.distGuides);
           tick((els) => {
             // First pass: translate every dragged boxed element (and the
             // free ends of arrows pulled into a frame-section move).
@@ -417,6 +417,15 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
             const autoRebind = depsRef.current.autoRebindArrowsRef.current ?? true;
             return autoRebind ? rebindArrowAnchorsAfterMove(moved, drag.startBounds) : moved;
           });
+          // A mind node in a tidy map shows the slot it would be reordered into
+          // (docs/specs/009-elements/mind-node.md "A tidy map stays tidy").
+          const committed = depsRef.current.activeTab.elements;
+          const mindSlot = mindDropGuide(
+            committed,
+            drag.primaryId,
+            mindDropNow(committed, virtualTab().elements, drag.primaryId, draggedIds!),
+          );
+          scheduleGuides(mindSlot ? [mindSlot] : move.guides, mindSlot ? [] : move.distGuides);
           // Shift-duplicate identity swap (docs/specs/008-canvas/shift-drag-duplicate.md): holding Shift turns
           // this move into a copy by parking the originals and handing the
           // cursor to a fresh clone set, and releasing it swings back. All
@@ -625,6 +634,16 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
             depsRef.current.activeTab.elements,
             arrowId,
             drag.reposition === true,
+          ),
+        );
+      }
+      // A mind node let go in a tidy map is reordered among its siblings or placed by hand, in the same change.
+      if (drag?.kind === 'boxed' && drag.mode === 'move' && dragEngagedRef.current) {
+        previewTick(
+          mindDropOnRelease(
+            depsRef.current.activeTab.elements,
+            drag.primaryId,
+            new Set(drag.startBounds.keys()),
           ),
         );
       }

@@ -340,6 +340,7 @@ export function EditorCanvasHost() {
     entityActions,
     mindOutline,
     tidyMindMap,
+    mindArrangeActions,
     abandonMindNode,
     setTextAlignSelected,
     setViewportOffset,
@@ -1229,6 +1230,7 @@ export function EditorCanvasHost() {
               canEditMindOutline={mindOutline.canEdit}
               onEditMindOutline={mindOutline.open}
               onTidyMindMap={tidyMindMap}
+              mindArrangeActions={isReadOnly ? undefined : mindArrangeActions}
               onAbandonMindNode={abandonMindNode}
               chartPalette={themeChartPalette(activeTheme)}
               onCancelEdit={cancelEdit}

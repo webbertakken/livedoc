@@ -593,6 +593,7 @@ export * from './mind-map';
 export * from './mind-layout';
 export * from './mind-grow';
 export * from './mind-connect';
+export * from './mind-arrange';
 export * from './mind-fit';
 export * from './mind-outline-text';
 export * from './mind-outline-marks';

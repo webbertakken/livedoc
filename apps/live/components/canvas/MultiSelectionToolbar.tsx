@@ -1,6 +1,8 @@
 import type { Element } from '@livedoc/document';
 import { DuplicateIcon, EllipsisIcon, LockIcon, TrashIcon, HoverCard, Glyph } from '@livedoc/ui';
 import type { CombineOp } from '@/lib/combine/combine';
+import { MindArrangeButtons, type MindArrangeState } from '@/components/canvas/MindArrangeButtons';
+import type { MindArrangeActions } from '@/hooks/canvas/useMindMapSetters';
 import { CombineMenuButton } from '@/components/canvas/CombineMenu';
 import { buildFilterGroups, SelectionFilterMenu } from '@/components/canvas/SelectionFilterMenu';
 import { TOOLBAR_BTN, TOOLBAR_BTN_ON } from '@/components/canvas/toolbar-buttons';
@@ -29,6 +31,8 @@ type MultiSelectionToolbarProps = {
   // Opens the selection-wide context menu (anchored under the ⋯ button).
   // Omitted for view-role, where there's no context menu.
   onOpenContextMenu?: (screenX: number, screenY: number) => void;
+  // Number, Group, Auto Position for the mind nodes selected (docs/specs/009-elements/mind-node.md).
+  mindArrange?: { state: MindArrangeState; actions: MindArrangeActions };
 };
 
 // The marquee multi-selection action buttons. Rendered bare (no shell) so the
@@ -44,6 +48,7 @@ export function MultiSelectionToolbar({
   onFilter,
   onExport,
   onOpenContextMenu,
+  mindArrange,
 }: MultiSelectionToolbarProps) {
   // SelectionFilterMenu renders nothing for a single-kind selection, so its
   // trailing divider must share the SAME predicate — gating on `onFilter`
@@ -72,6 +77,12 @@ export function MultiSelectionToolbar({
               <EllipsisIcon size={14} />
             </button>
           </HoverCard>
+          <span aria-hidden className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
+        </>
+      ) : null}
+      {mindArrange ? (
+        <>
+          <MindArrangeButtons {...mindArrange} />
           <span aria-hidden className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
         </>
       ) : null}

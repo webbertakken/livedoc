@@ -85,3 +85,28 @@ describe('Spacing', () => {
     expect(a.x).toBeGreaterThan(before.x);
   });
 });
+
+// docs/specs/009-elements/mind-node.md "A tidy map stays tidy", "Numbered nodes", "Groups".
+describe('Tidy Map and arranging by hand', () => {
+  const tidyMap = () => {
+    const messy = map();
+    const plan = relayoutMindMap(messy, 'root')!;
+    return applyMindMoves(messy, plan.moves, plan.reanchored);
+  };
+
+  it('puts a node placed by hand back, which a tidy map counts as a change', () => {
+    const placed = tidyMap().map((e) => (e.id === 'a' ? { ...e, x: 900, mindPlaced: true } : e));
+    const { api, notify, committed } = setters(placed);
+    api.tidyMindMap('root');
+    expect(notify).toHaveBeenCalledWith('success', 'Map tidied');
+    expect(committed()!.find((e) => e.id === 'a')).not.toHaveProperty('mindPlaced');
+  });
+
+  it('numbers, groups and ungroups the selection in one commit each', () => {
+    const { api, committed } = setters(tidyMap());
+    api.mindArrangeActions.number(true);
+    expect(committed()!.find((e) => e.id === 'a')).toMatchObject({ mindNumbered: true });
+    api.mindArrangeActions.group();
+    expect((committed()!.find((e) => e.id === 'a') as ShapeElement).mindGroup).toBeTruthy();
+  });
+});

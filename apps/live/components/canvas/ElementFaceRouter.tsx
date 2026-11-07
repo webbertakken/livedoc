@@ -135,6 +135,8 @@ type ElementFaceRouterProps = Pick<
   remoteBorderColor: string | null;
   inlineIcon: string | false | undefined;
   marker: ShapeMarker | undefined;
+  // A numbered mind node's number, drawn as a chip before the label.
+  mindNumber: number | undefined;
   iconCaptionBand: string | null;
   // An upright lane title's turned frame (upright-title.ts), or null.
   labelFrame: CSSProperties | null;
@@ -190,6 +192,7 @@ export function ElementFaceRouter({
   remoteBorderColor,
   inlineIcon,
   marker,
+  mindNumber,
   iconCaptionBand,
   labelFrame,
 }: ElementFaceRouterProps) {
@@ -580,12 +583,13 @@ export function ElementFaceRouter({
           onSetRows={(rows) => onSetWebRows?.(element.id, rows)}
           onSetHeading={(field, value) => onSetPageHeading(element.id, field, value)}
         />
-      ) : element.type === 'shape' && (inlineIcon || marker) ? (
+      ) : element.type === 'shape' && (inlineIcon || marker || mindNumber !== undefined) ? (
         <InsetContent inset={contentInset}>
           <ShapeInlineIconLayout
             element={element}
             showIcon={!!inlineIcon}
             marker={marker}
+            mindNumber={mindNumber}
             markerSize={element.markerSize ?? 'scale'}
             position={element.iconPosition ?? 'left'}
             iconStroke={textColor}

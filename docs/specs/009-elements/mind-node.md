@@ -116,10 +116,21 @@ The root never moves. A map grown by Tab and Enter from a single node, or from
 a mind-map template, is tidy by construction, so it stays tidy for as long as
 nobody rearranges it.
 
-The moment someone drags a node, the map is theirs. It is no longer tidy, and
-growth falls back to **free placement** (below), which never moves an existing
-node of that map. **Tidy Map** in the Mind Map menu puts it back, and
-from then on it stays tidy again.
+Dragging a node in a tidy map keeps it tidy (`planMindDrop`, `packages/document/src/mind-arrange.ts`):
+
+- **Dropped between its siblings** (within its own size of the slot the layout gives it there), it is **reordered**:
+  the map is laid out again with the node in that place. While it is dragged, a line across the slot's leading edge
+  shows where it will go.
+- **Dropped anywhere else**, it is **placed by hand** (`mindPlaced`): it stays where it was let go, its own branch is
+  laid out from it, and the rest of the map closes up around the gap it left. The layout keeps it there from then on,
+  so the map still counts as tidy and growth, deletes and Tidy Map's neighbours carry on around it.
+- **Auto Position**, on the toolbar of a selection holding a node placed by hand, puts it back into the layout.
+  **Tidy Map** puts every node of the map back.
+- Each drop is one undo step with the move. A root's drag moves the whole map, as before.
+
+A map arranged by hand before (a node moved somewhere the layout does not put it, without being placed) is not
+tidy: growth falls back to **free placement** (below), which never moves an existing node of that map. **Tidy Map**
+in the Mind Map menu puts it back, and from then on it stays tidy again.
 
 Order is read from the map as drawn: siblings are ordered along the flow's
 stacking axis (top to bottom for a tree or a leftward map, left to right for a downward or upward map,
@@ -336,6 +347,38 @@ contents. A branch is one idea: moving its heading and leaving its points
 behind is never the intent, and re-dragging each of them would be the
 workaround.
 Resizing a node resizes only that node.
+
+## Numbered nodes
+
+Siblings can be **numbered**, like a numbered list: **Number** on the toolbar of a selection of mind nodes (one or
+many, the single and the multi-selection toolbar alike) turns it on for each (`mindNumbered`), and pressed again
+(it shows pressed while every selected node is numbered) turns it off.
+
+- A node's number is its place among its **numbered siblings**, in the order the map reads them (`mindNumbers`), 1
+  up: reordering, adding or removing one renumbers the rest. Nothing is written into the label.
+- It is drawn as part of the card: a chip before the label, in the label's colour on a tint of it, sized from the
+  label. Exports lead the label with the number ("2. Venue").
+- A root is never numbered.
+
+## Groups
+
+Siblings can be **grouped** (`mindGroup`, an id the group is made with): **Group** on the toolbar of a selection of
+mind nodes below a root puts them in one group per parent; **Ungroup** (shown instead when the selection is one
+group) takes every member of their groups out.
+
+- A group is drawn as one **tinted box** around its members and their branches (`mindGroupBoxes`), padded by 12 px
+  (`MIND_GROUP_PADDING`), rounded, under the nodes: a mostly transparent fill and a stronger edge in a hue picked
+  from the group's id (`mindGroupColours`), so neighbouring groups tell apart, in light and dark. A branch placed by
+  hand elsewhere is left out of it.
+- The layout keeps a group's members **together**, where its first member is, in their own order, with the padding
+  as extra room before and after the group so its box never touches a neighbour.
+- **Pressing a group's box** selects its members, so the group is dragged as one block: dropped between siblings it is
+  reordered as a whole, between ungrouped nodes or other groups (groups never nest or split).
+- A node dropped **between two members** of a group joins it; a member dropped away from every other member leaves it.
+  **Enter** on a grouped node adds the new sibling to the group.
+- A node that changes parent (Connecting nodes, Add Parent's node) leaves its group; Add Parent's new node takes the
+  node's place in it.
+- Exports draw the boxes too.
 
 ## Add Parent
 

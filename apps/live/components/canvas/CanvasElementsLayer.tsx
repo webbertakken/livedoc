@@ -47,6 +47,7 @@ import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
+import { MindGroupBackdrops, MindNumbersProvider } from './MindMapLayer';
 import {
   SheetChartsContext,
   type SheetChartsValue,
@@ -558,158 +559,164 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
   );
   return (
     <SheetChartsContext.Provider value={sheetCharts}>
-      <CardVoteProvider value={cardVote}>
-        <SelectionGripsContext.Provider value={gripHosts}>
-          {/* Shared arrowhead defs. Multiple per-arrow <svg>s below
+      <MindNumbersProvider elements={elements}>
+        <CardVoteProvider value={cardVote}>
+          <SelectionGripsContext.Provider value={gripHosts}>
+            {/* Shared arrowhead defs. Multiple per-arrow <svg>s below
             all reference url(#arrowhead) — defs are document-scoped
             in SVG so a single defs node lets every arrow render
             with the same marker. */}
-          {hasArrows ? (
-            <svg
-              className="absolute"
-              style={{ width: 0, height: 0, overflow: 'visible' }}
-              aria-hidden
-            >
-              <ArrowDefs />
-            </svg>
-          ) : null}
+            {hasArrows ? (
+              <svg
+                className="absolute"
+                style={{ width: 0, height: 0, overflow: 'visible' }}
+                aria-hidden
+              >
+                <ArrowDefs />
+              </svg>
+            ) : null}
 
-          {/* Render elements in their natural array order so
+            {/* Render elements in their natural array order so
             `bringToFront` / `sendToBack` reorder arrows relative to
             boxed elements (instead of all arrows perpetually stacking
             above all boxes inside a single SVG layer). Each arrow
             gets its own <svg> overlay; pointer events on the SVG are
             disabled in CSS, only the inner arrow line picks them up. */}
-          {/* Pages mode cuts elements off at the page edges (PageClip); not in the
+            {/* Pages mode cuts elements off at the page edges (PageClip); not in the
           isometric view, whose 3D stack a clip would flatten. */}
-          <PageClip
-            pages={
-              props.pagesMode && props.canvasTool !== 'isometric' ? props.pagesMode.pages : null
-            }
-            // A page under a layout preview shows only the preview.
-            hiddenPageId={props.pagesMode?.layoutPreview?.pageId ?? null}
-            elements={elements}
-            layers={tabLayers}
-          >
-            <CanvasElementList
-              shownOrder={shownOrder}
-              previewStore={previewStore}
-              h={h}
-              boxedShared={boxedShared}
-              arrowGeometry={arrowGeometry}
-              arrowLabels={arrowLabels}
+            <PageClip
+              pages={
+                props.pagesMode && props.canvasTool !== 'isometric' ? props.pagesMode.pages : null
+              }
+              // A page under a layout preview shows only the preview.
+              hiddenPageId={props.pagesMode?.layoutPreview?.pageId ?? null}
               elements={elements}
-              editingId={editingId}
-              editCursorAtEnd={editCursorAtEnd}
-              reshapingArrowId={props.reshapingArrowId}
-              isPaintMode={isPaintMode}
-              tabLocked={tabLocked}
-              readOnly={readOnly}
-              insertShift={insertShift}
-              shiftDupGhostIds={shiftDupGhostIds}
-              draftView={draftView}
-              tabVote={tabVote}
-              tabLayers={tabLayers}
-              remoteSelectionsByElement={remoteSelectionsByElement}
-              canMove={canMove}
-              canWriteText={canWriteText}
-              canResize={canResize}
-              voteReview={voteReview}
-              commentActionsFor={commentActionsFor}
-              actionActionsFor={actionActionsFor}
-              revealedIds={revealedIds}
-              reactionBursts={reactionBursts}
-              tabFont={tabFont}
-              tabFinish={tabFinish}
-              fontEpoch={fontEpoch}
-              stackedIds={stackedIds}
-            />
-          </PageClip>
-          {/* A wireframe page's camera and system bars, over what is on its screen. */}
-          {props.pagesMode && props.canvasTool !== 'isometric' ? (
-            <WireframeDeviceOverlays
-              pages={props.pagesMode.pages}
-              frameTheme={props.pagesMode.frameTheme}
-            />
-          ) : null}
-
-          {/* Editor-only marks, left out of an animated GIF (GifOmit). */}
-          <GifOmit>
-            {/* The line or arrow being drawn (docs/specs/023-draw-mode/draw-mode.md "Shapes"): the
-          element the release lands, after every element, where it will land. */}
-            {drawDrag && props.pendingDraw?.type === 'arrow' && props.previewDrawnArrow ? (
-              <DrawnArrowPreview
-                arrow={props.previewDrawnArrow(
-                  props.pendingDraw,
-                  drawDrag.startX,
-                  drawDrag.startY,
-                  drawDrag.currentX,
-                  drawDrag.currentY,
-                )}
-                elementIndex={elementIndex ?? EMPTY_ELEMENT_INDEX}
-                occluders={drawnElements}
-                draftLayout={arrowLabels.draftLayout}
-                fontFamily={tabFontStack}
-                withDefs={!hasArrows}
+              layers={tabLayers}
+            >
+              <MindGroupBackdrops
+                elements={elements}
+                onSelect={readOnly ? undefined : props.onSelectMarquee}
+              />
+              <CanvasElementList
+                shownOrder={shownOrder}
+                previewStore={previewStore}
+                h={h}
+                boxedShared={boxedShared}
+                arrowGeometry={arrowGeometry}
+                arrowLabels={arrowLabels}
+                elements={elements}
+                editingId={editingId}
+                editCursorAtEnd={editCursorAtEnd}
+                reshapingArrowId={props.reshapingArrowId}
+                isPaintMode={isPaintMode}
+                tabLocked={tabLocked}
+                readOnly={readOnly}
+                insertShift={insertShift}
+                shiftDupGhostIds={shiftDupGhostIds}
+                draftView={draftView}
+                tabVote={tabVote}
+                tabLayers={tabLayers}
+                remoteSelectionsByElement={remoteSelectionsByElement}
+                canMove={canMove}
+                canWriteText={canWriteText}
+                canResize={canResize}
+                voteReview={voteReview}
+                commentActionsFor={commentActionsFor}
+                actionActionsFor={actionActionsFor}
+                revealedIds={revealedIds}
+                reactionBursts={reactionBursts}
+                tabFont={tabFont}
+                tabFinish={tabFinish}
+                fontEpoch={fontEpoch}
+                stackedIds={stackedIds}
+              />
+            </PageClip>
+            {/* A wireframe page's camera and system bars, over what is on its screen. */}
+            {props.pagesMode && props.canvasTool !== 'isometric' ? (
+              <WireframeDeviceOverlays
+                pages={props.pagesMode.pages}
+                frameTheme={props.pagesMode.frameTheme}
               />
             ) : null}
 
-            {/* What the agents present name in focus (docs/specs/024-agents/agent-presence.md "In the editor"):
+            {/* Editor-only marks, left out of an animated GIF (GifOmit). */}
+            <GifOmit>
+              {/* The line or arrow being drawn (docs/specs/023-draw-mode/draw-mode.md "Shapes"): the
+          element the release lands, after every element, where it will land. */}
+              {drawDrag && props.pendingDraw?.type === 'arrow' && props.previewDrawnArrow ? (
+                <DrawnArrowPreview
+                  arrow={props.previewDrawnArrow(
+                    props.pendingDraw,
+                    drawDrag.startX,
+                    drawDrag.startY,
+                    drawDrag.currentX,
+                    drawDrag.currentY,
+                  )}
+                  elementIndex={elementIndex ?? EMPTY_ELEMENT_INDEX}
+                  occluders={drawnElements}
+                  draftLayout={arrowLabels.draftLayout}
+                  fontFamily={tabFontStack}
+                  withDefs={!hasArrows}
+                />
+              ) : null}
+
+              {/* What the agents present name in focus (docs/specs/024-agents/agent-presence.md "In the editor"):
           above the elements, beneath the remote cursors. */}
-            <AgentFocusOverlay elements={elements} />
+              <AgentFocusOverlay elements={elements} />
 
-            <RemoteCursors cursors={remoteCursors} />
+              <RemoteCursors cursors={remoteCursors} />
 
-            {/* Laser overlay sits inside the viewport-transformed wrapper
+              {/* Laser overlay sits inside the viewport-transformed wrapper
             so trail coordinates (canvas-space) pan + zoom with
             elements. The overlay component owns its own RAF loop
             and only runs while there's at least one active trail. */}
-            <ZoomedLaserOverlay trails={laserTrails} />
+              <ZoomedLaserOverlay trails={laserTrails} />
 
-            {/* What a relayed changeset touched (docs/specs/024-agents/agent-changesets.md "In the editor"):
+              {/* What a relayed changeset touched (docs/specs/024-agents/agent-changesets.md "In the editor"):
           above the elements, below the selection chrome. */}
-            <ChangesetRevealOverlay elements={elements} tabId={props.activeTabId ?? ''} />
-          </GifOmit>
+              <ChangesetRevealOverlay elements={elements} tabId={props.activeTabId ?? ''} />
+            </GifOmit>
 
-          {/* The grips layer (docs/specs/008-canvas/canvas-and-palette.md "Resize"): above every element, so
+            {/* The grips layer (docs/specs/008-canvas/canvas-and-palette.md "Resize"): above every element, so
           no grip is ever covered. The canvas's own grips go in here; each element's are portalled in. */}
-          <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
-            <LayerSelectionChrome
-              selectionInput={props.selectionInput}
-              tabId={props.activeTabId ?? ''}
-              elements={elements}
-              editingId={editingId}
-              nextNote={
-                props.esBoard && props.onAddNextNote
-                  ? {
-                      blocked:
-                        readOnly ||
-                        tabLocked ||
-                        props.createBlocked === true ||
-                        insertShift.animates,
-                      onAdd: props.onAddNextNote,
-                    }
-                  : null
-              }
-              pluses={{
-                quickRingOpen,
-                setQuickRingOpen,
-                openOnHover: settings.quickAddOnHover === true,
-                onSpawnConnect,
-                onStartArrow,
-                onStartPencil,
-                onAddTableRow,
-                onAddTableColumn,
-                onAppendWebRow,
-                onAddEntityField: h.onAddEntityField,
-                onAddRelatedEntity: h.onAddRelatedEntity,
-              }}
-              onBeginDrag={onBeginDrag}
-              pages={props.pagesMode?.pages}
-            />
-          </SelectionGripsLayer>
-        </SelectionGripsContext.Provider>
-      </CardVoteProvider>
+            <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
+              <LayerSelectionChrome
+                selectionInput={props.selectionInput}
+                tabId={props.activeTabId ?? ''}
+                elements={elements}
+                editingId={editingId}
+                nextNote={
+                  props.esBoard && props.onAddNextNote
+                    ? {
+                        blocked:
+                          readOnly ||
+                          tabLocked ||
+                          props.createBlocked === true ||
+                          insertShift.animates,
+                        onAdd: props.onAddNextNote,
+                      }
+                    : null
+                }
+                pluses={{
+                  quickRingOpen,
+                  setQuickRingOpen,
+                  openOnHover: settings.quickAddOnHover === true,
+                  onSpawnConnect,
+                  onStartArrow,
+                  onStartPencil,
+                  onAddTableRow,
+                  onAddTableColumn,
+                  onAppendWebRow,
+                  onAddEntityField: h.onAddEntityField,
+                  onAddRelatedEntity: h.onAddRelatedEntity,
+                }}
+                onBeginDrag={onBeginDrag}
+                pages={props.pagesMode?.pages}
+              />
+            </SelectionGripsLayer>
+          </SelectionGripsContext.Provider>
+        </CardVoteProvider>
+      </MindNumbersProvider>
     </SheetChartsContext.Provider>
   );
 }

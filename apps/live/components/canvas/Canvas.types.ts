@@ -653,6 +653,8 @@ export type CanvasProps = {
   // fields, so they commit through here rather than the label editor.
   // Mind map (docs/specs/009-elements/mind-node.md): grows the next node from the label editor.
   onGrowMindNode: (id: string, kind: 'child' | 'sibling', options?: GrowOptions) => void;
+  // Number, Group and Auto Position on the selection toolbars (docs/specs/009-elements/mind-node.md): an Editor's.
+  mindArrangeActions?: import('@/hooks/canvas/useMindMapSetters').MindArrangeActions;
   // Add Parent (docs/specs/009-elements/mind-node.md "Add Parent"): an Editor's, so absent for anyone else.
   onAddMindParent?: (id: string) => void;
   // Flowchart (docs/specs/009-elements/flowchart.md): a step's type and lane from its toolbar. An

@@ -440,6 +440,15 @@ export type ShapeElement = {
   // How far apart the map's nodes sit (docs/specs/009-elements/mind-node.md "Spacing"). Read off the ROOT like
   // `mindFlow`; absent = 'comfortable', the gaps every map had before, so no map moves.
   mindSpacing?: MindSpacing;
+  // Placed by hand (docs/specs/009-elements/mind-node.md "A tidy map stays tidy"): the layout keeps this node where it
+  // was dropped and lays its own branch out from it. Stored only when true; Auto Position and Tidy Map clear it.
+  mindPlaced?: boolean;
+  // Numbered (docs/specs/009-elements/mind-node.md "Numbered nodes"): drawn with its place among its numbered
+  // siblings, 1 up. Stored only when true.
+  mindNumbered?: boolean;
+  // The group this node is in among its siblings (docs/specs/009-elements/mind-node.md "Groups"): siblings sharing it
+  // are laid out together inside one tinted box. An id minted when the group is made.
+  mindGroup?: string;
   // Flowchart (docs/specs/009-elements/flowchart.md): the chart this step or lane belongs to, minted as the
   // id of its first step. The ONLY thing that makes a shape a step: a diamond without it is a diamond.
   flowchartId?: string;

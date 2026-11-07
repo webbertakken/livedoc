@@ -186,6 +186,8 @@ export function planMindGrowth(
     ...size,
     id: ids.node,
     mindParentId: parent.id,
+    // Enter on a grouped node adds to its group (docs/specs/009-elements/mind-node.md "Groups").
+    ...(kind === 'sibling' && from.mindGroup ? { mindGroup: from.mindGroup } : {}),
   };
   const root = mindRootOf(elements, parent);
   const flow = mindFlowOf(elements, parent);

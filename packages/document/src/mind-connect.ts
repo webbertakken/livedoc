@@ -50,8 +50,11 @@ function isAncestor(elements: Element[], ancestorId: ElementId, node: ShapeEleme
 
 // A node's place in the tree, written in one go: its parent, or none (a root, which carries the map's flow and
 // spacing). Moving a root's fields onto whatever takes its place keeps the map's shape.
-type Patch = Partial<Pick<ShapeElement, 'mindParentId' | 'mindFlow' | 'mindSpacing'>>;
-const ROOT_FIELDS = ['mindParentId', 'mindFlow', 'mindSpacing'] as const;
+// A node that changes place leaves its group and its hand placement behind: both are about its old siblings.
+type Patch = Partial<
+  Pick<ShapeElement, 'mindParentId' | 'mindFlow' | 'mindSpacing' | 'mindGroup' | 'mindPlaced'>
+>;
+const ROOT_FIELDS = ['mindParentId', 'mindFlow', 'mindSpacing', 'mindGroup', 'mindPlaced'] as const;
 
 function patchNode(elements: Element[], id: ElementId, patch: Patch): Element[] {
   return elements.map((el) => {
@@ -267,9 +270,11 @@ export function insertMindParent(
     height: node.height,
   };
   const added = { ...dress.node(base, node), id: ids.node, x: node.x, y: node.y };
+  // It takes the node's place: its parent (or the root's flow and spacing), its group and its hand placement.
+  const place = stripUndefined({ mindGroup: node.mindGroup, mindPlaced: node.mindPlaced });
   const inserted: ShapeElement = parent
-    ? { ...added, mindParentId: parent.id }
-    : { ...added, ...stripUndefined(rootFieldsOf(node)) };
+    ? { ...added, ...place, mindParentId: parent.id }
+    : { ...added, ...place, ...stripUndefined(rootFieldsOf(node)) };
 
   let els: Element[] = [...elements, inserted];
   if (parent && oldLink) els = retargetConnector(els, parent.id, node.id, node.id, inserted.id);

@@ -10,6 +10,8 @@ import {
   SendToBackIcon,
   TextIcon,
 } from '@/components/canvas/selection-popover-icons';
+import { MindArrangeButtons, type MindArrangeState } from '@/components/canvas/MindArrangeButtons';
+import type { MindArrangeActions } from '@/hooks/canvas/useMindMapSetters';
 import {
   MIND_CHILD_OPTION,
   MIND_PARENT_OPTION,
@@ -60,6 +62,8 @@ type SelectionPopoverProps = {
   onAddMindChild?: (stay: boolean) => void;
   onAddMindSibling?: (stay: boolean) => void;
   onAddMindParent?: () => void;
+  // Number, Group, Auto Position (docs/specs/009-elements/mind-node.md): a mind node below its root, an Editor's.
+  mindArrange?: { state: MindArrangeState; actions: MindArrangeActions };
   // A flowchart step's group (docs/specs/009-elements/flowchart.md): Add Step, Add Branch, and an
   // Editor's Step Type and Lane menus. Passed only for an unlocked step someone may grow.
   flowchartStep?: FlowchartStepToolbar;
@@ -121,6 +125,7 @@ export function SelectionPopover({
   cardinality,
   onAddMindSibling,
   onAddMindParent,
+  mindArrange,
   onDuplicate,
   onBringToFront,
   onSendToBack,
@@ -258,6 +263,7 @@ export function SelectionPopover({
               >
                 {MIND_SIBLING_OPTION.icon}
               </PopoverButton>
+              {mindArrange ? <MindArrangeButtons {...mindArrange} /> : null}
               {onAddMindParent ? (
                 <PopoverButton
                   label={MIND_PARENT_OPTION.label}

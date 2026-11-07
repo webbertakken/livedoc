@@ -31,6 +31,7 @@ export function ShapeInlineIconLayout({
   element,
   showIcon = true,
   marker,
+  mindNumber,
   markerSize = 'scale',
   position,
   iconStroke,
@@ -53,6 +54,8 @@ export function ShapeInlineIconLayout({
   // Optional status marker (docs/specs/009-elements/shape-markers.md), drawn immediately left of the label.
   marker?: ShapeMarker;
   markerSize?: TextSizePreset;
+  // A numbered mind node's number (docs/specs/009-elements/mind-node.md "Numbered nodes"): a chip that leads the label.
+  mindNumber?: number;
   position: IconPosition;
   iconStroke: string;
   isEditing: boolean;
@@ -158,19 +161,41 @@ export function ShapeInlineIconLayout({
       <ShapeMarkerGlyph marker={marker} size={markerPx} color={textColor} />
     </span>
   ) : null;
-  // Marker + label form one inline group so the marker hugs the text and the
-  // pair stays centred together (or the marker centres alone when no label).
-  const content = markerGlyph ? (
-    <div
-      className="flex min-w-0 items-center"
-      style={{ gap: Math.max(4, Math.round(markerPx * 0.4)) }}
-    >
-      {markerGlyph}
-      {slot}
-    </div>
-  ) : (
-    slot
-  );
+  // The number chip: part of the card, in the label's colour on a tint of it, sized from the label.
+  const chipPx = Math.max(16, Math.round(fontSize * 1.25));
+  const numberChip =
+    mindNumber !== undefined ? (
+      <span
+        data-mind-number={mindNumber}
+        className="inline-flex shrink-0 items-center justify-center rounded-md font-bold tabular-nums"
+        style={{
+          minWidth: chipPx,
+          height: chipPx,
+          padding: `0 ${Math.round(chipPx * 0.25)}px`,
+          fontSize: Math.round(chipPx * 0.62),
+          fontFamily,
+          color: textColor,
+          background: `color-mix(in srgb, ${textColor} 16%, transparent)`,
+        }}
+      >
+        {mindNumber}
+      </span>
+    ) : null;
+  // Number, marker and label form one inline group so they hug the text and stay centred together (or centre alone
+  // when there is no label).
+  const content =
+    markerGlyph || numberChip ? (
+      <div
+        className="flex min-w-0 items-center"
+        style={{ gap: Math.max(6, Math.round(Math.max(markerPx, chipPx * 0.5) * 0.4)) }}
+      >
+        {numberChip}
+        {markerGlyph}
+        {slot}
+      </div>
+    ) : (
+      slot
+    );
   return (
     <div
       className="pointer-events-none absolute inset-0 flex"

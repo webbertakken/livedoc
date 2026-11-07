@@ -273,7 +273,15 @@ export function applyShapeKindToEl(el: Element, kind: ShapeKind): Element {
   // A mind node that becomes another kind leaves its map (docs/specs/008-canvas/canvas-and-palette.md "Shape"): its
   // place in the tree goes, and its children read as roots, as under a deleted parent. A box that becomes a mind
   // node is a root of its own.
-  const { mindParentId: _parent, mindFlow: _flow, mindSpacing: _spacing, ...rest } = el;
+  const {
+    mindParentId: _parent,
+    mindFlow: _flow,
+    mindSpacing: _spacing,
+    mindPlaced: _placed,
+    mindNumbered: _numbered,
+    mindGroup: _group,
+    ...rest
+  } = el;
   const base = kind === 'mind-node' || el.shape !== 'mind-node' ? el : rest;
   const oneToOne = kind === 'circle' || kind === 'diamond';
   if (oneToOne) {

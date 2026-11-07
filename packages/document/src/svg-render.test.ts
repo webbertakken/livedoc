@@ -972,6 +972,36 @@ describe('chrome the canvas draws on a box', () => {
     expect(svg).toContain('rx="11"');
   });
 
+  // docs/specs/009-elements/mind-node.md "Numbered nodes" and "Groups".
+  it("leads a numbered mind node's label with its number, and draws a group's box", () => {
+    const svg = renderElementsToSvg(
+      tab([
+        shape('root', { shape: 'mind-node', label: 'Plan' }),
+        shape('a', {
+          shape: 'mind-node',
+          label: 'Venue',
+          width: 300,
+          mindParentId: 'root',
+          y: 200,
+          mindNumbered: true,
+          mindGroup: 'g',
+        }),
+        shape('b', {
+          shape: 'mind-node',
+          label: 'Food',
+          width: 300,
+          mindParentId: 'root',
+          y: 400,
+          mindNumbered: true,
+          mindGroup: 'g',
+        }),
+      ]),
+    );
+    expect(svg).toContain('1. Venue');
+    expect(svg).toContain('2. Food');
+    expect(svg).toMatch(/<rect[^>]*rx="14" fill="hsla\(/);
+  });
+
   it("draws a shape's own border width, dash and radius, inside the box", () => {
     const svg = renderElementsToSvg(
       tab([shape('s', { strokeWidth: 'thick', strokeStyle: 'dashed', borderRadius: 'lg' })]),
