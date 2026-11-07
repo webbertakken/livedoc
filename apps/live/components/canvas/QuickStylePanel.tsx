@@ -469,7 +469,7 @@ function QuickStyleSections({
       ) : null}
       {textSize ? (
         <QuickRadioRow
-          title="Text size"
+          title="Text Size"
           testId="quick-style-text-size"
           showTitle={showTitles}
           columns={QUICK_TEXT_SIZES.length}
