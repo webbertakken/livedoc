@@ -194,6 +194,14 @@ None. Hints change no one's workflow, and hovering is not an action worth counti
 - Popovers keep their own homes (`packages/ui` popover positioning, the editor's menus and pickers);
   this spec only fixes what the word means. A popover that is a menu follows [Menus](./menus.md).
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **T1** `pointerenter`, `pointerType !== 'touch'`: not `dismissed`: `overTrigger`; cancel close; open now when
+  `OPEN_DELAY_MS[kind]` is 0 or `isHintWarm(kind, now)`, else after `OPEN_DELAY_MS[kind]`.
+- **T15** unmount: clear every timer; release the registry.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

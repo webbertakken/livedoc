@@ -83,6 +83,12 @@ I group-split-edges  core: 12 of 13 arrows cross its border  fix: group by owner
 | `LINT_MAX_ASPECT`          | 3     | Beyond 3:1 a diagram reads badly on a screen and in a PNG |
 | `LINT_MAX_ARROWS`          | 300   | Pairwise checks stay under a few milliseconds             |
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **N15** A custom tab theme: `colour-on-themed` is skipped and `[lint] theme unresolved` logs at debug.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

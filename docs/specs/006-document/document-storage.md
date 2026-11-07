@@ -125,6 +125,15 @@ tables are dropped ([Moving content into rooms](document-storage-move.md)).
 - [Content search](../013-workspace/content-search.md): what the search text is and how it is matched.
 - [Inbox](../013-workspace/inbox.md): what the outbox feeds it.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **G2** no write after purge: `document-outbox.test.ts`.
+- **G3** adds one primary-key read of `room_purges` to every request under `/api/documents/:id/`, before the room.
+- **R1** schema on first write only: `document-schema.test.ts`, `document-db.test.ts`.
+- **R3** every write path keys the outbox: `document-outbox-keys.test.ts`, one case per table.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

@@ -210,6 +210,28 @@ One pure engine, `@livedoc/edit-operations`, on top of `@livedoc/document`:
   views and the lint, as do graph input's label cap and the MCP's normalisation.
 - The api runs it for every changeset; the CLI runs it only to parse and to print.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E1** An operation that changes nothing (`set n3 label="Login"` on `"Login"`): no line, no element op; the changeset
+  still succeeds.
+- **E2** `rm` of an element an earlier operation added: both vanish from the diff; no line.
+- **E7** `insert` where a and b overlap (zero centre distance): the axis is vertical, downwards.
+- **E11** A custom theme the caller did not resolve: the default scheme's slots; `log('[edit-ops] theme-fallback')`.
+- **E18** A result holding a board or Sheet the tab did not hold, on a tab not in Plan (operations after `finalise`,
+  replace after `nextTab`; `planOnlyAddedOutsidePlan`): `invalid_value` (`planOnlyOutsidePlan`), detail `a board or Sheet goes only on a tab in Plan: <ids>`,
+  hint `add a Board tab or a Sheet tab with add_tab (template "kanban" or "blank-spreadsheet")` ([Agent
+  changesets](./agent-changesets.md#boards-and-sheets-only-in-plan)). One the tab already held passes.
+- **I1** Atomic. An outcome with `errors` carries no tab; the input `tab` is never mutated (the state copies on write).
+- **I2** Untouched stays identical. An element no operation touched, shifted, carried, landed or rebound is the same
+  object in `next.elements` as in `tab.elements`, so `diffToElementOps` emits nothing for it.
+- **I5** Deterministic. The same tab, operations and options give the same outcome: no clock, no `Math.random`; ids not
+  derived from text come from `options.makeId` (EO8).
+- **I6** Containers behind members. After finalising, every lane precedes every non-lane (`lanesToFront`) and every
+  container precedes each of its members in the element order.
+- **I7** Locks hold. No element in `locked` differs between `tab` and `next`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

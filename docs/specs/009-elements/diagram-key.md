@@ -68,6 +68,13 @@ next loads or changes.
 The **Diagram Key tour** is on the actions group's **Start Diagram Key Tour** button while a diagram key is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through
 it on the element itself ([Element tours](../007-editor/element-tours.md) "The Diagram Key tour").
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I1** after a commit, every key's `keyRows` equals `keyRowsOf` of its tab.
+- **I2** canvas and export place rows from `diagramKeyLayout`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

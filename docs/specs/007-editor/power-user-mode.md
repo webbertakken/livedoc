@@ -183,6 +183,12 @@ the funnel.
 The help centre explains the mode and Minimal chrome in **Power user mode** under User Interface, linked from the
 Settings row.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **P7** on: off: no baseline (another client): only P5: nothing to restore.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

@@ -307,6 +307,14 @@ your image gallery: list_images lists the pictures you can place`). That keeps t
 - **External-source image clipboard via `navigator.clipboard.read()`.** The Cmd+V image-paste path listens to the browser's native `paste` event and reads `clipboardData.items`, which is permissionless. The picker modal + drag-drop + the `paste` shortcut (Cmd/Ctrl+V on the canvas, image MIME on the clipboard data routes through `uploadImageFile` and lands as a new image element) are the entry paths today; `navigator.clipboard.read()` (which would let us probe the clipboard on a button click without requiring an actual paste gesture) needs the browser's clipboard-read permission prompt and is not used.
 - **External-URL images.** No `imageId === 'https://...'` shape. Every image is internal so the bytes survive an upstream taking the source down + don't leak referrer headers. [Image search](image-search.md) copies a picked picture into the gallery for the same reason.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E1** SVG, HTML or other bytes declared as PNG: Sniff mismatch, 415 `unsupported_type`.
+- **E2** Truncated or malformed JPEG: 415 `malformed_jpeg`; nothing written.
+- **E3** Lying `Content-Length`: Body re-checked after read, 413.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

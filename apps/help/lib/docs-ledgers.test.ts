@@ -15,7 +15,9 @@ const DOCS = fileURLToPath(new URL('../../../docs', import.meta.url));
 const SPECS = join(DOCS, 'specs');
 
 // A default in a spec's Defaults section: `- **D22** ...`. Code cites it by id within its category.
+// Invariants and edge cases carry ids too, but per spec, so only the Defaults section is read.
 const DEFAULT_ID = /^- \*\*([A-Z]+\d+)\*\* /gm;
+const DEFAULTS_SECTION = /^## Defaults\n([\s\S]*?)(?=^## |(?![\s\S]))/m;
 
 function filesNamed(dir: string, name: string): string[] {
   const out: string[] = [];
@@ -49,7 +51,8 @@ function defaultIds(category: string): string[] {
     .filter((entry) => entry.endsWith('.md'))
     .flatMap((entry) => {
       const text = readFileSync(join(SPECS, category, entry), 'utf8');
-      return [...text.matchAll(DEFAULT_ID)].map((m) => m[1]!);
+      const section = text.match(DEFAULTS_SECTION)?.[1] ?? '';
+      return [...section.matchAll(DEFAULT_ID)].map((m) => m[1]!);
     });
 }
 

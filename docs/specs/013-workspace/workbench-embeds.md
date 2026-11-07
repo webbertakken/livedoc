@@ -272,6 +272,18 @@ What a workbench does to fit this contract (its own documentation holds the deta
   workspace frame mounts the Explorer; `Cli·Used·WorkbenchOpen` and
   `Cli·Used·WorkbenchPair` for the commands; `Token·Linked·Workbench` when a pairing is approved.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E1** Origin with a path, query, fragment, credentials, `*`, `null`, `http` on a non-loopback host, or a default port
+  written out (`https://x:443`): `400 invalid_origin` at the api, exit 1 at the CLI.
+- **E34** The pair page opened in a frame: the live worker sends `X-Frame-Options: DENY`; nothing renders.
+- **I8** The workbench page mounts no editor and sends no `livedoc:*` message other than `hello` (and `ended` `refused`,
+  to the session's origin) before a valid `hello-ack`.
+- **I9** The editor in a workbench never runs the guest migration, never writes the participant record, and never writes
+  preferences to the api.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

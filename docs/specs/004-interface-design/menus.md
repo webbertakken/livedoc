@@ -230,6 +230,35 @@ None. Menus already count the verbs chosen in them; how focus moved is not an ac
   components) pick each row's role from the kind of menu they sit in.
 - The focus ring rules live in the shared Tailwind theme.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **C1** Element appears: Records `returnTarget`; with `focusOnOpen` and no text edit, focuses the first focusable with
+  `preventScroll`.
+- **C2** Escape: Root: a `document` listener that skips a `defaultPrevented` event. Sub-panel: a listener on its element
+  that `preventDefault`s. Both call `onClose()`.
+- **C3** Element goes away: As M10.
+- **M1** Element appears with `open`: Records `returnTarget` (`focusedOutside`: the focused element; on `body`, the last
+  focused element if it has gone), then focuses `initialIndex` of the own items (checked = a `menuitemradio` with
+  `aria-checked="true"`) with `preventScroll`, unless a text edit holds focus. A menu still becoming visible (a
+  `visibility` transition) is retried each frame, up to `MENU_FOCUS_RETRY_FRAMES`, until focus is in the menu or has
+  moved anywhere else.
+- **M2** Every commit: Names the menu: a `data-menu-label` it owns (`aria-labelledby`), else the `label` option
+  (`aria-label`), else the trigger (`aria-labelledby` its id, or `aria-label` its accessible name).
+- **M3** Open, with a trigger: Sets `aria-controls` on the trigger to the menu id unless the trigger manages its own;
+  removes what it set on close.
+- **M4** `keydown` on the menu (native listener): Resolves the intent against the focused own item; a non-null intent is
+  `preventDefault` + `stopPropagation`.
+- **M9** `tab`: In a submenu: the parent tree's `closeTree(backwards)`. At the root: focus
+  `tabbableNeighbour(returnTarget ?? trigger, backwards)` (else the target itself), then `onClose()`.
+- **M10** Element goes away or `open` turns false: If `ownsFocus(menu)` (in it, or in a surface whose parent chain leads
+  to it): `returnFocusAfterCommit`: `returnFocus` at once (`returnTarget` if connected, else the trigger, else next
+  frame the element with their id), and again after the commit if focus is back in the menu or on `body` (React restores
+  the prior focus when it is still mounted).
+- **M11** `focusout` to a related target: Outside the menu and its submenus (`ownsFocus`): `onClose()`; a null related
+  target (a press that focuses nothing) is ignored.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

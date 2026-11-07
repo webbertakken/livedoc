@@ -67,6 +67,22 @@ Applying any theme already emits `track('Theme', 'Changed', <label>)` ([Telemetr
 
 The catalogue ships **24 themes** (12 default + 12 extra), the extras including the dark schemes (Pine, Plum, Abyss, Espresso) and three multicolour themes (Rainbow, Pastel, Tropical). It was 27 until Basic and Charcoal merged into the single **Default** scheme ([Live app](../007-editor/live-app.md)), and 26 until Autumn and Jewel retired ([Light and dark halves](light-and-dark.md)); documents saved against a retired scheme are migrated on load ([Retired colour schemes](retired-schemes.md)). The counts are pinned by `apps/live/lib/themes.test.ts` and cited in [Canvas and palette](../008-canvas/canvas-and-palette.md), [Marketing site](../019-marketing/marketing-site.md), and [Marketing assets](../019-marketing/marketing-assets.md); all four move together. Six **seasonal themes** (three of them multicolour: Spring, Pumpkin, Yuletide) sit outside these counts: no picker lists them, and a tab wears one only through a seasonal look ([Seasonal looks](canvas-and-theme-dialog.md#seasonal-looks)).
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E2** Arrow pinned to another arrow, or dangling: Not an edge.
+- **E4** Loop with no root: Every node gets the trunk colour (step 7).
+- **E5** Empty palette at render: Trunk colour for every element, O2 warning.
+- **E7** Palette theme without `rootColor`: Element colours, then `TRUNK_FALLBACK` per null field.
+- **E8** Chain of `MAX_ELEMENTS_PER_TAB` elements: Iterative walk, no throw (I4).
+- **E9** More branches than palette entries: Index wraps modulo the palette length.
+- **E10** Loose element after a wrap: Shares a limb's hue, which is accepted.
+- **I1** every boxed element has exactly one entry, and no arrow has one.
+- **I3** the result is deterministic for the same input.
+- **O1** Each wrapper, palette theme only (D1, D2): `console.info`: `[theme-graph] <op> theme=<id> elements=<n> branches=<count>`.
+- **O2** `branchEntryFor`, empty palette (D2): `console.warn`: `[theme-graph] empty palette theme=<id>, painting trunk`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

@@ -115,6 +115,36 @@ compares that copy with the current tab. The api serves no diff.
 - Each view the api answers counts one anonymous `Agent·Viewed` event typed by the view's name
   ([Telemetry](../017-telemetry/telemetry.md)).
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E2** Unlabelled element: Kind word and ref only.
+- **E4** Overlapping containers: Smallest area holding the centre; equal areas, the earlier.
+- **E5** Element larger than a frame it overlaps: Not nested (strict area).
+- **E7** Hidden layer: Left out, counted `· n hidden`; arrows to hidden elements counted with them.
+- **E10** Self-loop: `→ <own ref>`.
+- **E17** Prefix ambiguous after a collaborator's add: 400 `target_ambiguous`, `stale: true`, candidates; never a guess.
+- **E18** Ref of a deleted element: 404 `target_not_found` with nearest refs; the message suggests `tab diff`.
+- **E22** Tab-scoped visitor asks `overview`: Out-of-scope tabs print `(out of scope)`; their bodies are never read.
+- **E23** Tab-scoped visitor asks a view of another tab: The GET's 404, unchanged.
+- **E25** Trashed document: The GET's 410, unchanged.
+- **E26** Table with ragged rows: Columns = the longest row's length; missing cells print empty.
+- **E28** Event-storming note with the `actor` notation: Kind word `es:actor`.
+- **I4** Every user-authored string a view prints passes through `jsonString`, `attrValue` or `cellText`, so no content
+  can start a line, fake a header or break a line's grammar.
+- **R4** An ambiguous prefix is refused with candidates, never guessed: `element-refs.test.ts`,
+  `apps/api/src/routes/document-views-route.test.ts`.
+- **R5** A prefix made ambiguous by an add says so: `element-refs.test.ts` (`stale`), `document-views-route.test.ts`.
+- **R7** Agent-added elements take label slugs, `-2` on a clash: `element-refs.test.ts`; `slug-id-roundtrip.test.ts`
+  (isValidTab, `applyElementDelta`); `packages/document/src/collab-index-rows.test.ts`.
+- **R23** `?view=` answers `text/plain`; overview on the document; no diff: `document-views-route.test.ts` (real SQLite:
+  gates, scope, 400s, `diff` refused, headers).
+- **R26** One `Agent·Viewed` event per answered view: `document-views-route.test.ts`;
+  `packages/api-schema/src/telemetry-schema.test.ts`; `apps/telemetry` catalogue suite.
+- **R27** `show selected`: the owner's selection, tab order, refusals:
+  `packages/document-views/src/show-selected.test.ts`, `document-views-route.test.ts`, `room-client.test.ts`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

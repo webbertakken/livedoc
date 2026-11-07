@@ -213,6 +213,15 @@ The MCP server and the REST API take the six kinds with `conceptRows`, `pyramidV
 animation fields. Rows are kept to the kind's own range, as the menu keeps them: past the most, the rest are dropped,
 and short of the fewest, rows named as Add names them ("Step 3") are added, so every later edit takes.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I1** row count within the kind's bounds after any write.
+- **I2** canvas and export place every row from the same layout call.
+- **I3** a stored `conceptAnim` the kind does not offer (flow on a stack) renders as none, and `withConceptAnim` never
+  writes one: a pick across kinds lands only on those that offer it.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

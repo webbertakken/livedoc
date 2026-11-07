@@ -173,6 +173,12 @@ Specified in the research and not built yet:
 **Participant** is this access level. The `participants` table and its records are a person's **display identity**
 (name, colour, picture); prose calls them that, never "participant" ([Domain language](../003-system-architecture/domain-language.md)).
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I2** Every reader parses through `parseStoredLevel`: an unknown level reads as `view`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

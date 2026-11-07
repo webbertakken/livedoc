@@ -57,6 +57,12 @@ a mind node allows it; a Viewer looks. The role line edits only for an Editor.
 The MCP server and the REST API take a mind node with `mindLook: 'person'` and `pageSubtitle`; an agent drawing an org
 chart lays out mind nodes with `mindParentId` and the Downward flow on the root.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I1** every node grown in a person map is a person node.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

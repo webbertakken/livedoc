@@ -96,6 +96,16 @@ Self-hosters upgrade through both releases in order; the drop refuses to run whi
 Every write to docs.nu (the deploy, the D1 migrations, the drop) is Webber's to run.
 The plan's output, the exact commands and this rollback are put to him before each.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **G1** no D1 row: no move, room stays empty: `content-move.test.ts`.
+- **M1** no content served before moved; concurrent requests wait: `content-move.test.ts`.
+- **M2** a mismatch or throw leaves the room unchanged: `content-move.test.ts`.
+- **M3** D1 content tables unchanged after a move: `content-move.test.ts` (row hash before and after).
+- **M4** created and copied documents are born moved: `content-move.test.ts`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

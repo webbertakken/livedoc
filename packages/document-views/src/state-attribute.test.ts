@@ -7,7 +7,7 @@ const state = (kind: Parameters<typeof shapeAt>[0], extra: Record<string, unknow
     .map((a) => a.text)
     .join(' ');
 
-describe('stateAttributeOf (R14, VW22)', () => {
+describe('stateAttributeOf (VW22)', () => {
   it('counts the collaboration family', () => {
     expect(state('estimate', { responses: [{}, {}], responsesRevealed: true })).toBe(
       'votes=2 revealed',

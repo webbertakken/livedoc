@@ -132,6 +132,14 @@ The MCP server and the REST API take `badge` with `attachedTo` / `attachAt`; an 
 places the badge on its point when the board next loads (a stored `x` / `y` that disagrees with the point is
 settled on read).
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I1** after settling, an attached chip's centre is on its point (within 0.5 px).
+- **I2** no chip names a host that is missing from the tab after a commit.
+- **I3** a badge's size is `badgeSize` of its label after a commit.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

@@ -232,6 +232,20 @@ test fails when a verb is exposed by neither, or a tool's schema drifts from its
 | `HELP_RESOURCE_MAX_TOKENS` | 250   | A resource's verbs, a line each                                                          |
 | `HELP_VERB_MAX_TOKENS`     | 400   | Usage, flags, two examples                                                               |
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E11** A second `/callback` request (a refresh, a probe): answered 404 once the first valid one closed the server; a
+  wrong `state` answers 400 and keeps waiting.
+- **E13** The platform's tool is missing, or refuses a store: the file store, with the one-line notice. A stored
+  keychain token the tool cannot read back: exit 4, hint `livedoc auth login`.
+- **E14** `credentials.json` readable by group or others: stderr warning, mode set to 0600, read continues.
+- **E18** `push` of a file pulled from another host: exit 2.
+- **E20** A pull file edited into invalid JSON or an invalid tab: exit 1 naming the tab; nothing sent.
+- **E24** `export` meets the token read limiter (120 a minute): 429 answers are retried after 60 s, up to three times
+  per request, before exit 6.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

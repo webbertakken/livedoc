@@ -363,6 +363,22 @@ holds the base snapshots (the latest `SYNC_BASES_KEPT` per tab), the pending pro
 - Telemetry: category `Cli`, action `Used`, type the verb (`LinkInit`, `Sync`, `SyncWatch`, `LinkHooks`, `Unlink`), as every
   command ([CLI](../015-api/cli.md#telemetry)).
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E14** A tab changed between the overview read and the tab read: the tab read's `ETag` revision is recorded, so the
+  file says exactly what it holds.
+- **E17** `git mv` refusing (untracked file, index locked): falls back to `CliFiles.move`; a failure of both is
+  `transient`-like: the line names the error, exit 7, nothing else moves for that document.
+- **E18** `mirror.dir` a symbolic link out of the link root: `invalid_dir` (its real path is outside), exit 1.
+- **E20** A lock held by another machine sharing the directory (a network drive): never judged stale; exit 5 after
+  `SYNC_LOCK_WAIT_MS`.
+- **E24** A covered document with zero tabs: written with `"tabs": []`, its outline file holds the heading line only.
+- **E27** A document renamed, its deck edited, its tabs reordered or refiled, with no tab revision moving: `behind` by
+  `envelopeDiffers`; the mirror file is rewritten at its stable path and a `relocate` line follows when the name changed
+  the expected path.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

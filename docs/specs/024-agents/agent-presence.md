@@ -74,6 +74,29 @@ point. It becomes the Participant check when share roles land, and no route chan
 Logs `[agent-presence] set`, `[agent-presence] cleared`, `[agent-presence] expired` with the document, tab and token
 id. Telemetry: category `Agent`, action `Present`, type the front door, counted once when a `PUT` creates an entry.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E1** Presence without a token (session, guest): 403 `presence_requires_token`.
+- **E6** The room is full: 409 `agent_presence_full`; logged.
+- **E7** A refresh that fails or finds the room full: logged, the changeset stands.
+- **E12** A focused element removed later: no ring for it; the entry keeps the id until the next PUT.
+- **E21** A tab body that fails to parse during the list: skipped, logged `[comment] list skipped tab`.
+- **I1** An entry is never a session: it is absent from the frame's `participants`, from `/selections`, from the
+  editor's `livePresence`, from `multiplayerDecision`, from `rosterSummary`'s count, from the Done check's `doneSplit`
+  keys, from a roll call, a picker and every other reader of `livePresence`. Agents travel in their own array (PR14), so
+  this holds by construction.
+- **I2** An entry's name and colour are the token owner's participant record at its last set or refresh, never a value
+  from the request.
+- **I3** `expiresAt - now <= AGENT_PRESENCE_MAX_TTL_MS` at every write.
+- **I4** `personTag` and `tokenId` never leave the room on the wire; `joins` names only presence ids the recipient
+  already holds.
+- **I5** The room's one alarm is armed at the earliest of the facilitator grace deadline and every entry's `expiresAt`,
+  and cleared when there is neither (`armAlarm`, PR29).
+- **I7** A comment's `tokenId` is set by the server only, kept by every later save, and seen only by its author.
+- **I8** Every comment write increments the tab's `rev` through `upsertTabAtRev`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

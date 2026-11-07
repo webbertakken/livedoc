@@ -240,6 +240,12 @@ Changesets count against the token's write rate limit ([Public API and API token
   `Cli`, `Api`, or `Editor` for the toast's Undo) ([Telemetry](../017-telemetry/telemetry.md)). The toast's Show
   tracks `Agent` / `Opened` / `Toast`.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E21** Id collision on mint: the primary key refuses; one re-mint inside the same attempt (CS7).
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

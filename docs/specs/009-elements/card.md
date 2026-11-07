@@ -149,6 +149,13 @@ in-place lines render inert for a Participant and a Viewer.
 The MCP server and the REST API take `card` with these fields. An agent building an architecture diagram uses cards
 for its service nodes: title the service, meta line the product or runtime, tags for the facts.
 
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I1** `tags` has at most 6 entries, each at most 32 characters, after any write.
+- **I2** after `migrateStoredElements`, no element is a `callout`.
+
 ## Defaults
 
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.

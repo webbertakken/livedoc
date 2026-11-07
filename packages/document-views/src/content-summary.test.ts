@@ -6,7 +6,7 @@ import { contentSummaryOf } from './content-summary';
 const shape = (kind: Parameters<typeof shapeAt>[0], extra: Record<string, unknown>) =>
   ({ ...shapeAt(kind, 'x', 0, 0), ...extra }) as Element;
 
-describe('contentSummaryOf (R14)', () => {
+describe('contentSummaryOf', () => {
   it("lists an entity's first 8 fields and counts the rest, escaping ; and }", () => {
     const fields = Array.from({ length: 10 }, (_, i) => ({
       name: `f${i}`,
