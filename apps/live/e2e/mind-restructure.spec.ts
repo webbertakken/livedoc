@@ -116,7 +116,7 @@ test('Shift+click Add Child keeps the node selected; Add Parent goes above a nod
   const addChild = page.getByRole('button', { name: 'Add Child', exact: true }).first();
   await addChild.click({ modifiers: ['Shift'] });
   await addChild.click({ modifiers: ['Shift'] });
-  let els = await savedElements(
+  const els = await savedElements(
     page,
     (e) => e.filter((x) => x.mindParentId === 'root').length === 3,
   );
@@ -126,7 +126,7 @@ test('Shift+click Add Child keeps the node selected; Add Parent goes above a nod
   await page.getByRole('button', { name: 'Add Parent', exact: true }).click();
   await page.keyboard.type('Style');
   await page.keyboard.press('Escape');
-  els = await savedElements(page, (e) => {
+  await savedElements(page, (e) => {
     const kid = e.find((x) => x.id === 'kid');
     const above = e.find((x) => x.id === kid?.mindParentId);
     return above?.mindParentId === 'root' && above.label === 'Style';
