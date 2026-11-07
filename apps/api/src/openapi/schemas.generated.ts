@@ -11243,11 +11243,20 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       mindFlow: {
         $ref: '#/components/schemas/MindFlow',
       },
+      mindGroup: {
+        type: 'string',
+      },
       mindLook: {
         $ref: '#/components/schemas/MindLook',
       },
+      mindNumbered: {
+        type: 'boolean',
+      },
       mindParentId: {
         $ref: '#/components/schemas/ElementId',
+      },
+      mindPlaced: {
+        type: 'boolean',
       },
       mindSpacing: {
         $ref: '#/components/schemas/MindSpacing',
