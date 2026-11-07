@@ -1,5 +1,5 @@
 // Building the LiveDoc element for a classified draw.io vertex
-// (docs/specs/020-import-export/blueprints/drawio-import.md steps 9-14):
+// (docs/specs/020-import-export/drawio-import.md steps 9-14):
 // shapes, text, notes, lines, images, icons, frames and labelled boxes.
 // Containers with a meaning (lanes, entities, tables) live in containers.ts.
 
@@ -107,7 +107,7 @@ function buildText(cell: DrawioCell, rect: Rect, ctx: PageContext, id: string): 
 }
 
 // A note keeps a sticky's colours: its fill (before the paper rule) as the nearest sticky preset,
-// with that preset's ink unless the label has a colour of its own (blueprint step 10.13).
+// with that preset's ink unless the label has a colour of its own (.13).
 function buildSticky(cell: DrawioCell, rect: Rect, ctx: PageContext, id: string): StickyElement {
   const { strokeColor, opacity, rotation, shadow, locked, link, note } = boxedProps(cell, ctx);
   const own = hexOf(cell.style.str('fillColor'));
@@ -257,7 +257,7 @@ function captionWidth(lines: string[], textSize: TextSize | undefined, scale: nu
 
 // An icon or actor carries its label OUTSIDE its figure in draw.io (below by
 // default); LiveDoc keeps the caption inside the element's box, beside the
-// figure. So the box grows by the caption towards its side (blueprint step 14):
+// figure. So the box grows by the caption towards its side ():
 // by a line per line above or below, widening about its centre to hold the
 // longest line unwrapped, or by the line's width beside it.
 function captionBox(

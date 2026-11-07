@@ -164,3 +164,15 @@ An open box's cards can be **scattered to sticky notes** in one action, which
 is what a retro does next: the cards become ordinary elements that group, move,
 theme and get dot-voted ([Session tools (timer + voting)](session-tools.md)) like anything else. They are created without
 authorship, so the scatter doesn't undo the anonymity that was the point.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **IB1** Which of several pending own cards comes out for a peer card: The newest one still in the box, so the earlier
+  post (numbered first by the room) stays (default).
+- **IB2** How an id-less entry is written beside id-carrying ones: `''`, so `ideaCardIds` stays aligned by position with
+  `ideaCards` (default).
+- **IB3** Where the refused-post notice shows: The editor's error toast, as the Q&A board's refused note (default).
+- **IB4** How long an id may be: 64 characters (`IDEA_CARD_ID_MAX`), the room's other id bound; a UUID is 36 (default).

@@ -17,7 +17,7 @@ import { useChangesetFeed } from './useChangesetFeed';
 import { createRemoteOpJournal } from './save-baseline';
 import type { ToastActionSpec } from '@/hooks/ui/useToast';
 
-// What an editor does with a relayed changeset (docs/specs/024-agents/blueprints/agent-changesets.md
+// What an editor does with a relayed changeset (docs/specs/024-agents/agent-changesets.md
 // "The editor"): apply, refetch, outline, toast, Show and Undo.
 
 const op = (over: Partial<ChangesetRoomOp> = {}): ChangesetRoomOp => ({

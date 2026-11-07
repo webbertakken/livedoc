@@ -243,3 +243,30 @@ authors them, and a rename in the dialog renames every flow and the node's colou
 - **Telemetry**: `track('Element', 'Added', 'Sankey')` on create; `track('Element', 'Changed', 'SankeyFlows'
 | 'SankeyStyle' | 'SankeyAnim')` on edits.
 - **Help**: a Sankey Diagram article under Build Elements.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D154** What a new Sankey shows: A household budget: Salary 3,200 and Side Work 800 into Budget; Budget to Needs
+  2,000, Wants 1,200, Savings 800; Needs to Rent 1,400, Groceries 600 (default).
+- **D155** Starting size: 560 × 300 (default).
+- **D156** "Translucent", "lifts", "fade back": Band fill-opacity 0.42 at rest, 0.78 lit, 0.10 dimmed; unlit nodes 0.35;
+  150 ms ease-out (default).
+- **D157** The Grey band colour: `#94a3b8` (slate-400), readable on light and dark paper (default).
+- **D158** Label sizes per Text Size: 10 / 12 / 15 px; `scale` reads as 12 (default).
+- **D159** Node bar width and column gap: Width `clamp(area.w / max(4, columns * 6), 6, 12)`; gap `clamp(area.h * 0.3 / (fullest - 1), 4, 18)`
+  (default).
+- **D160** "A few sweeps": 6 sweeps each way, `alpha = 0.99^sweep`, weight `value * column span` (default).
+- **D161** Animation timing: Grow: 0.9 s clip reveal, `cubic-bezier(0.22, 1, 0.36, 1)`, once; Flow: dash `6 18` marching
+  48 units per 1.4 s, looping; both scaled by speed (default).
+- **D162** How label widths are known headless: Characters × 0.6 em (name) / 0.56 em (amount) (default).
+- **D163** Inline amount threshold: A node shorter than 2.4 × label px puts its amount on the name's line (default).
+- **D164** The dialog preview's size: 300 px wide; height `clamp(300 * h / w, 150, 260)` (default).
+- **D165** How amounts print: At most two decimals, trailing zeros dropped, thousands grouped with commas; `$ £ € ¥ ₹ ₩ ₽ ₺ ₪ ฿ R$ A$ C$`
+  before, other units after a space (default).
+- **D166** How percentages print: Whole percent, one decimal under 10 %, `<0.1%` for a real share under 0.1 % (default).
+- **D167** Hovering a thin band: The hover target is at least 8 px thick; a node's at least 8 px tall and 3 px wider
+  each side (default).
+- **D168** Empty-state copy: "No flows yet." plus "Double-click to add flows." for someone who may edit (default).

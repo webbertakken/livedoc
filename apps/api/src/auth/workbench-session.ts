@@ -1,4 +1,4 @@
-// Workbench secrets and the `lvw_` bearer (docs/specs/013-workspace/blueprints/workbench-embeds.md "Redemption"
+// Workbench secrets and the `lvw_` bearer (docs/specs/013-workspace/workbench-embeds.md
 // and "A request bearing lvw_"). A ticket and a pairing code are 16 random bytes; a session is `lvw_` and 32.
 // Tickets and sessions are stored as SHA-256 hex only; a pairing code is a public handle stored in the clear.
 

@@ -1,5 +1,5 @@
-// The MCP server's tools as verbs (docs/specs/015-api/cli.md "One catalogue for the CLI and the MCP", blueprint
-// "The verb"): each tool is its own verb, holding its tool name, title, description, behaviour and its input and
+// The MCP server's tools as verbs (docs/specs/015-api/cli.md "One catalogue for the CLI and the MCP"): each
+// tool is its own verb, holding its tool name, title, description, behaviour and its input and
 // output schemas as the MCP has always published them. The MCP registers every tool from its verb (apps/mcp
 // tools.ts), and a parity test fails when a registered tool and its verb disagree. The handlers stay in the MCP.
 

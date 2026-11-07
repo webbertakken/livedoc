@@ -1,4 +1,4 @@
-// Named refusals and their text (docs/specs/024-agents/blueprints/edit-operations.md "Errors and
+// Named refusals and their text (docs/specs/024-agents/edit-operations.md "Errors and
 // edge cases"). Each builder returns the wire `EditRejection`; `formatRejections` prints a block of
 // them, ending `nothing was applied`.
 

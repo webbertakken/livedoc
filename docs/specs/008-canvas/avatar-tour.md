@@ -93,3 +93,11 @@ The Sketch tour's funnel, with its own tokens:
 
 [Power user mode](../007-editor/power-user-mode.md) marks the Avatar tour seen alongside the Diagram, Plan,
 Workshop and Sketch tours.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D112** Which avatar-tour targets carry which ids: `avatar-button`, `avatar-character`, `avatar-actions`,
+  `avatar-message`, `avatar-self`, one per step (default).

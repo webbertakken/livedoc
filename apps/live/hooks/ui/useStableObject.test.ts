@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useStableObject } from './useStableObject';
 
-// docs/specs/008-canvas/blueprints/selection-store.md "The canvas boundary": an object prop the
+// docs/specs/008-canvas/canvas-performance.md: an object prop the
 // editor rebuilds per render (data plus actions) keeps its identity until its data changes.
 
 type Bag = { count: number; label?: string; act?: (n: number) => number };

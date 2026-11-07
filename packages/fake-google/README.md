@@ -5,7 +5,7 @@ uses (files, folders, parents, the bin, `changes.list` with page tokens,
 `appProperties`, `md5Checksum` / `headRevisionId`, multipart and resumable
 uploads, `fields` and `q`) and the OAuth token and revoke endpoints
 (`invalid_grant` included). See
-[docs/specs/022-drive-mirror/blueprints/drive-mirror.md](../../docs/specs/022-drive-mirror/blueprints/drive-mirror.md).
+[docs/specs/022-drive-mirror/drive-mirror.md](../../docs/specs/022-drive-mirror/drive-mirror.md).
 
 - `new FakeGoogle()` then `fake.handle(request)` answers any Google request;
   pass `fake.fetch` wherever code takes a `fetch`.

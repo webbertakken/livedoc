@@ -1,4 +1,4 @@
-// Who is creating a document from the New Document menu (docs/specs/013-workspace/blueprints/new-document-menu.md
+// Who is creating a document from the New Document menu (docs/specs/013-workspace/new-document-menu.md
 // "Steps of startNewDocument"): the Explorer shell binds the person it has already settled, so a start never waits on
 // identity. Nobody bound (not on the Explorer, or a guest's signed id not resolved yet) sends the start to /new.
 export type NewDocumentCreator = {

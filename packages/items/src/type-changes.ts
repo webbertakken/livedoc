@@ -44,7 +44,8 @@ import {
   type TabInput,
 } from './type-change-face';
 
-// A new type's starting look and fields (blueprints/DEFAULTS.md D10): what the type editor's Add Type opens on.
+// A new type's starting look and fields (docs/specs/026-plan/item-types.md D10): what the type editor's Add
+// Type opens on.
 export const NEW_ITEM_TYPE: Omit<ItemTypeDef, 'id' | 'newTitle'> = {
   label: '',
   color: PLAN_TYPE_COLOURS[11],

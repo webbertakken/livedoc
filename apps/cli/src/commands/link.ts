@@ -1,5 +1,5 @@
-// `link init`, `link status` and `link ls` (docs/specs/027-repositories/repository-link.md "Commands"; blueprint
-// "`link init`", "`link status` and `link ls`"), and finding the links a command acts on, checked against the
+// `link init`, `link status` and `link ls` (docs/specs/027-repositories/repository-link.md "Commands"), and
+// finding the links a command acts on, checked against the
 // profile's host before any request (RL5).
 
 import { posix } from 'node:path';

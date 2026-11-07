@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// Settings > API tokens' paired workbenches (docs/specs/013-workspace/blueprints/workbench-embeds.md
+// Settings > API tokens' paired workbenches (docs/specs/013-workspace/workbench-embeds.md
 // "Settings > API tokens", WB46): one list read, grouped by token, and Unpair removing the row once it lands.
 import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
 import type { WorkbenchPairing } from '@livedoc/api-schema';

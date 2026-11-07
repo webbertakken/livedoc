@@ -177,3 +177,19 @@ somebody who asked for less motion loses nothing by getting a picture of it.
 Like every Behaviour element ([Session tools (timer + voting)](../012-collaboration/session-tools.md)): a dot vote turns a press into a dot,
 and a pad that is both "set this off" and "put a dot here" would mean whichever
 one a running vote happened to make it. Controls, not candidates.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D127** How long a burst may run: `BURST_MS = 2600` hard stop (default).
+- **D128** How long the reduced-motion frame stays: 900 ms, then the surface unmounts (default).
+- **D129** Burst size and randomness: Scale `width / 150`, clamped to `[0.55, 3]`; seeded LCG from a per-client sequence
+  (default).
+- **D130** When a burst is not broadcast: Cursors hidden, not hydrated, or a document neither shareable nor in a team:
+  local burst only (default).
+- **D131** Label after switching the reaction: Unchanged; only a placed pad takes `REACTION_PAD_LABEL` (default).
+- **D132** A received burst for another tab: Stored and never drawn (see GF9) (default).
+- **D146** "Bobs gently", "lifts", "throws a ring": `pad-bob` 2.8 s at 4% of the emoji; hover `translateY(-6%) scale(1.08)`
+  and `brightness(1.08)`; press `scale(0.9, 0.84)` and a 600 ms `pad-ring` (default).

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { STACK_STEP, ISO_COS } from './brand-mark-geometry';
 
-// The logo's press (docs/specs/004-interface-design/blueprints/brand-motion.md "Press"): the sheets draw a little
+// The logo's press (docs/specs/004-interface-design/brand-mark.md): the sheets draw a little
 // toward the page and the art a touch smaller, then ease back. Small and quick, no overshoot.
 export const BRAND_PRESS_IN_MS = 90;
 export const BRAND_PRESS_OUT_MS = 160;

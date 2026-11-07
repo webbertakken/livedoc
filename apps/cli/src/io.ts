@@ -1,4 +1,4 @@
-// Everything the CLI touches outside itself (docs/specs/015-api/blueprints/cli.md "Testing"): streams, the
+// Everything the CLI touches outside itself (docs/specs/015-api/cli.md): streams, the
 // environment, files, the network and the clock, injected so every command runs on fakes in tests.
 
 export type CliFiles = {
@@ -23,7 +23,7 @@ export type CliFiles = {
   realpath: (path: string) => Promise<string | null>;
 };
 
-// The room socket `wait` and `watch` listen on (blueprint "The room stream"): text frames in, a close code out.
+// The room socket `wait` and `watch` listen on: text frames in, a close code out.
 export type RoomSocket = {
   onOpen(handler: () => void): void;
   onMessage(handler: (data: string) => void): void;
@@ -74,7 +74,7 @@ export type CliIo = {
 
 export type ToolRun = { code: number; stdout: string };
 
-// A one-shot HTTP listener on 127.0.0.1 for the browser sign-in's callback (blueprint "The CLI's OAuth client").
+// A one-shot HTTP listener on 127.0.0.1 for the browser sign-in's callback.
 export type LoopbackRequest = {
   path: string;
   query: URLSearchParams;

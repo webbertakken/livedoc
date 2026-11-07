@@ -5,7 +5,7 @@ import { mirrorFileText, type MirrorFile } from './mirror-file';
 import { scanMirrorDir } from './mirror-scan';
 import { sha256 } from '../sync/pull-file';
 
-// Scanning the mirror directory (docs/specs/027-repositories/blueprints/repository-link.md "Scanning the mirror
+// Scanning the mirror directory (docs/specs/027-repositories/repository-link.md "Scanning the mirror
 // directory"): every *.livedoc.json under dir, classified in order.
 
 const HOST = 'https://docs.nu';

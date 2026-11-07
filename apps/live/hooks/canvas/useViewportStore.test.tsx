@@ -10,7 +10,7 @@ import {
   useViewportStore,
 } from './useViewportStore';
 
-// docs/specs/008-canvas/blueprints/viewport-store.md "Inside the canvas".
+// docs/specs/008-canvas/canvas-performance.md.
 
 describe('useViewportOf', () => {
   it('re-renders a reader only when its slice of the view changes', () => {

@@ -1,7 +1,7 @@
 import { CHANGESET_TOAST_COALESCE_MS, type ChangesetRoomOp } from '@livedoc/api-schema';
 
 // The toast one person's (or one agent's) burst of changesets raises
-// (docs/specs/024-agents/blueprints/agent-changesets.md "The editor", "Presentation and UX"). Pure:
+// (docs/specs/024-agents/agent-changesets.md). Pure:
 // the hook owns the clock and the toast stack.
 
 export type ChangesetToast = {

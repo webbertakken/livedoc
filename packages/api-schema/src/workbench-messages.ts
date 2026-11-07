@@ -1,5 +1,5 @@
-// Workbench messages (docs/specs/013-workspace/workbench-embeds.md "Workbench messages", blueprint
-// "Workbench messages"): the `postMessage` vocabulary between the workbench page and the tool framing
+// Workbench messages (docs/specs/013-workspace/workbench-embeds.md "Workbench messages"): the `postMessage`
+// vocabulary between the workbench page and the tool framing
 // it. Every message is `{ type, v: 1, ... }`; every field is validated and bounded on arrival, so a
 // workbench can parse what the page sends with the same function the page parses what it receives.
 
@@ -40,7 +40,7 @@ export type SelectionMessage = {
   documentName: string;
   tabId: string;
   rev: number;
-  // 0 when nothing is selected; `reference` then reads `whole tab` (blueprint WB28).
+  // 0 when nothing is selected; `reference` then reads `whole tab` (WB28).
   count: number;
   reference: string;
 };
@@ -105,7 +105,7 @@ export const WORKBENCH_MESSAGE_TYPES = [
 // type travelling the other way is not one this side takes, so it reads as ignored.
 export type WorkbenchMessageDirection = 'to-page' | 'to-workbench';
 
-// A ref the workbench asks to reveal: an element ref the agent printed (blueprint: 1 to 64 characters).
+// A ref the workbench asks to reveal: an element ref the agent printed (safe range: 1 to 64 characters).
 const REF_MAX_LENGTH = 64;
 // How much of an ignored message's type reaches a log line.
 const IGNORED_TYPE_MAX_LENGTH = 64;

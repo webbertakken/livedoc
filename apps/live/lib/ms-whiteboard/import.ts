@@ -37,7 +37,7 @@ export const MESSAGES = {
 
 const label = (dir: string) => dir.split('/').pop() || dir;
 
-/** Newest first, then by title (blueprint default M4). */
+/** Newest first, then by title (docs/specs/020-import-export/whiteboard-import.md M4). */
 function byRecency(a: BoardSummary, b: BoardSummary): number {
   const ma = a.dates.modifiedAt ?? '';
   const mb = b.dates.modifiedAt ?? '';

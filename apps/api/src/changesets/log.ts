@@ -1,6 +1,6 @@
 import type { EditLog } from '@livedoc/edit-operations';
 
-// The changeset log lines (docs/specs/024-agents/blueprints/agent-changesets.md "Observability"):
+// The changeset log lines (docs/specs/024-agents/agent-changesets.md):
 // one recognisable fingerprint each, with the document, the tab, the changeset id and counts, never
 // content.
 

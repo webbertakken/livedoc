@@ -11,7 +11,7 @@ import {
   type FakeWorkbench,
 } from './workbench-support';
 
-// The workspace scope end to end (docs/specs/013-workspace/blueprints/workbench-embeds.md "Testing"): a fake
+// The workspace scope end to end (docs/specs/013-workspace/workbench-embeds.md): a fake
 // workbench on http://127.0.0.1:<port> frames the Explorer of the live app on http://localhost:<port>. A document
 // pairing does not reach the workspace: the workspace is its own approval, asked in its own words. Then the frame
 // shows the Explorer without the app's surroundings, opens documents in place with Back, makes a new document in

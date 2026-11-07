@@ -1,5 +1,5 @@
 // POST /api/migrate: a guest's data moves into the account it signed in to (docs/specs/014-identity/
-// auth-and-guest-access.md "Guest → account upgrade"; blueprint "Guest migration").
+// auth-and-guest-access.md "Guest → account upgrade").
 
 import { isAccountIdShape } from '@livedoc/api-schema';
 import { verifyOwnerId } from '../auth/owner-signature';

@@ -37,7 +37,7 @@ type EditorSelectionActionsDeps = {
   // marquee bag).
   currentSelectionIds: () => Set<string>;
   // The single-selected element id (null in multi-select / none).
-  // Read when an action runs (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when an action runs (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   // The marquee multi-selection bag.
   // The active tab — read for its element list.

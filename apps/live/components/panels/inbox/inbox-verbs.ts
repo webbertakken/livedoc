@@ -1,4 +1,4 @@
-// The reading pane's verbs (docs/specs/013-workspace/inbox.md §1.5; blueprint inbox.md "Interfaces and contracts"):
+// The reading pane's verbs (docs/specs/013-workspace/inbox.md §1.5):
 // which a row is offered, so no page shows a verb it can't carry out, and the comment calls behind Reply and
 // Resolve. Open is not among them: every row has it.
 

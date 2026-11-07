@@ -5,7 +5,7 @@ import { contextOf, DOC_A, fakeApi, tabsOfA } from '../testing/fake-api';
 import { commentAdd, commentLs, commentReopen, commentReply, commentResolve } from './comment';
 import { presenceClear, presenceSet } from './presence';
 
-// docs/specs/015-api/cli.md "Commands" (comment, presence), blueprint "Addressing" (CLI78).
+// docs/specs/015-api/cli.md "Commands" (comment, presence) (CLI78).
 
 const TAB = `/documents/${DOC_A}/tabs/tab-one-0000`;
 const box = (id: string, comments: string[] = []) => ({

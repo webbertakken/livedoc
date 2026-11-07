@@ -68,7 +68,7 @@ export function useElementCreation(opts: {
   activeTab: Tab;
   // The single-selected element id, so "add an icon" can drop it INSIDE
   // a selected shape instead of creating a standalone icon element.
-  // Read where an add acts on the selection (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read where an add acts on the selection (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   commitTabs: (updater: (tabs: Tab[]) => Tab[]) => void;
   setSelectedId: SetState<string | null>;

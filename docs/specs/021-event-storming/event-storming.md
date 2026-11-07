@@ -1810,3 +1810,25 @@ The catalogue is pinned at **148 templates (11 default + 137 extra)**:
 `templates.test.ts`, [Canvas and palette](../008-canvas/canvas-and-palette.md), [Marketing site](../019-marketing/marketing-site.md), [Marketing assets](../019-marketing/marketing-assets.md), the marketing FAQ +
 landing copy, and the help centre's templates article all moved
 together with this addition.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** Which note of a selection "the first workshop note" is: The first workshop note among the drag's moved ids, in
+  the order the drag captured them (default).
+- **D2** Which note decides a selection's lane step on arrow keys: The single selection when it is a workshop note, else
+  the first workshop note in document order (default).
+- **D3** Whether the settle moves a note on a hidden layer: Yes: hidden is not pinned; only `locked` notes stay
+  (default).
+- **D4** How close to a lane centre counts as on it: `LANE_EPSILON = 0.5` canvas px (default).
+- **D5** Where a row starts and ends: A box joins the row while its centre is less than half a lane height below the
+  row's first centre (default).
+- **D6** Non-finite coordinates: Passed through unchanged; validation owns them (default).
+- **D7** Which note of a photo column sets its left edge: The top-most member; ties by id (default).
+- **D8** What "centred on the pointer" means for several notes: The centre of the boxed elements' bounding box
+  (default).
+- **D9** Which MCP notes are arriving: New ids, and workshop notes whose `x` or `y` an op changed; in replace mode,
+  every workshop note (default).
+- **D10** Settle toast copy: "Lined up N notes on the lanes." (singular for one) (default).

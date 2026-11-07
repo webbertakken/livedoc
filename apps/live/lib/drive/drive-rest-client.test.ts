@@ -5,7 +5,7 @@ import { DRIVE_MULTIPART_MAX_BYTES } from './cadence';
 import { DriveApiError } from './drive-client';
 import { createDriveRestClient } from './drive-rest-client';
 
-// The REST client against the fake Google (docs/specs/022-drive-mirror/blueprints/drive-mirror.md,
+// The REST client against the fake Google (docs/specs/022-drive-mirror/drive-mirror.md,
 // "DriveClient").
 
 function setup() {

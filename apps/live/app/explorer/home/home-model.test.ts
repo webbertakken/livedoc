@@ -13,7 +13,7 @@ import {
   type JumpBackInSet,
 } from './home-model';
 
-// Home's pure view model (docs/specs/013-workspace/blueprints/explorer-home-view.md).
+// Home's pure view model (docs/specs/013-workspace/explorer-home.md).
 
 // August: newer ICU writes September "Sept". Local times, so the day maths reads the same in any time zone the suite runs in.
 const at = (d: number, h = 12, m = 0) => new Date(2026, 7, d, h, m).getTime();

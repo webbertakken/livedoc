@@ -7,7 +7,7 @@ import { DocumentDb } from './document-db';
 import { DRAIN_TABS, drainOutbox, PUSH_CONCURRENCY } from './document-outbox';
 import { migrateDocumentSchema } from './document-schema';
 
-// The drain (docs/specs/006-document/blueprints/document-storage.md "The outbox"): its bounds, its concurrency, its
+// The drain (docs/specs/006-document/document-storage.md "The outbox"): its bounds, its concurrency, its
 // retry, a key written again during a drain, and G2 (nothing lands in D1 once the document's row is gone). The room's
 // SQLite and D1 are separate databases here, as they are in production.
 

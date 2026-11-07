@@ -8,7 +8,7 @@ vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
 // The zoom buttons step from the zoom as it is when pressed, and keep their identity across zooms,
 // so the chrome holding them does not render for a zoom
-// (docs/specs/008-canvas/blueprints/viewport-store.md "Inside the canvas").
+// (docs/specs/008-canvas/canvas-performance.md).
 
 describe('useZoomControls', () => {
   it('steps from the current zoom, read when pressed', () => {

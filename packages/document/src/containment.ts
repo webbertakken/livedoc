@@ -129,7 +129,7 @@ export function isContainer(el: Element): boolean {
   return el.type === 'shape' && isContainerKind(el.shape);
 }
 
-// What travels with moved containers (docs/specs/024-agents/blueprints/edit-operations.md "Carry"): `ids`
+// What travels with moved containers (docs/specs/024-agents/edit-operations.md): `ids`
 // itself, every element whose chain of holders reaches a container in `ids` (a nested frame or lane with
 // all it holds), and every arrow whose free ends all lie, as points, in such a container. Pinned ends
 // follow their elements. `ids` unchanged when none of them is a container.

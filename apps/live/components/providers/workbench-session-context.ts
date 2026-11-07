@@ -1,6 +1,6 @@
 'use client';
 
-// The workbench session the page runs under (docs/specs/013-workspace/blueprints/workbench-embeds.md
+// The workbench session the page runs under (docs/specs/013-workspace/workbench-embeds.md
 // "The editor in a workbench", "The workspace frame"): provided by WorkbenchAuthBridge on /embed/workbench, null
 // everywhere else. A document-scope session names its document; a workspace session names none at the frame's
 // level, and the frame provides a session naming the open document around the editor it shows. The editor reads

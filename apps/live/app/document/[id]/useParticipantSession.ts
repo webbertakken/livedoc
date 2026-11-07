@@ -4,7 +4,7 @@ import { participantTabChange, type Tab } from '@livedoc/document';
 import { debugLog } from '@/lib/debug-log';
 import { resolveEditorCapabilities } from '@/lib/editor-capabilities';
 
-// A Participant's session in the editor (docs/specs/013-workspace/share-roles.md; blueprint "Editor state"):
+// A Participant's session in the editor (docs/specs/013-workspace/share-roles.md):
 // its adder key, handed over with its room ticket; what it may do (`can`); and the one guard every element
 // commit passes through, so a gesture the room would refuse never lands on screen. An Editor and a Viewer pass
 // through untouched: an Editor's commit is never checked, and a Viewer's never reaches here.

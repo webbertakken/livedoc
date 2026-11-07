@@ -1,11 +1,11 @@
-// A bug report as the browser sends it (docs/specs/016-platform/bug-reports.md, blueprint "Interfaces and contracts"):
+// A bug report as the browser sends it (docs/specs/016-platform/bug-reports.md):
 // the submission, the context the browser attaches by itself, an opt-in screenshot, and the bounded parsers the api
 // runs on all of it. The editor builds the same shapes, so both read one definition.
 import { EDITOR_MODES, TAB_KINDS, type EditorMode, type TabKind } from '@livedoc/document';
 import { ACCESS_LEVELS, type AccessLevel } from './access-levels';
 import { isValidPageViewPath } from './page-views';
 
-// Every bound a report is held to (blueprint "Constants and configuration").
+// Every bound a report is held to.
 export const BUG_REPORT_LIMITS = {
   title: 200,
   details: 5000,

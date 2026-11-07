@@ -1,4 +1,4 @@
-// Names and outlines made safe in the generated Markdown (docs/specs/027-repositories/blueprints/repository-link.md
+// Names and outlines made safe in the generated Markdown (docs/specs/027-repositories/repository-link.md
 // "INDEX.md", RL32): names escaped, code spans and fences one backtick longer than the longest run inside.
 
 const longestRun = (text: string) =>

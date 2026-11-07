@@ -231,3 +231,217 @@ test fails when a verb is exposed by neither, or a tool's schema drifts from its
 | `HELP_TOP_MAX_TOKENS`      | 520   | Top-level help measured at 380; room to grow, not to sprawl (raised from 500 for `form`) |
 | `HELP_RESOURCE_MAX_TOKENS` | 250   | A resource's verbs, a line each                                                          |
 | `HELP_VERB_MAX_TOKENS`     | 400   | Usage, flags, two examples                                                               |
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **CLI1** What the workspace calls the app, and the name npm publishes it under: Workspace `@livedoc/cli` (private);
+  `build.mjs` writes `dist/package.json` under the same name, published as `@livedoc/cli` in the `livedoc` npm
+  organisation (the unscoped `livedoc` and the `livedocs` scope belong to others) with the command `livedoc`; CI
+  publishes from `dist`, outside the workspace globs; `NPM_PACKAGE` and `UPGRADE_HINT` in
+  `apps/cli/src/config/version.ts` name it in every hint (default).
+- **CLI2** How the one ESM file is built: esbuild (already the root's), `platform: node`, `target: node22`,
+  `#!/usr/bin/env node`, to `dist/livedoc.mjs`; render code reached only through `import()` so it is evaluated only when
+  a render runs (default).
+- **CLI3** How CI publishes with provenance: `.github/workflows/cli-publish.yml` on push to main when
+  `apps/cli/package.json`'s version changes, and by hand; npm trusted publishing (OIDC, `id-token: write`) with
+  `--provenance --access public`; skipped when that version is already on npm; every PR runs `npm pack --dry-run` on
+  `dist` (default).
+- **CLI4** Which keychain, and how a missing one degrades: The platform's own tool, no native code: macOS `security -i`
+  (the add command on stdin), `secret-tool store` (the token on stdin), Windows PowerShell `ConvertFrom-SecureString`
+  (DPAPI, the token on stdin, the blob kept in the file); service `livedoc`, account the profile name; a missing or
+  refusing tool stores in the file with one notice (default).
+- **CLI5** Where cache and state live, and whether XDG variables count: Config in `$XDG_CONFIG_HOME/livedoc` else
+  `~/.config/livedoc`; cache and state in `$XDG_CACHE_HOME/livedoc` else `~/.cache/livedoc` (default).
+- **CLI6** How `config.toml` is parsed: Read by hand in `apps/cli/src/config/config-file.ts`: top-level `key = value`
+  lines and `[profiles.<name>]` tables, strings quoted, booleans bare; a line that does not read is a usage error naming
+  the file and line; unknown keys ignored and logged under debug.
+  The link file needs a full parser (RL1) (default).
+- **CLI7** How flags, env and config combine, and what `--host` alone means: Flags over env over `default_profile` over
+  a built-in profile `default` at `https://docs.nu`; `--host` with `--profile` is exit 2; `--host` alone picks the first
+  profile with that host, else an unnamed profile with no stored credential (default).
+- **CLI8** How long capabilities are trusted: One hour per profile in `<cache>/capabilities/<profile>.json`, so a raised
+  floor lands within the hour (default).
+- **CLI9** Where the api base comes from: The api answers `${url.origin}/api` from the request (the router forwards
+  `/api` as is), so no new variable (default).
+- **CLI10** What the new api settings are called: `OAUTH_ISSUER` in the hosted profile (`hosted-vars.json`),
+  `CLI_MIN_VERSION` in `[vars]`; unset or malformed leaves the field out (default).
+- **CLI11** What "whether sign-in exists" reads: `authEnabled` is true when sign-in is on (`identityConfigOf`), the same
+  gate tokens use (default).
+- **CLI12** How versions compare: Numeric major, minor, patch; a prerelease suffix is ignored (default).
+- **CLI13** Which commands the floor refuses, and with which exit: Verbs whose behaviour is `write` or `destructive` and
+  that reach the api (`api` with a method other than GET included); exit 1 (default).
+- **CLI14** Which answers map to which exit code: 400, 405, 413, 422 to 1; 401, 403 to 4; 404, 410 to 3; 409, 412 to 5;
+  429 to 6; 5xx, timeout, network to 7 (default).
+- **CLI15** Whether a bad flag value is a usage error or a rejection: Unknown words or flags, missing positionals and
+  type mismatches exit 2; enum, range and length failures exit 1 naming valid values; operation words from argv that
+  fail to parse exit 2, from a file 1 (default).
+- **CLI16** What an unexpected exception exits with: 7, with `error: internal error (<ErrorName>)` and a hint to rerun
+  with `LIVEDOC_DEBUG=1` and report it (default).
+- **CLI17** How `--json` takes an optional field list: `--json=a,b`, or a following word whose every comma-separated
+  name is one of the verb's output fields; anything else is a positional (default).
+- **CLI18** What `--json` prints for lists and errors: The verb's output object (the MCP's structured content); fields
+  pick keys of the object or of each list item; with `--json`, errors are one JSON object on stderr (default).
+- **CLI19** List size and where the left-out line goes: Default 20, at most 200; the footer is the list's last stdout
+  line in text, on stderr with `-q`, a `more` count in JSON; an empty list prints `no <things>` on stdout (default).
+- **CLI20** The order and minimum length of document addressing: URL, then a 36-character id read directly, then the
+  swept list: id prefixes of at least 4 and names equal ignoring case, the union deciding; the printed ref is the
+  shortest unique prefix of at least 4 (default).
+- **CLI21** A pasted URL from another origin than the profile's host: Exit 2, hint `--host <origin>` (default).
+- **CLI22** How `--tab` matches: Name equal ignoring case, or an id prefix of at least 4; absent is the first by
+  `orderIndex` (default).
+- **CLI23** How an element command's words become one operation: The verb name, then each word, re-quoted when it holds
+  whitespace, quotes or backslashes (the value after `key=`, `key:` or `key~` when present); `connect <a> <b>` inserts
+  the `->` so the shell never sees it (default).
+- **CLI24** When a read copy is taken: After every `tab view` (the plain tab read beside the view, revisions agreeing by
+  `ETag`), `--raw`, `tab diff`, `pull`, and after a write that rebased over nothing (one plain read); a rebased write
+  keeps the older copy (default).
+- **CLI25** How `--wait-held` retries: Every 2 s until the given seconds have passed since the first attempt, then exit
+  5; at most 3600 s (`WAIT_HELD_MAX_S`, as `wait`) (default).
+- **CLI26** Who writes the footer and its revert command: The api, with `formatResultFooter` and `livedoc changeset revert <documentId> <changeset-id>`:
+  one footer for the CLI and the MCP, and a full id resolves without the sweep; the CLI prints the api's text (default).
+- **CLI27** The pull file's shape and name: The editor's `livedoc.document` envelope plus `livedocSync { host, pulledAt, tabs: { rev, hash } }`;
+  `<slug>.livedoc.json` with the name lower-cased to `[a-z0-9-]`, at most 60 characters, the id's first 8 when empty,
+  `-<id8>` on a clash with another document; `--svg` writes `<slug>.<tab-slug>.svg`; temporary file then rename
+  (default).
+- **CLI28** How push tells changed tabs and what it rewrites: A tab's elements changed when the SHA-256 of their
+  canonical JSON (keys sorted) differs from the pulled `hash`; sent as `replace { elements }` with the pulled revision
+  and `strict`.
+  Every other field is hashed apart (`settingsHash`): a change there prints `not pushed: the name, theme or background of tab "<name>"`.
+  A tab missing from the document is created with no base; a pulled tab gone from the file prints `not pushed: removing tab <id>`.
+  The file's revision and elements hash are updated for tabs that landed; its settings hash stays as pulled, so an
+  unsent rename is named on every push until the file is pulled again (default).
+- **CLI29** Export's paths, default format and pacing: Default `json`; `<dir>/<slug>.livedoc.json`,
+  `<dir>/<slug>/<tab-slug>.{svg,png,mmd,md}`; two documents at a time; a 429 retried after 60 s up to three times
+  (default).
+- **CLI30** Preview scale and what "its size" prints: Scale 1, as the MCP renders; `<path> <width>×<height> · <n> KB`
+  (default).
+- **CLI31** How the PNG renderer gets its wasm and font in two runtimes: `createPngRenderer({ wasm, font })` with
+  injected loaders: module imports in the Worker, files beside the bundle in Node (default).
+- **CLI32** How the listening socket behaves: It never sends `hello` or any frame, so it is no session in anyone's
+  roster; reconnects with a fresh ticket from 1 s doubling to 30 s (default).
+- **CLI33** The lines `wait` and `watch` print: `wait --for comment`: the thread's lines from `GET .../comments`; a
+  change: `tab "<name>" changed · rev <a>→<b> · diff: livedoc tab diff <doc> --tab <t> --since <a>`, `<a>` the latest
+  read copy's revision (the hint left out without one); `watch`: `changeset <id> by <name>: "<summary>" (+a ~c -r)`,
+  `element <ref> added\|changed\|removed`, `comment on <ref> by <name>: "<text>"`, `tab "<name>" added\|renamed\|removed`,
+  `document renamed "<name>"` (default).
+- **CLI34** How login opens the browser and whether it ever switches flow: `open`, `xdg-open` or `rundll32 url.dll,FileProtocolHandler`
+  (never a shell: `cmd /c start` splits a URL at `&`); the URL is always printed to stderr; never an automatic switch to
+  the device flow (default).
+- **CLI35** The loopback path and the built-in client's redirect URIs: `/callback`; `http://127.0.0.1/callback` and
+  `http://[::1]/callback`, matched on any port (default).
+- **CLI36** The device grant's parameters: Built-in clients only; device code 32 random bytes; user code 8 letters of
+  the RFC alphabet shown `XXXX-XXXX`; KV `device:<code>` and `usercode:<code>`, TTL 600 s; 20 starts an hour and 30
+  lookups per 10 minutes per IP (default).
+- **CLI37** Whether the device page links to help: No: no CLI help article exists; the CLI's README is its documentation
+  (default).
+- **CLI38** Logout with only an env token, a network failure, or a 401: Env only: exit 2 naming Settings › API Tokens;
+  network: kept, exit 7; 401: forgotten, exit 0 (default).
+- **CLI39** What `tokens/current` answers a session, and its fields: 405 for another method first; 403 `not_a_token` for
+  a session or guest; 404 for a row revoked between resolution and the read (a dead token is 401 `invalid_token` at the
+  front door); `{ accountId, accountName, tokenId, tokenName, role, expiresAt }`, the name from the owner's participant
+  record (default).
+- **CLI40** The credentials file's shape and a too-open mode: `{ version: 1, profiles }`, file 0600 in a 0700 directory;
+  a looser mode warns and is set to 0600 (default).
+- **CLI41** Telemetry's transport and edges: No `Authorization`; awaited at most 300 ms; a network failure is
+  `Internal.<Verb>`; `telemetry on` sends `TelemetryOn` after writing; the telemetry verbs send no `Cli·Used`; the
+  notice is recorded in `state.json` (default).
+- **CLI42** Which `DO_NOT_TRACK` values opt out: Any value but empty or `0` (default).
+- **CLI43** The update check's request and notice: `GET https://registry.npmjs.org/@livedoc/cli/latest`, 1.5 s; `CI` set
+  and non-empty skips it; `checkedAt` stored whatever the answer; the notice names both versions and both install forms
+  (default).
+- **CLI44** How the CLI logs: Only under `LIVEDOC_DEBUG=1`, to stderr, `[cli]` fingerprints, `Authorization` redacted
+  (default).
+- **CLI45** How the api tells the CLI apart: `X-Livedoc-Client: cli` and `User-Agent: livedoc-cli/<v> node/<v> <platform>`
+  (default).
+- **CLI46** How long a request may take: 30 s, then exit 7 (default).
+- **CLI47** Whether output is coloured: Never: the same bytes on a terminal and in a pipe (default).
+- **CLI48** How help tokens are counted: `estimateTokens` of `@livedoc/document-views` (UTF-16 length over 3, rounded
+  up), the views' own counter; stricter than o200k and no new dependency (default).
+- **CLI49** Budgets for guide topics and the skill: 1,200 tokens a topic; 80 for the frontmatter; 1,500 for the body
+  (research, agent-cli-ergonomics §4.2) (default).
+- **CLI50** Which aliases exist: `doc`, `el` and `edit` only; no hidden long forms (default).
+- **CLI51** How suggestions are found: Damerau-Levenshtein distance at most 2, the closest three (default).
+- **CLI52** Where `skill install` writes and what it may overwrite: `<dir>/livedoc/SKILL.md`; only a file whose
+  frontmatter `name` is `livedoc`, else exit 1 (default).
+- **CLI53** How `api` reads its path: Relative to the api base, a leading `/api` dropped; an absolute URL, or a `PUT` of
+  a tab, is exit 2; the body printed as sent, the status on stderr when not 2xx (default).
+- **CLI54** How large the package may grow: 8 MiB unpacked, checked by the build test (default).
+- **CLI55** How Node-only verbs sit in an isomorphic catalogue: Declared in `@livedoc/agent-verbs` with `local: true`
+  and no `run`; `apps/cli` supplies the handler; a test fails on a local verb without one (default).
+- **CLI56** How the dashboard shows `Cli·Used`: A `CLI Commands` stack in Connections, one chart per CLI verb, beside
+  `MCP Tool Calls`; computed sites and sentences declared (default).
+- **CLI57** The error text's shape: `error: <what>`, two-space-indented candidates, `hint: <one command>` (default).
+- **CLI58** The new tab's id, and `tab add` with no source: `crypto.randomUUID()`; an empty tab through `replace { elements: [] }`
+  (default).
+- **CLI59** `tab ls`'s line: `<position> <ref> "<name>"` (default).
+- **CLI60** `document ls`'s line and date: `<ref> "<name>" <library> <YYYY-MM-DD>`, UTC, so two calls print alike
+  (default).
+- **CLI61** `wait`'s default and longest timeout: 600 s and 3,600 s (default).
+- **CLI62** Whether `--summary` is checked before sending: Yes, against `CHANGESET_SUMMARY_MAX` from
+  `@livedoc/api-schema`; over it is exit 1 (default).
+- **CLI63** Where the CLI gets `isApiTokenFormat`: Moved to `@livedoc/api-schema`; the api imports it from there
+  (default).
+- **CLI64** How the CLI reuses the editor's envelope and Markdown export: `export-document-text.ts` and
+  `export-tab-text.ts` move to `@livedoc/document` (`git mv`); the editor imports them (default).
+- **CLI65** The device page's states and copy: As listed under Presentation, in the consent page's shell and voice
+  (default).
+- **CLI66** Whether the CLI prompts on a terminal: Never, piped or not; stdin is read only for `-`, `--body -` and
+  `--with-token` (default).
+- **CLI67** Which WebSocket client the CLI uses: Node 22's global `WebSocket`; the URL is the api base with `https`
+  turned to `wss` (default).
+- **CLI68** How a contributor runs the CLI: `pnpm --filter @livedoc/cli build`, then `node apps/cli/dist/livedoc.mjs`;
+  turbo's `build` includes it (default).
+- **CLI69** How flags reach a view and how JSON and the revision are read: The document views' query: `view`, `budget`,
+  `only`, `coarse=1`, `style=1`, `ref` (from `--ref`), `q` (from `--text`), `all=1` (from `--all`), `json=1` (from
+  `--json`); the revision from `ETag` (default).
+- **CLI70** How the CLI reads a pulled file's views offline: A `<doc>` that is an existing `*.livedoc.json` path is that
+  pull file, read-only: `document view`, `tab ls` and `tab view` render with `renderView` locally; any other verb exits
+  2 (default).
+- **CLI71** How `classifySource` tells a `-f` file apart: Whole-text JSON: an object with `nodes` is a graph, with
+  `replace` a replace, with `op` an operation; an array of operations (every item has `op`) is operations, any other
+  array elements; else a first meaningful line opening with a header `graphFromMermaid` accepts is Mermaid; else edit
+  operations (line form or JSON lines); unparseable JSON objects of neither kind are unknown, exit 1 (default).
+- **CLI72** Who may read the catalogue routes, and their caching: No identity, `GET` only, `Cache-Control: public, max-age=300`,
+  logged `[catalogues]` (default).
+- **CLI73** Where the schema text is generated: `packages/edit-operations/src/element-format.ts`:
+  `elementFormatText(kind)` read off the engine's factories, aliases and value lists, so it says what `add` and `set`
+  accept; `elementSchemaDoc()` stays the MCP's, its prose being the MCP resource; 300 tokens a kind (research §4.2)
+  (default).
+- **CLI74** How icon search ranks and what it searches: `paletteRank` and `matches` move from `apps/live/lib/search.ts`
+  to `packages/icons/src/search-rank.ts`, `searchIcons` on the `./search` subpath; the line-art and Technology
+  catalogues, label then keywords, ties in catalogue order; default 20, at most 50, a query of 1 to 60 characters
+  (default).
+- **CLI75** `document create`'s id, empty tab and tab name: The CLI mints the id with `crypto.randomUUID()`
+  (`VerbContext.newId`); without `-f` or `--template` one tab of `elements: []`; `--tab` defaults to the document's
+  name; the api derives the intent from what it compiles (`creationIntentOf` of the first compiled tab); a file of edit
+  operations is refused (they change a tab that exists); the printed ref is the id's first 8 characters (default).
+- **CLI76** How read copies are stored and bounded: `<cache>/copies/<first 16 hex of SHA-256 of profile, document, tab>/<rev>.json`
+  with an index; 3 revisions a tab, 32 MiB in all, least recently used out; files 0600 in 0700 directories (default).
+- **CLI77** How the consent page knows a CLI sign-in: `GET /oauth/session/:id` adds the public `clientId`, used for the
+  telemetry type only (default).
+- **CLI78** Which comment id the thread verbs send, and an element with no thread: The thread's last comment's id; no
+  thread exits 3 `no thread on <ref>` (default).
+- **CLI79** `tab diff --since` a revision with no read copy: Exit 3 naming the revisions held (default).
+- **CLI80** How long `wait --for change` waits for a burst to end: 2 s without another change (default).
+- **CLI81** How `comment ls` prints a thread across tabs: The comments view's thread line without the kind, with ` · tab "<name>"`;
+  its comments as the view prints them (`threadListingLines`) (default).
+- **CLI82** How the top-level help stays within its budget: Grouped rows, as the final copy: `wait, watch` share one,
+  `edit` shows as `apply (edit)` in the changeset row, and template, icon, schema, guide, skill, api, auth and telemetry
+  are named on one line (default).
+- **CLI83** `push`'s exit when tabs fail in different ways: 5 when any tab was stale, whatever else failed; else the
+  highest exit among the other failures; each failure prints its error and the rest still go (default).
+- **CLI84** What `export --all` does when one document fails: Prints that document's error, exports the rest, and exits
+  with the highest failure's code; the totals count what was written (default).
+- **CLI85** How siblings of one name are told apart when their short ids are alike too: The whole id instead of its
+  first 8 characters (default).
+- **CLI86** How `folder ls` prints the person's folders as paths: One line a folder, `<id> <path> <library>`, personal
+  first then each joined team by name, depth first, siblings by name: `link init`'s own order (`folderChoices`)
+  (default).
+- **CLI87** Where `folder create` files a folder and what it prints: `--in` resolved as `link init --folder`; a team
+  folder parent files it in that team; none, at the top of My Documents.
+  Text `+ folder <ref> "<path>"`, `--json` `{ id, path }` (default).
+- **CLI88** Which release a new command and a new flag make: A minor version (0.2.3 to 0.3.0): new commands, nothing
+  removed (default).

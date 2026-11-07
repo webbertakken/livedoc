@@ -1,5 +1,4 @@
--- Agent changesets (docs/specs/024-agents/agent-changesets.md; blueprint
--- docs/specs/024-agents/blueprints/agent-changesets.md "Data and persistence").
+-- Agent changesets (docs/specs/024-agents/agent-changesets.md; docs/specs/024-agents/agent-changesets.md).
 --
 -- 1. Every tab carries a revision that every write of it advances. 0 for every
 --    tab that existed before revisions (CS2).

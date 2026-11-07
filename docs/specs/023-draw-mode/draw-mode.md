@@ -907,3 +907,92 @@ Sketch mode is built in rounds and tuned with the operator between them.
 [Appearance](../004-interface-design/appearance.md),
 [Microsoft Whiteboard import](../020-import-export/whiteboard-import.md),
 [Google Drive mirror](../022-drive-mirror/drive-mirror.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** Which template category Whiteboard belongs to: `design`, nominal: the picker shows Whiteboard only as a
+  quick-pick, as it does Blank (default).
+- **D2** Which tool is in hand entering Sketch mode: Select with content; the active pen on an empty board, when
+  editable and no other intent or mode is held (default).
+- **D3** Where a split stroke's label, link, note and comments go: The longest piece (default).
+- **D4** Which tools the "touch pans once a pen is seen" rule covers: Every inking tool: the pens and the eraser
+  (default).
+- **D6** The eraser's brush size on a whiteboard: Stroke 10 px, Partial 16 px (screen) (default).
+- **D7** How finely Partial cuts a stroke: Densify to half the brush radius (at least 1 px); 12 bisection steps per
+  crossing (default).
+- **D8** Whether the eraser mode persists: Yes, device-locally with the pens and recognition (default).
+- **D9** Where the dock sits beside the tools group: Retired: the dock sits on the bottom line between the tools group
+  and the document group, or its own row above it (default).
+- **D10** Whether a pressureless stroke simulates pressure: No: it draws at the middle pressure, the preset width all
+  along; perfect-freehand's simulation at a 1 px size thins a mouse stroke to about 0.44x (default).
+- **D11** How a pen stroke stored before pressure and streamline draws: At the middle pressure with no streamline: its
+  points were smoothed when it landed (default).
+- **D12** How many samples a pen move gives: One per pointermove, no coalesced events, as Excalidraw: its streamline
+  values are tuned to that rate (default).
+- **D13** The pressure of the point where a pen lifts: The last pressure: a lifted pen reports 0, which would pinch the
+  end (default).
+- **D14** Which pointers record pressure: A `pen` only: a finger reports 0.5, or a contact force that engines disagree
+  on (default).
+- **D16** Which of the 20 kept kinds gives way: The least recent that is not among the 5 most picked; never the one just
+  picked (default).
+- **D17** How long the "seven pinned" hint stays: 4 s, on the board side of the Shapes group, and announced once in a
+  status region (default).
+- **D18** How the groups are separated in the one card: A hairline (`TOOLBAR_DIVIDER`), the strip's; was a 12 px gap
+  between pills (default).
+- **D19** Which shapes the Shapes search finds, named and ordered how: Every palette shape tile but Components (Shapes,
+  Write, Build, Devices, Data, Behaviours); the six dock shapes by dock name; Line, Arrow: Draw (default).
+- **D20** Where a drop over a pinned shape lands: Before the slot over its left half, after it over its right half; a
+  full side replaces it (default).
+- **D21** What colour a pinned shape's preview is: The dock buttons' own text colour, as every dock glyph; the flyout
+  previews use the board ink (default).
+- **D22** How far off the bar a drop still counts as on it: 44 px, a 44 px button's width when chosen; the buttons are
+  36 px now, matching the Toolbar strip (user request 2026-10-03), the reach kept (default).
+- **D35** What Alt does with recognition on and no shape shown: Recognises the stroke at once, as with recognition off:
+  each press flips between ink and shape (default).
+- **D23** When the dwell may snap again after a break: Only once the pen moves beyond the still radius, and never while
+  Alt is held (default).
+- **D24** What the chip offers after a flip while the pen stays still: It turns round (Make shape and Keep drawing), so
+  a second tap undoes the first (default).
+- **D25** Where the chip sits and how it looks: Its corner 12 screen px above and before the tip; a 44 px pill, slate on
+  the board (default).
+- **D26** When a chip tap acts: On its pointerdown, while the pen stays down (default).
+- **D27** Whether an Alt released after the lift reaches the browser: No: an Alt pressed mid-stroke has its release kept
+  from the browser, once (default).
+- **D28** Whether the chip is a tab stop: No: it lives only while a pointer is held down, and the keyboard has Alt
+  (default).
+- **D29** The contrast each stock colour aims for on its board: 6:1: over the 4.5:1 asked, so the light board's version
+  is clearly darker than the dark board's (default).
+- **D30** Which elements feed the panel's Custom colours: Pen strokes, shapes and lines whose own `strokeColor` is a
+  `#rrggbb`, from the last element back (default).
+- **D31** Where the custom picker starts with no custom colour in force: `#3b82f6`, a clear blue, as in the approved
+  mock (default).
+- **D32** What pressing the warning's readable swatch does: Applies it at once, as any swatch press picks (default).
+- **T1** How an existing `wrap` text box hugs: It keeps its width; the height hugs its text on the next edit, style
+  change or resize (default).
+- **T2** The hug padding when the text box has a padding preset: The preset, on every side; unset is 4 px left and
+  right, 2 px top and bottom (default).
+- **T3** Whether a rotated box, or one in a multi-selection resize, hugs: No: the resize frame's bounds, as on any tab;
+  the next edit re-hugs it (default).
+- **T4** Whether the element menu opens beside a text box being typed into: Not on a whiteboard: the box starts
+  caret-sized and grows into where the menu would open (default).
+- **T5** What keeping the ratio under Shift means, and the scale's range: The text keeps its ratio exactly; the 4 / 2 px
+  padding stays fixed; the scale stays within 0.1 to 40 (default).
+- **D33** How a top dock keeps clear of the Explorer menu card: Retired: the dock sits centred between the brand group
+  and the actions group, or its own row under the top line (default).
+- **D34** Where top corner panels go when a top dock reaches them: Retired: top corner stacks start below the top line,
+  and below the dock's own row while it has one (default).
+- **D36** Where along the dock a flyout opens, and how far off it: Centred on its opener, 8 px off the dock, clamped 12
+  px inside the viewport (default).
+- **D37** How a flyout's tip looks and how near a corner it may sit: A 10 px square turned 45°, the card's fill and
+  border on its outer sides; at least 14 px from a corner (the card's 12 px radius) (default).
+- **D38** How the arrow keys walk the Palette panel's tile grids: Retired: there is no Palette panel, so no tile grid to
+  walk (default).
+- **S1** What happens to a snapped element's quick-swatch binding: `strokeSwatch` is removed with the hex: a binding
+  would re-derive a hex over the stock colour (default).
+- **S2** What "how many" counts: Distinct custom colours (lower-cased), not elements; the status reports the same number
+  (default).
+- **S3** How the section's swatches read to assistive technology: Decorative (`aria-hidden`), no tooltip: the count
+  sentence carries the meaning (default).

@@ -125,8 +125,8 @@ function centredOn<T extends ShapeElement>(el: T, p: Point): T {
 }
 
 /**
- * Settle every badge and step number after a change from `prev` to `next` (docs/specs/009-elements/blueprints/
- * badge.md "Settling"): fit each badge to its text, number each new step, keep each attached chip on its host's point
+ * Settle every badge and step number after a change from `prev` to `next` (docs/specs/009-elements/badge.md):
+ * fit each badge to its text, number each new step, keep each attached chip on its host's point
  * (removing it when its host was deleted, detaching it when its host is unknown or it was dragged away), and attach a
  * new or moved chip that lands on a point. Returns `next` itself when nothing changes.
  */
@@ -153,7 +153,7 @@ export function settleChips(
   };
   for (const el of next) {
     if (isPointerNote(el)) {
-      // A pointer note (docs/specs/009-elements/blueprints/pointer-note.md "Settling"): its tip, not its box, holds.
+      // A pointer note (docs/specs/009-elements/pointer-note.md): its tip, not its box, holds.
       const settled = settlePointerNote(el, prevById, byId);
       if (settled === null) {
         changed = true;

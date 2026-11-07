@@ -1,4 +1,4 @@
-// The one sentence each sign-in failure shows (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Errors and
+// The one sentence each sign-in failure shows (docs/specs/014-identity/auth-and-guest-access.md "Errors and
 // edge cases"). The api answers with a code (`{ code, message }` from better-auth, or LiveDoc's own gates in front of
 // it); the page shows the copy for that code, never the server's own wording, so the two never drift apart.
 

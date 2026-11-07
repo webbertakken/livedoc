@@ -212,3 +212,24 @@ a Viewer.
 The MCP server and the REST API take the six kinds with `conceptRows`, `pyramidVariant`, `hubSpokes` and the
 animation fields. Rows are kept to the kind's own range, as the menu keeps them: past the most, the rest are dropped,
 and short of the fewest, rows named as Add names them ("Step 3") are added, so every later edit takes.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D13** Milestone range: 2 to 8, as the concept rows validate; a migrated rail clamps into it (default).
+- **D14** Geometry: Spine at mid-height; dot r `clamp(min(h * 0.055, slot * 0.14), 5, 12)`; stem up to 28px; words 1.9
+  slots wide, centred on the dot (default).
+- **D15** Colours: Spine, stems, dots and whens in the accent, dots ringed in the fill; names in the ink (default).
+- **D16** Default size: 720 × 240 with four milestones (default).
+- **D186** Starting content: Stack: Presentation, API, Domain, Storage with notes; pyramid: Vision to Daily work;
+  funnel: Visited 12,400 to Retained 210; cycle: Plan, Do, Check, Act around "Weekly loop" (default).
+- **D187** Build stagger and pulse beat: 0.18 s between rows building in; 0.6 s per row lighting, then 0.8 s of rest
+  (default).
+- **D188** Starting content of the Hub, Onion and Chevrons: Hub: Payments, Stock, Email, Search, Analytics, Support
+  around "Orders"; onion: Domain, Application, Adapters, Infrastructure; chevrons: Commit, Build, Test, Release with
+  notes (default).
+- **D189** Hub proportions and the chevron's point: Hub radius a third of the smaller side (at most `R - r - 10`);
+  satellites at a quarter of the half-side (0.25); chevron point 0.35 of its height, at most a third of a stage
+  (default).

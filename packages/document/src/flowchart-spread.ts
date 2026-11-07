@@ -1,5 +1,4 @@
-// A Decision's steps sit beyond its corners (docs/specs/009-elements/flowchart.md "The layout"; blueprint
-// flowchart.md "Layout", step 3).
+// A Decision's steps sit beyond its corners (docs/specs/009-elements/flowchart.md "The layout", step 3).
 //
 // The layered layout places a Decision's targets wherever crossing reduction leaves them, and when two
 // of them land inside the Decision's width both exits leave by the same point. On a chart without
@@ -12,7 +11,7 @@ import type { FlowchartDirection } from './flowchart';
 import type { ArrowElement, ElementId, ShapeElement } from './index';
 import type { Rect } from './geometry-primitives';
 
-/** Between a Decision's corner and its side step's centre, across the flow (blueprint D175). */
+/** Between a Decision's corner and its side step's centre, across the flow (D175). */
 export const FLOWCHART_CORNER_CLEARANCE = 32;
 
 /**

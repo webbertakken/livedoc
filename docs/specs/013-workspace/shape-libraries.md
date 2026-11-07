@@ -153,3 +153,21 @@ pairs, new types only.
 - Team-shared libraries (a `team_id`), as for custom themes.
 - Exporting a library back to draw.io.
 - Libraries from other tools.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D7** Which migration number: 0060; 0059 is reserved by an open pull request (spec "Storage") (default).
+- **D8** Whether name clashes compare case: Trimmed and case-insensitive: "UML" and "uml" read as the same name
+  (default).
+- **D9** How long an item id may be: 64 characters; the client mints UUIDs (36) (default).
+- **D10** How large one item may be: Each side in (0, 100 000] px (default).
+- **D11** Whether sign-up may carry an account past the library cap: Yes: the cap applies to creates; a migration never
+  drops a guest's library (default).
+- **D12** Order of an import holding diagrams and libraries: Diagrams first, then libraries, one progress count over
+  both (default).
+- **D13** Whether deleting one shape asks first: No: one shape is small; the library's delete asks (default).
+- **D14** Whether an empty library shows in My shapes: No: it shows only in the Explorer, where it can be deleted
+  (default).

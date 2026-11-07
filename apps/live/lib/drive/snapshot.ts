@@ -1,4 +1,4 @@
-// One pass's view of both sides (docs/specs/022-drive-mirror/blueprints/drive-mirror.md,
+// One pass's view of both sides (docs/specs/022-drive-mirror/drive-mirror.md,
 // "Passes"): My Documents as LiveDoc holds it, and the mirror's item
 // rows, indexed the ways the planners look them up.
 

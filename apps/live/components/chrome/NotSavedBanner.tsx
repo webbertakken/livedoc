@@ -4,7 +4,7 @@ import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import type { PendingCreateView } from '@/app/document/[id]/usePendingCreate';
 import { TopCenterBanner, TopCenterRow } from './TopCenter';
 
-// The not-saved notice (docs/specs/013-workspace/new-document-menu.md "Opening at once", blueprint "Failure"): a
+// The not-saved notice (docs/specs/013-workspace/new-document-menu.md "Opening at once"): a
 // document made from the Explorer whose create failed stays open with everything done to it, and says so here, first
 // in the top-centre stack, with the one action that can save it.
 export function NotSavedBanner() {

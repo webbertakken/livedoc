@@ -1,4 +1,4 @@
-// What a host offers (blueprint "Capabilities", CLI8): from GET <host>/api/capabilities, cached an hour per
+// What a host offers (CLI8): from GET <host>/api/capabilities, cached an hour per
 // profile. An absent field reads as the older worker meant it.
 
 import type { CapabilitiesResponse } from '@livedoc/api-schema';

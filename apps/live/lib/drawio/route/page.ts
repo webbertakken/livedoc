@@ -1,6 +1,6 @@
 // Ported from draw.io, Copyright (c) 2006-2015 JGraph Holdings Ltd and draw.io AG, Apache-2.0
 // (packages/licences/texts/drawio-31.7.0-LICENSE.txt); translated to TypeScript and changed.
-// Every edge of a page routed as draw.io routes it (blueprint step 12.2-12.6): each end's terminal
+// Every edge of a page routed as draw.io routes it (.2-12.6): each end's terminal
 // is the cell draw.io draws it to (mxGraphView.getVisibleTerminal), an edge terminal is routed
 // first, and a cycle of edges on edges routes its later member as if that end were free.
 

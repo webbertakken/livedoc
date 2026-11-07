@@ -1,7 +1,7 @@
 import { expect, test } from '../fixtures';
 import { signIn } from './sign-in';
 
-// The device sign-in page (docs/specs/015-api/blueprints/cli.md "The device grant", "Presentation and UX"): a person
+// The device sign-in page (docs/specs/015-api/cli.md): a person
 // signed in enters the code their terminal shows, sees which client asks, and approves; the page mints a token
 // through the api and hands it to the MCP worker. The stack runs no MCP worker, so its three routes are answered
 // here, as it would answer them.

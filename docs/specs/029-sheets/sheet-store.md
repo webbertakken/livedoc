@@ -232,3 +232,16 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   100 format rules per sheet.
 - A write changes up to 5,000 cells; the editor sends a larger paste, fill or import as several writes, one undo
   step. Writes count against the write rate limit.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D5** Largest room op before clients refetch instead: 256 KB (default).
+- **D6** How much the daily expiry deletes per run: 25 sheets read a query, 100,000 cells a batch, 500,000 cells a run
+  (default).
+- **D7** Sheets named in one GET: 50 (default).
+- **D8** Cells an agent reads at once: 5,000 (default).
+- **D23** How much one agent read answers: 100,000 characters (`SHEET_READ_CHARS_MAX`), with a note where to read on
+  (default).

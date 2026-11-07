@@ -5,7 +5,7 @@ import { DEFAULT_PRESENTATION_CONFIG } from '@/lib/presentation-config';
 import { loadPresentationOverlay } from '@/lib/editor-deferred-code';
 import { PresentationHost } from './PresentationHost';
 
-// docs/specs/012-collaboration/presentation-mode.md "Motion" and its blueprint: a move runs in a transition typed by
+// docs/specs/012-collaboration/presentation-mode.md "Motion": a move runs in a transition typed by
 // its direction, quick presses count from the slide last asked for, and the first slide is revealed as a
 // `slide-in` transition once the screen settles.
 const deck = {

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { createViewportStore } from '@/lib/viewport-store';
 import { useStoreSlice } from './useStoreSlice';
 
-// docs/specs/008-canvas/blueprints/viewport-store.md: a reader renders only when its slice changes.
+// docs/specs/008-canvas/canvas-performance.md: a reader renders only when its slice changes.
 
 describe('useStoreSlice', () => {
   it('renders only when the selected slice changes', () => {

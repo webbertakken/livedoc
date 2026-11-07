@@ -253,3 +253,18 @@ back for a deleted document is the question these answer; no names are sent.
   the document the moment it is restored.
 - **Milestones count trashed documents.** The document-count milestone email
   counts what an owner created, so binning and restoring never re-earns one.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** Which migration number: 0051; 0050 is the image reference index's, and the two are independent (default).
+- **D2** Which rooms hear that a document was trashed: Only a document with a room (shareable or in a team), the rule
+  every other room call follows (default).
+- **D3** How many documents one purge batch names: 100 ids, one `json_each` list, flat statement count (default).
+- **D4** How the view orders groups and rows: Your documents, then teams A to Z, then this browser; rows newest deleted
+  first (default).
+- **D5** Whether Restore asks for confirmation: No: it destroys nothing (default).
+- **D6** What the deleted card offers someone who can't restore: "Go to Explorer" only, and that the link works again if
+  it is restored (default).

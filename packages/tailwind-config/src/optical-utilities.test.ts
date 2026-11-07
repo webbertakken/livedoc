@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-// The optical utilities (docs/specs/004-interface-design/optical-alignment.md, blueprint "Utilities").
+// The optical utilities (docs/specs/004-interface-design/optical-alignment.md).
 const THEME_CSS = readFileSync(new URL('../theme.css', import.meta.url), 'utf8');
 const utility = (name: string) =>
   new RegExp(`@utility ${name} \\{([\\s\\S]*?)\\n\\}`).exec(THEME_CSS)?.[1] ?? '';

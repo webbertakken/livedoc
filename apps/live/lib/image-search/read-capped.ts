@@ -1,5 +1,5 @@
 // Read a response body into a Blob without holding more than `maxBytes` of it
-// (docs/specs/009-elements/blueprints/image-search.md "storeSearchResult"). A
+// (docs/specs/009-elements/image-search.md). A
 // declared Content-Length over the cap refuses before any byte is read; a body
 // that streams past the cap (no length, or a lying one) is cancelled the moment
 // it does, so a hostile or huge host costs at most `maxBytes` plus one chunk.

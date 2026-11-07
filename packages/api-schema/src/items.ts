@@ -1,4 +1,4 @@
-// The item store on the wire (docs/specs/026-plan/items.md, blueprint item-store.md "Interfaces and
+// The item store on the wire (docs/specs/026-plan/items.md, docs/specs/026-plan/items.md "Interfaces and
 // contracts"). Item shapes come from @livedoc/items; these are the request and response bodies.
 
 import type {

@@ -91,8 +91,8 @@ function assetsOutOfCacheFor(req) {
 
 const LIVE_PORT = Number(process.env.E2E_LIVE_PORT ?? 4002);
 const API_PORT = Number(process.env.E2E_API_PORT ?? 8787);
-// The other sites, for the audits that open them (docs/specs/004-interface-design/blueprints/
-// optical-alignment.md, "Ink audit"). Help and telemetry sit under their basePath on the
+// The other sites, for the audits that open them (docs/specs/004-interface-design/optical-alignment.md, "Ink
+// audit"). Help and telemetry sit under their basePath on the
 // live origin, as the router mounts them; marketing owns "/about" and its root files ("/_next") in production, so it gets its own port.
 const SITES = [
   { prefix: '/help', dir: path.join(ROOT, 'apps', 'help', 'out') },
@@ -113,8 +113,8 @@ const MARKETING_PORT = Number(process.env.E2E_MARKETING_PORT ?? 3013);
 const LIVE_ONLY = process.env.E2E_LIVE_ONLY === '1';
 const NO_AI = process.env.E2E_NO_AI === '1';
 const AI_BUDGET_SPENT = process.env.E2E_AI_BUDGET_SPENT === '1';
-//   E2E_DRIVE=1      the Google Drive mirror e2e (docs/specs/022-drive-mirror/blueprints/
-//                    drive-mirror.md, "Testing"): the api worker talks OAuth to the fake Google
+// E2E_DRIVE=1      the Google Drive mirror e2e (docs/specs/022-drive-mirror/drive-mirror.md, "Testing"): the
+// api worker talks OAuth to the fake Google
 //                    the test serves (E2E_DRIVE_GOOGLE_PORT). Test values only. Drive needs an
 //                    account, so the run also sets E2E_SIGN_IN=1 (playwright.config.ts).
 const DRIVE = process.env.E2E_DRIVE === '1';

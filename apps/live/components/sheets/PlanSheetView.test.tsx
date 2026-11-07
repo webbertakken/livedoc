@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The Sheet element (docs/specs/029-sheets/sheet.md; blueprint sheet-element.md "Editor components"): its faces
+// The Sheet element (docs/specs/029-sheets/sheet.md): its faces
 // while it cannot show the grid (loading, an error with Try Again, gone with Remove for an editor), the grid in
 // Plan mode, drawn only elsewhere with nothing offered on double-click, Import CSV (an empty sheet replaced at
 // once, a filled one asking first), and maximising without losing anything.

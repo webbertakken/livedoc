@@ -1,4 +1,4 @@
-// The CLI's pictures (docs/specs/015-api/blueprints/cli.md "Previews", CLI30, CLI31): an SVG drawn by the shared
+// The CLI's pictures (docs/specs/015-api/cli.md "Previews", CLI30, CLI31): an SVG drawn by the shared
 // renderer, written as is or rasterised at scale 1 with @livedoc/render-png, whose wasm and font the CLI reads
 // from beside its bundle only when a render runs.
 

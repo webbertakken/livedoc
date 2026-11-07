@@ -77,8 +77,8 @@ describe('CustomThemeProvider', () => {
   });
 });
 
-// A workbench reads the person's themes and writes none (docs/specs/013-workspace/blueprints/
-// workbench-embeds.md, Surface table).
+// A workbench reads the person's themes and writes none (docs/specs/013-workspace/workbench-embeds.md,
+// Surface table).
 describe('CustomThemeProvider writes', () => {
   it('are offered by default, withheld when read only, and never without a provider', () => {
     list.mockResolvedValue([]);

@@ -1,5 +1,5 @@
-// The lens's shapes (docs/specs/013-workspace/explorer-filters.md, blueprint
-// docs/specs/013-workspace/blueprints/explorer-filters.md "Interfaces and contracts").
+// The lens's shapes (docs/specs/013-workspace/explorer-filters.md,
+// docs/specs/013-workspace/explorer-filters.md).
 
 import type {
   EditedValue,

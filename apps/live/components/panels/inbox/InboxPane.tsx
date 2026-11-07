@@ -1,6 +1,7 @@
 'use client';
 
-// The Inbox (docs/specs/013-workspace/inbox.md §1; blueprint inbox.md): what is outstanding for the reader, as a list
+// The Inbox (docs/specs/013-workspace/inbox.md §1; docs/specs/013-workspace/inbox.md): what is outstanding
+// for the reader, as a list
 // and a reading pane. The list holds every row newest first under Today, Earlier This Week and Older, with a filter
 // bar over it; choosing a row shows it in the pane beside the list. Under 768 px, and always in the editor's
 // panel, the pane takes the list's place with Back to Inbox (the browser's Back and Esc too).

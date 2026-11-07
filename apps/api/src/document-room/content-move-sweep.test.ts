@@ -10,7 +10,7 @@ import {
   sweepContentMoves,
 } from './content-move-sweep';
 
-// The sweep (docs/specs/006-document/blueprints/document-storage-move.md "The sweep"): unrecorded documents first,
+// The sweep (docs/specs/006-document/document-storage-move.md "The sweep"): unrecorded documents first,
 // oldest first, at most MOVE_SWEEP_BATCH a run, MOVE_CONCURRENCY at once, a failed one again after an hour, and
 // nothing at all when nothing is due.
 

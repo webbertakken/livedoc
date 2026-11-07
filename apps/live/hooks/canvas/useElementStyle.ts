@@ -57,7 +57,7 @@ type EditorElementStyleDeps = {
   // The single-selected element id (null in multi-select / none).
   // Shape-only setters (shape kind, border presets) target it
   // directly.
-  // Read when a setter runs (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a setter runs (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   // The active tab — read for its theme (resetColors) and id.
   activeTab: Tab;

@@ -3,7 +3,8 @@ import { questionsOf, type FormDefinition, type FormQuestion } from '@livedoc/fo
 import { BUG, bugForm, formDraft, formWorld } from '../testing/forms';
 import { setGoesTo, setRespondsTo, syncChoiceField } from './form-draft';
 
-// Where responses and answers go (docs/specs/030-forms/forms.md "Agents"; blueprint forms.md §15 "Names and
+// Where responses and answers go (docs/specs/030-forms/forms.md "Agents"; docs/specs/030-forms/forms.md
+// "Names and
 // refusals"): Responses Go To and Answer Goes To as an agent names them.
 const q = (form: FormDefinition, id: string) => questionsOf(form).find((x) => x.id === id)!;
 

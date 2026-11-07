@@ -7,7 +7,7 @@ import { fileReadCopies } from '../sync/read-copies';
 import { WAIT_DEFAULT_TIMEOUT_S, WAIT_MAX_TIMEOUT_S } from '@livedoc/agent-verbs';
 import { WAIT_SETTLE_MS } from './wait';
 
-// `wait` and `watch` through the whole command (docs/specs/015-api/blueprints/cli.md "The room stream", CLI33, CLI80):
+// `wait` and `watch` through the whole command (docs/specs/015-api/cli.md, CLI33, CLI80):
 // a fake host, a fake room socket, and a clock the suite moves.
 
 const DOC = 'aaaa1111-0000-4000-8000-000000000001';

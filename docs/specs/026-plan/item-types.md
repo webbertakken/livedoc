@@ -450,3 +450,14 @@ Builds on [Items](items.md) (the item store, fields) and [Working in Plan](plan-
 
 - `Plan` · `Opened` · `CardTypes` when the panel opens; `Plan` · `Changed` · `CardType` when a type is saved, `Plan` · `Added` · `CardType` when one is added,
   `Plan` · `Duplicated` · `CardType` when a duplicate is saved and `Plan` · `Deleted` · `CardType` when one is deleted. Never names, ids or field names.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D10** A new type's starting look and fields: Cyan, star glyph; Title, Status, Description, Assignee (default).
+- **D11** Longest Choice option: 100 characters (was 40; now the spec's, 2026-10-16, so a form's full answers fit)
+  (default).
+- **D12** Field reordering in the type editor: ↑ and ↓ buttons per row (drag is for the panel's type rows) (default).
+- **D21** A new tab's name: "New Tab" (default).

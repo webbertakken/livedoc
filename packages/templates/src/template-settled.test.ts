@@ -5,7 +5,7 @@ import { buildPageLayout } from './page-layout-build';
 import { layoutCatalogueFor } from './layout-catalogue';
 import { TEMPLATES } from './templates';
 
-// docs/specs/009-elements/blueprints/badge.md "Settling": a template or layout lands settled, its step numbers half
+// docs/specs/009-elements/badge.md: a template or layout lands settled, its step numbers half
 // their disc and its badges fitted, exactly as a stored board reads back, so a preview or an agent's create shows what
 // the editor will.
 const settled = (els: Element[]) => settleChips([], els, { attachLoose: false });

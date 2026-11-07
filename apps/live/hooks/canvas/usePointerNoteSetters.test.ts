@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The pointer note's tip handle (docs/specs/009-elements/blueprints/pointer-note.md "Tip handle").
+// The pointer note's tip handle (docs/specs/009-elements/pointer-note.md).
 
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';

@@ -48,7 +48,7 @@ describe('remapTabDataLinks', () => {
 });
 
 // docs/specs/013-workspace/tab-scoped-share-links.md: a tab-scoped visitor's copy holds their tab only.
-// The copy moves content from the source's room into the copy's (docs/specs/006-document/blueprints/document-storage.md
+// The copy moves content from the source's room into the copy's (docs/specs/006-document/document-storage.md
 // "Routing", Copy): every tab under a fresh id, or a tab-scoped visitor's one tab.
 describe('copyDocument', () => {
   async function source() {

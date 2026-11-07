@@ -93,8 +93,8 @@ function setup() {
   return { journal, refs, useSubject };
 }
 
-// The selection reference names the revision the editor knows (docs/specs/013-workspace/blueprints/
-// workbench-embeds.md "The selection reference"): a save's answer is one.
+// The selection reference names the revision the editor knows (docs/specs/013-workspace/workbench-embeds.md
+// "The selection reference"): a save's answer is one.
 describe('useAutosave and tab revisions', () => {
   it('notes the revision each save wrote, and nothing when the answer names none', async () => {
     const { useSubject } = setup();
@@ -563,7 +563,7 @@ describe('useAutosave and a peer change during a save', () => {
 });
 
 // A document made in this browser saves nothing until its create lands, then everything done meanwhile at once
-// (docs/specs/013-workspace/blueprints/new-document-menu.md "Saves held until the create lands").
+// (docs/specs/013-workspace/new-document-menu.md).
 describe('useAutosave held for a create', () => {
   function heldSubject() {
     const { refs } = setup();

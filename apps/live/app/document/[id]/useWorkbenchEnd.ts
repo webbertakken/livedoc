@@ -1,5 +1,5 @@
-// A workbench page ends when the editor finds its document in the Trash (docs/specs/013-workspace/
-// blueprints/workbench-embeds.md "The workbench page" step 6): the page tells the workbench, the editor
+// A workbench page ends when the editor finds its document in the Trash
+// (docs/specs/013-workspace/workbench-embeds.md step 6): the page tells the workbench, the editor
 // shows the deleted card without Restore.
 import { useEffect } from 'react';
 import type { WorkbenchDocumentSession } from '@/components/providers/workbench-session-context';

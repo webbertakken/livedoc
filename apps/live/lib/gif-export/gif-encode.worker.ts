@@ -2,7 +2,7 @@ import type { GifPalette } from 'gifenc';
 import { createGifWriter, pagePalette, type GifWriter } from './gif-encode-core';
 import type { GifEncodeRequest, GifEncodeResponse } from './gif-encode-protocol';
 
-// The GIF export's encoder worker (docs/specs/020-import-export/blueprints/animated-gif-export.md "The encoder"):
+// The GIF export's encoder worker (docs/specs/020-import-export/animated-gif-export.md):
 // quantising and compressing every frame off the main thread, so the editor stays responsive while a GIF is made.
 
 const scope = self as unknown as {

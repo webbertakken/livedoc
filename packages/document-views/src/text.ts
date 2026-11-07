@@ -1,4 +1,4 @@
-// How user-authored text reaches a view line (docs/specs/024-agents/blueprints/document-views.md "The
+// How user-authored text reaches a view line (docs/specs/024-agents/document-views.md "The
 // outline grammar"): every string goes through one of these, so no content can start a line, fake a
 // header or break a line's grammar (I4).
 import { ATTR_BARE_PATTERN } from './constants';

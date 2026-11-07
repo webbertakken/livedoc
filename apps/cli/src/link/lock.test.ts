@@ -4,7 +4,7 @@ import { fakeIo, NOW } from '../testing/fake-io';
 import { SYNC_LOCK_POLL_MS, SYNC_LOCK_WAIT_MS } from './constants';
 import { acquireLinkLock } from './lock';
 
-// The lock (docs/specs/027-repositories/blueprints/repository-link.md "The lock"): one pass at a time per link.
+// The lock (docs/specs/027-repositories/repository-link.md): one pass at a time per link.
 
 const LOCK = '/state/lock';
 const holder = (pid: number, hostname = 'test-host') =>
@@ -178,7 +178,7 @@ describe('two passes taking over the same stale lock', () => {
   });
 });
 
-// The rename aside losing a race (blueprint "The lock"): whatever another pass did with the stale lock, this pass
+// The rename aside losing a race: whatever another pass did with the stale lock, this pass
 // never deletes a live holder's lock, and waits naming whoever holds it now.
 describe('a stale lock another pass moves first', () => {
   it('waits for the pass that moved it and took the lock', async () => {

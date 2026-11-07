@@ -1,5 +1,5 @@
 // What the page of the Page Stack shows as the homepage's every-kind cycle runs (docs/specs/004-interface-design/
-// brand-mark.md "Every kind"; blueprint brand-motion.md "Every kind"): a page, a sheet, a board and a form, drawn
+// brand-mark.md "Every kind"): a page, a sheet, a board and a form, drawn
 // in the page's plane units (140 × 150) in the mark's highlight ink. Data only; apps/marketing draws it.
 
 export type BrandKindShape =

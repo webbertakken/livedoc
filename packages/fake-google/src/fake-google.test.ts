@@ -4,7 +4,7 @@ import { FOLDER_MIME } from './drive-store';
 import { fakePngBase64Url } from './thumbnail';
 
 // The fake behaves like the slice of Google the mirror relies on
-// (docs/specs/022-drive-mirror/blueprints/drive-mirror.md).
+// (docs/specs/022-drive-mirror/drive-mirror.md).
 
 const API = 'https://www.googleapis.com';
 const FILE_FIELDS = 'id,name,parents,trashed,md5Checksum,headRevisionId,appProperties,mimeType';

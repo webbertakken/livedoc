@@ -1,4 +1,4 @@
-// The CLI's listening socket on a document's room (docs/specs/015-api/blueprints/cli.md "The room stream", CLI32):
+// The CLI's listening socket on a document's room (docs/specs/015-api/cli.md, CLI32):
 // a one-time ticket over REST, then a socket that never sends a frame, so it is no session in anyone's roster.
 // A dropped socket reconnects with a fresh ticket, backing off from ROOM_RECONNECT_MIN_MS doubling to
 // ROOM_RECONNECT_MAX_MS; a document moved to the Trash ends the stream, and a full room is waited out at the

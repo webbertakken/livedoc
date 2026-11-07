@@ -297,7 +297,7 @@ export function MindMapBoard({ portrait = false }: { portrait?: boolean }) {
       {/* A rocket sticker on the centre, for the launch: the editor's sticker look (a die-cut white
           plate on a soft shadow, @livedoc/icons sticker-markup.ts). An emoji's ink is the
           platform's emoji font's, so it is left out of the optical audit
-          (docs/specs/004-interface-design/blueprints/DEFAULTS.md D45). */}
+          (docs/specs/004-interface-design/optical-alignment.md D45). */}
       <g transform={`translate(${c.x + 6} ${c.y - c.r - 8}) rotate(8)`} data-optical-ignore="">
         <g className="hm-pop" style={at(8.6)}>
           <rect x="-15" y="-12" width="30" height="30" rx="9" fill="#0f172a" opacity="0.14" />

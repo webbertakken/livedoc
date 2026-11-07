@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readCapped } from './read-capped';
 
-// docs/specs/009-elements/blueprints/image-search.md "storeSearchResult": the download cap.
+// docs/specs/009-elements/image-search.md: the download cap.
 
 const CAP = 10;
 

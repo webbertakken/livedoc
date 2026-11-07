@@ -16,7 +16,7 @@ export const dynamic = 'force-static';
 //     for the homescreen tile.
 //   - Lighthouse PWA audit gets the basic-installability check.
 //
-// Icons (docs/specs/004-interface-design/blueprints/brand-media.md "Install"). /icon.svg is the scalable master
+// Icons (docs/specs/004-interface-design/brand-mark.md). /icon.svg is the scalable master
 // (Next.js also auto-emits a <link> for app/icon.svg); the 192 and 512px transparent PNGs serve install dialogs, launchers and
 // the Lighthouse installability check that want a concrete raster. The maskable tiles draw the stack at 56% of the
 // tile, inside the safe zone (the centre circle of 80%), so a circle or squircle mask never clips a sheet. The

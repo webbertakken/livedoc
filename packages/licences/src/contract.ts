@@ -45,8 +45,8 @@ export const LICENCES_PAGE_SEGMENTS = ['about', 'licences'] as const;
 // Where the page fetches a text: `${TEXTS_URL_PREFIX}${hash}.txt`.
 export const TEXTS_URL_PREFIX = `/${LICENCES_PAGE_SEGMENTS.join('/')}/texts/`;
 
-// A text box shows this many lines before it scrolls (blueprint D1).
+// A text box shows this many lines before it scrolls (D1).
 export const TEXT_BOX_MAX_LINES = 24;
 
-// One line of the text box, `text-xs leading-5` (blueprint D2).
+// One line of the text box, `text-xs leading-5` (D2).
 export const TEXT_BOX_LINE_HEIGHT_REM = 1.25;

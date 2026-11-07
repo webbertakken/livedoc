@@ -1,5 +1,5 @@
-// The daily expiry of unreferenced sheets (docs/specs/029-sheets/sheet-store.md "Deleting a sheet", blueprint
-// sheet-store.md "Deleting a sheet"). Every tab write notes when a sheet stops being referenced
+// The daily expiry of unreferenced sheets (docs/specs/029-sheets/sheet-store.md "Deleting a sheet"). Every
+// tab write notes when a sheet stops being referenced
 // (db/sheet-refs.ts), so this only reads the sheets past SHEET_UNREFERENCED_DAYS, oldest first, by a partial index:
 // its cost follows what expired, never how many tabs or sheets there are. Deleting a sheet deletes its cells (the
 // cascade), so a run is bounded by cells: a batch holds at most SHEET_EXPIRY_BATCH_CELLS (always at least one

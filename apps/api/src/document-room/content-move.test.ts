@@ -7,7 +7,7 @@ import { planOf, type Query } from './content-move-plan';
 import { CONTENT_MOVE_KEY } from './content-move';
 import { DOCUMENT_ID_HEADER } from './document-client';
 
-// The move (docs/specs/006-document/blueprints/document-storage-move.md): M1 no content before moved, M2 one
+// The move (docs/specs/006-document/document-storage-move.md): M1 no content before moved, M2 one
 // transaction that a difference undoes, M3 D1's content untouched, M4 created and copied documents born moved, G1 no
 // move without a D1 row. D1 here keeps its content tables, as production does until the drop release; each room has
 // a SQLite database of its own.

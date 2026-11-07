@@ -239,3 +239,98 @@ Changesets count against the token's write rate limit ([Public API and API token
 - Telemetry: category `Agent`, actions `Applied`, `Conflicted`, `Held`, `Reverted`, type the front door (`Mcp`,
   `Cli`, `Api`, or `Editor` for the toast's Undo) ([Telemetry](../017-telemetry/telemetry.md)). The toast's Show
   tracks `Agent` / `Opened` / `Toast`.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **CS1** Which migration number: 0067 (0066 went to Pages telemetry), which also adds the ws ticket person tag (the
+  held check reads it); share roles moves to 0068 (default).
+- **CS2** The revision of a tab that existed before revisions: 0 for every existing row; 1 for a tab inserted afterwards
+  (seed, copy, first save, created by a changeset) (default).
+- **CS3** How the compare-and-swap is made atomic in D1: Trigger `tabs_rev_advances` aborts any `data` update that does
+  not advance `rev` by exactly one, rolling back the batch (default).
+- **CS4** How "before writing" holds for a save racing a changeset: The tab PUT writes at the revision it read; a lost
+  race re-reads and re-merges once, then `409 tab_busy` (the autosave retries) (default).
+- **CS5** The ETag's form and conditional requests: Weak `W/"<rev>"` (representations vary by viewer redaction);
+  `If-None-Match` is not honoured (default).
+- **CS6** The fingerprint's hash: Canonical JSON (sorted keys, `LIVE_ELEMENT_FIELDS` left out) hashed by two 32-bit
+  FNV-1a lanes, 16 lowercase hex characters, sync and shared (default).
+- **CS7** The base32 alphabet and minting of changeset ids: Crockford base32 lowercase, 50 bits from
+  `crypto.getRandomValues`; one re-mint on a primary-key collision (default).
+- **CS8** How the line form and the JSON form reach the route: One JSON body; `operations` is an array (JSON form) or a
+  string (line form); `base`, `strict`, `summary` beside it (default).
+- **CS9** HTTP statuses for the engine's rejection codes: 400 `parse_error`, `unknown_operation`; 413 `too_large`; 422
+  every other engine code (default).
+- **CS10** How the summary is cleaned and an over-long one handled: Trimmed, control characters removed, empty means
+  none; over 80 characters is refused `invalid_value` naming the cap (default).
+- **CS11** A changeset or revert that changes nothing: Nothing written, recorded or relayed; 200 with `changeset: null`
+  and the results (default).
+- **CS12** Whether a dry run emits telemetry: No telemetry; it logs `[changeset] dry-run` (default).
+- **CS13** Which error wins when the engine refuses and the base is behind: The base check over the base's own elements
+  runs first; a conflict wins (default).
+- **CS14** A base revision newer than the tab: `400 invalid_base` (default).
+- **CS15** `strict` without a base: `400 strict_needs_base` (default).
+- **CS16** The author's name and colour when no participant row exists: Snapshot on the record; fallback name "Someone"
+  and the existing fallback colour `#0ea5e9` (default).
+- **CS17** How the merge reads before-images cheaply: A `fingerprints` column `{ before, after }` per touched id on the
+  record row, and `beforeOrder` (the order found of the elements kept) when the changeset reorders, which the merge and
+  the revert compare a reorder against (default).
+- **CS18** How many records a save's merge loads at once: Pages of 20 by revision, each with its `ops` part, processed
+  in order (default).
+- **CS19** An `X-Changeset-Seen` that does not parse: Treated as absent (the window rule) and logged `[changeset] seen-invalid`
+  (default).
+- **CS20** Room call timeouts: `/selections` 1,500 ms, the relay 2,000 ms, both awaited (default).
+- **CS21** How an editor notices a relay it never received: The op carries `prevRev`, the tab's previous changeset
+  revision; ahead of the seen revision triggers an in-place refetch; ops at or below seen are skipped (default).
+- **CS22** How the toast coalesces by token without putting the token id on the wire: The op carries `agentKey`, the
+  first 12 hex of SHA-256 of the token id (default).
+- **CS23** How editors learn of a tab a changeset created: The op carries the tab's non-element fields; editors append
+  the tab, then apply the element ops (default).
+- **CS24** The `changeset` op's class in the room: A system kind (worker-only), sequenced through `/mutation` (default).
+- **CS25** How the api knows the front door: Header `X-Livedoc-Client: mcp \| cli \| editor`; absent means `Api`
+  (default).
+- **CS26** The list route's paging and audit field: `?tab=`, `limit` 20 by default, at most 100, newest first; `tokenId`
+  only to the changeset's author (default).
+- **CS27** Owner-keyed `author_id` on account deletion and guest migration: Kept in the document's room: on the deleted
+  account's own documents they go with the purged rooms, on other people's with the room's changeset retention within 30
+  days; a guest's keep the guest author id after sign-up (default).
+- **CS28** How the retention purge runs: The room's daily upkeep over `created_at`; parts follow by cascade (default).
+- **CS29** Timeline and new-comment email for a changeset: The same as a tab save, with the author as actor (default).
+- **CS30** Comment authors inside a changeset's result: `rewriteCommentAuthors` against the stored tab, as a save does
+  (default).
+- **CS31** A creating changeset naming a tab id this document lacks, or an over-long id: Creates this document's own tab
+  (ids are unique per document); ids over 128 characters `422 invalid_value` (default).
+- **CS32** Record fields arriving in a tab PUT body: `rev`, `documentId`, `orderIndex`, `updatedAt` are stripped before
+  storing (default).
+- **CS33** Whether document reads and tab summaries carry `rev`: No; only a tab read does (default).
+- **CS34** What Show does exactly: Switches to the tab, then `fitToBounds` over the union of the touched elements'
+  bounds, `maxZoom` 1 (default).
+- **CS35** Where the shared constants and wire types live: `packages/api-schema/src/changesets.ts` (default).
+- **CS36** How the MCP draws the result PNG after a changeset: It reads the tab once more and renders it (default).
+- **CS37** The outline's animation: A fade over the short duration of [Motion](../004-interface-design/motion.md); none under reduced motion
+  (default).
+- **CS38** Where the room keeps selections and how many ids: DO storage `selection:<presenceId>`, at most 500 ids,
+  pruned on close and on read (default).
+- **CS39** Which identity marks the agent owner's sessions in the room: The agent presence person tag on the session
+  attachment (`personTagFor`); `/selections` takes it as `person` (default).
+- **CS40** The code of the 409 after a second lost race: `tab_busy` (default).
+- **CS41** How the editor receives a tab's revision: `apiLoadTabRevisioned` returns `{ tab, rev }`; `apiLoadTab` maps it
+  for callers that need no revision (default).
+- **CS42** The tab rename's revision and relay: `renameTab` advances `rev`; the relay is the `tab-meta { name }` an
+  editor's own rename sends, through `/mutation` (a `document-meta` keeps every editor's names, so a stale tab list
+  cannot revert a rename) (default).
+- **CS43** How the parts are stored and bounded: `agent_changeset_parts` rows `ops`, `inverse`, `results`, each at most
+  `MAX_TAB_BYTES`; over is `413 too_large` (default).
+- **CS44** Live fields when a changeset's version is taken (merge, revert): Grafted from the save or current element
+  through `mergeIncomingElement` (default).
+- **CS45** The 405 body for a token's tab PUT: `{ error: 'use_changesets', message }`, the message naming `POST /api/documents/:id/tabs/:tabId/changesets`
+  (default).
+- **CS46** How an editor learns of a changeset relayed before it joined the room: On its first presence list it reads
+  the newest `CHANGESET_LIST_DEFAULT` changesets and re-reads every loaded tab it is behind on, in place, without an
+  outline or toast (default).
+- **CS47** A `select` whose selection has no primary element: The room records `elementIds` whenever it is non-empty;
+  `elementId: null` with no ids clears the entry (default).
+- **CS48** Whether a token's revert is held: Yes, on every element the reverted changeset touched, as any agent
+  changeset; a person's revert never is (default).

@@ -1,4 +1,4 @@
-// Agent presence (docs/specs/024-agents/agent-presence.md "Presence", blueprint "REST" and "Room"): an agent's
+// Agent presence (docs/specs/024-agents/agent-presence.md "Presence"): an agent's
 // presence on one tab, set by `PUT .../tabs/:tabId/presence` or refreshed by its changesets, kept by the document's
 // room and sent to editors in the `presence` frame's `agents`. The request rule lives here so the CLI checks a
 // request with the rule the api applies; resolving focus refs stays in the api.

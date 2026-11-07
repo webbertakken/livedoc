@@ -31,7 +31,7 @@ import type { DocumentEnv, Env } from './types';
 
 const MIGRATIONS_DIR = fileURLToPath(new URL('../migrations/', import.meta.url).href);
 
-// D1's content tables (docs/specs/006-document/blueprints/document-storage-move.md), children first.
+// D1's content tables (docs/specs/006-document/document-storage-move.md), children first.
 const D1_CONTENT_TABLES = [
   'agent_changeset_parts',
   'agent_changesets',
@@ -48,7 +48,7 @@ const D1_CONTENT_TABLES = [
   'collab_index_state',
 ] as const;
 
-// A statement through D1 that names a room's table: content read or written in D1 (blueprint D15, R1). D1 holds no
+// A statement through D1 that names a room's table: content read or written in D1 (D15, R1). D1 holds no
 // content once documents live in rooms, so the harness refuses one outright rather than letting the shared tables
 // answer it.
 const ROOM_TABLE_SQL =

@@ -1,4 +1,4 @@
-// What happened (docs/specs/013-workspace/explorer-home.md; blueprint "Verbs", "Grouping"):
+// What happened (docs/specs/013-workspace/explorer-home.md):
 // other people's actions on documents the reader can open, one group per document per local day.
 // Pure: the read hands in rows newest first, already scoped and filtered to other people.
 

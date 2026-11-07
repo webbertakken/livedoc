@@ -13,7 +13,7 @@ import {
 import { fileOf, HOST, makeEngine, OWNER, world } from './test-support';
 
 // "Open with" on a copy of a mirrored file (docs/specs/022-drive-mirror/drive-mirror.md,
-// "Copies made in Drive"; blueprint "Open with"). The copy is made in Drive's own UI, so
+// "Copies made in Drive"). The copy is made in Drive's own UI, so
 // the app only sees it once the user opens it with LiveDoc.
 
 const COPY_CONTENT = documentToEnvelopeText(

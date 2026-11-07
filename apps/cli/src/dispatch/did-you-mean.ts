@@ -1,4 +1,4 @@
-// The nearest known word to a mistyped one, within an edit distance of 2 (blueprint CLI51).
+// The nearest known word to a mistyped one, within an edit distance of 2 (CLI51).
 
 function distance(a: string, b: string): number {
   const row = Array.from({ length: b.length + 1 }, (_, i) => i);

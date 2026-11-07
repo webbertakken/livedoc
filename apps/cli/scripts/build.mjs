@@ -1,4 +1,4 @@
-// The CLI as a publishable package (docs/specs/015-api/blueprints/cli.md CLI1, CLI2): dist/livedoc.mjs, every
+// The CLI as a publishable package (docs/specs/015-api/cli.md CLI1, CLI2): dist/livedoc.mjs, every
 // workspace package and dependency bundled for Node 22 and later, beside the package.json npm publishes (named
 // `@livedoc/cli` like the workspace; dist sits outside the workspace globs), the licence, the user README and the notices of every
 // bundled package, read from esbuild's metafile; beside the bundle the PNG renderer's wasm and font (CLI31), which only a

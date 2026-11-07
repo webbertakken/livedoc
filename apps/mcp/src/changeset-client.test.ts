@@ -17,8 +17,8 @@ import {
 } from './changeset-client';
 import { connectTestClient } from './mcp-test-client';
 
-// The MCP onto changesets (docs/specs/015-api/mcp-server.md §4.3a, §4.4; blueprint
-// docs/specs/024-agents/blueprints/agent-changesets.md "MCP").
+// The MCP onto changesets (docs/specs/015-api/mcp-server.md §4.3a, §4.4;
+// docs/specs/024-agents/agent-changesets.md).
 
 const box = (id: string, label = id): Element => ({
   id,

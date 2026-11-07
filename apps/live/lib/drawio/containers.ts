@@ -1,5 +1,5 @@
 // draw.io containers with a meaning of their own
-// (docs/specs/020-import-export/blueprints/drawio-import.md step 11):
+// (docs/specs/020-import-export/drawio-import.md step 11):
 // swimlanes become lanes, class / entity stacks become entities, tables
 // become tables. Entity rows and table rows / cells are consumed: the caller
 // forwards their connections to the container.

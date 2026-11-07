@@ -1,5 +1,5 @@
 // /api/placement-defaults: a person's default folders (docs/specs/013-workspace/default-folders.md,
-// blueprint docs/specs/013-workspace/blueprints/default-folders.md "Interfaces and contracts").
+// docs/specs/013-workspace/default-folders.md).
 //
 // GET    /api/placement-defaults       -> { defaults: { key, folderId }[] }
 // PUT    /api/placement-defaults/:key  -> 204, body { folderId }

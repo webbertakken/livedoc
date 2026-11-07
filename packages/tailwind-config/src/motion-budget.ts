@@ -1,5 +1,4 @@
-// The static motion-budget guard (docs/specs/004-interface-design/motion.md,
-// blueprint: docs/specs/004-interface-design/blueprints/motion.md).
+// The static motion-budget guard (docs/specs/004-interface-design/motion.md).
 //
 // Reads chrome stylesheets and component sources and computes an UPPER BOUND for
 // every duration and delay it finds. Anything it cannot bound is reported rather

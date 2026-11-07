@@ -6,7 +6,7 @@ import { addFlowchartLane, applyFlowchartStep, planFlowchartStep } from './flowc
 import { settleFlowcharts } from './flowchart-settle';
 import type { ArrowElement, Element, ShapeElement } from './index';
 
-// docs/specs/009-elements/flowchart.md "The layout", "Swimlanes"; blueprint D171.
+// docs/specs/009-elements/flowchart.md "The layout", "Swimlanes"; D171.
 
 let n = 0;
 const grow = (els: Element[], from: string, type?: 'decision') => {

@@ -187,3 +187,24 @@ Three kinds of content motion were compared against the 250ms budget, and the op
 - [User preferences](../007-editor/user-preferences.md): the `reduceMotion` preference
 - [Canvas and palette](../008-canvas/canvas-and-palette.md): canvas motion
 - [Menu flyouts must not resize under the pointer](flyout-height-stability.md)
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How the tokens reach components: Tailwind's `--transition-duration-*` namespace, so `duration-micro` etc. exist
+  with no plugin (default).
+- **D2** Whether unused tokens are emitted: `@theme static`, so a token read only through `var()` is always defined
+  (default).
+- **D3** The beat between cascade items: 10ms: eleven items reach the 100ms cap, which covers a context menu or a
+  visible screen of rows (default).
+- **D4** Row enter/exit tier: `micro`, because rows are cascade items and a cascade item runs at `micro` (default).
+- **D5** How the guard treats an untracked `var()`: `Infinity`, fallback or not: an inline style can override it, so
+  only tokens count as bounded (default).
+- **D6** A delay declared apart from its duration: Held to the cascade cap, since the pairing is only known at runtime;
+  the runtime guard checks the sum (default).
+- **D7** Inline `animationDuration` / `animationDelay`: Not read statically: marketing art sets hundreds; chrome
+  cascades go through `cascadeDelayMs` and e2e (default).
+- **D8** The middle tier: 200ms, halfway between the hover and ceiling values, for surfaces larger than a menu and
+  smaller than a dialog (default).

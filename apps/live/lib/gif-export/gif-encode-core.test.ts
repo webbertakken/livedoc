@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createGifWriter, indexFrame, pagePalette, sampleFrameBytes } from './gif-encode-core';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The encoder".
+// docs/specs/020-import-export/animated-gif-export.md.
 const W = 8;
 const H = 4;
 const solid = (r: number, g: number, b: number) => {

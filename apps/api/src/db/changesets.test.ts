@@ -15,7 +15,7 @@ import {
 } from './changesets';
 import { tabWriteStatements, upsertTab } from './tabs';
 
-// The changeset store (docs/specs/024-agents/blueprints/agent-changesets.md "Data and
+// The changeset store (docs/specs/024-agents/agent-changesets.md "Data and
 // persistence"), on real SQLite with every migration.
 
 const tab: Tab = { id: 't1', name: 'Board', elements: [] };

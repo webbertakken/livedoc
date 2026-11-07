@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { blankQuestion, OPTION_MAX } from '@livedoc/forms';
 import { applyQuestionSet, questionFrom } from './form-question';
 
-// An agent's question (docs/specs/030-forms/forms.md "Agents", blueprint §15 "Question input"): made as the builder
+// An agent's question (docs/specs/030-forms/forms.md "Agents" "Question input"): made as the builder
 // makes one, every setting checked against its type and the builder's limits.
 describe('questionFrom', () => {
   it('makes the builder’s question, with the settings given', () => {

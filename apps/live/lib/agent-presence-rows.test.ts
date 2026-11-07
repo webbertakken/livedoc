@@ -8,7 +8,7 @@ import {
   withoutAgentRows,
 } from './agent-presence-rows';
 
-// docs/specs/024-agents/agent-presence.md "In the editor", blueprint "Editor" and "Presentation and UX".
+// docs/specs/024-agents/agent-presence.md "In the editor".
 
 const NOW = 1_000;
 const self: Participant = { id: 'me', name: 'Webber', color: '#3b82f6', status: 'online' };

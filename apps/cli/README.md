@@ -1,8 +1,7 @@
 # LiveDoc CLI
 
 `livedoc` is the command line agents and scripts read, lint and change LiveDoc documents with. The
-behaviour is specified in [CLI](../../docs/specs/015-api/cli.md) and its
-[blueprint](../../docs/specs/015-api/blueprints/cli.md); the verbs themselves live in `@livedoc/agent-verbs`.
+behaviour is specified in [CLI](../../docs/specs/015-api/cli.md); the verbs themselves live in `@livedoc/agent-verbs`.
 
 ## Develop
 

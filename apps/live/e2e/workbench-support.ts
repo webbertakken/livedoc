@@ -1,4 +1,4 @@
-// Support for the workbench embed e2e (docs/specs/013-workspace/blueprints/workbench-embeds.md,
+// Support for the workbench embed e2e (docs/specs/013-workspace/workbench-embeds.md,
 // "Testing"): the fake workbench served from its own loopback origin, the person signed in for real on the
 // signed-in stack (account/sign-in.ts), and the api calls the CLI would make.
 

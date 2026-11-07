@@ -1,5 +1,5 @@
 // Fill an import's image elements through a session and count the outcome per
-// element (docs/specs/020-import-export/blueprints/import-image-pipeline.md "attachImportImages").
+// element (docs/specs/020-import-export/import-image-pipeline.md).
 // Every importer calls this between converting a file and replacing the tab.
 
 import type { Element } from '@livedoc/document';

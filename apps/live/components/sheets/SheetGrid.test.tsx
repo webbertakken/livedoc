@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-// The grid (docs/specs/029-sheets/sheet.md "The grid", "Keyboard"; blueprint sheet-element.md "Keyboard and
+// The grid (docs/specs/029-sheets/sheet.md "The grid", "Keyboard"; docs/specs/029-sheets/sheet.md "Keyboard
+// and
 // focus"): the keyboard map dispatched to the actions, Escape's order, what keeps Escape from the canvas, the
 // Add Rows footer, the error tooltip, presence, Find's highlights, the filter's buttons and the wheel.
 import { act, fireEvent, screen } from '@testing-library/react';

@@ -58,3 +58,14 @@ Per [Telemetry + public transparency dashboard](../017-telemetry/telemetry.md): 
 - Pressing a button FOR someone else, or a presenter forcing a mode on the room. Modes stay personal.
 - Walking an Avatar character onto a button to press it — tempting, and a natural follow-up.
 - A styling preset that makes a button look like the app's own buttons; it inherits shape styling like everything else.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D108** "More than a wobble": `PRESS_DRAG_SLOP_PX = 4` screen px, radial (`isDragTravel`) (default).
+- **D109** Where "Leave" goes: The tool before the current one; `select` when that equals the current (default).
+- **D110** "Just below it": Feet at the button's bottom centre plus `AVATAR_SPAWN_GAP = 12` px (default).
+- **D147** The exact button skin per paper: Light `MODE_BUTTON_SKIN` `#ffffff` / `#cbd5e1` / `#0f172a`; dark
+  `CONTROL_SKIN_DARK` `#1e293b` / `#475569` / `#f1f5f9` (default).

@@ -1,5 +1,5 @@
-// /api/home — Explorer Home's data (docs/specs/013-workspace/explorer-home.md; blueprint
-// docs/specs/013-workspace/blueprints/explorer-home.md).
+// /api/home — Explorer Home's data (docs/specs/013-workspace/explorer-home.md;
+// docs/specs/013-workspace/explorer-home.md).
 //
 // GET /api/home  -> HomeResponse: Jump back in and What happened
 //

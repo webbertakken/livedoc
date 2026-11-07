@@ -1,4 +1,4 @@
-// A Form tab's picture (docs/specs/030-forms/forms.md "Agents": read_form's image; blueprint §15): the form as a
+// A Form tab's picture (docs/specs/030-forms/forms.md "Agents": read_form's image): the form as a
 // respondent sees it on its tab's look, every section one after another as Preview scrolls them: the cover band, the
 // heading card, each question's card with its answer control, and the button that ends it. Pure markup, in either half.
 import { svgText, svgWrapLines, type Appearance, type FormLook } from '@livedoc/document';

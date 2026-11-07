@@ -68,7 +68,7 @@ export function useIdentityBootstrap(opts: {
   accountDisplayName: string | null | undefined;
   // The read-only embed view (docs/specs/013-workspace/embeds.md): its reads are not opens.
   embed: boolean;
-  // The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md): the session
+  // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md): the session
   // names the document and the person; see workbench-bootstrap.ts.
   workbench: WorkbenchDocumentSession | null;
   activeId: string;

@@ -1,4 +1,4 @@
-// The device sign-in page's trust boundary (docs/specs/015-api/blueprints/cli.md "The device grant", CLI36): which
+// The device sign-in page's trust boundary (docs/specs/015-api/cli.md, CLI36): which
 // client a typed code belongs to, and handing it the token or a refusal. The code a person types is the only
 // capability; the MCP answers the same "unknown" for an expired, used or never-issued code.
 

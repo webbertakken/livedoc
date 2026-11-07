@@ -1,6 +1,7 @@
 'use client';
 
-// A finger on a Sheet's grid (docs/specs/029-sheets/sheet.md "On a touch screen"; blueprint sheet-element.md
+// A finger on a Sheet's grid (docs/specs/029-sheets/sheet.md "On a touch screen";
+// docs/specs/029-sheets/sheet.md
 // "Pointer"). A finger pans the cells (useSheetPan; maximised, the grid scrolls natively) and a tap selects. A finger
 // held still for LONG_PRESS_MS grabs the cell or header under it: dragging on from there selects a range (or several
 // rows or columns), and letting go unmoved opens its menu. The selection's grip, a round handle at its bottom right,

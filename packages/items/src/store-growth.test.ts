@@ -1,4 +1,4 @@
-// A bulk create's cost grows with its size, not faster (docs/specs/026-plan/blueprints/item-store.md "Performance
+// A bulk create's cost grows with its size, not faster (docs/specs/026-plan/items.md "Performance
 // and limits"): every create is ranked by one placer (itemPlacer) rather than by re-sorting the column it joins,
 // which made a 2000-card seed quadratic. Timed as growth in CPU time (cpuMsOf), not against a wall clock: eight times
 // the creates cost about five to six times as much here, and the old per-create sort about fifty.

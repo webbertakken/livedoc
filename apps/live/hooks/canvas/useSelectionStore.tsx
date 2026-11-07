@@ -1,6 +1,6 @@
 'use client';
 
-// The editor's selection store in React (docs/specs/008-canvas/blueprints/selection-store.md): a
+// The editor's selection store in React (docs/specs/008-canvas/canvas-performance.md): a
 // provider per editor, and a subscription that re-renders a reader only when the slice it selected
 // changed.
 

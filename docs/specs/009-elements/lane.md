@@ -137,3 +137,15 @@ for the work.
 
 The **Lane tour** is on the actions group's **Start Lane Tour** button while a lane is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through
 it on the element itself ([Element tours](../007-editor/element-tours.md) "The Lane tour").
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D17** "Can neither vanish nor eat the lane": Drag clamps to `[MIN_GUTTER_PX (28), span - 28]` (default).
+- **D18** Snap distance and ties: `SEAM_SNAP_THRESHOLD` 8 element px; a lane seam wins a tie with an element edge
+  (default).
+- **D19** Driving a centred strip: From its right-hand seam, 2px of width per px of travel, never snapped (default).
+- **D20** When the seam is draggable: Whenever the canvas is editable, selected or not (default).
+- **D21** Seam commit precision: Rounded to a whole px on release (default).

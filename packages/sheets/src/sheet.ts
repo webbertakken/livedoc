@@ -1,9 +1,9 @@
-// The sheet model (docs/specs/029-sheets/sheet-store.md "What a sheet is", blueprint sheets-engine.md "Types").
+// The sheet model (docs/specs/029-sheets/sheet-store.md "What a sheet is").
 // Cells are keyed by row id and column id, never by position: a row's place is only its index in the layout.
 import { makeAxisIds, type Rand } from './ids';
 import { SHEET_COLS_NEW, SHEET_ROWS_NEW, SHEET_TITLE_MAX } from './limits';
 
-// A reference in a stored formula, by ids (blueprint "Stored form"). Absent corner ids mean a whole column (no
+// A reference in a stored formula, by ids. Absent corner ids mean a whole column (no
 // rows) or a whole row (no columns).
 export type StoredRef = {
   // Another sheet, by id; or by title when no sheet of that title existed when it was written.
@@ -103,7 +103,7 @@ export type FilterCondition = { values?: string[]; op?: ConditionOp; a?: string;
 
 export type SheetFilter = IdRange & { conds: Record<string, FilterCondition> };
 
-// Validation rules (docs/specs/029-sheets/data-validation.md, blueprint sheet-rules.md "Types"): what a range of
+// Validation rules (docs/specs/029-sheets/data-validation.md): what a range of
 // cells may hold.
 export type DropdownOption = { v: string; c?: string };
 export type ValidationKind = 'list' | 'range' | 'check' | 'num' | 'date' | 'text';

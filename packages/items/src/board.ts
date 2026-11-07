@@ -349,7 +349,7 @@ export function planBoardWidthFor(setup: Pick<PlanBoardSetup, 'columns'>): numbe
   );
 }
 
-// A board's starting height (docs/specs/026-plan/blueprints/DEFAULTS.md D5): 640 px fits about seven cards a
+// A board's starting height (docs/specs/026-plan/plan-board.md D5): 640 px fits about seven cards a
 // column. A board with no columns yet (the Blank board, waiting for Setup Board) starts at 880 px, about ten, as
 // its columns are still to come and an empty frame reads better tall.
 export const PLAN_BOARD_HEIGHT_PX = 640;

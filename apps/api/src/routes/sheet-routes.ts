@@ -1,4 +1,5 @@
-// The sheet store's endpoints (docs/specs/029-sheets/sheet-store.md, blueprint sheet-store.md "Interfaces and
+// The sheet store's endpoints (docs/specs/029-sheets/sheet-store.md, docs/specs/029-sheets/sheet-store.md
+// "Interfaces and
 // contracts"): list, create (blank, filled or a copy) and delete under /api/documents/:id/sheets, and each sheet's
 // writes (sheet-write-route.ts). People and agents use the same doors; every change reaches the room as an
 // ordered `sheets` op.

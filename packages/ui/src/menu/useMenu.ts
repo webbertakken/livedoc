@@ -36,7 +36,7 @@ import {
 } from './menu-keys';
 import { MenuTreeContext, type MenuKind, type MenuTree } from './menu-tree';
 
-// A command menu (docs/specs/004-interface-design/menus.md "Command menus"; blueprint M1 to M10):
+// A command menu (docs/specs/004-interface-design/menus.md "Command menus"; M1 to M10):
 // the one place menu roles, labelling, focus on open, the keyboard and focus return are written.
 // The host spreads `surfaceProps` and `ref` on its menu element and provides `tree` to its rows.
 

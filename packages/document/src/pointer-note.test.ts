@@ -14,7 +14,7 @@ import {
   type ShapeElement,
 } from './index';
 
-// docs/specs/009-elements/pointer-note.md, blueprint pointer-note.md.
+// docs/specs/009-elements/pointer-note.md, docs/specs/009-elements/pointer-note.md.
 
 const host = (over: Partial<ShapeElement> = {}) =>
   ({

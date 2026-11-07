@@ -100,7 +100,7 @@ export function useSlideDeck({
   tabs: Tab[];
   activeTabId: string;
   setActiveId: (id: string) => void;
-  // Read when a slide is made from the selection (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a slide is made from the selection (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   setSelectedId: (id: string | null) => void;
   setMultiSelectedIds: (ids: Set<string>) => void;

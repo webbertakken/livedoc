@@ -148,3 +148,18 @@ in-place lines render inert for a Participant and a Viewer.
 
 The MCP server and the REST API take `card` with these fields. An agent building an architecture diagram uses cards
 for its service nodes: title the service, meta line the product or runtime, tags for the facts.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D176** Tags wider than the card: Trailing chips are not drawn (still stored), as the header drops its trailing links
+  (default).
+- **D177** A card too small for its slots: Drop tags, then the meta line, then the media, until the body is at least
+  max(14, titlePx) tall (default).
+- **D178** What an added tag says: `Tag` (default).
+- **D179** Starting content: 300 × 150; tile media `credit-card`, "Payments" / "Stripe, EU region", a one-line body,
+  tags PCI and v2 (default).
+- **D180** The Callout preset: 380 × 116 (the callout's old size), badge media, "Heads up" and the callout's body copy
+  (default).

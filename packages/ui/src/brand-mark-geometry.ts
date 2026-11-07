@@ -2,7 +2,7 @@ import { PRISM_PALETTES, PRISM_STOPS, type PrismScheme, type PrismStop } from '.
 
 // The Page Stack's geometry (docs/specs/004-interface-design/brand-mark.md), shared by the React <BrandMark> and by
 // the SVG strings the static copies are drawn from (favicons, marketing/media/logo/, the Apple icon, the social
-// cards, the email mark). Every number here is listed in docs/specs/004-interface-design/blueprints/brand-media.md.
+// cards, the email mark). Every number here is listed in docs/specs/004-interface-design/brand-mark.md.
 
 // cos 30°: the isometric plane's horizontal scale.
 export const ISO_COS = Math.cos(Math.PI / 6);

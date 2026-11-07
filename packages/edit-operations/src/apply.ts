@@ -1,4 +1,4 @@
-// `applyEditOperations` (docs/specs/024-agents/blueprints/edit-operations.md "The pipeline"): the
+// `applyEditOperations` (docs/specs/024-agents/edit-operations.md): the
 // count, the tab lock, each operation in order against the working state, finalise and validate,
 // then the element ops, their inverse and the result lines. It stops at the first refusal and then
 // returns no tab: a changeset applies whole or not at all (I1). Pure and deterministic (I5): no

@@ -1,5 +1,5 @@
-// Where a live or structured element stands, in one attribute (docs/specs/024-agents/blueprints/
-// document-views.md "State attributes", VW22).
+// Where a live or structured element stands, in one attribute (docs/specs/024-agents/document-views.md,
+// VW22).
 import {
   RATING_DEFAULT,
   agendaTotalMinutes,

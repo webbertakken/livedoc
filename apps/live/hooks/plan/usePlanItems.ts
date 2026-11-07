@@ -40,7 +40,7 @@ import { track } from '@/lib/telemetry';
 import { useAssignRef, useLatest } from '@/hooks/ui/useLatest';
 import type { ItemUndoStep } from './item-undo-journal';
 
-// A burst of revision gaps refetches once (blueprint item-store.md "Constants").
+// A burst of revision gaps refetches once.
 const ITEM_REFETCH_DEBOUNCE_MS = 400;
 
 export type PlanItemsStatus = 'loading' | 'ready' | 'error';
@@ -67,7 +67,7 @@ export type PlanItems = {
   ownerId: string;
 };
 
-// The document's item store in the editor (docs/specs/026-plan/items.md, blueprint item-store.md
+// The document's item store in the editor (docs/specs/026-plan/items.md, docs/specs/026-plan/items.md
 // "Editor slice"): loaded once the document is, written optimistically through the same pure
 // transitions the api applies, kept live by the room's `items` op, and refetched on a revision gap,
 // a reconnect or a resync. Every write but a vote is undoable through `pushUndo`.

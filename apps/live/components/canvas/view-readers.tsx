@@ -1,7 +1,7 @@
 'use client';
 
 // The canvas parts that show the view, reading it where they draw it
-// (docs/specs/008-canvas/blueprints/viewport-store.md "Inside the canvas"): what renders them takes no
+// (docs/specs/008-canvas/canvas-performance.md): what renders them takes no
 // view, so a zoom tick renders these and not the layer or the chrome around them. The components they
 // wrap stay pure renderers.
 

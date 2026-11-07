@@ -66,3 +66,11 @@ columns as the monospace face draws them: a character takes one, a wide one
 ## Telemetry
 
 `track('Element', 'Added', 'CodeBlock')` at the add handler.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D105** Placeholder copy and tokenizer-failure state: `// double-click to add code`; failed load renders plain text
+  and retries on next mount (default).

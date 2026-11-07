@@ -369,8 +369,9 @@ export function writeUserPreferences(prefs: UserPreferences, ownerId?: string | 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(PREFERENCES_CHANGED_EVENT));
   }
-  // The editor in a workbench never writes preferences to the api (docs/specs/013-workspace/
-  // blueprints/workbench-embeds.md, I9): the frame's choices stay in the frame. Nor under the 'self'
+  // The editor in a workbench never writes preferences to the api
+  // (docs/specs/013-workspace/workbench-embeds.md, I9): the frame's choices stay in the frame. Nor under the
+  // 'self'
   // placeholder a document in This Browser opens with before the reader is known
   // (docs/specs/006-document/offline-mode.md "Instant open"): that row would be everybody's.
   if (ownerId && ownerId !== 'self' && !getWorkbenchConfinement()) savePreferences(ownerId, fitted);

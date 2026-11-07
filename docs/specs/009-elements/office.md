@@ -107,3 +107,14 @@ room's floor, and a room never covers what stands in it. Default 200 × 120.
 - Light switches, day and night, or sound.
 - Tables of other sizes (a four- or eight-seater). Chairs round any table do this today.
 - Anyone else using your drink, handing a cup over, or drinks that run out.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D208** How thick a room's walls are: 10 canvas px whatever the room's size, so a big room is a big floor (default).
+- **D209** How wide a doorway is: 96 canvas px, so 72 px are clear once the wall ends keep a character's reach; narrower
+  on a short wall (default).
+- **D210** An unstyled floor's and rug's colours: A warm off-white floor and a sand rug on light paper; deep warm browns
+  on dark (default).

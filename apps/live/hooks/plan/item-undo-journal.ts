@@ -1,5 +1,5 @@
 // Item undo steps placed among the canvas's snapshots (docs/specs/026-plan/items.md "Undo",
-// blueprint item-store.md "Undo"). Items live outside the tabs, so their changes cannot be tab
+//). Items live outside the tabs, so their changes cannot be tab
 // snapshots; instead each step remembers the tab history's depth when it was made, and undo takes
 // whichever came last: the item step when no canvas step has been made since it, else the canvas
 // step. Redo mirrors it by the redo side's length, and a new branch of edits drops stale redos.

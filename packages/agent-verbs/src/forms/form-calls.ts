@@ -1,4 +1,4 @@
-// The form verbs' calls (docs/specs/030-forms/forms.md "Agents", blueprint §15 "Engine flow"), shared by the MCP's
+// The form verbs' calls (docs/specs/030-forms/forms.md "Agents" "Engine flow"), shared by the MCP's
 // read_form, add_form, change_form and share_form and the CLI's form commands. Each reads the document's plan once
 // (its tabs, boards and sheets named without their bodies) and the Form tab's own body, builds the whole change on a
 // draft, and writes only once every change has been checked: card types first, then the form (a new Form tab by a

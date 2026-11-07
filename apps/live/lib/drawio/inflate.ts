@@ -1,4 +1,4 @@
-// Decoding draw.io payloads (docs/specs/020-import-export/blueprints/drawio-import.md step 3): base64, then
+// Decoding draw.io payloads (docs/specs/020-import-export/drawio-import.md step 3): base64, then
 // inflated under the import's byte budget (lib/inflate.ts).
 import { inflateBytes, type ByteBudget } from '@/lib/inflate';
 

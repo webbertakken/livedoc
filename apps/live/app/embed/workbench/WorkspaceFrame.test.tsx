@@ -10,7 +10,7 @@ import {
 } from '@/components/providers/workbench-session-context';
 import type { WorkbenchPort } from '@/lib/workbench/workbench-port';
 
-// The workspace frame (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workspace frame", "Workspace
+// The workspace frame (docs/specs/013-workspace/workbench-embeds.md, "Workspace
 // messages"): the Explorer on its place, a document's editor with Back, `ready` once, `place` on every move,
 // `open` from the workbench, and a trashed document back to the Explorer.
 

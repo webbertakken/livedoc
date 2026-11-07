@@ -58,7 +58,7 @@ Whiteboard keeps a board as a **tree of nodes** and syncs edits to it as
 base64 in JSON), an optional **id** (`fuid`), and named **traits**, each an
 ordered list of child nodes. Types and trait names are UUIDs; their meanings
 below were established against real boards and their screenshots, and are
-listed with their ids in the [blueprint](blueprints/ms-whiteboard-import.md).
+listed with their ids in `apps/live/lib/ms-whiteboard/format.ts`.
 
 ### Replay
 
@@ -271,3 +271,16 @@ parser normalises:
 - Exact text layout: Whiteboard's text wraps in its own font; ours wraps in the
   board's. Whiteboard also draws some enlarged auto-size text boxes further in from
   their stored place than the board records; they land at their stored place.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **M1** Order of changes with equal timestamps: Their sync order (`changeOrder`) (default).
+- **M2** A sticky colour value never seen in real boards: Yellow, Whiteboard's default note colour (default).
+- **M3** Width of an arrowhead stroke: Its own stored width, scaled like its stroke (default).
+- **M4** Order of boards in the list: Last modified, newest first; then title (default).
+- **M5** A line head value other than none: An open arrowhead (default).
+- **M6** Which date names an untitled board: Its created date (the day it was made), else its last edit (default).
+- **M7** The earliest date a board can carry: 2016-01-01; earlier is damage and is dropped (default).

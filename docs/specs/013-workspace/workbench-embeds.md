@@ -271,3 +271,138 @@ What a workbench does to fit this contract (its own documentation holds the deta
 - Telemetry: `Session·Opened·Workbench` when a page mounts the editor, `Session·Opened·WorkbenchWorkspace` when a
   workspace frame mounts the Explorer; `Cli·Used·WorkbenchOpen` and
   `Cli·Used·WorkbenchPair` for the commands; `Token·Linked·Workbench` when a pairing is approved.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **WB1** How a level is stored before share roles are built: `role` `view` or `edit` from `read_only`, under share
+  roles' three-value `CHECK`: participate needs no migration (default).
+- **WB2** How long a workbench name may be; whether a later ask renames: 1 to 40 characters, trimmed; a pending request
+  takes the latest name given; a pairing keeps its request's (default).
+- **WB3** What "the owner's own access" counts: Ownership and team membership; never a share code; a share-link URL in
+  `workbench open` exits 2 (default).
+- **WB4** Where the frame URL's origin comes from; whether it names a tab: `appBaseUrl(env)` (`APP_BASE_URL`); no tab
+  parameter: the tab rides the redemption's answer (default).
+- **WB5** What redemption does with an `Authorization` header: Ignores any but `lvw_`, which the choke point confines
+  (default).
+- **WB6** When a session expires against its token: The earlier of eight hours and the token's own expiry (default).
+- **WB7** What `person` holds when the owner has no display identity row: `name` and `color` null; the editor shows a
+  random name and colour locally and writes nothing (default).
+- **WB8** What another credential header beside `lvw_` gets: `403 workbench_confined`: a session never borrows a share
+  code's or a guest's access (default).
+- **WB9** How a view session's writes are refused, and which pass: `403 workbench_read_only` at the choke point; the
+  room-ticket mint and the session's own end pass (default).
+- **WB10** Which write budget a session spends: `WRITE_RATE_LIMITER` keyed `workbench:<sessionId>`, apart from its
+  token's agent writes (default).
+- **WB11** What a room matches when access ends; what the page's own end closes: The pairing id, carried by the room
+  ticket, so a socket outlives renewal; the page's own end closes nothing (default).
+- **WB12** Whether an ended page can be revived by a later ticket: No: `ended` is terminal; the workbench frames a fresh
+  URL to reconnect (default).
+- **WB13** What a `hello-ack` with a missing or overlong name gets: Invalid, ignored and logged; the wait runs on to the
+  deadline (default).
+- **WB14** Whether a ticket outside the renew window is redeemed: Yes, as a renewal: a workbench may renew early
+  (default).
+- **WB15** Which scheme shows before the first `livedoc:theme`: The system's; the frame's stored Appearance setting is
+  ignored in a workbench (default).
+- **WB16** How the editor treats a request the allow-list refuses: Refused locally (`WorkbenchConfinedError`), nothing
+  sent, logged once per route, not a network error (default).
+- **WB17** Whether an unchanged selection is sent again: No: a settled selection is sent only when its text differs from
+  the last sent (default).
+- **WB18** How `reveal` brings elements into view and outlines them: The changeset toast's Show and outline, in the
+  person's colour, for `CHANGESET_REVEAL_MS`, on the active tab (default).
+- **WB19** How the header names the document: By its full id: the frame cannot see the library a shorter ref is unique
+  in, and `<doc>` always resolves it (default).
+- **WB20** In which order selected elements are listed: The tab's element order, so the text does not depend on the
+  order of clicks (default).
+- **WB21** Whether a reference with no selection carries a `read:` line: No: the header and `whole tab`, as the spec
+  lists (default).
+- **WB22** Where the `… and n more` tail goes: On the `selected:` line, after the last item (default).
+- **WB23** Which exit `workbench open` gives a 428: 4, mapped by the verb; `exitCodeForStatus` is unchanged (it reads
+  428 as 1) (default).
+- **WB24** How a workbench reads the pairing URL before the wait ends: stdout's first line, flushed before waiting: the
+  URL, or `{ status, pairingUrl, expiresAt }` with `--json` (default).
+- **WB25** When `workbench pair` opens a browser: Only when stdout is a terminal; piped, as a workbench runs it, it
+  prints and waits (default).
+- **WB26** Where the new error tokens live: `WORKBENCH_ERROR_CODES` in `packages/api-schema/src/workbench.ts`, as
+  `CHANGESET_ERROR_CODES` (default).
+- **WB27** How "exactly `scheme://host[:port]`" is checked: The input must equal `new URL(input).origin`: no trailing
+  slash, default port, upper case or credentials (default).
+- **WB28** What "empty when none" means for a selection message: `count` 0; `reference` still carries the header and
+  `whole tab`, which the chip and the agent need (default).
+- **WB29** How the pairing code is made and kept: 16 random bytes, base64url, in the clear: it grants nothing without
+  the owner's session and is served again (default).
+- **WB30** How long an expired session row is kept: One day, so a late request logs `expired` rather than `unknown`;
+  then the daily sweep deletes it (default).
+- **WB31** What the page makes of a room close 4005 (access changed): `ended(revoked)`: the owner lost access, and a
+  workbench cannot reload into another path (default).
+- **WB32** Whether a session's requests stamp the token's `last_used_at`: No: the frame's autosave would make every
+  token look in constant use (default).
+- **WB33** The page's loading and refusal copy: "Opening your diagram…"; "Open this diagram from your workbench" with
+  "This link works once, for a minute." (default).
+- **WB34** Where Open in LiveDoc sits: The actions group, top right, after Search and Settings: a corner of the canvas
+  is where docked panels sit (default).
+- **WB35** What a token card with no pairings shows: Nothing extra: no empty heading (default).
+- **WB36** Whether Unpair asks first, and its words: Yes, Revoke's popover: "Unpair <name>?
+  Its open diagrams stop editing until you allow it again." (default).
+- **WB37** How logs name an origin: Its host only (default).
+- **WB38** When "before the session expires" is; how often to ask again: Ten minutes before, then every minute until a
+  ticket lands or the session expires (default).
+- **WB39** How long a session secret is: 32 random bytes after `lvw_`, as an API token's (default).
+- **WB40** Which migration number: 0077, the next after 0076; one migration holds the four tables and the `ws_tickets`
+  column (default).
+- **WB41** How `WORKBENCH_TICKETS_PER_MINUTE` is enforced: Its own rate-limit binding, namespace `7010`, 30 per 60 s
+  (previews `7110`) (default).
+- **WB42** Whether creating a pairing request is limited: Yes, in the same per-token bucket as the mint (default).
+- **WB43** The statuses of the rejections the spec does not name: 403 `token_required`, 401 `invalid_ticket`, 401
+  `invalid_session`, 403 `workbench_read_only`, 403 `not_a_workbench_session`, 409 `pairing_answered`, 410
+  `pairing_expired` (default).
+- **WB44** What `tabId` is when `workbench open` names none: `null`; the editor opens the document's first tab
+  (default).
+- **WB45** What the waiting CLI polls: `GET /api/workbench/pairing-requests/:code/status`, the requesting token only
+  (default).
+- **WB46** How Settings reads a token's pairings: `GET /api/workbench/pairings` once, grouped by token in the client;
+  `GET /api/tokens` is unchanged (default).
+- **WB47** Which logs beyond the spec's list: `bearer-refused`, `confined`, `read-only-refused`, `mint-refused`,
+  `renew-failed`, `message-invalid`, `ended`, `redeem-failed`, `request-confined`, `reveal-missed` (default).
+- **WB48** Which error codes the ways a `workbench pair` wait ends carry: `pairing_declined`, `pairing_expired`,
+  `pairing_gone`, so a workbench reading `--json` stderr tells them apart (default).
+- **WB49** How the mint names the spec's refusals: `400 invalid_value`: `invalid scope`, `a workspace ticket names no document`,
+  a missing `documentId`, `invalid folderId`; a malformed `tabId` stays `bad_request` (default).
+- **WB50** What approving a workspace request does to a document pairing: Widens it in place (same id, sessions keep
+  their scope); a document approval never narrows a workspace pairing (default).
+- **WB51** Whether a workspace session runs teams or uses Drive: No, `403 workbench_confined`: each needs a session
+  token, so the token cannot; the frame offers none of them (default).
+- **WB52** Which folders a workspace ticket may start on: The owner's personal folders, and folders of teams they are a
+  joined member of; else `404` (default).
+- **WB53** Which credential headers pass beside a workspace session: `X-Share-Code` and `X-Share-Password`, so a shared
+  document opens by its link; `X-Owner-Id` stays refused (default).
+- **WB54** Whether a view session lists share links: No, `403 workbench_read_only` in both scopes, as for a read-only
+  token: the list carries every code (default).
+- **WB55** How ending access finds a workspace session's rooms: `workbench_session_rooms`: each room ticket it mints
+  records the document; `endWorkbenchAccess` closes each (default).
+- **WB56** The frame paths of the views the spec does not name: `/embed/workbench` + the view's `/explorer/...` path; a
+  document `/embed/workbench/document/<id>[?s=][&tab=]` (default).
+- **WB57** Where a link the frame cannot hold goes: A new tab with `noopener`: help, sign-in and every page outside the
+  Explorer (default).
+- **WB58** What New document makes in the frame, and where: The asked template, else a blank, named as `/new` names it;
+  in the asked folder or team, else the place's (default).
+- **WB59** Where Back sits; what it does with no frame entry before: The brand group's Back, top left (caret and mark,
+  named "Back"); `history.back()` when the frame pushed the document, else Home (default).
+- **WB60** What a trashed document says in the workspace frame: The toast "That document is in the Trash." over the
+  Explorer it returns to (default).
+- **WB61** Where the lens field sits without the app header: A slim bar at the top of the frame holding the field alone,
+  in the header's colours (default).
+- **WB62** Which rows are Teams administration: New team, Invites, a team library's settings, members and invite
+  controls, the timeline's token Revoke (default).
+- **WB63** When `place` is sent again for the same place: Whenever any of its fields changes (a rename, a count, a tab);
+  never twice with the same fields (default).
+- **WB64** Which migration, and how the document becomes optional: 0099; tickets and sessions rebuilt with `scope`,
+  `folder_id` and a scope `CHECK`; live requests per scope (default).
+- **WB65** The workspace frame's opening and refused copy: "Opening your workspace…"; "Open your workspace from your
+  workbench", "This link works once, for a minute. …" (default).
+- **WB66** The line under a workspace pairing question: "It works in your Explorer and your documents, as you, inside
+  that tool.
+  You can unpair it any time …" (default).
+- **WB67** How Settings names a pairing's scope: "One document at a time" or "Whole workspace" (default).

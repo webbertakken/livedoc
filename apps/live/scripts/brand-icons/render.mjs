@@ -1,6 +1,6 @@
 // Writes every static copy of the brand mark from its one source, the Page Stack module in @livedoc/ui
 // (docs/specs/004-interface-design/brand-mark.md); the files, sizes and paths are listed in
-// docs/specs/004-interface-design/blueprints/brand-media.md:
+// docs/specs/004-interface-design/brand-mark.md:
 //   - apps/*/app/icon.svg: the compact mark, light/dark by prefers-color-scheme
 //   - apps/marketing/public/favicon.ico: 16, 32 and 48px, for browsers and tools that ask for it by name
 //   - apps/marketing/public/: the install icons (transparent marks, maskable tiles, the monochrome silhouette)

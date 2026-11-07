@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-// Settings > Account's Colour (docs/specs/014-identity/auth-and-guest-access.md "Account settings"; blueprint
-// "Presentation and UX"): the presence colour, chosen in place from the ten, put back newest-wins when refused.
+// Settings > Account's Colour (docs/specs/014-identity/auth-and-guest-access.md "Account settings"): the
+// presence colour, chosen in place from the ten, put back newest-wins when refused.
 
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

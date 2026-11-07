@@ -8,7 +8,7 @@ import { revealInScrollers } from './tour-reveal';
 import { hasAnchor, type TourStepOf } from './tour-step';
 
 // The step runner every guided tour shares (docs/specs/007-editor/editor-tour.md "Mechanics",
-// docs/specs/026-plan/blueprints/plan-tour.md "Engine"): each tour's host owns its way in (the bottom bar's Start
+// docs/specs/026-plan/plan-tour.md): each tour's host owns its way in (the bottom bar's Start
 // Tour button, tour-offer.ts; a Show Me button), its steps and what ending means, and hands this the rest. Each step
 // runs prepare
 // (opening the real panel / dropdown / menu it explains), waits for its target node, then reports a

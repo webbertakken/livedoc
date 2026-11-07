@@ -43,7 +43,7 @@ import {
   type PlacedAction,
 } from './linked-actions';
 
-// How long after the last change the heal waits (blueprint linked-boards.md "Constants"): long enough for the person
+// How long after the last change the heal waits: long enough for the person
 // who changed one side to have written the other, and for a burst of room ops to land, so a heal writes once.
 export const LINKED_HEAL_DEBOUNCE_MS = 600;
 
@@ -89,7 +89,7 @@ export function useLinkedActionCards(deps: {
   const placed = useMemo(() => placedActions(tabs, loadedTabIds), [tabs, loadedTabIds]);
   const live = useLatest({ ...deps, placed });
 
-  // Assignees as Plan names people (a one-way hash, docs/specs/026-plan/blueprints/item-store.md "Security and
+  // Assignees as Plan names people (a one-way hash, docs/specs/026-plan/items.md "Security and
   // trust"), worked out once per person.
   const [people, setPeople] = useState<ReadonlyMap<string, ItemPerson>>(new Map());
   useEffect(() => {

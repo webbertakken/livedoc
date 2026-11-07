@@ -9,7 +9,7 @@ import {
   resolveSheet,
 } from './form-names';
 
-// Names as the builder says them (blueprint §15 "Names and refusals"): an unknown name lists what there is.
+// Names as the builder says them ( "Names and refusals"): an unknown name lists what there is.
 describe('form names', () => {
   const world = formWorld();
 

@@ -192,3 +192,24 @@ page has not seen appears), made only for signed-in readers, reading at most
   and a later Google sign-in does not overwrite the account's profile.
 - Verifying server-side that a picture URL is the account's own (§6).
 - Pictures on the activity feed and exported files.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How the Clerk URL's source is read: The first path segment as base64url JSON; any failure is `'unknown'`, never
+  an upload (retired: the picture is the account's `image`, one URL with no source to read) (default).
+- **D2** When the published picture is written: On change only, compared with the last value written on this page
+  (default).
+- **D3** A PUT before the participant row exists: 404 is accepted; the next change or page load writes it (default).
+- **D4** How an open socket updates its identity: A distinct `identity` frame, so a hello keeps meaning "join" and its
+  side effects never re-run (default).
+- **D5** How a cursor shows a picture: A 14px disc leading the name pill, only when a picture exists (default).
+- **D6** Several Google accounts linked: The first in Clerk's `externalAccounts` order (retired: the picture is the one
+  Google gave when it created the account) (default).
+- **D7** Whether a picture fades in: No transition: a small swap reads as a flicker when faded (default).
+- **D8** How a hook reads module-level picture state: Through the `useSyncExternalStore` snapshot, never beside it: the
+  React Compiler memoizes module reads (default).
+- **D9** How many comment authors one request reads: 50 (`MAX_COMMENT_PICTURE_AUTHORS`); later authors show initials
+  (default).

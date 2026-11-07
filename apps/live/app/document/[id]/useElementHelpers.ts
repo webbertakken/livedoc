@@ -31,7 +31,7 @@ type SetState<T> = Dispatch<SetStateAction<T>>;
 // applyFormatFromSource runs the format painter). Returned so the
 // still-inline handlers and the Canvas consume them.
 export function useElementHelpers(opts: {
-  // The selection, read where a helper acts (docs/specs/008-canvas/blueprints/selection-store.md).
+  // The selection, read where a helper acts (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   activeId: string;
   activeTab: Tab;

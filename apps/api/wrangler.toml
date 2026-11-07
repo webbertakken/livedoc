@@ -143,7 +143,7 @@ tag = "v2"
 renamed_classes = [{ from = "DiagramRoom", to = "DocumentRoom" }]
 
 # A class cannot change its storage backend, so the key-value rooms step aside under a new name, keeping their
-# storage, and a SQLite-backed class takes the old one (docs/specs/006-document/blueprints/document-storage-move.md).
+# storage, and a SQLite-backed class takes the old one (docs/specs/006-document/document-storage-move.md).
 [[migrations]]
 tag = "v3"
 renamed_classes = [{ from = "DocumentRoom", to = "LegacyDocumentRoom" }]
@@ -294,7 +294,7 @@ type = "ratelimit"
 namespace_id = "7012"
 simple = { limit = 20, period = 60 }
 
-# Sign-in (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Security and trust"): every POST under
+# Sign-in (docs/specs/014-identity/auth-and-guest-access.md): every POST under
 # /api/auth, keyed on CF-Connecting-IP, and each sign-in code send, keyed on a hash of the address. better-auth's
 # own limiter stays off (it would keep IP keys in D1). Absent bindings → allow (self-host).
 [[unsafe.bindings]]

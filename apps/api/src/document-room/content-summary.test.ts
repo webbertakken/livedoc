@@ -6,8 +6,9 @@ import { contentSummaryOf } from './content-summary';
 import { DocumentDb } from './document-db';
 import { migrateDocumentSchema } from './document-schema';
 
-// The content summary a room pushes to `documents.content_summary` (docs/specs/006-document/blueprints/
-// document-storage.md "The content summary"): the list's first-tab count, a count per tab, the document's stats
+// The content summary a room pushes to `documents.content_summary`
+// (docs/specs/006-document/document-storage.md "The content summary"): the list's first-tab count, a count
+// per tab, the document's stats
 // and the empty clean-up's test, from the room's own tables.
 
 const D = 'doc-1';

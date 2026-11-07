@@ -1,5 +1,5 @@
 // The JSON form, one object an operation, checked member by member
-// (docs/specs/024-agents/blueprints/edit-operations.md "Interfaces and contracts"). Unknown members
+// (docs/specs/024-agents/edit-operations.md). Unknown members
 // are refused, booleans are `true` only (`false` reads as absent), and the operation count is
 // capped before anything is read.
 

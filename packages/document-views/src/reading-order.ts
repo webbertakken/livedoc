@@ -1,4 +1,4 @@
-// Reading order (docs/specs/024-agents/blueprints/document-views.md "Reading order", VW25): rows top to
+// Reading order (docs/specs/024-agents/document-views.md, VW25): rows top to
 // bottom, then left to right; elements without geometry follow in array order.
 import type { Element } from '@livedoc/document';
 import { boxOf, type Box } from './fields';

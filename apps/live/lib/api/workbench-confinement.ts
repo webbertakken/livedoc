@@ -1,4 +1,4 @@
-// Client confinement for a workbench session (docs/specs/013-workspace/blueprints/workbench-embeds.md
+// Client confinement for a workbench session (docs/specs/013-workspace/workbench-embeds.md
 // "The editor in a workbench", WB16): the editor in a workbench frame refuses, before sending, every
 // request the api's allow-list would refuse (`workbenchRouteVerdict`, the same function the api runs),
 // so a gate the editor missed costs nothing on the wire and never reads as a network error. Only a
@@ -65,7 +65,7 @@ export function confinementRefusal(
 }
 
 // The api refused the session itself (`401 invalid_session`: revoked, unpaired, purged, expired): the
-// workbench page ends (blueprint "The workbench page" step 6). Every response to a request presenting
+// workbench page ends. Every response to a request presenting
 // the session passes here; listeners hear each refusal.
 const refusedListeners = new Set<() => void>();
 

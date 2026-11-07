@@ -66,3 +66,21 @@ Applying any theme already emits `track('Theme', 'Changed', <label>)` ([Telemetr
 ## Counts
 
 The catalogue ships **24 themes** (12 default + 12 extra), the extras including the dark schemes (Pine, Plum, Abyss, Espresso) and three multicolour themes (Rainbow, Pastel, Tropical). It was 27 until Basic and Charcoal merged into the single **Default** scheme ([Live app](../007-editor/live-app.md)), and 26 until Autumn and Jewel retired ([Light and dark halves](light-and-dark.md)); documents saved against a retired scheme are migrated on load ([Retired colour schemes](retired-schemes.md)). The counts are pinned by `apps/live/lib/themes.test.ts` and cited in [Canvas and palette](../008-canvas/canvas-and-palette.md), [Marketing site](../019-marketing/marketing-site.md), and [Marketing assets](../019-marketing/marketing-assets.md); all four move together. Six **seasonal themes** (three of them multicolour: Spring, Pumpkin, Yuletide) sit outside these counts: no picker lists them, and a tab wears one only through a seasonal look ([Seasonal looks](canvas-and-theme-dialog.md#seasonal-looks)).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** "Each wrapper logs"; which layer owns the log: The four `theme-graph.ts` wrappers log, so live, templates,
+  Markdown import and MCP share one fingerprint (default).
+- **D2** Log levels: `console.info` for an apply, `console.warn` for an empty palette, matching the `[tag]` convention
+  in `apps/live` (default).
+- **D3** Where the contrast rule is computed: A `contrastRatio` helper in `packages/document/src/colors.ts`, beside
+  `hexToRgb` and `isLightColor` (default).
+- **D4** "Without exhausting the call stack": An explicit-stack depth-first walk; same result as recursion, because each
+  subtree takes one index (default).
+- **D5** Rejection wording: `badRequest('empty palette')`, following the route's lowercase messages (`'name too long'`)
+  (default).
+- **D6** Branch map reuse in a switch: Build once, share for `prev` and `next`; the map depends only on the elements
+  (default).

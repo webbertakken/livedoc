@@ -1,5 +1,5 @@
 // The property maps every draw.io vertex shares
-// (docs/specs/020-import-export/blueprints/drawio-import.md step 10): colours,
+// (docs/specs/020-import-export/drawio-import.md step 10): colours,
 // stroke, corners, opacity, rotation, shadow, lock, link, note, and the text.
 
 import {

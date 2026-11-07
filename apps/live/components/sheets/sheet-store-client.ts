@@ -1,4 +1,4 @@
-// The editor's sheet store (docs/specs/029-sheets/sheet-store.md; blueprint sheet-store.md "Editor slice"), in the
+// The editor's sheet store (docs/specs/029-sheets/sheet-store.md), in the
 // lazy sheet chunk: per sheet, the server's confirmed state and this person's pending writes laid over it (what
 // they see), one workbook per tab, writes sent one at a time per sheet in order, undo steps, and the room's ops
 // merged by rev. Writes land on ids, so pending writes rebase cleanly over anyone else's.

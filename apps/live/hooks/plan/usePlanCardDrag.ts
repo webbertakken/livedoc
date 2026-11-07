@@ -1,6 +1,6 @@
 'use client';
 
-// Picking a card up on a Plan board (docs/specs/026-plan/blueprints/plan-board.md "Behaviour and
+// Picking a card up on a Plan board (docs/specs/026-plan/plan-board.md "Behaviour and
 // state"): idle, pressed, dragging, then dropped or cancelled. A press that never moves is a click
 // (open the item). While dragging, a copy follows the pointer and the slot it would land in is
 // read from the board's own DOM under the pointer: the column (`data-plan-status`), the row

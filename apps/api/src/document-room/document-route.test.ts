@@ -10,7 +10,7 @@ vi.mock('../room-purge-client', async (importOriginal) => ({
   purgeOwed: vi.fn(async () => false),
 }));
 
-// Routing (docs/specs/006-document/blueprints/document-storage.md "Routing"): every path under /api/documents/:id/
+// Routing (docs/specs/006-document/document-storage.md): every path under /api/documents/:id/
 // that is not the room's admission or the copy is handed to the document's room with the caller the worker
 // resolved, and the room rebuilds the same RouteContext from it.
 

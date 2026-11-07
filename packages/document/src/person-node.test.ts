@@ -9,7 +9,7 @@ import {
   renderElementsToSvg,
 } from './index';
 
-// docs/specs/009-elements/org-chart.md, blueprint org-chart.md.
+// docs/specs/009-elements/org-chart.md, docs/specs/009-elements/org-chart.md.
 
 describe('person nodes', () => {
   it("takes initials from the first two words, or a one-word name's first two letters", () => {

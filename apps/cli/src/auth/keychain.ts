@@ -1,4 +1,4 @@
-// The token in the operating system's own store (docs/specs/015-api/cli.md "Authentication", blueprint CLI4), through
+// The token in the operating system's own store (docs/specs/015-api/cli.md "Authentication", CLI4), through
 // the system's own tool and never native code: the macOS Keychain (`security`), the Secret Service (`secret-tool`),
 // and on Windows a blob sealed for the user with DPAPI (PowerShell), kept in the credentials file. The token always
 // travels on the tool's stdin: its arguments, which any process can read, carry only the profile name.

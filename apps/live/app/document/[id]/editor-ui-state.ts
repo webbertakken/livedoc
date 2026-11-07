@@ -35,7 +35,7 @@ export function useEditorUiState(
     },
     [tabScopeRef, toast],
   );
-  // The selection lives in a store (docs/specs/008-canvas/blueprints/selection-store.md). The editor
+  // The selection lives in a store (docs/specs/008-canvas/canvas-performance.md). The editor
   // root holds it but never subscribes: handlers read it with readSelection() when they run, effects
   // subscribe in their effect, and only the views that show the selection render for a change.
   const [selectionStore] = useState(createSelectionStore);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { createShape, settleChips, type Element, type ShapeElement } from './index';
 
-// docs/specs/009-elements/blueprints/badge.md "Performance and limits": settling runs on every commit and every tick
+// docs/specs/009-elements/badge.md: settling runs on every commit and every tick
 // (a drag landing, a nudge), so a large board with chips must settle inside a frame's slack. The worst case is every
 // chip moved at once (each considered for attaching, a scan of every host): 2,000 boxes and 200 badges. Measured
 // 2026-10-14 (CPU time, three warm runs): 11 to 17 ms with every badge moved, 0.5 to 1.3 ms for one badge's drag.

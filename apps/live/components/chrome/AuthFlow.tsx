@@ -1,7 +1,7 @@
 'use client';
 
-// Both auth pages (docs/specs/014-identity/auth-and-guest-access.md "Auth surface"; the blueprint's "Presentation and
-// UX"): `/sign-in` and `/get-started` are one flow with two openings. Google first when the host offers it, then an
+// Both auth pages (docs/specs/014-identity/auth-and-guest-access.md "Auth surface"): `/sign-in` and
+// `/get-started` are one flow with two openings. Google first when the host offers it, then an
 // email code: the email (and on `/get-started` a name above it), "Send code", the code step, and, for an account that
 // has no name yet, "What should we call you?" once. An email that has no account is not turned away on `/sign-in`:
 // the code creates it.

@@ -1,4 +1,4 @@
-// A label as a message quotes it (blueprint N19, LN21): C0 and C1 controls stripped, whitespace collapsed,
+// A label as a message quotes it (N19, LN21): C0 and C1 controls stripped, whitespace collapsed,
 // cut at LINT_LABEL_QUOTE_MAX characters with `…`, JSON-escaped, so no label reaches a terminal raw.
 
 import { LINT_LABEL_QUOTE_MAX } from './constants';

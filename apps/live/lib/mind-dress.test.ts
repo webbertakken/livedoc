@@ -9,7 +9,8 @@ import {
 } from '@livedoc/document';
 import { dressMindConnector, dressMindNode } from './mind-dress';
 
-// docs/specs/009-elements/org-chart.md "Growing" (blueprint org-chart.md I1), and the ordinary mind node's dress.
+// docs/specs/009-elements/org-chart.md "Growing" (docs/specs/009-elements/org-chart.md I1), and the ordinary
+// mind node's dress.
 
 const tab = { theme: 'default' };
 const root = applyShapeVariant(createShape('mind-node', 0, 0), 'org-chart');

@@ -26,7 +26,7 @@ function setup(overrides: Partial<Args> = {}) {
 }
 
 // Follow-me viewport (docs/specs/012-collaboration/follow-me-viewport.md). The view is read from and
-// written to the viewport store (docs/specs/008-canvas/blueprints/viewport-store.md).
+// written to the viewport store (docs/specs/008-canvas/canvas-performance.md).
 describe('useFollowMe', () => {
   it("applies the followed peer's viewport, and keeps following once it lands", () => {
     const { hook, viewport } = setup();

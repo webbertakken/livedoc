@@ -1,4 +1,4 @@
-// Pending documents (docs/specs/013-workspace/new-document-menu.md "Opening at once", blueprint "Pending documents"): a
+// Pending documents (docs/specs/013-workspace/new-document-menu.md "Opening at once"): a
 // document made in the browser whose create has not landed. The Explorer adds one before it opens the editor in its
 // place; the editor seeds from it instead of fetching, holds its saves until the create lands, and offers Try again
 // when it fails. Memory only: a page load forgets it, by which time the create has landed or the page warned.
@@ -162,7 +162,7 @@ export function resetPendingDocumentsForTests(): void {
   listeners.clear();
 }
 
-// A standby document (blueprint "Standby"): the blank the New Document button's face would make next, prepared while
+// A standby document: the blank the New Document button's face would make next, prepared while
 // the Explorer is idle so the editor can render it ahead, hidden. Nothing is created for it; the click makes it a
 // pending document under the same ids (addPendingDocument), and a standby never used is dropped with the page.
 const standbys = new Map<string, PendingDocument>();

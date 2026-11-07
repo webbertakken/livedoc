@@ -1,4 +1,4 @@
-// How findings name arrows (blueprint "Presentation and UX", N18): by their ends in messages
+// How findings name arrows (N18): by their ends in messages
 // (`orders→bus`), and as a selector an edit operation can take in fixes (`orders->bus` when exactly one
 // arrow joins them that way, else the arrow's own ref).
 

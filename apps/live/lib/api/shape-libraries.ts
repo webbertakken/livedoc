@@ -55,7 +55,7 @@ export async function apiDeleteShapeLibrary(ownerId: string, id: string): Promis
 export const SHAPE_LIBRARY_SAVE_FAILED = "Couldn't save this shape library. Try again.";
 export const SHAPE_LIBRARY_TOO_LARGE = 'This library is too large to store.';
 
-/** What a failed create or change tells the person (blueprint "Interfaces and contracts"). */
+/** What a failed create or change tells the person. */
 export function shapeLibraryErrorCopy(error: unknown): string {
   if (!(error instanceof ApiError)) return SHAPE_LIBRARY_SAVE_FAILED;
   if (error.status === 413) return SHAPE_LIBRARY_TOO_LARGE;

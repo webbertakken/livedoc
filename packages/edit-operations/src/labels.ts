@@ -1,4 +1,4 @@
-// Labels (docs/specs/024-agents/blueprints/edit-operations.md "Fields and values", EO18, EO22): a
+// Labels (docs/specs/024-agents/edit-operations.md, EO18, EO22): a
 // shape's label over GRAPH_LABEL_MAX keeps its heading and moves the whole text into its note, as
 // graph input does; an arrow's is cut; any other element's label is its content and stays whole. A
 // shape whose label no longer fits grows around its centre, never shrinking.

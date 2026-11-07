@@ -24,7 +24,7 @@ export const ELEMENT_GESTURES: ReadonlySet<CanvasGesture> = new Set([
 ]);
 
 // A wheel has no end event: a wheel pan or zoom ends this long after its last wheel event
-// (docs/specs/008-canvas/blueprints/DEFAULTS.md D62).
+// (docs/specs/008-canvas/canvas-performance.md D62).
 export const WHEEL_SETTLE_MS = 150;
 
 export function selectionMoving(gesture: CanvasGestureState): boolean {

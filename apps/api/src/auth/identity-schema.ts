@@ -1,5 +1,5 @@
 // The identity tables' schema as better-auth wants it, against the schema our migrations build
-// (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Data and persistence"). better-auth's CLI cannot reach
+// (docs/specs/014-identity/auth-and-guest-access.md). better-auth's CLI cannot reach
 // D1, so the SQL is computed here instead: replay every migration into an in-memory SQLite, ask better-auth what is
 // missing, and compile that to plain SQL for the next `migrations/NNNN_*.sql`. Empty means in step.
 //

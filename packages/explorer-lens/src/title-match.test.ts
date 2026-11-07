@@ -8,8 +8,8 @@ import {
   type TitleRange,
 } from './title-match';
 
-// A regression guard, not the product budget: the frame budget is measured in Chromium (the blueprint's
-// "Performance"). Ranking 10,000 titles settles at 1 to 5 ms on a developer's machine; 40 leaves room for the
+// A regression guard, not the product budget: the frame budget is measured in Chromium . Ranking 10,000
+// titles settles at 1 to 5 ms on a developer's machine; 40 leaves room for the
 // coverage run on CI (30 to 60 ms there, against cpuBudgetMs's 120) and still fails a quadratic slide.
 const TITLE_BUDGET_COUNT = 10_000;
 const TITLE_BUDGET_MS = 40;
@@ -235,7 +235,7 @@ describe('rankByTitle', () => {
 
 describe('the frame budget', () => {
   // 10,000 titles of two to five words from a working vocabulary, a third with accents or a year
-  // (docs/specs/013-workspace/blueprints/explorer-filters.md "Performance and limits").
+  // (docs/specs/013-workspace/explorer-filters.md).
   const VOCABULARY = [
     'meeting',
     'notes',

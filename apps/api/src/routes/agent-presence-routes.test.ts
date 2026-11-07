@@ -4,7 +4,7 @@ import * as roomClient from '../room-client';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 
-// `PUT` / `DELETE .../tabs/:tabId/presence` (docs/specs/024-agents/agent-presence.md "Presence", blueprint "REST",
+// `PUT` / `DELETE .../tabs/:tabId/presence` (docs/specs/024-agents/agent-presence.md "Presence",
 // E1 to E6): token callers only, through the participation gate; focus resolved against the tab's refs; the room
 // keeps the entry.
 

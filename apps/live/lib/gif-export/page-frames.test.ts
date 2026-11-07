@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GifExportError } from './gif-export-error';
 import { composeFrame, createFrameDrawer, loadSvg, type FrameContext } from './page-frames';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "Frames".
+// docs/specs/020-import-export/animated-gif-export.md.
 function fakeContext() {
   const calls: string[] = [];
   const ctx = {

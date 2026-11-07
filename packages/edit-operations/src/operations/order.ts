@@ -1,4 +1,4 @@
-// `order <selector> front|back|above=<x>|below=<x>` (docs/specs/024-agents/blueprints/edit-operations.md
+// `order <selector> front|back|above=<x>|below=<x>` (docs/specs/024-agents/edit-operations.md
 // "Operations", EO37): the target moves in the element order, last, first, directly after x or
 // directly before x. Finalise then keeps every container behind its members.
 

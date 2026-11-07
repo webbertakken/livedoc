@@ -1,7 +1,7 @@
 'use client';
 
-// A token's paired workbenches (docs/specs/013-workspace/workbench-embeds.md "Pairing"; blueprint "Settings > API
-// tokens", WB35, WB36, WB67): under the card's lifetime bar, one row per workbench the token may open documents in,
+// A token's paired workbenches (docs/specs/013-workspace/workbench-embeds.md "Pairing", WB35, WB36, WB67):
+// under the card's lifetime bar, one row per workbench the token may open documents in,
 // each with Unpair, which asks first in the same popover Revoke uses. None renders nothing.
 import { useId, useState } from 'react';
 import type { WorkbenchPairing, WorkbenchScope } from '@livedoc/api-schema';

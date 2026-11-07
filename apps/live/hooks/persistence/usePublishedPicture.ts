@@ -36,7 +36,7 @@ export function resetPublishedPictureCache(): void {
 /**
  * Keep the participant record's picture equal to the published one. Runs only for a signed-in
  * account (`accountId`), after its token provider is registered. A 404 means the participant
- * row does not exist yet; the next change or page load writes it (blueprint D3).
+ * row does not exist yet; the next change or page load writes it (D3).
  */
 export function usePublishPicture(accountId: string | null | undefined): void {
   const picture = usePublishedPicture();

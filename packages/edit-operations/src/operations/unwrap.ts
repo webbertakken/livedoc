@@ -1,4 +1,4 @@
-// `unwrap <frame>` (docs/specs/024-agents/blueprints/edit-operations.md "Operations", EO36): the frame or
+// `unwrap <frame>` (docs/specs/024-agents/edit-operations.md, EO36): the frame or
 // lane goes; what it held stays where it is; arrows pinned to it go with it, as `rm` removes them.
 
 import type { EditRejection } from '@livedoc/api-schema';

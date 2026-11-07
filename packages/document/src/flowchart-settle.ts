@@ -1,5 +1,5 @@
 // Keeping a flowchart tidy through the editor's ordinary edits (docs/specs/009-elements/flowchart.md
-// "The layout", "Swimlanes"; blueprint D171).
+// "The layout", "Swimlanes"; D171).
 //
 // The flowchart's own actions lay the chart out themselves, but most structural changes arrive through
 // paths that know nothing about charts: an arrow drawn from one step to another, a step or lane

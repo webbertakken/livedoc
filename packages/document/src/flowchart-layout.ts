@@ -1,5 +1,4 @@
-// Laying out a flowchart (docs/specs/009-elements/flowchart.md "The layout", "Swimlanes"; blueprint
-// flowchart.md "Layout").
+// Laying out a flowchart (docs/specs/009-elements/flowchart.md "The layout", "Swimlanes").
 //
 // A chart is laid out again after every structural change, so this is the whole of "tidy": the
 // layered layout Auto Layout uses (ranks along the flow, loops ignored for ranking, crossings
@@ -43,11 +42,11 @@ import type {
   TextAlignY,
 } from './index';
 
-/** Clear of a lane's border on every side of its body (blueprint D169). */
+/** Clear of a lane's border on every side of its body (D169). */
 const FLOWCHART_LANE_PAD = 32;
 /** A lane is never thinner than one holding a single Process: 72 plus the pad each side, rounded. */
 export const FLOWCHART_LANE_MIN = 140;
-/** A lane shorter than this along the flow reads as a box (blueprint D170). */
+/** A lane shorter than this along the flow reads as a box (D170). */
 const FLOWCHART_LANE_MIN_LENGTH = 600;
 
 export type FlowchartLaneRect = {
@@ -228,7 +227,7 @@ export function layoutFlowchart(
   return out;
 }
 
-/** Clear of the steps a loop runs past (blueprint D174). */
+/** Clear of the steps a loop runs past (D174). */
 const FLOWCHART_LOOP_GAP = 40;
 
 /**

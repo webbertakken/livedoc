@@ -125,3 +125,24 @@ by any column.
 - Grouping and categories (by type, by date): the view is one flat list.
 - Choosing, ordering or resizing columns.
 - Counting documents shared with the reader.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D145** Which migration number: Retired: `tab_stats` is a room schema step, not a D1 migration (default).
+- **D146** Which tab's mode a document shows when two were written at the same ms: The earlier tab in the document's
+  order (default).
+- **D147** How many bodies one backfill page parses: Retired: no backfill; the move counts existing tabs (default).
+- **D148** How many tabs one backfill run may count: Retired: no backfill; the move counts existing tabs (default).
+- **D149** What a corrupt body counts as: Diagram, no elements, no comments, its bytes measured: counted once and never
+  retried (default).
+- **D150** Where the sort is kept: Device-local `localStorage`, beside the view choice, the same for every folder
+  (default).
+- **D151** Whether zero comments shows `0`: No: an empty cell, so the comments that exist stand out; `–` stays for not
+  counted (default).
+- **D152** Which mode a document in this browser shows: Its first tab's: this browser keeps no write time per tab
+  (default).
+- **D153** What a row with no creation date shows: `–` with the tooltip "Not known" (a document shared with the reader)
+  (default).

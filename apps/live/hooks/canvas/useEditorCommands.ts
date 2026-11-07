@@ -66,7 +66,7 @@ const INERT_HANDLERS: CommandHandlers = {
 };
 
 // `open`: the search is showing. Only then does the catalogue follow the selection, so a closed search
-// never renders for a selection change (docs/specs/008-canvas/blueprints/selection-store.md).
+// never renders for a selection change (docs/specs/008-canvas/canvas-performance.md).
 export function useEditorCommands(open: boolean): {
   // Undefined (not []) when there are no commands, so the SearchPanel can omit
   // the prop the same way it omits palette items for read-only sessions.

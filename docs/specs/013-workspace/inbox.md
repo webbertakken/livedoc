@@ -370,7 +370,7 @@ read filters that table; the rules below are what the push keeps. Two pieces mak
 - **An expression index on the assignee.** Migration 0073 adds
   `CREATE INDEX items_assignee ON items (json_extract(fields, '$.assignee.id'))`.
   An item's assignee id is `itemPersonId(userId)`, a one-way hash
-  ([Item store blueprint](../026-plan/blueprints/item-store.md) "Security and trust"); the worker hashes the reader's
+  ([Items](../026-plan/items.md)); the worker hashes the reader's
   `me` set (§2.2) and the read matches the index with `IN`.
 - **`plan_board_statuses`: which statuses a board shows, and which of
   them are Done.** Whether a card is open is a property of the boards,
@@ -664,3 +664,19 @@ Never an action name, comment text, document name, or any identity.
   an `InboxListAndPane` illustration.
 - README / `docs/development/architecture.md` / `docs/specs/005-project-roadmap/prototype-scope.md` gain
   the section; [Assigned actions](../012-collaboration/assigned-actions.md) §9 and [Folders](folders.md)'s sidebar list point here.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D185** How wide the list is beside the reading pane: `22rem`, the width of a three-line row with a 14rem document
+  chip (default).
+- **D186** How tall the side-by-side Inbox is: `calc(100dvh - 12rem)`, at least `32rem`, so each column scrolls on its
+  own under the Explorer's header (default).
+- **D187** How many thread reads the pane keeps: 64, newest kept, for the pane's lifetime (default).
+- **D188** What the pane shows when the thread read fails: The row's latest comment, quietly; no retry button (default).
+- **D189** Whether a draft survives moving to another row: No: a new row starts a fresh draft and clears the last verb's
+  error (default).
+- **D190** How long a row done here stays gone: The feed's lifetime (the visit), even if a read before the index catches
+  up lists it (default).

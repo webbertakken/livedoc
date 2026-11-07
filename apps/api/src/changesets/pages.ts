@@ -1,5 +1,5 @@
-// An agent's Pages edit (docs/specs/024-agents/pages-for-agents.md "The route"; blueprint
-// "Data and persistence"): read the tab at its revision, apply the page changes or the article write,
+// An agent's Pages edit (docs/specs/024-agents/pages-for-agents.md "The route"): read the tab at its
+// revision, apply the page changes or the article write,
 // and write the tab at that revision. Elements that changed (a layout, a deleted page's content, a
 // moved page's content) go through the changeset write, so they are recorded, merged into later
 // saves and relayed; the pages, mode and writing ride the same batch. Then the room hears what an

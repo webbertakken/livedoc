@@ -1,5 +1,5 @@
 // Minting a token and handing it to the MCP worker, for the consent and device pages (docs/specs/015-api/mcp-server.md
-// §3 "Consent + mint", docs/specs/015-api/blueprints/cli.md "The device grant"). A token minted for a request that
+// §3 "Consent + mint", docs/specs/015-api/cli.md). A token minted for a request that
 // can no longer take it (the 10-minute session expired, the code was used, the MCP answered 429) would stay live for
 // six months and count towards the per-account cap, so: the session is checked before the mint, and a token the MCP
 // did not take is revoked straight away.

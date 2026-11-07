@@ -1,4 +1,4 @@
-// `wait <doc> --for comment|change` (docs/specs/015-api/blueprints/cli.md "The room stream", CLI33, CLI80): listens
+// `wait <doc> --for comment|change` (docs/specs/015-api/cli.md, CLI33, CLI80): listens
 // until a comment is added, or until a change settles for WAIT_SETTLE_MS, then prints it. Past `--timeout`
 // (WAIT_DEFAULT_TIMEOUT_S unless given) it prints a line saying nothing came; Ctrl-C ends with exit 1; the document
 // moved to the Trash with exit 3.

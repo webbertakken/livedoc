@@ -1,4 +1,4 @@
-// The engine's invariants (docs/specs/024-agents/blueprints/edit-operations.md "Behaviour and state",
+// The engine's invariants (docs/specs/024-agents/edit-operations.md,
 // I1 to I7), held by one changeset per operation of the vocabulary on the checkout flow.
 
 import { describe, expect, it } from 'vitest';

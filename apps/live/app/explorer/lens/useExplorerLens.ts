@@ -16,8 +16,8 @@ import type { SelectedNode } from '../views';
 import { lensHref, lensViewOf, SEARCH_RESULTS_PATH } from './lens-views';
 import { trackLensChange } from './lens-telemetry';
 
-// The Explorer's one lens (docs/specs/013-workspace/explorer-filters.md, blueprint "The Explorer
-// page"): the string, the caret while the field is focused, and the URL kept in step. The string
+// The Explorer's one lens (docs/specs/013-workspace/explorer-filters.md): the string, the caret while the
+// field is focused, and the URL kept in step. The string
 // is the state; `q` in the address bar follows it, and a `q` that changes from outside (a link,
 // Back, Forward) is adopted. Writes this hook made itself are remembered until the address bar
 // shows them, so a fast typist is never overwritten by an echo of an older keystroke.

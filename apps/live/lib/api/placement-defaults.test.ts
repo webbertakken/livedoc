@@ -7,7 +7,7 @@ import {
   apiSetPlacementDefault,
 } from './placement-defaults';
 
-// docs/specs/013-workspace/blueprints/default-folders.md "Interfaces and contracts": a person's
+// docs/specs/013-workspace/default-folders.md: a person's
 // default folders, read, set and cleared, every refusal surfacing its token.
 
 let calls: { url: string; method: string; body: unknown }[];

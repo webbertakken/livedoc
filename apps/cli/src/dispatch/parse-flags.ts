@@ -1,4 +1,4 @@
-// A verb's words and flags into its input (blueprint "One command" step 2): positionals in the verb's order,
+// A verb's words and flags into its input: positionals in the verb's order,
 // every other input key a `--kebab-case` flag, then the verb's schema. An unknown flag or a missing
 // argument is a usage error (exit 2).
 

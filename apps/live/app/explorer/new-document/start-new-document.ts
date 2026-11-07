@@ -1,5 +1,5 @@
 // The one way the New Document menu makes a document (docs/specs/013-workspace/new-document-menu.md "What each choice
-// does", "Opening at once"; blueprint "Instant open"). A blank opens with its start closed, a template on the template.
+// does", "Opening at once"). A blank opens with its start closed, a template on the template.
 // The document is made in the browser and opened in the Explorer's place at once; its create runs behind it
 // (pending-documents.ts).
 import {
@@ -78,7 +78,7 @@ function locationFor(place: NewDocumentPlace, creator: NewDocumentCreator): Save
 
 // What a new document opens with: the editor's code, a Plan template's example cards, and the icon catalogues the
 // editor draws with. The standby is rendered hidden, which runs none of its effects, so a load an effect starts in the
-// editor (useIconCatalogs) would otherwise only begin at the click (blueprint "Standby").
+// editor (useIconCatalogs) would otherwise only begin at the click.
 const OPEN_CODE = [
   loadEditorPage,
   () => import('@livedoc/templates/plan-template-seeds'),
@@ -124,7 +124,7 @@ export function startNewDocument(request: NewDocumentRequest): void {
 }
 
 // A document made ready to open: its ids, its content and where it is stored. Made at the click, or ahead of it as the
-// standby the Explorer renders hidden (blueprint "Standby").
+// standby the Explorer renders hidden.
 type PreparedDocument = {
   ids: CreateIds;
   template: TemplateKind;

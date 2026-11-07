@@ -369,7 +369,7 @@ describe('apiFetch and the document format header', () => {
   });
 });
 
-// Client confinement (docs/specs/013-workspace/blueprints/workbench-embeds.md, WB16).
+// Client confinement (docs/specs/013-workspace/workbench-embeds.md, WB16).
 describe('apiFetch under a workbench session', () => {
   afterEach(() => {
     setWorkbenchConfinement(null);

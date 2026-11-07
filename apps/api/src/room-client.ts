@@ -377,7 +377,7 @@ export async function broadcastDocumentTrashed(env: Env, documentId: string): Pr
   await broadcastOp(env, documentId, { kind: 'document-trashed' }, 'document-trashed');
 }
 
-// Agent presence in the room (docs/specs/024-agents/blueprints/agent-presence.md "Room"). The room is its only store,
+// Agent presence in the room (docs/specs/024-agents/agent-presence.md). The room is its only store,
 // so a set or clear that cannot reach it throws `RoomUnavailableError` (the route answers 503, PR11).
 const ROOM_AGENT_PRESENCE_TIMEOUT_MS = 3_000;
 

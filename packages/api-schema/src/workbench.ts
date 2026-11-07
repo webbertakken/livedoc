@@ -1,12 +1,12 @@
-// Workbench embeds (docs/specs/013-workspace/workbench-embeds.md, blueprint
-// docs/specs/013-workspace/blueprints/workbench-embeds.md): the constants, the wire types of every
+// Workbench embeds (docs/specs/013-workspace/workbench-embeds.md,
+// docs/specs/013-workspace/workbench-embeds.md): the constants, the wire types of every
 // /api/workbench route, the one origin rule, and the confinement allow-list a workbench session lives
 // inside. Shared by the api worker, the live editor and the CLI, so all three decide alike.
 
 import { lowerLevel, type AccessLevel } from './access-levels';
 
 // ---------------------------------------------------------------------
-// Constants (blueprint "Constants and configuration")
+// Constants
 // ---------------------------------------------------------------------
 
 export const WORKBENCH_TICKET_TTL_MS = 60_000;
@@ -116,7 +116,7 @@ export const WORKBENCH_ERROR_CODES = [
 ] as const;
 
 // ---------------------------------------------------------------------
-// Wire types (blueprint "Wire types")
+// Wire types
 // ---------------------------------------------------------------------
 
 // `scope` absent is `document`, so the callers from before scopes read unchanged.
@@ -207,7 +207,7 @@ export function normaliseWorkbenchName(value: unknown): string | null {
 }
 
 // ---------------------------------------------------------------------
-// Confinement (blueprint "A request bearing lvw_", "The choke point by scope")
+// Confinement
 // ---------------------------------------------------------------------
 
 type WorkbenchRouteVerdict = 'allow' | 'confined' | 'other-document';

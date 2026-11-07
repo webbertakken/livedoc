@@ -1,4 +1,4 @@
-// `watch <doc>` (docs/specs/015-api/blueprints/cli.md "The room stream", CLI33): a line for each event the room
+// `watch <doc>` (docs/specs/015-api/cli.md, CLI33): a line for each event the room
 // relays, as it happens, until Ctrl-C (exit 0); the document moved to the Trash ends it with exit 3. Element refs are
 // the views' refs: a tab's ids are read once, on its first event, and kept current from the events.
 

@@ -1,5 +1,5 @@
 // A draw.io edge as a LiveDoc arrow
-// (docs/specs/020-import-export/blueprints/drawio-import.md step 12): ends
+// (docs/specs/020-import-export/drawio-import.md step 12): ends
 // pinned to the anchor nearest where draw.io attached them, the route and its
 // waypoints, the heads, the stroke, and one label from the edge and its
 // label children.
@@ -102,7 +102,7 @@ type EdgeInput = {
  *  label face's mean advance, and a line of wide letters runs past it (D43). Safe range: 1.1 to 1.4. */
 export const DRAWIO_CAPTION_WIDTH_SLACK = 1.2;
 
-/** The caption's own wrap width (blueprint step 12.13): its widest line at its size, with slack, so
+/** The caption's own wrap width (.13): its widest line at its size, with slack, so
  *  it breaks only where the author broke it. */
 function captionWidth(label: string, size: TextSize | undefined): number {
   const px = arrowLabelFontSize(size ?? 'sm');

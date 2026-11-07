@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { indexFileText, type IndexEntry } from './index-file';
 
-// INDEX.md (docs/specs/027-repositories/blueprints/repository-link.md "INDEX.md"): generated, one section per
+// INDEX.md (docs/specs/027-repositories/repository-link.md "INDEX.md"): generated, one section per
 // document in a stable order, byte for byte against the golden files.
 
 const golden = (name: string) =>

@@ -1,5 +1,5 @@
 // The click rules of selection (docs/specs/008-canvas/canvas-and-palette.md "Selection" and
-// "Marquee box-select"; blueprint docs/specs/008-canvas/blueprints/selection-clicks.md).
+// "Marquee box-select"; docs/specs/008-canvas/canvas-and-palette.md).
 //
 // Only Shift adds to or takes from a selection. A plain click (a press and
 // release without a drag) on a member of a multi-selection selects that member

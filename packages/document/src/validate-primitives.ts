@@ -1,6 +1,6 @@
 // The building blocks of runtime element validation (validate.ts, validate-shape.ts): value
-// predicates, and the named issue a failed check reports (docs/specs/024-agents/blueprints/
-// edit-operations.md "invalid_result" names the field and the rule).
+// predicates, and the named issue a failed check reports (docs/specs/024-agents/edit-operations.md names the
+// field and the rule).
 
 export type ElementValidationIssue = { field: string; rule: string };
 

@@ -1,4 +1,4 @@
-// Scanning the mirror directory (docs/specs/027-repositories/blueprints/repository-link.md "Scanning the mirror
+// Scanning the mirror directory (docs/specs/027-repositories/repository-link.md "Scanning the mirror
 // directory"): every `*.livedoc.json` under the link's `dir`, walked as `linksBelow` walks and skipping a
 // subdirectory that holds its own livedoc.toml (that link's files are its own, RL4), each classified in order.
 // Paths are relative to the mirror directory.
@@ -23,7 +23,7 @@ export type ScannedFile = (
   | { class: 'foreign-host'; path: string; host: string }
 ) & {
   // The SHA-256 of the bytes the scan read, so a pass can tell a file edited while it ran from the one it judged
-  // (blueprint "One sync pass": a write or removal re-reads the file first). Absent on a hand-built fixture.
+  // (: a write or removal re-reads the file first). Absent on a hand-built fixture.
   bytes?: string;
 };
 

@@ -11,7 +11,7 @@ import type { WorkbenchDocumentSession } from '@/components/providers/workbench-
 import { createRevealStore } from '@/lib/changeset-reveals';
 import { createSelectionStore } from '@/lib/selection-store';
 
-// The editor's workbench messages (docs/specs/013-workspace/blueprints/workbench-embeds.md "Workbench
+// The editor's workbench messages (docs/specs/013-workspace/workbench-embeds.md "Workbench
 // messages"): ready once, tab on each later change, the selection after it settles (only when its
 // text changed), reveal, theme.
 

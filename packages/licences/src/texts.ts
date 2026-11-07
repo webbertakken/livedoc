@@ -10,8 +10,7 @@ export type TextSource = { file: string; sources: string[]; sha256: string };
 export const TEXTS_DIR = fileURLToPath(new URL('../texts/', import.meta.url));
 
 // Every committed text, where it came from (pinned to the tag or commit the
-// shipped build used) and its checksum (blueprint "Assets and external
-// resources"). texts.test.ts keeps this list, the files and the tables in step.
+// shipped build used) and its checksum . texts.test.ts keeps this list, the files and the tables in step.
 export const TEXT_SOURCES: readonly TextSource[] = [
   {
     file: 'tensorflow-tfjs-4.22.0-LICENSE.txt',

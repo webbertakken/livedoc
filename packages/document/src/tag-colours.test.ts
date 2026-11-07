@@ -12,7 +12,7 @@ import {
   type TagColour,
 } from './index';
 
-// docs/specs/009-elements/tag-colours.md, blueprint tag-colours.md.
+// docs/specs/009-elements/tag-colours.md, docs/specs/009-elements/tag-colours.md.
 
 const card = (over: Partial<ShapeElement> = {}) =>
   ({ ...createShape('card', 0, 0), id: 'c', ...over }) as ShapeElement;

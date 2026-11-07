@@ -1,5 +1,5 @@
--- Content search (docs/specs/013-workspace/content-search.md, blueprint
--- docs/specs/013-workspace/blueprints/content-search.md): one row per tab's search text, and one per document for its
+-- Content search (docs/specs/013-workspace/content-search.md, docs/specs/013-workspace/content-search.md):
+-- one row per tab's search text, and one per document for its
 -- cards under the tab key '~items'. Written only by each document's room, through its outbox; read only through the
 -- access-filtered search. `text` keeps the text as written, for the snippet; `folded` keeps it folded as names are
 -- (foldSearchText), for the share-of-trigrams check and word starts.

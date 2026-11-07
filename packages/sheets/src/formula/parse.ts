@@ -1,4 +1,4 @@
-// The formula parser (blueprint sheets-engine.md "Grammar"): precedence climbing over the tokens, as Google
+// The formula parser: precedence climbing over the tokens, as Google
 // Sheets reads a formula (negation binds tighter than ^, so -2^2 is 4; ^ is left-associative).
 import { columnIndex } from '../address';
 import { FORMULA_DEPTH_MAX, FORMULA_MAX } from '../limits';

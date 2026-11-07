@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-// docs/specs/008-canvas/blueprints/layout-cleanup.md "Performance and limits": the tidiers stay out of the first load
+// docs/specs/008-canvas/layout-cleanup.md: the tidiers stay out of the first load
 // and arrive on demand; a command run before they arrive runs once they do.
 
 async function freshEngine() {

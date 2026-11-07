@@ -1,4 +1,4 @@
-// INDEX.md (docs/specs/027-repositories/repository-link.md "`INDEX.md`"; blueprint "`INDEX.md`"): generated, one
+// INDEX.md (docs/specs/027-repositories/repository-link.md "`INDEX.md`"): generated, one
 // section per covered document in a stable order (folder path, then name, then id, RL41), so a new document never
 // reorders the rest. A document not read this pass keeps its previous section verbatim (RL16).
 

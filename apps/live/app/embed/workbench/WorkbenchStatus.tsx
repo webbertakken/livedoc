@@ -1,7 +1,7 @@
 'use client';
 
-// The workbench page's status screens and their copy (docs/specs/013-workspace/blueprints/
-// workbench-embeds.md "Presentation and UX", WB33, WB65): bare like an embed's (no header, no Explorer), the
+// The workbench page's status screens and their copy (docs/specs/013-workspace/workbench-embeds.md, WB33,
+// WB65): bare like an embed's (no header, no Explorer), the
 // copy in a `role="status"` region, `refused` and `unbound` headed by an `h1`. A workspace frame speaks of the
 // workspace, a document frame of the diagram.
 import type { ReactNode } from 'react';

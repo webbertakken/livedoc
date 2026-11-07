@@ -8,7 +8,7 @@ import {
   type BugReportScreenshotType,
 } from '@livedoc/api-schema';
 
-// Blueprint D14: from 0.9 down to 0.4 in steps of 0.1.
+// docs/specs/016-platform/bug-reports.md D14: from 0.9 down to 0.4 in steps of 0.1.
 export const SCREENSHOT_QUALITY_STEPS = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4] as const;
 
 // How long a capture waits for the page's pictures, at most: a lazy picture below the fold never loads.

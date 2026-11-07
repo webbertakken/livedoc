@@ -1,4 +1,4 @@
-// Arrows as views print them (docs/specs/024-agents/blueprints/document-views.md "Edges", VW26, VW27):
+// Arrows as views print them (docs/specs/024-agents/document-views.md, VW26, VW27):
 // on their source's line when pinned to a printed element there, else on their own line.
 import type { ArrowElement, Element, Endpoint, RefTable } from '@livedoc/document';
 import type { ViewEdgeJson, ViewEnd } from '@livedoc/api-schema';

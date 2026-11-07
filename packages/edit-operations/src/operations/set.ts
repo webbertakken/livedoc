@@ -1,4 +1,4 @@
-// `set <selector> key=value… [all]` (docs/specs/024-agents/blueprints/edit-operations.md "Operations"):
+// `set <selector> key=value… [all]` (docs/specs/024-agents/edit-operations.md):
 // each target gets the fields in order, through the aliases or as stored fields; no geometry changes
 // but named geometry and a shape growing to fit its label. A target the fields leave as it was is
 // not touched, so it is never normalised (E1, I2).

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 // The profile card that opens Settings > Account (docs/specs/014-identity/profile-and-email-notifications.md
-// "Identity"; blueprint auth-and-guest-access.md "Presentation and UX").
+// "Identity").
 
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

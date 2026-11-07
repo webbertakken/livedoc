@@ -577,3 +577,49 @@ dashboard ([Telemetry](../017-telemetry/telemetry.md) "Retired features").
 [Document](../006-document/document.md), [Sketch mode](../023-draw-mode/draw-mode.md),
 [Event storming](../021-event-storming/event-storming.md),
 [Toolbar layout](toolbar-layout.md), [Zen mode](zen-mode.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D15** Where the remembered mode is kept: One `localStorage` key per tab, `livedoc:v2:editor-mode:<tabId>`, retired:
+  the mode is the tab's (`Tab.opensIn`), and keys an earlier editor wrote are left in place, never read (default).
+- **D16** Whether an opening-mode change moves people already on the tab: Yes: the mode is the tab's, and everyone on it
+  follows a change; nothing is pinned per page (default).
+- **D17** Who may choose Opens in on a locked tab: Nobody: on a locked tab the Mode choices are not offered at all
+  (retired 2026-10-18 with the tab menu's Mode) (default).
+- **D18** How Opens in stores Diagram: Written explicitly (`opensIn: 'diagram'`), not deleted (default).
+- **D19** Where Opens in sits in the tab menu: Rows straight in the menu, after Import, Export and Clear: icon and name,
+  no description (retired 2026-10-18: the tab menu holds no Mode) (default).
+- **D20** Which tools a switch puts down besides the other mode's: The eraser in both directions; a palette-armed shape
+  on entering Draw (default).
+- **D21** How Ink is stored by name: `penColour` / `penTextColour: 'ink'`, a `PenColourName` beside the eight hued ones
+  (default).
+- **D22** A migrated board's unpainted shape label: `penTextColour: 'ink'`, as the board drew it (default).
+- **D59** Whether a switch held by the Leave Pages question moves Opens in: Only once it goes ahead (Turn Into Pages or
+  Keep as Articles); Cancel writes nothing (default).
+- **D103** The mode menu's measures beyond "36px rows, 6px radius": Mock-up B's: a 220 px panel (the chip's width when
+  wider), 4 px padding, 12 px radius, 16 px marks, a 14 px brand check (default).
+- **D104** Whether the mode menu still shows Shift+D: Only as the chip's `aria-keyshortcuts` and in Settings › Keyboard;
+  mock-up B shows no key cap (default).
+- **D105** What a Plan tab's top line shows where the switch was: Nothing: no switch, as an event-storming board; the
+  brand group simply ends at the menu button (default).
+- **D106** Where an empty general tab stored `plan` sits: It stays the Plan start (Start Planning), with no mode switch
+  on its rail; its search still reaches every other start (default).
+- **D107** The add menu's rows and marks: Tab (the mark of the mode it will open in), Board (kanban), Sheet (grid),
+  Dashboard (tiles); the tab list's footer as four rows (default).
+- **D108** Where Board, Sheet and Dashboard land: A Plan start opened on Start Planning's matching rail category
+  (Boards, Spreadsheets, Dashboards), kept for the maker only (default).
+- **D109** Sketch's start's name: Start Sketching (was Start Drawing); Structured keeps Start Diagramming (default).
+- **D110** The heading over other starts' matches, once Workshop and Plan are no modes: "Elsewhere", line "Choosing one
+  changes this tab to match.", empty-state line "Found elsewhere." (default).
+- **D111** Help addresses after the renames: `/help/canvas/sketch-mode/`, `/help/canvas/workshop/`,
+  `/help/canvas/plan-tabs/`, each old address redirecting (default).
+- **D112** The order of the five blanks and the wizard's cards: The openings' order: Sketch, Structured, Pages,
+  Workshop, Plan (default).
+- **D113** The tours named after a mode: Start Sketch Tour and Start Structured Tour (were Draw and Diagram); the
+  Workshop and Plan tours keep their names (default).
+- **D114** Where the top line finds room for the Workshop control and the longer Structured: Under 1280px the mode chip
+  shows its mark alone (name read out); the Workshop control is its mark alone unless Button Labels is on, so a 1024px
+  laptop keeps the Palette strip on the top line and a 1440px one keeps it centred (default).

@@ -1,6 +1,6 @@
 'use client';
 
-// Renewal (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench page" step 5, WB14,
+// Renewal (docs/specs/013-workspace/workbench-embeds.md step 5, WB14,
 // WB38): WORKBENCH_RENEW_LEAD_MS before the session expires the page posts `renew`, then again every
 // WORKBENCH_RENEW_RETRY_MS until a ticket lands or the session expires. Any `ticket` while mounted is
 // redeemed: one for the bound document and origin swaps the session and ends the old one; anything else

@@ -32,8 +32,8 @@ import { readStoredTab, withRev, type StoredTab } from './stored-tab';
 import { structureChange, structureRefusal } from '../tab-structure';
 import { writeChangeset, type Author } from './write';
 
-// The changeset pipeline (docs/specs/024-agents/agent-changesets.md "The write path"; blueprint "The
-// pipeline"): read, compile, check the base, check held, then write at the revision read. A lost
+// The changeset pipeline (docs/specs/024-agents/agent-changesets.md "The write path"): read, compile, check
+// the base, check held, then write at the revision read. A lost
 // race repeats once from the read, so the second attempt compiles against the winner's tab.
 
 export const SUBMIT_ATTEMPTS = 2;

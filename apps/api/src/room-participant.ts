@@ -1,5 +1,5 @@
-// A Participant's writes in the room (docs/specs/013-workspace/share-roles.md "Integrity"; blueprint "Behaviour
-// and state"). Split out of document-room.ts, which owns the sockets and hands this module what it needs.
+// A Participant's writes in the room (docs/specs/013-workspace/share-roles.md "Integrity"). Split out of
+// document-room.ts, which owns the sockets and hands this module what it needs.
 //
 // Content: a Participant's `el` op is never relayed as sent. It joins the room's tab write queue, is applied to
 // the stored tab by the participant content rule, and only what the rule produced reaches anyone:
@@ -22,9 +22,9 @@ import {
 } from './participant-write';
 import type { DocumentEnv } from './types';
 
-// How soon a Participant's answers reach D1 (blueprint SR9).
+// How soon a Participant's answers reach D1 (SR9).
 export const ANSWERS_FLUSH_MS = 1500;
-// How many of one socket's writes may wait on the queue (blueprint SR12): far above a person's pace (the autosave
+// How many of one socket's writes may wait on the queue (SR12): far above a person's pace (the autosave
 // sends one op per changed element every 600 ms), and a crafted flood is refused rather than starving everyone.
 export const PARTICIPANT_PENDING_MAX = 64;
 

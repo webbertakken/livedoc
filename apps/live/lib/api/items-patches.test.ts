@@ -5,7 +5,7 @@ import { __setOfflineBackend } from '../offline/offline-store';
 import { memBackend } from '../offline/offline-test-utils';
 import { ItemWritePartlyLanded, writeItem } from './items';
 
-// Blueprint item-store.md "Editor slice": a write of many patches goes to /items/patches in batches of
+// A write of many patches goes to /items/patches in batches of
 // ITEM_BULK_MAX, its answers folded into one.
 
 const scope = { ownerId: 'owner-me', documentId: 'doc-cloud', shareCode: null, tabId: null };
@@ -59,7 +59,7 @@ describe('writeItem tally', () => {
   });
 });
 
-// A many-item change refused after part of it landed (blueprint item-store.md "Interfaces and contracts: REST"):
+// A many-item change refused after part of it landed:
 // the part that landed comes back with the failure, so the editor keeps it and can undo it.
 describe('writeItem patches refused part way', () => {
   const patches = Array.from({ length: ITEM_BULK_MAX + 2 }, (_, n) => ({

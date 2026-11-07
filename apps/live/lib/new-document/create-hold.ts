@@ -1,4 +1,4 @@
-// The hold on a document whose create has not landed (docs/specs/013-workspace/blueprints/new-document-menu.md
+// The hold on a document whose create has not landed (docs/specs/013-workspace/new-document-menu.md
 // "Pending documents"): one promise per id, resolved when the create lands and never rejected, so a failed create
 // keeps every request naming the document waiting until Try again lands. `apiFetch` and `isOfflineId` wait on it.
 // Free of imports: the api client's funnel reads it.

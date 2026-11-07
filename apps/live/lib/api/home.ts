@@ -1,5 +1,5 @@
-// Explorer Home's reads (docs/specs/013-workspace/explorer-home.md; blueprint
-// docs/specs/013-workspace/blueprints/explorer-home.md "Client").
+// Explorer Home's reads (docs/specs/013-workspace/explorer-home.md;
+// docs/specs/013-workspace/explorer-home.md).
 //
 // Null means the read FAILED (a refusal, offline, an unparseable body), never an empty Home: "we
 // could not ask" and "there is nothing" are different answers, as the Timeline learnt

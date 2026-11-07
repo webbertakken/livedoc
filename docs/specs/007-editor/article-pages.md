@@ -503,3 +503,56 @@ ink").
   and tracked changes, find and replace, Word / Google Docs import.
 - Character-level merging of two people typing in the same paragraph at the same moment.
 - The writing in Structured or Sketch mode.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D33** Shape of block, flow and note ids: `b-` / `art-` and eight hex digits (a note: a UUID); any id read is 1 to 64
+  characters (default).
+- **D34** How big an article's writing may be: 5000 blocks, 400 runs and 20,000 characters a block, links 2048
+  characters; the tab's own cap binds first (default).
+- **D35** Smallest and largest a zone may be: 24 px (a grip can still be pressed) to 2000 px (past A3 landscape)
+  (default).
+- **D36** Who counts as the writer of a layout: Whoever changed the writing in the last 3000 ms, or whose writing has
+  focus (default).
+- **D37** When a measured zone has moved: Past 0.75 px (a margin marker past 0.5 px); less is layout noise (default).
+- **D38** Height of a drawing zone made from elements dropped in: Their height plus 24 px each side, at least 200 px
+  (default).
+- **D39** Where an Insert from the toolbar or slash menu lands: 30 px under the caret's line top, so the writing takes
+  it in after the block being written (default).
+- **D40** How long "a moment" a collaborator's name shows: 1500 ms after their caret last moved (default).
+- **D41** The page toolbar's room and hover reach: 4 px clear of the margin's edges; 12 px of slack round a page, 250 ms
+  grace; phone bar 8 px in at the top; a finger pans past 8 px (default).
+- **D42** How big one sync frame of writing may be: 200,000 characters of block ops, inside the room's 256K message cap
+  (default).
+- **D43** Bounds of a caret on the wire: Ids of 1 to 256 characters; an integer offset 0 to 1,000,000 (default).
+- **D44** Size of the slash menu and its query: 260 px wide, at most 320 px tall; it closes past 24 typed characters
+  (default).
+- **D45** What the link field does with a bare address: A bare domain becomes `https://`; an email address `mailto:`;
+  http, https and mailto are kept as typed (default).
+- **D46** Size and colour of a page number: 12 px in the body font, half the bottom margin up; slate-600 at 80% on
+  light, white at 55% on dark (default).
+- **D47** Which eight accent presets: Blue `#2563eb`, Teal `#0d9488`, Green `#16a34a`, Amber `#b45309`, Red `#dc2626`,
+  Pink `#db2777`, Purple `#7c3aed`, Slate `#334155` (default).
+- **D48** The exact text and highlight swatches: Text: Gray `#64748b` to Pink `#db2777` (Tailwind 500 to 700 shades);
+  highlights the matching 200 tints (default).
+- **D49** A margin wider than a narrow page can take: Capped at 37.5% of the page's width and height, so a column is at
+  least a quarter of the page (default).
+- **D50** How a phone frames a page for writing: Text column across the screen less 32 px a side, never past 100%, 104
+  px clear above it (default).
+- **D51** The writing's ink: Slate-800 on a light page, slate-200 on a dark one; muted slate-500 / slate-400; accent
+  made legible (default).
+- **D52** Text width when an article has no pages laid out yet: 600 px (default).
+- **D53** Placeholders the spec does not name: "Subtitle", "Heading 2", "Heading 3", "Quote", "To-do"; an empty body
+  block with the caret "Type / for blocks" (default).
+- **D54** How Turn Into Pages writes what Page text cannot hold: Ink `#1f2937`; a divider as three long dashes; to-dos
+  `☐` / `☑`; four spaces a list level; zones and page breaks left out (default).
+- **D60** How long an undo from the writing may take its writing back: 400 ms (`UNDO_SETTLE_MS`); writing arriving later
+  is a collaborator's and leaves the caret be (default).
+- **D77** How far a resize grip's arrow key moves a zone: 8 px a press, Shift ten times that (`GRIP_KEY_STEP`,
+  `ZoneBar.tsx`) (default).
+- **D90** Which assignee mark an open action's marker wears, and what a note with no action yet shows: The assignee's
+  initials in a 14 px disc on the chip's bottom-right corner, in their identity colour; an action with no assignee yet
+  shows the open ring alone (default).

@@ -1,4 +1,4 @@
-// Word wrapping for arrow labels (docs/specs/008-canvas/blueprints/arrow-labels.md).
+// Word wrapping for arrow labels (docs/specs/008-canvas/arrow-labels.md).
 //
 // Works on per-word widths rather than measuring joined strings, so a layout
 // pass that re-wraps the same label at several widths measures each word once

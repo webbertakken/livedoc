@@ -38,7 +38,7 @@ const pts = [
   { x: 512, y: 300, p: 1 },
 ];
 
-// docs/specs/020-import-export/blueprints/ms-whiteboard-import.md "Elements".
+// docs/specs/020-import-export/whiteboard-import.md.
 describe('readBoard', () => {
   it('reads an ink group: placement, every stroke preset, colour, factor, translation, arrowhead', () => {
     const el = only(

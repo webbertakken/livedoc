@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BRAND_ASSEMBLE_MS, useBrandAssembled } from './useBrandAssembled';
 
-// docs/specs/004-interface-design/blueprints/brand-motion.md "Assemble": once per page load.
+// docs/specs/004-interface-design/brand-mark.md: once per page load.
 describe('useBrandAssembled', () => {
   afterEach(() => {
     vi.useRealTimers();

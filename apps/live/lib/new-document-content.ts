@@ -1,7 +1,7 @@
 // What a new cloud document is made of (docs/specs/007-editor/new-document-route.md): the template's tabs, the
 // first named after its template unless the template names it, the card types its boards use, and a Plan
 // template's example cards; or, for no template, one blank tab in the theme's backdrop. Shared by /new and the
-// workspace frame's New document (docs/specs/013-workspace/blueprints/workbench-embeds.md, WB58), so a document
+// workspace frame's New document (docs/specs/013-workspace/workbench-embeds.md, WB58), so a document
 // made in either is the same document.
 import type { Tab } from '@livedoc/document';
 import { catalogueWithBoardTypes, type ItemCreate, type ItemTypeCatalogue } from '@livedoc/items';

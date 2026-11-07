@@ -24,7 +24,7 @@ export type {
   ClientMessage,
 } from '@livedoc/api-schema';
 
-// What a content module runs with (docs/specs/006-document/blueprints/document-storage.md): the worker's bindings
+// What a content module runs with (docs/specs/006-document/document-storage.md): the worker's bindings
 // and the document's own SQLite as `DOCUMENT_DB`, inside the document's room. The worker's Env has no DOCUMENT_DB,
 // so a content module called from the worker does not compile.
 export type DocumentEnv = Env & { DOCUMENT_DB: D1Database };
@@ -128,7 +128,7 @@ export type Env = {
   // Google sign-in: the OAuth client (a var) and its secret. Separate from the Drive mirror's client.
   GOOGLE_AUTH_CLIENT_ID?: string;
   GOOGLE_AUTH_CLIENT_SECRET?: string;
-  // Sign-in rate limits (blueprint "Security and trust"): every POST under /api/auth per IP, and code sends per
+  // Sign-in rate limits: every POST under /api/auth per IP, and code sends per
   // address. Absent bindings (self-host) allow.
   AUTH_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };
   AUTH_EMAIL_RATE_LIMITER?: { limit: (input: { key: string }) => Promise<{ success: boolean }> };

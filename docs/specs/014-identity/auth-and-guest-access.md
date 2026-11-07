@@ -3,7 +3,7 @@
 **Status: built; docs.nu runs guest-only until its sign-in secret is set.** Sign-in is **better-auth**, run inside
 LiveDoc's own api worker with its identity data in LiveDoc's own D1. It replaced Clerk, which no account moves from:
 docs.nu never had Clerk accounts. Not built yet: Settings > Account's editable name, sign-in
-methods and sessions lists. How it is built: [the blueprint](blueprints/auth-and-guest-access.md).
+methods and sessions lists.
 
 ## Principle
 
@@ -421,3 +421,44 @@ Signing in never moves a document in This Browser by itself ([Offline Mode → A
 - The app and the api share an origin (the router stitches `/api/*` under the app's host), which is what lets the
   session cookie stay host-only and `SameSite=Lax`. A host that splits them across sites is not supported for
   sign-in; local development signs in through the router on port 4000.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D10** The account id's shape: `acct_` and 24 base62 characters: never a UUID (the guest shape) and never Clerk's
+  `user_`, so one prefix test tells them apart (default).
+- **D11** When better-auth's schema is checked: In CI (`identity-schema.test.ts`), not per request: the runtime check
+  costs 15 ms a request and is what hangs a cached instance (default).
+- **D12** How sign-in is rate limited: Two Cloudflare limiters in front of `/api/auth/*`, like every other limit in the
+  api; better-auth's own limiter off (it would store IPs in D1) (default).
+- **D13** When cookies are `Secure`: Always, except an `http://localhost` base URL for local development (default).
+- **D14** Whether a session keeps the IP address: Never: blanked before the row is written; the user agent is kept to
+  name the session in Settings (default).
+- **D15** How long a session lasts: 30 days, sliding once a day: a guest-first product should not sign people out weekly
+  (default).
+- **D16** When the browser fetches a new session token: 60 s before the current one expires (default).
+- **D17** How long the api caches the public keys: 5 minutes per isolate, re-read at once on an unknown key id
+  (default).
+- **D18** How often the session-token key rotates: Every 90 days, the old key verifying for 30 more (default).
+- **D19** How soon "Send a new code" is allowed: 30 s after the last send (default).
+- **D20** Which session counts as the sign-up's own: One created within 60 s of its account (default).
+- **D21** How better-auth's version is held: Pinned exactly; upgrades are their own pull request, since minors remove
+  APIs (default).
+- **D22** Which database holds the identity tables: The api's existing `DB`, prefixed `identity_`: deletion and the
+  invite claim stay in one database (default).
+- **D24** How another tab learns of a sign-in: The `localStorage` hint plus a `BroadcastChannel` nudge; the tab re-reads
+  the session, trusting neither (default).
+- **D25** Whether a guest's page asks for a session: Always, once on load: a cleared hint must not hide a live session
+  (default).
+- **D26** What `/new` assumes before the session answers: The host's last answer here (`livedoc:v2:sign-in-offered`); a
+  browser that never asked waits for the read (default).
+- **D27** What the auth pages show before the methods are known: The email form, with Google's place held, so a late
+  answer never moves the form (default).
+- **D28** How an older session verifies again before deleting: A code to the account's email, which signs this browser
+  in afresh; it works for Google-only accounts too (default).
+- **D29** Which secret the guest key derives from: The oldest usable one, so a rotation of the sign-in secret never
+  re-keys guests (default).
+- **D30** What a browser does with an unsigned guest id on a host that signs: Takes a fresh signed id; the unsigned id's
+  server rows stay unreachable (no upgrade path) (default).

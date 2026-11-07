@@ -1,6 +1,6 @@
 import { defineProject } from '@livedoc/vitest-config';
 
-// The engine is pure: every line and branch is covered (docs/specs/024-agents/blueprints/edit-operations.md).
+// The engine is pure: every line and branch is covered (docs/specs/024-agents/edit-operations.md).
 export default defineProject({
   test: {
     coverage: {

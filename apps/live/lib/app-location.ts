@@ -1,4 +1,4 @@
-// The app's one way to leave a page (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workspace frame"):
+// The app's one way to leave a page (docs/specs/013-workspace/workbench-embeds.md):
 // every full navigation the Explorer makes, and every router push and replace, asks the navigation interceptor first.
 // Outside a workspace frame there is none and the browser goes as asked. Inside one, the frame takes the href and
 // moves itself (history.pushState), so a frame never loads another page and never loses its session.

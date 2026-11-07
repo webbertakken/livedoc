@@ -1,6 +1,6 @@
 // "Open with" on a copy of a mirrored file: **Import as new document**
-// (docs/specs/022-drive-mirror/drive-mirror.md, "Copies made in Drive"; blueprint
-// "Open with"). The copy carries the original's ldDocumentId, but it is another
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Copies made in Drive"). The copy carries the original's
+// ldDocumentId, but it is another
 // Drive file, so it never opens, re-tags or adopts the original.
 
 import { type DocumentEnvelope } from '@livedoc/document';

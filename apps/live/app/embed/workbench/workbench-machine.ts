@@ -1,4 +1,4 @@
-// The workbench page's states (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench
+// The workbench page's states (docs/specs/013-workspace/workbench-embeds.md "The workbench
 // page", `WorkbenchPhase`, and "The workspace frame"), as a pure transition function. The hooks run the effects
 // (redeem, hello, revoke, post `ended`); this decides what each answer means. `ended`, `unbound`, `refused` and
 // `failed` are terminal (WB12): a workbench reconnects by framing a fresh URL.
@@ -92,7 +92,7 @@ export function workbenchTransition(state: WorkbenchPhase, event: WorkbenchEvent
   }
 }
 
-// A request refused `401 invalid_session` (blueprint step 6): before the session's expiry it was
+// A request refused `401 invalid_session` (): before the session's expiry it was
 // revoked (token revoked, unpaired, document purged); after it, it expired.
 export function endReasonOfInvalidSession(
   expiresAt: number,

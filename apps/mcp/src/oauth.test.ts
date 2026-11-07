@@ -451,7 +451,7 @@ describe('isAllowedRedirectUri', () => {
   });
 });
 
-describe('the CLI client (docs/specs/015-api/blueprints/cli.md "OAuth server", CLI35, CLI77)', () => {
+describe('the CLI client (docs/specs/015-api/cli.md, CLI35, CLI77)', () => {
   const authorize = (redirect: string, client = 'livedoc-cli') =>
     app.request(
       `/oauth/authorize?client_id=${client}&redirect_uri=${encodeURIComponent(redirect)}&code_challenge=${'c'.repeat(43)}&code_challenge_method=S256&response_type=code`,

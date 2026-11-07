@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { createShape, settleStacks, type Element, type ShapeElement } from './index';
 
-// docs/specs/009-elements/blueprints/stack.md "Performance and limits": settling runs at every commit, so a large
+// docs/specs/009-elements/stack.md: settling runs at every commit, so a large
 // board with stacks must stay cheap. 2,000 loose boxes and 20 stacks of 10 children, already laid out (the common case:
 // one child moved). Warm-up passes then the fastest of five, as the other budget tests do.
 const WARM_UP_PASSES = 3;

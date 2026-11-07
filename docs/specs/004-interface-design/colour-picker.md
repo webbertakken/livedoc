@@ -183,3 +183,18 @@ Colours** (the four-dot glyph), which opens the full picker.
 Preset tiles that set several things at once (sticky presets, chart palettes, theme cards, gradient presets),
 and colours that are assigned rather than chosen (Plan labels, a presence colour given at random) stay as they
 are. A presence colour someone chooses is chosen in the picker, from the presence colours.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D61** Where a no-colour option sits: First in the first group, before the named defaults (default).
+- **D62** Keys between rows: Up and Down move like Left and Right (reading order), not by column: groups wrap unevenly
+  (default).
+- **D63** Soft tone of Ink: White (`#ffffff`) in both appearances: a white wash is a real fill; an ink-coloured wash is
+  not (default).
+- **D64** Which appearance an off-canvas standard colour is stored for: Light: Plan, articles and pages are designed on
+  light paper and already stored light-paper hexes (default).
+- **D65** Picker width in a narrow host: Never narrower than 276px; a popover clamps to the viewport and wraps
+  (default).

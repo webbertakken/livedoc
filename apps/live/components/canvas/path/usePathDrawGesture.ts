@@ -57,8 +57,8 @@ type Drag = {
 
 const EMPTY: ReadonlySet<string> = new Set();
 
-// The Path tool's drawing gesture (docs/specs/023-draw-mode/path-tool.md "Drawing"; blueprint
-// path-tool "Drawing"). Canvas composes `beginPathPress` in front of the other draw gestures, so
+// The Path tool's drawing gesture (docs/specs/023-draw-mode/path-tool.md "Drawing"). Canvas composes
+// `beginPathPress` in front of the other draw gestures, so
 // every press it claims places, shapes, closes or finishes a path; the steps themselves are the
 // pure ones in lib/path-draw. The draft lives here until it lands through `onCommitPath`.
 export function usePathDrawGesture({

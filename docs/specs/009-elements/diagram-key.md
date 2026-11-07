@@ -67,3 +67,11 @@ next loads or changes.
 
 The **Diagram Key tour** is on the actions group's **Start Diagram Key Tour** button while a diagram key is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through
 it on the element itself ([Element tours](../007-editor/element-tours.md) "The Diagram Key tour").
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D191** Key geometry and the tinted tag chip: Key 260 wide, title 32 px, rows 28 px, 8 px pad, 40 px swatches; a
+  mapped tag's chip washed at 16% of its colour with a border in it (default).

@@ -77,3 +77,11 @@ to the spot the note is about. CSS only; reduced motion and every export show th
 
 The MCP server and the REST API take `pointer-note` with `label`, `pointerTip` and `attachedTo` / `attachAt`; an agent
 sets the host and point and the editor places the note's tip on it when the board next loads.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D190** Starting note, colours and tip: 180 × 64 amber note "Stale for 60 s after a price change", tip 56 px below
+  its bottom-left and 24 px left; 7 px tip dot, 1.5 px leader in the border colour (default).

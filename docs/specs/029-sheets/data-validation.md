@@ -200,3 +200,14 @@ colors?, display? }`, `{ type: "dropdown_range", source: "A2:A20" }`, `{ type: "
 - Checking a write looks up only the written cells' rules; a Dropdown from a Range reads its range's shown values
   once per check.
 - A sheet without rules pays nothing: no index is built and nothing is drawn.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D24** How a rule's leftover cells are kept when another rule covers part of it: Up to four rectangles (bands above,
+  below, left, right), each a new rule with a new id (default).
+- **D25** What a Dropdown from a Range reads: The range's distinct shown values, empty aside, the first 500 (default).
+- **D26** How a colour scale blends: Linear in sRGB (default).
+- **D27** Custom format codes in other locales: Drawn as `TEXT` writes them (en), the same for everyone (default).

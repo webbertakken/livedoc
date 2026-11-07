@@ -1,5 +1,5 @@
-// Ten copies of the checkout tab side by side: 300 elements (docs/specs/024-agents/blueprints/
-// document-views.md "Testing"). Each copy's ids are hashed, so refs read like real UUID prefixes.
+// Ten copies of the checkout tab side by side: 300 elements (docs/specs/024-agents/document-views.md). Each
+// copy's ids are hashed, so refs read like real UUID prefixes.
 import type { Element, Endpoint, Tab } from '@livedoc/document';
 import { checkoutElements, CHECKOUT_TAB_ID } from './checkout-tab';
 

@@ -145,3 +145,24 @@ Where they differ from the chair:
 - **No walk-to-the-nearest-free-chair.** Sit where you walked.
 - **No table element.** A chair is furniture the room already knows how to
   arrange around whatever the author drew.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D122** Two sitters: Ring in the first sitter's colour; names joined with ", "; own character labelled "You"
+  (default).
+- **D123** "The chair's seat point": Each view's seat away from its backrest: front `(0.5, 0.62)`, back `(0.5, 0.38)`,
+  side `(0.38, 0.5)`, mirrored for facing right (default).
+- **D124** What "arrives on" means: Frontmost boxed element under the feet, frames skipped, bounds inclusive, rotation
+  ignored (default).
+- **D125** Arriving on a chair while seated: Ignored (default).
+- **D126** New chair look: 76x84, `aspectLocked: true`, `textSize: 'sm'`, label at the bottom; no stored colour
+  (default).
+- **D203** A new desk's and sofa's size: Their drawings' grids at chair scale: desk 120 × 112, sofa 152 × 85 (default).
+- **D204** Which cushion a sofa seats you on: The seat point nearest the feet on arrival (default).
+- **D205** The occupied ring on a desk or sofa: One ring under all its seats, in the first sitter's colour (default).
+- **D206** How a face toward the room reads against a top: The seat fill under 22% of the stroke colour (default).
+- **D207** How big a side view is: The front view's grid with its sides swapped, so a quarter-turn box swap fits it
+  exactly (default).

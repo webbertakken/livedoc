@@ -1,4 +1,4 @@
-// The one model every tab view reads (docs/specs/024-agents/blueprints/document-views.md "The view
+// The one model every tab view reads (docs/specs/024-agents/document-views.md "The view
 // model"), built once per render.
 import {
   computeRefs,

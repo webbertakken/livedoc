@@ -1,4 +1,4 @@
-// Which verb a command line names (docs/specs/015-api/blueprints/cli.md "One command, start to end" step 1):
+// Which verb a command line names (docs/specs/015-api/cli.md step 1):
 // a resource and a verb, or a top-level verb; aliases resolved; unknown words refused with a suggestion.
 
 import {

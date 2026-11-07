@@ -6,7 +6,8 @@ import { useLatest } from '@/hooks/ui/useLatest';
 import { debugLog } from '@/lib/debug-log';
 
 // This Browser's idea posts, from the press until the room answers them
-// (docs/specs/012-collaboration/idea-box.md "Racing for the last card", blueprint idea-box-race.md).
+// (docs/specs/012-collaboration/idea-box.md "Racing for the last card",
+// docs/specs/012-collaboration/idea-box.md).
 //
 // A post applies its card at once, with a fresh random id, and goes to the room through `sequence`, whose
 // promise settles when the room's cursor answers it. Until then it is PENDING: a peer's card that reaches a full

@@ -1,4 +1,4 @@
-// `workbench pair` (docs/specs/013-workspace/blueprints/workbench-embeds.md "The CLI"): asks to pair the token
+// `workbench pair` (docs/specs/013-workspace/workbench-embeds.md): asks to pair the token
 // with a workbench's origin, prints the approval link first so a workbench reading stdout can show it (WB24),
 // opens the browser only for a person at a terminal (WB25), then waits for the owner's answer as
 // `loginWithDevice` waits for the device grant's.

@@ -1,4 +1,4 @@
-// Read copies (docs/specs/015-api/blueprints/cli.md "Read copies"): the plain tab as this client last read it, at
+// Read copies (docs/specs/015-api/cli.md): the plain tab as this client last read it, at
 // a revision. They give a write its base and `tab diff` its before. The store is the CLI's (files); a front door
 // without one passes null and writes send no base.
 

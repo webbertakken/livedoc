@@ -3,7 +3,8 @@ import { fakeApi } from '../testing/fake-api';
 import { formPlan } from '../testing/forms';
 import { readFormLink, sheetRefsOf, worldOf } from './form-world';
 
-// The world a form verb reads (blueprint forms.md §15 "Engine flow"): the plan's tabs, boards and sheets.
+// The world a form verb reads (docs/specs/030-forms/forms.md "Engine flow"): the plan's tabs, boards and
+// sheets.
 describe('worldOf', () => {
   it('names a second sheet on a tab after it, and only Board tabs’ live boards', () => {
     expect(

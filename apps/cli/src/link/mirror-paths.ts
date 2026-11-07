@@ -1,4 +1,4 @@
-// Where a document's files go (docs/specs/027-repositories/blueprints/repository-link.md "Paths"): under the mirror
+// Where a document's files go (docs/specs/027-repositories/repository-link.md): under the mirror
 // directory, by the folders between the covered folder and the document's (RL7), then the document's slug; a slug
 // another document's file holds takes the short id, then the whole id (CLI27, CLI85). Paths are relative to the
 // mirror directory, with POSIX separators.

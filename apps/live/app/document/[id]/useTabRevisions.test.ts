@@ -3,8 +3,8 @@ import { act, renderHook } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { useTabRevisions } from './useTabRevisions';
 
-// The last revision the editor knows for each tab (docs/specs/013-workspace/blueprints/
-// workbench-embeds.md "The selection reference"): its load and relayed changesets (the changeset-seen
+// The last revision the editor knows for each tab (docs/specs/013-workspace/workbench-embeds.md "The
+// selection reference"): its load and relayed changesets (the changeset-seen
 // map), and its own saves' answers.
 
 describe('useTabRevisions', () => {

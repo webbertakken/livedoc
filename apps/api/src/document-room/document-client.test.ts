@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Env } from '../types';
 import { askRoom, DOCUMENT_ID_HEADER, documentRoom } from './document-client';
 
-// The worker's one way into a document's room (docs/specs/006-document/blueprints/document-storage.md "Interfaces
+// The worker's one way into a document's room (docs/specs/006-document/document-storage.md "Interfaces
 // and contracts").
 
 function envWith(stub: Record<string, unknown>) {

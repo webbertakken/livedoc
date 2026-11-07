@@ -1,4 +1,4 @@
-// A question as an agent gives it (docs/specs/030-forms/forms.md "Agents", blueprint §15 "Question input"), made
+// A question as an agent gives it (docs/specs/030-forms/forms.md "Agents" "Question input"), made
 // through the builder's own edits so it equals one made in the builder: a type's blank question, then its settings,
 // each checked against the type and the limits the builder keeps. Where its answer goes is the mapping's
 // (form-mapping.ts).

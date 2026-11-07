@@ -8,8 +8,8 @@ import type { Env } from '../types';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 
-// The changeset routes end to end on real SQLite (docs/specs/024-agents/agent-changesets.md; blueprint
-// "Testing"): submit, list, one, revert, with a recording room.
+// The changeset routes end to end on real SQLite (docs/specs/024-agents/agent-changesets.md): submit, list,
+// one, revert, with a recording room.
 
 const OWNER = 'user_owner';
 const box = (id: string, label = id, x = 0): Element => ({

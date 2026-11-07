@@ -6,7 +6,7 @@ import { ROLE_PASS } from './share-dialog-parts';
 // "The pass metaphor"): a role-coloured header band and a body the caller fills.
 // Active and expired passes share it so the two read as the same object in two
 // states. The band runs across the top rather than down the left so the body,
-// and the link in it, has the card's whole width (blueprint SR7).
+// and the link in it, has the card's whole width (SR7).
 
 // Arrival and departure (docs/specs/007-editor/live-app.md "Share dialog"):
 // the <li> is a one-row grid whose row eases between 0fr and 1fr, so a pass

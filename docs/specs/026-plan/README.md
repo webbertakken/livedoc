@@ -13,4 +13,3 @@ Follow the references below only as needed; never upfront.
 - ./plan-agents.md - when working on how agents (MCP, CLI) read the plan, name columns, types and fields, and change card types
 - ./linked-boards.md - when working on linked boards: the Actions board that collects every action, linked cards kept in step with the canvas, Won't Do
 - ./items.md - when working on items and the item store: fields, item types, writes, access, live sync, undo, offline documents, copies, limits
-- ./blueprints/README.md - when implementing Plan tabs, the Plan board or the item store: file-level contracts, constants, defaults and tests

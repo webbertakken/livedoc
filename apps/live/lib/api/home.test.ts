@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HomeResponse } from '@livedoc/api-schema';
 import { apiReadHome } from './home';
 
-// Explorer Home's reads (docs/specs/013-workspace/blueprints/explorer-home.md "Client"): null
+// Explorer Home's reads (docs/specs/013-workspace/explorer-home.md): null
 // means "we could not ask", never an empty Home.
 
 const EMPTY: HomeResponse = {

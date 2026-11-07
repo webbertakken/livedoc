@@ -2,7 +2,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// The image picker in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface
+// The image picker in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface
 // table): upload only, and the person's gallery is never read.
 
 const { apiListImages } = vi.hoisted(() => ({ apiListImages: vi.fn(async () => []) }));

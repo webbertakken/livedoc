@@ -263,7 +263,7 @@ export const MERMAID_UNSUPPORTED_ERROR =
   'Only Mermaid flowcharts (graph / flowchart), state diagrams (stateDiagram), and ER diagrams (erDiagram) are supported — not sequence / class / gantt / etc.';
 
 // Whether the first meaningful line is a header the importer reads as a graph: a flowchart, a state diagram or an
-// ER diagram. The CLI tells a Mermaid file from edit operations by it (docs/specs/015-api/blueprints/cli.md CLI71).
+// ER diagram. The CLI tells a Mermaid file from edit operations by it (docs/specs/015-api/cli.md CLI71).
 export function startsWithMermaidHeader(text: string): boolean {
   const first = mermaidStatements(text)
     .map(cleanLine)

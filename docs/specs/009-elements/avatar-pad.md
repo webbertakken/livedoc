@@ -107,3 +107,13 @@ starting on a pad emits `track('Canvas', 'Used', 'AvatarPadArrival')`, once per 
 - **No pad per person or per team.** Everyone starts on the same pad (or the nearest one).
 - **No pressing it.** A pad is not a way into Avatar mode; a Selection Mode button set to Avatar is.
 - **No departure effect.** Leaving the mode takes the character away as it always has.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D211** How big the arrival beam is: 80 x 200 canvas px on a 2 px grid, fading up in four bands: wider than a Regular
+  character, rising well past a Tall one (default).
+- **D212** A new pad's size: 128 x 80: four canvas px per grid pixel, a touch chunkier than the sprite's own (default).
+- **D213** How many beams play at once: Eight, the oldest dropped first (default).

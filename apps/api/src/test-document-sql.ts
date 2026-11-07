@@ -3,7 +3,7 @@ import type { DocumentSql, DocumentSqlCursor } from './document-room/document-db
 import { assertD1Compound } from './test-d1-compound';
 
 // `ctx.storage.sql` for node tests: SqlStorage's `exec` over a node:sqlite database, for a room's SQLite
-// (docs/specs/006-document/blueprints/document-storage.md). Like SqlStorage, a call without bindings may hold several
+// (docs/specs/006-document/document-storage.md). Like SqlStorage, a call without bindings may hold several
 // statements (the schema); a call with bindings is one statement. Not a `.test.ts` file, so vitest doesn't collect
 // it as a suite.
 

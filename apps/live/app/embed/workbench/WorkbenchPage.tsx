@@ -1,6 +1,6 @@
 'use client';
 
-// The workbench page (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench page", "The
+// The workbench page (docs/specs/013-workspace/workbench-embeds.md, "The
 // workspace frame"): runs the page machine through the handshake and renewal, and renders a status screen until
 // the workbench answers; then, signed in as the session's person (WorkbenchAuthBridge), the editor with the
 // workbench surface in the document scope, or the workspace frame in the workspace scope. The address names the

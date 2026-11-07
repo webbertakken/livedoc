@@ -1,4 +1,4 @@
-// The Drive mirror's view of Google Drive (docs/specs/022-drive-mirror/blueprints/drive-mirror.md,
+// The Drive mirror's view of Google Drive (docs/specs/022-drive-mirror/drive-mirror.md,
 // "DriveClient"): the few calls the sync engine makes, behind an interface so
 // the engine is tested against the fake Google and never against a real one.
 

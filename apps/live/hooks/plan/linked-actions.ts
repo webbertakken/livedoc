@@ -13,7 +13,7 @@ export type PlacedAction = { tabId: string; elementId: string; action: ElementAc
 export type CollectingBoard = { tabId: string; elementId: string; setup: PlanBoardSetup };
 
 // Each tab's actions and boards, kept by its elements array: a change rewrites only the tabs it touches, so a drag on
-// one tab re-reads that tab alone (blueprint linked-boards.md "Performance and limits").
+// one tab re-reads that tab alone.
 type TabScan = { actions: PlacedAction[]; boards: CollectingBoard[] };
 const scans = new WeakMap<readonly Element[], Map<string, TabScan>>();
 

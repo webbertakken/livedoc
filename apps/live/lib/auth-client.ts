@@ -1,6 +1,6 @@
 'use client';
 
-// better-auth's browser client (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Files"): the email-code
+// better-auth's browser client (docs/specs/014-identity/auth-and-guest-access.md): the email-code
 // and Google calls of the sign-in pages and the re-verification before deleting the account. Imported only by those
 // surfaces, so the library lands in their own chunks and never in the editor's first load; every other page reads
 // the session through the auth bridge's plain `fetch` (`@livedoc/account-session`).

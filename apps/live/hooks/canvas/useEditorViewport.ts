@@ -62,7 +62,7 @@ const MIN_FIT_ZOOM = 0.2;
 
 type EditorViewportApi = {
   // The view (pan offset in canvas-coords, zoom multiplier; 1 = 100%), held in a store so a pan or a
-  // zoom renders the canvas, not the editor (docs/specs/008-canvas/blueprints/viewport-store.md).
+  // zoom renders the canvas, not the editor (docs/specs/008-canvas/canvas-performance.md).
   viewport: ViewportStore;
   setViewportOffset: ViewportStore['setOffset'];
   setViewportZoom: ViewportStore['setZoom'];

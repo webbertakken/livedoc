@@ -32,7 +32,7 @@ export function ChromeControls({
   // (docs/specs/013-workspace/folders.md); the full-page Explorer's bar keeps it.
   github?: boolean;
   // The Appearance control; withheld where the host sets the scheme itself (a workbench frame,
-  // docs/specs/013-workspace/blueprints/workbench-embeds.md, WB15).
+  // docs/specs/013-workspace/workbench-embeds.md, WB15).
   appearance?: boolean;
   // The Start Tour button leads the controls; the editor's actions group draws it with the document actions instead.
   tourOffer?: boolean;

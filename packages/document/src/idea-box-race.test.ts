@@ -11,7 +11,8 @@ import {
 } from './index';
 
 // Two people race for an idea box's last card (docs/specs/012-collaboration/idea-box.md "Racing for the last
-// card", blueprint idea-box-race.md). The room numbers A's post first. Each browser applies its own post at
+// card", docs/specs/012-collaboration/idea-box.md). The room numbers A's post first. Each browser applies its
+// own post at
 // the press, then the room's frames in the room's order; a poster's own post is pending until the room's
 // cursor answers it. Every copy, and the D1 copy a save merges with the ledger, must end the same.
 

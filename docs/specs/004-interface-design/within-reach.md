@@ -41,5 +41,12 @@ side's set and then the set of both, and loses nothing.
 ## Implementation
 
 One shared, pure function decides every within-reach set: `withinReach` in `@livedoc/api-schema`
-(`packages/api-schema/src/within-reach.ts`), used by the api worker and the live app alike
-([blueprint](blueprints/within-reach.md)).
+(`packages/api-schema/src/within-reach.ts`), used by the api worker and the live app alike.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D48** Which package holds the shared allocation: `@livedoc/api-schema`: the one package both the api worker and the
+  live app already import, beside Home's other shared rules (default).

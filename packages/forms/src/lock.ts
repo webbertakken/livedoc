@@ -1,4 +1,4 @@
-// A live form is locked (docs/specs/030-forms/forms.md "Publishing and the form link", "Agents"; blueprint §15):
+// A live form is locked (docs/specs/030-forms/forms.md "Publishing and the form link", "Agents"):
 // while it takes responses only its settings may change, as they never change what a response means.
 import type { FormDefinition } from './model';
 

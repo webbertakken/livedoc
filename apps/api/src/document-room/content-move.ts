@@ -1,5 +1,5 @@
 // A document's content moving from D1 into its room (docs/specs/006-document/document-storage-move.md "A move",
-// blueprint docs/specs/006-document/blueprints/document-storage-move.md "A move"). The room reads every row D1 holds
+// docs/specs/006-document/document-storage-move.md "A move"). The room reads every row D1 holds
 // for the document, writes them verbatim in one transaction with the rows derived from the bodies (tab stats, image
 // references, board statuses), reads its own rows back and compares the two as canonical content inside that same
 // transaction, so a difference undoes the whole write (M2). D1's content tables are only read (M3); the one D1 write

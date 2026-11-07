@@ -55,7 +55,7 @@ type GripContext = {
   resizable?: boolean;
 };
 
-// One element's resize handles and edge anchors (docs/specs/008-canvas/blueprints/selection-store.md):
+// One element's resize handles and edge anchors (docs/specs/008-canvas/canvas-performance.md):
 // shown on a lone boxed selection, not being edited, in no edit-blocking mode. Fixed-size elements
 // (mode / session buttons by kind, event-storming notes by their creation stamp) advertise no resize,
 // and a table no edge anchors. `single` is "this element is the one selected element".
@@ -210,7 +210,7 @@ export function deriveCanvasSelection(input: {
   // locked members and arrows where they are), each as drawn, so a rotated member's turned
   // corners sit inside it. Those members also pick the primary the handles press, so a locked
   // box or an arrow first in z-order neither hides the handles nor takes a press it refuses
-  // (docs/specs/008-canvas/blueprints/resize.md).
+  // (docs/specs/008-canvas/canvas-and-palette.md).
   const unionMembers =
     multiSelectedIds.size > 1
       ? elements.filter(

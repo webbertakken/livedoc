@@ -79,7 +79,7 @@ export function AiPanelContent({
 }: AiPanelProps) {
   // What the request is about: the selection, read from the store (empty = the whole tab). The panel
   // describes it, so a selection change renders the panel and not the editor
-  // (docs/specs/008-canvas/blueprints/selection-store.md).
+  // (docs/specs/008-canvas/canvas-performance.md).
   const selected = useSelectionOf(selectionSetOf, sameMembers);
   const focusIds = useMemo(() => [...selected], [selected]);
   // The request session (mode / prompt / streaming status / history +

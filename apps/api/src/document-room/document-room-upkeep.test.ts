@@ -6,7 +6,7 @@ import { SHEET_UNREFERENCED_DAYS } from '../sheet-sweep';
 import { FLUSH_IDLE_MS } from './room-content';
 import { UPKEEP_AT_KEY, UPKEEP_DUE_KEY, UPKEEP_INTERVAL_MS, upkeepAfterWrite } from './room-upkeep';
 
-// A room's upkeep (docs/specs/006-document/document-storage.md "Upkeep", blueprint "Upkeep"): from its alarm, at most
+// A room's upkeep (docs/specs/006-document/document-storage.md "Upkeep"): from its alarm, at most
 // once a day, changesets past their retention and sheets unreferenced past 30 days go; an idle room is woken again
 // only when something it holds will age out.
 

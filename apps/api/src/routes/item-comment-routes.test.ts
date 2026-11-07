@@ -8,7 +8,7 @@ import * as db from '../db';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 
-// A Plan card's comments (docs/specs/026-plan/items.md "Comments", blueprint item-store.md "Comments"): who
+// A Plan card's comments (docs/specs/026-plan/items.md "Comments"): who
 // may add, delete, resolve and reopen; author ids only to their author; the relay; restore; copies.
 
 let sql: SqliteD1;

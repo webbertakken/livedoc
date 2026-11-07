@@ -7,7 +7,7 @@ import type { Env } from '../types';
 import { parseChangesetRequest } from './request';
 import { submitChangeset } from './submit';
 
-// The pipeline's attempt loop and relay (docs/specs/024-agents/blueprints/agent-changesets.md "The
+// The pipeline's attempt loop and relay (docs/specs/024-agents/agent-changesets.md "The
 // pipeline" steps 9 and 10), on real SQLite with an injected interleaving.
 
 const box = (id: string, label = id): Element => ({

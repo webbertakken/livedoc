@@ -1,5 +1,5 @@
 // Inbound: what one Drive change means for LiveDoc
-// (docs/specs/022-drive-mirror/drive-mirror.md, "Inbound"; blueprint "Inbound").
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Inbound").
 // Pure: the engine applies the decision through the ordinary api routes.
 //
 // The item row is the last Drive state LiveDoc knows. A change is an

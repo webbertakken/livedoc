@@ -68,7 +68,7 @@ describe('rowToShareLink', () => {
     expect(rowToShareLink(row({ role: 'edit', level: null })).role).toBe('edit');
   });
 
-  it('reads an unrecognised value as view, never higher (blueprint I2)', () => {
+  it('reads an unrecognised value as view, never higher (I2)', () => {
     // Fail closed: a value this worker does not know (a future level, a
     // corrupted row, a typo, a case change) never escalates anyone. The
     // columns' CHECKs make it unreachable in practice; this pins the posture.

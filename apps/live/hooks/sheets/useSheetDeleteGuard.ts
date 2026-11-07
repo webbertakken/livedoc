@@ -1,5 +1,5 @@
-// Deleting a Sheet with its sheet (docs/specs/029-sheets/sheet-store.md "Deleting a sheet", blueprint
-// sheet-store.md "Deleting a sheet"). Before a delete, the guard finds the sheets it would take with it (those
+// Deleting a Sheet with its sheet (docs/specs/029-sheets/sheet-store.md "Deleting a sheet"). Before a delete,
+// the guard finds the sheets it would take with it (those
 // nothing else references, sheet-references.ts) and asks once for all of them. A delete taking no sheet, or one made
 // before any Sheet has drawn (nothing attached to release them), goes ahead without asking: its sheets are then left
 // as a Cut's are.

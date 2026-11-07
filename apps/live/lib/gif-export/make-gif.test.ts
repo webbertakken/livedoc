@@ -5,7 +5,7 @@ import type { GifFrame } from './gif-timeline';
 import { makeGif, paletteSamples } from './make-gif';
 import type { PageSnapshot } from './page-snapshot';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The hook": Make.
+// docs/specs/020-import-export/animated-gif-export.md: Make.
 const snap = (animated: boolean): PageSnapshot => ({
   animated,
   width: 4,

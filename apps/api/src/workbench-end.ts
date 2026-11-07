@@ -1,4 +1,4 @@
-// Ending workbench access (docs/specs/013-workspace/blueprints/workbench-embeds.md "Ending access"): Unpair
+// Ending workbench access (docs/specs/013-workspace/workbench-embeds.md): Unpair
 // removes one pairing; revoking a token removes all of its pairings and its pending requests. Tickets and
 // sessions cascade with their pairing. The D1 delete is the change; closing the rooms is best-effort, since
 // every later request of a removed session already fails. A document session's room is its document; a

@@ -1,5 +1,5 @@
 // One draw.io page to LiveDoc elements
-// (docs/specs/020-import-export/blueprints/drawio-import.md step 15): walk the
+// (docs/specs/020-import-export/drawio-import.md step 15): walk the
 // layers depth-first in paint order, build each vertex, drop groups, skip
 // hidden and collapsed content, then build the edges against the elements
 // their ends became.
@@ -122,7 +122,7 @@ export function convertPage(graph: DrawioGraph, input: PageContext): ConvertedPa
       return;
     }
     const cls = classifyVertex(cell, graph);
-    // Text draw.io sizes to itself comes in sized to its text (blueprint step 15.3).
+    // Text draw.io sizes to itself comes in sized to its text (.3).
     const rect = clampRect(
       cls.kind === 'text' && isAutoSized(rawRect)
         ? autoTextRect(cell, rawRect, ctx.scale ?? 1)

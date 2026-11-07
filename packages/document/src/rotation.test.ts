@@ -4,7 +4,7 @@ import { drawnBounds, rotationOf, supportsRotation } from './rotation';
 import { svgBoxed } from './svg-render';
 import type { BoxedElement, Element } from './index';
 
-// docs/specs/009-elements/blueprints/annotations.md [QD8]: Rotation is hidden for annotations.
+// docs/specs/009-elements/annotations.md [QD8]: Rotation is hidden for annotations.
 describe('supportsRotation', () => {
   it('lets a boxed element rotate', () => {
     expect(supportsRotation(createShape('square', 0, 0))).toBe(true);

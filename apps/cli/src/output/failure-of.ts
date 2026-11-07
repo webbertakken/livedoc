@@ -1,4 +1,4 @@
-// Any thrown thing as the failure the CLI reports (docs/specs/015-api/cli.md "Exit codes", blueprint CLI14-16):
+// Any thrown thing as the failure the CLI reports (docs/specs/015-api/cli.md "Exit codes", CLI14-16):
 // its exit code, a stable code, one line, candidates and a runnable fix. Never a stack trace.
 
 import { AddressError, VerbRefusal } from '@livedoc/agent-verbs';

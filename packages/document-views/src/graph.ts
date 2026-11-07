@@ -1,4 +1,4 @@
-// The graph view (docs/specs/024-agents/blueprints/document-views.md "graph", VW30): the elements an
+// The graph view (docs/specs/024-agents/document-views.md, VW30): the elements an
 // arrow touches, then every arrow in its stored direction with its ref.
 import type { GraphView, ViewDoor } from '@livedoc/api-schema';
 import { fitLines, fitOf, type ViewLine, type ViewResult } from './budget';

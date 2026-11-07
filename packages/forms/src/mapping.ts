@@ -1,4 +1,4 @@
-// Mapping (docs/specs/030-forms/forms.md "Mapping: where an answer goes", blueprint §5): which card fields a
+// Mapping (docs/specs/030-forms/forms.md "Mapping: where an answer goes"): which card fields a
 // question's answer may be kept in, and where it goes when its field is gone.
 import {
   ratingScaleOf,

@@ -1,7 +1,7 @@
 'use client';
 
-// A signed-in person's paired workbenches (docs/specs/013-workspace/workbench-embeds.md "Pairing"; blueprint
-// "Settings > API tokens", WB46): `GET /api/workbench/pairings` once, grouped by token here, and Unpair, which
+// A signed-in person's paired workbenches (docs/specs/013-workspace/workbench-embeds.md "Pairing", WB46):
+// `GET /api/workbench/pairings` once, grouped by token here, and Unpair, which
 // removes the row once the api has ended that pairing.
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { WorkbenchPairing } from '@livedoc/api-schema';

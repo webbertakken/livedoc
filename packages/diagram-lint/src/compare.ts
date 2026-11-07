@@ -1,4 +1,4 @@
-// `graph lint --compare` (blueprint "Compare", LN26, LN27): a graph source laid out in each variant of the
+// `graph lint --compare` (LN26, LN27): a graph source laid out in each variant of the
 // named dimensions, measured, and the best marked.
 
 import type { LintMeasures, LintReport, LintSeverity } from '@livedoc/api-schema';

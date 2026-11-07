@@ -1,4 +1,4 @@
-// A room's own upkeep (docs/specs/006-document/document-storage.md "Upkeep", blueprint "Upkeep"), run from its alarm
+// A room's own upkeep (docs/specs/006-document/document-storage.md "Upkeep"), run from its alarm
 // at most once per UPKEEP_INTERVAL_MS: agent changesets past their retention go (their parts by the cascade), and
 // sheets no tab has referenced for SHEET_UNREFERENCED_DAYS (sheet-sweep.ts). It answers when the next run is due:
 // the moment the oldest thing left would age out, never sooner than a day, or none when nothing is left to age, so

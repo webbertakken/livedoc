@@ -1,5 +1,5 @@
-// Reading a replayed board's elements (docs/specs/020-import-export/blueprints/
-// ms-whiteboard-import.md "Elements"): each canvas child by its type to a typed element.
+// Reading a replayed board's elements (docs/specs/020-import-export/whiteboard-import.md): each canvas child
+// by its type to a typed element.
 import type { SceneColour } from '@/lib/board-scene/scene';
 import { MSWB_STICKY_YELLOW, MSWB_TEXT_COLOURS, MSWB_TRAIT as T, MSWB_TYPE } from './format';
 import { decodePenStroke, type PenStroke } from './pen-stroke';

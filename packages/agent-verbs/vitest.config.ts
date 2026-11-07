@@ -1,7 +1,7 @@
 import { defineProject } from '@livedoc/vitest-config';
 
 // The verb catalogue is pure: every line and branch is covered, the suites' fakes aside
-// (docs/specs/015-api/blueprints/cli.md).
+// (docs/specs/015-api/cli.md).
 export default defineProject({
   test: {
     coverage: {

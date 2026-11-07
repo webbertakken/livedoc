@@ -1,5 +1,5 @@
 // Imported draw.io libraries made into shape libraries (docs/specs/013-workspace/shape-libraries.md
-// "Making libraries"; blueprint "Behaviour and state" 1). Each library on its own: its pictures
+// "Making libraries" 1). Each library on its own: its pictures
 // through the import image pipeline (into the owner's gallery, no document), its items given ids and
 // titles within the limits, then one create. A refused library is listed and the next goes on.
 

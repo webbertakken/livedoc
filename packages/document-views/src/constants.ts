@@ -1,4 +1,4 @@
-// The view constants (docs/specs/024-agents/blueprints/document-views.md "Constants and configuration").
+// The view constants (docs/specs/024-agents/document-views.md).
 
 // Spec, "The outline".
 export const LABEL_CUT_CHARS = 60;

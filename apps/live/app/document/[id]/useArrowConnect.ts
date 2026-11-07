@@ -42,7 +42,7 @@ export function useArrowConnect({
   editsBlocked: boolean;
   activeId: string;
   activeTab: Tab;
-  // Read when an arrow is armed (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when an arrow is armed (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   setSelectedId: (id: string | null) => void;
   beginDraw: (intent: { type: 'arrow'; ends?: ArrowEnds }) => void;

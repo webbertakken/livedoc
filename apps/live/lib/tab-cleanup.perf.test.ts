@@ -3,7 +3,7 @@ import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { createPinnedArrow, createShape, type Element } from '@livedoc/document';
 import { cleanupElements, type CleanupKind } from './tab-cleanup';
 
-// docs/specs/008-canvas/blueprints/layout-cleanup.md "Performance and limits": a tidier's press runs one cleanup
+// docs/specs/008-canvas/layout-cleanup.md: a tidier's press runs one cleanup
 // over the whole tab, so the worst case a hand-drawn diagram reaches must stay inside one press's budget.
 
 const TIDY_PRESS_WORST_CASE_NODES = 300;

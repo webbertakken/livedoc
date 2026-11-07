@@ -1,6 +1,6 @@
 'use client';
 
-// A Sheet that cannot show its grid yet or at all (blueprint sheet-element.md "Presentation and UX"): the frame and
+// A Sheet that cannot show its grid yet or at all: the frame and
 // the title, then while it loads the site's loader in a Sheet's form (SheetBuildAnimation: a table filling in, with
 // the opening screen's title and sweep); else skeleton grid lines and a quiet line: Couldn't load this sheet (Try
 // Again), or This sheet is no longer in this document (Remove, for an editor).

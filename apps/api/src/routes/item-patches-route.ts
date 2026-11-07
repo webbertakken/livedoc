@@ -1,4 +1,4 @@
-// POST /items/patches (blueprint item-store.md "Interfaces and contracts: REST"): many items changed at once, such
+// POST /items/patches: many items changed at once, such
 // as a deleted card type's or a removed column's cards sent to the Trash. Every id must exist (and, in a tab-scoped
 // grant, be in scope), each patch is read as a single one is, and every resulting item is checked before anything
 // is written, so one refusal refuses the request, naming the item. The updates land in one D1 batch, each guarded

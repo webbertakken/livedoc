@@ -1,4 +1,4 @@
-// @livedoc/sheets: the Sheet element's engine (docs/specs/029-sheets/blueprints/sheets-engine.md). Pure, no DOM,
+// @livedoc/sheets: the Sheet element's engine (docs/specs/029-sheets/formulas.md). Pure, no DOM,
 // no dependencies; shared by the editor (lazily loaded), the api worker and the MCP worker.
 export * from './limits';
 export * from './ids';

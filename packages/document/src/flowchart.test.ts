@@ -32,7 +32,7 @@ import { createShape } from './shape-factory';
 import { elementKindLabel } from './element-kind-label';
 import type { ArrowElement, Element, ShapeElement } from './index';
 
-// docs/specs/009-elements/flowchart.md and its blueprint.
+// docs/specs/009-elements/flowchart.md.
 
 const CHART = 'start';
 

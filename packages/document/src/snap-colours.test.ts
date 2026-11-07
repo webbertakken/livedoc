@@ -177,7 +177,7 @@ describe('snapTabColours', () => {
     expect(SNAP_COLOUR_FIELDS.filter((r) => r.applies(sticky()))).toHaveLength(0);
   });
 
-  // docs/specs/023-draw-mode/blueprints/snap-colours.md: the named colours imports land on.
+  // docs/specs/023-draw-mode/draw-mode.md: the named colours imports land on.
   it('snaps a text box, a path, an unfilled shape’s label and an arrow’s label', () => {
     const out = snapTabColours([
       text({ textColor: '#1971C2', textSwatch: 2 }),

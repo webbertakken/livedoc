@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkbenchDocumentSession } from '@/components/providers/workbench-session-context';
 
-// The editor's load in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor
+// The editor's load in a workbench (docs/specs/013-workspace/workbench-embeds.md "The editor
 // in a workbench", I9): no guest migration or guest identity, no participant write, no Explorer lists,
 // no share-link read, the session's level, the session's tab; the address is never read.
 

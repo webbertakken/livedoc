@@ -172,3 +172,37 @@ Specified in the research and not built yet:
 
 **Participant** is this access level. The `participants` table and its records are a person's **display identity**
 (name, colour, picture); prose calls them that, never "participant" ([Domain language](../003-system-architecture/domain-language.md)).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **SR1** What the level field is called in storage and on the wire: `role` everywhere stored or sent
+  (`share_links.role`, `ShareLink.role`), as today; `level` in code (`AccessLevel`) (default).
+- **SR2** Which queue a Participant's content write uses: The Q&A board's, renamed `tabWriteQueue`: both
+  read-modify-write the same tab rows, so one queue keeps them from racing (default).
+- **SR3** Who hears a Participant op the rule changed: Everyone including the sender, so the sender's screen converges
+  on what was stored; an unchanged op skips the sender as an Editor's does (default).
+- **SR4** How the server derives an adder key: The first 32 hex characters of SHA-256 over
+  `livediagram:adder:v1:<documentId>:<ownerId>`: stable per person and document, opaque, unlinkable across documents
+  (default).
+- **SR5** What a Participant session without an adder key may do: Update text, move and recolour; never add or remove,
+  since nothing could later prove the element was theirs (default).
+- **SR6** Where an embed's cap to Viewer is applied: In the editor (`sessionRole`), as embeds have no identity screen;
+  the room cannot tell an embed from a link holder (default).
+- **SR7** Where the pass's role mark sits: A full-width header band across the top of the card (was a `w-24` left stub,
+  which cut the link short), so `PARTICIPANT` fits and the link has the card's width (default).
+- **SR8** How the three role cards sit: One per row at every width: three across left each blurb four lines deep and the
+  title under the check (default).
+- **SR9** How soon a Participant's answers reach D1: 1500 ms after the first unflushed answer on a tab
+  (`ANSWERS_FLUSH_MS`), one write for a burst of dots (default).
+- **SR10** Whether writing on someone else's text box may resize it: Yes, only for a text box that sizes to its words
+  (`sizing` set): its width and height follow the words.
+  A Participant never moves or resizes someone else's text box by hand (decided 2026-10-10) (default).
+- **SR11** How the stored level admits `participate`: A nullable `level` column beside the two-valued `role` (written
+  `view` for a Participant): no table rebuild, and an older reader of `role` fails closed (default).
+- **SR12** How many of one socket's writes may wait: 64 (`PARTICIPANT_PENDING_MAX`): far above a person's pace, one op
+  per changed element every 600 ms; past it the sender re-hydrates (default).
+- **SR13** How a held-back gesture is reported: One info toast per 4 s burst (`HELD_BACK_NOTICE_MS`): "As a participant
+  you can add and write, move stickies, and remove what you added." (default).

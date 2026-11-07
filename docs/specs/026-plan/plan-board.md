@@ -186,7 +186,7 @@ Where each is set, so a setting lives with what it changes, never in one central
   column), for Action cards only, Compact cards showing who has each action and when it is due (a to-do list is a
   dense list of short items, so Compact; its checklist is in the card), and the Completion and Due Soon widgets.
 - **Setup Board**: a board with no columns (the Blank board starts so, and starts taller than a set-up board: 880 px
-  against 640, blueprint DEFAULTS D5) shows, in place of its columns, a **Setup
+  against 640, D5) shows, in place of its columns, a **Setup
   Board** card in the board's colours (a board glyph, the title, a line: "Pick its cards, columns and layout. Change
   them any time from its cog.", Help), with three steps shown as a wizard stepper across the card: a numbered
   circle per step joined by a connecting line, the step's name beside its circle (under it on a narrow card), no
@@ -874,3 +874,47 @@ some card types, an Editor is offered, optionally, to tidy those away too, as de
     cards, each lane as tall as its fullest column.
   - A Plan card element draws the same face, Detailed, inside its own bounds.
 - Read-only visitors see the board and open items read-only; they cannot drag, add or change set-up.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D5** Board and card default sizes: 1120×640 board (1120×880 while it has no columns: the Blank board), 240×120 card
+  (default).
+- **D6** Default type of a typed title in Add a Card: Task (default).
+- **D7** Column minimum width: 220 px; narrower boards scroll columns sideways (default).
+- **D8** How item panel edits group for undo: One step per field per 400 ms pause (default).
+- **D14** A board's corner radius with none set: 12 px (default).
+- **D15** Ink contrast before it is swapped: 4.5:1 against the fill (default).
+- **D20** Wait before a description is saved: 800 ms after the last keystroke, and at once on blur or close (default).
+- **D35** How tall the picker's Existing Statuses list grows: 14rem (`max-h-56`, about five rows), then it scrolls
+  (default).
+- **D36** Where a status only a card type knows reads from: Its id in Title Case (`statusLabel`), as a status with no
+  column reads (default).
+- **D37** Fill Tab's tile icons: A small board on a dashed canvas (On Canvas); a board filling the frame (Fill Tab)
+  (default).
+- **D38** Where a filled board sits against the editor's chrome: Over the canvas, under the floating panels (`--z-panel`
+  − 1); the two lines stay (default).
+- **D39** How many columns a maximised board shows before it scrolls: 5 slots (`MAXIMISED_BOARD_SLOTS`,
+  plan-board-columns.ts): the user's ask; a slot stays at least `PLAN_COLUMN_MIN_PX` (default).
+- **D40** How deep a maximised board's drag edge zone reaches: 56 px (`EDGE_SCROLL_ZONE_PX`), at most a quarter of the
+  viewport: about a column's padding plus a card's edge (default).
+- **D41** How fast a maximised board scrolls at its edge: 18 px a frame at the edge, a quadratic ramp in
+  (`EDGE_SCROLL_MAX_PX`); 6 px a frame under reduced motion (`EDGE_SCROLL_REDUCED_PX`) (default).
+- **D42** What shows around a maximised board: The canvas's own background (`background: inherit` on the cover); the Map
+  is hidden (default).
+- **D44** How much of the next column a phone shows: 48 px (`PHONE_COLUMN_PEEK_PX`, gap included): enough to say there
+  is more to the right without crowding the column in view (default).
+- **D45** How far a covering phone board's body runs past its cards: 8.5 rem plus the safe area (`PHONE_END_CLEARANCE`):
+  the bottom controls' two rows at 390 px, measured 134 px (default).
+- **D46** The least room a phone's header needs beside the menu: 160 px (`PHONE_ROW_MIN_PX`): a short title, Restore and
+  the cog (default).
+- **D47** Where the Columns section adds a column: At the end, or before the done columns when the board ends with them
+  (`columnsInsertAfter`): a new state is work in flight, not done (default).
+- **D48** How long a column just added from Columns stays tinted: 1600 ms (`ADDED_TINT_MS`): long enough to spot it in
+  the list, gone before the next add (default).
+- **D49** How a moved column glides: 240 ms on cubic-bezier(0.2, 0, 0, 1) (`COLUMN_MOVE_MS`, `COLUMN_MOVE_EASING`): long
+  enough to follow, short enough to repeat (default).
+- **D53** Which column names count as done unasked: The usual closing states (`DONE_NAMES`: Done, Won't Do, Cancelled,
+  Closed, Resolved, Shipped ...), whole names only (default).

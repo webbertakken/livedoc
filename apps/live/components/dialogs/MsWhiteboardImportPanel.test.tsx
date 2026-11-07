@@ -24,7 +24,7 @@ vi.mock('@/lib/pick-folder', () => ({
   readDrop: vi.fn(async () => null),
 }));
 
-// docs/specs/020-import-export/blueprints/ms-whiteboard-import.md "Presentation and UX".
+// docs/specs/020-import-export/whiteboard-import.md.
 describe('MsWhiteboardImportPanel', () => {
   it('lists the boards in a labelled group, all ticked, and imports the ticked ones', async () => {
     const importScenes = vi.fn(async () => ({ status: 'done' as const }));

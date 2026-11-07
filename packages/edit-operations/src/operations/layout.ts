@@ -1,5 +1,5 @@
 // `layout <selector> [style=flow|tree|mindmap] [direction=down|right]`
-// (docs/specs/024-agents/blueprints/edit-operations.md "Operations", EO38): the selected boxes and the
+// (docs/specs/024-agents/edit-operations.md, EO38): the selected boxes and the
 // arrows between them are laid out from the selection's top-left, every box keeping its size; boxes
 // no arrow joins are swept into rows below (from the top-left when none is joined). Nothing outside
 // the selection moves.

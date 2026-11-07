@@ -502,3 +502,17 @@ Empty states:
   action for now.
 - Persisted expansion state across reloads. V1 always starts
   collapsed for a clean entry point.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D15** Whether an empty-string `teamId` / `folderId` means "none": No: `placement_invalid`; only absent or null means
+  the space or its root (default).
+- **D16** Where "Choose another place" leads: `/new` without `folder`, `team` and the bypass params; every other param
+  kept (default).
+- **D121** When the parent is read: Inside the batch, by subquery, so a concurrent move cannot strand the contents
+  (default).
+- **D122** How the confirmation names a top-level folder's destination: "My Documents", or "the team's root" for a team
+  folder (default).

@@ -1,4 +1,4 @@
-// `pull <doc> [--to <dir>] [--svg]` (docs/specs/015-api/blueprints/cli.md "Pull and push", CLI27): the document and
+// `pull <doc> [--to <dir>] [--svg]` (docs/specs/015-api/cli.md, CLI27): the document and
 // every tab with its revision, written as a pull file, each tab kept as a read copy; `--svg` adds a drawing per tab.
 
 import { resolveDocument, tabPath, type VerbContext } from '@livedoc/agent-verbs';

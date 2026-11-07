@@ -1,5 +1,5 @@
-// The last revision the editor knows for each tab (docs/specs/013-workspace/blueprints/
-// workbench-embeds.md "The selection reference"): what its loads and the changesets relayed to it
+// The last revision the editor knows for each tab (docs/specs/013-workspace/workbench-embeds.md "The
+// selection reference"): what its loads and the changesets relayed to it
 // noted (the changeset-seen map), or what its own saves were answered with, whichever is later. Kept
 // apart from changeset-seen, which says which changesets this editor has applied: a save's revision
 // may include changesets the api merged that the editor has not received yet.

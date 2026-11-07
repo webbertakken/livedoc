@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
-// The editor in a workbench is signed in by its session alone (docs/specs/013-workspace/blueprints/
-// workbench-embeds.md "The editor in a workbench", I9): the bridge publishes the person before any
+// The editor in a workbench is signed in by its session alone (docs/specs/013-workspace/workbench-embeds.md,
+// I9): the bridge publishes the person before any
 // child fetches; above it, the auth bridge stands down (it never reads the browser session) and nothing
 // reads as a settled guest; and the bootstrap under the session runs no guest migration.
 

@@ -1,5 +1,5 @@
 // `wrap <selector…> in frame|lane [id=] key=value… [tidy] [absorb | make-room]`
-// (docs/specs/024-agents/blueprints/edit-operations.md "Operations", EO34, EO35): a frame or lane drawn
+// (docs/specs/024-agents/edit-operations.md, EO34, EO35): a frame or lane drawn
 // around the members, `FRAME_PAD` clear of them (a frame `FRAME_TOP` at the top, a lane its gutter on
 // its title edge). It never silently takes in what is not a member: such bystanders refuse the
 // changeset unless `absorb` makes them members or `make-room` moves them out.

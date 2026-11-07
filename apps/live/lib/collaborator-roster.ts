@@ -100,7 +100,7 @@ export function participantBadges(
 
 // A Collaborators row's second line: an agent row says what it is doing (or that it is online); a person's row
 // says their agent's status line first, then their status and, for anyone but you, how long ago they were active
-// (docs/specs/024-agents/blueprints/agent-presence.md "Presentation and UX").
+// (docs/specs/024-agents/agent-presence.md).
 export function collaboratorRowDetail(p: Participant, isSelf: boolean, now: number): string {
   if (p.agent) return p.statusLine ?? statusLabel(p.status);
   const active =

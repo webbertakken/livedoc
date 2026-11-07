@@ -76,3 +76,11 @@ changes.
 
 The **Stack tour** is on the actions group's **Start Stack Tour** button while a stack is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through
 it on the element itself ([Element tours](../007-editor/element-tours.md) "The Stack tour").
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D192** A new stack and its reflow: 360 × 160 empty row, gap 16, padding 16, centred, 2 grid columns, a faint dashed
+  outline and no fill; children glide 160 ms to their slots (default).

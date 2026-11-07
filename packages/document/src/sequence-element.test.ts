@@ -12,7 +12,7 @@ import {
   withSequenceRows,
 } from './index';
 
-// docs/specs/009-elements/sequence-diagram.md, blueprint sequence-diagram.md.
+// docs/specs/009-elements/sequence-diagram.md, docs/specs/009-elements/sequence-diagram.md.
 
 const seq = () => ({ ...createShape('sequence', 0, 0), id: 'q' });
 

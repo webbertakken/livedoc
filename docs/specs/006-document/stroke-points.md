@@ -150,3 +150,18 @@ doubles); timings are medians on a developer machine and move with it, the ratio
 - **Migrating** the former tab on load takes 18 ms, once: the next save stores it packed.
 - **In the editor**, the same board (912 KB packed) loads and draws all 3,300 strokes 0.78 s
   after a reload, with no errors (a one-off Playwright measurement against the local stack).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** The decoded number type: `Float64Array`: decoding then re-encoding is exact, and geometry stays in doubles
+  (default).
+- **D2** The decode cache's bound: 500,000 points total, least recently used out first (default).
+- **D3** What a writer does with a coordinate outside its box: Clamps float noise into `[0, 1]`; a non-finite value
+  throws (default).
+- **D4** How often an undecodable block is logged: Once per distinct block (a 64-entry set) (default).
+- **D5** Where the debug script lives: `packages/document/scripts/expand-stroke-points.ts`, run by Node's type stripping
+  with `scripts/ts-source-hooks.mjs` (default).
+- **D6** Which base64 codec: The codec's own table codec: the document package cannot import api-schema's (default).

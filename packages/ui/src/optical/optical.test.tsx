@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { Chip, GlyphDisc, IconSlot } from './index';
 
-// Primitive contracts (docs/specs/004-interface-design/blueprints/optical-alignment.md, "Primitives"):
+// Primitive contracts (docs/specs/004-interface-design/optical-alignment.md, "Primitives"):
 // every text glyph sits in the cap-band utility, and every box is sized explicitly (no CLS).
 
 const icon = <svg data-testid="icon" width="12" height="12" />;

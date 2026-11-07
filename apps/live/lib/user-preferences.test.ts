@@ -231,8 +231,8 @@ describe('writeUserPreferences (server sync)', () => {
     expect(mockedPut).not.toHaveBeenCalled();
   });
 
-  // The editor in a workbench never writes preferences to the api (docs/specs/013-workspace/blueprints/
-  // workbench-embeds.md, I9): the local write and the event stay.
+  // The editor in a workbench never writes preferences to the api
+  // (docs/specs/013-workspace/workbench-embeds.md, I9): the local write and the event stay.
   it('keeps the write local under a workbench session', () => {
     const { storage, events } = mockBrowser();
     setWorkbenchConfinement({ scope: 'document', documentId: 'doc-1', ownerId: 'user_1' });

@@ -1,4 +1,4 @@
-// A response (docs/specs/030-forms/forms.md "What a response makes", blueprint §11 "The response write"): checked
+// A response (docs/specs/030-forms/forms.md "What a response makes" "The response write"): checked
 // against the form as its tab holds it now, numbered, and made into one card in the form's destination, which the
 // room relays to everyone with the board open.
 import type { FormResponseAccepted, FormResponseRefusal } from '@livedoc/api-schema';

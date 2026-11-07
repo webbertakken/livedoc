@@ -1,4 +1,4 @@
-// What a verb's input fields are, read from its zod schema (blueprint "buildParseOptions"): each key's kind
+// What a verb's input fields are, read from its zod schema: each key's kind
 // (flag type), whether it is required, and its description for help.
 
 import type { z } from 'zod';

@@ -125,3 +125,21 @@ The note lifecycle emits `Note` / `Opened` / `Added` / `Changed` /
 `track('Note', 'Used', <Bold | Italic | Underline | Heading | List | Link>)`
 — an existing category / action pair, and a fixed preset token, never note
 content.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D76** Whitespace around a note: `canonicalNote` trims on the runs (`trimRuns`); empty after trim = no note
+  (default).
+- **D77** Clicking outside the popover: Commits (editable) and closes; read-only just closes (default).
+- **D78** Paste: `text/plain` only, inserted at the caret (default).
+- **D79** Caret on open: Editor focused, caret at the end, runs painted (default).
+- **D80** Note size of heading 3: 13.5px / 600 (default).
+- **D81** How a link looks: `var(--note-link-color)` (brand-700, dark brand-200), underlined (default).
+- **D82** Refused address: Field `aria-invalid` with a rose border; nothing stored (default).
+- **D83** Delete note with nothing to delete: Disabled while no stored note and no typed text (default).
+- **D84** Label heading sizes: `1.7em`/700, `1.35em`/700, `1.15em`/600, line-height 1.25 (default).
+- **D85** Heading and list both set (legacy): `blockTypeOf` reports the list (default).
+- **D86** Menu dismissal: Closes on option click and on outside `pointerdown` (capture) (default).

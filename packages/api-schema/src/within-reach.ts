@@ -1,5 +1,5 @@
-// Within reach (docs/specs/004-interface-design/within-reach.md; blueprint
-// docs/specs/004-interface-design/blueprints/within-reach.md): N most used items plus N recent ones,
+// Within reach (docs/specs/004-interface-design/within-reach.md;
+// docs/specs/004-interface-design/within-reach.md): N most used items plus N recent ones,
 // no item twice. One rule for every surface that offers a short "what you want next" list: the
 // Draw-mode Shapes flyout and Explorer Home's Jump back in, in the browser and in the api worker.
 

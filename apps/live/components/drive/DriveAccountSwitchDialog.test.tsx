@@ -9,7 +9,7 @@ import {
   DriveAccountSwitchDialog,
 } from './DriveAccountSwitchDialog';
 
-// docs/specs/022-drive-mirror/blueprints/drive-mirror.md "Account switch dialog".
+// docs/specs/022-drive-mirror/drive-mirror.md.
 
 afterEach(cleanup);
 

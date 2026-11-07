@@ -1,4 +1,4 @@
-// The git a sync asks (docs/specs/027-repositories/blueprints/repository-link.md "Paths", "Data and persistence",
+// The git a sync asks (docs/specs/027-repositories/repository-link.md,
 // "`link init`"): the work tree's git directory, a move git records, and whether the repository has a remote. Each
 // runs `git -C <dir> …` without a shell; a missing git or a refusal answers as if there were no work tree (RL8, RL9,
 // RL40).

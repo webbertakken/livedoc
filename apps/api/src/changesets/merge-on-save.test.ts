@@ -3,8 +3,8 @@ import { elementFingerprint, type Element, type ElementOp, type Tab } from '@liv
 import type { ChangesetFingerprints, MergeEntry } from '../db/changesets';
 import { mergeChangesetsIntoSave } from './merge-on-save';
 
-// docs/specs/024-agents/agent-changesets.md "The write path" step 8, each rule of the blueprint's
-// table: a person's save built from a copy without a changeset keeps the changeset's version only
+// docs/specs/024-agents/agent-changesets.md "The write path" step 8, each rule: a person's save built from a
+// copy without a changeset keeps the changeset's version only
 // where the save still holds the element as the changeset found it.
 
 const box = (id: string, label = id, over: Partial<Element> = {}): Element =>

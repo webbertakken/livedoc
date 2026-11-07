@@ -213,7 +213,7 @@ describe('handleCustomThemes auth', () => {
 });
 
 // docs/specs/011-theme/custom-themes.md: a palette, when present, is never empty
-// (blueprint E6, O3).
+// (E6, O3).
 describe('handleCustomThemes palette validation', () => {
   const PALETTE = [{ fill: '#fee2e2', stroke: '#dc2626', text: '#7f1d1d' }];
 

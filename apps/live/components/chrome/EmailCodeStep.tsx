@@ -1,7 +1,7 @@
 'use client';
 
 // The code step of both auth pages, and of the re-verification before deleting the account
-// (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Presentation and UX", "Accessibility"): "We sent a code
+// (docs/specs/014-identity/auth-and-guest-access.md): "We sent a code
 // to <email>", one six-digit field, "Sign in", and the two ways out, "Use a different email" and "Send a new code"
 // (held for CODE_RESEND_COOLDOWN_S after each send, counting down silently and announced once it is available).
 

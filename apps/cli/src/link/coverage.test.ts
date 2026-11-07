@@ -4,7 +4,7 @@ import { hostDoc, linkContext, linkHost } from '../testing/link-host';
 import { parseLinkFile } from './link-file';
 import { isCovered, readCoverage } from './coverage';
 
-// Coverage (docs/specs/027-repositories/blueprints/repository-link.md "Coverage"): the covered folder's subtree in
+// Coverage (docs/specs/027-repositories/repository-link.md): the covered folder's subtree in
 // the personal or a team library, the listed documents wherever they are, and each one's folder path.
 
 const linkOf = (covers: string) => parseLinkFile(`[covers]\n${covers}\n`, '/repo/livedoc.toml');

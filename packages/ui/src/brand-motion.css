@@ -1,5 +1,5 @@
 /* The logo's assembly as a page loads (docs/specs/004-interface-design/brand-mark.md "Size and motion"; the numbers
-   are in docs/specs/004-interface-design/blueprints/brand-motion.md "Assemble"). A content stylesheet: it plays
+   are in docs/specs/004-interface-design/brand-mark.md). A content stylesheet: it plays
    from the first paint of the static HTML, before any script, on logos marked `data-assemble`, until
    useBrandAssembled marks the page assembled, so it plays once per load. Only the mark moves; the wordmark is
    still. */

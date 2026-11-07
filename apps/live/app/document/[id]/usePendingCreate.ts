@@ -13,7 +13,7 @@ import {
 import { isOfflineLocation } from '@/lib/save-locations';
 
 export type PendingCreateView = {
-  // Saves wait: the document is still being made (docs/specs/013-workspace/blueprints/new-document-menu.md "Saves
+  // Saves wait: the document is still being made (docs/specs/013-workspace/new-document-menu.md "Saves
   // held until the create lands").
   held: boolean;
   // Set while the create has failed: the not-saved banner's copy and action.
@@ -40,7 +40,7 @@ export function usePendingCreate(opts: {
 }): PendingCreateView {
   const { documentId, selfId } = opts;
   // Followed as a transition: a create that lands while the editor is first being painted (This Browser's lands at
-  // once) re-renders the editor after that paint, never before it (blueprint "Instant open", D204).
+  // once) re-renders the editor after that paint, never before it (D204).
   const [doc, setDoc] = useState(() => pendingDocument(documentId));
   useEffect(() => {
     const follow = () => startTransition(() => setDoc(pendingDocument(documentId)));

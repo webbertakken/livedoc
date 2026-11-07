@@ -1,5 +1,5 @@
 // Every number the import image pipeline uses (docs/specs/020-import-export/import-image-pipeline.md).
-// Provenance and safe ranges: docs/specs/020-import-export/blueprints/import-image-pipeline.md.
+// Provenance and safe ranges: docs/specs/020-import-export/import-image-pipeline.md.
 
 export const IMPORT_IMAGE_MAX_EDGE_PX = 2048;
 export const IMPORT_IMAGE_WEBP_QUALITY = 0.85;

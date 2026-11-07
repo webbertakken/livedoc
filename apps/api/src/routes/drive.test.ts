@@ -8,7 +8,7 @@ import type { Env } from '../types';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDrive } from './drive';
 
-// /api/drive/* (docs/specs/022-drive-mirror/blueprints/drive-mirror.md, "Routes").
+// /api/drive/* (docs/specs/022-drive-mirror/drive-mirror.md, "Routes").
 
 const KEY = bytesToBase64(new Uint8Array(32).map((_, i) => i));
 const URI = 'https://docs.nu/drive/connected';

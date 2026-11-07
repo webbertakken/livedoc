@@ -1,5 +1,5 @@
 // A session's browser and system, named from its user agent for Settings > Account > Sessions
-// (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Presentation and UX"). Order matters: Edge and Opera
+// (docs/specs/014-identity/auth-and-guest-access.md). Order matters: Edge and Opera
 // also say Chrome, and Chrome also says Safari.
 const BROWSERS: [RegExp, string][] = [
   [/Edg\//, 'Edge'],

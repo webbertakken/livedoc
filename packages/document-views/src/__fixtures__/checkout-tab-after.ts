@@ -1,4 +1,4 @@
-// The checkout tab after six changes (docs/specs/024-agents/blueprints/document-views.md "Testing"):
+// The checkout tab after six changes (docs/specs/024-agents/document-views.md):
 // e4a8 renamed, a "Redis cache" cylinder added in c991 with an arrow from 202b, arrow 0cee removed,
 // 0c84's thread resolved, cb02 moved by +200,0.
 import { createPinnedArrow, createShape, type Element, type Tab } from '@livedoc/document';

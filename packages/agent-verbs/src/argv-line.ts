@@ -1,4 +1,4 @@
-// An element command's words as one line-form edit operation (docs/specs/015-api/blueprints/cli.md CLI23): the
+// An element command's words as one line-form edit operation (docs/specs/015-api/cli.md CLI23): the
 // verb, then each word, re-quoted when it holds whitespace, quotes or backslashes (only the value after `key=`,
 // `key:` or `key~` when the word has one); `connect <a> <b>` gets its `->`, which a shell would read as a redirect.
 

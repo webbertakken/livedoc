@@ -124,3 +124,28 @@ tables are dropped ([Moving content into rooms](document-storage-move.md)).
 - [API app](../015-api/api.md): the endpoints and the realtime model.
 - [Content search](../013-workspace/content-search.md): what the search text is and how it is matched.
 - [Inbox](../013-workspace/inbox.md): what the outbox feeds it.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D7** Which outbox keys a room keeps: Five kinds: `summary`, `tab` (per tab id), `cards`, `items`, `images`; the four
+  document kinds share one D1 unit, each tab has its own, so a tab's push fails alone (default).
+- **D8** How a drain groups its D1 writes: One D1 batch per unit (the document's, then each tab's), at most 6 in flight;
+  only succeeded units' keys go (default).
+- **D9** Where the stats and the empty test are worked out: In the room, the D1-era SQL moved unchanged into the room's
+  queries (default).
+- **D10** Which requests the worker hands to the room: Every path under `/api/documents/:id/`, as upstream; the
+  collection (list, create), the realtime admission and the copy stay in the worker (default).
+- **D11** The order of a create's two writes: The room first, then the D1 row; a failed D1 insert purges the room
+  (default).
+- **D12** How an unreachable room is purged later: A D1 tombstone, retried by the daily cron, 300 a run, at most hourly
+  per room (default).
+- **D13** Which write wins when two holders write in the same millisecond: The larger SHA-256 of the body, so every
+  holder picks the same (default).
+- **D14** What the row-cap constants are called once D1 no longer holds tabs: `SQLITE_ROW_MAX_BYTES`,
+  `SQLITE_ROW_HEADROOM_BYTES`; `MAX_TAB_BYTES` unchanged (default).
+- **D15** How a worker call to a content module is prevented: Content modules take `DocumentEnv`; the worker's `Env` has
+  no `DOCUMENT_DB`, so it does not compile (default).
+- **D16** What a request answers when its room fails: 503 `room_unavailable`, logged with the path (default).

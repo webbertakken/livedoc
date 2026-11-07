@@ -131,3 +131,14 @@ host's move, not a badge edit.
 The MCP server and the REST API take `badge` with `attachedTo` / `attachAt`; an agent sets those and the editor
 places the badge on its point when the board next loads (a stored `x` / `y` that disagrees with the point is
 settled on read).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D181** Badge height per text size: sm and scale 22 px, md 28, lg 36, an exact px × 1.6; font 0.48 of the height
+  (default).
+- **D182** A step's starting size: 28 × 28, aspect-locked (default).
+- **D183** How far apart Play in Order starts each step: 0.4 s per step, divided by the animation's speed factor
+  (default).

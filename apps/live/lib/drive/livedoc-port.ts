@@ -1,5 +1,5 @@
 // What the Drive mirror needs from LiveDoc itself
-// (docs/specs/022-drive-mirror/blueprints/drive-mirror.md, "LivedocPort"):
+// (docs/specs/022-drive-mirror/drive-mirror.md, "LivedocPort"):
 // My Documents reads, the ordinary writes an inbound change goes through
 // (so authorisation, the change log and realtime rooms behave exactly as if
 // the user had done it here), and the mirror's own rows. The engine only ever

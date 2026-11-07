@@ -186,7 +186,8 @@ export function FormFill({
         />
       ))}
 
-      {/* The hidden field (blueprint DEFAULTS D4): a person never sees or fills it; a bot that does is dropped. */}
+      {/* The hidden field (docs/specs/030-forms/forms.md D4): a person never sees or fills it;
+          a bot that does is dropped. */}
       <div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
         <label>
           Website

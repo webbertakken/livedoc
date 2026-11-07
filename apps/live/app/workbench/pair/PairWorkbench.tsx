@@ -1,6 +1,6 @@
 'use client';
 
-// The pairing page (docs/specs/013-workspace/workbench-embeds.md "Pairing"; blueprint "The pairing page"): a
+// The pairing page (docs/specs/013-workspace/workbench-embeds.md "Pairing"): a
 // workbench asked to open the person's documents with one of their tokens, and they answer here, signed in, in
 // their own browser. One read after auth settles, one answer; focus follows the heading at each state.
 import { useEffect, useState } from 'react';

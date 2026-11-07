@@ -1,5 +1,5 @@
 // FakeGoogle: an in-memory stand-in for the Google endpoints the Drive mirror
-// talks to (docs/specs/022-drive-mirror/blueprints/drive-mirror.md), so every
+// talks to (docs/specs/022-drive-mirror/drive-mirror.md), so every
 // test proves the mirror without real Google credentials.
 //
 //   - OAuth: POST /token (authorization_code, refresh_token) and POST /revoke. The code exchange also answers an

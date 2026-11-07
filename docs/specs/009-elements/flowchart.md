@@ -236,3 +236,21 @@ Step Type, Lane on a laned chart, and the Flowchart menu.
 - No Subroutine (predefined process) step yet: it needs a new shape kind.
 - Not a re-layout of anything else on the tab; a chart that grows into a note does not move the note.
 - Mermaid import still produces ordinary shapes, not a live flowchart.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D169** How far steps sit from a lane's border: `FLOWCHART_LANE_PAD` = 32 on every side of a lane's body (default).
+- **D170** How short a lane may be: `FLOWCHART_LANE_MIN_LENGTH` = 600 along the flow (default).
+- **D171** How generic edits (an arrow drawn, a delete, a drag into a lane) reach the layout:
+  `flowchartStructureChanged(before, after)` in the commit path; each affected chart is laid out in the same commit
+  (default).
+- **D172** What a copied step belongs to: A new chart per source chart; the copied anchor's new id, else the first
+  copy's (default).
+- **D173** Where a step goes when its lane is deleted: The first remaining lane, read at the next layout (`flowLaneId`
+  left dangling, read as the first lane) (default).
+- **D174** How far a loop runs outside the steps it passes: `FLOWCHART_LOOP_GAP` = 40 past the outermost step (default).
+- **D175** How far past a Decision's corner its side step sits: `FLOWCHART_CORNER_CLEARANCE` = 32 cross-axis px between
+  the corner and the step's centre (default).

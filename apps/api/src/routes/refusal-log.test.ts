@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { logRefusal } from './refusal-log';
 
-// The agent-presence blueprint "Observability": a refusal's fingerprint carries its status and code, never text.
+// The: a refusal's fingerprint carries its status and code, never text.
 
 afterEach(() => vi.restoreAllMocks());
 

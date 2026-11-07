@@ -41,3 +41,12 @@ opens, so it starts there before the page says otherwise.
 ## What goes dark
 
 Everything a reader sees on those five apps, including the landing page's illustrations. The editor mock-ups on the marketing site (the hero's windows and the feature art) render **the editor as it looks in dark**: dark chrome around diagrams drawn exactly as the real editor draws them on the **Default theme** (its dark half: the dark canvas and the dark ink of unpainted elements), so the examples show the real thing rather than an illustrator's palette. The one exception is the hero's theme beat, which demonstrates switching theme and so switches to Pine, the dark counterpart of the light appearance's Forest. Elements whose colour is their identity in the real editor (sticky notes, link cards, cursors and avatars, highlights, selection) keep it, as does an element the example deliberately painted, since the editor keeps a user's paint on any theme, and art whose subject IS colour (the theme catalogue, the format painter, custom themes) shows those colours. In light appearance the same examples are drawn on the Default theme's light half. Template previews use the shared `preview-art-tile` re-lighting. The help centre's article illustrations and category banners do the same: in dark they show the editor's dark chrome, while a surface that is dark in both appearances (a code block, the presenter HUD, an embed snippet), the light half of a light/dark comparison and a theme's swatches keep their own colours.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D76** Lifetime of the OS watch: One `MediaQueryList`, attached on first subscribe or write, never detached (default).
+- **D77** Content of the `darkreader-lock` meta: `'true'`: Dark Reader keys on the name alone, and Next drops a meta with
+  empty content (default).

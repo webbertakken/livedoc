@@ -1,5 +1,5 @@
 // Drive's "Open with" (docs/specs/022-drive-mirror/drive-mirror.md, "Open with";
-// blueprint "Open with"). Google opens `/drive/open?state=...`; the browser
+//). Google opens `/drive/open?state=...`; the browser
 // reads the file's appProperties and decides: open the document, offer
 // **Import a copy** or, for a copy of a mirrored file, **Import as new
 // document**, or say the file cannot be opened.

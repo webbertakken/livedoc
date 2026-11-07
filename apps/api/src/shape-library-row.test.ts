@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { rowToShapeLibrary, type ShapeLibraryRow } from './shape-library-row';
 
-// docs/specs/013-workspace/blueprints/shape-libraries.md "Data and persistence".
+// docs/specs/013-workspace/shape-libraries.md.
 
 const row = (items: string): ShapeLibraryRow => ({
   id: 'lib-1',

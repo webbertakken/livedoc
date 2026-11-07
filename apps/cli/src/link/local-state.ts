@@ -1,5 +1,5 @@
-// The local sync state (docs/specs/027-repositories/repository-link.md "Local sync state"; blueprint "Data and
-// persistence"): per link and work tree, never committed. Inside a git work tree at `<git dir>/livedoc/<link id>/`
+// The local sync state (docs/specs/027-repositories/repository-link.md "Local sync state"): per link and work
+// tree, never committed. Inside a git work tree at `<git dir>/livedoc/<link id>/`
 // (each worktree its own), elsewhere at `<cache>/links/<link id>/`; directories 0700, files 0600 (RL8). It holds
 // what each document was at its last sync here (RL44), the lock, and the latest reports.
 

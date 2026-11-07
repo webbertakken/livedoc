@@ -231,7 +231,7 @@ export function EditorContextMenuHost() {
     openAssignAction,
   } = useEditorContext();
   // The selection the menu acts on, read from the store while a menu is open: a closed menu never
-  // renders for a selection change (docs/specs/008-canvas/blueprints/selection-store.md).
+  // renders for a selection change (docs/specs/008-canvas/canvas-performance.md).
   const menuOpen = !!contextMenu && contextMenu.mode !== 'canvas' && !isReadOnly;
   const { selectedId, multiSelectedIds } = useSelectionOf(
     useCallback((sel: Selection) => (menuOpen ? sel : EMPTY_SELECTION), [menuOpen]),

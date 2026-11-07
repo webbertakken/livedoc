@@ -1,4 +1,4 @@
-// The api client the MCP and the CLI share (docs/specs/015-api/blueprints/cli.md "api-client"): one injected
+// The api client the MCP and the CLI share (docs/specs/015-api/cli.md): one injected
 // fetch, the caller's headers, JSON and text answers, and an `ApiError` naming the status and the body's
 // error code. A 5xx or a request that never completed is reported through `onFailure`; a 4xx is the
 // caller's to handle, never reported.

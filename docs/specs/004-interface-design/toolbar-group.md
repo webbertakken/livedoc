@@ -32,3 +32,13 @@ tools, never as a header, a footer and some floating cards.
 
 The group is presentation only. What each button offers an Editor, a Participant and a Viewer is the button's own
 rule; a group with nothing left to show for the session is not drawn.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D74** How a divider knows a part before it rendered: By CSS on the part (`:not(:empty)` sibling), so a part whose
+  control draws nothing leaves no divider behind (default).
+- **D75** Whether a labelled group is a landmark: A `toolbar` with its name, never a landmark region: the lines are
+  controls over the canvas, not page sections (default).

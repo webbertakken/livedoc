@@ -1,6 +1,6 @@
 import type { LicencesManifest } from './contract.ts';
 
-// The exported licences.html may not exceed this many bytes per work listed (blueprint D14): 1.5 times the page
+// The exported licences.html may not exceed this many bytes per work listed (D14): 1.5 times the page
 // as first measured (173.5 KB for 54 works), so the budget grows with the dependencies it lists. Inlined licence
 // texts are refused directly (`inlinedTexts`), not left to the budget to notice.
 export const LICENCES_HTML_BYTES_PER_WORK = 4_820;

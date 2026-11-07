@@ -1,5 +1,5 @@
 // Local verification of the Microsoft Whiteboard import over real board exports
-// (docs/specs/020-import-export/blueprints/ms-whiteboard-import.md). Data-free: the export's path is
+// (docs/specs/020-import-export/whiteboard-import.md). Data-free: the export's path is
 // an argument, and the output is aggregate counts and timings only (never titles, ids or text).
 //
 //   bun scripts/ms-whiteboard-verify.mts <folder or .zip>

@@ -83,3 +83,11 @@ cloud architecture nests boundaries for edge, region, VPC and subnet.
 
 The **Boundary tour** is on the actions group's **Start Boundary Tour** button while a boundary is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through
 it on the element itself ([Element tours](../007-editor/element-tours.md) "The Boundary tour").
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D184** A new boundary: 480 × 300, "Region", dashed, medium corner, small bold title (default).
+- **D185** The tab's height: 26 px, straddling the top edge from 14 px in (default).

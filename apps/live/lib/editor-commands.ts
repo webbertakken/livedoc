@@ -42,7 +42,7 @@ export type CommandContext = {
   // "Nothing attached to Plan items"); absent reads as true.
   singleTakesAttachments?: boolean;
   // True when the single selection can be rotated (`supportsRotation`): boxed, minus an
-  // annotation marker (docs/specs/009-elements/blueprints/annotations.md). Gates the Rotate commands.
+  // annotation marker (docs/specs/009-elements/annotations.md). Gates the Rotate commands.
   singleRotates: boolean;
   // True when the selection is combinable shapes on one logo page
   // (docs/specs/007-editor/logo-pages.md "Combine"). Gates the four Combine commands.
@@ -65,7 +65,7 @@ export type CommandContext = {
   // Offline document (docs/specs/006-document/offline-mode.md): nothing on the server to share, so the Share
   // command is withheld even though the session counts as the owner's.
   isOffline: boolean;
-  // The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table):
+  // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table):
   // no ownership powers, so neither Share nor Delete document.
   workbench?: boolean;
   // The canvas tool in force, so the command for the CURRENT tool is dropped

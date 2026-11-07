@@ -312,3 +312,79 @@ The help centre's [Home](../../../apps/help/app/explorer/timeline/page.mdx) arti
 - Keyboard order follows the reading order: See More (desktop and tablet), Jump Back In's documents in their order
   (then the See More tile on a phone), then What Happened.
 - WCAG 2.2 AA: contrast, visible focus, and targets of at least 24 by 24 px.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D65** Which migration number: 0063; 0061 and 0062 are taken by open branches (default).
+- **D66** How the server tells an open from any other tab read: The editor's first-tab read carries `X-Document-Open: 1`,
+  unless embedded; nothing else does (default).
+- **D67** Which day What Happened uses when no time zone is sent: UTC (default).
+- **D68** How many actions one What Happened read holds: 200, newest first; a capped read logs (default).
+- **D69** Whether a shared document names its team and folder: No: the owner's filing is theirs; both are null for `via: 'shared'`
+  (default).
+- **D70** Use days of a document opened as guest and as account: The days of either; a day under both counts once; the
+  last open is the later (default).
+- **D71** Whether Remove from Timeline hides a Home entry: No: it is a verb of the Timeline feed only (default).
+- **D72** Largest Timeline page: Retired: Home has no Timeline column and no paged read (default).
+- **D73** Home's rate limit: 60 reads per 60 s per resolved owner (default).
+- **D74** Who "you" is in "assigned you an action": The assignee id is the person's or one of their aliases; an invited
+  member row is not (default).
+- **D75** What else viewing Home does: Moves the unread mark by the Timeline's visit rule; seeds nothing (default).
+- **D76** Which edit days seed frecency: Retired: edit days count as use days at read time (D126), so nothing is seeded
+  (default).
+- **D77** Order of documents equal on every Within reach measure: Document id ascending (default).
+- **D78** Order of the people in a group: Newest action first (default).
+- **D79** How a reconstructed edit written before the mark is told apart: Stored more than 60 s after its own time;
+  marked once by migration 0063 (default).
+- **D80** How far the frecency seed reaches: Retired: nothing is seeded (D126) (default).
+- **D94** What the Timeline feed's page is called once Home is its own view: **Timeline**, its sidebar row's label (the
+  spec names it); the route and the kind keep their names (default).
+- **D95** Which time zone Home sends: The browser's own (`Intl.DateTimeFormat().resolvedOptions().timeZone`), so days
+  match the clock the person reads (default).
+- **D96** Where the Timeline's alternation restarts: Retired: Home has no Timeline column (default).
+- **D97** Whether the phone switch remembers its tab: Retired: Home has no Recent / Timeline switch (default).
+- **D98** How early the next Timeline page loads: Retired: Home has no Timeline column to page (default).
+- **D99** How many avatars a summary overlaps: Three, then a `+N` disc (default).
+- **D100** Thumbnail sizes: Grid tiles share the section's width at 80 px high; strip 128 × 80 (default).
+- **D101** The Timeline column's width: Retired: Home has no Timeline column (default).
+- **D102** Whether Home's header keeps the Help link: Yes: every section's header carries it; it is not an action on
+  Home (default).
+- **D103** Where See Timeline sits: In What Happened's heading row, at its end, so it never moves when entries load
+  (default).
+- **D104** Where this browser counts opens of its local documents: In the document's own IndexedDB record (`opens`), so
+  the count goes wherever the record goes (default).
+- **D126** How most used is not empty on day one: A real edit day counts as a use day, always: the edit history reaches
+  back a year, so no one-off seed (default).
+- **D127** Which migration number: 0065; 0064 is taken (default).
+- **D128** How wide the 4 by 2 grid grows: The section's full width, thumbnails a fixed 80 px high, as in the chosen
+  mockup (default).
+- **D129** How a local record of the earlier `opens` shape reads: Its last open day and last open; the next open
+  rewrites it in the new shape (default).
+- **D130** Where the Recent page's breadcrumb leads: Home › Recent: Recent is reached from Home and has no sidebar row
+  (default).
+- **D131** How the grid keeps two rows' height with fewer documents: A fixed minimum height of two tile rows on the list
+  (default).
+- **D132** Whether Hide from Recent leaves Jump Back In: No, as before: Hide from Recent tidies the Recent page; Jump
+  Back In is what the person reaches for (default).
+- **D133** Whether making a document counts as a use: Retired: the spec decides (Making a document): a making is a use,
+  a bulk import is not (default).
+- **D134** What the create's opt-out is called: `markUsed`, a boolean, default `true`; the CLI flag `--no-recent` maps
+  to `markUsed: false` (default).
+- **D135** What "more than one document in one go" counts: The documents the import sets out to make, not those that
+  land: two boards, one failing, mark none (default).
+- **D136** Where a making is recorded: On the creation's own Timeline event (`markUsed: true` in its snapshot): no new
+  table, no extra write (default).
+- **D137** Whether the backfill's creation may overwrite a real one: No: it keeps an existing row, as the reconstructed
+  edit does, so a mark is never cleared (default).
+- **D138** Whether the copy route takes `markUsed`: No: a copy is one document made on purpose, so it always counts
+  (default).
+- **D139** How a malformed `markUsed` is refused: 400 `bad_request` "invalid markUsed", as the document dates are;
+  logged `reason=mark_used_invalid` (default).
+- **D140** How a local making enters this browser's record: The record starts as a first open would: `{ days: [today], lastOpenedAt: now }`
+  (default).
+- **D168** How Jump back in keeps its height with a short or empty group: Retired: the groups share one grid with no
+  labels (`D131` holds its height) (default).
+- **D169** Which documents the hero's sheets show: Retired: Home has no hero (explorer-home.md "Layout") (default).

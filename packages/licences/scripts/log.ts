@@ -1,6 +1,6 @@
 import { LicencesError } from '../src/errors.ts';
 
-// `[licences] <fingerprint> key=value ...` (blueprint "Observability").
+// `[licences] <fingerprint> key=value ...`.
 export function log(fingerprint: string, fields: Record<string, string | number>): void {
   const pairs = Object.entries(fields).map(([k, v]) => `${k}=${v}`);
   console.log(['[licences]', fingerprint, ...pairs].join(' '));

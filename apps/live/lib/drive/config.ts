@@ -1,6 +1,6 @@
 // Whether this deployment offers the Drive mirror, and how it gets tokens
-// (docs/specs/022-drive-mirror/drive-mirror.md, "Self-hosting"; blueprint
-// "Deployment mode"). NEXT_PUBLIC_* values are baked in at build time.
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Self-hosting"). NEXT_PUBLIC_* values are baked in at build
+// time.
 
 import type { DriveMode } from '@livedoc/api-schema';
 
