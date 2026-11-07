@@ -19,6 +19,7 @@ Derived from [Bug reports](../bug-reports.md) and [Report a Bug entries](../../0
 | Bug Report card type | `BUG_REPORT_TYPE_LABEL` `'Bug Report'`             | Found by label, case apart                                           |
 | Reporter tag         | `reporterTag(reporter)`                            | 32 hex of SHA-256 of the id, or `anonymous`                          |
 | Place                | `BugReportPlace` `{ mode?, tabKind?, shareRole? }` | What the editor publishes while mounted                              |
+| Draft                | `BugReportDraft` `{ title, details, screenshot }`  | The unsent form, kept in `localStorage`                              |
 
 "Report a Bug" is the one name for the entry, the dialog title and the help article. Never "feedback" in copy (the
 telemetry category alone is `Feedback`).
@@ -46,6 +47,7 @@ telemetry category alone is `Feedback`).
 | `apps/live/lib/bug-report/place.ts`                                                     | `useBugReportPlace(place)`, `currentBugReportPlace()`                                                                               |
 | `apps/live/lib/bug-report/collect-context.ts`                                           | `collectBugReportContext(deps)`                                                                                                     |
 | `apps/live/lib/bug-report/screenshot.ts`                                                | `captureScreen()`, `encodeImageFile(blob)`, `encodeCanvas`, `encodeToFit`: scale, encode, step quality                              |
+| `apps/live/lib/bug-report/draft.ts`                                                     | `readBugReportDraft`, `saveBugReportDraftText`, `saveBugReportDraftScreenshot`, `clearBugReportDraft`                               |
 | `apps/live/lib/bug-report/send.ts`                                                      | `sendBugReport(submission)`: identity headers, the POST, the outcome                                                                |
 | `apps/live/components/bug-report/BugReportProvider.tsx`                                 | The opener context, `useOpenBugReport()`, the lazy dialog                                                                           |
 | `apps/live/components/bug-report/BugReportDialog.tsx`                                   | The form                                                                                                                            |
@@ -98,6 +100,10 @@ type BugReportScreenshot = { contentType: 'image/webp' | 'image/jpeg' | 'image/p
   leftovers appended to `description` under `<Label>:` lines, every value cut to the item store's bounds
   (`ITEM_TITLE_MAX`, `ITEM_DESCRIPTION_MAX`).
 - Editor: `useOpenBugReport(): (opts?: { trigger?: HTMLElement | null }) => void`; `useBugReportPlace(place)`.
+- Draft: `readBugReportDraft(): BugReportDraft` (`{ title: '', details: '', screenshot: null }` when none);
+  `saveBugReportDraftText({ title, details })`; `saveBugReportDraftScreenshot(screenshot | null): boolean` (false when
+  the browser refused it); `clearBugReportDraft()`. `restoreScreenshot(screenshot): PreparedScreenshot | null` makes
+  its preview again.
 
 ## Data and persistence
 
@@ -131,13 +137,20 @@ CREATE TABLE bug_report_windows (
   prefix); the owner migration moves `owner_id` and sets `reporter_kind` to `account`.
 - `bug_report_windows` holds hashes only; the daily sweep deletes windows older than a day.
 - R2 objects carry their content type; nothing else. The lifecycle rule is the bucket's (operations doc).
+- The draft is two `localStorage` keys, so typing never rewrites the picture: `livedoc:v2:bug-report-draft`
+  (`{ title, details }` JSON, each cut to its limit) and `livedoc:v2:bug-report-draft-screenshot` (a
+  `BugReportScreenshot` JSON, read back through `parseBugReportScreenshot`). Either key is removed when empty; anything
+  unreadable is read as absent. No migration: an unreadable draft is an empty form.
 
 ## Behaviour and state
 
 Dialog states: `editing` → `sending` → `sent { number } | stored` or back to `editing` with `error`. A capture
 (`capturing`) runs beside `editing`; Send pressed while capturing enters `sending` and awaits the capture
 (`useBugReportScreenshot().settled()`), then sends with whatever it produced.
-Closing the dialog clears everything; closing while sending drops the answer (the request still lands).
+The dialog opens on the draft (`readBugReportDraft`, once per opening). Every title or details change saves the text;
+every screenshot replace (attach, remove) saves or removes the picture, a capture that ends after the form closed
+included. A sent report (`filed` or `stored`) clears the draft, even when the form closed while sending; a failure
+keeps it. Closing keeps the draft; closing while sending drops the answer (the request still lands).
 
 Filing (worker, `submitBugReport`): method → `content-length` and text length ≤ 1,500,000 → rate → parse → reporter
 → screenshot put → `fileBugReport` → `201`, or `storeBugReport` → `202`, or `503`.
@@ -183,12 +196,15 @@ installed in `ErrorTelemetryBoot`'s effect. No layout shift: entries are fixed-s
 - Guest header shaped like an account id, or failing its signature where enforced: reporter `anonymous`, logged.
 - D1 down on the rate count: allowed, logged `[bug-reports] rate.uncounted`.
 - Board refuses and the D1 insert fails: `503`, logged `[bug-reports] report.lost` (error).
+- Draft: storage refused or full on the screenshot → the text is kept, the picture lasts for the opening, logged
+  `[bug-reports] draft.screenshot-unsaved`; a draft that does not parse → an empty form.
 - Client: no session token → sent without identity; network failure → "Sending failed"; capture failure; undecodable
   image; image over the bounds at the lowest quality.
 
 ## Security and trust
 
-Identity is never read from the body. Every field is bounded before D1, R2 or the item store. Screenshots are checked by
+Identity is never read from the body. Every field is bounded before D1, R2 or the item store. The draft never
+leaves the browser until it is sent, and is read back through the same parsers and limits as a submission. Screenshots are checked by
 signature, served only to the Bug Tracker's owner, with `nosniff` and `default-src 'none'`. Keys are unguessable
 (uuid) and validated by pattern before any R2 read. The route answers `404` alike for "not yours", "unknown" and
 "unconfigured". Rate limits: the binding per network, the D1 window per visitor; the global write limiter applies too.
@@ -206,7 +222,7 @@ Fingerprint `[bug-reports]`, one line per decision: `report.received`, `report.r
 `report.stored` (`reason`), `report.lost`, `room.failed`, `card.unmade` (`rejection`), `refile.run` (`due`, `filed`,
 `stored`), `refile.failed`, `screenshot.served`, `screenshot.refused` (`why`), `erasure.screenshots` (`objects`).
 Client: `[bug-reports] opened`, `opened.outside-provider`, `sent` (`number` or `stored`), `send.failed` (`status`),
-`send.anonymous`, `capture.failed`, `image.refused`, `screenshot.unavailable`.
+`send.anonymous`, `capture.failed`, `image.refused`, `screenshot.unavailable`, `draft.screenshot-unsaved`.
 
 ## Testing
 
@@ -220,7 +236,7 @@ Client: `[bug-reports] opened`, `opened.outside-provider`, `sent` (`number` or `
 | Screenshot store and owner-only serving    | `apps/api/src/bug-reports/screenshots.test.ts`                            |
 | Refile                                     | `apps/api/src/bug-reports/refile.test.ts`                                 |
 | Erasure and migration                      | `apps/api/src/db/account-owner-columns.test.ts`, `db/bug-reports.test.ts` |
-| Ring buffer, context, encoder, send        | `apps/live/lib/bug-report/*.test.ts`                                      |
+| Ring buffer, context, encoder, send, draft | `apps/live/lib/bug-report/*.test.ts`                                      |
 | Dialog, entries                            | `apps/live/components/bug-report/*.test.tsx`                              |
 | End to end                                 | `apps/live/e2e/bug-report.spec.ts`                                        |
 

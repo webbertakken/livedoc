@@ -37,7 +37,7 @@ const BASE64_RE = /^[A-Za-z0-9+/_-]*={0,2}$/;
 // for anything that is not base64, so a caller decoding untrusted input (a
 // secret from the environment, a sealed value from a row) can refuse it
 // rather than throw.
-export function base64ToBytes(text: string): Uint8Array | null {
+export function base64ToBytes(text: string): Uint8Array<ArrayBuffer> | null {
   if (!BASE64_RE.test(text)) return null;
   const standard = text.replace(/-/g, '+').replace(/_/g, '/').replace(/=+$/, '');
   const padded = standard + '='.repeat((4 - (standard.length % 4)) % 4);

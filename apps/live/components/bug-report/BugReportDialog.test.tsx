@@ -24,6 +24,7 @@ vi.mock('@/lib/bug-report/screenshot', () => ({
   ACCEPTED_SCREENSHOT_TYPES: ['image/png', 'image/jpeg', 'image/webp'],
   captureScreen: vi.fn(async () => prepared),
   encodeImageFile: vi.fn(async () => prepared),
+  restoreScreenshot: vi.fn((screenshot: unknown) => ({ screenshot, previewUrl: 'blob:restored' })),
 }));
 vi.mock('@/lib/telemetry', () => ({ track: (...args: unknown[]) => tracked.push(args) }));
 vi.mock('@/components/providers/deferred-auth', () => ({
@@ -39,6 +40,7 @@ beforeEach(() => {
   answer = { kind: 'filed', number: 7 };
   prepared = null;
   URL.revokeObjectURL = vi.fn();
+  localStorage.clear();
 });
 afterEach(() => cleanup());
 
@@ -141,6 +143,62 @@ describe('BugReportDialog', () => {
     expect(screen.getByText("What's Attached")).toBeTruthy();
     expect(screen.getByText('Your guest id')).toBeTruthy();
     expect(screen.getByText('Page')).toBeTruthy();
+  });
+
+  it('keeps the words and the screenshot when closed, and opens on them again', async () => {
+    prepared = { screenshot: { contentType: 'image/png', data: 'AAAA' }, previewUrl: 'blob:x' };
+    const first = render(<BugReportDialog onClose={() => {}} />);
+    fillTitle('Save fails');
+    fireEvent.change(screen.getByRole('textbox', { name: /More details/ }), {
+      target: { value: 'Spins' },
+    });
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Capture Screen' })));
+    first.unmount();
+
+    render(<BugReportDialog onClose={() => {}} />);
+    expect(screen.getByRole('textbox', { name: 'What went wrong?' })).toHaveProperty(
+      'value',
+      'Save fails',
+    );
+    expect(screen.getByRole('textbox', { name: /More details/ })).toHaveProperty('value', 'Spins');
+    expect(screen.getByRole('img', { name: 'Screenshot to send' }).getAttribute('src')).toBe(
+      'blob:restored',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Send Report' }));
+    await screen.findByText('Logged as report #7.');
+    expect(sent[0]).toMatchObject({
+      title: 'Save fails',
+      details: 'Spins',
+      screenshot: { data: 'AAAA' },
+    });
+  });
+
+  it('clears the draft once sent, and keeps it when sending fails', async () => {
+    answer = { kind: 'failed', reason: 'failed' };
+    const first = render(<BugReportDialog onClose={() => {}} />);
+    fillTitle('Save fails');
+    fireEvent.click(screen.getByRole('button', { name: 'Send Report' }));
+    await screen.findByRole('alert');
+    first.unmount();
+
+    answer = { kind: 'stored' };
+    const second = render(<BugReportDialog onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Send Report' }));
+    await screen.findByText('Saved; we will file it shortly.');
+    second.unmount();
+
+    render(<BugReportDialog onClose={() => {}} />);
+    expect(screen.getByRole('textbox', { name: 'What went wrong?' })).toHaveProperty('value', '');
+  });
+
+  it('forgets a removed screenshot', async () => {
+    prepared = { screenshot: { contentType: 'image/png', data: 'AAAA' }, previewUrl: 'blob:x' };
+    const first = render(<BugReportDialog onClose={() => {}} />);
+    await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Capture Screen' })));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Screenshot' }));
+    first.unmount();
+    render(<BugReportDialog onClose={() => {}} />);
+    expect(screen.queryByRole('img')).toBeNull();
   });
 
   it('closes from Done', async () => {
