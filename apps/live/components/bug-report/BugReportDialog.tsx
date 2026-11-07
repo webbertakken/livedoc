@@ -2,8 +2,10 @@
 
 // The Report a Bug form (docs/specs/016-platform/bug-reports.md "The form", blueprint "Behaviour and state"): what
 // went wrong, more details, an opt-in screenshot, what is attached, then a confirmation or the reason it failed.
-// Loaded on the first opening (BugReportProvider), so it adds nothing to a page until then.
+// Loaded on the first opening (BugReportProvider), so it adds nothing to a page until then. It opens on the draft and
+// keeps every change in it, so closing it loses nothing; a sent report clears it.
 import {
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -18,6 +20,11 @@ import { DialogFooter } from '@/components/dialogs/DialogFooter';
 import { useDeferredAuth } from '@/components/providers/deferred-auth';
 import { apiFetch, apiHeaders } from '@/lib/api/core';
 import { browserBugReportInputs, collectBugReportContext } from '@/lib/bug-report/collect-context';
+import {
+  clearBugReportDraft,
+  readBugReportDraft,
+  saveBugReportDraftText,
+} from '@/lib/bug-report/draft';
 import { sendBugReport, type BugReportSendResult } from '@/lib/bug-report/send';
 import { getGuestSelfId } from '@/lib/local-identity';
 import { track } from '@/lib/telemetry';
@@ -47,14 +54,21 @@ async function identity(): Promise<Record<string, string>> {
 }
 
 export function BugReportDialog({ onClose }: { onClose: () => void }) {
-  const [title, setTitle] = useState('');
-  const [details, setDetails] = useState('');
+  const [draft] = useState(readBugReportDraft);
+  const [title, setTitle] = useState(draft.title);
+  const [details, setDetails] = useState(draft.details);
   const [phase, setPhase] = useState<Phase>({ kind: 'editing', error: null });
-  const shot = useBugReportScreenshot();
+  const shot = useBugReportScreenshot(draft.screenshot);
   const { isSignedIn } = useDeferredAuth();
   const doneRef = useRef<HTMLButtonElement>(null);
   const context = useMemo(() => collectBugReportContext(browserBugReportInputs()), []);
   const you: BugReportYou = isSignedIn ? 'account' : getGuestSelfId() ? 'guest' : 'none';
+  const sent = phase.kind === 'sent';
+
+  // Until it is sent: the confirmation must not write back what the send just cleared.
+  useEffect(() => {
+    if (!sent) saveBugReportDraftText({ title, details });
+  }, [title, details, sent]);
 
   const send = async (e?: FormEvent) => {
     e?.preventDefault();
@@ -72,6 +86,7 @@ export function BugReportDialog({ onClose }: { onClose: () => void }) {
       setPhase({ kind: 'editing', error: FAILURE_COPY[result.reason] });
       return;
     }
+    clearBugReportDraft();
     track('Feedback', 'Completed', 'Bug');
     setPhase({ kind: 'sent', result });
     requestAnimationFrame(() => doneRef.current?.focus());
