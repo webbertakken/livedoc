@@ -25,6 +25,10 @@ import {
   type TextAlignX,
   type TextElement,
   type ThemeDefinition,
+  clampTextPx,
+  isTextPx,
+  labelFontPx,
+  readTextSize,
 } from '@livedoc/document';
 import { applySwatchOverrides, type ShownSwatch, type SwatchOverrides } from './swatch-overrides';
 import type { PenColourChoice, PenColourOption, QuickPenStyle } from './quick-style-pen';
@@ -37,7 +41,14 @@ export type BoardColourSection = {
 
 export type QuickStyleTarget = ShapeElement | ArrowElement | TextElement | PathElement;
 type QuickSectionId =
-  'stroke' | 'background' | 'textColour' | 'width' | 'style' | 'textAlign' | 'iconAlign';
+  | 'stroke'
+  | 'background'
+  | 'textColour'
+  | 'width'
+  | 'style'
+  | 'textAlign'
+  | 'iconAlign'
+  | 'textSize';
 export type QuickSwatchValue = 0 | QuickSwatchSlot;
 // Ink, the eighth choice of the Stroke and Text colour rows (docs/specs/007-editor/editor-modes.md
 // "One look"): stored by name, drawn in its version for the canvas.
@@ -54,6 +65,16 @@ export type QuickIconAlign = 'left' | 'above' | 'right';
 export type QuickCorners = 'none' | 'sm' | 'md' | 'lg';
 
 export const QUICK_WIDTHS: readonly QuickWidth[] = ['thin', 'medium', 'thick'];
+
+// The Text size row (docs/specs/008-canvas/quick-style-panel.md "Text size"): five steps around the tab's default
+// size, Medium being the default itself, each written as an exact px on the Text Size slider's scale.
+export type QuickTextSize = 'xs' | 's' | 'm' | 'l' | 'xl';
+export const QUICK_TEXT_SIZES: readonly QuickTextSize[] = ['xs', 's', 'm', 'l', 'xl'];
+const TEXT_SIZE_SCALE: Record<QuickTextSize, number> = { xs: 0.7, s: 0.85, m: 1, l: 1.3, xl: 1.7 };
+
+/** A step's px, around `base` (the tab's default size in px). */
+export const quickTextSizePx = (step: QuickTextSize, base: number): number =>
+  clampTextPx(Math.round(base * TEXT_SIZE_SCALE[step]));
 export const QUICK_TEXT_ALIGNS: readonly TextAlignX[] = ['left', 'center', 'right'];
 export const QUICK_ICON_ALIGNS: readonly QuickIconAlign[] = ['left', 'above', 'right'];
 const SHAPE_STYLES: readonly QuickStrokeStyle[] = ['solid', 'dashed', 'dotted'];
@@ -71,6 +92,8 @@ export type QuickStyleView = {
     style?: { value: QuickStrokeStyle | null; options: readonly QuickStrokeStyle[] };
     textAlign?: { value: TextAlignX | null };
     iconAlign?: { value: QuickIconAlign | null };
+    // `steps`: each step's px, XS to XL.
+    textSize?: { value: QuickTextSize | null; steps: number[] };
     // A whiteboard's Stroke and Text colour rows (lib/quick-style-whiteboard): the whiteboard's
     // colours in place of `stroke` and `textColour`.
     boardStroke?: BoardColourSection;
@@ -125,6 +148,10 @@ export function supportsQuickSection(el: QuickStyleTarget, section: QuickSection
     case 'iconAlign':
       // Not on a card, callout, header or boundary: they place their icon themselves.
       return el.type === 'shape' && positionsInlineIcon(el) && !!el.iconId;
+    case 'textSize':
+      // Words to size: a labelled shape that draws its label, or a text element.
+      if (el.type === 'text') return !!el.label?.trim();
+      return el.type === 'shape' && supportsTextAlign(el.shape) && !!el.label?.trim();
   }
 }
 
@@ -214,6 +241,8 @@ export function quickStyleView(
   overrides: SwatchOverrides = {},
   // The Ink swatch's colour: the version for the canvas the tab paints (the theme's, unless told).
   ink: string = PEN_INK[canvasSurface(theme.backgroundColor)],
+  // The tab's default text size in px, which the Text size row's Medium is; an unset size draws at Medium (22px).
+  textBase: number = labelFontPx(undefined),
 ): QuickStyleView | null {
   const targets = elements.filter(isQuickStyleTarget);
   const supporting = (s: QuickSectionId) => targets.filter((el) => supportsQuickSection(el, s));
@@ -280,6 +309,18 @@ export function quickStyleView(
   }
   const iconAlign = supporting('iconAlign');
   if (iconAlign.length > 0) sections.iconAlign = { value: shared(iconAlign.map(iconAlignOf)) };
+  const textSize = supporting('textSize');
+  if (textSize.length > 0) {
+    const steps = QUICK_TEXT_SIZES.map((s) => quickTextSizePx(s, textBase));
+    const stepOf = (el: QuickStyleTarget): QuickTextSize | null => {
+      const size = readTextSize((el as ShapeElement | TextElement).textSize);
+      if (size === 'scale') return null;
+      const px = isTextPx(size) ? size : labelFontPx(size);
+      const at = steps.indexOf(px);
+      return at === -1 ? null : QUICK_TEXT_SIZES[at]!;
+    };
+    sections.textSize = { value: shared(textSize.map(stepOf)), steps };
+  }
 
   if (Object.keys(sections).length === 0) return null;
   return { targetIds: targets.map((el) => el.id), sections };
@@ -394,6 +435,12 @@ export function applyQuickTextAlign(el: Element, align: TextAlignX): Element {
   if (el.type !== 'shape' || !isQuickStyleTarget(el) || !supportsQuickSection(el, 'textAlign'))
     return el;
   return { ...el, textAlignX: align };
+}
+
+export function applyQuickTextSize(el: Element, px: number): Element {
+  if ((el.type !== 'shape' && el.type !== 'text') || !isQuickStyleTarget(el)) return el;
+  if (!supportsQuickSection(el, 'textSize')) return el;
+  return { ...el, textSize: clampTextPx(px) };
 }
 
 export function applyQuickIconAlign(el: Element, align: QuickIconAlign): Element {

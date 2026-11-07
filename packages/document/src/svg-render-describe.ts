@@ -24,7 +24,7 @@ import { fontIdsUsed, resolveFontStack } from './fonts';
 import { elementFontId, isFinish, resolveFinish, type Finish } from './finish';
 import { hasRichFormatting } from './rich-text';
 import { iconCaptionBand } from './icon-size';
-import { fontSizeFor, labelMaxWidth } from './svg-render-primitives';
+import { fontSizeFor, labelMaxWidth, shrinkLabelPx } from './svg-render-primitives';
 import { BEHAVIOUR_FACE_SHAPES } from './svg-render-faces';
 import { isCollabPanelShape } from './collab-shapes';
 import { isSeatingShape } from './seating';
@@ -405,6 +405,21 @@ export function describeBoxedExport(
       },
     };
   }
+  // A shape's plain label shrinks to fit its box, as the canvas draws it (docs/specs/004-interface-design/fonts.md
+  // "Shrink to fit").
+  const size =
+    el.label && el.type === 'shape' && !runs
+      ? shrinkLabelPx({
+          text: eventStormingLabelText(el, el.label),
+          px: baseSize,
+          width: el.width,
+          height: el.height,
+          padding: pad,
+          bold: !!el.textBold,
+          italic: !!el.textItalic,
+          fontFamily,
+        })
+      : baseSize;
   const label: ExportLabel | null = el.label
     ? {
         text: eventStormingLabelText(el, el.label),
@@ -416,15 +431,15 @@ export function describeBoxedExport(
               : el.x + el.width / 2,
         y:
           alignY === 'top'
-            ? bodyTop + pad + baseSize / 2
+            ? bodyTop + pad + size / 2
             : alignY === 'bottom'
-              ? bodyBottom - pad - baseSize / 2
+              ? bodyBottom - pad - size / 2
               : (bodyTop + bodyBottom) / 2,
         anchor: alignX === 'right' ? 'end' : alignX === 'left' ? 'start' : 'middle',
         valign: alignY,
         maxWidth: labelMaxWidth(el, pad),
         color: baseColor,
-        size: baseSize,
+        size,
         bold: !!el.textBold,
         italic: !!el.textItalic,
         fontFamily,

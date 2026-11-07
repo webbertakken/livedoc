@@ -69,7 +69,9 @@ export {
   LABEL_LINE_HEIGHT,
   labelMaxWidth,
   labelMeasure,
+  LABEL_SHRINK_MIN_PX,
   r2,
+  shrinkLabelPx,
   wrapLabel,
   xmlEscape,
 } from './svg-render-primitives';

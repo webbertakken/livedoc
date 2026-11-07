@@ -426,6 +426,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone made the lines of the selected shapes or arrows thin, medium, or thick from the quick style panel.',
   'Element|Changed|QuickTextColour':
     'Someone picked a colour for the selected text elements from the quick style panel beside the selection.',
+  'Element|Changed|QuickTextSize':
+    "Someone picked a text size (extra small to extra large) from the quick style panel for the selected elements' text.",
   'Element|Changed|QuickTextAlign':
     'Someone aligned the text of the selected shapes left, centre, or right from the quick style panel.',
   'Element|Changed|Quiz':

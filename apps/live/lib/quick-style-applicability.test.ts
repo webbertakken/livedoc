@@ -61,7 +61,7 @@ describe('a mixed selection', () => {
   it('shows every row some element takes, and the marker rows for the strokes', () => {
     const view = quickStyleView(mixed, theme)!;
     expect(Object.keys(view.sections).sort()).toEqual(
-      ['background', 'stroke', 'style', 'textAlign', 'textColour', 'width'].sort(),
+      ['background', 'stroke', 'style', 'textAlign', 'textColour', 'textSize', 'width'].sort(),
     );
     expect(strokesPenStyle(mixed, { board: 'light', ink: '#000' })!.subject).toMatchObject({
       ids: ['stroke-1', 'stroke-2'],

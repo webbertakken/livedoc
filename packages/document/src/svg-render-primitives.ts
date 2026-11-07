@@ -156,3 +156,52 @@ export function svgIconGlyph(
     ` viewBox="0 0 24 24" preserveAspectRatio="xMidYMid meet" overflow="visible"${attrs}>${art.markup}</svg>`
   );
 }
+
+/** The smallest a label shrinks to, in px (the Text Size slider's floor). */
+export const LABEL_SHRINK_MIN_PX = 6;
+
+/**
+ * A shape label's px once it is shrunk to fit its box (docs/specs/004-interface-design/fonts.md "Shrink to fit"): its
+ * own size when the wrapped lines fit inside `width` x `height` less the padding, else the largest whole px below it
+ * that does, at least LABEL_SHRINK_MIN_PX. Wrapped and measured as the canvas and the export draw it, so both agree.
+ */
+export function shrinkLabelPx({
+  text,
+  px,
+  width,
+  height,
+  padding,
+  bold = false,
+  italic = false,
+  fontFamily,
+}: {
+  text: string;
+  px: number;
+  width: number;
+  height: number;
+  padding: number;
+  bold?: boolean;
+  italic?: boolean;
+  fontFamily?: string;
+}): number {
+  if (!text.trim()) return px;
+  const availW = Math.max(1, width - padding * 2);
+  const availH = Math.max(1, height - padding * 2);
+  const fits = (size: number) => {
+    const measure = labelMeasure(size, bold, italic, fontFamily);
+    const lines = wrapLabel(text, availW, measure);
+    return (
+      lines.length * size * LABEL_LINE_HEIGHT <= availH && lines.every((l) => measure(l) <= availW)
+    );
+  };
+  if (fits(px)) return px;
+  let lo = LABEL_SHRINK_MIN_PX;
+  let hi = Math.floor(px) - 1;
+  if (hi <= lo || !fits(lo)) return Math.min(px, lo);
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (fits(mid)) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo;
+}
