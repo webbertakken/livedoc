@@ -1,7 +1,8 @@
 import type { BorderRadius, BorderStroke, BorderStyle, ShapeKind } from '@livedoc/document';
 
 // Curated subset of the most common shapes offered for in-place morphing in
-// the context menu's Shape category (the full set lived in the old panel).
+// the context menu's Shape category; its search finds the rest (lib/shape-morph-targets.ts). The mind node is
+// among them so a box drawn first joins a mind map in one click.
 export const COMMON_SHAPES: ShapeKind[] = [
   'square',
   'circle',
@@ -11,6 +12,7 @@ export const COMMON_SHAPES: ShapeKind[] = [
   'hexagon',
   'triangle',
   'cylinder',
+  'mind-node',
 ];
 
 // Fixed rotation angles offered in the Rotation category (and the search

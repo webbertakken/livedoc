@@ -38,6 +38,19 @@ const SHAPE_GLYPH: Partial<Record<ShapeKind, { sw: number; body: ReactNode }>> =
     body: <path d="M3 3 L13 3 L13 12 C11 13.4 9.5 11.5 8 12.6 C6.5 13.7 5 11.5 3 12.6 Z" />,
   },
   stadium: { sw: 1.5, body: <rect x="2" y="5" width="12" height="6" rx="3" /> },
+  // A node with two branches leaving it: the mind map's own picture, never a plain box.
+  'mind-node': {
+    sw: 1.4,
+    body: (
+      <>
+        <rect x="1.5" y="5.5" width="6" height="5" rx="1.5" />
+        <path d="M7.5 8 C10 8 10 4 12.5 4" />
+        <path d="M7.5 8 C10 8 10 12 12.5 12" />
+        <circle cx="13.5" cy="4" r="1" />
+        <circle cx="13.5" cy="12" r="1" />
+      </>
+    ),
+  },
   actor: {
     sw: 1.3,
     body: (
