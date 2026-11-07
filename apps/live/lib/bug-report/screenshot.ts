@@ -3,6 +3,7 @@
 // unavailable), the quality stepped down until it fits 1 MB. The capture library loads only on the first capture.
 import {
   BUG_REPORT_LIMITS,
+  base64ToBytes,
   bytesToBase64,
   type BugReportScreenshot,
   type BugReportScreenshotType,
@@ -75,6 +76,14 @@ export async function encodeCanvas(source: HTMLCanvasElement): Promise<PreparedS
   if (!blob) return null;
   const data = bytesToBase64(new Uint8Array(await blob.arrayBuffer()));
   return { screenshot: { contentType: type, data }, previewUrl: URL.createObjectURL(blob) };
+}
+
+// A screenshot already encoded (the draft's), with its preview made again; null when its data is not base64.
+export function restoreScreenshot(screenshot: BugReportScreenshot): PreparedScreenshot | null {
+  const bytes = base64ToBytes(screenshot.data);
+  if (!bytes) return null;
+  const blob = new Blob([bytes], { type: screenshot.contentType });
+  return { screenshot, previewUrl: URL.createObjectURL(blob) };
 }
 
 // A chosen, pasted or dropped image file; null when it cannot be decoded or fitted.

@@ -147,3 +147,46 @@ test('an error card offers Report a Bug beside Try again', async ({ page }) => {
   await button.click();
   await expect(page.getByRole('dialog', { name: 'Report a Bug' })).toBeVisible();
 });
+
+// A 2x2 PNG, enough for the encoder to take.
+const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAAFklEQVR4nGO4o6bGt/Qlg8DOxq/zuAEmbAWtK9LTXQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+test('an unsent report survives closing and a reload, its image too, until it is sent', async ({
+  page,
+  context,
+  baseURL,
+  pageErrors,
+}) => {
+  await giveOwnClientAddress(context, baseURL!);
+  const watched = watchReports(page);
+  await page.goto('/report-a-bug');
+  const dialog = page.getByRole('dialog', { name: 'Report a Bug' });
+  const title = dialog.getByRole('textbox', { name: 'What went wrong?' });
+  const details = dialog.getByRole('textbox', { name: /More details/ });
+  await title.fill('Export loses the arrows');
+  await details.fill('Only on the second tab');
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: 'shot.png',
+    mimeType: 'image/png',
+    buffer: TINY_PNG,
+  });
+  await expect(dialog.getByRole('img', { name: 'Screenshot to send' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Close' }).click();
+  await expect(dialog).toHaveCount(0);
+
+  await page.goto('/report-a-bug');
+  await expect(title).toHaveValue('Export loses the arrows');
+  await expect(details).toHaveValue('Only on the second tab');
+  await expect(dialog.getByRole('img', { name: 'Screenshot to send' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Send Report' }).click();
+  await expect(dialog.getByText('Thanks for the report')).toBeVisible();
+  expect(watched.sent[0]?.screenshot?.contentType).toMatch(/^image\/(webp|jpeg)$/);
+
+  await page.goto('/report-a-bug');
+  await expect(title).toHaveValue('');
+  await expect(dialog.getByRole('img')).toHaveCount(0);
+  expectNoPageErrors(pageErrors);
+});

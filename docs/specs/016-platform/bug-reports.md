@@ -84,6 +84,14 @@ Try a smaller one." Types accepted: PNG, JPEG, WebP. The capture library loads o
 it was filed, or "Saved; we will file it shortly." when it was stored. No link is shown: the board is private. Focus
 moves to the confirmation; "Done" closes the form and clears it.
 
+**The draft**: what the reporter writes and attaches is kept in this browser while they work, so closing the form,
+reloading or leaving the page loses nothing: the next opening, from any entry or `/report-a-bug`, continues it. The
+title and details are saved as they are typed; the screenshot (captured, uploaded, pasted or dropped) once it is
+attached, and forgotten when it is removed. A report sent (filed or stored) clears the draft, and so does emptying both
+fields with no screenshot attached; a failed send keeps it. One draft per browser, shared by its tabs: the last write
+wins. When the browser cannot keep the screenshot (its storage is full or refused), the words are still kept and the
+screenshot lasts only while the form is open.
+
 **On failure** the form keeps every field and says: "You have sent a few reports just now. Try again in a few
 minutes." for `429`; "The screenshot is too large. Remove it or choose a smaller one." for `413`; otherwise "Sending
 failed. Please try again."
@@ -209,6 +217,7 @@ limits.
 ## Privacy
 
 - A screenshot is opt-in per report, shown before sending, kept 90 days, and served only to the Bug Tracker's owner.
+- An unsent draft, its screenshot included, stays in the reporter's browser only, until it is sent or emptied.
 - The context names no document, share code, query, email or person; error messages are redacted.
 - The reporter is an id with its kind, never an email or a name.
 - The privacy policy says so under what we store; the terms name the 90 days.
@@ -225,6 +234,8 @@ Opening the form emits `track('Feedback', 'Opened', 'Bug')`; a report sent (file
 - **Stored, never lost**: a D1 row with its reason, refiled on a schedule.
 - **Anyone can report**, not gated by share role: reporting reaches no shared document.
 - **Screenshot off by default**, at most 1,600 px and 1 MB, 90 days, owner only.
+- **A draft kept in the browser** (Webber, 2026-11-07): closing the form never wipes it; local storage, screenshot
+  included.
 - **One form, many entries**; other apps link to `/report-a-bug` rather than carrying a second form.
 - **5 per 600 s per visitor**: the binding's longest period is 60 s, so the binding gates bursts per network and a D1
   fixed window holds the 600 s count.

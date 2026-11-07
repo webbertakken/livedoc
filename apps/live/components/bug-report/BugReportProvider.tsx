@@ -33,7 +33,7 @@ type OpenBugReport = (options?: OpenBugReportOptions) => void;
 const OpenBugReportContext = createContext<OpenBugReport | null>(null);
 
 export function BugReportProvider({ children }: { children: ReactNode }) {
-  // A new key per opening: the form starts empty every time.
+  // A new key per opening: the form starts afresh from the draft (lib/bug-report/draft.ts) every time.
   const [opening, setOpening] = useState<number | null>(null);
   const pending = useRef<OpenBugReportOptions>({});
 

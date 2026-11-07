@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { SCREENSHOT_QUALITY_STEPS, encodeToFit, fitWithin } from './screenshot';
+import { SCREENSHOT_QUALITY_STEPS, encodeToFit, fitWithin, restoreScreenshot } from './screenshot';
 
 // docs/specs/016-platform/bug-reports.md "The form": at most 1,600 px on the longer side and 1 MB, the quality
 // stepped down until it fits (D14).
@@ -47,5 +47,25 @@ describe('encodeToFit', () => {
 
   it('steps from 0.9 to 0.4', () => {
     expect(SCREENSHOT_QUALITY_STEPS).toEqual([0.9, 0.8, 0.7, 0.6, 0.5, 0.4]);
+  });
+});
+
+describe('restoreScreenshot', () => {
+  it('makes the preview again from the kept bytes', async () => {
+    const made: Blob[] = [];
+    const original = URL.createObjectURL;
+    URL.createObjectURL = (blob: Blob) => (made.push(blob), 'blob:again');
+    try {
+      const out = restoreScreenshot({ contentType: 'image/png', data: 'AAEC' });
+      expect(out?.previewUrl).toBe('blob:again');
+      expect(made[0]?.type).toBe('image/png');
+      expect([...new Uint8Array(await made[0]!.arrayBuffer())]).toEqual([0, 1, 2]);
+    } finally {
+      URL.createObjectURL = original;
+    }
+  });
+
+  it('refuses data that is not base64', () => {
+    expect(restoreScreenshot({ contentType: 'image/png', data: 'not base64!' })).toBeNull();
   });
 });
