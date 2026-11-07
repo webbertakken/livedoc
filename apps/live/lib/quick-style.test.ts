@@ -544,7 +544,7 @@ describe('a transparent background', () => {
   });
 });
 
-// docs/specs/008-canvas/quick-style-panel.md "Text size" (Bug Tracker #6).
+// docs/specs/008-canvas/quick-style-panel.md "Text size" (Bug Tracker card 6).
 describe('Text size: five steps around the tab default', () => {
   it('names the steps around the default size, M the default itself', () => {
     expect(QUICK_TEXT_SIZES.map((s) => quickTextSizePx(s, 14))).toEqual([10, 12, 14, 18, 24]);

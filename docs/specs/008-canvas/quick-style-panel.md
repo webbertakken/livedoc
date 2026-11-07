@@ -127,7 +127,7 @@ opens nothing.
   On a whiteboard, Clear Styles returns corners to the kind's default too, and the board's style
   memory remembers them for the next rectangle.
 - **Highlighter colour** and **Highlighter width** are the [Highlighter](highlighter.md)'s settings, shown above the other rows for selected highlight strokes, and on their own (captioned "Highlighter") while the Highlighter tile is armed with nothing selected, where they set the next stroke. Five colours and three widths: the marker's own set, not the theme's. The width row has no context-menu twin, a deliberate exception scoped to these rows ([Highlighter](highlighter.md) "Settings").
-- **Text size** (the operator's request, Bug Tracker #6) sets the label size of every selected labelled shape and
+- **Text size** (the operator's request) sets the label size of every selected labelled shape and
   text element to one of five steps around the tab's default size, M being the default
   ([Fonts](../004-interface-design/fonts.md#five-steps)); the step every selected element is at is marked, none when
   they differ or sit between steps. Each option names its px ("Large, 18px"). Like Corners, its count is the
