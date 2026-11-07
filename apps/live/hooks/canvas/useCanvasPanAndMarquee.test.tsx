@@ -279,3 +279,34 @@ describe('useCanvasPanAndMarquee tap', () => {
     expect(t.onDeselect).not.toHaveBeenCalled();
   });
 });
+
+// docs/specs/008-canvas/canvas-and-palette.md "Touch": a second finger makes the gesture a pinch, which pans and zooms;
+// the selection box the first finger began goes, and its release selects nothing.
+describe('useCanvasPanAndMarquee and a second finger', () => {
+  it('drops the box once a pinch begins, selecting and deselecting nothing', () => {
+    const pinching = { current: false };
+    const deps = {
+      viewportZoom: 1,
+      setViewportOffset: vi.fn(),
+      elements: [] as never,
+      wrapperRef: {
+        current: { getBoundingClientRect: () => ({ left: 0, top: 0, width: 500, height: 500 }) },
+      } as never,
+      onDeselect: vi.fn(),
+      onSelectMarquee: vi.fn(),
+      isPinchingRef: pinching,
+    };
+    const hook = renderHook(() => useCanvasPanAndMarquee(deps));
+    act(() => hook.result.current.setMarquee({ startX: 0, startY: 0, currentX: 0, currentY: 0 }));
+    pinching.current = true;
+    act(() => {
+      window.dispatchEvent(new PointerEvent('pointermove', { clientX: 80, clientY: 80 }));
+    });
+    expect(hook.result.current.marquee).toBeNull();
+    act(() => {
+      window.dispatchEvent(new PointerEvent('pointerup', { clientX: 90, clientY: 90 }));
+    });
+    expect(deps.onSelectMarquee).not.toHaveBeenCalled();
+    expect(deps.onDeselect).not.toHaveBeenCalled();
+  });
+});
