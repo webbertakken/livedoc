@@ -10,7 +10,12 @@ afterEach(() => cleanup());
 const setup = () => {
   const onPick = vi.fn();
   render(
-    <ShapeMorphPicker current="square" onPick={onPick} onPreview={vi.fn()} onPreviewEnd={vi.fn()} />,
+    <ShapeMorphPicker
+      current="square"
+      onPick={onPick}
+      onPreview={vi.fn()}
+      onPreviewEnd={vi.fn()}
+    />,
   );
   const search = screen.getByRole('searchbox', { name: 'Search shapes' });
   return { onPick, search };

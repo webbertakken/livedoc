@@ -12,7 +12,16 @@ describe('shape morph targets', () => {
 
   it('leaves out what carries its own data, face or picture', () => {
     const kinds = new Set<string>(MORPH_TARGETS.map((t) => t.kind));
-    for (const kind of ['icon', 'sticker', 'frame', 'tab-window', 'progress-bar', 'chair', 'lane', 'page'])
+    for (const kind of [
+      'icon',
+      'sticker',
+      'frame',
+      'tab-window',
+      'progress-bar',
+      'chair',
+      'lane',
+      'page',
+    ])
       expect(kinds.has(kind)).toBe(false);
   });
 
