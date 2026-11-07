@@ -1,5 +1,5 @@
 // Real Excalidraw copies through the parser and the landing, both profiles
-// (docs/specs/020-import-export/blueprints/excalidraw-import.md "Testing").
+// (docs/specs/020-import-export/excalidraw-import-export.md).
 //
 // A script, not a test: real boards are personal content and never fixtures. It reads the paths it
 // is given and prints only aggregates (counts per kind, notes, validity, timing), never text,

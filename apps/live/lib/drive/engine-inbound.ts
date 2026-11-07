@@ -1,4 +1,4 @@
-// Applying inbound decisions (docs/specs/022-drive-mirror/blueprints/drive-mirror.md,
+// Applying inbound decisions (docs/specs/022-drive-mirror/drive-mirror.md,
 // "Inbound"). Every effect goes through the ordinary LiveDoc routes via
 // the port, and the snapshot follows along so later changes in the same read
 // see what the earlier ones did.

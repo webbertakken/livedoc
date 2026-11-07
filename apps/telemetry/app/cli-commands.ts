@@ -1,4 +1,4 @@
-// The CLI's commands as the dashboard names them (docs/specs/015-api/blueprints/cli.md CLI56): one row per verb the
+// The CLI's commands as the dashboard names them (docs/specs/015-api/cli.md CLI56): one row per verb the
 // CLI counts as `Cli·Used·<Verb>`, its command words and what it does. The CLI Commands stack and each event's
 // sentence read it; `metric-series.test` fails when a counted verb has no row. `telemetry on|off` is not counted.
 

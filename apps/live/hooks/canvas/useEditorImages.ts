@@ -52,7 +52,7 @@ type EditorImagesDeps = {
   // gallery nobody can manage. Everything else in the embed stays editable.
   embedMode: boolean;
   // The editor in a workbench uploads but never reads the person's gallery
-  // (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table): no recent-images fetch.
+  // (docs/specs/013-workspace/workbench-embeds.md, Surface table): no recent-images fetch.
   galleryHidden?: boolean;
   // Viewport centre in canvas coordinates — where freshly placed
   // images land.

@@ -10,7 +10,7 @@ import {
   nextFlushAt,
 } from './room-content';
 
-// The drain's pace (docs/specs/006-document/blueprints/document-storage.md "The outbox"): on idle after a write, at
+// The drain's pace (docs/specs/006-document/document-storage.md "The outbox"): on idle after a write, at
 // most once a minute, a minute after a failure, straight after a drain that left keys.
 
 const T0 = 1_700_000_000_000;

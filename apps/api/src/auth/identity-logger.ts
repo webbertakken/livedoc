@@ -1,4 +1,4 @@
-// better-auth's log lines (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Errors and edge cases",
+// better-auth's log lines (docs/specs/014-identity/auth-and-guest-access.md,
 // "Observability"). A secret changed without BETTER_AUTH_SECRETS keeping the old one leaves the session-token keys
 // undecryptable: better-auth throws on every token it signs, and that failure is logged under its own fingerprint.
 // Every other line passes through at its own level.

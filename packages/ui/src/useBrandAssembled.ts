@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-// How long the logo's assembly takes (docs/specs/004-interface-design/blueprints/brand-motion.md "Assemble"): the
+// How long the logo's assembly takes (docs/specs/004-interface-design/brand-mark.md): the
 // last part, `Doc`, lands at 610 + 500ms, the fold at 760 + 360ms, the lines by 560 + 3 × 70 + 380ms; 1700 covers
 // them all.
 export const BRAND_ASSEMBLE_MS = 1700;

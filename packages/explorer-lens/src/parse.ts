@@ -1,5 +1,5 @@
-// Reading a lens string (docs/specs/013-workspace/explorer-filters.md "Token grammar", blueprint
-// "Behaviour and state"). Pure and total: every word yields one term, every rejection is named.
+// Reading a lens string (docs/specs/013-workspace/explorer-filters.md "Token grammar"). Pure and total: every
+// word yields one term, every rejection is named.
 
 import {
   EDITED_VALUES,

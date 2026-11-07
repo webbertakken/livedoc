@@ -1,4 +1,4 @@
-// livedoc.toml (docs/specs/027-repositories/repository-link.md "The link file"; blueprint "The link file"):
+// livedoc.toml (docs/specs/027-repositories/repository-link.md "The link file"):
 // read with smol-toml (RL1), then checked key by key. Unknown keys are refused by name at every level the spec
 // names, so a typo never silently does nothing; `[hooks]` and `[[sources]]` are checked and left unread (RL2).
 
@@ -220,7 +220,7 @@ export function parseLinkFile(text: string, path: string): LinkFile {
 
 const tomlString = (value: string) => JSON.stringify(value);
 
-// What `link init` writes (blueprint "The link file", final copy): keys in this order, LF endings; `host` always
+// What `link init` writes (final copy): keys in this order, LF endings; `host` always
 // (RL28), `folder`, `documents` and `[mirror]` only when given.
 export function linkFileText(link: {
   host: string;

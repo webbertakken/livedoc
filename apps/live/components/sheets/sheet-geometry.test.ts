@@ -1,4 +1,4 @@
-// Where rows and columns sit on screen (blueprint sheet-element.md "Layout"): offsets with hidden and filtered
+// Where rows and columns sit on screen: offsets with hidden and filtered
 // lines, the frozen panes, merges, the window in view, the cell under a point, the scroll that reveals a cell and
 // how many rows a page is.
 import { describe, expect, it } from 'vitest';

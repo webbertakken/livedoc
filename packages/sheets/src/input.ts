@@ -1,5 +1,5 @@
 // What a typed input becomes, for everything but formulas (docs/specs/029-sheets/formulas.md "What a typed input
-// becomes"; blueprint sheets-engine.md "Typed input"). Read once when saved, and stored as what it means, so every
+// becomes"). Read once when saved, and stored as what it means, so every
 // viewer reads it the same whatever their locale. Formulas are read by typed-input.ts, which adds the parser.
 import { localeDayFirst, parseDateText, parseTimeText } from './dates';
 import type { CellInput, NumberFormatKind } from './sheet';

@@ -55,7 +55,7 @@ export function NewDocumentButton({
 
   const prefetch = useCallback(() => {
     void (phone ? loadSheet() : loadMenu()).catch(() => {});
-    // And what opening a document needs, so the first click opens at once (blueprint "Instant open").
+    // And what opening a document needs, so the first click opens at once.
     prefetchNewDocumentOpen();
   }, [phone]);
 

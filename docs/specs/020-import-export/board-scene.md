@@ -293,3 +293,28 @@ Import`; the open document is not touched.
 - Groups (LiveDoc has none; a parser drops them and says so).
 - Rough (sketchy) rendering and hatched or cross-hatched fills.
 - Keeping a landed board in sync with its source.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **B1** How "nearest" marker width and text size are measured: By ratio (log distance), ties to the larger: a 2 px line
+  is between 1.5 and 2.5, not nearer 1.5 (default).
+- **B2** Which stock colour wins a hue tie: The earlier in `PEN_COLOURS` order (default).
+- **B3** Which head an arrow with two different heads keeps: Superseded (plan 0030): both are kept, the start's as
+  `arrowheadStartShape` (default).
+- **B4** Handles of a curved polyline's nodes: Catmull-Rom, a sixth of the neighbours' chord, mirrored (default).
+- **B5** What a stock colour becomes on a kind with no named field (highlighter): Its light-board version's hex
+  (default).
+- **B6** Default title of a landed Draw-mode tab: "Whiteboard", the template's title (default).
+- **B7** How long the paste notice stays: Until closed, replaced by the next paste, or the tab changes (no timer: WCAG
+  2.2.1) (default).
+- **B8** Serif source fonts: Lora, the catalogue's serif (default).
+- **B9** A paste whose tab is left while its images upload: It does not land: it belonged to the tab it was made on
+  (default).
+- **B10** Text colour on a fill that does not adapt: Its exact hex, never ink or a stock name (a black label stays black
+  on its pale fill) (default).
+- **B11** A stroke longer than an element holds: Sampled evenly along its points, both ends kept, and reported
+  (default).
+- **B13** How finely boxes, free arrow ends and bends are kept: A hundredth of a canvas px (default).

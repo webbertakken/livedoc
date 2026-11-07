@@ -1,4 +1,4 @@
-// The mirror file (docs/specs/027-repositories/repository-link.md "The mirror file"; blueprint "The mirror file"):
+// The mirror file (docs/specs/027-repositories/repository-link.md "The mirror file"):
 // the CLI's pull file with no time, so the same revisions write the same bytes (RL30). Every object's keys are
 // sorted at every depth (RL31) and each tab's elements print one a line, so a change to one element is a one-line
 // diff and `rg` lands on the element's line.

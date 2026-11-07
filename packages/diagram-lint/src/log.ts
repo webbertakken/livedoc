@@ -1,4 +1,4 @@
-// How the pure lint logs (blueprint "Observability", LN30): an injected logger, by default the console
+// How the pure lint logs (LN30): an injected logger, by default the console
 // at the level each fingerprint names. Fields are counts, codes and flags, never content.
 
 export type LintLogger = (

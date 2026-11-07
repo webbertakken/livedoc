@@ -1,4 +1,4 @@
-// What a changeset did, one line per element (docs/specs/024-agents/blueprints/edit-operations.md
+// What a changeset did, one line per element (docs/specs/024-agents/edit-operations.md
 // "Result lines", EO42): `+ ~ -` in the order operations first touched each element, then `»` lines for
 // what moved without being named, then each container whose members changed, then warnings. Elements
 // print by ref (a removed one by its ref in the input tab); coordinates are rounded and relative to the

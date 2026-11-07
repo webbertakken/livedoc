@@ -1,4 +1,4 @@
-// `show selected` (docs/specs/024-agents/blueprints/document-views.md "show selected", VW65 to VW68): the
+// `show selected` (docs/specs/024-agents/document-views.md, VW65 to VW68): the
 // owner's live selection, each element as `show` prints it, in tab order, under one header and one budget.
 import type { ShowSelectedView, ViewDoor } from '@livedoc/api-schema';
 import type { Element } from '@livedoc/document';

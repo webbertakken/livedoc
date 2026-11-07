@@ -79,3 +79,17 @@ Every icon LiveDoc draws follows one grammar, so a glyph looks the same weight i
 - One glyph carries one meaning: settings are sliders, tools a wrench.
 - Icons keep their rendered box sizes when their geometry changes, so layout does not shift.
 - Iconography owns the drawing: path data, weight, the vocabulary, the icon primitive, the lint rule and the centring test. [Optical alignment](optical-alignment.md) owns everything around the glyph: containers, slots, text centring, row baselines and the ink audit. Its primitives take any icon as a child.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D36** Thin and bold pixel values: Thin 0.75px, bold 2px: a visible step either side of the 1.25px regular (default).
+- **D37** Weight of an icon drawn inside another shape: `regular`; only a placed icon element has a weight control
+  (default).
+- **D38** Where the weight constants live: `packages/icons` (no React), so ui, live and the Workers share them
+  (default).
+- **D39** Telemetry pair for weight changes: `Element` / `Changed` / `IconWeight`, the pair every style commit uses
+  (default).
+- **D40** Vercel tile glyph: A generic triangle-free deploy glyph (rocket), since the spec bans vendor marks (default).

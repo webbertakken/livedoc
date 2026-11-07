@@ -4,7 +4,7 @@
 // so a message is held to the same limits however it was sent.
 
 export const AVATAR_SAY_MAX_WORDS = 50;
-// Fifty words of six characters (docs/specs/008-canvas/blueprints/DEFAULTS.md D107), so one very long "word"
+// Fifty words of six characters (docs/specs/008-canvas/avatar-mode.md D107), so one very long "word"
 // cannot fill the canvas either.
 export const AVATAR_SAY_MAX_CHARS = 300;
 // Longer ids than any the editor mints are refused rather than drawn.

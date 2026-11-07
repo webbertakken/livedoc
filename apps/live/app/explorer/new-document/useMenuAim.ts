@@ -1,7 +1,7 @@
 'use client';
 
 // Hover selection that holds while the pointer heads for the pane (docs/specs/013-workspace/new-document-menu.md "The
-// menu", blueprint "Behaviour and state"): a row the pointer crosses on its way to the pane does not select; it does
+// menu"): a row the pointer crosses on its way to the pane does not select; it does
 // once the pointer rests on it for MENU_AIM_DELAY_MS, or moves any other way.
 import { useCallback, useEffect, useRef, type PointerEvent, type RefObject } from 'react';
 import { MENU_AIM_DELAY_MS, isHeadingTowards, type Point } from './menu-aim';

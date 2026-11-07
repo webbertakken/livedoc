@@ -1,5 +1,5 @@
-// Recording an open (docs/specs/013-workspace/explorer-home.md "Opens"; blueprint "Recording an
-// open"). Called from the tab read when the editor declares the read an open, inside waitUntil:
+// Recording an open (docs/specs/013-workspace/explorer-home.md "Opens"). Called from the tab read when the
+// editor declares the read an open, inside waitUntil:
 // it never slows or fails the read, and a failure is logged, not thrown.
 //
 // The day once per person per document per UTC day: the document_opens row is written first and

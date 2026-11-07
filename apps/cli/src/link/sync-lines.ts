@@ -1,4 +1,4 @@
-// What a pass prints, one line per action (docs/specs/027-repositories/blueprints/repository-link.md "Output
+// What a pass prints, one line per action (docs/specs/027-repositories/repository-link.md "Output
 // lines", final copy), then the totals. A document in step prints nothing of its own; it counts in the totals.
 
 import type { MirrorLevel } from './link-file';

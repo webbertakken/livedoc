@@ -1,7 +1,7 @@
 import { defineProject } from '@livedoc/vitest-config';
 
 // Items are pure and shared by the api, the editor and the offline store
-// (docs/specs/026-plan/blueprints/item-store.md), so every rule is covered.
+// (docs/specs/026-plan/items.md), so every rule is covered.
 export default defineProject({
   test: {
     coverage: {

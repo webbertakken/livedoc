@@ -1,4 +1,4 @@
-// The document-level reads and writes of a room (docs/specs/006-document/blueprints/document-storage.md "Routing",
+// The document-level reads and writes of a room (docs/specs/006-document/document-storage.md,
 // "Reads from outside a document's routes"): the outline a document read carries, whether it holds a tab, and a
 // copy's two halves. Runs inside the document's room, on `env.DOCUMENT_DB`; the worker reaches it through the room's
 // RPCs (document-rpc.ts).
@@ -83,7 +83,7 @@ type CopiedTab = {
 };
 type Row = Record<string, string | number | null>;
 
-// What a copy carries from its source's room to the copy's (blueprint "Routing", Copy). Plain rows, so it crosses
+// What a copy carries from its source's room to the copy's (Copy). Plain rows, so it crosses
 // the RPC boundary; the target re-mints the tab ids on import.
 export type DocumentCopy = {
   itemTypes: string | null;

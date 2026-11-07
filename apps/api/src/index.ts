@@ -258,7 +258,7 @@ async function routeApiRequest(
   // — so no write route can be reached, present or future, with no per-route
   // changes. sessions and full tokens are unaffected (tokenAuth is null
   // or readOnly false). Guest header requests carry no tokenAuth either.
-  // A token revoking itself escalates nothing, so any token may (docs/specs/015-api/blueprints/cli.md).
+  // A token revoking itself escalates nothing, so any token may (docs/specs/015-api/cli.md).
   const isSelfRevoke =
     request.method === 'DELETE' && segments[1] === 'tokens' && segments[2] === 'current';
   // Opening and pairing a workbench write nothing a read-only token could misuse: its ticket is minted view-only, so
@@ -500,7 +500,7 @@ const worker = {
     if (event.cron === '0 3 * * *') {
       const now = Date.now();
       scheduleSweep(ctx, env, 'events', 'rows', now - EVENTS_RETENTION_MS, deleteOldEvents);
-      // docs/specs/014-identity/blueprints/auth-and-guest-access.md: expired sessions and sign-in codes, and the
+      // docs/specs/014-identity/auth-and-guest-access.md: expired sessions and sign-in codes, and the
       // outbox's day of mail (previews only).
       scheduleSweep(ctx, env, 'identity', 'rows', now, deleteExpiredIdentityRows);
       scheduleSweep(
@@ -602,7 +602,7 @@ const worker = {
       // docs/specs/009-elements/images.md "Retention": once every document has pushed its images,
       // then reap unused images. runImageRetention logs its own outcome.
       ctx.waitUntil(runImageRetention(env, now));
-      // docs/specs/013-workspace/blueprints/workbench-embeds.md "Retention": spent tickets and requests,
+      // docs/specs/013-workspace/workbench-embeds.md: spent tickets and requests,
       // sessions past their grace, pairings of tokens no longer live.
       ctx.waitUntil(
         sweepWorkbench(env, now)

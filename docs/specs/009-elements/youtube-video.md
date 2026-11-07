@@ -145,3 +145,27 @@ are worth having.
 
 Start-time offsets, autoplay-on-load (deliberately never), and playlists.
 Other providers are specified in [More than YouTube](embed-providers.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D59** Is playback shared or persisted: `playing` / `controls` are per viewer, per mount; never synced or saved
+  (default).
+- **D60** Link changed while playing: Any `embedUrl` change stops the player and clears `controls` (default).
+- **D61** Read-only viewers: Can play and load; cannot open the link dialog (default).
+- **D62** When the player controls show: On hover or `focus-within`; hidden otherwise (default).
+- **D63** Which providers the no-load watch covers: Every provider (default).
+- **D64** iframe feature policy: YouTube's snippet `allow` list plus `allowFullScreen`, every provider (default).
+- **D65** Referrer sent to the framed page: Browser default (`strict-origin-when-cross-origin`) (default).
+- **D66** Poster loading and failure: Eager `<img>`, no fallback on error (default).
+- **D67** Concurrent loaded embeds: No cap (default).
+- **D68** Website label form: Host lower-cased with one `www.` stripped; "Website" if empty (default).
+- **D69** Google URL without `/edit` or `/view`: Passed through unchanged (default).
+- **D70** Excalidraw export: Rectangle labelled with the URL (or `label`) (default).
+- **D71** Draw banner with no provider: Reads as Website (default).
+- **D72** Help from the link dialog: `embedElements` article link (default).
+- **D73** Frame look: 10 px radius, 1 px border, `shadow-sm`, slate-900 fill, slate-800 stroke (default).
+- **D74** Kind name in UI: "Embed" in `elementKindLabel` and `kindLabel` (default).
+- **D75** Palette group initial state and key: Closed; keyed on the group title (default).

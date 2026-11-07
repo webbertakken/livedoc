@@ -1,5 +1,5 @@
 // @livedoc/edit-operations: the engine a changeset runs on
-// (docs/specs/024-agents/edit-operations.md, blueprint "Interfaces and contracts"): both forms of
+// (docs/specs/024-agents/edit-operations.md): both forms of
 // the edit operations, applied to a tab, and `replace`.
 
 export { validateEditOperation, validateEditOperations } from './parse-json';

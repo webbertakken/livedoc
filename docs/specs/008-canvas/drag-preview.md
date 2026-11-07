@@ -70,3 +70,17 @@ a drag's cost to what it moves, whatever the size of the board
 
 - Smoothing or interpolating a peer's movement between messages.
 - Showing who is dragging beyond what the cursor and selection presence already show.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D71** How large a live preview may be: `DRAG_PREVIEW_MAX_ELEMENTS = 200` changed elements; past it collaborators see
+  that gesture on release only (default).
+- **D72** What a previewed arrow's label avoids: Laid out by `draftLayout` against the previewed elements; others keep
+  the document's label pass (default).
+- **D73** What a peer sees of elements a gesture adds or removes (Shift-duplicate): Nothing until release: only changed
+  elements travel (default).
+- **D74** Which real change ends a peer's preview: Any element or tab op from that peer: the release sends its element
+  ops right after the end message (default).

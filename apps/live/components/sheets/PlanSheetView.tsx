@@ -1,6 +1,6 @@
 'use client';
 
-// The Sheet element (docs/specs/029-sheets/sheet.md; blueprint sheet-element.md "Editor components"): its sheet from
+// The Sheet element (docs/specs/029-sheets/sheet.md): its sheet from
 // the store, drawn as header, toolbar, formula bar, grid and status bar in the board colours of the tab's theme.
 // Takes input in Plan mode only (a Sheet goes only on a tab in Plan; sheet.md "Only in Plan").
 // Maximises as a board does: one stable tree inside MaximisableSlot, so nothing is lost either way. Loaded as its

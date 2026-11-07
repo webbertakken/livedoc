@@ -1,5 +1,5 @@
 // Where `add` and `move` put an element (docs/specs/024-agents/edit-operations.md "Placement";
-// blueprint "Placement", EO23 to EO27, EO50): beside, after, inside or aligned with a reference, at a
+//, EO23 to EO27, EO50): beside, after, inside or aligned with a reference, at a
 // point from the content origin, or, for a new element, beside the last one added. Side, `after` and
 // default spots move along their axis past whatever already sits there; `at:` and `align:` are exact.
 

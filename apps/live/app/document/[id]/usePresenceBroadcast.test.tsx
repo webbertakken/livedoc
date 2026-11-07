@@ -9,7 +9,7 @@ import { usePresenceBroadcast } from './usePresenceBroadcast';
 // peers see who holds what and the api can refuse an agent changeset on what a person holds
 // (docs/specs/024-agents/agent-changesets.md "Rooms for personal documents", "Held elements"). The
 // selection is read from the store, not the editor's render
-// (docs/specs/008-canvas/blueprints/selection-store.md "Above the canvas").
+// (docs/specs/008-canvas/canvas-performance.md).
 
 function setup(
   over: { selectedId?: string | null; multi?: string[]; documentServerStored?: boolean } = {},

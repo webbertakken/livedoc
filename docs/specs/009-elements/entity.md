@@ -133,7 +133,7 @@ One to Zero or Many. Each sets both ends at once; the arrow menu's per-end shape
 ## The box follows its fields
 
 The editor changes an entity's fields from the Fields menu, from in-place editing and from the ring. Each change
-resizes the box to its fields: the height that shows every row ("Authored size" in the blueprint), plus whatever
+resizes the box to its fields: the height that shows every row, plus whatever
 extra height the person had given it before. So adding a field never hides it below the box, and removing one
 never leaves an empty tail, while a box someone stretched on purpose keeps its extra room.
 
@@ -186,3 +186,29 @@ A Participant's element writes (`applyParticipantOp`) do not take `entityFields`
 
 The **Entity tour** is on the actions group's **Start Entity Tour** button while an entity is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an
 unlocked element, and walks through it on the element itself ([Element tours](../007-editor/element-tours.md) "The Entity tour").
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D22** A new entity's content: Label `Entity`, fields `id: string` (PK), `name: string`, title left / top (default).
+- **D23** Empty list: Italic "No fields yet" at 40% opacity (default).
+- **D24** Rows past the box: Clipped on canvas; export skips rows below `y + height - 2` (default).
+- **D25** Row metrics: Name 11px; type 10px monospace at 0.6 opacity, right-aligned; a PK name semibold; row pitch
+  `ENTITY_ROW_TEXT_PX + ENTITY_ROW_GAP_PX` (16.75px); list padding `ENTITY_BODY_PAD_PX` (6) (default).
+- **D141** An authored entity's size: MCP writes raise the height to `entityHeight(rows, textSize)`; graph authoring
+  builds it `sm`, 200 to 360 wide (default).
+- **D214** The band tint without a heading colour: The border colour at 12% (`ENTITY_BAND_TINT`); a set `headerFill` at
+  full strength (default).
+- **D215** The stripe: Every odd row, the ink at 4.5% (`ENTITY_STRIPE_TINT`), one row pitch tall centred on the row
+  (default).
+- **D216** The key gutter and glyphs: 15 px, 25 px with a PK FK pair; 10 px glyphs at 8 px in; PK amber `#f59e0b`, FK /
+  UK the ink at 0.7 (default).
+- **D217** Where Add Related Entity puts the new entity: 120 px clear of the source on that side, stepping out a full
+  width / height up to 12 times past anything in the way; beside, its FK row level with the source PK row (default).
+- **D218** A field port: A 9 px brand-ringed dot centred on each side edge of the hovered field, shown only while no
+  field is being edited (default).
+- **D219** A field in-place editor: Over the row, 3 px larger each way, brand ring; key button, name input, type input
+  (42%, monospace) (default).
+- **D220** The Cardinality button with no ER ends: Reads `1 : N`, the preset a new relationship gets (default).

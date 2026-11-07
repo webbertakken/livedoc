@@ -1,4 +1,4 @@
-// The item store's client (docs/specs/026-plan/items.md, blueprint item-store.md "Editor slice").
+// The item store's client (docs/specs/026-plan/items.md).
 // Each call dispatches an offline document to its local store (../offline/offline-items) and a
 // cloud document to the api. A session on a tab-scoped link names its tab on every call.
 
@@ -32,7 +32,7 @@ export type ItemsScope = {
 // answer does not say; the room's op carries it).
 export type ItemWriteAnswer = { upserts: Item[]; removed: string[]; rev: number };
 
-// A write that failed after part of it landed (a many-item change, docs/specs/026-plan/blueprints/item-store.md
+// A write that failed after part of it landed (a many-item change, docs/specs/026-plan/items.md
 // "Interfaces and contracts: REST"): what landed, so the editor keeps it and can undo it. `code` is the refusal's.
 export class ItemWritePartlyLanded extends Error {
   readonly code: string | null;

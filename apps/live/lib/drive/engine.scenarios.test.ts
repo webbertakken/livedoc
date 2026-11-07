@@ -505,7 +505,7 @@ describe('the root folder (docs/specs/022-drive-mirror/drive-mirror.md, "Connect
   });
 });
 
-describe('the root folder name in the status (blueprint "Cloud Sync in Settings")', () => {
+describe('the root folder name in the status', () => {
   it('reports the name it created, and follows a rename made in Drive', async () => {
     const w = world();
     const { engine, statuses } = makeEngine(w);

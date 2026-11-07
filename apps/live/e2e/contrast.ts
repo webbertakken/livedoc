@@ -18,8 +18,8 @@ export type ContrastReport = {
   // The lowest ratio measured (Infinity when nothing was), so a check can state its own bar.
   lowest: number;
   failures: ContrastFailure[];
-  // Text the audit cannot measure honestly, by reason; reported, never failed (D7 in
-  // docs/specs/004-interface-design/blueprints/DEFAULTS.md).
+  // Text the audit cannot measure honestly, by reason; reported, never failed (D15 in
+  // docs/specs/004-interface-design/color-scheme.md).
   skipped: Record<string, number>;
 };
 

@@ -1,4 +1,4 @@
-// Icon search over the line-art and Technology catalogues (docs/specs/015-api/blueprints/cli.md CLI74): ranked by
+// Icon search over the line-art and Technology catalogues (docs/specs/015-api/cli.md CLI74): ranked by
 // paletteRank over each icon's label and keywords, ties in catalogue order, line art first. Imports the catalogue
 // data, so it is its own subpath, as `resolve` is.
 

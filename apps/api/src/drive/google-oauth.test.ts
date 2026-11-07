@@ -10,7 +10,7 @@ import {
 } from './google-oauth';
 
 // The three calls the broker makes to Google's OAuth endpoint
-// (docs/specs/022-drive-mirror/blueprints/drive-mirror.md, "Google OAuth").
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Google OAuth").
 
 const env = {
   GOOGLE_CLIENT_ID: 'client-1',

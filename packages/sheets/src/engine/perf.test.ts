@@ -1,4 +1,4 @@
-// Performance budgets (blueprint sheets-engine.md "Performance and limits"), measured on the worst case the limits
+// Performance budgets, measured on the worst case the limits
 // allow: 50,000 filled cells, 20,000 of them formulas. CI machines are slower and shared, so the asserted budget
 // is a multiple of the laptop target.
 import { describe, expect, it } from 'vitest';

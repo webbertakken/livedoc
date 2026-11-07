@@ -1,7 +1,7 @@
 'use client';
 
-// The look of a speech bubble (docs/specs/008-canvas/avatar-mode.md "Speech bubbles", blueprint
-// docs/specs/008-canvas/blueprints/avatar-speech.md "Presentation and UX"), shared by the composer above your head
+// The look of a speech bubble (docs/specs/008-canvas/avatar-mode.md "Speech bubbles",
+// docs/specs/008-canvas/avatar-mode.md), shared by the composer above your head
 // and every floating bubble, so the one you type in is the one that floats away. Also the draft field and its word
 // counter, shared by the composer and the panel's message popover.
 

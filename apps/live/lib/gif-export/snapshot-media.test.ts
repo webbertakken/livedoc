@@ -7,7 +7,7 @@ import {
   TRANSPARENT_PIXEL,
 } from './snapshot-media';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The snapshot", step 4.
+// docs/specs/020-import-export/animated-gif-export.md, step 4.
 const okFetch = () =>
   vi.fn(
     // Bytes plus a content type, not a Blob: jsdom's Blob is not Node's, and Node 24's Response stringifies it.

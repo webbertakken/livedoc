@@ -1,4 +1,4 @@
-// Validation rules (docs/specs/029-sheets/data-validation.md, blueprint sheet-rules.md "Engine"): which rule covers a
+// Validation rules (docs/specs/029-sheets/data-validation.md): which rule covers a
 // cell, whether a value is one it allows, and the line that says what it allows. Pure; the editor and the api share
 // it, so the two never disagree.
 import { formatRange } from '../address';

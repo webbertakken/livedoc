@@ -11,4 +11,3 @@ Follow the references below only as needed; never upfront.
 - ./linting.md - when adding or changing a lint rule, a workspace's lint setup or a disable directive: oxlint with one shared config, every rule an error, the React hooks rules native, the repo's own rules as a JS plugin, only `oxlint-disable` directives count
 - ./source-scanners.md - when a test or guard reads TypeScript source: parse with `parseSourceFiles` from `@livedoc/source-ast` (TypeScript 7's native compiler) and walk `typescript/unstable/ast` trees
 - ./react-state-and-effects.md - when writing a React component or hook: pure render, effects only for the outside world, useEffectEvent / useLatest / useFollowingDraft / useRelativeNow, every hooks lint rule an error, the React Compiler (Rust port, Turbopack)
-- ./blueprints/README.md - when implementing browser-only rendering, a View Transition from state, a Fragment ref or the React Compiler's reach: engineering detail derived from the specs

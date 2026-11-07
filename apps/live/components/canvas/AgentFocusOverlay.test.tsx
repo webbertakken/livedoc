@@ -8,7 +8,7 @@ import {
   type AgentFocusByElement,
 } from './AgentFocusOverlay';
 
-// docs/specs/024-agents/blueprints/agent-presence.md "Presentation and UX", "Accessibility".
+// docs/specs/024-agents/agent-presence.md.
 
 const box = (id: string, x: number): Element => ({
   id,

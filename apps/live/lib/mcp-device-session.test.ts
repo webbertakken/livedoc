@@ -3,7 +3,7 @@ import { sentJson } from '@livedoc/vitest-config/sent-request';
 import { MCP_ORIGIN } from './mcp-config';
 import { completeDevice, denyDevice, fetchDeviceSession, userCodeOf } from './mcp-device-session';
 
-// docs/specs/015-api/blueprints/cli.md "The device grant", CLI36.
+// docs/specs/015-api/cli.md, CLI36.
 
 function stubFetch(answer: (url: string, init?: RequestInit) => Response | Promise<Response>) {
   const calls: { url: string; body?: unknown }[] = [];

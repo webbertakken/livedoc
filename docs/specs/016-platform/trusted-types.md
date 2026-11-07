@@ -96,3 +96,13 @@ reported it as `Uncaught.Help.NonError` or `Uncaught.Help.TypeError`.
 ## Out of scope
 
 - `script-src` and the rest of a full Content Security Policy; Trusted Types is the one directive set here.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D9** Where the third-party origins come from: Named in code (`GOOGLE_SCRIPT_ORIGINS`), for the editor build with a
+  Google client id only; none elsewhere (default).
+- **D10** What a refused script URL does: Returns null (the browser blocks it) and logs `[trusted-types] script-url-refused`
+  (default).

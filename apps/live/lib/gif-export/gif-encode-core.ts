@@ -1,4 +1,4 @@
-// The GIF export's encoder (docs/specs/020-import-export/blueprints/animated-gif-export.md "The encoder"): frames in,
+// The GIF export's encoder (docs/specs/020-import-export/animated-gif-export.md): frames in,
 // one looping GIF out. A frame identical to the one before it is not written: its time is added to that frame, so a
 // stretch where nothing moves costs one frame. Every frame of a page shares one palette, chosen from samples across
 // the page's hold, and a colour always takes the same palette entry, so a slow gradient drifts calmly rather than its

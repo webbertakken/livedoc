@@ -18,7 +18,8 @@ import {
 import { readSheets, resolveSheet, workbookFor, type SheetRefusal } from './sheet-state';
 import { rulesRead } from './sheet-rule-change';
 
-// The most characters of cells one read answers with (blueprint sheet-store.md, Defaults): about 25,000 tokens, so
+// The most characters of cells one read answers with (docs/specs/029-sheets/sheet-store.md, Defaults): about
+// 25,000 tokens, so
 // a read fits beside the rest of a conversation.
 export const SHEET_READ_CHARS_MAX = 100_000;
 

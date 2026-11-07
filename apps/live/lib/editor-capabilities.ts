@@ -1,4 +1,4 @@
-// What this session may do in the editor (docs/specs/013-workspace/share-roles.md; blueprint "Editor state").
+// What this session may do in the editor (docs/specs/013-workspace/share-roles.md).
 // Presentation only: the server is the rule, so a flag here decides what renders and what a gesture starts,
 // never what is allowed. An Editor holds every flag; a Viewer none; a Participant the content ones.
 //

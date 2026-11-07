@@ -152,3 +152,25 @@ not make, because the feature never raises one for them (each feature's own spec
   They share the toast's look (card, border, shadow, corners), not its stack.
 - The canvas's screen-reader announcements ([Canvas accessibility](canvas-accessibility.md)) are a separate,
   unconditional live region; a toast is not a substitute for one.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D66** Where the stack goes with nothing beneath it: 16px off the bottom edge, the page gutter, or the safe-area
+  inset plus 16px where that is more (default).
+- **D67** How far a toast's column reaches for an obstacle: Desktop: the 576px max width, centred, not the toast's own
+  width (a wider toast arriving must not land on chrome); phone: the full width between gutters (default).
+- **D68** Which tone a degraded-but-working result takes: `warning` ("Couldn't reach your Trash.
+  Showing this browser only."); a refusal or failure stays `error` (default).
+- **D69** What a fifth toast does: Retires the oldest without buttons, so an Undo still up survives a burst of notes
+  (default).
+- **D70** Which button of an action toast is primary: The last; an offer lists its decline first so its confirm is last
+  (default).
+- **D71** Whether a hidden page pauses the timers: Yes: a toast raised in a background tab is still there when the
+  person comes back (default).
+- **D72** How long a toast with buttons stays up: 10 seconds (`TOAST_ANSWER_TIMEOUT_MS`), paused while hovered, focused
+  or hidden; what it offered stays reachable elsewhere (the Trash, the history) (default).
+- **D73** How much of a name a toast shows: 30 characters, the last an ellipsis (`TOAST_NAME_MAX`), in curly quotes; a
+  blank name falls back to the generic word (default).

@@ -239,3 +239,18 @@ Opening the form emits `track('Feedback', 'Opened', 'Bug')`; a report sent (file
 - **One form, many entries**; other apps link to `/report-a-bug` rather than carrying a second form.
 - **5 per 600 s per visitor**: the binding's longest period is 60 s, so the binding gates bursts per network and a D1
   fixed window holds the 600 s count.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D11** How long a user agent may be: 512 characters, Minigames' bound (default).
+- **D12** How often stored reports are refiled: Every 15 minutes, on the every-minute cron (default).
+- **D13** How many a refile files: 20, oldest first (default).
+- **D14** How a screenshot is fitted to 1 MB: WebP (JPEG where unsupported), quality 0.9 stepping down by 0.1 to 0.4,
+  then refused (default).
+- **D15** Which board column a report lands in: The first column of the first live board on the tab that takes Bug
+  Report cards (default).
+- **D16** How the card's fields are found: By label, case apart; a missing field's value goes into Details under its
+  label (default).

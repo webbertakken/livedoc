@@ -227,7 +227,7 @@ describe('readRoomSelections', () => {
   });
 });
 
-describe('agent presence in the room (docs/specs/024-agents/blueprints/agent-presence.md "Room")', () => {
+describe('agent presence in the room (docs/specs/024-agents/agent-presence.md)', () => {
   const write = {
     documentId: 'd1',
     tokenId: 'tok_1',

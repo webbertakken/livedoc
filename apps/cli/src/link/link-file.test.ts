@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CliError, type CliFailure } from '../output/cli-error';
 import { linkFileText, parseLinkFile } from './link-file';
 
-// livedoc.toml (docs/specs/027-repositories/blueprints/repository-link.md "The link file"): every key, its
+// livedoc.toml (docs/specs/027-repositories/repository-link.md "The link file"): every key, its
 // defaults and every rejection, with its exit and final copy.
 
 const PATH = '/repo/livedoc.toml';

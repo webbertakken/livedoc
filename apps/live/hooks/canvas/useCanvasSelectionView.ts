@@ -1,7 +1,7 @@
 'use client';
 
 // The derived selection (primary element, bounds, every "show this chrome?" predicate) for a piece of
-// selection chrome that reads the store itself (docs/specs/008-canvas/blueprints/selection-store.md):
+// selection chrome that reads the store itself (docs/specs/008-canvas/canvas-performance.md):
 // the chrome re-renders on a selection change; the canvas that hosts it does not.
 
 import { useMemo } from 'react';

@@ -1,5 +1,5 @@
-// The speech bubbles on screen (docs/specs/008-canvas/avatar-mode.md "Speech bubbles", blueprint
-// docs/specs/008-canvas/blueprints/avatar-speech.md): your own and everyone else's, in one module store so the
+// The speech bubbles on screen (docs/specs/008-canvas/avatar-mode.md "Speech bubbles",
+// docs/specs/008-canvas/avatar-mode.md): your own and everyone else's, in one module store so the
 // room connection can hand a peer's message straight to the canvas layer that draws it, without threading it
 // through the editor's state (the drag preview's pattern, lib/drag-preview.ts). Ephemeral: nothing here is
 // written anywhere, and every bubble removes itself when its flight ends.

@@ -6,7 +6,7 @@ import { fakeIo, TOKEN, type FakeIo } from '../testing/fake-io';
 import { box, hostDoc, linkHost, type HostDoc } from '../testing/link-host';
 import { SYNC_LOCAL_SETTLE_MS, SYNC_WATCH_COVERAGE_MS } from './constants';
 
-// `sync --watch` (docs/specs/027-repositories/blueprints/repository-link.md "`sync --watch`"): room bursts settle
+// `sync --watch` (docs/specs/027-repositories/repository-link.md): room bursts settle
 // into one pass, local changes too, own writes are ignored, coverage is read again, and Ctrl-C ends it.
 
 const folders = [

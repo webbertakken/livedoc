@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { folderPathSegments, mirrorPathFor, outlinePathOf } from './mirror-paths';
 
-// Paths (docs/specs/027-repositories/blueprints/repository-link.md "Paths", RL7, CLI27, CLI85).
+// Paths (docs/specs/027-repositories/repository-link.md, RL7, CLI27, CLI85).
 
 const folders = new Map(
   [

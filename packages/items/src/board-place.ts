@@ -21,7 +21,7 @@ import { CARD_FIELD_LABELS } from './card-display';
 import type { BoardSortLevel } from './board-sort';
 import { settleDoneColumns } from './done-columns';
 
-// A placed board's width (blueprints/DEFAULTS.md D5; wider when its columns need it; its height is
+// A placed board's width (docs/specs/026-plan/plan-board.md D5; wider when its columns need it; its height is
 // planBoardHeightFor) and its gap from what the tab holds.
 export const PLACED_BOARD_WIDTH = 1120;
 export const PLACED_BOARD_GAP = 80;

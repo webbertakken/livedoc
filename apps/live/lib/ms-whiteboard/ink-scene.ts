@@ -1,4 +1,4 @@
-// Ink groups to scene ink (docs/specs/020-import-export/blueprints/ms-whiteboard-import.md "To
+// Ink groups to scene ink (docs/specs/020-import-export/whiteboard-import.md "To
 // scene"): each stroke placed by its group's position, scale and rotation, its pressure kept, its
 // colour normalised; preset inks carry their colour stops; an arrowhead is its own small stroke.
 import type { SceneAppearance, SceneColour, SceneInk, ScenePoint } from '@/lib/board-scene/scene';

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-// The auth bridge (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Sign-in states (browser)"): one
+// The auth bridge (docs/specs/014-identity/auth-and-guest-access.md): one
 // session read on every load, guests included; the states it settles to; the hint and the nudge between tabs;
 // signing out and deleting the account; and standing down on the workbench route.
 

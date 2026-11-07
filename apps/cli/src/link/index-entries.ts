@@ -1,4 +1,4 @@
-// INDEX.md's entries for a pass (docs/specs/027-repositories/blueprints/repository-link.md "`INDEX.md`"): each
+// INDEX.md's entries for a pass (docs/specs/027-repositories/repository-link.md): each
 // covered document as the pass left it. A document written or in step gets a fresh section, from its mirror file
 // at `files` and from the overview at `index`; a gone one none; any other (refused, unreadable, transient, or not
 // acted on by a narrowed pass) keeps its previous section (RL16).

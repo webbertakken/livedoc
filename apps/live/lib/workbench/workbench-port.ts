@@ -1,5 +1,5 @@
 // The page's side of the workbench messages (docs/specs/013-workspace/workbench-embeds.md "Workbench
-// messages", blueprint "Workbench messages"): every send targets the bound origin, so a parent of any
+// messages"): every send targets the bound origin, so a parent of any
 // other origin never receives it; a message is accepted only from the parent window at that origin and
 // only once it parses. Anything else from elsewhere is not a workbench's message and is dropped silently;
 // an unknown or invalid message from the workbench is logged once per type.

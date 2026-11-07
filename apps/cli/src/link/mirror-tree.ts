@@ -1,4 +1,4 @@
-// The mirror directory as a pass changes it (docs/specs/027-repositories/blueprints/repository-link.md "Paths",
+// The mirror directory as a pass changes it (docs/specs/027-repositories/repository-link.md,
 // "Security and trust"): files written only when their bytes differ, generated Markdown removed only while its first
 // line is still the generated line (RL42), directories left empty removed, moves through git where git tracks the
 // file (RL9). Every path written or removed is remembered for `--watch` (RL23). Paths are relative to the mirror

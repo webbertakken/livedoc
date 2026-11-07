@@ -1,7 +1,6 @@
 'use client';
 
-// Home's data (docs/specs/013-workspace/explorer-home.md; blueprint
-// docs/specs/013-workspace/blueprints/explorer-home-view.md "useHome").
+// Home's data (docs/specs/013-workspace/explorer-home.md; docs/specs/013-workspace/explorer-home.md).
 //
 // One read draws the first screen (GET /api/home); this browser's own opens of its local documents
 // are read beside it and placed by the same Within reach rule. A failed read is an error, never an empty Home: "we could not

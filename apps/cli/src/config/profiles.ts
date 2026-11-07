@@ -1,4 +1,4 @@
-// Which host a command talks to (docs/specs/015-api/cli.md "Profiles and self-hosting", blueprint CLI7):
+// Which host a command talks to (docs/specs/015-api/cli.md "Profiles and self-hosting", CLI7):
 // --host, else --profile, else LIVEDOC_HOST, else LIVEDOC_PROFILE, else the config's default profile,
 // else https://docs.nu. --host and --profile together are a usage error.
 

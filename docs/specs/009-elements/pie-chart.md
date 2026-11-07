@@ -236,3 +236,14 @@ paints no box; `LegendView` draws the card from the element's fill + stroke, and
 
 The **Chart tour** is on the actions group's **Start Chart Tour** button while a data chart (any of the seven chart types) is selected, once its kind is opted in to (Settings › Tours › Show Me), for an Editor on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Chart tour").
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D101** A chart with no data: Empty `pieSlices` (or line arrays) render the sample data (default).
+- **D102** Minimum rows in the menu / dialog editors: Remove is disabled at one row (slices, categories, series,
+  checklist rows) (default).
+- **D106** Readout copy: `label: value` (blank label shows an em dash glyph); line `category · series: value` (default).
+- **D107** Key strip when too small: Not rendered below 48 px wide (side) or 18 px tall (band) (default).

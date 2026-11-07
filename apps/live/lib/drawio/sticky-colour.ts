@@ -1,5 +1,5 @@
 // A draw.io note's colours as a sticky's (docs/specs/020-import-export/drawio-import.md "Notes keep a
-// sticky's colours", blueprint step 10.13). A tinted note takes the tinted sticky nearest its hue, so
+// sticky's colours".13). A tinted note takes the tinted sticky nearest its hue, so
 // draw.io's standard swatches land on their kin (#fff2cc on Classic, #dae8fc on Sky, #e1d5e7 on
 // Lilac); a grey or white one takes the neutral sticky nearest its lightness, so a pale note never
 // turns yellow and a yellow one never turns white.

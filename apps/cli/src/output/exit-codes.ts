@@ -1,5 +1,5 @@
 // The process status (docs/specs/015-api/cli.md "Exit codes"), one of eight, and how an api answer maps to it
-// (blueprint CLI14).
+// (CLI14).
 
 export const EXIT = {
   done: 0,

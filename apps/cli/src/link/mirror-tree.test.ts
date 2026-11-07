@@ -3,7 +3,7 @@ import { fakeIo } from '../testing/fake-io';
 import type { LinkFile } from './link-file';
 import { mirrorTree } from './mirror-tree';
 
-// docs/specs/027-repositories/blueprints/repository-link.md "Security and trust": writes stay inside the mirror
+// docs/specs/027-repositories/repository-link.md: writes stay inside the mirror
 // directory.
 const link: LinkFile = {
   path: '/work/livedoc.toml',

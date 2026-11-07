@@ -1,5 +1,5 @@
 // Whether sign-in is on, and with which methods (docs/specs/014-identity/auth-and-guest-access.md "Deployment
-// modes"; blueprint "Identity on or off"). Pure and total: every combination of keys maps to one answer, so the
+// modes"). Pure and total: every combination of keys maps to one answer, so the
 // worker, the capabilities route and the tests all read the same table.
 import type { SignInMethod } from '@livedoc/api-schema';
 import { emailTransportKind } from '../email/transport';

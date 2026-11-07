@@ -1,4 +1,4 @@
-// How a command names a document and a tab (docs/specs/015-api/blueprints/cli.md "Addressing"): a pasted URL,
+// How a command names a document and a tab (docs/specs/015-api/cli.md): a pasted URL,
 // a full id, an id prefix or a name; a tab by name or id prefix, the first by default. None or several refuse
 // with the nearest names or the candidates, never a guess.
 
@@ -28,7 +28,7 @@ export class AddressError extends Error {
 
 const refuse = (failure: AddressFailure) => new AddressError(failure);
 
-// A debug line naming how an address resolved (blueprint "Observability": `address <what> <how> <n> matches`).
+// A debug line naming how an address resolved (: `address <what> <how> <n> matches`).
 type AddressLog = (line: string) => void;
 
 const silent: AddressLog = () => {};

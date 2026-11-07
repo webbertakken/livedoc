@@ -63,3 +63,18 @@ Per [Telemetry + public transparency dashboard](../017-telemetry/telemetry.md): 
 - A password on a cover, or per-person reveal rules. See "not a permission".
 - Auto-reveal on a timer. Tempting next to [Session button](../012-collaboration/session-button.md)'s timer button, but a cover that opens itself while someone is mid-thought is a worse default than a facilitator clicking it.
 - Blurring the pixels underneath rather than covering them. Prettier, and it would make the "not a permission" line a lie by implying the content isn't there.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D118** "Two presses" distance: Any two un-dragged clicks within `DOUBLE_PRESS_MS = 450` ms; no distance check
+  between them (default).
+- **D119** "Double-tap on a touch device": Copy follows `useCoarsePointer()` (default).
+- **D120** What a room-wide reveal shows: The face renders nothing; the export omits the cover (default).
+- **D121** Can the facilitator peek privately: Yes: only non-facilitators are blocked (default).
+- **D144** The accent and ink of an unstyled cover: `behaviourSkin`: light paper stroke `#0ea5e9`, text `#0f172a`; dark
+  paper stroke `#64748b`, text `#ffffff` (default).
+- **D145** "A slow sweep ... every few seconds": `reveal-sweep`: a 45%-wide white band at 0.14, 5.5 s loop, crossing in
+  the last 45% of it (default).

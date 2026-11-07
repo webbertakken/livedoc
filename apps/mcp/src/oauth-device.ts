@@ -1,4 +1,4 @@
-// The device authorization grant (RFC 8628; docs/specs/015-api/blueprints/cli.md "The device grant", CLI36): a CLI on
+// The device authorization grant (RFC 8628; docs/specs/015-api/cli.md, CLI36): a CLI on
 // a machine without a browser shows a short code; the person opens /oauth/device anywhere, signs in, enters it and
 // approves; the CLI, polling /oauth/token, receives the token the page minted. Built-in clients only. State lives in
 // OAUTH_KV for DEVICE_CODE_TTL_S: `device:<device code>`, `usercode:<user code>` and `devicepoll:<device code>`.

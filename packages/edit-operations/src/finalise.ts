@@ -1,4 +1,4 @@
-// The working state made into the next tab (docs/specs/024-agents/blueprints/edit-operations.md
+// The working state made into the next tab (docs/specs/024-agents/edit-operations.md
 // "Finalise"): touched elements normalised and their shape kinds coerced, then checked, workshop
 // notes landed on lanes, arrows re-anchored around moved boxes, lanes behind what they hold, and the
 // whole tab validated. Untouched elements pass through as the same objects (I2).

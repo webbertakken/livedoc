@@ -131,7 +131,7 @@ export const SKETCH_FACE_FILTER = {
   baseFrequency: 0.12,
   numOctaves: 1,
   seed: 7,
-  /** Displacement, px (blueprint: 2 to 4; past 4 small rules break up). */
+  /** Displacement, px (safe range: 2 to 4; past 4 small rules break up). */
   scale: 3,
 } as const;
 

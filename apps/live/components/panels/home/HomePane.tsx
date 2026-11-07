@@ -1,7 +1,7 @@
 'use client';
 
-// Explorer Home (docs/specs/013-workspace/explorer-home.md; blueprint
-// docs/specs/013-workspace/blueprints/explorer-home-view.md). One column at every width: Jump back
+// Explorer Home (docs/specs/013-workspace/explorer-home.md; docs/specs/013-workspace/explorer-home.md). One
+// column at every width: Jump back
 // in, then What Happened, each its own section opened by a heading with a rule, space between
 // them, under the ordinary page header.
 

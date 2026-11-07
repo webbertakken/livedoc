@@ -1,5 +1,5 @@
 // Comment threads as the api lists them across a document (docs/specs/024-agents/agent-presence.md "Comments",
-// blueprint "REST"): one thread per element, with the element's ref and label, so an agent can read the
+//): one thread per element, with the element's ref and label, so an agent can read the
 // conversation without reading the tab.
 
 import type { CommentMention } from '@livedoc/document';

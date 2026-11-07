@@ -1,4 +1,4 @@
-// Selectors (docs/specs/024-agents/edit-operations.md "Selectors"; blueprint "Selectors"): a ref, a
+// Selectors (docs/specs/024-agents/edit-operations.md "Selectors"): a ref, a
 // quoted label, or `key:value` terms joined by spaces, every one of which must match. Matching runs
 // against the working state, so an element an earlier operation added or named is addressable.
 

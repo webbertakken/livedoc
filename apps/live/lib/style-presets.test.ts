@@ -302,7 +302,7 @@ describe('applyRotationToEl', () => {
     expect(applyRotationToEl(a, 45)).toBe(a);
   });
 
-  // docs/specs/009-elements/blueprints/annotations.md [QD8]: a marker never rotates, even inside a
+  // docs/specs/009-elements/annotations.md [QD8]: a marker never rotates, even inside a
   // multi-selection's Rotation pick.
   it('is a no-op on an annotation marker', () => {
     const marker = el('annotation');

@@ -153,3 +153,16 @@ building a deck puts a window onto the tab it drew the diagram on rather than co
 
 The **Tab Window tour** is on the actions group's Start Tour button (**Start Tab Window Tour**) while an Editor has a tab window selected, once its kind is opted in to (Settings › Tours › Show Me), on an unlocked element, and walks through it on the element
 itself ([Element tours](../007-editor/element-tours.md) "The Tab Window tour").
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D195** The frame's corners and edge: 12 px corners; a 1 px hairline in slate-300 (`#cbd5e1`) unless the window has
+  its own stroke (default).
+- **D196** The ground while there is no drawing: slate-50 with slate-500 words on light paper; slate-800 with slate-400
+  on dark (default).
+- **D197** How large its words read: Sized for a 220-unit-tall window and grown with its height, up to 2.4 times (a 640
+  × 360 window reads at a slide's zoom) (default).
+- **D198** Where Open sits: A chip in the top-right corner, shown on hover, focus or while selected (default).

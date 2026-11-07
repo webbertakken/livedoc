@@ -152,7 +152,7 @@ export function temperaturePosition(average: number): number {
 // anonymity guarantee expressed in the schema rather than in the UI.
 export const IDEA_MAX_CARDS = 300;
 export const IDEA_MAX_TEXT = 500;
-// Each card's random id (`ideaCardIds`, docs/specs/012-collaboration/blueprints/idea-box-race.md): a UUID is
+// Each card's random id (`ideaCardIds`, docs/specs/012-collaboration/idea-box.md): a UUID is
 // 36 characters; the room's other ids are bounded at 64. Safe range 36..128.
 export const IDEA_CARD_ID_MAX = 64;
 

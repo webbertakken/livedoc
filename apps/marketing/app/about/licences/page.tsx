@@ -13,7 +13,7 @@ export const metadata = pageMetadata({
 
 // Third-party licences (docs/specs/002-project-scope/third-party-licences.md).
 // Not a landing-funnel surface, so the header's calls to action carry no
-// `via` (blueprint D15).
+// `via` (D15).
 export default function LicencesPage() {
   const manifest = loadLicencesManifest();
   return (

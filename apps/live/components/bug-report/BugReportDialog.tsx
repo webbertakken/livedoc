@@ -1,6 +1,6 @@
 'use client';
 
-// The Report a Bug form (docs/specs/016-platform/bug-reports.md "The form", blueprint "Behaviour and state"): what
+// The Report a Bug form (docs/specs/016-platform/bug-reports.md "The form"): what
 // went wrong, more details, an opt-in screenshot, what is attached, then a confirmation or the reason it failed.
 // Loaded on the first opening (BugReportProvider), so it adds nothing to a page until then. It opens on the draft and
 // keeps every change in it, so closing it loses nothing; a sent report clears it.

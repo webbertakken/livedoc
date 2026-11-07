@@ -103,3 +103,22 @@ The GIF card opens an options-and-download panel, like PNG's, with the shared ba
 - A hold per page: one hold applies to every page.
 - A transition chosen in the export: the deck's own transition is used.
 - Frame rate or colour count options; video formats (MP4, WebM); a GIF of a diagram tab.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D46** What happens to consecutive identical frames' bytes: The encoder holds the last frame and adds a repeat's
+  delay to it, so a still stretch is one frame (default).
+- **D47** When the estimate is worked out: 250 ms after the options last changed, from one encoded frame of the preview
+  page at the chosen size (default).
+- **D48** How the estimate counts: Sample bytes x frames in the timeline + 800 bytes of header; MB is 1,000,000 bytes,
+  one decimal; under 1 MB in KB (default).
+- **D49** An image that cannot be read into the GIF: A transparent pixel in its place; the export goes on (default).
+- **D50** A transition longer than half the hold: Shortened to half the hold, so every page is seen still (default).
+- **D51** The easing of the GIF's transitions: The presenting transitions' own: cubic-bezier(0.4, 0, 0.2, 1) for Slide,
+  ease for Fade (default).
+- **D52** When the main thread yields during a make: After every frame, so the editor stays responsive (default).
+- **D53** Which frames a page's shared palette is chosen from: Its first, middle and last frames outside a transition,
+  every 4th pixel of each (default).

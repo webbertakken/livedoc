@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createViewportStore } from './viewport-store';
 
-// docs/specs/008-canvas/blueprints/viewport-store.md "Behaviour and state".
+// docs/specs/008-canvas/canvas-performance.md.
 
 describe('createViewportStore', () => {
   it('starts at the given zoom with no offset', () => {

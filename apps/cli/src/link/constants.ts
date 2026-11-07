@@ -1,4 +1,4 @@
-// The repository link's constants (docs/specs/027-repositories/blueprints/repository-link.md "Constants and
+// The repository link's constants (docs/specs/027-repositories/repository-link.md "Constants and
 // configuration"). `WAIT_SETTLE_MS` is `wait --for change`'s, reused by `sync --watch` (commands/wait.ts).
 
 export const LINK_FILE_NAME = 'livedoc.toml';

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { elisionCommand } from './elision';
 
-// The command an elision line names (docs/specs/024-agents/blueprints/document-views.md "Elision line").
+// The command an elision line names (docs/specs/024-agents/document-views.md).
 describe('elisionCommand', () => {
   it('prints a safe value bare', () => {
     expect(elisionCommand({ only: 'c991' }, 'cli')).toBe('view --only c991');

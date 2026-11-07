@@ -198,3 +198,20 @@ Never a tag's name.
 - A `tag:` filter token in the Explorer lens. The Tags page is the grouping view; a token is the natural next step.
 - Tagging several documents at once.
 - Tags shared across a team.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D154** Which migration number: 0094, the next free (default).
+- **D155** How long a tag id may be: 64 URL-safe characters; the client mints UUIDs (36) (default).
+- **D156** Whether an update is PATCH or PUT: PUT, the api's one update verb (custom themes, shape libraries) (default).
+- **D157** How wide the tag picker is: 288 px, the colour picker's width plus its row's check, dot and swatch (default).
+- **D158** What a too-long name in the picker shows: "Keep a tag's name to 32 characters." in place of Create (default).
+- **D159** How a phone's list row shows tags: The panel's dots below `sm`, chips above, so the name keeps its room
+  (default).
+- **D160** Whether Tags pages offer New Document: No: a new document lands in no tag (default).
+- **D161** Whether the Tags page lists show the Owner column: Yes: a tag gathers personal and team documents (default).
+- **D162** Whether a sidebar tag row has a menu: Yes: Rename, Change Colour, Delete on hover, focus or right-click, as a
+  folder row's (default).

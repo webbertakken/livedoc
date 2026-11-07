@@ -1,4 +1,4 @@
-// `move <selector> <placement> | by=dx,dy [all]` (docs/specs/024-agents/blueprints/edit-operations.md
+// `move <selector> <placement> | by=dx,dy [all]` (docs/specs/024-agents/edit-operations.md
 // "Placement", "Carry"): the targets' bounding box is placed as one box, or shifted by exactly
 // `by`, and every element in the moving set (the targets and what a moved frame or lane carries)
 // translates by the same delta. Pinned arrows follow by construction; finalise re-anchors them.

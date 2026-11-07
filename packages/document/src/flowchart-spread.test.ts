@@ -9,7 +9,7 @@ import type { Pt } from './auto-layout-shared';
 import type { ArrowElement, Element, ShapeElement } from './index';
 
 // docs/specs/009-elements/flowchart.md "A Decision's steps sit beyond its corners" and "No two exits of
-// a Decision share a face"; blueprint flowchart.md "Layout" steps 3 and 5.
+// a Decision share a face" steps 3 and 5.
 
 const CHART = 'd';
 const step = (id: string, type: FlowchartStepType = 'process'): ShapeElement => ({

@@ -10,7 +10,7 @@ import { OptionRows } from '@/components/plan/OptionRows';
 import { AnchoredPopover } from '@/components/primitives/AnchoredPopover';
 import type { SheetController } from '../sheet-controller';
 
-// Over this many options, a search field (data-validation.md; blueprint sheet-rules.md "Constants").
+// Over this many options, a search field (data-validation.md).
 const DROPDOWN_SEARCH_FROM = 8;
 const LIST_WIDTH_PX = 240;
 

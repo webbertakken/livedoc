@@ -386,3 +386,16 @@ The **Visualisations** palette category charts the cards. Each is resizable (720
 ## Telemetry
 
 - A plan view placed counts as `Element` · `Added` · `PlanView`, never the view kind.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D25** Plan view default sizes: Metric 260×64, Gantt 880×420, other visualisations 720×400 (default).
+- **D26** Which statuses are not started, in progress: A board's first column, then its columns that are not done
+  (default).
+- **D27** Gantt axis padding and tick spacing: A week each side, 28 days at least; weeks up to 120 days, then months
+  (default).
+- **D29** Gantt names column when resized: 120 px at least, 60 % of the chart at most, 16 px a key step (default).
+- **D30** Gantt swimlane header and empty lanes: 24 px headers; a lane with no projects is left out (default).

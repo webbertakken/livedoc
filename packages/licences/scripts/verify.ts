@@ -1,5 +1,5 @@
 // Checks the exported /licences page after `next build`
-// (docs/specs/002-project-scope/blueprints/third-party-licences.md "Testing"):
+// (docs/specs/002-project-scope/third-party-licences.md):
 //   node packages/licences/scripts/verify.ts apps/marketing
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';

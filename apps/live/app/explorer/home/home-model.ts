@@ -1,5 +1,5 @@
-// Home's pure view model (docs/specs/013-workspace/explorer-home.md; blueprint
-// docs/specs/013-workspace/blueprints/explorer-home-view.md): Jump Back In's Within reach set and
+// Home's pure view model (docs/specs/013-workspace/explorer-home.md;
+// docs/specs/013-workspace/explorer-home.md): Jump Back In's Within reach set and
 // its phone order, which day heads which What Happened entries, and when the strip fades.
 
 import {

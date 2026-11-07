@@ -204,7 +204,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   // same row would be exactly the race that once cost the dot vote its votes.
   // In memory because a queue only matters while requests are in flight; a
   // hibernation wake has none.
-  // The tab write queue (blueprint SR2): Q&A board writes and a Participant's writes, one at a time per document.
+  // The tab write queue (SR2): Q&A board writes and a Participant's writes, one at a time per document.
   private tabWriteQueue: Promise<unknown> = Promise.resolve();
   // The surface the api worker's internal endpoints act on (room-internal.ts).
   private readonly internal: InternalRoom;
@@ -680,7 +680,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     this.broadcast({ kind: 'op', from: 'system', op });
   }
 
-  // One step on the tab write queue (blueprint SR2), after every step before it. A failed step must not wedge
+  // One step on the tab write queue (SR2), after every step before it. A failed step must not wedge
   // every write after it.
   private queueTabWrite<T>(step: () => Promise<T>): Promise<T> {
     const run = this.tabWriteQueue.then(step);
@@ -1283,7 +1283,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     return (await this.content.rpc(documentId)).receiveShares(documentId, from, messages);
   }
 
-  // The sweep's move (docs/specs/006-document/blueprints/document-storage-move.md "The sweep"): the room's move
+  // The sweep's move (docs/specs/006-document/document-storage-move.md "The sweep"): the room's move
   // outcome, moving now when it has not; null when D1 has no row for the document (G1).
   async move(documentId: string): Promise<MoveOutcome | null> {
     this.content.bind(documentId);

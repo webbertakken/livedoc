@@ -1,4 +1,4 @@
-// Format rules (docs/specs/029-sheets/conditional-formatting.md, blueprint sheet-rules.md "Engine"): which rule draws
+// Format rules (docs/specs/029-sheets/conditional-formatting.md): which rule draws
 // a cell, and with what. The first rule in list order whose range covers the cell and whose condition it meets wins;
 // a colour scale meets every number it covers. Worked out per drawn cell, with what is costly (a scale's numbers, a
 // custom formula moved to a cell) kept until the workbook's next recalculation.

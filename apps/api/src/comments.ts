@@ -249,7 +249,7 @@ export function hasNewComments(
   return false;
 }
 
-// One tab's threads as the document listing serves them (agent-presence blueprint "REST"): in the outline's order,
+// One tab's threads as the document listing serves them: in the outline's order,
 // with each element's ref and label, author ids redacted for everyone but their author, and threads filtered by
 // status. A thread on a hidden layer is left out, as the views leave its element out. A Sheet's cell threads
 // (docs/specs/029-sheets/sheet.md "Cell comments") follow its own, each with its cell and, from `cellRefOf` (the

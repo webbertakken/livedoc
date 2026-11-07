@@ -8,8 +8,8 @@ import { gitDirOf, gitMove, gitRemote } from './git';
 import { linkStateDir } from './local-state';
 import { parseLinkFile } from './link-file';
 
-// The git a sync asks, against a real git in a temporary directory (docs/specs/027-repositories/blueprints/
-// repository-link.md "Testing"); skipped where git is absent.
+// The git a sync asks, against a real git in a temporary directory
+// (docs/specs/027-repositories/repository-link.md); skipped where git is absent.
 
 const hasGit = spawnSync('git', ['--version']).status === 0;
 const base = realpathSync(mkdtempSync(join(tmpdir(), 'livedoc-git-')));

@@ -1,5 +1,5 @@
-// The database reads behind placement (docs/specs/013-workspace/blueprints/document-placement.md,
-// docs/specs/013-workspace/blueprints/default-folders.md), kept apart from the resolver so its
+// The database reads behind placement (docs/specs/013-workspace/folders.md,
+// docs/specs/013-workspace/default-folders.md), kept apart from the resolver so its
 // judgements stay pure.
 
 import { getFolder, getMembership, listPlacementDefaults } from '../db';

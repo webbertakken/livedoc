@@ -16,7 +16,7 @@ import {
   type ShapeElement,
 } from './index';
 
-// docs/specs/009-elements/diagram-key.md, blueprint diagram-key.md.
+// docs/specs/009-elements/diagram-key.md, docs/specs/009-elements/diagram-key.md.
 
 const arrow = (style?: string) =>
   ({ ...createArrow(0, 0, 100, 0), ...(style ? { strokeStyle: style } : {}) }) as Element;

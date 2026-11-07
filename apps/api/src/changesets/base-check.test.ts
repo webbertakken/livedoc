@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { elementFingerprint, type Element, type Tab } from '@livedoc/document';
 import { checkBase } from './base-check';
 
-// docs/specs/024-agents/agent-changesets.md "Conflicts", one case per row of the blueprint's table.
+// docs/specs/024-agents/agent-changesets.md "Conflicts", one case per conflict.
 
 const box = (id: string, label = id): Element => ({
   id,

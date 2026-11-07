@@ -1,5 +1,5 @@
 // An API request about one document, answered inside the document's room (docs/specs/006-document/document-storage.md
-// "Reaching the content", blueprint "Routing"). The worker resolves who is calling (session, API token, workbench
+// "Reaching the content"). The worker resolves who is calling (session, API token, workbench
 // session, guest header) and runs the cross-cutting gates (rate limits, read-only tokens, workbench confinement, body
 // caps), then hands the request and that identity to the room (`route` RPC). The room rebuilds the RouteContext with
 // its own SQLite as `DOCUMENT_DB` and runs the same handlers, so every per-route access check (gateRead, gateEdit,
@@ -73,7 +73,7 @@ export function answerDocumentRequest(
 export const RETRY_AFTER_S = 5;
 
 // What a document request answers when its room throws or cannot be reached: 503 `room_unavailable`, logged with
-// the path (blueprint "Errors and edge cases", D16).
+// the path (D16).
 export function roomUnavailable(request: Request, error: unknown): Response {
   const url = new URL(request.url);
   const id = url.pathname.split('/')[3] ?? '';

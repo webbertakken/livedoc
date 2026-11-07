@@ -1,5 +1,5 @@
 // /api/documents: document metadata, per-tab content, folder assignment, tab linking, comments, share links
-// (docs/specs/006-document/blueprints/document-storage.md "Routing"). The worker answers the collection (list,
+// (docs/specs/006-document/document-storage.md). The worker answers the collection (list,
 // create), the copy and the realtime room's ticket and upgrade; every other path under /api/documents/:id/ is handed
 // to the document's room, which answers it with handleDocumentRequest against its own SQLite.
 

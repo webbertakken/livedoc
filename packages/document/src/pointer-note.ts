@@ -1,4 +1,5 @@
-// The pointer note (docs/specs/009-elements/pointer-note.md, blueprint pointer-note.md): a note with a leader line to a
+// The pointer note (docs/specs/009-elements/pointer-note.md, docs/specs/009-elements/pointer-note.md): a note
+// with a leader line to a
 // tip that may attach to a point on a host, the badge's way. The tip is stored relative to the note's top-left, so the
 // note carries it; settling (attachment.ts) keeps an attached tip on its point.
 //

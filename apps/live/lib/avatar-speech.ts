@@ -1,5 +1,5 @@
-// Speech bubbles in Avatar mode (docs/specs/008-canvas/avatar-mode.md "Speech bubbles", blueprint
-// docs/specs/008-canvas/blueprints/avatar-speech.md): the pure half. How long a message flies, where a bubble is
+// Speech bubbles in Avatar mode (docs/specs/008-canvas/avatar-mode.md "Speech bubbles",
+// docs/specs/008-canvas/avatar-mode.md): the pure half. How long a message flies, where a bubble is
 // at a moment of its flight, which bubbles stay on screen, and where above a character one starts. No React, no
 // DOM, so every rule here is unit-tested.
 
@@ -13,7 +13,7 @@ const SPEECH_FREE_WORDS = 2;
 export const SPEECH_MAX_MS = 10_000;
 // The bubble rises at a steady pace, in screen px (it is drawn at reading size whatever the zoom).
 export const SPEECH_RISE_PX_PER_S = 18;
-// "Swaying gently" (blueprint D108).
+// "Swaying gently" (D108).
 export const SPEECH_SWAY_PX = 6;
 export const SPEECH_SWAY_PERIOD_MS = 2400;
 // It fades over the last third of its flight.

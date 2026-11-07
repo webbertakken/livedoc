@@ -3,7 +3,7 @@
 // board, saved before columns were flagged, keeps its one done column and every column after it.
 import type { PlanBoardSetup, PlanColumn } from './board';
 
-// The done-like names (blueprints/DEFAULTS.md D53), as doneNameKey reads them.
+// The done-like names (docs/specs/026-plan/plan-board.md D53), as doneNameKey reads them.
 export const DONE_NAMES: readonly string[] = [
   'done',
   "won't do",
@@ -81,7 +81,7 @@ export function finishedStatuses(setup: DoneSetup): string[] {
   return doneColumnsOf(setup).map((c) => c.status);
 }
 
-// A set-up as written (docs/specs/026-plan/blueprints/plan-board.md "Done columns"): each column flagged as it counts.
+// A set-up as written (docs/specs/026-plan/plan-board.md): each column flagged as it counts.
 // A column without a flag keeps what it counted as on `before` when that is an older board holding it (else on
 // `after` when that is one), else its name decides. A column stores `done: true` when done, `done: false` when its name is done-like but
 // it is not, and nothing otherwise; `doneColumnId` names the first done column for older editors, or goes.

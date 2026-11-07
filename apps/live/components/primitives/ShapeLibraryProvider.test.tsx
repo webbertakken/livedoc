@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-// The owner's shape libraries (docs/specs/013-workspace/blueprints/shape-libraries.md "Behaviour and
+// The owner's shape libraries (docs/specs/013-workspace/shape-libraries.md "Behaviour and
 // state" 3): loaded once per owner, changed through the api, every failure said in words.
 
 import { act, renderHook, waitFor } from '@testing-library/react';

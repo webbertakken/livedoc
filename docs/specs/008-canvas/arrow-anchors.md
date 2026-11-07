@@ -235,4 +235,39 @@ After the re-evaluation, two pinned ends on the **same side of the same shape** 
 - Auto-rebind: `rebindArrowAnchorsAfterMove` in `arrow-rebind.ts`, with the path tests in
   `arrow-path-hits.ts` and the swap in `arrow-rebind-swap.ts`; called from the drag and nudge hooks
   in `apps/live/hooks/canvas/`.
-- Blueprint: [blueprints/arrow-anchors.md](blueprints/arrow-anchors.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** "A small grazing tolerance": `PATH_INSIDE_INSET_PX = 2`: a path must go more than 2 px inside the outline to
+  count (default).
+- **D2** How the drawn path is tested against a shape: Clip each segment to the connector box, sample every 2 px, at
+  most 512 samples per segment (default).
+- **D3** "Equally close": Distances within `CLOSENESS_TIE_PX = 0.5` are equal (default).
+- **D4** What "cross" means for paths meeting at an end point: Proper intersection farther than 1 px from every path end
+  point; collinear overlap is not a crossing (default).
+- **D5** How long swapping repeats; very busy sides: At most 8 passes per element; a side with more than 32 ends is
+  skipped and logged (default).
+- **D6** Log level and when to log in a per-frame pass: `console.debug` with the `[arrow-rebind]` prefix, only for
+  triggered arrows and swaps (default).
+- **D7** Order of decisions within a run: Arrows in document order, `from` before `to`; swaps per element in document
+  order, pairs `i < j` (default).
+- **D8** The outlines of `actor` and `stadium`: Actor: convex hull of head, arm tips and feet down to the label band;
+  stadium: capsule with 16-segment half circles (default).
+- **D9** Which of an element's ends the swap looks at: Every pinned end on the element that is not part of a self-loop,
+  whether or not its arrow is considered (default).
+- **D10** Outward direction of a quarter: The side normal, like its middle (default).
+- **D11** Return value when nothing changes: The input array itself, so callers can skip work on reference equality
+  (default).
+- **D12** Stored `manual` flags after the rule stopped reading them: A rewritten end is a fresh `{ kind, elementId, anchor }`,
+  so the inert flag falls away (default).
+- **D13** How a curved outline (cloud, document) is sampled: Cubic curves at 12 segments each; only `M L C Z` absolute
+  commands, the ones those paths use (default).
+- **D14** How a kind declares its anchors: A per-shape-kind list of anchor ids with an all-sixteen default, so a new
+  kind gets 16 until decided otherwise (default).
+- **D15** Where face-placed anchors come from: Derived from the kind's polygon vertices at load, so a silhouette change
+  moves its anchors with it (default).
+- **D16** Quick-connect from a side without anchors: The offered anchor nearest the side's middle, first in table order
+  on a tie (default).

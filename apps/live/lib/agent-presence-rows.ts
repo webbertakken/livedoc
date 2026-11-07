@@ -1,4 +1,4 @@
-// Agent presence in the editor (docs/specs/024-agents/agent-presence.md "In the editor", blueprint "Editor"): the
+// Agent presence in the editor (docs/specs/024-agents/agent-presence.md "In the editor"): the
 // room's `agents` read off a presence frame, folded into the per-tab presence rows the stacks and the Collaborators
 // modal render, and the focus each agent names on the active tab. Pure: the clock is passed in.
 

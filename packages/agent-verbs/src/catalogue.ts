@@ -1,4 +1,4 @@
-// The verb catalogue (docs/specs/015-api/blueprints/cli.md "One catalogue"): every verb the CLI routes to, the
+// The verb catalogue (docs/specs/015-api/cli.md): every verb the CLI routes to, the
 // resources they group under, and the aliases.
 
 import type { Verb } from './define';

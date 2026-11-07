@@ -871,7 +871,7 @@ describe('apiFetchImageBlobUrl request shape (docs/specs/009-elements/images.md 
   });
 
   // Under a workbench session the api reads an image only by its document path
-  // (docs/specs/013-workspace/blueprints/workbench-embeds.md "Route effects under a session").
+  // (docs/specs/013-workspace/workbench-embeds.md).
   it("always names the session's document under a workbench session", async () => {
     const spy = stub404();
     setWorkbenchConfinement({ scope: 'document', documentId: 'doc-wb', ownerId: 'owner' });

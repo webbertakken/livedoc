@@ -1,4 +1,4 @@
-// What a `-f` file holds (docs/specs/015-api/blueprints/cli.md CLI71), and the changeset body it becomes:
+// What a `-f` file holds (docs/specs/015-api/cli.md CLI71), and the changeset body it becomes:
 // edit operations send `{ operations }`; a graph, Mermaid, elements or a whole `replace` send `{ replace }`.
 
 import type { ChangesetRequest } from '@livedoc/api-schema';

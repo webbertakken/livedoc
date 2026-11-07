@@ -10,7 +10,7 @@ import {
   ROOM_RECONNECT_MIN_MS,
 } from './room-stream';
 
-// docs/specs/015-api/blueprints/cli.md "The room stream", CLI32.
+// docs/specs/015-api/cli.md, CLI32.
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 

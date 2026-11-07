@@ -1,4 +1,4 @@
-// The order findings are reported in (blueprint step 4, LN18): severity, then code order, then the
+// The order findings are reported in (LN18): severity, then code order, then the
 // primary subject's reading position (rounded top, then left; none first), then the refs.
 
 import { LINT_CODES, LINT_SEVERITIES, LINT_SEVERITY, type LintFinding } from '@livedoc/api-schema';

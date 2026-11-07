@@ -4,8 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import type { WorkbenchDocumentSession } from '@/components/providers/workbench-session-context';
 import { useWorkbenchEnd } from './useWorkbenchEnd';
 
-// A workbench page ends when the editor finds its document trashed (docs/specs/013-workspace/
-// blueprints/workbench-embeds.md "The workbench page" step 6).
+// A workbench page ends when the editor finds its document trashed
+// (docs/specs/013-workspace/workbench-embeds.md step 6).
 describe('useWorkbenchEnd', () => {
   it('ends the session once the document is trashed', () => {
     const end = vi.fn();

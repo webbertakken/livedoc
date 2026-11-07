@@ -1,4 +1,4 @@
-// Support for the Google Drive mirror e2e (docs/specs/022-drive-mirror/blueprints/drive-mirror.md,
+// Support for the Google Drive mirror e2e (docs/specs/022-drive-mirror/drive-mirror.md,
 // "Testing"): the fake Google served over HTTP for the worker's OAuth calls, and the browser's Google
 // traffic routed into the same fake. Accounts sign in for real (account/sign-in.ts).
 

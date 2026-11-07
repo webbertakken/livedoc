@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-// A finger on a Sheet's grid (docs/specs/029-sheets/sheet.md "On a touch screen"; blueprint sheet-element.md
+// A finger on a Sheet's grid (docs/specs/029-sheets/sheet.md "On a touch screen";
+// docs/specs/029-sheets/sheet.md
 // "Pointer"): a held finger grabs a cell or header, a drag from there selects a range or lines, a hold let go
 // unmoved opens the menu, the selection's grip drags its corner, a second finger is never a hold, and the
 // page never scrolls under a finger that selects.

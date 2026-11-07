@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 // Settings > Account, signed in: the name, the sign-in methods and the sessions
-// (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Presentation and UX").
+// (docs/specs/014-identity/auth-and-guest-access.md).
 
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

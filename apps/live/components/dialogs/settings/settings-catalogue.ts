@@ -161,7 +161,7 @@ type SettingsRowContext = {
   preferences?: UserPreferences;
   // Cloud Sync providers the deployment offers (docs/specs/022-drive-mirror/drive-mirror.md).
   cloudProviders?: readonly CloudSyncProviderId[];
-  // The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table).
+  // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table).
   workbench?: boolean;
 };
 
@@ -1866,7 +1866,7 @@ export function visibleCategories(
     .filter((c) => c.rows.length > 0);
 }
 
-// What a workbench's Settings leave out (docs/specs/013-workspace/blueprints/workbench-embeds.md,
+// What a workbench's Settings leave out (docs/specs/013-workspace/workbench-embeds.md,
 // Surface table): the account and everything beyond the one document. A category nested under one
 // goes with it, so nothing is left without its parent.
 const WORKBENCH_HIDDEN_CATEGORIES = new Set(['ai', 'documents', 'account', 'tokens']);

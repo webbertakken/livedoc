@@ -85,7 +85,7 @@ describe('applyElementDelta (docs/specs/012-collaboration/collab-race-hardening.
     expect(applyElementDelta(full, { kind: 'idea', text: 'late' })).toBe(full);
   });
 
-  // docs/specs/012-collaboration/blueprints/idea-box-race.md "Interfaces and contracts".
+  // docs/specs/012-collaboration/idea-box.md.
   it('keeps card ids aligned with the cards, padding id-less ones, and drops a replay', () => {
     const legacy = card({ shape: 'idea-box', ideaCards: ['old'] });
     expect(apply(legacy, { kind: 'idea', text: 'plain' })).not.toHaveProperty('ideaCardIds');

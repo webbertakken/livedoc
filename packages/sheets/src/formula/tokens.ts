@@ -1,4 +1,4 @@
-// The formula tokenizer (blueprint sheets-engine.md "Tokens"). Every token keeps its source offsets, so the editor
+// The formula tokenizer. Every token keeps its source offsets, so the editor
 // colours references where they were typed and the compiler replaces them in place. Identifiers are classified by
 // the parser (a cell, a column, a function, a name), since only context tells "A" the column from "A" a name.
 import { ERROR_CODES, type ErrorCode } from './values';

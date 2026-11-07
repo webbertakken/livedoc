@@ -1,4 +1,4 @@
-// What changed between two reads of a tab (docs/specs/024-agents/blueprints/document-views.md "diff",
+// What changed between two reads of a tab (docs/specs/024-agents/document-views.md,
 // VW36), in the outline's terms. The CLI computes it from the tab it cached; no api door serves it.
 import type { DiffView, ViewDoor } from '@livedoc/api-schema';
 import { STYLE_KEYS, type Element, type Endpoint, type Tab } from '@livedoc/document';

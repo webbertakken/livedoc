@@ -1,6 +1,6 @@
 'use client';
 
-// The editor's viewport store in React (docs/specs/008-canvas/blueprints/viewport-store.md "Inside the
+// The editor's viewport store in React (docs/specs/008-canvas/canvas-performance.md "Inside the
 // canvas"): a provider per editor, and a subscription that renders a reader only when the slice of
 // the view it shows changed.
 

@@ -6,7 +6,7 @@ import { PICKER_PAGE } from './constants';
 import { folderChoices } from '@livedoc/agent-verbs';
 import { folderNeededError, noFoldersError, pickFolder } from './folder-picker';
 
-// The folder picker (docs/specs/027-repositories/blueprints/repository-link.md "The folder picker"): choose, narrow,
+// The folder picker (docs/specs/027-repositories/repository-link.md): choose, narrow,
 // out of range, cancel three ways, and the refusal where it is not a terminal.
 
 const folder = (id: string, name: string, parentId: string | null = null) => ({

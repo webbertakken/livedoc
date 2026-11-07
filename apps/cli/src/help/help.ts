@@ -10,7 +10,7 @@ export const HELP_VERB_MAX_TOKENS = 400;
 
 const verbWord = (v: Verb) => v.id.slice(v.id.indexOf('.') + 1);
 
-// The rows the top level groups (blueprint "Help", final copy, CLI82): top-level verbs that belong together share a
+// The rows the top level groups (final copy, CLI82): top-level verbs that belong together share a
 // line after the resource row they follow, and the commands a first read needs least are only named, on one line.
 const GROUPED_ROWS = [
   {

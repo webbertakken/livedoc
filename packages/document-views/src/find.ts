@@ -1,4 +1,4 @@
-// The find view (docs/specs/024-agents/blueprints/document-views.md "find", VW35): elements whose text
+// The find view (docs/specs/024-agents/document-views.md, VW35): elements whose text
 // holds the query, each under its container chain. Substring only, so no pattern reaches a regex engine.
 import { FIND_FIELDS, type FindField, type FindView, type ViewDoor } from '@livedoc/api-schema';
 import type { Element } from '@livedoc/document';

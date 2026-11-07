@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { WorkbenchPort } from '@/lib/workbench/workbench-port';
 import { explorerPlaceFields, useWorkspacePlaceMessages } from './useWorkspacePlaceMessages';
 
-// `livedoc:place` (docs/specs/013-workspace/blueprints/workbench-embeds.md "Workspace messages", WB63): sent
+// `livedoc:place` (docs/specs/013-workspace/workbench-embeds.md, WB63): sent
 // whenever a field of the place changes, never twice with the same fields.
 describe('useWorkspacePlaceMessages', () => {
   it('sends a place once per change of its fields', () => {

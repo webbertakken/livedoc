@@ -8,7 +8,7 @@ import {
   storedCredential,
 } from './credentials';
 
-// The token in the platform's own store (docs/specs/015-api/cli.md "Authentication", blueprint CLI4, E13): each
+// The token in the platform's own store (docs/specs/015-api/cli.md "Authentication", CLI4, E13): each
 // platform's tool, the token only ever on stdin, and the file with a notice where there is no store.
 
 type Call = { command: string; args: readonly string[]; input: string };

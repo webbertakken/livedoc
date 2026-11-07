@@ -649,3 +649,35 @@ their bottom-row buttons. What changes to fit the width:
 The [Toolbar Layout](/help/palette/toolbar-layout/) article (Palette →
 Palette Settings) explains the strip, More, the menu button and how it
 fits a phone, with three figures.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D91** Where the brand group's Back goes in a document scope workbench frame: Nowhere: the mark without its caret,
+  not a link (default).
+- **D92** Where a maximised or tab-filling board's or Sheet's name rides without a menu box: In the document group's
+  active tab segment, in place of the tab's name (default).
+- **D93** Where Start Tour, Make a Copy, Present and Share sit, and how Search, Settings and appearance show: The
+  actions group; Search, Settings and the appearance toggle icon-only there, named by Button Labels, which is off by
+  default: a decision (Webber), recorded in toolbar-layout.md "Decided in review", not a default (default).
+- **D94** When Find a tab shows, and when the tab stack shows: Find a tab above five tabs; the tab stack even with one
+  tab, so the line never shifts (default).
+- **D95** What gives way first when a line runs out of room: The document name shortens, then the Palette's tiles drop,
+  then the centre toolbar takes its own row (default).
+- **D96** How the two lines fit a phone: The same lines, wrapping by the overflow order; the document name is not drawn
+  (default).
+- **D97** Where the two lines sit in a split view: In the editor's pane (the active tab's), with the palette; the other
+  pane has none (default).
+- **D98** What the bars handle folds on a phone held sideways: The actions group and the document group; the brand
+  group, the palette and the tools group stay (default).
+- **D99** Where Minimal chrome's role icon sits: In the document group, where the role pill was (default).
+- **D100** What zen, embeds, presenting and the welcome flow keep of the two lines: Zen: the tools group's Zoom alone;
+  embeds and presenting: neither line; the welcome flow: the brand group and the account control (default).
+- **D101** What a press on the contributors opens: The tab list; inside it, a row's presence avatars open the
+  Collaborators modal (default).
+- **D102** How the tab list and the tab stack show a tab-scoped share session: Tabs out of scope as "Not shared" rows,
+  not switchable; the stack counts the tabs in scope (default).
+- **D115** What an opener's chevron costs when the strip counts its room in tiles: 0.3 of a tile (`OPENER_TILES`),
+  beside a divider's 0.2; the room is reported up to one past twelve so a full strip's slack is seen (default).

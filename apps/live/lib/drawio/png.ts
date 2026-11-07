@@ -1,5 +1,5 @@
 // The draw.io diagram embedded in a `.drawio.png`
-// (docs/specs/020-import-export/blueprints/drawio-import.md step 4): a tEXt,
+// (docs/specs/020-import-export/drawio-import.md step 4): a tEXt,
 // zTXt or iTXt chunk keyed `mxfile` or `mxGraphModel`, placed before IDAT.
 
 import { BudgetExceeded, inflateBytes, type ByteBudget } from '@/lib/inflate';

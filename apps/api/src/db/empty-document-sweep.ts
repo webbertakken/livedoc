@@ -7,7 +7,7 @@ import { EMPTY_DOCUMENT_STALE_MS } from '@livedoc/api-schema';
 import type { Env } from '../types';
 
 // Documents per statement: one bounded UPDATE over a scan measured at ~10 ms on
-// production (docs/specs/013-workspace/blueprints/empty-document-cleanup.md).
+// production (docs/specs/013-workspace/empty-document-cleanup.md).
 const EMPTY_SWEEP_BATCH = 500;
 // Statements per cron run: 4 x 500 = 2,000 moves a day, the Trash purge's
 // order. A larger backlog drains over the following days, oldest save first.

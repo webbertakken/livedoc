@@ -1,4 +1,4 @@
-// The views' cost grows with the tab, not faster (docs/specs/024-agents/blueprints/document-views.md
+// The views' cost grows with the tab, not faster (docs/specs/024-agents/document-views.md
 // "Performance and limits"). Timed as growth, not as a ceiling: an absolute time depends on the machine
 // and on coverage instrumentation, a ratio does not. Four times the elements in the same containers
 // should cost about four to five times as much (n log n); a quadratic step would cost sixteen.

@@ -180,3 +180,11 @@ The Structured tour's funnel, with its own tokens, so the tours chart apart:
 ## Power user mode
 
 [Power user mode](../007-editor/power-user-mode.md) marks the Plan tour seen alongside the Structured tour.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D28** How long to wait for items before the card steps: 3000 ms, then the card steps are skipped.
+  Retired October 2026: the tour adds no cards, and its card steps read the drawn board (default).

@@ -1654,3 +1654,18 @@ alike; a text field still takes its primary-selection paste from the browser.
 Pasting foreign text as a text element is the obvious next step and is
 deliberately not built: it needs the viewport centre in canvas coordinates,
 which lives in `Canvas` rather than in the clipboard hook.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D54** Where the other axis goes when an edge handle is constrained: The opposite edge stays; the other axis grows
+  evenly about its centre line (the Figma convention) (default).
+- **D55** The minimum size under a constrained resize: The uniform scale stops where the shorter side meets 20; a side
+  already thinner than 20 never shrinks (default).
+- **D56** A corner's leading axis when the pointer has moved equally far on both: `x` leads (default).
+- **D57** Which selection a click is settled against: The selection at release, read through a ref; a press never
+  changes a selected element's membership (default).
+- **D58** How long a mouse or pen press may be held and still click: No limit; only touch hands a held press to the
+  long-press (default).

@@ -1,4 +1,4 @@
--- Participant links (docs/specs/013-workspace/share-roles.md; blueprint "Data and persistence").
+-- Participant links (docs/specs/013-workspace/share-roles.md).
 --
 -- A link's access level gains a third value, `participate`. `role` keeps its two-valued CHECK and is written as
 -- 'view' for a Participant link, so a worker from before this change, which reads any role it does not know as

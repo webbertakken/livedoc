@@ -461,7 +461,7 @@ describe('text box validation', () => {
   });
 });
 
-// docs/specs/024-agents/blueprints/edit-operations.md "invalid_result": a refusal names the field
+// docs/specs/024-agents/edit-operations.md: a refusal names the field
 // and the rule it broke, so the caller can fix the one value rather than guess.
 describe('elementValidationIssue', () => {
   it('finds nothing wrong with a valid element', () => {

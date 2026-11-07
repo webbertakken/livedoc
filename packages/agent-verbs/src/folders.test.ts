@@ -4,7 +4,7 @@ import { VerbRefusal } from './define';
 import type { Libraries } from './find-documents';
 import { folderChoices, matchFolders, resolveFolderRef } from './folders';
 
-// The person's folders as paths (blueprint CLI86): personal first, then each team by name, depth first.
+// The person's folders as paths (CLI86): personal first, then each team by name, depth first.
 
 const folder = (id: string, name: string, parentId: string | null = null): Folder => ({
   id,

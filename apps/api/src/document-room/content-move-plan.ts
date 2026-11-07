@@ -1,5 +1,5 @@
 // The operator's tool for the move of content into rooms (docs/specs/006-document/document-storage-move.md "The
-// operator's tool", blueprint docs/specs/006-document/blueprints/document-storage-move.md): `plan` before the
+// operator's tool", docs/specs/006-document/document-storage-move.md): `plan` before the
 // release, `verify` after. It only reads: every statement must be one SELECT, checked before anything runs.
 //
 // The pure core: the shell (content-move.ts) hands it a query function over wrangler; tests hand it node:sqlite.

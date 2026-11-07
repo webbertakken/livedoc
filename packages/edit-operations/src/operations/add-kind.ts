@@ -1,4 +1,4 @@
-// `add <kind> [id=] key=value… [<placement>]` (docs/specs/024-agents/blueprints/edit-operations.md
+// `add <kind> [id=] key=value… [<placement>]` (docs/specs/024-agents/edit-operations.md
 // "Operations", EO15, EO17, EO26 to EO29): the kind's factory element, sized for its label as graph
 // input sizes it, its fields written as `set` writes them, painted with the tab's theme, placed, put
 // on the placement reference's layer (or the active one when that is locked) and appended.

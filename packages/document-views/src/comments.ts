@@ -1,4 +1,4 @@
-// The comments view (docs/specs/024-agents/blueprints/document-views.md "comments", VW33): open threads
+// The comments view (docs/specs/024-agents/document-views.md, VW33): open threads
 // in the outline's order, every comment in full; resolved threads counted, or shown with `all`.
 import type { CommentsView, ViewDoor } from '@livedoc/api-schema';
 import type { Element } from '@livedoc/document';
@@ -101,7 +101,7 @@ export function threadListingLines(thread: {
 }
 
 // The elements holding a comment thread, in the outline's order, with their ref and label: what the comments view
-// lists, for a reader that needs the element ids too (the api's thread listing, agent-presence blueprint).
+// lists, for a reader that needs the element ids too (the api's thread listing).
 export function commentHosts(
   model: ViewModel,
 ): { el: Element; ref: string; label: string | null }[] {

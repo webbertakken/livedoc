@@ -1,4 +1,4 @@
-// An item store as a value (docs/specs/026-plan/blueprints/item-store.md): the items, the store's
+// An item store as a value (docs/specs/026-plan/items.md): the items, the store's
 // revision and the next key, with every write applied as a pure transition. The editor applies
 // writes optimistically through it, and an offline document's store is written by it, so a write
 // lands the same way in the browser as in the api.

@@ -338,7 +338,7 @@ describe('supportsFillColor', () => {
   });
 });
 
-// docs/specs/011-theme/blueprints/multicolour-themes.md, the contrast helper.
+// docs/specs/011-theme/multicolour-themes.md, the contrast helper.
 describe('contrastRatio', () => {
   it('rates black on white at 21 and a colour on itself at 1', () => {
     expect(contrastRatio('#000000', '#ffffff')).toBeCloseTo(21, 5);

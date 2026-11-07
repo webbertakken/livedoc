@@ -1,5 +1,4 @@
-// Arrow label layout (docs/specs/008-canvas/arrow-labels.md, blueprint
-// docs/specs/008-canvas/blueprints/arrow-labels.md).
+// Arrow label layout (docs/specs/008-canvas/arrow-labels.md, docs/specs/008-canvas/arrow-labels.md).
 //
 // A label sits ON its line, centred in the open run, with the line knocked
 // out behind it. Its width follows the line's local direction: along a

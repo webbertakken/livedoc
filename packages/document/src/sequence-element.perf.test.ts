@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { createShape, sequenceDrawing, type SequenceLook, type ShapeElement } from './index';
 
-// docs/specs/009-elements/blueprints/sequence-diagram.md "Performance and limits": the picture is rebuilt on every
+// docs/specs/009-elements/sequence-diagram.md: the picture is rebuilt on every
 // change of the rows (typing a message label commits on blur), so the worst case, 12 participants with 60 long
 // messages, must stay cheap. Each pass varies one label so the cache never answers; warm-up passes then the fastest
 // of five, as the other budget tests do.

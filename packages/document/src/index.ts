@@ -747,7 +747,7 @@ export * from './table';
 export * from './validate';
 export * from './savable';
 
-// Every stored field per element type (docs/specs/024-agents/blueprints/edit-operations.md).
+// Every stored field per element type (docs/specs/024-agents/edit-operations.md).
 export * from './element-fields';
 
 // Deterministic auto-layout for AI-generated diagrams (docs/specs/007-editor/ai-assistance.md).

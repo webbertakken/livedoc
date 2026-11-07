@@ -1,4 +1,5 @@
-// The CLI Commands stack (docs/specs/015-api/blueprints/cli.md CLI56): one chart per counted CLI verb, from CLI_COMMANDS.
+// The CLI Commands stack (docs/specs/015-api/cli.md CLI56): one chart per counted CLI verb, from
+// CLI_COMMANDS.
 
 import { CLI_COMMANDS } from '../cli-commands';
 import type { Metric, MetricStack } from '../metric-series';

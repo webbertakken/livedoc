@@ -2,7 +2,6 @@
 
 Follow the references below only as needed; never upfront.
 
-- ./blueprints/README.md - when implementing a collaboration spec from its blueprint
 - ./presentation-mode.md - when working on Presentation mode: Full-screen slide deck of author-picked element sets, each slide from one tab, built and run from a Slide Deck panel
 - ./workshop-tour.md - when working on the Workshop tour: the optional guided tour on the actions group's Start Workshop Tour button while the Workshop control is on (the Structured tour never runs with the control on)
 - ./workshop-mode.md - when working on the Workshop control: the toggle in the actions group that brings the session kit (the Session strip, the Collaborate and Stickers categories) into any editor mode, its templates, share roles and the migration of Workshop-mode tabs

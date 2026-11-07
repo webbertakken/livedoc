@@ -130,7 +130,7 @@ export const SHAPE_DEFAULT_SIZE: Record<ShapeKind, { width: number; height: numb
   // creation path widens it for a word badge off STICKER_ASPECT, since the
   // default table is per-kind and a badge and an emoji are one kind.
   sticker: { width: 104, height: 104 },
-  // Plan board (docs/specs/026-plan/blueprints/DEFAULTS.md D5): room for five 220px columns and a
+  // Plan board (docs/specs/026-plan/plan-board.md D5): room for five 220px columns and a
   // header; made Blank (no columns yet), so it starts at the empty board's height (planBoardHeightFor).
   // A literal, not PLAN_BOARD_EMPTY_HEIGHT_PX: this table is read while the module graph is still loading,
   // where the imported constant can be uninitialised; plan-shapes.test.ts keeps the two equal.

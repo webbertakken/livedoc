@@ -1,4 +1,4 @@
-// The page's side of the GIF encoder (docs/specs/020-import-export/blueprints/animated-gif-export.md "The encoder"):
+// The page's side of the GIF encoder (docs/specs/020-import-export/animated-gif-export.md):
 // one worker per GIF, started when the GIF is made and ended with it. Where a module worker cannot start (it throws,
 // or fails to load before saying it has started), the same encoder runs on the page.
 import type { GifPalette } from 'gifenc';

@@ -109,7 +109,7 @@ import { buildValueStreamMap } from './template-builders-value-stream';
 
 // Build the elements for a given template, centred on the supplied canvas
 // point. Each template is intentionally small and editable; users grow them.
-// The output lands settled (docs/specs/009-elements/blueprints/badge.md "Settling"): a builder sizes a step
+// The output lands settled (docs/specs/009-elements/badge.md): a builder sizes a step
 // after making it, so its number is set to half the disc here, as a stored board reads back, and a
 // preview or an agent's create shows what the editor will.
 export function buildTemplate(kind: TemplateKind, cx: number, cy: number): Element[] {

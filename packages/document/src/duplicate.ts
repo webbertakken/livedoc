@@ -207,7 +207,7 @@ export function duplicateElements(
   // A reference to something OUTSIDE the copied set is left alone: copying one
   // child of a mind map and pasting it back should still hang off that parent.
   // Only references whose target was itself copied follow the copy.
-  // A copied chart is a new chart (docs/specs/009-elements/flowchart.md, blueprint D172): each source
+  // A copied chart is a new chart (docs/specs/009-elements/flowchart.md, D172): each source
   // chart maps to ONE fresh id, the copy of its first step when that was copied, else the first copy's
   // id. Leaving the old id would graft the copies onto the original, unconnected, and its next layout
   // would rake them into a column beside it.

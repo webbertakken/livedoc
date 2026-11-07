@@ -1,4 +1,4 @@
-// Nearest candidates for a refusal (docs/specs/024-agents/blueprints/edit-operations.md "Nearest
+// Nearest candidates for a refusal (docs/specs/024-agents/edit-operations.md "Nearest
 // candidates"): a banded edit distance, so a typo in an id, a label or a name finds what was meant
 // at a bounded cost.
 

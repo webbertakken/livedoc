@@ -48,7 +48,6 @@ const UPSTREAM_MENTIONS: Record<string, number> = {
   'docs/operations/docs-nu.md': 3, // nothing reaches livediagram's infrastructure or names
   'docs/specs/001-project-vision/purpose.md': 4, // "It grew out of livediagram"
   'docs/specs/002-project-scope/README.md': 1,
-  'docs/specs/002-project-scope/blueprints/third-party-licences.md': 3, // the licences page's origin credit
   'docs/specs/README.md': 1,
 };
 

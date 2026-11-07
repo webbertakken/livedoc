@@ -1,5 +1,5 @@
 // Every way the generator refuses to publish an incomplete page
-// (docs/specs/002-project-scope/blueprints/third-party-licences.md "Errors and edge cases").
+// (docs/specs/002-project-scope/third-party-licences.md).
 type LicencesErrorCode =
   | 'BundlerFailed'
   | 'AnalyzeDataMissing'

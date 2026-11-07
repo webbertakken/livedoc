@@ -1,4 +1,4 @@
-// The public catalogues the api serves (docs/specs/015-api/blueprints/cli.md "Catalogue routes"): the template
+// The public catalogues the api serves (docs/specs/015-api/cli.md): the template
 // library, icon search and the element format. No identity needed, like capabilities.
 
 // GET /api/templates: list_templates' shape.

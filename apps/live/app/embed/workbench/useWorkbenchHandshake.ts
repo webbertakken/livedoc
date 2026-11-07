@@ -1,6 +1,6 @@
 'use client';
 
-// The workbench page's handshake (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench
+// The workbench page's handshake (docs/specs/013-workspace/workbench-embeds.md "The workbench
 // page", steps 1 to 3): read the ticket and clear the fragment, redeem it, check the document, then
 // bind to the workbench: `hello` to the session's origin and nothing else until a valid `hello-ack`
 // from the parent at that origin within WORKBENCH_HANDSHAKE_MS (I8). Every failure after a session

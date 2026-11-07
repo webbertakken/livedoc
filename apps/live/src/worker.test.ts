@@ -76,7 +76,7 @@ describe('live worker security headers', () => {
     expect(res.headers.get('X-Frame-Options')).toBeNull();
   });
 
-  // Workbench embeds (docs/specs/013-workspace/blueprints/workbench-embeds.md): the workbench page is
+  // Workbench embeds (docs/specs/013-workspace/workbench-embeds.md): the workbench page is
   // framed by its workbench; the pairing page never is (E34), nor is any other route.
   it('leaves the workbench page frameable, with or without a trailing slash', async () => {
     const { env: e } = env();

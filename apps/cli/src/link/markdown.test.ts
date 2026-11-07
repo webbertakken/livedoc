@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { codeSpan, fenceFor, markdownText } from './markdown';
 
-// Names and outlines made safe in Markdown (docs/specs/027-repositories/blueprints/repository-link.md "INDEX.md",
+// Names and outlines made safe in Markdown (docs/specs/027-repositories/repository-link.md "INDEX.md",
 // RL32).
 
 describe('markdownText', () => {

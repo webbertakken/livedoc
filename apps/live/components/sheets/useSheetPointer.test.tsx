@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // The grid's pointer (docs/specs/029-sheets/sheet.md "Selection", "Fill", "Rows and columns", "Freeze", "Writing
-// formulas"; blueprint sheet-element.md "Pointer"): select, extend and add ranges; header selection, resizing and
+// formulas"): select, extend and add ranges; header selection, resizing and
 // moving; the fill handle; the freeze edges; pointing into a formula; menus; touch; and autoscroll near the edges.
 import { act, fireEvent, screen } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';

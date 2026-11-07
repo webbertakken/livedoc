@@ -76,7 +76,7 @@ describe('dropping a file on the canvas', () => {
   });
 });
 
-// A shape from My shapes (docs/specs/013-workspace/blueprints/shape-libraries.md "Behaviour and
+// A shape from My shapes (docs/specs/013-workspace/shape-libraries.md "Behaviour and
 // state" 6): its library and item, with the canvas point.
 describe('dropping a library shape on the canvas', () => {
   function libraryDrag(data: string) {

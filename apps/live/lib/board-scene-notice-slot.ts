@@ -2,7 +2,7 @@
 // slot just above the whiteboard dock, so it never covers a dock button at any width. With no dock
 // (a diagram tab, a read-only board) it takes the slot a dock would have: lifted above the
 // tools group's line until the window is wide enough for both side by side, as the dock
-// is (WhiteboardDock: bottom 4.25rem, 1rem from 1760 px; whiteboard-dock blueprint D9).
+// is (WhiteboardDock: bottom 4.25rem, 1rem from 1760 px; D9).
 
 // The gap between the notice and what it sits above.
 export const NOTICE_GAP_PX = 8;

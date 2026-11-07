@@ -150,3 +150,19 @@ Picking a style in Settings sends `UI` · `Changed` · `ElementIndicatorsTop`,
 
 [Element Indicators](/help/canvas/element-indicators/) explains the badges, the Top / Footer / Off
 setting and where each one sits.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D75** Where the slide starts and how far it steps: `INDICATOR_START_INSET_PX = 3`, `INDICATOR_STEP_PX = 1`: the
+  first fitting inset is the tightest one (default).
+- **D76** How the cluster's size is known before it is drawn: Estimated from fixed glyph, gap and per-character widths
+  (`clusterSize`), never measured from the DOM (default).
+- **D77** Which kinds centre their indicators: circle, diamond, hexagon, cloud, triangle, trapezoid, star, actor; every
+  other element is a box (top-right / bottom-left) (default).
+- **D78** What a pip looks like: 22px tall, element fill, 1px ring in text colour at 15%, round on rounded elements,
+  11px glyphs, no dividers (default).
+- **D79** How the content's box is known before it is drawn: Estimated: 0.58 em per character, 1.3 em per line, wrapped
+  to the padded width, plus the inline icon's size and gap; never measured (default).

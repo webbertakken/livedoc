@@ -202,7 +202,7 @@ Reveals bring the words in; the rest play on words that are already there.
 - **Float** – the words drift in a slow circle.
 
 Words are animated letter by letter or word by word. A label longer than the letter limit animates by word, and one
-longer than the word limit animates as one block (limits in the blueprint). Splitting words into letters never
+longer than the word limit animates as one block (EA1). Splitting words into letters never
 changes what a screen reader reads or what copying picks up. Rich text keeps its formatting: letters split inside
 each styled run. Auto-fit labels animate like any other: their animated words are drawn at the size the fit
 measured.
@@ -288,3 +288,28 @@ their existing types.
   alone.
 - Choosing a different animation per letter, word, row or cell.
 - Sequencing animations across elements (one after another).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **EA1** The letter and word limits: 400 graphemes for letters, 120 words for words, else one block (default).
+- **EA2** How long a reveal holds before clearing: Reveal over the first 45% of the cycle, hold to 85%, clear by 100%
+  (default).
+- **EA3** Which shapes count as carrying words: `takesTypedLabel`, not `selfLabelled`, and not icon, chair or sticker
+  (default).
+- **EA4** Which set annotations, link cards, stickers and chairs take: Shape (default).
+- **EA5** How a table's words are counted against the limits: Summed across every cell in reading order, as one label
+  (default).
+- **EA6** How auto-fit (SVG) labels animate their letters: Keep the SVG `<text>` to measure the fit, painted
+  transparent, and draw the animated words as HTML in a `foreignObject` over the measured box (default).
+- **EA7** Which values a kept tile can show: Only values of the Shape set (the only set that existed before the split)
+  (default).
+- **EA8** How many letters flicker: 12% of letters, at least one, chosen from the element id (default).
+- **EA9** Boil frame rate: 8 frames a second, three frames (default).
+- **EA10** Fixed time for a long table cascade: The reveal phase of the cycle (45% of `D`); the stagger divides it by
+  the unit count (default).
+- **EA11** The accent of words without a stroke colour: Brand sky; marker yellow for Highlighter (default).
+- **EA12** The accent of a body animation when the element sets no stroke: Its theme's default stroke as drawn; a text
+  element's own ink (default).

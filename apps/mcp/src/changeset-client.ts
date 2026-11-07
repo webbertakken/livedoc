@@ -1,5 +1,5 @@
-// The MCP's door to agent changesets (docs/specs/015-api/mcp-server.md §4.3a and §4.4; blueprint
-// docs/specs/024-agents/blueprints/agent-changesets.md "MCP"): no tool does a whole-tab save. Every
+// The MCP's door to agent changesets (docs/specs/015-api/mcp-server.md §4.3a and §4.4;
+// docs/specs/024-agents/agent-changesets.md): no tool does a whole-tab save. Every
 // tab write is one changeset through the api, which applies it, relays it live to anyone with the
 // tab open and keeps it through their next save.
 

@@ -1,4 +1,4 @@
-// Sync states (docs/specs/027-repositories/repository-link.md "Sync states"; blueprint "Sync states"): one tracked
+// Sync states (docs/specs/027-repositories/repository-link.md "Sync states"): one tracked
 // mirror file of a document, its recorded tabs, its tabs now and what the api answered, to one state. Pure.
 
 import type { MirrorFile } from './mirror-file';

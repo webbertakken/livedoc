@@ -73,3 +73,93 @@ point. It becomes the Participant check when share roles land, and no route chan
 
 Logs `[agent-presence] set`, `[agent-presence] cleared`, `[agent-presence] expired` with the document, tab and token
 id. Telemetry: category `Agent`, action `Present`, type the front door, counted once when a `PUT` creates an entry.
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E1** Presence without a token (session, guest): 403 `presence_requires_token`.
+- **E6** The room is full: 409 `agent_presence_full`; logged.
+- **E7** A refresh that fails or finds the room full: logged, the changeset stands.
+- **E12** A focused element removed later: no ring for it; the entry keeps the id until the next PUT.
+- **E21** A tab body that fails to parse during the list: skipped, logged `[comment] list skipped tab`.
+- **I1** An entry is never a session: it is absent from the frame's `participants`, from `/selections`, from the
+  editor's `livePresence`, from `multiplayerDecision`, from `rosterSummary`'s count, from the Done check's `doneSplit`
+  keys, from a roll call, a picker and every other reader of `livePresence`. Agents travel in their own array (PR14), so
+  this holds by construction.
+- **I2** An entry's name and colour are the token owner's participant record at its last set or refresh, never a value
+  from the request.
+- **I3** `expiresAt - now <= AGENT_PRESENCE_MAX_TTL_MS` at every write.
+- **I4** `personTag` and `tokenId` never leave the room on the wire; `joins` names only presence ids the recipient
+  already holds.
+- **I5** The room's one alarm is armed at the earliest of the facilitator grace deadline and every entry's `expiresAt`,
+  and cleared when there is neither (`armAlarm`, PR29).
+- **I7** A comment's `tokenId` is set by the server only, kept by every later save, and seen only by its author.
+- **I8** Every comment write increments the tab's `rev` through `upsertTabAtRev`.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **PR1** Which migration number: None of its own: the ticket column landed in 0067 with agent changesets, which needed
+  the person tag first; 0068 is share roles' (default).
+- **PR2** How the room tells an owner's session from others without holding the owner id: `personTagFor` = SHA-256 hex
+  of `documentId:ownerId`, set on tickets minted by a verified account only (default).
+- **PR3** What identifies one presence entry: The token and the tab: storage key `agent-presence:<tokenId>:<tabId>`
+  (default).
+- **PR4** Whether a PUT merges or replaces: Replaces: an absent `status` or `focus` clears it (default).
+- **PR5** The unit and floor of `ttl`: Integer milliseconds, as the constants; at least 1000 (default).
+- **PR6** Whether an over-limit status, focus list or ttl is cut or refused: Refused with a named 400; nothing is cut
+  silently (default).
+- **PR7** How the 80-character status is counted: Code points after trimming; an empty status means none (default).
+- **PR8** What `focus` accepts and stores: A ref, unique prefix or id, resolved at the PUT; stored as full ids,
+  de-duplicated, in request order (default).
+- **PR9** What a changeset's refresh does to status, focus and expiry: Keeps status and focus; `expiresAt = max(expiresAt, now + AGENT_PRESENCE_TTL_MS)`;
+  creates a bare entry if none (default).
+- **PR10** What PUT and DELETE answer: PUT 200 `{ presence: { tabId, status, focus, expiresAt } }`; DELETE 204, also
+  when nothing was there (default).
+- **PR11** What PUT answers when the room is unreachable: 503 `room_unavailable`: the room is the only store, so nothing
+  was set (default).
+- **PR12** How many entries one room holds: 32 (`AGENT_PRESENCE_ROOM_MAX`); a new one past it is 409
+  `agent_presence_full` (default).
+- **PR13** How entries sit in Durable Object storage: One key per entry, restored by prefix list on wake (default).
+- **PR14** How agent entries travel to editors: A separate `agents` array on the `presence` frame, so no `participants`
+  reader ever counts one (default).
+- **PR15** What ends an entry besides DELETE and its ttl: A trashed document clears all; a revoked or rescoped share
+  code clears its entries; a revoked token waits its ttl (default).
+- **PR16** What an entry on a deleted tab does: Expires on its ttl; editors skip entries on tabs they do not know
+  (default).
+- **PR17** Resolving a resolved thread, reopening an open one: 204, nothing written, nothing relayed (default).
+- **PR18** What resolve and reopen answer: 204 with no body; reply answers 201 as add does (default).
+- **PR19** The comment list's default status: `open` (default).
+- **PR20** The comment list's order: Tab order, then reading order within a tab, comments in stored order (default).
+- **PR21** How the list reads a document's tabs: An `instr` query names threaded tabs; each is read alone, one tab in
+  memory at a time (default).
+- **PR22** What a comment write does on a lost compare-and-swap: Re-reads and repeats once, then 409 `tab_busy`, as a
+  changeset does (default).
+- **PR23** Where a comment's token id is kept: `Comment.tokenId` in the element JSON, locked, redacted and stripped from
+  the wire like `authorId` (default).
+- **PR24** Which thread verbs reach the Timeline: Reply as a comment added (`reply: true`); resolve as comment resolved;
+  reopen none (default).
+- **PR25** Whether a reply emails the owner: Yes, as an add does when the caller is not the owner (default).
+- **PR26** Whether a failed comment relay is logged: Yes: `[room-mutation] el-delta did not reach the room`, warn
+  (default).
+- **PR27** Which level an agent entry shows: The level the gates resolve for its token on the document (default).
+- **PR28** Where the comment routes live: `apps/api/src/routes/comment-routes.ts`, with add and delete-own moved out of
+  the subresource routes (default).
+- **PR29** How entries and the facilitator grace share one alarm: `armAlarm` sets the earliest deadline or deletes the
+  alarm; `alarm()` sweeps, judges the baton, re-arms (default).
+- **PR30** What covers a late or missed alarm: Every roster build and every wake sweeps expired entries first (default).
+- **PR31** How a focus ring is drawn: 2 px owner colour, 4 px outside the bounds, over a 1 px halo; static (default).
+- **PR32** Which idle status a standalone agent row shows: Always online: its ttl, not idle time, decides when it leaves
+  (default).
+- **PR33** Which characters a status may hold: Any but C0 controls and DEL, refused as `invalid_status` (default).
+- **PR34** Whether DELETE presence needs the tab to exist: No, so an entry on a deleted tab can still be cleared
+  (default).
+- **PR35** How two people's focus rings on one element are drawn: Nested: each further person's ring 4 px further out
+  (default).
+- **PR36** What a refused resolve or reopen from a non-edit session does: The thread goes back and `[comments] thread state not saved`
+  warns (default).
+- **PR37** Which buttons an agent's Collaborators row carries: None: an agent has no socket to follow and cannot hold
+  the baton (default).

@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { describe, expect, it, vi } from 'vitest';
 import { createPngRenderer, type PngLoaders } from './index';
 
-// docs/specs/015-api/blueprints/cli.md "render-png": one wasm initialisation, Inter for every font, PNG out.
+// docs/specs/015-api/cli.md: one wasm initialisation, Inter for every font, PNG out.
 
 const require = createRequire(import.meta.url);
 const wasmPath = require.resolve('@resvg/resvg-wasm/index_bg.wasm');

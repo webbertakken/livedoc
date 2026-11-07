@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { recordDocumentOpen } from './record-open';
 
-// Recording an open (docs/specs/013-workspace/explorer-home.md "Opens"; blueprint "Recording an
-// open"): the day once per person per document per UTC day, the row first, then a private event;
+// Recording an open (docs/specs/013-workspace/explorer-home.md "Opens"): the day once per person per document
+// per UTC day, the row first, then a private event;
 // every open moves the last open.
 
 const DAY = 24 * 60 * 60 * 1000;

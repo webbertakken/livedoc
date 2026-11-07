@@ -1,5 +1,5 @@
--- The workspace scope of workbench embeds (docs/specs/013-workspace/workbench-embeds.md "Two scopes", blueprint
--- docs/specs/013-workspace/blueprints/workbench-embeds.md "Data and persistence", WB64). A ticket, a session, a
+-- The workspace scope of workbench embeds (docs/specs/013-workspace/workbench-embeds.md "Two scopes",
+-- docs/specs/013-workspace/workbench-embeds.md, WB64). A ticket, a session, a
 -- pairing and a pairing request each carry a scope: `document` (one document) or `workspace` (the person's whole
 -- workspace). Every row from before is a `document` row, as the spec says of the pairings approved before scopes.
 

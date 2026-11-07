@@ -77,3 +77,19 @@ to the spot the note is about. CSS only; reduced motion and every export show th
 
 The MCP server and the REST API take `pointer-note` with `label`, `pointerTip` and `attachedTo` / `attachAt`; an agent
 sets the host and point and the editor places the note's tip on it when the board next loads.
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I1** an attached note's `x + tip.x, y + tip.y` equals its host point after any commit (to 0.5 px).
+- **I2** a note is never attached by its own position, only by its tip.
+- **I3** the export and the canvas draw the leader from `pointerLeader`.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D190** Starting note, colours and tip: 180 × 64 amber note "Stale for 60 s after a price change", tip 56 px below
+  its bottom-left and 24 px left; 7 px tip dot, 1.5 px leader in the border colour (default).

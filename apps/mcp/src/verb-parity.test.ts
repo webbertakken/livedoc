@@ -7,7 +7,7 @@ import { legacyToolName } from './legacy-tool-names';
 import { TOOL_ANNOTATIONS } from './tool-annotations';
 import { registerTools } from './tools';
 
-// One catalogue (docs/specs/015-api/cli.md "One catalogue for the CLI and the MCP", blueprint "The verb"): every tool
+// One catalogue (docs/specs/015-api/cli.md "One catalogue for the CLI and the MCP"): every tool
 // the server registers is its verb, word for word and schema for schema, and every tool verb is registered.
 
 // The wasm rasteriser does not load under Node; registering tools never renders.

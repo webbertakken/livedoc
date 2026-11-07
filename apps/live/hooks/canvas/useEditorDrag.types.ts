@@ -27,7 +27,7 @@ export type EditorDragDeps = {
   // Read-only selection state. Drag never sets selection directly
   // except through the supplied setter (so the parent owns the
   // truth).
-  // Read when a press or a drag frame acts (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a press or a drag frame acts (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   setSelectedId: (id: string | null) => void;
   // Written by the shift-duplicate identity swap (docs/specs/008-canvas/shift-drag-duplicate.md): the cursor-

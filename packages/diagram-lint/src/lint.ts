@@ -1,4 +1,4 @@
-// The diagram lint (docs/specs/024-agents/diagram-lint.md; blueprint "Behaviour and state"): a pure
+// The diagram lint (docs/specs/024-agents/diagram-lint.md): a pure
 // check of how a tab is drawn, returning its measures and findings in a fixed order.
 
 import type { LintCode, LintReport, LintSeverity } from '@livedoc/api-schema';

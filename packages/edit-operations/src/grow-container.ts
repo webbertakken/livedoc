@@ -1,4 +1,4 @@
-// A frame or lane grown to hold a box placed in it (docs/specs/024-agents/blueprints/edit-operations.md "Growing to
+// A frame or lane grown to hold a box placed in it (docs/specs/024-agents/edit-operations.md "Growing to
 // hold"): it takes its new box, and on each side it grew, what lay past its old edge within its span moves on by the
 // growth, carrying what it holds, so the grown container never takes in what sat beside it. Only the container's own
 // scope moves; what sits inside it stays where it was put. A container nested in another grows that one in turn,

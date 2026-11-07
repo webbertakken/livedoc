@@ -79,7 +79,7 @@ describe('useCanvasPinchZoom gestures', () => {
   });
 });
 
-// The view lives in the viewport store (docs/specs/008-canvas/blueprints/viewport-store.md): a wheel
+// The view lives in the viewport store (docs/specs/008-canvas/canvas-performance.md): a wheel
 // reads it when it fires and writes it back.
 describe('useCanvasPinchZoom view', () => {
   it('zooms in on a Ctrl-wheel, as one change of the view', () => {

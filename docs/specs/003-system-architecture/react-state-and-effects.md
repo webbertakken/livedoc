@@ -126,3 +126,16 @@ Every app is a static export, so every component also renders once at build time
 
 - Server Components, Server Actions and request-time rendering: every app is a static export
   ([Next.js](../016-platform/nextjs.md)).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How a render reads the viewport size or a media query: The existing stores: `useViewportHeight`,
+  `useViewportWidth`, `useMediaQuery` (default).
+- **D2** Where a client-only dialog's `use(browser())` suspends: Nowhere in practice: it mounts only in the browser; the
+  page's boundary covers it (default).
+- **D3** What the footer shows as its year: The build's year, a constant written at build time (`BUILD_YEAR`) (default).
+- **D4** Which reduced-motion check gates a View Transition: `prefersReducedMotion()`
+  (`apps/live/lib/motion-preference.ts`): both sources (default).

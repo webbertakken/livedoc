@@ -40,3 +40,10 @@ render/copy/export branches.
 Follows the composite-component pattern established by the timeline rail
 ([Timeline rail](timeline-rail.md)): a dedicated `ShapeKind` + small `ShapeElement` fields + a bespoke
 `*View` + a borderless variant + a context-menu category.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D100** On-canvas interaction: None; the score is set only from the menu picker (default).

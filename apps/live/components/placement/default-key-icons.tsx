@@ -14,7 +14,7 @@ import {
   lucideStickyNote,
 } from '@livedoc/icons/lucide';
 
-// Each default key's icon (docs/specs/013-workspace/default-folders.md "Entry names", blueprint D110):
+// Each default key's icon (docs/specs/013-workspace/default-folders.md "Entry names", D110):
 // a mode keeps the icon its mode switch shows; the kind and the families each draw what they are.
 // Typed per dimension, so a new mode, kind or family needs its icon before it compiles. Shapes
 // differ, so the marker never says anything by colour alone.
@@ -51,5 +51,5 @@ export function DefaultKeyIcon({
   return <Icon size={size} />;
 }
 
-/** The "Use as Default for" row's icon (blueprint D118). */
+/** The "Use as Default for" row's icon (D118). */
 export const UseAsDefaultIcon = lucideGlyph(lucideFolderCheck, 16);

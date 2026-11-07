@@ -9,8 +9,7 @@ import { useWhiteboardPenGesture } from './useWhiteboardPenGesture';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
-// The whiteboard pen gesture (docs/specs/023-draw-mode/draw-mode.md "Pens", "Touch and pen input";
-// blueprint whiteboard-round-one "Pen ink").
+// The whiteboard pen gesture (docs/specs/023-draw-mode/draw-mode.md "Pens", "Touch and pen input").
 
 const PEN: PendingDraw = {
   type: 'freehand',

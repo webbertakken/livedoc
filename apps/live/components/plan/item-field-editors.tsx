@@ -25,7 +25,7 @@ import {
   type ItemPerson,
 } from '@livedoc/items';
 
-// One undo step per pause in typing (blueprint DEFAULTS D8).
+// One undo step per pause in typing (docs/specs/026-plan/plan-board.md D8).
 const ITEM_EDIT_DEBOUNCE_MS = 400;
 
 // A save may report whether it landed: false (refused, by the store or the api) puts the field back to what is

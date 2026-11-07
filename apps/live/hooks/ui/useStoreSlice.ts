@@ -1,7 +1,7 @@
 'use client';
 
 // A subscription to one slice of an external store (the selection, the viewport): the reader renders
-// only when what it selected changed (docs/specs/008-canvas/blueprints/viewport-store.md). The last
+// only when what it selected changed (docs/specs/008-canvas/canvas-performance.md). The last
 // slice is kept per snapshot and selector, so an equal slice keeps its identity and
 // useSyncExternalStore sees no change; a new selector (one closing over other data) selects again.
 

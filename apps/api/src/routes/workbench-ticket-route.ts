@@ -1,4 +1,4 @@
-// POST /api/workbench/tickets (docs/specs/013-workspace/blueprints/workbench-embeds.md "The ticket mint", "The
+// POST /api/workbench/tickets (docs/specs/013-workspace/workbench-embeds.md, "The
 // workspace mint"): a paired token mints a single-use, one-minute ticket that opens one session, on one document
 // (the document scope) or in the person's whole workspace (the workspace scope). An origin the token is not paired
 // with for the asked scope answers 428 with the pairing URL; the person approves it once in their own browser.

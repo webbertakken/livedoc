@@ -10,8 +10,8 @@ import { handleHome } from './home';
 import { asUser } from './placement-test-support';
 
 // Making a document is a use, a bulk import is not (docs/specs/013-workspace/explorer-home.md
-// "Making a document"; docs/specs/015-api/api.md "Marking a document used"; blueprint "Recording a
-// making"), end to end through the create route and the Home read, against the real schema.
+// "Making a document"; docs/specs/015-api/api.md "Marking a document used"), end to end through the create
+// route and the Home read, against the real schema.
 
 const DAY = 24 * 60 * 60 * 1000;
 const HOUR = 60 * 60 * 1000;

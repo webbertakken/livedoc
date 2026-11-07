@@ -1,5 +1,5 @@
-// GET /api/search/content?q= (docs/specs/013-workspace/content-search.md, blueprint
-// docs/specs/013-workspace/blueprints/content-search.md "Reading"): the documents the caller may open whose content
+// GET /api/search/content?q= (docs/specs/013-workspace/content-search.md,
+// docs/specs/013-workspace/content-search.md): the documents the caller may open whose content
 // matches the query, best first. Read-only; hybrid identity like the lists.
 
 import type { ContentSearchDTO } from '@livedoc/api-schema';

@@ -1,4 +1,5 @@
-// Tag colours (docs/specs/009-elements/tag-colours.md, blueprint tag-colours.md): a tab-level map from a card tag to a
+// Tag colours (docs/specs/009-elements/tag-colours.md, docs/specs/009-elements/tag-colours.md): a tab-level
+// map from a card tag to a
 // colour. A card with a mapped tag renders that colour as its accent edge and its chip tinted; nothing is stored on the
 // card, so a retag or a new colour recolours every card at once.
 //

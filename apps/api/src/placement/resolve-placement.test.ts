@@ -5,7 +5,7 @@ import type { PlacementLookups } from './placement-types';
 import { judgeDefaultFolder } from './default-folder';
 
 // Placement on create (docs/specs/013-workspace/folders.md "Placement on create",
-// blueprint docs/specs/013-workspace/blueprints/document-placement.md).
+// docs/specs/013-workspace/folders.md).
 
 const guest = { ownerId: 'guest-uuid', verifiedAccountId: null };
 const alice = { ownerId: 'user_alice', verifiedAccountId: 'user_alice' };

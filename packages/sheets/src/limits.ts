@@ -1,6 +1,6 @@
 // Every bound the sheets engine, the sheet store and the editor share
-// (docs/specs/029-sheets/blueprints/sheets-engine.md "Constants and configuration"). Provenance and safe ranges
-// are in the blueprint's table; change a value there first.
+// (docs/specs/029-sheets/formulas.md). Each value's provenance
+// and safe range sit beside it; a change starts in the spec.
 
 // A new sheet's grid.
 export const SHEET_ROWS_NEW = 100;
@@ -61,7 +61,7 @@ export const CARD_CONTROLS_COL_PX = 72;
 // Decimals a number format may show.
 export const DECIMALS_MAX = 10;
 
-// Validation and format rules (docs/specs/029-sheets/blueprints/sheet-rules.md "Constants and configuration").
+// Validation and format rules (docs/specs/029-sheets/data-validation.md).
 export const VALIDATION_RULES_MAX = 200;
 export const FORMAT_RULES_MAX = 100;
 export const DROPDOWN_OPTIONS_MAX = 500;

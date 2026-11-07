@@ -1,4 +1,4 @@
-// The style keys views print and edit operations write (docs/specs/024-agents/blueprints/document-views.md
+// The style keys views print and edit operations write (docs/specs/024-agents/document-views.md
 // "Style attributes"): one table, so a printed `key=value` can be written back with `set` unchanged.
 type StyleKeyTarget = 'boxes' | 'arrows' | 'both';
 

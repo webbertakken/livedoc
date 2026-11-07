@@ -116,3 +116,23 @@ The editor has none of these:
 - Group membership in Excalidraw files: import does not map `groupIds` (grouped Excalidraw
   elements import as separate elements), and export writes an empty `groupIds` ([Excalidraw import & export](../020-import-export/excalidraw-import-export.md)).
 - A help article on groups.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D4** How row text is bounded on write: `clampWebText`: collapse whitespace, trim, slice to `WEB_TEXT_MAX` (80)
+  (default).
+- **D5** What an added row says: Stat `{ value: '0', caption: 'Metric' }`, step `Step <n+1>`, link `Link` (default).
+- **D6** Caption card turned back on: Starts from `HERO_DEFAULT_CAPTION`; turning it off deletes `heroCaption`
+  (default).
+- **D7** Hero card colour with no `fillColor`: `#0f172a` at opacity 0.82, text `textColor ?? '#ffffff'` (default).
+- **D8** How header link widths are known headless: Estimated: `ceil(len * linkPx * 0.58) + 2 * round(linkPx * 0.8)`,
+  same on canvas and export (default).
+- **D9** Legacy group end whose group is empty: Frozen to a free end at the origin `(0, 0)`, where it rendered
+  (default).
+- **D10** Export text too long for its rect: Character-estimate clip with an ellipsis (`px * 0.56` per char) (default).
+- **D11** A cleared masthead line: Stores `undefined`, not `''` (default).
+- **D12** Starting sizes: banner 440×104, callout 380×116, stat row 482×96, process 420×110, header 640×84, hero 520×300
+  (default).

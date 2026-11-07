@@ -1,5 +1,5 @@
-// A path's edit mode (docs/specs/023-draw-mode/path-tool.md "Editing"; blueprint path-tool "Edit
-// mode"): pure operations on its anchors, the hit test behind every press, and the rule for when
+// A path's edit mode (docs/specs/023-draw-mode/path-tool.md "Editing"): pure operations on its anchors, the
+// hit test behind every press, and the rule for when
 // the mode is open. The gesture (components/canvas/path/usePathEditGesture) owns the events and
 // the commit. Anchors here are in the path's own unrotated frame, in canvas px.
 import {

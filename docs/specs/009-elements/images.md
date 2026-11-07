@@ -306,3 +306,44 @@ your image gallery: list_images lists the pictures you can place`). That keeps t
 - **CDN / image-optimisation.** Cloudflare's edge cache (via the `immutable` Cache-Control) is the only transform layer. No on-the-fly resize / format conversion. Future: Cloudflare Image Resizing or a custom transform Worker.
 - **External-source image clipboard via `navigator.clipboard.read()`.** The Cmd+V image-paste path listens to the browser's native `paste` event and reads `clipboardData.items`, which is permissionless. The picker modal + drag-drop + the `paste` shortcut (Cmd/Ctrl+V on the canvas, image MIME on the clipboard data routes through `uploadImageFile` and lands as a new image element) are the entry paths today; `navigator.clipboard.read()` (which would let us probe the clipboard on a button click without requiring an actual paste gesture) needs the browser's clipboard-read permission prompt and is not used.
 - **External-URL images.** No `imageId === 'https://...'` shape. Every image is internal so the bytes survive an upstream taking the source down + don't leak referrer headers. [Image search](image-search.md) copies a picked picture into the gallery for the same reason.
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E1** SVG, HTML or other bytes declared as PNG: Sniff mismatch, 415 `unsupported_type`.
+- **E2** Truncated or malformed JPEG: 415 `malformed_jpeg`; nothing written.
+- **E3** Lying `Content-Length`: Body re-checked after read, 413.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How the migration stamps `created_at`: Retired: the index lives in each room and has no backfill row to stamp
+  (default).
+- **D2** How often a worker asks whether it's complete: Retired: no backfill, so nothing to ask; the sweep's gate reads
+  `content_summary` each run (default).
+- **D3** Order of the usage map's document lists: Document name, then id, so the response is deterministic (default).
+- **D33** Owner-only route with no resolved owner: 400 via `requireOwner` (default).
+- **D34** Deleting a missing / someone else's image: Missing: 200 `{ ok: true }`; other owner: 403 (default).
+- **D35** Cap comparison: Early check: refuse when `count >= limit` or `bytes + Content-Length > limit`; the insert
+  repeats both against the stored size (default).
+- **D36** Malformed JPEG: 415 `malformed_jpeg`, nothing stored (default).
+- **D37** Hash before or after the strip: Dedupe hash over original bytes; `byte_size` is the stored (stripped) size
+  (default).
+- **D38** Declared width / height: Trusted after a finite-and-positive check; never decoded server-side (default).
+- **D40** Size of an image placed from gallery / paste: 240 px on the longer side, natural ratio, at the viewport centre
+  (default).
+- **D41** Alt text on attach: `alt ?? originalName` (default).
+- **D42** Uploads inside an embed: Off: picker, paste and Add image no-op (default).
+- **D43** Name of a pasted screenshot: Empty or `image.png` renamed `pasted-<ms>.<ext>` (default).
+- **D44** Order when the snapshot budget runs out: Document order, one at a time; a too-big image is skipped, later
+  smaller ones may fit (default).
+- **D45** Client export fetch policy: Concurrent, no budget, per-image failure keeps the placeholder (default).
+- **D46** Blob URL lifetime: Revoked on unmount and on `imageId` change (default).
+- **D47** Backdrop behind a bitmap: White in every theme, canvas and export (default).
+- **D48** Corner radius and fit: 4 px unless `borderRadius`; `objectFit` `contain` (default).
+- **D49** Tap size of a new image: 200 × 150 (default).
+- **D142** Account deletion of an image a surviving shared tab of another owner places: The bytes go with the account;
+  that element renders broken (default).

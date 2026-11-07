@@ -425,3 +425,19 @@ and a network failure surface of its own.
 - Dropping an ordinary image (no Excalidraw scene) on the canvas to add it as an
   image element: refused with the drop toast for now; image drop is a separate,
   later feature.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D7** Which tab an import lands in if the user switches: The tab active when the import started (default).
+- **D8** Key for an image element without a `fileId`: Its element id, so it is processed on its own (and is
+  `missing-bytes`) (default).
+- **D9** Report view subtitle: "Here's how your images came across." (default).
+- **X1** Default font size of a text without `fontSize`: 20 px, Excalidraw's own default (default).
+- **X2** Key of an element without an `id`: `excalidraw-<position>`; it cannot be bound to (default).
+- **X3** Element opacity on a scene without an opacity slot: Multiplied into every colour the element paints (default).
+- **X4** Font of families outside hand-drawn and code: `sans` (default).
+- **X5** Paste of Excalidraw text that fails to read: Error toast with the rejection's message; nothing lands (default).
+- **X6** Fill of a sticky note whose colour cannot be read: `#ffdf6b`, Excalidraw's sticky yellow (default).

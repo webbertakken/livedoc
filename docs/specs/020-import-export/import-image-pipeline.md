@@ -182,3 +182,24 @@ session logs one `[import-images] report` line with the tallies when it finishes
 - Fetching images by URL from the source file (an external image link stays out: every image is
   internal, [Image element + per-owner gallery](../009-elements/images.md)).
 - Bulk import of many files at once; the session above is where it will plug in.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** Order failures are listed in: The order of `IMPORT_IMAGE_FAILURES`: file problems, then limits, then transport
+  (default).
+- **D2** Quality of the JPEG fallback: `0.85`, the same as WebP (default).
+- **D3** Whitespace inside a base64 `data:` payload: Stripped before decoding (hand-edited files wrap lines) (default).
+- **D4** How an SVG is recognised without a declared type: `<svg` within the first 1 KB decoded as UTF-8 (default).
+- **D5** Whether a refused offline image spends the budget: It does not; a smaller later image may still fit (default).
+- **D6** A request whose element is absent or not an image: Counted in the report by its outcome; nothing is patched
+  (default).
+- **D10** What progress counts: Distinct images (keys), not elements: that is the work being waited on (default).
+- **D11** How long WebP support is known: For the page: the first canvas answer decides; `null` answers decide nothing
+  (default).
+- **D12** Whether a failed WASM load is remembered: It is not; the next image tries again (a flaky network should not
+  cost the import) (default).
+- **D13** How to prove the Safari path where WebKit has WebP: The test makes the canvas answer WebP with PNG, which is
+  what Safari does (default).

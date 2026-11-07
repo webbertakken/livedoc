@@ -1,5 +1,5 @@
-// A tab's search text (docs/specs/013-workspace/content-search.md "What is searched", blueprint
-// docs/specs/013-workspace/blueprints/content-search.md): what content search finds a tab by. Its name; every
+// A tab's search text (docs/specs/013-workspace/content-search.md "What is searched",
+// docs/specs/013-workspace/content-search.md): what content search finds a tab by. Its name; every
 // element's texts that the `find` view searches; its articles' text, its pages' names and its form's words; and on a
 // Sheet tab, its cells' inputs. Read defensively from the stored body, as the views read it.
 

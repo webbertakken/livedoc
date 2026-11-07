@@ -1,4 +1,4 @@
-// The form link's wire shapes (docs/specs/030-forms/blueprints/forms.md §11): what the Form tab reads and changes
+// The form link's wire shapes (docs/specs/030-forms/forms.md §11): what the Form tab reads and changes
 // about its link, and what a form link's page reads and sends.
 import type { FormLook } from '@livedoc/document';
 import type { AnswerError, PublicForm } from '@livedoc/forms';

@@ -1,4 +1,4 @@
-// Pictures in an animated GIF's page snapshot (docs/specs/020-import-export/blueprints/animated-gif-export.md "The
+// Pictures in an animated GIF's page snapshot (docs/specs/020-import-export/animated-gif-export.md "The
 // snapshot", step 4): an SVG drawn as an image loads nothing, so every picture in the clone becomes a `data:` URL
 // of the bitmap the canvas already shows. What cannot be sampled shows still, as in a PNG export: a video its
 // poster, a drawn <canvas> its current bitmap, a web embed nothing.

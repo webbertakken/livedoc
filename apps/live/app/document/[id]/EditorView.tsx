@@ -114,8 +114,8 @@ export function EditorView() {
     followMe,
     anyWelcomeOpen,
     embedMode,
-    // The app's surroundings, and the workbench session (docs/specs/013-workspace/blueprints/
-    // workbench-embeds.md, Surface table).
+    // The app's surroundings, and the workbench session (docs/specs/013-workspace/workbench-embeds.md,
+    // Surface table).
     appChrome,
     workbench,
     quickStyleDeps,

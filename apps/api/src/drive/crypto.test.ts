@@ -3,7 +3,7 @@ import { base64ToBytes, bytesToBase64, bytesToBase64Url } from '@livedoc/api-sch
 import { importDriveKey, openRefreshToken, sealRefreshToken } from './crypto';
 
 // The refresh token is sealed with AES-GCM under DRIVE_TOKEN_KEY before it
-// reaches D1 (docs/specs/022-drive-mirror/blueprints/drive-mirror.md, "Data").
+// reaches D1 (docs/specs/022-drive-mirror/drive-mirror.md, "Data").
 
 const KEY = bytesToBase64(new Uint8Array(32).map((_, i) => i + 1));
 const OTHER_KEY = bytesToBase64(new Uint8Array(32).map((_, i) => 200 - i));

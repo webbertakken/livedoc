@@ -1,6 +1,6 @@
 // The browser half of the import image pipeline: the canvas codec and the
 // session wired to the api and Offline Mode
-// (docs/specs/020-import-export/blueprints/import-image-pipeline.md "Interfaces and contracts").
+// (docs/specs/020-import-export/import-image-pipeline.md).
 // Proven end to end in the running editor; everything it composes is unit-tested.
 
 import { sha256Hex } from '@livedoc/api-schema';

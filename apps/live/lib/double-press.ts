@@ -1,5 +1,4 @@
-// The double-press rule (docs/specs/008-canvas/arrow-bending.md, blueprint
-// docs/specs/008-canvas/blueprints/arrow-bending.md).
+// The double-press rule (docs/specs/008-canvas/arrow-bending.md, docs/specs/008-canvas/arrow-bending.md).
 //
 // A fast double-click on an element means "edit this element". The first
 // click selects it, which makes handles appear under the pointer; the second

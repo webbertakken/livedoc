@@ -1,7 +1,7 @@
 'use client';
 
-// Auth for the whole app tree (docs/specs/014-identity/auth-and-guest-access.md; the blueprint's "Sign-in states
-// (browser)"). Reads the session once on every load, guests included (D25), and publishes it as DeferredAuthState:
+// Auth for the whole app tree (docs/specs/014-identity/auth-and-guest-access.md). Reads the session once on
+// every load, guests included (D25), and publishes it as DeferredAuthState:
 //
 //   unsettled ──session read──▶ guest | signed-in | guest-offline
 //   signed-in ──sign-out, or the token endpoint answers 401──▶ guest
@@ -38,7 +38,7 @@ import {
   type DeferredAuthState,
 } from './deferred-auth';
 
-// The workbench page (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor in a workbench") is
+// The workbench page (docs/specs/013-workspace/workbench-embeds.md) is
 // signed in by its workbench session, never by a browser session: the bridge stands down there and the state holds
 // DEFERRED_AUTH_PENDING, so nothing above the page reads as a settled guest. WorkbenchAuthBridge publishes the
 // session to the editor beneath.

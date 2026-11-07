@@ -86,7 +86,7 @@ export const isPrimaryKey = (field: EntityField | undefined): boolean => {
 
 // --- Writing fields ---------------------------------------------------------------------------------
 
-// The fields as stored (blueprint "Commit"): at most 40, each name and type at most 80 characters, a
+// The fields as stored: at most 40, each name and type at most 80 characters, a
 // blank type and no key stored as absent, so a row round-trips identically however it was emptied.
 export function cleanEntityFields(fields: readonly EntityField[]): EntityField[] {
   return fields.slice(0, ENTITY_MAX_FIELDS).map((f) => {

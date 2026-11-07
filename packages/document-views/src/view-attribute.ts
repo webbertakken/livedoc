@@ -1,4 +1,4 @@
-// One `key=value` or flag after a line's label (docs/specs/024-agents/blueprints/document-views.md
+// One `key=value` or flag after a line's label (docs/specs/024-agents/document-views.md
 // "Attributes"). `value` is the uncut value the JSON form carries; `text` is what the line prints.
 export type ViewAttribute = { key: string; value: string | null; text: string };
 

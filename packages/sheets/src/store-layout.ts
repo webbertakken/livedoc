@@ -1,4 +1,4 @@
-// Layout changes (docs/specs/029-sheets/sheet-store.md "Changing a sheet", blueprint "Writes"): inserting, deleting,
+// Layout changes (docs/specs/029-sheets/sheet-store.md "Changing a sheet"): inserting, deleting,
 // moving, ordering, sizing, hiding, freezing, merging and filtering rows and columns, by id. Applying a change
 // never needs a position someone else may have moved: ids that are gone are skipped, an `after` that is gone lands
 // at the end.

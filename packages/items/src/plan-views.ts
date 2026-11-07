@@ -222,7 +222,7 @@ export function planViewMetric(view: PlanViewId): MetricKind | null {
   return view.startsWith('metric:') ? (view.slice(7) as MetricKind) : null;
 }
 
-// The size a view starts at (docs/specs/026-plan/blueprints/DEFAULTS.md D25).
+// The size a view starts at (docs/specs/026-plan/plan-views.md D25).
 export const PLAN_METRIC_SIZE = { width: 260, height: 64 } as const;
 export const PLAN_CHART_SIZE = { width: 720, height: 400 } as const;
 const PLAN_GANTT_SIZE = { width: 880, height: 420 } as const;

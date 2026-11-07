@@ -1,4 +1,4 @@
-// Workbench calls (docs/specs/013-workspace/workbench-embeds.md, blueprint "Routes"). Redemption is
+// Workbench calls (docs/specs/013-workspace/workbench-embeds.md). Redemption is
 // credential-free (the ticket is the bearer); the page's own end presents the session it ends; the
 // pairing calls are the signed-in person's, through apiHeaders like every account route.
 import type {

@@ -1,4 +1,4 @@
-// `tab render` and `graph render` (docs/specs/015-api/blueprints/cli.md "Previews", CLI30): a tab as the api draws
+// `tab render` and `graph render` (docs/specs/015-api/cli.md "Previews", CLI30): a tab as the api draws
 // it (render.svg), or a graph or Mermaid file laid out as the api would lay it out, written as SVG or PNG.
 
 import { graphOfSource, tabOf, tabPath, type VerbContext } from '@livedoc/agent-verbs';

@@ -10,7 +10,7 @@ import { DocumentDb } from './document-db';
 import { migrateDocumentSchema } from './document-schema';
 import { drainShares, receiveShares } from './tab-shares';
 
-// The room store's budgets (docs/specs/006-document/blueprints/document-storage.md "Performance and limits"),
+// The room store's budgets (docs/specs/006-document/document-storage.md),
 // node:sqlite standing in for the room's SQLite. Each case keeps the best of a few runs, in CPU time
 // (docs/specs/003-system-architecture/testing.md "Speed budgets are CPU time"), so neither a busy machine's wait for a
 // core nor one slow tick fails it. cpuBudgetMs keeps each written budget locally and gives it headroom on CI and under

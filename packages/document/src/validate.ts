@@ -477,7 +477,7 @@ function boxedIssue(el: Record<string, unknown>): ElementValidationIssue | null 
 }
 
 // The first structural problem of an element, naming the field and the rule it breaks; null for
-// any element the renderer can safely handle (docs/specs/024-agents/blueprints/edit-operations.md
+// any element the renderer can safely handle (docs/specs/024-agents/edit-operations.md
 // "invalid_result").
 export function elementValidationIssue(el: unknown): ElementValidationIssue | null {
   if (!isRecord(el)) return issue('element', 'an object');

@@ -1,4 +1,4 @@
-// Validation of writes and new sheets (blueprint sheets-engine.md "Validation"): the api runs it on every write
+// Validation of writes and new sheets: the api runs it on every write
 // before storing, against the sheet as stored; the editor runs it before sending, so a refusal is said at once.
 import { validFormatPatch, validFormat } from './format';
 import { isAxisId, isSheetId } from './ids';

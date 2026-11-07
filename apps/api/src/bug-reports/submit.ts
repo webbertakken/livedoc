@@ -1,4 +1,4 @@
-// POST /api/bug-reports (docs/specs/016-platform/bug-reports.md "Filing", blueprint "Behaviour and state"): bounded,
+// POST /api/bug-reports (docs/specs/016-platform/bug-reports.md "Filing"): bounded,
 // limited, parsed, its reporter resolved from the request, its screenshot stored, then filed on the Bug Tracker's
 // board or stored in D1 with the reason. Every report the board cannot take is kept; only a failed store is lost.
 import {

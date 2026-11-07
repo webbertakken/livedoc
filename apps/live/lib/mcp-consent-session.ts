@@ -21,7 +21,7 @@ import { MCP_ORIGIN } from './mcp-config';
 export type McpConsentSession = {
   clientName: string;
   redirectHost: string;
-  // Public; read only to tell the CLI apart for telemetry (docs/specs/015-api/blueprints/cli.md CLI77).
+  // Public; read only to tell the CLI apart for telemetry (docs/specs/015-api/cli.md CLI77).
   clientId: string | null;
 };
 

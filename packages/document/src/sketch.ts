@@ -1,5 +1,5 @@
-// The Sketch finish's geometry (docs/specs/008-canvas/finish.md, blueprint
-// docs/specs/008-canvas/blueprints/finish.md): an outline turned into hand-drawn strokes, an area into pencil
+// The Sketch finish's geometry (docs/specs/008-canvas/finish.md, docs/specs/008-canvas/finish.md): an outline
+// turned into hand-drawn strokes, an area into pencil
 // hatching, an arrow end into two loose strokes. Pure and deterministic: the wobble comes from a seeded random
 // stream (the element's id), so an element looks the same on every screen, in every export and after every reload.
 // No DOM, safe in a worker; read by the canvas overlays and the SVG export alike.

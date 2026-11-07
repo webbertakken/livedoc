@@ -1,4 +1,5 @@
-// Growing and reshaping a flowchart (docs/specs/009-elements/flowchart.md; blueprint flowchart.md
+// Growing and reshaping a flowchart (docs/specs/009-elements/flowchart.md;
+// docs/specs/009-elements/flowchart.md
 // "Growth", "Other changes").
 //
 // Every change here ends in the chart's layout, computed against the elements WITH the change, so

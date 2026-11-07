@@ -1,5 +1,5 @@
-// What LiveDoc does when better-auth creates an account, a session or a sign-in method (blueprint "Telemetry and
-// lifecycle hooks"), and how a sign-in code is sent. Sign-up and sign-in are counted here, from the server's own
+// What LiveDoc does when better-auth creates an account, a session or a sign-in method , and how a sign-in
+// code is sent. Sign-up and sign-in are counted here, from the server's own
 // writes, so every method counts once (docs/specs/017-telemetry/telemetry.md "Session").
 import { sendEmailNow } from '../email/client';
 import { welcomeOnSighting } from '../email/lifecycle';

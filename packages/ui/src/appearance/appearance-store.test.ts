@@ -281,7 +281,7 @@ describe('applyAppearance', () => {
   });
 });
 
-// A workbench frame (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor in a
+// A workbench frame (docs/specs/013-workspace/workbench-embeds.md "The editor in a
 // workbench", WB15): the workbench's scheme wins over the setting and is never stored.
 describe('setAppearanceOverride', () => {
   it('paints the override over the stored setting', () => {

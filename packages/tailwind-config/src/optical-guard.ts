@@ -1,5 +1,4 @@
-// The static optical-alignment guard (docs/specs/004-interface-design/optical-alignment.md,
-// blueprint: docs/specs/004-interface-design/blueprints/optical-alignment.md, "Static guard").
+// The static optical-alignment guard (docs/specs/004-interface-design/optical-alignment.md).
 //
 // A circle or pill that centres a glyph must centre the glyph's cap band, not its line box. So a
 // fixed-height, fully rounded, centring element may not hold text directly: the text goes through

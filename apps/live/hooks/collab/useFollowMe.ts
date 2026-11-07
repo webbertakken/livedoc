@@ -40,7 +40,7 @@ export function useFollowMe({
   livePresenceIds: string[];
   activeId: string;
   // The LOCAL view: written when following, watched so any move of our own breaks the follow
-  // (docs/specs/008-canvas/blueprints/viewport-store.md).
+  // (docs/specs/008-canvas/canvas-performance.md).
   viewport: ViewportStore;
   // Switch to the tab the presenter is on: "look at this" has to work when
   // the this is on tab 3.

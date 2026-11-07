@@ -1,7 +1,7 @@
 'use client';
 
-// Signs the editor in as the workbench session's person (docs/specs/013-workspace/blueprints/
-// workbench-embeds.md "The editor in a workbench"): a nested DeferredAuthContext with the session's
+// Signs the editor in as the workbench session's person (docs/specs/013-workspace/workbench-embeds.md): a
+// nested DeferredAuthContext with the session's
 // identity, the session itself in WorkbenchSessionContext, and the `lvw_` secret as the api client's
 // token. The provider and the confinement are in place before any child's layout effect runs, so the
 // editor's first request already presents the session (and is judged by the allow-list).

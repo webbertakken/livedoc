@@ -1,6 +1,6 @@
 // How-tos (docs/specs/015-api/cli.md "Help"): the depth top-level help leaves out, paid for only when asked.
 
-// The most one topic may cost (blueprint "Constants and configuration", CLI49).
+// The most one topic may cost (CLI49).
 export const GUIDE_TOPIC_MAX_TOKENS = 1200;
 
 export const GUIDE_TOPICS = {

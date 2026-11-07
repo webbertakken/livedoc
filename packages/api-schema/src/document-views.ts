@@ -1,6 +1,6 @@
 // Document views (docs/specs/024-agents/document-views.md): the view names, the query the api's two
 // doors take, and every view's JSON form, shared by the api, the MCP, the CLI and
-// `@livedoc/document-views` (docs/specs/024-agents/blueprints/document-views.md, VW49).
+// `@livedoc/document-views` (docs/specs/024-agents/document-views.md, VW49).
 import type { EditorMode, Finish, PageKind, TabKind } from '@livedoc/document';
 import type { ArticleSummary, PageSummary } from './pages';
 
@@ -103,8 +103,8 @@ export type ViewHeader = {
   unknown: number;
   threads: { open: number; total: number };
   rev: number | null;
-  // The tab's mode when it is not Diagram, and its finish when one is set (docs/specs/024-agents/blueprints/
-  // document-views.md "The outline grammar"), so a reader knows a Draw tab or a sketch finish took.
+  // The tab's mode when it is not Diagram, and its finish when one is set
+  // (docs/specs/024-agents/document-views.md), so a reader knows a Draw tab or a sketch finish took.
   mode?: EditorMode;
   finish?: Finish;
   // A Pages tab's pages, by kind (docs/specs/024-agents/pages-for-agents.md "Reading");

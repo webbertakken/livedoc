@@ -102,7 +102,7 @@ const AvatarSpeechLayer = dynamic(loadAvatarSpeechLayer, { ssr: false });
 // shows"): memoised, its `on…` props stable, so an editor render that changes nothing it shows stops here.
 export const Canvas = withStableEventProps(CanvasView);
 
-// The canvas is what shows the view (docs/specs/008-canvas/blueprints/viewport-store.md "Inside the
+// The canvas is what shows the view (docs/specs/008-canvas/canvas-performance.md "Inside the
 // canvas"): CanvasView subscribes to it; what it renders takes the view only where it shows it.
 const wholeView = (v: View) => v;
 
@@ -176,7 +176,7 @@ function CanvasView(props: CanvasProps) {
   // can reason about the visible viewport); we just read/write through props.
   // Which quick-connect ring (if any) is open. Self-contained state + reset /
   // outside-close effects live in useQuickRing.
-  // The selection lives in the store (docs/specs/008-canvas/blueprints/selection-store.md): the canvas
+  // The selection lives in the store (docs/specs/008-canvas/canvas-performance.md): the canvas
   // reads it when a handler runs and subscribes only to the narrow slices it draws.
   const selectionStore = useSelectionStore();
   const [quickRingOpen, setQuickRingOpen] = useQuickRing(selectionStore);

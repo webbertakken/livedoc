@@ -1,5 +1,4 @@
--- Explorer Home's opens, per docs/specs/013-workspace/explorer-home.md "Opens" and its blueprint
--- (docs/specs/013-workspace/blueprints/explorer-home.md "Data and persistence").
+-- Explorer Home's opens, per docs/specs/013-workspace/explorer-home.md "Opens".
 --
 -- One row per person per document they have opened: how many UTC days they opened it on, and the
 -- frecency key Jump back in ranks by (the instant the decayed open score falls to one, so the rank

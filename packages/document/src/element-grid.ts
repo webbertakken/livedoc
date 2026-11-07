@@ -10,7 +10,7 @@
 import { isBoxed, type Element } from './index';
 import type { Rect } from './geometry-primitives';
 
-// docs/specs/008-canvas/blueprints/DEFAULTS.md D63, D64.
+// docs/specs/008-canvas/canvas-performance.md D63, D64.
 export const ELEMENT_GRID_CELL = 256;
 export const ELEMENT_GRID_MAX_CELLS = 64;
 

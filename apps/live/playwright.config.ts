@@ -27,7 +27,7 @@ const OWN_STACKS: Record<string, OwnStack> = {
   // `pnpm test:e2e:armed`: the entry paths of a first-time guest under enforced guest signatures
   // (e2e-smoke.md "Armed guest signatures"), on a guest-only stack.
   armed: { name: 'armed', ports: { live: '3017', api: '8789', marketing: '3018' }, signIn: false },
-  // `pnpm test:e2e:workbench`: the workbench embed (docs/specs/013-workspace/blueprints/workbench-embeds.md
+  // `pnpm test:e2e:workbench`: the workbench embed (docs/specs/013-workspace/workbench-embeds.md
   // "Testing"), whose pairing page and CLI calls need an account.
   workbench: {
     name: 'workbench',
@@ -35,7 +35,7 @@ const OWN_STACKS: Record<string, OwnStack> = {
     signIn: true,
   },
   // `pnpm test:e2e:drive`: the Google Drive mirror against the fake Google
-  // (docs/specs/022-drive-mirror/blueprints/drive-mirror.md "Testing"), which needs an account.
+  // (docs/specs/022-drive-mirror/drive-mirror.md), which needs an account.
   drive: { name: 'drive', ports: { live: '3023', api: '8792', marketing: '3024' }, signIn: true },
 };
 const account = process.env.E2E_ACCOUNT === '1';
@@ -131,7 +131,7 @@ export default defineConfig({
       testMatch: /optical-audit-sites\.spec\.ts/,
     },
     // Opt-in (pnpm --filter @livedoc/live test:e2e:drive): the Google Drive mirror against the fake
-    // Google, signed in for real (docs/specs/022-drive-mirror/blueprints/drive-mirror.md, "Testing"). Kept
+    // Google, signed in for real (docs/specs/022-drive-mirror/drive-mirror.md, "Testing"). Kept
     // out of CI's default run: it needs a build that carries the e2e Google client id.
     ...(drive
       ? [

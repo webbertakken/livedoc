@@ -1,5 +1,5 @@
 // Writes the next identity migration when better-auth wants schema the migrations do not have
-// (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Data and persistence").
+// (docs/specs/014-identity/auth-and-guest-access.md).
 //
 //   bun scripts/identity-schema.mts <name>     e.g. `bun scripts/identity-schema.mts identity`
 //

@@ -3,7 +3,7 @@ import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { deleteOldDocumentOpens, migrateDocumentOpens } from './document-opens';
 
 // document_opens on sign-up and over time (docs/specs/013-workspace/explorer-home.md "Guests,
-// sign-up and deletion"; blueprint "Data and persistence"): one row per person per document, the
+// sign-up and deletion"): one row per person per document, the
 // last open and its day.
 
 const DAY = 24 * 60 * 60 * 1000;

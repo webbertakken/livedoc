@@ -1,4 +1,4 @@
-// The sheets of one tab and their values (blueprint sheets-engine.md "Workbook and recalculation"). Values are
+// The sheets of one tab and their values. Values are
 // worked out on demand and kept; a change forgets only the cells that read it, directly or through others, plus
 // the volatile ones. Long chains of references never overflow the stack: past a depth the deep cell is worked
 // out first, from the top, and the read is tried again.

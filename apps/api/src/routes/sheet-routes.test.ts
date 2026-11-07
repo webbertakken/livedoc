@@ -7,7 +7,8 @@ import * as db from '../db';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 
-// The sheet store's endpoints (docs/specs/029-sheets/sheet-store.md, blueprint sheet-store.md): gates incl.
+// The sheet store's endpoints (docs/specs/029-sheets/sheet-store.md, docs/specs/029-sheets/sheet-store.md):
+// gates incl.
 // tab-scoped links, every rejection, the rev guard, the json_each writes, caps, the relay, copies and seeds.
 
 let sql: SqliteD1;

@@ -1,4 +1,4 @@
-// The Form tab builder's edits (docs/specs/030-forms/forms.md "Building a form", blueprint §12, §15), shared by the
+// The Form tab builder's edits (docs/specs/030-forms/forms.md "Building a form", §15), shared by the
 // editor and agents: pure functions from a form to the next form, so each is one undo step when committed and each is
 // tested apart from the page. Ids come from `newId` (newFormPartId).
 import { OPTIONS_MAX, QUESTIONS_MAX, RATING_SCALE_DEFAULT, SECTIONS_MAX } from './limits';

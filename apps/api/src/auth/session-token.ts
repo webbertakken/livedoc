@@ -1,5 +1,5 @@
-// The session token (docs/specs/014-identity/auth-and-guest-access.md "Sessions"; blueprint "Credential
-// resolution"): a 15-minute EdDSA JWT better-auth's `jwt` plugin signs at GET /api/auth/token, sent by the browser
+// The session token (docs/specs/014-identity/auth-and-guest-access.md "Sessions"): a 15-minute EdDSA JWT
+// better-auth's `jwt` plugin signs at GET /api/auth/token, sent by the browser
 // as `Authorization: Bearer`. Verified here in-process against the public keys in `identity_jwks`, never by an
 // HTTP fetch of our own JWKS (a Worker fetching itself is better-auth issue #10888).
 //
@@ -28,7 +28,7 @@ export type AccountSession = {
   accountId: string;
   email: string | null;
   emailVerified: boolean;
-  // When the session was created (seconds): how fresh a sign-in is (blueprint "Freshness").
+  // When the session was created (seconds): how fresh a sign-in is.
   authTime: number | null;
 };
 

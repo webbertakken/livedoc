@@ -29,7 +29,7 @@ export type ShareLinkRow = {
 // own without dragging the rest of the D1 module along (same
 // pattern as image-strip.ts, image-sniff.ts, tab-row.ts).
 //
-// The level reads through `parseStoredLevel` (docs/specs/013-workspace/share-roles.md, blueprint I2): `level`
+// The level reads through `parseStoredLevel` (docs/specs/013-workspace/share-roles.md, I2): `level`
 // when the row has one, else the legacy two-valued `role`, and anything unknown reads as view, so a value this
 // worker does not know never escalates anyone.
 export function rowToShareLink(row: ShareLinkRow): ShareLinkDTO {

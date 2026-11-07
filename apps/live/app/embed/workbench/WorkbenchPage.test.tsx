@@ -7,7 +7,7 @@ import type { WorkbenchPort } from '@/lib/workbench/workbench-port';
 import { useWorkbenchSession } from '@/components/providers/workbench-session-context';
 import { workbenchTransition, type WorkbenchPhase } from './workbench-machine';
 
-// The workbench page (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench page",
+// The workbench page (docs/specs/013-workspace/workbench-embeds.md,
 // "Presentation and UX"): a status screen with its copy until the workbench answers, then the editor
 // signed in as the session's person; `ended` told to the workbench once; a refused session ends it.
 

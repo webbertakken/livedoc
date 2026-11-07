@@ -7,7 +7,7 @@ import type { TabHashes } from './mirror-scan';
 import type { EnvelopeFields, RemoteFact } from './remote';
 import { envelopeDiffers, isLocallyChanged, syncStateOf } from './sync-state';
 
-// Sync states (docs/specs/027-repositories/blueprints/repository-link.md "Sync states"): one row per state.
+// Sync states (docs/specs/027-repositories/repository-link.md "Sync states"): one row per state.
 
 const tab = (id: string, label: string): Tab => ({
   id,

@@ -1,4 +1,4 @@
-// A page's edges as arrows (docs/specs/020-import-export/blueprints/drawio-import.md steps 12 and
+// A page's edges as arrows (docs/specs/020-import-export/drawio-import.md steps 12 and
 // 15.7): each routed as draw.io routes it, its ends resolved to the elements, arrows or points they
 // became, then any shape riding on it placed where draw.io places it. Ends on other arrows find
 // their place along them once every arrow exists.

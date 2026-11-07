@@ -266,3 +266,43 @@ takes 6-14 ms, a pan costs nothing, and a zoom keeps every task under 50 ms; the
 broke that budget on faces, so faces take one pass. WebKit is the exception: it re-runs a live filter on every
 repaint wherever it is layered, so there the wobble is drawn into still pictures (icons and stickers) or left out
 (faces), and a Sketch pan costs what a Flexible one does.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D87** Which element kinds take hatching, and how: Shapes with a non-transparent fill other than frames, lanes and
+  self-painting kinds, as faint stroke-coloured shading over the kept solid fill; stickies and tables take none
+  (default).
+- **D88** "Sharper corners" in px: `PROFESSIONAL_CORNER_PX = 0` (square); fixed silhouettes keep their shape (default).
+- **D89** "Thinner lines": Unset border and arrow widths resolve to Thin (1 px) (default).
+- **D90** How wobbly Sketch is: 1.5 px end jitter, 2 px overshoot, bow 2% of length capped at 5 px, 2 px curve wander,
+  two passes (default).
+- **D91** Where the wobble comes from: FNV-1a of the element id into mulberry32; size or kind changes give new geometry,
+  position does not (default).
+- **D92** Hatch spacing and angle: -41 degrees, gap clamp(4 x stroke, 6, 12) px, at most 300 lines (default).
+- **D93** Which arrowheads are sketched: triangle, hollow triangle and line become two strokes; circle and diamond keep
+  their markers (default).
+- **D94** Sketch on a flowing arrow: One pass, so the flow's dash and draw maths stay right (default).
+- **D95** Which sketched shapes keep a solid fill: Backdrops: a later element's centre lies inside the shape's box
+  (default).
+- **D96** Professional's typeface: Inter when neither the element nor the tab picks a font (default).
+- **D97** How Professional draws a new arrow: Angled (right-angled connector) when its style was not picked (default).
+- **D98** How a palette tile shows Sketch: A shared two-pass displacement filter (seeds 7 and 23, scale 3) over the
+  glyph (default).
+- **D115** How wobbly Marker is: 0.8 px end jitter, 3.5 px overshoot, 1.5 px lead-in, bow 1.2% of length capped at 3 px,
+  1.2 px curve wander, one pass (default).
+- **D116** How ink pooling is drawn: Strokes dealt alternately into two layers, each its own path at 0.86 opacity; never
+  group opacity or a blend mode (default).
+- **D117** What colouring in looks like: Solid fill kept, then 12 px rows at -22° ±6°, overlapping a quarter, in the
+  stroke colour at 0.07, ends ragged by up to 5 px (default).
+- **D118** Marker's arrowheads: Line: one chevron stroke; triangle: a solid rounded wedge; hollow: a closed triangle,
+  the line stopped 0.9 head-lengths short (default).
+- **D119** A sticky under Marker: Stays paper with its peel, lettered in marker (default).
+- **D120** Which Look carries Marker: Workshop (it already named a marker pen), rather than a 25th Look (default).
+- **D121** Marker on a Thin border or a 1 px arrow: Drawn at the 3 px nib (a marker has no fine-liner; templates set
+  Thin on purpose); Medium and wider as picked (default).
+- **D122** How Sketch draws in WebKit, where live filters re-run every repaint: Icons and stickers as still pictures
+  through the same wobble; faces whole, unwobbled (chosen by the user over no wobble at all, or pausing it while moving)
+  (default).

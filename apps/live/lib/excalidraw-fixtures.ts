@@ -1,4 +1,4 @@
-// Synthesised Excalidraw content for tests (docs/specs/020-import-export/blueprints/excalidraw-import.md).
+// Synthesised Excalidraw content for tests (docs/specs/020-import-export/excalidraw-import-export.md).
 // Mirrors the fields a real Excalidraw copy carries (every element type, `index` keys, bindings
 // with `mode` / `fixedPoint`, freedraw `strokeOptions`, bound text, sticky notes, frames), so a
 // test reads like the clipboard it stands for. Real boards are never fixtures.

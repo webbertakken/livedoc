@@ -79,7 +79,7 @@ export function ParticipantAvatar({
     participant.lastActiveAt !== undefined
       ? ` · Active ${relativeSince(participant.lastActiveAt, now)}`
       : '';
-  // An agent's status line leads (docs/specs/024-agents/blueprints/agent-presence.md "Presentation and UX"): an
+  // An agent's status line leads (docs/specs/024-agents/agent-presence.md): an
   // agent row says only what it is doing, an owner's row says it before their own status.
   const description = participant.agent
     ? (participant.statusLine ?? statusLabel(participant.status))

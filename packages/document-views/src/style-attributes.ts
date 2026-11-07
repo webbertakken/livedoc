@@ -1,4 +1,4 @@
-// The style a view prints with `style` (docs/specs/024-agents/blueprints/document-views.md "Style
+// The style a view prints with `style` (docs/specs/024-agents/document-views.md "Style
 // attributes", VW50): each style key's field when present and different from what the kind's factory
 // writes, keyed as edit operations write it.
 import {

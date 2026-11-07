@@ -1,4 +1,4 @@
-// The evaluator (blueprint sheets-engine.md "Workbook and recalculation"): a stored formula's tree to a value,
+// The evaluator: a stored formula's tree to a value,
 // with operators broadcasting over arrays as Sheets does. References resolve through the frame's layouts at
 // evaluation time, so a formula always reads the cells its ids name.
 import type { StoredRef } from '../sheet';

@@ -66,7 +66,7 @@ describe('LicencesView', () => {
     expect(html).toContain('0 works');
   });
 
-  // docs/specs/002-project-scope/blueprints/third-party-licences.md "Presentation and UX".
+  // docs/specs/002-project-scope/third-party-licences.md.
   it('names every app of each section in its intro, from the manifest', () => {
     expect(html).toContain('Sent to your browser by these apps: Editor and Website.');
     expect(html).toContain(

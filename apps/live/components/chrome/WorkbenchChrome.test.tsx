@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { WorkbenchOpenLink, WorkbenchReconnectLine } from './WorkbenchChrome';
 
-// The workbench's chrome (docs/specs/013-workspace/blueprints/workbench-embeds.md "Presentation and UX",
+// The workbench's chrome (docs/specs/013-workspace/workbench-embeds.md,
 // "Accessibility"): Open in LiveDoc in the tab bar, and the Reconnect line once the session ended.
 
 describe('WorkbenchOpenLink', () => {

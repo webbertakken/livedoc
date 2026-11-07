@@ -229,3 +229,63 @@ None. Menus already count the verbs chosen in them; how focus moved is not an ac
 - The editor's menu primitives (`PortalMenu`, `ContextMenu`, `MenuFlyoutSection` and the row
   components) pick each row's role from the kind of menu they sit in.
 - The focus ring rules live in the shared Tailwind theme.
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **C1** Element appears: Records `returnTarget`; with `focusOnOpen` and no text edit, focuses the first focusable with
+  `preventScroll`.
+- **C2** Escape: Root: a `document` listener that skips a `defaultPrevented` event. Sub-panel: a listener on its element
+  that `preventDefault`s. Both call `onClose()`.
+- **C3** Element goes away: As M10.
+- **M1** Element appears with `open`: Records `returnTarget` (`focusedOutside`: the focused element; on `body`, the last
+  focused element if it has gone), then focuses `initialIndex` of the own items (checked = a `menuitemradio` with
+  `aria-checked="true"`) with `preventScroll`, unless a text edit holds focus. A menu still becoming visible (a
+  `visibility` transition) is retried each frame, up to `MENU_FOCUS_RETRY_FRAMES`, until focus is in the menu or has
+  moved anywhere else.
+- **M2** Every commit: Names the menu: a `data-menu-label` it owns (`aria-labelledby`), else the `label` option
+  (`aria-label`), else the trigger (`aria-labelledby` its id, or `aria-label` its accessible name).
+- **M3** Open, with a trigger: Sets `aria-controls` on the trigger to the menu id unless the trigger manages its own;
+  removes what it set on close.
+- **M4** `keydown` on the menu (native listener): Resolves the intent against the focused own item; a non-null intent is
+  `preventDefault` + `stopPropagation`.
+- **M9** `tab`: In a submenu: the parent tree's `closeTree(backwards)`. At the root: focus
+  `tabbableNeighbour(returnTarget ?? trigger, backwards)` (else the target itself), then `onClose()`.
+- **M10** Element goes away or `open` turns false: If `ownsFocus(menu)` (in it, or in a surface whose parent chain leads
+  to it): `returnFocusAfterCommit`: `returnFocus` at once (`returnTarget` if connected, else the trigger, else next
+  frame the element with their id), and again after the commit if focus is back in the menu or on `body` (React restores
+  the prior focus when it is still mounted).
+- **M11** `focusout` to a related target: Outside the menu and its submenus (`ownsFocus`): `onClose()`; a null related
+  target (a press that focuses nothing) is ignored.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D49** How long typed letters build one search: 500 ms, the buffer the WAI-ARIA Authoring Practices examples use
+  (default).
+- **D50** Whether a disabled item takes focus: Yes (`aria-disabled`, never `disabled`): the APG's recommendation, so the
+  item is discoverable and the menu keeps its shape (default).
+- **D51** How a control menu knows the keyboard opened it: The last interaction was a key press, tracked by capture
+  listeners on the document: the opener may be gone by the time the menu mounts, so `:focus-visible` on the focused
+  element cannot answer (default).
+- **D52** The menu focus ring's colour and offset: 2px outline inset 2px; brand 600 in light, brand 400 in dark: the
+  lightest brand step that clears 3:1 on every row tone (default).
+- **D53** Where Tab goes from a menu with no trigger: The tabbable after (before) the return target; with neither, focus
+  stays where the browser puts it (default).
+- **D54** A flyout trigger inside a control menu: `aria-haspopup="dialog"`, since its panel is a named non-modal dialog
+  (default).
+- **D55** Opens in, inside the Tab control menu: Toggle buttons with `aria-pressed`, as every one-of-a-set tile in a
+  control menu already is (retired 2026-10-18: the tab menu holds no Mode) (default).
+- **D56** The product switcher's CSS open on focus: Retired: the headers carry no product switcher (default).
+- **D57** Control menu names: "Element menu", "Selection menu", "Cell menu", "Tab menu", "Canvas menu", "<layer> layer
+  menu", the session tool's "<tool> options" (its trigger's name), "Live image": the menu's own word for itself
+  (default).
+- **D58** Returning focus to an opener that re-renders: Looked up again by id on the next frame when both the return
+  target and the trigger are gone; the selection toolbar's More actions carries `selection-more-actions` (default).
+- **D59** Up Arrow on a row's ⋯: Opens on the first item, as Down Arrow does: the row menus take no initial-focus prop,
+  and threading one through eight hosts buys nothing a second key press does not (default).
+- **D60** How long an opening menu keeps trying to take focus: 12 frames: a menu shown through a `visibility` transition
+  (a flyout panel) cannot take focus until the transition starts (default).

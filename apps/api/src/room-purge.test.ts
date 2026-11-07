@@ -14,7 +14,7 @@ import {
 import { sqliteD1, type SqliteD1 } from './test-sqlite-d1';
 import type { Env } from './types';
 
-// Purge tombstones (docs/specs/006-document/document-storage.md "Purging and copying", blueprint "Purge"): the
+// Purge tombstones (docs/specs/006-document/document-storage.md "Purging and copying"): the
 // removal batch leaves one per document, a room that confirms clears it, one that cannot be reached keeps it for the
 // daily retry, a tombstoned document cannot be opened (G3), and no run makes more room calls than its budget.
 

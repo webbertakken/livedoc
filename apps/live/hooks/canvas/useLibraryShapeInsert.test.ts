@@ -11,7 +11,7 @@ import {
 import type { ShapeLibraryItem } from '@livedoc/api-schema';
 import { useLibraryShapeInsert, type LibraryShapeInsertDeps } from './useLibraryShapeInsert';
 
-// docs/specs/013-workspace/blueprints/shape-libraries.md "Behaviour and state" 5: an item placed like
+// docs/specs/013-workspace/shape-libraries.md 5: an item placed like
 // a paste, centred on the point, fresh ids with its connections, one commit, selected.
 
 const { track } = vi.hoisted(() => ({ track: vi.fn() }));

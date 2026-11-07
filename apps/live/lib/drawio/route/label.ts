@@ -1,6 +1,6 @@
 // Ported from draw.io, Copyright (c) 2006-2015 JGraph Holdings Ltd and draw.io AG, Apache-2.0
 // (packages/licences/texts/drawio-31.7.0-LICENSE.txt); translated to TypeScript and changed.
-// Where draw.io centres an edge's label (blueprint step 12.13): mxGraphView.updateEdgeLabelOffset
+// Where draw.io centres an edge's label (.13): mxGraphView.updateEdgeLabelOffset
 // for the edge's own label, and mxGraphView.updateCellState's relative child geometry
 // (mxGraphView.getPoint) for a label child, in draw.io units.
 

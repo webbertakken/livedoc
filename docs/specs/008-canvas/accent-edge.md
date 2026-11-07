@@ -62,3 +62,11 @@ An Editor sets it. A Participant and a Viewer cannot (it is styling, and a Parti
 
 The MCP server and the REST API accept `accentEdge` and `accentEdgeColor` on the shapes above, so an agent can mark
 status or ownership the way a person would.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D106** Whether style presets touch the edge: Never: like the corner radius it is a deliberate choice, so presets
+  neither set nor clear it (default).

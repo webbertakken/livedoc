@@ -1,6 +1,6 @@
 # Local copy
 
-**Status: specified.** Nothing is built. Blueprint: [Local copy](blueprints/local-copy.md).
+**Status: specified.** Nothing is built.
 
 A **local copy** is a [repository link](repository-link.md) that git takes no part in: a live, two-way sync between
 LiveDoc and a folder of plain files. People edit its pages live in the browser; people and agents edit the same pages
@@ -201,3 +201,53 @@ view-level token syncs one way, and a document the person cannot open is `unread
   `no-git` or `binding-none`), `[sync] watch-refused` (a second watch), `[sync] folder-missing` (with the count of
   missing files), and those of [Native files](native-files.md#observability-and-telemetry).
 - Telemetry: as any link (`Sync`, `SyncWatch`, `SyncTake`); a local copy is not counted apart.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **LC1** What a `files` link inside a work tree with `binding = "branches"` does before Branch binding is built: Mirror
+  files as the first slice; every page and file document held, reason `binding-unbuilt`, naming `[git] binding = "none"`;
+  nothing of a git branch is ever written as main's (default).
+- **LC2** How `[git] binding` gets into the link file: `link init --binding none\|branches`; without it inside a work
+  tree, one stderr hint and no `[git]` table, so a git-bound link is never made by accident either way (default).
+- **LC3** A host whose overview carries no tab `kind` or `hash`: Read as a host without markdown and file tabs: native
+  files held, reason `host-too-old`; mirror files as before (default).
+- **LC4** The unit of the markdown spec's "character ranges": UTF-16 code units of the base revision's text (JavaScript
+  string indices), the same in `editsBetween` and the api's `patch` (default).
+- **LC5** Editor leftovers that are not dotfiles: `*~`, `#*#` and `.#*` are ignored as `editor-leftover`, so an Emacs or
+  Vim backup never becomes a document (default).
+- **LC6** "Files git ignores" when git takes no part: Inside a work tree (a `binding = "none"` wiki): `git check-ignore --stdin`,
+  one call per pass.
+  Outside one: no `.gitignore` is read; `[mirror] ignore` is the copy's own list (default).
+- **LC7** How `[mirror] ignore` globs match: `picomatch` 4.0.7 against the path relative to `dir`, POSIX separators,
+  `dot: true`; a glob ending `/**` also matches the directory itself (default).
+- **LC8** How a large first sync stays under the api's per-token limits: A `Pacer` of `SYNC_WRITES_PER_MINUTE` (120,
+  under `WRITE_RATE_LIMITER` 300/60 s) and `SYNC_READS_PER_MINUTE` (100, under `API_TOKEN_READ_RATE_LIMITER` 120/60 s),
+  waiting rather than failing; `[sync] paced` logs each wait (default).
+- **LC9** Whether every pass reads every covered document's overview: A native document whose list entry (`savedAt`,
+  `name`, `folderId`) equals the recorded one and whose file matches its record is `in-step` with no read; mirror-file
+  documents are read as before (their comments do not move `savedAt`) (default).
+- **LC10** Which files a narrowed `--watch` pass judges moves over: The whole scan, always: a lone half of a rename
+  never deletes a document (default).
+- **LC11** How "as git judges a rename" is measured: Bytes of lines common to both texts, counted as a multiset, over
+  the larger text's bytes, as git's diffcore counts text by line (default).
+- **LC12** A directory renamed in the folder: When every document recorded under one directory moved to one new
+  directory and no folder of that name exists, the folder is renamed, keeping its id (and a wiki mark on it) (default).
+- **LC13** When "a folder whose documents have all gone goes with them" deletes a LiveDoc folder: Only a folder this
+  pass emptied, holding no document and no subfolder; never the covered folder (default).
+- **LC14** Temporary files and modes of the files a local copy writes: `.<name>.<pid>.tmp` beside the target (a dotfile,
+  so `rg`, watchers and other syncs skip it), then `rename(2)`; a rewrite keeps the target's mode; a new file 0644, or
+  0755 when executable, narrowed by the umask (default).
+- **LC15** How a watch of hundreds of documents opens its room streams: In index order, `SYNC_STREAM_OPENS` (10) at a
+  time (default).
+- **LC16** Where a file name splits into name and extension: At the last dot; no dot: extension `''`; `archive.tar.gz`
+  is `archive.tar` and `gz` (default).
+- **LC17** The adopted document's id, and how adoption stays exactly-once: A random id chosen by the CLI and journalled
+  in `adoptions.json` before the create; a resumed pass asks the api for it before creating again (default).
+- **LC18** How "one watch per copy folder" is enforced, and its exit: An exclusive `watch` file in the state directory;
+  a live holder exits 5 (`watch_running`) naming the pid; a dead holder on this hostname is taken over, as RL34
+  (default).
+- **LC19** Where set-aside bytes are kept, and for how long: `<state dir>/set-aside/<startedAt>-<file name>`, 0600,
+  never pruned: they are the person's bytes (default).

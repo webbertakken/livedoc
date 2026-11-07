@@ -2,8 +2,8 @@ import type { Page } from '@playwright/test';
 import { discover, SHAPE, type Probe } from './optical-discover';
 import { inheritedSnap } from './optical-snap';
 
-// Optical alignment audit (docs/specs/004-interface-design/optical-alignment.md; the algorithm is
-// .../blueprints/optical-alignment.md, "Ink audit"). Finds every small painted shape that frames a glyph
+// Optical alignment audit (docs/specs/004-interface-design/optical-alignment.md). Finds every small painted
+// shape that frames a glyph
 // and measures how far the glyph sits from the shape's centre: text vertically by its cap band (from the
 // face's own metrics), everything else by its INK box (a pixel diff of the shape with and without its
 // content). Also checks stack rows (icon over label, side by side) share one line.

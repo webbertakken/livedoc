@@ -1,4 +1,4 @@
-// Placements that pair a side with a group or an alignment (docs/specs/024-agents/blueprints/edit-operations.md
+// Placements that pair a side with a group or an alignment (docs/specs/024-agents/edit-operations.md
 // "Placement"): `inside:<g> right-of:<x>` (within), `below:<x> align:<y>` (alignTo) and `inside:<g> align:<y>`.
 import { describe, expect, it } from 'vitest';
 import type { Element, Tab } from '@livedoc/document';

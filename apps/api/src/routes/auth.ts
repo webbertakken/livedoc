@@ -1,4 +1,4 @@
-// /api/auth/* (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Interfaces and contracts"): better-auth's
+// /api/auth/* (docs/specs/014-identity/auth-and-guest-access.md): better-auth's
 // own routes, behind LiveDoc's gates. Off (404) on a guest-only host. Every POST is rate limited per IP, a code send
 // per address too, and linking or unlinking a sign-in method needs a fresh session.
 import { sha256Hex } from '@livedoc/api-schema';

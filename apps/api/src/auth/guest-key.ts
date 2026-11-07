@@ -1,5 +1,5 @@
-// The guest signing key (docs/specs/014-identity/auth-and-guest-access.md "Signed guest ids"; blueprint "Security and
-// trust"): HKDF(SHA-256, the sign-in secret, salt 'livedoc', info 'livedoc-guest-id'), imported as an HMAC key. One
+// The guest signing key (docs/specs/014-identity/auth-and-guest-access.md "Signed guest ids"): HKDF(SHA-256,
+// the sign-in secret, salt 'livedoc', info 'livedoc-guest-id'), imported as an HMAC key. One
 // secret turns sign-in on and signs guest ids, and the two never sign the same bytes. Null on a host with no usable
 // secret: a guest-only host signs nothing and needs nothing signed.
 import type { Env } from '../types';

@@ -12,4 +12,3 @@ Follow the references below only as needed; never upfront.
 - ./secure-context.md - when an API is secure-context only (`crypto.randomUUID`, `crypto.subtle`, the clipboard) or the editor runs in an embed on an http page or a self-hosted http instance: the randomUUID boot shim, the SHA-256 fallback and what still needs HTTPS
 - ./trusted-types.md - when adding `dangerouslySetInnerHTML`, an inline script, a third-party script or a response header: the enforced Trusted Types header, the two policies, third parties and violations
 - ./bug-reports.md - when working on Report a Bug: the one form and its entries, the context and opt-in screenshot, filing a report as a card on the private Bug Tracker board, the D1 fallback and refile, screenshots served to the owner only
-- ./blueprints/README.md - when implementing or changing a platform feature from its blueprint

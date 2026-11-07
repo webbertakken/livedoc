@@ -3,7 +3,7 @@ import type { PlacementDefaultKey } from '@livedoc/api-schema';
 import { buildDefaultFolderIndex } from './default-destination';
 import { rememberDefaultFolders, rememberedDefaultFolder } from './default-folder-names';
 
-// The names Settings can still show for a deleted default folder (blueprint D113).
+// The names Settings can still show for a deleted default folder (D113).
 
 function memoryStore() {
   const data = new Map<string, string>();

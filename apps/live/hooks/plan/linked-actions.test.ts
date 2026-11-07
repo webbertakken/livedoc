@@ -179,7 +179,7 @@ describe('goneActionIds', () => {
   });
 });
 
-// docs/specs/026-plan/blueprints/linked-boards.md "Performance and limits": the walks run on every tabs change, so a
+// docs/specs/026-plan/linked-boards.md: the walks run on every tabs change, so a
 // big document (40 tabs of 500 elements, 40 full Action panels) stays well inside a frame.
 describe('budget', () => {
   it('finds every action and the board in a big document within budget', () => {

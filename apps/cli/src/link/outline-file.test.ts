@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Tab } from '@livedoc/document';
 import { outlineFileText } from './outline-file';
 
-// The outline file (docs/specs/027-repositories/blueprints/repository-link.md "The outline file"): generated, one
+// The outline file (docs/specs/027-repositories/repository-link.md "The outline file"): generated, one
 // section per tab holding its outline view in a fence that outlasts any backticks inside.
 
 const tab = (id: string, name: string, label: string): Tab => ({

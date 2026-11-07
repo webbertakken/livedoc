@@ -1,7 +1,7 @@
 'use client';
 
 // The grid's pointer (docs/specs/029-sheets/sheet.md "Selection", "Fill", "Rows and columns", "Writing formulas";
-// blueprint sheet-element.md "Pointer"): select, extend and add ranges; drag the fill handle; resize, select and
+//): select, extend and add ranges; drag the fill handle; resize, select and
 // move rows and columns by their headers; point at cells while writing a formula; open the menus. Drags run on
 // window listeners so they keep going outside the grid, and auto-scroll near its edges.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -36,7 +36,7 @@ const DRAG_START_PX = 4;
 const AUTOSCROLL_EDGE_PX = 24;
 // How close to the frozen edge's bar a press grabs it.
 const FREEZE_GRAB_PX = 3;
-// The most lines a drag freezes (the freeze limits, docs/specs/029-sheets/blueprints/DEFAULTS.md).
+// The most lines a drag freezes (docs/specs/029-sheets/sheet.md D16).
 const FREEZE_MAX = { r: SHEET_FREEZE_ROWS_MAX, c: SHEET_FREEZE_COLS_MAX };
 
 type Drag =

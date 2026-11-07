@@ -43,7 +43,7 @@ const landCopies = (els: Element[], copies: Element[], lanes: boolean): Element[
     : [...els, ...copies];
 
 export function useElementDuplication(deps: {
-  // Read when a duplicate runs (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a duplicate runs (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   activeTab: Tab;
   commit: (mapElements: (els: Element[]) => Element[]) => void;

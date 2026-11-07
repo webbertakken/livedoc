@@ -133,3 +133,22 @@ page when it outgrows it rather than the page growing without bound.
   larger feature. Put an image element next to the page.
 - **Import / export as a document format.** It exports exactly like any shape:
   its plain-text mirror in Markdown, its box in PNG / SVG.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D91** Body text size, shadow, border: `textSize: 'sm'`, shadow `{0, 2, 8, 0.18}`, stroke `#d4d4d8` (default).
+- **D92** Masthead typography and placeholders: 19px/600 slate-900; 12px/500 slate-500; "Title" / "Subtitle" at 40%
+  opacity (default).
+- **D93** Masthead commit normalisation: Whitespace runs → one space, trimmed, truncated to 200, committed only on
+  change (default).
+- **D94** When the masthead is editable: Whenever the page is not locked and the viewer not read-only (default).
+- **D95** Fold on a small page: `min(22, w/2, h/2)`; hidden at ≤ 2px; cut painted `--lvd-canvas-bg` on the canvas and
+  the export paper in SVG / PNG (`#ffffff` when none) (default).
+- **D96** Masthead geometry in export: Inset = border width + padding; title baseline `inset + 18`, subtitle `inset + 38.25`,
+  rule at `inset + PAGE_MASTHEAD_PX - 0.5` in the page stroke; body from `pageBodyTop`; an empty line draws nothing
+  (default).
+- **D143** A quick-style colour on a page, on theme: The swatch binding (`fillSwatch` / `strokeSwatch`) follows a theme
+  change, as on any shape (default).

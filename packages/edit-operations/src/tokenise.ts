@@ -1,4 +1,4 @@
-// The line form's words (docs/specs/024-agents/blueprints/edit-operations.md "Line form"): split on
+// The line form's words (docs/specs/024-agents/edit-operations.md): split on
 // whitespace, `"…"` with JSON's escapes (\" \\ \n \t and the rest), `'…'` literal, and a quote may open mid-word
 // (`label="Sign in"`), so each word keeps its segments and which of them were quoted.
 

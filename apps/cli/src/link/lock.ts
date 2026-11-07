@@ -1,4 +1,4 @@
-// The lock (docs/specs/027-repositories/repository-link.md "Commands"; blueprint "The lock"): one pass at a time per
+// The lock (docs/specs/027-repositories/repository-link.md "Commands"): one pass at a time per
 // link, an O_EXCL file in the local sync state naming its holder. A holder on this machine that is no longer alive is
 // stale and taken over (RL34); otherwise a second pass polls every SYNC_LOCK_POLL_MS and gives up after
 // SYNC_LOCK_WAIT_MS, exit 5, naming the holder's process (RL18).

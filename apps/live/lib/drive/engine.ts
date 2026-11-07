@@ -1,5 +1,5 @@
 // The Drive mirror's sync engine (docs/specs/022-drive-mirror/drive-mirror.md;
-// blueprint "Passes"). It runs in one tab per browser, only while that tab is
+//). It runs in one tab per browser, only while that tab is
 // open: arrival catch-up, a poll while visible, idle writes after edits, a
 // flush on hide. Inbound before outbound, one pass at a time.
 

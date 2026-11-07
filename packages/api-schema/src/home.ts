@@ -1,5 +1,5 @@
-// Explorer Home's data (docs/specs/013-workspace/explorer-home.md; blueprint
-// docs/specs/013-workspace/blueprints/explorer-home.md): Jump back in and What happened. The api
+// Explorer Home's data (docs/specs/013-workspace/explorer-home.md;
+// docs/specs/013-workspace/explorer-home.md): Jump back in and What happened. The api
 // builds these from D1 and the editor renders them, so the shapes, the verbs, the limits and the
 // refusals live here once.
 

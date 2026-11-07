@@ -1,4 +1,4 @@
-// The folder verbs (docs/specs/015-api/cli.md "Commands": `folder ls`, `folder create`; blueprint CLI86, CLI87): the
+// The folder verbs (docs/specs/015-api/cli.md "Commands": `folder ls`, `folder create`; CLI86, CLI87): the
 // person's folders as paths with their ids, and a new folder, at the top of My Documents or inside another. A
 // workbench names a project's folder by these ids (`workbench open --workspace --folder <f>`).
 

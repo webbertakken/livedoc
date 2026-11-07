@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-// The package npm publishes, as build.mjs writes it (docs/specs/015-api/blueprints/cli.md "Performance and limits",
+// The package npm publishes, as build.mjs writes it (docs/specs/015-api/cli.md,
 // "Supply chain", CLI2, CLI31, CLI54): built afresh into a temporary directory, never a stale dist.
 
 // The most the unpacked package may weigh (CLI54): the wasm and fonts take about 3 MB, the bundle the rest.

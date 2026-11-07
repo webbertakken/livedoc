@@ -1,4 +1,4 @@
-// `applyReplace` (docs/specs/024-agents/blueprints/edit-operations.md "Replace"): the other changeset
+// `applyReplace` (docs/specs/024-agents/edit-operations.md): the other changeset
 // body, a whole tab from a graph, Mermaid, a template, a dashboard, a form or raw elements, built exactly as the MCP's
 // `update_document` replace and `add_tab` build it, and answered with the same outcome as operations.
 // An existing tab keeps every tab field and swaps its elements (no theme repaint, EO41); a new tab is
@@ -53,7 +53,8 @@ const SOURCES: readonly Source[] = [
 
 // What one source builds: the new elements, and for a tab that does not exist yet, the whole tab.
 // `newOnly`: the source makes a tab of its own kind (a Dashboard): a new tab, or that kind's own tab rebuilt.
-// `formOnly`: a new Form tab (blueprint forms.md §15); an existing one's form changes through its form route.
+// `formOnly`: a new Form tab (docs/specs/030-forms/forms.md); an existing one's form changes through its form
+// route.
 type Built =
   | {
       elements: Element[];

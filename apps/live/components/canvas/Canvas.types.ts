@@ -80,7 +80,7 @@ export type CanvasProps = {
   mainRef: Ref<HTMLElement>;
   setViewportOffset: (offset: { x: number; y: number }) => void;
   // The view itself is not a prop: it lives in the viewport store, read where it shows
-  // (docs/specs/008-canvas/blueprints/viewport-store.md "Inside the canvas").
+  // (docs/specs/008-canvas/canvas-performance.md).
   setViewportZoom: Dispatch<SetStateAction<number>>;
   onFitToScreen: () => void;
   isPinchingRef?: React.RefObject<boolean>;
@@ -848,10 +848,10 @@ export type CanvasProps = {
   // button, the zoom-dock exit button, and the Z shortcut.
   zenMode?: boolean;
   onToggleZen?: () => void;
-  // The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table)
+  // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table)
   // has no Explorer: neither the floating panel nor the Toolbar layout's menu button.
   explorerHidden?: boolean;
-  // A workspace frame's Back (docs/specs/013-workspace/blueprints/workbench-embeds.md, WB59), in the menu button's
+  // A workspace frame's Back (docs/specs/013-workspace/workbench-embeds.md, WB59), in the menu button's
   // place at the canvas's top left.
   workbenchBack?: Pick<WorkspaceFrameHooks, 'back' | 'backTitle'> | null;
 };

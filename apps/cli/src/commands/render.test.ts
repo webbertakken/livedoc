@@ -3,7 +3,7 @@ import { run } from '../main';
 import { fakeIo, NOW, TOKEN, type FakeIo, type Route } from '../testing/fake-io';
 import { svgSize } from '../render/png';
 
-// `tab render`, `graph render` and `export --format png` (docs/specs/015-api/blueprints/cli.md "Previews", CLI30,
+// `tab render`, `graph render` and `export --format png` (docs/specs/015-api/cli.md "Previews", CLI30,
 // CLI31): real PNGs from the shared renderer, on a fake host.
 
 const DOC = 'aaaa1111-0000-4000-8000-000000000001';

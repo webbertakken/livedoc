@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { classifyRoomOp, onTab, watchLines, type Names, type RoomEvent } from './room-events';
 
-// docs/specs/015-api/blueprints/cli.md "The room stream", CLI33.
+// docs/specs/015-api/cli.md, CLI33.
 
 const comment = {
   id: 'c1',

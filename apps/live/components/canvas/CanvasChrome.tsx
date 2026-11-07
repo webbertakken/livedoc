@@ -263,7 +263,7 @@ export function CanvasChrome(props: CanvasChromeProps) {
     onToggleZen,
   } = props;
   // The view is not a prop here: the parts that show it read it from the viewport store, so a pan or
-  // zoom renders them and not this chrome or its panels (docs/specs/008-canvas/blueprints/viewport-store.md).
+  // zoom renders them and not this chrome or its panels (docs/specs/008-canvas/canvas-performance.md).
   const viewport = useViewportStore();
   const readZoom = useCallback(() => viewport.get().zoom, [viewport]);
   // Zen / focus mode (docs/specs/007-editor/zen-mode.md): hide all floating chrome. `chromeHidden`

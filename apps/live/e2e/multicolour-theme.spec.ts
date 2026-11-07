@@ -2,7 +2,7 @@ import { expect, test, expectNoPageErrors, seedTab, startBlankDocument } from '.
 
 // Multi-colour themes (docs/specs/011-theme/multicolour-themes.md) end to end:
 // Rainbow, picked for an uncoloured hierarchy, paints each limb its own palette colour, and
-// the switch leaves its trace in the console (blueprint O1). Unit tests prove
+// the switch leaves its trace in the console (O1). Unit tests prove
 // the branch map; only the editor proves the colours reach the canvas.
 
 const CANVAS = '[data-canvas-a11y-root]';

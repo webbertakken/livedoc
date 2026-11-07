@@ -190,7 +190,7 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     statuses: [200],
   },
 
-  // ---- Catalogues (docs/specs/015-api/blueprints/cli.md "Catalogue routes") ----
+  // ---- Catalogues (docs/specs/015-api/cli.md) ----
   {
     method: 'GET',
     path: '/templates',

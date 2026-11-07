@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { collectCss, pinRules, withFullMotion } from './snapshot-css';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The snapshot", steps 5 and 7.
+// docs/specs/020-import-export/animated-gif-export.md, steps 5 and 7.
 const style = (cssText: string) => ({ cssText });
 const group = (head: string, rules: { cssText: string }[], mediaText?: string) => ({
   cssText: `${head} { ... }`,

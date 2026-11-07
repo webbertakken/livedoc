@@ -6,7 +6,7 @@ import { GifOmit } from './GifOmit';
 
 afterEach(cleanup);
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The snapshot", step 3.
+// docs/specs/020-import-export/animated-gif-export.md, step 3.
 describe('GifOmit', () => {
   it('marks what it holds as editor-only, adding no box', () => {
     const { container } = render(

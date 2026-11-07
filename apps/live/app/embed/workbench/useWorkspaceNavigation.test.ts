@@ -12,7 +12,7 @@ import { assignAppLocation } from '@/lib/app-location';
 import type { WorkspacePlace } from '@/lib/workbench/workspace-place';
 import { useWorkspaceNavigation } from './useWorkspaceNavigation';
 
-// How a workspace frame moves (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workspace frame"):
+// How a workspace frame moves (docs/specs/013-workspace/workbench-embeds.md):
 // every navigation becomes a move of its own, the wizard becomes New document in place, the rest a new tab.
 
 const HOME: WorkspacePlace = { kind: 'explorer', node: { kind: 'home' } };

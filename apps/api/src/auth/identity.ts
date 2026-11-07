@@ -1,4 +1,4 @@
-// The better-auth instance for one request (docs/specs/014-identity/blueprints/auth-and-guest-access.md "The
+// The better-auth instance for one request (docs/specs/014-identity/auth-and-guest-access.md "The
 // instance"). Built per request, never cached per isolate: a cached instance whose first request is aborted hangs
 // every later request in that isolate (better-auth #10315, #11651), and with the runtime schema check off a build
 // costs 2 to 3 ms. The schema is checked in CI instead (identity-schema.test.ts).
@@ -18,7 +18,7 @@ import { identityHooks, sendSignInCode } from './identity-hooks';
 import { identityLogger } from './identity-logger';
 import type { Env } from '../types';
 
-// Sessions last 30 days and slide forward at most once a day (blueprint "Constants"; D15).
+// Sessions last 30 days and slide forward at most once a day (D15).
 export const SESSION_EXPIRES_IN_S = 2_592_000;
 export const SESSION_UPDATE_AGE_S = 86_400;
 // How recent a sign-in must be for the dangerous things (spec "Sessions": 10 minutes).

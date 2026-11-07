@@ -74,7 +74,7 @@ export const ROLE_PASS: Record<
     title: 'Participant',
     blurb: "Adds stickies, writes and votes. Can't reshape the board.",
     Icon: ParticipatePassIcon,
-    // teal-700 under the 10 px bold stamp: 5.47:1 (blueprint "Accessibility").
+    // teal-700 under the 10 px bold stamp: 5.47:1.
     solid: 'bg-teal-700 text-white dark:bg-teal-600/60',
     selected: 'border-teal-600 bg-teal-50/70 dark:border-teal-400 dark:bg-teal-500/10',
     text: 'text-teal-800 dark:text-teal-300',

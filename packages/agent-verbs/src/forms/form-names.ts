@@ -1,4 +1,4 @@
-// Naming a form's parts as the builder names them (docs/specs/030-forms/forms.md "Agents", blueprint §15 "Names and
+// Naming a form's parts as the builder names them (docs/specs/030-forms/forms.md "Agents" "Names and
 // refusals"): a Form tab by id or name, a question by id or prompt, a section by id, title or place, a board by its
 // tab's name or its title, a column by name, a sheet by its name in Responses Go To. An unknown name is refused with
 // the names there are.

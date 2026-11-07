@@ -15,7 +15,7 @@ import {
 } from './forms';
 import { readActivity } from './collab-index';
 
-// form_links' helpers (docs/specs/030-forms/blueprints/forms.md §11).
+// form_links' helpers (docs/specs/030-forms/forms.md §11).
 
 describe('generateFormCode', () => {
   it('draws 22 base-62 characters, skipping the bytes that would bias it', () => {

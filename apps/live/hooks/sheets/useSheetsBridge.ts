@@ -1,6 +1,6 @@
 'use client';
 
-// The editor's side of the sheet store (blueprint sheet-store.md "Editor slice"): the one piece of the Sheet that
+// The editor's side of the sheet store: the one piece of the Sheet that
 // lives in the main bundle. It hands the lazily loaded sheet chunk what it needs from the editor (who is writing,
 // the document's scope, undo, toasts, presence) and routes the room's `sheets` and `sheet-presence` ops to the
 // chunk once it has attached. Before any Sheet is drawn nothing attaches and every op is dropped: the store

@@ -67,7 +67,7 @@ export function ArticleFlows({
   elements: readonly Element[];
 }) {
   // The selection as one set, read from the store here so the canvas doesn't re-render for it
-  // (docs/specs/008-canvas/blueprints/selection-store.md).
+  // (docs/specs/008-canvas/canvas-performance.md).
   const selectedIds = useSelectionOf(selectionAsSet, sameIds);
   const articles = view.articles;
   const surface = useCanvasSurface();

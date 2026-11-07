@@ -1,4 +1,4 @@
-// The CLI's usage count (docs/specs/015-api/cli.md "Telemetry", blueprint "Telemetry", CLI41, CLI42): `Cli·Used·<Verb>`
+// The CLI's usage count (docs/specs/015-api/cli.md "Telemetry", CLI41, CLI42): `Cli·Used·<Verb>`
 // after a command succeeds, `Error·Api` when the api fails it (5xx or the network, never a 4xx), each one event to
 // the active profile's api with no credential, awaited at most TELEMETRY_FLUSH_TIMEOUT_MS. Off by environment or
 // config; the first send prints what is counted, once.
@@ -91,7 +91,7 @@ export async function reportApiFailure(
     await report('Error', 'Api', errorTypeToken('Internal', verb), sink);
 }
 
-// `telemetry on|off` (blueprint "Telemetry"): off tells the host first, then writes the setting; on writes it, then
+// `telemetry on|off`: off tells the host first, then writes the setting; on writes it, then
 // tells the host. Neither counts as a command.
 export async function setTelemetry(
   on: boolean,

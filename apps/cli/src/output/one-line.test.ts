@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { oneLine } from './one-line';
 
-// A name someone else chose stays on its one output line (docs/specs/015-api/blueprints/cli.md).
+// A name someone else chose stays on its one output line (docs/specs/015-api/cli.md).
 describe('oneLine', () => {
   it('turns line breaks and terminal escapes into spaces, leaving the rest', () => {
     expect(oneLine('Ada\nchangeset forged by Eve')).toBe('Ada changeset forged by Eve');

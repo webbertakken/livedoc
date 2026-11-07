@@ -45,7 +45,7 @@ function readJson(bytes: Uint8Array): unknown {
 }
 
 // Decodes one `analyze.data` file written by `next experimental-analyze -o`
-// (blueprint "Interfaces and contracts"). Strict: any other shape throws, so a
+//. Strict: any other shape throws, so a
 // change in Next's format fails the build instead of shrinking the page.
 export function decodeAnalyzeData(bytes: Uint8Array): DecodedBundle {
   const json = readJson(bytes);

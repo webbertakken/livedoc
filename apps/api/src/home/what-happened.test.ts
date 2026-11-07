@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { HomeDocument } from '@livedoc/api-schema';
 import { groupWhatHappened, verbOf, type WhatHappenedRow } from './what-happened';
 
-// What happened (docs/specs/013-workspace/explorer-home.md; blueprint "Verbs", "Grouping").
+// What happened (docs/specs/013-workspace/explorer-home.md).
 
 const ME = new Set(['me', 'guest-me']);
 const HOUR = 60 * 60 * 1000;

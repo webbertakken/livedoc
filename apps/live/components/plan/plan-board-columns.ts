@@ -7,11 +7,13 @@
 // and the next peeks in at the edge. Pure.
 import { PLAN_COLUMN_MIN_PX, type PlanColumn } from '@livedoc/items';
 
-// How many column slots a maximised board shows across its body before it scrolls (blueprint DEFAULTS).
+// How many column slots a maximised board shows across its body before it scrolls
+// (docs/specs/026-plan/plan-board.md D39).
 export const MAXIMISED_BOARD_SLOTS = 5;
 // The gap between columns (the grid's `gap-3`).
 export const PLAN_COLUMN_GAP_PX = 12;
-// How much of the next column a phone shows beside the one in view, gap included (blueprint DEFAULTS).
+// How much of the next column a phone shows beside the one in view, gap included
+// (docs/specs/026-plan/plan-board.md D44).
 export const PHONE_COLUMN_PEEK_PX = 48;
 
 // How a board lays its columns out: sharing the canvas element's width, five slots across while it covers the canvas,

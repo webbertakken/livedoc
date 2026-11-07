@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // An idea post from the press until the room answers it (docs/specs/012-collaboration/idea-box.md "Racing for
-// the last card", blueprint idea-box-race.md "Behaviour and state"): answered, gone quietly, or refused with
+// the last card"): answered, gone quietly, or refused with
 // the notice when a peer's earlier card took its place.
 
 import { act, renderHook } from '@testing-library/react';

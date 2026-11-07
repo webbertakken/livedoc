@@ -5,7 +5,7 @@ import type { RouteIdentity } from './document-room/document-route';
 import type { Env } from './types';
 
 // Several real rooms, each on a SQLite of its own, reaching one another through the env's DOCUMENT_ROOM as on
-// Cloudflare, beside one D1 (docs/specs/006-document/blueprints/document-storage.md "Testing"): what a test of shared
+// Cloudflare, beside one D1 (docs/specs/006-document/document-storage.md): what a test of shared
 // tabs between documents needs, since in the one-database harness (test-sqlite-d1.ts) two documents cannot each hold
 // a tab of the same id. A room named in `offline` throws on every call, as one that cannot be reached; a
 // `<room>.<method>` there throws on that call only.

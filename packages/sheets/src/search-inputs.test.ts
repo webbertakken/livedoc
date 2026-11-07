@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SheetJson } from './sheet-json';
 import { sheetSearchInputs } from './search-inputs';
 
-// A Sheet tab's part of its content search text (docs/specs/013-workspace/blueprints/content-search.md
+// A Sheet tab's part of its content search text (docs/specs/013-workspace/content-search.md
 // "tabSearchText"): the inputs of its sheets' cells that are not formulas, row-major.
 
 function sheet(

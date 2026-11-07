@@ -1,4 +1,4 @@
-// The CSS an animated GIF's frames carry (docs/specs/020-import-export/blueprints/animated-gif-export.md "The
+// The CSS an animated GIF's frames carry (docs/specs/020-import-export/animated-gif-export.md "The
 // snapshot"): the app's own stylesheets, once per export, and per frame the rules that pin every animation at a
 // moment of the page's clock.
 

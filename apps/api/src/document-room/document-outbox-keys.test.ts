@@ -2,7 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { migrateDocumentSchema } from './document-schema';
 
-// Invariant R3 (docs/specs/006-document/blueprints/document-storage.md "The outbox"): every write of a room table
+// Invariant R3 (docs/specs/006-document/document-storage.md "The outbox"): every write of a room table
 // keys the outbox from a trigger, in the write's own transaction. One case per table.
 
 let db: DatabaseSync;

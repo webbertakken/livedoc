@@ -59,7 +59,7 @@ export type Collected = {
 type Manifest = Record<string, unknown>;
 type Package = { name: string; version: string; root: string; manifest: Manifest };
 
-// One app's bundle to the works it ships (blueprint "Behaviour and state", step 3).
+// One app's bundle to the works it ships (step 3).
 export function collectWorks(bundle: AppBundle, ctx: CollectContext): Collected {
   const { reader } = ctx;
   const abs = (rel: string) => `${ctx.repoRoot}/${rel}`;

@@ -1,4 +1,4 @@
-// The content summary built in the room (docs/specs/006-document/blueprints/document-storage.md "The content
+// The content summary built in the room (docs/specs/006-document/document-storage.md "The content
 // summary"), from its own tables: the D1-era list subqueries (the first tab's count, documentStatsSql) and the empty
 // clean-up's test, moved here unchanged. Pushed to D1 by the outbox's document unit and answered by `create`.
 

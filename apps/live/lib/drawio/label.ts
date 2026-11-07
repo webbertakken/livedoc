@@ -1,4 +1,4 @@
-// A draw.io label to LiveDoc text (docs/specs/020-import-export/blueprints/drawio-import.md
+// A draw.io label to LiveDoc text (docs/specs/020-import-export/drawio-import.md
 // step 8). HTML labels are PARSED, never rendered: DOMParser('text/html') is an
 // inert document (no scripts, no loads), and only text plus a closed set of
 // formats is read out of it.

@@ -284,3 +284,72 @@ the reader's own change does.
 
 The help centre's [Search and filter documents](../../../apps/help/app/explorer/filters/page.mdx) article describes the
 field, the chips and the typed filters; Search results opens it from its Help button.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D41** Which words can be reported as a bad token: Only token-shaped words, `^[A-Za-z][A-Za-z-]*:`; `10:30` is plain
+  text, unreported (default).
+- **D42** How text compares with a name: Both folded: NFD, combining marks stripped, lower case; then matched by the
+  tiers of D172, D176 and D177 (default).
+- **D43** Where an over-long lens is cut: At the last whitespace within 512 characters; one over-long word is cut at 512
+  (default).
+- **D44** What "Last 12 months" counts back to: The same local date and time one calendar year before now; 29 February
+  rolls on to 1 March (default).
+- **D46** The order of space suggestions: My Documents, Shared With Me, then teams by name A to Z (default).
+- **D47** Which values a typed value start offers: Those whose value or label starts with it, case-insensitive
+  (default).
+- **D48** Spacing and caret after an accepted value: One space after the token, caret after it; the rest of the field is
+  left as it is (default).
+- **D49** When the result count is announced: 400 ms after the last change (`LENS_SETTLE_MS`) (default).
+- **D50** Whether the field grows when pills overflow: No: one line high, pills and text scroll sideways, so nothing
+  below shifts (default).
+- **D51** A caret outside the input: Clamped to `[0, input.length]` (default).
+- **D52** How many suggestions show at once: 8 (`LENS_MAX_SUGGESTIONS`) (default).
+- **D53** Whether a team id keeps its case: Yes, and compares exactly: keys and fixed values are lower-cased, minted ids
+  are not (default).
+- **D54** Where a chip writes a token when the string has none: First, before the text words: the canonical place for
+  tokens (default).
+- **D56** Empty entries around the one a suggestion completes: Dropped: the accepted token is well-formed (default).
+- **D57** How the Event Storming value is cased: "Event Storming", as the product names it everywhere else (default).
+- **D58** The order of the Edited values: Today, Last 7 days, Last 30 days, Last 12 months, This year: the rolling spans
+  widening, then the calendar one (default).
+- **D81** Where the search results live and what they list: `/explorer/search`, titled Search results: every document
+  the reader can open, newest first, no cap (default).
+- **D82** What typing does on a view that lists no documents: Opens Search results with the typed text (one history
+  entry), the field keeping focus (default).
+- **D83** Whether a scoped lens reaches subfolders: Yes, as in a file manager's search: every match in the scope, one
+  flat list; folder rows step aside (default).
+- **D84** Whether Favourites is an aggregate view: Yes: it lists documents from every place (default).
+- **D85** How Clear keeps the chip row still: Always laid out; `invisible` while the lens is empty (default).
+- **D86** Whether a chip's listbox closes on a choice: No: it is multi-select; Escape, Tab, a click outside or the chip
+  closes it (default).
+- **D87** Where the field sits on a phone: Its own full-width row under the header (default).
+- **D88** The field's placeholder: "Search or filter documents" (default).
+- **D89** The Made by AI badge's look: A sparkle and the words, violet, built like the This Browser pill (default).
+- **D90** Where the retired Dynamic view goes: The My Documents root, as Unsorted does (default).
+- **D91** What the personal root tile of the placement browser says under its name: "Top level", in place of "Unsorted"
+  (default).
+- **D92** How a failed list read shows: Failed on the views that read it; a toast when the shared read alone failed, as
+  other views still list rows (default).
+- **D93** Whether typed tokens of one dimension stay apart: No: they merge into one pill, as the canonical string writes
+  them (default).
+- **D171** How a highlight finds its place when folding changes a name's length: Each character folded on its own,
+  recording where every folded character came from; a name that folds to its own length maps one to one (default).
+- **D172** What "initials or in-order subsequence" admits: The initials of successive title words first; else the
+  letters in order inside one title word, starting at its first letter, so a long name never matches scattered letters
+  (default).
+- **D173** How several words' match qualities combine into one order: The sum of the words' scores (tier index, plus 0.5
+  for the weaker match within a tier); lower first (default).
+- **D174** Whether the Details view orders by match: No (decided by Webber): it keeps the column the reader sorted by;
+  the lens only narrows it (default).
+- **D175** How a matched character looks: A light brand tint, semibold and a 2 px brand underline, the text keeping its
+  own colour (default).
+- **D176** What a typo is measured against: The starts of each title word, up to the word's length plus its typos, so a
+  word still being typed is forgiven too (default).
+- **D177** What "word prefix" means beside "exact substring": The word spelled by the starts of successive title words,
+  each at least 2 letters ("meetnot"); a single word's start is already a substring (default).
+- **D178** Which 12 documents Recent ranks under a lens: Its 12 newest matches, ordered best first; never the 12 best of
+  all time (default).

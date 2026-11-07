@@ -1,4 +1,4 @@
-// `fill=` (docs/specs/024-agents/blueprints/edit-operations.md "Fields and values", EO21, EO49): a theme
+// `fill=` (docs/specs/024-agents/edit-operations.md, EO21, EO49): a theme
 // slot by name (`theme`, or one of the six quick-style hues, lower-cased with spaces as `-`), which
 // stays bound to the theme; a hex, which overrides it and warns; on a sticky, a sticky preset name.
 

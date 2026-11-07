@@ -10,7 +10,7 @@ import { handleDocuments } from './documents';
 import { handleForms } from './forms';
 import { FORM_RESPONSES_PER_HOUR } from '../forms/respond';
 
-// Form links (docs/specs/030-forms/forms.md, blueprint §11): publishing by role, the public read, responses made
+// Form links (docs/specs/030-forms/forms.md): publishing by role, the public read, responses made
 // into cards, every refusal, reports, and a deleted tab taking its link.
 
 let sql: SqliteD1;

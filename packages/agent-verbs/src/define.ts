@@ -1,4 +1,4 @@
-// What a verb is (docs/specs/015-api/blueprints/cli.md "The verb"): one capability, with its input and
+// What a verb is (docs/specs/015-api/cli.md): one capability, with its input and
 // output schemas, a factual description, its behaviour, a handler over the api, and how the CLI and the
 // MCP project it.
 
@@ -75,7 +75,7 @@ export type Verb<I extends z.ZodObject = z.ZodObject, O extends z.ZodType = z.Zo
   // Needs no host: no profile, credential or api (guides, the skill); never counted.
   offline?: true;
   // Reads or writes document files on disk, in the bundled document format: refused against a host that stores a
-  // newer one (blueprint "One command" step 6).
+  // newer one.
   files?: true;
   run?: (ctx: VerbContext, input: z.infer<I>) => Promise<z.infer<O>>;
   // The `Cli·Used` type when it is not the verb's own (`sync --watch` counts as SyncWatch, RL24).

@@ -1,5 +1,5 @@
 // This Browser's memory of the names of a person's default folders
-// (docs/specs/013-workspace/default-folders.md "Settings", blueprint D113): a deleted folder's row is
+// (docs/specs/013-workspace/default-folders.md "Settings", D113): a deleted folder's row is
 // gone from the server, so the only way Settings can still say "Workshops (deleted)" is to have
 // noted the name while the folder was visible. Owner-keyed, so a shared browser never shows one
 // account's folder names to another.

@@ -32,13 +32,14 @@ const slug = (value: string) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-// Blueprint D4: by name ignoring case, then version, then key for ties.
+// docs/specs/002-project-scope/third-party-licences.md D4: by name ignoring case, then version, then key for
+// ties.
 const byName = (a: WorkRecord, b: WorkRecord) =>
   a.name.localeCompare(b.name, 'en', { sensitivity: 'base' }) ||
   a.version.localeCompare(b.version, 'en', { numeric: true }) ||
   a.key.localeCompare(b.key, 'en');
 
-// All apps' works to the page manifest (blueprint "Behaviour and state", step 4).
+// All apps' works to the page manifest (step 4).
 export function buildManifest(collected: readonly Collected[], options: Options): BuiltManifest {
   const texts = new Map<string, string>();
   const order = new Map(LICENCE_APPS.map((app, i) => [app.id, i]));

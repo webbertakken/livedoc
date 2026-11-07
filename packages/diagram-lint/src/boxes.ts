@@ -1,4 +1,4 @@
-// What the lint calls a box, and the exact geometry it judges boxes by (blueprint "The checks", LN2,
+// What the lint calls a box, and the exact geometry it judges boxes by (LN2,
 // LN3): oriented rects, so a rotated box is measured as drawn.
 
 import {

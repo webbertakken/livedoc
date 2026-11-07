@@ -1,4 +1,4 @@
-// The document at a glance (docs/specs/024-agents/blueprints/document-views.md "overview", VW37): one
+// The document at a glance (docs/specs/024-agents/document-views.md, VW37): one
 // line per tab, built from each tab's header facts so the caller never holds every tab body at once.
 import type { OverviewView, ViewDoor } from '@livedoc/api-schema';
 import { computeRefs } from '@livedoc/document';

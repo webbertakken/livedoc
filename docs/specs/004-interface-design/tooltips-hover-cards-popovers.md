@@ -193,3 +193,31 @@ None. Hints change no one's workflow, and hovering is not an action worth counti
 - The shared lint config (`@livedoc/oxlint-config`) holds the native-`title` rule.
 - Popovers keep their own homes (`packages/ui` popover positioning, the editor's menus and pickers);
   this spec only fixes what the word means. A popover that is a menu follows [Menus](./menus.md).
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **T1** `pointerenter`, `pointerType !== 'touch'`: not `dismissed`: `overTrigger`; cancel close; open now when
+  `OPEN_DELAY_MS[kind]` is 0 or `isHintWarm(kind, now)`, else after `OPEN_DELAY_MS[kind]`.
+- **T15** unmount: clear every timer; release the registry.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D25** How long "a short grace period" is: 100ms: crosses a 6 to 10px gap at any human speed, short enough that a
+  passing pointer leaves no card (default).
+- **D26** How a blur closes a hint: The same grace as a pointer leave, so focus moving onto the hint's neighbour does
+  not flicker it (default).
+- **D27** An engine without `:focus-visible`: Treat focus as keyboard-visible, so keyboard users never lose the hint
+  (default).
+- **D28** A tooltip's width: `max-w-xs` (320px) and wrapping; a name is never cut short (default).
+- **D29** A tooltip's distance from its control: 6px and an 8px pointer: a pill is smaller than a card, so it sits
+  closer (default).
+- **D30** Whether a hint describes its trigger: No `aria-describedby`: a tooltip repeats the name, and a hover card
+  appears only after focus lands (default).
+- **D31** What a hint anchors on: The wrapper's first element child, as the old `Tooltip` did (default).
+- **D32** How exactly "the same words" is checked: The accessible name contains the label: clipped text and visually
+  hidden prefixes still pass (default).

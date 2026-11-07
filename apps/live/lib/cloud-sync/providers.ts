@@ -1,5 +1,5 @@
 // The Cloud Sync provider catalogue (docs/specs/022-drive-mirror/drive-mirror.md,
-// "Connecting"; blueprint "Cloud Sync in Settings"): one Settings row per
+// "Connecting"): one Settings row per
 // provider in Account > Cloud Sync. Another provider is another entry here and
 // its row component, nothing else.
 

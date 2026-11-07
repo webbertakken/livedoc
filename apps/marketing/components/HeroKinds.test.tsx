@@ -3,7 +3,7 @@ import { act, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HeroKinds } from './HeroKinds';
 
-// docs/specs/004-interface-design/brand-mark.md "Every kind"; blueprint brand-motion.md "Every kind".
+// docs/specs/004-interface-design/brand-mark.md "Every kind".
 describe('HeroKinds', () => {
   let observe: (entries: { isIntersecting: boolean }[]) => void = () => {};
   afterEach(() => vi.unstubAllGlobals());

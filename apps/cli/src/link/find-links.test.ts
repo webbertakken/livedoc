@@ -3,7 +3,7 @@ import { CliError, type CliFailure } from '../output/cli-error';
 import { fakeIo } from '../testing/fake-io';
 import { linksBelow, nearestLink } from './find-links';
 
-// Finding the link (docs/specs/027-repositories/blueprints/repository-link.md "Finding the link"): the nearest at
+// Finding the link (docs/specs/027-repositories/repository-link.md): the nearest at
 // or above the working directory, or with --all every one below it.
 
 const LINK = '[covers]\nfolder = "f1"\n';

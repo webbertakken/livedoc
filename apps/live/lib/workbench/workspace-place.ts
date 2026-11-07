@@ -1,5 +1,5 @@
-// Where a workspace frame is, and its address (docs/specs/013-workspace/workbench-embeds.md "What renders", blueprint
-// "The workspace frame", WB56). A place is an Explorer view or a document. Inside the frame each place has a path
+// Where a workspace frame is, and its address (docs/specs/013-workspace/workbench-embeds.md "What renders",
+// WB56). A place is an Explorer view or a document. Inside the frame each place has a path
 // under /embed/workbench, walked by the frame's own history: Home is /embed/workbench/explorer, a folder
 // /embed/workbench/explorer/folder/<id>, every other view its /explorer path under /embed/workbench, and a document
 // /embed/workbench/document/<id>. The Explorer itself keeps speaking its own /explorer hrefs; these functions

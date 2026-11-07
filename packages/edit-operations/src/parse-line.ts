@@ -1,4 +1,4 @@
-// One line form line into its JSON form (docs/specs/024-agents/blueprints/edit-operations.md "Line
+// One line form line into its JSON form (docs/specs/024-agents/edit-operations.md "Line
 // form"): fields are `key=value`, placements `key:value`, flags the operation's keywords, and every
 // other word a selector term. The object it builds is checked by `validateEditOperation`, so both
 // forms share one validation.
@@ -17,7 +17,7 @@ import {
 type LineError = { column: number; expected: string };
 type LineResult = { raw: Record<string, unknown> } | { error: LineError };
 
-// Keys an operation reads itself rather than as a field (blueprint "Word classes").
+// Keys an operation reads itself rather than as a field.
 const SPECIAL_KEYS: Readonly<Partial<Record<EditOperationName, readonly string[]>>> = {
   add: ['id'],
   move: ['by'],

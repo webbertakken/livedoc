@@ -1,4 +1,4 @@
-// `push <file>` (docs/specs/015-api/blueprints/cli.md "Pull and push", CLI28): each tab whose elements changed in a
+// `push <file>` (docs/specs/015-api/cli.md, CLI28): each tab whose elements changed in a
 // pull file goes back as a `replace` changeset based on its pulled revision, strictly, so a tab changed on the server
 // since is refused as stale and nothing is overwritten blindly. A tab the document lacks is created. Only elements
 // travel: changed settings and a tab gone from the file are named, never applied. The file's revisions and hashes

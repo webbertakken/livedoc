@@ -1,8 +1,8 @@
-// The CLI's own version, and the host's floor for writes (blueprint CLI13).
+// The CLI's own version, and the host's floor for writes (CLI13).
 
 export const CLI_VERSION = '0.5.0';
 
-// The name npm publishes the CLI under (blueprint CLI1); its command is `livedoc`.
+// The name npm publishes the CLI under (CLI1); its command is `livedoc`.
 export const NPM_PACKAGE = '@livedoc/cli';
 
 export const UPGRADE_HINT = `npm install -g ${NPM_PACKAGE}@latest, or npx ${NPM_PACKAGE}@latest`;

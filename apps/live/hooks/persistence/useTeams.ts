@@ -38,7 +38,7 @@ type UseTeamsResult = {
 };
 
 // `invites: false` reads the teams alone: a workspace frame reaches no team administration, invites included
-// (docs/specs/013-workspace/blueprints/workbench-embeds.md, WB62).
+// (docs/specs/013-workspace/workbench-embeds.md, WB62).
 export function useTeams(
   ownerId: string | null,
   opts: { enabled: boolean; invites?: boolean },

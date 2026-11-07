@@ -1,4 +1,4 @@
-// /api/documents/:id/copy (docs/specs/006-document/blueprints/document-storage.md "Routing", Copy): answered in
+// /api/documents/:id/copy (docs/specs/006-document/document-storage.md, Copy): answered in
 // the worker, which moves the content from the source's room into the copy's.
 
 // /api/documents — document metadata, per-tab content, copy, folder

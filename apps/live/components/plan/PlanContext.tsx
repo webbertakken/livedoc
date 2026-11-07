@@ -1,6 +1,6 @@
 'use client';
 
-// What every Plan board and Plan card on the canvas reads (docs/specs/026-plan/blueprints/plan-board.md
+// What every Plan board and Plan card on the canvas reads (docs/specs/026-plan/plan-board.md
 // "Editor components"): the document's items, who is looking, whether input works the Plan way, and
 // the actions a board takes. A context, like MindOutlineContext, because the consumers are element
 // bodies far below the editor state. Undefined outside the editor (share view, exports): a board

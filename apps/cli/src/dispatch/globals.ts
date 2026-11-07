@@ -1,4 +1,4 @@
-// The flags every command takes, wherever they stand (docs/specs/015-api/blueprints/cli.md "Global flags");
+// The flags every command takes, wherever they stand (docs/specs/015-api/cli.md);
 // every other word is the command's.
 
 import { CliError } from '../output/cli-error';

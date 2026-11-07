@@ -1,4 +1,4 @@
-// The direction a tab flows (blueprint "The checks", LN15): the larger-axis class of most connecting
+// The direction a tab flows (LN15): the larger-axis class of most connecting
 // directed arrows, or none.
 
 import type { ArrowElement } from '@livedoc/document';

@@ -386,3 +386,25 @@ clean, as one edit:
 - A brand palette or colour generator; the tab's theme and the colour pickers do this job.
 - An SVG favicon or a web manifest in the kit.
 - A combined shape's holes in an Excalidraw export, which draws its first contour only.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D66** Pixel size of the artboard: 1024 x 1024 (`LOGO_SIDE`): the common app-icon master (default).
+- **D67** Sizes of the keyline square and grid: Keyline square 64% of the side, an 8 x 8 grid (default).
+- **D68** Whether Mirror persists: Session only, per page (`useLogoTools`), released for every page when the tab changes
+  (page ids repeat across tabs); the guide parts and strength are synced preferences (a lasting taste), Show Guides per
+  page in local storage (page ids would fill the 4 KB preferences) (default).
+- **D69** How finely Combine traces curves: Adaptive flattening to 0.25 px chord error, straight runs merged within 0.05
+  px (default).
+- **D70** Where arched text's baseline sits in its box: Under 180 degrees the arc spans the box width, centred
+  vertically; from 180 a circle fitted to the box less glyph room (default).
+- **D71** How smaller kit PNGs are made: Downscaled from one 1024 px raster by halving, smoothing high (default).
+- **D72** Weights offered for wordmark type: 400, 500, 700: what every catalogue font already loads, so no extra font
+  bytes (default).
+- **D73** The size arched text is set at: `labelFontPx(textSize) x textScale`, the export's own size, so the canvas and
+  every file agree (default).
+- **D74** How an unfilled shape combines: By its filled area, as design tools do; the line is applied to the result
+  (default).

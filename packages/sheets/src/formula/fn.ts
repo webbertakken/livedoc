@@ -1,4 +1,4 @@
-// What a function is, and the helpers every function family shares (blueprint sheets-engine.md "Functions"): reading
+// What a function is, and the helpers every function family shares: reading
 // arguments as numbers, text, booleans and arrays the way Sheets does, lifting scalar functions over arrays, and
 // walking the numbers of a range for the aggregates.
 import { isRef, type EvalValue, type Frame, type RangeRef } from '../engine/frame';

@@ -65,7 +65,7 @@ export async function renameFolder(env: Env, id: string, name: string): Promise<
 
 // Deleting a folder moves its direct subfolders and documents (trashed ones too) up to its parent,
 // the space's root for a top-level folder (docs/specs/013-workspace/folders.md "Deleting a folder",
-// blueprint folder-delete.md). One batch, one transaction: the parent is read by subquery INSIDE it,
+// docs/specs/013-workspace/folders.md). One batch, one transaction: the parent is read by subquery INSIDE it,
 // while the row still exists, so a concurrent move cannot strand the contents, and the folder's
 // Drive mirror row (docs/specs/022-drive-mirror/drive-mirror.md, "Data") goes with it. The FKs'
 // ON DELETE SET NULL is only a backstop the explicit statements never reach. Answers the parent the

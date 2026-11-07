@@ -1660,3 +1660,68 @@ SlideShown`).
 
 - Per-page themes or fonts: the tab's theme and font apply to every page.
 - Master pages or shared headers and footers.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D23** Longest page name kept: 60 characters (`PAGE_NAME_MAX`): a label, not a caption (default).
+- **D24** How faint the pattern ink is: Slate at 10% on a light page, white at 14% on a dark one (`pagePatternInk`)
+  (default).
+- **D25** How light and dark Theme glow and Theme dusk are: Glow: accent tinted 85% to the second colour tinted 70%;
+  dusk: accent shaded 65% to the second shaded 40% (default).
+- **D26** How a layout headline is sized: Large text scaled until one line fills 72% of its box's height or its width at
+  0.6 of the size per glyph (default).
+- **D27** The page panel's width and gap from its cog: 304 px wide, 6 px from the cog (default).
+- **D28** The title bar's room for the cog and the layout invite: Cog 32 px (`COG_ROOM`), a slide page's deck and notes
+  buttons (`pageDeckRoom`, `pageNotesRoom`), the lock's room (`pageLockRoom`), and a logo page's title-bar controls
+  (`logoTitleBarRoom`); invite 150 px with words, 30 px as an icon; words only with room for two 40 px labels beside
+  (default).
+- **D29** A layout tile's thumbnail size: 120 px wide outside the gallery (`THUMB_W`); in the gallery, its column less
+  12 px, the page's aspect (default).
+- **D30** Where the layout preview stacks: `z-[1]` over the element layer, under the panel; the page's own content
+  dropped from the clip meanwhile (default).
+- **D31** A stored gradient with no usable angle: 180 (top to bottom), normalised to 0..359 (default).
+- **D32** What a slide row says for a page slide on another tab: The page's own label (`pageSlideLabels`, read from the
+  slide's own tab), whichever tab is shown; none once the page is gone (default).
+- **D55** The Add a page popover's size and place: 420 px wide, 10 px under the + (above it when there is no room),
+  centred on it (default).
+- **D56** The first page's choice card's size: 420 px wide at one screen size, centred on the page (default).
+- **D57** Where the page navigator sits: The tools group, right of Undo / Redo (default).
+- **D58** Which card the Add a page popover focuses: The first, Infographic (default).
+- **D61** How an all-pages image export is packaged: One stored (uncompressed) .zip, entries `NN <label>.<ext>`, dated
+  now; no extra dependency (default).
+- **D62** Whether a format's page choice outlives switching format: Each format keeps its own All / One choice while the
+  dialog is open; the page pick is shared (default).
+- **D75** The Fit to Content tile's short name and the Split Into Pages icon: **Fit**, as the other tiles are one short
+  word; Lucide `layout-grid` (`SplitPagesIcon`), one sheet as several (default).
+- **D76** Where the view goes after Split Into Pages: The first new page, as after Add page or Duplicate (default).
+- **D78** The empty page's in-page layout card's size: The page on screen less 16 px a side (`LAYOUT_CARD_MARGIN`),
+  capped at 900 x 660 px; shown from 340 x 380 px, else the Choose a Layout button (default).
+- **D79** How far a presented slide's letterbox reaches: 100 000 canvas px past the sheet (`LETTERBOX_SPREAD`): past any
+  screen at any zoom (default).
+- **D80** How often a locked page repeats its notice: Once per 2.5 s (`NOTICE_GAP_MS`) while presses keep landing on it
+  (default).
+- **D81** "Blocks of a similar size" for even gaps: Each side at most 1.5 times the line's first block's
+  (`PAGE_TIDY_SIMILAR_RATIO`); a line is cut where one is not (default).
+- **D82** How long a Tidy Up keeps settling: 6 passes per level, 10 runs over the page until one changes nothing
+  (`PAGE_TIDY_PASSES`, `PAGE_TIDY_RUNS`) (default).
+- **D83** When a card is too close to its page to read as a card: Under 1.25:1 against the page (a gradient's mean under
+  it), re-inked to 1.4:1 (`PAGE_CARD_FLOOR`, `PAGE_CARD_TARGET`); a border at 1.25:1 keeps it (default).
+- **D84** How a gradient is measured under an element: Its colours at 5 points across the element's span along the angle
+  (`GRADIENT_SAMPLES`), the worst for text and lines, the mean for a card (default).
+- **D85** How long re-inking remembers the author's colours: The editor session, per tab, at most 20 tabs (`MAX_TABS`);
+  never stored in the document (default).
+- **D86** How carried words find their place in a new layout: Roles by type size (title the most prominent at 32 px or
+  more, large at 32 px or more, body the rest) and figures (12 chars at most, a digit, no three-letter word), paired in
+  reading order with 4 px row tolerance; shrink to fit by a 0.55 / 0.6 bold glyph and 1.25 line estimate, never below
+  0.4 (default).
+- **D87** When the view is on a page, and how many tabs remember theirs: The page under the view's centre, else the
+  nearest by centre distance, once the view rests 400 ms (`LAST_PAGE_SETTLE_MS`: past a glide's 280 ms, short of a
+  deliberate stop); the latest 200 tabs (`LAST_PAGE_MAX`), as Logo page guides keep 200 pages (default).
+- **D88** How far a pan or a flick goes before the page turns, and when the view counts as rested: A fifth of what
+  shows, or 24 px at 0.5 px/ms as the hand lets go; within 2% of fit is the fit; 250 ms of rest with no pointer held
+  (`SNAP_SWIPE_FRACTION`, `SNAP_FLICK_*`, `SNAP_FIT_TOLERANCE`, `VIEW_REST_MS`) (default).
+- **D89** The layout gallery's columns and drawing: Columns of at least 156 px (112 px on a tall page), never fewer than
+  two, 8 px apart; a tile draws its preview within 320 px of view (default).

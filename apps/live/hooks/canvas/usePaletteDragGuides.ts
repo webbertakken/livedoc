@@ -60,7 +60,7 @@ export function usePaletteDragGuides({
   timeline,
 }: {
   elements: Element[];
-  // The zoom now, read on each dragover (docs/specs/008-canvas/blueprints/viewport-store.md).
+  // The zoom now, read on each dragover (docs/specs/008-canvas/canvas-performance.md).
   readZoom: () => number;
   wrapperRef: RefObject<HTMLElement | null>;
   // Insert between (docs/specs/021-event-storming/event-storming.md): what the board and session allow. The other

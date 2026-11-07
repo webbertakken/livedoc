@@ -1,4 +1,4 @@
-// The summary line's numbers (blueprint "Behaviour and state" step 2): crossing arrow pairs, shared with
+// The summary line's numbers: crossing arrow pairs, shared with
 // `edge-crossings`, and the drawing's extent.
 
 import { contentBounds, pathsCross, type ElementId, type Rect } from '@livedoc/document';

@@ -1,4 +1,4 @@
-// An in-memory CliIo for the suites (docs/specs/015-api/blueprints/cli.md "Testing"): captured streams, a map
+// An in-memory CliIo for the suites (docs/specs/015-api/cli.md): captured streams, a map
 // of files with their modes, a scripted fetch and a fixed clock.
 
 import { readFile } from 'node:fs/promises';

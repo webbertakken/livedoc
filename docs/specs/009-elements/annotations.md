@@ -95,3 +95,15 @@ size. `isBoxed` and the `BoxedElement` union include it.
 Adding an annotation emits `track('Element', 'Added', 'Annotation')`; opening
 its note reuses the existing `track('Note', 'Opened')` from `useEditorNotes`
 (see [Telemetry + public transparency dashboard](../017-telemetry/telemetry.md)).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D87** Hover preview placement and size: Above the marker, below when `rect.top - 10 < 120`; max 280px wide, 15rem
+  tall, clipped (default).
+- **D88** Export look: Ellipse with fill + stroke, no glyph, no note (default).
+- **D89** Default colours: Light fill `#e0f2fe`, stroke `#0ea5e9`; dark fill `DARK_INK.annotationFill` `#1c2533`, stroke
+  `DARK_INK.stroke` `#64748b`; padding `none` (default).
+- **D90** Quick-connect: No plus on an annotation (default).

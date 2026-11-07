@@ -1,4 +1,4 @@
-// What each function takes and does, in a line (blueprint sheets-engine.md "Functions"): the editor's autocomplete
+// What each function takes and does, in a line: the editor's autocomplete
 // and argument hint, and the Sheet Functions help article, read it. A flat catalogue (exempt from the size rule);
 // a test keeps it, the registry and formulas.md in step. Optional arguments are in [brackets]; "…" repeats.
 type FunctionDoc = { args: readonly string[]; summary: string; example: string };

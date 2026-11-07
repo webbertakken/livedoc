@@ -479,7 +479,7 @@ export async function markThumbRendered(env: Env, id: string, now: number): Prom
 }
 
 // "Copy this document to my own files": duplicates the source document under a brand-new id owned by
-// `newOwnerId` (docs/specs/006-document/blueprints/document-storage.md "Routing", Copy). Carries the name given,
+// `newOwnerId` (docs/specs/006-document/document-storage.md, Copy). Carries the name given,
 // the source's recorded creation intent (read in the same statement, never re-derived,
 // docs/specs/013-workspace/default-folders.md "Recorded intent") and every tab's content; deliberately not its share
 // links or its shareable flag, so the copy reads as the copier's own clean workspace.

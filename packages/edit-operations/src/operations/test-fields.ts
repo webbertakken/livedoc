@@ -1,4 +1,4 @@
-// `test <selector> key=value…` (docs/specs/024-agents/blueprints/edit-operations.md "Operations", EO39):
+// `test <selector> key=value…` (docs/specs/024-agents/edit-operations.md, EO39):
 // each field compares the value `set` would write with the stored one, aliases resolved, without the
 // label cap or a coercion warning: strings exactly, `key=` holding when the field is absent, colours
 // by slot or the hex case-insensitively. Any difference refuses the changeset; it changes nothing.

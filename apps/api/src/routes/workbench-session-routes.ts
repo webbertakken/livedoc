@@ -1,5 +1,5 @@
 // POST /api/workbench/sessions and DELETE /api/workbench/sessions/current
-// (docs/specs/013-workspace/blueprints/workbench-embeds.md "Redemption"). Redemption is credential-free: the
+// (docs/specs/013-workspace/workbench-embeds.md). Redemption is credential-free: the
 // ticket is the bearer. A document session acts as the ticket's owner on its one document, at the lower of the
 // ticket's level and the owner's access now; a workspace session acts as them in their workspace at the ticket's
 // level, each route capping it by their access now. Both last WORKBENCH_SESSION_TTL_MS or until the token's expiry.

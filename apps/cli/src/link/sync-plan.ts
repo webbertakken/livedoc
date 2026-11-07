@@ -1,4 +1,4 @@
-// Planning a pass (docs/specs/027-repositories/blueprints/repository-link.md "Actions"): the scan, the coverage, what
+// Planning a pass (docs/specs/027-repositories/repository-link.md): the scan, the coverage, what
 // the api answered and what the local sync state recorded, to one action per document and per refused or reported
 // file, documents in index order (RL41), then the files that name no readable document, by path. Pure. A document
 // with no answer this pass (a pass narrowed to another) gets no action.

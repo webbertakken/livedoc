@@ -5,7 +5,7 @@ import {
   type ShareRole,
 } from '@livedoc/api-schema';
 
-// The room's agent presence (docs/specs/024-agents/blueprints/agent-presence.md "Room"): one entry per token and tab,
+// The room's agent presence (docs/specs/024-agents/agent-presence.md): one entry per token and tab,
 // one Durable Object storage key each (PR3, PR13), restored by prefix on wake, swept on its expiry by the alarm or by
 // any roster build (PR30). Entries travel in the presence frame's own `agents` array, so no reader of
 // `participants` ever counts one (I1, PR14).
@@ -152,7 +152,7 @@ export class RoomAgentPresence {
 // One hello'd session as the roster sees it.
 export type RosterSession = { presenceId: string; personTag: string | null };
 
-// The `agents` array one recipient receives (blueprint "Room"): entries in the order they were set, `joins` naming the
+// The `agents` array one recipient receives: entries in the order they were set, `joins` naming the
 // other sessions of the same person, `self` when the recipient is that person, `person` numbered by first appearance.
 // No person tag or token id leaves (I4).
 export function agentRosterFor(
@@ -215,7 +215,7 @@ function agentPresenceWriteOf(body: unknown): AgentPresenceWrite | null {
   return ok ? (b as AgentPresenceWrite) : null;
 }
 
-// `[agent-presence] <event>` with the tab and token (blueprint "Observability"); the room knows no document id.
+// `[agent-presence] <event>` with the tab and token; the room knows no document id.
 export function agentPresenceLog(
   event: 'set' | 'cleared' | 'expired',
   r: { tabId: string; tokenId: string },
@@ -223,7 +223,7 @@ export function agentPresenceLog(
   console.info(`[agent-presence] ${event}`, { tabId: r.tabId, tokenId: r.tokenId });
 }
 
-// `PUT /presence` sets or refreshes one entry, `DELETE /presence?token=&tab=` clears it (blueprint "Room");
+// `PUT /presence` sets or refreshes one entry, `DELETE /presence?token=&tab=` clears it;
 // `changed` runs when the frame must go out again.
 export async function answerAgentPresence(
   store: RoomAgentPresence,

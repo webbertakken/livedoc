@@ -1,4 +1,4 @@
-// Administration needs a live account (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Errors and edge
+// Administration needs a live account (docs/specs/014-identity/auth-and-guest-access.md "Errors and edge
 // cases", "Deleted account's token still within 15 minutes"). A session token verifies on its own for up to
 // 15 minutes, so it outlives an account deleted in that window; administration must not act for one. Content routes
 // keep the hot path free of a D1 read: the deleted account's rows are already gone.

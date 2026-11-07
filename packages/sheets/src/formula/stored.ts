@@ -1,4 +1,4 @@
-// Formulas as stored (blueprint sheets-engine.md "Stored form"): references point at row and column ids (and
+// Formulas as stored: references point at row and column ids (and
 // other sheets at their id), so inserting, moving and sorting rows never rewrites a cell, and a write sent before
 // someone else's layout change still lands where its writer meant. People see and type A1; this file converts.
 import { columnLetters } from '../address';

@@ -1,7 +1,7 @@
-// The worker's way into a document's room (docs/specs/006-document/blueprints/document-storage.md "Interfaces and
+// The worker's way into a document's room (docs/specs/006-document/document-storage.md "Interfaces and
 // contracts"): the one place that stubs DOCUMENT_ROOM. One client per document: the room's RPCs with the document id
 // filled in, and a `fetch` that names the document on every call (X-Document-Id), so a room knows whose legacy state
-// to take over (docs/specs/006-document/blueprints/document-storage-move.md "Room state handover"). Every read or
+// to take over (docs/specs/006-document/document-storage-move.md). Every read or
 // write of one document's content from outside its routes comes through here.
 //
 // Inside the room itself the same call is a plain method call (DocumentRoom's local namespace), so code the worker

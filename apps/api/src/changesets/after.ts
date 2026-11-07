@@ -8,8 +8,8 @@ import type { DocumentDTO, DocumentEnv } from '../types';
 import type { FrontDoor } from './front-door';
 import type { Author } from './write';
 
-// What follows a written changeset, off the response path (docs/specs/024-agents/blueprints/
-// agent-changesets.md "The pipeline" step 11): the Timeline and the new-comment email exactly as a
+// What follows a written changeset, off the response path (docs/specs/024-agents/agent-changesets.md step
+// 11): the Timeline and the new-comment email exactly as a
 // save does, with the author as the actor (CS29), and the Agent telemetry for a token's changeset.
 // Never for a dry run (CS12).
 

@@ -40,7 +40,8 @@ function derive(over: Partial<Parameters<typeof deriveCanvasSelection>[0]>) {
 }
 
 describe('deriveCanvasSelection', () => {
-  // docs/specs/008-canvas/blueprints/resize.md: the union handles stand on the boxed, unlocked members, as drawn.
+  // docs/specs/008-canvas/canvas-and-palette.md: the union handles stand on the boxed, unlocked members, as
+  // drawn.
   it('a locked member first in z-order leaves the union handles to the members that resize', () => {
     const els: Element[] = [box('a', { locked: true }), box('b', { x: 200 }), box('c', { x: 400 })];
     const s = derive({ elements: els, multiSelectedIds: new Set(['a', 'b', 'c']) });
@@ -421,7 +422,7 @@ describe('deriveCanvasSelection — an arrow label is part of its arrow', () => 
   });
 });
 
-// docs/specs/008-canvas/blueprints/selection-store.md: each element view decides its own grips, by the
+// docs/specs/008-canvas/canvas-performance.md: each element view decides its own grips, by the
 // same rule the whole-selection derivation uses.
 describe('elementGrips', () => {
   const table = { ...box('t'), type: 'table' } as unknown as Element;

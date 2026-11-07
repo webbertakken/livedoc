@@ -1,4 +1,4 @@
-// The lint's cost (docs/specs/024-agents/blueprints/diagram-lint.md "Performance and limits", LN35). Timed as
+// The lint's cost (docs/specs/024-agents/diagram-lint.md, LN35). Timed as
 // growth, not as a ceiling: coverage instrumentation on a CI runner makes an absolute CPU budget flake, a ratio
 // does not. A tab of 300 boxes and 300 arrows costs about 10 ms here, under LINT_BUDGET_CPU_MS; four times the
 // tab costs under eight times as much (the pair check is bounded by LINT_MAX_ARROWS).

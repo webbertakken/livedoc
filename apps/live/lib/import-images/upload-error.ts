@@ -1,5 +1,5 @@
 // An upload rejection to a named import failure
-// (docs/specs/020-import-export/blueprints/import-image-pipeline.md "failureFromUploadError").
+// (docs/specs/020-import-export/import-image-pipeline.md).
 
 import { ApiError } from '../api/core';
 import type { ImportImageFailure } from './types';

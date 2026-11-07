@@ -215,3 +215,21 @@ Every decision logs with the `[pages-agent]` fingerprint: `applied` (document, t
 - Exact page counts for an article without an editor.
 - A picture of the pages in the tool answer (the PNG the diagram tools return draws elements, not pages).
 - Recording page and article writes in the changeset history for revert (only their elements are).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **IA1** Which package holds the engine: `packages/edit-operations/src/pages/`: it already depends on document and
+  templates, and the api already imports it (default).
+- **IA2** How the route writes pages without element changes: `upsertTabAtRev` at the read revision; with element
+  changes, `writeChangeset` so the ops are recorded and merged on save (default).
+- **IA3** The HTTP status of the engine's refusals: 400, as the sheet and item routes answer their named refusals; 413
+  for `tab_too_large`, 409 for `tab_busy` (default).
+- **IA4** How the editor knows an article op came from an agent: `agent: true` on the relayed `article` op, set only by
+  the api relay (default).
+- **IA5** Gradient angle when only two colours are given: 160 degrees, the page panel's `PAGE_GRADIENT_ANGLE` (moved to
+  packages/document) (default).
+- **IA6** Marks Markdown cannot write (underline, colour, highlight, sup, sub) on read: Printed as plain text; the view
+  says the Markdown is lossy for them (default).

@@ -1,5 +1,5 @@
-// The shapes placement on create works with (docs/specs/013-workspace/blueprints/document-placement.md,
-// docs/specs/013-workspace/blueprints/default-folders.md), shared by the resolver, its steps, the
+// The shapes placement on create works with (docs/specs/013-workspace/folders.md,
+// docs/specs/013-workspace/default-folders.md), shared by the resolver, its steps, the
 // lookups and the log.
 
 import type {

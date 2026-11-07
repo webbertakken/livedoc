@@ -7,7 +7,7 @@ import {
   sameFlags,
 } from './selection-store';
 
-// docs/specs/008-canvas/blueprints/selection-store.md "The store".
+// docs/specs/008-canvas/canvas-performance.md.
 
 describe('createSelectionStore', () => {
   it('starts empty, with a frozen empty selection', () => {

@@ -1,6 +1,6 @@
 // The catalogue verbs (docs/specs/015-api/cli.md "Commands"): the template library, one template as an outline,
 // icon search, and the element format, as the api serves them. The catalogue owns only their help; their content is
-// the api's (blueprint "Catalogue routes").
+// the api's.
 
 import { z } from 'zod';
 import type { IconSearchResponse, TemplateCatalogueResponse } from '@livedoc/api-schema';

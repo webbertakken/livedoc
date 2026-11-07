@@ -19,7 +19,7 @@ import {
 } from './drive';
 
 // Every statement on drive_connections / drive_items
-// (docs/specs/022-drive-mirror/blueprints/drive-mirror.md, "Data and persistence").
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Data and persistence").
 
 const T0 = 1_700_000_000_000;
 

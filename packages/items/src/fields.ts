@@ -1,4 +1,4 @@
-// Field validation (docs/specs/026-plan/blueprints/item-store.md "Validation").
+// Field validation (docs/specs/026-plan/items.md).
 // One function guards every door: the api routes, the offline store and the
 // editor's optimistic writes, so a value that passes here is valid everywhere.
 

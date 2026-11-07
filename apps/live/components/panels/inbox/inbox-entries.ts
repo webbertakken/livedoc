@@ -1,4 +1,5 @@
-// The Inbox's model (docs/specs/013-workspace/inbox.md §1.1 to §1.3; blueprint inbox.md): the feed's rows laid out
+// The Inbox's model (docs/specs/013-workspace/inbox.md §1.1 to §1.3; docs/specs/013-workspace/inbox.md): the
+// feed's rows laid out
 // as one list, newest first, under date dividers, with the filter bar's choices and counts, and what each row says
 // about itself (who, what, why, where). Worked out once per read, never per render.
 

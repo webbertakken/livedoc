@@ -3,8 +3,8 @@ import { run } from '../main';
 import { fakeIo, TOKEN, type FakeIo } from '../testing/fake-io';
 import { HOST, hostDoc, linkHost, type HostDoc } from '../testing/link-host';
 
-// `link init`, `link status` and `link ls` through the whole command (docs/specs/027-repositories/blueprints/
-// repository-link.md "`link init`", "The folder picker", "`link status` and `link ls`").
+// `link init`, `link status` and `link ls` through the whole command
+// (docs/specs/027-repositories/repository-link.md).
 
 const folders = [
   { id: 'games-0001', name: 'Minigames', parentId: null, teamId: null },

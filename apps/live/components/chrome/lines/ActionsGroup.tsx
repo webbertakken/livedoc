@@ -22,7 +22,7 @@ export type ActionsGroupProps = DocumentActionsProps & {
   // In a workbench: Open in LiveDoc, the app's own address for what the frame shows. The appearance follows the
   // workbench there, so no toggle.
   workbenchOpenHref?: string;
-  // The app's surroundings (docs/specs/013-workspace/blueprints/workbench-embeds.md): the document actions and the
+  // The app's surroundings (docs/specs/013-workspace/workbench-embeds.md): the document actions and the
   // account. False in a workbench frame, which keeps the chrome and Open in LiveDoc alone.
   appSurroundings?: boolean;
   onOpenAccount?: () => void;

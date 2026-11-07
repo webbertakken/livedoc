@@ -1,4 +1,4 @@
-// Every stored field of every element type (docs/specs/024-agents/blueprints/edit-operations.md
+// Every stored field of every element type (docs/specs/024-agents/edit-operations.md
 // "Fields and values"): what an edit operation's `set` may name, and the list its `unknown_field`
 // refusal offers. `fieldsOf` fails the build when an element type gains a field this table does not
 // list, and `satisfies` when a type has no list, so the table cannot drift from the types.

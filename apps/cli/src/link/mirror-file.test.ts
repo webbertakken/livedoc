@@ -3,7 +3,7 @@ import { parseDocumentEnvelope } from '@livedoc/document';
 import { parsePullFile } from '../sync/pull-file';
 import { hasConflictMarkers, mirrorFileText, type MirrorFile } from './mirror-file';
 
-// The mirror file (docs/specs/027-repositories/blueprints/repository-link.md "The mirror file"): the pull file with
+// The mirror file (docs/specs/027-repositories/repository-link.md "The mirror file"): the pull file with
 // no time, every key sorted, one element per line.
 
 const mirror = (): MirrorFile => ({

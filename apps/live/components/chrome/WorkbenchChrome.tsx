@@ -1,6 +1,6 @@
 'use client';
 
-// The chrome of the editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md
+// The chrome of the editor in a workbench (docs/specs/013-workspace/workbench-embeds.md
 // "Presentation and UX", WB34, WB59): an **Open in LiveDoc** link in the actions group, beside Search and
 // Settings, where no docked panel can cover it, that opens the document (or, in a workspace frame's Explorer, the
 // view) in a full tab; and, once the session has ended unrenewed or revoked, the line at the top centre that says how

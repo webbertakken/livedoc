@@ -224,7 +224,7 @@ export function resolveDocumentSession(input: {
   shareRole: AccessLevel;
   shareCodeParam: string | null;
   // The embed view (docs/specs/013-workspace/embeds.md): below Editor it only looks, having no identity screen to
-  // put a name on what it adds (docs/specs/013-workspace/share-roles.md, blueprint SR6).
+  // put a name on what it adds (docs/specs/013-workspace/share-roles.md, SR6).
   embed?: boolean;
 }): DocumentSession {
   const isOwner = input.documentOwnerId === input.selfId;

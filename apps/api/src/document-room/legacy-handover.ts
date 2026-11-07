@@ -1,5 +1,5 @@
 // A room taking over its legacy room's state (docs/specs/006-document/document-storage-move.md "Handing over room
-// state", blueprint "Room state handover"). The key-value room each document had before keeps the order state, the
+// state"). The key-value room each document had before keeps the order state, the
 // collaboration ledger, the live poll, the baton, selections and agent presence; the new SQLite room takes every key
 // verbatim on its first request, then marks the handover so it never asks again.
 

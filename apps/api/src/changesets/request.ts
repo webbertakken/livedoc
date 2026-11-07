@@ -21,7 +21,7 @@ import {
   type GraphInput,
 } from '@livedoc/document';
 
-// A changeset request as the route receives it (docs/specs/024-agents/blueprints/agent-changesets.md
+// A changeset request as the route receives it (docs/specs/024-agents/agent-changesets.md
 // "Interfaces and contracts"), checked member by member before anything is read. Pure.
 
 export type ChangesetBody =

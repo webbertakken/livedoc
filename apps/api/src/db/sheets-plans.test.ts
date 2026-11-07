@@ -1,4 +1,5 @@
-// The sheet cell reads and writes seek each named cell by the primary key (docs/specs/029-sheets/blueprints/sheet-store.md
+// The sheet cell reads and writes seek each named cell by the primary key
+// (docs/specs/029-sheets/sheet-store.md
 // "Performance and limits"), against the real migrations: a sheet holds up to SHEET_CELLS_MAX cells, and a write
 // that read all of them to find the few it names cost as much as the sheet was big.
 

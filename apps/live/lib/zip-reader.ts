@@ -1,4 +1,4 @@
-// Reading a Zip (docs/specs/020-import-export/blueprints/ms-whiteboard-import.md): stored and
+// Reading a Zip (docs/specs/020-import-export/whiteboard-import.md): stored and
 // deflated entries, the latter inflated by `DecompressionStream('deflate-raw')` under a byte
 // budget shared by the whole import. Every offset is bounds-checked: the file is untrusted.
 import { BudgetExceeded, inflateBytes, type ByteBudget } from '@/lib/inflate';

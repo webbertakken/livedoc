@@ -20,7 +20,7 @@ import {
   type SankeySkipReason,
 } from './sankey-model';
 
-// Geometry constants (docs/specs/009-elements/blueprints/sankey.md "Constants").
+// Geometry constants (docs/specs/009-elements/sankey.md).
 const SANKEY_NODE_WIDTH_PX = 12; // a node's bar, wide enough to hover, narrow enough to read as a post
 const SANKEY_NODE_MIN_WIDTH_PX = 6;
 const SANKEY_NODE_PAD_MAX_PX = 18; // vertical gap between nodes in a column, at most

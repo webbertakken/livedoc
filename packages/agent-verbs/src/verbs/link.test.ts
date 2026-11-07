@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { linkInit, linkLs, linkStatus, MIRROR_LEVELS, sync } from './link';
 
-// The repository link's verbs (docs/specs/027-repositories/blueprints/repository-link.md "The verbs"): declared
+// The repository link's verbs (docs/specs/027-repositories/repository-link.md): declared
 // here, run by the CLI (CLI55); what they print is theirs.
 
 describe('link init', () => {

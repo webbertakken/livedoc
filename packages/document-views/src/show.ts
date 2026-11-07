@@ -1,4 +1,4 @@
-// One element in full (docs/specs/024-agents/blueprints/document-views.md "show", VW34): its container,
+// One element in full (docs/specs/024-agents/document-views.md, VW34): its container,
 // geometry or ends, every stored field, a table's cells, an entity's fields, its comments and its
 // arrows both ways. Mirrors, packed points and person ids are left out and named.
 import type { ShowView, ViewDoor } from '@livedoc/api-schema';

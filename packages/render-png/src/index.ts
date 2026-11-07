@@ -1,5 +1,5 @@
 // SVG to PNG with resvg (WebAssembly), for every front door that shows a drawing as a picture
-// (docs/specs/015-api/blueprints/cli.md "render-png"): the MCP server's inline previews and the CLI's
+// (docs/specs/015-api/cli.md): the MCP server's inline previews and the CLI's
 // `tab render`, `graph render` and `export --format png`. Each front door says how to load the wasm and the
 // font: a Worker imports them as modules, Node reads them from beside its bundle, and only when it renders.
 //

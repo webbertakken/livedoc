@@ -6,7 +6,7 @@ import { VerbRefusal } from '../define';
 import { contextOf, DOC_A, DOC_C, fakeApi, library, tabsOfA } from '../testing/fake-api';
 import { workbenchNameOf, workbenchOpen, workbenchOriginOf, workbenchPair } from './workbench';
 
-// docs/specs/013-workspace/blueprints/workbench-embeds.md "The CLI", "CLI verbs" (WB23, WB44).
+// docs/specs/013-workspace/workbench-embeds.md (WB23, WB44).
 
 const ORIGIN = 'https://127.0.0.1:5175';
 const minted = {

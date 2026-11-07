@@ -10,7 +10,8 @@ import { useLatest } from '@/hooks/ui/useLatest';
 import type { PlanItemsStatus } from './usePlanItems';
 import { debugLog } from '@/lib/debug-log';
 
-// How long an import waits for the item store (blueprint DEFAULTS): a document with no Plan content until the
+// How long an import waits for the item store (docs/specs/026-plan/items.md D43): a document with no Plan
+// content until the
 // import starts loading it only once the imported board lands, which is a fetch away.
 const PLAN_IMPORT_READY_WAIT_MS = 10_000;
 

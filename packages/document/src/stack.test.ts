@@ -11,7 +11,7 @@ import {
   type ShapeElement,
 } from './index';
 
-// docs/specs/009-elements/stack.md, blueprint stack.md.
+// docs/specs/009-elements/stack.md, docs/specs/009-elements/stack.md.
 
 const stack = (over: Partial<ShapeElement> = {}) =>
   ({

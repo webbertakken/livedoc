@@ -49,7 +49,7 @@ import type { StatusBoard } from './usePlanStatusNames';
 const NO_STATUS_BOARDS: readonly StatusBoard[] = [];
 import { moveStatusRefusal } from './status-refusal';
 
-// The editor's Plan slice (docs/specs/026-plan/blueprints/plan-board.md "Editor components"): the
+// The editor's Plan slice (docs/specs/026-plan/plan-board.md): the
 // open item panel and board set-up, and the actions boards and cards take, composed into the value
 // PlanContext hands every board. Items change through `planItems`; boards and cards are elements,
 // changed through `commit` on the active tab.

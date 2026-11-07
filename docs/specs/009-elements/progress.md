@@ -42,3 +42,13 @@ The fill's animation is the **Progress** section of the menu's **Animation** row
 - **Fill animation** tiles: None / Fill / Pulse / Stripes (live miniatures of a progress bar, `ProgressAnimPreview`); once an animation is picked, a **Speed** row (Slowest / Slow / Normal / Fast) and a **Repeat** toggle appear beneath it.
 
 Setters `setProgressSelected` / `setProgressAnimSelected` / `setProgressAnimSpeedSelected` / `setProgressAnimRepeatSelected` (`useDataShapeSetters`, exposed through `useElementStyle`) apply to every selected progress shape; changes emit `track('Element', 'Changed', 'Progress' | 'ProgressAnim')`.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D97** Percentage label style: 14 px (`PROGRESS_LABEL_PX`), weight 600, tabular numerals, centred on its cap band;
+  ink per part (`progressLabelInks`) on the bar (default).
+- **D98** Out-of-range or fractional `progress`: `clampPercent`: round, clamp to [0, 100] at render and in the setter
+  (default).

@@ -1,4 +1,4 @@
-// Menu aim (docs/specs/013-workspace/new-document-menu.md "The menu", blueprint D193): whether the pointer, moving from
+// Menu aim (docs/specs/013-workspace/new-document-menu.md "The menu", D193): whether the pointer, moving from
 // `previous` to `current`, heads for the pane. It does when `current` lies inside the triangle of `previous` and the
 // pane's two near corners, so crossing other rows on the way does not change the selected blank. Pure.
 export type Point = { x: number; y: number };
@@ -6,7 +6,7 @@ export type Point = { x: number; y: number };
 // The pane's near edge, as the two corners the pointer aims between.
 export type AimTarget = { top: Point; bottom: Point };
 
-// MENU_AIM_DELAY_MS (blueprint "Constants"): how long a heading pointer holds the selection after its last move.
+// MENU_AIM_DELAY_MS: how long a heading pointer holds the selection after its last move.
 export const MENU_AIM_DELAY_MS = 300;
 
 const cross = (o: Point, a: Point, b: Point) =>

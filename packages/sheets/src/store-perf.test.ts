@@ -1,4 +1,4 @@
-// Row operations stay linear in the sheet (blueprint sheets-engine.md "Performance and limits"): a sort, a delete
+// Row operations stay linear in the sheet: a sort, a delete
 // and its undo over 10,000 rows once each scanned the layout per id. Timed as growth in CPU time (cpuMsOf), not as a
 // ceiling: four times the rows should cost about four times as much; a scan per id would cost sixteen.
 import { describe, expect, it } from 'vitest';

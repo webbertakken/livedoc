@@ -5,7 +5,7 @@ import { WORKBENCH_HANDSHAKE_MS, type WorkbenchDocumentSessionResponse } from '@
 import type { WorkbenchRedeemOutcome } from '@/lib/api/workbench';
 import type { WorkbenchEvent } from './workbench-machine';
 
-// The handshake (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench page" steps 1
+// The handshake (docs/specs/013-workspace/workbench-embeds.md steps 1
 // to 3): read, redeem, check the document, hello, wait for the ack; revoke on every failure after a
 // session exists; nothing but `hello` (and `ended refused`) is sent before the ack (I8).
 

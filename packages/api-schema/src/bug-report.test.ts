@@ -8,7 +8,7 @@ import {
 } from './bug-report';
 import { bytesToBase64 } from './bytes';
 
-// docs/specs/016-platform/bug-reports.md "Filing" step 2, blueprint "Interfaces and contracts".
+// docs/specs/016-platform/bug-reports.md "Filing" step 2.
 
 const context = (extra: Partial<BugReportContext> = {}): BugReportContext => ({
   route: '/document',

@@ -1,5 +1,5 @@
-// An infographic page's Tidy Up (docs/specs/007-editor/pages-mode.md "Tidy"; blueprint
-// "Page Tidy Up"): the layout the author made, straightened. Pure: elements in, elements out, the
+// An infographic page's Tidy Up (docs/specs/007-editor/pages-mode.md "Tidy"): the layout the author made,
+// straightened. Pure: elements in, elements out, the
 // same array back when nothing would change.
 //
 // The page's elements are tidied as **blocks**: an element with others wholly inside it carries

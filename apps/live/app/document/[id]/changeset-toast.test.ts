@@ -8,7 +8,7 @@ import {
   type ChangesetToast,
 } from './changeset-toast';
 
-// The toast a relayed changeset raises (docs/specs/024-agents/blueprints/agent-changesets.md "The
+// The toast a relayed changeset raises (docs/specs/024-agents/agent-changesets.md "The
 // editor", "Presentation and UX").
 
 const op = (over: Partial<ChangesetRoomOp> = {}): ChangesetRoomOp => ({

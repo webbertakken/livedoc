@@ -60,7 +60,7 @@ The maximum width follows the local direction:
 - **Diagonal runs** blend the two: the limit is whichever width makes the label's footprint along
   the line fit the open run, never above the cap.
 
-A label is never wider than a cap, which is wider along a horizontal run than across a vertical one, so a very long arrow still gets a readable label rather than one long strip. The caps are 120px across a vertical run and 240px along a horizontal one; the stub is a named constant in the blueprint.
+A label is never wider than a cap, which is wider along a horizontal run than across a vertical one, so a very long arrow still gets a readable label rather than one long strip. The caps are 120px across a vertical run and 240px along a horizontal one; the stub is a named constant in the code.
 Explicit line breaks the author types are kept, and each explicit line still wraps to the width.
 
 An arrow may carry its own **label width** (`labelMaxWidth`, px), which replaces both caps: the
@@ -105,3 +105,25 @@ position.
 
 The export (SVG, PNG, PDF, thumbnails, the MCP render) lays out and knocks out labels with the same
 code as the canvas, so an exported label wraps at the same words and sits at the same spot.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D17** Order in which labels claim space: Arrows in document order; each sees the knockouts placed before it
+  (default).
+- **D18** Longest segment tie: First in draw order (default).
+- **D19** "Balanced" lines: Smallest width keeping the greedy line count; 8 binary-search steps (default).
+- **D20** "Nearest spot that is clear": Twelfths of the open run, within a quarter run of the preferred centre, forward
+  first (default).
+- **D21** Which boxes a label avoids: Every boxed element except `frame` and `lane` containers, own endpoints included
+  (default).
+- **D22** A word wider than the cap: Never broken; the line overflows the cap (default).
+- **D23** Measure fails (NaN): 7 px per char at 12 px, scaled by font size (default).
+- **D24** Word-width cache bound: 2 000 entries, cleared when full (default).
+- **D25** Cap between horizontal and vertical: `cross + (along - cross) * u.x^2`, smooth in the angle (default).
+- **D26** Which elements a label pass sees: The whole tab, hidden layers included, on the canvas and in every export
+  alike (default).
+- **D31** Which label box the selection toolbars clear: The plate rect; the toolbar gap already clears the knockout
+  margin (default).

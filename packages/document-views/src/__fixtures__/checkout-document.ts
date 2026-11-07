@@ -1,4 +1,4 @@
-// A three-tab document (docs/specs/024-agents/blueprints/document-views.md "Testing"): the checkout tab,
+// A three-tab document (docs/specs/024-agents/document-views.md): the checkout tab,
 // a 42-element lanes tab, and a 24-element event-storming tab.
 import {
   createComment,

@@ -9,7 +9,7 @@ import {
   type PullFile,
 } from './pull-file';
 
-// docs/specs/015-api/blueprints/cli.md "The pull file", CLI27, CLI28.
+// docs/specs/015-api/cli.md, CLI27, CLI28.
 
 const square: ShapeElement = {
   id: 'a',

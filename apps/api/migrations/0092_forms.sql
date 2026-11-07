@@ -10,7 +10,7 @@ CREATE TABLE form_links (
   tab_id TEXT NOT NULL,
   open INTEGER NOT NULL DEFAULT 1,
   created_at INTEGER NOT NULL,
-  -- The response number last given (blueprint §11: never reused).
+  -- The response number last given (: never reused).
   responses INTEGER NOT NULL DEFAULT 0,
   -- When the last response arrived (the Inbox's row time).
   last_response_at INTEGER,

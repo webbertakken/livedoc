@@ -3,7 +3,7 @@ import { formLook } from '@livedoc/document';
 import { QUESTION_TYPES, blankQuestion, type FormDefinition } from '@livedoc/forms';
 import { FORM_ART_HEIGHT_MAX, FORM_ART_WIDTH, formArt } from './form-art';
 
-// read_form's picture (docs/specs/030-forms/forms.md "Agents", blueprint §15): the form as respondents see it.
+// read_form's picture (docs/specs/030-forms/forms.md "Agents"): the form as respondents see it.
 const every: FormDefinition = {
   v: 1,
   heading: 'Every Type',

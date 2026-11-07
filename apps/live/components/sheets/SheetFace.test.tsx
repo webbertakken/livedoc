@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// A Sheet that cannot show its grid (blueprint sheet-element.md "Presentation and UX"): the title, a quiet line and
+// A Sheet that cannot show its grid: the title, a quiet line and
 // the action that line offers.
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';

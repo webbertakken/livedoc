@@ -104,3 +104,14 @@ Offline Mode's local Trash rows are always `deleted`.
 - **No telemetry event.** Telemetry counts what people do; the sweep is not a
   person. Its log line counts it, and the Trash's `Restored` event already
   says whether anyone comes back for what it moved.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D141** What rows already in the Trash carry as their reason: NULL (a person deleted them); no backfill (default).
+- **D142** How the wire spells "deleted by a person": `'deleted'`, mapped from NULL, so the wire never carries a null
+  reason (default).
+- **D143** Whether an unreadable tab counts as content: Yes: invalid JSON keeps the document, failing safe (default).
+- **D144** How many documents one sweep statement moves: 500, at most 4 statements a run (default).

@@ -10,7 +10,7 @@ import {
   type FakeWorkbench,
 } from './workbench-support';
 
-// The workbench embed end to end (docs/specs/013-workspace/blueprints/workbench-embeds.md, "Testing"):
+// The workbench embed end to end (docs/specs/013-workspace/workbench-embeds.md, "Testing"):
 // a fake workbench on http://127.0.0.1:<port> frames the live app on http://localhost:<port>. Opt-in
 // (E2E_WORKBENCH=1, `pnpm test:e2e:workbench`): it needs the signed-in stack for the pairing page and
 // the api calls the CLI makes.

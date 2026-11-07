@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { GifEncodeRequest, GifEncodeResponse } from './gif-encode-protocol';
 import { openGifEncoder } from './gif-encoder';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The encoder": the page's side of the worker.
+// docs/specs/020-import-export/animated-gif-export.md: the page's side of the worker.
 function fakeWorker() {
   const sent: { message: GifEncodeRequest; transfer?: Transferable[] }[] = [];
   const listeners: {

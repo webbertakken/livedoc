@@ -1,5 +1,5 @@
 // From whatever the person handed us to the pages of a draw.io diagram
-// (docs/specs/020-import-export/blueprints/drawio-import.md step 2). The
+// (docs/specs/020-import-export/drawio-import.md step 2). The
 // content is sniffed, never the file name: an mxfile, a bare mxGraphModel,
 // an SVG carrying one in `content`, or a PNG carrying one in a text chunk.
 

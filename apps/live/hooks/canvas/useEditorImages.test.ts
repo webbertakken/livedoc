@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // The recent-images read (docs/specs/009-elements/images.md), and the workbench that never makes it
-// (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table: upload only).
+// (docs/specs/013-workspace/workbench-embeds.md, Surface table: upload only).
 
 const { apiListImages } = vi.hoisted(() => ({ apiListImages: vi.fn(async () => []) }));
 vi.mock('@/lib/api-client', () => ({ apiListImages, apiFetchImageDataUrl: vi.fn() }));

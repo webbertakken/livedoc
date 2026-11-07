@@ -1,5 +1,4 @@
-// Agent changesets over REST (docs/specs/024-agents/agent-changesets.md; blueprint "Interfaces and
-// contracts"):
+// Agent changesets over REST (docs/specs/024-agents/agent-changesets.md):
 //   POST /api/documents/<id>/tabs/<tabId>/changesets          submit (`?dryRun=1` plans only)
 //   GET  /api/documents/<id>/changesets[?tab=&limit=]         the history, newest first
 //   GET  /api/documents/<id>/changesets/<changesetId>         one, with its result lines

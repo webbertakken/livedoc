@@ -336,7 +336,7 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
         {/* Rotation — fixed snap angles. Each tile previews the orientation
             (an upright marker rotated by the angle) so the effect is legible
             before clicking; 0° resets to upright. Not on an annotation marker
-            (docs/specs/009-elements/blueprints/annotations.md [QD8]). */}
+            (docs/specs/009-elements/annotations.md [QD8]). */}
         {/* Nor on a chart its Sheet draws: it sits square on the cells (docs/specs/029-sheets/sheet.md "Charts"). */}
         {supportsRotation(target) && !esNote && !covering && !isSheetAnchoredChart(target) ? (
           <MenuAccordionSection
