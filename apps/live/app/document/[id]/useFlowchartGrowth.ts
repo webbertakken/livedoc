@@ -13,7 +13,7 @@ import {
 import { dressFlowchartConnector, dressFlowchartStep } from '@/lib/flowchart-dress';
 import { lockedElementIds } from '@/lib/tab-cleanup';
 import { useLatest } from '@/hooks/ui/useLatest';
-import type { HandoffActions } from '@/lib/mind-handoff';
+import type { GrowOptions, HandoffActions } from '@/lib/mind-handoff';
 import {
   labelled,
   patchActiveElements,
@@ -51,6 +51,7 @@ export function useFlowchartGrowth(opts: GrowthHookOpts) {
     kind: FlowchartGrowth,
     label?: string,
     type?: FlowchartStepType,
+    options: GrowOptions = {},
   ) => {
     if (editsBlocked) return;
     const before = activeTab.elements;
@@ -75,7 +76,7 @@ export function useFlowchartGrowth(opts: GrowthHookOpts) {
         connector,
       ),
     );
-    reveal(step, handoffActions);
+    reveal(step, handoffActions, options);
     debugLog(
       `[flowchart-grow] ${kind} from=${id} step=${step.id} moves=${plan.layout.steps.size} label=${connector.label ?? '-'}`,
     );
@@ -122,8 +123,12 @@ export function useFlowchartGrowth(opts: GrowthHookOpts) {
 
   return {
     canGrowFlowchartStep,
-    growFlowchartStep: (id: string, kind: FlowchartGrowth, type?: FlowchartStepType) =>
-      growFlowchartStep(id, kind, undefined, type),
+    growFlowchartStep: (
+      id: string,
+      kind: FlowchartGrowth,
+      type?: FlowchartStepType,
+      options?: GrowOptions,
+    ) => growFlowchartStep(id, kind, undefined, type, options),
     abandonFlowchartStep,
     escapeGrownFlowchartStep,
   };

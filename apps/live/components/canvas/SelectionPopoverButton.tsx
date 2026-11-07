@@ -16,7 +16,7 @@ export function PopoverButton({
 }: {
   label: string;
   description: string;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
   children: React.ReactNode;
   active?: boolean;
 }) {

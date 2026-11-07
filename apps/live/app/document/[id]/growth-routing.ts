@@ -3,18 +3,24 @@
 // handoff and Escape on an empty grown node all reach growth through `canGrow` / `grow` / `abandon` /
 // `escapeGrown`; routing here lets every one of them serve a flowchart step without a second copy of
 // that plumbing. A child is a step's next step, a sibling a parallel one.
-import type { FlowchartGrowth } from '@livedoc/document';
+import type { FlowchartGrowth, FlowchartStepType } from '@livedoc/document';
+import type { GrowOptions } from '@/lib/mind-handoff';
 
 type MindGrowthApi = {
   canGrowMindNode: (id: string) => boolean;
-  growMindNode: (id: string, kind: 'child' | 'sibling') => void;
+  growMindNode: (id: string, kind: 'child' | 'sibling', options?: GrowOptions) => void;
   abandonMindNode: (id: string) => boolean;
   escapeGrownMindNode: (id: string) => boolean;
 };
 
 type FlowchartGrowthApi = {
   canGrowFlowchartStep: (id: string) => boolean;
-  growFlowchartStep: (id: string, kind: FlowchartGrowth) => void;
+  growFlowchartStep: (
+    id: string,
+    kind: FlowchartGrowth,
+    type?: FlowchartStepType,
+    options?: GrowOptions,
+  ) => void;
   abandonFlowchartStep: (id: string) => boolean;
   escapeGrownFlowchartStep: (id: string) => boolean;
 };
@@ -25,10 +31,10 @@ const flowchartGrowthOf = (kind: 'child' | 'sibling'): FlowchartGrowth =>
 export function routeGrowth(mind: MindGrowthApi, flow: FlowchartGrowthApi): MindGrowthApi {
   return {
     canGrowMindNode: (id) => mind.canGrowMindNode(id) || flow.canGrowFlowchartStep(id),
-    growMindNode: (id, kind) =>
+    growMindNode: (id, kind, options) =>
       flow.canGrowFlowchartStep(id)
-        ? flow.growFlowchartStep(id, flowchartGrowthOf(kind))
-        : mind.growMindNode(id, kind),
+        ? flow.growFlowchartStep(id, flowchartGrowthOf(kind), undefined, options)
+        : mind.growMindNode(id, kind, options),
     abandonMindNode: (id) => mind.abandonMindNode(id) || flow.abandonFlowchartStep(id),
     escapeGrownMindNode: (id) => mind.escapeGrownMindNode(id) || flow.escapeGrownFlowchartStep(id),
   };

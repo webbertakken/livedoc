@@ -16,7 +16,7 @@ import { dressMindConnector, dressMindNode } from '@/lib/mind-dress';
 import { fitMindLabel } from '@/lib/mind-label-fit';
 import { measureDrawnMindLabel } from '@/components/canvas/text-hug-measure';
 import { useLatest } from '@/hooks/ui/useLatest';
-import type { HandoffActions } from '@/lib/mind-handoff';
+import type { GrowOptions, HandoffActions } from '@/lib/mind-handoff';
 import {
   labelled,
   patchActiveElements,
@@ -73,7 +73,12 @@ export function useMindGrowth(opts: GrowthHookOpts) {
   // `label`, when given, is written onto the node grown FROM in the same
   // commit: the typing-ahead handoff finishing a node whose editor never
   // opened (lib/mind-handoff.ts).
-  const growMindNode = (id: string, kind: 'child' | 'sibling', label?: string) => {
+  const growMindNode = (
+    id: string,
+    kind: 'child' | 'sibling',
+    label?: string,
+    options: GrowOptions = {},
+  ) => {
     if (editsBlocked) return;
     const withLabel = (els: Element[]) => (label === undefined ? els : withLabelOn(els, id, label));
     const ids = { node: crypto.randomUUID(), arrow: crypto.randomUUID() };
@@ -101,9 +106,9 @@ export function useMindGrowth(opts: GrowthHookOpts) {
       return [...applyMindMoves(base, now.moves, now.reanchored), ...build(now).added];
     };
     patchActive(grown);
-    reveal(node, handoffActions);
+    reveal(node, handoffActions, options);
     debugLog(
-      `[mind-grow] ${kind} from=${id} node=${node.id} moves=${plan.moves.length} style=${plan.styleFrom ? 'level' : 'default'}`,
+      `[mind-grow] ${kind} from=${id} node=${node.id} moves=${plan.moves.length} style=${plan.styleFrom ? 'level' : 'default'} stay=${options.stay === true}`,
     );
     track('Element', 'Added', 'MindNode');
   };
@@ -149,7 +154,8 @@ export function useMindGrowth(opts: GrowthHookOpts) {
 
   return {
     canGrowMindNode,
-    growMindNode: (id: string, kind: 'child' | 'sibling') => growMindNode(id, kind),
+    growMindNode: (id: string, kind: 'child' | 'sibling', options?: GrowOptions) =>
+      growMindNode(id, kind, undefined, options),
     abandonMindNode,
     escapeGrownMindNode,
   };

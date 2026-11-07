@@ -165,8 +165,11 @@ export function CanvasSelectionToolbars({
             selected &&
             isMindNode(selected)
               ? {
-                  onAddMindChild: () => props.onGrowMindNode(selected.id, 'child'),
-                  onAddMindSibling: () => props.onGrowMindNode(selected.id, 'sibling'),
+                  // Shift+click stays on this node, so several children are added in a row.
+                  onAddMindChild: (stay: boolean) =>
+                    props.onGrowMindNode(selected.id, 'child', { stay }),
+                  onAddMindSibling: (stay: boolean) =>
+                    props.onGrowMindNode(selected.id, 'sibling', { stay }),
                 }
               : {})}
             // Flowchart (docs/specs/009-elements/flowchart.md): Add Step / Add Branch for whoever grows

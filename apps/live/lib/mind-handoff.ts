@@ -35,6 +35,10 @@ export type HandoffEnd = 'child' | 'sibling' | 'escape';
 
 export type HandoffSegment = { text: string; end?: HandoffEnd };
 
+/** How a pointer growth lands (docs/specs/009-elements/mind-node.md "Discoverability"): `stay`
+ *  (Shift+click) keeps the node it grew from selected, so the next press grows from it again. */
+export type GrowOptions = { stay?: boolean };
+
 /** What the editor state does for a node whose typing ended before its
  *  editor ever opened. Called with the LATEST state, on a later task. */
 export type HandoffActions = {

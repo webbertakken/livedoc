@@ -59,6 +59,18 @@ describe('useMindGrowth', () => {
     expect(setEditingId).toHaveBeenLastCalledWith(null);
   });
 
+  it('keeps the node it grew from selected when asked to stay, so the next press grows again', () => {
+    const { hook, setEditingId, setSelectedId } = setup();
+    act(() => hook.result.current.api.growMindNode('root', 'child', { stay: true }));
+    act(() => hook.result.current.api.growMindNode('root', 'child', { stay: true }));
+    const kids = hook.result.current.tab.elements.filter(
+      (e) => e.type === 'shape' && e.mindParentId === 'root',
+    );
+    expect(kids).toHaveLength(2);
+    expect(setSelectedId).not.toHaveBeenCalled();
+    expect(setEditingId).not.toHaveBeenCalled();
+  });
+
   it('opens the editor once the node lands when keys were typed for it first', () => {
     const { hook, setEditingId, setSelectedId } = setup();
     act(() => {

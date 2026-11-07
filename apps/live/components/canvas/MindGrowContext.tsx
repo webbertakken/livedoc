@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
+import type { GrowOptions } from '@/lib/mind-handoff';
 
 // How the label editor grows the next mind node (docs/specs/009-elements/mind-node.md).
 //
@@ -16,7 +17,7 @@ type MindGrow = {
   // Takes the id rather than closing over the edited element, so the provider
   // doesn't have to re-create the callback (and re-render the tree) every time
   // the edit target changes.
-  grow: (id: string, kind: 'child' | 'sibling') => void;
+  grow: (id: string, kind: 'child' | 'sibling', options?: GrowOptions) => void;
   // Escape on an empty, childless node that was empty when the edit began:
   // the Tab pressed one time too many. Removes it (and its connector) and
   // selects its parent. False when the node isn't one to remove.

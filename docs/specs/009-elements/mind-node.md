@@ -27,6 +27,11 @@ the canvas, so Tab and Enter keep growing from it and the toolbar stays in reach
 on it opens its label editor with that first character (type-to-edit), so a whole branch
 is still typed without touching the mouse.
 
+**Shift+click** on Add Child or Add Sibling (the toolbar's or the ring's) grows the node and **stays**: the node it was
+pressed on stays selected, its toolbar and an open ring stay where they are, and the view does not move, so several
+children are added with as many clicks. Their hover cards say so ("Shift+click to add several."). Each press is its own
+undo step, laid out like any growth.
+
 ## Why this is the gap
 
 [Purpose](../001-project-vision/purpose.md) opens with "diagrams **and mindmaps** in real time",

@@ -142,9 +142,9 @@ describe('SelectionPopover mind-node growth', () => {
       />,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Add Child' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }));
-    expect(child).toHaveBeenCalledOnce();
-    expect(sibling).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Sibling' }), { shiftKey: true });
+    expect(child).toHaveBeenCalledExactlyOnceWith(false);
+    expect(sibling).toHaveBeenCalledExactlyOnceWith(true);
   });
 
   it('shows neither on an element that is not a mind node', () => {
