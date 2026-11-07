@@ -156,8 +156,11 @@ under the keyboard the moment it was tapped. Every floating surface stays in vie
   first grows to its content's height or the visible area's, whichever is less, and so moves up whole rather than
   cutting a line under its top edge; one still taller then scrolls the field into its own view. It gets its own cap
   back when the field lets go.
-- It moves by a `translateY` put in front of its own transform, so its placement is untouched; when the field lets go
-  of focus or the keyboard goes, it returns to where its placement puts it.
+- It moves by a `translateY` of whole pixels put in front of its own transform, so its placement is untouched; when
+  the field lets go of focus or the keyboard goes, it returns to where its placement puts it. The lift is recognised by
+  the transform as the browser wrote it back, never by the string written: a tablet's fractional pixels came back
+  rounded, the lift was taken for the surface's own transform, and the document group stayed up after the keyboard
+  went.
 - A panel anchored to a control (`AnchoredPopover`) never shrinks below 160 px of room on its side (or its own height,
   when less), however little the window leaves it, so a keyboard that shrinks the window cannot squeeze it to nothing.
 - A modal `Dialog` first fits itself to the visible area (live-app.md "A dialog stays above the on-screen keyboard"),
