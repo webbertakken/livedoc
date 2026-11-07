@@ -27,8 +27,13 @@ of the page, so the window reads as one piece. That is one of two surfaces:
 A layout whose top is the ground says so with `data-chrome-surface="ground"` on `<html>`; without it, the header
 applies. It is one `<meta name="theme-color">`, written by the No flash script before first paint, then kept current
 whenever the appearance, a tab's theme tint or Midnight changes. It is never set through Next's viewport, so no copy
-carries the brand blue. The web app manifest's `theme_color` is the homepage's light ground, where an installed app
-opens, so it starts there before the page says otherwise.
+carries the brand blue.
+
+The web app manifest carries **no `theme_color`**. Chrome on Android (153 on) paints an installed app's navigation bar
+from it, once, when the app is installed or updated, and never from the page's meta, so any value there is one fixed
+colour under every appearance: the light ground left a white bar under a dark page. Without it the bar is the
+platform's, which follows the device's dark mode; the title bar still wears the page's `theme-color`. An app already
+installed keeps the old bar until Chrome next updates it from the manifest.
 
 ## The control
 
