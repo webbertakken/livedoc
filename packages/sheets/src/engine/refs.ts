@@ -1,4 +1,4 @@
-// References as rectangles (blueprint sheets-engine.md "Workbook and recalculation"): a resolved reference, or one
+// References as rectangles: a resolved reference, or one
 // typed as A1 text (INDIRECT), to the positions it reads on its sheet.
 import type { A1Ref } from '../formula/ast';
 import { posRefOf, type PosRef } from '../formula/stored';

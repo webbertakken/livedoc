@@ -1,4 +1,4 @@
-// New elements' ids (docs/specs/024-agents/blueprints/edit-operations.md "Ids", EO8, EO9): an `id=` must
+// New elements' ids (docs/specs/024-agents/edit-operations.md, EO8, EO9): an `id=` must
 // be a slug id that is neither a keyword nor taken; without one, the id is a slug of the label, or of
 // the kind word for an unlabelled element (`arrow`, `arrow-2`), free among every id of the tab and
 // every id minted earlier in the changeset.

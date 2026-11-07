@@ -5,7 +5,7 @@ import { createPinnedArrow, createShape } from './factories';
 import type { Element } from './index';
 import { isValidTab } from './validate';
 
-// Element ids are opaque strings (docs/specs/024-agents/blueprints/document-views.md "Slug ids"): a tab
+// Element ids are opaque strings (docs/specs/024-agents/document-views.md): a tab
 // whose elements carry the slug ids an agent's writes mint stores, validates and takes deltas like any.
 describe('slug ids round trip (R7)', () => {
   const taken = new Set<string>();

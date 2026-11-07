@@ -1,5 +1,5 @@
 // `sync [--watch] [--relocate] [--dry-run] [--all]` (docs/specs/027-repositories/repository-link.md "Commands";
-// blueprint "One sync pass", "`sync --watch`"): one pass of each link, its lines and the highest exit; `--watch`
+//): one pass of each link, its lines and the highest exit; `--watch`
 // keeps syncing until Ctrl-C.
 
 import { posix } from 'node:path';

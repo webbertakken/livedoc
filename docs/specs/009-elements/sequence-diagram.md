@@ -132,3 +132,12 @@ opened by the tour, step by step; Done closes it with the tour. While the tour r
 The MCP server and the REST API take `sequence` with `sequenceParticipants`, `sequenceMessages` and `sequenceNumbered`.
 An agent that already has Mermaid text can keep drawing loose elements (`style: "sequence"`); this element is the
 editable form.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D194** A new sequence diagram and its Play beat: 560 × 340: Browser, API, Database with Place order, Validate
+  (self-call), Insert order, Order id (reply), 201 Created (reply); Play wipes 0.4 s per message at Normal speed
+  (default).

@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 // docs/specs/003-system-architecture/react-state-and-effects.md "Rendering in the browser only": render never guards a
 // browser global with `typeof window`, and no `useHydrated`-style state stands in for `use(browser())`. A guard
-// that stays is outside render, and is listed here with where it runs (the blueprint's "Stay as they are").
+// that stays is outside render, and is listed here with where it runs .
 
 const repo = fileURLToPath(new URL('../../', import.meta.url));
 const OUTSIDE_RENDER: Record<string, string> = {

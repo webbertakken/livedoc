@@ -1,4 +1,4 @@
-// Where rows and columns sit on screen (blueprint sheet-element.md "Layout"): prefix sums of sizes (hidden and
+// Where rows and columns sit on screen: prefix sums of sizes (hidden and
 // filtered-out lines are zero), the frozen panes' sizes, the visible window for a scroll position, and the cell
 // under a point. Pure, so the grid's maths is tested without a DOM.
 import {

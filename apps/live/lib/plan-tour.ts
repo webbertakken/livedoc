@@ -7,7 +7,8 @@ import {
 import { tourTrackSeen, withTracksAnswered } from './tour-tracks';
 import type { UserPreferences } from './user-preferences';
 
-// The Plan tour's pure parts (docs/specs/026-plan/plan-tour.md, blueprint plan-tour.md): its relaunch
+// The Plan tour's pure parts (docs/specs/026-plan/plan-tour.md, docs/specs/026-plan/plan-tour.md): its
+// relaunch
 // signal, its tracks, and the leftover record an older tour wrote, so a later visit tidies the example content
 // a reload cut short (usePlanTourLeftovers).
 

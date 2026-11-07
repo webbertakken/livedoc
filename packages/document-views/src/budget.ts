@@ -1,4 +1,4 @@
-// Fitting a view to a token budget (docs/specs/024-agents/blueprints/document-views.md "Budgets"):
+// Fitting a view to a token budget (docs/specs/024-agents/document-views.md "Budgets"):
 // the outline steps down its own ladder (outline.ts); every other view keeps whole lines in order, then
 // says what it left out (VW40).
 import type { Elision, ViewDoor } from '@livedoc/api-schema';

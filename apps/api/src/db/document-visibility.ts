@@ -1,5 +1,5 @@
 // The documents a person can open, as SQL (docs/specs/013-workspace/inbox.md §4;
-// docs/specs/013-workspace/blueprints/explorer-home.md "Reads"). The three sets the Explorer's
+// docs/specs/013-workspace/explorer-home.md). The three sets the Explorer's
 // Recent merges: their own personal ones, those in a team they have JOINED (an invite grants nothing), and those
 // shared with them through a link that is still live. Never a document in the Trash. A team document is the
 // team's (docs/specs/013-workspace/team-shared-documents.md): its maker reaches it as a joined member, through the

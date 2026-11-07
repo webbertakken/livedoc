@@ -209,3 +209,135 @@ One pure engine, `@livedoc/edit-operations`, on top of `@livedoc/document`:
 - Refs, slug ids, kind words, membership and the content origin come from `@livedoc/document`, shared with the
   views and the lint, as do graph input's label cap and the MCP's normalisation.
 - The api runs it for every changeset; the CLI runs it only to parse and to print.
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E1** An operation that changes nothing (`set n3 label="Login"` on `"Login"`): no line, no element op; the changeset
+  still succeeds.
+- **E2** `rm` of an element an earlier operation added: both vanish from the diff; no line.
+- **E7** `insert` where a and b overlap (zero centre distance): the axis is vertical, downwards.
+- **E11** A custom theme the caller did not resolve: the default scheme's slots; `log('[edit-ops] theme-fallback')`.
+- **E18** A result holding a board or Sheet the tab did not hold, on a tab not in Plan (operations after `finalise`,
+  replace after `nextTab`; `planOnlyAddedOutsidePlan`): `invalid_value` (`planOnlyOutsidePlan`), detail `a board or Sheet goes only on a tab in Plan: <ids>`,
+  hint `add a Board tab or a Sheet tab with add_tab (template "kanban" or "blank-spreadsheet")` ([Agent
+  changesets](./agent-changesets.md#boards-and-sheets-only-in-plan)). One the tab already held passes.
+- **I1** Atomic. An outcome with `errors` carries no tab; the input `tab` is never mutated (the state copies on write).
+- **I2** Untouched stays identical. An element no operation touched, shifted, carried, landed or rebound is the same
+  object in `next.elements` as in `tab.elements`, so `diffToElementOps` emits nothing for it.
+- **I5** Deterministic. The same tab, operations and options give the same outcome: no clock, no `Math.random`; ids not
+  derived from text come from `options.makeId` (EO8).
+- **I6** Containers behind members. After finalising, every lane precedes every non-lane (`lanesToFront`) and every
+  container precedes each of its members in the element order.
+- **I7** Locks hold. No element in `locked` differs between `tab` and `next`.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **EO1** Where the engine and the modules it needs live: `@livedoc/edit-operations` laid out like
+  `packages/explorer-lens`; the template tab builders go to `@livedoc/templates`, which already imports
+  `@livedoc/document` (the reverse would be a cycle) (default).
+- **EO2** What the moved event-storming landing is called: `landWorkshopArrivals`: the MCP is one caller among the api
+  and the CLI (default).
+- **EO3** How long one line may be: `EDIT_LINE_MAX_CHARS` 16,384: a 4,000-character code value with escapes and other
+  fields fits (default).
+- **EO4** How the two forms are told apart: Per line: a line starting with `{` is JSON form, any other line form; one
+  request may mix them (default).
+- **EO5** Whether a `#` inside a line starts a comment: No: only a line whose first non-space character is `#` is a
+  comment, so `fill=#ff0000` reads (default).
+- **EO6** Which quotes and escapes the line form takes: `"…"` with `\" \\ \n \t`, `'…'` literal; a quote may open
+  mid-word (`label="Sign in"`) (default).
+- **EO7** How many errors one rejection names: Parsing names up to `EDIT_MAX_ERRORS` (10) malformed lines; applying
+  stops at the first rejection (default).
+- **EO8** Ids no slug can name: `options.makeId`, default `crypto.randomUUID`, injected so tests are deterministic
+  (default).
+- **EO9** Whether `id=` may be a reserved selector word: No: `invalid_value`, since the word would read as a keyword
+  (default).
+- **EO10** An existing element whose id is a reserved selector word: The keyword wins; such an element is reached by
+  label or a longer prefix (default).
+- **EO11** Case of keys and labels in selectors: Keys read case-insensitively (`tokenKeyOf`); labels compared trimmed
+  after `toLowerCase()` (default).
+- **EO12** The order of several matches: Element order (z-order), in results and in `targets` (default).
+- **EO13** What `downstream:` and `upstream:` include: Boxed elements reachable along pinned arrows from `from` to `to`
+  (or back), the start excluded (default).
+- **EO14** Whether `in:` means direct or nested members, and arrows: Every element whose chain of holders includes it;
+  arrows are never members (default).
+- **EO15** Which kinds `add` can create: Kinds with a factory: shapes, text, sticky, table, annotation, link card;
+  `arrow` points at `connect`; image, video, freehand, path are `invalid_value` (default).
+- **EO16** `selected` when the selection could not be read: `target_not_found` with "the selection could not be read",
+  as for an empty selection (default).
+- **EO17** An unknown kind in `add`: Coerced as a shape kind (`coerceShapeKind`) with the warning `shape_coerced`
+  (default).
+- **EO18** Whether cutting an arrow's label is reported: Yes: the warning `label_capped`, as for a shape (default).
+- **EO19** The type of an unquoted line form value: JSON when it is a number, `true`, `false`, or starts with `[` or
+  `{`; otherwise a string (default).
+- **EO20** What a named `x`, `y`, `width` or `height` triggers: Arrow rebinding and membership lines, as a move does
+  (default).
+- **EO21** Hex given through a raw colour field: The same `colour_overrides_theme` warning as `fill=` (default).
+- **EO22** When a box grows to fit its label: Shapes without `fixedSize` and not `textSize: scale`, to `labelBoxSize`;
+  grows only; `widened` / `taller` annotations (default).
+- **EO23** The default and range of `gap:`: `PLACEMENT_GAP` = `LAYER_GAP` (90), the layout engine's rank gap; integers 0
+  to 2,000 (default).
+- **EO24** `after:<x>` when x has no outgoing arrows: `below` (default).
+- **EO25** Whether `at:` moves off an occupied spot: No: exact; an overlap is the lint's to report (default).
+- **EO26** Where "beside the last one added" and "right of the content" are: Right of the latest element an earlier
+  `add` or `insert` in this changeset created; else right of all boxed content at its top; an empty tab at the origin
+  (default).
+- **EO27** The free slot of `inside:` and a full container: Interior minus header band and padding, scanned in rows top
+  to bottom, left to right, steps of the gap; none free: below the lowest member and the container grows to hold it
+  (`taller`) (default).
+- **EO28** Text size, size and colours of added shapes and text: `textSize: sm` and `labelBoxSize`, as graph input;
+  painted with the tab's theme as `buildTab` paints (default).
+- **EO29** Layer and z-order of new elements: The placement reference's layer, else `resolveActiveLayerId(layers, null)`;
+  appended, an arrow after the later of its ends, a container before its earliest member (default).
+- **EO30** A `mindParentId` naming a removed element: Removed with the parent (default).
+- **EO31** Anchors and route after `rewire`: Both ends re-anchor facing each other; `curveOffset`, `curvePoints`,
+  `elbowOffset` removed (default).
+- **EO32** The gap `insert` keeps: The clearance already between a and b on the flow axis; below `INSERT_MIN_GAP` (16),
+  `PLACEMENT_GAP` (default).
+- **EO33** What the insert's new arrow copies: Every field but `id`, `from`, `to`, `label`, `labelOffset`,
+  `labelMaxWidth`, route fields, `commentThread`, `link`; both arrows drop their route (default).
+- **EO34** The padding `wrap` draws around members: `FRAME_PAD` (32) and `FRAME_TOP` (64), the clustered layout's; a
+  lane adds its factory gutter on the left (default).
+- **EO35** Where `wrap … make-room` pushes a bystander: Perpendicular to the nearest edge of the new box,
+  `PLACEMENT_GAP` outside it (default).
+- **EO36** Arrows pinned to a container `unwrap` removes: Removed with it, as `rm` removes them (default).
+- **EO37** `order` against containers: The move applies, then containers are restored before their members (default).
+- **EO38** Sizes and edgeless boxes in `layout`: Every selected box keeps its size (`fixedSizeIds`); edgeless ones are
+  swept below with `sweepEdgelessNodes` (default).
+- **EO39** How `test` compares: The value `set` would write, by deep equality; strings exactly; `key=` holds when
+  absent; colours by slot, or hex case-insensitively (default).
+- **EO40** Whether anchor-only arrow changes print: No line; they stay in `elementOps` (default).
+- **EO41** `replace` on an existing tab: Other tab fields kept, elements replaced as the MCP's replace mode does (no
+  theme repaint); a new tab built as `add_tab` builds it (default).
+- **EO42** The order of result lines: `+ ~ -` in first-touch order, then `»` per delta and reason, then container lines,
+  then warnings (default).
+- **EO43** How values print in result lines: Strings JSON-quoted, cut at the views' lengths (labels 60, others 48);
+  objects `(changed)`; colour pairs once under their alias (default).
+- **EO44** The footer of a dry run: `dry run · rev <n> · <lint summary> · nothing written` (default).
+- **EO45** How many candidates a rejection lists: `REJECTION_CANDIDATES_MAX` 10 matches, `NEAREST_CANDIDATES_MAX` 5
+  nearest within distance 3; "did you mean" within 2 (default).
+- **EO46** Which resolved elements count as targets: Selector matches, operation ends, the split arrow, words inside
+  terms, placement references and `wrap` members; not what is only shifted, carried, landed or rebound (default).
+- **EO47** Locks met indirectly: Make room passes locked units by and leaves locked containers ungrown; a new element
+  avoids a locked layer; a locked arrow in an `rm` cascade or a locked bystander under `make-room` refuses (default).
+- **EO48** Order and scope of `createdIds`: Creation order; only elements still in the next tab (default).
+- **EO49** How theme slot names are written: The quick-swatch names lower-cased with spaces as `-` (`green`,
+  `deep-blue`), plus `theme` for slot 0 (default).
+- **EO50** `align:` when both axes are equally near: The column (shared centre x) (default).
+- **EO51** Which loose arrows a moved container carries: An arrow with a free end travels when every free end, read as a
+  point, has a holder chain reaching the moved container; pinned ends follow their elements (default).
+- **EO52** How far make room reaches past b's container: Outward: the grown container makes room beyond its old far edge
+  in its own holder, and so on up; a mind node holds but does not grow (default).
+- **EO53** Arrow style after `layout` or `wrap tidy`: `straight`, as the shared `reanchorArrow` sets it for every
+  layout, printed as a change (default).
+- **EO54** How the MCP's `ops` mode names an element: The element its `elementId` resolves to (an id or a ref), by the
+  always-safe `id:"…"` ref; a word naming nothing goes as given (default).
+- **EO55** Where `insert`'s new arrow sits in the element order: Directly after the new node (default).
+- **EO56** A moved element that ends where it began: No `»` line: a summed shift of nothing, or a note a lane landed
+  back in place (default).
+- **EO57** What `layout`'s selector selects: Members as `wrap` takes them: each ref or quoted label one element, the
+  other words together (default).

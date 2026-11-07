@@ -1,4 +1,4 @@
-// What a stored rule may be (blueprint sheet-rules.md "Validation"): every viewer draws a stored rule, so a malformed
+// What a stored rule may be: every viewer draws a stored rule, so a malformed
 // one would break the sheet for all of them. Closed lists, bounded text and counts, ranges on the sheet.
 import { isColour, validFormatValue } from '../format';
 import { isAxisId } from '../ids';

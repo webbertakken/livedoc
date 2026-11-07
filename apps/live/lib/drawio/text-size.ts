@@ -1,5 +1,5 @@
 // draw.io font sizes (px) to LiveDoc's text presets
-// (docs/specs/020-import-export/blueprints/drawio-import.md "Text size"): a whole element's
+// (docs/specs/020-import-export/drawio-import.md): a whole element's
 // `fontSize`, and a span's size inside an HTML label. Every size the importer sets comes from here:
 // text under 12 px takes the extra-small run size (`xs`, RUN_XS_PX), and text under what `xs`
 // shows is counted (spec "Text size"; docs/specs/008-canvas/canvas-and-palette.md "Extra-small runs").

@@ -159,3 +159,39 @@ a blank's or template's link), unchanged ([New document route](../007-editor/new
 `[new-document] choice=<blank|template> blank=<id> template=<kind>`, then
 `[new-document] opened ms=<n>`, `[new-document] create-landed ms=<n>` or
 `[new-document] create-failed action=<retry|choose>`.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D191** How the pane orders a whole mode's templates: Its start's groups in rail order, Recommended first, each
+  template once under its first group (default).
+- **D192** Which templates Sheet, Board and Form list: The spreadsheet Plan templates, the other Plan templates, and the
+  form templates, in catalogue order (default).
+- **D193** How menu aim decides the pointer heads for the pane: The triangle of the previous point and the pane's two
+  near corners; held at most 300 ms after the last move (default).
+- **D195** When the menu's code is fetched: On idle, and on pointer enter or focus of the button (default).
+- **D196** Where the open's clock starts and stops: From the call to `startNewDocument` (the click) to the first paint
+  after the editor's load reaches `done` with the canvas on screen (default).
+- **D197** How saves are held until the create lands: The autosave and the unload flush do not run while held, and run
+  once on landing against the created content; every other request naming the document waits in `apiFetch` (default).
+- **D198** Back before the create lands: The editor stays mounted, hidden, until the create has landed and nothing is
+  unsaved, checked every 250 ms; Forward shows it again (default).
+- **D199** Who the reader is before the profile settles: The creator's id the Explorer already holds, with the
+  placeholder name and colour until the profile loads (default).
+- **D200** The not-saved notice's place and words: First in the editor's top-centre stack: "Not saved yet." with the
+  failure's message and its one action (default).
+- **D201** A start with nobody bound as the creator: The `/new` path with the same template and place (default).
+- **D202** Where the signed-in budget test lives: `e2e/account/`, the only suite with a signed-in stack; the guest half
+  stays in `e2e/` (default).
+- **D203** Whether This Browser waits for its write before opening: No: it opens from memory as a LiveDoc document does,
+  saves held until the write lands; one path, one Try again (default).
+- **D204** What may run before the new editor's first frame: Its render and its effects' mount: the reveal follows as a
+  transition, a create that lands at once after the paint (default).
+- **D205** Whether the editor may be built before the click: Yes, for the face's blank only: a hidden standby built when
+  the Explorer is idle (at most 2 s), nothing created until the click (default).
+- **D206** Which choices the standby serves: The face's blank, unplaced or in the default store; every other choice is
+  prepared at the click (default).
+- **D207** When the create starts: After the editor's first frame of the document, or 1 s at most: a create that lands
+  at once would re-render it inside that frame (default).

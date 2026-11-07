@@ -72,7 +72,7 @@ export function useRoomConnection(opts: {
   documentServerStored: boolean;
   // False keeps the room closed whatever else holds (an ended workbench session). Defaults to true.
   enabled?: boolean;
-  // A workbench session (docs/specs/013-workspace/blueprints/workbench-embeds.md): told when the room
+  // A workbench session (docs/specs/013-workspace/workbench-embeds.md): told when the room
   // ends it (close 4006), or when an access change does (4005, WB31), instead of reloading.
   onWorkbenchEnded?: () => void;
   // The room turned this editor away as full (docs/specs/015-api/api.md "A room holds at most 100 connections"),

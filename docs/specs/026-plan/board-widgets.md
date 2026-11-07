@@ -115,6 +115,15 @@ line:
   that listed **Votes Left** (from when boards had their own voting) shows it no more.
 - A board saved before widgets existed shows that same default set, so it looks as it did.
 
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D17** Widget pill height: 28 px, the header's control height (default).
+- **D18** Distance before a press becomes a reorder: 4 px (default).
+- **D19** "Due soon" horizon: 7 days, today included (default).
+- **D22** Days without a change before a card is stale: 14 (default).
+- **D23** What Set Done Column marks: The board's last column (default).
+
 ## Telemetry
 
 - A widget placed, moved or removed sends the set-up part `Widgets` (plan-mode.md "Telemetry"), never the kind.

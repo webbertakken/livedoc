@@ -1,5 +1,5 @@
 // Document views over REST (docs/specs/024-agents/document-views.md "Where views are made";
-// blueprint "REST"): `?view=` on the tab GET and on the document GET, answered after the same gate and
+//): `?view=` on the tab GET and on the document GET, answered after the same gate and
 // redaction as the plain read, as text or (`json=1`) as JSON.
 import {
   DOCUMENT_VIEW_NAMES,
@@ -77,7 +77,7 @@ function unknownView(view: string, scope: Scope): Response {
 }
 
 // The view a request asks for, a 400 naming what is wrong, or null for the plain read.
-// `view=lint` takes only `json=1` (blueprint "Interfaces and contracts").
+// `view=lint` takes only `json=1`.
 function parseLintQuery(query: URLSearchParams): ParsedLintView | Response {
   for (const parameter of new Set(query.keys())) {
     if (parameter !== VIEW_QUERY.view && parameter !== VIEW_QUERY.json)
@@ -229,7 +229,7 @@ function answerLintView(
   return parsed.json ? json(report, { headers }) : textPlain(formatLintReport(report), { headers });
 }
 
-// What the caller has selected on the tab now, for `show selected` only (blueprint "REST"): the `mine` selections
+// What the caller has selected on the tab now, for `show selected` only: the `mine` selections
 // of the room, as the changeset submit reads them; null when the room could not answer. No other view asks.
 async function ownerSelection(
   ctx: DocumentRouteContext,

@@ -28,7 +28,7 @@ export function toolPhantom(intent: PendingDraw, theme: ThemeDefinition): Elemen
     );
   }
   if (intent.type === 'text') return createText(0, 0);
-  // A closed stand-in, so the panel offers the fill a path takes once it closes (blueprint P11).
+  // A closed stand-in, so the panel offers the fill a path takes once it closes (P11).
   if (intent.type === 'path') return boardShape(createPath(PATH_PHANTOM, true));
   return null;
 }

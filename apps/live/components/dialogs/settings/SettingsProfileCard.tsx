@@ -21,7 +21,8 @@ import { useSelfPresence } from './useSelfPresence';
 import { AUTOMATIC } from './SettingsPresenceColourRow';
 
 // The profile card, the `identity` row that opens Settings > Account
-// (docs/specs/014-identity/profile-and-email-notifications.md "Identity"; blueprint auth-and-guest-access.md
+// (docs/specs/014-identity/profile-and-email-notifications.md "Identity";
+// docs/specs/014-identity/auth-and-guest-access.md
 // "Presentation and UX"): who this is, as collaborators see them. Signed in, the account: picture or initials, name,
 // email, the account chip, when it joined and its colour; Name and Colour are edited in the rows below. A guest gets
 // the same card as a guest, and what signing in brings.

@@ -5,7 +5,7 @@ import { buildViewModel } from './model';
 import { selectionReference } from './selection-reference';
 
 // The selection reference (docs/specs/013-workspace/workbench-embeds.md "The selection reference",
-// blueprint "The selection reference"): what the person meant when they typed.
+//): what the person meant when they typed.
 
 const tabOf = (elements: Element[]): Tab => ({ id: 'tab-1', name: 'Wireframe', elements });
 

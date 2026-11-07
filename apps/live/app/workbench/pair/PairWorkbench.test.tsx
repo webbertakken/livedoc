@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The pairing page (docs/specs/013-workspace/workbench-embeds.md "Pairing"; blueprint "The pairing page"): every
+// The pairing page (docs/specs/013-workspace/workbench-embeds.md "Pairing"): every
 // state and its copy, the one read after auth settles, the answer, and focus on the heading at each state.
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { WorkbenchPairingRequestView } from '@livedoc/api-schema';

@@ -759,3 +759,33 @@ Every chart is on the public dashboard's **Forms** stack.
 - A QR code of the form link, and importing questions from another form.
 - A cover image (a cover is a slide background in colour): an image would join the image store's reference index.
 - Dragging a choice's options (Alt+Up and Alt+Down move them).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How long a form code is: 22 characters of base 62 (~131 bits), so telemetry's id rule also drops it (default).
+- **D2** How a question id is made: `q-` and 6 random base-36 characters, unique in the form (default).
+- **D3** How unseen responses are counted per reader: By response number: the last number the reader has seen, one row
+  per form and reader (default).
+- **D4** Where the hidden field sits: A `website` text input, off screen and `aria-hidden`, `tabindex=-1`, autocomplete
+  off (default).
+- **D5** Which ids a form's creator person carries: `form:` and the code's first 8 characters (default).
+- **D6** When a dropdown replaces radios: Past 7 options, unless Show as Dropdown is set (default).
+- **D7** How often an open Form tab rereads its count: Every 30 seconds while the page is visible (default).
+- **D8** When text typed in the builder is saved: Half a second after typing pauses, and when the field is left
+  (default).
+- **D9** How many opened response cards a browser keeps: The newest 500 ids (default).
+- **D10** Where the Form Panel docks: Beside the form from 1,100 px wide; a sheet over it below (default).
+- **D11** How Sketch draws a form's boxes: Uneven elliptical corners (255/14 px), 2 px slate ink, a 2×3 px pencil shadow
+  (default).
+- **D12** Which theme colour is a form's: The shared theme accent; the brand blue of each half on Default (default).
+- **D13** Where add_form puts a new Form tab: After the document's last tab; its responses tab right after it (default).
+- **D14** Where questions given alone send responses: A new board, so the form can be published at once (default).
+- **D15** How an agent's question names its type: By the model's id (`short`, `single`...), each described with the
+  builder's name (default).
+- **D16** Which reason Not Taking Responses names first: Suspended, paused, switched off, Close On, Response Limit,
+  full: the first fix unblocks the rest (default).
+- **D17** Whether Share Form publishes after a sync: No: it shows Publish Form, held while the link is first read;
+  publishing stays one press (default).

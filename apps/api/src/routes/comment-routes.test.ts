@@ -6,7 +6,7 @@ import * as db from '../db';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 
-// The comment endpoints (docs/specs/024-agents/agent-presence.md "Comments", blueprint "REST"): add, delete-own,
+// The comment endpoints (docs/specs/024-agents/agent-presence.md "Comments"): add, delete-own,
 // reply, resolve and reopen through the tab's revision, relayed without author or token ids; the listing across
 // the document with refs and labels.
 

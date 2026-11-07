@@ -4,7 +4,7 @@ import { act, renderHook } from '@testing-library/react';
 import type { Tab } from '@livedoc/document';
 import { HELD_BACK_NOTICE, useParticipantSession } from './useParticipantSession';
 
-// A Participant's commit guard (docs/specs/013-workspace/share-roles.md; blueprint "Editor state").
+// A Participant's commit guard (docs/specs/013-workspace/share-roles.md).
 const box = { x: 0, y: 0, width: 10, height: 10 };
 const tab = (elements: unknown[]): Tab => ({ id: 't', name: 'T', elements }) as Tab;
 const theirs = { id: 'a', type: 'sticky', ...box, addedBy: 'b'.repeat(32) };

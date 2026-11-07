@@ -101,7 +101,7 @@ export function answeringKeys(participants: readonly Participant[]): string[] {
 }
 
 // What a screen reader hears for an avatar: "Webber (Online)", and their agent's status line after it
-// (docs/specs/024-agents/blueprints/agent-presence.md "Accessibility").
+// (docs/specs/024-agents/agent-presence.md).
 export function participantAccessibleName(participant: Participant): string {
   const base = `${participant.name} (${statusLabel(participant.status)})`;
   return participant.statusLine ? `${base}, ${participant.statusLine}` : base;

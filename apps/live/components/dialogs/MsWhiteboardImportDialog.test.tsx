@@ -7,7 +7,7 @@ import { useMsWhiteboardImportLauncher } from '@/hooks/persistence/useMsWhiteboa
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
-// docs/specs/020-import-export/blueprints/ms-whiteboard-import.md "Presentation and UX".
+// docs/specs/020-import-export/whiteboard-import.md.
 describe('MsWhiteboardImportDialog', () => {
   it('is a labelled dialog holding the panel, with no way back, closing on its close button', () => {
     const onClose = vi.fn();

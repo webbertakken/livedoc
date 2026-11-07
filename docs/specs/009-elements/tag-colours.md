@@ -57,3 +57,11 @@ the map.
 
 The MCP server and the REST API take `tagColours` on a tab; an agent colour-codes a diagram by tagging cards and
 setting the map once.
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **I1** a tag colour never writes to the card; removing the map row restores the card's own look.
+- **I2** an explicit `accentEdgeColor` always wins.
+- **I3** canvas and export draw the same edge and tints.

@@ -11,7 +11,7 @@ import {
   writeLinkState,
 } from './local-state';
 
-// The local sync state (docs/specs/027-repositories/blueprints/repository-link.md "Data and persistence"): per link
+// The local sync state (docs/specs/027-repositories/repository-link.md): per link
 // and work tree, under the git directory, else the cache; never committed.
 
 const link = parseLinkFile('[covers]\nfolder = "f"\n', '/repo/livedoc.toml');

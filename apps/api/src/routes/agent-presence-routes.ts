@@ -1,5 +1,5 @@
 // `PUT` and `DELETE /api/documents/:id/tabs/:tabId/presence` (docs/specs/024-agents/agent-presence.md "Presence",
-// blueprint "REST"): an agent shows itself on a tab with a status line and focus, without holding a socket. Token
+//): an agent shows itself on a tab with a status line and focus, without holding a socket. Token
 // callers only, through the participation gate; the room keeps the entry and expires it on its ttl.
 
 import {

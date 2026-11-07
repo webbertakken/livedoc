@@ -3,7 +3,7 @@ import { DocumentRoom } from './document-room/document-room';
 import { nodeDocumentSql, nodeTransaction } from './test-document-sql';
 import type { DocumentEnv, Env } from './types';
 
-// The room harness for tests (docs/specs/006-document/blueprints/document-storage.md "Testing"), two ways:
+// The room harness for tests (docs/specs/006-document/document-storage.md), two ways:
 //
 // - withTestDocumentRooms: the env's DOCUMENT_ROOM answers the room's RPCs (document-rpc.ts) against the env itself,
 //   so a route test drives the worker's handler, which hands the request to the "room", which runs the same

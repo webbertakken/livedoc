@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The Sheet toolbar's glyphs (blueprint sheet-element.md "Assets and external resources"): each draws an svg in
+// The Sheet toolbar's glyphs: each draws an svg in
 // `currentColor`, and the ones with a variant draw it.
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';

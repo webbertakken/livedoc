@@ -4,7 +4,7 @@ import { run } from '../main';
 import { fakeIo, TOKEN, type FakeIo, type Route } from '../testing/fake-io';
 import { LOGIN_TIMEOUT_MS } from './oauth';
 
-// Browser and device sign-in through `auth login` (docs/specs/015-api/blueprints/cli.md "The CLI's OAuth client",
+// Browser and device sign-in through `auth login` (docs/specs/015-api/cli.md,
 // "Credentials", CLI34 to CLI36), on a fake host with an authorization server.
 
 const HOST = 'https://docs.nu';

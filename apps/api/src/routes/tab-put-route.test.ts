@@ -10,7 +10,7 @@ import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 import { testDocumentRoom } from '../test-document-room';
 
-// The editor's whole-tab save (docs/specs/024-agents/blueprints/agent-changesets.md "The tab PUT"):
+// The editor's whole-tab save (docs/specs/024-agents/agent-changesets.md):
 // refused to tokens, merged with the changesets the saver had not seen, written at the revision it
 // read.
 

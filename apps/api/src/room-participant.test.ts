@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PARTICIPANT_PENDING_MAX, RoomParticipantWrites } from './room-participant';
 
-// A Participant's write queue (docs/specs/013-workspace/share-roles.md, blueprint SR12): one socket cannot queue
+// A Participant's write queue (docs/specs/013-workspace/share-roles.md, SR12): one socket cannot queue
 // writes without end.
 describe('RoomParticipantWrites', () => {
   it('refuses a flood past PARTICIPANT_PENDING_MAX with a resync, queueing nothing more', async () => {

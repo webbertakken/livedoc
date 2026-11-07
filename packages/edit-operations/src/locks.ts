@@ -1,4 +1,4 @@
-// What people have locked against change (docs/specs/024-agents/blueprints/edit-operations.md I7):
+// What people have locked against change (docs/specs/024-agents/edit-operations.md I7):
 // a locked element, or an element on a locked layer. The tab lock is checked before any operation.
 
 import {

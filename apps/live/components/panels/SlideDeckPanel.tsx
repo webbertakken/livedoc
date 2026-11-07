@@ -94,7 +94,7 @@ export function SlideDeckPanel({
     startingDeck,
   } = state;
   // The selection the panel offers to slide, read from the store: a selection change re-renders this
-  // panel and not the canvas (docs/specs/008-canvas/blueprints/selection-store.md).
+  // panel and not the canvas (docs/specs/008-canvas/canvas-performance.md).
   const selected = useSelectionOf(selectionSetOf, sameMembers);
   const selectionCount = selected.size;
   const currentSelectionIds = useMemo(() => [...selected], [selected]);

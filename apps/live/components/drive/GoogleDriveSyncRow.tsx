@@ -1,8 +1,8 @@
 'use client';
 
 // Google Drive's row in Settings > Account > Cloud Sync
-// (docs/specs/022-drive-mirror/drive-mirror.md, "Connecting"; blueprint "Cloud Sync in
-// Settings"). One row: the provider on the left, its status and one button on
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Connecting"). One row: the provider on the left, its status
+// and one button on
 // the right. A second line appears only while something needs the user. The
 // status keeps one width per phase (Layout stability, "reserve per phase, not
 // per message"). Syncing is automatic, so there is no Sync now.

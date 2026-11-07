@@ -16,7 +16,7 @@ import {
   searchWarningType,
 } from '@/lib/image-search/telemetry';
 
-// State of the image picker's Search tab (docs/specs/009-elements/blueprints/image-search.md
+// State of the image picker's Search tab (docs/specs/009-elements/image-search.md
 // "Behaviour and state"): the submitted query, the pages loaded so far, the
 // search status, and the one pick in flight.
 

@@ -1,4 +1,4 @@
-// A title folded once for matching (docs/specs/013-workspace/blueprints/explorer-filters.md "Title
+// A title folded once for matching (docs/specs/013-workspace/explorer-filters.md "Title
 // matching"): lower case without accents, its words, and the way back to the title as written. Folding is
 // the costly part of a match, so each title is folded once and kept.
 

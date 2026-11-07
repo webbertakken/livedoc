@@ -1,4 +1,4 @@
-// Steps 2 to 6 of a pass (docs/specs/027-repositories/blueprints/repository-link.md "One sync pass"): the local
+// Steps 2 to 6 of a pass (docs/specs/027-repositories/repository-link.md): the local
 // sync state, coverage, the scan, the api's answers and the plan, read and written nothing. `sync` acts on it;
 // `link status` prints it.
 

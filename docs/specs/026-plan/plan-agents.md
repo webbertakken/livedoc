@@ -251,3 +251,16 @@ its Default State, its display per size and its tabs, so a change can build on w
 ## Telemetry
 
 - None new: agent writes count through the MCP's existing per-tool events.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D31** Where an agent's board goes on a tab: Right of everything, 80 px gap, tops aligned; the origin on an empty tab
+  (default).
+- **D32** Which tab an agent's board goes on: The first tab with a board, else the first tab (default).
+- **D33** A person named by an agent who is not assigned yet: `n-<slug>` id, a Plan swatch picked by a hash of the name
+  (default).
+- **D34** Built-in field names agents may use besides ids: Due Date, Start Date, Colour, Label, Assigned To, Owner
+  (default).

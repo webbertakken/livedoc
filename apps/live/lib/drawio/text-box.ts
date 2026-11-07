@@ -1,4 +1,4 @@
-// Text draw.io sizes to itself (docs/specs/020-import-export/blueprints/drawio-import.md step 15.3):
+// Text draw.io sizes to itself (docs/specs/020-import-export/drawio-import.md step 15.3):
 // a text cell with no width or no height is drawn about its point, as wide and tall as its text.
 // Its box here is the text's own: its longest line in the label face with a character to spare
 // and its lines at the label line height, each plus the label padding, placed about the point by

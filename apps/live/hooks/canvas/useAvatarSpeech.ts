@@ -1,5 +1,5 @@
-// Speaking in Avatar mode (docs/specs/008-canvas/avatar-mode.md "Speech bubbles", blueprint
-// docs/specs/008-canvas/blueprints/avatar-speech.md): the composer's open state, Enter to open it, the cooldown
+// Speaking in Avatar mode (docs/specs/008-canvas/avatar-mode.md "Speech bubbles",
+// docs/specs/008-canvas/avatar-mode.md): the composer's open state, Enter to open it, the cooldown
 // between messages, and sending. What is on screen lives in lib/avatar-speech-store; the drawing in
 // AvatarSpeechLayer.
 

@@ -90,8 +90,8 @@ export function SettingsDialog({
   const { emailEnabled } = useCapabilities();
   const { accountId, isSignedIn } = useAccountApiBootstrap();
   const signedIn = Boolean(isSignedIn && accountId);
-  // A workbench's Settings reach nothing beyond its one document (docs/specs/013-workspace/
-  // blueprints/workbench-embeds.md, Surface table).
+  // A workbench's Settings reach nothing beyond its one document
+  // (docs/specs/013-workspace/workbench-embeds.md, Surface table).
   const workbench = useWorkbenchSession() !== null;
   // Loads the reader's default folders when the page has not (a no-op when it has).
   const defaultsOwner = usePlacementDefaults(workbench ? null : ownerId).ownerId;

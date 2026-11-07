@@ -1,4 +1,4 @@
-// The repository link's verbs (docs/specs/027-repositories/repository-link.md "Commands"; blueprint "The verbs"):
+// The repository link's verbs (docs/specs/027-repositories/repository-link.md "Commands"):
 // `link init`, `link status`, `link ls` and `sync`. They read and write the repository's files, so the CLI runs
 // them (CLI55); their inputs, outputs and what they print are declared here.
 

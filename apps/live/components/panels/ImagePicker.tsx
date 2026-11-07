@@ -43,7 +43,7 @@ type ImagePickerProps = {
   onRemove?: () => void;
   onSelect: (image: PickedImage) => void;
   onClose: () => void;
-  // The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table)
+  // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table)
   // uploads into its one document and never reads the person's gallery: no Gallery, no Search.
   uploadOnly?: boolean;
 };

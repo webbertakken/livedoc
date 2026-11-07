@@ -15,7 +15,7 @@ import {
 import type { DriveMirrorStatus } from './engine';
 
 // The Cloud Sync row's words (docs/specs/022-drive-mirror/drive-mirror.md,
-// "Connecting"; blueprint "Cloud Sync in Settings"): one row with a status,
+// "Connecting"): one row with a status,
 // and a problem line only while something needs the user.
 
 const NOW = 10 * 60_000;

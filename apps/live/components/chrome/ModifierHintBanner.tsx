@@ -69,7 +69,7 @@ export function selectedKindOf(
   return el.type === 'arrow' ? 'arrow' : el.type === 'table' ? 'table' : 'other';
 }
 
-// The banner with its selection read from the store (docs/specs/008-canvas/blueprints/selection-store.md):
+// The banner with its selection read from the store (docs/specs/008-canvas/canvas-performance.md):
 // a selection change renders this, not the editor view that places it.
 export function ModifierHint({
   elements,

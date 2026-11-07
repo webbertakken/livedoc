@@ -4,7 +4,7 @@ import { BRAND_KINDS, BrandMark, type BrandKindShape } from '@livedoc/ui';
 import { useEffect, useRef, useState } from 'react';
 
 // The homepage's every-kind mark (docs/specs/004-interface-design/brand-mark.md "Every kind"; the numbers are in
-// docs/specs/004-interface-design/blueprints/brand-motion.md): above the hero's question, the mark on its own with
+// docs/specs/004-interface-design/brand-mark.md): above the hero's question, the mark on its own with
 // its page cycling through a page, a sheet, a board and a form, the kind's name beneath. The cycle is CSS
 // (app/hero-kinds.css), drawn in the static HTML so it never shifts the layout; it pauses while off screen.
 

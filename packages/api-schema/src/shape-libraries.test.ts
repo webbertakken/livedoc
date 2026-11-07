@@ -8,7 +8,7 @@ import {
   validateShapeLibraryItems,
 } from './shape-libraries';
 
-// docs/specs/013-workspace/blueprints/shape-libraries.md "Interfaces and contracts".
+// docs/specs/013-workspace/shape-libraries.md.
 
 const square = (id = 'e1') => ({
   id,

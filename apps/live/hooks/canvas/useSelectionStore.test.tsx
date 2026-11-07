@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createSelectionStore, elementSelectionFlags, sameFlags } from '@/lib/selection-store';
 import { SelectionStoreProvider, useSelectionOf, useSelectionStore } from './useSelectionStore';
 
-// docs/specs/008-canvas/blueprints/selection-store.md "Subscribing".
+// docs/specs/008-canvas/canvas-performance.md.
 
 describe('useSelectionOf', () => {
   it('re-renders a subscriber only when its slice changes', () => {

@@ -127,3 +127,11 @@ value as a percentage ("110%"):
   corner's panel stack clears the tools group at the corner buttons' scale,
   the top corners clear the Toolbar strip at the toolbar's scale, the strip fits fewer tiles before More, and a
   popover opened from a button stays inside the window at its scaled width.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D13** How a value between steps resolves: Snapped to the nearest 5% step, then rounded to 2 decimals (default).
+- **D14** Where the row sits in Appearance: Second, after Theme (default).

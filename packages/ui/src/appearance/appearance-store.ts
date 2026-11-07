@@ -105,7 +105,7 @@ export function getAppearanceSetting(): AppearanceSetting {
 }
 
 // A setting that wins over the stored one and is never stored: a workbench frame paints the scheme its
-// workbench sends (docs/specs/013-workspace/blueprints/workbench-embeds.md, WB15), and System until
+// workbench sends (docs/specs/013-workspace/workbench-embeds.md, WB15), and System until
 // one arrives, whatever the frame's partitioned storage holds. Null hands back to the setting.
 let override: AppearanceSetting | null = null;
 

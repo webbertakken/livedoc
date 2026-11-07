@@ -2,7 +2,8 @@
 // board"): near the left or right edge of the columns' viewport the columns scroll, faster the closer the pointer is to
 // the edge, and not at all past the end. Under reduced motion it still scrolls, at a constant gentle speed. Pure.
 
-// How deep the edge zone reaches into the viewport, and the fastest step per frame (blueprint DEFAULTS).
+// How deep the edge zone reaches into the viewport, and the fastest step per frame
+// (docs/specs/026-plan/plan-board.md D40).
 export const EDGE_SCROLL_ZONE_PX = 56;
 export const EDGE_SCROLL_MAX_PX = 18;
 // The one speed under reduced motion: a third of the fastest, no ramp.

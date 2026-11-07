@@ -88,7 +88,7 @@ export async function handleTokens(ctx: RouteContext): Promise<Response> {
   return notFound();
 }
 
-// The token the request presented (docs/specs/015-api/blueprints/cli.md "Token self-service"). Only a token
+// The token the request presented (docs/specs/015-api/cli.md). Only a token
 // has one: a signed-in session or a guest is refused `403 not_a_token`; a token since revoked is 404.
 async function handleCurrentToken(ctx: RouteContext): Promise<Response> {
   const { request, env, token } = ctx;

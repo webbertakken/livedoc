@@ -216,3 +216,20 @@ here: the control is a tab edit, offered to an Editor on the tab the link opens.
 
 [Editor modes](../007-editor/editor-modes.md), [Session tools](session-tools.md), [Toolbar
 layout](../007-editor/toolbar-layout.md), [Workshop tour](workshop-tour.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **WC1** Per tab or per person: Per tab, synced, one undo step: the mode is the tab's for the same reason, and a
+  running vote or timer is the room's, so its kit must be everyone's (default).
+- **WC2** Structured's strip with the control on: The category bar, as Workshop mode's was, so a Workshop tab looks as
+  it did and the Workshop tour's first step has its anchors (default).
+- **WC3** What Sketch gets, having no palette: The Session strip only; the Collaborate tiles stay reachable from
+  Structured or Pages (default).
+- **WC4** Who sees the control: An Editor on a general unlocked tab (the mode switch's gate); a Participant and a Viewer
+  follow the tab's state without a control (default).
+- **WC5** Whether a new tab takes the control: Yes, from the tab it was made from, as it takes the mode (default).
+- **WC6** The control's name and place: "Workshop" with the flipchart mark, first among the document actions; its mark
+  alone unless Button Labels is on; pressed shows the brand fill Share uses (default).

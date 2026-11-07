@@ -40,7 +40,7 @@ export type EditorKeyboardShortcutsDeps = {
   onCancelDraw: () => void;
   // Selection state. Delete / Backspace acts on whichever is
   // populated (multi wins).
-  // Read when a key is pressed (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a key is pressed (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   editingId: string | null;
   // True for a view-only ('view' share role) session. Suppresses

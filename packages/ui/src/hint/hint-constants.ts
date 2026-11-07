@@ -1,5 +1,5 @@
 // Timings and sizes for tooltips and hover cards
-// (docs/specs/004-interface-design/blueprints/tooltips-hover-cards-popovers.md, Constants).
+// (docs/specs/004-interface-design/tooltips-hover-cards-popovers.md, Constants).
 
 export type HintKind = 'tooltip' | 'hover-card' | 'preview';
 

@@ -66,3 +66,13 @@ fields), which SQL over a JSON blob cannot express safely, and because offline d
   changes nothing. A tab with nothing to migrate is returned as the same object.
 - **Pure.** No I/O, no clock; the same tab always migrates the same way.
 - **Lossless for choices.** Only values equal to what the retired scheme wrote are removed.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D7** Load-time vs D1 migration: Read time at every tab entry point; the next save persists it, and offline tabs and
+  files never reach D1 (default).
+- **D8** Log level and fingerprint: `console.info('[tab-migrate] retired-scheme', { from, stripped })`, only when
+  something was rewritten (default).

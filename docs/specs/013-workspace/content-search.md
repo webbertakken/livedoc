@@ -83,3 +83,19 @@ None in the api; what the presentation counts is its own ([Telemetry](../017-tel
 - The wiki's in-wiki search and `livedoc search` ([Wiki](../032-wikis/wiki.md#search)) may read the same index later;
   their result shapes are theirs.
 - Search inside one open document stays the editor's own Find.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D179** How the index stores text for the share test and the snippet: An external-content FTS5 table over
+  `content_search`, which keeps the text as written and folded (default).
+- **D180** Whether the half-of-trigrams rule applies per word or per query: Per long word, so every word must be found,
+  as names require (default).
+- **D181** How many FTS candidates the share filter sees: 500, ranked by `bm25`, before the filter (default).
+- **D182** How the snippet is made: Cut in the Worker from the answered rows' text, whole words marked; never SQLite's
+  `snippet()` (default).
+- **D183** Where a document's items are indexed: One row per document under the tab key `~items`, never for a tab-scoped
+  reader (default).
+- **D184** Which rate limiter: A new `SEARCH_RATE_LIMITER`, 120 a minute per person (default).

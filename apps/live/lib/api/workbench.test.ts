@@ -11,7 +11,7 @@ import {
   apiUnpairWorkbench,
 } from './workbench';
 
-// The workbench calls (docs/specs/013-workspace/blueprints/workbench-embeds.md "Routes"): redemption is
+// The workbench calls (docs/specs/013-workspace/workbench-embeds.md): redemption is
 // credential-free, the page's own end presents the session, the pairing calls are the person's own.
 
 type Seen = { method: string; url: string; headers: Headers; body: unknown };

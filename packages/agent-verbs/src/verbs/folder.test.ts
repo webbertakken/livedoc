@@ -3,7 +3,7 @@ import { VerbRefusal } from '../define';
 import { contextOf, fakeApi, library } from '../testing/fake-api';
 import { folderCreate, folderLs } from './folder';
 
-// `folder ls` and `folder create` (docs/specs/015-api/cli.md "Commands"; blueprint CLI86, CLI87).
+// `folder ls` and `folder create` (docs/specs/015-api/cli.md "Commands"; CLI86, CLI87).
 
 const folders = {
   '/folders': {

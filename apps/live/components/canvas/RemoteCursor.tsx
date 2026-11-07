@@ -81,7 +81,7 @@ export const RemoteCursor = memo(function RemoteCursor({
 });
 
 // Every remote cursor on the active tab, drawn inside the canvas's panned + zoomed wrapper. It reads the zoom
-// itself (docs/specs/008-canvas/blueprints/viewport-store.md), so the layer around it takes no view, and it draws
+// itself (docs/specs/008-canvas/canvas-performance.md), so the layer around it takes no view, and it draws
 // nothing while this screen hides participant cursors (docs/specs/012-collaboration/collaborator-enhancements.md §2).
 // A cursor under or near this screen's own pointer fades out of the way until the pointer leaves (§3); the anchor,
 // a point at canvas (0, 0), is where the hit test reads the canvas's place on screen.

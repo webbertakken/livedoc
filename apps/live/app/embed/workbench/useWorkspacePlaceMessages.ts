@@ -1,7 +1,7 @@
 'use client';
 
 // Where a workspace frame is, told to its workbench (docs/specs/013-workspace/workbench-embeds.md "Workbench
-// messages", blueprint "Workspace messages", WB63): `livedoc:place` after every move and whenever a field of the
+// messages", WB63): `livedoc:place` after every move and whenever a field of the
 // place changes, never twice with the same fields. The Explorer reports its views, the editor its document; this is
 // the one sender. Logged by view only, never a name.
 import { useCallback, useRef } from 'react';

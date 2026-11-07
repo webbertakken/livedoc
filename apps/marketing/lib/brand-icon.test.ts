@@ -83,7 +83,7 @@ const pngSize = (path: string) => {
   return { width: png.readUInt32BE(16), height: png.readUInt32BE(20) };
 };
 
-// docs/specs/004-interface-design/blueprints/brand-media.md: every raster the generator writes, at its size.
+// docs/specs/004-interface-design/brand-mark.md: every raster the generator writes, at its size.
 describe('brand media', () => {
   it('ships the mono press marks, black and white, from the module', () => {
     for (const colour of ['black', 'white'] as const)

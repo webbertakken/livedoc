@@ -1,4 +1,5 @@
-// The sheet store on the wire (docs/specs/029-sheets/sheet-store.md, blueprint sheet-store.md "Interfaces and
+// The sheet store on the wire (docs/specs/029-sheets/sheet-store.md, docs/specs/029-sheets/sheet-store.md
+// "Interfaces and
 // contracts"). Sheet shapes come from @livedoc/sheets; these are the request and response bodies. A sheet's
 // cells travel as a list (a Map is not JSON).
 

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// A token card's paired workbenches (docs/specs/013-workspace/blueprints/workbench-embeds.md "Settings > API
+// A token card's paired workbenches (docs/specs/013-workspace/workbench-embeds.md "Settings > API
 // tokens", WB35, WB36): nothing when none; a row each with name, origin, scope, when paired and Unpair, which asks first.
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { WorkbenchPairing } from '@livedoc/api-schema';

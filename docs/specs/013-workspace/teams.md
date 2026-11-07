@@ -53,8 +53,6 @@ Membership is a two-step handshake: being invited does not make someone a member
 
 ## Declining from the email
 
-Implementation detail for this section and the next lives in the [Team invites blueprint](blueprints/team-invites.md).
-
 The invite email (and every reminder) carries a **Decline invite** link, so someone who does not want to join can say so without an account, and without signing in.
 
 - **The token.** Each email carries its own unguessable decline token, `<member id>.<secret>`, where the secret is 32 random bytes (base64url). Only the SHA-256 hash of the secret is stored, in the row's `decline_token_hashes`; the token itself exists only in the email. It is **single-purpose**: it can decline that one invite and read that invite's team name and state, nothing else. It is not a session, not an identity, and cannot accept, join, or reach any other route.
@@ -170,3 +168,19 @@ Declining and withdrawing are separate events because they are separate acts by 
 - Sharing documents with a team / team workspaces.
 - Team avatars, descriptions beyond the organisation line.
 - Looking up whether an invited email already has an account.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D163** Whether a decline in the Explorer also leaves a Rejected row: Yes: every decline marks the row `declined`, so
+  the admins' list reads the same whichever way they answered (default).
+- **D164** What Accept does after a decline or expiry: Nothing to accept: the row passes no gate, so the route 404s; a
+  fresh invite from an Admin reopens it (default).
+- **D165** Whether a decline link still works after the invite closes: Yes, read-only: it says declined or expired
+  (hashes live as long as the row); removing or replacing the row is what kills it (default).
+- **D166** Whether expiry needs email to be configured: No: expiry runs on every deployment, so one rule holds; only
+  reminders need email (default).
+- **D167** When the clock starts for invites pending before migration 0095: At the deploy (decided by Tom): they get the
+  full reminder series and expire 28 days after the deploy, so none is rejected at once (default).

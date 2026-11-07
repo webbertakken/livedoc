@@ -78,7 +78,7 @@ export async function tabBodiesWithBoards(
 }
 
 // A page of a document's tabs in order, bodies included: `overview` reads a document this way so it
-// never holds more than `limit` bodies at once (docs/specs/024-agents/blueprints/document-views.md, VW47).
+// never holds more than `limit` bodies at once (docs/specs/024-agents/document-views.md, VW47).
 export async function tabBodiesInOrder(
   env: DocumentEnv,
   documentId: string,
@@ -481,7 +481,7 @@ export async function swapTabData(
 }
 
 // Does the document link this tab? A workbench ticket naming a tab the document lacks is refused
-// (docs/specs/013-workspace/blueprints/workbench-embeds.md "The ticket mint").
+// (docs/specs/013-workspace/workbench-embeds.md).
 export async function documentLinksTab(
   env: DocumentEnv,
   documentId: string,

@@ -1,4 +1,4 @@
-// The comment endpoints (docs/specs/024-agents/agent-presence.md "Comments", blueprint "REST"): add, delete-own,
+// The comment endpoints (docs/specs/024-agents/agent-presence.md "Comments"): add, delete-own,
 // reply, resolve and reopen on a tab, and the thread listing across a document. People and agents use the same
 // endpoints, gated by participation; every write goes through the tab's revision (I8), retried once on a lost
 // race, and reaches the room as an `el-delta` without author or token ids.

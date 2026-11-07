@@ -1,6 +1,6 @@
 'use client';
 
-// Device sign-in (docs/specs/015-api/blueprints/cli.md "The device grant", "Presentation and UX", CLI36, CLI37): the
+// Device sign-in (docs/specs/015-api/cli.md, CLI36, CLI37): the
 // CLI on a machine without a browser shows a code; the person opens this page anywhere, signs in, enters the code
 // and approves. On approve the page mints an API token (with the session token, as the consent page does) and hands it to the
 // MCP worker for the waiting CLI to collect; on cancel it refuses the code, so the CLI stops waiting. No help link:

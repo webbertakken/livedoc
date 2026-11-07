@@ -1,5 +1,5 @@
-// How many typos lie between a query word and the start of a title word (docs/specs/013-workspace/
-// blueprints/explorer-filters.md "Title matching"): optimal string alignment, so swapping two neighbouring
+// How many typos lie between a query word and the start of a title word
+// (docs/specs/013-workspace/explorer-filters.md): optimal string alignment, so swapping two neighbouring
 // letters counts as one typo, as do an insert, a delete and a substitution.
 
 /** The shortest query word a typo may forgive; shorter words match only as typed. */

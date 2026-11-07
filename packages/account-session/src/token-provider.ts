@@ -1,6 +1,6 @@
 import { authUrl, type ApiOptions } from './session';
 
-// The session token provider (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Token provider"): the
+// The session token provider (docs/specs/014-identity/auth-and-guest-access.md): the
 // 15-minute token the browser sends to the rest of the api as `Authorization: Bearer`, fetched from
 // `GET /api/auth/token` with the session cookie and kept until shortly before it expires.
 

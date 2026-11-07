@@ -1,6 +1,6 @@
 import { defineProject } from '@livedoc/vitest-config';
 
-// The lint is pure: every line and branch is covered (docs/specs/024-agents/blueprints/diagram-lint.md).
+// The lint is pure: every line and branch is covered (docs/specs/024-agents/diagram-lint.md).
 export default defineProject({
   test: {
     coverage: {

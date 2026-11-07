@@ -373,7 +373,7 @@ Items follow the document's access ([Auth and guest access](../014-identity/auth
   is left as it is, so importing a tab's export back into its own document never doubles the cards. The tab's
   content, the added types and the new cards are separate undo steps, newest first: undo takes the cards away, then
   the types, then restores the tab. The import waits for the document's item store to load (a document with no Plan content
-  starts loading it once the imported board lands; blueprint DEFAULTS D43). When the store never loads, or refuses the
+  starts loading it once the imported board lands; D43). When the store never loads, or refuses the
   cards (the 2,000 cap), none are added, the tab stays imported, and the import's report says how many cards could
   not be added.
 - **The Markdown export** lists each Plan board under "Plan Boards": its title, then each column with its card
@@ -398,3 +398,18 @@ Items follow the document's access ([Auth and guest access](../014-identity/auth
 ## Deleting a document
 
 Deleting a document for good deletes its items with it. Trash keeps them until then.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** Rank alphabet: Base-36 fractional keys, first key `i` (default).
+- **D2** Order of two items with the same rank: By key, ascending (default).
+- **D3** Who may restore a deleted item's key: Anyone with edit, only while the key is free and below the next key
+  (default).
+- **D4** Undo of a field someone else changed since: Writes the old value (last write wins), as canvas undo does
+  (default).
+- **D24** Where archived cards go on an Archive board: All in its one column, in rank order (default).
+- **D43** How long a tab import waits for the item store: 10 000 ms (`PLAN_IMPORT_READY_WAIT_MS`): the imported board
+  starts the load, a fetch away; then its cards are reported as not added (default).

@@ -1,5 +1,5 @@
 // `add` with a whole raw element, as the MCP's `ops` mode sends it
-// (docs/specs/024-agents/blueprints/edit-operations.md "Operations"): taken as given, its geometry
+// (docs/specs/024-agents/edit-operations.md): taken as given, its geometry
 // kept, its id kept when free. Finalise normalises and validates it.
 
 import type { EditRejection } from '@livedoc/api-schema';

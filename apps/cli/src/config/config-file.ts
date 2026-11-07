@@ -1,4 +1,4 @@
-// `config.toml` (blueprint CLI5): the subset it uses, read by hand: top-level `key = value` lines and
+// `config.toml` (CLI5): the subset it uses, read by hand: top-level `key = value` lines and
 // `[profiles.<name>]` tables of the same. Strings in double quotes, booleans bare. A line that does not
 // read is a usage error naming the file and the line.
 

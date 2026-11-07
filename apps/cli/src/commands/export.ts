@@ -1,4 +1,4 @@
-// `export --all --to <dir> [--format json,svg,mermaid,md]` (docs/specs/015-api/blueprints/cli.md "Pull and push",
+// `export --all --to <dir> [--format json,svg,mermaid,md]` (docs/specs/015-api/cli.md,
 // CLI29): every document the token can read, written read-only for backups and docs. `json` is the editor's
 // `livedoc.document` envelope; the other formats are one file per tab under `<slug>/`. Two documents at a time;
 // a rate-limited read waits a minute and tries again, up to three times. A document that fails is reported and the

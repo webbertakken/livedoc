@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RoomHandlers } from '@/lib/api-client';
 
-// The room under a workbench session (docs/specs/013-workspace/blueprints/workbench-embeds.md "The
+// The room under a workbench session (docs/specs/013-workspace/workbench-embeds.md "The
 // workbench page" step 6, WB31): its end (close 4006) and an access change (4005) end the session
 // instead of reloading a frame that cannot reload into another access path; outside a workbench an
 // access change still reloads.

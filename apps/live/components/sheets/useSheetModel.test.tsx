@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// One Sheet element's view of the sheet store (blueprint sheet-store.md "Editor slice"): the document's store,
+// One Sheet element's view of the sheet store: the document's store,
 // attached to the room once while any Sheet draws from it; its tab loaded; a placed sheet made (titled, filled from a
 // dropped CSV); a copy made from a loaded sheet, a clipboard seed or on the server, refused across documents when
 // too big to travel; and the Plan cards handed over when a formula reads them.

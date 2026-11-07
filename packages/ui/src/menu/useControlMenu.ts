@@ -11,7 +11,7 @@ import {
   type MenuHandle,
 } from './useMenu';
 
-// A control menu (docs/specs/004-interface-design/menus.md "Control menus"; blueprint C1 to C3):
+// A control menu (docs/specs/004-interface-design/menus.md "Control menus"; C1 to C3):
 // a menu holding controls, announced as a named non-modal dialog. Tab walks its controls; focus
 // moves in only when the keyboard opened it; Escape closes the innermost open sub-panel first;
 // focus comes back as a command menu's does.

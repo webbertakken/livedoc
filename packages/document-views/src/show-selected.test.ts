@@ -6,7 +6,7 @@ import { buildViewModel } from './model';
 import { renderView } from './render-view';
 import { showView } from './show';
 
-// `show selected` (docs/specs/024-agents/document-views.md "The views"; blueprint "show selected", VW65 to VW68):
+// `show selected` (docs/specs/024-agents/document-views.md "The views", VW65 to VW68):
 // the owner's live selection, every element in full, in tab order, fitted like any line view.
 
 const show = (selected: readonly string[] | null | undefined, budget?: number) =>

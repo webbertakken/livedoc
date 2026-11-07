@@ -591,7 +591,7 @@ export type SignInMethod = 'google' | 'email-code';
 // Response body for GET /api/capabilities.
 export type CapabilitiesResponse = {
   aiEnabled: boolean;
-  // For the CLI (docs/specs/015-api/blueprints/cli.md "Capabilities"), each optional so an older worker parses:
+  // For the CLI (docs/specs/015-api/cli.md), each optional so an older worker parses:
   // where the api answers, whether sign-in exists, the OAuth server, the stored document format, and the
   // oldest CLI accepted for writes.
   apiBase?: string;
@@ -692,7 +692,7 @@ export * from './ref-errors';
 // Returning visitor (docs/specs/019-marketing/returning-visitor.md).
 export * from './recent-diagrams';
 
-// GET /api/tokens/current (docs/specs/015-api/blueprints/cli.md "Token self-service"): the token a request
+// GET /api/tokens/current (docs/specs/015-api/cli.md): the token a request
 // presented, for `livedoc auth status`. `role` is `full` or `read-only`.
 export type CurrentTokenResponse = {
   accountId: string;

@@ -598,3 +598,55 @@ These differ from draw.io for every file and are not worth a line each time:
 - `.vsdx`, Lucidchart and Gliffy files, which draw.io itself imports: bring them through draw.io first.
 - Re-creating draw.io's automatic layouts (`childLayout` other than the stacks above, tree layouts):
   the laid-out positions in the file are imported as they are.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D14** A compressed payload that is not URI-encoded: Use the inflated Latin-1 text as it is when `decodeURIComponent`
+  throws (default).
+- **D15** PNG chunk integrity: CRCs are not checked; a truncated chunk ends the walk (default).
+- **D16** Colour values other than hex, `none`, `default`, `light-dark`, `rgb()`: Left unset, so the theme paints them
+  (default).
+- **D17** Stroke width halfway between two presets: The thinner preset (default).
+- **D18** A vertex with no `strokeWidth`: `thin`, draw.io's 1 px, rather than LiveDoc's `medium` default (default).
+- **D19** An edge with `strokeColor=none`: `opacity: 0`: the connection keeps its ends and label, drawn invisible as in
+  draw.io (default).
+- **D20** A vertex with no geometry: Skipped and counted `hidden-skipped` (draw.io cannot show it either) (default).
+- **D21** Duplicate cell ids: The last cell wins the id map; every cell is still walked once (default).
+- **D22** "A fixed soft drop shadow": `{ offsetX: 2, offsetY: 3, blur: 3, opacity: 0.25 }` (default).
+- **D23** How much an icon's box grows to hold its caption: 18 px per line down / up; across, the longest line at
+  `LABEL_EM_ADVANCE` × the caption's px (over the page scale) plus 16 px of padding (default).
+- **D24** "A label placed away from the middle": Retired: every imported label is placed where draw.io centres it (spec
+  "Labels") (default).
+- **D25** How many unmatched stencil names the summary lists: The 5 most frequent, then "…" (default).
+- **D26** Font size halfway between two presets: The smaller preset (default).
+- **D27** Name of an unnamed page: `Page n`, n its 1-based position (default).
+- **D28** Names of layers beyond the first when unnamed: `Layer n`, n its 1-based position (default).
+- **D29** "Ink that reads on that fill": `#1e293b` on a fill `isLightColor` calls light, else `#ffffff` (default).
+- **D30** A single word wider than its imported shape: Left as LiveDoc wraps it (mid-word); the page scale already gives
+  every label draw.io's room (default).
+- **D31** Shape of a JSON-export node (the file has no style): A box, as Mermaid's default node (default).
+- **D32** Created date of a draw.io document (the file records none): Its last-modified date (default).
+- **D33** Name of an untitled draw.io library: "draw.io library" (default).
+- **D34** A JSON-export edge whose end is not a node of its page (the file has no geometry): One end on a node: kept,
+  pinned on that node, its free end `DRAWIO_JSON_LOOSE_EDGE_PX` (80) out at the node's middle height; neither end: left
+  out; each counted `connection-loosened` (default).
+- **D35** How much of a file the sniff reads: The first 4 KB, after a BOM and whitespace (default).
+- **D36** The px of an HTML `<font size="n">` span: The browser scale: 10, 13, 16, 18, 24, 32, 48 px for 1 to 7
+  (default).
+- **D37** Where "under about 12 px" ends, and how often small text is counted: Under 12 px exactly (12 px, draw.io's
+  default, stays `sm`); once per label with any text under 10 px (default).
+- **D38** When a `dashPattern` reads as dots: Every dash at most twice the stroke width (default).
+- **D39** "Near-white" (paper): OKLCH lightness at least 0.93 and chroma at most 0.02 (default).
+- **D40** The largest page scale: 1.6 (default).
+- **D41** Which translucent shapes keep their opacity: Those overlapping another visible vertex that is not their
+  ancestor or descendant (default).
+- **D42** The page scale's reference box width: The median width of the labelled vertices; 120 (draw.io's default)
+  without any (default).
+- **D43** "Room to spare" on a caption's wrap width: 1.2 × the widest line's estimate: the estimate is the face's mean
+  advance; wide letters run past it (default).
+- **D44** How finely draw.io's curve is sampled before simplifying: 16 points per quadratic piece (default).
+- **D45** When a note reads as tinted, and which sticky it lands on: OKLCH chroma at least 0.02; tinted notes by nearest
+  hue, neutral notes by nearest lightness (default).

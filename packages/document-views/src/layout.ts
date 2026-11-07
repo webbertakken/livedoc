@@ -1,4 +1,4 @@
-// The layout view (docs/specs/024-agents/blueprints/document-views.md "layout", VW31, VW32): exact
+// The layout view (docs/specs/024-agents/document-views.md, VW31, VW32): exact
 // geometry relative to the content origin, or coarse rows per container.
 import type { LayoutView, ViewDoor } from '@livedoc/api-schema';
 import { contentOrigin, type Endpoint } from '@livedoc/document';

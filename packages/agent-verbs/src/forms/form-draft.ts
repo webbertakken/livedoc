@@ -1,4 +1,4 @@
-// A form being changed by an agent (docs/specs/030-forms/forms.md "Agents", blueprint §15 "Engine flow"): the form,
+// A form being changed by an agent (docs/specs/030-forms/forms.md "Agents" "Engine flow"): the form,
 // the card types as they will be saved, the boards and sheets it may send responses to, and the tabs to make or boards
 // to change beside it, built up change by change and written only once every change has been checked. Where responses
 // go and where each answer goes are decided here, as Responses Go To and Answer Goes To decide them.

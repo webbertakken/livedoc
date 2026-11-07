@@ -5,7 +5,7 @@ import { applied, refused } from './fixtures/outcomes';
 import { applyReplace } from './replace';
 import type { ReplaceOptions } from './types';
 
-// A replace's `form` source (docs/specs/030-forms/forms.md "Agents", blueprint forms.md §15).
+// A replace's `form` source (docs/specs/030-forms/forms.md "Agents", docs/specs/030-forms/forms.md).
 const options: ReplaceOptions = { tabId: 'form-tab', name: 'Ignored', makeId: fixedIds() };
 const form = {
   v: 1,

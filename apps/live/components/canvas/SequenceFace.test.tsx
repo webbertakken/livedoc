@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
-// The sequence diagram's face (docs/specs/009-elements/sequence-diagram.md, blueprint sequence-diagram.md).
+// The sequence diagram's face (docs/specs/009-elements/sequence-diagram.md,
+// docs/specs/009-elements/sequence-diagram.md).
 
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';

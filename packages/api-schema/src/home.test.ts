@@ -12,7 +12,7 @@ import {
 // Explorer Home's wire (docs/specs/013-workspace/explorer-home.md): the api answers these tokens
 // and verbs, the editor reads them, so both take them from one place.
 describe('home rejections', () => {
-  it('names every refusal the blueprint lists', () => {
+  it('names every refusal the spec lists', () => {
     expect([...HOME_REJECTIONS]).toEqual(['tz_invalid']);
   });
 

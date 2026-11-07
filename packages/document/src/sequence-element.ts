@@ -1,4 +1,5 @@
-// The sequence diagram element (docs/specs/009-elements/sequence-diagram.md, blueprint sequence-diagram.md): one
+// The sequence diagram element (docs/specs/009-elements/sequence-diagram.md,
+// docs/specs/009-elements/sequence-diagram.md): one
 // element holding participants and messages, laid out by the shared `layoutSequence` (the Mermaid import's and the
 // agents' layout), so inserting a message is typing one row.
 

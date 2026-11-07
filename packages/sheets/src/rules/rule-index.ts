@@ -1,4 +1,4 @@
-// Which rules cover a cell (blueprint sheet-rules.md "Engine"): each rule bucketed by the columns its range spans,
+// Which rules cover a cell: each rule bucketed by the columns its range spans,
 // built once per layout and rule list, so drawing a visible cell scans only its column's few rules.
 import { posRangeOf } from '../layout';
 import type { IdRange, SheetLayout } from '../sheet';

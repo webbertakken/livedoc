@@ -5,7 +5,7 @@ import { fieldsOf, flagOf } from './fields';
 import { GLOBAL_FLAGS } from './globals';
 import { route } from './route';
 
-// The spec's command table (docs/specs/015-api/cli.md "Commands", blueprint "Testing"): every command it lists
+// The spec's command table (docs/specs/015-api/cli.md "Commands"): every command it lists
 // routes to a verb, and every flag it names belongs to one of its row's commands.
 
 const spec = readFileSync(

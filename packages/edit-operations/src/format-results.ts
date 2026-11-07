@@ -1,4 +1,4 @@
-// The text of a changeset's answer (docs/specs/024-agents/blueprints/edit-operations.md "Result
+// The text of a changeset's answer (docs/specs/024-agents/edit-operations.md "Result
 // lines"): the same for a dry run and a write. Strings are JSON-quoted and cut on a word boundary
 // (labels at 60, other text at 48), tokens and numbers print bare, objects and arrays as
 // `(changed)`, and an absent value as nothing (EO43).

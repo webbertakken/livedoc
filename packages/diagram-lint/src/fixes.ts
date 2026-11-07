@@ -1,4 +1,4 @@
-// The fix every finding ends with (blueprint "Presentation and UX", LN29). A tab fix is edit operations
+// The fix every finding ends with (LN29). A tab fix is edit operations
 // in the line form: `; ` runs them in order, `, or ` offers alternatives, and `<ref>` and `<text>` are
 // placeholders. A graph fix is a change to the source, in words or as a command.
 

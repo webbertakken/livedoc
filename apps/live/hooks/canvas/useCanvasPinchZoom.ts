@@ -33,7 +33,7 @@ import { getSheetZoom, setSheetZoom } from '@/hooks/sheets/sheet-zoom';
 
 type Deps = {
   canvasMainRef: React.RefObject<HTMLElement | null>;
-  // The view, read when a gesture fires and written back (docs/specs/008-canvas/blueprints/viewport-store.md).
+  // The view, read when a gesture fires and written back (docs/specs/008-canvas/canvas-performance.md).
   viewport: ViewportStore;
 };
 

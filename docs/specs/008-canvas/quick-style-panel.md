@@ -421,3 +421,51 @@ counted as Custom Swatches in the dashboard's Look & Feel stack.
 ## Help
 
 [Quick Style Panel](/help/canvas/quick-style-panel/) (Canvas).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D32** A multi-colour theme with fewer than six branches: Padded from the toned hue set at the missing slots, so a
+  row is always seven (default).
+- **D33** An element carrying a slot outside 1 to 6: Re-derivation ignores it (the colour stays); validation rejects it
+  on load (default).
+- **D34** Which theme view a bound colour re-derives against: The theme itself, not the element's branch view: a slot is
+  one colour per theme (default).
+- **D35** Return value when an edit changes no memorable field: The input memory object itself, so callers skip the
+  write on reference equality (default).
+- **D36** Stored memory with unknown kinds, fields or types: Dropped field by field on read; the rest of the memory
+  survives (default).
+- **D37** How often memory is written during a colour drag: At most once per 250 ms, flushed on unmount (default).
+- **D38** "The accent's tone", "legible ranges", "a wash": Saturation 0.45-0.85, lightness 0.36-0.52 (light) / 0.6-0.74
+  (dark), wash 0.2 over white / 0.3 over the dark fill (default).
+- **D39** Keyboard model of a row: WAI-ARIA radio group: arrows move and choose, wrapping; Home / End; one tab stop per
+  row (default).
+- **D41** "Right beneath the Palette": Retired: there is no Palette panel; the panel sits on the left edge (spec "Where
+  it sits") (default).
+- **D42** Too little room beneath the Palette: Retired: there is no Palette panel to fit beneath (default).
+- **D43** Following a Palette mid-drag: Live, via a MutationObserver on the Palette's style, coalesced per frame
+  (default).
+- **D44** Stored overrides with unknown themes, slots or colours: Dropped entry by entry on read; the first entry per
+  theme wins; the rest survive (default).
+- **D45** How overrides fit the 4 KB preferences cap: Short keys, at most 8 themes and 800 bytes, least recently edited
+  theme dropped first (default).
+- **D46** Where the override popover opens: Left of the panel, level with the swatch, clamped into the viewport
+  (default).
+- **D47** When a picked colour is saved: On the picker's `change` (close) or a valid hex on Enter / blur; never per drag
+  tick (default).
+- **D48** How narrow the Toolbar panel is: 186 px: seven touching 24 px targets, 8 px padding and a 1 px border a side
+  (default).
+- **D49** Default scheme light and dark halves: One theme id, so one set of overrides for both appearances (default).
+- **D50** A palette theme's text swatch: The branch stroke's hue and saturation, lightness stepped by 0.02 away from the
+  canvas until 4.5:1 (default).
+- **D51** The override store's key for the Text colour row: `x`, beside `s` (Stroke) and `f` (Background); `t` is
+  already the theme id (default).
+- **D52** Where the Text colour row sits: After Background, before Stroke width: the colour rows stay together
+  (default).
+- **D53** Style-memory kind key for a text element: `text`, one bucket for every text element, like `arrow` (default).
+- **D59** What the whiteboard caption counts on a mixed selection: The styled elements (targets and marker strokes);
+  passed-over kinds are not counted (default).
+- **D61** What the Corners row marks for an element with no preset: Nothing: its kind's default corner is none of the
+  four (default).

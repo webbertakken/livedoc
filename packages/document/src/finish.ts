@@ -24,7 +24,7 @@ export type HandDrawnFinish = 'sketch' | 'marker';
 export const DEFAULT_FINISH: Finish = 'flexible';
 
 /** The corner a Professional free-corner box draws when it sets none: square, the clearest break from
- *  Flexible's soft corners (blueprint: 0 to 4 px). */
+ *  Flexible's soft corners (safe range: 0 to 4 px). */
 export const PROFESSIONAL_CORNER_PX = 0;
 
 /** The crisp sans a Professional element is lettered in when neither it nor its tab picks a font. */
@@ -37,7 +37,7 @@ export const SKETCH_FONT_ID = 'caveat';
 export const MARKER_FONT_ID = 'permanent-marker';
 
 /** The width a Marker outline or arrow that sets none is drawn at, px: a felt-tip's nib, bolder than Flexible's 2 px
- *  and finer than Thick's 4 px (blueprint: 2.5 to 3.5). */
+ *  and finer than Thick's 4 px (safe range: 2.5 to 3.5). */
 export const MARKER_LINE_PX = 3;
 
 export function isFinish(v: unknown): v is Finish {

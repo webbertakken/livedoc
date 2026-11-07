@@ -189,7 +189,7 @@ describe('extractExcalidrawScene', () => {
 });
 
 // Real exports from excalidraw.com ("Embed scene" on), a text and a rectangle;
-// provenance in docs/specs/020-import-export/blueprints/excalidraw-import.md.
+// provenance in docs/specs/020-import-export/excalidraw-import-export.md.
 describe('real Excalidraw exports', () => {
   const fixture = (name: string) =>
     new Uint8Array(readFileSync(fileURLToPath(new URL(`./__fixtures__/${name}`, import.meta.url))));

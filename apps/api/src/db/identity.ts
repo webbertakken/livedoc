@@ -1,4 +1,4 @@
-// The identity tables better-auth writes (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Data and
+// The identity tables better-auth writes (docs/specs/014-identity/auth-and-guest-access.md "Data and
 // persistence"): what LiveDoc itself does to them. Dates are ISO strings there, so an ISO cutoff compares in order.
 import type { Env } from '../types';
 

@@ -1,4 +1,4 @@
-// Frames and their members, by the views' containment (blueprint "The checks", LN12, LN13, N13): the group
+// Frames and their members, by the views' containment (LN12, LN13, N13): the group
 // codes judge frames, never lanes; a box belongs to the first frame on its chain of containers, and a
 // frame's members are every box whose chain reaches it.
 

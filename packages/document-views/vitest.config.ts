@@ -1,6 +1,6 @@
 import { defineProject } from '@livedoc/vitest-config';
 
-// Views are pure: every line and branch is covered (docs/specs/024-agents/blueprints/document-views.md "Testing").
+// Views are pure: every line and branch is covered (docs/specs/024-agents/document-views.md).
 // The fixtures are test support, measured through the tests that use them.
 export default defineProject({
   test: {

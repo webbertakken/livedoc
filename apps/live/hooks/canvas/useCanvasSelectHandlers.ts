@@ -22,7 +22,7 @@ export function useCanvasSelectHandlers({
   inertIds: Set<string>;
   // The format painter is armed: every press paints, so none settles a click.
   isPaintMode: boolean;
-  // The selection as it is when a handler runs (docs/specs/008-canvas/blueprints/selection-store.md):
+  // The selection as it is when a handler runs (docs/specs/008-canvas/canvas-performance.md):
   // read from the store, so the handlers stay stable and a release reads the selection it ends.
   readSelection: () => Selection;
   onSelect: (id: string) => void;

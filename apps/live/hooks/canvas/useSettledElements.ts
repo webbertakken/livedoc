@@ -4,7 +4,7 @@
 // as every frame of a gesture leaves them. Through a move, resize, reshape, stroke or erase it keeps
 // its last drawing and catches up the moment the gesture ends; otherwise a change shows at once after
 // a quiet spell, and a burst of changes (a peer typing, a remote drag) lands as one trailing redraw
-// at most every MAP_REDRAW_MIN_MS (docs/specs/008-canvas/blueprints/DEFAULTS.md D69).
+// at most every MAP_REDRAW_MIN_MS (docs/specs/008-canvas/canvas-performance.md D69).
 
 import { useEffect, useRef, useState } from 'react';
 import type { Element } from '@livedoc/document';

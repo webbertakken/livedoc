@@ -38,7 +38,7 @@ export type PortalTravelDeps = {
    * `current` to read — hence the `'current' in mainRef` guard below.
    */
   mainRef?: Ref<HTMLElement> | null;
-  /** The zoom now, read when a portal is entered (docs/specs/008-canvas/blueprints/viewport-store.md). */
+  /** The zoom now, read when a portal is entered (docs/specs/008-canvas/canvas-performance.md). */
   readZoom: () => number;
   setViewportOffset: (offset: { x: number; y: number }) => void;
   /** Places the walking character, and names the portal to ignore on arrival. */

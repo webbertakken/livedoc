@@ -75,3 +75,22 @@ A Worker **image proxy / cache** (so viewers don't hit the third-party image
 host directly, and dead links keep their thumbnail) — noted follow-up.
 oEmbed players (the separate embed-element idea), manual metadata editing, and
 scheduled re-unfurling.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D50** Which URL the cached meta is keyed to: The requested URL on the element, not the post-redirect URL (default).
+- **D51** Field precedence: Title `og:title ?? <title>`; description `og:description ?? description`; first tag wins;
+  `og:image:url` accepted (default).
+- **D52** Which `<link>` is the favicon: First `rel` containing `icon`; else `/favicon.ico` on the final origin
+  (default).
+- **D53** Non-HTML page / network failure: Non-HTML: `url` + favicon; network error or timeout: `{ url }` only
+  (default).
+- **D54** Card with no OG image / broken favicon: Neutral globe banner; kind glyph instead of the favicon (default).
+- **D55** Which part of the card follows the link: Only the bottom info row ("Open link" button); the rest drags
+  (default).
+- **D56** Export look: Generic rect, `rx` 6, fill and stroke, no text (default).
+- **D57** History for the arriving preview: The meta write is its own `commit` (undo step) (default).
+- **D58** Hosts blocked beyond the spec's list: `0/8`, `0.0.0.0`, `*.localhost`, `::`, IPv4-mapped IPv6 (default).

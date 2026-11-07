@@ -1,4 +1,4 @@
-// Coverage (docs/specs/027-repositories/blueprints/repository-link.md "Coverage"): the documents a link covers, its
+// Coverage (docs/specs/027-repositories/repository-link.md): the documents a link covers, its
 // folder's subtree in the personal library or a team's, and its listed documents wherever they are, each with its
 // folder path (RL7). A covered folder no library holds leaves its documents unknown (RL6).
 

@@ -1,4 +1,4 @@
-// Workbench pairing (docs/specs/013-workspace/blueprints/workbench-embeds.md "Pairing"): a token asks to pair
+// Workbench pairing (docs/specs/013-workspace/workbench-embeds.md "Pairing"): a token asks to pair
 // with an origin and waits; the token's owner answers once in their own signed-in browser; Settings lists and
 // removes pairings. Only a session answers or unpairs, so no token, workbench session or guest can
 // approve a pairing for itself.

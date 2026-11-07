@@ -1,5 +1,5 @@
-// The Microsoft Whiteboard board format's ids (docs/specs/020-import-export/blueprints/
-// ms-whiteboard-import.md "Format ids"): node types, trait names and group commands. Meanings were
+// The Microsoft Whiteboard board format's ids (docs/specs/020-import-export/whiteboard-import.md): node
+// types, trait names and group commands. Meanings were
 // established against real boards and their screenshots.
 
 export const MSWB_COMMAND = {

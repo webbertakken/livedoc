@@ -132,7 +132,7 @@ describe('branchOfArrow', () => {
   });
 });
 
-// docs/specs/011-theme/blueprints/multicolour-themes.md, E2 / E4 / E8 / E10 and I1-I3.
+// docs/specs/011-theme/multicolour-themes.md, E2 / E4 / E8 / E10 and I1-I3.
 describe('assignBranches edge cases', () => {
   it('ignores an arrow pinned to another arrow or to an element not on the tab', () => {
     const connector = createPinnedArrow('a', 's', 'b', 'n');

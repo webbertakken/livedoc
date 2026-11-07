@@ -10,7 +10,7 @@ const checkout = () => buildViewModel(checkoutTab(), { rev: CHECKOUT_REV });
 const elementOf = (model: ReturnType<typeof buildViewModel>, id: string) =>
   model.printed.find((el) => el.id === id)!;
 
-describe('showView (R17, VW34)', () => {
+describe('showView (VW34)', () => {
   it('prints one element in full with its arrows both ways', async () => {
     const model = checkout();
     const { text, json } = showView(model, elementOf(model, CHECKOUT_IDS.orders));

@@ -1,5 +1,5 @@
-// What a document's room pushes to D1 (docs/specs/006-document/document-storage.md "The outbox", blueprint "The
-// outbox"). The room's triggers key `outbox` in the transaction of every write (document-schema.ts); the room's
+// What a document's room pushes to D1 (docs/specs/006-document/document-storage.md "The outbox"). The room's
+// triggers key `outbox` in the transaction of every write (document-schema.ts); the room's
 // alarm drains it on idle. A drain reads the keys, builds one D1 batch per unit (the document unit: summary, images,
 // cards, items; each tab its own), runs at most PUSH_CONCURRENCY at once and deletes exactly the keys whose unit
 // landed, by the ids it read: a key written again meanwhile has a new id and stays for the next drain.
@@ -21,7 +21,7 @@ import type { DocumentEnv } from '../types';
 import { contentSummaryOf } from './content-summary';
 import { CARD_THREADS_TAB, readInboxCards } from './inbox-cards';
 
-// Tab units one drain pushes; the rest go in the next drain, straight after (blueprint "Constants").
+// Tab units one drain pushes; the rest go in the next drain, straight after.
 export const DRAIN_TABS = 50;
 // D1 batches in flight at once: Workers' six open connections.
 export const PUSH_CONCURRENCY = 6;
@@ -261,7 +261,7 @@ function goneTabStatements(
   ];
 }
 
-// The tab's content search row (docs/specs/013-workspace/blueprints/content-search.md "Writing the index"): its
+// The tab's content search row (docs/specs/013-workspace/content-search.md): its
 // text with the inputs of the sheets it references, or a delete when it has gone or holds no text.
 function searchStatements(
   env: DocumentEnv,

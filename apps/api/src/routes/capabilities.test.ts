@@ -61,7 +61,7 @@ describe('the route', () => {
   });
 });
 
-describe('the CLI fields (docs/specs/015-api/blueprints/cli.md "Capabilities")', () => {
+describe('the CLI fields (docs/specs/015-api/cli.md)', () => {
   it('names the api base, sign-in, the document format, and no issuer or floor by default', async () => {
     const caps = await capabilities({});
     expect(caps).toMatchObject({

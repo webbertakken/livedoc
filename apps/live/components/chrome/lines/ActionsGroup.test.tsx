@@ -153,7 +153,7 @@ describe('ActionsGroup', () => {
     expect(parts()).toEqual([['Account menu']]);
   });
 
-  // docs/specs/013-workspace/blueprints/workbench-embeds.md: a workbench frame has no app surroundings (no Share, no
+  // docs/specs/013-workspace/workbench-embeds.md: a workbench frame has no app surroundings (no Share, no
   // account), only the chrome and its way out to the full app.
   it('in a workbench, holds the chrome and Open in LiveDoc, no document actions, no account, no appearance', () => {
     renderGroup({

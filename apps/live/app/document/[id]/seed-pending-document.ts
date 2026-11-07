@@ -15,8 +15,8 @@ import { isOfflineLocation } from '@/lib/save-locations';
 import { noteDocumentLoadEnded, startEditorTiming } from '@/lib/timing';
 import type { Participant } from '@/lib/identity';
 
-// What the editor starts from when it opens a pending document (docs/specs/013-workspace/blueprints/
-// new-document-menu.md "The editor's bootstrap branch"): its first state, read once as the editor mounts, so the
+// What the editor starts from when it opens a pending document
+// (docs/specs/013-workspace/new-document-menu.md): its first state, read once as the editor mounts, so the
 // document is on screen in the editor's very first render, with no loading pass and no state set after it. Every tab
 // is whole and loaded, none is fetched, and the autosave's baseline is the content the create writes, so what is done
 // before the create lands is saved once it has. The counterpart of seed-fetched-document.ts, for a document with

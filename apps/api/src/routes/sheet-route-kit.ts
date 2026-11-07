@@ -39,7 +39,8 @@ export function sheetCallerEdits(ctx: RouteContext, caller: SheetCaller): Promis
   );
 }
 
-// A relay larger than this asks clients to fetch the sheet instead (blueprint sheet-store.md, D5).
+// A relay larger than this asks clients to fetch the sheet instead (docs/specs/029-sheets/sheet-store.md,
+// D5).
 const SHEET_RELAY_BYTES_MAX = 262_144;
 export const SHEET_WRITE_RETRIES = 3;
 

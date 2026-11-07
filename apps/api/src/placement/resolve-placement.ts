@@ -1,5 +1,5 @@
-// Placement on create (docs/specs/013-workspace/folders.md "Placement on create", blueprint
-// docs/specs/013-workspace/blueprints/document-placement.md): decides where a new document is
+// Placement on create (docs/specs/013-workspace/folders.md "Placement on create",
+// docs/specs/013-workspace/folders.md): decides where a new document is
 // filed before anything is written. The judgements are pure; the reads they need arrive through
 // `PlacementLookups`, so the whole decision is testable without a database.
 

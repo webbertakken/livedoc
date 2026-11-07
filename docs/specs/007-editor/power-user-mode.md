@@ -182,3 +182,29 @@ the funnel.
 
 The help centre explains the mode and Minimal chrome in **Power user mode** under User Interface, linked from the
 Settings row.
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **P7** on: off: no baseline (another client): only P5: nothing to restore.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D3** What a "day" is for the offer's session count: The local calendar day, `YYYY-MM-DD` from the device clock
+  (default).
+- **D4** What counts as "a keyboard shortcut used": A keydown the editor's global shortcut listener newly claims
+  (`defaultPrevented` false before, true after) (default).
+- **D5** Whether counting stops after the offer: It continues; the latch alone stops the offer (default).
+- **D6** Shape of a palette tile without its caption: The existing icon-only tile (`hideCaption`), named by a Tooltip
+  (default).
+- **D7** Selection when switching to the view preview: Cleared, so no edit toolbar lingers into viewing (default).
+- **D8** Look of the role status icon: The status bar control box, in the role's emerald or amber rather than the bar's
+  slate (default).
+- **D9** Malformed offer counters: Reset to zero with a `[power-user-offer]` warning (default).
+- **D10** Where Help sits in the Explorer's menu: First row of the app band, above Search (default).
+- **D11** Order of the mode's children: Minimal Chrome first (a setting), then the preset readout (a summary) (default).
+- **D12** How "Change" goes to a row: Select the row's category and ring the row, the search result path (default).

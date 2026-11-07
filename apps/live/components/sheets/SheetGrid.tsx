@@ -1,6 +1,6 @@
 'use client';
 
-// The grid (docs/specs/029-sheets/sheet.md "The grid"; blueprint sheet-element.md "Layout", "Keyboard and focus"): a
+// The grid (docs/specs/029-sheets/sheet.md "The grid"): a
 // native scroll container over a spacer the size of the whole sheet, with a sticky viewport inside that draws only
 // what is in view: the cells, the headers, the selection, the editor. One tab stop; its keys are the grid's while it
 // has focus, and Escape hands them back to the canvas.

@@ -1,4 +1,4 @@
-// A draw.io cell's style string (docs/specs/020-import-export/blueprints/drawio-import.md
+// A draw.io cell's style string (docs/specs/020-import-export/drawio-import.md
 // step 5): `name;key=value;...`. Bare tokens are named styles from draw.io's
 // stylesheet; the few that matter carry defaults, merged UNDER the cell's own
 // pairs so an explicit value always wins.

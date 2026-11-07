@@ -355,7 +355,7 @@ inputs (`turbo.json`), so a docs-only change never replays a cached pass of thos
     filesystem (slugs ↔ `page.mdx`, per-category counts), the internal-link,
     UI-label, template and shortcut guards over article text, search and
     article telemetry, the schema.org JSON-LD builders, and the docs guards: every repo path quoted in
-    `docs/` exists, and every blueprint DEFAULTS.md ledger id, COMPLETENESS.md section and README.md
+    `docs/` exists, and every default id within a spec category and every README.md
     index entry is unique, so a merge that keeps both sides of one fails a test; and the
     one-TypeScript guard (every workspace on the root's TypeScript 7, no alias to another).
 

@@ -1,7 +1,7 @@
 'use client';
 
-// Where the Explorer runs (docs/specs/013-workspace/workbench-embeds.md "What renders", blueprint "The Explorer in
-// a workbench"): the app, or a workspace frame inside a workbench. In the frame the Explorer is itself, its sidebar,
+// Where the Explorer runs (docs/specs/013-workspace/workbench-embeds.md "What renders"): the app, or a
+// workspace frame inside a workbench. In the frame the Explorer is itself, its sidebar,
 // views and empty states, without the app's surroundings: no app header, account menu or Settings, no sign-in
 // banner, and none of the account's administration (API tokens, Teams administration, the guest migration).
 import { useWorkbenchSession } from '@/components/providers/workbench-session-context';

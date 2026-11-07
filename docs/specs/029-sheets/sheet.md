@@ -973,3 +973,28 @@ changeset onto one is refused. Its grid takes no input outside Plan, and a doubl
 - A help article **Sheets** (placing a sheet, editing, formulas, formatting, Paint Format, custom number formats,
   dropdowns and checkboxes, conditional formatting, sort, filter, maximise, CSV, keyboard),
   registered with the help centre, and a **Sheet Functions** article listing every function with an example.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D9** Toolbar, formula bar and status bar heights: 44, 28 and 24 px (default).
+- **D10** Row and column header sizes: 46 px wide row numbers, 22 px tall column letters (default).
+- **D11** How near a header edge a resize starts: 4 px (default).
+- **D12** Edge distance that auto-scrolls a drag: 24 px (default).
+- **D13** How often presence is sent while selecting: At most every 120 ms (default).
+- **D15** The cell editor's mechanism: A textarea with a reference-colouring overlay (default).
+- **D16** Most lines a freeze keeps: 100 rows and 26 columns (`SHEET_FREEZE_ROWS_MAX`, `SHEET_FREEZE_COLS_MAX`)
+  (default).
+- **D17** How many rows Add Rows adds: 100, changeable in its field, up to the grid's limit (default).
+- **D18** How many Find matches are highlighted: The first 2,000 (default).
+- **D19** Status bar: cells counted, and its pick: Up to 100,000 cells; the pick kept per browser (default).
+- **D20** Largest CSV a canvas drop reads: 8 MB (default).
+- **D21** Whether a remounted Sheet keeps its selection: Yes, per sheet for the session (up to 200 sheets), within the
+  grid (default).
+- **D22** How near the frozen edge's bar a press grabs: 3 px (default).
+- **D28** How many cell threads a Sheet holds: 1,000 (`CELL_THREADS_MAX`), each up to 500 comments as an element's
+  (default).
+- **D29** A cell comment marker's size and its preview: An 8 px triangle; the preview after 400 ms, the first 140
+  characters (default).

@@ -1,4 +1,4 @@
-// The sheet store's client (docs/specs/029-sheets/sheet-store.md, blueprint sheet-store.md "Editor slice"). Each
+// The sheet store's client (docs/specs/029-sheets/sheet-store.md). Each
 // call sends an offline document to its local store (../offline/offline-sheets, loaded only then: it carries the
 // engine) and a cloud document to the api. A session on a tab-scoped link names its tab on every call. Types only
 // from the engine, so this module costs the main bundle nothing.

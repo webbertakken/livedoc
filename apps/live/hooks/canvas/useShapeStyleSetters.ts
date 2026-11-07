@@ -27,7 +27,7 @@ type ShapeStyleSetterDeps = {
   currentSelectionIds: () => Set<string>;
   commit: (mapElements: (els: Element[]) => Element[]) => void;
   activeTab: Tab;
-  // Read when a setter runs (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a setter runs (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
 };
 

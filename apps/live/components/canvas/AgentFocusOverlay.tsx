@@ -9,7 +9,7 @@ import {
 } from '@livedoc/document';
 import { useCanvasSurface } from './CanvasSurfaceContext';
 
-// The focus rings of the agents present on the tab (docs/specs/024-agents/blueprints/agent-presence.md
+// The focus rings of the agents present on the tab (docs/specs/024-agents/agent-presence.md
 // "Presentation and UX", "Accessibility"): a static 2 px outline in the owner's colour, 4 px outside the element,
 // over a 1 px halo in the canvas surface colour so it reads against any fill (WCAG 1.4.11). Two people's agents on
 // one element nest, each ring a step further out. Canvas space, beneath the remote cursors. Supplementary to the

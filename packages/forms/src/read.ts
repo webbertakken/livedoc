@@ -1,4 +1,4 @@
-// readForm (docs/specs/030-forms/blueprints/forms.md §2): a stored or received form, made safe. It never throws and
+// readForm (docs/specs/030-forms/forms.md §2): a stored or received form, made safe. It never throws and
 // never refuses a form for one bad part: the part is dropped or capped, so a form from an older or newer editor, an
 // agent or a hand-edited file still opens.
 import { CUSTOM_FIELD_ID_PATTERN, ITEM_TYPE_PATTERN } from '@livedoc/items';

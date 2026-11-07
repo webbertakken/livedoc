@@ -1,5 +1,5 @@
 -- Each document's move of its content from D1 into its room (docs/specs/006-document/document-storage-move.md,
--- blueprint "Interfaces and contracts"): written by the room after each try, read by the sweep and the operator's
+--): written by the room after each try, read by the sweep and the operator's
 -- tool. Ids, counts, hashes and error names only, never content. `born` marks a document created or copied in a
 -- room, which D1 never held content for.
 CREATE TABLE content_moves (

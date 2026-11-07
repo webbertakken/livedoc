@@ -1,5 +1,5 @@
-// A room's own schema (docs/specs/006-document/document-storage.md "What the room holds", blueprint
-// docs/specs/006-document/blueprints/document-storage.md "Schema"): everything one document holds as content, in its
+// A room's own schema (docs/specs/006-document/document-storage.md "What the room holds",
+// docs/specs/006-document/document-storage.md): everything one document holds as content, in its
 // Durable Object's SQLite. D1 keeps the listing and the indexes the room's outbox feeds.
 //
 // One database per document, so `document_id` names the same document on every row. It stays a column (and in the
@@ -183,7 +183,7 @@ BEGIN
 END;
 `;
 
-// What the room owes D1 (document-outbox.ts, blueprint "The outbox"): one key per changed thing, written by the
+// What the room owes D1 (document-outbox.ts): one key per changed thing, written by the
 // triggers below in the transaction of the write it records (R3), so no write path can forget the listing. A key
 // is re-keyed by DELETE then INSERT, so a key written again during a drain gets a new id and stays for the next one.
 // `document_id` is the room's one document; it is a column so the content modules' store-of-many SQL runs unchanged.

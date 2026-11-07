@@ -1,4 +1,4 @@
-// `link init`'s folder picker (docs/specs/027-repositories/blueprints/repository-link.md "The folder picker"): on a
+// `link init`'s folder picker (docs/specs/027-repositories/repository-link.md): on a
 // terminal, a numbered list on stderr and one typed line at a time in the terminal's own line editing (RL35); a
 // number chooses, other text narrows, Enter alone, end of input or Ctrl-C cancels. Never redrawn, so a screen reader
 // reads each list once. Where stdin or stdout is not a terminal, the folders as runnable commands instead (RL39).

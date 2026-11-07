@@ -2,7 +2,7 @@ import type { PathAnchor } from '@livedoc/document';
 
 type Point = { x: number; y: number };
 
-// Screen px (blueprint path-tool P13): a node's circle and a handle's dot. Drawn in canvas px
+// Screen px ( P13): a node's circle and a handle's dot. Drawn in canvas px
 // divided by the zoom, so they keep their size at any zoom.
 const PATH_NODE_RADIUS_PX = 4;
 const PATH_HANDLE_RADIUS_PX = 3.5;

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/lib/api/core';
 
-// The page's one copy of the reader's defaults (blueprint "Behaviour and state (surfaces)"): loaded
+// The page's one copy of the reader's defaults: loaded
 // once per owner, written optimistically, telemetry before every write, rolled back on refusal.
 
 const { api, track } = vi.hoisted(() => ({

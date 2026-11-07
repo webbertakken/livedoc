@@ -1,4 +1,4 @@
--- Workbench embeds (docs/specs/013-workspace/workbench-embeds.md, blueprint "Data and persistence").
+-- Workbench embeds (docs/specs/013-workspace/workbench-embeds.md).
 --
 -- A developer tool (a workbench) frames the editor signed in as a person. A token mints tickets only for an
 -- origin its owner approved (a pairing); a ticket, redeemed once, opens a session confined to one document.

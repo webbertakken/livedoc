@@ -1,5 +1,5 @@
 // The content hash of a document's move into its room (docs/specs/006-document/document-storage-move.md "A move",
-// blueprint docs/specs/006-document/blueprints/document-storage-move.md "Canonical content"). The same reads and
+// docs/specs/006-document/document-storage-move.md). The same reads and
 // the same hash run in three places: the room over D1 before it writes, the room over its own SQLite after, and the
 // operator's tool over D1 through wrangler. So the tables, their columns and their order live here once.
 //

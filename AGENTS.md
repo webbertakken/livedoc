@@ -26,20 +26,24 @@ This section is exclusively human-hand-written; agents MUST NOT edit this sectio
 Use the following structure and rationale.
 
 - `AGENTS.md` instructs us about **how we work**.
-- `plans/` contains plans; **exhaustive list of checkboxed steps**.
+- `plans/` contains plans; **exhaustive list of checkboxed steps**, and **blueprints**: _per-change briefs_.
 - `docs/` holds all **documentation** files.
 - `docs/README.md` is the entry point.
 
 Within `docs/` are the following special categories:
 
 - `specs/` contains **specifications**: _what a thing IS_.
-- `specs/[...]/blueprints/` contains **blueprints**: _exhaustively documented implementation details_.
 - `instructions/` contains **instruction sets**: _empirically built repeatable processes_.
 
 **Indexes** are held inside `README.md` files. Entries look like: `- ./<file>.md - when <trigger>`.
 `README.md` files open with `Follow the references below only as needed; never upfront.`
 
 Further details below.
+
+### Writing
+
+- In specs, blueprints, instruction sets, wiki pages and agent files: one sentence per line, ≤ 120 characters.
+- In agent files: state the rule; no rationale, no examples.
 
 ### Docs
 
@@ -62,9 +66,9 @@ Further details below.
   - **phases** are logical increments, warranting a commit each.
   - **steps** MUST be performed with full focus, and in the highest qualitative and idiomatic way.
   - **checkboxes** MUST be checked off immediately upon completion of any step, and before starting the next step.
-- A plan MAY link to blueprints and specs (encouraged), but SHALL NOT restate them.
+- A plan MAY link to specs (encouraged), but SHALL NOT restate them.
 - The last step of every plan MUST be **fold-back**; to let the documentation reflect reality, and to verify all symbols/files/references.
-- Fold-back reconciles the spec to what actually shipped, then re-derives the blueprint from it.
+- Fold-back reconciles the spec to what actually shipped; the blueprint is then spent.
 - Plans SHALL NOT be renumbered.
 
 **When to use plans?**
@@ -93,14 +97,14 @@ _Note:_ There is no need to stop in between phases; just keep going.
 - Specs are never task lists and carry no checkboxes.
 - Spec files SHOULD be unnumbered and named by subject; a category MAY hold several related specs.
 - Write the spec BEFORE implementing anything non-trivial, and keep it true afterwards.
-- Iterate the existing spec rather than adding one on the same subject; stay cognizant of each delta.
+- Iterate the existing spec rather than adding a new one on the same subject; stay cognizant of the delta each change makes.
 
 **Category folders**
 
 - The first five categories are reserved:
   - `001-project-vision` - the "why": problem, target audience, value proposition.
   - `002-project-scope` - the "what" and "what-not": features, high-level outline, technical constraints, non-goals.
-  - `003-system-architecture` - the "how" underneath: data flow, infrastructure, state, language/runtime boundaries.
+  - `003-system-architecture` - the "how" under the hood: data flow, infrastructure, state management, and the language and runtime boundaries.
   - `004-interface-design` - the "how" at the surface: UX/UI, wireframes, user journeys, visual language.
   - `005-project-roadmap` - the "when": milestones as outcomes, phases, launch strategy.
 - Further category folders MUST BE named after a **system** or, preferably, a **domain concept**.
@@ -108,17 +112,19 @@ _Note:_ There is no need to stop in between phases; just keep going.
 
 ### Blueprints
 
-- Blueprints live in a `blueprints/` folder inside their spec's category folder `docs/specs/NNN-<category>/blueprints/`,
-- They are indexed under `docs/specs/NNN-<category>/blueprints/README.md`.
-- Blueprints are the meticulously detailed natural language source holding all implementation details, written before the code exists.
+- A blueprint is a per-change brief: the spec delta, translated into engineering precision, written before the code.
+- It lives beside its plan as `plans/NNNN-<topic>.blueprint.md`, or in the session when the change has no plan.
+- Blueprints are never committed; once the change ships, the spec and the code are the record.
 - Derive the blueprint mechanically from the spec before building; it adds engineering precision, not new design.
 - Derivation is one-directional and deterministic: the spec is the input, the blueprint the output.
-- Change flows in one-direction and is deterministic: a spec change updates the blueprint and then the code.
-- Any changes outside that are folded back into the spec and blueprint.
-- Blueprints do not invent design; if the spec is ambiguous, fix the spec first rather than guess.
-- Iterate existing blueprints, never rewrite: change only what the spec changed; stay cognizant of the delta.
-- Blueprints SHOULD apply documented defaults, one row per default in the category's `blueprints/DEFAULTS.md`.
-- A blueprint is complete only when every applicable **completeness category** is covered and checked off in `blueprints/COMPLETENESS.md`
+- Change flows in one direction: a spec change yields a blueprint, and the blueprint yields the code.
+- Any changes outside that are folded back into the spec.
+- Scope each blueprint to the spec delta; never re-derive what the change does not touch.
+- Blueprints do not invent design; if the spec is ambiguous or silent, fix the spec first rather than guess.
+- A default for a silent or qualitative spec goes into the spec, tagged `(default)`, until a human confirms it.
+- The code is the source of implementation detail: identifiers, constants, copy, and tests citing the rule they verify.
+- Docs never restate what the code holds; they point to it.
+- A blueprint is complete only when each **completeness category** the change touches is covered and ticked at its top.
 
 **Completeness categories**
 
@@ -133,12 +139,12 @@ _Note:_ There is no need to stop in between phases; just keep going.
 - **Accessibility** (UI only) - contrast, ARIA, keyboard, and reduced motion meet WCAG 2.2 AA.
 - **Web Experience** (Web only) - Core Web Vitals, including LCP, INP and CLS are explicitly addressed.
 - **Observability** - every decision point and failure emits a log with a recognisable fingerprint.
-- **Testing** - every spec rule maps to a deterministic test, traceably.
-- **Constants and configuration** - every magic number is a named constant with provenance and a safe range.
+- **Testing** - every spec rule maps to a deterministic test that cites the rule.
+- **Constants and configuration** - every magic number is a named constant in code, with provenance and a safe range.
 - **Assets and external resources** - every asset has a source, a licence, a path, and reproducible generation.
-- **Defaults ledger** - every default applied for a silent or qualitative spec has a ledger row.
+- **Defaults** - every default applied for a silent or qualitative spec is in the spec, tagged `(default)`.
 
-Record each blueprint's applicable categories in the committed `blueprints/COMPLETENESS.md`, one line each:
+Open each blueprint with the categories that apply to the change, a simple list, one line each:
 
 - [x] Domain and naming
 - [x] Behaviour and state
@@ -151,12 +157,12 @@ Leave out any category that does not apply; unchecked means applicable but not c
 
 - Instruction sets live in `docs/instructions/<process>.md`, unnumbered and named after the process they encode.
 - They are indexed under `docs/instructions/README.md`.
-- Instruction sets are **reusable process memory**: _how a process is done_, not scoped to one piece of work.
+- Instruction sets are **reusable process memory**: _how a process is done_, not scoped to one piece of work like a plan.
 - Instruction sets carry no checkboxes; a plan MAY link to one, and progress is ticked in the plan.
 - Steps are **chronological**; ordered the way the work is actually done, not grouped by theme.
 - Steps are **granular**; each is small enough that "did it happen?" has a yes or no answer.
 - Steps are **opinionated**; taste, preferences and domain specifics are woven in, not left to model defaults.
-- Surface only **genuine forks** (taste, preference, business knowledge); write every other decision down once.
+- Only **genuine forks** (taste, preference, business knowledge) are surfaced; every other decision is written down once.
 - Instruction sets grow **empirically**; gotchas, hard gained knowledge, user input or missed steps are folded back in.
 
 ## Specs are the source of truth

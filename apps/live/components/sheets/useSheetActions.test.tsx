@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The Sheet's actions over a live controller (blueprint sheet-element.md "Editor components"): commands read the
+// The Sheet's actions over a live controller: commands read the
 // selection as last set (not the render's copy), and Enter after a run of Tabs returns to the run's first column.
 import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';

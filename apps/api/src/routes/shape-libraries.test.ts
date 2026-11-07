@@ -3,7 +3,7 @@ import type { ShapeLibrary } from '@livedoc/api-schema';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MAX_SHAPE_LIBRARIES_PER_OWNER, MAX_TAB_BYTES } from '@livedoc/api-schema';
 
-// handleShapeLibraries (docs/specs/013-workspace/blueprints/shape-libraries.md "Interfaces and
+// handleShapeLibraries (docs/specs/013-workspace/shape-libraries.md "Interfaces and
 // contracts"): owner-scoped like custom themes, plus the cap, the size budget, item validation and
 // the name rules.
 

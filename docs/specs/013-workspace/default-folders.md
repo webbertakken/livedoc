@@ -397,3 +397,64 @@ new <these>", opened by Settings' Change.
 [Folders](folders.md), [Team shared documents](team-shared-documents.md),
 [Dedicated route for new-document creation](../007-editor/new-document-route.md),
 [MCP server](../015-api/mcp-server.md), [Auth + guest access](../014-identity/auth-and-guest-access.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D17** Which migration number: 0061, the next free number after 0060 (default).
+- **D18** How a key with a colon travels in the path: Either raw (`mode:draw`) or percent-encoded (`mode%3Adraw`); the
+  route decodes the segment (default).
+- **D19** What a successful PUT answers: 204 with no body, as `PUT /api/favourites/:id` does (default).
+- **D20** The order GET lists defaults in: The order of `PLACEMENT_DEFAULT_KEYS` (default).
+- **D21** Whether setting a key that has a default asks first: No: the new folder replaces the old, `updated_at`
+  restamped (default).
+- **D22** Whether an intent with fields beyond its three fails: No: only `mode`, `tabKind` and `templateFamily` are
+  read; other fields are ignored (default).
+- **D23** How a personal default no longer the caller's is logged: Its own skip reason, `folder_not_visible`, apart from
+  `folder_missing` (default).
+- **D24** What MCP reports when it cannot read the default's name: "your default folder", with a `[mcp]` warning
+  (default).
+- **D25** Whether an empty-string or unparsable PUT body is a folder: No: `default_folder_invalid`, as for a missing
+  `folderId` (default).
+- **D27** Where the editor-mode list that mode keys are generated from lives: `EDITOR_MODES` in
+  `packages/document/src/editor-mode.ts`, the editor modes module (default).
+- **D28** How a stored mode, tab kind or template family outside its list reads: As null (unknown), so a retired value
+  never reaches a client as a live option (default).
+- **D105** Which Settings category holds Where new documents go: A new Documents category: it is not a preference, and
+  Account holds identity and data (default).
+- **D106** The section heading's case: Title case, "New Documents" and "Default Folders", as every Settings section
+  heading (default).
+- **D107** Whether the submenu closes after a choice: No: it is a list of checkboxes, so several can be set in one visit
+  (default).
+- **D108** My Documents' checked entry: Shown checked and unavailable: the root is already where those documents go
+  (default).
+- **D109** Whether a team's root has the submenu: No: a team's root cannot be a default (spec) (default).
+- **D110** Each entry's icon: The mode icons; Lucide sticky-note, history and square-kanban (default).
+- **D111** Where the marker sits on a row with a count badge: After the badge, so the badge never moves when the marker
+  appears (default).
+- **D112** Which mode a kind or template entry's fallback is resolved for: Diagram, the mode every Event Storming board
+  and every family template opens in (default).
+- **D113** Where a deleted default folder's name comes from: This browser's owner-keyed memory,
+  `livedoc:v2:default-folder-names:<owner>`; else "A deleted folder" (default).
+- **D114** What the wizard's Change default does: Retired with the wizard's Location step (2026-10-16).
+  Was: Opens the default folder picker for that key; /new has no Settings dialog (default).
+- **D115** What an untouched root with nothing resolved sends: No placement: the server's precedence decides, so a
+  default not yet loaded still applies (default).
+- **D116** Which key Always save sets: Retired with the wizard's Location step (2026-10-16).
+  Was: The intent's most specific key (kind, then template, then mode) (default).
+- **D117** How a teammate's default on a team folder shows: It does not: only the reader's own defaults are known
+  (default).
+- **D118** The Use as Default for row's icon: Lucide folder-check (default).
+- **D119** Whether the sidebar's menu-less team folder rows show the marker: Yes: the marker is information, not a verb
+  (default).
+- **D120** What Settings shows when the defaults fail to load: "Couldn't load your default folders", no Change or Clear
+  (default).
+- **D123** Where the wizard's reason line sits: Retired with the wizard's Location step (2026-10-16).
+  Was: Under the browser, in the slot Always save uses: they never show together, so neither shifts the browser
+  (default).
+- **D124** How the Settings rows name the entries: Title case, as every Settings label ("Kanban Boards"); the menus keep
+  the list's own words (default).
+- **D125** Which level opens for a selected folder that holds subfolders: The level that lists it, as for a leaf, so the
+  checked card always names the folder (default).

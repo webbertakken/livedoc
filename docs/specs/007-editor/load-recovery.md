@@ -237,3 +237,14 @@ the server, which the rest of this spec covers.
   connection the editor still cannot start.
 - Timeouts on every API request. The watchdog bounds the load; requests after
   it are already reported when they fail.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D63** How long "Trying a fresh start" shows before the reload: 1.5 s (`AUTO_RELOAD_DELAY_MS`): long enough to read,
+  short against the 30 s already waited (default).
+- **D64** Where the self-healing reload's claim is remembered: Its own sessionStorage map, `livedoc:load-auto-reloads`,
+  through the stale-build guard's `claimReloadIn` (default).
+- **D65** How long "Copied" shows: 2 s (`COPIED_FOR_MS`) (default).

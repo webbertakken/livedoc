@@ -1,5 +1,5 @@
 // The Google Drive mirror's calls to the api worker
-// (docs/specs/022-drive-mirror/blueprints/drive-mirror.md, "Routes"). Signed-in
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Routes"). Signed-in
 // only: apiHeaders attaches the session Bearer, and the worker refuses anything
 // else. The Drive traffic itself never touches the worker.
 

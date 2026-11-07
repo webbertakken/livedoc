@@ -1,4 +1,4 @@
-// States without mirror files (docs/specs/027-repositories/blueprints/repository-link.md "States without mirror
+// States without mirror files (docs/specs/027-repositories/repository-link.md "States without mirror
 // files"): at `index` and `none` a document's state comes from what the local sync state recorded at its last sync
 // on this machine (RL36, RL44). Local changes cannot exist, so neither can `ahead` or `diverged`. Pure.
 

@@ -1,4 +1,4 @@
-// `rm <selector> [all] [keep-arrows]` (docs/specs/024-agents/blueprints/edit-operations.md
+// `rm <selector> [all] [keep-arrows]` (docs/specs/024-agents/edit-operations.md
 // "Operations"): arrows attached to what is removed go with it, transitively; with `keepArrows`
 // their attached ends are freed where they are drawn instead. A mind node's parent link to a removed
 // node is removed (EO30).

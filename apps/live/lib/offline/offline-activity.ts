@@ -39,7 +39,7 @@ export type OfflineActivity = {
 const EMPTY: OfflineActivity = { actions: [], threads: [], cards: [], cardThreads: [] };
 
 // Who the reader is: their ids (owner id, and the guest id this browser still holds) and the hashes of them, as an
-// item's assignee carries them (docs/specs/026-plan/blueprints/item-store.md "Security and trust").
+// item's assignee carries them (docs/specs/026-plan/items.md).
 export type OfflineReader = { ids: readonly string[]; personIds: readonly string[] };
 
 export async function offlineReader(ids: readonly (string | null)[]): Promise<OfflineReader> {

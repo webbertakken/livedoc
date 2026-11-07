@@ -1,5 +1,5 @@
-// Fuzzy title matching (docs/specs/013-workspace/explorer-filters.md "Matching", blueprint
-// docs/specs/013-workspace/blueprints/explorer-filters.md "Title matching"). One matcher for every list of
+// Fuzzy title matching (docs/specs/013-workspace/explorer-filters.md "Matching",
+// docs/specs/013-workspace/explorer-filters.md). One matcher for every list of
 // document titles: the Explorer lens, the search panel's documents and Add to Document.
 //
 // Every query word must match the title, by the best of four tiers: a substring, the starts of successive

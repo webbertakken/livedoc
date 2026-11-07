@@ -1,5 +1,5 @@
-// Every number the lint judges by (docs/specs/024-agents/blueprints/diagram-lint.md "Constants and
-// configuration"), with its provenance in the blueprint's table.
+// Every number the lint judges by (docs/specs/024-agents/diagram-lint.md "Constants and
+// configuration"), each with its provenance beside it.
 
 export const LINT_CROSSINGS_PER_ARROW = 0.25;
 export const LINT_MAX_ASPECT = 3;

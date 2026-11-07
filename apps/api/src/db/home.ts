@@ -1,4 +1,4 @@
-// Explorer Home's reads (docs/specs/013-workspace/explorer-home.md; blueprint "Reads"). Each one
+// Explorer Home's reads (docs/specs/013-workspace/explorer-home.md). Each one
 // scopes by the documents the person can open FIRST (VISIBLE_DOCUMENTS_CTES) and filters after.
 //
 // Binds shared by both: ?1 = the person's owner id, ?2 = now.
@@ -126,7 +126,7 @@ export const JUMP_BACK_IN_SQL = `WITH ${VISIBLE_DOCUMENTS_CTES},
        JOIN visible v ON v.id = p.document_id
        ${PLACE_JOINS}`;
 
-/** The person's server-side Within reach set (blueprint "Jump back in"): use days are the UTC days
+/** The person's server-side Within reach set: use days are the UTC days
  *  in the window with an open, a real edit or a marked making by them; the last use is the latest of
  *  those and their last open. SQL narrows to the n most used and the 2n most recent (which by the merge
  *  property hold the whole set); `withinReach` then allocates exactly, over rows in id order. */

@@ -10,7 +10,7 @@ import { handleDocuments } from './documents';
 import { personTagFor } from '../person-tag';
 import { makeTestRouteContext } from './test-route-context';
 
-// Document views over REST on real SQLite (docs/specs/024-agents/document-views.md; blueprint "REST",
+// Document views over REST on real SQLite (docs/specs/024-agents/document-views.md,
 // R23 and R26): the gates, scope, refusals, headers and the Viewed event.
 
 const OWNER = 'user_owner';

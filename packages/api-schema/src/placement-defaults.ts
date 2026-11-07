@@ -1,5 +1,5 @@
-// Default folders (docs/specs/013-workspace/default-folders.md, blueprint
-// docs/specs/013-workspace/blueprints/default-folders.md): where a person's new documents land when
+// Default folders (docs/specs/013-workspace/default-folders.md, docs/specs/013-workspace/default-folders.md):
+// where a person's new documents land when
 // no place is chosen, keyed by what the document is made as. The api resolves and stores them; the
 // editor and the MCP server send the creation intent; all read the keys and the intent from here.
 //

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { GifEncodeRequest, GifEncodeResponse } from './gif-encode-protocol';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The encoder": the worker's side.
+// docs/specs/020-import-export/animated-gif-export.md: the worker's side.
 async function startWorker() {
   const posted: { message: GifEncodeResponse; transfer?: Transferable[] }[] = [];
   let onMessage: (e: { data: GifEncodeRequest }) => void = () => {};

@@ -1,4 +1,4 @@
-// One command, start to end (docs/specs/015-api/blueprints/cli.md "One command"): global flags, routing, help,
+// One command, start to end (docs/specs/015-api/cli.md): global flags, routing, help,
 // the verb's input, the profile and credential, the host's capabilities, the handler, and what it prints. The
 // exit code is one of eight; stdout carries data only.
 
@@ -223,7 +223,7 @@ export async function run(argv: readonly string[], io: CliIo): Promise<ExitCode>
       const profile = resolveProfile(globals, io, config);
       host = profile.host;
       log(`profile ${profile.name} host ${profile.host} source ${profile.source}`);
-      // A link's host is checked against the profile's before any request (repository-link blueprint RL5).
+      // A link's host is checked against the profile's before any request (RL5).
       const links = LINKED_VERBS.includes(verb.id)
         ? await linksFor(io, Boolean(input.all), profile, config, verb.id.replace('.', ' '))
         : [];

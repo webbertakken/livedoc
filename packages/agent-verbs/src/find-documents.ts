@@ -1,5 +1,5 @@
 // The document sweep the MCP's find_documents and the CLI's addressing share (docs/specs/015-api/mcp-server.md §4.1,
-// docs/specs/015-api/blueprints/cli.md "Addressing"): the caller's personal
+// docs/specs/015-api/cli.md): the caller's personal
 // library PLUS every shared library of the teams they've joined. A document
 // filed into a team leaves its owner's personal list entirely (docs/specs/013-workspace/team-shared-documents.md), so
 // without the team sweep it would be invisible to the MCP — the personal

@@ -1,5 +1,5 @@
-// Bending an arrow by dragging its line (docs/specs/008-canvas/arrow-bending.md, blueprint
-// docs/specs/008-canvas/blueprints/arrow-bending.md).
+// Bending an arrow by dragging its line (docs/specs/008-canvas/arrow-bending.md,
+// docs/specs/008-canvas/arrow-bending.md).
 //
 // A press on the line is planned once, from the arrow as it stands, and every
 // pointer move applies the plan to the total pointer delta. Pure and

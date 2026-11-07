@@ -1,4 +1,4 @@
-// The content half of a document's room (docs/specs/006-document/blueprints/document-storage.md "Room lifecycle",
+// The content half of a document's room (docs/specs/006-document/document-storage.md,
 // "The outbox"): its SQLite as `DOCUMENT_DB`, the env its handlers run with, the one document it answers for, and
 // the outbox's drain on idle. DocumentRoom owns the sockets and the one alarm; it asks this for the drain's
 // deadline and runs the drain when it is due.
@@ -22,7 +22,7 @@ import {
 import { allShares, drainShares } from './tab-shares';
 import type { DocumentEnv, Env } from '../types';
 
-// The drain's pace (blueprint "Constants and configuration").
+// The drain's pace.
 export const FLUSH_IDLE_MS = 2_000;
 export const FLUSH_MIN_GAP_MS = 60_000;
 export const FLUSH_RETRY_MS = 60_000;
@@ -141,7 +141,7 @@ export class RoomContent {
     return documentRpc(this.env, (p) => this.state.waitUntil(p));
   }
 
-  // The move gate (docs/specs/006-document/blueprints/document-storage-move.md, M1): before any content is served,
+  // The move gate (docs/specs/006-document/document-storage-move.md, M1): before any content is served,
   // the room holds its document's content. A created or copied document is born moved (M4); any other moves now,
   // other requests waiting; a document D1 has no row for stays empty (G1). A failed move throws, answered 503
   // `content_moving`, and the next request tries again.

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { run } from '../main';
 import { capabilities, fakeIo, NOW, TOKEN, type FakeIo } from '../testing/fake-io';
 
-// `workbench open` as the CLI runs it (docs/specs/013-workspace/blueprints/workbench-embeds.md "The CLI", WB23):
+// `workbench open` as the CLI runs it (docs/specs/013-workspace/workbench-embeds.md, WB23):
 // the link on stdout, the pairing refusal as exit 4 naming the pair command, the usage and origin refusals.
 
 const DOC = 'aaaa1111-0000-4000-8000-000000000001';

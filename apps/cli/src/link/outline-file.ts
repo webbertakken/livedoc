@@ -1,5 +1,5 @@
-// The outline file (docs/specs/027-repositories/repository-link.md "The outline file"; blueprint "The outline
-// file"): generated, linking the document, then each tab's outline view whole, in a `text` fence (RL32). What an
+// The outline file (docs/specs/027-repositories/repository-link.md "The outline file"): generated, linking
+// the document, then each tab's outline view whole, in a `text` fence (RL32). What an
 // agent reads first, at a tenth of the JSON's tokens.
 
 import type { Tab } from '@livedoc/document';

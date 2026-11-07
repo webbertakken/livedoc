@@ -68,7 +68,7 @@ export function EditorTabDialogs() {
     setMultiSelectedIds,
   } = useEditorContext();
   // The selection the export covers, read from the store while a selection export is open
-  // (docs/specs/008-canvas/blueprints/selection-store.md).
+  // (docs/specs/008-canvas/canvas-performance.md).
   const exportingSelection = exportOpen && exportScope === 'selection';
   const multiSelectedIds = useSelectionOf(
     useCallback(

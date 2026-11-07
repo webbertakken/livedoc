@@ -1,7 +1,7 @@
 // What an element's indicators are, and how much room they take
 // (docs/specs/008-canvas/element-indicators.md). The items are built once from the element's
 // state; the size is ESTIMATED from fixed glyph, gap and character widths rather than measured,
-// so placement is pure and runs before anything is drawn (blueprint D76).
+// so placement is pure and runs before anything is drawn (D76).
 
 export type IndicatorKind = 'outline' | 'tidy' | 'link' | 'note' | 'action' | 'comment';
 

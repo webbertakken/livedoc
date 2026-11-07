@@ -1,7 +1,7 @@
 'use client';
 
-// The mounted workspace frame (docs/specs/013-workspace/workbench-embeds.md "What renders", blueprint "The workspace
-// frame"): the Explorer as it is at /explorer, without the app's surroundings, or the editor of the document opened
+// The mounted workspace frame (docs/specs/013-workspace/workbench-embeds.md "What renders"): the Explorer as
+// it is at /explorer, without the app's surroundings, or the editor of the document opened
 // in it, with Back. The place is the frame's own address; every move is the frame's own (useWorkspaceNavigation),
 // told to the workbench as `livedoc:place`, and the workbench may move it with `livedoc:open`. The
 // Explorer unmounts while a document is open, so the editor's shortcuts and panels are the only ones listening.

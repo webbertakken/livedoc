@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createWorkbenchPort } from './workbench-port';
 
-// The port (docs/specs/013-workspace/blueprints/workbench-embeds.md "Workbench messages"): sends only to
+// The port (docs/specs/013-workspace/workbench-embeds.md "Workbench messages"): sends only to
 // the bound origin, accepts only from the parent at that origin, logs unknown types once.
 
 const ORIGIN = 'https://127.0.0.1:5175';

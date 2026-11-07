@@ -119,3 +119,13 @@ One exception goes before the editor: a finger's double-press on an element too 
 frames the element instead of editing it ([Double-tap to zoom](./canvas-and-palette.md#double-tap-to-zoom)); the
 canvas catches that second press ahead of the element (`hooks/canvas/useSmallElementDoubleTap.ts`), and the next
 double-press edits.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D27** "A little way in from each end": The grab fraction is clamped to 0.2 to 0.8 (default).
+- **D28** Snapping while bending by the line: None; the handles keep their snapping, a line bend is freehand (default).
+- **D29** Bowing a zero-length arrow: Inserts one bend point instead (default).
+- **D30** "Close together" for a double-press: Within 8 screen px and 450 ms, the existing window (default).

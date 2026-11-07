@@ -1,5 +1,5 @@
 // Removing a document for good removes everything its room stored too (docs/specs/006-document/document-storage.md
-// "Purging and copying", blueprint "Purge"): its content and the collaboration ledger, which keeps the text of every
+// "Purging and copying"): its content and the collaboration ledger, which keeps the text of every
 // comment, idea and answer. The D1 removal before it is the delete and leaves a tombstone (`room_purges`,
 // db/document-removal.ts) per document; a room that confirms its purge clears its tombstone, one that cannot be
 // reached keeps it, logged rather than failing the request, and the daily cron tries it again.

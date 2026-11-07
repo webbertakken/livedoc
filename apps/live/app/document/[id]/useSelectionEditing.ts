@@ -31,7 +31,7 @@ type SetState<T> = Dispatch<SetStateAction<T>>;
 // shift-click multi-select toggling. applyFormatFromSource comes from
 // useElementHelpers and is passed in.
 export function useSelectionEditing(opts: {
-  // Read when an edit runs (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when an edit runs (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   isReadOnly: boolean;
   // The active tab is locked: every save is refused, so no label editor opens to take typing it would
@@ -323,7 +323,7 @@ export function useSelectionEditing(opts: {
     if (lockedByOther(elementId)) return false;
     const el = activeTab.elements.find((e) => e.id === elementId);
     if (!el) return false;
-    // A path takes no typed label (docs/specs/023-draw-mode/blueprints/path-tool.md P1): its edit
+    // A path takes no typed label (docs/specs/023-draw-mode/path-tool.md P1): its edit
     // mode is its points, never a caret.
     const labelable = (isBoxed(el) && el.type !== 'path') || el.type === 'arrow';
     if (!labelable) return false;

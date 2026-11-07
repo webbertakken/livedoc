@@ -1,4 +1,4 @@
-// A pull file read as a document, offline and read-only (docs/specs/015-api/blueprints/cli.md "Addressing", CLI70):
+// A pull file read as a document, offline and read-only (docs/specs/015-api/cli.md, CLI70):
 // `document view`, `tab ls` and `tab view` render it with the views the api renders, with each tab's pulled revision;
 // any other verb given one exits 2. No host, profile or credential is read.
 

@@ -1,4 +1,4 @@
-// What a response makes (docs/specs/030-forms/forms.md "What a response makes", blueprint §6): one card's type and
+// What a response makes (docs/specs/030-forms/forms.md "What a response makes"): one card's type and
 // fields from a checked response. Pure, so the api makes it and the builder's Preview can show what would be made.
 import {
   DESCRIPTION_RICH_FIELD,

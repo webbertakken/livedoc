@@ -5,13 +5,19 @@ import { describe, expect, it } from 'vitest';
 
 // The docs' ledgers and indexes stay unique (AGENTS.md "Organisation process").
 //
-// Several branches extend the same blueprint DEFAULTS.md ledger, the same COMPLETENESS.md and the
-// same README.md index at once. A merge that keeps both sides leaves two rows called D22, two
-// sections for one blueprint, or one index entry twice; nothing compiles prose, so each was found
-// by someone reading. These checks make that a red test instead. Lives beside
-// repo-paths-in-docs.test.ts for the same reason: this suite owns documentation correctness.
+// Several branches add defaults to the same spec category and entries to the same README.md index
+// at once. A merge that keeps both sides leaves two defaults called D22, or one index entry twice;
+// nothing compiles prose, so each was found by someone reading. These checks make that a red test
+// instead. Lives beside repo-paths-in-docs.test.ts for the same reason: this suite owns
+// documentation correctness.
 
 const DOCS = fileURLToPath(new URL('../../../docs', import.meta.url));
+const SPECS = join(DOCS, 'specs');
+
+// A default in a spec's Defaults section: `- **D22** ...`. Code cites it by id within its category.
+// Invariants and edge cases carry ids too, but per spec, so only the Defaults section is read.
+const DEFAULT_ID = /^- \*\*([A-Z]+\d+)\*\* /gm;
+const DEFAULTS_SECTION = /^## Defaults\n([\s\S]*?)(?=^## |(?![\s\S]))/m;
 
 function filesNamed(dir: string, name: string): string[] {
   const out: string[] = [];
@@ -36,17 +42,36 @@ function report(name: string, find: (text: string) => string[]): string[] {
   );
 }
 
+function categories(): string[] {
+  return readdirSync(SPECS).filter((entry) => statSync(join(SPECS, entry)).isDirectory());
+}
+
+function defaultIds(category: string): string[] {
+  return readdirSync(join(SPECS, category))
+    .filter((entry) => entry.endsWith('.md'))
+    .flatMap((entry) => {
+      const text = readFileSync(join(SPECS, category, entry), 'utf8');
+      const section = text.match(DEFAULTS_SECTION)?.[1] ?? '';
+      return [...section.matchAll(DEFAULT_ID)].map((m) => m[1]!);
+    });
+}
+
 describe('docs ledgers and indexes', () => {
-  it('give every default in a DEFAULTS.md ledger its own id', () => {
-    expect(
-      report('DEFAULTS.md', (t) => [...t.matchAll(/^\| (D\d+) +\|/gm)].map((m) => m[1]!)),
-    ).toEqual([]);
+  it('give every default in a spec category its own id', () => {
+    expect(categories().flatMap((c) => duplicates(defaultIds(c)).map((d) => `${c}: ${d}`))).toEqual(
+      [],
+    );
   });
 
-  it('give every blueprint one section in a COMPLETENESS.md', () => {
-    expect(
-      report('COMPLETENESS.md', (t) => [...t.matchAll(/^## (.+)$/gm)].map((m) => m[1]!)),
-    ).toEqual([]);
+  it('read the defaults at all (guard against this test going blind)', () => {
+    expect(categories().flatMap(defaultIds).length).toBeGreaterThan(1000);
+  });
+
+  it('keep blueprints out of the specs: a blueprint is a per-change brief in plans/', () => {
+    const committed = categories().filter((c) =>
+      readdirSync(join(SPECS, c)).includes('blueprints'),
+    );
+    expect(committed).toEqual([]);
   });
 
   it('list every file once in a README.md index', () => {

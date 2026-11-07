@@ -1,5 +1,5 @@
-// Content search's D1 side (docs/specs/013-workspace/content-search.md, blueprint
-// docs/specs/013-workspace/blueprints/content-search.md): the index rows a room's drain writes, and the
+// Content search's D1 side (docs/specs/013-workspace/content-search.md,
+// docs/specs/013-workspace/content-search.md): the index rows a room's drain writes, and the
 // access-filtered read. The only module naming `content_search` outside the migration.
 //
 // Matching: each query word of 3 characters or more matches by its trigrams, OR-ed into one FTS5 query over the

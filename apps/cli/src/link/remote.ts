@@ -1,4 +1,4 @@
-// What the api answered for one document in a pass (docs/specs/027-repositories/blueprints/repository-link.md "One
+// What the api answered for one document in a pass (docs/specs/027-repositories/repository-link.md "One
 // sync pass" step 5): its overview, and at `files` its envelope fields; or trashed, unreadable, or a transient
 // failure that keeps its files (RL14).
 

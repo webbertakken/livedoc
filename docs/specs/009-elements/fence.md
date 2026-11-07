@@ -83,3 +83,14 @@ simply never see a character on the far side of a fence because its owner's walk
 - **No bent fences.** One element is one straight run; corners are two fences.
 - **No blocking of the canvas tools.** A fence stops characters, never cursors, selection,
   dragging or arrows.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D199** Who enforces blocking for a peer on an older build: Nobody: their own client walks them through; nothing is
+  written (default).
+- **D200** A new fence's size: 240 × 24: six post gaps, thick enough to grab (default).
+- **D201** An unstyled fence's colour: Wood brown `#8a5a33` on light paper, `#c08a5b` on dark (default).
+- **D202** How close a character's feet may come: 12 canvas px, about the feet's half-width at Regular size (default).

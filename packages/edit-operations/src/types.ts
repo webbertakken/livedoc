@@ -1,4 +1,4 @@
-// The engine's types (docs/specs/024-agents/blueprints/edit-operations.md "Interfaces and
+// The engine's types (docs/specs/024-agents/edit-operations.md "Interfaces and
 // contracts"). The answer's wire shapes (result lines, warnings, rejections) live in
 // @livedoc/api-schema, where the changeset response carries them.
 

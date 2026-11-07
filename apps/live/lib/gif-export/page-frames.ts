@@ -1,4 +1,4 @@
-// The animated GIF export's frames (docs/specs/020-import-export/blueprints/animated-gif-export.md "Frames"): each
+// The animated GIF export's frames (docs/specs/020-import-export/animated-gif-export.md): each
 // timeline frame drawn from the page snapshots onto one reused canvas and read back as RGBA for the encoder.
 import { GifExportError } from './gif-export-error';
 import type { GifFrame } from './gif-timeline';

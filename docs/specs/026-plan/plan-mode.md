@@ -293,3 +293,14 @@ deleted or migrated), but its indicators are not drawn, so nothing invites addin
 - A help article for Plan tabs (**Plan tabs**, `/help/canvas/plan-tabs/`, the `/help/canvas/plan-mode/` address
   redirecting: the add menu, boards, set-up and keyboard) and one for items, registered with the help
   centre; one for the [Plan tour](plan-tour.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D9** Where Boards and Cards sit: Plan's only categories, under a Plan band heading; opens on Cards (Boards with no
+  board) (default).
+- **D13** The gap a dragged palette card opens: 56 px: the card does not exist yet, so it has no size to borrow
+  (default).
+- **D16** Where the card menu opens from the keyboard: Under the card's left edge (default).

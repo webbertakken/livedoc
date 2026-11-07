@@ -1,7 +1,7 @@
 'use client';
 
-// Settings > Account, signed in (docs/specs/014-identity/auth-and-guest-access.md "Account settings"; blueprint
-// "Presentation and UX"): the account's name, its sign-in methods and its sessions. Each row only renders signed
+// Settings > Account, signed in (docs/specs/014-identity/auth-and-guest-access.md "Account settings"): the
+// account's name, its sign-in methods and its sessions. Each row only renders signed
 // in (the catalogue's `available`), and reads the account through lib/account-manage.ts.
 import { useEffect, useState } from 'react';
 import { TextInput } from '@livedoc/ui';

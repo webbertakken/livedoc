@@ -1,4 +1,4 @@
-// /api/documents, the collection (docs/specs/006-document/blueprints/document-storage.md "Routing"): the
+// /api/documents, the collection (docs/specs/006-document/document-storage.md): the
 // caller's document list and the create, answered in the worker. A create has the new document's room store its
 // content first, then writes the D1 row (D11).
 

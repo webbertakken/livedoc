@@ -1,4 +1,5 @@
-// One write to a sheet (docs/specs/029-sheets/sheet-store.md "Changing a sheet", blueprint sheet-store.md "Data
+// One write to a sheet (docs/specs/029-sheets/sheet-store.md "Changing a sheet",
+// docs/specs/029-sheets/sheet-store.md "Data
 // and persistence"): validated by the engine, applied by the engine to what the write needs (the layout, and the
 // formulas a deletion shrinks), stored in one batch guarded by the sheet's rev (retried on a lost race), answered
 // with the stored state of every cell it touched, and relayed in order.

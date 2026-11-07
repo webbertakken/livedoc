@@ -1,6 +1,6 @@
 import type { ChangesetRoomOp } from '@livedoc/api-schema';
 
-// The changeset revision each loaded tab holds (docs/specs/024-agents/blueprints/agent-changesets.md
+// The changeset revision each loaded tab holds (docs/specs/024-agents/agent-changesets.md
 // "The editor"): set by every tab load, raised by every changeset applied, and sent with every save
 // as X-Changeset-Seen so the api merges exactly the changesets this editor has not applied.
 export type ChangesetSeen = Map<string, number>;
@@ -11,7 +11,7 @@ export function noteLoadedRev(seen: ChangesetSeen, tabId: string, rev: number): 
 
 type ChangesetAdmission = 'skip' | 'apply' | 'apply-and-refetch' | 'refetch';
 
-// What to do with one relayed changeset, in the blueprint's order. A tab this editor never loaded
+// What to do with one relayed changeset, in this order. A tab this editor never loaded
 // is skipped (its first load carries the change), except one the changeset itself created (CS23).
 // A `prevRev` ahead of what this editor has seen means a relay never reached it: apply this one and
 // re-read the tab, which brings the missed one and moves the seen revision (CS21).

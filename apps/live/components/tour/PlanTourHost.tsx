@@ -52,7 +52,8 @@ const isSheet = (el: PlanWork) => el.type === 'shape' && el.shape === 'plan-shee
 type Subject = { boardId: string | null; sheetId: string | null };
 const NO_SUBJECT: Subject = { boardId: null, sheetId: null };
 
-// Orchestrates the Plan tour (docs/specs/026-plan/plan-tour.md, blueprint plan-tour.md). Mounted once in
+// Orchestrates the Plan tour (docs/specs/026-plan/plan-tour.md, docs/specs/026-plan/plan-tour.md). Mounted
+// once in
 // EditorView beside TourHost. While the person can work on a tab with a board or Sheet on it, it offers the tour on
 // the bottom bar's Start Tour button ("Start Boards Tour", "Start Sheets Tour": a track not yet taken first, Boards
 // between equals); a press there, or the Settings row, starts it on the board or Sheet the person sees, the tour

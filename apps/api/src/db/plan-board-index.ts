@@ -37,7 +37,7 @@ export function planBoardIndexStatements(
 // ---------- Read (D1) ---------------------------------------------------
 
 // The hashed person ids of the reader and every identity they used to be (§2.2): what an item's assignee id
-// is (docs/specs/026-plan/blueprints/item-store.md "Security and trust").
+// is (docs/specs/026-plan/items.md).
 export async function readerPersonIds(env: Env, ownerId: string): Promise<string[]> {
   const res = await env.DB.prepare('SELECT alias_id FROM owner_aliases WHERE owner_id = ?')
     .bind(ownerId)

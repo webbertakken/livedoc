@@ -4,8 +4,8 @@ import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 
-// Where opens are recorded (docs/specs/013-workspace/explorer-home.md "Opens"; blueprint
-// "Interfaces and contracts"): the tab read, only when the editor declares it an open, only after
+// Where opens are recorded (docs/specs/013-workspace/explorer-home.md "Opens"): the tab read, only when the
+// editor declares it an open, only after
 // the read gate passed, and for whoever is reading, visitors included.
 
 let db: SqliteD1;

@@ -1,6 +1,6 @@
 'use client';
 
-// The Quick Style panel's host (docs/specs/008-canvas/blueprints/selection-store.md "Above the canvas"):
+// The Quick Style panel's host (docs/specs/008-canvas/canvas-performance.md):
 // it reads the selection from the store and builds the panel's view from it, so a selection change
 // renders this and the panel, never the editor root that hands it everything else.
 

@@ -1,5 +1,5 @@
 // The template library as the agent front doors list it (the MCP's list_templates, the api's GET /api/templates,
-// docs/specs/015-api/blueprints/cli.md "Catalogue routes"): the categories and one entry a template, the editor's
+// docs/specs/015-api/cli.md): the categories and one entry a template, the editor's
 // hidden onboarding templates left out. A template's category is its primary (docs/specs/008-canvas/canvas-and-palette.md
 // "Template categories"); the five blanks, in no category in the picker, are listed under `blanks` so an agent still
 // finds them.

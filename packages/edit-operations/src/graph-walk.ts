@@ -1,4 +1,4 @@
-// Reachability along pinned arrows (docs/specs/024-agents/blueprints/edit-operations.md
+// Reachability along pinned arrows (docs/specs/024-agents/edit-operations.md
 // "Selectors", EO13): `downstream:x` follows arrows from their `from` to their `to`, `upstream:x`
 // against them. One breadth-first walk over an adjacency map; the start itself is left out.
 

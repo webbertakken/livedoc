@@ -18,7 +18,7 @@ import { applyRoomOpToTabs } from './room-op-apply';
 import { foldRemoteOpIntoBaseline, type SaveBaselineRefs } from './save-baseline';
 
 // What an editor does with a relayed changeset (docs/specs/024-agents/agent-changesets.md "In the
-// editor"; blueprint "The editor"): apply it as a peer's op would be applied, or re-read the tab when
+// editor"): apply it as a peer's op would be applied, or re-read the tab when
 // the relay could not carry it; outline what it touched in its author's colour; and raise one toast
 // per burst offering Show and Undo. Undo is a revert, never personal history: applyRemoteOp puts the
 // changeset into every undo / redo snapshot too, so Ctrl+Z never takes it back.
@@ -171,7 +171,7 @@ type ToastRefs = {
   sessionShareCodeRef: MutableRefObject<string | null>;
 };
 
-// The toast of one burst (blueprint "Presentation and UX"): "Webber changed 3 elements: add payment
+// The toast of one burst: "Webber changed 3 elements: add payment
 // service" with Show and Undo. Undo reverts each of its changesets newest first, the buttons
 // disabled meanwhile, then reads "Undone" (or how many were kept).
 function changesetToastActions(refs: ToastRefs) {

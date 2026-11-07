@@ -1,5 +1,5 @@
-// A tab shared between documents (docs/specs/006-document/tab-document-many-to-many.md, blueprint
-// docs/specs/006-document/blueprints/document-storage.md "Shared tabs"). Each document's content lives in its own
+// A tab shared between documents (docs/specs/006-document/tab-document-many-to-many.md,
+// docs/specs/006-document/document-storage.md). Each document's content lives in its own
 // room, so every holder keeps its own copy under the same tab id and lists the OTHER holders in `tab_shares`.
 //
 // A write to the tab (a save, a rename, a Q&A vote, an agent's changeset) queues a `body` send to each holder from

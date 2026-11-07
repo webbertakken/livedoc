@@ -1,8 +1,7 @@
 'use client';
 
 // "Switch Google Account?" (docs/specs/022-drive-mirror/drive-mirror.md,
-// "Reconnecting with another Google account"; blueprint "Account switch
-// dialog"). Shown on /drive/connected when the consent came from another
+// "Reconnecting with another Google account"). Shown on /drive/connected when the consent came from another
 // Google account than the one Cloud Sync uses: nothing has changed yet, and
 // the owner confirms or cancels the switch here. An account-level setting:
 // no shared document reaches it.

@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Tab } from '@livedoc/document';
 
-// A document the Explorer has just made opens from memory (docs/specs/013-workspace/blueprints/new-document-menu.md
+// A document the Explorer has just made opens from memory (docs/specs/013-workspace/new-document-menu.md
 // "The editor's bootstrap branch"): its state is seeded in the editor's first render (seed-pending-document.ts), so the
 // bootstrap only notes the open, fetches nothing, and settles the reader once auth answers.
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ChangesetRoomOp } from '@livedoc/api-schema';
 import { admitChangesetOp, noteLoadedRev, type ChangesetSeen } from './changeset-seen';
 
-// Which relayed changesets an editor applies (docs/specs/024-agents/blueprints/agent-changesets.md
+// Which relayed changesets an editor applies (docs/specs/024-agents/agent-changesets.md
 // "The editor", CS21): one table row a case.
 
 const op = (over: Partial<ChangesetRoomOp> = {}): ChangesetRoomOp => ({

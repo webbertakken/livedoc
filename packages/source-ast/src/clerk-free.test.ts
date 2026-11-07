@@ -4,7 +4,7 @@ import { join, posix } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-// Sign-in is LiveDoc's own (docs/specs/014-identity/blueprints/auth-and-guest-access.md "Domain and naming"): the
+// Sign-in is LiveDoc's own (docs/specs/014-identity/auth-and-guest-access.md): the
 // earlier sign-in provider is gone from the code, its identifiers, env vars, comments and copy alike. This guard
 // fails on any mention of it, in any case, in a tracked file's path or text under the code roots.
 //

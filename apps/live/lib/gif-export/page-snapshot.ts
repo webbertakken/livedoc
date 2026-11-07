@@ -1,5 +1,6 @@
-// One page of a Pages tab, captured for the animated GIF export (docs/specs/020-import-export/blueprints/
-// animated-gif-export.md "The snapshot"): the canvas's own rendering of the page, cloned once, with every CSS
+// One page of a Pages tab, captured for the animated GIF export
+// (docs/specs/020-import-export/animated-gif-export.md): the canvas's own rendering of the page, cloned once,
+// with every CSS
 // animation on it recorded so a frame can pin each one at any moment of the page's clock. A frame is then an SVG
 // whose <foreignObject> holds the clone, drawn into a canvas (page-frames.ts).
 import { debugLog } from '@/lib/debug-log';

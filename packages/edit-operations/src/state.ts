@@ -1,4 +1,4 @@
-// The working state an apply carries (docs/specs/024-agents/blueprints/edit-operations.md "The
+// The working state an apply carries (docs/specs/024-agents/edit-operations.md "The
 // pipeline"): the tab as the operations have left it so far, and what they touched, created,
 // resolved and removed. Operations write on this copy; the input tab is never mutated (I1).
 

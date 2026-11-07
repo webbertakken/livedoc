@@ -1,4 +1,4 @@
-// Which formulas may spill (blueprint sheets-engine.md "Spills"): read statically from the tree, so an empty cell
+// Which formulas may spill: read statically from the tree, so an empty cell
 // knows which formulas above and to its left to work out before it can say it is empty. A formula of an
 // aggregate (SUM of a range) never spills; a range on its own, an array function, or a scalar function lifted
 // over a range may.

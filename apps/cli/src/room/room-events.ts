@@ -1,4 +1,4 @@
-// What a room op means to `wait` and `watch` (docs/specs/015-api/blueprints/cli.md "The room stream", CLI33): each
+// What a room op means to `wait` and `watch` (docs/specs/015-api/cli.md, CLI33): each
 // op the room relays becomes zero or more events, and each event one line. Pure: the names and refs a line needs
 // are looked up by the caller.
 
@@ -64,7 +64,7 @@ function elementEvent(op: unknown, tabId: string): RoomEvent[] {
 }
 
 // One comment change, an answer, an idea or a tick on one element. Only a new comment is a comment event; a comment
-// removed, re-keyed, resolved or reopened is neither a comment nor a change (blueprint "The room stream").
+// removed, re-keyed, resolved or reopened is neither a comment nor a change.
 function deltaEvent(op: Record<string, unknown>, tabId: string): RoomEvent[] {
   const elementId = str(op, 'elementId');
   const delta = isRecord(op.delta) ? op.delta : null;

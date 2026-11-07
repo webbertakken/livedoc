@@ -10,7 +10,7 @@ import type { ScannedFile } from './mirror-scan';
 import type { RemoteFact } from './remote';
 import { planSync, type PlanInput } from './sync-plan';
 
-// Planning a pass (docs/specs/027-repositories/blueprints/repository-link.md "Actions"): one action per document
+// Planning a pass (docs/specs/027-repositories/repository-link.md): one action per document
 // and per refused or reported file.
 
 const home = fixtureDoc('d-home', 'Home', [3]);

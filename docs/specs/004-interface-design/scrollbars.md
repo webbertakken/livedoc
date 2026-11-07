@@ -47,3 +47,14 @@ So the themed bar is the **default**, and a surface does nothing to get it.
 ## Help
 
 No article: this is appearance, not a feature.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D33** How Safari is styled: `::-webkit-scrollbar` rules beside the standard properties; Chromium 121+ ignores them
+  where the standard ones are set (default).
+- **D34** A hover colour: Only where the engine has one (the webkit fallback); `scrollbar-color` has no hover state
+  (default).
+- **D35** WebKit width of the default bar: 10 px with a 2 px transparent border, matching Chromium's thin bar (default).

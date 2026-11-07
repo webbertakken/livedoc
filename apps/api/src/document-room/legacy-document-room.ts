@@ -1,6 +1,6 @@
 // The key-value room each document had before its content moved into a SQLite room
-// (docs/specs/006-document/document-storage-move.md "The rooms change class", blueprint
-// docs/specs/006-document/blueprints/document-storage-move.md). A Durable Object class cannot change its storage
+// (docs/specs/006-document/document-storage-move.md "The rooms change class",
+// docs/specs/006-document/document-storage-move.md). A Durable Object class cannot change its storage
 // backend, so the old class is renamed aside as this one; it only hands its storage to the document's new room and
 // then clears it. The release that drops D1's content tables deletes the class.
 

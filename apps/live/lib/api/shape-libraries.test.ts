@@ -9,7 +9,7 @@ import {
   shapeLibraryErrorCopy,
 } from './shape-libraries';
 
-// docs/specs/013-workspace/blueprints/shape-libraries.md "Interfaces and contracts": the four calls
+// docs/specs/013-workspace/shape-libraries.md: the four calls
 // and what each refusal tells the person.
 
 let calls: { url: string; method: string; body: unknown }[];

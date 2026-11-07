@@ -275,7 +275,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // Where the editor runs (editor-surface.ts). The read-only embed view (docs/specs/013-workspace/
   // embeds.md) forces view behaviour regardless of the share role, suppresses the visitor identity
   // screen, and EditorView swaps the chrome for the embed badge + tab switcher. A workbench
-  // (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor in a workbench") is signed in
+  // (docs/specs/013-workspace/workbench-embeds.md) is signed in
   // by its session and drops the app's surroundings and everything beyond its one document.
   // Constant for the lifetime of the page (it comes from which route mounted us), so it's safe in
   // derived consts.
@@ -1316,7 +1316,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     hydrated,
     documentId,
     documentServerStored: realtime.documentServerStored,
-    // A workbench session that ended stops the room (blueprint "The workbench page" step 6).
+    // A workbench session that ended stops the room.
     enabled: !workbench?.ended,
     onWorkbenchEnded: workbench ? () => workbench.end('revoked') : undefined,
     onRoomFull: () => toast.warning(ROOM_FULL_NOTICE),
@@ -1710,7 +1710,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
       setActiveId(preShowView.tabId);
     }
   }
-  // The view itself (it lives in the viewport store, docs/specs/008-canvas/blueprints/viewport-store.md,
+  // The view itself (it lives in the viewport store, docs/specs/008-canvas/canvas-performance.md,
   // never written during render) is captured as a deck starts and put back as it ends, in a layout
   // effect: before the exit paints, and declared before the slide fit below, so the capture is the
   // view from before the first slide was framed.

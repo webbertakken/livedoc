@@ -362,3 +362,132 @@ holds the base snapshots (the latest `SYNC_BASES_KEPT` per tab), the pending pro
   `[unlink] declined`, `[relink] reattached`, each with the document and tab ids, never content.
 - Telemetry: category `Cli`, action `Used`, type the verb (`LinkInit`, `Sync`, `SyncWatch`, `LinkHooks`, `Unlink`), as every
   command ([CLI](../015-api/cli.md#telemetry)).
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **E14** A tab changed between the overview read and the tab read: the tab read's `ETag` revision is recorded, so the
+  file says exactly what it holds.
+- **E17** `git mv` refusing (untracked file, index locked): falls back to `CliFiles.move`; a failure of both is
+  `transient`-like: the line names the error, exit 7, nothing else moves for that document.
+- **E18** `mirror.dir` a symbolic link out of the link root: `invalid_dir` (its real path is outside), exit 1.
+- **E20** A lock held by another machine sharing the directory (a network drive): never judged stale; exit 5 after
+  `SYNC_LOCK_WAIT_MS`.
+- **E24** A covered document with zero tabs: written with `"tabs": []`, its outline file holds the heading line only.
+- **E27** A document renamed, its deck edited, its tabs reordered or refiled, with no tab revision moving: `behind` by
+  `envelopeDiffers`; the mirror file is rewritten at its stable path and a `relocate` line follows when the name changed
+  the expected path.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **RL1** How `livedoc.toml` is parsed: `smol-toml` 1.9.0 (the latest), bundled: the link file uses tables, arrays and
+  arrays of tables, beyond the hand parser `config-file.ts` reads; its line and column name a syntax error (default).
+- **RL2** What this slice does with `[hooks]` and `[[sources]]`: Parse and validate, never refuse a known table:
+  `[hooks]` admits only `block`, a boolean, refused by name otherwise; `[[sources]]` must be an array of tables and its
+  tables' keys are left to diagram-sources; both are ignored by every command of this slice, with a debug line
+  (default).
+- **RL3** The grammar of ids and `dir`: Ids are the strings the api stores (the spec's `fld_…`, `doc_…` are
+  illustrative): non-empty, no whitespace, at most 128 characters; `dir` normalised to POSIX segments, `.` allowed,
+  `..`, absolute paths and a real path outside the link root refused (`invalid_dir`) (default).
+- **RL4** Which directories `--all` and the mirror scan walk: Depth first in byte order of names; `.git`, `node_modules`
+  and dot-directories skipped; symbolic links never followed; the mirror scan also skips any subdirectory holding its
+  own `livedoc.toml` (default).
+- **RL5** How the link's host is compared, and which profile the refusal names: As origins with a leading `www.` ignored
+  (as `parseDocumentUrl`); the refusal exits 2 and names the first `config.toml` profile with that host, else `--host <link host>`
+  (default).
+- **RL6** A covered folder the syncing account cannot find: Said once on stderr; that pass judges no mirror file outside
+  coverage, so no file is removed for a folder the account cannot see (default).
+- **RL7** What "folder path" is, for paths and for `INDEX.md`: Paths: the slugged names (`fileSlug`) of the folders
+  below the covered folder down to the document's; empty for a listed document outside it.
+  `INDEX.md`: the names from the space (`My Documents`, or the team's name), `/`-joined; `Shared With Me` when the
+  folder is not visible (default).
+- **RL8** The link id's length, the state dir's discovery and modes: First 16 hex of SHA-256 of the link file's real
+  path; `git rev-parse --absolute-git-dir` from the link root (each worktree its own), else `<cacheDir>/links/<link id>/`;
+  directories 0700, files 0600 (default).
+- **RL9** How `--relocate` moves a file git does not track: `git -C <root> mv` first; an untracked file, a missing `git`
+  or a refusal falls back to a rename; empty directories left behind are removed (default).
+- **RL10** What the offline overview shows as "edited" for a file with no `pulledAt`: The greatest `updatedAt` among the
+  file's tabs, else 0 (default).
+- **RL11** Two mirror files naming one document: Both refused (`duplicate`), naming each other; neither is written or
+  removed (default).
+- **RL12** When an `in-step` document's outline file is rewritten: Only when it is missing, so CLIs of different
+  versions never rewrite each other's outlines back and forth (default).
+- **RL13** Whether `--dry-run` takes the lock or writes the local sync state: Neither: it reads and prints, ending `dry run: nothing written`
+  (default).
+- **RL14** Which answers are transient, and whether a pass retries: `429`, `5xx`, a timeout and a network failure are
+  transient, kept and reported, not retried within the pass; `401` ends the pass before any write, exit 4 (default).
+- **RL15** Whether a sync records read copies: Yes, every tab it reads, as `pull` does (CLI24), so `tab diff --since`
+  works from a synced revision (default).
+- **RL16** When `INDEX.md` is rewritten, and what a document not read this pass shows: Rewritten only when its bytes
+  differ; an `unreadable`, transient or refused document keeps its previous section verbatim (found by its `Link:`
+  line), else is left out (default).
+- **RL17** A pass's exit when documents fail differently: The highest exit among its actions (as CLI84); `unreadable`,
+  `local-new`, `gone` and a lowered removal are 0, a refusal (`gone-changed` and `lowered-changed` included) 1, a
+  transient 6 or 7; `--all` takes the highest across links.
+  `link status` is not a pass: it exits 0 (spec, RL43) (default).
+- **RL18** How a waiting sync polls, and its exit when the wait ends: Every 250 ms; exit 5 (`lock_held`, "conflict or
+  held: retry"), naming the pid (default).
+- **RL19** Whether `sync --watch` holds the lock between passes: No: per pass only, so `link status` and a one-off
+  `sync` still run beside a watch (default).
+- **RL20** Which room events count as a document's "changes" for `--watch`: Every event `classifyRoomOp` yields,
+  comments included (the mirror holds an element's threads), settled by `WAIT_SETTLE_MS` per document (default).
+- **RL21** How `--watch` learns that coverage changed: Coverage re-read every 60 s; entering documents get a stream and
+  a pass, leaving ones a pass and no stream (default).
+- **RL22** What `--watch` does after a room stream reconnects: A pass of that document, as after an op, instead of the
+  `tab diff` notice `watch` prints (default).
+- **RL23** How `--watch` tells its own writes from a person's: Each path it wrote or removed is kept with the SHA-256 of
+  what it wrote; an event whose file hashes to it is ignored (default).
+- **RL24** How `sync --watch` reports as `SyncWatch` when the verb is `sync`: `Verb.telemetryType(input)`, read by
+  `main.ts` before `pascalToken(verb.id)`; `CLI_COMMANDS` gains a `SyncWatch` row beside `Sync` (default).
+- **RL25** The line `--watch` prints per sync: `<HH:MM:SS>` in UTC, then the pass's action lines joined with `·`, or `in step`;
+  a refusal or `unreadable` line again only after it changed (default).
+- **RL26** How `link init --folder` names a folder: A full id, an id prefix of at least 4, or a name equal ignoring
+  case, over personal and team folders; none or several exit 3 with the nearest or the candidates (default).
+- **RL27** `link init --doc` given a share-link URL: Exit 2: a link file holds ids, and a share code is a credential of
+  sorts (default).
+- **RL28** Whether `link init` writes `host`: Always, so a teammate on another profile is refused rather than syncing
+  ids against the wrong host (default).
+- **RL29** `sync --watch --dry-run`: Exit 2: a dry run writes nothing, so there is nothing to watch (default).
+- **RL30** Whether the mirror file keeps the envelope's `exportedAt`: No: it is a time, and the same revisions must
+  write the same bytes; `parseDocumentEnvelope` reads its absence as 0 (default).
+- **RL31** Which keys "keys sorted" sorts: Every object's, at every depth, in `canonicalJson`'s order, so the whole file
+  is one canonical form (default).
+- **RL32** How names and outlines are made safe in Markdown: Names get a backslash before each backslash, backtick,
+  asterisk, underscore, bracket, angle bracket, hash, pipe and tilde, and before a leading list marker; code spans and
+  fences one backtick longer than the longest run inside (default).
+- **RL33** How the `[sync]` and `[link]` fingerprints print beside `[cli]`: `debugLog(io, scope)`; the sync modules log
+  with scope `sync`, `link init` and its picker with `link`, under `LIVEDOC_DEBUG=1` only (default).
+- **RL34** A lock whose holder died: A holder on this hostname whose pid is not alive is stale: removed and taken over,
+  logged; a holder on another hostname is never judged stale (default).
+- **RL35** How the folder picker takes input, and what cancelling exits: Line based on stderr: a numbered list, then
+  `folder> ` read with the terminal's own line editing; a number chooses, other text narrows by path ignoring case,
+  Enter alone, Ctrl-D or Ctrl-C cancels with exit 1; no raw mode, arrows or redraw, as the CLI draws no cursor movement
+  (CLI); choices are personal folders then each team's by team name, depth first, siblings by
+  name (default).
+- **RL36** What a sync does at `none`, where states come from recorded revisions: It reads coverage and revisions and
+  records them in the local sync state, so `link status` has states; it writes nothing in the tree but the removal of
+  lowered files; `sync --watch` ends after its first pass (default).
+- **RL37** Which "envelope fields" make a document `behind`, and how they are read: `document.name`,
+  `document.presentation`, the tab order and each tab's `folder` (absent equal to none), compared at `files` against
+  `GET /documents/:id`, read beside the overview; a hand edit of them is no local change and is written back (default).
+- **RL38** How many folders the picker and its refusal show at once: 20, as `LIST_DEFAULT_LIMIT`; the rest named in one
+  line, reached by narrowing or by `--folder <name>` (default).
+- **RL39** The refusal's shape when `link init` is not run in a terminal: Exit 2 (`folder_needed`); one line per folder,
+  `livedoc link init --folder <id>` with `--level` when given and a shell comment `# <path> (<library>)`, so each line
+  runs as pasted; the first as the hint (default).
+- **RL40** How `link init` knows the repository has a git remote: `git -C <cwd> remote` exiting 0 with any output; no
+  git, a non-zero exit or no output prints nothing; no forge is asked, so the profile's host stays the only one
+  contacted (default).
+- **RL41** How the stable order compares: Folder path by its slugged segments, segment by segment in UTF-16 code units,
+  a prefix first; then the document name in code units; then the id; never `localeCompare`, so every machine orders
+  alike (default).
+- **RL42** Which generated Markdown a sync may remove: An outline file or `INDEX.md` only when its first line is still
+  the generated line; one edited past that is left and named (default).
+- **RL43** What `link status` prints for a document it could not read: `?` in the state column, the failure on stderr,
+  exit 0 like every other row (default).
+- **RL44** The local sync state's record shape: Per document its name and per tab `{ rev, syncedAt }`, refreshed for
+  every document whose state a pass decided and dropped when it is `gone` (default).

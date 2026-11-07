@@ -1,7 +1,7 @@
 import { defineProject } from '@livedoc/vitest-config';
 
 // The CLI runs on fakes (an in-memory CliIo), so every line and branch is covered except the process wiring
-// in bin.ts and node-io.ts and the fakes themselves (docs/specs/015-api/blueprints/cli.md "Testing").
+// in bin.ts and node-io.ts and the fakes themselves (docs/specs/015-api/cli.md).
 export default defineProject({
   test: {
     coverage: {

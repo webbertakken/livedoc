@@ -69,3 +69,12 @@ its next api response; once the editor is deployed a reload ends it.
 
 The troubleshooting article "My Changes Are Missing" explains the prompt under "How saving works":
 what it means, that Reload saves first, and that Not now is always safe.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How often to check for a saved state: Every 200 ms while waiting, locally (no request) (default).
+- **D2** Where the prompt sits: Bottom centre, 80 px up like the photo import bars, on the chrome layer (default).
+- **D3** What "Not now" remembers: The dismissed server number, for this page only (default).

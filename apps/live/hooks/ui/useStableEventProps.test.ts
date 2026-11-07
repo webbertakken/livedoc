@@ -3,7 +3,7 @@ import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { useStableEventProps } from './useStableEventProps';
 
-// docs/specs/008-canvas/blueprints/selection-store.md "The canvas boundary".
+// docs/specs/008-canvas/canvas-performance.md.
 
 type Props = {
   onSave?: (n: number) => number;

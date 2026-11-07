@@ -1,5 +1,5 @@
-// The participant content rule (docs/specs/013-workspace/share-roles.md "What a Participant changes"; blueprint
-// "Behaviour and state"). A Participant changes a board's content, never its shape: it adds stickies, text, images
+// The participant content rule (docs/specs/013-workspace/share-roles.md "What a Participant changes"). A
+// Participant changes a board's content, never its shape: it adds stickies, text, images
 // and mind-map branches, writes on any element but a Behaviour, moves and recolours stickies, re-lays a mind map,
 // swaps an image's picture, and removes what it added and any mind node. The server applies each of
 // a Participant's element ops to the STORED tab through this one pure function, so a stale screen can never write
@@ -413,7 +413,7 @@ function applyAdd(
   };
 }
 
-// The editor's side of the rule (blueprint "Editor state"): whether a Participant's local change from `before` to
+// The editor's side of the rule: whether a Participant's local change from `before` to
 // `after` is one the server would take as it is. Answers the change with the adder stamped on what it adds, or
 // null when any part of it would be refused or trimmed, so the editor never shows a change the room will undo.
 // The tab around the elements must not change at all: a Participant never edits a tab's settings.

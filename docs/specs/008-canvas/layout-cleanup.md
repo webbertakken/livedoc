@@ -311,3 +311,35 @@ obstacles (the editor's tidy profile does), and any LLM
 involvement (the AI "Clean" in [AI Assistance](../007-editor/ai-assistance.md) is the separate,
 key-gated path; Auto Layout is the deterministic, offline-safe one every deployment
 gets). See issue #12 for the fuller rationale and open questions.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D81** Whether Auto Layout is offered on a tab with shapes but no arrows: Refused as already tidy: the transform
+  passes unwired elements through, so it changes nothing (default).
+- **D82** A remote edit landing during a hover preview: The revert restores the snapshot; the edit returns with the
+  room's next state, as the style preview accepts (retired: there is no Tidy Up popover) (default).
+- **D83** How fast a press must be: `TIDY_PRESS_BUDGET_MS = 100` per layout at `TIDY_PRESS_WORST_CASE_NODES = 300` wired
+  nodes (default).
+- **D84** How the popover's code loads: `next/dynamic` on first open, like the Session strip's popovers (retired: there
+  is no Tidy Up popover) (default).
+- **D85** How the five tiles sit in two columns: Smart spans both columns, drawing beside its words; the four styles
+  fill two rows (retired: there is no Tidy Up popover) (default).
+- **D86** Whether Escape closes the popover (the spec says it does; the sibling popovers have no Escape): A `window`
+  keydown listener while the popover is mounted (retired: there is no Tidy Up popover) (default).
+- **D99** How near two lines must be to count as one: 8 px, or 16 px for two boxes an arrow runs straight between;
+  groups never chain wider than that (default).
+- **D100** How many times a tidier repeats to settle: Auto-align until a pass moves nothing, at most 4; a layout at most
+  3, and once past 300 elements (default).
+- **D101** When the popover judges its tidiers: One per `setTimeout(0)` task after it paints, tiles in order then
+  Auto-align; a tile pressed first is judged at the press (retired: there is no Tidy Up popover) (default).
+- **D102** When a decision's exit "continues the column": Its centre within 12 px of the decision's centre line
+  (default).
+- **D103** The tidy profile's gaps and clearance: Ranks 56 apart, neighbours 48, each widened to its labels (6.6 px a
+  character, 28 px either side); the block 24 px clear of what it does not move (default).
+- **D104** Which route an arrow takes when none clears every box: The candidate through the fewest boxes, earlier
+  candidates winning ties (default).
+- **D105** What counts as lanes: Two or more unwired boxes holding wired shapes, same length and start on one axis
+  (within 2 px), stacked at most 48 px apart (default).

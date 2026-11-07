@@ -24,7 +24,7 @@ import type { NewDocumentChoice } from './start-new-document';
 
 const ChevronLeftIcon = lucideGlyph(lucideChevronLeft, 12);
 
-// NEW_DOCUMENT_MENU_WIDTH_REM and NEW_DOCUMENT_PANE_HEIGHT_REM (blueprint "Constants"): the list's 14.5rem beside a
+// NEW_DOCUMENT_MENU_WIDTH_REM and NEW_DOCUMENT_PANE_HEIGHT_REM: the list's 14.5rem beside a
 // pane of three cards a row, tall enough to show about four rows of templates at once.
 const MENU_WIDTH = 'w-[40rem]';
 const PANE_HEIGHT = 'h-[26rem]';

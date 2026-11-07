@@ -6,7 +6,7 @@ import { createSelectionStore } from '@/lib/selection-store';
 
 // docs/specs/004-interface-design/canvas-accessibility.md: a screen reader hears each selection change.
 // The hook follows the store, so the editor root does not render for it
-// (docs/specs/008-canvas/blueprints/selection-store.md "Above the canvas").
+// (docs/specs/008-canvas/canvas-performance.md).
 
 const { announce, heard } = vi.hoisted(() => ({ announce: vi.fn(), heard: { nonce: 0 } }));
 vi.mock('@/lib/announcer', () => ({

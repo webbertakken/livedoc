@@ -1,4 +1,4 @@
-// The colours a built-in theme paints (blueprint "The checks", LN17): its element fill or stroke (or,
+// The colours a built-in theme paints (LN17): its element fill or stroke (or,
 // where the theme leaves that to the element, the element type's own default), every palette and root
 // entry, and every per-shape override. A custom theme is not known here: null.
 

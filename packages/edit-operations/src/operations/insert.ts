@@ -1,4 +1,4 @@
-// `insert <kind> [id=] key=value… between <a> <b>` (docs/specs/024-agents/blueprints/edit-operations.md
+// `insert <kind> [id=] key=value… between <a> <b>` (docs/specs/024-agents/edit-operations.md
 // "Operations", EO32, EO33): the node sits between a and b on their axis, room is made for it beyond
 // the midline, the a→b arrow ends at the node, and a new arrow from the node to b copies its style.
 

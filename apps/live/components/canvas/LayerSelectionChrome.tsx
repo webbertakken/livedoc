@@ -1,6 +1,6 @@
 'use client';
 
-// The selection chrome inside the grips layer (docs/specs/008-canvas/blueprints/selection-store.md): the
+// The selection chrome inside the grips layer (docs/specs/008-canvas/canvas-performance.md): the
 // next-note buttons, the quick-connect pluses and the union resize box. It reads the selection from
 // the store, so a selection change re-renders this and not the element layer around it.
 

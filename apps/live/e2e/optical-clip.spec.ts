@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect, test, expectNoPageErrors } from './fixtures';
 
 // A trimmed label that also clips (`text-optical-line` + `truncate`) must keep its ink
-// (docs/specs/004-interface-design/blueprints/optical-alignment.md, "Truncated label"): the trim puts
+// (docs/specs/004-interface-design/optical-alignment.md, "Truncated label"): the trim puts
 // the content edge on the baseline, so the clip edge has to sit in the padding given back below it.
 // The proof is pixels: the label paints the same with its overflow released.
 

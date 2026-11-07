@@ -1,4 +1,4 @@
-// The OAuth clients LiveDoc ships itself, and the device grant's user codes (docs/specs/015-api/blueprints/cli.md
+// The OAuth clients LiveDoc ships itself, and the device grant's user codes (docs/specs/015-api/cli.md
 // "OAuth server", "The CLI's OAuth client", CLI35, CLI36). Shared by the MCP worker's authorization server, the
 // editor's /oauth/device page and the CLI.
 

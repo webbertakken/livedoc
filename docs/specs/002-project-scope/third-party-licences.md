@@ -25,7 +25,7 @@ reach a deployed artefact, and nothing else.
   always names the locked version.
 - **Distributed apps carry their own notices.** The CLI (`apps/cli`) is published as a package, not
   deployed; its bundle ships its own `THIRD_PARTY_LICENSES` beside the code, generated from its
-  esbuild metafile ([CLI blueprint](../015-api/blueprints/cli.md)), so the page leaves it out.
+  esbuild metafile ([CLI](../015-api/cli.md)), so the page leaves it out.
   `DISTRIBUTED_APPS` names it, so every directory in `apps/` is still accounted for.
 - **First-party code is not listed.** The `@livedoc/*` workspaces are this repo, under its MIT
   licence.
@@ -118,3 +118,34 @@ reach a deployed artefact, and nothing else.
 - [Open source + distribution](open-source-and-business-model.md)
 - [Router app](../016-platform/router-app.md)
 - [Folders](../013-workspace/folders.md) (the Explorer ⋯ menu)
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How tall a text box is before it scrolls: 24 lines: the opening of every common licence, including Apache-2.0's
+  first section, fits (default).
+- **D2** The text box's type: `text-xs leading-5` monospace, so a line is exactly 1.25rem and the height is computable
+  at build time (default).
+- **D3** How texts are named: First 16 hex of the sha256 of the normalised text (default).
+- **D4** Entry order: By name, case-insensitive (`en`), then version (default).
+- **D5** A vendored work's name: Its directory name (with `@scope/`), which is the name Next vendors it under (default).
+- **D6** A vendored work's version when it has none: `bundled in <parent> <parent version>` (default).
+- **D7** Label of a text: Its file name; an override's label names the upstream and version (default).
+- **D8** Which package links are shown: `homepage`, else `repository` (string, shorthand or `{ url }`), only when it
+  resolves to `https:` (default).
+- **D9** Opening the page from the editor: A new tab, as the neighbouring GitHub row does, so an open document stays put
+  (default).
+- **D10** What "permissive and weak-copyleft" admits: The sixteen ids in `LICENCE_ALLOWLIST`: today's shipped licences
+  plus common permissive peers (default).
+- **D11** Parallel or sequential analysis: Sequential: deterministic logs, bounded memory beside turbo's own parallel
+  builds (default).
+- **D12** Footer placement: In the footer's Legal column, last (default).
+- **D13** Sitemap weight: Priority 0.2, monthly: a transparency page, not a destination (default).
+- **D14** The HTML budget: 1.5x the page as first measured, per work listed (173.5 KB for 54 works: 4,820 bytes a work),
+  so the budget grows with the dependencies; inlined texts are refused by fingerprint, not by size (default).
+- **D15** The page's header calls to action: The shared header without a landing-funnel surface: a transparency page is
+  not a funnel step, so its CTAs carry no `via` (default).
+- **D16** The entry's disclosure affordance: The native `summary` marker, coloured: no second drawing of a chevron, no
+  rotation to animate, no bytes per entry (default).

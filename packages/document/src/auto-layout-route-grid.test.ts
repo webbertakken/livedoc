@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ROUTE_GRID_CELL, rectGrid } from './auto-layout-route-grid';
 
-// docs/specs/008-canvas/blueprints/layout-cleanup.md "Performance and limits": the router tests a leg
+// docs/specs/008-canvas/layout-cleanup.md: the router tests a leg
 // against the boxes near it, so the grid must never miss a box a leg could hit.
 describe('rectGrid', () => {
   const rects = Array.from({ length: 60 }, (_, i) => ({

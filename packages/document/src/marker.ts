@@ -10,7 +10,7 @@ import { sketchPoint as fmt, sketchRandom, type Pt, type SketchOutline } from '.
 
 /** Most a marker stroke's end moves, px: a quick, confident line, steadier than Sketch's pencil (1.5). */
 export const MARKER_JITTER_PX = 0.8;
-/** Most a marker stroke runs past its end, px: corners visibly cross (blueprint: 2 to 5). */
+/** Most a marker stroke runs past its end, px: corners visibly cross (safe range: 2 to 5). */
 export const MARKER_OVERSHOOT_PX = 3.5;
 /** Most a stroke starts before its corner, px: the nib lands a little early. */
 export const MARKER_LEAD_IN_PX = 1.5;
@@ -24,7 +24,7 @@ const MARKER_CURVE_KNOT_EVERY = 4;
 export const MARKER_LOOP_OVERLAP = 0.1;
 
 /** How see-through marker ink is: one stroke shows the paper a touch, two crossing strokes pool darker
- *  (blueprint: 0.8 to 0.92; below 0.8 a lone line reads washed out). */
+ *  (safe range: 0.8 to 0.92; below 0.8 a lone line reads washed out). */
 export const MARKER_INK_OPACITY = 0.86;
 /** The width thin chrome (bezels, keys, creases) is drawn at in marker, px: a fine-liner beside the nib, a touch
  *  bolder than Flexible's 0.8 px so it reads as ink. */

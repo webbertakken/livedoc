@@ -3,7 +3,8 @@
 import { useEffect, useRef } from 'react';
 import { useLatest } from '@/hooks/ui/useLatest';
 
-// The narrow pane's entry in the browser's history (docs/specs/013-workspace/inbox.md §1.7; blueprint inbox.md
+// The narrow pane's entry in the browser's history (docs/specs/013-workspace/inbox.md §1.7;
+// docs/specs/013-workspace/inbox.md
 // "Behaviour and state"): while the pane stands in for the list it owns one entry, so Back (the browser's,
 // Android's, an iPhone's swipe) returns to the list. The page's own history state is kept, the flag merged in.
 //

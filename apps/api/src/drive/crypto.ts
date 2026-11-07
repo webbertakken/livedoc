@@ -1,5 +1,5 @@
 // Sealing the Google refresh token at rest (docs/specs/022-drive-mirror/drive-mirror.md,
-// "Tokens"; blueprint "Data and persistence").
+// "Tokens").
 //
 // AES-GCM under DRIVE_TOKEN_KEY (base64 of 32 bytes), a fresh 12-byte IV per
 // seal, and the owner id as additional authenticated data: a sealed value

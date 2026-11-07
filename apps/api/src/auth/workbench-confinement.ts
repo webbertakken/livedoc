@@ -1,4 +1,4 @@
-// The choke point's verdict on a workbench session (docs/specs/013-workspace/blueprints/workbench-embeds.md
+// The choke point's verdict on a workbench session (docs/specs/013-workspace/workbench-embeds.md
 // "A request bearing lvw_", steps 3 to 5, and "The choke point by scope"): ambient credentials refused beside it
 // (by scope), the allow-list of its scope, then the session's level. Null lets the request through to its route,
 // which re-gates with the owner's identity.

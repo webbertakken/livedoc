@@ -148,3 +148,15 @@ Never the query, a title, a creator or a URL.
   render thumbnails for most of those (its thumbnail service answers 424), so every tile drew broken.
 - **Other providers.** Openverse only. A keyed provider (Unsplash, Pexels) would need the api worker
   as a proxy and is not planned.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D148** A result repeated across pages: Dropped by `id` when appending (default).
+- **D149** Gallery name of an untitled result: `openverse-<id>` (default).
+- **D150** A malformed result inside a good page: Dropped; the rest of the page shows (default).
+- **D151** A result with no landing URL: Stored without `credit` (default).
+- **D152** Whether the gallery keeps the credit: No; the credit lives on the element only (default).
+- **D153** Picker closed while a pick is storing: The store finishes; the result is ignored (default).

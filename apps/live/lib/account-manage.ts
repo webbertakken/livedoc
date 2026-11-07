@@ -1,6 +1,6 @@
 'use client';
 
-// What Settings > Account does to the account (docs/specs/014-identity/blueprints/auth-and-guest-access.md
+// What Settings > Account does to the account (docs/specs/014-identity/auth-and-guest-access.md
 // "Presentation and UX"): its name, its sign-in methods and its sessions, through better-auth's client. The client
 // is imported on first use, so it lands in its own chunk and never in the Settings dialog's.
 import { describeUserAgent } from './user-agent';

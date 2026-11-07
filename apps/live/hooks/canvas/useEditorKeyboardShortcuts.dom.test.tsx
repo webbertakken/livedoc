@@ -40,7 +40,7 @@ function deps(overrides: Overrides = {}) {
     ...spies,
     ...overrides,
   };
-  // The hook reads the selection when a key is pressed (docs/specs/008-canvas/blueprints/selection-store.md).
+  // The hook reads the selection when a key is pressed (docs/specs/008-canvas/canvas-performance.md).
   target.readSelection = () => ({
     selectedId: target.selectedId,
     multiSelectedIds: target.multiSelectedIds,

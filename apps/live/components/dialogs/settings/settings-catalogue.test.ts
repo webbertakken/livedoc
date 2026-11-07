@@ -463,7 +463,7 @@ describe('settings catalogue', () => {
     expect(visibleCategories(true, ctx).map((c) => c.id)).toContain('ai');
   });
 
-  // The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table).
+  // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table).
   it('leaves the account, documents, AI and tokens, and the Appearance choice, out of a workbench', () => {
     const ctx = { emailEnabled: true, signedIn: true, authEnabled: true, workbench: true };
     const categories = visibleCategories(true, ctx);

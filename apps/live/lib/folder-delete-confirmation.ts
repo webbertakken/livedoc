@@ -1,5 +1,5 @@
-// The folder delete confirmation (docs/specs/013-workspace/folders.md "Deleting a folder"; blueprint
-// folder-delete.md): one wording for every surface that deletes a folder, personal or team. It
+// The folder delete confirmation (docs/specs/013-workspace/folders.md "Deleting a folder"): one wording for
+// every surface that deletes a folder, personal or team. It
 // names where the contents go, and warns when the folder is one of the reader's default folders
 // (docs/specs/013-workspace/default-folders.md "Deleting a default folder").
 import type { PlacementDefaultKey } from '@livedoc/api-schema';

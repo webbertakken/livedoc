@@ -9,7 +9,7 @@ import {
   openKanban,
 } from './new-document-open';
 
-// Opening at once (docs/specs/013-workspace/new-document-menu.md, blueprint "Instant open"), on a host without sign-in,
+// Opening at once (docs/specs/013-workspace/new-document-menu.md), on a host without sign-in,
 // where everyone's documents are LiveDoc's: against the production build, a blank is editable within 200 ms of the
 // click and a template within 500 ms, with nothing fetched first; Back returns to the Explorer, and the document was
 // made. The signed-in and This Browser halves run on the signed-in stack (account/new-document-open-budget.spec.ts).

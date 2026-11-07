@@ -41,3 +41,12 @@ undoable: like a dot or an answer, they are the room's, not an edit.
 ## Telemetry
 
 `track('Element', 'Added', 'Checklist')` at the add handler. Box toggles deliberately don't track (high-frequency, low-signal, matching [Session tools (timer + voting)](../012-collaboration/session-tools.md)'s vote-cast precedent).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D99** Contrast of label / muted text: Not checked; the element's own text colour (checklist done 0.55, footer 0.6)
+  (default).
+- **D103** Duplicate row texts under a `check` delta: Index first; else the first row with that text (default).

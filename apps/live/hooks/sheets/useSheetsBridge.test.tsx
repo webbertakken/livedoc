@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// The editor's side of the sheet store (blueprint sheet-store.md "Editor slice"): a bridge whose callbacks always
+// The editor's side of the sheet store: a bridge whose callbacks always
 // reach the editor's latest functions, whose identity changes only with what the sheet chunk reads, and which
 // routes the room's `sheets` and `sheet-presence` ops to the chunk once it attaches (dropped before).
 import { act, render, renderHook } from '@testing-library/react';

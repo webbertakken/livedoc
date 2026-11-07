@@ -1,4 +1,4 @@
-// Make room (docs/specs/024-agents/blueprints/edit-operations.md "Make room", EO47): what an insert
+// Make room (docs/specs/024-agents/edit-operations.md, EO47): what an insert
 // shifts so its new node fits. Within b's container, the container's direct members; without one, the
 // top-level units of b's connected group along pinned arrows. Whatever lies past the midline on the
 // flow axis shifts by the room needed, a container with what it carries. The container grows on its

@@ -271,7 +271,7 @@ dialog or Make a copy button, no image upload or paste (`useEditorImages.ts`, `u
 | Editor                  | Edit link, team member    | Unchanged, minus anything ownership claims                                                                                           |
 | Ownership (not a level) | Owner, partly team member | A defined set: share family, password, delete, Trash, move, Take offline, baton override                                             |
 
-The draft blueprint in the worktree (`docs/specs/013-workspace/blueprints/share-roles.md`) already sketches the
+The draft blueprint in the worktree (`docs/specs/013-workspace/share-roles.md`) already sketches the
 middle class (`PARTICIPATION_DELTA_KINDS = ['response', 'idea']`, `poll-answer` and `vote` to comment), which
 fits this map.
 

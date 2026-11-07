@@ -1,4 +1,4 @@
-// The canonical line form of an operation (docs/specs/024-agents/blueprints/edit-operations.md
+// The canonical line form of an operation (docs/specs/024-agents/edit-operations.md
 // "Line form"): what a rejection's header prints, and text that parses back to the same operation.
 // An `add` with a whole element has no line form; it prints as its JSON form, which parses too. So does a `wrap`
 // of two or more compound selectors: the line form joins every non-single member word into one selector.

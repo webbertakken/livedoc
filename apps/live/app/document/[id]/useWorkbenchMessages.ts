@@ -1,12 +1,12 @@
 'use client';
 
-// The editor's side of the workbench messages (docs/specs/013-workspace/blueprints/workbench-embeds.md
+// The editor's side of the workbench messages (docs/specs/013-workspace/workbench-embeds.md
 // "Workbench messages"): `ready` once the document is in, `tab` on every later tab change, `selection`
 // once the selection has been still for WORKBENCH_SELECTION_SETTLE_MS and only when its text changed
 // (WB17), and the workbench's `reveal` and `theme`. Messages are built after the settle, off the input
 // event, so a marquee drag costs one reference. Nothing runs outside a workbench. In a workspace frame the frame
 // owns `ready` and the scheme: the editor reports its document as the frame's place instead of `ready`, on
-// every tab change and rename (blueprint "Workspace messages").
+// every tab change and rename.
 import { useEffect, useEffectEvent, useRef } from 'react';
 import {
   CHANGESET_REVEAL_MS,

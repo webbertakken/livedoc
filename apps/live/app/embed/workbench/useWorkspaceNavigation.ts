@@ -1,6 +1,6 @@
 'use client';
 
-// How a workspace frame moves (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workspace frame", WB57,
+// How a workspace frame moves (docs/specs/013-workspace/workbench-embeds.md, WB57,
 // WB58, WB59): it takes every navigation the Explorer and the editor make (the app's interceptor and a capture of
 // same-origin link clicks), and moves itself with the History API, which the App Router hears; the browser's own
 // back and forward walk the same entries. An Explorer or document href becomes a frame path; the wizard becomes New

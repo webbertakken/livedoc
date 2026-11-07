@@ -96,7 +96,7 @@ describe('buildEditorCommands — document/tab commands', () => {
   });
 });
 
-// The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table).
+// The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table).
 describe('buildEditorCommands — in a workbench', () => {
   it('offers neither Share nor Delete document, and keeps the rest', () => {
     const inWorkbench = ids({ ...base, canShare: true, workbench: true });
@@ -139,7 +139,7 @@ describe('buildEditorCommands — selection commands', () => {
     );
   });
 
-  // docs/specs/009-elements/blueprints/annotations.md [QD8]: an annotation marker never rotates.
+  // docs/specs/009-elements/annotations.md [QD8]: an annotation marker never rotates.
   it('offers note and comment but no Rotate for an annotation marker', () => {
     const out = ids({ ...base, selectionCount: 1, singleIsBoxed: true, singleRotates: false });
     expect(out).toEqual(expect.arrayContaining(['note', 'comment']));

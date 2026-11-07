@@ -11,7 +11,7 @@ import {
 import type { ThemeDefinition } from './themes';
 import { THEMES } from './themes-data';
 
-// docs/specs/011-theme/blueprints/multicolour-themes.md: colour resolution (E5, E7, E9),
+// docs/specs/011-theme/multicolour-themes.md: colour resolution (E5, E7, E9),
 // the shared branch map (D6) and the wrapper logs (O1, O2).
 
 const theme = (id: string): ThemeDefinition => THEMES.find((t) => t.id === id)!;

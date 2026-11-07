@@ -149,3 +149,12 @@ uncaught error or rejection, an area error boundary, or the app's root error bou
   full page loads; harmless.
 - If one of the two deploys fails, every navigation stays a full page load until they match again:
   slower, never broken.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D4** Which id names a build: The deploy's commit, from the one build job both deploys use (default).
+- **D5** How long the loop guard remembers: One minute per destination, in `sessionStorage` (default).
+- **D6** Which URL a recovery loads: The navigation intent within 10 s, else the current URL (default).

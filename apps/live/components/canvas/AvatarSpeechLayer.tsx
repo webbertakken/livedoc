@@ -1,7 +1,7 @@
 'use client';
 
-// Speech bubbles on the canvas (docs/specs/008-canvas/avatar-mode.md "Speech bubbles", blueprint
-// docs/specs/008-canvas/blueprints/avatar-speech.md): the composer above your own character's head and every
+// Speech bubbles on the canvas (docs/specs/008-canvas/avatar-mode.md "Speech bubbles",
+// docs/specs/008-canvas/avatar-mode.md): the composer above your own character's head and every
 // bubble floating away, yours and everyone's. Rendered INSIDE the canvas's transformed wrapper so each sits at
 // its canvas point and pans with the canvas, but counter-scaled by the zoom so it is always reading size.
 //

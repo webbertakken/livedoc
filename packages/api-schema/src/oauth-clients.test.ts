@@ -10,7 +10,7 @@ import {
   USER_CODE_LENGTH,
 } from './oauth-clients';
 
-// docs/specs/015-api/blueprints/cli.md "OAuth server", CLI35, CLI36.
+// docs/specs/015-api/cli.md, CLI35, CLI36.
 
 describe('the CLI client', () => {
   it('is a fixed id with loopback callbacks', () => {

@@ -1,4 +1,4 @@
-// An agent's form write (docs/specs/030-forms/forms.md "Agents", blueprint §15): a Form tab's form replaced whole,
+// An agent's form write (docs/specs/030-forms/forms.md "Agents"): a Form tab's form replaced whole,
 // at the revision the agent read, then relayed to open editors as the `tab-meta` an editor's own edit sends. The tab
 // takes the form's heading as its name. While the form takes responses only its settings may change: a form switched
 // on but past its Close On or at its Response Limit takes none, so it is not locked (unless the write would open it

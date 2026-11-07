@@ -1,4 +1,4 @@
-// The room's RPC surface (docs/specs/006-document/blueprints/document-storage.md "Interfaces and contracts"): what
+// The room's RPC surface (docs/specs/006-document/document-storage.md): what
 // the worker asks of a document's room, as plain functions over the room's env. DocumentRoom binds each call to its
 // one document and runs it here; the tests' rooms (test-sqlite-d1.ts) run the same functions over shared tables.
 // The worker calls these only through document-client.ts.

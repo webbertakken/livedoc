@@ -114,3 +114,26 @@ Existing ad-hoc shapes move onto these primitives. A new shape that frames a gly
   layout, not this rule.
 - Large illustrations (marketing feature art, help illustrations) keep their composition; only the
   small badges and discs inside them follow the rules.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D41** What counts as a shape: Painted (fill, border or ring), 8-44px tall, 8-220px wide, at most 28 characters and 8
+  descendants (default).
+- **D42** How tracked caps give back trailing space: `margin-inline-end` of minus one tracking step on the label
+  (`text-optical-caps`), so the box, not the glyphs, shrinks (default).
+- **D43** The cap height SVG text is placed by: 0.72em: the UI faces measure 0.70-0.73em (Segoe UI, SF, Roboto, Inter,
+  DejaVu), so the error stays under 0.25px at 16px (default).
+- **D44** Emoji in SVG shapes: Keep `dominant-baseline: central`: an emoji fills its em box, so the em centre is its
+  centre (default).
+- **D45** Decorative art that looks like a shape: `data-optical-ignore` on an art root that is composition, not a glyph
+  frame: the template preview fan (`PreviewFan`), whose cards frame drawn thumbnails, not glyphs; the landing hero's
+  off-centre windows, dimmed and blurred previews (the centred one is audited); the landing hero overview's scene
+  thumbnails, each a third its window's size so its text snaps to whole pixels (every scene is audited in its own
+  window); an emoji set in a decorative badge (the hero mind map's rocket), whose ink is the platform emoji font's and
+  lands differently on each platform (default).
+- **D46** Ink threshold in the audit's pixel diff: Summed RGB difference above 96, which ignores anti-aliasing noise at
+  4x and keeps any real stroke (default).
+- **D47** Audit resolution: `deviceScaleFactor: 4`, so the 0.5px tolerance is two device pixels (default).

@@ -9,7 +9,7 @@ import {
 import type { Env } from './env';
 import { registerOauthRoutes } from './oauth';
 
-// The device grant (docs/specs/015-api/blueprints/cli.md "The device grant", CLI36).
+// The device grant (docs/specs/015-api/cli.md, CLI36).
 
 // `afterGet` runs once a read has taken its value and before it returns it: a stand-in for a stale KV read.
 let afterGet: ((key: string) => Promise<void>) | null = null;

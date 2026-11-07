@@ -1,6 +1,5 @@
 -- Within reach replaces frecency in Explorer Home's Jump back in
--- (docs/specs/013-workspace/explorer-home.md "Jump back in"; blueprint
--- docs/specs/013-workspace/blueprints/explorer-home.md "Data and persistence").
+-- (docs/specs/013-workspace/explorer-home.md "Jump back in"; docs/specs/013-workspace/explorer-home.md).
 --
 -- Most used now counts use days (the person's document_opened events and real
 -- edits) over the last 90 days at read time, and recent reads the last open, so

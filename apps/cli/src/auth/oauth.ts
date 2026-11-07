@@ -1,4 +1,4 @@
-// The CLI's OAuth client (docs/specs/015-api/blueprints/cli.md "The CLI's OAuth client", CLI34 to CLI36): a token
+// The CLI's OAuth client (docs/specs/015-api/cli.md, CLI34 to CLI36): a token
 // from the host's authorization server, by the browser (loopback PKCE with the built-in client) or by the device
 // grant, for the profile's host. Both end in an ordinary livedoc_ API token; what happens with it is login's.
 

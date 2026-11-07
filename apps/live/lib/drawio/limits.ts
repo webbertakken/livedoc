@@ -1,5 +1,5 @@
 // The named constants of the draw.io importer
-// (docs/specs/020-import-export/blueprints/drawio-import.md "Constants").
+// (docs/specs/020-import-export/drawio-import.md).
 import type { ElementShadow } from '@livedoc/document';
 
 const MiB = 1024 * 1024;

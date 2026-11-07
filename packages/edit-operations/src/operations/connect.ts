@@ -1,5 +1,5 @@
 // `connect <a> -> <b> [id=] [label=…] [line=…] [again]` and `rewire <arrow> from=<x> | to=<y> | both`
-// (docs/specs/024-agents/blueprints/edit-operations.md "Operations", EO29, EO31): a pinned arrow
+// (docs/specs/024-agents/edit-operations.md, EO29, EO31): a pinned arrow
 // between boxes, anchors facing each other; a second arrow a→b needs `again`. Rewiring moves one end
 // and re-anchors both, dropping the old route.
 

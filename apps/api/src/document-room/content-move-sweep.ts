@@ -1,5 +1,5 @@
 // The sweep that moves every document's content into its room without waiting for someone to open it
-// (docs/specs/006-document/document-storage-move.md "The sweep", blueprint "The sweep"). Each minute it asks the
+// (docs/specs/006-document/document-storage-move.md "The sweep"). Each minute it asks the
 // rooms of documents with no move record, and those whose failed try is an hour old, to move; a room that has moved
 // answers its stored outcome and heals a lost record. Nothing to do: it returns at once, without a log line.
 

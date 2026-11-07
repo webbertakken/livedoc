@@ -6,7 +6,7 @@ import { sheetJson, sheetServer } from '../testing/sheets';
 import { bugForm, formPlan, formTabBody } from '../testing/forms';
 import { addForm, changeForm, readForm, shareForm } from './form-calls';
 
-// The form verbs' calls (docs/specs/030-forms/forms.md "Agents", blueprint §15 "Engine flow"): one read, every
+// The form verbs' calls (docs/specs/030-forms/forms.md "Agents" "Engine flow"): one read, every
 // change checked, then card types, the form and its responses tabs written in that order.
 const LINK: FormLinkResponse = {
   link: { code: 'AbCdEfGhIjKlMnOpQrStUv', open: true, createdAt: 1 },

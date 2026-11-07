@@ -1,4 +1,4 @@
-// The editor's load in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor
+// The editor's load in a workbench (docs/specs/013-workspace/workbench-embeds.md "The editor
 // in a workbench", I9, "The workspace frame"): the session names the document and the person, so the address is
 // not read. The person's participant record is read, never written; the load runs without the share-link
 // prefetch, the Explorer lists or an open record; the level is the session's, never above the person's own access;

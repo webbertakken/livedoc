@@ -1,5 +1,5 @@
-// The page scale (docs/specs/020-import-export/drawio-import.md "The page scale", blueprint steps
-// 15.0 and 15.9): draw.io sets labels smaller and lighter than LiveDoc does, so the whole page
+// The page scale (docs/specs/020-import-export/drawio-import.md "The page scale"): draw.io sets labels
+// smaller and lighter than LiveDoc does, so the whole page
 // grows until every label has the room draw.io gave it, in LiveDoc's own type. Positions,
 // sizes, waypoints and label offsets scale; strokes, presets and font sizes do not.
 
@@ -40,7 +40,7 @@ const median = (values: number[]): number => {
   return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
 };
 
-/** How much the page grows so its commonest label fits as draw.io fitted it (blueprint 15.0). */
+/** How much the page grows so its commonest label fits as draw.io fitted it. */
 export function pageScale(graph: DrawioGraph): number {
   const labelled = [...graph.cells.values()].filter(
     (c) => c.visible && (c.vertex || c.edge) && cellLabel(c).plain.trim() !== '',
@@ -59,7 +59,7 @@ export function pageScale(graph: DrawioGraph): number {
 const scaleEnd = (end: Endpoint, k: number): Endpoint =>
   end.kind === 'free' ? { ...end, x: end.x * k, y: end.y * k } : end;
 
-/** Every element grown by `k` about the page origin (blueprint 15.9); the same array at 1. */
+/** Every element grown by `k` about the page origin; the same array at 1. */
 export function scalePage(elements: Element[], k: number): Element[] {
   if (k === 1) return elements;
   return elements.map((el): Element => {

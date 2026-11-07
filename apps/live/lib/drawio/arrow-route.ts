@@ -1,4 +1,4 @@
-// draw.io's route as an arrow's path (docs/specs/020-import-export/blueprints/drawio-import.md step
+// draw.io's route as an arrow's path (docs/specs/020-import-export/drawio-import.md step
 // 12.7-12.9): each pinned end takes the anchor nearest where draw.io's path meets its shape, on the
 // side the path leaves through; the route's end segments follow the anchors and stay on their axis;
 // the corners in between become the arrow's bend points, or points on draw.io's curve.
@@ -40,7 +40,7 @@ export function exitSide(end: Pt, next: Pt): Side | null {
 
 const vertical = (side: Side) => side === 'n' || side === 's';
 
-/** The offered anchor nearest `point` on the side the route leaves through (blueprint step 12.7).
+/** The offered anchor nearest `point` on the side the route leaves through (.7).
  *  An anchor's primary side decides the axis the renderer squares its leg to (corners leave
  *  vertically), so a side with none of its own falls back to any anchor on the same axis, then
  *  to any anchor. */
@@ -91,7 +91,7 @@ export function simplifyRoute(points: Pt[]): Pt[] {
   return out;
 }
 
-/** The ends of a simplified route moved onto `from` / `to` (blueprint step 12.8): the corner next to
+/** The ends of a simplified route moved onto `from` / `to` (.8): the corner next to
  *  a moved end follows it on the end segment's axis, so a horizontal or vertical end stays one. A
  *  straight orthogonal route whose ends no longer line up gains two corners halfway along. */
 export function snapRouteEnds(route: Pt[], from: Pt, to: Pt, orthogonal: boolean): Pt[] {
@@ -183,7 +183,7 @@ const offLine = (p: Pt, line: Pt[]) =>
   Math.min(...line.slice(1).map((q, i) => segmentDistance(p, line[i]!, q)));
 
 /** The fewest points on draw.io's curve that the renderer's curve through them keeps within
- *  `DRAWIO_CURVE_TOLERANCE_PX` of draw.io's (blueprint step 12.9), both ends included: starting
+ *  `DRAWIO_CURVE_TOLERANCE_PX` of draw.io's (.9), both ends included: starting
  *  from the ends, the sample of draw.io's curve farthest from the renderer's joins the points until
  *  none is farther than the tolerance, and no point of the renderer's curve strays farther either. */
 function curveThrough(points: Pt[]): Pt[] {
@@ -209,7 +209,7 @@ function curveThrough(points: Pt[]): Pt[] {
   }
 }
 
-/** How the arrow draws its route (blueprint step 12.9). */
+/** How the arrow draws its route (.9). */
 export type RouteShape = {
   arrowStyle: ArrowStyle;
   curvePoints?: { dx: number; dy: number }[];

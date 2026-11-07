@@ -12,7 +12,7 @@ import { useCanvasSurface } from './CanvasSurfaceContext';
 import type { ChangesetReveal, RevealStore } from '@/lib/changeset-reveals';
 
 // The outline an agent's changeset draws around what it touched, in its author's colour
-// (docs/specs/024-agents/blueprints/agent-changesets.md "Presentation and UX", "Accessibility"):
+// (docs/specs/024-agents/agent-changesets.md):
 // 2 px, 4 px outside each element, over a 1 px halo in the canvas surface colour so it reads against
 // any fill (WCAG 1.4.11). Canvas space, above the elements and below the selection chrome. It fades
 // in and out over CHANGESET_REVEAL_MS; under reduced motion it appears and goes with no animation.

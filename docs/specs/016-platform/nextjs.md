@@ -68,3 +68,12 @@ shared configuration, and which Next.js features they use or decline, with the r
 | Immutable static assets across deployments                                              | Declined | An adapter feature for `?dpl` skew protection; the stale-builds guard covers skew ([Stale builds](stale-builds.md))                               |
 | `experimental.useOffline`                                                               | Declined | Offline is the editor's own system ([Offline mode](../006-document/offline-mode.md)); a soft navigation left pending would hide it                |
 | `experimental.concurrentRouterQueue`                                                    | Declined | Router internals with no measured need here                                                                                                       |
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D7** How the shared config is shaped: One function, `livedocNextConfig`, each app spreading it (default).
+- **D8** Turbopack-only flags under webpack: Left off together with the compiler, so the webpack escape hatch still
+  builds (default).

@@ -1,5 +1,5 @@
 // Decode, plan, encode and pick the bytes to store for one imported image
-// (docs/specs/020-import-export/blueprints/import-image-pipeline.md "prepareImportImage").
+// (docs/specs/020-import-export/import-image-pipeline.md).
 // The DOM work sits behind the injected codec, so this runs under Node.
 
 import { MAX_IMAGE_BYTES, sniffImageType } from '@livedoc/api-schema';

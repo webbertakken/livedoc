@@ -1,4 +1,5 @@
-// The undo of deleting rows or columns (docs/specs/029-sheets/sheet-store.md "Undo"; blueprint sheets-engine.md
+// The undo of deleting rows or columns (docs/specs/029-sheets/sheet-store.md "Undo";
+// docs/specs/029-sheets/formulas.md
 // "Writes"): the lines come back with their ids, places, sizes and hidden state, and of what the deletion shrank or
 // dropped (merges, the filter, named ranges, card tables' links, drafts and columns) exactly that is put back, into
 // the sheet as it is when the undo is made. Whatever else changed since (a row linked or drafted, a merge made, a

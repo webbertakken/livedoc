@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CHANGESET_MAX_OPERATIONS, CHANGESET_SUMMARY_MAX } from '@livedoc/api-schema';
 import { parseChangesetRequest, rejectionStatus } from './request';
 
-// docs/specs/024-agents/blueprints/agent-changesets.md "Interfaces and contracts", CS8 to CS10.
+// docs/specs/024-agents/agent-changesets.md, CS8 to CS10.
 const ops = [{ op: 'rm', target: 'a' }];
 
 describe('parseChangesetRequest', () => {

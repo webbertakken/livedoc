@@ -222,3 +222,17 @@ Per [Telemetry + public transparency dashboard](../017-telemetry/telemetry.md): 
 - A message history, replies, mentions, private messages, or anything typed reaching the document or the server's storage: speech is ephemeral.
 - A mobile on-screen direction pad (touch gets tap-to-walk only — no arrow keys, no Space).
 - Any persistence of where the avatar was left (only the costume persists), or syncing the costume to an account across devices.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D107** The character limit beside the 50 words: 300: fifty words of six characters, so a paste of one long word
+  cannot fill the canvas (default).
+- **D108** "Swaying gently": 6 px either side on a 2.4 s period: visible, never enough to read as shaking (default).
+- **D109** "A small bounce" and the tail "fading": Pop from 0.6 to 1 over 220 ms with an ease-out-back; tail out over
+  400 ms (default).
+- **D110** How fast an overflow bubble goes, and how many ids are remembered: 300 ms fade; the last 200 ids, the oldest
+  forgotten first (default).
+- **D111** Where above the head a bubble starts: 8 canvas px above the sprite's head, times its size scale (default).

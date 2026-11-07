@@ -6,7 +6,7 @@ import { createSelectionStore } from '@/lib/selection-store';
 import { useEditorViewport } from './useEditorViewport';
 
 // On a phone, an element just added (and selected by the add) scrolls into view. The selection is read
-// from the store when the board changes (docs/specs/008-canvas/blueprints/selection-store.md).
+// from the store when the board changes (docs/specs/008-canvas/canvas-performance.md).
 
 const tabOf = (elements: Element[]) => ({ id: 't', name: 'T', elements }) as unknown as Tab;
 const width = window.innerWidth;

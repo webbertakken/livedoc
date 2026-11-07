@@ -1,4 +1,5 @@
-// The sheet reference index (docs/specs/029-sheets/sheet-store.md "Deleting a sheet", blueprint sheet-store.md
+// The sheet reference index (docs/specs/029-sheets/sheet-store.md "Deleting a sheet",
+// docs/specs/029-sheets/sheet-store.md
 // "Deleting a sheet"). Every tab write replaces the tab's rows: one per Sheet element's `sheetId` and per copy not yet
 // made's `copyOf`. As a row goes or comes, the triggers of migration 0079 settle its sheet: unreferenced from then
 // (`unreferenced_since`), deleted at once when the editor deleted it with its element, referenced again; an

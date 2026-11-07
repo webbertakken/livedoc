@@ -1,4 +1,5 @@
-// Person nodes (docs/specs/009-elements/org-chart.md, blueprint org-chart.md): a mind node drawn as a person, an
+// Person nodes (docs/specs/009-elements/org-chart.md, docs/specs/009-elements/org-chart.md): a mind node
+// drawn as a person, an
 // initials disc beside the name (its label) and the role (`pageSubtitle`). An org chart is a mind map of them in the
 // Downward flow, so it grows, tidies and moves as any mind map.
 //

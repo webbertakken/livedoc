@@ -1,4 +1,4 @@
-// The checks every item write passes (blueprint item-store.md "Interfaces and contracts"): a create, patch or move
+// The checks every item write passes: a create, patch or move
 // read as the api reads its body, and the items it leaves checked against their card types and the size bounds.
 // The api reads request bodies with them; an offline document runs the same checks on its own writes, so it never
 // holds what a Sync to Cloud would refuse (docs/specs/026-plan/items.md "Offline documents").

@@ -1,4 +1,4 @@
-// A draw.io page's cell tree (docs/specs/020-import-export/blueprints/drawio-import.md
+// A draw.io page's cell tree (docs/specs/020-import-export/drawio-import.md
 // step 7): every mxCell (unwrapped from UserObject / object), its parent and
 // children in document order, the layers, and geometry resolved from
 // parent-relative to canvas coordinates.

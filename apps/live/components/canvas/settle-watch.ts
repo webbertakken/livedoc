@@ -4,11 +4,11 @@
 // board's zoom to 50-80 ms tasks.
 
 /** How long a face is still before its ink is copied again, ms: past a zoom or a burst of typing, short enough
- *  that an edit's ink follows at once to the eye (blueprint: 80 to 200). */
+ *  that an edit's ink follows at once to the eye (safe range: 80 to 200). */
 export const SKETCH_INK_SETTLE_MS = 120;
 
 /** The longest a changing face's ink waits, ms, so a face that never settles (an endless animation) still
- *  follows (blueprint: 500 to 2000). */
+ *  follows (safe range: 500 to 2000). */
 export const SKETCH_INK_MAX_WAIT_MS = 1000;
 
 /** Calls `take` SKETCH_INK_SETTLE_MS after `live` last changed (its subtree, or its size when `resize` is set), never

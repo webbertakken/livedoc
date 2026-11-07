@@ -1,5 +1,5 @@
 // Which Drive mirror the deployment runs (docs/specs/022-drive-mirror/drive-mirror.md,
-// "Self-hosting"; blueprint "Deployment mode").
+// "Self-hosting").
 
 import type { DriveMode } from '@livedoc/api-schema';
 import type { Env } from '../types';

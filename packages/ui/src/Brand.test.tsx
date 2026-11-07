@@ -222,7 +222,7 @@ describe('sizes', () => {
   });
 });
 
-// docs/specs/004-interface-design/blueprints/brand-motion.md "Structure": each sheet is a screen-space motion group
+// docs/specs/004-interface-design/brand-mark.md: each sheet is a screen-space motion group
 // around the isometric sheet group, so the assembly, the press and the fan never write the same property.
 describe('the motion structure', () => {
   it('wraps each sheet in a motion group, inside one art group', () => {

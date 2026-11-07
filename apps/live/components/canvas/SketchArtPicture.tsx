@@ -13,14 +13,14 @@ import { watchUntilSettled } from '@/components/canvas/settle-watch';
 // freeze it.
 
 /** How far a picture reaches past its drawing's box on each side, as a share of it: the art filter's own region
- *  (`x="-15%"`), so a wobbled edge is never clipped (blueprint: the filter region's margin). */
+ *  (`x="-15%"`), so a wobbled edge is never clipped (the filter region's margin). */
 export const SKETCH_ART_PICTURE_MARGIN = 0.15;
 
 /** The most a picture is laid out past its size, then shrunk back: a filter inside a picture runs at one pixel per
- *  laid-out pixel, so a picture laid out at its size is blurred on a 3x screen (blueprint: 2 to 4). */
+ *  laid-out pixel, so a picture laid out at its size is blurred on a 3x screen (safe range: 2 to 4). */
 export const SKETCH_ART_PICTURE_MAX_SCALE = 4;
 
-/** The longest side a picture is laid out at, px, so a big sticker on a 3x screen stays a few MB (blueprint: 512 to
+/** The longest side a picture is laid out at, px, so a big sticker on a 3x screen stays a few MB (safe range: 512 to
  *  2048). */
 export const SKETCH_ART_PICTURE_MAX_PX = 1024;
 

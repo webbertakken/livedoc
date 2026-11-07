@@ -1,4 +1,4 @@
-// The editor's two lines (docs/specs/007-editor/blueprints/two-lines.md "Constants and configuration").
+// The editor's two lines (docs/specs/007-editor/toolbar-layout.md).
 
 /** Avatars the contributors' button shows before it says +N. Spec: up to three. Safe range 1 to 5. */
 export const CONTRIBUTORS_SHOWN = 3;

@@ -1,4 +1,4 @@
-// Sheet writes (docs/specs/029-sheets/sheet-store.md "Changing a sheet"; blueprint sheets-engine.md "Writes"). One
+// Sheet writes (docs/specs/029-sheets/sheet-store.md "Changing a sheet"). One
 // pure apply, used by the api, the offline store and the editor's optimistic apply, so all converge; and its
 // inverse, for undo. A write lands on ids: what it names that is gone is skipped, never moved somewhere else.
 import { FORMAT_KEYS, mergeFormat, type FormatPatch } from './format';

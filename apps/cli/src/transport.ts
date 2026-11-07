@@ -1,4 +1,4 @@
-// The api client a command uses (blueprint CLI45): the profile's api base, the credential, the CLI's headers,
+// The api client a command uses (CLI45): the profile's api base, the credential, the CLI's headers,
 // a share code once a pasted link resolved, a timeout, and a debug line per request.
 
 import { createApiClient, type ApiClient } from '@livedoc/api-client';

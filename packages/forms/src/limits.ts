@@ -1,4 +1,4 @@
-// The form's limits (docs/specs/030-forms/blueprints/forms.md §3). Each is named once, here, so the builder, the
+// The form's limits (docs/specs/030-forms/forms.md §3). Each is named once, here, so the builder, the
 // respondent page and the api check the same numbers.
 import {
   CUSTOM_CHOICE_OPTIONS_MAX,

@@ -1,5 +1,5 @@
 // The closed vocabulary and the engine's limits (docs/specs/024-agents/edit-operations.md "The
-// vocabulary", blueprint "Constants and configuration").
+// vocabulary").
 
 export const EDIT_OPERATION_NAMES = [
   'add',
@@ -45,7 +45,7 @@ export const PLACEMENT_RELATIONS = [
 ] as const;
 export type PlacementRelation = (typeof PLACEMENT_RELATIONS)[number];
 
-// The `key:value` selector keys (blueprint "Selectors").
+// The `key:value` selector keys.
 export const SELECTOR_KEYS = [
   'type',
   'shape',

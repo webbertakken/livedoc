@@ -4,7 +4,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { HomeJumpBackInItem, HomeResponse } from '@livedoc/api-schema';
 
-// Home's data (docs/specs/013-workspace/blueprints/explorer-home-view.md "useHome"): one read draws
+// Home's data (docs/specs/013-workspace/explorer-home.md): one read draws
 // the page, a failure is not an empty Home, and the read clears the unread badge.
 
 const { apiReadHome, offlineListOpens, track } = vi.hoisted(() => ({

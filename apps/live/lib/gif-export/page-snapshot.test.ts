@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { GifExportError } from './gif-export-error';
 import { cropTransform, parseDelays, snapshotPage } from './page-snapshot';
 
-// docs/specs/020-import-export/blueprints/animated-gif-export.md "The snapshot".
+// docs/specs/020-import-export/animated-gif-export.md.
 const rect = (left: number, top: number, width: number, height: number) =>
   ({
     left,

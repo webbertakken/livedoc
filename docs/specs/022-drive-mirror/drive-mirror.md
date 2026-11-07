@@ -717,3 +717,40 @@ leaves the pair as it is.
 [Folders](../013-workspace/folders.md),
 [Auth + guest access](../014-identity/auth-and-guest-access.md),
 [Migration readiness](../../research/migration-readiness.md).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** When the first page token is taken: Before the root folder is created, so the mirror's own first writes are
+  read back as echoes (default).
+- **D2** Tab election without the Web Locks API: Every tab is elected; the D1 lease still keeps writes to one device
+  (default).
+- **D3** Envelope formatting: Two-space indented JSON, matching the tab envelope (default).
+- **D4** "Shortly before expiry" for the access token: 5 minutes before `expiresAt` (default).
+- **D5** How often recorded items reach D1 during a pass: Every 25 rows and at the end of the pass (default).
+- **D6** Order of changes within one `changes.list` read: Folders first, then files, each by `time`, so a restored
+  folder exists before its documents are placed (default).
+- **D7** A name from Drive longer than a LiveDoc name allows: Truncated to `MAX_NAME_LEN` (default).
+- **D8** A page token Drive rejects: Take a new start token and re-run the adoption listing (default).
+- **D9** Progress denominator for the first mirror: Live documents in My Documents at the start of the pass (default).
+- **D10** Where the reconnect banner sits: Bottom-left, dismissible for the browser session (default).
+- **D11** Relative wording of **Last synced**: "Just now" under a minute, then the shared relative-time formatter, "Not
+  yet" before the first pass (default).
+- **D12** Where `/drive/connected` returns to: The page the user connected from, else `/explorer` (default).
+- **D13** Lease holder identity: A random per-browser id in `localStorage` (`livedoc:v2:drive-device`) (default).
+- **D14** When a content edit made in Drive is rewritten: At the ordinary write cadence (idle and minimum interval), not
+  at once (default).
+- **D15** Where the unseen-folder notice shows on a row: A small amber folder mark after the document's name, in list
+  rows and cards alike (default).
+- **D16** Which pages run the engine: Every page of the live app except `/embed` and the `/drive` routes, from the root
+  layout (default).
+- **D17** Test ports for the opt-in e2e: The fake Google on 8796, overridable (`E2E_DRIVE_GOOGLE_PORT`); the stack on
+  3023 / 8792 / 3024 (default).
+- **D18** Telemetry pairs for the spec's events: Reuse `Linked`, `Unlinked`, `Changed`, `Created`, `Opened`; add only
+  the `Drive` category and `Applied` (default).
+- **D21** "On focus" guard at the 2-minute pace: At most one focus check every 30 seconds (default).
+- **D25** Look of Disconnect: The shared neutral `secondary` button, and a neutral confirm (default).
+- **D26** How long a sync runs before the status says Syncing…: 600 ms, so the cheap 2-minute check never flickers it
+  (default).

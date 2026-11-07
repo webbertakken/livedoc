@@ -40,7 +40,7 @@ type CustomThemeContextValue = {
     patch: { name?: string; definition?: CustomThemeDefinition },
   ) => Promise<CustomTheme | undefined>;
   deleteTheme: (id: string) => void;
-  // False in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table): the
+  // False in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table): the
   // themes are read, never built, edited or deleted there.
   writable: boolean;
 };

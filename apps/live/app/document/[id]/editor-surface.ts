@@ -1,4 +1,4 @@
-// Where the editor runs (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor in a
+// Where the editor runs (docs/specs/013-workspace/workbench-embeds.md "The editor in a
 // workbench"): the app, a share-code embed (docs/specs/013-workspace/embeds.md), or a workbench's frame.
 // Constant for the page's life (the route that mounted the editor decides it), so every gate may read
 // these flags in derived values.

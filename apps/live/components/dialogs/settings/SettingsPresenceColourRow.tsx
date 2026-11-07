@@ -1,7 +1,7 @@
 'use client';
 
-// Settings > Account's Colour (docs/specs/014-identity/auth-and-guest-access.md "Account settings"; blueprint
-// "Presentation and UX"): the colour collaborators see on this person's cursor, avatar and name tag, chosen in place
+// Settings > Account's Colour (docs/specs/014-identity/auth-and-guest-access.md "Account settings"): the
+// colour collaborators see on this person's cursor, avatar and name tag, chosen in place
 // with the Row skin of the one colour picker (docs/specs/004-interface-design/colour-picker.md), from the ten
 // presence colours only. A pick shows at once (here, on the profile card and in an open editor), then saves the
 // participant record; refused, it puts back what the server last took, newest wins.

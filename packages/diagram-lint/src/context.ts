@@ -1,4 +1,4 @@
-// Everything the checks read, prepared once a run (blueprint "Behaviour and state" step 1): the visible
+// Everything the checks read, prepared once a run: the visible
 // elements, an index over all of them, the views' refs, the boxes, containment, the arrows sorted into
 // dangling and drawable with their routes, the element grid and the label pass.
 

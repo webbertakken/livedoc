@@ -101,7 +101,7 @@ type ClipboardDeps = {
   // Editable embeds (docs/specs/013-workspace/embeds.md) still don't paste-upload images — see
   // pasteImageFile.
   embedMode: boolean;
-  // Read when a copy runs (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a copy runs (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   editingId: string | null;
   // Ends typing in a label: pasting copied elements while a note is open for

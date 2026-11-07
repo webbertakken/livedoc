@@ -13,7 +13,7 @@ const ZOOM_STEP = 0.1;
 const clampZoom = (z: number) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
 
 // Steps are updaters, applied to the zoom as it is when pressed: the handlers depend on no zoom value,
-// so they keep their identity across zooms (docs/specs/008-canvas/blueprints/viewport-store.md).
+// so they keep their identity across zooms (docs/specs/008-canvas/canvas-performance.md).
 export function useZoomControls(setZoom: Dispatch<SetStateAction<number>>) {
   return useMemo(
     () => ({

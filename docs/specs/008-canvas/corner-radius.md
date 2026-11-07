@@ -35,3 +35,11 @@ exported and clicked always agree.
 - **Imports:** Excalidraw's rounded rectangles land as **Large**, which through the quarter rule
   matches Excalidraw's own rounding at every size up to its 32 px cap
   ([Excalidraw import & export](../020-import-export/excalidraw-import-export.md)).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D60** Which kinds the quarter cap covers: Every drawn corner, presets and kind defaults alike; only Full is exempt
+  (default).

@@ -43,7 +43,7 @@ import { usePlanImageExport } from './usePlanImageExport';
 import type { ExportFormatKey } from '@livedoc/plan-art';
 
 // The animated GIF's panel and its capture, loaded only when the GIF card opens
-// (docs/specs/020-import-export/blueprints/animated-gif-export.md "Performance and limits").
+// (docs/specs/020-import-export/animated-gif-export.md).
 const GifExportPanel = lazy(() => import('./gif/GifExportPanel'));
 
 // Telemetry (docs/specs/017-telemetry/telemetry.md): map the internal format key to the public label

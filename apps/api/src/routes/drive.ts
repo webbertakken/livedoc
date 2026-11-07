@@ -1,5 +1,5 @@
 // /api/drive/* — the Google Drive mirror's token broker and bookkeeping
-// (docs/specs/022-drive-mirror/drive-mirror.md; blueprint "Routes").
+// (docs/specs/022-drive-mirror/drive-mirror.md).
 //
 // The mirror itself runs in the user's browser, straight against Google. The
 // worker only brokers tokens (the refresh token never leaves it) and stores a

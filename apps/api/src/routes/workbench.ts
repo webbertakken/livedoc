@@ -1,4 +1,4 @@
-// /api/workbench/* (docs/specs/013-workspace/blueprints/workbench-embeds.md "Routes"): tickets, sessions,
+// /api/workbench/* (docs/specs/013-workspace/workbench-embeds.md): tickets, sessions,
 // pairing requests and pairings, each in its own module. Matched by literal segment index and method, as
 // every route module is, so the OpenAPI drift test can probe it.
 

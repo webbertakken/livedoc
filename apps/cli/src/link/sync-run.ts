@@ -1,4 +1,4 @@
-// One sync pass (docs/specs/027-repositories/blueprints/repository-link.md "One sync pass"): the lock, the local
+// One sync pass (docs/specs/027-repositories/repository-link.md): the lock, the local
 // sync state, coverage, the scan, the api's answers, the plan, then the acts in their order (relocations, writes,
 // removals), INDEX.md and the report. A failure of one document never stops the others; a failure of the lock, the
 // coverage read or the credential stops the pass before anything is written. `--dry-run` takes no lock and writes

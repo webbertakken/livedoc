@@ -1,6 +1,6 @@
 // PUT /api/documents/<id>/tabs/<tabId>: the editor's whole-tab autosave and nothing else's
-// (docs/specs/024-agents/agent-changesets.md "Whole-tab saves and tab renames"; blueprint "The tab
-// PUT"). A token is refused; the save is merged with every recorded changeset its editor had not
+// (docs/specs/024-agents/agent-changesets.md "Whole-tab saves and tab renames"). A token is refused; the save
+// is merged with every recorded changeset its editor had not
 // seen and with the room's collaboration ledger, then written at the revision it read.
 
 import {

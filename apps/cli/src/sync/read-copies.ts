@@ -1,4 +1,4 @@
-// The read copies on disk (docs/specs/015-api/blueprints/cli.md "Read copies", CLI76): `<cache>/copies/<key>/<rev>.json`
+// The read copies on disk (docs/specs/015-api/cli.md, CLI76): `<cache>/copies/<key>/<rev>.json`
 // with one index, where the key is the first 16 hex of SHA-256 of profile, document and tab. At most
 // READ_COPY_REVS_PER_TAB revisions a tab and READ_COPY_MAX_BYTES in all, the least recently used out first; files
 // 0600 in 0700 directories, as they hold document content.

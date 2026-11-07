@@ -1,4 +1,4 @@
-// The lint as text (blueprint "Presentation and UX", LN19 to LN22): one summary line, then one finding a
+// The lint as text (LN19 to LN22): one summary line, then one finding a
 // line, refs first and the fix last; the verdict a changeset's footer carries.
 
 import type { LintCode, LintFinding, LintReport, LintSeverity } from '@livedoc/api-schema';

@@ -3,7 +3,7 @@ import { isPointerNote, snapPointerTip, withPointerTip, type Element } from '@li
 import { track } from '@/lib/telemetry';
 import { useLatest } from '@/hooks/ui/useLatest';
 
-// The pointer note's tip handle (docs/specs/009-elements/blueprints/pointer-note.md "Tip handle"): let go at `tipAbs`
+// The pointer note's tip handle (docs/specs/009-elements/pointer-note.md): let go at `tipAbs`
 // (canvas coordinates), the tip snaps to the nearest host point in reach and attaches there, or stays free where it
 // was let go. One history step. Whether it attaches is read from the elements as they are, for its telemetry, not from
 // inside the commit's updater, which React may run later.

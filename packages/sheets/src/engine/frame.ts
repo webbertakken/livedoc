@@ -1,4 +1,5 @@
-// What the evaluator and the functions see while working out one formula (blueprint sheets-engine.md "Workbook
+// What the evaluator and the functions see while working out one formula (docs/specs/029-sheets/formulas.md
+// "Workbook
 // and recalculation"). The workbook provides it; functions never reach the workbook itself.
 import type { CardSource } from '../cards';
 import type { SheetsCtx } from '../formula/stored';

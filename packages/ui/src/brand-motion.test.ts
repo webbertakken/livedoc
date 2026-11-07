@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const css = readFileSync(new URL('./brand-motion.css', import.meta.url), 'utf8');
 
-// docs/specs/004-interface-design/blueprints/brand-motion.md "Assemble".
+// docs/specs/004-interface-design/brand-mark.md.
 describe('brand-motion.css', () => {
   it('assembles only logos that ask, and only before the page is marked assembled', () => {
     const selectors = [...css.matchAll(/([^{}]+)\{[^{}]*animation:/g)].map((m) => m[1]!.trim());

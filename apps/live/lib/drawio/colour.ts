@@ -1,4 +1,4 @@
-// A draw.io colour value (docs/specs/020-import-export/blueprints/drawio-import.md
+// A draw.io colour value (docs/specs/020-import-export/drawio-import.md
 // step 6). `default` and absence are deliberately UNSET, not white or black:
 // the element then takes the tab's theme like anything drawn in LiveDoc.
 

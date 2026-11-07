@@ -67,3 +67,10 @@ text.
   **follow-up** (`lib/export-tab.ts`): the export positions labels
   independently of the canvas flex layout, so faithfully placing the marker
   left of the wrapped label is its own change, tracked separately.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D104** Accessible meaning of a marker: Glyph `aria-hidden`; circles differ by colour only (default).

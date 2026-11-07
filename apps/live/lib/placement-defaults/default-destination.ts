@@ -1,5 +1,5 @@
 // Where a person's new documents go, read on the client (docs/specs/013-workspace/default-folders.md
-// "Surfaces"; blueprint "Behaviour and state (surfaces)"). Pure: the defaults and the folders the
+// "Surfaces"). Pure: the defaults and the folders the
 // surface has loaded go in, and the server's precedence comes out, skipping a default whose folder
 // is not among them exactly as the server skips a dangling one.
 import {
@@ -86,7 +86,7 @@ export function resolveDefaultFor(
 }
 
 /** What a new document of this entry is made as. Every Event Storming board and every family
- *  template opens in Diagram mode (blueprint D112). */
+ *  template opens in Diagram mode (D112). */
 export function representativeIntent(key: PlacementDefaultKey): CreationIntent {
   const [dimension, value] = key.split(':') as [string, string];
   if (dimension === 'mode') return { mode: value as EditorMode, tabKind: 'diagram' };

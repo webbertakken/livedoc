@@ -1,4 +1,5 @@
-// A document's own SQLite behind the D1 surface (docs/specs/006-document/blueprints/document-storage.md). The content modules
+// A document's own SQLite behind the D1 surface (docs/specs/006-document/document-storage.md). The content
+// modules
 // (db/tabs.ts, db/tab-stats.ts, db/image-refs.ts, db/changesets.ts, ...) were written against D1's
 // prepare/bind/first/all/run/batch; inside the document's Durable Object they run unchanged against
 // `ctx.storage.sql` through this adapter, as `env.DOCUMENT_DB`.

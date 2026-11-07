@@ -1,12 +1,12 @@
 // The canvas performance budget (docs/specs/008-canvas/canvas-performance.md "The budget"), as rules
 // over what the probe measures, and the report it renders. Pure: the probe measures, this judges.
 
-// docs/specs/008-canvas/blueprints/canvas-performance.md "Constants and configuration".
+// docs/specs/008-canvas/canvas-performance.md.
 const LONG_TASK_MS = 50;
 const DRAG_MEDIAN_FRAME_MS = 33;
 const SELECT_TASK_MS = 100;
 const OPEN_INTERACTIVE_MS = 3000;
-// docs/specs/008-canvas/blueprints/DEFAULTS.md D66.
+// docs/specs/008-canvas/canvas-performance.md D66.
 const IDLE_WORK_MS = 5;
 
 export type Gesture =

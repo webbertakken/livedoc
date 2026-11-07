@@ -52,8 +52,8 @@ function whenIdle(run: () => void): () => void {
   return () => window.clearTimeout(id);
 }
 
-// The editor in the Explorer's place (docs/specs/013-workspace/new-document-menu.md "Opening at once", blueprint "In
-// the Explorer's place"): a document made from the New Document menu opens here, under /document/<id>, with no page
+// The editor in the Explorer's place (docs/specs/013-workspace/new-document-menu.md "Opening at once"): a
+// document made from the New Document menu opens here, under /document/<id>, with no page
 // load. While the address names it the editor shows and the Explorer is gone; once the address leaves it (Back, or
 // the editor's own way to the Explorer) the Explorer is back, and the editor stays, hidden, only until its document
 // is settled, so nothing done before the create landed is lost.
@@ -82,7 +82,7 @@ export function InPlaceEditor({ children }: { children: ReactNode }) {
   // What opening needs comes in while the Explorer is idle.
   useEffect(() => prefetchNewDocumentOpenWhenIdle(), []);
 
-  // The standby (blueprint "Standby"): the blank the face makes next, rendered ahead and hidden, so the click only
+  // The standby: the blank the face makes next, rendered ahead and hidden, so the click only
   // reveals an editor already built. Made again for the face's blank and whoever is creating, whenever either changes.
   const lastBlank = useLastBlank();
   const [creatorTick, setCreatorTick] = useState(0);

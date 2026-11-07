@@ -15,7 +15,7 @@ import type { Env } from '../types';
 import { makeTestRouteContext } from './test-route-context';
 import { handleHome } from './home';
 
-// Explorer Home's reads (docs/specs/013-workspace/explorer-home.md; blueprint "Reads",
+// Explorer Home's reads (docs/specs/013-workspace/explorer-home.md,
 // "Interfaces and contracts", "Security and trust"), against the real schema.
 
 const DAY = 24 * 60 * 60 * 1000;

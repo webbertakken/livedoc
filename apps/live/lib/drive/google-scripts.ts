@@ -1,5 +1,5 @@
 // Google's browser libraries, loaded on demand and only where they are used
-// (blueprint "Assets and external resources"): Identity Services for the
+//: Identity Services for the
 // browser-only token model, and the Picker for adopting a folder LiveDoc
 // cannot see. Neither loads for a deployment without a client id.
 

@@ -12,7 +12,7 @@ interface PresenceBroadcastDeps {
   // personal documents"); this is all a personal one ever hears from us.
   documentServerStored: boolean;
   // Read and followed here, not passed as values: the editor root never renders for a selection
-  // (docs/specs/008-canvas/blueprints/selection-store.md "Above the canvas").
+  // (docs/specs/008-canvas/canvas-performance.md).
   selection: SelectionStore;
   activeId: string;
   roomRef: MutableRefObject<ReturnType<typeof connectRoom> | null>;

@@ -7,7 +7,7 @@ import { importShapeLibraries } from './library-store';
 import { PIXEL_PNG } from './library-test-support';
 import type { DrawioLibraryFile } from './files';
 
-// docs/specs/013-workspace/blueprints/shape-libraries.md "Behaviour and state" 1: each imported
+// docs/specs/013-workspace/shape-libraries.md 1: each imported
 // library made into a shape library of its own, its pictures stored first, failures listed.
 
 const compress = (xml: string) =>

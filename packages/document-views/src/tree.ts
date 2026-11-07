@@ -1,4 +1,4 @@
-// The outline's tree (docs/specs/024-agents/blueprints/document-views.md "The view model"): each printed
+// The outline's tree (docs/specs/024-agents/document-views.md): each printed
 // non-arrow element under its derived container, siblings in reading order, bare strokes folded.
 import { deriveContainers, type Element } from '@livedoc/document';
 import { freehandRuns, type FreehandRun } from './freehand-runs';

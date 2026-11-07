@@ -3,7 +3,7 @@ import { applyMigration, sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { backfillUserScope, recordDocumentEdited } from '../timeline';
 
 // Only events with a real actor count for Home (docs/specs/013-workspace/explorer-home.md
-// "Timeline"; blueprint "Real edits"): the Timeline backfill's reconstructed edit says so, never
+// "Timeline"): the Timeline backfill's reconstructed edit says so, never
 // marks a real one, and the rows written before the mark are marked by migration 0063.
 
 const DAY = 24 * 60 * 60 * 1000;

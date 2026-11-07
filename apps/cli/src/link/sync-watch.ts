@@ -1,4 +1,4 @@
-// `sync --watch` (docs/specs/027-repositories/repository-link.md "Commands"; blueprint "`sync --watch`"): one full
+// `sync --watch` (docs/specs/027-repositories/repository-link.md "Commands"): one full
 // pass, then one room stream per covered document and a watch on the mirror directory. A document's burst of room
 // changes settles for WAIT_SETTLE_MS (RL20), a file's for SYNC_LOCAL_SETTLE_MS, then a pass narrowed to it runs;
 // passes run one at a time, merged per document. Coverage is read again every SYNC_WATCH_COVERAGE_MS (RL21). One

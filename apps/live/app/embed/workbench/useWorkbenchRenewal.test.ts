@@ -12,7 +12,7 @@ import type { WorkbenchRedeemOutcome } from '@/lib/api/workbench';
 import type { WorkbenchPort } from '@/lib/workbench/workbench-port';
 import { workbenchTransition, type WorkbenchPhase } from './workbench-machine';
 
-// Renewal (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench page" step 5): `renew`
+// Renewal (docs/specs/013-workspace/workbench-embeds.md step 5): `renew`
 // at the lead, again every retry, a ticket swaps the session, anything else is logged and retried, and
 // an unrenewed session ends `expired` at its expiry.
 

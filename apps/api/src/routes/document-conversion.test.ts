@@ -59,7 +59,7 @@ const db = vi.hoisted(() => ({
   seedTabs: vi.fn(async () => {}),
 }));
 vi.mock('../db', () => db);
-// A create's content is its room's (docs/specs/006-document/blueprints/document-storage.md "Routing").
+// A create's content is its room's (docs/specs/006-document/document-storage.md).
 const { createDocumentContent } = vi.hoisted(() => ({
   createDocumentContent: vi.fn(async () => ({
     ok: true,

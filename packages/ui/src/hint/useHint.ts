@@ -119,7 +119,7 @@ const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
 // One hint's behaviour: when it opens, when it closes, and what a touch long
 // press does. Transitions T1-T15 in
-// docs/specs/004-interface-design/blueprints/tooltips-hover-cards-popovers.md.
+// docs/specs/004-interface-design/tooltips-hover-cards-popovers.md.
 export function useHint(kind: HintKind): HintState {
   const [source, setSource] = useState<HintOpenSource | null>(null);
   const [token] = useState<HintToken>(() => ({}));

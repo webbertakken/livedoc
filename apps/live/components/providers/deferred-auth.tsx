@@ -61,7 +61,7 @@ export const DEFERRED_AUTH_GUEST: DeferredAuthState = {
 };
 
 // Auth held unsettled, whatever the deployment: what the workbench page's surroundings read
-// (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor in a workbench"), so nothing
+// (docs/specs/013-workspace/workbench-embeds.md), so nothing
 // above the editor ever reads as a settled guest; the editor itself reads WorkbenchAuthBridge's state.
 export const DEFERRED_AUTH_PENDING: DeferredAuthState = {
   ...DEFERRED_AUTH_DEFAULT,

@@ -1,4 +1,5 @@
-// The diagram key (docs/specs/009-elements/diagram-key.md, blueprint diagram-key.md): a legend whose rows are what the
+// The diagram key (docs/specs/009-elements/diagram-key.md, docs/specs/009-elements/diagram-key.md): a legend
+// whose rows are what the
 // tab uses (its arrows' line patterns, then its tag colours), each with a meaning the author types. The rows are
 // derived at the commit point and stored on the key (`keyRows`), so every reader draws them without re-deriving.
 //

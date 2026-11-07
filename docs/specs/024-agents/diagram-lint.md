@@ -82,3 +82,89 @@ I group-split-edges  core: 12 of 13 arrows cross its border  fix: group by owner
 | `LINT_CROSSINGS_PER_ARROW` | 0.25  | A few crossings in a dense graph are normal; many are not |
 | `LINT_MAX_ASPECT`          | 3     | Beyond 3:1 a diagram reads badly on a screen and in a PNG |
 | `LINT_MAX_ARROWS`          | 300   | Pairwise checks stay under a few milliseconds             |
+
+## Invariants and edge cases
+
+The invariants and edge cases the code and its tests cite by id.
+
+- **N15** A custom tab theme: `colour-on-themed` is skipped and `[lint] theme unresolved` logs at debug.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **LN1** Whether elements on hidden layers are linted: Only visible elements are checked, as `mermaidFromTab` and the
+  render do; the index and refs span every element, so a hidden end is not missing (default).
+- **LN2** What a "box" is: A boxed element that is not a container, `text`, `annotation`, `freehand` or `path`: shapes,
+  stickies, tables, images, link cards, videos (default).
+- **LN3** How overlap and "wholly inside" are measured: On element rects, rotation included (separating axes), deeper
+  than `LINT_OVERLAP_TOLERANCE_PX` = 2 (`PATH_INSIDE_INSET_PX`); silhouettes are not traced (default).
+- **LN4** Which text measure the label checks use: `estimatedLabelMeasure` (0.55 em a character), the headless
+  renderers' fallback lifted into a name, so the lint is deterministic and agrees with the previews (default).
+- **LN5** How many lines a box "holds": `max(1, floor(labelRoom.height / (px × LABEL_LINE_HEIGHT)))`, only for boxes
+  where `drawsStandardLabel` is true (default).
+- **LN6** Whether a `scale` text size can overflow: No: it fits the box by design (default).
+- **LN7** How rich text is measured: As its plain `label` at the element's base size (default).
+- **LN8** Granularity of `arrow-behind-box` and `label-collision`: One finding per arrow listing every box; an arrow's
+  own pinned ends are exempt from behind, not from label collision (default).
+- **LN9** What `edge-crossings` reports: One finding for the tab; JSON refs every crossing arrow, most crossings first;
+  the message names the top 3 and `+k` (default).
+- **LN10** How the summary says crossings were skipped: `crossings skipped ({n} arrows)` in place of the crossing count;
+  `skipped.crossings` in JSON (default).
+- **LN11** When a tab is "otherwise a graph": At least 2 boxes are ends of connecting arrows and they are at least half
+  of all boxes (default).
+- **LN12** "Most" of a frame's arrows: More than half of at least 3 arrows touching a member; an arrow crosses when
+  exactly one end is a member; membership is transitive through nested containers (default).
+- **LN13** When a member "lies outside" its frame: Its rotated bounds reach past the first frame on its container chain
+  by more than 2 px on any side (default).
+- **LN14** When two labels are "the same": Equal after trim, whitespace collapse and lower-casing; blank never matches;
+  one finding per label (default).
+- **LN15** What the flow direction of a tab is: A graph source's `direction`; else the larger-axis class of at least 60%
+  of at least 3 directed connecting arrows; backwards beyond 8 px; `from` reverses, `both`/`none` skipped (default).
+- **LN16** What the drawing's extent is, and when aspect applies: `contentBounds` of visible elements with arrow routes
+  and label plates; only with at least 3 boxes and both sides at least 1 px (default).
+- **LN17** Which colours a theme "would paint": Its element fill or stroke, every palette and root entry, every
+  per-shape override; both Default halves; a custom theme skips the check (default).
+- **LN18** Order of findings: Severity, then code order, then reading position (top, then left) of the primary subject,
+  then refs (default).
+- **LN19** Text line layout: Severity letter, code padded to 17, message padded to the longest printed (max 48), then
+  `fix: …` (default).
+- **LN20** How long the text report may grow: At most 10 lines per code, then `… {n} more {code}`; JSON is never cut
+  (default).
+- **LN21** How labels are quoted in messages: Controls stripped, whitespace collapsed, cut at 40 characters with `…`,
+  JSON-escaped (default).
+- **LN22** Summary plurals and an empty drawing: `1 crossing`, `1 overlap`, `1 error`, `1 warning`, `{n} info`; nothing
+  visible reads `empty` (default).
+- **LN23** What happens when the lint throws: The write or tool call still succeeds; `[lint] failed` logs and `lint unavailable`
+  stands in; the view answers 500 (default).
+- **LN24** How the MCP appends the summary: A `lint` field in structured content plus a text block; `create_document`
+  reads `?view=lint&json=1` per tab, one line each in `tabIds` order (default).
+- **LN25** Where the lint's wire types live: `packages/api-schema/src/lint.ts`, as every DTO the api emits (default).
+- **LN26** Value order and enumeration of `--compare`: Dimensions nested in the order named; `down, right`; `groups, no-groups`;
+  `straight, angled, curved`; a source without groups has `no-groups` only (default).
+- **LN27** What makes a variant "best": Fewest errors, then crossings plus behind, then warnings, then aspect nearest 1,
+  then area, then enumeration order (default).
+- **LN28** Arrow ids of a laid-out graph source: `e1`, `e2`, … in edge order, `-2` on a clash with a node id, so a graph
+  lint is deterministic (default).
+- **LN29** Wording of each code's fix: The fix catalogue: tab fixes are edit operations (`; ` sequence, `, or `
+  alternatives, `<ref>`/`<text>` placeholders); graph fixes are source changes (default).
+- **LN30** How the pure package logs: An injected `LintLogger`, default console; the CLI's debug logger writes to stderr
+  only when debugging (default).
+- **LN31** Which changeset paths are linted: Writes, dry runs and reverts; a rejected changeset is not linted (default).
+- **LN32** Whether a lint report is stored: No: derived on each call; changeset rows do not carry it (default).
+- **LN33** How estimated widths stay out of the label layout's word cache: `fontEpoch` = -1 (`LINT_MEASURE_EPOCH`), a
+  key no browser uses (default).
+- **LN34** How rotated boxes are found through the element grid: Every query rect grows by half the largest diagonal of
+  any rotated box (default).
+- **LN35** The concrete budget behind "a few milliseconds": 50 ms CPU for 300 boxes and 300 arrows, label pass included,
+  as a measured aim; the test gates growth (4× the tab under 8× the CPU) (default).
+- **LN36** Granularity of the per-element codes: One finding per pair (`box-overlap`), per box, per shape, per arrow,
+  per frame or per element; one per tab for `edge-crossings` and `aspect-extreme` (default).
+- **LN37** `--compare` on a stored tab: Refused as a usage error (exit 2): only a graph source has variants (default).
+- **LN38** Shape of `--json`: The findings array, pretty-printed; with `--compare` the rows array (default).
+- **LN39** What a theme paints where it leaves a colour to the element, and what counts as bound: The element type's own
+  default on either surface; a colour stored by name (a marker colour) is a binding, so only hex values are judged
+  (default).
+- **LN40** A ref that is an edit-operations keyword (`back`, `frame`) in a fix: Printed as the views print it; such an
+  id is reached as `id:"…"` (the engine never mints keywords as ids) (default).

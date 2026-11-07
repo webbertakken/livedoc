@@ -1,4 +1,4 @@
-// Test support for the Drive mirror engine (docs/specs/022-drive-mirror/blueprints/drive-mirror.md,
+// Test support for the Drive mirror engine (docs/specs/022-drive-mirror/drive-mirror.md,
 // "Testing"): an in-memory LiveDoc behind LivedocPort that keeps the
 // api's own rules (the Trash, folder deletion moving contents up, mirror rows
 // removed with their document or folder, the lease), and a harness wiring

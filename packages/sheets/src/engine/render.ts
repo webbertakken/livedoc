@@ -1,4 +1,4 @@
-// A sheet's top-left window as plain data (blueprint sheet-element.md "Static render"): what images, thumbnails,
+// A sheet's top-left window as plain data: what images, thumbnails,
 // PDFs and api or MCP renders draw, with no DOM. Only the cells inside the window are worked out.
 import { columnLetters } from '../address';
 import { colWidth, layoutIndex, posRangeOf, rowHeight } from '../layout';

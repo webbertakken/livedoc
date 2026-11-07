@@ -1,5 +1,5 @@
 // Google Drive mirror rows (docs/specs/022-drive-mirror/drive-mirror.md, "Data";
-// blueprint "Data and persistence"). Every statement is scoped to one owner,
+//). Every statement is scoped to one owner,
 // the verified account id the route resolved.
 
 import {

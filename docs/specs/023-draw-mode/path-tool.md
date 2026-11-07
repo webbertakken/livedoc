@@ -201,3 +201,44 @@ corner and handle can be adjusted, by mouse, pen, finger and keyboard.
 - Pressure, and a pen-pressure-aware Path tool.
 - The Path tool on diagram tabs.
 - Partial erasing of paths.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **P1** Whether a path takes a typed label: No: typing on a selected path never opens a label; Enter and double-click
+  open edit mode instead (default).
+- **P2** Handle lengths when a corner turns smooth: Catmull-Rom's: `(next − prev) / 6` either side, equal (mirrored); an
+  open end, a third of the way to its one neighbour (default).
+- **P3** A click on the first node that would close an invalid path: Ignored (the draft stays); a drag there, which adds
+  handles, closes it (default).
+- **P4** Continuing a rotated path: Its rotation is baked into the nodes; the continued path is unrotated and looks the
+  same (default).
+- **P5** Enter with fewer than two nodes: Cancels the draft, as Escape does (default).
+- **P6** Which event a continuation reports: `Element·Added·Path`, as any committed path (default).
+- **P7** How to reach a node from the keyboard in edit mode: Tab / Shift+Tab select the next / previous node (Figma)
+  (default).
+- **P8** Cmd/Ctrl+A in edit mode: Selects every node (Figma) (default).
+- **P9** Delete in edit mode with no node selected: Nothing happens (Figma); the path is deleted outside edit mode
+  (default).
+- **P10** Undo steps for arrow-key nudges: One per press (default).
+- **P11** Whether "Next path" offers a fill: Yes: the stand-in is closed, so Background shows; it applies to paths that
+  close (default).
+- **P12** Click versus drag, and a double-click: A drag starts at 3 screen px; a double press is two presses on the same
+  node within 500 ms (default).
+- **P13** How nodes and handles look: 4 px nodes (a corner a square, a smooth node a circle: the spec), 3.5 px handle
+  dots on a 1 px line, brand-coloured with a board rim (default).
+- **P14** Limits and numeric tolerances: 5 000 nodes; coordinates up to 1e6; nearest point by 24 samples and 12
+  halvings; a bend's `t` clamped to 0.05 to 0.95 (default).
+- **P15** What a click outside the path does in edit mode: Leaves edit mode and deselects the path (Figma) (default).
+- **P16** Whether undo and redo leave edit mode: They stay in it (Figma): the edit mode reopens once the undo has run,
+  unless the step took the path away (default).
+- **P17** What the toolbar's Close path does without both ends selected: Closes the path anyway, joining its two ends; J
+  keeps asking for both ends selected (default).
+- **P18** What a click on a placed node other than the last does while drawing: Nothing (a drag moves it): a node is
+  never placed on top of a node (default).
+- **P19** How a just-finished path can be "edited at once": It lands selected, the Path tool still in hand: Edit points
+  and Enter open it; the next path's first node deselects it (default).
+- **P20** How the keyboard reaches the edit toolbar: Tab past the last node moves on into the toolbar, whose buttons
+  keep Tab, Enter and Space; Escape still leaves (default).

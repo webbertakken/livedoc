@@ -1,4 +1,4 @@
-// Values and errors (docs/specs/029-sheets/formulas.md "Values", "Errors"; blueprint "Values and coercion").
+// Values and errors (docs/specs/029-sheets/formulas.md "Values", "Errors").
 import { parsePlainNumber } from '../input';
 
 export type ErrorCode =

@@ -1,5 +1,5 @@
-// The workbench page's address (docs/specs/013-workspace/workbench-embeds.md "The handoff", blueprint
-// "The workbench page" step 1, "The workspace frame"): `/embed/workbench?d=<documentId>#ticket=<ticket>` for the
+// The workbench page's address (docs/specs/013-workspace/workbench-embeds.md "The handoff", "The workspace
+// frame"): `/embed/workbench?d=<documentId>#ticket=<ticket>` for the
 // document scope, `/embed/workbench/explorer[/folder/<id>]#ticket=<ticket>` for the workspace scope. The ticket is
 // read from the fragment and the fragment cleared before any request, so it never outlives the page load in the
 // address bar, the history or a reload. The page the address names is the scope its session must carry.

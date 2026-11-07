@@ -106,7 +106,7 @@ vi.mock('../thumbnail', () => ({ getDocumentThumbnailSvg, getDocumentTabImageSvg
 // The share password (docs/specs/013-workspace/share-password.md): met unless a case says otherwise.
 const { sharePasswordOk } = vi.hoisted(() => ({ sharePasswordOk: vi.fn(async () => true) }));
 vi.mock('../auth/share-access', () => ({ sharePasswordOk }));
-// A create's content is its room's (docs/specs/006-document/blueprints/document-storage.md "Routing"): these cases
+// A create's content is its room's (docs/specs/006-document/document-storage.md): these cases
 // pin what the worker hands it and the D1 row it writes after.
 const { createDocumentContent } = vi.hoisted(() => ({ createDocumentContent: vi.fn() }));
 vi.mock('../document-room/document-create', () => ({ createDocumentContent }));

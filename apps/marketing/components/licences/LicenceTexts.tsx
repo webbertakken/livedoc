@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 type LicenceTextRef = { label: string; hash: string; lines: number };
 
 // A text box's height, fixed from its line count before anything loads, so
-// loading, failing or finishing never moves the page (blueprint "Web Experience").
+// loading, failing or finishing never moves the page.
 const textBoxHeight = (lines: number) =>
   `calc(${Math.min(Math.max(lines, 1), TEXT_BOX_MAX_LINES) * TEXT_BOX_LINE_HEIGHT_REM}rem + 1.5rem + 2px)`;
 

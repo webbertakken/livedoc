@@ -739,3 +739,34 @@ the map being grown, and only while that map is still exactly as the layout
 left it; a hand-arranged map is never re-flowed by a keystroke. Arbitrary
 diagrams keep the radial / tree re-layouts in Auto Layout
 ([Layout cleanup](../008-canvas/layout-cleanup.md)).
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D26** Downward child gap: Free placement: `parent.y + height + MIND_CHILD_GAP_Y` (50, `MIND_SIBLING_GAP_Y + MIND_CHILD_GAP_X / 2`);
+  the tidy downward layout uses the same gap (default).
+- **D27** Balanced: which side first: Root: odd child count goes left (first child right); deeper: side of
+  `cos(outward)` (default).
+- **D28** Bubble fan: Free placement: `BUBBLE_STEP` 50°, order 0, +1, -1, +2, ...; radius = half-diagonals + 64; a slot
+  on a sibling gives way downward (default).
+- **D29** Non-mind elements in the way: Ignored: growth only avoids and moves mind nodes (default).
+- **D30** A new root's flow and x: No `mindFlow` (tree); `x` of the node Enter was pressed on (default).
+- **D31** Cyclic or dangling `mindParentId`: Iterative walks with a seen-set; a dangling pointer makes a root (default).
+- **D32** Tab / Enter with several selected: Not growth; single selection only (default).
+- **D133** Size of a root's first branch (no level yet): Element defaults capped at the root: `min(250, root.width)` ×
+  `min(80, root.height)` (default).
+- **D134** Which sibling / cousin a new node copies: The sibling Enter was pressed on, else the last child; else the
+  first node at that depth, breadth-first (default).
+- **D135** Which connector a new one copies: The first child's connector found (either direction), else the parent's own
+  connector in (default).
+- **D136** Balanced "side with less on it": Less total node height among the root's children on that side; a tie goes
+  right (default).
+- **D137** Tidy bubble ring radius: `max(r[d-1] + inner/2 + outer/2 + 64, Σ(max(w, h) + 18) / 2π)`, footprint `max(w, h)`
+  (default).
+- **D138** Non-text keys while a handoff captures: Swallowed (arrows, Delete, Home ...); Cmd / Ctrl / Alt and IME
+  composition pass through (default).
+- **D139** How far a grown node is revealed: `scrollIntoView` with a 300 screen-px side margin
+  (`GROWTH_REVEAL_SIDE_MARGIN`) (default).
+- **D140** Sibling order when positions tie: Document order (default).

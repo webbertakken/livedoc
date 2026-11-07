@@ -28,7 +28,7 @@ import { mintChangesetId } from './changeset-id';
 import { agentKeyFor, changesetRoomOp } from './room-op';
 import type { StoredTab } from './stored-tab';
 
-// One changeset's write (docs/specs/024-agents/blueprints/agent-changesets.md "The pipeline" steps
+// One changeset's write (docs/specs/024-agents/agent-changesets.md steps
 // 7 to 10), shared by a submit and a revert: the tab at the revision it was read, the record and
 // its three parts in ONE batch (the revision trigger aborts all of it when the tab moved), then the
 // relay to the document's room, which never fails the write.

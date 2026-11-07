@@ -1,4 +1,4 @@
-// The classes Home's parts share (docs/specs/013-workspace/blueprints/explorer-home-view.md
+// The classes Home's parts share (docs/specs/013-workspace/explorer-home.md
 // "Presentation and UX"), so the sections read as one page.
 
 /** A section's heading row: the title, its quiet link at the end, and the hairline rule under it

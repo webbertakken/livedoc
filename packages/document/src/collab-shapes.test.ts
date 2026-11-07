@@ -190,7 +190,7 @@ describe('validation bounds', () => {
     expect(isValidElement(withFields({ ideaCards: ['a real idea'] }))).toBe(true);
   });
 
-  // docs/specs/012-collaboration/blueprints/idea-box-race.md: ids are bounded, '' marks an id-less card.
+  // docs/specs/012-collaboration/idea-box.md: ids are bounded, '' marks an id-less card.
   it('bounds idea card ids', () => {
     expect(isValidElement(withFields({ ideaCards: ['a', 'b'], ideaCardIds: ['', 'c1'] }))).toBe(
       true,

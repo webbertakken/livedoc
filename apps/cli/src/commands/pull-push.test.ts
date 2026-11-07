@@ -6,7 +6,7 @@ import { mirrorFileText } from '../link/mirror-file';
 import { parsePullFile, type PullFile } from '../sync/pull-file';
 import { fakeIo, NOW, TOKEN, type FakeIo, type Route } from '../testing/fake-io';
 
-// `pull` and `push` through the whole command (docs/specs/015-api/blueprints/cli.md "Pull and push", CLI27, CLI28,
+// `pull` and `push` through the whole command (docs/specs/015-api/cli.md, CLI27, CLI28,
 // E18 to E20), on a fake host whose tabs move on with each write.
 
 const DOC = 'aaaa1111-0000-4000-8000-000000000001';

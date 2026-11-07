@@ -1,5 +1,5 @@
 // Every word Home says (docs/specs/013-workspace/explorer-home.md "Jump Back In", "What Happened",
-// "States"; blueprint docs/specs/013-workspace/blueprints/explorer-home-view.md). Pure, so the
+// "States"; docs/specs/013-workspace/explorer-home.md). Pure, so the
 // sentences are tested once and every part of Home reads alike.
 
 import type {

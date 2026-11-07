@@ -46,7 +46,7 @@ type CanvasA11yDeps = {
   enabled: boolean;
   elements: Element[];
   // Read when a key is pressed and followed for announcements; never a render input, so the editor
-  // root does not render for a selection (docs/specs/008-canvas/blueprints/selection-store.md).
+  // root does not render for a selection (docs/specs/008-canvas/canvas-performance.md).
   selection: SelectionStore;
   editingId: string | null;
   selectElement: (id: string) => void;

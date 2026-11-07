@@ -1,4 +1,4 @@
-// The verbs the CLI handles itself (docs/specs/015-api/blueprints/cli.md CLI55): declared here so help and
+// The verbs the CLI handles itself (docs/specs/015-api/cli.md CLI55): declared here so help and
 // routing come from one catalogue; their handlers need Node and live in apps/cli.
 
 import { z } from 'zod';
@@ -181,7 +181,7 @@ const telemetryVerb = (on: boolean) =>
 export const telemetryOn = telemetryVerb(true);
 export const telemetryOff = telemetryVerb(false);
 
-// The room stream's verbs (blueprint "The room stream"): they hold a socket and a clock, so the CLI runs them.
+// The room stream's verbs: they hold a socket and a clock, so the CLI runs them.
 const streamOutput = z.object({ lines: z.array(z.string()), exit: z.number() });
 
 export const waitFor = defineVerb({
@@ -241,7 +241,7 @@ export const watch = defineVerb({
   json: () => undefined,
 });
 
-// One document to a file and back (blueprint "Pull and push"): they read and write files, so the CLI runs them.
+// One document to a file and back: they read and write files, so the CLI runs them.
 export const pull = defineVerb({
   id: 'pull',
   files: true,
@@ -294,7 +294,7 @@ export const push = defineVerb({
   },
 });
 
-// Every document to files, read-only, for backups and docs (blueprint "Pull and push", CLI29).
+// Every document to files, read-only, for backups and docs (CLI29).
 export const EXPORT_FORMATS = ['json', 'svg', 'png', 'mermaid', 'md'] as const;
 
 export const exportAll = defineVerb({
@@ -330,7 +330,7 @@ export const exportAll = defineVerb({
   },
 });
 
-// A picture of a tab or a graph file (blueprint "Previews"): the CLI rasterises, so it runs them.
+// A picture of a tab or a graph file: the CLI rasterises, so it runs them.
 const pictureFlags = {
   png: z.string().optional().describe('Write a PNG here'),
   svg: z.string().optional().describe('Write an SVG here'),

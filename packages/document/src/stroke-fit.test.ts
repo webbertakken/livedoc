@@ -77,7 +77,7 @@ describe('fitStrokeToLimit', () => {
     const out = fitStrokeToLimit(points);
     const ms = performance.now() - t0;
     expect(out.points.length).toBeLessThanOrEqual(MAX_FREEHAND_POINTS);
-    // Generous for a loaded CI machine; measured locally in the blueprint.
+    // Generous for a loaded CI machine; the fit runs far faster locally.
     expect(ms).toBeLessThan(1_000);
   });
 });

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { SCREENSHOT_QUALITY_STEPS, encodeToFit, fitWithin, restoreScreenshot } from './screenshot';
 
 // docs/specs/016-platform/bug-reports.md "The form": at most 1,600 px on the longer side and 1 MB, the quality
-// stepped down until it fits (blueprint D14).
+// stepped down until it fits (D14).
 
 describe('fitWithin', () => {
   it.each([

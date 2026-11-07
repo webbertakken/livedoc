@@ -1,6 +1,5 @@
 // The Google Drive row's words in Settings > Account > Cloud Sync
-// (docs/specs/022-drive-mirror/drive-mirror.md, "Connecting"; blueprint "Cloud Sync in
-// Settings"). Pure, so every state is tested.
+// (docs/specs/022-drive-mirror/drive-mirror.md, "Connecting"). Pure, so every state is tested.
 //
 // The row keeps one size within each phase and reserves nothing for another
 // phase (Layout stability, "reserve per phase, not per message"), so every

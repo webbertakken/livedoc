@@ -253,3 +253,44 @@ The package's `theme.css` declares the brand ramp as CSS variables inside a `@th
 ```
 
 Slate, success / warning / error utilities live on Tailwind's own defaults — only the `brand` ramp is custom.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D9** Hover on a solid fill that is not a control: Two constants: `SOLID_BRAND_DARK` (no hover) for badges and discs,
+  `SOLID_BRAND_DARK_CONTROL` for controls (default).
+- **D10** How the wordmark's sky reaches the span: Tailwind's own `sky-400` utility (`#38bdf8`), not a new token
+  (default).
+- **D11** Resize handle hover in dark: Fill and border hold; only the existing opacity lift (70 % to 100 %) signals
+  hover; no shadow (default).
+- **D12** Pill height once its line box is trimmed: Each padding-sized host is fixed at its previously rendered height,
+  probed in the real layout (14px template counts, 19px settings counts, 17px slide-deck count, 12px folder and 12.6px
+  group counts) (default).
+- **D13** Optical centring without `text-box` support: `translateY(0.1em)`, the measured cap-to-line-box offset of the
+  UI face (default).
+- **D14** What the contrast audit measures: Visible text nodes (non-blank, non-zero box, visible, cumulative opacity >
+  0, in viewport) (default).
+- **D15** What the audit cannot measure: Reported by reason, never failed: glyphs drawn under 6px (incidental text in a
+  picture: the minimap, thumbnails), art under a CSS filter, disabled controls, visually hidden text, text over an
+  image.
+  Gradients ARE measured, at their worst stop (default).
+- **D16** Large-text threshold: 24px, or 18.66px at weight 700 or more (WCAG's 18pt / 14pt bold at 96dpi) (default).
+- **D17** Arrow label on dark paper with a user stroke: Follows the stroke, as in light: the label is `#94a3b8` only for
+  an arrow with no stored colour (default).
+- **D18** Which screens the audit covers: Wizard steps 1 and 2, editor with a seeded diagram and its default panels,
+  Settings, Share, Join, Explorer (default).
+- **D19** A selected text element's ring offset in dark: `dark:ring-offset-transparent`, so the gap between ring and
+  glyphs shows the paper, not a white frame (default).
+- **D20** Deep shade of a non-participant colour: Darken in 5 % steps (`shade`) until white reads at 4.5:1; black as the
+  floor (default).
+- **D21** Which slate carries secondary text in dark: `slate-400` everywhere `dark:text-slate-500` stood; the
+  `dark:text-slate-600` tier stays for separators, chevrons and disabled states, mirroring light's `slate-300`
+  (default).
+- **D22** Surfaces painted by inline style: The token (`var(--color-slate-800)`), so a literal cannot drift from the
+  palette or dodge a theme tint (default).
+- **D23** How the audit reads a colour: Paint it into a 1x1 canvas and read the pixel: every CSS colour space lands in
+  sRGB bytes (default).
+- **D24** Hover on a static solid fill: None: badges, discs and pills use `SOLID_BRAND_DARK`; only controls hover (see
+  D9) (default).

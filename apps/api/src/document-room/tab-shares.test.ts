@@ -16,7 +16,7 @@ import { FLUSH_IDLE_MS, FLUSH_RETRY_MS } from './room-content';
 import { drainShares, isLaterWrite, SHARE_DRAIN_MAX, type ShareMessage } from './tab-shares';
 
 // Shared tabs between rooms (docs/specs/006-document/tab-document-many-to-many.md "Keeping the copies in step",
-// blueprint docs/specs/006-document/blueprints/document-storage.md "Shared tabs"): each holder keeps its own copy
+// docs/specs/006-document/document-storage.md): each holder keeps its own copy
 // under the same tab id, writes travel on the room's alarm, the later write wins everywhere, nothing echoes back.
 
 const T0 = NETWORK_T0;

@@ -121,7 +121,8 @@ Every surface that shows LiveDoc outside a page gets the mark in the size and fo
 - **Email:** the transparent mark beside the plain-text wordmark.
 - **Press:** the mark and the lockup (mark plus wordmark) as SVG in light, dark and mono, and as PNG.
 
-The files, their sizes and their paths are listed in the [brand media blueprint](./blueprints/brand-media.md).
+`pnpm icons:brand` (`apps/live/scripts/brand-icons/render.mjs`) writes every file, its size and its path from
+`packages/ui/src/brand-mark-geometry.ts`; `apps/marketing/lib/brand-icon.test.ts` keeps the committed files in step.
 
 ## Links
 

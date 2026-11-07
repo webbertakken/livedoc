@@ -1,4 +1,4 @@
-// The starters Start Planning offers (docs/specs/030-forms/forms.md "Starting a form", blueprint §7): a form, the
+// The starters Start Planning offers (docs/specs/030-forms/forms.md "Starting a form"): a form, the
 // card type its responses suit, and the fields its questions map to.
 import {
   READY_MADE_CARD_TYPES,

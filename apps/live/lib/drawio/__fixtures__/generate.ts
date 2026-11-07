@@ -1,5 +1,5 @@
 // Rebuilds the derived draw.io fixtures from the hand-written sources beside
-// this file (docs/specs/020-import-export/blueprints/drawio-import.md "Assets").
+// this file (docs/specs/020-import-export/drawio-import.md).
 // Deterministic: the same sources always produce byte-identical outputs.
 //
 //   node apps/live/lib/drawio/__fixtures__/generate.ts

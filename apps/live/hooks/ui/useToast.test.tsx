@@ -111,7 +111,7 @@ describe('toast.offer', () => {
   });
 });
 
-// The action toast (docs/specs/024-agents/blueprints/agent-changesets.md "Clients"): an info toast
+// The action toast (docs/specs/024-agents/agent-changesets.md): an info toast
 // with buttons, upserted in place by key, up for the longer answer time.
 describe('toast.action', () => {
   function Actions({ spec }: { spec: Parameters<ReturnType<typeof useToast>['action']>[0] }) {

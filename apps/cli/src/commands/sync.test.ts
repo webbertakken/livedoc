@@ -5,7 +5,7 @@ import { GENERATED_LINE_START } from '../link/mirror-tree';
 import { fakeIo, TOKEN, type FakeIo } from '../testing/fake-io';
 import { box, hostDoc, linkHost, type HostDoc, type LinkHost } from '../testing/link-host';
 
-// `sync` through the whole command (docs/specs/027-repositories/blueprints/repository-link.md "One sync pass",
+// `sync` through the whole command (docs/specs/027-repositories/repository-link.md,
 // "Actions", "Output lines"), on a fake host whose documents move on.
 
 const folders = [
@@ -652,7 +652,7 @@ describe('a dry run', () => {
 });
 
 // A pass judges the files its scan read; an edit saved while it runs (the api answering in between) is the person's.
-// The write or removal re-reads the file first and refuses when its bytes moved on (blueprint "One sync pass").
+// The write or removal re-reads the file first and refuses when its bytes moved on.
 describe('an edit saved while the pass runs', () => {
   // Edits `path` by hand at the first api request after the scan has read it.
   const editDuringPass = (io: FakeIo, path: string) => {

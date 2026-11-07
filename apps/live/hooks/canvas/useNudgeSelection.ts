@@ -40,7 +40,7 @@ import { track } from '@/lib/telemetry';
 
 type NudgeDeps = {
   isReadOnly: boolean;
-  // Read on each press (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read on each press (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   activeTab: Tab;
   // An event-storming board: up / down move a workshop note a whole lane

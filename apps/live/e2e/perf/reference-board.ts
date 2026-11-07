@@ -16,7 +16,7 @@ import {
   type ShapeKind,
 } from '@livedoc/document';
 
-// docs/specs/008-canvas/blueprints/DEFAULTS.md D65.
+// docs/specs/008-canvas/canvas-performance.md D65.
 export const REFERENCE_SEED = 1;
 export const REFERENCE_COUNT = 1000;
 // Four 1440 px screens wide, three 900 px screens high.

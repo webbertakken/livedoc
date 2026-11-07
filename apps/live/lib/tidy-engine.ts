@@ -1,4 +1,4 @@
-// The tidiers, loaded on demand (docs/specs/008-canvas/blueprints/layout-cleanup.md "Performance and limits").
+// The tidiers, loaded on demand (docs/specs/008-canvas/layout-cleanup.md).
 // The layouts, their router and the verdicts are only needed once someone runs a tidier from the command
 // palette, so they stay out of the editor's first load: the first press loads them.
 

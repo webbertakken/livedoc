@@ -36,7 +36,7 @@ type ShapeDrawingDeps = {
   editsBlocked: boolean;
   // The currently-selected element id, read at arm-time so a tap-to-drop
   // inherits its size (see beginDraw / commitDraw).
-  // Read when a draw begins (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when a draw begins (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   canvasTool: CanvasTool;
   setCanvasTool: (tool: CanvasTool) => void;

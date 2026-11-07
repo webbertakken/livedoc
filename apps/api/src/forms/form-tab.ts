@@ -1,4 +1,4 @@
-// A Form tab as the api reads it (docs/specs/030-forms/blueprints/forms.md §11): its form, the boards its destination
+// A Form tab as the api reads it (docs/specs/030-forms/forms.md §11): its form, the boards its destination
 // names, and the backdrop its form page draws on.
 import { tabKindOf } from '@livedoc/document';
 import {

@@ -1,5 +1,5 @@
 // Golden routes from draw.io itself, for the route port's tests
-// (docs/specs/020-import-export/blueprints/drawio-import.md "Testing").
+// (docs/specs/020-import-export/drawio-import.md).
 //
 // For every hand-written fixture page it writes, per edge, the points of the path draw.io desktop's
 // CLI draws: each page is exported to SVG with its edges made headless, square-cornered and coloured

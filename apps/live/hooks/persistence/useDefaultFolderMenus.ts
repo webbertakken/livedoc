@@ -16,7 +16,7 @@ import {
 import { usePlacementDefaults } from './usePlacementDefaults';
 
 // The "Use as Default for" submenu's data (docs/specs/013-workspace/default-folders.md "Use as
-// default for"; blueprint "Menus"): for a folder, an entry is checked when the folder holds that
+// default for"): for a folder, an entry is checked when the folder holds that
 // key; for My Documents, when the key has no working default. Undefined until the defaults load,
 // so a menu opened early shows no submenu rather than wrong checks.
 

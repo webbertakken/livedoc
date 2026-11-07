@@ -1,4 +1,4 @@
-// A Pages request read from the wire (docs/specs/024-agents/blueprints/pages-for-agents.md
+// A Pages request read from the wire (docs/specs/024-agents/pages-for-agents.md
 // "Interfaces and contracts"): strictly, so a misspelt field is refused by name rather than ignored.
 // Answers the request, or the refusal that says what was wrong and where.
 import {

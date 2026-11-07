@@ -163,3 +163,15 @@ An agent sees linked cards as ordinary cards (`list_items`) carrying their `link
 - Picking which board collects actions, or more than one Actions board. The first one collects.
 - Assigning from the card. Choosing an assignee needs the action's team picker and email toggle.
 - Offline Mode documents link the same way while the editor is open; nothing more is promised for them.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D50** How long the heal waits after a change: 600 ms (`LINKED_HEAL_DEBOUNCE_MS`): past a room op's round trip, so
+  the person who changed one side has written the other (default).
+- **D51** Which cards the Actions board shows on its face: Compact, with number, assignee, due, checklist and comments;
+  Completion and Due Soon widgets (default).
+- **D52** A card id for an action: `a` + the action id's id-safe characters, cut to 32 and padded to 6 (`linkedCardId`)
+  (default).

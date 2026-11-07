@@ -17,7 +17,7 @@ import {
   type Pt,
 } from './sketch';
 
-// docs/specs/008-canvas/finish.md "Sketch", blueprint docs/specs/008-canvas/blueprints/finish.md
+// docs/specs/008-canvas/finish.md "Sketch", docs/specs/008-canvas/finish.md
 const numbersOf = (d: string) => (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
 const pointsOf = (d: string): Pt[] => {
   const n = numbersOf(d);

@@ -1,4 +1,5 @@
-// The stack (docs/specs/009-elements/stack.md, blueprint stack.md): a container that lays out the elements whose centre
+// The stack (docs/specs/009-elements/stack.md, docs/specs/009-elements/stack.md): a container that lays out
+// the elements whose centre
 // it holds, in a row, a column or a grid, and hugs them. Settled at the editor's commit point and on read, like the
 // badges, so the stored positions are always the laid-out ones.
 

@@ -1,4 +1,4 @@
-// `graph lint` (docs/specs/024-agents/diagram-lint.md, docs/specs/015-api/blueprints/cli.md "Previews"): a graph or
+// `graph lint` (docs/specs/024-agents/diagram-lint.md, docs/specs/015-api/cli.md "Previews"): a graph or
 // Mermaid file laid out and linted locally, before anything is written; `--compare` lays it out in each variant and
 // prints one line of measures each. Nothing reaches the api.
 

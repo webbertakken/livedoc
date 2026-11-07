@@ -1,6 +1,6 @@
 name: CLI publish
 
-# Publishes the CLI to npm as `@livedoc/cli` (command `livedoc`) with provenance (docs/specs/015-api/blueprints/cli.md
+# Publishes the CLI to npm as `@livedoc/cli` (command `livedoc`) with provenance (docs/specs/015-api/cli.md
 # CLI3), through npm trusted publishing: npm trusts this workflow by its OIDC identity, so no npm token is stored
 # anywhere. Runs when apps/cli/package.json changes on main (a version bump) and by hand; a version already on npm is
 # skipped, so a change that keeps the version publishes nothing.

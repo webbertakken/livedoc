@@ -4,7 +4,8 @@ import { __setOfflineBackend } from '../offline/offline-store';
 import { memBackend } from '../offline/offline-test-utils';
 import { writeItemComment } from './items';
 
-// A card's comment writes against the api (docs/specs/026-plan/items.md "Comments", blueprint item-store.md
+// A card's comment writes against the api (docs/specs/026-plan/items.md "Comments",
+// docs/specs/026-plan/items.md
 // "Comments"): the path and method for each change, a 204 for a resolve that changed nothing, and refusals.
 
 const scope = { ownerId: 'owner-me', documentId: 'doc-cloud', shareCode: null, tabId: 't1' };

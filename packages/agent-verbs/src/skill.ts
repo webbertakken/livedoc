@@ -5,7 +5,7 @@ import { GUIDE_TOPICS, GUIDE_TOPIC_NAMES } from './guides';
 
 export const SKILL_NAME = 'livedoc';
 
-// Token budgets (blueprint "Constants and configuration", CLI49): the frontmatter every agent pays for at start, the
+// Token budgets (CLI49): the frontmatter every agent pays for at start, the
 // body it pays for once it opens the skill.
 export const SKILL_FRONTMATTER_MAX_TOKENS = 80;
 export const SKILL_BODY_MAX_TOKENS = 1500;

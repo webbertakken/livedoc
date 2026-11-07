@@ -3,7 +3,7 @@ import type { OverviewView } from '@livedoc/api-schema';
 import type { RemoteFact } from './remote';
 import { recordedStateOf, type RecordedDocument } from './recorded-state';
 
-// States without mirror files (docs/specs/027-repositories/blueprints/repository-link.md "States without mirror
+// States without mirror files (docs/specs/027-repositories/repository-link.md "States without mirror
 // files"): from what the local sync state recorded at the document's last sync here. One row per state.
 
 const facts = (id: string, rev: number) => ({

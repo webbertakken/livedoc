@@ -1,5 +1,5 @@
 // A create's content, stored by the document's room before the worker writes the document's D1 row
-// (docs/specs/006-document/blueprints/document-storage.md "Routing", D11): the document row with its dates, slide
+// (docs/specs/006-document/document-storage.md, D11): the document row with its dates, slide
 // deck and type catalogue, the seeded tabs, and on a genuine create the seed items and sheets. Everything is
 // validated by the worker first; what the stores themselves refuse (a full item store, a sheet over its caps, a tab
 // over the row cap) comes back as the refusal the request answers.

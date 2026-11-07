@@ -1,5 +1,5 @@
 // A Participant's content and answers, written by the room (docs/specs/013-workspace/share-roles.md "Integrity";
-// blueprint "Behaviour and state"). A Participant never saves a whole tab: the room applies each element op it
+//). A Participant never saves a whole tab: the room applies each element op it
 // sends to the STORED tab through the participant content rule, and folds its dots, responses and ideas from the
 // room's ledger, then compare-and-swaps the row.
 //

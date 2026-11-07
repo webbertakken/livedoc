@@ -1,4 +1,4 @@
-// Running outbound ops against Drive (docs/specs/022-drive-mirror/blueprints/drive-mirror.md,
+// Running outbound ops against Drive (docs/specs/022-drive-mirror/drive-mirror.md,
 // "Outbound"). Each write records the Drive state Google returns, so the
 // change it causes is read back as an echo. A rate limit stops the run; any
 // other failure of one op is logged and the rest carry on.

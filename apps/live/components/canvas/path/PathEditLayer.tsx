@@ -21,8 +21,8 @@ export type PathEditView = {
 // How far a snap guide runs past the path's nodes, in screen px.
 const GUIDE_OVERHANG_PX = 24;
 
-// A path's edit mode on the canvas (docs/specs/023-draw-mode/path-tool.md "Editing"; blueprint
-// path-tool "Rendering"): every node, the handles of the selected nodes and their neighbours' facing
+// A path's edit mode on the canvas (docs/specs/023-draw-mode/path-tool.md "Editing"): every node, the handles
+// of the selected nodes and their neighbours' facing
 // sides, the snap guides and the node box, drawn in the transformed layer and turned with the path.
 // It takes no pointer: presses are hit-tested by usePathEditGesture.
 export function PathEditLayer({

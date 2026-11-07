@@ -1,4 +1,4 @@
-// The editor's code, fetched once and kept (docs/specs/013-workspace/blueprints/new-document-menu.md "In the
+// The editor's code, fetched once and kept (docs/specs/013-workspace/new-document-menu.md "In the
 // Explorer's place"): /new and the Explorer fetch it ahead of the moment they hand a document to it, and the Explorer
 // renders the loaded component directly, so opening never waits on a lazy component suspending.
 import type { ComponentType } from 'react';

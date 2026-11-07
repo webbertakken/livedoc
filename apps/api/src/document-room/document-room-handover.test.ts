@@ -6,7 +6,7 @@ import { LEGACY_HANDOVER_KEY } from './legacy-handover';
 import { RoomIdMismatchError } from './room-content';
 
 // The first request a SQLite room answers takes over its legacy room's state
-// (docs/specs/006-document/blueprints/document-storage-move.md "Room state handover").
+// (docs/specs/006-document/document-storage-move.md).
 
 function makeState() {
   const store = new Map<string, unknown>();

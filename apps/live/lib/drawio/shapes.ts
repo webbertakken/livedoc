@@ -1,5 +1,5 @@
 // What a draw.io vertex becomes (docs/specs/020-import-export/drawio-import.md
-// "Vertices: shapes", blueprint step 9). One table of named shapes, the
+// "Vertices: shapes"). One table of named shapes, the
 // stencil lookups, and the container kinds; everything else is unmatched and
 // becomes a labelled box.
 
@@ -198,7 +198,7 @@ const FLIP: Record<string, string> = { east: 'west', west: 'east', north: 'south
 
 type ShapeTurn = { rotation: number; swap: boolean; approximated: boolean };
 
-/** How a shape's draw.io `direction` / flips carry over (blueprint step 9). */
+/** How a shape's draw.io `direction` / flips carry over (). */
 export function shapeTurn(cell: DrawioCell, shape: ShapeKind): ShapeTurn {
   const direction = cell.style.str('direction') ?? 'east';
   if (shape === 'triangle') {

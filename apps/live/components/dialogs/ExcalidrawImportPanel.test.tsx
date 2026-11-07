@@ -9,7 +9,7 @@ import { EXCALIDRAW_FILE_ACCEPT, ExcalidrawImportPanel } from './ExcalidrawImpor
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.spyOn(console, 'info').mockImplementation(() => {});
 
-// docs/specs/020-import-export/blueprints/excalidraw-import.md "Explorer entry and dialog".
+// docs/specs/020-import-export/excalidraw-import-export.md.
 const saved = (name: string) =>
   new File([excalidrawText([excalidrawBuilder().rectangle()], { type: 'excalidraw' })], name);
 

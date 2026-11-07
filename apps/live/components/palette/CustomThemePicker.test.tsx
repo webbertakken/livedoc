@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // The theme list (docs/specs/011-theme/canvas-and-theme-dialog.md "Colours panel") is one flat grid of every
 // theme; its "New Theme" card is the builder's door (docs/specs/011-theme/custom-themes.md). A workbench writes no
-// themes (docs/specs/013-workspace/blueprints/workbench-embeds.md, Surface table), so it offers neither New nor Copy.
+// themes (docs/specs/013-workspace/workbench-embeds.md, Surface table), so it offers neither New nor Copy.
 
 // jsdom has no ResizeObserver; the browser's animated height measures itself with one.
 globalThis.ResizeObserver ??= class {

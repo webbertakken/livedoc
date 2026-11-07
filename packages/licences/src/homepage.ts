@@ -34,7 +34,7 @@ function fromRepository(repository: unknown): string | undefined {
   );
 }
 
-// A work's "Source" link on the page (blueprint D8): its homepage, else its
+// A work's "Source" link on the page (D8): its homepage, else its
 // repository, and only when that resolves to an https URL.
 export function homepageFromManifest(manifest: Manifest): string | undefined {
   const homepage = typeof manifest.homepage === 'string' ? https(manifest.homepage) : undefined;

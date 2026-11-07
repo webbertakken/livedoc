@@ -1,5 +1,5 @@
-// A Sheet element in an export, thumbnail or api image (docs/specs/029-sheets/sheet.md "Exports and images"; blueprint
-// sheet-element.md "Static render"): its header, column letters and row numbers, and the cells of the top-left
+// A Sheet element in an export, thumbnail or api image (docs/specs/029-sheets/sheet.md "Exports and images"):
+// its header, column letters and row numbers, and the cells of the top-left
 // window with their formats, from a render model the caller worked out with the sheets engine. The document
 // package never imports the engine: the model's shape is restated here, structurally.
 import type { BoxedElement } from './index';

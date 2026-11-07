@@ -1,5 +1,5 @@
 /* The homepage's every-kind cycle (docs/specs/004-interface-design/brand-mark.md "Every kind"; the numbers are in
-   docs/specs/004-interface-design/blueprints/brand-motion.md "Every kind"). A content stylesheet: one 6400ms cycle,
+   docs/specs/004-interface-design/brand-mark.md). A content stylesheet: one 6400ms cycle,
    each kind shown for a quarter, entering from below and leaving upwards; its name crossfades beneath; the page
    lifts a little as each kind arrives. Paused while off screen (`data-paused`). */
 

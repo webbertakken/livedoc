@@ -1,6 +1,6 @@
 // agent_changesets and agent_changeset_parts (migration 0067): one row per changeset, its element
 // ops, inverse and result lines beside it, one row per part
-// (docs/specs/024-agents/blueprints/agent-changesets.md "Data and persistence").
+// (docs/specs/024-agents/agent-changesets.md).
 
 import type { ElementOp } from '@livedoc/document';
 import { CHANGESET_MERGE_PAGE, type ChangesetCounts } from '@livedoc/api-schema';

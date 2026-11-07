@@ -1,5 +1,5 @@
 // The engine's cost grows with the tab and the changeset, not faster
-// (docs/specs/024-agents/blueprints/edit-operations.md "Performance and limits"). Timed as growth, not as
+// (docs/specs/024-agents/edit-operations.md). Timed as growth, not as
 // a ceiling: an absolute time depends on the machine and on coverage instrumentation, a ratio does not.
 // Timed in CPU time (cpuMsOf), not wall-clock: under turbo's parallel suites a wall-clock run also
 // counts the time spent waiting for a core, which pushed the ratio past its ceiling.

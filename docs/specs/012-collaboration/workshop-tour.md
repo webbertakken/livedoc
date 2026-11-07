@@ -91,3 +91,13 @@ The Plan tour's funnel, with its own tokens:
 
 [Power user mode](../007-editor/power-user-mode.md) marks the Workshop tour seen alongside the Diagram and Plan
 tours.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **FT1** When to decide the Share step is out: When the tour starts, by whether the actions group's Share button is on
+  screen (default).
+- **FT2** The help card's hue: `#ea580c`, a step from the Workshop control's `#c2410c`, as the Plan tour's is to Plan
+  (default).

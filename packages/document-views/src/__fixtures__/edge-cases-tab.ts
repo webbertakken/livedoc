@@ -1,4 +1,4 @@
-// The edge cases of docs/specs/024-agents/blueprints/document-views.md "Errors and edge cases" (E2 to
+// The edge cases of docs/specs/024-agents/document-views.md (E2 to
 // E28) composed in one tab, with every kind that has a state attribute. Unknown kinds make it a tab
 // `isValidTab` refuses, which is the point: views never drop what they do not know.
 import {

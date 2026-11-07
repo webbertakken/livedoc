@@ -1,5 +1,5 @@
 // Real draw.io files through the importer, as the Explorer reads them
-// (docs/specs/020-import-export/blueprints/drawio-import.md "Testing").
+// (docs/specs/020-import-export/drawio-import.md).
 //
 // A script, not a test: real diagrams are personal content and never fixtures. It reads every file
 // under the paths it is given (files or folders) and prints only aggregates (the kind found, pages,

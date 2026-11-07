@@ -11,7 +11,7 @@ import {
   type WorkbenchPhase,
 } from './workbench-machine';
 
-// The page machine (docs/specs/013-workspace/blueprints/workbench-embeds.md "The workbench page"):
+// The page machine (docs/specs/013-workspace/workbench-embeds.md):
 // every transition of the phase table.
 
 const TICKET = 'Ab3_-xYz0123456789abcd';

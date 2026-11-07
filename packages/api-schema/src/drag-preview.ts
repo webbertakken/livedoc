@@ -4,7 +4,7 @@
 
 import type { ArrowElement, Endpoint } from '@livedoc/document';
 
-// docs/specs/008-canvas/blueprints/DEFAULTS.md D71: past this, a gesture sends no patches and
+// docs/specs/008-canvas/drag-preview.md D71: past this, a gesture sends no patches and
 // collaborators see it on release.
 export const DRAG_PREVIEW_MAX_ELEMENTS = 200;
 

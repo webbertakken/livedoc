@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-// docs/specs/004-interface-design/motion.md "View Transitions" and its blueprint: the document root takes no part,
+// docs/specs/004-interface-design/motion.md "View Transitions": the document root takes no part,
 // each surface's classes live in its own stylesheet, and nothing starts a View Transition but React.
 
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));

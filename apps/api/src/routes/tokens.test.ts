@@ -237,7 +237,7 @@ describe('POST /api/tokens — the name the caller asks for', () => {
   });
 });
 
-describe('/api/tokens/current (docs/specs/015-api/blueprints/cli.md "Token self-service")', () => {
+describe('/api/tokens/current (docs/specs/015-api/cli.md)', () => {
   const live = {
     id: 'tok_1',
     name: 'LiveDoc CLI',

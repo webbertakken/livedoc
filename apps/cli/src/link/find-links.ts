@@ -1,4 +1,4 @@
-// Finding the link (docs/specs/027-repositories/blueprints/repository-link.md "Finding the link"): the nearest
+// Finding the link (docs/specs/027-repositories/repository-link.md): the nearest
 // livedoc.toml at or above the working directory, or with --all every one below it, walked depth first in
 // byte order of names, skipping `.git`, `node_modules` and dot-directories, never following a symbolic link (RL4).
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { actionLine, totalsLine, type LineContext } from './sync-lines';
 
-// What a pass prints (docs/specs/027-repositories/blueprints/repository-link.md "Output lines"): final copy, paths
+// What a pass prints (docs/specs/027-repositories/repository-link.md): final copy, paths
 // relative to the working directory.
 
 const lc = (over: Partial<LineContext> = {}): LineContext => ({

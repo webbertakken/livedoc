@@ -1,4 +1,4 @@
-// Fields onto an element (docs/specs/024-agents/blueprints/edit-operations.md "Fields and values"):
+// Fields onto an element (docs/specs/024-agents/edit-operations.md):
 // the spec's aliases (`label note shape fill text line`) or any stored field of the element's type.
 // `null` unsets. Identity, live fields and prototype keys are refused. A shape's long label is capped
 // into its note once every field is written, so it moves into the note the element ends with.

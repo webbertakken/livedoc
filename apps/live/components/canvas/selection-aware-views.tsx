@@ -1,6 +1,6 @@
 'use client';
 
-// The element layer's per-element selection readers (docs/specs/008-canvas/blueprints/selection-store.md):
+// The element layer's per-element selection readers (docs/specs/008-canvas/canvas-performance.md):
 // each element view reads its own selected state from the store, so a selection change re-renders
 // the views whose state flipped and not the layer that lays them out. Each wrapper is memoised as the
 // view it wraps, so a layer render costs what it did.

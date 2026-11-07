@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ELEMENT_FIELD_NAMES, isElementFieldName } from './element-fields';
 import { ELEMENT_TYPES } from './validate';
 
-// docs/specs/024-agents/blueprints/edit-operations.md "Fields and values": a `set` names a stored
+// docs/specs/024-agents/edit-operations.md: a `set` names a stored
 // field of the element's type. The compile-time check in element-fields.ts keeps every list
 // exhaustive; these pin the lookups the engine makes.
 describe('ELEMENT_FIELD_NAMES', () => {

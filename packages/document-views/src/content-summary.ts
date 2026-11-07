@@ -1,4 +1,4 @@
-// What a content kind holds, briefly (docs/specs/024-agents/blueprints/document-views.md "Content
+// What a content kind holds, briefly (docs/specs/024-agents/document-views.md "Content
 // summaries", VW18 to VW21).
 import { ENTITY_KEY_LABELS, type Element } from '@livedoc/document';
 import { ENTITY_FIELDS_SHOWN } from './constants';

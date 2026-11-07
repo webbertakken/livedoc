@@ -377,3 +377,18 @@ Themes, ShapeLibraries, Trash), never a name or id
 The help centre's [Explorer page](../../../apps/help/app/explorer/explorer-page/page.mdx) article describes the groups;
 [My Documents and Folders](../../../apps/help/app/explorer/personal-space/page.mdx) and
 [Team Spaces](../../../apps/help/app/explorer/team-spaces/page.mdx) describe the two kinds of space.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D59** Where expansion state lives: The shared session-local `expanded` set, so the desktop sidebar and the drawer
+  agree (default).
+- **D60** Home's icon: Lucide `house` (default).
+- **D61** My Documents' icon: Lucide `folder-root`: a root folder, as the spec names the spaces (default).
+- **D62** This Browser's icon: Lucide `app-window`: a browser window (default).
+- **D63** Where the header search sits: Left of the account control; below `sm` its own row (D87) (default).
+- **D64** Tab stop when the current view has no row: The first row of the first group (default).
+- **D170** What "about 36 px" rows and the tile's tones are exactly: Retired: rows are small and bare again
+  (explorer-structure.md "Look") (default).

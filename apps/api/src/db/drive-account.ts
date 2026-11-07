@@ -1,6 +1,6 @@
 // Which Google account a Drive connection syncs with, and a pending switch to
 // another one (docs/specs/022-drive-mirror/drive-mirror.md, "Reconnecting with
-// another Google account"; blueprint "Account switch"). Every statement is
+// another Google account"). Every statement is
 // scoped to one owner.
 
 import type { Env } from '../types';

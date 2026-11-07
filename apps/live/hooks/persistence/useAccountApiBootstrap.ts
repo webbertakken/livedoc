@@ -39,7 +39,7 @@ type BootstrapResult = {
   accountDisplayName: string | null;
 };
 
-// The editor in a workbench (docs/specs/013-workspace/blueprints/workbench-embeds.md "The editor in a
+// The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md "The editor in a
 // workbench", I9) is the session's person, settled at once: no guest migration, no timeout, no token
 // provider here (WorkbenchAuthBridge registers the session's).
 function workbenchResult(session: WorkbenchSession): BootstrapResult {

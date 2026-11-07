@@ -1,5 +1,5 @@
-// New document in a workspace frame (docs/specs/013-workspace/workbench-embeds.md "What renders", blueprint "New
-// document in place", WB58): never the /new wizard. The wizard's href says where and what (`folder`, `team`,
+// New document in a workspace frame (docs/specs/013-workspace/workbench-embeds.md "What renders", WB58):
+// never the /new wizard. The wizard's href says where and what (`folder`, `team`,
 // `template`); the place the frame shows fills in where it says nothing, a folder view its folder and a team page its
 // team. The document is made as /new makes it (lib/new-document-content.ts) and opened in the frame.
 import { untitledNameForTemplate, type TemplateKind } from '@livedoc/templates';

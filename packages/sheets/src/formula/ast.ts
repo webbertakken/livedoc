@@ -1,4 +1,4 @@
-// The formula syntax tree (blueprint sheets-engine.md "Grammar"). A typed formula's references are positional
+// The formula syntax tree. A typed formula's references are positional
 // (`ref`); a stored template's are indexes into its StoredRef list (`stored`).
 import type { ErrorCode } from './values';
 

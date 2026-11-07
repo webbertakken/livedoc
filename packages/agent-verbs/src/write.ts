@@ -1,4 +1,4 @@
-// One changeset write (docs/specs/015-api/blueprints/cli.md "Writes"): the base from the read copies, the POST,
+// One changeset write (docs/specs/015-api/cli.md): the base from the read copies, the POST,
 // `--wait-held` retries, the refusals worded with their next step, warnings as notices, and a fresh read copy
 // after a write that rebased over nothing (CLI24, CLI25).
 

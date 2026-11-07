@@ -386,3 +386,13 @@ The three questions this draft opened with are answered, and the answers are in 
 
 1. **Duplicating a slide across tabs.** Duplicate copies a slide within its tab. Should there be a "copy this slide to another tab" that maps to equivalent elements, or is that a fantasy given elements are not equivalent across tabs?
 2. **A deleted tab's slides.** They are skipped at read time (above), so a deck can carry invisible slides that come back if the tab is restored by undo. Is silent-skip right, or should the panel show them struck through so you know they are there?
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **PM1** What counts as a step (counted from the slide asked for): A move of exactly one slide; a jump (list, Home,
+  End) is taken as given (default).
+- **PM2** What logs a refused fullscreen: `console.warn`, always shown ([Console
+  logging](../003-system-architecture/console-logging.md)) (default).

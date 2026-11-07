@@ -234,3 +234,16 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
 - The engine bounds its work: a formula reading more than 1,000,000 cells, or a recalculation of more than
   5,000,000 cell reads, stops with `#NUM!` in the cells it did not reach and says "This sheet is too large to
   recalculate at once".
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D1** How row and column ids are made: 6-character random base-36 ids, made by the client; a collision is refused
+  (default).
+- **D2** A write's byte size: 1 MB, so one D1 parameter stays well under its 2 MB value limit (default).
+- **D3** Largest array a formula may return: 100,000 values (default).
+- **D4** How the regex time limit is enforced: A work estimate (text length × pattern length) up to 10,000,000
+  (default).
+- **D14** Two-digit years: Below 70 are 20xx, else 19xx (default).

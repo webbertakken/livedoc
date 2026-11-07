@@ -1,6 +1,6 @@
-// Which document the Explorer shows in its own place (docs/specs/013-workspace/blueprints/new-document-menu.md "In the
+// Which document the Explorer shows in its own place (docs/specs/013-workspace/new-document-menu.md "In the
 // Explorer's place"): set by startNewDocument as it moves the address to /document/<id>, cleared once the editor may
-// go. One at a time: opening another replaces it. Beside it, the standby (blueprint "Standby"): the document the
+// go. One at a time: opening another replaces it. Beside it, the standby: the document the
 // editor is rendered for ahead, hidden, until a click opens it. Both change together, in one update, so the editor
 // built for the standby is the one that opens, never unmounted in between.
 import { startTransition, useEffect, useState } from 'react';
@@ -44,7 +44,7 @@ const subscribe = (listener: () => void) => {
 
 // Followed as a transition: the editor mounts, or the standby is revealed, at a non-urgent priority, outside the
 // click's own event. Its commit still mounts the editor's effects before the first frame: the measuring layout effects
-// set state, and React runs the passive effects ahead of the render that follows (blueprint "Instant open", D204).
+// set state, and React runs the passive effects ahead of the render that follows (D204).
 export function useInPlaceDocuments(): InPlaceDocuments {
   const [shown, setShown] = useState<InPlaceDocuments>(current);
   useEffect(() => {

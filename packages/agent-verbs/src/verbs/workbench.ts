@@ -1,4 +1,4 @@
-// The workbench verbs (docs/specs/013-workspace/blueprints/workbench-embeds.md "The CLI", "CLI verbs", "The CLI,
+// The workbench verbs (docs/specs/013-workspace/workbench-embeds.md, "The CLI,
 // workspace scope"): a single-use link that opens a document, or the person's whole workspace, live inside a
 // developer tool's frame, and pairing the token with that tool once, for one scope. `workbench pair` waits on the
 // person's browser, so the CLI runs it (CLI55).

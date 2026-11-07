@@ -18,7 +18,7 @@ import {
 } from '@livedoc/sheets';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 
-// data-validation.md "Drawing"; blueprint sheet-rules.md "Constants and configuration".
+// data-validation.md "Drawing".
 const CHECKBOX_PX = 14;
 const INVALID_MARK_PX = 6;
 // A chip's inset from the cell's left, its height's room above and below, and its arrow's room.

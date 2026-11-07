@@ -1,5 +1,5 @@
 // Answering a pending Google account switch (docs/specs/022-drive-mirror/drive-mirror.md,
-// "Reconnecting with another Google account"; blueprint "Account switch").
+// "Reconnecting with another Google account").
 // POST /api/drive/account-switch confirms, DELETE cancels. Each revokes the
 // grant it leaves behind, best effort; a pending account always differs from
 // the recorded one, so the revoked grant is never the one in use.

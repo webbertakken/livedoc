@@ -4,7 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import type { Participant } from '@/lib/identity';
 import { ParticipantAvatar } from './ParticipantAvatar';
 
-// The status line an agent sets (docs/specs/024-agents/blueprints/agent-presence.md "Presentation and UX",
+// The status line an agent sets (docs/specs/024-agents/agent-presence.md,
 // "Accessibility"), in the avatar's accessible name and its hover card.
 
 const webber: Participant = { id: 'me', name: 'Webber', color: '#3b82f6', status: 'online' };

@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { withStableEventProps } from './withStableEventProps';
 
-// docs/specs/008-canvas/blueprints/selection-store.md "The canvas boundary": an editor render with
+// docs/specs/008-canvas/canvas-performance.md: an editor render with
 // the same data and freshly built handlers re-renders nothing below the boundary.
 
 describe('withStableEventProps', () => {

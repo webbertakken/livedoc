@@ -1,4 +1,4 @@
-// Bare strokes fold into one counted line (docs/specs/024-agents/blueprints/document-views.md "Freehand
+// Bare strokes fold into one counted line (docs/specs/024-agents/document-views.md "Freehand
 // runs", VW56).
 import type { Element } from '@livedoc/document';
 import { fieldOf, flagField, textField, threadOf } from './fields';

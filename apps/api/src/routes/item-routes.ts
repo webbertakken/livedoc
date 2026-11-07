@@ -1,4 +1,4 @@
-// The item store's endpoints (docs/specs/026-plan/items.md, blueprint item-store.md "Interfaces and
+// The item store's endpoints (docs/specs/026-plan/items.md, docs/specs/026-plan/items.md "Interfaces and
 // contracts"): list, create, bulk create, patch (POST), many patches (item-patches-route.ts), a vote's tally (item-tally-route.ts), move and delete under
 // /api/documents/:id/items, and a card's comment writes (item-comment-routes.ts). People and agents use the
 // same doors. Every write applies the pure functions of @livedoc/items, lands guarded by the item's rev

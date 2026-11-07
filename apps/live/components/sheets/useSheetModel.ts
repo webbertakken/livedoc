@@ -1,6 +1,6 @@
 'use client';
 
-// One Sheet element's view of the sheet store (blueprint sheet-store.md "Editor slice"): the store of its document
+// One Sheet element's view of the sheet store: the store of its document
 // (attached to the room through the bridge once), its tab loaded, its sheet made when it was just placed or copied,
 // and the Plan cards handed to formulas that read them. Re-renders when the store moves on.
 import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';

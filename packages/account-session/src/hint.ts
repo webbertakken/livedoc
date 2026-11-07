@@ -1,5 +1,5 @@
 // The signed-in hint and the nudge between tabs (docs/specs/014-identity/auth-and-guest-access.md "Who is a guest,
-// before the session answers"; D24 in the identity blueprint's DEFAULTS.md).
+// before the session answers"; D24).
 //
 // The hint is a `localStorage` flag the auth bridge writes `1` whenever a session settles signed in and `0` whenever
 // it settles signed out. It only picks a default before the session answers (where a new document is saved); it

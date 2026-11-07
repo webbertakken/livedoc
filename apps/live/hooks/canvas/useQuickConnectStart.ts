@@ -15,7 +15,7 @@ export function useQuickConnectStart({
   readSelection,
   beginAnchorDrag,
 }: {
-  // Read when the press lands (docs/specs/008-canvas/blueprints/selection-store.md).
+  // Read when the press lands (docs/specs/008-canvas/canvas-performance.md).
   readSelection: () => Selection;
   beginAnchorDrag: EditorDragApi['beginAnchorDrag'];
 }) {

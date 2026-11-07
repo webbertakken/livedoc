@@ -7,7 +7,7 @@ import {
 import { run } from '../main';
 import { capabilities, fakeIo, NOW, TOKEN, type FakeIo } from '../testing/fake-io';
 
-// `workbench pair` (docs/specs/013-workspace/blueprints/workbench-embeds.md "The CLI", WB24, WB25, WB45): the
+// `workbench pair` (docs/specs/013-workspace/workbench-embeds.md, WB24, WB25, WB45): the
 // approval link first on stdout, the browser only on a terminal, then the wait, as `auth login --device` waits.
 
 const ORIGIN = 'https://127.0.0.1:5175';

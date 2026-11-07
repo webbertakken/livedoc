@@ -190,3 +190,31 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
 - A canvas or WebGL renderer: the DOM and SVG stay the rendering surface, for text, accessibility
   and the element views as they are.
 - Limits on board size: a board is never refused or truncated for being large.
+
+## Defaults
+
+Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
+The code cites each by its id.
+
+- **D62** When a wheel pan or zoom ends (wheels have no end event): `WHEEL_SETTLE_MS = 150` after the last wheel event
+  (default).
+- **D63** The spatial index's shape: A uniform grid of `ELEMENT_GRID_CELL = 256` canvas px cells (default).
+- **D64** How very large elements sit in the index: Spanning more than `ELEMENT_GRID_MAX_CELLS = 64` cells puts it on an
+  oversize list every query returns (default).
+- **D65** Which seed the reference board uses: `REFERENCE_SEED = 1`, a `mulberry32` PRNG (default).
+- **D66** What "no main-thread work" at rest means when measured: At most `IDLE_WORK_MS = 5` of main-thread task time
+  over the 2 s idle window (browser housekeeping) (default).
+- **D67** When the nightly run fires: `30 2 * * *` (02:30 UTC) (default).
+- **D68** When "interactive" starts and ends for opening a board: From the tab's GET response to the start of the first
+  500 ms with no long task and no long animation frame; median of five opens (default).
+- **D69** How "at most once every 250 ms" treats the first change after a pause: Leading edge: shown at once; later
+  changes in the window wait for one trailing redraw (default).
+- **D70** How a machine's speed is read for calibration: The fastest of five fresh pages' benchmark medians:
+  interference only ever slows a run (default).
+- **D80** How long the probe waits for opening to go quiet, and how often it looks: Every `OPEN_POLL_MS = 1000`, up to
+  `OPEN_SETTLE_TIMEOUT_MS = 60000` (default).
+- **D113** The sticky peel picture's resolution and how its sides stretch: `PEEL_SCALE = 4` picture px per CSS px; 64
+  side rows made at a 200 px note (`PEEL_REFERENCE_HEIGHT`) and stretched; the blur drawn to three deviations
+  (`PEEL_MARGIN = 6`) (default).
+- **D114** How often a touch pinch changes the view: At most once a frame (`requestAnimationFrame`), from the latest
+  fingers; a lift inside a frame lands on them (default).

@@ -94,7 +94,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.4,
     },
     // Third-party licences (docs/specs/002-project-scope/third-party-licences.md):
-    // a transparency page, regenerated every build (blueprint D13).
+    // a transparency page, regenerated every build (D13).
     {
       url: `${base}/about/licences`,
       lastModified: now,

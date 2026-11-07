@@ -42,7 +42,7 @@ export async function openExplorer(page: Page): Promise<void> {
   const caret = page.getByRole('button', { name: 'More new document choices' });
   await untilHydrated(caret);
   await page.waitForLoadState('networkidle');
-  // The face's blank made ready while the Explorer is idle (blueprint "Standby"): its editor, built and hidden.
+  // The face's blank made ready while the Explorer is idle: its editor, built and hidden.
   await expect(page.locator('[data-canvas-a11y-root]')).toBeAttached();
   await caret.hover();
 }

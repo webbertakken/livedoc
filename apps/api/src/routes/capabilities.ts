@@ -9,7 +9,7 @@ import type { RouteContext } from './context';
 
 const VERSION = /^\d+\.\d+\.\d+$/;
 
-// What the CLI learns about a host (docs/specs/015-api/blueprints/cli.md "Capabilities", CLI9 to CLI13): where
+// What the CLI learns about a host (docs/specs/015-api/cli.md, CLI9 to CLI13): where
 // the api answers, whether sign-in exists, the OAuth server when it is an https origin, the document format
 // stored, and the version floor when one is set.
 function cliCapabilities({ env, url }: RouteContext) {

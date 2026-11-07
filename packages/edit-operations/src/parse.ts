@@ -1,4 +1,4 @@
-// A changeset's operations as text (docs/specs/024-agents/blueprints/edit-operations.md "Line form"):
+// A changeset's operations as text (docs/specs/024-agents/edit-operations.md):
 // one operation a line, in the line form or, for a line starting with `{`, the JSON form. Blank
 // lines and lines starting with `#` are skipped and not counted. Every malformed line is reported, up
 // to EDIT_MAX_ERRORS, so a batch of typos is fixed in one round.

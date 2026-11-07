@@ -4,7 +4,7 @@ import { IMPORT_IMAGE_MAX_SOURCE_BYTES } from '../import-images/constants';
 import type { OpenverseImage } from './openverse';
 import { pickFailureMessage, storeSearchResult, type PickStore } from './pick';
 
-// docs/specs/009-elements/blueprints/image-search.md "storeSearchResult".
+// docs/specs/009-elements/image-search.md.
 
 const result: OpenverseImage = {
   id: 'abc',

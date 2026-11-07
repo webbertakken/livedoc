@@ -1,4 +1,4 @@
-// Bug reports in D1 (docs/specs/016-platform/bug-reports.md "Filing", blueprint "Data and persistence"): the reports
+// Bug reports in D1 (docs/specs/016-platform/bug-reports.md "Filing"): the reports
 // the Bug Tracker's board could not take, kept with the reason until the refile files them, and the 600 s report
 // window per visitor.
 import { parseBugReportContext, type BugReportFiling, type BugReporter } from '@livedoc/api-schema';

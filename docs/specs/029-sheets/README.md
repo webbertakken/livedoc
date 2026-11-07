@@ -11,4 +11,3 @@ document's sheet store, apart from the canvas.
 - ./conditional-formatting.md - when working on format rules: conditions and styles, colour scales, which rule draws a cell, the Conditional Formatting popover
 - ./formulas.md - when working on the formula language: values, number formats, references, operators, functions, arrays and spills, references to other sheets and to Plan cards, errors, recalculation
 - ./sheet-store.md - when working on the sheet store: what is stored, writes, rows and columns by id, access, live sync, undo, offline documents, copies, agents, limits
-- ./blueprints/README.md - when implementing a sheets spec from its blueprint

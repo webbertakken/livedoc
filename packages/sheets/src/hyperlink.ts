@@ -1,4 +1,5 @@
-// A HYPERLINK's target (docs/specs/029-sheets/formulas.md "Text"; blueprint sheets-engine.md): kept only when it is an
+// A HYPERLINK's target (docs/specs/029-sheets/formulas.md "Text"; docs/specs/029-sheets/formulas.md): kept
+// only when it is an
 // http, https or mailto address of a sane length, so a `javascript:` or `data:` target typed into a formula, or one
 // arriving in an imported CSV, can never be opened. Anything else draws the label as plain text.
 
