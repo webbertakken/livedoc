@@ -32,6 +32,7 @@ import {
   type Element,
 } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
+import { mindConnectionOnRelease } from './mind-connect-on-release';
 import { trackDuplicated } from '@/lib/element-telemetry';
 import { isTechIconId } from '@/lib/tech-icons';
 import { iconDropSide, type DragState } from '@/lib/canvas';
@@ -619,6 +620,13 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
       if (drag?.kind === 'arrow-endpoint' && !tapStill) {
         const arrowId = drag.arrowId;
         previewTick((els) => withRelationshipHeads(els, arrowId));
+        previewTick(
+          mindConnectionOnRelease(
+            depsRef.current.activeTab.elements,
+            arrowId,
+            drag.reposition === true,
+          ),
+        );
       }
       // The gesture's result, as the release logic below reads it, then written in one change before
       // anything else writes (docs/specs/008-canvas/drag-preview.md).
@@ -839,6 +847,13 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
       {
         const arrowId = drag.arrowId;
         previewTick((els) => withRelationshipHeads(els, arrowId));
+        previewTick(
+          mindConnectionOnRelease(
+            depsRef.current.activeTab.elements,
+            arrowId,
+            drag.reposition === true,
+          ),
+        );
       }
       commitPreview();
       // The endpoint already tracks the cursor (last pointermove); this

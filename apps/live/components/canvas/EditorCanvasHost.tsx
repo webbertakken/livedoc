@@ -335,6 +335,7 @@ export function EditorCanvasHost() {
     appendWebRowTo,
     setHeroCaptionLine,
     growMindNode,
+    addMindParent,
     flowchartActions,
     entityActions,
     mindOutline,
@@ -1222,6 +1223,7 @@ export function EditorCanvasHost() {
               onAppendWebRow={isReadOnly ? undefined : appendWebRowTo}
               onSetHeroCaptionLine={isReadOnly ? undefined : setHeroCaptionLine}
               onGrowMindNode={growMindNode}
+              onAddMindParent={isReadOnly ? undefined : addMindParent}
               flowchartActions={isReadOnly ? undefined : flowchartActions}
               entityActions={isReadOnly ? undefined : entityActions}
               canEditMindOutline={mindOutline.canEdit}

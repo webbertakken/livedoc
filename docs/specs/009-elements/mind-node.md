@@ -337,6 +337,40 @@ behind is never the intent, and re-dragging each of them would be the
 workaround.
 Resizing a node resizes only that node.
 
+## Add Parent
+
+A map is not always grown from the top: a heading turns up after its points were written, or a map needs a new root
+above the one it started from. **Add Parent**, on a selected node's toolbar after Add Child and Add Sibling, puts a new
+node **between the node and its parent** (`insertMindParent`, `packages/document/src/mind-connect.ts`):
+
+- The new node takes the node's place in the map, joined to the old parent by the connector that joined the node (its
+  look kept); the node hangs under the new one, joined by a connector in its siblings' look.
+- On a **root** the new node becomes the map's root, and the flow and spacing pass to it.
+- The new node looks like the node it goes above (the level it now holds), and is selected, so typing names it.
+- A tidy map is laid out again around it; in a hand-arranged map the new node stands where the node stood and the
+  node's branch steps out one level along the flow to make room.
+- One undo step. It is an **Editor's**, like the rest of restructuring a map; not on a locked node.
+
+## Connecting nodes
+
+The tree is the connectors you can see, so **drawing a connector between two mind nodes** (from an anchor, or moving
+one end of a connector onto another node) changes the tree (`connectMindNodes`):
+
+- The node connected **to** becomes a **child** of the node connected **from**, its whole branch with it; its old
+  connector to its old parent goes. A root connected to stops being a root (its flow and spacing go).
+- A node and its own **ancestor** cannot both be the other's parent, so connecting the two (its parent included, from
+  either end) **turns the hierarchy over** there: the lower node takes the upper one's place, joined to the upper
+  one's parent (or becoming the root, the flow and spacing passing to it), and the upper one hangs under it with the
+  rest of its own branch. Connecting a parent to its own child is how a child becomes the parent.
+- After a change, deleting a node takes only the branch that is under it now: an old parent that was turned under its
+  child no longer takes the child with it.
+- Moving a connector's end off a node it joined to its parent frees that node: it stands as a root of its own.
+- The drawn connector becomes the map's connector: dressed in its siblings' look (a curved line with no arrowheads when
+  there is none) and re-faced by the flow.
+- Maps that were tidy are laid out again; a hand-arranged map keeps its nodes where they are.
+- It lands with the connector in the same change (one undo step). A connector between a mind node and anything else
+  stays an ordinary arrow.
+
 ## Flows: the shape the map grows in
 
 The arrangement a keyboard-driven outline wants is a child to the right,

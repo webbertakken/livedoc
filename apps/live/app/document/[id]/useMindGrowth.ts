@@ -1,5 +1,6 @@
 import {
   applyMindMoves,
+  insertMindParent,
   isMindNode,
   isMindTreeTidy,
   mindChildren,
@@ -113,6 +114,28 @@ export function useMindGrowth(opts: GrowthHookOpts) {
     track('Element', 'Added', 'MindNode');
   };
 
+  // Add Parent (docs/specs/009-elements/mind-node.md "Add Parent"): a new node between this one and its parent, or
+  // above a root, looking like the node it goes above; selected, so typing names it.
+  const addMindParent = (id: string) => {
+    if (editsBlocked) return;
+    const root = rootOf(id);
+    const ids = {
+      node: crypto.randomUUID(),
+      into: crypto.randomUUID(),
+      out: crypto.randomUUID(),
+    };
+    const dressing = {
+      node: (node: ShapeElement, from: ShapeElement) => dress(node, from, root),
+      connector: dressMindConnector,
+    };
+    if (!insertMindParent(activeTab.elements, id, ids, dressing)) return;
+    patchActive((els) => insertMindParent(els, id, ids, dressing) ?? els);
+    setEditingId(null);
+    setSelectedId(ids.node);
+    debugLog(`[mind-grow] parent of=${id} node=${ids.node}`);
+    track('Element', 'Added', 'MindNode');
+  };
+
   // Escape on the empty node a Tab made one time too many
   // (docs/specs/009-elements/mind-node.md "Escape keeps what you typed"): only a childless node with a
   // parent, so a root or a node with a branch under it is never lost this way.
@@ -158,5 +181,6 @@ export function useMindGrowth(opts: GrowthHookOpts) {
       growMindNode(id, kind, undefined, options),
     abandonMindNode,
     escapeGrownMindNode,
+    addMindParent,
   };
 }

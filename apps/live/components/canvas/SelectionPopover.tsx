@@ -10,7 +10,11 @@ import {
   SendToBackIcon,
   TextIcon,
 } from '@/components/canvas/selection-popover-icons';
-import { MIND_CHILD_OPTION, MIND_SIBLING_OPTION } from '@/components/canvas/quick-connect-options';
+import {
+  MIND_CHILD_OPTION,
+  MIND_PARENT_OPTION,
+  MIND_SIBLING_OPTION,
+} from '@/components/canvas/quick-connect-options';
 import { EditPointsIcon } from '@/components/palette/palette-icons';
 import {
   FlowchartStepButtons,
@@ -55,6 +59,7 @@ type SelectionPopoverProps = {
   // `stay`: Shift was held, so the node stays selected (docs/specs/009-elements/mind-node.md).
   onAddMindChild?: (stay: boolean) => void;
   onAddMindSibling?: (stay: boolean) => void;
+  onAddMindParent?: () => void;
   // A flowchart step's group (docs/specs/009-elements/flowchart.md): Add Step, Add Branch, and an
   // Editor's Step Type and Lane menus. Passed only for an unlocked step someone may grow.
   flowchartStep?: FlowchartStepToolbar;
@@ -115,6 +120,7 @@ export function SelectionPopover({
   flowchartStep,
   cardinality,
   onAddMindSibling,
+  onAddMindParent,
   onDuplicate,
   onBringToFront,
   onSendToBack,
@@ -252,6 +258,15 @@ export function SelectionPopover({
               >
                 {MIND_SIBLING_OPTION.icon}
               </PopoverButton>
+              {onAddMindParent ? (
+                <PopoverButton
+                  label={MIND_PARENT_OPTION.label}
+                  description={MIND_PARENT_OPTION.description}
+                  onClick={onAddMindParent}
+                >
+                  {MIND_PARENT_OPTION.icon}
+                </PopoverButton>
+              ) : null}
               <Divider />
             </>
           ) : null}

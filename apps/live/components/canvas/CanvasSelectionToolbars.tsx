@@ -170,6 +170,9 @@ export function CanvasSelectionToolbars({
                     props.onGrowMindNode(selected.id, 'child', { stay }),
                   onAddMindSibling: (stay: boolean) =>
                     props.onGrowMindNode(selected.id, 'sibling', { stay }),
+                  ...(props.onAddMindParent
+                    ? { onAddMindParent: () => props.onAddMindParent!(selected.id) }
+                    : {}),
                 }
               : {})}
             // Flowchart (docs/specs/009-elements/flowchart.md): Add Step / Add Branch for whoever grows

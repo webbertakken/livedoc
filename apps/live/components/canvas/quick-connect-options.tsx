@@ -84,6 +84,13 @@ export const MIND_SIBLING_OPTION: Option = {
     'Add a node beside this one, under the same parent. Shortcut: Enter. Shift+click to add several. While typing a label, Shift+Enter starts a new line.',
   icon: <MindSiblingIcon />,
 };
+// A new node above this one (docs/specs/009-elements/mind-node.md "Add Parent"): on the toolbar only, beside the two
+// that grow down.
+export const MIND_PARENT_OPTION = {
+  label: 'Add Parent',
+  description: 'Put a new node between this one and its parent. On the top node, a new top node.',
+  icon: <MindParentIcon />,
+} as const;
 
 // Flowchart growth (docs/specs/009-elements/flowchart.md), offered on a step's ring and toolbar: the
 // same two keys as a mind node, named for what they make in a flowchart.
@@ -244,6 +251,18 @@ function MindChildIcon() {
       <path d="M6 8h2.5" />
       <rect x="8.5" y="4.5" width="6.5" height="7" rx="1.5" />
       <path d="M11.75 6.5v3M10.25 8h3" />
+    </Glyph>
+  );
+}
+
+// A new node (outlined, with its plus) on the left, joined to this node (solid) on the right: a parent above it.
+function MindParentIcon() {
+  return (
+    <Glyph size={OPTION_ICON_SIZE} units={16}>
+      <rect x="1" y="4.5" width="6.5" height="7" rx="1.5" />
+      <path d="M4.25 6.5v3M2.75 8h3" />
+      <path d="M7.5 8h2.5" />
+      <rect x="10" y="5.5" width="5" height="5" rx="1" fill="currentColor" />
     </Glyph>
   );
 }
