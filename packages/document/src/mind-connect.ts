@@ -299,3 +299,23 @@ export function insertMindParent(
   );
   return settle(els, inserted.id, tidy);
 }
+
+/**
+ * After nodes were deleted (docs/specs/009-elements/mind-node.md "Deleting"), every map that lost a node and was tidy
+ * before is laid out again, so its siblings close the gap; a hand-arranged map is left as it is. `before` is the tab as
+ * it was, `after` without the deleted elements.
+ */
+export function relayoutAfterRemoval(before: Element[], after: Element[]): Element[] {
+  const kept = new Set(after.map((e) => e.id));
+  const roots = new Set<ElementId>();
+  for (const el of before) {
+    if (!isMindNode(el) || kept.has(el.id)) continue;
+    const parent = findNode(before, el.mindParentId);
+    if (!parent || !kept.has(parent.id)) continue;
+    const root = mindRootOf(before, parent);
+    if (kept.has(root.id) && tidyOf(before, root)) roots.add(root.id);
+  }
+  let els = after;
+  for (const id of roots) els = settle(els, id, true);
+  return els;
+}

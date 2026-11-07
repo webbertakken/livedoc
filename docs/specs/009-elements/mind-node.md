@@ -657,6 +657,8 @@ Undo brings the whole branch back.
 
 - It applies to Delete / Backspace, the element menu's Delete, and a
   multi-selection's delete: each selected node takes its branch.
+- A map that was **tidy** is laid out again in the same change (`relayoutAfterRemoval`), so the siblings close the
+  gap the branch leaves and the parents re-centre; a hand-arranged map keeps every node where it is.
 - **Cut** takes the branch too, and copies it first, so a paste puts the whole
   branch back. A Cut copies only what its delete takes: a locked node, or one on
   a locked layer, and the branch under it stay, so none of it is copied to be

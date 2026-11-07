@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createPinnedArrow, createShape } from './factories';
-import { connectMindNodes, insertMindParent } from './mind-connect';
+import { connectMindNodes, insertMindParent, relayoutAfterRemoval } from './mind-connect';
 import { applyMindMoves, relayoutMindMap } from './mind-grow';
 import { isMindTreeTidy } from './mind-layout';
 import { mindRootOf, withMindBranches } from './mind-map';
@@ -170,5 +170,29 @@ describe('connectMindNodes', () => {
     );
     expect(get(out, 'loose').mindParentId).toBe('a');
     expect(get(out, 'a2')).not.toHaveProperty('mindParentId');
+  });
+});
+
+describe('relayoutAfterRemoval', () => {
+  const without = (els: Element[], ...ids: string[]) =>
+    els.filter(
+      (e) =>
+        !ids.includes(e.id) &&
+        !(e.type === 'arrow' && e.to.kind === 'pinned' && ids.includes(e.to.elementId)),
+    );
+
+  it('closes the gap a deleted node leaves in a tidy map', () => {
+    const before = tidyMap();
+    const after = relayoutAfterRemoval(before, without(before, 'a1'));
+    expect(isMindTreeTidy(after, 'root', 'tree')).toBe(true);
+    expect(get(after, 'a2')).not.toEqual(get(before, 'a2'));
+  });
+
+  it('leaves a hand-arranged map where it is', () => {
+    const before = tidyMap().map((e) =>
+      e.id === 'b' ? { ...e, x: (e as ShapeElement).x + 300 } : e,
+    );
+    const after = without(before, 'a1');
+    expect(relayoutAfterRemoval(before, after)).toBe(after);
   });
 });
