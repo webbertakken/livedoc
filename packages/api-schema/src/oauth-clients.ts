@@ -10,6 +10,11 @@ export const CLI_REDIRECT_URIS: readonly string[] = [
   'http://[::1]/callback',
 ];
 
+// Runa, the operator's personal assistant, working LiveDoc boards for him (docs/specs/015-api/mcp-server.md §3):
+// a device-grant client only, so it has no redirect URIs.
+export const RUNA_CLIENT_ID = 'runa';
+export const RUNA_CLIENT_NAME = 'Runa';
+
 export const DEVICE_CODE_GRANT = 'urn:ietf:params:oauth:grant-type:device_code';
 export const DEVICE_CODE_TTL_S = 600;
 export const DEVICE_POLL_INTERVAL_S = 5;

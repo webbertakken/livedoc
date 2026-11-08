@@ -489,6 +489,12 @@ describe('the CLI client (docs/specs/015-api/cli.md, CLI35, CLI77)', () => {
     );
   });
 
+  it('refuses Runa an authorisation code: she signs in on a device only', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect((await authorize('http://127.0.0.1:5/callback', 'runa')).status).toBe(400);
+    expect(warn).toHaveBeenCalled();
+  });
+
   it('advertises the device endpoint and grant', async () => {
     const meta = (await (
       await app.request('/.well-known/oauth-authorization-server', {}, env)

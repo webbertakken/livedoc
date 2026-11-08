@@ -1159,6 +1159,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone filtered an aggregate Explorer list by where documents live (My Documents, Shared With Me, a team).',
   'Token|Created|MCP':
     'An AI tool was connected to the account over MCP, which creates an API token for it to use.',
+  'Token|Created|Runa':
+    'Runa, the personal assistant, was connected to the account to work its boards, which creates an API token for her.',
   'Token|Created|Manual':
     'Someone created a new personal API token by hand, from the API Tokens category in Settings.',
   'Token|Linked|Workbench': 'A token’s owner allowed a developer tool to open their documents.',

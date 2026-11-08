@@ -15,6 +15,7 @@ import {
   denyDevice,
   fetchDeviceSession,
   userCodeOf,
+  deviceClient,
 } from '@/lib/mcp-device-session';
 import { handoverFailureCopy, mintAndHandOver, type HandoverFailure } from '@/lib/oauth-handover';
 import { track } from '@/lib/telemetry';
@@ -30,6 +31,7 @@ type Step =
       kind: 'consent';
       userCode: string;
       clientName: string;
+      clientId: string;
       working: boolean;
       // Why the last Connect failed, or null before one has.
       failed: HandoverFailure | null;
@@ -114,6 +116,7 @@ function Device() {
             kind: 'consent',
             userCode,
             clientName: session.clientName,
+            clientId: session.clientId,
             working: false,
             failed: null,
           }
@@ -121,8 +124,8 @@ function Device() {
     );
   };
 
-  const approve = async (userCode: string, clientName: string) => {
-    setStep({ kind: 'consent', userCode, clientName, working: true, failed: null });
+  const approve = async (userCode: string, clientName: string, clientId: string) => {
+    setStep({ kind: 'consent', userCode, clientName, clientId, working: true, failed: null });
     // Checks the code is still waiting before minting, and revokes a token the MCP did not take, so a failed
     // Connect never leaves a six-month token behind (lib/oauth-handover.ts).
     const result = await mintAndHandOver({
@@ -133,11 +136,18 @@ function Device() {
       revoke: (id) => apiRevokeToken(accountId, id),
     });
     if (!result.ok) {
-      setStep({ kind: 'consent', userCode, clientName, working: false, failed: result.reason });
+      setStep({
+        kind: 'consent',
+        userCode,
+        clientName,
+        clientId,
+        working: false,
+        failed: result.reason,
+      });
       return;
     }
-    // Anonymous telemetry (docs/specs/017-telemetry/telemetry.md): the CLI signed in, which mints a token.
-    track('Token', 'Created', 'Cli');
+    // Anonymous telemetry (docs/specs/017-telemetry/telemetry.md): the CLI or Runa signed in, which mints a token.
+    track('Token', 'Created', deviceClient(clientId).telemetryType);
     setStep({ kind: 'done' });
   };
 
@@ -172,7 +182,7 @@ function Device() {
         </OauthShell>
       );
     case 'consent': {
-      const { userCode, clientName, working, failed } = step;
+      const { userCode, clientName, clientId, working, failed } = step;
       return (
         <OauthShell>
           <h1 className={HEADING}>Connect {clientName}</h1>
@@ -184,13 +194,13 @@ function Device() {
           <ReadOnlyAccessToggle readOnly={readOnly} onChange={setReadOnly} />
           {failed ? (
             <p role="alert" className="mt-3 text-xs text-rose-600 dark:text-rose-400">
-              {handoverFailureCopy(failed, 'Run the sign-in again from your terminal.')}
+              {handoverFailureCopy(failed, deviceClient(clientId).restart)}
             </p>
           ) : null}
           <div className="mt-5 flex items-center gap-2">
             <button
               type="button"
-              onClick={() => void approve(userCode, clientName)}
+              onClick={() => void approve(userCode, clientName, clientId)}
               disabled={working}
               className={OAUTH_PRIMARY}
             >
