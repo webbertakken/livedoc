@@ -49,7 +49,7 @@ A Dependabot alert is fixed by upgrading the direct dependency that pulls the vu
 | ---------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sharp` `^0.35.5`                        | GHSA-wq5f-xc86-pv6w (librsvg in sharp `< 0.35.5`)    | `@huggingface/transformers` 3.8.1, the last 3.x, asks for `^0.34.1`; 4.x is ruled out by the 25 MiB asset limit ([Deployment](../specs/016-platform/deployment.md))                      |
 | `onnxruntime-node>global-agent` `^4.1.3` | GHSA-hp3w-g68c-fv3c (sprintf-js, no patched release) | transformers 3.8.1 pins `onnxruntime-node` 1.21.0, whose `global-agent` 3 pulls `roarr` 2 and `sprintf-js`; `global-agent` 4 has neither and keeps the `bootstrap` its postinstall calls |
-| `@tensorflow/tfjs>argparse` `^2.0.1`     | GHSA-hp3w-g68c-fv3c (sprintf-js, no patched release) | `@tensorflow/tfjs` 4.22.0, the latest, declares `argparse` 1 but never requires it; `argparse` 2 has no dependencies                                                                     |
+| `@tensorflow/tfjs>argparse` `^3.0.0`     | GHSA-hp3w-g68c-fv3c (sprintf-js, no patched release) | `@tensorflow/tfjs` 4.22.0, the latest, declares `argparse` 1 but never requires it; `argparse` 3 has no dependencies                                                                     |
 
 Drop an entry once an upstream release makes it redundant.
 
