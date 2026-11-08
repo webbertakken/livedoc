@@ -5,7 +5,7 @@ How to run LiveDoc on your machine.
 ## Requirements
 
 - **Node** `>= 22` (Wrangler 4 requires it).
-- **pnpm** `>= 9` (the lockfile and workspaces depend on it).
+- **pnpm** `>= 10.34.5` (the lockfile and workspaces depend on it).
 
 Cloudflare is not required for local development. The api worker runs locally via Wrangler against a local D1 SQLite file; the Next.js apps run via Next's dev server.
 
