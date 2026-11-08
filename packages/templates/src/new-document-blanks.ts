@@ -6,6 +6,7 @@ import type { TemplateKind } from './templates';
 
 export const NEW_DOCUMENT_BLANK_IDS = [
   'diagram',
+  'brainstorm',
   'whiteboard',
   'page',
   'sheet',
@@ -40,6 +41,12 @@ export const NEW_DOCUMENT_BLANKS: readonly NewDocumentBlank[] = [
     name: 'Diagram',
     blank: 'blank',
     templates: { start: 'diagram' },
+  },
+  {
+    id: 'brainstorm',
+    name: 'Brainstorm',
+    blank: 'blank-brainstorm',
+    templates: { start: 'diagram', group: 'mindmaps' },
   },
   {
     id: 'whiteboard',

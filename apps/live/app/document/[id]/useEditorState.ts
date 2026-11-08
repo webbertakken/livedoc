@@ -241,6 +241,7 @@ import { useSelectionEditing } from './useSelectionEditing';
 import { useFormatTool } from './useFormatTool';
 import { useTabEntryEffects } from './useTabEntryEffects';
 import { useCollabDeepLink, useCollabDeepLinkCapture } from './useCollabDeepLink';
+import { useLoneRootLanding } from './useLoneRootLanding';
 import { useEditorUiState } from './editor-ui-state';
 import { useTabScope } from './useTabScope';
 import { useEditorPersistence } from './editor-persistence';
@@ -1902,6 +1903,15 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
       focusLanding.afterTabFit(activeId);
     },
     skipFitForTabRef: skipTabFitRef,
+  });
+  // A brainstorm about to start lands with its central idea selected (mind-node.md "A lone root opens selected").
+  useLoneRootLanding({
+    hydrated,
+    activeId,
+    tabLoaded: loadedTabIds.has(activeId),
+    elements: activeTab.elements,
+    mayWrite: participant.can.writeText,
+    select: setSelectedId,
   });
 
   // Derived realtime presence rows (avatars per tab, remote cursors,

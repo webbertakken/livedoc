@@ -63,11 +63,19 @@ export function useTabEntryEffects({
     }
     if (lastFittedTabRef.current === activeId) return;
     if (!tabLoaded) return;
-    lastFittedTabRef.current = activeId;
-    if (elementCount === 0) return;
+    if (elementCount === 0) {
+      lastFittedTabRef.current = activeId;
+      return;
+    }
     // Defer to the next frame so the canvas wrapper has its final
-    // measured size before fitToScreen reads getBoundingClientRect.
-    const handle = window.requestAnimationFrame(fit);
+    // measured size before fitToScreen reads getBoundingClientRect. The
+    // entry is claimed only as the fit runs: an effect re-run before the
+    // frame (React's StrictMode, a dependency settling) cancels it, and the
+    // re-run must schedule it again rather than find the entry taken.
+    const handle = window.requestAnimationFrame(() => {
+      lastFittedTabRef.current = activeId;
+      fit();
+    });
     return () => window.cancelAnimationFrame(handle);
   }, [hydrated, activeId, tabLoaded, elementCount, skipFitForTabRef]);
 

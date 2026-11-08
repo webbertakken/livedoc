@@ -129,6 +129,7 @@ export const TEMPLATE_CATEGORIES: readonly Omit<CategoryInfo, 'searchWords'>[] =
 // Mirrors isBlankTemplate (BLANK_TEMPLATE_FOR_OPENING and EXTRA_BLANK_TEMPLATES); the categories test pins them together.
 type BlankKind =
   | 'blank'
+  | 'blank-brainstorm'
   | 'whiteboard'
   | 'blank-illustration'
   | 'blank-slide-deck'

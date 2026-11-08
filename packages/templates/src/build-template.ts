@@ -84,7 +84,12 @@ import {
 } from './template-builders-flows';
 import { buildDataFlow } from './template-builders-dataflow';
 import { buildFlowchart, buildOrgChart } from './template-builders-trees';
-import { buildBubbleMap, buildMindMap, buildMindMapTree } from './template-builders-mindmaps';
+import {
+  buildBlankBrainstorm,
+  buildBubbleMap,
+  buildMindMap,
+  buildMindMapTree,
+} from './template-builders-mindmaps';
 import {
   buildStartStopContinue,
   buildMadSadGlad,
@@ -122,6 +127,8 @@ function buildUnsettled(kind: TemplateKind, cx: number, cy: number): Element[] {
   switch (kind) {
     case 'blank':
       return buildBlank();
+    case 'blank-brainstorm':
+      return buildBlankBrainstorm(cx, cy);
     case 'mindmap':
       return buildMindMap(cx, cy);
     case 'mindmap-tree':

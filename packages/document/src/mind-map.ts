@@ -28,6 +28,15 @@ export function isMindNode(el: Element): el is ShapeElement {
   return el.type === 'shape' && el.shape === 'mind-node';
 }
 
+/**
+ * The one mind node of a tab that holds nothing else: a brainstorm about to start, which the editor selects as it lands
+ * on the tab (docs/specs/009-elements/mind-node.md "A lone root opens selected"). Null for any other tab.
+ */
+export function loneMindRoot(elements: readonly Element[]): ShapeElement | null {
+  const only = elements.length === 1 ? elements[0]! : null;
+  return only && isMindNode(only) ? only : null;
+}
+
 /** The nodes whose `mindParentId` is `id`, in document order. */
 export function mindChildren(elements: Element[], id: ElementId): ShapeElement[] {
   return elements.filter((el) => isMindNode(el) && el.mindParentId === id) as ShapeElement[];

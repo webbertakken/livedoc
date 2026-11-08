@@ -224,6 +224,12 @@ const OWN_GROUPS: Readonly<Record<Exclude<TemplateStartMode, 'diagram'>, readonl
   ],
 };
 
+// Start Diagramming's groups are the catalogue's categories, where a blank never is; one leads with a blank of its own
+// (docs/specs/007-editor/start-diagramming.md "Recommended and groups"): Brainstorm, a mind map's central idea alone.
+const DIAGRAM_GROUP_LEADS: Readonly<Partial<Record<string, TemplateKind>>> = {
+  mindmaps: 'blank-brainstorm',
+};
+
 const byKind = new Map(TEMPLATES.map((t) => [t.kind, t]));
 
 /** A template's descriptor. */
@@ -248,7 +254,10 @@ function build(mode: TemplateStartMode): TemplateStart {
           id: c.id,
           name: c.label,
           line: c.description,
-          kinds: listed.filter((k) => isInTemplateCategory(k, c.id)),
+          kinds: [
+            ...(DIAGRAM_GROUP_LEADS[c.id] ? [DIAGRAM_GROUP_LEADS[c.id]!] : []),
+            ...listed.filter((k) => isInTemplateCategory(k, c.id)),
+          ],
         }))
       : OWN_GROUPS[mode].map((g, i, all) => ({
           ...g,
@@ -261,8 +270,11 @@ function build(mode: TemplateStartMode): TemplateStart {
         }));
   const groups = [recommended, ...rest].filter((g) => g.kinds.length > 0);
   // Where a match is listed: Diagram's under its primary category, another mode's under its group.
+  // A group's own blank (Blank Brainstorm) is in no category, so it is found under the group it leads.
   const home = (k: TemplateKind) =>
-    mode === 'diagram' ? templateCategory(k) : (rest.find((g) => g.kinds.includes(k))?.id ?? null);
+    (mode === 'diagram' ? templateCategory(k) : null) ??
+    rest.find((g) => g.kinds.includes(k))?.id ??
+    null;
   const search = (query: string) => {
     if (query.trim() === '') return [];
     const found = listed.filter((k) => templateMatchesQuery(templateOf(k), query));

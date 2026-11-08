@@ -41,6 +41,16 @@ describe('paneGroupsFor', () => {
     expect(groupsOf('page')[0]!.kinds).toContain('article');
   });
 
+  it('lists the mind maps for Brainstorm, and leaves them out of Diagram', () => {
+    expect(groupsOf('brainstorm').map((g) => g.name)).toEqual(['Brainstorm']);
+    expect(groupsOf('brainstorm')[0]!.kinds).toEqual(['mindmap', 'mindmap-tree', 'mindmap-bubble']);
+    const diagram = groupsOf('diagram').flatMap((g) => g.kinds);
+    expect(diagram).not.toContain('mindmap');
+    expect(diagram).not.toContain('mindmap-tree');
+    expect(groupsOf('diagram').map((g) => g.id)).not.toContain('mindmaps');
+    expect(diagram).toContain('flowchart');
+  });
+
   it('lists a Plan family for Sheet, Board and Form', () => {
     expect(groupsOf('sheet')[0]!.kinds).toContain('budget-planner');
     expect(groupsOf('sheet')[0]!.kinds).not.toContain('kanban');

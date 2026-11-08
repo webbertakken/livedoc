@@ -5,6 +5,7 @@ import type { Element, ShapeElement } from './index';
 import {
   growMindChild,
   growMindSibling,
+  loneMindRoot,
   MIND_CHILD_GAP_X,
   MIND_SIBLING_GAP_Y,
   mindChildren,
@@ -21,6 +22,23 @@ const node = (id: string, x: number, y: number, parent?: string): ShapeElement =
   ...createShape('mind-node', x, y),
   id,
   ...(parent ? { mindParentId: parent } : {}),
+});
+
+// docs/specs/009-elements/mind-node.md "A lone root opens selected"
+describe('loneMindRoot', () => {
+  it('names the one mind node of a tab that holds nothing else', () => {
+    expect(loneMindRoot([node('root', 0, 0)])?.id).toBe('root');
+  });
+
+  it('names none beside anything else, a map grown from it included', () => {
+    expect(loneMindRoot([node('root', 0, 0), node('a', 0, 0, 'root')])).toBeNull();
+    expect(loneMindRoot([node('root', 0, 0), createShape('square', 0, 0)])).toBeNull();
+  });
+
+  it('names none on an empty tab or for a lone box of another shape', () => {
+    expect(loneMindRoot([])).toBeNull();
+    expect(loneMindRoot([createShape('square', 0, 0)])).toBeNull();
+  });
 });
 
 describe('mindChildren', () => {

@@ -65,7 +65,8 @@ Blank Slide Deck. The shelf itself (the gallery's) is unchanged. The groups (`co
 
 - **Start Diagramming:** the catalogue's categories that hold a Structured template ([Canvas and
   palette](../008-canvas/canvas-and-palette.md) "Template categories"), in the catalogue's order, by their short names
-  (Flowcharts, Org Charts, Timelines and so on).
+  (Flowcharts, Org Charts, Timelines and so on). **Brainstorm** leads with **Blank Brainstorm**, a mind map's central
+  idea alone ([Templates by mode](templates-by-mode.md#five-blanks)), before the mind maps.
 - **Start Sketching**, whose templates are drawn, by what each is for: **Visual Notes**, **Exercises**, **Prototypes**.
 - **Start a Workshop**, whose templates nearly all share one category, by the session each runs: **Retrospectives**, **Meetings**, **Spaces** (offices and halls to walk round together in Avatar mode), **Quizzes & Games**, **Ideation**, **Planning** (goals, roadmaps and who does what), **Strategy** (the business, the people and the opportunities) and **Decisions** (the boards with a dot vote).
 - **Pages**, likewise, by what each makes: **Slides**, **Infographics**, **Articles**, **Posters and Social**, **Logos**, **Design** (wireframes, storyboards and floor plans, [Templates by mode](templates-by-mode.md#design-templates)).

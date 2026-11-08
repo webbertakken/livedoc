@@ -43,7 +43,7 @@ describe('filterGallery', () => {
   });
 
   it('matches the description and the category name', () => {
-    expect(filterGallery(all, 'offsite plan').map((t) => t.kind)).toContain('mindmap');
+    expect(filterGallery(all, 'weekend trip').map((t) => t.kind)).toContain('mindmap');
     expect(filterGallery(all, 'technical').map((t) => t.kind)).toContain('sequence-diagram');
   });
 
@@ -93,6 +93,7 @@ describe('the shelves, as the template step lays them out', () => {
     expect(shelves[0]?.templates.map((t) => t.kind)).toEqual([
       'whiteboard',
       'blank',
+      'blank-brainstorm',
       'blank-illustration',
       'blank-slide-deck',
       'blank-article',
