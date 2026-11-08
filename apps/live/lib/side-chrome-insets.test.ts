@@ -50,7 +50,10 @@ describe('restingRect: the sidebar measured where it comes to rest', () => {
     panel.style.translate = '640px';
     // Pinned right, still carried 640 px further by the drag's translate as it slides home.
     panel.getBoundingClientRect = () => rect(1604, 1840);
+    // Only a panel in the document has a computed translate.
+    document.body.append(panel);
     expect(restingRect(panel)).toEqual({ left: 964, right: 1200, top: 130, bottom: 860 });
+    panel.remove();
   });
 
   it('frames beside the resting sidebar, not the one mid-slide', () => {
