@@ -44,7 +44,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           package-manager-cache: false
 
       # The run's head commit, and the open pull request it belongs to (a fork's included).
