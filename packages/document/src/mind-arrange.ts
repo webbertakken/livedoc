@@ -137,7 +137,7 @@ const tidyAtStart = new WeakMap<Element[], Map<ElementId, boolean>>();
 function wasTidy(before: Element[], node: ShapeElement): boolean {
   const rootId = mindRootOf(before, node).id;
   let known = tidyAtStart.get(before);
-  if (!known) tidyAtStart.set(before, (known = new Map()));
+  if (!known) tidyAtStart.set(before, (known = new Map<ElementId, boolean>()));
   if (!known.has(rootId)) known.set(rootId, isTidy(before, node));
   return known.get(rootId)!;
 }
