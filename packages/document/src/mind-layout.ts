@@ -27,12 +27,17 @@ import { unionRects } from './geometry-primitives';
 import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
 
 /** How far a group's tinted box reaches past its members, and so the extra room a group takes among its siblings
- *  (docs/specs/009-elements/mind-node.md "Groups"). */
-export const MIND_GROUP_PADDING = 12;
+ *  (docs/specs/009-elements/mind-node.md "Groups"). The title is inset as far: it is the `md` padding preset, the
+ *  frame's own (`PADDING_PX.md`, pinned by mind-group.test.ts). */
+export const MIND_GROUP_PADDING = 14;
 /** A group box's corner radius. */
 export const MIND_GROUP_RADIUS = 14;
-/** The band at a group's top its title sits in, above the padding (docs/specs/009-elements/mind-node.md "Groups"). */
-export const MIND_GROUP_TITLE_BAND = 22;
+/** A group title's text size, in px. */
+export const MIND_GROUP_TITLE_PX = 14;
+/** The band at a group's top its title sits in, above the padding: the title's line (14 px at the label line height,
+ *  1.25, so 18 px) and the padding again under it, so the title is as far from the members as from the frame's edge
+ *  (docs/specs/009-elements/mind-node.md "Groups"). */
+export const MIND_GROUP_TITLE_BAND = 32;
 
 // A node placed by hand keeps its own position (docs/specs/009-elements/mind-node.md "A tidy map stays tidy").
 const isPlaced = (n: ShapeElement) => n.mindPlaced === true && !!n.mindParentId;
