@@ -188,7 +188,9 @@ test('number and group children, drag one between its siblings, and place one by
 
   // Its title is inset as far as its members (docs/specs/009-elements/mind-node.md "Groups"), never in the corner.
   const frame = (await element(page, groupId).boundingBox())!;
-  const title = (await element(page, groupId).getByText('Essentials', { exact: true }).boundingBox())!;
+  const title = (await element(page, groupId)
+    .getByText('Essentials', { exact: true })
+    .boundingBox())!;
   const member = (await element(page, 'k2').boundingBox())!;
   expect(Math.abs(title.x - frame.x - (member.x - frame.x))).toBeLessThan(1.5);
   expect(Math.abs(title.y - frame.y - (member.x - frame.x))).toBeLessThan(1.5);
