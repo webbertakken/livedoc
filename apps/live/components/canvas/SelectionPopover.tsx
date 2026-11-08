@@ -10,7 +10,13 @@ import {
   SendToBackIcon,
   TextIcon,
 } from '@/components/canvas/selection-popover-icons';
-import { MIND_CHILD_OPTION, MIND_SIBLING_OPTION } from '@/components/canvas/quick-connect-options';
+import { MindArrangeButtons, type MindArrangeState } from '@/components/canvas/MindArrangeButtons';
+import type { MindArrangeActions } from '@/hooks/canvas/useMindMapSetters';
+import {
+  MIND_CHILD_OPTION,
+  MIND_PARENT_OPTION,
+  MIND_SIBLING_OPTION,
+} from '@/components/canvas/quick-connect-options';
 import { EditPointsIcon } from '@/components/palette/palette-icons';
 import {
   FlowchartStepButtons,
@@ -52,8 +58,12 @@ type SelectionPopoverProps = {
   // Mind map growth (docs/specs/009-elements/mind-node.md): Add child / Add sibling on a mind node.
   // The same actions as Tab / Enter and the "+" ring, given a one-click home
   // on the toolbar. Passed only for an editable, unlocked mind node.
-  onAddMindChild?: () => void;
-  onAddMindSibling?: () => void;
+  // `stay`: Shift was held, so the node stays selected (docs/specs/009-elements/mind-node.md).
+  onAddMindChild?: (stay: boolean) => void;
+  onAddMindSibling?: (stay: boolean) => void;
+  onAddMindParent?: () => void;
+  // Number, Group, Auto Position (docs/specs/009-elements/mind-node.md): a mind node below its root, an Editor's.
+  mindArrange?: { state: MindArrangeState; actions: MindArrangeActions };
   // A flowchart step's group (docs/specs/009-elements/flowchart.md): Add Step, Add Branch, and an
   // Editor's Step Type and Lane menus. Passed only for an unlocked step someone may grow.
   flowchartStep?: FlowchartStepToolbar;
@@ -114,6 +124,8 @@ export function SelectionPopover({
   flowchartStep,
   cardinality,
   onAddMindSibling,
+  onAddMindParent,
+  mindArrange,
   onDuplicate,
   onBringToFront,
   onSendToBack,
@@ -240,17 +252,27 @@ export function SelectionPopover({
               <PopoverButton
                 label={MIND_CHILD_OPTION.label}
                 description={MIND_CHILD_OPTION.description}
-                onClick={onAddMindChild}
+                onClick={(e) => onAddMindChild(e.shiftKey)}
               >
                 {MIND_CHILD_OPTION.icon}
               </PopoverButton>
               <PopoverButton
                 label={MIND_SIBLING_OPTION.label}
                 description={MIND_SIBLING_OPTION.description}
-                onClick={onAddMindSibling}
+                onClick={(e) => onAddMindSibling(e.shiftKey)}
               >
                 {MIND_SIBLING_OPTION.icon}
               </PopoverButton>
+              {mindArrange ? <MindArrangeButtons {...mindArrange} /> : null}
+              {onAddMindParent ? (
+                <PopoverButton
+                  label={MIND_PARENT_OPTION.label}
+                  description={MIND_PARENT_OPTION.description}
+                  onClick={onAddMindParent}
+                >
+                  {MIND_PARENT_OPTION.icon}
+                </PopoverButton>
+              ) : null}
               <Divider />
             </>
           ) : null}

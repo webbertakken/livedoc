@@ -27,6 +27,11 @@ the canvas, so Tab and Enter keep growing from it and the toolbar stays in reach
 on it opens its label editor with that first character (type-to-edit), so a whole branch
 is still typed without touching the mouse.
 
+**Shift+click** on Add Child or Add Sibling (the toolbar's or the ring's) grows the node and **stays**: the node it was
+pressed on stays selected, its toolbar and an open ring stay where they are, and the view does not move, so several
+children are added with as many clicks. Their hover cards say so ("Shift+click to add several."). Each press is its own
+undo step, laid out like any growth.
+
 ## Why this is the gap
 
 [Purpose](../001-project-vision/purpose.md) opens with "diagrams **and mindmaps** in real time",
@@ -111,10 +116,21 @@ The root never moves. A map grown by Tab and Enter from a single node, or from
 a mind-map template, is tidy by construction, so it stays tidy for as long as
 nobody rearranges it.
 
-The moment someone drags a node, the map is theirs. It is no longer tidy, and
-growth falls back to **free placement** (below), which never moves an existing
-node of that map. **Tidy Map** in the Mind Map menu puts it back, and
-from then on it stays tidy again.
+Dragging a node in a tidy map keeps it tidy (`planMindDrop`, `packages/document/src/mind-arrange.ts`):
+
+- **Dropped between its siblings** (within its own size of the slot the layout gives it there), it is **reordered**:
+  the map is laid out again with the node in that place. While it is dragged, a line across the slot's leading edge
+  shows where it will go.
+- **Dropped anywhere else**, it is **placed by hand** (`mindPlaced`): it stays where it was let go, its own branch is
+  laid out from it, and the rest of the map closes up around the gap it left. The layout keeps it there from then on,
+  so the map still counts as tidy and growth, deletes and Tidy Map's neighbours carry on around it.
+- **Auto Position**, on the toolbar of a selection holding a node placed by hand, puts it back into the layout.
+  **Tidy Map** puts every node of the map back.
+- Each drop is one undo step with the move. A root's drag moves the whole map, as before.
+
+A map arranged by hand before (a node moved somewhere the layout does not put it, without being placed) is not
+tidy: growth falls back to **free placement** (below), which never moves an existing node of that map. **Tidy Map**
+in the Mind Map menu puts it back, and from then on it stays tidy again.
 
 Order is read from the map as drawn: siblings are ordered along the flow's
 stacking axis (top to bottom for a tree or a leftward map, left to right for a downward or upward map,
@@ -331,6 +347,72 @@ contents. A branch is one idea: moving its heading and leaving its points
 behind is never the intent, and re-dragging each of them would be the
 workaround.
 Resizing a node resizes only that node.
+
+## Numbered nodes
+
+Siblings can be **numbered**, like a numbered list: **Number** on the toolbar of a selection of mind nodes (one or
+many, the single and the multi-selection toolbar alike) turns it on for each (`mindNumbered`), and pressed again
+(it shows pressed while every selected node is numbered) turns it off.
+
+- A node's number is its place among its **numbered siblings**, in the order the map reads them (`mindNumbers`), 1
+  up: reordering, adding or removing one renumbers the rest. Nothing is written into the label.
+- It is drawn as part of the card: a chip before the label, in the label's colour on a tint of it, sized from the
+  label. Exports lead the label with the number ("2. Venue").
+- A root is never numbered.
+
+## Groups
+
+Siblings can be **grouped** (`mindGroup`, an id the group is made with): **Group** on the toolbar of a selection of
+mind nodes below a root puts them in one group per parent; **Ungroup** (shown instead when the selection is one
+group) takes every member of their groups out.
+
+- A group is drawn as one **tinted box** around its members and their branches (`mindGroupBoxes`), padded by 12 px
+  (`MIND_GROUP_PADDING`), rounded, under the nodes: a mostly transparent fill and a stronger edge in a hue picked
+  from the group's id (`mindGroupColours`), so neighbouring groups tell apart, in light and dark. A branch placed by
+  hand elsewhere is left out of it.
+- The layout keeps a group's members **together**, where its first member is, in their own order, with the padding
+  as extra room before and after the group so its box never touches a neighbour.
+- **Pressing a group's box** selects its members, so the group is dragged as one block: dropped between siblings it is
+  reordered as a whole, between ungrouped nodes or other groups (groups never nest or split).
+- A node dropped **between two members** of a group joins it; a member dropped away from every other member leaves it.
+  **Enter** on a grouped node adds the new sibling to the group.
+- A node that changes parent (Connecting nodes, Add Parent's node) leaves its group; Add Parent's new node takes the
+  node's place in it.
+- Exports draw the boxes too.
+
+## Add Parent
+
+A map is not always grown from the top: a heading turns up after its points were written, or a map needs a new root
+above the one it started from. **Add Parent**, on a selected node's toolbar after Add Child and Add Sibling, puts a new
+node **between the node and its parent** (`insertMindParent`, `packages/document/src/mind-connect.ts`):
+
+- The new node takes the node's place in the map, joined to the old parent by the connector that joined the node (its
+  look kept); the node hangs under the new one, joined by a connector in its siblings' look.
+- On a **root** the new node becomes the map's root, and the flow and spacing pass to it.
+- The new node looks like the node it goes above (the level it now holds), and is selected, so typing names it.
+- A tidy map is laid out again around it; in a hand-arranged map the new node stands where the node stood and the
+  node's branch steps out one level along the flow to make room.
+- One undo step. It is an **Editor's**, like the rest of restructuring a map; not on a locked node.
+
+## Connecting nodes
+
+The tree is the connectors you can see, so **drawing a connector between two mind nodes** (from an anchor, or moving
+one end of a connector onto another node) changes the tree (`connectMindNodes`):
+
+- The node connected **to** becomes a **child** of the node connected **from**, its whole branch with it; its old
+  connector to its old parent goes. A root connected to stops being a root (its flow and spacing go).
+- A node and its own **ancestor** cannot both be the other's parent, so connecting the two (its parent included, from
+  either end) **turns the hierarchy over** there: the lower node takes the upper one's place, joined to the upper
+  one's parent (or becoming the root, the flow and spacing passing to it), and the upper one hangs under it with the
+  rest of its own branch. Connecting a parent to its own child is how a child becomes the parent.
+- After a change, deleting a node takes only the branch that is under it now: an old parent that was turned under its
+  child no longer takes the child with it.
+- Moving a connector's end off a node it joined to its parent frees that node: it stands as a root of its own.
+- The drawn connector becomes the map's connector: dressed in its siblings' look (a curved line with no arrowheads when
+  there is none) and re-faced by the flow.
+- Maps that were tidy are laid out again; a hand-arranged map keeps its nodes where they are.
+- It lands with the connector in the same change (one undo step). A connector between a mind node and anything else
+  stays an ordinary arrow.
 
 ## Flows: the shape the map grows in
 
@@ -618,6 +700,8 @@ Undo brings the whole branch back.
 
 - It applies to Delete / Backspace, the element menu's Delete, and a
   multi-selection's delete: each selected node takes its branch.
+- A map that was **tidy** is laid out again in the same change (`relayoutAfterRemoval`), so the siblings close the
+  gap the branch leaves and the parents re-centre; a hand-arranged map keeps every node where it is.
 - **Cut** takes the branch too, and copies it first, so a paste puts the whole
   branch back. A Cut copies only what its delete takes: a locked node, or one on
   a locked layer, and the branch under it stay, so none of it is copied to be

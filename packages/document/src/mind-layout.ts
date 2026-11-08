@@ -22,8 +22,19 @@ import {
   type MindFlow,
   type MindGaps,
 } from './mind-flow';
-import { isMindNode, mindChildren } from './mind-map';
+import { isMindNode, mindChildren, mindFlowOf, mindRootOf, mindSubtree } from './mind-map';
+import { unionRects } from './geometry-primitives';
 import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
+
+/** How far a group's tinted box reaches past its members, and so the extra room a group takes among its siblings
+ *  (docs/specs/009-elements/mind-node.md "Groups"). */
+export const MIND_GROUP_PADDING = 12;
+/** A group box's corner radius. */
+export const MIND_GROUP_RADIUS = 14;
+
+// A node placed by hand keeps its own position (docs/specs/009-elements/mind-node.md "A tidy map stays tidy").
+const isPlaced = (n: ShapeElement) => n.mindPlaced === true && !!n.mindParentId;
+const groupOf = (n: ShapeElement) => n.mindGroup ?? null;
 
 /** How far a node may sit from its laid-out slot and still count as tidy.
  *  Rounding in the layout itself is the only drift a tidy map ever has. */
@@ -61,16 +72,27 @@ function buildTree(
     // The hinted node has no meaningful position yet, so it is kept out of
     // the positional sort and inserted where the hint says.
     const hinted = hint ? kids.find((k) => k.id === hint.id) : undefined;
-    const placed = kids
+    const keyed = kids
       .filter((k) => k !== hinted)
-      .map((k, i) => ({ k, key: orderKey(k, parent), i }))
+      .map((k, i) => ({ k, key: orderKey(k, parent), i }));
+    // A group sits where its first member is, its members together in their own order.
+    const groupKey = new Map<string, number>();
+    for (const e of keyed) {
+      const g = groupOf(e.k);
+      if (g !== null) groupKey.set(g, Math.min(groupKey.get(g) ?? Infinity, e.key));
+    }
+    const at = (e: (typeof keyed)[number]) => {
+      const g = groupOf(e.k);
+      return g === null ? e.key : groupKey.get(g)!;
+    };
+    const placed = keyed
       // Stable on ties (document order), so nodes stacked on one spot still
       // come out in a deterministic order.
-      .sort((a, b) => a.key - b.key || a.i - b.i)
+      .sort((a, b) => at(a) - at(b) || a.key - b.key || a.i - b.i)
       .map((e) => e.k);
     if (hinted) {
-      const at = hint?.after ? placed.findIndex((k) => k.id === hint.after) : -1;
-      placed.splice(at === -1 ? placed.length : at + 1, 0, hinted);
+      const after = hint?.after ? placed.findIndex((k) => k.id === hint.after) : -1;
+      placed.splice(after === -1 ? placed.length : after + 1, 0, hinted);
     }
     tree.set(parent.id, placed);
     frontier.push(...placed);
@@ -100,25 +122,33 @@ function stackLayout(
 ) {
   const across = cross(axis);
   const gap = axis === 'x' ? gaps.child : gaps.level;
+  const pad = (n: ShapeElement | undefined) => (n && groupOf(n) !== null ? MIND_GROUP_PADDING : 0);
+  // The room between two siblings: the gap, and a group's padding where a group begins or ends.
+  const between = (a: ShapeElement, b: ShapeElement) =>
+    gaps.sibling + (groupOf(a) !== null && groupOf(a) === groupOf(b) ? 0 : pad(a) + pad(b));
+  const flowing = (k: readonly ShapeElement[]) => k.filter((c) => !isPlaced(c));
+  // The room a row of siblings needs across the stacking axis, groups' padding included.
+  const blockOf = (k: readonly ShapeElement[]): number =>
+    k.reduce((s, c, i) => s + span(c) + (i > 0 ? between(k[i - 1]!, c) : 0), 0) +
+    pad(k[0]) +
+    pad(k[k.length - 1]);
   // The room a whole subtree needs across the stacking axis: its own node, or
-  // its children's blocks stacked, whichever is bigger.
-  const span = (n: ShapeElement): number => {
-    const k = kidsOf(tree, n.id);
-    const block = k.reduce((s, c) => s + span(c), 0) + gaps.sibling * Math.max(0, k.length - 1);
-    return Math.max(extent(n, across), block);
-  };
+  // its children's blocks stacked, whichever is bigger. A node placed by hand takes none.
+  const span = (n: ShapeElement): number =>
+    Math.max(extent(n, across), blockOf(flowing(kidsOf(tree, n.id))));
   const place = (p: ShapeElement, children: readonly ShapeElement[]) => {
     const at = out.get(p.id)!;
-    const block =
-      children.reduce((s, c) => s + span(c), 0) + gaps.sibling * Math.max(0, children.length - 1);
-    let cursor = at[across] + extent(p, across) / 2 - block / 2;
-    for (const c of children) {
+    const row = flowing(children);
+    let cursor = at[across] + extent(p, across) / 2 - blockOf(row) / 2 + pad(row[0]);
+    row.forEach((c, i) => {
+      if (i > 0) cursor += between(row[i - 1]!, c);
       const s = span(c);
       const main = dir === 1 ? at[axis] + extent(p, axis) + gap : at[axis] - gap - extent(c, axis);
       const side = cursor + s / 2 - extent(c, across) / 2;
       out.set(c.id, axis === 'x' ? { x: main, y: side } : { x: side, y: main });
-      cursor += s + gaps.sibling;
-    }
+      cursor += s;
+    });
+    for (const c of children) if (isPlaced(c)) out.set(c.id, { x: c.x, y: c.y });
     for (const c of children) place(c, kidsOf(tree, c.id));
   };
   place(parent, kids);
@@ -172,10 +202,15 @@ function bubbleLayout(tree: Tree, out: MindLayout, root: ShapeElement, gaps: Min
       const s = depth === 0 ? share / kids.length : (share * leaves.get(c.id)!) / leaves.get(n.id)!;
       const mid = a + s / 2;
       const r = radius[depth + 1]!;
-      out.set(c.id, {
-        x: origin.x + Math.cos(mid) * r - c.width / 2,
-        y: origin.y + Math.sin(mid) * r - c.height / 2,
-      });
+      out.set(
+        c.id,
+        isPlaced(c)
+          ? { x: c.x, y: c.y }
+          : {
+              x: origin.x + Math.cos(mid) * r - c.width / 2,
+              y: origin.y + Math.sin(mid) * r - c.height / 2,
+            },
+      );
       place(c, a, s, depth + 1);
       a += s;
     }
@@ -274,6 +309,12 @@ export function layoutMindTree(
     );
     stackLayout(tree, out, root, right, 'x', 1, gaps);
     stackLayout(tree, out, root, left, 'x', -1, gaps);
+    // A branch placed by hand keeps its place and grows on the side it stands on.
+    for (const k of kids.filter(isPlaced)) {
+      out.set(k.id, { x: k.x, y: k.y });
+      const side = centre(k).x < centre(root).x ? -1 : 1;
+      stackLayout(tree, out, k, kidsOf(tree, k.id), 'x', side, gaps);
+    }
   }
   for (const [id, p] of out) out.set(id, { x: Math.round(p.x), y: Math.round(p.y) });
   return out;
@@ -305,7 +346,7 @@ function balancedSides(
   const right: ShapeElement[] = [];
   const dealt = new Set<ElementId>();
   for (const k of kids) {
-    if (k === hinted) continue;
+    if (k === hinted || isPlaced(k)) continue;
     const goLeft = fresh ? height(left) < height(right) : centre(k).x < rootX;
     (goLeft ? left : right).push(k);
     if (goLeft) dealt.add(k.id);
@@ -368,4 +409,110 @@ export function reanchorMindConnectors(
     out.push({ ...el, from: { ...el.from, anchor: fromA }, to: { ...el.to, anchor: toA } });
   }
   return out;
+}
+
+/** A group's tinted box (docs/specs/009-elements/mind-node.md "Groups"): its members and their branches, padded. */
+export type MindGroupBox = {
+  parentId: ElementId;
+  groupId: string;
+  memberIds: ElementId[];
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+/** Every group's box on the tab: siblings sharing a `mindGroup` under one parent, a branch placed elsewhere by hand
+ *  left out. */
+export function mindGroupBoxes(elements: Element[]): MindGroupBox[] {
+  const groups = new Map<string, ShapeElement[]>();
+  for (const el of elements) {
+    if (!isMindNode(el) || !el.mindGroup || !el.mindParentId) continue;
+    const key = `${el.mindParentId}\u0000${el.mindGroup}`;
+    const list = groups.get(key);
+    if (list) list.push(el);
+    else groups.set(key, [el]);
+  }
+  const out: MindGroupBox[] = [];
+  for (const members of groups.values()) {
+    const nodes: ShapeElement[] = [];
+    for (const m of members) {
+      nodes.push(m);
+      const away = new Set<ElementId>();
+      for (const n of mindSubtree(elements, m.id)) {
+        const parentAway = n.mindParentId ? away.has(n.mindParentId) : false;
+        if (isPlaced(n) || parentAway) away.add(n.id);
+        else nodes.push(n);
+      }
+    }
+    const r = unionRects(nodes)!;
+    out.push({
+      parentId: members[0]!.mindParentId!,
+      groupId: members[0]!.mindGroup!,
+      memberIds: members.map((m) => m.id),
+      x: r.x - MIND_GROUP_PADDING,
+      y: r.y - MIND_GROUP_PADDING,
+      width: r.width + 2 * MIND_GROUP_PADDING,
+      height: r.height + 2 * MIND_GROUP_PADDING,
+    });
+  }
+  return out;
+}
+
+/** The number each numbered node is drawn with (docs/specs/009-elements/mind-node.md "Numbered nodes"): its place
+ *  among its numbered siblings, in the order the map reads them, 1 up. */
+export function mindNumbers(elements: Element[]): Map<ElementId, number> {
+  const out = new Map<ElementId, number>();
+  if (!elements.some((el) => isMindNode(el) && el.mindNumbered === true)) return out;
+  const roots = new Set<ElementId>();
+  for (const el of elements) if (isMindNode(el)) roots.add(mindRootOf(elements, el).id);
+  for (const rootId of roots) {
+    const root = elements.find((e) => e.id === rootId) as ShapeElement;
+    const counts = new Map<ElementId, number>();
+    for (const { node } of mindNodesInOrder(elements, rootId, mindFlowOf(elements, root))) {
+      if (node.mindNumbered !== true || !node.mindParentId || node.id === rootId) continue;
+      const n = (counts.get(node.mindParentId) ?? 0) + 1;
+      counts.set(node.mindParentId, n);
+      out.set(node.id, n);
+    }
+  }
+  return out;
+}
+
+// One hue per group, picked from its id so a group keeps its colour wherever it is drawn.
+const GROUP_HUES = [210, 150, 35, 280, 345, 185, 95, 260] as const;
+
+/** A group's tint (docs/specs/009-elements/mind-node.md "Groups"): mostly transparent, its edge a little stronger, on
+ *  light or dark paper. */
+export function mindGroupColours(
+  groupId: string,
+  surface: 'light' | 'dark',
+): { fill: string; stroke: string } {
+  let hash = 0;
+  for (const ch of groupId) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  const hue = GROUP_HUES[hash % GROUP_HUES.length]!;
+  const light = surface === 'dark' ? 62 : 48;
+  return {
+    fill: `hsla(${hue}, 70%, ${light}%, ${surface === 'dark' ? 0.12 : 0.09})`,
+    stroke: `hsla(${hue}, 70%, ${light}%, 0.45)`,
+  };
+}
+
+/** The elements as an export draws them: a numbered node's label led by its number ("2. Venue"). */
+export function withMindNumberLabels(elements: Element[]): Element[] {
+  const numbers = mindNumbers(elements);
+  if (numbers.size === 0) return elements;
+  return elements.map((el) => {
+    const n = numbers.get(el.id);
+    if (n === undefined || el.type !== 'shape') return el;
+    const prefix = `${n}. `;
+    const runs = el.richText;
+    return {
+      ...el,
+      label: prefix + (el.label ?? ''),
+      ...(runs && runs.length > 0
+        ? { richText: [{ ...runs[0]!, text: prefix + runs[0]!.text }, ...runs.slice(1)] }
+        : {}),
+    };
+  });
 }

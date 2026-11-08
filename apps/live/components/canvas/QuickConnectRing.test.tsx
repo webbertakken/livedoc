@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, fireEvent, render } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MOTION_MS } from '@livedoc/tailwind-config/motion';
 import { QuickConnectRing } from './QuickConnectRing';
@@ -86,6 +86,18 @@ describe('QuickConnectRing menu', () => {
       .map((b) => b.getAttribute('aria-label'))
       .filter((l) => l !== 'Quick add and connect');
     expect(labels).toEqual(['Add Child', 'Add Sibling', 'Duplicate']);
+  });
+
+  it('stays open after a Shift+click grows, so the next press grows again', () => {
+    const grow = vi.fn();
+    const close = vi.fn();
+    const { getByRole } = render(ring(true, { onGrowMind: grow, onClose: close }));
+    fireEvent.click(getByRole('button', { name: 'Add Child' }), { shiftKey: true });
+    expect(grow).toHaveBeenCalledExactlyOnceWith('child', true);
+    expect(close).not.toHaveBeenCalled();
+    fireEvent.click(getByRole('button', { name: 'Add Child' }));
+    expect(grow).toHaveBeenLastCalledWith('child', false);
+    expect(close).toHaveBeenCalledOnce();
   });
 });
 

@@ -13,6 +13,7 @@
 // inline version used). The page owns the open/closed state + the
 // handlers; this component only decides which items to show.
 
+import { ShapeMorphPicker } from './ShapeMorphPicker';
 import { onMouseHover, useRevertOnUnmount } from '@/components/primitives/hover-preview';
 import {
   EVENT_STORMING_NOTES,
@@ -53,7 +54,6 @@ import {
   MenuGroupSeparator,
 } from '@/components/primitives/PortalMenu';
 import { MenuTile, MenuTileGrid } from '@/components/primitives/MenuTiles';
-import { ShapeIcon } from '@/components/primitives/shape-icon';
 import { SizeSection } from '@/components/palette/SizeSection';
 
 import { OpacityRow } from '@/components/palette/context-menu-rows';
@@ -67,8 +67,7 @@ import { ElementAppearanceSections } from './ElementAppearanceSections';
 import { MirrorCopyGlyph } from '@/components/canvas/logo-glyphs';
 import { MultiSelectionContextMenu } from './MultiSelectionContextMenu';
 
-import { shapeKindLabel } from '@/lib/element-names';
-import { COMMON_SHAPES, ROTATION_ANGLES } from './context-menu-constants';
+import { ROTATION_ANGLES } from './context-menu-constants';
 import { useViewportHeight } from '@/hooks/ui/useViewportHeight';
 
 // Cursor position + which menu to show. `element` carries the clicked
@@ -317,20 +316,12 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
         {/* Shape — morph to another common kind, preserving size + colour. */}
         {morphable ? (
           <MenuAccordionSection title="Shape" icon={<SquareMenuIcon />} {...sectionProps('shape')}>
-            <div className="grid grid-cols-4 gap-1 px-2 py-1.5">
-              {COMMON_SHAPES.map((kind) => (
-                <SizeButton
-                  key={kind}
-                  label={shapeKindLabel(kind)}
-                  active={target.type === 'shape' && target.shape === kind}
-                  onClick={() => props.onSetShapeKind([target.id], kind)}
-                  onPointerEnter={onMouseHover(() => props.onPreviewShapeKind([target.id], kind))}
-                  onPointerLeave={onMouseHover(props.onPreviewStyleEnd)}
-                >
-                  <ShapeIcon kind={kind} />
-                </SizeButton>
-              ))}
-            </div>
+            <ShapeMorphPicker
+              current={target.type === 'shape' ? target.shape : undefined}
+              onPick={(kind) => props.onSetShapeKind([target.id], kind)}
+              onPreview={(kind) => props.onPreviewShapeKind([target.id], kind)}
+              onPreviewEnd={props.onPreviewStyleEnd}
+            />
           </MenuAccordionSection>
         ) : null}
         {/* Rotation — fixed snap angles. Each tile previews the orientation

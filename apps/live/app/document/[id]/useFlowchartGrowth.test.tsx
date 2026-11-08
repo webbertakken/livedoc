@@ -121,13 +121,13 @@ describe('routeGrowth', () => {
     expect(r.canGrowMindNode('s')).toBe(true);
     expect(r.canGrowMindNode('x')).toBe(false);
     r.growMindNode('s', 'child');
-    r.growMindNode('s', 'sibling');
+    r.growMindNode('s', 'sibling', { stay: true });
     expect(flow.growFlowchartStep.mock.calls).toEqual([
-      ['s', 'next'],
-      ['s', 'parallel'],
+      ['s', 'next', undefined, undefined],
+      ['s', 'parallel', undefined, { stay: true }],
     ]);
-    r.growMindNode('m', 'child');
-    expect(mind.growMindNode).toHaveBeenCalledWith('m', 'child');
+    r.growMindNode('m', 'child', { stay: true });
+    expect(mind.growMindNode).toHaveBeenCalledWith('m', 'child', { stay: true });
     expect(r.abandonMindNode('s')).toBe(true);
     expect(r.escapeGrownMindNode('s')).toBe(true);
   });

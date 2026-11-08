@@ -19,7 +19,9 @@ import { toSurfacePx, uiScaleStyle } from '@/lib/ui-scale';
 import {
   QUICK_ICON_ALIGNS,
   QUICK_TEXT_ALIGNS,
+  QUICK_TEXT_SIZES,
   QUICK_WIDTHS,
+  type QuickTextSize,
   type QuickCorners,
   type QuickIconAlign,
   type QuickStrokeStyle,
@@ -76,6 +78,13 @@ const CORNER_NAMES: Record<QuickCorners, string> = {
   sm: 'Small',
   md: 'Medium',
   lg: 'Large',
+};
+const TEXT_SIZE_NAMES: Record<QuickTextSize, string> = {
+  xs: 'Extra small',
+  s: 'Small',
+  m: 'Medium',
+  l: 'Large',
+  xl: 'Extra large',
 };
 const ICON_ALIGN_NAMES: Record<QuickIconAlign, string> = {
   left: 'Icon before label',
@@ -308,7 +317,7 @@ function QuickStyleSections({
     (role: QuickSwatchRole) => (slot: QuickColourValue, anchor: HTMLButtonElement) => {
       if (isQuickSwatchSlot(slot)) onEditSwatch(role, slot, anchor);
     };
-  const { width, style, textAlign, iconAlign, corners } = view.sections;
+  const { width, style, textAlign, iconAlign, corners, textSize } = view.sections;
   const surface = useCanvasSurface();
   // Whose style this is when it is not plainly the selection: the pen in hand,
   // the selected strokes, or a tool's next mark. Power user mode leaves it out.
@@ -456,6 +465,25 @@ function QuickStyleSections({
           }))}
           value={textAlign.value}
           onChoose={quickStyle.setTextAlign}
+        />
+      ) : null}
+      {textSize ? (
+        <QuickRadioRow
+          title="Text Size"
+          testId="quick-style-text-size"
+          showTitle={showTitles}
+          columns={QUICK_TEXT_SIZES.length}
+          options={QUICK_TEXT_SIZES.map((step, i) => ({
+            value: step,
+            name: `${TEXT_SIZE_NAMES[step]}, ${textSize.steps[i]}px`,
+            content: (
+              <span className="text-[11px] font-semibold leading-none">{step.toUpperCase()}</span>
+            ),
+          }))}
+          value={textSize.value}
+          onChoose={(step) =>
+            quickStyle.setTextSize(textSize.steps[QUICK_TEXT_SIZES.indexOf(step)]!)
+          }
         />
       ) : null}
       {iconAlign ? (

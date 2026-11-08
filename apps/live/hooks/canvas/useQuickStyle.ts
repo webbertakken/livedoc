@@ -17,7 +17,7 @@ import type {
   ThemeDefinition,
 } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
-import { canvasSurface, PEN_INK } from '@livedoc/document';
+import { canvasSurface, labelFontPx, PEN_INK } from '@livedoc/document';
 import {
   applyBoardStroke,
   applyBoardTextColour,
@@ -47,6 +47,7 @@ import { resolveTabBackdrop } from '@/lib/themes';
 import {
   applyQuickFill,
   applyQuickIconAlign,
+  applyQuickTextSize,
   applyQuickStroke,
   applyQuickStrokeStyle,
   applyQuickTextAlign,
@@ -76,6 +77,8 @@ export type QuickStyleApi = {
   setStrokeStyle: (style: QuickStrokeStyle) => void;
   setTextAlign: (align: TextAlignX) => void;
   setIconAlign: (align: QuickIconAlign) => void;
+  // The Text size row (docs/specs/008-canvas/quick-style-panel.md "Text size"): a step's px.
+  setTextSize: (px: number) => void;
   // A whiteboard's Corners row (docs/specs/008-canvas/corner-radius.md).
   setCorners: (corners: QuickCorners) => void;
   // A whiteboard's Stroke and Text colour rows: the whiteboard's colours.
@@ -152,6 +155,8 @@ export function useQuickStyle(
   const ink = PEN_INK[board];
   const held = deps.pen?.held ?? null;
   const palette = useMemo(() => ({ board, ink }), [board, ink]);
+  // The tab's default text size, the Text size row's Medium.
+  const textBase = labelFontPx(activeTab.defaultTextSize);
   // A tool's choices land in memory, not the document: a version to re-read it.
   const [toolVersion, bumpTool] = useReducer((n: number) => n + 1, 0);
   const intent = deps.toolIntent ?? null;
@@ -179,13 +184,13 @@ export function useQuickStyle(
     if (editsBlocked) return null;
     if (phantom && intent) {
       const tool = onWhiteboard(
-        quickStyleView([phantom], theme, overrides, palette.ink),
+        quickStyleView([phantom], theme, overrides, palette.ink, textBase),
         [phantom],
         palette,
       );
       return tool && { ...tool, caption: toolCaption(intent) };
     }
-    const plain = quickStyleView(selected, theme, overrides, palette.ink);
+    const plain = quickStyleView(selected, theme, overrides, palette.ink, textBase);
     if (!whiteboard) return plain;
     const board = onWhiteboard(plain, selected, palette);
     // Selected strokes first; with nothing selected, the pen in hand.
@@ -198,7 +203,18 @@ export function useQuickStyle(
     return pen
       ? { ...(board ?? { targetIds: [], sections: {} }), pen, ...(caption ? { caption } : {}) }
       : board;
-  }, [editsBlocked, selected, theme, overrides, whiteboard, held, phantom, intent, palette]);
+  }, [
+    editsBlocked,
+    selected,
+    theme,
+    overrides,
+    whiteboard,
+    held,
+    phantom,
+    intent,
+    palette,
+    textBase,
+  ]);
   // The Highlighter rows join whatever else the panel shows; alone, they are the whole panel. A
   // mixed selection's caption counts every styled element, highlights included.
   const view = useMemo((): QuickStyleView | null => {
@@ -306,6 +322,7 @@ export function useQuickStyle(
     setStrokeStyle: (style) => run((el) => applyQuickStrokeStyle(el, style), 'QuickStrokeStyle'),
     setTextAlign: (align) => run((el) => applyQuickTextAlign(el, align), 'QuickTextAlign'),
     setIconAlign: (align) => run((el) => applyQuickIconAlign(el, align), 'QuickIconAlign'),
+    setTextSize: (px) => run((el) => applyQuickTextSize(el, px), 'QuickTextSize'),
     setCorners: (corners) => run((el) => applyQuickCorners(el, corners), 'QuickCorners'),
     setBoardStroke: (colour) => run((el) => applyBoardStroke(el, colour), 'QuickStroke'),
     setBoardTextColour: (colour) =>

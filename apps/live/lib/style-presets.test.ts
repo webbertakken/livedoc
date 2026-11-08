@@ -1,5 +1,6 @@
 import {
   ARROW_THICKNESS_PX,
+  createShape,
   DEFAULT_ANIMATION_SPEED,
   encodeStrokePoints,
   freehandPressures,
@@ -23,6 +24,7 @@ import {
   applyIconWeightToEl,
   applyRotationToEl,
   applyShadowToEl,
+  applyShapeKindToEl,
   applyFinishToEl,
   applyStrokeColorToEl,
   applyTextColorToEl,
@@ -496,5 +498,34 @@ describe('applyFinishToEl (docs/specs/008-canvas/finish.md)', () => {
       const source = el(type);
       expect(applyFinishToEl(source, 'sketch'), type).toBe(source);
     }
+  });
+});
+
+// docs/specs/008-canvas/canvas-and-palette.md "Shape": a box becomes a mind node (a root), and a mind node a box.
+describe('applyShapeKindToEl and the mind node', () => {
+  const box = { ...createShape('square', 10, 20), width: 160, height: 90, label: 'Idea' };
+
+  it('turns a box into a root mind node, keeping its size and label', () => {
+    expect(applyShapeKindToEl(box, 'mind-node')).toMatchObject({
+      shape: 'mind-node',
+      width: 160,
+      height: 90,
+      label: 'Idea',
+    });
+    expect(applyShapeKindToEl(box, 'mind-node')).not.toHaveProperty('mindParentId');
+  });
+
+  it('drops the map fields when a mind node becomes another kind', () => {
+    const node = {
+      ...box,
+      shape: 'mind-node' as const,
+      mindParentId: 'p',
+      mindFlow: 'tree' as const,
+      mindSpacing: 'wide' as const,
+    };
+    const out = applyShapeKindToEl(node, 'square');
+    expect(out).toMatchObject({ shape: 'square', label: 'Idea' });
+    for (const field of ['mindParentId', 'mindFlow', 'mindSpacing'])
+      expect(out).not.toHaveProperty(field);
   });
 });

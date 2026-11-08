@@ -18,6 +18,7 @@ import {
   sendManyToBack,
   isBoxed,
   withAttachedArrows,
+  relayoutAfterRemoval,
   withMindBranches,
   withSheetCharts,
   type Element,
@@ -134,13 +135,17 @@ export function useElementSelectionActions(deps: EditorSelectionActionsDeps) {
     commit((els) => {
       // The arrows attached to what goes, and those hung off them in turn (docs/specs/008-canvas/arrow-to-arrow.md).
       const gone = withAttachedArrows(els, targetIds, isProtected);
-      return els.filter((el) => {
-        // Belt-and-suspenders: never drop a locked element, even via the
-        // arrow cascade (a locked arrow survives its endpoint going).
-        // A locked LAYER protects its elements the same way (docs/specs/006-document/layers.md).
-        if (el.locked === true || layerLockedIds.has(el.id)) return true;
-        return !gone.has(el.id);
-      });
+      // A tidy mind map closes the gap in the same change (docs/specs/009-elements/mind-node.md "Deleting").
+      return relayoutAfterRemoval(
+        els,
+        els.filter((el) => {
+          // Belt-and-suspenders: never drop a locked element, even via the
+          // arrow cascade (a locked arrow survives its endpoint going).
+          // A locked LAYER protects its elements the same way (docs/specs/006-document/layers.md).
+          if (el.locked === true || layerLockedIds.has(el.id)) return true;
+          return !gone.has(el.id);
+        }),
+      );
     });
     setSelectedId(null);
     setEditingId(null);
@@ -232,10 +237,14 @@ export function useElementSelectionActions(deps: EditorSelectionActionsDeps) {
     commit((els) => {
       // The arrows attached to what goes, and those hung off them in turn (docs/specs/008-canvas/arrow-to-arrow.md).
       const gone = withAttachedArrows(els, targetIds, isProtected);
-      return els.filter((el) => {
-        if (el.locked === true || layerLockedIds.has(el.id)) return true;
-        return !gone.has(el.id);
-      });
+      // A tidy mind map closes the gap in the same change (docs/specs/009-elements/mind-node.md "Deleting").
+      return relayoutAfterRemoval(
+        els,
+        els.filter((el) => {
+          if (el.locked === true || layerLockedIds.has(el.id)) return true;
+          return !gone.has(el.id);
+        }),
+      );
     });
     setMultiSelectedIds(new Set());
     setEditingId(null);

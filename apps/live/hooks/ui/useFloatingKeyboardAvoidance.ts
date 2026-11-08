@@ -70,8 +70,10 @@ function revealWithin(surface: HTMLElement, field: HTMLElement) {
   }
 }
 
-// The lift each surface carries now, and the inline transform it had before it.
-const lifted = new Map<HTMLElement, { dy: number; base: string }>();
+// The lift each surface carries now, the inline transform it had before it, and the transform as the browser wrote it
+// back once lifted: a re-render that set the surface's own transform is told apart by comparing with that, never with
+// the string written, which a browser rewrites (three decimals at most in Chrome).
+const lifted = new Map<HTMLElement, { dy: number; base: string; written: string }>();
 // The inline max-height each grown surface had before it grew.
 const grown = new Map<HTMLElement, string>();
 
@@ -90,7 +92,9 @@ function shrink(el: HTMLElement) {
   grown.delete(el);
 }
 
-function apply(el: HTMLElement, dy: number) {
+// Whole pixels: a fractional lift (a tablet's 2.125 device pixel ratio) gains nothing on screen.
+function apply(el: HTMLElement, lift: number) {
+  const dy = Math.round(lift);
   const was = lifted.get(el);
   const base = was ? was.base : el.style.transform;
   if (dy === 0) {
@@ -98,8 +102,8 @@ function apply(el: HTMLElement, dy: number) {
     lifted.delete(el);
     return;
   }
-  lifted.set(el, { dy, base });
   el.style.transform = `translateY(${-dy}px)${base ? ` ${base}` : ''}`;
+  lifted.set(el, { dy, base, written: el.style.transform });
 }
 
 export function releaseAll(except?: HTMLElement | null) {
@@ -129,8 +133,7 @@ export function checkFloatingField() {
   }
   // A re-render that set the surface's own transform dropped the lift: it starts again from there.
   const was = lifted.get(surface);
-  if (was && !surface.style.transform.startsWith(`translateY(${-was.dy}px)`))
-    lifted.delete(surface);
+  if (was && surface.style.transform !== was.written) lifted.delete(surface);
   grow(surface, vv.height - 2 * VIEWPORT_EDGE_MARGIN);
   revealWithin(surface, field);
   // Where both would be without the lift this surface carries now.

@@ -3074,8 +3074,10 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     scrollIntoView,
   };
   const flowchartGrowth = useFlowchartGrowth(growthOpts);
+  const mindGrowth = useMindGrowth(growthOpts);
+  const { addMindParent } = mindGrowth;
   const { canGrowMindNode, growMindNode, abandonMindNode, escapeGrownMindNode } = routeGrowth(
-    useMindGrowth(growthOpts),
+    mindGrowth,
     flowchartGrowth,
   );
 
@@ -3329,6 +3331,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     setMindSpacingSelected,
     tidyMindMapSelected,
     tidyMindMap,
+    mindArrangeActions,
     setPageHeading,
     setWebRows,
     appendWebRowTo,
@@ -4415,6 +4418,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     setMindSpacingSelected,
     tidyMindMapSelected,
     tidyMindMap,
+    mindArrangeActions,
     toggleChecklistItem,
     setPageHeading,
     setWebRows,
@@ -4423,6 +4427,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     setHeroCaptionLine,
     setHeroCaptionSelected,
     growMindNode,
+    addMindParent,
     abandonMindNode,
     flowchartActions,
     entityActions,

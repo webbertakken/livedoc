@@ -377,7 +377,17 @@ export const EXACT: Readonly<Record<string, string>> = {
     'A link-card element automatically fetched a preview (title, image, and favicon) after someone gave it a web address.',
   'Element|Changed|Marker': "Someone added or removed a status marker next to a shape's label.",
   'Element|Changed|MarkerSize': "Someone changed the size of a shape's status marker.",
+  'Element|Changed|MindAutoPosition':
+    "Someone put a mind map node they had placed by hand back into the map's automatic layout.",
   'Element|Changed|MindFlow': "Someone changed a mind map's flow direction.",
+  'Element|Changed|MindGroup': 'Someone grouped mind map nodes together in a tinted box.',
+  'Element|Changed|MindNumber':
+    'Someone numbered or unnumbered mind map nodes, like a numbered list.',
+  'Element|Changed|MindPlace':
+    'Someone dragged a mind map node to a place of their own, out of the automatic layout.',
+  'Element|Changed|MindReorder':
+    'Someone dragged a mind map node to a new place among its siblings.',
+  'Element|Changed|MindUngroup': 'Someone took mind map nodes out of their group.',
   'Element|Changed|MindOutline':
     'Someone saved an edited outline onto a mind map, re-shaping the map from its text.',
   'Element|Changed|MindSpacing':
@@ -416,6 +426,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone made the lines of the selected shapes or arrows thin, medium, or thick from the quick style panel.',
   'Element|Changed|QuickTextColour':
     'Someone picked a colour for the selected text elements from the quick style panel beside the selection.',
+  'Element|Changed|QuickTextSize':
+    "Someone picked a text size (extra small to extra large) from the quick style panel for the selected elements' text.",
   'Element|Changed|QuickTextAlign':
     'Someone aligned the text of the selected shapes left, centre, or right from the quick style panel.',
   'Element|Changed|Quiz':

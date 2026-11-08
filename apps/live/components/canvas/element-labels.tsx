@@ -17,6 +17,7 @@ import {
   hasRichFormatting,
   isEventStormingNote,
   labelFontPx,
+  shrinkLabelPx,
   type BoxedElement,
   type TextAlignX,
   type TextAlignY,
@@ -229,10 +230,27 @@ export function renderLabel(
     );
   }
 
+  // A shape's label shrinks to fit its box (docs/specs/004-interface-design/fonts.md "Shrink to fit"), measured as the
+  // export measures it.
+  const sizePx = labelFontPx(textSize) * textScale;
+  const px = hug
+    ? hug.fontPx
+    : element.type === 'shape'
+      ? shrinkLabelPx({
+          text: caps ? label.toUpperCase() : label,
+          px: sizePx,
+          width: element.width,
+          height: element.height,
+          padding,
+          bold: !!element.textBold,
+          italic: !!element.textItalic,
+          fontFamily,
+        })
+      : sizePx;
   return (
     <FixedSizeLabel
       text={label}
-      px={hug ? hug.fontPx : labelFontPx(textSize) * textScale}
+      px={px}
       alignX={alignX}
       alignY={alignY}
       padding={textPadding}

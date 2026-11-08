@@ -89,6 +89,23 @@ The slider shows a preset at the px it draws at on that surface (a label's Large
 with the thumb at 32). Touching the slider
 replaces the preset with a px; nothing converts presets on load.
 
+### Shrink to fit
+
+A **shape's** label always fits its box: drawn at its size when its wrapped lines fit inside the box less its
+padding, else at the largest whole px below that which does, down to 6 px (`shrinkLabelPx`). There is no control
+for it: the size picked is the most a label draws at, and a label too long for its box shrinks instead of running
+out of it. Boxes of different sizes with the same size picked draw the same text, unless one is too small for its
+words. The canvas and every export measure it the same way (the label's face, weight and wrapping), so they agree.
+A note's Scale keeps filling its note, a text element hugs its text, and a label with formatting, an inline icon, a
+marker or a number keeps its size.
+
+### Five steps
+
+The quick style panel's **Text size** row ([Quick style panel](../008-canvas/quick-style-panel.md)) offers five steps
+of the same slider: **XS, S, M, L and XL**, around the tab's default size (its **Size of New Text**, Medium when
+unset): M is the default itself, and the others 0.7, 0.85, 1.3 and 1.7 times it, rounded to whole px (10, 12, 14, 18
+and 24 px on a new document's 14 px). A step writes its px.
+
 Agents write the same values through the `text` alias: `sm`, `md`, `lg`, `scale`, or a whole px
 from 6 to 48 (`text=18`). Anything else is refused with that list.
 

@@ -59,6 +59,29 @@ describe('useMindGrowth', () => {
     expect(setEditingId).toHaveBeenLastCalledWith(null);
   });
 
+  it('keeps the node it grew from selected when asked to stay, so the next press grows again', () => {
+    const { hook, setEditingId, setSelectedId } = setup();
+    act(() => hook.result.current.api.growMindNode('root', 'child', { stay: true }));
+    act(() => hook.result.current.api.growMindNode('root', 'child', { stay: true }));
+    const kids = hook.result.current.tab.elements.filter(
+      (e) => e.type === 'shape' && e.mindParentId === 'root',
+    );
+    expect(kids).toHaveLength(2);
+    expect(setSelectedId).not.toHaveBeenCalled();
+    expect(setEditingId).not.toHaveBeenCalled();
+  });
+
+  it('adds a parent above a node and selects it, ready to be named', () => {
+    const { hook, setSelectedId } = setup();
+    act(() => hook.result.current.api.growMindNode('root', 'child'));
+    const child = grownId(setSelectedId);
+    act(() => hook.result.current.api.addMindParent(child));
+    const parent = grownId(setSelectedId);
+    const els = hook.result.current.tab.elements;
+    expect(els.find((e) => e.id === parent)).toMatchObject({ mindParentId: 'root' });
+    expect(els.find((e) => e.id === child)).toMatchObject({ mindParentId: parent });
+  });
+
   it('opens the editor once the node lands when keys were typed for it first', () => {
     const { hook, setEditingId, setSelectedId } = setup();
     act(() => {

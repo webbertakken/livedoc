@@ -1,6 +1,11 @@
 import { useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
 import type { Element, Tab } from '@livedoc/document';
-import { beginMindHandoff, landMindHandoff, type HandoffActions } from '@/lib/mind-handoff';
+import {
+  beginMindHandoff,
+  landMindHandoff,
+  type GrowOptions,
+  type HandoffActions,
+} from '@/lib/mind-handoff';
 
 // What both keyboard-grown structures share (docs/specs/009-elements/mind-node.md,
 // docs/specs/009-elements/flowchart.md): useMindGrowth and useFlowchartGrowth each plan and dress
@@ -72,11 +77,14 @@ export function useGrowthLanding({
   const lastGrown = useRef<string | null>(null);
 
   // A just-committed growth: the label editor it came from closes, the new element is selected
-  // and scrolled into view, and keys typed before it is on screen are held for it.
+  // and scrolled into view, and keys typed before it is on screen are held for it. One that stays
+  // (Shift+click) leaves the selection, the view and the keys where they are.
   const reveal = (
     el: { id: string; x: number; y: number; width: number; height: number },
     handoff: HandoffActions,
+    { stay = false }: GrowOptions = {},
   ) => {
+    if (stay) return;
     setEditingId(null);
     setSelectedId(el.id);
     beginMindHandoff(el.id, handoff);

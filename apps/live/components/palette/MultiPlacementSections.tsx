@@ -1,3 +1,4 @@
+import { ShapeMorphPicker } from './ShapeMorphPicker';
 import { Switch } from '@livedoc/ui';
 import { CombineOpGlyph, CombineTiles } from '@/components/canvas/CombineMenu';
 import { MirrorCopyGlyph } from '@/components/canvas/logo-glyphs';
@@ -28,9 +29,7 @@ import {
 import { MenuTile, MenuTileGrid } from '@/components/primitives/MenuTiles';
 import { OpacityRow } from '@/components/palette/context-menu-rows';
 import { MoveToLayerRow } from '@/components/palette/MoveToLayerRow';
-import { ShapeIcon } from '@/components/primitives/shape-icon';
-import { shapeKindLabel } from '@/lib/element-names';
-import { COMMON_SHAPES, ROTATION_ANGLES } from './context-menu-constants';
+import { ROTATION_ANGLES } from './context-menu-constants';
 import type { EditorContextMenuProps } from './EditorContextMenu.types';
 import type { useContextMenuScaffold } from './useContextMenuScaffold';
 
@@ -136,20 +135,12 @@ export function MultiPlacementSections({
       {/* Shape — morph every morphable member to a common kind. */}
       {morphSrc ? (
         <MenuAccordionSection title="Shape" icon={<SquareMenuIcon />} {...sectionProps('m-shape')}>
-          <div className="grid grid-cols-4 gap-1 px-2 py-1.5">
-            {COMMON_SHAPES.map((kind) => (
-              <SizeButton
-                key={kind}
-                label={shapeKindLabel(kind)}
-                active={morphSrc.shape === kind}
-                onClick={() => props.onSetShapeKind(morphIds, kind)}
-                onPointerEnter={onMouseHover(() => props.onPreviewShapeKind(morphIds, kind))}
-                onPointerLeave={onMouseHover(props.onPreviewStyleEnd)}
-              >
-                <ShapeIcon kind={kind} />
-              </SizeButton>
-            ))}
-          </div>
+          <ShapeMorphPicker
+            current={morphSrc.shape}
+            onPick={(kind) => props.onSetShapeKind(morphIds, kind)}
+            onPreview={(kind) => props.onPreviewShapeKind(morphIds, kind)}
+            onPreviewEnd={props.onPreviewStyleEnd}
+          />
           <div className="px-2 pb-1.5 pt-0.5">
             <MenuActionButton
               label="Reset Aspect Ratio"

@@ -79,7 +79,8 @@ type QuickConnectRingProps = {
   onAddTableRow?: () => void;
   // Mind-map growth (docs/specs/009-elements/mind-node.md). Set only on a mind node, which is what
   // puts Add child / Add sibling on its ring.
-  onGrowMind?: (relation: 'child' | 'sibling') => void;
+  // `stay`: Shift was held, so the node stays selected and the ring open, to grow again.
+  onGrowMind?: (relation: 'child' | 'sibling', stay: boolean) => void;
   // What `onGrowMind` grows, which names its two options. Absent: a mind map.
   growing?: 'mind' | 'flowchart';
   onAddTableColumn?: () => void;
@@ -415,8 +416,13 @@ export function QuickConnectRing({
                         onClose();
                       }
                     }}
-                    onClick={() => {
+                    onClick={(e) => {
                       if (isArrow) return;
+                      const growing =
+                        option.kind === 'mind-child' ||
+                        option.kind === 'flowchart-next' ||
+                        option.kind === 'mind-sibling' ||
+                        option.kind === 'flowchart-parallel';
                       if (option.kind === 'pencil') onPencil();
                       else if (option.kind === 'add-web-row') webRow?.onAdd();
                       else if (option.kind === 'add-row') onAddTableRow?.();
@@ -424,14 +430,14 @@ export function QuickConnectRing({
                       else if (option.kind === 'entity-field') entity?.onAddField?.();
                       else if (option.kind === 'add-column') onAddTableColumn?.();
                       else if (option.kind === 'mind-child' || option.kind === 'flowchart-next')
-                        onGrowMind?.('child');
+                        onGrowMind?.('child', e.shiftKey);
                       else if (
                         option.kind === 'mind-sibling' ||
                         option.kind === 'flowchart-parallel'
                       )
-                        onGrowMind?.('sibling');
+                        onGrowMind?.('sibling', e.shiftKey);
                       else onSpawn(option.kind as QuickConnectKind);
-                      onClose();
+                      if (!(growing && e.shiftKey)) onClose();
                     }}
                   >
                     {option.icon}

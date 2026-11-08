@@ -165,7 +165,14 @@ export const SHAPE_KIND_FIELDS: Readonly<Record<string, readonly string[]>> = {
   process: ['processSteps'],
   'site-header': ['navLinks'],
   page: ['pageTitle', 'pageSubtitle'],
-  'mind-node': ['mindParentId', 'mindFlow', 'mindSpacing'],
+  'mind-node': [
+    'mindParentId',
+    'mindFlow',
+    'mindSpacing',
+    'mindPlaced',
+    'mindNumbered',
+    'mindGroup',
+  ],
   // docs/specs/009-elements/flowchart.md: any of the step-type kinds is a step once it carries a chart (a lane
   // joins one by `flowchartId` too, above).
   ...Object.fromEntries(

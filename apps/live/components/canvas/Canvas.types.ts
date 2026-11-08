@@ -2,6 +2,7 @@ import type { PenInk } from '@/hooks/canvas/commit-freehand';
 import type { SnapGuideStore } from '@/hooks/canvas/useSnapGuideState';
 import type { CombineOp } from '@/lib/combine/combine';
 import type { RemoteSelector } from '@/lib/presence-rows';
+import type { GrowOptions } from '@/lib/mind-handoff';
 import type { Dispatch, SetStateAction } from 'react';
 import type { ShapeLibraryItem } from '@livedoc/api-schema';
 import type { LibraryShapeRef } from '@/lib/shape-library-dnd';
@@ -651,7 +652,11 @@ export type CanvasProps = {
   // The Page masthead (docs/specs/009-elements/page-element.md): its heading and subtitle are their own
   // fields, so they commit through here rather than the label editor.
   // Mind map (docs/specs/009-elements/mind-node.md): grows the next node from the label editor.
-  onGrowMindNode: (id: string, kind: 'child' | 'sibling') => void;
+  onGrowMindNode: (id: string, kind: 'child' | 'sibling', options?: GrowOptions) => void;
+  // Number, Group and Auto Position on the selection toolbars (docs/specs/009-elements/mind-node.md): an Editor's.
+  mindArrangeActions?: import('@/hooks/canvas/useMindMapSetters').MindArrangeActions;
+  // Add Parent (docs/specs/009-elements/mind-node.md "Add Parent"): an Editor's, so absent for anyone else.
+  onAddMindParent?: (id: string) => void;
   // Flowchart (docs/specs/009-elements/flowchart.md): a step's type and lane from its toolbar. An
   // Editor's only, so absent for anyone else (who still grows a chart through onGrowMindNode).
   flowchartActions?: import('@/hooks/canvas/useFlowchartSetters').FlowchartActions;

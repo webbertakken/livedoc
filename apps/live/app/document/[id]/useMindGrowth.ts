@@ -1,5 +1,6 @@
 import {
   applyMindMoves,
+  insertMindParent,
   isMindNode,
   isMindTreeTidy,
   mindChildren,
@@ -16,7 +17,7 @@ import { dressMindConnector, dressMindNode } from '@/lib/mind-dress';
 import { fitMindLabel } from '@/lib/mind-label-fit';
 import { measureDrawnMindLabel } from '@/components/canvas/text-hug-measure';
 import { useLatest } from '@/hooks/ui/useLatest';
-import type { HandoffActions } from '@/lib/mind-handoff';
+import type { GrowOptions, HandoffActions } from '@/lib/mind-handoff';
 import {
   labelled,
   patchActiveElements,
@@ -73,7 +74,12 @@ export function useMindGrowth(opts: GrowthHookOpts) {
   // `label`, when given, is written onto the node grown FROM in the same
   // commit: the typing-ahead handoff finishing a node whose editor never
   // opened (lib/mind-handoff.ts).
-  const growMindNode = (id: string, kind: 'child' | 'sibling', label?: string) => {
+  const growMindNode = (
+    id: string,
+    kind: 'child' | 'sibling',
+    label?: string,
+    options: GrowOptions = {},
+  ) => {
     if (editsBlocked) return;
     const withLabel = (els: Element[]) => (label === undefined ? els : withLabelOn(els, id, label));
     const ids = { node: crypto.randomUUID(), arrow: crypto.randomUUID() };
@@ -101,10 +107,32 @@ export function useMindGrowth(opts: GrowthHookOpts) {
       return [...applyMindMoves(base, now.moves, now.reanchored), ...build(now).added];
     };
     patchActive(grown);
-    reveal(node, handoffActions);
+    reveal(node, handoffActions, options);
     debugLog(
-      `[mind-grow] ${kind} from=${id} node=${node.id} moves=${plan.moves.length} style=${plan.styleFrom ? 'level' : 'default'}`,
+      `[mind-grow] ${kind} from=${id} node=${node.id} moves=${plan.moves.length} style=${plan.styleFrom ? 'level' : 'default'} stay=${options.stay === true}`,
     );
+    track('Element', 'Added', 'MindNode');
+  };
+
+  // Add Parent (docs/specs/009-elements/mind-node.md "Add Parent"): a new node between this one and its parent, or
+  // above a root, looking like the node it goes above; selected, so typing names it.
+  const addMindParent = (id: string) => {
+    if (editsBlocked) return;
+    const root = rootOf(id);
+    const ids = {
+      node: crypto.randomUUID(),
+      into: crypto.randomUUID(),
+      out: crypto.randomUUID(),
+    };
+    const dressing = {
+      node: (node: ShapeElement, from: ShapeElement) => dress(node, from, root),
+      connector: dressMindConnector,
+    };
+    if (!insertMindParent(activeTab.elements, id, ids, dressing)) return;
+    patchActive((els) => insertMindParent(els, id, ids, dressing) ?? els);
+    setEditingId(null);
+    setSelectedId(ids.node);
+    debugLog(`[mind-grow] parent of=${id} node=${ids.node}`);
     track('Element', 'Added', 'MindNode');
   };
 
@@ -149,8 +177,10 @@ export function useMindGrowth(opts: GrowthHookOpts) {
 
   return {
     canGrowMindNode,
-    growMindNode: (id: string, kind: 'child' | 'sibling') => growMindNode(id, kind),
+    growMindNode: (id: string, kind: 'child' | 'sibling', options?: GrowOptions) =>
+      growMindNode(id, kind, undefined, options),
     abandonMindNode,
     escapeGrownMindNode,
+    addMindParent,
   };
 }

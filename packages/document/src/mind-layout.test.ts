@@ -7,7 +7,14 @@ import {
   MIND_FLOWS,
   type MindFlow,
 } from './mind-flow';
-import { isMindTreeTidy, layoutMindTree, reanchorMindConnectors } from './mind-layout';
+import {
+  MIND_GROUP_PADDING,
+  isMindTreeTidy,
+  layoutMindTree,
+  mindGroupBoxes,
+  mindNumbers,
+  reanchorMindConnectors,
+} from './mind-layout';
 import type { ArrowElement, Element, ShapeElement } from './index';
 
 // docs/specs/009-elements/mind-node.md "A tidy map stays tidy".
@@ -273,5 +280,58 @@ describe('layoutMindTree: spacing', () => {
       const els = apply(withSpacing(s), layoutMindTree(withSpacing(s), 'r', 'balanced'));
       expect(isMindTreeTidy(els, 'r', 'balanced')).toBe(true);
     }
+  });
+});
+
+// docs/specs/009-elements/mind-node.md "A tidy map stays tidy" (placed by hand) and "Groups".
+describe('layoutMindTree: placed nodes and groups', () => {
+  const laid = (els: Element[], flow: MindFlow = 'tree') =>
+    apply(els, layoutMindTree(els, 'r', flow));
+  const stacked = () => laid(map());
+
+  it('keeps a placed node where it is, lays its branch out from it, and closes its slot', () => {
+    const base = stacked();
+    const moved = base.map((e) => (e.id === 'b' ? { ...e, x: 900, y: 40, mindPlaced: true } : e));
+    const out = laid(moved);
+    expect(box(out, 'b')).toMatchObject({ x: 900, y: 40 });
+    expect(box(out, 'b1').x).toBe(900 + 200 + MIND_CHILD_GAP_X);
+    // a and c now stack as the only two in the column, centred on the root.
+    expect(box(out, 'c').y - box(out, 'a').y).toBe(60 + MIND_SIBLING_GAP_Y);
+    expect((cy(box(out, 'a')) + cy(box(out, 'c'))) / 2).toBe(cy(box(out, 'r')));
+    expect(isMindTreeTidy(out, 'r', 'tree')).toBe(true);
+  });
+
+  it('keeps a group together, its members in a row, set apart by the group padding', () => {
+    // c and a grouped; drawn order a, b, c: the group lands where its first member is.
+    const els = stacked().map((e) => (e.id === 'a' || e.id === 'c' ? { ...e, mindGroup: 'g' } : e));
+    const out = laid(els);
+    const order = ['a', 'b', 'c'].sort((p, q) => box(out, p).y - box(out, q).y);
+    expect(order).toEqual(['a', 'c', 'b']);
+    expect(box(out, 'c').y - (box(out, 'a').y + 60)).toBe(MIND_SIBLING_GAP_Y);
+    // b's branch begins with b1, its first child.
+    const after = box(out, 'b1').y - (box(out, 'c').y + 60);
+    expect(after).toBe(MIND_SIBLING_GAP_Y + MIND_GROUP_PADDING);
+    expect(isMindTreeTidy(out, 'r', 'tree')).toBe(true);
+  });
+
+  it('draws one box around a group, its branches inside', () => {
+    const els = laid(
+      stacked().map((e) => (e.id === 'b' || e.id === 'c' ? { ...e, mindGroup: 'g' } : e)),
+    );
+    const [group] = mindGroupBoxes(els);
+    expect(group).toMatchObject({ parentId: 'r', groupId: 'g', memberIds: ['b', 'c'] });
+    for (const id of ['b', 'c', 'b1', 'b2']) {
+      const n = box(els, id);
+      expect(n.x).toBeGreaterThanOrEqual(group!.x + MIND_GROUP_PADDING);
+      expect(n.y + n.height).toBeLessThanOrEqual(group!.y + group!.height - MIND_GROUP_PADDING);
+    }
+  });
+
+  it('numbers the numbered siblings in the order they are drawn', () => {
+    const els = stacked().map((e) =>
+      ['a', 'c', 'b1'].includes(e.id) ? { ...e, mindNumbered: true } : e,
+    );
+    const numbers = mindNumbers(els);
+    expect(Object.fromEntries(numbers)).toEqual({ a: 1, c: 2, b1: 1 });
   });
 });

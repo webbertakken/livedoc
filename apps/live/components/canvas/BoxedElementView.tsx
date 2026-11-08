@@ -1,3 +1,4 @@
+import { useMindNumber } from './MindMapLayer';
 import { memo, useRef, useState } from 'react';
 import { useZoneClip, zoneClipPolygon } from '@/lib/article/zone-clip-store';
 import { PhotoDraftRing, PhotoMatchedBadge } from '@/components/canvas/photo-badges';
@@ -374,6 +375,8 @@ function BoxedElementViewImpl({
   // A status marker (docs/specs/009-elements/shape-markers.md) sits just left of the label (or centred when the
   // shape has no label). Progress shapes render their own centred percentage,
   // so they skip it. Shares the icon+label flex layout below.
+  // A numbered mind node's number (docs/specs/009-elements/mind-node.md "Numbered nodes"), a chip before its label.
+  const mindNumber = useMindNumber(element.id);
   const marker: ShapeMarker | undefined =
     element.type === 'shape' && !isSelfDrawingShape(element.shape) ? element.marker : undefined;
   // Which surface each looping animation rides (wrapper box vs text
@@ -438,7 +441,7 @@ function BoxedElementViewImpl({
     // marker-only shape still lays out through ShapeInlineIconLayout, and
     // a full-box editor there contributes no flex width, so the marker
     // centred alone on top of the text while editing.
-    !!inlineIcon || !!marker,
+    !!inlineIcon || !!marker || mindNumber !== undefined,
     labelAnimClass,
     textHug.label,
     textAnim,
@@ -790,6 +793,7 @@ function BoxedElementViewImpl({
             remoteBorderColor={remoteBorderColor}
             inlineIcon={inlineIcon}
             marker={marker}
+            mindNumber={mindNumber}
             iconCaptionBand={iconCaptionBand}
             labelFrame={labelFrame}
           />

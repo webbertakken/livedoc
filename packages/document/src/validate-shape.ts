@@ -132,6 +132,7 @@ export const ATTACH_POINTS_RULE = [
 ] as const;
 
 const flag = (field: string): FieldCheck => ({ field, valid: isBool, rule: 'a boolean' });
+const isMindGroupId = (v: unknown) => typeof v === 'string' && v.length > 0 && v.length <= 64;
 const finite = (field: string): FieldCheck => ({ field, valid: isNum, rule: 'a finite number' });
 
 // Record (docs/specs/009-elements/entity.md): rows of { name, type? }.
@@ -268,6 +269,9 @@ const SHAPE_FIELD_CHECKS: readonly FieldCheck[] = [
   { field: 'codeTheme', valid: (v) => isCodeThemeId(v as string), rule: 'a code theme id' },
   { field: 'mindFlow', valid: (v) => isMindFlow(v as string), rule: 'a mind flow' },
   { field: 'mindSpacing', valid: (v) => isMindSpacing(v as string), rule: 'a mind spacing' },
+  flag('mindPlaced'),
+  flag('mindNumbered'),
+  { field: 'mindGroup', valid: isMindGroupId, rule: 'a group id of 1 to 64 characters' },
   {
     field: 'chartVariant',
     valid: isChartVariant,

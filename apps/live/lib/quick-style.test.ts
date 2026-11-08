@@ -21,6 +21,9 @@ import {
   applyQuickWidth,
   clearQuickStyle,
   quickStyleView,
+  QUICK_TEXT_SIZES,
+  applyQuickTextSize,
+  quickTextSizePx,
 } from './quick-style';
 
 // docs/specs/008-canvas/quick-style-panel.md
@@ -56,7 +59,14 @@ describe('quickStyleView: which sections show', () => {
   });
 
   it('gives a plain shape every section but icon alignment', () => {
-    expect(sections([shape('a')])).toEqual(['stroke', 'background', 'width', 'style', 'textAlign']);
+    expect(sections([shape('a')])).toEqual([
+      'stroke',
+      'background',
+      'width',
+      'style',
+      'textAlign',
+      'textSize',
+    ]);
   });
 
   it('offers text alignment only once the shape has text', () => {
@@ -97,6 +107,7 @@ describe('quickStyleView: which sections show', () => {
       'width',
       'style',
       'textAlign',
+      'textSize',
     ]);
   });
 
@@ -334,8 +345,8 @@ describe('Text colour: text elements', () => {
     ...extra,
   });
 
-  it('gives a text element only the Text colour row', () => {
-    expect(sections([text('t')])).toEqual(['textColour']);
+  it('gives a text element the Text colour and Text size rows', () => {
+    expect(sections([text('t')])).toEqual(['textColour', 'textSize']);
   });
 
   it('adds the row beside a shape without giving the shape one', () => {
@@ -346,6 +357,7 @@ describe('Text colour: text elements', () => {
       'width',
       'style',
       'textAlign',
+      'textSize',
     ]);
     expect(sections([shape('a')])).not.toContain('textColour');
   });
@@ -529,5 +541,37 @@ describe('a transparent background', () => {
     expect(next.fillSwatch).toBeUndefined();
     expect(next.colorPreset).toBeUndefined();
     expect(quickStyleView([next], forest)!.sections.background!.value).toBe(QUICK_TRANSPARENT);
+  });
+});
+
+// docs/specs/008-canvas/quick-style-panel.md "Text size" (Bug Tracker card 6).
+describe('Text size: five steps around the tab default', () => {
+  it('names the steps around the default size, M the default itself', () => {
+    expect(QUICK_TEXT_SIZES.map((s) => quickTextSizePx(s, 14))).toEqual([10, 12, 14, 18, 24]);
+    expect(quickTextSizePx('m', 22)).toBe(22);
+  });
+
+  it('shows for a labelled shape or text element, marking the step its size matches', () => {
+    const text: TextElement = {
+      id: 't',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 80,
+      height: 20,
+      label: 'Hi',
+    };
+    const view = quickStyleView([shape('a', { textSize: 18 }), text], forest, {}, undefined, 14);
+    expect(view?.sections.textSize).toEqual({ value: null, steps: [10, 12, 14, 18, 24] });
+    const one = quickStyleView([shape('a', { textSize: 18 })], forest, {}, undefined, 14);
+    expect(one?.sections.textSize?.value).toBe('l');
+    // An unset size draws at the element default (Medium, 22px): M on a tab whose default is 22.
+    expect(quickStyleView([shape('a')], forest)?.sections.textSize?.value).toBe('m');
+    expect(sections([shape('a', { label: '' })])).not.toContain('textSize');
+  });
+
+  it('writes the step as a px size', () => {
+    expect(applyQuickTextSize(shape('a'), 24)).toMatchObject({ textSize: 24 });
+    expect(applyQuickTextSize(arrow('x'), 24)).not.toHaveProperty('textSize');
   });
 });

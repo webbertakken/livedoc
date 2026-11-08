@@ -11,9 +11,11 @@ describe('web app manifest', () => {
     expect(manifest()).toMatchObject({ name: 'LiveDoc', short_name: 'LiveDoc' });
   });
 
-  // docs/specs/004-interface-design/appearance.md "The browser's chrome": the title bar wears the header's colour.
-  it('starts an installed app on the homepage ground, never the brand blue', () => {
-    expect(manifest()).toMatchObject({ start_url: '/', theme_color: '#f8fafc' });
+  // docs/specs/004-interface-design/appearance.md "The browser's chrome": the page's theme-color colours the title bar;
+  // a manifest colour would paint an installed app's navigation bar one fixed colour, white under a dark page.
+  it('starts an installed app on the homepage and leaves its system bars to the page and the device', () => {
+    expect(manifest()).toMatchObject({ start_url: '/' });
+    expect(manifest()).not.toHaveProperty('theme_color');
   });
 
   it('leaves theme-color to the appearance script, which knows light from dark', () => {

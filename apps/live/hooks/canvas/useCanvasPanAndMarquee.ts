@@ -223,18 +223,28 @@ export function useCanvasPanAndMarquee(deps: Deps): Api {
     // hardware fires faster than paint.
     let rafId: number | null = null;
     let pending: { x: number; y: number } | null = null;
+    // Set once a pinch took the gesture over: a release landing before the box is gone still selects nothing.
+    let dropped = false;
     const flush = () => {
       rafId = null;
       const pos = pending;
       if (pos) setMarquee((m) => (m ? { ...m, currentX: pos.x, currentY: pos.y } : null));
     };
     const onMove = (e: PointerEvent) => {
+      // A second finger made the press a pinch, which pans and zooms: the box the first finger began is dropped, and
+      // its release selects nothing (docs/specs/008-canvas/canvas-and-palette.md "Touch").
+      if (depsRef.current.isPinchingRef?.current) {
+        pending = null;
+        dropped = true;
+        setMarquee(null);
+        return;
+      }
       pending = { x: e.clientX, y: e.clientY };
       if (rafId === null) rafId = requestAnimationFrame(flush);
     };
     const onUp = () => {
       const base = marquee;
-      if (!base) return;
+      if (!base || dropped || depsRef.current.isPinchingRef?.current) return;
       // Land on the final pointer position even if it's still pending
       // in an uncommitted rAF (which the cleanup cancels).
       const m = pending ? { ...base, currentX: pending.x, currentY: pending.y } : base;

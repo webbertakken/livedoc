@@ -270,12 +270,25 @@ export function applyRotationToEl(el: Element, deg: number): Element {
 // footprint. No-op on non-shapes.
 export function applyShapeKindToEl(el: Element, kind: ShapeKind): Element {
   if (el.type !== 'shape') return el;
+  // A mind node that becomes another kind leaves its map (docs/specs/008-canvas/canvas-and-palette.md "Shape"): its
+  // place in the tree goes, and its children read as roots, as under a deleted parent. A box that becomes a mind
+  // node is a root of its own.
+  const {
+    mindParentId: _parent,
+    mindFlow: _flow,
+    mindSpacing: _spacing,
+    mindPlaced: _placed,
+    mindNumbered: _numbered,
+    mindGroup: _group,
+    ...rest
+  } = el;
+  const base = kind === 'mind-node' || el.shape !== 'mind-node' ? el : rest;
   const oneToOne = kind === 'circle' || kind === 'diamond';
   if (oneToOne) {
     const side = Math.max(el.width, el.height);
-    return { ...el, shape: kind, width: side, height: side };
+    return { ...base, shape: kind, width: side, height: side };
   }
-  return { ...el, shape: kind };
+  return { ...base, shape: kind };
 }
 
 // A Technology icon's fixed tile-size preset (docs/specs/010-palette/technology-icons.md). Icon shapes only.

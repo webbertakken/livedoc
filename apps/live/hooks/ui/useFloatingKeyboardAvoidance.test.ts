@@ -97,6 +97,29 @@ describe('checkFloatingField', () => {
     expect(panel.style.transform).toBe('scale(1)');
   });
 
+  // A tablet's fractional pixels: Chrome writes a transform back with at most three decimals, so a lift of
+  // -308.1234567px read back as -308.123px, was taken for a re-render's own transform, and was kept as the base the
+  // surface returned to: the document group stayed up after the keyboard went.
+  it('puts a surface back after a lift of fractional pixels, as a browser rounds it', () => {
+    viewport(400.3333333);
+    const { panel, input } = popover(500.4567891);
+    let stored = panel.style.transform;
+    Object.defineProperty(panel.style, 'transform', {
+      configurable: true,
+      get: () => stored,
+      set: (v: string) => {
+        stored = v.replace(/-?\d+\.\d+/g, (n) => String(Number(Number(n).toFixed(3))));
+      },
+    });
+    input.focus();
+    checkFloatingField();
+    checkFloatingField();
+    expect(panel.style.transform).toMatch(/^translateY\(-\d+px\) scale\(1\)$/);
+    input.blur();
+    checkFloatingField();
+    expect(panel.style.transform).toBe('scale(1)');
+  });
+
   // A popover capped at the little room its placement had grows to the visible band while its field has focus, so it
   // moves up whole rather than scrolling a clipped line under its top edge, and gets its own cap back after.
   it('grows a capped popover to its content within the visible band, and restores its cap', () => {
