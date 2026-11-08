@@ -129,17 +129,30 @@ describe('useWorkspaceNavigation', () => {
   });
 
   it('goes back to where a document was opened from, else to Home', () => {
-    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
     const { result } = mount();
 
     act(() => assignAppLocation('/explorer/recent'));
     act(() => assignAppLocation('/document/doc-1'));
     act(() => result.current.back());
-    expect(back).toHaveBeenCalledTimes(1);
+    expect(path()).toBe('/embed/workbench/explorer/recent');
 
     window.history.replaceState(null, '', '/embed/workbench/document/doc-2');
     act(() => result.current.back());
     expect(path()).toBe('/embed/workbench/explorer');
+  });
+
+  // A frame shares its host's history: a step back may be the host's own entry, which leaves the frame unmoved.
+  it('moves forward to where it goes back to, never stepping back through the shared history', () => {
+    const traverse = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    const pushes = vi.spyOn(window.history, 'pushState');
+    const { result } = mount();
+
+    act(() => assignAppLocation('/explorer/folder/f1'));
+    act(() => assignAppLocation('/document/doc-1'));
+    act(() => result.current.back());
+
+    expect(traverse).not.toHaveBeenCalled();
+    expect(pushes).toHaveBeenLastCalledWith({}, '', '/embed/workbench/explorer/folder/f1');
   });
 
   it('moves to a place, as `livedoc:open` asks', () => {

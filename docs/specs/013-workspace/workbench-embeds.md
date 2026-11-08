@@ -145,7 +145,9 @@ else the system. Presence shows the person as themselves; their agent shows as t
 A **workspace** frame renders the Explorer as it is at `/explorer`: its sidebar, its views and its empty states,
 without the app header, the account menu, Settings, or the Teams administration rows. Opening a document opens the
 editor in the same frame (`/embed/workbench/document/<id>`), with a **Back** control to where it was opened from;
-the browser's own back and forward walk the frame's history. **Back** is the brand group's Back
+the browser's own back and forward walk the frame's history. Back moves forward to where it returns: it never steps
+back through the history, which the frame shares with its host, so a host's own entry is never undone in its place.
+**Back** is the brand group's Back
 ([Toolbar layout](../007-editor/toolbar-layout.md#the-top-line)): the first thing at the top left of the frame,
 where back controls live, and the first of the editor's controls for the keyboard. There is no separate Back
 button. A document's status screens (deleted, load error, not found) carry Back at their top left too. The document
@@ -401,7 +403,8 @@ The code cites each by its id.
 - **WB58** What New document makes in the frame, and where: The asked template, else a blank, named as `/new` names it;
   in the asked folder or team, else the place's (default).
 - **WB59** Where Back sits; what it does with no frame entry before: The brand group's Back, top left (caret and mark,
-  named "Back"); `history.back()` when the frame pushed the document, else Home (default).
+  named "Back"); moves to the Explorer place the document was opened from, else Home, never by `history.back()`,
+  which in a frame can step back the host instead (default).
 - **WB60** What a trashed document says in the workspace frame: The toast "That document is in the Trash." over the
   Explorer it returns to (default).
 - **WB61** Where the lens field sits without the app header: A slim bar at the top of the frame holding the field alone,
