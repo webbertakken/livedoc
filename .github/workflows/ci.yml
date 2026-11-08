@@ -32,13 +32,11 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -92,13 +90,11 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -161,13 +157,11 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -202,13 +196,11 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - name: Set up Node
         uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies

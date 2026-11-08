@@ -111,12 +111,10 @@ jobs:
         run: echo "id=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -210,12 +208,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -247,12 +243,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -284,12 +278,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -323,12 +315,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -368,12 +358,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -526,12 +514,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
@@ -581,12 +567,10 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 10.34.5
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 26
           cache: pnpm
 
       - name: Install dependencies
