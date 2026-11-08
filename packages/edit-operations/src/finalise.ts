@@ -23,6 +23,7 @@ import {
   type Endpoint,
   type Tab,
   settleDiagramKeys,
+  settleMindGroups,
   tagColoursOf,
 } from '@livedoc/document';
 import { kindOf } from './element-text';
@@ -218,9 +219,9 @@ export function finalise(state: EditState, log: EditLog): Tab | EditRejection {
   // An element that ends as it began is the element it began as (E1, I2).
   // A diagram key's rows follow the tab's lines and tags (docs/specs/009-elements/diagram-key.md), settled here as the
   // editor settles them on commit: an agent's key otherwise drew its empty hint.
-  const settled = settleDiagramKeys(
-    containersBehindMembers(lanesToFront(rebound)),
-    tagColoursOf(state.tab),
+  // And a mind map group's frame follows its members (docs/specs/009-elements/mind-node.md "Groups").
+  const settled = settleMindGroups(
+    settleDiagramKeys(containersBehindMembers(lanesToFront(rebound)), tagColoursOf(state.tab)),
   );
   const elements = settled.map((el) => {
     const was = state.before.get(el.id);

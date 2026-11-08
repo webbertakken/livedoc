@@ -12,6 +12,13 @@ import { applyMindMoves, relayoutMindMap } from './mind-grow';
 import { isVerticalMindFlow, type MindFlow } from './mind-flow';
 import { isMindTreeTidy, layoutMindTree } from './mind-layout';
 import { isMindNode, mindFlowOf, mindRootOf } from './mind-map';
+import {
+  isMindGroupFrame,
+  mindGroupMembers,
+  newMindGroupFrame,
+  settleMindGroups,
+  withMindGroupMembers,
+} from './mind-group';
 import type { Element, ElementId, ShapeElement } from './index';
 
 /** What a drop did: reordered among its siblings, placed by hand, or nothing (not a tidy map's node). */
@@ -109,13 +116,30 @@ export function planMindDrop(
 ): MindDrop {
   const decided = decideMindDrop(before, after, primaryId, draggedIds);
   if (!decided) return { kind: null, elements: after };
+  // A group's frame follows its members wherever they landed.
   return decided.kind === 'reordered'
     ? {
         kind: 'reordered',
-        elements: relayout(decided.candidate, decided.rootId),
+        elements: settleMindGroups(relayout(decided.candidate, decided.rootId)),
         slot: decided.slot,
       }
-    : { kind: 'placed', elements: relayout(decided.placed, decided.rootId) };
+    : { kind: 'placed', elements: settleMindGroups(relayout(decided.placed, decided.rootId)) };
+}
+
+// A group's frame in hand stands for its members: the first of them in the map's order leads the drop.
+function inHand(
+  before: Element[],
+  primaryId: ElementId,
+  draggedIds: ReadonlySet<ElementId>,
+): { primaryId: ElementId; draggedIds: ReadonlySet<ElementId> } {
+  const frame = before.find((e) => e.id === primaryId);
+  if (!frame || !isMindGroupFrame(frame)) return { primaryId, draggedIds };
+  const members = mindGroupMembers(before, frame.id);
+  if (members.length === 0) return { primaryId, draggedIds };
+  const flow = mindFlowOf(before, members[0]!);
+  const key = (n: ShapeElement) => (isVerticalMindFlow(flow) ? centre(n).x : centre(n).y);
+  const lead = [...members].sort((a, b) => key(a) - key(b))[0]!;
+  return { primaryId: lead.id, draggedIds: withMindGroupMembers(before, draggedIds) };
 }
 
 /** What a drop would do, without laying the map out: for the marker a drag shows as it moves. */
@@ -154,9 +178,10 @@ type Decided =
 function decideMindDrop(
   before: Element[],
   after: Element[],
-  primaryId: ElementId,
-  draggedIds: ReadonlySet<ElementId>,
+  heldId: ElementId,
+  held: ReadonlySet<ElementId>,
 ): Decided | null {
+  const { primaryId, draggedIds } = inHand(before, heldId, held);
   const was = findNode(before, primaryId);
   const node = findNode(after, primaryId);
   if (!was?.mindParentId || !node || !wasTidy(before, was)) return null;
@@ -199,17 +224,23 @@ function decideMindDrop(
   };
 }
 
-/** Auto Position: `ids` go back into the layout, and their maps are laid out again. */
+/** Auto Position: `ids` (a group's frame standing for its members) go back into the layout, their maps laid out again. */
 export function autoPositionMindNodes(elements: Element[], ids: ReadonlySet<ElementId>): Element[] {
-  return changeTidyMaps(
-    elements,
-    ids,
-    (els) => patch(els, ids, (n) => without(n, 'mindPlaced')),
-    true,
+  const nodes = withMindGroupMembers(elements, ids);
+  return settleMindGroups(
+    changeTidyMaps(
+      elements,
+      nodes,
+      (els) => patch(els, nodes, (n) => without(n, 'mindPlaced')),
+      true,
+    ),
   );
 }
 
-/** Group the mind nodes among `ids`, one group per parent, named `groupId` (then `groupId-2`, ...). */
+/**
+ * Group the mind nodes among `ids`, one group per parent: a frame each, its id `groupId` (then `groupId-2`, ...),
+ * untitled, around them and their branches.
+ */
 export function groupMindNodes(
   elements: Element[],
   ids: ReadonlySet<ElementId>,
@@ -221,42 +252,52 @@ export function groupMindNodes(
     if (!n?.mindParentId || byParent.has(n.mindParentId)) continue;
     byParent.set(n.mindParentId, byParent.size === 0 ? groupId : `${groupId}-${byParent.size + 1}`);
   }
-  return changeTidyMaps(elements, ids, (els) =>
-    patch(els, ids, (n) =>
-      n.mindParentId && byParent.has(n.mindParentId)
-        ? { ...n, mindGroup: byParent.get(n.mindParentId)! }
-        : n,
+  if (byParent.size === 0) return elements;
+  const frames = [...byParent.values()].map(newMindGroupFrame);
+  return settleMindGroups(
+    changeTidyMaps(elements, ids, (els) => [
+      ...patch(els, ids, (n) =>
+        n.mindParentId && byParent.has(n.mindParentId)
+          ? { ...n, mindGroup: byParent.get(n.mindParentId)! }
+          : n,
+      ),
+      ...frames,
+    ]),
+  );
+}
+
+/** Ungroup every group among `ids` (its frame) or a node among them is in: the frames go, the members stay. */
+export function ungroupMindNodes(elements: Element[], ids: ReadonlySet<ElementId>): Element[] {
+  const groups = new Set<string>();
+  for (const id of ids) {
+    const el = elements.find((e) => e.id === id);
+    if (!el) continue;
+    if (isMindGroupFrame(el)) groups.add(el.id);
+    else if (isMindNode(el) && el.mindGroup) groups.add(el.mindGroup);
+  }
+  if (groups.size === 0) return elements;
+  const members = new Set(
+    elements
+      .filter((e) => isMindNode(e) && !!e.mindGroup && groups.has(e.mindGroup))
+      .map((e) => e.id),
+  );
+  return changeTidyMaps(elements, members, (els) =>
+    patch(
+      els.filter((e) => !groups.has(e.id)),
+      members,
+      (n) => without(n, 'mindGroup'),
     ),
   );
 }
 
-/** Ungroup every group a node among `ids` is in. */
-export function ungroupMindNodes(elements: Element[], ids: ReadonlySet<ElementId>): Element[] {
-  const groups = new Set<string>();
-  for (const id of ids) {
-    const n = findNode(elements, id);
-    if (n?.mindGroup && n.mindParentId) groups.add(`${n.mindParentId}\u0000${n.mindGroup}`);
-  }
-  const members = new Set(
-    elements
-      .filter(
-        (e): e is ShapeElement =>
-          isMindNode(e) && groups.has(`${e.mindParentId}\u0000${e.mindGroup}`),
-      )
-      .map((e) => e.id),
-  );
-  return changeTidyMaps(elements, members, (els) =>
-    patch(els, members, (n) => without(n, 'mindGroup')),
-  );
-}
-
-/** Number (or unnumber) the mind nodes among `ids`. */
+/** Number (or unnumber) the mind nodes among `ids`, a group's frame standing for its members. */
 export function setMindNumbered(
   elements: Element[],
   ids: ReadonlySet<ElementId>,
   on: boolean,
 ): Element[] {
-  return patch(elements, ids, (n) =>
+  const nodes = withMindGroupMembers(elements, ids);
+  return patch(elements, nodes, (n) =>
     on ? { ...n, mindNumbered: true } : without(n, 'mindNumbered'),
   );
 }

@@ -3,6 +3,7 @@
 import type { Element, ElementId } from './index';
 import type { Point } from './geometry-primitives';
 import { isMindNode } from './mind-map';
+import { isMindGroupFrame } from './mind-group';
 
 export type Box = { x: number; y: number; width: number; height: number };
 
@@ -86,10 +87,19 @@ function mindParents(elements: readonly Element[]): Map<ElementId, ElementId> {
   return links;
 }
 
-// The container of every non-arrow element: its mind map parent, else the smallest frame or lane of
-// strictly greater area holding its centre (earlier on a tie), else null for the root.
+// The container of every non-arrow element: a grouped mind node's group frame, else its mind map parent, else the
+// smallest frame or lane of strictly greater area holding its centre (earlier on a tie), else null for the root. A
+// group's frame sits in its members' parent (docs/specs/009-elements/mind-node.md "Groups").
 export function deriveContainers(elements: readonly Element[]): Map<ElementId, ElementId | null> {
-  const parents = mindParents(elements);
+  const parents = new Map<ElementId, ElementId>(mindParents(elements));
+  const groupFrames = new Set(elements.filter(isMindGroupFrame).map((el) => el.id));
+  if (groupFrames.size > 0) {
+    for (const el of elements) {
+      if (!isMindNode(el) || !el.mindGroup || !groupFrames.has(el.mindGroup)) continue;
+      parents.set(el.id, el.mindGroup);
+      if (el.mindParentId && !parents.has(el.mindGroup)) parents.set(el.mindGroup, el.mindParentId);
+    }
+  }
   const byArea = elements
     .filter(hasGeometry)
     .filter(isContainerShape)

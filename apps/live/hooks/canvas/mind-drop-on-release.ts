@@ -2,7 +2,9 @@
 // a line marks the slot it would be reordered into among its siblings; let go, it is reordered there or placed by
 // hand where it was dropped. Folded into the drag's result, so the move and the new layout land as one change.
 import {
+  isMindGroupFrame,
   isMindNode,
+  mindGroupMembers,
   isVerticalMindFlow,
   mindFlowOf,
   planMindDrop,
@@ -15,9 +17,11 @@ import {
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 
-// Only a drag of a mind node below its root counts; anything else in the selection keeps its plain move.
+// Only a drag of a mind node below its root, or of a group's frame (standing for its first member), counts; anything
+// else in the selection keeps its plain move.
 function droppedNode(committed: readonly Element[], primaryId: string) {
-  const node = committed.find((el) => el.id === primaryId);
+  const held = committed.find((el) => el.id === primaryId);
+  const node = held && isMindGroupFrame(held) ? mindGroupMembers(committed, held.id)[0] : held;
   return node && isMindNode(node) && node.mindParentId ? node : null;
 }
 

@@ -20,6 +20,7 @@ import {
 } from './mind-grow';
 import { isMindTreeTidy, reanchorMindConnectors } from './mind-layout';
 import { isMindNode, mindFlowOf, mindRootOf, mindSubtree, treeIds } from './mind-map';
+import { isMindGroupFrame, settleMindGroups } from './mind-group';
 import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
 
 /** Dresses a new node or connector the way the map's level looks (the editor's `mind-dress`). */
@@ -320,7 +321,20 @@ export function relayoutAfterRemoval(before: Element[], after: Element[]): Eleme
     const root = mindRootOf(before, parent);
     if (kept.has(root.id) && tidyOf(before, root)) roots.add(root.id);
   }
+  // A group whose frame went: its members leave it, and their map closes up the group's room.
+  const goneGroups = new Set(
+    before.filter((el) => isMindGroupFrame(el) && !kept.has(el.id)).map((el) => el.id),
+  );
   let els = after;
+  if (goneGroups.size > 0) {
+    els = els.map((el) => {
+      if (!isMindNode(el) || !el.mindGroup || !goneGroups.has(el.mindGroup)) return el;
+      const root = mindRootOf(before, el);
+      if (tidyOf(before, root)) roots.add(root.id);
+      const { mindGroup: _gone, ...rest } = el;
+      return rest;
+    });
+  }
   for (const id of roots) els = settle(els, id, true);
-  return els;
+  return settleMindGroups(els);
 }

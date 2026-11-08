@@ -141,9 +141,12 @@ export function useMindMapSetters({
       if (arrange(on ? 'number' : 'unnumber', (all, ids) => setMindNumbered(all, ids, on)))
         track('Element', 'Changed', 'MindNumber');
     },
+    // The new group's frame id, so the editor can select it and open its title.
     group: () => {
-      if (arrange('group', (all, ids) => groupMindNodes(all, ids, crypto.randomUUID())))
-        track('Element', 'Changed', 'MindGroup');
+      const id = crypto.randomUUID();
+      if (!arrange('group', (all, ids) => groupMindNodes(all, ids, id))) return null;
+      track('Element', 'Changed', 'MindGroup');
+      return id;
     },
     ungroup: () => {
       if (arrange('ungroup', ungroupMindNodes)) track('Element', 'Changed', 'MindUngroup');
@@ -165,7 +168,7 @@ export function useMindMapSetters({
 
 export type MindArrangeActions = {
   number: (on: boolean) => void;
-  group: () => void;
+  group: () => string | null;
   ungroup: () => void;
   autoPosition: () => void;
 };

@@ -3331,7 +3331,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     setMindSpacingSelected,
     tidyMindMapSelected,
     tidyMindMap,
-    mindArrangeActions,
+    mindArrangeActions: styleMindArrange,
     setPageHeading,
     setWebRows,
     appendWebRowTo,
@@ -3396,6 +3396,20 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     checkpointBurst,
     notify: (tone, message) => toast[tone](message),
   });
+
+  // A new group is selected with its title open to type (docs/specs/009-elements/mind-node.md "Groups").
+  const mindArrangeActions = {
+    ...styleMindArrange,
+    group: () => {
+      const id = styleMindArrange.group();
+      if (id) {
+        setMultiSelectedIds(new Set());
+        setSelectedId(id);
+        setEditingId(id);
+      }
+      return id;
+    },
+  };
 
   // The flowchart's step type, direction, lanes and Tidy (docs/specs/009-elements/flowchart.md): one
   // bundle the step toolbar and the Flowchart menu section read from the editor context.

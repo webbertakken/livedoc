@@ -47,12 +47,7 @@ import { inlineIconLayout } from './svg-render-inline-icon';
 import { svgIconShape, svgImageShape } from './svg-render-image-icon';
 import { DIAMOND_POINTS } from './shape-geometry';
 import { svgTableShape } from './svg-render-table';
-import {
-  MIND_GROUP_RADIUS,
-  mindGroupBoxes,
-  mindGroupColours,
-  withMindNumberLabels,
-} from './mind-layout';
+import { withMindNumberLabels } from './mind-layout';
 // Which body an element draws, and the list of kinds that have one (docs/specs/020-import-export/export-fidelity.md).
 import { shapeHasBespokeBody, svgElementBody } from './svg-render-body';
 import { svgPageFold } from './svg-render-page';
@@ -691,14 +686,8 @@ export function renderElementsToSvg(
   const tagColours = tagColoursOf(tab);
   // A wireframe page's elements are cut to its screen, its system bars over them (withinPageFrame).
   const bandsStart = parts.length;
-  // Mind map groups' tinted boxes under everything, and numbered nodes led by their number
-  // (docs/specs/009-elements/mind-node.md "Groups", "Numbered nodes").
-  for (const g of mindGroupBoxes(visible)) {
-    const { fill, stroke } = mindGroupColours(g.groupId, surface === 'dark' ? 'dark' : 'light');
-    parts.push(
-      `<rect x="${r2(g.x)}" y="${r2(g.y)}" width="${r2(g.width)}" height="${r2(g.height)}" rx="${MIND_GROUP_RADIUS}" fill="${fill}" stroke="${stroke}"/>`,
-    );
-  }
+  // Numbered mind nodes are led by their number (docs/specs/009-elements/mind-node.md "Numbered nodes"); a group is a
+  // frame, drawn as one.
   const numbered = new Map(withMindNumberLabels(tab.elements).map((el) => [el.id, el]));
   for (const band of layerBands(tab.elements, tab.layers)) {
     const shown = frame

@@ -176,9 +176,23 @@ test('number and group children, drag one between its siblings, and place one by
   await element(page, 'k2').click();
   await element(page, 'k3').click({ modifiers: ['Shift'] });
   await page.getByRole('button', { name: 'Group', exact: true }).click();
-  await expect(page.locator('[data-mind-group]')).toHaveCount(1);
+  // The group is a frame, selected with its title open to type.
+  await page.keyboard.type('Essentials');
+  await page.keyboard.press('Escape');
+  const withGroup = await savedElements(page, (e) =>
+    e.some((x) => x.shape === 'frame' && x.label === 'Essentials'),
+  );
+  const groupId = withGroup.find((x) => x.shape === 'frame')!.id;
   await page.keyboard.press('Escape');
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/numbered-grouped.png` });
+
+  // A press on its title band selects the group itself, its toolbar offering Ungroup.
+  const frameBox = (await element(page, groupId).boundingBox())!;
+  await page.mouse.click(frameBox.x + frameBox.width - 16, frameBox.y + 10);
+  await expect(page.getByRole('button', { name: 'Ungroup', exact: true })).toBeVisible();
+  await expect(page.getByText(/Selected Elements/)).toHaveCount(0);
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/group-selected.png` });
+  await page.keyboard.press('Escape');
 
   // Drag Venue down between Agenda and Travel: reordered, the numbers following.
   const venue = await element(page, 'k1').boundingBox();
@@ -237,5 +251,32 @@ test('the quick Text Size row sets five sizes, and a long label shrinks to fit',
   const px = (els.find((e) => e.id === 'box') as { textSize?: number }).textSize!;
   expect(px).toBeGreaterThan(20);
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/text-size-row.png` });
+  expectNoPageErrors(pageErrors);
+});
+
+test('a group is dragged by its frame as one block', async ({ page, pageErrors }) => {
+  await openStartBlank(page);
+  await seedTab(page, tidyFour());
+  await element(page, 'k1').click();
+  await element(page, 'k2').click({ modifiers: ['Shift'] });
+  await page.getByRole('button', { name: 'Group', exact: true }).click();
+  await page.keyboard.type('First');
+  await page.keyboard.press('Escape');
+  const grouped = await savedElements(page, (e) => e.some((x) => x.label === 'First'));
+  const groupId = grouped.find((x) => x.shape === 'frame')!.id;
+  await page.keyboard.press('Escape');
+
+  const frame = (await element(page, groupId).boundingBox())!;
+  const travel = (await element(page, 'k4').boundingBox())!;
+  const from = { x: frame.x + frame.width - 16, y: frame.y + 10 };
+  const dy = travel.y + travel.height + 30 - frame.y;
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(from.x, from.y + dy, { steps: 14 });
+  await page.mouse.up();
+  await savedElements(page, (e) => {
+    const y = (id: string) => (e.find((x) => x.id === id) as Node | undefined)?.y ?? 0;
+    return y('k1') > y('k4') && y('k2') > y('k4');
+  });
   expectNoPageErrors(pageErrors);
 });

@@ -4,15 +4,25 @@
 // "Groups", "A tidy map stays tidy"): Number, Group or Ungroup, and Auto Position for a node placed by hand. Shown for
 // a selection holding a mind node below its root, on the single and the multi-selection toolbars alike.
 import { Glyph } from '@livedoc/ui';
-import { isMindNode, type Element } from '@livedoc/document';
+import { isMindGroupFrame, isMindNode, type Element } from '@livedoc/document';
 import type { MindArrangeActions } from '@/hooks/canvas/useMindMapSetters';
 import { PopoverButton } from './SelectionPopoverButton';
 
 export type MindArrangeState = { numbered: boolean; grouped: boolean; placed: boolean };
 
-/** What the selected nodes are now, or null when the selection holds no mind node below a root. */
-export function mindArrangeState(selected: readonly Element[]): MindArrangeState | null {
-  const nodes = selected.filter(isMindNode).filter((n) => !!n.mindParentId);
+/** What the selected nodes are now (a group's frame standing for its members), or null when the selection holds no
+ *  mind node below a root and no group. */
+export function mindArrangeState(
+  selected: readonly Element[],
+  elements: readonly Element[],
+): MindArrangeState | null {
+  const frames = new Set(selected.filter(isMindGroupFrame).map((f) => f.id));
+  const nodes = [
+    ...selected.filter(isMindNode).filter((n) => !!n.mindParentId),
+    ...(frames.size > 0
+      ? elements.filter(isMindNode).filter((n) => !!n.mindGroup && frames.has(n.mindGroup))
+      : []),
+  ];
   if (nodes.length === 0) return null;
   const first = nodes[0]!;
   return {
