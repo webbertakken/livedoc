@@ -26,7 +26,7 @@
     "test:e2e:workbench": "E2E_WORKBENCH=1 playwright test --project=workbench"
   },
   "dependencies": {
-    "@huggingface/transformers": "^3.8.1",
+    "@huggingface/transformers": "^4.0.0",
     "@jsquash/webp": "1.5.0",
     "@livedoc/account-session": "workspace:*",
     "@livedoc/api-schema": "workspace:*",
