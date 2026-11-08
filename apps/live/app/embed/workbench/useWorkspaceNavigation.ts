@@ -123,13 +123,15 @@ export function useWorkspaceNavigation(opts: {
 
   const go = useCallback((place: WorkspacePlace) => move(workspaceFramePath(place), false), [move]);
 
+  // Back moves forward to the place, never `history.back()`: the frame shares its host's history, so a step back can
+  // undo the host's own last entry and leave the frame where it was.
   const back = useCallback(() => {
     const from = (win.history.state as FrameEntryState | null)?.workbenchFrom;
-    if (from && workspacePlaceOf(from.split('?')[0]!, new URLSearchParams()).kind === 'explorer') {
-      win.history.back();
-      return;
-    }
-    move(workspaceFramePath({ kind: 'explorer', node: { kind: 'home' } }), false);
+    const opener =
+      from && workspacePlaceOf(from.split('?')[0]!, new URLSearchParams()).kind === 'explorer'
+        ? from
+        : null;
+    move(opener ?? workspaceFramePath({ kind: 'explorer', node: { kind: 'home' } }), false);
   }, [move, win]);
 
   return { go, back };
