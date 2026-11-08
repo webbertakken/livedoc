@@ -2,12 +2,10 @@ import {
   buildMindTemplate,
   createText,
   MIND_HUES,
-  runsPlainText,
   type MindHue,
   type MindSpec,
   type Element,
   type ShapeElement,
-  type TextRun,
 } from '@livedoc/document';
 
 // The mind-map templates (docs/specs/009-elements/mind-node.md "Templates"). Every one is built from
@@ -20,86 +18,83 @@ import {
 // The builder lives with the mind-node layout in the document package; templates import it from here as before.
 export { buildMindTemplate, type MindSpec };
 
-// Radial mind map: a real plan (a team offsite) rather than a diagram of one.
-// A bold round nucleus names the topic and its dates; five branches radiate
-// from it, each in its OWN hue (card tint, border and connector alike) with a
-// line-art glyph for what it covers, so a glance finds "the money one" or
-// "the fun one". Leaves are plain white cards edged in their branch's hue
-// carrying concrete facts (a venue, a price, a train time). A muted line
-// under the map teaches the two keys that grow it. Because growth copies the
-// look of a node at the same level and the connector of its siblings, a leaf
-// added to a branch comes out in that branch's colour.
-const OFFSITE_BRANCHES: { label: string; icon: string; leaves: string[] }[] = [
-  { label: 'Venue', icon: 'map-pin', leaves: ['Lakeside lodge', 'Deposit paid'] },
-  {
-    label: 'Agenda',
-    icon: 'calendar',
-    leaves: ['Day 1 · Strategy', 'Day 2 · Hack day', 'Day 3 · Demos'],
+// Every map here is a quick start, never a finished map (docs/specs/009-elements/mind-node.md "Templates"): a few
+// one-word ideas to grow from, so whoever opens one starts typing their own rather than reading ours. The levels still
+// read apart at a glance: a bold root, branches each in their OWN hue (card tint, border and the connector into them),
+// and white leaves edged in their branch's hue. Growth copies the look of a node at the same level and its siblings'
+// connector, so what is grown comes out in the map's own colours.
+
+// The root every quick start shares: the strongest preset, the largest text, a circle in the radial maps.
+const rootLook = (round: boolean): MindSpec['look'] => ({
+  width: 200,
+  height: round ? 200 : 96,
+  textSize: 'lg',
+  colorPreset: 'bold',
+  ...(round ? { borderRadius: 'full' } : {}),
+});
+
+// A first-level branch in its hue: tinted, bold medium text, a thick border and connector.
+const branch = (label: string, hue: MindHue, children?: MindSpec[]): MindSpec => ({
+  label,
+  look: {
+    width: 150,
+    height: 56,
+    textSize: 'md',
+    textBold: true,
+    fillColor: hue.fill,
+    strokeColor: hue.stroke,
+    textColor: hue.text,
+    strokeWidth: 'thick',
   },
-  { label: 'Travel', icon: 'send', leaves: ['Train at 09:05', 'Minibus to lodge'] },
-  { label: 'Budget', icon: 'dollar-sign', leaves: ['£12k all in', 'Food £3.5k'] },
-  { label: 'Fun', icon: 'smile', leaves: ['Kayaking', 'Campfire quiz'] },
-];
+  connector: { strokeColor: hue.stroke, strokeWidth: 4 },
+  ...(children ? { children } : {}),
+});
+
+// A leaf: a plain white card edged in its branch's hue.
+const leaf = (label: string, hue: MindHue): MindSpec => ({
+  label,
+  look: {
+    width: 180,
+    height: 44,
+    textSize: 'sm',
+    fillColor: '#ffffff',
+    strokeColor: hue.leaf,
+    textColor: '#334155',
+  },
+  connector: { strokeColor: hue.leaf, strokeWidth: 2 },
+});
+
+const HOW_TO = 'Select any idea, then press Tab to add a child or Enter to add a sibling.';
+
+// Blank Brainstorm: the central idea alone, in the radial (bubble) flow, so its first Tab starts the ring. No how-to
+// line: the root is the tab's only element, which is what selects it on landing (mind-node.md "A lone root opens
+// selected"), and its toolbar names the two keys.
+export const BRAINSTORM_CENTRAL_IDEA = 'Central idea';
+
+export function buildBlankBrainstorm(cx: number, cy: number): Element[] {
+  return buildMindTemplate(
+    { label: BRAINSTORM_CENTRAL_IDEA, look: rootLook(true) },
+    'bubble',
+    cx,
+    cy,
+  );
+}
+
+// Radial mind map: a weekend trip, four question-word branches round it.
+const TRIP_BRANCHES = ['Where', 'When', 'Who', 'Budget'];
 
 export function buildMindMap(cx: number, cy: number): Element[] {
-  const rootRuns: TextRun[] = [
-    { text: 'Team offsite', bold: true },
-    { text: '\nLake District · 12-14 June', size: 'sm' },
-  ];
   const map = buildMindTemplate(
     {
-      label: runsPlainText(rootRuns),
-      // The one round node: a nucleus with ideas radiating from it, rather
-      // than a sea of equivalent boxes.
-      look: {
-        width: 210,
-        height: 210,
-        textSize: 'lg',
-        colorPreset: 'bold',
-        borderRadius: 'full',
-        richText: rootRuns,
-      },
-      children: OFFSITE_BRANCHES.map((b, i) => {
-        const hue = MIND_HUES[i % MIND_HUES.length]!;
-        return {
-          label: b.label,
-          // First-level branches sit between the bold centre and plain
-          // leaves: tinted in their hue, medium text, a glyph for the theme.
-          look: {
-            width: 170,
-            height: 64,
-            textSize: 'md',
-            textBold: true,
-            iconId: b.icon,
-            fillColor: hue.fill,
-            strokeColor: hue.stroke,
-            textColor: hue.text,
-            strokeWidth: 'thick',
-          },
-          connector: { strokeColor: hue.stroke, strokeWidth: 4 },
-          children: b.leaves.map((leaf) => ({
-            label: leaf,
-            look: {
-              width: 160,
-              height: 44,
-              textSize: 'sm',
-              fillColor: '#ffffff',
-              strokeColor: hue.leaf,
-              textColor: '#334155',
-            },
-            connector: { strokeColor: hue.leaf, strokeWidth: 2 },
-          })),
-        };
-      }),
+      label: 'Weekend trip',
+      look: rootLook(true),
+      children: TRIP_BRANCHES.map((label, i) => branch(label, MIND_HUES[i % MIND_HUES.length]!)),
     },
     'bubble',
     cx,
     cy,
   );
-  return [
-    ...map,
-    mindHowTo(map, 'Select any idea, then press Tab to add a child or Enter to add a sibling.'),
-  ];
+  return [...map, mindHowTo(map, HOW_TO)];
 }
 
 // The muted how-to line under a map: the two keys that grow it, which a
@@ -120,125 +115,53 @@ export function mindHowTo(map: Element[], label: string): Element {
   };
 }
 
-// Tree mind map: a left-to-right outline for people who think in outlines
-// (the tree flow), worked as a quarter's content plan. The three levels read
-// apart at a glance, in the radial map's grammar: a bold root naming the plan
-// and its quarter, branches each in their OWN hue (tint, border, glyph and the
-// connector into them), and plain white leaves edged in their branch's hue
-// carrying concrete pieces of work. Growth copies the look of a node at the
-// same level and its siblings' connector, so a leaf added to Video comes out
-// rose. Every box is sized so its longest label sits on one line.
-const CONTENT_BRANCHES: { label: string; icon: string; leaves: string[] }[] = [
-  { label: 'Blog', icon: 'edit', leaves: ['SEO guides, 2 a month', 'Guest posts from users'] },
-  {
-    label: 'Social',
-    icon: 'message',
-    leaves: ['Weekly tips carousel', 'Creator collabs', 'Live Q&A on Fridays'],
-  },
-  { label: 'Email', icon: 'mail', leaves: ['Monthly newsletter', 'Five-day onboarding'] },
-  { label: 'Events', icon: 'calendar', leaves: ['Two webinars', 'Meetup in Leeds'] },
-  { label: 'Video', icon: 'camera', leaves: ['Product tutorials', 'Customer stories'] },
+// Tree mind map: the same quick start as a left-to-right outline (the tree flow), for people who think in outlines.
+// One leaf per branch shows the third level without filling it in.
+const PROJECT_BRANCHES: [string, string][] = [
+  ['Goals', 'Launch by June'],
+  ['Tasks', 'Write the brief'],
+  ['Questions', 'Who is it for?'],
 ];
 
 export function buildMindMapTree(cx: number, cy: number): Element[] {
-  const rootRuns: TextRun[] = [
-    { text: 'Content strategy', bold: true },
-    { text: '\nQ3 · grow sign-ups 20%', size: 'sm' },
-  ];
   const map = buildMindTemplate(
     {
-      label: runsPlainText(rootRuns),
-      // Root of the tree: the strongest preset and the largest text, so the
-      // topic anchors the outline.
-      look: { width: 300, height: 112, textSize: 'lg', colorPreset: 'bold', richText: rootRuns },
-      children: CONTENT_BRANCHES.map((b, i) => {
+      label: 'New project',
+      look: rootLook(false),
+      children: PROJECT_BRANCHES.map(([label, idea], i) => {
         const hue = MIND_HUES[(i + 1) % MIND_HUES.length]!;
-        return {
-          label: b.label,
-          look: {
-            width: 170,
-            height: 60,
-            textSize: 'md',
-            textBold: true,
-            iconId: b.icon,
-            fillColor: hue.fill,
-            strokeColor: hue.stroke,
-            textColor: hue.text,
-            strokeWidth: 'thick',
-          },
-          connector: { strokeColor: hue.stroke, strokeWidth: 4 },
-          children: b.leaves.map((leaf) => ({
-            label: leaf,
-            look: {
-              width: 220,
-              height: 44,
-              textSize: 'sm',
-              fillColor: '#ffffff',
-              strokeColor: hue.leaf,
-              textColor: '#334155',
-            },
-            connector: { strokeColor: hue.leaf, strokeWidth: 2 },
-          })),
-        };
+        return branch(label, hue, [leaf(idea, hue)]);
       }),
     },
     'tree',
     cx,
     cy,
   );
-  return [
-    ...map,
-    mindHowTo(map, 'Select any idea, then press Tab to add a child or Enter to add a sibling.'),
-  ];
+  return [...map, mindHowTo(map, HOW_TO)];
 }
 
-// Bubble map: the Thinking Maps "describe it" map, one topic ringed by the
-// adjectives that describe it. The worked example is a brand voice, the
-// workshop a bubble map is most often run for: each bubble is one adjective
-// in bold with a line of copy that proves it underneath, so the map doubles
-// as a style guide. Every bubble takes its own hue (the mind map's branch
-// palette plus teal), round mind nodes (a full corner radius) in the bubble
-// flow, so Tab on the centre still adds another bubble to the ring.
-// Proofs break by hand so each wraps to two even lines inside its circle.
-const VOICE_BUBBLES: [string, string][] = [
-  ['Warm', '"Welcome back,\nSam!"'],
-  ['Clear', '"Tap Pay.\nDone."'],
-  ['Playful', '"Oops, that\none\'s on us."'],
-  ['Honest', '"Refunds take\n3 days."'],
-  ['Curious', '"What are you\nmaking?"'],
-  ['Calm', '"No rush,\nit\'s saved."'],
-];
+// Bubble map: the Thinking Maps "describe it" map, one topic ringed by the words that describe it, each bubble a
+// round mind node in its own hue (the branch palette plus teal) in the bubble flow, so Tab on the centre still adds
+// another bubble to the ring.
+const TEAM_WORDS = ['Curious', 'Kind', 'Bold', 'Calm', 'Clear'];
 const TEAL: MindHue = { fill: '#ccfbf1', stroke: '#14b8a6', text: '#115e59', leaf: '#5eead4' };
 
 export function buildBubbleMap(cx: number, cy: number): Element[] {
   const hues = [...MIND_HUES, TEAL];
-  const rootRuns: TextRun[] = [
-    { text: 'Our brand voice', bold: true },
-    { text: '\nHow we sound', size: 'sm' },
-  ];
   const map = buildMindTemplate(
     {
-      label: runsPlainText(rootRuns),
-      look: {
-        width: 200,
-        height: 200,
-        textSize: 'lg',
-        colorPreset: 'bold',
-        borderRadius: 'full',
-        richText: rootRuns,
-      },
-      children: VOICE_BUBBLES.map(([word, proof], i) => {
+      label: 'Our team',
+      look: rootLook(true),
+      children: TEAM_WORDS.map((word, i) => {
         const hue = hues[i % hues.length]!;
-        const runs: TextRun[] = [{ text: word, bold: true, size: 'md' }, { text: `\n${proof}` }];
         return {
-          label: runsPlainText(runs),
-          // Sized so the adjective sits on one line and its proof on two.
+          label: word,
           look: {
-            width: 164,
-            height: 164,
-            textSize: 'sm',
+            width: 130,
+            height: 130,
+            textSize: 'md',
+            textBold: true,
             borderRadius: 'full',
-            richText: runs,
             fillColor: hue.fill,
             strokeColor: hue.stroke,
             textColor: hue.text,
@@ -252,11 +175,5 @@ export function buildBubbleMap(cx: number, cy: number): Element[] {
     cx,
     cy,
   );
-  return [
-    ...map,
-    mindHowTo(
-      map,
-      'One adjective per bubble, with a line that proves it. Tab on the centre adds a bubble.',
-    ),
-  ];
+  return [...map, mindHowTo(map, 'One word per bubble. Tab on the centre adds another.')];
 }

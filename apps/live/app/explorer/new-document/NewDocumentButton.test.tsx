@@ -62,7 +62,7 @@ describe('NewDocumentButton', () => {
     expect(screen.getByRole('group', { name: 'Form templates' })).toBeTruthy();
   });
 
-  it('lists the eight blanks, each with its number key', async () => {
+  it('lists the nine blanks, each with its number key', async () => {
     render(<NewDocumentButton place={{}} />);
     await openMenu();
     const rows = screen
@@ -77,13 +77,14 @@ describe('NewDocumentButton', () => {
       '6',
       '7',
       '8',
+      '9',
     ]);
   });
 
   it('makes a blank from its number key', async () => {
     render(<NewDocumentButton place={{}} />);
     const menu = await openMenu();
-    fireEvent.keyDown(menu.querySelector('[data-spot="list:0"]')!, { key: '5' });
+    fireEvent.keyDown(menu.querySelector('[data-spot="list:0"]')!, { key: '6' });
     expect(started).toHaveBeenCalledWith(
       expect.objectContaining({ blank: 'board', template: 'blank-board' }),
     );
@@ -96,6 +97,21 @@ describe('NewDocumentButton', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Flowchart' }));
     expect(started).toHaveBeenCalledWith(
       expect.objectContaining({ choice: 'template', blank: 'diagram', template: 'flowchart' }),
+    );
+  });
+
+  it('makes a brainstorm from its row, second in the list', async () => {
+    render(<NewDocumentButton place={{}} />);
+    await openMenu();
+    const row = screen.getByRole('menuitem', { name: 'Brainstorm, blank' });
+    expect(row.getAttribute('aria-keyshortcuts')).toBe('2');
+    fireEvent.click(row);
+    expect(started).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choice: 'blank',
+        blank: 'brainstorm',
+        template: 'blank-brainstorm',
+      }),
     );
   });
 
@@ -115,9 +131,9 @@ describe('NewDocumentButton', () => {
     first.focus();
     fireEvent.keyDown(first, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(
-      screen.getByRole('menuitem', { name: 'Whiteboard, blank' }),
+      screen.getByRole('menuitem', { name: 'Brainstorm, blank' }),
     );
-    expect(screen.getByRole('group', { name: 'Whiteboard templates' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Brainstorm templates' })).toBeTruthy();
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
     expect(document.activeElement?.getAttribute('data-spot')).toBe('pane:0:0');
   });

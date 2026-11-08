@@ -145,10 +145,11 @@ export const BLANK_TEMPLATE_FOR_OPENING: Readonly<Record<TabOpening, TemplateKin
   plan: 'blank-plan',
 };
 
-// The blanks beyond each mode's own (docs/specs/007-editor/templates-by-mode.md "The blanks"): Blank Spreadsheet, an
-// empty Sheet, beside Blank Plan; the blanks of a page kind ("Blanks of a page kind"), one empty page of a chosen kind,
+// The blanks beyond each mode's own (docs/specs/007-editor/templates-by-mode.md "The blanks"): Blank Brainstorm, a mind
+// map's central idea, beside Blank Diagram; Blank Spreadsheet, an empty Sheet, beside Blank Plan; the blanks of a page kind ("Blanks of a page kind"), one empty page of a chosen kind,
 // beside Blank Illustration, in the order the landing page's Blank Slate lists them.
 export const EXTRA_BLANK_TEMPLATES: readonly TemplateKind[] = [
+  'blank-brainstorm',
   'blank-slide-deck',
   'blank-article',
   'blank-infographic',

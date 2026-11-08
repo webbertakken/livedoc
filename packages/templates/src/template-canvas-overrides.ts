@@ -86,6 +86,8 @@ const TEMPLATE_PATTERNS: Partial<Record<TemplateKind, BackgroundPattern>> = {
   fishbone: 'grid',
   'live-card': 'blank',
   mindmap: 'grid',
+  // Blank Brainstorm is the radial map's start, so it rides the same softened dot grid.
+  'blank-brainstorm': 'grid',
   // Tree map rides the dot grid like the radial map; the bubble map is a
   // clean radial layout, so it gets a blank canvas like Venn / pyramid.
   'mindmap-tree': 'grid',
@@ -242,6 +244,7 @@ export function templateCanvasOverrides(kind: TemplateKind): Partial<Tab> {
   const mode = openingEditorMode(opening);
   const quiet = pattern && mode !== 'draw' ? TEMPLATE_PATTERN_OPACITY[pattern] : undefined;
   const soft =
+    kind === 'blank-brainstorm' ||
     kind === 'mindmap' ||
     kind === 'mindmap-tree' ||
     kind === 'journey' ||

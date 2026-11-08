@@ -1806,7 +1806,7 @@ truth for what the type IS at any moment.
 
 ## Counts
 
-The catalogue is pinned at **148 templates (11 default + 137 extra)**:
+The catalogue is pinned at **149 templates (11 default + 138 extra)**:
 `templates.test.ts`, [Canvas and palette](../008-canvas/canvas-and-palette.md), [Marketing site](../019-marketing/marketing-site.md), [Marketing assets](../019-marketing/marketing-assets.md), the marketing FAQ +
 landing copy, and the help centre's templates article all moved
 together with this addition.

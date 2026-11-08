@@ -9,6 +9,7 @@ import type { TemplateKind } from './templates';
 
 const TEMPLATE_FAMILY: Record<TemplateKind, TemplateFamily | null> = {
   blank: null,
+  'blank-brainstorm': null,
   mindmap: null,
   'mindmap-tree': null,
   'mindmap-bubble': null,

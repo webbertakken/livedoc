@@ -30,6 +30,7 @@ import { isTechIconId } from './tech-icons';
 // other direction. `logo-design` slipped past the check that way.
 const ALL_KINDS = [
   'blank',
+  'blank-brainstorm',
   'mindmap',
   'mindmap-tree',
   'mindmap-bubble',

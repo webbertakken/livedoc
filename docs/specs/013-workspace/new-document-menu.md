@@ -25,21 +25,30 @@ closed: whoever asked for a blank gets a blank.
 - A blank is never called a kind: a kind is what a tab is, and Structured and Sketch (the Diagram and Whiteboard blanks) are modes of one kind
   ([Domain language](../003-system-architecture/domain-language.md#mode-kind-and-template)). The blanks name what
   people make, whatever mode or kind makes it.
+- **Brainstorm** is a blank, never a kind or a mode: what it makes is a diagram, one Structured tab holding a mind map's
+  central idea ([The mind node](../009-elements/mind-node.md#templates)). It names the work, as Slides names a deck of
+  pages.
 
 ## The blanks
 
 In this order, each with its glyph and number key:
 
-| #   | Blank      | Makes (its blank template)              | Its templates, in the pane                                      |
-| --- | ---------- | --------------------------------------- | --------------------------------------------------------------- |
-| 1   | Diagram    | Blank Diagram (`blank`)                 | Start Diagramming's, in its groups, Recommended first           |
-| 2   | Whiteboard | Blank Whiteboard (`whiteboard`)         | Start Sketching's, in its groups, Recommended first             |
-| 3   | Page       | Blank Article (`blank-article`)         | Start Making Pages' Articles                                    |
-| 4   | Sheet      | Blank Spreadsheet (`blank-spreadsheet`) | The spreadsheet templates (Budget, Timesheet, Invoice, ...)     |
-| 5   | Board      | Blank Board (`blank-board`)             | The Plan templates that set up boards (Kanban, Bug Triage, ...) |
-| 6   | Slides     | Blank Slide Deck (`blank-slide-deck`)   | Start Making Pages' Slides                                      |
-| 7   | Form       | Blank Form (`blank-form`)               | The form templates                                              |
-| 8   | Workshop   | Blank Session (`blank-session`)         | Start a Workshop's, in its groups, Recommended first            |
+| #   | Blank      | Makes (its blank template)              | Its templates, in the pane                                              |
+| --- | ---------- | --------------------------------------- | ----------------------------------------------------------------------- |
+| 1   | Diagram    | Blank Diagram (`blank`)                 | Start Diagramming's, in its groups, Recommended first, but Brainstorm's |
+| 2   | Brainstorm | Blank Brainstorm (`blank-brainstorm`)   | Start Diagramming's Brainstorm: the mind maps                           |
+| 3   | Whiteboard | Blank Whiteboard (`whiteboard`)         | Start Sketching's, in its groups, Recommended first                     |
+| 4   | Page       | Blank Article (`blank-article`)         | Start Making Pages' Articles                                            |
+| 5   | Sheet      | Blank Spreadsheet (`blank-spreadsheet`) | The spreadsheet templates (Budget, Timesheet, Invoice, ...)             |
+| 6   | Board      | Blank Board (`blank-board`)             | The Plan templates that set up boards (Kanban, Bug Triage, ...)         |
+| 7   | Slides     | Blank Slide Deck (`blank-slide-deck`)   | Start Making Pages' Slides                                              |
+| 8   | Form       | Blank Form (`blank-form`)               | The form templates                                                      |
+| 9   | Workshop   | Blank Session (`blank-session`)         | Start a Workshop's, in its groups, Recommended first                    |
+
+- **Brainstorm** is the quickest way into a mind map. Blank Brainstorm is a diagram holding one central idea and
+  nothing else, and it opens with that idea selected, so the first key typed names it and Tab grows its first branch
+  ([The mind node](../009-elements/mind-node.md#a-lone-root-opens-selected)). Its templates are the mind maps, each a
+  small example to grow from rather than a finished map. It sits second, beside Diagram, since it is one.
 
 - **Page** is prose. It makes an Article ([Article pages](../007-editor/article-pages.md)) until the
   [markdown tab](../031-markdown/markdown-tab.md) ships; then it makes a page, a document of one markdown tab.
@@ -63,14 +72,16 @@ In this order, each with its glyph and number key:
 
 A popover under the button, its right edge on the button's. Two panes side by side:
 
-- **The list**, on the right, straight under the button where the pointer already is: the eight blanks, each its
+- **The list**, on the right, straight under the button where the pointer already is: the nine blanks, each its
   glyph in its own tint, its name and its number key in a key cap. The selected row is filled. Where the section
   offers New Folder ([Folders](folders.md)), a hairline and **New Folder** (or **New Subfolder**) end the list.
 - **The pane**, to the left of the list: **every template of the selected blank**, three to a row, each its preview
   and name, under the headings of its template groups (Recommended, Brainstorm, Design, ...). A template appears
   once, under the first group holding it. The pane scrolls within the menu; each group's heading stays at the top
-  while its templates pass under it, and a soft fade at the foot says there is more. A blank with one group (Page,
-  Slides, Sheet, Board, Form) has one heading.
+  while its templates pass under it, and a soft fade at the foot says there is more. A blank with one group
+  (Brainstorm, Page, Slides, Sheet, Board, Form) has one heading.
+- **A template has one blank.** A whole mode's pane leaves out every template another blank lists from the same
+  start, so Diagram's pane holds no mind map: they are Brainstorm's. The editor's start still lists them all.
 - **There is no blank card.** A row of the list is the blank: clicking it, or Enter on it, makes the blank. The pane
   holds templates only.
 - **There is no way out to a bigger picker.** The pane holds every template of the blank; the editor's template
@@ -127,10 +138,10 @@ A blank is on screen, editable, **within 200 ms of the click**, and a template w
 ## Keyboard and screen readers
 
 - The face and the caret are buttons; the caret has `aria-haspopup="menu"` and `aria-expanded`.
-- The list is a `menu` of `menuitem`s named "<name>, blank" with `aria-keyshortcuts` 1 to 8. The pane is a labelled
+- The list is a `menu` of `menuitem`s named "<name>, blank" with `aria-keyshortcuts` 1 to 9. The pane is a labelled
   `group` ("Diagram templates") of `menuitem`s, under headings (`h3`) naming its template groups.
 - **Up and Down** move along the list, wrapping; **Home** and **End** reach its ends. **Enter** makes the selected
-  blank. **1 to 8** make that blank from anywhere in the menu. **Left** moves into the pane, on its first template;
+  blank. **1 to 9** make that blank from anywhere in the menu. **Left** moves into the pane, on its first template;
   there the arrow keys move as a grid, three to a row, the rows of every group one after another, and the card
   reached scrolls into view. **Right** from the pane's right column goes back to the list. **Escape**
   closes the menu and puts focus back on the caret; **Tab** moves through the menu and leaves it closed.
@@ -195,3 +206,7 @@ The code cites each by its id.
   prepared at the click (default).
 - **D207** When the create starts: After the editor's first frame of the document, or 1 s at most: a create that lands
   at once would re-render it inside that frame (default).
+- **D221** Where Brainstorm sits in the list: Second, after Diagram, the blank it is a diagram of; the blanks after it
+  move one number key down (default).
+- **D222** Brainstorm's glyph and tint: The lightbulb (`lucideLightbulb`), rose (`text-rose-600`, `dark:text-rose-400`),
+  the one hue no other blank wears (default).

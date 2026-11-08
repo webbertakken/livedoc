@@ -8,6 +8,15 @@ import type { TemplateKind } from './templates';
 const OWN_KEYWORDS: Readonly<Record<TemplateKind, readonly string[]>> = {
   // The blanks.
   blank: ['empty', 'scratch', 'new', 'canvas', 'nothing'],
+  'blank-brainstorm': [
+    'empty',
+    'brainstorm',
+    'mind map',
+    'mindmap',
+    'ideas',
+    'central idea',
+    'think',
+  ],
   whiteboard: ['empty', 'scratch', 'draw', 'sketch', 'freehand', 'pen'],
   'blank-illustration': ['empty', 'page', 'infographic', 'poster', 'design'],
   'blank-slide-deck': [

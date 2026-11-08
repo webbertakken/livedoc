@@ -4,87 +4,64 @@ import { pv } from './motion';
 
 import { popGroup } from './story-parts';
 
-// Group 1 of 3 (mind maps / flowcharts). Static SVG preview tiles (one branch per
+// Group 1 of 3 (mind maps, Blank Brainstorm among them / flowcharts). Static SVG preview tiles (one branch per
 // TemplateKind; see template-preview.tsx for who renders them). Split out of template-preview.tsx to keep each file under the
 // ~1000-line budget; TemplatePreview chains the groups with ??.
 // A story group hidden at rest that pops in at `at` (pv-new on a <g>, scaled
 // round its own box rather than the drawing's corner).
 export function templatePreviewGroup1(kind: TemplateKind): ReactElement | null {
   switch (kind) {
+    case 'blank-brainstorm':
+      // The central idea alone, a bold round root. Hover story: Tab grows its first branch, which glides out of it.
+      return (
+        <svg width="70" height="44" viewBox="0 0 80 50" aria-hidden>
+          <circle
+            cx="40"
+            cy="25"
+            r="9"
+            fill="rgb(3 105 161)"
+            stroke="rgb(7 89 133)"
+            strokeWidth="1"
+          />
+          <rect x="35" y="24.2" width="10" height="1.6" rx="0.8" fill="white" />
+          <line
+            className="pv-new"
+            opacity="0"
+            x1="40"
+            y1="25"
+            x2="63"
+            y2="15"
+            stroke="rgb(16 185 129)"
+            strokeWidth="1.3"
+            style={pv({ '--pv-at': '1100ms' })}
+          />
+          <rect
+            className="pv-arrive"
+            opacity="0"
+            x="56"
+            y="12"
+            width="14"
+            height="6"
+            rx="1.5"
+            fill="rgb(209 250 229)"
+            stroke="rgb(16 185 129)"
+            strokeWidth="0.9"
+            style={pv({ '--pv-from-x': '-16px', '--pv-from-y': '7px', '--pv-at': '900ms' })}
+          />
+        </svg>
+      );
     case 'mindmap':
-      // A bold round topic, five branches each in its own hue (card and
-      // connector alike), two white leaves edged in the branch's hue.
+      // A bold round topic and four branches round it, each in its own hue (card and connector alike).
       return (
         <svg width="70" height="44" viewBox="0 0 80 50" aria-hidden>
           {[
-            {
-              b: [17, 15],
-              l: [
-                [6, 6],
-                [6, 24],
-              ],
-              c: 'rgb(16 185 129)',
-              f: 'rgb(209 250 229)',
-              e: 'rgb(110 231 183)',
-            },
-            {
-              b: [40, 7],
-              l: [
-                [26, 2.5],
-                [54, 2.5],
-              ],
-              c: 'rgb(14 165 233)',
-              f: 'rgb(224 242 254)',
-              e: 'rgb(125 211 252)',
-            },
-            {
-              b: [63, 15],
-              l: [
-                [74, 7],
-                [74, 23],
-              ],
-              c: 'rgb(139 92 246)',
-              f: 'rgb(237 233 254)',
-              e: 'rgb(196 181 253)',
-            },
-            {
-              b: [60, 37],
-              l: [
-                [74, 44],
-                [48, 46],
-              ],
-              c: 'rgb(245 158 11)',
-              f: 'rgb(254 243 199)',
-              e: 'rgb(252 211 77)',
-            },
-            {
-              b: [20, 37],
-              l: [
-                [7, 44],
-                [31, 46],
-              ],
-              c: 'rgb(244 63 94)',
-              f: 'rgb(255 228 230)',
-              e: 'rgb(253 164 175)',
-            },
-          ].map(({ b, l, c, f, e }) => (
+            { b: [17, 15], c: 'rgb(16 185 129)', f: 'rgb(209 250 229)' },
+            { b: [63, 15], c: 'rgb(14 165 233)', f: 'rgb(224 242 254)' },
+            { b: [63, 35], c: 'rgb(139 92 246)', f: 'rgb(237 233 254)' },
+            { b: [17, 35], c: 'rgb(245 158 11)', f: 'rgb(254 243 199)' },
+          ].map(({ b, c, f }) => (
             <g key={c}>
               <line x1="40" y1="25" x2={b[0]} y2={b[1]} stroke={c} strokeWidth="1.3" />
-              {l.map(([lx, ly]) => (
-                <g key={`${lx}-${ly}`}>
-                  <line x1={b[0]} y1={b[1]} x2={lx} y2={ly} stroke={e} strokeWidth="0.7" />
-                  <rect
-                    x={lx! - 5}
-                    y={ly! - 2}
-                    width="10"
-                    height="4"
-                    rx="1"
-                    fill="white"
-                    stroke={e}
-                    strokeWidth="0.6"
-                  />
-                </g>
-              ))}
               <rect
                 x={b[0]! - 7}
                 y={b[1]! - 3}
@@ -105,46 +82,45 @@ export function templatePreviewGroup1(kind: TemplateKind): ReactElement | null {
             stroke="rgb(7 89 133)"
             strokeWidth="1"
           />
-          {/* Hover story (preview-motion.css): Tab on the violet branch grows
-              a third leaf, which glides out of the branch in its hue. */}
+          {/* Hover story (preview-motion.css): Tab on the sky branch grows a
+              first leaf, which glides out of the branch in its hue. */}
           <line
             className="pv-new"
             opacity="0"
             x1="63"
             y1="15"
-            x2="72"
-            y2="31"
-            stroke="rgb(196 181 253)"
+            x2="73"
+            y2="6"
+            stroke="rgb(125 211 252)"
             strokeWidth="0.7"
             style={pv({ '--pv-at': '1700ms' })}
           />
           <rect
             className="pv-arrive"
             opacity="0"
-            x="67"
-            y="29"
+            x="68"
+            y="4"
             width="10"
             height="4"
             rx="1"
             fill="white"
-            stroke="rgb(139 92 246)"
+            stroke="rgb(14 165 233)"
             strokeWidth="0.7"
-            style={pv({ '--pv-from-x': '-9px', '--pv-from-y': '-14px', '--pv-at': '900ms' })}
+            style={pv({ '--pv-from-x': '-9px', '--pv-from-y': '9px', '--pv-at': '900ms' })}
           />
         </svg>
       );
     case 'mindmap-bubble':
       return (
         <svg width="70" height="44" viewBox="0 0 80 50" aria-hidden>
-          {/* A bold topic ringed by adjective bubbles, each in its own hue
-              with a matching spoke. */}
+          {/* A bold topic ringed by five one-word bubbles, each in its own
+              hue with a matching spoke. */}
           {[
-            [40, 6, 'rgb(14 165 233)', 'rgb(224 242 254)'],
-            [63, 15, 'rgb(139 92 246)', 'rgb(237 233 254)'],
-            [63, 35, 'rgb(245 158 11)', 'rgb(254 243 199)'],
-            [40, 44, 'rgb(244 63 94)', 'rgb(255 228 230)'],
-            [17, 35, 'rgb(20 184 166)', 'rgb(204 251 241)'],
-            [17, 15, 'rgb(16 185 129)', 'rgb(209 250 229)'],
+            [40, 6, 'rgb(16 185 129)', 'rgb(209 250 229)'],
+            [62.8, 19.1, 'rgb(14 165 233)', 'rgb(224 242 254)'],
+            [54.1, 40.4, 'rgb(139 92 246)', 'rgb(237 233 254)'],
+            [25.9, 40.4, 'rgb(245 158 11)', 'rgb(254 243 199)'],
+            [17.2, 19.1, 'rgb(244 63 94)', 'rgb(255 228 230)'],
           ].map(([bx, by, c, f], i) => (
             <g key={`${bx}-${by}`}>
               <line x1="40" y1="25" x2={bx} y2={by} stroke={c as string} strokeWidth="0.9" />
@@ -160,22 +136,14 @@ export function templatePreviewGroup1(kind: TemplateKind): ReactElement | null {
                 className="pv-pulse"
                 style={pv({ '--pv-at': `${900 + i * 160}ms` })}
               />
-              {/* The adjective over its proof line. */}
+              {/* Its one word. */}
               <line
                 x1={(bx as number) - 2.4}
-                y1={(by as number) - 0.9}
+                y1={by as number}
                 x2={(bx as number) + 2.4}
-                y2={(by as number) - 0.9}
+                y2={by as number}
                 stroke={c as string}
                 strokeWidth="0.9"
-              />
-              <line
-                x1={(bx as number) - 1.8}
-                y1={(by as number) + 1.2}
-                x2={(bx as number) + 1.8}
-                y2={(by as number) + 1.2}
-                stroke={c as string}
-                strokeWidth="0.5"
               />
             </g>
           ))}
@@ -191,10 +159,10 @@ export function templatePreviewGroup1(kind: TemplateKind): ReactElement | null {
           <line
             className="pv-new"
             opacity="0"
-            x1="67"
-            y1="38.5"
-            x2="71.7"
-            y2="42.1"
+            x1="58.5"
+            y1="42.8"
+            x2="65.5"
+            y2="45"
             stroke="rgb(100 116 139)"
             strokeWidth="0.9"
             style={pv({ '--pv-at': '2000ms' })}
@@ -202,11 +170,11 @@ export function templatePreviewGroup1(kind: TemplateKind): ReactElement | null {
           <circle
             className="pv-new"
             opacity="0"
-            cx="74"
-            cy="44"
+            cx="68"
+            cy="45.5"
             r="3"
             fill="white"
-            stroke="rgb(14 165 233)"
+            stroke="rgb(139 92 246)"
             strokeWidth="1.1"
             style={pv({ '--pv-at': '2200ms' })}
           />

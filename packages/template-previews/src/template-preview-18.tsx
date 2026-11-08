@@ -43,13 +43,6 @@ const AMBER: Hue = {
   ink: 'rgb(180 83 9)',
   fill: 'rgb(245 158 11)',
 };
-const ROSE: Hue = {
-  band: 'rgb(255 241 242)',
-  strip: 'rgb(255 228 230)',
-  edge: 'rgb(251 113 133)',
-  ink: 'rgb(190 18 60)',
-  fill: 'rgb(244 63 94)',
-};
 
 // Text as a bar, the way every preview draws a line of copy.
 const Bar = ({
@@ -195,21 +188,19 @@ const Cylinder = ({ cx, cy, hue }: { cx: number; cy: number; hue: Hue }) => (
   </g>
 );
 
-// The tree mind map's five branches, top to bottom (template-builders-mindmaps.ts), with how many leaves each grows.
+// The tree mind map's three branches, top to bottom (template-builders-mindmaps.ts), with how many leaves each grows.
 const TREE = [
-  { hue: SKY, leaves: 2 },
-  { hue: VIOLET, leaves: 3 },
-  { hue: AMBER, leaves: 2 },
-  { hue: ROSE, leaves: 2 },
-  { hue: GREEN, leaves: 2 },
+  { hue: SKY, leaves: 1 },
+  { hue: VIOLET, leaves: 1 },
+  { hue: AMBER, leaves: 1 },
 ];
-const LEAF_Y = (i: number) => 2.4 + i * 4.5;
+const LEAF_Y = (i: number) => 11 + i * 14;
 
 export function templatePreviewGroup18(kind: TemplateKind): ReactElement | null {
   switch (kind) {
     case 'mindmap-tree': {
-      // A bold root on the left, five branches each in its own hue with a glyph, and their leaves edged in the
-      // branch's hue down the right; connectors carry the hue too. Hover story: Tab on the last branch grows a leaf.
+      // A bold root on the left, three branches each in its own hue, and a leaf each edged in the branch's hue down
+      // the right; connectors carry the hue too. Hover story: Tab on the last branch grows a second leaf.
       let n = 0;
       const branches = TREE.map((b) => {
         const ys = Array.from({ length: b.leaves }, () => LEAF_Y(n++));
@@ -256,8 +247,7 @@ export function templatePreviewGroup18(kind: TemplateKind): ReactElement | null 
                 stroke={hue.fill}
                 strokeWidth="0.9"
               />
-              <circle cx="31" cy={cy} r="0.9" fill="none" stroke={hue.ink} strokeWidth="0.5" />
-              <Bar x={33} y={cy - 0.55} w={6.5} h={1.1} fill={hue.ink} />
+              <Bar x={31} y={cy - 0.55} w={8} h={1.1} fill={hue.ink} />
             </g>
           ))}
           <rect
@@ -272,13 +262,13 @@ export function templatePreviewGroup18(kind: TemplateKind): ReactElement | null 
           />
           <Bar x={4.5} y={23} w={12} h={1.6} fill={WHITE} />
           <Bar x={6} y={26.4} w={9} h={0.8} fill="rgb(186 230 253)" />
-          {/* Hover story: Tab on Video grows a third leaf under it. */}
+          {/* Hover story: Tab on Questions grows a second leaf under it. */}
           <path
             className="pv-new"
             opacity="0"
-            d="M42 45.15 C47 45.15 46 46.6 51 46.6"
+            d="M42 39 C47 39 46 46 51 46"
             fill="none"
-            stroke={GREEN.edge}
+            stroke={AMBER.edge}
             strokeWidth="0.55"
             style={pv({ '--pv-at': '1300ms' })}
           />
@@ -286,12 +276,12 @@ export function templatePreviewGroup18(kind: TemplateKind): ReactElement | null 
             className="pv-arrive"
             opacity="0"
             x="51"
-            y="45.6"
+            y="44.3"
             width="26"
             height="3.4"
             rx="0.8"
-            fill={GREEN.strip}
-            stroke={GREEN.fill}
+            fill={AMBER.strip}
+            stroke={AMBER.fill}
             strokeWidth="0.6"
             style={pv({ '--pv-from-x': '-10px', '--pv-at': '900ms' })}
           />

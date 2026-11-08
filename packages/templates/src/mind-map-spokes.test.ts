@@ -11,7 +11,7 @@ import { buildMindMap } from './template-builders-mindmaps';
 
 // docs/specs/009-elements/mind-node.md "Connectors": a bubble map's spokes leave each node toward the other's
 // centre and run straight, so growing a branch never routes a spoke behind a sibling (issue #970's repro:
-// Travel grows Hotel, then Taxi).
+// Travel grew Hotel, then Taxi; the quick start's Who grows the same way).
 
 const isNode = (el: Element): el is ShapeElement => el.type === 'shape' && el.shape === 'mind-node';
 
@@ -81,11 +81,11 @@ function crossings(elements: Element[]): string[] {
 }
 
 describe('bubble mind map spokes', () => {
-  it('clear every sibling after Travel grows Hotel and Taxi', () => {
+  it('clear every sibling after a branch grows two leaves', () => {
     let map = buildMindMap(0, 0);
-    const travel = map.find((el) => isNode(el) && el.label === 'Travel')!;
-    map = grow(map, travel.id, 'child', 'Hotel');
-    map = grow(map, 'Hotel', 'sibling', 'Taxi');
+    const who = map.find((el) => isNode(el) && el.label === 'Who')!;
+    map = grow(map, who.id, 'child', 'Sam');
+    map = grow(map, 'Sam', 'sibling', 'Alex');
     expect(crossings(map)).toEqual([]);
   });
 

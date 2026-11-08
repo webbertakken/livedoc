@@ -62,6 +62,12 @@ it, with no columns, no card types and no example cards, so it opens on Setup Bo
 [New Document menu](../013-workspace/new-document-menu.md) makes for **Board**; like Blank Spreadsheet it leads no
 start, and Start Planning, which places its own Blank board, does not offer it.
 
+**Blank Brainstorm** (`blank-brainstorm`, Structured) is a blank of the same sort: one tab holding a mind map's central
+idea and nothing else, which opens selected so typing names it
+([The mind node](../009-elements/mind-node.md#templates)). It is what the New Document menu makes for **Brainstorm**,
+and it leads Start Diagramming's Brainstorm group ([Template starts](start-diagramming.md#recommended-and-groups)); the tab
+keeps its name. The document is "Untitled Brainstorm".
+
 ### Blanks of a page kind
 
 Blank Illustration's one page asks what it is for. Four more Pages blanks have already answered, for someone

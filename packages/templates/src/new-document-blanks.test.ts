@@ -12,10 +12,11 @@ const known = new Set(TEMPLATES.map((t) => t.kind));
 
 // docs/specs/013-workspace/new-document-menu.md "The blanks"
 describe('New Document blanks', () => {
-  it('lists the eight blanks in the menu order', () => {
+  it('lists the nine blanks in the menu order', () => {
     expect(NEW_DOCUMENT_BLANKS.map((b) => b.id)).toEqual([...NEW_DOCUMENT_BLANK_IDS]);
     expect(NEW_DOCUMENT_BLANKS.map((b) => b.name)).toEqual([
       'Diagram',
+      'Brainstorm',
       'Whiteboard',
       'Page',
       'Sheet',

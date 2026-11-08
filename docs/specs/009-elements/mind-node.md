@@ -694,10 +694,34 @@ and the root's flow, and laid out by `layoutMindTree`, so a template is a live,
 tidy map rather than a picture of one: select any node and Tab and Enter grow
 it in place, and the new nodes look like the template's own.
 
-- **Mind Map**: the bubble flow; a team-offsite plan, a root with five branches, each in its own hue with a glyph, carrying two or three leaves.
-- **Tree Mind Map**: the tree flow; a bold root, four tinted branches, two small leaves each.
-- **Bubble Map**: the bubble flow with round nodes and a single ring; a brand voice, one adjective and its proof line per bubble, each bubble in its own hue.
+A mind-map template is a **quick start, not a lesson**: a few short ideas to grow from, never a finished map that
+shows how it ought to be done. Each holds one level of branches, or two at most, every label a word or two, with the
+muted line under the map that names the two keys.
+
+- **Blank Brainstorm**: one central idea and nothing else: a bold round root reading "Central idea", in the bubble
+  flow. The [New Document menu](../013-workspace/new-document-menu.md)'s **Brainstorm** makes it.
+- **Mind Map**: the bubble flow; "Weekend trip" in a bold round root, and four branches round it (Where, When, Who,
+  Budget), each in its own hue.
+- **Tree Mind Map**: the tree flow; "New project" in a bold root, three tinted branches (Goals, Tasks, Questions), one
+  leaf each.
+- **Bubble Map**: the bubble flow with round nodes and a single ring; "Our team" ringed by five one-word bubbles
+  (Curious, Kind, Bold, Calm, Clear), each in its own hue.
 - **Sitemap**: the downward flow; Home over the nav sections and the dashed footer and utility groups, each page carrying its route on its second line ([Templates](../008-canvas/canvas-and-palette.md)).
+
+### A lone root opens selected
+
+A tab whose only element is a mind node with no parent is a brainstorm about to start, so landing on it selects that
+node (`loneMindRoot`): the first key typed names it (type-to-edit replaces "Central idea"), Tab grows its first branch,
+and its toolbar offers Add Child.
+
+- **Landing** is the editor opening the tab, as the document opens or as the tab is switched to, once its content has
+  loaded; once per landing, so a selection cleared afterwards stays cleared.
+- It holds wherever the tab came from: the New Document menu's Brainstorm, a `/new?template=blank-brainstorm` link,
+  a start's pick (which already selects a template of one element), or a map pared back to its root.
+- **Share roles**: only for a session that may write the node's label (`can.writeText`): an Editor, and a
+  Participant, who grows maps too. A Viewer lands with nothing selected.
+- Nothing else is selected for it, and nothing is changed: no edit, no undo step, nothing sent to the room.
+- Log: `[mind] lone-root selected id=<id>`.
 
 ## Deleting
 

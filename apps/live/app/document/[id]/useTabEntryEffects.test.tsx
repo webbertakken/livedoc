@@ -3,6 +3,7 @@
 // The fit on landing on a tab (docs/specs/008-canvas/canvas-and-palette.md "Fit-to-screen"): once per
 // entry, when the tab's content has loaded, and never again for what the user then adds to it.
 
+import { StrictMode } from 'react';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useTabEntryEffects } from './useTabEntryEffects';
@@ -62,6 +63,23 @@ describe('useTabEntryEffects', () => {
     nextFrame();
     expect(fitToScreen).not.toHaveBeenCalled();
     rerender({ activeId: 't2', elementCount: 5, tabLoaded: true });
+    nextFrame();
+    expect(fitToScreen).toHaveBeenCalledTimes(1);
+  });
+
+  it('fits a tab whose entry is run again before its frame (React re-running the effect)', () => {
+    const fitToScreen = vi.fn();
+    renderHook(
+      () =>
+        useTabEntryEffects({
+          hydrated: true,
+          activeId: 't1',
+          elementCount: 1,
+          tabLoaded: true,
+          fitToScreen,
+        }),
+      { wrapper: StrictMode },
+    );
     nextFrame();
     expect(fitToScreen).toHaveBeenCalledTimes(1);
   });

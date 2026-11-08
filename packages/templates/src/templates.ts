@@ -4,9 +4,12 @@ import { UNTITLED_DOCUMENT_NAME, isUntitledDocumentName } from './legacy-untitle
 
 export type TemplateKind =
   | 'blank'
+  // Blank Brainstorm (docs/specs/007-editor/templates-by-mode.md "The blanks"): a mind map's central idea alone, what
+  // the New Document menu's Brainstorm makes.
+  | 'blank-brainstorm'
   | 'mindmap'
   // Mind-map variants (docs/specs/008-canvas/canvas-and-palette.md): the radial 'mindmap' plus a left-to-right
-  // tree and a central bubble map, grouped under the Mind maps category.
+  // tree and a central bubble map, grouped under the Brainstorm category.
   | 'mindmap-tree'
   | 'mindmap-bubble'
   | 'orgchart'
@@ -304,6 +307,12 @@ export const TEMPLATES: TemplateDescriptor[] = [
     description: 'An empty canvas for shapes, connectors and whatever you like.',
   },
   {
+    kind: 'blank-brainstorm',
+    title: 'Blank Brainstorm',
+    description: 'One central idea, selected: type to name it, then Tab to branch out.',
+    extra: true,
+  },
+  {
     kind: 'whiteboard',
     title: 'Blank Whiteboard',
     description: 'Free drawing without distractions',
@@ -395,18 +404,17 @@ export const TEMPLATES: TemplateDescriptor[] = [
   {
     kind: 'mindmap',
     title: 'Mind Map',
-    description:
-      'A team offsite plan: five colour-coded branches with glyphs radiating from the topic.',
+    description: 'A weekend trip with four branches round it, ready to grow.',
   },
   {
     kind: 'mindmap-tree',
     title: 'Tree Mind Map',
-    description: 'A left-to-right outline: a bold root, four branches and two sub-topics each.',
+    description: 'A new project as a left-to-right outline: three branches, one idea each.',
   },
   {
     kind: 'mindmap-bubble',
     title: 'Bubble Map',
-    description: 'A brand voice ringed by six adjectives, each with a line that proves it.',
+    description: 'A team ringed by five words that describe it.',
   },
   {
     kind: 'orgchart',
