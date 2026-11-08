@@ -5,7 +5,9 @@ import { groupMindNodes, planMindDrop, setMindNumbered, ungroupMindNodes } from 
 import { relayoutAfterRemoval } from './mind-connect';
 import { isMindGroupFrame, settleMindGroups } from './mind-group';
 import { MIND_GROUP_PADDING, MIND_GROUP_TITLE_BAND, isMindTreeTidy } from './mind-layout';
-import type { Element, ShapeElement } from './index';
+import { LABEL_LINE_HEIGHT } from './svg-render-primitives';
+import { labelFontPx } from './label-font';
+import { PADDING_PX, type Element, type ShapeElement } from './index';
 
 // docs/specs/009-elements/mind-node.md "Groups": a group is a titled frame around its members.
 
@@ -49,6 +51,22 @@ describe('a group is a frame', () => {
     const a = get(out, 'a');
     expect(a.y + a.height).toBeLessThan(frame.y);
     expect(isMindTreeTidy(out, 'r', 'tree')).toBe(true);
+  });
+
+  it('insets its title as far as its members, and leaves that much again under the title', () => {
+    const frame = get(groupMindNodes(tidy(), new Set(['b', 'c']), 'g'), 'g');
+    const inset = PADDING_PX[frame.padding!];
+    expect(inset).toBe(MIND_GROUP_PADDING);
+    const titleBottom = inset + labelFontPx(frame.textSize) * LABEL_LINE_HEIGHT;
+    const membersTop = MIND_GROUP_PADDING + MIND_GROUP_TITLE_BAND;
+    // The band is whole pixels round a 17.5 px line, so the gap is the inset to within half a pixel.
+    expect(Math.abs(membersTop - titleBottom - MIND_GROUP_PADDING)).toBeLessThanOrEqual(0.5);
+  });
+
+  it('brings an older frame’s title in to the inset as it settles', () => {
+    const grouped = groupMindNodes(tidy(), new Set(['b', 'c']), 'g');
+    const older = grouped.map((e) => (e.id === 'g' ? { ...e, padding: 'sm' as const } : e));
+    expect(PADDING_PX[get(settleMindGroups(older), 'g').padding!]).toBe(MIND_GROUP_PADDING);
   });
 
   it('follows its members, and goes when they all leave it or a node names a frame that is gone', () => {

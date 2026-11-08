@@ -366,11 +366,14 @@ Siblings can be **grouped**: **Group** on the toolbar of a selection of mind nod
 parent. A group is an element of its own, a **frame** (`packages/document/src/mind-group.ts`): the frame carries its own
 id as its `mindGroup`, and its members carry that id too.
 
-- **Its title** is the frame's label, at its **top left**, in a 14 px bold line. A new group is made untitled and is
+- **Its title** is the frame's label, at its **top left**, in a 14 px bold line, inset from the frame's edges as far as
+  the members are (14 px, the frame's `md` padding), never hugging the corner. A new group is made untitled and is
   selected with its title open to type, so naming it is the next keystroke; Escape or a click away keeps what was
   typed, an empty title stays empty.
-- **Its box follows its members**: their nodes and branches (a branch placed by hand elsewhere left out), padded by 12 px
-  (`MIND_GROUP_PADDING`) with a 22 px band above for the title (`MIND_GROUP_TITLE_BAND`). It is settled on every
+- **Its box follows its members**: their nodes and branches (a branch placed by hand elsewhere left out), padded by 14 px
+  (`MIND_GROUP_PADDING`) with a 32 px band above for the title (`MIND_GROUP_TITLE_BAND`): the title's 18 px line and
+  the padding again under it, so the title sits as far from the members as from the frame's edge. A frame made with
+  another inset takes this one as it settles. It is settled on every
   change (`settleMindGroups`, in the editor's commit and an agent's edit alike), so it has no resize handles.
 - **It looks like a group**: a frame in a mostly transparent tint with a stronger edge, the hue picked from its
   id (`mindGroupColours`), one mid tone that reads on light and dark paper, so neighbouring groups tell apart. Like

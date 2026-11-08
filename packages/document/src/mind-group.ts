@@ -5,7 +5,7 @@
 
 import { createShape } from './factories';
 import { isMindNode } from './mind-map';
-import { mindGroupBoxes, mindGroupColours } from './mind-layout';
+import { MIND_GROUP_TITLE_PX, mindGroupBoxes, mindGroupColours } from './mind-layout';
 import type { Element, ElementId, ShapeElement } from './index';
 
 /** Whether `el` is a group's frame. */
@@ -20,6 +20,10 @@ export function mindGroupMembers(elements: readonly Element[], groupId: ElementI
   );
 }
 
+// The title's inset from the frame's edge: the padding preset of MIND_GROUP_PADDING, so the title sits as far in as
+// the members do.
+const TITLE_PADDING = 'md' as const;
+
 /** A new group's frame, untitled and tinted, its box settled later around its members. */
 export function newMindGroupFrame(id: ElementId): ShapeElement {
   const { fill, stroke } = mindGroupColours(id);
@@ -32,8 +36,8 @@ export function newMindGroupFrame(id: ElementId): ShapeElement {
     label: '',
     textAlignX: 'left',
     textAlignY: 'top',
-    padding: 'sm',
-    textSize: 14,
+    padding: TITLE_PADDING,
+    textSize: MIND_GROUP_TITLE_PX,
     textBold: true,
     fillColor: fill,
     strokeColor: stroke,
@@ -42,8 +46,8 @@ export function newMindGroupFrame(id: ElementId): ShapeElement {
 }
 
 /**
- * Every group made whole after a change: a frame takes its members' box, a frame left with no member goes, and a node
- * naming a group that has no frame leaves it. The same array when nothing changes.
+ * Every group made whole after a change: a frame takes its members' box and its title's inset, a frame left with no
+ * member goes, and a node naming a group that has no frame leaves it. The same array when nothing changes.
  */
 export function settleMindGroups(elements: Element[]): Element[] {
   if (!elements.some((el) => el.type === 'shape' && el.mindGroup)) return elements;
@@ -59,9 +63,24 @@ export function settleMindGroups(elements: Element[]): Element[] {
         continue;
       }
       const same =
-        el.x === box.x && el.y === box.y && el.width === box.width && el.height === box.height;
+        el.x === box.x &&
+        el.y === box.y &&
+        el.width === box.width &&
+        el.height === box.height &&
+        el.padding === TITLE_PADDING;
       if (!same) changed = true;
-      out.push(same ? el : { ...el, x: box.x, y: box.y, width: box.width, height: box.height });
+      out.push(
+        same
+          ? el
+          : {
+              ...el,
+              x: box.x,
+              y: box.y,
+              width: box.width,
+              height: box.height,
+              padding: TITLE_PADDING,
+            },
+      );
       continue;
     }
     if (isMindNode(el) && el.mindGroup && !frames.has(el.mindGroup)) {
