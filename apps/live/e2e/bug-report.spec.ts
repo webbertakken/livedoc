@@ -176,6 +176,9 @@ test('an unsent report survives closing and a reload, its image too, until it is
   await expect(dialog.getByRole('img', { name: 'Screenshot to send' })).toBeVisible();
   await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toHaveCount(0);
+  // Closing the form's own page goes back in history: that navigation lands before the page is opened again, or the
+  // two race and the reopened form is navigated away.
+  await page.waitForURL((url) => !url.pathname.startsWith('/report-a-bug'));
 
   await page.goto('/report-a-bug');
   await expect(title).toHaveValue('Export loses the arrows');
