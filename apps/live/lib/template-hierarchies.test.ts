@@ -28,24 +28,21 @@ describe('mind map template', () => {
   const root = nodes.find((n) => !n.mindParentId)!;
   const branches = nodes.filter((n) => n.mindParentId === root.id);
 
-  it('names a real topic and its dates on a bold round nucleus', () => {
-    expect(root.label).toBe('Team offsite\nLake District · 12-14 June');
+  it('names its topic in a word or two on a bold round nucleus', () => {
+    expect(root.label).toBe('Weekend trip');
     expect(root.colorPreset).toBe('bold');
     expect(root.borderRadius).toBe('full');
   });
 
-  it('radiates five branches, each in its own hue with a glyph, border and connector alike', () => {
-    expect(branches.map((b) => b.label)).toEqual(['Venue', 'Agenda', 'Travel', 'Budget', 'Fun']);
-    expect(branches.every((b) => b.iconId)).toBe(true);
-    expect(new Set(branches.map((b) => b.strokeColor)).size).toBe(5);
+  it('is a quick start: four one-word branches, each in its own hue, border and connector alike', () => {
+    expect(branches.map((b) => b.label)).toEqual(['Where', 'When', 'Who', 'Budget']);
+    expect(new Set(branches.map((b) => b.strokeColor)).size).toBe(4);
     for (const b of branches) {
       const into = arrows(els).find((a) => pinnedTo(a, 'to') === b.id)!;
       expect(into.strokeColor).toBe(b.strokeColor);
-      // Leaves are white cards edged in their branch's family, not its exact ink.
-      const leaves = nodes.filter((n) => n.mindParentId === b.id);
-      expect(leaves.length).toBeGreaterThanOrEqual(2);
-      expect(leaves.every((l) => l.fillColor === '#ffffff')).toBe(true);
     }
+    // Nothing filled in past the branches: the rest is the reader's to grow.
+    expect(nodes).toHaveLength(5);
   });
 
   it('is a tidy mind map in the bubble flow, so Tab and Enter keep it tidy', () => {
@@ -67,38 +64,55 @@ describe('mind map template', () => {
   });
 });
 
+describe('tree mind map template', () => {
+  const els = buildTemplate('mindmap-tree', 0, 0);
+  const nodes = shapes(els, 'mind-node');
+  const root = nodes.find((n) => !n.mindParentId)!;
+  const branches = nodes.filter((n) => n.mindParentId === root.id);
+
+  it('outlines a new project in the tree flow: three branches, one white leaf each in its hue', () => {
+    expect(root.label).toBe('New project');
+    expect(root.mindFlow).toBe('tree');
+    expect(branches.map((b) => b.label)).toEqual(['Goals', 'Tasks', 'Questions']);
+    for (const b of branches) {
+      const leaves = nodes.filter((n) => n.mindParentId === b.id);
+      expect(leaves).toHaveLength(1);
+      expect(leaves[0]!.fillColor).toBe('#ffffff');
+    }
+  });
+});
+
+describe('blank brainstorm template', () => {
+  it('is one central idea and nothing else, a bold round root in the bubble flow', () => {
+    const els = buildTemplate('blank-brainstorm', 0, 0);
+    expect(els).toHaveLength(1);
+    expect(els[0]).toMatchObject({
+      shape: 'mind-node',
+      label: 'Central idea',
+      mindFlow: 'bubble',
+      colorPreset: 'bold',
+      borderRadius: 'full',
+    });
+  });
+});
+
 describe('bubble map template', () => {
   const els = buildTemplate('mindmap-bubble', 0, 0);
   const nodes = shapes(els, 'mind-node');
   const root = nodes.find((n) => !n.mindParentId)!;
   const bubbles = nodes.filter((n) => n.mindParentId === root.id);
 
-  it('rings a brand voice with six round adjective bubbles, each in its own hue', () => {
-    expect(root.label).toBe('Our brand voice\nHow we sound');
-    expect(bubbles.map((b) => b.label!.split('\n')[0])).toEqual([
-      'Warm',
-      'Clear',
-      'Playful',
-      'Honest',
-      'Curious',
-      'Calm',
-    ]);
+  it('rings a team with five round one-word bubbles, each in its own hue', () => {
+    expect(root.label).toBe('Our team');
+    expect(bubbles.map((b) => b.label)).toEqual(['Curious', 'Kind', 'Bold', 'Calm', 'Clear']);
     expect(bubbles.every((b) => b.borderRadius === 'full' && b.width === b.height)).toBe(true);
-    expect(new Set(bubbles.map((b) => b.fillColor)).size).toBe(6);
-  });
-
-  it('gives each adjective a bold word over a two-line quoted proof', () => {
-    for (const b of bubbles) {
-      expect(b.richText![0]!.bold).toBe(true);
-      // Word, then the proof broken by hand onto two lines.
-      expect(b.label!.split('\n')).toHaveLength(3);
-      expect(b.label!.split('\n')[1]!.startsWith('"')).toBe(true);
-    }
+    expect(bubbles.every((b) => b.textBold)).toBe(true);
+    expect(new Set(bubbles.map((b) => b.fillColor)).size).toBe(5);
   });
 
   it('stays one level deep in the bubble flow, so Tab on the centre adds a bubble', () => {
     expect(root.mindFlow).toBe('bubble');
-    expect(nodes).toHaveLength(7);
+    expect(nodes).toHaveLength(6);
   });
 });
 
