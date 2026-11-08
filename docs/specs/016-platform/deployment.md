@@ -22,8 +22,8 @@ The marketing worker serves files from `apps/marketing/out/` (`output: 'export'`
 
 ## Toolchain
 
-- **Node:** `>=22` (Wrangler 4 requires it). Both `ci.yml` and `deploy.yml` pin Node 22.
-- **pnpm:** `10.34.5` via `pnpm/action-setup`.
+- **Node:** `>=22` (Wrangler 4 requires it). The workflows run Node 26.
+- **pnpm:** the root `package.json` `packageManager` pins it; `pnpm/action-setup` reads it from there, never its own `version`.
 - **Wrangler:** `^4.40.0` across all workspaces.
 - **Asset size:** Workers Static Assets refuses any file over 25 MiB, and only at deploy. The editor's `build` ends with `scripts/asset-size-gate.mjs`, which fails the build on any file in `out/` over the limit, so CI catches it first. `@huggingface/transformers` stays on 3.x for this reason: 4.3.0 ships a 25.6 MiB onnxruntime wasm, and Dependabot ignores its majors.
 

@@ -32,8 +32,6 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -92,8 +90,6 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -161,8 +157,6 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - name: Set up Node
         uses: actions/setup-node@v7
@@ -202,8 +196,6 @@ jobs:
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - name: Set up Node
         uses: actions/setup-node@v7

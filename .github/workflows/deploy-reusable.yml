@@ -111,8 +111,6 @@ jobs:
         run: echo "id=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:
@@ -210,8 +208,6 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:
@@ -247,8 +243,6 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:
@@ -284,8 +278,6 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:
@@ -323,8 +315,6 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:
@@ -368,8 +358,6 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:
@@ -526,8 +514,6 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:
@@ -581,8 +567,6 @@ jobs:
           ref: ${{ inputs.ref }}
 
       - uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - uses: actions/setup-node@v7
         with:

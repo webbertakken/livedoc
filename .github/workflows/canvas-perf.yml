@@ -57,8 +57,6 @@ jobs:
       - name: Set up pnpm
         if: steps.previous.outputs.skip != 'true'
         uses: pnpm/action-setup@v6
-        with:
-          version: 12.18.0
 
       - name: Cache the pnpm store
         if: steps.previous.outputs.skip != 'true'

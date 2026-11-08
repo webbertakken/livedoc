@@ -8,8 +8,6 @@ runs:
   steps:
     - name: Set up pnpm
       uses: pnpm/action-setup@v6
-      with:
-        version: 12.18.0
 
     # No `cache: pnpm`: inside the container the store path never matches a saved cache, so it only
     # adds a ~75-second save to every job, while a cold install takes about 15 seconds.
