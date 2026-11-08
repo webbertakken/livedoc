@@ -424,6 +424,9 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     open: 'Internal.<Method>.<Route>, the route the worker was serving',
   },
 
+  // The device sign-in page counts which built-in client signed in (docs/specs/015-api/mcp-server.md §3).
+  'apps/live/app/oauth/device/page.tsx Token·Created': { values: ['Cli', 'Runa'] },
+
   // The CLI (apps/cli).
   'apps/cli/src/telemetry.ts Cli·Used': { values: CLI_VERBS },
   'apps/cli/src/telemetry.ts Error·Api': {

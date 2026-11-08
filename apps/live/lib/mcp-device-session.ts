@@ -2,7 +2,13 @@
 // client a typed code belongs to, and handing it the token or a refusal. The code a person types is the only
 // capability; the MCP answers the same "unknown" for an expired, used or never-issued code.
 
-import { normaliseUserCode, formatUserCode, isUserCode } from '@livedoc/api-schema';
+import {
+  CLI_CLIENT_ID,
+  RUNA_CLIENT_ID,
+  normaliseUserCode,
+  formatUserCode,
+  isUserCode,
+} from '@livedoc/api-schema';
 import { MCP_ORIGIN } from './mcp-config';
 
 // What a person typed, as the code the server knows, or null when it cannot be one.
@@ -11,14 +17,23 @@ export function userCodeOf(typed: string): string | null {
   return isUserCode(code) ? formatUserCode(code) : null;
 }
 
-export async function fetchDeviceSession(userCode: string): Promise<{ clientName: string } | null> {
+export async function fetchDeviceSession(
+  userCode: string,
+): Promise<{ clientName: string; clientId: string } | null> {
   try {
     const res = await fetch(`${MCP_ORIGIN}/oauth/device/session/${encodeURIComponent(userCode)}`);
     if (!res.ok) return null;
     const body: unknown = await res.json();
-    const clientName: unknown =
-      typeof body === 'object' && body !== null ? Reflect.get(body, 'clientName') : undefined;
-    return typeof clientName === 'string' && clientName ? { clientName } : null;
+    const field = (name: string): unknown =>
+      typeof body === 'object' && body !== null ? Reflect.get(body, name) : undefined;
+    const clientName = field('clientName');
+    const clientId = field('clientId');
+    if (typeof clientName !== 'string' || !clientName) return null;
+    // An MCP worker from before it named the client only ever started the CLI's sign-in.
+    return {
+      clientName,
+      clientId: typeof clientId === 'string' && clientId ? clientId : CLI_CLIENT_ID,
+    };
   } catch {
     return null;
   }
@@ -41,3 +56,11 @@ export const completeDevice = (userCode: string, token: string, expiresAt: numbe
   post('/oauth/device/complete', { userCode, token, ...(expiresAt ? { expiresAt } : {}) });
 
 export const denyDevice = (userCode: string) => post('/oauth/device/deny', { userCode });
+
+// What the device page says and counts for each built-in client signing in on a device
+// (docs/specs/015-api/mcp-server.md §3).
+export function deviceClient(clientId: string): { telemetryType: 'Cli' | 'Runa'; restart: string } {
+  return clientId === RUNA_CLIENT_ID
+    ? { telemetryType: 'Runa', restart: 'Start the sign-in again from Runa.' }
+    : { telemetryType: 'Cli', restart: 'Run the sign-in again from your terminal.' };
+}

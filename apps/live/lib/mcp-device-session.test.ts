@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { sentJson } from '@livedoc/vitest-config/sent-request';
 import { MCP_ORIGIN } from './mcp-config';
-import { completeDevice, denyDevice, fetchDeviceSession, userCodeOf } from './mcp-device-session';
+import {
+  completeDevice,
+  denyDevice,
+  deviceClient,
+  fetchDeviceSession,
+  userCodeOf,
+} from './mcp-device-session';
 
 // docs/specs/015-api/cli.md, CLI36.
 
@@ -25,9 +31,14 @@ describe('userCodeOf', () => {
 });
 
 describe('fetchDeviceSession', () => {
-  it('asks the MCP origin and returns the client name', async () => {
+  it('asks the MCP origin and returns the client, the CLI when it names none', async () => {
     const calls = stubFetch(() => Response.json({ clientName: 'LiveDoc CLI' }));
-    expect(await fetchDeviceSession('BCDF-GHJK')).toEqual({ clientName: 'LiveDoc CLI' });
+    expect(await fetchDeviceSession('BCDF-GHJK')).toEqual({
+      clientName: 'LiveDoc CLI',
+      clientId: 'livedoc-cli',
+    });
+    stubFetch(() => Response.json({ clientName: 'Runa', clientId: 'runa' }));
+    expect(await fetchDeviceSession('BCDF-GHJK')).toEqual({ clientName: 'Runa', clientId: 'runa' });
     expect(calls[0]!.url).toBe(`${MCP_ORIGIN}/oauth/device/session/BCDF-GHJK`);
   });
 
@@ -62,5 +73,16 @@ describe('completeDevice and denyDevice', () => {
       throw new Error('offline');
     });
     expect(await completeDevice('X', 't', null)).toBe(false);
+  });
+});
+
+// docs/specs/015-api/mcp-server.md §3 "Runa signs in here too".
+describe('deviceClient', () => {
+  it('counts and words Runa apart from the CLI', () => {
+    expect(deviceClient('runa')).toEqual({
+      telemetryType: 'Runa',
+      restart: 'Start the sign-in again from Runa.',
+    });
+    expect(deviceClient('livedoc-cli').telemetryType).toBe('Cli');
   });
 });

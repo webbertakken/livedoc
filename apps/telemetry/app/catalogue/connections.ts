@@ -30,6 +30,14 @@ export const CLI_SIGN_INS: Metric = {
   blurb: 'The LiveDoc CLI signed in, through the browser or with a code on another device.',
 };
 
+export const RUNA_SIGN_INS: Metric = {
+  category: 'Token',
+  action: 'Created',
+  type: 'Runa',
+  title: 'Runa Sign-ins',
+  blurb: 'Runa, the personal assistant, was connected with a code to work its boards.',
+};
+
 export const TOKENS_REVOKED: Metric = {
   rising: 'neutral',
   category: 'Token',
@@ -52,8 +60,15 @@ export const API_TOKEN_ACTIVITY: MetricStack = {
   stack: true,
   title: 'API Token Activity',
   blurb:
-    'Every token event: created by hand, by an AI tool connecting over MCP, by the CLI signing in, paired with a workbench, and revoked.',
-  members: [TOKENS_CREATED, AI_TOOLS_CONNECTED, CLI_SIGN_INS, WORKBENCHES_PAIRED, TOKENS_REVOKED],
+    'Every token event: created by hand, by an AI tool connecting over MCP, by the CLI or Runa signing in, paired with a workbench, and revoked.',
+  members: [
+    TOKENS_CREATED,
+    AI_TOOLS_CONNECTED,
+    CLI_SIGN_INS,
+    RUNA_SIGN_INS,
+    WORKBENCHES_PAIRED,
+    TOKENS_REVOKED,
+  ],
 };
 
 // MCP tool calls, one chart per tool the MCP server registers (apps/mcp

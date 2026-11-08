@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CLI_CLIENT_ID,
+  RUNA_CLIENT_ID,
   DEVICE_CODE_GRANT,
   DEVICE_CODE_TTL_S,
   DEVICE_SLOW_DOWN_S,
@@ -114,12 +115,27 @@ describe('starting', () => {
   });
 });
 
+// docs/specs/015-api/mcp-server.md §3 "Runa signs in here too".
+describe('Runa, a second built-in client', () => {
+  it('starts a device sign-in named Runa', async () => {
+    const res = await app.request(
+      '/oauth/device_authorization',
+      form({ client_id: RUNA_CLIENT_ID }),
+      env,
+    );
+    expect(res.status).toBe(200);
+    const { user_code } = (await res.json()) as { user_code: string };
+    const found = await app.request(`/oauth/device/session/${user_code}`, {}, env);
+    expect(await found.json()).toEqual({ clientName: 'Runa', clientId: RUNA_CLIENT_ID });
+  });
+});
+
 describe('the device page', () => {
   it('names the client for a code typed any way, and refuses an unknown one', async () => {
     const s = await start();
     const typed = s.user_code.toLowerCase().replace('-', ' ');
     const found = await app.request(`/oauth/device/session/${encodeURIComponent(typed)}`, {}, env);
-    expect(await found.json()).toEqual({ clientName: 'LiveDoc CLI' });
+    expect(await found.json()).toEqual({ clientName: 'LiveDoc CLI', clientId: CLI_CLIENT_ID });
     expect((await app.request('/oauth/device/session/BBBB-BBBB', {}, env)).status).toBe(404);
     expect((await app.request('/oauth/device/session/nope', {}, env)).status).toBe(404);
   });

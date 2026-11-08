@@ -154,7 +154,7 @@ export function registerDeviceRoutes(app: Hono<{ Bindings: Env }>): void {
       return c.json({ error: 'rate_limited' }, 429);
     const found = await pendingByUserCode(c.env, c.req.param('userCode'));
     if (!found) return c.json({ error: 'invalid_code' }, 404);
-    return c.json({ clientName: found.record.clientName });
+    return c.json({ clientName: found.record.clientName, clientId: found.record.clientId });
   });
 
   // The signed-in device page posts the token it minted for this code.

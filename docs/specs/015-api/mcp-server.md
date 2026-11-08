@@ -173,6 +173,13 @@ whose name the consent screen can trust, and the device authorisation grant
 (RFC 8628) with a `/oauth/device` page in `apps/live` for machines without a
 browser. A token minted for the CLI is named "LiveDoc CLI".
 
+**Runa signs in here too.** Runa, the operator's personal assistant, reads and works LiveDoc boards for him
+(its LiveDoc boards plugin). She is a second pre-registered public client, `runa`, named "Runa", that signs in with
+the device authorisation grant only: it has no redirect URIs, so an authorisation-code request naming it is refused.
+Her plugin shows the code and the `/oauth/device` link, he approves it there as for the CLI, and the token minted is
+named "Runa", so it is told apart from his CLI's in Settings › Account › API Tokens and revoked on its own. The device
+page counts it as `Token·Created·Runa`, and on a failed hand-over tells him to start the sign-in again from Runa.
+
 ## 4. Tools
 
 Twenty-eight tools: thirteen for documents, five for Plan boards ([§4.9b](#49b-the-plan-tools)), four for sheets
