@@ -112,7 +112,7 @@ describe('PictureDisc', () => {
     );
     const named = view.getByRole('img', { name: 'Ann (Online)' });
     expect(named.dataset.optical).toBe('disc');
-    expect(named.style.boxShadow).toBe('0 0 0 2px white');
+    expect(named.style.boxShadow).toBe('white 0px 0px 0px 2px');
   });
 
   it('holds the same fixed box in every state', () => {

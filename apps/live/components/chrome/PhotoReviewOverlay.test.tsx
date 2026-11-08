@@ -12,6 +12,10 @@ import { anyModalOpen } from '@/lib/modal-guard';
 
 afterEach(cleanup);
 
+/** The factor of an inline `scale(n)`, which the CSSOM serialises to six significant digits. */
+const scaleOf = (el: HTMLElement): number =>
+  Number(/^scale\((.+)\)$/.exec(el.style.transform)?.[1]);
+
 const sticky = (id: number): DetectedSticky => ({
   id,
   kind: 'domain-event',
@@ -471,12 +475,13 @@ describe('zooming into the photo', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
     fireEvent.click(screen.getByRole('button', { name: 'Zoom in' }));
     const tick = screen.getByRole('checkbox');
-    expect(tick.style.transform).toBe(`scale(${1 / 2.25})`);
-    expect(screen.getByTestId('note-words-0').style.transform).toBe(`scale(${1 / 2.25})`);
+    expect(scaleOf(tick)).toBeCloseTo(1 / 2.25, 6);
+    expect(scaleOf(screen.getByTestId('note-words-0'))).toBeCloseTo(1 / 2.25, 6);
     // …and so does the outline: two pixels on screen, drawn as a shadow so the
     // browser cannot round it up to a whole pixel of PHOTO first.
     const outline = screen.getByTestId('note-box-0').firstElementChild as HTMLElement;
-    expect(outline.style.boxShadow).toContain(`${2 / 2.25}px`);
+    const spread = /([\d.]+)px inset$/.exec(outline.style.boxShadow)?.[1];
+    expect(Number(spread)).toBeCloseTo(2 / 2.25, 6);
     expect(outline.style.borderWidth).toBe('');
   });
 });
