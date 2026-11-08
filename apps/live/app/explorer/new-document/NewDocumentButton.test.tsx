@@ -100,11 +100,11 @@ describe('NewDocumentButton', () => {
     );
   });
 
-  it('makes a brainstorm from its row, second in the list', async () => {
+  it('makes a brainstorm from its row, third in the list, after Whiteboard', async () => {
     render(<NewDocumentButton place={{}} />);
     await openMenu();
     const row = screen.getByRole('menuitem', { name: 'Brainstorm, blank' });
-    expect(row.getAttribute('aria-keyshortcuts')).toBe('2');
+    expect(row.getAttribute('aria-keyshortcuts')).toBe('3');
     fireEvent.click(row);
     expect(started).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -131,9 +131,9 @@ describe('NewDocumentButton', () => {
     first.focus();
     fireEvent.keyDown(first, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(
-      screen.getByRole('menuitem', { name: 'Brainstorm, blank' }),
+      screen.getByRole('menuitem', { name: 'Whiteboard, blank' }),
     );
-    expect(screen.getByRole('group', { name: 'Brainstorm templates' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Whiteboard templates' })).toBeTruthy();
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowLeft' });
     expect(document.activeElement?.getAttribute('data-spot')).toBe('pane:0:0');
   });

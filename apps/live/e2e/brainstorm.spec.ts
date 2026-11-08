@@ -21,7 +21,7 @@ test('the menu lists the mind maps under Brainstorm, never under Diagram', async
   await openExplorer(page);
   await page.getByRole('button', { name: 'More new document choices' }).click();
   const row = page.getByRole('menuitem', { name: 'Brainstorm, blank' });
-  await expect(row).toHaveAttribute('aria-keyshortcuts', '2');
+  await expect(row).toHaveAttribute('aria-keyshortcuts', '3');
   await row.hover();
   const pane = page.getByRole('group', { name: 'Brainstorm templates' });
   for (const name of ['Mind Map', 'Tree Mind Map', 'Bubble Map'])
