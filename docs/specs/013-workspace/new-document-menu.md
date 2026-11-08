@@ -36,8 +36,8 @@ In this order, each with its glyph and number key:
 | #   | Blank      | Makes (its blank template)              | Its templates, in the pane                                              |
 | --- | ---------- | --------------------------------------- | ----------------------------------------------------------------------- |
 | 1   | Diagram    | Blank Diagram (`blank`)                 | Start Diagramming's, in its groups, Recommended first, but Brainstorm's |
-| 2   | Brainstorm | Blank Brainstorm (`blank-brainstorm`)   | Start Diagramming's Brainstorm: the mind maps                           |
-| 3   | Whiteboard | Blank Whiteboard (`whiteboard`)         | Start Sketching's, in its groups, Recommended first                     |
+| 2   | Whiteboard | Blank Whiteboard (`whiteboard`)         | Start Sketching's, in its groups, Recommended first                     |
+| 3   | Brainstorm | Blank Brainstorm (`blank-brainstorm`)   | Start Diagramming's Brainstorm: the mind maps                           |
 | 4   | Page       | Blank Article (`blank-article`)         | Start Making Pages' Articles                                            |
 | 5   | Sheet      | Blank Spreadsheet (`blank-spreadsheet`) | The spreadsheet templates (Budget, Timesheet, Invoice, ...)             |
 | 6   | Board      | Blank Board (`blank-board`)             | The Plan templates that set up boards (Kanban, Bug Triage, ...)         |
@@ -48,7 +48,8 @@ In this order, each with its glyph and number key:
 - **Brainstorm** is the quickest way into a mind map. Blank Brainstorm is a diagram holding one central idea and
   nothing else, and it opens with that idea selected, so the first key typed names it and Tab grows its first branch
   ([The mind node](../009-elements/mind-node.md#a-lone-root-opens-selected)). Its templates are the mind maps, each a
-  small example to grow from rather than a finished map. It sits second, beside Diagram, since it is one.
+  small example to grow from rather than a finished map. It sits third, after Whiteboard: Diagram, Whiteboard and
+  Brainstorm are the three ways onto a canvas, and Brainstorm is the freest of them after a whiteboard.
 
 - **Page** is prose. It makes an Article ([Article pages](../007-editor/article-pages.md)) until the
   [markdown tab](../031-markdown/markdown-tab.md) ships; then it makes a page, a document of one markdown tab.
@@ -206,7 +207,5 @@ The code cites each by its id.
   prepared at the click (default).
 - **D207** When the create starts: After the editor's first frame of the document, or 1 s at most: a create that lands
   at once would re-render it inside that frame (default).
-- **D221** Where Brainstorm sits in the list: Second, after Diagram, the blank it is a diagram of; the blanks after it
-  move one number key down (default).
 - **D222** Brainstorm's glyph and tint: The lightbulb (`lucideLightbulb`), rose (`text-rose-600`, `dark:text-rose-400`),
   the one hue no other blank wears (default).

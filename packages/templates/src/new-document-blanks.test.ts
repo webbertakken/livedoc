@@ -16,8 +16,8 @@ describe('New Document blanks', () => {
     expect(NEW_DOCUMENT_BLANKS.map((b) => b.id)).toEqual([...NEW_DOCUMENT_BLANK_IDS]);
     expect(NEW_DOCUMENT_BLANKS.map((b) => b.name)).toEqual([
       'Diagram',
-      'Brainstorm',
       'Whiteboard',
+      'Brainstorm',
       'Page',
       'Sheet',
       'Board',
