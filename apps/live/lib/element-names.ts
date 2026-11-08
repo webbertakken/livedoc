@@ -7,6 +7,7 @@ import {
   CHART_TYPE_LABELS,
   chartTypeOf,
   DEFAULT_SESSION_TOOL,
+  isMindGroupFrame,
   type BoxedElement,
   type Element,
   type SessionTool,
@@ -45,6 +46,8 @@ export function kindLabel(el: Element): string {
   // A session button names the tool it starts ('Timer', 'Poll'), not the generic kind, which said nothing about it.
   if (el.type === 'shape' && el.shape === 'session-button')
     return SESSION_TOOL_KIND[el.session?.tool ?? DEFAULT_SESSION_TOOL];
+  // A mind map group is a frame, named for what it is (docs/specs/009-elements/mind-node.md "Groups").
+  if (isMindGroupFrame(el)) return 'Group';
   if (el.type === 'shape') {
     // A chart is named by its chart type, as the palette names it: 'Column chart', not its kind's 'Bar chart'.
     const chart = chartTypeOf(el);

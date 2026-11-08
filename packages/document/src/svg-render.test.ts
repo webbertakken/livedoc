@@ -9,6 +9,7 @@ import type {
   TableElement,
 } from './index';
 import { createPinnedArrow, createShape } from './factories';
+import { newMindGroupFrame } from './mind-group';
 import { tableHeaderColours } from './table-header-colours';
 import { freehandPenStroke, penStrokePath } from './pen-stroke';
 import { r2 } from './svg-render-primitives';
@@ -973,9 +974,10 @@ describe('chrome the canvas draws on a box', () => {
   });
 
   // docs/specs/009-elements/mind-node.md "Numbered nodes" and "Groups".
-  it("leads a numbered mind node's label with its number, and draws a group's box", () => {
+  it("leads a numbered mind node's label with its number, and draws a group's titled frame", () => {
     const svg = renderElementsToSvg(
       tab([
+        { ...newMindGroupFrame('g'), label: 'Logistics', x: -20, y: 160, width: 360, height: 360 },
         shape('root', { shape: 'mind-node', label: 'Plan' }),
         shape('a', {
           shape: 'mind-node',
@@ -999,7 +1001,8 @@ describe('chrome the canvas draws on a box', () => {
     );
     expect(svg).toContain('1. Venue');
     expect(svg).toContain('2. Food');
-    expect(svg).toMatch(/<rect[^>]*rx="14" fill="hsla\(/);
+    expect(svg).toContain('fill="hsla(');
+    expect(svg).toContain('Logistics');
   });
 
   it("draws a shape's own border width, dash and radius, inside the box", () => {

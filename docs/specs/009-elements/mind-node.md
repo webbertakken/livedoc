@@ -362,23 +362,32 @@ many, the single and the multi-selection toolbar alike) turns it on for each (`m
 
 ## Groups
 
-Siblings can be **grouped** (`mindGroup`, an id the group is made with): **Group** on the toolbar of a selection of
-mind nodes below a root puts them in one group per parent; **Ungroup** (shown instead when the selection is one
-group) takes every member of their groups out.
+Siblings can be **grouped**: **Group** on the toolbar of a selection of mind nodes below a root makes one group per
+parent. A group is an element of its own, a **frame** (`packages/document/src/mind-group.ts`): the frame carries its own
+id as its `mindGroup`, and its members carry that id too.
 
-- A group is drawn as one **tinted box** around its members and their branches (`mindGroupBoxes`), padded by 12 px
-  (`MIND_GROUP_PADDING`), rounded, under the nodes: a mostly transparent fill and a stronger edge in a hue picked
-  from the group's id (`mindGroupColours`), so neighbouring groups tell apart, in light and dark. A branch placed by
-  hand elsewhere is left out of it.
+- **Its title** is the frame's label, at its **top left**, in a 14 px bold line. A new group is made untitled and is
+  selected with its title open to type, so naming it is the next keystroke; Escape or a click away keeps what was
+  typed, an empty title stays empty.
+- **Its box follows its members**: their nodes and branches (a branch placed by hand elsewhere left out), padded by 12 px
+  (`MIND_GROUP_PADDING`) with a 22 px band above for the title (`MIND_GROUP_TITLE_BAND`). It is settled on every
+  change (`settleMindGroups`, in the editor's commit and an agent's edit alike), so it has no resize handles.
+- **It looks like a group**: a frame in a mostly transparent tint with a stronger edge, the hue picked from its
+  id (`mindGroupColours`), one mid tone that reads on light and dark paper, so neighbouring groups tell apart. Like
+  every frame it is drawn behind what it holds; exports draw it as they draw a frame.
+- **Selecting it**: a press on the frame (its title band, or any of it not covered by a node) selects the **group
+  itself**, not its members. Its toolbar offers **Number** (its members) and **Ungroup**.
+- **Dragging it** carries its members and their branches, as a frame carries its contents, and the drop is read for
+  the group as one block: between siblings it is reordered as a whole (between ungrouped nodes or other groups: groups
+  never nest or split); anywhere else its members are placed by hand.
 - The layout keeps a group's members **together**, where its first member is, in their own order, with the padding
-  as extra room before and after the group so its box never touches a neighbour.
-- **Pressing a group's box** selects its members, so the group is dragged as one block: dropped between siblings it is
-  reordered as a whole, between ungrouped nodes or other groups (groups never nest or split).
-- A node dropped **between two members** of a group joins it; a member dropped away from every other member leaves it.
+  (and, where siblings stack down, the title's band) as extra room so the frame never touches a neighbour.
+- A node dropped **between two members** joins the group; a member dropped away from every other member leaves it.
   **Enter** on a grouped node adds the new sibling to the group.
+- **Ungroup**, or deleting the frame, takes the group away and keeps its members; a tidy map closes up the group's
+  room. A group whose members have all left or gone goes too, and a node naming a group that has no frame leaves it.
 - A node that changes parent (Connecting nodes, Add Parent's node) leaves its group; Add Parent's new node takes the
   node's place in it.
-- Exports draw the boxes too.
 
 ## Add Parent
 

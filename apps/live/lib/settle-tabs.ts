@@ -1,6 +1,7 @@
 import {
   settleChips,
   settleDiagramKeys,
+  settleMindGroups,
   settleStacks,
   tagColoursOf,
   type Tab,
@@ -18,9 +19,10 @@ export function settleChipsInTabs(before: readonly Tab[], after: Tab[]): Tab[] {
     // And every diagram key's rows, from the tab's arrows and tag colours (docs/specs/009-elements/diagram-key.md).
     // Keys first, as they depend on no position, so a key a stack holds is laid out at its new height; then stacks
     // (docs/specs/009-elements/stack.md), so attached marks settle on where things end up.
+    // A mind map group's frame follows its members (docs/specs/009-elements/mind-node.md "Groups").
     const settled = settleChips(
       prev?.elements ?? [],
-      settleStacks(settleDiagramKeys(t.elements, tagColoursOf(t))),
+      settleStacks(settleMindGroups(settleDiagramKeys(t.elements, tagColoursOf(t)))),
     );
     if (settled === t.elements) return t;
     changed = true;

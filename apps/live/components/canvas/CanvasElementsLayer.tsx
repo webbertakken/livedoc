@@ -47,7 +47,7 @@ import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
-import { MindGroupBackdrops, MindNumbersProvider } from './MindMapLayer';
+import { MindNumbersProvider } from './MindMapLayer';
 import {
   SheetChartsContext,
   type SheetChartsValue,
@@ -593,10 +593,6 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
               elements={elements}
               layers={tabLayers}
             >
-              <MindGroupBackdrops
-                elements={elements}
-                onSelect={readOnly ? undefined : props.onSelectMarquee}
-              />
               <CanvasElementList
                 shownOrder={shownOrder}
                 previewStore={previewStore}

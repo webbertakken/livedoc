@@ -12,14 +12,27 @@ const node = (id: string, extra: Record<string, unknown> = {}) =>
   ({ ...createShape('mind-node', 0, 0), id, mindParentId: 'r', ...extra }) as Element;
 
 describe('MindArrangeButtons', () => {
+  it("stands a group's frame for its members: Number and Ungroup", () => {
+    const frame = { ...createShape('frame', 0, 0), id: 'g', mindGroup: 'g' } as Element;
+    const members = [
+      node('a', { mindGroup: 'g', mindNumbered: true }),
+      node('b', { mindGroup: 'g' }),
+    ];
+    expect(mindArrangeState([frame], [frame, ...members])).toEqual({
+      numbered: false,
+      grouped: true,
+      placed: false,
+    });
+  });
+
   it('offers nothing for a root alone or a plain shape', () => {
-    expect(mindArrangeState([{ ...createShape('mind-node', 0, 0), id: 'r' }])).toBeNull();
-    expect(mindArrangeState([{ ...createShape('square', 0, 0), id: 's' }])).toBeNull();
+    expect(mindArrangeState([{ ...createShape('mind-node', 0, 0), id: 'r' }], [])).toBeNull();
+    expect(mindArrangeState([{ ...createShape('square', 0, 0), id: 's' }], [])).toBeNull();
   });
 
   it('numbers, groups and, for a node placed by hand, puts it back', () => {
     const actions = { number: vi.fn(), group: vi.fn(), ungroup: vi.fn(), autoPosition: vi.fn() };
-    const state = mindArrangeState([node('a', { mindPlaced: true }), node('b')])!;
+    const state = mindArrangeState([node('a', { mindPlaced: true }), node('b')], [])!;
     render(<MindArrangeButtons state={state} actions={actions} />);
     fireEvent.click(screen.getByRole('button', { name: 'Number' }));
     fireEvent.click(screen.getByRole('button', { name: 'Group' }));
@@ -31,10 +44,13 @@ describe('MindArrangeButtons', () => {
 
   it('offers Ungroup and an unnumbering Number for a numbered group', () => {
     const actions = { number: vi.fn(), group: vi.fn(), ungroup: vi.fn(), autoPosition: vi.fn() };
-    const state = mindArrangeState([
-      node('a', { mindGroup: 'g', mindNumbered: true }),
-      node('b', { mindGroup: 'g', mindNumbered: true }),
-    ])!;
+    const state = mindArrangeState(
+      [
+        node('a', { mindGroup: 'g', mindNumbered: true }),
+        node('b', { mindGroup: 'g', mindNumbered: true }),
+      ],
+      [],
+    )!;
     render(<MindArrangeButtons state={state} actions={actions} />);
     const number = screen.getByRole('button', { name: 'Number' });
     expect(number.getAttribute('aria-pressed')).toBe('true');

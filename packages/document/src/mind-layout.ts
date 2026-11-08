@@ -31,6 +31,8 @@ import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
 export const MIND_GROUP_PADDING = 12;
 /** A group box's corner radius. */
 export const MIND_GROUP_RADIUS = 14;
+/** The band at a group's top its title sits in, above the padding (docs/specs/009-elements/mind-node.md "Groups"). */
+export const MIND_GROUP_TITLE_BAND = 22;
 
 // A node placed by hand keeps its own position (docs/specs/009-elements/mind-node.md "A tidy map stays tidy").
 const isPlaced = (n: ShapeElement) => n.mindPlaced === true && !!n.mindParentId;
@@ -122,15 +124,19 @@ function stackLayout(
 ) {
   const across = cross(axis);
   const gap = axis === 'x' ? gaps.child : gaps.level;
+  // A group's room before its first member and after its last: the padding, and before, where the siblings stack
+  // down, the title's band too (a group's title is at its top).
+  const titled = across === 'y' ? MIND_GROUP_TITLE_BAND : 0;
   const pad = (n: ShapeElement | undefined) => (n && groupOf(n) !== null ? MIND_GROUP_PADDING : 0);
-  // The room between two siblings: the gap, and a group's padding where a group begins or ends.
+  const lead = (n: ShapeElement | undefined) => (pad(n) > 0 ? pad(n) + titled : 0);
+  // The room between two siblings: the gap, and a group's room where a group begins or ends.
   const between = (a: ShapeElement, b: ShapeElement) =>
-    gaps.sibling + (groupOf(a) !== null && groupOf(a) === groupOf(b) ? 0 : pad(a) + pad(b));
+    gaps.sibling + (groupOf(a) !== null && groupOf(a) === groupOf(b) ? 0 : pad(a) + lead(b));
   const flowing = (k: readonly ShapeElement[]) => k.filter((c) => !isPlaced(c));
   // The room a row of siblings needs across the stacking axis, groups' padding included.
   const blockOf = (k: readonly ShapeElement[]): number =>
     k.reduce((s, c, i) => s + span(c) + (i > 0 ? between(k[i - 1]!, c) : 0), 0) +
-    pad(k[0]) +
+    lead(k[0]) +
     pad(k[k.length - 1]);
   // The room a whole subtree needs across the stacking axis: its own node, or
   // its children's blocks stacked, whichever is bigger. A node placed by hand takes none.
@@ -139,7 +145,7 @@ function stackLayout(
   const place = (p: ShapeElement, children: readonly ShapeElement[]) => {
     const at = out.get(p.id)!;
     const row = flowing(children);
-    let cursor = at[across] + extent(p, across) / 2 - blockOf(row) / 2 + pad(row[0]);
+    let cursor = at[across] + extent(p, across) / 2 - blockOf(row) / 2 + lead(row[0]);
     row.forEach((c, i) => {
       if (i > 0) cursor += between(row[i - 1]!, c);
       const s = span(c);
@@ -451,9 +457,9 @@ export function mindGroupBoxes(elements: Element[]): MindGroupBox[] {
       groupId: members[0]!.mindGroup!,
       memberIds: members.map((m) => m.id),
       x: r.x - MIND_GROUP_PADDING,
-      y: r.y - MIND_GROUP_PADDING,
+      y: r.y - MIND_GROUP_PADDING - MIND_GROUP_TITLE_BAND,
       width: r.width + 2 * MIND_GROUP_PADDING,
-      height: r.height + 2 * MIND_GROUP_PADDING,
+      height: r.height + 2 * MIND_GROUP_PADDING + MIND_GROUP_TITLE_BAND,
     });
   }
   return out;
@@ -482,20 +488,13 @@ export function mindNumbers(elements: Element[]): Map<ElementId, number> {
 // One hue per group, picked from its id so a group keeps its colour wherever it is drawn.
 const GROUP_HUES = [210, 150, 35, 280, 345, 185, 95, 260] as const;
 
-/** A group's tint (docs/specs/009-elements/mind-node.md "Groups"): mostly transparent, its edge a little stronger, on
- *  light or dark paper. */
-export function mindGroupColours(
-  groupId: string,
-  surface: 'light' | 'dark',
-): { fill: string; stroke: string } {
+/** A group's tint (docs/specs/009-elements/mind-node.md "Groups"): mostly transparent, its edge a little stronger, in
+ *  one mid tone that reads on light and dark paper alike. */
+export function mindGroupColours(groupId: string): { fill: string; stroke: string } {
   let hash = 0;
   for (const ch of groupId) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
   const hue = GROUP_HUES[hash % GROUP_HUES.length]!;
-  const light = surface === 'dark' ? 62 : 48;
-  return {
-    fill: `hsla(${hue}, 70%, ${light}%, ${surface === 'dark' ? 0.12 : 0.09})`,
-    stroke: `hsla(${hue}, 70%, ${light}%, 0.45)`,
-  };
+  return { fill: `hsla(${hue}, 70%, 55%, 0.1)`, stroke: `hsla(${hue}, 70%, 55%, 0.5)` };
 }
 
 /** The elements as an export draws them: a numbered node's label led by its number ("2. Venue"). */

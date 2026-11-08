@@ -1,4 +1,5 @@
 import { FLOWCHART_STEP_LABEL, flowchartStepTypeOf, isFlowchartStep } from './flowchart';
+import { isMindGroupFrame } from './mind-group';
 import type { Element, ShapeKind } from './index';
 import { eventStormingKindOf } from './event-storming';
 import { CHART_TYPE_LABELS, chartTypeOf } from './chart-types';
@@ -45,6 +46,8 @@ export function elementKindLabel(el: Element): string {
       // was "Selected Bar Chart", from its stored kind, and an area chart read as a line chart.
       const chart = chartTypeOf(el);
       if (chart) return `${CHART_TYPE_LABELS[chart]} Chart`;
+      // A mind map group is a frame, named for what it is (docs/specs/009-elements/mind-node.md "Groups").
+      if (isMindGroupFrame(el)) return 'Group';
       return SHAPE_LABELS[el.shape] ?? titleCase(el.shape);
     }
     case 'text':

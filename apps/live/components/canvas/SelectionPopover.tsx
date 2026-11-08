@@ -263,7 +263,6 @@ export function SelectionPopover({
               >
                 {MIND_SIBLING_OPTION.icon}
               </PopoverButton>
-              {mindArrange ? <MindArrangeButtons {...mindArrange} /> : null}
               {onAddMindParent ? (
                 <PopoverButton
                   label={MIND_PARENT_OPTION.label}
@@ -273,6 +272,13 @@ export function SelectionPopover({
                   {MIND_PARENT_OPTION.icon}
                 </PopoverButton>
               ) : null}
+              <Divider />
+            </>
+          ) : null}
+
+          {mindArrange ? (
+            <>
+              <MindArrangeButtons {...mindArrange} />
               <Divider />
             </>
           ) : null}

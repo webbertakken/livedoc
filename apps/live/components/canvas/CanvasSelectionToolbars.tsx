@@ -94,7 +94,10 @@ export function CanvasSelectionToolbars({
     onOpenMultiContextMenu,
   } = props;
   const multiArrange = showMultiToolbar
-    ? mindArrangeState(elements.filter((el) => multiSelectedIds.has(el.id)))
+    ? mindArrangeState(
+        elements.filter((el) => multiSelectedIds.has(el.id)),
+        elements,
+      )
     : null;
   return (
     <>
@@ -177,15 +180,15 @@ export function CanvasSelectionToolbars({
                   ...(props.onAddMindParent
                     ? { onAddMindParent: () => props.onAddMindParent!(selected.id) }
                     : {}),
-                  ...(props.mindArrangeActions && mindArrangeState([selected])
-                    ? {
-                        mindArrange: {
-                          state: mindArrangeState([selected])!,
-                          actions: props.mindArrangeActions,
-                        },
-                      }
-                    : {}),
                 }
+              : {})}
+            // Number, Group and Auto Position (docs/specs/009-elements/mind-node.md): a mind node below its
+            // root, or a group's frame (Number and Ungroup). An Editor's.
+            {...(!readOnly && !selectedLocked && selected && props.mindArrangeActions
+              ? (() => {
+                  const state = mindArrangeState([selected], elements);
+                  return state ? { mindArrange: { state, actions: props.mindArrangeActions } } : {};
+                })()
               : {})}
             // Flowchart (docs/specs/009-elements/flowchart.md): Add Step / Add Branch for whoever grows
             // the chart; Step Type and Lane for an Editor. Not on a locked step: growing re-lays the chart.
