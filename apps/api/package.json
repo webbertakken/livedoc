@@ -31,7 +31,7 @@
     "@livedoc/render-png": "workspace:*",
     "@livedoc/sheets": "workspace:*",
     "@livedoc/templates": "workspace:*",
-    "better-auth": "1.7.13",
+    "better-auth": "1.7.18",
     "jose": "^6.2.12"
   },
   "devDependencies": {
