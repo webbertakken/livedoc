@@ -83,11 +83,20 @@ describe('contentSummaryOf', () => {
     ['an element', '{"elements":[{"id":"e"}]}'],
     ['an article', '{"elements":[],"articles":[{"id":"x"}]}'],
     ['a form', '{"elements":[],"form":{"questions":[]}}'],
+    [
+      'a filled dashboard slot',
+      '{"elements":[],"dashboard":{"rows":[{"id":"r","slots":[{"id":"a"},{"id":"b","content":{"type":"note"}}]}]}}',
+    ],
     ['a body that is not JSON', 'not json'],
   ])('holds content when a tab has %s', async (_, data) => {
     tab('a', 0, '{"elements":[]}');
     tab('b', 1, data);
     expect((await contentSummaryOf(env, D)).hasContent).toBe(true);
+  });
+
+  it('reads a dashboard whose slots are all empty as no content', async () => {
+    tab('a', 0, '{"elements":[],"dashboard":{"rows":[{"id":"r","slots":[{"id":"s"}]}]}}');
+    expect((await contentSummaryOf(env, D)).hasContent).toBe(false);
   });
 
   it("adds every tab's stats, the latest written tab's mode", async () => {

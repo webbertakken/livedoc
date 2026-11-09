@@ -62,6 +62,8 @@ export type CommandContext = {
   // The owner, or a joined member of a team document: the Share command is hidden for
   // visitors (one with an edit link gets "Make a copy" instead, which isn't a palette command).
   canShare: boolean;
+  // The session may delete the document (mayDeleteDocument): the owner or a joined team member, outside a workbench.
+  canDeleteDocument: boolean;
   // Offline document (docs/specs/006-document/offline-mode.md): nothing on the server to share, so the Share
   // command is withheld even though the session counts as the owner's.
   isOffline: boolean;
@@ -331,7 +333,7 @@ export function buildEditorCommands(ctx: CommandContext, h: CommandHandlers): Ed
     keywords: 'rename document diagram title name relabel',
     run: h.renameDocument,
   });
-  if (!ctx.workbench) {
+  if (ctx.canDeleteDocument) {
     out.push({
       id: 'delete-document',
       name: 'Delete Document',

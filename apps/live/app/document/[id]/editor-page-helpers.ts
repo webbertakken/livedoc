@@ -250,6 +250,19 @@ export function mayShareDocument(input: {
   return input.isOwner || (input.teamId !== null && input.sessionShareCode === null);
 }
 
+// May this session delete the open document? The api's own rule (mayDeleteDocument: the owner or a joined member of
+// its team, never a share-link visitor), which is mayShareDocument's, outside a workbench, which holds no ownership
+// powers (docs/specs/013-workspace/workbench-embeds.md). Gates the last tab's Delete
+// (docs/specs/006-document/document-structure.md "The last tab") and the palette's Delete Document.
+export function mayDeleteDocument(input: {
+  isOwner: boolean;
+  teamId: string | null;
+  sessionShareCode: string | null;
+  workbench: boolean;
+}): boolean {
+  return !input.workbench && mayShareDocument(input);
+}
+
 // Drop entries whose key isn't in `present`, returning the SAME map
 // reference when nothing was removed. The realtime presence handler
 // prunes its remote tab-focus / selection / cursor maps with this when

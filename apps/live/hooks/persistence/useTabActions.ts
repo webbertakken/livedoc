@@ -302,9 +302,9 @@ export function useTabActions(deps: TabActionsDeps) {
   };
 
   // Asks nothing: one commit, so undo brings the tab back (the tab menu asks first only when deleting does what an
-  // undo cannot take back, deleteTabWarning). The
-  // menu's Delete item is already gated on `canDelete` (tabs.length > 1);
-  // the guards here are belt-and-suspenders.
+  // undo cannot take back, deleteTabWarning). A document's last tab never comes here: the menu's Delete sends it to the
+  // document delete instead (tabDeletion, docs/specs/006-document/document-structure.md "The last tab"), so the
+  // guards here are belt-and-suspenders.
   const deleteTab = (id: string) => {
     if (tabs.length <= 1) return;
     const idx = tabs.findIndex((t) => t.id === id);

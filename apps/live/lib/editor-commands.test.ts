@@ -53,6 +53,7 @@ const base: CommandContext = {
   hasAnimation: false,
   marker: null,
   canShare: true,
+  canDeleteDocument: true,
   isOffline: false,
   // A drawn-on desktop canvas in Select, which is where most of these
   // assertions live; the tool commands have their own describe block.
@@ -84,6 +85,12 @@ describe('buildEditorCommands — document/tab commands', () => {
     expect(ids({ ...base, canShare: false })).not.toContain('share');
   });
 
+  // Who may delete the document (docs/specs/006-document/document-structure.md "The last tab"): never a share-link
+  // Editor, Participant or Viewer, never the editor in a workbench.
+  it('hides Delete Document from a session that may not delete the document', () => {
+    expect(ids({ ...base, canDeleteDocument: false })).not.toContain('delete-document');
+  });
+
   it('hides Share for offline documents (docs/specs/006-document/offline-mode.md)', () => {
     expect(ids({ ...base, isOffline: true })).not.toContain('share');
   });
@@ -99,7 +106,7 @@ describe('buildEditorCommands — document/tab commands', () => {
 // The editor in a workbench (docs/specs/013-workspace/workbench-embeds.md, Surface table).
 describe('buildEditorCommands — in a workbench', () => {
   it('offers neither Share nor Delete document, and keeps the rest', () => {
-    const inWorkbench = ids({ ...base, canShare: true, workbench: true });
+    const inWorkbench = ids({ ...base, canShare: true, canDeleteDocument: false, workbench: true });
     expect(inWorkbench).not.toContain('share');
     expect(inWorkbench).not.toContain('delete-document');
     expect(inWorkbench).toContain('rename-document');
@@ -497,5 +504,14 @@ describe('buildEditorCommands — locked tab and Plan mode', () => {
     expect(ids(base)).not.toContain('tool:avatar');
     expect(ids({ ...base, isReadOnly: true })).not.toContain('tool:avatar');
     expect(ids({ ...base, canvasTool: 'avatar' })).not.toContain('tool:avatar');
+  });
+});
+
+describe('buildEditorCommands: Auto-align to Grid', () => {
+  it('runs the auto-align handler', () => {
+    const h = handlers();
+    const cmd = buildEditorCommands(base, h).find((c) => c.id === 'auto-align');
+    cmd?.run();
+    expect(h.autoAlign).toHaveBeenCalled();
   });
 });

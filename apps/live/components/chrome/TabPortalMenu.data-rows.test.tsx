@@ -32,7 +32,7 @@ function props(over: Partial<Props> = {}): Props {
     onMoveToFolder: noop,
     onRemoveFromFolder: noop,
     onDelete: noop,
-    canDelete: true,
+    deletion: { kind: 'tab' },
     canClearContent: true,
     ...over,
   };

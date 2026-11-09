@@ -23,6 +23,7 @@ const ctx: CommandContext = {
   hasAnimation: false,
   marker: null,
   canShare: true,
+  canDeleteDocument: true,
   isOffline: false,
   // A tool nothing else uses, so every real tool is offered.
   canvasTool: 'none',

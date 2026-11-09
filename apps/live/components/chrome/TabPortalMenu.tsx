@@ -6,6 +6,7 @@ import { BottomSheet } from '@/components/primitives/BottomSheet';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
 import { ConfirmPopover } from '@/components/primitives/ConfirmPopover';
 import { clampToViewport } from '@/lib/clamp-to-viewport';
+import { deleteDescription, type TabDeletion } from '@/lib/tab-deletion';
 import { FileExportIcon, FileImportIcon } from '@/components/palette/palette-icons';
 import {
   ClearIcon,
@@ -56,8 +57,7 @@ export function PortalMenu({
   onRemoveFromFolder,
   onDelete,
   canClearContent,
-  canDelete,
-  deleteWarning,
+  deletion,
 }: {
   // Positioned EITHER above an anchor button (tab ellipsis) OR at a screen
   // point (canvas right-click / footer button). Exactly one is provided.
@@ -88,9 +88,8 @@ export function PortalMenu({
   onMoveToFolder: (folderName: string) => void;
   onRemoveFromFolder: () => void;
   onDelete: () => void;
-  canDelete: boolean;
-  // Delete's warning (deleteTabWarning): the forms sending their responses to this tab are unpublished.
-  deleteWarning?: string | undefined;
+  // What Delete does (tabDeletion): the tab, its document when it is the last, or nothing, and what it asks first.
+  deletion: TabDeletion;
   canClearContent: boolean;
 }) {
   // The menu itself lists the verbs (Rename, Duplicate, Clear…); the two
@@ -102,8 +101,8 @@ export function PortalMenu({
   // the outside-click dismisser below; the modal owns its own dismissal
   // and closes the whole menu with it.
   const [view, setView] = useState<'actions' | 'copyTo' | 'folder'>('actions');
-  // Delete asks nothing (undo brings a tab back), except for what an undo cannot take back (deleteTabWarning):
-  // then an inline popover anchored to the Delete row, rendered so the outside-click handler treats it as "inside".
+  // Delete asks nothing (undo brings a tab back), except for what an undo cannot take back (deleteTabWarning) and
+  // for a last tab holding content, which takes its document with it (tabDeletion): then an inline popover anchored to the Delete row, rendered so the outside-click handler treats it as "inside".
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleteRow, setDeleteRow] = useState<HTMLDivElement | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -266,159 +265,153 @@ export function PortalMenu({
     );
   }
 
-  // The menu's rows, the same in the anchored box and in a phone's bottom sheet.
+  // The menu's rows, the same in the anchored box and in a phone's bottom sheet (the pickers returned above).
   const body = (
     <>
-      {view === 'actions' ? (
-        <>
-          {/* Quick actions: the verbs reached for most often, as a compact
+      {/* Quick actions: the verbs reached for most often, as a compact
             icon row so they're one glance away. The rest of the menu
             groups the verbose / destructive actions into sections. */}
-          <MenuToolbar>
-            <MenuToolButton
-              icon={<PencilIcon />}
-              label="Rename"
-              description="Rename this tab."
-              onClick={onRename}
-            />
-            <MenuToolButton
-              icon={<DuplicateIcon />}
-              label="Duplicate"
-              description="Create a copy of this tab in this document."
-              onClick={onDuplicate}
-            />
-            {/* Paste in the tab ⋯ menu: one tab verb among several, so an
+      <MenuToolbar>
+        <MenuToolButton
+          icon={<PencilIcon />}
+          label="Rename"
+          description="Rename this tab."
+          onClick={onRename}
+        />
+        <MenuToolButton
+          icon={<DuplicateIcon />}
+          label="Duplicate"
+          description="Create a copy of this tab in this document."
+          onClick={onDuplicate}
+        />
+        {/* Paste in the tab ⋯ menu: one tab verb among several, so an
               icon. Opened from an empty-canvas right-click (`point`) it
               is a labelled row below instead (docs/specs/008-canvas/canvas-and-palette.md). Greyed, not
               hidden, when the buffer is empty. */}
-            {canvas && !point ? (
-              <MenuToolButton
-                icon={<PasteMenuIcon />}
-                label="Paste"
-                description={
-                  canvas.canPaste ? 'Paste what you copied onto this tab.' : 'Nothing to paste yet.'
-                }
-                onClick={() => {
-                  canvas.onPaste();
-                  onClose();
-                }}
-                disabled={!canvas.canPaste}
-              />
-            ) : null}
-            {/* Side by side (docs/specs/007-editor/split-view.md): the menu's way to what dragging the
+        {canvas && !point ? (
+          <MenuToolButton
+            icon={<PasteMenuIcon />}
+            label="Paste"
+            description={
+              canvas.canPaste ? 'Paste what you copied onto this tab.' : 'Nothing to paste yet.'
+            }
+            onClick={() => {
+              canvas.onPaste();
+              onClose();
+            }}
+            disabled={!canvas.canPaste}
+          />
+        ) : null}
+        {/* Side by side (docs/specs/007-editor/split-view.md): the menu's way to what dragging the
               pill to the right does, for a keyboard or a trackpad that would rather not drag. */}
-            {sideBySide ? (
-              <MenuToolButton
-                icon={<SideBySideIcon />}
-                label={sideBySide.closing ? 'Close Side by Side' : 'Side by Side'}
-                description={
-                  sideBySide.closing
-                    ? 'Go back to one tab: this one, across the whole window.'
-                    : 'Show this tab on the right, beside the tab you were on. Or drag its pill to the right edge.'
-                }
-                onClick={() => {
-                  sideBySide.run();
-                  onClose();
-                }}
-                active={sideBySide.closing}
-              />
-            ) : null}
-            {/* Lock and Delete sit together at the right edge, apart from
+        {sideBySide ? (
+          <MenuToolButton
+            icon={<SideBySideIcon />}
+            label={sideBySide.closing ? 'Close Side by Side' : 'Side by Side'}
+            description={
+              sideBySide.closing
+                ? 'Go back to one tab: this one, across the whole window.'
+                : 'Show this tab on the right, beside the tab you were on. Or drag its pill to the right edge.'
+            }
+            onClick={() => {
+              sideBySide.run();
+              onClose();
+            }}
+            active={sideBySide.closing}
+          />
+        ) : null}
+        {/* Lock and Delete sit together at the right edge, apart from
               the everyday verbs: both change what the tab will let you
               do next rather than doing something to it. The confirm
               popover anchors to this wrapper. */}
-            <div ref={setDeleteRow} className="ml-auto flex items-center gap-0.5">
-              <MenuToolButton
-                icon={<TabLockIcon />}
-                label={locked ? 'Unlock Tab' : 'Lock Tab'}
-                description={locked ? 'Make this tab editable again.' : 'Make this tab read-only.'}
-                onClick={onToggleLock}
-                active={locked}
-              />
-              <MenuToolButton
-                icon={<TrashIcon />}
-                label="Delete"
-                description={
-                  locked ? 'This tab is locked. Unlock it before deleting.' : 'Delete this tab.'
-                }
-                onClick={() => {
-                  if (deleteWarning) {
-                    setConfirmingDelete(true);
-                    return;
-                  }
-                  onDelete();
-                  onClose();
-                }}
-                disabled={!canDelete || locked}
-              />
-            </div>
-          </MenuToolbar>
-          {/* Separator under the toolbar, isolating the quick verbs from the rows below. */}
-          <MenuGroupSeparator />
-          {/* The empty-canvas right-click is usually "put what I copied
+        <div ref={setDeleteRow} className="ml-auto flex items-center gap-0.5">
+          <MenuToolButton
+            icon={<TabLockIcon />}
+            label={locked ? 'Unlock Tab' : 'Lock Tab'}
+            description={locked ? 'Make this tab editable again.' : 'Make this tab read-only.'}
+            onClick={onToggleLock}
+            active={locked}
+          />
+          <MenuToolButton
+            icon={<TrashIcon />}
+            label="Delete"
+            description={deleteDescription(deletion)}
+            onClick={() => {
+              if (deletion.kind !== 'blocked' && deletion.confirm) {
+                setConfirmingDelete(true);
+                return;
+              }
+              onDelete();
+              onClose();
+            }}
+            disabled={deletion.kind === 'blocked'}
+          />
+        </div>
+      </MenuToolbar>
+      {/* Separator under the toolbar, isolating the quick verbs from the rows below. */}
+      <MenuGroupSeparator />
+      {/* The empty-canvas right-click is usually "put what I copied
             HERE", so there Paste leads the menu as a labelled row
             (docs/specs/008-canvas/canvas-and-palette.md "Canvas menu: Paste"). */}
-          {canvas && point ? (
-            <>
-              <div data-testid="canvas-paste-row">
-                <MenuActionRow
-                  plain
-                  icon={<PasteMenuIcon />}
-                  label="Paste"
-                  disabled={!canvas.canPaste}
-                  onClick={() => {
-                    canvas.onPaste();
-                    onClose();
-                  }}
-                />
-              </div>
-              <MenuGroupSeparator />
-            </>
-          ) : null}
-          {/* The rest as full-width rows, no categories: the menu is short enough to show it
-            all (docs/specs/007-editor/live-app.md "Tab menu"). Separators part the related groups:
-            where the tab lives and what is on it. */}
-          <MenuActionRow
-            plain
-            icon={<FolderMenuIcon />}
-            label="Add to Folder"
-            onClick={() => setView('folder')}
-          />
-          <MenuActionRow
-            plain
-            icon={<MoveIcon />}
-            label="Add to Document"
-            onClick={() => setView('copyTo')}
-            disabled={otherDocuments.length === 0 || planTab}
-          />
+      {canvas && point ? (
+        <>
+          <div data-testid="canvas-paste-row">
+            <MenuActionRow
+              plain
+              icon={<PasteMenuIcon />}
+              label="Paste"
+              disabled={!canvas.canPaste}
+              onClick={() => {
+                canvas.onPaste();
+                onClose();
+              }}
+            />
+          </div>
           <MenuGroupSeparator />
-          <MenuActionRow
-            plain
-            icon={<FileImportIcon />}
-            label={dataRows?.importLabel ?? 'Import'}
-            onClick={dataRows ? () => (dataRows.onImport?.(), onClose()) : onImport}
-            disabled={locked || (!!dataRows && !dataRows.onImport)}
-          />
-          <MenuActionRow plain icon={<FileExportIcon />} label="Export" onClick={onExport} />
-          <MenuActionRow
-            plain
-            icon={<ClearIcon />}
-            label="Clear"
-            onClick={onClearContent}
-            disabled={!canClearContent}
-          />
         </>
       ) : null}
+      {/* The rest as full-width rows, no categories: the menu is short enough to show it
+            all (docs/specs/007-editor/live-app.md "Tab menu"). Separators part the related groups:
+            where the tab lives and what is on it. */}
+      <MenuActionRow
+        plain
+        icon={<FolderMenuIcon />}
+        label="Add to Folder"
+        onClick={() => setView('folder')}
+      />
+      <MenuActionRow
+        plain
+        icon={<MoveIcon />}
+        label="Add to Document"
+        onClick={() => setView('copyTo')}
+        disabled={otherDocuments.length === 0 || planTab}
+      />
+      <MenuGroupSeparator />
+      <MenuActionRow
+        plain
+        icon={<FileImportIcon />}
+        label={dataRows?.importLabel ?? 'Import'}
+        onClick={dataRows ? () => (dataRows.onImport?.(), onClose()) : onImport}
+        disabled={locked || (!!dataRows && !dataRows.onImport)}
+      />
+      <MenuActionRow plain icon={<FileExportIcon />} label="Export" onClick={onExport} />
+      <MenuActionRow
+        plain
+        icon={<ClearIcon />}
+        label="Clear"
+        onClick={onClearContent}
+        disabled={!canClearContent}
+      />
     </>
   );
   // Delete's confirm, anchored to its row in either form.
   const confirm =
-    confirmingDelete && deleteRow ? (
+    confirmingDelete && deleteRow && deletion.kind !== 'blocked' && deletion.confirm ? (
       <ConfirmPopover
         anchor={deleteRow}
-        message="Delete this tab?"
-        warning={deleteWarning}
-        confirmLabel="Delete"
+        message={deletion.confirm.message}
+        warning={deletion.confirm.warning}
+        confirmLabel={deletion.confirm.confirmLabel}
         onConfirm={() => {
           setConfirmingDelete(false);
           onDelete();

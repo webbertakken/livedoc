@@ -5,6 +5,7 @@ import { PortalMenu } from './TabPortalMenu';
 import { EllipsisGlyph } from '@/components/primitives/EllipsisTriggerButton';
 import { MenuErrorBoundary } from '@/components/primitives/MenuErrorBoundary';
 import type { CanvasMenuActions } from './lines/tabs-chrome';
+import type { TabDeletion } from '@/lib/tab-deletion';
 
 // The tab-bar ⋯ button: toggles the unified tab / canvas PortalMenu anchored
 // to itself. Extracted from TabBar.tsx. Pure prop-based component.
@@ -13,8 +14,7 @@ export function EllipsisMenuButton({
   onToggle,
   onClose,
   canvas,
-  canDelete,
-  deleteWarning,
+  deletion,
   canClearContent,
   locked,
   otherDocuments,
@@ -41,9 +41,8 @@ export function EllipsisMenuButton({
   // so the tab ellipsis menu renders the SAME Canvas + Add sections as the
   // canvas right-click menu, i.e. one unified menu rather than two.
   canvas?: CanvasMenuActions;
-  canDelete: boolean;
-  // Delete's warning (deleteTabWarning): the forms sending their responses to this tab are unpublished.
-  deleteWarning?: string | undefined;
+  // What Delete does (tabDeletion): the tab, its document when it is the last, or nothing, and what it asks first.
+  deletion: TabDeletion;
   canClearContent: boolean;
   locked: boolean;
   // Viewer identity, forwarded to the menu's Add to Document thumbnails.
@@ -103,8 +102,7 @@ export function EllipsisMenuButton({
             onMoveToFolder={onMoveToFolder}
             onRemoveFromFolder={onRemoveFromFolder}
             onDelete={onDelete}
-            canDelete={canDelete}
-            deleteWarning={deleteWarning}
+            deletion={deletion}
             canClearContent={canClearContent}
           />
         </MenuErrorBoundary>

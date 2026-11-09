@@ -2,6 +2,7 @@ import type { ArrowElement, Element, ShapeElement, Tab } from '@livedoc/document
 import { describe, expect, it } from 'vitest';
 import {
   mayShareDocument,
+  mayDeleteDocument,
   autosaveReadOnly,
   computeTabSaveDiff,
   createTab,
@@ -556,5 +557,97 @@ describe('mayShareDocument', () => {
     expect(mayShareDocument({ isOwner: false, teamId: null, sessionShareCode: 'c1' })).toBe(false);
     expect(mayShareDocument({ isOwner: false, teamId: 't1', sessionShareCode: 'c1' })).toBe(false);
     expect(mayShareDocument({ isOwner: false, teamId: null, sessionShareCode: null })).toBe(false);
+  });
+});
+
+// Who may delete the open document, so its last tab's Delete (docs/specs/006-document/document-structure.md
+// "The last tab") and the palette's Delete Document: the owner or a joined team member, as the api's
+// mayDeleteDocument, never a share-link Editor, Participant or Viewer, and never from a workbench.
+describe('mayDeleteDocument', () => {
+  const session = { isOwner: false, teamId: null, sessionShareCode: null, workbench: false };
+
+  it('lets the owner delete, in This Browser and on the server alike', () => {
+    expect(mayDeleteDocument({ ...session, isOwner: true })).toBe(true);
+    expect(mayDeleteDocument({ ...session, isOwner: true, teamId: 't1' })).toBe(true);
+  });
+
+  it('lets a joined team member delete a team document', () => {
+    expect(mayDeleteDocument({ ...session, teamId: 't1' })).toBe(true);
+  });
+
+  it('refuses every share-link role: Editor, Participant and Viewer arrive with a code', () => {
+    expect(mayDeleteDocument({ ...session, sessionShareCode: 'edit-code' })).toBe(false);
+    expect(
+      mayDeleteDocument({ ...session, teamId: 't1', sessionShareCode: 'participant-code' }),
+    ).toBe(false);
+    expect(mayDeleteDocument({ ...session, sessionShareCode: 'view-code' })).toBe(false);
+  });
+
+  it('refuses the editor in a workbench, the owner included', () => {
+    expect(mayDeleteDocument({ ...session, isOwner: true, workbench: true })).toBe(false);
+  });
+});
+
+describe('computeTabSaveDiff: element by element', () => {
+  const box = (id: string, x: number) =>
+    ({ id, type: 'shape', shape: 'square', x, y: 0, width: 10, height: 10 }) as Element;
+
+  it('flags a tab whose element count changed, or whose element changed in a new object', () => {
+    const a = tab('a', 'a', [box('e1', 0)]);
+    expect(computeTabSaveDiff([a], [tab('a', 'a', [])], 'Doc', 'Doc').hasChanges).toBe(true);
+    expect(computeTabSaveDiff([a], [tab('a', 'a', [box('e1', 20)])], 'Doc', 'Doc').hasChanges).toBe(
+      true,
+    );
+    expect(computeTabSaveDiff([a], [tab('a', 'a', [...a.elements])], 'Doc', 'Doc').hasChanges).toBe(
+      false,
+    );
+  });
+});
+
+describe('mergeAiElements: a generated diagram is laid out in free space', () => {
+  const sq = (id: string, x = 0): ShapeElement => ({
+    id,
+    type: 'shape',
+    shape: 'square',
+    x,
+    y: 0,
+    width: 100,
+    height: 80,
+  });
+  const link = (id: string, from: string, to: string): ArrowElement => ({
+    id,
+    type: 'arrow',
+    from: { kind: 'pinned', elementId: from, anchor: 'e' },
+    to: { kind: 'pinned', elementId: to, anchor: 'w' },
+  });
+  const diagram = [sq('n1'), sq('n2'), sq('n3'), link('l1', 'n1', 'n2'), link('l2', 'n2', 'n3')];
+
+  it('places it below what is already drawn', () => {
+    const out = mergeAiElements([sq('old', 0)], diagram, 'generate');
+    const placed = out.filter((e) => e.id.startsWith('n')) as ShapeElement[];
+    expect(placed).toHaveLength(3);
+    for (const el of placed) expect(el.y).toBeGreaterThanOrEqual(80 + 120);
+  });
+
+  it('places it from a corner on an empty canvas', () => {
+    const out = mergeAiElements([], diagram, 'generate');
+    expect(out.filter((e) => e.type === 'shape')).toHaveLength(3);
+  });
+});
+
+describe('mergeAiElements: clean keeps what a non-shape element is', () => {
+  it('keeps a text element a text element, taking only how it looks', () => {
+    const text = {
+      id: 't',
+      type: 'text',
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 20,
+      label: 'Teh',
+    } as Element;
+    const patch = { ...text, type: 'shape', label: 'The' } as unknown as Element;
+    const [out] = mergeAiElements([text], [patch], 'clean');
+    expect(out).toMatchObject({ id: 't', type: 'text', label: 'The' });
   });
 });
