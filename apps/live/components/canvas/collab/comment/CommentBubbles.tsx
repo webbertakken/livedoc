@@ -7,6 +7,7 @@ import type { Comment } from '@livedoc/document';
 import { Glyph, GlyphDisc, IDENTITY_FILL, identityVars } from '@livedoc/ui';
 import { AuthorDisc } from '@/components/primitives/AuthorDisc';
 import { relativeSince } from '@/lib/relative-time';
+import { runningStarts } from '@/lib/running-starts';
 import { MentionText } from '@/components/primitives/MentionText';
 import { tint } from '../collab-chrome';
 import { QA_ACCENT, stopPointer } from '../qa/qa-parts';
@@ -51,10 +52,11 @@ export function CommentBubbles({
   freshFrom: number;
   onDelete?: (commentId: string) => void;
 }) {
-  let index = 0;
+  const groups = groupByAuthor(comments);
+  const starts = runningStarts(groups.map((group) => group.length));
   return (
     <ul className="flex flex-col gap-2.5">
-      {groupByAuthor(comments).map((group) => {
+      {groups.map((group, g) => {
         const first = group[0]!;
         const mine = !!selfId && first.authorId === selfId;
         return (
@@ -84,8 +86,8 @@ export function CommentBubbles({
                   {relativeSince(group[group.length - 1]!.createdAt, now)}
                 </span>
               </span>
-              {group.map((c) => {
-                const fresh = index++ >= freshFrom;
+              {group.map((c, i) => {
+                const fresh = starts[g]! + i >= freshFrom;
                 return (
                   <span
                     key={c.id}

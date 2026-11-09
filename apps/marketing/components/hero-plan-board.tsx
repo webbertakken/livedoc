@@ -231,11 +231,17 @@ function counts(c: number): { text: string; from: number }[] {
   return values;
 }
 
+/** The cards that stay put, in the order they pop in: each column's, less the one carried away. */
+const STAYING: readonly { card: CardDef; c: number; s: number }[] = COLUMNS.flatMap((col, c) => {
+  const carried = MOVES.some((m) => m.from === c);
+  return col.cards
+    .map((card, s) => ({ card, c, s }))
+    .filter(({ s }) => !(carried && s === col.cards.length - 1));
+});
+
 export function PlanBoard({ portrait = false }: { portrait?: boolean }) {
   const l = portrait ? PORTRAIT : LANDSCAPE;
   const w = cardW(l);
-  const moving = new Set<number>(MOVES.map((m) => m.from));
-  let order = 0;
   const qx = cardX(l, QUICK_COLUMN);
   // The quick add takes the slot the carried card left.
   const qy = slotY(l, COLUMNS[QUICK_COLUMN]!.cards.length - 1);
@@ -320,15 +326,11 @@ export function PlanBoard({ portrait = false }: { portrait?: boolean }) {
       ))}
 
       {/* The cards that stay put. */}
-      {COLUMNS.map((col, c) =>
-        col.cards.map((card, s) =>
-          moving.has(c) && s === col.cards.length - 1 ? null : (
-            <g key={card.title} className="hm-pop" style={at(T.cards + order++ * 0.1)}>
-              <CardFace card={card} x={cardX(l, c)} y={slotY(l, s)} w={w} narrow={l.narrow} />
-            </g>
-          ),
-        ),
-      )}
+      {STAYING.map(({ card, c, s }, order) => (
+        <g key={card.title} className="hm-pop" style={at(T.cards + order * 0.1)}>
+          <CardFace card={card} x={cardX(l, c)} y={slotY(l, s)} w={w} narrow={l.narrow} />
+        </g>
+      ))}
 
       {/* Each column's Add Card row, making room as a card lands above it. */}
       {COLUMNS.map((col, c) => {
@@ -400,7 +402,7 @@ export function PlanBoard({ portrait = false }: { portrait?: boolean }) {
             name={m.name}
             arrive={T.arrive[i]!}
             carry={T.carry[i]!}
-            appear={T.cards + (order + i) * 0.1}
+            appear={T.cards + (STAYING.length + i) * 0.1}
           />
         );
       })}

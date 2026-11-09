@@ -36,7 +36,7 @@ jobs:
     # Twice the 5-minute budget: a hung shard stops well before GitHub's six hours.
     timeout-minutes: 10
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
       options: --user 1001 --ipc=host
     strategy:
       # Every shard reports, so one failing shard never hides another's failures.
@@ -103,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
       options: --user 1001 --ipc=host
     steps:
       - name: Check out
@@ -167,7 +167,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
-      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      image: mcr.microsoft.com/playwright:v1.65.0-noble
       options: --user 1001 --ipc=host
     steps:
       - name: Check out

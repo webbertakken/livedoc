@@ -94,7 +94,7 @@ export function roomNetwork(ids: readonly string[]): RoomNetwork {
                 (...a: unknown[]) => Promise<unknown>
               >;
               if (!room) throw new Error(`no room ${name}`);
-              return room[prop as string]!.apply(room, args);
+              return room[prop as string]!(...args);
             };
           },
         },
