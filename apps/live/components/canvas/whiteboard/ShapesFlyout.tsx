@@ -12,6 +12,7 @@ import { Fragment, useEffect, useId, useRef, useState, type FragmentInstance } f
 import { NoMatches, Tooltip } from '@livedoc/ui';
 import { SearchInput } from '@/components/primitives/SearchInput';
 import { useLongPress } from '@/hooks/ui/useLongPress';
+import { runningStarts } from '@/lib/running-starts';
 import type { WhiteboardShapeEntry, WhiteboardShapeKey } from '@/lib/whiteboard-shape-catalogue';
 import type { ShapeSlots, SlotSource } from '@/lib/whiteboard-shape-slots';
 import { ShapePreview, shapeShortcut } from './ShapePreview';
@@ -76,7 +77,7 @@ export function ShapesFlyout({
     fieldRef.current?.focus({ preventScroll: true });
   };
 
-  let index = 0;
+  const starts = runningStarts(groups.map((group) => group.entries.length));
   return (
     <div data-shape-search="" className="relative flex w-[8.5rem] flex-col gap-2">
       <Fragment ref={fieldRef}>
@@ -119,7 +120,7 @@ export function ShapesFlyout({
             onClear={() => setQuery('')}
           />
         ) : (
-          groups.map((group) => (
+          groups.map((group, g) => (
             <div
               key={group.id}
               role="group"
@@ -127,8 +128,8 @@ export function ShapesFlyout({
               data-shape-row={group.id}
               className="grid grid-cols-3 gap-1"
             >
-              {group.entries.map((entry) => {
-                const at = index++;
+              {group.entries.map((entry, i) => {
+                const at = starts[g]! + i;
                 return (
                   <ShapeEntry
                     key={entry.key}

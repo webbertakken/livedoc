@@ -1,6 +1,7 @@
 import { useMemo, type CSSProperties } from 'react';
 import type { TableElement } from '@livedoc/document';
 import { bodySetClass } from '@/lib/animation-classes';
+import { runningStarts } from '@/lib/running-starts';
 import { unitCount } from './animated-words';
 import { useTextAnimation, type TextAnimView } from './useTextAnimation';
 
@@ -22,15 +23,10 @@ export function useTableAnimation(
   const textAnim = useTextAnimation(element, texts, textColor, isEditing);
   const textStarts = useMemo(() => {
     if (!textAnim) return undefined;
-    let next = 0;
-    return element.cells.map((row) =>
-      row.map((cell) => {
-        const start = next;
-        next += unitCount(cell, textAnim.plan);
-        return start;
-      }),
-    );
-  }, [element.cells, textAnim]);
+    const cellStarts = runningStarts(texts.map((cell) => unitCount(cell, textAnim.plan)));
+    const rowStarts = runningStarts(element.cells.map((row) => row.length));
+    return element.cells.map((row, r) => row.map((_, c) => cellStarts[rowStarts[r]! + c]!));
+  }, [element.cells, texts, textAnim]);
   const gridClass = bodySetClass(element, 'table');
   const rows = element.cells.length;
   const cols = element.cells[0]?.length ?? 0;
