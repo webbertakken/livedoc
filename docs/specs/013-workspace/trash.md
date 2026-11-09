@@ -35,7 +35,9 @@ the team library, the public API with a token, and the MCP server. So does a
 document left empty for 30 days, moved there by the daily
 [empty document clean-up](empty-document-cleanup.md). The rule is
 the same for guests and signed-in users. Tabs are not trashed; deleting a tab
-is unchanged.
+is unchanged, except a document's last tab, whose Delete deletes the document
+([The last tab](../006-document/document-structure.md#the-last-tab)): into the Trash like any other delete, asking
+first only when that tab holds content.
 
 Three things bypass it:
 

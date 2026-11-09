@@ -157,3 +157,47 @@ Element IDs are document-scoped so cross-tab links are stable even if elements m
 - **Rename** a tab by clicking the active tab's name, or double-clicking a row in the tab list (inline input — Enter commits, Escape cancels). Also available via the per-tab ellipsis menu.
 - **Reorder** tabs by dragging a tab to a new position in the bar.
 - **Create a link** from the element's right-click context menu, click "Link Element", and pick a target (tab, element, another document, or an external URL); the link follows the element if it's moved.
+- **Delete** a tab from its tab menu; see [Deleting a tab](#deleting-a-tab).
+
+## Deleting a tab
+
+**Delete** in the tab menu removes the tab in one commit, so Undo brings it back.
+It asks first only when deleting does what an undo cannot take back (`deleteTabWarning`,
+[Destructive actions](../007-editor/live-app.md#destructive-actions)).
+A locked tab is never deleted: its Delete is greyed out until the tab is unlocked.
+
+### The last tab
+
+A document holds one or more tabs, so deleting its last tab deletes the document.
+
+- The last tab's Delete is on whenever the session may delete the document, and greyed out otherwise.
+- It deletes the document as Delete Document does: into the [Trash](../013-workspace/trash.md#deleting), the editor
+  going to the Explorer, which offers Undo.
+- A document saved on the server and one saved in [This Browser](offline-mode.md) take the same path, each into its
+  own Trash.
+- An empty last tab goes, with its document, at once: nothing is asked.
+- A last tab that holds content asks first, in the anchored confirmation on its Delete button: "Delete this
+  document?", warning "This is its only tab, so the whole document goes to the Trash.", confirmed by **Delete
+  Document**; Cancel keeps both.
+- A tab **holds content** by the [empty document clean-up](../013-workspace/empty-document-cleanup.md#which-documents)
+  test: an element, an article, a form or a filled dashboard slot (`tabHoldsContent`, `@livedoc/document`).
+- That covers every tab kind: a Diagram or Event Storming tab (Structured, Sketch, Pages and Slides alike) by its
+  elements and articles, a Board or Sheet tab by its board or sheet element, a Form tab by its form, a Dashboard
+  tab by its slots.
+- A tab whose content has not loaded yet counts as holding content, so a tab never goes unasked on a guess.
+- The decision is `tabDeletion` (`apps/live/lib/tab-deletion.ts`): a tab delete, a document delete with or without a
+  question, or nothing.
+
+| Session                                              | The last tab's Delete                                                   |
+| ---------------------------------------------------- | ----------------------------------------------------------------------- |
+| The owner, or a joined member of the document's team | On: deletes the document                                                |
+| Editor (a share link)                                | Greyed out: "This is the only tab, and you cannot delete the document." |
+| Participant, Viewer, a tab-scoped link               | No tab menu                                                             |
+| The editor in a workbench                            | Greyed out, as for an Editor: a workbench has no ownership powers       |
+
+The authority is the document delete's ([Ownership](../013-workspace/share-roles.md#ownership)): the editor reads it as
+`canDeleteDocument`, and the api refuses anyone else's delete whatever the editor shows.
+The command palette's **Delete Document** follows the same `canDeleteDocument`.
+
+Telemetry: `Tab` · `Deleted` · `LastTab` when the last tab's Delete deletes the document, then `Document` · `Deleted`
+once the delete lands ([Telemetry](../017-telemetry/telemetry.md)).

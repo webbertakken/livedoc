@@ -62,7 +62,7 @@ No tab body, tab order, tab stat, image reference by tab, changeset, item, sheet
 - the first tab's element count, which decides an empty row's preview;
 - the document's stats (last mode, elements, comments, bytes), the Details view's columns;
 - whether the document has any content, by the [Empty document clean-up](../013-workspace/empty-document-cleanup.md)'s
-  own test (a tab with an element, an article or a form).
+  own test (a tab with an element, an article, a form or a filled dashboard slot).
 
 A create writes the first summary with the document, so a new row never reads empty for want of a push.
 A summary that is missing reads as unknown: never empty in the Explorer, and never moved to the Trash by the clean-up.

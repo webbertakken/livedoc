@@ -94,7 +94,9 @@ capabilities, the Participant palette, the room) keep a new feature from widenin
 
 Ownership is a set of powers, held by the document's **owner**: its creator, or whoever moved it into their own
 library. Sharing (creating, revoking and rescoping links, the share password) stays with the owner; delete, Trash
-and moves stay with the owner and joined team members. No level grants any of them. The full ownership model is
+and moves stay with the owner and joined team members. No level grants any of them.
+Deleting a document's last tab deletes the document, so it is theirs too: an Editor's last-tab Delete is greyed out
+([The last tab](../006-document/document-structure.md#the-last-tab)). The full ownership model is
 [Later](#later).
 
 ## Share links
