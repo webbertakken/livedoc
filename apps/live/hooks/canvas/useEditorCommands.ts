@@ -83,6 +83,7 @@ export function useEditorCommands(open: boolean): {
   const {
     isReadOnly,
     canShareDocument,
+    canDeleteDocument,
     documentId,
     activeTab,
     deleteSelected,
@@ -180,6 +181,7 @@ export function useEditorCommands(open: boolean): {
       tabHasSteps,
       marker,
       canShare: canShareDocument,
+      canDeleteDocument,
       isOffline,
       workbench: workbenchMode,
       canvasTool,
@@ -210,6 +212,7 @@ export function useEditorCommands(open: boolean): {
       tabHasSteps,
       marker,
       canShareDocument,
+      canDeleteDocument,
       isOffline,
       workbenchMode,
       canvasTool,

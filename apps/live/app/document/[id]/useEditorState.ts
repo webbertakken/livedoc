@@ -199,6 +199,7 @@ import {
   autosaveReadOnly,
   createTab,
   deriveTabLoadState,
+  mayDeleteDocument,
   mergeAiElements,
   patchTab,
 } from './editor-page-helpers';
@@ -3977,6 +3978,13 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // slice it reaches exists.
   useAssignRef(sheetsCommitRef, commit);
   useAssignRef(sheetsPlaceRef, (at, make, opts) => addBoxedAt(at.x, at.y, make, opts));
+  // May this session delete the document: its last tab's Delete and the palette's Delete Document follow it.
+  const canDeleteDocument = mayDeleteDocument({
+    isOwner: realtime.isOwner,
+    teamId: documentTeamId,
+    sessionShareCode,
+    workbench: workbenchMode,
+  });
   return {
     pendingCreate,
     planTabs,
@@ -4224,6 +4232,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     createFolder,
     createShareLink,
     deleteComment,
+    canDeleteDocument,
     deleteDocument,
     deleteFolder,
     deleteMultiSelected,

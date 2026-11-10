@@ -4,7 +4,8 @@ import { useState, type ComponentProps } from 'react';
 import { folderNamesInDocument, tabFolderName, type Tab } from '@livedoc/document';
 import type { AccessLevel } from '@livedoc/api-schema';
 import { hasPlanContent } from '@/hooks/plan/usePlanNeeded';
-import { deleteTabWarning } from '@/hooks/forms/forms-feeding';
+import { tabDeletion } from '@/lib/tab-deletion';
+import { track } from '@/lib/telemetry';
 import { useAppearance } from '@/hooks/ui/useAppearance';
 import type { Participant } from '@/lib/identity';
 import type { EllipsisMenuButton } from '@/components/chrome/EllipsisMenuButton';
@@ -33,6 +34,11 @@ export type TabsChromeProps = {
   onRename: (id: string, name: string) => void;
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
+  // The document's last tab deletes the document (docs/specs/006-document/document-structure.md "The last tab"),
+  // only for a session that may delete it, asking first when the tab holds content or has not loaded.
+  canDeleteDocument: boolean;
+  onDeleteDocument: () => void;
+  isTabLoaded: (tabId: string) => boolean;
   // Folder membership (docs/specs/006-document/tab-folders.md): a tab into a folder by name (new or existing), out
   // of its folder, or a folder renamed (every member rewritten).
   onMoveTabToFolder: (tabId: string, folderName: string) => void;
@@ -93,63 +99,77 @@ export function useTabsChrome(props: TabsChromeProps) {
   const isDark = useAppearance().appearance === 'dark';
   const folderNames = folderNamesInDocument(tabs);
 
-  const tabMenuProps = (tab: Tab, close: () => void): TabMenuProps => ({
-    canDelete: tabs.length > 1,
-    // Deleting a board or sheet a form sends to unpublishes the form: its confirmation says so first.
-    deleteWarning: deleteTabWarning(tabs, tab.id),
-    canClearContent: props.activeTabHasContent && !tab.locked,
-    locked: tab.locked === true,
-    // A Plan tab's cards are its document's items: it is not added to another document
-    // (docs/specs/026-plan/plan-mode.md "Switching modes keeps the tab").
-    planTab: hasPlanContent(tab.elements, null),
-    dataRows: tabDataRows(tab),
-    selfId: props.selfId,
-    otherDocuments: props.otherDocuments,
-    folderNames,
-    currentFolder: tabFolderName(tab),
-    onMoveToFolder: (name: string) => {
-      props.onMoveTabToFolder(tab.id, name);
-      close();
-    },
-    onRemoveFromFolder: () => {
-      props.onRemoveTabFromFolder(tab.id);
-      close();
-    },
-    onRename: () => {
-      setEditingId(tab.id);
-      close();
-    },
-    onDuplicate: () => {
-      props.onDuplicate(tab.id);
-      close();
-    },
-    onClearContent: () => {
-      props.onClearContent();
-      close();
-    },
-    onImport: () => {
-      props.onImportTab();
-      close();
-    },
-    onExport: () => {
-      props.onExportTab();
-      close();
-    },
-    // Closes once the copy lands; a failed copy keeps the menu open (the callee reports it).
-    onCopyTo: (targetId: string) => {
-      void Promise.resolve(props.onCopyTabTo(targetId)).then(close, (error: unknown) =>
-        console.warn('[tab-menu] add to document failed', error),
-      );
-    },
-    onToggleLock: () => {
-      props.onToggleLockTab();
-      close();
-    },
-    onDelete: () => {
-      props.onDelete(tab.id);
-      close();
-    },
-  });
+  const tabMenuProps = (tab: Tab, close: () => void): TabMenuProps => {
+    // Deleting a board or sheet a form sends to unpublishes the form, and a last tab takes its document: what the
+    // menu's Delete does, and asks first, is tabDeletion's.
+    const deletion = tabDeletion({
+      tabs,
+      tabId: tab.id,
+      canDeleteDocument: props.canDeleteDocument,
+      isTabLoaded: props.isTabLoaded,
+    });
+    return {
+      deletion,
+      canClearContent: props.activeTabHasContent && !tab.locked,
+      locked: tab.locked === true,
+      // A Plan tab's cards are its document's items: it is not added to another document
+      // (docs/specs/026-plan/plan-mode.md "Switching modes keeps the tab").
+      planTab: hasPlanContent(tab.elements, null),
+      dataRows: tabDataRows(tab),
+      selfId: props.selfId,
+      otherDocuments: props.otherDocuments,
+      folderNames,
+      currentFolder: tabFolderName(tab),
+      onMoveToFolder: (name: string) => {
+        props.onMoveTabToFolder(tab.id, name);
+        close();
+      },
+      onRemoveFromFolder: () => {
+        props.onRemoveTabFromFolder(tab.id);
+        close();
+      },
+      onRename: () => {
+        setEditingId(tab.id);
+        close();
+      },
+      onDuplicate: () => {
+        props.onDuplicate(tab.id);
+        close();
+      },
+      onClearContent: () => {
+        props.onClearContent();
+        close();
+      },
+      onImport: () => {
+        props.onImportTab();
+        close();
+      },
+      onExport: () => {
+        props.onExportTab();
+        close();
+      },
+      // Closes once the copy lands; a failed copy keeps the menu open (the callee reports it).
+      onCopyTo: (targetId: string) => {
+        void Promise.resolve(props.onCopyTabTo(targetId)).then(close, (error: unknown) =>
+          console.warn('[tab-menu] add to document failed', error),
+        );
+      },
+      onToggleLock: () => {
+        props.onToggleLockTab();
+        close();
+      },
+      onDelete: () => {
+        if (deletion.kind === 'blocked') return;
+        if (deletion.kind === 'document') {
+          track('Tab', 'Deleted', 'LastTab');
+          props.onDeleteDocument();
+        } else {
+          props.onDelete(tab.id);
+        }
+        close();
+      },
+    };
+  };
 
   return {
     menuFor,

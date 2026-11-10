@@ -267,11 +267,13 @@ export const TABS_RENAMED: Metric = {
   title: 'Tabs Renamed',
 };
 
+// Every tab deleted, a document's last tab included (`LastTab`: it deletes the document,
+// docs/specs/006-document/document-structure.md "The last tab").
 export const TABS_DELETED: Metric = {
   rising: 'neutral',
   category: 'Tab',
   action: 'Deleted',
-  type: null,
+  allTypes: true,
   title: 'Tabs Deleted',
 };
 

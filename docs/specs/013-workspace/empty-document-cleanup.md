@@ -13,23 +13,27 @@ the database clean without anyone having to tidy up.
 
 ## Which documents
 
-A document is **empty** when none of its tabs holds an element, an article or a form. An
+A document is **empty** when none of its tabs holds an element, an article, a form or a filled dashboard slot. An
 article's writing is stored on its tab beside the elements, not as elements
 ([Article pages](../007-editor/article-pages.md)), so a tab with any article, even
 one still blank, keeps its document: someone made it to write in. A Form tab's form is
 stored the same way ([Forms](../030-forms/forms.md)), so a tab holding a form keeps its
-document too, even a form with no questions yet. A document with
+document too, even a form with no questions yet. A Dashboard tab's slots are stored on its tab too
+([Plan tabs](../026-plan/plan-tabs.md#dashboard-tab)), so a dashboard with any slot holding something (a note, a
+title, a card, a view, a tab) keeps its document. A document with
 no tabs at all is empty too. Nothing else counts as content: a name, extra
 blank tabs, a tab's settings (background, grid), a share link, a star or a
 folder never keep a document. Comments and actions live on elements, so an
 empty document has none. A tab shared with another document
 ([Tab ↔ document many-to-many](../006-document/tab-document-many-to-many.md))
-counts in every document that holds it: if it has elements, an article or a form,
+counts in every document that holds it: if it has elements, an article, a form or a filled dashboard slot,
 none of those documents is empty.
 
 The test runs in each document's room, which pushes its answer with the listing's content summary
 ([Document storage](../006-document/document-storage.md#the-content-summary)); the daily clean-up reads that answer
 and never a tab. A document whose room has not pushed a summary is kept.
+The editor asks the same of one tab with `tabHoldsContent` (`@livedoc/document`), to decide whether deleting a
+document's last tab asks first ([Deleting a tab](../006-document/document-structure.md#the-last-tab)).
 
 A document is **stale** when it was created at least 30 days ago and has not
 been saved for 30 days. Saving an empty document (renaming a tab, changing a

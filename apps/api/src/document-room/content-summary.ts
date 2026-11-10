@@ -6,13 +6,16 @@ import type { ContentSummary } from '../db/content-summary';
 import { documentStatsSql, readDocumentStats } from '../db/tab-stats';
 import type { DocumentEnv } from '../types';
 
-// A tab holds content (docs/specs/013-workspace/empty-document-cleanup.md): an element, an article or a form. A
-// body that is not JSON fails safe as content. A CASE, so SQLite stops at the first match.
+// A tab holds content (docs/specs/013-workspace/empty-document-cleanup.md): an element, an article, a form or a filled
+// dashboard slot, as `tabHoldsContent` (@livedoc/document) asks it of one tab in the editor. A body that is not JSON
+// fails safe as content. A CASE, so SQLite stops at the first match.
 const HAS_CONTENT = `CASE
        WHEN NOT json_valid(t.data) THEN 1
        WHEN COALESCE(json_array_length(t.data, '$.elements'), 0) > 0 THEN 1
        WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.articles')) THEN 1
        WHEN json_type(t.data, '$.form') = 'object' THEN 1
+       WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.dashboard.rows') r, json_each(r.value, '$.slots') s
+                     WHERE json_type(s.value, '$.content') = 'object') THEN 1
        ELSE 0
      END`;
 

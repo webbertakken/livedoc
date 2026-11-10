@@ -130,6 +130,9 @@ export function EditorView() {
     contextMenu,
     copying,
     deleteTab,
+    canDeleteDocument,
+    deleteDocument,
+    loadedTabIds,
     documentId,
     documentList,
     nameDocument,
@@ -376,6 +379,13 @@ export function EditorView() {
               onRename: renameTab,
               onDuplicate: duplicateTab,
               onDelete: deleteTab,
+              // The last tab's Delete deletes the document (docs/specs/006-document/document-structure.md "The last tab"),
+              // as Delete Document does: into the Trash, then to the Explorer.
+              canDeleteDocument: canDeleteDocument && !!documentId,
+              onDeleteDocument: () => {
+                if (documentId) void deleteDocument(documentId);
+              },
+              isTabLoaded: (tabId) => loadedTabIds.has(tabId),
               onClearContent: () => void clearTabContent(),
               onImportTab: () => setImportOpen(true),
               onExportTab: () => {
