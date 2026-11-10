@@ -133,6 +133,36 @@ describe('applyArrowBend', () => {
     ]);
   });
 
+  it('slides the last segment, keeping the end with a new jog', () => {
+    // Auto elbow at (200, 0); grab the last leg, (200, 0) to (200, 100), and slide it 30 right.
+    const plan = planArrowBend(arrow([0, 0], [200, 100], { arrowStyle: 'angled' }), [], {
+      x: 200,
+      y: 50,
+    });
+    const patch = applyArrowBend(plan, { x: 30, y: 10 });
+    // Chord middle (100, 50): vertices (230, 0), (230, 100).
+    expect(patch.curvePoints).toEqual([
+      { dx: 130, dy: -50 },
+      { dx: 130, dy: 50 },
+    ]);
+  });
+
+  it('slides a zero-length segment along x', () => {
+    // An elbow dragged onto the start leaves a first leg with no length, so no direction of its own.
+    const onStart = { arrowStyle: 'angled' as const, elbowOffset: { dx: -200, dy: 0 } };
+    const plan = planArrowBend(arrow([0, 0], [200, 100], onStart), [], { x: 0, y: 0 });
+    if (plan.kind !== 'slide') throw new Error('expected a slide');
+    expect(plan.segment).toBe(0);
+    expect(plan.dir).toEqual({ x: 1, y: 0 });
+  });
+
+  it('keeps the ends of a plan made from a route with exact ends exact', () => {
+    const plan = planArrowBend(arrow([0, 0], [200, 0]), [], { x: 100, y: 0 });
+    expect(applyArrowBend(plan, { x: 0, y: 20 }).exactStart).toBeUndefined();
+    const patch = applyArrowBend({ ...plan, exactEnds: true }, { x: 0, y: 20 });
+    expect([patch.exactStart, patch.exactEnd]).toEqual([true, true]);
+  });
+
   it('slides an interior segment without adding vertices', () => {
     // Z through (100, 0) and (100, 200); chord middle (150, 100).
     const a = arrow([0, 0], [300, 200], {

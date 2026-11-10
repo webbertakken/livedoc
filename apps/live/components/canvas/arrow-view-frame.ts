@@ -3,7 +3,6 @@ import {
   arrowDashOffset,
   arrowPathD,
   arrowPathMidpoint,
-  arrowStyleOf,
   angledCornerPoints,
   curveAnchorPoints,
   curveControlPoint,
@@ -28,18 +27,17 @@ export function deriveArrowViewFrame(
   stored: ArrowElement,
   elementIndex: ElementIndex,
   // The finish the arrow is drawn in (docs/specs/008-canvas/finish.md): Professional routes a mind
-  // map's connectors right-angled.
+  // map's connectors right-angled; the others turn them halfway (docs/specs/009-elements/mind-node.md).
   finish: Finish = DEFAULT_FINISH,
 ) {
   // Resolve the true endpoints, then apply the converging-fan offset: when
   // several arrows pin to the same anchor, each end slides a few px along
   // the target edge so the heads don't pile up (arrow-endpoint-spread.ts).
   // A finish-routed connector comes back as the arrow it draws, ends exact.
-  const { arrow, from, to } = finishArrowEnds(stored, elementIndex, finish);
+  const { arrow, style, from, to } = finishArrowEnds(stored, elementIndex, finish);
   // A route the finish draws belongs to the map, so it offers no bow, elbow or bend handles: dragging
   // one would edit a shape the stored arrow does not have.
   const routed = arrow !== stored;
-  const style = arrowStyleOf(arrow);
   const pathD = arrowPathD(
     style,
     from,
@@ -88,7 +86,7 @@ export function deriveArrowViewFrame(
       ? angledElbow(from, to, arrow.from, arrow.to, arrow.elbowOffset)
       : null;
   // A shared end's dashes anchored there, in step with every arrow into it (arrow-dash.ts).
-  const dashOffset = arrowDashOffset(arrow, from, to);
+  const dashOffset = arrowDashOffset(arrow, from, to, style);
   return {
     from,
     to,

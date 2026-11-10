@@ -45,6 +45,52 @@ describe('sameArrowViewFrame', () => {
   });
 });
 
+describe('deriveArrowViewFrame handles', () => {
+  const frameOf = (extra: Partial<typeof arrow>) => {
+    const shaped = { ...arrow, ...extra };
+    return deriveArrowViewFrame(shaped, buildElementIndex([a, b, shaped]));
+  };
+
+  it('offers a handle per bend point, squared on an angled line', () => {
+    const bends = [{ dx: 0, dy: 60 }];
+    const curved = frameOf({ arrowStyle: 'curved', curvePoints: bends });
+    expect(curved.curveAnchors).toHaveLength(1);
+    expect(curved.curveControl).toBeNull();
+    const angled = frameOf({ arrowStyle: 'angled', curvePoints: bends });
+    expect(angled.curveAnchors).toHaveLength(1);
+    expect(angled.elbowPoint).toBeNull();
+  });
+
+  it('offers the elbow on an angled line with no bend points, and nothing on a straight one', () => {
+    expect(frameOf({ arrowStyle: 'angled' }).elbowPoint).not.toBeNull();
+    expect(frameOf({ arrowStyle: 'angled', curvePoints: [] }).curveAnchors).toBeNull();
+    const straight = frameOf({ arrowStyle: 'straight' });
+    expect([straight.curveAnchors, straight.curveControl, straight.elbowPoint]).toEqual([
+      null,
+      null,
+      null,
+    ]);
+  });
+
+  it('sees a bend point that moved, and one more or fewer', () => {
+    const one = frameOf({ arrowStyle: 'curved', curvePoints: [{ dx: 0, dy: 60 }] });
+    const moved = frameOf({ arrowStyle: 'curved', curvePoints: [{ dx: 0, dy: 70 }] });
+    const two = frameOf({
+      arrowStyle: 'curved',
+      curvePoints: [
+        { dx: 0, dy: 60 },
+        { dx: 20, dy: 60 },
+      ],
+    });
+    expect(sameArrowViewFrame(one, { ...one, curveAnchors: [...one.curveAnchors!] })).toBe(true);
+    expect(sameArrowViewFrame(one, { ...moved, pathD: one.pathD, midpoint: one.midpoint })).toBe(
+      false,
+    );
+    expect(sameArrowViewFrame(one, { ...one, curveAnchors: two.curveAnchors })).toBe(false);
+    expect(sameArrowViewFrame(one, { ...one, curveAnchors: null })).toBe(false);
+  });
+});
+
 describe('arrowViewGeometry', () => {
   it('breaks the line around a box in its way, found through the grid', () => {
     const between = { ...createShape('square', 200, -20), fillColor: '#ffffff' };
@@ -87,9 +133,34 @@ describe('deriveArrowViewFrame in a finish', () => {
     expect(frame.elbowPoint).toBeNull();
   });
 
-  it('keeps the stored curve and its handle in Flexible', () => {
+  // docs/specs/009-elements/mind-node.md "Halfway between parent and child".
+  it('draws the S turning halfway in Flexible, with no handles', () => {
     const frame = deriveArrowViewFrame(link, index);
+    expect(frame.style).toBe('s-curve');
+    expect(frame.pathD).toBe('M 250 40 C 282 40 282 138 314 138');
+    expect(frame.midpoint).toEqual({ x: 282, y: 89 });
+    expect(frame.curveAnchors).toBeNull();
+    expect(frame.curveControl).toBeNull();
+    expect(frame.elbowPoint).toBeNull();
+  });
+
+  it('draws an angled connector as the Z turning halfway, with no elbow handle', () => {
+    const angled = { ...link, arrowStyle: 'angled' as const };
+    const frame = deriveArrowViewFrame(angled, buildElementIndex([root, kid, angled]));
+    expect(frame.pathD).toBe('M 250 40 L 282 40 L 282 138 L 314 138');
+    expect(frame.elbowPoint).toBeNull();
+  });
+
+  it('keeps a bowed connector and its handle', () => {
+    const bowed = { ...link, curveOffset: { dx: 0, dy: 20 } };
+    const frame = deriveArrowViewFrame(bowed, buildElementIndex([root, kid, bowed]));
     expect(frame.style).toBe('curved');
     expect(frame.curveControl).not.toBeNull();
+  });
+
+  it('sees the dash offset of the S as drawn', () => {
+    const dashed = { ...link, strokeStyle: 'dashed' as const };
+    const frame = deriveArrowViewFrame(dashed, buildElementIndex([root, kid, dashed]));
+    expect(frame.dashOffset).toBeTypeOf('number');
   });
 });

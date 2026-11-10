@@ -10,13 +10,14 @@ import {
   angledCornerPoints,
   curveAnchorPoints,
   curveControlPoint,
+  sCurveControlPoints,
+  type ArrowPathStyle,
 } from './arrow-path';
 import {
   ARROWHEAD_SIZE_PX,
   arrowheadShapeOf,
   arrowheadStartShapeOf,
   arrowheadSizeOf,
-  arrowStyleOf,
   type ArrowheadShape,
 } from './arrow-style';
 import { BORDER_DASH_ARRAY } from './border-style';
@@ -40,10 +41,14 @@ import type { ArrowElement, Element } from './index';
 // curve / elbow handles so heads sit tangent to the rendered path.
 function arrowHeadRefs(
   arrow: ArrowElement,
+  style: ArrowPathStyle,
   from: { x: number; y: number },
   to: { x: number; y: number },
 ): { toRef: { x: number; y: number }; fromRef: { x: number; y: number } } {
-  const style = arrowStyleOf(arrow);
+  if (style === 's-curve') {
+    const [c1, c2] = sCurveControlPoints(from, to, arrow.from, arrow.to);
+    return { toRef: c2, fromRef: c1 };
+  }
   const pts = arrow.curvePoints;
   if (pts && pts.length > 0 && (style === 'curved' || style === 'angled')) {
     const anchors =
@@ -172,10 +177,8 @@ export function svgArrow(
   // The tab's font, for a caption that has not chosen one of its own
   // (docs/specs/004-interface-design/fonts.md), so an exported caption reads in the same face as the canvas.
   tabFont?: string,
-  // The tab's label pass (layouts + knockouts), computed once per render by the caller.
-  labels: ArrowLabelPass = arrowLabelPass(elements, {
-    fontFamilyOf: (a) => arrowLabelFontStack(a, tabFont, tabFinish),
-  }),
+  // The tab's label pass (layouts + knockouts), computed once per render by the caller; worked out here when not.
+  labelPass?: ArrowLabelPass,
   // Mask ids live in the document once the markup is inlined; a caller that
   // inlines several renders of the same arrow (thumbnails, the minimap) gives
   // each its own prefix so no render borrows another's mask.
@@ -192,6 +195,9 @@ export function svgArrow(
   // Its flow, drawn moving (a tab window); absent, the line is a still, as every export draws it.
   lineMotion?: ArrowLineMotion,
 ): string {
+  const labels =
+    labelPass ??
+    arrowLabelPass(elements, { fontFamilyOf: (a) => arrowLabelFontStack(a, tabFont, tabFinish) });
   // A stock colour stored by name is drawn in its version for this page.
   const stocked = resolveStockColours(source, surface);
   // Professional thins an arrow that sets no width and draws a mind map's connectors right-angled; Sketch and
@@ -199,12 +205,11 @@ export function svgArrow(
   const finish = resolveFinish(stocked.finish, tabFinish);
   // The same ends the live canvas resolves (the converging-fan offset of arrow-endpoint-spread.ts, or a
   // finish's exact route), so exports match what's on screen.
-  const { arrow, from, to } = finishArrowEnds(stocked, elements, finish);
+  const { arrow, style, from, to } = finishArrowEnds(stocked, elements, finish);
   const stroke = arrow.strokeColor ?? defaultArrowStrokeColor(surface);
   const lw = finishArrowWidthPx(arrow.strokeWidth, finish);
   const op = arrow.opacity ?? 1;
   const opAttr = op !== 1 ? ` opacity="${r2(op)}"` : '';
-  const style = arrowStyleOf(arrow);
   const parts = [`<g${opAttr}>`];
   const d = arrowPathD(
     style,
@@ -218,7 +223,7 @@ export function svgArrow(
   );
   const dash = BORDER_DASH_ARRAY[arrow.strokeStyle ?? 'solid'];
   // A shared end's pattern is anchored there, so every arrow into it runs in step (arrow-dash.ts).
-  const dashOffset = arrowDashOffset(arrow, from, to);
+  const dashOffset = arrowDashOffset(arrow, from, to, style);
   // A moving flow marches its own pattern, as ArrowView draws it.
   const dashAttr = lineMotion?.dash
     ? ` stroke-dasharray="${xmlEscape(lineMotion.dash)}"`
@@ -276,7 +281,7 @@ export function svgArrow(
     parts.push(`<path d="${sketched.heads}"${headAttrs}/>`);
   }
   if (!sketched?.sketchedHeads || mixed) {
-    const { toRef, fromRef } = arrowHeadRefs(arrow, from, to);
+    const { toRef, fromRef } = arrowHeadRefs(arrow, style, from, to);
     const headSize = ARROWHEAD_SIZE_PX[headPreset];
     if (ends === 'to' || ends === 'both')
       parts.push(svgArrowhead(toRef, to, stroke, headShape, headSize, paper));

@@ -21,14 +21,22 @@ export const BEND_T_MIN = 0.2;
 // Samples used to find where on a quadratic the press landed.
 const CURVE_SAMPLES = 64;
 
-export type BendPlan =
+export type BendPlan = (
   | { kind: 'bow'; from: Pt; to: Pt; t: number; grab: Pt }
   // `fromBow`: the points began as a single bow, converted to its apex; the bow's offset goes.
   | { kind: 'insert'; mid: Pt; points: Delta[]; index: number; grab: Pt; fromBow?: true }
-  | { kind: 'slide'; mid: Pt; route: Pt[]; segment: number; dir: Pt; grab: Pt };
+  | { kind: 'slide'; mid: Pt; route: Pt[]; segment: number; dir: Pt; grab: Pt }
+) & {
+  // Planned from a route its finish draws with exact ends (mind-connector-bend.ts): the bend keeps them exact,
+  // so the bent line starts and ends where it was drawn.
+  exactEnds?: true;
+};
 
 type BendPatch = Partial<
-  Pick<ArrowElement, 'arrowStyle' | 'curveOffset' | 'curvePoints' | 'elbowOffset'>
+  Pick<
+    ArrowElement,
+    'arrowStyle' | 'curveOffset' | 'curvePoints' | 'elbowOffset' | 'exactStart' | 'exactEnd'
+  >
 >;
 
 const clampT = (t: number) => Math.min(1 - BEND_T_MIN, Math.max(BEND_T_MIN, t));
@@ -112,6 +120,11 @@ export function planArrowBend(arrow: ArrowElement, elements: Element[], grab: Pt
 }
 
 export function applyArrowBend(plan: BendPlan, delta: Pt): BendPatch {
+  const patch = bendPatch(plan, delta);
+  return plan.exactEnds ? { ...patch, exactStart: true, exactEnd: true } : patch;
+}
+
+function bendPatch(plan: BendPlan, delta: Pt): BendPatch {
   const p = { x: plan.grab.x + delta.x, y: plan.grab.y + delta.y };
   switch (plan.kind) {
     case 'bow': {

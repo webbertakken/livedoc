@@ -589,6 +589,7 @@ export * from './flowchart-grow';
 export * from './flowchart-settle';
 export * from './mind-flow';
 export * from './mind-connector-route';
+export * from './mind-connector-bend';
 export * from './mind-map';
 export * from './mind-layout';
 export * from './mind-grow';
