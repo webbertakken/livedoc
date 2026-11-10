@@ -4,23 +4,24 @@
 // not one line. Such an arrow's pattern is anchored at its end instead, so every arrow into the bus is in step along it.
 // Both renderers read it, the canvas's ArrowView and the export's svgArrow.
 
-import { arrowPathPolyline } from './arrow-path';
+import { arrowPathPolyline, type ArrowPathStyle } from './arrow-path';
 import { arrowStyleOf } from './arrow-style';
 import { BORDER_DASH_ARRAY } from './border-style';
 import type { ArrowElement } from './index';
 
 // The stroke-dashoffset that puts the dash pattern's start at the arrow's end, or undefined: a solid line, or one
-// whose end is its own.
+// whose end is its own. `style` is the shape the path is drawn in, the stored one unless a finish draws it otherwise.
 export function arrowDashOffset(
   arrow: ArrowElement,
   from: { x: number; y: number },
   to: { x: number; y: number },
+  style: ArrowPathStyle = arrowStyleOf(arrow),
 ): number | undefined {
   const dash = BORDER_DASH_ARRAY[arrow.strokeStyle ?? 'solid'];
   if (!dash || !arrow.exactEnd) return undefined;
   const period = dash.split(/\s+/).reduce((s, n) => s + Number(n), 0);
   const pts = arrowPathPolyline(
-    arrowStyleOf(arrow),
+    style,
     from,
     to,
     arrow.from,

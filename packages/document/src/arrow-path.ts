@@ -1,6 +1,16 @@
 import type { Anchor, ArrowStyle, Endpoint } from './index';
 import { anchorClass, anchorPrimarySide } from './anchors';
 
+/**
+ * A path's shape as drawn: a stored arrow style, or the `s-curve` a finish draws a mind connector with
+ * (docs/specs/009-elements/mind-node.md "Halfway between parent and child"). The S is drawn, never stored.
+ */
+export type ArrowPathStyle = ArrowStyle | 's-curve';
+
+// Points sampled along a single curve (quadratic bow or S) for labels, hits and lengths. Even, so the
+// middle sample is the curve's own middle.
+const CURVE_SAMPLES = 24;
+
 // The anchor a pinned end sits on; null for free / on-arrow ends.
 const anchorOf = (ep?: Endpoint): Anchor | null => (ep && ep.kind === 'pinned' ? ep.anchor : null);
 
@@ -140,9 +150,8 @@ export function catmullRomPathD(points: { x: number; y: number }[]): string {
 }
 
 // Sample a Catmull-Rom spline (through `points`) into a fine polyline, for
-// label placement + hit projection on multi-bend curves.
+// label placement + hit projection on multi-bend curves (always the two ends and at least one point between).
 function sampleCatmullRom(points: { x: number; y: number }[], perSeg = 12): Pt[] {
-  if (points.length < 3) return points.slice();
   const p = points;
   const out: Pt[] = [{ x: p[0]!.x, y: p[0]!.y }];
   for (let i = 0; i < p.length - 1; i++) {
@@ -187,7 +196,7 @@ function sampleCatmullRom(points: { x: number; y: number }[], perSeg = 12): Pt[]
 // available so a pinned arrow leaves its element along its anchor
 // direction.
 export function arrowPathD(
-  style: ArrowStyle,
+  style: ArrowPathStyle,
   from: { x: number; y: number },
   to: { x: number; y: number },
   fromEp: Endpoint,
@@ -197,6 +206,10 @@ export function arrowPathD(
   curvePoints?: { dx: number; dy: number }[],
 ): string {
   if (style === 'straight') return `M ${from.x} ${from.y} L ${to.x} ${to.y}`;
+  if (style === 's-curve') {
+    const [c1, c2] = sCurveControlPoints(from, to, fromEp, toEp);
+    return `M ${from.x} ${from.y} C ${c1.x} ${c1.y} ${c2.x} ${c2.y} ${to.x} ${to.y}`;
+  }
   if (style === 'curved') {
     // Multi-bend: a smooth spline through from -> control points -> to.
     if (curvePoints && curvePoints.length > 0) {
@@ -218,6 +231,50 @@ export function arrowPathD(
   }
   const elbow = angledElbow(from, to, fromEp, toEp, elbowOffset);
   return `M ${from.x} ${from.y} L ${elbow.x} ${elbow.y} L ${to.x} ${to.y}`;
+}
+
+// The two control points of the S (docs/specs/009-elements/mind-node.md "Halfway between parent and child"):
+// both halfway along the axis the line leaves its start on, one level with each end. The cubic then leaves
+// `from` square to its face, passes through the chord midpoint (its inflection), enters `to` square to its
+// face, and its two halves mirror each other about that midpoint. The axis is the angled arrow's first leg's.
+export function sCurveControlPoints(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  fromEp: Endpoint,
+  toEp: Endpoint,
+): [{ x: number; y: number }, { x: number; y: number }] {
+  if (angledHorizontalFirst(from, to, fromEp, toEp)) {
+    const mx = (from.x + to.x) / 2;
+    return [
+      { x: mx, y: from.y },
+      { x: mx, y: to.y },
+    ];
+  }
+  const my = (from.y + to.y) / 2;
+  return [
+    { x: from.x, y: my },
+    { x: to.x, y: my },
+  ];
+}
+
+// The point `t` (0..1) along the S.
+export function sCurvePoint(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  fromEp: Endpoint,
+  toEp: Endpoint,
+  t: number,
+): { x: number; y: number } {
+  const [c1, c2] = sCurveControlPoints(from, to, fromEp, toEp);
+  const mt = 1 - t;
+  const a = mt * mt * mt;
+  const b = 3 * mt * mt * t;
+  const c = 3 * mt * t * t;
+  const d = t * t * t;
+  return {
+    x: a * from.x + b * c1.x + c * c2.x + d * to.x,
+    y: a * from.y + b * c1.y + c * c2.y + d * to.y,
+  };
 }
 
 // Auto-computed elbow position for an angled arrow, plus any
@@ -247,7 +304,7 @@ export function angledElbow(
 // arrows return the elbow vertex; straight arrows return the chord
 // midpoint.
 export function arrowPathMidpoint(
-  style: ArrowStyle,
+  style: ArrowPathStyle,
   from: { x: number; y: number },
   to: { x: number; y: number },
   fromEp: Endpoint,
@@ -262,6 +319,14 @@ export function arrowPathMidpoint(
         .point;
     }
     return angledElbow(from, to, fromEp, toEp, elbowOffset);
+  }
+  if (style === 's-curve') {
+    // B(0.5) of the cubic: the chord midpoint for the symmetric S.
+    const [c1, c2] = sCurveControlPoints(from, to, fromEp, toEp);
+    return {
+      x: (from.x + 3 * c1.x + 3 * c2.x + to.x) / 8,
+      y: (from.y + 3 * c1.y + 3 * c2.y + to.y) / 8,
+    };
   }
   if (style === 'curved' && curvePoints && curvePoints.length > 0) {
     // Arc-length midpoint of the sampled spline.
@@ -288,11 +353,11 @@ type Pt = { x: number; y: number };
 
 // The arrow's centreline as a polyline of vertices in draw order:
 // straight = [from, to]; angled = [from, elbow, to]; curved = the
-// quadratic Bezier sampled into short chords (fine enough to place +
+// quadratic Bezier (an s-curve its cubic) sampled into short chords (fine enough to place +
 // project a label against). Both the label anchor and the label-drag
 // projection read this so they agree on the same line.
 export function arrowPathPolyline(
-  style: ArrowStyle,
+  style: ArrowPathStyle,
   from: Pt,
   to: Pt,
   fromEp: Endpoint,
@@ -306,7 +371,7 @@ export function arrowPathPolyline(
   }
   if (style === 'curved') {
     const c = curveControlPoint(from, to, curveOffset, fromEp, toEp);
-    const N = 24;
+    const N = CURVE_SAMPLES;
     const pts: Pt[] = [];
     for (let i = 0; i <= N; i++) {
       const t = i / N;
@@ -317,6 +382,11 @@ export function arrowPathPolyline(
       });
     }
     return pts;
+  }
+  if (style === 's-curve') {
+    return Array.from({ length: CURVE_SAMPLES + 1 }, (_, i) =>
+      sCurvePoint(from, to, fromEp, toEp, i / CURVE_SAMPLES),
+    );
   }
   if (style === 'angled') {
     if (curvePoints && curvePoints.length > 0) {
@@ -337,29 +407,25 @@ function polylineAt(pts: Pt[], t: number): { point: Pt; tangent: Pt } {
     segLens.push(len);
     total += len;
   }
-  if (total < 1e-6 || segLens.length === 0) {
-    return { point: pts[0] ?? { x: 0, y: 0 }, tangent: { x: 1, y: 0 } };
-  }
+  if (total < 1e-6) return { point: pts[0]!, tangent: { x: 1, y: 0 } };
   let target = Math.max(0, Math.min(1, t)) * total;
-  for (let i = 0; i < segLens.length; i++) {
-    const len = segLens[i]!;
-    if (target <= len || i === segLens.length - 1) {
-      const a = pts[i]!;
-      const b = pts[i + 1]!;
-      const f = len > 1e-6 ? target / len : 0;
-      const tx = b.x - a.x;
-      const ty = b.y - a.y;
-      const tl = Math.hypot(tx, ty) || 1;
-      return {
-        point: { x: a.x + tx * f, y: a.y + ty * f },
-        tangent: { x: tx / tl, y: ty / tl },
-      };
-    }
-    target -= len;
+  // The segment the target falls on; the last one takes any rounding overshoot.
+  let i = 0;
+  while (i < segLens.length - 1 && target > segLens[i]!) {
+    target -= segLens[i]!;
+    i++;
   }
-  // Unreachable (loop always returns on the last segment), but keeps
-  // the type checker happy without a non-null assertion dance.
-  return { point: pts[pts.length - 1]!, tangent: { x: 1, y: 0 } };
+  const len = segLens[i]!;
+  const a = pts[i]!;
+  const b = pts[i + 1]!;
+  const f = len > 1e-6 ? target / len : 0;
+  const tx = b.x - a.x;
+  const ty = b.y - a.y;
+  const tl = Math.hypot(tx, ty) || 1;
+  return {
+    point: { x: a.x + tx * f, y: a.y + ty * f },
+    tangent: { x: tx / tl, y: ty / tl },
+  };
 }
 
 // Where a label sits given its stored placement. `t` is the position
@@ -368,7 +434,7 @@ function polylineAt(pts: Pt[], t: number): { point: Pt; tangent: Pt } {
 // right) so the user can park the label on either side. Falls back to
 // the natural midpoint when no placement is stored.
 export function arrowLabelAnchor(
-  style: ArrowStyle,
+  style: ArrowPathStyle,
   from: Pt,
   to: Pt,
   fromEp: Endpoint,
@@ -403,7 +469,7 @@ export function arrowLabelAnchor(
 // label nearest that point. Inverse of `arrowLabelAnchor`; drives the
 // label-drag gesture.
 export function projectToArrow(
-  style: ArrowStyle,
+  style: ArrowPathStyle,
   from: Pt,
   to: Pt,
   fromEp: Endpoint,

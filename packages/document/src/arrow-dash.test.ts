@@ -42,4 +42,22 @@ describe('arrowDashOffset', () => {
       arrowDashOffset(arrow({ strokeStyle: 'dashed' }), { x: 0, y: 0 }, { x: 0, y: 100 }),
     ).toBeUndefined();
   });
+
+  it('measures the shape the path is drawn in, not the stored one', () => {
+    // A mind connector drawn as the S (docs/specs/009-elements/mind-node.md "Halfway between parent and child")
+    // runs longer than its chord, so its pattern is pulled back by a different amount.
+    const curved = arrow({
+      strokeStyle: 'dashed',
+      exactEnd: true,
+      arrowStyle: 'curved',
+      from: { kind: 'pinned', elementId: 'p', anchor: 'e' },
+      to: { kind: 'pinned', elementId: 'c', anchor: 'w' },
+    });
+    const from = { x: 0, y: 0 };
+    const to = { x: 64, y: 196 };
+    const drawn = arrowDashOffset(curved, from, to, 's-curve')!;
+    expect(drawn).not.toBe(arrowDashOffset(curved, from, to));
+    expect(drawn).toBeGreaterThanOrEqual(0);
+    expect(drawn).toBeLessThan(11);
+  });
 });

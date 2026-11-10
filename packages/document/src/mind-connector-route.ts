@@ -1,18 +1,21 @@
-// Mind-map connectors in the Professional finish (docs/specs/009-elements/mind-node.md "Connectors",
+// How a finish draws a mind map's connectors (docs/specs/009-elements/mind-node.md "Connectors",
 // docs/specs/008-canvas/finish.md "Professional").
 //
-// A mind map's connectors are stored curved (MIND_CONNECTOR_LOOK). Professional draws them right-angled,
-// and neatly: every connector off one parent leaves the same point on the parent's face and turns on one
-// shared trunk halfway across the gap to the nearest child, so a column of siblings reads as a bracket
-// rather than a bundle of separate elbows. The bubble flow, which fans every way, draws straight spokes, in every
-// finish.
+// A mind map's connectors are stored curved (MIND_CONNECTOR_LOOK). Every finish draws one turning halfway
+// between parent and child: the curve as an S, an angled one as a Z ("Halfway between parent and child").
+// Professional draws the curve right-angled, and neatly: every connector off one parent leaves the same point on
+// the parent's face and turns on one shared trunk halfway across the gap to the nearest child, so a column of
+// siblings reads as a bracket rather than a bundle of separate elbows. The bubble flow, which fans every way,
+// draws straight spokes, in every finish.
 //
-// It is a look, never a rewrite: the stored arrow keeps its curve, so switching the finish back restores
-// it. Only a connector still in the map's default look is routed; a style, bow or bend picked on it wins.
+// It is a look, never a rewrite: the stored arrow keeps its curve or angle, so switching the finish back restores
+// it. Only a connector without a bow, elbow or bend of its own is routed; one picked on it wins.
 // Pure, read by the canvas and every export so the two agree.
 
 import type { Anchor, ArrowElement, Element, ElementId, ShapeElement } from './index';
 import { arrowEndpointSpread } from './arrow-endpoint-spread';
+import type { ArrowPathStyle } from './arrow-path';
+import { arrowStyleOf } from './arrow-style';
 import { endpointPosition, elementIndexFor, type ElementIndex, type Point } from './geometry';
 import type { Finish } from './finish';
 import { DEFAULT_MIND_FLOW, MIND_CONNECTOR_LOOK, isMindFlow, type MindFlow } from './mind-flow';
@@ -20,9 +23,11 @@ import { DEFAULT_MIND_FLOW, MIND_CONNECTOR_LOOK, isMindFlow, type MindFlow } fro
 type Delta = { dx: number; dy: number };
 
 /** How a finish draws a mind connector: angled through `corners` (absolute, in from-to order; none for a
- *  run whose ends already line up), or a straight spoke. */
+ *  run whose ends already line up), a straight spoke, or the S turning halfway between its ends. */
 type MindConnectorRoute =
-  { style: 'angled'; corners: Point[] } | { style: 'straight'; corners: [] };
+  | { style: 'angled'; corners: Point[] }
+  | { style: 'straight'; corners: [] }
+  | { style: 's-curve'; corners: [] };
 
 const isNode = (el: Element | undefined): el is ShapeElement =>
   el !== undefined && el.type === 'shape' && el.shape === 'mind-node';
@@ -38,7 +43,8 @@ export function isDefaultMindConnectorLook(arrow: ArrowElement): boolean {
 }
 
 // Each node's mind children, built once per element index (the index is rebuilt whenever the board
-// changes, so it is the cache key): finding a parent's siblings is then a lookup, not a board scan.
+// changes, so it is the cache key): finding a parent's siblings is then a lookup, not a board scan. Asked only
+// for the parent of a connector's child, so the list holds at least that child.
 const childrenCache = new WeakMap<ElementIndex, Map<ElementId, ShapeElement[]>>();
 function childrenOf(index: ElementIndex, id: ElementId): readonly ShapeElement[] {
   let byParent = childrenCache.get(index);
@@ -52,7 +58,7 @@ function childrenOf(index: ElementIndex, id: ElementId): readonly ShapeElement[]
     }
     childrenCache.set(index, byParent);
   }
-  return byParent.get(id) ?? [];
+  return byParent.get(id)!;
 }
 
 // The flow is stored on the root. Each walk records the flow for every node it passed, per index, so a
@@ -86,17 +92,24 @@ function flowOf(index: ElementIndex, node: ShapeElement): MindFlow {
 
 const FACE: Record<string, 'e' | 'w' | 'n' | 's'> = { e: 'e', w: 'w', n: 'n', s: 's' };
 
+/** Whether a connector is angled with no elbow or bend of its own: it turns halfway between its ends. */
+const isPlainAngled = (arrow: ArrowElement): boolean =>
+  arrow.arrowStyle === 'angled' &&
+  !arrow.elbowOffset &&
+  !(arrow.curvePoints && arrow.curvePoints.length > 0);
+
 /**
- * The route the finish draws `arrow` along, or null when it is drawn as stored: not Professional (nor a bubble
- * map's spoke or an org chart's connector, which are always routed), not a mind connector (both ends pinned to mind nodes, one the other's
- * parent), or not in the default look.
+ * The route the finish draws `arrow` along, or null when it is drawn as stored: not a mind connector (both ends
+ * pinned to mind nodes, one the other's parent), a bow, elbow, bend or other style picked on it, or, outside the
+ * Professional bracket, faces that do not face each other across a gap.
  */
 export function finishMindConnectorRoute(
   arrow: ArrowElement,
   elements: readonly Element[] | ElementIndex,
   finish: Finish,
 ): MindConnectorRoute | null {
-  if (!isDefaultMindConnectorLook(arrow)) return null;
+  const curved = isDefaultMindConnectorLook(arrow);
+  if (!curved && !isPlainAngled(arrow)) return null;
   if (arrow.from.kind !== 'pinned' || arrow.to.kind !== 'pinned') return null;
   const index: ElementIndex = Array.isArray(elements)
     ? elementIndexFor(elements)
@@ -107,29 +120,74 @@ export function finishMindConnectorRoute(
   // Usually drawn parent to child, but a swapped connector is the same branch.
   const forward = b.mindParentId === a.id;
   if (!forward && a.mindParentId !== b.id) return null;
-  // A bubble map fans every way, so its spokes are straight in every finish: a curve leaving one face and
-  // entering another bulges sideways and can pass behind a sibling, so a branch reads as the wrong node's.
-  if (flowOf(index, a) === 'bubble') return { style: 'straight', corners: [] };
-  // An org chart (docs/specs/009-elements/org-chart.md) draws its connectors as this bracket in every finish: a
-  // person map's reports hang off one trunk, the way org charts are read.
-  const orgChart = a.mindLook === 'person' && b.mindLook === 'person';
-  if (finish !== 'professional' && !orgChart) return null;
-
   const parent = forward ? a : b;
   const parentEnd = forward ? arrow.from : arrow.to;
   const childEnd = forward ? arrow.to : arrow.from;
+  const parentFace = FACE[(parentEnd as { anchor: Anchor }).anchor];
+  const childFace = FACE[(childEnd as { anchor: Anchor }).anchor];
   const p = endpointPosition(parentEnd, index);
   const c = endpointPosition(childEnd, index);
-  const corners = bracketCorners(
-    parent,
-    FACE[(parentEnd as { anchor: Anchor }).anchor],
-    FACE[(childEnd as { anchor: Anchor }).anchor],
-    p,
-    c,
-    childrenOf(index, parent.id),
-  );
-  if (corners === null) return { style: 'angled', corners: [] };
-  return { style: 'angled', corners: forward ? corners : corners.reverse() };
+  const inOrder = (corners: Point[]) => (forward ? corners : corners.reverse());
+
+  if (curved) {
+    // A bubble map fans every way, so its spokes are straight in every finish: a curve leaving one face and
+    // entering another bulges sideways and can pass behind a sibling, so a branch reads as the wrong node's.
+    if (flowOf(index, a) === 'bubble') return { style: 'straight', corners: [] };
+    // An org chart (docs/specs/009-elements/org-chart.md) draws its connectors as this bracket in every finish: a
+    // person map's reports hang off one trunk, the way org charts are read.
+    const orgChart = a.mindLook === 'person' && b.mindLook === 'person';
+    if (finish === 'professional' || orgChart) {
+      const corners = bracketCorners(
+        parent,
+        parentFace,
+        childFace,
+        p,
+        c,
+        childrenOf(index, parent.id),
+      );
+      if (corners === null) return { style: 'angled', corners: [] };
+      return { style: 'angled', corners: inOrder(corners) };
+    }
+  }
+
+  const corners = halfwayCorners(parentFace, childFace, p, c);
+  if (corners === null) return null;
+  if (curved)
+    return corners.length > 0
+      ? { style: 's-curve', corners: [] }
+      : { style: 'straight', corners: [] };
+  return { style: 'angled', corners: inOrder(corners) };
+}
+
+const OPPOSITE: Record<string, string> = { e: 'w', w: 'e', n: 's', s: 'n' };
+
+// Corners of the run from the parent's point `p` to the child's point `c` turning halfway between the two
+// (docs/specs/009-elements/mind-node.md "Halfway between parent and child"), parent first. Null when the faces do
+// not face each other across a gap (a child tucked back over its parent, a re-pinned end): drawn as stored. Empty
+// when the ends already line up, so the run is a single straight segment.
+function halfwayCorners(
+  parentFace: 'e' | 'w' | 'n' | 's' | undefined,
+  childFace: 'e' | 'w' | 'n' | 's' | undefined,
+  p: Point,
+  c: Point,
+): Point[] | null {
+  if (!parentFace || childFace !== OPPOSITE[parentFace]) return null;
+  const across = parentFace === 'e' || parentFace === 'w';
+  const sign = parentFace === 'e' || parentFace === 's' ? 1 : -1;
+  if ((across ? c.x - p.x : c.y - p.y) * sign <= 0) return null;
+  if (across ? Math.abs(c.y - p.y) < 1 : Math.abs(c.x - p.x) < 1) return [];
+  if (across) {
+    const mx = (p.x + c.x) / 2;
+    return [
+      { x: mx, y: p.y },
+      { x: mx, y: c.y },
+    ];
+  }
+  const my = (p.y + c.y) / 2;
+  return [
+    { x: p.x, y: my },
+    { x: c.x, y: my },
+  ];
 }
 
 // Corners of the bracket from the parent's point `p` to the child's point `c`, parent first. Null when
@@ -144,8 +202,7 @@ function bracketCorners(
   children: readonly ShapeElement[],
 ): Point[] | null {
   const across = parentFace === 'e' || parentFace === 'w';
-  const opposite: Record<string, string> = { e: 'w', w: 'e', n: 's', s: 'n' };
-  if (!parentFace || childFace !== opposite[parentFace]) return null;
+  if (!parentFace || childFace !== OPPOSITE[parentFace]) return null;
   const sign = parentFace === 'e' || parentFace === 's' ? 1 : -1;
   // The children on this side of the parent, and the face of the nearest one: the trunk sits halfway
   // between it and the parent, so every sibling turns on the same line.
@@ -173,18 +230,21 @@ function bracketCorners(
       ];
 }
 
+/** An arrow as its finish draws it, and the shape its path takes (the S has no stored style of its own). */
+export type DrawnArrow = { arrow: ArrowElement; style: ArrowPathStyle };
+
 /**
  * The arrow as the finish draws it: for a routed mind connector, a copy that is angled through the
- * route's corners (or straight), with no bow or elbow of its own and both ends exact, so no fan pulls a
- * sibling's start off the shared point. Any other arrow comes back as it is (the same object).
+ * route's corners (or straight, or the S), with no bow or elbow of its own and both ends exact, so no fan pulls
+ * a sibling's start off the shared point. Any other arrow comes back as it is (the same object).
  */
 export function finishRoutedArrow(
   arrow: ArrowElement,
   elements: readonly Element[] | ElementIndex,
   finish: Finish,
-): ArrowElement {
+): DrawnArrow {
   const route = finishMindConnectorRoute(arrow, elements, finish);
-  if (!route) return arrow;
+  if (!route) return { arrow, style: arrowStyleOf(arrow) };
   const index: ElementIndex = Array.isArray(elements)
     ? elementIndexFor(elements)
     : (elements as ElementIndex);
@@ -198,14 +258,19 @@ export function finishRoutedArrow(
   // Lined-up ends with no corners draw straight: an angled style with nothing to bend draws a
   // zero-length elbow (arrow-orthogonal.ts).
   const lined = route.style === 'angled' && !curvePoints && aligned(from, to);
+  const style: ArrowPathStyle = lined ? 'straight' : route.style;
   return {
-    ...arrow,
-    arrowStyle: lined ? 'straight' : route.style,
-    curveOffset: undefined,
-    elbowOffset: undefined,
-    curvePoints,
-    exactStart: true,
-    exactEnd: true,
+    arrow: {
+      ...arrow,
+      // The S is drawn, never stored: its copy keeps the curve it stands for.
+      arrowStyle: style === 's-curve' ? 'curved' : style,
+      curveOffset: undefined,
+      elbowOffset: undefined,
+      curvePoints,
+      exactStart: true,
+      exactEnd: true,
+    },
+    style,
   };
 }
 
@@ -220,15 +285,16 @@ export function finishArrowEnds(
   arrow: ArrowElement,
   elements: Element[] | ElementIndex,
   finish: Finish,
-): { arrow: ArrowElement; from: Point; to: Point } {
+): DrawnArrow & { from: Point; to: Point } {
   const drawn = finishRoutedArrow(arrow, elements, finish);
   const from = endpointPosition(arrow.from, elements);
   const to = endpointPosition(arrow.to, elements);
-  if (drawn !== arrow) return { arrow: drawn, from, to };
+  if (drawn.arrow !== arrow) return { ...drawn, from, to };
   const fromSpread = arrowEndpointSpread(arrow.id, 'from', elements);
   const toSpread = arrowEndpointSpread(arrow.id, 'to', elements);
   return {
     arrow,
+    style: drawn.style,
     from: { x: from.x + fromSpread.x, y: from.y + fromSpread.y },
     to: { x: to.x + toSpread.x, y: to.y + toSpread.y },
   };

@@ -7,9 +7,8 @@ import {
   curveAnchorPoints,
   curveControlPoint,
   endpointPosition,
-  finishMindConnectorRoute,
+  planArrowBendInFinish,
   arrowRoutePoints,
-  planArrowBend,
   resolveFinish,
   type ArrowElement,
   type FrameHandle,
@@ -203,11 +202,7 @@ export function useArrowDragHandlers({
     if (!r) return;
     const { d, arrow } = r;
     if (arrow.locked === true || d.layerInertIds.has(arrowId) || d.isReadOnly) return;
-    // A mind connector the finish routes through corners is the map's shape, not the arrow's: there is no
-    // stored bend to drag (docs/specs/009-elements/mind-node.md "Connectors"). A bubble map's straight spoke
-    // can still be bowed: the bow is then picked on it, and a pick wins in every finish.
     const finish = resolveFinish(arrow.finish, d.activeTab.finish);
-    if (finishMindConnectorRoute(arrow, d.activeTab.elements, finish)?.style === 'angled') return;
     // The arrow's <svg> spans the transformed canvas wrapper, so its rect maps
     // the pointer into canvas coordinates exactly as the wrapper's does.
     const svg = e.currentTarget.ownerSVGElement;
@@ -218,13 +213,17 @@ export function useArrowDragHandlers({
       svg.getBoundingClientRect(),
       d.zoomRef.current,
     );
+    // Bent from the line as its finish draws it (docs/specs/009-elements/mind-node.md "Connectors"): the
+    // Professional bracket of a stored curve is the map's shape, with no bend to drag.
+    const plan = planArrowBendInFinish(arrow, d.activeTab.elements, finish, grab);
+    if (!plan) return;
     checkpointPendingRef.current = true;
     setDrag({
       kind: 'arrow-bend',
       arrowId,
       startClientX: e.clientX,
       startClientY: e.clientY,
-      plan: planArrowBend(arrow, d.activeTab.elements, grab),
+      plan,
     });
   };
 
