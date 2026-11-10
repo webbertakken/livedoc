@@ -150,10 +150,14 @@ describe('layoutMindTree: other flows', () => {
       }
   });
 
-  it.each(MIND_FLOWS.map((f) => [f]))('%s is a fixed point', (flow: MindFlow) => {
-    const once = apply(map(), layoutMindTree(map(), 'r', flow));
-    expect(isMindTreeTidy(once, 'r', flow)).toBe(true);
-  });
+  // An any-direction map's children hold their sides; mind-layout-directions.test.ts lays those out.
+  it.each(MIND_FLOWS.filter((f) => f !== 'any').map((f) => [f]))(
+    '%s is a fixed point',
+    (flow: MindFlow) => {
+      const once = apply(map(), layoutMindTree(map(), 'r', flow));
+      expect(isMindTreeTidy(once, 'r', flow)).toBe(true);
+    },
+  );
 });
 
 describe('isMindTreeTidy', () => {

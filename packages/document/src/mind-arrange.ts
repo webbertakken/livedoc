@@ -9,9 +9,10 @@
 // Pure: every function returns the whole element list, for the editor to land as one change.
 
 import { applyMindMoves, relayoutMindMap } from './mind-grow';
-import { isVerticalMindFlow, type MindFlow } from './mind-flow';
+import { isVerticalMindFlow } from './mind-flow';
 import { isMindTreeTidy, layoutMindTree } from './mind-layout';
 import { isMindNode, mindFlowOf, mindRootOf } from './mind-map';
+import { mindSideOf } from './mind-direction';
 import {
   isMindGroupFrame,
   mindGroupMembers,
@@ -90,9 +91,9 @@ function changeTidyMaps(
 function groupAfterDrop(
   siblings: readonly ShapeElement[],
   node: ShapeElement,
-  flow: MindFlow,
+  vertical: boolean,
 ): string | undefined {
-  const key = (n: ShapeElement) => (isVerticalMindFlow(flow) ? centre(n).x : centre(n).y);
+  const key = (n: ShapeElement) => (vertical ? centre(n).x : centre(n).y);
   const at = key(node);
   const sorted = [...siblings].sort((a, b) => key(a) - key(b));
   const prev = sorted.filter((s) => key(s) < at).at(-1);
@@ -126,6 +127,10 @@ export function planMindDrop(
     : { kind: 'placed', elements: settleMindGroups(relayout(decided.placed, decided.rootId)) };
 }
 
+// Whether a node's side spreads its siblings across a row (above or below its parent) rather than down a column.
+const stacksAcross = (elements: Element[], node: ShapeElement): boolean =>
+  isVerticalMindFlow(mindSideOf(elements, node) ?? 'tree');
+
 // A group's frame in hand stands for its members: the first of them in the map's order leads the drop.
 function inHand(
   before: Element[],
@@ -136,8 +141,9 @@ function inHand(
   if (!frame || !isMindGroupFrame(frame)) return { primaryId, draggedIds };
   const members = mindGroupMembers(before, frame.id);
   if (members.length === 0) return { primaryId, draggedIds };
-  const flow = mindFlowOf(before, members[0]!);
-  const key = (n: ShapeElement) => (isVerticalMindFlow(flow) ? centre(n).x : centre(n).y);
+  // Along the axis the members' side stacks across (docs/specs/009-elements/mind-node.md "A direction per node").
+  const vertical = stacksAcross(before, members[0]!);
+  const key = (n: ShapeElement) => (vertical ? centre(n).x : centre(n).y);
   const lead = [...members].sort((a, b) => key(a) - key(b))[0]!;
   return { primaryId: lead.id, draggedIds: withMindGroupMembers(before, draggedIds) };
 }
@@ -200,7 +206,7 @@ function decideMindDrop(
       : groupAfterDrop(
           siblings.filter((s) => !unit.has(s.id)),
           node,
-          flow,
+          stacksAcross(before, was),
         );
 
   const candidate = patch(after, unit, (n) => {

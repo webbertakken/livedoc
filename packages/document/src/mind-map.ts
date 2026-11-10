@@ -19,6 +19,7 @@ import {
   placeMindChild,
   type MindFlow,
 } from './mind-flow';
+import { mindBranchFlowOf, mindNewChildSide, mindSideOf, type MindSide } from './mind-direction';
 import { rectsIntersect as overlaps, unionRects, type Rect } from './geometry-primitives';
 import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
 
@@ -270,14 +271,21 @@ export function nextMindChildPosition(
   elements: Element[],
   parent: ShapeElement,
   size: { width: number; height: number },
+  // The side the new child holds, under an any-direction parent (mindNewChildSide): it is placed as that side
+  // grows, against the branches already on that side only.
+  side: MindSide | null = null,
 ): { x: number; y: number } {
   const gaps = mindGaps(mindSpacingOf(elements, parent));
+  const children = mindChildren(elements, parent.id);
+  const onSide = side ? children.filter((c) => mindSideOf(elements, c) === side) : children;
   const at = placeMindChild(
-    mindFlowOf(elements, parent),
+    side ?? mindBranchFlowOf(elements, parent),
     parent,
     size,
-    mindSubtree(elements, parent.id),
-    mindChildren(elements, parent.id),
+    side
+      ? onSide.flatMap((c) => [c, ...mindSubtree(elements, c.id)])
+      : mindSubtree(elements, parent.id),
+    onSide,
     outwardOf(elements, parent),
     gaps,
   );
@@ -310,14 +318,22 @@ export function growMindChild(
   // label widen it) and then growing from it otherwise produced a branch of
   // mismatched boxes, which reads as a mistake rather than a hierarchy.
   const size = { width: sizeFrom.width, height: sizeFrom.height };
-  const at = nextMindChildPosition(elements, parent, size);
-  const node: ShapeElement = { ...base, ...size, x: at.x, y: at.y, mindParentId: parent.id };
+  const side = mindNewChildSide(elements, parent, sizeFrom === parent ? undefined : sizeFrom);
+  const at = nextMindChildPosition(elements, parent, size, side);
+  const node: ShapeElement = {
+    ...base,
+    ...size,
+    x: at.x,
+    y: at.y,
+    mindParentId: parent.id,
+    ...(side ? { mindFlow: side } : {}),
+  };
   // The faces the connector uses follow the flow: a tree runs east to west, a
   // downward map north to south, and a fanned one whichever way the child
   // actually went. The nearest-pair chooser alone picked a tree parent's SOUTH
   // face for a child far down the column, and the connector then ran behind
   // the siblings above it.
-  const [from, to] = mindConnectorAnchors(mindFlowOf(elements, parent), parent, node);
+  const [from, to] = mindConnectorAnchors(side ?? mindBranchFlowOf(elements, parent), parent, node);
   return {
     node,
     arrow: createPinnedArrow(parent.id, from, node.id, to),

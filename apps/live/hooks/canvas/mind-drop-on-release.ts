@@ -6,7 +6,7 @@ import {
   isMindNode,
   mindGroupMembers,
   isVerticalMindFlow,
-  mindFlowOf,
+  mindSideOf,
   planMindDrop,
   previewMindDrop,
   withMindSubtrees,
@@ -48,7 +48,7 @@ export function mindDropGuide(
   const node = droppedNode(committed, primaryId);
   if (!node || drop?.kind !== 'reordered' || !drop.slot) return null;
   const s = drop.slot;
-  return isVerticalMindFlow(mindFlowOf(committed, node))
+  return isVerticalMindFlow(mindSideOf(committed, node) ?? 'tree')
     ? { axis: 'x', position: s.x - 4, start: s.y, end: s.y + s.height }
     : { axis: 'y', position: s.y - 4, start: s.x, end: s.x + s.width };
 }

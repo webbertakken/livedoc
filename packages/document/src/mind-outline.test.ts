@@ -240,3 +240,30 @@ describe('applyMindOutline', () => {
     expect(applyMindOutline(offsite(), 'venue', parse('Venue'), dress)).toBeNull();
   });
 });
+
+// docs/specs/009-elements/mind-node.md "Flows": a child of an any-direction parent holds its side.
+describe('applyMindOutline under an any-direction parent', () => {
+  const anyMap = (): Element[] =>
+    offsite().map((e) =>
+      e.id === 'root'
+        ? { ...e, mindFlow: 'any' as const }
+        : e.type === 'shape' && e.mindParentId === 'root'
+          ? { ...e, mindFlow: 'upward' as const }
+          : e,
+    );
+
+  it('gives a new node the side of the last added child', () => {
+    const els = anyMap();
+    const out = applyMindOutline(els, 'root', parse(`${outlineOf(els)}\n- Budget`), dress)!;
+    expect(byLabel(out, 'Budget').mindFlow).toBe('upward');
+  });
+
+  it('gives a node moved under it, holding no side, the same', () => {
+    const els = anyMap();
+    // Lake District moves up a level, from under Venue to under the root.
+    const text = outlineOf(els).replace('  - Lake District', '- Lake District');
+    const out = applyMindOutline(els, 'root', parse(text), dress)!;
+    expect(byLabel(out, 'Lake District').mindParentId).toBe('root');
+    expect(byLabel(out, 'Lake District').mindFlow).toBe('upward');
+  });
+});

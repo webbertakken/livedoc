@@ -110,3 +110,38 @@ describe('Tidy Map and arranging by hand', () => {
     expect((committed()!.find((e) => e.id === 'a') as ShapeElement).mindGroup).toBeTruthy();
   });
 });
+
+// docs/specs/009-elements/mind-node.md "A direction per node": a Branching pick sets the selected node's own.
+describe('Branching', () => {
+  const nodeOf = (els: Element[] | null, id: string) =>
+    els?.find((e) => e.id === id) as ShapeElement | undefined;
+
+  it("sets the selected node's own direction, not its root's", () => {
+    const { api, committed } = setters(map());
+    api.setMindFlowSelected('upward');
+    expect(nodeOf(committed(), 'a')?.mindFlow).toBe('upward');
+    expect(nodeOf(committed(), 'root')?.mindFlow).toBe('tree');
+  });
+
+  it('drops the direction on Auto', () => {
+    const held = map().map((e) => (e.id === 'a' ? { ...e, mindFlow: 'upward' as const } : e));
+    const { api, committed } = setters(held);
+    api.setMindFlowSelected('auto');
+    expect(nodeOf(committed(), 'a')?.mindFlow).toBeUndefined();
+  });
+
+  it('commits nothing with nothing selected', () => {
+    const notify = vi.fn();
+    const commit = vi.fn();
+    const { result } = renderHook(() =>
+      useMindMapSetters({
+        currentSelectionIds: () => new Set(),
+        commit,
+        elements: () => map(),
+        notify,
+      }),
+    );
+    result.current.setMindFlowSelected('tree');
+    expect(commit).not.toHaveBeenCalled();
+  });
+});

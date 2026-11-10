@@ -593,6 +593,8 @@ export * from './mind-connector-route';
 export * from './mind-connector-bend';
 export * from './mind-map';
 export * from './mind-layout';
+export * from './mind-direction';
+export * from './mind-direction-edit';
 export * from './mind-grow';
 export * from './mind-connect';
 export * from './mind-arrange';

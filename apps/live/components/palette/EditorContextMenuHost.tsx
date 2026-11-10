@@ -9,7 +9,8 @@ import {
   DEFAULT_MIND_SPACING,
   isMindNode,
   logoPageAt,
-  mindFlowOf,
+  mindDirectionChoices,
+  MIND_FLOWS,
   mindRootOf,
   mindSpacingOf,
   resolveLayerId,
@@ -284,13 +285,13 @@ export function EditorContextMenuHost() {
         }
       : undefined;
 
-  // The flow the selected node's MAP grows in (docs/specs/009-elements/mind-node.md). Resolved here
-  // because it lives on the tree's root, which the menu cannot walk to from
-  // the node in hand.
+  // What Branching offers on the selected node, and the row ticked (docs/specs/009-elements/mind-node.md "A direction
+  // per node"). Resolved here because a root's and a bubble map's come from the tree's root, which the menu cannot
+  // walk to from the node in hand.
   const menuMindNode = ctxSelectedEl && isMindNode(ctxSelectedEl) ? ctxSelectedEl : null;
-  const menuMindFlow = menuMindNode
-    ? mindFlowOf(activeTab.elements, menuMindNode)
-    : DEFAULT_MIND_FLOW;
+  const menuMindDirections = menuMindNode
+    ? mindDirectionChoices(activeTab.elements, menuMindNode)
+    : { rows: MIND_FLOWS, selected: DEFAULT_MIND_FLOW };
   // Its spacing, from the same root (docs/specs/009-elements/mind-node.md "Spacing").
   const menuMindSpacing = menuMindNode
     ? mindSpacingOf(activeTab.elements, menuMindNode)
@@ -447,7 +448,8 @@ export function EditorContextMenuHost() {
       }
       chartThemeRamp={themeChartPalette(getTheme(activeTab.theme))}
       flowchart={flowchartMenu}
-      mindFlow={menuMindFlow}
+      mindFlow={menuMindDirections.selected}
+      mindFlowRows={menuMindDirections.rows}
       onSetMindFlow={setMindFlowSelected}
       onTidyMindMap={tidyMindMapSelected}
       onEditMindOutline={

@@ -14,6 +14,7 @@
 import { createPinnedArrow, createShape } from './factories';
 import { SHAPE_DEFAULT_SIZE } from './shape-factory';
 import { mindConnectorAnchors, type MindFlow } from './mind-flow';
+import { mindBranchFlowOf, mindNewChildSide } from './mind-direction';
 import {
   growMindSibling,
   isMindNode,
@@ -189,6 +190,10 @@ export function planMindGrowth(
     // Enter on a grouped node adds to its group (docs/specs/009-elements/mind-node.md "Groups").
     ...(kind === 'sibling' && from.mindGroup ? { mindGroup: from.mindGroup } : {}),
   };
+  // Under an any-direction parent the new node holds a side: its sibling's, else the last added child's
+  // (docs/specs/009-elements/mind-node.md "Flows").
+  const side = mindNewChildSide(elements, parent, kind === 'sibling' ? from : undefined);
+  if (side) base.mindFlow = side;
   const root = mindRootOf(elements, parent);
   const flow = mindFlowOf(elements, parent);
 
@@ -210,11 +215,11 @@ export function planMindGrowth(
     reanchored = reanchorMindConnectors(elements, mapIds, flow, layout);
     parentAt = { ...parent, ...layout.get(parent.id)! };
   } else {
-    const at = nextMindChildPosition(elements, parent, size);
+    const at = nextMindChildPosition(elements, parent, size, side);
     node = { ...base, x: at.x, y: at.y };
     moves = toMoves(elements, makeRoom(elements, treeIds(elements, parent), node));
   }
-  const [pa, ca] = mindConnectorAnchors(flow, parentAt, node);
+  const [pa, ca] = mindConnectorAnchors(side ?? mindBranchFlowOf(elements, parent), parentAt, node);
   return {
     node,
     arrow: { ...createPinnedArrow(parent.id, pa, node.id, ca), id: ids.arrow },
@@ -237,13 +242,15 @@ export function relayoutMindMap(
   flow?: MindFlow,
   // Siblings in this order rather than as drawn (an outline save): a rank per node.
   order?: ReadonlyMap<ElementId, number>,
+  // Whether a balanced map deals its branches out afresh (layoutMindTree's default when omitted).
+  deal?: boolean,
 ): MindRelayout | null {
   const node = elements.find((el) => el.id === nodeId);
   if (!node || !isMindNode(node)) return null;
   const root = mindRootOf(elements, node);
   const current = mindFlowOf(elements, root);
   const target = flow ?? current;
-  const layout = layoutMindTree(elements, root.id, target, undefined, current, order);
+  const layout = layoutMindTree(elements, root.id, target, undefined, current, order, deal);
   const own = layoutMoves(elements, layout);
   const mapIds = new Set(layout.keys());
   const pushed = makeRoom(elements, mapIds, movedRects(elements, own));

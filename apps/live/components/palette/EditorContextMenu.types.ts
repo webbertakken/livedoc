@@ -29,7 +29,7 @@ import type {
   Finish,
   Layer,
   LegendItem,
-  MindFlow,
+  MindDirectionChoice,
   MindSpacing,
   AnimationSetId,
   IconAnimation,
@@ -218,11 +218,12 @@ export type EditorContextMenuProps = {
   // Flowchart (docs/specs/009-elements/flowchart.md): present only for an Editor on an unlocked step or
   // chart lane, so the menu shows no Flowchart section otherwise.
   flowchart?: import('@/components/flowchart/FlowchartMenuSections').FlowchartMenuHandlers;
-  // Mind-map flow (docs/specs/009-elements/mind-node.md): the shape the selected node's whole map grows
-  // in. Resolved here rather than in the menu because it is stored on the
-  // tree's ROOT, which the menu has no way to walk to.
-  mindFlow: MindFlow;
-  onSetMindFlow: (flow: MindFlow) => void;
+  // Mind-map direction (docs/specs/009-elements/mind-node.md "A direction per node"): the Branching rows the selected
+  // node offers and the one ticked. Resolved here rather than in the menu: a root's rows and a bubble map's come from
+  // the tree's ROOT, which the menu has no way to walk to.
+  mindFlow: MindDirectionChoice;
+  mindFlowRows: readonly MindDirectionChoice[];
+  onSetMindFlow: (flow: MindDirectionChoice) => void;
   // Lay the selected node's whole map out tidily in its flow (docs/specs/009-elements/mind-node.md "Tidy Map").
   onTidyMindMap: () => void;
   // Edit Outline (docs/specs/009-elements/mind-node.md): the outline of the node's map; absent while it cannot be

@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { stubResizeObserver } from '@/components/sheets/sheet-ui-test-utils';
+import { MIND_FLOWS } from '@livedoc/document';
 import { MindMapMenuSections } from './MindMapMenuSections';
 
 // docs/specs/009-elements/mind-node.md "The Mind Map menu": a Mind Map flyout row holding Outline, Branching and
@@ -20,6 +21,7 @@ function renderMenu(
     sectionProps: () => ({ open, onToggle: vi.fn() }),
     flyoutProps: {},
     flow: 'tree' as const,
+    flowRows: MIND_FLOWS,
     spacing: 'comfortable' as const,
     onSetFlow: vi.fn(),
     onSetSpacing: vi.fn(),
@@ -78,7 +80,7 @@ describe('MindMapMenuSections', () => {
     expect(screen.queryByRole('button', { name: 'Edit Outline' })).toBeNull();
   });
 
-  it('lists the six flows with the current one checked, and picks one', () => {
+  it("lists a root's seven flows with the current one checked, and picks one", () => {
     const p = renderMenu({ flow: 'upward' });
     const group = screen.getByRole('radiogroup', { name: 'Branching' });
     const radios = [...group.querySelectorAll('[role="radio"]')];
@@ -89,12 +91,34 @@ describe('MindMapMenuSections', () => {
       'Downward',
       'Upward',
       'Bubble',
+      'Any direction',
     ]);
     expect(group.querySelector('[aria-checked="true"]')?.getAttribute('data-option')).toBe(
       'upward',
     );
     fireEvent.click(group.querySelector('[data-option="leftward"]')!);
     expect(p.onSetFlow).toHaveBeenCalledWith('leftward');
+  });
+
+  // docs/specs/009-elements/mind-node.md "A direction per node".
+  it("lists a deeper node's directions, Auto first, and picks Auto", () => {
+    const p = renderMenu({
+      flow: 'auto',
+      flowRows: ['auto', 'tree', 'leftward', 'downward', 'upward', 'any'],
+    });
+    const group = screen.getByRole('radiogroup', { name: 'Branching' });
+    const radios = [...group.querySelectorAll('[role="radio"]')];
+    expect(radios.map((r) => r.textContent)).toEqual([
+      'Auto',
+      'Tree',
+      'Leftward',
+      'Downward',
+      'Upward',
+      'Any direction',
+    ]);
+    expect(group.querySelector('[aria-checked="true"]')?.getAttribute('data-option')).toBe('auto');
+    fireEvent.click(group.querySelector('[data-option="any"]')!);
+    expect(p.onSetFlow).toHaveBeenCalledWith('any');
   });
 
   it('lists the four spacings and picks one', () => {
