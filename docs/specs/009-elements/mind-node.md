@@ -224,6 +224,35 @@ face to face clears its siblings, since a ring only grows until its nodes clear 
 routes, it is how the map is drawn, not what is stored, and a bow or bend dragged onto one spoke wins, as any
 look picked on a connector does.
 
+### Halfway between parent and child
+
+A connector between a parent and its child turns **halfway across the gap** between them, in every finish:
+
+- **Curved** (the map's default look) is an **S**: it leaves the parent's face square to it.
+  It bends through the point halfway between its two ends and enters the child's face square to it.
+  Its two halves mirror each other about that point, so it never bulges back along either node's edge.
+- **Angled** sticks straight out of the parent's face to halfway across the gap and turns there.
+  It runs along that line to the child's level, then straight into the child's face, never along a node's edge.
+- The halfway point is the connector's own: a child dragged further out turns halfway to it, not on its siblings'.
+- A child level with its parent is one straight run.
+- Both ends start and end exactly on the faces, out of the fan that spreads arrows sharing an anchor (default).
+  A parent's connectors therefore leave from one point.
+
+It holds only while the two faces face each other across a gap (east to west, west to east, south to north, north
+to south).
+A child tucked back over its parent, or an end re-pinned to another face, is drawn as stored.
+The Professional bracket, an org chart's bracket and a bubble map's straight spokes take the place of the curved S.
+An angled connector turns halfway in every finish.
+
+It is how the map is drawn, not what is stored: the connector keeps its curve or its angle.
+Only a connector without a bow, elbow or bend of its own is drawn this way; one bowed or bent keeps its shape.
+The drawn connector has no bow or elbow handles, since they would edit a shape it is not drawn with (default).
+Dragging its line bends it, outside the Professional bracket, and from then on it keeps that bend (default).
+The bend starts from the line as drawn, so nothing jumps, and its ends stay where they were drawn (default).
+An angled one slides the segment grabbed.
+A curved one bends through the point grabbed, between the S's shoulders a quarter and three quarters along it.
+The canvas and every export draw it the same way.
+
 ### In the Professional finish
 
 The Professional finish ([Finish](../008-canvas/finish.md)) draws a map's connectors right-angled, and neat:
@@ -243,7 +272,7 @@ The Professional finish ([Finish](../008-canvas/finish.md)) draws a map's connec
 This is how the finish draws the map, not what is stored: the connectors stay curved, so switching the tab
 back to Flexible or Sketch shows the curves, and growth under Professional copies the curved look and is
 drawn the same right-angled way. Only a connector still in the map's **default look** (curved, never bowed
-or bent by hand) is routed. One that was given another style (straight, angled), a bow or a bend keeps it,
+or bent by hand) is routed. One that was given another style (straight, or angled as above), a bow or a bend keeps it,
 because a pick on an element wins in every finish; one given its own Flexible finish keeps its curve, which
 is how to keep a curve on a Professional tab. A connector whose faces were re-pinned so they no longer face
 each other is drawn as a plain one-elbow angled line.
