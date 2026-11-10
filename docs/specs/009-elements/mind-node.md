@@ -441,14 +441,17 @@ The tree is the connectors you can see, so **drawing a connector between two min
 one end of a connector onto another node) changes the tree (`connectMindNodes`):
 
 - The node connected **to** becomes a **child** of the node connected **from**, its whole branch with it; its old
-  connector to its old parent goes. A root connected to stops being a root (its flow and spacing go).
+  connector to its old parent goes. A root connected to stops being a root (its spacing goes).
+- The branch keeps the **direction** it grew in, and the parent takes the sides its children now sit on (see
+  "Connecting a branch keeps its direction" below).
 - A node and its own **ancestor** cannot both be the other's parent, so connecting the two (its parent included, from
   either end) **turns the hierarchy over** there: the lower node takes the upper one's place, joined to the upper
   one's parent (or becoming the root, the flow and spacing passing to it), and the upper one hangs under it with the
   rest of its own branch. Connecting a parent to its own child is how a child becomes the parent.
 - After a change, deleting a node takes only the branch that is under it now: an old parent that was turned under its
   child no longer takes the child with it.
-- Moving a connector's end off a node it joined to its parent frees that node: it stands as a root of its own.
+- Moving a connector's end off a node it joined to its parent frees that node: it stands as a root of its own, its
+  branch growing the way it did.
 - The drawn connector becomes the map's connector: dressed in its siblings' look (a curved line with no arrowheads when
   there is none) and re-faced by the flow.
 - Maps that were tidy are laid out again; a hand-arranged map keeps its nodes where they are.
@@ -459,7 +462,7 @@ one end of a connector onto another node) changes the tree (`connectMindNodes`):
 
 The arrangement a keyboard-driven outline wants is a child to the right,
 siblings stacked down it. That is a **tree**, and it is only one of the shapes
-people draw. There are six (`MindFlow` in
+people draw. There are seven (`MindFlow` in
 `packages/document/src/mind-flow.ts`), picked from **Branching** in the **Mind
 Map** menu of a selected node's menu (see "The Mind Map menu"):
 
@@ -477,6 +480,9 @@ Map** menu of a selected node's menu (see "The Mind Map menu"):
 - **Upward**: branches above, siblings spread across. The downward tree
   mirrored, for a goal tree that builds up to its root, the way a pyramid of
   reasons reads.
+- **Any direction**: each branch grows on a side of its own. A child with a direction of its own sits on that side;
+  one without keeps the side it is drawn on. A new child (Tab) goes on the side of the parent's last added child, or
+  to the right when it has none; a sibling (Enter) goes on the side of the node it was pressed on.
 - **Bubble**: branches fanned around the parent. Laid out tidily, the root's
   children share the full circle **equally**, starting from the root's west
   side and running clockwise, so a lone first branch points east. Weighting
@@ -486,16 +492,44 @@ Map** menu of a selected node's menu (see "The Mind Map menu"):
   placement each new child takes the next free angle either side of the
   direction the branch already runs in.
 
-The flow is stored on the map's **root** (`mindFlow`) and read for the whole
-tree: a map half tree and half bubble is not a map anyone meant to draw. So a
-pick on any node sets its root's, and selecting several nodes of one map sets it
-once.
+### A direction per node
 
-Picking a flow **re-lays the map out** in it straight away, around the root
-(which stays put). A flow that only changed where the next node would land
-would leave the map looking exactly the same after the click, so the pick would
-look broken.
-The flow change and the re-layout are one undo step.
+Every node holds the direction its own children grow in (`mindFlow` on the node).
+The root's is the map's flow, Tree when it holds none, so every map already drawn keeps its shape.
+A deeper node holding none is **Auto**: it follows its parent.
+Under a parent with one direction, Auto grows that way; under a balanced root or an any-direction parent, Auto grows
+the way of the side the node sits on.
+So a map can go up from its root while one branch goes left and another right, and each branch's own branches can go
+their own ways again.
+
+Balanced and Bubble are the root's only: a deeper node offers Auto, Tree, Leftward, Downward, Upward and Any
+direction, and a Balanced or Bubble stored on a deeper node reads as Auto.
+A bubble map is laid out round its root as a whole, so its deeper nodes' directions are not read, and Branching on
+any of its nodes acts on the root, as it does on a root (default).
+
+Picking a direction sets the **selected node's** own, on each selected node.
+A child holding the very direction its parent now has drops it, back to Auto; directions held deeper down stay.
+**Auto** on a deeper node drops its own direction, so it follows its parent again.
+Picking **re-lays the map out** straight away, around the root (which stays put), keeping the order siblings are
+drawn in.
+A pick that only changed where the next node would land would leave the map looking exactly the same after the
+click, so the pick would look broken.
+The change and the re-layout are one undo step.
+
+### Connecting a branch keeps its direction
+
+A branch connected under a new parent keeps the direction it grew in, so a branch going up stays going up and one
+going left stays going left:
+
+- The branch sits on the side of its direction when that is Tree, Leftward, Downward or Upward.
+  Otherwise (Any direction, or a Balanced or Bubble root) it sits on the side it is drawn on, and grows in any
+  direction from then on.
+- The parent then takes the sides its children sit on.
+  All on one side: the parent takes that side's direction; on more than one: **Any direction**.
+  A Balanced root keeps Balanced while its children sit only left and right, and a Bubble root stays Bubble.
+- A child whose direction is the same as its parent's goes back to Auto, so a branch that already goes the parent's
+  way holds no direction of its own; one that differs keeps it.
+- Directions held deeper in the branch, and in the parent's other branches, stay as they were.
 
 The **keystrokes do not change**. Tab is still a child and Enter still a
 sibling; the flow decides only where the node lands, and which faces its
@@ -548,7 +582,8 @@ name after it.
   - **Select Branch**: select the node and every node under it, so a branch can
     be restyled, copied or moved as one.
   - **Select Whole Map**: select every node of the map, root included.
-- **Branching**: the six flows, one row each, the map's flow ticked. A row is its
+- **Branching**: on a root, the seven flows; on a deeper node, Auto, Tree, Leftward, Downward, Upward and Any
+  direction. One row each, the node's own direction ticked (Auto when it holds none). A row is its
   glyph and name only: a hint line under each was cut short in a menu column and
   doubled the list's height, and the glyph already draws the arrangement.
 - **Spacing**: Tight, Compact, Comfortable and Wide, the map's spacing ticked.
