@@ -2,7 +2,7 @@
 // named, because "Balanced" and "Bubble" mean nothing until you see the arrangement: each flow glyph is the branch
 // pattern its flow produces, and each spacing glyph three nodes at that spacing's gap.
 import type { ReactNode } from 'react';
-import type { MindFlow, MindSpacing } from '@livedoc/document';
+import type { MindDirectionChoice, MindSpacing } from '@livedoc/document';
 
 const glyph = (children: ReactNode) => (
   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" aria-hidden>
@@ -12,7 +12,15 @@ const glyph = (children: ReactNode) => (
 const LINE = { stroke: 'currentColor', strokeWidth: 1.3 } as const;
 const FAINT = { fill: 'currentColor', opacity: 0.55 } as const;
 
-export const MIND_FLOW_ICON: Record<MindFlow, ReactNode> = {
+export const MIND_FLOW_ICON: Record<MindDirectionChoice, ReactNode> = {
+  // Follows the node above: a node with a dotted branch hanging the same way as the one before it.
+  auto: glyph(
+    <>
+      <rect x="1.5" y="9" width="7" height="6" rx="1.5" fill="currentColor" />
+      <rect x="15" y="9" width="7.5" height="6" rx="1.5" {...FAINT} />
+      <path d="M8.5 12H15" {...LINE} strokeDasharray="1.6 1.6" />
+    </>,
+  ),
   tree: glyph(
     <>
       <rect x="1.5" y="9" width="7" height="6" rx="1.5" fill="currentColor" />
@@ -65,6 +73,16 @@ export const MIND_FLOW_ICON: Record<MindFlow, ReactNode> = {
       <circle cx="17" cy="19.5" r="2.4" {...FAINT} />
       <circle cx="4.5" cy="16" r="2.4" {...FAINT} />
       <path d="M12 8V5.4M15.7 10.2l2.2-1.6M14.2 15.3l1.9 2.4M8.7 13.6l-2.4 1.2" {...LINE} />
+    </>,
+  ),
+  // A branch on three sides: up, left and right, each its own way.
+  any: glyph(
+    <>
+      <rect x="9" y="10" width="6" height="4.5" rx="1.5" fill="currentColor" />
+      <rect x="9" y="1" width="6" height="4" rx="1.5" {...FAINT} />
+      <rect x="0.5" y="10.25" width="5.5" height="4" rx="1.5" {...FAINT} />
+      <rect x="18" y="10.25" width="5.5" height="4" rx="1.5" {...FAINT} />
+      <path d="M12 10V5M9 12.25H6M15 12.25h3" {...LINE} />
     </>,
   ),
 };

@@ -5,11 +5,12 @@ import {
   isMindNode,
   mindRootOf,
   relayoutMindMap,
+  setMindDirection,
   setMindNumbered,
   treeIds,
   ungroupMindNodes,
   type Element,
-  type MindFlow,
+  type MindDirectionChoice,
   type MindSpacing,
 } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
@@ -25,9 +26,8 @@ type MindMapSetterDeps = {
 };
 
 // The Mind Map menu section's actions (docs/specs/009-elements/mind-node.md "Flows" + "Tidy Map"): the
-// shape the selected node's whole map grows in, and laying that map out
-// tidily. Both act on the map's ROOT, so selecting several nodes of one map
-// acts on it once.
+// direction each selected node's branches grow in, and laying a map out tidily (on the map's ROOT, so
+// selecting several nodes of one map acts on it once).
 export function useMindMapSetters({
   currentSelectionIds,
   commit,
@@ -60,21 +60,17 @@ export function useMindMapSetters({
     });
   };
 
-  // Lay each map out (in `flow` when given), with the flow stored on its root,
-  // as one commit, so the change and its re-layout are one undo step.
-  const relayoutSelected = (flow?: MindFlow, ids = currentSelectionIds(), unplace = false) => {
+  // Lay each map out again, as one commit (Tidy Map puts its hand-placed nodes back too).
+  const relayoutSelected = (ids: Set<string>, unplace = false) => {
     if (ids.size === 0) return;
     commit((all) => {
       let next = all;
       for (const rootId of selectedRoots(all, ids)) {
         if (unplace) next = unplaced(next, rootId);
-        const plan = relayoutMindMap(next, rootId, flow);
+        const plan = relayoutMindMap(next, rootId);
         if (!plan) continue;
         next = applyMindMoves(next, plan.moves, plan.reanchored);
-        if (flow) next = next.map((el) => (el.id === rootId ? { ...el, mindFlow: flow } : el));
-        debugLog(
-          `[mind-layout] relayout root=${rootId} flow=${flow ?? 'current'} moves=${plan.moves.length}`,
-        );
+        debugLog(`[mind-layout] relayout root=${rootId} moves=${plan.moves.length}`);
       }
       return next;
     });
@@ -83,8 +79,19 @@ export function useMindMapSetters({
   // Picking a flow re-lays the map out in it straight away: a flow that only
   // changed where the NEXT node would land left the map looking the same after
   // the click, so the pick looked broken.
-  const setMindFlowSelected = (flow: MindFlow) => {
-    relayoutSelected(flow);
+  // Each selected node takes the direction picked (docs/specs/009-elements/mind-node.md "A direction per node"),
+  // its map laid out again, all as one commit, so the change and its re-layout are one undo step.
+  const setMindFlowSelected = (flow: MindDirectionChoice) => {
+    const ids = currentSelectionIds();
+    if (ids.size === 0) return;
+    commit((all) => {
+      let next = all;
+      for (const id of ids) {
+        next = setMindDirection(next, id, flow === 'auto' ? null : flow);
+        debugLog(`[mind-layout] direction node=${id} flow=${flow}`);
+      }
+      return next;
+    });
     track('Element', 'Changed', 'MindFlow');
   };
 
@@ -116,7 +123,7 @@ export function useMindMapSetters({
       const plan = relayoutMindMap(free, rootId);
       return free !== all || (!!plan && (plan.moves.length > 0 || plan.reanchored.length > 0));
     });
-    if (changes) relayoutSelected(undefined, ids, true);
+    if (changes) relayoutSelected(ids, true);
     debugLog(`[mind-layout] tidy changed=${changes}`);
     notify(changes ? 'success' : 'info', changes ? 'Map tidied' : 'Map already tidy');
     track('Element', 'Changed', 'MindTidy');

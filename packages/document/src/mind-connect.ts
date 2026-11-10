@@ -10,7 +10,7 @@
 // a hand-arranged one keeps its nodes where they are, with its connectors re-faced by the flow. Pure.
 
 import { createPinnedArrow, createShape } from './factories';
-import { mindConnectorAnchors, mindGaps, isMindSpacing, type MindFlow } from './mind-flow';
+import { mindConnectorAnchors, mindGaps, isMindSpacing } from './mind-flow';
 import {
   applyMindMoves,
   mindConnectorBetween,
@@ -20,6 +20,8 @@ import {
 } from './mind-grow';
 import { isMindTreeTidy, reanchorMindConnectors } from './mind-layout';
 import { isMindNode, mindFlowOf, mindRootOf, mindSubtree, treeIds } from './mind-map';
+import { isMindSide, mindBranchFlowOf, mindSideOf, type MindSide } from './mind-direction';
+import { keepMindDirections } from './mind-direction-edit';
 import { isMindGroupFrame, settleMindGroups } from './mind-group';
 import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
 
@@ -49,9 +51,10 @@ function isAncestor(elements: Element[], ancestorId: ElementId, node: ShapeEleme
   return false;
 }
 
-// A node's place in the tree, written in one go: its parent, or none (a root, which carries the map's flow and
-// spacing). Moving a root's fields onto whatever takes its place keeps the map's shape.
-// A node that changes place leaves its group and its hand placement behind: both are about its old siblings.
+// A node's place in the tree, written in one go: its parent, or none (a root, which carries the map's spacing).
+// Moving a root's fields onto whatever takes its place keeps the map's shape.
+// A node that changes place leaves its group and its hand placement behind: both are about its old siblings. Its
+// direction stays unless the patch names one: the direction a branch grew in goes with it (mind-direction-edit.ts).
 type Patch = Partial<
   Pick<ShapeElement, 'mindParentId' | 'mindFlow' | 'mindSpacing' | 'mindGroup' | 'mindPlaced'>
 >;
@@ -61,7 +64,8 @@ function patchNode(elements: Element[], id: ElementId, patch: Patch): Element[] 
   return elements.map((el) => {
     if (el.id !== id || !isMindNode(el)) return el;
     const next: ShapeElement = { ...el };
-    for (const field of ROOT_FIELDS) delete next[field];
+    for (const field of ROOT_FIELDS)
+      if (field !== 'mindFlow' || 'mindFlow' in patch) delete next[field];
     return { ...next, ...stripUndefined(patch) };
   });
 }
@@ -163,8 +167,11 @@ function releaseOldPair(elements: Element[], previous: ArrowElement | undefined)
   if (!pair) return elements;
   const [a, b] = pair.map((id) => findNode(elements, id));
   if (!a || !b) return elements;
-  if (b.mindParentId === a.id) return patchNode(elements, b.id, {});
-  if (a.mindParentId === b.id) return patchNode(elements, a.id, {});
+  // The freed node's branch keeps growing the way it did, now as its map's flow.
+  const free = (n: ShapeElement) =>
+    patchNode(elements, n.id, { mindFlow: mindBranchFlowOf(elements, n) });
+  if (b.mindParentId === a.id) return free(b);
+  if (a.mindParentId === b.id) return free(a);
   return elements;
 }
 
@@ -203,6 +210,8 @@ export function connectMindNodes(
       const other = n.id === from.id ? to.id : from.id;
       return n.mindParentId === other;
     })!;
+  // The branches keep the directions they grew in; the parent takes the sides they sit on.
+  els = keepMindDirections(released, els, [from.id, to.id], child.id);
   const parent = findNode(els, child.mindParentId)!;
   const styleFrom = mindConnectorStyleSource(
     els.filter((e) => e.id !== drawn.id),
@@ -219,21 +228,18 @@ export function connectMindNodes(
 
 // One level along the flow, for a map arranged by hand: where a node's new parent goes, its branch shifting out by
 // that much so the parent has room.
-function levelStep(
-  elements: Element[],
-  node: ShapeElement,
-  flow: MindFlow,
-): { dx: number; dy: number } {
+function levelStep(elements: Element[], node: ShapeElement): { dx: number; dy: number } {
   const root = mindRootOf(elements, node);
   const gaps = mindGaps(isMindSpacing(root.mindSpacing) ? root.mindSpacing : undefined);
   const across = node.width + gaps.child;
   const down = node.height + gaps.level;
-  if (flow === 'downward') return { dx: 0, dy: down };
-  if (flow === 'upward') return { dx: 0, dy: -down };
-  if (flow === 'leftward') return { dx: -across, dy: 0 };
-  if (flow === 'balanced')
-    return { dx: node.x + node.width / 2 < root.x + root.width / 2 ? -across : across, dy: 0 };
-  if (flow === 'bubble') {
+  // Along the side the node sits on (a root, along its map's flow, as a branch would).
+  const side: MindSide | 'bubble' =
+    mindSideOf(elements, node) ?? (node.mindParentId ? 'bubble' : rootSide(elements, node));
+  if (side === 'downward') return { dx: 0, dy: down };
+  if (side === 'upward') return { dx: 0, dy: -down };
+  if (side === 'leftward') return { dx: -across, dy: 0 };
+  if (side === 'bubble') {
     const parent = findNode(elements, node.mindParentId);
     if (!parent) return { dx: across, dy: 0 };
     const vx = node.x + node.width / 2 - (parent.x + parent.width / 2);
@@ -243,6 +249,13 @@ function levelStep(
     return { dx: Math.round((vx / len) * reach), dy: Math.round((vy / len) * reach) };
   }
   return { dx: across, dy: 0 };
+}
+
+// A root steps along its own map's flow: one way for a one-direction map, and right otherwise.
+function rootSide(elements: Element[], root: ShapeElement): MindSide | 'bubble' {
+  const flow = mindFlowOf(elements, root);
+  if (flow === 'bubble') return 'bubble';
+  return flow === 'leftward' || flow === 'downward' || flow === 'upward' ? flow : 'tree';
 }
 
 /**
@@ -259,8 +272,8 @@ export function insertMindParent(
 ): Element[] | null {
   const node = findNode(elements, nodeId);
   if (!node) return null;
-  const flow = mindFlowOf(elements, node);
   const tidy = tidyOf(elements, node);
+  const side = mindSideOf(elements, node);
   const parent = findNode(elements, node.mindParentId);
   const oldLink = parent ? mindConnectorBetween(elements, parent.id, node.id) : undefined;
 
@@ -273,29 +286,39 @@ export function insertMindParent(
   const added = { ...dress.node(base, node), id: ids.node, x: node.x, y: node.y };
   // It takes the node's place: its parent (or the root's flow and spacing), its group and its hand placement.
   const place = stripUndefined({ mindGroup: node.mindGroup, mindPlaced: node.mindPlaced });
+  // Under an any-direction parent it holds the node's side, as every child there does.
+  const held =
+    parent && mindBranchFlowOf(elements, parent) === 'any' && side ? { mindFlow: side } : {};
   const inserted: ShapeElement = parent
-    ? { ...added, ...place, mindParentId: parent.id }
+    ? { ...added, ...place, ...held, mindParentId: parent.id }
     : { ...added, ...place, ...stripUndefined(rootFieldsOf(node)) };
 
   let els: Element[] = [...elements, inserted];
   if (parent && oldLink) els = retargetConnector(els, parent.id, node.id, node.id, inserted.id);
   else if (parent) {
-    const [pa, ca] = mindConnectorAnchors(flow, parent, inserted);
+    const [pa, ca] = mindConnectorAnchors(side ?? 'bubble', parent, inserted);
     els.push(
       dress.connector({ ...createPinnedArrow(parent.id, pa, inserted.id, ca), id: ids.into }, null),
     );
   }
-  els = patchNode(els, node.id, { mindParentId: inserted.id });
+  // The node keeps the direction it grows in; one it would follow from its new parent anyway it drops. A root's map
+  // flow passed to the new root with its other fields; any direction stays its own, so its branches keep their sides.
+  const keep = parent ? node.mindFlow : node.mindFlow === 'any' ? 'any' : undefined;
+  els = patchNode(els, node.id, { mindParentId: inserted.id, mindFlow: keep });
+  const under = findNode(els, node.id)!;
+  const above = mindBranchFlowOf(els, findNode(els, inserted.id)!);
+  if (isMindSide(above) && under.mindFlow === above)
+    els = patchNode(els, node.id, { mindParentId: inserted.id, mindFlow: undefined });
 
   if (!tidy) {
     // By hand: the node and its branch step out one level, so the new parent stands where the node stood.
-    const step = levelStep(elements, node, flow);
+    const step = levelStep(elements, node);
     const branch = [node, ...mindSubtree(elements, node.id)];
     const moves: MindMove[] = branch.map((n) => ({ id: n.id, x: n.x + step.dx, y: n.y + step.dy }));
     els = applyMindMoves(els, moves);
   }
   const moved = findNode(els, node.id)!;
-  const [pa, ca] = mindConnectorAnchors(flow, inserted, moved);
+  const [pa, ca] = mindConnectorAnchors(mindSideOf(els, moved) ?? 'bubble', inserted, moved);
   const style = oldLink ?? mindConnectorStyleSource(elements, node);
   els.push(
     dress.connector(

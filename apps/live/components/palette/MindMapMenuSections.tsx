@@ -6,11 +6,10 @@
 // MAP, through its root.
 import type { ComponentProps } from 'react';
 import {
-  MIND_FLOWS,
-  MIND_FLOW_LABEL,
+  MIND_DIRECTION_LABEL,
   MIND_SPACINGS,
   MIND_SPACING_LABEL,
-  type MindFlow,
+  type MindDirectionChoice,
   type MindSpacing,
 } from '@livedoc/document';
 import { lucideGlyph } from '@livedoc/ui';
@@ -31,6 +30,7 @@ type SectionProps = { open: boolean; onToggle: () => void; flush?: boolean };
 
 export function MindMapMenuSections({
   flow,
+  flowRows,
   spacing,
   onSetFlow,
   onSetSpacing,
@@ -41,9 +41,10 @@ export function MindMapMenuSections({
   sectionProps,
   flyoutProps,
 }: {
-  flow: MindFlow;
+  flow: MindDirectionChoice;
+  flowRows: readonly MindDirectionChoice[];
   spacing: MindSpacing;
-  onSetFlow: (flow: MindFlow) => void;
+  onSetFlow: (flow: MindDirectionChoice) => void;
   onSetSpacing: (spacing: MindSpacing) => void;
   onTidy: () => void;
   // Absent while the outline cannot be edited (a locked tab, edits blocked).
@@ -93,12 +94,12 @@ export function MindMapMenuSections({
           label="Branching"
           className="mx-3 my-1.5"
           selected={flow}
-          rows={MIND_FLOWS.map((f) => ({
+          rows={flowRows.map((f) => ({
             id: f,
-            label: MIND_FLOW_LABEL[f],
+            label: MIND_DIRECTION_LABEL[f],
             icon: MIND_FLOW_ICON[f],
           }))}
-          onPick={(id) => onSetFlow(id as MindFlow)}
+          onPick={(id) => onSetFlow(id as MindDirectionChoice)}
         />
       </MenuAccordionSection>
       <MenuAccordionSection

@@ -95,10 +95,10 @@ To lay a whole map out again, every node you placed yourself included, right-cli
 
 ## The Mind Map menu
 
-Right-click any node of a map, open **Tools**, then **Mind Map**. It has three groups, and everything in them acts on the whole map:
+Right-click any node of a map, open **Tools**, then **Mind Map**. It has three groups. Outline and Spacing act on the whole map; Branching acts on the node you picked it on:
 
 - **Outline**: **Edit Outline** (see below), **Tidy Map**, **Select Branch** (the node and everything under it, with the lines between) and **Select Whole Map**.
-- **Branching**: the shape the map takes.
+- **Branching**: which way the node's branches grow.
 - **Spacing**: how far apart its nodes sit.
 
 <Figure caption="Tools, then Mind Map: Outline, Branching and Spacing, each a list of choices.">
@@ -113,8 +113,11 @@ Right-click any node of a map, open **Tools**, then **Mind Map**. It has three g
 - **Downward**: branches below, siblings spread across, like an org chart.
 - **Upward**: branches above, siblings spread across. Downward mirrored, for a map that builds up to its root.
 - **Bubble**: branches fanned around the parent, joined by straight spokes so no line passes behind a neighbour.
+- **Any direction**: each branch grows on a side of its own, so one can go up, another left and another right. A new node goes on the same side as the last one added.
 
-Picking one re-arranges the whole map straight away, around the root, which stays put. It is one step, so **Undo** puts the old arrangement back. Tab and Enter mean the same thing in every flow; the flow only decides where the new node lands.
+Every node has its own choice, so a map can go up from its root while one branch below it goes left. On a node below the root, **Auto** (the default) follows the node above it; **Balanced** and **Bubble** are for the root only. Picking a choice re-arranges the map straight away, around the root, which stays put. It is one step, so **Undo** puts the old arrangement back. Tab and Enter mean the same thing in every flow; the flow only decides where the new node lands.
+
+When you connect a branch to a new parent, it keeps the way it grew: a branch going up still goes up. If the parent's branches now sit on more than one side, the parent switches to **Any direction**.
 
 ## Spacing
 

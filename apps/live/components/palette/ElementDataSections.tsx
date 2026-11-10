@@ -574,10 +574,11 @@ export function ElementDataSections({
             />
           ) : null}
           {/* Mind map (docs/specs/009-elements/mind-node.md "The Mind Map menu"): a flyout of Outline, Branching and Spacing.
-            Branching and Spacing set the ROOT's, so one pick re-shapes the whole map rather than half of it. */}
+            Branching sets the node's own direction (a root's is the map's); Spacing sets the ROOT's. */}
           {isMindNode ? (
             <MindMapMenuSections
               flow={props.mindFlow}
+              flowRows={props.mindFlowRows}
               spacing={props.mindSpacing}
               onSetFlow={props.onSetMindFlow}
               onSetSpacing={props.onSetMindSpacing}

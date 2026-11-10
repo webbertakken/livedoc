@@ -8278,7 +8278,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     type: 'string',
   },
   MindFlow: {
-    enum: ['tree', 'leftward', 'balanced', 'downward', 'upward', 'bubble'],
+    enum: ['tree', 'leftward', 'balanced', 'downward', 'upward', 'bubble', 'any'],
     type: 'string',
   },
   MindLook: {

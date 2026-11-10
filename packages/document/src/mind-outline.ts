@@ -16,6 +16,7 @@ import {
   relayoutMindMap,
 } from './mind-grow';
 import { isMindNode, mindFlowOf, mindRootOf } from './mind-map';
+import { isMindSide, mindNewChildSide } from './mind-direction';
 import { mindNodesInOrder } from './mind-layout';
 import { mindOutlineNodeText, type MindOutlineNode } from './mind-outline-text';
 import {
@@ -237,9 +238,18 @@ export function applyMindOutline(
           : undefined;
         if (old) next = next.filter((el) => el.id !== old.id);
       }
+      // Moved under an any-direction parent, a node holding no side takes the one a new child would.
+      const side = moved && !isMindSide(existing.mindFlow) ? mindNewChildSide(next, parent) : null;
       if (Object.keys(text).length || moved)
         next = next.map((el) =>
-          el.id === existing.id ? ({ ...el, ...text, mindParentId: parent.id } as Element) : el,
+          el.id === existing.id
+            ? ({
+                ...el,
+                ...text,
+                ...(side ? { mindFlow: side } : {}),
+                mindParentId: parent.id,
+              } as Element)
+            : el,
         );
       if (moved) connectTo(parent, byId(existing.id)!);
       return;
@@ -258,6 +268,9 @@ export function applyMindOutline(
       richText: mindRichTextFor(dressed, line.text, line.marks),
       mindParentId: parent.id,
     };
+    // Under an any-direction parent a new node holds a side, as one grown by Tab does.
+    const side = mindNewChildSide(next, parent);
+    if (side) node.mindFlow = side;
     next = [...next, node];
     ids.push(node.id);
     connectTo(parent, node, look);

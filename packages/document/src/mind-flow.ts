@@ -8,8 +8,9 @@
 // classic hand-drawn mind map. The keystrokes are the same in all of them, so
 // the flow changes where a node lands and nothing else.
 //
-// The flow lives on the map's ROOT node and applies to the whole tree: a map
-// half tree and half bubble is not a map anyone meant to draw.
+// The root's flow is the map's. Every deeper node may hold a direction of its own for its children (Auto when it
+// holds none), so one branch can go up while another goes left (mind-direction.ts). Balanced and Bubble are the
+// root's only: a map half tree and half bubble is not a map anyone meant to draw.
 //
 // Pure geometry. It takes the parent, the size of the node to place, and the
 // branch as it already stands, and returns a position plus the axis a
@@ -19,7 +20,7 @@
 import { bestAnchorTowards } from './anchor-choice';
 import type { Anchor, ShapeElement } from './index';
 
-export type MindFlow = 'tree' | 'leftward' | 'balanced' | 'downward' | 'upward' | 'bubble';
+export type MindFlow = 'tree' | 'leftward' | 'balanced' | 'downward' | 'upward' | 'bubble' | 'any';
 
 /** In the order the Branching list shows them: each mirror next to its original. */
 export const MIND_FLOWS: readonly MindFlow[] = [
@@ -29,6 +30,7 @@ export const MIND_FLOWS: readonly MindFlow[] = [
   'downward',
   'upward',
   'bubble',
+  'any',
 ];
 
 /** What the element grew as before flows existed, so every map already drawn
@@ -43,6 +45,7 @@ export const MIND_FLOW_LABEL: Record<MindFlow, string> = {
   downward: 'Downward',
   upward: 'Upward',
   bubble: 'Bubble',
+  any: 'Any direction',
 };
 
 /** Whether a flow's levels run vertically (its siblings spread across a row). */
@@ -100,7 +103,7 @@ export function isMindSpacing(value: string | undefined): value is MindSpacing {
 export type MindGaps = { child: number; sibling: number; level: number };
 
 export function mindGaps(spacing: MindSpacing = DEFAULT_MIND_SPACING): MindGaps {
-  const k = MIND_SPACING_SCALE[spacing] ?? 1;
+  const k = MIND_SPACING_SCALE[spacing];
   return {
     child: Math.round(MIND_CHILD_GAP_X * k),
     sibling: Math.round(MIND_SIBLING_GAP_Y * k),

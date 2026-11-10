@@ -16,154 +16,41 @@
 
 import {
   isMindSpacing,
-  isVerticalMindFlow,
   mindConnectorAnchors,
   mindGaps,
   type MindFlow,
   type MindGaps,
 } from './mind-flow';
-import { isMindNode, mindChildren, mindFlowOf, mindRootOf, mindSubtree } from './mind-map';
+import { mindFlowOn, mindSideOf, mindStackedSideUnder, type MindSide } from './mind-direction';
+import { isMindNode, mindFlowOf, mindRootOf, mindSubtree } from './mind-map';
+import { stackMindBranch, type StackContext } from './mind-layout-stack';
+import {
+  MIND_GROUP_PADDING,
+  MIND_GROUP_TITLE_BAND,
+  buildTree,
+  centre,
+  isPlaced,
+  kidsOf,
+  type MindLayout,
+  type MindOrderHint,
+  type MindPoint,
+  type Tree,
+} from './mind-layout-tree';
 import { unionRects } from './geometry-primitives';
 import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
 
-/** How far a group's tinted box reaches past its members, and so the extra room a group takes among its siblings
- *  (docs/specs/009-elements/mind-node.md "Groups"). The title is inset as far: it is the `md` padding preset, the
- *  frame's own (`PADDING_PX.md`, pinned by mind-group.test.ts). */
-export const MIND_GROUP_PADDING = 14;
+export { MIND_GROUP_PADDING, MIND_GROUP_TITLE_BAND, type MindLayout, type MindPoint };
 /** A group box's corner radius. */
 export const MIND_GROUP_RADIUS = 14;
 /** A group title's text size, in px. */
 export const MIND_GROUP_TITLE_PX = 14;
-/** The band at a group's top its title sits in, above the padding: the title's line (14 px at the label line height,
- *  1.25, so 18 px) and the padding again under it, so the title is as far from the members as from the frame's edge
- *  (docs/specs/009-elements/mind-node.md "Groups"). */
-export const MIND_GROUP_TITLE_BAND = 32;
-
-// A node placed by hand keeps its own position (docs/specs/009-elements/mind-node.md "A tidy map stays tidy").
-const isPlaced = (n: ShapeElement) => n.mindPlaced === true && !!n.mindParentId;
-const groupOf = (n: ShapeElement) => n.mindGroup ?? null;
 
 /** How far a node may sit from its laid-out slot and still count as tidy.
  *  Rounding in the layout itself is the only drift a tidy map ever has. */
 const MIND_TIDY_TOLERANCE = 1;
 
-/** Where a node that is not on the canvas yet slots into its siblings: right
- *  after `after` (Enter inserts the next line), else at the end (Tab). */
-type MindOrderHint = { id: ElementId; after?: ElementId };
-
-export type MindPoint = { x: number; y: number };
-/** Top-left position per node of the map, root included. */
-export type MindLayout = Map<ElementId, MindPoint>;
-
-const centre = (n: ShapeElement): MindPoint => ({ x: n.x + n.width / 2, y: n.y + n.height / 2 });
 const TAU = Math.PI * 2;
 const wrap = (a: number) => ((a % TAU) + TAU) % TAU;
-
-// The map as a tree of nodes, children in their drawn order. Cycle-guarded
-// like the rest of the mind-map walkers: `mindParentId` is stored data.
-type Tree = Map<ElementId, ShapeElement[]>;
-
-function buildTree(
-  elements: Element[],
-  root: ShapeElement,
-  orderKey: (node: ShapeElement, parent: ShapeElement) => number,
-  hint?: MindOrderHint,
-): Tree {
-  const tree: Tree = new Map();
-  const seen = new Set<ElementId>([root.id]);
-  const frontier = [root];
-  while (frontier.length > 0) {
-    const parent = frontier.shift()!;
-    const kids = mindChildren(elements, parent.id).filter((k) => !seen.has(k.id));
-    for (const k of kids) seen.add(k.id);
-    // The hinted node has no meaningful position yet, so it is kept out of
-    // the positional sort and inserted where the hint says.
-    const hinted = hint ? kids.find((k) => k.id === hint.id) : undefined;
-    const keyed = kids
-      .filter((k) => k !== hinted)
-      .map((k, i) => ({ k, key: orderKey(k, parent), i }));
-    // A group sits where its first member is, its members together in their own order.
-    const groupKey = new Map<string, number>();
-    for (const e of keyed) {
-      const g = groupOf(e.k);
-      if (g !== null) groupKey.set(g, Math.min(groupKey.get(g) ?? Infinity, e.key));
-    }
-    const at = (e: (typeof keyed)[number]) => {
-      const g = groupOf(e.k);
-      return g === null ? e.key : groupKey.get(g)!;
-    };
-    const placed = keyed
-      // Stable on ties (document order), so nodes stacked on one spot still
-      // come out in a deterministic order.
-      .sort((a, b) => at(a) - at(b) || a.key - b.key || a.i - b.i)
-      .map((e) => e.k);
-    if (hinted) {
-      const after = hint?.after ? placed.findIndex((k) => k.id === hint.after) : -1;
-      placed.splice(after === -1 ? placed.length : after + 1, 0, hinted);
-    }
-    tree.set(parent.id, placed);
-    frontier.push(...placed);
-  }
-  return tree;
-}
-
-const kidsOf = (tree: Tree, id: ElementId) => tree.get(id) ?? [];
-
-// --- Tree, balanced, downward: stacked layouts ------------------------------
-
-// The stacked flows are one layout with two parameters: which axis the levels
-// run along (x for a tree, y for a downward map) and which way (a leftward or
-// upward map, and a balanced map's left side, run backwards).
-type Axis = 'x' | 'y';
-const cross = (axis: Axis): Axis => (axis === 'x' ? 'y' : 'x');
-const extent = (n: ShapeElement, axis: Axis) => (axis === 'x' ? n.width : n.height);
-
-function stackLayout(
-  tree: Tree,
-  out: MindLayout,
-  parent: ShapeElement,
-  kids: readonly ShapeElement[],
-  axis: Axis,
-  dir: 1 | -1,
-  gaps: MindGaps,
-) {
-  const across = cross(axis);
-  const gap = axis === 'x' ? gaps.child : gaps.level;
-  // A group's room before its first member and after its last: the padding, and before, where the siblings stack
-  // down, the title's band too (a group's title is at its top).
-  const titled = across === 'y' ? MIND_GROUP_TITLE_BAND : 0;
-  const pad = (n: ShapeElement | undefined) => (n && groupOf(n) !== null ? MIND_GROUP_PADDING : 0);
-  const lead = (n: ShapeElement | undefined) => (pad(n) > 0 ? pad(n) + titled : 0);
-  // The room between two siblings: the gap, and a group's room where a group begins or ends.
-  const between = (a: ShapeElement, b: ShapeElement) =>
-    gaps.sibling + (groupOf(a) !== null && groupOf(a) === groupOf(b) ? 0 : pad(a) + lead(b));
-  const flowing = (k: readonly ShapeElement[]) => k.filter((c) => !isPlaced(c));
-  // The room a row of siblings needs across the stacking axis, groups' padding included.
-  const blockOf = (k: readonly ShapeElement[]): number =>
-    k.reduce((s, c, i) => s + span(c) + (i > 0 ? between(k[i - 1]!, c) : 0), 0) +
-    lead(k[0]) +
-    pad(k[k.length - 1]);
-  // The room a whole subtree needs across the stacking axis: its own node, or
-  // its children's blocks stacked, whichever is bigger. A node placed by hand takes none.
-  const span = (n: ShapeElement): number =>
-    Math.max(extent(n, across), blockOf(flowing(kidsOf(tree, n.id))));
-  const place = (p: ShapeElement, children: readonly ShapeElement[]) => {
-    const at = out.get(p.id)!;
-    const row = flowing(children);
-    let cursor = at[across] + extent(p, across) / 2 - blockOf(row) / 2 + lead(row[0]);
-    row.forEach((c, i) => {
-      if (i > 0) cursor += between(row[i - 1]!, c);
-      const s = span(c);
-      const main = dir === 1 ? at[axis] + extent(p, axis) + gap : at[axis] - gap - extent(c, axis);
-      const side = cursor + s / 2 - extent(c, across) / 2;
-      out.set(c.id, axis === 'x' ? { x: main, y: side } : { x: side, y: main });
-      cursor += s;
-    });
-    for (const c of children) if (isPlaced(c)) out.set(c.id, { x: c.x, y: c.y });
-    for (const c of children) place(c, kidsOf(tree, c.id));
-  };
-  place(parent, kids);
-}
 
 // --- Bubble: radial wedges --------------------------------------------------
 
@@ -232,17 +119,26 @@ function bubbleLayout(tree: Tree, out: MindLayout, root: ShapeElement, gaps: Min
 // --- Public API ---------------------------------------------------------------
 
 /**
- * The sibling-order key for `node` under `parent`, read from where it is drawn.
- * Stacked flows: along the stacking axis. Bubble: clockwise around the ROOT
- * from the seam opposite the parent's own direction, which is outside the
- * parent's wedge, so the order a layout produces reads back unchanged.
+ * The sibling-order key for `node` under `parent`, read from where it is drawn, the map read as growing `flow`
+ * from its root. Stacked: along the axis its side stacks across (across a row above or below, down a column
+ * either side). Bubble: clockwise around the ROOT from the seam opposite the parent's own direction, which is
+ * outside the parent's wedge, so the order a layout produces reads back unchanged. Asked parent first, as
+ * `buildTree` does, so each node's direction is known by the time its children are keyed.
  */
 function orderKeyFor(
   flow: MindFlow,
   root: ShapeElement,
 ): (node: ShapeElement, parent: ShapeElement) => number {
-  if (isVerticalMindFlow(flow)) return (n) => centre(n).x;
-  if (flow !== 'bubble') return (n) => centre(n).y;
+  if (flow !== 'bubble') {
+    const flows = new Map<ElementId, MindFlow>([[root.id, flow]]);
+    return (n, parent) => {
+      // Asked parent first, so the parent's direction is known; never Bubble here.
+      const parentFlow = flows.get(parent.id)! as Exclude<MindFlow, 'bubble'>;
+      const side = mindStackedSideUnder(parentFlow, parent, n);
+      flows.set(n.id, mindFlowOn(n, side));
+      return side === 'downward' || side === 'upward' ? centre(n).x : centre(n).y;
+    };
+  }
   const o = centre(root);
   const angle = (n: ShapeElement) => Math.atan2(centre(n).y - o.y, centre(n).x - o.x);
   return (n, parent) => {
@@ -293,6 +189,9 @@ export function layoutMindTree(
   // An order to lay siblings out in instead of the drawn one (an outline save, mind-outline.ts):
   // a rank per node, lower first. A balanced map then deals its branches out afresh.
   order?: ReadonlyMap<ElementId, number>,
+  // Whether a balanced map deals its branches out afresh rather than keeping the sides they are drawn on; by
+  // default when an order is given or the map was drawn in another flow.
+  deal: boolean = !!order || orderFlow !== 'balanced',
 ): MindLayout {
   const out: MindLayout = new Map();
   const root = elements.find((el) => el.id === rootId);
@@ -304,28 +203,19 @@ export function layoutMindTree(
   out.set(root.id, { x: root.x, y: root.y });
   // The map's spacing lives on its root, like its flow (docs/specs/009-elements/mind-node.md "Spacing").
   const gaps = mindGaps(isMindSpacing(root.mindSpacing) ? root.mindSpacing : undefined);
-  const kids = kidsOf(tree, root.id);
   if (flow === 'bubble') bubbleLayout(tree, out, root, gaps);
-  else if (flow === 'downward') stackLayout(tree, out, root, kids, 'y', 1, gaps);
-  else if (flow === 'upward') stackLayout(tree, out, root, kids, 'y', -1, gaps);
-  else if (flow === 'tree') stackLayout(tree, out, root, kids, 'x', 1, gaps);
-  else if (flow === 'leftward') stackLayout(tree, out, root, kids, 'x', -1, gaps);
   else {
-    const { left, right } = balancedSides(
+    // Every branch on the side its direction puts it (docs/specs/009-elements/mind-node.md "A direction per node").
+    const ctx: StackContext = {
       tree,
-      root,
-      hint,
-      !!order || orderFlow !== 'balanced',
       gaps,
-    );
-    stackLayout(tree, out, root, right, 'x', 1, gaps);
-    stackLayout(tree, out, root, left, 'x', -1, gaps);
-    // A branch placed by hand keeps its place and grows on the side it stands on.
-    for (const k of kids.filter(isPlaced)) {
-      out.set(k.id, { x: k.x, y: k.y });
-      const side = centre(k).x < centre(root).x ? -1 : 1;
-      stackLayout(tree, out, k, kidsOf(tree, k.id), 'x', side, gaps);
-    }
+      // Never a bubble map here, so every child has a side.
+      sideOf: (parent, parentFlow, child) =>
+        mindStackedSideUnder(parentFlow as Exclude<MindFlow, 'bubble'>, parent, child),
+    };
+    // A balanced root deals its branches to its two sides; one placed by hand grows on the side it stands on.
+    const sides = flow === 'balanced' ? balancedSides(tree, root, hint, deal, gaps) : undefined;
+    stackMindBranch(ctx, out, root, flow, sides);
   }
   for (const [id, p] of out) out.set(id, { x: Math.round(p.x), y: Math.round(p.y) });
   return out;
@@ -340,7 +230,7 @@ function balancedSides(
   hint: MindOrderHint | undefined,
   fresh: boolean,
   gaps: MindGaps,
-): { left: ShapeElement[]; right: ShapeElement[] } {
+): Map<ElementId, MindSide> {
   const kids = kidsOf(tree, root.id);
   const rootX = centre(root).x;
   // Less on the left, by the height each branch's whole subtree takes, sends a branch left; a tie goes right,
@@ -370,7 +260,10 @@ function balancedSides(
     const at = after ? side.indexOf(after) + 1 : side.length;
     side.splice(at, 0, hinted);
   }
-  return { left, right };
+  const sides = new Map<ElementId, MindSide>();
+  for (const k of left) sides.set(k.id, 'leftward');
+  for (const k of right) sides.set(k.id, 'tree');
+  return sides;
 }
 
 /** Whether every node of the map already sits where the layout puts it. */
@@ -400,8 +293,18 @@ export function reanchorMindConnectors(
     const p = at.get(n.id);
     return p ? { ...n, ...p } : n;
   };
+  // The board as it is about to be, its root growing `flow`: each child's side is read from there.
+  let board = elements.map((el) => (isMindNode(el) && nodeIds.has(el.id) ? moved(el) : el));
+  const first = board.find((el): el is ShapeElement => isMindNode(el) && nodeIds.has(el.id));
+  if (first) {
+    const root = mindRootOf(board, first);
+    board = board.map((el) => (el.id === root.id ? { ...root, mindFlow: flow } : el));
+  }
   const nodes = new Map<ElementId, ShapeElement>();
-  for (const el of elements) if (isMindNode(el) && nodeIds.has(el.id)) nodes.set(el.id, moved(el));
+  for (const el of board) if (isMindNode(el) && nodeIds.has(el.id)) nodes.set(el.id, el);
+  // The faces follow the side the child sits on (a fanned bubble map's, whichever way it went).
+  const anchorsOf = (parent: ShapeElement, child: ShapeElement) =>
+    mindConnectorAnchors(mindSideOf(board, child) ?? 'bubble', parent, child);
   const out: ArrowElement[] = [];
   for (const el of elements) {
     if (el.type !== 'arrow' || el.from.kind !== 'pinned' || el.to.kind !== 'pinned') continue;
@@ -412,9 +315,7 @@ export function reanchorMindConnectors(
     // person who drew it started from.
     const aIsParent = b.mindParentId === a.id;
     if (!aIsParent && a.mindParentId !== b.id) continue;
-    const [pa, ca] = aIsParent
-      ? mindConnectorAnchors(flow, a, b)
-      : mindConnectorAnchors(flow, b, a);
+    const [pa, ca] = aIsParent ? anchorsOf(a, b) : anchorsOf(b, a);
     const [fromA, toA] = aIsParent ? [pa, ca] : [ca, pa];
     if (el.from.anchor === fromA && el.to.anchor === toA) continue;
     out.push({ ...el, from: { ...el.from, anchor: fromA }, to: { ...el.to, anchor: toA } });

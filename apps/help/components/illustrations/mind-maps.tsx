@@ -174,7 +174,7 @@ export function MindMapGrowth() {
 }
 
 /** A tiny map in one flow: the root (solid) and its branches, as the flow tile draws it. */
-type Flow = 'tree' | 'leftward' | 'balanced' | 'downward' | 'upward' | 'bubble';
+type Flow = 'tree' | 'leftward' | 'balanced' | 'downward' | 'upward' | 'bubble' | 'any';
 
 function FlowGlyph({ flow }: { flow: Flow }) {
   // The mirrored flows are their originals flipped, as the menu draws them.
@@ -239,6 +239,17 @@ function FlowGlyph({ flow }: { flow: Flow }) {
           ))}
         </g>
       );
+    case 'any':
+      // A branch on three sides: up, left and right.
+      return (
+        <g>
+          <path d="M0 -3 V-6 M-5 0 H-8 M5 0 H8" {...st} />
+          <rect x={-5} y={-3} width={10} height={6} rx={1.5} className={root} />
+          <rect x={-4.5} y={-12} width={9} height={6} rx={1.5} className={leaf} />
+          <rect x={-17} y={-2.5} width={9} height={5} rx={1.5} className={leaf} />
+          <rect x={8} y={-2.5} width={9} height={5} rx={1.5} className={leaf} />
+        </g>
+      );
     case 'bubble':
       return (
         <g>
@@ -285,6 +296,7 @@ export function MindMapFlows() {
           ['downward', 'Downward'],
           ['upward', 'Upward'],
           ['bubble', 'Bubble'],
+          ['any', 'Any direction'],
         ] as const
       ).map(([id, label]) => ({
         label,
