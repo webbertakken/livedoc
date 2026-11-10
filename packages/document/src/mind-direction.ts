@@ -146,11 +146,11 @@ export function mindNewChildSide(
   after?: ShapeElement,
 ): MindSide | null {
   if (mindBranchFlowOf(elements, parent) !== 'any') return null;
-  const last =
-    after ??
-    elements.findLast(
-      (el): el is ShapeElement =>
-        el.type === 'shape' && el.shape === 'mind-node' && el.mindParentId === parent.id,
-    );
+  // The last added: the latest in document order (a plain loop: the packages compiling this target ES2022).
+  let last = after;
+  for (let i = elements.length - 1; !last && i >= 0; i--) {
+    const el = elements[i]!;
+    if (el.type === 'shape' && el.shape === 'mind-node' && el.mindParentId === parent.id) last = el;
+  }
   return last ? mindStackedSideUnder('any', parent, last) : 'tree';
 }
