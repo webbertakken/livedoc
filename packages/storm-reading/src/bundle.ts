@@ -12,7 +12,8 @@ export const EXPORT_MANIFEST_SCHEMA = 'livedoc.storm-export/1';
 export type ExportManifest = {
   schema: typeof EXPORT_MANIFEST_SCHEMA;
   board: { documentId: string; tabId: string; name: string; rev: number | null };
-  language: DomainLanguage;
+  // Null when the agent identifies it from the repository it works in (the MCP without `language`).
+  language: DomainLanguage | null;
   // Why that language: a project file, an earlier export, or the caller's choice.
   because: string;
   livedoc: string;
@@ -24,7 +25,8 @@ export type BundleInput = {
   reading: StormReading;
   // The earlier export's reading, when there is one.
   previous: StormReading | null;
-  language: DomainLanguage;
+  // Null when the agent identifies it from the repository it works in (the MCP without `language`).
+  language: DomainLanguage | null;
   because: string;
   board: ExportManifest['board'];
   livedoc: string;

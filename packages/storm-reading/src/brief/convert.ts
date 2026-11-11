@@ -6,7 +6,7 @@
 // Tune, Fowler, Hohpe and Woolf): the wall's grammar already names the building blocks, so the brief maps each note kind
 // to one of four function shapes and leaves the judgement (names, boundaries, fields) to the model.
 
-import { LANGUAGE_IDIOMS, type DomainLanguage } from './languages';
+import { DOMAIN_EXPORT_LANGUAGES, LANGUAGE_IDIOMS, type DomainLanguage } from './languages';
 
 // Bumped when the brief changes in a way an earlier export should know about.
 export const BRIEF_VERSION = 1;
@@ -131,9 +131,21 @@ The spec and the code are older than this export, and people have changed them s
 - Report what you added, renamed, removed and left as a question, in a few lines.
 `;
 
-export function renderBrief(language: DomainLanguage): string {
-  return BRIEF.replaceAll('{{language}}', LANGUAGE_IDIOMS[language].name).replace(
+const idiomsOf = (language: DomainLanguage) =>
+  `### ${LANGUAGE_IDIOMS[language].name}\n\n${LANGUAGE_IDIOMS[language].idioms.map((l) => `- ${l}`).join('\n')}`;
+
+// The brief for one language; with none, the agent identifies it from the repository and reads that section.
+export function renderBrief(language: DomainLanguage | null): string {
+  if (language)
+    return BRIEF.replaceAll('{{language}}', LANGUAGE_IDIOMS[language].name).replace(
+      '{{idioms}}',
+      idiomsOf(language),
+    );
+  return BRIEF.replaceAll('{{language}}', 'the language the repository is written in').replace(
     '{{idioms}}',
-    `### ${LANGUAGE_IDIOMS[language].name}\n\n${LANGUAGE_IDIOMS[language].idioms.map((l) => `- ${l}`).join('\n')}`,
+    [
+      "Identify the language from the repository's project files; when they do not say, ask the person. Then follow its section:",
+      ...DOMAIN_EXPORT_LANGUAGES.map(idiomsOf),
+    ].join('\n\n'),
   );
 }

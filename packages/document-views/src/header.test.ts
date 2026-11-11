@@ -34,7 +34,7 @@ describe('headerLine (R16, VW8)', () => {
       }),
     );
     expect(line).toBe(
-      'tab es "Board \\"1\\"" · 1 element: 1 box, 1 frame, 1 lane, 1 arrow · kind=event-storming · 2 hidden · 1 unknown',
+      'tab es "Board \\"1\\"" · 1 element: 1 box, 1 frame, 1 lane, 1 arrow · kind=event-storming (read_event_storming) · 2 hidden · 1 unknown',
     );
   });
 

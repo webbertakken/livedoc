@@ -61,7 +61,9 @@ describe('diffReadings', () => {
     expect(text).toContain('- command c "Submit Order", was "Place Order"');
     expect(text).toContain('- read-model p "Notify", was a policy');
     expect(text).toContain('- actor new "Guest" issues command c "Submit Order"');
-    expect(text).toContain('## No longer related\n\n- read-model p "Notify" is triggered by domain-event e "Order Placed"');
+    expect(text).toContain(
+      '## No longer related\n\n- read-model p "Notify" is triggered by domain-event e "Order Placed"',
+    );
   });
 
   it('says so when nothing changed', () => {
@@ -166,4 +168,15 @@ describe('renderBrief', () => {
       expect(brief.split('\n').filter((l) => l.startsWith('### '))).toHaveLength(1);
     },
   );
+});
+
+describe('renderBrief without a language', () => {
+  it('asks the agent to identify it, and carries every language section', () => {
+    const brief = renderBrief(null);
+    expect(brief).toContain('domain types** in the language the repository is written in');
+    expect(brief.split('\n').filter((l) => l.startsWith('### '))).toHaveLength(
+      DOMAIN_EXPORT_LANGUAGES.length,
+    );
+    expect(brief).not.toMatch(/\{\{/);
+  });
 });

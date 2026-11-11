@@ -46,6 +46,9 @@ export function headerSegments(facts: HeaderFacts): string {
   ];
   // A Form tab's content is its form, read with read_form (docs/specs/030-forms/forms.md "Agents").
   if (facts.tab.kind === 'form') segments.push('kind=form (read_form)');
+  // A board reads as a domain with read_event_storming (docs/specs/021-event-storming/board-reading.md).
+  else if (facts.tab.kind === 'event-storming')
+    segments.push('kind=event-storming (read_event_storming)');
   else if (facts.tab.kind !== 'diagram') segments.push(`kind=${facts.tab.kind}`);
   if (facts.mode) segments.push(`mode=${facts.mode}`);
   if (facts.finish) segments.push(`finish=${facts.finish}`);

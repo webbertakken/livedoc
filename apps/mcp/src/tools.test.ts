@@ -284,6 +284,7 @@ describe('registerTools', () => {
       'change_sheet',
       'create_document',
       'delete_document',
+      'export_event_storming',
       'find_documents',
       'list_images',
       'list_items',
@@ -435,6 +436,7 @@ describe('tool annotations', () => {
     // docs/specs/015-api/mcp-server.md §4.9f: suggestions move nothing and write no note.
     read_event_storming: 'read',
     suggest_notes: 'write',
+    export_event_storming: 'read',
   };
 
   it('gives every tool one of the three documented presets', () => {
@@ -475,6 +477,7 @@ describe('tool annotations', () => {
       .map((r) => r.name)
       .sort();
     expect(readOnly).toEqual([
+      'export_event_storming',
       'find_documents',
       'list_images',
       'list_items',

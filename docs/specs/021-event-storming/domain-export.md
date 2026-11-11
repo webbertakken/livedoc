@@ -31,7 +31,7 @@ What every way produces before a model writes anything:
 | `CHANGES.md`  | What changed on the board since the previous export's `storm.json`, when there is one                    |
 | `CONVERT.md`  | The brief, with the language filled in                                                                   |
 | `export.json` | The manifest: board (document, tab, name, rev), language, LiveDoc version, when, and the brief's version |
-| `trace.json`  | Which spec section and type each note became: written by the model, kept by every later export            |
+| `trace.json`  | Which spec section and type each note became: written by the model, kept by every later export           |
 
 ## Iterative, never from scratch
 

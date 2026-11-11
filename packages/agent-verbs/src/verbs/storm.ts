@@ -11,6 +11,7 @@ import {
   type StormRefusal,
   type StormWrite,
 } from '../storm/storm-calls';
+import { DOMAIN_EXPORT_LANGUAGES } from '@livedoc/storm-reading';
 import { documentOf } from './shared';
 
 const docArg = z.string().describe('A name, id prefix or LiveDoc URL');
@@ -18,6 +19,7 @@ const tabFlag = z
   .string()
   .optional()
   .describe('The Event Storming tab, by name or id; the first board when omitted');
+const count = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 const HINT = 'read the board with: livedoc storm read <doc>';
 
 function unwrap<T extends StormRead | StormWrite>(result: T | StormRefusal): T {
@@ -146,4 +148,49 @@ export const stormClear = defineVerb({
   },
 });
 
-export const stormVerbs: Verb[] = [stormRead, stormSuggest, stormClear] as Verb[];
+export const stormExport = defineVerb({
+  id: 'storm.export',
+  summary: 'Export an Event Storming board for a model to turn into a spec and types',
+  description:
+    "Writes the board's domain export bundle into <to>/.livedoc/storm/<board>/: the reading (storm.json, storm.md), what changed since the last export there (CHANGES.md), and the brief (CONVERT.md) a model follows to write the spec and the domain types into the repository. The language comes from --lang, else the last export, else the project files at <to>.",
+  behaviour: 'read',
+  local: true,
+  input: z.object({
+    doc: docArg,
+    tab: tabFlag,
+    to: z
+      .string()
+      .default('.')
+      .describe('The repository to export into; the working directory when omitted'),
+    lang: z
+      .enum(DOMAIN_EXPORT_LANGUAGES)
+      .optional()
+      .describe(`The language of the types: ${DOMAIN_EXPORT_LANGUAGES.join(', ')}`),
+  }),
+  output: z.object({
+    dir: z.string(),
+    language: z.string(),
+    because: z.string(),
+    notes: z.number(),
+    gaps: z.number(),
+    changes: z.number().nullable(),
+    files: z.array(z.string()),
+  }),
+  text: (o) => [
+    `${o.dir}  ${count(o.notes, 'note')} · ${count(o.gaps, 'gap')} · ${o.changes === null ? 'first export' : count(o.changes, 'change')}`,
+    `language ${o.language} (${o.because})`,
+    ...o.files.map((f) => `  ${f}`),
+    `next: follow ${o.dir}/CONVERT.md`,
+  ],
+  quiet: (o) => [o.dir],
+  cli: {
+    positionals: ['doc'],
+    examples: [
+      'livedoc storm export "Order flow"',
+      'livedoc storm export 3f9c --to ../shop --lang kotlin',
+    ],
+    prints: 'the bundle folder and counts, the language and why, the files, then the next step',
+  },
+});
+
+export const stormVerbs: Verb[] = [stormRead, stormSuggest, stormClear, stormExport] as Verb[];

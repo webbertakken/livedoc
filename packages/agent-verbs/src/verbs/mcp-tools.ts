@@ -19,6 +19,8 @@ import {
   tryFormShape,
 } from '../mcp/form-schema';
 import {
+  exportEventStormingOutput,
+  exportEventStormingShape,
   readEventStormingOutput,
   readEventStormingShape,
   suggestNotesOutput,
@@ -530,6 +532,18 @@ export const mcpSuggestNotes = mcpTool('suggest_notes', {
   outputSchema: suggestNotesOutput,
 });
 
+export const mcpExportEventStorming = mcpTool('export_event_storming', {
+  behaviour: 'read',
+  title: 'Export an Event Storming board as a spec and domain types',
+  description:
+    'Export an Event Storming board for you to turn into a spec and domain types, in the repository you work in: ' +
+    'the board reading (storm.json), what changed since the earlier export when you pass its storm.json as previous ' +
+    '(CHANGES.md), and CONVERT.md, the brief you follow to write the spec and the types and to change an earlier ' +
+    'result rather than replace it. Write the files into the folder named; the writing is yours.',
+  inputSchema: exportEventStormingShape,
+  outputSchema: exportEventStormingOutput,
+});
+
 // Every tool, in the order the server registers them.
 export const MCP_TOOL_VERBS: readonly McpToolVerb[] = [
   mcpListItems,
@@ -551,6 +565,7 @@ export const MCP_TOOL_VERBS: readonly McpToolVerb[] = [
   mcpTryForm,
   mcpReadEventStorming,
   mcpSuggestNotes,
+  mcpExportEventStorming,
   mcpFindDocuments,
   mcpReadDocument,
   mcpListTemplates,

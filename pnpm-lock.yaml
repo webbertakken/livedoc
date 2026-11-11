@@ -327,6 +327,9 @@ importers:
       '@livedoc/render-png':
         specifier: workspace:*
         version: link:../../packages/render-png
+      '@livedoc/storm-reading':
+        specifier: workspace:*
+        version: link:../../packages/storm-reading
       smol-toml:
         specifier: ^1.9.1
         version: 1.9.1

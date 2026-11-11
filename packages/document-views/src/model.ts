@@ -6,6 +6,7 @@ import {
   opensInOf,
   pageKindOf,
   isKnownElement,
+  isSuggestion,
   kindWordOf,
   tabKindOf,
   type Element,
@@ -45,6 +46,10 @@ function tabRefsFor(tabId: string, tabIds: readonly string[] | undefined): (id: 
   return (id) => (known.has(id) ? tabRefs.refOf(id) : computeRefs([id]).refOf(id));
 }
 
+// What a hidden layer hides; a suggestion is not board content but a proposal, listed by the storm view instead
+// (docs/specs/021-event-storming/suggestions.md).
+const hiddenCount = (hidden: readonly Element[]) => hidden.filter((el) => !isSuggestion(el)).length;
+
 function headerFacts(
   tab: Tab,
   printed: readonly Element[],
@@ -79,7 +84,13 @@ function pagesFacts(tab: Tab): Pick<HeaderFacts, 'pages'> {
 // A tab's header facts alone, without its tree: what `overview` keeps of each tab body it reads.
 export function headerFactsOf(tab: Tab, context: ViewContext = {}): HeaderFacts {
   const { printed, hidden } = partitionVisible(tab);
-  return headerFacts(tab, printed, hidden.length, tabRefsFor(tab.id, context.tabIds), context.rev);
+  return headerFacts(
+    tab,
+    printed,
+    hiddenCount(hidden),
+    tabRefsFor(tab.id, context.tabIds),
+    context.rev,
+  );
 }
 
 export function buildViewModel(tab: Tab, context: ViewContext = {}): ViewModel {
@@ -96,6 +107,6 @@ export function buildViewModel(tab: Tab, context: ViewContext = {}): ViewModel {
   };
   const tree = buildViewTree(printed, new Set(printed.flatMap(pinnedIds)));
   const edges = edgesOf(printed, refs, new Set(tree.nodes.keys()));
-  const facts = headerFacts(tab, printed, hidden.length, tabRefOf, context.rev);
+  const facts = headerFacts(tab, printed, hiddenCount(hidden), tabRefOf, context.rev);
   return { tab, printed, hidden, refs, tabRefOf, kindOf, tree, edges, facts };
 }

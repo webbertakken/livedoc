@@ -27,6 +27,7 @@ export type StormRead = {
   documentId: string;
   tabId: string;
   tabName: string;
+  rev: number;
   reading: StormReading;
   suggestions: StormSuggestion[];
   lines: string[];
@@ -67,7 +68,7 @@ function engineRefusalOf(err: unknown): StormRefusal | null {
 
 const NOT_A_BOARD = 'not_event_storming';
 
-type StormViewBody = { reading: StormReading; suggestions: StormSuggestion[] };
+type StormViewBody = { reading: StormReading; suggestions: StormSuggestion[]; rev: number };
 
 async function stormViewOf(
   api: ApiClient,
@@ -111,6 +112,7 @@ export async function readStorm(
         documentId: document.id,
         tabId: tab.id,
         tabName: tab.name,
+        rev: body.rev,
         reading: body.reading,
         suggestions: body.suggestions,
         lines: formatStormView(body.reading, body.suggestions),

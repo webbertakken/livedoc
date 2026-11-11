@@ -273,7 +273,7 @@ function answerStormView(
   countViewed(ctx, STORM_VIEW_NAME);
   const headers = { ETag: tabEtag(tab.rev) };
   return parsed.json
-    ? json({ reading, suggestions }, { headers })
+    ? json({ reading, suggestions, rev: tab.rev }, { headers })
     : textPlain(formatStormView(reading, suggestions).join('\n'), { headers });
 }
 

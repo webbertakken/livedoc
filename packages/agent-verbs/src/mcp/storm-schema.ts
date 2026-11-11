@@ -7,7 +7,7 @@ import {
   EVENT_STORMING_NOTES,
   SUGGESTION_REASON_MAX,
 } from '@livedoc/document';
-import { GAP_CODES } from '@livedoc/storm-reading';
+import { DOMAIN_EXPORT_LANGUAGES, GAP_CODES } from '@livedoc/storm-reading';
 import { SUGGEST_NOTES_MAX } from '../storm/storm-calls';
 
 const url = z.string().describe('Link that opens the document in the LiveDoc editor.');
@@ -86,5 +86,42 @@ export const suggestNotesOutput = {
     .nullable()
     .describe('The changeset; revert it to take the suggestions back.'),
   lines: z.array(z.string()).describe('One result line per suggestion added, with its ref.'),
+  url,
+};
+
+export const exportEventStormingShape = {
+  documentId,
+  tab,
+  language: z
+    .enum(DOMAIN_EXPORT_LANGUAGES)
+    .optional()
+    .describe(
+      'The language of the domain types. Absent: identify it from the repository you work in, and ask the person when it does not say.',
+    ),
+  previous: z
+    .string()
+    .optional()
+    .describe(
+      'The storm.json of the earlier export, as kept in the repository; it makes CHANGES.md.',
+    ),
+};
+
+export const exportEventStormingOutput = {
+  documentId: z.string().describe('The document.'),
+  tabId: z.string().describe('The board.'),
+  folder: z
+    .string()
+    .describe('Where the bundle belongs in the repository: .livedoc/storm/<board>/.'),
+  files: z
+    .array(
+      z.object({
+        name: z.string().describe('The file name, within the folder.'),
+        text: z.string().describe('Its contents.'),
+      }),
+    )
+    .describe(
+      'The bundle: storm.json (keep it as the next baseline), storm.md, CHANGES.md (with previous), CONVERT.md (follow it), export.json.',
+    ),
+  changes: z.number().nullable().describe('How many changes since previous; null without it.'),
   url,
 };

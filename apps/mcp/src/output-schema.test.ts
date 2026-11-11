@@ -325,6 +325,11 @@ const CALLS: { tool: string; output: keyof typeof outputs; args: Record<string, 
   },
   { tool: 'read_event_storming', output: 'readEventStormingOutput', args: { documentId: 'd1' } },
   {
+    tool: 'export_event_storming',
+    output: 'exportEventStormingOutput',
+    args: { documentId: 'd1', language: 'rust' },
+  },
+  {
     tool: 'suggest_notes',
     output: 'suggestNotesOutput',
     args: {
