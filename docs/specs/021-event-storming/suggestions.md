@@ -54,18 +54,39 @@ about the domain (the missing command, the policy everyone forgot, the external 
 Two presentations of the same suggestions, switched by one toggle, **Show All Suggestions**, which is the
 person's own view (not shared, not saved with the board; off when the board opens) (default):
 
-- **Off (the default): hints.** Nothing on the board moves. Each anchor that has suggestions shows a quiet hint at
-  the side the suggestion would go; the hint names its kind by colour and its number when there are several.
-  Pointing at a hint, or focusing it, previews the placeholder over the board where it would land, with its words,
-  its reason and its two actions; still nothing moves.
-- **On: placeholders.** Every suggestion is drawn full size where it would land, as a **placeholder**: the kind's
-  paper at reduced opacity with a dashed border, its words, and its two actions. The board makes room for them as a
-  preview, the way the Alt insertion previews: the notes that would stand aside are drawn shifted, the document is
-  untouched, and switching the toggle off puts every note back.
-- **The suggestions bar.** While a board has open suggestions, a small bar says how many and offers Show All
-  Suggestions, Apply All and Dismiss All. It is the only permanent chrome the feature adds, and it is gone when the
-  last suggestion is.
-- The visual design of hints, placeholders and the bar is ruled in the design review recorded below.
+- **Off (the default): peek tabs.** Nothing on the board moves. Each anchor side that has suggestions shows one
+  **peek tab**: a small dashed tab tucked behind the anchor on the side the suggestion would land, open where it
+  meets the paper, as if the note-to-be were waiting behind this one.
+  - One tab per anchor side, however many suggestions it holds; a chain (a suggestion on a suggestion) counts under
+    the side its first link grows from. The tab shows the count when it holds more than one.
+  - It is never paper: a dashed outline with a faint tint of the kind's hue, no solid fill.
+  - Beside the note (`before`, `after`) it stays inside the gutter (three quarters of `ES_NOTE_GAP`), so it never
+    lies on the note beside; above and below, where lanes leave more room, it reaches further (default).
+  - It runs a quarter of the anchor's edge. Beside the note it sits towards the top, so the
+    [next-note tab](event-storming.md#phase-7-shipped-re-ruled-next-note-buttons) keeps the middle of the same edge
+    and both show on a selected note; above and below it is centred (default).
+- **Pointing at a peek tab, or focusing it, previews the suggestion** where it would land, drawn as a placeholder
+  (below) with a caption: the agent's reason in its own words and who suggested it, never a gap code.
+  As the next-note tab's ghost does, the preview stands on the spot one gutter beside the anchor even when that spot
+  is taken; nothing moves until it is applied, which makes room. A tab holding a chain previews the whole chain.
+- **On: placeholders.** Every suggestion is drawn full size where Apply All would land it, as a **placeholder**.
+  The board makes room for them as a preview, the way the Alt insertion previews: the notes that would stand aside
+  are drawn shifted, the document is untouched, and switching the toggle off puts every note back.
+- **A placeholder** is pale paper (the kind's paper over white, in either scheme) inside a dashed border, the kind
+  named small above its words, with ✓ (apply) and ✕ (dismiss); pointing at it shows the caption.
+- **The suggestions panel.** While a board has open suggestions, the top right of the canvas holds the panel,
+  **collapsed by default** to a small button that says how many there are (default: collapsed again each time the
+  board opens). Expanded, it lists every suggestion in timeline order (kind, words, reason, ✓ and ✕) and holds Show
+  All Suggestions, Apply All and Dismiss All. Pointing at a row, or focusing it, brings its anchor and its spot into
+  view (the least pan that shows both, none when they already show) (default) and previews it as a peek tab does.
+  It is the only chrome the feature adds, and it is gone when the last suggestion is.
+- **Colour.** A dashed stroke is non-text UI and needs 3:1 against what it stands on (WCAG 2.2 1.4.11): on the light
+  canvas the kind's darker (700) shade, on the dark canvas the kind's own paper colour, which stands clear of the
+  dark ground. A placeholder's stroke and kind name stand on its pale paper, so they take the darker shade in either
+  scheme.
+- **Keyboard.** Peek tabs, placeholders and panel rows are in the tab order. On a peek tab or a placeholder, Enter
+  applies and Delete (or Backspace) dismisses; on a peek tab that holds several, the first in its chain (default).
+- **Motion.** The Show All preview eases as the Alt insertion's does, and is instant under reduced motion.
 
 ## Applying and dismissing
 
@@ -76,25 +97,35 @@ person's own view (not shared, not saved with the board; off when the board open
   along that lane when the spot is taken. It is one undoable step through the ordinary choke point.
 - **A suggestion on a suggestion** applies its anchor first, in the same step.
 - **Apply All** applies every open suggestion in timeline order as one undoable step.
-- **Dismiss** removes the suggestion; **Dismiss All** removes them all, as one undoable step.
+- **Dismiss** removes the suggestion and the suggestions chained on it; **Dismiss All** removes them all, as one
+  undoable step.
+- Every apply and dismiss also removes the board's orphans, in the same step.
+- Nothing is offered where the change would be refused: a locked tab, a hidden or locked active layer, or a drag in
+  hand hides the tabs, placeholders and panel (default).
 - An applied note is selected, not opened for typing: its words were already chosen.
-- **Telemetry**: `Canvas / Used / SuggestionApplied`, `SuggestionDismissed`, `SuggestionsShown` (the toggle on),
-  and `Element / Added / Sticky` for an applied note.
+- **Telemetry**: `Canvas / Used / SuggestionApplied`, `SuggestionDismissed`, `SuggestionsAppliedAll`,
+  `SuggestionsDismissedAll`, `SuggestionsShown` (the toggle on), and `Element / Added / Sticky` once per apply.
 
 ## Share roles
 
-| Role        | Sees                     | May                                                                        |
-| ----------- | ------------------------ | -------------------------------------------------------------------------- |
-| Editor      | hints, placeholders, bar | Show All, apply, dismiss, Apply All, Dismiss All                           |
-| Participant | nothing of suggestions   | nothing: applying reshapes the board, which a Participant never does       |
-| Viewer      | nothing of suggestions   | nothing                                                                    |
-| Agent       | the `storm` view         | suggest, and remove its own owner's suggestions with `rm` or `storm clear` |
+| Role        | Sees                           | May                                                                        |
+| ----------- | ------------------------------ | -------------------------------------------------------------------------- |
+| Editor      | peek tabs, placeholders, panel | Show All, apply, dismiss, Apply All, Dismiss All                           |
+| Participant | nothing of suggestions         | nothing: applying reshapes the board, which a Participant never does       |
+| Viewer      | nothing of suggestions         | nothing                                                                    |
+| Agent       | the `storm` view               | suggest, and remove its own owner's suggestions with `rm` or `storm clear` |
 
 Participants and Viewers see none of it because they could act on none of it (default).
 
 ## Design review
 
-Four directions for the hints are rendered in the editor on a real board before one is chosen (ruled 2026-11-11,
-"render all four"): a peek tab tucked behind the anchor, a corner dot with the ghost on hover, placeholders wherever
-they fit without overlap, and a side panel listing them by timeline. The ruling and the chosen design are recorded
-here.
+Four directions for the hints were rendered in the editor on a real board (ruled 2026-11-11, "render all four"):
+a peek tab tucked behind the anchor, a corner dot with the preview on hover, placeholders wherever they fit without
+overlap with the rest collapsing to peek tabs, and a side panel listing them by timeline.
+
+- **Ruled 2026-11-11: "A: Peek tab, and an expand/collapse from the side panel as well. Hovering one goes to the right
+  position and shows the suggestions. By default it's collapsed."** The peek tab is the hint; the side panel is the
+  suggestions panel above, collapsed by default, and it replaces the separate suggestions bar first specified.
+- The critique the designs answered: a hint never reads as paper; it sits on the anchor's edge at the side the note
+  would land; one per anchor side with a count; it gives the next-note tab the middle of the edge; its caption is the
+  reason and who, never a gap code; its dashed stroke meets 3:1.
