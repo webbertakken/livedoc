@@ -297,6 +297,95 @@ describe('the lint over REST', () => {
   });
 });
 
+describe('the storm view (docs/specs/021-event-storming/board-reading.md "Output")', () => {
+  const note = (
+    id: string,
+    esKind: string,
+    x: number,
+    label: string,
+    extra: Record<string, unknown> = {},
+  ) =>
+    ({ id, type: 'sticky', x, y: 0, width: 200, height: 200, label, esKind, ...extra }) as Element;
+  async function setUpBoard() {
+    const db = await setUp();
+    const board = {
+      id: 'es',
+      name: 'Board',
+      kind: 'event-storming',
+      elements: [
+        note('cmd', 'command', 0, 'Place Order'),
+        note('evt', 'domain-event', 216, 'Order Placed'),
+        note('sug', 'actor', 0, 'Guest', {
+          esSuggestion: { anchorId: 'cmd', side: 'above', by: 'Webber' },
+        }),
+      ],
+    };
+    const created = await call(db, 'POST', '/api/documents', {
+      id: 'B',
+      name: 'Storm',
+      tabs: [board],
+    });
+    expect(created.status).toBe(201);
+    return db;
+  }
+  const stormView = (db: SqliteD1, query: string) =>
+    call(db, 'GET', `/api/documents/B/tabs/es?${query}`, undefined, {});
+
+  it('answers the reading as text with the tab revision, and counts it', async () => {
+    quiet();
+    const db = await setUpBoard();
+    const res = await stormView(db, 'view=storm');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('ETag')).toBe('W/"1"');
+    const lines = (await res.text()).split('\n');
+    expect(lines[0]).toBe('board "Board" · 2 notes · 1 event · 0 chains · 1 gap · 1 suggestion');
+    expect(lines).toContain('  <- command cmd "Place Order"');
+    expect(lines).toContain('  sug actor "Guest" above cmd · by Webber');
+    expect(logged('[storm] view')).toMatchObject({
+      doc: 'B',
+      tab: 'es',
+      notes: 2,
+      gaps: 1,
+      suggestions: 1,
+    });
+    await settled();
+    expect(viewed(db)).toEqual(['Storm']);
+  });
+
+  it('answers the reading and the suggestions as JSON with json=1', async () => {
+    quiet();
+    const db = await setUpBoard();
+    const res = await stormView(db, 'view=storm&json=1');
+    const body = (await res.json()) as {
+      reading: { schema: string; gaps: { code: string }[] };
+      suggestions: unknown[];
+    };
+    expect(body.reading.schema).toBe('livedoc.storm/1');
+    expect(body.reading.gaps.map((g) => g.code)).toEqual(['command_without_trigger']);
+    expect(body.suggestions).toHaveLength(1);
+  });
+
+  it('refuses a tab that is not a board', async () => {
+    quiet();
+    const db = await setUp();
+    const res = await tabView(db, 'view=storm');
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: 'not_event_storming' });
+    expect(logged('[storm] refused')).toEqual({ code: 'not_event_storming', tab: 't1' });
+  });
+
+  it('takes only json', () => {
+    expect(parseViewQuery(new URL('https://x/?view=storm'), 'tab')).toEqual({
+      storm: true,
+      json: false,
+    });
+    expect(parseViewQuery(new URL('https://x/?view=storm&json=1'), 'tab')).toEqual({
+      storm: true,
+      json: true,
+    });
+  });
+});
+
 describe('ref refusals over REST (R4, R5, E17, E18)', () => {
   it('answers 404 with the nearest refs for a ref that names nothing', async () => {
     quiet();

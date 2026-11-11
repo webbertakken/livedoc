@@ -20,6 +20,7 @@
   "dependencies": {
     "@livedoc/api-schema": "workspace:*",
     "@livedoc/diagram-lint": "workspace:*",
+    "@livedoc/storm-reading": "workspace:*",
     "@livedoc/document": "workspace:*",
     "@livedoc/document-views": "workspace:*",
     "@livedoc/edit-operations": "workspace:*",

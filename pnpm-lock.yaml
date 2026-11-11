@@ -257,6 +257,9 @@ importers:
       '@livedoc/sheets':
         specifier: workspace:*
         version: link:../../packages/sheets
+      '@livedoc/storm-reading':
+        specifier: workspace:*
+        version: link:../../packages/storm-reading
       '@livedoc/templates':
         specifier: workspace:*
         version: link:../../packages/templates

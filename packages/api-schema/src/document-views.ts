@@ -17,8 +17,12 @@ export const VIEW_NAMES = [
   'diff',
   'lint',
   'pages',
+  'storm',
 ] as const;
 export const LINT_VIEW_NAME = 'lint' satisfies ViewName;
+// An Event Storming board's reading (docs/specs/021-event-storming/board-reading.md), answered by
+// `@livedoc/storm-reading`, not by `renderView`; it takes only `json`.
+export const STORM_VIEW_NAME = 'storm' satisfies ViewName;
 export type ViewName = (typeof VIEW_NAMES)[number];
 
 // What each api door serves. `diff` has no api door: the CLI computes it from its cache.

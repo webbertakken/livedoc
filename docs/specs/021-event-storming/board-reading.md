@@ -98,7 +98,10 @@ Levels:
 - **Data**: `StormReading`, versioned (`schema: 'livedoc.storm/1'`), holding the notes (ref, kind, words, lane,
   order), the timeline, the chains, the loose notes and the gaps. It is the `storm.json` of the
   [domain export](domain-export.md).
-- **Text**: the `storm` view, compact, one line per note, in timeline order, then the gaps, then the board's
-  [suggestions](suggestions.md); within the view budget, eliding the middle of a long timeline as every view does.
+- **Text**: the `storm` view (`?view=storm` on a tab), compact, one line per note in timeline order, then the loose
+  notes, the gaps and the board's open [suggestions](suggestions.md). It is not budgeted: the whole reading is what an
+  agent asks for, and a board of `DOMAIN_EXPORT_MAX_NOTES` notes prints in about eight thousand tokens.
+- **JSON** of the view (`json=1`): `{ reading, suggestions }`. A tab that is not a board is refused as
+  `400 not_event_storming`.
 - Refs are the [document views](../024-agents/document-views.md#refs)' refs, so an agent can name a note from the
   reading in an edit operation.
