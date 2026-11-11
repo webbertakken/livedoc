@@ -31,13 +31,14 @@ What every way produces before a model writes anything:
 | `CHANGES.md`  | What changed on the board since the previous export's `storm.json`, when there is one                    |
 | `CONVERT.md`  | The brief, with the language filled in                                                                   |
 | `export.json` | The manifest: board (document, tab, name, rev), language, LiveDoc version, when, and the brief's version |
+| `trace.json`  | Which spec section and type each note became: written by the model, kept by every later export            |
 
 ## Iterative, never from scratch
 
 A board changes after its first export, and so do the spec and the code a team grew from it.
 An export never throws the earlier result away:
 
-- **The baseline.** Each export keeps its `storm.json`. The next export compares the new reading against it and
+- **The baseline.** Each export keeps its `storm.json`, and the model keeps `trace.json` beside it. The next export compares the new reading against it and
   writes `CHANGES.md`: notes added, removed, reworded and re-kinded, and relations made and broken, by note ref.
   Refs are stable element ids, so a reworded note is a rewording, not a removal and an addition.
 - **The brief says change, not regenerate.** With an earlier result present, the model reads the existing spec and
@@ -51,16 +52,17 @@ An export never throws the earlier result away:
 The types are written in the language the team needs, identified, not assumed:
 
 - **The CLI** looks at the directory it writes into: the project files at its root name the language
-  (`tsconfig.json` or `package.json` TypeScript, `pyproject.toml` Python, `go.mod` Go, `Cargo.toml` Rust,
-  `*.csproj` C#, `pom.xml` or `build.gradle` Java, `build.gradle.kts` Kotlin, `pubspec.yaml` Dart, `Package.swift`
-  Swift, `composer.json` PHP, `Gemfile` Ruby, `mix.exs` Elixir; `DOMAIN_LANGUAGE_MARKERS`).
+  (`tsconfig.json` or `package.json` TypeScript, `pyproject.toml`, `requirements.txt` or `setup.py` Python, `go.mod` Go,
+  `Cargo.toml` Rust, `*.csproj` or `*.sln` C#, `pom.xml` or `build.gradle` Java, `build.gradle.kts` Kotlin,
+  `pubspec.yaml` Dart; `DOMAIN_LANGUAGE_MARKERS`).
   An earlier export's manifest wins over the markers. `--lang` wins over both. Two or more candidates, or none,
   is refused as `language_unclear` with the candidates and the `--lang` to choose.
 - **The MCP** takes `language`, optional: without it the brief tells the agent to identify the language from the
   repository it works in, and to ask the person when the repository does not say.
 - **The zip** asks: the export dialog's language picker, remembered per board on this device, TypeScript the first
   time (default).
-- The languages offered are `DOMAIN_EXPORT_LANGUAGES`; the brief carries the building-block idioms for each.
+- The languages offered are `DOMAIN_EXPORT_LANGUAGES`: the eight the domain-modelling research covers. The brief
+  carries each one's building-block idioms, so the types read as that language's community writes them.
 
 ## The CLI
 
