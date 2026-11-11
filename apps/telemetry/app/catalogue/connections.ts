@@ -165,6 +165,21 @@ export const MCP_TOOL_METRICS: readonly Metric[] = [
     'Try Form',
     'Filling in a form as a preview response, to check it end to end.',
   ),
+  mcpTool(
+    'ReadEventStorming',
+    'Read Event Storming',
+    'Reading an Event Storming board as a domain: its timeline, gaps and open suggestions.',
+  ),
+  mcpTool(
+    'SuggestNotes',
+    'Suggest Notes',
+    'Proposing notes for an Event Storming board, for people to apply.',
+  ),
+  mcpTool(
+    'ExportEventStorming',
+    'Export Event Storming',
+    'Exporting an Event Storming board for an agent to write its spec and domain types.',
+  ),
 ];
 
 export const MCP_TOOL_CALLS: MetricStack = {
