@@ -33,6 +33,8 @@ export const COMMAND_OF_TOOL: Readonly<Record<string, string>> = {
   change_form: 'form change',
   share_form: 'form share',
   try_form: 'form try',
+  read_event_storming: 'storm read',
+  suggest_notes: 'storm suggest',
 };
 
 const TOOL_WORD = new RegExp(`\\b(${Object.keys(COMMAND_OF_TOOL).join('|')})\\b`, 'g');

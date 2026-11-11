@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { readBoard } from '@livedoc/storm-reading';
 import { ITEM_TYPES } from '@livedoc/items';
 import {
   applySheetWrite,
@@ -227,6 +228,11 @@ async function api(request: Request): Promise<Response> {
   const path = url.pathname.replace(/^\/api/, '');
   if (request.method === 'DELETE') return new Response(null, { status: 204 });
   const json = (body: unknown) => Response.json(body);
+  // The storm view as JSON, as the api answers `view=storm&json=1` (docs/specs/021-event-storming/board-reading.md).
+  if (url.searchParams.get('view') === 'storm') {
+    const reading = readBoard({ id: 't1', name: 'Board', elements: [] });
+    return json({ reading, suggestions: [] });
+  }
   // A document view: text with the tab revision as its ETag, as the api answers it.
   if (url.searchParams.has('view')) {
     return new Response('tab t1 "Tab 1" · 0 elements · rev 3', { headers: { ETag: 'W/"3"' } });
@@ -316,6 +322,17 @@ const CALLS: { tool: string; output: keyof typeof outputs; args: Record<string, 
     tool: 'try_form',
     output: 'tryFormOutput',
     args: { documentId: 'd1', answers: { Summary: 'Login fails', Severity: 'S1', 'How bad?': 4 } },
+  },
+  { tool: 'read_event_storming', output: 'readEventStormingOutput', args: { documentId: 'd1' } },
+  {
+    tool: 'suggest_notes',
+    output: 'suggestNotesOutput',
+    args: {
+      documentId: 'd1',
+      suggestions: [
+        { kind: 'command', words: 'Place Order', anchor: 'e1', side: 'before', reason: 'why' },
+      ],
+    },
   },
   { tool: 'find_documents', output: 'findDocumentsOutput', args: {} },
   { tool: 'read_document', output: 'readDocumentOutput', args: { documentId: 'd1' } },

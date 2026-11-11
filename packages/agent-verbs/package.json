@@ -24,6 +24,7 @@
     "@livedoc/document": "workspace:*",
     "@livedoc/document-views": "workspace:*",
     "@livedoc/edit-operations": "workspace:*",
+    "@livedoc/storm-reading": "workspace:*",
     "@livedoc/forms": "workspace:*",
     "@livedoc/items": "workspace:*",
     "@livedoc/page-background": "workspace:*",

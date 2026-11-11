@@ -17,6 +17,7 @@
   "dependencies": {
     "@livedoc/agent-verbs": "workspace:*",
     "@livedoc/api-client": "workspace:*",
+    "@livedoc/storm-reading": "workspace:*",
     "@livedoc/api-schema": "workspace:*",
     "@livedoc/diagram-lint": "workspace:*",
     "@livedoc/document": "workspace:*",

@@ -132,6 +132,19 @@ const SHEET = sheetToJson(emptySheet({ id: 'sheet_budget', tabId: 't_1', title: 
 function okResponse(request: Request): Response {
   const url = new URL(request.url);
   const path = url.pathname.replace(/^\/api/, '');
+  if (url.searchParams.get('view') === 'storm') {
+    const reading = {
+      schema: 'livedoc.storm/1',
+      board: { tabId: 't_1', name: 'Tab 1' },
+      notes: [],
+      relations: { causes: {}, triggers: {}, issues: {}, informs: {}, decides: {}, flags: {} },
+      timeline: [],
+      chains: [],
+      loose: [],
+      gaps: [],
+    };
+    return Response.json({ reading, suggestions: [] });
+  }
   if (url.searchParams.has('view')) {
     return new Response('tab t_1 "Tab 1" · 0 elements · rev 1', { headers: { ETag: 'W/"1"' } });
   }
@@ -242,6 +255,7 @@ const ARGS = {
   board: 'Sprint',
   sheet: 'Budget',
   action: 'close',
+  suggestions: [{ kind: 'command', words: 'Pay', anchor: 'e1', side: 'before' }],
 };
 
 const AUTHED = { authInfo: { token: 'tok_test' } };
@@ -254,7 +268,7 @@ const AUTHED = { authInfo: { token: 'tok_test' } };
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('registerTools', () => {
-  it('registers the twenty-nine documented tools, each with a description', () => {
+  it('registers the thirty-one documented tools, each with a description', () => {
     const { registered } = harness();
     const current = registered.filter((r) => !isDeprecated(r));
     expect(current.map((r) => r.name).sort()).toEqual([
@@ -277,6 +291,7 @@ describe('registerTools', () => {
       'list_templates',
       'list_trash',
       'read_document',
+      'read_event_storming',
       'read_form',
       'read_sheet',
       'rename_document',
@@ -284,6 +299,7 @@ describe('registerTools', () => {
       'search_icons',
       'share_document',
       'share_form',
+      'suggest_notes',
       'try_form',
       'update_document',
       'write_article',
@@ -416,6 +432,9 @@ describe('tool annotations', () => {
     change_form: 'destructive',
     share_form: 'write',
     try_form: 'write',
+    // docs/specs/015-api/mcp-server.md §4.9f: suggestions move nothing and write no note.
+    read_event_storming: 'read',
+    suggest_notes: 'write',
   };
 
   it('gives every tool one of the three documented presets', () => {
@@ -463,6 +482,7 @@ describe('tool annotations', () => {
       'list_templates',
       'list_trash',
       'read_document',
+      'read_event_storming',
       'read_form',
       'read_sheet',
       'search_icons',

@@ -51,6 +51,7 @@ import { cardTypeVerbs } from './verbs/card-type';
 import { sheetVerbs } from './verbs/sheet';
 import { pagesVerbs } from './verbs/pages';
 import { formVerbs } from './verbs/form';
+import { stormVerbs } from './verbs/storm';
 import { linkInit, linkLs, linkStatus, sync } from './verbs/link';
 import { workbenchOpen, workbenchPair } from './verbs/workbench';
 import { folderCreate, folderLs } from './verbs/folder';
@@ -78,6 +79,7 @@ export const VERBS: readonly Verb[] = [
   ...sheetVerbs,
   ...pagesVerbs,
   ...formVerbs,
+  ...stormVerbs,
   changesetApply,
   changesetLs,
   changesetShow,
@@ -136,6 +138,7 @@ export const RESOURCES: readonly { name: string; alias?: string; summary: string
   { name: 'page', summary: 'Pages: slides, logos, infographics' },
   { name: 'article', summary: 'Articles as Markdown' },
   { name: 'form', summary: 'Forms: build, read and publish one' },
+  { name: 'storm', summary: 'Event Storming boards: read one, suggest notes, export it' },
   { name: 'changeset', summary: 'Changesets: what changed, by whom, and undoing one' },
   { name: 'comment', summary: 'Comment threads' },
   { name: 'presence', summary: 'What the agent is doing, shown on a tab' },
