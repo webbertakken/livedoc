@@ -90,6 +90,8 @@ The types are written in the language the team needs, identified, not assumed:
 **File → Export → Domain Model (zip)**, offered on an Event Storming board only.
 
 - **The dialog**: the language, and **Update an earlier export** (an earlier zip, optional).
+- **The writer is the deployment's model** (ruled 2026-11-11): the zip carries a written spec and types whenever the
+  deployment has a model, and the bundle alone when it has none.
 - **With the deployment's model** (`aiEnabled`), the api writes the spec and the types with the brief, given the
   reading, `CHANGES.md` and the earlier zip's spec and code when one was given, and the zip holds the result beside
   the bundle. It may take a minute: the dialog shows progress and can be cancelled.

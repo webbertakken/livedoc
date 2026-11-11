@@ -94,4 +94,7 @@ Participants and Viewers see none of it because they could act on none of it (de
 
 ## Design review
 
-Pending: the critique and four options for hints, placeholders and the bar, and Webber's ruling.
+Four directions for the hints are rendered in the editor on a real board before one is chosen (ruled 2026-11-11,
+"render all four"): a peek tab tucked behind the anchor, a corner dot with the ghost on hover, placeholders wherever
+they fit without overlap, and a side panel listing them by timeline. The ruling and the chosen design are recorded
+here.
