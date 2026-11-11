@@ -6,8 +6,8 @@ import {
   isValidEsSuggestion,
   suggestionBounds,
   suggestionKindOf,
-  suggestionsAnchoredOn,
 } from './event-storming-suggestions';
+import { withDependents } from './arrow-rebind';
 import { hiddenLayerElementIds, layerBands, visibleLayerElements } from './layers';
 import { isValidElement } from './validate';
 import type { Element } from './index';
@@ -104,16 +104,15 @@ describe('suggestionBounds', () => {
   });
 });
 
-describe('suggestionsAnchoredOn', () => {
-  it('finds the suggestions on a note, and theirs, transitively', () => {
+describe('a suggestion goes with its anchor', () => {
+  it('is taken by the delete cascade, transitively', () => {
     const els = [
       note('e', 0),
       suggestion('s1', 'e'),
       suggestion('s2', 's1'),
       suggestion('s3', 'x'),
     ];
-    expect([...suggestionsAnchoredOn(els, ['e'])].sort()).toEqual(['s1', 's2']);
-    expect(suggestionsAnchoredOn(els, ['nothing']).size).toBe(0);
+    expect([...withDependents(els, new Set(['e']))].sort()).toEqual(['e', 's1', 's2']);
   });
 });
 

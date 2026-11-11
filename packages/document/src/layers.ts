@@ -212,7 +212,7 @@ function elementIdsWhere(
 export function layerElementCounts(tab: Pick<Tab, 'elements' | 'layers'>): Map<string, number> {
   const ls = tabLayers(tab.layers);
   const counts = new Map(ls.map((l) => [l.id, 0]));
-  for (const el of tab.elements) {
+  for (const el of boardElements(tab.elements)) {
     const id = resolveLayerId(el.layerId, ls);
     counts.set(id, counts.get(id)! + 1);
   }

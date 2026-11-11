@@ -27,7 +27,7 @@
 // working even if the pointer leaves the canvas surface mid-drag.
 
 import { useEffect, useRef } from 'react';
-import { withAttachedArrows, type Element, type Tab } from '@livedoc/document';
+import { withDependents, type Element, type Tab } from '@livedoc/document';
 
 import { elementHostsAtPoint } from '@/lib/dom-hit-test';
 import {
@@ -163,7 +163,7 @@ export function useCanvasEraser(deps: EraserDeps) {
     depsRef.current.tick((els) => {
       const inert = depsRef.current.layerInertIds;
       const isProtected = (el: Element) => el.locked === true || inert.has(el.id);
-      const gone = withAttachedArrows(els, ids, isProtected);
+      const gone = withDependents(els, ids, isProtected);
       return els.filter((el) => isProtected(el) || !gone.has(el.id));
     });
   };

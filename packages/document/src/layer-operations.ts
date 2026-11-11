@@ -1,6 +1,6 @@
 import type { Element, ElementId, Tab } from './index';
 import { bringManyToFront, sendManyToBack } from './layer-order';
-import { withAttachedArrows } from './arrow-rebind';
+import { withDependents } from './arrow-rebind';
 import {
   DEFAULT_LAYER_ID,
   DEFAULT_LAYER_NAME,
@@ -169,7 +169,7 @@ function withoutLayerElements(tab: Tab, layerId: string): Element[] {
     tab.elements.filter((el) => resolveLayerId(el.layerId, ls) === layerId).map((el) => el.id),
   );
   if (doomed.size === 0) return tab.elements;
-  const gone = withAttachedArrows(tab.elements, doomed);
+  const gone = withDependents(tab.elements, doomed);
   return tab.elements.filter((el) => !gone.has(el.id));
 }
 

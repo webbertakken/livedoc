@@ -75,26 +75,3 @@ export function suggestionBounds(
   const lane = laneIndexAt(anchor.y + anchor.height / 2, ES_LANES) + (side === 'above' ? -1 : 1);
   return { x: anchor.x, y: laneCentre(lane, ES_LANES) - size.height / 2, ...size };
 }
-
-// The suggestions anchored on any of `ids`, and the suggestions anchored on those, and so on: what goes when the
-// notes go.
-export function suggestionsAnchoredOn(
-  elements: readonly Element[],
-  ids: Iterable<ElementId>,
-): Set<ElementId> {
-  const found = new Set<ElementId>();
-  const anchors = new Set<ElementId>(ids);
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const el of elements) {
-      if (el.type !== 'sticky' || !el.esSuggestion || found.has(el.id)) continue;
-      if (anchors.has(el.esSuggestion.anchorId)) {
-        found.add(el.id);
-        anchors.add(el.id);
-        grew = true;
-      }
-    }
-  }
-  return found;
-}
