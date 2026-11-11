@@ -14557,6 +14557,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       'diff',
       'lint',
       'pages',
+      'storm',
     ],
     type: 'string',
   },
