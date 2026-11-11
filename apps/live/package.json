@@ -41,6 +41,7 @@
     "@livedoc/sheets": "workspace:*",
     "@livedoc/sticky-model": "workspace:*",
     "@livedoc/sticky-vision": "workspace:*",
+    "@livedoc/storm-reading": "workspace:*",
     "@livedoc/telemetry-client": "workspace:*",
     "@livedoc/template-previews": "workspace:*",
     "@livedoc/templates": "workspace:*",

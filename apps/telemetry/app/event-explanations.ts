@@ -558,6 +558,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'UI|Changed|LogoMirrorCopies5': "Someone set a logo page's radial mirror to 5 copies.",
   'UI|Changed|LogoMirrorCopies6': "Someone set a logo page's radial mirror to 6 copies.",
   'UI|Changed|LogoMirrorCopies8': "Someone set a logo page's radial mirror to 8 copies.",
+  'Document|Exported|DomainModel':
+    "Someone exported an Event Storming board as a domain model zip: a spec and types written by the deployment's model.",
+  'Document|Exported|DomainModelBundle':
+    "Someone exported an Event Storming board's reading and conversion brief as a zip, for a coding agent to write from.",
   'Document|Exported|LogoKit':
     'Someone downloaded a logo kit: an SVG, PNGs and a favicon of a logo page.',
   'UI|Toggled|LogoGuideCentreLinesOn': "Someone showed the logo guides' centre lines.",

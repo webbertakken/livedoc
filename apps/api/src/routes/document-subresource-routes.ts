@@ -27,6 +27,7 @@ import { handleTabLink } from './tab-link-route';
 import { handleTabRename } from './tab-name-route';
 import { handleTabForm } from './tab-form-route';
 import { handleTabPages } from './tab-pages-route';
+import { handleStormExport } from './storm-export-route';
 import { handleChangesetRoutes } from './changesets';
 import { handleCommentRoutes } from './comment-routes';
 import { handleAgentPresenceRoute } from './agent-presence-routes';
@@ -88,6 +89,11 @@ export async function handleDocumentSubresources(
     ctx.request.method === 'POST'
   ) {
     return handleTabPages(ctx, segments[2]!, segments[4]!);
+  }
+  // /api/documents/<id>/tabs/<tabId>/storm-export: an Event Storming board's domain export
+  // (docs/specs/021-event-storming/domain-export.md "The zip").
+  if (segments.length === 6 && segments[3] === 'tabs' && segments[5] === 'storm-export') {
+    return handleStormExport(ctx, segments[2]!, segments[4]!);
   }
   // /api/documents/<id>/tabs/<tabId>/form: an agent's form write (docs/specs/030-forms/forms.md "Agents").
   if (

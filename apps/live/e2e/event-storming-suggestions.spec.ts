@@ -113,3 +113,32 @@ test('Delete on a placeholder dismisses it and what is chained on it', async ({ 
   // The board's notes are all still there.
   expect(after.find((el) => el.id === IDS.orderShipped)).toBeDefined();
 });
+
+// The zip export (docs/specs/021-event-storming/domain-export.md "The zip"): offered on the board, it downloads the
+// zip. The e2e stack has no model, so the zip holds the bundle and the README that says what to do with it.
+test('the Export dialog downloads the board as a domain model zip', async ({ page }) => {
+  await startSuggestionBoard(page);
+  await page.getByRole('button', { name: 'Tab menu' }).click();
+  await page
+    .getByRole('dialog', { name: 'Tab menu' })
+    .getByRole('button', { name: 'Export', exact: true })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Export Tab' });
+  await dialog.getByRole('button', { name: /^Domain Model/ }).click();
+  await expect(dialog.getByText(/hand the brief to a coding agent/)).toBeVisible();
+  await dialog.getByRole('combobox', { name: 'Types in' }).selectOption('go');
+  const download = page.waitForEvent('download');
+  await dialog.getByRole('button', { name: 'Export .zip' }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toMatch(/Domain Model\.zip$/);
+  const chunks: Buffer[] = [];
+  for await (const chunk of await file.createReadStream()) chunks.push(chunk as Buffer);
+  const zip = Buffer.concat(chunks).toString('latin1');
+  for (const name of [
+    'README.md',
+    'livedoc/storm.json',
+    'livedoc/CONVERT.md',
+    'livedoc/export.json',
+  ])
+    expect(zip).toContain(name);
+});

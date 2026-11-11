@@ -28,3 +28,15 @@ export {
   type DomainLanguage,
   type LanguageVerdict,
 } from './brief/languages';
+export {
+  DOMAIN_EXPORT_MAX_NOTES,
+  DOMAIN_EXPORT_MAX_PREVIOUS_BYTES,
+  DOMAIN_EXPORT_MAX_WRITTEN_FILES,
+  ZIP_BUNDLE_FOLDER,
+  parseWrittenFiles,
+  previousExport,
+  writeMessages,
+  zipFiles,
+  type PreviousExport,
+  type WrittenFiles,
+} from './zip';

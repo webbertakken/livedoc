@@ -97,14 +97,30 @@ The types are written in the language the team needs, identified, not assumed:
   the bundle. It may take a minute: the dialog shows progress and can be cancelled.
 - **Without one** (a self-host with no model key), the zip holds the bundle and a `README.md` saying to hand
   `CONVERT.md` to a coding agent; the dialog says so before the export, never after.
-- **Layout**: `README.md`, `livedoc/` (the bundle), `docs/specs/…` (the spec), and the source tree the brief chose for
-  the language.
+- **Layout**: `README.md`, `livedoc/` (the bundle, with the model's `trace.json`), `docs/specs/…` (the spec), and the
+  source tree the brief chose for the language.
+- **The earlier zip is read in the browser** (the editor's zip reader): its text files go to the route as `previous`,
+  the bundle folder's `storm.json` as the baseline, its `export.json` for the language, its `trace.json` and every spec
+  and source file for the model to change rather than replace. Nothing is kept on the server between exports
+  (default).
+- **The route answers files, the editor writes the zip** (default): `{ files, written }`, `files` mapping each path
+  to its text, `written` true when the model wrote the spec and the types. The editor already writes zips for the
+  page and logo exports, and the Worker stays free of an archive library.
+- **The model** is the deployment's assistant provider, behind the AI routes' gates (default). It is handed the brief,
+  then an answer format: every file it writes as `{ path, content }` in one JSON answer, paths relative and inside the
+  spec or the source tree (never `..`, never an absolute path, never the bundle folder but its `trace.json`), at most
+  `DOMAIN_EXPORT_MAX_WRITTEN_FILES` (80) files. A path outside those rules is dropped and logged, never written.
+- **When the model fails** (an error, a timeout, an answer that is no such JSON) the route answers `502 ai_failed` and
+  the dialog offers the bundle on its own, saying why, by asking again with `bundleOnly` (default).
 - **Limits**: a board of up to `DOMAIN_EXPORT_MAX_NOTES` (400) notes; an earlier zip of up to
   `DOMAIN_EXPORT_MAX_PREVIOUS_BYTES` (2 MB) of text; anything past them is refused before the model is called,
   saying which.
 - The route is `POST /api/documents/:id/tabs/:tabId/storm-export`, behind the AI routes' gates (rate limiter,
   origin allow-list, `AI_REQUIRE_ACCOUNT`), with edit or view access to the tab.
-- **Telemetry**: `Export / Used / DomainModel`.
+- **Telemetry**: `Document / Exported / DomainModel`, as every other export; `DomainModelBundle` when it holds the bundle
+  alone.
+- **Refusals**: `not_event_storming`, `language_invalid`, `board_too_large`, `previous_too_large`,
+  `previous_invalid` (no `storm.json` of schema `livedoc.storm/1` in the earlier zip's bundle folder), `ai_failed`.
 
 ## Share roles
 

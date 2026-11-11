@@ -182,6 +182,24 @@ is new is added.
   yourself. It is a head start on the typing, not a replacement for reading your own wall.
 </Note>
 
+## Suggestions From an Agent
+
+An AI agent connected to LiveDoc (through the [MCP connection](/help/account-and-data/connect-ai-mcp/) or the command line) can read your board, find where it is thin, and **suggest** notes: the command nobody wrote, the policy everyone forgot, the external system the flow quietly depends on. A suggestion is only offered; nothing on the board moves until you take it.
+
+- Each note with suggestions shows a small **dashed tab** on the side the note would go, with a number when there are several. Point at it, or tab to it, to see the note where it would land, with the agent's reason and who suggested it.
+- Press **Enter** on a tab or a suggestion to apply it, or **Delete** to dismiss it. Applied, it becomes an ordinary note, placed the way the next-note tabs place one, and the board makes room when it needs to.
+- The **suggestions** button at the top right lists them all, in timeline order. Pointing at one brings it into view. From there, **Show All Suggestions** draws every suggestion in place, with the board making room as a preview only, and **Apply All** or **Dismiss All** handles them in one go. One Undo puts the board back.
+
+Only people who can edit the board see suggestions: applying one reshapes the board.
+
+## Exporting a Domain Model
+
+**Export** in the tab menu offers **Domain Model** on an event storming board. It turns the board into what a team builds from it: a spec of the domain and its types, in the language you choose.
+
+- Where your LiveDoc has an AI model set up, the zip holds the spec and the types it wrote, beside the board reading they came from. Review them as you would a colleague's first draft.
+- Without one, the zip holds the board reading and a brief, `CONVERT.md`: hand the brief to a coding agent working in your repository and it writes the spec and the types there.
+- After the board changes, export again and choose the earlier zip under **Update an earlier export**: the spec and the types are changed to match the board, keeping what people wrote by hand.
+
 ## One Wall of Paper
 
 The board is a single [layer](/help/canvas/layers/). Every note lands on it, whichever colour it is, so any two notes can be stacked in front of or behind each other and nothing is filed away on a plane you cannot see.

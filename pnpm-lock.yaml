@@ -497,6 +497,9 @@ importers:
       '@livedoc/sticky-vision':
         specifier: workspace:*
         version: link:../../packages/sticky-vision
+      '@livedoc/storm-reading':
+        specifier: workspace:*
+        version: link:../../packages/storm-reading
       '@livedoc/telemetry-client':
         specifier: workspace:*
         version: link:../../packages/telemetry-client

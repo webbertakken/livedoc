@@ -130,6 +130,16 @@ export function FormatIcon({ kind }: { kind: Format }) {
           <rect x="8" y="20" width="12" height="2.5" rx="1.25" fill="rgb(14 116 144)" />
         </svg>
       );
+    case 'domain-model':
+      // Three workshop notes in a row (command, event, policy) over the .zip they become.
+      return (
+        <svg width="32" height="24" viewBox="0 0 32 24" aria-hidden>
+          <rect x="1" y="3" width="9" height="9" rx="1" fill="#93c5fd" />
+          <rect x="11.5" y="3" width="9" height="9" rx="1" fill="#fdba74" />
+          <rect x="22" y="3" width="9" height="9" rx="1" fill="#d8b4fe" />
+          <rect x="6" y="16" width="20" height="5" rx="1.5" fill="rgb(71 85 105)" />
+        </svg>
+      );
     case 'pdf':
       return (
         <svg width="22" height="28" viewBox="0 0 22 28" aria-hidden>
