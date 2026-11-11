@@ -11,10 +11,10 @@ import {
 } from '@livedoc/document';
 import { checkoutFlow } from './fixtures/checkout-flow';
 import { applied } from './fixtures/outcomes';
-import { flowWith, run } from './fixtures/run';
+import { run } from './fixtures/run';
 import { EDIT_OPERATION_NAMES } from './vocabulary';
 
-const SAMPLES: Readonly<Record<(typeof EDIT_OPERATION_NAMES)[number], string>> = {
+const SAMPLES: Readonly<Record<Name, string>> = {
   add: 'add sticky label="Fraud check" right-of:n5',
   set: 'set n3 label="Sign in" fill=green',
   rm: 'rm n7',
@@ -27,7 +27,27 @@ const SAMPLES: Readonly<Record<(typeof EDIT_OPERATION_NAMES)[number], string>> =
   order: 'order f2 front',
   layout: 'layout n5 n6 n7 n8 direction=right',
   test: 'test n3 label=Login',
+  suggest: 'suggest command "Place Order" before=placed reason="every event has a cause"',
 };
+
+type Name = (typeof EDIT_OPERATION_NAMES)[number];
+
+// The checkout flow, or for `suggest` the same flow on an Event Storming board with one domain event to anchor on.
+function tabFor(name: string): Tab {
+  const flow = checkoutFlow();
+  if (name !== 'suggest') return flow;
+  const placed: Element = {
+    id: 'placed',
+    type: 'sticky',
+    x: 2000,
+    y: 0,
+    width: 200,
+    height: 200,
+    label: 'Order Placed',
+    esKind: 'domain-event',
+  };
+  return { ...flow, kind: 'event-storming', elements: [...flow.elements, placed] };
+}
 
 const samples = Object.entries(SAMPLES);
 const frozen = (tab: Tab) => JSON.parse(JSON.stringify(tab)) as Tab;
@@ -39,20 +59,20 @@ describe('invariants', () => {
 
   it.each(samples)(
     '%s: a rejected changeset carries no tab and the input is untouched (I1)',
-    (_, text) => {
-      const tab = checkoutFlow();
+    (name, text) => {
+      const tab = tabFor(name);
       const outcome = run(`${text}\ntest n1 label=Nope`, tab);
       expect(outcome).not.toHaveProperty('tab');
-      expect(tab).toEqual(frozen(checkoutFlow()));
+      expect(tab).toEqual(frozen(tabFor(name)));
     },
   );
 
   it.each(samples)(
     '%s: the input tab is never mutated, and what stayed is the same object (I1, I2)',
-    (_, text) => {
-      const tab = checkoutFlow();
+    (name, text) => {
+      const tab = tabFor(name);
       const { tab: next } = applied(run(text, tab));
-      expect(tab).toEqual(frozen(checkoutFlow()));
+      expect(tab).toEqual(frozen(tabFor(name)));
       const before = new Map(tab.elements.map((el) => [el.id, el]));
       for (const el of next.elements) {
         const was = before.get(el.id);
@@ -61,18 +81,18 @@ describe('invariants', () => {
     },
   );
 
-  it.each(samples)('%s: element ops and their inverse round trip (I4)', (_, text) => {
-    const tab = checkoutFlow();
+  it.each(samples)('%s: element ops and their inverse round trip (I4)', (name, text) => {
+    const tab = tabFor(name);
     const { tab: next, elementOps, inverse } = applied(run(text, tab));
     expect(applyElementOps(tab.elements, elementOps)).toEqual(next.elements);
     expect(applyElementOps(next.elements, inverse)).toEqual(tab.elements);
   });
 
-  it.each(samples)('%s: the same input gives the same outcome (I5)', (_, text) => {
-    expect(run(text)).toEqual(run(text));
+  it.each(samples)('%s: the same input gives the same outcome (I5)', (name, text) => {
+    expect(run(text, tabFor(name))).toEqual(run(text, tabFor(name)));
   });
 
-  it.each(samples)('%s: lanes first, and every container behind its members (I6)', (_, text) => {
+  it.each(samples)('%s: lanes first, and every container behind its members (I6)', (name, text) => {
     const lane: Element = {
       id: 'lane',
       type: 'shape',
@@ -82,7 +102,7 @@ describe('invariants', () => {
       width: 2000,
       height: 1200,
     };
-    const tab = { ...checkoutFlow(), elements: [...checkoutFlow().elements, lane] };
+    const tab = { ...tabFor(name), elements: [...tabFor(name).elements, lane] };
     const { tab: next } = applied(run(text, tab));
     const order = next.elements.map((el) => el.id);
     const firstOther = next.elements.findIndex(
@@ -98,9 +118,13 @@ describe('invariants', () => {
     }
   });
 
-  it.each(samples)('%s: no locked element changes (I7)', (_, text) => {
-    for (const id of checkoutFlow().elements.map((el) => el.id)) {
-      const tab = flowWith((el) => (el.id === id ? { ...el, locked: true } : el));
+  it.each(samples)('%s: no locked element changes (I7)', (name, text) => {
+    for (const id of tabFor(name).elements.map((el) => el.id)) {
+      const base = tabFor(name);
+      const tab = {
+        ...base,
+        elements: base.elements.map((el) => (el.id === id ? { ...el, locked: true } : el)),
+      };
       const outcome = run(text, tab);
       if ('errors' in outcome) {
         expect(outcome.errors[0]!.code).toBe('element_locked');

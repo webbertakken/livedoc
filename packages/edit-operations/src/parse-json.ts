@@ -18,7 +18,7 @@ import {
   WRAP_CONTAINERS,
   type EditOperationName,
 } from './vocabulary';
-import { isRecord } from '@livedoc/document';
+import { ES_SUGGESTION_SIDES, isRecord } from '@livedoc/document';
 
 type Raw = Record<string, unknown>;
 
@@ -70,6 +70,15 @@ export function placementIssue(value: unknown): string | null {
 function memberIssue(name: EditOperationName, raw: Raw, member: string): string | null {
   const value = raw[member];
   switch (member) {
+    case 'words':
+    case 'reason':
+    case 'gap':
+      return typeof value === 'string' ? null : expected(member, 'a string');
+    case 'side':
+      return isOneOf(ES_SUGGESTION_SIDES, value)
+        ? null
+        : expected(member, ES_SUGGESTION_SIDES.join(', '));
+    case 'anchor':
     case 'target':
     case 'from':
     case 'above':
@@ -124,6 +133,7 @@ const REQUIRED: Readonly<Record<EditOperationName, readonly string[]>> = {
   order: ['target'],
   layout: ['target'],
   test: ['target', 'fields'],
+  suggest: ['kind', 'words', 'anchor', 'side'],
 };
 
 // Members of which exactly one, at most one (`atMostOne`) or at least one (`atLeastOne`) is given,

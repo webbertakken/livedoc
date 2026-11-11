@@ -126,6 +126,16 @@ function words(operation: EditOperation): string[] {
         ...(operation.style ? [`style=${operation.style}`] : []),
         ...(operation.direction ? [`direction=${operation.direction}`] : []),
       ];
+    case 'suggest':
+      return [
+        'suggest',
+        operation.kind,
+        JSON.stringify(operation.words),
+        `${operation.side}=${oneWord(operation.anchor)}`,
+        ...(operation.reason !== undefined ? [`reason=${JSON.stringify(operation.reason)}`] : []),
+        ...(operation.gap !== undefined ? [`gap=${operation.gap}`] : []),
+        ...idText(operation.id),
+      ];
   }
 }
 

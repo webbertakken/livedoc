@@ -16,7 +16,7 @@ about the domain (the missing command, the policy everyone forgot, the external 
   | `side`     | `before`, `after` (same lane, left or right) or `above`, `below` (lane above) |
   | `reason`   | Why, in the agent's words, up to `SUGGESTION_REASON_MAX` (200) characters     |
   | `gap`      | The [gap](board-reading.md#gaps) code it closes, when it closes one           |
-  | `by`       | Who suggested it: the agent's name as its presence shows it                   |
+  | `by`       | Who suggested it: the token owner's name, as the agent's presence shows it    |
 
 - **It is not board content.** A suggestion is invisible to everything that reads the board as a board: it is not
   painted as a note, not hit, not selected, not exported (SVG, PNG, Mermaid, Markdown, text), not counted by the

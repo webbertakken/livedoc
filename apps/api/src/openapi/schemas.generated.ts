@@ -5387,6 +5387,32 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     enum: ['pk', 'fk', 'pk-fk', 'uk'],
     type: 'string',
   },
+  EsSuggestion: {
+    additionalProperties: false,
+    properties: {
+      anchorId: {
+        $ref: '#/components/schemas/ElementId',
+      },
+      by: {
+        type: 'string',
+      },
+      gap: {
+        type: 'string',
+      },
+      reason: {
+        type: 'string',
+      },
+      side: {
+        $ref: '#/components/schemas/EsSuggestionSide',
+      },
+    },
+    required: ['anchorId', 'side'],
+    type: 'object',
+  },
+  EsSuggestionSide: {
+    enum: ['before', 'after', 'above', 'below'],
+    type: 'string',
+  },
   EstimateScale: {
     enum: ['fibonacci', 'tshirt', 'powers'],
     type: 'string',
@@ -10562,6 +10588,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       {
         additionalProperties: false,
         properties: {
+          anchoredTo: {
+            type: 'string',
+          },
           ends: {
             items: {
               type: 'string',
@@ -10584,7 +10613,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             type: 'string',
           },
           reason: {
-            enum: ['pinned', 'unwrapped'],
+            enum: ['pinned', 'unwrapped', 'anchored'],
             type: 'string',
           },
           ref: {
@@ -12536,6 +12565,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       esKind: {
         $ref: '#/components/schemas/EventStormingNoteKind',
+      },
+      esSuggestion: {
+        $ref: '#/components/schemas/EsSuggestion',
       },
       fillColor: {
         type: 'string',

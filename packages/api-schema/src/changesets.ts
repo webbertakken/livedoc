@@ -101,6 +101,14 @@ export const EDIT_REJECTION_CODES = [
   'elements_held',
   'invalid_result',
   'too_large',
+  // The suggest operation (docs/specs/021-event-storming/suggestions.md "How an agent suggests").
+  'not_event_storming',
+  'invalid_kind',
+  'anchor_not_a_note',
+  'words_required',
+  'reason_too_long',
+  'too_many_suggestions',
+  'duplicate_suggestion',
 ] as const;
 export type EditRejectionCode = (typeof EDIT_REJECTION_CODES)[number];
 
@@ -154,8 +162,10 @@ export type ResultLine =
       kind: string;
       label?: string;
       ends?: [string, string];
-      reason?: 'pinned' | 'unwrapped';
+      reason?: 'pinned' | 'unwrapped' | 'anchored';
       pinnedTo?: string;
+      // The note a removed suggestion was anchored on (docs/specs/021-event-storming/suggestions.md).
+      anchoredTo?: string;
     }
   | {
       mark: '»';

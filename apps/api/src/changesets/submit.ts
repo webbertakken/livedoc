@@ -226,6 +226,8 @@ function compile(
     // What the owner has selected: what `selected` reads; null when the room was not read.
     selected: selections ? selections.filter((s) => s.mine).flatMap((s) => s.elementIds) : null,
     log: engineLog({ documentId: args.document.id, tabId: args.tabId }),
+    // An agent's suggestion records its owner's name, as its presence shows it (docs/specs/021-event-storming/suggestions.md).
+    ...(args.tokenId !== null ? { agentName: args.author.name } : {}),
   };
   const body = args.request.body;
   if (body.kind === 'replace') {
