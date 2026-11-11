@@ -25,23 +25,25 @@ an actor or a read model leads to a command, a command causes an event, an aggre
 the command that causes an event, an event triggers a policy, and a policy issues a command.
 A relation is found from geometry alone, in this order, and each note takes at most one partner per relation:
 
-| Note            | Relates to                                           | How it is found                                                        |
-| --------------- | ---------------------------------------------------- | ---------------------------------------------------------------------- |
-| Command         | the event it **causes**                              | the nearest event not left of the command                              |
-| Policy          | the event that **triggers** it                       | the nearest event not right of the policy                              |
-| Policy          | the command it **issues**                            | the nearest command not left of the policy, whose event is not earlier |
-| Actor           | the command it **issues**                            | the command it overlaps, else the nearest command not left of it       |
-| Read model      | the command it **informs**                           | the nearest command not left of it                                     |
-| Aggregate       | the event it **decides**                             | the nearest event not left of it                                       |
-| External system | the event it **causes** or the command it **serves** | the nearest event not left of it                                       |
-| Hotspot         | the note it **flags**                                | the note it overlaps most, else the nearest note                       |
+| Note            | Relates to                                           | How it is found                                                                          |
+| --------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Command         | the event it **causes**                              | the nearest event not left of the command                                                |
+| Policy          | the event that **triggers** it                       | the nearest event not right of the policy                                                |
+| Policy          | the command it **issues**                            | the nearest command not left of the policy, whose event comes after the policy's trigger |
+| Actor           | the command it **issues**                            | the command it overlaps, else the nearest command not left of it                         |
+| Read model      | the command it **informs**                           | the nearest command not left of it                                                       |
+| Aggregate       | the event it **decides**                             | the nearest event not left of it                                                         |
+| External system | the event it **causes** or the command it **serves** | the nearest event not left of it                                                         |
+| Hotspot         | the note it **flags**                                | the note it overlaps most, else the nearest note                                         |
 
 - **"Not left of"** means the partner's centre is at or right of the note's left edge, so a partner in the same
   column counts: a board laid out a lane per kind (as the MCP's storm graph lays it) reads like a board laid out in
   one row.
-- **Nearest** is by distance between centres, where each lane apart costs one `ES_LANE_PITCH`, so a partner on the
+- **Nearest** is by straight-line distance between centres, where each lane apart costs one `ES_LANE_PITCH` (default), so a partner on the
   note's own lane wins over one diagonally the same distance away.
-- **Ties** go to the partner on the lane above, then to the one first in document order.
+- **Ties** go to the partner fewer lanes away, then to the one on the lane above, then to the one first in document
+  order.
+- There is no reach along the timeline: a partner far to the right is still the nearest one (default).
 - A note that finds no partner within reach is **loose**: read, listed, and the subject of a gap.
 
 ## The timeline
@@ -78,14 +80,15 @@ Levels:
 | `blank_note`              | notation | A note has no words                                                    | none                       |
 | `event_not_past_tense`    | notation | An event's last word does not read as past tense                       | none                       |
 | `command_not_imperative`  | notation | A command's first word reads as past tense                             | none                       |
-| `duplicate_note`          | question | Two notes of one kind say the same words                               | none                       |
+| `duplicate_note`          | question | Two events, commands or policies of one kind say the same words        | none                       |
 | `open_hotspot`            | question | Every hotspot: a question the room has not answered                    | none                       |
 
 - **Tense is a heuristic, in English.** A word reads as past tense when it ends in `ed`, or is one of the common
   irregular past forms (`PAST_TENSE_IRREGULARS`). A board in another language finds none of these two, never false
   ones: the check stands down when fewer than half the board's events read as English past tense
   (`TENSE_CHECK_MIN_SHARE`) (default).
-- **Duplicates** compare words ignoring case, punctuation and repeated spaces.
+- **Duplicates** compare words ignoring case, punctuation and repeated spaces, among the kinds that name a moment
+  (events, commands, policies): actors, read models, aggregates and external systems recur on a board by nature.
 - Gaps are ordered by the timeline (the first note they name), then by code.
 - A gap is a prompt, never a verdict: an event can be caused by time passing, and the room may know it.
   Nothing in the editor flags a gap on its own; gaps are what an agent reads to make suggestions.
