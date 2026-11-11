@@ -1564,6 +1564,31 @@ importers:
         specifier: ^5.0.5
         version: 5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0(@noble/hashes@2.4.0))(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0))
 
+  packages/storm-reading:
+    dependencies:
+      '@livedoc/document':
+        specifier: workspace:*
+        version: link:../document
+    devDependencies:
+      '@livedoc/oxlint-config':
+        specifier: workspace:*
+        version: link:../oxlint-config
+      '@livedoc/vitest-config':
+        specifier: workspace:*
+        version: link:../vitest-config
+      '@vitest/coverage-v8':
+        specifier: ^5.0.5
+        version: 5.1.0(vitest@5.1.0)
+      oxlint:
+        specifier: ^1.88.0
+        version: 1.92.0(oxlint-tsgolint@7.0.2006)
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: ^5.0.5
+        version: 5.1.0(@types/node@26.6.6)(@vitest/coverage-v8@5.1.0)(jsdom@31.0.0(@noble/hashes@2.4.0))(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0))
+
   packages/tailwind-config:
     dependencies:
       '@livedoc/source-ast':

@@ -49,6 +49,7 @@ import {
   oneOfRule,
 } from './validate-primitives';
 import { isRecord } from './is-record';
+import { isValidEsSuggestion } from './event-storming-suggestions';
 
 export type { ElementValidationIssue } from './validate-primitives';
 
@@ -470,7 +471,11 @@ function boxedIssue(el: Record<string, unknown>): ElementValidationIssue | null 
       return pathIssue(el);
     case 'text':
       return firstFieldIssue(el, TEXT_FIELD_CHECKS);
-    // sticky / annotation / link-card / video carry no extra required fields.
+    case 'sticky':
+      return el.esSuggestion === undefined || isValidEsSuggestion(el.esSuggestion)
+        ? null
+        : issue('esSuggestion', 'an { anchorId, side, reason?, gap?, by? } suggestion');
+    // annotation / link-card / video carry no extra required fields.
     default:
       return null;
   }
