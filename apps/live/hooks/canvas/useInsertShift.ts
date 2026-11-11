@@ -21,9 +21,13 @@ export type InsertShift = {
   // just while a slot is open: were the transition removed in the same commit
   // as the offset, the board would snap shut instead of easing.
   animates: boolean;
+  // Whether a drag is in hand: the board is the drag's while it lasts, so chrome that acts on it stands down.
+  dragging: boolean;
 };
 
-export function useInsertShift(): InsertShift {
+// `preview`: the Show All Suggestions shift (docs/specs/021-event-storming/suggestions.md "How a person sees them"),
+// the board as Apply All would leave it. A drag in hand puts it away: the board is the drag's while it lasts.
+export function useInsertShift(preview?: ReadonlyMap<string, number> | null): InsertShift {
   const slot = useInsertionSlot();
   // Either entry point counts as "a drag is in hand": a palette note on its
   // way in, or a note already on the board being moved. Both subscriptions are
@@ -37,9 +41,17 @@ export function useInsertShift(): InsertShift {
   const shiftDx = slot?.shiftDx;
   return useMemo(
     () => ({
-      xFor: (id: string) => (shiftedIds?.has(id) ? shiftDx : undefined),
-      animates: dragging,
+      xFor: (id: string) =>
+        shiftedIds
+          ? shiftedIds.has(id)
+            ? shiftDx
+            : undefined
+          : dragging
+            ? undefined
+            : preview?.get(id),
+      animates: dragging || !!preview,
+      dragging,
     }),
-    [shiftedIds, shiftDx, dragging],
+    [shiftedIds, shiftDx, dragging, preview],
   );
 }

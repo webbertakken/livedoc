@@ -137,6 +137,16 @@ export const EXACT: Readonly<Record<string, string>> = {
     "Someone clicked a comment-thread row in the Explorer's Inbox, jumping to the element it's on.",
   'Canvas|Used|AddNextNote':
     'Someone clicked a next-note button beside a note on an event-storming board and got the note type that notation places there next.',
+  'Canvas|Used|SuggestionApplied':
+    "Someone applied an agent's suggested note on an event-storming board, turning it into an ordinary note.",
+  'Canvas|Used|SuggestionDismissed':
+    "Someone dismissed an agent's suggested note on an event-storming board.",
+  'Canvas|Used|SuggestionsAppliedAll':
+    'Someone applied every open suggestion on an event-storming board at once, from the suggestions panel.',
+  'Canvas|Used|SuggestionsDismissedAll':
+    'Someone dismissed every open suggestion on an event-storming board at once, from the suggestions panel.',
+  'Canvas|Used|SuggestionsShown':
+    'Someone switched on Show All Suggestions, drawing every suggested note where it would land on an event-storming board.',
   'Canvas|Used|WaterCooler':
     'Someone walked their Avatar-mode character up to a water cooler and took a cup of water.',
   'Canvas|Used|CoffeeMachine':

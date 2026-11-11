@@ -663,6 +663,23 @@ export const LANES_SETTLED = chart(
   { types: ['LanesSettled'] },
 );
 
+// Suggestions on an event-storming board (docs/specs/021-event-storming/suggestions.md "Applying and dismissing").
+export const SUGGESTIONS_HANDLED = chart(
+  'Canvas',
+  'Used',
+  'Suggestions Handled',
+  "An agent's suggested note on an event-storming board applied or dismissed, one at a time or all at once, or every suggestion shown in place.",
+  {
+    types: [
+      'SuggestionApplied',
+      'SuggestionDismissed',
+      'SuggestionsAppliedAll',
+      'SuggestionsDismissedAll',
+      'SuggestionsShown',
+    ],
+  },
+);
+
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -685,6 +702,7 @@ export const ELEMENT_EDITING: MetricStack = {
     NEXT_NOTES_ADDED,
     NOTE_KINDS_CHANGED,
     LANES_SETTLED,
+    SUGGESTIONS_HANDLED,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],

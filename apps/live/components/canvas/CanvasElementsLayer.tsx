@@ -37,12 +37,15 @@ import {
 import { ChangesetRevealOverlay } from '@/components/canvas/ChangesetRevealOverlay';
 import { AgentFocusOverlay } from '@/components/canvas/AgentFocusOverlay';
 import { LayerSelectionChrome } from '@/components/canvas/LayerSelectionChrome';
+import { SuggestionLayer } from '@/components/canvas/suggestions/SuggestionLayer';
 import { useSheetChartRenderer, type BoxedShared } from '@/components/canvas/sheet-chart-renderer';
 import type { CanvasSelectionInput } from '@/hooks/canvas/useCanvasSelectionView';
 import { usePhotoDraftView } from '@/lib/photo-draft-preview';
 import { ZoomedLaserOverlay } from '@/components/canvas/view-readers';
 import { RemoteCursors } from '@/components/canvas/RemoteCursor';
 import { useInsertShift } from '@/hooks/canvas/useInsertShift';
+import { suggestionPreview } from '@/lib/suggestion-apply';
+import { useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
@@ -349,7 +352,23 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
   // Insert-between preview (docs/specs/021-event-storming/event-storming.md): while a palette drag hovers a gap on an
   // event-storming board, the elements at and after the insertion point RENDER
   // shifted right to show the slot opening — see useInsertShift.
-  const insertShift = useInsertShift();
+  // Show All Suggestions (docs/specs/021-event-storming/suggestions.md): the board drawn as Apply All would leave
+  // it, through the same render-only shift. Never where the change would be refused.
+  const suggestionView = useSuggestionView(props.activeTabId ?? '');
+  const suggestionsShown =
+    !!props.suggestions &&
+    !!props.esBoard &&
+    !readOnly &&
+    !tabLocked &&
+    props.createBlocked !== true;
+  const showAllPreview = useMemo(
+    () =>
+      suggestionsShown && suggestionView.showAll
+        ? suggestionPreview(elements, props.layerInertIds)
+        : null,
+    [suggestionsShown, suggestionView.showAll, elements, props.layerInertIds],
+  );
+  const insertShift = useInsertShift(showAllPreview?.shiftX ?? null);
   // Session-local view state for an open photo draft (docs/specs/021-event-storming/event-storming.md Phase 8).
   const draftView = usePhotoDraftView();
   // Paint order (docs/specs/006-document/layers.md + docs/specs/008-canvas/canvas-and-palette.md): layer bands bottom -> top, keeping
@@ -676,6 +695,16 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
             {/* The grips layer (docs/specs/008-canvas/canvas-and-palette.md "Resize"): above every element, so
           no grip is ever covered. The canvas's own grips go in here; each element's are portalled in. */}
             <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
+              {/* Suggestions (docs/specs/021-event-storming/suggestions.md): beneath the next-note tabs, standing
+          down while a drag is in hand. */}
+              {suggestionsShown && props.suggestions && !insertShift.dragging ? (
+                <SuggestionLayer
+                  elements={elements}
+                  tabId={props.activeTabId ?? ''}
+                  controls={props.suggestions}
+                  showAllSpots={showAllPreview?.spots ?? null}
+                />
+              ) : null}
               <LayerSelectionChrome
                 selectionInput={props.selectionInput}
                 tabId={props.activeTabId ?? ''}
@@ -688,7 +717,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                           readOnly ||
                           tabLocked ||
                           props.createBlocked === true ||
-                          insertShift.animates,
+                          insertShift.dragging,
                         onAdd: props.onAddNextNote,
                       }
                     : null

@@ -14,6 +14,8 @@ describe('resolveEditorCapabilities', () => {
   it('gives an Editor everything', () => {
     const can = resolveEditorCapabilities({ level: 'edit', adderKey: null });
     expect(can.takePart && can.addContent && can.planCards && can.sheetCells).toBe(true);
+    // Suggestions are an Editor's alone (docs/specs/021-event-storming/suggestions.md "Share roles").
+    expect(can.suggestions).toBe(true);
     expect(can.remove(shape()) && can.move(shape()) && can.recolour(shape())).toBe(true);
   });
 
@@ -31,7 +33,9 @@ describe('resolveEditorCapabilities', () => {
 
   it('gives a Viewer nothing', () => {
     const can = resolveEditorCapabilities({ level: 'view', adderKey: ME });
-    expect(can.takePart || can.addContent || can.planCards || can.sheetCells).toBe(false);
+    expect(
+      can.takePart || can.addContent || can.planCards || can.sheetCells || can.suggestions,
+    ).toBe(false);
     expect(
       can.writeText(sticky()) || can.move(sticky()) || can.remove(sticky({ addedBy: ME })),
     ).toBe(false);

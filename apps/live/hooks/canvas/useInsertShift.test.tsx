@@ -65,4 +65,24 @@ describe('useInsertShift', () => {
     act(() => setInsertionDragInHand(false));
     expect(result.current.animates).toBe(false);
   });
+
+  // The Show All preview (docs/specs/021-event-storming/suggestions.md "How a person sees them"): the board drawn as
+  // Apply All would leave it, eased as the insertion is, without counting as a drag in hand.
+  it('draws the Show All preview shift, eased, and never as a drag', () => {
+    const preview = new Map([['b', 216]]);
+    const { result } = renderHook(() => useInsertShift(preview));
+    expect(result.current.xFor('b')).toBe(216);
+    expect(result.current.xFor('a')).toBeUndefined();
+    expect(result.current.animates).toBe(true);
+    expect(result.current.dragging).toBe(false);
+  });
+
+  it('puts the Show All preview away while a drag is in hand', () => {
+    const { result } = renderHook(() => useInsertShift(new Map([['b', 216]])));
+    act(() => setInsertionDragInHand(true));
+    expect(result.current.xFor('b')).toBeUndefined();
+    act(() => setInsertionSlot(SLOT));
+    expect(result.current.xFor('b')).toBe(272);
+    expect(result.current.dragging).toBe(true);
+  });
 });
