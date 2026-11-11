@@ -1559,6 +1559,10 @@ hundred small notes.
 
 ## Agents
 
+An agent reads a board through its [board reading](board-reading.md) (the timeline, the chains and the gaps,
+with no model involved), proposes notes as [suggestions](suggestions.md) that a person applies or dismisses, and
+turns the board into a spec and domain types with the [domain export](domain-export.md).
+
 An agent builds a board through the MCP's graph input with `style: "storm"` ([MCP server](../015-api/mcp-server.md)
 §4.7), saying only what the wall holds and what leads to what; the server leaves it as a facilitator would.
 

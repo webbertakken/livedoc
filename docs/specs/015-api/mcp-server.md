@@ -182,9 +182,9 @@ page counts it as `Token·Created·Runa`, and on a failed hand-over tells him to
 
 ## 4. Tools
 
-Twenty-eight tools: thirteen for documents, five for Plan boards ([§4.9b](#49b-the-plan-tools)), four for sheets
-([§4.9c](#49c-the-sheet-tools)), two for pages and articles ([§4.9d](#49d-the-pages-tools)) and four
-for forms ([§4.9e](#49e-the-form-tools)), besides the deprecated names ([§4.18](#418-deprecated-tool-names)). The search/view capability is two tools (find, then read); create,
+Thirty-one tools: thirteen for documents, five for Plan boards ([§4.9b](#49b-the-plan-tools)), four for sheets
+([§4.9c](#49c-the-sheet-tools)), two for pages and articles ([§4.9d](#49d-the-pages-tools)), four
+for forms ([§4.9e](#49e-the-form-tools)) and three for Event Storming boards ([§4.9f](#49f-the-event-storming-tools)), besides the deprecated names ([§4.18](#418-deprecated-tool-names)). The search/view capability is two tools (find, then read); create,
 add_tab, and update are separate because their inputs and intent differ;
 list_templates exposes the template catalogue ([§4.5](#45-list_templates)), search_icons the icon catalogue
 ([§4.5a](#45a-search_icons)) and list_images the user's image gallery ([§4.5b](#45b-list_images));
@@ -950,6 +950,22 @@ built with the editor's own edits (`@livedoc/forms`) and started as Start Planni
   route. Answers what it made, where, and its number.
 - `read_document` lists a Form tab as `kind=form` with a line naming `read_form`; its `image` draws the form as
   `read_form` does.
+
+### 4.9f The event-storming tools
+
+An Event Storming board read as a domain, the notes an agent proposes for it, and the bundle that turns it into a
+spec and types ([Board reading](../021-event-storming/board-reading.md),
+[Suggestions](../021-event-storming/suggestions.md), [Domain export](../021-event-storming/domain-export.md)). The
+server (`packages/agent-verbs/src/storm/`) reads through the api's `storm` view and writes through changesets.
+
+- **`read_event_storming`** (read): the board reading (the timeline of events with what leads to each, the chains,
+  the loose notes), its gaps with their remedies, and the open suggestions; a tab that is not a board is refused as
+  `not_event_storming`.
+- **`suggest_notes`** (write): up to 30 suggestions (`kind`, `words`, `anchor` ref, `side`, `reason`, `gap`) as one
+  changeset of `suggest` operations; a refusal writes nothing and names the suggestion. Answers each suggestion's ref.
+- **`export_event_storming`** (read): the [domain export](../021-event-storming/domain-export.md#the-mcp) bundle as
+  text; `language` and `previous` are optional.
+- `update_document`'s `ops` take `suggest` as well, and `read_document` names `read_event_storming` on a board.
 
 ### 4.10 Prompts (discoverability)
 
