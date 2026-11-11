@@ -59,7 +59,8 @@ function engineRefusalOf(err: unknown): StormRefusal | null {
   if (!(err instanceof ApiError) || err.status >= 500 || err.code === null) return null;
   try {
     const body: unknown = JSON.parse(err.body);
-    const text = typeof body === 'object' && body !== null ? Reflect.get(body, 'text') : null;
+    const text: unknown =
+      typeof body === 'object' && body !== null ? Reflect.get(body, 'text') : null;
     return typeof text === 'string' ? refuse(err.code, text) : null;
   } catch {
     return null;

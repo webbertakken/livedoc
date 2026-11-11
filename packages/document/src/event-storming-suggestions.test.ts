@@ -12,8 +12,8 @@ import { hiddenLayerElementIds, layerBands, visibleLayerElements } from './layer
 import { isValidElement } from './validate';
 import type { Element } from './index';
 
-const note = (id: string, x: number, extra: Record<string, unknown> = {}): Element =>
-  ({
+const note = (id: string, x: number, extra: Record<string, unknown> = {}): Element => {
+  const sticky: Element = {
     id,
     type: 'sticky',
     x,
@@ -23,7 +23,9 @@ const note = (id: string, x: number, extra: Record<string, unknown> = {}): Eleme
     label: id,
     esKind: 'domain-event',
     ...extra,
-  }) as Element;
+  };
+  return sticky;
+};
 
 const suggestion = (id: string, anchorId: string, side = 'before'): Element =>
   note(id, 0, { esKind: 'command', esSuggestion: { anchorId, side, reason: 'why' } });

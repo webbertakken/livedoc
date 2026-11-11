@@ -14,7 +14,6 @@ import {
   bundleFolderName,
   hasChanges,
   parsePreviousReading,
-  type DomainLanguage,
 } from '@livedoc/storm-reading';
 import { clientFor } from './api';
 import type { Env } from './env';
@@ -70,7 +69,7 @@ export function registerStormTools(server: McpServer, env: Env): void {
       return errorResult(
         'previous is not the storm.json of an earlier export (schema livedoc.storm/1).',
       );
-    const language = (args.language as DomainLanguage | undefined) ?? null;
+    const language = args.language ?? null;
     const bundle = buildExportBundle({
       reading: read.reading,
       previous,
