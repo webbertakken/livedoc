@@ -278,7 +278,7 @@ export function parseOperationWords(
     if ('column' in c) return { error: c };
     if (c.terms.length) return fail(c.terms[0], end, 'before=, after=, above= or below=<note>');
     const fieldWord = more.find(
-      (w) => fieldOf(w) && !(SPECIAL_KEYS.suggest ?? []).includes(fieldOf(w)!.key),
+      (w) => fieldOf(w) && !SPECIAL_KEYS.suggest!.includes(fieldOf(w)!.key),
     );
     if (fieldWord) return fail(fieldWord, end, 'reason=, gap= or id=');
     const sides = SUGGEST_SIDES.filter((side) => c.special[side] !== undefined);

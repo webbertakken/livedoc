@@ -11,6 +11,7 @@ const DOC = 'aaaa1111-0000-4000-8000-000000000002';
 const HOST = 'https://docs.nu';
 const note = (id: string, esKind: string, x: number, label: string): Element =>
   ({ id, type: 'sticky', x, y: 0, width: 200, height: 200, label, esKind }) as Element;
+let isBoard = true;
 let elements: Element[] = [
   note('c', 'command', 0, 'Place Order'),
   note('e', 'domain-event', 216, 'Order Placed'),
@@ -32,6 +33,12 @@ const host: Route = (_r, url) => {
         tabs: [{ id: 'es', name: 'Order Flow', orderIndex: 0 }],
       },
     });
+  if (
+    path === `/api/documents/${DOC}/tabs/es` &&
+    url.searchParams.get('view') === 'storm' &&
+    !isBoard
+  )
+    return Response.json({ error: 'not_event_storming' }, { status: 400 });
   if (path === `/api/documents/${DOC}/tabs/es` && url.searchParams.get('view') === 'storm')
     return Response.json({
       reading: readBoard({ id: 'es', name: 'Order Flow', elements }),
@@ -86,6 +93,47 @@ describe('storm export', () => {
     expect(second.out).toContain('· 1 change');
     expect(second.out).toContain('language rust (the last export)');
     expect(second.file('CHANGES.md')).toContain('- command c "Submit Order", was "Place Order"');
+  });
+
+  it('refuses a document with no board', async () => {
+    const result = await cli(['storm', 'export', DOC, '--tab', 'nope']);
+    expect(result.code).not.toBe(0);
+    expect(result.err).toContain('No tab "nope"');
+  });
+
+  it('treats an unreadable storm.json as a first export, and drops a stale CHANGES.md', async () => {
+    elements = [note('c', 'command', 0, 'Place Order')];
+    const result = await cli(['storm', 'export', DOC, '--lang', 'go'], {
+      [`${DIR}/storm.json`]: 'not json',
+      [`${DIR}/CHANGES.md`]: 'old',
+    });
+    expect(result.code).toBe(0);
+    expect(result.err).toContain('storm.json is not a reading');
+    expect(result.out).toContain('first export');
+    expect(result.file('CHANGES.md')).toBeUndefined();
+  });
+
+  it('refuses a tab that is no board, and counts no changes when nothing changed', async () => {
+    isBoard = false;
+    const refused = await cli(['storm', 'export', DOC]);
+    isBoard = true;
+    expect(refused.err).toContain('no Event Storming board');
+    elements = [note('c', 'command', 0, 'Place Order')];
+    const first = await cli(['storm', 'export', DOC, '--lang', 'go']);
+    const kept = Object.fromEntries([...first.io.fileMap].map(([path, f]) => [path, f.data]));
+    const again = await cli(['storm', 'export', DOC], {
+      ...kept,
+      [`${DIR}/export.json`]: 'broken',
+      '/work/go.mod': '',
+    });
+    expect(again.out).toContain('· 0 changes');
+    expect(again.out).toContain('language go (go.mod at its root)');
+  });
+
+  it('refuses when nothing at the root names a language', async () => {
+    const result = await cli(['storm', 'export', DOC]);
+    expect(result.err).toContain('says which language');
+    expect(result.err).toContain('--lang typescript');
   });
 
   it('refuses when the repository does not say which language', async () => {

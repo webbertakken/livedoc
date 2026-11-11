@@ -75,6 +75,7 @@ describe('suggest: parsing', () => {
     ['suggest command "x" before=a fill=red', 'reason=, gap= or id='],
     ['suggest command "x" before=a stray', 'before=, after='],
     ['suggest command reason=x before=a', 'the words'],
+    ['suggest command "x" before=a fill=[1', 'a JSON value'],
   ])('refuses %s', (line, expected) => {
     const parsed = parseEditOperations(line);
     expect('errors' in parsed && parsed.errors[0]!.details.join(' ')).toContain(expected);
@@ -163,6 +164,40 @@ describe('suggest: applying', () => {
     ['suggest command "x" before=placed id=Bad!', board(), 'invalid_value'],
   ])('refuses %s', (line, tab, code) => {
     expect(refused(run(line, tab)).code).toBe(code);
+  });
+
+  it('records the gap it closes, and prints a suggestion without one bare', () => {
+    const outcome = applied(
+      run('suggest command "Pay" before=placed gap=event_without_cause id=pay', board()),
+    );
+    expect(suggestionOf(outcome.tab, 'pay')).toMatchObject({
+      esSuggestion: { gap: 'event_without_cause' },
+    });
+    expect(
+      formatOperation({
+        op: 'suggest',
+        kind: 'actor',
+        words: 'Cook',
+        anchor: 'placed',
+        side: 'above',
+      }),
+    ).toBe('suggest actor "Cook" above=placed');
+  });
+
+  it('compares an unworded suggestion as blank', () => {
+    const blank: Element = {
+      id: 'blank',
+      type: 'sticky',
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 200,
+      esKind: 'command',
+      esSuggestion: { anchorId: 'placed', side: 'before' },
+    };
+    expect(
+      applied(run('suggest command "Pay" before=placed id=pay', board(blank))).createdIds,
+    ).toEqual(['pay']);
   });
 
   it('refuses the same suggestion twice on one anchor', () => {

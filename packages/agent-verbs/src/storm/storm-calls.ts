@@ -57,14 +57,9 @@ const refuse = (code: string, message: string): StormRefusal => ({ ok: false, co
 // The engine's refusal, as `livedoc edit` prints it: the code, then the formatted rejections.
 function engineRefusalOf(err: unknown): StormRefusal | null {
   if (!(err instanceof ApiError) || err.status >= 500 || err.code === null) return null;
-  try {
-    const body: unknown = JSON.parse(err.body);
-    const text: unknown =
-      typeof body === 'object' && body !== null ? Reflect.get(body, 'text') : null;
-    return typeof text === 'string' ? refuse(err.code, text) : null;
-  } catch {
-    return null;
-  }
+  // A code was read from the body, so the body is a JSON object.
+  const text: unknown = Reflect.get(JSON.parse(err.body) as object, 'text');
+  return typeof text === 'string' ? refuse(err.code, text) : null;
 }
 
 const NOT_A_BOARD = 'not_event_storming';
