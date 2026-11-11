@@ -59,3 +59,31 @@ describe('buildViewModel', () => {
     expect(model.facts.tab.ref).toBe('0b34');
   });
 });
+
+describe('suggestions in the view model (docs/specs/021-event-storming/suggestions.md)', () => {
+  it('keeps a suggestion out of the printed elements without counting it as hidden', () => {
+    const note = (id: string, extra: Record<string, unknown> = {}): Element => {
+      const sticky: Element = {
+        id,
+        type: 'sticky',
+        x: 0,
+        y: 0,
+        width: 200,
+        height: 200,
+        label: id,
+        esKind: 'command',
+        ...extra,
+      };
+      return sticky;
+    };
+    const tab: Tab = {
+      id: 'es',
+      name: 'Board',
+      kind: 'event-storming',
+      elements: [note('c'), note('s', { esSuggestion: { anchorId: 'c', side: 'above' } })],
+    };
+    const model = buildViewModel(tab);
+    expect(model.printed.map((el) => el.id)).toEqual(['c']);
+    expect(model.facts.hidden).toBe(0);
+  });
+});

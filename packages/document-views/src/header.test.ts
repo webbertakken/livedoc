@@ -38,6 +38,21 @@ describe('headerLine (R16, VW8)', () => {
     );
   });
 
+  it('names any other kind as it is', () => {
+    const line = headerLine(
+      facts({
+        tab: { id: 't', ref: 'b1', name: 'Plan', kind: 'board' },
+        elements: 0,
+        counts: { boxes: 0, frames: 0, lanes: 0, arrows: 0 },
+        hidden: 0,
+        unknown: 0,
+        threads: { open: 0, total: 0 },
+        rev: null,
+      }),
+    );
+    expect(line).toContain(' · kind=board');
+  });
+
   it('points a Form tab at read_form', () => {
     const line = headerLine(
       facts({
