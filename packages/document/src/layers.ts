@@ -3,6 +3,7 @@
 // cycle observable at runtime.
 import type { Element, ElementId, Tab } from './index';
 import { eventStormingKindOf } from './event-storming';
+import { isSuggestion } from './event-storming-suggestions';
 import { isFloorShape } from './office';
 
 // Photoshop-style layers (docs/specs/006-document/layers.md). A tab optionally carries an ordered
@@ -122,6 +123,7 @@ export function layerBands(
   layers: Layer[] | undefined,
   opts?: { includeHidden?: boolean },
 ): { layer: Layer; elements: Element[] }[] {
+  elements = boardElements(elements);
   const ls = tabLayers(layers);
   if (ls.length === 1) {
     if (!opts?.includeHidden && !isLayerVisible(ls[0]!)) return [];
@@ -153,10 +155,18 @@ function bandsOf(elements: Element[], layers: Layer[]): Element[][] {
 // where paint order doesn't matter. Returns the input array unchanged
 // when nothing is hidden.
 export function visibleLayerElements(elements: Element[], layers: Layer[] | undefined): Element[] {
+  const board = boardElements(elements);
   const ls = tabLayers(layers);
-  if (ls.every(isLayerVisible)) return elements;
+  if (ls.every(isLayerVisible)) return board;
   const hidden = hiddenLayerIds(ls);
-  return elements.filter((el) => !hidden.has(resolveLayerId(el.layerId, ls)));
+  return board.filter((el) => !hidden.has(resolveLayerId(el.layerId, ls)));
+}
+
+// The elements that are board content: everything but suggestions (docs/specs/021-event-storming/suggestions.md),
+// which no painter, exporter or hit test may see, whichever layer they sit on. Returns the input array unchanged
+// when it holds no suggestion.
+export function boardElements(elements: Element[]): Element[] {
+  return elements.some(isSuggestion) ? elements.filter((el) => !isSuggestion(el)) : elements;
 }
 
 // Ids of hidden / locked layers within a NORMALISED layers array.
@@ -170,7 +180,9 @@ export function hiddenLayerElementIds(
   elements: Element[],
   layers: Layer[] | undefined,
 ): Set<ElementId> {
-  return elementIdsWhere(elements, layers, (l) => !isLayerVisible(l));
+  const hidden = elementIdsWhere(elements, layers, (l) => !isLayerVisible(l));
+  for (const el of elements) if (isSuggestion(el)) hidden.add(el.id);
+  return hidden;
 }
 
 // Element ids sitting on a locked layer — combined with per-element
@@ -200,7 +212,7 @@ function elementIdsWhere(
 export function layerElementCounts(tab: Pick<Tab, 'elements' | 'layers'>): Map<string, number> {
   const ls = tabLayers(tab.layers);
   const counts = new Map(ls.map((l) => [l.id, 0]));
-  for (const el of tab.elements) {
+  for (const el of boardElements(tab.elements)) {
     const id = resolveLayerId(el.layerId, ls);
     counts.set(id, counts.get(id)! + 1);
   }

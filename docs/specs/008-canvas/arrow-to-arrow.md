@@ -53,7 +53,7 @@ threshold, excludeId)` (`geometry-snapping.ts`) compute the dots + the nearest
   that is on the tab the copy lands on (a paste onto another tab drops an arrow
   whose target arrow did not land); deleting a target arrow cascade-deletes
   the arrows attached to it, and theirs in turn, a connector a deleted box takes
-  included (`withAttachedArrows`, by the delete, the eraser, the draw eraser,
+  included (`withDependents`, by the delete, the eraser, the draw eraser,
   Combine Shapes and layer deletion). A protected arrow (locked, or on a locked
   layer) is never taken, nor what hangs off it.
 - Reveal distance (perpendicular) shows the dots; a tighter threshold connects.

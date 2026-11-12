@@ -69,6 +69,18 @@ export const CLI_COMMANDS: readonly { type: string; command: string; what: strin
     what: 'publishing, closing or deleting a form’s link',
   },
   { type: 'FormTry', command: 'form try', what: 'filling in a form as a preview response' },
+  { type: 'StormRead', command: 'storm read', what: 'reading an Event Storming board as a domain' },
+  {
+    type: 'StormSuggest',
+    command: 'storm suggest',
+    what: 'suggesting notes for an Event Storming board',
+  },
+  { type: 'StormClear', command: 'storm clear', what: 'removing a board’s open suggestions' },
+  {
+    type: 'StormExport',
+    command: 'storm export',
+    what: 'exporting a board for an agent to write its spec and types',
+  },
   { type: 'TypeLs', command: 'type ls', what: 'listing a document’s card types' },
   { type: 'TypeApply', command: 'type apply', what: 'changing card types from a file' },
   { type: 'ChangesetApply', command: 'edit', what: 'applying edit operations from a file' },

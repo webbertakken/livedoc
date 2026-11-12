@@ -156,5 +156,31 @@ export function removeOne(
   }
   removeElement(state, el.id, operation, removal);
   for (const [id, by] of pulled) removeElement(state, id, operation, { pinnedTo: by });
+  // The suggestions anchored on what went, and on those, go too (docs/specs/021-event-storming/suggestions.md "It goes
+  // with its anchor"), whether or not the arrows are kept.
+  for (const [id, by] of anchoredOn(state, removed))
+    removeElement(state, id, operation, { anchoredTo: by });
   return null;
+}
+
+// The suggestions anchored on any removed id, transitively, each with the element it was anchored on.
+function anchoredOn(state: EditState, removed: ReadonlySet<ElementId>): Map<ElementId, ElementId> {
+  const out = new Map<ElementId, ElementId>();
+  const gone = new Set(removed);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const el of state.byId.values()) {
+      if (
+        el.type !== 'sticky' ||
+        !el.esSuggestion ||
+        gone.has(el.id) ||
+        !gone.has(el.esSuggestion.anchorId)
+      )
+        continue;
+      out.set(el.id, el.esSuggestion.anchorId);
+      gone.add(el.id);
+      grew = true;
+    }
+  }
+  return out;
 }

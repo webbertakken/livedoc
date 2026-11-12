@@ -84,6 +84,7 @@ import { registerPlanTools } from './plan-tools';
 import { registerSheetTools } from './sheet-tools';
 import { registerPagesTools } from './pages-tools';
 import { registerFormTools } from './form-tools';
+import { registerStormTools } from './storm-tools';
 import {
   createDocumentTab,
   mcpAddTab,
@@ -109,6 +110,8 @@ export function registerTools(server: McpServer, env: Env): void {
   // The user's image gallery, for image elements (docs/specs/015-api/mcp-server.md §4.5b).
   registerImageTools(server, env);
   registerFormTools(server, env);
+  // Event Storming boards: their reading and suggestions (docs/specs/015-api/mcp-server.md §4.9f).
+  registerStormTools(server, env);
   registerTool(server, env, mcpFindDocuments, async (args, extra) => {
     const token = requireToken(extra);
     // Personal + team shared libraries (docs/specs/013-workspace/team-shared-documents.md): a document filed into a

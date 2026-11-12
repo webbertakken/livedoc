@@ -6,6 +6,7 @@ import type { EditRejection, EditWarning, JsonValue, ResultLine } from '@livedoc
 import type {
   ElementId,
   ElementOp,
+  EsSuggestionSide,
   Finish,
   GraphInput,
   Tab,
@@ -100,6 +101,19 @@ export type LayoutOperation = {
 
 export type TestOperation = { op: 'test'; target: Selector; fields: Fields };
 
+// `suggest <kind> "<words>" before|after|above|below=<note> [reason=…] [gap=…] [id=<id>]`: a note proposed for an Event
+// Storming board (docs/specs/021-event-storming/suggestions.md).
+export type SuggestOperation = {
+  op: 'suggest';
+  kind: string;
+  words: string;
+  anchor: Selector;
+  side: EsSuggestionSide;
+  reason?: string;
+  gap?: string;
+  id?: string;
+};
+
 export type EditOperation =
   | AddOperation
   | SetOperation
@@ -112,7 +126,8 @@ export type EditOperation =
   | UnwrapOperation
   | OrderOperation
   | LayoutOperation
-  | TestOperation;
+  | TestOperation
+  | SuggestOperation;
 
 export type ParseOutcome = { operations: EditOperation[] } | { errors: EditRejection[] };
 
@@ -128,6 +143,8 @@ export type ApplyOptions = {
   theme?: ThemeDefinition;
   // Ids no slug can name; default crypto.randomUUID.
   makeId?: () => string;
+  // The agent's name as its presence shows it, recorded on a suggestion as `by`.
+  agentName?: string;
   log?: EditLog;
 };
 

@@ -11,7 +11,7 @@ import {
   type Element,
   type LaidOutPage,
   type Tab,
-  withAttachedArrows,
+  withDependents,
 } from '@livedoc/document';
 import { combineElements, type CombineOp } from '@/lib/combine/combine';
 import { isCombinable } from '@/lib/combine/outline';
@@ -51,7 +51,7 @@ export function withCombinedResult(
   removed: ReadonlySet<string>,
   result: Element,
 ): Element[] {
-  const gone = withAttachedArrows(elements, removed);
+  const gone = withDependents(elements, removed);
   const out: Element[] = [];
   let placed = false;
   for (const el of elements) {

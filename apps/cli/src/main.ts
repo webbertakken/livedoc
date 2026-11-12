@@ -2,6 +2,7 @@
 // the verb's input, the profile and credential, the host's capabilities, the handler, and what it prints. The
 // exit code is one of eight; stdout carries data only.
 
+import type { StormExportInput } from './commands/storm-export';
 import { graphLint, renderSkill, type Verb, type VerbContext } from '@livedoc/agent-verbs';
 import { DOCUMENT_FORMAT } from '@livedoc/api-schema';
 import { resolveCredential } from './auth/credentials';
@@ -156,6 +157,10 @@ async function runOnline(
     return renderTab(io, ctx, input as { doc: string; tab?: string; png?: string; svg?: string });
   }
   if (verb.id === 'export') return exportAll(io, ctx, profile.host, input as ExportInput);
+  if (verb.id === 'storm.export') {
+    const { stormExport } = await import('./commands/storm-export');
+    return stormExport(io, ctx, input as StormExportInput);
+  }
   if (verb.id === 'pull') return pullDocument(io, ctx, input as PullInput);
   if (verb.id === 'push') return pushFile(io, ctx, profile.host, input as PushInput);
   if (verb.id === 'wait') return waitFor(io, ctx, caps.apiBase, input as WaitInput);

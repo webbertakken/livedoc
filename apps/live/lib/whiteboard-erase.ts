@@ -9,7 +9,7 @@ import {
   pathTouchesBrush,
   shapeTouchesBrush,
   strokeTouchesBrush,
-  withAttachedArrows,
+  withDependents,
   type ArrowElement,
   type Element,
   type Endpoint,
@@ -100,7 +100,7 @@ export function partialEraseStep(
   if (gone.size === 0 && split.size === 0) return null;
   // The arrows attached to an erased stroke go with it, and those hung off them in turn
   // (docs/specs/008-canvas/arrow-to-arrow.md); a protected arrow stays, and what hangs off it.
-  const cascade = gone.size > 0 ? withAttachedArrows(out, gone, isProtected) : gone;
+  const cascade = gone.size > 0 ? withDependents(out, gone, isProtected) : gone;
   return out.flatMap((el): Element[] => {
     if (el.type !== 'arrow') return [el];
     if (cascade.has(el.id)) return [];

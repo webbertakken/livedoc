@@ -135,6 +135,7 @@ export function EditorCanvasHost() {
     addSticky,
     esBoard,
     addNextNote,
+    suggestionActions,
     photoImportAvailable,
     photoImportBlocked,
     openPhotoImport,
@@ -614,6 +615,12 @@ export function EditorCanvasHost() {
         }
       : {}),
   });
+  // Suggestions are an Editor's alone (docs/specs/021-event-storming/suggestions.md "Share roles").
+  const suggestionControls = useStableObject({
+    ...suggestionActions,
+    reveal: (r: { x: number; y: number; width: number; height: number }) =>
+      scrollIntoView(r.x, r.y, r.width, r.height),
+  });
   const stableSlideDeck = useStableObject(slideDeck);
   const activeTheme = getTheme(activeTab.theme);
   // Tab windows (docs/specs/009-elements/tab-window.md): the tabs they show, fetched as they are shown.
@@ -889,6 +896,7 @@ export function EditorCanvasHost() {
               esBoard={esBoard}
               esBoardControls={esBoardControls}
               onAddNextNote={createBlocked ? undefined : addNextNote}
+              suggestions={esBoard && can.suggestions ? suggestionControls : undefined}
               onDropPhoto={readPhotoFile}
               onDropFile={isReadOnly ? undefined : dropBoardFile}
               onDropLibraryShape={isReadOnly ? undefined : dropLibraryShape}

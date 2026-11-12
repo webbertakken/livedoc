@@ -726,6 +726,7 @@ export * from './event-storming';
 export * from './event-storming-lanes';
 export * from './event-storming-lane-landing';
 export * from './event-storming-next';
+export * from './event-storming-suggestions';
 export * from './event-storming-photo';
 export * from './whiteboard';
 export * from './whiteboard-stroke';

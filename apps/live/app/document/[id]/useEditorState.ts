@@ -156,6 +156,7 @@ import { useShortcutsEnabled } from '@/hooks/ui/useShortcutsEnabled';
 import { useEditorComments } from '@/hooks/collab/useEditorComments';
 import { useEditorDrag } from '@/hooks/canvas/useEditorDrag';
 import { useNoteActions } from '@/hooks/canvas/useNoteActions';
+import { useSuggestionActions } from '@/hooks/canvas/useSuggestionActions';
 import { usePhotoPicker } from '@/hooks/canvas/usePhotoPicker';
 import { warmBoundaryModel } from '@/lib/photo-model/client';
 import { usePhotoDraft } from '@/hooks/canvas/usePhotoDraft';
@@ -2623,6 +2624,14 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     commit,
     addBoxedAt,
   });
+  // Suggestions on an event-storming board (docs/specs/021-event-storming/suggestions.md): apply and dismiss.
+  const suggestionActions = useSuggestionActions({
+    activeTab,
+    createBlocked,
+    layerInertIds,
+    commit,
+    select: (id) => selectionStore.setSelection({ selectedId: id, multiSelectedIds: new Set() }),
+  });
 
   // --- Tab actions ---------------------------------------------------------
 
@@ -4076,6 +4085,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     quickStyleDeps,
     // Note acts on an event-storming board (docs/specs/021-event-storming/event-storming.md).
     ...noteActions,
+    // Suggestion acts (docs/specs/021-event-storming/suggestions.md "Applying and dismissing").
+    suggestionActions,
     // Photo import (docs/specs/021-event-storming/event-storming.md Phase 8): the draft run, whether the entry
     // points may be offered, and the hidden file input they open.
     photoDraft,

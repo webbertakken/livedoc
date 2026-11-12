@@ -13,7 +13,9 @@ export type ExportFormatKey =
   | 'svg'
   | 'gif'
   | 'file'
-  | 'logo-kit';
+  | 'logo-kit'
+  // An Event Storming board's domain export (docs/specs/021-event-storming/domain-export.md "The zip").
+  | 'domain-model';
 
 // A Board tab: its picture, its board's outline (each column and its cards) and its cards as CSV. A Sheet tab: its
 // picture and its cells as CSV. A Dashboard tab: its page's picture, and the JSON its Import reads back.

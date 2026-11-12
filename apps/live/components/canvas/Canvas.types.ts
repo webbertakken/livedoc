@@ -1,4 +1,5 @@
 import type { PenInk } from '@/hooks/canvas/commit-freehand';
+import type { SuggestionActions } from '@/hooks/canvas/useSuggestionActions';
 import type { SnapGuideStore } from '@/hooks/canvas/useSnapGuideState';
 import type { CombineOp } from '@/lib/combine/combine';
 import type { RemoteSelector } from '@/lib/presence-rows';
@@ -45,6 +46,11 @@ import type { WorkspaceFrameHooks } from '@/components/providers/workbench-sessi
 // world-space position of a nearby shape's anchor, with `active` set on the
 // one the endpoint is currently snapped to. Rendered by CanvasChrome.
 export type SnapTarget = { x: number; y: number; active: boolean };
+
+// What the canvas may do with a board's suggestions: the acts, and bring a canvas rect into view.
+export type SuggestionControls = SuggestionActions & {
+  reveal: (rect: { x: number; y: number; width: number; height: number }) => void;
+};
 
 export type CanvasProps = {
   tabName: string;
@@ -353,6 +359,9 @@ export type CanvasProps = {
   // Add the next note beside a note (docs/specs/021-event-storming/event-storming.md Phase 7), from its next-note
   // button. Absent when the session cannot create.
   onAddNextNote?: (fromId: string, side: EsSide) => void;
+  // The suggestion acts and the pan that brings one into view (docs/specs/021-event-storming/suggestions.md).
+  // Supplied only to an Editor on an event-storming board: absent, nothing of suggestions shows.
+  suggestions?: SuggestionControls;
   // Read a photograph of the wall dropped on the canvas (docs/specs/021-event-storming/event-storming.md Phase 8).
   // Present only on an event-storming board with the model configured.
   onDropPhoto?: (file: File) => void;

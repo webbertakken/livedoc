@@ -50,7 +50,7 @@ export type Touch = {
 };
 
 // Why an element left: named by an operation, or pinned to one that was.
-export type Removal = { pinnedTo?: ElementId; unwrapped?: true };
+export type Removal = { pinnedTo?: ElementId; unwrapped?: true; anchoredTo?: ElementId };
 
 export type EditState = {
   readonly tab: Tab;
@@ -69,6 +69,8 @@ export type EditState = {
   readonly warnings: EditWarning[];
   readonly locked: ReadonlyMap<ElementId, LockReason>;
   readonly makeId: () => string;
+  // The agent's name, recorded on a suggestion as `by`; null when the caller did not say.
+  readonly agentName: string | null;
   readonly log: EditLog;
   // The owner's selection; null when the room was not read.
   readonly selected: readonly ElementId[] | null;
@@ -113,6 +115,7 @@ export function createState(tab: Tab, options: ApplyOptions, log: EditLog): Edit
     warnings: [],
     locked: lockedIds(tab),
     makeId: options.makeId ?? (() => crypto.randomUUID()),
+    agentName: options.agentName ?? null,
     log,
     selected: options.selected === undefined ? [] : options.selected,
     theme: options.theme ?? themeOf(tab, log),

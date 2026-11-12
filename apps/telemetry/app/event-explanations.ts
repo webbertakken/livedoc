@@ -137,6 +137,16 @@ export const EXACT: Readonly<Record<string, string>> = {
     "Someone clicked a comment-thread row in the Explorer's Inbox, jumping to the element it's on.",
   'Canvas|Used|AddNextNote':
     'Someone clicked a next-note button beside a note on an event-storming board and got the note type that notation places there next.',
+  'Canvas|Used|SuggestionApplied':
+    "Someone applied an agent's suggested note on an event-storming board, turning it into an ordinary note.",
+  'Canvas|Used|SuggestionDismissed':
+    "Someone dismissed an agent's suggested note on an event-storming board.",
+  'Canvas|Used|SuggestionsAppliedAll':
+    'Someone applied every open suggestion on an event-storming board at once, from the suggestions panel.',
+  'Canvas|Used|SuggestionsDismissedAll':
+    'Someone dismissed every open suggestion on an event-storming board at once, from the suggestions panel.',
+  'Canvas|Used|SuggestionsShown':
+    'Someone switched on Show All Suggestions, drawing every suggested note where it would land on an event-storming board.',
   'Canvas|Used|WaterCooler':
     'Someone walked their Avatar-mode character up to a water cooler and took a cup of water.',
   'Canvas|Used|CoffeeMachine':
@@ -548,6 +558,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'UI|Changed|LogoMirrorCopies5': "Someone set a logo page's radial mirror to 5 copies.",
   'UI|Changed|LogoMirrorCopies6': "Someone set a logo page's radial mirror to 6 copies.",
   'UI|Changed|LogoMirrorCopies8': "Someone set a logo page's radial mirror to 8 copies.",
+  'Document|Exported|DomainModel':
+    "Someone exported an Event Storming board as a domain model zip: a spec and types written by the deployment's model.",
+  'Document|Exported|DomainModelBundle':
+    "Someone exported an Event Storming board's reading and conversion brief as a zip, for a coding agent to write from.",
   'Document|Exported|LogoKit':
     'Someone downloaded a logo kit: an SVG, PNGs and a favicon of a logo page.',
   'UI|Toggled|LogoGuideCentreLinesOn': "Someone showed the logo guides' centre lines.",

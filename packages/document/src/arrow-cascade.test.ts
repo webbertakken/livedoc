@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { withAttachedArrows, type ArrowElement, type Element, type ShapeElement } from './index';
+import { withDependents, type ArrowElement, type Element, type ShapeElement } from './index';
 
 // docs/specs/008-canvas/arrow-to-arrow.md: deleting a target arrow cascade-deletes the arrows attached to it, and so
 // does the arrow a deleted box takes with it.
@@ -27,20 +27,20 @@ const hung = (id: string, onto: string): ArrowElement => ({
   to: { kind: 'on-arrow', arrowId: onto, t: 0.5 },
 });
 
-describe('withAttachedArrows', () => {
+describe('withDependents', () => {
   it("takes a box's connector and the arrows hung off that connector", () => {
     const els = [box('a'), box('b'), link('x', 'a', 'b'), hung('y', 'x'), hung('z', 'y')];
-    expect([...withAttachedArrows(els, new Set(['a']))].sort()).toEqual(['a', 'x', 'y', 'z']);
+    expect([...withDependents(els, new Set(['a']))].sort()).toEqual(['a', 'x', 'y', 'z']);
   });
 
   it('leaves arrows attached to nothing that goes', () => {
     const els = [box('a'), box('b'), box('c'), link('x', 'b', 'c'), hung('y', 'x')];
-    expect([...withAttachedArrows(els, new Set(['a']))]).toEqual(['a']);
+    expect([...withDependents(els, new Set(['a']))]).toEqual(['a']);
   });
 
   it('stops at a protected arrow, and leaves what hangs off it', () => {
     const els = [box('a'), box('b'), link('x', 'a', 'b', true), hung('y', 'x')];
-    const out = withAttachedArrows(els, new Set(['a']), (el) => el.locked === true);
+    const out = withDependents(els, new Set(['a']), (el) => el.locked === true);
     expect([...out]).toEqual(['a']);
   });
 
@@ -51,7 +51,7 @@ describe('withAttachedArrows', () => {
     for (let i = 0; i < n; i += 1)
       els.push(i === n - 1 ? link(`c${i}`, 'a', 'a') : hung(`c${i}`, `c${i + 1}`));
     const started = performance.now();
-    const out = withAttachedArrows(els, new Set(['a']));
+    const out = withDependents(els, new Set(['a']));
     expect(out.size).toBe(n + 1);
     expect(performance.now() - started).toBeLessThan(100);
   });

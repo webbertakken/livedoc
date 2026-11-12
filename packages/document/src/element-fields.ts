@@ -281,6 +281,7 @@ export const ELEMENT_FIELD_NAMES = {
     'fixedSize',
     'esKind',
     'esDraft',
+    'esSuggestion',
     'textSize',
     'textAlignX',
     'textAlignY',

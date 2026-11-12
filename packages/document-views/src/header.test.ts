@@ -34,8 +34,23 @@ describe('headerLine (R16, VW8)', () => {
       }),
     );
     expect(line).toBe(
-      'tab es "Board \\"1\\"" · 1 element: 1 box, 1 frame, 1 lane, 1 arrow · kind=event-storming · 2 hidden · 1 unknown',
+      'tab es "Board \\"1\\"" · 1 element: 1 box, 1 frame, 1 lane, 1 arrow · kind=event-storming (read_event_storming) · 2 hidden · 1 unknown',
     );
+  });
+
+  it('names any other kind as it is', () => {
+    const line = headerLine(
+      facts({
+        tab: { id: 't', ref: 'b1', name: 'Plan', kind: 'board' },
+        elements: 0,
+        counts: { boxes: 0, frames: 0, lanes: 0, arrows: 0 },
+        hidden: 0,
+        unknown: 0,
+        threads: { open: 0, total: 0 },
+        rev: null,
+      }),
+    );
+    expect(line).toContain(' · kind=board');
   });
 
   it('points a Form tab at read_form', () => {

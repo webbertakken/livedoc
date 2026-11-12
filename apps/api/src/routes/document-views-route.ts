@@ -7,6 +7,7 @@ import {
   isTabViewName,
   isViewDoor,
   LINT_VIEW_NAME,
+  STORM_VIEW_NAME,
   tabEtag,
   TAB_VIEW_NAMES,
   UNKNOWN_VIEW_ERROR,
@@ -20,7 +21,8 @@ import {
 } from '@livedoc/api-schema';
 import { formatLintReport, lintTab } from '@livedoc/diagram-lint';
 import { lintLog } from '../changesets/lint';
-import { isKnownElement } from '@livedoc/document';
+import { isEventStormingTab, isKnownElement } from '@livedoc/document';
+import { formatStormView, readBoard, readSuggestions } from '@livedoc/storm-reading';
 import {
   FIND_QUERY_MAX_LENGTH,
   headerFactsOf,
@@ -45,6 +47,8 @@ import type { DocumentRouteContext } from './context';
 export type ParsedView = { request: ViewRequest; json: boolean };
 // `view=lint` (docs/specs/024-agents/diagram-lint.md): answered by the lint, not by `renderView`.
 type ParsedLintView = { lint: true; json: boolean };
+// `view=storm` (docs/specs/021-event-storming/board-reading.md "Output"): answered by the board reading.
+type ParsedStormView = { storm: true; json: boolean };
 
 type Scope = 'tab' | 'document';
 
@@ -77,20 +81,23 @@ function unknownView(view: string, scope: Scope): Response {
 }
 
 // The view a request asks for, a 400 naming what is wrong, or null for the plain read.
-// `view=lint` takes only `json=1`.
-function parseLintQuery(query: URLSearchParams): ParsedLintView | Response {
+// `view=lint` and `view=storm` take only `json=1`.
+function parseJsonOnlyQuery(
+  query: URLSearchParams,
+  view: typeof LINT_VIEW_NAME | typeof STORM_VIEW_NAME,
+): { json: boolean } | Response {
   for (const parameter of new Set(query.keys())) {
     if (parameter !== VIEW_QUERY.view && parameter !== VIEW_QUERY.json)
       return refuse(
         parameter,
         INVALID_VIEW_VALUE_ERROR,
-        `${parameter} does not apply to view lint`,
+        `${parameter} does not apply to view ${view}`,
       );
   }
   const jsonFlag = query.get(VIEW_QUERY.json);
   if (jsonFlag !== null && jsonFlag !== '1')
     return refuse('json', INVALID_VIEW_VALUE_ERROR, 'json takes 1');
-  return { lint: true, json: jsonFlag === '1' };
+  return { json: jsonFlag === '1' };
 }
 
 // The lint is a tab view only.
@@ -98,15 +105,19 @@ export function parseViewQuery(url: URL, scope: 'document'): ParsedView | Respon
 export function parseViewQuery(
   url: URL,
   scope: 'tab',
-): ParsedView | ParsedLintView | Response | null;
+): ParsedView | ParsedLintView | ParsedStormView | Response | null;
 export function parseViewQuery(
   url: URL,
   scope: Scope,
-): ParsedView | ParsedLintView | Response | null {
+): ParsedView | ParsedLintView | ParsedStormView | Response | null {
   const query = url.searchParams;
   const view = query.get(VIEW_QUERY.view);
   if (view === null) return null;
-  if (scope === 'tab' && view === LINT_VIEW_NAME) return parseLintQuery(query);
+  if (scope === 'tab' && (view === LINT_VIEW_NAME || view === STORM_VIEW_NAME)) {
+    const parsed = parseJsonOnlyQuery(query, view);
+    if (parsed instanceof Response) return parsed;
+    return view === LINT_VIEW_NAME ? { lint: true, ...parsed } : { storm: true, ...parsed };
+  }
   const tabView = isTabViewName(view);
   if (scope === 'tab' ? !tabView : view !== 'overview') return unknownView(view, scope);
   const name = tabView ? view : 'overview';
@@ -177,8 +188,12 @@ export function parseViewQuery(
   return { request, json: flag('json') === true };
 }
 
-const TITLE_CASE: Record<DocumentViewName | TabViewName | typeof LINT_VIEW_NAME, string> = {
+const TITLE_CASE: Record<
+  DocumentViewName | TabViewName | typeof LINT_VIEW_NAME | typeof STORM_VIEW_NAME,
+  string
+> = {
   lint: 'Lint',
+  storm: 'Storm',
   overview: 'Overview',
   outline: 'Outline',
   graph: 'Graph',
@@ -191,7 +206,7 @@ const TITLE_CASE: Record<DocumentViewName | TabViewName | typeof LINT_VIEW_NAME,
 
 function countViewed(
   ctx: DocumentRouteContext,
-  view: DocumentViewName | TabViewName | typeof LINT_VIEW_NAME,
+  view: DocumentViewName | TabViewName | typeof LINT_VIEW_NAME | typeof STORM_VIEW_NAME,
 ): void {
   const { env } = ctx;
   ctx.waitUntil?.(reportServerEvent(env, 'Agent', 'Viewed', TITLE_CASE[view]));
@@ -229,6 +244,39 @@ function answerLintView(
   return parsed.json ? json(report, { headers }) : textPlain(formatLintReport(report), { headers });
 }
 
+// `view=storm`: an Event Storming board's reading, its gaps and its open suggestions
+// (docs/specs/021-event-storming/board-reading.md "Output"). Any other tab is refused: it has no notation to read.
+function answerStormView(
+  ctx: DocumentRouteContext,
+  parsed: ParsedStormView,
+  document: DocumentDTO,
+  tab: TabDTO,
+): Response {
+  if (!isEventStormingTab(tab)) {
+    viewsLog('info', '[storm] refused', { code: 'not_event_storming', tab: tab.id });
+    return json(
+      { error: 'not_event_storming', message: 'the storm view reads an Event Storming board' },
+      { status: 400 },
+    );
+  }
+  const started = Date.now();
+  const reading = readBoard(tab, { documentId: document.id });
+  const suggestions = readSuggestions(tab);
+  viewsLog('info', '[storm] view', {
+    doc: document.id,
+    tab: tab.id,
+    notes: reading.notes.length,
+    gaps: reading.gaps.length,
+    suggestions: suggestions.length,
+    ms: Date.now() - started,
+  });
+  countViewed(ctx, STORM_VIEW_NAME);
+  const headers = { ETag: tabEtag(tab.rev) };
+  return parsed.json
+    ? json({ reading, suggestions, rev: tab.rev }, { headers })
+    : textPlain(formatStormView(reading, suggestions).join('\n'), { headers });
+}
+
 // What the caller has selected on the tab now, for `show selected` only: the `mine` selections
 // of the room, as the changeset submit reads them; null when the room could not answer. No other view asks.
 async function ownerSelection(
@@ -259,12 +307,13 @@ async function ownerSelection(
 // A tab view, after the tab GET's gate and redaction; `owner` is the caller the GET resolved.
 export async function answerTabView(
   ctx: DocumentRouteContext,
-  parsed: ParsedView | ParsedLintView,
+  parsed: ParsedView | ParsedLintView | ParsedStormView,
   document: DocumentDTO,
   tab: TabDTO,
   owner: string,
 ): Promise<Response> {
   if ('lint' in parsed) return answerLintView(ctx, parsed, document, tab);
+  if ('storm' in parsed) return answerStormView(ctx, parsed, document, tab);
   const selected = await ownerSelection(ctx, parsed.request, document.id, tab.id, owner);
   const started = Date.now();
   const rendered = renderView(parsed.request, tab, {

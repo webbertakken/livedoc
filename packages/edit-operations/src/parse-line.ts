@@ -27,6 +27,7 @@ const SPECIAL_KEYS: Readonly<Partial<Record<EditOperationName, readonly string[]
   wrap: ['id'],
   order: ['above', 'below'],
   layout: ['style', 'direction'],
+  suggest: ['id', 'before', 'after', 'above', 'below', 'reason', 'gap'],
 };
 
 // The flags each operation takes.
@@ -39,7 +40,16 @@ const FLAGS: Readonly<Partial<Record<EditOperationName, readonly FlagWord[]>>> =
 };
 
 // The special keys whose value is a selector, kept as written.
-const SELECTOR_KEYS_OF: ReadonlySet<string> = new Set(['from', 'to', 'above', 'below']);
+const SELECTOR_KEYS_OF: ReadonlySet<string> = new Set([
+  'from',
+  'to',
+  'above',
+  'below',
+  'before',
+  'after',
+]);
+// The sides a suggestion takes, each a key naming its anchor.
+const SUGGEST_SIDES = ['before', 'after', 'above', 'below'] as const;
 const PLACEMENT_WORDS: ReadonlySet<string> = new Set([...PLACEMENT_RELATIONS, 'at']);
 const FIELD_KEY = /^([a-zA-Z][a-zA-Z-]*)=/;
 const KEYED = /^([a-zA-Z][a-zA-Z-]*):/;
@@ -256,6 +266,35 @@ export function parseOperationWords(
     if (c.special.id !== undefined) raw.id = c.special.id;
     if (between) raw.between = between;
     return { raw: withOptional(raw, c, name === 'add' ? ['fields', 'place'] : ['fields']) };
+  }
+
+  if (name === 'suggest') {
+    const [kindWord, wordsWord, ...more] = rest;
+    if (!kindWord || hasQuotes(kindWord) || /[:=~]/.test(kindWord.value))
+      return fail(kindWord, end, 'a kind: domain-event, command, actor, policy, read-model, …');
+    if (!wordsWord || fieldOf(wordsWord))
+      return fail(wordsWord, lineEnd, 'the words, quoted: "Place Order"');
+    const c = collect(name, more);
+    if ('column' in c) return { error: c };
+    if (c.terms.length) return fail(c.terms[0], end, 'before=, after=, above= or below=<note>');
+    const fieldWord = more.find(
+      (w) => fieldOf(w) && !SPECIAL_KEYS.suggest!.includes(fieldOf(w)!.key),
+    );
+    if (fieldWord) return fail(fieldWord, end, 'reason=, gap= or id=');
+    const sides = SUGGEST_SIDES.filter((side) => c.special[side] !== undefined);
+    if (sides.length !== 1)
+      return fail(undefined, lineEnd, 'one of before=, after=, above= or below=<note>');
+    const side = sides[0]!;
+    const raw: Record<string, unknown> = {
+      op: name,
+      kind: kindWord.value,
+      words: wordsWord.value,
+      side,
+      anchor: c.special[side],
+    };
+    for (const key of ['reason', 'gap', 'id'] as const)
+      if (c.special[key] !== undefined) raw[key] = c.special[key];
+    return { raw };
   }
 
   if (name === 'connect') {

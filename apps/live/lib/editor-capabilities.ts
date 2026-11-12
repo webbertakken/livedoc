@@ -30,6 +30,9 @@ export type EditorCapabilities = {
   // Plan cards (add, edit, move) and Sheet cells.
   planCards: boolean;
   sheetCells: boolean;
+  // An event-storming board's suggestions (docs/specs/021-event-storming/suggestions.md "Share roles"): seen and
+  // acted on by an Editor alone, since applying one reshapes the board.
+  suggestions: boolean;
 };
 
 const never = () => false;
@@ -56,6 +59,7 @@ export function resolveEditorCapabilities(input: {
       remove: always,
       planCards: true,
       sheetCells: true,
+      suggestions: true,
     };
   }
   if (level === 'view') {
@@ -70,6 +74,7 @@ export function resolveEditorCapabilities(input: {
       remove: never,
       planCards: false,
       sheetCells: false,
+      suggestions: false,
     };
   }
   const own = (el: Element) => addedByAdder(el, adderKey);
@@ -86,6 +91,7 @@ export function resolveEditorCapabilities(input: {
     remove: (el) => !isLocked(el) && (own(el) || isMindNode(el)),
     planCards: true,
     sheetCells: true,
+    suggestions: false,
   };
 }
 

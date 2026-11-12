@@ -17,7 +17,7 @@ import {
   duplicateElements,
   sendManyToBack,
   isBoxed,
-  withAttachedArrows,
+  withDependents,
   relayoutAfterRemoval,
   withMindBranches,
   withSheetCharts,
@@ -134,7 +134,7 @@ export function useElementSelectionActions(deps: EditorSelectionActionsDeps) {
     haptic('delete');
     commit((els) => {
       // The arrows attached to what goes, and those hung off them in turn (docs/specs/008-canvas/arrow-to-arrow.md).
-      const gone = withAttachedArrows(els, targetIds, isProtected);
+      const gone = withDependents(els, targetIds, isProtected);
       // A tidy mind map closes the gap in the same change (docs/specs/009-elements/mind-node.md "Deleting").
       return relayoutAfterRemoval(
         els,
@@ -236,7 +236,7 @@ export function useElementSelectionActions(deps: EditorSelectionActionsDeps) {
     announceDeleted(targetIds);
     commit((els) => {
       // The arrows attached to what goes, and those hung off them in turn (docs/specs/008-canvas/arrow-to-arrow.md).
-      const gone = withAttachedArrows(els, targetIds, isProtected);
+      const gone = withDependents(els, targetIds, isProtected);
       // A tidy mind map closes the gap in the same change (docs/specs/009-elements/mind-node.md "Deleting").
       return relayoutAfterRemoval(
         els,

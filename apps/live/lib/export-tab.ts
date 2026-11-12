@@ -24,6 +24,7 @@ import {
   shade,
   exportFontIds,
   visibleLayerElements,
+  boardElements,
   type ArrowElement,
   type ArrowLineMotion,
   type BoxedElement,
@@ -267,7 +268,7 @@ export async function renderTabToCanvas(
   // paint order — layer bands bottom -> top, frames first per band —
   // with each element carrying its band's opacity factor.
   const els = (
-    opts.hiddenLayers ? tab.elements : visibleLayerElements(tab.elements, tab.layers)
+    opts.hiddenLayers ? boardElements(tab.elements) : visibleLayerElements(tab.elements, tab.layers)
   ).filter(reaches);
   const ordered = layerBands(tab.elements, tab.layers, {
     includeHidden: opts.hiddenLayers,
@@ -635,7 +636,7 @@ export function renderTabToSvg(tab: Tab, opts: ImageExportOpts = {}): string {
   const reaches = (el: Element) =>
     !isArticleNoteMarker(el) && (!frame || frame.reaches(el, tab.elements));
   const els = (
-    opts.hiddenLayers ? tab.elements : visibleLayerElements(tab.elements, tab.layers)
+    opts.hiddenLayers ? boardElements(tab.elements) : visibleLayerElements(tab.elements, tab.layers)
   ).filter(reaches);
   const bands = layerBands(tab.elements, tab.layers, { includeHidden: opts.hiddenLayers }).map(
     (band) => ({ ...band, elements: band.elements.filter(reaches) }),
@@ -792,7 +793,9 @@ export function renderTabToSvg(tab: Tab, opts: ImageExportOpts = {}): string {
 // A downloaded SVG carries its own typefaces: the reader hasn't got
 // Permanent Marker installed, and an @import is dead in an offline viewer.
 export async function exportTabAsSvg(tab: Tab, opts: ImageExportOpts = {}): Promise<Blob> {
-  const els = opts.hiddenLayers ? tab.elements : visibleLayerElements(tab.elements, tab.layers);
+  const els = opts.hiddenLayers
+    ? boardElements(tab.elements)
+    : visibleLayerElements(tab.elements, tab.layers);
   // The writing's faces only: the writing itself is measured once, by renderTabToSvg.
   const writing = opts.page ? { fonts: pageWritingFonts(tab, opts.page) } : null;
   const fontCss =

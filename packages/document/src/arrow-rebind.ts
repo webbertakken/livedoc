@@ -196,25 +196,27 @@ export function arrowReferencesAny(arrow: ArrowElement, ids: ReadonlySet<string>
   );
 }
 
-// `ids` and every arrow a delete of them takes with it: each arrow attached to one of them, then each arrow attached
-// to one of THOSE, and so on (docs/specs/008-canvas/arrow-to-arrow.md "deleting a target arrow cascade-deletes the
+// `ids` and everything a delete of them takes with it: each arrow attached to one of them and each suggestion anchored
+// on one (docs/specs/021-event-storming/suggestions.md "It goes with its anchor"), then each attached to one of THOSE,
+// and so on (docs/specs/008-canvas/arrow-to-arrow.md "deleting a target arrow cascade-deletes the
 // arrows attached to it"). One pass of arrowReferencesAny stops a level short: a deleted box takes its connector but
 // leaves an arrow hung off that connector, its end naming an arrow that is gone. A protected arrow (locked, or on a
-// locked layer) is never taken, nor what hangs off it. Linear in the elements: each arrow is indexed under what it
-// attaches to and visited once.
-export function withAttachedArrows(
+// locked layer) is never taken, nor what hangs off it. Linear in the elements: each dependent is indexed under what
+// it attaches to and visited once.
+export function withDependents(
   elements: readonly Element[],
   ids: ReadonlySet<ElementId>,
   isProtected: (el: Element) => boolean = () => false,
 ): Set<ElementId> {
   const out = new Set(ids);
-  const attached = new Map<ElementId, ArrowElement[]>();
-  const index = (target: ElementId, arrow: ArrowElement) => {
+  const attached = new Map<ElementId, Element[]>();
+  const index = (target: ElementId, dependent: Element) => {
     const list = attached.get(target);
-    if (list) list.push(arrow);
-    else attached.set(target, [arrow]);
+    if (list) list.push(dependent);
+    else attached.set(target, [dependent]);
   };
   for (const el of elements) {
+    if (el.type === 'sticky' && el.esSuggestion) index(el.esSuggestion.anchorId, el);
     if (el.type !== 'arrow') continue;
     for (const end of [el.from, el.to]) {
       if (end.kind === 'pinned') index(end.elementId, el);
@@ -223,10 +225,10 @@ export function withAttachedArrows(
   }
   const queue = [...out];
   for (let id = queue.pop(); id !== undefined; id = queue.pop()) {
-    for (const arrow of attached.get(id) ?? []) {
-      if (out.has(arrow.id) || isProtected(arrow)) continue;
-      out.add(arrow.id);
-      queue.push(arrow.id);
+    for (const dependent of attached.get(id) ?? []) {
+      if (out.has(dependent.id) || isProtected(dependent)) continue;
+      out.add(dependent.id);
+      queue.push(dependent.id);
     }
   }
   return out;

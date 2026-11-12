@@ -186,8 +186,10 @@ export function eventStormingKindOf(el: {
   esKind?: EventStormingNoteKind;
   fillColor?: string;
   fixedSize?: boolean;
+  esSuggestion?: unknown;
 }): EventStormingNoteKind | null {
-  if (el.type !== 'sticky') return null;
+  // A suggestion is no note until a person applies it (docs/specs/021-event-storming/suggestions.md).
+  if (el.type !== 'sticky' || el.esSuggestion !== undefined) return null;
   return el.esKind ?? null;
 }
 
@@ -199,6 +201,7 @@ export function isEventStormingNote(el: {
   esKind?: EventStormingNoteKind;
   fillColor?: string;
   fixedSize?: boolean;
+  esSuggestion?: unknown;
 }): boolean {
   return eventStormingKindOf(el) !== null;
 }

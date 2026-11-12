@@ -182,9 +182,9 @@ page counts it as `Token·Created·Runa`, and on a failed hand-over tells him to
 
 ## 4. Tools
 
-Twenty-eight tools: thirteen for documents, five for Plan boards ([§4.9b](#49b-the-plan-tools)), four for sheets
-([§4.9c](#49c-the-sheet-tools)), two for pages and articles ([§4.9d](#49d-the-pages-tools)) and four
-for forms ([§4.9e](#49e-the-form-tools)), besides the deprecated names ([§4.18](#418-deprecated-tool-names)). The search/view capability is two tools (find, then read); create,
+Thirty-one tools: thirteen for documents, five for Plan boards ([§4.9b](#49b-the-plan-tools)), four for sheets
+([§4.9c](#49c-the-sheet-tools)), two for pages and articles ([§4.9d](#49d-the-pages-tools)), four
+for forms ([§4.9e](#49e-the-form-tools)) and three for Event Storming boards ([§4.9f](#49f-the-event-storming-tools)), besides the deprecated names ([§4.18](#418-deprecated-tool-names)). The search/view capability is two tools (find, then read); create,
 add_tab, and update are separate because their inputs and intent differ;
 list_templates exposes the template catalogue ([§4.5](#45-list_templates)), search_icons the icon catalogue
 ([§4.5a](#45a-search_icons)) and list_images the user's image gallery ([§4.5b](#45b-list_images));
@@ -951,6 +951,22 @@ built with the editor's own edits (`@livedoc/forms`) and started as Start Planni
 - `read_document` lists a Form tab as `kind=form` with a line naming `read_form`; its `image` draws the form as
   `read_form` does.
 
+### 4.9f The event-storming tools
+
+An Event Storming board read as a domain, the notes an agent proposes for it, and the bundle that turns it into a
+spec and types ([Board reading](../021-event-storming/board-reading.md),
+[Suggestions](../021-event-storming/suggestions.md), [Domain export](../021-event-storming/domain-export.md)). The
+server (`packages/agent-verbs/src/storm/`) reads through the api's `storm` view and writes through changesets.
+
+- **`read_event_storming`** (read): the board reading (the timeline of events with what leads to each, the chains,
+  the loose notes), its gaps with their remedies, and the open suggestions; a tab that is not a board is refused as
+  `not_event_storming`.
+- **`suggest_notes`** (write): up to 30 suggestions (`kind`, `words`, `anchor` ref, `side`, `reason`, `gap`) as one
+  changeset of `suggest` operations; a refusal writes nothing and names the suggestion. Answers each suggestion's ref.
+- **`export_event_storming`** (read): the [domain export](../021-event-storming/domain-export.md#the-mcp) bundle as
+  text; `language` and `previous` are optional.
+- `update_document`'s `ops` take `suggest` as well, and `read_document` names `read_event_storming` on a board.
+
 ### 4.10 Prompts (discoverability)
 
 Registered MCP **prompts** — pre-canned templates a client surfaces as slash
@@ -1033,14 +1049,14 @@ while a destructive one always asks. Directory listings (the Claude connectors
 portal among them) also require them, and a missing block is a listing blocker,
 which is how the gap was found.
 
-Three behaviours cover the twenty tools, and each is a preset in
+Three behaviours cover every tool, and each is a preset in
 `apps/mcp/src/tool-annotations.ts`:
 
-| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                 |
-| --------------- | -------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`                             |
-| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `add_form`, `share_form`, `try_form` |
-| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                             |
+| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                     |
+| --------------- | -------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming` |
+| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`    |
+| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                 |
 
 The split mirrors §4.11's read-only-token boundary exactly (what a
 `read_only = 1` token can still reach is what `read` annotates), so the hint a

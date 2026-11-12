@@ -8,7 +8,9 @@ import { FormatIcon } from './export-format-icons';
 import { TextExportPanel } from './TextExportPanel';
 import { ImageExportPanel } from './ImageExportPanel';
 import { LogoKitPanel } from './LogoKitPanel';
+import { DomainModelExportPanel } from './DomainModelExportPanel';
 import {
+  isEventStormingTab,
   isLayerVisible,
   tabLayers,
   mermaidFromTab,
@@ -59,6 +61,7 @@ const EXPORT_LABEL: Record<Format, string> = {
   pdf: 'PDF',
   gif: 'GIF',
   'logo-kit': 'LogoKit',
+  'domain-model': 'DomainModel',
 };
 
 // A text format taken (downloaded or copied): CSV counts as its board's or Sheet's own CSV download, as the tab menu's
@@ -196,6 +199,12 @@ const CARDS: { kind: Format; title: string; description: string }[] = [
     title: 'Logo Kit',
     description: 'An SVG, PNGs from 16 to 1024 px and a favicon.ico, in one .zip.',
   },
+  {
+    // An Event Storming board only (docs/specs/021-event-storming/domain-export.md "The zip").
+    kind: 'domain-model',
+    title: 'Domain Model',
+    description: 'A spec of the domain and its types, from this board, in one .zip.',
+  },
 ];
 
 // Per-text-format panel config: the blurb, the download button label + file
@@ -325,7 +334,10 @@ export function ExportTabDialog({
       CARDS.filter((c) =>
         planImage.formats
           ? planImage.formats.includes(c.kind)
-          : c.kind !== 'logo-kit' && c.kind !== 'gif' && c.kind !== 'csv',
+          : c.kind !== 'logo-kit' &&
+            c.kind !== 'gif' &&
+            c.kind !== 'csv' &&
+            (c.kind !== 'domain-model' || (isEventStormingTab(tab) && !!imageContext)),
       );
 
   const isSelection = scope === 'selection';
@@ -479,11 +491,13 @@ export function ExportTabDialog({
   const subtitle = activeCard
     ? active === 'logo-kit'
       ? 'Download a logo page as an SVG, PNGs and a favicon.'
-      : active === 'gif'
-        ? 'Set how the pages play, then download the GIF.'
-        : isTextFormat(active!)
-          ? `Copy this tab as ${activeCard.title}, or download a file.`
-          : `Set the image options for ${activeCard.title}, then download.`
+      : active === 'domain-model'
+        ? 'Turn this board into a spec of the domain and its types.'
+        : active === 'gif'
+          ? 'Set how the pages play, then download the GIF.'
+          : isTextFormat(active!)
+            ? `Copy this tab as ${activeCard.title}, or download a file.`
+            : `Set the image options for ${activeCard.title}, then download.`
     : isSelection
       ? 'Pick a format to export the selected elements.'
       : pages
@@ -525,6 +539,14 @@ export function ExportTabDialog({
             images={previewImages}
             imagesReady={previewReady}
             imageContext={imageContext}
+            onDone={onClose}
+            onBack={() => setActive(null)}
+          />
+        ) : active === 'domain-model' && imageContext ? (
+          <DomainModelExportPanel
+            tab={tab}
+            documentName={documentName}
+            context={imageContext}
             onDone={onClose}
             onBack={() => setActive(null)}
           />

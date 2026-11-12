@@ -7,6 +7,7 @@ import type { RoomDoor } from './office';
 import type { Finish } from './finish';
 import type { CardSearchFilter, PlanBoardSetup, PlanViewId, SwimlaneBy } from '@livedoc/items';
 import type { EventStormingNoteKind } from './event-storming';
+import type { EsSuggestion } from './event-storming-suggestions';
 import type { TextRun } from './rich-text';
 import type { CommentThread } from './comments';
 import type { CellCommentThreads } from './cell-comments';
@@ -877,6 +878,10 @@ export type StickyElement = {
   // draft survives a reload and a peer sees it for what it is; `acceptDraft`
   // strips the flag, `discardDraft` removes the notes.
   esDraft?: true;
+  // A suggestion (docs/specs/021-event-storming/suggestions.md): a note an agent proposes, shown as a hint or a
+  // placeholder until a person applies it. While it is set the sticky is no board content: no notation kind, and the
+  // layer funnels drop it.
+  esSuggestion?: EsSuggestion;
   textSize?: TextSize;
   textAlignX?: TextAlignX;
   textAlignY?: TextAlignY;
