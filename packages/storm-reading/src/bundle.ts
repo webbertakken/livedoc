@@ -91,8 +91,9 @@ export function bundleFolderName(boardName: string, tabId: string): string {
     .normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .join('-')
     .slice(0, 48);
   return slug || tabId;
 }

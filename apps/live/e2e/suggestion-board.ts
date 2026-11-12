@@ -72,7 +72,7 @@ function suggestion(
 export const SUGGESTION_BOARD_IDS = {
   orderShipped: 'n-order-shipped',
   shipOrder: 's-ship-order',
-  clerk: 's-warehouse-clerk',
+  worker: 's-warehouse-worker',
   notify: 's-notify',
   basket: 's-basket',
   failed: 's-payment-failed',
@@ -106,12 +106,12 @@ export function suggestionBoardElements(): Note[] {
     ...above,
     shipOrder,
     suggestion(
-      SUGGESTION_BOARD_IDS.clerk,
+      SUGGESTION_BOARD_IDS.worker,
       'actor',
-      'Warehouse clerk',
+      'Warehouse worker',
       shipOrder,
       'above',
-      'Who ships the order? In most shops a warehouse clerk does.',
+      'Who ships the order? In most shops a warehouse worker does.',
     ),
     suggestion(
       SUGGESTION_BOARD_IDS.notify,

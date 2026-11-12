@@ -112,6 +112,8 @@ describe('parseWrittenFiles', () => {
       dropped: [],
     });
     expect(parseWrittenFiles('```json\n' + answer + '\n```').ok).toBe(true);
+    expect(parseWrittenFiles('```' + answer + '```').ok).toBe(true);
+    expect(parseWrittenFiles('```')).toEqual({ ok: false });
   });
 
   it('drops every path outside the spec and the source tree', () => {

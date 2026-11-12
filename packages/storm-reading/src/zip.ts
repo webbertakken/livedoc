@@ -100,13 +100,18 @@ function isWritablePath(path: string): boolean {
 export type WrittenFiles =
   { ok: true; files: Record<string, string>; dropped: string[] } | { ok: false };
 
+// An answer wrapped in a Markdown code fence, unwrapped; string work rather than a pattern, so a long run of
+// whitespace costs linear time whatever the model sends.
+function unfenced(text: string): string {
+  if (!text.startsWith('```') || !text.endsWith('```') || text.length < 6) return text;
+  const firstLine = text.indexOf('\n');
+  return text.slice(firstLine < 0 ? 3 : firstLine + 1, -3).trim();
+}
+
 // The model's answer, read safely: the files it wrote at paths it may write, at most the cap. An answer that is no
 // such JSON, or writes nothing, is no answer.
 export function parseWrittenFiles(answer: string): WrittenFiles {
-  const text = answer
-    .trim()
-    .replace(/^```(?:json)?\s*/, '')
-    .replace(/\s*```$/, '');
+  const text = unfenced(answer.trim());
   let value: unknown;
   try {
     value = JSON.parse(text);

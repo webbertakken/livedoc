@@ -44,7 +44,7 @@ test('a peek tab previews a suggestion with its reason, and Enter applies it', a
   const preview = page.locator(`[data-suggestion-placeholder="${IDS.shipOrder}"]`);
   await expect(preview).toBeVisible();
   // The chain previews with it, and the caption says why and who, never a gap code.
-  await expect(page.locator(`[data-suggestion-placeholder="${IDS.clerk}"]`)).toBeVisible();
+  await expect(page.locator(`[data-suggestion-placeholder="${IDS.worker}"]`)).toBeVisible();
   const caption = page.locator('[data-suggestion-caption]');
   await expect(caption).toContainText('Nothing on the board causes the shipment');
   await expect(caption).toContainText('Suggested by Claude');
@@ -61,7 +61,7 @@ test('a peek tab previews a suggestion with its reason, and Enter applies it', a
   expect(ship.x).toBe(byId(before, IDS.orderShipped).x);
   expect(shipped.x).toBeGreaterThan(ship.x);
   // The chained actor waits on, now on a real note.
-  expect(byId(after, IDS.clerk).esSuggestion).toMatchObject({ anchorId: IDS.shipOrder });
+  expect(byId(after, IDS.worker).esSuggestion).toMatchObject({ anchorId: IDS.shipOrder });
 
   // One Undo puts the whole board back.
   await page.keyboard.press('Control+z');
@@ -109,7 +109,7 @@ test('Delete on a placeholder dismisses it and what is chained on it', async ({ 
   await expect(page.locator('[data-suggestion-placeholder]')).toHaveCount(3);
   const after = await storedBoard(page);
   expect(after.find((el) => el.id === IDS.shipOrder)).toBeUndefined();
-  expect(after.find((el) => el.id === IDS.clerk)).toBeUndefined();
+  expect(after.find((el) => el.id === IDS.worker)).toBeUndefined();
   // The board's notes are all still there.
   expect(after.find((el) => el.id === IDS.orderShipped)).toBeDefined();
 });
