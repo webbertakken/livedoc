@@ -491,11 +491,13 @@ export function ExportTabDialog({
   const subtitle = activeCard
     ? active === 'logo-kit'
       ? 'Download a logo page as an SVG, PNGs and a favicon.'
-      : active === 'gif'
-        ? 'Set how the pages play, then download the GIF.'
-        : isTextFormat(active!)
-          ? `Copy this tab as ${activeCard.title}, or download a file.`
-          : `Set the image options for ${activeCard.title}, then download.`
+      : active === 'domain-model'
+        ? 'Turn this board into a spec of the domain and its types.'
+        : active === 'gif'
+          ? 'Set how the pages play, then download the GIF.'
+          : isTextFormat(active!)
+            ? `Copy this tab as ${activeCard.title}, or download a file.`
+            : `Set the image options for ${activeCard.title}, then download.`
     : isSelection
       ? 'Pick a format to export the selected elements.'
       : pages
