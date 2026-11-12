@@ -122,6 +122,12 @@ The types are written in the language the team needs, identified, not assumed:
 - **Refusals**: `not_event_storming`, `language_invalid`, `board_too_large`, `previous_too_large`,
   `previous_invalid` (no `storm.json` of schema `livedoc.storm/1` in the earlier zip's bundle folder), `ai_failed`.
 
+## Where it lives
+
+- The zip's pure parts (earlier export, model messages, answer, layout): `packages/storm-reading/src/zip.ts`.
+- The route: `apps/api/src/routes/storm-export-route.ts`, the streamed answer read by `apps/api/src/ai-stream.ts`.
+- The dialog: `apps/live/components/dialogs/DomainModelExportPanel.tsx` over `apps/live/lib/domain-export.ts`.
+
 ## Share roles
 
 Exporting reads the board: anyone who may read it may export it, as with every other export.

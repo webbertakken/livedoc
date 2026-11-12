@@ -129,3 +129,13 @@ overlap with the rest collapsing to peek tabs, and a side panel listing them by 
 - The critique the designs answered: a hint never reads as paper; it sits on the anchor's edge at the side the note
   would land; one per anchor side with a count; it gives the next-note tab the middle of the edge; its caption is the
   reason and who, never a gap code; its dashed stroke meets 3:1.
+
+## Where it lives
+
+- Placement and grouping: `apps/live/lib/suggestion-hints.ts`; apply, Apply All, dismiss and the Show All preview:
+  `apps/live/lib/suggestion-apply.ts`; the person's view: `apps/live/lib/suggestion-view.ts`.
+- The acts: `apps/live/hooks/canvas/useSuggestionActions.ts`, composed into the editor state; the Editor gate is
+  `can.suggestions` in `apps/live/lib/editor-capabilities.ts`.
+- The peek tabs, placeholders and panel: `apps/live/components/canvas/suggestions/`; the Show All shift rides the
+  insertion preview's `useInsertShift`.
+- The seeded board the end-to-end tests use: `apps/live/e2e/suggestion-board.ts`.
