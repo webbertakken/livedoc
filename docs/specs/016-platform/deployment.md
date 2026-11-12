@@ -157,6 +157,7 @@ Set in the repo under **Settings → Secrets and variables → Actions**:
 | `BETTER_AUTH_SECRET`        | api             | [04](../014-identity/auth-and-guest-access.md): turns sign-in on, and derives the guest-id signing key     |
 | `GOOGLE_AUTH_CLIENT_SECRET` | api             | [04](../014-identity/auth-and-guest-access.md): Google sign-in, beside `GOOGLE_AUTH_CLIENT_ID` in `[vars]` |
 | `INTERNAL_EVENTS_KEY`       | api **and** mcp | [22](../017-telemetry/telemetry.md) — one GitHub secret drives both, so they can't drift                   |
+| `GOOGLE_AI_STUDIO_API_KEY`  | api             | [AI assistance](../007-editor/ai-assistance.md): Gemini for every AI feature when it is the only key       |
 
 Syncing on every deploy means these rotate by editing the GitHub secret rather than by running `wrangler` against production. [Secrets policy](../002-project-scope/secrets-policy.md) holds the full worker-secret table.
 
