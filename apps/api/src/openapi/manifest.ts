@@ -990,6 +990,27 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     },
     statuses: [200, 403, 404],
   },
+  // ---- Event Storming domain export (docs/specs/021-event-storming/domain-export.md "The zip") ----
+  {
+    method: 'POST',
+    path: '/documents/{id}/tabs/{tabId}/storm-export',
+    segment: 'documents',
+    tag: 'Documents',
+    summary:
+      "An Event Storming board's domain export as the zip's files: `{ language, previous?, bundleOnly? }` answers `{ files, written }`. With the deployment's model (behind the AI gates) the files hold a written spec and types; without one, or with bundleOnly, the board reading and the brief alone. 400 not_event_storming, language_invalid, previous_invalid; 413 board_too_large, previous_too_large; 502 ai_failed. Read access.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: {
+      type: 'object',
+      properties: {
+        language: { type: 'string' },
+        previous: { type: 'object', additionalProperties: { type: 'string' } },
+        bundleOnly: { type: 'boolean' },
+      },
+      required: ['language'],
+    },
+    statuses: [200, 400, 401, 403, 404, 405, 413, 429, 502, 503],
+  },
   // ---- Form links (docs/specs/030-forms/forms.md) ----
   {
     method: 'POST',
