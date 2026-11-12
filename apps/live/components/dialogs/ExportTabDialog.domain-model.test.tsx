@@ -34,7 +34,9 @@ describe('ExportTabDialog Domain Model', () => {
     open(board, context);
     fireEvent.click(screen.getByRole('button', { name: /Domain Model/ }));
     expect(screen.getByRole('combobox', { name: 'Types in' })).toBeTruthy();
-    expect(screen.getByText('Turn this board into a spec of the domain and its types.')).toBeTruthy();
+    expect(
+      screen.getByText('Turn this board into a spec of the domain and its types.'),
+    ).toBeTruthy();
   });
 
   it('is not offered on any other tab, nor without a document to export from', () => {
