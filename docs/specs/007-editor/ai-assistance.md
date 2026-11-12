@@ -186,7 +186,7 @@ variable that holds it should say whose it is, and the endpoint follows.
 
 | key var                      | provider | base URL                                                  | default model                                                         |
 | ---------------------------- | -------- | --------------------------------------------------------- | --------------------------------------------------------------------- |
-| `GOOGLE_AI_STUDIO_API_KEY`   | google   | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-3.6-flash` (assistant), `gemini-2.5-flash-lite` (crop reader) |
+| `GOOGLE_AI_STUDIO_API_KEY`   | google   | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-3.6-flash` (assistant), `gemini-3.5-flash-lite` (crop reader) |
 | `OPENAI_API_KEY`             | openai   | `https://api.openai.com/v1`                               | `gpt-4o`                                                              |
 | `AI_API_KEY` + `AI_BASE_URL` | generic  | whatever `AI_BASE_URL` says                               | none — `AI_MODEL` is REQUIRED                                         |
 
@@ -228,9 +228,9 @@ unused`) rather than left as a dead secret nobody notices.
 `AI_MODEL` names a model of the provider serving the assistant, so it reaches
 the reader only when both run on that provider: a `gpt-4o` id sent to Gemini is
 a guaranteed failure. The READER has its own Google default,
-`gemini-2.5-flash-lite`, because reading handwriting is literal work: measured
-on a real wall it read 99% of the words against 95% for `gemini-3.6-flash`,
-while costing about a quarter as much and finishing four times faster
+`gemini-3.5-flash-lite`, because reading handwriting is literal work: re-measured
+on a real wall it read 98-99% of the words against 92-96% for `gemini-2.5-flash-lite` and 79% for
+`gemini-3.6-flash`, while costing a fraction of the big model and finishing four times faster
 (docs/research/vision/handwriting-readers.md). An operator who names `AI_MODEL`
 for a single-provider deployment means it for the reader too, and
 `AI_VISION_MODEL` beats everything. The generic preset has no defaults, so it

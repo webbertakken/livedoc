@@ -61,7 +61,7 @@ If you're deploying via GitHub Actions (the default workflow), set two repo secr
 - `CF_API_TOKEN`: the token from the step above.
 - `CF_ACCOUNT_ID`: your Cloudflare account id.
 
-Those two are the only **required** ones — the deploy workflow uses raw `pnpm exec wrangler deploy` against them. Optionally, it also syncs three worker secrets from repo secrets of the same name, each skipped when unset: `BETTER_AUTH_SECRET`, `GOOGLE_AUTH_CLIENT_SECRET`, and `INTERNAL_EVENTS_KEY`. Setting them here rather than by hand means they rotate by editing the GitHub secret — and, for `INTERNAL_EVENTS_KEY`, that the api and mcp workers can't drift apart. See [Secrets policy](../specs/002-project-scope/secrets-policy.md) for the full table.
+Those two are the only **required** ones — the deploy workflow uses raw `pnpm exec wrangler deploy` against them. Optionally, it also syncs four worker secrets from repo secrets of the same name, each skipped when unset: `BETTER_AUTH_SECRET`, `GOOGLE_AUTH_CLIENT_SECRET`, `INTERNAL_EVENTS_KEY`, and `GOOGLE_AI_STUDIO_API_KEY` (the AI features' model key). Setting them here rather than by hand means they rotate by editing the GitHub secret — and, for `INTERNAL_EVENTS_KEY`, that the api and mcp workers can't drift apart. See [Secrets policy](../specs/002-project-scope/secrets-policy.md) for the full table.
 
 ## Optional sign-in
 
@@ -244,7 +244,7 @@ reader prefers Google, each falling back to whichever key exists, and
   `AI_API_KEY`.
 - `AI_VISION_MODEL`: model id for reading sticky-note crops
   (`POST /api/ai/read-notes`, [Event storming](../specs/021-event-storming/event-storming.md)). On Google this defaults to
-  `gemini-2.5-flash-lite` rather than the assistant's model — it reads
+  `gemini-3.5-flash-lite` rather than the assistant's model — it reads
   handwriting better AND costs less (docs/research/vision/handwriting-readers.md). On a
   single provider, setting `AI_MODEL` moves the reader too unless you set this.
 - `AI_ALLOWED_ORIGINS`: comma-separated `Origin` allow-list for `POST /api/ai` (e.g. `https://your-host,http://localhost:4002`). Unset = no origin check. Matched verbatim, case-sensitive. `apps/api/wrangler.toml` commits docs.nu's origins here, so a fork sets its own or deletes the line, or every AI request answers 403.

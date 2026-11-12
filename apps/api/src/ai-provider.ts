@@ -54,7 +54,9 @@ export const OPENAI_DEFAULT_MODEL = 'gpt-4o';
 // reasoning a larger model brings is spent on a task with nothing to reason
 // about (it also has to be paid for out of `max_tokens`). See
 // docs/research/vision/handwriting-readers.md for the run.
-export const GOOGLE_DEFAULT_VISION_MODEL = 'gemini-2.5-flash-lite';
+// Re-measured 2026-11-12 on the same wall (43 crops, 31 labelled): gemini-3.5-flash-lite read 98-99% of the words
+// at 0.1-0.7% CER over three runs, against 92-96% and 1.7% for gemini-2.5-flash-lite, for pennies more per wall.
+export const GOOGLE_DEFAULT_VISION_MODEL = 'gemini-3.5-flash-lite';
 
 type Preset = {
   provider: AiProviderName;

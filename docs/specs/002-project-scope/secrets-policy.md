@@ -25,7 +25,7 @@ Required by the CI/CD pipeline (see [10-deployment.md](../016-platform/deploymen
 | `CF_API_TOKEN`  | Cloudflare API token scoped to the account that owns the workers. Required permissions: Workers Scripts:Edit, D1:Edit, Workers Routes:Edit, Account Settings:Read, User Details:Read. Full list in [10-deployment.md](../016-platform/deployment.md). |
 | `CF_ACCOUNT_ID` | Cloudflare account ID (not a secret per se, but kept in the same store).                                                                                                                                                                              |
 
-The deploy workflow also **syncs** three of the worker secrets below from GitHub repo secrets into `wrangler secret put` on every deploy, so they rotate by editing the GitHub secret: `BETTER_AUTH_SECRET`, `GOOGLE_AUTH_CLIENT_SECRET` and `INTERNAL_EVENTS_KEY`. Each sync step is guarded on the GitHub secret being non-empty, so a fork that sets none still deploys.
+The deploy workflow also **syncs** four of the worker secrets below from GitHub repo secrets into `wrangler secret put` on every deploy, so they rotate by editing the GitHub secret: `BETTER_AUTH_SECRET`, `GOOGLE_AUTH_CLIENT_SECRET`, `INTERNAL_EVENTS_KEY` and `GOOGLE_AI_STUDIO_API_KEY`. Each sync step is guarded on the GitHub secret being non-empty, so a fork that sets none still deploys.
 
 ## Worker secrets in use today
 
