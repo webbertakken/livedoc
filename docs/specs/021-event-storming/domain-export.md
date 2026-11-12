@@ -102,11 +102,11 @@ The types are written in the language the team needs, identified, not assumed:
 - **The earlier zip is read in the browser** (the editor's zip reader): its text files go to the route as `previous`,
   the bundle folder's `storm.json` as the baseline, its `export.json` for the language, its `trace.json` and every spec
   and source file for the model to change rather than replace. Nothing is kept on the server between exports
-  (default).
+  (ruled 2026-11-12).
 - **The route answers files, the editor writes the zip** (default): `{ files, written }`, `files` mapping each path
   to its text, `written` true when the model wrote the spec and the types. The editor already writes zips for the
   page and logo exports, and the Worker stays free of an archive library.
-- **The model** is the deployment's assistant provider, behind the AI routes' gates (default). It is handed the brief,
+- **The model** is the deployment's assistant provider, behind the AI routes' gates (ruled 2026-11-12: no separate code model). It is handed the brief,
   then an answer format: every file it writes as `{ path, content }` in one JSON answer, paths relative and inside the
   spec or the source tree (never `..`, never an absolute path, never the bundle folder but its `trace.json`), at most
   `DOMAIN_EXPORT_MAX_WRITTEN_FILES` (80) files. A path outside those rules is dropped and logged, never written.
