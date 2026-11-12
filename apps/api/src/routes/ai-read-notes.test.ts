@@ -353,7 +353,7 @@ describe('what leaves this worker', () => {
     expect(new Headers((init as RequestInit).headers).get('Authorization')).toBe('Bearer g');
     expect(JSON.parse((init as RequestInit).body as string)).toHaveProperty(
       'model',
-      'gemini-2.5-flash-lite',
+      'gemini-3.5-flash-lite',
     );
   });
 });

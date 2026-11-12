@@ -345,3 +345,19 @@ editor with no model configured on the api, or with `E2E_AI_BUDGET_SPENT=1`.
 
 Real photographs never enter the repo — keep the wall PNG and its labels
 outside it.
+
+## Re-measured 2026-11-12: the Flash-Lite generations
+
+The detector now finds 43 crops on the same wall; 31 whole, legible notes were labelled (partial and struck-through
+crops left out, so no blanks are scored). Same harness, strict schema, six crops per call.
+
+| Reader                | runs | exact    | words  | CER      | wall time |
+| --------------------- | ---- | -------- | ------ | -------- | --------- |
+| gemini-3.5-flash-lite | 3    | 29-30/31 | 98-99% | 0.1-0.7% | 7-9 s     |
+| gemini-2.5-flash-lite | 3    | 25-27/31 | 92-96% | 1.6-1.7% | 7 s       |
+| gemini-3.1-flash-lite | 1    | 27/31    | 95%    | 1.0%     | 7.5 s     |
+| gemini-3.6-flash      | 1    | 24/31    | 79%    | 18.1%    | 38 s      |
+
+2.5 Flash-Lite's misses are truncations (`Activity` for `Activity Postponed`, `Timeslot` for a six-line note); 3.5
+Flash-Lite's one steady miss is a spelling the labeller could read either way (`Cancelled` / `Canceled`). The reader
+default moved to `gemini-3.5-flash-lite`.

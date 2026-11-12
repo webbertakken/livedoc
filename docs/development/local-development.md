@@ -159,7 +159,7 @@ OPENAI_API_KEY=...             # or GOOGLE_AI_STUDIO_API_KEY=..., or both:
 # AI_BASE_URL=http://127.0.0.1:8080/v1  # neither named key is set; needs both of these
 # AI_MODEL=gpt-4o              # the assistant's model; optional for the named keys
 # AI_VISION_MODEL=...          # optional; reads sticky crops (docs/specs/021-event-storming/event-storming.md).
-#                              # On Google this defaults to gemini-2.5-flash-lite,
+#                              # On Google this defaults to gemini-3.5-flash-lite,
 #                              # which reads handwriting better than the big model.
 ```
 
