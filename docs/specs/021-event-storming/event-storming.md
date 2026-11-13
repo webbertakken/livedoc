@@ -1562,17 +1562,54 @@ hundred small notes.
 Requested 2026-11-13: anyone can upload several photos of one wall, in order, and a complete board comes out.
 A real wall rarely fits one photo: the operator's own wall took eleven overlapping photos, left to right.
 
-- **What it is.** The photo import takes several photos at once (a `.zip`, or several files picked together), in
-  wall order, and lands ONE draft for the whole wall, reviewed and added like a single photo's.
-- **Why the single-photo matcher is not enough.** Running the eleven photos one after another through
-  `reconcilePhoto` (2026-11-13) read every photo (174 notes, no failed batch) but stitched them wrongly: a photo that
-  shares only one or two notes with the board fits its whole transform to them, and one chance text match (two
-  "Signed in" notes) drops the photo a screen lower. Photos 0 to 5 ended up as a cascade down the board instead of a
-  row along it. Photo 8, which overlaps photo 7 heavily, matched 13 notes and stitched correctly.
-- **What stitching a sequence needs** (to be designed): the order is known, so each photo is matched against its
-  neighbour only; an overlap counts when several matches agree on one shift and scale; without that agreement the
-  photo lands beside its neighbour, at its scale, top edges aligned.
-- Open questions are in the plan's ambiguities until ruled.
+### What a person does
+
+- **Pick several photos at once.** Add from Photo takes several files picked together, or a `.zip` of photos (as a
+  phone's photo app exports them), or both mixed (ruled 2026-11-13). A zip's folders and non-photo files are
+  skipped and counted in the review; a zip in a zip is skipped.
+- **Order is by file name** (ruled 2026-11-13): natural order, so `IMG_9` comes before `IMG_10`, and a phone's
+  timestamped names (`20261112_173833.jpg`) read in the order they were taken. The person shoots the wall left to
+  right; the review says the order it used.
+- **One review for the whole wall** (ruled 2026-11-13): the review wizard shows one photo at a time, with a strip of
+  the photos along its top to move between them, and one Add at the end that lands every photo's notes as one draft.
+  Each photo's boxes, kinds and words are reviewed exactly as a single photo's are; the words step lists the notes
+  photo by photo. Notes the stitching takes as the same paper seen twice are shown once, on the first photo, and
+  marked on the later one as "on photo N".
+- **It runs in the browser** (ruled 2026-11-13), as a single photo does: the photos never leave the device, only
+  the crops are read. Photos are detected one after another, never at once, so a phone holds one decoded photo at a
+  time.
+- **Limits.** At most `WALL_MAX_PHOTOS` (20) photos and `PHOTO_MAX_NOTES` per photo (default); past the photo
+  limit the review says how many were left out, from the end.
+- **One undoable step.** Add lands one draft; Add or Discard on the draft bar, as for one photo.
+
+### How the photos are stitched
+
+The single-photo import fits a photo to whatever on the board its words match. That is wrong for a sequence: run
+over the eleven photos (2026-11-13) it read all 174 notes but a photo sharing one or two notes with the board fitted
+its whole place to them, and one chance match dropped a photo a screen lower; photos 0 to 5 came out as a staircase.
+Stitching uses what a sequence knows instead:
+
+- **Each photo against the one before it only.** Photo 1 is placed against the board exactly as a single photo is
+  (`reconcilePhoto`); every later photo is matched only against the notes already placed from the photo before it.
+- **An overlap counts when matches agree.** Each pair of notes with matching words implies where the new photo sits.
+  The overlap is the largest group of pairs that agree within `WALL_AGREEMENT_PX` (120 canvas px, default), and
+  needs at least `WALL_MIN_AGREEING` (2, default) different notes. With three or more, scale is fitted too, within
+  0.7 to 1.4 of the photo's own scale (default).
+- **No overlap: beside.** A photo whose matches do not agree is placed right of the one before it, one
+  `WALL_PHOTO_GAP` (200 canvas px, default) clear, at its own scale, top edges aligned.
+- **The same paper once.** After placing, a note whose centre lands within `WALL_SAME_NOTE_PX` (110 canvas px,
+  default) of a placed note of the same kind is that note seen again, whether or not its words were read alike.
+- **Measured** on the eleven photos with the spike (2026-11-13): photos read left to right in one row of story;
+  photo 8 stitched to photo 7 on 11 agreeing notes, photo 10 to photo 9 on 6; the rest landed beside.
+- The stitching is pure (`stitchWall` in `@livedoc/document`) so the editor, the CLI and the MCP share it.
+
+### Through the CLI and the MCP (ruled 2026-11-13: possible through both)
+
+- **CLI**: `livedoc storm import-wall <doc> <photo|zip>… [--tab <t>]` detects on the machine running it, reads the
+  crops through the deployment's reader (`POST /api/ai/read-notes`, under the same gates), stitches, and writes
+  the notes as a draft the person adds or discards in the editor.
+- **MCP**: `add_photo_notes` takes the notes an agent read from each photo, in order (kind, words, box as fractions
+  of its photo), stitches them the same way, and writes the same draft. The photos stay with the agent.
 
 ## Agents
 
