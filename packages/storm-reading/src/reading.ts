@@ -2,6 +2,7 @@
 // where its notes sit. Deterministic and pure; no model is involved.
 
 import type { Tab } from '@livedoc/document';
+import { readContexts } from './contexts';
 import { findGaps } from './gaps';
 import { readNotes } from './notes';
 import { relate } from './relations';
@@ -39,5 +40,6 @@ export function readBoard(
     chains: timeline.chains,
     loose: timeline.loose,
     gaps: findGaps(placed, relations, timeline),
+    contexts: readContexts(tab, order),
   };
 }

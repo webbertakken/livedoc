@@ -67,9 +67,13 @@ export function parsePreviousReading(text: string): StormReading | null {
   try {
     const value: unknown = JSON.parse(text);
     const reading = value as Partial<StormReading>;
-    return reading.schema === STORM_SCHEMA && Array.isArray(reading.notes) && reading.relations
-      ? (value as StormReading)
-      : null;
+    if (reading.schema !== STORM_SCHEMA || !Array.isArray(reading.notes) || !reading.relations)
+      return null;
+    // A reading made before candidate contexts has none.
+    return {
+      ...(value as StormReading),
+      contexts: Array.isArray(reading.contexts) ? reading.contexts : [],
+    };
   } catch {
     return null;
   }

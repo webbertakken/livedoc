@@ -9,7 +9,7 @@
 import { DOMAIN_EXPORT_LANGUAGES, LANGUAGE_IDIOMS, type DomainLanguage } from './languages';
 
 // Bumped when the brief changes in a way an earlier export should know about.
-export const BRIEF_VERSION = 1;
+export const BRIEF_VERSION = 2;
 
 const BRIEF = `# Convert an Event Storming board into a spec and domain types
 
@@ -20,8 +20,8 @@ You change what is already there; you never start over.
 ## What you are given
 
 - \`storm.json\`: the board reading (schema \`livedoc.storm/1\`). Notes with stable ids, the relations between them,
-  the timeline of events, the chains (event, policy, command, event) and the gaps. It is deterministic: trust its
-  relations, question its words.
+  the timeline of events, the chains (event, policy, command, event), the gaps and the candidate contexts the
+  board groups its notes into. It is deterministic: trust its relations, question its words.
 - \`storm.md\`: the same reading as text, for orientation.
 - \`CHANGES.md\`: what changed on the board since the last export, by note id. Absent on a first export.
 - \`trace.json\`: which spec section and which type each note became last time. Absent on a first export.
@@ -55,8 +55,14 @@ A board is a set of decisions. Every note kind becomes exactly one of four shape
   one aggregate. Ask "whose job is it to keep these consistent?"; if not the issuer's, they are separate aggregates
   that talk through events.
 - Keep aggregates small: a root with values. Reference other aggregates by identity, never by holding them.
-- Start with one bounded context per board. Split only where the language splits: one word meaning two things, or a
-  pivotal event after which the vocabulary changes. A split is a module boundary, not a service.
+- **Candidate contexts.** When \`storm.json\` lists \`contexts\`, the people at the wall grouped its notes into candidate
+  bounded contexts. Take each as a bounded context, named as the board names it, and put its aggregates, commands,
+  events and policies in it. They are evidence, not a ruling: where the language says otherwise (one word meaning
+  two things inside one, or two contexts sharing one model), say so in the spec as a question.
+- A note in no candidate context belongs where its relations lead; say where you put it.
+- With no candidate contexts, start with one bounded context per board. Split only where the language splits: one
+  word meaning two things, or a pivotal event after which the vocabulary changes. A split is a module boundary, not a
+  service.
 - Identify the subdomain: core (where the business competes, give it the richest model), supporting or generic (keep
   it simple; say so in the spec).
 
