@@ -58,6 +58,13 @@ export function ContextOutline({
   const plateRef = useRef<HTMLButtonElement>(null);
   const [selected, setSelected] = useState(false);
   const [editing, setEditing] = useState(false);
+  // Back to the name once a rename ends: the name is drawn again only after the field goes.
+  const refocus = useRef(false);
+  useEffect(() => {
+    if (editing || !refocus.current) return;
+    refocus.current = false;
+    plateRef.current?.focus();
+  }, [editing]);
   const name = context.label;
   const px = 1 / zoom;
   const pad = CONTEXT_WOBBLE_PX + LINE_HIT_PX * px;
@@ -147,8 +154,8 @@ export function ContextOutline({
         onStartEditing={() => setEditing(true)}
         onEndEditing={(next) => {
           setEditing(false);
+          refocus.current = true;
           if (next !== null) acts.kept?.onRename(next);
-          plateRef.current?.focus();
         }}
       />
     </div>

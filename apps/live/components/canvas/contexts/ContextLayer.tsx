@@ -4,7 +4,7 @@ import { useMemo, type CSSProperties } from 'react';
 import { CONTEXT_INK, hiddenLayerElementIds, type Element, type Layer } from '@livedoc/document';
 import type { ContextControls, SuggestionControls } from '@/components/canvas/Canvas.types';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
-import { applyOverlay, localPreview, useDragPreview } from '@/lib/drag-preview';
+import { applyOverlay, useDragPreview, useLocalDragPreview } from '@/lib/drag-preview';
 import { drawnContexts } from '@/lib/context-outlines';
 import {
   endSuggestionPreview,
@@ -51,10 +51,11 @@ export function ContextLayer({
   const zoom = useCanvasZoom();
   const view = useSuggestionView(tabId);
   const overlay = useDragPreview(tabId, elements);
-  const local = localPreview();
+  // The notes this person has in hand; only someone who may change contexts sees where a drop would land.
+  const local = useLocalDragPreview(tabId);
   const draggedIds = useMemo(
-    () => (contexts && local?.tabId === tabId && overlay ? new Set(local.changed.keys()) : NO_DRAG),
-    [contexts, local, tabId, overlay],
+    () => (contexts && local ? new Set(local.changed.keys()) : NO_DRAG),
+    [contexts, local],
   );
   const drawn = useMemo(() => {
     const board = overlay ? applyOverlay(elements, overlay) : elements;
