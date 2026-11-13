@@ -1557,6 +1557,23 @@ hundred small notes.
 <photo>` with the author's own key (a flash-class vision model) or a local
   one, tiled for small notes, writing the same draft through the API.
 
+## Phase 11 (planned): a whole wall from several photos
+
+Requested 2026-11-13: anyone can upload several photos of one wall, in order, and a complete board comes out.
+A real wall rarely fits one photo: the operator's own wall took eleven overlapping photos, left to right.
+
+- **What it is.** The photo import takes several photos at once (a `.zip`, or several files picked together), in
+  wall order, and lands ONE draft for the whole wall, reviewed and added like a single photo's.
+- **Why the single-photo matcher is not enough.** Running the eleven photos one after another through
+  `reconcilePhoto` (2026-11-13) read every photo (174 notes, no failed batch) but stitched them wrongly: a photo that
+  shares only one or two notes with the board fits its whole transform to them, and one chance text match (two
+  "Signed in" notes) drops the photo a screen lower. Photos 0 to 5 ended up as a cascade down the board instead of a
+  row along it. Photo 8, which overlaps photo 7 heavily, matched 13 notes and stitched correctly.
+- **What stitching a sequence needs** (to be designed): the order is known, so each photo is matched against its
+  neighbour only; an overlap counts when several matches agree on one shift and scale; without that agreement the
+  photo lands beside its neighbour, at its scale, top edges aligned.
+- Open questions are in the plan's ambiguities until ruled.
+
 ## Agents
 
 An agent reads a board through its [board reading](board-reading.md) (the timeline, the chains and the gaps,
