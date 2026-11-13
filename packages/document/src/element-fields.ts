@@ -182,6 +182,7 @@ export const ELEMENT_FIELD_NAMES = {
     'sequenceAnimSpeed',
     'sequenceAnimRepeat',
     'boundaryStyle',
+    'esContext',
     'conceptRows',
     'pyramidVariant',
     'conceptAnim',

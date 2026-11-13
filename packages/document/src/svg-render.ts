@@ -56,6 +56,7 @@ import { defaultTextColor, SELF_PAINTING_SHAPES } from './colors';
 // Text/number primitives shared with the per-element emitters — re-exported
 // below so existing importers of this module keep resolving.
 import { labelMeasure, r2, wrapLabel, xmlEscape } from './svg-render-primitives';
+import { svgCandidateContexts, withContextReach } from './svg-render-contexts';
 
 export {
   estimatedLabelMeasure,
@@ -647,16 +648,21 @@ export function renderElementsToSvg(
   const labels = arrowLabelPass(tab.elements, {
     fontFamilyOf: (a) => arrowLabelFontStack(a, tab.font, tab.finish),
   });
-  const bounds = frame ? frame.bounds : contentBounds(visible, labels);
-  const vbX = bounds.x - padding;
-  const vbY = bounds.y - padding;
-  const vbW = bounds.w + padding * 2;
-  const vbH = bounds.h + padding * 2;
   const bg = frame ? PAGE_EXPORT_PAPER : (opts.background ?? tab.backgroundColor ?? EXPORT_BG);
   // What you export is what you see: an element with no colours of its own is
   // drawn in the ink of the paper it is being exported onto (docs/specs/007-editor/live-app.md), so a
   // dark canvas exports dark-canvas elements rather than pale ones.
   const surface = frame ? frame.surface : canvasSurface(bg);
+  // Kept candidate contexts, drawn beneath the notes (docs/specs/021-event-storming/candidate-contexts.md), and how
+  // far their outlines reach past them.
+  const contexts = svgCandidateContexts(tab.elements, visible, surface, bg);
+  const bounds = frame
+    ? frame.bounds
+    : withContextReach(contentBounds(visible, labels), contexts.bounds);
+  const vbX = bounds.x - padding;
+  const vbY = bounds.y - padding;
+  const vbW = bounds.w + padding * 2;
+  const vbH = bounds.h + padding * 2;
   const parts: string[] = [
     `<svg xmlns="http://www.w3.org/2000/svg" width="${r2(vbW)}" height="${r2(vbH)}" viewBox="${r2(vbX)} ${r2(vbY)} ${r2(vbW)} ${r2(vbH)}">`,
     frame
@@ -686,6 +692,7 @@ export function renderElementsToSvg(
   const tagColours = tagColoursOf(tab);
   // A wireframe page's elements are cut to its screen, its system bars over them (withinPageFrame).
   const bandsStart = parts.length;
+  if (contexts.svg) parts.push(contexts.svg);
   // Numbered mind nodes are led by their number (docs/specs/009-elements/mind-node.md "Numbered nodes"); a group is a
   // frame, drawn as one.
   const numbered = new Map(withMindNumberLabels(tab.elements).map((el) => [el.id, el]));
