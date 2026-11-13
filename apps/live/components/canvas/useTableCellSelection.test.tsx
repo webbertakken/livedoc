@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTable } from '@livedoc/document';
+import { pointerMenuAnchor } from '@/lib/context-menu-anchor';
 import { useTableCellSelection } from './useTableCellSelection';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -105,5 +106,66 @@ describe('useTableCellSelection', () => {
     expect(result.current.selectedCell).toBeNull();
     expect(result.current.extraCells.size).toBe(0);
     expect(result.current.cellMenuPos).toBeNull();
+  });
+});
+
+// docs/specs/008-canvas/canvas-and-palette.md "Element menu anchor": a right-click on a cell opens the cell menu at the
+// pointer; the keyboard opens it beside the acting cells.
+describe('the cell menu anchor', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  // A 3 x 3 grid drawn at the table's own size, its first column's right edge at x = 100.
+  function grid() {
+    const node = document.createElement('div');
+    node.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: element.width, height: element.height }) as DOMRect;
+    return node;
+  }
+
+  function setupWithGrid() {
+    return renderHook(() =>
+      useTableCellSelection({
+        element,
+        rows: 3,
+        cols: 3,
+        gridRef: { current: grid() },
+        editing: null,
+        isSelected: true,
+        disabled: false,
+        onCommitTable: vi.fn(),
+      }),
+    );
+  }
+
+  it('opens at the pointer on a right-click, selecting the cell', () => {
+    const { result } = setupWithGrid();
+    document.dispatchEvent(new Event('pointerdown'));
+    act(() => result.current.openCellContextMenu({ r: 1, c: 1 }, { clientX: 400, clientY: 300 }));
+    expect(result.current.cellMenuPos).toEqual(pointerMenuAnchor({ x: 400, y: 300 }));
+    expect(result.current.selectedCell).toEqual({ r: 1, c: 1 });
+  });
+
+  it('opens beside the cells from the keyboard', () => {
+    // jsdom computes no grid tracks, so the grid reports the ones it was drawn with.
+    vi.spyOn(window, 'getComputedStyle').mockReturnValue({
+      gridTemplateColumns: '100px 100px 100px',
+      gridTemplateRows: '40px 40px 40px',
+    } as CSSStyleDeclaration);
+    const { result } = setupWithGrid();
+    document.dispatchEvent(new Event('keydown'));
+    act(() => result.current.openCellContextMenu({ r: 0, c: 0 }, { clientX: 400, clientY: 300 }));
+    expect(result.current.cellMenuPos).toEqual({ x: 108, y: 8 });
+  });
+
+  it('keeps a multi-selection the right-clicked cell is in', () => {
+    const { result } = setupWithGrid();
+    act(() => {
+      result.current.setSelectedCell({ r: 0, c: 0 });
+      result.current.setExtraCells(new Set(['0:1']));
+    });
+    document.dispatchEvent(new Event('pointerdown'));
+    act(() => result.current.openCellContextMenu({ r: 0, c: 1 }, { clientX: 40, clientY: 30 }));
+    expect(result.current.selectedCell).toEqual({ r: 0, c: 0 });
+    expect([...result.current.extraCells]).toEqual(['0:1']);
   });
 });

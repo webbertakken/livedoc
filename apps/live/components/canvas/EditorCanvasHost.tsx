@@ -773,9 +773,8 @@ export function EditorCanvasHost() {
               onToggleReveal={runBlocked ? undefined : toggleRevealForMe}
               onSetSessionConfig={isReadOnly || runBlocked ? undefined : setSessionConfigFor}
               // The `…` on a Behaviours element's face (docs/specs/008-canvas/canvas-and-palette.md). Anchored from the
-              // ELEMENT's rect, not the trigger's, so it lands exactly where a
-              // right-click on the same element would — one menu, one position,
-              // whichever way you asked for it.
+              // ELEMENT's rect, not the trigger's, so it lands beside the element
+              // as the toolbar's More and a long-press do ("Element menu anchor").
               onOpenElementSettings={
                 isReadOnly
                   ? undefined
@@ -1146,9 +1145,9 @@ export function EditorCanvasHost() {
                       }
                       // Right-clicking the element that already owns the menu AT THE
                       // SAME ANCHOR is a no-op: return the SAME state object so React
-                      // re-renders nothing. Re-opening would restart the entrance
-                      // animation and flash the selection popover in the gap, for a
-                      // gesture that asked for the menu already on screen.
+                      // re-renders nothing. Re-opening would rebuild the menu and
+                      // flash the selection popover in the gap, for a gesture that
+                      // asked for the menu already on screen.
                       //
                       // The anchor has to be part of that comparison: selectElement
                       // runs first and retargets an open menu's elementId in place

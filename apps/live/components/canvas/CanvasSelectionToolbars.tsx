@@ -250,8 +250,8 @@ export function CanvasSelectionToolbars({
                 ? undefined
                 : selected && onOpenElementContextMenu
                   ? (x, y) => {
-                      // Open from the element's top-right corner (same as a
-                      // right-click, via elementMenuAnchor), NOT under the
+                      // Open from the element's top-right corner (as a long-press
+                      // and the keyboard do, via elementMenuAnchor), NOT under the
                       // toolbar's ⋯ button, so the menu doesn't cover the
                       // element. Fall back to the button coords if the
                       // element node can't be found.
