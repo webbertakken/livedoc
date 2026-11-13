@@ -25,18 +25,17 @@ import { hiddenLayerElementIds, layerBands, visibleLayerElements } from './layer
 import { elementValidationIssue, isValidElement } from './validate';
 import type { Element } from './index';
 
-const note = (id: string, x: number, extra: Record<string, unknown> = {}): Element =>
-  ({
-    id,
-    type: 'sticky',
-    x,
-    y: 0,
-    width: 200,
-    height: 200,
-    label: id,
-    esKind: 'domain-event',
-    ...extra,
-  }) as Element;
+const note = (id: string, x: number, extra: Record<string, unknown> = {}): Element => ({
+  id,
+  type: 'sticky',
+  x,
+  y: 0,
+  width: 200,
+  height: 200,
+  label: id,
+  esKind: 'domain-event',
+  ...extra,
+});
 
 const context = (
   id: string,
