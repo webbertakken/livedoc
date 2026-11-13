@@ -102,6 +102,9 @@ export const ACTOR_HULL: readonly (readonly [number, number])[] = [
   [33.7, 10.7],
 ];
 export const ACTOR_VIEWBOX = { width: 90, height: 130 } as const;
+/** How far down the actor viewBox its arm tips reach: a named actor's outline drops from them
+ *  to its name's room (shape-outline.ts). */
+export const ACTOR_ARM_TIP_Y = 56;
 
 // Every silhouette whose geometry does not depend on the element's size.
 const FIXED_GEOMETRY: Partial<Record<ShapeKind, ShapeGeometry>> = {

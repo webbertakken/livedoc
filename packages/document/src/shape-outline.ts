@@ -8,8 +8,14 @@ import { isTechIconId } from '@livedoc/icons';
 import type { BoxedElement } from './index';
 import { techIconMarkBounds } from './icon-size';
 import { distToSegment, rotatePoint, type Point } from './geometry-primitives';
-import { ACTOR_HULL, ACTOR_VIEWBOX, shapePathData, shapePolygonVertices } from './shape-geometry';
-import { actorFigureRect } from './actor-figure';
+import {
+  ACTOR_ARM_TIP_Y,
+  ACTOR_HULL,
+  ACTOR_VIEWBOX,
+  shapePathData,
+  shapePolygonVertices,
+} from './shape-geometry';
+import { actorFigureRect, actorNameRoom } from './actor-figure';
 import { sampleSvgPath } from './svg-path-outline';
 import type { ShapeKind } from './shape-kind';
 
@@ -102,7 +108,41 @@ function actorOutline(el: BoxedElement, x: number, y: number): Point[] {
   const k = Math.min(r.width / ACTOR_VIEWBOX.width, r.height / ACTOR_VIEWBOX.height);
   const ox = x + r.x + (r.width - ACTOR_VIEWBOX.width * k) / 2;
   const oy = y + r.y + (r.height - ACTOR_VIEWBOX.height * k) / 2;
-  return ACTOR_HULL.map(([vx, vy]) => ({ x: ox + vx * k, y: oy + vy * k }));
+  const hull = ACTOR_HULL.map(([vx, vy]) => ({ x: ox + vx * k, y: oy + vy * k }));
+  const room = actorNameRoom(el);
+  if (room <= 0) return hull;
+  return enclosingName(hull, x, y, el.width, el.height, room);
+}
+
+// A named actor's outline (docs/specs/008-canvas/arrow-anchors.md "The actor's name"): the
+// hull from the head down to the arm tips, then straight down from each tip to the name's room,
+// which spans the element's width to its bottom edge, so no connector ends in or runs through
+// the name. Clockwise, like the hull.
+function enclosingName(
+  hull: readonly Point[],
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  room: number,
+): Point[] {
+  const belowArms = ([, vy]: readonly [number, number]) => vy > ACTOR_ARM_TIP_Y;
+  // The points below the arm tips are one run in the clockwise hull: the feet.
+  const feet = ACTOR_HULL.findIndex(belowArms);
+  const right = hull.slice(0, feet);
+  const left = hull.slice(feet + ACTOR_HULL.filter(belowArms).length);
+  const top = y + Math.max(0, height - room);
+  const bottom = y + height;
+  return [
+    ...right,
+    { x: right.at(-1)!.x, y: top },
+    { x: x + width, y: top },
+    { x: x + width, y: bottom },
+    { x, y: bottom },
+    { x, y: top },
+    { x: left[0]!.x, y: top },
+    ...left,
+  ];
 }
 
 // The element's anchoring outline in its local (unrotated) px, or null when
