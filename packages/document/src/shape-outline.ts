@@ -127,8 +127,10 @@ function enclosingName(
   room: number,
 ): Point[] {
   const belowArms = ([, vy]: readonly [number, number]) => vy > ACTOR_ARM_TIP_Y;
-  const right = hull.slice(0, ACTOR_HULL.findIndex(belowArms));
-  const left = hull.slice(ACTOR_HULL.findLastIndex(belowArms) + 1);
+  // The points below the arm tips are one run in the clockwise hull: the feet.
+  const feet = ACTOR_HULL.findIndex(belowArms);
+  const right = hull.slice(0, feet);
+  const left = hull.slice(feet + ACTOR_HULL.filter(belowArms).length);
   const top = y + Math.max(0, height - room);
   const bottom = y + height;
   return [
