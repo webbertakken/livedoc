@@ -37,7 +37,7 @@ In this order, each with its glyph and number key:
 | --- | ---------- | --------------------------------------- | ----------------------------------------------------------------------- |
 | 1   | Diagram    | Blank Diagram (`blank`)                 | Start Diagramming's, in its groups, Recommended first, but Brainstorm's |
 | 2   | Whiteboard | Blank Whiteboard (`whiteboard`)         | Start Sketching's, in its groups, Recommended first                     |
-| 3   | Brainstorm | Blank Brainstorm (`blank-brainstorm`)   | Start Diagramming's Brainstorm: the mind maps                           |
+| 3   | Brainstorm | Blank Brainstorm (`blank-brainstorm`)   | Start Diagramming's Brainstorm: the mind maps, then Event Storming      |
 | 4   | Page       | Blank Article (`blank-article`)         | Start Making Pages' Articles                                            |
 | 5   | Sheet      | Blank Spreadsheet (`blank-spreadsheet`) | The spreadsheet templates (Budget, Timesheet, Invoice, ...)             |
 | 6   | Board      | Blank Board (`blank-board`)             | The Plan templates that set up boards (Kanban, Bug Triage, ...)         |
@@ -82,7 +82,8 @@ A popover under the button, its right edge on the button's. Two panes side by si
   while its templates pass under it, and a soft fade at the foot says there is more. A blank with one group
   (Brainstorm, Page, Slides, Sheet, Board, Form) has one heading.
 - **A template has one blank.** A whole mode's pane leaves out every template another blank lists from the same
-  start, so Diagram's pane holds no mind map: they are Brainstorm's. The editor's start still lists them all.
+  start, so Diagram's pane holds no mind map and no Event Storming: they are Brainstorm's.
+  The editor's start still lists them all.
 - **There is no blank card.** A row of the list is the blank: clicking it, or Enter on it, makes the blank. The pane
   holds templates only.
 - **There is no way out to a bigger picker.** The pane holds every template of the blank; the editor's template
