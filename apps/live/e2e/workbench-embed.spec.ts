@@ -176,6 +176,61 @@ test('a paired workbench frames the editor, hears the selection, renews, and end
     .toMatchObject({ reason: 'revoked' });
 });
 
+// docs/specs/016-platform/bug-reports.md "From an embed": the person reports from the frame, screenshot and context
+// included, filed as their account, inside a host that sandboxes its frame.
+test('a person reports a bug from inside a sandboxed workbench frame', async ({
+  page,
+  context,
+  request,
+  baseURL,
+}, testInfo) => {
+  test.setTimeout(120_000);
+  const person = await newPerson(context, baseURL!, 'Webber');
+  const seeded = await seedDocumentAndToken(request, person);
+  const unpaired = await mintTicket(request, seeded, workbench.origin);
+  await page.goto(unpaired.body.pairingUrl!);
+  await page.getByRole('button', { name: 'Allow', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Workbench allowed' })).toBeVisible();
+  const minted = await mintTicket(request, seeded, workbench.origin);
+  const reports: { status: number; body: Record<string, unknown> }[] = [];
+  page.on('response', async (res) => {
+    const req = res.request();
+    if (req.method() !== 'POST' || !req.url().endsWith('/api/bug-reports')) return;
+    reports.push({ status: res.status(), body: req.postDataJSON() as Record<string, unknown> });
+  });
+
+  await workbench.open(page, minted.body.url!, {
+    sandbox:
+      'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads allow-modals',
+  });
+  const frame = page.frameLocator('#frame');
+  await frame.locator('[data-canvas-a11y-root]').waitFor();
+  await frame.locator('[data-bug-report-entry][aria-label="Report a Bug"]').click();
+  const dialog = frame.getByRole('dialog', { name: 'Report a Bug' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('textbox', { name: 'What went wrong?' }).fill('The sticky snaps back');
+  await dialog.getByRole('button', { name: 'Capture Screen' }).click();
+  await expect(dialog.getByRole('img', { name: 'Screenshot to send' })).toBeVisible({
+    timeout: 30_000,
+  });
+  await dialog.getByText("What's Attached").click();
+  await expect(dialog.getByText('Your account id')).toBeVisible();
+  await expect(dialog.getByText('Embedded', { exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('bug-report-in-workbench.png') });
+
+  await dialog.getByRole('button', { name: 'Send Report' }).click();
+
+  await expect(dialog.getByText('Thanks for the report')).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath('bug-report-in-workbench-sent.png') });
+  expect(reports).toHaveLength(1);
+  expect(reports[0]!.status).toBe(202);
+  expect(reports[0]!.body).toMatchObject({
+    title: 'The sticky snaps back',
+    context: { route: '/embed/workbench', embedded: true },
+    screenshot: { contentType: expect.stringMatching(/^image\//) },
+  });
+});
+
 test('a page of another origin framing the URL mounts nothing', async ({
   page,
   context,

@@ -17,7 +17,12 @@ const FAKE_WORKBENCH_HTML = readFileSync(
 export type FakeWorkbench = {
   origin: string;
   // Opens the fake workbench in `page` and hands it `frameUrl` to frame.
-  open: (page: Page, frameUrl: string, opts?: { silent?: boolean }) => Promise<void>;
+  // `sandbox`: the frame's sandbox tokens, as a host that sandboxes its frames sets them.
+  open: (
+    page: Page,
+    frameUrl: string,
+    opts?: { silent?: boolean; sandbox?: string },
+  ) => Promise<void>;
   close: () => Promise<void>;
 };
 
@@ -33,6 +38,11 @@ export async function serveFakeWorkbench(): Promise<FakeWorkbench> {
     origin,
     open: async (page, frameUrl, opts = {}) => {
       await page.goto(`${origin}/${opts.silent ? '?silent=1' : ''}`);
+      if (opts.sandbox !== undefined) {
+        await page
+          .locator('#frame')
+          .evaluate((frame, tokens) => frame.setAttribute('sandbox', tokens), opts.sandbox);
+      }
       const framed = await page.evaluate(
         (url) => (window as unknown as { openFrame: (u: string) => boolean }).openFrame(url),
         frameUrl,
