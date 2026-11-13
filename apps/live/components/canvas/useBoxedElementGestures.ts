@@ -1,7 +1,8 @@
 import { useRightClickRelease } from '@/hooks/canvas/useRightClickRelease';
 import { useRef, type PointerEvent as ReactPointerEvent, type RefObject } from 'react';
 import { opensInlineLabelEditor, voteKeyOf } from '@livedoc/document';
-import { elementMenuAnchor } from '@/lib/context-menu-anchor';
+import { openedFromKeyboard } from '@livedoc/ui';
+import { elementMenuAnchor, rightClickMenuAnchor } from '@/lib/context-menu-anchor';
 import { useLongPress } from '@/hooks/ui/useLongPress';
 import { pressLedger } from '@/lib/double-press';
 import { armPlainClick } from '@/lib/selection-click';
@@ -214,11 +215,10 @@ export function useBoxedElementGestures({
     onBeginEdit(element.id);
   };
 
-  // Open the context menu beside the element rather than under the cursor /
-  // finger, so it never covers the thing you're editing. `elementMenuAnchor`
-  // owns the top-right corner + flip-to-left + gap rule (shared with the
-  // toolbar "More" button). Reads the live on-screen rect so zoom / scroll are
-  // already baked in.
+  // A touch long-press opens the context menu beside the element rather than under the finger, so it never covers
+  // the thing you're editing (docs/specs/008-canvas/canvas-and-palette.md "Element menu anchor"). `elementMenuAnchor`
+  // owns the top-right corner + flip-to-left + gap rule (shared with the toolbar "More" button). Reads the live
+  // on-screen rect so zoom / scroll are already baked in.
   const openContextMenuBesideElement = () => {
     const rect = wrapperRef.current?.getBoundingClientRect();
     if (!rect) {
@@ -237,9 +237,17 @@ export function useBoxedElementGestures({
   // that. The host's `onElementContextMenu` owns the decision and still
   // refuses for everybody else, so nothing changed for them. `onContextSelect`
   // calls `onSelect` on the way through, which the lock already no-ops.
-  const rightClick = useRightClickRelease(() => {
+  //
+  // A pointer right-click opens the menu at the pointer, the shortest move to the next press; the keyboard
+  // (Shift+F10, the Menu key) has no pointer, so it opens beside the element.
+  const rightClick = useRightClickRelease((e) => {
     if (isEditing) return;
-    openContextMenuBesideElement();
+    const { x, y } = rightClickMenuAnchor({
+      pointer: { x: e.clientX, y: e.clientY },
+      element: wrapperRef.current?.getBoundingClientRect() ?? null,
+      fromKeyboard: openedFromKeyboard(),
+    });
+    onContextSelect(element.id, x, y);
   });
 
   const handlePointerUp = rightClick.onPointerUp;

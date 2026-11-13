@@ -136,8 +136,9 @@ test.describe('Motion budget', () => {
     const seen = transitions(await recorded(page));
     // Guard against the probe going blind: menus, dialogs and hovers all ran.
     expect(seen.length).toBeGreaterThan(20);
-    expect(seen.some((m) => m.name === 'menu-drop')).toBe(true);
     expect(seen.some((m) => m.name === 'fly-up-in')).toBe(true);
+    // The tab and element context menus appear at once ("Context menus"): their rows never cascade in.
+    expect(seen.some((m) => m.name === 'menu-drop')).toBe(false);
 
     const slow = seen
       .filter((m) => m.delay + m.active > CEILING_MS)

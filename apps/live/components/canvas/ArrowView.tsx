@@ -17,8 +17,7 @@ import {
 import { sameLabelRender, type ArrowLabelRender } from '@/hooks/canvas/useArrowLabelLayouts';
 import type { ArrowEnd } from '@/lib/canvas';
 import { sameArrowViewFrame, sameRects, type ArrowViewFrame } from './arrow-view-frame';
-import { useRightClickRelease } from '@/hooks/canvas/useRightClickRelease';
-import { elementMenuAnchor } from '@/lib/context-menu-anchor';
+import { useArrowMenuGestures } from './useArrowMenuGestures';
 import { elementAriaLabel } from '@/lib/element-names';
 import { ArrowHeadMarker, arrowheadMarkerId, markersTakeLineColour } from './arrow-defs';
 import { ArrowLabel } from './ArrowLabel';
@@ -27,7 +26,6 @@ import { ArrowGripsPortal } from './SelectionGripsLayer';
 import { ArrowFlowOverlays, useArrowFlow } from './arrow-flow';
 import { useArrowFinish } from './arrow-finish';
 import { BRAND_600 } from './arrow-handle-style';
-import { useLongPress } from '@/hooks/ui/useLongPress';
 import { useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { pressLedger } from '@/lib/double-press';
 
@@ -139,22 +137,13 @@ function ArrowViewImpl({
   // An arrow with no stroke of its own takes the canvas's ink (docs/specs/007-editor/live-app.md).
   const surface = useElementSurface(arrow.id);
   const isLocked = arrow.locked === true || tabLocked;
-  // Open the context menu beside the arrow rather than under the cursor /
-  // finger, mirroring boxed elements: `elementMenuAnchor` owns the top-right
-  // corner + flip-to-left + gap rule, applied to the arrow's on-screen
-  // bounding box (the wide hit band's rect, so zoom / pan are baked in).
-  // Falls back to the pointer position if the hit band can't be measured.
+  // Its context menu: at the pointer on a right-click, beside the arrow from the keyboard or a long-press.
   const hitBandRef = useRef<SVGPathElement | null>(null);
-  const contextSelectBeside = (x: number, y: number) => {
-    const rect = hitBandRef.current?.getBoundingClientRect();
-    const anchor = rect ? elementMenuAnchor(rect) : { x, y };
-    onContextSelect(arrow.id, anchor.x, anchor.y);
-  };
-  // Right-click opens on release, like every other element (docs/specs/008-canvas/canvas-and-palette.md).
-  const arrowRightClick = useRightClickRelease((e) => contextSelectBeside(e.clientX, e.clientY));
-  // Touch long-press opens the arrow's context menu (touch has no
-  // right-click); a press that moves becomes a select / drag instead.
-  const longPress = useLongPress(contextSelectBeside);
+  const {
+    rightClick: arrowRightClick,
+    longPress,
+    onLabelContextMenu,
+  } = useArrowMenuGestures(arrow.id, hitBandRef, onContextSelect);
   // Endpoints / path / midpoint / handle points / label placement — the
   // pure per-render frame, resolved in arrow-view-frame.ts.
   const { from, to, pathD, dashOffset, curveAnchors, curveControl, elbowPoint } = frame;
@@ -516,7 +505,7 @@ function ArrowViewImpl({
           onCommit={(next) => onCommitLabel(arrow.id, next)}
           guardPress={guardPress}
           onSelect={(e) => onSelect(arrow.id, e)}
-          onContextMenu={(e) => contextSelectBeside(e.clientX, e.clientY)}
+          onContextMenu={onLabelContextMenu}
         />
       ) : null}
 

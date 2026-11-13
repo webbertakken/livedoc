@@ -7,7 +7,9 @@ import {
   type TableElement,
 } from '@livedoc/document';
 import { cellKey } from '@/components/canvas/TableCellView';
+import { openedFromKeyboard } from '@livedoc/ui';
 import { useLongPress } from '@/hooks/ui/useLongPress';
+import { pointerMenuAnchor } from '@/lib/context-menu-anchor';
 import { track } from '@/lib/telemetry';
 
 // The cell-selection slice (docs/specs/008-canvas/canvas-and-palette.md multi-cell selection + the per-cell
@@ -43,14 +45,15 @@ export function useTableCellSelection({
   // the anchor alone.
   const [extraCells, setExtraCells] = useState<Set<string>>(new Set());
   // The per-cell CONTEXT MENU (docs/specs/008-canvas/canvas-and-palette.md): right-click a cell on desktop,
-  // long-press on touch, opens the accordion menu at the pointer (screen
-  // coords — it portals out of the transformed canvas). A plain click only
-  // selects the cell.
+  // long-press on touch, opens the accordion menu (screen coords — it portals
+  // out of the transformed canvas; see openCellMenu for where). A plain click
+  // only selects the cell.
   const [cellMenuPos, setCellMenuPos] = useState<{ x: number; y: number } | null>(null);
 
-  // Place the cell context menu BESIDE the selected cells instead of over
-  // them (matching the element menus): at the right edge of the selection's
-  // screen rect, or the left when the right would spill off the viewport.
+  // Where the keyboard and a long-press place the cell menu: BESIDE the
+  // selected cells instead of over them (matching the element menus), at
+  // the right edge of the selection's screen rect, or the left when the
+  // right would spill off the viewport.
   // The rect comes from the grid's live computed tracks (element-space px,
   // like the resize logic) scaled by the rendered-to-element ratio, so it
   // is exact at any zoom / pinned track sizes.
@@ -109,11 +112,13 @@ export function useTableCellSelection({
   // pointerdown so the grid-level long-press (touch's right-click) knows
   // which cell to open the toolbar for.
   const pressedCellRef = useRef<{ r: number; c: number } | null>(null);
-  const cellLongPress = useLongPress(() => {
-    const cell = pressedCellRef.current;
-    if (!cell || disabled) return;
-    // Long-press on a cell already in the multi-selection keeps the set (the
-    // menu then acts on all of it); elsewhere it re-anchors to that cell.
+  // Opens the cell menu on `cell`. A cell already in the multi-selection keeps the set (the menu then acts on all of
+  // it); elsewhere the selection re-anchors to that cell. The menu opens at `pointer` when one asked, else beside the
+  // acting cells (docs/specs/008-canvas/canvas-and-palette.md "Element menu anchor").
+  const openCellMenu = (
+    cell: { r: number; c: number },
+    pointer: { x: number; y: number } | null,
+  ) => {
     const inSelection =
       (selectedCell && selectedCell.r === cell.r && selectedCell.c === cell.c) ||
       extraCells.has(cellKey(cell.r, cell.c));
@@ -121,7 +126,24 @@ export function useTableCellSelection({
       setExtraCells(new Set());
       setSelectedCell(cell);
     }
-    setCellMenuPos(menuPositionFor(inSelection ? selectionCells() : [cell]));
+    setCellMenuPos(
+      pointer
+        ? pointerMenuAnchor(pointer)
+        : menuPositionFor(inSelection ? selectionCells() : [cell]),
+    );
+  };
+
+  // A right-click opens it at the pointer; the keyboard (Shift+F10, the Menu key) has no pointer, so beside the cells.
+  const openCellContextMenu = (
+    cell: { r: number; c: number },
+    e: { clientX: number; clientY: number },
+  ) => openCellMenu(cell, openedFromKeyboard() ? null : { x: e.clientX, y: e.clientY });
+
+  // A long-press opens it beside the cells: the finger would hide a menu under it.
+  const cellLongPress = useLongPress(() => {
+    const cell = pressedCellRef.current;
+    if (!cell || disabled) return;
+    openCellMenu(cell, null);
   });
 
   // The adjustments below react to a CHANGE of their input, made while
@@ -197,7 +219,7 @@ export function useTableCellSelection({
     setExtraCells,
     cellMenuPos,
     setCellMenuPos,
-    menuPositionFor,
+    openCellContextMenu,
     selectionCells,
     pressedCellRef,
     cellLongPress,

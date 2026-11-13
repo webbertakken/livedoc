@@ -50,9 +50,10 @@ export type TableCellCtx = {
   beginEdit: (r: number, c: number) => void;
   setSelectedCell: (v: { r: number; c: number } | null) => void;
   setExtraCells: (v: Set<string> | ((prev: Set<string>) => Set<string>)) => void;
-  setCellMenuPos: (v: { x: number; y: number } | null) => void;
-  menuPositionFor: (cells: { r: number; c: number }[]) => { x: number; y: number };
-  selectionCells: () => { r: number; c: number }[];
+  openCellContextMenu: (
+    cell: { r: number; c: number },
+    e: { clientX: number; clientY: number },
+  ) => void;
   pressedCellRef: { current: { r: number; c: number } | null };
   cellLongPress: { onPointerDown: (e: ReactPointerEvent) => void };
   cancelHoverClear: () => void;
@@ -118,9 +119,7 @@ export function TableCellView({
     beginEdit,
     setSelectedCell,
     setExtraCells,
-    setCellMenuPos,
-    menuPositionFor,
-    selectionCells,
+    openCellContextMenu,
     pressedCellRef,
     cellLongPress,
     cancelHoverClear,
@@ -178,21 +177,11 @@ export function TableCellView({
         // Right-click opens the per-cell context menu (docs/specs/008-canvas/canvas-and-palette.md) —
         // the explicit gesture on desktop; touch long-presses
         // instead (cellLongPress). Swallowed so the element
-        // context menu doesn't also open over it. On a cell
-        // already in the multi-selection the set is kept (the
-        // menu acts on all of it); elsewhere it re-anchors.
+        // context menu doesn't also open over it.
         if (showControls && !isEditingCell) {
           e.preventDefault();
           e.stopPropagation();
-          const inSelection =
-            (selectedCell?.r === r && selectedCell?.c === c) || extraCells.has(cellKey(r, c));
-          if (!inSelection) {
-            setSelectedCell({ r, c });
-            setExtraCells(new Set());
-          }
-          // Beside the acting selection (right, else left), never
-          // over it — matching the element menus.
-          setCellMenuPos(menuPositionFor(inSelection ? selectionCells() : [{ r, c }]));
+          openCellContextMenu({ r, c }, e);
         }
       }}
       onPointerDown={
