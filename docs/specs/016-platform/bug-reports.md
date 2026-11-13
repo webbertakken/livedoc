@@ -51,6 +51,15 @@ screenshot leaves the entries out of the picture.
 form is not gated by the share session's `can`: reporting reaches no shared document. A share role only appears in the
 report's context.
 
+**From an embed.** A [workbench embed](../013-workspace/workbench-embeds.md) keeps the bottom-bar entry with the
+rest of its chrome, and its report goes with the frame's workbench session, so it is filed as the person's account,
+screenshot and context included, whatever the frame's browser does to third-party cookies and storage.
+A read-only workbench session reports too: a report writes nothing the session is confined from.
+A [share-code embed](../013-workspace/embeds.md) hides all chrome, so it has no entry of its own (default); its
+"Open in LiveDoc" badge leads to the full view, which has one.
+Its error cards keep theirs, and those reports go as the frame's guest id, or with no id where the browser keeps
+none: What's Attached names which, so a reporter is never told they report as an account they are not.
+
 ## The form
 
 `BugReportDialog` is titled "Report a Bug", `lg` wide (34rem), a sheet on a phone, and holds, in order:
@@ -67,9 +76,9 @@ report's context.
    Screenshot" beside it, so a picture is only sent after the reporter has seen it and could remove it; removing it
    moves focus to "Capture Screen". "Screenshot added." is announced politely.
 4. **What's Attached** (a closed disclosure): every context line in plain words (page, from, mode, tab kind, share role,
-   app version, browser and system, screen size, online, the number of recent errors), "You": "Your account id" or
-   "Your guest id" (or "No id: you are not signed in" when the browser has none), and the screenshot when one is
-   attached.
+   app version, browser and system, screen size, online, embedded, the number of recent errors), "You": "Your
+   account id" (signed in, or in a workbench frame) or "Your guest id" (or "No id: you are not signed in" when the
+   browser has none), and the screenshot when one is attached.
 5. **Send Report**, in the footer with any send error. Enter in the title sends. While a capture runs, Send reads
    "Sending…" and sends once the capture ends, with its picture, or without one when it failed.
 
@@ -113,6 +122,8 @@ failed. Please try again."
   (`describeUserAgent`: "Chrome 141 on Windows").
 - **viewport**: `innerWidth`, `innerHeight` and `devicePixelRatio`.
 - **online**: `navigator.onLine`.
+- **embedded**: `true` when the page runs inside another page's frame (`window.self !== window.top`), else left out;
+  shown and filed as "Embedded: Yes". With **route** (`/embed`, `/embed/workbench`, ...) it says which embed.
 - **recentErrors**: the newest five client errors, newest last, from a ring buffer installed at boot that records
   uncaught errors, unhandled rejections, render crashes caught by an error boundary and failed api requests. Each is
   `{ at, source, message }`, its message redacted (`redactErrorText`: emails, URLs, UUIDs, long tokens and numbers
@@ -254,3 +265,5 @@ The code cites each by its id.
   Report cards (default).
 - **D16** How the card's fields are found: By label, case apart; a missing field's value goes into Details under its
   label (default).
+- **D17** Whether a share-code embed carries an entry: No, its chrome stays hidden; the badge leads to the full view,
+  and its error cards keep theirs (default).
