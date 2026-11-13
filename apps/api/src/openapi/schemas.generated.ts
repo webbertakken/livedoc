@@ -6304,6 +6304,38 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "EsContext": {
+    "additionalProperties": false,
+    "properties": {
+      "notes": {
+        "description": "The workshop notes it groups, by id.",
+        "items": {
+          "$ref": "#/components/schemas/ElementId"
+        },
+        "type": "array"
+      },
+      "suggestion": {
+        "$ref": "#/components/schemas/EsContextSuggestion"
+      }
+    },
+    "required": [
+      "notes"
+    ],
+    "type": "object"
+  },
+  "EsContextSuggestion": {
+    "additionalProperties": false,
+    "description": "Who suggested a context and why; present while it is suggested, dropped when a person applies it.",
+    "properties": {
+      "by": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
   "EsSuggestion": {
     "additionalProperties": false,
     "properties": {
@@ -12442,6 +12474,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "anchoredTo": {
             "type": "string"
           },
+          "emptiedBy": {
+            "type": "string"
+          },
           "ends": {
             "items": {
               "type": "string"
@@ -12467,7 +12502,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             "enum": [
               "pinned",
               "unwrapped",
-              "anchored"
+              "anchored",
+              "emptied"
             ],
             "type": "string"
           },
@@ -13123,6 +13159,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "$ref": "#/components/schemas/EntityField"
         },
         "type": "array"
+      },
+      "esContext": {
+        "$ref": "#/components/schemas/EsContext"
       },
       "estimateScale": {
         "$ref": "#/components/schemas/EstimateScale"

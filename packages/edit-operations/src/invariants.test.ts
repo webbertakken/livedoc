@@ -28,6 +28,7 @@ const SAMPLES: Readonly<Record<Name, string>> = {
   layout: 'layout n5 n6 n7 n8 direction=right',
   test: 'test n3 label=Login',
   suggest: 'suggest command "Place Order" before=placed reason="every event has a cause"',
+  'suggest-context': 'suggest-context "Ordering" placed reason="one part of the business"',
   wall: JSON.stringify({
     op: 'wall',
     photos: [
@@ -45,7 +46,7 @@ type Name = (typeof EDIT_OPERATION_NAMES)[number];
 // The checkout flow, or for `suggest` the same flow on an Event Storming board with one domain event to anchor on.
 function tabFor(name: string): Tab {
   const flow = checkoutFlow();
-  if (name !== 'suggest' && name !== 'wall') return flow;
+  if (name !== 'suggest' && name !== 'suggest-context' && name !== 'wall') return flow;
   const placed: Element = {
     id: 'placed',
     type: 'sticky',

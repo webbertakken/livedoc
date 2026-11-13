@@ -114,6 +114,16 @@ export type SuggestOperation = {
   id?: string;
 };
 
+// `suggest-context "<name>" <note>… [reason=…] [id=<id>]`: a candidate context proposed round some workshop notes
+// (docs/specs/021-event-storming/candidate-contexts.md "How an agent suggests one").
+export type SuggestContextOperation = {
+  op: 'suggest-context';
+  name: string;
+  notes: Selector[];
+  reason?: string;
+  id?: string;
+};
+
 // The notes read off several photos of one wall, in wall order (docs/specs/021-event-storming/event-storming.md
 // Phase 11): each note's box in its photo's pixels. JSON form only.
 export type WallNoteInput = {
@@ -141,6 +151,7 @@ export type EditOperation =
   | LayoutOperation
   | TestOperation
   | SuggestOperation
+  | SuggestContextOperation
   | WallOperation;
 
 export type ParseOutcome = { operations: EditOperation[] } | { errors: EditRejection[] };

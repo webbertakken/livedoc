@@ -21,6 +21,7 @@ import {
   type CandidateContextElement,
 } from './candidate-contexts';
 import { withDependents } from './arrow-rebind';
+import { kindWordOf } from './element-refs';
 import { hiddenLayerElementIds, layerBands, visibleLayerElements } from './layers';
 import { elementValidationIssue, isValidElement } from './validate';
 import type { Element } from './index';
@@ -323,5 +324,11 @@ describe('a note leaving takes nothing with it (the cascade)', () => {
 
   it('leaves a board without contexts alone', () => {
     expect([...withDependents([note('a', 0)], new Set(['a']))]).toEqual(['a']);
+  });
+});
+
+describe('kindWordOf (a candidate context)', () => {
+  it('names it a context, never the shape that carries it', () => {
+    expect(kindWordOf(context('c', ['a']))).toBe('context');
   });
 });

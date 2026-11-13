@@ -15,6 +15,7 @@ export const EDIT_OPERATION_NAMES = [
   'layout',
   'test',
   'suggest',
+  'suggest-context',
   'wall',
 ] as const;
 export type EditOperationName = (typeof EDIT_OPERATION_NAMES)[number];
@@ -34,6 +35,7 @@ export const OPERATION_MEMBERS: Readonly<Record<EditOperationName, readonly stri
   layout: ['op', 'target', 'style', 'direction'],
   test: ['op', 'target', 'fields'],
   suggest: ['op', 'kind', 'words', 'anchor', 'side', 'reason', 'gap', 'id'],
+  'suggest-context': ['op', 'name', 'notes', 'reason', 'id'],
   wall: ['op', 'photos'],
 };
 

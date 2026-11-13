@@ -28,6 +28,7 @@ const SPECIAL_KEYS: Readonly<Partial<Record<EditOperationName, readonly string[]
   order: ['above', 'below'],
   layout: ['style', 'direction'],
   suggest: ['id', 'before', 'after', 'above', 'below', 'reason', 'gap'],
+  'suggest-context': ['id', 'reason'],
 };
 
 // The flags each operation takes.
@@ -295,6 +296,26 @@ export function parseOperationWords(
       anchor: c.special[side],
     };
     for (const key of ['reason', 'gap', 'id'] as const)
+      if (c.special[key] !== undefined) raw[key] = c.special[key];
+    return { raw };
+  }
+
+  if (name === 'suggest-context') {
+    const [nameWord, ...more] = rest;
+    if (!nameWord || fieldOf(nameWord))
+      return fail(nameWord, lineEnd, 'the name, quoted: "Billing"');
+    const c = collect(name, more);
+    if ('column' in c) return { error: c };
+    const fieldWord = more.find(
+      (w) => fieldOf(w) && !SPECIAL_KEYS['suggest-context']!.includes(fieldOf(w)!.key),
+    );
+    if (fieldWord) return fail(fieldWord, end, 'reason= or id=');
+    const raw: Record<string, unknown> = {
+      op: name,
+      name: nameWord.value,
+      notes: c.terms.map((w) => w.raw),
+    };
+    for (const key of ['reason', 'id'] as const)
       if (c.special[key] !== undefined) raw[key] = c.special[key];
     return { raw };
   }

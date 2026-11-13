@@ -50,7 +50,12 @@ export type Touch = {
 };
 
 // Why an element left: named by an operation, or pinned to one that was.
-export type Removal = { pinnedTo?: ElementId; unwrapped?: true; anchoredTo?: ElementId };
+export type Removal = {
+  pinnedTo?: ElementId;
+  unwrapped?: true;
+  anchoredTo?: ElementId;
+  emptiedBy?: ElementId;
+};
 
 export type EditState = {
   readonly tab: Tab;
