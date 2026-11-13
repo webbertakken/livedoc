@@ -43,15 +43,15 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
   timeline order of its leftmost note.
 - **Apply** keeps it as a candidate context (the suggestion mark is dropped); **Dismiss** removes it. One undoable
   step each; Apply All and Dismiss All include contexts.
-- **A kept context** can be renamed (double-click its name) and deleted (select the outline, Delete). How its notes
-  change is the open question below.
+- **A kept context** can be renamed (double-click its name) and deleted (select the outline, Delete).
+- **Its notes change two ways** (ruled 2026-11-13: "Note menu and dragging"):
+  - **The note's menu**: Add to Context (a list of the board's contexts by name) and Remove from Context.
+  - **Dragging**: a note dropped inside an outline joins that context, leaving any other; a note dragged clear of
+    its own outline by more than `CONTEXT_LEAVE_PX` (half a note, 100 canvas px) leaves it (default). While a
+    note is dragged, the outline it would join is highlighted, so a drop is never a surprise.
+  - A suggested context does not take notes by dragging until it is applied (default).
 
 ## Share roles
 
 As suggestions: an Editor sees, applies and dismisses suggested contexts and edits kept ones; a Participant and a
 Viewer see kept contexts and none of the suggested ones (default).
-
-## Open
-
-- **How a kept context's notes change**: through the note's menu (Add to Context, Remove from Context), by dragging
-  a note into or out of the outline, both, or only by agents.
