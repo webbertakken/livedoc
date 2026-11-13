@@ -163,6 +163,40 @@ describe('stitchWall', () => {
   });
 });
 
+describe('stitchWall against a board', () => {
+  // The board holds three notes 216 px apart; the photos show theirs further apart, so the first photo is fitted
+  // smaller than its own notes say. The next photo keeps that fitted scale.
+  const board = ['Order placed', 'Payment received', 'Order shipped'].map((text, i): BoardNote => ({
+    id: `b${i}`,
+    text,
+    kind: 'domain-event',
+    x: i * 216,
+    y: 0,
+    width: 200,
+    height: 200,
+  }));
+  const row = (words: string[]) => words.map((w, i) => note(w, 0.1 + i * 0.25, 0.2));
+
+  it('keeps the first photo’s fitted scale for the next, so the overlap still agrees', () => {
+    const out = stitchWall(
+      [
+        row(['Order placed', 'Take payment', 'Payment received', 'Ship order']),
+        row(['Payment received', 'Ship order', 'Order shipped', 'Notify customer']),
+      ],
+      board,
+    );
+    expect(out.placements.map((p) => p.how)).toEqual(['board', 'overlap']);
+    expect(out.placements[1]!.scale).toBeCloseTo(out.placements[0]!.scale, 5);
+    expect(textsOf(out.additions)).toEqual(['Notify customer', 'Ship order', 'Take payment']);
+  });
+
+  it('leaves a note the board has alone whichever photo shows it', () => {
+    const out = stitchWall([row(['A', 'B']), row(['C', 'Order shipped'])], board);
+    expect(out.matches.map((m) => m.boardId)).toEqual(['b2']);
+    expect(textsOf(out.additions)).toEqual(['A', 'B', 'C']);
+  });
+});
+
 describe('naturalCompare', () => {
   it('orders file names as people number them', () => {
     const names = [

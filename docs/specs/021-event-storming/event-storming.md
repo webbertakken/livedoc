@@ -1597,10 +1597,16 @@ Stitching uses what a sequence knows instead:
   0.7 to 1.4 of the photo's own scale (default).
 - **No overlap: beside.** A photo whose matches do not agree is placed right of the one before it, one
   `WALL_PHOTO_GAP` (200 canvas px, default) clear, at its own scale, top edges aligned.
-- **The same paper once.** After placing, a note whose centre lands within `WALL_SAME_NOTE_PX` (110 canvas px,
+- **The chain keeps its scale.** A later photo is placed at its neighbour's placed scale, adjusted by how much larger
+  or smaller its own notes are, so a first photo fitted to the board does not leave the next one at another scale.
+- **Only best matches pair.** A note pairs with a neighbour's note only when each is the other's best match by words,
+  so a near miss (two events one letter apart) in the same layout cannot outvote the true overlap.
+- **The same paper once.** The notes of an agreeing overlap are the neighbour's notes seen again. After placing, a note whose centre lands within `WALL_SAME_NOTE_PX` (110 canvas px,
   default) of a placed note of the same kind is that note seen again, whether or not its words were read alike.
+- **The board's notes stay.** A note of any photo whose words the board already has, as the single-photo import
+  matches them, is left alone and listed as already on the board.
 - **Measured** on the eleven photos with the spike (2026-11-13): photos read left to right in one row of story;
-  photo 8 stitched to photo 7 on 11 agreeing notes, photo 10 to photo 9 on 6, photos 5 and 7 on 2; the rest landed beside. 196 notes, 20 taken as the same paper seen again.
+  photo 8 stitched to photo 7 on 11 agreeing notes, photo 10 to photo 9 on 6, photos 5 and 7 on 2; the rest landed beside. 194 notes, 22 taken as the same paper seen again.
 - The stitching is pure (`stitchWall` in `@livedoc/document`) so the editor, the CLI and the MCP share it.
 
 ### Through the CLI and the MCP (ruled 2026-11-13: possible through both)

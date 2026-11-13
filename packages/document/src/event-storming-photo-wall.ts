@@ -9,6 +9,7 @@
 import { eventStormingNoteSize, type EventStormingNoteKind } from './event-storming';
 import {
   defaultPhotoScale,
+  matchDetectedNotes,
   noteTextSimilarity,
   type BoardNote,
   type PhotoMatch,
@@ -71,6 +72,8 @@ type Candidate = {
   py: number;
   qx: number;
   qy: number;
+  // The neighbour's photo: an agreeing pair is that photo's paper seen again.
+  photo: number;
 };
 
 // Where photo `notes` sits against its neighbour, from the matches that agree; null when too few do.
@@ -95,6 +98,7 @@ function overlapWith(notes: PhotoNote[], neighbour: Placed[], scale: number) {
         py: n.cy,
         qx: p.x,
         qy: p.y,
+        photo: p.photo,
       });
     });
   });
@@ -136,7 +140,7 @@ function overlapWith(notes: PhotoNote[], neighbour: Placed[], scale: number) {
       t = { scale: fitted, tx: qxm - fitted * pxm, ty: qym - fitted * pym };
     }
   }
-  return { transform: t, agreeing: distinct };
+  return { transform: t, agreeing: distinct, pairs: new Map(group.map((g) => [g.id, g.photo])) };
 }
 
 // Right of the neighbour, one gap clear, top edges aligned.
@@ -176,7 +180,9 @@ export function stitchWall(photos: readonly PhotoNote[][], existing: BoardNote[]
   let differences: WallStitch['differences'] = [];
   // Every note placed so far, for the same-paper check, and the last photo with notes, for the neighbour match.
   const placed: Placed[] = [];
-  let neighbour: { notes: Placed[]; extent: Extent } | null = null;
+  // Its scale as placed, and the scale its own notes implied: a later photo keeps the chain's scale, adjusted by how
+  // much nearer or further it was shot.
+  let neighbour: { notes: Placed[]; extent: Extent; scale: number; own: number } | null = null;
 
   photos.forEach((notes, photo) => {
     if (notes.length === 0) {
@@ -209,8 +215,9 @@ export function stitchWall(photos: readonly PhotoNote[][], existing: BoardNote[]
       }
       placements.push({ photo, how: 'board', agreeing: matches.length, scale: transform.scale });
     } else {
-      const overlap = overlapWith(notes, neighbour.notes, own);
-      transform = overlap?.transform ?? besideOf(notes, neighbour.extent, own);
+      const scale = (neighbour.scale * own) / neighbour.own;
+      const overlap = overlapWith(notes, neighbour.notes, scale);
+      transform = overlap?.transform ?? besideOf(notes, neighbour.extent, scale);
       placements.push({
         photo,
         how: overlap ? 'overlap' : 'beside',
@@ -218,8 +225,14 @@ export function stitchWall(photos: readonly PhotoNote[][], existing: BoardNote[]
         scale: transform.scale,
       });
       const before = placed.length;
+      const fresh: PhotoNote[] = [];
       for (const n of notes) {
         const c = at(n, transform);
+        const paired = overlap?.pairs.get(n.id);
+        if (paired !== undefined) {
+          seenAgain.push({ photo, detectedId: n.id, onPhoto: paired });
+          continue;
+        }
         const same = placed
           .slice(0, before)
           .find(
@@ -229,13 +242,30 @@ export function stitchWall(photos: readonly PhotoNote[][], existing: BoardNote[]
           seenAgain.push({ photo, detectedId: n.id, onPhoto: same.photo });
           continue;
         }
+        fresh.push(n);
+      }
+      // A note the board already has stays as it is, whichever photo shows it.
+      const onBoard = new Map(
+        matchDetectedNotes(
+          fresh,
+          existing.filter((b) => !matches.some((m) => m.boardId === b.id)),
+        ).map((m) => [m.detectedId, m]),
+      );
+      for (const n of fresh) {
+        const match = onBoard.get(n.id);
+        if (match) {
+          matches.push(match);
+          continue;
+        }
         additions.push(raw(n, transform, photo));
-        placed.push({ photo, kind: kindOf(n), text: n.text, ...c });
+        placed.push({ photo, kind: kindOf(n), text: n.text, ...at(n, transform) });
       }
     }
     neighbour = {
       notes: notes.map((n) => ({ photo, kind: kindOf(n), text: n.text, ...at(n, transform) })),
       extent: extentOf(notes, transform),
+      scale: transform.scale,
+      own,
     };
   });
 
