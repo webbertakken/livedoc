@@ -91,3 +91,43 @@ test('a zip of photos becomes one draft of the whole wall', async ({ page, pageE
   expect(xs).toEqual([...xs].sort((m, n) => m - n));
   expectNoPageErrors(pageErrors);
 });
+
+// The board already holds "Order placed", "Payment received" and "Order shipped" (the starter row): photos that show
+// them leave them alone, and the overlap between the photos still lands once.
+test('photos that partly show the board add only what is new', async ({ page, pageErrors }) => {
+  await openPhotoBoard(page, { boundaryModel: false });
+  const words = [
+    ['Order placed', 'Take payment', 'Payment received', 'Ship order'],
+    ['Payment received', 'Ship order', 'Order shipped', 'Notify customer'],
+  ];
+  let reads = 0;
+  await page.route('**/api/ai/read-notes', async (route) => {
+    const { crops = [] } = JSON.parse(route.request().postData() ?? '{}') as {
+      crops?: { id: number }[];
+    };
+    const these = words[Math.min(reads, words.length - 1)]!;
+    reads += 1;
+    await route.fulfill({
+      json: { texts: crops.map((c) => ({ id: c.id, text: these[c.id] ?? '', legible: true })) },
+    });
+  });
+  const zip = Buffer.from(
+    writeZip([
+      { name: '1.png', data: photo() },
+      { name: '2.png', data: photo() },
+    ]),
+  );
+  await page.getByRole('button', { name: /add from photo/i }).click();
+  await page.setInputFiles('input[type="file"]', {
+    name: 'wall.zip',
+    mimeType: 'application/zip',
+    buffer: zip,
+  });
+  await page
+    .getByRole('button', { name: /^Add \d+ notes from 2 photos$/ })
+    .click({ timeout: 30_000 });
+  // Take payment, Ship order, Notify customer: the rest are on the board or seen twice.
+  await expect(page.locator('[data-photo-draft]')).toHaveCount(3);
+  await expect(page.locator('[data-testid="photo-draft-bar"]')).toContainText('3 new');
+  expectNoPageErrors(pageErrors);
+});
