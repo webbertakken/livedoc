@@ -82,6 +82,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone asked the AI Assistant a question about the active tab and got an answer.',
   'AI|Used|Clean':
     "Someone used the AI Assistant's Clean mode to tidy up a tab's labels, sizes, and styles.",
+  'AI|Used|PhotoWall':
+    'Someone imported a whole wall from several photos at once, stitched into one draft of notes on an event-storming board.',
   'AI|Used|PhotoNotes':
     'Someone imported the sticky notes from a photo of a real wall onto an event-storming board, a workshop-style tab built as a timeline of business events.',
   'Action|Changed|Edited':

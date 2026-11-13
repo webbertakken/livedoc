@@ -2609,7 +2609,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // must not replace the chooser that is already returning a file.
   const photoPicker = usePhotoPicker({
     canOpen: () => photoImportAvailable && !photoImportBlocked,
-    onFile: (file) => readPhotoFile?.(file),
+    onFiles: (files) => {
+      if (photoImportAvailable && !photoImportBlocked) void photoDraft.startFromFiles(files);
+    },
     onOpen: warmBoundaryModel,
   });
   const photoPickerRef = photoPicker.inputRef;

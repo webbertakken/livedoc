@@ -49,6 +49,7 @@ function review(stickies: DetectedSticky[] | null): PhotoReview {
           },
     textById: new Map(),
     readError: null,
+    readSoFar: 0,
   };
 }
 

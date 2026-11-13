@@ -26,6 +26,7 @@ describe('stitchWall', () => {
     expect(stitchWall([], [])).toEqual({
       additions: [],
       matches: [],
+      differences: [],
       seenAgain: [],
       placements: [],
     });
@@ -50,6 +51,7 @@ describe('stitchWall', () => {
     const single = reconcilePhoto(photo, existing);
     const wall = stitchWall([photo], existing);
     expect(wall.matches).toEqual(single.matches);
+    expect(wall.differences).toEqual(single.differences);
     expect(wall.additions.map(({ photo: _p, ...a }) => a)).toEqual(single.additions);
   });
 
@@ -89,6 +91,14 @@ describe('stitchWall', () => {
     const xNote = out.additions.find((n) => n.text === 'X')!;
     expect(xNote.x).toBeGreaterThanOrEqual(a.x + a.width + WALL_PHOTO_GAP - 1);
     expect(out.additions.filter((n) => n.text === 'Signed in')).toHaveLength(2);
+  });
+
+  it('pairs notes only with their best match by words, so a near miss in the same layout never wins', () => {
+    const words = (labels: string[]) =>
+      labels.map((l, i) => note(`${l} happened`, 0.1 + i * 0.2, 0.1));
+    const out = stitchWall([words(['A', 'B', 'C', 'D']), words(['C', 'D', 'E', 'F'])], []);
+    expect(out.placements[1]).toMatchObject({ how: 'overlap', agreeing: 2 });
+    expect(out.additions).toHaveLength(6);
   });
 
   it('fits the scale too when three or more matches agree', () => {

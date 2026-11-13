@@ -787,3 +787,151 @@ describe('reading a changed box again', () => {
     expect(h.api().review).toBeNull();
   });
 });
+
+// A whole wall from several photos (docs/specs/021-event-storming/event-storming.md Phase 11).
+describe('a wall of several photos', () => {
+  const named = (name: string) => new File([new Uint8Array([1])], name, { type: 'image/jpeg' });
+  // Two photos of one wall: A B C D, then C D E F, notes 200 px apart at 1000 px wide (a note is 100 px).
+  const row = (labels: string[]) => labels.map((_, i) => sticky({ id: i, x: 100 + i * 200 }));
+  function twoPhotos() {
+    vi.mocked(detectAndCrop)
+      .mockResolvedValueOnce(detection(row(['A', 'B', 'C', 'D'])))
+      .mockResolvedValueOnce(detection(row(['C', 'D', 'E', 'F'])));
+    vi.mocked(readCrops)
+      .mockResolvedValueOnce(read(['A', 'B', 'C', 'D'].map((text, id) => ({ id, text }))))
+      .mockResolvedValueOnce(read(['C', 'D', 'E', 'F'].map((text, id) => ({ id, text }))));
+  }
+  async function wallReviewed(files = [named('IMG_2.jpg'), named('IMG_1.jpg')]) {
+    const h = harness();
+    await act(async () => {
+      await h.api().startFromFiles(files);
+    });
+    await waitFor(() =>
+      expect(h.api().wall?.reviews.every((r) => r.textById.size === 4)).toBe(true),
+    );
+    return h;
+  }
+  const allKept = (h: Awaited<ReturnType<typeof wallReviewed>>) =>
+    h.api().wall!.reviews.map((r) => ({ kept: r.detection!.stickies, texts: new Map(r.textById) }));
+
+  it('reviews the photos in file-name order, detecting one after another', async () => {
+    twoPhotos();
+    const h = await wallReviewed();
+    expect(h.api().wall!.reviews.map((r) => r.photoName)).toEqual(['IMG_1.jpg', 'IMG_2.jpg']);
+    expect(h.api().review?.photoName).toBe('IMG_1.jpg');
+    expect(h.api().state).toMatchObject({ stage: 'review', found: 8 });
+    act(() => h.api().goToPhoto(1));
+    expect(h.api().review?.photoName).toBe('IMG_2.jpg');
+    // Out of range, or the photo already shown: nothing moves.
+    act(() => h.api().goToPhoto(5));
+    act(() => h.api().goToPhoto(1));
+    expect(h.api().wall!.current).toBe(1);
+  });
+
+  it('lands the whole wall as one draft, the overlap once', async () => {
+    twoPhotos();
+    const h = await wallReviewed();
+    act(() => h.api().confirmWall(allKept(h)));
+    h.rerender();
+    expect(
+      h
+        .drafts()
+        .map((n) => (n as StickyElement).label)
+        .sort(),
+    ).toEqual(['A', 'B', 'C', 'D', 'E', 'F']);
+    expect(h.steps()).toBe(1);
+    expect(h.api().wall).toBeNull();
+    act(() => h.api().accept());
+    expect(vi.mocked(track)).toHaveBeenCalledWith('AI', 'Used', 'PhotoWall');
+  });
+
+  it('keeps the other photos when one cannot be opened', async () => {
+    vi.mocked(detectAndCrop)
+      .mockRejectedValueOnce(new PhotoDetectFailed('photo_unreadable'))
+      .mockResolvedValueOnce(detection([sticky()]));
+    const h = harness();
+    await act(async () => {
+      await h.api().startFromFiles([named('1.jpg'), named('2.jpg')]);
+    });
+    await waitFor(() => expect(h.api().wall?.reviews[1]?.textById.size).toBe(1));
+    expect(h.api().wall!.reviews[0]!.readError).toBe('photo_unreadable');
+    expect(h.toasts).toEqual([]);
+    const second = h.api().wall!.reviews[1]!;
+    act(() =>
+      h.api().confirmWall([
+        { kept: [], texts: new Map() },
+        { kept: second.detection!.stickies, texts: new Map(second.textById) },
+      ]),
+    );
+    h.rerender();
+    expect(h.drafts()).toHaveLength(1);
+  });
+
+  it('never reads a photo with no paper in it, and says nothing about it', async () => {
+    vi.mocked(detectAndCrop)
+      .mockResolvedValueOnce(detection([]))
+      .mockResolvedValueOnce(detection([sticky()]));
+    const h = harness();
+    await act(async () => {
+      await h.api().startFromFiles([named('1.jpg'), named('2.jpg')]);
+    });
+    await waitFor(() => expect(h.api().wall?.reviews[1]?.textById.size).toBe(1));
+    expect(readCrops).toHaveBeenCalledTimes(1);
+    expect(h.toasts).toEqual([]);
+  });
+
+  it('takes one photo picked alone the one-photo way, and refuses what holds no photo', async () => {
+    const one = harness();
+    await act(async () => {
+      await one.api().startFromFiles([named('only.jpg')]);
+    });
+    expect(one.api().wall?.reviews).toHaveLength(1);
+    const none = harness();
+    await act(async () => {
+      await none
+        .api()
+        .startFromFiles([
+          new File(['x'], 'a.pdf', { type: 'application/pdf' }),
+          new File(['y'], 'b.pdf', { type: 'application/pdf' }),
+        ]);
+    });
+    expect(none.api().wall).toBeNull();
+    expect(none.toasts).toHaveLength(1);
+  });
+
+  it('refuses a wall while a review is open', async () => {
+    twoPhotos();
+    const h = await wallReviewed();
+    await act(async () => {
+      await h.api().startFromFiles([named('x.jpg'), named('y.jpg')]);
+    });
+    expect(h.toasts).toEqual(['A photo is already open. Finish or cancel that one first.']);
+  });
+
+  it('lands nothing when no photo has a detection yet', async () => {
+    let finish: (d: PhotoDetection) => void = () => {};
+    vi.mocked(detectAndCrop).mockImplementation(
+      () => new Promise<PhotoDetection>((resolve) => (finish = resolve)),
+    );
+    const h = harness();
+    let started: Promise<void> = Promise.resolve();
+    act(() => {
+      started = h.api().startFromFiles([named('1.jpg'), named('2.jpg')]);
+    });
+    await waitFor(() => expect(h.api().wall).not.toBeNull());
+    act(() => h.api().confirmWall([]));
+    expect(h.drafts()).toHaveLength(0);
+    act(() => h.api().cancelReview());
+    finish(detection([]));
+    await act(async () => {
+      await started;
+    });
+  });
+
+  it('gives every photo back to the browser when the review is cancelled', async () => {
+    twoPhotos();
+    const h = await wallReviewed();
+    act(() => h.api().cancelReview());
+    expect(revoked).toHaveLength(2);
+  });
+});

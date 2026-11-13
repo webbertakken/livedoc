@@ -187,6 +187,16 @@ export const PHOTOS_IMPORTED = chart(
   { types: ['PhotoNotes'] },
 );
 
+// A whole wall from several photos (docs/specs/021-event-storming/event-storming.md Phase 11): sent beside
+// PhotoNotes when the confirmed draft came from more than one photo.
+export const WALLS_IMPORTED = chart(
+  'AI',
+  'Used',
+  'Walls Imported',
+  'Several photos of one wall, stitched into one draft of notes, once the author confirmed it.',
+  { types: ['PhotoWall'] },
+);
+
 export const MODEL_DETECTED = chart(
   'AI',
   'Used',
@@ -208,7 +218,7 @@ export const PHOTO_IMPORT: MetricStack = {
   title: 'Photo Import',
   blurb:
     'Sticky-note walls photographed onto an event-storming board, and whether the in-browser model or the classical fallback read each photo.',
-  members: [PHOTOS_IMPORTED, MODEL_DETECTED, FELL_BACK_TO_CLASSICAL],
+  members: [PHOTOS_IMPORTED, WALLS_IMPORTED, MODEL_DETECTED, FELL_BACK_TO_CLASSICAL],
   headline: PHOTOS_IMPORTED,
 };
 

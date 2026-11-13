@@ -8,7 +8,12 @@ import { PhotoImportProgress } from '@/components/chrome/PhotoImportProgress';
 import { PHOTO_ACCEPT_ATTR } from '@/lib/photo-accept';
 import { usePhotoDraftView } from '@/lib/photo-draft-preview';
 
-// The photo review loads once a wall photo is picked (docs/specs/016-platform/web-performance.md).
+// The photo review loads once a wall photo is picked (docs/specs/016-platform/web-performance.md); several photos of
+// one wall review together (docs/specs/021-event-storming/event-storming.md Phase 11).
+const PhotoWallReview = dynamic(
+  () => import('@/components/chrome/photo/PhotoWallReview').then((m) => m.PhotoWallReview),
+  { ssr: false },
+);
 const PhotoReviewOverlay = dynamic(
   () => import('@/components/chrome/PhotoReviewOverlay').then((m) => m.PhotoReviewOverlay),
   { ssr: false },
@@ -31,7 +36,25 @@ export function EditorPhotoImport() {
 
       {/* Step 1 + 2 of the wizard (docs/specs/021-event-storming/event-storming.md Phase 9): the photo with every
       box, tickable, and the words editable. Nothing lands until Add. */}
-      {photoDraft.state.stage === 'review' && photoDraft.review ? (
+      {photoDraft.state.stage === 'review' &&
+      photoDraft.wall &&
+      photoDraft.wall.reviews.length > 1 ? (
+        <PhotoWallReview
+          wall={photoDraft.wall}
+          reading={photoDraft.state.readSoFar < photoDraft.state.found}
+          modelDownload={photoDraft.state.modelDownload}
+          readSoFar={photoDraft.state.readSoFar}
+          readTotal={photoDraft.state.found}
+          readerBackend={photoDraft.state.readerBackend}
+          readerWhy={photoDraft.state.readerWhy}
+          readerFallback={photoDraft.state.readerFallback}
+          rereading={photoDraft.rereading}
+          onReread={photoDraft.reread}
+          onGo={photoDraft.goToPhoto}
+          onConfirmWall={photoDraft.confirmWall}
+          onCancel={photoDraft.cancelReview}
+        />
+      ) : photoDraft.state.stage === 'review' && photoDraft.review ? (
         <PhotoReviewOverlay
           review={photoDraft.review}
           reading={
@@ -80,7 +103,8 @@ export function EditorPhotoImport() {
         <input
           ref={photoPickerRef}
           type="file"
-          accept={PHOTO_ACCEPT_ATTR}
+          accept={`${PHOTO_ACCEPT_ATTR},.zip,application/zip`}
+          multiple
           capture="environment"
           className="hidden"
           aria-hidden

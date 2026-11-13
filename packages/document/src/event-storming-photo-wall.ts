@@ -44,8 +44,9 @@ export type WallPlacement = {
 
 export type WallStitch = {
   additions: WallAddition[];
-  // The first photo's notes the board already has.
+  // The first photo's notes the board already has, and those whose words differ from the board's.
   matches: PhotoMatch[];
+  differences: ReturnType<typeof reconcilePhoto>['differences'];
   // Notes of a later photo that are paper an earlier photo already placed.
   seenAgain: { photo: number; detectedId: number; onPhoto: number }[];
   placements: WallPlacement[];
@@ -72,11 +73,18 @@ type Candidate = {
 
 // Where photo `notes` sits against its neighbour, from the matches that agree; null when too few do.
 function overlapWith(notes: PhotoNote[], neighbour: Placed[], scale: number) {
+  // Only MUTUAL best matches by words: "C happened" pairs with "C happened", never with "A happened" one letter
+  // off, which the same layout would otherwise make agree perfectly. Ties are all kept; agreement decides them.
+  const scores = notes.map((n) =>
+    neighbour.map((p) => (n.text ? noteTextSimilarity(n.text, p.text) : 0)),
+  );
+  const bestOfNote = scores.map((row) => Math.max(0, ...row));
+  const bestOfNeighbour = neighbour.map((_, j) => Math.max(0, ...scores.map((row) => row[j]!)));
   const candidates: Candidate[] = [];
-  for (const n of notes) {
-    if (!n.text) continue;
-    for (const p of neighbour) {
-      if (noteTextSimilarity(n.text, p.text) < SAME_WORDS) continue;
+  notes.forEach((n, i) => {
+    neighbour.forEach((p, j) => {
+      const score = scores[i]![j]!;
+      if (score < SAME_WORDS || score < bestOfNote[i]! || score < bestOfNeighbour[j]!) return;
       candidates.push({
         id: n.id,
         dx: p.x - scale * n.cx,
@@ -86,8 +94,8 @@ function overlapWith(notes: PhotoNote[], neighbour: Placed[], scale: number) {
         qx: p.x,
         qy: p.y,
       });
-    }
-  }
+    });
+  });
   let group: Candidate[] = [];
   let distinct = 0;
   for (const c of candidates) {
@@ -163,6 +171,7 @@ export function stitchWall(photos: readonly PhotoNote[][], existing: BoardNote[]
   const seenAgain: WallStitch['seenAgain'] = [];
   const placements: WallPlacement[] = [];
   let matches: PhotoMatch[] = [];
+  let differences: WallStitch['differences'] = [];
   // Every note placed so far, for the same-paper check, and the last photo with notes, for the neighbour match.
   const placed: Placed[] = [];
   let neighbour: { notes: Placed[]; extent: Extent } | null = null;
@@ -178,6 +187,7 @@ export function stitchWall(photos: readonly PhotoNote[][], existing: BoardNote[]
       // The first photo meets the board exactly as a single photo does.
       const reconciled = reconcilePhoto(notes, existing);
       matches = reconciled.matches;
+      differences = reconciled.differences;
       transform = reconciled.transform;
       const matched = new Map(matches.map((m) => [m.detectedId, m.boardId]));
       for (const n of notes) {
@@ -232,6 +242,7 @@ export function stitchWall(photos: readonly PhotoNote[][], existing: BoardNote[]
   return {
     additions: landed.map((a, i) => ({ ...a, photo: additions[i]!.photo })),
     matches,
+    differences,
     seenAgain,
     placements,
   };

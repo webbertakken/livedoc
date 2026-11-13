@@ -8,6 +8,7 @@ import { PhotoStatus } from './photo/PhotoStatus';
 import { TruthExport } from './photo/TruthExport';
 import { UNREAD_TIP_SHARE, UnreadTip } from './photo/UnreadTip';
 import { ZoomControls } from './photo/ZoomControls';
+import { PhotoWallStrip, type PhotoWallProps, type ReviewSnapshot } from './photo/PhotoWallStrip';
 import { useModalGuard } from '@/hooks/ui/useModalGuard';
 import type { ModelDownload as Download } from '@/lib/reading/download-progress';
 import type { ProcessorReason, ReaderBackend } from '@/lib/reading/reader-protocol';
@@ -74,8 +75,11 @@ export function PhotoReviewOverlay({
   onConfirm,
   onCancel,
   onRetake,
+  wall,
 }: {
   review: PhotoReview;
+  // One of several photos of a wall under one review (docs/specs/021-event-storming/event-storming.md Phase 11).
+  wall?: PhotoWallProps;
   reading: boolean;
   // The in-browser reader's model download, while it runs (first import on a
   // device only).
@@ -112,7 +116,7 @@ export function PhotoReviewOverlay({
   const detected = detection?.stickies ?? [];
   const frame = detection?.imageSize ?? { width: 1, height: 1 };
   // Still looking. Distinct from "looked and found nothing", which is advice.
-  const detecting = detection === null;
+  const detecting = detection === null && !review.readError;
   const foundNothing = detection !== null && detected.length === 0;
   // Whether the browser has actually PAINTED the photograph yet. The surface
   // opens before the image has been decoded, so there is a moment with a frame
@@ -121,14 +125,14 @@ export function PhotoReviewOverlay({
   const [photoShown, setPhotoShown] = useState(false);
   // The boxes as the author has corrected them, which are ticked, and which
   // one is selected for correcting.
-  const edits = useReviewBoxes(detected, detection);
+  const edits = useReviewBoxes(detected, detection, wall?.seed);
   const notes = edits.boxes;
   // Where each DETECTED box comes in the reveal; a drawn or reopened box is
   // there at once.
   const revealAt = new Map(detected.map((s, i) => [s.id, i]));
   // The author's edits only; every unedited note streams straight from the
   // review as the words arrive.
-  const [edited, setEdited] = useState<Map<number, string>>(() => new Map());
+  const [edited, setEdited] = useState<Map<number, string>>(() => new Map(wall?.seed?.edited));
   const [revealed, setRevealed] = useState(0);
   // A moved, resized or drawn box is read again, 8 s after the last change;
   // never one whose words the author typed.
@@ -240,6 +244,12 @@ export function PhotoReviewOverlay({
     sentToReader.length > 0 &&
     unread / sentToReader.length >= UNREAD_TIP_SHARE;
 
+  // The wall recounts what Add lands as this photo changes.
+  const onSnapshot = wall?.onSnapshot;
+  useEffect(() => {
+    onSnapshot?.({ boxes: notes, ticked: edits.ticked, edited });
+  }, [onSnapshot, notes, edits.ticked, edited]);
+
   const confirm = () => {
     const texts = new Map<number, { text: string; legible: boolean }>();
     for (const s of notes) {
@@ -248,6 +258,8 @@ export function PhotoReviewOverlay({
     }
     onConfirm(edits.kept, texts);
   };
+  // This photo as the author left it, for the wall to keep while another photo is shown.
+  const snapshot = (): ReviewSnapshot => ({ boxes: notes, ticked: edits.ticked, edited });
 
   // The photo area: drag on it (not on a box's controls) to draw a sticky the
   // detector missed.
@@ -366,6 +378,23 @@ export function PhotoReviewOverlay({
                 zoom={view.zoom}
               />
             ))}
+            {wall?.seenOn
+              ? notes.map((s) =>
+                  wall.seenOn?.has(s.id) && edits.ticked.has(s.id) ? (
+                    <span
+                      key={`seen-${s.id}`}
+                      data-seen-on={wall.seenOn.get(s.id)}
+                      className="pointer-events-none absolute -translate-y-full rounded bg-slate-900/85 px-1.5 py-0.5 text-[11px] font-medium text-white"
+                      style={{
+                        left: `${(s.x / frame.width) * 100}%`,
+                        top: `${(s.y / frame.height) * 100}%`,
+                      }}
+                    >
+                      on photo {wall.seenOn.get(s.id)! + 1}
+                    </span>
+                  ) : null,
+                )
+              : null}
             {draw.drawing ? (
               <div
                 aria-hidden
@@ -461,14 +490,24 @@ export function PhotoReviewOverlay({
           <button
             type="button"
             onClick={confirm}
-            disabled={edits.ticked.size === 0}
+            disabled={wall ? wall.adding === 0 : edits.ticked.size === 0}
             data-tour-id="photo-add"
             className={`pointer-events-auto rounded-full bg-brand-700 px-4 py-1.5 text-sm font-semibold text-white shadow-lg hover:bg-brand-800 disabled:opacity-50 ${SOLID_BRAND_DARK_CONTROL}`}
           >
-            Add {edits.ticked.size} {edits.ticked.size === 1 ? 'note' : 'notes'}
+            {wall
+              ? `Add ${wall.adding} ${wall.adding === 1 ? 'note' : 'notes'} from ${wall.names.length} photos`
+              : `Add ${edits.ticked.size} ${edits.ticked.size === 1 ? 'note' : 'notes'}`}
           </button>
         </div>
       </div>
+      {wall ? (
+        <PhotoWallStrip
+          names={wall.names}
+          index={wall.index}
+          skipped={wall.skipped}
+          onGo={(i) => wall.onGo(i, snapshot())}
+        />
+      ) : null}
       <PhotoReviewTourStage tour={tour} />
     </div>
   );
