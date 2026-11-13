@@ -366,7 +366,7 @@ describe('turnsByHand', () => {
         width: 5,
         height: 5,
         esKind: 'domain-event',
-      } as Element),
+      }),
     ).toBe(false);
     expect(
       turnsByHand(
