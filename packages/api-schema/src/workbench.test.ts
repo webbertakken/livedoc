@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   capWorkbenchRole,
+  isWorkbenchScope,
   pairingCoversScope,
   workbenchAmbientHeaders,
   isWorkbenchSessionFormat,
@@ -127,6 +128,7 @@ describe('workbenchRouteVerdict', () => {
     ['DELETE', 'documents/doc1/items/i1'],
     ['DELETE', 'documents/doc1/items/i1/comments/c1'],
     ['PUT', 'documents/doc1/item-types'],
+    ['POST', 'bug-reports'],
     ['DELETE', 'workbench/sessions/current'],
   ])('allows %s %s', (method, path) => {
     expect(verdict(method, path)).toBe('allow');
@@ -141,6 +143,7 @@ describe('workbenchRouteVerdict', () => {
     ['POST', 'documents/doc1/share'],
     ['PUT', 'documents/doc1/share-password'],
     ['DELETE', 'documents/doc1/share/abc'],
+    ['GET', 'bug-reports/screenshots/tag/file.webp'],
     ['PUT', 'documents/doc1/thumbnail'],
     ['POST', 'documents/doc1/tabs/t1/link'],
     ['PUT', 'documents/doc1/tabs/t1/presence'],
@@ -271,6 +274,7 @@ describe('workbenchRouteVerdict, workspace scope', () => {
     ['GET', 'teams/team1'],
     ['GET', 'teams/team1/library'],
     ['GET', 'teams/team1/members'],
+    ['POST', 'bug-reports'],
     ['DELETE', 'workbench/sessions/current'],
   ])('allows %s %s', (method, path) => {
     expect(verdict(method, path)).toBe('allow');
@@ -281,6 +285,7 @@ describe('workbenchRouteVerdict, workspace scope', () => {
     ['GET', 'account'],
     ['POST', 'migrate'],
     ['POST', 'guest-id'],
+    ['GET', 'bug-reports/screenshots/tag/file.webp'],
     ['GET', 'tokens'],
     ['DELETE', 'tokens/current'],
     ['GET', 'workbench/pairings'],
@@ -306,5 +311,14 @@ describe('workbenchRouteVerdict, workspace scope', () => {
     ['PATCH', 'documents/any-doc'],
   ])('confines %s %s', (method, path) => {
     expect(verdict(method, path)).toBe('confined');
+  });
+});
+
+describe('isWorkbenchScope', () => {
+  it('knows the two scopes and nothing else', () => {
+    expect(isWorkbenchScope('document')).toBe(true);
+    expect(isWorkbenchScope('workspace')).toBe(true);
+    expect(isWorkbenchScope('account')).toBe(false);
+    expect(isWorkbenchScope(undefined)).toBe(false);
   });
 });

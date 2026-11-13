@@ -43,6 +43,8 @@ export type BugReportContext = {
   userAgent?: string;
   viewport: { width: number; height: number; pixelRatio: number };
   online: boolean;
+  // True when the page runs inside another page's frame; left out otherwise.
+  embedded?: true;
   // Newest last.
   recentErrors: BugReportRecentError[];
 };
@@ -128,6 +130,7 @@ export function parseBugReportContext(raw: unknown): BugReportContext | null {
   if (typeof raw.release === 'string' && RELEASE.test(raw.release)) context.release = raw.release;
   if (typeof raw.userAgent === 'string' && raw.userAgent)
     context.userAgent = raw.userAgent.slice(0, BUG_REPORT_LIMITS.userAgent);
+  if (raw.embedded === true) context.embedded = true;
   return context;
 }
 

@@ -34,6 +34,7 @@ describe('describeUserAgent', () => {
     [IPAD_CHROME, 'Chrome 141 on iPadOS'],
     [CHROMEOS, 'Chrome 141 on ChromeOS'],
     ['curl/8.0', 'Unknown browser'],
+    ['Firefox/144.0', 'Firefox 144'],
     ['', 'Unknown browser'],
   ])('describes %s', (ua, expected) => {
     expect(describeUserAgent(ua)).toBe(expected);
@@ -85,6 +86,7 @@ describe('bugReportContextLines', () => {
       release: 'abc1234',
       userAgent: CHROME_WIN,
       online: false,
+      embedded: true,
       recentErrors: [{ at: '2026-10-28T10:00:00.000Z', source: 'api', message: 'Http500.SaveTab' }],
     });
     expect(lines).toEqual([
@@ -97,6 +99,7 @@ describe('bugReportContextLines', () => {
       { label: 'Browser', value: 'Chrome 141 on Windows' },
       { label: 'Screen', value: '1280 × 800 at 2x' },
       { label: 'Online', value: 'No' },
+      { label: 'Embedded', value: 'Yes' },
       { label: 'Recent errors', value: '1' },
       { label: 'Error', value: '2026-10-28T10:00:00.000Z api: Http500.SaveTab' },
     ]);

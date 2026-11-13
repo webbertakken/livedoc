@@ -112,6 +112,16 @@ describe('workbenchRefusal', () => {
     expect(refuse('DELETE', 'workbench/sessions/current', view)).toBeNull();
     expect(refuse('GET', 'documents/doc1', view)).toBeNull();
   });
+
+  // docs/specs/016-platform/bug-reports.md "From an embed": a report writes nothing the session is confined from.
+  it('lets a bug report through in either scope, from a view session too', () => {
+    const view = { level: 'view' as const };
+
+    expect(refuse('POST', 'bug-reports')).toBeNull();
+    expect(refuse('POST', 'bug-reports', view)).toBeNull();
+    expect(refuseInWorkspace('POST', 'bug-reports')).toBeNull();
+    expect(refuseInWorkspace('POST', 'bug-reports', view)).toBeNull();
+  });
 });
 
 describe('workbenchRefusal, workspace scope', () => {

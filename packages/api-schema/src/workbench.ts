@@ -278,6 +278,8 @@ const WORKBENCH_ROUTES: readonly RouteShape[] = [
   shape('POST', 'documents/:doc/items/:p/comments/reopen'),
   shape('DELETE', 'documents/:doc/items/:p/comments/:p'),
   shape('PUT', 'documents/:doc/item-types'),
+  // Report a Bug (docs/specs/016-platform/bug-reports.md "From an embed"): filed as the session's owner.
+  shape('POST', 'bug-reports'),
   shape('DELETE', 'workbench/sessions/current'),
 ];
 
@@ -313,6 +315,7 @@ const WORKSPACE_ROUTES: readonly RouteShape[] = [
   shape('GET', 'teams/:p'),
   shape('GET', 'teams/:p/library'),
   shape('GET', 'teams/:p/members'),
+  shape('POST', 'bug-reports'),
   shape('DELETE', 'workbench/sessions/current'),
 ];
 

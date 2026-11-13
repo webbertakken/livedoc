@@ -17,6 +17,8 @@ export type BugReportInputs = {
   userAgent: string;
   viewport: { width: number; height: number; pixelRatio: number };
   online: boolean;
+  // The page runs inside another page's frame (an embed).
+  framed: boolean;
   release: string | null;
   place: BugReportPlace;
   recentErrors: BugReportRecentError[];
@@ -37,6 +39,7 @@ export function collectBugReportContext(inputs: BugReportInputs): BugReportConte
       pixelRatio: inputs.viewport.pixelRatio,
     },
     online: inputs.online,
+    ...(inputs.framed ? { embedded: true as const } : {}),
     recentErrors: inputs.recentErrors.slice(-BUG_REPORT_LIMITS.recentErrors),
   };
   if (inputs.release && RELEASE.test(inputs.release)) context.release = inputs.release;
@@ -55,6 +58,7 @@ export function browserBugReportInputs(): BugReportInputs {
       pixelRatio: window.devicePixelRatio || 1,
     },
     online: navigator.onLine,
+    framed: window.self !== window.top,
     release: EDITOR_BUILD_ID || null,
     place: currentBugReportPlace(),
     recentErrors: recentClientErrors(),

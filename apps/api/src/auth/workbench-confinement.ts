@@ -10,10 +10,12 @@ import { sessionPrefixOf } from './workbench-session';
 
 const WRITE_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
 
-// A view session may still join the room and end itself (WB9).
+// A view session may still join the room, end itself (WB9) and report a bug, which writes nothing it is confined from
+// (docs/specs/016-platform/bug-reports.md "From an embed").
 function isViewExempt(method: string, segments: readonly string[]): boolean {
   const path = segments.slice(1).join('/');
   if (method === 'DELETE' && path === 'workbench/sessions/current') return true;
+  if (method === 'POST' && path === 'bug-reports') return true;
   return method === 'POST' && segments[1] === 'documents' && segments[3] === 'room-ticket';
 }
 

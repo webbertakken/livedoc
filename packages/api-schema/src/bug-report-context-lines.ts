@@ -83,6 +83,7 @@ export function bugReportContextLines(context: BugReportContext): BugReportConte
   const { width, height, pixelRatio } = context.viewport;
   lines.push({ label: 'Screen', value: `${width} × ${height} at ${pixelRatio}x` });
   lines.push({ label: 'Online', value: context.online ? 'Yes' : 'No' });
+  if (context.embedded) lines.push({ label: 'Embedded', value: 'Yes' });
   const errors = context.recentErrors;
   lines.push({ label: 'Recent errors', value: errors.length ? String(errors.length) : 'None' });
   for (const e of errors)
