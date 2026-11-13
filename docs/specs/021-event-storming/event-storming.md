@@ -1600,7 +1600,7 @@ Stitching uses what a sequence knows instead:
 - **The same paper once.** After placing, a note whose centre lands within `WALL_SAME_NOTE_PX` (110 canvas px,
   default) of a placed note of the same kind is that note seen again, whether or not its words were read alike.
 - **Measured** on the eleven photos with the spike (2026-11-13): photos read left to right in one row of story;
-  photo 8 stitched to photo 7 on 11 agreeing notes, photo 10 to photo 9 on 6; the rest landed beside.
+  photo 8 stitched to photo 7 on 11 agreeing notes, photo 10 to photo 9 on 6, photos 5 and 7 on 2; the rest landed beside. 196 notes, 20 taken as the same paper seen again.
 - The stitching is pure (`stitchWall` in `@livedoc/document`) so the editor, the CLI and the MCP share it.
 
 ### Through the CLI and the MCP (ruled 2026-11-13: possible through both)
