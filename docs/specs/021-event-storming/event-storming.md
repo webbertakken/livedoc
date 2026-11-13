@@ -1529,7 +1529,11 @@ The plans live in `plans/0010-event-storming-photo-review.md`,
 `plans/0011-event-storming-photo-surface-and-shade.md` and
 `plans/0009-event-storming-photo-precision.md`.
 
-## Phase 10 (planned): a higher-quality import through the author's own AI
+## Phase 10 (partly shipped): a higher-quality import through the author's own AI
+
+The MCP half shipped with Phase 11 as `add_photo_notes`, taking several photos in wall order and landing a draft
+through the `wall` operation; the CLI half is Phase 11's planned `storm import-wall`. The text below is the design as
+first written.
 
 The default photo import is and stays FREE for everyone: detection in the
 browser, reading by the deployment's reader or the in-browser one, no key,
@@ -1557,7 +1561,7 @@ hundred small notes.
 <photo>` with the author's own key (a flash-class vision model) or a local
   one, tiled for small notes, writing the same draft through the API.
 
-## Phase 11 (planned): a whole wall from several photos
+## Phase 11 (shipped): a whole wall from several photos
 
 Requested 2026-11-13: anyone can upload several photos of one wall, in order, and a complete board comes out.
 A real wall rarely fits one photo: the operator's own wall took eleven overlapping photos, left to right.
@@ -1611,11 +1615,22 @@ Stitching uses what a sequence knows instead:
 
 ### Through the CLI and the MCP (ruled 2026-11-13: possible through both)
 
-- **CLI**: `livedoc storm import-wall <doc> <photo|zip>… [--tab <t>]` detects on the machine running it, reads the
+- **CLI** (shipped): the same `wall` operation as JSON through `livedoc changeset apply <doc> -f wall.json`.
+- **CLI** (planned): `livedoc storm import-wall <doc> <photo|zip>… [--tab <t>]` detects on the machine running it, reads the
   crops through the deployment's reader (`POST /api/ai/read-notes`, under the same gates), stitches, and writes
-  the notes as a draft the person adds or discards in the editor.
-- **MCP**: `add_photo_notes` takes the notes an agent read from each photo, in order (kind, words, box as fractions
+  the notes as a draft the person adds or discards in the editor. It waits on a JPEG decoder outside the browser and
+  on token callers being let past the AI routes' origin check.
+- **MCP** (shipped): `add_photo_notes` takes the notes an agent read from each photo, in order (kind, words, box as fractions
   of its photo), stitches them the same way, and writes the same draft. The photos stay with the agent.
+
+### Where it lives
+
+- Stitching: `packages/document/src/event-storming-photo-wall.ts` (`stitchWall`, `naturalCompare`, the `WALL_*` constants).
+- Picking: `apps/live/lib/photo-wall-files.ts`; the run and the one confirm: `apps/live/hooks/canvas/usePhotoDraft.ts`.
+- Review: `apps/live/components/chrome/photo/PhotoWallReview.tsx` and `PhotoWallStrip.tsx` over the one-photo review.
+- Agents: the `wall` edit operation (`packages/edit-operations/src/operations/wall.ts`), the MCP tool
+  `add_photo_notes` (`packages/agent-verbs`, `apps/mcp/src/storm-tools.ts`).
+- Shipped 2026-11-13 (#146); the operator's eleven-photo wall landed on the example board as one 191-note draft.
 
 ## Agents
 
