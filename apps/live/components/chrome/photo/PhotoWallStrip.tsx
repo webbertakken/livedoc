@@ -56,7 +56,7 @@ export function PhotoWallStrip({
                 i === index ? 'bg-white text-slate-900' : 'text-white hover:bg-white/15'
               }`}
             >
-              {i + 1}
+              <span className="text-optical-centre">{i + 1}</span>
             </button>
           </li>
         ))}

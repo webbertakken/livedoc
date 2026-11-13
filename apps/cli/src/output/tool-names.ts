@@ -35,6 +35,8 @@ export const COMMAND_OF_TOOL: Readonly<Record<string, string>> = {
   try_form: 'form try',
   read_event_storming: 'storm read',
   suggest_notes: 'storm suggest',
+  // A wall's notes go as the JSON `wall` operation through a changeset (docs/specs/021-event-storming/event-storming.md Phase 11).
+  add_photo_notes: 'changeset apply',
   export_event_storming: 'storm export',
 };
 
