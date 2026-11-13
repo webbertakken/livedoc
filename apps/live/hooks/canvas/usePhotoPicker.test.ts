@@ -18,7 +18,7 @@ function setup(opts: { canOpen?: boolean } = {}) {
   const onOpen = vi.fn();
   const clicks = vi.fn();
   const view = renderHook(() =>
-    usePhotoPicker({ canOpen: () => opts.canOpen !== false, onFile, onOpen }),
+    usePhotoPicker({ canOpen: () => opts.canOpen !== false, onFiles: onFile, onOpen }),
   );
   const input = { click: clicks, value: 'x', files: null } as unknown as HTMLInputElement;
   view.result.current.inputRef.current = input;
@@ -125,5 +125,16 @@ describe('usePhotoPicker', () => {
     const h = setup({ canOpen: false });
     act(() => h.api().open());
     expect(h.clicks).not.toHaveBeenCalled();
+  });
+});
+
+// Several photos of one wall, or zips of them, in one pick (docs/specs/021-event-storming/event-storming.md Phase 11).
+describe('picking several files', () => {
+  it('hands every file picked over at once', () => {
+    const h = setup();
+    act(() => h.api().open());
+    const files = [file(), file()];
+    act(() => h.api().onChange(change(h.input, files)));
+    expect(h.onFile).toHaveBeenCalledWith(files);
   });
 });

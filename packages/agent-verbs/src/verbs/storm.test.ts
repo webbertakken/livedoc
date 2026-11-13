@@ -6,6 +6,7 @@ import {
   clearSuggestions,
   readStorm,
   suggestFromText,
+  addPhotoNotes,
   suggestNotes,
   SUGGEST_NOTES_MAX,
   type StormRead,
@@ -152,6 +153,30 @@ describe('suggesting and clearing', () => {
       rev: 4,
     });
     expect(sent).toEqual({ operations: [{ op: 'suggest', ...one }], summary: 'suggest 1 note' });
+  });
+
+  it('sends a wall of photos as one wall operation, and refuses none', async () => {
+    let sent: unknown = null;
+    const api = fakeApi(
+      routesWith({
+        [`${base}/tabs/es/changesets`]: async (r: Request) => {
+          sent = await r.json();
+          return Response.json({ dryRun: false, changeset: { id: 'cs_2', rev: 5 }, results: [] });
+        },
+      }),
+    );
+    const photo = { width: 100, height: 50, notes: [{ words: 'Paid', x: 5, y: 5, w: 10, h: 10 }] };
+    expect(await addPhotoNotes(api, board, [photo, photo], 'mcp')).toMatchObject({
+      ok: true,
+      changesetId: 'cs_2',
+    });
+    expect(sent).toEqual({
+      operations: [{ op: 'wall', photos: [photo, photo] }],
+      summary: 'add 2 notes from 2 photos',
+    });
+    await addPhotoNotes(api, board, [photo], 'mcp');
+    expect(sent).toMatchObject({ summary: 'add 1 note from 1 photo' });
+    expect(await addPhotoNotes(api, board, [], 'mcp')).toMatchObject({ code: 'nothing_to_add' });
   });
 
   it('refuses none, or more than a call takes', async () => {

@@ -36,6 +36,7 @@ function review(over: Partial<PhotoReview> = {}): PhotoReview {
     detection: null,
     textById: new Map(),
     readError: null,
+    readSoFar: 0,
     ...over,
   };
 }

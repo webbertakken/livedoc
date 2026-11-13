@@ -176,6 +176,11 @@ export const MCP_TOOL_METRICS: readonly Metric[] = [
     'Proposing notes for an Event Storming board, for people to apply.',
   ),
   mcpTool(
+    'AddPhotoNotes',
+    'Add Photo Notes',
+    'Landing the notes an agent read off photos of a physical wall, as a draft on an Event Storming board.',
+  ),
+  mcpTool(
     'ExportEventStorming',
     'Export Event Storming',
     'Exporting an Event Storming board for an agent to write its spec and domain types.',

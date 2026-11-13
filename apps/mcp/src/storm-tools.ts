@@ -3,8 +3,9 @@
 // error that says what is there.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ApiClient } from '@livedoc/api-client';
-import { readStorm, suggestNotes, type SuggestionInput } from '@livedoc/agent-verbs';
+import { addPhotoNotes, readStorm, suggestNotes, type SuggestionInput } from '@livedoc/agent-verbs';
 import {
+  mcpAddPhotoNotes,
   mcpExportEventStorming,
   mcpReadEventStorming,
   mcpSuggestNotes,
@@ -50,6 +51,22 @@ export function registerStormTools(server: McpServer, env: Env): void {
     const read = await boardOf(api, args.documentId, args.tab);
     if (!read.ok) return errorResult(read.message);
     const written = await suggestNotes(api, read, args.suggestions as SuggestionInput[], 'mcp');
+    if (!written.ok) return errorResult(written.message);
+    return textResult({
+      documentId: written.documentId,
+      tabId: written.tabId,
+      changesetId: written.changesetId,
+      lines: written.lines,
+      url: deepLink(env, written.documentId),
+    });
+  });
+
+  // A whole wall from the agent's own reading of its photos (docs/specs/021-event-storming/event-storming.md Phase 11).
+  registerTool(server, env, mcpAddPhotoNotes, async (args, extra) => {
+    const api = clientFor(env, requireToken(extra));
+    const read = await boardOf(api, args.documentId, args.tab);
+    if (!read.ok) return errorResult(read.message);
+    const written = await addPhotoNotes(api, read, args.photos, 'mcp');
     if (!written.ok) return errorResult(written.message);
     return textResult({
       documentId: written.documentId,

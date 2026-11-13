@@ -7,7 +7,7 @@ import {
   discardDraft,
   draftNotesOf,
   eventStormingNoteSize,
-  reconcilePhoto,
+  stitchWall,
   unionRects,
   type Element,
   type PhotoAddition,
@@ -27,6 +27,7 @@ import { setPhotoDraftView } from '@/lib/photo-draft-preview';
 import type { PhotoDetection } from '@/lib/photo-detect';
 import { photoTypeError } from '@/lib/photo-accept';
 import { detectorTelemetryType } from '@/lib/photo-model/telemetry';
+import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { useLatest } from '@/hooks/ui/useLatest';
 
@@ -92,6 +93,24 @@ export type PhotoReview = {
   detection: PhotoDetection | null;
   textById: Map<number, { text: string; legible: boolean }>;
   readError: string | null;
+  // How many of this photo's crops have been read.
+  readSoFar: number;
+};
+
+// Several photos of one wall, reviewed together (docs/specs/021-event-storming/event-storming.md Phase 11): one
+// review per photo, in wall order, the one on screen, and what the picking left out. A single photo is a wall of one.
+export type PhotoWall = {
+  reviews: PhotoReview[];
+  current: number;
+  // Files that were not photos, and photos past the limit.
+  skipped: number;
+  leftOut: number;
+};
+
+// One photo's boxes as the author left them, and the words on each: what Add lands.
+export type ReviewedPhoto = {
+  kept: DetectedSticky[];
+  texts: Map<number, { text: string; legible: boolean }>;
 };
 
 // The detector measured the geometry and the kind; the model read the words.
@@ -142,14 +161,22 @@ type PhotoDraftDeps = {
 
 type PhotoDraftApi = {
   state: PhotoDraftState;
-  // The review wizard's payload, set while `state.stage === 'review'`.
+  // The review wizard's payload, set while `state.stage === 'review'`: the photo on screen.
   review: PhotoReview | null;
+  // Every photo under review, when several were picked.
+  wall: PhotoWall | null;
   // True while the review wizard is open (nothing landed yet).
   reviewOpen: boolean;
   // True while notes from a photo are awaiting Add or Discard. Derived from
   // the ELEMENTS, so a reload mid-draft still knows.
   draftOpen: boolean;
   startFromFile: (file: File) => Promise<void>;
+  // Several photos of one wall, or zips of them, in file-name order (Phase 11). One photo goes the one-photo way.
+  startFromFiles: (files: File[]) => Promise<void>;
+  // Show another photo of the wall under review.
+  goToPhoto: (index: number) => void;
+  // Add every photo's boxes as they stand, stitched into one draft.
+  confirmWall: (photos: ReviewedPhoto[]) => void;
   // Add the boxes AS THEY STAND in the review — ticked, corrected, drawn — as
   // the on-canvas draft.
   confirm: (kept: DetectedSticky[], texts: Map<number, { text: string; legible: boolean }>) => void;
@@ -197,14 +224,16 @@ const NO_NOTES_TOAST =
 
 export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
   const [state, setState] = useState<PhotoDraftState>(EMPTY);
-  const [review, setReview] = useState<PhotoReview | null>(null);
+  const [wall, setWall] = useState<PhotoWall | null>(null);
+  const review = wall ? (wall.reviews[wall.current] ?? null) : null;
+  const wallRef = useLatest<PhotoWall | null>(wall);
   // Latest review, for guards inside callbacks whose deps do not re-run on it.
   const reviewRef = useLatest<PhotoReview | null>(review);
   const abortRef = useRef<AbortController | null>(null);
   // The object URL the overlay is showing. Held so it can be handed back to
   // the browser when the review closes: an unrevoked one pins the whole
   // photograph in memory for the life of the tab, and a wall photo is 3MB.
-  const photoUrlRef = useRef<string | null>(null);
+  const photoUrlRef = useRef<string[]>([]);
   // Which run is current. A run has two awaits before it is abortable, and
   // Cancel pressed in that window must not land a draft over a board the
   // author has moved on from.
@@ -215,7 +244,13 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
   const live = useLatest(deps);
   // The photo as picked, kept for the review's life: a box the author moves
   // is cut again from it, at full resolution.
-  const fileRef = useRef<File | null>(null);
+  const filesRef = useRef<File[]>([]);
+  // Which photo a re-read belongs to: crop ids repeat from photo to photo.
+  const rereadPhotoRef = useRef(0);
+  // How far each photo's read has got, for the progress strip's total.
+  const readByPhotoRef = useRef<number[]>([]);
+  // How many photos the draft on the board came from, for the telemetry on Add.
+  const draftPhotosRef = useRef(1);
   // One model, one queue: the first read and every re-read take turns.
   const queueRef = useRef<Promise<void>>(Promise.resolve());
   const enqueue = useCallback((job: () => Promise<void>) => {
@@ -236,13 +271,21 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
 
   // Close the review and give the photograph back to the browser.
   const closeReview = useCallback(() => {
-    if (photoUrlRef.current) {
-      URL.revokeObjectURL(photoUrlRef.current);
-      photoUrlRef.current = null;
-    }
-    fileRef.current = null;
-    setReview(null);
+    for (const url of photoUrlRef.current) URL.revokeObjectURL(url);
+    photoUrlRef.current = [];
+    filesRef.current = [];
+    readByPhotoRef.current = [];
+    setWall(null);
   }, []);
+
+  // Change the reviews that match, leaving the rest as they are.
+  const patchReviews = useCallback(
+    (match: (r: PhotoReview, index: number) => boolean, change: (r: PhotoReview) => PhotoReview) =>
+      setWall((w) =>
+        w ? { ...w, reviews: w.reviews.map((r, i) => (match(r, i) ? change(r) : r)) } : w,
+      ),
+    [],
+  );
 
   // Hand the thread back long enough for the browser to paint what was just
   // set, before taking it again for work that will block. Two frames, because
@@ -309,8 +352,11 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
   }, []);
 
   const readWords = useCallback(
-    async (detection: PhotoDetection, controller: AbortController, run: number) => {
+    async (detection: PhotoDetection, controller: AbortController, run: number, photo = 0) => {
       const current = () => runRef.current === run;
+      const mine = (r: PhotoReview) => r.detection === detection;
+      // A wall reads its photos one after another under one controller: each read holds it while it runs.
+      if (current()) abortRef.current = controller;
       try {
         const { read } = selectReader({
           aiEnabled: live.current.aiEnabled,
@@ -320,37 +366,32 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
           signal: controller.signal,
           onProgress: (readSoFar) => {
             if (!current()) return;
-            setState((s) => (s.stage === 'review' ? { ...s, readSoFar } : s));
+            readByPhotoRef.current[photo] = readSoFar;
+            const total = readByPhotoRef.current.reduce((sum, n) => sum + (n ?? 0), 0);
+            patchReviews(mine, (r) => ({ ...r, readSoFar }));
+            setState((s) => (s.stage === 'review' ? { ...s, readSoFar: total } : s));
           },
           ...readerCallbacks(run),
           // Each note's words as they are read: the photo fills in note by
           // note, rather than a wall of blanks until the last one is done.
           onText: (cropId, read) => {
             if (!current()) return;
-            setReview((prev) =>
-              prev && prev.detection === detection
-                ? { ...prev, textById: new Map(prev.textById).set(cropId, read) }
-                : prev,
-            );
+            patchReviews(mine, (r) => ({ ...r, textById: new Map(r.textById).set(cropId, read) }));
           },
         });
         if (!current()) return;
-        setReview((prev) =>
-          prev && prev.detection === detection
-            ? {
-                ...prev,
-                textById: answer.textById,
-                // Part of the run is not all of it. The words that arrived are
-                // shown; the note that says so names how many did not.
-                // A reader that never started is its own failure, not part of a run.
-                readError: !answer.failure
-                  ? prev.readError
-                  : answer.failure === 'reader_unavailable'
-                    ? 'reader_unavailable'
-                    : `partial:${answer.unread ?? 0}`,
-              }
-            : prev,
-        );
+        patchReviews(mine, (prev) => ({
+          ...prev,
+          textById: answer.textById,
+          // Part of the run is not all of it. The words that arrived are
+          // shown; the note that says so names how many did not.
+          // A reader that never started is its own failure, not part of a run.
+          readError: !answer.failure
+            ? prev.readError
+            : answer.failure === 'reader_unavailable'
+              ? 'reader_unavailable'
+              : `partial:${answer.unread ?? 0}`,
+        }));
         if (answer.failure === 'reader_unavailable') {
           live.current.toastError(
             `The reading model couldn't start in this browser (${answer.detail ?? 'unknown reason'}). Type the words in yourself, or try again later.`,
@@ -363,22 +404,22 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
       } catch (err) {
         if (controller.signal.aborted || !current()) return;
         const token = err instanceof Error ? err.message : 'ai_error';
-        setReview((prev) =>
-          prev && prev.detection === detection ? { ...prev, readError: token } : prev,
-        );
+        patchReviews(mine, (r) => ({ ...r, readError: token }));
         live.current.toastError(ERROR_TOASTS[token] ?? ERROR_TOASTS.ai_error!);
       } finally {
         if (abortRef.current === controller) abortRef.current = null;
       }
     },
-    [readerCallbacks, live],
+    [readerCallbacks, live, patchReviews],
   );
 
   // A box the author moved, resized or drew, read again (docs/specs/021-event-storming/event-storming.md Phase 9).
   const { rereading, reread, cancelRereads } = usePhotoReread({
     source: () => {
-      const imageSize = reviewRef.current?.detection?.imageSize;
-      const file = fileRef.current;
+      const w = wallRef.current;
+      const imageSize = w?.reviews[w.current]?.detection?.imageSize;
+      const file = w ? filesRef.current[w.current] : undefined;
+      if (w) rereadPhotoRef.current = w.current;
       return file && imageSize ? { run: runRef.current, file, imageSize } : null;
     },
     isCurrent: (run) => runRef.current === run,
@@ -388,174 +429,228 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
     readOptions: readerCallbacks,
     onText: (run, id, read) => {
       if (runRef.current !== run) return;
-      setReview((prev) =>
-        prev ? { ...prev, textById: new Map(prev.textById).set(id, read) } : prev,
+      const photo = rereadPhotoRef.current;
+      patchReviews(
+        (_r, i) => i === photo,
+        (r) => ({ ...r, textById: new Map(r.textById).set(id, read) }),
       );
     },
     onError: () => live.current.toastError(REREAD_FAILED_TOAST),
   });
 
+  // Whether a new import may start at all. Every refusal SPEAKS: returning quietly is how picking a photo came to
+  // look like a broken button, and the next move is to click again, which is refused just as quietly.
+  const mayStart = useCallback((): boolean => {
+    const d = live.current;
+    // One draft at a time — a review in progress counts as one, even though nothing has landed yet.
+    if (reviewRef.current !== null) {
+      d.toastError(BUSY_TOASTS.review);
+      return false;
+    }
+    if (draftNotesOf(d.activeTab.elements).length > 0) {
+      d.toastError(BUSY_TOASTS.draft);
+      return false;
+    }
+    if (d.createBlocked) {
+      d.toastError(BUSY_TOASTS.blocked);
+      return false;
+    }
+    return true;
+  }, [reviewRef, live]);
+
+  // The photos go up, then each is detected here in the browser, one after another, and read behind the review.
+  // One photo is a wall of one: a photo that cannot be opened or holds no paper says so as it always has.
+  const run = useCallback(
+    async (files: File[], picked: { skipped: number; leftOut: number }) => {
+      const single = files.length === 1;
+      const runId = (runRef.current += 1);
+      const current = () => runRef.current === runId;
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      // THE PHOTOS GO UP FIRST. An object URL costs nothing to make and the browser decodes it for display on its
+      // own thread, so the author sees the wall they just picked while the detector is still walking it.
+      const urls = files.map((file) => URL.createObjectURL(file));
+      photoUrlRef.current = urls;
+      filesRef.current = files;
+      readByPhotoRef.current = files.map(() => 0);
+      setWall({
+        reviews: files.map((file, i) => ({
+          photoUrl: urls[i]!,
+          photoName: file.name,
+          detection: null,
+          textById: new Map(),
+          readError: null,
+          readSoFar: 0,
+        })),
+        current: 0,
+        ...picked,
+      });
+      setState({ stage: 'review', found: 0, readSoFar: 0, error: null });
+      if (!single) debugLog('[photo] wall', { photos: files.length, ...picked });
+
+      // Let the browser actually PAINT that before the detector takes the thread: detection is synchronous
+      // number-crunching over a few million pixels.
+      await nextPaint();
+      if (!current()) return;
+
+      // The detection pipeline (and the sticky detector in it) loads only now, once a photo is picked: most
+      // documents never import one (docs/specs/016-platform/web-performance.md).
+      let pipeline: typeof import('@/lib/photo-detect') | null = null;
+      let found = 0;
+      for (const [i, file] of files.entries()) {
+        let detection: PhotoDetection;
+        try {
+          pipeline ??= await import('@/lib/photo-detect');
+          detection = await pipeline.detectAndCrop(file, { signal: controller.signal });
+        } catch (err) {
+          if (!current()) return;
+          const reason =
+            pipeline && err instanceof pipeline.PhotoDetectFailed ? err.reason : 'photo_unreadable';
+          if (single) {
+            abortRef.current = null;
+            closeReview();
+            fail(reason);
+            return;
+          }
+          // One unreadable photo of a wall does not lose the others: it is said on that photo.
+          console.warn('[photo] wall photo unreadable', { photo: i, reason });
+          patchReviews(
+            (_r, at) => at === i,
+            (r) => ({ ...r, readError: reason }),
+          );
+          continue;
+        }
+        if (!current()) return;
+        track('AI', 'Used', detectorTelemetryType(detection.detector));
+        found += detection.stickies.length;
+        patchReviews(
+          (_r, at) => at === i,
+          (r) => ({ ...r, detection }),
+        );
+        setState((s) => ({ ...s, stage: 'review', found }));
+        if (detection.stickies.length === 0) {
+          // No paper in the picture. The photo STAYS on screen with the advice; never spend a model call on it.
+          if (single) {
+            abortRef.current = null;
+            live.current.toastError(NO_NOTES_TOAST);
+          }
+          continue;
+        }
+        enqueue(() => readWords(detection, controller, runId, i));
+        // Hand the thread back between photos, so the review stays responsive while the next one is walked.
+        await nextPaint();
+        if (!current()) return;
+      }
+    },
+    [closeReview, enqueue, fail, nextPaint, readWords, patchReviews, live],
+  );
+
   const startFromFile = useCallback(
     async (file: File) => {
-      const d = live.current;
-      // One draft at a time, and never where the drop would be refused — a
-      // review in progress counts as one, even though nothing has landed yet.
-      //
-      // Every refusal SPEAKS. Returning quietly here is how picking a photo
-      // came to look like a broken button: the author gets no overlay and no
-      // message, so the only theory left is that the click did not register,
-      // and the next move is to click again — which is refused just as quietly.
-      if (reviewRef.current !== null) {
-        d.toastError(BUSY_TOASTS.review);
-        return;
-      }
-      if (draftNotesOf(d.activeTab.elements).length > 0) {
-        d.toastError(BUSY_TOASTS.draft);
-        return;
-      }
-      if (d.createBlocked) {
-        d.toastError(BUSY_TOASTS.blocked);
-        return;
-      }
-      // A file we cannot decode at all is refused before anything opens: an
-      // overlay showing a broken image is worse than a straight answer.
+      if (!mayStart()) return;
+      // A file we cannot decode at all is refused before anything opens: an overlay showing a broken image is worse
+      // than a straight answer.
       const typeError = photoTypeError(file.type);
       if (typeError) {
         fail(typeError);
         return;
       }
-
-      const run = (runRef.current += 1);
-      const current = () => runRef.current === run;
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      // THE PHOTO GOES UP FIRST. An object URL costs nothing to make and the
-      // browser decodes it for display on its own thread, so the author sees
-      // the wall they just picked while the detector is still walking it.
-      const photoUrl = URL.createObjectURL(file);
-      photoUrlRef.current = photoUrl;
-      fileRef.current = file;
-      setReview({
-        photoUrl,
-        photoName: file.name,
-        detection: null,
-        textById: new Map(),
-        readError: null,
-      });
-      setState({ stage: 'review', found: 0, readSoFar: 0, error: null });
-
-      // Let the browser actually PAINT that before the detector takes the
-      // thread. Detection is synchronous number-crunching over a few million
-      // pixels; without this yield React's state change and the blocking work
-      // land in the same frame and the overlay never appears until it is over.
-      await nextPaint();
-      if (!current()) return;
-
-      // Finding the stickies happens HERE, in the browser: the photograph
-      // never leaves the machine, only the crops do.
-      let detection: PhotoDetection;
-      // The detection pipeline (and the sticky detector in it) loads only now, once a photo is
-      // picked: most documents never import one (docs/specs/016-platform/web-performance.md).
-      let pipeline: typeof import('@/lib/photo-detect') | null = null;
-      try {
-        pipeline = await import('@/lib/photo-detect');
-        detection = await pipeline.detectAndCrop(file, { signal: controller.signal });
-      } catch (err) {
-        abortRef.current = null;
-        if (!current()) return;
-        closeReview();
-        fail(
-          pipeline && err instanceof pipeline.PhotoDetectFailed ? err.reason : 'photo_unreadable',
-        );
-        return;
-      }
-      if (!current()) return;
-      track('AI', 'Used', detectorTelemetryType(detection.detector));
-
-      setReview((prev) => (prev ? { ...prev, detection } : prev));
-      setState({
-        stage: 'review',
-        found: detection.stickies.length,
-        readSoFar: 0,
-        error: null,
-      });
-
-      if (detection.stickies.length === 0) {
-        // No paper in the picture. The photo STAYS on screen with the advice:
-        // "shoot straighter, fill the frame" is advice about this photograph,
-        // and closing the dialog throws away the thing it is about. Never spend
-        // a model call on it.
-        abortRef.current = null;
-        live.current.toastError(NO_NOTES_TOAST);
-        return;
-      }
-
-      enqueue(() => readWords(detection, controller, run));
+      await run([file], { skipped: 0, leftOut: 0 });
     },
-    [closeReview, enqueue, fail, nextPaint, readWords, reviewRef, live],
+    [mayStart, fail, run],
   );
 
-  // Add the ticked boxes as the on-canvas draft. The one write of the review:
-  // arm the checkpoint, reconcile the ticked notes against the board as it is
-  // NOW (a peer may have added the very note the photo shows), and land them.
-  // `kept` is every box that lands, as the author left it: moved, resized,
-  // re-kinded or drawn; `texts` the words on each, as edited.
-  const confirm = useCallback(
-    (kept: DetectedSticky[], texts: Map<number, { text: string; legible: boolean }>) => {
+  const startFromFiles = useCallback(
+    async (files: File[]) => {
+      const zip = files.some((f) => f.type === 'application/zip' || /\.zip$/i.test(f.name));
+      if (files.length === 1 && !zip) return startFromFile(files[0]!);
+      if (!mayStart()) return;
+      const { wallPhotosOf } = await import('@/lib/photo-wall-files');
+      const picked = await wallPhotosOf(files);
+      if (picked.photos.length === 0) {
+        fail('photo_unsupported_type');
+        return;
+      }
+      await run(picked.photos, { skipped: picked.skipped, leftOut: picked.leftOut });
+    },
+    [mayStart, fail, run, startFromFile],
+  );
+
+  const goToPhoto = useCallback((index: number) => {
+    setWall((w) =>
+      w && index >= 0 && index < w.reviews.length && index !== w.current
+        ? { ...w, current: index }
+        : w,
+    );
+  }, []);
+
+  // Add the ticked boxes as the on-canvas draft. The one write of the review: arm the checkpoint, stitch every
+  // photo's notes against the board as it is NOW (a peer may have added the very note the photo shows), and land
+  // them. Each photo's `kept` is every box that lands, as the author left it; `texts` the words on each.
+  const confirmWall = useCallback(
+    (photos: ReviewedPhoto[]) => {
       const d = live.current;
-      // Nothing to land before the detector has answered — the Add button is
-      // disabled then, and a drawn box cannot exist without the image data
-      // that classifies it.
-      if (!review?.detection) return;
-      const found = review.detection;
-      const detection: PhotoDetection = {
-        ...found,
-        stickies: kept,
-      };
-      if (detection.stickies.length === 0) return;
+      const reviews = wallRef.current?.reviews ?? [];
+      // Nothing to land before the detector has answered — the Add button is disabled then.
+      if (!reviews.some((r) => r.detection)) return;
+      const notes = reviews.map((r, i) =>
+        r.detection && photos[i]
+          ? toPhotoNotes({ ...r.detection, stickies: photos[i].kept }, photos[i].texts)
+          : [],
+      );
+      if (notes.every((n) => n.length === 0)) return;
       const existing = boardNotesOfElements(d.activeTab.elements);
-      const result = reconcilePhoto(toPhotoNotes(detection, texts), existing);
-      // Nothing usable in the photo at all: close the review and say so. A
-      // photo whose notes are ALL already on the board is not this case — it
-      // lands nothing but still publishes what it matched and how it differed.
+      const result = stitchWall(notes, existing);
+      const read = reviews.reduce((sum, r) => sum + (r.detection?.stickies.length ?? 0), 0);
+      // Nothing usable at all: close the review and say so. Photos whose notes are ALL already on the board are not
+      // this case — they land nothing but still publish what they matched and how they differed.
       if (result.additions.length === 0 && result.matches.length === 0) {
-        setReview(null);
+        closeReview();
         setState(EMPTY);
         d.toastError(NO_NOTES_TOAST);
         return;
       }
+      if (reviews.length > 1)
+        debugLog('[photo] wall stitched', {
+          photos: reviews.length,
+          added: result.additions.length,
+          seenAgain: result.seenAgain.length,
+          placements: result.placements.map((pl) => pl.how),
+        });
       const matchedIds = new Set(result.matches.map((m) => m.boardId));
       checkpointedRef.current = true;
+      draftPhotosRef.current = reviews.length;
       d.markCheckpoint();
       const finalNotes = buildDraftNotes(result.additions, d.activeTab);
       d.tick((els) => [...els, ...finalNotes]);
       d.setSelectedId(null);
       d.setMultiSelectedIds(new Set(finalNotes.map((el) => el.id)));
       frameElements([...finalNotes, ...existing.filter((e) => matchedIds.has(e.id))]);
+      const firstTexts = photos[0]?.texts;
       setPhotoDraftView({
         matchedIds,
         differences: new Map(
           result.differences
-            .map((diff) => [diff.boardId, texts.get(diff.detectedId)?.text ?? ''] as const)
+            .map((diff) => [diff.boardId, firstTexts?.get(diff.detectedId)?.text ?? ''] as const)
             .filter(([, text]) => text !== ''),
         ),
-        read: found.stickies.length,
+        read,
       });
       // The words on screen are what landed: a re-read still pending is moot.
       runRef.current += 1;
       cancelRereads();
-      fileRef.current = null;
-      setReview(null);
-      setState({
-        stage: 'draft',
-        found: found.stickies.length,
-        readSoFar: found.stickies.length,
-        error: null,
-      });
+      closeReview();
+      setState({ stage: 'draft', found: read, readSoFar: read, error: null });
     },
-    [review, frameElements, cancelRereads, live],
+    [wallRef, frameElements, cancelRereads, closeReview, live],
+  );
+
+  // One photo's Add.
+  const confirm = useCallback(
+    (kept: DetectedSticky[], texts: Map<number, { text: string; legible: boolean }>) =>
+      confirmWall([{ kept, texts }]),
+    [confirmWall],
   );
 
   const cancelReview = useCallback(() => {
@@ -579,6 +674,8 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
     const after = acceptDraft(d.activeTab.elements);
     d.tick(() => after);
     track('AI', 'Used', 'PhotoNotes');
+    if (draftPhotosRef.current > 1) track('AI', 'Used', 'PhotoWall');
+    draftPhotosRef.current = 1;
     for (const _ of drafts) track('Element', 'Added', 'Sticky');
     checkpointedRef.current = false;
     setPhotoDraftView(null);
@@ -613,10 +710,14 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
   return {
     state,
     review,
+    wall,
     reviewOpen: review !== null,
     draftOpen,
     startFromFile,
+    startFromFiles,
+    goToPhoto,
     confirm,
+    confirmWall,
     cancelReview,
     accept,
     discard,

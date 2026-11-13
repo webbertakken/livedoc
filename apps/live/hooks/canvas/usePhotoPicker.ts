@@ -35,7 +35,8 @@ type PhotoPicker = {
 export function usePhotoPicker(deps: {
   // Whether a photo may be started at all right now (the board's own rules).
   canOpen: () => boolean;
-  onFile: (file: File) => void;
+  // Every file picked: one photo, several photos of a wall, or zips of them (Phase 11).
+  onFiles: (files: File[]) => void;
   // A pick has begun: work that the file will need (the boundary model's
   // runtime) can load while the author is still choosing.
   onOpen?: () => void;
@@ -88,12 +89,12 @@ export function usePhotoPicker(deps: {
       // been delivered would otherwise pop a second dialog over the review that
       // is opening.
       release();
-      const file = event.target.files?.[0];
+      const files = [...(event.target.files ?? [])];
       // Clear the input before doing anything with the file, so picking the SAME
       // photo again still fires a change (the value, not the file, is what the
       // browser compares).
       event.target.value = '';
-      if (file) live.current.onFile(file);
+      if (files.length > 0) live.current.onFiles(files);
     },
     [release, live],
   );

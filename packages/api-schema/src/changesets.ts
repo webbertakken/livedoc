@@ -109,6 +109,9 @@ export const EDIT_REJECTION_CODES = [
   'reason_too_long',
   'too_many_suggestions',
   'duplicate_suggestion',
+  // The wall operation (docs/specs/021-event-storming/event-storming.md Phase 11).
+  'draft_open',
+  'nothing_to_add',
 ] as const;
 export type EditRejectionCode = (typeof EDIT_REJECTION_CODES)[number];
 

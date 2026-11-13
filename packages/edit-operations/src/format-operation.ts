@@ -136,6 +136,8 @@ function words(operation: EditOperation): string[] {
         ...(operation.gap !== undefined ? [`gap=${operation.gap}`] : []),
         ...idText(operation.id),
       ];
+    case 'wall':
+      return [JSON.stringify(operation)];
   }
 }
 

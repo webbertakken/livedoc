@@ -11,13 +11,22 @@ import { boxesFromLabel } from '@/lib/photo-boxes';
 //
 // What Add lands is `kept` — the boxes as they stand, so a moved box lands
 // where it was moved to.
-export function useReviewBoxes(detected: DetectedSticky[], detectionKey: unknown) {
-  const [boxes, setBoxes] = useState<DetectedSticky[]>(detected);
+//
+// `seed`: the boxes as the author left them on this photo before moving to another photo of the wall
+// (docs/specs/021-event-storming/event-storming.md Phase 11), so coming back finds them as they were.
+export function useReviewBoxes(
+  detected: DetectedSticky[],
+  detectionKey: unknown,
+  seed?: { boxes: DetectedSticky[]; ticked: ReadonlySet<number> },
+) {
+  const [boxes, setBoxes] = useState<DetectedSticky[]>(seed?.boxes ?? detected);
   // Everything found is ticked: the common case is "add the wall".
-  const [ticked, setTicked] = useState<Set<number>>(() => new Set(detected.map((s) => s.id)));
+  const [ticked, setTicked] = useState<Set<number>>(
+    () => new Set(seed?.ticked ?? detected.map((s) => s.id)),
+  );
   const [selected, setSelected] = useState<number | null>(null);
-  // Drawn boxes count down from -1, clear of the reader's crop ids.
-  const drawnId = useRef(-1);
+  // Drawn boxes count down from -1, clear of the reader's crop ids and of any drawn box in the seed.
+  const drawnId = useRef(Math.min(0, ...(seed?.boxes ?? []).map((b) => b.id)) - 1);
 
   // The surface mounts before the detector answers; take its boxes as they
   // land, during render. Keyed on the DETECTION, never on a re-render.

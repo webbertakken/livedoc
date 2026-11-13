@@ -27,6 +27,7 @@ describe('the MCP tool verbs', () => {
       'try_form',
       'read_event_storming',
       'suggest_notes',
+      'add_photo_notes',
       'export_event_storming',
       'find_documents',
       'read_document',
