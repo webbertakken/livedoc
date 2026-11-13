@@ -606,3 +606,51 @@ describe('arrow keys between pages', () => {
     expect(onStepPage).not.toHaveBeenCalled();
   });
 });
+
+// Shift+H and Shift+V flip the selection (docs/specs/008-canvas/selection-transforms.md "Where flips live").
+describe('Shift+H and Shift+V', () => {
+  it('flip the selection horizontally and vertically', () => {
+    const onFlipSelection = vi.fn();
+    const { bag, spies } = deps({ onFlipSelection });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    const e = press('H', { shiftKey: true });
+    press('V', { shiftKey: true });
+    expect(onFlipSelection.mock.calls).toEqual([['horizontal'], ['vertical']]);
+    expect(e.defaultPrevented).toBe(true);
+    expect(spies.onShortcutUsed).toHaveBeenCalledTimes(2);
+  });
+
+  it('flip a multi-selection in Draw mode too', () => {
+    const onFlipSelection = vi.fn();
+    const pickSelect = vi.fn();
+    const { bag } = deps({
+      selectedId: null,
+      multiSelectedIds: new Set(['a', 'b']),
+      onFlipSelection,
+      whiteboard: { pickSelect } as never,
+    });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    press('V', { shiftKey: true });
+    expect(onFlipSelection).toHaveBeenCalledWith('vertical');
+    expect(pickSelect).not.toHaveBeenCalled();
+  });
+
+  it('flip nothing without a selection, or for a read-only session', () => {
+    const onFlipSelection = vi.fn();
+    renderHook(() => useEditorKeyboardShortcuts(deps({ selectedId: null, onFlipSelection }).bag));
+    press('H', { shiftKey: true });
+    cleanup();
+    renderHook(() => useEditorKeyboardShortcuts(deps({ isReadOnly: true, onFlipSelection }).bag));
+    press('H', { shiftKey: true });
+    expect(onFlipSelection).not.toHaveBeenCalled();
+  });
+
+  it('yield to type-to-edit on a selected labelled element', () => {
+    const onFlipSelection = vi.fn();
+    const onTypeIntoSelected = vi.fn(() => true);
+    renderHook(() => useEditorKeyboardShortcuts(deps({ onFlipSelection, onTypeIntoSelected }).bag));
+    press('H', { shiftKey: true });
+    expect(onTypeIntoSelected).toHaveBeenCalledWith('a', 'H');
+    expect(onFlipSelection).not.toHaveBeenCalled();
+  });
+});

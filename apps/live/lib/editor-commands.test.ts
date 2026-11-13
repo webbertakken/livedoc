@@ -13,6 +13,7 @@ function handlers(): CommandHandlers {
     rotate: vi.fn(),
     combine: vi.fn(),
     mirrorCopy: vi.fn(),
+    flip: vi.fn(),
     clearAnimation: vi.fn(),
     renumberSteps: vi.fn(),
     setMarker: vi.fn(),
@@ -513,5 +514,25 @@ describe('buildEditorCommands: Auto-align to Grid', () => {
     const cmd = buildEditorCommands(base, h).find((c) => c.id === 'auto-align');
     cmd?.run();
     expect(h.autoAlign).toHaveBeenCalled();
+  });
+});
+
+// docs/specs/008-canvas/selection-transforms.md "Where flips live".
+describe('buildEditorCommands — flips', () => {
+  it('offers Flip Horizontal and Flip Vertical for a selection that can flip', () => {
+    const h = handlers();
+    const cmds = buildEditorCommands({ ...base, selectionCount: 3, canFlip: true }, h);
+    cmds.find((c) => c.id === 'flip-horizontal')!.run();
+    expect(h.flip).toHaveBeenCalledWith('horizontal');
+    cmds.find((c) => c.id === 'flip-vertical')!.run();
+    expect(h.flip).toHaveBeenCalledWith('vertical');
+    expect(cmds.find((c) => c.id === 'flip-vertical')!.name).toBe('Flip Vertical');
+  });
+
+  it('offers no flip for a selection that cannot, nor to a read-only session', () => {
+    expect(ids({ ...base, selectionCount: 1 })).not.toContain('flip-horizontal');
+    expect(ids({ ...base, selectionCount: 1, canFlip: true, isReadOnly: true })).not.toContain(
+      'flip-horizontal',
+    );
   });
 });

@@ -9,6 +9,7 @@ import {
   drawnBounds,
   elementBounds,
   isBoxed,
+  supportsRotation,
   unionRects,
   type BoxedElement,
   type Element,
@@ -38,6 +39,9 @@ type CanvasSelection = {
   unionResizeBounds: Rect | null;
   unionResizePrimaryId: string | null;
   showUnionResize: boolean;
+  // The frame's rotate zones: shown with its handles when a member can rotate
+  // (docs/specs/008-canvas/selection-transforms.md "Where zones appear").
+  showUnionTurn: boolean;
   // Floating multi-selection toolbar anchor + visibility. Spans arrows too,
   // so it shows for arrow-only / mixed marquees (the resize box above does not).
   multiToolbarBounds: Rect | null;
@@ -263,6 +267,7 @@ export function deriveCanvasSelection(input: {
     unionResizeBounds,
     unionResizePrimaryId,
     showUnionResize,
+    showUnionTurn: showUnionResize && unionMembers.some(supportsRotation),
     multiToolbarBounds,
     showMultiToolbar,
   };

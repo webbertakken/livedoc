@@ -50,6 +50,14 @@ describe('ModifierHintBanner', () => {
     expect(screen.getByText(/click elements to select several/i)).toBeTruthy();
   });
 
+  // docs/specs/008-canvas/selection-transforms.md "Rotating by hand": Shift snaps a turn, not the proportions.
+  it('names the angle snap while rotating by hand', () => {
+    show({ drag: { kind: 'boxed', mode: 'rotate' } as DragState });
+    holdShift(true);
+    expect(screen.getByText(/snapping to 15° steps/i)).toBeTruthy();
+    expect(screen.queryByText(/proportions locked/i)).toBeNull();
+  });
+
   // Q4: a held modifier nobody knows about is a feature nobody finds. The
   // offer appears DURING the drag, before Alt is touched — which is also the
   // only wording that works where a window manager claims Alt+press.

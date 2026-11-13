@@ -50,6 +50,7 @@ export function EditorContextMenuHost() {
     userPreferences,
     activeTab,
     isReadOnly,
+    flipSelected,
     setTagColour,
     editingId,
     closeContextMenu,
@@ -252,6 +253,7 @@ export function EditorContextMenuHost() {
     : null;
   const ctxMemberIds =
     multiSelectedIds.size > 0 ? [...multiSelectedIds] : ctxSelectedEl ? [ctxSelectedEl.id] : [];
+  const ctxMemberSet = new Set(ctxMemberIds);
 
   // A Sankey's menu sections (docs/specs/009-elements/sankey.md "The menu"), for someone who may edit it.
   const sankeyMenu =
@@ -415,6 +417,7 @@ export function EditorContextMenuHost() {
       onCommitFinish={commitFinish}
       onPreviewRotation={previewRotation}
       onCommitRotation={commitRotation}
+      onFlip={flipSelected}
       onSetMarker={commitMarker}
       onPreviewMarker={previewMarker}
       onSetMarkerSize={commitMarkerSize}
@@ -563,9 +566,9 @@ export function EditorContextMenuHost() {
       onOpenNote={openNote}
       onOpenComments={openComments}
       onAssignAction={openAssignAction}
-      selectionElements={ctxMemberIds
-        .map((id) => activeTab.elements.find((e) => e.id === id))
-        .filter((e): e is NonNullable<typeof e> => e != null)}
+      // In document order, the order a selection's reference member is read in
+      // (docs/specs/008-canvas/selection-transforms.md "Terms").
+      selectionElements={activeTab.elements.filter((e) => ctxMemberSet.has(e.id))}
     />
   );
 }

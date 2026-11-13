@@ -52,8 +52,14 @@ export function LayerSelectionChrome({
   // (docs/specs/007-editor/logo-pages.md "A logo page"), a mark not a diagram.
   pages?: readonly LaidOutPage[] | null;
 }) {
-  const { selectionBounds, showPlus, showUnionResize, unionResizeBounds, unionResizePrimaryId } =
-    useCanvasSelectionView(selectionInput, tabId);
+  const {
+    selectionBounds,
+    showPlus,
+    showUnionResize,
+    showUnionTurn,
+    unionResizeBounds,
+    unionResizePrimaryId,
+  } = useCanvasSelectionView(selectionInput, tabId);
   const selectedId = useSelectionOf(singleId);
   // Counter-scaled chrome: the zoom from the canvas's zoom context, so the layer passes none.
   const zoom = useCanvasZoom();
@@ -102,6 +108,7 @@ export function LayerSelectionChrome({
           bounds={unionResizeBounds}
           primaryId={unionResizePrimaryId}
           zoom={zoom}
+          turnable={showUnionTurn}
           onBeginDrag={onBeginDrag}
         />
       ) : null}

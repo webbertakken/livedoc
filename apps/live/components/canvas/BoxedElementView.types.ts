@@ -31,6 +31,8 @@ export type BoxedElementViewProps = {
   isPaintMode: boolean;
   showHandles: boolean;
   showAnchors: boolean;
+  // The rotate zones beside the corner handles (docs/specs/008-canvas/selection-transforms.md "Where zones appear").
+  showTurn?: boolean;
   onBeginDrag: (id: string, mode: DragMode, e: ReactPointerEvent) => void;
   // The armed action a tap takes instead of selecting (Canvas.types.ts): true when it took it.
   onPressArmedAction?: (id: string) => boolean;

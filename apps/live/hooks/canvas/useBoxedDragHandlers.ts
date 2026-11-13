@@ -17,6 +17,8 @@ import { track } from '@/lib/telemetry';
 import { type DragMode, type DragState, type ShapeBounds } from '@/lib/canvas';
 import type { EditorDragDeps } from './useEditorDrag.types';
 import { elementSelector } from '@/lib/canvas-selectors';
+import { debugLog } from '@/lib/debug-log';
+import { turnFramePivotClient } from '@/lib/turn-frame';
 
 type BoxedDragHandlerDeps = {
   depsRef: RefObject<EditorDragDeps>;
@@ -77,8 +79,20 @@ export function useBoxedDragHandlers({
     // Selection above still lands so viewers can inspect; the drag
     // itself is blocked for a locked element or a read-only session.
     if (element.locked === true) return;
-    // A Participant moves and resizes only what it may (docs/specs/013-workspace/share-roles.md).
-    if (d.isReadOnly && !(mode === 'move' ? d.canMove : d.canResize)?.(element)) return;
+    // A Participant moves and resizes only what it may (docs/specs/013-workspace/share-roles.md), and never turns
+    // the board by hand (docs/specs/008-canvas/selection-transforms.md ST3).
+    if (
+      d.isReadOnly &&
+      (mode === 'rotate' || !(mode === 'move' ? d.canMove : d.canResize)?.(element))
+    ) {
+      return;
+    }
+    // A turn pivots on the frame the pressed zone belongs to, read on screen at the press.
+    const pivotClient = mode === 'rotate' ? turnFramePivotClient(e.currentTarget) : null;
+    if (mode === 'rotate' && !pivotClient) {
+      debugLog('[rotate] no turn frame around the pressed zone', elementId);
+      return;
+    }
 
     // A multi-selection drags in lockstep: for 'move' the whole set
     // translates together, for 'resize-*' the whole set scales together
@@ -153,7 +167,9 @@ export function useBoxedDragHandlers({
       startArrowEnds,
       startElements: d.activeTab.elements,
       aspectLocked: element.aspectLocked === true,
+      ...(pivotClient ? { pivotClient } : {}),
     });
+    if (pivotClient) debugLog('[rotate] begin', elementId, startBounds.size, pivotClient);
   };
 
   const beginAnchorDrag = (

@@ -108,6 +108,7 @@ function BoxedElementViewImpl({
   isPaintMode,
   showHandles,
   showAnchors,
+  showTurn = false,
   onBeginDrag,
   onShiftSelect,
   layerOpacity,
@@ -900,6 +901,7 @@ function BoxedElementViewImpl({
         shiftX={insertShiftX}
         showHandles={showHandles}
         showAnchors={showAnchors}
+        showTurn={showTurn}
         onBeginDrag={onBeginDrag}
       />
 

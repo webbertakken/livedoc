@@ -5,6 +5,7 @@
 // wiring; the unit test asserts the key -> action mapping against
 // these tables directly.
 
+import type { FlipDirection } from '@livedoc/document';
 import type { Selection } from '@/lib/selection-store';
 import type { CanvasTool } from '@/components/palette/palette.types';
 import type { WhiteboardPenId } from '@/lib/whiteboard-prefs';
@@ -122,6 +123,8 @@ export type EditorKeyboardShortcutsDeps = {
   // Shift+D: move to the next editor mode (docs/specs/007-editor/editor-modes.md). Null where
   // the mode switch is not offered (view role, event-storming boards).
   onCycleEditorMode: (() => void) | null;
+  // Shift+H / Shift+V: flip the selection (docs/specs/008-canvas/selection-transforms.md).
+  onFlipSelection: (direction: FlipDirection) => void;
   // Escape with a live selection and no transient mode to cancel clears
   // the selection (single + multi). Mirrors clicking empty canvas.
   onDeselect: () => void;

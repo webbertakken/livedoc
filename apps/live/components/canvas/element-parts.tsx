@@ -13,6 +13,8 @@ import {
   FLOATING_CONTROL_HOVER_CLASS,
 } from '@/components/chrome/floating-controls';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
+import { RotateZones } from '@/components/canvas/RotateZones';
+import { TURN_FRAME_ATTR } from '@/lib/turn-frame';
 
 // --- Lock badge ------------------------------------------------------------
 
@@ -153,6 +155,8 @@ type UnionResizeHandlesProps = {
   // proportionally.
   primaryId: string;
   zoom: number;
+  // The frame's rotate zones, beside its corner handles (docs/specs/008-canvas/selection-transforms.md).
+  turnable?: boolean;
   onBeginDrag: (id: string, mode: DragMode, e: ReactPointerEvent) => void;
 };
 
@@ -165,11 +169,14 @@ export function UnionResizeHandles({
   bounds,
   primaryId,
   zoom,
+  turnable = false,
   onBeginDrag,
 }: UnionResizeHandlesProps) {
   return (
     <div
       aria-hidden
+      // The frame a rotate zone pivots on (lib/turn-frame.ts).
+      {...{ [TURN_FRAME_ATTR]: '' }}
       className="pointer-events-none absolute"
       style={{
         left: bounds.x,
@@ -178,6 +185,9 @@ export function UnionResizeHandles({
         height: bounds.height,
       }}
     >
+      {turnable ? (
+        <RotateZones elementId={primaryId} zoom={zoom} onBeginDrag={onBeginDrag} />
+      ) : null}
       {HANDLE_POSITIONS.map((pos) => (
         <div
           key={pos}
@@ -219,6 +229,7 @@ export function SelectionChromeLayer({
   shiftX,
   showHandles,
   showAnchors,
+  showTurn = false,
   onBeginDrag,
 }: {
   elementId: string;
@@ -229,6 +240,8 @@ export function SelectionChromeLayer({
   shiftX?: number;
   showHandles: boolean;
   showAnchors: boolean;
+  // The rotate zones beside the corner handles (docs/specs/008-canvas/selection-transforms.md).
+  showTurn?: boolean;
   onBeginDrag: (id: string, mode: DragMode, e: ReactPointerEvent) => void;
 }) {
   const zoom = useCanvasZoom();
@@ -243,6 +256,8 @@ export function SelectionChromeLayer({
     <BoxGripsPortal>
       <div
         data-grips-for={elementId}
+        // The box a rotate zone pivots on (lib/turn-frame.ts).
+        {...{ [TURN_FRAME_ATTR]: '' }}
         className="pointer-events-none absolute"
         style={{
           left: box.x,
@@ -258,6 +273,14 @@ export function SelectionChromeLayer({
           reads as a mistake. Corner handles show even when rotated — the
           resize math projects the drag into the element's local frame
           (useEditorDrag). */}
+        {showHandles && showTurn ? (
+          <RotateZones
+            elementId={elementId}
+            zoom={zoom}
+            rotation={rotation}
+            onBeginDrag={onBeginDrag}
+          />
+        ) : null}
         {showHandles ? (
           <ResizeHandles
             elementId={elementId}

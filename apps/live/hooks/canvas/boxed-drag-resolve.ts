@@ -283,7 +283,7 @@ export function resolveBoxedResize({
   // As resolveBoxedMove's: page lines to snap the resized edge to.
   pageSnapBoxes?: Element[];
 }): { boundsById: Map<string, ShapeBounds>; guides: AlignmentGuide[] | null } | null {
-  if (mode === 'move') return null;
+  if (mode === 'move' || mode === 'rotate') return null;
   const aligned = pageSnapBoxes?.length ? [...elements, ...pageSnapBoxes] : elements;
   const corner = cornerOf(mode);
   // Corner OR single edge — so edge resizes snap + dimension-match on
@@ -489,7 +489,7 @@ export function resizedElement(
   next: ShapeBounds,
   hug: TextHugResize | null,
 ): BoxedElement {
-  if (hug && hug.mode !== 'move' && hugsText(el) && !el.rotation) {
+  if (hug && hug.mode !== 'move' && hug.mode !== 'rotate' && hugsText(el) && !el.rotation) {
     return hugResizedText(el, next, hug.mode, hug.constrain, hug.measure);
   }
   return { ...el, ...next };

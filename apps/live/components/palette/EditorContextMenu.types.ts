@@ -4,6 +4,7 @@ import type { WordmarkPatch } from '@/lib/style-presets';
 import type { EventStormingNoteKind } from '@livedoc/document';
 import type {
   AnimationSpeed,
+  FlipDirection,
   ArrowEnds,
   ArrowFlow,
   ArrowheadShape,
@@ -169,6 +170,8 @@ export type EditorContextMenuProps = {
   onCommitFinish: (finish: Finish | null) => void;
   onPreviewRotation: (deg: number) => void;
   onCommitRotation: (deg: number) => void;
+  // Flip the selection as one piece (docs/specs/008-canvas/selection-transforms.md); shown at the foot of Rotation.
+  onFlip: (direction: FlipDirection) => void;
   // Status markers (docs/specs/009-elements/shape-markers.md): set / clear the shape's marker glyph and its
   // size. Commit + hover-preview pairs, like the border tiles above.
   onSetMarker: (value: ShapeMarker | null) => void;

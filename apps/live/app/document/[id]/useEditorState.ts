@@ -3337,6 +3337,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     resetAspectRatioSelected,
     setSizeSelected,
     setRotationSelected,
+    flipSelected,
     setBorderStrokeSelected,
     setBorderStyleSelected,
     setBorderRadiusSelected,
@@ -3923,6 +3924,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     // In Pages, Fit frames the page you are nearest, not the whole tab.
     onFitToScreen: pagesMode ? pagesMode.fitPageInView : fitToScreen,
     onCycleEditorMode: editorModeShortcut(editorMode, announce),
+    onFlipSelection: flipSelected,
     onDeselect: () => {
       setSelectedId(null);
       setMultiSelectedIds(new Set());
@@ -4559,6 +4561,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     resetAspectRatioSelected,
     setSizeSelected,
     setRotationSelected,
+    flipSelected,
     setShortcutsEnabled,
     setStrokeColorSelected,
     setFontSelected,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { FreehandElement, PathElement, ShapeElement, TextElement } from './element-types';
 import { layOutPages, newLogoPage } from './page';
-import { mirrorElement, twinFor } from './element-mirror';
+import { mirrorElement, reflectElement, twinFor } from './element-mirror';
 import { decodeStrokePoints } from './stroke-points-cache';
 import { encodeStrokePoints } from './stroke-points';
 
@@ -119,5 +119,61 @@ describe('mirrorElement turning', () => {
     expect(mirrorElement({ ...p, nodes: [...p.nodes] }, 400).rotation).toBe(-30);
     const t = { id: 't', type: 'text', x: 0, y: 0, width: 10, height: 10, rotation: 15 } as const;
     expect(mirrorElement({ ...t }, 50).rotation).toBe(-15);
+  });
+});
+
+// docs/specs/008-canvas/selection-transforms.md "Flipping": the same rules across a horizontal line.
+describe('reflectElement across a horizontal line', () => {
+  it('reflects the box top to bottom and turns it the other way', () => {
+    const t: TextElement = {
+      id: 't',
+      type: 'text',
+      x: 10,
+      y: 20,
+      width: 30,
+      height: 10,
+      rotation: 20,
+    };
+    expect(reflectElement(t, 'horizontal', 100)).toMatchObject({ x: 10, y: 170, rotation: -20 });
+  });
+
+  it("reflects a path's points and handles in y, leaving x", () => {
+    const p: PathElement = {
+      id: 'p',
+      type: 'path',
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10,
+      closed: false,
+      nodes: [{ nx: 0.2, ny: 0.3, mode: 'mirrored', handleIn: { nx: 0.1, ny: 0.9 } }],
+      subpaths: [[{ nx: 0.4, ny: 0.25, mode: 'corner' }]],
+    };
+    const m = reflectElement(p, 'horizontal', 50);
+    expect(m.y).toBe(90);
+    expect(m.nodes[0]!.nx).toBe(0.2);
+    expect(m.nodes[0]!.ny).toBeCloseTo(0.7);
+    expect(m.nodes[0]!.handleIn!.ny).toBeCloseTo(0.1);
+    expect(m.subpaths![0]![0]!.ny).toBeCloseTo(0.75);
+  });
+
+  it("reflects a stroke's points in y", () => {
+    const f: FreehandElement = {
+      id: 'f',
+      type: 'freehand',
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 10,
+      closed: false,
+      packedPoints: encodeStrokePoints([
+        { nx: 0.25, ny: 0 },
+        { nx: 0.5, ny: 0.25 },
+      ]),
+    };
+    const pts = decodeStrokePoints(reflectElement(f, 'horizontal', 0).packedPoints);
+    expect(pts.nx[0]).toBeCloseTo(0.25);
+    expect(pts.ny[0]).toBeCloseTo(1);
+    expect(pts.ny[1]).toBeCloseTo(0.75);
   });
 });

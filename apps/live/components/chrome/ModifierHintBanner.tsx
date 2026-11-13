@@ -124,6 +124,8 @@ function shiftHintMessage(
   if (drag?.kind === 'arrow-endpoint' && drag.end === 'to' && !drag.reposition) {
     return 'Click places it and starts another arrow';
   }
+  // Rotating by hand: Shift snaps the angle (docs/specs/008-canvas/selection-transforms.md).
+  if (drag?.kind === 'boxed' && drag.mode === 'rotate') return 'Snapping to 15° steps';
   // Resizing: Shift locks the aspect ratio.
   if (drag?.kind === 'boxed' && drag.mode !== 'move') return 'Proportions locked';
   // Mid-gesture otherwise (move, curve handles, …): Shift does nothing.

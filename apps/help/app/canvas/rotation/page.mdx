@@ -7,17 +7,25 @@ import { RotationCategory } from '@/components/illustrations/style-panels';
 export const metadata = helpMetadata({
   title: 'Rotating Elements',
   description:
-    'Tilt an element, or a whole selection, to a preset 45° angle from the Rotation category of the right-click menu, or rotate it from the search palette.',
+    'Turn an element or a whole selection by hand or to a preset 45° angle, and flip a selection horizontally or vertically.',
   path: '/help/canvas/rotation/',
 });
 
-<ArticleLayout title="Rotating Elements" description="Tilt a shape, label, or image to a preset 45° angle from the right-click menu or the search palette." categoryTitle="Canvas" categorySlug="canvas" subArticles={getSubArticles("rotation")}>
+<ArticleLayout title="Rotating Elements" description="Turn an element or a whole selection by hand or to a preset 45° angle, and flip a selection horizontally or vertically." categoryTitle="Canvas" categorySlug="canvas" subArticles={getSubArticles("rotation")}>
 
-Most elements sit upright, but sometimes a shape, label, or image reads better at an angle: a tilted callout, a diagonal banner, a label following a sloped arrow. The **Rotation** controls turn an element to the angle you want.
+Most elements sit upright, but sometimes a shape, label, or image reads better at an angle: a tilted callout, a diagonal banner, a label following a sloped arrow. You can turn an element by hand from just outside its corners, snap it to a preset angle, and flip a whole selection over.
 
 <Figure caption="A square rotated 45° over its upright outline.">
   <Rotation />
 </Figure>
+
+## Rotate by hand
+
+Select an element and move the pointer just outside one of its corners, past the small corner handle: the pointer becomes a curved two-headed arrow. Press there and drag round to turn the element about its centre. The corner handle itself still resizes, so aim a little further out than the handle to rotate.
+
+With several elements selected, the same zones sit outside the corners of the dashed selection frame, and dragging turns the **whole selection as one piece** about the frame's centre: every element swings round together and keeps its place relative to the others, the way a sheet of paper turns on a desk.
+
+Hold **Shift** while turning to snap to 15° steps. Press **Escape** mid-turn to put everything back. Each turn is one undo step.
 
 ## Snap to a preset angle
 
@@ -27,31 +35,38 @@ Right-click an element (or press the **⋯** button on its selection toolbar) an
   <RotationCategory />
 </Figure>
 
-Select several elements and the multi-selection menu has the same **Rotation** category, turning every one of them that can rotate to the angle you pick.
+Select several elements and the multi-selection menu has the same **Rotation** category. It turns the selection as one piece: the first element that can rotate lands on the angle you pick, and the rest swing round with it, keeping their places and angles relative to it. Picking **0°** stands that element upright and brings the rest round with it.
+
+## Flip a selection
+
+The **Rotation** category ends with **Flip Horizontal** and **Flip Vertical**, for one element or a whole selection. A flip mirrors the selection across the centre of its frame: left to right, or top to bottom. Drawings and paths are mirrored stroke for stroke, while shapes, text, sticky notes and images move to their mirrored place but keep their face, so words never read backwards. Arrows attached to a flipped element stay on the same part of it.
+
+Press **Shift+H** to flip horizontally or **Shift+V** to flip vertically, or search the palette for **flip**. Flipping the same way twice puts the selection back exactly.
 
 ## Rotate from the search palette
 
 With a single element selected, open the search palette (**Cmd+K** or **Cmd+.**, **Ctrl** on Windows and Linux) and type **rotate** for quick **Rotate 90°**, **Rotate 180°**, **Rotate 270°**, and **Reset Rotation** actions: the keyboard-only route to the same result, without opening the menu. They set the angle rather than add to it, so **Rotate 90°** twice still leaves the element at 90°.
 
 <Note>
-  Rotation uses these fixed 45° steps rather than a free-drag handle, so tilted elements stay
-  consistent with one another and any angle is easy to reproduce. Each change is one undo step.
+  The preset tiles keep tilted elements consistent with one another and make any angle easy to
+  reproduce; turning by hand gives any whole-degree angle. Each change is one undo step.
 </Note>
 
 ## Good to know
 
-- Rotation turns an element about its centre, and is a per-element property, so different elements on the same tab can sit at different angles. Copy, paste and duplicate keep the angle.
+- A single element turns about its centre; a selection turns about the centre of its frame. The angle is a per-element property, so different elements on the same tab can sit at different angles. Copy, paste and duplicate keep the angle.
+- Locked elements in a selection stay where they are when the rest turns or flips.
 - Shapes, text, sticky notes, images, freehand strokes, tables and link cards can all be rotated. Arrows have no Rotation category: move their ends instead.
 - A rotated element keeps its resize handles, turned with it. Dragging one grows the element along its own tilted sides while the opposite corner or edge stays put. It doesn't snap to other elements while it is tilted.
 - Arrows attached to a rotated element stay on its outline as it turns.
-- [Annotation](/help/canvas/annotations/) markers don't rotate: they are round note markers of a fixed size, so they have no Rotation category or **Rotate** actions, and a multi-selection's Rotation leaves them upright.
-- [Pointer notes](/help/palette/pointer-notes/) don't rotate either: their line is pinned to a point, and turning the note would swing it away. They stay upright in the same way.
+- [Annotation](/help/canvas/annotations/) markers don't rotate: they are round note markers of a fixed size, so they have no Rotation category or **Rotate** actions. In a selection that turns, they move round with the rest but stay upright.
+- [Pointer notes](/help/palette/pointer-notes/) don't rotate either: their line is pinned to a point, and turning the note would swing it away. They move round with a turning selection and stay upright in the same way.
 - Notes on an [event storming board](/help/canvas/event-storming-boards/) have no Rotation category: their tilt is part of the notation.
 - The **Bounce** and **Wobble** [animations](/help/canvas/animations/) compose with an element's rotation, so a tilted shape still bobs or wiggles around its angle.
 
 <Tip>
-  Use a preset angle when you want several elements to share the exact same tilt; reach for the
-  search palette's **Rotate** actions when your hands are already on the keyboard.
+  Use a preset angle when you want several elements to share the exact same tilt; turn by hand when
+  you want a sketch to sit just so, and reach for **Shift+H** or **Shift+V** to mirror it.
 </Tip>
 
 </ArticleLayout>

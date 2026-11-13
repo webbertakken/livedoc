@@ -5,6 +5,7 @@ import { MirrorCopyGlyph } from '@/components/canvas/logo-glyphs';
 import {
   rotationOf,
   supportsRotation,
+  turnReference,
   type BoxedElement,
   type Element,
   type ShapeElement,
@@ -30,6 +31,7 @@ import { MenuTile, MenuTileGrid } from '@/components/primitives/MenuTiles';
 import { OpacityRow } from '@/components/palette/context-menu-rows';
 import { MoveToLayerRow } from '@/components/palette/MoveToLayerRow';
 import { ROTATION_ANGLES } from './context-menu-constants';
+import { FlipButtons } from './FlipButtons';
 import type { EditorContextMenuProps } from './EditorContextMenu.types';
 import type { useContextMenuScaffold } from './useContextMenuScaffold';
 
@@ -59,8 +61,10 @@ export function MultiPlacementSections({
   const morphSrc = morphable[0];
   const morphIds = morphable.map((el) => el.id);
   // The members that turn: a pointer note or an annotation marker does not (supportsRotation), so a selection of only
-  // those offers no Rotation, and the active tile reads a member that turns.
+  // those offers no Rotation. The active tile reads the reference member, the one a tile lands on angle-wise while the
+  // rest turn with it (docs/specs/008-canvas/selection-transforms.md).
   const turnable = boxedSel.filter(supportsRotation);
+  const reference = turnReference(sel, new Set(sel.map((el) => el.id)));
   return (
     <>
       {/* Combine (docs/specs/007-editor/logo-pages.md "Combine"): shapes on a logo page into one. */}
@@ -152,7 +156,7 @@ export function MultiPlacementSections({
           </div>
         </MenuAccordionSection>
       ) : null}
-      {/* Rotation — snap angles for every boxed member. */}
+      {/* Rotation — snap angles, turning the selection as one piece. */}
       {turnable.length ? (
         <MenuAccordionSection
           title="Rotation"
@@ -163,7 +167,7 @@ export function MultiPlacementSections({
             {ROTATION_ANGLES.map((deg) => (
               <SizeButton
                 key={deg}
-                active={rotationOf(turnable[0]!) % 360 === deg}
+                active={reference !== null && rotationOf(reference) % 360 === deg}
                 onClick={() => props.onCommitRotation(deg)}
                 onPointerEnter={onMouseHover(() => props.onPreviewRotation(deg))}
                 onPointerLeave={onMouseHover(props.onPreviewStyleEnd)}
@@ -175,6 +179,7 @@ export function MultiPlacementSections({
               </SizeButton>
             ))}
           </div>
+          <FlipButtons onFlip={props.onFlip} />
         </MenuAccordionSection>
       ) : null}
     </>
