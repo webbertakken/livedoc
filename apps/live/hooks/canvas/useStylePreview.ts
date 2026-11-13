@@ -25,7 +25,11 @@
 // the direct setters in useElementStyle use).
 
 import { useRef, type MutableRefObject } from 'react';
-import { ANIMATION_SET_TELEMETRY_TYPE, type AnimationSetId } from '@livedoc/document';
+import {
+  ANIMATION_SET_TELEMETRY_TYPE,
+  turnSelectionTo,
+  type AnimationSetId,
+} from '@livedoc/document';
 import { withSetAnimation } from '@/lib/animation-set-writes';
 import type {
   ArrowFlow,
@@ -71,7 +75,6 @@ import {
   applyMarkerSizeToEl,
   applyMarkerToEl,
   applyPaddingToEl,
-  applyRotationToEl,
   applyShapeKindToEl,
   applyStrokeColorToEl,
   applyTextAlignToEl,
@@ -87,11 +90,9 @@ import type { ShapeColorPreset } from '@/lib/themes';
 import { track } from '@/lib/telemetry';
 
 type Snapshot = { ids: Set<string>; originals: Map<string, Element> };
+// A change to the selected members (`ids`) of the tab's elements, returning the whole list.
+type SelectionMap = (els: Element[], ids: ReadonlySet<string>) => Element[];
 type ArrowPreset = { style: BorderStyle; thickness: ArrowThickness; flow?: ArrowFlow };
-
-// A rotation tile turns an element unless it is locked.
-const rotateUnlocked = (el: Element, deg: number): Element =>
-  el.locked === true ? el : applyRotationToEl(el, deg);
 
 export function useStylePreview(deps: {
   editsBlocked: boolean;
@@ -162,21 +163,29 @@ export function useStylePreview(deps: {
     tickTabs(mapTabs);
   };
 
-  // Ephemeral preview of `mapEl` over the selection. Maps from the captured
+  // The elements as they stood before the preview: the snapshot's originals put back.
+  const restored = (snap: Snapshot) =>
+    elementsNow().map((el) => (snap.originals.has(el.id) ? snap.originals.get(el.id)! : el));
+
+  // One element at a time, for the selected members: what most tiles do.
+  const perElement =
+    (mapEl: (el: Element) => Element): SelectionMap =>
+    (els, ids) =>
+      els.map((el) => (ids.has(el.id) ? mapEl(el) : el));
+
+  // Ephemeral preview of `mapSel` over the selection. Maps from the captured
   // originals so consecutive hovers don't compound.
-  const previewStyle = (mapEl: (el: Element) => Element, ids?: Set<string>) => {
+  const previewSelection = (mapSel: SelectionMap, ids?: Set<string>) => {
     if (editsBlocked) return;
     const snap = ensureSnapshot(ids);
     if (!snap) return;
     // Mark the preview active so autosave ignores this (and any subsequent)
     // tick until the pointer leaves (clearPreview) or the user clicks (commit).
     previewingRef.current = true;
-    writeElements(
-      elementsNow().map((el) =>
-        snap.originals.has(el.id) ? mapEl(snap.originals.get(el.id)!) : el,
-      ),
-    );
+    writeElements(mapSel(restored(snap), snap.ids));
   };
+  const previewStyle = (mapEl: (el: Element) => Element, ids?: Set<string>) =>
+    previewSelection(perElement(mapEl), ids);
 
   // Revert to the pre-hover look (mouse left the tile without clicking).
   const clearPreview = () => {
@@ -186,28 +195,20 @@ export function useStylePreview(deps: {
     // Preview gone: the revert tick below restores the pre-hover state, which
     // equals what's already saved, so letting autosave run again is a no-op.
     previewingRef.current = false;
-    writeElements(
-      elementsNow().map((el) => (snap.originals.has(el.id) ? snap.originals.get(el.id)! : el)),
-    );
+    writeElements(restored(snap));
   };
 
   // Commit `mapEl` as one history step, from the true original
   // base (see the file header).
-  const commitStyle = (
-    mapEl: (el: Element) => Element,
-    telemetryType: string,
-    ids?: Set<string>,
-  ) => {
+  const commitSelection = (mapSel: SelectionMap, telemetryType: string, ids?: Set<string>) => {
     if (editsBlocked) return;
     const snap = ensureSnapshot(ids);
     if (!snap) return;
     previewRef.current = null;
     // The click commits for real: let autosave persist the result below.
     previewingRef.current = false;
-    const before = elementsNow().map((el) =>
-      snap.originals.has(el.id) ? snap.originals.get(el.id)! : el,
-    );
-    const after = before.map((el) => (snap.ids.has(el.id) ? mapEl(el) : el));
+    const before = restored(snap);
+    const after = mapSel(before, snap.ids);
     // Restore originals into the present (no history), THEN commit the result:
     // the composed updaters snapshot the original onto the undo stack.
     writeElements(before);
@@ -215,6 +216,8 @@ export function useStylePreview(deps: {
     onCommitted?.(before, after);
     track('Element', 'Changed', telemetryType);
   };
+  const commitStyle = (mapEl: (el: Element) => Element, telemetryType: string, ids?: Set<string>) =>
+    commitSelection(perElement(mapEl), telemetryType, ids);
 
   return {
     clearPreview,
@@ -281,10 +284,13 @@ export function useStylePreview(deps: {
     // Finish tiles (docs/specs/008-canvas/finish.md); `null` is Follow Tab.
     previewFinish: (v: Finish | null) => previewStyle((el) => applyFinishToEl(el, v)),
     commitFinish: (v: Finish | null) => commitStyle((el) => applyFinishToEl(el, v), 'Finish'),
-    // Rotation angle tiles (fixed 45° steps). A locked member keeps its angle, as the palette's setter leaves it
+    // Rotation angle tiles (fixed 45° steps): the selection turns as one piece, its reference member landing on the
+    // angle (docs/specs/008-canvas/selection-transforms.md). A locked member keeps its angle and place
     // (docs/specs/008-canvas/canvas-and-palette.md "Locking").
-    previewRotation: (deg: number) => previewStyle((el) => rotateUnlocked(el, deg)),
-    commitRotation: (deg: number) => commitStyle((el) => rotateUnlocked(el, deg), 'Rotation'),
+    previewRotation: (deg: number) =>
+      previewSelection((els, ids) => turnSelectionTo(els, ids, deg)),
+    commitRotation: (deg: number) =>
+      commitSelection((els, ids) => turnSelectionTo(els, ids, deg), 'Rotation'),
     // Shape morph tiles. Id-scoped: the single menu morphs the clicked
     // element only (not its group), the multi menu passes every morphable
     // member — so the ids come from the caller, not the resolved selection.

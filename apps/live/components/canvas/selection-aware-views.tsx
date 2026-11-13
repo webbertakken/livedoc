@@ -6,7 +6,7 @@
 // view it wraps, so a layer render costs what it did.
 
 import { memo, type ComponentProps, type PointerEvent as ReactPointerEvent } from 'react';
-import { arrowRoutePoints, type ArrowElement, type Element } from '@livedoc/document';
+import { arrowRoutePoints, turnsByHand, type ArrowElement, type Element } from '@livedoc/document';
 import { ArrowView, arrowViewPropsEqual } from '@/components/canvas/ArrowView';
 import { BoxedElementView } from '@/components/canvas/BoxedElementView';
 import { FreeArrowSelection } from '@/components/canvas/FreeArrowSelection';
@@ -22,7 +22,7 @@ const useFlagsOf = (id: string) =>
 type BoxedProps = ComponentProps<typeof BoxedElementView>;
 type SelectableBoxedProps = Omit<
   BoxedProps,
-  'isSelected' | 'isMultiSelected' | 'showHandles' | 'showAnchors'
+  'isSelected' | 'isMultiSelected' | 'showHandles' | 'showAnchors' | 'showTurn'
 > & { editingId: string | null };
 
 export const SelectableBoxedView = memo(function SelectableBoxedView({
@@ -44,6 +44,9 @@ export const SelectableBoxedView = memo(function SelectableBoxedView({
       isMultiSelected={flags.multi}
       showHandles={grips.handles}
       showAnchors={grips.anchors}
+      // An Editor turns a lone element that turns by hand from just outside its corners
+      // (docs/specs/008-canvas/selection-transforms.md "Where zones appear").
+      showTurn={grips.handles && props.readOnly !== true && turnsByHand(props.element)}
     />
   );
 });

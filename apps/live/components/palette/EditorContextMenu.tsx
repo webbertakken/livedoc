@@ -26,8 +26,7 @@ import {
   arrowThicknessOf,
   isBoxed,
   isSelfDrawingShape,
-  supportsRotation,
-  isSheetAnchoredChart,
+  turnsByHand,
   takesAttachments,
 } from '@livedoc/document';
 import { ArrowLineControls, ArrowPointerControls } from '@/components/canvas/arrow-controls';
@@ -68,6 +67,7 @@ import { MirrorCopyGlyph } from '@/components/canvas/logo-glyphs';
 import { MultiSelectionContextMenu } from './MultiSelectionContextMenu';
 
 import { ROTATION_ANGLES } from './context-menu-constants';
+import { FlipButtons } from './FlipButtons';
 import { useViewportHeight } from '@/hooks/ui/useViewportHeight';
 
 // Cursor position + which menu to show. `element` carries the clicked
@@ -329,7 +329,7 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
             before clicking; 0° resets to upright. Not on an annotation marker
             (docs/specs/009-elements/annotations.md [QD8]). */}
         {/* Nor on a chart its Sheet draws: it sits square on the cells (docs/specs/029-sheets/sheet.md "Charts"). */}
-        {supportsRotation(target) && !esNote && !covering && !isSheetAnchoredChart(target) ? (
+        {turnsByHand(target) && !covering ? (
           <MenuAccordionSection
             title="Rotation"
             icon={<RotationMenuIcon />}
@@ -351,6 +351,7 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
                 </SizeButton>
               ))}
             </div>
+            <FlipButtons onFlip={props.onFlip} />
           </MenuAccordionSection>
         ) : null}
         {/* Mirror Copy on a logo page (docs/specs/007-editor/logo-pages.md "Mirror"). */}

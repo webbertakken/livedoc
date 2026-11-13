@@ -147,4 +147,49 @@ describe('useStylePreview rotation tiles', () => {
     expect(a!.rotation).toBe(90);
     expect(b!.rotation).toBeUndefined();
   });
+
+  // docs/specs/008-canvas/selection-transforms.md "Rotation tiles on a multi-selection".
+  function pair() {
+    const a = { ...createShape('square', 0, 0), width: 20, height: 10 };
+    const b = { ...createShape('square', 80, 0), width: 20, height: 10, rotation: 45 };
+    let committed: Tab[] = [{ id: 'tab1', name: 'Tab', elements: [a, b] }];
+    const tabsRef = { current: committed };
+    const preview = renderHook(() =>
+      useStylePreview({
+        editsBlocked: false,
+        activeId: 'tab1',
+        currentSelectionIds: () => new Set([a.id, b.id]),
+        tabsRef,
+        tickTabs: (map) => {
+          committed = map(committed);
+        },
+        commitTabs: (map) => {
+          committed = map(committed);
+        },
+        previewingRef: { current: false },
+      }),
+    ).result.current;
+    type Turned = Element & { x: number; y: number; rotation?: number };
+    return { preview, a, b, els: () => committed[0]!.elements as Turned[] };
+  }
+
+  it('turns a multi-selection as one piece, the reference member landing on the tile', () => {
+    const { preview, els } = pair();
+    preview.commitRotation(90);
+    const [a, b] = els();
+    expect(a!.rotation).toBe(90);
+    expect(b!.rotation).toBe(135);
+    // Rigid: the centres stay 80 apart and now line up vertically.
+    expect(b!.x - a!.x).toBeCloseTo(0);
+    expect(Math.abs(b!.y - a!.y)).toBeCloseTo(80);
+  });
+
+  it('previews the same turn and puts the selection back on leave', () => {
+    const { preview, a, b, els } = pair();
+    preview.previewRotation(180);
+    expect(els()[1]!.rotation).toBe(225);
+    expect(els()[1]!.x).toBeLessThan(els()[0]!.x);
+    preview.clearPreview();
+    expect(els()).toEqual([a, b]);
+  });
 });

@@ -89,6 +89,22 @@ export function selectionCommands(ctx: CommandContext, h: CommandHandlers): Edit
     });
   }
 
+  // Flips (docs/specs/008-canvas/selection-transforms.md "Where flips live"): any selection with an unlocked member.
+  if (hasSelection && ctx.canFlip) {
+    out.push({
+      id: 'flip-horizontal',
+      name: 'Flip Horizontal',
+      keywords: 'flip mirror reflect horizontal left right reverse',
+      run: () => h.flip('horizontal'),
+    });
+    out.push({
+      id: 'flip-vertical',
+      name: 'Flip Vertical',
+      keywords: 'flip mirror reflect vertical upside down top bottom',
+      run: () => h.flip('vertical'),
+    });
+  }
+
   // Rotation is for a single element that can turn (an annotation marker cannot).
   if (isSingle && ctx.singleRotates) {
     for (const deg of [90, 180, 270] as const) {

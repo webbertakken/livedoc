@@ -46,6 +46,9 @@ export const SHORTCUT_SECTIONS: ShortcutSection[] = [
       { keys: ['Del', '/  ⌫'], label: 'Delete Selection' },
       { keys: ['⌘', '⇧', ']'], label: 'Bring to Front' },
       { keys: ['⌘', '⇧', '['], label: 'Send to Back' },
+      // docs/specs/008-canvas/selection-transforms.md "Where flips live".
+      { keys: ['⇧', 'H'], label: 'Flip Horizontal' },
+      { keys: ['⇧', 'V'], label: 'Flip Vertical' },
     ],
   },
   {

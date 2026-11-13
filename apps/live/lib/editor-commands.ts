@@ -14,7 +14,7 @@ import {
   AUTO_LAYOUT_STYLE_IDS,
   type AutoLayoutChoice,
 } from './auto-layout-choices';
-import type { ShapeMarker } from '@livedoc/document';
+import type { FlipDirection, ShapeMarker } from '@livedoc/document';
 import type { CommandSearchItem } from './search';
 import { selectionCommands } from './editor-commands-selection';
 
@@ -49,6 +49,8 @@ export type CommandContext = {
   canCombine?: boolean;
   // True when the selection has an element on a logo page to reflect (Mirror Copy).
   canMirrorCopy?: boolean;
+  // True when the selection has an unlocked member to flip (docs/specs/008-canvas/selection-transforms.md).
+  canFlip?: boolean;
   // True when the single selection is a plain shape (markers are shape-only).
   singleIsShape: boolean;
   // True when the single selection already carries a looping animation
@@ -110,6 +112,7 @@ export type CommandHandlers = {
   rotate: (deg: number) => void;
   combine: (op: CombineOp) => void;
   mirrorCopy: () => void;
+  flip: (direction: FlipDirection) => void;
   clearAnimation: () => void;
   setMarker: (marker: ShapeMarker | null) => void;
   addComment: () => void;

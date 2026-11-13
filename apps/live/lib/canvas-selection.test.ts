@@ -51,6 +51,22 @@ describe('deriveCanvasSelection', () => {
     expect(s.unionResizeBounds).toEqual({ x: 200, y: 0, width: 300, height: 60 });
   });
 
+  // docs/specs/008-canvas/selection-transforms.md "Where zones appear".
+  it('offers the rotate zones on a frame with a member that can rotate', () => {
+    const els: Element[] = [box('a'), box('b', { x: 200 })];
+    expect(derive({ elements: els, multiSelectedIds: new Set(['a', 'b']) }).showUnionTurn).toBe(
+      true,
+    );
+    const markers = [
+      { id: 'm', type: 'annotation', x: 0, y: 0, width: 20, height: 20 },
+      { id: 'n', type: 'annotation', x: 90, y: 0, width: 20, height: 20 },
+    ] as Element[];
+    expect(derive({ elements: markers, multiSelectedIds: new Set(['m', 'n']) }).showUnionTurn).toBe(
+      false,
+    );
+    expect(derive({ elements: [], multiSelectedIds: new Set() }).showUnionTurn).toBe(false);
+  });
+
   it('an arrow first in z-order still shows the union handles over the boxes', () => {
     const els: Element[] = [arrow('l'), box('b', { x: 200 }), box('c', { x: 400 })];
     const s = derive({ elements: els, multiSelectedIds: new Set(['l', 'b', 'c']) });

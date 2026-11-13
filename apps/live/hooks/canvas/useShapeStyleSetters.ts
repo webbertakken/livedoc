@@ -1,11 +1,13 @@
 import type { Selection } from '@/lib/selection-store';
 import {
+  flipSelection,
   isBoxed,
   SHAPE_DEFAULT_SIZE,
   type BorderRadius,
   type BorderStroke,
   type BorderStyle,
   type Element,
+  type FlipDirection,
   type ShapeElement,
   type ShapeKind,
   type ShapeMarker,
@@ -132,8 +134,7 @@ export function useShapeStyleSetters({
   // Set the selected element's rotation to a fixed angle (degrees clockwise
   // about its centre), normalised to 0..359. Drives the context menu's
   // Rotation category + the search palette's Rotate actions — fixed 45°
-  // steps, the only way to rotate (there's no free-drag handle). Boxed
-  // elements only.
+  // steps (the rotate zones turn by hand, useEditorDrag). Boxed elements only.
   const setRotationSelected = (deg: number) => {
     const { selectedId } = readSelection();
     if (!selectedId) return;
@@ -143,6 +144,15 @@ export function useShapeStyleSetters({
       ),
     );
     track('Element', 'Changed', 'Rotation');
+  };
+
+  // Flip the selection as one piece across the line through its frame's centre
+  // (docs/specs/008-canvas/selection-transforms.md "Flipping"): one history step, locked members left as they are.
+  const flipSelected = (direction: FlipDirection) => {
+    const ids = currentSelectionIds();
+    if (ids.size === 0) return;
+    commit((els) => flipSelection(els, ids, direction));
+    track('Element', 'Changed', direction === 'horizontal' ? 'FlipHorizontal' : 'FlipVertical');
   };
 
   // Border-preset setters. Each writes the field on any element
@@ -247,6 +257,7 @@ export function useShapeStyleSetters({
     resetAspectRatioSelected,
     setSizeSelected,
     setRotationSelected,
+    flipSelected,
     setBorderStrokeSelected,
     setBorderStyleSelected,
     setBorderRadiusSelected,

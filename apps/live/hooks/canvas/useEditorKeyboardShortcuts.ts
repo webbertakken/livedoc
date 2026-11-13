@@ -386,6 +386,22 @@ export function useEditorKeyboardShortcuts(deps: EditorKeyboardShortcutsDeps): v
         return;
       }
 
+      // --- Flip (Shift+H / Shift+V, docs/specs/008-canvas/selection-transforms.md) ---
+      // After type-to-edit, as Shift+D, so a capital letter still types into a selected label; before the dock keys,
+      // so it works in Draw mode too.
+      if (
+        e.shiftKey &&
+        !e.altKey &&
+        (lower === 'h' || lower === 'v') &&
+        !live.isReadOnly &&
+        live.canvasTool !== 'avatar' &&
+        (selectedId !== null || multiSelectedIds.size > 0)
+      ) {
+        e.preventDefault();
+        live.onFlipSelection(lower === 'h' ? 'horizontal' : 'vertical');
+        return;
+      }
+
       // Walking, the Avatar Panel's action keys are the character's (docs/specs/008-canvas/avatar-mode.md
       // "Keyboard actions", useAvatarActionKeys): S spins rather than searching, 1 throws confetti rather than
       // picking Select. V / H / K / I / Z and Escape stay the way out.

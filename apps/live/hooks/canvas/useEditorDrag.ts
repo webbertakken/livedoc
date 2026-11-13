@@ -53,6 +53,7 @@ import {
   resolveBoxedResize,
   translateBoxedSelection,
 } from './boxed-drag-resolve';
+import { resolveBoxedTurn } from './boxed-turn-resolve';
 import { measureDrawnText } from '@/components/canvas/text-hug-measure';
 import { useSnapGuideState } from './useSnapGuideState';
 import { useArrowDragHandlers } from './useArrowDragHandlers';
@@ -455,6 +456,27 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
           ) {
             return;
           }
+        } else if (drag.mode === 'rotate') {
+          // A turn by hand (docs/specs/008-canvas/selection-transforms.md): engages like a move, then turns the
+          // selection as the gesture found it by the angle swept about its pivot.
+          if (!dragEngagedRef.current) {
+            const travelled = Math.hypot(
+              e.clientX - drag.startClientX,
+              e.clientY - drag.startClientY,
+            );
+            if (travelled < DRAG_ENGAGE_PX) return;
+            dragEngagedRef.current = true;
+            engageGesture();
+          }
+          const turned = resolveBoxedTurn({
+            startElements: drag.startElements,
+            ids: new Set([...drag.startBounds.keys(), ...drag.startArrowEnds.keys()]),
+            pivotClient: drag.pivotClient!,
+            pressClient: { x: drag.startClientX, y: drag.startClientY },
+            client: { x: e.clientX, y: e.clientY },
+            shiftHeld: e.shiftKey,
+          });
+          tick((els) => els.map((el) => turned.get(el.id) ?? el));
         } else {
           // Single + multi resize (union scaling, rotated projection,
           // resize snapping) all live in resolveBoxedResize; this handler
@@ -636,6 +658,11 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
             drag.reposition === true,
           ),
         );
+      }
+      // A turn by hand is counted once, on release (docs/specs/008-canvas/selection-transforms.md "Telemetry").
+      if (drag?.kind === 'boxed' && drag.mode === 'rotate' && dragEngagedRef.current) {
+        debugLog('[rotate] release', drag.primaryId, drag.startBounds.size);
+        track('Element', 'Changed', 'RotateByHand');
       }
       // A mind node let go in a tidy map is reordered among its siblings or placed by hand, in the same change.
       if (drag?.kind === 'boxed' && drag.mode === 'move' && dragEngagedRef.current) {

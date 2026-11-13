@@ -12,7 +12,13 @@
 import { useSelectionOf } from '@/hooks/canvas/useSelectionStore';
 import { EMPTY_SELECTION, type Selection } from '@/lib/selection-store';
 import { useCallback, useMemo } from 'react';
-import { isBoxed, renumberSteps, supportsRotation, takesAttachments } from '@livedoc/document';
+import {
+  isBoxed,
+  renumberSteps,
+  selectionPivot,
+  supportsRotation,
+  takesAttachments,
+} from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import type { CanvasTool } from '@/components/palette/palette.types';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
@@ -38,6 +44,7 @@ const INERT_HANDLERS: CommandHandlers = {
   rotate: noop,
   combine: noop,
   mirrorCopy: noop,
+  flip: noop,
   clearAnimation: noop,
   renumberSteps: noop,
   setMarker: noop,
@@ -95,6 +102,7 @@ export function useEditorCommands(open: boolean): {
     sendSelectedToBack,
     bringSelectedToFront,
     setRotationSelected,
+    flipSelected,
     clearAnimationsSelected,
     commitElements,
     setArrowFlowSelected,
@@ -151,6 +159,11 @@ export function useEditorCommands(open: boolean): {
   const singleRotates = single ? supportsRotation(single) : false;
   const combinable = isMulti && canCombine();
   const mirrorable = selectionCount > 0 && !!pagesMode?.logo?.canMirrorCopy();
+  // A flip needs an unlocked member to mirror (docs/specs/008-canvas/selection-transforms.md).
+  const flippable =
+    selectionCount > 0 &&
+    selectionPivot(activeTab.elements, isMulti ? multiSelectedIds : new Set([selectedId!])) !==
+      null;
   const marker = single?.type === 'shape' ? (single.marker ?? null) : null;
   const hasAnimation = single
     ? single.type === 'arrow'
@@ -176,6 +189,7 @@ export function useEditorCommands(open: boolean): {
       singleRotates,
       canCombine: combinable,
       canMirrorCopy: mirrorable,
+      canFlip: flippable,
       singleIsShape,
       hasAnimation,
       tabHasSteps,
@@ -207,6 +221,7 @@ export function useEditorCommands(open: boolean): {
       singleRotates,
       combinable,
       mirrorable,
+      flippable,
       singleIsShape,
       hasAnimation,
       tabHasSteps,
@@ -238,6 +253,7 @@ export function useEditorCommands(open: boolean): {
     rotate: setRotationSelected,
     combine: (op) => void combineSelected(op),
     mirrorCopy: () => pagesMode?.logo?.mirrorCopy(),
+    flip: flipSelected,
     clearAnimation: () =>
       single?.type === 'arrow' ? setArrowFlowSelected(null) : clearAnimationsSelected(),
     setMarker: setMarkerSelected,

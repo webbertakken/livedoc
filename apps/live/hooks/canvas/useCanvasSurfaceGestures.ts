@@ -314,7 +314,8 @@ export function useCanvasSurfaceGestures({
     }
     // Whiteboard, Select in hand (docs/specs/023-draw-mode/draw-mode.md "Selecting"): Shift + press always
     // drags a selection box that adds to the selection, even when it starts on an element, and a
-    // Shift-click on an element toggles it. A handle keeps its own Shift behaviour.
+    // Shift-click on an element toggles it. A handle, and a rotate zone (whose Shift snaps the turn), keep their own
+    // Shift behaviour.
     if (
       whiteboard &&
       e.button === 0 &&
@@ -325,7 +326,7 @@ export function useCanvasSurfaceGestures({
     ) {
       const target = e.target as HTMLElement;
       const onCanvas = target === e.currentTarget || !!wrapperRef.current?.contains(target);
-      if (onCanvas && !target.closest('[data-canvas-handle]')) {
+      if (onCanvas && !target.closest('[data-canvas-handle], [data-rotate-zone]')) {
         focusCanvas();
         e.preventDefault();
         e.stopPropagation();

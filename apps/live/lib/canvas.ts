@@ -138,7 +138,13 @@ export type DragMode =
   | 'resize-n'
   | 'resize-s'
   | 'resize-e'
-  | 'resize-w';
+  | 'resize-w'
+  // A rotate zone just outside a corner: turn the selection about its pivot
+  // (docs/specs/008-canvas/selection-transforms.md "Rotating by hand").
+  | 'rotate';
+
+// The modes that resize: every one but a move and a turn.
+export type ResizeMode = Exclude<DragMode, 'move' | 'rotate'>;
 
 // Resize geometry (nextBounds / union scaling / corner lookups) +
 // MIN_SIZE / ShapeBounds live in resize-geometry.ts; re-exported so
@@ -215,6 +221,9 @@ export type DragState =
       // shifting arrows on shapes that never moved.
       startElements: Element[];
       aspectLocked: boolean;
+      // A turn by hand: the selection's pivot on screen, read off its frame at the press (the angle is swept
+      // about it). Absent for a move or a resize.
+      pivotClient?: { x: number; y: number };
     }
   | {
       kind: 'arrow-endpoint';

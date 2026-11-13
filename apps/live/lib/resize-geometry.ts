@@ -6,7 +6,7 @@
 // resolving) as one cohesive, DOM-free unit.
 
 import type { Rect } from '@livedoc/document';
-import type { DragMode } from './canvas';
+import type { DragMode, ResizeMode } from './canvas';
 
 // Floor for any single side of a boxed element during a resize. Below
 // this the shape becomes a pinprick that's near-impossible to grab
@@ -30,7 +30,7 @@ export type ShapeBounds = Rect;
 // from every handle.
 export function nextBounds(
   start: ShapeBounds,
-  mode: DragMode,
+  mode: Exclude<DragMode, 'rotate'>,
   dx: number,
   dy: number,
   aspectLocked: boolean,
@@ -82,7 +82,7 @@ export function nextBounds(
 // for a corner the axis the pointer has moved further along (in canvas
 // px). The other side follows from the ratio.
 type ResizeAxis = 'x' | 'y';
-export function leadingAxis(mode: Exclude<DragMode, 'move'>, dx: number, dy: number): ResizeAxis {
+export function leadingAxis(mode: ResizeMode, dx: number, dy: number): ResizeAxis {
   if (mode === 'resize-e' || mode === 'resize-w') return 'x';
   if (mode === 'resize-n' || mode === 'resize-s') return 'y';
   return Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
@@ -140,7 +140,7 @@ function anchoredBounds(
 // to keep and resizes freely.
 export function constrainedBounds(
   start: ShapeBounds,
-  mode: Exclude<DragMode, 'move'>,
+  mode: ResizeMode,
   dx: number,
   dy: number,
   minScale: number = minUniformScale(start),
@@ -256,16 +256,18 @@ export function cornerOf(mode: DragMode): 'nw' | 'ne' | 'sw' | 'se' | null {
       return 'sw';
     case 'resize-se':
       return 'se';
-    // move + the single-axis edge handles have no corner anchor.
+    // move, rotate and the single-axis edge handles have no corner anchor.
     default:
       return null;
   }
 }
 
 // Map a DragMode to the snap mode `snapResizeBounds` understands (the
-// corner OR single edge being dragged), or null for 'move'. Lets edge
+// corner OR single edge being dragged), or null for 'move' and 'rotate'. Lets edge
 // resizes snap + dimension-match on their one axis just like corners do.
 type ResizeSnapMode = 'nw' | 'ne' | 'sw' | 'se' | 'n' | 's' | 'e' | 'w';
 export function snapModeOf(mode: DragMode): ResizeSnapMode | null {
-  return mode === 'move' ? null : (mode.slice('resize-'.length) as ResizeSnapMode);
+  return mode === 'move' || mode === 'rotate'
+    ? null
+    : (mode.slice('resize-'.length) as ResizeSnapMode);
 }

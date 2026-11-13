@@ -35,6 +35,12 @@ describe('dragWaitsToEngage', () => {
     expect(dragWaitsToEngage(drag({ kind: 'boxed', mode: 'resize-se' }))).toBe(false);
   });
 
+  // docs/specs/008-canvas/selection-transforms.md "Rotating by hand": a click on a rotate zone turns nothing.
+  it('waits for a turn by hand, which reads as a resize-like gesture', () => {
+    expect(dragWaitsToEngage(drag({ kind: 'boxed', mode: 'rotate' }))).toBe(true);
+    expect(gestureOfDrag(drag({ kind: 'boxed', mode: 'rotate' }))).toBe('resize');
+  });
+
   it('waits for arrow handles, except a new arrow end following the pointer', () => {
     expect(dragWaitsToEngage(drag({ kind: 'arrow-bend' }))).toBe(true);
     expect(dragWaitsToEngage(drag({ kind: 'arrow-endpoint', reposition: true }))).toBe(true);

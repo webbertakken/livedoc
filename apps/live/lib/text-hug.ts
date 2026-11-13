@@ -13,7 +13,7 @@ import {
   type Element,
   type TextElement,
 } from '@livedoc/document';
-import type { DragMode, ShapeBounds } from '@/lib/canvas';
+import type { ResizeMode, ShapeBounds } from '@/lib/canvas';
 
 // Canvas px around the text's line box, left and right, then top and bottom.
 const TEXT_HUG_PAD_X = 4;
@@ -120,7 +120,7 @@ export function placedTextBox(
 export function hugResizedText(
   current: TextElement,
   next: ShapeBounds,
-  mode: Exclude<DragMode, 'move'>,
+  mode: ResizeMode,
   constrain: boolean,
   measure: (el: TextElement) => MeasureTextBlock,
 ): TextElement {

@@ -5,6 +5,8 @@ import type { Anchor, ArrowElement, Endpoint } from './arrow-types';
 import { reflectElement, type ReflectionAxis } from './element-mirror';
 import { boundsOfPoints, rotatePoint, unionRects, type Point } from './geometry-primitives';
 import { isBoxed, type BoxedElement, type Element } from './index';
+import { isSheetAnchoredChart } from './chart-source';
+import { eventStormingKindOf } from './event-storming';
 import { isPointerNote, pointerTipOf, withPointerTip } from './pointer-note';
 import { drawnBounds, rotationOf, supportsRotation } from './rotation';
 
@@ -28,6 +30,14 @@ export function selectionPivot(
     unionRects(members.filter(isBoxed).map(drawnBounds)) ??
     boundsOfPoints(members.flatMap((el) => (el.type === 'arrow' ? freeEnds(el) : [])));
   return frame ? { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 } : null;
+}
+
+/**
+ * Whether one element turns by hand and offers its Rotation tiles: it rotates, and is neither an event-storming note
+ * (its tilt is notation) nor a chart its Sheet draws square on the cells.
+ */
+export function turnsByHand(el: Element): boolean {
+  return supportsRotation(el) && eventStormingKindOf(el) === null && !isSheetAnchoredChart(el);
 }
 
 /** The member a selection's angle is read from: the first unlocked one, in document order, that can rotate. */

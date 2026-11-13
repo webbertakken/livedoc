@@ -9,6 +9,7 @@ import {
   turnReference,
   turnSelection,
   turnSelectionTo,
+  turnsByHand,
 } from './selection-transform';
 import { decodeStrokePoints } from './stroke-points-cache';
 import { encodeStrokePoints } from './stroke-points';
@@ -345,5 +346,35 @@ describe('selection transforms at their edges', () => {
     expect(flipSelection([box('a', 20, 0), marker], ids('a', 'm'), 'horizontal')[1]).toMatchObject({
       x: 35,
     });
+  });
+});
+
+describe('turnsByHand', () => {
+  it('lets an element that rotates turn by hand', () => {
+    expect(turnsByHand(box('a', 0, 0))).toBe(true);
+  });
+
+  it('keeps an annotation marker, an event-storming note and a Sheet-anchored chart from turning', () => {
+    const marker: Element = { id: 'm', type: 'annotation', x: 0, y: 0, width: 5, height: 5 };
+    expect(turnsByHand(marker)).toBe(false);
+    expect(
+      turnsByHand({
+        id: 's',
+        type: 'sticky',
+        x: 0,
+        y: 0,
+        width: 5,
+        height: 5,
+        esKind: 'domain-event',
+      } as Element),
+    ).toBe(false);
+    expect(
+      turnsByHand(
+        box('c', 0, 0, {
+          chartSource: { sheetId: 's' },
+          sheetAnchor: { x: 0, y: 0 },
+        } as Partial<ShapeElement>),
+      ),
+    ).toBe(false);
   });
 });
