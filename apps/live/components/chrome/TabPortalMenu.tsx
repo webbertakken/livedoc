@@ -450,11 +450,9 @@ export function PortalMenu({
         {...surfaceProps}
         data-tour-id="tab-menu"
         onContextMenu={(e) => e.preventDefault()}
-        // lvd-menu-stagger cascades the direct children (toolbar + category
-        // sections) in one at a time for the same falling-stack entrance the
-        // element context menu uses (ContextMenu.tsx); animate-fade-in matches
-        // its whole-menu fade. See globals.css.
-        className="lvd-menu-stagger animate-fade-in fixed z-[var(--z-modal)] flex w-56 outline-none flex-col rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
+        // No entrance motion: like the element context menu (ContextMenu.tsx), it appears at once
+        // (docs/specs/004-interface-design/motion.md "Context menus").
+        className="fixed z-[var(--z-modal)] flex w-56 outline-none flex-col rounded-md border border-slate-200 bg-white py-1 text-sm shadow-lg dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40"
         style={{
           // adjust nudges the box back on-screen when it would overflow an edge.
           // Anchor mode pins the menu's right edge to the ellipsis button and

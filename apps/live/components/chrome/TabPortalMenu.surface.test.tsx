@@ -79,6 +79,13 @@ describe('the tab menu: where it sits', () => {
     const menu = document.querySelector<HTMLElement>('[data-tour-id="tab-menu"]')!;
     expect(menu.style.left).toBe('-12px');
   });
+
+  // docs/specs/004-interface-design/motion.md "Context menus": it appears at once, with no fade and no cascade.
+  it('appears at once, with no entrance motion', () => {
+    anchored();
+    const menu = document.querySelector<HTMLElement>('[data-tour-id="tab-menu"]')!;
+    expect(menu.className).not.toMatch(/\banimate-|lvd-menu-stagger/);
+  });
 });
 
 describe('the tab menu: what closes it', () => {
