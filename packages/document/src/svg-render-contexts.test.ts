@@ -73,7 +73,7 @@ describe('svgCandidateContexts (docs/specs/021-event-storming/candidate-contexts
 
 describe('contextPlate and withContextReach', () => {
   it('centres the plate on the label point, padded', () => {
-    expect(contextPlate({ x: 100, y: 50 }, 40)).toEqual({ x: 94, y: 40, width: 52, height: 20 });
+    expect(contextPlate({ x: 100, y: 50 }, 40)).toEqual({ x: 94, y: 39, width: 52, height: 22 });
   });
 
   it('grows a content box to take in the reach, and keeps it with none', () => {

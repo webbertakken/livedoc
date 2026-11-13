@@ -16,7 +16,7 @@ import { suggestionKeys } from '../suggestions/SuggestionPlaceholder';
 
 // One candidate context on the canvas (docs/specs/021-event-storming/candidate-contexts.md): its dashed, hand-drawn
 // outline beneath the notes and its name on a plate of the canvas's paper on the top edge. A suggested one is drawn at
-// half strength, its name in italics and marked, with ✓ and ✕ by it. A kept one is selected by its outline or its
+// half strength (its name at full, to stay legible), in italics and marked, with ✓ and ✕ by it. A kept one is selected by its outline or its
 // name (the name takes focus: that IS its selection), renamed by a double-click or Enter, and deleted with Delete.
 
 // The smallest hit target, in screen px, whatever the zoom (WCAG 2.2 2.5.8).
@@ -134,7 +134,6 @@ export function ContextOutline({
         suggested={suggested}
         left={outline.label.x - CONTEXT_PLATE_PAD_X}
         top={outline.label.y - CONTEXT_PLATE_H / 2}
-        strength={strength}
         editing={editing}
         selected={selected}
         label={label}
@@ -167,7 +166,6 @@ function ContextPlate({
   suggested,
   left,
   top,
-  strength,
   editing,
   selected,
   label,
@@ -184,7 +182,6 @@ function ContextPlate({
   suggested: boolean;
   left: number;
   top: number;
-  strength: number;
   editing: boolean;
   selected: boolean;
   label: string;
@@ -222,14 +219,14 @@ function ContextPlate({
   const interactive = suggested ? acts.suggested : acts.kept;
   if (!interactive)
     return (
-      <div className={`${plateClass} pointer-events-none`} style={{ ...style, opacity: strength }}>
+      <div className={`${plateClass} pointer-events-none`} style={style}>
         {words}
       </div>
     );
   return (
     <div
       className={`${plateClass} pointer-events-auto`}
-      style={{ ...style, opacity: strength }}
+      style={style}
       onPointerEnter={acts.suggested?.onPreview}
       onPointerLeave={acts.suggested?.onLeave}
     >
@@ -306,7 +303,7 @@ function PlateAction({
       className={`-my-2 flex shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-brand-600 ${className}`}
       style={{ width: size, height: size }}
     >
-      {act === 'apply' ? <CheckIcon size={12} /> : <CloseIcon size={12} />}
+      {act === 'apply' ? <CheckIcon size={14} /> : <CloseIcon size={14} />}
     </button>
   );
 }

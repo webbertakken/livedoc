@@ -105,7 +105,13 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
 - Its `x`, `y`, `width` and `height` are its notes' bounds when it was written: a snapshot that nothing draws from.
 - `CONTEXT_NOTES_MAX` (400, as many notes as a domain export reads) caps its notes (default).
 - The outline: `packages/document/src/candidate-context-outline.ts`; the model, membership writes and the cascade:
-  `packages/document/src/candidate-contexts.ts`; joining by drag: `apps/live/lib/context-drop.ts`.
+  `packages/document/src/candidate-contexts.ts`; the export's drawing and the inks:
+  `packages/document/src/svg-render-contexts.ts`; joining by drag: `apps/live/lib/context-drop.ts`.
+- On the canvas: `apps/live/components/canvas/contexts/` (drawn from `apps/live/lib/context-outlines.ts`); the acts:
+  `apps/live/hooks/canvas/useContextActions.ts`; the note menu's rows: `apps/live/lib/note-context-menu.ts`.
+- The edit operation: `packages/edit-operations/src/operations/suggest-context.ts`; the reading's contexts:
+  `packages/storm-reading/src/contexts.ts`.
+- The board seeded by the end-to-end tests: `apps/live/e2e/context-board.ts`.
 
 ## In the reading and the export
 

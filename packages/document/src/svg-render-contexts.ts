@@ -20,8 +20,8 @@ export const CONTEXT_INK = {
   dark: { line: '#94a3b8', name: '#e2e8f0' },
 } as const;
 /** The name's type size and its plate, canvas px. */
-export const CONTEXT_NAME_PX = 13;
-export const CONTEXT_PLATE_H = 20;
+export const CONTEXT_NAME_PX = 15;
+export const CONTEXT_PLATE_H = 22;
 export const CONTEXT_PLATE_PAD_X = 6;
 const CONTEXT_FONT = 'Inter, system-ui, sans-serif';
 
