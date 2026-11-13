@@ -15,6 +15,8 @@ import {
   type ShapeElement,
 } from './index';
 
+import { actorNameRoom } from './actor-figure';
+
 const shape = (overrides: Partial<ShapeElement> = {}): ShapeElement => ({
   id: 's',
   type: 'shape',
@@ -60,13 +62,17 @@ describe('sixteen anchor positions (docs/specs/008-canvas/arrow-anchors.md)', ()
   it.each([
     'stadium',
     'actor',
+    'named actor',
     'triangle',
     'hexagon',
     'parallelogram',
     'trapezoid',
     'cylinder',
   ] as const)('puts every %s anchor on its outline, never inside it', (kind) => {
-    const el = shape({ shape: kind, width: 180, height: 120 });
+    const el =
+      kind === 'named actor'
+        ? shape({ shape: 'actor', width: 180, height: 120, label: 'Guest user' })
+        : shape({ shape: kind, width: 180, height: 120 });
     for (const a of offeredAnchors(el)) {
       const p = anchorPosition(el, a);
       expect(pointInsideOutline(el, p, 0.01), `${kind} ${a}`).toBe(false);
@@ -81,6 +87,56 @@ describe('sixteen anchor positions (docs/specs/008-canvas/arrow-anchors.md)', ()
     const se = anchorPosition(actor, 'se');
     expect(se.x).toBeLessThan(80);
     close(anchorPosition(actor, 's'), 45, 130);
+  });
+
+  describe("a named actor's outline encloses its name (The actor's name)", () => {
+    const named = (overrides: Partial<ShapeElement> = {}) =>
+      shape({ shape: 'actor', width: 90, height: 130, label: 'Webber', ...overrides });
+    const nameTop = (el: ShapeElement) => el.y + el.height - actorNameRoom(el);
+
+    it('puts the bottom anchors under the name, at the element bottom and its corners', () => {
+      const actor = named({ x: 10, y: 20 });
+      close(anchorPosition(actor, 's'), 55, 150);
+      close(anchorPosition(actor, 'sw'), 10, 150);
+      close(anchorPosition(actor, 'se'), 100, 150);
+    });
+
+    it('leaves no anchor inside the name', () => {
+      for (const label of ['Webber', 'Guest\nuser']) {
+        const actor = named({ label, textSize: 'lg' });
+        const top = nameTop(actor);
+        for (const a of offeredAnchors(actor)) {
+          const p = anchorPosition(actor, a);
+          const inName =
+            p.y > top + 1e-6 && p.y < actor.height - 1e-6 && p.x > 1e-6 && p.x < actor.width - 1e-6;
+          expect(inName, `${label} ${a} at ${p.x},${p.y}`).toBe(false);
+        }
+      }
+    });
+
+    it('holds the whole name inside the outline, so a path across it passes through', () => {
+      const actor = named();
+      const top = nameTop(actor);
+      for (const x of [3, 45, 87]) {
+        expect(pointInsideOutline(actor, { x, y: (top + 130) / 2 }, 0), `x ${x}`).toBe(true);
+      }
+    });
+
+    it('keeps the side anchors on the arm tips, not out at the element edge', () => {
+      const actor = named();
+      const e = anchorPosition(actor, 'e');
+      expect(e.x).toBeLessThan(80);
+      expect(e.y).toBeLessThan(nameTop(actor));
+    });
+
+    it('keeps every anchor on the outline when the name fills the element', () => {
+      const actor = named({ width: 60, height: 30, label: 'A\nB\nC' });
+      for (const a of offeredAnchors(actor)) {
+        const p = anchorPosition(actor, a);
+        expect(Number.isFinite(p.x) && Number.isFinite(p.y), a).toBe(true);
+        expect(pointInsideOutline(actor, p, 0.01), a).toBe(false);
+      }
+    });
   });
 
   it('rotates a quarter with the element', () => {

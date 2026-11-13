@@ -62,11 +62,21 @@ Each kind offers its own **anchors**: which of the sixteen it has, and where the
     shared shape-geometry table; the last four also place their anchors along their faces, above);
   - `stadium` (the capsule: a box with fully rounded ends);
   - `actor` (the hull around the stick figure: head, arm tips and feet, down to the bottom of its
-    label band);
+    label band; a named actor's outline also encloses its name, below);
   - `cloud` and `document` (their drawn paths: the cloud's bumps, the document's wavy bottom edge);
   - `cylinder` (its body with the curved top and bottom).
 - Every other kind keeps its box as its outline for anchoring, including `star` and
   `speech-bubble`.
+- **The actor's name.** A named actor's outline encloses its name, so no connector ends inside the
+  name or runs through it: the name always reads above the lines that meet the actor.
+  - The figure's hull holds from the head down to the arm tips.
+  - From each arm tip the outline drops straight down to the top of the name's room
+    (`actorNameRoom`, the band `actorFigureRect` keeps clear under the legs).
+  - The name's room spans the element's full width down to its bottom edge, which is the outline there.
+  - So the `s` anchor sits under the name, and `sw` and `se` at the element's bottom corners.
+  - An actor with no name keeps the plain hull.
+  - The name's room spans the element's width, not the measured text, so every renderer agrees
+    without measuring text (default).
 - A Technology icon with a caption pushes the anchors on the caption's side out to the element
   edge, so a connector leaving toward the caption starts past the text.
 - **Rotation.** On a rotated element the anchor rotates with the element about its centre.
@@ -254,7 +264,8 @@ The code cites each by its id.
   triggered arrows and swaps (default).
 - **D7** Order of decisions within a run: Arrows in document order, `from` before `to`; swaps per element in document
   order, pairs `i < j` (default).
-- **D8** The outlines of `actor` and `stadium`: Actor: convex hull of head, arm tips and feet down to the label band;
+- **D8** The outlines of `actor` and `stadium`: Actor: hull of head, arm tips and feet down to the label band, a
+  named actor's whole name's room enclosed;
   stadium: capsule with 16-segment half circles (default).
 - **D9** Which of an element's ends the swap looks at: Every pinned end on the element that is not part of a self-loop,
   whether or not its arrow is considered (default).

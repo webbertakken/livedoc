@@ -121,3 +121,23 @@ describe('svgArrow line', () => {
     expect(svg).toContain('x="30"');
   });
 });
+
+describe('svgArrow on a named actor', () => {
+  it('starts under the actor\'s name, as the canvas does (arrow-anchors.md "The actor\'s name")', () => {
+    const actor: Element = {
+      id: 'actor',
+      type: 'shape',
+      shape: 'actor',
+      x: 0,
+      y: 0,
+      width: 90,
+      height: 130,
+      label: 'Customer',
+    };
+    const down = line({
+      from: { kind: 'pinned', elementId: 'actor', anchor: 's' },
+      to: { kind: 'free', x: 45, y: 300 },
+    });
+    expect(svgArrow(down, [actor])).toMatch(/<path d="M 45 130 /);
+  });
+});
