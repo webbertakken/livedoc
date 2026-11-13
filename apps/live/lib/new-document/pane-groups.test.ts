@@ -41,12 +41,18 @@ describe('paneGroupsFor', () => {
     expect(groupsOf('page')[0]!.kinds).toContain('article');
   });
 
-  it('lists the mind maps for Brainstorm, and leaves them out of Diagram', () => {
+  it('lists the mind maps and Event Storming for Brainstorm, and leaves them out of Diagram', () => {
     expect(groupsOf('brainstorm').map((g) => g.name)).toEqual(['Brainstorm']);
-    expect(groupsOf('brainstorm')[0]!.kinds).toEqual(['mindmap', 'mindmap-tree', 'mindmap-bubble']);
+    expect(groupsOf('brainstorm')[0]!.kinds).toEqual([
+      'mindmap',
+      'mindmap-tree',
+      'mindmap-bubble',
+      'event-storming',
+    ]);
     const diagram = groupsOf('diagram').flatMap((g) => g.kinds);
     expect(diagram).not.toContain('mindmap');
     expect(diagram).not.toContain('mindmap-tree');
+    expect(diagram).not.toContain('event-storming');
     expect(groupsOf('diagram').map((g) => g.id)).not.toContain('mindmaps');
     expect(diagram).toContain('flowchart');
   });

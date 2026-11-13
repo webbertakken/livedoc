@@ -64,14 +64,14 @@ describe('template categories', () => {
       spreadsheets: 5,
       forms: 6,
       meetings: 17,
-      mindmaps: 8,
+      mindmaps: 9,
       timelines: 7,
       flowcharts: 5,
       strategy: 15,
       hierarchies: 7,
       design: 14,
       presentations: 17,
-      technical: 10,
+      technical: 9,
       games: 5,
     });
   });
@@ -89,6 +89,8 @@ describe('template categories', () => {
     expect(isInTemplateCategory('funnel', 'finance')).toBe(true);
     expect(isInTemplateCategory('team-retro', 'planning')).toBe(true);
     expect(isInTemplateCategory('doodle-warmup', 'games')).toBe(true);
+    expect(templateCategory('event-storming')).toBe('mindmaps');
+    expect(templateCategories('event-storming')).toEqual(['mindmaps', 'meetings', 'technical']);
     expect(isInTemplateCategory('blank', 'flowcharts')).toBe(false);
   });
 

@@ -37,7 +37,9 @@ is still invisible to the editor once its elements are on the canvas.
 ## Phase 1 (shipped): the starter
 
 - `TemplateKind` `'event-storming'`, title **Event Storming**, an
-  `extra` in the **Technical** category.
+  `extra` in the **Brainstorm** category (`mindmaps`), cross-listed in **Workshops** and **Technical**:
+  a room getting a domain out on sticky notes is a brainstorm first, so the New Document menu lists it under
+  Brainstorm, never Diagram ([New Document menu](../013-workspace/new-document-menu.md#the-menu)).
 - The seed is the method's opening move and nothing else: ONE orange
   domain-event sticky reading **"Board Created"**, gently tilted so it
   reads as hand-placed, on a lane. No text element: the board is paper
