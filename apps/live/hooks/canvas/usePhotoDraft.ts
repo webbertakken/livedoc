@@ -27,6 +27,7 @@ import { setPhotoDraftView } from '@/lib/photo-draft-preview';
 import type { PhotoDetection } from '@/lib/photo-detect';
 import { photoTypeError } from '@/lib/photo-accept';
 import { detectorTelemetryType } from '@/lib/photo-model/telemetry';
+import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 import { useLatest } from '@/hooks/ui/useLatest';
 
@@ -486,7 +487,7 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
         ...picked,
       });
       setState({ stage: 'review', found: 0, readSoFar: 0, error: null });
-      if (!single) console.info('[photo] wall', { photos: files.length, ...picked });
+      if (!single) debugLog('[photo] wall', { photos: files.length, ...picked });
 
       // Let the browser actually PAINT that before the detector takes the thread: detection is synchronous
       // number-crunching over a few million pixels.
@@ -611,7 +612,7 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
         return;
       }
       if (reviews.length > 1)
-        console.info('[photo] wall stitched', {
+        debugLog('[photo] wall stitched', {
           photos: reviews.length,
           added: result.additions.length,
           seenAgain: result.seenAgain.length,
