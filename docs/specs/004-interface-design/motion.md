@@ -31,11 +31,11 @@ and cards.
 Three named durations, shared by every app through the Tailwind theme (`@livedoc/tailwind-config`).
 A chrome duration is one of these three and never a bare number.
 
-| Token   | Duration | For                                                                                                                        |
-| ------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `micro` | 150ms    | Hover, focus, press and colour feedback. Tooltips, small fades, chevrons, menu and dropdown opens. Each item of a cascade. |
-| `short` | 200ms    | Panels opening and resizing, accordions, rails, sliding indicators, progress bars, step swaps, drawers.                    |
-| `long`  | 250ms    | Dialogs and modals, sheets, tour moves, page transitions. This is also the ceiling.                                        |
+| Token   | Duration | For                                                                                                                                                  |
+| ------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `micro` | 150ms    | Hover, focus, press and colour feedback. Tooltips, small fades, chevrons, menu and dropdown opens (context menus take none). Each item of a cascade. |
+| `short` | 200ms    | Panels opening and resizing, accordions, rails, sliding indicators, progress bars, step swaps, drawers.                                              |
+| `long`  | 250ms    | Dialogs and modals, sheets, tour moves, page transitions. This is also the ceiling.                                                                  |
 
 Tailwind's bare `transition` utility runs at `micro`.
 
@@ -99,6 +99,17 @@ A state change that swaps a whole surface animates as a React View Transition
   `globals.css`, each on the `::view-transition-old(.<class>)` and `::view-transition-new(.<class>)` pseudo-elements.
 - **Reduced motion starts no View Transition at all.** The collapse rule above matches elements, not the
   `::view-transition-*` pseudo-elements, so the change itself runs without a transition and appears at once.
+
+## Context menus
+
+A context menu is a tool reached for many times a minute, so it **appears at once and leaves at once**.
+Waiting even a cascade's 250ms on every right-click reads as lag to someone working quickly.
+
+- The floating context menus take no entrance motion: no fade and no cascade of their rows (D9).
+- That is the element, selection and cell menus (`ContextMenu`) and the tab and canvas menu (`TabPortalMenu`).
+- They close the moment they are dismissed, with no exit animation and no exit hold.
+- A flyout or picker opened from inside one keeps its own motion; only the menu's arrival is instant.
+- On a phone these menus are bottom sheets, which keep the sheet's own entrance.
 
 ## Dialogs
 
@@ -208,3 +219,5 @@ The code cites each by its id.
   cascades go through `cascadeDelayMs` and e2e (default).
 - **D8** The middle tier: 200ms, halfway between the hover and ceiling values, for surfaces larger than a menu and
   smaller than a dialog (default).
+- **D9** How fast a context menu appears: at once, with no animation at all, rather than a shorter fade: anything slower
+  still reads as lag, and a native context menu shows the same way (default).

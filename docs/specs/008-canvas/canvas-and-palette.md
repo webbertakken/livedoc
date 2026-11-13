@@ -158,7 +158,27 @@ Each boxed element can have its **aspect ratio locked**. Stored as `aspectLocked
 
 > **Status (superseded):** the floating editor side panel (this Current Tab section + the Selected Element section below) has been **removed**. Every control it hosted now lives in **right-click context menus** (the [Quick style panel](quick-style-panel.md) repeats only the most-used few, beside a selection) — the element/multi-selection menu and the **tab menu** (the ellipsis / tab right-click menu, also opened by right-clicking the empty canvas). The tab menu is now a **single unified menu** at every entry point, so the tab and canvas menus are identical rather than separate; the tab's theme, canvas background and font live in the **Tab Style** dialog ([Canvas + Theme dialog](../011-theme/canvas-and-theme-dialog.md)), not in the menu. (Adding elements is done from the palette + quick-connect, so the menu has no Add section.) (The former desktop footer canvas-menu button has been removed; right-click is the desktop entry point, and a **press-and-hold (long-press) on the empty canvas** opens the same menu on touch devices.) Every context menu shares one width (`w-56`). Plus the **Tab Style** dialog (Looks, then the Colours, Finish, Text and Canvas panels, see [Canvas + Theme dialog](../011-theme/canvas-and-theme-dialog.md)). The descriptions below document the controls themselves (still accurate) but no longer their panel home; this section is pending a fuller rewrite.
 
-> **Element menu anchor:** an element's context menu opens from the element's **top-right corner** rather than the cursor / finger / toolbar, so the menu sits beside the element (down + right) instead of covering the thing being edited. This is shared (one helper, `lib/context-menu-anchor.ts`) by all three entry points: **right-click** (desktop), **long-press** (touch), and the selection toolbar's **⋯ "More"** button (which no longer drops the menu under itself). If the fixed-width (`w-56`) menu wouldn't fit to the right of the element, it flips to the element's **top-left** corner and opens leftward; either way it's held a few px off the edge so a thick border / selection ring isn't tucked under it, and it still clamps back on-screen vertically near a viewport edge. The empty-canvas / tab menu still opens at the cursor. **Arrows anchor the same way**, using the top-right corner of the arrow's on-screen bounding box (the wide hit band's rect, so zoom / pan are baked in) — right-click, long-press, and a right-click on the arrow's label all open beside the arrow rather than under the pointer, falling back to the pointer position only if the arrow's DOM node can't be measured.
+> **Element menu anchor:** where an element's context menu opens depends on how it was asked for.
+> The rules live in one helper, `lib/context-menu-anchor.ts`.
+>
+> - **A pointer right-click** (mouse, trackpad or pen) opens it **at the pointer**, a couple of pixels off the tip.
+>   The next press is then the shortest move away.
+>   A menu that would not fit to the right of the pointer opens to its left instead.
+> - This holds for boxed elements, arrows and arrow labels, a member of a multi-selection (the selection menu) and a
+>   table cell (the cell menu), in every mode and tab kind.
+> - **Every other entry point opens it beside the element**, at the element's **top-right corner**.
+>   There it never covers what is being worked on.
+>   That is the keyboard (Shift+F10 or the Menu key, which has no pointer to open at), a touch **long-press** (the
+>   finger would hide a menu under it), the selection toolbar's **⋯ More**, an element face's own `…`, and the menu
+>   that opens beside a label being edited.
+> - Beside the element, a menu that would not fit to the right flips to the element's **top-left** and opens leftward.
+>   Either way it is held a few px off the edge so a thick border or selection ring is not tucked under it.
+> - **Arrows** measure the top-right corner of the arrow's on-screen bounding box (the wide hit band's rect, so zoom
+>   and pan are baked in), falling back to the pointer only if the hit band cannot be measured.
+> - A table cell's beside position is the acting cell selection's right edge, or its left when the right would spill.
+> - Whichever the anchor, the menu clamps back on-screen near a viewport edge.
+> - The empty-canvas (tab) menu opens at the pointer, as it always has.
+> - On a phone every one of these menus is a bottom sheet instead, so no anchor applies there.
 
 Tab-level styling + tools (no longer a panel section): **Theme**, **Canvas** (background) and **Font** live in the **Tab Style** dialog ([Canvas + Theme dialog](../011-theme/canvas-and-theme-dialog.md)); **Auto-align** and the **Session** tools live in the canvas / tab context menu; **Remove all content** lives in the tab's context menu. What each does:
 
