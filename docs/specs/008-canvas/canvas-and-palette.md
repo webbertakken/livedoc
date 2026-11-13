@@ -1569,7 +1569,6 @@ This used to be a **toggle** in the pencil's mode banner, backed by a persisted 
 - Confidence is in [0, 1]; the editor's 0.40 threshold leans hard toward "convert it". Picking the Shape Pen over Freehand is an explicit statement that you want the stroke classified, so false positives are one Cmd-Z away and the other pen is one click away, while false negatives (a wobbly square that stayed a sketch when the user wanted a rectangle) are the more frustrating outcome. Previous values: 0.72 (too strict), 0.55 (still too strict per user feedback).
 - Telemetry: a recognised commit emits `Element/Added/<Square|Circle|Diamond|Arrow>` (the dashboard reads as if the user had clicked the palette button); the unrecognised fallback emits `Element/Added/Freehand` as before. No new types in [Telemetry + public transparency dashboard](../017-telemetry/telemetry.md)'s closed vocabulary.
 
-
 ## Slide Deck
 
 The tool dropdown's Present band also carries **Slide Deck** ([Presentation mode](../012-collaboration/presentation-mode.md)), which opens the panel where a slide deck is built and started. Picking it does not present: Start is a deliberate second act. It is a `CanvasTool` only and deliberately NOT a `SelectionMode`, so there is no Mode Button for it — handing somebody else's screen into a full-screen deck is not something one person should do to another. Disabled on an empty canvas, like the other Present-band tools, since there is nothing to put on a slide.

@@ -2277,7 +2277,8 @@ export const articles: Article[] = [
     slug: 'rotation',
     title: 'Rotating Elements',
     description: 'Turn an element or a selection by hand or to a preset angle, and flip it.',
-    keywords: 'rotate turn angle spin degrees tilt flip mirror reflect orientation group selection corner',
+    keywords:
+      'rotate turn angle spin degrees tilt flip mirror reflect orientation group selection corner',
     category: 'Canvas',
     categorySlug: 'canvas',
     group: 'Styling Elements',
