@@ -111,7 +111,8 @@ second, explicit approval, never an existing pairing widened in silence.
 - **Only what the editor of one document needs.** The document, its tabs, comments, changesets, items and room;
   uploading images into it (always with the bytes: the hash-only dedupe shortcut is not theirs, so the session
   cannot probe the owner's gallery, [Images](../009-elements/images.md) "Size cap") and reading its images; reading the person's display identity, preferences, custom
-  themes and shape libraries; the catalogues. Everything else is refused `403 workbench_confined`: ownership powers
+  themes and shape libraries; the catalogues; sending a [bug report](../016-platform/bug-reports.md#entries) as the
+  person, which a view session may do too. Everything else is refused `403 workbench_confined`: ownership powers
   (share links, password, move, delete, publish, copy), other documents, the person's library and folders,
   writing preferences or the profile, the guest migration, tokens, teams, the account and the AI assistant. The
   editor offers none of them in a workbench embed: the person's agent sits beside it.
@@ -126,6 +127,8 @@ The bullets above are the document scope. A **workspace** session is confined di
   them, opened in the frame as the document scope opens one.
 - **Everything the Explorer does.** Create, rename, move, copy, favourite, share (links, roles, password, expiry),
   trash, restore, and create, rename, move and delete folders, at the person's own access to each.
+- **Bug reports.** Sending a [bug report](../016-platform/bug-reports.md#entries) as the person, as in the document
+  scope.
 - **Never the account.** Refused `403 workbench_confined`, as in the document scope: the profile, preferences'
   writes, the guest migration, API tokens and pairings, team administration (invites, members, roles, plans,
   billing), the account itself, and the AI assistant (the person's agent sits beside the frame).
@@ -307,7 +310,7 @@ The code cites each by its id.
 - **WB8** What another credential header beside `lvw_` gets: `403 workbench_confined`: a session never borrows a share
   code's or a guest's access (default).
 - **WB9** How a view session's writes are refused, and which pass: `403 workbench_read_only` at the choke point; the
-  room-ticket mint and the session's own end pass (default).
+  room-ticket mint, the session's own end and a bug report pass (default).
 - **WB10** Which write budget a session spends: `WRITE_RATE_LIMITER` keyed `workbench:<sessionId>`, apart from its
   token's agent writes (default).
 - **WB11** What a room matches when access ends; what the page's own end closes: The pairing id, carried by the room

@@ -1839,6 +1839,10 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "BugReportContext": {
     "additionalProperties": false,
     "properties": {
+      "embedded": {
+        "const": true,
+        "type": "boolean"
+      },
       "from": {
         "type": "string"
       },

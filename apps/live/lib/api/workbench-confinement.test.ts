@@ -40,6 +40,16 @@ describe('confinementRefusal', () => {
     ).toBeNull();
   });
 
+  // docs/specs/016-platform/bug-reports.md "From an embed": the form's send is the session's to make.
+  it('lets a bug report through, in either scope', () => {
+    const send = { method: 'POST', headers: BEARER };
+
+    setWorkbenchConfinement(SESSION);
+    expect(confinementRefusal('/api/bug-reports', send)).toBeNull();
+    setWorkbenchConfinement({ scope: 'workspace', documentId: null, ownerId: 'user_1' });
+    expect(confinementRefusal('/api/bug-reports', send)).toBeNull();
+  });
+
   it('refuses a confined route presenting the session', () => {
     setWorkbenchConfinement(SESSION);
 

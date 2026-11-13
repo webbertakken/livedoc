@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BUG_REPORT_LIMITS,
+  base64DecodedLength,
   parseBugReportContext,
   parseBugReportScreenshot,
   parseBugReportSubmission,
@@ -84,6 +85,7 @@ describe('parseBugReportContext', () => {
       shareRole: 'participate',
       release: 'abc123.1',
       userAgent: 'Mozilla/5.0',
+      embedded: true,
       recentErrors: [{ at: '2026-10-28T10:00:00.000Z', source: 'api', message: 'Http500.SaveTab' }],
     });
     expect(parseBugReportContext(full)).toEqual(full);
@@ -98,8 +100,13 @@ describe('parseBugReportContext', () => {
       shareRole: 'admin',
       release: 'has space',
       userAgent: 7,
+      embedded: 'yes',
     });
     expect(parsed).toEqual(context());
+  });
+
+  it('leaves out an embedded that is not true', () => {
+    expect(parseBugReportContext({ ...context(), embedded: false })).toEqual(context());
   });
 
   it('cuts the user agent and error messages to their bounds', () => {
@@ -119,6 +126,8 @@ describe('parseBugReportContext', () => {
       recentErrors: [
         err(1),
         { source: 'other', at: 'x', message: 'y' },
+        { source: 'api', at: 1, message: 'y' },
+        { source: 'api', at: 'x', message: 2 },
         5,
         err(2),
         err(3),
@@ -165,5 +174,13 @@ describe('parseBugReportScreenshot', () => {
   it('refuses data larger than the limit once decoded', () => {
     const big = 'A'.repeat(Math.ceil((BUG_REPORT_LIMITS.screenshotBytes + 3) / 3) * 4);
     expect(parseBugReportScreenshot({ contentType: 'image/png', data: big })).toBeNull();
+  });
+});
+
+describe('base64DecodedLength', () => {
+  it('counts the bytes behind each padding', () => {
+    expect(base64DecodedLength(bytesToBase64(new Uint8Array(3)))).toBe(3);
+    expect(base64DecodedLength(bytesToBase64(new Uint8Array(2)))).toBe(2);
+    expect(base64DecodedLength(bytesToBase64(new Uint8Array(1)))).toBe(1);
   });
 });

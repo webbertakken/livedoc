@@ -18,7 +18,7 @@ import { Button, DialogCloseButton, DialogHeader, TextArea, TextInput } from '@l
 import { Dialog } from '@/components/dialogs/Dialog';
 import { DialogFooter } from '@/components/dialogs/DialogFooter';
 import { useDeferredAuth } from '@/components/providers/deferred-auth';
-import { apiFetch, apiHeaders } from '@/lib/api/core';
+import { apiFetch, apiHeaders, getWorkbenchConfinement } from '@/lib/api/core';
 import { browserBugReportInputs, collectBugReportContext } from '@/lib/bug-report/collect-context';
 import {
   clearBugReportDraft,
@@ -62,7 +62,9 @@ export function BugReportDialog({ onClose }: { onClose: () => void }) {
   const { isSignedIn } = useDeferredAuth();
   const doneRef = useRef<HTMLButtonElement>(null);
   const context = useMemo(() => collectBugReportContext(browserBugReportInputs()), []);
-  const you: BugReportYou = isSignedIn ? 'account' : getGuestSelfId() ? 'guest' : 'none';
+  // A workbench frame's report goes with its session, as the person's account, though its page reads no sign-in.
+  const asAccount = isSignedIn || getWorkbenchConfinement() !== null;
+  const you: BugReportYou = asAccount ? 'account' : getGuestSelfId() ? 'guest' : 'none';
   const sent = phase.kind === 'sent';
 
   // Until it is sent: the confirmation must not write back what the send just cleared.

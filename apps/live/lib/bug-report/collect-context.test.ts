@@ -9,6 +9,7 @@ const base = {
   userAgent: 'Mozilla/5.0 Chrome/141.0',
   viewport: { width: 1280, height: 800, pixelRatio: 2 },
   online: true,
+  framed: false,
   release: 'abc1234',
   place: { mode: 'draw' as const, tabKind: 'diagram' as const, shareRole: 'edit' as const },
   recentErrors: [{ at: 't', source: 'api' as const, message: 'Http500.SaveTab' }],
@@ -53,6 +54,20 @@ describe('collectBugReportContext', () => {
     const context = collectBugReportContext({ ...base, pathname: '/%E0%A4%A', release: null });
     expect(context.route).toBe('/');
     expect(context.release).toBeUndefined();
+  });
+
+  it('says the page is embedded only when it runs inside another page', () => {
+    const context = collectBugReportContext({
+      ...base,
+      pathname: '/embed/workbench',
+      framed: true,
+    });
+    expect(context).toMatchObject({ route: '/embed/workbench', embedded: true });
+    expect(collectBugReportContext(base).embedded).toBeUndefined();
+  });
+
+  it('leaves out an empty user agent', () => {
+    expect(collectBugReportContext({ ...base, userAgent: '' }).userAgent).toBeUndefined();
   });
 
   it('rounds a fractional viewport', () => {

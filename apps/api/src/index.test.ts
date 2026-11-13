@@ -10,10 +10,14 @@ vi.mock('./db', () => ({
   deleteOldEvents: async () => {},
 }));
 
-const { resolveWorkbenchSessionMock, handleWorkbenchMock } = vi.hoisted(() => ({
-  resolveWorkbenchSessionMock: vi.fn(),
-  handleWorkbenchMock: vi.fn(async () => new Response(null, { status: 204 })),
-}));
+const { resolveWorkbenchSessionMock, handleWorkbenchMock, handleBugReportsMock } = vi.hoisted(
+  () => ({
+    resolveWorkbenchSessionMock: vi.fn(),
+    handleWorkbenchMock: vi.fn(async () => new Response(null, { status: 204 })),
+    handleBugReportsMock: vi.fn(async () => new Response(null, { status: 204 })),
+  }),
+);
+vi.mock('./bug-reports/route', () => ({ handleBugReports: handleBugReportsMock }));
 vi.mock('./auth/workbench-session', async (original) => ({
   ...(await original<typeof import('./auth/workbench-session')>()),
   resolveWorkbenchSession: resolveWorkbenchSessionMock,
@@ -23,6 +27,7 @@ vi.mock('./routes/workbench', () => ({ handleWorkbench: handleWorkbenchMock }));
 import worker from './index';
 import type { RouteContext, WorkbenchContext } from './routes/context';
 import { signOwnerId } from './auth/owner-signature';
+import { resolveBugReporter } from './bug-reports/reporter';
 import type { Env } from './types';
 
 // Enforcement on: the host has a sign-in secret, so it signs guest ids.
@@ -437,6 +442,21 @@ describe('workbench sessions at the front door', () => {
     expect(ctx.verifiedAccountId).toBe('user_1');
     expect(limit).toHaveBeenCalledWith({ key: `workbench:${SESSION.sessionId}` });
   });
+
+  // docs/specs/016-platform/bug-reports.md "From an embed": the frame's report is the person's, from a view session too.
+  it.each(['edit', 'view'] as const)(
+    'hands a bug report from a session at %s level to its route, filed as the account',
+    async (level) => {
+      resolveWorkbenchSessionMock.mockResolvedValue({ ok: true, workbench: { ...SESSION, level } });
+      handleBugReportsMock.mockClear();
+
+      const res = await call('POST', '/api/bug-reports');
+      const ctx = (handleBugReportsMock.mock.calls[0] as unknown as [RouteContext])[0];
+
+      expect(res.status).toBe(204);
+      expect(await resolveBugReporter(ctx)).toEqual({ kind: 'account', id: 'user_1' });
+    },
+  );
 
   it('leaves a token bearer to the token path', async () => {
     resolveApiTokenMock.mockResolvedValue({ ownerId: 'user_1', tokenId: 'tok1', readOnly: false });

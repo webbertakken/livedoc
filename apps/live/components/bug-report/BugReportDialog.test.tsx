@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { BugReportSubmission } from '@livedoc/api-schema';
+import { BUG_REPORT_LIMITS, type BugReportSubmission } from '@livedoc/api-schema';
 import type { BugReportSendResult } from '@/lib/bug-report/send';
 
 // docs/specs/016-platform/bug-reports.md "The form": the fields, What's Attached, the confirmation and every failure.
@@ -9,6 +9,7 @@ import type { BugReportSendResult } from '@/lib/bug-report/send';
 const sent: BugReportSubmission[] = [];
 let answer: BugReportSendResult = { kind: 'filed', number: 7 };
 const tracked: unknown[][] = [];
+let guestId: string | null = 'guest-1';
 let prepared: {
   screenshot: { contentType: 'image/png'; data: string };
   previewUrl: string;
@@ -30,15 +31,21 @@ vi.mock('@/lib/telemetry', () => ({ track: (...args: unknown[]) => tracked.push(
 vi.mock('@/components/providers/deferred-auth', () => ({
   useDeferredAuth: () => ({ authLoaded: true, isSignedIn: false }),
 }));
-vi.mock('@/lib/local-identity', () => ({ getGuestSelfId: () => 'guest-1' }));
+vi.mock('@/lib/local-identity', () => ({
+  getGuestSelfId: () => guestId,
+  getGuestSelfSig: () => null,
+}));
 
 const { BugReportDialog } = await import('./BugReportDialog');
+const { setWorkbenchConfinement } = await import('@/lib/api/core');
+const { sendBugReport } = await import('@/lib/bug-report/send');
 
 beforeEach(() => {
   sent.length = 0;
   tracked.length = 0;
   answer = { kind: 'filed', number: 7 };
   prepared = null;
+  guestId = 'guest-1';
   URL.revokeObjectURL = vi.fn();
   localStorage.clear();
 });
@@ -124,6 +131,73 @@ describe('BugReportDialog', () => {
     );
   });
 
+  it('attaches a dropped image, and leaves a drop without one alone', async () => {
+    prepared = { screenshot: { contentType: 'image/png', data: 'AAAA' }, previewUrl: 'blob:x' };
+    render(<BugReportDialog onClose={() => {}} />);
+    const form = screen.getByRole('textbox', { name: 'What went wrong?' }).closest('form')!;
+    const text = new File(['x'], 'notes.txt', { type: 'text/plain' });
+    const image = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' });
+
+    fireEvent.dragOver(form);
+    await act(async () => fireEvent.drop(form, { dataTransfer: { files: [text] } }));
+    expect(screen.queryByRole('img', { name: 'Screenshot to send' })).toBeNull();
+    await act(async () => fireEvent.drop(form, { dataTransfer: { files: [image] } }));
+
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: 'Screenshot to send' })).toBeTruthy(),
+    );
+  });
+
+  it("sends with the browser's identity, the guest id where no one is signed in", async () => {
+    render(<BugReportDialog onClose={() => {}} />);
+    fillTitle('x');
+    fireEvent.click(screen.getByRole('button', { name: 'Send Report' }));
+    await screen.findByText('Logged as report #7.');
+    const deps = vi.mocked(sendBugReport).mock.calls.at(-1)![1];
+
+    expect(await deps.identity()).toMatchObject({ 'X-Owner-Id': 'guest-1' });
+  });
+
+  it('says no id, and sends without one, where the browser keeps none', async () => {
+    guestId = null;
+    render(<BugReportDialog onClose={() => {}} />);
+    expect(screen.getByText('No id: you are not signed in')).toBeTruthy();
+    fillTitle('x');
+    fireEvent.click(screen.getByRole('button', { name: 'Send Report' }));
+    await screen.findByText('Logged as report #7.');
+    const deps = vi.mocked(sendBugReport).mock.calls.at(-1)![1];
+
+    await expect(deps.identity()).resolves.not.toHaveProperty('Authorization');
+  });
+
+  it('sends once when asked again while sending', async () => {
+    render(<BugReportDialog onClose={() => {}} />);
+    fillTitle('x');
+    const form = screen.getByRole('textbox', { name: 'What went wrong?' }).closest('form')!;
+
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+    await screen.findByText('Logged as report #7.');
+
+    expect(sent).toHaveLength(1);
+  });
+
+  it('counts the title once it nears its limit', () => {
+    render(<BugReportDialog onClose={() => {}} />);
+    fillTitle('a'.repeat(159));
+    expect(screen.queryByText(`159/${BUG_REPORT_LIMITS.title}`)).toBeNull();
+    fillTitle('a'.repeat(160));
+    expect(screen.getByText(`160/${BUG_REPORT_LIMITS.title}`)).toBeTruthy();
+  });
+
+  it('leaves a paste without an image to the field', () => {
+    render(<BugReportDialog onClose={() => {}} />);
+    fireEvent.paste(screen.getByRole('textbox', { name: 'What went wrong?' }), {
+      clipboardData: { files: [] },
+    });
+    expect(screen.queryByRole('img', { name: 'Screenshot to send' })).toBeNull();
+  });
+
   it('attaches a pasted image', async () => {
     prepared = { screenshot: { contentType: 'image/png', data: 'AAAA' }, previewUrl: 'blob:x' };
     render(<BugReportDialog onClose={() => {}} />);
@@ -143,6 +217,18 @@ describe('BugReportDialog', () => {
     expect(screen.getByText("What's Attached")).toBeTruthy();
     expect(screen.getByText('Your guest id')).toBeTruthy();
     expect(screen.getByText('Page')).toBeTruthy();
+  });
+
+  // docs/specs/016-platform/bug-reports.md "From an embed": a workbench frame reports as the person's account.
+  it('says the account id in a workbench frame, whose report goes with its session', () => {
+    setWorkbenchConfinement({ scope: 'document', documentId: 'doc1', ownerId: 'user_1' });
+    try {
+      render(<BugReportDialog onClose={() => {}} />);
+      expect(screen.getByText('Your account id')).toBeTruthy();
+      expect(screen.queryByText('Your guest id')).toBeNull();
+    } finally {
+      setWorkbenchConfinement(null);
+    }
   });
 
   it('keeps the words and the screenshot when closed, and opens on them again', async () => {
