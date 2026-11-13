@@ -43,7 +43,7 @@ A turn or a flip never takes a selection apart; its members keep where they sit 
 - The corner handle itself still resizes: where handle and zone meet, the handle wins.
 - Pressing a zone and dragging turns the selection about the pivot by the angle the pointer sweeps around it.
 - The drag engages once the pointer travels as far as a body move needs (`DRAG_ENGAGE_PX`), so a click turns nothing.
-- **Shift** held snaps the reference member's angle to 15° steps (default).
+- **Shift** held snaps the reference member's angle to 15° steps (default), and the modifier banner says so.
 - The frame does not turn during the drag; it re-fits the turned selection as it goes.
 - The drag draws as a preview and writes once on release, like a resize
   ([Drag preview](drag-preview.md)); **Escape** puts the selection back.
@@ -76,10 +76,10 @@ A turn or a flip never takes a selection apart; its members keep where they sit 
 
 - The element menu's **Rotation** category, single and multi, ends with a row of two buttons: **Flip Horizontal** and
   **Flip Vertical**.
-- The command palette offers **Flip Horizontal** and **Flip Vertical** while something is selected.
+- The command palette offers **Flip Horizontal** and **Flip Vertical** while the selection has an unlocked member.
 - **Shift+H** flips horizontally and **Shift+V** vertically, on a diagram tab in either mode.
   As with Shift+D, a capital letter typed on a single labelled element still types into its label.
-- Flips are offered where turning is: never for a Participant or a Viewer (default).
+- A Participant or a Viewer is offered no flip: the menu, the commands and the keys are an Editor's (default).
 
 ## Telemetry
 
@@ -91,8 +91,13 @@ A turn or a flip never takes a selection apart; its members keep where they sit 
 
 - The transforms are pure: `turnSelection` and `flipSelection` in `packages/document`
   (`selection-transform.ts`), reusing `mirrorElement`'s reflection rules from [Logo pages](../007-editor/logo-pages.md).
-- The rotate zones are `RotateZones` in `apps/live/components/canvas/element-parts.tsx`; the drag is a boxed drag
-  in `rotate` mode, resolved by `resolveBoxedTurn` (`apps/live/hooks/canvas/boxed-turn-resolve.ts`).
+- The rotate zones are `RotateZones` (`apps/live/components/canvas/RotateZones.tsx`), inside a frame marked
+  `data-turn-frame` whose on-screen centre is the pivot the press reads (`apps/live/lib/turn-frame.ts`).
+- The drag is a boxed drag in `rotate` mode, resolved by `resolveBoxedTurn`
+  (`apps/live/hooks/canvas/boxed-turn-resolve.ts`).
+- One element's zones show where `turnsByHand` allows; a multi-selection's where `showUnionTurn` does
+  (`apps/live/lib/canvas-selection.ts`).
+- The flips are `flipSelected` (`apps/live/hooks/canvas/useShapeStyleSetters.ts`) and `FlipButtons` in the menu.
 
 ## Defaults
 

@@ -34,10 +34,11 @@ export function FlipButtons({ onFlip }: { onFlip: (direction: FlipDirection) => 
           key={direction}
           type="button"
           onClick={() => onFlip(direction)}
-          className={`flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md px-1.5 py-1 text-xs font-medium transition ${TOOLBAR_CONTROL_REST}`}
+          // Glyph over a small label, as the angle tiles above set theirs, so both names fit a narrow menu.
+          className={`flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md px-1.5 py-1 font-medium transition ${TOOLBAR_CONTROL_REST}`}
         >
           <FlipGlyph direction={direction} />
-          {label}
+          <span className="whitespace-nowrap text-[10px] leading-none">{label}</span>
         </button>
       ))}
     </div>
