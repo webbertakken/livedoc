@@ -3,13 +3,7 @@
 // error that says what is there.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ApiClient } from '@livedoc/api-client';
-import {
-  addPhotoNotes,
-  readStorm,
-  suggestNotes,
-  type SuggestionInput,
-  type WallPhotoInput,
-} from '@livedoc/agent-verbs';
+import { addPhotoNotes, readStorm, suggestNotes, type SuggestionInput } from '@livedoc/agent-verbs';
 import {
   mcpAddPhotoNotes,
   mcpExportEventStorming,
@@ -72,7 +66,7 @@ export function registerStormTools(server: McpServer, env: Env): void {
     const api = clientFor(env, requireToken(extra));
     const read = await boardOf(api, args.documentId, args.tab);
     if (!read.ok) return errorResult(read.message);
-    const written = await addPhotoNotes(api, read, args.photos as WallPhotoInput[], 'mcp');
+    const written = await addPhotoNotes(api, read, args.photos, 'mcp');
     if (!written.ok) return errorResult(written.message);
     return textResult({
       documentId: written.documentId,
