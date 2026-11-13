@@ -11,4 +11,5 @@ export {
   type StormRefusal,
   type StormWrite,
   type SuggestionInput,
+  type ContextSuggestionInput,
 } from './storm-calls';

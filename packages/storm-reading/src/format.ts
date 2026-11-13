@@ -90,12 +90,13 @@ export function formatStormView(
 }
 
 // One open suggestion: a note by its kind, words, side and anchor; a context by its name and notes; then who and why.
+// A suggestion read from an api older than contexts carries no `type`: it is a note.
 function suggestionLine(s: StormSuggestion): string {
-  const gap = s.type === 'note' && s.gap ? `gap ${s.gap}` : null;
+  const gap = s.type !== 'context' && s.gap ? `gap ${s.gap}` : null;
   const facts = [gap, s.by ? `by ${s.by}` : null].filter(Boolean);
   const what =
-    s.type === 'note'
-      ? `${KIND_WORD[s.kind]} "${s.words}" ${s.side} ${s.anchorRef}`
-      : `context "${s.name}" ${s.noteRefs.join(',')}`;
+    s.type === 'context'
+      ? `context "${s.name}" ${s.noteRefs.join(',')}`
+      : `${KIND_WORD[s.kind]} "${s.words}" ${s.side} ${s.anchorRef}`;
   return `${s.ref} ${what}${facts.length ? ` · ${facts.join(' · ')}` : ''}${s.reason ? `: ${s.reason}` : ''}`;
 }

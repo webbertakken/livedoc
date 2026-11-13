@@ -524,12 +524,14 @@ export const mcpReadEventStorming = mcpTool('read_event_storming', {
 
 export const mcpSuggestNotes = mcpTool('suggest_notes', {
   behaviour: 'write',
-  title: 'Suggest notes for an Event Storming board',
+  title: 'Suggest notes and candidate contexts for an Event Storming board',
   description:
     'Propose notes for an Event Storming board: each a kind, its words, the note it goes against and on which side, ' +
     'and why. They show to the people on the board as suggestions they apply or dismiss; nothing on the board moves ' +
     'and no note is written. One call is one changeset, all or none. Read the board with read_event_storming first: ' +
-    'its gaps say where a note is missing, your knowledge of the domain says what it says.',
+    'its gaps say where a note is missing, your knowledge of the domain says what it says. Propose candidate contexts ' +
+    'the same way: group the notes by the part of the business they belong to, name each group in the business’s ' +
+    'words, and say why; a note belongs to at most one context.',
   inputSchema: suggestNotesShape,
   outputSchema: suggestNotesOutput,
 });

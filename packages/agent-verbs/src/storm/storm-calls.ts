@@ -64,7 +64,12 @@ function engineRefusalOf(err: unknown): StormRefusal | null {
 
 const NOT_A_BOARD = 'not_event_storming';
 
-type StormViewBody = { reading: StormReading; suggestions: StormSuggestion[]; rev: number };
+// An api older than candidate contexts sends a reading without them (docs/specs/021-event-storming/candidate-contexts.md).
+type StormViewBody = {
+  reading: Omit<StormReading, 'contexts'> & { contexts?: StormReading['contexts'] };
+  suggestions: StormSuggestion[];
+  rev: number;
+};
 
 async function stormViewOf(
   api: ApiClient,
@@ -103,15 +108,16 @@ export async function readStorm(
     for (const tab of named) {
       const body = await stormViewOf(api, document.id, tab.id);
       if (!body) continue;
+      const reading: StormReading = { ...body.reading, contexts: body.reading.contexts ?? [] };
       return {
         ok: true,
         documentId: document.id,
         tabId: tab.id,
         tabName: tab.name,
         rev: body.rev,
-        reading: body.reading,
+        reading,
         suggestions: body.suggestions,
-        lines: formatStormView(body.reading, body.suggestions),
+        lines: formatStormView(reading, body.suggestions),
       };
     }
   } catch (err) {
@@ -158,22 +164,41 @@ async function postOperations(
   }
 }
 
-// Suggestions as one changeset of `suggest` operations, all or nothing.
+// A candidate context proposed round some notes (docs/specs/021-event-storming/candidate-contexts.md), its notes by the
+// refs the reading prints.
+export type ContextSuggestionInput = {
+  name: string;
+  notes: string[];
+  reason?: string;
+};
+
+// What a call proposes, counted as one changeset says it: "suggest 2 notes and 1 context".
+function suggestSummary(notes: number, contexts: number): string {
+  const say = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const parts = [notes ? say(notes, 'note') : null, contexts ? say(contexts, 'context') : null];
+  return `suggest ${parts.filter(Boolean).join(' and ')}`;
+}
+
+// Suggestions as one changeset of `suggest` and `suggest-context` operations, all or nothing.
 export async function suggestNotes(
   api: ApiClient,
   board: { documentId: string; tabId: string },
   suggestions: readonly SuggestionInput[],
   client: Client,
+  contexts: readonly ContextSuggestionInput[] = [],
 ): Promise<StormWrite | StormRefusal> {
-  if (suggestions.length === 0)
-    return refuse('nothing_to_suggest', 'Give at least one suggestion.');
-  if (suggestions.length > SUGGEST_NOTES_MAX)
+  const count = suggestions.length + contexts.length;
+  if (count === 0) return refuse('nothing_to_suggest', 'Give at least one suggestion.');
+  if (count > SUGGEST_NOTES_MAX)
     return refuse(
       'too_many_suggestions',
       `At most ${SUGGEST_NOTES_MAX} suggestions a call; send the rest after.`,
     );
-  const operations = suggestions.map((s) => ({ op: 'suggest', ...s }));
-  const summary = `suggest ${suggestions.length} note${suggestions.length === 1 ? '' : 's'}`;
+  const operations = [
+    ...suggestions.map((s) => ({ op: 'suggest', ...s })),
+    ...contexts.map((c) => ({ op: 'suggest-context', ...c })),
+  ];
+  const summary = suggestSummary(suggestions.length, contexts.length);
   return postOperations(api, board.documentId, board.tabId, operations, summary, client);
 }
 
@@ -216,7 +241,9 @@ export async function suggestFromText(
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'));
   if (lines.length === 0) return refuse('nothing_to_suggest', 'The file holds no suggest lines.');
-  const other = lines.find((l) => !/^suggest\s/.test(l) && !/^\{\s*"op"\s*:\s*"suggest"/.test(l));
+  const other = lines.find(
+    (l) => !/^suggest(-context)?\s/.test(l) && !/^\{\s*"op"\s*:\s*"suggest(-context)?"/.test(l),
+  );
   if (other)
     return refuse(
       'not_a_suggestion',
@@ -227,7 +254,10 @@ export async function suggestFromText(
       'too_many_suggestions',
       `At most ${SUGGEST_NOTES_MAX} suggestions a call; send the rest after.`,
     );
-  const summary = `suggest ${lines.length} note${lines.length === 1 ? '' : 's'}`;
+  const contexts = lines.filter((l) =>
+    /^suggest-context\s|^\{\s*"op"\s*:\s*"suggest-context"/.test(l),
+  ).length;
+  const summary = suggestSummary(lines.length - contexts, contexts);
   return postOperations(api, board.documentId, board.tabId, lines.join('\n'), summary, client);
 }
 

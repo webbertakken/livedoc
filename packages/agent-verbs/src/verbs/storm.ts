@@ -87,9 +87,9 @@ export const stormRead = defineVerb({
 
 export const stormSuggest = defineVerb({
   id: 'storm.suggest',
-  summary: 'Suggest notes for an Event Storming board',
+  summary: 'Suggest notes and candidate contexts for an Event Storming board',
   description:
-    'Sends suggest lines from a file (or stdin, with -f -) as one changeset: each a note proposed beside a note of the board, which a person applies or dismisses; nothing on the board moves. Line form: suggest <kind> "<words>" before|after|above|below=<note> [reason="…"] [gap=<code>].',
+    'Sends suggest lines from a file (or stdin, with -f -) as one changeset: each a note proposed beside a note of the board, which a person applies or dismisses; nothing on the board moves. Line form: suggest <kind> "<words>" before|after|above|below=<note> [reason="…"] [gap=<code>]; a candidate context round some notes: suggest-context "<name>" <note>… [reason="…"].',
   behaviour: 'write',
   input: z.object({
     doc: docArg,
@@ -125,7 +125,7 @@ export const stormClear = defineVerb({
   id: 'storm.clear',
   summary: "Remove an Event Storming board's open suggestions",
   description:
-    'Removes every open suggestion on the board as one changeset, as Dismiss All does in the editor. Notes already applied stay.',
+    'Removes every open suggestion on the board, suggested notes and candidate contexts alike, as one changeset, as Dismiss All does in the editor. What was already applied stays.',
   behaviour: 'destructive',
   input: z.object({ doc: docArg, tab: tabFlag }),
   output: writeOutput,

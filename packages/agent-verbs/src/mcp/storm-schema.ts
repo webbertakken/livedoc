@@ -4,6 +4,7 @@
 import { z } from 'zod';
 import { PHOTO_MAX_NOTES } from '@livedoc/api-schema';
 import {
+  CONTEXT_NAME_MAX,
   ES_SUGGESTION_SIDES,
   EVENT_STORMING_NOTES,
   SUGGESTION_REASON_MAX,
@@ -32,12 +33,14 @@ export const readEventStormingOutput = {
     .describe(
       'The reading, one line per note in timeline order: each event ("<n> event <ref> \\"words\\"") with what leads ' +
         'to it ("<-" command · actor · read-model · policy), decides it ("@"), follows it ("->" policy => command) ' +
-        'and flags it ("!"); then loose notes, gaps (level code refs: message (remedy)), and open suggestions.',
+        'and flags it ("!"); then loose notes, candidate contexts (ref "name": refs), gaps (level code refs: message ' +
+        '(remedy)), and open suggestions (notes, and contexts as ref context "name" refs).',
     ),
   reading: z
     .record(z.string(), z.unknown())
     .describe(
-      'The board reading as data (schema livedoc.storm/1): notes, relations, timeline, chains, loose, gaps.',
+      'The board reading as data (schema livedoc.storm/1): notes, relations, timeline, chains, loose, gaps, ' +
+        'contexts.',
     ),
   gaps: z.number().describe('How many gaps the reading found.'),
   suggestions: z.number().describe('How many suggestions are open on the board.'),
@@ -70,14 +73,44 @@ const suggestion = z.object({
     .describe('The gap code it closes, when it closes one.'),
 });
 
+// A candidate context (docs/specs/021-event-storming/candidate-contexts.md "How an agent suggests one").
+const contextSuggestion = z.object({
+  name: z
+    .string()
+    .max(CONTEXT_NAME_MAX)
+    .describe(
+      `The part of the business, in its own words, up to ${CONTEXT_NAME_MAX} characters ("Billing").`,
+    ),
+  notes: z
+    .array(z.string())
+    .min(1)
+    .describe(
+      'The refs of the workshop notes it groups, as read_event_storming prints them; none already in a context.',
+    ),
+  reason: z
+    .string()
+    .max(SUGGESTION_REASON_MAX)
+    .optional()
+    .describe(`Why these belong together, up to ${SUGGESTION_REASON_MAX} characters.`),
+});
+
 export const suggestNotesShape = {
   documentId,
   tab,
   suggestions: z
     .array(suggestion)
-    .min(1)
     .max(SUGGEST_NOTES_MAX)
-    .describe(`1 to ${SUGGEST_NOTES_MAX} suggestions, written as one changeset: all or none.`),
+    .optional()
+    .describe(
+      `Notes to suggest. With contexts, 1 to ${SUGGEST_NOTES_MAX} in all, written as one changeset: all or none.`,
+    ),
+  contexts: z
+    .array(contextSuggestion)
+    .max(SUGGEST_NOTES_MAX)
+    .optional()
+    .describe(
+      'Candidate contexts to suggest: dashed outlines round groups of notes that belong to one part of the business.',
+    ),
 };
 
 export const suggestNotesOutput = {

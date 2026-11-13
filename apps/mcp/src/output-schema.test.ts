@@ -337,6 +337,7 @@ const CALLS: { tool: string; output: keyof typeof outputs; args: Record<string, 
       suggestions: [
         { kind: 'command', words: 'Place Order', anchor: 'e1', side: 'before', reason: 'why' },
       ],
+      contexts: [{ name: 'Ordering', notes: ['e1'], reason: 'placing an order' }],
     },
   },
   {
