@@ -207,6 +207,8 @@ const TEMPLATE_CATEGORY: Record<Exclude<TemplateKind, BlankKind>, TemplateCatego
   'affinity-map': 'mindmaps',
   'crazy-eights': 'mindmaps',
   'doodle-warmup': 'mindmaps',
+  // Event Storming is a room getting a domain out on sticky notes: a brainstorm first, cross-listed for developers.
+  'event-storming': 'mindmaps',
   // Timelines and Roadmaps: work laid out in time, and who owns it.
   timeline: 'timelines',
   'milestone-timeline': 'timelines',
@@ -286,7 +288,6 @@ const TEMPLATE_CATEGORY: Record<Exclude<TemplateKind, BlankKind>, TemplateCatego
   'sequence-diagram': 'technical',
   'uml-class': 'technical',
   'state-machine': 'technical',
-  'event-storming': 'technical',
   'incident-postmortem': 'technical',
   'threat-model': 'technical',
   'value-stream-map': 'technical',
@@ -330,7 +331,7 @@ export const TEMPLATE_ALSO_IN: Readonly<
   // Workshop formats.
   'crazy-eights': ['meetings', 'design'],
   'doodle-warmup': ['meetings', 'games'],
-  'event-storming': ['meetings'],
+  'event-storming': ['meetings', 'technical'],
   'incident-postmortem': ['meetings'],
   // Research synthesis and site structure are design work too.
   'affinity-map': ['design'],
