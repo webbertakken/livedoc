@@ -1,13 +1,17 @@
 // @vitest-environment jsdom
 
 // Back, the brand group's first control (docs/specs/007-editor/toolbar-layout.md "The top line"): a back caret and the
-// logo, one link to the Explorer; in a workspace frame, back to where the document was opened from; where there is
-// nowhere to go back to, the mark alone.
+// logo, one link to the Explorer; in a workspace frame, back to where the document was opened from; in a frame with
+// document scope, the Explorer in a new tab. Every one looks and answers the same.
 
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EXPLORER_LANDING_PATH } from '@/lib/explorer-landing';
-import { BrandBack } from './BrandBack';
+import {
+  WorkbenchSessionContext,
+  type WorkbenchSession,
+} from '@/components/providers/workbench-session-context';
+import { BrandBack, useBackTarget, type BackTarget } from './BrandBack';
 
 const track = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/telemetry', () => ({ track }));
@@ -61,12 +65,33 @@ describe('BrandBack', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
-  it('with nowhere to go back to, draws the mark alone, not a link', () => {
-    const { container } = render(<BrandBack target={{ kind: 'none' }} />);
-    expect(screen.queryByRole('link')).toBeNull();
-    expect(screen.queryByRole('button')).toBeNull();
-    expect(container.querySelector('[data-back-caret]')).toBeNull();
-    expect(container.querySelector('svg')).not.toBeNull();
+  it('in a frame with document scope, opens the Explorer in a new tab, caret and all', () => {
+    render(<BrandBack target={{ kind: 'explorer', newTab: true }} />);
+    const link = screen.getByRole('link', { name: 'Back to the Explorer (opens in a new tab)' });
+    expect(link.getAttribute('href')).toBe(EXPLORER_LANDING_PATH);
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.firstElementChild?.hasAttribute('data-back-caret')).toBe(true);
+    link.addEventListener('click', (e) => e.preventDefault());
+    fireEvent.click(link);
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'BrandBack');
+  });
+
+  // I10 (docs/specs/013-workspace/workbench-embeds.md): never an inert mark; the same hit area, states and logo motion.
+  it('looks and answers the same wherever it goes', () => {
+    const controls = [
+      render(<BrandBack target={{ kind: 'explorer' }} />).container,
+      render(<BrandBack target={{ kind: 'explorer', newTab: true }} />).container,
+      render(<BrandBack target={{ kind: 'frame', back: vi.fn(), backTitle: 'Roadmap' }} />)
+        .container,
+    ].map((c) => c.querySelector<HTMLElement>('a, button')!);
+    const [app] = controls;
+    for (const control of controls) {
+      expect(control.className).toBe(app!.className);
+      expect(control.className).toContain('hover:bg-slate-100');
+      expect(control.className).toContain('focus-visible:ring-2');
+      expect(control.hasAttribute('data-assemble')).toBe(true);
+      expect(control.firstElementChild?.hasAttribute('data-back-caret')).toBe(true);
+    }
   });
 
   it('tints the mark with the tab theme accent', () => {
@@ -77,5 +102,35 @@ describe('BrandBack', () => {
     cleanup();
     const tinted = render(<BrandBack target={{ kind: 'explorer' }} accent="#ff0000" />).container;
     expect(tinted.querySelector('stop')?.getAttribute('style')).not.toBe(plainStop);
+  });
+});
+
+describe('useBackTarget', () => {
+  function targetIn(session: Partial<WorkbenchSession> | null): BackTarget {
+    let target: BackTarget | null = null;
+    function Probe() {
+      target = useBackTarget();
+      return null;
+    }
+    render(
+      <WorkbenchSessionContext.Provider value={session as WorkbenchSession | null}>
+        <Probe />
+      </WorkbenchSessionContext.Provider>,
+    );
+    return target!;
+  }
+
+  it('goes to the Explorer in the app', () => {
+    expect(targetIn(null)).toEqual({ kind: 'explorer' });
+  });
+
+  it('in a frame with document scope, goes to the Explorer in a new tab', () => {
+    expect(targetIn({ frame: null })).toEqual({ kind: 'explorer', newTab: true });
+  });
+
+  it('in a workspace frame, goes where the frame says', () => {
+    const back = vi.fn();
+    const frame = { back, backTitle: 'Roadmap', reportDocumentPlace: vi.fn() };
+    expect(targetIn({ frame })).toEqual({ kind: 'frame', back, backTitle: 'Roadmap' });
   });
 });

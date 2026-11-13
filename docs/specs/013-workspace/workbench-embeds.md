@@ -154,7 +154,8 @@ back through the history, which the frame shares with its host, so a host's own 
 ([Toolbar layout](../007-editor/toolbar-layout.md#the-top-line)): the first thing at the top left of the frame,
 where back controls live, and the first of the editor's controls for the keyboard. There is no separate Back
 button. A document's status screens (deleted, load error, not found) carry Back at their top left too. The document
-scope has nowhere to go back to: its brand group shows the mark without the caret, and the mark is not a link. **New document** creates the document in place and opens
+scope has no Explorer in the frame: its Back is the regular editor's, caret, mark and states alike, and opens the
+Explorer in a new tab. **New document** creates the document in place and opens
 it in the frame, never `/new`. **Open in LiveDoc** opens the current view or document in a full tab. A frame
 started on a folder shows that folder; its empty state is the Explorer's own, with New document and the templates.
 
@@ -288,6 +289,8 @@ The invariants and edge cases the code and its tests cite by id.
   to the session's origin) before a valid `hello-ack`.
 - **I9** The editor in a workbench never runs the guest migration, never writes the participant record, and never writes
   preferences to the api.
+- **I10** Back in either scope draws the caret and the mark with the regular editor's hover, focus and press; it is
+  never an inert mark.
 
 ## Defaults
 
