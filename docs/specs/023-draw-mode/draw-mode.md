@@ -177,6 +177,8 @@ pointing at the button that opened it, on the edge facing the dock, over its but
   styling is reached through right-click, as on any tab, but the menu offers
   only what a whiteboard element uses (colour, width, delete, bring forward /
   send back, duplicate, comment).
+- A selection turns as one piece, by hand from just outside its corners or from its Rotation tiles, and flips
+  horizontally or vertically ([Selection transforms](../008-canvas/selection-transforms.md)).
 
 ## Where the dock sits
 
@@ -828,6 +830,9 @@ H (hand) and Z (zen) keep working as on any tab, and every modifier shortcut
 box selected, typing a character still edits it rather than switching tool;
 any other selection (a shape just drawn, a line, a stroke) leaves the key to
 the dock, so R then O draws a rectangle and then an ellipse.
+
+Shift+H and Shift+V flip the selection horizontally and vertically, as on any diagram tab
+([Selection transforms](../008-canvas/selection-transforms.md)).
 View-role visitors get V and Escape only. Each dock button and Shapes option
 with a key shows it small in its bottom-right corner, as the Toolbar strip does (a tool bar is
 where people learn the keys), and carries it in `aria-keyshortcuts`.
