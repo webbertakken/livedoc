@@ -390,6 +390,10 @@ export type EditorContextMenuProps = {
   // the kind is the notation rather than a style. Absent when the session
   // cannot edit.
   onSetEsKind?: (kind: EventStormingNoteKind) => void;
+  // A workshop note's candidate context (docs/specs/021-event-storming/candidate-contexts.md "Its notes change two
+  // ways"): the board's kept contexts by name to add it to, the one it is in, and the two acts. Absent when the
+  // session cannot change contexts, or when the board has none and the note is in none.
+  noteContexts?: NoteContextsMenu;
   // Set the selection's exact size in canvas pixels (docs/specs/008-canvas/element-size.md). Either
   // dimension alone is allowed: the omitted one is left as-is, or carried by
   // the aspect lock when that is on.
@@ -437,4 +441,14 @@ export type EditorContextMenuProps = {
   // above apply to the whole selection. Duplicate / Group / Lock / Export /
   // Delete are NOT here — the selection toolbar carries those.
   selectionElements: Element[];
+};
+
+// The element menu's view of a note's candidate context (docs/specs/021-event-storming/candidate-contexts.md).
+export type NoteContextsMenu = {
+  // The board's kept contexts, by name.
+  contexts: readonly { id: string; name: string }[];
+  // The kept context the note is in, or null.
+  currentId: string | null;
+  onAdd: (contextId: string) => void;
+  onRemove: () => void;
 };

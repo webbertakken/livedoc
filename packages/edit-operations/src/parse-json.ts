@@ -93,6 +93,7 @@ function memberIssue(name: EditOperationName, raw: Raw, member: string): string 
   switch (member) {
     case 'photos':
       return wallPhotosIssue(value);
+    case 'name':
     case 'words':
     case 'reason':
     case 'gap':
@@ -126,6 +127,10 @@ function memberIssue(name: EditOperationName, raw: Raw, member: string): string 
       return Array.isArray(value) && value.length === 2 && value.every(isText)
         ? null
         : expected(member, '[a, b] selectors');
+    case 'notes':
+      return Array.isArray(value) && value.every(isText)
+        ? null
+        : expected(member, 'an array of note selectors');
     case 'targets':
       return Array.isArray(value) && value.length > 0 && value.every(isText)
         ? null
@@ -157,6 +162,7 @@ const REQUIRED: Readonly<Record<EditOperationName, readonly string[]>> = {
   layout: ['target'],
   test: ['target', 'fields'],
   suggest: ['kind', 'words', 'anchor', 'side'],
+  'suggest-context': ['name', 'notes'],
   wall: ['photos'],
 };
 

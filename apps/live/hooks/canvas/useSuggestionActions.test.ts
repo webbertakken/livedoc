@@ -125,3 +125,59 @@ describe('useSuggestionActions', () => {
     expect(info).toHaveBeenCalledWith('[suggestions] refused', { reason: 'not-a-suggestion' });
   });
 });
+
+// Suggested candidate contexts are suggestions too (docs/specs/021-event-storming/candidate-contexts.md "How a person
+// sees and decides").
+describe('useSuggestionActions with suggested contexts', () => {
+  const context = (id: string, notes: string[], suggested = true): Element => ({
+    id,
+    type: 'shape',
+    shape: 'square',
+    x: 0,
+    y: 0,
+    width: 1,
+    height: 1,
+    label: id,
+    esContext: { notes, ...(suggested ? { suggestion: { reason: 'r' } } : {}) },
+  });
+  const contextOf = (els: Element[], id: string) =>
+    els.find((el) => el.id === id) as
+      (Element & { esContext: { suggestion?: unknown } }) | undefined;
+
+  it('applies a suggested context in one commit, keeping it', () => {
+    const { acts, commit, select, board } = setup([note('e', 1000), context('c', ['e'])]);
+    acts.apply('c');
+    expect(commit).toHaveBeenCalledTimes(1);
+    expect(contextOf(board(), 'c')!.esContext.suggestion).toBeUndefined();
+    expect(select).not.toHaveBeenCalled();
+    expect(track.mock.calls).toEqual([['Canvas', 'Used', 'ContextApplied']]);
+  });
+
+  it('dismisses a suggested context, its notes staying', () => {
+    const { acts, board } = setup([note('e', 1000), context('c', ['e'])]);
+    acts.dismiss('c');
+    expect(board().map((el) => el.id)).toEqual(['e']);
+    expect(track).toHaveBeenLastCalledWith('Canvas', 'Used', 'ContextDismissed');
+  });
+
+  it('takes contexts into Apply All and Dismiss All', () => {
+    const els = [note('e', 1000), suggestion('p', 'e', 'after'), context('c', ['e'])];
+    const applied = setup(els);
+    applied.acts.applyAll();
+    expect(applied.commit).toHaveBeenCalledTimes(1);
+    expect(contextOf(applied.board(), 'c')!.esContext.suggestion).toBeUndefined();
+    const onlyContexts = setup([note('e', 1000), context('c', ['e'])]);
+    onlyContexts.acts.applyAll();
+    expect(onlyContexts.commit).toHaveBeenCalledTimes(1);
+    const dismissed = setup(els);
+    dismissed.acts.dismissAll();
+    expect(dismissed.board().map((el) => el.id)).toEqual(['e']);
+  });
+
+  it('refuses to apply a kept context as a suggestion', () => {
+    const { acts, commit } = setup([note('e', 1000), context('k', ['e'], false)]);
+    acts.apply('k');
+    acts.dismiss('k');
+    expect(commit).not.toHaveBeenCalled();
+  });
+});

@@ -136,6 +136,14 @@ function words(operation: EditOperation): string[] {
         ...(operation.gap !== undefined ? [`gap=${operation.gap}`] : []),
         ...idText(operation.id),
       ];
+    case 'suggest-context':
+      return [
+        'suggest-context',
+        JSON.stringify(operation.name),
+        ...operation.notes.map(oneWord),
+        ...(operation.reason !== undefined ? [`reason=${JSON.stringify(operation.reason)}`] : []),
+        ...idText(operation.id),
+      ];
     case 'wall':
       return [JSON.stringify(operation)];
   }

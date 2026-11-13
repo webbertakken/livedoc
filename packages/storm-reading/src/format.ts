@@ -28,6 +28,7 @@ export function formatStormView(
     const n = byId.get(id)!;
     return `${KIND_WORD[n.kind]} ${n.ref} "${n.words}"`;
   };
+  const contexts = reading.contexts;
   const open = suggestions.filter((s) => !s.orphan);
   const orphans = suggestions.length - open.length;
   const lines = [
@@ -37,6 +38,7 @@ export function formatStormView(
       plural(reading.timeline.length, 'event'),
       plural(reading.chains.length, 'chain'),
       plural(reading.gaps.length, 'gap'),
+      ...(contexts.length > 0 ? [plural(contexts.length, 'context')] : []),
       plural(open.length, 'suggestion'),
     ].join(' · '),
   ];
@@ -60,6 +62,12 @@ export function formatStormView(
     for (const id of reading.loose) lines.push(`  ${say(id)}`);
   }
 
+  if (contexts.length > 0) {
+    lines.push('contexts');
+    for (const c of contexts)
+      lines.push(`  ${c.ref} "${c.name}": ${c.notes.map((id) => byId.get(id)!.ref).join(',')}`);
+  }
+
   if (reading.gaps.length > 0) {
     lines.push('gaps');
     for (const g of reading.gaps) {
@@ -74,14 +82,21 @@ export function formatStormView(
 
   if (suggestions.length > 0) {
     lines.push('suggestions');
-    for (const s of open) {
-      const facts = [s.gap ? `gap ${s.gap}` : null, s.by ? `by ${s.by}` : null].filter(Boolean);
-      lines.push(
-        `  ${s.ref} ${KIND_WORD[s.kind]} "${s.words}" ${s.side} ${s.anchorRef}${facts.length ? ` · ${facts.join(' · ')}` : ''}${s.reason ? `: ${s.reason}` : ''}`,
-      );
-    }
+    for (const s of open) lines.push(`  ${suggestionLine(s)}`);
     if (orphans > 0)
-      lines.push(`  ${plural(orphans, 'orphaned suggestion')} (anchor gone; never shown)`);
+      lines.push(`  ${plural(orphans, 'orphaned suggestion')} (anchor or notes gone; never shown)`);
   }
   return lines;
+}
+
+// One open suggestion: a note by its kind, words, side and anchor; a context by its name and notes; then who and why.
+// A suggestion read from an api older than contexts carries no `type`: it is a note.
+function suggestionLine(s: StormSuggestion): string {
+  const gap = s.type !== 'context' && s.gap ? `gap ${s.gap}` : null;
+  const facts = [gap, s.by ? `by ${s.by}` : null].filter(Boolean);
+  const what =
+    s.type === 'context'
+      ? `context "${s.name}" ${s.noteRefs.join(',')}`
+      : `${KIND_WORD[s.kind]} "${s.words}" ${s.side} ${s.anchorRef}`;
+  return `${s.ref} ${what}${facts.length ? ` · ${facts.join(' · ')}` : ''}${s.reason ? `: ${s.reason}` : ''}`;
 }

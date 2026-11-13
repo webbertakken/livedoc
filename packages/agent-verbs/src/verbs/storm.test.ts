@@ -92,6 +92,15 @@ describe('readStorm', () => {
     expect((read as StormRead).lines[0]).toContain('board "Board"');
   });
 
+  it('reads a reading from an api older than candidate contexts as having none', async () => {
+    const { reading, ...rest } = storm();
+    const { contexts: _none, ...older } = reading;
+    const api = fakeApi(
+      routesWith({ [`${base}/tabs/es?view=storm&json=1`]: { ...rest, reading: older } }),
+    );
+    expect(((await readStorm(api, doc)) as StormRead).reading.contexts).toEqual([]);
+  });
+
   it('takes a tab by name, id or id prefix', async () => {
     const api = fakeApi(routesWith());
     expect(await readStorm(api, doc, 'board')).toMatchObject({ tabId: 'es' });
@@ -272,6 +281,38 @@ describe('suggesting and clearing', () => {
       'cli',
     );
     expect(summary).toBe('clear 2 suggestions');
+  });
+
+  it('sends candidate contexts beside notes as one changeset (candidate-contexts.md)', async () => {
+    let sent: { summary: string; operations: unknown } = { summary: '', operations: null };
+    const api = fakeApi(
+      routesWith({
+        [`${base}/tabs/es/changesets`]: async (r: Request) => {
+          sent = (await r.json()) as typeof sent;
+          return Response.json({ dryRun: true, changeset: null, results: [] });
+        },
+      }),
+    );
+    const billing = { name: 'Billing', notes: ['e1', 'e2'], reason: 'money' };
+    await suggestNotes(api, board, [one], 'mcp', [billing]);
+    expect(sent.summary).toBe('suggest 1 note and 1 context');
+    expect(sent.operations).toEqual([
+      { op: 'suggest', ...one },
+      { op: 'suggest-context', ...billing },
+    ]);
+    await suggestNotes(api, board, [], 'mcp', [billing, billing]);
+    expect(sent.summary).toBe('suggest 2 contexts');
+    expect(await suggestNotes(api, board, [], 'mcp', [])).toMatchObject({
+      ok: false,
+      code: 'nothing_to_suggest',
+    });
+    const lines = [
+      'suggest-context "Billing" e1 e2',
+      JSON.stringify({ op: 'suggest-context', name: 'Kitchen', notes: ['e3'] }),
+      'suggest command "Pay" before=e1',
+    ].join('\n');
+    await suggestFromText(api, board, lines, 'cli');
+    expect(sent.summary).toBe('suggest 1 note and 2 contexts');
   });
 
   it('removes every open suggestion, or says there are none', async () => {

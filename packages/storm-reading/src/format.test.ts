@@ -76,7 +76,7 @@ describe('formatStormView', () => {
       'suggestions',
       '  s1 event "Kitchen Notified" after c2 · gap command_without_event · by Claude: every command ends in an event',
       '  s3 actor "Cook" above c1',
-      '  1 orphaned suggestion (anchor gone; never shown)',
+      '  1 orphaned suggestion (anchor or notes gone; never shown)',
     ]);
   });
 

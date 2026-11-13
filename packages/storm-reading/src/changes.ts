@@ -3,7 +3,7 @@
 // reworded note is a rewording and never a removal plus an addition.
 
 import type { ElementId } from '@livedoc/document';
-import type { StormNote, StormReading, StormRelations } from './types';
+import type { StormContext, StormNote, StormReading, StormRelations } from './types';
 
 export type RelationName = keyof StormRelations;
 
@@ -14,6 +14,13 @@ export type StormChanges = {
   rekinded: { note: StormNote; was: StormNote['kind'] }[];
   related: { relation: RelationName; from: ElementId; to: ElementId }[];
   unrelated: { relation: RelationName; from: ElementId; to: ElementId }[];
+  // Candidate contexts (docs/specs/021-event-storming/candidate-contexts.md "In the reading and the export"): added,
+  // removed and renamed, and the notes that joined or left one both readings hold.
+  contextsAdded: StormContext[];
+  contextsRemoved: StormContext[];
+  contextsRenamed: { context: StormContext; was: string }[];
+  joined: { note: ElementId; context: StormContext }[];
+  left: { note: ElementId; context: StormContext }[];
 };
 
 const RELATIONS: readonly RelationName[] = [
@@ -41,6 +48,11 @@ export function diffReadings(previous: StormReading, next: StormReading): StormC
     rekinded: [],
     related: [],
     unrelated: [],
+    contextsAdded: [],
+    contextsRemoved: [],
+    contextsRenamed: [],
+    joined: [],
+    left: [],
   };
   for (const note of next.notes) {
     const was = before.get(note.id);
@@ -57,6 +69,7 @@ export function diffReadings(previous: StormReading, next: StormReading): StormC
     for (const key of now) if (!old.has(key)) changes.related.push(split(key, relation));
     for (const key of old) if (!now.has(key)) changes.unrelated.push(split(key, relation));
   }
+  diffContexts(previous.contexts, next.contexts, changes);
   return changes;
 }
 
@@ -86,6 +99,7 @@ export function formatChanges(
   const say = (id: ElementId) => words.get(id)!;
   const section = (title: string, lines: string[]) =>
     lines.length ? [`## ${title}`, '', ...lines, ''] : [];
+  const contextName = (c: StormContext) => `context ${c.id} "${c.name}"`;
   const relationLine = (r: StormChanges['related'][number]) =>
     `- ${say(r.from)} ${VERB[r.relation]} ${say(r.to)}`;
   const body = [
@@ -107,6 +121,26 @@ export function formatChanges(
     ),
     ...section('Related', changes.related.map(relationLine)),
     ...section('No longer related', changes.unrelated.map(relationLine)),
+    ...section(
+      'Contexts added',
+      changes.contextsAdded.map((c) => `- ${contextName(c)}: ${c.notes.map(say).join(', ')}`),
+    ),
+    ...section(
+      'Contexts removed',
+      changes.contextsRemoved.map((c) => `- ${contextName(c)}`),
+    ),
+    ...section(
+      'Contexts renamed',
+      changes.contextsRenamed.map((r) => `- ${contextName(r.context)}, was "${r.was}"`),
+    ),
+    ...section(
+      'Joined a context',
+      changes.joined.map((j) => `- ${say(j.note)} joined ${contextName(j.context)}`),
+    ),
+    ...section(
+      'Left a context',
+      changes.left.map((l) => `- ${say(l.note)} left ${contextName(l.context)}`),
+    ),
   ];
   return [
     '# Changes since the last export',
@@ -117,4 +151,26 @@ export function formatChanges(
     '',
     ...body,
   ].join('\n');
+}
+
+function diffContexts(
+  previous: readonly StormContext[],
+  next: readonly StormContext[],
+  changes: StormChanges,
+): void {
+  const before = new Map(previous.map((c) => [c.id, c]));
+  const after = new Set(next.map((c) => c.id));
+  for (const context of next) {
+    const was = before.get(context.id);
+    if (!was) {
+      changes.contextsAdded.push(context);
+      continue;
+    }
+    if (was.name !== context.name) changes.contextsRenamed.push({ context, was: was.name });
+    for (const note of context.notes)
+      if (!was.notes.includes(note)) changes.joined.push({ note, context });
+    for (const note of was.notes)
+      if (!context.notes.includes(note)) changes.left.push({ note, context });
+  }
+  for (const context of previous) if (!after.has(context.id)) changes.contextsRemoved.push(context);
 }

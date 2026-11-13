@@ -11,6 +11,7 @@ import {
   type ElementIndex,
 } from './geometry';
 import { pointDistance, type Point } from './geometry-primitives';
+import { emptyContextIds } from './candidate-contexts';
 
 // THE AUTO-REBIND (docs/specs/008-canvas/arrow-anchors.md "Auto-rebind").
 //
@@ -230,6 +231,12 @@ export function withDependents(
       out.add(dependent.id);
       queue.push(dependent.id);
     }
+  }
+  // A candidate context left with no note goes in the same step (docs/specs/021-event-storming/candidate-contexts.md
+  // "A note leaving takes nothing with it"); its notes are never taken with it.
+  for (const id of emptyContextIds(elements, out)) {
+    const context = elements.find((el) => el.id === id)!;
+    if (!isProtected(context)) out.add(id);
   }
   return out;
 }

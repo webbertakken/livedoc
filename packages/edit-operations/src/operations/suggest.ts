@@ -9,6 +9,7 @@ import {
   eventStormingNoteFields,
   isBoxed,
   isEventStormingTab,
+  isOpenSuggestion,
   isSuggestion,
   SUGGESTION_BY_MAX,
   SUGGESTION_GAP_MAX,
@@ -74,12 +75,14 @@ export function applySuggest(
     ]);
 
   const elements = currentElements(state);
+  // Suggested notes and suggested candidate contexts count alike (docs/specs/021-event-storming/candidate-contexts.md).
   const open = elements.filter(isSuggestion);
-  if (open.length >= SUGGESTIONS_MAX)
+  const openCount = elements.filter(isOpenSuggestion).length;
+  if (openCount >= SUGGESTIONS_MAX)
     return refusal(
       'too_many_suggestions',
       operation,
-      [`the board holds ${open.length} open suggestions; at most ${SUGGESTIONS_MAX}`],
+      [`the board holds ${openCount} open suggestions; at most ${SUGGESTIONS_MAX}`],
       'dismiss some first, or wait for a person to apply them',
     );
   const twin = open.find(

@@ -76,9 +76,11 @@ function formatLine(line: ResultLine): string {
           ? ` (pinned to ${line.pinnedTo})`
           : line.reason === 'anchored'
             ? ` (anchored on ${line.anchoredTo})`
-            : line.reason === 'unwrapped'
-              ? ' (unwrapped)'
-              : '';
+            : line.reason === 'emptied'
+              ? ` (emptied by ${line.emptiedBy})`
+              : line.reason === 'unwrapped'
+                ? ' (unwrapped)'
+                : '';
       return `- ${line.ref}  ${line.kind}${ends}${labelText(line.label)}${reason}`;
     }
     case '»': {

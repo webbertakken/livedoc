@@ -6,6 +6,7 @@
 import type { EditRejection } from '@livedoc/api-schema';
 import {
   endpointPosition,
+  isCandidateContext,
   type ArrowElement,
   type Element,
   type ElementId,
@@ -158,9 +159,25 @@ export function removeOne(
   for (const [id, by] of pulled) removeElement(state, id, operation, { pinnedTo: by });
   // The suggestions anchored on what went, and on those, go too (docs/specs/021-event-storming/suggestions.md "It goes
   // with its anchor"), whether or not the arrows are kept.
-  for (const [id, by] of anchoredOn(state, removed))
-    removeElement(state, id, operation, { anchoredTo: by });
+  const anchored = anchoredOn(state, removed);
+  for (const [id, by] of anchored) removeElement(state, id, operation, { anchoredTo: by });
+  // A candidate context left with none of its notes goes too (docs/specs/021-event-storming/candidate-contexts.md
+  // "A note leaving takes nothing with it"); one that keeps a note stays, its notes untouched.
+  for (const id of emptiedBy(state, new Set([...removed, ...anchored.keys()])))
+    removeElement(state, id, operation, { emptiedBy: el.id });
   return null;
+}
+
+// The candidate contexts that held one of the removed ids and now hold no note that is left.
+function emptiedBy(state: EditState, removed: ReadonlySet<ElementId>): ElementId[] {
+  const out: ElementId[] = [];
+  for (const el of state.byId.values()) {
+    if (!isCandidateContext(el)) continue;
+    const notes = el.esContext.notes;
+    if (notes.some((id) => removed.has(id)) && !notes.some((id) => state.byId.has(id)))
+      out.push(el.id);
+  }
+  return out;
 }
 
 // The suggestions anchored on any removed id, transitively, each with the element it was anchored on.

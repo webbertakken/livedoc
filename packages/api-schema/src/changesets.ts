@@ -109,6 +109,12 @@ export const EDIT_REJECTION_CODES = [
   'reason_too_long',
   'too_many_suggestions',
   'duplicate_suggestion',
+  // The suggest-context operation (docs/specs/021-event-storming/candidate-contexts.md "How an agent suggests one").
+  'name_required',
+  'name_too_long',
+  'notes_required',
+  'note_not_a_note',
+  'note_in_context',
   // The wall operation (docs/specs/021-event-storming/event-storming.md Phase 11).
   'draft_open',
   'nothing_to_add',
@@ -165,10 +171,12 @@ export type ResultLine =
       kind: string;
       label?: string;
       ends?: [string, string];
-      reason?: 'pinned' | 'unwrapped' | 'anchored';
+      reason?: 'pinned' | 'unwrapped' | 'anchored' | 'emptied';
       pinnedTo?: string;
       // The note a removed suggestion was anchored on (docs/specs/021-event-storming/suggestions.md).
       anchoredTo?: string;
+      // The note whose removal left a candidate context with none (docs/specs/021-event-storming/candidate-contexts.md).
+      emptiedBy?: string;
     }
   | {
       mark: '»';

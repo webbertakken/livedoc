@@ -48,6 +48,7 @@ import { suggestionPreview } from '@/lib/suggestion-apply';
 import { useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
+import { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
 import { MindNumbersProvider } from './MindMapLayer';
@@ -601,6 +602,20 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
             above all boxes inside a single SVG layer). Each arrow
             gets its own <svg> overlay; pointer events on the SVG are
             disabled in CSS, only the inner arrow line picks them up. */}
+            {/* Candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): beneath every element. */}
+            {props.esBoard ? (
+              <ContextLayer
+                elements={elements}
+                tabId={props.activeTabId ?? ''}
+                layers={tabLayers}
+                contexts={readOnly || tabLocked ? undefined : props.contexts}
+                showSuggested={suggestionsShown}
+                suggestions={
+                  suggestionsShown && !insertShift.dragging ? props.suggestions : undefined
+                }
+                shiftX={insertShift.xFor}
+              />
+            ) : null}
             {/* Pages mode cuts elements off at the page edges (PageClip); not in the
           isometric view, whose 3D stack a clip would flatten. */}
             <PageClip

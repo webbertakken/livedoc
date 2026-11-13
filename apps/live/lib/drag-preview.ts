@@ -178,3 +178,13 @@ export function resetDragPreviewForTests(): void {
   changedNow();
   listeners.clear();
 }
+
+// This person's own preview on the tab, as a store React reads (never `localPreview()` during render, which the
+// React Compiler would hold at its first value); null while they drag nothing there.
+export function useLocalDragPreview(tabId: string): DragOverlay | null {
+  return useSyncExternalStore(
+    subscribeDragPreview,
+    () => (local && local.tabId === tabId ? local : null),
+    () => null,
+  );
+}

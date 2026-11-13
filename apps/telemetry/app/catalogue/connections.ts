@@ -173,7 +173,7 @@ export const MCP_TOOL_METRICS: readonly Metric[] = [
   mcpTool(
     'SuggestNotes',
     'Suggest Notes',
-    'Proposing notes for an Event Storming board, for people to apply.',
+    'Proposing notes and candidate contexts for an Event Storming board, for people to apply.',
   ),
   mcpTool(
     'AddPhotoNotes',

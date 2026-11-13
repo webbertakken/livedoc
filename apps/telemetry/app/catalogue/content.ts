@@ -680,6 +680,23 @@ export const SUGGESTIONS_HANDLED = chart(
   },
 );
 
+// Candidate contexts on an event-storming board (docs/specs/021-event-storming/candidate-contexts.md "Telemetry").
+export const CONTEXTS_HANDLED = chart(
+  'Canvas',
+  'Used',
+  'Candidate Contexts Handled',
+  "A candidate context on an event-storming board applied or dismissed from an agent's suggestion, renamed, deleted, or a note joining or leaving one.",
+  {
+    types: [
+      'ContextApplied',
+      'ContextDismissed',
+      'ContextRenamed',
+      'ContextDeleted',
+      'ContextNoteJoined',
+      'ContextNoteLeft',
+    ],
+  },
+);
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -703,6 +720,7 @@ export const ELEMENT_EDITING: MetricStack = {
     NOTE_KINDS_CHANGED,
     LANES_SETTLED,
     SUGGESTIONS_HANDLED,
+    CONTEXTS_HANDLED,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],

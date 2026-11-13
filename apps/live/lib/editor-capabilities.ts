@@ -33,6 +33,9 @@ export type EditorCapabilities = {
   // An event-storming board's suggestions (docs/specs/021-event-storming/suggestions.md "Share roles"): seen and
   // acted on by an Editor alone, since applying one reshapes the board.
   suggestions: boolean;
+  // An event-storming board's kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md "Share
+  // roles"): renamed, deleted and their notes changed by an Editor alone; everyone sees them.
+  contexts: boolean;
 };
 
 const never = () => false;
@@ -60,6 +63,7 @@ export function resolveEditorCapabilities(input: {
       planCards: true,
       sheetCells: true,
       suggestions: true,
+      contexts: true,
     };
   }
   if (level === 'view') {
@@ -75,6 +79,7 @@ export function resolveEditorCapabilities(input: {
       planCards: false,
       sheetCells: false,
       suggestions: false,
+      contexts: false,
     };
   }
   const own = (el: Element) => addedByAdder(el, adderKey);
@@ -92,6 +97,7 @@ export function resolveEditorCapabilities(input: {
     planCards: true,
     sheetCells: true,
     suggestions: false,
+    contexts: false,
   };
 }
 

@@ -5,7 +5,12 @@ export * from './constants';
 export * from './types';
 export { readBoard } from './reading';
 export { wordsOf } from './notes';
-export { readSuggestions, type StormSuggestion } from './suggestions';
+export {
+  readSuggestions,
+  type StormContextSuggestion,
+  type StormNoteSuggestion,
+  type StormSuggestion,
+} from './suggestions';
 export { formatStormView } from './format';
 export { diffReadings, formatChanges, hasChanges, type StormChanges } from './changes';
 export {

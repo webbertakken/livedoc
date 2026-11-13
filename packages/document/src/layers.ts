@@ -4,6 +4,7 @@
 import type { Element, ElementId, Tab } from './index';
 import { eventStormingKindOf } from './event-storming';
 import { isSuggestion } from './event-storming-suggestions';
+import { isCandidateContext } from './candidate-contexts';
 import { isFloorShape } from './office';
 
 // Photoshop-style layers (docs/specs/006-document/layers.md). A tab optionally carries an ordered
@@ -162,11 +163,14 @@ export function visibleLayerElements(elements: Element[], layers: Layer[] | unde
   return board.filter((el) => !hidden.has(resolveLayerId(el.layerId, ls)));
 }
 
-// The elements that are board content: everything but suggestions (docs/specs/021-event-storming/suggestions.md),
-// which no painter, exporter or hit test may see, whichever layer they sit on. Returns the input array unchanged
-// when it holds no suggestion.
+// What the element painters see: everything but suggestions (docs/specs/021-event-storming/suggestions.md), which no
+// painter, exporter or hit test may see, and candidate contexts (docs/specs/021-event-storming/candidate-contexts.md),
+// which are drawn from their notes by their own layer, never as a shape; whichever layer they sit on. Returns the
+// input array unchanged when it holds neither.
+const paintedByOthers = (el: Element) => isSuggestion(el) || isCandidateContext(el);
+
 export function boardElements(elements: Element[]): Element[] {
-  return elements.some(isSuggestion) ? elements.filter((el) => !isSuggestion(el)) : elements;
+  return elements.some(paintedByOthers) ? elements.filter((el) => !paintedByOthers(el)) : elements;
 }
 
 // Ids of hidden / locked layers within a NORMALISED layers array.
@@ -181,7 +185,7 @@ export function hiddenLayerElementIds(
   layers: Layer[] | undefined,
 ): Set<ElementId> {
   const hidden = elementIdsWhere(elements, layers, (l) => !isLayerVisible(l));
-  for (const el of elements) if (isSuggestion(el)) hidden.add(el.id);
+  for (const el of elements) if (paintedByOthers(el)) hidden.add(el.id);
   return hidden;
 }
 

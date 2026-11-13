@@ -1056,3 +1056,18 @@ html {
   animation-duration: var(--transition-duration-short);
   animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* Candidate contexts (docs/specs/021-event-storming/candidate-contexts.md "Its outline, exactly"): the outline's ink
+   and its name's, set by the layer from CONTEXT_INK; the light pair, the dark pair on a dark canvas. A selected or
+   highlighted outline takes the brand colour. */
+.lvd-context {
+  --ctx-line: var(--ctx-line-light);
+  --ctx-name: var(--ctx-name-light);
+  --ctx-active: var(--color-brand-600);
+}
+
+[data-dark-canvas] .lvd-context {
+  --ctx-line: var(--ctx-line-dark);
+  --ctx-name: var(--ctx-name-dark);
+  --ctx-active: var(--color-brand-400);
+}

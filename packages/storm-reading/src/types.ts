@@ -117,4 +117,15 @@ export type StormReading = {
   chains: StormChain[];
   loose: ElementId[];
   gaps: StormGap[];
+  // The kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md "In the reading and the export"),
+  // in timeline order of their first note. Absent in a reading made before contexts: read as none.
+  contexts: StormContext[];
+};
+
+// A kept candidate context: its name and its notes, in reading order.
+export type StormContext = {
+  id: ElementId;
+  ref: string;
+  name: string;
+  notes: ElementId[];
 };

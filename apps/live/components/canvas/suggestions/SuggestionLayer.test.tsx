@@ -357,3 +357,44 @@ describe('the suggestions panel', () => {
     expect(vi.mocked(c.reveal).mock.calls[0]![0]).toMatchObject({ x: 1000 });
   });
 });
+
+// Suggested candidate contexts in the panel (docs/specs/021-event-storming/candidate-contexts.md "How a person sees
+// and decides").
+describe('SuggestionLayer: suggested contexts', () => {
+  const panel = () => screen.getByRole('complementary', { name: 'Suggestions' });
+  const context = (id: string, notes: string[], suggested = true): Element => ({
+    id,
+    type: 'shape',
+    shape: 'square',
+    x: 0,
+    y: 0,
+    width: 1,
+    height: 1,
+    label: `Context ${id}`,
+    esContext: { notes, ...(suggested ? { suggestion: { reason: `because ${id}` } } : {}) },
+  });
+  const left = note('l', 'domain-event', 200);
+
+  it('lists a suggested context among the notes, at its leftmost note, with its size and reason', () => {
+    const c = draw([...board, left, context('ctx', ['l', 'e']), context('kept', ['e'], false)]);
+    act(() => setSuggestionsPanelOpen(TAB, true));
+    const rows = within(panel()).getAllByRole('listitem');
+    expect(rows.map((r) => r.dataset.suggestionRow)).toEqual(['ctx', 'a', 'c', 'r', 'p']);
+    expect(rows[0]!.textContent).toContain('Context ctx · 2 notes');
+    expect(rows[0]!.textContent).toContain('because ctx');
+    fireEvent.pointerEnter(rows[0]!);
+    expect(vi.mocked(c.reveal).mock.calls[0]![0]).toMatchObject({ x: 200, width: 1000 });
+    fireEvent.pointerLeave(rows[0]!);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Apply suggestion: Candidate context: Context ctx' }),
+    );
+    expect(c.apply).toHaveBeenCalledWith('ctx');
+  });
+
+  it('shows the panel for a board whose only suggestions are contexts, never an orphan', () => {
+    draw([left, context('ctx', ['l']), context('orphan', ['gone'])]);
+    expect(within(panel()).getByRole('button', { name: '1 suggestion' })).toBeTruthy();
+    act(() => setSuggestionsPanelOpen(TAB, true));
+    expect(within(panel()).getByText('1 note', { exact: false })).toBeTruthy();
+  });
+});

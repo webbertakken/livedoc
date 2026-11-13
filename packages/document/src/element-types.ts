@@ -20,6 +20,7 @@ import type { CardMedia } from './card';
 import type { ChipLook } from './chip';
 import type { AttachPoint } from './attachment';
 import type { BoundaryStyle } from './boundary';
+import type { EsContext } from './candidate-contexts';
 import type { ConceptAnim, ConceptRow, PyramidVariant } from './concept';
 import type { PenColourName } from './pen-colours';
 import type { QuickSwatchSlot } from './quick-swatches';
@@ -506,6 +507,10 @@ export type ShapeElement = {
   mindLook?: MindLook;
   // A boundary's look (docs/specs/009-elements/boundary.md); absent = Tab.
   boundaryStyle?: BoundaryStyle;
+  // A candidate context on an event-storming board (docs/specs/021-event-storming/candidate-contexts.md): the notes it
+  // groups, and while suggested who suggested it and why. Its name is `label`; it is drawn from its notes, never as
+  // this shape.
+  esContext?: EsContext;
   // Concept graphics (docs/specs/009-elements/concept-graphics.md): the rows (a layer, tier or step each, with an
   // optional note), a pyramid's variant (absent = pyramid) and the Concept animation with its speed and repeat.
   conceptRows?: ConceptRow[];

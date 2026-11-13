@@ -55,9 +55,11 @@ export function removedLine(el: Element, naming: LineNaming, removal: Removal = 
       ? { reason: 'pinned' as const, pinnedTo: naming.refOf(removal.pinnedTo) }
       : removal.anchoredTo
         ? { reason: 'anchored' as const, anchoredTo: naming.refOf(removal.anchoredTo) }
-        : removal.unwrapped
-          ? { reason: 'unwrapped' as const }
-          : {}),
+        : removal.emptiedBy
+          ? { reason: 'emptied' as const, emptiedBy: naming.refOf(removal.emptiedBy) }
+          : removal.unwrapped
+            ? { reason: 'unwrapped' as const }
+            : {}),
   };
 }
 

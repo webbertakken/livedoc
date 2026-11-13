@@ -140,8 +140,11 @@ export function suggestionBoardElements(): Note[] {
   ];
 }
 
-// A new Event Storming board holding the order flow and its suggestions.
-export async function startSuggestionBoard(page: Page): Promise<void> {
+// A new Event Storming board holding the order flow and its suggestions, or the elements given.
+export async function startSuggestionBoard(
+  page: Page,
+  elements: readonly Record<string, unknown>[] = suggestionBoardElements(),
+): Promise<void> {
   await startTemplateDocument(page, 'Technical', /^Event storming/i);
   const notes = page.locator('[data-canvas-a11y-root]').getByRole('img', { name: /^Sticky note/ });
   await notes.first().waitFor();
@@ -176,7 +179,7 @@ export async function startSuggestionBoard(page: Page): Promise<void> {
       });
       if (!res.ok) throw new Error(`seeding the board failed: ${res.status}`);
     },
-    { base: apiBase, headers, elements: suggestionBoardElements() },
+    { base: apiBase, headers, elements },
   );
   await page.reload();
   await page.locator(`[data-element-id="${SUGGESTION_BOARD_IDS.orderShipped}"]`).first().waitFor();

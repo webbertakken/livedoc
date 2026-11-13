@@ -42,6 +42,8 @@ import {
   lucideWandSparkles,
   lucideWrench,
   lucidePencil,
+  lucideGroup,
+  lucideSquareDashed,
 } from '@livedoc/icons/lucide';
 
 /** Size step of every menu row and section icon. */
@@ -51,6 +53,9 @@ export const QUICK_ACTION_ICON_PX = 16;
 
 export const LayerUpIcon = lucideGlyph(lucideBringToFront, MENU_ICON_PX);
 export const LayerDownIcon = lucideGlyph(lucideSendToBack, MENU_ICON_PX);
+// A note's candidate context (docs/specs/021-event-storming/candidate-contexts.md): joining one, and leaving it.
+export const ContextJoinIcon = lucideGlyph(lucideGroup, MENU_ICON_PX);
+export const ContextLeaveIcon = lucideGlyph(lucideSquareDashed, MENU_ICON_PX);
 
 // The note / action / comment / link glyphs are the shared element-affordance drawings
 // (@livedoc/ui), the same ones the on-element badge pill shows, at the menu step.

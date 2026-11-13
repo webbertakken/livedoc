@@ -146,7 +146,7 @@ Your changesets reach the frame live. Their own selection never holds your write
 you act for them.`,
   },
   storm: {
-    summary: 'read an Event Storming board, suggest notes, export it',
+    summary: 'read an Event Storming board, suggest notes and contexts, export it',
     text: `Event Storming boards
 
 Read the board as a domain: the timeline of events, what leads to each, and the gaps.
@@ -171,6 +171,16 @@ Suggest it; people see it beside the note and apply or dismiss it. Nothing on th
 Sides: before and after along the note's lane (time runs left to right), above and below on the
 next lane. Write in the board's language and casing; an event in the past tense, a command as
 an intent. When a person asked for suggestions, suggest: never add the notes yourself.
+Group the notes into candidate contexts: the parts of the business the board splits into.
+Read the board, group the events by the part of the business they belong to, name each group
+in the business's words, and suggest it with a reason. A note belongs to at most one context.
+
+  livedoc storm suggest "Order flow" -f - <<'EOF'
+  suggest-context "Ordering" c2 e3 a1 reason="placing and paying for an order"
+  suggest-context "Kitchen" p4 c5 reason="what happens once the kitchen hears of it"
+  EOF
+
+People see a faint dashed outline round each group and apply or dismiss it.
 Take them back with: livedoc storm clear "Order flow"
 
 Photos of a physical wall become notes on the board with add_photo_notes (MCP): look at each

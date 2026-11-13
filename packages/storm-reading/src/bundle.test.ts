@@ -98,7 +98,7 @@ describe('buildExportBundle', () => {
     expect(bundle.manifest).toMatchObject({
       schema: EXPORT_MANIFEST_SCHEMA,
       language: 'typescript',
-      brief: 1,
+      brief: 2,
     });
     expect(bundle.changes).toBeNull();
   });

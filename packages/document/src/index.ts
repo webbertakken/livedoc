@@ -729,6 +729,15 @@ export * from './event-storming-lanes';
 export * from './event-storming-lane-landing';
 export * from './event-storming-next';
 export * from './event-storming-suggestions';
+export * from './candidate-contexts';
+export * from './candidate-context-outline';
+export {
+  CONTEXT_INK,
+  CONTEXT_NAME_PX,
+  CONTEXT_PLATE_H,
+  CONTEXT_PLATE_PAD_X,
+  contextPlate,
+} from './svg-render-contexts';
 export * from './event-storming-photo';
 export * from './event-storming-photo-wall';
 export * from './whiteboard';

@@ -50,7 +50,13 @@ export function registerStormTools(server: McpServer, env: Env): void {
     const api = clientFor(env, requireToken(extra));
     const read = await boardOf(api, args.documentId, args.tab);
     if (!read.ok) return errorResult(read.message);
-    const written = await suggestNotes(api, read, args.suggestions as SuggestionInput[], 'mcp');
+    const written = await suggestNotes(
+      api,
+      read,
+      (args.suggestions ?? []) as SuggestionInput[],
+      'mcp',
+      args.contexts ?? [],
+    );
     if (!written.ok) return errorResult(written.message);
     return textResult({
       documentId: written.documentId,

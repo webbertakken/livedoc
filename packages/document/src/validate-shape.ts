@@ -67,6 +67,7 @@ import {
   stringRule,
 } from './validate-primitives';
 import { isRecord } from './is-record';
+import { CONTEXT_NAME_MAX, isValidContextName, isValidEsContext } from './candidate-contexts';
 import {
   SANKEY_ALIGNS,
   SANKEY_LEFTOVERS,
@@ -580,5 +581,12 @@ const SHAPE_FIELD_CHECKS: readonly FieldCheck[] = [
 // A shape's own issue, its box already checked: the kind is required, the rest optional.
 export function shapeValidationIssue(el: Record<string, unknown>): ElementValidationIssue | null {
   if (!isNonEmptyStr(el.shape)) return issue('shape', 'a shape kind');
+  // A candidate context (docs/specs/021-event-storming/candidate-contexts.md "Where it lives"): its notes, and a name.
+  if (el.esContext !== undefined) {
+    if (!isValidEsContext(el.esContext))
+      return issue('esContext', 'a { notes, suggestion?: { reason?, by? } } candidate context');
+    if (!isValidContextName(el.label))
+      return issue('label', `a candidate context's name, 1 to ${CONTEXT_NAME_MAX} characters`);
+  }
   return firstFieldIssue(el, SHAPE_FIELD_CHECKS);
 }
