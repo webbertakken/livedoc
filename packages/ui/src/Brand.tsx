@@ -44,8 +44,11 @@ type BrandProps = {
   leading?: React.ReactNode;
   label?: string;
   markClassName?: string;
-  // Called on a press of the link, before it navigates (the editor counts its Back).
-  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+  // The link opens in a new tab (the editor's Back in a workbench frame with document scope).
+  newTab?: boolean;
+  // Called on a press of the link, before it navigates (the editor counts its Back). Without an href the logo is a
+  // button that does this alone (a workspace frame's Back), the whole of it the logo, as the link is.
+  onClick?: (e: React.MouseEvent<HTMLElement>) => void;
 };
 
 // Type size, and the gap between the mark and the wordmark at that size.
@@ -90,6 +93,7 @@ export function Brand({
   leading,
   label = 'LiveDoc',
   markClassName,
+  newTab = false,
   onClick,
 }: BrandProps) {
   // Pointing at the logo (or reaching it by keyboard) fans the stack open; the wordmark holds still.
@@ -156,14 +160,28 @@ export function Brand({
         href={href}
         aria-label={label}
         className={classes}
+        {...(newTab ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
         onClick={(e) => {
           onClick?.(e);
-          scrollTopIfHere(e);
+          if (!newTab) scrollTopIfHere(e);
         }}
         {...fanHandlers}
       >
         {content}
       </a>
+    );
+  }
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        aria-label={label}
+        className={classes}
+        onClick={onClick}
+        {...fanHandlers}
+      >
+        {content}
+      </button>
     );
   }
   return (

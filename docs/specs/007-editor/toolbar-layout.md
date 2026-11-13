@@ -25,12 +25,14 @@ on two lines over the canvas, a top line and a bottom line, each a single row wh
     document was opened from, replacing the frame's separate Back button
     ([Workbench embeds](../013-workspace/workbench-embeds.md#what-renders)). Its name is "Back to the Explorer" (in a
     frame, "Back"), with a hover card.
+  - In a workbench frame with document scope there is no Explorer in the frame to go back to: Back opens the Explorer
+    in a new tab, named "Back to the Explorer (opens in a new tab)", its hover card saying so.
   - The caret is a chevron 8 × 14 px, a 1.75 px round stroke in the chrome's muted ink (slate-500, slate-400 in dark),
     8 px before the logo; the logo is the brand mark alone, 24 px, **without the wordmark**, tinted by the tab's theme
     as today ([Brand mark](../004-interface-design/brand-mark.md)). Caret and mark are one 36 px tall hit area with
     the group's hover fill.
-  - Where there is nowhere to go back to (a workbench frame with document scope) the caret is not drawn and the mark
-    is not a link.
+  - Back looks and answers the same wherever the editor runs, the app or either workbench frame: the caret, the hover
+    fill and ink, the focus ring, and the logo's assembly, fan and press across the whole hit area.
 - **Centre: the Palette strip** (below), or Sketch's dock when it sits at the top ([Sketch mode](../023-draw-mode/draw-mode.md)).
 - **Right: the actions group.** In order: Search, Settings, the appearance toggle (the `ChromeControls` trio, icon
   only; **Button Labels** names them, [User preferences](user-preferences.md)), a divider, the document actions that
@@ -655,8 +657,6 @@ fits a phone, with three figures.
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
 The code cites each by its id.
 
-- **D91** Where the brand group's Back goes in a document scope workbench frame: Nowhere: the mark without its caret,
-  not a link (default).
 - **D92** Where a maximised or tab-filling board's or Sheet's name rides without a menu box: In the document group's
   active tab segment, in place of the tab's name (default).
 - **D93** Where Start Tour, Make a Copy, Present and Share sit, and how Search, Settings and appearance show: The

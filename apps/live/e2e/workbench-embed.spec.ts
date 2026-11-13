@@ -64,6 +64,15 @@ test('a paired workbench frames the editor, hears the selection, renews, and end
     frame.getByRole('link', { name: 'Open in LiveDoc (opens in a new tab)' }),
   ).toBeVisible();
   await expect(frame.getByRole('button', { name: /^Share/ })).toHaveCount(0);
+  // Back is the regular editor's (I10): caret and mark, the hover fill, opening the Explorer in a new tab.
+  const back = frame.getByRole('link', { name: 'Back to the Explorer (opens in a new tab)' });
+  await expect(back).toHaveAttribute('target', '_blank');
+  await expect(back.locator('[data-back-caret]')).toBeVisible();
+  const fill = () => back.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const resting = await fill();
+  await back.hover();
+  await expect.poll(fill).not.toBe(resting);
+  await page.mouse.move(1, 1);
   await expect(frame.getByText('Explorer', { exact: true })).toHaveCount(0);
   await expect(frame.getByText('Wireframe').first()).toBeVisible();
   await expect

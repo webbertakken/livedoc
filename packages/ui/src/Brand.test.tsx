@@ -59,6 +59,49 @@ describe('Brand', () => {
     expect(link.firstElementChild?.hasAttribute('data-caret')).toBe(true);
     expect(link.querySelector('svg')?.getAttribute('class')).toContain('size-6');
   });
+
+  // A workbench frame with document scope opens the Explorer beside it (docs/specs/007-editor/toolbar-layout.md).
+  it('opens its link in a new tab when asked, and never scrolls in place for it', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    const scrollTo = vi.fn();
+    window.scrollTo = scrollTo as never;
+    const { container } = render(<Brand href={window.location.pathname} newTab />);
+    const link = container.querySelector('a')!;
+    expect(link.getAttribute('target')).toBe('_blank');
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer');
+    link.addEventListener('click', (e) => e.preventDefault());
+    fireEvent.click(link);
+    expect(scrollTo).not.toHaveBeenCalled();
+  });
+
+  it('keeps its link in this tab by default', () => {
+    const link = render(<Brand href="/" />).container.querySelector('a')!;
+    expect(link.hasAttribute('target')).toBe(false);
+    expect(link.hasAttribute('rel')).toBe(false);
+  });
+
+  // A workspace frame's Back acts in the page rather than navigating: the same logo, as a button.
+  it('is a button, the whole of it the logo, when it acts instead of linking', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    const onClick = vi.fn();
+    const { container } = render(
+      <Brand
+        wordmark={false}
+        label="Back"
+        leading={<i data-caret="" />}
+        onClick={onClick}
+        assemble
+      />,
+    );
+    const button = container.querySelector('button')!;
+    expect(button.getAttribute('type')).toBe('button');
+    expect(button.getAttribute('aria-label')).toBe('Back');
+    expect(button.firstElementChild?.hasAttribute('data-caret')).toBe(true);
+    expect(button.hasAttribute('data-assemble')).toBe(true);
+    expect(container.querySelector('a')).toBeNull();
+    fireEvent.click(button);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
 });
 
 describe('BrandMark', () => {
