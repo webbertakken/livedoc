@@ -28,6 +28,7 @@ import { applySet } from './operations/set';
 import { buildResultLines } from './results';
 import { planOnlyOutsidePlan, tabLocked, tooLarge } from './rejections';
 import { applySuggest } from './operations/suggest';
+import { applyWall } from './operations/wall';
 import { EDIT_MAX_ERRORS } from './vocabulary';
 import { createState, type EditState } from './state';
 import type { ApplyOptions, ApplyOutcome, ApplyRejection, EditLog, EditOperation } from './types';
@@ -68,6 +69,8 @@ function applyOperation(
       return applyWrap(state, operation, index);
     case 'suggest':
       return applySuggest(state, operation, index);
+    case 'wall':
+      return applyWall(state, operation, index);
   }
 }
 

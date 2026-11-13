@@ -963,6 +963,10 @@ server (`packages/agent-verbs/src/storm/`) reads through the api's `storm` view 
   `not_event_storming`.
 - **`suggest_notes`** (write): up to 30 suggestions (`kind`, `words`, `anchor` ref, `side`, `reason`, `gap`) as one
   changeset of `suggest` operations; a refusal writes nothing and names the suggestion. Answers each suggestion's ref.
+- **`add_photo_notes`** (write): the notes an agent read off photos of a physical wall, in wall order (per photo its
+  `width`, `height` and `notes`, each a box in pixels with an optional `kind` and `words`), as one changeset of the
+  `wall` operation; the engine stitches them against the board and lands a draft the person adds or discards
+  ([Event storming](../021-event-storming/event-storming.md) Phase 11). The photos stay with the agent.
 - **`export_event_storming`** (read): the [domain export](../021-event-storming/domain-export.md#the-mcp) bundle as
   text; `language` and `previous` are optional.
 - `update_document`'s `ops` take `suggest` as well, and `read_document` names `read_event_storming` on a board.
@@ -1052,11 +1056,11 @@ which is how the gap was found.
 Three behaviours cover every tool, and each is a preset in
 `apps/mcp/src/tool-annotations.ts`:
 
-| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                     |
-| --------------- | -------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming` |
-| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`    |
-| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                 |
+| Behaviour       | `readOnlyHint` | `destructiveHint` | Tools                                                                                                                                                                                                     |
+| --------------- | -------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **read**        | `true`         | (not applicable)  | `find_documents`, `read_document`, `list_templates`, `search_icons`, `list_trash`, `list_items`, `list_sheets`, `read_sheet`, `read_form`, `read_event_storming`, `export_event_storming`                 |
+| **write**       | `false`        | `false`           | `create_document`, `add_tab`, `share_document`, `rename_document`, `restore_document`, `add_board`, `change_board`, `add_sheet`, `add_form`, `share_form`, `try_form`, `suggest_notes`, `add_photo_notes` |
+| **destructive** | `false`        | `true`            | `update_document`, `delete_document`, `change_items`, `change_card_types`, `change_sheet`, `change_pages`, `write_article`, `change_form`                                                                 |
 
 The split mirrors §4.11's read-only-token boundary exactly (what a
 `read_only = 1` token can still reach is what `read` annotates), so the hint a

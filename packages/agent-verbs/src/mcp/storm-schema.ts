@@ -2,10 +2,12 @@
 // suggest_notes. Notes are named by the refs the reading prints; the limits come from the suggestion model, so the tools
 // and the engine agree.
 import { z } from 'zod';
+import { PHOTO_MAX_NOTES } from '@livedoc/api-schema';
 import {
   ES_SUGGESTION_SIDES,
   EVENT_STORMING_NOTES,
   SUGGESTION_REASON_MAX,
+  WALL_MAX_PHOTOS,
 } from '@livedoc/document';
 import { DOMAIN_EXPORT_LANGUAGES, GAP_CODES } from '@livedoc/storm-reading';
 import { SUGGEST_NOTES_MAX } from '../storm/storm-calls';
@@ -86,6 +88,52 @@ export const suggestNotesOutput = {
     .nullable()
     .describe('The changeset; revert it to take the suggestions back.'),
   lines: z.array(z.string()).describe('One result line per suggestion added, with its ref.'),
+  url,
+};
+
+// A whole wall from several photos (docs/specs/021-event-storming/event-storming.md Phase 11).
+const wallNote = z.object({
+  kind: z
+    .enum(kinds)
+    .optional()
+    .describe('The note kind by its paper colour; absent when unsure (a domain event).'),
+  words: z
+    .string()
+    .optional()
+    .describe('The words on the note, verbatim as written; absent when unreadable.'),
+  x: z.number().describe('Left edge of the note in the photo, in pixels.'),
+  y: z.number().describe('Top edge, in pixels.'),
+  w: z.number().positive().describe('Width, in pixels.'),
+  h: z.number().positive().describe('Height, in pixels.'),
+});
+const wallPhoto = z.object({
+  width: z.number().positive().describe('The photo’s width in pixels.'),
+  height: z.number().positive().describe('The photo’s height in pixels.'),
+  notes: z
+    .array(wallNote)
+    .max(PHOTO_MAX_NOTES)
+    .describe('Every sticky note you see in this photo.'),
+});
+
+export const addPhotoNotesShape = {
+  documentId,
+  tab,
+  photos: z
+    .array(wallPhoto)
+    .min(1)
+    .max(WALL_MAX_PHOTOS)
+    .describe(
+      `The photos of one wall in order, left to right, at most ${WALL_MAX_PHOTOS}. Overlapping photos are stitched: a note two photos both show lands once.`,
+    ),
+};
+
+export const addPhotoNotesOutput = {
+  documentId: z.string().describe('The document.'),
+  tabId: z.string().describe('The board.'),
+  changesetId: z.string().nullable().describe('The changeset; revert it to take the draft back.'),
+  lines: z
+    .array(z.string())
+    .describe('One result line per note landed in the draft, with its ref.'),
   url,
 };
 

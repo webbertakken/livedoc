@@ -256,6 +256,7 @@ const ARGS = {
   sheet: 'Budget',
   action: 'close',
   suggestions: [{ kind: 'command', words: 'Pay', anchor: 'e1', side: 'before' }],
+  photos: [{ width: 100, height: 50, notes: [{ words: 'Paid', x: 5, y: 5, w: 10, h: 10 }] }],
 };
 
 const AUTHED = { authInfo: { token: 'tok_test' } };
@@ -268,12 +269,13 @@ const AUTHED = { authInfo: { token: 'tok_test' } };
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('registerTools', () => {
-  it('registers the thirty-one documented tools, each with a description', () => {
+  it('registers the thirty-two documented tools, each with a description', () => {
     const { registered } = harness();
     const current = registered.filter((r) => !isDeprecated(r));
     expect(current.map((r) => r.name).sort()).toEqual([
       'add_board',
       'add_form',
+      'add_photo_notes',
       'add_sheet',
       'add_tab',
       'change_board',
@@ -436,6 +438,7 @@ describe('tool annotations', () => {
     // docs/specs/015-api/mcp-server.md §4.9f: suggestions move nothing and write no note.
     read_event_storming: 'read',
     suggest_notes: 'write',
+    add_photo_notes: 'write',
     export_event_storming: 'read',
   };
 

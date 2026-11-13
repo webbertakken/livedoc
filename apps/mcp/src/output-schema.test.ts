@@ -339,6 +339,20 @@ const CALLS: { tool: string; output: keyof typeof outputs; args: Record<string, 
       ],
     },
   },
+  {
+    tool: 'add_photo_notes',
+    output: 'addPhotoNotesOutput',
+    args: {
+      documentId: 'd1',
+      photos: [
+        {
+          width: 1000,
+          height: 500,
+          notes: [{ kind: 'domain-event', words: 'Order Shipped', x: 50, y: 50, w: 100, h: 100 }],
+        },
+      ],
+    },
+  },
   { tool: 'find_documents', output: 'findDocumentsOutput', args: {} },
   { tool: 'read_document', output: 'readDocumentOutput', args: { documentId: 'd1' } },
   {

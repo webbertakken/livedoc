@@ -237,6 +237,8 @@ export function parseOperationWords(
   lineEnd: number,
 ): LineResult {
   const end = head.column + head.raw.length;
+  // A wall carries photos of notes: only its JSON form says that.
+  if (name === 'wall') return fail(undefined, lineEnd, 'the JSON form: {"op":"wall","photos":[…]}');
   const needSelector = (terms: readonly Word[]) =>
     terms.length ? null : fail(rest[0], end, 'a selector: a ref, a "label" or key:value terms');
 

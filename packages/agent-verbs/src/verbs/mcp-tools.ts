@@ -25,6 +25,8 @@ import {
   readEventStormingShape,
   suggestNotesOutput,
   suggestNotesShape,
+  addPhotoNotesOutput,
+  addPhotoNotesShape,
 } from '../mcp/storm-schema';
 import {
   changePagesOutput,
@@ -532,6 +534,19 @@ export const mcpSuggestNotes = mcpTool('suggest_notes', {
   outputSchema: suggestNotesOutput,
 });
 
+export const mcpAddPhotoNotes = mcpTool('add_photo_notes', {
+  behaviour: 'write',
+  title: 'Add a wall of notes from photos to an Event Storming board',
+  description:
+    'Turn photos of a physical Event Storming wall into notes on a board. Look at each photo yourself and send, per ' +
+    'photo in wall order (left to right), its size and every sticky note in it: its box in pixels, its kind by paper ' +
+    'colour, and its words verbatim. Overlapping photos are stitched, a note two photos show lands once, and notes ' +
+    'the board already has are left alone. The notes land as a draft the person adds or discards in the editor. The ' +
+    'photos stay with you; only what you read is sent.',
+  inputSchema: addPhotoNotesShape,
+  outputSchema: addPhotoNotesOutput,
+});
+
 export const mcpExportEventStorming = mcpTool('export_event_storming', {
   behaviour: 'read',
   title: 'Export an Event Storming board as a spec and domain types',
@@ -565,6 +580,7 @@ export const MCP_TOOL_VERBS: readonly McpToolVerb[] = [
   mcpTryForm,
   mcpReadEventStorming,
   mcpSuggestNotes,
+  mcpAddPhotoNotes,
   mcpExportEventStorming,
   mcpFindDocuments,
   mcpReadDocument,

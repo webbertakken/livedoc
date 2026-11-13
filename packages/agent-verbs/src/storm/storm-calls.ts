@@ -177,6 +177,33 @@ export async function suggestNotes(
   return postOperations(api, board.documentId, board.tabId, operations, summary, client);
 }
 
+// A whole wall from several photos as one draft (docs/specs/021-event-storming/event-storming.md Phase 11): the notes
+// read off each photo, in wall order, stitched by the engine against the board as it is.
+export type WallPhotoInput = {
+  width: number;
+  height: number;
+  notes: { kind?: string; words?: string; x: number; y: number; w: number; h: number }[];
+};
+
+export async function addPhotoNotes(
+  api: ApiClient,
+  board: { documentId: string; tabId: string },
+  photos: readonly WallPhotoInput[],
+  client: Client,
+): Promise<StormWrite | StormRefusal> {
+  if (photos.length === 0) return refuse('nothing_to_add', 'Give at least one photo.');
+  const notes = photos.reduce((sum, p) => sum + p.notes.length, 0);
+  const summary = `add ${notes} note${notes === 1 ? '' : 's'} from ${photos.length} photo${photos.length === 1 ? '' : 's'}`;
+  return postOperations(
+    api,
+    board.documentId,
+    board.tabId,
+    [{ op: 'wall', photos }],
+    summary,
+    client,
+  );
+}
+
 // Suggest lines as written (the line form or JSON lines), checked to hold nothing but suggestions.
 export async function suggestFromText(
   api: ApiClient,

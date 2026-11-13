@@ -173,6 +173,11 @@ next lane. Write in the board's language and casing; an event in the past tense,
 an intent. When a person asked for suggestions, suggest: never add the notes yourself.
 Take them back with: livedoc storm clear "Order flow"
 
+Photos of a physical wall become notes on the board with add_photo_notes (MCP): look at each
+photo yourself and send, per photo in wall order (left to right), its size and every sticky in
+it: its box in pixels, its kind by paper colour, its words verbatim. Overlapping photos are
+stitched; the notes land as a draft the person adds or discards.
+
 Turn the board into a spec and domain types, in the repository you work in:
 
   livedoc storm export "Order flow" --to .

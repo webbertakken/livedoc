@@ -1,5 +1,5 @@
 import { isPhotoAcceptedType } from '@livedoc/api-schema';
-import { naturalCompare } from '@livedoc/document';
+import { WALL_MAX_PHOTOS, naturalCompare } from '@livedoc/document';
 import { ByteBudget } from './inflate';
 import { listZip, readZipEntry } from './zip-reader';
 
@@ -7,8 +7,7 @@ import { listZip, readZipEntry } from './zip-reader';
 // person does"): several files, zips of photos as a phone's photo app exports them, or both mixed, opened here in the
 // browser and put in file-name order. Folders, other files and a zip inside a zip are skipped and counted.
 
-// The most photos one wall takes (default). Safe range: 10 to 40; each photo is detected one after another.
-export const WALL_MAX_PHOTOS = 20;
+export { WALL_MAX_PHOTOS };
 // The most a zip may inflate to, summed over its photos. Safe range: 100 MB to 500 MB.
 export const WALL_MAX_ZIP_BYTES = 200 * 1024 * 1024;
 

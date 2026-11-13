@@ -114,6 +114,19 @@ export type SuggestOperation = {
   id?: string;
 };
 
+// The notes read off several photos of one wall, in wall order (docs/specs/021-event-storming/event-storming.md
+// Phase 11): each note's box in its photo's pixels. JSON form only.
+export type WallNoteInput = {
+  kind?: string;
+  words?: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+export type WallPhotoInput = { width: number; height: number; notes: WallNoteInput[] };
+export type WallOperation = { op: 'wall'; photos: WallPhotoInput[] };
+
 export type EditOperation =
   | AddOperation
   | SetOperation
@@ -127,7 +140,8 @@ export type EditOperation =
   | OrderOperation
   | LayoutOperation
   | TestOperation
-  | SuggestOperation;
+  | SuggestOperation
+  | WallOperation;
 
 export type ParseOutcome = { operations: EditOperation[] } | { errors: EditRejection[] };
 

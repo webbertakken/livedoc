@@ -66,10 +66,33 @@ export function placementIssue(value: unknown): string | null {
   return null;
 }
 
+// The rule a wall's photos break, or null: a list of { width, height, notes: [{ kind?, words?, x, y, w, h }] }.
+function wallPhotosIssue(value: unknown): string | null {
+  const what =
+    'a non-empty list of { "width", "height", "notes": [{ "kind"?, "words"?, "x", "y", "w", "h" }] }';
+  if (!Array.isArray(value) || value.length === 0) return expected('photos', what);
+  for (const photo of value) {
+    if (!isRecord(photo) || !isFiniteNumber(photo.width) || !isFiniteNumber(photo.height))
+      return expected('photos', what);
+    if (!Array.isArray(photo.notes)) return expected('photos', what);
+    for (const note of photo.notes) {
+      if (!isRecord(note) || !['x', 'y', 'w', 'h'].every((k) => isFiniteNumber(note[k])))
+        return expected('photos', `${what}; every note a box of four numbers`);
+      if (note.kind !== undefined && typeof note.kind !== 'string')
+        return expected('photos', 'a note\'s "kind" a string');
+      if (note.words !== undefined && typeof note.words !== 'string')
+        return expected('photos', 'a note\'s "words" a string');
+    }
+  }
+  return null;
+}
+
 // The rule one member breaks, or null. `to` is an end in `order` and a selector elsewhere.
 function memberIssue(name: EditOperationName, raw: Raw, member: string): string | null {
   const value = raw[member];
   switch (member) {
+    case 'photos':
+      return wallPhotosIssue(value);
     case 'words':
     case 'reason':
     case 'gap':
@@ -134,6 +157,7 @@ const REQUIRED: Readonly<Record<EditOperationName, readonly string[]>> = {
   layout: ['target'],
   test: ['target', 'fields'],
   suggest: ['kind', 'words', 'anchor', 'side'],
+  wall: ['photos'],
 };
 
 // Members of which exactly one, at most one (`atMostOne`) or at least one (`atLeastOne`) is given,

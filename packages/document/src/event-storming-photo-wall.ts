@@ -29,6 +29,8 @@ export const WALL_SAME_NOTE_PX = 110;
 // How far a fitted scale may stray from the photo's own. Safe range: 0.5 to 2.
 export const WALL_SCALE_MIN = 0.7;
 export const WALL_SCALE_MAX = 1.4;
+// The most photos one wall takes (spec default). Safe range: 10 to 40.
+export const WALL_MAX_PHOTOS = 20;
 // Notes with words this alike are the same words, as the single-photo match reads them.
 const SAME_WORDS = 0.72;
 
