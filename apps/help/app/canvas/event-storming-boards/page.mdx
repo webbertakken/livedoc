@@ -209,6 +209,19 @@ An AI agent connected to LiveDoc (through the [MCP connection](/help/account-and
 
 Only people who can edit the board see suggestions: applying one reshapes the board.
 
+## Candidate Contexts
+
+As a wall fills up, the events start to fall into parts of the business: signing people up, taking their money, running the classes. A **candidate context** is one of those parts, drawn as a loose, dashed outline round its notes with a name on top. It is a first guess at where the business splits, not a final design.
+
+- An agent can **suggest** candidate contexts. A suggested one is drawn faint, its name marked _suggested_, and it is listed in the **suggestions** panel among the notes. Apply it to keep it, or dismiss it; **Apply All** and **Dismiss All** include them.
+- The outline is never drawn by hand: it shapes itself round the outermost notes it holds, so it follows them when they move.
+- **Click the outline or its name** to select it. **Double-click the name** (or press **Enter**) to rename it, and press **Delete** to remove it; its notes stay where they are.
+- To change which notes it holds, right-click a note and use **Add to Context** or **Remove from Context**, or **drag the note**: drop it inside an outline to join it, or well clear of its own outline to leave it. While you drag, the outline it would join lights up.
+- A note belongs to at most one candidate context. Deleting a context's last note removes the context too.
+- Candidate contexts show in PNG and SVG exports, and the domain export groups its model by them.
+
+Everyone on the board sees the contexts that were kept; only people who can edit the board change them or see the suggested ones.
+
 ## Exporting a Domain Model
 
 **Export** in the tab menu offers **Domain Model** on an event storming board. It turns the board into what a team builds from it: a spec of the domain and its types, in the language you choose.

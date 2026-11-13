@@ -255,20 +255,18 @@ function ContextPlate({
         <>
           <PlateAction
             label={`Apply suggested candidate context: ${name}`}
+            act="apply"
             minHit={minHit}
             onClick={acts.suggested.onApply}
             className="text-emerald-700 hover:bg-emerald-50 in-[[data-dark-canvas]]:text-emerald-400 in-[[data-dark-canvas]]:hover:bg-emerald-950"
-          >
-            <CheckIcon size={12} />
-          </PlateAction>
+          />
           <PlateAction
             label={`Dismiss suggested candidate context: ${name}`}
+            act="dismiss"
             minHit={minHit}
             onClick={acts.suggested.onDismiss}
             className="text-slate-600 hover:bg-slate-100 in-[[data-dark-canvas]]:text-slate-300 in-[[data-dark-canvas]]:hover:bg-slate-800"
-          >
-            <CloseIcon size={12} />
-          </PlateAction>
+          />
         </>
       ) : null}
     </div>
@@ -280,13 +278,13 @@ function PlateAction({
   minHit,
   onClick,
   className,
-  children,
+  act,
 }: {
+  act: 'apply' | 'dismiss';
   label: string;
   minHit: number;
   onClick: () => void;
   className: string;
-  children: React.ReactNode;
 }) {
   const size = Math.max(CONTEXT_PLATE_H - 4, minHit);
   return (
@@ -301,7 +299,7 @@ function PlateAction({
       className={`-my-2 flex shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-brand-600 ${className}`}
       style={{ width: size, height: size }}
     >
-      {children}
+      {act === 'apply' ? <CheckIcon size={12} /> : <CloseIcon size={12} />}
     </button>
   );
 }
