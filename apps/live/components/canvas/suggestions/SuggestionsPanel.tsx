@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import {
   Button,
   CheckIcon,
@@ -10,7 +10,7 @@ import {
   SparkleIcon,
   SwitchRow,
 } from '@livedoc/ui';
-import { eventStormingNote, type Rect } from '@livedoc/document';
+import { eventStormingNote, type CandidateContextElement, type Rect } from '@livedoc/document';
 import type { SuggestionElement } from '@/lib/suggestion-hints';
 import { suggestionName } from './SuggestionPlaceholder';
 import {
@@ -23,11 +23,64 @@ import {
 // The suggestions panel (docs/specs/021-event-storming/suggestions.md "How a person sees them"): the only chrome
 // the feature adds. Collapsed by default to a button saying how many; expanded, every suggestion in timeline order
 // with ✓ and ✕, Show All Suggestions, Apply All and Dismiss All. Pointing at a row, or focusing it, brings its
-// anchor and spot into view and previews it on the board.
+// anchor and spot into view and previews it on the board. Suggested candidate contexts are listed among the notes,
+// at their leftmost note (docs/specs/021-event-storming/candidate-contexts.md "How a person sees and decides").
 
-export type PanelRow = { suggestion: SuggestionElement; spot: Rect; anchor: Rect };
+export type PanelRow =
+  | { type: 'note'; suggestion: SuggestionElement; spot: Rect; anchor: Rect }
+  | { type: 'context'; context: CandidateContextElement; bounds: Rect; notes: number };
+
+export const panelRowId = (row: PanelRow) =>
+  row.type === 'note' ? row.suggestion.id : row.context.id;
 
 const countLabel = (n: number) => `${n} suggestion${n === 1 ? '' : 's'}`;
+const noteCount = (n: number) => `${n} note${n === 1 ? '' : 's'}`;
+
+// One row's face: its swatch, its kind and words (or a context's name and size), and the reason.
+function rowFace(row: PanelRow): {
+  name: string;
+  swatch: ReactNode;
+  kind: ReactNode;
+  words: string;
+  reason?: string;
+  style?: React.CSSProperties;
+} {
+  if (row.type === 'context') {
+    const c = row.context;
+    return {
+      name: `Candidate context: ${c.label}`,
+      swatch: (
+        <span
+          aria-hidden
+          className="mt-0.5 size-4 shrink-0 rounded-[5px] border-2 border-dashed border-slate-500 dark:border-slate-400"
+        />
+      ),
+      kind: (
+        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Context</span>
+      ),
+      words: `${c.label} · ${noteCount(row.notes)}`,
+      reason: c.esContext.suggestion?.reason,
+    };
+  }
+  const s = row.suggestion;
+  return {
+    name: suggestionName(s),
+    swatch: (
+      <span
+        aria-hidden
+        className={`mt-0.5 size-4 shrink-0 rounded-[3px] border-2 border-dashed ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER}`}
+      />
+    ),
+    kind: (
+      <span className={`text-xs font-semibold ${SUGGESTION_STROKE_TEXT}`}>
+        {eventStormingNote(s.esKind).label}
+      </span>
+    ),
+    words: s.label ?? '',
+    reason: s.esSuggestion.reason,
+    style: suggestionStrokeVars(s.esKind),
+  };
+}
 
 export function SuggestionsPanel({
   rows,
@@ -87,52 +140,45 @@ export function SuggestionsPanel({
           <>
             <ol id={listId} className="min-h-0 flex-1 overflow-y-auto py-1">
               {rows.map((row) => {
-                const s = row.suggestion;
-                const note = eventStormingNote(s.esKind);
-                const name = suggestionName(s);
+                const id = panelRowId(row);
+                const face = rowFace(row);
                 return (
                   <li
-                    key={s.id}
+                    key={id}
                     tabIndex={0}
-                    aria-label={name}
-                    data-suggestion-row={s.id}
+                    aria-label={face.name}
+                    data-suggestion-row={id}
                     onPointerEnter={() => onPreview(row)}
                     onPointerLeave={() => onLeave(row)}
                     onFocus={() => onPreview(row)}
                     onBlur={() => onLeave(row)}
                     className="flex gap-3 px-4 py-2.5 outline-none hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-500 dark:hover:bg-slate-800/60 dark:focus-visible:bg-slate-800/60"
-                    style={suggestionStrokeVars(s.esKind)}
+                    style={face.style}
                   >
-                    <span
-                      aria-hidden
-                      className={`mt-0.5 size-4 shrink-0 rounded-[3px] border-2 border-dashed ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER}`}
-                    />
+                    {face.swatch}
                     <div className="min-w-0 flex-1">
                       <p className="text-sm">
-                        <span className={`text-xs font-semibold ${SUGGESTION_STROKE_TEXT}`}>
-                          {note.label}
-                        </span>{' '}
-                        <span className="font-medium">{s.label}</span>
+                        {face.kind} <span className="font-medium">{face.words}</span>
                       </p>
-                      {s.esSuggestion.reason ? (
+                      {face.reason ? (
                         <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
-                          {s.esSuggestion.reason}
+                          {face.reason}
                         </p>
                       ) : null}
                     </div>
                     <div className="flex shrink-0 items-start gap-1">
                       <button
                         type="button"
-                        aria-label={`Apply suggestion: ${name}`}
-                        onClick={() => onApply(s.id)}
+                        aria-label={`Apply suggestion: ${face.name}`}
+                        onClick={() => onApply(id)}
                         className="flex size-7 items-center justify-center rounded-full text-emerald-700 hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-emerald-400 dark:hover:bg-emerald-950"
                       >
                         <CheckIcon size={14} />
                       </button>
                       <button
                         type="button"
-                        aria-label={`Dismiss suggestion: ${name}`}
-                        onClick={() => onDismiss(s.id)}
+                        aria-label={`Dismiss suggestion: ${face.name}`}
+                        onClick={() => onDismiss(id)}
                         className="flex size-7 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
                         <CloseIcon size={14} />

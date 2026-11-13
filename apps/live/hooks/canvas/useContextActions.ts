@@ -1,0 +1,87 @@
+import {
+  contextOf,
+  isKeptContext,
+  joinContext,
+  leaveContext,
+  removeContexts,
+  renameContext,
+  type Element,
+  type ElementId,
+  type Tab,
+} from '@livedoc/document';
+import { debugLog } from '@/lib/debug-log';
+import { track } from '@/lib/telemetry';
+
+// The acts on a kept candidate context (docs/specs/021-event-storming/candidate-contexts.md "How a person sees and
+// decides"): rename it, delete it, and change its notes from a note's menu. Each is ONE commit through the ordinary
+// choke point, so one Undo takes it back; the board each leaves is the document's own context writes. Joining and
+// leaving by dragging ride the drag's own change (context-drop-on-release.ts).
+
+type ContextActionsDeps = {
+  activeTab: Tab;
+  // The creation gate (a view-only session, a locked tab, a hidden or locked active layer): every act reshapes.
+  createBlocked: boolean;
+  commit: (mapper: (els: Element[]) => Element[]) => void;
+};
+
+export type ContextActions = {
+  rename: (id: ElementId, name: string) => void;
+  remove: (id: ElementId) => void;
+  // Notes join a kept context, leaving any other.
+  addNotes: (contextId: ElementId, noteIds: readonly ElementId[]) => void;
+  // Notes leave whatever context holds them.
+  removeNotes: (noteIds: readonly ElementId[]) => void;
+};
+
+type Refusal = 'blocked' | 'not-a-kept-context' | 'unchanged' | 'not-in-a-context';
+const refuse = (reason: Refusal) => debugLog('[contexts] refused', { reason });
+
+export function useContextActions({
+  activeTab,
+  createBlocked,
+  commit,
+}: ContextActionsDeps): ContextActions {
+  const kept = (id: ElementId) =>
+    activeTab.elements.some((el) => el.id === id && isKeptContext(el));
+  const guard = (ok: boolean, reason: Refusal): boolean => {
+    if (createBlocked) refuse('blocked');
+    else if (!ok) refuse(reason);
+    return !createBlocked && ok;
+  };
+
+  const rename = (id: ElementId, name: string) => {
+    if (!guard(kept(id), 'not-a-kept-context')) return;
+    const renamed = renameContext(activeTab.elements, id, name);
+    if (!guard(renamed !== activeTab.elements, 'unchanged')) return;
+    commit((els) => renameContext(els, id, name));
+    debugLog('[contexts] renamed', { id });
+    track('Canvas', 'Used', 'ContextRenamed');
+  };
+
+  const remove = (id: ElementId) => {
+    if (!guard(kept(id), 'not-a-kept-context')) return;
+    commit((els) => removeContexts(els, [id]));
+    debugLog('[contexts] deleted', { id });
+    track('Canvas', 'Used', 'ContextDeleted');
+  };
+
+  const addNotes = (contextId: ElementId, noteIds: readonly ElementId[]) => {
+    if (!guard(kept(contextId), 'not-a-kept-context')) return;
+    const joined = joinContext(activeTab.elements, contextId, noteIds);
+    if (!guard(joined !== activeTab.elements, 'unchanged')) return;
+    const fresh = noteIds.filter((id) => contextOf(activeTab.elements, id)?.id !== contextId);
+    commit((els) => joinContext(els, contextId, noteIds));
+    debugLog('[contexts] joined', { contextId, notes: fresh.length });
+    fresh.forEach(() => track('Canvas', 'Used', 'ContextNoteJoined'));
+  };
+
+  const removeNotes = (noteIds: readonly ElementId[]) => {
+    const held = noteIds.filter((id) => contextOf(activeTab.elements, id) !== null);
+    if (!guard(held.length > 0, 'not-in-a-context')) return;
+    commit((els) => leaveContext(els, held));
+    debugLog('[contexts] left', { notes: held.length });
+    held.forEach(() => track('Canvas', 'Used', 'ContextNoteLeft'));
+  };
+
+  return { rename, remove, addNotes, removeNotes };
+}

@@ -16,6 +16,8 @@ describe('resolveEditorCapabilities', () => {
     expect(can.takePart && can.addContent && can.planCards && can.sheetCells).toBe(true);
     // Suggestions are an Editor's alone (docs/specs/021-event-storming/suggestions.md "Share roles").
     expect(can.suggestions).toBe(true);
+    // So are the kept candidate contexts' acts (docs/specs/021-event-storming/candidate-contexts.md "Share roles").
+    expect(can.contexts).toBe(true);
     expect(can.remove(shape()) && can.move(shape()) && can.recolour(shape())).toBe(true);
   });
 
@@ -43,6 +45,8 @@ describe('resolveEditorCapabilities', () => {
 
   it('lets a Participant write anywhere, move and recolour stickies, remove only its own', () => {
     const can = resolveEditorCapabilities({ level: 'participate', adderKey: ME });
+    // A Participant who moves a note changes no context (candidate-contexts.md "Share roles").
+    expect(can.contexts).toBe(false);
     expect(can.takePart && can.addContent && can.planCards && can.sheetCells).toBe(true);
     expect(can.writeText(shape())).toBe(true);
     expect(can.writeText(shape({ locked: true }))).toBe(false);

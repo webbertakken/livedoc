@@ -30,6 +30,7 @@ import { getTheme, shapeColorPresets, tableColorPresets, themeChartPalette } fro
 import { canEditSankey } from '@/lib/sankey-edit';
 import { canEditSequence } from '@/lib/sequence-edit';
 import { panelEnabled } from '@/lib/user-preferences';
+import { noteContextMenu } from '@/lib/note-context-menu';
 
 // Lazy like the other heavy editor chrome: the menu's chunk loads on the
 // first right-click, not with the page.
@@ -231,6 +232,7 @@ export function EditorContextMenuHost() {
     openNote,
     openComments,
     openAssignAction,
+    contextActions,
   } = useEditorContext();
   // The selection the menu acts on, read from the store while a menu is open: a closed menu never
   // renders for a selection change (docs/specs/008-canvas/canvas-performance.md).
@@ -374,6 +376,12 @@ export function EditorContextMenuHost() {
         createBlocked || contextMenu.mode !== 'element'
           ? undefined
           : (kind) => setEsKindOf(contextMenu.elementId, kind)
+      }
+      noteContexts={
+        createBlocked || contextMenu.mode !== 'element'
+          ? undefined
+          : (noteContextMenu(activeTab.elements, contextMenu.elementId, contextActions) ??
+            undefined)
       }
       onStackFront={stackSelectedFront}
       onStackBack={stackSelectedBack}

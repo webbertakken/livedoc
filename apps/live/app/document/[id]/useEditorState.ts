@@ -157,6 +157,7 @@ import { useEditorComments } from '@/hooks/collab/useEditorComments';
 import { useEditorDrag } from '@/hooks/canvas/useEditorDrag';
 import { useNoteActions } from '@/hooks/canvas/useNoteActions';
 import { useSuggestionActions } from '@/hooks/canvas/useSuggestionActions';
+import { useContextActions } from '@/hooks/canvas/useContextActions';
 import { usePhotoPicker } from '@/hooks/canvas/usePhotoPicker';
 import { warmBoundaryModel } from '@/lib/photo-model/client';
 import { usePhotoDraft } from '@/hooks/canvas/usePhotoDraft';
@@ -2634,6 +2635,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     commit,
     select: (id) => selectionStore.setSelection({ selectedId: id, multiSelectedIds: new Set() }),
   });
+  // Kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): rename, delete, notes in and out.
+  const contextActions = useContextActions({ activeTab, createBlocked, commit });
 
   // --- Tab actions ---------------------------------------------------------
 
@@ -4091,6 +4094,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     ...noteActions,
     // Suggestion acts (docs/specs/021-event-storming/suggestions.md "Applying and dismissing").
     suggestionActions,
+    // Candidate context acts (docs/specs/021-event-storming/candidate-contexts.md).
+    contextActions,
     // Photo import (docs/specs/021-event-storming/event-storming.md Phase 8): the draft run, whether the entry
     // points may be offered, and the hidden file input they open.
     photoDraft,

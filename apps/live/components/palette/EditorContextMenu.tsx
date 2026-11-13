@@ -47,6 +47,7 @@ import {
   DuplicateMenuIcon,
   RemoveIcon,
 } from '@/components/palette/context-menu-icons';
+import { NoteContextRows } from './NoteContextRows';
 import {
   MenuAccordionSection,
   MenuActionRow,
@@ -245,6 +246,13 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
                   </MenuTileGrid>
                 </MenuAccordionSection>
               </>
+            ) : null}
+            {props.noteContexts ? (
+              <NoteContextRows
+                menu={props.noteContexts}
+                runAndClose={runAndClose}
+                sectionProps={sectionProps}
+              />
             ) : null}
             <MenuGroupSeparator />
             <MenuActionRow

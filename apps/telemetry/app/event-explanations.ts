@@ -149,6 +149,18 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone dismissed every open suggestion on an event-storming board at once, from the suggestions panel.',
   'Canvas|Used|SuggestionsShown':
     'Someone switched on Show All Suggestions, drawing every suggested note where it would land on an event-storming board.',
+  'Canvas|Used|ContextApplied':
+    "Someone applied an agent's suggested candidate context on an event-storming board, keeping its dashed outline.",
+  'Canvas|Used|ContextDismissed':
+    "Someone dismissed an agent's suggested candidate context on an event-storming board.",
+  'Canvas|Used|ContextRenamed':
+    'Someone renamed a candidate context on an event-storming board. Never the name.',
+  'Canvas|Used|ContextDeleted':
+    'Someone deleted a candidate context on an event-storming board; its notes stayed.',
+  'Canvas|Used|ContextNoteJoined':
+    'A note joined a candidate context on an event-storming board, from its menu or by being dropped inside the outline.',
+  'Canvas|Used|ContextNoteLeft':
+    'A note left a candidate context on an event-storming board, from its menu or by being dragged clear of the outline.',
   'Canvas|Used|WaterCooler':
     'Someone walked their Avatar-mode character up to a water cooler and took a cup of water.',
   'Canvas|Used|CoffeeMachine':

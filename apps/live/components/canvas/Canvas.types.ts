@@ -1,5 +1,6 @@
 import type { PenInk } from '@/hooks/canvas/commit-freehand';
 import type { SuggestionActions } from '@/hooks/canvas/useSuggestionActions';
+import type { ContextActions } from '@/hooks/canvas/useContextActions';
 import type { SnapGuideStore } from '@/hooks/canvas/useSnapGuideState';
 import type { CombineOp } from '@/lib/combine/combine';
 import type { RemoteSelector } from '@/lib/presence-rows';
@@ -51,6 +52,10 @@ export type SnapTarget = { x: number; y: number; active: boolean };
 export type SuggestionControls = SuggestionActions & {
   reveal: (rect: { x: number; y: number; width: number; height: number }) => void;
 };
+
+// A kept candidate context's acts (docs/specs/021-event-storming/candidate-contexts.md), and clearing the editor's
+// selection when a context is selected (the two selections never stand together).
+export type ContextControls = ContextActions & { clearSelection: () => void };
 
 export type CanvasProps = {
   tabName: string;
@@ -362,6 +367,9 @@ export type CanvasProps = {
   // The suggestion acts and the pan that brings one into view (docs/specs/021-event-storming/suggestions.md).
   // Supplied only to an Editor on an event-storming board: absent, nothing of suggestions shows.
   suggestions?: SuggestionControls;
+  // Kept candidate contexts' acts: an Editor's alone; absent, contexts are drawn and nothing more
+  // (docs/specs/021-event-storming/candidate-contexts.md "Share roles").
+  contexts?: ContextControls;
   // Read a photograph of the wall dropped on the canvas (docs/specs/021-event-storming/event-storming.md Phase 8).
   // Present only on an event-storming board with the model configured.
   onDropPhoto?: (file: File) => void;

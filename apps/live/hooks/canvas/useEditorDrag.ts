@@ -34,6 +34,7 @@ import {
 import { track } from '@/lib/telemetry';
 import { mindConnectionOnRelease } from './mind-connect-on-release';
 import { mindDropGuide, mindDropNow, mindDropOnRelease } from './mind-drop-on-release';
+import { contextDropOnRelease } from './context-drop-on-release';
 import { trackDuplicated } from '@/lib/element-telemetry';
 import { isTechIconId } from '@/lib/tech-icons';
 import { iconDropSide, type DragState } from '@/lib/canvas';
@@ -670,6 +671,25 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
           mindDropOnRelease(
             depsRef.current.activeTab.elements,
             drag.primaryId,
+            new Set(drag.startBounds.keys()),
+          ),
+        );
+      }
+      // Notes let go inside or clear of a candidate context's outline join or leave it, in the same change
+      // (docs/specs/021-event-storming/candidate-contexts.md "Joining and leaving, exactly"); an Editor's alone.
+      const gate = depsRef.current.insertGate;
+      if (
+        drag?.kind === 'boxed' &&
+        drag.mode === 'move' &&
+        dragEngagedRef.current &&
+        gate.esBoard &&
+        !gate.readOnly &&
+        !gate.tabLocked &&
+        !gate.createBlocked
+      ) {
+        previewTick(
+          contextDropOnRelease(
+            depsRef.current.activeTab.elements,
             new Set(drag.startBounds.keys()),
           ),
         );

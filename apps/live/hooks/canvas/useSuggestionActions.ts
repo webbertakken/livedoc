@@ -1,13 +1,23 @@
-import { isSuggestion, type Element, type ElementId, type Tab } from '@livedoc/document';
+import {
+  applyContextSuggestions,
+  isOpenSuggestion,
+  isSuggestedContext,
+  isSuggestion,
+  removeContexts,
+  type Element,
+  type ElementId,
+  type Tab,
+} from '@livedoc/document';
 import { applyAllSuggestions, applySuggestion, dismissSuggestions } from '@/lib/suggestion-apply';
 import { suggestionsInTimeline, type SuggestionElement } from '@/lib/suggestion-hints';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
 
 // The suggestion acts on an event-storming board (docs/specs/021-event-storming/suggestions.md "Applying and
-// dismissing"): apply, dismiss, Apply All, Dismiss All. Each is ONE commit through the ordinary choke point, so
-// layer stamping, autosave, realtime and a single Undo work as for any change; the board each act leaves is decided
-// by the pure `lib/suggestion-apply`.
+// dismissing"): apply, dismiss, Apply All, Dismiss All, for suggested notes and suggested candidate contexts alike
+// (docs/specs/021-event-storming/candidate-contexts.md "How a person sees and decides"). Each is ONE commit through
+// the ordinary choke point, so layer stamping, autosave, realtime and a single Undo work as for any change; the board
+// each act leaves is decided by the pure `lib/suggestion-apply` and the document's context writes.
 
 type SuggestionActionsDeps = {
   activeTab: Tab;
@@ -29,6 +39,9 @@ export type SuggestionActions = {
 const refuse = (reason: 'blocked' | 'not-a-suggestion') =>
   debugLog('[suggestions] refused', { reason });
 
+const suggestedContextIds = (elements: readonly Element[]) =>
+  elements.filter(isSuggestedContext).map((el) => el.id);
+
 export function useSuggestionActions({
   activeTab,
   createBlocked,
@@ -37,7 +50,8 @@ export function useSuggestionActions({
   select,
 }: SuggestionActionsDeps): SuggestionActions {
   const open = () => activeTab.elements.filter(isSuggestion) as SuggestionElement[];
-  const isOpen = (id: ElementId) => open().some((el) => el.id === id);
+  const find = (id: ElementId) =>
+    activeTab.elements.find((el) => el.id === id && isOpenSuggestion(el));
 
   const guard = (ok: boolean): boolean => {
     if (createBlocked) refuse('blocked');
@@ -46,8 +60,15 @@ export function useSuggestionActions({
   };
 
   const apply = (id: ElementId) => {
-    if (!guard(isOpen(id))) return;
-    const s = open().find((el) => el.id === id)!;
+    const target = find(id);
+    if (!guard(target !== undefined)) return;
+    if (isSuggestedContext(target!)) {
+      commit((els) => applyContextSuggestions(els, [id]));
+      debugLog('[contexts] applied', { id });
+      track('Canvas', 'Used', 'ContextApplied');
+      return;
+    }
+    const s = target as SuggestionElement;
     commit((els) => applySuggestion(els, id, layerInertIds));
     debugLog('[suggestions] applied', { id, kind: s.esKind, side: s.esSuggestion.side });
     track('Canvas', 'Used', 'SuggestionApplied');
@@ -56,7 +77,14 @@ export function useSuggestionActions({
   };
 
   const dismiss = (id: ElementId) => {
-    if (!guard(isOpen(id))) return;
+    const target = find(id);
+    if (!guard(target !== undefined)) return;
+    if (isSuggestedContext(target!)) {
+      commit((els) => removeContexts(els, [id]));
+      debugLog('[contexts] dismissed', { id });
+      track('Canvas', 'Used', 'ContextDismissed');
+      return;
+    }
     commit((els) => dismissSuggestions(els, [id]));
     debugLog('[suggestions] dismissed', { count: 1 });
     track('Canvas', 'Used', 'SuggestionDismissed');
@@ -65,18 +93,22 @@ export function useSuggestionActions({
   const applyAll = () => {
     // Orphans are swept, never landed: count what lands.
     const count = suggestionsInTimeline(activeTab.elements).length;
-    if (!guard(count > 0)) return;
-    commit((els) => applyAllSuggestions(els, layerInertIds));
-    debugLog('[suggestions] applied', { count });
+    const contexts = suggestedContextIds(activeTab.elements);
+    if (!guard(count + contexts.length > 0)) return;
+    commit((els) =>
+      applyContextSuggestions(applyAllSuggestions(els, layerInertIds), suggestedContextIds(els)),
+    );
+    debugLog('[suggestions] applied', { count, contexts: contexts.length });
     track('Canvas', 'Used', 'SuggestionsAppliedAll');
     for (let i = 0; i < count; i += 1) track('Element', 'Added', 'Sticky');
   };
 
   const dismissAll = () => {
     const ids = open().map((el) => el.id);
-    if (!guard(ids.length > 0)) return;
-    commit((els) => dismissSuggestions(els, ids));
-    debugLog('[suggestions] dismissed', { count: ids.length });
+    const contexts = suggestedContextIds(activeTab.elements);
+    if (!guard(ids.length + contexts.length > 0)) return;
+    commit((els) => removeContexts(dismissSuggestions(els, ids), suggestedContextIds(els)));
+    debugLog('[suggestions] dismissed', { count: ids.length, contexts: contexts.length });
     track('Canvas', 'Used', 'SuggestionsDismissedAll');
   };
 

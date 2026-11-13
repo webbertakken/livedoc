@@ -136,6 +136,7 @@ export function EditorCanvasHost() {
     esBoard,
     addNextNote,
     suggestionActions,
+    contextActions,
     photoImportAvailable,
     photoImportBlocked,
     openPhotoImport,
@@ -621,6 +622,14 @@ export function EditorCanvasHost() {
     reveal: (r: { x: number; y: number; width: number; height: number }) =>
       scrollIntoView(r.x, r.y, r.width, r.height),
   });
+  // Kept candidate contexts' acts are an Editor's alone (docs/specs/021-event-storming/candidate-contexts.md).
+  const contextControls = useStableObject({
+    ...contextActions,
+    clearSelection: () => {
+      setSelectedId(null);
+      setMultiSelectedIds(new Set());
+    },
+  });
   const stableSlideDeck = useStableObject(slideDeck);
   const activeTheme = getTheme(activeTab.theme);
   // Tab windows (docs/specs/009-elements/tab-window.md): the tabs they show, fetched as they are shown.
@@ -896,6 +905,7 @@ export function EditorCanvasHost() {
               esBoardControls={esBoardControls}
               onAddNextNote={createBlocked ? undefined : addNextNote}
               suggestions={esBoard && can.suggestions ? suggestionControls : undefined}
+              contexts={esBoard && can.contexts ? contextControls : undefined}
               onDropPhoto={readPhotoFile}
               onDropFile={isReadOnly ? undefined : dropBoardFile}
               onDropLibraryShape={isReadOnly ? undefined : dropLibraryShape}
