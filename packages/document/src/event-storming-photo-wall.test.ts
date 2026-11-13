@@ -79,9 +79,9 @@ describe('stitchWall', () => {
   });
 
   it('never lets one chance match move a photo (the staircase)', () => {
-    const first = [note('Signed in', 0.1, 0.1), note('A', 0.3, 0.1)];
-    // "Signed in" appears again lower down the next stretch of wall: a different note with the same words.
-    const second = [note('X', 0.1, 0.1), note('Y', 0.3, 0.1), note('Signed in', 0.3, 0.6)];
+    const first = [note('Same words', 0.1, 0.1), note('A', 0.3, 0.1)];
+    // "Same words" appears again lower down the next stretch of wall: a different note with the same words.
+    const second = [note('X', 0.1, 0.1), note('Y', 0.3, 0.1), note('Same words', 0.3, 0.6)];
     const out = stitchWall([first, second], []);
     expect(out.placements[1]!.how).toBe('beside');
     const top = (t: string) => out.additions.find((a) => a.text === t)!.y;
@@ -90,7 +90,7 @@ describe('stitchWall', () => {
     const a = out.additions.find((n) => n.text === 'A')!;
     const xNote = out.additions.find((n) => n.text === 'X')!;
     expect(xNote.x).toBeGreaterThanOrEqual(a.x + a.width + WALL_PHOTO_GAP - 1);
-    expect(out.additions.filter((n) => n.text === 'Signed in')).toHaveLength(2);
+    expect(out.additions.filter((n) => n.text === 'Same words')).toHaveLength(2);
   });
 
   it('pairs notes only with their best match by words, so a near miss in the same layout never wins', () => {

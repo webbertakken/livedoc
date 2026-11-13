@@ -358,6 +358,6 @@ crops left out, so no blanks are scored). Same harness, strict schema, six crops
 | gemini-3.1-flash-lite | 1    | 27/31    | 95%    | 1.0%     | 7.5 s     |
 | gemini-3.6-flash      | 1    | 24/31    | 79%    | 18.1%    | 38 s      |
 
-2.5 Flash-Lite's misses are truncations (`Activity` for `Activity Postponed`, `Timeslot` for a six-line note); 3.5
-Flash-Lite's one steady miss is a spelling the labeller could read either way (`Cancelled` / `Canceled`). The reader
+2.5 Flash-Lite's misses are truncations (the first word of a two-word note, the first line of a six-line one); 3.5
+Flash-Lite's one steady miss is a spelling the labeller could read either way (a doubled consonant). The reader
 default moved to `gemini-3.5-flash-lite`.

@@ -4,7 +4,7 @@
 // The single-photo import fits a photo to whatever on the board its words match. A sequence knows more: each photo
 // continues the one before it. So a photo is matched only against its neighbour, an overlap counts only when several
 // matches agree on where the photo sits, and a photo without that agreement goes beside its neighbour. One chance
-// match (two notes that both say "Signed in") can then never drop a photo a screen lower.
+// match (two notes that say the same words) can then never drop a photo a screen lower.
 
 import { eventStormingNoteSize, type EventStormingNoteKind } from './event-storming';
 import {
