@@ -105,7 +105,7 @@ A state change that swaps a whole surface animates as a React View Transition
 A context menu is a tool reached for many times a minute, so it **appears at once and leaves at once**.
 Waiting even a cascade's 250ms on every right-click reads as lag to someone working quickly.
 
-- The floating context menus take no entrance motion: no fade and no cascade of their rows (D9).
+- The floating context menus take no entrance motion: no fade and no cascade of their rows (D78).
 - That is the element, selection and cell menus (`ContextMenu`) and the tab and canvas menu (`TabPortalMenu`).
 - They close the moment they are dismissed, with no exit animation and no exit hold.
 - A flyout or picker opened from inside one keeps its own motion; only the menu's arrival is instant.
@@ -219,5 +219,5 @@ The code cites each by its id.
   cascades go through `cascadeDelayMs` and e2e (default).
 - **D8** The middle tier: 200ms, halfway between the hover and ceiling values, for surfaces larger than a menu and
   smaller than a dialog (default).
-- **D9** How fast a context menu appears: at once, with no animation at all, rather than a shorter fade: anything slower
+- **D78** How fast a context menu appears: at once, with no animation at all, rather than a shorter fade: anything slower
   still reads as lag, and a native context menu shows the same way (default).
