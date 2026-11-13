@@ -6,7 +6,7 @@ import { contextDropOnRelease } from './context-drop-on-release';
 
 const track = vi.fn<typeof import('@/lib/telemetry').track>();
 vi.mock('@/lib/telemetry', () => ({ track: (...a: Parameters<typeof track>) => track(...a) }));
-const debugLog = vi.fn();
+const debugLog = vi.fn<(...a: unknown[]) => void>();
 vi.mock('@/lib/debug-log', () => ({ debugLog: (...a: unknown[]) => debugLog(...a) }));
 
 const note = (id: string, x: number): Element => ({

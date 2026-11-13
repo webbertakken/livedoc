@@ -24,14 +24,15 @@ function note(
   lane: number,
 ): StickyElement {
   const fields = eventStormingNoteFields(kind);
-  return {
+  const sticky: StickyElement = {
     id,
     type: 'sticky',
     label,
     ...fields,
     x: column * COLUMN,
     y: laneCentre(lane, ES_LANES) - fields.height / 2,
-  } as StickyElement;
+  };
+  return sticky;
 }
 
 export const CONTEXT_BOARD_IDS = {
