@@ -7,7 +7,7 @@ import {
   type ShapeElement,
 } from '@livedoc/document';
 import { strokeHitWidth } from '@/lib/whiteboard-tool';
-import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
+import { useHitBandZoom } from '@/components/canvas/CanvasZoomContext';
 
 /**
  * How a shape is picked on a whiteboard: by its drawn outline alone, or, once selected, by its box
@@ -38,7 +38,7 @@ export function ShapeHitOutline({
   element: ShapeElement;
   borderPx: number;
 }) {
-  const zoom = useCanvasZoom();
+  const zoom = useHitBandZoom();
   const outline = shapeHitOutline(element);
   const { line, fills } = useMemo(
     () => ({

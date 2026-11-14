@@ -16,7 +16,7 @@ import {
 import { useElementFinish } from '@/components/canvas/CanvasFinishContext';
 import type { SVGProps } from 'react';
 import { strokeHitWidth } from '@/lib/whiteboard-tool';
-import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
+import { useHitBandZoom } from '@/components/canvas/CanvasZoomContext';
 import { useDrawingAnimation } from '@/components/canvas/drawing-animation';
 
 // Browser chrome rendered as fixed-pixel HTML rather than scaled SVG so
@@ -107,14 +107,16 @@ export const FREEHAND_SVG_CLASS =
 
 // The invisible line that catches pointers on a stroke (docs/specs/023-draw-mode/draw-mode.md
 // "Selecting"): STROKE_HIT_SCREEN_PX either side of a line `penWidth` canvas px wide, at any zoom. It is
-// the one zoom-reading part of a stroke, so a zoom re-renders it and not the ink
-// (docs/specs/008-canvas/canvas-performance.md). `trim` takes a width the line already covers.
+// the one zoom-reading part of a stroke, so a zoom re-renders it and not the ink, and it reads the zoom a zoom
+// gesture settles at (useHitBandZoom), so a wheel tick re-renders it not at all
+// (docs/specs/008-canvas/canvas-performance.md "A zoom moves no hit band"). `trim` takes a width the line already
+// covers.
 export function StrokeHitPath({
   penWidth,
   trim = 0,
   ...path
 }: { penWidth: number; trim?: number } & Omit<SVGProps<SVGPathElement>, 'strokeWidth' | 'stroke'>) {
-  const zoom = useCanvasZoom();
+  const zoom = useHitBandZoom();
   return (
     <path
       data-stroke-hit=""

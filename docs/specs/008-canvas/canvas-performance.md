@@ -52,6 +52,13 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   border-image computed from its recipe ([Canvas and palette](canvas-and-palette.md) "Sticky notes
   read as paper"); it takes no pointer, so a click or a drop beside a note reaches the board. A filter a person chooses for one element (an element shadow, the Sketch finish)
   stays a filter.
+- **A zoom moves no hit band.** The invisible bands that catch a whiteboard shape or stroke a few
+  screen px either side of its line hold the zoom a zoom gesture started at, and take the new zoom
+  when it ends (a pinch lifting, a wheel settling): hundreds of them on a board, each a stroke width
+  written as the zoom moved, restyled and laid out every one on every wheel tick (about 20 ms of a
+  60 ms task). While a zoom lasts a band is a little wider or narrower on screen than its 6 px, and
+  catches the same pointers. The grips, badges and other counter-scaled parts that show follow the
+  zoom as it moves.
 - **A pan or zoom renders the canvas, not the editor.** The view (pan offset and zoom) is held in
   one viewport store per editor, not as the editor's render state. A wheel tick, a pinch frame, a
   pan or a glide renders what shows the view (the canvas and its counter-scaled parts, the zoom
