@@ -11,12 +11,14 @@ import { randomColor, randomName, type Participant } from '@/lib/identity';
 export async function resolveParticipant(opts: {
   accountId: string | null | undefined;
   accountDisplayName: string | null | undefined;
-  // Called once the id is known and the row is being fetched (the load watchdog's step).
-  onParticipantStep?: () => void;
+  // Called once the id is known and the row is being fetched (the load watchdog's step), with that id: what the
+  // reader asks for next can leave beside the row rather than after it
+  // (docs/specs/016-platform/web-performance.md "The open path asks in parallel").
+  onParticipantStep?: (selfId: string) => void;
 }): Promise<Participant> {
   const { accountId, accountDisplayName } = opts;
   const selfId = accountId ?? (await ensureSignedGuestIdentity()).id;
-  opts.onParticipantStep?.();
+  opts.onParticipantStep?.(selfId);
   const storedSelf = await apiLoadSelf(selfId).catch(() => null);
   // Signed-in users always use their account name on the
   // participant record. For a brand-new participant (no storedSelf)

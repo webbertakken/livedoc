@@ -337,6 +337,39 @@ export function useIdentityBootstrap(opts: {
     const load = async () => {
       const id = initialId;
       const shareCodeParam = initialShareCode;
+      // The cached share grant (docs/specs/013-workspace/share-password.md "Password cache"), read once: it rides
+      // the share link's first ask, and is cleared below when the server refuses it.
+      const cachedGrant = shareCodeParam ? readCachedShareGrant(shareCodeParam) : null;
+      // What the address names, asked for the moment the reader's id is known: beside the participant row,
+      // never after it (docs/specs/016-platform/web-performance.md "The open path asks in parallel"). Asked
+      // once; each branch below awaits the answer where it used to make the call.
+      let shareAsked: ReturnType<typeof apiLoadShared> | null = null;
+      let documentAsked: ReturnType<typeof apiLoadDocument> | null = null;
+      const askForShare = (code: string, selfId: string) => {
+        if (!shareAsked) {
+          // Seed the session with the cached grant before the first call, so a returning visitor whose password
+          // didn't change gets straight to the canvas without the gate. It rides where the password would
+          // (X-Share-Password); a no-op when nothing is cached.
+          if (cachedGrant) setSessionSharePassword(cachedGrant);
+          // Pass the visitor's owner id so the api worker can record their visit into shared_with: without it
+          // the server can't identify the visitor and the "Shared with you" list stays empty forever.
+          shareAsked = apiLoadShared(code, selfId);
+          // Handled where it is awaited; never an unhandled rejection while the participant is still answering.
+          shareAsked.catch(() => {});
+        }
+        return shareAsked;
+      };
+      const askForOwnDocument = (documentId: string, selfId: string) => {
+        if (!documentAsked) {
+          documentAsked = apiLoadDocument(selfId, documentId);
+          documentAsked.catch(() => {});
+        }
+        return documentAsked;
+      };
+      const askForDocument = (selfId: string) => {
+        if (shareCodeParam) void askForShare(shareCodeParam, selfId);
+        else if (id) void askForOwnDocument(id, selfId);
+      };
 
       // Identity comes first because every document fetch needs an
       // owner id. On password retries (passwordRetry > 0) we already
@@ -354,7 +387,10 @@ export function useIdentityBootstrap(opts: {
         self = await resolveParticipant({
           accountId,
           accountDisplayName,
-          onParticipantStep: () => setLoadStep('participant'),
+          onParticipantStep: (selfId) => {
+            setLoadStep('participant');
+            askForDocument(selfId);
+          },
         });
         // The document-write key (docs/specs/012-collaboration/participant-responses.md) is stamped onto the LOCAL
         // participant only, never onto `self` as it goes to `apiSaveSelf`: it belongs to this browser,
@@ -397,20 +433,11 @@ export function useIdentityBootstrap(opts: {
       // arrivals get full document data via the share-code endpoint and
       // are flagged `!isOwner` so the Share button hides.
       if (shareCodeParam) {
-        // Seed the session with the cached share grant (docs/specs/013-workspace/share-password.md
-        // "Password cache") before the first call, so a returning visitor whose password didn't change gets
-        // straight to the canvas without the gate. It rides where the password would (X-Share-Password); a
-        // no-op when nothing is cached, and cleared below when the server refuses it.
-        const cachedGrant = readCachedShareGrant(shareCodeParam);
-        if (cachedGrant) setSessionSharePassword(cachedGrant);
-        // Pass the visitor's owner id so the api worker can record
-        // their visit into shared_with — without it the server can't
-        // identify the visitor and the "Shared with you" list stays
-        // empty forever.
         setLoadStep('share');
         let resolution;
         try {
-          resolution = await apiLoadShared(shareCodeParam, self.id);
+          // Asked already beside the participant (above); a password retry or an early open asks here.
+          resolution = await askForShare(shareCodeParam, self.id);
         } catch (err) {
           // Couldn't reach the server to resolve the share link (network
           // / 5xx). Retryable, so show the error page instead of the
@@ -539,7 +566,7 @@ export function useIdentityBootstrap(opts: {
         setLoadStep('document');
         let fetched;
         try {
-          fetched = await apiLoadDocument(self.id, id);
+          fetched = await askForOwnDocument(id, self.id);
         } catch (err) {
           // The load FAILED (network down / 5xx) — not a clean 404.
           // Surface a retryable error page rather than NotFound, which
