@@ -96,6 +96,8 @@ by one rule for both lines:
    centred, and the side groups keep their corners.
 
 The active tab never shortens. On a phone ("On a phone") the same order runs, and the document name is not drawn.
+The order runs again whenever the room changes, whatever the editor started at: a window, pane or workbench frame
+that grows from a phone's width to a computer's brings the centre toolbar back onto the line wherever it fits there.
 
 ## What
 

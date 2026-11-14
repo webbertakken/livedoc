@@ -297,6 +297,47 @@ describe('ToolbarPalette', () => {
     expect(screen.getByRole('button', { name: 'Selection mode' })).toBeTruthy();
   });
 
+  // docs/specs/007-editor/toolbar-layout.md "When a line runs out of room": the phone's row is its own, so the top line's
+  // placement never measures it; a window (or a workbench frame) that opened at a phone's width and grew to a
+  // computer's puts the strip back on the line, as one opened there would.
+  it('returns to the top line once a window that opened at a phone’s width has grown', () => {
+    const rect = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.matches('[data-tour-id="palette"]')
+          ? new DOMRect(0, 0, 425, 46)
+          : new DOMRect(0, 0, 0, 0);
+      });
+    const top = () => document.querySelector<HTMLElement>('[data-toolbar-palette]')!.style.top;
+    const palette = (leading: ReactNode | undefined) =>
+      inMode(
+        'diagram',
+        <ToolbarPalette
+          canvasTool="select"
+          onSetCanvasTool={vi.fn()}
+          canvasEmpty={false}
+          pendingDraw={null}
+          leading={leading}
+          {...handlers()}
+        />,
+      );
+    vi.stubGlobal('innerWidth', 1440);
+    const opened = render(palette(undefined));
+    const onTheLine = top();
+    opened.unmount();
+
+    vi.stubGlobal('innerWidth', 390);
+    mobile.value = true;
+    const grown = render(palette(null));
+    vi.stubGlobal('innerWidth', 1440);
+    mobile.value = false;
+    grown.rerender(palette(undefined));
+
+    expect(top()).toBe(onTheLine);
+    rect.mockRestore();
+    vi.unstubAllGlobals();
+  });
+
   it('draws the menu card on a phone’s row when given one', () => {
     mobile.value = true;
     render(

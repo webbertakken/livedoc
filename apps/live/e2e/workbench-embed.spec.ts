@@ -240,6 +240,49 @@ test('a person reports a bug from inside a sandboxed workbench frame', async ({
   });
 });
 
+// docs/specs/013-workspace/workbench-embeds.md "What renders": a frame that opens narrow (a workbench's panel sliding
+// open) and widens to a computer's width keeps the Palette strip in the top line's middle, as the app's editor does.
+test('a frame that opens narrow and widens keeps the strip on the top line', async ({
+  page,
+  context,
+  request,
+  baseURL,
+}) => {
+  test.setTimeout(120_000);
+  const person = await newPerson(context, baseURL!, 'Webber');
+  const seeded = await seedDocumentAndToken(request, person);
+  const unpaired = await mintTicket(request, seeded, workbench.origin);
+  await page.goto(unpaired.body.pairingUrl!);
+  await page.getByRole('button', { name: 'Allow', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Workbench allowed' })).toBeVisible();
+  const minted = await mintTicket(request, seeded, workbench.origin);
+
+  await page.setViewportSize({ width: 1460, height: 860 });
+  await workbench.open(page, minted.body.url!, {
+    sandbox: 'allow-scripts allow-same-origin allow-forms allow-popups',
+  });
+  const host = page.locator('#frame');
+  const size = (width: number) =>
+    host.evaluate(
+      (el, w) => Object.assign((el as HTMLElement).style, { width: `${w}px`, height: '760px' }),
+      width,
+    );
+  await size(480);
+  const frame = page.frameLocator('#frame');
+  await frame.locator('[data-canvas-a11y-root]').waitFor();
+  const card = frame.locator('[data-tour-id="palette"]');
+  await expect(card).toBeVisible();
+
+  await size(1414);
+  const tops = () =>
+    Promise.all(
+      ['[data-toolbar-menu]', '[data-tour-id="palette"]'].map((s) =>
+        frame.locator(s).evaluate((el) => Math.round(el.getBoundingClientRect().top)),
+      ),
+    );
+  await expect.poll(async () => new Set(await tops()).size).toBe(1);
+});
+
 test('a page of another origin framing the URL mounts nothing', async ({
   page,
   context,
