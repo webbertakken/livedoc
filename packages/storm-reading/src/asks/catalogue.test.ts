@@ -7,10 +7,12 @@ import {
   STORM_ASK_HANDS,
   STORM_ASK_TOPICS,
   askFits,
+  askScopeHolds,
   askScopeOf,
   askTopicsFor,
   isAskScope,
   isAskTopic,
+  type AskScope,
 } from './catalogue';
 
 const notes = () =>
@@ -124,6 +126,21 @@ describe('what an ask is about', () => {
       { type: 'contexts', ids: ['x'] },
     ])
       expect(isAskScope(bad), JSON.stringify(bad)).toBe(false);
+  });
+
+  it('holds on a board only while everything it names is there, as what it is named for', () => {
+    const elements = orderFlow();
+    const holds = (scope: unknown) => askScopeHolds(scope as AskScope, elements);
+    expect(holds({ type: 'board' })).toBe(true);
+    expect(holds({ type: 'notes', ids: ['place', 'paid'] })).toBe(true);
+    expect(holds({ type: 'context', id: 'payments' })).toBe(true);
+    expect(holds({ type: 'contexts', ids: ['ordering', 'payments'] })).toBe(true);
+    // Gone, a suggestion, or another thing altogether.
+    expect(holds({ type: 'notes', ids: ['place', 'gone'] })).toBe(false);
+    expect(holds({ type: 'notes', ids: ['maybe'] })).toBe(false);
+    expect(holds({ type: 'notes', ids: ['ordering'] })).toBe(false);
+    expect(holds({ type: 'context', id: 'place' })).toBe(false);
+    expect(holds({ type: 'contexts', ids: ['ordering', 'gone'] })).toBe(false);
   });
 
   it('is unchanged by a board holding none of what was selected', () => {

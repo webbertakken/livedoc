@@ -646,6 +646,7 @@ export * from './cta-sources';
 export * from './page-views';
 export * from './read-notes';
 export * from './storm-export';
+export * from './storm-ask';
 export * from './poll';
 export * from './room-messages';
 export * from './room-capacity';

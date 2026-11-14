@@ -83,6 +83,21 @@ export function isAskScope(value: unknown): value is AskScope {
   }
 }
 
+const isWorkshopNote = (el: Element) => eventStormingKindOf(el) !== null && !isSuggestion(el);
+
+/** Whether everything a scope names is on the board, as what the scope names it for. */
+export function askScopeHolds(scope: AskScope, elements: readonly Element[]): boolean {
+  if (scope.type === 'board') return true;
+  const byId = new Map(elements.map((el) => [el.id, el]));
+  const are = (ids: readonly ElementId[], is: (el: Element) => boolean) =>
+    ids.every((id) => {
+      const el = byId.get(id);
+      return el !== undefined && is(el);
+    });
+  if (scope.type === 'notes') return are(scope.ids, isWorkshopNote);
+  return are(scope.type === 'context' ? [scope.id] : scope.ids, isCandidateContext);
+}
+
 /** What an ask is about, from what is selected: the contexts, else the workshop notes, else the board. A context
  *  counts kept or suggested alike; a suggested note, and anything that is no workshop note, never does. */
 export function askScopeOf(
@@ -98,6 +113,6 @@ export function askScopeOf(
   const contexts = held(selected.contexts, isCandidateContext);
   if (contexts.length === 1) return { type: 'context', id: contexts[0]! };
   if (contexts.length > 1) return { type: 'contexts', ids: contexts };
-  const notes = held(selected.notes, (el) => eventStormingKindOf(el) !== null && !isSuggestion(el));
+  const notes = held(selected.notes, isWorkshopNote);
   return notes.length > 0 ? { type: 'notes', ids: notes } : { type: 'board' };
 }

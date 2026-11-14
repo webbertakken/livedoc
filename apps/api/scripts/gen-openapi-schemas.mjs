@@ -121,6 +121,8 @@ export const ROOT_TYPES = [
   'AiRequest',
   'ReadNotesRequest',
   'ReadNotesResponse',
+  'StormAskRequest',
+  'StormAskResponse',
   'CapabilitiesResponse',
   'CurrentTokenResponse',
   'DocumentCommentThread',

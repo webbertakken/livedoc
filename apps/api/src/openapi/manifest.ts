@@ -2506,6 +2506,19 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'ReadNotesResponse',
     statuses: [200, 400, 401, 403, 413, 429, 502, 503],
   },
+  // ---- Event Storming asks (docs/specs/021-event-storming/asks.md "The built-in hand") ----
+  {
+    method: 'POST',
+    path: '/storm-ask',
+    segment: 'storm-ask',
+    tag: 'AI',
+    summary:
+      "Ask the deployment's small model for suggestions on an Event Storming board: `{ topic, scope, lanes?, tab }`, the board travelling in the request, answers what to add (`{ added, names, changes, lines, dropped, folded? }`). Each line the model answers runs through the edit-operation engine; nothing is stored and nothing on a board changes. 400 not_event_storming, topic_invalid, scope_invalid, lanes_invalid; 413 board_too_large; 502 ai_failed.",
+    auth: 'guest-or-session',
+    requestSchema: 'StormAskRequest',
+    responseSchema: 'StormAskResponse',
+    statuses: [200, 400, 401, 403, 413, 429, 502, 503],
+  },
 
   // ---- Link unfurl ----
   {

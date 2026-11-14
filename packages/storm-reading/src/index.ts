@@ -39,7 +39,15 @@ export {
 } from './lanes/same-reading';
 export { applyLanePlan, checkLanePlan, landLanePlan, type LanePlanVerdict } from './lanes/check';
 export { withLaneNames } from './lanes/names';
-export { foldLanes, type Fold } from './lanes/fold';
+export {
+  FOLD_BY,
+  FOLD_REASON,
+  FOLD_REASON_OWN,
+  foldLanes,
+  foldPlan,
+  sayNoFold,
+  type Fold,
+} from './lanes/fold';
 export { readLanePlan, type StormLanePlan } from './lanes/view';
 export { arrangeBoard, type Arranged } from './lanes/arrange';
 export { diffReadings, formatChanges, hasChanges, type StormChanges } from './changes';
@@ -80,6 +88,7 @@ export {
   STORM_ASK_HANDS,
   STORM_ASK_TOPICS,
   askFits,
+  askScopeHolds,
   askScopeOf,
   askTopicsFor,
   isAskScope,

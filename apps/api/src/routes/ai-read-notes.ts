@@ -8,6 +8,7 @@ import {
 } from '@livedoc/api-schema';
 import { aiError, CORS_HEADERS, json } from '../responses';
 import { chatCompletions, providerOf } from '../ai-client';
+import { extractJson } from '../ai-json';
 import { aiGate } from './ai-gate';
 import { buildReadNotesPrompt, READ_NOTES_SCHEMA } from './ai-read-prompt';
 import type { RouteContext } from './context';
@@ -147,36 +148,6 @@ export async function handleAiReadNotes(ctx: RouteContext): Promise<Response> {
   const legible = answer.texts.filter((t) => t.legible).length;
   console.log(`[ai/read-notes] ok model=${model} crops=${crops.length} legible=${legible}`);
   return json(answer, { headers: CORS_HEADERS });
-}
-
-// The model is asked for JSON and given JSON mode, but a reasoning model still
-// sometimes wraps its answer in a fence or a sentence. Take the JSON out of
-// whatever shape it arrived in, rather than trusting the mode to have worked.
-function extractJson(raw: string): unknown {
-  const trimmed = raw.trim();
-  try {
-    return JSON.parse(trimmed);
-  } catch {
-    /* not bare JSON */
-  }
-  const fenced = trimmed.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-  if (fenced !== trimmed) {
-    try {
-      return JSON.parse(fenced);
-    } catch {
-      /* not a clean fence either */
-    }
-  }
-  const start = trimmed.indexOf('{');
-  const end = trimmed.lastIndexOf('}');
-  if (start !== -1 && end > start) {
-    try {
-      return JSON.parse(trimmed.slice(start, end + 1));
-    } catch {
-      /* fall through */
-    }
-  }
-  return null;
 }
 
 // `data:<mime>;base64,<payload>` — and nothing else. The mime must be one the

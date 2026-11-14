@@ -155,6 +155,9 @@ export type Env = {
   AI_MODEL?: string;
   // The crop reader's model (docs/specs/021-event-storming/event-storming.md Phase 8), beating every default.
   AI_VISION_MODEL?: string;
+  // The model that answers an ask on an Event Storming board (docs/specs/021-event-storming/asks.md "The built-in
+  // hand"), beating the provider's small model.
+  AI_STORM_MODEL?: string;
   // Per-IP rate limiter for POST /api/ai. Caps AI requests at 20/60s
   // per IP so a single client can't exhaust the operator's model budget.
   // Optional: absent (self-host) falls through to "allow".

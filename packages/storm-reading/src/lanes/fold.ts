@@ -7,8 +7,11 @@ import {
   laneIndexAt,
   LANES_MAX,
   LANES_MIN,
+  newLanePlanElement,
   plannableNotes,
+  type ElementId,
   type EsPlanLane,
+  type LanePlanElement,
   type StickyElement,
   type Tab,
 } from '@livedoc/document';
@@ -80,4 +83,35 @@ export function foldLanes(tab: Pick<Tab, 'elements' | 'layers'>, count: number):
     lanes = merged;
   }
   return { lanes: planOf(lanes) };
+}
+
+/** Who a fold is by, and why it is offered in place of a model's plan. */
+export const FOLD_BY = 'LiveDoc';
+export const FOLD_REASON = 'The board’s own fold: no model’s plan kept what the board says.';
+/** Why, when a person asked the board itself. */
+export const FOLD_REASON_OWN = 'The board’s own fold, made without a model.';
+
+/** The fold as a plan a board can hold, or why there is none. */
+export function foldPlan(
+  tab: Pick<Tab, 'elements' | 'layers'>,
+  count: number,
+  plan: { id: ElementId; reason: string },
+): { plan: LanePlanElement } | { none: 'fits' | 'no_arrangement' } {
+  const fold = foldLanes(tab, count);
+  if ('none' in fold) return fold;
+  const held = new Set(fold.lanes.flatMap((lane) => lane.notes));
+  return {
+    plan: newLanePlanElement({
+      id: plan.id,
+      plan: { lanes: fold.lanes, reason: plan.reason, by: FOLD_BY },
+      notes: plannableNotes(tab).filter((note) => held.has(note.id)),
+    }),
+  };
+}
+
+/** What the board says when it has nothing to fold. */
+export function sayNoFold(none: 'fits' | 'no_arrangement', count: number): string {
+  return none === 'fits'
+    ? `The board already fits ${count} lanes.`
+    : `No arrangement in ${count} lanes keeps what the board says. Try more lanes.`;
 }

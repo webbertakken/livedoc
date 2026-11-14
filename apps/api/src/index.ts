@@ -48,6 +48,7 @@ import { clientIp, clientNetwork, clientRateKey } from './client-ip';
 import { MAX_BODY_BYTES, MAX_IMAGE_BYTES } from './limits';
 import { handleAccount } from './routes/account';
 import { handleAiReadNotes } from './routes/ai-read-notes';
+import { handleStormAsk } from './routes/storm-ask-route';
 import { handleAi } from './routes/ai';
 import { handleCatalogues } from './routes/catalogues';
 import { handleCapabilities } from './routes/capabilities';
@@ -403,6 +404,10 @@ async function routeApiRequest(
       if (segments[2] === 'read-notes' && segments.length === 3)
         return await handleAiReadNotes(ctx);
       return notFound();
+    case 'storm-ask':
+      // The built-in hand of an ask (docs/specs/021-event-storming/asks.md), behind the same gate as the model
+      // routes above.
+      return segments.length === 2 ? await handleStormAsk(ctx) : notFound();
     case 'events':
       return await handleEvents(ctx);
     case 'telemetry':
