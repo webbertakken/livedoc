@@ -653,9 +653,6 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                 previewStore={previewStore}
                 h={h}
                 boxedShared={boxedShared}
-                arrowGeometry={arrowGeometry}
-                arrowLabels={arrowLabels}
-                elements={elements}
                 editingId={editingId}
                 editCursorAtEnd={editCursorAtEnd}
                 reshapingArrowId={props.reshapingArrowId}
