@@ -16,7 +16,12 @@ It is offered three ways, which all hand out the same thing: the [CLI](#the-cli)
   today's judgement into the product.
 - **The brief joins them.** `CONVERT.md` is one text, shipped with LiveDoc, that tells a model how to turn a reading
   into a spec and types: what each note kind becomes, how the spec is organised, how each language expresses the
-  building blocks, and how to change an earlier result rather than replace it. Every way hands the same brief to
+  building blocks, and how to change an earlier result rather than replace it.
+- **The brief takes the room's own knowledge first.** The [About](asks.md#about-this-domain) is the person's
+  description of the domain, read before the notes. Each [decision](board-structure.md#hotspot-answers) is recorded
+  in the spec beside what it was asked about, never dropped. The [pivotal events](board-structure.md#pivotal-events)
+  are the flow's milestones and its phases. An event that crosses the [context map](board-reading.md#the-context-map)
+  is a public event of its context, the contract between two parts; every other event is internal to its context. Every way hands the same brief to
   whichever model does the writing. The brief is distilled from the domain-driven design and code-pattern
   literature; its source is `packages/storm-reading/src/brief/`.
 
@@ -39,7 +44,8 @@ A board changes after its first export, and so do the spec and the code a team g
 An export never throws the earlier result away:
 
 - **The baseline.** Each export keeps its `storm.json`, and the model keeps `trace.json` beside it. The next export compares the new reading against it and
-  writes `CHANGES.md`: notes added, removed, reworded and re-kinded, and relations made and broken, by note ref.
+  writes `CHANGES.md`: notes added, removed, reworded and re-kinded, and relations made and broken, by note ref;
+  the About changed, events marked or unmarked pivotal, and hotspots answered (default).
   Refs are stable element ids, so a reworded note is a rewording, not a removal and an addition.
 - **The brief says change, not regenerate.** With an earlier result present, the model reads the existing spec and
   code first, applies only what `CHANGES.md` implies, keeps every hand-written change, and renames through the code
@@ -89,7 +95,8 @@ The types are written in the language the team needs, identified, not assumed:
 
 **File → Export → Domain Model (zip)**, offered on an Event Storming board only.
 
-- **The dialog**: the language, and **Update an earlier export** (an earlier zip, optional).
+- **The dialog**: the [readiness](board-review.md#readiness) line, the language, and **Update an earlier export**
+  (an earlier zip, optional).
 - **The writer is the deployment's model** (ruled 2026-11-11): the zip carries a written spec and types whenever the
   deployment has a model, and the bundle alone when it has none.
 - **With the deployment's model** (`aiEnabled`), the api writes the spec and the types with the brief, given the
