@@ -164,3 +164,42 @@ test('Shift-click selects two contexts and the offer merges them into one, named
   );
   expect(contextIn(after, IDS.payments)).toBeUndefined();
 });
+
+test('New Context makes one round the selected notes, named afresh', async ({ page }) => {
+  await startContextBoard(page);
+  await note(page, IDS.takePayment).click();
+  await note(page, IDS.orderShipped).click({ modifiers: ['Shift'] });
+  await note(page, IDS.orderShipped).click({ button: 'right' });
+  const menu = page.getByRole('dialog', { name: 'Selection menu' });
+  // The board's selection menu: Text and New Context alone.
+  await expect(menu.getByRole('button', { name: 'Layer' })).toHaveCount(0);
+  await menu.getByRole('button', { name: 'New Context' }).click();
+  const field = page.getByRole('textbox', { name: 'Candidate context name' });
+  await field.fill('Fulfilment');
+  await field.press('Enter');
+  const made = (await storedBoard(page)).find((el) => el.label === 'Fulfilment');
+  expect(made?.esContext?.notes).toEqual([IDS.takePayment, IDS.orderShipped]);
+});
+
+test('Draw Context makes one round the notes a drawn loop takes in', async ({ page }) => {
+  await startContextBoard(page);
+  await page.getByRole('button', { name: 'Draw Context' }).click();
+  const box = (await note(page, IDS.orderShipped).boundingBox())!;
+  const m = 30;
+  const loop = [
+    [box.x - m, box.y - m],
+    [box.x + box.width + m, box.y - m],
+    [box.x + box.width + m, box.y + box.height + m],
+    [box.x - m, box.y + box.height + m],
+  ];
+  await page.mouse.move(loop[0]![0]!, loop[0]![1]!);
+  await page.mouse.down();
+  for (const [x, y] of [...loop.slice(1), loop[0]!]) await page.mouse.move(x!, y!, { steps: 6 });
+  await page.mouse.up();
+  const field = page.getByRole('textbox', { name: 'Candidate context name' });
+  await field.fill('Shipping');
+  await field.press('Enter');
+  const made = (await storedBoard(page)).find((el) => el.label === 'Shipping');
+  expect(made?.esContext?.notes).toEqual([IDS.orderShipped]);
+  await expect(page.locator('[data-context-pen]')).toHaveCount(0);
+});

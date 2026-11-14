@@ -57,6 +57,7 @@ import { brushPageId, pageBrushPreview, pagePaintPress } from '@/lib/format-page
 import { useDeadPageBrush } from '@/hooks/editor/useDeadPageBrush';
 import { elementSelector } from '@/lib/canvas-selectors';
 import { useWorkbenchSession } from '@/components/providers/workbench-session-context';
+import { setDrawingContext, useContextSelection } from '@/lib/context-selection';
 
 // The Canvas element's wiring, lifted out of EditorView (which carried
 // ~500 lines of prop plumbing for it). Reads everything straight from
@@ -607,7 +608,15 @@ export function EditorCanvasHost() {
   });
   // Object props the canvas boundary compares by identity (docs/specs/008-canvas/canvas-performance.md
   // "The canvas re-renders only for what it shows"): new only when their data changes.
+  // Draw Context's pen (docs/specs/021-event-storming/candidate-contexts.md "Making one by hand"): an Editor's.
+  const drawingContext = useContextSelection(activeTab.id).drawing;
   const esBoardControls = useStableObject({
+    ...(esBoard && can.contexts && !createBlocked
+      ? {
+          onDrawContext: () => setDrawingContext(activeTab.id, !drawingContext),
+          drawingContext,
+        }
+      : {}),
     ...(photoImportAvailable
       ? {
           onImportPhoto: openPhotoImport,

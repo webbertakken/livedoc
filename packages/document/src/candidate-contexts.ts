@@ -283,3 +283,19 @@ export function mergeContexts(
     keptId: kept!.id,
   };
 }
+
+/** A kept context made by hand round some notes (candidate-contexts.md "Making one by hand"): only workshop notes
+ *  join, each taken from any context it was in. Unchanged when none of them is a workshop note. */
+export function createContext(
+  elements: Element[],
+  id: ElementId,
+  name: string,
+  noteIds: readonly ElementId[],
+): Element[] {
+  const byId = new Map(elements.map((el) => [el.id, el]));
+  const notes = [...new Set(noteIds)].map((n) => byId.get(n)).filter(isNote);
+  if (notes.length === 0) return elements;
+  const taken = new Set(notes.map((n) => n.id));
+  const freed = rewrite(elements, (c) => c.esContext.notes.filter((n) => !taken.has(n)));
+  return [...freed, newContextElement({ id, name, notes })];
+}

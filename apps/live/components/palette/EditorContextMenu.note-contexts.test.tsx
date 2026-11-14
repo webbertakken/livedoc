@@ -54,6 +54,7 @@ const menuOf = (currentId: string | null): NoteContextsMenu => ({
   currentId,
   onAdd: vi.fn(),
   onRemove: vi.fn(),
+  onCreate: vi.fn(),
 });
 
 describe('a workshop note’s menu and its candidate context', () => {
@@ -65,6 +66,13 @@ describe('a workshop note’s menu and its candidate context', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Billing' }));
     expect(menu.onAdd).toHaveBeenCalledWith('b');
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('makes a new context round it', () => {
+    const menu = menuOf(null);
+    open(menu);
+    fireEvent.click(screen.getByRole('button', { name: 'New Context' }));
+    expect(menu.onCreate).toHaveBeenCalledTimes(1);
   });
 
   it('removes it from its context', () => {

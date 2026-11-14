@@ -90,6 +90,29 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
   the field keeps it, Escape puts the old name back, and an empty name is never kept (default).
 - **Delete**: Delete or Backspace on a selected context removes it; its notes stay where they are.
 
+## Making one by hand
+
+Requested 2026-11-13: "draw my own groups or create a group from a selection".
+
+- **From a selection.** With workshop notes selected, the menu offers **New Context**: one kept context round the
+  selected notes, taking them from any context they were in. Anything else in the selection is passed over.
+- **By drawing.** **Draw Context**, beside Add from Photo in the strip and the Event Storming category, arms a
+  one-shot pen: press and drag a loop round some notes, and every workshop note whose centre lies inside the loop
+  makes the new context. While the pen is armed the pointer is a crosshair and the loop draws dashed as it goes;
+  Escape or the button again puts the pen away, and a loop round no note makes nothing (default).
+- **The loop is only a gesture.** The context's outline is still worked out from its notes, never from the loop.
+- Either way it is named "New context" and its name opens for typing at once, as after a merge; one undoable step
+  (default). Telemetry: `Canvas / Used / ContextCreated` from a selection, `ContextDrawn` from a loop (default).
+- An Editor's alone, as every act on contexts.
+
+## The board's element menu
+
+Ruled 2026-11-13: "All the layer, rotation, colours, shadow, finish, animation, from the context menu can go for
+this board. Let's keep text for now, and add the other action".
+
+- On an Event Storming board the menu for a selection of several holds **Text** and **New Context**, and nothing else.
+- A single workshop note's menu keeps its verbs and gains **New Context** beside Add to Context.
+
 ## Selecting several and merging
 
 Requested 2026-11-13: "shift click two (suggested) groups to select both and I should get a suggestion for merging

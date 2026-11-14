@@ -7,6 +7,7 @@ import {
   contextBounds,
   contextNotes,
   contextOf,
+  createContext,
   emptyContextIds,
   isCandidateContext,
   isKeptContext,
@@ -385,5 +386,31 @@ describe('mergeContexts (candidate-contexts.md "Selecting several and merging")'
   it('changes nothing for fewer than two contexts', () => {
     const board = els();
     expect(mergeContexts(board, ['one', 'a', 'nope'])).toEqual({ elements: board, keptId: null });
+  });
+});
+
+describe('createContext (candidate-contexts.md "Making one by hand")', () => {
+  it('makes a kept context round the workshop notes given, taking them from any other', () => {
+    const els = [
+      note('a', 0),
+      note('b', 300),
+      note('p', 600, { esKind: undefined }),
+      context('k', ['b']),
+    ];
+    const out = createContext(els, 'n', 'New context', ['a', 'b', 'p', 'gone']);
+    const made = ctx(out, 'n')!;
+    expect(made).toMatchObject({
+      label: 'New context',
+      x: 0,
+      width: 500,
+      esContext: { notes: ['a', 'b'] },
+    });
+    expect(made.esContext.suggestion).toBeUndefined();
+    expect(ctx(out, 'k')).toBeUndefined();
+  });
+
+  it('makes nothing round no workshop note', () => {
+    const els = [note('p', 0, { esKind: undefined })];
+    expect(createContext(els, 'n', 'New context', ['p'])).toBe(els);
   });
 });

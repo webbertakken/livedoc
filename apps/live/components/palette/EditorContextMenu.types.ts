@@ -394,6 +394,11 @@ export type EditorContextMenuProps = {
   // ways"): the board's kept contexts by name to add it to, the one it is in, and the two acts. Absent when the
   // session cannot change contexts, or when the board has none and the note is in none.
   noteContexts?: NoteContextsMenu;
+  // An Event Storming board (candidate-contexts.md "The board's element menu"): its selection menu holds Text and New
+  // Context alone.
+  esBoard?: boolean;
+  // A kept context round the selected workshop notes; absent when the session may not make one.
+  onNewContext?: () => void;
   // Set the selection's exact size in canvas pixels (docs/specs/008-canvas/element-size.md). Either
   // dimension alone is allowed: the omitted one is left as-is, or carried by
   // the aspect lock when that is on.
@@ -451,4 +456,6 @@ export type NoteContextsMenu = {
   currentId: string | null;
   onAdd: (contextId: string) => void;
   onRemove: () => void;
+  // A new kept context round this note alone.
+  onCreate: () => void;
 };
