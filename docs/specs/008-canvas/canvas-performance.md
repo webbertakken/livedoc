@@ -194,7 +194,8 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   and an animation-frame recorder), so they count the board's own work and nothing else, never
   from inside a profiler start: starting the CPU profiler costs a one-off task of about a second on
   a large page. A still board's work, which must stay under a task's length, is read from a trace.
-  One more run of each gesture is traced for attribution and not counted.
+  One more run of each gesture is traced for attribution and not counted; its trace samples the
+  JavaScript as it runs and records the stack that forced each style or layout pass.
 - **Nothing the probe does lands in a gesture's window either.** It runs without Playwright's own
   trace, which snapshots the page before and after every input action: on the reference board each
   snapshot is a task of up to 60 ms, which the budget counted as the board's own (a whiteboard zoom

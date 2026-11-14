@@ -29,6 +29,14 @@ import { mainThreadTasks, type TraceEvent } from './trace-tasks';
 
 const OUT = 'test-results/perf';
 const CATEGORIES = 'devtools.timeline,disabled-by-default-devtools.timeline';
+// A gesture's traced run, for attribution: also the JavaScript sampled as it runs, and the stack that
+// forced each style or layout pass (docs/specs/008-canvas/canvas-performance.md "Measuring"). Never the
+// still board's: starting the sampler is a task of its own.
+const ATTRIBUTION_CATEGORIES = [
+  CATEGORIES,
+  'disabled-by-default-devtools.timeline.stack',
+  'disabled-by-default-v8.cpu_profiler',
+].join(',');
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
 const VIEW = { width: 1440, height: 900 };
 const SHAPE_IDS = buildReferenceBoard()
@@ -157,6 +165,7 @@ async function traced(
   label: string,
   run: () => Promise<void>,
   frames = true,
+  categories = CATEGORIES,
 ): Promise<{ tasks: number[]; frameMs: number[] }> {
   const events: TraceEvent[] = [];
   const onData = (d: { value: object[] }) => {
@@ -164,7 +173,7 @@ async function traced(
   };
   cdp.on('Tracing.dataCollected', onData);
   const done = new Promise<void>((resolve) => cdp.once('Tracing.tracingComplete', () => resolve()));
-  await cdp.send('Tracing.start', { categories: CATEGORIES, transferMode: 'ReportEvents' });
+  await cdp.send('Tracing.start', { categories, transferMode: 'ReportEvents' });
   if (frames) {
     await page.evaluate(() => {
       const w = window as unknown as { __frames: number[]; __recording: boolean };
@@ -455,7 +464,14 @@ async function measureZoom(
     out.push(medianOfRuns(runs));
     // One more, traced, for attribution; not counted.
     await step.setup?.();
-    await traced(cdp, page, `${tab}-${zoom}-${step.gesture}`, step.act, false);
+    await traced(
+      cdp,
+      page,
+      `${tab}-${zoom}-${step.gesture}`,
+      step.act,
+      false,
+      ATTRIBUTION_CATEGORIES,
+    );
     await step.reset?.();
   }
   return out;
