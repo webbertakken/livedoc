@@ -10,3 +10,16 @@ export function defaultTabName(n: number): string {
 export function isDefaultTabName(name: string): boolean {
   return DEFAULT_TAB_NAME.test(name.trim());
 }
+
+// Naming the document names its first tab while that tab still has its default name
+// (docs/specs/006-document/document-structure.md "Naming the document names its first tab"): the tab to rename and
+// its new name, or null when none takes it. Only the first tab, so two tabs never share the name.
+export function tabNamedByDocument(
+  tabs: readonly { id: string; name: string }[],
+  documentName: string,
+): { id: string; name: string } | null {
+  const name = documentName.trim();
+  const first = tabs[0];
+  if (!name || !first || !isDefaultTabName(first.name)) return null;
+  return { id: first.id, name };
+}

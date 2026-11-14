@@ -20,6 +20,16 @@ Document
 - Tabs are **ordered**; users can drag-reorder them in the tab list.
 - A tab has a name (default `"Tab 1"`, `"Tab 2"`, etc.) and is renameable.
 - **Auto-rename on first edit.** While a tab still has its default name (matching `^Tab \d+$`), editing the label of its first element renames the tab to that label. The rename only fires once: as soon as the tab name diverges from the default pattern (auto-rename or manual rename), subsequent label edits leave the tab name alone. This mirrors the document-name auto-fill from the default `Untitled document`.
+- **Naming the document names its first tab.** Renaming the document in the editor (its name in the document
+  group) also renames the first tab to the new name while that tab still has its default name (`^Tab \d+$`).
+  - Only the first tab, so two tabs never share the name; a tab named by a person, a template or the auto-rename keeps
+    its name.
+  - It happens once: the tab then has a name of its own, so a later rename of the document leaves it alone.
+  - A rename that clears the name, or leaves it as it was, names no tab.
+  - The tab's rename is an ordinary tab rename (`renameTab`): one commit, synced to collaborators, and undoable, and
+    the tab's boards and Sheets follow it as they follow any rename. The document's name is not in the undo history,
+    so Undo takes back the tab's name alone.
+  - The rule is `tabNamedByDocument` (`@livedoc/document`).
 
 ## Cross-tab links
 
