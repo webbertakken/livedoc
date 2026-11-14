@@ -54,8 +54,3 @@ The **Language** tab of the [Review panel](board-review.md) lists the board's te
 ## Telemetry
 
 `Canvas / Used / TermRenamed` (default).
-
-## Where it lives
-
-- Terms and matching: `packages/storm-reading/src/language.ts`.
-- The tab: `apps/live/components/canvas/review/LanguageTab.tsx`.

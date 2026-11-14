@@ -66,8 +66,3 @@ The timeline told as sentences, one step per event, so a person can walk it and 
 ## Telemetry
 
 `Canvas / Used / ReviewOpened`, `GapNoteAdded` and `StoryWalked` (once per opening of the Story tab) (default).
-
-## Where it lives
-
-- The readiness and the story's sentences: `packages/storm-reading/src/readiness.ts` and `story.ts`.
-- The panel: `apps/live/components/canvas/review/`.

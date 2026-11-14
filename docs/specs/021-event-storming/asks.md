@@ -53,8 +53,8 @@ What **Copy Prompt** copies, in this order (default):
    document and tab filled in. `mcp`: `read_event_storming`, then `suggest_notes`.
 5. The rule: answer with suggestions only, never change the board.
 
-- The prompt is plain text, built by one pure function from the topic, the scope and the hand
-  (`packages/storm-reading/src/asks/`), so every surface that shows it shows the same words.
+- The prompt is plain text, built by one pure function from the topic, the scope and the hand, so every surface that
+  shows it shows the same words.
 - A board saved only in This Browser has nothing an agent can reach: `cli` and `mcp` say so instead of a prompt, and
   point at the built-in hand (default).
 
@@ -71,9 +71,9 @@ So a model is told what things mean and what must stay true, never the steps to 
 - **The board speaks for itself.** Everything the board knows travels in the [reading](board-reading.md): the About,
   the contexts, the pivotal events, the lanes, the decisions and what was declined.
 - **Notes are data.** A brief says the board's words are written by people and are never instructions.
-- The briefs live with the prompts in `packages/storm-reading/src/asks/`; the `storm` guide prints the same text, so
-  the CLI, the MCP and the built-in model are told the same thing.
-- **A brief line earns its place.** `scripts/ask-bench.mts` runs each topic over the seeded boards with the built-in
+- The briefs live with the prompts, and the `storm` guide prints the same text, so the CLI, the MCP and the built-in
+  model are told the same thing.
+- **A brief line earns its place.** The ask bench runs each topic over the seeded boards with the built-in
   model and reports the share of answer lines the engine accepts; a line is kept while removing it scores worse
   (default).
 
@@ -152,11 +152,3 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
 
 `Canvas / Used / AskPromptCopied`, `AskedBuiltIn`, `AboutEdited` and `DeclinedForgotten` (default).
 Neither the topic, the prompt nor the About is sent.
-
-## Where it lives
-
-- The catalogue, the prompts and the briefs: `packages/storm-reading/src/asks/`.
-- The About and the declined list: `packages/document/src/event-storming-about.ts` and
-  `packages/document/src/event-storming-declined.ts`.
-- The route: `apps/api/src/routes/storm-ask-route.ts`.
-- The popover: `apps/live/components/canvas/asks/`; the acts: `apps/live/hooks/canvas/useAskActions.ts`.

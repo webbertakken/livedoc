@@ -118,11 +118,3 @@ none of it; an agent suggests, and removes its owner's with `rm` or `storm clear
 
 `Canvas / Used / NameSuggestionApplied`, `NameSuggestionDismissed`, `NoteChangeApplied`, `NoteChangeDismissed`, and
 `ContextsMerged` when a merge's name is chosen (default).
-
-## Where it lives
-
-- The model and its pure writes: `packages/document/src/event-storming-changes.ts` (note changes) and
-  `packages/document/src/candidate-contexts.ts` (name suggestions).
-- The edit operations: `packages/edit-operations/src/operations/suggest-name.ts` and `suggest-change.ts`.
-- On the canvas: the chips in `apps/live/components/canvas/contexts/`, the change mark and its previews in
-  `apps/live/components/canvas/suggestions/`.

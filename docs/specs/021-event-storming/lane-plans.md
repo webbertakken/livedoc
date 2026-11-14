@@ -66,7 +66,6 @@ This is the domain knowledge a model is told ([Asks](asks.md#what-a-model-is-tol
   so a column too deep for the lanes opens and nothing after it changes its order or spacing (default).
 - **A note stands a gutter clear** (`ES_NOTE_GAP`) of the note before it on its lane, at least.
 - **Placing is pure and repeatable**: the same board and plan always place the same.
-  It lives beside the lanes, in `packages/document/src/event-storming-lane-plan.ts`.
 
 ## What must stay true
 
@@ -111,10 +110,3 @@ Viewer see none of it; an agent suggests one, and removes its owner's with `rm` 
 ## Telemetry
 
 `Canvas / Used / LanePlanApplied`, `LanePlanDismissed` and `LanesFolded` (default).
-
-## Where it lives
-
-- The plan, its placing and the fold: `packages/document/src/event-storming-lane-plan.ts`.
-- The check: `packages/storm-reading/src/same-reading.ts`.
-- The edit operation: `packages/edit-operations/src/operations/suggest-lane.ts`.
-- The preview and the acts: `apps/live/lib/lane-plan-preview.ts` and `apps/live/hooks/canvas/useLanePlanActions.ts`.
