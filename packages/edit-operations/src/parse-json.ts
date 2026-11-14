@@ -103,6 +103,14 @@ function memberIssue(name: EditOperationName, raw: Raw, member: string): string 
       return Array.isArray(value) && value.every((part) => typeof part === 'string')
         ? null
         : expected(member, 'an array of strings');
+    case 'kinds':
+      return Array.isArray(value) && value.every((kind) => typeof kind === 'string')
+        ? null
+        : expected(member, 'an array of kinds');
+    case 'lanes':
+      return Array.isArray(value) && value.every((lane) => Number.isInteger(lane))
+        ? null
+        : expected(member, 'an array of lane numbers');
     case 'side':
       return isOneOf(ES_SUGGESTION_SIDES, value)
         ? null
@@ -175,6 +183,8 @@ const REQUIRED: Readonly<Record<EditOperationName, readonly string[]>> = {
   'suggest-kind': ['note', 'kind'],
   'suggest-split': ['note', 'parts'],
   'suggest-remove': ['note'],
+  'suggest-lane': ['name'],
+  arrange: [],
   wall: ['photos'],
 };
 

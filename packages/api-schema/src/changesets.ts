@@ -124,6 +124,14 @@ export const EDIT_REJECTION_CODES = [
   'term_not_in_words',
   'declined_before',
   'nothing_suggested',
+  // Lane plans (docs/specs/021-event-storming/lane-plans.md) and arranging (docs/specs/021-event-storming/arrange.md).
+  'lane_not_found',
+  'lanes_out_of_range',
+  'lane_empty',
+  'lanes_incomplete',
+  'lane_blocked',
+  'reading_changes',
+  'nothing_to_arrange',
   // The wall operation (docs/specs/021-event-storming/event-storming.md Phase 11).
   'draft_open',
   'nothing_to_add',
@@ -191,7 +199,7 @@ export type ResultLine =
       mark: '»';
       refs: string[];
       delta?: [number, number];
-      reason: 'make room' | 'carried' | 'laid out' | 'landed on a lane';
+      reason: 'make room' | 'carried' | 'laid out' | 'landed on a lane' | 'arranged';
       // How `layout` laid them out; a direction only for the flow style.
       layout?: { style: 'flow' | 'tree' | 'mindmap'; direction?: 'down' | 'right' };
     }

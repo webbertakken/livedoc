@@ -30,6 +30,8 @@ import { planOnlyOutsidePlan, tabLocked, tooLarge } from './rejections';
 import { applySuggest } from './operations/suggest';
 import { applySuggestChange } from './operations/suggest-change';
 import { applySuggestContext } from './operations/suggest-context';
+import { applyArrange } from './operations/arrange';
+import { applySuggestLane, settleLanePlan } from './operations/suggest-lane';
 import { applySuggestName } from './operations/suggest-name';
 import { applyWall } from './operations/wall';
 import { EDIT_MAX_ERRORS } from './vocabulary';
@@ -81,6 +83,10 @@ function applyOperation(
     case 'suggest-split':
     case 'suggest-remove':
       return applySuggestChange(state, operation, index);
+    case 'suggest-lane':
+      return applySuggestLane(state, operation, index);
+    case 'arrange':
+      return applyArrange(state, index);
     case 'wall':
       return applyWall(state, operation, index);
   }
@@ -162,6 +168,9 @@ export function applyEditOperations(
       ],
     };
   }
+  // The lane lines of the changeset make one plan, for the board the changeset leaves.
+  const unsettled = settleLanePlan(state);
+  if (unsettled) return rejected(log, unsettled, operations);
   const next = finalise(state, log);
   if ('code' in next) return rejected(log, next, operations);
   const offPlan = planOnlyAddedOutsidePlan(tab.elements, next);

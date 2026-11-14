@@ -21,6 +21,8 @@ export const EDIT_OPERATION_NAMES = [
   'suggest-kind',
   'suggest-split',
   'suggest-remove',
+  'suggest-lane',
+  'arrange',
   'wall',
 ] as const;
 export type EditOperationName = (typeof EDIT_OPERATION_NAMES)[number];
@@ -46,6 +48,8 @@ export const OPERATION_MEMBERS: Readonly<Record<EditOperationName, readonly stri
   'suggest-kind': ['op', 'note', 'kind', 'reason'],
   'suggest-split': ['op', 'note', 'parts', 'reason'],
   'suggest-remove': ['op', 'note', 'reason'],
+  'suggest-lane': ['op', 'name', 'lanes', 'kinds', 'contexts', 'notes', 'reason'],
+  arrange: ['op'],
   wall: ['op', 'photos'],
 };
 

@@ -14,6 +14,7 @@ import {
 } from '@livedoc/document';
 import { readNotes } from '../notes';
 import { byTime } from '../timeline';
+import { blockedBy, type Box } from './blocked';
 
 export type PlacedPlan = {
   // The board with the plan's notes where they would stand; everything else as it was, in its order.
@@ -23,11 +24,6 @@ export type PlacedPlan = {
   // The notes that stay which a placed note would land on.
   blocked: ElementId[];
 };
-
-type Box = { x: number; y: number; width: number; height: number };
-
-const overlaps = (a: Box, b: Box) =>
-  a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
 export function placeLanePlan(
   tab: Pick<Tab, 'elements'>,
@@ -58,14 +54,5 @@ export function placeLanePlan(
     reached.set(lane, Math.max(reached.get(lane) ?? -Infinity, x + width));
   }
 
-  const boxes = [...placed.values()];
-  const blocked = notes
-    .filter((n) => !placed.has(n.id))
-    .filter((n) => {
-      const box = { x: n.left, y: n.top, width: n.right - n.left, height: n.bottom - n.top };
-      return boxes.some((b) => overlaps(b, box));
-    })
-    .map((n) => n.id);
-
-  return { elements, top, blocked };
+  return { elements, top, blocked: blockedBy(notes, placed) };
 }

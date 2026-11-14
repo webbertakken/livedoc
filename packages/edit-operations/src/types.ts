@@ -169,6 +169,23 @@ export type SuggestRemoveOperation = { op: 'suggest-remove'; note: Selector; rea
 export type SuggestChangeOperation =
   SuggestRewordOperation | SuggestKindOperation | SuggestSplitOperation | SuggestRemoveOperation;
 
+// `suggest-lane "<name>" [lanes=<n>,…] [kind=<kind>,…] [context=<context>,…] [<note>…] [reason=…]`: one lane of a lane
+// plan (docs/specs/021-event-storming/lane-plans.md "How an agent suggests one"); the lines of one changeset, top to
+// bottom, make one plan.
+export type SuggestLaneOperation = {
+  op: 'suggest-lane';
+  name: string;
+  // Lanes by the number the storm view prints for them.
+  lanes?: number[];
+  kinds?: string[];
+  contexts?: Selector[];
+  notes?: Selector[];
+  reason?: string;
+};
+
+// `arrange`: the board laid out afresh along the timeline (docs/specs/021-event-storming/arrange.md).
+export type ArrangeOperation = { op: 'arrange' };
+
 // The notes read off several photos of one wall, in wall order (docs/specs/021-event-storming/event-storming.md
 // Phase 11): each note's box in its photo's pixels. JSON form only.
 export type WallNoteInput = {
@@ -199,6 +216,8 @@ export type EditOperation =
   | SuggestContextOperation
   | SuggestNameOperation
   | SuggestChangeOperation
+  | SuggestLaneOperation
+  | ArrangeOperation
   | WallOperation;
 
 export type ParseOutcome = { operations: EditOperation[] } | { errors: EditRejection[] };

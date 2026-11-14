@@ -40,6 +40,7 @@ export { applyLanePlan, checkLanePlan, type LanePlanVerdict } from './lanes/chec
 export { withLaneNames } from './lanes/names';
 export { foldLanes, type Fold } from './lanes/fold';
 export { readLanePlan, type StormLanePlan } from './lanes/view';
+export { arrangeBoard, type Arranged } from './lanes/arrange';
 export { diffReadings, formatChanges, hasChanges, type StormChanges } from './changes';
 export {
   buildExportBundle,
