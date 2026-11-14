@@ -13,6 +13,11 @@ import {
 /** Shift snaps the reference member's angle to these steps (ST1). */
 export const ROTATE_SNAP_DEGREES = 15;
 
+/** One frame of a turn by hand: the members as turned, and the angle the reference member lands on. */
+export type TurnResolution = { members: Map<string, Element>; angle: number };
+
+const wholeDegrees = (deg: number) => ((deg % 360) + 360) % 360;
+
 /** The clockwise angle (degrees, y down) swept about `pivot` from `start` to `now`, the short way round. */
 export function sweptDegrees(pivot: Point, start: Point, now: Point): number {
   if ((start.x === pivot.x && start.y === pivot.y) || (now.x === pivot.x && now.y === pivot.y)) {
@@ -26,8 +31,9 @@ export function sweptDegrees(pivot: Point, start: Point, now: Point): number {
 
 /**
  * The selection's members turned by the sweep, keyed by id, from the elements as the gesture found them (as they
- * were while the sweep is under a whole degree, so sweeping back puts them back). The angles are read on screen: the canvas is never itself turned, so a sweep
- * on screen is the same sweep on the canvas.
+ * were while the sweep is under a whole degree, so sweeping back puts them back), and the angle the reference member
+ * lands on, in whole degrees from 0 to 359, for the readout beside the pointer (ST6). The angles are read on screen:
+ * the canvas is never itself turned, so a sweep on screen is the same sweep on the canvas.
  */
 export function resolveBoxedTurn({
   startElements,
@@ -43,15 +49,15 @@ export function resolveBoxedTurn({
   pressClient: Point;
   client: Point;
   shiftHeld: boolean;
-}): Map<string, Element> {
+}): TurnResolution {
   let turn = Math.round(sweptDegrees(pivotClient, pressClient, client));
-  const reference = shiftHeld ? turnReference(startElements, ids) : null;
+  const reference = turnReference(startElements, ids);
+  const from = reference ? rotationOf(reference) : 0;
   if (shiftHeld) {
-    const from = reference ? rotationOf(reference) : 0;
     turn = Math.round((from + turn) / ROTATE_SNAP_DEGREES) * ROTATE_SNAP_DEGREES - from;
   }
   const turned = turnSelection(startElements, ids, turn);
-  const out = new Map<string, Element>();
-  for (const el of turned) if (ids.has(el.id)) out.set(el.id, el);
-  return out;
+  const members = new Map<string, Element>();
+  for (const el of turned) if (ids.has(el.id)) members.set(el.id, el);
+  return { members, angle: wholeDegrees(from + turn) };
 }

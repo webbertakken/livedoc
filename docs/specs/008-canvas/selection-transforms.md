@@ -45,6 +45,9 @@ A turn or a flip never takes a selection apart; its members keep where they sit 
 - The drag engages once the pointer travels as far as a body move needs (`DRAG_ENGAGE_PX`), so a click turns nothing.
 - **Shift** held snaps the reference member's angle to 15° steps (default), and the modifier banner says so.
 - The frame does not turn during the drag; it re-fits the turned selection as it goes.
+- While the drag turns, an **angle readout** sits beside the pointer: the angle the reference member lands on,
+  in whole degrees clockwise from 0° to 359°, the number its Rotation tiles use (default).
+  Under Shift it steps with the snap; it follows the pointer and goes when the drag ends, however it ends.
 - The drag draws as a preview and writes once on release, like a resize
   ([Drag preview](drag-preview.md)); **Escape** puts the selection back.
 - A zone is 20 screen pixels square for a mouse or pen; on a coarse pointer it reaches 40 pixels past the
@@ -94,7 +97,9 @@ A turn or a flip never takes a selection apart; its members keep where they sit 
 - The rotate zones are `RotateZones` (`apps/live/components/canvas/RotateZones.tsx`), inside a frame marked
   `data-turn-frame` whose on-screen centre is the pivot the press reads (`apps/live/lib/turn-frame.ts`).
 - The drag is a boxed drag in `rotate` mode, resolved by `resolveBoxedTurn`
-  (`apps/live/hooks/canvas/boxed-turn-resolve.ts`).
+  (`apps/live/hooks/canvas/boxed-turn-resolve.ts`), which also answers the reference member's landing angle.
+- The drag publishes the readout to `apps/live/lib/turn-readout.ts`, and `TurnReadout`
+  (`apps/live/components/canvas/TurnReadout.tsx`) draws it; the drag clears it on release and on cancel.
 - One element's zones show where `turnsByHand` allows; a multi-selection's where `showUnionTurn` does
   (`apps/live/lib/canvas-selection.ts`).
 - The flips are `flipSelected` (`apps/live/hooks/canvas/useShapeStyleSetters.ts`) and `FlipButtons` in the menu.
@@ -110,3 +115,7 @@ Each default below was applied where this spec is silent or qualitative, and hol
 - **ST4** What a flip does to a shape's own outline: nothing; the shape keeps its face and only its place and angle
   mirror, as Mirror Copy places one (default).
 - **ST5** Which keys flip: Shift+H and Shift+V, the convention of common design tools (default).
+- **ST6** What the angle readout shows: the angle the reference member lands on, not the turn so far, as Figma and
+  Canva show it; it agrees with the Rotation tiles and with Shift's snap to the reference member's angle (default).
+- **ST7** Where the angle readout sits: a small pill 16 screen pixels right of and below the pointer, clear of the
+  rotate cursor, kept on screen (default).

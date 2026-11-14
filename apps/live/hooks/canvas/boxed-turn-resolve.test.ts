@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createShape, type Element, type ShapeElement } from '@livedoc/document';
+import { createAnnotation, createShape, type Element, type ShapeElement } from '@livedoc/document';
 import { resolveBoxedTurn, sweptDegrees, ROTATE_SNAP_DEGREES } from './boxed-turn-resolve';
 
 // docs/specs/008-canvas/selection-transforms.md "Rotating by hand".
@@ -44,8 +44,9 @@ describe('resolveBoxedTurn', () => {
       client: { x: 500, y: 400 },
       shiftHeld: false,
     });
-    expect(out.get('a')!).toMatchObject({ rotation: 90 });
-    expect(out.get('b')!).toMatchObject({ rotation: 100 });
+    expect(out.members.get('a')!).toMatchObject({ rotation: 90 });
+    expect(out.members.get('b')!).toMatchObject({ rotation: 100 });
+    expect(out.angle).toBe(90);
   });
 
   it('snaps the reference member to 15° steps with Shift', () => {
@@ -60,8 +61,8 @@ describe('resolveBoxedTurn', () => {
       shiftHeld: true,
     });
     expect(ROTATE_SNAP_DEGREES).toBe(15);
-    expect(out.get('b')!).toMatchObject({ rotation: 60 });
-    expect(out.get('a')!).toMatchObject({ rotation: 50 });
+    expect(out.members.get('b')!).toMatchObject({ rotation: 60 });
+    expect(out.members.get('a')!).toMatchObject({ rotation: 50 });
   });
 
   it('gives the members as they began until the sweep reaches a whole degree', () => {
@@ -73,7 +74,78 @@ describe('resolveBoxedTurn', () => {
       client: { x: 600, y: 300.3 },
       shiftHeld: false,
     });
-    expect(out.get('a')).toBe(a);
-    expect(out.get('b')).toBe(b);
+    expect(out.members.get('a')).toBe(a);
+    expect(out.members.get('b')).toBe(b);
+  });
+});
+
+// docs/specs/008-canvas/selection-transforms.md "Rotating by hand": the angle readout, ST6.
+describe('the landing angle', () => {
+  const a: ShapeElement = { ...createShape('square', 0, 0), id: 'a', rotation: 350 };
+  const b: ShapeElement = { ...createShape('square', 80, 0), id: 'b', rotation: 20 };
+  const pivotClient = { x: 500, y: 300 };
+  const press = { x: 600, y: 300 };
+  const at = (deg: number) => {
+    const r = (deg * Math.PI) / 180;
+    return { x: 500 + 100 * Math.cos(r), y: 300 + 100 * Math.sin(r) };
+  };
+
+  it('reads the angle the reference member lands on, not the turn so far', () => {
+    const out = resolveBoxedTurn({
+      startElements: [b, a, { ...a, id: 'c' }],
+      ids: new Set(['a', 'b']),
+      pivotClient,
+      pressClient: press,
+      client: at(30),
+      shiftHeld: false,
+    });
+    expect(out.angle).toBe(50);
+    expect(out.members.has('c')).toBe(false);
+  });
+
+  it('wraps the angle into 0 to 359 degrees', () => {
+    const out = resolveBoxedTurn({
+      startElements: [a],
+      ids: new Set(['a']),
+      pivotClient,
+      pressClient: press,
+      client: at(25),
+      shiftHeld: false,
+    });
+    expect(out.angle).toBe(15);
+    const back = resolveBoxedTurn({
+      startElements: [b],
+      ids: new Set(['b']),
+      pivotClient,
+      pressClient: press,
+      client: at(-30),
+      shiftHeld: false,
+    });
+    expect(back.angle).toBe(350);
+  });
+
+  it('steps with the Shift snap', () => {
+    const out = resolveBoxedTurn({
+      startElements: [b],
+      ids: new Set(['b']),
+      pivotClient,
+      pressClient: press,
+      client: at(17),
+      shiftHeld: true,
+    });
+    expect(out.angle).toBe(30);
+  });
+
+  it('reads the turn itself when no member can rotate', () => {
+    const marker = { ...createAnnotation(0, 0), id: 'a' };
+    const out = resolveBoxedTurn({
+      startElements: [marker],
+      ids: new Set(['a']),
+      pivotClient,
+      pressClient: press,
+      client: at(-40),
+      shiftHeld: false,
+    });
+    expect(out.angle).toBe(320);
   });
 });

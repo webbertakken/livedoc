@@ -196,6 +196,60 @@ test.describe('selection transforms on a whiteboard', () => {
     expectNoPageErrors(pageErrors);
   });
 
+  // "Rotating by hand", ST6 and ST7: the landing angle beside the pointer, gone however the turn ends.
+  test('a turn by hand shows its angle beside the pointer until it ends', async ({
+    page,
+    pageErrors,
+  }) => {
+    await openBoard(page);
+    await page
+      .locator('[data-element-id="wide"]')
+      .first()
+      .click({ position: { x: 20, y: 20 } });
+    const zone = page.locator('[data-rotate-zone="se"]');
+    const z = (await zone.boundingBox())!;
+    const frame = (await page.locator('[data-turn-frame]').first().boundingBox())!;
+    const pivot = { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 };
+    const start = { x: z.x + z.width / 2, y: z.y + z.height / 2 };
+    const r = Math.hypot(start.x - pivot.x, start.y - pivot.y);
+    const a0 = Math.atan2(start.y - pivot.y, start.x - pivot.x);
+    const sweep = async (deg: number, steps = 10) => {
+      for (let i = 1; i <= steps; i += 1) {
+        const a = a0 + (i / steps) * ((deg * Math.PI) / 180);
+        await page.mouse.move(pivot.x + r * Math.cos(a), pivot.y + r * Math.sin(a));
+      }
+    };
+    const readout = page.locator('[data-turn-readout]');
+
+    // Escape puts the selection back and takes the readout with it.
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await expect(readout).toHaveCount(0);
+    await sweep(20);
+    await expect(readout).toHaveText('20°');
+    await page.keyboard.press('Escape');
+    await expect(readout).toHaveCount(0);
+    await page.mouse.up();
+    expect((await placed(page)).wide!.rotation).toBe(0);
+
+    await page.mouse.move(start.x, start.y);
+    await page.mouse.down();
+    await sweep(-32);
+    await expect(readout).toHaveText('328°');
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/card30-turning.png` });
+    // Shift steps the readout with the snap.
+    await page.keyboard.down('Shift');
+    await sweep(-37);
+    await expect(readout).toHaveText('315°');
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/card30-shift.png` });
+    await page.mouse.up();
+    await page.keyboard.up('Shift');
+    await expect(readout).toHaveCount(0);
+    expect((await placed(page)).wide!.rotation).toBe(315);
+
+    expectNoPageErrors(pageErrors);
+  });
+
   test('Shift+H and the menu flip the selection, text kept readable', async ({
     page,
     pageErrors,
