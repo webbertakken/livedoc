@@ -7,7 +7,7 @@ import { loopPath } from '@/lib/context-loop';
 // Draw Context's pen (docs/specs/021-event-storming/candidate-contexts.md "Making one by hand"): while it is armed,
 // a sheet over the whole board takes the pointer; a press and drag draws a dashed loop in canvas units, and letting
 // go hands the loop over. Lives in the context layer's canvas space, so a point is the pointer less the sheet's
-// origin, over the zoom.
+// origin, over the zoom. Pointer only: from the keyboard, New Context makes one from a selection.
 
 // How far the sheet reaches from the canvas origin each way, canvas px: past any board.
 const SHEET_REACH = 1_000_000;
@@ -29,7 +29,6 @@ export function ContextDrawPen({ zoom, onLoop }: { zoom: number; onLoop: (loop: 
   return (
     <div
       data-context-pen=""
-      aria-label="Draw a loop round the notes for the new context"
       className="pointer-events-auto absolute cursor-crosshair touch-none"
       style={{
         left: -SHEET_REACH,
