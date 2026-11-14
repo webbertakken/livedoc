@@ -163,6 +163,9 @@ seen on the document).
 - Cells named by key are matched as `(row_id, col_id)` pairs, so the primary key seeks each one
   (`apps/api/src/db/sheets-plans.test.ts`).
 - A check that needs only a document's owner and team reads that row, not the full document.
+- A request about one document pays no D1 read for the purge guard: the document's own row keeps it
+  ([Document storage](../006-document/document-storage.md) G3). `apps/api/src/routes/document-request-round-trips.test.ts`
+  counts the D1 round trips of the requests an open editor makes all the time.
 - A realtime room reads a socket's fixed session facts once, not on every frame.
 - The tab save reads its document in one query and fetches the room's ledger alongside its other
   reads ([API](../015-api/api.md) "Tab save"); the timeline's event and its scopes are one batch; the

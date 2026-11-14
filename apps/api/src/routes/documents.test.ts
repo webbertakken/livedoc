@@ -2,7 +2,7 @@ import { makeTestRouteContext } from './test-route-context';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DocumentDTO } from '../types';
 
-// No document here owes its room a purge (G3 is room-purge.test.ts's).
+// No document created here owes its room a purge (the create's check, room-purge.test.ts).
 vi.mock('../room-purge-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../room-purge-client')>()),
   purgeOwed: vi.fn(async () => false),

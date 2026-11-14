@@ -130,7 +130,10 @@ tables are dropped ([Moving content into rooms](document-storage-move.md)).
 The invariants and edge cases the code and its tests cite by id.
 
 - **G2** no write after purge: `document-outbox.test.ts`.
-- **G3** adds one primary-key read of `room_purges` to every request under `/api/documents/:id/`, before the room.
+- **G3** a tombstoned document cannot be opened, at no read of its own: the removal deletes the document's D1 row in
+  the batch that writes its tombstone, a create of the same id purges the room first, and every route under
+  `/api/documents/:id/` reads that row before it serves or writes anything (`document-purge-guard.test.ts`, every
+  documented route).
 - **R1** schema on first write only: `document-schema.test.ts`, `document-db.test.ts`.
 - **R3** every write path keys the outbox: `document-outbox-keys.test.ts`, one case per table.
 

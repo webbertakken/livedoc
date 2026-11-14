@@ -28,7 +28,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import worker from '../index';
-import { PURGE_OWED_SQL } from '../room-purge-client';
 import { withTestDocumentRooms } from '../test-document-room';
 import type { Env } from '../types';
 
@@ -155,22 +154,6 @@ export function instantiate(template: string): string[] {
 
 class StorageTrap extends Error {}
 
-// D1 as the probe sees it: G3's tombstone read, which every document path passes before its room routes it
-// (room-purge-client.ts), answers "none owed" and is not storage; anything else springs the trap.
-function guardedTrap(trapped: object, state: { touched: boolean }): unknown {
-  const prepare = (query: string) => {
-    if (query !== PURGE_OWED_SQL) {
-      state.touched = true;
-      throw new StorageTrap('probe touched DB');
-    }
-    return { bind: () => ({ first: async () => null }) };
-  };
-  return new Proxy(trapped, {
-    get: (target, prop, receiver) =>
-      prop === 'prepare' ? prepare : (Reflect.get(target, prop, receiver) as unknown),
-  });
-}
-
 /** Probes the real worker. `candidates` lists the paths to try; every path is
  *  tried with every method in PROBE_METHODS unless `methods` narrows it. */
 export async function probeDispatch(
@@ -192,7 +175,7 @@ export async function probeDispatch(
   // Feature gates open, so a handler reaches its own routing instead of
   // answering "not configured" for every path: telemetry on, a model key set.
   const env = {
-    DB: guardedTrap(trap('DB'), state),
+    DB: trap('DB'),
     IMAGES: trap('IMAGES'),
     // A room's own SQLite: the room runs the document routes against it (document-route.ts).
     DOCUMENT_DB: trap('DOCUMENT_DB'),
