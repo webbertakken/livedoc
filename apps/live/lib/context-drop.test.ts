@@ -93,21 +93,43 @@ describe('contextDropPlan', () => {
     expect(contextDropPlan(board, both, new Set(['a', 'b']))).toBe(NO_CONTEXT_DROP);
   });
 
-  it('leaves suggested contexts alone, and passes over what is no note or did not move', () => {
-    const withSuggested: Element[] = [...board, note('f', 8000), context('s', ['f'], true)];
-    // Dropped inside the suggested outline: it takes no notes until applied.
-    expect(contextDropPlan(withSuggested, moved(withSuggested, 'e', 8000), new Set(['e']))).toBe(
-      NO_CONTEXT_DROP,
-    );
+  it('takes a note into a suggested context and lets one go from it, as a kept one does', () => {
+    const withSuggested: Element[] = [
+      ...board,
+      note('f', 8000),
+      note('g', 8300),
+      context('s', ['f', 'g'], true),
+    ];
+    const into = contextDropPlan(withSuggested, moved(withSuggested, 'e', 8000), new Set(['e']));
+    expect([...into.joins]).toEqual([['e', 's']]);
+    const away = contextDropPlan(withSuggested, moved(withSuggested, 'g', 20000), new Set(['g']));
+    expect([...away.leaves]).toEqual(['g']);
     // A note of a suggested context dragged into a kept outline joins it.
     const plan = contextDropPlan(withSuggested, moved(withSuggested, 'f', 150), new Set(['f']));
     expect([...plan.joins]).toEqual([['f', 'left']]);
+  });
+
+  it('changes nothing for a nudge in the dead band near an edge, in or out', () => {
+    // e, in no context, nudged until its centre is just short of the left outline's edge (500 + padding).
+    const edge = 500 + CONTEXT_PADDING_PX;
+    expect(contextDropPlan(board, moved(board, 'e', edge - 100 + 1), new Set(['e']))).toBe(
+      NO_CONTEXT_DROP,
+    );
+    // b, a member, nudged out until it stands just inside the leave distance of a's outline.
+    const near = 200 + CONTEXT_PADDING_PX + CONTEXT_LEAVE_PX - 1;
+    expect(contextDropPlan(board, moved(board, 'b', near), new Set(['b']))).toBe(NO_CONTEXT_DROP);
+    // A centre past the edge is in.
+    const plan = contextDropPlan(board, moved(board, 'e', edge - 100 - 10), new Set(['e']));
+    expect([...plan.joins]).toEqual([['e', 'left']]);
+  });
+
+  it('passes over what is no note or did not move', () => {
     const plain = [...board, note('p', 9000, 0, { esKind: undefined })];
     expect(contextDropPlan(plain, moved(plain, 'p', 150), new Set(['p']))).toBe(NO_CONTEXT_DROP);
     expect(contextDropPlan(board, board, new Set(['a']))).toBe(NO_CONTEXT_DROP);
   });
 
-  it('has nothing to do on a board without kept contexts, or with nothing dragged', () => {
+  it('has nothing to do on a board without contexts, or with nothing dragged', () => {
     const bare = [note('a', 0), note('b', 300)];
     expect(contextDropPlan(bare, moved(bare, 'a', 900), new Set(['a']))).toBe(NO_CONTEXT_DROP);
     expect(contextDropPlan(board, board, new Set())).toBe(NO_CONTEXT_DROP);
