@@ -5,7 +5,7 @@ import type { RefObject } from 'react';
 import { deriveTextColorForBg, ES_LANE_HEIGHT, laneTop, type EsTimeline } from '@livedoc/document';
 import { getTheme, type ThemeId } from '@/lib/themes';
 import { useLanePreview } from '@/lib/lane-preview';
-import { useCanvasClientOrigin } from '@/hooks/canvas/useCanvasClientOrigin';
+import { useCanvasOverlayOrigin } from '@/hooks/canvas/useCanvasClientOrigin';
 
 // The lane a dragged note is landing on (docs/specs/021-event-storming/event-storming.md Phase 6), lit while the drag
 // is in hand and gone on release.
@@ -42,7 +42,7 @@ export function TimelineLanesOverlay({
 }) {
   const { viewportZoom, viewKey } = useCanvasViewKey(mainSize);
   const preview = useLanePreview();
-  const rect = useCanvasClientOrigin(wrapperRef, !!timeline && !!preview, viewKey);
+  const rect = useCanvasOverlayOrigin(wrapperRef, !!timeline && !!preview, viewKey);
   if (!timeline || !preview || !rect) return null;
 
   const theme = getTheme(tabThemeId);

@@ -1,13 +1,14 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { tabHasDrawing } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useSelectTab } from '@/app/document/[id]/useSelectTab';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
 import { useSplitView } from '@/hooks/ui/useSplitView';
 import { useViewportWidth } from '@/hooks/ui/useViewportWidth';
+import { EditorBoxContext, WINDOW_EDITOR_BOX, type EditorBox } from '@/hooks/ui/useEditorBox';
 import {
   anchorFromEditorView,
   editorViewFromAnchor,
@@ -87,6 +88,11 @@ export function SplitViewFrame({
     : editorSide === 'left'
       ? { left: 0, width: leftWidth }
       : { left: leftWidth, width: split.rightWidth };
+  // What the editor's `fixed` overlays count from: the pane in a split, else the window (hooks/ui/useEditorBox).
+  const fixedBox = useMemo<EditorBox>(
+    () => (showing ? { left: editorBox.left, top: 0, width: editorBox.width } : WINDOW_EDITOR_BOX),
+    [showing, editorBox.left, editorBox.width],
+  );
   const staticBox =
     editorSide === 'left'
       ? { left: leftWidth, width: split.rightWidth }
@@ -199,7 +205,9 @@ export function SplitViewFrame({
             ...(showing ? { transform: 'translateZ(0)', overflow: 'clip' } : null),
           }}
         >
-          {children(showing)}
+          <EditorBoxContext.Provider value={fixedBox}>
+            {children(showing)}
+          </EditorBoxContext.Provider>
         </div>
         {staticTab ? (
           <div

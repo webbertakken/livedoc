@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { setTurnReadout } from '@/lib/turn-readout';
+import { EditorBoxContext, type EditorBox } from '@/hooks/ui/useEditorBox';
 import { TurnReadout, TURN_READOUT_OFFSET_PX } from './TurnReadout';
 
 // docs/specs/008-canvas/selection-transforms.md "Rotating by hand": the angle readout, ST6 and ST7.
@@ -47,5 +48,34 @@ describe('TurnReadout', () => {
     expect(pill.style.left).toBe(`${window.innerWidth - 2 - TURN_READOUT_OFFSET_PX}px`);
     expect(pill.style.top).toBe(`${window.innerHeight - 2 - TURN_READOUT_OFFSET_PX}px`);
     expect(pill.style.transform).toBe('translate(-100%, -100%)');
+  });
+});
+
+// docs/specs/007-editor/split-view.md "How the editor fits in its pane": in a split the pill counts from the editor
+// pane's corner, and stays readable at the pane's own right edge.
+describe('TurnReadout in a split', () => {
+  const inPane = (box: EditorBox) =>
+    render(
+      <EditorBoxContext.Provider value={box}>
+        <TurnReadout />
+      </EditorBoxContext.Provider>,
+    );
+
+  it("sits beside the pointer in the right pane, counted from the pane's corner", () => {
+    inPane({ left: 600, top: 0, width: 400 });
+    act(() => setTurnReadout({ angle: 45, clientX: 700, clientY: 150 }));
+
+    const pill = screen.getByText('45°');
+    expect(pill.style.left).toBe(`${100 + TURN_READOUT_OFFSET_PX}px`);
+    expect(pill.style.top).toBe(`${150 + TURN_READOUT_OFFSET_PX}px`);
+  });
+
+  it("flips at the left pane's right edge, the divider", () => {
+    inPane({ left: 0, top: 0, width: 500 });
+    act(() => setTurnReadout({ angle: 90, clientX: 490, clientY: 150 }));
+
+    const pill = screen.getByText('90°');
+    expect(pill.style.left).toBe(`${490 - TURN_READOUT_OFFSET_PX}px`);
+    expect(pill.style.transform).toMatch(/^translate\(-100%/);
   });
 });
