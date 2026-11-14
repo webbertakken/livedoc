@@ -56,7 +56,7 @@ export function NameChips({
           data-name-chips-lead=""
           className="flex h-7 items-center whitespace-nowrap rounded-full bg-[var(--lvd-canvas-paper,#ffffff)] pl-3 pr-2.5 text-xs font-medium leading-none text-slate-600 in-[[data-dark-canvas]]:text-slate-400"
         >
-          Rename to
+          <span className="text-optical-centre">Rename to</span>
         </span>
       )}
       {names.map(({ name }) => (

@@ -199,7 +199,9 @@ export function ContextName({
             data-context-name-count={names}
             className="flex h-5 items-center whitespace-nowrap rounded-full border-[1.5px] border-dashed bg-[var(--lvd-canvas-paper,#ffffff)] px-[9px] text-[11px] font-semibold leading-none tabular-nums [border-color:var(--ctx-line)]"
           >
-            {names} name{names === 1 ? '' : 's'}
+            <span className="text-optical-centre">
+              {names} name{names === 1 ? '' : 's'}
+            </span>
           </span>
         </div>
       ) : null}
