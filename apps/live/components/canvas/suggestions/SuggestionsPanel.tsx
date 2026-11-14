@@ -51,6 +51,9 @@ type RowFace = {
   kind: ReactNode;
   words: string;
   detail?: string;
+  // A row with no caption on the board to say them says its reason whole, and who suggested it beneath.
+  whole?: boolean;
+  by?: string;
   style?: CSSProperties;
 };
 
@@ -120,14 +123,15 @@ function rowFace(row: PanelRow): RowFace {
     case 'lane-plan': {
       const { reason, by } = row.plan.esLanePlan;
       const lanes = `${row.lanes} lane${row.lanes === 1 ? '' : 's'}`;
-      const why = [reason, by ? `Suggested by ${by}` : null].filter(Boolean).join(' · ');
       return {
         name: `Lane plan: ${lanes}`,
         ...(row.stale ? { said: `Lane plan: ${lanes}. ${STALE_PLAN}` } : {}),
         swatch: LANES_SWATCH,
         kind: contextKind('Lane plan'),
         words: lanes,
-        detail: row.stale ? STALE_PLAN : why || undefined,
+        detail: row.stale ? STALE_PLAN : reason,
+        whole: true,
+        ...(by && !row.stale ? { by } : {}),
       };
     }
     case 'change': {
@@ -229,8 +233,15 @@ export function SuggestionsPanel({
                       {face.kind} <span className="font-medium">{face.words}</span>
                     </p>
                     {face.detail ? (
-                      <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
+                      <p
+                        className={`mt-0.5 text-xs text-slate-600 dark:text-slate-300 ${face.whole ? '' : 'line-clamp-2'}`}
+                      >
                         {face.detail}
+                      </p>
+                    ) : null}
+                    {face.by ? (
+                      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                        Suggested by {face.by}
                       </p>
                     ) : null}
                   </>

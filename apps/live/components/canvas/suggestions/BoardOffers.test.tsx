@@ -61,7 +61,10 @@ describe('the lane plan in the suggestions panel', () => {
   it('lists the plan with how many lanes, why and who, and applies or dismisses it', () => {
     const c = panel(plannedKitchen({ reason: 'Two parts of the business', by: 'Claude' }).elements);
     const row = screen.getByRole('listitem', { name: 'Lane plan: 2 lanes' });
-    expect(row.textContent).toContain('Two parts of the business · Suggested by Claude');
+    // The row is the one place a plan's reason and author are said: whole, and who on a line of its own.
+    const why = within(row).getByText('Two parts of the business');
+    expect(why.className).not.toContain('line-clamp');
+    expect(within(row).getByText('Suggested by Claude')).not.toBe(why);
     fireEvent.click(
       within(row).getByRole('button', { name: 'Apply suggestion: Lane plan: 2 lanes' }),
     );
