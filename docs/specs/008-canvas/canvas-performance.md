@@ -63,11 +63,20 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   floating toolbar, the selection popover) is **hidden while a selection is being moved or
   resized** and placed again when the gesture ends; elsewhere it positions from canvas geometry
   (bounds, offset, zoom) and a measurement taken outside the gesture.
-- **A render never asks the browser for a media query's match.** A match is read once per query,
-  shared by everything that reads it, and kept up to date by the browser's change event: reading
-  one brings style and layout up to date, and with every element view reading one as it rendered,
-  pressing a selected box laid out the whole board in the middle of the press (about 20 ms of a
-  55 ms task).
+- **Chrome measures itself in the next frame.** Chrome that follows a selection (the floating
+  toolbar, the selection popover) reads its own size and the canvas's edges in the frame after the
+  change that shows or moves it, never in that change's commit: the commit has just changed the
+  page, and reading layout there lays out the whole board inside the input's task (a pencil
+  stroke's release, which selects the stroke, laid the board out for about 18 ms of an 84 ms
+  task). It places itself before that frame paints, so it never shows unplaced, and a flip it
+  makes places it again in the same frame.
+- **A render never asks the browser for layout.** What a render would read from the browser
+  that brings style and layout up to date (a media query's match, the visual viewport a dialog
+  fits above the keyboard) is read once, shared by everything that reads it, and kept up to date
+  by the browser's own events (a query's change, the viewport's resize and scroll). With every
+  element view reading a match as it rendered, pressing a selected box laid out the whole board in
+  the middle of the press (about 20 ms of a 55 ms task); with every dialog in the editor reading
+  the viewport, a pencil stroke's release did the same.
 - **Opening a board animates nothing across the board.** The board appears at once, with no fade
   on the canvas world ([Motion](../004-interface-design/motion.md) "Editor arrival") and no
   pop-in on the elements it opens with ([Canvas and palette](canvas-and-palette.md) "Motion and
@@ -115,6 +124,12 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   would redraw for it, the other arrows in their fans, and what rides on those. A change of finish
   or of paint order, or one touching a mind node (whose connectors read their siblings and the
   root's flow), works out every arrow again.
+- **A new element walks only itself.** A change that adds or removes elements (a stroke landing,
+  a paste, a delete) renders the element list, and each element's slot is skipped while its
+  element, its place in the paint order and what every element draws with (the editing state,
+  the tab's look, the handlers) hold: the slot the change added renders, and the slots after one
+  it removed (each a place lower in the paint order), not the board's thousand. A change of what
+  every element draws with walks them all, as it must.
 - **A break stays local.** An arrow broken where it runs behind a box is masked over its own extent (its path's
   points, control points included, grown for its heads), never a vast region: a mask's region is what the browser
   repaints when its holes change, and a vast one repainted the whole screen for every arrow a dragged box crossed.
