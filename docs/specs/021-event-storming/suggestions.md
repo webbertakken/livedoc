@@ -4,6 +4,8 @@ A **suggestion** is a note an agent proposes for an Event Storming board: its ki
 why. It is offered, never imposed: nothing on the board moves or changes until a person applies it.
 An agent finds where the board is thin from the [board reading](board-reading.md)'s gaps, and adds what it knows
 about the domain (the missing command, the policy everyone forgot, the external system nobody named).
+A person asks for them with an [ask](asks.md); changes to what is already on the board are
+[suggested changes](suggested-changes.md), and a reorganisation is a [lane plan](lane-plans.md).
 
 ## What a suggestion is
 
@@ -42,6 +44,8 @@ about the domain (the missing command, the policy everyone forgot, the external 
   `SUGGESTIONS_MAX` (60) open suggestions).
 - **One per place.** A second suggestion of the same kind, words and anchor replaces nothing and is refused as
   `duplicate_suggestion`, so an agent run twice does not stack copies.
+- **Not what was declined.** A suggestion a person dismissed before is refused as `declined_before`
+  ([Asks](asks.md#what-was-declined)).
 - **The CLI**: `livedoc storm read <doc>` prints the reading with its gaps; `livedoc storm suggest <doc> -f <file>`
   applies suggest lines; `livedoc storm clear <doc>` removes the agent's open suggestions.
 - **The MCP**: `read_event_storming` (the reading, gaps and open suggestions) and `suggest_notes` (up to 30
@@ -80,6 +84,8 @@ person's own view (not shared, not saved with the board; off when the board open
   All Suggestions, Apply All and Dismiss All. Pointing at a row, or focusing it, brings its anchor and its spot into
   view (the least pan that shows both, none when they already show) (default) and previews it as a peek tab does.
   It is the only chrome the feature adds, and it is gone when the last suggestion is.
+  It lists a [lane plan](lane-plans.md#how-a-person-sees-and-decides) first, then notes, contexts,
+  [name suggestions and note changes](suggested-changes.md) in timeline order.
 - **Colour.** A dashed stroke is non-text UI and needs 3:1 against what it stands on (WCAG 2.2 1.4.11): on the light
   canvas the kind's darker (700) shade, on the dark canvas the kind's own paper colour, which stands clear of the
   dark ground. A placeholder's stroke and kind name stand on its pale paper, so they take the darker shade in either
@@ -98,7 +104,7 @@ person's own view (not shared, not saved with the board; off when the board open
 - **A suggestion on a suggestion** applies its anchor first, in the same step.
 - **Apply All** applies every open suggestion in timeline order as one undoable step.
 - **Dismiss** removes the suggestion and the suggestions chained on it; **Dismiss All** removes them all, as one
-  undoable step.
+  undoable step. Each one dismissed is [remembered as declined](asks.md#what-was-declined) in the same step.
 - Every apply and dismiss also removes the board's orphans, in the same step.
 - Nothing is offered where the change would be refused: a locked tab, a hidden or locked active layer, or a drag in
   hand hides the tabs, placeholders and panel (default).

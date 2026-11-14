@@ -4,7 +4,8 @@ The **board reading** is what an Event Storming board says, read out of where it
 It is deterministic and pure: the same board always reads the same, with no model involved.
 A model is good at domain words and poor at geometry, so the geometry is read here and the words are left to the model.
 The reading feeds everything that has to understand a board rather than draw it:
-the agents' `storm` view ([Suggestions](suggestions.md)), the gaps, and the [domain export](domain-export.md).
+the agents' `storm` view ([Suggestions](suggestions.md)), the gaps, the [Review panel](board-review.md), the
+[asks](asks.md) and the [domain export](domain-export.md).
 
 It lives in `@livedoc/storm-reading` (`packages/storm-reading`), beside nothing that paints.
 
@@ -17,6 +18,7 @@ It lives in `@livedoc/storm-reading` (`packages/storm-reading`), beside nothing 
 - **Time.** The x axis is time, left to right: a note's moment is its centre x.
 - **Lanes.** A note's lane is the lane its centre is nearest (`ES_LANES`); a note free-placed off a lane still has one.
 - **Reach.** Two notes can relate only within `READING_REACH_LANES` (2) lanes of each other.
+- **About.** The board's [About](asks.md#about-this-domain), when it has one: the person's own words on the domain.
 
 ## Relations
 
@@ -56,6 +58,29 @@ A relation is found from geometry alone, in this order, and each note takes at m
   the reading follows chains, so a process reads as one story across the board.
 - Loose notes follow the timeline, by kind, in reading order.
 
+## Structure
+
+What the board carries beyond its notes ([Board structure](board-structure.md)), read as it stands:
+
+- **Lanes.** The lanes that hold workshop notes, top to bottom, numbered from 1: each with its
+  [name](board-structure.md#lane-names) when it has one, and its notes left to right.
+  The numbers are what a [lane plan](lane-plans.md) names a lane by.
+- **Pivotal events and phases.** The events marked pivotal, and the [phases](board-structure.md#phases) they close.
+- **Decisions.** Every answered hotspot: its question (its words), its answer and the note it flags.
+
+## The context map
+
+Where the board keeps [candidate contexts](candidate-contexts.md), the reading says how they depend on each other.
+
+- **A crossing** is a relation of the flow (an event triggers a policy, a policy issues a command, a command causes
+  an event) whose two notes belong to two different kept contexts.
+- **The map** lists, for each pair of contexts in the direction the flow runs, its crossings: the relation and its
+  two notes. The context the flow leaves is upstream of the one it enters.
+- An event that crosses is what one part of the business tells another: the domain export takes it as a public
+  event of the upstream context.
+- A note in no context makes no crossing; a board with fewer than two kept contexts has no map.
+- The other relations (an actor, a read model, an aggregate, a hotspot) are not read for crossings (default).
+
 ## Gaps
 
 A **gap** is a finding about the board, the way a [lint](../024-agents/diagram-lint.md) finding is one about a
@@ -81,7 +106,8 @@ Levels:
 | `event_not_past_tense`    | notation | An event's last word does not read as past tense                       | none                       |
 | `command_not_imperative`  | notation | A command's first word reads as past tense                             | none                       |
 | `duplicate_note`          | question | Two events, commands or policies of one kind say the same words        | none                       |
-| `open_hotspot`            | question | Every hotspot: a question the room has not answered                    | none                       |
+| `open_hotspot`            | question | A hotspot with no [answer](board-structure.md#hotspot-answers)         | none                       |
+| `event_without_context`   | question | An event in no candidate context, on a board that keeps any            | none                       |
 
 - **Tense is a heuristic, in English.** A word reads as past tense when it ends in `ed`, or is one of the common
   irregular past forms (`PAST_TENSE_IRREGULARS`). A board in another language finds none of these two, never false
@@ -91,16 +117,20 @@ Levels:
   (events, commands, policies): actors, read models, aggregates and external systems recur on a board by nature.
 - Gaps are ordered by the timeline (the first note they name), then by code.
 - A gap is a prompt, never a verdict: an event can be caused by time passing, and the room may know it.
-  Nothing in the editor flags a gap on its own; gaps are what an agent reads to make suggestions.
+  Nothing on the board flags a gap on its own: an agent reads them to make suggestions, and a person reads them in
+  the [Review panel](board-review.md#check) when they open it.
 
 ## Output
 
 - **Data**: `StormReading`, versioned (`schema: 'livedoc.storm/1'`), holding the notes (ref, kind, words, lane,
-  order), the timeline, the chains, the loose notes and the gaps. It is the `storm.json` of the
-  [domain export](domain-export.md).
-- **Text**: the `storm` view (`?view=storm` on a tab), compact, one line per note in timeline order, then the loose
-  notes, the gaps and the board's open [suggestions](suggestions.md). It is not budgeted: the whole reading is what an
-  agent asks for, and a board of `DOMAIN_EXPORT_MAX_NOTES` notes prints in about eight thousand tokens.
+  order), the timeline, the chains, the loose notes and the gaps, and, each only when the board has it, the About,
+  the lanes, the pivotal events and phases, the decisions, the contexts and their map. It is the `storm.json` of the
+  [domain export](domain-export.md). A reading made before a part existed reads as having none of it.
+- **Text**: the `storm` view (`?view=storm` on a tab), compact: the About, one line per note in timeline order (a
+  pivotal event marked so, an answered hotspot with its answer), the loose notes, the lanes, the contexts and their
+  map, the gaps, the board's open [suggestions](suggestions.md) and [suggested changes](suggested-changes.md), and
+  what was [declined](asks.md#what-was-declined). It is not budgeted: the whole reading is what an
+  agent asks for, and a board of `DOMAIN_EXPORT_MAX_NOTES` notes prints in about ten thousand tokens.
 - **JSON** of the view (`json=1`): `{ reading, suggestions, rev }`, `rev` the tab revision read. A tab that is not a board is refused as
   `400 not_event_storming`.
 - Refs are the [document views](../024-agents/document-views.md#refs)' refs, so an agent can name a note from the

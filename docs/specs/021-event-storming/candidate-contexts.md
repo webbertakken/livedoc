@@ -49,6 +49,8 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
 - **Apply** keeps it as a candidate context (the suggestion mark is dropped); **Dismiss** removes it. One undoable
   step each; Apply All and Dismiss All include contexts.
 - **A kept context** can be renamed (double-click its name) and deleted (select the outline, Delete).
+- **Another name can be asked for.** A context, kept or suggested, takes
+  [name suggestions](suggested-changes.md#name-suggestions): chips under its name, each a name an agent proposes.
 - **Its notes change two ways** (ruled 2026-11-13: "Note menu and dragging"):
   - **The note's menu**: Add to Context (a list of the board's contexts by name) and Remove from Context.
   - **Dragging**: a note dropped inside an outline joins that context, leaving any other; a note dragged clear of
@@ -131,6 +133,9 @@ them".
   - it stays a suggestion only when every one merged was a suggestion, its reasons joined with "; " and cut to
     `SUGGESTION_REASON_MAX`; with any kept one among them it is kept (default);
   - its name opens for typing straight away, so it can be named for what it now holds (default).
+- **A name can be chosen instead.** The offer shows the
+  [name suggestions](suggested-changes.md#name-suggestions) made for exactly the selected contexts; choosing one
+  merges them under that name, and the name does not open for typing.
 - An Editor's alone, as every act on contexts. Telemetry: `Canvas / Used / ContextsMerged`.
 - Delete on a selected context still acts on that one (default).
 
@@ -173,6 +178,7 @@ them".
 - `storm.md` prints them after the timeline (`contexts`, one line each: ref, name, its notes' refs); suggested ones
   print among the suggestions (`<ref> context "<name>" <refs>`, who and why).
 - `CHANGES.md` reports contexts added, removed and renamed, and notes that joined or left one (default).
+- The reading's [context map](board-reading.md#the-context-map) lists what crosses from one kept context to another.
 - The brief (`CONVERT.md`) tells the model to take each candidate context as a bounded context to group the
   aggregates, events and commands into, named as the board names it, and to weigh it as evidence, not a ruling.
 

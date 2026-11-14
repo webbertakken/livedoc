@@ -1639,6 +1639,8 @@ Stitching uses what a sequence knows instead:
 An agent reads a board through its [board reading](board-reading.md) (the timeline, the chains and the gaps,
 with no model involved), proposes notes as [suggestions](suggestions.md) that a person applies or dismisses, and
 turns the board into a spec and domain types with the [domain export](domain-export.md).
+A person asks an agent, or the built-in model, with an [ask](asks.md); an agent also proposes
+[changes to what is on the board](suggested-changes.md) and a [lane plan](lane-plans.md) to reorganise it.
 
 An agent builds a board through the MCP's graph input with `style: "storm"` ([MCP server](../015-api/mcp-server.md)
 §4.7), saying only what the wall holds and what leads to what; the server leaves it as a facilitator would.
@@ -1869,9 +1871,10 @@ kind, kept current every session. Each should stay true on its own.
 
 ## Still ahead (phased, see the plan)
 
-Board structure (swimlanes, pivotal events). Vertical insertion, for
-boards that run top to bottom: the geometry is axis-parameterised in
-shape and horizontal in fact.
+Vertical insertion, for boards that run top to bottom: the geometry is
+axis-parameterised in shape and horizontal in fact. Board structure is its own
+spec: [Board structure](board-structure.md) (pivotal events, phases, lane names,
+hotspot answers).
 
 **A per-board colour legend (`esColourLegend`).** Every wall invents its own
 convention — the operator's uses pink for hotspots and green for read models,
