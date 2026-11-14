@@ -6,6 +6,8 @@ import {
   isBoxed,
   isLayoutCandidate,
   remapElementRefs,
+  tabNamedByDocument,
+  truncateName,
   unionRects,
   type Element,
   type Tab,
@@ -373,4 +375,24 @@ function freePlacement(existing: Element[]): { originX: number; originY: number 
   const b = unionRects(existing.filter(isBoxed));
   if (!b) return { originX: 120, originY: 100 };
   return { originX: b.x, originY: b.y + b.height + 120 };
+}
+
+// A person renames the open document (docs/specs/006-document/document-structure.md "Naming the document names its
+// first tab"): the name, capped (docs/specs/006-document/name-length.md), goes to the document, and a real change also
+// names a still default-named first tab, as an ordinary tab rename.
+export function applyDocumentRename(input: {
+  previous: string;
+  next: string;
+  tabs: readonly Tab[];
+  nameDocument: (name: string) => void;
+  renameTab: (id: string, name: string) => void;
+  // A real change: the telemetry the caller counts it with.
+  renamed: () => void;
+}): void {
+  const name = truncateName(input.next);
+  input.nameDocument(name);
+  if (!name || name === input.previous.trim()) return;
+  input.renamed();
+  const tab = tabNamedByDocument(input.tabs, name);
+  if (tab) input.renameTab(tab.id, tab.name);
 }

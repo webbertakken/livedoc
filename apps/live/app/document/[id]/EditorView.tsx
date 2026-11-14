@@ -6,7 +6,8 @@ import dynamic from 'next/dynamic';
 import { CommentBadgesContext } from '@/components/canvas/CommentBadgesContext';
 import { SuppressElementIndicators } from '@/components/canvas/ElementIndicatorStyleContext';
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
-import { tabKindOf, truncateName } from '@livedoc/document';
+import { tabKindOf } from '@livedoc/document';
+import { applyDocumentRename } from './editor-page-helpers';
 import { useBugReportPlace } from '@/lib/bug-report/place';
 import { openSearchWithPrefetch } from '@/lib/open-search';
 import { track } from '@/lib/telemetry';
@@ -353,14 +354,16 @@ export function EditorView() {
               ) : (
                 <RolePill {...role} />
               ),
-              onRename: (next) => {
-                const prev = documentName.trim();
-                // docs/specs/006-document/name-length.md: capped here so the rename can't outrun the limit the
-                // auto-namer and the Explorer renames both respect.
-                const nextTrim = truncateName(next);
-                nameDocument(nextTrim);
-                if (nextTrim && nextTrim !== prev) track('Document', 'Renamed');
-              },
+              // Capped, counted, and naming a still default-named first tab (applyDocumentRename).
+              onRename: (next) =>
+                applyDocumentRename({
+                  previous: documentName,
+                  next,
+                  tabs,
+                  nameDocument,
+                  renameTab,
+                  renamed: () => track('Document', 'Renamed'),
+                }),
             }}
             tabs={{
               tabs: tabs,

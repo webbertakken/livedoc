@@ -1,9 +1,10 @@
 import type { ArrowElement, Element, ShapeElement, Tab } from '@livedoc/document';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   mayShareDocument,
   mayDeleteDocument,
   autosaveReadOnly,
+  applyDocumentRename,
   computeTabSaveDiff,
   createTab,
   deriveTabLoadState,
@@ -649,5 +650,53 @@ describe('mergeAiElements: clean keeps what a non-shape element is', () => {
     const patch = { ...text, type: 'shape', label: 'The' } as unknown as Element;
     const [out] = mergeAiElements([text], [patch], 'clean');
     expect(out).toMatchObject({ id: 't', type: 'text', label: 'The' });
+  });
+});
+
+describe('applyDocumentRename', () => {
+  const arrange = (previous: string, tabs: Tab[]) => {
+    const calls = { nameDocument: vi.fn(), renameTab: vi.fn(), renamed: vi.fn() };
+    return {
+      calls,
+      run: (next: string) => applyDocumentRename({ previous, next, tabs, ...calls }),
+    };
+  };
+
+  it('names the document and its default-named first tab', () => {
+    const { calls, run } = arrange('Untitled Diagram', [tab('a', 'Tab 1')]);
+    run(' Roadmap ');
+    expect(calls.nameDocument).toHaveBeenCalledWith('Roadmap');
+    expect(calls.renameTab).toHaveBeenCalledWith('a', 'Roadmap');
+    expect(calls.renamed).toHaveBeenCalledOnce();
+  });
+
+  it('leaves a first tab with a name of its own alone', () => {
+    const { calls, run } = arrange('Untitled Diagram', [tab('a', 'Overview')]);
+    run('Roadmap');
+    expect(calls.nameDocument).toHaveBeenCalledWith('Roadmap');
+    expect(calls.renameTab).not.toHaveBeenCalled();
+  });
+
+  it('names no tab when the name stays as it was', () => {
+    const { calls, run } = arrange('Roadmap', [tab('a', 'Tab 1')]);
+    run('Roadmap ');
+    expect(calls.renameTab).not.toHaveBeenCalled();
+    expect(calls.renamed).not.toHaveBeenCalled();
+  });
+
+  it('names no tab when the name is cleared', () => {
+    const { calls, run } = arrange('Roadmap', [tab('a', 'Tab 1')]);
+    run('   ');
+    expect(calls.nameDocument).toHaveBeenCalledWith('');
+    expect(calls.renameTab).not.toHaveBeenCalled();
+    expect(calls.renamed).not.toHaveBeenCalled();
+  });
+
+  it('caps the name the document and tab take', () => {
+    const { calls, run } = arrange('Untitled Diagram', [tab('a', 'Tab 1')]);
+    run('x'.repeat(200));
+    const [name] = calls.nameDocument.mock.calls[0]!;
+    expect((name as string).length).toBeLessThan(200);
+    expect(calls.renameTab).toHaveBeenCalledWith('a', name);
   });
 });
