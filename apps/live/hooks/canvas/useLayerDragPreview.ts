@@ -66,6 +66,9 @@ export type LayerPreviewStore = {
   entryOf: (id: string) => PreviewEntry | undefined;
   // What the element draws from the document, once the layer has committed it; undefined before then.
   docOf: (id: string) => DocEntry | undefined;
+  // The layer's inputs the document's entries were last taken from (the board, the arrows' geometry and labels):
+  // what an element the preview adds draws from, having no document entry; null before the layer has rendered.
+  inputs: () => LayerPreviewInputs | null;
   subscribeStructure: (cb: () => void) => () => void;
   structure: () => PreviewStructure | null;
   // Takes the document's entries from the layer's inputs as the layer renders, so the elements it lists in that
@@ -270,6 +273,7 @@ export function createLayerPreviewStore(): LayerPreviewStore {
     },
     entryOf: (id) => entries.get(id),
     docOf: (id) => docs.get(id),
+    inputs: () => docInputs,
     subscribeStructure(cb) {
       structureListeners.add(cb);
       return () => {

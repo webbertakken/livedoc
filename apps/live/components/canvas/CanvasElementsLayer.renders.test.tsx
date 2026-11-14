@@ -63,10 +63,10 @@ const slotRenders = { count: 0 };
 vi.mock('./PreviewedElement', async (importOriginal) => {
   const real = await importOriginal<typeof import('./PreviewedElement')>();
   return {
-    PreviewedElement: (props: Parameters<typeof real.PreviewedElement>[0]) => {
+    PreviewedElement: memo(function SlotStub(props: Parameters<typeof real.ElementSlot>[0]) {
       slotRenders.count += 1;
-      return real.PreviewedElement(props);
-    },
+      return real.ElementSlot(props);
+    }),
   };
 });
 // The grips layer is re-created on every layer render, so its count is the layer's.
@@ -226,10 +226,33 @@ describe('element views render only for their own changes', () => {
     expect(arrowFrom.get(ab.id)!.y).toBe(startedAt.y + 40);
   });
 
-  it('walks every slot again when the order changes', () => {
+  // "A new element walks only itself": a stroke or a shape landing adds one slot and leaves the board's alone.
+  it('walks only the new slot when an element is added', () => {
+    const { rerender } = mount();
+    const d = createShape('square', 400, 400);
+    rerender(<CanvasElementsLayer {...layerProps({ elements: [...BOARD, d] })} />);
+    expect(slotRenders.count).toBe(1);
+    expect(drawnAs.get(d.id)).toBe(d);
+  });
+
+  // Each slot after it moves down a place in the paint order (its isometric depth), and only those walk.
+  it('walks only the slots after an element that is removed', () => {
+    const { rerender } = mount();
+    rerender(<CanvasElementsLayer {...layerProps({ elements: [a, b, ab] })} />);
+    expect(slotRenders.count).toBe(1);
+  });
+
+  it('walks every slot again when what every element draws with changes', () => {
+    const { rerender } = mount();
+    rerender(<CanvasElementsLayer {...layerProps()} editingId={a.id} />);
+    expect(slotRenders.count).toBe(BOARD.length);
+  });
+
+  // An element's paint index is what isometric mode stacks it by, so a reorder walks the slots it moved.
+  it('walks the slots whose place changes when the order changes', () => {
     const { rerender } = mount();
     rerender(<CanvasElementsLayer {...layerProps({ elements: [b, a, c, ab] })} />);
-    expect(slotRenders.count).toBe(BOARD.length);
+    expect(slotRenders.count).toBe(2);
   });
 
   it('renders no element view, and no arrow frame slot, for a zoom', () => {
