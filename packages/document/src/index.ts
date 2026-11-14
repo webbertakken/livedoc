@@ -741,6 +741,7 @@ export * from './event-storming-suggestions';
 export * from './candidate-contexts';
 export * from './event-storming-about';
 export * from './event-storming-structure';
+export * from './event-storming-lane-plan';
 export * from './event-storming-terms';
 export * from './event-storming-words';
 export * from './context-names';

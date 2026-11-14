@@ -22,6 +22,7 @@ import type { ChipLook } from './chip';
 import type { AttachPoint } from './attachment';
 import type { BoundaryStyle } from './boundary';
 import type { EsContext } from './candidate-contexts';
+import type { EsLanePlan } from './event-storming-lane-plan';
 import type { ConceptAnim, ConceptRow, PyramidVariant } from './concept';
 import type { PenColourName } from './pen-colours';
 import type { QuickSwatchSlot } from './quick-swatches';
@@ -512,6 +513,9 @@ export type ShapeElement = {
   // groups, and while suggested who suggested it and why. Its name is `label`; it is drawn from its notes, never as
   // this shape.
   esContext?: EsContext;
+  // A lane plan on an event-storming board (docs/specs/021-event-storming/lane-plans.md): the lanes it proposes, top
+  // to bottom, with who suggested it and why. No painter draws it.
+  esLanePlan?: EsLanePlan;
   // Concept graphics (docs/specs/009-elements/concept-graphics.md): the rows (a layer, tier or step each, with an
   // optional note), a pyramid's variant (absent = pyramid) and the Concept animation with its speed and repeat.
   conceptRows?: ConceptRow[];

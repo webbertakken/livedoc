@@ -3,12 +3,42 @@
 // board after it, unchanged (the same array) when nothing changes.
 
 import { eventStormingKindOf } from './event-storming';
-import type { Element, ElementId } from './index';
+import { ES_LANES, ES_NOTE_GAP, laneCentre } from './event-storming-lanes';
+import { GRAPH_MUTED } from './graph-header';
+import type { Element, ElementId, TextElement } from './index';
 
 /** The longest hotspot answer, characters (safe range: 100 to 1000; it shows as a caption). */
 export const HOTSPOT_ANSWER_MAX = 300;
 /** The longest lane name the reading reads and a lane plan writes, characters (safe range: 20 to 80). */
 export const LANE_NAME_MAX = 40;
+
+/** How wide a lane name is written, and how tall, canvas px: the storm graph's labels. */
+export const LANE_NAME_WIDTH = 180;
+export const LANE_NAME_HEIGHT = 32;
+
+/** A lane's name as the board writes it: muted text, right aligned, one gutter clear of the wall, on the lane. */
+export function laneNameElement(input: {
+  id: ElementId;
+  name: string;
+  lane: number;
+  /** The wall's left edge: the left-most workshop note's x. */
+  wallLeft: number;
+  layerId?: string;
+}): TextElement {
+  return {
+    id: input.id,
+    type: 'text',
+    x: input.wallLeft - ES_NOTE_GAP - LANE_NAME_WIDTH,
+    y: laneCentre(input.lane, ES_LANES) - LANE_NAME_HEIGHT / 2,
+    width: LANE_NAME_WIDTH,
+    height: LANE_NAME_HEIGHT,
+    label: input.name,
+    textSize: 'md',
+    textColor: GRAPH_MUTED,
+    textAlignX: 'right',
+    ...(input.layerId !== undefined ? { layerId: input.layerId } : {}),
+  };
+}
 
 type Note = Parameters<typeof eventStormingKindOf>[0];
 type Marked = Note & { esPivotal?: unknown };
