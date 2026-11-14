@@ -151,7 +151,7 @@ export async function apiSaveTab(
   return savedRevOf(res);
 }
 
-// The revision a save wrote, from the tab the api echoes; null when the answer names none.
+// The revision a save wrote, from the record the api answers; null when the answer names none.
 async function savedRevOf(res: Response): Promise<number | null> {
   try {
     const body = (await res.json()) as { tab?: { rev?: unknown } };

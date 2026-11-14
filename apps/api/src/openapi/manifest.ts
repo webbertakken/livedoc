@@ -495,10 +495,10 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     path: '/documents/{id}/tabs/{tabId}',
     segment: 'documents',
     tag: 'Documents',
-    summary: `The editor's whole-tab save: create or replace one tab and its elements, merged with every changeset the editor had not seen (\`X-Changeset-Seen\`). An API token is refused with 405 \`use_changesets\`: scripts and agents write tabs with changesets. A new or changed tab name is stored shortened to ${NAME_MAX_LENGTH} characters.`,
+    summary: `The editor's whole-tab save: create or replace one tab and its elements, merged with every changeset the editor had not seen (\`X-Changeset-Seen\`). An API token is refused with 405 \`use_changesets\`: scripts and agents write tabs with changesets. A new or changed tab name is stored shortened to ${NAME_MAX_LENGTH} characters. Answers the saved tab's record and new revision, not its content.`,
     auth: 'guest-or-session',
     requestSchema: 'Tab',
-    responseSchema: wrap('tab', 'TabRecord'),
+    responseSchema: wrap('tab', 'TabSaveRecord'),
     statuses: [200, 400, 401, 403, 404, 405, 409, 410, 413],
   },
   {

@@ -8,6 +8,7 @@ import {
   CHANGESET_SEEN_HEADER,
   TAB_SAVE_CAS_ATTEMPTS,
   parseChangesetSeen,
+  type TabSaveResponse,
 } from '@livedoc/api-schema';
 import { tabShowsEveryCard } from '@livedoc/items';
 import { isValidTab, migrateIncomingTab, preferNewerQaAll, type Tab } from '@livedoc/document';
@@ -178,19 +179,12 @@ export async function handleTabPut(
         ),
       );
     }
-    // Echo what was just written instead of reading it back; folder is link metadata the client
-    // strips before persisting, so it is absent by design.
-    return json({
-      tab: {
-        ...sanitised,
-        id: tabId,
-        name: body.name,
-        documentId: id,
-        orderIndex,
-        updatedAt: Date.now(),
-        rev,
-      },
-    });
+    // The record and its new revision, never the content: the editor sent it and reads only `rev`
+    // (docs/specs/016-platform/web-performance.md "Realtime and saving").
+    const saved: TabSaveResponse = {
+      tab: { id: tabId, name: body.name, documentId: id, orderIndex, updatedAt: Date.now(), rev },
+    };
+    return json(saved);
   }
   return conflict('tab_busy');
 }

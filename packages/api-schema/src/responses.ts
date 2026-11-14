@@ -4,13 +4,23 @@
 // the same shape instead of spelling `{ document: LiveDoc }` inline at each
 // call site, where a renamed key would drift silently.
 
-import type { LiveDoc, DocumentSummary, Folder, ShareLink, TabRecord, TeamListItem } from './index';
+import type {
+  LiveDoc,
+  DocumentSummary,
+  Folder,
+  ShareLink,
+  TabRecord,
+  TabSaveRecord,
+  TeamListItem,
+} from './index';
 import type { TeamRecentDocument } from './recent-diagrams';
 
 // GET / PUT /api/documents/:id, POST /api/documents (+ copy).
 export type DocumentResponse = { document: LiveDoc };
 // GET /api/documents/:id/tabs/:tabId.
 export type TabResponse = { tab: TabRecord };
+// PUT /api/documents/:id/tabs/:tabId: the editor's save, answered without the content it sent.
+export type TabSaveResponse = { tab: TabSaveRecord };
 // GET /api/documents: the caller's personal library. With `?include=team-recent` it also carries the
 // newest documents of the teams they have joined (docs/specs/019-marketing/returning-visitor.md).
 export type DocumentListResponse = {

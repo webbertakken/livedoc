@@ -167,3 +167,10 @@ seen on the document).
 - The tab save reads its document in one query and fetches the room's ledger alongside its other
   reads ([API](../015-api/api.md) "Tab save"); the timeline's event and its scopes are one batch; the
   guest-to-account migration moves its rows in one batch.
+
+## Realtime and saving
+
+- The tab save answers the saved tab's record and its new `rev`, never the content it was sent
+  ([API](../015-api/api.md) "Tab save"): the editor reads only the revision, so an echo cost every
+  autosave the tab's full size again (95,893 bytes for a 1,000-box tab, now under 200).
+  `apps/api/src/routes/tab-put-route.test.ts` pins the answer's keys and size.

@@ -196,6 +196,14 @@ export type TabRecord = Tab & {
   updatedAt: number;
 };
 
+// What `PUT /api/documents/:id/tabs/:tabId` answers: the saved tab's record and its new `rev`,
+// never its content. The editor sent the content and reads only the revision; echoing a whole tab
+// back on every autosave cost its full size again (docs/specs/016-platform/web-performance.md).
+export type TabSaveRecord = Pick<
+  TabRecord,
+  'id' | 'name' | 'documentId' | 'orderIndex' | 'updatedAt' | 'rev'
+>;
+
 // ---------------------------------------------------------------------
 // Folders (docs/specs/013-workspace/folders.md)
 // ---------------------------------------------------------------------
