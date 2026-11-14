@@ -51,12 +51,15 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
 - **A kept context** can be renamed (double-click its name) and deleted (select the outline, Delete).
 - **Another name can be asked for.** A context, kept or suggested, takes
   [name suggestions](suggested-changes.md#name-suggestions): chips under its name, each a name an agent proposes.
-- **Its notes change two ways** (ruled 2026-11-13: "Note menu and dragging"):
+- **Its notes change three ways** (ruled 2026-11-13: "Note menu and dragging"; arriving requested 2026-11-14):
   - **The note's menu**: Add to Context (a list of the board's contexts by name) and Remove from Context.
   - **Dragging**: a note dropped inside an outline joins that context, leaving any other; a note dragged clear of
     its own outline by more than `CONTEXT_LEAVE_PX` (half a note, 100 canvas px) leaves it (default). While a
     note is dragged, the outline it would join is highlighted, so a drop is never a surprise.
-  - A suggested context does not take notes by dragging until it is applied (default).
+  - **Arriving**: a note added in a context belongs to it from the start (see
+    [Arriving in a context](#arriving-in-a-context)).
+  - A suggested context takes notes as a kept one does, by dragging and by arriving, so the notes a person adds
+    while weighing it are in it when it is applied (requested 2026-11-14).
 
 ## Its outline, exactly
 
@@ -68,8 +71,8 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
   The dash is `CONTEXT_DASH_PX` long with an equal gap, 2 px wide (default).
 - **The name** sits in the middle of the shape: centred on the outline's centroid (its area's weighted centre), drawn
   over the notes on a pill of the canvas's paper, its ends fully round (ruled 2026-11-14: "larger size, more padding
-  and have the background colour of paper with fully rounded corners on the side"), so it reads at any zoom (ruled 2026-11-13: "always
-  be in the middle of weighted center ... inside the shape").
+  and have the background colour of paper with fully rounded corners on the side"), so it reads at any zoom
+  (ruled 2026-11-13: "always be in the middle of weighted center ... inside the shape").
 - **It grows as the board zooms out.** The name is `CONTEXT_NAME_PX` (20) canvas px at 100% and closer, and keeps
   that size on screen when zoomed further out, so on the canvas it grows by 1 / zoom (ruled 2026-11-13: "font size
   should grow when zooming out").
@@ -146,11 +149,32 @@ them".
 - A note dropped inside more than one outline joins the smallest (default).
 - A note leaves when the gap between it and the outline its context's other notes make is more than
   `CONTEXT_LEAVE_PX` (default).
+- **The two thresholds make a dead band** (requested 2026-11-14): a note is in only once its centre is past the
+  edge, half a note deep, and out only once it stands more than `CONTEXT_LEAVE_PX` clear, so a nudge near an
+  edge never flips it in or out (default).
+- Kept and suggested contexts alike take and let go of notes this way.
 - Only workshop notes join; a plain sticky, text or shape never does.
 - While a drag is in hand, every outline draws as the drop would leave it: the outline a note would join takes it
   in and is highlighted in the brand colour, and the one it would leave lets it go (default).
 - **Applying** a suggested context takes its notes out of any other context they joined since (default).
 - Joining, leaving, renaming and deleting are each one undoable step through the ordinary choke point.
+
+## Arriving in a context
+
+Requested 2026-11-14: a note added in a context, by hand or from a suggestion, goes into that context.
+
+- **Beside a note**: a note added from another, by a
+  [next-note button](event-storming.md#phase-7-shipped-re-ruled-next-note-buttons), joins the context of the note
+  it is added from.
+- **From a suggestion**: an applied [suggestion](suggestions.md#applying-and-dismissing) joins the context of its
+  anchor; one a context already names stays in that one.
+- **Between two notes**: a note the Alt insertion puts between two notes joins the context the two share.
+- **Anywhere else**: a note dropped or placed from the palette joins the smallest context whose outline, as its
+  notes stand, holds the note's centre (default); this is also the rule when the note beside, or the two either
+  side, share no context.
+- A paste or a duplicate joins no context: its copies are placed as copies, never as members (default).
+- The join lands in the same change as the note, so one Undo takes both back.
+- An Editor's alone, as every change to a context's notes: a Participant's new note joins none (default).
 
 ## Where it lives
 
@@ -164,7 +188,8 @@ them".
 - `CONTEXT_NOTES_MAX` (400, as many notes as a domain export reads) caps its notes (default).
 - The outline: `packages/document/src/candidate-context-outline.ts`; the model, membership writes and the cascade:
   `packages/document/src/candidate-contexts.ts`; the export's drawing and the inks:
-  `packages/document/src/svg-render-contexts.ts`; joining by drag: `apps/live/lib/context-drop.ts`.
+  `packages/document/src/svg-render-contexts.ts`; joining by drag: `apps/live/lib/context-drop.ts`; arriving:
+  `apps/live/lib/context-arrival.ts`.
 - On the canvas: `apps/live/components/canvas/contexts/` (drawn from `apps/live/lib/context-outlines.ts`; the lines and
   the names are two parts of one layer); the selection: `apps/live/lib/context-selection.ts`; the acts:
   `apps/live/hooks/canvas/useContextActions.ts`; the note menu's rows: `apps/live/lib/note-context-menu.ts`.
@@ -185,7 +210,8 @@ them".
 ## Telemetry
 
 `Canvas / Used / ContextApplied`, `ContextDismissed`, `ContextRenamed`, `ContextDeleted`, `ContextNoteJoined` and
-`ContextNoteLeft` (the menu and a drop alike); Apply All and Dismiss All stay the suggestions' events (default).
+`ContextNoteLeft` (the menu, a drop and a note added by hand alike); Apply All and Dismiss All stay the suggestions'
+events, and an applied note joining its anchor's context counts only as `SuggestionApplied` (default).
 
 ## Share roles
 

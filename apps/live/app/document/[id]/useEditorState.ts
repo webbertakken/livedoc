@@ -2554,6 +2554,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
         blocked: createBlocked,
         structureBlocked: structureCreateBlocked,
       }),
+      joinsContexts: participant.can.contexts,
       formatSourceId,
       formatConfig: formatSettings.config,
       getViewportCenter,
@@ -3074,6 +3075,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     zoomRef,
     styleNewElement: styleMemory.styleNewElement,
     onPlanCardPlace: placePaletteCard,
+    joinsContexts: participant.can.contexts,
   });
   useEffect(() => {
     putToolDownRef.current = () => {

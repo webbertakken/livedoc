@@ -7,6 +7,7 @@ import {
   type Element,
   type Tab,
 } from '@livedoc/document';
+import { contextForArrival, joinArrival, type ArrivalHint } from '@/lib/context-arrival';
 import { insertElementAt, type InsertionSlot } from '@/lib/insert-between';
 import { deriveNewBoxedColours } from '@/lib/themes';
 import { inheritedSizeFor } from '@/lib/canvas';
@@ -36,6 +37,9 @@ export function useElementHelpers(opts: {
   activeId: string;
   activeTab: Tab;
   editsBlocked: boolean;
+  // May this person change a candidate context's notes (an Editor): a new note then joins the context it arrives in
+  // (docs/specs/021-event-storming/candidate-contexts.md "Arriving in a context").
+  joinsContexts: boolean;
   formatSourceId: string | null;
   // The Format Panel's settings (docs/specs/008-canvas/format-panel.md): which parts of a copied style
   // travel, and whether the brush stays loaded.
@@ -52,6 +56,7 @@ export function useElementHelpers(opts: {
     activeId,
     activeTab,
     editsBlocked,
+    joinsContexts,
     formatSourceId,
     formatConfig,
     getViewportCenter,
@@ -87,6 +92,8 @@ export function useElementHelpers(opts: {
       style?: <E extends BoxedElement>(el: E) => E;
       // false: added without selecting it on the canvas (a chart that sits in a Sheet, selected there instead).
       select?: boolean;
+      // The note it is added from (a next-note button): the new note joins that note's context.
+      beside?: string;
     },
   ) => {
     placeBoxed(
@@ -97,6 +104,7 @@ export function useElementHelpers(opts: {
       opts?.insertion ?? null,
       opts?.style,
       opts?.select !== false,
+      opts?.beside,
     );
   };
 
@@ -108,6 +116,7 @@ export function useElementHelpers(opts: {
     insertion: InsertionSlot | null = null,
     style: <E extends BoxedElement>(el: E) => E = (el) => el,
     select = true,
+    beside?: string,
   ) => {
     if (editsBlocked) return;
     const base = make(0, 0);
@@ -161,14 +170,27 @@ export function useElementHelpers(opts: {
     // holds NOW, not the snapshot the drag started with, so a peer's mid-drag
     // move isn't reverted by the drop that follows it. One commitTabs = one
     // history entry, so a single Undo takes the ripple AND the note back.
+    // A workshop note arriving in a candidate context joins it in the same change.
+    const hint: ArrivalHint = beside
+      ? { beside }
+      : insertion
+        ? { between: [insertion.leftId, insertion.rightId] }
+        : {};
+    const arrive = (els: Element[]) => (joinsContexts ? joinArrival(els, el.id, hint) : els);
+    if (joinsContexts && contextForArrival(after, el.id, hint))
+      track('Canvas', 'Used', 'ContextNoteJoined');
     commitTabs((ts) =>
       insertion
         ? ts.map((t) =>
             t.id === activeId
-              ? { ...t, elements: insertElementAt(t.elements, insertion, el), templateChosen: true }
+              ? {
+                  ...t,
+                  elements: arrive(insertElementAt(t.elements, insertion, el)),
+                  templateChosen: true,
+                }
               : t,
           )
-        : patchTab(ts, activeId, { elements: after, templateChosen: true }),
+        : patchTab(ts, activeId, { elements: arrive(after), templateChosen: true }),
     );
     if (select) setSelectedId(el.id);
     // Only kinds that take typed text: a sticker or a session button renders

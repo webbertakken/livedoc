@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ES_LANES,
   ES_NOTE_GAP,
+  contextOf,
   laneCentre,
   newContextElement,
   type Element,
@@ -78,16 +79,75 @@ describe('applySuggestion', () => {
     expect(act.y + act.height / 2).toBe(laneCentre(1, ES_LANES));
   });
 
-  it('takes the nearest free slot along the lane when the spot above is taken', () => {
+  it('opens the lane below when its spot is taken: the lane moves one note along, nothing else', () => {
     const els = [
       note('cmd', 'domain-event', 1000),
+      note('beside', 'domain-event', 1000 + STEP),
+      note('earlier', 'domain-event', 1000 - STEP, 3),
       note('taken', 'domain-event', 1000, 3),
+      note('later', 'domain-event', 1000 + STEP, 3),
       suggestion('rm', 'domain-event', 'cmd', 'below'),
     ];
-    const rm = byId(applySuggestion(els, 'rm'), 'rm');
-    expect(rm.y + rm.height / 2).toBe(laneCentre(3, ES_LANES));
-    expect(rm.x === 1000 + STEP || rm.x === 1000 - STEP).toBe(true);
-    expect(byId(applySuggestion(els, 'rm'), 'taken').x).toBe(1000);
+    const out = applySuggestion(els, 'rm');
+    const rm = byId(out, 'rm');
+    expect([rm.x, rm.y + rm.height / 2]).toEqual([1000, laneCentre(3, ES_LANES)]);
+    expect(byId(out, 'earlier').x).toBe(1000 - STEP);
+    expect(byId(out, 'taken').x).toBe(1000 + STEP);
+    expect(byId(out, 'later').x).toBe(1000 + 2 * STEP);
+    expect(byId(out, 'cmd').x).toBe(1000);
+    expect(byId(out, 'beside').x).toBe(1000 + STEP);
+  });
+
+  it('takes the place of a wider note it covers, leaving no gap and no overlap', () => {
+    // A 300-wide policy starts 27 left of the spot below its anchor, one gutter after the note before it.
+    const policy = { ...note('policy', 'policy', 1000 - 27, 3), width: 300 };
+    const els = [
+      note('cmd', 'domain-event', 1000),
+      { ...note('earlier', 'domain-event', 1000 - 27 - STEP, 3) },
+      policy,
+      note('later', 'domain-event', 1000 - 27 + 300 + ES_NOTE_GAP, 3),
+      suggestion('rm', 'domain-event', 'cmd', 'below'),
+    ];
+    const out = applySuggestion(els, 'rm');
+    const lane = ['earlier', 'rm', 'policy', 'later'].map((id) => byId(out, id));
+    const gaps = lane.slice(1).map((n, i) => n.x - (lane[i]!.x + lane[i]!.width));
+    expect(gaps).toEqual([ES_NOTE_GAP, ES_NOTE_GAP, ES_NOTE_GAP]);
+  });
+
+  it('joins the context of its anchor, kept or suggested, in the same step', () => {
+    for (const suggested of [false, true]) {
+      const e = note('e', 'domain-event', 1000);
+      const els: Element[] = [
+        e,
+        newContextElement({
+          id: 'ctx',
+          name: 'Orders',
+          notes: [e],
+          ...(suggested ? { suggestion: {} } : {}),
+        }),
+        suggestion('p', 'domain-event', 'e', 'after'),
+        suggestion('q', 'domain-event', 'p', 'below'),
+      ];
+      const out = applySuggestion(els, 'q');
+      expect(contextOf(out, 'p')?.id).toBe('ctx');
+      expect(contextOf(out, 'q')?.id).toBe('ctx');
+    }
+  });
+
+  it('keeps a suggestion a context already names in that context', () => {
+    const [e, f, p] = [
+      note('e', 'domain-event', 1000),
+      note('f', 'domain-event', 5000),
+      suggestion('p', 'domain-event', 'e', 'after'),
+    ];
+    const els: Element[] = [
+      e,
+      f,
+      newContextElement({ id: 'mine', name: 'Mine', notes: [e] }),
+      newContextElement({ id: 'named', name: 'Named', notes: [f, p] }),
+      p,
+    ];
+    expect(contextOf(applySuggestion(els, 'p'), 'p')?.id).toBe('named');
   });
 
   it('never lets another open suggestion take a spot or travel as a note', () => {
@@ -188,7 +248,9 @@ describe('dismissSuggestions', () => {
     const els = [e, lingering, suggestion('p', 'domain-event', 'e', 'after')];
     const out = dismissSuggestions(els, ['p']);
     expect((out[1] as typeof lingering).esContext.names).toEqual([{ name: 'Own' }]);
-    expect(applySuggestion(els, 'p')[1]).toEqual(out[1]);
+    const applied = applySuggestion(els, 'p')[1] as typeof lingering;
+    expect(applied.esContext.names).toEqual([{ name: 'Own' }]);
+    expect(applied.esContext.notes).toEqual(['e', 'p']);
   });
 });
 

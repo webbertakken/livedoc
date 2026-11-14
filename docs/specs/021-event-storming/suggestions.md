@@ -99,8 +99,18 @@ person's own view (not shared, not saved with the board; off when the board open
 - **Apply** turns the suggestion into an ordinary note: `esSuggestion` is dropped, and the note lands where the
   placeholder showed it, on its lane, exactly as the [next-note buttons](event-storming.md#phase-7-shipped-re-ruled-next-note-buttons)
   land one: one gutter beside its anchor for `before` and `after`, making room with the insertion ripple when the
-  spot is taken; the same left edge on the lane above or below for `above` and `below`, taking the nearest free slot
-  along that lane when the spot is taken. It is one undoable step through the ordinary choke point.
+  spot is taken; the same left edge on the lane above or below for `above` and `below`, opening that lane when the
+  spot is taken (below). It is one undoable step through the ordinary choke point.
+- **Opening a lane** (requested 2026-11-14: an applied note above or below makes room where it lands, with no
+  overlap and no gap):
+  - the lane's notes split at the spot's centre: those whose centre lies before it stay, the rest are after it;
+  - the note lands on the spot, or in the place of the first note after it when that note starts left of the spot,
+    and never closer than one gutter (`ES_NOTE_GAP`) to the last note before it;
+  - the notes after it move along together by just enough to leave one gutter after the new note, so the lane
+    keeps its rhythm; nothing moves when they already clear it;
+  - only that lane opens: the other lanes and the anchor stay where they are (default).
+- **An applied note joins its anchor's context**, as
+  [Arriving in a context](candidate-contexts.md#arriving-in-a-context) says, in the same step.
 - **A suggestion on a suggestion** applies its anchor first, in the same step.
 - **Apply All** applies every open suggestion in timeline order as one undoable step.
 - **Dismiss** removes the suggestion and the suggestions chained on it; **Dismiss All** removes them all, as one
@@ -139,7 +149,8 @@ overlap with the rest collapsing to peek tabs, and a side panel listing them by 
 ## Where it lives
 
 - Placement and grouping: `apps/live/lib/suggestion-hints.ts`; apply, Apply All, dismiss and the Show All preview:
-  `apps/live/lib/suggestion-apply.ts`; the person's view: `apps/live/lib/suggestion-view.ts`.
+  `apps/live/lib/suggestion-apply.ts`; opening a lane: `apps/live/lib/lane-opening.ts`; the person's view:
+  `apps/live/lib/suggestion-view.ts`.
 - The acts: `apps/live/hooks/canvas/useSuggestionActions.ts`, composed into the editor state; the Editor gate is
   `can.suggestions` in `apps/live/lib/editor-capabilities.ts`.
 - The peek tabs, placeholders and panel: `apps/live/components/canvas/suggestions/`; the Show All shift rides the

@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { createArrow, type Element, type StickyElement, type Tab } from '@livedoc/document';
+import {
+  contextOf,
+  createArrow,
+  newContextElement,
+  type Element,
+  type StickyElement,
+  type Tab,
+} from '@livedoc/document';
 import { DEFAULT_FORMAT_CONFIG, type FormatMode } from '@/lib/format-config';
 import type { InsertionSlot } from '@/lib/insert-between';
 import { useElementHelpers } from './useElementHelpers';
@@ -31,7 +38,7 @@ const SLOT: InsertionSlot = {
   spanBottom: 240,
 };
 
-function harness(elements: Element[] = ROW) {
+function harness(elements: Element[] = ROW, joinsContexts = true) {
   const tab: Tab = { id: 't1', name: 'Tab 1', elements };
   const commitTabs = vi.fn();
   const { result } = renderHook(() =>
@@ -40,6 +47,7 @@ function harness(elements: Element[] = ROW) {
       activeId: 't1',
       activeTab: tab,
       editsBlocked: false,
+      joinsContexts,
       formatSourceId: null,
       formatConfig: { mode: 'keep', groups: {} } as never,
       getViewportCenter: () => ({ x: 0, y: 0 }),
@@ -59,6 +67,58 @@ function committedXs(commitTabs: ReturnType<typeof vi.fn>, against: Element[]): 
   const next = updater([{ id: 't1', name: 'Tab 1', elements: against }]);
   return next[0]!.elements.map((el) => (el as StickyElement).x);
 }
+
+// A workshop note row: a and b in the context 'ctx', c in none.
+const esNote = (id: string, x: number): StickyElement => ({
+  ...note(id, x),
+  esKind: 'domain-event',
+});
+const ES_ROW: Element[] = [
+  esNote('a', 0),
+  esNote('b', 272),
+  esNote('c', 544),
+  newContextElement({ id: 'ctx', name: 'Orders', notes: [esNote('a', 0), esNote('b', 272)] }),
+];
+
+function committedContextNotes(commitTabs: ReturnType<typeof vi.fn>, against: Element[]) {
+  const updater = commitTabs.mock.calls[0]![0] as (tabs: Tab[]) => Tab[];
+  const next = updater([{ id: 't1', name: 'Tab 1', elements: against }]);
+  return contextOf(next[0]!.elements, 'new')?.id ?? null;
+}
+
+describe('addBoxedAt arriving in a context (docs/specs/021-event-storming/candidate-contexts.md "Arriving")', () => {
+  it('joins the context of the note it is added beside, in the same change', () => {
+    telemetry.track.mockClear();
+    const { helpers, commitTabs } = harness(ES_ROW);
+    helpers.addBoxedAt(1000, 100, (x) => esNote('new', x), { beside: 'b' });
+    expect(commitTabs).toHaveBeenCalledTimes(1);
+    expect(committedContextNotes(commitTabs, ES_ROW)).toBe('ctx');
+    expect(telemetry.track).toHaveBeenCalledWith('Canvas', 'Used', 'ContextNoteJoined');
+  });
+
+  it('joins the context two notes share when inserted between them', () => {
+    const { helpers, commitTabs } = harness(ES_ROW);
+    helpers.addBoxedAt(372, 100, (x) => esNote('new', x), { insertion: SLOT });
+    expect(committedContextNotes(commitTabs, ES_ROW)).toBe('ctx');
+  });
+
+  it('joins the outline it is dropped in, and none when dropped clear of every one', () => {
+    const inside = harness(ES_ROW);
+    inside.helpers.addBoxedAt(250, 100, (x) => esNote('new', x));
+    expect(committedContextNotes(inside.commitTabs, ES_ROW)).toBe('ctx');
+    telemetry.track.mockClear();
+    const clear = harness(ES_ROW);
+    clear.helpers.addBoxedAt(3000, 100, (x) => esNote('new', x));
+    expect(committedContextNotes(clear.commitTabs, ES_ROW)).toBeNull();
+    expect(telemetry.track).not.toHaveBeenCalledWith('Canvas', 'Used', 'ContextNoteJoined');
+  });
+
+  it('joins none for someone who may not change contexts', () => {
+    const { helpers, commitTabs } = harness(ES_ROW, false);
+    helpers.addBoxedAt(1000, 100, (x) => esNote('new', x), { beside: 'b' });
+    expect(committedContextNotes(commitTabs, ES_ROW)).toBeNull();
+  });
+});
 
 describe('addBoxedAt with an insertion slot (docs/specs/021-event-storming/event-storming.md)', () => {
   it('commits the ripple and the new note as ONE change', () => {
@@ -107,6 +167,7 @@ describe('addBoxedAt with an insertion slot (docs/specs/021-event-storming/event
         activeId: 't1',
         activeTab: tab,
         editsBlocked: true,
+        joinsContexts: true,
         formatSourceId: null,
         formatConfig: { mode: 'keep', groups: {} } as never,
         getViewportCenter: () => ({ x: 0, y: 0 }),
@@ -138,6 +199,7 @@ describe('applyFormatFromSource', () => {
         activeId: 't1',
         activeTab: tab,
         editsBlocked: false,
+        joinsContexts: true,
         formatSourceId: source,
         formatConfig: { ...DEFAULT_FORMAT_CONFIG, mode },
         getViewportCenter: () => ({ x: 0, y: 0 }),

@@ -811,6 +811,8 @@ then just two notes: the board keeps no relation between them.
   footprint is taken, the insertion ripple makes room in the same commit, so
   the author sees the board behave exactly as the Alt gesture taught them. One
   click is ONE undoable step through the ordinary choke point.
+- **It joins the context of the note it is added from**, in the same step
+  ([Arriving in a context](candidate-contexts.md#arriving-in-a-context)).
 - **The buttons are paper tabs.** A small tab in the NEXT note's own colour
   peeks from the note's edge with a "+": the colour says which note it adds
   before a word is read. It is sized in proportion to the note (a quarter of

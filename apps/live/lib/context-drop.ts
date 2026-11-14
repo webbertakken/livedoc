@@ -5,7 +5,6 @@ import {
   contextOutline,
   distanceToPolygon,
   eventStormingKindOf,
-  isKeptContext,
   joinContext,
   leaveContext,
   pointInPolygon,
@@ -23,9 +22,9 @@ import {
 // the note in hand would follow it everywhere and never let it go.
 
 export type ContextDropPlan = {
-  // A dragged note and the kept context it joins.
+  // A dragged note and the context, kept or suggested, it joins.
   joins: ReadonlyMap<ElementId, ElementId>;
-  // Dragged notes that leave their kept context.
+  // Dragged notes that leave their context.
   leaves: ReadonlySet<ElementId>;
 };
 
@@ -34,21 +33,47 @@ export const NO_CONTEXT_DROP: ContextDropPlan = { joins: new Map(), leaves: new 
 const isNote = (el: Element | undefined): el is StickyElement =>
   el !== undefined && el.type === 'sticky' && eventStormingKindOf(el) !== null;
 
-type Judged = { context: CandidateContextElement; polygon: ReturnType<typeof outlineOf> };
+export type JudgedContext = {
+  context: CandidateContextElement;
+  polygon: ReturnType<typeof outlineOf>;
+};
 
 function outlineOf(context: CandidateContextElement, notes: readonly StickyElement[]) {
   const outline = contextOutline(context.id, notes);
   return outline ? { points: outline.polygon, area: polygonArea(outline.polygon) } : null;
 }
 
-/** What letting go of the dragged notes where they stand now would do to the kept contexts. */
+/** Every context, kept and suggested, with the outline its notes make where they stand, `leftOut` left out. */
+export function judgeContexts(
+  board: ReadonlyMap<ElementId, Element>,
+  leftOut: ReadonlySet<ElementId>,
+): JudgedContext[] {
+  return candidateContexts([...board.values()]).map((context) => ({
+    context,
+    polygon: outlineOf(
+      context,
+      contextNotes(context, board).filter((n) => !leftOut.has(n.id)),
+    ),
+  }));
+}
+
+/** The smallest of these outlines that holds the point, if any. */
+export function smallestHolding(
+  judged: readonly JudgedContext[],
+  point: { x: number; y: number },
+): JudgedContext | undefined {
+  return judged
+    .filter((j) => j.polygon && pointInPolygon(point, j.polygon.points))
+    .sort((a, b) => a.polygon!.area - b.polygon!.area)[0];
+}
+
+/** What letting go of the dragged notes where they stand now would do to the contexts. */
 export function contextDropPlan(
   committed: readonly Element[],
   previewed: readonly Element[],
   draggedIds: ReadonlySet<ElementId>,
 ): ContextDropPlan {
-  const kept = candidateContexts(committed).filter(isKeptContext);
-  if (kept.length === 0 || draggedIds.size === 0) return NO_CONTEXT_DROP;
+  if (draggedIds.size === 0 || candidateContexts(committed).length === 0) return NO_CONTEXT_DROP;
   const before = new Map(committed.map((el) => [el.id, el]));
   const after = new Map(previewed.map((el) => [el.id, el]));
   const moved = [...draggedIds].filter((id) => {
@@ -58,22 +83,17 @@ export function contextDropPlan(
   });
   if (moved.length === 0) return NO_CONTEXT_DROP;
 
-  const judged: Judged[] = kept.map((context) => ({
-    context,
-    polygon: outlineOf(
-      context,
-      contextNotes(context, after).filter((n) => !draggedIds.has(n.id)),
-    ),
-  }));
+  const judged = judgeContexts(after, draggedIds);
   const joins = new Map<ElementId, ElementId>();
   const leaves = new Set<ElementId>();
   for (const id of moved) {
     const note = after.get(id) as StickyElement;
     const centre = { x: note.x + note.width / 2, y: note.y + note.height / 2 };
     const own = judged.find((j) => j.context.esContext.notes.includes(id));
-    const target = judged
-      .filter((j) => j !== own && j.polygon && pointInPolygon(centre, j.polygon.points))
-      .sort((a, b) => a.polygon!.area - b.polygon!.area)[0];
+    const target = smallestHolding(
+      judged.filter((j) => j !== own),
+      centre,
+    );
     if (target) joins.set(id, target.context.id);
     else if (own?.polygon && distanceToPolygon(note, own.polygon.points) > CONTEXT_LEAVE_PX)
       leaves.add(id);
