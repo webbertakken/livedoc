@@ -10,9 +10,11 @@ import {
   type Element,
   type ElementId,
   type EventStormingNoteKind,
+  type Layer,
   type Rect,
   type StickyElement,
 } from '@livedoc/document';
+import { arrangeOffer, lanePlanOffer, type BoardOffer } from './board-offer';
 import { landSplit } from './suggested-changes-apply';
 import { parsePreviewKey, type PreviewedChange } from './suggestion-view';
 
@@ -20,7 +22,9 @@ import { parsePreviewKey, type PreviewedChange } from './suggestion-view';
 // (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"): the board as drawn, never as
 // written. A reword draws its new words on every note it ripples to, a kind change the other kind's paper, a split
 // its first part on the note and the others as placeholders with the board making room, a removal the note faint
-// and struck, a name chip the context under that name. Pure; the canvas draws it over an untouched board.
+// and struck, a name chip the context under that name; a lane plan or Arrange and Reorder the whole board as it would
+// stand (docs/specs/021-event-storming/lane-plans.md, docs/specs/021-event-storming/arrange.md). Pure; the canvas
+// draws it over an untouched board.
 
 /** How much of its opacity a note keeps while its removal is previewed: faint, but its words still read
  *  (safe range: 0.25 to 0.5). */
@@ -37,6 +41,8 @@ export type OfferedPreview = {
   shiftX: ReadonlyMap<ElementId, number>;
   // The note a removal would take: drawn faint, for the layer to strike through.
   struck: ElementId | null;
+  // The whole board rearranged (a lane plan, Arrange and Reorder): what the bar says of it.
+  board: BoardOffer | null;
 };
 
 const NO_SHIFT: ReadonlyMap<ElementId, number> = new Map();
@@ -46,6 +52,7 @@ const plain = (elements: Element[]): OfferedPreview => ({
   parts: [],
   shiftX: NO_SHIFT,
   struck: null,
+  board: null,
 });
 
 const boxOf = ({ x, y, width, height }: Rect): Rect => ({ x, y, width, height });
@@ -99,6 +106,7 @@ function changePreview(
         }),
         shiftX,
         struck: null,
+        board: null,
       };
     }
   }
@@ -117,15 +125,22 @@ function namePreview(
   return plain(renameContext(elements, key.contextIds[0]!, suggested.name));
 }
 
-/** The preview a key asks for; null when the key names no suggested change that is still there, or one on a note
- *  that may not change (locked, or on a hidden or locked layer). */
+const boardPreview = (board: BoardOffer | null): OfferedPreview | null =>
+  board && { ...plain(board.elements), board };
+
+/** The preview a key asks for; null when the key names no suggested change that is still there, one on a note
+ *  that may not change (locked, or on a hidden or locked layer), or a board the check would not rearrange. */
 export function offeredPreview(
   elements: Element[],
   previewKey: string | null,
   inertIds: ReadonlySet<ElementId>,
+  layers?: Layer[],
 ): OfferedPreview | null {
   const key = parsePreviewKey(previewKey);
   if (key?.type === 'change') return changePreview(elements, key, inertIds);
+  if (key?.type === 'lane-plan')
+    return boardPreview(lanePlanOffer({ elements, layers }, key.planId));
+  if (key?.type === 'arrange') return boardPreview(arrangeOffer({ elements, layers }));
   // Contexts brought forward (a Names or a Merge row pointed at) change nothing that is drawn.
   return key?.type === 'name' ? namePreview(elements, key) : null;
 }

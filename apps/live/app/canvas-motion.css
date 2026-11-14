@@ -1223,6 +1223,16 @@
   transition: transform 120ms ease-out;
 }
 
+/* A whole board offered (docs/specs/021-event-storming/arrange.md "How a person arranges", lane-plans.md "How a
+   person sees and decides"): while a lane plan or Arrange and Reorder is previewed, every note glides to where it
+   would stand, and back when the preview ends. Mounted on the document only for that preview (useOfferGlide), never
+   under a drag. The global reduce-motion rules above collapse it to ~instant: the notes jump. */
+[data-offer-glide] [data-element-id] {
+  transition:
+    left 160ms ease-out,
+    top 160ms ease-out;
+}
+
 /* A stack's reflow (docs/specs/009-elements/stack.md "Animation"): a child the stack holds glides from where it was to
    its new slot. Only on children nothing is dragging (the attribute is dropped for the gesture's elements), so a drag
    still tracks the pointer exactly. The global reduce-motion rules above collapse it to ~instant. */

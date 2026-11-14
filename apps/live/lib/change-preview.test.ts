@@ -12,7 +12,8 @@ import {
   orderFlow,
 } from './change-board.fixture';
 import { REMOVE_PREVIEW_OPACITY, offeredPreview } from './change-preview';
-import { changeKey, contextsKey, nameKey } from './suggestion-view';
+import { ARRANGE_KEY, changeKey, contextsKey, nameKey, planKey } from './suggestion-view';
+import { kitchenNotes, plannedKitchen } from './lane-board.fixture';
 
 // What a suggested change would make of the board while a person looks at it
 // (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"): for drawing only.
@@ -106,5 +107,32 @@ describe('offeredPreview', () => {
     ])
       expect(offeredPreview(board, key, NONE)).toBeNull();
     expect(offeredPreview(board, changeKey('pack'), new Set(['pack']))).toBeNull();
+  });
+});
+
+// docs/specs/021-event-storming/lane-plans.md "How a person sees and decides", arrange.md "How a person arranges".
+describe('a whole board offered', () => {
+  it('draws a lane plan as applying would leave it, and says what the bar needs', () => {
+    const tab = plannedKitchen();
+    const preview = offeredPreview(tab.elements, planKey('plan'), new Set())!;
+    expect(preview.board).toMatchObject({ what: 'lane-plan', lanes: 2, gained: 0 });
+    expect(preview.elements).toBe(preview.board!.elements);
+    expect(preview.parts).toEqual([]);
+    expect(offeredPreview(tab.elements, planKey('gone'), new Set())).toBeNull();
+  });
+
+  it('draws the board arranged, leaving a note on a locked layer where it is', () => {
+    const notes = kitchenNotes().map((el) =>
+      el.id === 'dish-plated' ? { ...el, x: 2000, layerId: 'back' } : el,
+    );
+    const free = offeredPreview(notes, ARRANGE_KEY, new Set())!;
+    expect(free.board!.what).toBe('arrange');
+    expect(free.elements.find((el) => el.id === 'dish-plated')).not.toMatchObject({ x: 2000 });
+    const layers = [
+      { id: 'front', name: 'Front' },
+      { id: 'back', name: 'Back', locked: true },
+    ];
+    const held = offeredPreview(notes, ARRANGE_KEY, new Set(), layers);
+    expect(held?.elements.find((el) => el.id === 'dish-plated')).toMatchObject({ x: 2000 });
   });
 });

@@ -5,8 +5,10 @@ import {
   type CandidateContextElement,
   type Element,
   type ElementId,
+  type Layer,
   type Rect,
 } from '@livedoc/document';
+import { lanePlanRow, type LanePlanRow } from './board-offer';
 import {
   changeRows,
   nameRows,
@@ -15,11 +17,13 @@ import {
   type NamesRow,
 } from './suggested-changes';
 import type { SuggestionElement } from './suggestion-hints';
-import { changeKey, contextsKey } from './suggestion-view';
+import { changeKey, contextsKey, planKey } from './suggestion-view';
 
 // The suggestions panel's rows (docs/specs/021-event-storming/suggestions.md "The suggestions panel"): every open
 // suggestion of a board in one timeline: suggested notes, suggested contexts, the names suggested for a context or a
-// merge, and the changes suggested to a note. Pure: what a row is, what it previews and what it brings into view.
+// merge, and the changes suggested to a note; before them all, the open lane plan
+// (docs/specs/021-event-storming/lane-plans.md "How a person sees and decides"). Pure: what a row is, what it previews
+// and what it brings into view.
 
 export type NoteRow = { type: 'note'; suggestion: SuggestionElement; spot: Rect; anchor: Rect };
 export type ContextRow = {
@@ -28,7 +32,7 @@ export type ContextRow = {
   bounds: Rect;
   notes: number;
 };
-export type PanelRow = NoteRow | ContextRow | NamesRow | MergeRow | ChangeRow;
+export type PanelRow = NoteRow | ContextRow | NamesRow | MergeRow | ChangeRow | LanePlanRow;
 
 const union = (a: Rect, b: Rect): Rect => {
   const x = Math.min(a.x, b.x);
@@ -57,11 +61,13 @@ export function panelRowId(row: PanelRow): string {
         .join(' ')}`;
     case 'change':
       return `change:${row.note.id}:${row.index}`;
+    case 'lane-plan':
+      return `lane-plan:${row.plan.id}`;
   }
 }
 
 /** What pointing at a row previews: the suggestion alone, the context at full strength, a change as its mark
- *  previews it, or the contexts a name was suggested for. */
+ *  previews it, the contexts a name was suggested for, or the board as a lane plan would leave it. */
 export function panelRowKey(row: PanelRow): string {
   switch (row.type) {
     case 'note':
@@ -74,6 +80,8 @@ export function panelRowKey(row: PanelRow): string {
       return contextsKey(row.contexts.map((c) => c.id));
     case 'change':
       return changeKey(row.note.id, row.index);
+    case 'lane-plan':
+      return planKey(row.plan.id);
   }
 }
 
@@ -104,14 +112,18 @@ export type PanelRowsInput = {
   // Where Apply All would land each suggested note, while Show All draws the board so.
   showAllSpots: ReadonlyMap<ElementId, Rect> | null;
   inertIds: ReadonlySet<ElementId>;
+  // The tab's layers: a lane plan leaves a note on a locked layer where it is.
+  layers?: Layer[];
 };
 
-/** Every row in one timeline: a note by where it lands, anything else by its left-most note. */
+/** The open lane plan first, then every other row in one timeline: a note by where it lands, anything else by its
+ *  left-most note. */
 export function panelRows({
   elements,
   timeline,
   showAllSpots,
   inertIds,
+  layers,
 }: PanelRowsInput): PanelRow[] {
   const notes: NoteRow[] = timeline.map(({ suggestion, spot, anchor }) => ({
     type: 'note',
@@ -119,12 +131,14 @@ export function panelRows({
     anchor,
     spot: showAllSpots?.get(suggestion.id) ?? spot,
   }));
-  const rows: PanelRow[] = [
+  const rows: Exclude<PanelRow, LanePlanRow>[] = [
     ...notes,
     ...suggestedContextRows(elements),
     ...nameRows(elements),
     ...changeRows(elements, inertIds),
   ];
-  const at = (row: PanelRow) => (row.type === 'note' ? row.spot : row.bounds);
-  return rows.sort((a, b) => at(a).x - at(b).x || at(a).y - at(b).y);
+  const at = (row: (typeof rows)[number]) => (row.type === 'note' ? row.spot : row.bounds);
+  rows.sort((a, b) => at(a).x - at(b).x || at(a).y - at(b).y);
+  const plan = lanePlanRow({ elements: [...elements], layers });
+  return plan ? [plan, ...rows] : rows;
 }

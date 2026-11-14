@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { laneActionSpies } from '@/hooks/canvas/lane-actions.fixture';
 import type { CandidateContextElement, Element } from '@livedoc/document';
 import { CanvasZoomProvider } from '@/components/canvas/CanvasZoomContext';
 import type { ContextControls, SuggestionControls } from '@/components/canvas/Canvas.types';
@@ -66,6 +67,7 @@ const contextControls = (): ContextControls => ({
   clearSelection: vi.fn(),
 });
 const suggestionControls = (): SuggestionControls => ({
+  ...laneActionSpies(),
   apply: vi.fn(),
   dismiss: vi.fn(),
   applyAll: vi.fn(),

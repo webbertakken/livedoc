@@ -70,6 +70,7 @@ const INERT_HANDLERS: CommandHandlers = {
   openShortcuts: noop,
   setTool: noop,
   openPhotoImport: noop,
+  arrangeBoard: noop,
 };
 
 // `open`: the search is showing. Only then does the catalogue follow the selection, so a closed search
@@ -124,6 +125,7 @@ export function useEditorCommands(open: boolean): {
     esBoard,
     photoImportAvailable,
     openPhotoImport,
+    suggestionActions,
     fitToScreen,
     autoLayoutTab,
     autoAlignTab,
@@ -302,6 +304,8 @@ export function useEditorCommands(open: boolean): {
     redo,
     toggleZen: toggleZenMode,
     openPhotoImport,
+    // Tracks when the arrangement is kept (useLaneActions).
+    arrangeBoard: () => suggestionActions.arrange(),
     fitToScreen,
     autoLayout: autoLayoutTab,
     autoAlign: autoAlignTab,

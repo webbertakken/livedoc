@@ -3,12 +3,16 @@ import {
   isOpenSuggestion,
   isSuggestedContext,
   isSuggestion,
+  LANES_MAX,
+  openLanePlan,
   removeContexts,
   SPLIT_PARTS_MAX,
+  withoutLanePlans,
   type Element,
   type ElementId,
   type Tab,
 } from '@livedoc/document';
+import { applyLanePlan, checkLanePlan } from '@livedoc/storm-reading';
 import { applyFirstChanges, withoutSuggestedChanges } from '@/lib/suggested-changes-apply';
 import { changeMarks, nameRows } from '@/lib/suggested-changes';
 import { applyAllSuggestions, applySuggestion, dismissSuggestions } from '@/lib/suggestion-apply';
@@ -24,7 +28,9 @@ import { track } from '@/lib/telemetry';
 // each act leaves is decided by the pure `lib/suggestion-apply` and the document's context writes. A dismissal
 // commits the tab, because it is remembered as declined in the same step
 // (docs/specs/021-event-storming/asks.md "What was declined"). Apply All and Dismiss All take the board's name
-// suggestions and note changes with them (docs/specs/021-event-storming/suggested-changes.md "Accepting").
+// suggestions and note changes with them (docs/specs/021-event-storming/suggested-changes.md "Accepting"), and the
+// open lane plan: Apply All applies it first, Dismiss All removes it, unremembered
+// (docs/specs/021-event-storming/lane-plans.md "How a person sees and decides").
 
 type SuggestionActionsDeps = {
   activeTab: Tab;
@@ -51,15 +57,17 @@ const refuse = (reason: 'blocked' | 'not-a-suggestion') =>
 const suggestedContextIds = (elements: readonly Element[]) =>
   elements.filter(isSuggestedContext).map((el) => el.id);
 
-// The board with every open suggestion gone: notes, contexts, names and note changes.
+// The board with every open suggestion gone: notes, contexts, names, note changes and the lane plan.
 const withoutEverything = (elements: Element[]) =>
-  withoutSuggestedChanges(
-    removeContexts(
-      dismissSuggestions(
-        elements,
-        elements.filter(isSuggestion).map((el) => el.id),
+  withoutLanePlans(
+    withoutSuggestedChanges(
+      removeContexts(
+        dismissSuggestions(
+          elements,
+          elements.filter(isSuggestion).map((el) => el.id),
+        ),
+        suggestedContextIds(elements),
       ),
-      suggestedContextIds(elements),
     ),
   );
 
@@ -126,14 +134,29 @@ export function useSuggestionActions({
     const count = suggestionsInTimeline(activeTab.elements).length;
     const contexts = suggestedContextIds(activeTab.elements);
     const { names, changes: marked } = changes();
-    if (!guard(count + contexts.length + names + marked > 0)) return;
-    // A split's notes are named once, so the board is the same however often the commit maps it.
+    // A stale plan is left for its row to say so: nothing is applied that the check would refuse.
+    const open = openLanePlan(activeTab.elements)?.esLanePlan;
+    const plan = open && checkLanePlan(activeTab, open).ok ? open : null;
+    if (!guard(count + contexts.length + names + marked + (plan ? 1 : 0) > 0)) return;
+    // A split's notes and a plan's lane names are named once, so the board is the same however often the commit
+    // maps it.
     const partIds = Array.from({ length: marked * SPLIT_PARTS_MAX }, () => crypto.randomUUID());
+    const nameIds = Array.from({ length: plan ? LANES_MAX : 0 }, () => crypto.randomUUID());
     const applyAll = (els: Element[]) => {
       let next = 0;
+      let named = 0;
+      // The lane plan first: everything else lands on the board it leaves.
+      const planned =
+        (plan &&
+          applyLanePlan(
+            { elements: els, layers: activeTab.layers },
+            plan,
+            () => nameIds[named++]!,
+          )) ||
+        els;
       const landed = applyContextSuggestions(
-        applyAllSuggestions(els, layerInertIds),
-        suggestedContextIds(els),
+        applyAllSuggestions(planned, layerInertIds),
+        suggestedContextIds(planned),
       );
       return applyFirstChanges(landed, { inertIds: layerInertIds, makeId: () => partIds[next++]! });
     };
@@ -144,6 +167,7 @@ export function useSuggestionActions({
       contexts: contexts.length,
       names: applied.names,
       changes: applied.changes,
+      plan: plan ? 1 : 0,
     });
     track('Canvas', 'Used', 'SuggestionsAppliedAll');
     for (let i = 0; i < count + applied.added; i += 1) track('Element', 'Added', 'Sticky');
@@ -153,13 +177,15 @@ export function useSuggestionActions({
     const ids = open().map((el) => el.id);
     const contexts = suggestedContextIds(activeTab.elements);
     const { names, changes: marked } = changes();
-    if (!guard(ids.length + contexts.length + names + marked > 0)) return;
+    const plan = openLanePlan(activeTab.elements) ? 1 : 0;
+    if (!guard(ids.length + contexts.length + names + marked + plan > 0)) return;
     commitTab((tab) => dismissedTab(tab, withoutEverything, declinedEverything));
     debugLog('[suggestions] dismissed', {
       count: ids.length,
       contexts: contexts.length,
       names,
       changes: marked,
+      plan,
     });
     track('Canvas', 'Used', 'SuggestionsDismissedAll');
   };

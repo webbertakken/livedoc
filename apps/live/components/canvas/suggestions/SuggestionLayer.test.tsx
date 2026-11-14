@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { laneActionSpies } from '@/hooks/canvas/lane-actions.fixture';
 import {
   ES_NOTE_GAP,
   type Element,
@@ -87,6 +88,7 @@ const board: Element[] = [
 
 function controls(): SuggestionControls {
   return {
+    ...laneActionSpies(),
     apply: vi.fn(),
     dismiss: vi.fn(),
     applyAll: vi.fn(),

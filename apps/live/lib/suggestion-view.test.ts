@@ -2,6 +2,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  ARRANGE_KEY,
   SUGGESTION_PREVIEW_LEAVE_MS,
   changeKey,
   contextsKey,
@@ -9,10 +10,13 @@ import {
   leaveSuggestion,
   nameKey,
   parsePreviewKey,
+  planKey,
   previewSuggestion,
   previewedContextIds,
   setShowAllSuggestions,
   setSuggestionsPanelOpen,
+  startArranging,
+  stopArranging,
   suggestionViewFor,
   useSuggestionView,
 } from './suggestion-view';
@@ -34,6 +38,7 @@ describe('suggestion view', () => {
       showAll: false,
       panelOpen: false,
       previewKey: null,
+      arranging: false,
     });
   });
 
@@ -136,5 +141,40 @@ describe('preview keys', () => {
     expect(previewedContextIds(contextsKey(['c1', 'c2']))).toEqual(['c1', 'c2']);
     expect(previewedContextIds(nameKey(['c1'], 'Sales'))).toEqual(['c1']);
     for (const key of [null, 's:p1', changeKey('n1')]) expect(previewedContextIds(key)).toEqual([]);
+  });
+});
+
+// docs/specs/021-event-storming/lane-plans.md "How a person sees and decides", arrange.md "How a person arranges".
+describe('board offers', () => {
+  it('names a lane plan by its element, and arranging by itself', () => {
+    expect(parsePreviewKey(planKey('plan-1'))).toEqual({ type: 'lane-plan', planId: 'plan-1' });
+    expect(parsePreviewKey(ARRANGE_KEY)).toEqual({ type: 'arrange' });
+    expect(parsePreviewKey('p:')).toBeNull();
+    expect(previewedContextIds(planKey('plan-1'))).toEqual([]);
+    expect(previewedContextIds(ARRANGE_KEY)).toEqual([]);
+  });
+
+  it('arranges one board at a time, and stops when asked or when another board opens', () => {
+    expect(suggestionViewFor('a').arranging).toBe(false);
+    startArranging('a');
+    expect(suggestionViewFor('a').arranging).toBe(true);
+    // A hover preview comes and goes beneath it.
+    previewSuggestion('a', 's:1');
+    endSuggestionPreview('a');
+    expect(suggestionViewFor('a').arranging).toBe(true);
+    expect(suggestionViewFor('b').arranging).toBe(false);
+    stopArranging('a');
+    expect(suggestionViewFor('a').arranging).toBe(false);
+    startArranging('a');
+    setSuggestionsPanelOpen('b', true);
+    expect(suggestionViewFor('a').arranging).toBe(false);
+  });
+
+  it('tells a reader when arranging starts and stops', () => {
+    const { result } = renderHook(() => useSuggestionView('a'));
+    act(() => startArranging('a'));
+    expect(result.current.arranging).toBe(true);
+    act(() => stopArranging('a'));
+    expect(result.current.arranging).toBe(false);
   });
 });
