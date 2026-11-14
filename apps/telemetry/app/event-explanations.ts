@@ -175,6 +175,12 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone accepted a change an agent suggested to a note on an event-storming board: other words, another kind, a split or its removal. Never the words.',
   'Canvas|Used|NoteChangeDismissed':
     'Someone dismissed a change an agent suggested to a note on an event-storming board.',
+  'Canvas|Used|LanePlanApplied':
+    'Someone applied a lane plan an agent suggested for an event-storming board: its notes moved onto fewer lanes and the lanes were named. Never the names.',
+  'Canvas|Used|LanePlanDismissed':
+    'Someone dismissed a lane plan an agent suggested for an event-storming board.',
+  'Canvas|Used|BoardArranged':
+    'Someone arranged an event-storming board along its timeline with Arrange and Reorder, and kept the result.',
   'Canvas|Used|WaterCooler':
     'Someone walked their Avatar-mode character up to a water cooler and took a cup of water.',
   'Canvas|Used|CoffeeMachine':
