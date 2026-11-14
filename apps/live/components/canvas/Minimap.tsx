@@ -1,5 +1,6 @@
 'use client';
 
+import { mapPictures } from './minimap-pictures';
 import { CANVAS_PAPER } from '@/lib/page-paint';
 import { pageWritingBars } from '@/lib/article/article-export';
 import { useArticleLaidOutSeq } from '@/lib/article/article-editor-store';
@@ -181,22 +182,24 @@ export function Minimap({
   // exports / live image use — real colours, silhouettes, tables, freehand,
   // icon glyphs, rotation, curved arrows) plus the content bounds; recomputed
   // only when elements, the tab font or the icon catalogues change —
-  // panning/zooming re-renders just the viewport overlay below. It is shown as ONE image of that markup
+  // panning/zooming re-renders just the viewport overlay below. It is shown as a few pictures of that markup
   // (docs/specs/008-canvas/minimap.md "What it shows"), not injected as live elements: on a large
   // board a live copy doubled the page and slowed every gesture
-  // (docs/specs/008-canvas/canvas-performance.md "The Map is one image"). It draws no labels: at the
+  // (docs/specs/008-canvas/canvas-performance.md "The Map is a few pictures"). It draws no labels: at the
   // Map's size they are a pixel or two tall, and laying them out was half the picture's cost.
-  const { picture, bounds } = useMemo(() => {
+  const { pictures, bounds } = useMemo(() => {
     const drawn = elements.map(withoutLabel);
     const corners: Point[] = [];
-    const parts: string[] = [];
+    const pageParts: string[] = [];
+    const boxedParts: string[] = [];
+    const arrowParts: string[] = [];
     // The pages first, under everything: each sheet in its own paint with a crisp outline, so
     // even an empty page shows where it is.
     const paper = CANVAS_PAPER[surface === 'dark' ? 'dark' : 'light'];
     const outline = surface === 'dark' ? '#94a3b8' : '#64748b';
     for (const page of pages ?? []) {
       const { x, y, width, height } = page.rect;
-      parts.push(
+      pageParts.push(
         pageExportFrame(page, { paper, idPrefix: 'lvd-minimap-page' }).backgroundSvg +
           // An article page's writing, as soft lines of text.
           (page.flow ? articleOpsToSvg(pageWritingBars(page, outline)) : '') +
@@ -222,7 +225,7 @@ export function Minimap({
     for (const el of framesFirst(drawn)) {
       if (el.type === 'arrow') continue;
       if (!isBoxed(el)) continue;
-      parts.push(
+      boxedParts.push(
         svgBoxed(el, {
           resolveIconArt,
           resolveStickerArt,
@@ -238,7 +241,7 @@ export function Minimap({
     }
     for (const el of drawn) {
       if (el.type !== 'arrow') continue;
-      parts.push(
+      arrowParts.push(
         svgArrow(
           el,
           drawn,
@@ -254,7 +257,7 @@ export function Minimap({
       corners.push(endpointPosition(el.from, drawn), endpointPosition(el.to, drawn));
     }
     const content = boundsOfPoints(corners);
-    if (!content) return { picture: null, bounds: null };
+    if (!content) return { pictures: [], bounds: null };
     // The picture covers the padded content box, so strokes and shadows past the corners still show.
     const px = content.width * PAD_FRACTION + PAD_MIN;
     const py = content.height * PAD_FRACTION + PAD_MIN;
@@ -264,12 +267,17 @@ export function Minimap({
       width: content.width + 2 * px,
       height: content.height + 2 * py,
     };
-    const doc =
+    const open =
       `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box.x} ${box.y} ${box.width} ${box.height}" width="${box.width}" height="${box.height}">` +
-      `${svgShadowDefs(elements)}${parts.join('')}</svg>`;
+      svgShadowDefs(elements);
+    // A few pictures, stacked in paint order (minimap-pictures.ts): a change redraws only the ones it touched.
+    const sections = [
+      { key: 'p', parts: pageParts },
+      { key: 'b', parts: boxedParts },
+      { key: 'a', parts: arrowParts },
+    ];
     return {
-      // Our own renderer's output (user text is xmlEscaped inside it), shown as an image.
-      picture: { ...box, href: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(doc)}` },
+      pictures: mapPictures(sections, open).map((picture) => ({ ...box, ...picture })),
       bounds: content,
     };
     // `writing` changes with the documents' text, which the bars read off the editors.
@@ -378,9 +386,10 @@ export function Minimap({
           }}
           onWheel={onWheel}
         >
-          {/* The tab's real rendering, as one image (see the picture build above). */}
-          {picture ? (
+          {/* The tab's real rendering, as a few pictures (see the picture build above). */}
+          {pictures.map((picture) => (
             <image
+              key={picture.key}
               href={picture.href}
               x={picture.x}
               y={picture.y}
@@ -388,7 +397,7 @@ export function Minimap({
               height={picture.height}
               preserveAspectRatio="none"
             />
-          ) : null}
+          ))}
           {hasView ? (
             <>
               {/* Dim everything outside the current view (even-odd: outer box

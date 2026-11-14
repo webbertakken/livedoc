@@ -86,7 +86,9 @@ describe('Minimap during a move', () => {
     size: 'medium' as const,
   });
   const drawing = (container: HTMLElement) =>
-    container.querySelector('svg[role="img"] > image')?.getAttribute('href') ?? '';
+    [...container.querySelectorAll('svg[role="img"] > image')]
+      .map((image) => image.getAttribute('href'))
+      .join('|');
 
   it('holds its drawing while the selection moves and redraws on release', () => {
     const { container, rerender } = render(<Minimap {...props(elements)} />);
@@ -103,10 +105,10 @@ describe('Minimap during a move', () => {
   });
 });
 
-// docs/specs/008-canvas/minimap.md "What it shows": the drawing is one image, not a copy of the board
-// in the page (docs/specs/008-canvas/canvas-performance.md "The Map is one image").
+// docs/specs/008-canvas/minimap.md "What it shows": the drawing is a few pictures, not a copy of the board
+// in the page (docs/specs/008-canvas/canvas-performance.md "The Map is a few pictures").
 describe('Minimap drawing', () => {
-  it('is one image, with none of the board in the page', () => {
+  it('is pictures, one for these few boxes, with none of the board in the page', () => {
     const { container } = mount({ width: 800, height: 600 });
     const map = container.querySelector('svg[role="img"]')!;
     expect(map.querySelectorAll('image')).toHaveLength(1);
@@ -153,8 +155,12 @@ describe('Minimap labels', () => {
         size="medium"
       />,
     );
-    const href = container.querySelector('svg[role="img"] > image')!.getAttribute('href')!;
-    const doc = decodeURIComponent(href.slice(href.indexOf(',') + 1));
+    const hrefs = [...container.querySelectorAll('svg[role="img"] > image')].map((image) =>
+      image.getAttribute('href')!,
+    );
+    // The boxes in one picture, the arrow in another, over them.
+    expect(hrefs).toHaveLength(2);
+    const doc = hrefs.map((href) => decodeURIComponent(href.slice(href.indexOf(',') + 1))).join('');
     expect(doc).not.toContain('<text');
     expect(doc).not.toMatch(/Checkout|Pay|A note|next/);
     expect(doc.match(/<rect /g)?.length ?? 0).toBeGreaterThanOrEqual(3);
