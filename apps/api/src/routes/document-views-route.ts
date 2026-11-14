@@ -22,7 +22,13 @@ import {
 import { formatLintReport, lintTab } from '@livedoc/diagram-lint';
 import { lintLog } from '../changesets/lint';
 import { isEventStormingTab, isKnownElement } from '@livedoc/document';
-import { formatStormView, readBoard, readSuggestions } from '@livedoc/storm-reading';
+import {
+  formatStormView,
+  readBoard,
+  readDeclined,
+  readSuggestedChanges,
+  readSuggestions,
+} from '@livedoc/storm-reading';
 import {
   FIND_QUERY_MAX_LENGTH,
   headerFactsOf,
@@ -244,8 +250,9 @@ function answerLintView(
   return parsed.json ? json(report, { headers }) : textPlain(formatLintReport(report), { headers });
 }
 
-// `view=storm`: an Event Storming board's reading, its gaps and its open suggestions
-// (docs/specs/021-event-storming/board-reading.md "Output"). Any other tab is refused: it has no notation to read.
+// `view=storm`: an Event Storming board's reading, its gaps, its open suggestions and suggested changes, and what was
+// declined (docs/specs/021-event-storming/board-reading.md "Output"). Any other tab is refused: it has no notation to
+// read.
 function answerStormView(
   ctx: DocumentRouteContext,
   parsed: ParsedStormView,
@@ -262,19 +269,25 @@ function answerStormView(
   const started = Date.now();
   const reading = readBoard(tab, { documentId: document.id });
   const suggestions = readSuggestions(tab);
+  const changes = readSuggestedChanges(tab);
+  const declined = readDeclined(tab);
   viewsLog('info', '[storm] view', {
     doc: document.id,
     tab: tab.id,
     notes: reading.notes.length,
     gaps: reading.gaps.length,
     suggestions: suggestions.length,
+    changes: changes.length,
+    declined: declined.length,
     ms: Date.now() - started,
   });
   countViewed(ctx, STORM_VIEW_NAME);
   const headers = { ETag: tabEtag(tab.rev) };
   return parsed.json
-    ? json({ reading, suggestions, rev: tab.rev }, { headers })
-    : textPlain(formatStormView(reading, suggestions).join('\n'), { headers });
+    ? json({ reading, suggestions, changes, declined, rev: tab.rev }, { headers })
+    : textPlain(formatStormView(reading, suggestions, { changes, declined }).join('\n'), {
+        headers,
+      });
 }
 
 // What the caller has selected on the tab now, for `show selected` only: the `mine` selections

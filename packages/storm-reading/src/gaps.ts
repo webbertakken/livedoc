@@ -1,7 +1,7 @@
 // The gaps (docs/specs/021-event-storming/board-reading.md "Gaps"): findings about the board, each with a stable code,
 // a level, the notes it is about and, where one note would close it, the remedy that becomes a suggestion.
 
-import type { ElementId } from '@livedoc/document';
+import { comparableWords, type ElementId } from '@livedoc/document';
 import { TENSE_CHECK_MIN_SHARE } from './constants';
 import { firstWord, lastWord, readsAsPastTense } from './tense';
 import {
@@ -36,14 +36,6 @@ const MOMENT_KINDS: readonly PlacedNote['kind'][] = ['domain-event', 'command', 
 
 const quoted = (n: PlacedNote) =>
   n.words ? `"${n.words}"` : `a blank ${n.kind.replace('-', ' ')}`;
-
-// Words compared for duplicates: case, punctuation and repeated spaces ignored.
-const comparable = (words: string) =>
-  words
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s]/gu, '')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 export function findGaps(
   notes: readonly PlacedNote[],
@@ -149,7 +141,8 @@ export function findGaps(
 
   const groups = new Map<string, PlacedNote[]>();
   for (const note of notes.filter((n) => MOMENT_KINDS.includes(n.kind))) {
-    const key = comparable(note.words);
+    // Case, punctuation and repeated spaces never tell two notes apart.
+    const key = comparableWords(note.words);
     if (!key) continue;
     const id = `${note.kind}\u0000${key}`;
     groups.set(id, [...(groups.get(id) ?? []), note]);

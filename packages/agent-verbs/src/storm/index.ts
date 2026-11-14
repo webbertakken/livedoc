@@ -12,4 +12,7 @@ export {
   type StormWrite,
   type SuggestionInput,
   type ContextSuggestionInput,
+  type NameSuggestionInput,
+  type NoteChangeInput,
+  type Proposals,
 } from './storm-calls';

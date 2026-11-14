@@ -98,7 +98,12 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
   An agent taking its own suggestions back (`rm`, `storm clear`) is not a dismissal. A lane plan is not remembered.
 - **A declined suggestion is refused** when suggested again, as `declined_before`: the same type, the same words
   ignoring case, punctuation and spacing, the same kind, about the same notes or contexts.
-- The reading lists them (`declined`), so an agent sees what the room turned down before it suggests.
+- **What each is about.** A suggested note: the note its chain of suggestions grows from, so a chain suggested again
+  is refused at its first link, on any side. A suggested context: its notes. A name: the contexts it was for. A note
+  change: its note. An entry names up to `DECLINED_ABOUT_MAX` (40) of them (default).
+- The storm view lists them (`declined`), so an agent sees what the room turned down before it suggests: those whose
+  notes and contexts are all still on the board, since one about something gone can never be suggested again
+  (default).
 - **Forget Declined**, in the Ask popover beside the count, empties the list in one undoable step.
 
 ## The built-in hand
@@ -158,3 +163,5 @@ Neither the topic, the prompt nor the About is sent.
 ## Where it lives
 
 - The About: `packages/document/src/event-storming-about.ts`.
+- What was declined: `packages/document/src/event-storming-declined.ts`; the view's rows:
+  `packages/storm-reading/src/declined.ts`; how words compare: `packages/document/src/event-storming-words.ts`.

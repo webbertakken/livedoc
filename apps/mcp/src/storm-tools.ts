@@ -3,7 +3,13 @@
 // error that says what is there.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ApiClient } from '@livedoc/api-client';
-import { addPhotoNotes, readStorm, suggestNotes, type SuggestionInput } from '@livedoc/agent-verbs';
+import {
+  addPhotoNotes,
+  readStorm,
+  suggestNotes,
+  type NoteChangeInput,
+  type SuggestionInput,
+} from '@livedoc/agent-verbs';
 import {
   mcpAddPhotoNotes,
   mcpExportEventStorming,
@@ -41,7 +47,7 @@ export function registerStormTools(server: McpServer, env: Env): void {
       text: read.lines.join('\n'),
       reading: read.reading,
       gaps: read.reading.gaps.length,
-      suggestions: read.suggestions.filter((s) => !s.orphan).length,
+      suggestions: read.suggestions.filter((s) => !s.orphan).length + read.changes.length,
       url: deepLink(env, read.documentId),
     });
   });
@@ -53,9 +59,13 @@ export function registerStormTools(server: McpServer, env: Env): void {
     const written = await suggestNotes(
       api,
       read,
-      (args.suggestions ?? []) as SuggestionInput[],
+      {
+        suggestions: args.suggestions as SuggestionInput[] | undefined,
+        contexts: args.contexts,
+        names: args.names,
+        changes: args.changes as NoteChangeInput[] | undefined,
+      },
       'mcp',
-      args.contexts ?? [],
     );
     if (!written.ok) return errorResult(written.message);
     return textResult({

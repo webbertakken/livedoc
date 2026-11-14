@@ -156,7 +156,7 @@ describe('suggesting and clearing', () => {
         },
       }),
     );
-    expect(await suggestNotes(api, board, [one], 'mcp')).toMatchObject({
+    expect(await suggestNotes(api, board, { suggestions: [one] }, 'mcp')).toMatchObject({
       ok: true,
       changesetId: 'cs_1',
       rev: 4,
@@ -190,9 +190,9 @@ describe('suggesting and clearing', () => {
 
   it('refuses none, or more than a call takes', async () => {
     const api = fakeApi(routesWith());
-    expect(await suggestNotes(api, board, [], 'mcp')).toMatchObject({ code: 'nothing_to_suggest' });
+    expect(await suggestNotes(api, board, {}, 'mcp')).toMatchObject({ code: 'nothing_to_suggest' });
     const many = Array.from({ length: SUGGEST_NOTES_MAX + 1 }, () => one);
-    expect(await suggestNotes(api, board, many, 'mcp')).toMatchObject({
+    expect(await suggestNotes(api, board, { suggestions: many }, 'mcp')).toMatchObject({
       code: 'too_many_suggestions',
     });
   });
@@ -207,7 +207,7 @@ describe('suggesting and clearing', () => {
           ),
       }),
     );
-    expect(await suggestNotes(engine, board, [one], 'cli')).toEqual({
+    expect(await suggestNotes(engine, board, { suggestions: [one] }, 'cli')).toEqual({
       ok: false,
       code: 'anchor_not_a_note',
       message: 'error anchor_not_a_note · op 1',
@@ -217,21 +217,21 @@ describe('suggesting and clearing', () => {
         [`${base}/tabs/es/changesets`]: () => Response.json({ error: 'locked' }, { status: 403 }),
       }),
     );
-    expect(await suggestNotes(noText, board, [one], 'cli')).toMatchObject({
+    expect(await suggestNotes(noText, board, { suggestions: [one] }, 'cli')).toMatchObject({
       ok: false,
       code: 'locked',
     });
     const notJson = fakeApi(
       routesWith({ [`${base}/tabs/es/changesets`]: () => new Response('nope', { status: 403 }) }),
     );
-    expect(await suggestNotes(notJson, board, [one], 'cli')).toMatchObject({
+    expect(await suggestNotes(notJson, board, { suggestions: [one] }, 'cli')).toMatchObject({
       ok: false,
       code: 'http_403',
     });
     const down = fakeApi(
       routesWith({ [`${base}/tabs/es/changesets`]: () => new Response('down', { status: 503 }) }),
     );
-    await expect(suggestNotes(down, board, [one], 'cli')).rejects.toThrow();
+    await expect(suggestNotes(down, board, { suggestions: [one] }, 'cli')).rejects.toThrow();
   });
 
   it('takes suggest lines, and only those', async () => {
@@ -269,7 +269,7 @@ describe('suggesting and clearing', () => {
         },
       }),
     );
-    expect(await suggestNotes(api, board, [one, one], 'mcp')).toMatchObject({
+    expect(await suggestNotes(api, board, { suggestions: [one, one] }, 'mcp')).toMatchObject({
       changesetId: null,
       rev: null,
     });
@@ -294,15 +294,15 @@ describe('suggesting and clearing', () => {
       }),
     );
     const billing = { name: 'Billing', notes: ['e1', 'e2'], reason: 'money' };
-    await suggestNotes(api, board, [one], 'mcp', [billing]);
+    await suggestNotes(api, board, { suggestions: [one], contexts: [billing] }, 'mcp');
     expect(sent.summary).toBe('suggest 1 note and 1 context');
     expect(sent.operations).toEqual([
       { op: 'suggest', ...one },
       { op: 'suggest-context', ...billing },
     ]);
-    await suggestNotes(api, board, [], 'mcp', [billing, billing]);
+    await suggestNotes(api, board, { contexts: [billing, billing] }, 'mcp');
     expect(sent.summary).toBe('suggest 2 contexts');
-    expect(await suggestNotes(api, board, [], 'mcp', [])).toMatchObject({
+    expect(await suggestNotes(api, board, { suggestions: [], contexts: [] }, 'mcp')).toMatchObject({
       ok: false,
       code: 'nothing_to_suggest',
     });
@@ -326,6 +326,161 @@ describe('suggesting and clearing', () => {
       ok: true,
       changesetId: null,
       lines: [],
+    });
+  });
+
+  // docs/specs/021-event-storming/suggested-changes.md.
+  describe('suggested changes', () => {
+    const sending = () => {
+      const sent: { summary: string; operations: unknown }[] = [];
+      const api = fakeApi(
+        routesWith({
+          [`${base}/tabs/es/changesets`]: async (r: Request) => {
+            sent.push((await r.json()) as (typeof sent)[number]);
+            return Response.json({ dryRun: true, changeset: null, results: [] });
+          },
+        }),
+      );
+      return { api, sent };
+    };
+    const name = { name: 'Sales', contexts: ['x1', 'x2'], reason: 'one team' };
+    const changes = [
+      {
+        note: 'evt',
+        change: 'reword' as const,
+        words: 'Booking Placed',
+        term: 'Order',
+        to: 'Booking',
+      },
+      { note: 'evt', change: 'kind' as const, kind: 'command' },
+      { note: 'evt', change: 'split' as const, parts: ['Order Placed', 'Order Paid'] },
+      { note: 'cmd', change: 'remove' as const, reason: 'said twice' },
+    ];
+
+    it('sends names and note changes as the suggest operation each is', async () => {
+      const { api, sent } = sending();
+      await suggestNotes(api, board, { suggestions: [one], names: [name], changes }, 'mcp');
+      expect(sent[0]).toEqual({
+        summary: 'suggest 1 note, 1 name and 4 changes',
+        operations: [
+          { op: 'suggest', ...one },
+          { op: 'suggest-name', ...name },
+          {
+            op: 'suggest-reword',
+            note: 'evt',
+            words: 'Booking Placed',
+            term: 'Order',
+            to: 'Booking',
+          },
+          { op: 'suggest-kind', note: 'evt', kind: 'command' },
+          { op: 'suggest-split', note: 'evt', parts: ['Order Placed', 'Order Paid'] },
+          { op: 'suggest-remove', note: 'cmd', reason: 'said twice' },
+        ],
+      });
+      await suggestNotes(api, board, { changes: [changes[3]!] }, 'mcp');
+      expect(sent[1]!.summary).toBe('suggest 1 change');
+    });
+
+    it('counts every kind of suggestion towards what one call takes', async () => {
+      const { api } = sending();
+      const many = Array.from({ length: SUGGEST_NOTES_MAX }, () => changes[3]!);
+      expect(await suggestNotes(api, board, { names: [name], changes: many }, 'mcp')).toMatchObject(
+        { code: 'too_many_suggestions' },
+      );
+    });
+
+    it('takes every suggest line from a file, in the line form or as JSON', async () => {
+      const { api, sent } = sending();
+      const lines = [
+        'suggest-name "Sales" x1 x2',
+        'suggest-reword evt "Booking Placed" term=Order to=Booking',
+        'suggest-kind evt command',
+        'suggest-split evt "Order Placed" "Order Paid"',
+        JSON.stringify({ op: 'suggest-remove', note: 'cmd' }),
+        'suggest-context "Billing" evt',
+      ].join('\n');
+      expect(await suggestFromText(api, board, lines, 'cli')).toMatchObject({ ok: true });
+      expect(sent[0]!.summary).toBe('suggest 1 context, 1 name and 4 changes');
+      expect(await suggestFromText(api, board, 'suggest-everything evt', 'cli')).toMatchObject({
+        code: 'not_a_suggestion',
+      });
+      expect(await suggestFromText(api, board, '{"op":"rm","target":"evt"}', 'cli')).toMatchObject({
+        code: 'not_a_suggestion',
+      });
+      expect(await suggestFromText(api, board, 'suggest-remove', 'cli')).toMatchObject({
+        ok: true,
+      });
+    });
+
+    it('reads the suggested changes and what was declined, and prints them', async () => {
+      const view = {
+        ...storm(),
+        changes: [
+          { type: 'change', note: 'evt', noteRef: 'evt', change: 'remove', reason: null, by: null },
+        ],
+        declined: [{ type: 'remove', about: ['cmd'], aboutRefs: ['cmd'] }],
+      };
+      const api = fakeApi(routesWith({ [`${base}/tabs/es?view=storm&json=1`]: view }));
+      const read = (await readStorm(api, doc)) as StormRead;
+      expect(read.changes).toHaveLength(1);
+      expect(read.declined).toHaveLength(1);
+      expect(read.lines[0]).toContain('2 suggestions');
+      expect(read.lines).toEqual(
+        expect.arrayContaining(['suggested changes', '  evt remove', 'declined', '  remove cmd']),
+      );
+      const out = await stormRead.run!(contextOf(api, [], []), {
+        doc: 'Auth flow',
+        tab: undefined,
+      });
+      expect(out.suggestions).toBe(2);
+    });
+
+    it('reads an answer from an api older than suggested changes as having none', async () => {
+      const read = (await readStorm(fakeApi(routesWith()), doc)) as StormRead;
+      expect(read.changes).toEqual([]);
+      expect(read.declined).toEqual([]);
+    });
+
+    it('clear takes back what is suggested on notes and kept contexts, once each', async () => {
+      const { api, sent } = sending();
+      const read = (await readStorm(api, doc)) as StormRead;
+      const change = (noteRef: string) =>
+        ({
+          type: 'change',
+          note: noteRef,
+          noteRef,
+          change: 'remove',
+          reason: null,
+          by: null,
+        }) as const;
+      const named = (contextRefs: string[]) =>
+        ({
+          type: 'name',
+          contexts: contextRefs,
+          contextRefs,
+          name: 'Sales',
+          reason: null,
+          by: null,
+        }) as const;
+      await clearSuggestions(
+        api,
+        {
+          ...read,
+          // "sug" is a suggestion that goes whole: what it holds needs no taking back.
+          changes: [change('evt'), change('evt'), named(['x1', 'x2']), named(['sug'])],
+        },
+        'cli',
+      );
+      expect(sent[0]).toEqual({
+        summary: 'clear 5 suggestions',
+        operations: [
+          { op: 'rm', target: 'sug' },
+          { op: 'rm', target: 'evt', suggested: true },
+          { op: 'rm', target: 'x1', suggested: true },
+        ],
+      });
+      await clearSuggestions(api, { ...read, suggestions: [], changes: [change('evt')] }, 'cli');
+      expect(sent[1]!.summary).toBe('clear 1 suggestion');
     });
   });
 });

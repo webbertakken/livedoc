@@ -12,7 +12,14 @@ export {
   type StormNoteSuggestion,
   type StormSuggestion,
 } from './suggestions';
-export { formatStormView } from './format';
+export {
+  readSuggestedChanges,
+  type StormNameSuggestion,
+  type StormNoteChange,
+  type StormSuggestedChange,
+} from './suggested-changes';
+export { readDeclined, type StormDeclined } from './declined';
+export { formatStormView, type StormViewExtras } from './format';
 export { formatReadiness, readinessOf, type Readiness } from './readiness';
 export { storySteps, type StoryStep } from './story';
 export { boardTerms, type BoardTerm } from './language';

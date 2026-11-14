@@ -1,13 +1,116 @@
 import { describe, expect, it } from 'vitest';
 import { formatStormView } from './format';
 import { readBoard } from './reading';
+import { readDeclined } from './declined';
+import { readSuggestedChanges } from './suggested-changes';
 import { readSuggestions } from './suggestions';
+import type { Element, Tab } from '@livedoc/document';
 import { board, laneText, note } from './testing';
 
 const view = (...specs: Parameters<typeof board>) => {
   const tab = board(...specs);
   return formatStormView(readBoard(tab), readSuggestions(tab));
 };
+
+// The whole view of a tab: the reading, its suggestions, its suggested changes and what was declined.
+const whole = (tab: Tab) =>
+  formatStormView(readBoard(tab), readSuggestions(tab), {
+    changes: readSuggestedChanges(tab),
+    declined: readDeclined(tab),
+  });
+
+describe('formatStormView: suggested changes and what was declined', () => {
+  const context = (id: string, label: string, esContext: Record<string, unknown>): Element =>
+    ({
+      id,
+      type: 'shape',
+      shape: 'square',
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      label,
+      esContext,
+    }) as Element;
+  const tab: Tab = {
+    ...board(
+      {
+        id: 'e1',
+        kind: 'domain-event',
+        col: 0,
+        words: 'Order Placed',
+        extra: {
+          esChanges: [
+            { change: 'reword', words: 'Booking Placed', term: 'Order', to: 'Booking', by: 'Ada' },
+            { change: 'reword', words: 'Order Made' },
+            { change: 'kind', kind: 'command', reason: 'it reads as an intent' },
+          ],
+        },
+      },
+      {
+        id: 'e2',
+        kind: 'domain-event',
+        col: 1,
+        words: 'Meal Cooked and Served',
+        extra: {
+          esChanges: [
+            { change: 'split', parts: ['Meal Cooked', 'Meal Served'] },
+            { change: 'remove', reason: 'said twice', by: 'Ada' },
+          ],
+        },
+      },
+      context('x1', 'Ordering', {
+        notes: ['e1'],
+        names: [{ name: 'Orders' }, { name: 'Shop', with: ['x2'], reason: 'one team', by: 'Ada' }],
+      }),
+      context('x2', 'Kitchen', { notes: ['e2'] }),
+    ),
+    esDeclined: [
+      { type: 'note', words: 'Place Order', kind: 'command', about: ['e1'] },
+      { type: 'context', words: 'Front of house', about: ['e1', 'e2'] },
+      { type: 'name', words: 'Sales', about: ['x1', 'x2'] },
+      { type: 'kind', kind: 'policy', about: ['e2'] },
+      { type: 'remove', about: ['e1'] },
+    ],
+  };
+
+  it('counts every open suggestion in the board line', () => {
+    expect(whole(tab)[0]).toContain('· 7 suggestions');
+  });
+
+  it('lists each suggested change by the refs it is on, with who and why', () => {
+    const lines = whole(tab);
+    const at = lines.indexOf('suggested changes');
+    expect(lines.slice(at, at + 8)).toEqual([
+      'suggested changes',
+      '  x1 name "Orders"',
+      '  x1,x2 name "Shop" · by Ada: one team',
+      '  e1 reword "Booking Placed" (term "Order" -> "Booking") · by Ada',
+      '  e1 reword "Order Made"',
+      '  e1 kind command: it reads as an intent',
+      '  e2 split "Meal Cooked" | "Meal Served"',
+      '  e2 remove · by Ada: said twice',
+    ]);
+  });
+
+  it('lists what was declined: its type, kind, words and what it was about', () => {
+    const lines = whole(tab);
+    expect(lines.slice(lines.indexOf('declined'))).toEqual([
+      'declined',
+      '  note command "Place Order" e1',
+      '  context "Front of house" e1,e2',
+      '  name "Sales" x1,x2',
+      '  kind policy e2',
+      '  remove e1',
+    ]);
+  });
+
+  it('prints neither part for a board that has none', () => {
+    const lines = whole(board({ id: 'e1', kind: 'domain-event', col: 0 }));
+    expect(lines).not.toContain('suggested changes');
+    expect(lines).not.toContain('declined');
+  });
+});
 
 describe('formatStormView', () => {
   it('says an empty board has no notes', () => {

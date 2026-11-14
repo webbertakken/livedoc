@@ -1,9 +1,11 @@
 // The storm view (docs/specs/021-event-storming/board-reading.md "Output"): the reading as compact text. The About,
 // one line per note in timeline order (a pivotal event marked so, an answered hotspot with its answer), the loose
-// notes, the lanes, the contexts and their map, the gaps and the open suggestions. Refs name every note, so an agent
-// can address any of them in an edit operation.
+// notes, the lanes, the contexts and their map, the gaps, the open suggestions and suggested changes, and what was
+// declined. Refs name every note, so an agent can address any of them in an edit operation.
 
 import type { ElementId, EventStormingNoteKind } from '@livedoc/document';
+import type { StormDeclined } from './declined';
+import type { StormNoteChange, StormSuggestedChange } from './suggested-changes';
 import type { StormSuggestion } from './suggestions';
 import type { CrossingRelation, StormNote, StormReading } from './types';
 
@@ -27,9 +29,17 @@ const CROSSING_VERB: Record<CrossingRelation, string> = {
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+// What the view lists beside the reading and its suggested notes and contexts: the changes suggested to what is on
+// the board, and what a person dismissed before.
+export type StormViewExtras = {
+  changes?: readonly StormSuggestedChange[];
+  declined?: readonly StormDeclined[];
+};
+
 export function formatStormView(
   reading: StormReading,
   suggestions: readonly StormSuggestion[],
+  { changes = [], declined = [] }: StormViewExtras = {},
 ): string[] {
   const byId = new Map<ElementId, StormNote>(reading.notes.map((n) => [n.id, n]));
   const answers = new Map(reading.decisions.map((d) => [d.hotspot, d.answer]));
@@ -51,7 +61,8 @@ export function formatStormView(
       plural(reading.chains.length, 'chain'),
       plural(reading.gaps.length, 'gap'),
       ...(contexts.length > 0 ? [plural(contexts.length, 'context')] : []),
-      plural(open.length, 'suggestion'),
+      // Every open suggestion counts alike: notes, contexts, names and note changes.
+      plural(open.length + changes.length, 'suggestion'),
     ].join(' · '),
   ];
   if (reading.notes.length === 0) lines.push('no notes');
@@ -118,7 +129,44 @@ export function formatStormView(
     if (orphans > 0)
       lines.push(`  ${plural(orphans, 'orphaned suggestion')} (anchor or notes gone; never shown)`);
   }
+
+  if (changes.length > 0) {
+    lines.push('suggested changes');
+    for (const c of changes) lines.push(`  ${changeLine(c)}`);
+  }
+
+  if (declined.length > 0) {
+    lines.push('declined');
+    for (const d of declined)
+      lines.push(
+        `  ${d.type}${d.kind ? ` ${d.kind}` : ''}${d.words ? ` "${d.words}"` : ''} ${d.aboutRefs.join(',')}`,
+      );
+  }
   return lines;
+}
+
+// What a note change proposes, as its edit operation says it.
+function noteChangeText(c: StormNoteChange): string {
+  switch (c.change) {
+    case 'reword':
+      return `reword "${c.words}"${c.term ? ` (term "${c.term}" -> "${c.to}")` : ''}`;
+    case 'kind':
+      return `kind ${c.kind}`;
+    case 'split':
+      return `split ${c.parts.map((part) => `"${part}"`).join(' | ')}`;
+    case 'remove':
+      return 'remove';
+  }
+}
+
+// One suggested change: the refs it is on (a note, a context, or the contexts a name would merge), what it proposes,
+// then who and why.
+function changeLine(c: StormSuggestedChange): string {
+  const what =
+    c.type === 'name'
+      ? `${c.contextRefs.join(',')} name "${c.name}"`
+      : `${c.noteRef} ${noteChangeText(c)}`;
+  return `${what}${c.by ? ` · by ${c.by}` : ''}${c.reason ? `: ${c.reason}` : ''}`;
 }
 
 // One open suggestion: a note by its kind, words, side and anchor; a context by its name and notes; then who and why.

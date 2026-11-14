@@ -16,14 +16,17 @@ A **name suggestion** is another name for a candidate context, or one name for s
 - **On the context.** `esContext.names` holds them, each a `name` (up to `CONTEXT_NAME_MAX`), a `reason` and who
   suggested it (`by`), and `with`: the other contexts it names, when it is a name for a merge.
   A merge's name suggestion is held by the context the merge keeps (the most notes; on a tie, the leftmost).
-- A context, kept or suggested, holds up to `CONTEXT_NAMES_MAX` (5) of them.
+- A context, kept or suggested, holds up to `CONTEXT_NAMES_MAX` (5) of them, and one name is for at most
+  `NAMED_CONTEXTS_MAX` (12) contexts (default).
 - **The edit operation `suggest-name`**: `suggest-name "<name>" <context>… [reason="…"]`.
   One context: a name for it. Several: a name for them merged.
   Refusals: `not_event_storming`, `name_required`, `name_too_long`, `reason_too_long`, `contexts_required`,
   `not_a_context`, `duplicate_suggestion` (its present name, or a name already suggested for the same contexts,
-  ignoring case), `too_many_suggestions`, `declined_before`.
+  ignoring case), `too_many_suggestions` (the context holds five, or the board is full), `declined_before`, and
+  `element_locked` for a locked context.
 - **The MCP**: `suggest_notes` takes `names: [{ name, contexts, reason }]`; the CLI's `storm suggest` takes the line.
 - **It goes with its contexts.** Removing a context removes the name suggestions it holds and those that name it.
+  One left behind anyway (an older copy, a merge on save) is never shown or counted, and goes with the next write.
 
 ### How a person sees and decides
 
@@ -37,6 +40,7 @@ A **name suggestion** is another name for a candidate context, or one name for s
   shows the name suggestions made for exactly those contexts as chips.
   Choosing one merges them and names the merged context, in one undoable step, without opening the name for typing
   (ruled 2026-11-14: "Picking a name for both combined will merge them automatically").
+  The merged context drops its name suggestions for itself, as one renamed by a chip does (default).
 - ✕ dismisses the chips shown; Delete on a focused chip dismisses that one.
 - **In the suggestions panel**: a **Names** row per context that holds any, and a **Merge** row per set of contexts
   a name was suggested for. Pointing at a row brings its contexts into view at full strength; choosing a Merge row
@@ -54,11 +58,15 @@ A **note change** is a change proposed to one workshop note. There are four:
 | `remove` | taking the note off the board (a duplicate, a stray) | `suggest-remove <note>`                                     |
 
 - **On the note.** `esChanges` on the sticky holds them, up to `NOTE_CHANGES_MAX` (4), each with a `reason` and `by`.
+  Words a change proposes run to `NOTE_CHANGE_WORDS_MAX` (200) characters (default).
 - Every operation takes `reason="…"`.
   Refusals: `not_event_storming`, `note_not_a_note` (a suggestion is not a note), `words_required`,
   `invalid_kind`, `same_kind`, `parts_required` (a split needs two to `SPLIT_PARTS_MAX`, 4, parts),
   `term_not_in_words` (the old term is not in the note's words, or the new one not in the suggested words),
-  `reason_too_long`, `duplicate_suggestion`, `too_many_suggestions`, `declined_before`.
+  `reason_too_long`, `duplicate_suggestion` (the note already holds that change, or already says those words),
+  `too_many_suggestions` (the note holds four, or the board is full), `declined_before`, and `element_locked` for a
+  locked note.
+- A reword that only changes the casing is a reword; `term` and `to` go together.
 - **The MCP**: `suggest_notes` takes `changes: [{ note, change, … }]`; the CLI's `storm suggest` takes the lines.
 - Every open suggestion counts towards `SUGGESTIONS_MAX`: a suggested note, a suggested context, a name suggestion
   and a note change alike.
@@ -114,7 +122,25 @@ Each is one undoable step through the ordinary choke point.
 As [suggestions](suggestions.md#share-roles): an Editor sees, accepts and dismisses; a Participant and a Viewer see
 none of it; an agent suggests, and removes its owner's with `rm` or `storm clear`.
 
+- **Taking one back.** `rm <note> suggested` drops the changes suggested on a note and `rm <context> suggested` the
+  names a context holds, the note or context staying; a target that holds none is refused as `nothing_suggested`.
+  `storm clear` does it for the whole board (default).
+- An agent taking its own back is no dismissal: nothing is remembered as declined.
+
 ## Telemetry
 
 `Canvas / Used / NameSuggestionApplied`, `NameSuggestionDismissed`, `NoteChangeApplied`, `NoteChangeDismissed`, and
 `ContextsMerged` when a merge's name is chosen (default).
+
+## Where it lives
+
+- Name suggestions: the field and its cascade in `packages/document/src/candidate-contexts.ts`, its reads and writes
+  in `packages/document/src/context-names.ts`.
+- Note changes: `packages/document/src/note-changes.ts`; accepting one, with the reword's ripple:
+  `packages/document/src/note-change-accept.ts`.
+- The count every suggestion shares: `packages/document/src/open-suggestions.ts`.
+- The edit operations: `packages/edit-operations/src/operations/suggest-name.ts` and
+  `packages/edit-operations/src/operations/suggest-change.ts`; what every suggest operation checks alike:
+  `packages/edit-operations/src/operations/suggestion-rules.ts`; taking one back:
+  `packages/edit-operations/src/operations/rm.ts`.
+- The view's rows: `packages/storm-reading/src/suggested-changes.ts`.

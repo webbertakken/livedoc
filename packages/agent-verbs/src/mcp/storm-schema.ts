@@ -7,7 +7,11 @@ import {
   CONTEXT_NAME_MAX,
   ES_SUGGESTION_SIDES,
   EVENT_STORMING_NOTES,
+  NOTE_CHANGE_TYPES,
+  NOTE_CHANGE_WORDS_MAX,
+  SPLIT_PARTS_MAX,
   SUGGESTION_REASON_MAX,
+  TERM_MAX,
   WALL_MAX_PHOTOS,
 } from '@livedoc/document';
 import { DOMAIN_EXPORT_LANGUAGES, GAP_CODES } from '@livedoc/storm-reading';
@@ -36,8 +40,9 @@ export const readEventStormingOutput = {
         'to it ("<-" command · actor · read-model · policy), decides it ("@"), follows it ("->" policy => command) ' +
         'and flags it ("!", an answered hotspot ending = "answer"); then loose notes, the lanes in use (number ' +
         '"name": refs), candidate contexts (ref "name": refs), the context map (context -> context: what crosses), ' +
-        'gaps (level code refs: message (remedy)), and open suggestions (notes, and contexts as ref context "name" ' +
-        'refs).',
+        'gaps (level code refs: message (remedy)), open suggestions (notes, and contexts as ref context "name" ' +
+        'refs), suggested changes (the refs it is on, then name "…", reword "…", kind …, split "…" | "…" or remove), ' +
+        'and what was declined (type, kind, words, the refs it was about).',
     ),
   reading: z
     .record(z.string(), z.unknown())
@@ -46,7 +51,11 @@ export const readEventStormingOutput = {
         'contexts, about, lanes, pivotal, phases, decisions, contextMap.',
     ),
   gaps: z.number().describe('How many gaps the reading found.'),
-  suggestions: z.number().describe('How many suggestions are open on the board.'),
+  suggestions: z
+    .number()
+    .describe(
+      'How many suggestions are open on the board: notes, contexts, names and note changes.',
+    ),
   url,
 };
 
@@ -97,6 +106,72 @@ const contextSuggestion = z.object({
     .describe(`Why these belong together, up to ${SUGGESTION_REASON_MAX} characters.`),
 });
 
+// Another name for a candidate context, or one name for several merged
+// (docs/specs/021-event-storming/suggested-changes.md "Name suggestions").
+const nameSuggestion = z.object({
+  name: z
+    .string()
+    .max(CONTEXT_NAME_MAX)
+    .describe(
+      `The name, in the business’s own words, up to ${CONTEXT_NAME_MAX} characters ("Fulfilment").`,
+    ),
+  contexts: z
+    .array(z.string())
+    .min(1)
+    .describe(
+      'The refs of the candidate contexts it is for, kept or suggested, as read_event_storming prints them: one ' +
+        'context for another name for it, several for one name for them merged.',
+    ),
+  reason: z
+    .string()
+    .max(SUGGESTION_REASON_MAX)
+    .optional()
+    .describe(`Why this name, up to ${SUGGESTION_REASON_MAX} characters.`),
+});
+
+// A change to one workshop note (suggested-changes.md "Note changes").
+const noteChange = z.object({
+  note: z.string().describe('The ref of the workshop note, as read_event_storming prints it.'),
+  change: z
+    .enum(NOTE_CHANGE_TYPES)
+    .describe(
+      'reword: other words (words; and term with to when one word changes). kind: another note kind (kind). ' +
+        'split: several notes for one that holds several facts (parts). remove: take it off the board, as a ' +
+        'duplicate or a stray.',
+    ),
+  words: z
+    .string()
+    .max(NOTE_CHANGE_WORDS_MAX)
+    .optional()
+    .describe('reword: what the note would say, in the board’s language and casing.'),
+  term: z
+    .string()
+    .max(TERM_MAX)
+    .optional()
+    .describe(
+      'reword: the word of the note that changes ("Order"), when the change is to that word. With it, a person ' +
+        'accepting the reword also rewords every note of the same candidate context that holds the word.',
+    ),
+  to: z.string().max(TERM_MAX).optional().describe('reword: what the term becomes ("Booking").'),
+  kind: z
+    .enum(kinds)
+    .optional()
+    .describe(`kind: the kind it should be: ${kinds.join(', ')}.`),
+  parts: z
+    .array(z.string().max(NOTE_CHANGE_WORDS_MAX))
+    .min(2)
+    .max(SPLIT_PARTS_MAX)
+    .optional()
+    .describe(
+      `split: the words of each note, 2 to ${SPLIT_PARTS_MAX}; the first stays on this note, the others land after it.`,
+    ),
+  reason: z
+    .string()
+    .max(SUGGESTION_REASON_MAX)
+    .optional()
+    .describe(`Why, for the person deciding, up to ${SUGGESTION_REASON_MAX} characters.`),
+});
+
 export const suggestNotesShape = {
   documentId,
   tab,
@@ -105,7 +180,7 @@ export const suggestNotesShape = {
     .max(SUGGEST_NOTES_MAX)
     .optional()
     .describe(
-      `Notes to suggest. With contexts, 1 to ${SUGGEST_NOTES_MAX} in all, written as one changeset: all or none.`,
+      `Notes to suggest. With contexts, names and changes, 1 to ${SUGGEST_NOTES_MAX} in all, written as one changeset: all or none.`,
     ),
   contexts: z
     .array(contextSuggestion)
@@ -113,6 +188,20 @@ export const suggestNotesShape = {
     .optional()
     .describe(
       'Candidate contexts to suggest: dashed outlines round groups of notes that belong to one part of the business.',
+    ),
+  names: z
+    .array(nameSuggestion)
+    .max(SUGGEST_NOTES_MAX)
+    .optional()
+    .describe(
+      'Names to suggest for candidate contexts already on the board: another name for one, or one name for several merged.',
+    ),
+  changes: z
+    .array(noteChange)
+    .max(SUGGEST_NOTES_MAX)
+    .optional()
+    .describe(
+      'Changes to suggest to notes already on the board: reword, kind, split or remove. Nothing changes until a person accepts one.',
     ),
 };
 

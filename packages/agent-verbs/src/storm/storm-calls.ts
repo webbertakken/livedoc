@@ -1,7 +1,7 @@
-// Agents' Event Storming calls (docs/specs/021-event-storming/suggestions.md "How an agent suggests"), shared by the
-// CLI's storm verbs and the MCP's event-storming tools: read a board through the api's storm view, propose notes as one
-// changeset of `suggest` operations, and remove a board's open suggestions. A refusal comes back in the words agents
-// read; anything not from the api throws.
+// Agents' Event Storming calls (docs/specs/021-event-storming/suggestions.md "How an agent suggests",
+// suggested-changes.md), shared by the CLI's storm verbs and the MCP's event-storming tools: read a board through the
+// api's storm view, propose notes, contexts, names and note changes as one changeset of the `suggest` operations, and
+// remove a board's open suggestions. A refusal comes back in the words agents read; anything not from the api throws.
 
 import { ApiError, type ApiClient } from '@livedoc/api-client';
 import { CLIENT_HEADER, type ChangesetResponse } from '@livedoc/api-schema';
@@ -9,8 +9,14 @@ import type { TabSummary } from '../addressing';
 
 export type Client = 'mcp' | 'cli';
 import type { EsSuggestionSide } from '@livedoc/document';
-import { formatResultLines } from '@livedoc/edit-operations';
-import type { OlderStormReading, StormReading, StormSuggestion } from '@livedoc/storm-reading';
+import { EDIT_OPERATION_NAMES, formatResultLines } from '@livedoc/edit-operations';
+import type {
+  OlderStormReading,
+  StormDeclined,
+  StormReading,
+  StormSuggestedChange,
+  StormSuggestion,
+} from '@livedoc/storm-reading';
 import { formatStormView, withReadingDefaults } from '@livedoc/storm-reading';
 import { apiRefusalOf } from '../plan/api-refusal';
 import { tabPath } from '../verbs/shared';
@@ -30,6 +36,9 @@ export type StormRead = {
   rev: number;
   reading: StormReading;
   suggestions: StormSuggestion[];
+  // The changes suggested to what is on the board, and what a person dismissed before.
+  changes: StormSuggestedChange[];
+  declined: StormDeclined[];
   lines: string[];
 };
 
@@ -64,11 +73,13 @@ function engineRefusalOf(err: unknown): StormRefusal | null {
 
 const NOT_A_BOARD = 'not_event_storming';
 
-// An api older than candidate contexts or the board structure sends a reading without them
-// (docs/specs/021-event-storming/board-reading.md "Output").
+// An api older than candidate contexts or the board structure sends a reading without them, and one older than
+// suggested changes no `changes` or `declined` (docs/specs/021-event-storming/board-reading.md "Output").
 type StormViewBody = {
   reading: OlderStormReading;
   suggestions: StormSuggestion[];
+  changes?: StormSuggestedChange[];
+  declined?: StormDeclined[];
   rev: number;
 };
 
@@ -110,6 +121,7 @@ export async function readStorm(
       const body = await stormViewOf(api, document.id, tab.id);
       if (!body) continue;
       const reading = withReadingDefaults(body.reading);
+      const { changes = [], declined = [] } = body;
       return {
         ok: true,
         documentId: document.id,
@@ -118,7 +130,9 @@ export async function readStorm(
         rev: body.rev,
         reading,
         suggestions: body.suggestions,
-        lines: formatStormView(reading, body.suggestions),
+        changes,
+        declined,
+        lines: formatStormView(reading, body.suggestions, { changes, declined }),
       };
     }
   } catch (err) {
@@ -173,22 +187,61 @@ export type ContextSuggestionInput = {
   reason?: string;
 };
 
-// What a call proposes, counted as one changeset says it: "suggest 2 notes and 1 context".
-function suggestSummary(notes: number, contexts: number): string {
-  const say = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
-  const parts = [notes ? say(notes, 'note') : null, contexts ? say(contexts, 'context') : null];
-  return `suggest ${parts.filter(Boolean).join(' and ')}`;
+// Another name for a candidate context, or one name for several merged
+// (docs/specs/021-event-storming/suggested-changes.md "Name suggestions"), its contexts by the refs the reading prints.
+export type NameSuggestionInput = {
+  name: string;
+  contexts: string[];
+  reason?: string;
+};
+
+// A change to one workshop note (suggested-changes.md "Note changes"): `change` says which, and the members its edit
+// operation takes say what (a reword's `words`, `term` and `to`; a `kind`; a split's `parts`).
+export type NoteChangeInput = {
+  note: string;
+  change: 'reword' | 'kind' | 'split' | 'remove';
+  words?: string;
+  term?: string;
+  to?: string;
+  kind?: string;
+  parts?: string[];
+  reason?: string;
+};
+
+// What one call proposes: notes, candidate contexts, names for contexts and changes to notes.
+export type Proposals = {
+  suggestions?: readonly SuggestionInput[];
+  contexts?: readonly ContextSuggestionInput[];
+  names?: readonly NameSuggestionInput[];
+  changes?: readonly NoteChangeInput[];
+};
+
+type ProposalCounts = { notes: number; contexts: number; names: number; changes: number };
+
+// What a call proposes, counted as one changeset says it: "suggest 2 notes, 1 context and 3 changes".
+function suggestSummary(counts: ProposalCounts): string {
+  const parts = (
+    [
+      [counts.notes, 'note'],
+      [counts.contexts, 'context'],
+      [counts.names, 'name'],
+      [counts.changes, 'change'],
+    ] as const
+  )
+    .filter(([n]) => n > 0)
+    .map(([n, word]) => `${n} ${word}${n === 1 ? '' : 's'}`);
+  const last = parts.pop();
+  return `suggest ${parts.length ? `${parts.join(', ')} and ${last}` : last}`;
 }
 
-// Suggestions as one changeset of `suggest` and `suggest-context` operations, all or nothing.
+// Proposals as one changeset of the suggest operations, all or nothing.
 export async function suggestNotes(
   api: ApiClient,
   board: { documentId: string; tabId: string },
-  suggestions: readonly SuggestionInput[],
+  { suggestions = [], contexts = [], names = [], changes = [] }: Proposals,
   client: Client,
-  contexts: readonly ContextSuggestionInput[] = [],
 ): Promise<StormWrite | StormRefusal> {
-  const count = suggestions.length + contexts.length;
+  const count = suggestions.length + contexts.length + names.length + changes.length;
   if (count === 0) return refuse('nothing_to_suggest', 'Give at least one suggestion.');
   if (count > SUGGEST_NOTES_MAX)
     return refuse(
@@ -198,8 +251,15 @@ export async function suggestNotes(
   const operations = [
     ...suggestions.map((s) => ({ op: 'suggest', ...s })),
     ...contexts.map((c) => ({ op: 'suggest-context', ...c })),
+    ...names.map((n) => ({ op: 'suggest-name', ...n })),
+    ...changes.map(({ change, ...rest }) => ({ op: `suggest-${change}`, ...rest })),
   ];
-  const summary = suggestSummary(suggestions.length, contexts.length);
+  const summary = suggestSummary({
+    notes: suggestions.length,
+    contexts: contexts.length,
+    names: names.length,
+    changes: changes.length,
+  });
   return postOperations(api, board.documentId, board.tabId, operations, summary, client);
 }
 
@@ -230,6 +290,17 @@ export async function addPhotoNotes(
   );
 }
 
+// The operations that only propose: the suggest family.
+const SUGGEST_OPERATIONS: readonly string[] = EDIT_OPERATION_NAMES.filter((name) =>
+  name.startsWith('suggest'),
+);
+
+// The suggest operation a line is, in the line form or as a JSON line; null for anything else.
+function suggestOperationOf(line: string): string | null {
+  const name = /^([a-z-]+)(\s|$)/.exec(line)?.[1] ?? /^\{\s*"op"\s*:\s*"([a-z-]+)"/.exec(line)?.[1];
+  return name !== undefined && SUGGEST_OPERATIONS.includes(name) ? name : null;
+}
+
 // Suggest lines as written (the line form or JSON lines), checked to hold nothing but suggestions.
 export async function suggestFromText(
   api: ApiClient,
@@ -242,9 +313,7 @@ export async function suggestFromText(
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'));
   if (lines.length === 0) return refuse('nothing_to_suggest', 'The file holds no suggest lines.');
-  const other = lines.find(
-    (l) => !/^suggest(-context)?\s/.test(l) && !/^\{\s*"op"\s*:\s*"suggest(-context)?"/.test(l),
-  );
+  const other = lines.find((l) => suggestOperationOf(l) === null);
   if (other)
     return refuse(
       'not_a_suggestion',
@@ -255,20 +324,29 @@ export async function suggestFromText(
       'too_many_suggestions',
       `At most ${SUGGEST_NOTES_MAX} suggestions a call; send the rest after.`,
     );
-  const contexts = lines.filter((l) =>
-    /^suggest-context\s|^\{\s*"op"\s*:\s*"suggest-context"/.test(l),
-  ).length;
-  const summary = suggestSummary(lines.length - contexts, contexts);
+  const named = lines.map(suggestOperationOf);
+  const notes = named.filter((name) => name === 'suggest').length;
+  const contexts = named.filter((name) => name === 'suggest-context').length;
+  const names = named.filter((name) => name === 'suggest-name').length;
+  const summary = suggestSummary({
+    notes,
+    contexts,
+    names,
+    changes: lines.length - notes - contexts - names,
+  });
   return postOperations(api, board.documentId, board.tabId, lines.join('\n'), summary, client);
 }
 
-// Every open suggestion on the board, orphans included, removed as one changeset: what Dismiss All does.
+// Every open suggestion on the board, orphans included, removed as one changeset: the suggested notes and contexts
+// go, and what is suggested on a note or a kept context is taken back (`rm <ref> suggested`), the note or context
+// staying. An agent's own, never a person's dismissal: nothing is remembered as declined.
 export async function clearSuggestions(
   api: ApiClient,
   read: StormRead,
   client: Client,
 ): Promise<StormWrite | StormRefusal> {
-  if (read.suggestions.length === 0)
+  const count = read.suggestions.length + read.changes.length;
+  if (count === 0)
     return {
       ok: true,
       documentId: read.documentId,
@@ -277,7 +355,17 @@ export async function clearSuggestions(
       rev: null,
       lines: [],
     };
-  const operations = read.suggestions.map((s) => ({ op: 'rm', target: s.ref }));
-  const summary = `clear ${read.suggestions.length} suggestion${read.suggestions.length === 1 ? '' : 's'}`;
+  const going = new Set(read.suggestions.map((s) => s.ref));
+  // What a change is kept on: its note, or the first of a name's contexts. One a removal already takes needs no more.
+  const holders = new Set(
+    read.changes
+      .map((c) => (c.type === 'name' ? c.contextRefs[0]! : c.noteRef))
+      .filter((ref) => !going.has(ref)),
+  );
+  const operations = [
+    ...read.suggestions.map((s) => ({ op: 'rm', target: s.ref })),
+    ...[...holders].map((ref) => ({ op: 'rm', target: ref, suggested: true })),
+  ];
+  const summary = `clear ${count} suggestion${count === 1 ? '' : 's'}`;
   return postOperations(api, read.documentId, read.tabId, operations, summary, client);
 }
