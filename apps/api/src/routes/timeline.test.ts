@@ -422,3 +422,17 @@ describe('handleTimeline dismiss', () => {
     expect(store.dismissTimelineEventsForScope).not.toHaveBeenCalled();
   });
 });
+
+// The page and the scope's state do not depend on each other: both go to D1 together, so a Timeline page waits
+// one round trip for them, not two (docs/specs/016-platform/web-performance.md "The api").
+describe('handleTimeline reads in flight together', () => {
+  it("asks for the page and the scope's state together", async () => {
+    let release!: (page: { items: never[] }) => void;
+    store.readTimeline.mockReturnValue(new Promise((resolve) => (release = resolve)));
+    const answer = handleTimeline(makeCtx('GET', '/api/timeline'));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(store.getScopeState).toHaveBeenCalledWith({}, { scopeType: 'user', scopeId: 'owner-1' });
+    release({ items: [] });
+    expect((await answer).status).toBe(200);
+  });
+});

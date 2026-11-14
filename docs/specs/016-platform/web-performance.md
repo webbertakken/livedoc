@@ -167,6 +167,10 @@ seen on the document).
   the card routes take the card types from the room. The whole document (its owner's name, its tabs) is read
   only where the answer carries it: opening the document and a document view.
 - A share-link visitor's open is recorded from the grant the read already resolved, not a second resolve.
+- Reads that do not depend on each other go to D1 together: a team request's team and the caller's membership,
+  a team's members and its invite link, a Timeline page and its scope's state.
+- A list that names its people reads their profiles in the same statement: a team's members join their
+  participant rows (`apps/api/src/db/team-members.test.ts` pins the round trip and the plan).
 - A request about one document pays no D1 read for the purge guard: the document's own row keeps it
   ([Document storage](../006-document/document-storage.md) G3). `apps/api/src/routes/document-request-round-trips.test.ts`
   counts the D1 round trips of the requests an open editor makes all the time.
