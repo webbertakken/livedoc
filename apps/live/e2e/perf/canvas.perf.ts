@@ -344,6 +344,11 @@ async function measureZoom(
     },
     {
       gesture: 'drag',
+      // A selection is what a drag moves: the undo between runs clears it, and selecting is a row of its own.
+      setup: async () => {
+        await page.mouse.click(shape.x, shape.y);
+        await page.waitForTimeout(400);
+      },
       act: async () => {
         await page.mouse.move(shape.x, shape.y);
         await page.mouse.down();

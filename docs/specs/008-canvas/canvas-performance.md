@@ -196,6 +196,9 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   a large page. A still board's work, which must stay under a task's length, is read from a trace.
   One more run of each gesture is traced for attribution and not counted; its trace samples the
   JavaScript as it runs and records the stack that forced each style or layout pass.
+- **Each gesture starts from the state it measures.** A drag starts with its shape selected: the
+  undo that resets each run clears the selection, and a press that selects is the Selecting row's
+  work, not the drag's (it read as the drag's longest task).
 - **Nothing the probe does lands in a gesture's window either.** It runs without Playwright's own
   trace, which snapshots the page before and after every input action: on the reference board each
   snapshot is a task of up to 60 ms, which the budget counted as the board's own (a whiteboard zoom
