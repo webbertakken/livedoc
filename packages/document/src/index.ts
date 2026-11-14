@@ -731,12 +731,7 @@ export * from './event-storming-next';
 export * from './event-storming-suggestions';
 export * from './candidate-contexts';
 export * from './candidate-context-outline';
-export {
-  CONTEXT_FONT,
-  CONTEXT_INK,
-  CONTEXT_PLATE_OPACITY,
-  contextPlate,
-} from './svg-render-contexts';
+export { CONTEXT_FONT, CONTEXT_INK, contextPlate } from './svg-render-contexts';
 export * from './event-storming-photo';
 export * from './event-storming-photo-wall';
 export * from './whiteboard';

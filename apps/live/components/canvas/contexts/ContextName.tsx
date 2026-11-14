@@ -16,7 +16,7 @@ import { suggestionKeys } from '../suggestions/SuggestionPlaceholder';
 import type { ContextOutlineActs } from './ContextOutline';
 
 // A candidate context's name on the canvas (docs/specs/021-event-storming/candidate-contexts.md "The name"): in the
-// middle of the shape, over the notes, on a plate of the canvas's paper; its screen size kept as the board zooms out,
+// middle of the shape, over the notes, on a pill of the canvas's paper; its screen size kept as the board zooms out,
 // and shrunk to keep clear of the line in a small shape. A suggested one reads in italics, marked, with ✓ and ✕.
 // For an Editor, a click selects the context, a Shift-click adds it to the selection or takes it out, a double-click
 // opens the name, and Enter and Delete act on it. Selection and the open name are lib/context-selection.ts's.
@@ -81,10 +81,11 @@ export function ContextName({
     height: place.height,
     fontSize: place.fontPx,
     paddingInline: CONTEXT_PLATE_PAD_X * scale,
-    borderRadius: 4 * scale,
+    // A pill: its ends fully round.
+    borderRadius: place.height / 2,
   };
   const plateClass =
-    'absolute flex items-center justify-center gap-[0.25em] whitespace-nowrap bg-[color-mix(in_srgb,var(--lvd-canvas-paper,#ffffff)_85%,transparent)] font-semibold leading-none text-[color:var(--ctx-name)]';
+    'absolute flex items-center justify-center gap-[0.25em] whitespace-nowrap bg-[var(--lvd-canvas-paper,#ffffff)] font-semibold leading-none text-[color:var(--ctx-name)]';
   const label = suggested
     ? `Suggested candidate context: ${name}, ${notes} note${notes === 1 ? '' : 's'}`
     : `Candidate context: ${name}`;
@@ -170,7 +171,7 @@ export function ContextName({
           acts.suggested?.onPreview();
         }}
         onBlur={() => acts.suggested?.onLeave()}
-        className={`flex h-full cursor-pointer items-center rounded-[3px] outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+        className={`flex h-full cursor-pointer items-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
           selected ? 'ring-2 ring-[color:var(--ctx-active)]' : ''
         }`}
       >

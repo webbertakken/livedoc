@@ -21,14 +21,14 @@ export const CONTEXT_DASH_PX = 10;
 /** The line's width, canvas px. */
 export const CONTEXT_STROKE_PX = 2;
 /** The name's type size at 100% and closer, canvas px; zoomed out it keeps this size on screen. */
-export const CONTEXT_NAME_PX = 15;
+export const CONTEXT_NAME_PX = 20;
 /** The least the name shrinks to, to fit a small shape, canvas px at 100% (safe range: 8 to 12). */
-export const CONTEXT_NAME_MIN_PX = 9;
+export const CONTEXT_NAME_MIN_PX = 11;
 /** The least gap between the name's plate and the line, screen px (safe range: 8 to 24). */
 export const CONTEXT_NAME_CLEARANCE_PX = 12;
-/** The plate's height and its side padding at CONTEXT_NAME_PX; they scale with the type. */
-export const CONTEXT_PLATE_H = 22;
-export const CONTEXT_PLATE_PAD_X = 6;
+/** The pill's height and its side padding at CONTEXT_NAME_PX; they scale with the type. Its ends are fully round. */
+export const CONTEXT_PLATE_H = 36;
+export const CONTEXT_PLATE_PAD_X = 18;
 /** Each step the name shrinks by while it does not fit. */
 const NAME_SHRINK = 0.9;
 /** Points per padded corner: 16 keeps the round within half a pixel at the padding. */
