@@ -12,7 +12,7 @@ edit operation stays `arrange`, and this file and the telemetry keep their names
 
 - **A [lane plan](lane-plans.md) changes lanes and keeps time**: a note moves up or down, never along the timeline.
 - **Arrange and Reorder changes time and keeps lanes**: a note moves along the timeline, never off its lane
-  (default).
+  (ruled 2026-11-14: "Keep every lane").
 - Either is used alone; a board reorganised and then arranged is laid out afresh on both axes.
 - Neither does the other's work: applying a lane plan never arranges, and Arrange and Reorder never changes a lane.
 
