@@ -2,7 +2,7 @@
 import { isLanePlan, newLanePlanElement, type EsLanePlan } from '@livedoc/document';
 import { describe, expect, it } from 'vitest';
 import { board, laneText, note } from '../testing';
-import { applyLanePlan, checkLanePlan } from './check';
+import { applyLanePlan, checkLanePlan, landLanePlan } from './check';
 import { at, kitchen, outOfReach, twoLanes } from './kitchen.fixture';
 
 const ids = () => {
@@ -94,6 +94,13 @@ describe('applying a lane plan', () => {
       'Orders',
       'Kitchen',
     ]);
+  });
+
+  it('lands a verdict as applying does, for a preview that checks once', () => {
+    const tab = withPlan();
+    const verdict = checkLanePlan(tab, plan);
+    if (!verdict.ok) throw new Error('the plan passes');
+    expect(landLanePlan(tab, plan, verdict, ids())).toEqual(applyLanePlan(tab, plan, ids()));
   });
 
   it('applies nothing when the plan no longer passes', () => {

@@ -24,6 +24,7 @@ import {
   checkLanePlan,
   READING_CHANGES_SHOWN,
   resolveLaneLines,
+  sayReadingChange,
   type LaneRefusal,
   type ReadingChange,
 } from '@livedoc/storm-reading';
@@ -126,27 +127,6 @@ export function applySuggestLane(
   return null;
 }
 
-const RELATION_WORDS: Readonly<Record<Exclude<ReadingChange['relation'], 'order'>, string>> = {
-  causes: 'cause',
-  triggers: 'be triggered by',
-  issues: 'issue',
-  informs: 'inform',
-  decides: 'decide',
-  flags: 'flag',
-};
-
-/** One change to what the board says, as a refusal names it: `e12 (command) would no longer cause e14 (now e19)`. */
-export function readingChangeText(
-  change: ReadingChange,
-  ref: (id: ElementId) => string,
-  kindOf: (id: ElementId) => string,
-): string {
-  if (change.relation === 'order')
-    return `${ref(change.from)} (${kindOf(change.from)}) would read before ${ref(change.was)}, which it follows`;
-  const now = change.now === null ? '' : ` (now ${ref(change.now)})`;
-  return `${ref(change.from)} (${kindOf(change.from)}) would no longer ${RELATION_WORDS[change.relation]} ${ref(change.was)}${now}`;
-}
-
 /** The refusal for a board that would say something else, naming the first changes. */
 export function readingChangesRefusal(
   state: EditState,
@@ -164,7 +144,7 @@ export function readingChangesRefusal(
     [
       ...changes
         .slice(0, READING_CHANGES_SHOWN)
-        .map((change) => readingChangeText(change, ref, kindOf)),
+        .map((change) => sayReadingChange(change, (id) => `${ref(id)} (${kindOf(id)})`, ref)),
       ...(more > 0 ? [`and ${more} more`] : []),
     ],
     hint,

@@ -1,7 +1,7 @@
 // docs/specs/021-event-storming/lane-plans.md "What must stay true".
 import { describe, expect, it } from 'vitest';
 import { board } from '../testing';
-import { readingChanges } from './same-reading';
+import { readingChanges, sayReadingChange } from './same-reading';
 
 describe('the board says the same', () => {
   const before = board(
@@ -78,5 +78,37 @@ describe('the board says the same', () => {
       { relation: 'triggers', from: 'rule', was: 'ordered', now: null },
       { relation: 'causes', from: 'pay', was: 'paid', now: null },
     ]);
+  });
+});
+
+describe('a change to what the board says, in words', () => {
+  const subject = (id: string) => `<${id}>`;
+  const partner = (id: string) => `[${id}]`;
+
+  it('says a relation lost, and where it would point instead', () => {
+    expect(
+      sayReadingChange(
+        { relation: 'causes', from: 'pay', was: 'paid', now: null },
+        subject,
+        partner,
+      ),
+    ).toBe('<pay> would no longer cause [paid]');
+    expect(
+      sayReadingChange(
+        { relation: 'triggers', from: 'notify', was: 'paid', now: 'sent' },
+        subject,
+        partner,
+      ),
+    ).toBe('<notify> would no longer be triggered by [paid] (now [sent])');
+  });
+
+  it('says two events in another order', () => {
+    expect(
+      sayReadingChange(
+        { relation: 'order', from: 'sent', was: 'paid', now: null },
+        subject,
+        partner,
+      ),
+    ).toBe('<sent> would read before [paid], which it follows');
   });
 });

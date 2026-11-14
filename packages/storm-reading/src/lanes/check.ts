@@ -38,14 +38,24 @@ export function checkLanePlan(
   return { ok: true, elements: placed.elements, top: placed.top, gained };
 }
 
-/** The board with the plan applied: its notes moved, the lane names written, the plan gone. Null when it may not. */
+/** The board a passing verdict leaves: the plan's notes moved, the lane names written, the plan gone. A preview
+ *  lands the verdict it already holds; applying checks and lands. */
+export function landLanePlan(
+  tab: Pick<Tab, 'elements' | 'layers'>,
+  plan: Pick<EsLanePlan, 'lanes'>,
+  verdict: Extract<LanePlanVerdict, { ok: true }>,
+  makeId: () => string,
+): Element[] {
+  const names = plan.lanes.map((lane) => lane.name);
+  return withoutLanePlans(withLaneNames(tab, verdict.elements, names, verdict.top, makeId));
+}
+
+/** The board with the plan applied; null when it may not be. */
 export function applyLanePlan(
   tab: Pick<Tab, 'elements' | 'layers'>,
   plan: Pick<EsLanePlan, 'lanes'>,
   makeId: () => string,
 ): Element[] | null {
   const verdict = checkLanePlan(tab, plan);
-  if (!verdict.ok) return null;
-  const names = plan.lanes.map((lane) => lane.name);
-  return withoutLanePlans(withLaneNames(tab, verdict.elements, names, verdict.top, makeId));
+  return verdict.ok ? landLanePlan(tab, plan, verdict, makeId) : null;
 }

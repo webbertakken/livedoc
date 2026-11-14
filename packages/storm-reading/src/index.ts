@@ -32,11 +32,12 @@ export {
 export { placeLanePlan, type PlacedPlan } from './lanes/place';
 export {
   readingChanges,
+  sayReadingChange,
   type ReadingChange,
   type ReadingDifference,
   type ReadingRelation,
 } from './lanes/same-reading';
-export { applyLanePlan, checkLanePlan, type LanePlanVerdict } from './lanes/check';
+export { applyLanePlan, checkLanePlan, landLanePlan, type LanePlanVerdict } from './lanes/check';
 export { withLaneNames } from './lanes/names';
 export { foldLanes, type Fold } from './lanes/fold';
 export { readLanePlan, type StormLanePlan } from './lanes/view';

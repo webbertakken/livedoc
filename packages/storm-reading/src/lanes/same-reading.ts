@@ -68,3 +68,25 @@ export function readingChanges(
   }
   return { changes, gained };
 }
+
+const RELATION_WORDS: Readonly<Record<ReadingRelation, string>> = {
+  causes: 'cause',
+  triggers: 'be triggered by',
+  issues: 'issue',
+  informs: 'inform',
+  decides: 'decide',
+  flags: 'flag',
+};
+
+/** One change to what the board says, in words: "<subject> would no longer cause <partner> (now <partner>)".
+ *  `subject` names the note the change is about, `partner` the others: an agent reads refs, a person the words. */
+export function sayReadingChange(
+  change: ReadingChange,
+  subject: (id: ElementId) => string,
+  partner: (id: ElementId) => string,
+): string {
+  if (change.relation === 'order')
+    return `${subject(change.from)} would read before ${partner(change.was)}, which it follows`;
+  const now = change.now === null ? '' : ` (now ${partner(change.now)})`;
+  return `${subject(change.from)} would no longer ${RELATION_WORDS[change.relation]} ${partner(change.was)}${now}`;
+}
