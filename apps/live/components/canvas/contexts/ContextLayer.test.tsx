@@ -60,6 +60,10 @@ const suggestionControls = (): SuggestionControls => ({
   dismiss: vi.fn(),
   applyAll: vi.fn(),
   dismissAll: vi.fn(),
+  chooseName: vi.fn(() => null),
+  dismissNames: vi.fn(),
+  acceptChange: vi.fn(),
+  dismissChange: vi.fn(),
   reveal: vi.fn(),
 });
 

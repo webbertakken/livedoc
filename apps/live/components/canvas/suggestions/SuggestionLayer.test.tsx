@@ -70,6 +70,10 @@ function controls(): SuggestionControls {
     dismiss: vi.fn(),
     applyAll: vi.fn(),
     dismissAll: vi.fn(),
+    chooseName: vi.fn(),
+    dismissNames: vi.fn(),
+    acceptChange: vi.fn(),
+    dismissChange: vi.fn(),
     reveal: vi.fn(),
   };
 }

@@ -3,6 +3,7 @@ import {
   ES_LANES,
   ES_NOTE_GAP,
   laneCentre,
+  newContextElement,
   type Element,
   type StickyElement,
 } from '@livedoc/document';
@@ -174,6 +175,20 @@ describe('dismissSuggestions', () => {
   it('never removes a note, even when asked to', () => {
     const els = [note('e', 'domain-event', 1000)];
     expect(dismissSuggestions(els, ['e'])).toBe(els);
+  });
+
+  // docs/specs/021-event-storming/suggested-changes.md "It goes with its contexts".
+  it('sweeps a name suggestion left behind by a context that is gone', () => {
+    const e = note('e', 'domain-event', 1000);
+    const kept = newContextElement({ id: 'kept', name: 'Kept', notes: [e] });
+    const lingering = {
+      ...kept,
+      esContext: { ...kept.esContext, names: [{ name: 'Both', with: ['gone'] }, { name: 'Own' }] },
+    };
+    const els = [e, lingering, suggestion('p', 'domain-event', 'e', 'after')];
+    const out = dismissSuggestions(els, ['p']);
+    expect((out[1] as typeof lingering).esContext.names).toEqual([{ name: 'Own' }]);
+    expect(applySuggestion(els, 'p')[1]).toEqual(out[1]);
   });
 });
 

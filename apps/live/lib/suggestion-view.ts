@@ -12,9 +12,78 @@ export type SuggestionView = {
   tabId: string | null;
   showAll: boolean;
   panelOpen: boolean;
-  // A peek tab's hint key, or `s:<suggestion id>` for one suggestion (a panel row, a placeholder).
+  // A peek tab's hint key, `s:<suggestion id>` for one suggestion (a panel row, a placeholder), `c:<context id>`
+  // for a suggested context, or a `changeKey` or `nameKey` for a suggested change.
   previewKey: string | null;
 };
+
+// How far a previewed reword reaches (docs/specs/021-event-storming/suggested-changes.md "A reword ripples").
+type PreviewScope = 'context' | 'board';
+
+/** What a suggested change's preview key names: a note's change by its place among the note's changes, a name chip
+ *  by its name and the contexts it is for, or the contexts a panel row's names are for. */
+export type PreviewedChange =
+  | { type: 'change'; noteId: string; index: number; scope: PreviewScope }
+  | { type: 'name'; name: string; contextIds: string[] }
+  | { type: 'contexts'; contextIds: string[] };
+
+const CHANGE_PREFIX = 'x:';
+const NAME_PREFIX = 'n:';
+const CONTEXTS_PREFIX = 'g:';
+const CONTEXT_PREFIX = 'c:';
+
+/** The key of a note change's preview: the mark previews the note's first, in its context's scope. */
+export function changeKey(noteId: string, index = 0, scope: PreviewScope = 'context'): string {
+  return CHANGE_PREFIX + JSON.stringify([noteId, index, scope]);
+}
+
+/** The key of a name chip's preview: one context's other name, or one name for several merged. */
+export function nameKey(contextIds: readonly string[], name: string): string {
+  return NAME_PREFIX + JSON.stringify([name, ...contextIds]);
+}
+
+/** The key that brings several contexts forward at full strength: a Names or a Merge row pointed at. */
+export function contextsKey(contextIds: readonly string[]): string {
+  return CONTEXTS_PREFIX + JSON.stringify(contextIds);
+}
+
+function parsedList(json: string): unknown[] | null {
+  try {
+    const list: unknown = JSON.parse(json);
+    return Array.isArray(list) ? list : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The suggested change a preview key names; null for any other key (a hint, a suggestion, a context) or none. */
+export function parsePreviewKey(key: string | null): PreviewedChange | null {
+  if (key?.startsWith(CHANGE_PREFIX)) {
+    const [noteId, index, scope] = parsedList(key.slice(CHANGE_PREFIX.length)) ?? [];
+    if (typeof noteId !== 'string' || typeof index !== 'number') return null;
+    return { type: 'change', noteId, index, scope: scope === 'board' ? 'board' : 'context' };
+  }
+  if (key?.startsWith(NAME_PREFIX)) {
+    const [name, ...contextIds] = parsedList(key.slice(NAME_PREFIX.length)) ?? [];
+    if (typeof name !== 'string' || contextIds.length === 0) return null;
+    if (!contextIds.every((id): id is string => typeof id === 'string')) return null;
+    return { type: 'name', name, contextIds };
+  }
+  if (key?.startsWith(CONTEXTS_PREFIX)) {
+    const contextIds = parsedList(key.slice(CONTEXTS_PREFIX.length)) ?? [];
+    if (contextIds.length === 0) return null;
+    if (!contextIds.every((id): id is string => typeof id === 'string')) return null;
+    return { type: 'contexts', contextIds };
+  }
+  return null;
+}
+
+/** The contexts a preview brings forward: one suggested context, those a row's names are for, or those of a chip. */
+export function previewedContextIds(key: string | null): readonly string[] {
+  if (key?.startsWith(CONTEXT_PREFIX)) return [key.slice(CONTEXT_PREFIX.length)];
+  const parsed = parsePreviewKey(key);
+  return parsed && parsed.type !== 'change' ? parsed.contextIds : [];
+}
 
 // How long a preview outlives the pointer leaving it, so the pointer can cross from a tab to its preview.
 export const SUGGESTION_PREVIEW_LEAVE_MS = 160;

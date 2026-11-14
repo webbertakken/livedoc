@@ -40,6 +40,11 @@ export function selectContext(tabId: string, id: string, add = false): void {
   publish({ tabId, ids, editingId: null, drawing: false });
 }
 
+/** Select exactly these contexts: a panel row's contexts, or the one a chosen merge kept. */
+export function selectContexts(tabId: string, ids: readonly string[]): void {
+  publish({ tabId, ids: new Set(ids), editingId: null, drawing: false });
+}
+
 export function clearContextSelection(tabId: string): void {
   const now = contextSelectionFor(tabId);
   if (now.ids.size === 0 && now.editingId === null && !now.drawing) return;

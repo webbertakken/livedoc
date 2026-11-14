@@ -5,6 +5,7 @@ import {
   editContextName,
   resetContextSelectionForTests,
   selectContext,
+  selectContexts,
   setDrawingContext,
 } from './context-selection';
 
@@ -56,5 +57,12 @@ describe('the Draw Context pen', () => {
     setDrawingContext('t', true);
     selectContext('t', 'a');
     expect(contextSelectionFor('t').drawing).toBe(false);
+  });
+
+  it('selects exactly the contexts given, whatever was selected', () => {
+    selectContext('t', 'a');
+    selectContexts('t', ['b', 'c']);
+    expect([...contextSelectionFor('t').ids]).toEqual(['b', 'c']);
+    expect(contextSelectionFor('t').editingId).toBeNull();
   });
 });

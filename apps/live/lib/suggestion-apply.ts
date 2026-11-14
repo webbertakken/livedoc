@@ -2,6 +2,7 @@ import {
   isBoxed,
   isSuggestion,
   landArrivals,
+  pruneNameSuggestions,
   suggestionBounds,
   withDependents,
   type Element,
@@ -29,11 +30,13 @@ function openSuggestion(elements: readonly Element[], id: ElementId): Suggestion
 }
 
 // The board without its orphans: suggestions whose chain ends nowhere (docs/specs/021-event-storming/suggestions.md
-// "It goes with its anchor"). Every apply and dismiss sweeps them.
+// "It goes with its anchor"), and name suggestions for a context that is gone
+// (docs/specs/021-event-storming/suggested-changes.md "It goes with its contexts"). Every apply and dismiss sweeps
+// them.
 function withoutOrphans(elements: Element[]): Element[] {
   const spots = suggestionSpots(elements);
   const out = elements.filter((el) => !isSuggestion(el) || spots.has(el.id));
-  return out.length === elements.length ? elements : out;
+  return pruneNameSuggestions(out.length === elements.length ? elements : out);
 }
 
 function asNote(s: SuggestionElement): StickyElement {
