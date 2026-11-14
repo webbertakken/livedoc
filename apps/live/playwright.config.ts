@@ -193,7 +193,13 @@ export default defineConfig({
       ? [
           {
             name: 'perf',
-            use: { ...devices['Desktop Chrome'], colorScheme: 'dark' as const },
+            // No Playwright trace: it snapshots the page before and after every input action, tasks of up to
+            // 60 ms the budget would count as the board's own (canvas-performance.md "Measuring").
+            use: {
+              ...devices['Desktop Chrome'],
+              colorScheme: 'dark' as const,
+              trace: 'off' as const,
+            },
             testMatch: /perf\/.*\.perf\.ts/,
             // One long measurement: a retry would only run it all again (and double the time).
             retries: 0,
