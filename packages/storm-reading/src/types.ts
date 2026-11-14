@@ -17,9 +17,13 @@ export type StormNote = {
   order: number;
 };
 
-// Where a note sits, for the relations; never part of the JSON.
+// Where a note sits and what it carries, for the relations and the structure; never part of the JSON.
 export type PlacedNote = Omit<StormNote, 'order'> & {
   index: number;
+  // A domain event marked pivotal (docs/specs/021-event-storming/board-structure.md).
+  pivotal: boolean;
+  // A hotspot's answer; empty while it is open, and for every other kind.
+  answer: string;
   cx: number;
   cy: number;
   left: number;
@@ -90,6 +94,7 @@ export const GAP_CODES = [
   'command_not_imperative',
   'duplicate_note',
   'open_hotspot',
+  'event_without_context',
 ] as const;
 export type GapCode = (typeof GAP_CODES)[number];
 
@@ -120,6 +125,53 @@ export type StormReading = {
   // The kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md "In the reading and the export"),
   // in timeline order of their first note. Absent in a reading made before contexts: read as none.
   contexts: StormContext[];
+  // The board's About (docs/specs/021-event-storming/asks.md "About This Domain"); only when it has one.
+  about?: string;
+  // The board's structure (docs/specs/021-event-storming/board-reading.md "Structure") and its context map. Absent in
+  // a reading made before them: read as none.
+  lanes: StormLane[];
+  pivotal: ElementId[];
+  phases: StormPhase[];
+  decisions: StormDecision[];
+  contextMap: StormContextLink[];
+};
+
+// A lane that holds workshop notes: its number from the top (from 1), the lane index it is, its name when a text
+// stands left of the wall on it, and its notes left to right.
+export type StormLane = {
+  number: number;
+  lane: number;
+  name: string | null;
+  notes: ElementId[];
+};
+
+// The run of events a pivotal event closes; the last run, which none closes, has `closes: null`.
+export type StormPhase = {
+  closes: ElementId | null;
+  events: ElementId[];
+};
+
+// An answered hotspot: the question, what the room decided, and the note it was asked about.
+export type StormDecision = {
+  hotspot: ElementId;
+  question: string;
+  answer: string;
+  flags: ElementId | null;
+};
+
+// A relation of the flow whose two notes sit in two different kept contexts, in the direction the flow runs.
+export type CrossingRelation = 'triggers' | 'issues' | 'causes';
+export type StormCrossing = {
+  relation: CrossingRelation;
+  from: ElementId;
+  to: ElementId;
+};
+
+// What crosses from one kept context (upstream) to another (downstream), by context id.
+export type StormContextLink = {
+  from: ElementId;
+  to: ElementId;
+  crossings: StormCrossing[];
 };
 
 // A kept candidate context: its name and its notes, in reading order.

@@ -80,6 +80,7 @@ Where the board keeps [candidate contexts](candidate-contexts.md), the reading s
   event of the upstream context.
 - A note in no context makes no crossing; a board with fewer than two kept contexts has no map.
 - The other relations (an actor, a read model, an aggregate, a hotspot) are not read for crossings (default).
+- It is read in `packages/storm-reading/src/context-map.ts`.
 
 ## Gaps
 

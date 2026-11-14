@@ -315,13 +315,18 @@ export function changeEventStormingKind<
   const size = eventStormingNoteSize(kind);
   const cx = el.x + el.width / 2;
   const cy = el.y + el.height / 2;
+  // What only one kind carries goes with that kind (docs/specs/021-event-storming/board-structure.md): the pivotal
+  // mark is a domain event's, the answer a hotspot's.
+  const { esPivotal, esAnswer, ...rest } = el as T & { esPivotal?: unknown; esAnswer?: unknown };
   return {
-    ...el,
+    ...rest,
+    ...(kind === 'domain-event' && esPivotal !== undefined ? { esPivotal } : {}),
+    ...(kind === 'hotspot' && esAnswer !== undefined ? { esAnswer } : {}),
     esKind: kind,
     fillColor: note.fill,
     x: cx - size.width / 2,
     y: cy - size.height / 2,
     width: size.width,
     height: size.height,
-  };
+  } as T;
 }

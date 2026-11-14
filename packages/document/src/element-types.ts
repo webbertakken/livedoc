@@ -887,6 +887,12 @@ export type StickyElement = {
   // placeholder until a person applies it. While it is set the sticky is no board content: no notation kind, and the
   // layer funnels drop it.
   esSuggestion?: EsSuggestion;
+  // A pivotal event (docs/specs/021-event-storming/board-structure.md "Pivotal events"): a domain event the flow
+  // turns on, drawn with a tape through the board. Read via `isPivotalEvent`; only a domain event carries it.
+  esPivotal?: true;
+  // A hotspot's answer (docs/specs/021-event-storming/board-structure.md "Hotspot answers"): what the room decided,
+  // kept on the question. Read via `answerOf`; only a hotspot carries it.
+  esAnswer?: string;
   textSize?: TextSize;
   textAlignX?: TextAlignX;
   textAlignY?: TextAlignY;

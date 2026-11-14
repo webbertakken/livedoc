@@ -152,3 +152,7 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
 
 `Canvas / Used / AskPromptCopied`, `AskedBuiltIn`, `AboutEdited` and `DeclinedForgotten` (default).
 Neither the topic, the prompt nor the About is sent.
+
+## Where it lives
+
+- The About: `packages/document/src/event-storming-about.ts`.

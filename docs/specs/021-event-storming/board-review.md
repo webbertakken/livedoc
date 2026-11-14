@@ -19,7 +19,7 @@ The **readiness** line heads the Check tab and the [domain export](domain-export
 
 - It counts what a person would settle before exporting: events, gaps, open hotspots, and events outside every
   candidate context when the board keeps any ("42 events · 3 gaps · 2 open hotspots · 5 events outside a context").
-- A board with none of the last three reads "Ready to export".
+- A board with none of the last three reads "Ready to export"; a board with no event reads "No events yet".
 - It never blocks an export: it informs.
 
 ## Check
@@ -66,3 +66,7 @@ The timeline told as sentences, one step per event, so a person can walk it and 
 ## Telemetry
 
 `Canvas / Used / ReviewOpened`, `GapNoteAdded` and `StoryWalked` (once per opening of the Story tab) (default).
+
+## Where it lives
+
+- The readiness and the story's sentences: `packages/storm-reading/src/readiness.ts` and `packages/storm-reading/src/story.ts`.

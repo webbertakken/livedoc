@@ -1,10 +1,11 @@
-// The storm view (docs/specs/021-event-storming/board-reading.md "Output"): the reading as compact text, one line per
-// note in timeline order, then the loose notes, the gaps and the open suggestions. Refs name every note, so an
-// agent can address any of them in an edit operation.
+// The storm view (docs/specs/021-event-storming/board-reading.md "Output"): the reading as compact text. The About,
+// one line per note in timeline order (a pivotal event marked so, an answered hotspot with its answer), the loose
+// notes, the lanes, the contexts and their map, the gaps and the open suggestions. Refs name every note, so an agent
+// can address any of them in an edit operation.
 
 import type { ElementId, EventStormingNoteKind } from '@livedoc/document';
 import type { StormSuggestion } from './suggestions';
-import type { StormNote, StormReading } from './types';
+import type { CrossingRelation, StormNote, StormReading } from './types';
 
 const KIND_WORD: Record<EventStormingNoteKind, string> = {
   'domain-event': 'event',
@@ -17,6 +18,13 @@ const KIND_WORD: Record<EventStormingNoteKind, string> = {
   hotspot: 'hotspot',
 };
 
+// A crossing as the flow runs it, from the upstream note to the downstream one.
+const CROSSING_VERB: Record<CrossingRelation, string> = {
+  triggers: 'triggers',
+  issues: 'issues',
+  causes: 'causes',
+};
+
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 export function formatStormView(
@@ -24,11 +32,15 @@ export function formatStormView(
   suggestions: readonly StormSuggestion[],
 ): string[] {
   const byId = new Map<ElementId, StormNote>(reading.notes.map((n) => [n.id, n]));
+  const answers = new Map(reading.decisions.map((d) => [d.hotspot, d.answer]));
+  const pivotal = new Set(reading.pivotal);
   const say = (id: ElementId) => {
     const n = byId.get(id)!;
-    return `${KIND_WORD[n.kind]} ${n.ref} "${n.words}"`;
+    const answer = answers.get(id);
+    return `${KIND_WORD[n.kind]} ${n.ref} "${n.words}"${answer ? ` = "${answer}"` : ''}`;
   };
   const contexts = reading.contexts;
+  const contextSaid = new Map(contexts.map((c) => [c.id, `${c.ref} "${c.name}"`]));
   const open = suggestions.filter((s) => !s.orphan);
   const orphans = suggestions.length - open.length;
   const lines = [
@@ -43,10 +55,12 @@ export function formatStormView(
     ].join(' · '),
   ];
   if (reading.notes.length === 0) lines.push('no notes');
+  if (reading.about)
+    lines.push('about', ...reading.about.split('\n').map((line) => `  ${line.trim()}`));
 
   if (reading.timeline.length > 0) lines.push('timeline');
   reading.timeline.forEach((m, i) => {
-    lines.push(`${i + 1} ${say(m.event)}`);
+    lines.push(`${i + 1} ${say(m.event)}${pivotal.has(m.event) ? ' · pivotal' : ''}`);
     for (const c of m.commands) {
       const by = [...c.actors, ...c.readModels, ...(c.policy ? [c.policy] : [])].map(say);
       lines.push(`  <- ${say(c.command)}${by.length ? ` · ${by.join(' · ')}` : ''}`);
@@ -62,10 +76,28 @@ export function formatStormView(
     for (const id of reading.loose) lines.push(`  ${say(id)}`);
   }
 
+  // The lanes in use, by the number a lane plan names them by (docs/specs/021-event-storming/lane-plans.md).
+  if (reading.lanes.length > 0) {
+    lines.push('lanes');
+    for (const lane of reading.lanes)
+      lines.push(
+        `  ${lane.number}${lane.name ? ` "${lane.name}"` : ''}: ${lane.notes.map((id) => byId.get(id)!.ref).join(',')}`,
+      );
+  }
+
   if (contexts.length > 0) {
     lines.push('contexts');
     for (const c of contexts)
       lines.push(`  ${c.ref} "${c.name}": ${c.notes.map((id) => byId.get(id)!.ref).join(',')}`);
+  }
+
+  if (reading.contextMap.length > 0) {
+    lines.push('context map');
+    for (const link of reading.contextMap)
+      for (const c of link.crossings)
+        lines.push(
+          `  ${contextSaid.get(link.from)!} -> ${contextSaid.get(link.to)!}: ${say(c.from)} ${CROSSING_VERB[c.relation]} ${say(c.to)}`,
+        );
   }
 
   if (reading.gaps.length > 0) {

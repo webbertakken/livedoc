@@ -283,6 +283,8 @@ export const ELEMENT_FIELD_NAMES = {
     'esKind',
     'esDraft',
     'esSuggestion',
+    'esPivotal',
+    'esAnswer',
     'textSize',
     'textAlignX',
     'textAlignY',

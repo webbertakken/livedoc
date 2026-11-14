@@ -22,3 +22,17 @@ export const PAST_TENSE_IRREGULARS: ReadonlySet<string> = new Set([
   'thought', 'threw', 'thrown', 'told', 'took', 'torn', 'understood', 'undone', 'upheld', 'upset', 'withdrawn',
   'withdrew', 'withheld', 'woke', 'won', 'wore', 'worn', 'wound', 'wrote', 'written',
 ]);
+
+// The board language (docs/specs/021-event-storming/board-language.md "Terms"): a term is a word at least this many
+// notes share (safe range: 2 to 5), of at least this many letters (safe range: 2 to 4) (default).
+export const TERM_MIN_NOTES = 2;
+export const TERM_MIN_LETTERS = 3;
+
+// English words that carry no domain meaning, so they are never terms (default).
+// prettier-ignore
+export const LANGUAGE_STOP_WORDS: ReadonlySet<string> = new Set([
+  'all', 'and', 'any', 'are', 'but', 'can', 'did', 'does', 'each', 'for', 'from', 'had', 'has', 'have', 'her', 'his',
+  'into', 'its', 'may', 'not', 'off', 'one', 'our', 'out', 'per', 'than', 'that', 'the', 'their', 'them', 'then',
+  'there', 'these', 'they', 'this', 'too', 'under', 'upon', 'via', 'was', 'were', 'when', 'whenever', 'which', 'who',
+  'will', 'with', 'you', 'your',
+]);

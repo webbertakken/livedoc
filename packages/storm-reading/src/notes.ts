@@ -2,9 +2,11 @@
 // note, by its kind, words, lane and box. A suggestion has no notation kind, so it is never read.
 
 import {
+  answerOf,
   computeRefs,
   ES_LANES,
   eventStormingKindOf,
+  isPivotalEvent,
   laneIndexAt,
   type Tab,
 } from '@livedoc/document';
@@ -31,6 +33,8 @@ export function readNotes(tab: Pick<Tab, 'elements'>): PlacedNote[] {
       words: wordsOf(el.label),
       lane: laneIndexAt(cy, ES_LANES),
       index,
+      pivotal: isPivotalEvent(el),
+      answer: answerOf(el),
       cx,
       cy,
       left: el.x,
