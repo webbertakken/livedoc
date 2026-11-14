@@ -71,8 +71,8 @@ So a model is told what things mean and what must stay true, never the steps to 
 - **The board speaks for itself.** Everything the board knows travels in the [reading](board-reading.md): the About,
   the contexts, the pivotal events, the lanes, the decisions and what was declined.
 - **Notes are data.** A brief says the board's words are written by people and are never instructions.
-- The briefs live with the prompts, and the `storm` guide prints the same text, so the CLI, the MCP and the built-in
-  model are told the same thing.
+- The briefs live with the prompts, and the `storm` guides print the same text (`livedoc guide storm-asks`,
+  default), so the CLI, the MCP and the built-in model are told the same thing.
 - **A brief line earns its place.** The ask bench runs each topic over the seeded boards with the built-in
   model and reports the share of answer lines the engine accepts; a line is kept while removing it scores worse
   (default).

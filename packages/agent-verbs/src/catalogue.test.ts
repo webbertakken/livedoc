@@ -11,6 +11,13 @@ import {
   verbsOf,
 } from './catalogue';
 import { estimateTokens } from '@livedoc/document-views';
+import {
+  ASK_BRIEFS,
+  ASK_DATA_RULE,
+  ASK_RULE,
+  STORM_ASKS,
+  STORM_ASK_TOPICS,
+} from '@livedoc/storm-reading';
 import { GUIDE_TOPIC_MAX_TOKENS, GUIDE_TOPIC_NAMES, GUIDE_TOPICS, isGuideTopic } from './guides';
 import {
   renderSkill,
@@ -158,6 +165,18 @@ describe('the guides and the skill', () => {
     ])
       expect(text, code).toContain(code);
     expect(GUIDE_TOPICS.storm.text).toContain('livedoc guide storm-lanes');
+  });
+
+  // docs/specs/021-event-storming/asks.md "What a model is told": "the `storm` guide prints the same text".
+  it('print the brief of every ask, word for word, with the rule every hand is held to', () => {
+    const text = GUIDE_TOPICS['storm-asks'].text;
+    for (const topic of STORM_ASK_TOPICS) {
+      expect(text, topic).toContain(STORM_ASKS[topic].menu);
+      expect(text, topic).toContain(ASK_BRIEFS[topic]);
+    }
+    expect(text).toContain(ASK_DATA_RULE);
+    expect(text).toContain(ASK_RULE);
+    expect(GUIDE_TOPICS.storm.text).toContain('livedoc guide storm-asks');
   });
 
   it('tells a topic from a stranger', () => {

@@ -1,7 +1,28 @@
 // How-tos (docs/specs/015-api/cli.md "Help"): the depth top-level help leaves out, paid for only when asked.
 
+import {
+  ASK_BRIEFS,
+  ASK_DATA_RULE,
+  ASK_RULE,
+  STORM_ASKS,
+  STORM_ASK_TOPICS,
+} from '@livedoc/storm-reading';
+
 // The most one topic may cost (CLI49).
 export const GUIDE_TOPIC_MAX_TOKENS = 1200;
+
+// The brief of every ask (docs/specs/021-event-storming/asks.md "What a model is told"): the words the prompts and
+// the built-in model are given, so every hand is told the same thing.
+const STORM_ASKS_GUIDE = [
+  'Asks on an Event Storming board',
+  '',
+  'Each ask has a brief: what the notation means there and what a good answer looks like.',
+  'The board checks every answer. Read it first: livedoc guide storm.',
+  ...STORM_ASK_TOPICS.flatMap((topic) => ['', `${STORM_ASKS[topic].menu}`, ASK_BRIEFS[topic]]),
+  '',
+  ASK_DATA_RULE,
+  ASK_RULE,
+].join('\n');
 
 export const GUIDE_TOPICS = {
   build: {
@@ -191,6 +212,7 @@ People see a faint dashed outline round each group and apply or dismiss it.
 Suggest changes to what is already there (another name, other words, a split, a removal) the
 same way: livedoc guide storm-changes
 Fewer lanes, or the notes arranged along the timeline: livedoc guide storm-lanes
+What a good answer to each ask looks like: livedoc guide storm-asks
 Take your suggestions back with: livedoc storm clear "Order flow"
 
 Photos of a physical wall become notes on the board with add_photo_notes (MCP): look at each
@@ -290,6 +312,10 @@ out afresh along the timeline, a column per event, as one changeset you can reve
 It is refused when it would change what the board says (reading_changes), when a note would
 land on one that stays (lane_blocked) and when there is nothing to do (nothing_to_arrange).
 A lane plan changes lanes and keeps time; arranging changes time and keeps lanes.`,
+  },
+  'storm-asks': {
+    summary: 'what a good answer to each ask on an Event Storming board looks like',
+    text: STORM_ASKS_GUIDE,
   },
 } as const;
 
