@@ -18,7 +18,7 @@ The first prototype phase ([spec 02](../005-project-roadmap/prototype-scope.md))
 
 ## Wire-format types
 
-The DTO shapes the api worker emits + the live editor consumes live in `packages/api-schema` (`@livedoc/api-schema`) — `LiveDoc` (published as `Document`), `TabSummary`, `TabRecord`, `Folder`, `ShareLink`, `ServerMessage` / `ClientMessage`, and the room op vocabulary (`RoomOp` / `RoomOutgoing` / `RoomIncoming`). Both apps import them; the api worker also re-exports under historical `XxxDTO` aliases (`apps/api/src/types.ts`) for backward compatibility with its existing call sites.
+The DTO shapes the api worker emits + the live editor consumes live in `packages/api-schema` (`@livedoc/api-schema`) — `LiveDoc` (published as `Document`), `TabSummary`, `TabRecord`, `TabSaveRecord`, `Folder`, `ShareLink`, `ServerMessage` / `ClientMessage`, and the room op vocabulary (`RoomOp` / `RoomOutgoing` / `RoomIncoming`). Both apps import them; the api worker also re-exports under historical `XxxDTO` aliases (`apps/api/src/types.ts`) for backward compatibility with its existing call sites.
 
 Defining the wire shapes once means server and client cannot drift — adding a field on one side without updating the other is a typechecker error. **Do not redefine these types inline in `apps/api/` or `apps/live/`**; extend the schema package instead. Per AGENTS.md the reuse-over-duplication rule is non-negotiable.
 
