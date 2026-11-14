@@ -283,9 +283,10 @@ export function ToolbarPalette(props: Props) {
     scale,
   });
   const leadingRef = useRef<HTMLDivElement>(null);
-  // Too wide to centre between the menu card's sides (a tablet): the strip sits at the right instead.
-  // On the top line, centred or off centre between its side groups, or its own row (useStripPlacement).
-  const { crowded, shift } = useStripPlacement(cardRef, leading == null);
+  // On the top line, centred or off centre between its side groups, or its own row (useStripPlacement). Measured on
+  // the top line only: the phone's row is its own, and turning the measuring on as the window grows out of a phone's
+  // width measures the strip the computer's layout draws, not the phone's it last saw.
+  const { crowded, shift } = useStripPlacement(cardRef, !phoneRow);
   // Crowded, it takes its own row under the top line, and the top corners follow (centre-row-store).
   useReportCentreOwnRow(crowded && !props.hidden);
   const stripLimit = useStripTileLimit(cardRef, {

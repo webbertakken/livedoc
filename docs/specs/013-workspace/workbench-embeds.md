@@ -141,7 +141,9 @@ The editor of the document, minus the app's surroundings: no Explorer or account
 menu button and the actions group no account control. The canvas, the two lines' groups
 ([Toolbar layout](../007-editor/toolbar-layout.md#the-two-lines)), the palette and the panels stay, since a
 workbench embed is for drawing. An **Open in LiveDoc** button, in the actions group, opens the document in a full
-tab. The colour scheme follows the workbench (`livedoc:theme`),
+tab. The two lines lay out by the frame's width as the app's do by the window's, so the centre toolbar keeps the
+top line's middle wherever the app's would at that width, including once a frame opened narrow has widened.
+The colour scheme follows the workbench (`livedoc:theme`),
 else the system. Presence shows the person as themselves; their agent shows as their status line
 ([Agent presence](../024-agents/agent-presence.md)).
 
