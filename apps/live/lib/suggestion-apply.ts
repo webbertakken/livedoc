@@ -1,7 +1,6 @@
 import {
   isBoxed,
   isSuggestion,
-  landArrivals,
   pruneNameSuggestions,
   suggestionBounds,
   withDependents,
@@ -10,7 +9,9 @@ import {
   type Rect,
   type StickyElement,
 } from '@livedoc/document';
+import { joinArrival } from './context-arrival';
 import { applyInsertionShift } from './insert-between';
+import { openLane, planLaneOpening } from './lane-opening';
 import { planNextNote } from './next-note-add';
 import { suggestionSpots, suggestionsInTimeline, type SuggestionElement } from './suggestion-hints';
 
@@ -18,7 +19,8 @@ import { suggestionSpots, suggestionsInTimeline, type SuggestionElement } from '
 // Pure: each answers the board after the act, so the act is one commit through the ordinary choke point and one
 // Undo puts the board back. A suggestion lands exactly where the next-note buttons land a note: `before` and
 // `after` through `planNextNote` (one gutter beside, the insertion ripple when the spot is taken), `above` and
-// `below` on the neighbouring lane with the left edges lined up, at the nearest free slot when that is taken.
+// `below` on the neighbouring lane with the left edges lined up, that lane opening when the spot is taken. The
+// landed note joins its anchor's context (candidate-contexts.md "Arriving in a context").
 
 type InertIds = ReadonlySet<ElementId>;
 
@@ -58,19 +60,17 @@ function land(elements: Element[], id: ElementId, inertIds: InertIds): Element[]
     for (const el of elements) if (isSuggestion(el)) inert.add(el.id);
     const plan = planNextNote(elements, anchor.id, side, s.esKind, inert)!;
     const opened = plan.ripple ? applyInsertionShift(elements, plan.ripple) : elements;
-    return opened.map((el) => (el.id === id ? { ...asNote(s), ...plan.bounds } : el));
+    const landed = opened.map((el) => (el.id === id ? { ...asNote(s), ...plan.bounds } : el));
+    return joinArrival(landed, id, { beside: anchor.id });
   }
 
-  // Above or below: the lanes' own landing, over the board as it is seen (no other open suggestion in it).
-  const placed: StickyElement = {
-    ...asNote(s),
-    ...suggestionBounds(anchor as StickyElement, side, s.esKind),
-  };
-  const seen = elements
-    .filter((el) => el.id === id || !isSuggestion(el))
-    .map((el) => (el.id === id ? placed : el));
-  const landed = landArrivals(seen, new Set([id]), { x: 'free-slot' }).find((el) => el.id === id)!;
-  return elements.map((el) => (el.id === id ? landed : el));
+  // Above or below: the lane above or below opens under the anchor (open suggestions are never in the way).
+  const spot = suggestionBounds(anchor as StickyElement, side, s.esKind);
+  const opening = planLaneOpening(elements, spot, inertIds);
+  const landed = openLane(elements, opening).map((el) =>
+    el.id === id ? { ...asNote(s), ...opening.bounds } : el,
+  );
+  return joinArrival(landed, id, { beside: anchor.id });
 }
 
 export function applySuggestion(
