@@ -11,6 +11,7 @@ import {
   deleteTabRow,
   getDocument,
   getDocumentForSave,
+  getDocumentMeta,
   getParticipant,
   getTab,
 } from '../db';
@@ -42,7 +43,6 @@ import {
   gateGrant,
   missingDocument,
   requireOwner,
-  shareCodeOf,
   tabScopeOf,
   type DocumentRouteContext,
 } from './context';
@@ -131,13 +131,15 @@ export async function handleDocumentSubresources(
       if (!allowed) return forbidden();
       return handleTabPut(ctx, saving, tabId, owner, await tabScopeOf(ctx, saving));
     }
-    const existing = await getDocument(env, id);
-    if (!existing) return missingDocument(ctx, id);
-
     if (request.method === 'GET') {
       // A document view (docs/specs/024-agents/document-views.md): checked before any read, rendered
-      // after the same gate and redaction as the plain tab.
+      // after the same gate and redaction as the plain tab. The plain tab, which the editor reads on every open
+      // and tab switch, needs only the document's gate row; a view renders from the whole document.
       const view = parseViewQuery(new URL(request.url), 'tab');
+      const viewing = view !== null && !(view instanceof Response);
+      const document = viewing ? await getDocument(env, id) : null;
+      const existing = viewing ? document : await getDocumentMeta(env, id);
+      if (!existing) return missingDocument(ctx, id);
       if (view instanceof Response) return view;
       // Naming the tab confines a tab-scoped link to its own tab
       // (docs/specs/013-workspace/tab-scoped-share-links.md). Every other tab reads as missing: 404, no
@@ -157,7 +159,7 @@ export async function handleDocumentSubresources(
         owner === existing.ownerId
           ? tab
           : { ...tab, elements: redactCommentAuthorIds(tab.elements, owner) };
-      if (view) return answerTabView(ctx, view, existing, safe, owner);
+      if (view && document) return answerTabView(ctx, view, document, safe, owner);
       // docs/specs/013-workspace/timeline.md §4.3: somebody arrived through a SHARE LINK and opened this.
       // The tab read is the honest signal for "opened" — the document GET is hit
       // by link previews and polls, whereas fetching tab content means a person
@@ -175,13 +177,11 @@ export async function handleDocumentSubresources(
       //
       // A visitor is someone the grant admitted through a link, never merely a request carrying a share header:
       // a teammate following a share link is still a teammate.
-      if (owner !== existing.ownerId && shareCodeOf(request) !== null) {
+      if (owner !== existing.ownerId && grant.shareCode !== null) {
         ctx.waitUntil?.(
-          gateGrant(ctx, existing.id, existing.ownerId, existing.teamId).then(async (grant) => {
-            if (!grant?.shareCode) return;
-            const p = await getParticipant(env, owner);
-            await recordVisitorOpened(env, existing, owner, p?.name ?? null);
-          }),
+          getParticipant(env, owner).then((p) =>
+            recordVisitorOpened(env, existing, owner, p?.name ?? null),
+          ),
         );
       }
       // docs/specs/013-workspace/explorer-home.md "Opens": the reader's own open, for their Home.
@@ -195,6 +195,9 @@ export async function handleDocumentSubresources(
       // revision", CS5): what an agent read, for its changeset base.
       return json({ tab: safe }, { headers: { ETag: tabEtag(tab.rev) } });
     }
+
+    const existing = await getDocument(env, id);
+    if (!existing) return missingDocument(ctx, id);
 
     // Writes below: owner or edit-role share visitor only, and a tab-scoped
     // visitor on their own tab only.

@@ -16,7 +16,7 @@ const { store } = vi.hoisted(() => ({
 }));
 vi.mock('../db/timeline', () => store);
 vi.mock('../timeline', () => ({ backfillUserScope: vi.fn() }));
-const { db } = vi.hoisted(() => ({ db: { getMembership: vi.fn(), getDocument: vi.fn() } }));
+const { db } = vi.hoisted(() => ({ db: { getMembership: vi.fn(), getDocumentMeta: vi.fn() } }));
 vi.mock('../db', () => db);
 const { gate } = vi.hoisted(() => ({ gate: { gateRead: vi.fn() } }));
 vi.mock('./context', async (importOriginal) => {
@@ -30,7 +30,7 @@ beforeEach(() => {
   store.readTimeline.mockReset();
   store.readTimeline.mockResolvedValue({ items: [], nextCursor: null });
   store.getScopeState.mockResolvedValue(null);
-  db.getDocument.mockResolvedValue({ id: 'd-1', ownerId: 'owner-1', teamId: null });
+  db.getDocumentMeta.mockResolvedValue({ id: 'd-1', ownerId: 'owner-1', teamId: null });
   gate.gateRead.mockResolvedValue(true);
 });
 

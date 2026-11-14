@@ -99,10 +99,9 @@ export const DOCUMENT_SUMMARY_COLS = `id, owner_id, name, shareable, folder_id, 
 // Both document reads see LIVE documents only: a trashed one reads as missing
 // (docs/specs/013-workspace/trash.md, "fail closed"). A door that owes an
 // authorised caller the deleted state asks getTrashedDocumentMeta on a miss.
-export async function getDocumentMeta(
-  env: Env,
-  id: string,
-): Promise<{ id: string; ownerId: string; teamId: string | null; name: string } | null> {
+export type DocumentMeta = { id: string; ownerId: string; teamId: string | null; name: string };
+
+export async function getDocumentMeta(env: Env, id: string): Promise<DocumentMeta | null> {
   const row = await env.DB.prepare(
     'SELECT id, owner_id, team_id, name FROM documents WHERE id = ? AND trashed_at IS NULL',
   )
@@ -166,6 +165,23 @@ export async function getDocumentItemTypes(
     .bind(id)
     .first<{ item_types: string | null }>();
   return readItemTypeCatalogue(row?.item_types ?? null);
+}
+
+// A document's card types with their revision, for the card routes: read from the room's document row, so a card
+// request reads D1 only for its gate (getDocumentMeta).
+export async function getDocumentItemTypesAtRev(
+  env: DocumentEnv,
+  id: string,
+): Promise<{ itemTypes: ItemTypeCatalogue | null; itemTypesRev: number }> {
+  const row = await env.DOCUMENT_DB.prepare(
+    'SELECT item_types, item_types_rev FROM document WHERE id = ?',
+  )
+    .bind(id)
+    .first<{ item_types: string | null; item_types_rev: number }>();
+  return {
+    itemTypes: readItemTypeCatalogue(row?.item_types ?? null),
+    itemTypesRev: row?.item_types_rev ?? 0,
+  };
 }
 
 export async function getDocument(env: Env, id: string): Promise<DocumentDTO | null> {

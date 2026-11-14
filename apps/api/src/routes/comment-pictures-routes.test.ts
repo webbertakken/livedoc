@@ -5,7 +5,7 @@ import { makeTestRouteContext } from './test-route-context';
 // never exposing an author id, and empty for anyone not signed in.
 
 const { db, gates } = vi.hoisted(() => ({
-  db: { getDocument: vi.fn(), getTab: vi.fn(), getParticipant: vi.fn() },
+  db: { getDocumentMeta: vi.fn(), getTab: vi.fn(), getParticipant: vi.fn() },
   gates: { gateRead: vi.fn() },
 }));
 vi.mock('../db', () => db);
@@ -29,7 +29,7 @@ const PATH = '/api/documents/d1/tabs/t1/comment-pictures';
 
 beforeEach(() => {
   vi.clearAllMocks();
-  db.getDocument.mockResolvedValue({ ownerId: 'user_ann', teamId: null });
+  db.getDocumentMeta.mockResolvedValue({ ownerId: 'user_ann', teamId: null });
   gates.gateRead.mockResolvedValue(true);
   db.getTab.mockResolvedValue({
     elements: [

@@ -7,7 +7,7 @@
 // share-link visitor reads an empty map, so the URL never reaches them.
 
 import { elementThreads, type Element } from '@livedoc/document';
-import { getDocument, getParticipant, getTab } from '../db';
+import { getDocumentMeta, getParticipant, getTab } from '../db';
 import { forbidden, json } from '../responses';
 import { gateRead, missingDocument, requireOwner, type DocumentRouteContext } from './context';
 
@@ -30,7 +30,7 @@ export async function handleCommentPicturesRoute(
   const tabId = segments[4]!;
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const existing = await getDocument(env, id);
+  const existing = await getDocumentMeta(env, id);
   if (!existing) return missingDocument(ctx, id);
   if (!(await gateRead(ctx, id, existing.ownerId, existing.teamId, tabId))) return forbidden();
   if (!ctx.verifiedAccountId) return json({ pictures: {} });

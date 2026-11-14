@@ -18,7 +18,7 @@ import {
 import { chatCompletions } from '../ai-client';
 import { resolveAiProvider } from '../ai-provider';
 import { readChatStream } from '../ai-stream';
-import { getDocument, getTab } from '../db';
+import { getDocumentMeta, getTab } from '../db';
 import { json, methodNotAllowed, notFound } from '../responses';
 import { aiGate } from './ai-gate';
 import {
@@ -57,7 +57,7 @@ export async function handleStormExport(
   if (request.method !== 'POST') return methodNotAllowed();
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const document = await getDocument(env, documentId);
+  const document = await getDocumentMeta(env, documentId);
   if (!document) return missingDocument(ctx, documentId);
   // Read access, as every export: a tab-scoped link reads only its own tab.
   const grant = await gateGrant(ctx, documentId, document.ownerId, document.teamId);

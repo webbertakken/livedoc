@@ -32,7 +32,7 @@ import {
   markScopeSeen,
   readTimeline,
 } from '../db/timeline';
-import { getDocument, getMembership } from '../db';
+import { getDocumentMeta, getMembership } from '../db';
 import { backfillUserScope } from '../timeline';
 import { isNewVisit } from '../timeline/seen';
 import { badRequest, forbidden, json, missingAuth, noContent, notFound } from '../responses';
@@ -222,7 +222,7 @@ async function canReadScope(
     // its team, or a valid share-code visitor. A missing document is a
     // refusal rather than a 404, so a guessed id can't be probed for
     // existence through this endpoint either.
-    const liveDoc = await getDocument(ctx.env, scope.scopeId);
+    const liveDoc = await getDocumentMeta(ctx.env, scope.scopeId);
     if (!liveDoc) return false;
     return gateRead(ctx, scope.scopeId, liveDoc.ownerId, liveDoc.teamId);
   }

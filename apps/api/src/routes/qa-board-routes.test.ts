@@ -10,7 +10,7 @@ import type { QaWriteRequest } from '../qa-board-write';
 // the room's, covered in document-room-qa.test.ts and qa-board-write.test.ts.
 
 const { db, gates, votes } = vi.hoisted(() => ({
-  db: { getDocument: vi.fn(), getParticipant: vi.fn() },
+  db: { getDocumentMeta: vi.fn(), getParticipant: vi.fn() },
   gates: { gateParticipate: vi.fn(), gateEdit: vi.fn() },
   votes: { refuseGuestVoteOverCap: vi.fn() },
 }));
@@ -50,7 +50,7 @@ function setup(reply: () => Response = () => Response.json({ notes: [], rev: 1 }
 
 beforeEach(() => {
   for (const fn of [...Object.values(db), ...Object.values(gates)]) fn.mockReset();
-  db.getDocument.mockResolvedValue({ id: 'd1', ownerId: 'owner-0', teamId: null, tabs: [] });
+  db.getDocumentMeta.mockResolvedValue({ id: 'd1', ownerId: 'owner-0', teamId: null, name: 'Q' });
   db.getParticipant.mockResolvedValue({ name: 'Priya', color: '#0af' });
   gates.gateParticipate.mockResolvedValue(true);
   gates.gateEdit.mockResolvedValue(false);

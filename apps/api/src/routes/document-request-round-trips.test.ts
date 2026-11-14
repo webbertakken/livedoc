@@ -39,7 +39,7 @@ async function request(
   method: string,
   path: string,
   opts: { body?: unknown; owner?: string; code?: string } = {},
-): Promise<{ status: number; trips: string[] }> {
+): Promise<{ status: number; trips: string[]; withBackground: string[] }> {
   await db.flush();
   trips.reset();
   const background: Promise<unknown>[] = [];
@@ -54,7 +54,7 @@ async function request(
   );
   const made = [...trips.trips];
   await Promise.allSettled(background);
-  return { status: res.status, trips: made };
+  return { status: res.status, trips: made, withBackground: [...trips.trips] };
 }
 
 describe('the round trips of a document request', () => {
@@ -65,11 +65,11 @@ describe('the round trips of a document request', () => {
   });
 
   it.each([
-    ['a tab', '/tabs/t1', 2],
-    ['the cards', '/items', 2],
-    ['the sheets', '/sheets', 2],
-    ['the comments', '/comments', 2],
-    ['the plan', '/plan', 2],
+    ['a tab', '/tabs/t1', 1],
+    ['the cards', '/items', 1],
+    ['the sheets', '/sheets', 1],
+    ['the comments', '/comments', 1],
+    ['the plan', '/plan', 1],
   ])('reading %s reads no tombstone', async (_what, path, expected) => {
     const res = await request('GET', path);
     expect(res.status).toBe(200);
@@ -78,14 +78,14 @@ describe('the round trips of a document request', () => {
   });
 
   it.each([
-    ['a card', '/items', { type: 'task', fields: { title: 'x' } }, 3],
+    ['a card', '/items', { type: 'task', fields: { title: 'x' } }, 2],
     [
       'a sheet',
       '/sheets',
       { id: 'sheetA00', tabId: 't1', title: 'B', layout: emptyLayout(rand, 3, 3) },
-      3,
+      2,
     ],
-    ['a comment', '/tabs/t1/comments', { elementId: 'a', text: 'hi' }, 4],
+    ['a comment', '/tabs/t1/comments', { elementId: 'a', text: 'hi' }, 3],
   ])('adding %s reads no tombstone', async (_what, path, body, expected) => {
     const res = await request('POST', path, { body });
     expect(res.status).toBe(201);
@@ -93,9 +93,9 @@ describe('the round trips of a document request', () => {
     expect(res.trips.join('\n')).not.toMatch(/room_purges/);
   });
 
-  it("a share-link visitor's tab read resolves the link once", async () => {
+  it("a share-link visitor's tab read resolves the link once, its open recorded too", async () => {
     const res = await request('GET', '/tabs/t1', { owner: 'visitor', code: 'EDIT' });
     expect(res.status).toBe(200);
-    expect(res.trips).toHaveLength(6);
+    expect(res.withBackground).toHaveLength(5);
   });
 });

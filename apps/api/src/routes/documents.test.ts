@@ -33,6 +33,7 @@ const { db, canReadDocument, canEditDocument, resolveDocumentGrant } = vi.hoiste
     getDocument: vi.fn(),
     // The save's own one-query read (db/tab-save-document.ts); answered from getDocument's mock below.
     getDocumentForSave: vi.fn(),
+    getDocumentMeta: vi.fn(),
     getShareLink: vi.fn(async () => null),
     // The thumbnail route's one-query gate + freshness read.
     getDocumentThumbMeta: vi.fn(),
@@ -154,6 +155,8 @@ beforeEach(() => {
     const doc = (await db.getDocument(...args)) as DocumentDTO | null;
     return doc ? { ...doc, tabCount: doc.tabs?.length ?? 0 } : null;
   });
+  // The gate-only read answers from the same document.
+  db.getDocumentMeta.mockImplementation(async (...args: unknown[]) => db.getDocument(...args));
   canReadDocument.mockReset();
   canEditDocument.mockReset();
   resolveDocumentGrant.mockReset();

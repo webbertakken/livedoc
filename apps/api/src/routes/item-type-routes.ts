@@ -7,7 +7,7 @@
 
 import type { ItemTypesResponse, ItemTypesStale } from '@livedoc/api-schema';
 import { validateItemTypeCatalogue, type ItemTypeCatalogue } from '@livedoc/items';
-import { getDocument, setDocumentItemTypes } from '../db';
+import { getDocumentItemTypesAtRev, getDocumentMeta, setDocumentItemTypes } from '../db';
 import { badRequest, forbidden, json, methodNotAllowed } from '../responses';
 import { relayItemTypes } from '../room-client';
 import {
@@ -21,7 +21,7 @@ import {
 async function put(ctx: DocumentRouteContext, documentId: string): Promise<Response> {
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const doc = await getDocument(ctx.env, documentId);
+  const doc = await getDocumentMeta(ctx.env, documentId);
   if (!doc) return missingDocument(ctx, documentId);
   // The catalogue is the whole document's: a grant confined to one tab may not change it.
   if (!(await gateEdit(ctx, documentId, doc.ownerId, doc.teamId))) return forbidden();
@@ -47,12 +47,12 @@ async function put(ctx: DocumentRouteContext, documentId: string): Promise<Respo
   const itemTypesRev = await setDocumentItemTypes(ctx.env, documentId, itemTypes, expectedRev);
   if (itemTypesRev === null) {
     // Someone else's change landed since the caller read the catalogue: answer with what is stored.
-    const stored = await getDocument(ctx.env, documentId);
-    console.info('[item-types] item-types.stale', { expectedRev, rev: stored?.itemTypesRev });
+    const stored = await getDocumentItemTypesAtRev(ctx.env, documentId);
+    console.info('[item-types] item-types.stale', { expectedRev, rev: stored.itemTypesRev });
     const stale: ItemTypesStale = {
       error: 'item_types_stale',
-      itemTypes: stored?.itemTypes ?? null,
-      itemTypesRev: stored?.itemTypesRev ?? 0,
+      itemTypes: stored.itemTypes,
+      itemTypesRev: stored.itemTypesRev,
     };
     return json(stale, { status: 409 });
   }

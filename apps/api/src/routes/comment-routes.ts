@@ -23,13 +23,14 @@ import {
 import { formatA1, layoutIndex } from '@livedoc/sheets';
 import { ANONYMOUS_AUTHOR, findCommentHost, removeComment, threadsOfTab } from '../comments';
 import {
-  getDocument,
+  getDocumentMeta,
   getParticipant,
   getTab,
   listSheetHeads,
   isTabRevStale,
   tabIdsWithComments,
   upsertTabAtRev,
+  type DocumentMeta,
 } from '../db';
 import { emailEnabled } from '../email/client';
 import { notifyNewComment } from '../email/notifications';
@@ -60,7 +61,7 @@ import {
 
 type ThreadVerb = 'reply' | 'resolve' | 'reopen';
 
-type Doc = NonNullable<Awaited<ReturnType<typeof getDocument>>>;
+type Doc = DocumentMeta;
 type CommentCaller = { doc: Doc; owner: string };
 type Caller = CommentCaller;
 
@@ -76,7 +77,7 @@ async function participant(
 ): Promise<Caller | Response> {
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const doc = await getDocument(ctx.env, id);
+  const doc = await getDocumentMeta(ctx.env, id);
   if (!doc) return missingDocument(ctx, id);
   // Commenting is a Participant's (docs/specs/013-workspace/share-roles.md): a Viewer only looks.
   if (!(await gateParticipate(ctx, id, doc.ownerId, doc.teamId, tabId)))
@@ -345,7 +346,7 @@ async function cellRefsOf(
 async function listThreads(ctx: DocumentRouteContext, id: string): Promise<Response> {
   const status = ctx.url.searchParams.get('status') ?? 'open';
   if (!isCommentListStatus(status)) return json({ error: 'invalid_status' }, { status: 400 });
-  const doc = await getDocument(ctx.env, id);
+  const doc = await getDocumentMeta(ctx.env, id);
   if (!doc) return missingDocument(ctx, id);
   const whole = await gateRead(ctx, id, doc.ownerId, doc.teamId);
   const viewer = ctx.resolveOwner();

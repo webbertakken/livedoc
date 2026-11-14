@@ -25,7 +25,7 @@ vi.mock('../db/timeline', () => store);
 const { emit } = vi.hoisted(() => ({ emit: { backfillUserScope: vi.fn() } }));
 vi.mock('../timeline', () => emit);
 
-const { db } = vi.hoisted(() => ({ db: { getMembership: vi.fn(), getDocument: vi.fn() } }));
+const { db } = vi.hoisted(() => ({ db: { getMembership: vi.fn(), getDocumentMeta: vi.fn() } }));
 vi.mock('../db', () => db);
 
 const { gate } = vi.hoisted(() => ({ gate: { gateRead: vi.fn() } }));
@@ -54,8 +54,8 @@ beforeEach(() => {
   emit.backfillUserScope.mockReset();
   db.getMembership.mockReset();
   db.getMembership.mockResolvedValue(null);
-  db.getDocument.mockReset();
-  db.getDocument.mockResolvedValue({ id: 'd-1', ownerId: 'owner-1', teamId: null });
+  db.getDocumentMeta.mockReset();
+  db.getDocumentMeta.mockResolvedValue({ id: 'd-1', ownerId: 'owner-1', teamId: null });
   gate.gateRead.mockReset();
   gate.gateRead.mockResolvedValue(false);
   store.readTimeline.mockResolvedValue({ items: [] });
@@ -140,7 +140,7 @@ describe('handleTimeline read', () => {
   // A refusal, not a 404: a guessed id must not be probeable for
   // existence through this endpoint any more than through the document's.
   it('403s a document scope for an id that does not exist', async () => {
-    db.getDocument.mockResolvedValue(null);
+    db.getDocumentMeta.mockResolvedValue(null);
     const res = await handleTimeline(makeCtx('GET', '/api/timeline?scope=document:missing'));
     expect(res.status).toBe(403);
     expect(gate.gateRead).not.toHaveBeenCalled();
