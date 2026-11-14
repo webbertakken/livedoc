@@ -63,6 +63,11 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   floating toolbar, the selection popover) is **hidden while a selection is being moved or
   resized** and placed again when the gesture ends; elsewhere it positions from canvas geometry
   (bounds, offset, zoom) and a measurement taken outside the gesture.
+- **A render never asks the browser for a media query's match.** A match is read once per query,
+  shared by everything that reads it, and kept up to date by the browser's change event: reading
+  one brings style and layout up to date, and with every element view reading one as it rendered,
+  pressing a selected box laid out the whole board in the middle of the press (about 20 ms of a
+  55 ms task).
 - **Opening a board animates nothing across the board.** The board appears at once, with no fade
   on the canvas world ([Motion](../004-interface-design/motion.md) "Editor arrival") and no
   pop-in on the elements it opens with ([Canvas and palette](canvas-and-palette.md) "Motion and
@@ -189,7 +194,11 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   and an animation-frame recorder), so they count the board's own work and nothing else, never
   from inside a profiler start: starting the CPU profiler costs a one-off task of about a second on
   a large page. A still board's work, which must stay under a task's length, is read from a trace.
-  One more run of each gesture is traced for attribution and not counted.
+  One more run of each gesture is traced for attribution and not counted; its trace samples the
+  JavaScript as it runs and records the stack that forced each style or layout pass.
+- **Each gesture starts from the state it measures.** A drag starts with its shape selected: the
+  undo that resets each run clears the selection, and a press that selects is the Selecting row's
+  work, not the drag's (it read as the drag's longest task).
 - **Nothing the probe does lands in a gesture's window either.** It runs without Playwright's own
   trace, which snapshots the page before and after every input action: on the reference board each
   snapshot is a task of up to 60 ms, which the budget counted as the board's own (a whiteboard zoom
