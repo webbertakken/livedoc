@@ -68,6 +68,8 @@ A **note change** is a change proposed to one workshop note. There are four:
   locked note.
 - A reword that only changes the casing is a reword; `term` and `to` go together.
 - **The MCP**: `suggest_notes` takes `changes: [{ note, change, … }]`; the CLI's `storm suggest` takes the lines.
+- The `storm-changes` guide teaches name suggestions and note changes, apart from the `storm` guide so each
+  stays within a guide's budget (default).
 - Every open suggestion counts towards `SUGGESTIONS_MAX`: a suggested note, a suggested context, a name suggestion
   and a note change alike.
 - A note change goes with its note: removing the note removes it.

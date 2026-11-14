@@ -146,7 +146,7 @@ Your changesets reach the frame live. Their own selection never holds your write
 you act for them.`,
   },
   storm: {
-    summary: 'read an Event Storming board, suggest notes, contexts and changes, export it',
+    summary: 'read an Event Storming board, suggest notes and contexts, export it',
     text: `Event Storming boards
 
 Read the board as a domain: the timeline of events, what leads to each, and the gaps.
@@ -188,9 +188,29 @@ in the business's words, and suggest it with a reason. A note belongs to at most
   EOF
 
 People see a faint dashed outline round each group and apply or dismiss it.
+Suggest changes to what is already there (another name, other words, a split, a removal) the
+same way: livedoc guide storm-changes
+Take your suggestions back with: livedoc storm clear "Order flow"
 
-Suggest changes to what is already on the board, the same way. Nothing changes until a person
-accepts one; contexts are named by the refs the reading prints for them.
+Photos of a physical wall become notes on the board with add_photo_notes (MCP): look at each
+photo yourself and send, per photo in wall order (left to right), its size and every sticky in
+it: its box in pixels, its kind by paper colour, its words verbatim. Overlapping photos are
+stitched; the notes land as a draft the person adds or discards.
+
+Turn the board into a spec and domain types, in the repository you work in:
+
+  livedoc storm export "Order flow" --to .
+
+It writes .livedoc/storm/<board>/ (the reading, what changed since the last export, and
+CONVERT.md); then follow CONVERT.md. Keep the bundle: the next export starts from it.`,
+  },
+  'storm-changes': {
+    summary: 'suggest changes to what is on an Event Storming board: names, words, splits',
+    text: `Changing what is on an Event Storming board
+
+Read the board first: livedoc guide storm. Then suggest changes to what is already there, the
+way you suggest notes. Nothing changes until a person accepts one; contexts are named by the
+refs the reading prints for them.
 
   livedoc storm suggest "Order flow" -f - <<'EOF'
   suggest-name "Fulfilment" x2 reason="what the business calls it"
@@ -211,19 +231,7 @@ accepts one; contexts are named by the refs the reading prints for them.
 The reading lists them under "suggested changes", and under "declined" what a person dismissed
 before: those are refused when suggested again (declined_before), so suggest something else.
 Take your suggestions back with: livedoc storm clear "Order flow"
-or one note's or context's alone, in an edit: rm e3 suggested
-
-Photos of a physical wall become notes on the board with add_photo_notes (MCP): look at each
-photo yourself and send, per photo in wall order (left to right), its size and every sticky in
-it: its box in pixels, its kind by paper colour, its words verbatim. Overlapping photos are
-stitched; the notes land as a draft the person adds or discards.
-
-Turn the board into a spec and domain types, in the repository you work in:
-
-  livedoc storm export "Order flow" --to .
-
-It writes .livedoc/storm/<board>/ (the reading, what changed since the last export, and
-CONVERT.md); then follow CONVERT.md. Keep the bundle: the next export starts from it.`,
+or one note's or context's alone, in an edit: rm e3 suggested`,
   },
 } as const;
 
