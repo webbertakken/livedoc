@@ -1,6 +1,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { expect, pageOwnerHeaders, test } from './fixtures';
-import { CONTEXT_BOARD_IDS as IDS, startContextBoard } from './context-board';
+import {
+  ES_LANES,
+  ES_NOTE_GAP,
+  eventStormingNoteFields,
+  laneCentre,
+  suggestionBounds,
+} from '@livedoc/document';
+import { CONTEXT_BOARD_IDS as IDS, contextBoardElements, startContextBoard } from './context-board';
 
 // Candidate contexts in the editor (docs/specs/021-event-storming/candidate-contexts.md), in a real browser: what only
 // a browser can answer is whether the outline follows its notes, whether a drag joins and leaves the way the pure
@@ -8,7 +15,13 @@ import { CONTEXT_BOARD_IDS as IDS, startContextBoard } from './context-board';
 
 test.use({ colorScheme: 'dark' });
 
-type Stored = { id: string; label?: string; esContext?: { notes: string[]; suggestion?: unknown } };
+type Stored = {
+  id: string;
+  label?: string;
+  x?: number;
+  esContext?: { notes: string[]; suggestion?: unknown };
+  esSuggestion?: unknown;
+};
 
 async function storedBoard(page: Page): Promise<Stored[]> {
   // Let the debounced autosave flush before asking the server what it has.
@@ -202,4 +215,60 @@ test('Draw Context makes one round the notes a drawn loop takes in', async ({ pa
   const made = (await storedBoard(page)).find((el) => el.label === 'Shipping');
   expect(made?.esContext?.notes).toEqual([IDS.orderShipped]);
   await expect(page.locator('[data-context-pen]')).toHaveCount(0);
+});
+
+// docs/specs/021-event-storming/candidate-contexts.md "Arriving in a context".
+test('a next note added from a note in a context joins that context', async ({ page }) => {
+  await startContextBoard(page);
+  const before = contextIn(await storedBoard(page), IDS.ordering)!.esContext!.notes;
+  await note(page, IDS.orderPlaced).click();
+  await page.getByRole('button', { name: /^Add a policy after this domain event/ }).click();
+  await page.keyboard.press('Escape');
+  const after = contextIn(await storedBoard(page), IDS.ordering)!.esContext!.notes;
+  expect(after).toHaveLength(before.length + 1);
+  expect(after.slice(0, before.length)).toEqual(before);
+});
+
+// docs/specs/021-event-storming/suggestions.md "Opening a lane", and the applied note joining its anchor's context.
+test('a suggestion applied below a taken spot opens that lane and joins its anchor’s context', async ({
+  page,
+}) => {
+  const placed = contextBoardElements().find((el) => el.id === IDS.orderPlaced) as {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  const blocker = {
+    id: 'n-blocker',
+    type: 'sticky',
+    label: 'Kitchen notified',
+    ...eventStormingNoteFields('domain-event'),
+    x: placed.x,
+    y: laneCentre(3, ES_LANES) - 100,
+  };
+  const spot = suggestionBounds(placed, 'below', 'domain-event');
+  const below = {
+    id: 's-order-confirmed',
+    type: 'sticky',
+    label: 'Order confirmed',
+    ...eventStormingNoteFields('domain-event'),
+    ...spot,
+    esSuggestion: {
+      anchorId: IDS.orderPlaced,
+      side: 'below',
+      reason: 'The kitchen confirms.',
+      by: 'Claude',
+    },
+  };
+  await startContextBoard(page, [blocker, below]);
+  const tab = page.locator(`[data-suggestion-hint="${IDS.orderPlaced}:below"]`);
+  await tab.focus();
+  await page.keyboard.press('Enter');
+  const after = await storedBoard(page);
+  const landed = after.find((el) => el.id === below.id)!;
+  expect(landed.esSuggestion).toBeUndefined();
+  expect(landed.x).toBe(placed.x);
+  expect(after.find((el) => el.id === blocker.id)!.x).toBe(placed.x + 200 + ES_NOTE_GAP);
+  expect(contextIn(after, IDS.ordering)!.esContext!.notes).toContain(below.id);
 });

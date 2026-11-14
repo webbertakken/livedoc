@@ -77,8 +77,12 @@ export function contextBoardElements(): Record<string, unknown>[] {
   ];
 }
 
-export async function startContextBoard(page: Page): Promise<void> {
-  await startSuggestionBoard(page, contextBoardElements());
+// `extra`: elements a spec adds to the board, such as a suggested note.
+export async function startContextBoard(
+  page: Page,
+  extra: readonly Record<string, unknown>[] = [],
+): Promise<void> {
+  await startSuggestionBoard(page, [...contextBoardElements(), ...extra]);
   await page
     .locator(
       `[data-testid="context-lines"] [data-candidate-context="${CONTEXT_BOARD_IDS.ordering}"]`,

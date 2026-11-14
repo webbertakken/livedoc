@@ -204,7 +204,7 @@ is placed beside it. Up to 20 photos go in one import.
 An AI agent connected to LiveDoc (through the [MCP connection](/help/account-and-data/connect-ai-mcp/) or the command line) can read your board, find where it is thin, and **suggest** notes: the command nobody wrote, the policy everyone forgot, the external system the flow quietly depends on. A suggestion is only offered; nothing on the board moves until you take it.
 
 - Each note with suggestions shows a small **dashed tab** on the side the note would go, with a number when there are several. Point at it, or tab to it, to see the note where it would land, with the agent's reason and who suggested it.
-- Press **Enter** on a tab or a suggestion to apply it, or **Delete** to dismiss it. Applied, it becomes an ordinary note, placed the way the next-note tabs place one, and the board makes room when it needs to.
+- Press **Enter** on a tab or a suggestion to apply it, or **Delete** to dismiss it. Applied, it becomes an ordinary note, placed the way the next-note tabs place one, and the board makes room when it needs to: a note above or below another opens that row, moving the notes after it along by one place. It joins the candidate context of the note it was suggested against.
 - The **suggestions** button at the top right lists them all, in timeline order. Pointing at one brings it into view. From there, **Show All Suggestions** draws every suggestion in place, with the board making room as a preview only, and **Apply All** or **Dismiss All** handles them in one go. One Undo puts the board back.
 
 Only people who can edit the board see suggestions: applying one reshapes the board.
@@ -216,7 +216,8 @@ As a wall fills up, the events start to fall into parts of the business: signing
 - An agent can **suggest** candidate contexts. A suggested one is drawn faint, its name marked _suggested_, and it is listed in the **suggestions** panel among the notes. Apply it to keep it, or dismiss it; **Apply All** and **Dismiss All** include them.
 - The outline is never drawn by hand: it shapes itself round the outermost notes it holds, so it follows them when they move.
 - **Click the outline or its name** to select it. **Double-click the name** (or press **Enter**) to rename it, and press **Delete** to remove it; its notes stay where they are.
-- To change which notes it holds, right-click a note and use **Add to Context** or **Remove from Context**, or **drag the note**: drop it inside an outline to join it, or well clear of its own outline to leave it. While you drag, the outline it would join lights up.
+- To change which notes it holds, right-click a note and use **Add to Context** or **Remove from Context**, or **drag the note**: drop it with its middle inside an outline to join it, or well clear of its own outline to leave it, so a small nudge near an edge changes nothing. While you drag, the outline it would join lights up. Suggested contexts take notes the same way.
+- **New notes join in**: a note added from a next-note tab joins the context of the note it came from, one dropped between two notes of a context joins it, and one placed inside an outline joins that context.
 - **Make your own**: select some notes, right-click and choose **New Context**, or press **Draw Context** (beside Add from Photo) and drag a loop round the notes you want. Its name opens straight away; Esc puts the pen away.
 - On this board, the menu for several selected notes holds just **Text** and **New Context**.
 - **Shift-click** two or more outlines or names, suggested or kept, to select them together, then press **✓** on the **Merge** offer above them to make one context of them. Its name opens straight away, so you can name what it now holds; one Undo puts them back.
