@@ -34,7 +34,8 @@ lets you jump the viewport anywhere with a tap or drag.
   real colours, silhouette, table grid, freehand stroke, icon glyph (the
   Technology marks pop in when the async catalogue lands), rotation, and
   every arrow with its true curved / elbow path — not a grey wireframe. That
-  drawing is shown as **one image**, not as a copy of the board in the page: on
+  drawing is shown as **a few pictures** (stacked in paint order, each a slice of the board), not as
+  a copy of the board in the page: on
   a large board a live copy doubled the page's elements and slowed every
   gesture ([Canvas performance](canvas-performance.md)). **It draws no labels**:
   element and arrow labels are left out of the picture. On a board of any size

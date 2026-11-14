@@ -73,9 +73,12 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   pan or stroke it keeps its last drawing and moves only its viewport rectangle; a remote edit
   redraws it at most once every 250 ms. Opening a board draws the board first; the Map's picture
   follows in a later render.
-- **The Map is one image.** It draws the board as a picture, not as a second copy of the board's
+- **The Map is a few pictures.** It draws the board as pictures, not as a second copy of the board's
   elements in the page, which every style pass, layout, hit test and collection would otherwise
-  walk.
+  walk. The browser parses and lays out a picture in one task on the main thread, so the drawing
+  is cut into pictures of at most `MAP_PICTURE_PARTS = 50` elements each (default), stacked in paint
+  order (the pages, then the boxed elements, then the arrows), and a change redraws only the
+  pictures it changed: one picture of a whole board was a task of about 55 ms after every release.
 - **Questions about neighbours ask a spatial index.** Anything that asks, for each element, which
   other elements are near it (arrows passing behind boxes) queries one shared index of element
   bounds, updated for the elements that changed, so its per-frame cost follows the neighbourhood,
