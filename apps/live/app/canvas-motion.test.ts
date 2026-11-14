@@ -51,4 +51,10 @@ describe('the element plane rule', () => {
   it('stops the canvas cursor at the plane', () => {
     expect(read('./globals.css')).toMatch(/\[data-element-plane\]\s*\{[^}]*cursor:\s*auto/);
   });
+
+  it('stops it at the chrome beside the canvas, without outranking a cursor the chrome sets', () => {
+    expect(read('./globals.css')).toMatch(
+      /:where\(\[data-canvas-root\] > :not\(\[data-canvas-content\]\)\)\s*\{[^}]*cursor:\s*auto/,
+    );
+  });
 });

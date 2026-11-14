@@ -154,7 +154,10 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   every element on the board. The elements sit in a plane with a cursor of its own, so a change of
   the canvas's cursor restyles that plane and not what is in it. Each element shows its own cursor
   where it takes a press, as it already does; a whiteboard pen or a path in its edit mode, whose
-  cursor shows over elements, passes it through the plane on purpose.
+  cursor shows over elements, passes it through the plane on purpose. The chrome beside the canvas
+  (the toolbars, panels and overlays the canvas holds) takes the default cursor, not the tool's:
+  with it inheriting the tool's, a pencil putting itself down after its stroke restyled some 450
+  pieces of chrome inside the release's task. A cursor a piece of chrome sets itself still wins.
 - **A change above the board walks no board.** What the editor hands down past the canvas (its
   state, the plan, the themes, the tab windows' tabs, the charts' elements, the split view, the
   mode, the chrome's lines) reaches its readers through a store the provider keeps for its
