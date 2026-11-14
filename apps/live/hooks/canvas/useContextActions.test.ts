@@ -110,7 +110,6 @@ describe('useContextActions', () => {
   it('refuses a note in no context, a suggested or unknown context, and a blocked board', () => {
     const { acts, commit } = setup([note('a', 0), context('s', ['a'], true)]);
     acts.removeNotes(['zz']);
-    acts.rename('s', 'x');
     acts.remove('nope');
     acts.addNotes('s', ['a']);
     expect(commit).not.toHaveBeenCalled();
@@ -118,6 +117,32 @@ describe('useContextActions', () => {
     blocked.acts.remove('k');
     expect(blocked.commit).not.toHaveBeenCalled();
     expect(debugLog).toHaveBeenCalledWith('[contexts] refused', { reason: 'blocked' });
+  });
+});
+
+describe('useContextActions: merging and naming suggestions', () => {
+  it('merges contexts in one commit and answers the one kept', () => {
+    const { acts, commit, ctx } = setup();
+    expect(acts.merge(['k', 'j'])).toBe('k');
+    expect(commit).toHaveBeenCalledTimes(1);
+    expect(ctx('k')!.esContext.notes).toEqual(['a', 'b', 'c']);
+    expect(ctx('j')).toBeUndefined();
+    expect(track).toHaveBeenCalledWith('Canvas', 'Used', 'ContextsMerged');
+  });
+
+  it('refuses to merge fewer than two', () => {
+    const { acts, commit } = setup();
+    expect(acts.merge(['k'])).toBeNull();
+    expect(commit).not.toHaveBeenCalled();
+    expect(debugLog).toHaveBeenCalledWith('[contexts] refused', { reason: 'too-few' });
+  });
+
+  it('renames a suggested context, and refuses what is no context', () => {
+    const { acts, ctx } = setup();
+    acts.rename('s', 'Joined');
+    expect(ctx('s')!.label).toBe('Joined');
+    acts.rename('a', 'Nope');
+    expect(debugLog).toHaveBeenCalledWith('[contexts] refused', { reason: 'not-a-context' });
   });
 });
 

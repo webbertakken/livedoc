@@ -16,8 +16,8 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
   its notes stand, as a loose hull around the outermost of them, so it reshapes itself whenever a note moves, is
   added or leaves (ruled 2026-11-13: "stays a dashed shape that shapes based on the outer stickies").
 - **It looks drawn, not drafted.** A dashed line in a muted ink, with a gentle, seeded wobble so it reads as a marker
-  line round some paper rather than a box; the same context always wobbles the same way. Its name sits on the
-  outline's top edge. It is drawn behind the notes and never covers their words.
+  line round some paper rather than a box; the same context always wobbles the same way. The line is drawn
+  behind the notes; its name sits in the middle of the shape, over them (see "The name").
 - **It is board content, not a note.** It is not a workshop note: the reading, the lanes, the next-note buttons and
   the Alt insertion ignore it as they ignore any shape. The domain export reads it: each candidate context names a
   context the brief groups aggregates into.
@@ -64,8 +64,17 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
 - **The wobble.** The hull is walked at a fixed step and each point is pushed in or out along the hull by a smooth,
   seeded wander of at most `CONTEXT_WOBBLE_PX` (4 canvas px), seeded by the context's id (default).
   The dash is `CONTEXT_DASH_PX` long with an equal gap, 2 px wide (default).
-- **The name** sits on the top edge, `CONTEXT_LABEL_INSET_PX` (24) in from where the top edge starts, on a small
-  plate of the canvas colour that breaks the line beneath it (default).
+- **The name** sits in the middle of the shape: centred on the outline's centroid (its area's weighted centre), drawn
+  over the notes on a plate of the canvas colour at 85% opacity, so it reads at any zoom (ruled 2026-11-13: "always
+  be in the middle of weighted center ... inside the shape").
+- **It grows as the board zooms out.** The name is `CONTEXT_NAME_PX` (15) canvas px at 100% and closer, and keeps
+  that size on screen when zoomed further out, so on the canvas it grows by 1 / zoom (ruled 2026-11-13: "font size
+  should grow when zooming out").
+- **It keeps clear of the line.** Its plate keeps at least `CONTEXT_NAME_CLEARANCE_PX` (12 screen px) inside the
+  outline on every side; when the shape is too small for that, the name shrinks until it fits, down to
+  `CONTEXT_NAME_MIN_PX` (9) canvas px, and below that sits centred regardless (default).
+- The same placement draws in the PNG and SVG exports, at 100% (default).
+- Requested for suggested contexts and applied to every context, so the two read alike (default).
 - **Ink.** A muted slate: slate-500 on the light canvas, slate-400 on the dark one, each 3:1 or more against the
   canvas (WCAG 2.2 1.4.11); the name in slate-700 and slate-200, 4.5:1 or more (default).
   A suggested outline draws at half the opacity, its name in italics followed by "· suggested" (default).
@@ -80,6 +89,26 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
 - **Rename**: double-click the name, or Enter on a selected context, opens the name for typing; Enter or leaving
   the field keeps it, Escape puts the old name back, and an empty name is never kept (default).
 - **Delete**: Delete or Backspace on a selected context removes it; its notes stay where they are.
+
+## Selecting several and merging
+
+Requested 2026-11-13: "shift click two (suggested) groups to select both and I should get a suggestion for merging
+them".
+
+- **Shift-click** an outline or its name, kept or suggested, adds it to the selection or takes it out; a plain click
+  selects that one alone. Tabbing to a name selects that one alone (default).
+- The context selection is cleared by Escape, by a click on the canvas away from every context, and by selecting an
+  element (default).
+- **With two or more selected**, a **Merge** offer sits between their names, above the highest:
+  "Merge 2 contexts" with a ✓ (merge) and ✕ (keep them apart, which clears the selection) (default).
+- **Merging** makes one context of them, in one undoable step:
+  - it keeps the context with the most notes (on a tie, the leftmost), its name and its place in the board;
+  - its notes are all of theirs, in order; the others are removed;
+  - it stays a suggestion only when every one merged was a suggestion, its reasons joined with "; " and cut to
+    `SUGGESTION_REASON_MAX`; with any kept one among them it is kept (default);
+  - its name opens for typing straight away, so it can be named for what it now holds (default).
+- An Editor's alone, as every act on contexts. Telemetry: `Canvas / Used / ContextsMerged`.
+- Delete on a selected context still acts on that one (default).
 
 ## Joining and leaving, exactly
 
@@ -107,7 +136,8 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
 - The outline: `packages/document/src/candidate-context-outline.ts`; the model, membership writes and the cascade:
   `packages/document/src/candidate-contexts.ts`; the export's drawing and the inks:
   `packages/document/src/svg-render-contexts.ts`; joining by drag: `apps/live/lib/context-drop.ts`.
-- On the canvas: `apps/live/components/canvas/contexts/` (drawn from `apps/live/lib/context-outlines.ts`); the acts:
+- On the canvas: `apps/live/components/canvas/contexts/` (drawn from `apps/live/lib/context-outlines.ts`; the lines and
+  the names are two parts of one layer); the selection: `apps/live/lib/context-selection.ts`; the acts:
   `apps/live/hooks/canvas/useContextActions.ts`; the note menu's rows: `apps/live/lib/note-context-menu.ts`.
 - The edit operation: `packages/edit-operations/src/operations/suggest-context.ts`; the reading's contexts:
   `packages/storm-reading/src/contexts.ts`.

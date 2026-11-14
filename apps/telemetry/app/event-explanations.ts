@@ -161,6 +161,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'A note joined a candidate context on an event-storming board, from its menu or by being dropped inside the outline.',
   'Canvas|Used|ContextNoteLeft':
     'A note left a candidate context on an event-storming board, from its menu or by being dragged clear of the outline.',
+  'Canvas|Used|ContextsMerged':
+    'Someone merged two or more selected candidate contexts on an event-storming board into one.',
   'Canvas|Used|WaterCooler':
     'Someone walked their Avatar-mode character up to a water cooler and took a cup of water.',
   'Canvas|Used|CoffeeMachine':

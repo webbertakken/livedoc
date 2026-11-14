@@ -605,6 +605,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
             {/* Candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): beneath every element. */}
             {props.esBoard ? (
               <ContextLayer
+                part="lines"
                 elements={elements}
                 tabId={props.activeTabId ?? ''}
                 layers={tabLayers}
@@ -661,6 +662,21 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                 stackedIds={stackedIds}
               />
             </PageClip>
+            {/* Candidate contexts' names, in the middle of their shapes, over the notes. */}
+            {props.esBoard ? (
+              <ContextLayer
+                part="names"
+                elements={elements}
+                tabId={props.activeTabId ?? ''}
+                layers={tabLayers}
+                contexts={readOnly || tabLocked ? undefined : props.contexts}
+                showSuggested={suggestionsShown}
+                suggestions={
+                  suggestionsShown && !insertShift.dragging ? props.suggestions : undefined
+                }
+                shiftX={insertShift.xFor}
+              />
+            ) : null}
             {/* A wireframe page's camera and system bars, over what is on its screen. */}
             {props.pagesMode && props.canvasTool !== 'isometric' ? (
               <WireframeDeviceOverlays

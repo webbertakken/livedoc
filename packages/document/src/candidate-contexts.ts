@@ -246,3 +246,40 @@ export function emptyContextIds(
     .filter((c) => !c.esContext.notes.some((id) => !gone.has(id) && isNote(byId.get(id))))
     .map((c) => c.id);
 }
+
+/** Contexts merged into one (docs/specs/021-event-storming/candidate-contexts.md "Selecting several and merging"):
+ *  the one with the most notes (the leftmost on a tie) is kept with all their notes; it stays a suggestion only when
+ *  every one was, their reasons joined. Unchanged, with no kept id, for fewer than two contexts. */
+export function mergeContexts(
+  elements: Element[],
+  ids: readonly ElementId[],
+): { elements: Element[]; keptId: ElementId | null } {
+  const wanted = new Set(ids);
+  const byId = new Map(elements.map((el) => [el.id, el]));
+  const merging = candidateContexts(elements).filter((c) => wanted.has(c.id));
+  if (merging.length < 2) return { elements, keptId: null };
+  const size = (c: CandidateContextElement) => contextNotes(c, byId).length;
+  const left = (c: CandidateContextElement) => Math.min(...contextNotes(c, byId).map((n) => n.x));
+  const [kept] = [...merging].sort((a, b) => size(b) - size(a) || left(a) - left(b));
+  const ordered = [kept!, ...merging.filter((c) => c !== kept)];
+  const notes = [...new Set(ordered.flatMap((c) => c.esContext.notes))];
+  const allSuggested = merging.every((c) => c.esContext.suggestion !== undefined);
+  const reasons = ordered.map((c) => c.esContext.suggestion?.reason).filter(Boolean);
+  const by = ordered.map((c) => c.esContext.suggestion?.by).find(Boolean);
+  const suggestion: EsContextSuggestion = {
+    ...(reasons.length ? { reason: reasons.join('; ').slice(0, SUGGESTION_REASON_MAX) } : {}),
+    ...(by ? { by } : {}),
+  };
+  const merged = withNotes(
+    { ...kept!, esContext: { notes, ...(allSuggested ? { suggestion } : {}) } },
+    notes,
+    byId,
+  );
+  const gone = new Set(merging.filter((c) => c !== kept).map((c) => c.id));
+  return {
+    elements: elements
+      .filter((el) => !gone.has(el.id))
+      .map((el) => (el.id === kept!.id ? merged : el)),
+    keptId: kept!.id,
+  };
+}

@@ -20,8 +20,17 @@ const CONTEXT_WOBBLE_KNOT_EVERY = 3;
 export const CONTEXT_DASH_PX = 10;
 /** The line's width, canvas px. */
 export const CONTEXT_STROKE_PX = 2;
-/** How far in from where the top edge starts the name sits, canvas px. */
-export const CONTEXT_LABEL_INSET_PX = 24;
+/** The name's type size at 100% and closer, canvas px; zoomed out it keeps this size on screen. */
+export const CONTEXT_NAME_PX = 15;
+/** The least the name shrinks to, to fit a small shape, canvas px at 100% (safe range: 8 to 12). */
+export const CONTEXT_NAME_MIN_PX = 9;
+/** The least gap between the name's plate and the line, screen px (safe range: 8 to 24). */
+export const CONTEXT_NAME_CLEARANCE_PX = 12;
+/** The plate's height and its side padding at CONTEXT_NAME_PX; they scale with the type. */
+export const CONTEXT_PLATE_H = 22;
+export const CONTEXT_PLATE_PAD_X = 6;
+/** Each step the name shrinks by while it does not fit. */
+const NAME_SHRINK = 0.9;
 /** Points per padded corner: 16 keeps the round within half a pixel at the padding. */
 const CORNER_SAMPLES = 16;
 
@@ -30,8 +39,6 @@ export type ContextOutline = {
   path: string;
   /** The padded hull without the wobble, counter-clockwise on screen: what "inside" means. */
   polygon: Pt[];
-  /** Where the name's plate starts: on the top edge, in from its start. */
-  label: Pt;
   /** The padded hull's box. */
   bounds: Rect;
 };
@@ -181,17 +188,81 @@ function smoothClosedPath(points: readonly Pt[]): string {
   return `${parts.join('')}Z`;
 }
 
-// The highest point of the polygon's boundary straight above or below x.
-function topAt(polygon: readonly Pt[], x: number): number {
-  let top = Infinity;
+/** A polygon's weighted centre (the centroid of its area); the mean of its points when it has no area. */
+export function polygonCentroid(polygon: readonly Pt[]): Pt {
+  let twice = 0;
+  let cx = 0;
+  let cy = 0;
   for (let i = 0; i < polygon.length; i++) {
     const a = polygon[i]!;
     const b = polygon[(i + 1) % polygon.length]!;
-    if (x < Math.min(a.x, b.x) || x > Math.max(a.x, b.x)) continue;
-    const y = a.x === b.x ? Math.min(a.y, b.y) : a.y + ((x - a.x) * (b.y - a.y)) / (b.x - a.x);
-    top = Math.min(top, y);
+    const c = a.x * b.y - b.x * a.y;
+    twice += c;
+    cx += (a.x + b.x) * c;
+    cy += (a.y + b.y) * c;
   }
-  return top;
+  if (twice === 0) {
+    const n = polygon.length;
+    return {
+      x: polygon.reduce((s, p) => s + p.x, 0) / n,
+      y: polygon.reduce((s, p) => s + p.y, 0) / n,
+    };
+  }
+  return { x: tenth(cx / (3 * twice)), y: tenth(cy / (3 * twice)) };
+}
+
+// How deep a point lies inside a polygon: the distance to its nearest edge, negative outside.
+function depthOf(p: Pt, polygon: readonly Pt[]): number {
+  if (!pointInPolygon(p, polygon)) return -1;
+  let best = Infinity;
+  for (let i = 0; i < polygon.length; i++)
+    best = Math.min(best, segmentDistance(p, polygon[i]!, polygon[(i + 1) % polygon.length]!));
+  return best;
+}
+
+export type ContextNamePlacement = {
+  /** The plate's centre, canvas px. */
+  x: number;
+  y: number;
+  /** The type size and the plate's box, canvas px. */
+  fontPx: number;
+  width: number;
+  height: number;
+};
+
+/** Where a context's name sits (docs/specs/021-event-storming/candidate-contexts.md "The name"): on the shape's
+ *  weighted centre, its screen size kept as the board zooms out, shrunk to keep clear of the line in a small shape.
+ *  `nameWidth` measures the name (and whatever rides on its plate) at a type size. */
+export function contextNamePlacement(
+  polygon: readonly Pt[],
+  nameWidth: (fontPx: number) => number,
+  zoom: number,
+): ContextNamePlacement {
+  const { x, y } = polygonCentroid(polygon);
+  const clearance = CONTEXT_NAME_CLEARANCE_PX / Math.min(zoom, 1);
+  const boxAt = (fontPx: number) => {
+    const scale = fontPx / CONTEXT_NAME_PX;
+    return {
+      x,
+      y,
+      fontPx,
+      width: nameWidth(fontPx) + 2 * CONTEXT_PLATE_PAD_X * scale,
+      height: CONTEXT_PLATE_H * scale,
+    };
+  };
+  const fits = (b: ContextNamePlacement) =>
+    [-1, 1].every((sx) =>
+      [-1, 1].every(
+        (sy) =>
+          depthOf({ x: x + (sx * b.width) / 2, y: y + (sy * b.height) / 2 }, polygon) >= clearance,
+      ),
+    );
+  const least = CONTEXT_NAME_MIN_PX / Math.min(zoom, 1);
+  for (let fontPx = CONTEXT_NAME_PX / Math.min(zoom, 1); fontPx > least; fontPx *= NAME_SHRINK) {
+    const b = boxAt(fontPx);
+    if (fits(b)) return b;
+  }
+  return boxAt(least);
 }
 
 /** The outline of a context whose notes stand at `rects`; null when it has none to draw round. */
@@ -219,12 +290,5 @@ export function contextOutline(seed: string, rects: readonly Rect[]): ContextOut
     return { x: p.x + n.x * d, y: p.y + n.y * d };
   });
 
-  const leftmost = Math.min(...rects.map((r) => r.x));
-  const labelX = leftmost + CONTEXT_LABEL_INSET_PX;
-  return {
-    path: smoothClosedPath(wobbled),
-    polygon,
-    label: { x: labelX, y: tenth(topAt(polygon, labelX)) },
-    bounds,
-  };
+  return { path: smoothClosedPath(wobbled), polygon, bounds };
 }

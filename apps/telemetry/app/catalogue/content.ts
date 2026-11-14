@@ -685,7 +685,7 @@ export const CONTEXTS_HANDLED = chart(
   'Canvas',
   'Used',
   'Candidate Contexts Handled',
-  "A candidate context on an event-storming board applied or dismissed from an agent's suggestion, renamed, deleted, or a note joining or leaving one.",
+  "A candidate context on an event-storming board applied or dismissed from an agent's suggestion, renamed, deleted or merged with others, or a note joining or leaving one.",
   {
     types: [
       'ContextApplied',
@@ -694,6 +694,7 @@ export const CONTEXTS_HANDLED = chart(
       'ContextDeleted',
       'ContextNoteJoined',
       'ContextNoteLeft',
+      'ContextsMerged',
     ],
   },
 );

@@ -139,3 +139,28 @@ test('a note’s menu adds it to a context and takes it out again', async ({ pag
     IDS.orderShipped,
   );
 });
+
+test('Shift-click selects two contexts and the offer merges them into one, named afresh', async ({
+  page,
+}) => {
+  await startContextBoard(page);
+  await page.getByRole('button', { name: 'Candidate context: Ordering' }).click();
+  await page
+    .getByRole('button', { name: /^Suggested candidate context: Payments/ })
+    .click({ modifiers: ['Shift'] });
+  const offer = page.getByRole('group', { name: 'Merge 2 contexts' });
+  await expect(offer).toBeVisible();
+  await offer.getByRole('button', { name: 'Merge 2 contexts into one' }).click();
+  const field = page.getByRole('textbox', { name: 'Candidate context name' });
+  await field.fill('Ordering and paying');
+  await field.press('Enter');
+  const after = await storedBoard(page);
+  const merged = contextIn(after, IDS.ordering)!;
+  expect(merged.label).toBe('Ordering and paying');
+  // Ordering was kept, so the merge is kept; it holds both contexts' notes.
+  expect(merged.esContext?.suggestion).toBeUndefined();
+  expect(merged.esContext?.notes).toEqual(
+    expect.arrayContaining([IDS.placeOrder, IDS.takePayment]),
+  );
+  expect(contextIn(after, IDS.payments)).toBeUndefined();
+});

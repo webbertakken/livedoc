@@ -6,6 +6,7 @@ import { CanvasZoomProvider } from '@/components/canvas/CanvasZoomContext';
 import type { ContextControls, SuggestionControls } from '@/components/canvas/Canvas.types';
 import { clearLocalPreview, setLocalPreview } from '@/lib/drag-preview';
 import { endSuggestionPreview, previewSuggestion } from '@/lib/suggestion-view';
+import { resetContextSelectionForTests } from '@/lib/context-selection';
 import { ContextLayer } from './ContextLayer';
 
 // Candidate contexts on the canvas (docs/specs/021-event-storming/candidate-contexts.md): the outline and its name,
@@ -50,6 +51,7 @@ const contextControls = (): ContextControls => ({
   remove: vi.fn(),
   addNotes: vi.fn(),
   removeNotes: vi.fn(),
+  merge: vi.fn(() => 'k'),
   clearSelection: vi.fn(),
 });
 const suggestionControls = (): SuggestionControls => ({
@@ -72,6 +74,17 @@ function draw(
   return render(
     <CanvasZoomProvider zoom={1}>
       <ContextLayer
+        part="lines"
+        elements={elements}
+        tabId={TAB}
+        layers={opts.layers}
+        contexts={opts.contexts}
+        showSuggested={opts.showSuggested ?? opts.suggestions !== undefined}
+        suggestions={opts.suggestions}
+        shiftX={() => undefined}
+      />
+      <ContextLayer
+        part="names"
         elements={elements}
         tabId={TAB}
         layers={opts.layers}
@@ -87,12 +100,15 @@ function draw(
 const outline = (id: string) =>
   document.querySelector<SVGPathElement>(`[data-candidate-context="${id}"] path`);
 const shown = () =>
-  [...document.querySelectorAll<HTMLElement>('[data-candidate-context]')].map(
-    (el) => el.dataset.candidateContext,
-  );
+  [
+    ...document.querySelectorAll<HTMLElement>(
+      '[data-testid="context-lines"] [data-candidate-context]',
+    ),
+  ].map((el) => el.dataset.candidateContext);
 
 afterEach(() => {
   cleanup();
+  resetContextSelectionForTests();
   clearLocalPreview();
   endSuggestionPreview(TAB);
 });
@@ -111,7 +127,7 @@ describe('ContextLayer: what everyone sees', () => {
     const { container } = draw(board, {
       layers: [{ id: 'L', name: 'L', visible: false }],
     });
-    expect(container.querySelector('[data-testid="context-layer"]')).toBeNull();
+    expect(container.querySelector('[data-testid="context-lines"]')).toBeNull();
   });
 });
 
@@ -124,7 +140,17 @@ describe('ContextLayer: an Editor and a kept context', () => {
     expect(document.activeElement).toBe(name);
     expect(c.clearSelection).toHaveBeenCalledTimes(1);
     expect(outline('k')!.getAttribute('stroke-dasharray')).toBeNull();
-    fireEvent.blur(name);
+    // Escape lets go.
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(outline('k')!.getAttribute('stroke-dasharray')).toBe('10 10');
+    // A press on the name selects it on its click, not its focus.
+    fireEvent.pointerDown(name);
+    fireEvent.focus(name);
+    expect(outline('k')!.getAttribute('stroke-dasharray')).toBe('10 10');
+    fireEvent.click(name);
+    expect(outline('k')!.getAttribute('stroke-dasharray')).toBeNull();
+    // A press on the canvas away from it lets go too.
+    fireEvent.pointerDown(document.body);
     expect(outline('k')!.getAttribute('stroke-dasharray')).toBe('10 10');
   });
 
@@ -179,8 +205,9 @@ describe('ContextLayer: a suggested context', () => {
     expect(s.apply).toHaveBeenCalledTimes(2);
     fireEvent.keyDown(name, { key: 'Delete' });
     expect(s.dismiss).toHaveBeenCalledTimes(2);
+    // A suggested context's name opens too: a merged suggestion is named before it is applied.
     fireEvent.doubleClick(name);
-    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByRole('textbox', { name: 'Candidate context name' })).toBeTruthy();
   });
 
   it('is drawn at full strength while previewed, from the panel or its name', () => {
@@ -219,5 +246,118 @@ describe('ContextLayer: a drag in hand', () => {
     const moved = board.map((el) => (el.id === 'c' ? { ...el, x: 150 } : el));
     act(() => setLocalPreview(TAB, moved, board));
     expect(outline('k')!.getAttribute('stroke')).toBe('var(--ctx-line)');
+  });
+});
+
+describe('ContextLayer: selecting several and merging (candidate-contexts.md)', () => {
+  const two: Element[] = [
+    note('a', 0),
+    note('b', 300),
+    note('c', 2000),
+    context('k', ['a', 'b'], true),
+    context('s', ['c'], true),
+  ];
+  const offer = () => screen.queryByRole('group', { name: 'Merge 2 contexts' });
+
+  it('Shift-click selects two suggested contexts and offers to merge them', () => {
+    const c = contextControls();
+    draw(two, { contexts: c, suggestions: suggestionControls() });
+    const k = screen.getByRole('button', { name: /Ctx k, 2 notes/ });
+    const s = screen.getByRole('button', { name: /Ctx s, 1 note/ });
+    fireEvent.click(k);
+    expect(offer()).toBeNull();
+    fireEvent.click(s, { shiftKey: true });
+    expect(offer()).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Merge 2 contexts into one' }));
+    expect(c.merge).toHaveBeenCalledWith(['k', 's']);
+    // The kept one's name opens for typing.
+    const field = screen.getByRole('textbox', { name: 'Candidate context name' });
+    fireEvent.change(field, { target: { value: 'Joined' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    expect(c.rename).toHaveBeenCalledWith('k', 'Joined');
+  });
+
+  it('takes one back out with another Shift-click, from the outline too, and keeps them apart with ✕', () => {
+    const c = contextControls();
+    draw(two, { contexts: c, suggestions: suggestionControls() });
+    fireEvent.click(document.querySelector('[data-context-line="k"]')!, { shiftKey: true });
+    fireEvent.click(document.querySelector('[data-context-line="s"]')!, { shiftKey: true });
+    expect(offer()).not.toBeNull();
+    fireEvent.click(document.querySelector('[data-context-line="s"]')!, { shiftKey: true });
+    expect(offer()).toBeNull();
+    fireEvent.click(document.querySelector('[data-context-line="s"]')!, { shiftKey: true });
+    fireEvent.pointerDown(offer()!);
+    expect(offer()).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep them apart' }));
+    expect(offer()).toBeNull();
+    expect(c.merge).not.toHaveBeenCalled();
+  });
+
+  it('opens nothing when the merge kept nothing, and offers no merge to someone who may not', () => {
+    const c = { ...contextControls(), merge: vi.fn(() => null) };
+    draw(two, { contexts: c, suggestions: suggestionControls() });
+    fireEvent.click(screen.getByRole('button', { name: /^Suggested candidate context: Ctx k/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Suggested candidate context: Ctx s/ }), {
+      shiftKey: true,
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Merge 2 contexts into one' }));
+    expect(screen.queryByRole('textbox')).toBeNull();
+    cleanup();
+    resetContextSelectionForTests();
+    draw(two, { suggestions: suggestionControls() });
+    fireEvent.click(screen.getByRole('button', { name: /^Suggested candidate context: Ctx k/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Suggested candidate context: Ctx s/ }), {
+      shiftKey: true,
+    });
+    expect(offer()).toBeNull();
+  });
+});
+
+describe('ContextLayer: the name (candidate-contexts.md "The name")', () => {
+  const plate = () =>
+    document.querySelector<HTMLElement>(
+      '[data-testid="context-names"] [data-candidate-context="k"]',
+    )!;
+  const drawAt = (zoom: number) =>
+    render(
+      <CanvasZoomProvider zoom={zoom}>
+        {(['lines', 'names'] as const).map((part) => (
+          <ContextLayer
+            key={part}
+            part={part}
+            elements={board}
+            tabId={TAB}
+            layers={undefined}
+            contexts={contextControls()}
+            showSuggested={false}
+            suggestions={undefined}
+            shiftX={() => undefined}
+          />
+        ))}
+      </CanvasZoomProvider>,
+    );
+
+  it('sits over the notes, centred on the shape, and grows as the board zooms out', () => {
+    drawAt(1);
+    const near = plate();
+    // The notes span 0..500 by 480..680: the plate is centred on (250, 580).
+    expect(
+      parseFloat(near.style.left) + parseFloat(near.style.width || '0') / 2,
+    ).toBeLessThanOrEqual(250);
+    expect(parseFloat(near.style.top) + parseFloat(near.style.height) / 2).toBe(580);
+    const nearPx = parseFloat(near.style.fontSize);
+    cleanup();
+    drawAt(0.5);
+    expect(parseFloat(plate().style.fontSize)).toBeGreaterThan(nearPx);
+  });
+
+  it('selects from the line again when the name already has focus', () => {
+    drawAt(1);
+    const name = screen.getByRole('button', { name: 'Candidate context: Ctx k' });
+    name.focus();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(outline('k')!.getAttribute('stroke-dasharray')).toBe('10 10');
+    fireEvent.click(document.querySelector('[data-context-line="k"]')!);
+    expect(outline('k')!.getAttribute('stroke-dasharray')).toBeNull();
   });
 });

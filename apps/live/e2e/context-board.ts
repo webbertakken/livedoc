@@ -79,5 +79,9 @@ export function contextBoardElements(): Record<string, unknown>[] {
 
 export async function startContextBoard(page: Page): Promise<void> {
   await startSuggestionBoard(page, contextBoardElements());
-  await page.locator(`[data-candidate-context="${CONTEXT_BOARD_IDS.ordering}"]`).waitFor();
+  await page
+    .locator(
+      `[data-testid="context-lines"] [data-candidate-context="${CONTEXT_BOARD_IDS.ordering}"]`,
+    )
+    .waitFor();
 }
