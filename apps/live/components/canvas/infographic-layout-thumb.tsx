@@ -5,7 +5,7 @@
 // and font on the page's own background, so the tile is exactly what pressing it puts on the page.
 // Outside the editor (no tab to paint with) it falls back to a wireframe: text as bars (a title
 // thicker), images as a shaded block, icons as dots, everything else as an outlined box.
-import { useContext, useMemo } from 'react';
+import { useMemo } from 'react';
 import {
   arcGeometry,
   hasWordmarkType,
@@ -15,7 +15,7 @@ import {
 } from '@livedoc/document';
 import type { PageLayoutId } from '@livedoc/templates';
 import { buildPageLayout } from '@livedoc/templates';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import { LayoutRenderThumb } from './layout-render-thumb';
 
 // Wide enough to read a layout's parts: two tiles to a row in the panel and the in-page card.
@@ -152,7 +152,7 @@ export function LayoutThumb({
       : widest;
   // Rendered with the editor's tab (its theme and font, LayoutRenderThumb); a wireframe where there
   // is none.
-  const tab = useContext(EditorContext)?.activeTab;
+  const tab = useOptionalEditorContext()?.activeTab;
   return tab ? (
     <LayoutRenderThumb layout={layout} page={page} width={width} tab={tab} />
   ) : (

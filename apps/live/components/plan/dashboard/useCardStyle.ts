@@ -4,15 +4,7 @@
 // against the tab's theme, and the changes the Slot Settings cog's Style row makes. A hover previews (the card shows the look,
 // nothing is written) and leaving reverts; a pick is one change, one undo step; a slider drag lands as one step once
 // it rests.
-import {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useSyncExternalStore,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { getResolvedAppearance, subscribeAppearance, type Appearance } from '@livedoc/ui';
 import {
   dashboardCardLook,
@@ -25,7 +17,7 @@ import {
   type ShapeColorPreset,
   type ThemeDefinition,
 } from '@livedoc/document';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import { getTheme } from '@/lib/themes';
 import { useDashboard } from './dashboard-context';
 
@@ -35,7 +27,7 @@ const CARD_STYLE_DRAG_SETTLE_MS = 400;
 // The Dashboard tab's theme, for the viewer's appearance (the Default scheme has a light and a dark half). Outside
 // the editor (a test, a preview) the Default scheme.
 export function useCardTheme(): ThemeDefinition {
-  const themeId = useContext(EditorContext)?.activeTab?.theme;
+  const themeId = useOptionalEditorContext()?.activeTab?.theme;
   const appearance = useViewerAppearance();
   return useMemo(() => getTheme(themeId, appearance), [themeId, appearance]);
 }

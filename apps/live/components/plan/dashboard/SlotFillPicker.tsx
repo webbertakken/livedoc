@@ -6,8 +6,8 @@
 // Sheet, and the cards), offering only what looks good at this slot's size (SLOT_FIT). It opens on its categories
 // (the palette's ToolsCategoryGrid); one opens to its tiles, each drawn as it would look there, under the breadcrumb
 // back (Escape and Backspace go back too). Picking one fills this slot (placeItem, one step) and closes it.
-import { useContext, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import {
   isPlanViewId,
   type MetricKind,
@@ -178,7 +178,7 @@ export function SlotFillPicker({
   const tabs = usePlanTabList();
   const palette = planPalette(useCanvasSurface(), {});
   // Form Metrics only while the document has a form (docs/specs/026-plan/plan-tabs.md "Form Metrics").
-  const hasForms = useContext(EditorContext)?.tabs.some((t) => t.kind === 'form') ?? false;
+  const hasForms = useOptionalEditorContext()?.tabs.some((t) => t.kind === 'form') ?? false;
   const { sections, tooBig } = useMemo(
     () => slotFillSections(dashboardTabTiles(tabs), size, hasForms),
     [tabs, size, hasForms],

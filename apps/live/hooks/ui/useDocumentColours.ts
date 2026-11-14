@@ -1,7 +1,7 @@
 'use client';
 
-import { useContext, useMemo } from 'react';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { useMemo } from 'react';
+import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import { documentColours } from '@/lib/document-colours';
 
 const NONE: readonly string[] = [];
@@ -10,7 +10,7 @@ const NONE: readonly string[] = [];
 // the colours picked with + across the document, the active tab's first, worked out again only when
 // the tabs change. Outside the editor (a test, a standalone surface) there are none.
 export function useDocumentColours(offered: readonly string[] = NONE): string[] {
-  const editor = useContext(EditorContext);
+  const editor = useOptionalEditorContext();
   const tabs = editor?.tabs;
   const activeId = editor?.activeTab?.id;
   // Joined, so callers can pass a fresh array each render without re-working the list.

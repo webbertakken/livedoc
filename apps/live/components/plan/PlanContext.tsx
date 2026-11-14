@@ -6,7 +6,7 @@
 // bodies far below the editor state. Undefined outside the editor (share view, exports): a board
 // then draws read-only from nothing.
 import type { StatusBoard } from '@/hooks/plan/usePlanStatusNames';
-import { createContext, useContext } from 'react';
+import { createStoreContext } from '@/hooks/ui/store-context';
 import type { ItemCommentAction } from '@/lib/api/items';
 import type { PlanCardRef, PlanViewRef } from '@livedoc/document';
 import type {
@@ -137,10 +137,14 @@ export type PlanContextValue = {
   statusBoards: readonly StatusBoard[];
 };
 
-const PlanContext = createContext<PlanContextValue | undefined>(undefined);
+// Reached through a store, not a plain context: it sits above the canvas, and a new value would have React walk the
+// whole board for its readers (docs/specs/008-canvas/canvas-performance.md "A change above the board walks no
+// board").
+const PlanContextStore = createStoreContext<PlanContextValue | undefined>(undefined);
+const PlanContext = { Provider: PlanContextStore.Provider };
 
 export const PlanProvider = PlanContext.Provider;
 
 export function usePlan(): PlanContextValue | undefined {
-  return useContext(PlanContext);
+  return PlanContextStore.useValue();
 }

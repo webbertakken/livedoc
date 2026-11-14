@@ -4,10 +4,10 @@
 // before its cog, each the cog's size with a tooltip: Tidy Up (while the selection holds a
 // hand-drawn line; the mind map's tidy wand), Mirror (pressed while on; opens its popover,
 // LogoMirrorPopover) and Guides (pressed while the page shows them; opens LogoGuidesPopover).
-import { useContext, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { lucideGrid3x3, lucideWandSparkles } from '@livedoc/icons/lucide';
 import { lucideGlyph, Tooltip } from '@livedoc/ui';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import { useHasSelectionStore, useSelectionOf } from '@/hooks/canvas/useSelectionStore';
 import type { LogoToolsView } from '@/hooks/editor/useLogoTools';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
@@ -85,7 +85,7 @@ export function LogoTitleBar({
   // Mirror and Guides name themselves on a desktop with room; a phone keeps them icon-only.
   const desktop = !useIsMobileViewport();
   const labelled = named ?? desktop;
-  const editor = useContext(EditorContext);
+  const editor = useOptionalEditorContext();
   const selection = useHasSelectionStore();
   return (
     <div

@@ -3,7 +3,8 @@
 // What a tab window on the canvas reads (docs/specs/009-elements/tab-window.md): the document's tabs, where each
 // one's content is, and the few things a window does (ask for its tab, open it, show another). Provided once by the
 // canvas host rather than threaded through every element.
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { createStoreContext } from '@/hooks/ui/store-context';
 import type { Tab } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
 
@@ -25,11 +26,15 @@ export type TabWindowContextValue = {
   choose?: (elementId: string, tabId: string) => void;
 };
 
-export const TabWindowContext = createContext<TabWindowContextValue | null>(null);
+// Reached through a store, not a plain context: it sits above the canvas, and a new value would have React walk the
+// whole board for its readers (docs/specs/008-canvas/canvas-performance.md "A change above the board walks no
+// board").
+const TabWindowContextStore = createStoreContext<TabWindowContextValue | null>(null);
+export const TabWindowContext = { Provider: TabWindowContextStore.Provider };
 
 /** The windows' context, or null where nothing provides it (a renderer outside the editor). */
 export function useTabWindows(): TabWindowContextValue | null {
-  return useContext(TabWindowContext);
+  return TabWindowContextStore.useValue();
 }
 
 /** The value the canvas host provides, from the editor's tabs and its per-tab loading. */

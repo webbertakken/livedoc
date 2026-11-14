@@ -155,6 +155,13 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   the canvas's cursor restyles that plane and not what is in it. Each element shows its own cursor
   where it takes a press, as it already does; a whiteboard pen or a path in its edit mode, whose
   cursor shows over elements, passes it through the plane on purpose.
+- **A change above the board walks no board.** What the editor hands down past the canvas (its
+  state, the plan, the themes, the tab windows' tabs, the charts' elements, the split view, the
+  mode, the chrome's lines) reaches its readers through a store the provider keeps for its
+  lifetime, never as a context value that changes: React looks for a changed context's readers
+  by walking the whole tree beneath it, the board's thousand elements included, and with the
+  editor's state new on every render that walk ran on every press, release and pointer frame
+  that rendered the editor. Readers still render whenever the value changes.
 - **The canvas re-renders only for what it shows.** The editor around the canvas re-renders for
   many reasons (a panel opening, a toast, a collaborator's presence, the selection); none of them
   re-renders the canvas unless something the canvas shows changed. The canvas's event handlers keep
