@@ -13,7 +13,7 @@ import { drawnDragBox } from '@/lib/draw-commit';
 import type { StampGhost } from '@/components/canvas/useStampGhost';
 import { NoteGhost } from '@/components/canvas/NoteGhost';
 import { PenShapePreview } from '@/components/canvas/whiteboard/BoardShapePreview';
-import { useCanvasClientOrigin } from '@/hooks/canvas/useCanvasClientOrigin';
+import { useCanvasOverlayOrigin } from '@/hooks/canvas/useCanvasClientOrigin';
 import { HIGHLIGHTER_COLOR, HIGHLIGHTER_WIDTH } from '@/lib/highlighter-config';
 import { draftMirrorMaps, pointsBox, SymmetryCopies, toScreen } from './MirrorReflection';
 
@@ -67,8 +67,8 @@ export function CanvasDrawPreview({
   // A line or an arrow previews as the element it lands, in the canvas layer
   // (DrawnArrowPreview, docs/specs/023-draw-mode/draw-mode.md "Shapes"), not here.
   const showsBox = !!drawDrag && !!pendingDraw && !stamp && pendingDraw.type !== 'arrow';
-  // Where canvas (0, 0) sits on screen, measured only while a preview shows.
-  const origin = useCanvasClientOrigin(wrapperRef, showsPen || showsPolygon || showsBox, viewKey);
+  // Where canvas (0, 0) sits in the editor's box, measured only while a preview shows.
+  const origin = useCanvasOverlayOrigin(wrapperRef, showsPen || showsPolygon || showsBox, viewKey);
   // The drawings in progress (pencil, polygon, draw-to-size box), given once more reflected while
   // Mirror While Drawing is on over a logo page (docs/specs/007-editor/logo-pages.md "Mirror").
   const drafts = (

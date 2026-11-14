@@ -2,7 +2,9 @@
 
 import { renderHook } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { useCanvasClientOrigin } from './useCanvasClientOrigin';
+import type { ReactNode } from 'react';
+import { EditorBoxContext, type EditorBox } from '@/hooks/ui/useEditorBox';
+import { useCanvasClientOrigin, useCanvasOverlayOrigin } from './useCanvasClientOrigin';
 
 function wrapperAt(at: { left: number; top: number }) {
   const el = document.createElement('div');
@@ -68,6 +70,38 @@ describe('useCanvasClientOrigin', () => {
       initialProps: { on: true },
     });
     rerender({ on: false });
+    expect(result.current).toBeNull();
+  });
+});
+
+// docs/specs/007-editor/split-view.md "How the editor fits in its pane": a `fixed` overlay inside a split's pane counts
+// from the pane's corner, so the canvas origin it draws from is the client origin less the pane's offset.
+describe('useCanvasOverlayOrigin', () => {
+  const inBox =
+    (box: EditorBox) =>
+    ({ children }: { children: ReactNode }) => (
+      <EditorBoxContext.Provider value={box}>{children}</EditorBoxContext.Provider>
+    );
+
+  it('is the client origin when the editor fills the window', () => {
+    const { ref } = wrapperAt({ left: 10, top: 20 });
+    const { result } = renderHook(() => useCanvasOverlayOrigin(ref, true, 'v'));
+    expect(result.current).toEqual({ left: 10, top: 20 });
+  });
+
+  it("counts from the pane's corner in a split", () => {
+    const { ref } = wrapperAt({ left: 1000, top: 20 });
+    const { result } = renderHook(() => useCanvasOverlayOrigin(ref, true, 'v'), {
+      wrapper: inBox({ left: 893, top: 0, width: 893 }),
+    });
+    expect(result.current).toEqual({ left: 107, top: 20 });
+  });
+
+  it('is null while inactive', () => {
+    const { ref } = wrapperAt({ left: 1000, top: 20 });
+    const { result } = renderHook(() => useCanvasOverlayOrigin(ref, false, 'v'), {
+      wrapper: inBox({ left: 893, top: 0, width: 893 }),
+    });
     expect(result.current).toBeNull();
   });
 });

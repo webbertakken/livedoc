@@ -5,6 +5,7 @@ import { dashboardOpen } from '@/hooks/plan/dashboard-drop';
 import { ShapeGlyph } from '@/components/primitives/shape-icon';
 import { usePaletteDragPreview, usePaletteDragSnap } from '@/lib/palette-drag-preview';
 import { overFloatingPanel } from '@/lib/canvas-pointer';
+import { toEditorBox, useEditorBox } from '@/hooks/ui/useEditorBox';
 
 // Drag-to-add ghost (docs/specs/010-palette/palette-drag-ghost.md). While a palette tile is being dragged, this
 // paints a translucent footprint of what will land — sized to the shape's
@@ -17,6 +18,8 @@ export function PaletteDragGhost({ zoom }: { zoom: number }) {
   // the ghost draws where the element will LAND, not under the raw cursor,
   // so the guide lines and the footprint agree.
   const snap = usePaletteDragSnap();
+  // The pointer arrives in client coords; the ghost counts from the editor's box (docs/specs/007-editor/split-view.md).
+  const box = useEditorBox();
   // Live cursor + whether it's over a valid drop target (the canvas, not a
   // floating panel). Reset whenever a drag isn't in progress.
   const [cursor, setCursor] = useState<{ x: number; y: number; over: boolean } | null>(null);
@@ -51,14 +54,15 @@ export function PaletteDragGhost({ zoom }: { zoom: number }) {
   // centred inside, rather than a stretched silhouette (whose stroke would
   // scale with the box). Communicates footprint + which shape, cleanly.
   const glyph = Math.max(16, Math.min(w, h) * 0.5);
+  const at = toEditorBox(cursor, box);
 
   return (
     <div
       aria-hidden
       className="pointer-events-none fixed z-[var(--z-overlay)] flex animate-fade-in items-center justify-center rounded-lg border-2 border-dashed border-brand-500/70 bg-brand-500/5 text-brand-500/80 dark:border-brand-400/70 dark:bg-brand-400/10 dark:text-brand-300/90"
       style={{
-        left: cursor.x + (snap?.dx ?? 0) * zoom,
-        top: cursor.y + (snap?.dy ?? 0) * zoom,
+        left: at.x + (snap?.dx ?? 0) * zoom,
+        top: at.y + (snap?.dy ?? 0) * zoom,
         width: w,
         height: h,
         transform: 'translate(-50%, -50%)',

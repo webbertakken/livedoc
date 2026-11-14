@@ -7,9 +7,10 @@ import {
 } from '@livedoc/document';
 import { getTheme, type ThemeId } from '@/lib/themes';
 import type { SnapTarget } from '@/components/canvas/Canvas.types';
-import { useCanvasClientOrigin } from '@/hooks/canvas/useCanvasClientOrigin';
+import { useCanvasOverlayOrigin } from '@/hooks/canvas/useCanvasClientOrigin';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { selectionBoxColors } from '@/lib/selection-box';
+import { toEditorBox, useEditorBox } from '@/hooks/ui/useEditorBox';
 
 type Marquee = { startX: number; startY: number; currentX: number; currentY: number } | null;
 
@@ -45,13 +46,18 @@ export function CanvasGuideOverlay({
   const { viewportZoom, viewKey } = useCanvasViewKey(mainSize);
   const surface = useCanvasSurface();
   const marqueeColors = selectionBoxColors(getTheme(tabThemeId).elementStroke, surface);
-  // Where canvas (0, 0) sits on screen, measured only while a canvas-space guide shows (the marquee is
-  // already in client coords).
-  const origin = useCanvasClientOrigin(
+  // Where canvas (0, 0) sits in the editor's box, measured only while a canvas-space guide shows.
+  const origin = useCanvasOverlayOrigin(
     wrapperRef,
     alignGuides.length > 0 || allSnapTargets.length > 0 || !!drawHover || distGuides.length > 0,
     viewKey,
   );
+  // The marquee runs in client coords; the editor's box (a split's pane) is what its `fixed` box counts from.
+  const box = useEditorBox();
+  const marqueeStart = marquee ? toEditorBox({ x: marquee.startX, y: marquee.startY }, box) : null;
+  const marqueeEnd = marquee
+    ? toEditorBox({ x: marquee.currentX, y: marquee.currentY }, box)
+    : null;
   return (
     <>
       {/* Alignment guides. While a move / resize snap is in effect,
@@ -212,17 +218,18 @@ export function CanvasGuideOverlay({
           })()
         : null}
 
-      {marquee ? (
+      {marqueeStart && marqueeEnd ? (
         <div
           aria-hidden
+          data-marquee=""
           // Border + faint fill take the active tab theme's accent, softened on
           // dark paper (selectionBoxColors, shared with the Map's view window).
           className="pointer-events-none fixed z-[var(--z-chrome)] rounded-sm border"
           style={{
-            left: Math.min(marquee.startX, marquee.currentX),
-            top: Math.min(marquee.startY, marquee.currentY),
-            width: Math.abs(marquee.currentX - marquee.startX),
-            height: Math.abs(marquee.currentY - marquee.startY),
+            left: Math.min(marqueeStart.x, marqueeEnd.x),
+            top: Math.min(marqueeStart.y, marqueeEnd.y),
+            width: Math.abs(marqueeEnd.x - marqueeStart.x),
+            height: Math.abs(marqueeEnd.y - marqueeStart.y),
             borderColor: marqueeColors.stroke,
             backgroundColor: marqueeColors.fill,
           }}

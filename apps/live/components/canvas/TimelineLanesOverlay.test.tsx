@@ -3,6 +3,7 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ES_LANE_HEIGHT, laneTop, type EsTimeline } from '@livedoc/document';
 import { setLanePreview } from '@/lib/lane-preview';
+import { EditorBoxContext, type EditorBox } from '@/hooks/ui/useEditorBox';
 import { TimelineLanesOverlay } from './TimelineLanesOverlay';
 import { createViewportStore } from '@/lib/viewport-store';
 import { ViewportStoreProvider } from '@/hooks/canvas/useViewportStore';
@@ -120,5 +121,30 @@ describe('TimelineLanesOverlay', () => {
   it('never takes a pointer event away from the drag it describes', () => {
     setLanePreview({ laneIndex: 0 });
     expect(draw().querySelector('svg')!.getAttribute('class')).toContain('pointer-events-none');
+  });
+});
+
+// docs/specs/007-editor/split-view.md "How the editor fits in its pane": in the right pane the editor's box starts
+// 893 px from the window's edge, so the slot counts from the pane's corner and lands where the drop will.
+describe('TimelineLanesOverlay in the right pane of a split', () => {
+  it("draws the slot counted from the pane's corner", () => {
+    setLanePreview({ laneIndex: 1, ghost: { x: 272, y: 240, width: 200, height: 200 } });
+    const pane: EditorBox = { left: 893, top: 0, width: 893 };
+
+    const { container } = render(
+      <ViewportStoreProvider store={createViewportStore(1)}>
+        <EditorBoxContext.Provider value={pane}>
+          <TimelineLanesOverlay
+            timeline={TIMELINE}
+            tabThemeId="brand"
+            wrapperRef={wrapper(1000, 0)}
+            mainSize={{ width: 1000, height: 1000 }}
+          />
+        </EditorBoxContext.Provider>
+      </ViewportStoreProvider>,
+    );
+
+    const ghost = container.querySelector('[data-testid="timeline-lane-ghost"]')!;
+    expect(Number(ghost.getAttribute('x'))).toBe(107 + 272);
   });
 });

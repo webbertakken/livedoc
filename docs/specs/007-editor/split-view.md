@@ -145,6 +145,17 @@ Chrome that sizes itself to the room it has measures the editor's box, not the w
 The palette strip ([Toolbar layout](toolbar-layout.md)) is the first: in a pane it fits the tiles
 a window of the pane's width would, and refits as the divider moves.
 
+What the canvas draws over itself while a gesture runs lands under the pointer in either pane.
+The marquee, the alignment and spacing guides, the arrow snap points, the draw-to-size, pen and polygon
+previews, their mirrored twins, the turn readout, the palette's drag ghost and the timeline lane preview
+are placed from the pointer's client coordinates.
+Inside the editor's box those coordinates count from the box's own corner, not the window's, so each
+overlay takes the box's offset off first (`apps/live/hooks/ui/useEditorBox.ts`).
+In the right pane the selection box therefore traces the pointer's drag exactly as it does on the left or
+with no split, at any device pixel ratio.
+Selecting acts in the editor's pane only: the other pane draws its tab without a selection.
+[`split-view-overlays.spec.ts`](../003-system-architecture/e2e-smoke.md) proves it in the right pane at 1.25x.
+
 ## Motion
 
 The other pane arrives from the right when the split opens (250 ms, house ease-out) and leaves the
