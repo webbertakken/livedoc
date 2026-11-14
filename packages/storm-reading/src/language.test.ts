@@ -69,6 +69,14 @@ describe('boardTerms', () => {
     expect(found.map((t) => [t.term, t.notes.length])).toEqual([['Sent', 2]]);
   });
 
+  it('counts a note once however it cases or pluralises the word', () => {
+    const found = terms(
+      { id: 'e1', kind: 'domain-event', col: 0, words: 'Order for order of Orders Sent' },
+      { id: 'e2', kind: 'domain-event', col: 1, words: 'Order Kept' },
+    );
+    expect(found.map((t) => [t.term, t.notes])).toEqual([['Order', ['e1', 'e2']]]);
+  });
+
   it('leaves out short words, stop words and blank notes', () => {
     const found = terms(
       { id: 'e1', kind: 'domain-event', col: 0, words: 'ID of the Order Set' },

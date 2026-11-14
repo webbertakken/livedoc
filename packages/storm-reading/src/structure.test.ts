@@ -52,6 +52,14 @@ describe('readBoard: lanes', () => {
       ),
     );
     expect(reading.lanes[0]!.name).toBe('Near');
+    const reversed = readBoard(
+      board(
+        { id: 'e1', kind: 'domain-event', col: 0 },
+        laneText('near', 0, -16, 'Near'),
+        laneText('far', 0, -400, 'Far'),
+      ),
+    );
+    expect(reversed.lanes[0]!.name).toBe('Near');
   });
 
   it('reads no name from a text that is not left of the wall, off the lane, blank or on an empty lane', () => {
