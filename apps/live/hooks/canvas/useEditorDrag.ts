@@ -42,6 +42,7 @@ import { elementHostsAtPoint } from '@/lib/dom-hit-test';
 import { applyInsertionShift, type InsertionSlot } from '@/lib/insert-between';
 import { setInsertionDragInHand, setInsertionSlot } from '@/lib/insertion-preview';
 import { setLanePreview } from '@/lib/lane-preview';
+import { setTurnReadout } from '@/lib/turn-readout';
 import { isSingleNoteDrag, landNoteInSlot, resolveNoteInsertion } from './note-insertion-drag';
 import { laneAnchorOf, lanesHoldDrag } from './lane-drag';
 import type { EditorDragDeps, EditorDragApi } from './useEditorDrag.types';
@@ -276,6 +277,7 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
       insertSlotRef.current = null;
       setInsertionSlot(null);
       setLanePreview(null);
+      setTurnReadout(null);
       // A live shift-duplicate is torn down with the gesture: the clone set
       // goes (a no-op after the Escape path's cancelToCheckpoint already
       // restored, but pinch / second-touch cancels never restore) and the
@@ -468,7 +470,7 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
             dragEngagedRef.current = true;
             engageGesture();
           }
-          const turned = resolveBoxedTurn({
+          const turn = resolveBoxedTurn({
             startElements: drag.startElements,
             ids: new Set([...drag.startBounds.keys(), ...drag.startArrowEnds.keys()]),
             pivotClient: drag.pivotClient!,
@@ -476,7 +478,8 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
             client: { x: e.clientX, y: e.clientY },
             shiftHeld: e.shiftKey,
           });
-          tick((els) => els.map((el) => turned.get(el.id) ?? el));
+          tick((els) => els.map((el) => turn.members.get(el.id) ?? el));
+          setTurnReadout({ angle: turn.angle, clientX: e.clientX, clientY: e.clientY });
         } else {
           // Single + multi resize (union scaling, rotated projection,
           // resize snapping) all live in resolveBoxedResize; this handler
@@ -874,6 +877,8 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
       // The lane has done its job the moment the note lands on it: the drop
       // commits the position the overlay was promising, and the overlay goes.
       setLanePreview(null);
+      // A turn's angle readout goes with the turn (docs/specs/008-canvas/selection-transforms.md).
+      setTurnReadout(null);
       if (insertion && drag?.kind === 'boxed' && drag.mode === 'move') {
         d.tick((els) => applyInsertionShift(els, insertion));
         track('Canvas', 'Used', 'InsertBetween');

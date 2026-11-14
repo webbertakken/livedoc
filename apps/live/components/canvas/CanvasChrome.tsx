@@ -7,6 +7,7 @@ import { participantKey } from '@/lib/identity';
 import { useVoteReviewOpener } from '@/hooks/canvas/useVoteReviewOpener';
 import { computeDrawGuides } from '@/components/canvas/canvas-draw-guides';
 import { CanvasGuideOverlay } from '@/components/canvas/CanvasGuideOverlay';
+import { TurnReadout } from '@/components/canvas/TurnReadout';
 import { TimelineLanesOverlay } from '@/components/canvas/TimelineLanesOverlay';
 import { CanvasDrawPreview } from '@/components/canvas/CanvasDrawPreview';
 import { TopCenterChrome } from '@/components/chrome/TopCenterChrome';
@@ -534,6 +535,9 @@ export function CanvasChrome(props: CanvasChromeProps) {
         wrapperRef={wrapperRef}
         mainSize={props.mainSize}
       />
+
+      {/* A turn by hand's angle beside the pointer (docs/specs/008-canvas/selection-transforms.md). */}
+      <TurnReadout />
 
       <CanvasDrawPreview
         drawDrag={drawDrag}
