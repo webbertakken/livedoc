@@ -14,18 +14,17 @@ const OWNER = 'user_owner';
 
 const note = (id: string, esKind: string, x: number, label: string): Element =>
   ({ id, type: 'sticky', x, y: 0, width: 200, height: 200, label, esKind }) as Element;
-const context = (id: string, label: string, notes: string[]): Element =>
-  ({
-    id,
-    type: 'shape',
-    shape: 'square',
-    x: 0,
-    y: 0,
-    width: 1,
-    height: 1,
-    label,
-    esContext: { notes },
-  }) as Element;
+const context = (id: string, label: string, notes: string[]): Element => ({
+  id,
+  type: 'shape',
+  shape: 'square',
+  x: 0,
+  y: 0,
+  width: 1,
+  height: 1,
+  label,
+  esContext: { notes },
+});
 
 // A room that holds nothing and answers no selection.
 const room = {
@@ -135,10 +134,8 @@ describe('suggested changes through the api', () => {
       '  remove cooked',
       '  name "Shop" kitchen,ordering',
     ]);
-    expect(
-      ((await (await stormView(db, 'view=storm&json=1')).json()) as { declined: unknown[] })
-        .declined,
-    ).toHaveLength(2);
+    const body: { declined: unknown[] } = await (await stormView(db, 'view=storm&json=1')).json();
+    expect(body.declined).toHaveLength(2);
   });
 
   it('lets an agent take its suggestions back, the note staying', async () => {

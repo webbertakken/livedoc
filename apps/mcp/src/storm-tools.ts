@@ -3,13 +3,7 @@
 // error that says what is there.
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ApiClient } from '@livedoc/api-client';
-import {
-  addPhotoNotes,
-  readStorm,
-  suggestNotes,
-  type NoteChangeInput,
-  type SuggestionInput,
-} from '@livedoc/agent-verbs';
+import { addPhotoNotes, readStorm, suggestNotes, type SuggestionInput } from '@livedoc/agent-verbs';
 import {
   mcpAddPhotoNotes,
   mcpExportEventStorming,
@@ -63,7 +57,7 @@ export function registerStormTools(server: McpServer, env: Env): void {
         suggestions: args.suggestions as SuggestionInput[] | undefined,
         contexts: args.contexts,
         names: args.names,
-        changes: args.changes as NoteChangeInput[] | undefined,
+        changes: args.changes,
       },
       'mcp',
     );
