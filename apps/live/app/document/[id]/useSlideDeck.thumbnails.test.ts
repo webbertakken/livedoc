@@ -41,7 +41,7 @@ describe('useSlideDeck slide pictures', () => {
         tabs,
         activeTabId: 't',
         setActiveId: () => {},
-        readSelection: () => ({ selectedId: 'a', multiSelectedIds: new Set<string>() }) as never,
+        readSelection: () => ({ selectedId: 'a', multiSelectedIds: new Set<string>() }),
         setSelectedId: () => {},
         setMultiSelectedIds: () => {},
         isReadOnly: false,

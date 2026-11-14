@@ -24,8 +24,16 @@ beforeAll(stubResizeObserver);
 // mounted once opened, so its row previews (a whole-board render) are drawn only while it is open.
 
 const LAYERS: Layer[] = [{ id: 'a', name: 'A' }];
-const box = (id: string, x: number): Element =>
-  ({ id, type: 'shape', shape: 'square', x, y: 0, width: 100, height: 60, label: id }) as Element;
+const box = (id: string, x: number): Element => ({
+  id,
+  type: 'shape',
+  shape: 'square',
+  x,
+  y: 0,
+  width: 100,
+  height: 60,
+  label: id,
+});
 
 function panel(elements: Element[], popoverOpen: boolean) {
   return (

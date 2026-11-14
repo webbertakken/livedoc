@@ -199,7 +199,16 @@ describe('SlideDeckPanel row pictures', () => {
           id: 'a',
           name: 'Here',
           elements: [
-            { id: 'box', type: 'shape', shape: 'square', x: 0, y: 0, width: 120, height: 60, label: 'Box' },
+            {
+              id: 'box',
+              type: 'shape',
+              shape: 'square',
+              x: 0,
+              y: 0,
+              width: 120,
+              height: 60,
+              label: 'Box',
+            },
           ],
         },
       ],
@@ -214,6 +223,8 @@ describe('SlideDeckPanel row pictures', () => {
         onMoveTo={noop}
       />,
     );
-    expect(container.querySelector('svg[viewBox][aria-hidden] rect, svg[viewBox][aria-hidden] path')).toBeTruthy();
+    expect(
+      container.querySelector('svg[viewBox][aria-hidden] rect, svg[viewBox][aria-hidden] path'),
+    ).toBeTruthy();
   });
 });

@@ -292,12 +292,13 @@ describe('AuthBridge', () => {
     let releaseSession: (() => void) | null;
     function holdSession(body: unknown) {
       releaseSession = null;
-      const answered = fetchMock.getMockImplementation()!;
-      fetchMock.mockImplementation(async (url: string) => {
+      const answered = fetchMock.getMockImplementation() as (url: string) => Promise<Response>;
+      fetchMock = vi.fn(async (url: string) => {
         if (url !== '/api/auth/get-session') return answered(url);
         await new Promise<void>((resolve) => (releaseSession = resolve));
         return new Response(JSON.stringify(body), { status: 200 });
       });
+      vi.stubGlobal('fetch', fetchMock);
     }
     const tokenAsks = () =>
       fetchMock.mock.calls.filter(([url]) => url === '/api/auth/token').length;
@@ -344,7 +345,7 @@ describe('AuthBridge', () => {
     answer('/api/auth/get-session', { status: 200, body: null });
     mount();
     await waitFor(() => expect(probe.state!.authLoaded).toBe(true));
-    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(['/api/auth/get-session']);
+    expect(fetchMock.mock.calls.map((call) => String(call[0]))).toEqual(['/api/auth/get-session']);
   });
 
   it('stands down on the workbench route', async () => {

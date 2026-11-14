@@ -145,11 +145,13 @@ describe('useIdentityBootstrap open path', () => {
     expect(seed).not.toHaveBeenCalled();
     answer(GUEST);
     await vi.advanceTimersByTimeAsync(0);
-    expect(s.setSelfParticipant).toHaveBeenCalledWith(expect.objectContaining({ id: 'guest-1', name: 'G' }));
-    expect(s.setLoadingDocument).toHaveBeenCalledWith(false);
-    expect(s.setSelfParticipant.mock.invocationCallOrder[0]).toBeLessThan(
-      s.setLoadingDocument.mock.invocationCallOrder.at(-1)!,
+    expect(s.setSelfParticipant).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'guest-1', name: 'G' }),
     );
+    expect(s.setLoadingDocument).toHaveBeenCalledWith(false);
+    const adopted = s.setSelfParticipant!.mock.invocationCallOrder[0]!;
+    const shown = s.setLoadingDocument!.mock.invocationCallOrder.at(-1)!;
+    expect(adopted).toBeLessThan(shown);
   });
 
   it('asks for the document once, however the participant answers', async () => {
