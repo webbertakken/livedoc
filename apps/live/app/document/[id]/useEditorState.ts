@@ -1635,10 +1635,6 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // Slide deck (docs/specs/012-collaboration/presentation-mode.md). Owns the deck, the panel's editing verbs, and the
   // presentation Start runs. Placed after the viewport because presenting
   // frames each slide through it.
-  const slideThumbnailPlan = useMemo(
-    () => ({ items: planItems.items, types: itemTypes.types }),
-    [planItems.items, itemTypes.types],
-  );
   // Set by the pages' hook (below): a page slide's row frames its page once its tab is open.
   const framePageRef = useRef<((pageId: string) => void) | null>(null);
   const slideDeck = useSlideDeck({
@@ -1650,7 +1646,6 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     framePage: (_tabId, pageId) => framePageRef.current?.(pageId),
     movePage: (tabId, pageId, unitIndex) =>
       commitTabs((ts) => tabsWithPageMoved(ts, tabId, pageId, unitIndex)),
-    plan: slideThumbnailPlan,
     activeTabId: activeId,
     setActiveId,
     readSelection,

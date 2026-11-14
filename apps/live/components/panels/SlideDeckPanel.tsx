@@ -39,6 +39,7 @@ import { rowDropIndex, useRowReorderDrag } from '@/hooks/ui/useRowReorderDrag';
 import { DropCaret } from '@/components/primitives/DropCaret';
 import { SOLID_BRAND_DARK_CONTROL } from '@livedoc/ui';
 import { SlideDeckIcon } from '@/components/palette/palette-icons';
+import { useSlideThumbnails } from '@/hooks/ui/useSlideThumbnails';
 
 const selectionSetOf = (s: Selection) => selectionIds(s.selectedId, s.multiSelectedIds);
 
@@ -75,7 +76,7 @@ export function SlideDeckPanel({
     openSlideId,
     openSlideInEditor,
     runnable,
-    thumbs,
+    tabs: deckTabs,
     pageLabels,
     headlines,
     newSlideFromSelection,
@@ -93,6 +94,10 @@ export function SlideDeckPanel({
     start,
     startingDeck,
   } = state;
+  // Row previews, from the same headless renderer the Layers panel uses: drawn here, while the panel is open, never
+  // on every edit of an editor whose panel is closed (docs/specs/016-platform/web-performance.md "Work only when it
+  // can change what shows"). On light paper, as the rows have always been drawn.
+  const thumbs = useSlideThumbnails(deck, deckTabs, { plan, surface: 'light' });
   // The selection the panel offers to slide, read from the store: a selection change re-renders this
   // panel and not the canvas (docs/specs/008-canvas/canvas-performance.md).
   const selected = useSelectionOf(selectionSetOf, sameMembers);

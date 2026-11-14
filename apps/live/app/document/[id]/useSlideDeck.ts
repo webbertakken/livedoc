@@ -38,7 +38,6 @@ import {
 } from '@livedoc/document';
 
 import { track } from '@/lib/telemetry';
-import { useSlideThumbnails, type ThumbnailPlan } from '@/hooks/ui/useSlideThumbnails';
 import {
   readPresentationConfig,
   withPresentationConfig,
@@ -88,7 +87,6 @@ export function useSlideDeck({
   isReadOnly,
   saveDeck,
   loadAllTabs,
-  plan,
   framePage,
   movePage,
   prefs,
@@ -109,8 +107,6 @@ export function useSlideDeck({
   saveDeck?: (serialised: string | null) => void;
   /** Pulls every not-yet-loaded tab, so a deck can reach a tab nobody visited. */
   loadAllTabs?: () => Promise<unknown>;
-  /** The document's items and types, for a Plan board's thumbnail. */
-  plan?: ThumbnailPlan;
   /** Frames a page of a tab in the view (as its label's press does), once that tab is
    *  the active one. Absent where nothing frames pages. */
   framePage?: (tabId: string, pageId: string) => void;
@@ -218,8 +214,6 @@ export function useSlideDeck({
       setPresenting(next === null ? null : positionAt(next, runnableRef.current)),
     [runnableRef],
   );
-  // Row previews, from the same headless renderer the Layers panel uses.
-  const thumbs = useSlideThumbnails(deck, tabs, plan);
   // Each page slide's page, named from its own tab (null once the page is gone).
   const pageLabels = useMemo(() => pageSlideLabels(deck, tabs), [deck, tabs]);
   // What each slide is about, for a row whose slide has no name: its largest text.
@@ -525,7 +519,9 @@ export function useSlideDeck({
     setOpenSlideId,
     openSlideInEditor,
     runnable,
-    thumbs,
+    // The tabs the slides are on, for the panel's row pictures, drawn there while it is open
+    // (docs/specs/016-platform/web-performance.md "Work only when it can change what shows").
+    tabs,
     pageLabels,
     headlines,
     newSlideFromSelection,
