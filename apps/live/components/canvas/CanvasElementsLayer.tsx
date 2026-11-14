@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { participantKey } from '@/lib/identity';
 import { useStableHandlers } from '@/hooks/ui/useStableHandlers';
 import { idBound } from './element-layer-props';
-import { arrowViewGeometry } from './arrow-view-frame';
+import { createArrowGeometryTracker, type ArrowGeometry } from './arrow-geometry-tracker';
 import { buildArrowLinks } from './drag-affected-arrows';
 import { shownWithOverlay, useLayerDragPreview } from '@/hooks/canvas/useLayerDragPreview';
 import { CanvasElementList } from './CanvasElementList';
@@ -11,7 +11,6 @@ import { useFontEpoch } from './useFontEpoch';
 import {
   elementFontId,
   resolveFontStack,
-  resolveFinish,
   isSelectionMode,
   alignmentCoordinates,
   buildElementIndex,
@@ -61,6 +60,8 @@ import { GifOmit } from './GifOmit';
 
 // What a drawn arrow resolves its ends against on a board with no arrows yet.
 const EMPTY_ELEMENT_INDEX: ElementIndex = new Map();
+// A board with no arrows draws no arrow geometry.
+const NO_ARROW_GEOMETRY: ReadonlyMap<string, ArrowGeometry> = new Map();
 
 // Canvas-computed values threaded into the element layer alongside the
 // raw props.
@@ -507,27 +508,29 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
   const drawnElements = useMemo(() => ordered.map((o) => o.element), [ordered]);
   // Shapes something sits on keep a solid fill under Sketch (docs/specs/008-canvas/finish.md).
   usePublishSketchBackdrops(props.activeTabId ?? '', drawnElements, tabFinish);
-  // The drawn elements' grid (docs/specs/008-canvas/canvas-performance.md "Questions about neighbours
-  // ask a spatial index"), re-bucketing only what changed since the last one, and every arrow's frame
-  // and holes from it, once per element change. ArrowView compares both by value, so a move
-  // re-renders only the arrows whose geometry it changed.
-  const [gridTracker] = useState(createElementGridTracker);
-  const arrowGeometry = useMemo(() => {
-    const out = new Map<string, ReturnType<typeof arrowViewGeometry>>();
-    if (!elementIndex) return out;
-    const grid = gridTracker.gridFor(drawnElements);
-    for (const el of drawnElements) {
-      if (el.type === 'arrow')
-        out.set(
-          el.id,
-          arrowViewGeometry(el, elementIndex, grid, resolveFinish(el.finish, tabFinish)),
-        );
-    }
-    return out;
-  }, [drawnElements, elementIndex, gridTracker, tabFinish]);
   const arrowLinks = useMemo(
     () => (hasArrows ? buildArrowLinks(drawnElements) : null),
     [hasArrows, drawnElements],
+  );
+  // The drawn elements' grid (docs/specs/008-canvas/canvas-performance.md "Questions about neighbours
+  // ask a spatial index"), re-bucketing only what changed since the last one, and every arrow's frame
+  // and holes from it, worked out again only where an element change can have moved them
+  // (arrow-geometry-tracker.ts). ArrowView compares both by value, so a move re-renders only the
+  // arrows whose geometry it changed.
+  const [gridTracker] = useState(createElementGridTracker);
+  const [geometryTracker] = useState(createArrowGeometryTracker);
+  const arrowGeometry = useMemo(
+    () =>
+      elementIndex && arrowLinks
+        ? geometryTracker.geometryFor({
+            elements: drawnElements,
+            index: elementIndex,
+            grid: gridTracker.gridFor(drawnElements),
+            links: arrowLinks,
+            tabFinish,
+          })
+        : NO_ARROW_GEOMETRY,
+    [drawnElements, elementIndex, arrowLinks, gridTracker, geometryTracker, tabFinish],
   );
   // A drag in progress, ours or a collaborator's (docs/specs/008-canvas/drag-preview.md): each element
   // it changes, and each arrow depending on them, reads its own preview entry (PreviewedElement), so a
@@ -539,6 +542,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
     drawnElements,
     elementIndex,
     arrowLinks,
+    arrowGeometry,
     gridFor: (els) => gridTracker.gridFor(els),
     arrowLabels,
     tabFinish,

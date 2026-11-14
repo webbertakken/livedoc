@@ -99,6 +99,14 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   release. An arrow slot that cannot wear the free arrow's frame ignores the board, and a step the
   release adds to the preview (a mind drop, a context join) redraws it only when it changes
   something.
+- **A change of the board walks what it changed, not the board.** Each element reads what the
+  document gives it (the element, an arrow's frame, holes and label) from the element layer's
+  store, so a change that keeps the list (the same elements, in the same order, at the same
+  opacity) renders the elements it changed and not the list of all of them. An arrow's frame and
+  holes are worked out again only where the change can have moved them: the arrows a drag preview
+  would redraw for it, the other arrows in their fans, and what rides on those. A change of finish
+  or of paint order, or one touching a mind node (whose connectors read their siblings and the
+  root's flow), works out every arrow again.
 - **A break stays local.** An arrow broken where it runs behind a box is masked over its own extent (its path's
   points, control points included, grown for its heads), never a vast region: a mask's region is what the browser
   repaints when its holes change, and a vast one repainted the whole screen for every arrow a dragged box crossed.

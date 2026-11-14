@@ -11,6 +11,7 @@ import type { InsertShift } from '@/hooks/canvas/useInsertShift';
 import type {
   LayerDrawn,
   LayerPreviewStore,
+  DocEntry,
   PreviewEntry,
 } from '@/hooks/canvas/useLayerDragPreview';
 import type { PhotoDraftView } from '@/lib/photo-draft-preview';
@@ -26,7 +27,11 @@ import type { BoxedShared } from './sheet-chart-renderer';
 // entry or the document. Memoised: every prop is identity-stable across editor renders that change
 // nothing it draws, so a press or a release that renders the editor (a drag beginning or ending) does
 // not walk the board's element views (docs/specs/008-canvas/canvas-performance.md "A move re-renders
-// what moved").
+// what moved"). What the document gives each element (the element, an arrow's geometry and label, the
+// board) each element reads from the layer's store, so a change of the document that keeps the list
+// (the same elements, in the same order, at the same opacity) renders only the elements it changed
+// ("A release re-renders what moved, too"); the list's own copies are drawn only before the store has
+// taken them, which a list render never sees.
 
 // Stable empty-array constant for the `remoteSelectors` prop on the
 // (very common) "no remote participants have this element selected"
@@ -139,7 +144,7 @@ export const CanvasElementList = memo(function CanvasElementList({
           key={listed.id}
           store={previewStore}
           element={listed}
-          draw={(element: Element, entry: PreviewEntry | undefined) => {
+          draw={(element: Element, entry: PreviewEntry | undefined, doc: DocEntry | undefined) => {
             // Shift-duplicate ghost (docs/specs/008-canvas/shift-drag-duplicate.md): the dragged set renders
             // translucent while its materialised copy holds the start
             // position, multiplied over any per-layer opacity.
@@ -152,6 +157,7 @@ export const CanvasElementList = memo(function CanvasElementList({
             const draftFade = draftView && !isDraftNote ? 0.5 : 1;
             const effOpacity = ghostFactor * layerOpacity * draftFade;
             if (element.type === 'arrow') {
+              const geometry = entry?.geometry ?? doc?.geometry ?? arrowGeometry.get(element.id)!;
               return (
                 <Fragment key={element.id}>
                   <svg
@@ -180,9 +186,9 @@ export const CanvasElementList = memo(function CanvasElementList({
                   >
                     <SelectableArrowView
                       arrow={element}
-                      frame={(entry?.geometry ?? arrowGeometry.get(element.id)!).frame}
-                      holes={(entry?.geometry ?? arrowGeometry.get(element.id)!).holes}
-                      labelRender={entry?.label ?? arrowLabels.renderOf(element.id)}
+                      frame={geometry.frame}
+                      holes={geometry.holes}
+                      labelRender={entry?.label ?? doc?.label ?? arrowLabels.renderOf(element.id)}
                       draftLayout={arrowLabels.draftLayout}
                       isPaintMode={isPaintMode}
                       isEditing={element.id === editingId}
@@ -205,7 +211,7 @@ export const CanvasElementList = memo(function CanvasElementList({
                   </svg>
                   <FreeArrowFrame
                     arrow={element}
-                    elements={elements}
+                    elements={doc?.board ?? elements}
                     standsDown={
                       element.id === editingId ||
                       element.id === reshapingArrowId ||
@@ -269,4 +275,28 @@ export const CanvasElementList = memo(function CanvasElementList({
       ))}
     </div>
   );
-});
+}, elementListPropsEqual);
+
+// The props the store hands each element on (the board, its elements, the arrows' geometry and labels) are
+// left out; the listing itself counts by its ids and opacities.
+const STORE_FED = new Set<string>(['elements', 'arrowGeometry', 'arrowLabels', 'shownOrder']);
+
+function sameListing(a: readonly LayerDrawn[], b: readonly LayerDrawn[]): boolean {
+  return (
+    a === b ||
+    (a.length === b.length &&
+      a.every((o, i) => o.element.id === b[i]!.element.id && o.layerOpacity === b[i]!.layerOpacity))
+  );
+}
+
+export function elementListPropsEqual(
+  a: CanvasElementListProps,
+  b: CanvasElementListProps,
+): boolean {
+  const keys = Object.keys(b) as (keyof CanvasElementListProps)[];
+  return (
+    keys.length === Object.keys(a).length &&
+    keys.every((k) => STORE_FED.has(k) || Object.is(a[k], b[k])) &&
+    sameListing(a.shownOrder, b.shownOrder)
+  );
+}
