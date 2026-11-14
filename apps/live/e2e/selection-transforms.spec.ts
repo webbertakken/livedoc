@@ -239,7 +239,7 @@ test.describe('selection transforms on a whiteboard', () => {
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/card30-turning.png` });
     // Shift steps the readout with the snap.
     await page.keyboard.down('Shift');
-    await sweep(-37);
+    await sweep(-40);
     await expect(readout).toHaveText('315°');
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/card30-shift.png` });
     await page.mouse.up();
