@@ -156,7 +156,9 @@ beforeEach(() => {
     return doc ? { ...doc, tabCount: doc.tabs?.length ?? 0 } : null;
   });
   // The gate-only read answers from the same document.
-  db.getDocumentMeta.mockImplementation(async (...args: unknown[]) => db.getDocument(...args));
+  db.getDocumentMeta.mockImplementation(
+    async (...args: unknown[]) => (await db.getDocument(...args)) as DocumentDTO | null,
+  );
   canReadDocument.mockReset();
   canEditDocument.mockReset();
   resolveDocumentGrant.mockReset();
