@@ -113,7 +113,7 @@ test.describe('the two lines', () => {
       await page.getByRole('menuitem', { name: 'Tab', exact: true }).click();
     }
     const stack = documentGroup(page).locator('[data-tab-stack]');
-    await expect(stack).toHaveAccessibleName('All tabs (3)');
+    await expect(stack).toHaveAccessibleName('Tab 3, all tabs (3)');
     await stack.click();
     const list = page.getByRole('dialog', { name: 'Tabs' });
     await expect(list).toBeVisible();

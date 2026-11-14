@@ -51,13 +51,16 @@ on two lines over the canvas, a top line and a bottom line, each a single row wh
 - **Right: the document group.** In order:
   1. the document's **share-state icon** (the 28 px badge, [The top bar's middle](live-app.md#the-top-bars-middle)), its
      **name** (click to rename, for someone who may) and the **role pill**, as they were in the header;
-  2. a divider, then the **active tab** as a tinted segment: its kind glyph, its name, its tab menu (⋯). It never
-     shortens; a click on it renames it in place for someone who may change the document's tabs
-     (as the menu box's name did), a double-click on the name does too;
-  3. the **tab stack**: a stack glyph and the number of tabs in the session's scope. A press opens the **tab list**;
-  4. the **contributors**: the avatars of everyone else in the document, up to three, then **+N**. A press opens the
+  2. a divider, then the **active tab** as a tinted segment, which never shortens: its kind glyph, then the **tab
+     stack**, then its tab menu (⋯).
+     - The **kind glyph** renames the tab in place, for someone who may change the document's tabs: a button named
+       "Rename tab", in its hover card and to a screen reader. For anyone else it is a plain glyph.
+     - The **tab stack** is one button: the tab's name, a stack glyph and the number of tabs in the session's scope.
+       A press opens the **tab list**. It is named by its words and what it does: "Tab 1, all tabs (3)".
+     - While the tab is renamed, its name field takes the segment's place.
+  3. a divider, then the **contributors**: the avatars of everyone else in the document, up to three, then **+N**. A press opens the
      same tab list. Not drawn while nobody else is here;
-  5. **Add tab** (+), for someone who may add tabs: it opens the **add menu**, **Tab**, **Board**, **Sheet** and
+  4. **Add tab** (+), for someone who may add tabs: it opens the **add menu**, **Tab**, **Board**, **Sheet** and
      **Dashboard**, below or above it as there is room, styled as the mode menu (36 px rows with each one's mark)
      ([Editor modes](editor-modes.md#where-the-mode-lives)). A menu button (`aria-haspopup="menu"`, named "Add
      tab"), its rows `menuitem`s, arrow keys, Home, End, Enter, Space and Escape as every menu.
@@ -436,10 +439,14 @@ so a new page load starts on the mode's landing (Plan's Cards, or Boards while t
   left, carries no name.
 - While a board, Sheet or view filling the tab (or maximised) has its own name, that name shows in the segment
   instead, so the segment never shows two.
-- A click (a tap) on it renames the tab in place, for someone who may change the
-  document's tabs: Enter or leaving saves, Escape puts it back; up to 60 characters.
-- Every name in the segment renames on a single click, whichever it is (the tab's, a board's, a Sheet's, a chart's,
-  a Dashboard's): in the segment a click has nothing else to do. In an element's own header a press moves the
+- A click (a tap) on the name opens the tab list: the name, the stack glyph and the count are one button.
+- The kind glyph before the name renames the tab in place, for someone who may change the document's tabs: Enter
+  or leaving saves, Escape puts it back; up to 60 characters. The tab menu's **Rename**, the command palette's
+  **Rename Tab** and the tab list's double-click and `F2` rename it too.
+- Why: the tab's name is what people reach for to see and switch tabs, far more often than to rename one, and a name
+  that renamed on a click left the tab list behind a small separate button. Decided by Webber.
+- A board's, Sheet's, chart's or Dashboard's own name riding in the segment keeps its own rename on a click, and sits
+  before the stack, which then shows only the glyph and the count. In an element's own header a press moves the
   element, so there a double-click renames, as before.
 - On a phone too: the active tab is drawn there; only the document's name is not ("On a phone").
 

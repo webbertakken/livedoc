@@ -655,8 +655,8 @@ function documentParts({
   locked = false,
 }: DocumentGroupProps) {
   const docW = 26 + (name ? textW(name, 10.5) + 8 : 0) + (role ? 54 : 0);
-  const tabW = 26 + (locked ? 12 : 0) + textW(tab, 10.5) + 22;
-  const stackW = 40;
+  const stackW = 36;
+  const tabW = 26 + (locked ? 12 : 0) + textW(tab, 10.5) + 4 + stackW + 22;
   const peopleW = people.length ? 10 + people.length * 14 + (more ? 22 : 0) : 0;
   return { docW, tabW, stackW, peopleW, plusW: 26 };
 }
@@ -664,11 +664,12 @@ function documentParts({
 /** The document group's width for the same props. */
 export function documentGroupWidth(props: DocumentGroupProps = {}): number {
   const p = documentParts(props);
-  return 4 + p.docW + 8 + p.tabW + 8 + p.stackW + (p.peopleW ? 8 + p.peopleW : 0) + 8 + p.plusW + 4;
+  return 4 + p.docW + 8 + p.tabW + (p.peopleW ? 8 + p.peopleW : 0) + 8 + p.plusW + 4;
 }
 
 /** The document group, its right edge at `right`: the share-state icon, the document's name (none on a phone) and
- *  the role pill; the active tab (mode glyph, name, ⋯) tinted; the tab stack (glyph and count); the people here (up
+ *  the role pill; the active tab tinted: its mode glyph (Rename tab), the tab stack (its name, glyph and count, one
+ *  button) and ⋯; the people here (up
  *  to three, then +N); and +. Returns the group with the tab stack's centre, where the tab list's arrow points. */
 export function DocumentGroup({
   right,
@@ -692,8 +693,8 @@ export function DocumentGroup({
   at += p.docW;
   const tabX = at + 8;
   at = tabX + p.tabW;
-  const stackX = at + 8;
-  at = stackX + p.stackW;
+  // The tab stack is one button with the name, inside the active tab, before its ⋯.
+  const stackX = tabX + p.tabW - 22 - p.stackW;
   const peopleX = p.peopleW ? at + 8 : at;
   at = peopleX + p.peopleW;
   const plusX = at + 8;
@@ -741,15 +742,18 @@ export function DocumentGroup({
       ) : (
         <DotsGlyph x={tabX + p.tabW - 11} y={y + 16} />
       )}
-      <GroupDivider x={stackX - 4} y={y} />
       {props.stackOpen && (
-        <rect x={stackX} y={y + 4} width={p.stackW} height={24} rx={6} className="fill-slate-100" />
+        <rect x={stackX} y={y + 6} width={p.stackW} height={20} rx={5} className="fill-brand-100" />
       )}
-      <TabStackGlyph x={stackX + 11} y={y + 16} />
-      <rect x={stackX + 20} y={y + 9} width={16} height={14} rx={7} className="fill-slate-100" />
-      <Label x={stackX + 28} y={y + 17} size={9} weight={600} tone="body" anchor="middle">
-        {count}
-      </Label>
+      {!props.renaming && (
+        <g>
+          <TabStackGlyph x={stackX + 9} y={y + 16} />
+          <rect x={stackX + 18} y={y + 9} width={16} height={14} rx={7} className="fill-white" />
+          <Label x={stackX + 26} y={y + 17} size={9} weight={600} tone="body" anchor="middle">
+            {count}
+          </Label>
+        </g>
+      )}
       {p.peopleW > 0 && (
         <g>
           <GroupDivider x={peopleX - 4} y={y} />
@@ -799,7 +803,7 @@ export function DocumentGroup({
 export function tabStackCentre(right: number, props: DocumentGroupProps = {}): number {
   const p = documentParts(props);
   const x = right - documentGroupWidth(props);
-  return x + 4 + p.docW + 8 + p.tabW + 8 + p.stackW / 2;
+  return x + 4 + p.docW + 8 + p.tabW - 22 - p.stackW / 2;
 }
 
 // --- The tab list ----------------------------------------------------------------------
