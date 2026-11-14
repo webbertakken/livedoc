@@ -174,3 +174,9 @@ seen on the document).
   ([API](../015-api/api.md) "Tab save"): the editor reads only the revision, so an echo cost every
   autosave the tab's full size again (95,893 bytes for a 1,000-box tab, now under 200).
   `apps/api/src/routes/tab-put-route.test.ts` pins the answer's keys and size.
+- A peer's op reaches what is on screen when it arrives, and each undo or redo snapshot only when
+  undo, redo or a cancelled drag restores it ([Realtime conflict resolution](../012-collaboration/realtime-conflict-resolution.md)
+  "Undo"). Applied to every snapshot on arrival, one peer save of 20 ops against 500 steps of a
+  1,000-element board held the main thread 200 to 300 ms; replayed on restore it takes about 1 ms.
+  `apps/live/hooks/canvas/useDocumentHistory.test.ts` counts the passes and checks every step
+  against applying each op to every snapshot on arrival.

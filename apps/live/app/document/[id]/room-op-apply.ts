@@ -37,7 +37,14 @@ import { markArticleGrow } from '@/lib/article/article-grow-store';
 // peer's card that reaches a full box takes the place of the newest of them. The baseline never does.
 export type PendingIdeaIds = (tabId: string, elementId: string) => readonly string[];
 
-export function applyRoomOpToTabs(tabs: Tab[], op: RoomOp, pendingIdeaIds?: PendingIdeaIds): Tab[] {
+// `replaying`: the op runs again on an undo snapshot being restored (history-replay.ts), long after
+// it arrived; the marks it leaves for the next lay-out were left then and are not left twice.
+export function applyRoomOpToTabs(
+  tabs: Tab[],
+  op: RoomOp,
+  pendingIdeaIds?: PendingIdeaIds,
+  { replaying = false }: { replaying?: boolean } = {},
+): Tab[] {
   switch (op.kind) {
     case 'tab': {
       // A peer's whole tab. A tab we don't have yet (they just added it) is
@@ -144,7 +151,7 @@ export function applyRoomOpToTabs(tabs: Tab[], op: RoomOp, pendingIdeaIds?: Pend
           if (!known) return tab;
           articles[op.flow] = applyArticleOps(articles[op.flow], ops);
           // An agent's writing has no writer here to add the pages it needs: the next lay-out may.
-          if (op.agent === true) markArticleGrow(op.tabId, op.flow);
+          if (op.agent === true && !replaying) markArticleGrow(op.tabId, op.flow);
         }
         if (Object.keys(articles).length > 0) return { ...tab, articles };
         const { articles: _drop, ...rest } = tab;

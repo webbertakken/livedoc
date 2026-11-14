@@ -188,11 +188,15 @@ the editor until a reload, and nothing says so. The client therefore checks its 
 
 1. **Undo is local, not global.** Undo/redo affects the current user's own
    changes only — never rolls back a peer's edit. Every peer op (and every
-   agent changeset) is applied to each undo and redo snapshot as well as to
-   what is on screen, so a restored snapshot already holds the peer's change:
+   agent changeset) is applied to what is on screen when it arrives, and to each
+   undo and redo snapshot, in arrival order, when undo, redo or a cancelled drag
+   restores that snapshot, so a restored snapshot holds the peer's change:
    undoing takes back your own edits alone, never a collaborator's element or a
    tab they added, and the resulting element ops are broadcast as yours. A
-   resync's re-read content replaces only what is on screen.
+   resync's re-read content replaces only what is on screen. The ops a
+   snapshot has yet to take are held until every kept snapshot has them; past
+   `REPLAY_LIMIT` (1,000) the oldest goes to the snapshots that lack it
+   (`apps/live/hooks/canvas/history-replay.ts`).
 2. **The room's SQLite is the system of record.** The room holds the document's content in its SQLite
    ([Document storage](../006-document/document-storage.md)) beside its ordering and collaboration state (epoch +
    seq, the op log, the collaboration ledger, the live poll, the facilitator baton). REST reads, exports and

@@ -1,6 +1,6 @@
+import type { RemoteApply } from '@/hooks/canvas/history-replay';
 import { useCallback, useEffect, useRef, useState, type MutableRefObject } from 'react';
 import { CHANGESET_REVEAL_MS, type ChangesetRoomOp } from '@livedoc/api-schema';
-import type { Tab } from '@livedoc/document';
 import { apiListChangesets, apiRevertChangeset } from '@/lib/api-client';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
@@ -33,7 +33,7 @@ export function useChangesetFeed(opts: {
   markTabLoaded: (tabId: string) => void;
   // A peer's op into the present and every undo / redo snapshot (historyApplyRemoteOp), so undo
   // never brings back what the peer changed.
-  applyRemoteOp: (apply: (prev: Tab[]) => Tab[]) => void;
+  applyRemoteOp: (apply: RemoteApply) => void;
   saveBaseline: SaveBaselineRefs;
   countAppliedOp: () => void;
   // Re-reads the named tabs from D1 in place (useRoomResync), moving the seen revision with them.

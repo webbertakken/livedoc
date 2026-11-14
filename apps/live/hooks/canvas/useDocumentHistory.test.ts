@@ -13,6 +13,7 @@ import {
   historyCancel,
   historyUndo,
 } from './useDocumentHistory';
+import { REPLAY_LIMIT } from './history-replay';
 
 const tab = (id: string, label = id): Tab => ({
   id,
@@ -264,32 +265,152 @@ describe('historyApplyRemoteOp', () => {
     expect(h.present.map((t) => t.id)).toEqual(['a', 'p']);
   });
 
-  it('keeps the history itself when the op changes nothing', () => {
-    const h: History = { past: [[tab('a')]], present: [tab('a')], future: [] };
+  it('keeps the history itself when the op changes nothing and no snapshot could take it', () => {
+    const h: History = { past: [], present: [tab('a')], future: [] };
     expect(historyApplyRemoteOp(h, (ts) => ts)).toBe(h);
+  });
+
+  it("brings a peer's edit to a tab I deleted back with the tab when I undo", () => {
+    let h: History = { past: [], present: [tab('a'), tab('b')], future: [] };
+    h = historyCommit(h, (ts) => ts.filter((t) => t.id !== 'b'));
+    h = historyApplyRemoteOp(h, (ts) => ts.map((t) => (t.id === 'b' ? { ...t, name: 'peer' } : t)));
+    expect(h.present.map((t) => t.id)).toEqual(['a']);
+    expect(historyUndo(h).present.find((t) => t.id === 'b')!.name).toBe('peer');
   });
 });
 
-// A peer op costs one pass per snapshot (measured 12 ms for 500 steps on a 2,000-element tab): linear in the
-// history, never worse. Counted, not timed: the op runs once on the present and once on every undo and redo
-// snapshot, each exactly once. (A CPU-time ratio here swung with garbage collection on CI and turned main red.)
+// A peer op runs on the present when it arrives and on a snapshot only when undo, redo or a cancel restores it
+// (history-replay.ts): one pass per snapshot on every op cost 200 to 300 ms for a peer save of 20 ops against
+// 500 steps of a 1,000-element board. Counted, not timed.
 describe('historyApplyRemoteOp cost', () => {
-  it('runs the op once per snapshot, so it grows linearly with the history', () => {
-    const board = (n: number): Tab[] => [{ id: 'a', name: `${n}`, elements: [] }];
-    const h: History = {
-      past: Array.from({ length: 300 }, (_, i) => board(i)),
-      present: board(300),
-      future: Array.from({ length: 100 }, (_, i) => board(301 + i)),
-    };
+  const board = (n: number): Tab[] => [{ id: 'a', name: `${n}`, elements: [] }];
+  const deep = (): History => {
+    let h = start(board(0));
+    for (let i = 1; i <= 300; i++) h = historyCommit(h, () => board(i));
+    for (let i = 0; i < 100; i++) h = historyUndo(h);
+    return h;
+  };
+
+  it('runs the op on the present alone when it arrives', () => {
     const seen: Tab[][] = [];
-    const next = historyApplyRemoteOp(h, (ts) => {
+    const next = historyApplyRemoteOp(deep(), (ts) => {
       seen.push(ts);
       return ts.map((t) => ({ ...t, name: `${t.name}!` }));
     });
-    expect(seen).toHaveLength(401);
-    expect(new Set(seen).size).toBe(401);
-    expect(next.past).toHaveLength(300);
+    expect(seen).toHaveLength(1);
+    expect(next.present[0]!.name).toBe('200!');
+    expect(next.past).toHaveLength(200);
     expect(next.future).toHaveLength(100);
-    expect(next.present[0]!.name).toBe('300!');
+  });
+
+  it('runs it once more on each snapshot that undo or redo brings back, never twice', () => {
+    let calls = 0;
+    let h = historyApplyRemoteOp(deep(), (ts) => {
+      calls++;
+      return ts.map((t) => ({ ...t, name: `${t.name}!` }));
+    });
+    for (let i = 0; i < 3; i++) h = historyUndo(h);
+    for (let i = 0; i < 5; i++) h = historyRedo(h);
+    expect(calls).toBe(1 + 3 + 2);
+    expect(h.present[0]!.name).toBe('202!');
+  });
+
+  it('keeps no op that every snapshot already holds', () => {
+    let h = start(board(0));
+    h = historyCommit(h, () => board(1));
+    h = historyApplyRemoteOp(h, (ts) => ts.map((t) => ({ ...t, name: `${t.name}!` })));
+    h = historyUndo(h);
+    expect(h.replay?.ops ?? []).toHaveLength(0);
+  });
+
+  it('holds at most REPLAY_LIMIT ops, applying the oldest to the snapshots that lack it', () => {
+    let calls = 0;
+    let h = historyCommit(start(board(0)), () => board(1));
+    for (let i = 0; i < REPLAY_LIMIT + 5; i++) {
+      h = historyApplyRemoteOp(h, (ts) => {
+        calls++;
+        return ts.map((t) => ({ ...t, name: `${t.name}.` }));
+      });
+    }
+    expect(h.replay!.ops).toHaveLength(REPLAY_LIMIT);
+    expect(calls).toBe(REPLAY_LIMIT + 5 + 5);
+    expect(historyUndo(h).present[0]!.name).toBe(`0${'.'.repeat(REPLAY_LIMIT + 5)}`);
+  });
+});
+
+// The rule the replay keeps (docs/specs/012-collaboration/realtime-conflict-resolution.md "Undo"): every step
+// shows exactly what applying each peer op to every snapshot on arrival showed. Checked against that eager model
+// over a seeded run of edits, checkpoints, cancels, undos, redos and order-dependent peer ops.
+describe('historyApplyRemoteOp replay', () => {
+  type Model = { past: Tab[][]; present: Tab[]; future: Tab[][] };
+  const relabel = (tabs: Tab[], id: string, f: (label: string) => string): Tab[] =>
+    tabs.map((t) => ({
+      ...t,
+      elements: t.elements.map((e) =>
+        e.id === id ? { ...e, label: f((e as { label?: string }).label ?? '') } : e,
+      ),
+    }));
+
+  it('restores what applying every op to every snapshot on arrival restored', () => {
+    let seed = 7;
+    const rand = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    let h = start([tab('A', 'a')]);
+    let m: Model = { past: [], present: h.present, future: [] };
+    for (let step = 0; step < 2000; step++) {
+      const roll = rand(10);
+      if (roll < 3) {
+        const id = `el-${rand(4)}`;
+        const edit = (ts: Tab[]): Tab[] =>
+          ts.some((t) => t.elements.some((e) => e.id === id))
+            ? relabel(ts, id, (l) => `${l}L${step}`)
+            : ts.map((t, i) =>
+                i === 0 ? { ...t, elements: [...t.elements, { ...tab('x').elements[0]!, id }] } : t,
+              );
+        h = historyCommit(h, edit);
+        m = { past: [...m.past, m.present], present: edit(m.present), future: [] };
+      } else if (roll === 3) {
+        h = historyMarkCheckpoint(h);
+        m = { past: [...m.past, m.present], present: m.present, future: [] };
+      } else if (roll === 4 && m.past.length > 0) {
+        h = historyCancel(h);
+        m = { ...m, past: m.past.slice(0, -1), present: m.past[m.past.length - 1]! };
+      } else if (roll === 5 && m.past.length > 0) {
+        h = historyUndo(h);
+        m = {
+          past: m.past.slice(0, -1),
+          present: m.past[m.past.length - 1]!,
+          future: [m.present, ...m.future],
+        };
+      } else if (roll === 6 && m.future.length > 0) {
+        h = historyRedo(h);
+        m = { past: [...m.past, m.present], present: m.future[0]!, future: m.future.slice(1) };
+      } else {
+        const id = `el-${rand(4)}`;
+        const mark = `P${step}`;
+        // Order-dependent: doubles the label, then marks it, so replaying out of order shows.
+        const peer = (ts: Tab[]): Tab[] =>
+          relabel(ts, id, (l) => `${l.slice(-6)}${l.slice(-6)}${mark}`);
+        h = historyApplyRemoteOp(h, peer);
+        m = { past: m.past.map(peer), present: peer(m.present), future: m.future.map(peer) };
+      }
+      expect(h.present).toEqual(m.present);
+    }
+    while (m.past.length > 0) {
+      h = historyUndo(h);
+      m = {
+        past: m.past.slice(0, -1),
+        present: m.past[m.past.length - 1]!,
+        future: [m.present, ...m.future],
+      };
+      expect(h.present).toEqual(m.present);
+    }
+    while (m.future.length > 0) {
+      h = historyRedo(h);
+      m = { past: [...m.past, m.present], present: m.future[0]!, future: m.future.slice(1) };
+      expect(h.present).toEqual(m.present);
+    }
   });
 });
