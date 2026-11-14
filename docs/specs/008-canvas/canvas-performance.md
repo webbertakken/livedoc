@@ -171,6 +171,10 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   from inside a profiler start: starting the CPU profiler costs a one-off task of about a second on
   a large page. A still board's work, which must stay under a task's length, is read from a trace.
   One more run of each gesture is traced for attribution and not counted.
+- **Nothing the probe does lands in a gesture's window either.** It runs without Playwright's own
+  trace, which snapshots the page before and after every input action: on the reference board each
+  snapshot is a task of up to 60 ms, which the budget counted as the board's own (a whiteboard zoom
+  read 62 ms with them).
 - **It runs nightly on its own**, in a scheduled workflow, against the head of `main`; a night with
   no new commit on `main` since the last run is skipped, so it spends no CI minutes on an unchanged
   build. Each run writes the budget table to the job summary and keeps the raw traces as an
