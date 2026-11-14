@@ -1,4 +1,4 @@
-import { useCanvasViewKey } from '@/hooks/canvas/useViewportStore';
+import { useViewportZoom } from '@/hooks/canvas/useViewportStore';
 import type { RefObject } from 'react';
 import {
   deriveTextColorForBg,
@@ -25,7 +25,7 @@ type CanvasGuideOverlayProps = {
   tabThemeId: ThemeId;
   wrapperRef: RefObject<HTMLDivElement | null>;
   // The canvas size. With the view, read from the viewport store here, it is what the wrapper's
-  // origin follows (useCanvasViewKey), so the chrome around this takes no view.
+  // origin follows (useCanvasClientOrigin), so the chrome around this takes no view.
   mainSize: { width: number; height: number };
 };
 
@@ -43,14 +43,14 @@ export function CanvasGuideOverlay({
   wrapperRef,
   mainSize,
 }: CanvasGuideOverlayProps) {
-  const { viewportZoom, viewKey } = useCanvasViewKey(mainSize);
+  const viewportZoom = useViewportZoom();
   const surface = useCanvasSurface();
   const marqueeColors = selectionBoxColors(getTheme(tabThemeId).elementStroke, surface);
   // Where canvas (0, 0) sits in the editor's box, measured only while a canvas-space guide shows.
   const origin = useCanvasOverlayOrigin(
     wrapperRef,
     alignGuides.length > 0 || allSnapTargets.length > 0 || !!drawHover || distGuides.length > 0,
-    viewKey,
+    mainSize,
   );
   // The marquee runs in client coords; the editor's box (a split's pane) is what its `fixed` box counts from.
   const box = useEditorBox();

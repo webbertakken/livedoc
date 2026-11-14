@@ -39,16 +39,9 @@ export function useViewportOf<T>(
 }
 
 const zoomOf = (v: View) => v.zoom;
-const zoomAndOffset = (v: View) => `${v.offset.x},${v.offset.y},${v.zoom}`;
 
-// For the overlays that convert canvas points to the screen: the zoom, and a key naming what moves
-// the canvas wrapper on screen (the view and the canvas size), on which they re-measure its origin
-// (useCanvasClientOrigin). They read it themselves, so the chrome around them takes no view.
-export function useCanvasViewKey(mainSize: { width: number; height: number }): {
-  viewportZoom: number;
-  viewKey: string;
-} {
-  const view = useViewportOf(zoomAndOffset);
-  const viewportZoom = useViewportOf(zoomOf);
-  return { viewportZoom, viewKey: `${view},${mainSize.width},${mainSize.height}` };
+// The zoom, for the overlays that convert canvas points to the screen: they read it themselves, so the chrome
+// around them takes no view.
+export function useViewportZoom(): number {
+  return useViewportOf(zoomOf);
 }

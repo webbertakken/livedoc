@@ -133,9 +133,14 @@ A gesture's cost scales with what it changes and what is on screen, never with t
 - **A break stays local.** An arrow broken where it runs behind a box is masked over its own extent (its path's
   points, control points included, grown for its heads), never a vast region: a mask's region is what the browser
   repaints when its holes change, and a vast one repainted the whole screen for every arrow a dragged box crossed.
-- **A pointer move reads no layout.** The pointer position sent to peers converts with where the canvas sits on
-  screen, measured when the view or the canvas's size changes; read on every move, it laid the whole board out again
-  on each frame of a drag.
+- **Converting between the screen and the canvas reads no layout.** Where canvas (0, 0) sits on
+  screen is worked out from the view and the canvas's box, which is measured when the canvas
+  changes size; the view is a transform of that box, so a pan or a zoom moves the origin without
+  measuring anything. The pointer position sent to peers converts with the view as the move
+  arrives, and the overlays drawn in screen space (the snap guides, the draw previews, the lit
+  lane) follow the view as they render. Read from the page on every pointer move, the origin laid
+  the whole board out again on each frame of a drag; measured on every change of the view, it
+  laid it out on each wheel tick of a whiteboard zoom (about 25 ms of a 55 ms task).
 - **The canvas's cursor stays off the elements.** The cursor the canvas shows (the tool's, a pan's
   grab, a draw tool's intent) changes on a tool switch, at the start and end of a pan and when a
   stroke lands, and a cursor is inherited: set on what holds the elements, each change restyled

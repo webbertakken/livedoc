@@ -5,8 +5,8 @@ import { ES_LANE_HEIGHT, laneTop, type EsTimeline } from '@livedoc/document';
 import { setLanePreview } from '@/lib/lane-preview';
 import { EditorBoxContext, type EditorBox } from '@/hooks/ui/useEditorBox';
 import { TimelineLanesOverlay } from './TimelineLanesOverlay';
-import { createViewportStore } from '@/lib/viewport-store';
 import { ViewportStoreProvider } from '@/hooks/canvas/useViewportStore';
+import { canvasWrapperFixture, storeWithOriginAt } from '@/hooks/canvas/canvas-wrapper.fixture';
 
 // The lit lane (docs/specs/021-event-storming/event-storming.md Phase 6). What matters here is that it draws NOTHING
 // until a drag has claimed a lane, and that what it draws lands where the drop
@@ -15,19 +15,14 @@ import { ViewportStoreProvider } from '@/hooks/canvas/useViewportStore';
 
 const TIMELINE: EsTimeline = { originY: 0 };
 
-function wrapper(left = 0, top = 0) {
-  const el = document.createElement('div');
-  el.getBoundingClientRect = () => ({ left, top, width: 1000, height: 1000 }) as DOMRect;
-  return { current: el };
-}
-
 function draw(opts: { zoom?: number; timeline?: EsTimeline | null } = {}) {
   const { container } = render(
-    <ViewportStoreProvider store={createViewportStore(opts.zoom ?? 1)}>
+    // Canvas (0, 0) on the wrapper's corner at any zoom, so client space is canvas space scaled.
+    <ViewportStoreProvider store={storeWithOriginAt(opts.zoom ?? 1)}>
       <TimelineLanesOverlay
         timeline={opts.timeline === undefined ? TIMELINE : opts.timeline}
         tabThemeId="brand"
-        wrapperRef={wrapper()}
+        wrapperRef={canvasWrapperFixture().ref}
         mainSize={{ width: 1000, height: 1000 }}
       />
     </ViewportStoreProvider>,
@@ -132,12 +127,12 @@ describe('TimelineLanesOverlay in the right pane of a split', () => {
     const pane: EditorBox = { left: 893, top: 0, width: 893 };
 
     const { container } = render(
-      <ViewportStoreProvider store={createViewportStore(1)}>
+      <ViewportStoreProvider store={storeWithOriginAt(1)}>
         <EditorBoxContext.Provider value={pane}>
           <TimelineLanesOverlay
             timeline={TIMELINE}
             tabThemeId="brand"
-            wrapperRef={wrapper(1000, 0)}
+            wrapperRef={canvasWrapperFixture({ left: 1000, top: 0, width: 1000, height: 1000 }).ref}
             mainSize={{ width: 1000, height: 1000 }}
           />
         </EditorBoxContext.Provider>

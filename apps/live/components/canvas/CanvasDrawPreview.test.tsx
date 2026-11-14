@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { render as rtlRender } from '@testing-library/react';
 import type { ReactElement } from 'react';
-import { createViewportStore } from '@/lib/viewport-store';
 import { ViewportStoreProvider } from '@/hooks/canvas/useViewportStore';
+import { canvasWrapperFixture, storeWithOriginAt } from '@/hooks/canvas/canvas-wrapper.fixture';
 import { describe, expect, it } from 'vitest';
 import type { PendingDraw } from '@/lib/draw-mode';
 import { DEFAULT_MIRROR, layOutPages, newLogoPage } from '@livedoc/document';
@@ -11,17 +11,16 @@ import { CanvasDrawPreview } from './CanvasDrawPreview';
 import { draftMirrorMaps, toScreen } from './MirrorReflection';
 
 // docs/specs/023-draw-mode/draw-mode.md "Pens": what you see while drawing is what lands.
-const wrapper = document.createElement('div');
-// The overlay reads the view from the viewport store, at 2x here.
+// The overlay reads the view from the viewport store, at 2x here, canvas (0, 0) on the wrapper's corner.
 const render = (ui: ReactElement) =>
-  rtlRender(<ViewportStoreProvider store={createViewportStore(2)}>{ui}</ViewportStoreProvider>);
+  rtlRender(<ViewportStoreProvider store={storeWithOriginAt(2)}>{ui}</ViewportStoreProvider>);
 const base = {
   drawDrag: null,
   penPoints: null,
   polygonVertices: [],
   polygonCursor: null,
   stamp: null,
-  wrapperRef: { current: wrapper },
+  wrapperRef: canvasWrapperFixture().ref,
   mainSize: { width: 1000, height: 1000 },
   whiteboardInk: '#1c1917',
 };
@@ -97,9 +96,8 @@ describe('CanvasDrawPreview rectangle corners', () => {
 // 893 px from the window's edge, so a preview counts from the pane's corner and lands under the pointer.
 describe('CanvasDrawPreview in the right pane of a split', () => {
   const RIGHT_PANE: EditorBox = { left: 893, top: 0, width: 893 };
-  const paneWrapper = document.createElement('div');
-  paneWrapper.getBoundingClientRect = () =>
-    ({ left: 1000, top: 40, width: 800, height: 800 }) as DOMRect;
+  const paneWrapper = canvasWrapperFixture({ left: 1000, top: 40, width: 1000, height: 1000 }).ref
+    .current;
   const inPane = (ui: ReactElement) =>
     render(<EditorBoxContext.Provider value={RIGHT_PANE}>{ui}</EditorBoxContext.Provider>);
 

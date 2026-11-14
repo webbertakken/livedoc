@@ -1,6 +1,6 @@
 'use client';
 
-import { useCanvasViewKey } from '@/hooks/canvas/useViewportStore';
+import { useViewportZoom } from '@/hooks/canvas/useViewportStore';
 import type { RefObject } from 'react';
 import { deriveTextColorForBg, ES_LANE_HEIGHT, laneTop, type EsTimeline } from '@livedoc/document';
 import { getTheme, type ThemeId } from '@/lib/themes';
@@ -37,12 +37,12 @@ export function TimelineLanesOverlay({
   tabThemeId: ThemeId;
   wrapperRef: RefObject<HTMLDivElement | null>;
   // The canvas size. With the view, read from the viewport store here, it is what the wrapper's
-  // origin follows (useCanvasViewKey), so the chrome around this takes no view.
+  // origin follows (useCanvasClientOrigin), so the chrome around this takes no view.
   mainSize: { width: number; height: number };
 }) {
-  const { viewportZoom, viewKey } = useCanvasViewKey(mainSize);
+  const viewportZoom = useViewportZoom();
   const preview = useLanePreview();
-  const rect = useCanvasOverlayOrigin(wrapperRef, !!timeline && !!preview, viewKey);
+  const rect = useCanvasOverlayOrigin(wrapperRef, !!timeline && !!preview, mainSize);
   if (!timeline || !preview || !rect) return null;
 
   const theme = getTheme(tabThemeId);
