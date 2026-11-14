@@ -87,6 +87,13 @@
   }
 }
 
+/* A label's words pick their element (docs/specs/023-draw-mode/draw-mode.md "Selecting"): while an element's box
+   lets pointers through (`data-words-pick`, an unselected stroke, line or outline-picked shape on a whiteboard), its
+   words catch them as its drawn line does (components/canvas/LabelWords.tsx). */
+[data-words-pick] [data-label-words] {
+  pointer-events: auto;
+}
+
 @layer base {
   /* The pointer cursor on every enabled button now lives in the shared theme
    * (@livedoc/tailwind-config), so every app gets it. */

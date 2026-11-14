@@ -509,6 +509,9 @@ Explorer Home's Jump Back In.
 - The **outline is the one drawn**, not the box: an ellipse by its curve, a
   diamond by its four edges, a cylinder by its body and rim, following the
   shape's rotation.
+- **A label's words pick their element**, as its line or outline does: a click on them selects a stroke, a line or a
+  shape whose inside lets pointers through, and a double-click on them opens that element's label, as a
+  double-click on its line does, never a new text box.
 - **Shift with Select always drags a selection box**, even when the press
   starts on an element, and the box **adds** what it encloses to the
   selection. A **Shift-click** on an element adds it to the selection or

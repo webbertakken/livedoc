@@ -79,7 +79,9 @@ The control:
 - **Scale** is an icon toggle (the double-headed arrow, tooltip "Scale") to the right of the
   slider and its readout, pressed while the size is Scale. It keeps its meaning per surface: a
   note fills its box, a table cell tracks the row height, a single-line label draws at a middling
-  fixed px.
+  fixed px (16 px, `LABEL_FONT_PX.scale`), never stretched to its box.
+  A shape's label at Scale shrinks to fit like any size ([Shrink to fit](#shrink-to-fit)), the same on the canvas, in
+  its editor and in every export.
 
 An exact px **draws at that px on every surface**: a shape label, a note, an arrow caption, a table
 cell, a chart key and a Sankey's labels alike, on the canvas and in every export. Earlier documents

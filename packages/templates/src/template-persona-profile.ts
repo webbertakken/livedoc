@@ -109,7 +109,8 @@ export function personaProfileCard(out: Element[], x: number, top: number, heigh
       width: innerW,
       height: 44,
       label: 'Maya Chen',
-      textSize: 'scale',
+      // Large (32 px) fills the 44 px name line: Scale is a middling 16 px on a single line, under the subtitle.
+      textSize: 'lg',
       textBold: true,
       textColor: INK,
       textAlignX: 'left',

@@ -1,6 +1,6 @@
 // Label rendering primitives used inside boxed element views (shape,
-// text, sticky). Five renderers and two editors covering the four
-// committed sizes (scale / sm / md / lg) and both single-line and
+// text, sticky). The renderers and the editor covering every committed
+// size (Scale, a preset or a px) and both single-line and
 // multi-line layouts. Lifted out of element-parts.tsx (was 643 lines,
 // two-thirds of it labels) so the parts file is scoped to selection
 // chrome (lock badge, resize handles) and labels live with
@@ -26,7 +26,7 @@ import {
 } from '@livedoc/document';
 import { RichTextEditor } from '@/components/canvas/RichTextEditor';
 import { fitMultilineFontPx } from '@/lib/fit-multiline-text';
-import { FixedSizeLabel, MultilineLabel, RichLabel, ScalingLabel } from './element-label-views';
+import { FixedSizeLabel, MultilineLabel, RichLabel } from './element-label-views';
 import type { TextHugLabel } from './useTextHug';
 import type { TextAnimView } from './useTextAnimation';
 import { wordmarkTextStyle } from './label-style';
@@ -174,9 +174,9 @@ export function renderLabel(
   }
 
   // Per-range formatting (docs/specs/008-canvas/canvas-and-palette.md): once a label carries non-trivial
-  // runs, render them as styled spans regardless of size (the `scale`
-  // auto-fit opt-out). Empty / single override-free runs fall through to
-  // the legacy whole-element renderers below.
+  // runs, render them as styled spans regardless of size (a note's Scale
+  // fill included). Empty / single override-free runs fall through to
+  // the whole-element renderers below.
   if (hasRichFormatting(richText)) {
     return (
       <RichLabel
@@ -212,26 +212,9 @@ export function renderLabel(
     );
   }
 
-  if (textSize === 'scale' && !hug) {
-    if (!label) return null;
-    return (
-      <ScalingLabel
-        text={label}
-        alignX={alignX}
-        alignY={alignY}
-        padding={padding}
-        style={textStyle}
-        // The gradient relies on background-clip:text, which can't paint an SVG
-        // <text> fill — withhold it here so the glyphs don't vanish; glow /
-        // pulse / trace ride the SVG drop-shadow fine.
-        animClass={labelAnimClass === 'lvd-anim-text-gradient' ? undefined : labelAnimClass}
-        textAnim={textAnim}
-      />
-    );
-  }
-
   // A shape's label shrinks to fit its box (docs/specs/004-interface-design/fonts.md "Shrink to fit"), measured as the
-  // export measures it.
+  // export measures it. Scale is the label scale's middling fixed px here, never stretched to the box, so the editor
+  // (RichTextEditor, on the same px) opens on the words exactly where they are drawn.
   const sizePx = labelFontPx(textSize) * textScale;
   const px = hug
     ? hug.fontPx
