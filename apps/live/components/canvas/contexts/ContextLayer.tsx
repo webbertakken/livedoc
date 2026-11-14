@@ -1,7 +1,14 @@
 'use client';
 
 import { useMemo, type CSSProperties } from 'react';
-import { CONTEXT_INK, hiddenLayerElementIds, type Element, type Layer } from '@livedoc/document';
+import {
+  CONTEXT_INK,
+  hiddenLayerElementIds,
+  nameSuggestionsFor,
+  type Element,
+  type ElementId,
+  type Layer,
+} from '@livedoc/document';
 import type { ContextControls, SuggestionControls } from '@/components/canvas/Canvas.types';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
 import { applyOverlay, useDragPreview, useLocalDragPreview } from '@/lib/drag-preview';
@@ -9,13 +16,17 @@ import { drawnContexts } from '@/lib/context-outlines';
 import {
   endSuggestionPreview,
   leaveSuggestion,
+  nameKey,
+  parsePreviewKey,
   previewSuggestion,
+  previewedContextIds,
   useSuggestionView,
 } from '@/lib/suggestion-view';
 import {
   clearContextSelection,
   editContextName,
   selectContext,
+  selectContexts,
   setDrawingContext,
   useContextSelection,
 } from '@/lib/context-selection';
@@ -23,12 +34,15 @@ import { notesInLoop } from '@/lib/context-loop';
 import { ContextDrawPen } from './ContextDrawPen';
 import { ContextMergeOffer } from './ContextMergeOffer';
 import { ContextName } from './ContextName';
-import { ContextOutline, type ContextOutlineActs } from './ContextOutline';
+import { ContextOutline, contextNameButton, type ContextOutlineActs } from './ContextOutline';
+import { NameChips, type NameChipActs } from './NameChips';
 import { useClearContextSelection } from './useClearContextSelection';
 
 // A board's candidate contexts on the canvas (docs/specs/021-event-storming/candidate-contexts.md), in canvas units
 // beneath every element: each outline drawn round its notes as they are drawn now, so it follows a note in hand.
-// Everyone sees the kept ones; the suggested ones, and every act, are an Editor's.
+// Everyone sees the kept ones; the suggested ones, and every act, are an Editor's. So are the names an agent suggests
+// for a context (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"): a count beside
+// its name, chips under the name of the one selected, and chips in the merge offer for several.
 
 // The inks as custom properties: the light pair, swapped for the dark pair on a dark canvas (globals.css).
 const INK_VARS = {
@@ -133,6 +147,54 @@ export function ContextLayer({
       : undefined;
   const merging = contexts ? drawn.filter((d) => selection.ids.has(d.context.id)) : [];
 
+  // Name suggestions are read from the board as committed: a chip being previewed redraws the context under its
+  // name, and must not take itself away.
+  const previewedIds = previewedContextIds(view.previewKey);
+  const previewed = parsePreviewKey(view.previewKey);
+  const chipsFor = (ids: readonly ElementId[], merge: boolean) => {
+    if (!suggestions) return null;
+    const names = nameSuggestionsFor(elements, ids);
+    if (names.length === 0) return null;
+    const decide = (act: () => void) => {
+      endSuggestionPreview(tabId);
+      act();
+    };
+    // The chips go with what they decided: the keyboard stays on the context's name.
+    const backToName = (id: ElementId) =>
+      requestAnimationFrame(() => contextNameButton(id)?.focus());
+    const acts: NameChipActs = {
+      onChoose: (name) =>
+        decide(() => {
+          const kept = suggestions.chooseName(ids, name);
+          if (!kept) return;
+          selectContexts(tabId, [kept]);
+          backToName(kept);
+        }),
+      onDismiss: (name) =>
+        decide(() => {
+          suggestions.dismissNames(ids, [name]);
+          if (!merge) backToName(ids[0]!);
+        }),
+      onDismissAll: merge
+        ? undefined
+        : () =>
+            decide(() => {
+              suggestions.dismissNames(ids);
+              backToName(ids[0]!);
+            }),
+      onPreview: (name) => previewSuggestion(tabId, nameKey(ids, name)),
+      onLeave: (name) => leaveSuggestion(tabId, nameKey(ids, name)),
+    };
+    const shown =
+      previewed?.type === 'name' &&
+      previewed.contextIds.length === ids.length &&
+      previewed.contextIds.every((id) => ids.includes(id))
+        ? previewed.name
+        : null;
+    return <NameChips names={names} merge={merge} previewed={shown} acts={acts} />;
+  };
+  const mergingIds = merging.map((d) => d.context.id);
+
   return (
     <div
       data-testid={`context-${part}`}
@@ -147,7 +209,7 @@ export function ContextLayer({
             key={d.context.id}
             drawn={d}
             zoom={zoom}
-            previewed={view.previewKey === `c:${d.context.id}`}
+            previewed={previewedIds.includes(d.context.id)}
             selected={selected}
             acts={acts}
           />
@@ -159,6 +221,8 @@ export function ContextLayer({
             selected={selected}
             editing={selection.editingId === d.context.id}
             acts={acts}
+            names={showSuggested ? nameSuggestionsFor(elements, [d.context.id]).length : 0}
+            below={selected && selection.ids.size === 1 ? chipsFor([d.context.id], false) : null}
           />
         );
       })}
@@ -166,8 +230,9 @@ export function ContextLayer({
         <ContextMergeOffer
           contexts={merging}
           zoom={zoom}
+          chips={chipsFor(mergingIds, true)}
           onMerge={() => {
-            const kept = contexts.merge(merging.map((d) => d.context.id));
+            const kept = contexts.merge(mergingIds);
             if (kept) editContextName(tabId, kept);
           }}
           onCancel={() => clearContextSelection(tabId)}

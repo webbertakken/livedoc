@@ -5,12 +5,16 @@ import { createShape, type Element } from '@livedoc/document';
 import {
   applyOverlay,
   clearLocalPreview,
+  clearOfferedPreview,
   clearPeerPreview,
+  dragPreviewFor,
   localPreview,
   resetDragPreviewForTests,
   setLocalPreview,
+  setOfferedPreview,
   setPeerPreview,
   useDragPreview,
+  useLocalDragPreview,
 } from './drag-preview';
 
 // docs/specs/008-canvas/drag-preview.md "The preview".
@@ -132,5 +136,53 @@ describe('several readers', () => {
     second.rerender();
     expect(first.result.current).toBe(one);
     expect(second.result.current).toBe(two);
+  });
+});
+
+// What an offered change would make of the board (docs/specs/021-event-storming/suggested-changes.md "A preview never
+// writes"): drawn as a drag is, never sent and never a note in hand.
+describe('the offered preview', () => {
+  it('is drawn in place of the elements it changes, for its tab only', () => {
+    const reworded = { ...b, label: 'Booking placed' };
+    setOfferedPreview('t', [a, reworded, c], doc);
+    expect(dragPreviewFor('t', doc)?.changed.get(b.id)).toBe(reworded);
+    expect(dragPreviewFor('other', doc)).toBeNull();
+  });
+
+  it('is never this person’s drag: nothing is sent and no note is in hand', () => {
+    setOfferedPreview('t', [a, { ...b, label: 'x' }, c], doc);
+    expect(localPreview()).toBeNull();
+    const { result } = renderHook(() => useLocalDragPreview('t'));
+    expect(result.current).toBeNull();
+  });
+
+  it('lies beneath a drag: the drag wins on an element both touch, and each keeps its own', () => {
+    const reworded = { ...b, label: 'Booking placed' };
+    const offeredC = { ...c, label: 'Booking closed' };
+    const draggedB = { ...b, x: 250 };
+    setOfferedPreview('t', [a, reworded, offeredC], doc);
+    setLocalPreview('t', [a, draggedB, c], doc);
+    const overlay = dragPreviewFor('t', doc)!;
+    expect(overlay.changed.get(b.id)).toBe(draggedB);
+    expect(overlay.changed.get(c.id)).toBe(offeredC);
+  });
+
+  it('lies beneath a collaborator’s drag too', () => {
+    setOfferedPreview('t', [a, { ...b, label: 'x' }, c], doc);
+    setPeerPreview('peer', 't', [{ id: b.id, x: 300 }]);
+    expect(dragPreviewFor('t', doc)!.changed.get(b.id)).toMatchObject({ x: 300 });
+  });
+
+  it('ends when cleared, and a reader is told', () => {
+    const { result } = renderHook(() => useDragPreview('t', doc));
+    act(() => setOfferedPreview('t', [a, { ...b, label: 'x' }, c], doc));
+    expect(result.current).not.toBeNull();
+    act(() => clearOfferedPreview());
+    expect(result.current).toBeNull();
+  });
+
+  it('is nothing when the offer changes nothing', () => {
+    setOfferedPreview('t', doc, doc);
+    expect(dragPreviewFor('t', doc)).toBeNull();
   });
 });

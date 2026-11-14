@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { CheckIcon, CloseIcon } from '@livedoc/ui';
 import {
   CONTEXT_FONT,
@@ -37,6 +37,8 @@ export function ContextName({
   selected,
   editing,
   acts,
+  names = 0,
+  below,
 }: {
   drawn: DrawnContext;
   zoom: number;
@@ -44,6 +46,11 @@ export function ContextName({
   // Its name is open for typing.
   editing: boolean;
   acts: ContextOutlineActs;
+  // How many other names it holds for itself (suggested-changes.md "Chips under the name"): a small count beside
+  // its name, for someone who may decide on them.
+  names?: number;
+  // What stands under the name at screen size: its name chips, while it is the one selected.
+  below?: ReactNode;
 }) {
   const { context, outline, suggested, notes } = drawn;
   const name = context.label;
@@ -86,9 +93,10 @@ export function ContextName({
   };
   const plateClass =
     'absolute flex items-center justify-center gap-[0.25em] whitespace-nowrap bg-[var(--lvd-canvas-paper,#ffffff)] font-semibold leading-none text-[color:var(--ctx-name)]';
+  const held = names > 0 ? `, ${names} name${names === 1 ? '' : 's'} suggested` : '';
   const label = suggested
-    ? `Suggested candidate context: ${name}, ${notes} note${notes === 1 ? '' : 's'}`
-    : `Candidate context: ${name}`;
+    ? `Suggested candidate context: ${name}, ${notes} note${notes === 1 ? '' : 's'}${held}`
+    : `Candidate context: ${name}${held}`;
   const words = (
     <>
       <span className={suggested ? 'italic' : undefined}>{name}</span>
@@ -177,6 +185,15 @@ export function ContextName({
       >
         {words}
       </button>
+      {names > 0 ? (
+        <span
+          aria-hidden
+          data-context-name-count={names}
+          className="absolute bottom-full right-[0.9em] flex h-[0.8em] min-w-[1.25em] items-center justify-center rounded-t-[0.3em] border-[1.5px] border-b-0 border-dashed px-[0.2em] text-[0.6em] font-semibold tabular-nums [background-color:color-mix(in_srgb,var(--ctx-line)_14%,var(--lvd-canvas-paper,#ffffff))] [border-color:var(--ctx-line)]"
+        >
+          {names}
+        </span>
+      ) : null}
       {acts.suggested ? (
         <>
           <PlateAction
@@ -196,6 +213,17 @@ export function ContextName({
             className="text-slate-600 hover:bg-slate-100 in-[[data-dark-canvas]]:text-slate-300 in-[[data-dark-canvas]]:hover:bg-slate-800"
           />
         </>
+      ) : null}
+      {below ? (
+        <div
+          className="absolute left-1/2 top-full pt-2"
+          style={{
+            transform: `translateX(-50%) scale(${1 / zoom})`,
+            transformOrigin: 'top center',
+          }}
+        >
+          {below}
+        </div>
       ) : null}
     </div>
   );

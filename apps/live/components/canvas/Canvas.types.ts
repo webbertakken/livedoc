@@ -1,5 +1,6 @@
 import type { PenInk } from '@/hooks/canvas/commit-freehand';
 import type { SuggestionActions } from '@/hooks/canvas/useSuggestionActions';
+import type { ChangeActions } from '@/hooks/canvas/useChangeActions';
 import type { ContextActions } from '@/hooks/canvas/useContextActions';
 import type { SnapGuideStore } from '@/hooks/canvas/useSnapGuideState';
 import type { CombineOp } from '@/lib/combine/combine';
@@ -48,10 +49,12 @@ import type { WorkspaceFrameHooks } from '@/components/providers/workbench-sessi
 // one the endpoint is currently snapped to. Rendered by CanvasChrome.
 export type SnapTarget = { x: number; y: number; active: boolean };
 
-// What the canvas may do with a board's suggestions: the acts, and bring a canvas rect into view.
-export type SuggestionControls = SuggestionActions & {
-  reveal: (rect: { x: number; y: number; width: number; height: number }) => void;
-};
+// What the canvas may do with a board's suggestions and suggested changes: the acts, and bring a canvas rect into
+// view.
+export type SuggestionControls = SuggestionActions &
+  ChangeActions & {
+    reveal: (rect: { x: number; y: number; width: number; height: number }) => void;
+  };
 
 // A kept candidate context's acts (docs/specs/021-event-storming/candidate-contexts.md), and clearing the editor's
 // selection when a context is selected (the two selections never stand together).

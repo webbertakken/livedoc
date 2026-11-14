@@ -43,6 +43,8 @@ import { usePhotoDraftView } from '@/lib/photo-draft-preview';
 import { ZoomedLaserOverlay } from '@/components/canvas/view-readers';
 import { RemoteCursors } from '@/components/canvas/RemoteCursor';
 import { useInsertShift } from '@/hooks/canvas/useInsertShift';
+import { useOfferedPreview } from '@/hooks/canvas/useOfferedPreview';
+import { selectContexts } from '@/lib/context-selection';
 import { suggestionPreview } from '@/lib/suggestion-apply';
 import { useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
@@ -370,7 +372,21 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
         : null,
     [suggestionsShown, suggestionView.showAll, elements, props.layerInertIds],
   );
-  const insertShift = useInsertShift(showAllPreview?.shiftX ?? null);
+  // A suggested change a person points at (docs/specs/021-event-storming/suggested-changes.md "A preview never
+  // writes"): drawn over the untouched board. While Show All draws the board as Apply All leaves it, a split's parts
+  // stand down: the board is already making room.
+  const offeredChange = useOfferedPreview({
+    tabId: props.activeTabId ?? '',
+    elements,
+    previewKey: suggestionsShown ? suggestionView.previewKey : null,
+    inertIds: props.layerInertIds,
+  });
+  const offered = useMemo(
+    () => (offeredChange && showAllPreview ? { ...offeredChange, parts: [] } : offeredChange),
+    [offeredChange, showAllPreview],
+  );
+  const offeredShift = offered && offered.shiftX.size > 0 ? offered.shiftX : null;
+  const insertShift = useInsertShift(showAllPreview ? showAllPreview.shiftX : offeredShift);
   // Session-local view state for an open photo draft (docs/specs/021-event-storming/event-storming.md Phase 8).
   const draftView = usePhotoDraftView();
   // Paint order (docs/specs/006-document/layers.md + docs/specs/008-canvas/canvas-and-palette.md): layer bands bottom -> top, keeping
@@ -738,6 +754,12 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                   tabId={props.activeTabId ?? ''}
                   controls={props.suggestions}
                   showAllSpots={showAllPreview?.spots ?? null}
+                  inertIds={props.layerInertIds}
+                  offered={offered}
+                  onSelectContexts={(ids) => {
+                    props.contexts?.clearSelection();
+                    selectContexts(props.activeTabId ?? '', ids);
+                  }}
                 />
               ) : null}
               <LayerSelectionChrome

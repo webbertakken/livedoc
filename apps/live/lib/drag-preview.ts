@@ -21,6 +21,9 @@ export type DragOverlay = {
 type PeerPatch = { id: string } & Record<string, unknown>;
 
 let local: DragOverlay | null = null;
+// What an offered change would make of the board (a suggested reword, kind or name a person points at): drawn as a
+// drag is, beneath every drag, but nobody's gesture, so it is never sent and never a note in hand.
+let offered: DragOverlay | null = null;
 const peers = new Map<string, { tabId: string; patches: readonly PeerPatch[] }>();
 // One merged preview per tab and per element list a reader draws (Canvas and the element layer read
 // different lists): a reader must get the same object back until something changes, or
@@ -81,6 +84,26 @@ export function localPreview(): DragOverlay | null {
   return local;
 }
 
+/** Draw `next` in place of `doc` on the tab, as an offer a person is looking at; nothing is written or sent. */
+export function setOfferedPreview(
+  tabId: string,
+  next: readonly Element[],
+  doc: readonly Element[],
+): void {
+  const overlay = overlayBetween(tabId, next, doc);
+  const empty =
+    overlay.changed.size === 0 && overlay.removed.size === 0 && overlay.added.length === 0;
+  if (empty && offered === null) return;
+  offered = empty ? null : overlay;
+  changedNow();
+}
+
+export function clearOfferedPreview(): void {
+  if (offered === null) return;
+  offered = null;
+  changedNow();
+}
+
 export function setPeerPreview(
   presenceId: string,
   tabId: string,
@@ -124,8 +147,18 @@ export function applyOverlay(elements: readonly Element[], overlay: DragOverlay)
   return out;
 }
 
-// Every preview for a tab, merged: collaborators' patches resolved against `elements` (ids it lacks are
-// skipped), then ours over them.
+// `top` laid over `base`: what either changes, removes or adds, `top` winning on an element both change.
+function over(base: DragOverlay, top: DragOverlay): DragOverlay {
+  return {
+    tabId: top.tabId,
+    changed: new Map([...base.changed, ...top.changed]),
+    removed: new Set([...base.removed, ...top.removed]),
+    added: [...base.added, ...top.added],
+  };
+}
+
+// Every preview for a tab, merged: an offer at the bottom, collaborators' patches resolved against `elements` (ids
+// it lacks are skipped) over it, then our drag over them.
 function mergedFor(tabId: string, elements: readonly Element[]): DragOverlay | null {
   let forTab = merged.get(tabId);
   if (!forTab) {
@@ -134,17 +167,19 @@ function mergedFor(tabId: string, elements: readonly Element[]): DragOverlay | n
   }
   if (forTab.has(elements)) return forTab.get(elements)!;
   const theirs = [...peers.values()].filter((p) => p.tabId === tabId && p.patches.length > 0);
-  const ours = local && local.tabId === tabId ? local : null;
+  const drag = local && local.tabId === tabId ? local : null;
+  const offer = offered && offered.tabId === tabId ? offered : null;
+  const ours = drag && offer ? over(offer, drag) : (drag ?? offer);
   let overlay: DragOverlay | null = ours;
   if (theirs.length > 0) {
     const byId = new Map(elements.map((el) => [el.id, el] as const));
-    const changed = new Map<string, Element>();
+    const changed = new Map<string, Element>(offer?.changed);
     for (const p of theirs)
       for (const patch of p.patches) {
         const base = byId.get(patch.id);
         if (base) changed.set(patch.id, { ...base, ...patch });
       }
-    if (ours) for (const [id, el] of ours.changed) changed.set(id, el);
+    if (drag) for (const [id, el] of drag.changed) changed.set(id, el);
     overlay =
       changed.size || ours
         ? { tabId, changed, removed: ours?.removed ?? new Set(), added: ours?.added ?? [] }
@@ -174,6 +209,7 @@ export function useDragPreview(tabId: string, elements: readonly Element[]): Dra
 
 export function resetDragPreviewForTests(): void {
   local = null;
+  offered = null;
   peers.clear();
   changedNow();
   listeners.clear();

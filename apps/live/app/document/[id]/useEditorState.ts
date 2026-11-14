@@ -157,6 +157,7 @@ import { useEditorComments } from '@/hooks/collab/useEditorComments';
 import { useEditorDrag } from '@/hooks/canvas/useEditorDrag';
 import { useNoteActions } from '@/hooks/canvas/useNoteActions';
 import { useSuggestionActions } from '@/hooks/canvas/useSuggestionActions';
+import { useChangeActions } from '@/hooks/canvas/useChangeActions';
 import { useContextActions } from '@/hooks/canvas/useContextActions';
 import { usePhotoPicker } from '@/hooks/canvas/usePhotoPicker';
 import { warmBoundaryModel } from '@/lib/photo-model/client';
@@ -2627,14 +2628,25 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     commit,
     addBoxedAt,
   });
-  // Suggestions on an event-storming board (docs/specs/021-event-storming/suggestions.md): apply and dismiss.
-  const suggestionActions = useSuggestionActions({
+  // Suggestions on an event-storming board (docs/specs/021-event-storming/suggestions.md): apply and dismiss; and
+  // the changes suggested to what is already there (docs/specs/021-event-storming/suggested-changes.md): names for
+  // a context, changes to a note. A dismissal commits the tab, so it is remembered as declined in the same step.
+  const suggestedNoteActions = useSuggestionActions({
     activeTab,
     createBlocked,
     layerInertIds,
     commit,
+    commitTab: commitActiveTab,
     select: (id) => selectionStore.setSelection({ selectedId: id, multiSelectedIds: new Set() }),
   });
+  const changeActions = useChangeActions({
+    activeTab,
+    createBlocked,
+    layerInertIds,
+    commit,
+    commitTab: commitActiveTab,
+  });
+  const suggestionActions = { ...suggestedNoteActions, ...changeActions };
   // Kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): rename, delete, notes in and out.
   const contextActions = useContextActions({ activeTab, createBlocked, commit });
 

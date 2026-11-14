@@ -144,6 +144,8 @@ export function suggestionBoardElements(): Note[] {
 export async function startSuggestionBoard(
   page: Page,
   elements: readonly Record<string, unknown>[] = suggestionBoardElements(),
+  // A note of the board given, whose arrival says the seeded board is drawn.
+  readyId: string = SUGGESTION_BOARD_IDS.orderShipped,
 ): Promise<void> {
   await startTemplateDocument(page, 'Technical', /^Event storming/i);
   const notes = page.locator('[data-canvas-a11y-root]').getByRole('img', { name: /^Sticky note/ });
@@ -182,5 +184,5 @@ export async function startSuggestionBoard(
     { base: apiBase, headers, elements },
   );
   await page.reload();
-  await page.locator(`[data-element-id="${SUGGESTION_BOARD_IDS.orderShipped}"]`).first().waitFor();
+  await page.locator(`[data-element-id="${readyId}"]`).first().waitFor();
 }

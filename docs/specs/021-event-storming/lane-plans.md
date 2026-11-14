@@ -19,7 +19,7 @@ Ruled 2026-11-14: "The model names lanes", the board places and checks.
 - **The lane count bounds the whole board** (ruled 2026-11-14): every workshop note ends on one of at most N lanes,
   N from `LANES_MIN` (2) to `LANES_MAX` (12).
 - **A plan keeps each note's x** (ruled 2026-11-14: "Keep each note's x"). Laying the board out afresh along the
-  timeline is a separate act, [Arrange](arrange.md).
+  timeline is a separate act, [Arrange and Reorder](arrange.md).
 
 ## What a lane means
 

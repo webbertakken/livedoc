@@ -5,8 +5,18 @@ import type { CandidateContextElement, Element } from '@livedoc/document';
 import { CanvasZoomProvider } from '@/components/canvas/CanvasZoomContext';
 import type { ContextControls, SuggestionControls } from '@/components/canvas/Canvas.types';
 import { clearLocalPreview, setLocalPreview } from '@/lib/drag-preview';
-import { endSuggestionPreview, previewSuggestion } from '@/lib/suggestion-view';
-import { resetContextSelectionForTests, setDrawingContext } from '@/lib/context-selection';
+import {
+  contextsKey,
+  endSuggestionPreview,
+  nameKey,
+  previewSuggestion,
+  suggestionViewFor,
+} from '@/lib/suggestion-view';
+import {
+  contextSelectionFor,
+  resetContextSelectionForTests,
+  setDrawingContext,
+} from '@/lib/context-selection';
 import { ContextLayer } from './ContextLayer';
 
 // Candidate contexts on the canvas (docs/specs/021-event-storming/candidate-contexts.md): the outline and its name,
@@ -60,6 +70,10 @@ const suggestionControls = (): SuggestionControls => ({
   dismiss: vi.fn(),
   applyAll: vi.fn(),
   dismissAll: vi.fn(),
+  chooseName: vi.fn(() => null),
+  dismissNames: vi.fn(),
+  acceptChange: vi.fn(),
+  dismissChange: vi.fn(),
   reveal: vi.fn(),
 });
 
@@ -420,5 +434,127 @@ describe('ContextLayer: Draw Context’s pen (candidate-contexts.md "Making one 
     draw(board);
     act(() => setDrawingContext(TAB, true));
     expect(pen()).toBeNull();
+  });
+});
+
+// The names an agent suggests for a context (docs/specs/021-event-storming/suggested-changes.md "How a person sees
+// and decides"): an Editor's alone.
+describe('ContextLayer: name suggestions', () => {
+  const named = (): Element[] => {
+    const holding = (c: CandidateContextElement, names: object[]): CandidateContextElement => ({
+      ...c,
+      esContext: { ...c.esContext, names } as CandidateContextElement['esContext'],
+    });
+    return [
+      note('a', 0),
+      note('b', 300),
+      note('c', 2000),
+      holding(context('k', ['a', 'b']), [
+        { name: 'Order taking', reason: 'What the waiter does.', by: 'Claude' },
+        { name: 'Sales' },
+        { name: 'Shop', with: ['s'], reason: 'One sitting.' },
+      ]),
+      context('s', ['c'], true),
+    ];
+  };
+  const editor = () => ({ contexts: contextControls(), suggestions: suggestionControls() });
+  const nameOf = (id: string) =>
+    document.querySelector<HTMLButtonElement>(`[data-context-name-for="${id}"]`)!;
+  const chips = () =>
+    [...document.querySelectorAll<HTMLElement>('[data-name-chip]')].map(
+      (el) => el.dataset.nameChip,
+    );
+  const chip = (name: string) =>
+    document.querySelector<HTMLButtonElement>(`[data-name-chip="${name}"]`)!;
+  const count = (id: string) =>
+    nameOf(id).parentElement!.querySelector<HTMLElement>('[data-context-name-count]');
+
+  it('wears a count of the names a context holds for itself, and says so', () => {
+    draw(named(), editor());
+    expect(count('k')!.textContent).toBe('2');
+    expect(nameOf('k').getAttribute('aria-label')).toBe(
+      'Candidate context: Ctx k, 2 names suggested',
+    );
+    expect(count('s')).toBeNull();
+  });
+
+  it('shows nothing of them to someone who sees no suggestions', () => {
+    draw(named(), { contexts: contextControls() });
+    expect(count('k')).toBeNull();
+    fireEvent.click(nameOf('k'));
+    expect(chips()).toEqual([]);
+    expect(nameOf('k').getAttribute('aria-label')).toBe('Candidate context: Ctx k');
+  });
+
+  it('shows the selected context’s names as chips under its name, with ✕ after them', () => {
+    draw(named(), editor());
+    expect(chips()).toEqual([]);
+    fireEvent.click(nameOf('k'));
+    expect(chips()).toEqual(['Order taking', 'Sales']);
+    expect(screen.getByRole('button', { name: 'Rename to Sales' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Dismiss name suggestions' })).toBeTruthy();
+  });
+
+  it('previews a chip pointed at, with the reason and who suggested it', () => {
+    draw(named(), editor());
+    fireEvent.click(nameOf('k'));
+    fireEvent.pointerEnter(chip('Order taking'));
+    expect(suggestionViewFor(TAB).previewKey).toBe(nameKey(['k'], 'Order taking'));
+    const caption = document.querySelector('[data-name-caption]')!;
+    expect(caption.textContent).toBe('What the waiter does.Suggested by Claude');
+    // The chips stay while the context is drawn under the previewed name.
+    expect(chips()).toEqual(['Order taking', 'Sales']);
+  });
+
+  it('renames the context with the chip chosen, and keeps it selected', () => {
+    const acts = editor();
+    vi.mocked(acts.suggestions.chooseName).mockReturnValue('k');
+    draw(named(), acts);
+    fireEvent.click(nameOf('k'));
+    fireEvent.click(chip('Sales'));
+    expect(acts.suggestions.chooseName).toHaveBeenCalledWith(['k'], 'Sales');
+    expect([...contextSelectionFor(TAB).ids]).toEqual(['k']);
+    expect(contextSelectionFor(TAB).editingId).toBeNull();
+  });
+
+  it('dismisses one chip with Delete and all of them with ✕', () => {
+    const acts = editor();
+    draw(named(), acts);
+    fireEvent.click(nameOf('k'));
+    fireEvent.keyDown(chip('Sales'), { key: 'Delete' });
+    expect(acts.suggestions.dismissNames).toHaveBeenLastCalledWith(['k'], ['Sales']);
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss name suggestions' }));
+    expect(acts.suggestions.dismissNames).toHaveBeenLastCalledWith(['k']);
+    expect(acts.contexts.remove).not.toHaveBeenCalled();
+  });
+
+  it('puts the names for exactly the selected contexts in the merge offer; choosing one merges under it', () => {
+    const acts = editor();
+    vi.mocked(acts.suggestions.chooseName).mockReturnValue('k');
+    draw(named(), acts);
+    fireEvent.click(nameOf('k'));
+    fireEvent.click(nameOf('s'), { shiftKey: true });
+    const offer = document.querySelector<HTMLElement>('[data-context-merge]')!;
+    expect(chips()).toEqual(['Shop']);
+    expect(offer.contains(chip('Shop'))).toBe(true);
+    // The offer's own ✕ keeps the contexts apart: the chips bring no second one.
+    expect(screen.queryByRole('button', { name: 'Dismiss name suggestions' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Merge and name Shop' }));
+    expect(acts.suggestions.chooseName).toHaveBeenCalledWith(['k', 's'], 'Shop');
+    expect(acts.contexts.merge).not.toHaveBeenCalled();
+    // The kept context is selected alone, and its name is not opened for typing.
+    expect([...contextSelectionFor(TAB).ids]).toEqual(['k']);
+    expect(contextSelectionFor(TAB).editingId).toBeNull();
+  });
+
+  it('brings a row’s contexts forward at full strength while the panel points at them', () => {
+    draw(named(), editor());
+    const strength = () =>
+      document.querySelector<SVGElement>(
+        '[data-testid="context-lines"] [data-candidate-context="s"] svg',
+      )!.style.opacity;
+    const faint = strength();
+    act(() => previewSuggestion(TAB, contextsKey(['k', 's'])));
+    expect(Number(strength())).toBeGreaterThan(Number(faint));
   });
 });

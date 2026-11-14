@@ -94,7 +94,8 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
 - `Tab.esDeclined`: up to `DECLINED_MAX` (200) entries, the oldest dropped first; each holds what was declined (a
   note, a context, a name, a reword, a kind, a split or a removal), its words or name, its kind where it has one, and
   the notes or contexts it was about.
-- **A person's dismissal is remembered**: Dismiss and Dismiss All, in the same undoable step.
+- **A person's dismissal is remembered**: Dismiss and Dismiss All, in the same undoable step, so one Undo brings
+  the suggestion back and forgets the dismissal.
   An agent taking its own suggestions back (`rm`, `storm clear`) is not a dismissal. A lane plan is not remembered.
 - **A declined suggestion is refused** when suggested again, as `declined_before`: the same type, the same words
   ignoring case, punctuation and spacing, the same kind, about the same notes or contexts.
@@ -135,8 +136,8 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
   for the current selection (default; its placement is ruled from renders on a real board).
 - A selected context shows the same button after its name, and the merge offer shows it beside its ✓ and ✕.
 - A workshop note's menu holds **Ask…**.
-- With nothing selected the popover also offers [Arrange](arrange.md), apart from the topics: it is the board's
-  own act and needs no hand.
+- With nothing selected the popover also offers [Arrange and Reorder](arrange.md), apart from the topics: it is the
+  board's own act and needs no hand.
 - **The Ask popover** holds, top to bottom: the topics the scope offers (one chosen; the first by default); the lane
   count for `lanes`, a stepper starting at the lanes in use, held within 2 to 12; the hands; the prompt with **Copy
   Prompt**, or **Ask** for the built-in hand; **About This Domain**; the declined count with **Forget Declined**.
@@ -164,4 +165,5 @@ Neither the topic, the prompt nor the About is sent.
 
 - The About: `packages/document/src/event-storming-about.ts`.
 - What was declined: `packages/document/src/event-storming-declined.ts`; the view's rows:
-  `packages/storm-reading/src/declined.ts`; how words compare: `packages/document/src/event-storming-words.ts`.
+  `packages/storm-reading/src/declined.ts`; how words compare: `packages/document/src/event-storming-words.ts`;
+  what the editor remembers of each dismissal, in the same undoable step: `apps/live/lib/suggestion-declined.ts`.

@@ -4,13 +4,29 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ES_NOTE_GAP, type Element, type StickyElement } from '@livedoc/document';
 import { CanvasZoomProvider } from '@/components/canvas/CanvasZoomContext';
 import type { SuggestionControls } from '@/components/canvas/Canvas.types';
+import {
+  KIND,
+  REMOVE,
+  REWORD,
+  SPLIT,
+  STEP,
+  byId,
+  changed,
+  named,
+  orderFlow,
+} from '@/lib/change-board.fixture';
+import { offeredPreview } from '@/lib/change-preview';
 import { suggestionPreview } from '@/lib/suggestion-apply';
 import {
   SUGGESTION_PREVIEW_LEAVE_MS,
+  changeKey,
+  contextsKey,
   endSuggestionPreview,
   setShowAllSuggestions,
   setSuggestionsPanelOpen,
+  suggestionViewFor,
 } from '@/lib/suggestion-view';
+import { changeMarkBox } from './NoteChangeMark';
 import { PEEK_PROTRUDE, PEEK_PROTRUDE_ACROSS } from './SuggestionPeekTab';
 import { SuggestionLayer } from './SuggestionLayer';
 
@@ -70,6 +86,10 @@ function controls(): SuggestionControls {
     dismiss: vi.fn(),
     applyAll: vi.fn(),
     dismissAll: vi.fn(),
+    chooseName: vi.fn(),
+    dismissNames: vi.fn(),
+    acceptChange: vi.fn(),
+    dismissChange: vi.fn(),
     reveal: vi.fn(),
   };
 }
@@ -86,6 +106,26 @@ function draw(elements: Element[], c = controls(), showAll = false) {
     </CanvasZoomProvider>,
   );
   return c;
+}
+
+// The layer with what the canvas hands it beside the board: the previewed change, the inert notes, the selecting.
+function drawWith(
+  elements: Element[],
+  extra: Partial<Parameters<typeof SuggestionLayer>[0]>,
+  c = controls(),
+) {
+  const view = render(
+    <CanvasZoomProvider zoom={1}>
+      <SuggestionLayer
+        elements={elements}
+        tabId={TAB}
+        controls={c}
+        showAllSpots={null}
+        {...extra}
+      />
+    </CanvasZoomProvider>,
+  );
+  return { controls: c, unmount: view.unmount };
 }
 
 const hint = (key: string) =>
@@ -396,5 +436,206 @@ describe('SuggestionLayer: suggested contexts', () => {
     expect(within(panel()).getByRole('button', { name: '1 suggestion' })).toBeTruthy();
     act(() => setSuggestionsPanelOpen(TAB, true));
     expect(within(panel()).getByText('1 note', { exact: false })).toBeTruthy();
+  });
+});
+
+// Changes suggested to notes already on the board (docs/specs/021-event-storming/suggested-changes.md "How a person
+// sees and decides").
+describe('SuggestionLayer: note changes', () => {
+  const flow = () => changed(changed(orderFlow(), 'pack', REWORD), 'packed', SPLIT, REMOVE);
+  const mark = (id: string) => document.querySelector<HTMLElement>(`[data-change-mark="${id}"]`)!;
+  const caption = () => document.querySelector<HTMLElement>('[data-change-caption]');
+
+  it('marks each note that holds changes, named for its first, with the count past one', () => {
+    draw(flow());
+    expect(mark('pack').getAttribute('aria-label')).toBe(
+      'Suggested change to this command: Reword “Pack parcel”',
+    );
+    expect(mark('pack').textContent).toBe('');
+    expect(mark('packed').getAttribute('aria-label')).toBe(
+      'Suggested change to this domain event: Split “Order packed” · “Order shipped” and 1 more',
+    );
+    expect(mark('packed').textContent).toBe('2');
+    expect(document.querySelectorAll('[data-change-mark]')).toHaveLength(2);
+  });
+
+  it('stands the mark on the note’s top edge at its right end, clear of the corner', () => {
+    const pack = byId(flow(), 'pack');
+    expect(changeMarkBox(pack)).toEqual({
+      left: pack.x + 200 - 48 - 8,
+      top: pack.y - PEEK_PROTRUDE_ACROSS,
+      width: 48,
+      height: PEEK_PROTRUDE_ACROSS,
+    });
+  });
+
+  it('captions the previewed change: what changes, why, how far it reaches and who', () => {
+    draw(flow());
+    expect(caption()).toBeNull();
+    fireEvent.pointerEnter(mark('pack'));
+    const text = caption()!.textContent;
+    expect(text).toContain('Reword');
+    expect(text).toContain('“Pack parcel”');
+    expect(text).toContain('The warehouse handles a parcel.');
+    expect(text).toContain('Also rewords 2 notes in Fulfilment · 3 more on the board');
+    expect(text).toContain('Suggested by Claude');
+    // The preview outlives the pointer for a beat, so it can cross to the caption.
+    fireEvent.pointerLeave(mark('pack'));
+    expect(caption()).not.toBeNull();
+    act(() => void vi.advanceTimersByTime(SUGGESTION_PREVIEW_LEAVE_MS + 1));
+    expect(caption()).toBeNull();
+  });
+
+  it('accepts, accepts everywhere and dismisses from the caption', () => {
+    const c = draw(flow());
+    const open = () => fireEvent.focus(mark('pack'));
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Accept: Reword “Pack parcel”' }));
+    expect(c.acceptChange).toHaveBeenLastCalledWith('pack', REWORD);
+    expect(caption()).toBeNull();
+    open();
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Accept everywhere: Reword “Pack parcel”' }),
+    );
+    expect(c.acceptChange).toHaveBeenLastCalledWith('pack', REWORD, 'board');
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss: Reword “Pack parcel”' }));
+    expect(c.dismissChange).toHaveBeenCalledWith('pack', REWORD);
+  });
+
+  it('offers Everywhere only for a reword that notes beyond its context hold', () => {
+    draw(flow());
+    fireEvent.focus(mark('packed'));
+    expect(caption()!.textContent).toContain('Split');
+    expect(screen.queryByRole('button', { name: /^Accept everywhere/ })).toBeNull();
+  });
+
+  it('previews the reword across the board while Everywhere is pointed at', () => {
+    draw(flow());
+    fireEvent.focus(mark('pack'));
+    const everywhere = screen.getByRole('button', { name: /^Accept everywhere/ });
+    fireEvent.pointerEnter(everywhere);
+    expect(suggestionViewFor(TAB).previewKey).toBe(changeKey('pack', 0, 'board'));
+    fireEvent.pointerLeave(everywhere);
+    expect(suggestionViewFor(TAB).previewKey).toBe(changeKey('pack', 0));
+  });
+
+  it('accepts the first change with Enter and dismisses it with Delete', () => {
+    const c = draw(flow());
+    fireEvent.keyDown(mark('packed'), { key: 'Enter' });
+    expect(c.acceptChange).toHaveBeenCalledWith('packed', SPLIT);
+    fireEvent.keyDown(mark('packed'), { key: 'Delete' });
+    expect(c.dismissChange).toHaveBeenCalledWith('packed', SPLIT);
+  });
+
+  it('draws a previewed split’s further parts where they would land, and strikes a note to be removed', () => {
+    const board = flow();
+    const split = offeredPreview(board, changeKey('packed', 0), new Set())!;
+    const { unmount } = drawWith(board, { offered: split });
+    const part = document.querySelector<HTMLElement>('[data-change-part="Order shipped"]')!;
+    expect(part.style.left).toBe(`${byId(board, 'packed').x + STEP}px`);
+    expect(part.textContent).toContain('Order shipped');
+    expect(document.querySelector('[data-change-strike]')).toBeNull();
+    unmount();
+    drawWith(board, { offered: offeredPreview(board, changeKey('packed', 1), new Set())! });
+    expect(document.querySelector('[data-change-strike="packed"]')).not.toBeNull();
+    expect(document.querySelector('[data-change-part]')).toBeNull();
+  });
+
+  it('wears no mark on a note on a hidden or locked layer', () => {
+    drawWith(flow(), { inertIds: new Set(['pack']) });
+    expect(document.querySelector('[data-change-mark="pack"]')).toBeNull();
+    expect(document.querySelector('[data-change-mark="packed"]')).not.toBeNull();
+  });
+});
+
+describe('the suggestions panel: suggested changes', () => {
+  const panel = () => screen.getByRole('complementary', { name: 'Suggestions' });
+  const open = (n: number) =>
+    fireEvent.click(within(panel()).getByRole('button', { name: `${n} suggestions` }));
+  const flow = () =>
+    changed(
+      named(
+        named(orderFlow(), ['ordering'], 'Order taking', 'Sales'),
+        ['ordering', 'fulfilment'],
+        'Shop',
+      ),
+      'pack',
+      REWORD,
+      KIND,
+    );
+
+  it('lists a board that holds only suggested changes, along the timeline', () => {
+    draw(flow());
+    open(4);
+    expect(
+      within(panel())
+        .getAllByRole('listitem')
+        .map((r) => r.dataset.suggestionRow),
+    ).toEqual(['names:ordering', 'merge:fulfilment ordering', 'change:pack:0', 'change:pack:1']);
+  });
+
+  it('says what each row is: the names for a context or a merge, and a change with its reason', () => {
+    draw(flow());
+    open(4);
+    const rows = within(panel()).getAllByRole('listitem');
+    expect(rows[0]!.textContent).toBe('Names OrderingOrder taking, Sales');
+    expect(rows[1]!.textContent).toBe('Merge Ordering + FulfilmentShop');
+    expect(rows[2]!.textContent).toBe(
+      'Reword “Pack parcel”The warehouse handles a parcel.Everywhere',
+    );
+    expect(rows[3]!.textContent).toBe('Change kind CommandIt asks.');
+  });
+
+  it('accepts a change, in its context or everywhere, and dismisses it', () => {
+    const c = draw(flow());
+    open(4);
+    fireEvent.click(screen.getByRole('button', { name: 'Apply suggestion: Reword “Pack parcel”' }));
+    expect(c.acceptChange).toHaveBeenLastCalledWith('pack', REWORD, 'context');
+    fireEvent.click(screen.getByRole('button', { name: 'Apply everywhere: Reword “Pack parcel”' }));
+    expect(c.acceptChange).toHaveBeenLastCalledWith('pack', REWORD, 'board');
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Dismiss suggestion: Change kind Command' }),
+    );
+    expect(c.dismissChange).toHaveBeenCalledWith('pack', KIND);
+  });
+
+  it('previews a change row as its mark does, and brings its note into view', () => {
+    const c = draw(flow());
+    open(4);
+    fireEvent.pointerEnter(within(panel()).getAllByRole('listitem')[3]!);
+    expect(suggestionViewFor(TAB).previewKey).toBe(changeKey('pack', 1));
+    expect(c.reveal).toHaveBeenLastCalledWith(expect.objectContaining({ x: 5 * STEP, width: 200 }));
+    expect(document.querySelector('[data-change-caption]')!.textContent).toContain('Change kind');
+  });
+
+  it('selects a Names or a Merge row’s contexts when it is chosen, and dismisses its names with ✕', () => {
+    const onSelectContexts = vi.fn();
+    const c = drawWith(flow(), { onSelectContexts }).controls;
+    open(4);
+    fireEvent.click(screen.getByRole('button', { name: 'Show name suggestions for Ordering' }));
+    expect(onSelectContexts).toHaveBeenLastCalledWith(['ordering']);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Show name suggestions for Ordering and Fulfilment merged',
+      }),
+    );
+    expect(onSelectContexts).toHaveBeenLastCalledWith(['ordering', 'fulfilment']);
+    expect(screen.queryByRole('button', { name: /^Apply suggestion: Name/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss name suggestions for Ordering' }));
+    expect(c.dismissNames).toHaveBeenLastCalledWith(['ordering']);
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Dismiss name suggestions for Ordering and Fulfilment merged',
+      }),
+    );
+    expect(c.dismissNames).toHaveBeenLastCalledWith(['ordering', 'fulfilment']);
+  });
+
+  it('brings a Names row’s contexts forward while it is pointed at', () => {
+    draw(flow());
+    open(4);
+    fireEvent.pointerEnter(within(panel()).getAllByRole('listitem')[1]!);
+    expect(suggestionViewFor(TAB).previewKey).toBe(contextsKey(['ordering', 'fulfilment']));
   });
 });

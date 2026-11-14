@@ -3,9 +3,14 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   SUGGESTION_PREVIEW_LEAVE_MS,
+  changeKey,
+  contextsKey,
   endSuggestionPreview,
   leaveSuggestion,
+  nameKey,
+  parsePreviewKey,
   previewSuggestion,
+  previewedContextIds,
   setShowAllSuggestions,
   setSuggestionsPanelOpen,
   suggestionViewFor,
@@ -69,5 +74,67 @@ describe('suggestion view', () => {
     expect(result.current.showAll).toBe(true);
     act(() => setShowAllSuggestions('t4', false));
     expect(result.current.showAll).toBe(false);
+  });
+});
+
+// What a preview key names (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides").
+describe('preview keys', () => {
+  it('names a note change by its place on the note, in the scope of its context unless said', () => {
+    expect(parsePreviewKey(changeKey('n1', 0))).toEqual({
+      type: 'change',
+      noteId: 'n1',
+      index: 0,
+      scope: 'context',
+    });
+    expect(parsePreviewKey(changeKey('n:1', 2, 'board'))).toEqual({
+      type: 'change',
+      noteId: 'n:1',
+      index: 2,
+      scope: 'board',
+    });
+  });
+
+  it('names a chip by its name and the contexts it is for', () => {
+    expect(parsePreviewKey(nameKey(['c1'], 'Order taking'))).toEqual({
+      type: 'name',
+      name: 'Order taking',
+      contextIds: ['c1'],
+    });
+    expect(parsePreviewKey(nameKey(['c1', 'c:2'], 'Checkout'))).toEqual({
+      type: 'name',
+      name: 'Checkout',
+      contextIds: ['c1', 'c:2'],
+    });
+  });
+
+  it('names the contexts a row of names is for', () => {
+    expect(parsePreviewKey(contextsKey(['c1', 'c2']))).toEqual({
+      type: 'contexts',
+      contextIds: ['c1', 'c2'],
+    });
+  });
+
+  it('answers null for a hint, a suggestion, a context, nothing and a key that does not parse', () => {
+    for (const key of [
+      'e1:after',
+      's:p1',
+      'c:c1',
+      null,
+      'x:not json',
+      'x:[1]',
+      'n:[]',
+      'n:{}',
+      'n:["Name", 1]',
+      'g:[]',
+      'g:[1]',
+    ])
+      expect(parsePreviewKey(key)).toBeNull();
+  });
+
+  it('says which contexts a preview brings forward', () => {
+    expect(previewedContextIds('c:c1')).toEqual(['c1']);
+    expect(previewedContextIds(contextsKey(['c1', 'c2']))).toEqual(['c1', 'c2']);
+    expect(previewedContextIds(nameKey(['c1'], 'Sales'))).toEqual(['c1']);
+    for (const key of [null, 's:p1', changeKey('n1')]) expect(previewedContextIds(key)).toEqual([]);
   });
 });
