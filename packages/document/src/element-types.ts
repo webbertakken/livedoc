@@ -8,6 +8,7 @@ import type { Finish } from './finish';
 import type { CardSearchFilter, PlanBoardSetup, PlanViewId, SwimlaneBy } from '@livedoc/items';
 import type { EventStormingNoteKind } from './event-storming';
 import type { EsSuggestion } from './event-storming-suggestions';
+import type { EsNoteChange } from './note-changes';
 import type { TextRun } from './rich-text';
 import type { CommentThread } from './comments';
 import type { CellCommentThreads } from './cell-comments';
@@ -893,6 +894,10 @@ export type StickyElement = {
   // A hotspot's answer (docs/specs/021-event-storming/board-structure.md "Hotspot answers"): what the room decided,
   // kept on the question. Read via `answerOf`; only a hotspot carries it.
   esAnswer?: string;
+  // The changes an agent suggests to this note (docs/specs/021-event-storming/suggested-changes.md "Note changes"):
+  // other words, another kind, a split or its removal. Read via `noteChangesOf`; nothing changes until a person
+  // accepts one.
+  esChanges?: EsNoteChange[];
   textSize?: TextSize;
   textAlignX?: TextAlignX;
   textAlignY?: TextAlignY;

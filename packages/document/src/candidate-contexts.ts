@@ -20,13 +20,30 @@ export const CONTEXT_NOTES_MAX = 400;
 /** How far clear of its own outline a dragged note must land to leave it, canvas px: half a note. */
 export const CONTEXT_LEAVE_PX = 100;
 
+/** The most name suggestions one context holds (safe range: 3 to 10; they show as chips under its name). */
+export const CONTEXT_NAMES_MAX = 5;
+/** The most contexts one name suggestion is for: past a dozen it is no merge (safe range: 4 to 50). */
+export const NAMED_CONTEXTS_MAX = 12;
+
 /** Who suggested a context and why; present while it is suggested, dropped when a person applies it. */
 export type EsContextSuggestion = { reason?: string; by?: string };
+
+/** Another name an agent proposes (docs/specs/021-event-storming/suggested-changes.md "Name suggestions"): for the
+ *  context that holds it, or, with `with`, for that context and those others merged into one. */
+export type EsNameSuggestion = {
+  name: string;
+  /** The other contexts it names, when it is a name for a merge. */
+  with?: ElementId[];
+  reason?: string;
+  by?: string;
+};
 
 export type EsContext = {
   /** The workshop notes it groups, by id. */
   notes: ElementId[];
   suggestion?: EsContextSuggestion;
+  /** The names suggested for it; read with `nameSuggestionsFor`. */
+  names?: EsNameSuggestion[];
 };
 
 export type CandidateContextElement = ShapeElement & { esContext: EsContext; label: string };
@@ -40,6 +57,29 @@ function isValidSuggestion(v: unknown): boolean {
   return optionalText(s.reason, SUGGESTION_REASON_MAX) && optionalText(s.by, SUGGESTION_BY_MAX);
 }
 
+const isId = (id: unknown) => typeof id === 'string' && id.length > 0;
+
+function isValidNameSuggestion(v: unknown): boolean {
+  if (typeof v !== 'object' || v === null) return false;
+  const s = v as Record<string, unknown>;
+  const others = s.with;
+  return (
+    isValidContextName(s.name) &&
+    (others === undefined ||
+      (Array.isArray(others) &&
+        others.length > 0 &&
+        others.length < NAMED_CONTEXTS_MAX &&
+        others.every(isId))) &&
+    optionalText(s.reason, SUGGESTION_REASON_MAX) &&
+    optionalText(s.by, SUGGESTION_BY_MAX)
+  );
+}
+
+/** The names a context may hold: at most CONTEXT_NAMES_MAX, each a name with who and why. */
+export function isValidEsNames(v: unknown): v is EsNameSuggestion[] {
+  return Array.isArray(v) && v.length <= CONTEXT_NAMES_MAX && v.every(isValidNameSuggestion);
+}
+
 export function isValidEsContext(v: unknown): v is EsContext {
   if (typeof v !== 'object' || v === null) return false;
   const c = v as Record<string, unknown>;
@@ -47,14 +87,20 @@ export function isValidEsContext(v: unknown): v is EsContext {
     Array.isArray(c.notes) &&
     c.notes.length > 0 &&
     c.notes.length <= CONTEXT_NOTES_MAX &&
-    c.notes.every((id) => typeof id === 'string' && id.length > 0) &&
-    (c.suggestion === undefined || isValidSuggestion(c.suggestion))
+    c.notes.every(isId) &&
+    (c.suggestion === undefined || isValidSuggestion(c.suggestion)) &&
+    (c.names === undefined || isValidEsNames(c.names))
   );
 }
 
 /** A name a context may carry: 1 to CONTEXT_NAME_MAX characters, not only space. */
 export function isValidContextName(v: unknown): boolean {
   return typeof v === 'string' && v.trim().length > 0 && v.length <= CONTEXT_NAME_MAX;
+}
+
+/** A name as a context keeps it: trimmed, runs of space as one, cut to CONTEXT_NAME_MAX; empty when blank. */
+export function cleanContextName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').slice(0, CONTEXT_NAME_MAX).trim();
 }
 
 export function isCandidateContext(el: {
@@ -171,6 +217,23 @@ function rewrite(
     if (notes !== null && notes.some((id) => isNote(byId.get(id))))
       out.push(withNotes(el, notes, byId));
   }
+  return changed ? pruneNameSuggestions(out) : elements;
+}
+
+/** The board without the name suggestions that name a context no longer on it (docs/specs/021-event-storming/
+ *  suggested-changes.md "It goes with its contexts"): every write that removes a context ends here. The same array
+ *  when none goes. */
+export function pruneNameSuggestions(elements: Element[]): Element[] {
+  const present = new Set(candidateContexts(elements).map((c) => c.id));
+  let changed = false;
+  const out = elements.map((el) => {
+    if (!isCandidateContext(el) || !el.esContext.names) return el;
+    const names = el.esContext.names.filter((s) => (s.with ?? []).every((id) => present.has(id)));
+    if (names.length === el.esContext.names.length) return el;
+    changed = true;
+    const { names: _dropped, ...rest } = el.esContext;
+    return { ...el, esContext: names.length ? { ...rest, names } : rest };
+  });
   return changed ? out : elements;
 }
 
@@ -201,7 +264,7 @@ export function leaveContext(elements: Element[], noteIds: readonly ElementId[])
 
 /** A context renamed: trimmed, runs of space as one, cut to CONTEXT_NAME_MAX. An empty name keeps the old one. */
 export function renameContext(elements: Element[], contextId: ElementId, name: string): Element[] {
-  const clean = name.trim().replace(/\s+/g, ' ').slice(0, CONTEXT_NAME_MAX).trim();
+  const clean = cleanContextName(name);
   const target = elements.find((el) => el.id === contextId);
   if (!clean || !target || !isCandidateContext(target) || target.label === clean) return elements;
   return elements.map((el) => (el.id === contextId ? { ...target, label: clean } : el));
@@ -211,7 +274,7 @@ export function renameContext(elements: Element[], contextId: ElementId, name: s
 export function removeContexts(elements: Element[], ids: readonly ElementId[]): Element[] {
   const gone = new Set(ids);
   const out = elements.filter((el) => !(gone.has(el.id) && isCandidateContext(el)));
-  return out.length === elements.length ? elements : out;
+  return out.length === elements.length ? elements : pruneNameSuggestions(out);
 }
 
 /** Suggested contexts kept, in the order given: each drops its suggestion and takes its notes from any other. */
@@ -224,7 +287,7 @@ export function applyContextSuggestions(elements: Element[], ids: readonly Eleme
     const { suggestion: _dropped, ...kept } = c.esContext;
     const byId = new Map(board.map((el) => [el.id, el]));
     if (!kept.notes.some((n) => isNote(byId.get(n)))) {
-      board = board.filter((el) => el.id !== id);
+      board = pruneNameSuggestions(board.filter((el) => el.id !== id));
       continue;
     }
     const taken = new Set(kept.notes);
@@ -247,6 +310,21 @@ export function emptyContextIds(
     .map((c) => c.id);
 }
 
+/** The context a merge of these keeps: the one with the most notes, the leftmost on a tie. It is also the one that
+ *  holds a name suggested for the merge. Null for fewer than two contexts. */
+export function mergeKeeperOf(
+  elements: readonly Element[],
+  ids: readonly ElementId[],
+): CandidateContextElement | null {
+  const wanted = new Set(ids);
+  const byId = new Map(elements.map((el) => [el.id, el]));
+  const merging = candidateContexts(elements).filter((c) => wanted.has(c.id));
+  if (merging.length < 2) return null;
+  const size = (c: CandidateContextElement) => contextNotes(c, byId).length;
+  const left = (c: CandidateContextElement) => Math.min(...contextNotes(c, byId).map((n) => n.x));
+  return [...merging].sort((a, b) => size(b) - size(a) || left(a) - left(b))[0]!;
+}
+
 /** Contexts merged into one (docs/specs/021-event-storming/candidate-contexts.md "Selecting several and merging"):
  *  the one with the most notes (the leftmost on a tie) is kept with all their notes; it stays a suggestion only when
  *  every one was, their reasons joined. Unchanged, with no kept id, for fewer than two contexts. */
@@ -256,12 +334,10 @@ export function mergeContexts(
 ): { elements: Element[]; keptId: ElementId | null } {
   const wanted = new Set(ids);
   const byId = new Map(elements.map((el) => [el.id, el]));
+  const kept = mergeKeeperOf(elements, ids);
+  if (!kept) return { elements, keptId: null };
   const merging = candidateContexts(elements).filter((c) => wanted.has(c.id));
-  if (merging.length < 2) return { elements, keptId: null };
-  const size = (c: CandidateContextElement) => contextNotes(c, byId).length;
-  const left = (c: CandidateContextElement) => Math.min(...contextNotes(c, byId).map((n) => n.x));
-  const [kept] = [...merging].sort((a, b) => size(b) - size(a) || left(a) - left(b));
-  const ordered = [kept!, ...merging.filter((c) => c !== kept)];
+  const ordered = [kept, ...merging.filter((c) => c !== kept)];
   const notes = [...new Set(ordered.flatMap((c) => c.esContext.notes))];
   const allSuggested = merging.every((c) => c.esContext.suggestion !== undefined);
   const reasons = ordered.map((c) => c.esContext.suggestion?.reason).filter(Boolean);
@@ -270,17 +346,21 @@ export function mergeContexts(
     ...(reasons.length ? { reason: reasons.join('; ').slice(0, SUGGESTION_REASON_MAX) } : {}),
     ...(by ? { by } : {}),
   };
+  const { names } = kept.esContext;
   const merged = withNotes(
-    { ...kept!, esContext: { notes, ...(allSuggested ? { suggestion } : {}) } },
+    {
+      ...kept,
+      esContext: { notes, ...(allSuggested ? { suggestion } : {}), ...(names ? { names } : {}) },
+    },
     notes,
     byId,
   );
   const gone = new Set(merging.filter((c) => c !== kept).map((c) => c.id));
   return {
-    elements: elements
-      .filter((el) => !gone.has(el.id))
-      .map((el) => (el.id === kept!.id ? merged : el)),
-    keptId: kept!.id,
+    elements: pruneNameSuggestions(
+      elements.filter((el) => !gone.has(el.id)).map((el) => (el.id === kept.id ? merged : el)),
+    ),
+    keptId: kept.id,
   };
 }
 
