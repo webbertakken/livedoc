@@ -62,16 +62,7 @@ export const SelectableArrowView = memo(
   (a, b) => arrowViewPropsEqual(a as ArrowProps, b as ArrowProps),
 );
 
-// A selected free arrow wears a box's selection: ring + scale handles (docs/specs/008-canvas/arrow-bending.md),
-// portalled into the grips layer. Not while it is locked, edited or reshaped by a handle (the frame
-// grew with every bend and read as a selection box being dragged out), nor in an edit-blocking mode.
-export const FreeArrowFrame = memo(function FreeArrowFrame({
-  arrow,
-  elements,
-  standsDown,
-  onBeginArrowTranslate,
-  onBeginArrowScale,
-}: {
+type FreeArrowFrameProps = {
   arrow: ArrowElement;
   elements: Element[];
   // Editing, reshaping, read-only, tab-locked or painting: any of them hides the frame.
@@ -82,14 +73,32 @@ export const FreeArrowFrame = memo(function FreeArrowFrame({
     handle: Parameters<ComponentProps<typeof FreeArrowSelection>['onBeginScale']>[0],
     e: ReactPointerEvent,
   ) => void;
-}) {
+};
+
+// Whether the arrow wears the frame when it is the lone selection.
+const frameable = ({ arrow, standsDown }: FreeArrowFrameProps) =>
+  !standsDown && arrow.from.kind === 'free' && arrow.to.kind === 'free' && arrow.locked !== true;
+
+// The board matters only to an arrow that can be framed (its frame follows the route): any other
+// arrow's slot ignores it, so a document change renders no slot but a frameable arrow's
+// (docs/specs/008-canvas/canvas-performance.md "A move re-renders what moved").
+export function freeArrowFramePropsEqual(a: FreeArrowFrameProps, b: FreeArrowFrameProps): boolean {
+  return (
+    a.arrow === b.arrow &&
+    a.standsDown === b.standsDown &&
+    a.onBeginArrowTranslate === b.onBeginArrowTranslate &&
+    a.onBeginArrowScale === b.onBeginArrowScale &&
+    (a.elements === b.elements || !frameable(b))
+  );
+}
+
+// A selected free arrow wears a box's selection: ring + scale handles (docs/specs/008-canvas/arrow-bending.md),
+// portalled into the grips layer. Not while it is locked, edited or reshaped by a handle (the frame
+// grew with every bend and read as a selection box being dragged out), nor in an edit-blocking mode.
+export const FreeArrowFrame = memo(function FreeArrowFrame(props: FreeArrowFrameProps) {
+  const { arrow, elements, onBeginArrowTranslate, onBeginArrowScale } = props;
   const { single } = useFlagsOf(arrow.id);
-  const framed =
-    single &&
-    !standsDown &&
-    arrow.from.kind === 'free' &&
-    arrow.to.kind === 'free' &&
-    arrow.locked !== true;
+  const framed = single && frameable(props);
   if (!framed) return null;
   return (
     <FramedArrow
@@ -99,7 +108,7 @@ export const FreeArrowFrame = memo(function FreeArrowFrame({
       onBeginArrowScale={onBeginArrowScale}
     />
   );
-});
+}, freeArrowFramePropsEqual);
 
 // The one framed arrow's frame: it alone follows the zoom (its grips keep their screen size), so a
 // zoom renders it and no other arrow's slot (docs/specs/008-canvas/canvas-performance.md).

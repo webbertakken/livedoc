@@ -147,13 +147,12 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
   });
   const previewTick = useEffectEvent((mapper: (els: Element[]) => Element[]) => {
     const tab = depsRef.current.activeTab;
-    let p = previewRef.current;
-    if (!p) {
-      p = { tabId: tab.id, base: tab.elements, virtual: tab.elements };
-      previewRef.current = p;
-      debugLog('[drag-preview] begin', { tab: tab.id });
-    }
-    const next = { ...p, virtual: mapper(p.virtual) };
+    const p = previewRef.current ?? { tabId: tab.id, base: tab.elements, virtual: tab.elements };
+    const virtual = mapper(p.virtual);
+    // A step that changes nothing (a release adding no mind drop or context join) redraws nothing.
+    if (virtual === p.virtual) return;
+    if (!previewRef.current) debugLog('[drag-preview] begin', { tab: tab.id });
+    const next = { ...p, virtual };
     previewRef.current = next;
     setLocalPreview(next.tabId, next.virtual, next.base);
   });

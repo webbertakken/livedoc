@@ -91,6 +91,12 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   recomputed. A preview frame renders neither the canvas nor the element layer: each element view
   reads its own part of the preview, so a frame's work follows what moved, not the board, and only
   what follows the moved selection (its chrome) reads the whole preview.
+- **A release re-renders what moved, too.** The release writes the board, and what every element
+  view reads from the board (the mind nodes' numbers, the agents' focus) keeps its identity while
+  its entries hold: a fresh, equal value re-rendered every element view on the board at each
+  release. An arrow slot that cannot wear the free arrow's frame ignores the board, and a step the
+  release adds to the preview (a mind drop, a context join) redraws it only when it changes
+  something.
 - **A break stays local.** An arrow broken where it runs behind a box is masked over its own extent (its path's
   points, control points included, grown for its heads), never a vast region: a mask's region is what the browser
   repaints when its holes change, and a vast one repainted the whole screen for every arrow a dragged box crossed.

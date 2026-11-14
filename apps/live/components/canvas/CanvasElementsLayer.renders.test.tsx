@@ -2,7 +2,7 @@
 import { act, render } from '@testing-library/react';
 import { memo } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createPinnedArrow, createShape, type Element } from '@livedoc/document';
+import { createPinnedArrow, createShape, type ArrowElement, type Element } from '@livedoc/document';
 
 // docs/specs/008-canvas/canvas-performance.md: an element view renders only for its own changes. A
 // Canvas render that changes no element, no selection and no zoom renders no element view; a zoom
@@ -49,7 +49,7 @@ vi.mock('./selection-aware-views', async (importOriginal) => {
     FreeArrowFrame: memo(function FrameStub(props: FrameProps) {
       bump(renders.frame, props.arrow.id);
       return null;
-    }),
+    }, real.freeArrowFramePropsEqual),
   };
 });
 // Each element's slot in the list: its count shows whether a layer render walked the board.
@@ -246,6 +246,29 @@ describe('arrow views render only for their own changes', () => {
     const movedA = movedC.map((el) => (el.id === a.id ? { ...el, y: 40 } : el));
     rerender(<CanvasElementsLayer {...layerProps({ elements: movedA })} />);
     expect([...renders.arrow.keys()]).toEqual([ab.id]);
+  });
+
+  // A pinned arrow never wears the free arrow's frame, so the board it would be framed against is
+  // nothing to it: a released drag renders no frame slot.
+  it('renders no arrow frame slot for a move, when no arrow there can be framed', () => {
+    const { rerender } = mount();
+    const moved = BOARD.map((el) => (el.id === a.id ? { ...el, y: 40 } : el));
+    rerender(<CanvasElementsLayer {...layerProps({ elements: moved })} />);
+    expect(renders.frame.size).toBe(0);
+  });
+
+  it("renders a free arrow's frame slot for a move, since its frame follows the board", () => {
+    const free = { ...createPinnedArrow(a.id, 'e', c.id, 'w'), id: 'free' } as ArrowElement;
+    const freeArrow: ArrowElement = {
+      ...free,
+      from: { kind: 'free', x: 0, y: 900 },
+      to: { kind: 'free', x: 300, y: 900 },
+    };
+    const board = [...BOARD, freeArrow];
+    const { rerender } = mount(layerProps({ elements: board }));
+    const moved = board.map((el) => (el.id === a.id ? { ...el, y: 40 } : el));
+    rerender(<CanvasElementsLayer {...layerProps({ elements: moved })} />);
+    expect([...renders.frame.keys()]).toEqual(['free']);
   });
 
   it('renders an arrow when a box moves into its path', () => {
