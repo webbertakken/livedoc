@@ -1,6 +1,8 @@
 import {
   contextOf,
+  isCandidateContext,
   isKeptContext,
+  mergeContexts,
   joinContext,
   leaveContext,
   removeContexts,
@@ -31,9 +33,12 @@ export type ContextActions = {
   addNotes: (contextId: ElementId, noteIds: readonly ElementId[]) => void;
   // Notes leave whatever context holds them.
   removeNotes: (noteIds: readonly ElementId[]) => void;
+  // Contexts merged into one; answers the id of the one kept, or null when nothing was merged.
+  merge: (ids: readonly ElementId[]) => ElementId | null;
 };
 
-type Refusal = 'blocked' | 'not-a-kept-context' | 'unchanged' | 'not-in-a-context';
+type Refusal =
+  'blocked' | 'not-a-kept-context' | 'not-a-context' | 'unchanged' | 'not-in-a-context' | 'too-few';
 const refuse = (reason: Refusal) => debugLog('[contexts] refused', { reason });
 
 export function useContextActions({
@@ -49,8 +54,10 @@ export function useContextActions({
     return !createBlocked && ok;
   };
 
+  // Any context may be renamed: a merged suggestion is named before it is applied.
   const rename = (id: ElementId, name: string) => {
-    if (!guard(kept(id), 'not-a-kept-context')) return;
+    const any = activeTab.elements.some((el) => el.id === id && isCandidateContext(el));
+    if (!guard(any, 'not-a-context')) return;
     const renamed = renameContext(activeTab.elements, id, name);
     if (!guard(renamed !== activeTab.elements, 'unchanged')) return;
     commit((els) => renameContext(els, id, name));
@@ -83,5 +90,14 @@ export function useContextActions({
     held.forEach(() => track('Canvas', 'Used', 'ContextNoteLeft'));
   };
 
-  return { rename, remove, addNotes, removeNotes };
+  const merge = (ids: readonly ElementId[]) => {
+    const { keptId } = mergeContexts(activeTab.elements, ids);
+    if (!guard(keptId !== null, 'too-few')) return null;
+    commit((els) => mergeContexts(els, ids).elements);
+    debugLog('[contexts] merged', { count: ids.length, keptId });
+    track('Canvas', 'Used', 'ContextsMerged');
+    return keptId;
+  };
+
+  return { rename, remove, addNotes, removeNotes, merge };
 }

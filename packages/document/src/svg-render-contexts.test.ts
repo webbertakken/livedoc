@@ -43,37 +43,47 @@ const tab = (elements: Element[], o: Partial<Tab> = {}): Tab => ({
 });
 
 describe('svgCandidateContexts (docs/specs/021-event-storming/candidate-contexts.md "Where it lives")', () => {
-  it('draws a kept context dashed in the canvas ink, its name escaped on a plate of paper', () => {
+  it('draws a kept context dashed in the canvas ink, and its name escaped in the middle', () => {
     const els = [note('a', 0), note('b', 300), context('c', ['a', 'b'])];
     const out = svgCandidateContexts(els, els, 'light', '#ffffff');
-    expect(out.svg).toContain('data-candidate-context="c"');
-    expect(out.svg).toContain(`stroke="${CONTEXT_INK.light.line}"`);
-    expect(out.svg).toContain('stroke-dasharray');
-    expect(out.svg).toContain('Billing &amp; &lt;co&gt;');
-    expect(out.svg).toContain('fill="#ffffff"');
+    expect(out.lines).toContain('data-candidate-context="c"');
+    expect(out.lines).toContain(`stroke="${CONTEXT_INK.light.line}"`);
+    expect(out.lines).toContain('stroke-dasharray');
+    expect(out.names).toContain('Billing &amp; &lt;co&gt;');
+    expect(out.names).toContain('fill="#ffffff" fill-opacity="0.85"');
+    // The notes span 0..500 by 0..200: the name stands on their middle.
+    expect(out.names).toContain('x="250" y="100" text-anchor="middle"');
     expect(out.bounds!.x).toBeLessThan(-CONTEXT_PADDING_PX);
   });
 
   it('inks a dark canvas in the dark pair', () => {
     const els = [note('a', 0), context('c', ['a'])];
-    expect(svgCandidateContexts(els, els, 'dark', '#0f172a').svg).toContain(
+    expect(svgCandidateContexts(els, els, 'dark', '#0f172a').lines).toContain(
       `stroke="${CONTEXT_INK.dark.line}"`,
     );
   });
 
   it('draws no suggested context and none whose notes are hidden', () => {
     const els = [note('a', 0), context('s', ['a'], true), context('h', ['a'])];
-    const all = svgCandidateContexts(els, els, 'light', '#fff').svg;
+    const all = svgCandidateContexts(els, els, 'light', '#fff').lines;
     expect(all).not.toContain('data-candidate-context="s"');
     expect(all).toContain('data-candidate-context="h"');
-    const out = svgCandidateContexts(els, [], 'light', '#fff');
-    expect(out).toEqual({ svg: '', bounds: null });
+    expect(svgCandidateContexts(els, [], 'light', '#fff')).toEqual({
+      lines: '',
+      names: '',
+      bounds: null,
+    });
   });
 });
 
 describe('contextPlate and withContextReach', () => {
-  it('centres the plate on the label point, padded', () => {
-    expect(contextPlate({ x: 100, y: 50 }, 40)).toEqual({ x: 94, y: 39, width: 52, height: 22 });
+  it('boxes a placed name round its centre', () => {
+    expect(contextPlate({ x: 100, y: 50, fontPx: 15, width: 52, height: 22 })).toEqual({
+      x: 74,
+      y: 39,
+      width: 52,
+      height: 22,
+    });
   });
 
   it('grows a content box to take in the reach, and keeps it with none', () => {
@@ -89,12 +99,13 @@ describe('contextPlate and withContextReach', () => {
 });
 
 describe('renderElementsToSvg with candidate contexts', () => {
-  it('draws the outline beneath the notes and frames it in the image', () => {
+  it('draws the line beneath the notes, the name over them, and frames it in the image', () => {
     const svg = renderElementsToSvg(tab([note('a', 0, { label: 'Alpha' }), context('c', ['a'])]), {
       padding: 0,
     });
-    expect(svg.indexOf('data-candidate-context')).toBeGreaterThan(0);
-    expect(svg.indexOf('data-candidate-context')).toBeLessThan(svg.search(/alpha/i));
+    const note0 = svg.search(/alpha/i);
+    expect(svg.indexOf('data-candidate-context="c"')).toBeLessThan(note0);
+    expect(svg.indexOf('data-candidate-context-name="c"')).toBeGreaterThan(note0);
     const viewBox = svg.match(/viewBox="(-?[\d.]+) (-?[\d.]+)/)!;
     expect(Number(viewBox[1])).toBeLessThan(-CONTEXT_PADDING_PX);
   });

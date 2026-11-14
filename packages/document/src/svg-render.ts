@@ -692,7 +692,7 @@ export function renderElementsToSvg(
   const tagColours = tagColoursOf(tab);
   // A wireframe page's elements are cut to its screen, its system bars over them (withinPageFrame).
   const bandsStart = parts.length;
-  if (contexts.svg) parts.push(contexts.svg);
+  if (contexts.lines) parts.push(contexts.lines);
   // Numbered mind nodes are led by their number (docs/specs/009-elements/mind-node.md "Numbered nodes"); a group is a
   // frame, drawn as one.
   const numbered = new Map(withMindNumberLabels(tab.elements).map((el) => [el.id, el]));
@@ -728,6 +728,8 @@ export function renderElementsToSvg(
       opacity < 1 ? `<g opacity="${r2(opacity)}">${inner.join('\n')}</g>` : inner.join('\n'),
     );
   }
+  // Their names over the notes.
+  if (contexts.names) parts.push(contexts.names);
   if (frame?.clipId)
     parts.splice(
       bandsStart,

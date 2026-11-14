@@ -1,13 +1,15 @@
 // Candidate contexts in an exported image (docs/specs/021-event-storming/candidate-contexts.md "Where it lives"):
-// every kept context drawn beneath the notes from the same outline the canvas draws, its name on a plate of the
-// paper's colour on the top edge. A suggested context is a suggestion, and no export shows one.
+// every kept context's line drawn beneath the notes from the same outline the canvas draws, and its name over them in
+// the middle of the shape, placed as the canvas places it at 100%. A suggested context is a suggestion, and no export shows one.
 
 import { isKeptContext, contextNotes, type CandidateContextElement } from './candidate-contexts';
 import {
   CONTEXT_DASH_PX,
   CONTEXT_STROKE_PX,
   CONTEXT_WOBBLE_PX,
+  contextNamePlacement,
   contextOutline,
+  type ContextNamePlacement,
 } from './candidate-context-outline';
 import type { Rect } from './geometry-primitives';
 import type { Element } from './index';
@@ -19,33 +21,27 @@ export const CONTEXT_INK = {
   light: { line: '#64748b', name: '#334155' },
   dark: { line: '#94a3b8', name: '#e2e8f0' },
 } as const;
-/** The name's type size and its plate, canvas px. */
-export const CONTEXT_NAME_PX = 15;
-export const CONTEXT_PLATE_H = 22;
-export const CONTEXT_PLATE_PAD_X = 6;
-const CONTEXT_FONT = 'Inter, system-ui, sans-serif';
+/** The name's plate is the canvas's paper at this opacity, so the notes beneath show faintly through. */
+export const CONTEXT_PLATE_OPACITY = 0.85;
+export const CONTEXT_FONT = 'Inter, system-ui, sans-serif';
 
-/** Where a context's name plate stands, from the outline's label point and the name's width. */
-export function contextPlate(label: { x: number; y: number }, nameWidth: number): Rect {
-  return {
-    x: label.x - CONTEXT_PLATE_PAD_X,
-    y: label.y - CONTEXT_PLATE_H / 2,
-    width: nameWidth + 2 * CONTEXT_PLATE_PAD_X,
-    height: CONTEXT_PLATE_H,
-  };
+/** A placed name's plate as a box. */
+export function contextPlate(p: ContextNamePlacement): Rect {
+  return { x: p.x - p.width / 2, y: p.y - p.height / 2, width: p.width, height: p.height };
 }
 
-/** The kept contexts drawn round their `visible` notes, and the box they reach; empty when none shows. */
+/** The kept contexts drawn round their `visible` notes: their lines (beneath the notes), their names (over them) and
+ *  the box they reach; empty when none shows. */
 export function svgCandidateContexts(
   elements: readonly Element[],
   visible: readonly Element[],
   surface: 'light' | 'dark',
   paper: string,
-): { svg: string; bounds: Rect | null } {
+): { lines: string; names: string; bounds: Rect | null } {
   const shown = new Map(visible.map((el) => [el.id, el]));
   const ink = CONTEXT_INK[surface];
-  const measure = labelMeasure(CONTEXT_NAME_PX, true, false, CONTEXT_FONT);
-  const parts: string[] = [];
+  const lines: string[] = [];
+  const names: string[] = [];
   let reach: { x0: number; y0: number; x1: number; y1: number } | null = null;
   const grow = (r: Rect) => {
     reach = reach ?? { x0: r.x, y0: r.y, x1: r.x + r.width, y1: r.y + r.height };
@@ -59,7 +55,12 @@ export function svgCandidateContexts(
     const context = el as CandidateContextElement;
     const outline = contextOutline(context.id, contextNotes(context, shown));
     if (!outline) continue;
-    const plate = contextPlate(outline.label, measure(context.label));
+    const name = contextNamePlacement(
+      outline.polygon,
+      (fontPx) => labelMeasure(fontPx, true, false, CONTEXT_FONT)(context.label),
+      1,
+    );
+    const plate = contextPlate(name);
     const w = CONTEXT_WOBBLE_PX;
     grow({
       x: outline.bounds.x - w,
@@ -67,21 +68,25 @@ export function svgCandidateContexts(
       width: outline.bounds.width + 2 * w,
       height: outline.bounds.height + 2 * w,
     });
-    grow(plate);
-    parts.push(
-      `<g data-candidate-context="${xmlEscape(context.id)}">` +
-        `<path d="${outline.path}" fill="none" stroke="${ink.line}" stroke-width="${CONTEXT_STROKE_PX}" ` +
-        `stroke-dasharray="${CONTEXT_DASH_PX} ${CONTEXT_DASH_PX}" stroke-linecap="round"/>` +
+    const id = xmlEscape(context.id);
+    lines.push(
+      `<path data-candidate-context="${id}" d="${outline.path}" fill="none" stroke="${ink.line}" ` +
+        `stroke-width="${CONTEXT_STROKE_PX}" stroke-dasharray="${CONTEXT_DASH_PX} ${CONTEXT_DASH_PX}" ` +
+        `stroke-linecap="round"/>`,
+    );
+    names.push(
+      `<g data-candidate-context-name="${id}">` +
         `<rect x="${r2(plate.x)}" y="${r2(plate.y)}" width="${r2(plate.width)}" height="${r2(plate.height)}" ` +
-        `rx="4" fill="${xmlEscape(paper)}"/>` +
-        `<text x="${r2(outline.label.x)}" y="${r2(outline.label.y)}" dominant-baseline="central" ` +
-        `font-family="${CONTEXT_FONT}" font-size="${CONTEXT_NAME_PX}" font-weight="600" fill="${ink.name}">` +
+        `rx="4" fill="${xmlEscape(paper)}" fill-opacity="${CONTEXT_PLATE_OPACITY}"/>` +
+        `<text x="${r2(name.x)}" y="${r2(name.y)}" text-anchor="middle" dominant-baseline="central" ` +
+        `font-family="${CONTEXT_FONT}" font-size="${r2(name.fontPx)}" font-weight="600" fill="${ink.name}">` +
         `${xmlEscape(context.label)}</text></g>`,
     );
   }
   const r = reach as { x0: number; y0: number; x1: number; y1: number } | null;
   return {
-    svg: parts.join('\n'),
+    lines: lines.join('\n'),
+    names: names.join('\n'),
     bounds: r ? { x: r.x0, y: r.y0, width: r.x1 - r.x0, height: r.y1 - r.y0 } : null,
   };
 }

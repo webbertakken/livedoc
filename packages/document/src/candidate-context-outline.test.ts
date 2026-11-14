@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CONTEXT_LABEL_INSET_PX,
+  CONTEXT_NAME_CLEARANCE_PX,
+  CONTEXT_NAME_MIN_PX,
+  CONTEXT_NAME_PX,
   CONTEXT_PADDING_PX,
+  CONTEXT_PLATE_H,
+  CONTEXT_PLATE_PAD_X,
   CONTEXT_WOBBLE_PX,
+  contextNamePlacement,
   contextOutline,
   convexHull,
   distanceToPolygon,
   pointInPolygon,
   polygonArea,
+  polygonCentroid,
 } from './candidate-context-outline';
 
 const note = (x: number, y: number) => ({ x, y, width: 200, height: 200 });
@@ -110,19 +116,54 @@ describe('contextOutline (docs/specs/021-event-storming/candidate-contexts.md "I
     expect(contextOutline('ctx-b', rects)!.path).not.toBe(a.path);
   });
 
-  it('puts the name on the top edge, in from where it starts', () => {
-    const o = contextOutline('c', [note(0, 100), note(400, 100)])!;
-    expect(o.label).toEqual({ x: CONTEXT_LABEL_INSET_PX, y: 100 - CONTEXT_PADDING_PX });
-  });
-
-  it('finds the top edge above the leftmost note when the notes step down', () => {
-    const o = contextOutline('c', [note(0, 0), note(400, 400)])!;
-    expect(o.label.x).toBe(CONTEXT_LABEL_INSET_PX);
-    expect(o.label.y).toBeCloseTo(-CONTEXT_PADDING_PX, 0);
-  });
-
   it('wraps a single note', () => {
     const o = contextOutline('c', [note(10, 20)])!;
     expect(o.bounds.width).toBe(200 + 2 * CONTEXT_PADDING_PX);
+  });
+});
+
+describe('contextNamePlacement (candidate-contexts.md "The name")', () => {
+  const square = (size: number) => [
+    { x: 0, y: 0 },
+    { x: size, y: 0 },
+    { x: size, y: size },
+    { x: 0, y: size },
+  ];
+  // A name 10 characters wide at any size.
+  const width = (fontPx: number) => fontPx * 6;
+
+  it('centres the name on the shape’s weighted centre at full size, 100% and closer', () => {
+    const tri = [
+      { x: 0, y: 0 },
+      { x: 900, y: 0 },
+      { x: 0, y: 900 },
+    ];
+    expect(polygonCentroid(tri)).toEqual({ x: 300, y: 300 });
+    const p = contextNamePlacement(tri, width, 2);
+    expect(p).toMatchObject({ x: 300, y: 300, fontPx: CONTEXT_NAME_PX });
+    expect(p.width).toBe(CONTEXT_NAME_PX * 6 + 2 * CONTEXT_PLATE_PAD_X);
+    expect(p.height).toBe(CONTEXT_PLATE_H);
+  });
+
+  it('grows on the canvas as the board zooms out, keeping its size on screen', () => {
+    const p = contextNamePlacement(square(4000), width, 0.25);
+    expect(p.fontPx).toBe(CONTEXT_NAME_PX * 4);
+    expect(p.height).toBe(CONTEXT_PLATE_H * 4);
+  });
+
+  it('shrinks to keep clear of the line in a small shape, down to the least size', () => {
+    const fits = contextNamePlacement(square(100), width, 1);
+    expect(fits.fontPx).toBeLessThan(CONTEXT_NAME_PX);
+    expect(fits.width / 2 + CONTEXT_NAME_CLEARANCE_PX).toBeLessThanOrEqual(50);
+    expect(contextNamePlacement(square(40), width, 1).fontPx).toBe(CONTEXT_NAME_MIN_PX);
+  });
+
+  it('answers the middle of what it was given for a shape with no area', () => {
+    expect(
+      polygonCentroid([
+        { x: 2, y: 4 },
+        { x: 6, y: 4 },
+      ]),
+    ).toEqual({ x: 4, y: 4 });
   });
 });

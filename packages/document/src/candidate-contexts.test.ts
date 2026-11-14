@@ -15,6 +15,7 @@ import {
   isValidEsContext,
   joinContext,
   leaveContext,
+  mergeContexts,
   newContextElement,
   removeContexts,
   renameContext,
@@ -330,5 +331,59 @@ describe('a note leaving takes nothing with it (the cascade)', () => {
 describe('kindWordOf (a candidate context)', () => {
   it('names it a context, never the shape that carries it', () => {
     expect(kindWordOf(context('c', ['a']))).toBe('context');
+  });
+});
+
+describe('mergeContexts (candidate-contexts.md "Selecting several and merging")', () => {
+  const els = (): Element[] => [
+    note('a', 0),
+    note('b', 300),
+    note('c', 600),
+    note('d', 900),
+    context('one', ['c'], { suggestion: { reason: 'r1', by: 'Ada' } }),
+    context('two', ['a', 'b'], { suggestion: { reason: 'r2' } }),
+    context('three', ['d']),
+  ];
+
+  it('keeps the one with most notes, takes all their notes, and stays suggested when all were', () => {
+    const out = mergeContexts(els(), ['one', 'two']);
+    expect(out.keptId).toBe('two');
+    const merged = ctx(out.elements, 'two')!;
+    expect(merged.esContext).toEqual({
+      notes: ['a', 'b', 'c'],
+      suggestion: { reason: 'r2; r1', by: 'Ada' },
+    });
+    expect(merged.width).toBe(800);
+    expect(ctx(out.elements, 'one')).toBeUndefined();
+  });
+
+  it('is kept when any merged one was kept, and breaks a tie by the leftmost', () => {
+    const out = mergeContexts(els(), ['three', 'one']);
+    expect(out.keptId).toBe('one');
+    expect(ctx(out.elements, 'one')!.esContext).toEqual({ notes: ['c', 'd'] });
+  });
+
+  it('cuts joined reasons to the limit, and keeps who when only one said', () => {
+    const long = [
+      note('a', 0),
+      note('b', 300),
+      context('x', ['a'], { suggestion: { reason: 'x'.repeat(150), by: 'Ada' } }),
+      context('y', ['b'], { suggestion: { reason: 'y'.repeat(150) } }),
+    ];
+    const s = ctx(mergeContexts(long, ['x', 'y']).elements, 'x')!.esContext.suggestion!;
+    expect(s.reason).toHaveLength(200);
+    expect(s.by).toBe('Ada');
+    const bare = [
+      note('a', 0),
+      note('b', 300),
+      context('x', ['a'], { suggestion: {} }),
+      context('y', ['b'], { suggestion: {} }),
+    ];
+    expect(ctx(mergeContexts(bare, ['x', 'y']).elements, 'x')!.esContext.suggestion).toEqual({});
+  });
+
+  it('changes nothing for fewer than two contexts', () => {
+    const board = els();
+    expect(mergeContexts(board, ['one', 'a', 'nope'])).toEqual({ elements: board, keptId: null });
   });
 });
