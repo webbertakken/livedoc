@@ -15,6 +15,7 @@ import {
   type Element,
   type BoxedElement,
   type ElementId,
+  type EventStormingNoteKind,
   type RefTable,
   type Tab,
 } from '@livedoc/document';
@@ -28,7 +29,7 @@ import { RESERVED_WORDS } from './vocabulary';
 // The first operation that touched an element, and the fields operations wrote on it in the order
 // written: how its ~ line orders them.
 // Why an element moved without an operation naming it.
-export type MoveReason = 'make room' | 'carried' | 'laid out' | 'landed on a lane';
+export type MoveReason = 'make room' | 'carried' | 'laid out' | 'landed on a lane' | 'arranged';
 
 // `moved` marks an element only moved along, which prints as a » line and is not normalised.
 // How `layout` laid elements out, as its `»` line says.
@@ -55,6 +56,17 @@ export type Removal = {
   unwrapped?: true;
   anchoredTo?: ElementId;
   emptiedBy?: ElementId;
+};
+
+// One `suggest-lane` line as its operation read it: the contexts and notes resolved to ids.
+export type PendingLaneLine = {
+  operation: number;
+  name: string;
+  lanes: readonly number[];
+  kinds: readonly EventStormingNoteKind[];
+  contexts: readonly ElementId[];
+  notes: readonly ElementId[];
+  reason?: string;
 };
 
 export type EditState = {
@@ -85,6 +97,11 @@ export type EditState = {
   readonly origin: { x: number; y: number };
   // Every id the tab holds or the changeset used, and every keyword: what a new id may not be.
   readonly taken: Set<string>;
+  // The lines of a lane plan the changeset has given so far, settled into one plan after its last operation
+  // (docs/specs/021-event-storming/lane-plans.md "How an agent suggests one").
+  readonly laneLines: PendingLaneLine[];
+  // What an operation says of an element it made, on its + line, in place of a label.
+  readonly said: Map<ElementId, string>;
   // Refs, recomputed when an element is added or removed; holders and the element list, after any
   // write. Every write goes through the functions below, which clear them.
   readonly memo: {
@@ -118,6 +135,8 @@ export function createState(tab: Tab, options: ApplyOptions, log: EditLog): Edit
     targetSet: new Set(),
     removed: new Map(),
     warnings: [],
+    laneLines: [],
+    said: new Map(),
     locked: lockedIds(tab),
     makeId: options.makeId ?? (() => crypto.randomUUID()),
     agentName: options.agentName ?? null,

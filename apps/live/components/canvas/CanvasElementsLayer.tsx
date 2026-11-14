@@ -36,6 +36,7 @@ import {
 import { ChangesetRevealOverlay } from '@/components/canvas/ChangesetRevealOverlay';
 import { AgentFocusOverlay } from '@/components/canvas/AgentFocusOverlay';
 import { LayerSelectionChrome } from '@/components/canvas/LayerSelectionChrome';
+import { BoardOffers } from '@/components/canvas/suggestions/BoardOffers';
 import { SuggestionLayer } from '@/components/canvas/suggestions/SuggestionLayer';
 import { useSheetChartRenderer, type BoxedShared } from '@/components/canvas/sheet-chart-renderer';
 import type { CanvasSelectionInput } from '@/hooks/canvas/useCanvasSelectionView';
@@ -43,10 +44,11 @@ import { usePhotoDraftView } from '@/lib/photo-draft-preview';
 import { ZoomedLaserOverlay } from '@/components/canvas/view-readers';
 import { RemoteCursors } from '@/components/canvas/RemoteCursor';
 import { useInsertShift } from '@/hooks/canvas/useInsertShift';
+import { useOfferGlide } from '@/hooks/canvas/useOfferGlide';
 import { useOfferedPreview } from '@/hooks/canvas/useOfferedPreview';
 import { selectContexts } from '@/lib/context-selection';
 import { suggestionPreview } from '@/lib/suggestion-apply';
-import { useSuggestionView } from '@/lib/suggestion-view';
+import { ARRANGE_KEY, useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
 import { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
@@ -374,12 +376,15 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
   );
   // A suggested change a person points at (docs/specs/021-event-storming/suggested-changes.md "A preview never
   // writes"): drawn over the untouched board. While Show All draws the board as Apply All leaves it, a split's parts
-  // stand down: the board is already making room.
+  // stand down: the board is already making room. Arrange and Reorder, while it is previewed, takes the board from
+  // every hover (docs/specs/021-event-storming/arrange.md "How a person arranges").
+  const arranging = suggestionsShown && suggestionView.arranging;
   const offeredChange = useOfferedPreview({
     tabId: props.activeTabId ?? '',
     elements,
-    previewKey: suggestionsShown ? suggestionView.previewKey : null,
+    previewKey: arranging ? ARRANGE_KEY : suggestionsShown ? suggestionView.previewKey : null,
     inertIds: props.layerInertIds,
+    layers: tabLayers,
   });
   const offered = useMemo(
     () => (offeredChange && showAllPreview ? { ...offeredChange, parts: [] } : offeredChange),
@@ -387,6 +392,8 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
   );
   const offeredShift = offered && offered.shiftX.size > 0 ? offered.shiftX : null;
   const insertShift = useInsertShift(showAllPreview ? showAllPreview.shiftX : offeredShift);
+  // A whole board offered glides to where it would stand, and back; never under a drag.
+  useOfferGlide(!!offered?.board && !insertShift.dragging);
   // Session-local view state for an open photo draft (docs/specs/021-event-storming/event-storming.md Phase 8).
   const draftView = usePhotoDraftView();
   // Paint order (docs/specs/006-document/layers.md + docs/specs/008-canvas/canvas-and-palette.md): layer bands bottom -> top, keeping
@@ -745,13 +752,25 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
             <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
               {/* Suggestions (docs/specs/021-event-storming/suggestions.md): beneath the next-note tabs, standing
           down while a drag is in hand. */}
-              {suggestionsShown && props.suggestions && !insertShift.dragging ? (
+              {suggestionsShown && props.suggestions ? (
+                <BoardOffers
+                  tabId={props.activeTabId ?? ''}
+                  elements={elements}
+                  layers={tabLayers}
+                  offer={offered?.board ?? null}
+                  arranging={arranging}
+                  dragging={insertShift.dragging}
+                  controls={props.suggestions}
+                />
+              ) : null}
+              {suggestionsShown && props.suggestions && !insertShift.dragging && !arranging ? (
                 <SuggestionLayer
                   elements={elements}
                   tabId={props.activeTabId ?? ''}
                   controls={props.suggestions}
                   showAllSpots={showAllPreview?.spots ?? null}
                   inertIds={props.layerInertIds}
+                  layers={tabLayers}
                   offered={offered}
                   onSelectContexts={(ids) => {
                     props.contexts?.clearSelection();

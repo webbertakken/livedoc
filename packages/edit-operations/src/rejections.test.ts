@@ -82,7 +82,7 @@ describe('rejection builders', () => {
       operation: 1,
       details: [
         '"sett" is not an operation',
-        'operations: add set rm move connect rewire insert wrap unwrap order layout test suggest suggest-context suggest-name suggest-reword suggest-kind suggest-split suggest-remove wall',
+        'operations: add set rm move connect rewire insert wrap unwrap order layout test suggest suggest-context suggest-name suggest-reword suggest-kind suggest-split suggest-remove suggest-lane arrange wall',
       ],
       hint: 'did you mean set?',
     });

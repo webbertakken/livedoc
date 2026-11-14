@@ -13,8 +13,11 @@ export type SuggestionView = {
   showAll: boolean;
   panelOpen: boolean;
   // A peek tab's hint key, `s:<suggestion id>` for one suggestion (a panel row, a placeholder), `c:<context id>`
-  // for a suggested context, or a `changeKey` or `nameKey` for a suggested change.
+  // for a suggested context, a `changeKey` or `nameKey` for a suggested change, or a `planKey` for a lane plan.
   previewKey: string | null;
+  // Arrange and Reorder is being previewed (docs/specs/021-event-storming/arrange.md "How a person arranges"): the
+  // board draws as arranged until the person keeps it or puts it back. It outlives every hover preview.
+  arranging: boolean;
 };
 
 // How far a previewed reword reaches (docs/specs/021-event-storming/suggested-changes.md "A reword ripples").
@@ -25,12 +28,24 @@ type PreviewScope = 'context' | 'board';
 export type PreviewedChange =
   | { type: 'change'; noteId: string; index: number; scope: PreviewScope }
   | { type: 'name'; name: string; contextIds: string[] }
-  | { type: 'contexts'; contextIds: string[] };
+  | { type: 'contexts'; contextIds: string[] }
+  // A whole board rearranged: by its open lane plan, or arranged along the timeline.
+  | { type: 'lane-plan'; planId: string }
+  | { type: 'arrange' };
 
 const CHANGE_PREFIX = 'x:';
 const NAME_PREFIX = 'n:';
 const CONTEXTS_PREFIX = 'g:';
 const CONTEXT_PREFIX = 'c:';
+const PLAN_PREFIX = 'p:';
+
+/** The key that draws the board as Arrange and Reorder would leave it. */
+export const ARRANGE_KEY = 'a:';
+
+/** The key of a lane plan's preview: the board as applying the plan would leave it. */
+export function planKey(planId: string): string {
+  return PLAN_PREFIX + planId;
+}
 
 /** The key of a note change's preview: the mark previews the note's first, in its context's scope. */
 export function changeKey(noteId: string, index = 0, scope: PreviewScope = 'context'): string {
@@ -75,6 +90,9 @@ export function parsePreviewKey(key: string | null): PreviewedChange | null {
     if (!contextIds.every((id): id is string => typeof id === 'string')) return null;
     return { type: 'contexts', contextIds };
   }
+  if (key === ARRANGE_KEY) return { type: 'arrange' };
+  if (key?.startsWith(PLAN_PREFIX) && key.length > PLAN_PREFIX.length)
+    return { type: 'lane-plan', planId: key.slice(PLAN_PREFIX.length) };
   return null;
 }
 
@@ -82,7 +100,7 @@ export function parsePreviewKey(key: string | null): PreviewedChange | null {
 export function previewedContextIds(key: string | null): readonly string[] {
   if (key?.startsWith(CONTEXT_PREFIX)) return [key.slice(CONTEXT_PREFIX.length)];
   const parsed = parsePreviewKey(key);
-  return parsed && parsed.type !== 'change' ? parsed.contextIds : [];
+  return parsed && 'contextIds' in parsed ? parsed.contextIds : [];
 }
 
 // How long a preview outlives the pointer leaving it, so the pointer can cross from a tab to its preview.
@@ -92,6 +110,7 @@ const DEFAULTS: Omit<SuggestionView, 'tabId'> = {
   showAll: false,
   panelOpen: false,
   previewKey: null,
+  arranging: false,
 };
 
 let view: SuggestionView = { tabId: null, ...DEFAULTS };
@@ -103,7 +122,8 @@ function publish(next: SuggestionView): void {
     next.tabId === view.tabId &&
     next.showAll === view.showAll &&
     next.panelOpen === view.panelOpen &&
-    next.previewKey === view.previewKey
+    next.previewKey === view.previewKey &&
+    next.arranging === view.arranging
   )
     return;
   view = next;
@@ -149,6 +169,14 @@ export function leaveSuggestion(tabId: string, key: string): void {
 export function endSuggestionPreview(tabId: string): void {
   cancelLeave();
   update(tabId, { previewKey: null });
+}
+
+export function startArranging(tabId: string): void {
+  update(tabId, { arranging: true });
+}
+
+export function stopArranging(tabId: string): void {
+  update(tabId, { arranging: false });
 }
 
 function subscribe(l: () => void): () => void {

@@ -21,6 +21,7 @@
     "@livedoc/document": "workspace:*",
     "@livedoc/forms": "workspace:*",
     "@livedoc/icons": "workspace:*",
+    "@livedoc/storm-reading": "workspace:*",
     "@livedoc/templates": "workspace:*"
   },
   "devDependencies": {

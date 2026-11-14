@@ -7,6 +7,9 @@ import {
   CONTEXT_NAME_MAX,
   ES_SUGGESTION_SIDES,
   EVENT_STORMING_NOTES,
+  LANE_NAME_MAX,
+  LANES_MAX,
+  LANES_MIN,
   NOTE_CHANGE_TYPES,
   NOTE_CHANGE_WORDS_MAX,
   SPLIT_PARTS_MAX,
@@ -42,7 +45,8 @@ export const readEventStormingOutput = {
         '"name": refs), candidate contexts (ref "name": refs), the context map (context -> context: what crosses), ' +
         'gaps (level code refs: message (remedy)), open suggestions (notes, and contexts as ref context "name" ' +
         'refs), suggested changes (the refs it is on, then name "…", reword "…", kind …, split "…" | "…" or remove), ' +
-        'and what was declined (type, kind, words, the refs it was about).',
+        'the open lane plan (its ref, its lanes top to bottom with how many notes each holds; stale when the board ' +
+        'changed since), and what was declined (type, kind, words, the refs it was about).',
     ),
   reading: z
     .record(z.string(), z.unknown())
@@ -54,7 +58,7 @@ export const readEventStormingOutput = {
   suggestions: z
     .number()
     .describe(
-      'How many suggestions are open on the board: notes, contexts, names and note changes.',
+      'How many suggestions are open on the board: notes, contexts, names, note changes and a lane plan.',
     ),
   url,
 };
@@ -172,6 +176,29 @@ const noteChange = z.object({
     .describe(`Why, for the person deciding, up to ${SUGGESTION_REASON_MAX} characters.`),
 });
 
+// One lane of a lane plan (docs/specs/021-event-storming/lane-plans.md "How an agent suggests one").
+const lane = z.object({
+  name: z
+    .string()
+    .max(LANE_NAME_MAX)
+    .describe(
+      `What the lane holds, in the business’s words, up to ${LANE_NAME_MAX} characters ("Kitchen").`,
+    ),
+  lanes: z
+    .array(z.number().int().min(1))
+    .optional()
+    .describe('Lanes of the board as it stands, by the number read_event_storming prints.'),
+  kinds: z
+    .array(z.enum(kinds))
+    .optional()
+    .describe(`Note kinds: every note of the kind. ${kinds.join(', ')}.`),
+  contexts: z
+    .array(z.string())
+    .optional()
+    .describe('Candidate contexts by ref: every note of the context.'),
+  notes: z.array(z.string()).optional().describe('Workshop notes by ref.'),
+});
+
 export const suggestNotesShape = {
   documentId,
   tab,
@@ -180,7 +207,7 @@ export const suggestNotesShape = {
     .max(SUGGEST_NOTES_MAX)
     .optional()
     .describe(
-      `Notes to suggest. With contexts, names and changes, 1 to ${SUGGEST_NOTES_MAX} in all, written as one changeset: all or none.`,
+      `Notes to suggest. With contexts, names, changes and lanes, 1 to ${SUGGEST_NOTES_MAX} in all, written as one changeset: all or none.`,
     ),
   contexts: z
     .array(contextSuggestion)
@@ -202,6 +229,23 @@ export const suggestNotesShape = {
     .optional()
     .describe(
       'Changes to suggest to notes already on the board: reword, kind, split or remove. Nothing changes until a person accepts one.',
+    ),
+  lanes: z
+    .array(lane)
+    .max(LANES_MAX)
+    .optional()
+    .describe(
+      `A lane plan: the board reorganised into ${LANES_MIN} to ${LANES_MAX} lanes, top to bottom. Each lane says what ` +
+        'it holds by notes, contexts, kinds or lanes, which may be mixed; the most specific takes a note (a ref, ' +
+        'then a context, then a kind, then a lane). Every workshop note must end on a lane. The board places the ' +
+        'notes, each keeping its place in time, and refuses a plan that would change what the board says.',
+    ),
+  lanesReason: z
+    .string()
+    .max(SUGGESTION_REASON_MAX)
+    .optional()
+    .describe(
+      `Why these lanes, for the person deciding, up to ${SUGGESTION_REASON_MAX} characters.`,
     ),
 };
 

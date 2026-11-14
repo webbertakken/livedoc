@@ -190,6 +190,7 @@ in the business's words, and suggest it with a reason. A note belongs to at most
 People see a faint dashed outline round each group and apply or dismiss it.
 Suggest changes to what is already there (another name, other words, a split, a removal) the
 same way: livedoc guide storm-changes
+Fewer lanes, or the notes arranged along the timeline: livedoc guide storm-lanes
 Take your suggestions back with: livedoc storm clear "Order flow"
 
 Photos of a physical wall become notes on the board with add_photo_notes (MCP): look at each
@@ -232,6 +233,63 @@ The reading lists them under "suggested changes", and under "declined" what a pe
 before: those are refused when suggested again (declined_before), so suggest something else.
 Take your suggestions back with: livedoc storm clear "Order flow"
 or one note's or context's alone, in an edit: rm e3 suggested`,
+  },
+  'storm-lanes': {
+    summary: 'reorganise an Event Storming board into fewer lanes, or arrange it',
+    text: `Lanes on an Event Storming board
+
+Read the board first: livedoc guide storm. The reading lists the lanes in use, numbered from
+the top, with their names and notes. A lane plan reorganises the board into fewer lanes (2 to
+12). You say which notes share a lane, what each lane is called and the lanes' order; the
+board places the notes and checks the result. Nothing moves until a person applies the plan.
+
+What a lane means:
+  Time runs left to right; notes one above the other belong to one moment.
+  Up and down never means later: it means at the same time, instead, or whose.
+  A note stays beside what it leads to: the reading reaches no further than two lanes.
+  A candidate context is one part of the business: its notes read best together.
+  A pivotal event is a border every lane respects.
+  Fewer lanes tell one story in order; more lanes show what runs side by side.
+  A lane's name says what it holds, in the business's words.
+
+One line per lane, top to bottom; the suggest-lane lines of one call make one plan:
+
+  livedoc storm suggest "Order flow" -f - <<'EOF'
+  suggest-lane "Ordering" context=x1 reason="a lane for each part of the business"
+  suggest-lane "Kitchen" context=x2 kind=policy
+  suggest-lane "Questions" kind=hotspot lanes=5 e12
+  EOF
+
+A line says what its lane holds four ways, which may be mixed: notes by ref, context= (every
+note of a context), kind= (every note of a kind) and lanes= (the notes now on a lane, by its
+number); each takes several, comma separated. The most specific line takes a note: a ref,
+then a context, then a kind, then a lane. Every workshop note must end on a lane. Locked
+notes and notes placed free of the lanes stay where they are: name none of them.
+
+Each note keeps its place in time; a column too deep for the lanes opens to the right.
+A plan the board cannot keep is refused, and the refusal says what to change:
+  reading_changes     it would change what the board says, and lists how ("c2 command no
+                      longer causes e3"): keep those notes on one lane or on neighbours
+  lanes_incomplete    names the notes no line takes: add them to a line
+  lane_empty          a line takes no note: drop it, or say what it holds
+  lane_not_found      a lane number the reading does not print
+  lanes_out_of_range  fewer than 2 lanes, or more than 12
+  lane_blocked        a note would land on a locked or free-placed one
+
+A board holds one open plan; a new one replaces it. The reading lists it under "lane plan".
+Take it back with: livedoc storm clear "Order flow"
+or alone, in an edit: rm <its ref>
+
+Arranging is another act, and yours to do directly: it keeps every lane and lays the notes
+out afresh along the timeline, a column per event, as one changeset you can revert.
+
+  livedoc edit "Order flow" -f - <<'OPS'
+  arrange
+  OPS
+
+It is refused when it would change what the board says (reading_changes), when a note would
+land on one that stays (lane_blocked) and when there is nothing to do (nothing_to_arrange).
+A lane plan changes lanes and keeps time; arranging changes time and keeps lanes.`,
   },
 } as const;
 

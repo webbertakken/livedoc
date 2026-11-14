@@ -1,7 +1,20 @@
+import { ES_NOTE_GAP, ES_NOTE_SIZE_PX } from '@livedoc/document';
+
 // The board reading's numbers (docs/specs/021-event-storming/board-reading.md), one block because they are one model.
 
 // How many lanes apart two notes can still relate; the same reach the lane snap offers (ES_CANDIDATE_REACH_LANES).
 export const READING_REACH_LANES = 2;
+
+// How many changes to what the board says a refusal names (docs/specs/021-event-storming/lane-plans.md "What must
+// stay true"): enough for an agent to change its plan, few enough to read.
+export const READING_CHANGES_SHOWN = 5;
+
+// How far apart Arrange and Reorder stands two columns (docs/specs/021-event-storming/arrange.md "How the board
+// arranges"): three gutters, as the storm graph lays a wall out, and wider a gutter at a time, up to a square note and
+// a gutter, where the closer spacing would change what the board says (default).
+export const ARRANGE_COLUMN_GAP = ES_NOTE_GAP * 3;
+export const ARRANGE_COLUMN_GAP_STEP = ES_NOTE_GAP;
+export const ARRANGE_COLUMN_GAP_MAX = ES_NOTE_SIZE_PX.square.width + ES_NOTE_GAP;
 
 // The tense checks run only when at least this share of the worded events reads as English past tense, so a board
 // written in another language finds none, never false ones (default).

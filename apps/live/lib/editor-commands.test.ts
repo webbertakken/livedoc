@@ -39,6 +39,7 @@ function handlers(): CommandHandlers {
     openShortcuts: vi.fn(),
     setTool: vi.fn(),
     openPhotoImport: vi.fn(),
+    arrangeBoard: vi.fn(),
   };
 }
 
@@ -534,5 +535,25 @@ describe('buildEditorCommands — flips', () => {
     expect(ids({ ...base, selectionCount: 1, canFlip: true, isReadOnly: true })).not.toContain(
       'flip-horizontal',
     );
+  });
+});
+
+// docs/specs/021-event-storming/arrange.md "How a person arranges".
+describe('the Arrange and Reorder command', () => {
+  it('is offered on an event-storming board alone, to someone who may change it', () => {
+    expect(ids(base)).not.toContain('arrange-board');
+    expect(ids({ ...base, esBoard: true })).toContain('arrange-board');
+    expect(ids({ ...base, esBoard: true, tabLocked: true })).not.toContain('arrange-board');
+    expect(ids({ ...base, esBoard: true, isReadOnly: true })).not.toContain('arrange-board');
+  });
+
+  it('runs the arrange act', () => {
+    const h = handlers();
+    const command = buildEditorCommands({ ...base, esBoard: true }, h).find(
+      (c) => c.id === 'arrange-board',
+    )!;
+    expect(command.name).toBe('Arrange and Reorder');
+    command.run();
+    expect(h.arrangeBoard).toHaveBeenCalledTimes(1);
   });
 });

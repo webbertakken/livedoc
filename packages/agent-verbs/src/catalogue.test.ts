@@ -141,6 +141,25 @@ describe('the guides and the skill', () => {
     expect(parseEditOperations(lines.map((l) => l.trim()).join('\n'))).toHaveProperty('operations');
   });
 
+  // docs/specs/021-event-storming/lane-plans.md "How an agent suggests one", arrange.md "How an agent arranges".
+  it('teach lane plans and arranging in lines that parse, with the refusals to act on', () => {
+    const text = GUIDE_TOPICS['storm-lanes'].text;
+    const lines = text.split('\n').filter((l) => /^ {2}(suggest-lane |arrange$)/.test(l));
+    expect(lines).toHaveLength(4);
+    expect(parseEditOperations(lines.map((l) => l.trim()).join('\n'))).toHaveProperty('operations');
+    for (const code of [
+      'reading_changes',
+      'lanes_incomplete',
+      'lane_empty',
+      'lane_not_found',
+      'lanes_out_of_range',
+      'lane_blocked',
+      'nothing_to_arrange',
+    ])
+      expect(text, code).toContain(code);
+    expect(GUIDE_TOPICS.storm.text).toContain('livedoc guide storm-lanes');
+  });
+
   it('tells a topic from a stranger', () => {
     expect(isGuideTopic('edit')).toBe(true);
     expect(isGuideTopic('nope')).toBe(false);

@@ -153,6 +153,18 @@ function words(operation: EditOperation): string[] {
         ...operation.contexts.map(oneWord),
         ...reasonText(operation.reason),
       ];
+    case 'suggest-lane':
+      return [
+        'suggest-lane',
+        JSON.stringify(operation.name),
+        ...(operation.lanes?.length ? [`lanes=${operation.lanes.join(',')}`] : []),
+        ...(operation.kinds?.length ? [`kind=${operation.kinds.join(',')}`] : []),
+        ...(operation.contexts?.length ? [`context=${operation.contexts.join(',')}`] : []),
+        ...(operation.notes ?? []).map(oneWord),
+        ...reasonText(operation.reason),
+      ];
+    case 'arrange':
+      return ['arrange'];
     case 'suggest-reword':
       return [
         'suggest-reword',

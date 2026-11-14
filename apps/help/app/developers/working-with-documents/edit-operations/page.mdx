@@ -65,6 +65,20 @@ One parser turns the line form into the JSON form, so both are checked the same 
 | `layout`  | `layout <selector> [style=flow] [direction=down]`                            | Lays out only the selection, keeping its top-left corner; `style` is `flow`, `tree` or `mindmap`, `direction` `down` or `right`                             |
 | `test`    | `test <selector> key=value…`                                                 | Refuses the whole changeset unless the element still holds these values                                                                                     |
 
+On an **Event Storming** board, an agent proposes rather than changes: these operations add suggestions, which a person applies or dismisses in the editor. Nothing on the board moves until they do. Any other tab refuses them as `not_event_storming`.
+
+| Operation         | Line form                                                                                        | What it does                                                                                                                                                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `suggest`         | `suggest <kind> "<words>" before=<note> [reason=…] [gap=…]` (or `after=`, `above=`, `below=`)    | Proposes a note beside a note of the board                                                                                                                                                                                                                  |
+| `suggest-context` | `suggest-context "<name>" <note>… [reason=…]`                                                    | Proposes a candidate context round some notes                                                                                                                                                                                                               |
+| `suggest-name`    | `suggest-name "<name>" <context>… [reason=…]`                                                    | Proposes another name for a candidate context, or one name for several merged                                                                                                                                                                               |
+| `suggest-reword`  | `suggest-reword <note> "<words>" [term=<old> to=<new>] [reason=…]`                               | Proposes other words for a note; with `term` and `to`, the word changes in every note of its context when accepted                                                                                                                                          |
+| `suggest-kind`    | `suggest-kind <note> <kind> [reason=…]`                                                          | Proposes another kind for a note                                                                                                                                                                                                                            |
+| `suggest-split`   | `suggest-split <note> "<words>" "<words>"… [reason=…]`                                           | Proposes several notes for one that holds several facts                                                                                                                                                                                                     |
+| `suggest-remove`  | `suggest-remove <note> [reason=…]`                                                               | Proposes taking a note off the board                                                                                                                                                                                                                        |
+| `suggest-lane`    | `suggest-lane "<name>" [lanes=<n>,…] [kind=<kind>,…] [context=<context>,…] [<note>…] [reason=…]` | One lane of a lane plan; the `suggest-lane` lines of one changeset, top to bottom, make one plan of 2 to 12 lanes. The board places the notes, each keeping its place in time, and refuses a plan that would change what the board says (`reading_changes`) |
+| `arrange`         | `arrange`                                                                                        | Not a suggestion: lays the board out afresh along the timeline, a column per event, every note kept on its lane. Refused when that would change what the board says, or when there is nothing to do (`nothing_to_arrange`)                                  |
+
 A few rules hold for every operation:
 
 - **Kinds.** `add` and `insert` take a shape kind (`square`, `circle`, `diamond`, `cylinder`, `stadium`, `hexagon` and the rest) or `text`, `sticky`, `table`, `annotation` or `link-card`. A shape kind it does not know is turned into the nearest one, with a `shape_coerced` warning. Arrows are made with `connect`; images, videos and drawn strokes are not made by name, but an `add` in the JSON form can carry a whole element (`{ "op": "add", "element": { … } }`), which is how an uploaded image goes on a tab.
@@ -149,14 +163,14 @@ f2  +verify
 rev 41→42 · cs_8k2m4q7d1x · lint clean · revert: livedoc changeset revert 3f9c2a71-… cs_8k2m4q7d1x
 ```
 
-| Mark          | Means                                                     |
-| ------------- | --------------------------------------------------------- |
-| `+`           | Added                                                     |
-| `~`           | Changed, each field before→after                          |
-| `-`           | Removed, with the reason when it went with another        |
-| `»`           | Moved without being named (made room, carried by a frame) |
-| `f2  +verify` | A frame or lane's membership changed                      |
-| `!`           | A warning                                                 |
+| Mark          | Means                                                               |
+| ------------- | ------------------------------------------------------------------- |
+| `+`           | Added                                                               |
+| `~`           | Changed, each field before→after                                    |
+| `-`           | Removed, with the reason when it went with another                  |
+| `»`           | Moved without being named (made room, carried by a frame, arranged) |
+| `f2  +verify` | A frame or lane's membership changed                                |
+| `!`           | A warning                                                           |
 
 The last line carries the tab's new revision, the changeset's id, the lint verdict and the command that reverts it. A changeset that changes nothing answers `nothing changed`.
 

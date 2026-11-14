@@ -63,7 +63,7 @@ export const stormRead = defineVerb({
   id: 'storm.read',
   summary: 'Read an Event Storming board: its timeline, gaps and suggestions',
   description:
-    "Prints an Event Storming board's reading: the About, one line per note in timeline order (each event with the commands, actors, read models, aggregates, policies and hotspots it relates to; pivotal events and answered hotspots marked), the loose notes, the lanes, the contexts and their map, the gaps with their remedies, the open suggestions and suggested changes, and what was declined. Deterministic: no model reads it.",
+    "Prints an Event Storming board's reading: the About, one line per note in timeline order (each event with the commands, actors, read models, aggregates, policies and hotspots it relates to; pivotal events and answered hotspots marked), the loose notes, the lanes, the contexts and their map, the gaps with their remedies, the open suggestions, suggested changes and lane plan, and what was declined. Deterministic: no model reads it.",
   behaviour: 'read',
   input: z.object({ doc: docArg, tab: tabFlag }),
   output: readOutput,
@@ -73,7 +73,7 @@ export const stormRead = defineVerb({
       documentId: read.documentId,
       tabId: read.tabId,
       gaps: read.reading.gaps.length,
-      suggestions: read.suggestions.length + read.changes.length,
+      suggestions: read.suggestions.length + read.changes.length + (read.plan ? 1 : 0),
       lines: read.lines,
     };
   },
@@ -82,15 +82,15 @@ export const stormRead = defineVerb({
     positionals: ['doc'],
     examples: ['livedoc storm read "Order flow"', 'livedoc storm read 3f9c --tab Kitchen'],
     prints:
-      'the board line, the About, the timeline, loose notes, lanes, contexts and their map, gaps, open suggestions, suggested changes and what was declined',
+      'the board line, the About, the timeline, loose notes, lanes, contexts and their map, gaps, open suggestions, suggested changes, the lane plan and what was declined',
   },
 });
 
 export const stormSuggest = defineVerb({
   id: 'storm.suggest',
-  summary: 'Suggest notes, contexts, names and note changes for an Event Storming board',
+  summary: 'Suggest notes, contexts, names, note changes and lanes for an Event Storming board',
   description:
-    'Sends suggest lines from a file (or stdin, with -f -) as one changeset, which a person applies or dismisses; nothing on the board moves or changes. A note beside a note of the board: suggest <kind> "<words>" before|after|above|below=<note> [reason="…"] [gap=<code>]. A candidate context round some notes: suggest-context "<name>" <note>… [reason="…"]. Another name for a context, or one name for several merged: suggest-name "<name>" <context>… [reason="…"]. A change to a note: suggest-reword <note> "<words>" [term="<old>" to="<new>"], suggest-kind <note> <kind>, suggest-split <note> "<words>" "<words>"…, suggest-remove <note>, each with [reason="…"].',
+    'Sends suggest lines from a file (or stdin: -f -) as one changeset for a person to apply or dismiss; nothing on the board changes. Every line takes [reason="…"]. A note beside a note: suggest <kind> "<words>" before|after|above|below=<note> [gap=<code>]. A candidate context round notes: suggest-context "<name>" <note>…. A name for a context, or one for several merged: suggest-name "<name>" <context>…. A change to a note: suggest-reword <note> "<words>" [term="<old>" to="<new>"], suggest-kind <note> <kind>, suggest-split <note> "<words>" "<words>"…, suggest-remove <note>. A lane plan, a line per lane, top to bottom: suggest-lane "<name>" [lanes=<n>,…] [kind=<kind>,…] [context=<context>,…] [<note>…] (livedoc guide storm-lanes).',
   behaviour: 'write',
   input: z.object({
     doc: docArg,
@@ -126,7 +126,7 @@ export const stormClear = defineVerb({
   id: 'storm.clear',
   summary: "Remove an Event Storming board's open suggestions",
   description:
-    'Removes every open suggestion on the board as one changeset: suggested notes and candidate contexts go, and the names and note changes suggested on what is already there are taken back. What was already applied stays, and nothing is remembered as declined.',
+    'Removes every open suggestion on the board as one changeset: suggested notes, candidate contexts and the lane plan go, and the names and note changes suggested on what is already there are taken back. What was already applied stays, and nothing is remembered as declined.',
   behaviour: 'destructive',
   input: z.object({ doc: docArg, tab: tabFlag }),
   output: writeOutput,

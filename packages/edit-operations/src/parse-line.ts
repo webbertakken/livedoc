@@ -34,6 +34,7 @@ const SPECIAL_KEYS: Readonly<Partial<Record<EditOperationName, readonly string[]
   'suggest-kind': ['reason'],
   'suggest-split': ['reason'],
   'suggest-remove': ['reason'],
+  'suggest-lane': ['lanes', 'kind', 'context', 'reason'],
 };
 
 // The note changes (docs/specs/021-event-storming/suggested-changes.md "Note changes"), which share one line shape:
@@ -394,6 +395,35 @@ export function parseOperationWords(
   }
 
   if (isNoteChange(name)) return noteChangeLine(name, rest, end, lineEnd);
+
+  if (name === 'suggest-lane') {
+    const [nameWord, ...more] = rest;
+    if (!nameWord || fieldOf(nameWord))
+      return fail(nameWord, lineEnd, 'the lane’s name, quoted: "Kitchen"');
+    const c = collect(name, more);
+    if ('column' in c) return { error: c };
+    const keyed = (key: string) => more.find((w) => fieldOf(w)?.key.toLowerCase() === key);
+    const fieldWord = more.find(
+      (w) => fieldOf(w) && !SPECIAL_KEYS['suggest-lane']!.includes(fieldOf(w)!.key.toLowerCase()),
+    );
+    if (fieldWord) return fail(fieldWord, end, 'lanes=, kind=, context= or reason=');
+    const raw: Record<string, unknown> = { op: name, name: nameWord.value };
+    const { lanes, kind, context, reason } = c.special;
+    if (lanes !== undefined) {
+      const numbers = lanes.split(',').map((n) => (n.trim() === '' ? NaN : Number(n)));
+      if (!numbers.every(Number.isInteger))
+        return fail(keyed('lanes'), end, 'lanes=1,2 with whole numbers');
+      raw.lanes = numbers;
+    }
+    if (kind !== undefined) raw.kinds = kind.split(',');
+    if (context !== undefined) raw.contexts = context.split(',');
+    if (c.terms.length) raw.notes = c.terms.map((w) => w.raw);
+    if (reason !== undefined) raw.reason = reason;
+    return { raw };
+  }
+
+  if (name === 'arrange')
+    return rest.length ? fail(rest[0], end, 'nothing after arrange') : { raw: { op: name } };
 
   if (name === 'connect') {
     const isArrow = (w: Word) => !hasQuotes(w) && w.value === '->';

@@ -68,6 +68,7 @@ import {
 } from './validate-primitives';
 import { isRecord } from './is-record';
 import { CONTEXT_NAME_MAX, isValidContextName, isValidEsContext } from './candidate-contexts';
+import { isValidEsLanePlan, LANES_MAX, LANES_MIN } from './event-storming-lane-plan';
 import {
   SANKEY_ALIGNS,
   SANKEY_LEFTOVERS,
@@ -588,5 +589,11 @@ export function shapeValidationIssue(el: Record<string, unknown>): ElementValida
     if (!isValidContextName(el.label))
       return issue('label', `a candidate context's name, 1 to ${CONTEXT_NAME_MAX} characters`);
   }
+  // A lane plan (docs/specs/021-event-storming/lane-plans.md "The plan").
+  if (el.esLanePlan !== undefined && !isValidEsLanePlan(el.esLanePlan))
+    return issue(
+      'esLanePlan',
+      `a { lanes: [{ name, notes }], reason?, by? } lane plan of ${LANES_MIN} to ${LANES_MAX} lanes`,
+    );
   return firstFieldIssue(el, SHAPE_FIELD_CHECKS);
 }

@@ -129,11 +129,11 @@ Levels:
   [domain export](domain-export.md). A reading made before a part existed reads as having none of it.
 - **Text**: the `storm` view (`?view=storm` on a tab), compact: the About, one line per note in timeline order (a
   pivotal event marked so, an answered hotspot with its answer), the loose notes, the lanes, the contexts and their
-  map, the gaps, the board's open [suggestions](suggestions.md) and [suggested changes](suggested-changes.md), and
-  what was [declined](asks.md#what-was-declined). It is not budgeted: the whole reading is what an
+  map, the gaps, the board's open [suggestions](suggestions.md), [suggested changes](suggested-changes.md) and
+  [lane plan](lane-plans.md), and what was [declined](asks.md#what-was-declined). It is not budgeted: the whole reading is what an
   agent asks for, and a board of `DOMAIN_EXPORT_MAX_NOTES` notes prints in about ten thousand tokens.
-- **JSON** of the view (`json=1`): `{ reading, suggestions, changes, declined, rev }`, `rev` the tab revision read:
-  the suggested changes and what was declined travel beside the reading, never inside it, so `storm.json` stays what
-  the board says (default). A tab that is not a board is refused as `400 not_event_storming`.
+- **JSON** of the view (`json=1`): `{ reading, suggestions, changes, plan, declined, rev }`, `rev` the tab revision
+  read, `plan` the open lane plan or null: the suggested changes, the plan and what was declined travel beside the
+  reading, never inside it, so `storm.json` stays what the board says (default). A tab that is not a board is refused as `400 not_event_storming`.
 - Refs are the [document views](../024-agents/document-views.md#refs)' refs, so an agent can name a note from the
   reading in an edit operation.

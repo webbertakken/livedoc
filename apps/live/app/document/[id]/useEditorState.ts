@@ -158,6 +158,7 @@ import { useEditorDrag } from '@/hooks/canvas/useEditorDrag';
 import { useNoteActions } from '@/hooks/canvas/useNoteActions';
 import { useSuggestionActions } from '@/hooks/canvas/useSuggestionActions';
 import { useChangeActions } from '@/hooks/canvas/useChangeActions';
+import { useLaneActions } from '@/hooks/canvas/useLaneActions';
 import { useContextActions } from '@/hooks/canvas/useContextActions';
 import { usePhotoPicker } from '@/hooks/canvas/usePhotoPicker';
 import { warmBoundaryModel } from '@/lib/photo-model/client';
@@ -2647,7 +2648,17 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     commit,
     commitTab: commitActiveTab,
   });
-  const suggestionActions = { ...suggestedNoteActions, ...changeActions };
+  // A whole board rearranged (docs/specs/021-event-storming/lane-plans.md, docs/specs/021-event-storming/arrange.md):
+  // the open lane plan applied or dismissed, and Arrange and Reorder previewed, kept or put back.
+  const laneActions = useLaneActions({
+    activeTab,
+    createBlocked,
+    commit,
+    commitTab: commitActiveTab,
+    notify: (message) => toast.info(message),
+    select: (id) => selectionStore.setSelection({ selectedId: id, multiSelectedIds: new Set() }),
+  });
+  const suggestionActions = { ...suggestedNoteActions, ...changeActions, ...laneActions };
   // Kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): rename, delete, notes in and out.
   const contextActions = useContextActions({ activeTab, createBlocked, commit });
 

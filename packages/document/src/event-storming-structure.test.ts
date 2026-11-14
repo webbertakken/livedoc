@@ -6,6 +6,7 @@ import {
   answerOf,
   isPivotalEvent,
   isValidEsAnswer,
+  laneNameElement,
   setAnswer,
   setPivotal,
 } from './event-storming-structure';
@@ -127,5 +128,35 @@ describe('element validation', () => {
         note('h1', 'hotspot', { esAnswer: 'x'.repeat(HOTSPOT_ANSWER_MAX + 1) }),
       ),
     ).toMatchObject({ field: 'esAnswer' });
+  });
+});
+
+describe('a lane name (board-structure.md "Lane names")', () => {
+  it('is muted text, right aligned, one gutter clear of the wall, on its lane', () => {
+    const name = laneNameElement({ id: 'n1', name: 'Kitchen', lane: 2, wallLeft: 100 });
+    expect(name).toEqual({
+      id: 'n1',
+      type: 'text',
+      x: 100 - 16 - 180,
+      y: 2 * 240 + 100 - 16,
+      width: 180,
+      height: 32,
+      label: 'Kitchen',
+      textSize: 'md',
+      textColor: '#64748b',
+      textAlignX: 'right',
+    });
+    expect(isValidElement(name)).toBe(true);
+  });
+
+  it('stands on the layer it is given', () => {
+    const name = laneNameElement({
+      id: 'n1',
+      name: 'Kitchen',
+      lane: 0,
+      wallLeft: 0,
+      layerId: 'layer:es:board',
+    });
+    expect(name.layerId).toBe('layer:es:board');
   });
 });

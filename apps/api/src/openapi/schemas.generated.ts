@@ -6406,6 +6406,28 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "EsLanePlan": {
+    "additionalProperties": false,
+    "properties": {
+      "by": {
+        "type": "string"
+      },
+      "lanes": {
+        "description": "The lanes, top to bottom.",
+        "items": {
+          "$ref": "#/components/schemas/EsPlanLane"
+        },
+        "type": "array"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "lanes"
+    ],
+    "type": "object"
+  },
   "EsNameSuggestion": {
     "additionalProperties": false,
     "description": "Another name an agent proposes (docs/specs/021-event-storming/suggested-changes.md \"Name suggestions\"): for the context that holds it, or, with `with`, for that context and those others merged into one.",
@@ -6447,6 +6469,27 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "$ref": "#/components/schemas/EsRemoveChange"
       }
     ]
+  },
+  "EsPlanLane": {
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "description": "What the lane holds, in the business's words.",
+        "type": "string"
+      },
+      "notes": {
+        "description": "The workshop notes it holds, by id.",
+        "items": {
+          "$ref": "#/components/schemas/ElementId"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "name",
+      "notes"
+    ],
+    "type": "object"
   },
   "EsRemoveChange": {
     "additionalProperties": false,
@@ -12750,7 +12793,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
               "make room",
               "carried",
               "laid out",
-              "landed on a lane"
+              "landed on a lane",
+              "arranged"
             ],
             "type": "string"
           },
@@ -13350,6 +13394,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "esContext": {
         "$ref": "#/components/schemas/EsContext"
+      },
+      "esLanePlan": {
+        "$ref": "#/components/schemas/EsLanePlan"
       },
       "estimateScale": {
         "$ref": "#/components/schemas/EstimateScale"

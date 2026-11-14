@@ -1,6 +1,7 @@
 import type { PenInk } from '@/hooks/canvas/commit-freehand';
 import type { SuggestionActions } from '@/hooks/canvas/useSuggestionActions';
 import type { ChangeActions } from '@/hooks/canvas/useChangeActions';
+import type { LaneActions } from '@/hooks/canvas/useLaneActions';
 import type { ContextActions } from '@/hooks/canvas/useContextActions';
 import type { SnapGuideStore } from '@/hooks/canvas/useSnapGuideState';
 import type { CombineOp } from '@/lib/combine/combine';
@@ -52,7 +53,8 @@ export type SnapTarget = { x: number; y: number; active: boolean };
 // What the canvas may do with a board's suggestions and suggested changes: the acts, and bring a canvas rect into
 // view.
 export type SuggestionControls = SuggestionActions &
-  ChangeActions & {
+  ChangeActions &
+  LaneActions & {
     reveal: (rect: { x: number; y: number; width: number; height: number }) => void;
   };
 

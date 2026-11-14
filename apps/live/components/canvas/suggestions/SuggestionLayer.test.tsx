@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { laneActionSpies } from '@/hooks/canvas/lane-actions.fixture';
 import {
   ES_NOTE_GAP,
   type Element,
@@ -87,6 +88,7 @@ const board: Element[] = [
 
 function controls(): SuggestionControls {
   return {
+    ...laneActionSpies(),
     apply: vi.fn(),
     dismiss: vi.fn(),
     applyAll: vi.fn(),
@@ -313,6 +315,31 @@ describe('SuggestionLayer with Show All on', () => {
     act(() => setShowAllSuggestions(TAB, true));
     draw(board, controls(), false);
     expect(hint('e:before')).not.toBeNull();
+  });
+
+  it('keeps the focus on its switch as the board turns to the preview and back', () => {
+    const layer = (showAll: boolean) => (
+      <CanvasZoomProvider zoom={1}>
+        <SuggestionLayer
+          elements={board}
+          tabId={TAB}
+          controls={controls()}
+          showAllSpots={showAll ? suggestionPreview(board).spots : null}
+        />
+      </CanvasZoomProvider>
+    );
+    act(() => setSuggestionsPanelOpen(TAB, true));
+    const { rerender } = render(layer(false));
+    const show = screen.getByRole('switch', { name: 'Show All Suggestions' });
+    show.focus();
+    fireEvent.click(show);
+    rerender(layer(true));
+    expect(placeholders().sort()).toEqual(['a', 'c', 'p', 'r']);
+    expect(document.activeElement).toBe(show);
+    fireEvent.click(show);
+    rerender(layer(false));
+    expect(hint('e:before')).not.toBeNull();
+    expect(document.activeElement).toBe(show);
   });
 });
 

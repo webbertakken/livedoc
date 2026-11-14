@@ -30,7 +30,8 @@ import {
 // so are the changes suggested to what is already there (docs/specs/021-event-storming/suggested-changes.md): a row
 // per note change, with Everywhere for a reword that reaches further, a Names row per context that holds names, and
 // a Merge row per set of contexts a name was suggested for. A Names or a Merge row is chosen as a whole: it selects
-// its contexts, whose chips on the board decide.
+// its contexts, whose chips on the board decide. The open lane plan is listed before them all
+// (docs/specs/021-event-storming/lane-plans.md "How a person sees and decides"): a stale one holds ✕ alone.
 
 /** A row that is decided where it stands: applied with ✓. */
 export type DecidedRow = Exclude<PanelRow, NamesRow | MergeRow>;
@@ -42,12 +43,17 @@ const noteCount = (n: number) => `${n} note${n === 1 ? '' : 's'}`;
 
 type RowFace = {
   name: string;
+  // What the row itself is called when its name is not all there is to say (a stale lane plan).
+  said?: string;
   // A row chosen as a whole says what it holds, for its buttons: "name suggestions for Ordering".
   holds?: string;
   swatch: ReactNode;
   kind: ReactNode;
   words: string;
   detail?: string;
+  // A row with no caption on the board to say them says its reason whole, and who suggested it beneath.
+  whole?: boolean;
+  by?: string;
   style?: CSSProperties;
 };
 
@@ -63,6 +69,17 @@ const NOTE_SWATCH = (
     className={`mt-0.5 size-4 shrink-0 rounded-[3px] border-2 border-dashed ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER}`}
   />
 );
+// A lane plan: the dashed outline ruled in two lanes.
+const LANES_SWATCH = (
+  <span
+    aria-hidden
+    className="mt-0.5 flex size-4 shrink-0 items-center rounded-[5px] border-2 border-dashed border-slate-500 dark:border-slate-400"
+  >
+    <span className="w-full border-t-2 border-dashed border-slate-500 dark:border-slate-400" />
+  </span>
+);
+/** What a plan made for an older board says (lane-plans.md "What must stay true"). */
+export const STALE_PLAN = 'The board changed since this plan was made. Ask again.';
 const contextKind = (word: string) => (
   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{word}</span>
 );
@@ -101,6 +118,20 @@ function rowFace(row: PanelRow): RowFace {
         kind: contextKind('Merge'),
         words: labels.join(' + '),
         detail: row.names.map((n) => n.name).join(', '),
+      };
+    }
+    case 'lane-plan': {
+      const { reason, by } = row.plan.esLanePlan;
+      const lanes = `${row.lanes} lane${row.lanes === 1 ? '' : 's'}`;
+      return {
+        name: `Lane plan: ${lanes}`,
+        ...(row.stale ? { said: `Lane plan: ${lanes}. ${STALE_PLAN}` } : {}),
+        swatch: LANES_SWATCH,
+        kind: contextKind('Lane plan'),
+        words: lanes,
+        detail: row.stale ? STALE_PLAN : reason,
+        whole: true,
+        ...(by && !row.stale ? { by } : {}),
       };
     }
     case 'change': {
@@ -202,8 +233,15 @@ export function SuggestionsPanel({
                       {face.kind} <span className="font-medium">{face.words}</span>
                     </p>
                     {face.detail ? (
-                      <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
+                      <p
+                        className={`mt-0.5 text-xs text-slate-600 dark:text-slate-300 ${face.whole ? '' : 'line-clamp-2'}`}
+                      >
                         {face.detail}
+                      </p>
+                    ) : null}
+                    {face.by ? (
+                      <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                        Suggested by {face.by}
                       </p>
                     ) : null}
                   </>
@@ -212,7 +250,7 @@ export function SuggestionsPanel({
                   <li
                     key={id}
                     tabIndex={0}
-                    aria-label={face.name}
+                    aria-label={face.said ?? face.name}
                     data-suggestion-row={id}
                     onPointerEnter={() => onPreview(row)}
                     onPointerLeave={() => onLeave(row)}
@@ -247,7 +285,7 @@ export function SuggestionsPanel({
                       </div>
                     )}
                     <div className="flex shrink-0 items-start gap-1">
-                      {chosen ? null : (
+                      {chosen || (row.type === 'lane-plan' && row.stale) ? null : (
                         <button
                           type="button"
                           aria-label={`Apply suggestion: ${face.name}`}

@@ -23,6 +23,25 @@ export { formatStormView, type StormViewExtras } from './format';
 export { formatReadiness, readinessOf, type Readiness } from './readiness';
 export { storySteps, type StoryStep } from './story';
 export { boardTerms, type BoardTerm } from './language';
+export {
+  resolveLaneLines,
+  type LaneLine,
+  type LaneRefusal,
+  type ResolvedLanes,
+} from './lanes/resolve';
+export { placeLanePlan, type PlacedPlan } from './lanes/place';
+export {
+  readingChanges,
+  sayReadingChange,
+  type ReadingChange,
+  type ReadingDifference,
+  type ReadingRelation,
+} from './lanes/same-reading';
+export { applyLanePlan, checkLanePlan, landLanePlan, type LanePlanVerdict } from './lanes/check';
+export { withLaneNames } from './lanes/names';
+export { foldLanes, type Fold } from './lanes/fold';
+export { readLanePlan, type StormLanePlan } from './lanes/view';
+export { arrangeBoard, type Arranged } from './lanes/arrange';
 export { diffReadings, formatChanges, hasChanges, type StormChanges } from './changes';
 export {
   buildExportBundle,

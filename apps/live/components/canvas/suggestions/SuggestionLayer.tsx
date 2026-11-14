@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Element, ElementId, Rect } from '@livedoc/document';
+import type { Element, ElementId, Layer, Rect } from '@livedoc/document';
 import type { SuggestionControls } from '@/components/canvas/Canvas.types';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
 import type { OfferedPreview } from '@/lib/change-preview';
@@ -33,7 +33,9 @@ import { SuggestionsPanel, type ChosenRow, type DecidedRow } from './Suggestions
 // stand aside are drawn shifted by the element list, from the same preview). The panel is portalled to the screen.
 // The changes suggested to notes already there wear their marks here too
 // (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"); a context's suggested names
-// are drawn with the contexts, and listed in the panel.
+// are drawn with the contexts, and listed in the panel. While a whole board is offered (a lane plan pointed at,
+// docs/specs/021-event-storming/lane-plans.md), the tabs, placeholders and marks stand down: they are drawn from the
+// board as written, and the notes they belong to are drawn elsewhere.
 
 const NO_INERT: ReadonlySet<ElementId> = new Set();
 
@@ -43,6 +45,7 @@ export function SuggestionLayer({
   controls,
   showAllSpots,
   inertIds = NO_INERT,
+  layers,
   offered = null,
   onSelectContexts,
 }: {
@@ -53,6 +56,8 @@ export function SuggestionLayer({
   showAllSpots: ReadonlyMap<string, Rect> | null;
   // Elements on hidden or locked layers: a note there wears no change mark.
   inertIds?: ReadonlySet<ElementId>;
+  // The tab's layers: a lane plan leaves a note on a locked layer where it is.
+  layers?: Layer[];
   // What the previewed change would make of the board, computed beside the shift it goes with.
   offered?: OfferedPreview | null;
   // Select these contexts, whose names then show as chips on the board.
@@ -70,8 +75,15 @@ export function SuggestionLayer({
   const marks = useMemo(() => changeMarks(elements, inertIds), [elements, inertIds]);
   const showAll = view.showAll && showAllSpots !== null;
   const rows = useMemo(
-    () => panelRows({ elements, timeline, showAllSpots: showAll ? showAllSpots : null, inertIds }),
-    [elements, timeline, showAll, showAllSpots, inertIds],
+    () =>
+      panelRows({
+        elements,
+        timeline,
+        showAllSpots: showAll ? showAllSpots : null,
+        inertIds,
+        layers,
+      }),
+    [elements, timeline, showAll, showAllSpots, inertIds, layers],
   );
   if (hints.length === 0 && rows.length === 0) return null;
 
@@ -98,7 +110,8 @@ export function SuggestionLayer({
   );
 
   const applyRow = (row: DecidedRow, everywhere = false) => {
-    if (row.type === 'change')
+    if (row.type === 'lane-plan') decide(controls.applyLanePlan);
+    else if (row.type === 'change')
       decide(() =>
         controls.acceptChange(row.note.id, row.change, everywhere ? 'board' : 'context'),
       );
@@ -107,7 +120,8 @@ export function SuggestionLayer({
   const contextIdsOf = (row: ChosenRow) =>
     row.type === 'names' ? [row.context.id] : row.contexts.map((c) => c.id);
   const dismissRow = (row: PanelRow) => {
-    if (row.type === 'change') decide(() => controls.dismissChange(row.note.id, row.change));
+    if (row.type === 'lane-plan') decide(controls.dismissLanePlan);
+    else if (row.type === 'change') decide(() => controls.dismissChange(row.note.id, row.change));
     else if (row.type === 'names' || row.type === 'merge')
       decide(() => controls.dismissNames(contextIdsOf(row)));
     else dismiss(row.type === 'note' ? row.suggestion.id : row.context.id);
@@ -150,41 +164,47 @@ export function SuggestionLayer({
     />
   );
 
-  if (showAll)
+  // What stands on the board: nothing while a whole board is offered (only the panel, whose row is being pointed
+  // at), every placeholder under Show All, else the peek tabs with the previewed hint's chain (a panel row shows its
+  // one suggestion).
+  const onBoard = () => {
+    if (offered?.board) return null;
+    if (showAll)
+      return timeline.map(({ suggestion }) => {
+        const key = `s:${suggestion.id}`;
+        const spot = showAllSpots.get(suggestion.id);
+        return spot ? placeholder(suggestion, spot, view.previewKey === key, key) : null;
+      });
+    const key = view.previewKey;
+    const one = key?.startsWith('s:') ? key.slice(2) : null;
+    const previewed = hints.find((h) =>
+      one ? h.suggestions.some((s) => s.id === one) : h.key === key,
+    );
+    const shown = previewed?.suggestions.filter((s) => one === null || s.id === one) ?? [];
     return (
       <>
-        {timeline.map(({ suggestion }) => {
-          const key = `s:${suggestion.id}`;
-          const spot = showAllSpots.get(suggestion.id);
-          return spot ? placeholder(suggestion, spot, view.previewKey === key, key) : null;
-        })}
-        {changes}
-        {panel}
+        {hints.map((hint) => (
+          <SuggestionPeekTab
+            key={hint.key}
+            hint={hint}
+            zoom={zoom}
+            onPreview={preview(hint.key)}
+            onLeave={leave(hint.key)}
+            onApply={apply}
+            onDismiss={dismiss}
+          />
+        ))}
+        {shown.map((s, i) => placeholder(s, spots.get(s.id)!, i === 0, key!))}
       </>
     );
+  };
 
-  // Show All off: the previewed hint shows its whole chain; a panel row shows its one suggestion.
-  const key = view.previewKey;
-  const one = key?.startsWith('s:') ? key.slice(2) : null;
-  const previewed = hints.find((h) =>
-    one ? h.suggestions.some((s) => s.id === one) : h.key === key,
-  );
-  const shown = previewed?.suggestions.filter((s) => one === null || s.id === one) ?? [];
+  // One shape whatever is shown, so the panel is never remounted under a person's focus: its row keeps the keyboard
+  // while it previews, and its switch while the board turns to Show All and back.
   return (
     <>
-      {hints.map((hint) => (
-        <SuggestionPeekTab
-          key={hint.key}
-          hint={hint}
-          zoom={zoom}
-          onPreview={preview(hint.key)}
-          onLeave={leave(hint.key)}
-          onApply={apply}
-          onDismiss={dismiss}
-        />
-      ))}
-      {shown.map((s, i) => placeholder(s, spots.get(s.id)!, i === 0, key!))}
-      {changes}
+      {onBoard()}
+      {offered?.board ? null : changes}
       {panel}
     </>
   );

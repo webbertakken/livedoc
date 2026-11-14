@@ -12,7 +12,7 @@ edit operation stays `arrange`, and this file and the telemetry keep their names
 
 - **A [lane plan](lane-plans.md) changes lanes and keeps time**: a note moves up or down, never along the timeline.
 - **Arrange and Reorder changes time and keeps lanes**: a note moves along the timeline, never off its lane
-  (default).
+  (ruled 2026-11-14: "Keep every lane").
 - Either is used alone; a board reorganised and then arranged is laid out afresh on both axes.
 - Neither does the other's work: applying a lane plan never arranges, and Arrange and Reorder never changes a lane.
 
@@ -25,9 +25,12 @@ edit operation stays `arrange`, and this file and the telemetry keep their names
 - **A note the timeline does not reach** (a loose note) takes a column of its own, where it stands now among the
   events: after the last event whose centre is left of its own (default).
 - **Within a column**, notes on one lane stand a gutter (`ES_NOTE_GAP`) apart, in the reading's order.
+- **No note stands left of what leads to it**: along the reading's order a note's centre never steps back, so a
+  column of notes each on its own lane shares one centre (default).
+- **A note whose event stays** (a locked or free-placed event) heads a column of its own (default).
 - **Columns stand as close as keeps what the board says**: `ARRANGE_COLUMN_GAP` (three gutters) apart, and wider,
-  step by step up to `ARRANGE_COLUMN_GAP_MAX` (a square note and a gutter), where the closer spacing would change
-  the reading (default).
+  a gutter at a time up to `ARRANGE_COLUMN_GAP_MAX` (a square note and a gutter), where the closer spacing would
+  change the reading (default).
 - **The wall starts where it starts**: the left-most column begins at the left-most workshop note's present x, so
   the lane names keep their place.
 - **Which notes move.** Every workshop note but a locked one and one placed free of the lanes: those stay.
@@ -45,6 +48,7 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
   first `READING_CHANGES_SHOWN` (5) relations it would change, each a way in to fix the board by hand.
 - **A note in the way.** When an arranged note would land on a locked or free-placed one, the board is not arranged,
   and it names that note.
+- **A note in the way** says "A note that stays where it is stands in the way.", naming it as a way in too.
 - **Nothing to arrange**: a board with no event says "No events yet. Arrange and Reorder follows the timeline."; a
   board that is arranged already says "Already arranged."
 
@@ -52,11 +56,19 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
 
 - **Arrange and Reorder** is offered in the Ask popover, apart from the topics, when nothing is selected; it needs no
   hand (default; its placement is ruled with the Ask button's).
+- **It is a command too**: the command palette lists "Arrange and Reorder" on an Event Storming board that is not
+  locked, for an Editor (default).
 - **Choosing it previews**: every note draws where it would stand and the view fits the board as it would be, under
   a bar that says "Arranged and reordered along the timeline", how many loose notes find a partner when any do,
   **Keep** and **Put Back**.
 - **Keep** moves the notes as one undoable step. **Put Back**, or Escape, leaves the board as it was.
-- A preview never writes; under reduced motion the notes jump rather than glide.
+- **The preview does not hold the board**: panning, zooming and selecting keep working under it, the suggestions
+  on the board stand down while it lasts, and a drag in hand puts the board back, since the board is then the
+  drag's (default).
+- **A board that is not arranged says why** in the bar's place: the sentence, then each note it names as a line
+  that selects that note and brings it into view, and **Close**; Escape closes it too (default).
+- **Nothing to arrange is said in one line** that goes by itself, with no bar (default).
+- A preview never writes; the notes glide to where they would stand and back, and under reduced motion they jump.
 
 ## How an agent arranges
 
@@ -65,6 +77,7 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
   model (default).
 - Refusals: `not_event_storming`, `nothing_to_arrange` (no event, or already arranged), `reading_changes`,
   `lane_blocked`.
+- Its result line says the notes were `arranged` (default).
 - The CLI's `livedoc edit` and the MCP's `update_document` take it as they take any operation; the `storm` guide
   teaches it beside lane plans.
 
@@ -79,4 +92,17 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
 
 ## Telemetry
 
-`Canvas / Used / BoardArranged` (default).
+`Canvas / Used / BoardArranged`, counted when an arrangement is kept (default).
+
+## Where it lives
+
+- Arranging, pure: `packages/storm-reading/src/lanes/arrange.ts`, checked by
+  `packages/storm-reading/src/lanes/same-reading.ts`; what is in the way:
+  `packages/storm-reading/src/lanes/blocked.ts`.
+- The edit operation: `packages/edit-operations/src/operations/arrange.ts`.
+- In the editor: the board arranged, or why not: `apps/live/lib/board-offer.ts`; the words:
+  `apps/live/lib/board-offer-words.ts`; that a person is arranging: `apps/live/lib/suggestion-view.ts`; the bar with
+  Keep and Put Back, and the refusal: `apps/live/components/canvas/suggestions/BoardOffers.tsx` and
+  `apps/live/components/canvas/suggestions/BoardOfferBar.tsx`; the acts: `apps/live/hooks/canvas/useLaneActions.ts`;
+  the command: `apps/live/lib/editor-commands.ts`; the glide: `apps/live/hooks/canvas/useOfferGlide.ts`.
+- Proven in a browser by `apps/live/e2e/event-storming-lane-plans.spec.ts`.

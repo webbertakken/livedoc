@@ -32,6 +32,8 @@ editing an existing tab use the same operations; a full rebuild uses `replace`. 
 | `suggest-kind`    | `suggest-kind <note> <kind> [reason=…]`                                                                                     | Proposes another notation kind for a workshop note                                                                                                                                                                                                                                       |
 | `suggest-split`   | `suggest-split <note> "<words>" "<words>"… [reason=…]`                                                                      | Proposes several notes for one that holds several facts; the note keeps the first                                                                                                                                                                                                        |
 | `suggest-remove`  | `suggest-remove <note> [reason=…]`                                                                                          | Proposes taking a workshop note off the board                                                                                                                                                                                                                                            |
+| `suggest-lane`    | `suggest-lane "<name>" [lanes=<n>,…] [kind=<kind>,…] [context=<context>,…] [<note>…] [reason=…]`                            | One lane of a lane plan for an Event Storming board; the `suggest-lane` lines of one changeset make one plan, top to bottom, which the board places and checks; nothing moves ([Lane plans](../021-event-storming/lane-plans.md))                                                        |
+| `arrange`         | `arrange`                                                                                                                   | Lays an Event Storming board out afresh along the timeline, a column per event, every note kept on its lane; refused when it would change what the board says ([Arrange and Reorder](../021-event-storming/arrange.md))                                                                  |
 | `wall`            | JSON form only: `{ "op": "wall", "photos": [{ "width", "height", "notes": [{ "kind"?, "words"?, "x", "y", "w", "h" }] }] }` | Stitches several photos' notes against the board and lands them as a draft; refused as `not_event_storming`, `draft_open`, `too_large`, `nothing_to_add` ([Event storming](../021-event-storming/event-storming.md) Phase 11)                                                            |
 
 - **`replace`** is the other changeset body: a whole tab from `graph`, `mermaid`, `template`, `dashboard` (a new
@@ -164,8 +166,10 @@ f2  +verify
 rev 41→42 · cs_8k2m4q7d1x · lint clean · revert: livedoc changeset revert 3f9c2a71-… cs_8k2m4q7d1x
 ```
 
-`+` added, `~` changed (before→after), `-` removed, `»` moved without being named, a container ref followed by its
-membership changes, `!` a warning. The last line carries the revision, the changeset, the
+`+` added, `~` changed (before→after), `-` removed, `»` moved without being named (with why: `make room`, `carried`,
+`laid out`, `landed on a lane`, `arranged`), a container ref followed by its membership changes, `!` a warning. A
+lane plan answers one `+` line that says what it is: `+ e40  lane-plan: 3 lanes, 42 notes; reads the same, 2 loose
+notes find a partner`. The last line carries the revision, the changeset, the
 [lint](diagram-lint.md) summary and the revert command.
 
 ## Rejections

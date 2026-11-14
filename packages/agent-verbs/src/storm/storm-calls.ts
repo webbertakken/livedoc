@@ -1,7 +1,7 @@
 // Agents' Event Storming calls (docs/specs/021-event-storming/suggestions.md "How an agent suggests",
-// suggested-changes.md), shared by the CLI's storm verbs and the MCP's event-storming tools: read a board through the
-// api's storm view, propose notes, contexts, names and note changes as one changeset of the `suggest` operations, and
-// remove a board's open suggestions. A refusal comes back in the words agents read; anything not from the api throws.
+// suggested-changes.md, lane-plans.md), shared by the CLI's storm verbs and the MCP's event-storming tools: read a board
+// through the api's storm view, propose notes, contexts, names, note changes and a lane plan as one changeset of the
+// `suggest` operations, and remove a board's open suggestions. A refusal comes back in the words agents read; anything not from the api throws.
 
 import { ApiError, type ApiClient } from '@livedoc/api-client';
 import { CLIENT_HEADER, type ChangesetResponse } from '@livedoc/api-schema';
@@ -13,6 +13,7 @@ import { EDIT_OPERATION_NAMES, formatResultLines } from '@livedoc/edit-operation
 import type {
   OlderStormReading,
   StormDeclined,
+  StormLanePlan,
   StormReading,
   StormSuggestedChange,
   StormSuggestion,
@@ -38,6 +39,8 @@ export type StormRead = {
   suggestions: StormSuggestion[];
   // The changes suggested to what is on the board, and what a person dismissed before.
   changes: StormSuggestedChange[];
+  // The open lane plan, when the board holds one.
+  plan: StormLanePlan | null;
   declined: StormDeclined[];
   lines: string[];
 };
@@ -73,12 +76,14 @@ function engineRefusalOf(err: unknown): StormRefusal | null {
 
 const NOT_A_BOARD = 'not_event_storming';
 
-// An api older than candidate contexts or the board structure sends a reading without them, and one older than
-// suggested changes no `changes` or `declined` (docs/specs/021-event-storming/board-reading.md "Output").
+// An api older than candidate contexts or the board structure sends a reading without them, one older than suggested
+// changes no `changes` or `declined`, and one older than lane plans no `plan`
+// (docs/specs/021-event-storming/board-reading.md "Output").
 type StormViewBody = {
   reading: OlderStormReading;
   suggestions: StormSuggestion[];
   changes?: StormSuggestedChange[];
+  plan?: StormLanePlan | null;
   declined?: StormDeclined[];
   rev: number;
 };
@@ -121,7 +126,7 @@ export async function readStorm(
       const body = await stormViewOf(api, document.id, tab.id);
       if (!body) continue;
       const reading = withReadingDefaults(body.reading);
-      const { changes = [], declined = [] } = body;
+      const { changes = [], plan = null, declined = [] } = body;
       return {
         ok: true,
         documentId: document.id,
@@ -131,8 +136,9 @@ export async function readStorm(
         reading,
         suggestions: body.suggestions,
         changes,
+        plan,
         declined,
-        lines: formatStormView(reading, body.suggestions, { changes, declined }),
+        lines: formatStormView(reading, body.suggestions, { changes, plan, declined }),
       };
     }
   } catch (err) {
@@ -208,15 +214,34 @@ export type NoteChangeInput = {
   reason?: string;
 };
 
-// What one call proposes: notes, candidate contexts, names for contexts and changes to notes.
+// One lane of a lane plan (docs/specs/021-event-storming/lane-plans.md "How an agent suggests one"): its name, and
+// what it holds, said any of four ways: the lanes the reading numbers, note kinds, candidate contexts and notes by ref.
+export type LaneInput = {
+  name: string;
+  lanes?: number[];
+  kinds?: string[];
+  contexts?: string[];
+  notes?: string[];
+};
+
+// What one call proposes: notes, candidate contexts, names for contexts, changes to notes, and the lanes of one lane
+// plan, top to bottom, with why.
 export type Proposals = {
   suggestions?: readonly SuggestionInput[];
   contexts?: readonly ContextSuggestionInput[];
   names?: readonly NameSuggestionInput[];
   changes?: readonly NoteChangeInput[];
+  lanes?: readonly LaneInput[];
+  lanesReason?: string;
 };
 
-type ProposalCounts = { notes: number; contexts: number; names: number; changes: number };
+type ProposalCounts = {
+  notes: number;
+  contexts: number;
+  names: number;
+  changes: number;
+  lanes: number;
+};
 
 // What a call proposes, counted as one changeset says it: "suggest 2 notes, 1 context and 3 changes".
 function suggestSummary(counts: ProposalCounts): string {
@@ -225,6 +250,7 @@ function suggestSummary(counts: ProposalCounts): string {
       [counts.notes, 'note'],
       [counts.contexts, 'context'],
       [counts.names, 'name'],
+      [counts.lanes, 'lane'],
       [counts.changes, 'change'],
     ] as const
   )
@@ -238,10 +264,10 @@ function suggestSummary(counts: ProposalCounts): string {
 export async function suggestNotes(
   api: ApiClient,
   board: { documentId: string; tabId: string },
-  { suggestions = [], contexts = [], names = [], changes = [] }: Proposals,
+  { suggestions = [], contexts = [], names = [], changes = [], lanes = [], lanesReason }: Proposals,
   client: Client,
 ): Promise<StormWrite | StormRefusal> {
-  const count = suggestions.length + contexts.length + names.length + changes.length;
+  const count = suggestions.length + contexts.length + names.length + changes.length + lanes.length;
   if (count === 0) return refuse('nothing_to_suggest', 'Give at least one suggestion.');
   if (count > SUGGEST_NOTES_MAX)
     return refuse(
@@ -253,12 +279,19 @@ export async function suggestNotes(
     ...contexts.map((c) => ({ op: 'suggest-context', ...c })),
     ...names.map((n) => ({ op: 'suggest-name', ...n })),
     ...changes.map(({ change, ...rest }) => ({ op: `suggest-${change}`, ...rest })),
+    // The plan's reason rides its first line: the engine takes the first given.
+    ...lanes.map((lane, i) => ({
+      op: 'suggest-lane',
+      ...lane,
+      ...(i === 0 && lanesReason ? { reason: lanesReason } : {}),
+    })),
   ];
   const summary = suggestSummary({
     notes: suggestions.length,
     contexts: contexts.length,
     names: names.length,
     changes: changes.length,
+    lanes: lanes.length,
   });
   return postOperations(api, board.documentId, board.tabId, operations, summary, client);
 }
@@ -328,24 +361,26 @@ export async function suggestFromText(
   const notes = named.filter((name) => name === 'suggest').length;
   const contexts = named.filter((name) => name === 'suggest-context').length;
   const names = named.filter((name) => name === 'suggest-name').length;
+  const lanes = named.filter((name) => name === 'suggest-lane').length;
   const summary = suggestSummary({
     notes,
     contexts,
     names,
-    changes: lines.length - notes - contexts - names,
+    lanes,
+    changes: lines.length - notes - contexts - names - lanes,
   });
   return postOperations(api, board.documentId, board.tabId, lines.join('\n'), summary, client);
 }
 
 // Every open suggestion on the board, orphans included, removed as one changeset: the suggested notes and contexts
-// go, and what is suggested on a note or a kept context is taken back (`rm <ref> suggested`), the note or context
-// staying. An agent's own, never a person's dismissal: nothing is remembered as declined.
+// and the open lane plan go, and what is suggested on a note or a kept context is taken back (`rm <ref> suggested`),
+// the note or context staying. An agent's own, never a person's dismissal: nothing is remembered as declined.
 export async function clearSuggestions(
   api: ApiClient,
   read: StormRead,
   client: Client,
 ): Promise<StormWrite | StormRefusal> {
-  const count = read.suggestions.length + read.changes.length;
+  const count = read.suggestions.length + read.changes.length + (read.plan ? 1 : 0);
   if (count === 0)
     return {
       ok: true,
@@ -365,6 +400,7 @@ export async function clearSuggestions(
   const operations = [
     ...read.suggestions.map((s) => ({ op: 'rm', target: s.ref })),
     ...[...holders].map((ref) => ({ op: 'rm', target: ref, suggested: true })),
+    ...(read.plan ? [{ op: 'rm', target: read.plan.ref }] : []),
   ];
   const summary = `clear ${count} suggestion${count === 1 ? '' : 's'}`;
   return postOperations(api, read.documentId, read.tabId, operations, summary, client);

@@ -4,6 +4,7 @@
 import { cutSlug, slugText, uniqueSlug } from '@livedoc/items';
 import { eventStormingKindOf } from './event-storming';
 import { isCandidateContext } from './candidate-contexts';
+import { isLanePlan } from './event-storming-lane-plan';
 import type { Element } from './index';
 import { ELEMENT_TYPES, SHAPE_KINDS } from './validate';
 
@@ -149,6 +150,7 @@ export function kindWordOf(el: Element): string {
   if (notation) return notation === 'actor' ? 'es:actor' : notation;
   // A candidate context is named for what it is, never for the shape that carries it.
   if (isCandidateContext(el)) return 'context';
+  if (isLanePlan(el)) return 'lane-plan';
   if (el.type !== 'shape') return el.type;
   return SHAPE_KINDS.has(el.shape) ? el.shape : unknownKindWord(el.shape, 'shape');
 }

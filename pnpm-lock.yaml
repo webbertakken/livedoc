@@ -1154,6 +1154,9 @@ importers:
       '@livedoc/icons':
         specifier: workspace:*
         version: link:../icons
+      '@livedoc/storm-reading':
+        specifier: workspace:*
+        version: link:../storm-reading
       '@livedoc/templates':
         specifier: workspace:*
         version: link:../templates

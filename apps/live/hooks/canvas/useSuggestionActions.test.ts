@@ -8,7 +8,17 @@ import {
   type StickyElement,
   type Tab,
 } from '@livedoc/document';
-import { REMOVE, SPLIT, byId, changed, named, orderFlow } from '@/lib/change-board.fixture';
+import {
+  REMOVE,
+  SPLIT,
+  byId,
+  changed,
+  named,
+  note as flowNote,
+  orderFlow,
+} from '@/lib/change-board.fixture';
+import { kitchenNotes, plannedKitchen } from '@/lib/lane-board.fixture';
+import { isLanePlan } from '@livedoc/document';
 import { useSuggestionActions } from './useSuggestionActions';
 
 // The suggestion acts (docs/specs/021-event-storming/suggestions.md "Applying and dismissing"): each one commit
@@ -246,6 +256,7 @@ describe('useSuggestionActions with suggested changes', () => {
       contexts: 0,
       names: 1,
       changes: 1,
+      plan: 0,
     });
   });
 
@@ -261,6 +272,63 @@ describe('useSuggestionActions with suggested changes', () => {
       contexts: 0,
       names: 1,
       changes: 2,
+      plan: 0,
     });
+  });
+});
+
+// docs/specs/021-event-storming/lane-plans.md "How a person sees and decides": Apply All and Dismiss All include it.
+describe('useSuggestionActions: the lane plan', () => {
+  const suggested = () => ({
+    ...flowNote('s', 'Dish served', 0),
+    esSuggestion: { anchorId: 'dish-plated', side: 'after' as const },
+  });
+  const yOf = (els: Element[], id: string) => (els.find((el) => el.id === id) as { y: number }).y;
+
+  it('Apply All applies the plan first, then lands the rest on the board it leaves, in one commit', () => {
+    const { acts, commit, board } = setup([...plannedKitchen().elements, suggested()]);
+    acts.applyAll();
+    expect(commit).toHaveBeenCalledTimes(1);
+    expect(board().some(isLanePlan)).toBe(false);
+    // The suggested event landed beside its anchor, on the lane the plan moved the anchor to.
+    expect(yOf(board(), 's')).toBe(yOf(board(), 'dish-plated'));
+    expect(yOf(board(), 'dish-plated')).not.toBe(yOf(kitchenNotes(), 'dish-plated'));
+    expect(info).toHaveBeenCalledWith(
+      '[suggestions] applied',
+      expect.objectContaining({ plan: 1 }),
+    );
+  });
+
+  it('Apply All applies a plan that is the only thing open', () => {
+    const { acts, commit, board } = setup(plannedKitchen().elements);
+    acts.applyAll();
+    expect(commit).toHaveBeenCalledTimes(1);
+    expect(board().some(isLanePlan)).toBe(false);
+  });
+
+  it('Apply All leaves a stale plan for its row to say so', () => {
+    const late = flowNote('late', 'Why?', 5, 'hotspot', 0);
+    const alone = setup([...plannedKitchen().elements, late]);
+    alone.acts.applyAll();
+    expect(alone.commit).not.toHaveBeenCalled();
+    const { acts, board } = setup([...plannedKitchen().elements, late, suggested()]);
+    acts.applyAll();
+    expect(board().some(isLanePlan)).toBe(true);
+    expect(info).toHaveBeenCalledWith(
+      '[suggestions] applied',
+      expect.objectContaining({ plan: 0 }),
+    );
+  });
+
+  it('Dismiss All removes the plan, stale or not, and remembers nothing of it', () => {
+    const { acts, commitTab, tab } = setup(plannedKitchen().elements);
+    acts.dismissAll();
+    expect(commitTab).toHaveBeenCalledTimes(1);
+    expect(tab().elements.some(isLanePlan)).toBe(false);
+    expect(tab().esDeclined ?? []).toEqual([]);
+    expect(info).toHaveBeenCalledWith(
+      '[suggestions] dismissed',
+      expect.objectContaining({ plan: 1 }),
+    );
   });
 });

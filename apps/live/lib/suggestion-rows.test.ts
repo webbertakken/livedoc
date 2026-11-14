@@ -3,7 +3,8 @@ import { newContextElement, type Element, type StickyElement } from '@livedoc/do
 import { KIND, REWORD, STEP, byId, changed, named, note, orderFlow } from './change-board.fixture';
 import { suggestionsInTimeline } from './suggestion-hints';
 import { panelRowBounds, panelRowId, panelRowKey, panelRows } from './suggestion-rows';
-import { changeKey, contextsKey } from './suggestion-view';
+import { changeKey, contextsKey, planKey } from './suggestion-view';
+import { lanePlan, plannedKitchen } from './lane-board.fixture';
 
 // The suggestions panel's rows (docs/specs/021-event-storming/suggestions.md "The suggestions panel"): notes,
 // contexts, name suggestions and note changes in one timeline.
@@ -99,5 +100,33 @@ describe('a row’s preview key and the box it brings into view', () => {
     expect(panelRowBounds(row('s'))).toMatchObject({ x: placed.x, width: 200 + STEP });
     expect(panelRowBounds(row('change:pack:0'))).toMatchObject({ x: 5 * STEP, width: 200 });
     expect(panelRowBounds(row('names:fulfilment'))).toMatchObject({ x: 5 * STEP });
+  });
+});
+
+// docs/specs/021-event-storming/lane-plans.md "How a person sees and decides".
+describe('the lane plan among the rows', () => {
+  it('is listed first, whatever stands left of it', () => {
+    const elements = [...board(), lanePlan()];
+    const rows = panelRows({
+      elements,
+      timeline: suggestionsInTimeline(elements),
+      showAllSpots: null,
+      inertIds: NONE,
+    });
+    expect(rows[0]!.type).toBe('lane-plan');
+    expect(rows.filter((row) => row.type === 'lane-plan')).toHaveLength(1);
+  });
+
+  it('has an id of its own, previews the plan and brings the board as it would be into view', () => {
+    const tab = plannedKitchen();
+    const [row] = panelRows({
+      elements: tab.elements,
+      timeline: [],
+      showAllSpots: null,
+      inertIds: NONE,
+    });
+    expect(panelRowId(row!)).toBe('lane-plan:plan');
+    expect(panelRowKey(row!)).toBe(planKey('plan'));
+    expect(panelRowBounds(row!).width).toBeGreaterThan(0);
   });
 });

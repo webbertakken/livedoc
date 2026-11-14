@@ -41,7 +41,10 @@ export function registerStormTools(server: McpServer, env: Env): void {
       text: read.lines.join('\n'),
       reading: read.reading,
       gaps: read.reading.gaps.length,
-      suggestions: read.suggestions.filter((s) => !s.orphan).length + read.changes.length,
+      suggestions:
+        read.suggestions.filter((s) => !s.orphan).length +
+        read.changes.length +
+        (read.plan ? 1 : 0),
       url: deepLink(env, read.documentId),
     });
   });
@@ -58,6 +61,8 @@ export function registerStormTools(server: McpServer, env: Env): void {
         contexts: args.contexts,
         names: args.names,
         changes: args.changes,
+        lanes: args.lanes,
+        lanesReason: args.lanesReason,
       },
       'mcp',
     );

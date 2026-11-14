@@ -34,9 +34,15 @@ const size = (w: number, h: number): [number, number] => [Math.round(w), Math.ro
 type Named = Parameters<typeof nameLines>[0];
 
 // The `+` line of a new element.
-export function addedLine(el: Element, naming: LineNaming): Extract<ResultLine, { mark: '+' }> {
-  const label = labelOf(el);
+// `said` is what the operation says of what it made (a lane plan's lanes and what the check found), printed bare.
+export function addedLine(
+  el: Element,
+  naming: LineNaming,
+  said?: string,
+): Extract<ResultLine, { mark: '+' }> {
   const ref = naming.refOf(el.id);
+  if (said !== undefined) return { mark: '+', ref, kind: `${kindOf(el)}: ${said}` };
+  const label = labelOf(el);
   const common = { mark: '+' as const, ref, kind: kindOf(el), ...(label ? { label } : {}) };
   return el.type === 'arrow'
     ? { ...common, ends: [endText(el, 'from', naming), endText(el, 'to', naming)] }
@@ -208,6 +214,8 @@ type ResultSource = {
   // Ids in the order operations first touched them, with the fields they wrote.
   touched: ReadonlyMap<ElementId, Omit<Touch, 'operation'>>;
   removed: ReadonlyMap<ElementId, Removal>;
+  // What an operation says of an element it made, in place of its label and box.
+  said?: ReadonlyMap<ElementId, string>;
   warnings: readonly EditWarning[];
   theme: ThemeDefinition;
   origin: { x: number; y: number };
@@ -300,7 +308,7 @@ export function buildResultLines(source: ResultSource, next: readonly Element[])
     const { written } = touched;
     const [prev, cur] = [source.before.get(id), after.get(id)];
     if (cur && !prev) {
-      const line = addedLine(cur, naming);
+      const line = addedLine(cur, naming, source.said?.get(id));
       lines.push(touched.styleOf ? { ...line, styleOf: naming.refOf(touched.styleOf) } : line);
     } else if (prev && !cur) lines.push(removedLine(prev, naming, source.removed.get(id)));
     else if (prev && cur && !touched.moved) {

@@ -1,10 +1,11 @@
 // The storm view (docs/specs/021-event-storming/board-reading.md "Output"): the reading as compact text. The About,
 // one line per note in timeline order (a pivotal event marked so, an answered hotspot with its answer), the loose
-// notes, the lanes, the contexts and their map, the gaps, the open suggestions and suggested changes, and what was
-// declined. Refs name every note, so an agent can address any of them in an edit operation.
+// notes, the lanes, the contexts and their map, the gaps, the open suggestions, suggested changes and lane plan, and
+// what was declined. Refs name every note, so an agent can address any of them in an edit operation.
 
 import type { ElementId, EventStormingNoteKind } from '@livedoc/document';
 import type { StormDeclined } from './declined';
+import type { StormLanePlan } from './lanes/view';
 import type { StormNoteChange, StormSuggestedChange } from './suggested-changes';
 import type { StormSuggestion } from './suggestions';
 import type { CrossingRelation, StormNote, StormReading } from './types';
@@ -30,16 +31,17 @@ const CROSSING_VERB: Record<CrossingRelation, string> = {
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 // What the view lists beside the reading and its suggested notes and contexts: the changes suggested to what is on
-// the board, and what a person dismissed before.
+// the board, the open lane plan, and what a person dismissed before.
 export type StormViewExtras = {
   changes?: readonly StormSuggestedChange[];
+  plan?: StormLanePlan | null;
   declined?: readonly StormDeclined[];
 };
 
 export function formatStormView(
   reading: StormReading,
   suggestions: readonly StormSuggestion[],
-  { changes = [], declined = [] }: StormViewExtras = {},
+  { changes = [], plan = null, declined = [] }: StormViewExtras = {},
 ): string[] {
   const byId = new Map<ElementId, StormNote>(reading.notes.map((n) => [n.id, n]));
   const answers = new Map(reading.decisions.map((d) => [d.hotspot, d.answer]));
@@ -61,8 +63,8 @@ export function formatStormView(
       plural(reading.chains.length, 'chain'),
       plural(reading.gaps.length, 'gap'),
       ...(contexts.length > 0 ? [plural(contexts.length, 'context')] : []),
-      // Every open suggestion counts alike: notes, contexts, names and note changes.
-      plural(open.length + changes.length, 'suggestion'),
+      // Every open suggestion counts alike: notes, contexts, names, note changes and a lane plan.
+      plural(open.length + changes.length + (plan ? 1 : 0), 'suggestion'),
     ].join(' · '),
   ];
   if (reading.notes.length === 0) lines.push('no notes');
@@ -135,6 +137,8 @@ export function formatStormView(
     for (const c of changes) lines.push(`  ${changeLine(c)}`);
   }
 
+  if (plan) lines.push('lane plan', `  ${planLine(plan)}`);
+
   if (declined.length > 0) {
     lines.push('declined');
     for (const d of declined)
@@ -167,6 +171,18 @@ function changeLine(c: StormSuggestedChange): string {
       ? `${c.contextRefs.join(',')} name "${c.name}"`
       : `${c.noteRef} ${noteChangeText(c)}`;
   return `${what}${c.by ? ` · by ${c.by}` : ''}${c.reason ? `: ${c.reason}` : ''}`;
+}
+
+// The open lane plan (docs/specs/021-event-storming/lane-plans.md): its ref, its lanes top to bottom with how many
+// notes each holds, whether the board changed since it was made, then who and why.
+function planLine(plan: StormLanePlan): string {
+  const lanes = plan.lanes.map((lane) => `"${lane.name}" ${plural(lane.notes, 'note')}`).join(', ');
+  const facts = [
+    plan.stale ? 'stale (the board changed since it was made)' : null,
+    plan.by ? `by ${plan.by}` : null,
+  ].filter(Boolean);
+  const said = [`${plan.ref} ${plural(plan.lanes.length, 'lane')}: ${lanes}`, ...facts].join(' · ');
+  return `${said}${plan.reason ? `: ${plan.reason}` : ''}`;
 }
 
 // One open suggestion: a note by its kind, words, side and anchor; a context by its name and notes; then who and why.

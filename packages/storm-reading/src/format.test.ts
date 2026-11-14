@@ -4,8 +4,10 @@ import { readBoard } from './reading';
 import { readDeclined } from './declined';
 import { readSuggestedChanges } from './suggested-changes';
 import { readSuggestions } from './suggestions';
-import type { Element, Tab } from '@livedoc/document';
+import { newLanePlanElement, type Element, type Tab } from '@livedoc/document';
 import { board, laneText, note } from './testing';
+import { kitchen, twoLanes } from './lanes/kitchen.fixture';
+import { readLanePlan } from './lanes/view';
 
 const view = (...specs: Parameters<typeof board>) => {
   const tab = board(...specs);
@@ -275,5 +277,42 @@ describe('formatStormView', () => {
       { id: 'e2', kind: 'domain-event', col: 3.5, words: 'Thanks Sent' },
     );
     expect(lines).toContain('  <- command c "Send Thanks" · policy p "Thank"');
+  });
+});
+
+// docs/specs/021-event-storming/lane-plans.md "Share roles": an agent reads the open plan to take it back.
+describe('formatStormView: the open lane plan', () => {
+  const planned = (extra: { reason?: string; by?: string } = {}) => {
+    const tab = kitchen();
+    const plan = newLanePlanElement({ id: 'plan', plan: { lanes: twoLanes, ...extra }, notes: [] });
+    return board(...tab.elements, plan);
+  };
+  const withPlan = (tab: Tab) =>
+    formatStormView(readBoard(tab), readSuggestions(tab), { plan: readLanePlan(tab) });
+
+  it('lists the plan by its ref, its lanes top to bottom, who and why', () => {
+    const lines = withPlan(planned({ reason: 'Two parts', by: 'Claude' }));
+    expect(lines.slice(lines.indexOf('lane plan'))).toEqual([
+      'lane plan',
+      '  plan 2 lanes: "Orders" 3 notes, "Kitchen" 4 notes · by Claude: Two parts',
+    ]);
+  });
+
+  it('counts the plan as one suggestion', () => {
+    expect(withPlan(planned())[0]).toContain('· 1 suggestion');
+  });
+
+  it('says when the board changed since the plan was made', () => {
+    const tab = planned();
+    const late = board(...tab.elements, { id: 'late', kind: 'hotspot', col: 5, lane: 0 });
+    expect(withPlan(late).at(-1)).toBe(
+      '  plan 2 lanes: "Orders" 3 notes, "Kitchen" 4 notes · stale (the board changed since it was made)',
+    );
+  });
+
+  it('prints no plan for a board that has none', () => {
+    const tab = kitchen();
+    expect(withPlan(tab)).not.toContain('lane plan');
+    expect(formatStormView(readBoard(tab), [], { plan: null })[0]).toContain('· 0 suggestions');
   });
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import type { Element, ElementId } from '@livedoc/document';
+import type { Element, ElementId, Layer } from '@livedoc/document';
 import { offeredPreview, type OfferedPreview } from '@/lib/change-preview';
 import { clearOfferedPreview, setOfferedPreview } from '@/lib/drag-preview';
 
@@ -18,16 +18,19 @@ export function useOfferedPreview({
   elements,
   previewKey,
   inertIds = NO_INERT,
+  layers,
 }: {
   tabId: string;
   elements: Element[];
   // The person's previewed key; null where suggestions are not shown.
   previewKey: string | null;
   inertIds?: ReadonlySet<ElementId>;
+  // The tab's layers: a lane plan and Arrange and Reorder leave a note on a locked layer where it is.
+  layers?: Layer[];
 }): OfferedPreview | null {
   const offered = useMemo(
-    () => offeredPreview(elements, previewKey, inertIds),
-    [elements, previewKey, inertIds],
+    () => offeredPreview(elements, previewKey, inertIds, layers),
+    [elements, previewKey, inertIds, layers],
   );
   useEffect(() => {
     if (!offered) return;

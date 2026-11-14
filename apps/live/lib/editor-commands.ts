@@ -144,6 +144,9 @@ export type CommandHandlers = {
   // flip the palette's switch runs.
   // Open the wall-photo reader (docs/specs/021-event-storming/event-storming.md Phase 8).
   openPhotoImport: () => void;
+  // Arrange and Reorder (docs/specs/021-event-storming/arrange.md "How a person arranges"): previews the board laid
+  // out along the timeline, to keep or put back.
+  arrangeBoard: () => void;
 };
 
 // The canvas tools reachable from search, in the tool dropdown's own order.
@@ -316,6 +319,12 @@ export function buildEditorCommands(ctx: CommandContext, h: CommandHandlers): Ed
         run: h.openPhotoImport,
       });
     }
+    out.push({
+      id: 'arrange-board',
+      name: 'Arrange and Reorder',
+      keywords: 'arrange reorder timeline columns tidy order lay out event storming board notes',
+      run: h.arrangeBoard,
+    });
   }
 
   out.push({

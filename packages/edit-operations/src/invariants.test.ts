@@ -35,6 +35,8 @@ const SAMPLES: Readonly<Record<Name, string>> = {
   'suggest-kind': 'suggest-kind placed command reason="it reads as an intent"',
   'suggest-split': 'suggest-split placed "Order Placed" "Order Paid" reason="two facts"',
   'suggest-remove': 'suggest-remove placed reason="said twice"',
+  'suggest-lane': 'suggest-lane "Asks" place reason="who asks"\nsuggest-lane "Events" placed',
+  arrange: 'arrange',
   wall: JSON.stringify({
     op: 'wall',
     photos: [
@@ -49,11 +51,12 @@ const SAMPLES: Readonly<Record<Name, string>> = {
 
 type Name = (typeof EDIT_OPERATION_NAMES)[number];
 
-// The checkout flow, or for the suggest family and `wall` the same flow on an Event Storming board with one domain
-// event to anchor on; `suggest-name` also finds a candidate context round it.
+// The checkout flow, or for the suggest family, `arrange` and `wall` the same flow on an Event Storming board with
+// one domain event to anchor on; `suggest-name` also finds a candidate context round it, and a lane plan and
+// `arrange` a command a lane above, left of its event.
 function tabFor(name: string): Tab {
   const flow = checkoutFlow();
-  if (!name.startsWith('suggest') && name !== 'wall') return flow;
+  if (!name.startsWith('suggest') && name !== 'wall' && name !== 'arrange') return flow;
   const placed: Element = {
     id: 'placed',
     type: 'sticky',
@@ -75,10 +78,25 @@ function tabFor(name: string): Tab {
     label: 'Ordering',
     esContext: { notes: ['placed'] },
   };
+  const place: Element = {
+    id: 'place',
+    type: 'sticky',
+    x: 1500,
+    y: -240,
+    width: 200,
+    height: 200,
+    label: 'Place Order',
+    esKind: 'command',
+  };
   return {
     ...flow,
     kind: 'event-storming',
-    elements: [...flow.elements, placed, ...(name === 'suggest-name' ? [ordering] : [])],
+    elements: [
+      ...flow.elements,
+      placed,
+      ...(name === 'suggest-name' ? [ordering] : []),
+      ...(name === 'suggest-lane' || name === 'arrange' ? [place] : []),
+    ],
   };
 }
 
@@ -160,7 +178,10 @@ describe('invariants', () => {
       };
       const outcome = run(text, tab);
       if ('errors' in outcome) {
-        expect(outcome.errors[0]!.code).toBe('element_locked');
+        // Arranging names no element: a lock that leaves it nothing to arrange is refused as that.
+        expect(outcome.errors[0]!.code).toBe(
+          name === 'arrange' ? 'nothing_to_arrange' : 'element_locked',
+        );
         continue;
       }
       const lockedBefore = tab.elements.find((el) => el.id === id);

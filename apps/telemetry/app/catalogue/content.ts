@@ -717,6 +717,15 @@ export const SUGGESTED_CHANGES_HANDLED = chart(
     ],
   },
 );
+// A whole event-storming board rearranged (docs/specs/021-event-storming/lane-plans.md "Telemetry",
+// docs/specs/021-event-storming/arrange.md "Telemetry").
+export const BOARD_REARRANGED = chart(
+  'Canvas',
+  'Used',
+  'Board Rearranged',
+  "An agent's lane plan for an event-storming board applied or dismissed, or the board arranged along its timeline and kept.",
+  { types: ['LanePlanApplied', 'LanePlanDismissed', 'BoardArranged'] },
+);
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -742,6 +751,7 @@ export const ELEMENT_EDITING: MetricStack = {
     SUGGESTIONS_HANDLED,
     CONTEXTS_HANDLED,
     SUGGESTED_CHANGES_HANDLED,
+    BOARD_REARRANGED,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],
