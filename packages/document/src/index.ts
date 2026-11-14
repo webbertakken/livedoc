@@ -605,6 +605,7 @@ export * from './mind-outline-marks';
 export * from './mind-outline';
 export * from './youtube';
 export * from './arrow-path';
+export * from './path-bounds';
 export * from './arrow-dash';
 export * from './arrow-label';
 export * from './arrow-label-layout';

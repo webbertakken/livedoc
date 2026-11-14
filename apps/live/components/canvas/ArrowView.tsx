@@ -4,6 +4,8 @@ import {
   arrowheadShapeOf,
   arrowheadStartShapeOf,
   arrowheadSizeOf,
+  arrowMaskRegion,
+  ARROWHEAD_SIZE_PX,
   BORDER_DASH_ARRAY,
   DEFAULT_BORDER_STYLE,
   defaultArrowLabelColor,
@@ -30,11 +32,14 @@ import { useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { pressLedger } from '@/lib/double-press';
 
 // The mask region + backdrop for route-behind (docs/specs/008-canvas/arrow-route-behind.md) and label
-// knockouts (docs/specs/008-canvas/arrow-labels.md). Deliberately vast
-// rather than fitted to the arrow: a curve can bow well outside its chord,
-// and a region that ends where the geometry does clips the drawing instead
-// of the boxes.
-const MASK_SPAN = { origin: -100000, size: 200000 } as const;
+// knockouts (docs/specs/008-canvas/arrow-labels.md): the box of every path the mask cuts, control points and all (a
+// curve never bows past them), grown by MASK_MARGIN_PER_STROKE strokes for the heads and the halo. Fitted, not vast:
+// a mask's region is what the browser repaints when its holes change, and a vast one repainted the whole screen for
+// every arrow a dragged box crossed (docs/specs/008-canvas/canvas-performance.md "A break stays local"). A path it
+// cannot bound falls back to MASK_SPAN.
+const MASK_SPAN = { x: -100000, y: -100000, width: 200000, height: 200000 } as const;
+// The largest head (ARROWHEAD_SIZE_PX 'extra-large', in strokes) and two strokes more, per stroke and two pixels.
+const MASK_MARGIN_PER_STROKE = ARROWHEAD_SIZE_PX['extra-large'] + 2;
 
 type ArrowViewProps = {
   arrow: ArrowElement;
@@ -222,6 +227,12 @@ function ArrowViewImpl({
   const headMarker = sketchedHeads ? undefined : markerUrl;
   const startMarker = sketchedHeads ? undefined : startMarkerUrl;
   const strokeWidth = isSelected ? baseStrokeWidth + 0.5 : baseStrokeWidth;
+  const maskRegion = behindMaskId
+    ? (arrowMaskRegion(
+        sketch?.line ? [pathD, sketch.line] : [pathD],
+        MASK_MARGIN_PER_STROKE * (strokeWidth + 2),
+      ) ?? MASK_SPAN)
+    : null;
   const hitCursor = isPaintMode ? 'copy' : 'pointer';
   // The line bends where it is grabbed, so an editable line says so.
   const bendCursor = isPaintMode || isLocked || readOnly ? hitCursor : 'grab';
@@ -309,17 +320,17 @@ function ArrowViewImpl({
           // horizontal (or vertical) arrow has a zero-height bbox, so the
           // default region collapsed to a hairline and swallowed the
           // arrowhead — which sticks out above and below the line — along
-          // with part of the stroke. Same vast box as the backdrop below.
-          x={MASK_SPAN.origin}
-          y={MASK_SPAN.origin}
-          width={MASK_SPAN.size}
-          height={MASK_SPAN.size}
+          // with part of the stroke. The same fitted box as the backdrop below.
+          x={maskRegion!.x}
+          y={maskRegion!.y}
+          width={maskRegion!.width}
+          height={maskRegion!.height}
         >
           <rect
-            x={MASK_SPAN.origin}
-            y={MASK_SPAN.origin}
-            width={MASK_SPAN.size}
-            height={MASK_SPAN.size}
+            x={maskRegion!.x}
+            y={maskRegion!.y}
+            width={maskRegion!.width}
+            height={maskRegion!.height}
             fill="white"
           />
           {maskHoles.map((h, i) => (

@@ -307,7 +307,7 @@ function CanvasView(props: CanvasProps) {
   );
 
   const { spotlightLook, spotlight, eraserPos, handlePointerMoveCanvas, handlePointerLeaveCanvas } =
-    useCanvasPointer({ canvasTool, mainRef, onCanvasPointerMove, wrapperRef, viewportZoom });
+    useCanvasPointer({ canvasTool, mainRef, onCanvasPointerMove, wrapperRef, mainSize });
 
   const {
     avatar,
