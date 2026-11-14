@@ -197,6 +197,10 @@ export function writeFieldsOnto<T extends Element>(
       });
     }
   }
+  // A label written as plain words, or unset, takes its formatted runs with it (rich-text.ts): they mirror the old
+  // words, and left behind the canvas goes on drawing those.
+  if ('label' in patch && !('richText' in patch) && Reflect.get(el, 'richText') !== undefined)
+    patch.richText = null;
   const set = Object.fromEntries(
     Object.entries(patch).filter(([, v]) => v !== null && v !== undefined),
   );

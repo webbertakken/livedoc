@@ -40,6 +40,41 @@ describe('set', () => {
     expect(lines(run([set('n3', { textAlignX: 'left' })]))).toEqual(['~ n3  textAlignX →left']);
   });
 
+  // The label is the plain mirror of its runs (rich-text.ts): runs left behind go on drawing the old words.
+  describe('a label that carried formatting', () => {
+    const formatted = (): Tab => {
+      const tab = checkoutFlow();
+      return {
+        ...tab,
+        elements: tab.elements.map((el) =>
+          el.id === 'n3' && el.type === 'shape'
+            ? { ...el, richText: [{ text: 'Log' }, { text: 'in', bold: true }] }
+            : el,
+        ),
+      };
+    };
+    const n3 = (tab: Tab) => tab.elements.find((el) => el.id === 'n3')!;
+
+    it('loses its runs when the label is written in plain words, or unset', () => {
+      expect(
+        n3(applied(run([set('n3', { label: 'Sign in' })], formatted())).tab),
+      ).not.toHaveProperty('richText');
+      expect(n3(applied(run([set('n3', { label: null })], formatted())).tab)).not.toHaveProperty(
+        'richText',
+      );
+    });
+
+    it('keeps the runs the same write gives it, and those of a write that leaves the label be', () => {
+      const runs = [{ text: 'Sign ' }, { text: 'in', italic: true }];
+      expect(
+        n3(applied(run([set('n3', { label: 'Sign in', richText: runs })], formatted())).tab),
+      ).toMatchObject({ richText: runs });
+      expect(n3(applied(run([set('n3', { shape: 'stadium' })], formatted())).tab)).toHaveProperty(
+        'richText',
+      );
+    });
+  });
+
   it('unsets a field given null', () => {
     const tab = checkoutFlow();
     tab.elements[3] = { ...tab.elements[3]!, note: 'Ask for SSO' } as (typeof tab.elements)[number];
