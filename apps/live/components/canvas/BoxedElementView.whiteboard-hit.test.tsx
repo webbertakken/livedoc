@@ -74,3 +74,24 @@ describe('whiteboard picking by the drawn line', () => {
     expect(draw(stroke, false).wrapper.style.pointerEvents).toBe('none');
   });
 });
+
+// docs/specs/023-draw-mode/draw-mode.md "Selecting": a label's words pick their element, as its line does.
+describe('whiteboard picking by a label\u2019s words', () => {
+  it('lets an unselected stroke\u2019s words catch pointers while its box lets them through', () => {
+    const { wrapper } = draw({ ...stroke, label: 'Image' }, false);
+    expect(wrapper.style.pointerEvents).toBe('none');
+    expect(wrapper.hasAttribute('data-words-pick')).toBe(true);
+    expect(wrapper.querySelector('[data-label-words]')!.textContent).toBe('Image');
+  });
+
+  it('lets an unselected shape\u2019s words catch pointers too', () => {
+    const { wrapper } = draw({ ...rect, label: 'Image' }, false);
+    expect(wrapper.hasAttribute('data-words-pick')).toBe(true);
+    expect(wrapper.querySelector('[data-label-words]')!.textContent).toBe('Image');
+  });
+
+  it('leaves the words to the box once it catches pointers itself', () => {
+    const { wrapper } = draw({ ...stroke, label: 'Image' }, true);
+    expect(wrapper.hasAttribute('data-words-pick')).toBe(false);
+  });
+});

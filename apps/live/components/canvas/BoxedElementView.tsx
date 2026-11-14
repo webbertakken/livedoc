@@ -483,6 +483,8 @@ function BoxedElementViewImpl({
       data-frame={element.type === 'shape' && element.shape === 'frame' ? '' : undefined}
       // What the face's own parts are drawn in (docs/specs/008-canvas/finish.md "Faces"; app/face-finish.css).
       data-face-finish={faceFinish}
+      // While the box lets pointers through, its label's words catch them as its line does (globals.css, LabelWords).
+      data-words-pick={passThrough ? '' : undefined}
       onPointerDown={(e) => {
         // A finger on a board's empty space pans the canvas instead (hooks/canvas/pan-through.ts).
         if (isPanThrough(e)) return;

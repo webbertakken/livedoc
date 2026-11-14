@@ -1,11 +1,9 @@
-// The four display label renderers (docs/specs/008-canvas/canvas-and-palette.md), split out of
-// element-labels.tsx: the auto-scaling single-line SVG label, the
-// fixed-size single-line label, the sticky multi-line label, and the
-// per-range RichLabel. renderLabel (the dispatcher the element views
-// call) stays in element-labels.tsx and picks between them.
+// The display label renderers (docs/specs/008-canvas/canvas-and-palette.md), split out of element-labels.tsx: the
+// fixed-size single-line label, the sticky multi-line label, and the per-range RichLabel. renderLabel (the
+// dispatcher the element views call) stays in element-labels.tsx and picks between them.
 
-import { useLayoutEffect, useRef, useState } from 'react';
 import { renderUnits } from './animated-words';
+import { LabelWords } from './LabelWords';
 import type { TextAnimView } from './useTextAnimation';
 import {
   type BoxedElement,
@@ -28,177 +26,7 @@ import {
   type LabelTextStyle,
 } from '@/components/canvas/label-style';
 
-function svgPreserve(alignX: TextAlignX, alignY: TextAlignY): string {
-  const ax = alignX === 'left' ? 'xMin' : alignX === 'right' ? 'xMax' : 'xMid';
-  const ay = alignY === 'top' ? 'YMin' : alignY === 'bottom' ? 'YMax' : 'YMid';
-  return `${ax}${ay} meet`;
-}
-
-// --- Auto-scaling single-line label (SVG fit-to-bounds) --------------------
-
-// Where `preserveAspectRatio="… meet"` puts the measured box inside the svg: its scale and the
-// offset of its top-left corner from the label's own (padding included). Measured when the box or
-// the svg's size changes; only while a Text animation needs it.
-function useSvgFit(
-  svg: React.RefObject<SVGSVGElement | null>,
-  bbox: { w: number; h: number } | null,
-  alignX: TextAlignX,
-  alignY: TextAlignY,
-  padding: number,
-  active: boolean,
-): { scale: number; x: number; y: number } | null {
-  const [fit, setFit] = useState<{ scale: number; x: number; y: number } | null>(null);
-  useLayoutEffect(() => {
-    const node = svg.current;
-    if (!active || !node || !bbox) return;
-    const measure = () => {
-      const w = node.clientWidth;
-      const h = node.clientHeight;
-      if (!w || !h) return;
-      const scale = Math.min(w / bbox.w, h / bbox.h);
-      const fx = alignX === 'left' ? 0 : alignX === 'right' ? 1 : 0.5;
-      const fy = alignY === 'top' ? 0 : alignY === 'bottom' ? 1 : 0.5;
-      setFit({
-        scale,
-        x: padding + (w - bbox.w * scale) * fx,
-        y: padding + (h - bbox.h * scale) * fy,
-      });
-    };
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [svg, bbox, alignX, alignY, padding, active]);
-  return active ? fit : null;
-}
-
-export function ScalingLabel({
-  text,
-  alignX,
-  alignY,
-  padding,
-  style,
-  animClass,
-  textAnim,
-}: {
-  text: string;
-  alignX: TextAlignX;
-  alignY: TextAlignY;
-  padding: number;
-  style?: LabelTextStyle;
-  // Text animation (docs/specs/028-animation/element-animations.md). SVG <text> letters cannot move
-  // on their own, so an animated label keeps the <text> only to measure the fit (painted
-  // transparent) and draws its words as HTML over it, placed and scaled exactly as the view box
-  // fits the <text> (useSvgFit). Plain HTML rather than a foreignObject, which WebKit renders
-  // without the SVG's scaling once its content is positioned or composited.
-  textAnim?: TextAnimView;
-  // Text-native animation class (docs/specs/008-canvas/canvas-and-palette.md). Only the drop-shadow variants
-  // (glow / pulse / trace) reach here — see renderLabel — since drop-shadow
-  // follows the SVG glyph alpha; the background-clip gradient can't paint SVG
-  // <text> fill, so it's withheld for the auto-fit (`scale`) renderer.
-  animClass?: string;
-}) {
-  const textRef = useRef<SVGTextElement>(null);
-  const [bbox, setBBox] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
-
-  useLayoutEffect(() => {
-    const node = textRef.current;
-    if (!node) return;
-    const b = node.getBBox();
-    setBBox({ x: b.x, y: b.y, w: b.width || 1, h: b.height || 1 });
-    // Tracking, weight and case change the glyphs' extent too.
-  }, [text, style?.letterSpacing, style?.weight, style?.uppercase, style?.lowercase]);
-
-  const viewBox = bbox ? `${bbox.x} ${bbox.y} ${bbox.w} ${bbox.h}` : '0 0 100 24';
-  const svgRef = useRef<SVGSVGElement>(null);
-  const fit = useSvgFit(svgRef, bbox, alignX, alignY, padding, !!textAnim);
-
-  return (
-    <div className="pointer-events-none absolute inset-0 flex" style={{ padding }}>
-      <svg
-        ref={svgRef}
-        width="100%"
-        height="100%"
-        viewBox={viewBox}
-        preserveAspectRatio={svgPreserve(alignX, alignY)}
-        className={textAnim ? undefined : animClass}
-        overflow="visible"
-      >
-        <text
-          ref={textRef}
-          x="0"
-          y="0"
-          dominantBaseline="hanging"
-          fontFamily={style?.fontFamily ?? 'ui-sans-serif, system-ui, sans-serif'}
-          fontWeight={style?.weight ?? (style?.bold ? 700 : 500)}
-          style={{
-            letterSpacing: style?.letterSpacing ? `${style.letterSpacing}em` : undefined,
-            textTransform: style?.uppercase
-              ? 'uppercase'
-              : style?.lowercase
-                ? 'lowercase'
-                : undefined,
-          }}
-          fontStyle={style?.italic ? 'italic' : undefined}
-          textDecoration={
-            style?.underline && style?.strikethrough
-              ? 'underline line-through'
-              : style?.underline
-                ? 'underline'
-                : style?.strikethrough
-                  ? 'line-through'
-                  : undefined
-          }
-          fontSize="20"
-          fill={textAnim ? 'transparent' : 'currentColor'}
-          aria-hidden={textAnim ? true : undefined}
-        >
-          {text.split('\n').map((line, i) => (
-            // One tspan per line so multi-line labels (Enter inserts a
-            // newline now) lay out as separate lines; getBBox below
-            // unions them, so the auto-fit still scales the whole block.
-            <tspan key={i} x="0" dy={i === 0 ? 0 : '1.2em'}>
-              {line || ' '}
-            </tspan>
-          ))}
-        </text>
-      </svg>
-      {textAnim && bbox && fit ? (
-        <div
-          key={textAnim.className}
-          className={`absolute left-0 top-0 origin-top-left ${textAnim.className}`}
-          aria-label={textAnim.ariaLabel}
-          style={{
-            ...textAnim.style,
-            translate: `${fit.x}px ${fit.y}px`,
-            scale: String(fit.scale),
-            width: bbox.w,
-            fontSize: 20,
-            lineHeight: 1.2,
-            whiteSpace: 'pre',
-            fontFamily: style?.fontFamily ?? 'ui-sans-serif, system-ui, sans-serif',
-            fontWeight: style?.weight ?? (style?.bold ? 700 : 500),
-            fontStyle: style?.italic ? 'italic' : undefined,
-            letterSpacing: style?.letterSpacing ? `${style.letterSpacing}em` : undefined,
-            textTransform: style?.uppercase
-              ? 'uppercase'
-              : style?.lowercase
-                ? 'lowercase'
-                : undefined,
-            textDecoration:
-              [style?.underline && 'underline', style?.strikethrough && 'line-through']
-                .filter(Boolean)
-                .join(' ') || undefined,
-          }}
-        >
-          {renderUnits(text, textAnim.plan, { next: 0 })}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-// --- Fixed-size single-line label (sm/md/lg) -------------------------------
+// --- Fixed-size single-line label (Scale, a preset or a px) ---------------------
 
 export function FixedSizeLabel({
   text,
@@ -247,7 +75,7 @@ export function FixedSizeLabel({
         role={textAnim?.ariaLabel ? 'img' : undefined}
         aria-label={textAnim?.ariaLabel}
       >
-        {textAnim ? renderUnits(text, textAnim.plan, { next: 0 }) : text}
+        <LabelWords>{textAnim ? renderUnits(text, textAnim.plan, { next: 0 }) : text}</LabelWords>
       </div>
     </div>
   );
@@ -330,10 +158,9 @@ export function MultilineLabel({
 
 // Display renderer for a label carrying per-range formatting. Mirrors the
 // FixedSizeLabel / MultilineLabel wrapper (alignment + padding + base font
-// + family) and lays the runs out as styled <span>s. Applying any per-run
-// override opts the label out of SVG auto-fit (`scale`) into fixed-px
-// rendering — mixing per-run sizes with whole-element auto-fit is
-// contradictory; see docs/specs/008-canvas/canvas-and-palette.md.
+// + family) and lays the runs out as styled <span>s at fixed px: per-run
+// sizes and a note's whole-element fill would contradict each other; see
+// docs/specs/008-canvas/canvas-and-palette.md.
 export function RichLabel({
   runs,
   element,
@@ -404,9 +231,9 @@ export function RichLabel({
         }}
       >
         {runs.map((run, i) => (
-          <span key={i} style={effectiveRunStyle(run, element, runSizePx)}>
+          <LabelWords key={i} style={effectiveRunStyle(run, element, runSizePx)}>
             {textAnim ? renderUnits(run.text, textAnim.plan, counter, `${i}:`) : run.text}
-          </span>
+          </LabelWords>
         ))}
       </div>
     </div>

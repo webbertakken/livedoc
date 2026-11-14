@@ -53,13 +53,14 @@ Selectable from the element's edit-text toolbar (and the right-click context men
 
 Behaviour per label renderer:
 
-| Renderer           | How alignment is applied                                                                                                            |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Scaling (auto-fit) | The SVG `preserveAspectRatio` is set to the matching `x{Min/Mid/Max}Y{Min/Mid/Max} meet` so the text scales into the chosen corner. |
-| Fixed-size single  | CSS `align-items` + `text-align` on a flex container.                                                                               |
-| Sticky multi-line  | CSS `align-items` for vertical + `text-align` on the inner block.                                                                   |
+| Renderer          | How alignment is applied                                          |
+| ----------------- | ----------------------------------------------------------------- |
+| Fixed-size single | CSS `align-items` + `text-align` on a flex container.             |
+| Sticky multi-line | CSS `align-items` for vertical + `text-align` on the inner block. |
 
 The label editor (input/textarea) inherits the horizontal alignment so the cursor appears where the committed text will land.
+The editor draws the text exactly as the label does: the same size, face, weight, line height, wrap width, padding,
+alignment and position, at every zoom, so opening or closing it moves no word.
 
 ## Colours
 
