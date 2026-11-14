@@ -128,7 +128,7 @@ describe('validateEditOperations', () => {
       {
         code: 'parse_error',
         operation: 1,
-        details: ['unknown member "keep"; rm takes target, all, keepArrows'],
+        details: ['unknown member "keep"; rm takes target, all, keepArrows, suggested'],
       },
     ]);
   });

@@ -19,6 +19,7 @@ import { endRef, kindOf, labelOf } from './element-text';
 import { sameValue as same } from './equality';
 import { ALIAS_FIELDS } from './fields';
 import { fillValue } from './colours';
+import { nameLines, noteChangeLines } from './result-suggested';
 import type { LaidOut, MoveReason, Removal, Touch } from './state';
 
 // How a result names elements and places points: by ref, relative to the content origin.
@@ -29,6 +30,8 @@ const pointIn = (naming: LineNaming, x: number, y: number): [number, number] => 
   Math.round(y - naming.origin.y),
 ];
 const size = (w: number, h: number): [number, number] => [Math.round(w), Math.round(h)];
+
+type Named = Parameters<typeof nameLines>[0];
 
 // The `+` line of a new element.
 export function addedLine(el: Element, naming: LineNaming): Extract<ResultLine, { mark: '+' }> {
@@ -88,7 +91,13 @@ const aliasesWriting = (key: string) =>
 // The place of a change in its line: fields in the order operations wrote them (a position where
 // its x or y was written), then the rest in the element's own key order.
 function rankOf(change: FieldChange, written: readonly string[]): number {
-  const keys = change.key === 'at' ? ['x', 'y'] : [change.key, ...aliasesWriting(change.key)];
+  // What was suggested or taken back is what the operation wrote on the note or the context.
+  const keys =
+    change.key === 'at'
+      ? ['x', 'y']
+      : change.key === 'suggested' || change.key === 'took back'
+        ? ['esChanges', 'esContext']
+        : [change.key, ...aliasesWriting(change.key)];
   const ranks = keys.map((key) => written.indexOf(key)).filter((rank) => rank >= 0);
   return ranks.length ? Math.min(...ranks) : written.length;
 }
@@ -170,6 +179,16 @@ function fieldChanges(
   const now = cur as unknown as Record<string, JsonValue | undefined>;
   for (const key of new Set([...Object.keys(was), ...Object.keys(now)])) {
     if (PLACED_KEYS.has(key) || same(was[key], now[key])) continue;
+    // What was suggested on the element says what it is (suggested-changes.md), not "(changed)".
+    if (key === 'esChanges') {
+      changes.push(...noteChangeLines(was[key], now[key]));
+      continue;
+    }
+    if (key === 'esContext') {
+      const names = nameLines(was[key] as Named, now[key] as Named, naming.refOf);
+      changes.push(...names.changes);
+      if (!names.rest) continue;
+    }
     changes.push({
       key,
       ...(was[key] !== undefined ? { from: was[key] } : {}),

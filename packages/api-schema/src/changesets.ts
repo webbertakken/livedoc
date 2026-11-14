@@ -115,6 +115,15 @@ export const EDIT_REJECTION_CODES = [
   'notes_required',
   'note_not_a_note',
   'note_in_context',
+  // Suggested changes (docs/specs/021-event-storming/suggested-changes.md) and what was declined
+  // (docs/specs/021-event-storming/asks.md "What was declined").
+  'contexts_required',
+  'not_a_context',
+  'same_kind',
+  'parts_required',
+  'term_not_in_words',
+  'declined_before',
+  'nothing_suggested',
   // The wall operation (docs/specs/021-event-storming/event-storming.md Phase 11).
   'draft_open',
   'nothing_to_add',

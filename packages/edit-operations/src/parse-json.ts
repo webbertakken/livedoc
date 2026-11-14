@@ -97,12 +97,18 @@ function memberIssue(name: EditOperationName, raw: Raw, member: string): string 
     case 'words':
     case 'reason':
     case 'gap':
+    case 'term':
       return typeof value === 'string' ? null : expected(member, 'a string');
+    case 'parts':
+      return Array.isArray(value) && value.every((part) => typeof part === 'string')
+        ? null
+        : expected(member, 'an array of strings');
     case 'side':
       return isOneOf(ES_SUGGESTION_SIDES, value)
         ? null
         : expected(member, ES_SUGGESTION_SIDES.join(', '));
     case 'anchor':
+    case 'note':
     case 'target':
     case 'from':
     case 'above':
@@ -128,9 +134,10 @@ function memberIssue(name: EditOperationName, raw: Raw, member: string): string 
         ? null
         : expected(member, '[a, b] selectors');
     case 'notes':
+    case 'contexts':
       return Array.isArray(value) && value.every(isText)
         ? null
-        : expected(member, 'an array of note selectors');
+        : expected(member, `an array of ${member === 'notes' ? 'note' : 'context'} selectors`);
     case 'targets':
       return Array.isArray(value) && value.length > 0 && value.every(isText)
         ? null
@@ -163,6 +170,11 @@ const REQUIRED: Readonly<Record<EditOperationName, readonly string[]>> = {
   test: ['target', 'fields'],
   suggest: ['kind', 'words', 'anchor', 'side'],
   'suggest-context': ['name', 'notes'],
+  'suggest-name': ['name', 'contexts'],
+  'suggest-reword': ['note', 'words'],
+  'suggest-kind': ['note', 'kind'],
+  'suggest-split': ['note', 'parts'],
+  'suggest-remove': ['note'],
   wall: ['photos'],
 };
 
@@ -235,6 +247,11 @@ export function validateEditOperation(
         `add with "element" takes no "${extra}": the element carries it`,
       );
   }
+  if (name === 'suggest-reword' && (raw.term === undefined) !== (raw.to === undefined))
+    return parseError(
+      operation,
+      'suggest-reword takes "term" and "to" together (in a line: term="Order" to="Booking")',
+    );
   // Every member was checked against its operation's shape above.
   return withoutFalse(raw) as EditOperation;
 }

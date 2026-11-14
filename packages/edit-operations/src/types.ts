@@ -46,7 +46,14 @@ export type AddOperation = AddElementOperation | AddKindOperation;
 
 export type SetOperation = { op: 'set'; target: Selector; fields: Fields; all?: true };
 
-export type RmOperation = { op: 'rm'; target: Selector; all?: true; keepArrows?: true };
+// `suggested` removes what is suggested on the target (a note's changes, a context's names) and keeps the target.
+export type RmOperation = {
+  op: 'rm';
+  target: Selector;
+  all?: true;
+  keepArrows?: true;
+  suggested?: true;
+};
 
 export type MoveOperation = { op: 'move'; target: Selector; all?: true } & (
   { place: Placement } | { by: [number, number] }
@@ -124,6 +131,44 @@ export type SuggestContextOperation = {
   id?: string;
 };
 
+// Suggested changes to what is already on an Event Storming board (docs/specs/021-event-storming/
+// suggested-changes.md): another name for a candidate context (or one name for several merged), and a change to a
+// workshop note. Nothing on the board changes until a person accepts one.
+// `suggest-name "<name>" <context>… [reason=…]`
+export type SuggestNameOperation = {
+  op: 'suggest-name';
+  name: string;
+  contexts: Selector[];
+  reason?: string;
+};
+// `suggest-reword <note> "<words>" [term="<old>" to="<new>"] [reason=…]`
+export type SuggestRewordOperation = {
+  op: 'suggest-reword';
+  note: Selector;
+  words: string;
+  term?: string;
+  to?: string;
+  reason?: string;
+};
+// `suggest-kind <note> <kind> [reason=…]`
+export type SuggestKindOperation = {
+  op: 'suggest-kind';
+  note: Selector;
+  kind: string;
+  reason?: string;
+};
+// `suggest-split <note> "<words>" "<words>"… [reason=…]`
+export type SuggestSplitOperation = {
+  op: 'suggest-split';
+  note: Selector;
+  parts: string[];
+  reason?: string;
+};
+// `suggest-remove <note> [reason=…]`
+export type SuggestRemoveOperation = { op: 'suggest-remove'; note: Selector; reason?: string };
+export type SuggestChangeOperation =
+  SuggestRewordOperation | SuggestKindOperation | SuggestSplitOperation | SuggestRemoveOperation;
+
 // The notes read off several photos of one wall, in wall order (docs/specs/021-event-storming/event-storming.md
 // Phase 11): each note's box in its photo's pixels. JSON form only.
 export type WallNoteInput = {
@@ -152,6 +197,8 @@ export type EditOperation =
   | TestOperation
   | SuggestOperation
   | SuggestContextOperation
+  | SuggestNameOperation
+  | SuggestChangeOperation
   | WallOperation;
 
 export type ParseOutcome = { operations: EditOperation[] } | { errors: EditRejection[] };

@@ -218,6 +218,43 @@ describe('suggest: applying', () => {
       'too_many_suggestions',
     );
   });
+
+  // docs/specs/021-event-storming/asks.md "What was declined".
+  describe('what a person dismissed before', () => {
+    const declined: Tab = {
+      ...board(),
+      esDeclined: [{ type: 'note', words: 'Place Order', kind: 'command', about: ['placed'] }],
+    };
+
+    it('is refused when suggested again, on either side of the same note', () => {
+      const rejection = refused(run('suggest command "place order!" after=placed', declined));
+      expect(rejection.code).toBe('declined_before');
+      expect(rejection.details[0]).toBe(
+        'a person dismissed command "place order!" on placed before',
+      );
+    });
+
+    it('is refused at the end of a chain that grows from the same note', () => {
+      const lines =
+        'suggest actor "Customer" before=placed id=customer\nsuggest command "Place Order" below=customer';
+      expect(refused(run(lines, declined)).code).toBe('declined_before');
+    });
+
+    it('lets through another kind, other words, or the same on another note', () => {
+      const other: Element = { ...event, id: 'paid', x: 1600, label: 'Order Paid' };
+      const outcome = applied(
+        run(
+          [
+            'suggest policy "Place Order" before=placed',
+            'suggest command "Submit Order" before=placed',
+            'suggest command "Place Order" before=paid',
+          ].join('\n'),
+          { ...declined, elements: [...declined.elements, other] },
+        ),
+      );
+      expect(outcome.createdIds).toHaveLength(3);
+    });
+  });
 });
 
 describe('suggest: removal', () => {

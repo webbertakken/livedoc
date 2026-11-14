@@ -29,6 +29,12 @@ const SAMPLES: Readonly<Record<Name, string>> = {
   test: 'test n3 label=Login',
   suggest: 'suggest command "Place Order" before=placed reason="every event has a cause"',
   'suggest-context': 'suggest-context "Ordering" placed reason="one part of the business"',
+  'suggest-name': 'suggest-name "Sales" ordering reason="what the business calls it"',
+  'suggest-reword':
+    'suggest-reword placed "Booking Placed" term=Order to=Booking reason="their word for it"',
+  'suggest-kind': 'suggest-kind placed command reason="it reads as an intent"',
+  'suggest-split': 'suggest-split placed "Order Placed" "Order Paid" reason="two facts"',
+  'suggest-remove': 'suggest-remove placed reason="said twice"',
   wall: JSON.stringify({
     op: 'wall',
     photos: [
@@ -43,10 +49,11 @@ const SAMPLES: Readonly<Record<Name, string>> = {
 
 type Name = (typeof EDIT_OPERATION_NAMES)[number];
 
-// The checkout flow, or for `suggest` the same flow on an Event Storming board with one domain event to anchor on.
+// The checkout flow, or for the suggest family and `wall` the same flow on an Event Storming board with one domain
+// event to anchor on; `suggest-name` also finds a candidate context round it.
 function tabFor(name: string): Tab {
   const flow = checkoutFlow();
-  if (name !== 'suggest' && name !== 'suggest-context' && name !== 'wall') return flow;
+  if (!name.startsWith('suggest') && name !== 'wall') return flow;
   const placed: Element = {
     id: 'placed',
     type: 'sticky',
@@ -57,7 +64,22 @@ function tabFor(name: string): Tab {
     label: 'Order Placed',
     esKind: 'domain-event',
   };
-  return { ...flow, kind: 'event-storming', elements: [...flow.elements, placed] };
+  const ordering: Element = {
+    id: 'ordering',
+    type: 'shape',
+    shape: 'square',
+    x: 2000,
+    y: 0,
+    width: 200,
+    height: 200,
+    label: 'Ordering',
+    esContext: { notes: ['placed'] },
+  };
+  return {
+    ...flow,
+    kind: 'event-storming',
+    elements: [...flow.elements, placed, ...(name === 'suggest-name' ? [ordering] : [])],
+  };
 }
 
 const samples = Object.entries(SAMPLES);
