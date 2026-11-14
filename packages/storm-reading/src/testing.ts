@@ -49,3 +49,17 @@ export function board(...specs: (NoteSpec | Element)[]): Tab {
   };
   return tab;
 }
+
+// A text standing on a lane with its right edge at `right`: left of the wall it reads as the lane's name.
+export function laneText(id: string, lane: number, right: number, words: string): Element {
+  const text: Element = {
+    id,
+    type: 'text',
+    x: right - 160,
+    y: laneCentre(lane, ES_LANES) - 20,
+    width: 160,
+    height: 40,
+    label: words,
+  };
+  return text;
+}

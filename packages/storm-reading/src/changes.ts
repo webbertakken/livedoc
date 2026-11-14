@@ -1,6 +1,7 @@
 // What changed on a board between two readings (docs/specs/021-event-storming/domain-export.md "Iterative, never from
-// scratch"): notes added, removed, reworded and re-kinded, and relations made and broken, all by stable note id, so a
-// reworded note is a rewording and never a removal plus an addition.
+// scratch"): notes added, removed, reworded and re-kinded, relations made and broken, contexts, and the room's own
+// knowledge (the About, pivotal marks, hotspot answers), all by stable note id, so a reworded note is a rewording and
+// never a removal plus an addition.
 
 import type { ElementId } from '@livedoc/document';
 import type { StormContext, StormNote, StormReading, StormRelations } from './types';
@@ -21,6 +22,13 @@ export type StormChanges = {
   contextsRenamed: { context: StormContext; was: string }[];
   joined: { note: ElementId; context: StormContext }[];
   left: { note: ElementId; context: StormContext }[];
+  // The room's own knowledge (docs/specs/021-event-storming/board-structure.md): the About (one entry when it
+  // changed), events marked and unmarked pivotal, hotspots answered (or answered differently) and reopened.
+  about: { was: string; now: string }[];
+  pivotalMarked: ElementId[];
+  pivotalUnmarked: ElementId[];
+  answered: { hotspot: ElementId; answer: string }[];
+  reopened: ElementId[];
 };
 
 const RELATIONS: readonly RelationName[] = [
@@ -53,6 +61,11 @@ export function diffReadings(previous: StormReading, next: StormReading): StormC
     contextsRenamed: [],
     joined: [],
     left: [],
+    about: [],
+    pivotalMarked: [],
+    pivotalUnmarked: [],
+    answered: [],
+    reopened: [],
   };
   for (const note of next.notes) {
     const was = before.get(note.id);
@@ -70,6 +83,7 @@ export function diffReadings(previous: StormReading, next: StormReading): StormC
     for (const key of old) if (!now.has(key)) changes.unrelated.push(split(key, relation));
   }
   diffContexts(previous.contexts, next.contexts, changes);
+  diffStructure(previous, next, changes, after);
   return changes;
 }
 
@@ -141,6 +155,26 @@ export function formatChanges(
       'Left a context',
       changes.left.map((l) => `- ${say(l.note)} left ${contextName(l.context)}`),
     ),
+    ...section(
+      'About',
+      changes.about.map(() => '- The About changed: read it again in storm.md'),
+    ),
+    ...section(
+      'Marked pivotal',
+      changes.pivotalMarked.map((id) => `- ${say(id)}`),
+    ),
+    ...section(
+      'No longer pivotal',
+      changes.pivotalUnmarked.map((id) => `- ${say(id)}`),
+    ),
+    ...section(
+      'Answered',
+      changes.answered.map((a) => `- ${say(a.hotspot)}: ${a.answer}`),
+    ),
+    ...section(
+      'Reopened',
+      changes.reopened.map((id) => `- ${say(id)}`),
+    ),
   ];
   return [
     '# Changes since the last export',
@@ -151,6 +185,28 @@ export function formatChanges(
     '',
     ...body,
   ].join('\n');
+}
+
+// The About, the pivotal marks and the hotspot answers; a note that left the board is a removal, not an unmarking.
+function diffStructure(
+  previous: StormReading,
+  next: StormReading,
+  changes: StormChanges,
+  after: ReadonlyMap<ElementId, StormNote>,
+): void {
+  const was = previous.about ?? '';
+  const now = next.about ?? '';
+  if (was !== now) changes.about.push({ was, now });
+  for (const id of next.pivotal) if (!previous.pivotal.includes(id)) changes.pivotalMarked.push(id);
+  for (const id of previous.pivotal)
+    if (after.has(id) && !next.pivotal.includes(id)) changes.pivotalUnmarked.push(id);
+  const answers = new Map(previous.decisions.map((d) => [d.hotspot, d.answer]));
+  const answeredNow = new Set(next.decisions.map((d) => d.hotspot));
+  for (const d of next.decisions)
+    if (answers.get(d.hotspot) !== d.answer)
+      changes.answered.push({ hotspot: d.hotspot, answer: d.answer });
+  for (const d of previous.decisions)
+    if (after.has(d.hotspot) && !answeredNow.has(d.hotspot)) changes.reopened.push(d.hotspot);
 }
 
 function diffContexts(

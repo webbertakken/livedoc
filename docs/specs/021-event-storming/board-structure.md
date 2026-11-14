@@ -67,3 +67,8 @@ A hotspot is a question the room left open. Its **answer** is what the room deci
 ## Telemetry
 
 `Canvas / Used / PivotalMarked`, `PivotalUnmarked`, `HotspotAnswered` and `LaneNamed` (default).
+
+## Where it lives
+
+- The marks and their pure writes: `packages/document/src/event-storming-structure.ts`.
+- The reading's part: `packages/storm-reading/src/structure.ts`.

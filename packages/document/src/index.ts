@@ -374,6 +374,9 @@ export type Tab = {
   // lanes once (docs/specs/021-event-storming/event-storming.md "Always on a lane"). Set by that settle, by the
   // template, or by a file import; never cleared, and grafted across undo.
   esLanesSettled?: boolean;
+  // An event-storming board's About (docs/specs/021-event-storming/asks.md "About This Domain"): what the person
+  // says the domain is, heading every reading. Read via `aboutOf`; written with `withAbout`.
+  esAbout?: string;
   // The colours someone picked with + in a colour picker on this tab, newest first, lower-case
   // `#rrggbb` (docs/specs/004-interface-design/colour-picker.md "Custom colours"). Read via
   // `customColoursOf`; every picker in the document offers them as Custom Colours.
@@ -731,6 +734,9 @@ export * from './event-storming-lane-landing';
 export * from './event-storming-next';
 export * from './event-storming-suggestions';
 export * from './candidate-contexts';
+export * from './event-storming-about';
+export * from './event-storming-structure';
+export * from './event-storming-terms';
 export * from './candidate-context-outline';
 export { CONTEXT_FONT, CONTEXT_INK, contextPlate } from './svg-render-contexts';
 export * from './event-storming-photo';

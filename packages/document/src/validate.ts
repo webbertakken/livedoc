@@ -49,6 +49,7 @@ import {
   oneOfRule,
 } from './validate-primitives';
 import { isRecord } from './is-record';
+import { HOTSPOT_ANSWER_MAX, isValidEsAnswer } from './event-storming-structure';
 import { isValidEsSuggestion } from './event-storming-suggestions';
 
 export type { ElementValidationIssue } from './validate-primitives';
@@ -455,6 +456,17 @@ function pathIssue(el: Record<string, unknown>): ElementValidationIssue | null {
   return null;
 }
 
+// A sticky's event-storming fields (docs/specs/021-event-storming/): the suggestion it may be, the pivotal mark and
+// the hotspot answer it may carry.
+function stickyIssue(el: Record<string, unknown>): ElementValidationIssue | null {
+  if (el.esSuggestion !== undefined && !isValidEsSuggestion(el.esSuggestion))
+    return issue('esSuggestion', 'an { anchorId, side, reason?, gap?, by? } suggestion');
+  if (el.esPivotal !== undefined && el.esPivotal !== true) return issue('esPivotal', 'true');
+  if (el.esAnswer !== undefined && !isValidEsAnswer(el.esAnswer))
+    return issue('esAnswer', `text of at most ${HOTSPOT_ANSWER_MAX} characters`);
+  return null;
+}
+
 function boxedIssue(el: Record<string, unknown>): ElementValidationIssue | null {
   const box = boxIssue(el);
   if (box) return box;
@@ -472,9 +484,7 @@ function boxedIssue(el: Record<string, unknown>): ElementValidationIssue | null 
     case 'text':
       return firstFieldIssue(el, TEXT_FIELD_CHECKS);
     case 'sticky':
-      return el.esSuggestion === undefined || isValidEsSuggestion(el.esSuggestion)
-        ? null
-        : issue('esSuggestion', 'an { anchorId, side, reason?, gap?, by? } suggestion');
+      return stickyIssue(el);
     // annotation / link-card / video carry no extra required fields.
     default:
       return null;

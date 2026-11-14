@@ -10,8 +10,8 @@ import type { TabSummary } from '../addressing';
 export type Client = 'mcp' | 'cli';
 import type { EsSuggestionSide } from '@livedoc/document';
 import { formatResultLines } from '@livedoc/edit-operations';
-import type { StormReading, StormSuggestion } from '@livedoc/storm-reading';
-import { formatStormView } from '@livedoc/storm-reading';
+import type { OlderStormReading, StormReading, StormSuggestion } from '@livedoc/storm-reading';
+import { formatStormView, withReadingDefaults } from '@livedoc/storm-reading';
 import { apiRefusalOf } from '../plan/api-refusal';
 import { tabPath } from '../verbs/shared';
 
@@ -64,9 +64,10 @@ function engineRefusalOf(err: unknown): StormRefusal | null {
 
 const NOT_A_BOARD = 'not_event_storming';
 
-// An api older than candidate contexts sends a reading without them (docs/specs/021-event-storming/candidate-contexts.md).
+// An api older than candidate contexts or the board structure sends a reading without them
+// (docs/specs/021-event-storming/board-reading.md "Output").
 type StormViewBody = {
-  reading: Omit<StormReading, 'contexts'> & { contexts?: StormReading['contexts'] };
+  reading: OlderStormReading;
   suggestions: StormSuggestion[];
   rev: number;
 };
@@ -108,7 +109,7 @@ export async function readStorm(
     for (const tab of named) {
       const body = await stormViewOf(api, document.id, tab.id);
       if (!body) continue;
-      const reading: StormReading = { ...body.reading, contexts: body.reading.contexts ?? [] };
+      const reading = withReadingDefaults(body.reading);
       return {
         ok: true,
         documentId: document.id,

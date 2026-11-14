@@ -14747,12 +14747,19 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "commentThread": {
         "$ref": "#/components/schemas/CommentThread"
       },
+      "esAnswer": {
+        "type": "string"
+      },
       "esDraft": {
         "const": true,
         "type": "boolean"
       },
       "esKind": {
         "$ref": "#/components/schemas/EventStormingNoteKind"
+      },
+      "esPivotal": {
+        "const": true,
+        "type": "boolean"
       },
       "esSuggestion": {
         "$ref": "#/components/schemas/EsSuggestion"
@@ -14998,6 +15005,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         },
         "type": "array"
       },
+      "esAbout": {
+        "type": "string"
+      },
       "esLanesSettled": {
         "type": "boolean"
       },
@@ -15144,6 +15154,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "$ref": "#/components/schemas/Element"
         },
         "type": "array"
+      },
+      "esAbout": {
+        "type": "string"
       },
       "esLanesSettled": {
         "type": "boolean"

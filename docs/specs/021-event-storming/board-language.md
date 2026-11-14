@@ -9,7 +9,8 @@ It is deterministic and pure, as the [board reading](board-reading.md) is: no mo
 - **A term** is a word that at least `TERM_MIN_NOTES` (2) workshop notes hold.
 - **Words** are runs of letters and digits in a note's words; a word under `TERM_MIN_LETTERS` (3) letters, or one of
   `LANGUAGE_STOP_WORDS` (English), is no term (default).
-- **Compared ignoring case**, and a plain plural counts as its singular: "Orders" is the term "Order" (default).
+- **Compared ignoring case**, and a plain plural counts as its singular when the singular is on the board too:
+  "Orders" is the term "Order", and "Status" stays "Status" (default).
 - A term is shown in the casing it is most often written in; on a tie, the first in reading order.
 - Each term knows the notes that hold it and the candidate contexts those notes belong to.
 - Suggestions are not read: a term is counted from the notes on the board.
@@ -54,3 +55,8 @@ The **Language** tab of the [Review panel](board-review.md) lists the board's te
 ## Telemetry
 
 `Canvas / Used / TermRenamed` (default).
+
+## Where it lives
+
+- Terms: `packages/storm-reading/src/language.ts`.
+- Matching: `packages/document/src/event-storming-terms.ts`.

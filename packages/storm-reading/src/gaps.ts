@@ -10,6 +10,7 @@ import {
   type GapLevel,
   type GapRemedy,
   type PlacedNote,
+  type StormContext,
   type StormGap,
   type StormRelations,
 } from './types';
@@ -27,6 +28,7 @@ const LEVEL: Record<GapCode, GapLevel> = {
   command_not_imperative: 'notation',
   duplicate_note: 'question',
   open_hotspot: 'question',
+  event_without_context: 'question',
 };
 
 // The kinds that name a moment; the others (actors, read models, aggregates, external systems) recur by nature.
@@ -47,6 +49,7 @@ export function findGaps(
   notes: readonly PlacedNote[],
   relations: StormRelations,
   timeline: Timeline,
+  contexts: readonly StormContext[] = [],
 ): StormGap[] {
   const gaps: StormGap[] = [];
   const add = (
@@ -159,8 +162,16 @@ export function findGaps(
         `${quoted(group[0]!)} appears ${group.length} times as a ${group[0]!.kind.replace('-', ' ')}`,
       );
 
+  // An answered hotspot is a decision (docs/specs/021-event-storming/board-structure.md "Hotspot answers").
   for (const hotspot of of('hotspot'))
-    add('open_hotspot', [hotspot], `${quoted(hotspot)} is still open`);
+    if (!hotspot.answer) add('open_hotspot', [hotspot], `${quoted(hotspot)} is still open`);
+
+  if (contexts.length > 0) {
+    const grouped = new Set(contexts.flatMap((c) => c.notes));
+    for (const event of of('domain-event'))
+      if (!grouped.has(event.id))
+        add('event_without_context', [event], `${quoted(event)}: in no candidate context`);
+  }
 
   const position = new Map(timeline.order.map((id, i) => [id, i]));
   const codeRank = (code: GapCode) => GAP_CODES.indexOf(code);

@@ -98,7 +98,7 @@ describe('buildExportBundle', () => {
     expect(bundle.manifest).toMatchObject({
       schema: EXPORT_MANIFEST_SCHEMA,
       language: 'typescript',
-      brief: 2,
+      brief: 3,
     });
     expect(bundle.changes).toBeNull();
   });
@@ -165,6 +165,10 @@ describe('renderBrief', () => {
       const brief = renderBrief(language);
       expect(brief).not.toMatch(/\{\{/);
       expect(brief).toContain('## Iterating');
+      // docs/specs/021-event-storming/domain-export.md "The brief takes the room's own knowledge first".
+      expect(brief).toContain("## The room's own knowledge");
+      for (const part of ['about', 'decisions', 'pivotal', 'contextMap'])
+        expect(brief).toContain(`(\`${part}\`)`);
       expect(brief.split('\n').filter((l) => l.startsWith('### '))).toHaveLength(1);
     },
   );

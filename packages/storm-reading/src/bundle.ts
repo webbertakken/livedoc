@@ -5,6 +5,7 @@ import { BRIEF_VERSION, renderBrief } from './brief/convert';
 import type { DomainLanguage } from './brief/languages';
 import { diffReadings, formatChanges, type StormChanges } from './changes';
 import { formatStormView } from './format';
+import { withReadingDefaults, type OlderStormReading } from './reading-defaults';
 import { STORM_SCHEMA, type StormReading } from './types';
 
 export const EXPORT_MANIFEST_SCHEMA = 'livedoc.storm-export/1';
@@ -69,11 +70,7 @@ export function parsePreviousReading(text: string): StormReading | null {
     const reading = value as Partial<StormReading>;
     if (reading.schema !== STORM_SCHEMA || !Array.isArray(reading.notes) || !reading.relations)
       return null;
-    // A reading made before candidate contexts has none.
-    return {
-      ...(value as StormReading),
-      contexts: Array.isArray(reading.contexts) ? reading.contexts : [],
-    };
+    return withReadingDefaults(value as OlderStormReading);
   } catch {
     return null;
   }

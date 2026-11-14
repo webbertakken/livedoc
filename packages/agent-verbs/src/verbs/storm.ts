@@ -63,7 +63,7 @@ export const stormRead = defineVerb({
   id: 'storm.read',
   summary: 'Read an Event Storming board: its timeline, gaps and suggestions',
   description:
-    "Prints an Event Storming board's reading: one line per note in timeline order (each event with the commands, actors, read models, aggregates, policies and hotspots it relates to), the loose notes, the gaps with their remedies, and the open suggestions. Deterministic: no model reads it.",
+    "Prints an Event Storming board's reading: the About, one line per note in timeline order (each event with the commands, actors, read models, aggregates, policies and hotspots it relates to; pivotal events and answered hotspots marked), the loose notes, the lanes, the contexts and their map, the gaps with their remedies, and the open suggestions. Deterministic: no model reads it.",
   behaviour: 'read',
   input: z.object({ doc: docArg, tab: tabFlag }),
   output: readOutput,
@@ -81,7 +81,8 @@ export const stormRead = defineVerb({
   cli: {
     positionals: ['doc'],
     examples: ['livedoc storm read "Order flow"', 'livedoc storm read 3f9c --tab Kitchen'],
-    prints: 'the board line, the timeline, loose notes, gaps and open suggestions',
+    prints:
+      'the board line, the About, the timeline, loose notes, lanes, contexts and their map, gaps and open suggestions',
   },
 });
 

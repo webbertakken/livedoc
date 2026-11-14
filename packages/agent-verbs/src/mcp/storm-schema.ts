@@ -31,16 +31,19 @@ export const readEventStormingOutput = {
   text: z
     .string()
     .describe(
-      'The reading, one line per note in timeline order: each event ("<n> event <ref> \\"words\\"") with what leads ' +
+      'The reading: the About (what the person says the domain is) when the board has one; one line per note in ' +
+        'timeline order: each event ("<n> event <ref> \\"words\\"", a pivotal one ending "· pivotal") with what leads ' +
         'to it ("<-" command · actor · read-model · policy), decides it ("@"), follows it ("->" policy => command) ' +
-        'and flags it ("!"); then loose notes, candidate contexts (ref "name": refs), gaps (level code refs: message ' +
-        '(remedy)), and open suggestions (notes, and contexts as ref context "name" refs).',
+        'and flags it ("!", an answered hotspot ending = "answer"); then loose notes, the lanes in use (number ' +
+        '"name": refs), candidate contexts (ref "name": refs), the context map (context -> context: what crosses), ' +
+        'gaps (level code refs: message (remedy)), and open suggestions (notes, and contexts as ref context "name" ' +
+        'refs).',
     ),
   reading: z
     .record(z.string(), z.unknown())
     .describe(
       'The board reading as data (schema livedoc.storm/1): notes, relations, timeline, chains, loose, gaps, ' +
-        'contexts.',
+        'contexts, about, lanes, pivotal, phases, decisions, contextMap.',
     ),
   gaps: z.number().describe('How many gaps the reading found.'),
   suggestions: z.number().describe('How many suggestions are open on the board.'),

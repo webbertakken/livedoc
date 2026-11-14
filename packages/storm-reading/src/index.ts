@@ -4,6 +4,7 @@
 export * from './constants';
 export * from './types';
 export { readBoard } from './reading';
+export { withReadingDefaults, type OlderStormReading } from './reading-defaults';
 export { wordsOf } from './notes';
 export {
   readSuggestions,
@@ -12,6 +13,9 @@ export {
   type StormSuggestion,
 } from './suggestions';
 export { formatStormView } from './format';
+export { formatReadiness, readinessOf, type Readiness } from './readiness';
+export { storySteps, type StoryStep } from './story';
+export { boardTerms, type BoardTerm } from './language';
 export { diffReadings, formatChanges, hasChanges, type StormChanges } from './changes';
 export {
   buildExportBundle,
