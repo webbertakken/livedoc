@@ -6,7 +6,7 @@ import { CanvasZoomProvider } from '@/components/canvas/CanvasZoomContext';
 import type { ContextControls, SuggestionControls } from '@/components/canvas/Canvas.types';
 import { clearLocalPreview, setLocalPreview } from '@/lib/drag-preview';
 import { endSuggestionPreview, previewSuggestion } from '@/lib/suggestion-view';
-import { resetContextSelectionForTests } from '@/lib/context-selection';
+import { resetContextSelectionForTests, setDrawingContext } from '@/lib/context-selection';
 import { ContextLayer } from './ContextLayer';
 
 // Candidate contexts on the canvas (docs/specs/021-event-storming/candidate-contexts.md): the outline and its name,
@@ -52,6 +52,7 @@ const contextControls = (): ContextControls => ({
   addNotes: vi.fn(),
   removeNotes: vi.fn(),
   merge: vi.fn(() => 'k'),
+  create: vi.fn(() => 'made'),
   clearSelection: vi.fn(),
 });
 const suggestionControls = (): SuggestionControls => ({
@@ -359,5 +360,65 @@ describe('ContextLayer: the name (candidate-contexts.md "The name")', () => {
     expect(outline('k')!.getAttribute('stroke-dasharray')).toBe('10 10');
     fireEvent.click(document.querySelector('[data-context-line="k"]')!);
     expect(outline('k')!.getAttribute('stroke-dasharray')).toBeNull();
+  });
+});
+
+describe('ContextLayer: Draw Context’s pen (candidate-contexts.md "Making one by hand")', () => {
+  const pen = () => document.querySelector<HTMLElement>('[data-context-pen]');
+  // jsdom lays nothing out: the sheet's box is placed by hand, so a client point maps to a canvas point.
+  const placeSheet = () => {
+    const sheet = pen()!;
+    sheet.getBoundingClientRect = () =>
+      ({ left: -1_000_000, top: -1_000_000, width: 0, height: 0 }) as DOMRect;
+    return sheet;
+  };
+  const drawLoop = (sheet: HTMLElement, points: [number, number][]) => {
+    const [first, ...rest] = points;
+    fireEvent.pointerDown(sheet, { clientX: first![0], clientY: first![1], pointerId: 1 });
+    for (const [x, y] of rest)
+      fireEvent.pointerMove(sheet, { clientX: x, clientY: y, pointerId: 1 });
+    fireEvent.pointerUp(sheet, { pointerId: 1 });
+  };
+
+  it('is armed by the store even on a board with no contexts, and makes one round the notes in the loop', () => {
+    const c = contextControls();
+    draw([note('a', 0), note('b', 300), note('c', 2000)], { contexts: c });
+    expect(pen()).toBeNull();
+    act(() => setDrawingContext(TAB, true));
+    const sheet = placeSheet();
+    drawLoop(sheet, [
+      [-20, 460],
+      [300, 450],
+      [600, 460],
+      [600, 1],
+      [600, 700],
+      [-20, 700],
+    ]);
+    expect(c.create).toHaveBeenCalledWith(['a', 'b'], 'drawn');
+    // The new one's name opens, and the pen is put away.
+    expect(pen()).toBeNull();
+  });
+
+  it('puts the pen away when the loop takes in no note, and moves without a press draw nothing', () => {
+    const c = { ...contextControls(), create: vi.fn(() => null) };
+    draw(board, { contexts: c });
+    act(() => setDrawingContext(TAB, true));
+    const sheet = placeSheet();
+    fireEvent.pointerMove(sheet, { clientX: 5, clientY: 5 });
+    fireEvent.pointerUp(sheet);
+    expect(c.create).not.toHaveBeenCalled();
+    drawLoop(sheet, [
+      [5000, 5000],
+      [5001, 5001],
+      [5100, 5000],
+    ]);
+    expect(c.create).toHaveBeenCalledWith([], 'drawn');
+    expect(pen()).toBeNull();
+  });
+
+  it('offers no pen to someone who may not change contexts', () => {
+    draw(board);
+    act(() => setDrawingContext(TAB, true));
+    expect(pen()).toBeNull();
   });
 });

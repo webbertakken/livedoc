@@ -31,6 +31,7 @@ import { canEditSankey } from '@/lib/sankey-edit';
 import { canEditSequence } from '@/lib/sequence-edit';
 import { panelEnabled } from '@/lib/user-preferences';
 import { noteContextMenu } from '@/lib/note-context-menu';
+import { editContextName } from '@/lib/context-selection';
 
 // Lazy like the other heavy editor chrome: the menu's chunk loads on the
 // first right-click, not with the page.
@@ -233,6 +234,7 @@ export function EditorContextMenuHost() {
     openComments,
     openAssignAction,
     contextActions,
+    esBoard,
   } = useEditorContext();
   // The selection the menu acts on, read from the store while a menu is open: a closed menu never
   // renders for a selection change (docs/specs/008-canvas/canvas-performance.md).
@@ -380,8 +382,9 @@ export function EditorContextMenuHost() {
       noteContexts={
         createBlocked || contextMenu.mode !== 'element'
           ? undefined
-          : (noteContextMenu(activeTab.elements, contextMenu.elementId, contextActions) ??
-            undefined)
+          : (noteContextMenu(activeTab.elements, contextMenu.elementId, contextActions, (id) =>
+              editContextName(activeTab.id, id),
+            ) ?? undefined)
       }
       onStackFront={stackSelectedFront}
       onStackBack={stackSelectedBack}
@@ -577,6 +580,17 @@ export function EditorContextMenuHost() {
       // In document order, the order a selection's reference member is read in
       // (docs/specs/008-canvas/selection-transforms.md "Terms").
       selectionElements={activeTab.elements.filter((e) => ctxMemberSet.has(e.id))}
+      // An Event Storming board's selection menu is Text and New Context alone
+      // (docs/specs/021-event-storming/candidate-contexts.md "The board's element menu").
+      esBoard={esBoard}
+      onNewContext={
+        esBoard && !createBlocked
+          ? () => {
+              const made = contextActions.create([...ctxMemberSet], 'selection');
+              if (made) editContextName(activeTab.id, made);
+            }
+          : undefined
+      }
     />
   );
 }

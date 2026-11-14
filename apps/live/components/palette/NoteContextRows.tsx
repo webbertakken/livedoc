@@ -7,11 +7,13 @@ import {
 } from '@/components/primitives/PortalMenu';
 import { CheckIcon } from '@livedoc/ui';
 import { ContextJoinIcon, ContextLeaveIcon } from './context-menu-icons';
+import { ContextLoopIcon } from './EventStormingBoardRows';
 import type { NoteContextsMenu } from './EditorContextMenu.types';
 
 // A workshop note's candidate context in its menu (docs/specs/021-event-storming/candidate-contexts.md "Its notes
 // change two ways"): Add to Context, listing the board's kept contexts by name (the one it is in checked, not offered),
-// and Remove from Context when it is in one. Every row runs, then closes the menu.
+// New Context round it alone (candidate-contexts.md "Making one by hand"), and Remove from Context when it is in one.
+// Every row runs, then closes the menu.
 export function NoteContextRows({
   menu,
   runAndClose,
@@ -44,6 +46,11 @@ export function NoteContextRows({
           ))}
         </MenuAccordionSection>
       ) : null}
+      <MenuActionRow
+        icon={<ContextLoopIcon />}
+        label="New Context"
+        onClick={runAndClose(menu.onCreate)}
+      />
       {menu.currentId ? (
         <MenuActionRow
           icon={<ContextLeaveIcon />}

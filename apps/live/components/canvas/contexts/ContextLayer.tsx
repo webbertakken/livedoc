@@ -16,8 +16,11 @@ import {
   clearContextSelection,
   editContextName,
   selectContext,
+  setDrawingContext,
   useContextSelection,
 } from '@/lib/context-selection';
+import { notesInLoop } from '@/lib/context-loop';
+import { ContextDrawPen } from './ContextDrawPen';
 import { ContextMergeOffer } from './ContextMergeOffer';
 import { ContextName } from './ContextName';
 import { ContextOutline, type ContextOutlineActs } from './ContextOutline';
@@ -71,22 +74,30 @@ export function ContextLayer({
     () => (contexts && local ? new Set(local.changed.keys()) : NO_DRAG),
     [contexts, local],
   );
-  const drawn = useMemo(() => {
-    const board = overlay ? applyOverlay(elements, overlay) : elements;
-    return drawnContexts({
-      committed: elements,
-      drawn: board,
-      hidden: hiddenLayerElementIds(board, layers),
-      shiftX,
-      draggedIds,
-      showSuggested,
-    });
+  const { drawn, board, hidden } = useMemo(() => {
+    const shown = overlay ? applyOverlay(elements, overlay) : elements;
+    const off = hiddenLayerElementIds(shown, layers);
+    return {
+      board: shown,
+      hidden: off,
+      drawn: drawnContexts({
+        committed: elements,
+        drawn: shown,
+        hidden: off,
+        shiftX,
+        draggedIds,
+        showSuggested,
+      }),
+    };
   }, [elements, overlay, layers, shiftX, draggedIds, showSuggested]);
+  // Draw Context's pen, armed by an Editor (candidate-contexts.md "Making one by hand").
+  const pen = part === 'names' && contexts !== undefined && selection.drawing;
   useClearContextSelection(
     tabId,
-    part === 'names' && (selection.ids.size > 0 || selection.editingId !== null),
+    part === 'names' &&
+      (selection.ids.size > 0 || selection.editingId !== null || selection.drawing),
   );
-  if (drawn.length === 0) return null;
+  if (drawn.length === 0 && !pen) return null;
 
   const actsFor = (id: string, suggested: boolean): ContextOutlineActs => {
     if (suggested && suggestions) {
@@ -160,6 +171,16 @@ export function ContextLayer({
             if (kept) editContextName(tabId, kept);
           }}
           onCancel={() => clearContextSelection(tabId)}
+        />
+      ) : null}
+      {pen ? (
+        <ContextDrawPen
+          zoom={zoom}
+          onLoop={(loop) => {
+            const made = contexts.create(notesInLoop(board, loop, hidden), 'drawn');
+            if (made) editContextName(tabId, made);
+            else setDrawingContext(tabId, false);
+          }}
         />
       ) : null}
     </div>

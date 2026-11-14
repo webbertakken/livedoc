@@ -1,5 +1,6 @@
 import {
   contextOf,
+  createContext,
   isCandidateContext,
   isKeptContext,
   mergeContexts,
@@ -35,10 +36,22 @@ export type ContextActions = {
   removeNotes: (noteIds: readonly ElementId[]) => void;
   // Contexts merged into one; answers the id of the one kept, or null when nothing was merged.
   merge: (ids: readonly ElementId[]) => ElementId | null;
+  // A kept context made round some notes, from a selection or a drawn loop; answers its id, or null when none of
+  // them is a workshop note (candidate-contexts.md "Making one by hand").
+  create: (noteIds: readonly ElementId[], how: 'selection' | 'drawn') => ElementId | null;
 };
 
+/** What a context made by hand is called until its maker names it. */
+export const NEW_CONTEXT_NAME = 'New context';
+
 type Refusal =
-  'blocked' | 'not-a-kept-context' | 'not-a-context' | 'unchanged' | 'not-in-a-context' | 'too-few';
+  | 'blocked'
+  | 'not-a-kept-context'
+  | 'not-a-context'
+  | 'unchanged'
+  | 'not-in-a-context'
+  | 'too-few'
+  | 'no-notes';
 const refuse = (reason: Refusal) => debugLog('[contexts] refused', { reason });
 
 export function useContextActions({
@@ -99,5 +112,15 @@ export function useContextActions({
     return keptId;
   };
 
-  return { rename, remove, addNotes, removeNotes, merge };
+  const create = (noteIds: readonly ElementId[], how: 'selection' | 'drawn') => {
+    const id = crypto.randomUUID();
+    const made = createContext(activeTab.elements, id, NEW_CONTEXT_NAME, noteIds);
+    if (!guard(made !== activeTab.elements, 'no-notes')) return null;
+    commit((els) => createContext(els, id, NEW_CONTEXT_NAME, noteIds));
+    debugLog('[contexts] created', { id, how, notes: noteIds.length });
+    track('Canvas', 'Used', how === 'drawn' ? 'ContextDrawn' : 'ContextCreated');
+    return id;
+  };
+
+  return { rename, remove, addNotes, removeNotes, merge, create };
 }

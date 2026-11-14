@@ -147,7 +147,7 @@ describe('useContextActions: merging and naming suggestions', () => {
 });
 
 describe('noteContextMenu', () => {
-  const acts = { addNotes: vi.fn(), removeNotes: vi.fn() };
+  const acts = { addNotes: vi.fn(), removeNotes: vi.fn(), create: vi.fn(() => 'made') };
 
   it('lists the kept contexts by name with the one the note is in', () => {
     const menu = noteContextMenu(board, 'a', acts)!;
@@ -169,9 +169,40 @@ describe('noteContextMenu', () => {
     ).toBeNull();
   });
 
-  it('offers nothing for what is no note, or on a board without kept contexts', () => {
+  it('offers nothing for what is no note', () => {
     expect(noteContextMenu(board, 'k', acts)).toBeNull();
     expect(noteContextMenu(board, 'missing', acts)).toBeNull();
-    expect(noteContextMenu([note('a', 0)], 'a', acts)).toBeNull();
+  });
+
+  it('offers New Context on a board without kept contexts, opening its name', () => {
+    const onCreated = vi.fn();
+    const menu = noteContextMenu([note('a', 0)], 'a', acts, onCreated)!;
+    expect(menu.contexts).toEqual([]);
+    menu.onCreate();
+    expect(acts.create).toHaveBeenCalledWith(['a'], 'selection');
+    expect(onCreated).toHaveBeenCalledWith('made');
+    acts.create.mockReturnValueOnce(null as never);
+    noteContextMenu([note('a', 0)], 'a', acts)!.onCreate();
+    expect(onCreated).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('useContextActions: making one by hand (candidate-contexts.md)', () => {
+  it('makes a kept context round the notes, one commit, counted by how', () => {
+    const { acts, commit, ctx } = setup();
+    const id = acts.create(['c'], 'drawn')!;
+    expect(commit).toHaveBeenCalledTimes(1);
+    expect(ctx(id)).toMatchObject({ label: 'New context', esContext: { notes: ['c'] } });
+    expect(ctx('j')).toBeUndefined();
+    expect(track).toHaveBeenCalledWith('Canvas', 'Used', 'ContextDrawn');
+    setup().acts.create(['a'], 'selection');
+    expect(track).toHaveBeenLastCalledWith('Canvas', 'Used', 'ContextCreated');
+  });
+
+  it('makes nothing round no workshop note', () => {
+    const { acts, commit } = setup();
+    expect(acts.create(['k', 'nope'], 'selection')).toBeNull();
+    expect(commit).not.toHaveBeenCalled();
+    expect(debugLog).toHaveBeenCalledWith('[contexts] refused', { reason: 'no-notes' });
   });
 });

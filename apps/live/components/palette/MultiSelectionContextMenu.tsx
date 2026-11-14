@@ -43,7 +43,12 @@ import {
   TextColourIcon,
   TextGlyph,
 } from '@/components/palette/context-menu-icons';
-import { MenuAccordionSection, MenuGroupSeparator } from '@/components/primitives/PortalMenu';
+import {
+  MenuAccordionSection,
+  MenuActionRow,
+  MenuGroupSeparator,
+} from '@/components/primitives/PortalMenu';
+import { ContextLoopIcon } from './EventStormingBoardRows';
 import { MenuFlyoutSection } from '@/components/primitives/MenuFlyoutSection';
 import {
   ColourRow,
@@ -191,68 +196,100 @@ export function MultiSelectionContextMenu({
         // Alignment + Markers, mirroring the single-element menu; arrow
         // and table text formats via the content Text section instead.
         const showTextFlyout = !!markerSrc || !!alignSrc;
+        // An Event Storming board's selection menu is Text and New Context alone
+        // (docs/specs/021-event-storming/candidate-contexts.md "The board's element menu").
+        const es = props.esBoard === true;
         return (
           <>
-            {/* Placement group (Layer / Shape / Rotation) — see
+            {es ? null : (
+              <>
+                {/* Placement group (Layer / Shape / Rotation) — see
                   MultiPlacementSections. */}
-            <MultiPlacementSections
-              props={props}
-              sel={sel}
-              boxedSel={boxedSel}
-              morphable={morphable}
-              sectionProps={sectionProps}
-              onClose={onClose}
-            />
-            <MenuGroupSeparator />
-            {/* ── Style band (docs/specs/008-canvas/canvas-and-palette.md): Presets + Colours + Border behind one
+                <MultiPlacementSections
+                  props={props}
+                  sel={sel}
+                  boxedSel={boxedSel}
+                  morphable={morphable}
+                  sectionProps={sectionProps}
+                  onClose={onClose}
+                />
+                <MenuGroupSeparator />
+                {/* ── Style band (docs/specs/008-canvas/canvas-and-palette.md): Presets + Colours + Border behind one
                   "Style" flyout row, matching the single-element menu. ── */}
-            {showStyleFlyout ? (
-              <MenuFlyoutSection title="Style" icon={<StyleMenuGlyph />} {...flyoutProps('style')}>
-                {presetShapeSrc &&
-                sel.every(
-                  (el) =>
-                    el.type !== 'shape' || !shapeSupportsPresets(el) || isPlanPresetShape(el.shape),
-                ) ? (
-                  // Only boards and sheets: their calm presets (docs/specs/010-palette/style-presets.md).
-                  <PlanPresetsSection
-                    target={presetShapeSrc}
-                    props={props}
-                    accordion={sectionProps('m-shape-presets')}
-                    onClose={onClose}
-                    title={arrowSrc ? 'Shape Presets' : 'Presets'}
-                  />
-                ) : presetShapeSrc ? (
-                  <ShapePresetsSection
-                    shape={presetShapeSrc.shape}
-                    current={{
-                      fillColor: presetShapeSrc.fillColor,
-                      strokeColor: presetShapeSrc.strokeColor,
-                      textColor: presetShapeSrc.textColor,
-                      colorPreset: presetShapeSrc.colorPreset,
-                    }}
-                    props={props}
-                    accordion={sectionProps('m-shape-presets')}
-                    onClose={onClose}
-                    // Mixed selection shows both preset sections — disambiguate
-                    // by kind, same as the Animation sections below.
-                    title={presetShapeSrc && arrowSrc ? 'Shape Presets' : 'Presets'}
-                  />
+                {showStyleFlyout ? (
+                  <MenuFlyoutSection
+                    title="Style"
+                    icon={<StyleMenuGlyph />}
+                    {...flyoutProps('style')}
+                  >
+                    {presetShapeSrc &&
+                    sel.every(
+                      (el) =>
+                        el.type !== 'shape' ||
+                        !shapeSupportsPresets(el) ||
+                        isPlanPresetShape(el.shape),
+                    ) ? (
+                      // Only boards and sheets: their calm presets (docs/specs/010-palette/style-presets.md).
+                      <PlanPresetsSection
+                        target={presetShapeSrc}
+                        props={props}
+                        accordion={sectionProps('m-shape-presets')}
+                        onClose={onClose}
+                        title={arrowSrc ? 'Shape Presets' : 'Presets'}
+                      />
+                    ) : presetShapeSrc ? (
+                      <ShapePresetsSection
+                        shape={presetShapeSrc.shape}
+                        current={{
+                          fillColor: presetShapeSrc.fillColor,
+                          strokeColor: presetShapeSrc.strokeColor,
+                          textColor: presetShapeSrc.textColor,
+                          colorPreset: presetShapeSrc.colorPreset,
+                        }}
+                        props={props}
+                        accordion={sectionProps('m-shape-presets')}
+                        onClose={onClose}
+                        // Mixed selection shows both preset sections — disambiguate
+                        // by kind, same as the Animation sections below.
+                        title={presetShapeSrc && arrowSrc ? 'Shape Presets' : 'Presets'}
+                      />
+                    ) : null}
+                    {arrowSrc ? (
+                      <ArrowPresetsSection
+                        current={{
+                          strokeStyle: arrowSrc.strokeStyle,
+                          strokeWidth: arrowSrc.strokeWidth,
+                          flow: arrowSrc.flow,
+                        }}
+                        props={props}
+                        accordion={sectionProps('m-arrow-presets')}
+                        onClose={onClose}
+                        title={presetShapeSrc && arrowSrc ? 'Arrow Presets' : 'Presets'}
+                      />
+                    ) : null}
+                    <MultiStyleSections
+                      part="style"
+                      props={props}
+                      scaffold={scaffold}
+                      boxedSel={boxedSel}
+                      arrowSrc={arrowSrc}
+                      colourable={colourable}
+                      textSrc={textSrc}
+                      fillSrc={fillSrc}
+                      strokeSrc={strokeSrc}
+                      borderableSel={borderableSel}
+                      borderSrc={borderSrc}
+                      radiusSrc={radiusSrc}
+                      shadowSrc={shadowSrc}
+                      techIconSrc={techIconSrc}
+                      onClose={onClose}
+                    />
+                  </MenuFlyoutSection>
                 ) : null}
-                {arrowSrc ? (
-                  <ArrowPresetsSection
-                    current={{
-                      strokeStyle: arrowSrc.strokeStyle,
-                      strokeWidth: arrowSrc.strokeWidth,
-                      flow: arrowSrc.flow,
-                    }}
-                    props={props}
-                    accordion={sectionProps('m-arrow-presets')}
-                    onClose={onClose}
-                    title={presetShapeSrc && arrowSrc ? 'Arrow Presets' : 'Presets'}
-                  />
-                ) : null}
+                {/* Motion band (Animation / arrow Animation / tech-icon size) —
+                  top-level rows, same as the single-element menu. */}
                 <MultiStyleSections
-                  part="style"
+                  part="motion"
                   props={props}
                   scaffold={scaffold}
                   boxedSel={boxedSel}
@@ -268,27 +305,8 @@ export function MultiSelectionContextMenu({
                   techIconSrc={techIconSrc}
                   onClose={onClose}
                 />
-              </MenuFlyoutSection>
-            ) : null}
-            {/* Motion band (Animation / arrow Animation / tech-icon size) —
-                  top-level rows, same as the single-element menu. */}
-            <MultiStyleSections
-              part="motion"
-              props={props}
-              scaffold={scaffold}
-              boxedSel={boxedSel}
-              arrowSrc={arrowSrc}
-              colourable={colourable}
-              textSrc={textSrc}
-              fillSrc={fillSrc}
-              strokeSrc={strokeSrc}
-              borderableSel={borderableSel}
-              borderSrc={borderSrc}
-              radiusSrc={radiusSrc}
-              shadowSrc={shadowSrc}
-              techIconSrc={techIconSrc}
-              onClose={onClose}
-            />
+              </>
+            )}
             {/* ── Text row (docs/specs/008-canvas/canvas-and-palette.md): Typography + Alignment + Markers behind
                   one "Text" flyout, matching the single-element menu. Sits in
                   the style band (no separator) like its single counterpart. ── */}
@@ -355,138 +373,163 @@ export function MultiSelectionContextMenu({
                 ) : null}
               </MenuFlyoutSection>
             ) : null}
-            {/* ── Content group: Line / Pointer / Text / Table ── */}
-            {(arrowSrc || contentTextSrc || tableSrc) && showMultiAppearance ? (
-              <MenuGroupSeparator />
-            ) : null}
-            {arrowSrc ? (
+            {es ? null : (
               <>
-                <MenuAccordionSection title="Line" icon={<LineGlyph />} {...sectionProps('m-line')}>
-                  <div className="px-3 py-1.5">
-                    <ArrowLineControls
-                      thickness={arrowThicknessOf(arrowSrc)}
-                      style={arrowStyleOf(arrowSrc)}
-                      strokeStyle={arrowSrc.strokeStyle ?? 'solid'}
-                      onSetThickness={props.onSetArrowThickness}
-                      onSetStyle={props.onSetArrowStyle}
-                      // Hidden in a multi-selection: the row is a toggle
-                      // reflecting one arrow's state, and arrows in the
-                      // selection can disagree. Set it per arrow.
-                      routeBehind={null}
-                      exactStart={null}
-                      onSetExactStart={props.onSetArrowExactStart}
-                      onSetStrokeStyle={props.onSetArrowStrokeStyle}
-                      onSetRouteBehind={props.onSetArrowRouteBehind}
-                    />
-                  </div>
-                </MenuAccordionSection>
-                <MenuAccordionSection
-                  title="Pointer"
-                  icon={<PointerGlyph />}
-                  {...sectionProps('m-pointer')}
-                >
-                  <div className="px-3 py-1.5">
-                    <ArrowPointerControls
-                      ends={arrowSrc.arrowEnds ?? 'to'}
-                      headSize={arrowheadSizeOf(arrowSrc)}
-                      headShape={arrowheadShapeOf(arrowSrc)}
-                      onSetEnds={props.onSetArrowEnds}
-                      onSetHeadSize={props.onSetArrowheadSize}
-                      onSetHeadShape={props.onSetArrowheadShape}
-                    />
-                  </div>
-                </MenuAccordionSection>
-              </>
-            ) : null}
-            {/* Text — whole-element label formatting for labelled arrows /
+                {/* ── Content group: Line / Pointer / Text / Table ── */}
+                {(arrowSrc || contentTextSrc || tableSrc) && showMultiAppearance ? (
+                  <MenuGroupSeparator />
+                ) : null}
+                {arrowSrc ? (
+                  <>
+                    <MenuAccordionSection
+                      title="Line"
+                      icon={<LineGlyph />}
+                      {...sectionProps('m-line')}
+                    >
+                      <div className="px-3 py-1.5">
+                        <ArrowLineControls
+                          thickness={arrowThicknessOf(arrowSrc)}
+                          style={arrowStyleOf(arrowSrc)}
+                          strokeStyle={arrowSrc.strokeStyle ?? 'solid'}
+                          onSetThickness={props.onSetArrowThickness}
+                          onSetStyle={props.onSetArrowStyle}
+                          // Hidden in a multi-selection: the row is a toggle
+                          // reflecting one arrow's state, and arrows in the
+                          // selection can disagree. Set it per arrow.
+                          routeBehind={null}
+                          exactStart={null}
+                          onSetExactStart={props.onSetArrowExactStart}
+                          onSetStrokeStyle={props.onSetArrowStrokeStyle}
+                          onSetRouteBehind={props.onSetArrowRouteBehind}
+                        />
+                      </div>
+                    </MenuAccordionSection>
+                    <MenuAccordionSection
+                      title="Pointer"
+                      icon={<PointerGlyph />}
+                      {...sectionProps('m-pointer')}
+                    >
+                      <div className="px-3 py-1.5">
+                        <ArrowPointerControls
+                          ends={arrowSrc.arrowEnds ?? 'to'}
+                          headSize={arrowheadSizeOf(arrowSrc)}
+                          headShape={arrowheadShapeOf(arrowSrc)}
+                          onSetEnds={props.onSetArrowEnds}
+                          onSetHeadSize={props.onSetArrowheadSize}
+                          onSetHeadShape={props.onSetArrowheadShape}
+                        />
+                      </div>
+                    </MenuAccordionSection>
+                  </>
+                ) : null}
+                {/* Text — whole-element label formatting for labelled arrows /
                   every cell of the selection's tables, mirroring the single
                   menu's content Text section. */}
-            {contentTextSrc ? (
-              <MenuAccordionSection title="Text" icon={<TextGlyph />} {...sectionProps('m-text')}>
-                {contentTextSrc.type === 'table' ? (
-                  <p className="px-3 pt-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                    Applies to every cell.
-                  </p>
+                {contentTextSrc ? (
+                  <MenuAccordionSection
+                    title="Text"
+                    icon={<TextGlyph />}
+                    {...sectionProps('m-text')}
+                  >
+                    {contentTextSrc.type === 'table' ? (
+                      <p className="px-3 pt-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                        Applies to every cell.
+                      </p>
+                    ) : null}
+                    <div className="flex gap-1 px-2 py-1.5">
+                      <TextToggle
+                        active={!!contentTextSrc.textBold}
+                        label="Bold"
+                        onClick={props.onToggleTextBold}
+                      >
+                        <BoldIcon />
+                      </TextToggle>
+                      <TextToggle
+                        active={!!contentTextSrc.textItalic}
+                        label="Italic"
+                        onClick={props.onToggleTextItalic}
+                      >
+                        <ItalicIcon />
+                      </TextToggle>
+                      <TextToggle
+                        active={!!contentTextSrc.textUnderline}
+                        label="Underline"
+                        onClick={props.onToggleTextUnderline}
+                      >
+                        <UnderlineIcon />
+                      </TextToggle>
+                      <TextToggle
+                        active={!!contentTextSrc.textStrikethrough}
+                        label="Strikethrough"
+                        onClick={props.onToggleTextStrikethrough}
+                      >
+                        <StrikethroughIcon />
+                      </TextToggle>
+                    </div>
+                    <TextSizeControl
+                      current={contentTextSrc.textSize ?? 'sm'}
+                      presetPx={presetPxFor(contentTextSrc.type)}
+                      onSet={props.onSetTextSize}
+                      onPreview={props.onPreviewTextSize}
+                      onPreviewEnd={props.onPreviewStyleEnd}
+                    />
+                    <ContextMenuDivider />
+                    <ColourRow
+                      label="Colour"
+                      icon={<TextColourIcon />}
+                      value={shownColour(contentTextSrc, 'text', surface, '#0f172a')}
+                      ink={inkSwatch(contentTextSrc, 'text', surface)}
+                      {...textColorHandlers}
+                      {...colorProps('m-content-text')}
+                      {...props.colourPalette}
+                    />
+                  </MenuAccordionSection>
                 ) : null}
-                <div className="flex gap-1 px-2 py-1.5">
-                  <TextToggle
-                    active={!!contentTextSrc.textBold}
-                    label="Bold"
-                    onClick={props.onToggleTextBold}
-                  >
-                    <BoldIcon />
-                  </TextToggle>
-                  <TextToggle
-                    active={!!contentTextSrc.textItalic}
-                    label="Italic"
-                    onClick={props.onToggleTextItalic}
-                  >
-                    <ItalicIcon />
-                  </TextToggle>
-                  <TextToggle
-                    active={!!contentTextSrc.textUnderline}
-                    label="Underline"
-                    onClick={props.onToggleTextUnderline}
-                  >
-                    <UnderlineIcon />
-                  </TextToggle>
-                  <TextToggle
-                    active={!!contentTextSrc.textStrikethrough}
-                    label="Strikethrough"
-                    onClick={props.onToggleTextStrikethrough}
-                  >
-                    <StrikethroughIcon />
-                  </TextToggle>
-                </div>
-                <TextSizeControl
-                  current={contentTextSrc.textSize ?? 'sm'}
-                  presetPx={presetPxFor(contentTextSrc.type)}
-                  onSet={props.onSetTextSize}
-                  onPreview={props.onPreviewTextSize}
-                  onPreviewEnd={props.onPreviewStyleEnd}
-                />
-                <ContextMenuDivider />
-                <ColourRow
-                  label="Colour"
-                  icon={<TextColourIcon />}
-                  value={shownColour(contentTextSrc, 'text', surface, '#0f172a')}
-                  ink={inkSwatch(contentTextSrc, 'text', surface)}
-                  {...textColorHandlers}
-                  {...colorProps('m-content-text')}
-                  {...props.colourPalette}
-                />
-              </MenuAccordionSection>
-            ) : null}
-            {/* Table — header row / column + zebra, applied to every table
+                {/* Table — header row / column + zebra, applied to every table
                   in the selection (the single menu's Table section,
                   selection-wide). */}
-            {tableSrc ? (
-              <MenuAccordionSection
-                title="Table"
-                icon={<TableGlyph />}
-                {...sectionProps('m-table')}
-              >
-                <MenuToggleRow
-                  label="Header Row"
-                  description="Style the first row as a header."
-                  checked={tableSrc.headerRow ?? false}
-                  onToggle={props.onToggleTableHeaderRow}
+                {tableSrc ? (
+                  <MenuAccordionSection
+                    title="Table"
+                    icon={<TableGlyph />}
+                    {...sectionProps('m-table')}
+                  >
+                    <MenuToggleRow
+                      label="Header Row"
+                      description="Style the first row as a header."
+                      checked={tableSrc.headerRow ?? false}
+                      onToggle={props.onToggleTableHeaderRow}
+                    />
+                    <ContextMenuDivider />
+                    <MenuToggleRow
+                      label="Header Column"
+                      description="Style the first column as a header."
+                      checked={tableSrc.headerColumn ?? false}
+                      onToggle={props.onToggleTableHeaderColumn}
+                    />
+                    <ContextMenuDivider />
+                    <MenuToggleRow
+                      label="Zebra Striping"
+                      description="Tint alternate body rows."
+                      checked={tableSrc.zebra ?? false}
+                      onToggle={props.onToggleTableZebra}
+                    />
+                  </MenuAccordionSection>
+                ) : null}
+              </>
+            )}
+            {es && props.onNewContext ? (
+              <>
+                {showTextFlyout ? <MenuGroupSeparator /> : null}
+                <MenuActionRow
+                  icon={<ContextLoopIcon />}
+                  label="New Context"
+                  onClick={() => {
+                    props.onNewContext?.();
+                    onClose();
+                  }}
                 />
-                <ContextMenuDivider />
-                <MenuToggleRow
-                  label="Header Column"
-                  description="Style the first column as a header."
-                  checked={tableSrc.headerColumn ?? false}
-                  onToggle={props.onToggleTableHeaderColumn}
-                />
-                <ContextMenuDivider />
-                <MenuToggleRow
-                  label="Zebra Striping"
-                  description="Tint alternate body rows."
-                  checked={tableSrc.zebra ?? false}
-                  onToggle={props.onToggleTableZebra}
-                />
-              </MenuAccordionSection>
+              </>
             ) : null}
           </>
         );

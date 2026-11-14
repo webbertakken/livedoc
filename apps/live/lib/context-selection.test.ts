@@ -5,6 +5,7 @@ import {
   editContextName,
   resetContextSelectionForTests,
   selectContext,
+  setDrawingContext,
 } from './context-selection';
 
 // docs/specs/021-event-storming/candidate-contexts.md "Selecting several and merging".
@@ -41,5 +42,19 @@ describe('the context selection', () => {
     expect(cleared.ids.size).toBe(0);
     clearContextSelection('t');
     expect(contextSelectionFor('t')).toBe(cleared);
+  });
+});
+
+describe('the Draw Context pen', () => {
+  it('arms, lets go of the selection, and is put away by a clear or a selection', () => {
+    selectContext('t', 'a');
+    setDrawingContext('t', true);
+    expect(contextSelectionFor('t')).toMatchObject({ drawing: true, editingId: null });
+    expect(contextSelectionFor('t').ids.size).toBe(0);
+    clearContextSelection('t');
+    expect(contextSelectionFor('t').drawing).toBe(false);
+    setDrawingContext('t', true);
+    selectContext('t', 'a');
+    expect(contextSelectionFor('t').drawing).toBe(false);
   });
 });

@@ -32,6 +32,7 @@ import { PaletteGroupProvider } from './palette-group-state';
 import { PaletteDropdown, TOOLBAR_TRIGGER_TONE } from './PaletteDropdown';
 import { CATEGORY_BANDS } from './palette-category-bands';
 import { EsPhotoStripButton } from './EsPhotoStripButton';
+import { EsDrawContextButton } from './EsDrawContextButton';
 import { usePlan } from '@/components/plan/PlanContext';
 import { planCardTile } from './palette-plan-tiles';
 import { EditCardsStripButton } from './EditCardsStripButton';
@@ -512,9 +513,13 @@ export function ToolbarPalette(props: Props) {
                 notation is the palette there. */}
                     {/* ...and lead with the board's own control instead, as the Event Storming
                 category's body does. */}
-                    {esBoard && !participant && props.esBoardControls?.onImportPhoto ? (
+                    {esBoard &&
+                    !participant &&
+                    (props.esBoardControls?.onImportPhoto ||
+                      props.esBoardControls?.onDrawContext) ? (
                       <>
                         <EsPhotoStripButton controls={props.esBoardControls} />
+                        <EsDrawContextButton controls={props.esBoardControls} />
                         <Divider />
                       </>
                     ) : null}
