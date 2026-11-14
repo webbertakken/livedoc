@@ -10,6 +10,7 @@ import { note } from '@/lib/change-board.fixture';
 import { offeredPreview } from '@/lib/change-preview';
 import { kitchenNotes, kitchenTab, plannedKitchen } from '@/lib/lane-board.fixture';
 import {
+  SUGGESTION_PREVIEW_LEAVE_MS,
   planKey,
   setSuggestionsPanelOpen,
   startArranging,
@@ -109,6 +110,36 @@ describe('the lane plan in the suggestions panel', () => {
     rerender(layer(offeredPreview(elements, planKey('plan'), new Set())));
     expect(container.querySelector('[data-suggestion-hint]')).toBeNull();
     expect(screen.getByRole('complementary', { name: 'Suggestions' })).toBeTruthy();
+  });
+
+  it('keeps the focus on the plan’s row while it previews the board, so its keys still decide', () => {
+    const elements = plannedKitchen().elements;
+    const layer = (offered: ReturnType<typeof offeredPreview>) => (
+      <CanvasZoomProvider zoom={1}>
+        <SuggestionLayer
+          elements={elements}
+          tabId={TAB}
+          controls={controls()}
+          showAllSpots={null}
+          offered={offered}
+        />
+      </CanvasZoomProvider>
+    );
+    vi.useFakeTimers();
+    setSuggestionsPanelOpen(TAB, true);
+    const { rerender } = render(layer(null));
+    const row = screen.getByRole('listitem', { name: 'Lane plan: 2 lanes' });
+    act(() => row.focus());
+    expect(suggestionViewFor(TAB).previewKey).toBe(planKey('plan'));
+    rerender(layer(offeredPreview(elements, planKey('plan'), new Set())));
+    expect(document.activeElement).toBe(row);
+    // Leaving the row ends the preview.
+    act(() => row.blur());
+    act(() => {
+      vi.advanceTimersByTime(SUGGESTION_PREVIEW_LEAVE_MS * 2);
+    });
+    expect(suggestionViewFor(TAB).previewKey).toBeNull();
+    vi.useRealTimers();
   });
 });
 

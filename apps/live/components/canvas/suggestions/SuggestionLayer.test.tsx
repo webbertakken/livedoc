@@ -316,6 +316,31 @@ describe('SuggestionLayer with Show All on', () => {
     draw(board, controls(), false);
     expect(hint('e:before')).not.toBeNull();
   });
+
+  it('keeps the focus on its switch as the board turns to the preview and back', () => {
+    const layer = (showAll: boolean) => (
+      <CanvasZoomProvider zoom={1}>
+        <SuggestionLayer
+          elements={board}
+          tabId={TAB}
+          controls={controls()}
+          showAllSpots={showAll ? suggestionPreview(board).spots : null}
+        />
+      </CanvasZoomProvider>
+    );
+    act(() => setSuggestionsPanelOpen(TAB, true));
+    const { rerender } = render(layer(false));
+    const show = screen.getByRole('switch', { name: 'Show All Suggestions' });
+    show.focus();
+    fireEvent.click(show);
+    rerender(layer(true));
+    expect(placeholders().sort()).toEqual(['a', 'c', 'p', 'r']);
+    expect(document.activeElement).toBe(show);
+    fireEvent.click(show);
+    rerender(layer(false));
+    expect(hint('e:before')).not.toBeNull();
+    expect(document.activeElement).toBe(show);
+  });
 });
 
 describe('the suggestions panel', () => {

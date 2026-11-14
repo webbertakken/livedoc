@@ -164,44 +164,47 @@ export function SuggestionLayer({
     />
   );
 
-  // A whole board offered: only the panel, whose row is being pointed at.
-  if (offered?.board) return panel;
-
-  if (showAll)
+  // What stands on the board: nothing while a whole board is offered (only the panel, whose row is being pointed
+  // at), every placeholder under Show All, else the peek tabs with the previewed hint's chain (a panel row shows its
+  // one suggestion).
+  const onBoard = () => {
+    if (offered?.board) return null;
+    if (showAll)
+      return timeline.map(({ suggestion }) => {
+        const key = `s:${suggestion.id}`;
+        const spot = showAllSpots.get(suggestion.id);
+        return spot ? placeholder(suggestion, spot, view.previewKey === key, key) : null;
+      });
+    const key = view.previewKey;
+    const one = key?.startsWith('s:') ? key.slice(2) : null;
+    const previewed = hints.find((h) =>
+      one ? h.suggestions.some((s) => s.id === one) : h.key === key,
+    );
+    const shown = previewed?.suggestions.filter((s) => one === null || s.id === one) ?? [];
     return (
       <>
-        {timeline.map(({ suggestion }) => {
-          const key = `s:${suggestion.id}`;
-          const spot = showAllSpots.get(suggestion.id);
-          return spot ? placeholder(suggestion, spot, view.previewKey === key, key) : null;
-        })}
-        {changes}
-        {panel}
+        {hints.map((hint) => (
+          <SuggestionPeekTab
+            key={hint.key}
+            hint={hint}
+            zoom={zoom}
+            onPreview={preview(hint.key)}
+            onLeave={leave(hint.key)}
+            onApply={apply}
+            onDismiss={dismiss}
+          />
+        ))}
+        {shown.map((s, i) => placeholder(s, spots.get(s.id)!, i === 0, key!))}
       </>
     );
+  };
 
-  // Show All off: the previewed hint shows its whole chain; a panel row shows its one suggestion.
-  const key = view.previewKey;
-  const one = key?.startsWith('s:') ? key.slice(2) : null;
-  const previewed = hints.find((h) =>
-    one ? h.suggestions.some((s) => s.id === one) : h.key === key,
-  );
-  const shown = previewed?.suggestions.filter((s) => one === null || s.id === one) ?? [];
+  // One shape whatever is shown, so the panel is never remounted under a person's focus: its row keeps the keyboard
+  // while it previews, and its switch while the board turns to Show All and back.
   return (
     <>
-      {hints.map((hint) => (
-        <SuggestionPeekTab
-          key={hint.key}
-          hint={hint}
-          zoom={zoom}
-          onPreview={preview(hint.key)}
-          onLeave={leave(hint.key)}
-          onApply={apply}
-          onDismiss={dismiss}
-        />
-      ))}
-      {shown.map((s, i) => placeholder(s, spots.get(s.id)!, i === 0, key!))}
-      {changes}
+      {onBoard()}
+      {offered?.board ? null : changes}
       {panel}
     </>
   );
