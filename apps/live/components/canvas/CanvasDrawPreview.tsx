@@ -1,4 +1,4 @@
-import { useCanvasViewKey } from '@/hooks/canvas/useViewportStore';
+import { useViewportZoom } from '@/hooks/canvas/useViewportStore';
 import type { RefObject } from 'react';
 import {
   BORDER_STROKE_PX,
@@ -28,7 +28,7 @@ type CanvasDrawPreviewProps = {
   stamp: StampGhost | null;
   wrapperRef: RefObject<HTMLDivElement | null>;
   // The canvas size. With the view, read from the viewport store here, it is what the wrapper's
-  // origin follows (useCanvasViewKey), so the chrome around this takes no view.
+  // origin follows (useCanvasClientOrigin), so the chrome around this takes no view.
   mainSize: { width: number; height: number };
   // The board's ink on a whiteboard (docs/specs/023-draw-mode/draw-mode.md), what the main pen
   // previews in. Absent elsewhere.
@@ -53,7 +53,7 @@ export function CanvasDrawPreview({
   whiteboardInk,
   mirrorPages,
 }: CanvasDrawPreviewProps) {
-  const { viewportZoom, viewKey } = useCanvasViewKey(mainSize);
+  const viewportZoom = useViewportZoom();
   // A whiteboard shape or line previews as it will land (docs/specs/023-draw-mode/draw-mode.md
   // "Shapes"): in the board's ink, solid, unfilled.
   const inkOf = (colour: string | null) => colour ?? whiteboardInk ?? 'currentColor';
@@ -67,8 +67,8 @@ export function CanvasDrawPreview({
   // A line or an arrow previews as the element it lands, in the canvas layer
   // (DrawnArrowPreview, docs/specs/023-draw-mode/draw-mode.md "Shapes"), not here.
   const showsBox = !!drawDrag && !!pendingDraw && !stamp && pendingDraw.type !== 'arrow';
-  // Where canvas (0, 0) sits in the editor's box, measured only while a preview shows.
-  const origin = useCanvasOverlayOrigin(wrapperRef, showsPen || showsPolygon || showsBox, viewKey);
+  // Where canvas (0, 0) sits in the editor's box, while a preview shows.
+  const origin = useCanvasOverlayOrigin(wrapperRef, showsPen || showsPolygon || showsBox, mainSize);
   // The drawings in progress (pencil, polygon, draw-to-size box), given once more reflected while
   // Mirror While Drawing is on over a logo page (docs/specs/007-editor/logo-pages.md "Mirror").
   const drafts = (

@@ -4,17 +4,17 @@ import type { ComponentProps } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ViewportStoreProvider } from '@/hooks/canvas/useViewportStore';
 import { EditorBoxContext, WINDOW_EDITOR_BOX, type EditorBox } from '@/hooks/ui/useEditorBox';
-import { createViewportStore } from '@/lib/viewport-store';
+import { canvasWrapperFixture, storeWithOriginAt } from '@/hooks/canvas/canvas-wrapper.fixture';
 import { CanvasGuideOverlay } from './CanvasGuideOverlay';
 
 // docs/specs/007-editor/split-view.md "How the editor fits in its pane": the marquee and the guides land under the
 // pointer in either pane. In the right pane the editor's box starts 893 px from the window's edge.
 const RIGHT_PANE: EditorBox = { left: 893, top: 0, width: 893 };
 
+// A canvas wrapper whose corner sits at (left, top); the view below puts canvas (0, 0) on it, at 2×.
+const SIZE = { width: 800, height: 800 };
 function wrapperAt(left: number, top: number) {
-  const el = document.createElement('div');
-  el.getBoundingClientRect = () => ({ left, top, width: 800, height: 800 }) as DOMRect;
-  return { current: el };
+  return canvasWrapperFixture({ left, top, ...SIZE }).ref;
 }
 
 const base: ComponentProps<typeof CanvasGuideOverlay> = {
@@ -30,7 +30,7 @@ const base: ComponentProps<typeof CanvasGuideOverlay> = {
 
 function draw(props: Partial<ComponentProps<typeof CanvasGuideOverlay>>, box = WINDOW_EDITOR_BOX) {
   return render(
-    <ViewportStoreProvider store={createViewportStore(2)}>
+    <ViewportStoreProvider store={storeWithOriginAt(2, { left: 0, top: 0, ...SIZE })}>
       <EditorBoxContext.Provider value={box}>
         <CanvasGuideOverlay {...base} {...props} />
       </EditorBoxContext.Provider>

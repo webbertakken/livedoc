@@ -5,9 +5,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { createViewportStore } from '@/lib/viewport-store';
 import {
   ViewportStoreProvider,
-  useCanvasViewKey,
   useViewportOf,
   useViewportStore,
+  useViewportZoom,
 } from './useViewportStore';
 
 // docs/specs/008-canvas/canvas-performance.md.
@@ -41,16 +41,25 @@ describe('useViewportStore', () => {
   });
 });
 
-describe('useCanvasViewKey', () => {
-  it('names what moves the canvas on screen: the view and the canvas size', () => {
+describe('useViewportZoom', () => {
+  it('is the zoom, and renders its reader only when the zoom changes', () => {
     const store = createViewportStore(2);
-    store.setOffset({ x: 3, y: 4 });
     const wrapper = ({ children }: { children: ReactNode }) => (
       <ViewportStoreProvider store={store}>{children}</ViewportStoreProvider>
     );
-    const { result } = renderHook(() => useCanvasViewKey({ width: 800, height: 600 }), { wrapper });
-    expect(result.current).toEqual({ viewportZoom: 2, viewKey: '3,4,2,800,600' });
+    let renders = 0;
+    const { result } = renderHook(
+      () => {
+        renders += 1;
+        return useViewportZoom();
+      },
+      { wrapper },
+    );
+    expect(result.current).toBe(2);
+    const before = renders;
+    act(() => store.setOffset({ x: 3, y: 4 }));
+    expect(renders).toBe(before);
     act(() => store.setZoom(3));
-    expect(result.current.viewKey).toBe('3,4,3,800,600');
+    expect(result.current).toBe(3);
   });
 });
