@@ -1,17 +1,20 @@
-# Arrange
+# Arrange and Reorder
 
-**Arrange** lays an Event Storming board out afresh along the timeline: one column per event, every note in the
-column of the event it belongs to.
+**Arrange and Reorder** lays an Event Storming board out afresh along the timeline: one column per event, every note
+in the column of the event it belongs to.
 It is the board's own act, worked out from the [reading](board-reading.md): no model is asked.
 
 Ruled 2026-11-14: reorganising keeps each note's x, "but there should be a separate option for 'arrange'".
+Ruled 2026-11-14, asked what the act is called: "Arrange and Reorder". It reads so wherever a person meets it; the
+edit operation stays `arrange`, and this file and the telemetry keep their names (default).
 
 ## Two acts, one axis each
 
 - **A [lane plan](lane-plans.md) changes lanes and keeps time**: a note moves up or down, never along the timeline.
-- **Arrange changes time and keeps lanes**: a note moves along the timeline, never off its lane (default).
+- **Arrange and Reorder changes time and keeps lanes**: a note moves along the timeline, never off its lane
+  (default).
 - Either is used alone; a board reorganised and then arranged is laid out afresh on both axes.
-- Neither does the other's work: applying a lane plan never arranges, and Arrange never changes a lane.
+- Neither does the other's work: applying a lane plan never arranges, and Arrange and Reorder never changes a lane.
 
 ## How the board arranges
 
@@ -42,16 +45,16 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
   first `READING_CHANGES_SHOWN` (5) relations it would change, each a way in to fix the board by hand.
 - **A note in the way.** When an arranged note would land on a locked or free-placed one, the board is not arranged,
   and it names that note.
-- **Nothing to arrange**: a board with no event says "No events yet. Arrange follows the timeline."; a board that is
-  arranged already says "Already arranged."
+- **Nothing to arrange**: a board with no event says "No events yet. Arrange and Reorder follows the timeline."; a
+  board that is arranged already says "Already arranged."
 
 ## How a person arranges
 
-- **Arrange** is offered in the Ask popover, apart from the topics, when nothing is selected; it needs no hand
-  (default; its placement is ruled with the Ask button's).
+- **Arrange and Reorder** is offered in the Ask popover, apart from the topics, when nothing is selected; it needs no
+  hand (default; its placement is ruled with the Ask button's).
 - **Choosing it previews**: every note draws where it would stand and the view fits the board as it would be, under
-  a bar that says "Arranged along the timeline", how many loose notes find a partner when any do, **Keep** and
-  **Put Back**.
+  a bar that says "Arranged and reordered along the timeline", how many loose notes find a partner when any do,
+  **Keep** and **Put Back**.
 - **Keep** moves the notes as one undoable step. **Put Back**, or Escape, leaves the board as it was.
 - A preview never writes; under reduced motion the notes jump rather than glide.
 

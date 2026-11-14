@@ -135,8 +135,8 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
   for the current selection (default; its placement is ruled from renders on a real board).
 - A selected context shows the same button after its name, and the merge offer shows it beside its ✓ and ✕.
 - A workshop note's menu holds **Ask…**.
-- With nothing selected the popover also offers [Arrange](arrange.md), apart from the topics: it is the board's
-  own act and needs no hand.
+- With nothing selected the popover also offers [Arrange and Reorder](arrange.md), apart from the topics: it is the
+  board's own act and needs no hand.
 - **The Ask popover** holds, top to bottom: the topics the scope offers (one chosen; the first by default); the lane
   count for `lanes`, a stepper starting at the lanes in use, held within 2 to 12; the hands; the prompt with **Copy
   Prompt**, or **Ask** for the built-in hand; **About This Domain**; the declined count with **Forget Declined**.
