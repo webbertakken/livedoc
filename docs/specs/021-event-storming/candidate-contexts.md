@@ -65,9 +65,10 @@ Requested 2026-11-13: agents suggest groupings too, drawn as seemingly free-draw
   seeded wander of at most `CONTEXT_WOBBLE_PX` (4 canvas px), seeded by the context's id (default).
   The dash is `CONTEXT_DASH_PX` long with an equal gap, 2 px wide (default).
 - **The name** sits in the middle of the shape: centred on the outline's centroid (its area's weighted centre), drawn
-  over the notes on a plate of the canvas colour at 85% opacity, so it reads at any zoom (ruled 2026-11-13: "always
+  over the notes on a pill of the canvas's paper, its ends fully round (ruled 2026-11-14: "larger size, more padding
+  and have the background colour of paper with fully rounded corners on the side"), so it reads at any zoom (ruled 2026-11-13: "always
   be in the middle of weighted center ... inside the shape").
-- **It grows as the board zooms out.** The name is `CONTEXT_NAME_PX` (15) canvas px at 100% and closer, and keeps
+- **It grows as the board zooms out.** The name is `CONTEXT_NAME_PX` (20) canvas px at 100% and closer, and keeps
   that size on screen when zoomed further out, so on the canvas it grows by 1 / zoom (ruled 2026-11-13: "font size
   should grow when zooming out").
 - **It keeps clear of the line.** Its plate keeps at least `CONTEXT_NAME_CLEARANCE_PX` (12 screen px) inside the

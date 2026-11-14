@@ -152,9 +152,10 @@ describe('contextNamePlacement (candidate-contexts.md "The name")', () => {
   });
 
   it('shrinks to keep clear of the line in a small shape, down to the least size', () => {
-    const fits = contextNamePlacement(square(100), width, 1);
+    const fits = contextNamePlacement(square(160), width, 1);
     expect(fits.fontPx).toBeLessThan(CONTEXT_NAME_PX);
-    expect(fits.width / 2 + CONTEXT_NAME_CLEARANCE_PX).toBeLessThanOrEqual(50);
+    expect(fits.width / 2 + CONTEXT_NAME_CLEARANCE_PX).toBeLessThanOrEqual(80);
+    expect(fits.fontPx).toBeGreaterThan(CONTEXT_NAME_MIN_PX);
     expect(contextNamePlacement(square(40), width, 1).fontPx).toBe(CONTEXT_NAME_MIN_PX);
   });
 

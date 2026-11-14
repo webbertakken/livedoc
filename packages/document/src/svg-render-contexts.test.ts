@@ -50,7 +50,7 @@ describe('svgCandidateContexts (docs/specs/021-event-storming/candidate-contexts
     expect(out.lines).toContain(`stroke="${CONTEXT_INK.light.line}"`);
     expect(out.lines).toContain('stroke-dasharray');
     expect(out.names).toContain('Billing &amp; &lt;co&gt;');
-    expect(out.names).toContain('fill="#ffffff" fill-opacity="0.85"');
+    expect(out.names).toMatch(/rx="(\d+(\.\d+)?)" fill="#ffffff"\/>/);
     // The notes span 0..500 by 0..200: the name stands on their middle.
     expect(out.names).toContain('x="250" y="100" text-anchor="middle"');
     expect(out.bounds!.x).toBeLessThan(-CONTEXT_PADDING_PX);
