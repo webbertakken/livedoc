@@ -1,6 +1,6 @@
 // The CLI's own version, and the host's floor for writes (CLI13).
 
-export const CLI_VERSION = '0.5.0';
+export const CLI_VERSION = '0.6.0';
 
 // The name npm publishes the CLI under (CLI1); its command is `livedoc`.
 export const NPM_PACKAGE = '@livedoc/cli';
