@@ -132,13 +132,17 @@ export function foldAgentPresence(input: {
   return out;
 }
 
+// Nothing in focus, as one value: the canvas reads the focus through a context, so a document change with no agent
+// focus re-renders nothing through it (docs/specs/008-canvas/canvas-performance.md "A move re-renders what moved").
+const NO_AGENT_FOCUS: ReadonlyMap<string, readonly { name: string; color: string }[]> = new Map();
+
 // Who each element on the active tab is in focus for, once per person, for the focus rings. Ids no longer on the
 // tab draw nothing (E12). Kept apart from the remote selections: an agent never holds an element.
 export function buildAgentFocusByElement(
   agents: readonly AgentPresence[],
   activeId: string,
   elementIds: ReadonlySet<string>,
-): Map<string, { name: string; color: string }[]> {
+): ReadonlyMap<string, readonly { name: string; color: string }[]> {
   const out = new Map<string, { name: string; color: string }[]>();
   const seen = new Set<string>();
   for (const entry of agents) {
@@ -152,5 +156,5 @@ export function buildAgentFocusByElement(
       out.set(elementId, list);
     }
   }
-  return out;
+  return out.size > 0 ? out : NO_AGENT_FOCUS;
 }

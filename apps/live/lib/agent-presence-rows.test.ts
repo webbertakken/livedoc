@@ -215,4 +215,13 @@ describe('buildAgentFocusByElement', () => {
       ]),
     );
   });
+
+  // docs/specs/008-canvas/canvas-performance.md "A move re-renders what moved": the canvas reads this through a
+  // context, so with nothing in focus a document change hands it the same value.
+  it('hands back the one empty map whenever nothing is in focus', () => {
+    const first = buildAgentFocusByElement([], 't1', new Set(['e1']));
+    const later = buildAgentFocusByElement([agent({ tabId: 't2' })], 't1', new Set(['e1', 'e2']));
+    expect(first.size).toBe(0);
+    expect(later).toBe(first);
+  });
 });

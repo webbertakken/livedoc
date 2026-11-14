@@ -2,7 +2,7 @@
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Element, Tab } from '@livedoc/document';
-import { localPreview, resetDragPreviewForTests } from '@/lib/drag-preview';
+import { localPreview, resetDragPreviewForTests, subscribeDragPreview } from '@/lib/drag-preview';
 import { useEditorDrag } from './useEditorDrag';
 import type { EditorDragDeps } from './useEditorDrag.types';
 
@@ -131,6 +131,23 @@ describe('a drag draws from a preview', () => {
     expect(h.xOf('a')).toBe(100);
     expect(h.xOf('b')).toBe(400);
     expect(localPreview()).toBeNull();
+  });
+
+  // docs/specs/008-canvas/canvas-performance.md "A move re-renders what moved": what the release adds to
+  // the preview (a mind drop, a context join) redraws it only when it changes something; the release
+  // otherwise ends the preview once.
+  it('ends the preview with one change on release when the release adds nothing', () => {
+    const h = harness();
+    h.press();
+    h.pointer('pointermove', 100);
+    let changes = 0;
+    const stop = subscribeDragPreview(() => {
+      changes += 1;
+    });
+    h.pointer('pointerup', 100);
+    stop();
+    expect(changes).toBe(1);
+    expect(h.xOf('a')).toBe(50);
   });
 
   it('writes nothing for a click', () => {
