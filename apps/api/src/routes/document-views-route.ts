@@ -26,6 +26,7 @@ import {
   formatStormView,
   readBoard,
   readDeclined,
+  readLanePlan,
   readSuggestedChanges,
   readSuggestions,
 } from '@livedoc/storm-reading';
@@ -250,9 +251,9 @@ function answerLintView(
   return parsed.json ? json(report, { headers }) : textPlain(formatLintReport(report), { headers });
 }
 
-// `view=storm`: an Event Storming board's reading, its gaps, its open suggestions and suggested changes, and what was
-// declined (docs/specs/021-event-storming/board-reading.md "Output"). Any other tab is refused: it has no notation to
-// read.
+// `view=storm`: an Event Storming board's reading, its gaps, its open suggestions, suggested changes and lane plan, and
+// what was declined (docs/specs/021-event-storming/board-reading.md "Output"). Any other tab is refused: it has no
+// notation to read.
 function answerStormView(
   ctx: DocumentRouteContext,
   parsed: ParsedStormView,
@@ -270,6 +271,7 @@ function answerStormView(
   const reading = readBoard(tab, { documentId: document.id });
   const suggestions = readSuggestions(tab);
   const changes = readSuggestedChanges(tab);
+  const plan = readLanePlan(tab);
   const declined = readDeclined(tab);
   viewsLog('info', '[storm] view', {
     doc: document.id,
@@ -278,14 +280,15 @@ function answerStormView(
     gaps: reading.gaps.length,
     suggestions: suggestions.length,
     changes: changes.length,
+    plan: plan ? 1 : 0,
     declined: declined.length,
     ms: Date.now() - started,
   });
   countViewed(ctx, STORM_VIEW_NAME);
   const headers = { ETag: tabEtag(tab.rev) };
   return parsed.json
-    ? json({ reading, suggestions, changes, declined, rev: tab.rev }, { headers })
-    : textPlain(formatStormView(reading, suggestions, { changes, declined }).join('\n'), {
+    ? json({ reading, suggestions, changes, plan, declined, rev: tab.rev }, { headers })
+    : textPlain(formatStormView(reading, suggestions, { changes, plan, declined }).join('\n'), {
         headers,
       });
 }

@@ -145,6 +145,19 @@ describe('readStorm', () => {
 describe('suggesting and clearing', () => {
   const board = { documentId: DOC_A, tabId: 'es' };
   const one = { kind: 'command', words: 'Pay', anchor: 'evt', side: 'before' as const };
+  // An api that keeps what each changeset sent.
+  const sending = () => {
+    const sent: { summary: string; operations: unknown }[] = [];
+    const api = fakeApi(
+      routesWith({
+        [`${base}/tabs/es/changesets`]: async (r: Request) => {
+          sent.push((await r.json()) as (typeof sent)[number]);
+          return Response.json({ dryRun: true, changeset: null, results: [] });
+        },
+      }),
+    );
+    return { api, sent };
+  };
 
   it('sends suggestions as one changeset of suggest operations', async () => {
     let sent: unknown = null;
@@ -331,18 +344,6 @@ describe('suggesting and clearing', () => {
 
   // docs/specs/021-event-storming/suggested-changes.md.
   describe('suggested changes', () => {
-    const sending = () => {
-      const sent: { summary: string; operations: unknown }[] = [];
-      const api = fakeApi(
-        routesWith({
-          [`${base}/tabs/es/changesets`]: async (r: Request) => {
-            sent.push((await r.json()) as (typeof sent)[number]);
-            return Response.json({ dryRun: true, changeset: null, results: [] });
-          },
-        }),
-      );
-      return { api, sent };
-    };
     const name = { name: 'Sales', contexts: ['x1', 'x2'], reason: 'one team' };
     const changes = [
       {
@@ -481,6 +482,104 @@ describe('suggesting and clearing', () => {
       });
       await clearSuggestions(api, { ...read, suggestions: [], changes: [change('evt')] }, 'cli');
       expect(sent[1]!.summary).toBe('clear 1 suggestion');
+    });
+  });
+
+  // docs/specs/021-event-storming/lane-plans.md "How an agent suggests one".
+  describe('lane plans', () => {
+    const lanes = [
+      { name: 'Orders', contexts: ['x1'], notes: ['cmd'] },
+      { name: 'Kitchen', lanes: [1, 2], kinds: ['policy'] },
+    ];
+    const plan = {
+      id: 'plan',
+      ref: 'e9',
+      lanes: [
+        { name: 'Orders', notes: 1 },
+        { name: 'Kitchen', notes: 1 },
+      ],
+      by: 'Claude',
+      stale: false,
+    };
+
+    it('sends each lane as a suggest-lane operation, the reason on the first', async () => {
+      const { api, sent } = sending();
+      await suggestNotes(
+        api,
+        board,
+        { suggestions: [one], lanes, lanesReason: 'two teams' },
+        'mcp',
+      );
+      expect(sent[0]).toEqual({
+        summary: 'suggest 1 note and 2 lanes',
+        operations: [
+          { op: 'suggest', ...one },
+          { op: 'suggest-lane', ...lanes[0], reason: 'two teams' },
+          { op: 'suggest-lane', ...lanes[1] },
+        ],
+      });
+      await suggestNotes(api, board, { lanes }, 'mcp');
+      expect(sent[1]).toEqual({
+        summary: 'suggest 2 lanes',
+        operations: lanes.map((lane) => ({ op: 'suggest-lane', ...lane })),
+      });
+    });
+
+    it('counts each lane towards what one call takes', async () => {
+      const { api } = sending();
+      const many = Array.from({ length: SUGGEST_NOTES_MAX }, () => one);
+      expect(
+        await suggestNotes(api, board, { suggestions: many, lanes: [lanes[0]!] }, 'mcp'),
+      ).toMatchObject({ code: 'too_many_suggestions' });
+    });
+
+    it('counts the suggest-lane lines of a file', async () => {
+      const { api, sent } = sending();
+      const text =
+        'suggest-lane "Orders" context=x1\nsuggest-lane "Kitchen" lanes=1,2\nsuggest-remove cmd';
+      expect(await suggestFromText(api, board, text, 'cli')).toMatchObject({ ok: true });
+      expect(sent[0]!.summary).toBe('suggest 2 lanes and 1 change');
+    });
+
+    it('reads the open plan, prints it and counts it', async () => {
+      const api = fakeApi(
+        routesWith({ [`${base}/tabs/es?view=storm&json=1`]: { ...storm(), plan } }),
+      );
+      const read = (await readStorm(api, doc)) as StormRead;
+      expect(read.plan).toEqual(plan);
+      expect(read.lines[0]).toContain('2 suggestions');
+      expect(read.lines.slice(-2)).toEqual([
+        'lane plan',
+        '  e9 2 lanes: "Orders" 1 note, "Kitchen" 1 note · by Claude',
+      ]);
+      const out = await stormRead.run!(contextOf(api, [], []), {
+        doc: 'Auth flow',
+        tab: undefined,
+      });
+      expect(out.suggestions).toBe(2);
+    });
+
+    it('reads an answer from an api older than lane plans as having none', async () => {
+      const read = (await readStorm(fakeApi(routesWith()), doc)) as StormRead;
+      expect(read.plan).toBeNull();
+    });
+
+    it('clear removes the open plan with the rest', async () => {
+      const { api, sent } = sending();
+      const read = (await readStorm(api, doc)) as StormRead;
+      await clearSuggestions(api, { ...read, plan }, 'cli');
+      expect(sent[0]).toEqual({
+        summary: 'clear 2 suggestions',
+        operations: [
+          { op: 'rm', target: 'sug' },
+          { op: 'rm', target: 'e9' },
+        ],
+      });
+      await clearSuggestions(api, { ...read, suggestions: [], plan }, 'cli');
+      expect(sent[1]).toEqual({
+        summary: 'clear 1 suggestion',
+        operations: [{ op: 'rm', target: 'e9' }],
+      });
     });
   });
 });

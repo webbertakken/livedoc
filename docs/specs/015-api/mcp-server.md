@@ -959,23 +959,28 @@ spec and types ([Board reading](../021-event-storming/board-reading.md),
 server (`packages/agent-verbs/src/storm/`) reads through the api's `storm` view and writes through changesets.
 
 - **`read_event_storming`** (read): the board reading (the timeline of events with what leads to each, the chains,
-  the loose notes), its gaps with their remedies, the open suggestions and
-  [suggested changes](../021-event-storming/suggested-changes.md), and what was
+  the loose notes), its gaps with their remedies, the lanes in use, the open suggestions,
+  [suggested changes](../021-event-storming/suggested-changes.md) and
+  [lane plan](../021-event-storming/lane-plans.md), and what was
   [declined](../021-event-storming/asks.md#what-was-declined); a tab that is not a board is refused as
   `not_event_storming`.
 - **`suggest_notes`** (write): up to 30 suggestions in all: notes (`suggestions`: `kind`, `words`, `anchor` ref, `side`,
   `reason`, `gap`) and [candidate contexts](../021-event-storming/candidate-contexts.md) (`contexts`: `name`, `notes`
   refs, `reason`), names for contexts (`names`: `name`, `contexts` refs, `reason`) and changes to notes (`changes`:
   `note` ref, `change` (`reword`, `kind`, `split`, `remove`) with its `words`, `term` and `to`, `kind` or `parts`,
-  and `reason`), as one changeset of the `suggest` operations; a refusal writes nothing and names the suggestion.
-  Answers each suggestion's ref.
+  and `reason`), and the lanes of one [lane plan](../021-event-storming/lane-plans.md) (`lanes`, top to bottom: each a
+  `name` and what it holds by `lanes` numbers, `kinds`, `contexts` refs and `notes` refs; `lanesReason`), as one
+  changeset of the `suggest` operations; a refusal writes nothing and names the suggestion. Answers each
+  suggestion's ref.
 - **`add_photo_notes`** (write): the notes an agent read off photos of a physical wall, in wall order (per photo its
   `width`, `height` and `notes`, each a box in pixels with an optional `kind` and `words`), as one changeset of the
   `wall` operation; the engine stitches them against the board and lands a draft the person adds or discards
   ([Event storming](../021-event-storming/event-storming.md) Phase 11). The photos stay with the agent.
 - **`export_event_storming`** (read): the [domain export](../021-event-storming/domain-export.md#the-mcp) bundle as
   text; `language` and `previous` are optional.
-- `update_document`'s `ops` take `suggest` as well, and `read_document` names `read_event_storming` on a board.
+- `update_document`'s `edits` take the `suggest` operations as well, and `arrange`
+  ([Arrange and Reorder](../021-event-storming/arrange.md#how-an-agent-arranges)); `read_document` names
+  `read_event_storming` on a board.
 
 ### 4.10 Prompts (discoverability)
 

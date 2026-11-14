@@ -59,6 +59,9 @@ This is the domain knowledge a model is told ([Asks](asks.md#what-a-model-is-tol
   land on a locked or free-placed one), `reading_changes` (below), `reason_too_long`.
 - **The MCP**: `suggest_notes` takes `lanes: [{ name, lanes, kinds, contexts, notes }]` and `lanesReason`; the CLI's
   `storm suggest` takes the lines. The lane count a person asked for travels in the prompt, not in the operation.
+- **The `storm` view** lists the open plan under "lane plan": its ref, its lanes top to bottom with how many notes
+  each holds, who and why, and `stale` when the board changed since it was made (default).
+- The `storm-lanes` guide teaches what a lane means, the line, the refusals to act on, and `arrange`.
 
 ## How the board places a plan
 
