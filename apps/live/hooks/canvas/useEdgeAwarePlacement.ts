@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffectEvent, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { flushSync } from 'react-dom';
 import { VIEWPORT_EDGE_MARGIN as EDGE } from '@/lib/clamp-to-viewport';
 import type { Rect } from '@livedoc/document';
 
@@ -32,6 +33,12 @@ export function overlapsChrome(r: DOMRect, self: Element): boolean {
 // decision) but does not trigger either — the effect re-runs on the
 // bounds / offset / placeAbove changes that actually move the box, and the
 // placement itself is an effect event reading the newest nudge and zoom.
+//
+// The box measures itself in the next frame, never in the commit that shows or moves it: the commit has just
+// changed the page (a stroke landing, a selection appearing), and reading layout there lays out the whole board
+// inside the input's task (docs/specs/008-canvas/canvas-performance.md "Chrome measures itself in the next
+// frame"). The frame lays the page out anyway; the placement reads it there and applies before that frame paints,
+// so the box never shows unplaced. A flip it applies places again at once, inside the same frame.
 //
 // The box ref must be attached to the floating element so its measured rect can
 // be checked against the viewport. `style` is the ready-to-spread placement:
@@ -108,8 +115,23 @@ export function useEdgeAwarePlacement(
     const ny = dy / zoom;
     if (nx !== adjust.x || ny !== adjust.y) setAdjust({ x: nx, y: ny });
   });
+  // Set while a frame's placement applies: the re-render it causes (a flip) places at once, in the same frame.
+  const applyingRef = useRef(false);
   useLayoutEffect(() => {
-    if (!suspended) place();
+    if (suspended) return;
+    if (applyingRef.current) {
+      place();
+      return;
+    }
+    const frame = requestAnimationFrame(() => {
+      applyingRef.current = true;
+      try {
+        flushSync(place);
+      } finally {
+        applyingRef.current = false;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
   }, [
     bounds.x,
     bounds.y,
