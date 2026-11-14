@@ -29,12 +29,29 @@ const SPECIAL_KEYS: Readonly<Partial<Record<EditOperationName, readonly string[]
   layout: ['style', 'direction'],
   suggest: ['id', 'before', 'after', 'above', 'below', 'reason', 'gap'],
   'suggest-context': ['id', 'reason'],
+  'suggest-name': ['reason'],
+  'suggest-reword': ['term', 'to', 'reason'],
+  'suggest-kind': ['reason'],
+  'suggest-split': ['reason'],
+  'suggest-remove': ['reason'],
 };
+
+// The note changes (docs/specs/021-event-storming/suggested-changes.md "Note changes"), which share one line shape:
+// the note, what the change says, then its keys.
+type NoteChangeName = 'suggest-reword' | 'suggest-kind' | 'suggest-split' | 'suggest-remove';
+const NOTE_CHANGE_KEYS: Readonly<Record<NoteChangeName, string>> = {
+  'suggest-reword': 'term=, to= or reason=',
+  'suggest-kind': 'reason=',
+  'suggest-split': 'reason=',
+  'suggest-remove': 'reason=',
+};
+const isNoteChange = (name: EditOperationName): name is NoteChangeName =>
+  Object.hasOwn(NOTE_CHANGE_KEYS, name);
 
 // The flags each operation takes.
 const FLAGS: Readonly<Partial<Record<EditOperationName, readonly FlagWord[]>>> = {
   set: ['all'],
-  rm: ['all', 'keep-arrows'],
+  rm: ['all', 'keep-arrows', 'suggested'],
   move: ['all'],
   connect: ['again'],
   wrap: ['tidy', 'absorb', 'make-room'],
@@ -172,8 +189,9 @@ function collect(name: EditOperationName, words: readonly Word[]): Collected | L
     if (field) {
       const special = specials.find((key) => key === field.key.toLowerCase());
       if (special) {
-        // Selectors keep their quotes; ids, styles and offsets are plain values.
-        out.special[special] = SELECTOR_KEYS_OF.has(special) ? field.raw : field.text;
+        // Selectors keep their quotes; ids, styles and offsets are plain values, as is the term a reword changes to.
+        const selector = SELECTOR_KEYS_OF.has(special) && name !== 'suggest-reword';
+        out.special[special] = selector ? field.raw : field.text;
         continue;
       }
       const value = fieldValue(field);
@@ -227,6 +245,44 @@ function withOptional(raw: Record<string, unknown>, c: Collected, members: reado
   if (members.includes('fields') && Object.keys(c.fields).length) raw.fields = c.fields;
   if (members.includes('place') && c.place) raw.place = c.place;
   return { ...raw, ...c.flags };
+}
+
+// A note change's line: `suggest-reword <note> "<words>" [term= to=]`, `suggest-kind <note> <kind>`,
+// `suggest-split <note> "<words>" "<words>"…`, `suggest-remove <note>`, each with `reason=`.
+function noteChangeLine(
+  name: NoteChangeName,
+  rest: readonly Word[],
+  end: number,
+  lineEnd: number,
+): LineResult {
+  const [noteWord, ...more] = rest;
+  if (!noteWord || fieldOf(noteWord))
+    return fail(noteWord, lineEnd, 'the note: its ref or its "label"');
+  const c = collect(name, more);
+  if ('column' in c) return { error: c };
+  const keys = SPECIAL_KEYS[name]!;
+  const fieldWord = more.find((w) => fieldOf(w) && !keys.includes(fieldOf(w)!.key));
+  if (fieldWord) return fail(fieldWord, end, NOTE_CHANGE_KEYS[name]);
+  const raw: Record<string, unknown> = { op: name, note: noteWord.raw };
+  const [first, ...others] = c.terms;
+  if (name === 'suggest-split') raw.parts = c.terms.map((w) => w.value);
+  else if (name === 'suggest-remove') {
+    if (first) return fail(first, end, NOTE_CHANGE_KEYS[name]);
+  } else {
+    const kind = name === 'suggest-kind';
+    if (!first || (kind && hasQuotes(first)))
+      return fail(
+        first,
+        lineEnd,
+        kind
+          ? 'a kind: domain-event, command, actor, policy, read-model, …'
+          : 'the new words, quoted: "Booking Created"',
+      );
+    if (others.length) return fail(others[0], end, NOTE_CHANGE_KEYS[name]);
+    raw[kind ? 'kind' : 'words'] = first.value;
+  }
+  for (const key of keys) if (c.special[key] !== undefined) raw[key] = c.special[key];
+  return { raw };
 }
 
 // The JSON form of one line's words, `head` the operation's name, or where it stops reading.
@@ -319,6 +375,25 @@ export function parseOperationWords(
       if (c.special[key] !== undefined) raw[key] = c.special[key];
     return { raw };
   }
+
+  if (name === 'suggest-name') {
+    const [nameWord, ...more] = rest;
+    if (!nameWord || fieldOf(nameWord))
+      return fail(nameWord, lineEnd, 'the name, quoted: "Billing"');
+    const c = collect(name, more);
+    if ('column' in c) return { error: c };
+    const fieldWord = more.find((w) => fieldOf(w) && fieldOf(w)!.key !== 'reason');
+    if (fieldWord) return fail(fieldWord, end, 'reason=');
+    const raw: Record<string, unknown> = {
+      op: name,
+      name: nameWord.value,
+      contexts: c.terms.map((w) => w.raw),
+    };
+    if (c.special.reason !== undefined) raw.reason = c.special.reason;
+    return { raw };
+  }
+
+  if (isNoteChange(name)) return noteChangeLine(name, rest, end, lineEnd);
 
   if (name === 'connect') {
     const isArrow = (w: Word) => !hasQuotes(w) && w.value === '->';

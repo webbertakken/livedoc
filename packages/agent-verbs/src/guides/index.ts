@@ -188,7 +188,9 @@ in the business's words, and suggest it with a reason. A note belongs to at most
   EOF
 
 People see a faint dashed outline round each group and apply or dismiss it.
-Take them back with: livedoc storm clear "Order flow"
+Suggest changes to what is already there (another name, other words, a split, a removal) the
+same way: livedoc guide storm-changes
+Take your suggestions back with: livedoc storm clear "Order flow"
 
 Photos of a physical wall become notes on the board with add_photo_notes (MCP): look at each
 photo yourself and send, per photo in wall order (left to right), its size and every sticky in
@@ -201,6 +203,35 @@ Turn the board into a spec and domain types, in the repository you work in:
 
 It writes .livedoc/storm/<board>/ (the reading, what changed since the last export, and
 CONVERT.md); then follow CONVERT.md. Keep the bundle: the next export starts from it.`,
+  },
+  'storm-changes': {
+    summary: 'suggest changes to what is on an Event Storming board: names, words, splits',
+    text: `Changing what is on an Event Storming board
+
+Read the board first: livedoc guide storm. Then suggest changes to what is already there, the
+way you suggest notes. Nothing changes until a person accepts one; contexts are named by the
+refs the reading prints for them.
+
+  livedoc storm suggest "Order flow" -f - <<'EOF'
+  suggest-name "Fulfilment" x2 reason="what the business calls it"
+  suggest-name "Sales" x1 x2 reason="one team runs both"
+  suggest-reword e3 "Booking Placed" term="Order" to="Booking" reason="they say booking"
+  suggest-kind c5 policy reason="it reacts, nobody asks for it"
+  suggest-split e7 "Meal Cooked" "Meal Served" reason="two facts on one note"
+  suggest-remove e9 reason="says what e3 says"
+  EOF
+
+  suggest-name    another name for a context; several contexts: one name for them merged
+  suggest-reword  other words for a note. When one word changes, name it (term, to): a person
+                  accepting it rewords every note of the same context that holds the word
+  suggest-kind    another kind for a note
+  suggest-split   two to four notes for one that holds several facts; the first stays on it
+  suggest-remove  a duplicate or a stray
+
+The reading lists them under "suggested changes", and under "declined" what a person dismissed
+before: those are refused when suggested again (declined_before), so suggest something else.
+Take your suggestions back with: livedoc storm clear "Order flow"
+or one note's or context's alone, in an edit: rm e3 suggested`,
   },
 } as const;
 

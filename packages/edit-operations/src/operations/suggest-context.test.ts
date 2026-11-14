@@ -164,6 +164,21 @@ describe('suggest-context: applying', () => {
     );
   });
 
+  it('refuses a context a person dismissed before, round the same notes', () => {
+    const declined: Tab = {
+      ...board(),
+      esDeclined: [{ type: 'context', words: 'Accounts', about: ['joined', 'paid'] }],
+    };
+    const rejection = refused(run('suggest-context "accounts" paid joined', declined));
+    expect(rejection.code).toBe('declined_before');
+    expect(rejection.details[0]).toContain('the context "accounts" round those notes');
+    // Round other notes, or under another name, it was never declined.
+    expect(
+      applied(run('suggest-context "Accounts" paid\nsuggest-context "Members" joined', declined))
+        .createdIds,
+    ).toHaveLength(2);
+  });
+
   it('refuses more notes than a context holds', () => {
     const many = Array.from({ length: 401 }, (_, i) => event(`n${i}`, 1000 + i * 300));
     const line = `suggest-context "Big" ${many.map((n) => n.id).join(' ')}`;

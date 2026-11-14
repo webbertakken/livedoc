@@ -28,7 +28,9 @@ import { applySet } from './operations/set';
 import { buildResultLines } from './results';
 import { planOnlyOutsidePlan, tabLocked, tooLarge } from './rejections';
 import { applySuggest } from './operations/suggest';
+import { applySuggestChange } from './operations/suggest-change';
 import { applySuggestContext } from './operations/suggest-context';
+import { applySuggestName } from './operations/suggest-name';
 import { applyWall } from './operations/wall';
 import { EDIT_MAX_ERRORS } from './vocabulary';
 import { createState, type EditState } from './state';
@@ -72,6 +74,13 @@ function applyOperation(
       return applySuggest(state, operation, index);
     case 'suggest-context':
       return applySuggestContext(state, operation, index);
+    case 'suggest-name':
+      return applySuggestName(state, operation, index);
+    case 'suggest-reword':
+    case 'suggest-kind':
+    case 'suggest-split':
+    case 'suggest-remove':
+      return applySuggestChange(state, operation, index);
     case 'wall':
       return applyWall(state, operation, index);
   }

@@ -10,7 +10,7 @@ import { columns, WAIT_DEFAULT_TIMEOUT_S, WAIT_MAX_TIMEOUT_S } from './shared';
 export const guide = defineVerb({
   id: 'guide',
   offline: true,
-  summary: 'How-tos: build, edit, views, comments, collaborate, workbench',
+  summary: 'How-tos: build, edit, views, comments, collaborate, workbench, storm',
   description: 'Prints the list of guide topics, or one topic.',
   behaviour: 'read',
   local: true,

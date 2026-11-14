@@ -55,6 +55,20 @@ export function isSuggestion(el: { type: string; esSuggestion?: unknown }): bool
   return el.type === 'sticky' && el.esSuggestion !== undefined;
 }
 
+// The note a suggestion's chain grows from: its anchor, or its anchor's, up to the first that is no suggestion (a
+// missing anchor included). What a declined suggestion is remembered about (asks.md "What was declined").
+export function suggestionRootId(elements: readonly Element[], id: ElementId): ElementId {
+  const byId = new Map(elements.map((el) => [el.id, el]));
+  const seen = new Set<ElementId>();
+  let at = id;
+  for (;;) {
+    const el = byId.get(at);
+    if (!el || el.type !== 'sticky' || !el.esSuggestion || seen.has(at)) return at;
+    seen.add(at);
+    at = el.esSuggestion.anchorId;
+  }
+}
+
 // The kind a suggestion proposes; null for anything that is not a suggestion.
 export function suggestionKindOf(el: Element): EventStormingNoteKind | null {
   return el.type === 'sticky' && el.esSuggestion !== undefined ? (el.esKind ?? null) : null;

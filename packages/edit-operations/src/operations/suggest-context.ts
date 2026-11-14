@@ -7,26 +7,24 @@ import {
   CONTEXT_NAME_MAX,
   CONTEXT_NOTES_MAX,
   contextOf,
+  declinedContext,
   eventStormingKindOf,
-  isEventStormingTab,
-  isOpenSuggestion,
   newContextElement,
-  SUGGESTION_BY_MAX,
-  SUGGESTION_REASON_MAX,
-  SUGGESTIONS_MAX,
   type StickyElement,
 } from '@livedoc/document';
 import { newElementId } from '../ids';
 import { resolveOne } from '../selectors';
 import { currentElements, putElement, refsOf, type EditState } from '../state';
 import type { SuggestContextOperation } from '../types';
-
-const refusal = (
-  code: EditRejection['code'],
-  operation: number,
-  details: string[],
-  hint?: string,
-): EditRejection => ({ code, operation, details, ...(hint ? { hint } : {}) });
+import {
+  boardFull,
+  declinedBefore,
+  notABoard,
+  reasonTooLong,
+  refusal,
+  tidy,
+  whyAndWho,
+} from './suggestion-rules';
 
 // The notes named, each resolved to a workshop note no context holds yet; the first refusal otherwise.
 function resolveNotes(
@@ -62,20 +60,16 @@ export function applySuggestContext(
   op: SuggestContextOperation,
   operation: number,
 ): EditRejection | null {
-  if (!isEventStormingTab(state.tab))
-    return refusal('not_event_storming', operation, [
-      'candidate contexts go on an Event Storming board',
-    ]);
-  const name = op.name.trim().replace(/\s+/g, ' ');
+  const board = notABoard(state, operation, 'candidate contexts');
+  if (board) return board;
+  const name = tidy(op.name);
   if (!name) return refusal('name_required', operation, ['a candidate context needs a name']);
   if (name.length > CONTEXT_NAME_MAX)
     return refusal('name_too_long', operation, [
       `the name is ${name.length} characters; at most ${CONTEXT_NAME_MAX}`,
     ]);
-  if (op.reason !== undefined && op.reason.length > SUGGESTION_REASON_MAX)
-    return refusal('reason_too_long', operation, [
-      `the reason is ${op.reason.length} characters; at most ${SUGGESTION_REASON_MAX}`,
-    ]);
+  const long = reasonTooLong(op.reason, operation);
+  if (long) return long;
   if (op.notes.length === 0)
     return refusal('notes_required', operation, ['name the notes it groups, by ref']);
 
@@ -85,28 +79,25 @@ export function applySuggestContext(
     return refusal('invalid_value', operation, [
       `${notes.length} notes; a candidate context groups at most ${CONTEXT_NOTES_MAX}`,
     ]);
-  const open = currentElements(state).filter(isOpenSuggestion).length;
-  if (open >= SUGGESTIONS_MAX)
-    return refusal(
-      'too_many_suggestions',
-      operation,
-      [`the board holds ${open} open suggestions; at most ${SUGGESTIONS_MAX}`],
-      'dismiss some first, or wait for a person to apply them',
-    );
+  const full = boardFull(state, operation);
+  if (full) return full;
 
   const id = newElementId(state, { given: op.id, label: name, kind: 'shape' }, operation);
   if (typeof id !== 'string') return id;
-  const by = state.agentName?.slice(0, SUGGESTION_BY_MAX);
-  putElement(
+  const context = newContextElement({
+    id,
+    name,
+    notes,
+    suggestion: whyAndWho(state, op.reason),
+  });
+  const declined = declinedBefore(
     state,
-    newContextElement({
-      id,
-      name,
-      notes,
-      suggestion: { ...(op.reason ? { reason: op.reason } : {}), ...(by ? { by } : {}) },
-    }),
+    declinedContext(context),
     operation,
+    `the context "${name}" round those notes`,
   );
+  if (declined) return declined;
+  putElement(state, context, operation);
   state.created.push(id);
   state.log('[edit-ops] suggested context', { operation, notes: notes.length });
   return null;

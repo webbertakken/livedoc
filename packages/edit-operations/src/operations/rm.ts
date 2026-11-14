@@ -7,14 +7,19 @@ import type { EditRejection } from '@livedoc/api-schema';
 import {
   endpointPosition,
   isCandidateContext,
+  noteChangesOf,
+  pruneNameSuggestions,
+  withNoteChanges,
   type ArrowElement,
   type Element,
   type ElementId,
   type Endpoint,
   type ShapeElement,
+  type StickyElement,
 } from '@livedoc/document';
 import { resolveSome } from '../selectors';
 import {
+  currentElements,
   type EditState,
   type Removal,
   refsOf,
@@ -23,6 +28,7 @@ import {
   writeFields,
 } from '../state';
 import type { RmOperation } from '../types';
+import { refusal } from './suggestion-rules';
 
 const attachedTo = (end: Endpoint): ElementId | null =>
   end.kind === 'pinned' ? end.elementId : end.kind === 'on-arrow' ? end.arrowId : null;
@@ -110,11 +116,12 @@ function orphansOf(state: EditState, removed: ReadonlySet<ElementId>): ShapeElem
 
 export function applyRm(
   state: EditState,
-  { target, all, keepArrows: keep }: RmOperation,
+  { target, all, keepArrows: keep, suggested }: RmOperation,
   operation: number,
 ): EditRejection | null {
   const resolved = resolveSome(state, target, operation, all === true);
   if ('rejection' in resolved) return resolved.rejection;
+  if (suggested) return takeBack(state, resolved.els, operation);
   for (const { id } of resolved.els) {
     // An arrow already gone with an earlier target's cascade.
     const el = state.byId.get(id);
@@ -123,6 +130,48 @@ export function applyRm(
     if (rejection) return rejection;
   }
   return null;
+}
+
+// `rm <target> suggested` (docs/specs/021-event-storming/suggested-changes.md): what is suggested on each target goes
+// (a note's changes, a context's name suggestions) and the target stays. How an agent takes its own back.
+function takeBack(
+  state: EditState,
+  els: readonly Element[],
+  operation: number,
+): EditRejection | null {
+  let changes = 0;
+  let names = 0;
+  for (const el of els) {
+    const held = el.type === 'sticky' ? noteChangesOf(el).length : 0;
+    const named = isCandidateContext(el) ? (el.esContext.names?.length ?? 0) : 0;
+    if (held + named === 0) continue;
+    const locked = lockRejection(state, el, operation);
+    if (locked) return locked;
+    if (isCandidateContext(el)) {
+      const { names: _dropped, ...rest } = el.esContext;
+      writeFields(state, { ...el, esContext: rest }, operation, ['esContext']);
+    } else writeFields(state, withNoteChanges(el as StickyElement, []), operation, ['esChanges']);
+    changes += held;
+    names += named;
+  }
+  if (changes + names === 0)
+    return refusal(
+      'nothing_suggested',
+      operation,
+      [`nothing is suggested on ${els.map((el) => refsOf(state).refOf(el.id)).join(', ')}`],
+      'the storm view lists the suggested changes with the refs they are on',
+    );
+  state.log('[edit-ops] took back', { operation, changes, names });
+  return null;
+}
+
+// The name suggestions that named a context now gone go with it (suggested-changes.md "It goes with its contexts").
+function pruneNames(state: EditState, operation: number): void {
+  const before = [...currentElements(state)];
+  const after = pruneNameSuggestions(before);
+  after.forEach((el, i) => {
+    if (el !== before[i]) writeFields(state, el, operation, ['esContext']);
+  });
 }
 
 // Removes one element with its cascade; `removal` says why it went when no operation named it.
@@ -163,8 +212,9 @@ export function removeOne(
   for (const [id, by] of anchored) removeElement(state, id, operation, { anchoredTo: by });
   // A candidate context left with none of its notes goes too (docs/specs/021-event-storming/candidate-contexts.md
   // "A note leaving takes nothing with it"); one that keeps a note stays, its notes untouched.
-  for (const id of emptiedBy(state, new Set([...removed, ...anchored.keys()])))
-    removeElement(state, id, operation, { emptiedBy: el.id });
+  const emptied = emptiedBy(state, new Set([...removed, ...anchored.keys()]));
+  for (const id of emptied) removeElement(state, id, operation, { emptiedBy: el.id });
+  if (emptied.length > 0 || isCandidateContext(el)) pruneNames(state, operation);
   return null;
 }
 

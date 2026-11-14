@@ -51,6 +51,7 @@ import {
 import { isRecord } from './is-record';
 import { HOTSPOT_ANSWER_MAX, isValidEsAnswer } from './event-storming-structure';
 import { isValidEsSuggestion } from './event-storming-suggestions';
+import { isValidEsChanges, NOTE_CHANGES_MAX } from './note-changes';
 
 export type { ElementValidationIssue } from './validate-primitives';
 
@@ -456,14 +457,19 @@ function pathIssue(el: Record<string, unknown>): ElementValidationIssue | null {
   return null;
 }
 
-// A sticky's event-storming fields (docs/specs/021-event-storming/): the suggestion it may be, the pivotal mark and
-// the hotspot answer it may carry.
+// A sticky's event-storming fields (docs/specs/021-event-storming/): the suggestion it may be, and the pivotal mark,
+// the hotspot answer and the suggested changes it may carry.
 function stickyIssue(el: Record<string, unknown>): ElementValidationIssue | null {
   if (el.esSuggestion !== undefined && !isValidEsSuggestion(el.esSuggestion))
     return issue('esSuggestion', 'an { anchorId, side, reason?, gap?, by? } suggestion');
   if (el.esPivotal !== undefined && el.esPivotal !== true) return issue('esPivotal', 'true');
   if (el.esAnswer !== undefined && !isValidEsAnswer(el.esAnswer))
     return issue('esAnswer', `text of at most ${HOTSPOT_ANSWER_MAX} characters`);
+  if (el.esChanges !== undefined && !isValidEsChanges(el.esChanges))
+    return issue(
+      'esChanges',
+      `at most ${NOTE_CHANGES_MAX} changes, each a reword, kind, split or remove`,
+    );
   return null;
 }
 

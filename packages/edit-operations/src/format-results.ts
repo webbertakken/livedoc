@@ -42,8 +42,10 @@ const isPoint = (v: JsonValue | undefined): v is [number, number] =>
   Array.isArray(v) && v.length === 2 && v.every((n) => typeof n === 'number');
 
 function formatChange({ key, from, to }: FieldChange): string {
-  // Where `order` put it: `order front`, `order above n5`, printed bare.
-  if (key === 'order') return `order ${typeof to === 'string' ? to : '(changed)'}`;
+  // Where `order` put it (`order front`, `order above n5`), and what was suggested on a note or a context or taken
+  // back (`suggested reword "Booking Placed"`, `took back 2 changes`): printed bare.
+  if (key === 'order' || key === 'suggested' || key === 'took back')
+    return `${key} ${typeof to === 'string' ? to : '(changed)'}`;
   if (key === 'at' && isPoint(from) && isPoint(to)) return `${at(from)}→${at(to)}`;
   if ((key === 'from' || key === 'to') && (isPoint(from) || isPoint(to))) {
     const end = (v: JsonValue | undefined) =>

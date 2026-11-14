@@ -16,6 +16,11 @@ export const EDIT_OPERATION_NAMES = [
   'test',
   'suggest',
   'suggest-context',
+  'suggest-name',
+  'suggest-reword',
+  'suggest-kind',
+  'suggest-split',
+  'suggest-remove',
   'wall',
 ] as const;
 export type EditOperationName = (typeof EDIT_OPERATION_NAMES)[number];
@@ -24,7 +29,7 @@ export type EditOperationName = (typeof EDIT_OPERATION_NAMES)[number];
 export const OPERATION_MEMBERS: Readonly<Record<EditOperationName, readonly string[]>> = {
   add: ['op', 'kind', 'id', 'fields', 'place', 'element'],
   set: ['op', 'target', 'fields', 'all'],
-  rm: ['op', 'target', 'all', 'keepArrows'],
+  rm: ['op', 'target', 'all', 'keepArrows', 'suggested'],
   move: ['op', 'target', 'place', 'by', 'all'],
   connect: ['op', 'from', 'to', 'id', 'fields', 'again'],
   rewire: ['op', 'target', 'from', 'to'],
@@ -36,6 +41,11 @@ export const OPERATION_MEMBERS: Readonly<Record<EditOperationName, readonly stri
   test: ['op', 'target', 'fields'],
   suggest: ['op', 'kind', 'words', 'anchor', 'side', 'reason', 'gap', 'id'],
   'suggest-context': ['op', 'name', 'notes', 'reason', 'id'],
+  'suggest-name': ['op', 'name', 'contexts', 'reason'],
+  'suggest-reword': ['op', 'note', 'words', 'term', 'to', 'reason'],
+  'suggest-kind': ['op', 'note', 'kind', 'reason'],
+  'suggest-split': ['op', 'note', 'parts', 'reason'],
+  'suggest-remove': ['op', 'note', 'reason'],
   wall: ['op', 'photos'],
 };
 
@@ -66,6 +76,7 @@ export const SELECTOR_KEYS = [
 export const FLAG_MEMBERS = {
   all: 'all',
   'keep-arrows': 'keepArrows',
+  suggested: 'suggested',
   again: 'again',
   tidy: 'tidy',
   absorb: 'absorb',
@@ -82,6 +93,7 @@ export const RESERVED_WORDS: ReadonlySet<string> = new Set([
   'absorb',
   'make-room',
   'keep-arrows',
+  'suggested',
   'between',
   'in',
   'frame',

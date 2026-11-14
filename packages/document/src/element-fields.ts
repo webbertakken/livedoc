@@ -285,6 +285,7 @@ export const ELEMENT_FIELD_NAMES = {
     'esSuggestion',
     'esPivotal',
     'esAnswer',
+    'esChanges',
     'textSize',
     'textAlignX',
     'textAlignY',

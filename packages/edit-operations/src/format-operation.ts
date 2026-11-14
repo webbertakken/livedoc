@@ -48,6 +48,8 @@ function flagsText(operation: EditOperation): string[] {
 }
 
 const idText = (id: string | undefined) => (id === undefined ? [] : [`id=${id}`]);
+const reasonText = (reason: string | undefined) =>
+  reason === undefined ? [] : [`reason=${JSON.stringify(reason)}`];
 
 function words(operation: EditOperation): string[] {
   switch (operation.op) {
@@ -132,7 +134,7 @@ function words(operation: EditOperation): string[] {
         operation.kind,
         JSON.stringify(operation.words),
         `${operation.side}=${oneWord(operation.anchor)}`,
-        ...(operation.reason !== undefined ? [`reason=${JSON.stringify(operation.reason)}`] : []),
+        ...reasonText(operation.reason),
         ...(operation.gap !== undefined ? [`gap=${operation.gap}`] : []),
         ...idText(operation.id),
       ];
@@ -141,9 +143,41 @@ function words(operation: EditOperation): string[] {
         'suggest-context',
         JSON.stringify(operation.name),
         ...operation.notes.map(oneWord),
-        ...(operation.reason !== undefined ? [`reason=${JSON.stringify(operation.reason)}`] : []),
+        ...reasonText(operation.reason),
         ...idText(operation.id),
       ];
+    case 'suggest-name':
+      return [
+        'suggest-name',
+        JSON.stringify(operation.name),
+        ...operation.contexts.map(oneWord),
+        ...reasonText(operation.reason),
+      ];
+    case 'suggest-reword':
+      return [
+        'suggest-reword',
+        oneWord(operation.note),
+        JSON.stringify(operation.words),
+        ...(operation.term !== undefined ? [`term=${JSON.stringify(operation.term)}`] : []),
+        ...(operation.to !== undefined ? [`to=${JSON.stringify(operation.to)}`] : []),
+        ...reasonText(operation.reason),
+      ];
+    case 'suggest-kind':
+      return [
+        'suggest-kind',
+        oneWord(operation.note),
+        operation.kind,
+        ...reasonText(operation.reason),
+      ];
+    case 'suggest-split':
+      return [
+        'suggest-split',
+        oneWord(operation.note),
+        ...operation.parts.map((part) => JSON.stringify(part)),
+        ...reasonText(operation.reason),
+      ];
+    case 'suggest-remove':
+      return ['suggest-remove', oneWord(operation.note), ...reasonText(operation.reason)];
     case 'wall':
       return [JSON.stringify(operation)];
   }

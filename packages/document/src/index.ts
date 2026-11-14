@@ -15,6 +15,7 @@ import type { FormDefinition } from '@livedoc/forms';
 import type { TagColour } from './tag-colours';
 import { isSelfDrawingShape } from './data-shapes';
 import type { TabKind } from './tab-kind';
+import type { EsDeclined } from './event-storming-declined';
 import type { DashboardLayout } from './dashboard';
 import type { EditorMode } from './editor-mode';
 import type { Page, PageOrientation } from './page';
@@ -377,6 +378,10 @@ export type Tab = {
   // An event-storming board's About (docs/specs/021-event-storming/asks.md "About This Domain"): what the person
   // says the domain is, heading every reading. Read via `aboutOf`; written with `withAbout`.
   esAbout?: string;
+  // What was declined on an event-storming board (docs/specs/021-event-storming/asks.md "What was declined"): the
+  // suggestions a person dismissed, which are refused when made again. Read via `declinedOf`; written with
+  // `withDeclined` and `withoutDeclined`, by a person's editor alone.
+  esDeclined?: EsDeclined[];
   // The colours someone picked with + in a colour picker on this tab, newest first, lower-case
   // `#rrggbb` (docs/specs/004-interface-design/colour-picker.md "Custom colours"). Read via
   // `customColoursOf`; every picker in the document offers them as Custom Colours.
@@ -737,6 +742,12 @@ export * from './candidate-contexts';
 export * from './event-storming-about';
 export * from './event-storming-structure';
 export * from './event-storming-terms';
+export * from './event-storming-words';
+export * from './context-names';
+export * from './note-changes';
+export * from './note-change-accept';
+export * from './event-storming-declined';
+export * from './open-suggestions';
 export * from './candidate-context-outline';
 export { CONTEXT_FONT, CONTEXT_INK, contextPlate } from './svg-render-contexts';
 export * from './event-storming-photo';

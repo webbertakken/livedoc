@@ -5172,6 +5172,18 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "string"
   },
+  "DeclinedType": {
+    "enum": [
+      "note",
+      "context",
+      "name",
+      "reword",
+      "kind",
+      "split",
+      "remove"
+    ],
+    "type": "string"
+  },
   "DiffView": {
     "additionalProperties": false,
     "properties": {
@@ -6307,6 +6319,13 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
   "EsContext": {
     "additionalProperties": false,
     "properties": {
+      "names": {
+        "description": "The names suggested for it; read with `nameSuggestionsFor`.",
+        "items": {
+          "$ref": "#/components/schemas/EsNameSuggestion"
+        },
+        "type": "array"
+      },
       "notes": {
         "description": "The workshop notes it groups, by id.",
         "items": {
@@ -6334,6 +6353,175 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
         "type": "string"
       }
     },
+    "type": "object"
+  },
+  "EsDeclined": {
+    "additionalProperties": false,
+    "properties": {
+      "about": {
+        "description": "The notes or contexts it was about, in id order.",
+        "items": {
+          "$ref": "#/components/schemas/ElementId"
+        },
+        "type": "array"
+      },
+      "kind": {
+        "$ref": "#/components/schemas/EventStormingNoteKind",
+        "description": "Its kind, where it has one: a suggested note's, or the kind a change proposed."
+      },
+      "type": {
+        "$ref": "#/components/schemas/DeclinedType"
+      },
+      "words": {
+        "description": "Its words or name; a split's parts joined by \" | \".",
+        "type": "string"
+      }
+    },
+    "required": [
+      "type",
+      "about"
+    ],
+    "type": "object"
+  },
+  "EsKindChange": {
+    "additionalProperties": false,
+    "properties": {
+      "by": {
+        "type": "string"
+      },
+      "change": {
+        "const": "kind",
+        "type": "string"
+      },
+      "kind": {
+        "$ref": "#/components/schemas/EventStormingNoteKind"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "change",
+      "kind"
+    ],
+    "type": "object"
+  },
+  "EsNameSuggestion": {
+    "additionalProperties": false,
+    "description": "Another name an agent proposes (docs/specs/021-event-storming/suggested-changes.md \"Name suggestions\"): for the context that holds it, or, with `with`, for that context and those others merged into one.",
+    "properties": {
+      "by": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "with": {
+        "description": "The other contexts it names, when it is a name for a merge.",
+        "items": {
+          "$ref": "#/components/schemas/ElementId"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "type": "object"
+  },
+  "EsNoteChange": {
+    "anyOf": [
+      {
+        "$ref": "#/components/schemas/EsRewordChange"
+      },
+      {
+        "$ref": "#/components/schemas/EsKindChange"
+      },
+      {
+        "$ref": "#/components/schemas/EsSplitChange"
+      },
+      {
+        "$ref": "#/components/schemas/EsRemoveChange"
+      }
+    ]
+  },
+  "EsRemoveChange": {
+    "additionalProperties": false,
+    "properties": {
+      "by": {
+        "type": "string"
+      },
+      "change": {
+        "const": "remove",
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "change"
+    ],
+    "type": "object"
+  },
+  "EsRewordChange": {
+    "additionalProperties": false,
+    "description": "Other words for the note; with `term` and `to`, a term that changes wherever the board holds it.",
+    "properties": {
+      "by": {
+        "type": "string"
+      },
+      "change": {
+        "const": "reword",
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "term": {
+        "type": "string"
+      },
+      "to": {
+        "type": "string"
+      },
+      "words": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "change",
+      "words"
+    ],
+    "type": "object"
+  },
+  "EsSplitChange": {
+    "additionalProperties": false,
+    "description": "Several notes for one that holds several facts: the note keeps the first part.",
+    "properties": {
+      "by": {
+        "type": "string"
+      },
+      "change": {
+        "const": "split",
+        "type": "string"
+      },
+      "parts": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "reason": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "change",
+      "parts"
+    ],
     "type": "object"
   },
   "EsSuggestion": {
@@ -14750,6 +14938,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "esAnswer": {
         "type": "string"
       },
+      "esChanges": {
+        "items": {
+          "$ref": "#/components/schemas/EsNoteChange"
+        },
+        "type": "array"
+      },
       "esDraft": {
         "const": true,
         "type": "boolean"
@@ -15008,6 +15202,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "esAbout": {
         "type": "string"
       },
+      "esDeclined": {
+        "items": {
+          "$ref": "#/components/schemas/EsDeclined"
+        },
+        "type": "array"
+      },
       "esLanesSettled": {
         "type": "boolean"
       },
@@ -15157,6 +15357,12 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "esAbout": {
         "type": "string"
+      },
+      "esDeclined": {
+        "items": {
+          "$ref": "#/components/schemas/EsDeclined"
+        },
+        "type": "array"
       },
       "esLanesSettled": {
         "type": "boolean"

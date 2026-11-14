@@ -317,11 +317,20 @@ export function changeEventStormingKind<
   const cy = el.y + el.height / 2;
   // What only one kind carries goes with that kind (docs/specs/021-event-storming/board-structure.md): the pivotal
   // mark is a domain event's, the answer a hotspot's.
-  const { esPivotal, esAnswer, ...rest } = el as T & { esPivotal?: unknown; esAnswer?: unknown };
+  const { esPivotal, esAnswer, esChanges, ...rest } = el as T & {
+    esPivotal?: unknown;
+    esAnswer?: unknown;
+    esChanges?: unknown;
+  };
+  // A suggested change to the kind the note now is says nothing any more (suggested-changes.md "Note changes").
+  const changes = (Array.isArray(esChanges) ? esChanges : []).filter(
+    (c: { change?: unknown; kind?: unknown }) => c?.change !== 'kind' || c.kind !== kind,
+  );
   return {
     ...rest,
     ...(kind === 'domain-event' && esPivotal !== undefined ? { esPivotal } : {}),
     ...(kind === 'hotspot' && esAnswer !== undefined ? { esAnswer } : {}),
+    ...(changes.length > 0 ? { esChanges: changes } : {}),
     esKind: kind,
     fillColor: note.fill,
     x: cx - size.width / 2,

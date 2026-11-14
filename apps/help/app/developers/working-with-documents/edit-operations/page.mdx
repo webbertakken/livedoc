@@ -50,20 +50,20 @@ One parser turns the line form into the JSON form, so both are checked the same 
 
 ## Operations
 
-| Operation | Line form                                                                    | What it does                                                                                                                    |
-| --------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `add`     | `add <kind> [id=<id>] key=value… [<placement>]`                              | Creates an element sized for its label                                                                                          |
-| `set`     | `set <selector> key=value… [all]`                                            | Changes only the fields named; `key=` with nothing after it unsets one                                                          |
-| `rm`      | `rm <selector> [all] [keep-arrows]`                                          | Removes elements, and the arrows pinned to them unless `keep-arrows` leaves those with free ends                                |
-| `move`    | `move <selector> <placement> [all]` or `move <selector> by=dx,dy [all]`      | Moves elements; pinned arrows follow, and a frame or lane carries its members                                                   |
-| `connect` | `connect <a> -> <b> [id=<id>] [label=…] [line=…] [again]`                    | Draws an arrow pinned at both ends, anchored on the sides facing each other                                                     |
-| `rewire`  | `rewire <arrow> from=<x> [to=<y>]` or `rewire <arrow> to=<y>`                | Moves one or both ends of an arrow to other elements                                                                            |
-| `insert`  | `insert <kind> [id=<id>] key=value… between <a> <b>`                         | Puts a new element on the arrow from a to b, which becomes two arrows, and makes room for it                                    |
-| `wrap`    | `wrap <selector…> in frame [id=<id>] key=value… [tidy] [absorb] [make-room]` | Draws a frame (or `in lane`, a lane) around the members                                                                         |
-| `unwrap`  | `unwrap <frame>`                                                             | Removes a frame or lane and leaves its members where they are                                                                   |
-| `order`   | `order <selector> front`, `back`, `above=<x>` or `below=<x>`                 | Changes the stacking order; frames and lanes always stay behind their contents                                                  |
-| `layout`  | `layout <selector> [style=flow] [direction=down]`                            | Lays out only the selection, keeping its top-left corner; `style` is `flow`, `tree` or `mindmap`, `direction` `down` or `right` |
-| `test`    | `test <selector> key=value…`                                                 | Refuses the whole changeset unless the element still holds these values                                                         |
+| Operation | Line form                                                                    | What it does                                                                                                                                                |
+| --------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `add`     | `add <kind> [id=<id>] key=value… [<placement>]`                              | Creates an element sized for its label                                                                                                                      |
+| `set`     | `set <selector> key=value… [all]`                                            | Changes only the fields named; `key=` with nothing after it unsets one                                                                                      |
+| `rm`      | `rm <selector> [all] [keep-arrows] [suggested]`                              | Removes elements, and the arrows pinned to them unless `keep-arrows` leaves those with free ends; with `suggested`, removes only what was suggested on them |
+| `move`    | `move <selector> <placement> [all]` or `move <selector> by=dx,dy [all]`      | Moves elements; pinned arrows follow, and a frame or lane carries its members                                                                               |
+| `connect` | `connect <a> -> <b> [id=<id>] [label=…] [line=…] [again]`                    | Draws an arrow pinned at both ends, anchored on the sides facing each other                                                                                 |
+| `rewire`  | `rewire <arrow> from=<x> [to=<y>]` or `rewire <arrow> to=<y>`                | Moves one or both ends of an arrow to other elements                                                                                                        |
+| `insert`  | `insert <kind> [id=<id>] key=value… between <a> <b>`                         | Puts a new element on the arrow from a to b, which becomes two arrows, and makes room for it                                                                |
+| `wrap`    | `wrap <selector…> in frame [id=<id>] key=value… [tidy] [absorb] [make-room]` | Draws a frame (or `in lane`, a lane) around the members                                                                                                     |
+| `unwrap`  | `unwrap <frame>`                                                             | Removes a frame or lane and leaves its members where they are                                                                                               |
+| `order`   | `order <selector> front`, `back`, `above=<x>` or `below=<x>`                 | Changes the stacking order; frames and lanes always stay behind their contents                                                                              |
+| `layout`  | `layout <selector> [style=flow] [direction=down]`                            | Lays out only the selection, keeping its top-left corner; `style` is `flow`, `tree` or `mindmap`, `direction` `down` or `right`                             |
+| `test`    | `test <selector> key=value…`                                                 | Refuses the whole changeset unless the element still holds these values                                                                                     |
 
 A few rules hold for every operation:
 
@@ -97,7 +97,7 @@ Terms combine: `type:sticky in:f2` is the stickies inside frame `f2`, and `from:
 - `wrap` and `layout` act on many by nature. Each ref or quoted label you give names one element, and the other terms together add whatever they match.
 - `selected` with nothing selected is refused. The owner is whoever the API token belongs to, so an agent can act on "what I have selected" while you point at it.
 - Membership (for `in:`, `wrap` and moving a frame) is the smallest frame or lane holding an element's centre, the same rule the editor uses when you drag a frame.
-- The words `selected`, `all`, `again`, `tidy`, `absorb`, `make-room`, `keep-arrows`, `between`, `in`, `frame`, `lane`, `front` and `back` are always keywords. Reach an element named one of them by its quoted label or a longer ref.
+- The words `selected`, `all`, `again`, `tidy`, `absorb`, `make-room`, `keep-arrows`, `suggested`, `between`, `in`, `frame`, `lane`, `front` and `back` are always keywords. Reach an element named one of them by its quoted label or a longer ref.
 
 ## Placement
 
@@ -121,14 +121,15 @@ What you did not ask to change stays put. `set` moves nothing except a box that 
 
 ## Flags
 
-| Flag          | On                  | Means                                                                                                         |
-| ------------- | ------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `all`         | `set`, `rm`, `move` | Act on every element the selector matches, not only one                                                       |
-| `keep-arrows` | `rm`                | Leave arrows pinned to the removed elements in place, with free ends, instead of removing them                |
-| `again`       | `connect`           | Draw a second arrow from a to b when one already exists (otherwise `arrow_exists`)                            |
-| `tidy`        | `wrap`              | Lay the members out compactly before drawing the frame round them                                             |
-| `absorb`      | `wrap`              | Let the new frame take in elements that are not members but fall inside it                                    |
-| `make-room`   | `wrap`              | Move those bystanders out of the way instead (without one of these two, `wrap` refuses with `frame_captures`) |
+| Flag          | On                  | Means                                                                                                                                                                      |
+| ------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `all`         | `set`, `rm`, `move` | Act on every element the selector matches, not only one                                                                                                                    |
+| `keep-arrows` | `rm`                | Leave arrows pinned to the removed elements in place, with free ends, instead of removing them                                                                             |
+| `suggested`   | `rm`                | On an Event Storming board: take back what was suggested on a note or a candidate context (its suggested changes, its suggested names) and keep the note or context itself |
+| `again`       | `connect`           | Draw a second arrow from a to b when one already exists (otherwise `arrow_exists`)                                                                                         |
+| `tidy`        | `wrap`              | Lay the members out compactly before drawing the frame round them                                                                                                          |
+| `absorb`      | `wrap`              | Let the new frame take in elements that are not members but fall inside it                                                                                                 |
+| `make-room`   | `wrap`              | Move those bystanders out of the way instead (without one of these two, `wrap` refuses with `frame_captures`)                                                              |
 
 In the JSON form, a flag is a member set to `true`: `"all"`, `"keepArrows"`, `"again"`, `"tidy"`, `"absorb"`, `"makeRoom"`.
 
