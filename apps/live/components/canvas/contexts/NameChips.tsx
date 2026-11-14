@@ -8,7 +8,8 @@ import { suggestionKeys } from '../suggestions/SuggestionPlaceholder';
 // (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"): under a selected context's
 // name, or in the merge offer for several. Pointing at a chip, or focusing it, previews it, with a caption giving the
 // reason and who suggested it; choosing it renames the context (or merges and names them); Delete on a focused chip
-// dismisses that one, and ✕ after them dismisses those shown. Chrome: drawn at screen size by whoever places it.
+// dismisses that one, and ✕ after them dismisses those shown. Under one context they are led by "Rename to", which
+// says what choosing one does; the merge offer says it itself. Chrome: drawn at screen size by whoever places it.
 
 export type NameChipActs = {
   onChoose: (name: string) => void;
@@ -49,6 +50,15 @@ export function NameChips({
       onPointerDown={(e) => e.stopPropagation()}
       className="relative flex items-center gap-1.5"
     >
+      {merge ? null : (
+        <span
+          aria-hidden
+          data-name-chips-lead=""
+          className="flex h-7 items-center whitespace-nowrap rounded-full bg-[var(--lvd-canvas-paper,#ffffff)] pl-3 pr-2.5 text-xs font-medium leading-none text-slate-600 in-[[data-dark-canvas]]:text-slate-400"
+        >
+          <span className="text-optical-centre">Rename to</span>
+        </span>
+      )}
       {names.map(({ name }) => (
         <button
           key={name}

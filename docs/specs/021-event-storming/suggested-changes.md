@@ -30,8 +30,9 @@ A **name suggestion** is another name for a candidate context, or one name for s
 
 ### How a person sees and decides
 
-- **Chips under the name.** A selected context shows its name suggestions as chips under its name, with ✕ after
-  them; a context that holds any wears a small count beside its name (default).
+- **A context that holds names says so in words**: at rest, a small dashed chip under its name ("1 name",
+  "3 names"). Selected, it unfolds into the name suggestions as chips under the name, led by "Rename to", with ✕
+  after them (ruled 2026-11-14: "D · Worded tab").
 - **Pointing at a chip, or focusing it, previews it**: the context's name reads as the suggestion would have it, and
   a caption gives the reason and who suggested it.
   A merge's chip previews by its caption alone: the selected outlines already show what would merge (default).
@@ -45,7 +46,7 @@ A **name suggestion** is another name for a candidate context, or one name for s
   The merged context is then the one selected, and the keyboard stays on its name (default).
 - ✕ after the chips dismisses those shown; Delete on a focused chip dismisses that one.
   In the merge offer the chips bring no ✕ of their own: the offer's ✕ keeps the contexts apart (default).
-- The count beside a name is in its accessible name too ("Candidate context: Ordering, 3 names suggested").
+- The count is in the name's accessible name too ("Candidate context: Ordering, 3 names suggested").
 - **In the suggestions panel**: a **Names** row per context that holds any, and a **Merge** row per set of contexts
   a name was suggested for. Pointing at a row brings its contexts into view at full strength; choosing a row selects
   its contexts, which shows their chips under the name, or the merge offer with its chips (default).
@@ -98,8 +99,14 @@ context (possibly all contexts) if the word Order changes in that suggestion."
 
 ### How a person sees and decides
 
-- **A change mark.** A note that holds changes wears a small dashed tab on its top right corner, in the family of
-  the [peek tab](suggestions.md#how-a-person-sees-them), with the count when it holds more than one (default).
+- **A change mark.** A note that holds changes wears a worded dashed tab on its top edge at its right end, in the
+  family of the [peek tab](suggestions.md#how-a-person-sees-them): it says what the first change is ("Reword",
+  "Split", "Remove") and "+N" when the note holds more ("Split +1"), on a faint tint of the kind's hue; never paper
+  (ruled 2026-11-14: "D · Worded tab").
+  - A kind change says the kind the note would become ("To Policy"): "Kind" alone says too little (default).
+  - Its words are text, so they wear an ink that reads at 4.5:1 on the tint; the dashed stroke keeps 3:1.
+  - Where a suggestion waits above the note, the mark keeps clear of that peek tab, and words that no longer fit
+    are cut with an ellipsis; its accessible name always says the change whole (default).
 - **Pointing at the mark, or focusing it, previews the note's first change**, with a caption: what changes, the
   reason and who suggested it, ✓ and ✕, and **Everywhere** for a reword that reaches further.
   The caption sits under the note, never on its paper, so the previewed note reads whole, and it is nudged back
@@ -152,6 +159,17 @@ none of it; an agent suggests, and removes its owner's with `rm` or `storm clear
 
 `Canvas / Used / NameSuggestionApplied`, `NameSuggestionDismissed`, `NoteChangeApplied`, `NoteChangeDismissed`, and
 `ContextsMerged` when a merge's name is chosen (default).
+
+## Design review
+
+Four looks for the change mark and the name chips were rendered in the editor on a seeded board (2026-11-14): a corner
+tab with a count, a turned corner, a round badge with a glyph, and a worded tab.
+
+- **Ruled 2026-11-14: "D · Worded tab".** The mark says what the change is; a context says in words that names
+  wait, and its chips are led by what choosing one does. The merge offer's chips stay as they were.
+- The critique the looks answered: a count alone says how many, never what; a glyph has to be learnt; a mark must
+  never read as paper, must stand clear of the peek tabs on the same note, and must keep a 24 px hit target at any
+  zoom.
 
 ## Where it lives
 

@@ -69,7 +69,7 @@ test('a change mark previews a reword through its context without writing, and �
   await expect(mark(page, IDS.packOrder)).toHaveAccessibleName(
     'Suggested change to this command: Reword “Pack parcel”',
   );
-  await expect(mark(page, IDS.packedAndShipped)).toHaveText('2');
+  await expect(mark(page, IDS.packedAndShipped)).toHaveText('Split +1');
 
   await mark(page, IDS.packOrder).hover();
   // The note and the notes of its context that hold the term draw their new words; the board is untouched.

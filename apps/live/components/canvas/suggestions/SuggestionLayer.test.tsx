@@ -1,7 +1,12 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ES_NOTE_GAP, type Element, type StickyElement } from '@livedoc/document';
+import {
+  ES_NOTE_GAP,
+  type Element,
+  type EsNoteChange,
+  type StickyElement,
+} from '@livedoc/document';
 import { CanvasZoomProvider } from '@/components/canvas/CanvasZoomContext';
 import type { SuggestionControls } from '@/components/canvas/Canvas.types';
 import {
@@ -26,7 +31,7 @@ import {
   setSuggestionsPanelOpen,
   suggestionViewFor,
 } from '@/lib/suggestion-view';
-import { changeMarkBox } from './NoteChangeMark';
+import { changeMarkPlace, changeMarkWords } from './NoteChangeMark';
 import { PEEK_PROTRUDE, PEEK_PROTRUDE_ACROSS } from './SuggestionPeekTab';
 import { SuggestionLayer } from './SuggestionLayer';
 
@@ -446,27 +451,45 @@ describe('SuggestionLayer: note changes', () => {
   const mark = (id: string) => document.querySelector<HTMLElement>(`[data-change-mark="${id}"]`)!;
   const caption = () => document.querySelector<HTMLElement>('[data-change-caption]');
 
-  it('marks each note that holds changes, named for its first, with the count past one', () => {
+  it('marks each note that holds changes with the word for its first, and how many more', () => {
     draw(flow());
     expect(mark('pack').getAttribute('aria-label')).toBe(
       'Suggested change to this command: Reword “Pack parcel”',
     );
-    expect(mark('pack').textContent).toBe('');
+    expect(mark('pack').textContent).toBe('Reword');
     expect(mark('packed').getAttribute('aria-label')).toBe(
       'Suggested change to this domain event: Split “Order packed” · “Order shipped” and 1 more',
     );
-    expect(mark('packed').textContent).toBe('2');
+    expect(mark('packed').textContent).toBe('Split +1');
     expect(document.querySelectorAll('[data-change-mark]')).toHaveLength(2);
   });
 
-  it('stands the mark on the note’s top edge at its right end, clear of the corner', () => {
+  it('words each change: a kind change says the kind the note would become', () => {
+    const words = (...changes: EsNoteChange[]) => changeMarkWords({ changes });
+    expect(words(REWORD)).toBe('Reword');
+    expect(words(SPLIT)).toBe('Split');
+    expect(words(REMOVE, REWORD, SPLIT)).toBe('Remove +2');
+    expect(words(KIND)).toBe('To Command');
+    expect(words({ change: 'kind', kind: 'domain-event' }, REMOVE)).toBe('To Domain Event +1');
+  });
+
+  it('stands the mark on the note’s top edge, its right end set in from the corner', () => {
     const pack = byId(flow(), 'pack');
-    expect(changeMarkBox(pack)).toEqual({
-      left: pack.x + 200 - 48 - 8,
-      top: pack.y - PEEK_PROTRUDE_ACROSS,
-      width: 48,
-      height: PEEK_PROTRUDE_ACROSS,
+    expect(changeMarkPlace(pack, false)).toEqual({
+      right: pack.x + 200 - 8,
+      top: pack.y - 20,
+      height: 20,
+      maxWidth: 200 - 16,
     });
+  });
+
+  it('keeps the mark clear of a peek tab standing above the note', () => {
+    const pack = byId(flow(), 'pack');
+    // The peek tab is centred on the top edge, 48 long: the mark has what is left of the right half, less a gap.
+    expect(changeMarkPlace(pack, true).maxWidth).toBe(192 - 124 - 4);
+    draw([...flow(), suggestion('above-pack', 'actor', 'pack', 'above')]);
+    expect(mark('pack').style.maxWidth).toBe('64px');
+    expect(mark('packed').style.maxWidth).toBe('184px');
   });
 
   it('captions the previewed change: what changes, why, how far it reaches and who', () => {
