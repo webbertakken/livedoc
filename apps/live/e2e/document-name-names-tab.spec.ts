@@ -34,7 +34,9 @@ async function renameDocument(page: Page, name: string) {
   await expect(page.locator('[data-doc-name] button')).toHaveText(name);
 }
 
-const activeTab = (page: Page) => page.locator('[data-active-tab-segment] [aria-current="page"]');
+// The active tab's name: the first words of its tab stack.
+const activeTab = (page: Page) =>
+  page.locator('[data-active-tab-segment] [data-tab-stack] > span').first();
 
 async function storedTabName(page: Page, owner: string, doc: { id: string; tabId: string }) {
   const res = await page.request.get(`${apiBase}/documents/${doc.id}/tabs/${doc.tabId}`, {

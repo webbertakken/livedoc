@@ -30,7 +30,7 @@ function othersHere(byTab: Map<string, Participant[]>, selfId: string): Particip
 type Opener = { from: 'stack' | 'people'; button: HTMLElement };
 
 // The document group, the bottom line's right (docs/specs/007-editor/toolbar-layout.md "The bottom line"): the
-// document's share-state icon, name and role pill; the active tab; the tab stack; the contributors; Add tab, whose
+// document's share-state icon, name and role pill; the active tab, holding the tab stack; the contributors; Add tab, whose
 // menu adds a Tab, a Board, a Sheet or a Dashboard (AddTabMenu). The stack and the contributors open the same tab
 // list.
 export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: TabsChromeProps }) {
@@ -56,6 +56,7 @@ export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: T
   };
   // Nobody left to show: a list the contributors opened closes with them.
   const open = opener?.from === 'people' && people.length === 0 ? null : opener;
+  const stack = { count: inScope, open: open?.from === 'stack', onToggle: toggle('stack') };
 
   return (
     <>
@@ -71,14 +72,14 @@ export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: T
           <DocumentName {...name} />
         </ToolbarPart>
         <ToolbarPart className="shrink-0">
-          {activeTab ? <ActiveTabSegment tab={activeTab} tabs={tabs} chrome={chrome} /> : null}
+          {/* The tab stack rides in the active tab: its name, glyph and count are one button. */}
+          {activeTab ? (
+            <ActiveTabSegment tab={activeTab} tabs={tabs} chrome={chrome} stack={stack} />
+          ) : (
+            <TabStackButton name="Tabs" {...stack} />
+          )}
         </ToolbarPart>
         <ToolbarPart className="shrink-0">
-          <TabStackButton
-            count={inScope}
-            open={open?.from === 'stack'}
-            onToggle={toggle('stack')}
-          />
           {people.length > 0 ? (
             <ContributorsButton
               people={people}

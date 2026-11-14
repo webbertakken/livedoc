@@ -18,23 +18,36 @@ type OpenerProps = {
 const COUNT =
   'flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-slate-100 px-1.5 text-[11px] font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-200';
 
-// The tab stack (docs/specs/007-editor/toolbar-layout.md "The bottom line"): a stack glyph and the number of tabs in
-// the session's scope. Always drawn, one tab too, so nothing on the line moves as tabs come and go. A press opens
-// the tab list.
-export function TabStackButton({ count, open, onToggle }: OpenerProps & { count: number }) {
+// The tab stack (docs/specs/007-editor/toolbar-layout.md "The bottom line", "The tab's name"): one button inside the
+// active tab, holding the tab's name, a stack glyph and the number of tabs in the session's scope. Always drawn, one
+// tab too, so nothing on the line moves as tabs come and go. A press opens the tab list. While a board's or Sheet's own
+// name rides in the slot just before it, that name stands for the tab's, which hides.
+export const STACK_NAME_BESIDE_SLOT = '[[data-menu-name-slot]:not(:empty)+button_&]:hidden';
+
+export function TabStackButton({
+  name,
+  count,
+  open,
+  onToggle,
+}: OpenerProps & { name: string; count: number }) {
   return (
     <button
       type="button"
-      aria-label={`All tabs (${count})`}
+      aria-label={`${name}, all tabs (${count})`}
       aria-haspopup="dialog"
       aria-expanded={open}
       data-tab-stack=""
       onClick={(e) => onToggle(e.currentTarget)}
-      className={`${TOOLBAR_BUTTON} px-2 ${open ? TOOLBAR_CONTROL_PRESSED : ''}`}
+      className={`relative flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded px-1.5 outline-none transition touch-target-y focus-visible:ring-2 focus-visible:ring-brand-400 ${
+        open ? 'bg-black/10 dark:bg-white/15' : 'hover:bg-black/5 dark:hover:bg-white/10'
+      }`}
     >
-      <TabsLabelIcon />
-      <span className={COUNT}>
-        <span className="text-optical-centre">{count}</span>
+      <span className={`text-optical-centre ${STACK_NAME_BESIDE_SLOT}`}>{name}</span>
+      <span className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+        <TabsLabelIcon />
+        <span className={COUNT}>
+          <span className="text-optical-centre">{count}</span>
+        </span>
       </span>
     </button>
   );
