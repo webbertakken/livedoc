@@ -10,7 +10,14 @@
 // the SVG export's svgArrow), which is why it lives here rather than in
 // the app.
 
-import { isBoxed, type Anchor, type Element, type ElementId, type Endpoint } from './index';
+import {
+  isBoxed,
+  type Anchor,
+  type ArrowElement,
+  type Element,
+  type ElementId,
+  type Endpoint,
+} from './index';
 import { anchorClass, anchorPrimarySide } from './anchors';
 import { endpointPosition, isElementIndex, type ElementIndex, type Point } from './geometry';
 import { connectorBox } from './shape-outline';
@@ -57,6 +64,9 @@ type ConvergingEnd = {
   other: Point;
 };
 
+// One end pinned to an anchor, before any position is resolved.
+type ConvergingPin = { arrow: ArrowElement; end: 'from' | 'to' };
+
 function pinKey(endpoint: Endpoint): string | null {
   if (endpoint.kind === 'pinned') return `el:${endpoint.elementId}:${endpoint.anchor}`;
   return null;
@@ -82,101 +92,107 @@ function fanFrame(
   return null;
 }
 
-// Compute every fanned end's offset for one element set. Keyed
-// `${arrowId}:${end}`; ends that don't converge (or aren't pinned) are
-// simply absent.
-function computeSpreadMap(elements: Element[], index: ElementIndex): Map<string, Point> {
-  const groups = new Map<string, ConvergingEnd[]>();
-  const frames = new Map<string, { span: number; rotation: number; anchor: Anchor }>();
-  const anchorAt = new Map<string, Point>();
+// Which ends converge on each pinned anchor, by key, for one element set: a scan of the arrows alone,
+// resolving no position. An end set exactly at its anchor (exactStart, exactEnd) sits out of that
+// anchor's fan.
+function convergingPins(elements: Iterable<Element>): Map<string, ConvergingPin[]> {
+  const pins = new Map<string, ConvergingPin[]>();
   for (const el of elements) {
     if (el.type !== 'arrow') continue;
-    const arrow = el;
     for (const end of ['from', 'to'] as const) {
-      // An end set exactly at its anchor (exactStart, exactEnd) sits out of that anchor's fan.
-      if (end === 'from' && arrow.exactStart === true) continue;
-      if (end === 'to' && arrow.exactEnd === true) continue;
-      const endpoint = arrow[end];
-      const key = pinKey(endpoint);
+      if (end === 'from' && el.exactStart === true) continue;
+      if (end === 'to' && el.exactEnd === true) continue;
+      const key = pinKey(el[end]);
       if (!key) continue;
-      if (!frames.has(key)) {
-        const frame = fanFrame(endpoint, index);
-        if (!frame) continue;
-        frames.set(key, frame);
-        anchorAt.set(key, endpointPosition(endpoint, index));
-      }
-      const other = endpointPosition(end === 'from' ? arrow.to : arrow.from, index);
-      const list = groups.get(key);
-      if (list) list.push({ arrowId: arrow.id, end, other });
-      else groups.set(key, [{ arrowId: arrow.id, end, other }]);
+      const list = pins.get(key);
+      if (list) list.push({ arrow: el, end });
+      else pins.set(key, [{ arrow: el, end }]);
     }
   }
+  return pins;
+}
 
+// One fan's offsets, keyed `${arrowId}:${end}`; empty when fewer than two ends converge or the
+// target is gone.
+function fanOffsets(pins: readonly ConvergingPin[], index: ElementIndex): Map<string, Point> {
   const offsets = new Map<string, Point>();
-  for (const [key, ends] of groups) {
-    if (ends.length < 2) continue;
-    const frame = frames.get(key);
-    if (!frame) continue;
-    const axis = spreadAxis(frame.anchor);
-    const n = ends.length;
-    const spacing = Math.min(SPREAD_SPACING, (frame.span * SPREAD_EDGE_FRACTION) / (n - 1));
-    // Slot positions along the edge: centred on the anchor for a face,
-    // marching inward from a corner.
-    const inward = cornerInwardSign(frame.anchor);
-    // `|| 0` normalises the -0 that `inward * spacing * 0` produces.
-    const slots = Array.from({ length: n }, (_, i) =>
-      inward === null ? (i - (n - 1) / 2) * spacing || 0 : inward * spacing * i || 0,
-    ).sort((a, b) => a - b);
-    // Match ascending slots to ends sorted by where they come FROM along
-    // the same axis, so neighbouring arrows don't cross at the fan.
-    // Ends coming from one place along the edge (two steps in one column) tie on that: the nearer takes the slot on
-    // the side they come from, so its run stops short of the farther one's instead of crossing it.
-    const at = anchorAt.get(key)!;
-    const along = (q: Point) => (axis === 'x' ? q.x : q.y);
-    const across = (q: Point) => (axis === 'x' ? q.y : q.x);
-    const nearness = (e: ConvergingEnd) =>
-      Math.abs(across(e.other) - across(at)) * Math.sign(along(at) - along(e.other));
-    // Whole pixels, so "level" is a consistent bucket: ties within a pixel either way (0, 0.8, 1.6) are not transitive,
-    // and a sort given an inconsistent comparator ordered the fan by the arrows' order on the tab.
-    const sorted = [...ends].sort(
-      (a, b) =>
-        Math.round(along(a.other)) - Math.round(along(b.other)) ||
-        nearness(a) - nearness(b) ||
-        (a.arrowId < b.arrowId ? -1 : 1),
-    );
-    const rad = (frame.rotation * Math.PI) / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-    sorted.forEach((e, i) => {
-      const t = slots[i] ?? 0;
-      const local = axis === 'x' ? { x: t, y: 0 } : { x: 0, y: t };
-      // Rotate the tangential offset with the target so the fan stays on
-      // the (rotated) edge.
-      offsets.set(`${e.arrowId}:${e.end}`, {
-        x: local.x * cos - local.y * sin,
-        y: local.x * sin + local.y * cos,
-      });
+  if (pins.length < 2) return offsets;
+  const first = pins[0]!;
+  const frame = fanFrame(first.arrow[first.end], index);
+  if (!frame) return offsets;
+  const at = endpointPosition(first.arrow[first.end], index);
+  const ends: ConvergingEnd[] = pins.map(({ arrow, end }) => ({
+    arrowId: arrow.id,
+    end,
+    other: endpointPosition(end === 'from' ? arrow.to : arrow.from, index),
+  }));
+  const axis = spreadAxis(frame.anchor);
+  const n = ends.length;
+  const spacing = Math.min(SPREAD_SPACING, (frame.span * SPREAD_EDGE_FRACTION) / (n - 1));
+  // Slot positions along the edge: centred on the anchor for a face,
+  // marching inward from a corner.
+  const inward = cornerInwardSign(frame.anchor);
+  // `|| 0` normalises the -0 that `inward * spacing * 0` produces.
+  const slots = Array.from({ length: n }, (_, i) =>
+    inward === null ? (i - (n - 1) / 2) * spacing || 0 : inward * spacing * i || 0,
+  ).sort((a, b) => a - b);
+  // Match ascending slots to ends sorted by where they come FROM along
+  // the same axis, so neighbouring arrows don't cross at the fan.
+  // Ends coming from one place along the edge (two steps in one column) tie on that: the nearer takes the slot on
+  // the side they come from, so its run stops short of the farther one's instead of crossing it.
+  const along = (q: Point) => (axis === 'x' ? q.x : q.y);
+  const across = (q: Point) => (axis === 'x' ? q.y : q.x);
+  const nearness = (e: ConvergingEnd) =>
+    Math.abs(across(e.other) - across(at)) * Math.sign(along(at) - along(e.other));
+  // Whole pixels, so "level" is a consistent bucket: ties within a pixel either way (0, 0.8, 1.6) are not transitive,
+  // and a sort given an inconsistent comparator ordered the fan by the arrows' order on the tab.
+  const sorted = [...ends].sort(
+    (a, b) =>
+      Math.round(along(a.other)) - Math.round(along(b.other)) ||
+      nearness(a) - nearness(b) ||
+      (a.arrowId < b.arrowId ? -1 : 1),
+  );
+  const rad = (frame.rotation * Math.PI) / 180;
+  const cos = Math.cos(rad);
+  const sin = Math.sin(rad);
+  sorted.forEach((e, i) => {
+    const t = slots[i] ?? 0;
+    const local = axis === 'x' ? { x: t, y: 0 } : { x: 0, y: t };
+    // Rotate the tangential offset with the target so the fan stays on
+    // the (rotated) edge.
+    offsets.set(`${e.arrowId}:${e.end}`, {
+      x: local.x * cos - local.y * sin,
+      y: local.x * sin + local.y * cos,
     });
-  }
+  });
   return offsets;
 }
 
-// Per-collection memo so both render paths can call per arrow without
-// recomputing the whole map each time. Keyed on the collection's identity;
-// tab state is immutable, so a changed tab is a new array / index.
-const spreadCache = new WeakMap<object, Map<string, Point>>();
+// Per element set, the fans asked about so far: the pins are scanned once (no position resolved),
+// and each fan's offsets worked out when one of its ends is first asked for. Keyed on the
+// collection's identity; tab state is immutable, so a changed tab is a new array / index. A drag
+// preview, which asks over a fresh index every frame for the arrows it redraws, so resolves only
+// their fans (docs/specs/008-canvas/canvas-performance.md "Whole-board passes stay linear and run once").
+type SpreadState = {
+  index: ElementIndex;
+  pins: Map<string, ConvergingPin[]>;
+  fans: Map<string, Map<string, Point>>;
+};
+const spreadCache = new WeakMap<object, SpreadState>();
 
-function spreadMapFor(elements: Element[] | ElementIndex): Map<string, Point> {
-  const key = elements;
-  const cached = spreadCache.get(key);
+function spreadStateFor(elements: Element[] | ElementIndex): SpreadState {
+  const cached = spreadCache.get(elements);
   if (cached) return cached;
-  const list = isElementIndex(elements) ? [...elements.values()] : elements;
   const index = isElementIndex(elements)
     ? elements
-    : new Map(list.map((el) => [el.id, el] as const));
-  const map = computeSpreadMap(list, index);
-  spreadCache.set(key, map);
-  return map;
+    : new Map(elements.map((el) => [el.id, el] as const));
+  const state = {
+    index,
+    pins: convergingPins(isElementIndex(elements) ? elements.values() : elements),
+    fans: new Map(),
+  };
+  spreadCache.set(elements, state);
+  return state;
 }
 
 // The visual offset for one arrow end: {0,0} unless this end converges on
@@ -186,5 +202,14 @@ export function arrowEndpointSpread(
   end: 'from' | 'to',
   elements: Element[] | ElementIndex,
 ): Point {
-  return spreadMapFor(elements).get(`${arrowId}:${end}`) ?? { x: 0, y: 0 };
+  const state = spreadStateFor(elements);
+  const arrow = state.index.get(arrowId);
+  const key = arrow?.type === 'arrow' ? pinKey(arrow[end]) : null;
+  if (!key) return { x: 0, y: 0 };
+  let fan = state.fans.get(key);
+  if (!fan) {
+    fan = fanOffsets(state.pins.get(key) ?? [], state.index);
+    state.fans.set(key, fan);
+  }
+  return fan.get(`${arrowId}:${end}`) ?? { x: 0, y: 0 };
 }

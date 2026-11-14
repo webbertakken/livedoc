@@ -245,3 +245,33 @@ describe('fan order', () => {
       expect(slotsOf(order), order.join('')).toEqual(first);
   });
 });
+
+// docs/specs/008-canvas/canvas-performance.md "Whole-board passes stay linear and run once": a drag
+// preview asks for the spread of the arrows it redraws over a fresh index every frame, so one arrow's
+// spread resolves its own fan, never every fan on the board.
+describe('the cost of one end', () => {
+  it('reads only the elements of its own fan', () => {
+    const hub = box('hub', 400, 100);
+    const elsewhere = box('elsewhere', 2000, 100);
+    const board: Element[] = [
+      hub,
+      elsewhere,
+      box('far-1', 2000, 600),
+      box('far-2', 2400, 600),
+      arrow({ kind: 'free', x: 100, y: 400 }, pinned('hub', 's'), 'mine'),
+      arrow({ kind: 'free', x: 800, y: 400 }, pinned('hub', 's'), 'sibling'),
+      arrow(pinned('far-1', 'n'), pinned('elsewhere', 's'), 'other-1'),
+      arrow(pinned('far-2', 'n'), pinned('elsewhere', 's'), 'other-2'),
+    ];
+    const read = new Set<string>();
+    class CountingIndex extends Map<string, Element> {
+      override get(id: string) {
+        read.add(id);
+        return super.get(id);
+      }
+    }
+    const index = new CountingIndex(board.map((el) => [el.id, el] as const));
+    expect(arrowEndpointSpread('mine', 'to', index)).toEqual({ x: -7, y: 0 });
+    expect([...read].filter((id) => /far|elsewhere|other/.test(id))).toEqual([]);
+  });
+});

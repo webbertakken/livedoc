@@ -84,7 +84,9 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   with how far apart two points are.
 - **Whole-board passes stay linear and run once.** What deliberately looks across the whole board
   (alignment and distribution snapping, the endpoint spread, the arrow label pass) makes one
-  linear pass per frame at most, shared by everything that reads it.
+  linear pass per frame at most, shared by everything that reads it. The endpoint spread works out
+  a fan only when one of its ends is asked for: a drag preview asks for the arrows it redraws over a
+  fresh board each frame, and resolving every fan on the board for them was most of a frame's script.
 - **A move re-renders what moved.** A move, resize or reshape draws from a preview and writes the
   document once, on release ([Drag preview](drag-preview.md)): the moved elements and the arrows
   that depend on them re-render each frame, and nothing derived from the rest of the board is
