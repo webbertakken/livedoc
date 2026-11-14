@@ -18,6 +18,8 @@ Ruled 2026-11-14: "The model names lanes", the board places and checks.
 - **The board checks the result**: a plan that would change what the board says is refused, whoever made it.
 - **The lane count bounds the whole board** (ruled 2026-11-14): every workshop note ends on one of at most N lanes,
   N from `LANES_MIN` (2) to `LANES_MAX` (12).
+- **A plan keeps each note's x** (ruled 2026-11-14: "Keep each note's x"). Laying the board out afresh along the
+  timeline is a separate act, [Arrange](arrange.md).
 
 ## What a lane means
 
@@ -61,9 +63,9 @@ This is the domain knowledge a model is told ([Asks](asks.md#what-a-model-is-tol
 ## How the board places a plan
 
 - **Lanes are consecutive**, the plan's first on the top-most lane the board's workshop notes now use (default).
-- **A note keeps its place in time.** Each note keeps its x. Along a lane, notes are taken left to right; where one
-  would stand on the note before it, it and every note to its right, on every lane, move right by what is missing,
-  so a column too deep for the lanes opens and nothing after it changes its order or spacing (default).
+- **A note keeps its place in time** (ruled 2026-11-14). Each note keeps its x. Along a lane, notes are taken left
+  to right; where one would stand on the note before it, it and every note to its right, on every lane, move right
+  by what is missing, so a column too deep for the lanes opens and nothing after it changes its order or spacing.
 - **A note stands a gutter clear** (`ES_NOTE_GAP`) of the note before it on its lane, at least.
 - **Placing is pure and repeatable**: the same board and plan always place the same.
 
