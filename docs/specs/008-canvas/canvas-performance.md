@@ -91,6 +91,12 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   recomputed. A preview frame renders neither the canvas nor the element layer: each element view
   reads its own part of the preview, so a frame's work follows what moved, not the board, and only
   what follows the moved selection (its chrome) reads the whole preview.
+- **A break stays local.** An arrow broken where it runs behind a box is masked over its own extent (its path's
+  points, control points included, grown for its heads), never a vast region: a mask's region is what the browser
+  repaints when its holes change, and a vast one repainted the whole screen for every arrow a dragged box crossed.
+- **A pointer move reads no layout.** The pointer position sent to peers converts with where the canvas sits on
+  screen, measured when the view or the canvas's size changes; read on every move, it laid the whole board out again
+  on each frame of a drag.
 - **The canvas's cursor stays off the elements.** The cursor the canvas shows (the tool's, a pan's
   grab, a draw tool's intent) changes on a tool switch, at the start and end of a pan and when a
   stroke lands, and a cursor is inherited: set on what holds the elements, each change restyled

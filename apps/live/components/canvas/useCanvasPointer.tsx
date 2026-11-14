@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { pointerToCanvas } from '@/lib/canvas';
 import { useSpotlight } from '@/hooks/canvas/useSpotlight';
 import { useSpotlightConfig } from '@/hooks/canvas/useSpotlightConfig';
 import { spotlightRadius } from '@/lib/spotlight-config';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
+import { useCanvasClientOrigin } from '@/hooks/canvas/useCanvasClientOrigin';
+import { useCanvasViewKey } from '@/hooks/canvas/useViewportStore';
 
 type CanvasPointerInput = Pick<CanvasProps, 'canvasTool' | 'mainRef' | 'onCanvasPointerMove'> & {
   wrapperRef: React.RefObject<HTMLDivElement | null>;
-  viewportZoom: number;
+  // <main>'s size: where canvas (0, 0) sits on screen moves with it, the pan and the zoom.
+  mainSize: { width: number; height: number };
 };
 
 // Where the pointer is over the canvas: the spotlight's light and the eraser's brush ring in screen space, and the
@@ -19,8 +21,13 @@ export function useCanvasPointer({
   mainRef,
   onCanvasPointerMove,
   wrapperRef,
-  viewportZoom,
+  mainSize,
 }: CanvasPointerInput) {
+  // Where canvas (0, 0) sits on screen, measured when the view or <main>'s size changes and never on a pointer
+  // move: a move during a drag follows the frame's writes, and reading layout there laid out the whole board
+  // again on every frame (docs/specs/008-canvas/canvas-performance.md "A gesture frame never reads layout").
+  const { viewportZoom, viewKey } = useCanvasViewKey(mainSize);
+  const origin = useCanvasClientOrigin(wrapperRef, true, viewKey);
   // Spotlight presenter tool (docs/specs/008-canvas/canvas-and-palette.md): screen-space light position +
   // radius. Local to Canvas so the click handlers, the pointer tracker, and
   // the overlay share one source of truth; survives Pan/Select detours
@@ -50,10 +57,12 @@ export function useCanvasPointer({
       if (at && canvasTool === 'spotlight') spotlight.setPos(at);
       if (at && canvasTool === 'eraser') setEraserPos(at);
     }
-    const rect = wrapperRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    const { x: sx, y: sy } = pointerToCanvas(e.clientX, e.clientY, rect, viewportZoom);
-    onCanvasPointerMove(sx, sy, e.target);
+    if (!origin) return;
+    onCanvasPointerMove(
+      (e.clientX - origin.left) / viewportZoom,
+      (e.clientY - origin.top) / viewportZoom,
+      e.target,
+    );
   };
   const handlePointerLeaveCanvas = () => {
     onCanvasPointerMove(null, null);
