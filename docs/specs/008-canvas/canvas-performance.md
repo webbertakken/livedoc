@@ -63,6 +63,11 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   floating toolbar, the selection popover) is **hidden while a selection is being moved or
   resized** and placed again when the gesture ends; elsewhere it positions from canvas geometry
   (bounds, offset, zoom) and a measurement taken outside the gesture.
+- **A render never asks the browser for a media query's match.** A match is read once per query,
+  shared by everything that reads it, and kept up to date by the browser's change event: reading
+  one brings style and layout up to date, and with every element view reading one as it rendered,
+  pressing a selected box laid out the whole board in the middle of the press (about 20 ms of a
+  55 ms task).
 - **Opening a board animates nothing across the board.** The board appears at once, with no fade
   on the canvas world ([Motion](../004-interface-design/motion.md) "Editor arrival") and no
   pop-in on the elements it opens with ([Canvas and palette](canvas-and-palette.md) "Motion and

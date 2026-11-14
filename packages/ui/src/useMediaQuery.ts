@@ -18,6 +18,39 @@ import { useMemo, useSyncExternalStore } from 'react';
 // matchMedia is optional-chained throughout: jsdom and very old browsers can
 // leave it undefined, and a missing matchMedia should read as "no match"
 // rather than throw during render.
+//
+// One watched query per string, shared by every caller: reading a match asks the browser to bring style
+// and layout up to date, and a canvas whose every element read one forced a layout of the whole board in
+// the middle of a press. The match is read once and kept; the browser's change event updates it, then
+// tells the callers.
+type WatchedQuery = {
+  // The matchMedia it was read through: one replaced (a test's stub) is read again.
+  source: unknown;
+  matches: boolean;
+  listeners: Set<() => void>;
+};
+
+const watched = new Map<string, WatchedQuery>();
+
+function watch(query: string): WatchedQuery {
+  const source = typeof window === 'undefined' ? undefined : window.matchMedia;
+  const known = watched.get(query);
+  if (known && known.source === source) return known;
+  const mql = source ? (window.matchMedia(query) ?? null) : null;
+  // Callers already listening move over to the new source.
+  const entry: WatchedQuery = {
+    source,
+    matches: mql?.matches ?? false,
+    listeners: known?.listeners ?? new Set(),
+  };
+  mql?.addEventListener('change', () => {
+    entry.matches = mql.matches;
+    for (const cb of entry.listeners) cb();
+  });
+  watched.set(query, entry);
+  return entry;
+}
+
 export function useMediaQuery(query: string): boolean {
   // Memoised on `query` so the subscription survives re-renders. Fresh function
   // identities here would make useSyncExternalStore tear down and re-add the
@@ -26,13 +59,13 @@ export function useMediaQuery(query: string): boolean {
     () =>
       [
         (cb: () => void) => {
-          const mql = typeof window === 'undefined' ? null : window.matchMedia?.(query);
-          if (!mql) return () => {};
-          mql.addEventListener('change', cb);
-          return () => mql.removeEventListener('change', cb);
+          const { listeners } = watch(query);
+          listeners.add(cb);
+          return () => {
+            listeners.delete(cb);
+          };
         },
-        () =>
-          typeof window === 'undefined' ? false : (window.matchMedia?.(query).matches ?? false),
+        () => watch(query).matches,
       ] as const,
     [query],
   );
