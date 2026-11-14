@@ -1,6 +1,6 @@
 'use client';
 
-import type { Element } from '@livedoc/document';
+import type { Element, ElementId } from '@livedoc/document';
 import type { SuggestionControls } from '@/components/canvas/Canvas.types';
 import { changeCaption, changeSummary } from '@/lib/change-caption';
 import type { OfferedPreview } from '@/lib/change-preview';
@@ -29,6 +29,7 @@ export function NoteChangeMarks({
   elements,
   tabId,
   marks,
+  above,
   previewKey,
   offered,
   zoom,
@@ -37,6 +38,8 @@ export function NoteChangeMarks({
   elements: readonly Element[];
   tabId: string;
   marks: readonly ChangeMark[];
+  // The notes a suggestion waits above: their marks keep clear of its peek tab.
+  above: ReadonlySet<ElementId>;
   previewKey: string | null;
   // What the previewed change would make of the board: a split's parts and a removal's note are drawn here.
   offered: OfferedPreview | null;
@@ -63,6 +66,7 @@ export function NoteChangeMarks({
           <NoteChangeMark
             key={mark.note.id}
             mark={mark}
+            above={above.has(mark.note.id)}
             zoom={zoom}
             onPreview={() => previewSuggestion(tabId, key)}
             onLeave={() => leaveSuggestion(tabId, key)}

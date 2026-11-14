@@ -469,9 +469,9 @@ describe('ContextLayer: name suggestions', () => {
   const count = (id: string) =>
     nameOf(id).parentElement!.querySelector<HTMLElement>('[data-context-name-count]');
 
-  it('wears a count of the names a context holds for itself, and says so', () => {
+  it('says under its name how many names a context holds for itself', () => {
     draw(named(), editor());
-    expect(count('k')!.textContent).toBe('2');
+    expect(count('k')!.textContent).toBe('2 names');
     expect(nameOf('k').getAttribute('aria-label')).toBe(
       'Candidate context: Ctx k, 2 names suggested',
     );
@@ -491,6 +491,11 @@ describe('ContextLayer: name suggestions', () => {
     expect(chips()).toEqual([]);
     fireEvent.click(nameOf('k'));
     expect(chips()).toEqual(['Order taking', 'Sales']);
+    // The count unfolds into the chips, led by what choosing one does.
+    expect(count('k')).toBeNull();
+    expect(document.querySelector('[data-name-chips]')!.textContent).toBe(
+      'Rename toOrder takingSales',
+    );
     expect(screen.getByRole('button', { name: 'Rename to Sales' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Dismiss name suggestions' })).toBeTruthy();
   });

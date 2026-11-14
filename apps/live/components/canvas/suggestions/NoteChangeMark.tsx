@@ -4,40 +4,60 @@ import { eventStormingNote, type Rect } from '@livedoc/document';
 import { changeSummary } from '@/lib/change-caption';
 import type { ChangeMark } from '@/lib/suggested-changes';
 import { suggestionKeys } from './SuggestionPlaceholder';
-import { PEEK_PROTRUDE, PEEK_PROTRUDE_ACROSS } from './SuggestionPeekTab';
+import { PEEK_LENGTH_RATIO } from './SuggestionPeekTab';
 import {
+  SUGGESTION_INK_TEXT,
   SUGGESTION_STROKE_BORDER,
-  SUGGESTION_STROKE_TEXT,
   SUGGESTION_TINT,
   suggestionStrokeVars,
 } from './suggestion-colours';
 
-// The change mark (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"): a small dashed
-// tab on the top right corner of a note that holds suggested changes, in the family of the peek tab, with the count
-// when it holds more than one. Pointing at it, or focusing it, previews the note's first change; Enter accepts that
-// one and Delete dismisses it. Never paper: an outline and a faint tint of the kind's hue.
+// The change mark (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"): a worded
+// dashed tab on the top edge of a note that holds suggested changes, at its right end, in the family of the peek tab.
+// It says what the first change is ("Reword", "Split", "Remove", "To Policy") and how many more the note holds
+// ("Split +1"). Pointing at it, or focusing it, previews the note's first change; Enter accepts that one and Delete
+// dismisses it. Never paper: an outline and a faint tint of the kind's hue.
 
-// Along the top edge: as long as a peek tab, and set in from the corner so it clears the tab an `after` suggestion
-// tucks beside the note.
-export const MARK_LENGTH_RATIO = 0.24;
-export const MARK_INSET_RATIO = 0.04;
+// Canvas units, as the note's own words are: the tab is part of the board.
+export const MARK_HEIGHT = 20;
+// Set in from the corner, so it clears the tab an `after` suggestion tucks beside the note.
+export const MARK_INSET = 8;
+// The room kept to a peek tab standing above the note, in the middle of the same edge.
+export const MARK_CLEAR = 4;
+const MARK_PAD_X = 8;
+const MARK_FONT = 12;
+const MARK_RADIUS = 6;
 const STROKE_PX = 2;
 // The smallest hit target, in screen px, whatever the zoom (WCAG 2.2 2.5.8).
 const MIN_HIT_PX = 24;
 
-/** The mark's box in canvas units: standing on the note's top edge, at its right end. */
-export function changeMarkBox(note: Rect): {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-} {
-  const width = note.width * MARK_LENGTH_RATIO;
+const WORD = { reword: 'Reword', split: 'Split', remove: 'Remove' } as const;
+const titled = (label: string) => label.replace(/\b[a-z]/g, (letter) => letter.toUpperCase());
+
+/** What the tab says: the first change, a kind change by the kind the note would become, and how many more. */
+export function changeMarkWords(mark: Pick<ChangeMark, 'changes'>): string {
+  const first = mark.changes[0]!;
+  const word =
+    first.change === 'kind'
+      ? `To ${titled(eventStormingNote(first.kind).label)}`
+      : WORD[first.change];
+  const more = mark.changes.length - 1;
+  return more > 0 ? `${word} +${more}` : word;
+}
+
+/** Where the mark stands, in canvas units: on the note's top edge, ending `right`, at most `maxWidth` long.
+ *  `above`: a suggestion waits above the note, so the mark keeps clear of its peek tab. */
+export function changeMarkPlace(
+  note: Rect,
+  above: boolean,
+): { right: number; top: number; height: number; maxWidth: number } {
+  const right = note.x + note.width - MARK_INSET;
+  const peekRight = note.x + note.width / 2 + (note.width * PEEK_LENGTH_RATIO) / 2;
   return {
-    left: note.x + note.width - width - note.width * MARK_INSET_RATIO,
-    top: note.y - PEEK_PROTRUDE_ACROSS,
-    width,
-    height: PEEK_PROTRUDE_ACROSS,
+    right,
+    top: note.y - MARK_HEIGHT,
+    height: MARK_HEIGHT,
+    maxWidth: above ? right - peekRight - MARK_CLEAR : note.width - 2 * MARK_INSET,
   };
 }
 
@@ -50,6 +70,7 @@ export function changeMarkLabel(mark: ChangeMark): string {
 
 export function NoteChangeMark({
   mark,
+  above,
   zoom,
   onPreview,
   onLeave,
@@ -57,6 +78,8 @@ export function NoteChangeMark({
   onDismiss,
 }: {
   mark: ChangeMark;
+  // A suggestion waits above the note: keep clear of its peek tab.
+  above: boolean;
   zoom: number;
   onPreview: () => void;
   onLeave: () => void;
@@ -64,12 +87,10 @@ export function NoteChangeMark({
   onAccept: () => void;
   onDismiss: () => void;
 }) {
-  const box = changeMarkBox(mark.note);
+  const place = changeMarkPlace(mark.note, above);
   const px = 1 / zoom;
-  const hitW = Math.max(box.width, MIN_HIT_PX * px);
-  const hitH = Math.max(box.height, MIN_HIT_PX * px);
-  const count = mark.changes.length;
-  const radius = PEEK_PROTRUDE * 0.5;
+  const hit = MIN_HIT_PX * px;
+  const hitH = Math.max(place.height, hit);
   return (
     <button
       type="button"
@@ -87,30 +108,34 @@ export function NoteChangeMark({
         onPreview();
       }}
       onKeyDown={(e) => suggestionKeys(e, onAccept, onDismiss)}
-      className="group pointer-events-auto absolute flex items-end justify-center focus-visible:outline-none"
+      className="group pointer-events-auto absolute flex items-end justify-end focus-visible:outline-none"
       style={{
-        left: box.left + box.width / 2 - hitW / 2,
-        top: box.top + box.height - hitH,
-        width: hitW,
+        // Its right end is the anchor: the words decide how far left it reaches.
+        left: place.right,
+        top: place.top + place.height - hitH,
+        transform: 'translateX(-100%)',
         height: hitH,
+        minWidth: hit,
+        maxWidth: place.maxWidth,
         ...suggestionStrokeVars(mark.kind),
       }}
     >
       <span
         aria-hidden
-        className={`flex items-center justify-center border-dashed font-semibold tabular-nums transition duration-150 group-hover:scale-105 group-focus-visible:ring-2 group-focus-visible:ring-brand-500 motion-reduce:transition-none ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER} ${SUGGESTION_STROKE_TEXT}`}
+        className={`block max-w-full truncate border-dashed font-semibold tabular-nums transition duration-150 group-hover:scale-105 group-focus-visible:ring-2 group-focus-visible:ring-brand-500 motion-reduce:transition-none ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER} ${SUGGESTION_INK_TEXT}`}
         style={{
-          width: box.width,
-          height: box.height,
+          height: place.height,
+          paddingInline: MARK_PAD_X,
           borderWidth: STROKE_PX * px,
           // Open where it meets the paper.
           borderBottomWidth: 0,
-          borderRadius: `${radius}px ${radius}px 0 0`,
-          fontSize: box.height * 0.8,
-          transformOrigin: 'bottom',
+          borderRadius: `${MARK_RADIUS}px ${MARK_RADIUS}px 0 0`,
+          fontSize: MARK_FONT,
+          lineHeight: `${place.height - STROKE_PX * px}px`,
+          transformOrigin: 'bottom right',
         }}
       >
-        {count > 1 ? count : null}
+        {changeMarkWords(mark)}
       </span>
     </button>
   );

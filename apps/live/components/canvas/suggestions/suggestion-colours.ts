@@ -16,6 +16,26 @@ const LIGHT_STROKE: Readonly<Record<EventStormingNoteKind, string>> = {
   hotspot: '#b91c1c',
 };
 
+// The colour of words set on a hint's tint (the change mark's): text, so 4.5:1 (WCAG 2.2 1.4.3). On the light
+// canvas the kind's 800 shade, a step darker than its stroke; on the dark canvas the stroke already reads.
+const LIGHT_INK: Readonly<Record<EventStormingNoteKind, string>> = {
+  'domain-event': '#9a3412',
+  command: '#1e40af',
+  actor: '#854d0e',
+  policy: '#6b21a8',
+  'read-model': '#166534',
+  'external-system': '#9d174d',
+  aggregate: '#92400e',
+  hotspot: '#991b1b',
+};
+
+export function suggestionInk(kind: EventStormingNoteKind, scheme: 'light' | 'dark'): string {
+  return scheme === 'light' ? LIGHT_INK[kind] : suggestionStroke(kind, 'dark');
+}
+
+// How much of the stroke a hint's tint holds, per cent, on each canvas.
+export const SUGGESTION_TINT_PERCENT = { light: 12, dark: 16 } as const;
+
 export function suggestionStroke(kind: EventStormingNoteKind, scheme: 'light' | 'dark'): string {
   return scheme === 'light' ? LIGHT_STROKE[kind] : eventStormingNote(kind).fill;
 }
@@ -25,6 +45,7 @@ export function suggestionStrokeVars(kind: EventStormingNoteKind): CSSProperties
   return {
     '--suggestion-stroke-light': suggestionStroke(kind, 'light'),
     '--suggestion-stroke-dark': suggestionStroke(kind, 'dark'),
+    '--suggestion-ink-light': suggestionInk(kind, 'light'),
   } as CSSProperties;
 }
 
@@ -32,6 +53,9 @@ export const SUGGESTION_STROKE_BORDER =
   '[border-color:var(--suggestion-stroke-light)] dark:[border-color:var(--suggestion-stroke-dark)]';
 export const SUGGESTION_STROKE_TEXT =
   '[color:var(--suggestion-stroke-light)] dark:[color:var(--suggestion-stroke-dark)]';
+// Words on the tint: the ink on the light canvas, the stroke on the dark one.
+export const SUGGESTION_INK_TEXT =
+  '[color:var(--suggestion-ink-light)] dark:[color:var(--suggestion-stroke-dark)]';
 // A breath of the kind's hue inside a hint, so a small outline still reads as a colour; never paper.
 export const SUGGESTION_TINT =
   '[background-color:color-mix(in_srgb,var(--suggestion-stroke-light)_12%,transparent)] dark:[background-color:color-mix(in_srgb,var(--suggestion-stroke-dark)_16%,transparent)]';

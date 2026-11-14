@@ -61,6 +61,10 @@ export function SuggestionLayer({
   const zoom = useCanvasZoom();
   const view = useSuggestionView(tabId);
   const hints = useMemo(() => suggestionHints(elements), [elements]);
+  const above = useMemo(
+    () => new Set(hints.filter((h) => h.side === 'above').map((h) => h.anchorId)),
+    [hints],
+  );
   const spots = useMemo(() => suggestionSpots(elements), [elements]);
   const timeline = useMemo(() => suggestionsInTimeline(elements), [elements]);
   const marks = useMemo(() => changeMarks(elements, inertIds), [elements, inertIds]);
@@ -138,6 +142,7 @@ export function SuggestionLayer({
       elements={elements}
       tabId={tabId}
       marks={marks}
+      above={above}
       previewKey={view.previewKey}
       offered={offered}
       zoom={zoom}

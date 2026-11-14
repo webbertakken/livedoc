@@ -185,14 +185,23 @@ export function ContextName({
       >
         {words}
       </button>
-      {names > 0 ? (
-        <span
-          aria-hidden
-          data-context-name-count={names}
-          className="absolute bottom-full right-[0.9em] flex h-[0.8em] min-w-[1.25em] items-center justify-center rounded-t-[0.3em] border-[1.5px] border-b-0 border-dashed px-[0.2em] text-[0.6em] font-semibold tabular-nums [background-color:color-mix(in_srgb,var(--ctx-line)_14%,var(--lvd-canvas-paper,#ffffff))] [border-color:var(--ctx-line)]"
+      {names > 0 && !below ? (
+        // At rest the context says in words that names wait; selected, this unfolds into the chips below.
+        <div
+          className="pointer-events-none absolute left-1/2 top-full pt-[3px]"
+          style={{
+            transform: `translateX(-50%) scale(${1 / zoom})`,
+            transformOrigin: 'top center',
+          }}
         >
-          {names}
-        </span>
+          <span
+            aria-hidden
+            data-context-name-count={names}
+            className="flex h-5 items-center whitespace-nowrap rounded-full border-[1.5px] border-dashed bg-[var(--lvd-canvas-paper,#ffffff)] px-[9px] text-[11px] font-semibold leading-none tabular-nums [border-color:var(--ctx-line)]"
+          >
+            {names} name{names === 1 ? '' : 's'}
+          </span>
+        </div>
       ) : null}
       {acts.suggested ? (
         <>
