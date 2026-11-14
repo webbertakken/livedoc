@@ -47,9 +47,18 @@ function whatOf(note: Pick<StickyElement, 'label'>, change: EsNoteChange): strin
   }
 }
 
+/** A change in two words' worth: the act ("Reword") and what it acts on or leaves (the new words, the kind). */
+export function changeWords(
+  note: Pick<StickyElement, 'label'>,
+  change: EsNoteChange,
+): { title: string; what: string } {
+  return { title: TITLE[change.change], what: whatOf(note, change) };
+}
+
 /** A change in one line, as a label reads it: "Reword “Pack parcel”". */
 export function changeSummary(note: Pick<StickyElement, 'label'>, change: EsNoteChange): string {
-  return `${TITLE[change.change]} ${whatOf(note, change)}`;
+  const { title, what } = changeWords(note, change);
+  return `${title} ${what}`;
 }
 
 // How far a reword reaches from its note: its own context first, then how many more notes hold the term.
@@ -85,8 +94,7 @@ export function changeCaption(
 ): ChangeCaption {
   const note = elements.find((el) => el.id === noteId);
   return {
-    title: TITLE[change.change],
-    what: whatOf({ label: note?.type === 'sticky' ? note.label : undefined }, change),
+    ...changeWords({ label: note?.type === 'sticky' ? note.label : undefined }, change),
     ...rippleOf(elements, noteId, change),
     ...(change.reason ? { reason: change.reason } : {}),
     ...(change.by ? { by: change.by } : {}),

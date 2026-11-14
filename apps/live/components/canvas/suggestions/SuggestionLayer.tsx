@@ -1,22 +1,18 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  contextBounds,
-  contextNotes,
-  isSuggestedContext,
-  type CandidateContextElement,
-  type Element,
-  type Rect,
-} from '@livedoc/document';
+import type { Element, ElementId, Rect } from '@livedoc/document';
 import type { SuggestionControls } from '@/components/canvas/Canvas.types';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
+import type { OfferedPreview } from '@/lib/change-preview';
+import { changeMarks } from '@/lib/suggested-changes';
 import {
   suggestionHints,
   suggestionSpots,
   suggestionsInTimeline,
   type SuggestionElement,
 } from '@/lib/suggestion-hints';
+import { panelRowBounds, panelRowKey, panelRows, type PanelRow } from '@/lib/suggestion-rows';
 import {
   endSuggestionPreview,
   leaveSuggestion,
@@ -26,78 +22,63 @@ import {
   useSuggestionView,
 } from '@/lib/suggestion-view';
 import { track } from '@/lib/telemetry';
+import { NoteChangeMarks } from './NoteChangeMarks';
 import { SuggestionPeekTab } from './SuggestionPeekTab';
 import { SuggestionPlaceholder } from './SuggestionPlaceholder';
-import { SuggestionsPanel, panelRowId, type PanelRow } from './SuggestionsPanel';
+import { SuggestionsPanel, type ChosenRow, type DecidedRow } from './SuggestionsPanel';
 
 // A board's suggestions on the canvas (docs/specs/021-event-storming/suggestions.md "How a person sees them"), in
 // canvas units inside the grips layer, above every element: with Show All off a peek tab per anchor side and the
 // previewed suggestion's placeholder; with it on, every placeholder where Apply All would land it (the notes that
 // stand aside are drawn shifted by the element list, from the same preview). The panel is portalled to the screen.
+// The changes suggested to notes already there wear their marks here too
+// (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"); a context's suggested names
+// are drawn with the contexts, and listed in the panel.
 
-const union = (a: Rect, b: Rect): Rect => {
-  const x = Math.min(a.x, b.x);
-  const y = Math.min(a.y, b.y);
-  return {
-    x,
-    y,
-    width: Math.max(a.x + a.width, b.x + b.width) - x,
-    height: Math.max(a.y + a.height, b.y + b.height) - y,
-  };
-};
-
-// The suggested candidate contexts as panel rows (docs/specs/021-event-storming/candidate-contexts.md), each with the
-// box of its notes still on the board; one with none left is an orphan, never listed.
-function suggestedContextRows(elements: readonly Element[]): PanelRow[] {
-  const byId = new Map(elements.map((el) => [el.id, el]));
-  const rows: PanelRow[] = [];
-  for (const el of elements) {
-    if (!isSuggestedContext(el)) continue;
-    const context = el as CandidateContextElement;
-    const notes = contextNotes(context, byId);
-    if (notes.length > 0)
-      rows.push({ type: 'context', context, bounds: contextBounds(notes), notes: notes.length });
-  }
-  return rows;
-}
-
-// Notes and contexts in one timeline: a note by where it lands, a context by its leftmost note.
-function inTimeline(notes: PanelRow[], contexts: PanelRow[]): PanelRow[] {
-  const at = (row: PanelRow) => (row.type === 'note' ? row.spot : row.bounds);
-  return [...notes, ...contexts].sort((a, b) => at(a).x - at(b).x || at(a).y - at(b).y);
-}
+const NO_INERT: ReadonlySet<ElementId> = new Set();
 
 export function SuggestionLayer({
   elements,
   tabId,
   controls,
   showAllSpots,
+  inertIds = NO_INERT,
+  offered = null,
+  onSelectContexts,
 }: {
   elements: Element[];
   tabId: string;
   controls: SuggestionControls;
   // Where Apply All would land each suggestion: the Show All preview, computed beside the shift it goes with.
   showAllSpots: ReadonlyMap<string, Rect> | null;
+  // Elements on hidden or locked layers: a note there wears no change mark.
+  inertIds?: ReadonlySet<ElementId>;
+  // What the previewed change would make of the board, computed beside the shift it goes with.
+  offered?: OfferedPreview | null;
+  // Select these contexts, whose names then show as chips on the board.
+  onSelectContexts?: (ids: readonly ElementId[]) => void;
 }) {
   const zoom = useCanvasZoom();
   const view = useSuggestionView(tabId);
   const hints = useMemo(() => suggestionHints(elements), [elements]);
   const spots = useMemo(() => suggestionSpots(elements), [elements]);
   const timeline = useMemo(() => suggestionsInTimeline(elements), [elements]);
-  const contextRows = useMemo(() => suggestedContextRows(elements), [elements]);
-  if (hints.length === 0 && contextRows.length === 0) return null;
-
+  const marks = useMemo(() => changeMarks(elements, inertIds), [elements, inertIds]);
   const showAll = view.showAll && showAllSpots !== null;
+  const rows = useMemo(
+    () => panelRows({ elements, timeline, showAllSpots: showAll ? showAllSpots : null, inertIds }),
+    [elements, timeline, showAll, showAllSpots, inertIds],
+  );
+  if (hints.length === 0 && rows.length === 0) return null;
+
   const preview = (key: string) => () => previewSuggestion(tabId, key);
   const leave = (key: string) => () => leaveSuggestion(tabId, key);
-  const apply = (id: string) => {
+  const decide = (act: () => void) => {
     endSuggestionPreview(tabId);
-    controls.apply(id);
+    act();
   };
-  const dismiss = (id: string) => {
-    endSuggestionPreview(tabId);
-    controls.dismiss(id);
-  };
+  const apply = (id: string) => decide(() => controls.apply(id));
+  const dismiss = (id: string) => decide(() => controls.dismiss(id));
   const placeholder = (s: SuggestionElement, spot: Rect, caption: boolean, key: string) => (
     <SuggestionPlaceholder
       key={s.id}
@@ -112,14 +93,21 @@ export function SuggestionLayer({
     />
   );
 
-  const noteRows: PanelRow[] = timeline.map(({ suggestion, spot, anchor }) => ({
-    type: 'note',
-    suggestion,
-    anchor,
-    spot: (showAll ? showAllSpots.get(suggestion.id) : undefined) ?? spot,
-  }));
-  const rows = inTimeline(noteRows, contextRows);
-  const rowKey = (row: PanelRow) => `${row.type === 'note' ? 's' : 'c'}:${panelRowId(row)}`;
+  const applyRow = (row: DecidedRow, everywhere = false) => {
+    if (row.type === 'change')
+      decide(() =>
+        controls.acceptChange(row.note.id, row.change, everywhere ? 'board' : 'context'),
+      );
+    else apply(row.type === 'note' ? row.suggestion.id : row.context.id);
+  };
+  const contextIdsOf = (row: ChosenRow) =>
+    row.type === 'names' ? [row.context.id] : row.contexts.map((c) => c.id);
+  const dismissRow = (row: PanelRow) => {
+    if (row.type === 'change') decide(() => controls.dismissChange(row.note.id, row.change));
+    else if (row.type === 'names' || row.type === 'merge')
+      decide(() => controls.dismissNames(contextIdsOf(row)));
+    else dismiss(row.type === 'note' ? row.suggestion.id : row.context.id);
+  };
   const panel = (
     <SuggestionsPanel
       rows={rows}
@@ -131,20 +119,29 @@ export function SuggestionLayer({
         setShowAllSuggestions(tabId, on);
       }}
       onPreview={(row) => {
-        previewSuggestion(tabId, rowKey(row));
-        controls.reveal(row.type === 'note' ? union(row.anchor, row.spot) : row.bounds);
+        previewSuggestion(tabId, panelRowKey(row));
+        controls.reveal(panelRowBounds(row));
       }}
-      onLeave={(row) => leaveSuggestion(tabId, rowKey(row))}
-      onApply={apply}
-      onDismiss={dismiss}
-      onApplyAll={() => {
-        endSuggestionPreview(tabId);
-        controls.applyAll();
+      onLeave={(row) => leaveSuggestion(tabId, panelRowKey(row))}
+      onApply={applyRow}
+      onChoose={(row) => {
+        onSelectContexts?.(contextIdsOf(row));
+        controls.reveal(row.bounds);
       }}
-      onDismissAll={() => {
-        endSuggestionPreview(tabId);
-        controls.dismissAll();
-      }}
+      onDismiss={dismissRow}
+      onApplyAll={() => decide(controls.applyAll)}
+      onDismissAll={() => decide(controls.dismissAll)}
+    />
+  );
+  const changes = (
+    <NoteChangeMarks
+      elements={elements}
+      tabId={tabId}
+      marks={marks}
+      previewKey={view.previewKey}
+      offered={offered}
+      zoom={zoom}
+      controls={controls}
     />
   );
 
@@ -156,6 +153,7 @@ export function SuggestionLayer({
           const spot = showAllSpots.get(suggestion.id);
           return spot ? placeholder(suggestion, spot, view.previewKey === key, key) : null;
         })}
+        {changes}
         {panel}
       </>
     );
@@ -181,6 +179,7 @@ export function SuggestionLayer({
         />
       ))}
       {shown.map((s, i) => placeholder(s, spots.get(s.id)!, i === 0, key!))}
+      {changes}
       {panel}
     </>
   );

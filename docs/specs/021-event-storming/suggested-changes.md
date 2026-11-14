@@ -34,6 +34,7 @@ A **name suggestion** is another name for a candidate context, or one name for s
   them; a context that holds any wears a small count beside its name (default).
 - **Pointing at a chip, or focusing it, previews it**: the context's name reads as the suggestion would have it, and
   a caption gives the reason and who suggested it.
+  A merge's chip previews by its caption alone: the selected outlines already show what would merge (default).
 - **Choosing a chip renames the context**, and drops its other name suggestions for itself, in one undoable step.
   A suggested context stays suggested under its new name (default).
 - **With two or more contexts selected**, the [merge offer](candidate-contexts.md#selecting-several-and-merging)
@@ -41,10 +42,15 @@ A **name suggestion** is another name for a candidate context, or one name for s
   Choosing one merges them and names the merged context, in one undoable step, without opening the name for typing
   (ruled 2026-11-14: "Picking a name for both combined will merge them automatically").
   The merged context drops its name suggestions for itself, as one renamed by a chip does (default).
-- ✕ dismisses the chips shown; Delete on a focused chip dismisses that one.
+  The merged context is then the one selected, and the keyboard stays on its name (default).
+- ✕ after the chips dismisses those shown; Delete on a focused chip dismisses that one.
+  In the merge offer the chips bring no ✕ of their own: the offer's ✕ keeps the contexts apart (default).
+- The count beside a name is in its accessible name too ("Candidate context: Ordering, 3 names suggested").
 - **In the suggestions panel**: a **Names** row per context that holds any, and a **Merge** row per set of contexts
-  a name was suggested for. Pointing at a row brings its contexts into view at full strength; choosing a Merge row
-  selects its contexts, which shows the merge offer with its chips (default).
+  a name was suggested for. Pointing at a row brings its contexts into view at full strength; choosing a row selects
+  its contexts, which shows their chips under the name, or the merge offer with its chips (default).
+  Such a row is chosen as a whole and holds ✕ alone, which dismisses its names: it has no ✓, because which name is
+  the person's to pick (default).
 
 ## Note changes
 
@@ -96,14 +102,24 @@ context (possibly all contexts) if the word Order changes in that suggestion."
   the [peek tab](suggestions.md#how-a-person-sees-them), with the count when it holds more than one (default).
 - **Pointing at the mark, or focusing it, previews the note's first change**, with a caption: what changes, the
   reason and who suggested it, ✓ and ✕, and **Everywhere** for a reword that reaches further.
+  The caption sits under the note, never on its paper, so the previewed note reads whole, and it is nudged back
+  inside the window when its note stands at an edge (default).
   - `reword`: the note and every note that ripples draw their new words, and the caption counts them
     ("Also rewords 4 notes in Ordering · 3 more on the board").
+    Pointing at Everywhere previews the reword across the whole board (default).
   - `kind`: the note draws as the other kind's paper and silhouette.
-  - `split`: the parts draw as placeholders after the note, the board making room as Show All does.
+  - `split`: the note draws its first part and the others draw as placeholders after it, the board making room
+    as Show All does. With Show All on, only the first part previews: the board is already drawn as Apply All
+    would leave it (default).
   - `remove`: the note draws struck through and faint.
 - A preview never writes: it is drawn over an untouched board, as every preview on this board is.
+  It is drawn the way a drag in hand is drawn, so the context outlines and names follow it, and it is never sent
+  to a collaborator.
+- **A locked note, or one on a hidden or locked layer, wears no mark** and has no row: nothing is offered where the
+  change would be refused (default).
 - **The suggestions panel** lists every note change in timeline order of its note (the change, the words, the reason,
   ✓ and ✕, and Everywhere); pointing at a row previews it as the mark does.
+  The panel's count is its rows: a context's names are one thing to decide (default).
 - **Keyboard.** The mark is in the tab order; Enter accepts the first change and Delete dismisses it.
 
 ### Accepting
@@ -113,10 +129,13 @@ Each is one undoable step through the ordinary choke point.
 - `reword`: the note takes the words; the notes that ripple take the term; the note's other rewords are dropped.
 - `kind`: the note changes kind as Change Kind changes it, and the note's other kind changes are dropped.
 - `split`: the note keeps the first part; each further part lands as a note of the same kind after it, as an applied
-  `after` suggestion lands, and joins the note's candidate context.
+  `after` suggestion lands, and joins the note's candidate context, kept or suggested.
+  The note's other changes stay for the person to decide.
 - `remove`: the note is removed as Delete removes it, with what was suggested on it.
 - Apply All and Dismiss All include name suggestions and note changes; Apply All takes the first name suggestion of
   each context and each note's first change, a reword in its context's scope (default).
+  It applies the suggested notes and contexts first, then the names, then the note changes along the timeline, each
+  on the board the one before left; a merge's name is left for the person to choose (default).
 - Dismissing is [remembered](asks.md#what-was-declined).
 
 ## Share roles
@@ -146,3 +165,12 @@ none of it; an agent suggests, and removes its owner's with `rm` or `storm clear
   `packages/edit-operations/src/operations/suggestion-rules.ts`; taking one back:
   `packages/edit-operations/src/operations/rm.ts`.
 - The view's rows: `packages/storm-reading/src/suggested-changes.ts`.
+- In the editor: what a board's suggested changes are, for drawing: `apps/live/lib/suggested-changes.ts`; accepting
+  on the board (a split's parts land here): `apps/live/lib/suggested-changes-apply.ts`; the preview:
+  `apps/live/lib/change-preview.ts`, drawn through the offered channel of `apps/live/lib/drag-preview.ts` by
+  `apps/live/hooks/canvas/useOfferedPreview.ts`; a change's words: `apps/live/lib/change-caption.ts`; the acts:
+  `apps/live/hooks/canvas/useChangeActions.ts`.
+- On the canvas: the mark, its caption and what a preview adds (a split's parts, a removal's strike) in
+  `apps/live/components/canvas/suggestions/` (`NoteChangeMark.tsx`, `ChangeCaption.tsx`, `NoteChangeMarks.tsx`);
+  the chips: `apps/live/components/canvas/contexts/NameChips.tsx`.
+- The board seeded by the end-to-end tests: `apps/live/e2e/change-board.ts`.

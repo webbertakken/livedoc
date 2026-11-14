@@ -2,7 +2,7 @@
 
 import type { KeyboardEvent } from 'react';
 import { CheckIcon, CloseIcon } from '@livedoc/ui';
-import { eventStormingNote, type Rect } from '@livedoc/document';
+import { eventStormingNote, type EventStormingNoteKind, type Rect } from '@livedoc/document';
 import type { SuggestionElement } from '@/lib/suggestion-hints';
 import { suggestionStrokeVars } from './suggestion-colours';
 
@@ -31,6 +31,49 @@ export function suggestionKeys(e: KeyboardEvent, onApply: () => void, onDismiss:
   e.stopPropagation();
 }
 
+// The placeholder's paper, filling the box it is put in: that box sets the kind's strokes (`suggestionStrokeVars`).
+// A previewed split draws its further parts with it (docs/specs/021-event-storming/suggested-changes.md "How a person
+// sees and decides").
+export function PlaceholderPaper({
+  kind,
+  words,
+  height,
+  zoom,
+}: {
+  kind: EventStormingNoteKind;
+  words: string;
+  // The box's height in canvas units: the type and the padding follow it.
+  height: number;
+  zoom: number;
+}) {
+  const note = eventStormingNote(kind);
+  return (
+    <div
+      className="flex h-full w-full flex-col items-center justify-center border-dashed bg-white [border-color:var(--suggestion-stroke-light)] group-focus-visible:ring-2 group-focus-visible:ring-brand-500 group-focus-visible:ring-offset-2"
+      style={{
+        borderWidth: 2 / zoom,
+        borderRadius: height * 0.03,
+        backgroundImage: `linear-gradient(${note.fill}${PAPER_ALPHA}, ${note.fill}${PAPER_ALPHA})`,
+        padding: height * 0.08,
+        gap: height * 0.03,
+      }}
+    >
+      <span
+        className="font-semibold uppercase tracking-wide [color:var(--suggestion-stroke-light)]"
+        style={{ fontSize: height * 0.06 }}
+      >
+        {note.label}
+      </span>
+      <span
+        className="text-balance text-center font-semibold leading-tight text-slate-900"
+        style={{ fontSize: height * 0.1 }}
+      >
+        {words}
+      </span>
+    </div>
+  );
+}
+
 export function SuggestionPlaceholder({
   suggestion,
   spot,
@@ -52,7 +95,6 @@ export function SuggestionPlaceholder({
   onPreview: () => void;
   onLeave: () => void;
 }) {
-  const note = eventStormingNote(suggestion.esKind);
   const px = 1 / zoom;
   const name = suggestionName(suggestion);
   const { reason, by } = suggestion.esSuggestion;
@@ -80,29 +122,12 @@ export function SuggestionPlaceholder({
         ...suggestionStrokeVars(suggestion.esKind),
       }}
     >
-      <div
-        className="flex h-full w-full flex-col items-center justify-center border-dashed bg-white [border-color:var(--suggestion-stroke-light)] group-focus-visible:ring-2 group-focus-visible:ring-brand-500 group-focus-visible:ring-offset-2"
-        style={{
-          borderWidth: 2 * px,
-          borderRadius: spot.height * 0.03,
-          backgroundImage: `linear-gradient(${note.fill}${PAPER_ALPHA}, ${note.fill}${PAPER_ALPHA})`,
-          padding: spot.height * 0.08,
-          gap: spot.height * 0.03,
-        }}
-      >
-        <span
-          className="font-semibold uppercase tracking-wide [color:var(--suggestion-stroke-light)]"
-          style={{ fontSize: spot.height * 0.06 }}
-        >
-          {note.label}
-        </span>
-        <span
-          className="text-balance text-center font-semibold leading-tight text-slate-900"
-          style={{ fontSize: spot.height * 0.1 }}
-        >
-          {suggestion.label}
-        </span>
-      </div>
+      <PlaceholderPaper
+        kind={suggestion.esKind}
+        words={suggestion.label ?? ''}
+        height={spot.height}
+        zoom={zoom}
+      />
       <div className="absolute flex" style={{ right: 6 * px, bottom: 6 * px, gap: 4 * px }}>
         <button
           type="button"

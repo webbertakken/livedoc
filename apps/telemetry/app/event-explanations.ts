@@ -167,6 +167,14 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone made a candidate context on an event-storming board from the notes they had selected (New Context).',
   'Canvas|Used|ContextDrawn':
     'Someone drew a loop round notes on an event-storming board with Draw Context, making a candidate context of them.',
+  'Canvas|Used|NameSuggestionApplied':
+    'Someone chose a name an agent suggested for a candidate context on an event-storming board, renaming it, or merging several under it. Never the name.',
+  'Canvas|Used|NameSuggestionDismissed':
+    'Someone dismissed the names an agent suggested for a candidate context on an event-storming board, one or all of those shown.',
+  'Canvas|Used|NoteChangeApplied':
+    'Someone accepted a change an agent suggested to a note on an event-storming board: other words, another kind, a split or its removal. Never the words.',
+  'Canvas|Used|NoteChangeDismissed':
+    'Someone dismissed a change an agent suggested to a note on an event-storming board.',
   'Canvas|Used|WaterCooler':
     'Someone walked their Avatar-mode character up to a water cooler and took a cup of water.',
   'Canvas|Used|CoffeeMachine':

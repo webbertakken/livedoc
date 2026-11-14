@@ -700,6 +700,23 @@ export const CONTEXTS_HANDLED = chart(
     ],
   },
 );
+
+// Changes an agent suggests to what is already on an event-storming board
+// (docs/specs/021-event-storming/suggested-changes.md "Telemetry").
+export const SUGGESTED_CHANGES_HANDLED = chart(
+  'Canvas',
+  'Used',
+  'Suggested Changes Handled',
+  "An agent's suggested name for a candidate context chosen or dismissed, or its suggested change to a note (other words, another kind, a split, a removal) accepted or dismissed.",
+  {
+    types: [
+      'NameSuggestionApplied',
+      'NameSuggestionDismissed',
+      'NoteChangeApplied',
+      'NoteChangeDismissed',
+    ],
+  },
+);
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -724,6 +741,7 @@ export const ELEMENT_EDITING: MetricStack = {
     LANES_SETTLED,
     SUGGESTIONS_HANDLED,
     CONTEXTS_HANDLED,
+    SUGGESTED_CHANGES_HANDLED,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],

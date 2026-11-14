@@ -143,5 +143,6 @@ overlap with the rest collapsing to peek tabs, and a side panel listing them by 
 - The acts: `apps/live/hooks/canvas/useSuggestionActions.ts`, composed into the editor state; the Editor gate is
   `can.suggestions` in `apps/live/lib/editor-capabilities.ts`.
 - The peek tabs, placeholders and panel: `apps/live/components/canvas/suggestions/`; the Show All shift rides the
-  insertion preview's `useInsertShift`.
+  insertion preview's `useInsertShift`. The panel's rows, in one timeline: `apps/live/lib/suggestion-rows.ts`.
+- What a dismissal is remembered as: `apps/live/lib/suggestion-declined.ts`.
 - The seeded board the end-to-end tests use: `apps/live/e2e/suggestion-board.ts`.

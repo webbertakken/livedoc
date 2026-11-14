@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, type ReactNode } from 'react';
+import { useId, type CSSProperties, type ReactNode } from 'react';
 import {
   Button,
   CheckIcon,
@@ -10,8 +10,10 @@ import {
   SparkleIcon,
   SwitchRow,
 } from '@livedoc/ui';
-import { eventStormingNote, type CandidateContextElement, type Rect } from '@livedoc/document';
-import type { SuggestionElement } from '@/lib/suggestion-hints';
+import { eventStormingNote } from '@livedoc/document';
+import { changeWords } from '@/lib/change-caption';
+import type { MergeRow, NamesRow } from '@/lib/suggested-changes';
+import { panelRowId, type PanelRow } from '@/lib/suggestion-rows';
 import { suggestionName } from './SuggestionPlaceholder';
 import {
   SUGGESTION_STROKE_BORDER,
@@ -24,63 +26,111 @@ import {
 // the feature adds. Collapsed by default to a button saying how many; expanded, every suggestion in timeline order
 // with ✓ and ✕, Show All Suggestions, Apply All and Dismiss All. Pointing at a row, or focusing it, brings its
 // anchor and spot into view and previews it on the board. Suggested candidate contexts are listed among the notes,
-// at their leftmost note (docs/specs/021-event-storming/candidate-contexts.md "How a person sees and decides").
+// at their leftmost note (docs/specs/021-event-storming/candidate-contexts.md "How a person sees and decides"), and
+// so are the changes suggested to what is already there (docs/specs/021-event-storming/suggested-changes.md): a row
+// per note change, with Everywhere for a reword that reaches further, a Names row per context that holds names, and
+// a Merge row per set of contexts a name was suggested for. A Names or a Merge row is chosen as a whole: it selects
+// its contexts, whose chips on the board decide.
 
-export type PanelRow =
-  | { type: 'note'; suggestion: SuggestionElement; spot: Rect; anchor: Rect }
-  | { type: 'context'; context: CandidateContextElement; bounds: Rect; notes: number };
-
-export const panelRowId = (row: PanelRow) =>
-  row.type === 'note' ? row.suggestion.id : row.context.id;
+/** A row that is decided where it stands: applied with ✓. */
+export type DecidedRow = Exclude<PanelRow, NamesRow | MergeRow>;
+/** A row that is chosen as a whole: it selects its contexts, which show their chips. */
+export type ChosenRow = NamesRow | MergeRow;
 
 const countLabel = (n: number) => `${n} suggestion${n === 1 ? '' : 's'}`;
 const noteCount = (n: number) => `${n} note${n === 1 ? '' : 's'}`;
 
-// One row's face: its swatch, its kind and words (or a context's name and size), and the reason.
-function rowFace(row: PanelRow): {
+type RowFace = {
   name: string;
+  // A row chosen as a whole says what it holds, for its buttons: "name suggestions for Ordering".
+  holds?: string;
   swatch: ReactNode;
   kind: ReactNode;
   words: string;
-  reason?: string;
-  style?: React.CSSProperties;
-} {
-  if (row.type === 'context') {
-    const c = row.context;
-    return {
-      name: `Candidate context: ${c.label}`,
-      swatch: (
-        <span
-          aria-hidden
-          className="mt-0.5 size-4 shrink-0 rounded-[5px] border-2 border-dashed border-slate-500 dark:border-slate-400"
-        />
-      ),
-      kind: (
-        <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Context</span>
-      ),
-      words: `${c.label} · ${noteCount(row.notes)}`,
-      reason: c.esContext.suggestion?.reason,
-    };
+  detail?: string;
+  style?: CSSProperties;
+};
+
+const CONTEXT_SWATCH = (
+  <span
+    aria-hidden
+    className="mt-0.5 size-4 shrink-0 rounded-[5px] border-2 border-dashed border-slate-500 dark:border-slate-400"
+  />
+);
+const NOTE_SWATCH = (
+  <span
+    aria-hidden
+    className={`mt-0.5 size-4 shrink-0 rounded-[3px] border-2 border-dashed ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER}`}
+  />
+);
+const contextKind = (word: string) => (
+  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{word}</span>
+);
+const noteKind = (word: string) => (
+  <span className={`text-xs font-semibold ${SUGGESTION_STROKE_TEXT}`}>{word}</span>
+);
+
+// One row's face: its swatch, what it is, its words, and the reason or the names beneath.
+function rowFace(row: PanelRow): RowFace {
+  switch (row.type) {
+    case 'context': {
+      const c = row.context;
+      return {
+        name: `Candidate context: ${c.label}`,
+        swatch: CONTEXT_SWATCH,
+        kind: contextKind('Context'),
+        words: `${c.label} · ${noteCount(row.notes)}`,
+        detail: c.esContext.suggestion?.reason,
+      };
+    }
+    case 'names':
+      return {
+        name: `Name suggestions for ${row.context.label}`,
+        holds: `name suggestions for ${row.context.label}`,
+        swatch: CONTEXT_SWATCH,
+        kind: contextKind('Names'),
+        words: row.context.label,
+        detail: row.names.map((n) => n.name).join(', '),
+      };
+    case 'merge': {
+      const labels = row.contexts.map((c) => c.label);
+      return {
+        name: `Name suggestions for ${labels.join(' and ')} merged`,
+        holds: `name suggestions for ${labels.join(' and ')} merged`,
+        swatch: CONTEXT_SWATCH,
+        kind: contextKind('Merge'),
+        words: labels.join(' + '),
+        detail: row.names.map((n) => n.name).join(', '),
+      };
+    }
+    case 'change': {
+      const { title, what } = changeWords(row.note, row.change);
+      return {
+        name: `${title} ${what}`,
+        swatch: NOTE_SWATCH,
+        kind: noteKind(title),
+        words: what,
+        detail: row.change.reason,
+        style: suggestionStrokeVars(row.kind),
+      };
+    }
+    case 'note': {
+      const s = row.suggestion;
+      return {
+        name: suggestionName(s),
+        swatch: NOTE_SWATCH,
+        kind: noteKind(eventStormingNote(s.esKind).label),
+        words: s.label ?? '',
+        detail: s.esSuggestion.reason,
+        style: suggestionStrokeVars(s.esKind),
+      };
+    }
   }
-  const s = row.suggestion;
-  return {
-    name: suggestionName(s),
-    swatch: (
-      <span
-        aria-hidden
-        className={`mt-0.5 size-4 shrink-0 rounded-[3px] border-2 border-dashed ${SUGGESTION_TINT} ${SUGGESTION_STROKE_BORDER}`}
-      />
-    ),
-    kind: (
-      <span className={`text-xs font-semibold ${SUGGESTION_STROKE_TEXT}`}>
-        {eventStormingNote(s.esKind).label}
-      </span>
-    ),
-    words: s.label ?? '',
-    reason: s.esSuggestion.reason,
-    style: suggestionStrokeVars(s.esKind),
-  };
 }
+
+const ICON_BUTTON =
+  'flex size-7 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-brand-600';
+const DISMISS_BUTTON = `${ICON_BUTTON} text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800`;
 
 export function SuggestionsPanel({
   rows,
@@ -91,6 +141,7 @@ export function SuggestionsPanel({
   onPreview,
   onLeave,
   onApply,
+  onChoose,
   onDismiss,
   onApplyAll,
   onDismissAll,
@@ -102,8 +153,10 @@ export function SuggestionsPanel({
   onShowAllChange: (showAll: boolean) => void;
   onPreview: (row: PanelRow) => void;
   onLeave: (row: PanelRow) => void;
-  onApply: (id: string) => void;
-  onDismiss: (id: string) => void;
+  // Apply a suggestion or accept a change; `everywhere` for a reword across the whole board.
+  onApply: (row: DecidedRow, everywhere?: boolean) => void;
+  onChoose: (row: ChosenRow) => void;
+  onDismiss: (row: PanelRow) => void;
   onApplyAll: () => void;
   onDismissAll: () => void;
 }) {
@@ -142,6 +195,19 @@ export function SuggestionsPanel({
               {rows.map((row) => {
                 const id = panelRowId(row);
                 const face = rowFace(row);
+                const chosen = row.type === 'names' || row.type === 'merge';
+                const words = (
+                  <>
+                    <p className="text-sm">
+                      {face.kind} <span className="font-medium">{face.words}</span>
+                    </p>
+                    {face.detail ? (
+                      <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
+                        {face.detail}
+                      </p>
+                    ) : null}
+                  </>
+                );
                 return (
                   <li
                     key={id}
@@ -156,30 +222,48 @@ export function SuggestionsPanel({
                     style={face.style}
                   >
                     {face.swatch}
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm">
-                        {face.kind} <span className="font-medium">{face.words}</span>
-                      </p>
-                      {face.reason ? (
-                        <p className="mt-0.5 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">
-                          {face.reason}
-                        </p>
-                      ) : null}
-                    </div>
-                    <div className="flex shrink-0 items-start gap-1">
+                    {chosen ? (
                       <button
                         type="button"
-                        aria-label={`Apply suggestion: ${face.name}`}
-                        onClick={() => onApply(id)}
-                        className="flex size-7 items-center justify-center rounded-full text-emerald-700 hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-emerald-400 dark:hover:bg-emerald-950"
+                        aria-label={`Show ${face.holds}`}
+                        onClick={() => onChoose(row)}
+                        className="min-w-0 flex-1 rounded-md text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600"
                       >
-                        <CheckIcon size={14} />
+                        {words}
                       </button>
+                    ) : (
+                      <div className="min-w-0 flex-1">
+                        {words}
+                        {row.type === 'change' && row.beyond > 0 ? (
+                          <button
+                            type="button"
+                            aria-label={`Apply everywhere: ${face.name}`}
+                            onClick={() => onApply(row, true)}
+                            className="mt-1 rounded-md text-xs font-medium text-brand-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-brand-300"
+                          >
+                            Everywhere
+                          </button>
+                        ) : null}
+                      </div>
+                    )}
+                    <div className="flex shrink-0 items-start gap-1">
+                      {chosen ? null : (
+                        <button
+                          type="button"
+                          aria-label={`Apply suggestion: ${face.name}`}
+                          onClick={() => onApply(row)}
+                          className={`${ICON_BUTTON} text-emerald-700 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950`}
+                        >
+                          <CheckIcon size={14} />
+                        </button>
+                      )}
                       <button
                         type="button"
-                        aria-label={`Dismiss suggestion: ${face.name}`}
-                        onClick={() => onDismiss(id)}
-                        className="flex size-7 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                        aria-label={
+                          chosen ? `Dismiss ${face.holds}` : `Dismiss suggestion: ${face.name}`
+                        }
+                        onClick={() => onDismiss(row)}
+                        className={DISMISS_BUTTON}
                       >
                         <CloseIcon size={14} />
                       </button>
