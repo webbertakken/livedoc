@@ -30,6 +30,7 @@ const inputs: LayerPreviewInputs = {
   drawnElements: BOARD,
   elementIndex: new Map(BOARD.map((el) => [el.id, el])),
   arrowLinks: buildArrowLinks(BOARD),
+  arrowGeometry: new Map(),
   gridFor: (els) => tracker.gridFor(els),
   arrowLabels: {
     renderOf: () => ({ layout: null, knockouts: [] }),

@@ -3,7 +3,11 @@
 import { useCallback, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { Element, ElementGrid, ElementIndex } from '@livedoc/document';
 import { dragPreviewFor, subscribeDragPreview, type DragOverlay } from '@/lib/drag-preview';
-import type { ArrowLabelRender, ArrowLabels } from '@/hooks/canvas/useArrowLabelLayouts';
+import {
+  sameLabelRender,
+  type ArrowLabelRender,
+  type ArrowLabels,
+} from '@/hooks/canvas/useArrowLabelLayouts';
 import { sameArrowViewFrame, type ArrowViewFrame } from '@/components/canvas/arrow-view-frame';
 import {
   affectedArrows,
@@ -29,6 +33,17 @@ export type PreviewEntry = {
   label?: ArrowLabelRender;
 };
 
+// What one element draws from the document: the element, and for an arrow its frame and holes, its label, and for
+// an arrow with two free ends (the one kind that can wear the free arrow's frame, which follows its route) the board.
+// Kept per element and handed on only when it changes, so a change of the board re-renders the elements it changed
+// and never the layer's list (docs/specs/008-canvas/canvas-performance.md "A release re-renders what moved, too").
+export type DocEntry = {
+  element: Element;
+  geometry?: { frame: ArrowViewFrame; holes: Rect[] };
+  label?: ArrowLabelRender;
+  board?: Element[];
+};
+
 // The ids the preview adds and removes: what the layer lists, as one value that holds while the set does.
 // `added` carries each element as it was when the set last changed, for listing; what it draws comes
 // from its entry.
@@ -37,9 +52,10 @@ export type PreviewStructure = Pick<DragOverlay, 'removed' | 'added'>;
 export type LayerPreviewInputs = {
   tabId: string;
   ordered: readonly LayerDrawn[];
-  drawnElements: readonly Element[];
+  drawnElements: Element[];
   elementIndex: ElementIndex | null;
   arrowLinks: ArrowLinks | null;
+  arrowGeometry: ReadonlyMap<string, { frame: ArrowViewFrame; holes: Rect[] }>;
   gridFor: (elements: readonly Element[]) => ElementGrid;
   arrowLabels: ArrowLabels;
   tabFinish: unknown;
@@ -48,8 +64,13 @@ export type LayerPreviewInputs = {
 export type LayerPreviewStore = {
   subscribe: (id: string, cb: () => void) => () => void;
   entryOf: (id: string) => PreviewEntry | undefined;
+  // What the element draws from the document, once the layer has committed it; undefined before then.
+  docOf: (id: string) => DocEntry | undefined;
   subscribeStructure: (cb: () => void) => () => void;
   structure: () => PreviewStructure | null;
+  // Takes the document's entries from the layer's inputs as the layer renders, so the elements it lists in that
+  // render read them; notifies nobody (update does, once the layer has committed).
+  prepare: (inputs: LayerPreviewInputs) => void;
   // Re-derives from the latest preview and inputs, notifying only the elements whose entry changed.
   update: (inputs: LayerPreviewInputs) => void;
 };
@@ -99,6 +120,7 @@ function sameInputs(a: LayerPreviewInputs | null, b: LayerPreviewInputs): boolea
     a.drawnElements === b.drawnElements &&
     a.elementIndex === b.elementIndex &&
     a.arrowLinks === b.arrowLinks &&
+    a.arrowGeometry === b.arrowGeometry &&
     a.arrowLabels === b.arrowLabels &&
     a.tabFinish === b.tabFinish
   );
@@ -136,6 +158,36 @@ function steadyEntry(prev: PreviewEntry | undefined, next: PreviewEntry): Previe
   return prev;
 }
 
+// The document's entries for the layer's inputs, each the previous one where it draws the same.
+function docEntries(
+  inputs: LayerPreviewInputs,
+  prev: ReadonlyMap<string, DocEntry>,
+): Map<string, DocEntry> {
+  const out = new Map<string, DocEntry>();
+  for (const { element } of inputs.ordered) {
+    const was = prev.get(element.id);
+    if (element.type !== 'arrow') {
+      out.set(element.id, was?.element === element ? was : { element });
+      continue;
+    }
+    const geometry = inputs.arrowGeometry.get(element.id);
+    const label = inputs.arrowLabels.renderOf(element.id);
+    const board =
+      element.from.kind === 'free' && element.to.kind === 'free' ? inputs.drawnElements : undefined;
+    const same =
+      was?.element === element &&
+      was.board === board &&
+      (was.geometry === geometry ||
+        (!!was.geometry &&
+          !!geometry &&
+          sameArrowViewFrame(was.geometry.frame, geometry.frame) &&
+          sameRects(was.geometry.holes, geometry.holes))) &&
+      (was.label === label || (!!was.label && sameLabelRender(was.label, label)));
+    out.set(element.id, same ? was : { element, geometry, label, board });
+  }
+  return out;
+}
+
 const structureKey = (s: PreviewStructure | null) =>
   s === null
     ? ''
@@ -143,6 +195,10 @@ const structureKey = (s: PreviewStructure | null) =>
 
 export function createLayerPreviewStore(): LayerPreviewStore {
   let entries = new Map<string, PreviewEntry>();
+  let docs = new Map<string, DocEntry>();
+  let docInputs: LayerPreviewInputs | null = null;
+  // The elements whose document entry changed since the last notification.
+  const pending = new Set<string>();
   let structure: PreviewStructure | null = null;
   let lastOverlay: DragOverlay | null = null;
   let lastInputs: LayerPreviewInputs | null = null;
@@ -188,6 +244,20 @@ export function createLayerPreviewStore(): LayerPreviewStore {
     return out;
   }
 
+  function prepare(inputs: LayerPreviewInputs): void {
+    if (
+      docInputs?.ordered === inputs.ordered &&
+      docInputs.drawnElements === inputs.drawnElements &&
+      docInputs.arrowGeometry === inputs.arrowGeometry &&
+      docInputs.arrowLabels === inputs.arrowLabels
+    )
+      return;
+    const prev = docs;
+    docs = docEntries(inputs, prev);
+    docInputs = inputs;
+    for (const [id, entry] of docs) if (prev.get(id) !== entry) pending.add(id);
+  }
+
   return {
     subscribe(id, cb) {
       let set = byId.get(id);
@@ -199,6 +269,7 @@ export function createLayerPreviewStore(): LayerPreviewStore {
       };
     },
     entryOf: (id) => entries.get(id),
+    docOf: (id) => docs.get(id),
     subscribeStructure(cb) {
       structureListeners.add(cb);
       return () => {
@@ -206,7 +277,12 @@ export function createLayerPreviewStore(): LayerPreviewStore {
       };
     },
     structure: () => structure,
+    prepare,
     update(inputs) {
+      prepare(inputs);
+      const changedDocs = [...pending];
+      pending.clear();
+      for (const id of changedDocs) for (const cb of byId.get(id) ?? []) cb();
       const overlay = dragPreviewFor(inputs.tabId, inputs.drawnElements);
       // Nothing to do: no preview before or now, or the same preview over the same inputs.
       if (overlay === lastOverlay && (overlay === null || sameInputs(lastInputs, inputs))) return;
@@ -255,8 +331,19 @@ export function useLayerDragPreview(inputs: LayerPreviewInputs): {
     store.update(inputsRef.current);
     return off;
   }, [store]);
+  // The document's entries, for the elements this render lists (docs/specs/008-canvas/canvas-performance.md "A release
+  // re-renders what moved, too"). Taken during render, before the list renders, and idempotent: the layer renders
+  // synchronously, so what it takes is what commits.
+  store.prepare(inputs);
   const structure = useSyncExternalStore(store.subscribeStructure, store.structure, () => null);
   return { store, structure };
+}
+
+// One element's document entry: what it draws from when no preview changes it.
+export function useDocEntry(store: LayerPreviewStore, id: string): DocEntry | undefined {
+  const subscribe = useCallback((cb: () => void) => store.subscribe(id, cb), [store, id]);
+  const read = useCallback(() => store.docOf(id), [store, id]);
+  return useSyncExternalStore(subscribe, read, read);
 }
 
 // One element's preview entry: undefined while no preview changes it.

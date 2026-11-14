@@ -32,6 +32,7 @@ function inputs(over: Partial<LayerPreviewInputs> = {}): LayerPreviewInputs {
     drawnElements: BOARD,
     elementIndex: new Map(BOARD.map((el) => [el.id, el])),
     arrowLinks: buildArrowLinks(BOARD),
+    arrowGeometry: new Map(),
     gridFor: (els) => tracker.gridFor(els),
     arrowLabels: {
       renderOf: () => NONE,
@@ -44,6 +45,14 @@ function inputs(over: Partial<LayerPreviewInputs> = {}): LayerPreviewInputs {
 }
 
 afterEach(() => resetDragPreviewForTests());
+
+// A store as the layer leaves it once mounted: its document taken as the layer rendered, and handed out on commit.
+function mounted(at: LayerPreviewInputs = inputs()) {
+  const store = createLayerPreviewStore();
+  store.prepare(at);
+  store.update(at);
+  return store;
+}
 
 describe('shownWithOverlay', () => {
   it('swaps changed elements, drops removed ones and puts added ones after their neighbour', () => {
@@ -88,7 +97,7 @@ describe('shownWithOverlay', () => {
 
 describe('the layer preview store', () => {
   it('tells only the moved element and the arrows on it, and draws them from the preview', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const told = { a: vi.fn(), b: vi.fn(), c: vi.fn(), ab: vi.fn() };
     store.subscribe(a.id, told.a);
     store.subscribe(b.id, told.b);
@@ -108,7 +117,7 @@ describe('the layer preview store', () => {
   });
 
   it('does nothing for the same preview over the same inputs, or with no preview', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const told = vi.fn();
     store.subscribe(a.id, told);
     const same = inputs();
@@ -121,7 +130,7 @@ describe('the layer preview store', () => {
   });
 
   it('derives nothing again for a fresh inputs object holding the same fields', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const told = vi.fn();
     store.subscribe(a.id, told);
     store.subscribe(ab.id, told);
@@ -135,7 +144,7 @@ describe('the layer preview store', () => {
   });
 
   it('tells no one when the preview is rebuilt the same, as a peer’s is each frame', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const told = { a: vi.fn(), ab: vi.fn() };
     store.subscribe(a.id, told.a);
     store.subscribe(ab.id, told.ab);
@@ -152,7 +161,7 @@ describe('the layer preview store', () => {
   });
 
   it('tells an element again when the preview ends, so it draws from the document', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const told = vi.fn();
     store.subscribe(a.id, told);
     setLocalPreview('t', [{ ...a, y: 1 }, b, c, ab], BOARD);
@@ -164,7 +173,7 @@ describe('the layer preview store', () => {
   });
 
   it('changes its structure only when the preview adds or removes something new', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const told = vi.fn();
     store.subscribeStructure(told);
     const copy = { ...c, id: 'copy' };
@@ -180,7 +189,7 @@ describe('the layer preview store', () => {
   });
 
   it('draws no arrow geometry on a board without arrows', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     setLocalPreview('t', [{ ...a, y: 1 }, b, c, ab], BOARD);
     store.update(inputs({ elementIndex: null, arrowLinks: null }));
     expect(store.entryOf(ab.id)).toBeUndefined();
@@ -188,7 +197,7 @@ describe('the layer preview store', () => {
   });
 
   it('stops telling an element once it unsubscribes', () => {
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const told = vi.fn();
     const off = store.subscribe(a.id, told);
     off();
@@ -206,7 +215,7 @@ describe('a previewed arrow with a label', () => {
     const own = { x: 5, y: 5, width: 2, height: 2 };
     const placed = { x: 9, y: 9, width: 3, height: 3 };
     const draftLayout = vi.fn(() => ({ knockout: placed }));
-    const store = createLayerPreviewStore();
+    const store = mounted();
     const movedA = { ...a, y: 40 };
     setLocalPreview('t', [movedA, b, c, labelled], board);
     store.update(
@@ -224,5 +233,65 @@ describe('a previewed arrow with a label', () => {
     );
     expect(draftLayout).toHaveBeenCalledWith(labelled, 'Yes', [movedA, b, c, labelled]);
     expect(store.entryOf(ab.id)?.label?.knockouts).toEqual([kept, placed]);
+  });
+});
+
+// docs/specs/008-canvas/canvas-performance.md "A release re-renders what moved, too": each element reads what the
+// document gives it from the store, and a change of the document tells only the elements it changed.
+describe("the layer store's document", () => {
+  const frameOf = (fromX: number) => ({
+    frame: {
+      from: { x: fromX, y: 0 },
+      to: { x: 400, y: 0 },
+      style: 'straight' as const,
+      pathD: `M ${fromX} 0 L 400 0`,
+      dashOffset: undefined,
+      midpoint: { x: (fromX + 400) / 2, y: 0 },
+      curveAnchors: null,
+      curveControl: null,
+      elbowPoint: null,
+    },
+    holes: [],
+  });
+
+  it('hands each element its document entry as the layer renders', () => {
+    const geometry = new Map([[ab.id, frameOf(100)]]);
+    const store = mounted(inputs({ arrowGeometry: geometry }));
+    expect(store.docOf(c.id)?.element).toBe(c);
+    expect(store.docOf(ab.id)?.geometry).toBe(geometry.get(ab.id));
+  });
+
+  it('tells only the elements a document change changed', () => {
+    const store = mounted(inputs({ arrowGeometry: new Map([[ab.id, frameOf(100)]]) }));
+    const told = { a: vi.fn(), c: vi.fn(), ab: vi.fn() };
+    store.subscribe(a.id, told.a);
+    store.subscribe(c.id, told.c);
+    store.subscribe(ab.id, told.ab);
+    const movedC = { ...c, x: 40 };
+    const board = [a, b, movedC, ab];
+    const next = inputs({
+      ordered: board.map((element) => ({ element, layerOpacity: 1 })),
+      drawnElements: board,
+      // Worked out afresh, the arrow's geometry comes out the same.
+      arrowGeometry: new Map([[ab.id, frameOf(100)]]),
+    });
+    store.prepare(next);
+    expect(told.c).not.toHaveBeenCalled();
+    store.update(next);
+    expect(told.c).toHaveBeenCalledTimes(1);
+    expect(told.a).not.toHaveBeenCalled();
+    expect(told.ab).not.toHaveBeenCalled();
+    expect(store.docOf(c.id)?.element).toBe(movedC);
+  });
+
+  it('tells an arrow whose geometry changed', () => {
+    const store = mounted(inputs({ arrowGeometry: new Map([[ab.id, frameOf(100)]]) }));
+    const told = vi.fn();
+    store.subscribe(ab.id, told);
+    const next = inputs({ arrowGeometry: new Map([[ab.id, frameOf(120)]]) });
+    store.prepare(next);
+    store.update(next);
+    expect(told).toHaveBeenCalledTimes(1);
+    expect(store.docOf(ab.id)?.geometry?.frame.from.x).toBe(120);
   });
 });

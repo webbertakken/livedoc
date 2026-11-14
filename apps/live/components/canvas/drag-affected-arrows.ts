@@ -68,7 +68,12 @@ export function affectedArrows(
     const was = before.get(id);
     for (const box of [was, el]) if (box && isBoxed(box)) moved.push(box);
   }
-  for (const id of overlay.removed) for (const dep of links.dependants.get(id) ?? []) add(dep);
+  for (const id of overlay.removed) {
+    for (const dep of links.dependants.get(id) ?? []) add(dep);
+    // A box taken away mends the arrows it cut.
+    const was = before.get(id);
+    if (was && isBoxed(was)) moved.push(was);
+  }
   if (moved.length) {
     for (const [id, rect] of links.rects) if (moved.some((m) => rectsIntersect(m, rect))) add(id);
   }

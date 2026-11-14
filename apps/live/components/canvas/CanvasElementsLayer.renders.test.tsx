@@ -20,6 +20,8 @@ const renders = {
 };
 const bump = (m: Map<string, number>, id: string) => m.set(id, (m.get(id) ?? 0) + 1);
 const drawnAs = new Map<string, Element>();
+// Where each arrow view was last told its line starts.
+const arrowFrom = new Map<string, { x: number; y: number }>();
 
 vi.mock('./BoxedElementView', () => ({
   BoxedElementView: memo(function BoxedStub({ element }: { element: Element }) {
@@ -33,8 +35,12 @@ vi.mock('./ArrowView', async (importOriginal) => {
   const real = await importOriginal<typeof import('./ArrowView')>();
   return {
     ...real,
-    ArrowView: memo(function ArrowStub({ arrow }: Parameters<typeof real.arrowViewPropsEqual>[0]) {
+    ArrowView: memo(function ArrowStub({
+      arrow,
+      frame,
+    }: Parameters<typeof real.arrowViewPropsEqual>[0]) {
       bump(renders.arrow, arrow.id);
+      arrowFrom.set(arrow.id, frame.from);
       return null;
     }, real.arrowViewPropsEqual),
   };
@@ -192,10 +198,37 @@ describe('element views render only for their own changes', () => {
     expect(slotRenders.count).toBe(0);
   });
 
-  it('walks the element slots again when an element changes', () => {
+  // "A release re-renders what moved, too": a document change renders the slots of what it changed, never the board's.
+  it('walks only the changed element slot when an element changes', () => {
     const { rerender } = mount();
-    const moved = BOARD.map((el) => (el.id === c.id ? { ...el, x: 40 } : el));
-    rerender(<CanvasElementsLayer {...layerProps({ elements: moved })} />);
+    const movedC = { ...c, x: 40 };
+    rerender(
+      <CanvasElementsLayer
+        {...layerProps({ elements: BOARD.map((el) => (el.id === c.id ? movedC : el)) })}
+      />,
+    );
+    expect(slotRenders.count).toBe(1);
+    expect(drawnAs.get(c.id)).toBe(movedC);
+  });
+
+  it('walks the slots of a moved element and of the arrow that follows it', () => {
+    const { rerender } = mount();
+    const startedAt = arrowFrom.get(ab.id)!;
+    const movedA = { ...a, y: 40 };
+    rerender(
+      <CanvasElementsLayer
+        {...layerProps({ elements: BOARD.map((el) => (el.id === a.id ? movedA : el)) })}
+      />,
+    );
+    expect(slotRenders.count).toBe(2);
+    expect(drawnAs.get(a.id)).toBe(movedA);
+    expect([...renders.arrow.keys()]).toEqual([ab.id]);
+    expect(arrowFrom.get(ab.id)!.y).toBe(startedAt.y + 40);
+  });
+
+  it('walks every slot again when the order changes', () => {
+    const { rerender } = mount();
+    rerender(<CanvasElementsLayer {...layerProps({ elements: [b, a, c, ab] })} />);
     expect(slotRenders.count).toBe(BOARD.length);
   });
 
