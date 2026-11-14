@@ -31,6 +31,7 @@ import { buildDressedDrawnArrow, buildDrawnBoxed, buildDrawnComponent } from '@/
 import type { CanvasTool } from '@/components/palette/palette.types';
 import { componentTelemetryType, shapeTelemetryToken } from '@/lib/element-telemetry';
 import { makeCommitFreehand } from '@/hooks/canvas/commit-freehand';
+import { contextForArrival, joinArrival } from '@/lib/context-arrival';
 
 type ShapeDrawingDeps = {
   editsBlocked: boolean;
@@ -60,6 +61,9 @@ type ShapeDrawingDeps = {
   // A palette card never lands on the canvas (docs/specs/026-plan/plan-mode.md "The palette"): it goes
   // into the board column at the point, or nowhere.
   onPlanCardPlace?: (itemType: string | undefined, canvasX: number, canvasY: number) => void;
+  // May this person change a candidate context's notes (an Editor): a drawn workshop note then joins the context
+  // whose outline holds it (docs/specs/021-event-storming/candidate-contexts.md "Arriving in a context").
+  joinsContexts: boolean;
 };
 
 export function useShapeDrawing(deps: ShapeDrawingDeps) {
@@ -77,6 +81,7 @@ export function useShapeDrawing(deps: ShapeDrawingDeps) {
     zoomRef,
     styleNewElement,
     onPlanCardPlace,
+    joinsContexts,
   } = deps;
 
   // Pending draw-to-size intent. Picking a palette element stashes it here;
@@ -217,7 +222,9 @@ export function useShapeDrawing(deps: ShapeDrawingDeps) {
     // Frames don't need special-casing here: the canvas + exporters
     // route through `framesFirst`, which keeps every frame painted
     // behind its contents regardless of array position (docs/specs/008-canvas/canvas-and-palette.md).
-    commit((els) => [...els, sized]);
+    commit((els) => (joinsContexts ? joinArrival([...els, sized], sized.id, {}) : [...els, sized]));
+    if (joinsContexts && contextForArrival([...activeTab.elements, sized], sized.id, {}))
+      track('Canvas', 'Used', 'ContextNoteJoined');
     setSelectedId(sized.id);
     // A freshly added text element drops straight into typing mode
     // (matches the double-click-to-add-text path in useElementCreation):

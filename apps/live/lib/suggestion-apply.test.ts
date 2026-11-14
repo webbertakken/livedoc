@@ -110,8 +110,8 @@ describe('applySuggestion', () => {
     ];
     const out = applySuggestion(els, 'rm');
     const lane = ['earlier', 'rm', 'policy', 'later'].map((id) => byId(out, id));
-    for (let i = 1; i < lane.length; i += 1)
-      expect(lane[i].x - (lane[i - 1].x + lane[i - 1].width)).toBe(ES_NOTE_GAP);
+    const gaps = lane.slice(1).map((n, i) => n.x - (lane[i]!.x + lane[i]!.width));
+    expect(gaps).toEqual([ES_NOTE_GAP, ES_NOTE_GAP, ES_NOTE_GAP]);
   });
 
   it('joins the context of its anchor, kept or suggested, in the same step', () => {

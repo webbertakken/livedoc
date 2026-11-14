@@ -37,7 +37,7 @@ type NoteActionsDeps = {
     canvasX: number,
     canvasY: number,
     make: (x: number, y: number) => T,
-    opts?: { edit?: boolean; insertion?: InsertionSlot | null },
+    opts?: { edit?: boolean; insertion?: InsertionSlot | null; beside?: string },
   ) => void;
 };
 
@@ -70,8 +70,9 @@ export function useNoteActions({
       (x, y) => buildEventStormingNote(plan.kind, x, y, activeTab),
       // Opened for typing, because the click already said what and where — and
       // the ripple (if the spot was taken) lands in the SAME commit, so one
-      // Undo puts the whole board back.
-      { edit: true, insertion: plan.ripple },
+      // Undo puts the whole board back. It joins the context of the note it is added from
+      // (docs/specs/021-event-storming/candidate-contexts.md "Arriving in a context").
+      { edit: true, insertion: plan.ripple, beside: fromId },
     );
     track('Element', 'Added', 'Sticky');
   };

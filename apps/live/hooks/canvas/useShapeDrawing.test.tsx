@@ -3,12 +3,14 @@
 import { act, renderHook } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
+import { contextOf, newContextElement, type Element, type StickyElement } from '@livedoc/document';
 import type { CanvasTool } from '@/components/palette/palette.types';
 import { useShapeDrawing } from './useShapeDrawing';
 import { createSelectionStore } from '@/lib/selection-store';
 import { DEFAULT_WHITEBOARD_PREFS, saveWhiteboardPrefs } from '@/lib/whiteboard-prefs';
 
-vi.mock('@/lib/telemetry', () => ({ track: vi.fn(), titleCaseType: (s: string) => s }));
+const telemetry = vi.hoisted(() => ({ track: vi.fn(), titleCaseType: (s: string) => s }));
+vi.mock('@/lib/telemetry', () => telemetry);
 
 // The Highlighter is a Draw tile (docs/specs/008-canvas/highlighter.md): picking it arms the marker
 // for one stroke and clears the selection, like the pens. It is not a canvas tool.
@@ -34,6 +36,7 @@ function setup(commit = vi.fn<Commit>(), setCanvasTool = vi.fn()) {
         setEditingId,
         zoomRef: { current: 1 },
         styleNewElement: (el) => el,
+        joinsContexts: true,
       });
       const { selectedId, multiSelectedIds: multi } = selection.get();
       return { drawing, selectedId, multi, editingId };
@@ -167,6 +170,7 @@ describe('placing a badge preset', () => {
         zoomRef: { current: 1 },
         // The board remembers blue for badges.
         styleNewElement: (el) => ({ ...el, strokeColor: '#2563eb' }),
+        joinsContexts: true,
       }),
     );
     act(() =>
@@ -180,6 +184,69 @@ describe('placing a badge preset', () => {
     );
     const [placed] = commit.mock.calls[0]![0]([]);
     expect(placed).toMatchObject({ shape: 'badge', label: 'PII', strokeColor: '#e11d48' });
+  });
+});
+
+// docs/specs/021-event-storming/candidate-contexts.md "Arriving in a context": a workshop note drawn inside a
+// context's outline joins it, for someone who may change contexts.
+describe('drawing a workshop note in a context', () => {
+  const member = (id: string, x: number): StickyElement => ({
+    id,
+    type: 'sticky',
+    esKind: 'domain-event',
+    x,
+    y: 0,
+    width: 200,
+    height: 200,
+  });
+  const board: Element[] = [
+    member('a', 0),
+    member('b', 300),
+    newContextElement({ id: 'ctx', name: 'Orders', notes: [member('a', 0), member('b', 300)] }),
+  ];
+  const draw = (joinsContexts: boolean) => {
+    const commit = vi.fn<Commit>();
+    const selection = createSelectionStore();
+    const { result } = renderHook(() =>
+      useShapeDrawing({
+        editsBlocked: false,
+        readSelection: selection.get,
+        canvasTool: 'select',
+        setCanvasTool: vi.fn(),
+        activeTab: { id: 't1', name: 'Tab', kind: 'event-storming', elements: board },
+        drawMode: false,
+        commit,
+        setSelectedId: selection.setSelectedId,
+        setMultiSelectedIds: selection.setMultiSelectedIds,
+        setEditingId: vi.fn(),
+        zoomRef: { current: 1 },
+        styleNewElement: (el) => el,
+        joinsContexts,
+      }),
+    );
+    act(() =>
+      result.current.commitDraw(
+        { type: 'sticky', esKind: 'domain-event' } as never,
+        250,
+        100,
+        250,
+        100,
+      ),
+    );
+    const after = commit.mock.calls[0]![0](board);
+    return contextOf(after, after[after.length - 1]!.id)?.id ?? null;
+  };
+
+  it('joins the context whose outline holds it', () => {
+    telemetry.track.mockClear();
+    expect(draw(true)).toBe('ctx');
+    expect(telemetry.track).toHaveBeenCalledWith('Canvas', 'Used', 'ContextNoteJoined');
+  });
+
+  it('joins none for someone who may not change contexts', () => {
+    telemetry.track.mockClear();
+    expect(draw(false)).toBeNull();
+    expect(telemetry.track).not.toHaveBeenCalledWith('Canvas', 'Used', 'ContextNoteJoined');
   });
 });
 
