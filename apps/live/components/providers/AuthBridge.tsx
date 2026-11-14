@@ -17,6 +17,7 @@ import {
   createTokenProvider,
   onAccountChange,
   readSession,
+  readSignedInHint,
   signOut as endSession,
   writeSignedInHint,
   type SessionState,
@@ -92,6 +93,14 @@ export function AuthBridge({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (workbenchRoute) return;
+    // A browser whose last session was signed in asks for its token beside the session read, so the page's first
+    // data request has it when the session answers rather than one round trip later
+    // (docs/specs/016-platform/web-performance.md "The open path asks in parallel"). It only prepares: nothing is
+    // signed in until the read says so, and a read that answers signed out drops it (read, above).
+    if (readSignedInHint() === true) {
+      debugLog('[auth] token_asked_early source=hint');
+      void tokens.getToken();
+    }
     void read();
     const stop = onAccountChange(() => void read());
     const onOnline = () => {
@@ -102,7 +111,7 @@ export function AuthBridge({ children }: { children: ReactNode }) {
       stop();
       window.removeEventListener('online', onOnline);
     };
-  }, [workbenchRoute, read, sessionRef]);
+  }, [workbenchRoute, read, sessionRef, tokens]);
 
   const state = useMemo<DeferredAuthState>(() => {
     if (!session) return DEFERRED_AUTH_DEFAULT;
