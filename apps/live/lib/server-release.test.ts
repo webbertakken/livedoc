@@ -6,8 +6,11 @@ import {
   noteServerBuild,
   serverBuild,
   newVersionAvailable,
+  noteOfflineStoreSuperseded,
   noteServerDocumentFormat,
+  newVersionReason,
   resetServerReleaseForTests,
+  runningStaleBuild,
   serverDocumentFormat,
   subscribeServerRelease,
 } from './server-release';
@@ -75,5 +78,31 @@ describe('the server build id', () => {
 
   it('reads this editor’s own id from the build', () => {
     expect(EDITOR_BUILD_ID).toBe(parseBuildId(process.env.NEXT_PUBLIC_BUILD_ID));
+  });
+});
+
+// docs/specs/006-document/offline-mode.md "Other browser tabs during an upgrade".
+describe('the offline store upgraded by a newer build', () => {
+  it('offers a new version and makes this page stale, telling listeners once', () => {
+    const listener = vi.fn();
+    subscribeServerRelease(listener);
+    expect(runningStaleBuild()).toBe(false);
+    noteOfflineStoreSuperseded();
+    noteOfflineStoreSuperseded();
+    expect(newVersionAvailable()).toBe(true);
+    expect(runningStaleBuild()).toBe(true);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts each reason to reload as it arrives', () => {
+    expect(newVersionReason()).toBe(0);
+    noteServerDocumentFormat(DOCUMENT_FORMAT);
+    expect(newVersionReason()).toBe(0);
+    noteServerDocumentFormat(DOCUMENT_FORMAT + 1);
+    expect(newVersionReason()).toBe(1);
+    noteOfflineStoreSuperseded();
+    expect(newVersionReason()).toBe(2);
+    noteServerDocumentFormat(DOCUMENT_FORMAT + 2);
+    expect(newVersionReason()).toBe(3);
   });
 });

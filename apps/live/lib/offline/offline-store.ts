@@ -5,9 +5,9 @@
 // persistence dispatch in `lib/api/*` routes to these when a document id is
 // registered offline (see `isOfflineId`).
 //
-// Storage: one IndexedDB record per document, holding its meta + all tab bodies
-// inline (offline documents load whole — no lazy per-tab fetch). The set of
-// offline ids IS the set of record keys, mirrored in an in-memory cache so the
+// Storage: one IndexedDB record per tab beside one per document (./offline-tab-records); every
+// operation here still sees a whole document (offline documents load whole, no lazy per-tab fetch),
+// and the autosave writes only the tab it saves. The set of offline ids IS the set of document keys, mirrored in an in-memory cache so the
 // dispatch can answer "is this id offline?" cheaply (./offline-ids, which keeps
 // every tab of the browser in step).
 
@@ -27,6 +27,7 @@ import {
   offlineBackend,
   setOfflineBackend,
   type OfflineBackend,
+  type OfflineDocumentMeta,
   type OfflineRecordChange,
 } from './offline-backend';
 import {
@@ -35,6 +36,7 @@ import {
   rememberOfflineId,
   resetOfflineIds,
 } from './offline-ids';
+import { resetOfflineDbForTests } from './offline-db';
 import { offlineDocumentStats } from './offline-stats';
 
 // Sentinel owner id stamped on offline documents. They have no server owner;
@@ -197,17 +199,19 @@ export function applyMeta(
   };
 }
 
-// Upsert one tab body into a record (the autosave path). A new tab id is
-// appended; an existing one is replaced in place, preserving order.
-export function upsertTab(rec: OfflineDocumentRecord, tab: Tab, at: number): OfflineDocumentRecord {
+// Upsert one tab body into a document (the autosave path), given its meta: a new tab id is appended
+// to the order, an existing one keeps its place. Only the meta and this tab are written.
+export function upsertTab(
+  meta: OfflineDocumentMeta,
+  tab: Tab,
+  at: number,
+): { meta: OfflineDocumentMeta; tab: Tab } {
   // Stamp the tab kind here for the same reason the cloud path stamps it
   // in tabForWire (docs/specs/021-event-storming/event-storming.md): both stores must agree on what a tab IS, or a
   // Sync Document would hand the cloud a board that has forgotten itself.
   const stamped = stampTabKind(tab);
-  const i = rec.tabs.findIndex((t) => t.id === stamped.id);
-  const tabs =
-    i === -1 ? [...rec.tabs, stamped] : rec.tabs.map((t) => (t.id === stamped.id ? stamped : t));
-  return { ...rec, tabs, savedAt: at };
+  const tabIds = meta.tabIds.includes(stamped.id) ? meta.tabIds : [...meta.tabIds, stamped.id];
+  return { meta: { ...meta, tabIds, savedAt: at }, tab: stamped };
 }
 
 export function removeTab(
@@ -224,8 +228,10 @@ export function removeTab(
 
 export {
   OFFLINE_STORE_OPEN_TIMEOUT_MS,
+  OFFLINE_STORE_UPGRADE_TIMEOUT_MS,
   offlineBackend,
   type OfflineBackend,
+  type OfflineDocumentMeta,
   type OfflineRecordChange,
 } from './offline-backend';
 export { isOfflineId, isOfflineIdSync, offlineIdCount, subscribeOfflineIds } from './offline-ids';
@@ -234,6 +240,7 @@ export { isOfflineId, isOfflineIdSync, offlineIdCount, subscribeOfflineIds } fro
 export function __setOfflineBackend(b: OfflineBackend | null): void {
   setOfflineBackend(b);
   resetOfflineIds();
+  resetOfflineDbForTests();
 }
 
 // Thrown by a write whose record is gone while this tab still lists the id: another tab synced it
@@ -262,7 +269,7 @@ let writeChain: Promise<unknown> = Promise.resolve();
 
 // A record the editor may still write: present, and not in the local Trash
 // (an editor left open on a binned document must not keep changing it).
-function writable(rec: OfflineDocumentRecord | undefined): rec is OfflineDocumentRecord {
+function writable<T extends { trashedAt?: number }>(rec: T | undefined): rec is T {
   return rec !== undefined && rec.trashedAt === undefined;
 }
 export function serializeOfflineWrite<T>(op: () => Promise<T>): Promise<T> {
@@ -293,12 +300,17 @@ async function writeLive(
       missing = rec === undefined;
       return writable(rec) ? change(rec) : undefined;
     });
-    if (missing && isOfflineIdSync(id)) {
-      forgetOfflineId(id);
-      console.warn('[offline-store] write-to-missing-record, id forgotten');
-      throw new OfflineDocumentMissingError(id);
-    }
+    if (missing) failOnMissing(id);
   });
+}
+
+// A write that found no record: a quiet no-op when this tab has already forgotten the id, otherwise
+// the id is forgotten and the write fails out loud.
+function failOnMissing(id: string): void {
+  if (!isOfflineIdSync(id)) return;
+  forgetOfflineId(id);
+  console.warn('[offline-store] write-to-missing-record, id forgotten');
+  throw new OfflineDocumentMissingError(id);
 }
 
 // Live records only: a trashed one waits in the local Trash.
@@ -432,7 +444,14 @@ export async function offlineSaveTab(id: string, tab: Tab, now: number): Promise
   // copy behind a 1-tab offline ghost (the local analog of the server's
   // old create-on-first-write bug). Records are only ever created by
   // offlineCreateDocument / offlinePutRecord.
-  await writeLive(id, (rec) => upsertTab(rec, tab, now));
+  await serializeOfflineWrite(async () => {
+    let missing = false;
+    await offlineBackend().updateTab(id, tab.id, (meta) => {
+      missing = meta === undefined;
+      return writable(meta) ? upsertTab(meta, tab, now) : undefined;
+    });
+    if (missing) failOnMissing(id);
+  });
 }
 
 export async function offlineDeleteTab(id: string, tabId: string, now: number): Promise<void> {

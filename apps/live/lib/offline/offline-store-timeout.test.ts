@@ -3,6 +3,7 @@ import {
   __setOfflineBackend,
   isOfflineId,
   OFFLINE_STORE_OPEN_TIMEOUT_MS,
+  OFFLINE_STORE_UPGRADE_TIMEOUT_MS,
   offlineListDocuments,
 } from './offline-store';
 import { setApiWarningReporter } from '../api/error-report';
@@ -51,6 +52,16 @@ afterEach(() => {
   __setOfflineBackend(null);
 });
 
+// The browser answers with an upgrade that then runs on: every store there, its cursor never answering.
+function upgradeStarted(req: Req): void {
+  const store = { openCursor: () => ({}) };
+  Object.assign(req, {
+    result: { close, objectStoreNames: { contains: (name: string) => name !== 'diagrams' } },
+    transaction: { objectStore: () => store, addEventListener: () => {} },
+  });
+  req.onupgradeneeded?.();
+}
+
 describe('offline store open limit', () => {
   it('answers "not offline" once the open times out, and stops asking for the page load', async () => {
     const first = isOfflineId('doc-1');
@@ -63,12 +74,34 @@ describe('offline store open limit', () => {
     expect(requests).toHaveLength(1);
   });
 
-  it('gives up at once when the open is blocked', async () => {
-    const check = isOfflineId('doc-1');
+  it('keeps waiting when the open is blocked, within the limit', async () => {
+    let answered = false;
+    const check = isOfflineId('doc-1').then((v) => {
+      answered = true;
+      return v;
+    });
     await vi.advanceTimersByTimeAsync(0);
     requests[0]!.onblocked?.();
+    await vi.advanceTimersByTimeAsync(OFFLINE_STORE_OPEN_TIMEOUT_MS - 1);
+    expect(answered).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
     expect(await check).toBe(false);
     expect(warnings).toEqual(['OfflineStore.Unavailable']);
+  });
+
+  it('gives an upgrade the browser has started the longer limit', async () => {
+    let answered = false;
+    const list = offlineListDocuments()
+      .catch((e: unknown) => e)
+      .finally(() => {
+        answered = true;
+      });
+    await vi.advanceTimersByTimeAsync(0);
+    upgradeStarted(requests[0]!);
+    await vi.advanceTimersByTimeAsync(OFFLINE_STORE_UPGRADE_TIMEOUT_MS - 1);
+    expect(answered).toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await list).toMatchObject({ name: 'OfflineStoreUnavailableError' });
   });
 
   it('closes an open that lands after it gave up', async () => {

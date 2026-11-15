@@ -65,7 +65,7 @@ describe('offline store upgrade from the diagrams store', () => {
     await seedVersionOne([record('a'), record('b')]);
     const list = await offlineListDocuments();
     expect(list.map((d) => d.id).sort()).toEqual(['a', 'b']);
-    expect(await storeNames()).toEqual(['documents']);
+    expect(await storeNames()).toEqual(['documents', 'tabs']);
   });
 
   it('keeps the tab kind and upgrades the legacy link on load', async () => {
@@ -80,6 +80,6 @@ describe('offline store upgrade from the diagrams store', () => {
 
   it('starts empty on a browser that never stored anything', async () => {
     expect(await offlineListDocuments()).toEqual([]);
-    expect(await storeNames()).toEqual(['documents']);
+    expect(await storeNames()).toEqual(['documents', 'tabs']);
   });
 });

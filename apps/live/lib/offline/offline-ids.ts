@@ -10,7 +10,11 @@
 import { reportApiWarning } from '../api/error-report';
 import { debugLog } from '../debug-log';
 import { whenDocumentCreated } from '../new-document/create-hold';
-import { OfflineStoreUnavailableError, offlineBackend } from './offline-backend';
+import {
+  OfflineStoreSupersededError,
+  OfflineStoreUnavailableError,
+  offlineBackend,
+} from './offline-backend';
 
 // The channel the tabs of one browser tell each other about offline ids on.
 export const OFFLINE_IDS_CHANNEL = 'livedoc-offline';
@@ -53,8 +57,10 @@ async function loadIds(): Promise<Set<string>> {
         // Do NOT pin an empty cache: clear the in-flight slot so the next
         // check retries, and answer THIS check from the pending set only.
         // A store that would not open in time is the exception: it is not
-        // retried for the rest of the page load (see storeUnavailable).
+        // retried for the rest of the page load (see storeUnavailable), nor is
+        // one a newer build has upgraded past this build (reported as it was seen).
         idCacheLoad = null;
+        if (err instanceof OfflineStoreSupersededError) storeUnavailable = true;
         if (err instanceof OfflineStoreUnavailableError) {
           storeUnavailable = true;
           console.warn(`[offline-store] unavailable: ${err.message}`);

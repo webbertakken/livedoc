@@ -1,16 +1,33 @@
-// Offline Mode's storage backend (docs/specs/006-document/offline-mode.md): one IndexedDB object
-// store of document records, behind a small interface so tests swap in an in-memory map. The
-// record shape and every operation on it live in ./offline-store.ts.
+// Offline Mode's storage backend (docs/specs/006-document/offline-mode.md "Where offline documents
+// live"): whole documents in and out, behind a small interface so tests swap in an in-memory map. The
+// IndexedDB one keeps each tab in its own record (./offline-tab-records) and writes back only what a
+// change touched; a database whose upgrade failed is read and written in its own shape, whole records
+// (./offline-db). The record shape and every operation on it live in ./offline-store.ts.
 
-import { upgradeStores } from './legacy-offline-store';
-import { INDEXED_DB_PROBE_TIMEOUT_MS } from '@livedoc/ui';
+import type { Tab } from '@livedoc/document';
+import { openOfflineDb } from './offline-db';
+import {
+  DOCUMENTS_STORE,
+  TABS_STORE,
+  deleteDocument,
+  metaOf,
+  readAllDocuments,
+  readDocument,
+  updateTab,
+  withTab,
+  writeDocument,
+  type Guard,
+  type OfflineTabChange,
+} from './offline-tab-records';
 import type { OfflineDocumentRecord } from './offline-store';
 
-const DB_NAME = 'livedoc-offline';
-// Version 2 renamed the object store (docs/specs/006-document/offline-mode.md);
-// ./legacy-offline-store moves every record across.
-const DB_VERSION = 2;
-const STORE = 'documents';
+export {
+  OFFLINE_STORE_OPEN_TIMEOUT_MS,
+  OFFLINE_STORE_UPGRADE_TIMEOUT_MS,
+  OfflineStoreSupersededError,
+  OfflineStoreUnavailableError,
+} from './offline-db';
+export type { OfflineDocumentMeta, OfflineTabChange } from './offline-tab-records';
 
 // What a read-modify-write gets: the stored record (undefined when there is none), and what it
 // answers: the record to store, 'delete' to remove it, or undefined to write nothing. Synchronous, because IndexedDB
@@ -28,110 +45,130 @@ export type OfflineBackend = {
   // The read and the write in ONE transaction, so another browser tab's write cannot land between
   // them and be overwritten (two transactions let it: the module's write chain only orders this tab).
   update(id: string, change: OfflineRecordChange): Promise<void>;
+  // The autosave's read-modify-write: the document meta and one tab, in one transaction, the other
+  // tabs neither read nor written. Same rules as `update`.
+  updateTab(id: string, tabId: string, change: OfflineTabChange): Promise<void>;
 };
 
-function idbRequest<T>(req: IDBRequest<T>): Promise<T> {
-  return new Promise((resolve, reject) => {
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error ?? new Error('IndexedDB request failed'));
-  });
-}
-
-// How long opening the store may take (docs/specs/007-editor/load-recovery.md "The load always ends").
-// Every document load asks the store first, so a browser whose IndexedDB never answers `open` used to
-// hold the load on the opening screen forever. Shared with the browser checks' probe so the
-// diagnostics report the same limit the load uses.
-export const OFFLINE_STORE_OPEN_TIMEOUT_MS = INDEXED_DB_PROBE_TIMEOUT_MS;
-
-// Thrown when the store did not open in time or reported `blocked`.
-export class OfflineStoreUnavailableError extends Error {
-  constructor(reason: 'timeout' | 'blocked') {
-    super(`offline store ${reason}`);
-    this.name = 'OfflineStoreUnavailableError';
-  }
-}
-
-function openDb(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    if (typeof indexedDB === 'undefined') {
-      reject(new Error('IndexedDB unavailable'));
-      return;
-    }
-    let settled = false;
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    const giveUp = (reason: 'timeout' | 'blocked') => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      reject(new OfflineStoreUnavailableError(reason));
-    };
-    const timer = setTimeout(() => giveUp('timeout'), OFFLINE_STORE_OPEN_TIMEOUT_MS);
-    req.onupgradeneeded = () => upgradeStores(req.result, req.transaction!, STORE);
-    req.onblocked = () => giveUp('blocked');
-    req.onsuccess = () => {
-      // An open that lands after we gave up is closed at once, so it never holds a version lock.
-      if (settled) return req.result.close();
-      settled = true;
-      clearTimeout(timer);
-      resolve(req.result);
-    };
-    req.onerror = () => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      reject(req.error ?? new Error('IndexedDB open failed'));
-    };
-  });
-}
-
-async function run<T>(
+// One transaction over the stores the open database has. `body` issues its requests and may `answer`
+// a value; the promise settles when the transaction commits, so a resolved write is on disk. A throw
+// in a guarded step aborts the transaction and rejects with the thrown error.
+async function transact<T>(
   mode: IDBTransactionMode,
-  op: (store: IDBObjectStore) => IDBRequest<T>,
+  body: (tx: IDBTransaction, split: boolean, guard: Guard, answer: (value: T) => void) => void,
 ): Promise<T> {
-  const db = await openDb();
+  const db = await openOfflineDb();
   try {
-    const store = db.transaction(STORE, mode).objectStore(STORE);
-    return await idbRequest(op(store));
-  } finally {
-    db.close();
-  }
-}
-
-// The get and the put share one readwrite transaction; it settles when the transaction commits,
-// so a resolved update is on disk.
-async function idbUpdate(id: string, change: OfflineRecordChange): Promise<void> {
-  const db = await openDb();
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const tx = db.transaction(STORE, 'readwrite');
-      const store = tx.objectStore(STORE);
+    const split = db.objectStoreNames.contains(TABS_STORE);
+    return await new Promise<T>((resolve, reject) => {
+      const tx = db.transaction(split ? [DOCUMENTS_STORE, TABS_STORE] : [DOCUMENTS_STORE], mode);
       let thrown: { err: unknown } | null = null;
-      const read = store.get(id) as IDBRequest<OfflineDocumentRecord | undefined>;
-      read.onsuccess = () => {
-        try {
-          const next = change(read.result);
-          if (next === 'delete') store.delete(id);
-          else if (next) store.put(next);
-        } catch (err) {
-          thrown = { err };
-          tx.abort();
-        }
-      };
-      tx.oncomplete = () => resolve();
+      let value: T;
+      const guard: Guard =
+        (step) =>
+        (...args) => {
+          try {
+            step(...args);
+          } catch (err) {
+            thrown = { err };
+            tx.abort();
+          }
+        };
+      tx.oncomplete = () => resolve(value);
       tx.onabort = () =>
-        reject(thrown ? thrown.err : (tx.error ?? new Error('IndexedDB update aborted')));
+        reject(thrown ? thrown.err : (tx.error ?? new Error('IndexedDB transaction aborted')));
+      guard(() =>
+        body(tx, split, guard, (v) => {
+          value = v;
+        }),
+      )();
     });
   } finally {
     db.close();
   }
 }
 
+// A database whose upgrade failed holds whole records in `documents`.
+function wholeStore(tx: IDBTransaction): IDBObjectStore {
+  return tx.objectStore(DOCUMENTS_STORE);
+}
+
+function readWhole(
+  tx: IDBTransaction,
+  id: string,
+  done: (rec: OfflineDocumentRecord | undefined) => void,
+): void {
+  const read = wholeStore(tx).get(id) as IDBRequest<OfflineDocumentRecord | undefined>;
+  read.onsuccess = () => done(read.result);
+}
+
 const indexedDbBackend: OfflineBackend = {
-  get: (id) => run('readonly', (s) => s.get(id) as IDBRequest<OfflineDocumentRecord | undefined>),
-  put: (rec) => run('readwrite', (s) => s.put(rec)).then(() => undefined),
-  delete: (id) => run('readwrite', (s) => s.delete(id)).then(() => undefined),
-  all: () => run('readonly', (s) => s.getAll() as IDBRequest<OfflineDocumentRecord[]>),
-  update: idbUpdate,
+  get: (id) =>
+    transact<OfflineDocumentRecord | undefined>('readonly', (tx, split, guard, answer) => {
+      if (split)
+        readDocument(
+          tx,
+          id,
+          guard((rec) => answer(rec)),
+        );
+      else readWhole(tx, id, guard(answer));
+    }),
+  put: (rec) =>
+    transact<void>('readwrite', (tx, split) => {
+      if (split) writeDocument(tx, rec);
+      else wholeStore(tx).put(rec);
+    }),
+  delete: (id) =>
+    transact<void>('readwrite', (tx, split) => {
+      if (split) deleteDocument(tx, id);
+      else wholeStore(tx).delete(id);
+    }),
+  all: () =>
+    transact<OfflineDocumentRecord[]>('readonly', (tx, split, guard, answer) => {
+      if (split) return readAllDocuments(tx, guard(answer));
+      const read = wholeStore(tx).getAll() as IDBRequest<OfflineDocumentRecord[]>;
+      read.onsuccess = guard(() => answer(read.result));
+    }),
+  update: (id, change) =>
+    transact<void>('readwrite', (tx, split, guard) => {
+      if (!split) {
+        return readWhole(
+          tx,
+          id,
+          guard((rec) => {
+            const next = change(rec);
+            if (next === 'delete') wholeStore(tx).delete(id);
+            else if (next) wholeStore(tx).put(next);
+          }),
+        );
+      }
+      readDocument(
+        tx,
+        id,
+        guard((rec, stored) => {
+          const next = change(rec);
+          if (next === 'delete') deleteDocument(tx, id);
+          else if (next) writeDocument(tx, next, rec && stored ? { rec, stored } : undefined);
+        }),
+      );
+    }),
+  updateTab: (id, tabId, change) =>
+    transact<void>('readwrite', (tx, split, guard) => {
+      if (split) return updateTab(tx, id, tabId, change, guard);
+      readWhole(
+        tx,
+        id,
+        guard((rec) => {
+          const answer = rec
+            ? change(
+                metaOf(rec),
+                rec.tabs.find((t: Tab) => t.id === tabId),
+              )
+            : change(undefined, undefined);
+          if (rec && answer) wholeStore(tx).put(withTab(rec, answer));
+        }),
+      );
+    }),
 };
 
 let backend: OfflineBackend = indexedDbBackend;

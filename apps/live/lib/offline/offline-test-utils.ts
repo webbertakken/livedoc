@@ -2,6 +2,7 @@
 // (swapped in via __setOfflineBackend) and record/tab factories.
 import type { Tab } from '@livedoc/document';
 import type { OfflineBackend, OfflineDocumentRecord } from './offline-store';
+import { metaOf, withTab } from './offline-tab-records';
 
 export const testTab = (id: string, over: Partial<Tab> = {}): Tab => ({
   id,
@@ -32,6 +33,16 @@ export function memBackend(): OfflineBackend {
       const next = change(map.get(id));
       if (next === 'delete') map.delete(id);
       else if (next) map.set(next.id, next);
+    },
+    updateTab: async (id, tabId, change) => {
+      const rec = map.get(id);
+      const answer = rec
+        ? change(
+            metaOf(rec),
+            rec.tabs.find((t) => t.id === tabId),
+          )
+        : change(undefined, undefined);
+      if (rec && answer) map.set(id, withTab(rec, answer));
     },
   };
 }
