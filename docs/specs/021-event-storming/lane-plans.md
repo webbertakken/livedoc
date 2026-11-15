@@ -107,6 +107,12 @@ was refused twice.
 - It passes the same check. When no pair does, the board says "No arrangement in N lanes keeps what the board says.
   Try more lanes." and suggests nothing.
 - A board already on N lanes or fewer has nothing to fold: "The board already fits N lanes."
+- **A fold is a lane plan like any other**, by "LiveDoc": it is listed, previewed, applied and dismissed as an
+  agent's is. Its reason says where it came from: "The board's own fold: no model's plan kept what the board says."
+  after a model's refusals, "The board's own fold, made without a model." when a person asked the board itself
+  (default).
+- **A person asks the board itself** with Fold the Lanes in the [Ask popover](asks.md#where-an-ask-starts), with
+  `lanes` chosen.
 
 ## How a person sees and decides
 

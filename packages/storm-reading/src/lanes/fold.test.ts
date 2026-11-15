@@ -1,8 +1,9 @@
 // docs/specs/021-event-storming/lane-plans.md "The fold".
 import { describe, expect, it } from 'vitest';
+import { isLanePlan } from '@livedoc/document';
 import { board, laneText, note } from '../testing';
 import { checkLanePlan } from './check';
-import { foldLanes } from './fold';
+import { FOLD_BY, FOLD_REASON, foldLanes, foldPlan, sayNoFold } from './fold';
 import { kitchen } from './kitchen.fixture';
 
 const lanesOf = (result: ReturnType<typeof foldLanes>) =>
@@ -94,5 +95,31 @@ describe('the fold', () => {
       { id: 'packed', kind: 'domain-event', col: 1, lane: 2 },
     );
     expect(lanesOf(foldLanes(tab, 2))).toBe('no_arrangement');
+  });
+});
+
+describe('the fold as a plan', () => {
+  it('is a lane plan by LiveDoc, boxed round the notes it holds, that says why', () => {
+    const tab = kitchen();
+    const folded = foldPlan(tab, 3, { id: 'plan', reason: FOLD_REASON });
+    expect('plan' in folded && folded.plan).toMatchObject({
+      id: 'plan',
+      type: 'shape',
+      esLanePlan: { by: FOLD_BY, reason: FOLD_REASON },
+    });
+    expect('plan' in folded && isLanePlan(folded.plan)).toBe(true);
+    expect('plan' in folded && folded.plan.esLanePlan.lanes).toEqual(planOf(foldLanes(tab, 3)));
+    expect('plan' in folded && checkLanePlan(tab, folded.plan.esLanePlan).ok).toBe(true);
+  });
+
+  it('is none where the fold is none, and says which', () => {
+    expect(foldPlan(kitchen(), 4, { id: 'plan', reason: FOLD_REASON })).toEqual({ none: 'fits' });
+  });
+
+  it('says what the board says when there is nothing to fold, in the lanes asked for', () => {
+    expect(sayNoFold('fits', 4)).toBe('The board already fits 4 lanes.');
+    expect(sayNoFold('no_arrangement', 2)).toBe(
+      'No arrangement in 2 lanes keeps what the board says. Try more lanes.',
+    );
   });
 });

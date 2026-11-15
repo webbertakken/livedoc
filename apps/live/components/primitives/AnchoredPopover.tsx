@@ -22,6 +22,9 @@ const FOCUSABLE =
 
 export type AnchoredSide = 'below' | 'above';
 
+/** What a panel hangs from: an element, or anything that answers for one (a corner whose pill takes the focus). */
+export type PopoverAnchor = Pick<HTMLElement, 'getBoundingClientRect' | 'focus' | 'contains'>;
+
 export type AnchoredPlace = {
   left: number;
   side: AnchoredSide;
@@ -35,14 +38,17 @@ export type AnchoredPlace = {
 
 // Where the panel goes. Its side is chosen once, when it opens (`side` absent): under the anchor, or above it when
 // only above has room for it; after that the side is kept (`side` given), whatever the panel grows to, so picking
-// something that adds a row never flips it across the anchor. The left edge is clamped on-screen.
+// something that adds a row never flips it across the anchor. The left edge is clamped on-screen. `alignEnd`
+// holds the panel's right edge to the anchor's instead of its left (a panel opening from a right-hand corner).
 export function placeAnchored(
-  anchor: { left: number; top: number; bottom: number },
+  anchor: { left: number; top: number; bottom: number; right?: number },
   size: { width: number; height: number },
   viewport: { width: number; height: number },
   side?: AnchoredSide,
+  alignEnd = false,
 ): AnchoredPlace {
-  const left = Math.max(EDGE, Math.min(anchor.left, viewport.width - size.width - EDGE));
+  const start = alignEnd && anchor.right !== undefined ? anchor.right - size.width : anchor.left;
+  const left = Math.max(EDGE, Math.min(start, viewport.width - size.width - EDGE));
   const roomBelow = viewport.height - (anchor.bottom + GAP) - EDGE;
   const roomAbove = anchor.top - GAP - EDGE;
   const chosen: AnchoredSide =
@@ -82,10 +88,11 @@ export function AnchoredPopover({
   onClose,
   onEscape,
   beside,
+  alignEnd,
   keepOpenWithin,
   children,
 }: {
-  anchor: HTMLElement;
+  anchor: PopoverAnchor;
   // The panel's accessible name.
   name: string;
   width: number;
@@ -94,6 +101,8 @@ export function AnchoredPopover({
   onEscape?: () => boolean;
   // Open beside this panel rather than under the anchor (placeBeside).
   beside?: HTMLElement | null;
+  // Hold the panel's right edge to the anchor's, not its left.
+  alignEnd?: boolean;
   // A press inside what this selector matches (a menu's flyout, a picker it opened, portalled elsewhere) is not a
   // press outside.
   keepOpenWithin?: string;
@@ -128,7 +137,7 @@ export function AnchoredPopover({
             size,
             viewport,
           )
-        : placeAnchored(anchor.getBoundingClientRect(), size, viewport, side.current);
+        : placeAnchored(anchor.getBoundingClientRect(), size, viewport, side.current, alignEnd);
       side.current = next.side;
       setPos(next);
     };
@@ -142,7 +151,7 @@ export function AnchoredPopover({
       window.removeEventListener('resize', place);
       window.removeEventListener('scroll', place, true);
     };
-  }, [anchor, width, beside]);
+  }, [anchor, width, beside, alignEnd]);
 
   useEffect(() => {
     panel.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();

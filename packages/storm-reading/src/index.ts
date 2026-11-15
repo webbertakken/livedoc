@@ -39,7 +39,15 @@ export {
 } from './lanes/same-reading';
 export { applyLanePlan, checkLanePlan, landLanePlan, type LanePlanVerdict } from './lanes/check';
 export { withLaneNames } from './lanes/names';
-export { foldLanes, type Fold } from './lanes/fold';
+export {
+  FOLD_BY,
+  FOLD_REASON,
+  FOLD_REASON_OWN,
+  foldLanes,
+  foldPlan,
+  sayNoFold,
+  type Fold,
+} from './lanes/fold';
 export { readLanePlan, type StormLanePlan } from './lanes/view';
 export { arrangeBoard, type Arranged } from './lanes/arrange';
 export { diffReadings, formatChanges, hasChanges, type StormChanges } from './changes';
@@ -75,3 +83,21 @@ export {
   type PreviousExport,
   type WrittenFiles,
 } from './zip';
+export {
+  STORM_ASKS,
+  STORM_ASK_HANDS,
+  STORM_ASK_TOPICS,
+  askFits,
+  askScopeHolds,
+  askScopeOf,
+  askTopicsFor,
+  isAskScope,
+  isAskTopic,
+  type AskScope,
+  type StormAskHand,
+  type StormAskTopic,
+} from './asks/catalogue';
+export { ASK_BRIEFS, ASK_DATA_RULE, ASK_RULE } from './asks/briefs';
+export { ASK_LINES } from './asks/lines';
+export { ASK_SCOPE_SHOWN, askMessages, askPrompt, askSentence, type AskBoard } from './asks/prompt';
+export { addAskAnswer, askAnswerOf, type AskAnswer, type AskedName } from './asks/answer';

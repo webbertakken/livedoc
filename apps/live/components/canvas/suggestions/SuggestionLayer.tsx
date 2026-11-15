@@ -2,8 +2,10 @@
 
 import { useMemo } from 'react';
 import type { Element, ElementId, Layer, Rect } from '@livedoc/document';
+import { AskButton } from '@/components/canvas/ask/AskButton';
 import type { SuggestionControls } from '@/components/canvas/Canvas.types';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
+import { closeAsk } from '@/lib/ask-view';
 import type { OfferedPreview } from '@/lib/change-preview';
 import { changeMarks } from '@/lib/suggested-changes';
 import {
@@ -48,6 +50,7 @@ export function SuggestionLayer({
   layers,
   offered = null,
   onSelectContexts,
+  canAsk = false,
 }: {
   elements: Element[];
   tabId: string;
@@ -62,6 +65,9 @@ export function SuggestionLayer({
   offered?: OfferedPreview | null;
   // Select these contexts, whose names then show as chips on the board.
   onSelectContexts?: (ids: readonly ElementId[]) => void;
+  // The Ask pill stands in the corner (docs/specs/021-event-storming/asks.md "Where an ask starts"): where a new
+  // suggestion may land, so never on a locked board.
+  canAsk?: boolean;
 }) {
   const zoom = useCanvasZoom();
   const view = useSuggestionView(tabId);
@@ -85,7 +91,6 @@ export function SuggestionLayer({
       }),
     [elements, timeline, showAll, showAllSpots, inertIds, layers],
   );
-  if (hints.length === 0 && rows.length === 0) return null;
 
   const preview = (key: string) => () => previewSuggestion(tabId, key);
   const leave = (key: string) => () => leaveSuggestion(tabId, key);
@@ -131,7 +136,12 @@ export function SuggestionLayer({
       rows={rows}
       open={view.panelOpen}
       showAll={view.showAll}
-      onOpenChange={(open) => setSuggestionsPanelOpen(tabId, open)}
+      // The list and the Ask popover share the corner: opening one closes the other.
+      onOpenChange={(open) => {
+        if (open) closeAsk(tabId);
+        setSuggestionsPanelOpen(tabId, open);
+      }}
+      ask={canAsk ? <AskButton tabId={tabId} onAsk={() => controls.openAsk()} /> : undefined}
       onShowAllChange={(on) => {
         if (on) track('Canvas', 'Used', 'SuggestionsShown');
         setShowAllSuggestions(tabId, on);

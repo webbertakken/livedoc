@@ -8,6 +8,7 @@ import {
   suggestionBounds,
 } from '@livedoc/document';
 import { CONTEXT_BOARD_IDS as IDS, contextBoardElements, startContextBoard } from './context-board';
+import { expectNothingSuggested } from './suggestion-board';
 
 // Candidate contexts in the editor (docs/specs/021-event-storming/candidate-contexts.md), in a real browser: what only
 // a browser can answer is whether the outline follows its notes, whether a drag joins and leaves the way the pure
@@ -71,7 +72,7 @@ test('a kept context is drawn round its notes, renamed from its name, and delete
 }) => {
   await startContextBoard(page);
   await expect(outline(page, IDS.ordering)).toHaveAttribute('stroke-dasharray', '10 10');
-  const name = page.getByRole('button', { name: 'Candidate context: Ordering' });
+  const name = page.getByRole('button', { name: 'Candidate context: Ordering', exact: true });
   await expect(name).toBeVisible();
 
   await name.dblclick();
@@ -79,7 +80,7 @@ test('a kept context is drawn round its notes, renamed from its name, and delete
   await field.fill('Placing orders');
   await field.press('Enter');
   await expect(
-    page.getByRole('button', { name: 'Candidate context: Placing orders' }),
+    page.getByRole('button', { name: 'Candidate context: Placing orders', exact: true }),
   ).toBeFocused();
   expect(contextIn(await storedBoard(page), IDS.ordering)?.label).toBe('Placing orders');
 
@@ -104,8 +105,10 @@ test('a suggested context shows faint, sits in the panel, and is kept by its ✓
   );
 
   await page.getByRole('button', { name: 'Apply suggested candidate context: Payments' }).click();
-  await expect(panel).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Candidate context: Payments' })).toBeVisible();
+  await expectNothingSuggested(page);
+  await expect(
+    page.getByRole('button', { name: 'Candidate context: Payments', exact: true }),
+  ).toBeVisible();
   expect(contextIn(await storedBoard(page), IDS.payments)?.esContext?.suggestion).toBeUndefined();
 });
 
@@ -157,7 +160,7 @@ test('Shift-click selects two contexts and the offer merges them into one, named
   page,
 }) => {
   await startContextBoard(page);
-  await page.getByRole('button', { name: 'Candidate context: Ordering' }).click();
+  await page.getByRole('button', { name: 'Candidate context: Ordering', exact: true }).click();
   await page
     .getByRole('button', { name: /^Suggested candidate context: Payments/ })
     .click({ modifiers: ['Shift'] });

@@ -159,6 +159,9 @@ import { useNoteActions } from '@/hooks/canvas/useNoteActions';
 import { useSuggestionActions } from '@/hooks/canvas/useSuggestionActions';
 import { useChangeActions } from '@/hooks/canvas/useChangeActions';
 import { useLaneActions } from '@/hooks/canvas/useLaneActions';
+import { useAskActions } from '@/hooks/canvas/useAskActions';
+import { contextSelectionFor } from '@/lib/context-selection';
+import { selectionIds } from '@/lib/selection-store';
 import { useContextActions } from '@/hooks/canvas/useContextActions';
 import { usePhotoPicker } from '@/hooks/canvas/usePhotoPicker';
 import { warmBoundaryModel } from '@/lib/photo-model/client';
@@ -2653,7 +2656,29 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     notify: (message) => toast.info(message),
     select: (id) => selectionStore.setSelection({ selectedId: id, multiSelectedIds: new Set() }),
   });
-  const suggestionActions = { ...suggestedNoteActions, ...changeActions, ...laneActions };
+  // Asks (docs/specs/021-event-storming/asks.md): the popover opened about the selection, the prompt copied, the
+  // built-in model asked and its answer added, the About kept and the declined forgotten.
+  const askActions = useAskActions({
+    activeTab,
+    createBlocked,
+    commitTab: commitActiveTab,
+    liveTab: () => tabsRef.current.find((t) => t.id === activeId) ?? activeTab,
+    notify: (message) => toast.info(message),
+    selected: () => {
+      const { selectedId, multiSelectedIds } = selectionStore.get();
+      return {
+        notes: [...selectionIds(selectedId, multiSelectedIds)],
+        contexts: [...contextSelectionFor(activeTab.id).ids],
+      };
+    },
+    caller: { ownerId: selfParticipant.id, share: sessionShareCode },
+  });
+  const suggestionActions = {
+    ...suggestedNoteActions,
+    ...changeActions,
+    ...laneActions,
+    ...askActions,
+  };
   // Kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): rename, delete, notes in and out.
   const contextActions = useContextActions({ activeTab, createBlocked, commit });
 

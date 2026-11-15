@@ -233,3 +233,36 @@ describe('which model', () => {
     expect(resolveAiProvider(keys, 'assistant')).toBeNull();
   });
 });
+
+// The built-in hand of an ask (docs/specs/021-event-storming/asks.md "The built-in hand"): the deployment's small
+// model, which on Google is the photo reader's.
+describe('which model answers an ask', () => {
+  it('prefers Google, on its small model', () => {
+    expect(resolveAiProvider(env(BOTH), 'storm')).toMatchObject({
+      provider: 'google',
+      model: GOOGLE_DEFAULT_VISION_MODEL,
+    });
+  });
+
+  it('keeps the small model when the assistant is named another', () => {
+    const keys = env({ GOOGLE_AI_STUDIO_API_KEY: 'k', AI_MODEL: 'gemini-big' });
+    expect(resolveAiProvider(keys, 'storm')?.model).toBe(GOOGLE_DEFAULT_VISION_MODEL);
+  });
+
+  it('is the assistant’s model on a provider with no small one', () => {
+    expect(resolveAiProvider(env({ OPENAI_API_KEY: 'k' }), 'storm')?.model).toBe(
+      OPENAI_DEFAULT_MODEL,
+    );
+    const named = env({ OPENAI_API_KEY: 'k', AI_MODEL: 'gpt-named' });
+    expect(resolveAiProvider(named, 'storm')?.model).toBe('gpt-named');
+    const generic = env({ AI_API_KEY: 'k', AI_BASE_URL: 'http://x/v1', AI_MODEL: 'local' });
+    expect(resolveAiProvider(generic, 'storm')?.model).toBe('local');
+  });
+
+  it('AI_STORM_MODEL names another, for asks alone', () => {
+    const keys = env({ ...BOTH, AI_STORM_MODEL: 'gemini-asks' });
+    expect(resolveAiProvider(keys, 'storm')?.model).toBe('gemini-asks');
+    expect(resolveAiProvider(keys, 'reader')?.model).toBe(GOOGLE_DEFAULT_VISION_MODEL);
+    expect(resolveAiProvider(keys, 'assistant')?.model).toBe(OPENAI_DEFAULT_MODEL);
+  });
+});

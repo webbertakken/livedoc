@@ -329,9 +329,11 @@ name = "EMAIL"
 #
 # Each feature takes its own provider from the keys that are set: the assistant
 # (/api/ai) prefers OpenAI, the crop reader (/api/ai/read-notes) prefers Google,
-# and one key serves both. Production sets both named keys to split them.
-# AI_BASE_URL / AI_MODEL / AI_VISION_MODEL are plain [vars]; AI_MODEL is the
-# assistant's model and AI_VISION_MODEL the reader's (docs/specs/007-editor/ai-assistance.md).
+# an ask on an Event Storming board (/api/storm-ask) goes where the reader goes,
+# and one key serves them all. Production sets both named keys to split them.
+# AI_BASE_URL / AI_MODEL / AI_VISION_MODEL / AI_STORM_MODEL are plain [vars]; AI_MODEL is the
+# assistant's model, AI_VISION_MODEL the reader's and AI_STORM_MODEL an ask's
+# (docs/specs/007-editor/ai-assistance.md).
 #
 # With no key the whole surface is hidden: GET /api/capabilities answers
 # { aiEnabled: false }, the editor shows no AI panel and no photo import, and

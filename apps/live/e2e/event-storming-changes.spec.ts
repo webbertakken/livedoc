@@ -7,6 +7,7 @@ import {
   CHANGE_BOARD_NAMES as NAMES,
   startChangeBoard,
 } from './change-board';
+import { expectNothingSuggested } from './suggestion-board';
 
 // Suggested changes in the editor (docs/specs/021-event-storming/suggested-changes.md "How a person sees and
 // decides", "Accepting"), in a real browser: what only a browser can answer is whether a preview draws over the
@@ -266,7 +267,7 @@ test('the panel lists names, merges and note changes; Dismiss All drops and reme
   await expect(chip(page, NAMES.ordering[0])).toBeVisible();
 
   await panel.getByRole('button', { name: 'Dismiss All' }).click();
-  await expect(panel).toHaveCount(0);
+  await expectNothingSuggested(page);
   await expect(page.locator('[data-change-mark]')).toHaveCount(0);
   const after = await storedTab(page);
   expect(after.elements.some((el) => el.esChanges || el.esContext?.names)).toBe(false);

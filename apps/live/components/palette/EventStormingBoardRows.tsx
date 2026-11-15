@@ -1,6 +1,7 @@
 'use client';
 
-import { Glyph } from '@livedoc/ui';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { Glyph, SparkleIcon } from '@livedoc/ui';
 
 // The BOARD-level controls at the top of the palette's Event Storming category
 // (docs/specs/021-event-storming/event-storming.md). Everything below them adds a note; these change what the board
@@ -23,66 +24,97 @@ export type EsBoardControls = {
   onDrawContext?: () => void;
   // The pen is armed.
   drawingContext?: boolean;
+  // Ask for Suggestions (docs/specs/021-event-storming/asks.md "Where an ask starts"): opens the Ask popover about
+  // what is selected. Absent for someone who may not ask.
+  onAsk?: () => void;
 };
 
 export function EventStormingBoardRows({ controls }: { controls: EsBoardControls }) {
   return (
     <div className="mb-1.5 border-b border-slate-200 pb-1.5 dark:border-slate-700">
       {controls.onDrawContext ? (
-        <button
-          type="button"
+        <BoardRow
+          icon={<ContextLoopIcon />}
+          title="Draw Context"
+          line={
+            controls.drawingContext
+              ? 'Drag a loop round the notes; Esc to stop'
+              : 'Group notes into a candidate context'
+          }
+          look={controls.drawingContext ? 'pressed' : 'plain'}
           aria-pressed={controls.drawingContext === true}
           data-context-pen-toggle=""
           onClick={controls.onDrawContext}
-          className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition ${
-            controls.drawingContext
-              ? 'bg-brand-50 dark:bg-brand-950'
-              : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-          }`}
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            <ContextLoopIcon />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-              Draw Context
-            </span>
-            <span className="block text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-              {controls.drawingContext
-                ? 'Drag a loop round the notes; Esc to stop'
-                : 'Group notes into a candidate context'}
-            </span>
-          </span>
-        </button>
+        />
+      ) : null}
+      {controls.onAsk ? (
+        <BoardRow
+          icon={<SparkleIcon size={16} />}
+          title="Ask for Suggestions"
+          line="Gaps, contexts, names, wording and lanes"
+          aria-haspopup="dialog"
+          data-ask-row=""
+          // Asking is about what is selected: a press here leaves a selected context selected.
+          data-keeps-context-selection=""
+          onClick={controls.onAsk}
+        />
       ) : null}
       {controls.onImportPhoto ? (
-        <button
-          type="button"
-          onClick={controls.onImportPhoto}
+        <BoardRow
+          icon={<CameraIcon />}
+          title="Add from Photo"
+          // A disabled button takes no focus and may get no hover, so the reason is the row's own second line
+          // rather than a hint.
+          line={
+            (controls.photoDisabled && controls.photoDisabledReason) ||
+            'Read the stickies off a photo of the wall'
+          }
+          look={controls.photoDisabled ? 'disabled' : 'plain'}
           disabled={controls.photoDisabled}
-          className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition ${
-            controls.photoDisabled
-              ? 'cursor-not-allowed opacity-50'
-              : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-          }`}
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-            <CameraIcon />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[11px] font-semibold text-slate-700 dark:text-slate-200">
-              Add from Photo
-            </span>
-            {/* A disabled button takes no focus and may get no hover, so the
-                reason is the row's own second line rather than a hint. */}
-            <span className="block text-[10px] leading-snug text-slate-500 dark:text-slate-400">
-              {(controls.photoDisabled && controls.photoDisabledReason) ||
-                'Read the stickies off a photo of the wall'}
-            </span>
-          </span>
-        </button>
+          onClick={controls.onImportPhoto}
+        />
       ) : null}
     </div>
+  );
+}
+
+const ROW_LOOKS = {
+  plain: 'hover:bg-slate-50 dark:hover:bg-slate-800',
+  pressed: 'bg-brand-50 dark:bg-brand-950',
+  disabled: 'cursor-not-allowed opacity-50',
+} as const;
+
+// One board-level row: an icon in its tile, what the row does, and a second line saying more.
+function BoardRow({
+  icon,
+  title,
+  line,
+  look = 'plain',
+  ...button
+}: {
+  icon: ReactNode;
+  title: string;
+  line: string;
+  look?: keyof typeof ROW_LOOKS;
+} & ButtonHTMLAttributes<HTMLButtonElement>) {
+  return (
+    <button
+      type="button"
+      {...button}
+      className={`flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition ${ROW_LOOKS[look]}`}
+    >
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+          {title}
+        </span>
+        <span className="block text-[10px] leading-snug text-slate-500 dark:text-slate-400">
+          {line}
+        </span>
+      </span>
+    </button>
   );
 }
 

@@ -32,6 +32,7 @@ import { canEditSequence } from '@/lib/sequence-edit';
 import { panelEnabled } from '@/lib/user-preferences';
 import { noteContextMenu } from '@/lib/note-context-menu';
 import { editContextName } from '@/lib/context-selection';
+import { askScopeOf } from '@livedoc/storm-reading';
 
 // Lazy like the other heavy editor chrome: the menu's chunk loads on the
 // first right-click, not with the page.
@@ -234,6 +235,7 @@ export function EditorContextMenuHost() {
     openComments,
     openAssignAction,
     contextActions,
+    suggestionActions,
     esBoard,
   } = useEditorContext();
   // The selection the menu acts on, read from the store while a menu is open: a closed menu never
@@ -385,6 +387,15 @@ export function EditorContextMenuHost() {
           : (noteContextMenu(activeTab.elements, contextMenu.elementId, contextActions, (id) =>
               editContextName(activeTab.id, id),
             ) ?? undefined)
+      }
+      // Asking is an Editor's alone (docs/specs/021-event-storming/asks.md "Share roles").
+      onAskAbout={
+        esBoard && can.suggestions && !createBlocked && contextMenu.mode === 'element'
+          ? () =>
+              suggestionActions.openAsk(
+                askScopeOf(activeTab.elements, { notes: [contextMenu.elementId], contexts: [] }),
+              )
+          : undefined
       }
       onStackFront={stackSelectedFront}
       onStackBack={stackSelectedBack}

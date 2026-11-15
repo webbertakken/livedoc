@@ -21,6 +21,18 @@ describe('placeAnchored', () => {
     ).toEqual({ left: 100, side: 'below', top: 136, maxHeight: view.height - 136 - EDGE });
   });
 
+  it('holds its right edge to the anchor’s when it opens from a right-hand corner', () => {
+    const corner = { left: 850, right: 950, top: 60, bottom: 100 };
+    expect(placeAnchored(corner, { width: 340, height: 200 }, view, undefined, true).left).toBe(
+      610,
+    );
+    // Still on-screen when the anchor is narrower than the room at its left.
+    const tight = { left: 100, right: 200, top: 60, bottom: 100 };
+    expect(placeAnchored(tight, { width: 340, height: 200 }, view, undefined, true).left).toBe(
+      EDGE,
+    );
+  });
+
   it('opens above when only above has room, held by its bottom edge, left edge on-screen', () => {
     const at = placeAnchored(
       { left: 900, top: 700, bottom: 730 },

@@ -772,6 +772,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                   inertIds={props.layerInertIds}
                   layers={tabLayers}
                   offered={offered}
+                  canAsk={!props.createBlocked}
                   onSelectContexts={(ids) => {
                     props.contexts?.clearSelection();
                     selectContexts(props.activeTabId ?? '', ids);

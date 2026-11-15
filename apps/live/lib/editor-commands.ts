@@ -147,6 +147,9 @@ export type CommandHandlers = {
   // Arrange and Reorder (docs/specs/021-event-storming/arrange.md "How a person arranges"): previews the board laid
   // out along the timeline, to keep or put back.
   arrangeBoard: () => void;
+  // Ask for Suggestions (docs/specs/021-event-storming/asks.md "Where an ask starts"): opens the Ask popover about
+  // whatever is selected.
+  askBoard: () => void;
 };
 
 // The canvas tools reachable from search, in the tool dropdown's own order.
@@ -324,6 +327,13 @@ export function buildEditorCommands(ctx: CommandContext, h: CommandHandlers): Ed
       name: 'Arrange and Reorder',
       keywords: 'arrange reorder timeline columns tidy order lay out event storming board notes',
       run: h.arrangeBoard,
+    });
+    out.push({
+      id: 'ask-board',
+      name: 'Ask for Suggestions',
+      keywords:
+        'ask suggest suggestions agent prompt copy model ai gaps contexts names wording lanes about domain declined event storming',
+      run: h.askBoard,
     });
   }
 

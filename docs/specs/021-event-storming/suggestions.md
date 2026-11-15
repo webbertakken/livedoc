@@ -78,12 +78,16 @@ person's own view (not shared, not saved with the board; off when the board open
   are drawn shifted, the document is untouched, and switching the toggle off puts every note back.
 - **A placeholder** is pale paper (the kind's paper over white, in either scheme) inside a dashed border, the kind
   named small above its words, with ✓ (apply) and ✕ (dismiss); pointing at it shows the caption.
-- **The suggestions panel.** While a board has open suggestions, the top right of the canvas holds the panel,
-  **collapsed by default** to a small button that says how many there are (default: collapsed again each time the
-  board opens). Expanded, it lists every suggestion in timeline order (kind, words, reason, ✓ and ✕) and holds Show
+- **The suggestions corner.** The top right of the canvas holds, for an Editor on a board that may be changed, the
+  [Ask pill](asks.md#where-an-ask-starts) and, while the board has open suggestions, the panel beside it (ruled
+  2026-11-15 with the Ask pill's placement: one home for asking and for what comes back).
+  With no suggestion open the corner holds the pill alone.
+- **The suggestions panel** is **collapsed by default** to a small button that says how many there are (default:
+  collapsed again each time the board opens). Expanded, it lists every suggestion in timeline order (kind, words, reason, ✓ and ✕) and holds Show
   All Suggestions, Apply All and Dismiss All. Pointing at a row, or focusing it, brings its anchor and its spot into
   view (the least pan that shows both, none when they already show) (default) and previews it as a peek tab does.
-  It is the only chrome the feature adds, and it is gone when the last suggestion is.
+  It is the only chrome the feature adds, and it is gone when the last suggestion is; the Ask pill stays.
+  The list shares the corner with the Ask popover: opening one closes the other (default).
   It lists a [lane plan](lane-plans.md#how-a-person-sees-and-decides) first, then notes, contexts,
   [name suggestions and note changes](suggested-changes.md) in timeline order.
 - **Colour.** A dashed stroke is non-text UI and needs 3:1 against what it stands on (WCAG 2.2 1.4.11): on the light
@@ -117,7 +121,8 @@ person's own view (not shared, not saved with the board; off when the board open
   undoable step. Each one dismissed is [remembered as declined](asks.md#what-was-declined) in the same step.
 - Every apply and dismiss also removes the board's orphans, in the same step.
 - Nothing is offered where the change would be refused: a locked tab, a hidden or locked active layer, or a drag in
-  hand hides the tabs, placeholders and panel (default).
+  hand hides the tabs, placeholders and the whole corner, Ask pill and all (default).
+  A board being [arranged](arrange.md#how-a-person-arranges) hides them too: it is the preview's while that lasts.
 - An applied note is selected, not opened for typing: its words were already chosen.
 - **Telemetry**: `Canvas / Used / SuggestionApplied`, `SuggestionDismissed`, `SuggestionsAppliedAll`,
   `SuggestionsDismissedAll`, `SuggestionsShown` (the toggle on), and `Element / Added / Sticky` once per apply.

@@ -204,6 +204,8 @@ export function ContextLayer({
       {drawn.map((d) => {
         const acts = { ...actsFor(d.context.id, d.suggested), select: selectFor(d.context.id) };
         const selected = selection.ids.has(d.context.id);
+        // The one selected context: its chips and its Ask stand with its name; several share the merge offer.
+        const alone = selected && selection.ids.size === 1;
         return part === 'lines' ? (
           <ContextOutline
             key={d.context.id}
@@ -222,7 +224,12 @@ export function ContextLayer({
             editing={selection.editingId === d.context.id}
             acts={acts}
             names={showSuggested ? nameSuggestionsFor(elements, [d.context.id]).length : 0}
-            below={selected && selection.ids.size === 1 ? chipsFor([d.context.id], false) : null}
+            below={alone ? chipsFor([d.context.id], false) : null}
+            onAsk={
+              alone && suggestions
+                ? () => suggestions.openAsk({ type: 'context', id: d.context.id })
+                : undefined
+            }
           />
         );
       })}
@@ -231,6 +238,11 @@ export function ContextLayer({
           contexts={merging}
           zoom={zoom}
           chips={chipsFor(mergingIds, true)}
+          onAsk={
+            suggestions
+              ? () => suggestions.openAsk({ type: 'contexts', ids: mergingIds })
+              : undefined
+          }
           onMerge={() => {
             const kept = contexts.merge(mergingIds);
             if (kept) editContextName(tabId, kept);

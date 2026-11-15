@@ -1,6 +1,7 @@
 import type { PenInk } from '@/hooks/canvas/commit-freehand';
 import type { SuggestionActions } from '@/hooks/canvas/useSuggestionActions';
 import type { ChangeActions } from '@/hooks/canvas/useChangeActions';
+import type { AskActions } from '@/hooks/canvas/useAskActions';
 import type { LaneActions } from '@/hooks/canvas/useLaneActions';
 import type { ContextActions } from '@/hooks/canvas/useContextActions';
 import type { SnapGuideStore } from '@/hooks/canvas/useSnapGuideState';
@@ -54,7 +55,8 @@ export type SnapTarget = { x: number; y: number; active: boolean };
 // view.
 export type SuggestionControls = SuggestionActions &
   ChangeActions &
-  LaneActions & {
+  LaneActions &
+  AskActions & {
     reveal: (rect: { x: number; y: number; width: number; height: number }) => void;
   };
 

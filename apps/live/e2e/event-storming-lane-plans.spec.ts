@@ -2,6 +2,7 @@ import type { Page } from '@playwright/test';
 import { freshDarkPage } from './audit-screens';
 import { expect, pageOwnerHeaders, test } from './fixtures';
 import { LANE_BOARD_IDS as IDS, LANE_BOARD_PLAN as PLAN, startLaneBoard } from './lane-board';
+import { expectNothingSuggested } from './suggestion-board';
 
 // Lane plans and Arrange and Reorder in the editor (docs/specs/021-event-storming/lane-plans.md "How a person sees
 // and decides", docs/specs/021-event-storming/arrange.md "How a person arranges"), in a real browser: what only a
@@ -152,7 +153,7 @@ test('the row keeps the keyboard while it previews: Tab reaches ✓, and Enter a
   await expect.poll(() => lanesBelow(page, IDS.waiter, IDS.orderTaken)).toBe(0);
   await expect(bar(page)).toHaveText('2 lanes · Reads the same');
   await page.keyboard.press('Enter');
-  await expect(panel(page)).toHaveCount(0);
+  await expectNothingSuggested(page);
   expect(laneNames(await storedTab(page))).toEqual(['Front of house', 'Kitchen']);
 });
 
@@ -181,7 +182,7 @@ test('✓ applies the plan as one step, lane names and all; one Undo takes it ba
   await planRow(page)
     .getByRole('button', { name: 'Apply suggestion: Lane plan: 2 lanes', exact: true })
     .click();
-  await expect(panel(page)).toHaveCount(0);
+  await expectNothingSuggested(page);
   await expect(bar(page)).toHaveCount(0);
 
   const after = await storedTab(page);
@@ -211,7 +212,7 @@ test('✕ and Dismiss All remove the plan and remember nothing', async ({ page }
   await planRow(page)
     .getByRole('button', { name: 'Dismiss suggestion: Lane plan: 2 lanes', exact: true })
     .click();
-  await expect(panel(page)).toHaveCount(0);
+  await expectNothingSuggested(page);
   const after = await storedTab(page);
   expect(plans(after)).toHaveLength(0);
   expect(after.elements).toHaveLength(10);
@@ -222,7 +223,7 @@ test('✕ and Dismiss All remove the plan and remember nothing', async ({ page }
   await page.keyboard.press('ControlOrMeta+z');
   await expect(planRow(page)).toBeVisible();
   await panel(page).getByRole('button', { name: 'Dismiss All' }).click();
-  await expect(panel(page)).toHaveCount(0);
+  await expectNothingSuggested(page);
   const again = await storedTab(page);
   expect(plans(again)).toHaveLength(0);
   expect(again.esDeclined ?? []).toEqual([]);
@@ -251,7 +252,7 @@ test('a plan the board outgrew says so, previews nothing and is left by Apply Al
   expect(place(await storedTab(page), IDS.orderTaken)).toEqual([0, 480]);
 
   await row.getByRole('button', { name: /^Dismiss suggestion: Lane plan/ }).click();
-  await expect(panel(page)).toHaveCount(0);
+  await expectNothingSuggested(page);
   expect(plans(await storedTab(page))).toHaveLength(0);
 });
 
@@ -295,11 +296,13 @@ test('Arrange and Reorder previews the board along its timeline; Escape and Put 
   page,
 }) => {
   await startLaneBoard(page);
-  await expect(panel(page)).toHaveCount(0);
+  await expectNothingSuggested(page);
   expect(await columnsApart(page)).toBeGreaterThan(3);
 
   await run(page, 'Arrange and Reorder');
   await expect(bar(page)).toContainText('Arranged and reordered along the timeline');
+  // The suggestions corner stands down, Ask pill and all, while the board is the preview's.
+  await expect(panel(page)).toHaveCount(0);
   // The columns close up; every note stays on its lane; the board is not written.
   await expect.poll(() => columnsApart(page)).toBeLessThan(2);
   expect(await lanesBelow(page, IDS.waiter, IDS.orderTaken)).toBe(2);
@@ -307,6 +310,7 @@ test('Arrange and Reorder previews the board along its timeline; Escape and Put 
 
   await page.keyboard.press('Escape');
   await expect(bar(page)).toHaveCount(0);
+  await expectNothingSuggested(page);
   await expect.poll(() => columnsApart(page)).toBeGreaterThan(3);
   await expect(gliding(page)).toHaveCount(0, { timeout: 1000 });
 

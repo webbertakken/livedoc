@@ -1,6 +1,10 @@
 import type { Page } from '@playwright/test';
 import { expect, pageOwnerHeaders, test } from './fixtures';
-import { SUGGESTION_BOARD_IDS as IDS, startSuggestionBoard } from './suggestion-board';
+import {
+  SUGGESTION_BOARD_IDS as IDS,
+  expectNothingSuggested,
+  startSuggestionBoard,
+} from './suggestion-board';
 
 // Suggestions in the editor (docs/specs/021-event-storming/suggestions.md), in a real browser: what only a browser
 // can answer is whether the peek tabs, the preview, the keys and the panel reach the board the way the pure apply
@@ -93,7 +97,7 @@ test('the panel opens collapsed, shows every suggestion, and applies them all', 
   expect(byId(await storedBoard(page), IDS.orderShipped).x).toBe(byId(before, IDS.orderShipped).x);
 
   await panel.getByRole('button', { name: 'Apply All' }).click();
-  await expect(panel).toHaveCount(0);
+  await expectNothingSuggested(page);
   const after = await storedBoard(page);
   expect(after.filter((el) => el.esSuggestion !== undefined)).toEqual([]);
   expect(after).toHaveLength(before.length);

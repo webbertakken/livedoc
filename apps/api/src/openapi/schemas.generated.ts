@@ -15193,6 +15193,224 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     },
     "type": "object"
   },
+  "StormAskRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "lanes": {
+        "type": "number"
+      },
+      "scope": {
+        "$ref": "#/components/schemas/StormAskScope"
+      },
+      "tab": {
+        "additionalProperties": false,
+        "properties": {
+          "elements": {
+            "items": {
+              "$ref": "#/components/schemas/Element"
+            },
+            "type": "array"
+          },
+          "esAbout": {
+            "type": "string"
+          },
+          "esDeclined": {
+            "items": {
+              "$ref": "#/components/schemas/EsDeclined"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "layers": {
+            "items": {
+              "$ref": "#/components/schemas/Layer"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "elements"
+        ],
+        "type": "object"
+      },
+      "topic": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "topic",
+      "scope",
+      "tab"
+    ],
+    "type": "object"
+  },
+  "StormAskResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "added": {
+        "items": {
+          "$ref": "#/components/schemas/Element"
+        },
+        "type": "array"
+      },
+      "changes": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "change": {
+              "$ref": "#/components/schemas/EsNoteChange"
+            },
+            "note": {
+              "$ref": "#/components/schemas/ElementId"
+            }
+          },
+          "required": [
+            "note",
+            "change"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      },
+      "dropped": {
+        "type": "number"
+      },
+      "folded": {
+        "enum": [
+          true,
+          "fits",
+          "no_arrangement"
+        ],
+        "type": [
+          "boolean",
+          "string"
+        ]
+      },
+      "lines": {
+        "type": "number"
+      },
+      "names": {
+        "items": {
+          "additionalProperties": false,
+          "properties": {
+            "by": {
+              "type": "string"
+            },
+            "contexts": {
+              "items": {
+                "$ref": "#/components/schemas/ElementId"
+              },
+              "type": "array"
+            },
+            "name": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "contexts",
+            "name"
+          ],
+          "type": "object"
+        },
+        "type": "array"
+      }
+    },
+    "required": [
+      "added",
+      "names",
+      "changes",
+      "lines",
+      "dropped"
+    ],
+    "type": "object"
+  },
+  "StormAskScope": {
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "board",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "$ref": "#/components/schemas/ElementId"
+            },
+            "type": "array"
+          },
+          "type": {
+            "const": "notes",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "ids"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ElementId"
+          },
+          "type": {
+            "const": "context",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "$ref": "#/components/schemas/ElementId"
+            },
+            "type": "array"
+          },
+          "type": {
+            "const": "contexts",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "ids"
+        ],
+        "type": "object"
+      }
+    ]
+  },
   "SwimlaneBy": {
     "enum": [
       "none",

@@ -71,6 +71,7 @@ const INERT_HANDLERS: CommandHandlers = {
   setTool: noop,
   openPhotoImport: noop,
   arrangeBoard: noop,
+  askBoard: noop,
 };
 
 // `open`: the search is showing. Only then does the catalogue follow the selection, so a closed search
@@ -306,6 +307,8 @@ export function useEditorCommands(open: boolean): {
     openPhotoImport,
     // Tracks when the arrangement is kept (useLaneActions).
     arrangeBoard: () => suggestionActions.arrange(),
+    // Tracks when a prompt is copied or the model is asked (useAskActions).
+    askBoard: () => suggestionActions.openAsk(),
     fitToScreen,
     autoLayout: autoLayoutTab,
     autoAlign: autoAlignTab,

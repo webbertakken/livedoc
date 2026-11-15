@@ -247,6 +247,10 @@ reader prefers Google, each falling back to whichever key exists, and
   `gemini-3.5-flash-lite` rather than the assistant's model — it reads
   handwriting better AND costs less (docs/research/vision/handwriting-readers.md). On a
   single provider, setting `AI_MODEL` moves the reader too unless you set this.
+- `AI_STORM_MODEL`: model id for answering an ask on an Event Storming board
+  (`POST /api/storm-ask`, [Asks](../specs/021-event-storming/asks.md)). It defaults to the
+  provider's small model (`gemini-3.5-flash-lite` on Google), whatever `AI_MODEL` names, and to
+  the assistant's model on a provider with no small one.
 - `AI_ALLOWED_ORIGINS`: comma-separated `Origin` allow-list for `POST /api/ai` (e.g. `https://your-host,http://localhost:4002`). Unset = no origin check. Matched verbatim, case-sensitive. `apps/api/wrangler.toml` commits docs.nu's origins here, so a fork sets its own or deletes the line, or every AI request answers 403.
 - `AI_REQUIRE_ACCOUNT`: set to `"true"` to reject the guest (`X-Owner-Id`) path on `/api/ai` only, requiring a signed-in session. Unset = guests can use AI (so a fork without sign-in still works).
 

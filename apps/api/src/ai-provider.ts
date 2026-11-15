@@ -8,15 +8,16 @@ import type { Env } from './types';
 // A variable called `OPENAI_API_KEY` holding a Gemini key is a lie every future
 // reader has to decode.
 //
-// Three presets, and two FEATURES that each resolve their own provider from
+// Three presets, and three FEATURES that each resolve their own provider from
 // whichever keys are set ("Each feature has its own provider"): one key serves
-// both, two named keys split them.
+// them all, two named keys split them.
 
 export type AiProviderName = 'google' | 'openai' | 'generic';
 
 // The assistant is Ask / Clean (`/api/ai`); the reader reads the handwriting on
-// event-storming sticky crops (`/api/ai/read-notes`).
-export type AiFeature = 'assistant' | 'reader';
+// event-storming sticky crops (`/api/ai/read-notes`); storm answers an ask on an
+// Event Storming board (`/api/storm-ask`, docs/specs/021-event-storming/asks.md).
+export type AiFeature = 'assistant' | 'reader' | 'storm';
 
 export type ResolvedAiProvider = {
   provider: AiProviderName;
@@ -63,7 +64,8 @@ type Preset = {
   keyVar: keyof Env;
   baseUrl?: string;
   defaultModel?: string;
-  // What the crop READER uses when the operator has not named a model at all.
+  // The provider's small model: what the crop READER uses when the operator has not named a model at
+  // all, and what answers an ask.
   defaultVisionModel?: string;
   strictSchema: boolean;
 };
@@ -104,13 +106,14 @@ export function trimTrailingSlashes(url: string): string {
 
 // Each feature takes the FIRST present key in its own order. The assistant
 // prefers OpenAI, the model it has always run on; the crop reader prefers
-// Google, whose small model reads handwriting better for less. One key serves
-// both, and the generic key comes last for both, so every feature is either
-// available on every deployment that has a usable key or on none: one
-// `aiEnabled` answers for both.
+// Google, whose small model reads handwriting better for less, and an ask goes
+// where the reader goes. One key serves them all, and the generic key comes last
+// for each, so every feature is either available on every deployment that has a
+// usable key or on none: one `aiEnabled` answers for all.
 const PREFERENCE: Record<AiFeature, AiProviderName[]> = {
   assistant: ['openai', 'google', 'generic'],
   reader: ['google', 'openai', 'generic'],
+  storm: ['google', 'openai', 'generic'],
 };
 
 const presetFor = (name: AiProviderName): Preset => PRESETS.find((p) => p.provider === name)!;
@@ -167,18 +170,24 @@ export function resolveAiProvider(env: Env, feature: AiFeature): ResolvedAiProvi
 // is a guaranteed failure. On one provider, an operator who NAMED a model means
 // it for everything, so the preset's reader default applies only when nothing
 // is named. `AI_VISION_MODEL` beats all of it, for the reader only.
+//
+// An ask is answered by the provider's small model whatever the assistant is named
+// (docs/specs/021-event-storming/asks.md "The built-in hand"), and by the assistant's model on a
+// provider with no small one. `AI_STORM_MODEL` beats both, for asks only.
 function modelFor(env: Env, feature: AiFeature, preset: Preset): string {
   const fallback = preset.defaultModel ?? '';
   if (feature === 'assistant') return env.AI_MODEL ?? fallback;
-  if (env.AI_VISION_MODEL) return env.AI_VISION_MODEL;
   const sharesAssistant = firstPresent(env, 'assistant')?.provider === preset.provider;
+  const assistants = sharesAssistant && env.AI_MODEL ? env.AI_MODEL : fallback;
+  if (feature === 'storm') return env.AI_STORM_MODEL ?? preset.defaultVisionModel ?? assistants;
+  if (env.AI_VISION_MODEL) return env.AI_VISION_MODEL;
   if (sharesAssistant && env.AI_MODEL) return env.AI_MODEL;
   return preset.defaultVisionModel ?? fallback;
 }
 
-// Is there any AI on this deployment? Both features resolve from the same keys
-// and fall back to each other's provider, so they are available together or
-// not at all; asking the assistant answers for both.
+// Is there any AI on this deployment? Every feature resolves from the same keys
+// and falls back to the others' provider, so they are available together or
+// not at all; asking the assistant answers for all.
 export function aiConfigured(env: Env): boolean {
   return resolveAiProvider(env, 'assistant') !== null;
 }

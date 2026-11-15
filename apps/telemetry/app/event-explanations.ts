@@ -181,6 +181,16 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone dismissed a lane plan an agent suggested for an event-storming board.',
   'Canvas|Used|BoardArranged':
     'Someone arranged an event-storming board along its timeline with Arrange and Reorder, and kept the result.',
+  'Canvas|Used|AskPromptCopied':
+    'Someone copied the prompt of an ask on an event-storming board, to paste into their own agent. Never the prompt, its topic or the board.',
+  'Canvas|Used|AskedBuiltIn':
+    "Someone asked the deployment's built-in model for suggestions on an event-storming board. Never the topic or the board.",
+  'Canvas|Used|LanesFolded':
+    "An event-storming board's own fold into fewer lanes was offered as a lane plan: asked for outright, or after a model's plan was refused twice.",
+  'Canvas|Used|AboutEdited':
+    'Someone changed what an event-storming board says its domain is (About This Domain). Never the words.',
+  'Canvas|Used|DeclinedForgotten':
+    'Someone emptied the list of suggestions an event-storming board remembers as declined, so they may be suggested again.',
   'Canvas|Used|WaterCooler':
     'Someone walked their Avatar-mode character up to a water cooler and took a cup of water.',
   'Canvas|Used|CoffeeMachine':
