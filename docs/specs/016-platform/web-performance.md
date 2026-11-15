@@ -161,8 +161,6 @@ A timer that re-renders a large tree (the editor's presence clock) skips its tic
 is hidden, catching up when it returns, and while it has nothing to update (nobody else has been
 seen on the document).
 
-- The shared clock behind every relative time ("5 min ago") holds still while the page is hidden and
-  ticks the moment it shows again.
 - A panel that stays mounted once opened draws its pictures only while it is open: the Layers
   panel's row previews are not redrawn on every board change while it is closed.
 - Pictures only a panel shows are drawn by that panel: the Slide Deck panel draws its slides'
