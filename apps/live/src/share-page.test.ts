@@ -11,43 +11,94 @@ import {
 // The share page's head (docs/specs/013-workspace/share-link-previews.md "The share page's head"): a working share
 // link previews with its document's name and card; anything else is the shell as built.
 
-// HTMLRewriter is a Workers runtime global. This stand-in runs every handler against one recording element per
-// selector and answers what was set, so a test reads exactly what the worker wrote into the head.
-type Edits = Record<string, { attrs: Record<string, string>; inner?: string }>;
-class RecordingRewriter {
-  handlers: [string, { element(el: unknown): void }][] = [];
-  on(selector: string, handler: { element(el: unknown): void }) {
-    this.handlers.push([selector, handler]);
+// HTMLRewriter is a Workers runtime global. This stand-in does what the share page asks of it, on the shell below:
+// `title` and `meta[name="..."]` / `meta[property="..."]` selectors, an element's attributes (raw, entities and
+// all, as the runtime answers them), its removal, and a title's text.
+type Handlers = {
+  element?(el: { getAttribute(name: string): string | null; remove(): void }): void;
+  text?(chunk: { text: string }): void;
+};
+class StubRewriter {
+  handlers: [string, Handlers][] = [];
+  on(selector: string, handlers: Handlers) {
+    this.handlers.push([selector, handlers]);
     return this;
   }
   transform(response: Response): Response {
-    const edits: Edits = {};
-    for (const [selector, handler] of this.handlers) {
-      const edit = (edits[selector] ??= { attrs: {} });
-      handler.element({
-        setAttribute: (name: string, value: string) => void (edit.attrs[name] = value),
-        setInnerContent: (content: string) => void (edit.inner = content),
-      });
-    }
-    return new Response(JSON.stringify(edits), {
-      status: response.status,
-      headers: response.headers,
+    const rewrite = async () => {
+      let html = await response.text();
+      for (const [selector, handlers] of this.handlers) {
+        const meta = /^meta\[(name|property)="([^"]+)"\]$/.exec(selector);
+        const pattern = meta
+          ? new RegExp(`<meta ${meta[1]}="${meta[2]}"[^>]*>`, 'g')
+          : /<title>([^<]*)<\/title>/g;
+        html = html.replace(pattern, (tag: string, inner?: string) => {
+          let removed = false;
+          handlers.element?.({
+            getAttribute: (name) => new RegExp(`${name}="([^"]*)"`).exec(tag)?.[1] ?? null,
+            remove: () => void (removed = true),
+          });
+          if (!meta) handlers.text?.({ text: inner ?? '' });
+          return removed ? '' : tag;
+        });
+      }
+      return html;
+    };
+    const body = new ReadableStream<Uint8Array>({
+      start: async (controller) => {
+        controller.enqueue(new TextEncoder().encode(await rewrite()));
+        controller.close();
+      },
     });
+    return new Response(body, { status: response.status, headers: response.headers });
   }
 }
 
-const SHELL = '<html><head><title>LiveDoc</title></head><body></body></html>';
+// What the root layout emits, in its order: scripts and styles first, then the title and the preview tags, then the
+// inline scripts that must run before any chunk does.
+const HEAD_START =
+  '<html><head><link rel="stylesheet" href="/a.css"/><script src="/a.js" async=""></script>';
+const PREVIEW_TAGS =
+  '<title>LiveDoc</title>' +
+  '<meta name="description" content="Diagrams &amp; more"/>' +
+  '<meta property="og:title" content="LiveDoc"/>' +
+  '<meta property="og:description" content="Diagrams &amp; more"/>' +
+  '<meta property="og:image" content="https://docs.nu/opengraph-image"/>' +
+  '<meta property="og:image:width" content="1200"/>' +
+  '<meta property="og:image:alt" content="LiveDoc, a card"/>' +
+  '<meta name="twitter:title" content="LiveDoc"/>' +
+  '<meta name="twitter:description" content="Diagrams &amp; more"/>' +
+  '<meta name="twitter:image" content="https://docs.nu/twitter-image"/>';
+const HEAD_END = '<script>guard()</script></head><body>editor</body></html>';
+const SHELL = HEAD_START + PREVIEW_TAGS + HEAD_END;
+// The head before its preview tags: everything but the title and the tags it moves (og:image:width stays).
+const HEAD_WITHOUT_TAGS =
+  HEAD_START + '<meta property="og:image:width" content="1200"/><script>guard()</script>';
+// The shell's own title and tags, closing the head: what goes out when the link does not preview.
+const AS_BUILT =
+  HEAD_WITHOUT_TAGS +
+  '<title>LiveDoc</title>' +
+  '<meta name="description" content="Diagrams &amp; more"/>' +
+  '<meta property="og:title" content="LiveDoc"/>' +
+  '<meta property="og:description" content="Diagrams &amp; more"/>' +
+  '<meta property="og:image" content="https://docs.nu/opengraph-image"/>' +
+  '<meta property="og:image:alt" content="LiveDoc, a card"/>' +
+  '<meta name="twitter:title" content="LiveDoc"/>' +
+  '<meta name="twitter:description" content="Diagrams &amp; more"/>' +
+  '<meta name="twitter:image" content="https://docs.nu/twitter-image"/>' +
+  '</head><body>editor</body></html>';
 
 function makeEnv(
   api?: (path: string, init?: RequestInit) => Promise<Response> | Response,
   shellStatus = 200,
+  shellBody = SHELL,
 ) {
   const assets: string[] = [];
   const env = {
     ASSETS: {
       fetch: async (req: Request) => {
         assets.push(new URL(req.url).pathname);
-        return new Response(SHELL, {
+        return new Response(shellBody, {
           status: shellStatus,
           headers: { 'content-type': 'text/html' },
         });
@@ -69,7 +120,7 @@ const get = (path: string, env: never, init: RequestInit = {}) =>
   worker.fetch(new Request(`https://docs.nu${path}`, init), env);
 
 beforeEach(() => {
-  vi.stubGlobal('HTMLRewriter', RecordingRewriter);
+  vi.stubGlobal('HTMLRewriter', StubRewriter);
   vi.spyOn(console, 'warn').mockImplementation(() => {});
 });
 afterEach(() => {
@@ -105,31 +156,51 @@ describe('shareHead', () => {
 });
 
 describe('live worker: the share page', () => {
-  it("fills the shell's head with the document the link names, asking the api once", async () => {
+  it("closes the shell's head with the document the link names, asking the api once", async () => {
     const seen: string[] = [];
     const { env, assets } = makeEnv((path) => {
       seen.push(path);
-      return Response.json({ name: 'Payments flow' });
+      return Response.json({ name: 'Q3 <plan> & "risks"' });
     });
     const res = await get('/document/shared?s=CODE1234', env);
     expect(assets).toEqual(['/document/placeholder']);
     expect(seen).toEqual(['/api/share/CODE1234/card']);
     expect(res.status).toBe(200);
-    // Still the editor page's headers.
+    // Still the editor page's headers, less a length the rewritten body no longer has.
     expect(res.headers.get('X-Frame-Options')).toBe('DENY');
-    const edits = (await res.json()) as Edits;
+    expect(res.headers.has('content-length')).toBe(false);
+    const name = 'Q3 &lt;plan&gt; &amp; &quot;risks&quot;';
     const image = 'https://docs.nu/api/share/CODE1234/image.png';
-    expect(edits.title!.inner).toBe('Payments flow');
-    expect(edits['meta[name="description"]']!.attrs.content).toBe(SHARE_PITCH);
-    expect(edits['meta[property="og:title"]']!.attrs.content).toBe('Payments flow');
-    expect(edits['meta[property="og:description"]']!.attrs.content).toBe(SHARE_PITCH);
-    expect(edits['meta[property="og:image"]']!.attrs.content).toBe(image);
-    expect(edits['meta[property="og:image:alt"]']!.attrs.content).toBe(
-      'Payments flow, drawn in LiveDoc',
+    const pitch = SHARE_PITCH;
+    expect(await res.text()).toBe(
+      HEAD_WITHOUT_TAGS +
+        `<title>${name}</title>` +
+        `<meta name="description" content="${pitch}"/>` +
+        `<meta property="og:title" content="${name}"/>` +
+        `<meta property="og:description" content="${pitch}"/>` +
+        `<meta property="og:image" content="${image}"/>` +
+        `<meta property="og:image:alt" content="${name}, drawn in LiveDoc"/>` +
+        `<meta name="twitter:title" content="${name}"/>` +
+        `<meta name="twitter:description" content="${pitch}"/>` +
+        `<meta name="twitter:image" content="${image}"/>` +
+        '</head><body>editor</body></html>',
     );
-    expect(edits['meta[name="twitter:title"]']!.attrs.content).toBe('Payments flow');
-    expect(edits['meta[name="twitter:description"]']!.attrs.content).toBe(SHARE_PITCH);
-    expect(edits['meta[name="twitter:image"]']!.attrs.content).toBe(image);
+  });
+
+  it('sends the head, every style and script in it, before the api answers', async () => {
+    let answer!: (res: Response) => void;
+    const { env } = makeEnv(() => new Promise<Response>((resolve) => (answer = resolve)));
+    const res = await get('/document/shared?s=CODE1234', env);
+    const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
+    let sent = '';
+    while (sent.length < HEAD_WITHOUT_TAGS.length) sent += (await reader.read()).value;
+    expect(sent).toBe(HEAD_WITHOUT_TAGS);
+
+    answer(Response.json({ name: 'Payments flow' }));
+    let rest = '';
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read())
+      rest += chunk.value;
+    expect(rest).toMatch(/^<title>Payments flow<\/title>.*<\/head><body>editor<\/body><\/html>$/);
   });
 
   it("forwards the visitor's address, so the api limits previews per visitor", async () => {
@@ -145,26 +216,26 @@ describe('live worker: the share page', () => {
     expect(new Headers(init!.headers).has('CF-Connecting-IP')).toBe(false);
   });
 
-  it('serves the shell as built when the api says the link previews as LiveDoc', async () => {
+  it("closes the head with the shell's own tags when the api says the link previews as LiveDoc", async () => {
     const { env } = makeEnv(() => Response.json({ error: 'not_found' }, { status: 404 }));
     const res = await get('/document/shared?s=GATED', env);
-    expect(await res.text()).toBe(SHELL);
+    expect(await res.text()).toBe(AS_BUILT);
     expect(console.warn).not.toHaveBeenCalled();
   });
 
-  it('serves the shell as built, and says so, when the api fails or cannot be reached', async () => {
+  it("closes the head with the shell's own tags, and says so, when the api fails or cannot be reached", async () => {
     const failing = makeEnv(() => new Response('boom', { status: 500 }));
-    expect(await (await get('/document/shared?s=C', failing.env)).text()).toBe(SHELL);
+    expect(await (await get('/document/shared?s=C', failing.env)).text()).toBe(AS_BUILT);
     expect(console.warn).toHaveBeenCalledWith('[share-page] api answered', 500);
 
     const down = makeEnv(() => Promise.reject(new Error('timeout')));
-    expect(await (await get('/document/shared?s=C', down.env)).text()).toBe(SHELL);
+    expect(await (await get('/document/shared?s=C', down.env)).text()).toBe(AS_BUILT);
     expect(console.warn).toHaveBeenCalledWith('[share-page] api unreachable', 'Error: timeout');
   });
 
   it('ignores an answer with no name in it', async () => {
     const { env } = makeEnv(() => Response.json({}));
-    expect(await (await get('/document/shared?s=C', env)).text()).toBe(SHELL);
+    expect(await (await get('/document/shared?s=C', env)).text()).toBe(AS_BUILT);
   });
 
   it('waits on the api no longer than its budget', async () => {
@@ -192,6 +263,13 @@ describe('live worker: the share page', () => {
     const res = await get('/document/shared?s=C', env);
     expect(res.status).toBe(503);
     expect(await res.text()).toBe(SHELL);
+  });
+
+  it('sends a shell with no head to close as built, and says so', async () => {
+    const headless = '<html><body>editor</body></html>';
+    const { env } = makeEnv(() => Response.json({ name: 'n' }), 200, headless);
+    expect(await (await get('/document/shared?s=C', env)).text()).toBe(headless);
+    expect(console.warn).toHaveBeenCalledWith('[share-page] shell has no head to close');
   });
 
   it("never asks about a document's own address, which only its owner can open", async () => {
