@@ -1,3 +1,4 @@
+import type { RemoteApply } from '@/hooks/canvas/history-replay';
 import {
   useEffect,
   useEffectEvent,
@@ -8,7 +9,7 @@ import {
 } from 'react';
 import { setRemoteBesideTab, syncRemoteBesideTabs } from '@/lib/split-presence';
 import { noteAccessEnded } from '@/lib/access-notice';
-import type { EditorMode, QaNote, Tab } from '@livedoc/document';
+import type { EditorMode, QaNote } from '@livedoc/document';
 import {
   parseArticleCaret,
   type AgentPresence,
@@ -104,7 +105,7 @@ export function useRoomConnection(opts: {
   // history on each would wipe undo continuously during a shared session).
   // A peer's op into the present and every undo / redo snapshot (historyApplyRemoteOp), so undo
   // never brings back what the peer changed.
-  applyRemoteOp: (apply: (prev: Tab[]) => Tab[]) => void;
+  applyRemoteOp: (apply: RemoteApply) => void;
   // This browser's own idea posts the room has not answered (useIdeaPosts), so a peer's card that reaches a
   // full box takes the newest one's place (docs/specs/012-collaboration/idea-box.md "Racing for the last card").
   pendingIdeaIds?: PendingIdeaIds;
@@ -453,10 +454,16 @@ export function useRoomConnection(opts: {
         // A peer's tab list keeps what this editor has not saved yet: a tab added here, one deleted here
         // (keepUnsavedTabChanges), judged against the baseline as it was before the list arrived.
         const savedBefore = saveBaseline.tabs.current;
-        applyRemoteOp((prev) =>
+        // Read now: the op may run again on an undo snapshot long after, and must run as it did on arrival.
+        const pendingIdeas =
+          op.kind === 'el-delta' && op.delta.kind === 'idea'
+            ? pendingIdeaIds?.(op.tabId, op.elementId)
+            : undefined;
+        const pendingAtArrival = pendingIdeas && (() => pendingIdeas);
+        applyRemoteOp((prev, replaying) =>
           op.kind === 'document-meta'
             ? keepUnsavedTabChanges(prev, applyRoomOpToTabs(prev, op), savedBefore)
-            : applyRoomOpToTabs(prev, op, pendingIdeaIds),
+            : applyRoomOpToTabs(prev, op, pendingAtArrival, { replaying }),
         );
         foldRemoteOpIntoBaseline(saveBaseline, op);
         const switched = peerModeSwitchOf(op);

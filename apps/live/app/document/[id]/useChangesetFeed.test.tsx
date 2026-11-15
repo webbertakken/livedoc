@@ -66,7 +66,7 @@ function setup(seen = new Map([['t1', 1]])) {
       seenRef: { current: seen },
       loadedTabIdsRef: { current: new Set(['t1']) },
       applyRemoteOp: (updater) => {
-        tabs = updater(tabs);
+        tabs = updater(tabs, false);
       },
       saveBaseline: {
         tabs: { current: [] },

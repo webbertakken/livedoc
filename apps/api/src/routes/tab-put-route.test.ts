@@ -188,6 +188,21 @@ describe('the tab PUT', () => {
     expect(data).not.toHaveProperty('documentId');
   });
 
+  it('answers the record, never the content it was sent back', async () => {
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const db = await documentWith([box('a')]);
+    const many = Array.from({ length: 1000 }, (_, i) => box(`e${i}`));
+    const res = await save(db, many);
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    const { tab } = JSON.parse(text) as { tab: Record<string, unknown> };
+    expect(Object.keys(tab).sort()).toEqual(
+      ['documentId', 'id', 'name', 'orderIndex', 'rev', 'updatedAt'].sort(),
+    );
+    expect(tab).toMatchObject({ id: 't1', documentId: 'D', rev: 2 });
+    expect(text.length).toBeLessThan(200);
+  });
+
   it('merges a changeset the saver had not seen, and logs it', async () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
     const db = await documentWith([box('a')]);

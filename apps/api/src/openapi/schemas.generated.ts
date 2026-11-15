@@ -15502,6 +15502,38 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "TabSaveRecord": {
+    "additionalProperties": false,
+    "properties": {
+      "documentId": {
+        "type": "string"
+      },
+      "id": {
+        "$ref": "#/components/schemas/TabId"
+      },
+      "name": {
+        "type": "string"
+      },
+      "orderIndex": {
+        "type": "number"
+      },
+      "rev": {
+        "type": "number"
+      },
+      "updatedAt": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "documentId",
+      "orderIndex",
+      "updatedAt",
+      "rev"
+    ],
+    "type": "object"
+  },
   "TabSummary": {
     "additionalProperties": false,
     "properties": {
