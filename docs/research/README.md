@@ -51,7 +51,7 @@ Where a large board spends its time during pan, zoom, drag, marquee and pen stro
 What the November 2026 sweep measured across first load, the open path, saving, the api and the static sites.
 The resulting rules live in docs/specs/016-platform/web-performance.md.
 
-- ./performance-sweep.md - when proposing a speed-up: what shipped, what was refuted, the open forks, what remains
+- ./performance-sweep.md - when proposing a speed-up: what shipped, what was refuted, the forks decided, what remains
 
 ## Agent CLI
 

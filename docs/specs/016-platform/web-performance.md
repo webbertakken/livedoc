@@ -1,5 +1,7 @@
 # Web performance
 
+Performance must be ultra slick throughout: every page, every surface, every gesture.
+
 What every site on docs.nu loads up front, and the rules that keep it lean. The canvas's own
 hot paths (drag, pan, zoom on large boards) are a separate subject:
 [Canvas performance](../008-canvas/canvas-performance.md).
