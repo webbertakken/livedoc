@@ -9,6 +9,28 @@ import { describe, expect, it } from 'vitest';
 
 const root = join(__dirname, '..');
 const read = (path: string) => readFileSync(join(root, path), 'utf8');
+// What the root layout mounts on every route, and what those modules import on its behalf.
+const ROOT_LAYOUT_MODULES = [
+  'components/providers/ErrorTelemetryBoot.tsx',
+  'components/providers/AuthBridge.tsx',
+  'components/drive/DriveMirrorProvider.tsx',
+  'hooks/persistence/useAccountApiBootstrap.ts',
+  'lib/auth-config.ts',
+  'lib/drive/browser-tokens.ts',
+  'lib/guest-migration.ts',
+  'lib/preferences-sync.ts',
+  'lib/telemetry.ts',
+  'lib/user-preferences.ts',
+];
+// Pages someone lands on from an email or another app, with one call to make.
+const SMALL_PAGE_MODULES = [
+  'components/panels/TeamInviteJoin.tsx',
+  'components/panels/TeamInviteDecline.tsx',
+  'app/oauth/consent/page.tsx',
+  'app/oauth/device/page.tsx',
+  'components/drive/DriveConnected.tsx',
+  'app/workbench/pair/PairWorkbench.tsx',
+];
 const staticImports = (src: string) =>
   [...src.matchAll(/^import\s+(?!type\b)[^;]*?from\s+'([^']+)'/gms)].map((m) => m[1]!);
 
@@ -31,5 +53,44 @@ describe('the Explorer’s first load', () => {
     const imports = staticImports(read('app/explorer/ExplorerShell.tsx'));
     expect(imports).not.toContain('@/components/dialogs/SettingsDialog');
     expect(imports).not.toContain('@/components/dialogs/MoveToFolderDialog');
+  });
+
+  it('loads search with the catalogues it searches, never ahead of it', () => {
+    const shell = read('app/explorer/ExplorerShell.tsx');
+    const imports = staticImports(shell);
+    expect(imports).not.toContain('@/components/panels/SearchPanel');
+    expect(imports).not.toContain('@/lib/help-search');
+    expect(imports).not.toContain('@/lib/settings-search-items');
+    expect(shell).toContain("import('./ExplorerSearch')");
+  });
+
+  // The template builders are every template's elements: about 400 KiB the Explorer shipped on every page.
+  it('loads what makes a document when one is made', () => {
+    for (const file of [
+      'app/explorer/new-document/start-new-document.ts',
+      'lib/new-document/write-new-document.ts',
+    ]) {
+      const imports = staticImports(read(file));
+      expect(imports, file).not.toContain('@/lib/new-document-content');
+      expect(imports, file).not.toContain('@/lib/template-builders');
+    }
+    expect(read('app/explorer/new-document/start-new-document.ts')).toContain(
+      "import('@/lib/new-document-content')",
+    );
+  });
+});
+
+// The barrel names every call the editor makes, and with it the offline store and the document model.
+describe('the api client barrel', () => {
+  it('stays out of what the root layout mounts', () => {
+    for (const file of ROOT_LAYOUT_MODULES) {
+      expect(staticImports(read(file)), file).not.toContain('@/lib/api-client');
+    }
+  });
+
+  it('stays out of the small pages, which import the api module they call', () => {
+    for (const file of SMALL_PAGE_MODULES) {
+      expect(staticImports(read(file)), file).not.toContain('@/lib/api-client');
+    }
   });
 });
