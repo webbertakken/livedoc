@@ -12,10 +12,9 @@ import { LensAnnouncer } from './lens/LensStates';
 import { ChromeControls } from '@/components/chrome/ChromeControls';
 import { TeamFormModal } from '@/components/dialogs/TeamFormModal';
 import { useAccessEndedToast } from './useAccessEndedToast';
-import { HELP_SEARCH_ITEMS } from '@/lib/help-search';
-import { SETTINGS_SEARCH_ITEMS } from '@/lib/settings-search-items';
 import { commitUserPreferences } from '@/lib/user-preferences';
 import { useSearchShortcut } from '@/hooks/ui/useSearchShortcut';
+import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { CustomThemeProvider } from '@/components/primitives/CustomThemeProvider';
 import { ShapeLibraryProvider } from '@/components/primitives/ShapeLibraryProvider';
 import { DocumentTagsProvider } from '@/components/tags/DocumentTagsProvider';
@@ -32,14 +31,12 @@ import { WorkbenchOpenLink } from '@/components/chrome/WorkbenchChrome';
 import { assignAppLocation } from '@/lib/app-location';
 import { bindNewDocumentCreator } from '@/lib/new-document/new-document-creator';
 
-// Lazy-load SearchPanel — same rationale as the editor route: it's
-// gated on `searchOpen`, never default-rendered, and dropping ~375
-// lines from the Explorer's initial chunk pays for itself immediately
-// on the first paint of the dashboard.
-const SearchPanel = dynamic(
-  () => import('@/components/panels/SearchPanel').then((m) => m.SearchPanel),
-  { ssr: false },
-);
+// Search draws only while open, so the panel and the catalogues it searches (the help registry, the settings
+// catalogue) load apart from the Explorer, fetched once the page is idle so the first press of the search key finds
+// them in (docs/specs/016-platform/web-performance.md "A surface that is not on screen loads when it is").
+const loadExplorerSearch = () => import('./ExplorerSearch').then((m) => m.ExplorerSearch);
+const EXPLORER_SEARCH_CODE = [loadExplorerSearch] as const;
+const ExplorerSearch = dynamic(loadExplorerSearch, { ssr: false });
 
 // Settings and the move picker mount only while open, so they load on first open rather than
 // with every Explorer page: Settings alone carries every category's panes.
@@ -144,6 +141,7 @@ function ShellChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   // Cmd/Ctrl+K and Cmd/Ctrl+. open search here as in the editor (docs/specs/007-editor/command-palette.md).
   useSearchShortcut(() => setSearchOpen(true));
+  useEffect(() => prefetchWhenIdle(EXPLORER_SEARCH_CODE), []);
 
   // Settings live in the bottom bar's gear (same synced UserPreferences as
   // the editor, docs/specs/007-editor/user-preferences.md). The prefs themselves are owned by
@@ -338,7 +336,7 @@ function ShellChrome({ children }: { children: ReactNode }) {
         onCancel={() => setTeamModalOpen(false)}
       />
       {searchOpen ? (
-        <SearchPanel
+        <ExplorerSearch
           {...searchPanelSources({ documents: liveDocs, folders, shared, teams, teamDocuments })}
           teamFolders={teamFolders}
           onSelectDocument={(id) => {
@@ -361,8 +359,7 @@ function ShellChrome({ children }: { children: ReactNode }) {
             // folder deep-link param at mount (docs/specs/013-workspace/team-shared-documents.md).
             assignAppLocation(teamFolderPath(teamId, folderId));
           }}
-          helpItems={HELP_SEARCH_ITEMS}
-          settingItems={surface.settings ? SETTINGS_SEARCH_ITEMS : []}
+          settings={surface.settings}
           onSelectSetting={(categoryId, rowKey) => {
             setSettingsFocus({ categoryId, rowKey });
             setSettingsOpen(true);
