@@ -14,9 +14,11 @@ import {
   useSheetZoom,
 } from '@/hooks/sheets/sheet-zoom';
 import { useEffect, type ComponentProps } from 'react';
+import dynamic from 'next/dynamic';
+import { loadMinimap } from '@/lib/editor-deferred-code';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
 import { LaserOverlay } from '@/components/canvas/LaserOverlay';
-import { Minimap } from '@/components/canvas/Minimap';
+import type { Minimap as MinimapComponent } from '@/components/canvas/Minimap';
 import { ZoomControls } from '@/components/chrome/ZoomControls';
 import { useViewportOf } from '@/hooks/canvas/useViewportStore';
 import type { View } from '@/lib/viewport-store';
@@ -59,10 +61,14 @@ export function ViewZoomControls(
   return <ZoomControls {...props} zoom={canvasZoom} zoomOff={covered} />;
 }
 
+// The Map draws its picture with the SVG renderer, so it is content a board may draw on open: fetched as the editor
+// mounts (DOCUMENT_CONTENT_CODE), never part of the first load (docs/specs/016-platform/web-performance.md).
+const Minimap = dynamic(loadMinimap, { ssr: false });
+
 // The Map, its view box following the view (its picture is memoised and does not redraw for it). Hidden while a Plan
 // board or view covers the canvas (docs/specs/026-plan/plan-board.md "Maximised board"): there is no canvas to map.
 export function ViewMinimap(
-  props: Omit<ComponentProps<typeof Minimap>, 'viewportZoom' | 'viewportOffset'>,
+  props: Omit<ComponentProps<typeof MinimapComponent>, 'viewportZoom' | 'viewportOffset'>,
 ) {
   const view = useViewportOf(wholeView);
   const covered = useCanvasCovered();

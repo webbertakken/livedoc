@@ -20,11 +20,16 @@ import { getTheme, recolourElementsForTheme } from './themes';
 
 export {
   buildTemplate,
+  formTemplateStarter,
   isDefaultDocumentName,
+  isFormTemplateKind,
+  isPlanTemplateKind,
   templateCanvasOverrides,
   templateTabs,
   untitledNameForTemplate,
+  withBlankPageThemed,
 } from '@livedoc/templates';
+export { templateTabName } from './template-tab-name';
 
 export function buildTemplatedTab(
   kind: TemplateKind,

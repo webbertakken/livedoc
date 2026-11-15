@@ -50,23 +50,24 @@ import { SessionTimerFace } from '@/components/canvas/SessionTimerFace';
 import { ShapeInlineIconLayout } from '@/components/canvas/shape-inline-icon-layout';
 import { InsetContent } from '@/components/canvas/InsetContent';
 import type { ContentInset } from '@/components/canvas/useIndicatorLayout';
-import { loadCollabFaceRouter, loadTableView } from '@/lib/editor-deferred-code';
+import { loadCollabFaceRouter, loadSequenceFace, loadTableView } from '@/lib/editor-deferred-code';
 import { VideoView } from '@/components/canvas/VideoView';
 import { HeroCaptionCard } from '@/components/canvas/web/HeroCaptionCard';
 import { ChipFace } from '@/components/canvas/ChipFace';
 import { PersonNodeFace } from '@/components/canvas/PersonNodeFace';
 import { DiagramKeyFace } from '@/components/canvas/DiagramKeyFace';
-import { SequenceFace } from '@/components/canvas/SequenceFace';
 import { BoundaryFace } from '@/components/canvas/BoundaryFace';
 import { ConceptFace } from '@/components/canvas/ConceptFace';
 import { WebComponentFace } from '@/components/canvas/web/WebComponentFace';
 import type { BoxedElementViewProps } from './BoxedElementView.types';
 import { useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 
-// Tables and facilitation panels are on few boards, so their faces load on demand; their code is fetched
-// as the editor mounts (lib/editor-deferred-code.ts), so a board that has one finds it already in.
+// Tables, facilitation panels and sequence diagrams are on few boards, so their faces load on demand; their code
+// is fetched as the editor mounts (lib/editor-deferred-code.ts), so a board that has one finds it already in. A
+// sequence diagram's face is the SVG renderer's picture, which keeps the renderer out of the first load.
 const TableView = dynamic(loadTableView, { ssr: false });
 const CollabFaceRouter = dynamic(loadCollabFaceRouter, { ssr: false });
+const SequenceFace = dynamic(loadSequenceFace, { ssr: false });
 
 // WHAT AN ELEMENT SHOWS IN PLACE OF A PLAIN LABEL.
 //

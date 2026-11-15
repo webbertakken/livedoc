@@ -8,7 +8,6 @@
 
 import { useEffect, useState, type RefObject } from 'react';
 import { MAX_ELEMENTS_PER_TAB, type Element, type Tab } from '@livedoc/document';
-import { landBoardScene } from '@/lib/board-scene/land';
 import type { BoardScene } from '@/lib/board-scene/scene';
 import { reportHasLosses, type BoardSceneReport } from '@/lib/board-scene/report';
 import {
@@ -24,6 +23,7 @@ import {
 } from '@/lib/board-scene-browser';
 import { useLatest } from '@/hooks/ui/useLatest';
 import { debugLog } from '@/lib/debug-log';
+import { loadBoardSceneLanding } from '@/lib/editor-deferred-code';
 
 export type BoardSceneSource = BoardScene['source'];
 
@@ -88,6 +88,8 @@ export function useBoardSceneInsert(deps: BoardSceneInsertDeps): BoardSceneInser
     }
     const whiteboard = d.drawMode;
     const at = point ?? d.canvasPointerRef?.current ?? d.getViewportCenter();
+    // Landing is code a paste or a drop loads (fetched ahead once the board is idle).
+    const { landBoardScene } = await loadBoardSceneLanding();
     const result = landBoardScene(scene, {
       profile: whiteboard ? 'whiteboard' : 'diagram',
       placement: { kind: 'at', x: at.x, y: at.y },

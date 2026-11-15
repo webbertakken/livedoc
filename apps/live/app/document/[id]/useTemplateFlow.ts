@@ -3,15 +3,8 @@ import type { EditorMode, Tab } from '@livedoc/document';
 import type { ItemCreate } from '@livedoc/items';
 import { track, titleCaseType } from '@/lib/telemetry';
 import { getTheme, recolourElementsForTheme } from '@/lib/themes';
-import {
-  formTemplateStarter,
-  isFormTemplateKind,
-  isPlanTemplateKind,
-  withBlankPageThemed,
-  type TemplateKind,
-} from '@livedoc/templates';
+import type { TemplateKind } from '@livedoc/templates';
 import type { StarterId } from '@livedoc/forms';
-import { templateTabName } from '@/lib/template-tab-name';
 import type { Participant } from '@/lib/identity';
 import { landTemplateOnTab, templateFollowerTabs } from './template-tab-set';
 
@@ -111,6 +104,11 @@ export function useTemplateFlow(opts: {
       templateCanvasOverrides,
       isDefaultDocumentName,
       untitledNameForTemplate,
+      formTemplateStarter,
+      isFormTemplateKind,
+      isPlanTemplateKind,
+      withBlankPageThemed,
+      templateTabName,
     } = await import('@/lib/template-builders');
     // The first tab's template names a document still on a default name ("Untitled Flowchart",
     // docs/specs/007-editor/templates-by-mode.md "The document's name"); a name someone gave it stays.
