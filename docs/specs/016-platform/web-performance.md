@@ -342,6 +342,11 @@ seen on the document).
   ([API](../015-api/api.md) "Tab save"): the editor reads only the revision, so an echo cost every
   autosave the tab's full size again (95,893 bytes for a 1,000-box tab, now under 200).
   `apps/api/src/routes/tab-put-route.test.ts` pins the answer's keys and size.
+- An autosave of a This Browser document writes the tab it saves and the small document record,
+  never the other tabs ([Offline Mode](../006-document/offline-mode.md) "Where offline documents
+  live"): one IndexedDB record per tab. On a five-tab document of 1,000 boxes a tab, a save wrote
+  509,336 bytes when the document was one record; it writes about a fifth of that now.
+  `apps/live/lib/offline/offline-save-bytes.test.ts` counts the bytes every save puts.
 - A peer's op reaches what is on screen when it arrives, and each undo or redo snapshot only when
   undo, redo or a cancelled drag restores it ([Realtime conflict resolution](../012-collaboration/realtime-conflict-resolution.md)
   "Undo"). Applied to every snapshot on arrival, one peer save of 20 ops against 500 steps of a
