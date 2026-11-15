@@ -171,26 +171,41 @@ Not worth it:
 - Also at rest: picker groups, the tool ref effect, the tab summary key, the table key listener.
 - Custom themes and shape libraries: asked after the board shows, which paints from its own stored colours.
 
-## Design forks open
+## Decided
 
-Each changes something a person sees, a wire format or stored data, so each is Webber's to decide.
+Each fork changed something a person sees, a wire format or stored data, so each was Webber's to decide.
+He ruled on 2026-11-15, with the standing requirement that performance must be ultra slick throughout.
 
-- Realtime (#182): `persistOrder` before broadcast (the output gate keeps a seq from reaching peers unpersisted).
-- Realtime (#182): batched element ops, a new op kind that old rooms and editors do not know.
-- Realtime (#182): persisting the op log, a storage write per op for fewer resyncs.
-- Realtime (#182): short tab ids in cursor frames, a wire change.
-- Realtime (#182): per-tab offline records, an IndexedDB version bump that stale tabs cannot open.
-- Api (#184): caching `/api/capabilities`, whose cached answer would replay a stale build header.
-- Api (#184): `immutable` images for a year, so a deleted image would linger.
-- Sites (#187): skipping the share-preview lookup for people, which needs a crawler list the spec does not keep.
-- Sites (#187): reading time at build time, which shows a different time on 42 of 295 articles.
-- Sites (#187): no telemetry prefetch on save-data, so tabs would show a skeleton where they open at once.
-- Open path (#183): guests skipping the session read (spec D25).
-- Open path (#183): deferring the Explorer's lists on Home, which the sidebar shows.
-- Open path (#183): the avatar heartbeat while the page is hidden.
-- Open path (#183): a virtualised panel tree.
-- First load (#188): `/new` loading the template builders at the pick.
-- That trades a faster wizard for one more round trip on `/new?template=`.
+To build:
+
+- F1 `/new` loads the template builders at the pick, fetched as `/new` loads when the address names a template (#188).
+- R5 an offline document's tabs stored one record each, so an autosave writes one tab, not the document (#182).
+- S3 the telemetry dashboard prefetches no other view when the browser asks to save data (#187).
+- O4 the Explorer's panel tree becomes infinite scroll, with a search that finds every row, shown or not (#183).
+
+To measure, then build:
+
+- R3 the room's op log kept across hibernation: count production resyncs (`RealtimeResync`) first (#182).
+- S1 the share-link preview lookup for people: measure its real time in production first (#187).
+
+Declined:
+
+- R1 order written after the broadcast: the output gate keeps an unstored sequence number from reaching peers;
+  5 to 30 ms is not worth duplicated or lost ops (#182).
+- R4 short tab ids in cursor frames: a wire change for bytes nobody notices (#182).
+- A1 browsers caching `/api/capabilities`: its answer carries the build id the stale-build guard reads; the request
+  is already shared and off the critical path (#184).
+- A2 images immutable for a year: a deleted image would linger; the 304 already removed the bytes (#184).
+- S2 help reading time counted at build: 42 of 295 articles would show a different time; the win is invisible (#187).
+- O1 guests skipping the session read: a cleared hint would open a signed-in person's document as a guest (D25, #183).
+- O3 no avatar heartbeat while the page is hidden: an away person's avatar would vanish for newcomers (#183).
+
+Parked:
+
+- R2 batched element ops: a new op kind needing a version handshake; until room CPU shows on the bill or a busy room
+  lags (#182).
+- O2 Home deferring the Explorer's lists: #188 already moved Home's request about 1 s earlier; measure again before
+  the sidebar fills in late (#183).
 
 ## What remains
 
