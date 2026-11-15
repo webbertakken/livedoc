@@ -40,6 +40,7 @@ function handlers(): CommandHandlers {
     setTool: vi.fn(),
     openPhotoImport: vi.fn(),
     arrangeBoard: vi.fn(),
+    askBoard: vi.fn(),
   };
 }
 
@@ -555,5 +556,25 @@ describe('the Arrange and Reorder command', () => {
     expect(command.name).toBe('Arrange and Reorder');
     command.run();
     expect(h.arrangeBoard).toHaveBeenCalledTimes(1);
+  });
+});
+
+// docs/specs/021-event-storming/asks.md "Where an ask starts".
+describe('the Ask for Suggestions command', () => {
+  it('is offered on an event-storming board alone, to someone who may change it', () => {
+    expect(ids(base)).not.toContain('ask-board');
+    expect(ids({ ...base, esBoard: true })).toContain('ask-board');
+    expect(ids({ ...base, esBoard: true, tabLocked: true })).not.toContain('ask-board');
+    expect(ids({ ...base, esBoard: true, isReadOnly: true })).not.toContain('ask-board');
+  });
+
+  it('opens the Ask popover', () => {
+    const h = handlers();
+    const command = buildEditorCommands({ ...base, esBoard: true }, h).find(
+      (c) => c.id === 'ask-board',
+    )!;
+    expect(command.name).toBe('Ask for Suggestions');
+    command.run();
+    expect(h.askBoard).toHaveBeenCalledTimes(1);
   });
 });

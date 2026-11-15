@@ -48,6 +48,23 @@ describe('EventStormingBoardRows', () => {
   });
 });
 
+// docs/specs/021-event-storming/asks.md "Where an ask starts".
+describe('EventStormingBoardRows Ask for Suggestions', () => {
+  it('opens the Ask popover from its row', () => {
+    const onAsk = vi.fn();
+    render(<EventStormingBoardRows controls={{ onAsk }} />);
+    const row = screen.getByRole('button', { name: /ask for suggestions/i });
+    expect(row.getAttribute('aria-haspopup')).toBe('dialog');
+    fireEvent.click(row);
+    expect(onAsk).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows no row to someone who may not ask', () => {
+    render(<EventStormingBoardRows controls={{}} />);
+    expect(screen.queryByRole('button', { name: /ask for suggestions/i })).toBeNull();
+  });
+});
+
 describe('the Event Storming palette category', () => {
   it('puts the board rows above the notation', () => {
     render(

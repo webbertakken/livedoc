@@ -611,6 +611,8 @@ export function EditorCanvasHost() {
   // "The canvas re-renders only for what it shows"): new only when their data changes.
   // Draw Context's pen (docs/specs/021-event-storming/candidate-contexts.md "Making one by hand"): an Editor's.
   const drawingContext = useContextSelection(activeTab.id).drawing;
+  // Asking is an Editor's alone, where a suggestion may land (docs/specs/021-event-storming/asks.md "Share roles").
+  const mayAsk = esBoard && can.suggestions && !createBlocked;
   const esBoardControls = useStableObject({
     ...(esBoard && can.contexts && !createBlocked
       ? {
@@ -618,6 +620,7 @@ export function EditorCanvasHost() {
           drawingContext,
         }
       : {}),
+    ...(mayAsk ? { onAsk: () => suggestionActions.openAsk() } : {}),
     ...(photoImportAvailable
       ? {
           onImportPhoto: openPhotoImport,
@@ -664,8 +667,8 @@ export function EditorCanvasHost() {
         <TabWindowContext.Provider value={tabWindows}>
           {/* Presenting shows the slide as the audience sees it: no indicators or lock badges on its elements
           (docs/specs/008-canvas/element-indicators.md "Unchanged"). */}
-          {/* The Ask popover (docs/specs/021-event-storming/asks.md): an Editor's, where a suggestion may land. */}
-          {esBoard && can.suggestions && !createBlocked && documentId ? (
+          {/* The Ask popover (docs/specs/021-event-storming/asks.md "Where an ask starts"). */}
+          {mayAsk && documentId ? (
             <AskHost
               tab={activeTab}
               documentId={documentId}

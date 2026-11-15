@@ -394,6 +394,9 @@ export type EditorContextMenuProps = {
   // ways"): the board's kept contexts by name to add it to, the one it is in, and the two acts. Absent when the
   // session cannot change contexts, or when the board has none and the note is in none.
   noteContexts?: NoteContextsMenu;
+  // Ask… on a workshop note (docs/specs/021-event-storming/asks.md "Where an ask starts"): opens the Ask popover about
+  // the note. Absent when the session may not ask.
+  onAskAbout?: () => void;
   // An Event Storming board (candidate-contexts.md "The board's element menu"): its selection menu holds Text and New
   // Context alone.
   esBoard?: boolean;

@@ -47,6 +47,7 @@ import {
   DuplicateMenuIcon,
   RemoveIcon,
 } from '@/components/palette/context-menu-icons';
+import { SparkleIcon } from '@livedoc/ui';
 import { NoteContextRows } from './NoteContextRows';
 import {
   MenuAccordionSection,
@@ -253,6 +254,17 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
                 runAndClose={runAndClose}
                 sectionProps={sectionProps}
               />
+            ) : null}
+            {/* Ask… (docs/specs/021-event-storming/asks.md "Where an ask starts"): the Ask popover, about this note. */}
+            {props.onAskAbout ? (
+              <>
+                <MenuGroupSeparator />
+                <MenuActionRow
+                  icon={<SparkleIcon size={16} />}
+                  label="Ask…"
+                  onClick={runAndClose(props.onAskAbout)}
+                />
+              </>
             ) : null}
             <MenuGroupSeparator />
             <MenuActionRow

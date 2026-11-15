@@ -565,3 +565,59 @@ describe('ContextLayer: name suggestions', () => {
     expect(Number(strength())).toBeGreaterThan(Number(faint));
   });
 });
+
+// docs/specs/021-event-storming/asks.md "Where an ask starts".
+describe('ContextLayer: asking about a context', () => {
+  const askAbout = (name: string) => screen.queryByRole('button', { name });
+
+  it('shows Ask after the name of the one selected context, and asks about it', () => {
+    const s = suggestionControls();
+    draw(board, { contexts: contextControls(), suggestions: s });
+    expect(askAbout('Ask about candidate context: Ctx k')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Candidate context: Ctx k' }));
+    const button = askAbout('Ask about candidate context: Ctx k')!;
+    expect(button.getAttribute('aria-haspopup')).toBe('dialog');
+    fireEvent.click(button);
+    expect(s.openAsk).toHaveBeenCalledWith({ type: 'context', id: 'k' });
+  });
+
+  it('asks about a suggested context as about a kept one', () => {
+    const s = suggestionControls();
+    draw(board, { contexts: contextControls(), suggestions: s });
+    fireEvent.click(screen.getByRole('button', { name: /^Suggested candidate context: Ctx s/ }));
+    fireEvent.click(askAbout('Ask about candidate context: Ctx s')!);
+    expect(s.openAsk).toHaveBeenCalledWith({ type: 'context', id: 's' });
+    expect(s.apply).not.toHaveBeenCalled();
+  });
+
+  it('shows no Ask to someone who sees no suggestions', () => {
+    draw(board, { contexts: contextControls() });
+    fireEvent.click(screen.getByRole('button', { name: 'Candidate context: Ctx k' }));
+    expect(askAbout('Ask about candidate context: Ctx k')).toBeNull();
+  });
+
+  it('asks about several selected contexts as one, from the merge offer', () => {
+    const s = suggestionControls();
+    draw(board, { contexts: contextControls(), suggestions: s });
+    fireEvent.click(screen.getByRole('button', { name: 'Candidate context: Ctx k' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Suggested candidate context: Ctx s/ }), {
+      shiftKey: true,
+    });
+    expect(askAbout('Ask about candidate context: Ctx k')).toBeNull();
+    const button = askAbout('Ask about 2 contexts')!;
+    expect(button.getAttribute('aria-haspopup')).toBe('dialog');
+    fireEvent.click(button);
+    expect(s.openAsk).toHaveBeenCalledWith({ type: 'contexts', ids: ['k', 's'] });
+  });
+
+  it('offers the merge without Ask to someone who sees no suggestions', () => {
+    const kept = [note('a', 0), note('b', 300), note('c', 2000), context('k', ['a', 'b'])];
+    draw([...kept, context('m', ['c'])], { contexts: contextControls() });
+    fireEvent.click(screen.getByRole('button', { name: 'Candidate context: Ctx k' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Candidate context: Ctx m' }), {
+      shiftKey: true,
+    });
+    expect(screen.queryByRole('group', { name: 'Merge 2 contexts' })).not.toBeNull();
+    expect(askAbout('Ask about 2 contexts')).toBeNull();
+  });
+});

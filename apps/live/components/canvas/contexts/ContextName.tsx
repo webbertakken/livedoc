@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, type KeyboardEvent, type ReactNode } from 'react';
-import { CheckIcon, CloseIcon } from '@livedoc/ui';
+import { CheckIcon, CloseIcon, SparkleIcon } from '@livedoc/ui';
 import {
   CONTEXT_FONT,
   CONTEXT_NAME_MAX,
@@ -39,6 +39,7 @@ export function ContextName({
   acts,
   names = 0,
   below,
+  onAsk,
 }: {
   drawn: DrawnContext;
   zoom: number;
@@ -51,6 +52,9 @@ export function ContextName({
   names?: number;
   // What stands under the name at screen size: its name chips, while it is the one selected.
   below?: ReactNode;
+  // Ask about this context (docs/specs/021-event-storming/asks.md "Where an ask starts"): a button after the name
+  // while it is the one selected, for someone who may ask.
+  onAsk?: () => void;
 }) {
   const { context, outline, suggested, notes } = drawn;
   const name = context.label;
@@ -224,6 +228,31 @@ export function ContextName({
             className="text-slate-600 hover:bg-slate-100 in-[[data-dark-canvas]]:text-slate-300 in-[[data-dark-canvas]]:hover:bg-slate-800"
           />
         </>
+      ) : null}
+      {onAsk ? (
+        // Beside the pill, not in it: the name stays where it is as the context is selected. Chrome, at screen size.
+        <div
+          className="absolute left-full top-1/2 pl-1.5"
+          style={{
+            transform: `translateY(-50%) scale(${1 / zoom})`,
+            transformOrigin: 'left center',
+          }}
+        >
+          <button
+            type="button"
+            aria-label={`Ask about candidate context: ${name}`}
+            aria-haspopup="dialog"
+            data-context-ask={context.id}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAsk();
+            }}
+            className="flex size-7 items-center justify-center rounded-full bg-[var(--lvd-canvas-paper,#ffffff)] text-brand-700 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-600 in-[[data-dark-canvas]]:text-brand-300 in-[[data-dark-canvas]]:hover:bg-brand-950"
+          >
+            <SparkleIcon size={14} />
+          </button>
+        </div>
       ) : null}
       {below ? (
         <div
