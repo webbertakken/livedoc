@@ -78,17 +78,16 @@ const SECTION_HELP: Partial<Record<string, HelpArticleKey>> = {
 // The heavier panes load on demand (explorer-pane-code.ts): each is only mounted on its own route, so none of them
 // sit in the shared explorer chunk. Home and the Timeline are landing routes, split all the same: their code would
 // otherwise ride with every other section's first paint.
-const lazyPane = { ssr: false } as const;
-const GalleryPane = dynamic(loadGalleryPane, lazyPane);
-const TrashSection = dynamic(loadTrashSection, lazyPane);
-const ThemesPane = dynamic(loadThemesPane, lazyPane);
-const ShapeLibrariesPane = dynamic(loadShapeLibrariesPane, lazyPane);
-const TeamPane = dynamic(loadTeamPane, lazyPane);
-const TeamInvitesPane = dynamic(loadTeamInvitesPane, lazyPane);
-const TimelinePane = dynamic(loadTimelinePane, lazyPane);
-const HomePane = dynamic(loadHomePane, lazyPane);
-const TagsPane = dynamic(loadTagsPane, lazyPane);
-const InboxPane = dynamic(loadInboxPane, lazyPane);
+const GalleryPane = dynamic(loadGalleryPane, { ssr: false });
+const TrashSection = dynamic(loadTrashSection, { ssr: false });
+const ThemesPane = dynamic(loadThemesPane, { ssr: false });
+const ShapeLibrariesPane = dynamic(loadShapeLibrariesPane, { ssr: false });
+const TeamPane = dynamic(loadTeamPane, { ssr: false });
+const TeamInvitesPane = dynamic(loadTeamInvitesPane, { ssr: false });
+const TimelinePane = dynamic(loadTimelinePane, { ssr: false });
+const HomePane = dynamic(loadHomePane, { ssr: false });
+const TagsPane = dynamic(loadTagsPane, { ssr: false });
+const InboxPane = dynamic(loadInboxPane, { ssr: false });
 
 // The right pane for whichever /explorer/<section> route is active:
 // PaneHeader (title, breadcrumb, contextual CTAs) + the section's
