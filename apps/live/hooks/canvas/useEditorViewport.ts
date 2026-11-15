@@ -52,6 +52,9 @@ type EditorViewportDeps = {
 const VIEW_MARGIN_TOP = 96;
 const VIEW_MARGIN_BOTTOM = 88;
 const VIEW_MARGIN_SIDE = 20;
+// A card standing over the board's right side is cleared only while the band beside it keeps at least this
+// share of the board (safe range 0.4 to 0.6); a card wider than that (a phone) is not cleared.
+const MIN_CLEAR_BAND_SHARE = 0.5;
 
 // When a new element is too big to fit the visible band at the current
 // zoom, scrollIntoView zooms OUT (never in) so the WHOLE element shows.
@@ -109,8 +112,10 @@ type EditorViewportApi = {
     // `sideMargin` (screen px) widens the side band to clear the floating
     // panels, for reveals that should land in the open canvas (a grown mind
     // node, docs/specs/009-elements/mind-node.md "Following the growth"). Capped at a quarter of the
-    // canvas so a narrow window still has a band to reveal into.
-    opts?: { center?: boolean; sideMargin?: number },
+    // canvas so a narrow window still has a band to reveal into. `clearRightOf` (a screen x) ends the band
+    // the side margin before a card standing over the board's right side, as the Review panel does
+    // (docs/specs/021-event-storming/board-review.md "The panel").
+    opts?: { center?: boolean; sideMargin?: number; clearRightOf?: number },
   ) => void;
   // Centre a canvas point, keeping our own zoom (docs/specs/012-collaboration/bring-focus.md).
   centreOn: (at: { x: number; y: number }) => void;
@@ -187,7 +192,7 @@ export function useEditorViewport(deps: EditorViewportDeps): EditorViewportApi {
       by: number,
       bw: number,
       bh: number,
-      opts?: { center?: boolean; sideMargin?: number },
+      opts?: { center?: boolean; sideMargin?: number; clearRightOf?: number },
     ) => {
       const rect = canvasMainRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -196,7 +201,11 @@ export function useEditorViewport(deps: EditorViewportDeps): EditorViewportApi {
       const side = Math.min(opts?.sideMargin ?? VIEW_MARGIN_SIDE, rect.width / 4);
       // Visible band (screen px) we keep the element within.
       const visLeft = rect.left + side;
-      const visRight = rect.right - side;
+      const clearRight = (opts?.clearRightOf ?? rect.right) - side;
+      const visRight =
+        clearRight - rect.left >= rect.width * MIN_CLEAR_BAND_SHARE
+          ? Math.min(rect.right - side, clearRight)
+          : rect.right - side;
       const visTop = rect.top + VIEW_MARGIN_TOP;
       const visBottom = rect.bottom - VIEW_MARGIN_BOTTOM;
       const visW = Math.max(1, visRight - visLeft);

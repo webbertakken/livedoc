@@ -114,6 +114,18 @@ describe('ReviewHost', () => {
     expect(within(panel).getByRole('button', { name: /^Answer/ })).toBeTruthy();
   });
 
+  it('brings what a row names into the part of the board the card leaves free', () => {
+    const { reveal } = draw();
+    const panel = openCard();
+    const measure = vi
+      .spyOn(panel, 'getBoundingClientRect')
+      .mockReturnValue({ left: 908, right: 1268 } as DOMRect);
+    fireEvent.click(within(panel).getByRole('button', { name: /^Answer/ }));
+    expect(reveal).toHaveBeenCalledTimes(1);
+    expect(reveal.mock.calls[0]![1]).toEqual({ clearRightOf: 908 });
+    measure.mockRestore();
+  });
+
   it('lets someone who only reads walk all three tabs, with nothing to write', () => {
     draw({ mayWrite: false });
     const panel = openCard();

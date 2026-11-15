@@ -173,3 +173,45 @@ describe('useEditorViewport focus', () => {
     document.documentElement.classList.remove('reduce-motion');
   });
 });
+
+// A reveal from a card standing over the board's right side lands beside the card, not under it
+// (docs/specs/021-event-storming/board-review.md "The panel").
+describe('useEditorViewport scrollIntoView clearing a card', () => {
+  function wide(canvasWidth: number) {
+    const view = renderHook(() =>
+      useEditorViewport({ activeTab: tabOf([]), readSelection: createSelectionStore().get }),
+    );
+    const main = document.createElement('main');
+    main.getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top: 0,
+        right: canvasWidth,
+        bottom: 720,
+        width: canvasWidth,
+        height: 720,
+      }) as DOMRect;
+    (view.result.current.canvasMainRef as { current: HTMLElement | null }).current = main;
+    const reveal = (x: number, clearRightOf?: number) => {
+      act(() => view.result.current.scrollIntoView(x, 350, 282, 100, { clearRightOf }));
+      act(() => {
+        vi.advanceTimersByTime(800);
+      });
+      return view.result.current.viewport.get().offset.x;
+    };
+    return { reveal };
+  }
+
+  it('leaves a note that is already in the band where it is', () => {
+    expect(wide(1280).reveal(978)).toBe(0);
+  });
+
+  it('pulls a note under the card out to the side margin left of it', () => {
+    // The card's left edge at 908: the note's right edge ends 20 px before it, at 888.
+    expect(wide(1280).reveal(978, 908)).toBeCloseTo(888 - 1260);
+  });
+
+  it('ignores a card that leaves less than half the board beside it, as on a phone', () => {
+    expect(wide(600).reveal(290, 228)).toBe(0);
+  });
+});

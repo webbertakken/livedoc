@@ -35,13 +35,22 @@ export function ReviewHost({
   acts: ReviewActions;
   // Elements that may not change: locked, or on a hidden or locked layer.
   inertIds: ReadonlySet<ElementId>;
-  // Pans the board so a rectangle of it is in view.
-  reveal: (rect: { x: number; y: number; width: number; height: number }) => void;
+  // Pans the board so a rectangle of it is in view, beside the card (a screen x the view ends before).
+  reveal: (
+    rect: { x: number; y: number; width: number; height: number },
+    clear: { clearRightOf?: number },
+  ) => void;
   // Whether Add, Answer and Rename Term are offered: an Editor's alone.
   mayWrite: boolean;
 }) {
-  const { view, reading, setTab, panelActs } = useReviewPanel({ tab, acts, inertIds, reveal });
   const card = useRef<HTMLElement>(null);
+  // What a row names lands in the part of the board the card leaves free, not under the card.
+  const { view, reading, setTab, panelActs } = useReviewPanel({
+    tab,
+    acts,
+    inertIds,
+    reveal: (rect) => reveal(rect, { clearRightOf: card.current?.getBoundingClientRect().left }),
+  });
   // Under the corner its pill stands in, measured as the panel opens: how tall the pill is is the font's to say.
   useLayoutEffect(() => {
     const node = card.current;

@@ -694,7 +694,7 @@ export function EditorCanvasHost() {
               tab={activeTab}
               acts={reviewActions}
               inertIds={layerInertIds}
-              reveal={(r) => scrollIntoView(r.x, r.y, r.width, r.height)}
+              reveal={(r, clear) => scrollIntoView(r.x, r.y, r.width, r.height, clear)}
               mayWrite={can.structure && !createBlocked}
             />
           ) : null}
