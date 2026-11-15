@@ -21,7 +21,8 @@ import {
 } from './event-storming';
 import { ES_LANES, ES_NOTE_GAP, laneCentre } from './event-storming-lanes';
 import type { GraphEdge, GraphNode } from './graph-authoring';
-import { GRAPH_MUTED, withHeaderAndKey } from './graph-header';
+import { withHeaderAndKey } from './graph-header';
+import { GRAPH_MUTED } from './graph-muted';
 import type { Element } from './index';
 
 // The lanes, top to bottom: who and what they look at, what they ask for, what it acts on, what happened, how the

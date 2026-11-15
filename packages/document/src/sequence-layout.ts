@@ -8,7 +8,8 @@ import { glyphWidth } from './graph-authoring';
 import { arrowLabelFontSize } from './arrow-label';
 import { wrapBalanced } from './arrow-label-wrap';
 import { LABEL_LINE_HEIGHT, labelMeasure } from './svg-render-primitives';
-import { GRAPH_MUTED, withHeaderAndKey } from './graph-header';
+import { withHeaderAndKey } from './graph-header';
+import { GRAPH_MUTED } from './graph-muted';
 import type { SequenceDiagram, SequenceItem, SequenceMessageKind } from './mermaid-sequence';
 import type { ArrowheadShape, Element } from './index';
 
