@@ -52,6 +52,7 @@ import { ARRANGE_KEY, useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
 import { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
+import { StructureTapes } from '@/components/canvas/structure/StructureTapes';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
 import { MindNumbersProvider } from './MindMapLayer';
@@ -642,6 +643,15 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                   suggestionsShown && !insertShift.dragging ? props.suggestions : undefined
                 }
                 shiftX={insertShift.xFor}
+              />
+            ) : null}
+            {/* The tape of each pivotal event (docs/specs/021-event-storming/board-structure.md "Pivotal events"):
+          beneath every element too, and everyone's to see. */}
+            {props.esBoard ? (
+              <StructureTapes
+                tabId={props.activeTabId ?? ''}
+                elements={elements}
+                layers={tabLayers}
               />
             ) : null}
             {/* Pages mode cuts elements off at the page edges (PageClip); not in the
