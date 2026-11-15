@@ -172,8 +172,10 @@ seen on the document).
 - Content search ranks and filters its candidates without their text and reads the text by key for the
   matches it answers only (`apps/api/src/db/content-search.test.ts`): 600 matching 32 KB tabs search in about
   half the time.
-- A large module only one route reads loads on that route's first request, not with the worker: the OpenAPI
-  document and its generated schemas (`apps/api/src/routes/openapi.test.ts`), the PNG renderer.
+- A module is deferred behind a dynamic import only when the deploy's "Worker Startup Time" shows the gain. The
+  worker is one bundle: a dynamic import wraps every module it reaches for lazy start, so deferring the OpenAPI
+  document grew the upload by 430 KB and start-up from about 72 to 97 ms, and it was put back. The PNG renderer,
+  wasm in a module of its own, stays deferred.
 - A list that names its people reads their profiles in the same statement: a team's members join their
   participant rows (`apps/api/src/db/team-members.test.ts` pins the round trip and the plan).
 - A request about one document pays no D1 read for the purge guard: the document's own row keeps it
