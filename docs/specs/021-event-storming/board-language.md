@@ -67,3 +67,4 @@ The **Language** tab of the [Review panel](board-review.md) lists the board's te
 - The rename as one write, and its scope: `packages/document/src/term-rename.ts` (`termRename`, `TermScope`).
 - Its preview: `termKey` in `apps/live/lib/suggestion-view.ts`, answered by `apps/live/lib/change-preview.ts`.
 - The tab: `apps/live/components/canvas/review/ReviewLanguage.tsx`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/reviewing-a-board/page.mdx`.

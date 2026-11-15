@@ -194,3 +194,4 @@ tab with a count, a turned corner, a round badge with a glyph, and a worded tab.
   what keeps the caption inside the window: `apps/live/hooks/canvas/useKeepInWindow.ts`;
   the chips: `apps/live/components/canvas/contexts/NameChips.tsx`.
 - The board seeded by the end-to-end tests: `apps/live/e2e/change-board.ts`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/suggested-changes/page.mdx`.

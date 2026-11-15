@@ -38,7 +38,7 @@ A person asks for them with an [ask](asks.md); changes to what is already on the
 - **The edit operation `suggest`** ([Edit operations](../024-agents/edit-operations.md)):
   `suggest <kind> "<words>" before|after|above|below=<note> [reason="…"] [gap=<code>] [id=<id>]`.
   It is one changeset like any edit, attributed to the agent's owner, revertable as one unit.
-- **Refusals**: `not_event_storming` (the tab is not a board), `invalid_kind`, `anchor_not_found`,
+- **Refusals**: `not_event_storming` (the tab is not a board), `invalid_kind`, `target_not_found` (no note answers the anchor),
   `anchor_not_a_note` (the anchor is neither a workshop note nor a suggestion), `words_required` (a suggestion
   without words is no suggestion), `reason_too_long`, `too_many_suggestions` (the board would hold more than
   `SUGGESTIONS_MAX` (60) open suggestions).

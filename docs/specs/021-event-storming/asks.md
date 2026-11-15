@@ -223,3 +223,4 @@ Neither the topic, the prompt nor the About is sent.
 - The ask bench: `scripts/ask-bench.mts`.
 - Proven in a browser by `apps/live/e2e/event-storming-ask.spec.ts`, on the kitchen of
   `apps/live/e2e/ask-board.ts`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/asking-for-suggestions/page.mdx`.

@@ -104,3 +104,4 @@ per opening of the Story tab) (default).
   `apps/live/components/palette/EventStormingBoardRows.tsx`.
 - The seeded kitchen and the browser's proof: `apps/live/lib/review-board.fixture.ts`,
   `apps/live/e2e/review-board.ts` and `apps/live/e2e/event-storming-review.spec.ts`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/reviewing-a-board/page.mdx`.
