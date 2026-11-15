@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { contrastRatio, hexToRgb } from './colour-math';
 import { defaultStrokeColor, defaultTextColor } from './colors';
 import { createArrow, createShape, createSticky, createTable, createText } from './index';
@@ -705,10 +706,10 @@ describe('re-inking cost', () => {
       );
     }
     const tab = tabOf(els);
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     withPageInkFor(tab, 'p', { fill: FILLS.steep! });
-    const ms = performance.now() - t0;
+    const ms = cpuNowMs() - t0;
     // Measured 44 ms on an M-series Mac (every element re-inked, the worst case); the budget leaves room for a loaded CI runner.
-    expect(ms).toBeLessThan(1500);
+    expect(ms).toBeLessThan(cpuBudgetMs(1500));
   });
 });

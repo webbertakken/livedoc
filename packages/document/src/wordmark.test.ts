@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { elementValidationIssue } from './validate';
 import {
   arcGeometry,
@@ -65,9 +66,9 @@ describe('wordmark type', () => {
 
   it('stays linear on a long run of spaces (CodeQL js/polynomial-redos)', () => {
     const text = 'a' + ' '.repeat(100_000) + 'b\n' + ' '.repeat(100_000);
-    const t = performance.now();
+    const t = cpuNowMs();
     expect(arcText(text)).toBe('a' + ' '.repeat(100_000) + 'b ');
-    expect(performance.now() - t).toBeLessThan(200);
+    expect(cpuNowMs() - t).toBeLessThan(cpuBudgetMs(200));
   });
 
   it('validates the fields', () => {

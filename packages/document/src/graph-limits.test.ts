@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { resolveGraphInput } from './graph-input';
 import { GRAPH_LAYOUT_MAX_EDGES, GRAPH_LAYOUT_MAX_NODES, graphTooLargeError } from './graph-limits';
 import { parseMermaid } from './mermaid';
@@ -14,9 +15,9 @@ const fan = (n: number) => {
 
 describe('graph layout caps', () => {
   it('refuses a fan-out past the edge cap, quickly and before building every pair', () => {
-    const started = performance.now();
+    const started = cpuNowMs();
     const parsed = parseMermaid(fan(120));
-    expect(performance.now() - started).toBeLessThan(200);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(200));
     expect(parsed.ok).toBe(false);
     if (!parsed.ok) expect(parsed.error).toContain(`${GRAPH_LAYOUT_MAX_EDGES} connections`);
   });
