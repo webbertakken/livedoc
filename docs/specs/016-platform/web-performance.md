@@ -36,6 +36,27 @@ Then the document page's own first load (measured 2026-10-11 the same way, on to
 | Editor: `/document/<id>`            | 1,489 KiB | 1,240 KiB |
 | Marketing: a `/about/features` page | 221 KiB   | 207 KiB   |
 
+Measured 2026-11-15 on `main` at e8e2d1430f, after the performance sweep (what it measured, shipped and set aside:
+[Performance sweep](../../research/performance-sweep.md)), with the October number beside it:
+
+| Page                                                  | Now       | October   |
+| ----------------------------------------------------- | --------- | --------- |
+| Editor: `/document/<id>`, `/embed`                    | 1,560 KiB | 1,240 KiB |
+| Editor: `/new`                                        | 802 KiB   | 669 KiB   |
+| Editor: `/explorer/all`, `/explorer/folder` and lists | 618 KiB   | n/a       |
+| Editor: `/explorer` (Home and most sections)          | 571 KiB   | 570 KiB   |
+| Editor: `/drive/open`                                 | 398 KiB   | 316–354   |
+| Editor: `/form/<code>`                                | 355 KiB   | n/a       |
+| Editor: `/sign-in`, `/get-started`                    | 278 KiB   | 362 KiB   |
+| Editor: `/oauth/*`, `/workbench/pair`                 | 261–263   | 316–354   |
+| Editor: `/join`, `/drive/connected`                   | 255 KiB   | 316–354   |
+| Editor: every route's base (`/`, `/404`)              | 245 KiB   | n/a       |
+| Help: an article                                      | 206 KiB   | 207 KiB   |
+| Telemetry: the dashboard                              | 300 KiB   | 280 KiB   |
+| Marketing: `/about`                                   | 280 KiB   | n/a       |
+| Marketing: a `/about/features` page                   | 206 KiB   | 207 KiB   |
+| Marketing: `/about` (HTML, gzipped)                   | 94 KiB    | 93 KiB    |
+
 ## Rules
 
 ### Every page has a budget
