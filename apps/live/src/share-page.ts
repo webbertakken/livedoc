@@ -160,7 +160,7 @@ async function writeInTwoParts(
     await writer.close();
   } catch (err) {
     // The visitor went away mid-page; nothing is left to send them.
-    console.info('[share-page] visitor left before the page ended', String(err));
+    console.warn('[share-page] visitor left before the page ended', String(err));
   }
 }
 
