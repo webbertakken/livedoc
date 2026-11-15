@@ -345,7 +345,8 @@ seen on the document).
 - An autosave of a This Browser document writes the tab it saves and the small document record,
   never the other tabs ([Offline Mode](../006-document/offline-mode.md) "Where offline documents
   live"): one IndexedDB record per tab. On a five-tab document of 1,000 boxes a tab, a save wrote
-  509,336 bytes when the document was one record; it writes about a fifth of that now.
+  509,336 bytes when the document was one record; it writes 102,082 now (the tab and its
+  document record).
   `apps/live/lib/offline/offline-save-bytes.test.ts` counts the bytes every save puts.
 - A peer's op reaches what is on screen when it arrives, and each undo or redo snapshot only when
   undo, redo or a cancelled drag restores it ([Realtime conflict resolution](../012-collaboration/realtime-conflict-resolution.md)
