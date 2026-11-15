@@ -346,7 +346,8 @@ pinned footer, rather than leaving the pane a sliver.
 The rail is a `nav` named "Explorer sections" of buttons; Up and Down move between entries (Left and Right on a phone's
 chip row), Enter or Space picks one. The pane's rows are lists of buttons named by the document or folder (the open
 document's `aria-current`); Up and Down move between them, Enter opens one, and the `⋯` menu, right-click or Shift+F10
-opens its menu. A folder's breadcrumb is a `nav` named "Folder path". The footer is a `nav` named "Go to".
+opens its menu. A folder's breadcrumb is a `nav` named "Folder path". The footer is a `nav` named "Go to". Ctrl F
+(Cmd F) opens the panel's find field ([Long lists](#find)).
 
 ### Who may do what
 
@@ -363,6 +364,66 @@ editor's Explorer, the Trash), carries the **This Browser** pill
 
 The editor's document group names such a document with the matching **This Browser** badge. Home's "Jump Back In" carries the
 same pill (`ThisBrowserPill`) on the document's thumbnail ([Explorer Home](explorer-home.md)).
+
+## Long lists
+
+A folder can hold a thousand documents, and opening it is as quick as opening one of ten. Every Explorer list of
+documents draws only the rows in view (Webber, 2026-11-15): the List, Card and Details views of the Explorer page, and
+the panel's lists of a space or folder (My Documents, a team, This Browser, Shared With Me, Tags).
+
+- **The scrollbar is the whole list's** from the first draw: the list is as tall as all its rows, rows not drawn are
+  empty room of their height, and a row is drawn as it comes near the view. No pages, no "load more" button, no row
+  ever jumps.
+- **What is drawn**: the rows in view and about a screen's worth past each edge (`LIST_OVERSCAN_PX`, 800), in blocks
+  of `LIST_BLOCK_ROWS` (10) rows, so scrolling draws a block at a time rather than a row a frame.
+- **Folders draw whole**: a view's subfolders (its folder rows, the panel's folder cards) are always all drawn; only
+  its documents are windowed. A view's documents are drawn whole while they number `LIST_WINDOW_FROM` (60) or fewer.
+- **Rows cascade in once**: the rise and fade a list arrives with plays on its first draw; a row drawn later, as it
+  scrolls into view, appears at once.
+- **Thumbnails** are asked for as a row is drawn, never for rows out of view.
+
+### Keyboard, focus and dragging
+
+- Tab, and the panel's Up and Down, move through the rows in order as before: the row past the last one drawn is
+  always drawn, and moving to it brings the next rows in.
+- The row holding the focus (its button, its `⋯` menu, its rename field) stays drawn while the list scrolls away from
+  it, so focus is never lost; so does a row being dragged, until the drop.
+
+### Screen readers
+
+- A windowed list's rows say where they are in the whole list: each `listitem` carries `aria-setsize` (every row of
+  the view, folders included) and `aria-posinset` (its place, from 1).
+- The Details table carries `aria-rowcount` (its rows and header) and each row `aria-rowindex` (the header is 1).
+- The room left for rows not drawn is hidden from assistive technology.
+
+### Find
+
+In-page find cannot see rows that are not drawn, so the Explorer brings its own (Webber, 2026-11-15):
+
+- **On the Explorer page**, Ctrl F (Cmd F on a Mac) puts the caret in the top-bar search, its words selected; the list
+  narrows to what matches, best first ([Explorer filters](explorer-filters.md) "The field"). Pressed again while the
+  search has the focus, the browser's own find opens, as everywhere else.
+- **In the editor's panel**, Ctrl F (Cmd F) with the focus inside the panel, on a section listing documents (a space or
+  a folder, This Browser, Shared With Me), opens a **find field** above the open folder's list, focused. Typing
+  narrows the folder's subfolders and documents by name, best first, with the matched characters marked, matching as
+  the lens's text does ([Explorer filters](explorer-filters.md) "Matching"); nothing matching reads "No matches".
+  Escape, or its clear button, closes it and puts the focus back on the row it came from (else the first row).
+  Opening another folder or section closes it. Pressed again while the field has the focus, the browser's find opens.
+  The field is a `searchbox` named "Find in <folder>", and its count of matches is a polite live region.
+- Ctrl F anywhere else (the canvas, a dialog, a section with no list) is the browser's, as before.
+
+### Back
+
+Going Back to a long list lands where it was left (Webber, 2026-11-15):
+
+- **On the Explorer page**, Back (or Forward) to a list view restores its scroll position: the row that was at the top
+  of the view is at the top again, at the same offset, even when rows were added or removed above it in the meantime;
+  when that row is gone, the same scroll offset. Opening a view any other way (the sidebar, a link) starts at the top.
+- **In the panel**, the open folder keeps its place when the panel is drawn again on it: opening a document from the
+  folder, and Back to the document before, show the folder where it was left. Opening a folder, by its card or the
+  back bar, starts at its top.
+- A place is kept for the browser tab's session only (`sessionStorage` for the page, memory for the panel), for the
+  last `LIST_PLACES_KEPT` (50) lists.
 
 ## Telemetry
 
@@ -390,5 +451,10 @@ The code cites each by its id.
 - **D62** This Browser's icon: Lucide `app-window`: a browser window (default).
 - **D63** Where the header search sits: Left of the account control; below `sm` its own row (D87) (default).
 - **D64** Tab stop when the current view has no row: The first row of the first group (default).
+- **D223** How far past the view a long list draws, and in what steps: About a screen (800 px) each way, in blocks of
+  10 rows; lists of up to 60 documents draw whole (default).
+- **D224** What a kept list place is anchored to: The row at the top of the view and its offset, falling back to the
+  scroll offset (default).
+- **D225** How many list places are kept: The last 50, for the tab's session (default).
 - **D170** What "about 36 px" rows and the tile's tones are exactly: Retired: rows are small and bare again
   (explorer-structure.md "Look") (default).

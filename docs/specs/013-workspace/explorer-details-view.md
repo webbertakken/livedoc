@@ -96,6 +96,12 @@ by any column.
 - Document rows drag onto folders exactly as list rows and cards do; folder rows take dropped
   documents ([Folders: standalone page](folders.md#standalone-explorer-page)).
 
+## Long folders
+
+- Rows draw as they come into view; the table says its size to a screen reader with
+  `aria-rowcount` and each row its place with `aria-rowindex` ([Explorer structure](explorer-structure.md#long-lists)).
+- Sorting orders every row, drawn or not; the scroll position stays where it was.
+
 ## Narrow screens
 
 - A phone never shows the table: List and Details are for larger screens, so a phone always shows

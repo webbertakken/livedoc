@@ -201,6 +201,9 @@ field keeps the focus with the caret after the typed words.
 - Each token renders as a **pill** inside the field: "Template: Retrospective, Kanban", "Space: Acme". The free text
   follows the pills. A pill that does not apply (a Space pill on a scoped view) is muted and says why.
 - A typed token becomes a pill once it is complete: accepted from the suggestions, or followed by a space.
+- **Ctrl F** (Cmd F on a Mac) anywhere on an Explorer page with no dialog open puts the caret in the field and selects
+  its text, since in-page find cannot see a long list's rows that are not drawn
+  ([Explorer structure](explorer-structure.md#find)). Pressed while the field has the focus, it is the browser's find.
 
 ### Suggestions
 

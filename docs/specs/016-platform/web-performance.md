@@ -221,6 +221,16 @@ the fallback face until the faces land, and the canvas re-measures each time the
 - The features pages' looping illustrations sit in frames with `content-visibility: auto`, so the
   browser skips rendering and animating the ones off screen. Each frame's size is fixed, so this
   never moves layout.
+- A long Explorer list (the page's List, Card and Details views, the editor panel's lists) draws only the rows near
+  the view, its scrollbar the whole list's; find, focus, Back and screen readers are kept whole
+  ([Explorer structure](../013-workspace/explorer-structure.md#long-lists)).
+- The list itself is fetched whole (`GET /api/documents`), never paged: the sidebar's counts, the lens over every
+  document, Recent, Tags, the Details sort and the Explorer's find all read the whole list, and it is small on the
+  wire. Measured 2026-11-15: 1,000 documents are 410 KB, 35 KB gzipped, answered in about 23 ms on the local stack;
+  the largest library on docs.nu then held 105. Drawing was the cost: at 4x CPU, opening a folder of 1,000 took 16 to
+  19 s on the Explorer page (a single task of up to 13 s, about 37,000 elements) and 34.5 s in the editor's panel,
+  and scrolling it crashed the tab. Measure it again with `apps/live/scripts/explorer-long-list-seed.mjs` and
+  `explorer-long-list-measure.mjs`.
 
 ### Layout never shifts after first paint
 
