@@ -19,6 +19,7 @@ import {
 } from '@livedoc/explorer-lens';
 import { CloseIcon, HoverCard, SearchIcon } from '@livedoc/ui';
 import type { ExplorerLens } from './useExplorerLens';
+import { useFindShortcut } from './useFindShortcut';
 import { composeField, removePill, settleField, splitField, writeDraft } from './field-model';
 
 // The Explorer's top-bar search, the lens field (docs/specs/013-workspace/explorer-filters.md
@@ -46,6 +47,7 @@ export function LensField({
   const id = useId();
   const listId = `${id}-suggestions`;
   const field = useRef<HTMLInputElement>(null);
+  useFindShortcut(field);
   const parts = splitField(input, context, caret);
   const offset = composeField(parts.tokens, '', 0).caret;
   const pills = useMemo(

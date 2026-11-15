@@ -229,6 +229,8 @@ export function ExplorerPane() {
   const ViewComponent = VIEW_COMPONENTS[viewMode];
   const documentViewProps = {
     ownerId,
+    // The list's place for Back is kept per view (explorer-structure.md "Back").
+    listKey: `${selected.kind}:${'id' in selected ? (selected.id ?? '') : ''}`,
     onOpenFolder: (id: string) => go({ kind: 'folder', id }),
     onCommitRenameFolder: commitRenameFolder,
     onCancelRenameFolder: () => setRenamingFolderId(null),

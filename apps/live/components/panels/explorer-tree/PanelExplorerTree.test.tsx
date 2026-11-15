@@ -152,3 +152,61 @@ describe('PanelExplorerTree', () => {
     expect(screen.getByRole('heading', { name: 'Nothing in this browser' })).toBeTruthy();
   });
 });
+
+describe('PanelExplorerTree, long folders (explorer-structure.md "Long lists")', () => {
+  const many = Array.from({ length: 200 }, (_, i) =>
+    doc(`m${i}`, `Sprint ${String(i + 1).padStart(3, '0')}`),
+  );
+
+  function Long() {
+    return (
+      <PanelExplorerTree
+        section={{ kind: 'browser' }}
+        rootLabel="This Browser"
+        tree={{
+          ownerId: 'me',
+          currentDocumentId: null,
+          exitingDocumentIds: new Set(),
+          expanded: {},
+          onToggle: vi.fn(),
+          onOpenDocument: vi.fn(),
+          pendingRenameFolderId: null,
+          onRenameFolderCommitted: vi.fn(),
+          onCreateChild: vi.fn(),
+          onCreateTeamChild: vi.fn(),
+        }}
+        shared={[]}
+        ownIndex={{ foldersByParent: new Map(), documentsByFolder: new Map() }}
+        offlineDocuments={many}
+        teams={[]}
+        foldersByTeam={new Map()}
+        documentsByTeam={new Map()}
+        folderId={null}
+        onOpenFolder={vi.fn()}
+      />
+    );
+  }
+
+  it('draws the rows near the view, each saying its place in the whole folder', () => {
+    render(<Long />);
+    const drawn = rows();
+    expect(drawn.length).toBeLessThan(200);
+    const first = row('Sprint 001').closest('li')!;
+    expect(first.getAttribute('aria-setsize')).toBe('200');
+    expect(first.getAttribute('aria-posinset')).toBe('1');
+  });
+
+  it('finds a row not drawn with Ctrl F, best first, and Escape brings the folder back', () => {
+    render(<Long />);
+    row('Sprint 001').focus();
+    fireEvent.keyDown(row('Sprint 001'), { key: 'f', ctrlKey: true });
+    const field = screen.getByRole('searchbox', { name: 'Find in This Browser' });
+    fireEvent.change(field, { target: { value: 'sprint 187' } });
+    expect(rows()[0]).toBe('Sprint 187');
+    expect(screen.getByRole('status').textContent).toMatch(/match/);
+    fireEvent.keyDown(field, { key: 'Escape' });
+    expect(screen.queryByRole('searchbox')).toBeNull();
+    expect(rows()[0]).toBe('Sprint 001');
+    expect(document.activeElement).toBe(row('Sprint 001'));
+  });
+});

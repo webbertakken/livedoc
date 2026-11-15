@@ -85,6 +85,7 @@ export const EMITTED_EVENT_PAIRS: readonly string[] = [
   'Explorer·Changed',
   'Explorer·Created',
   'Explorer·Deleted',
+  'Explorer·Opened',
   'Explorer·Removed',
   'Explorer·Renamed',
   'Element·Added',

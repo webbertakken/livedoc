@@ -831,6 +831,16 @@ export const TAGS_EDITED = chart(
   { actionIn: ['Renamed', 'Changed', 'Deleted'], types: ['Tag', 'TagColour'], rising: 'neutral' },
 );
 
+// The Explorer's find (docs/specs/013-workspace/explorer-structure.md "Telemetry"): Ctrl F reaching the page's search
+// or opening the panel's find field, since in-page find cannot see a long list's rows that are not drawn.
+export const EXPLORER_FIND_OPENED = chart(
+  'Explorer',
+  'Opened',
+  'Explorer Find Opened',
+  "Ctrl F (Cmd F) in the Explorer: the caret put in the page's search, or the panel's find field opened.",
+  { types: ['FindShortcut', 'PanelFind'], rising: 'good' },
+);
+
 // Default folders (docs/specs/013-workspace/default-folders.md "Telemetry"): one type per key.
 export const DEFAULT_FOLDERS_SET = chart(
   'Folder',
@@ -864,6 +874,7 @@ export const ORGANISATION: MetricStack = {
     TABS_UNFILED,
     EXPLORER_SIDEBAR_PICKS,
     EXPLORER_FILTERS_PICKED,
+    EXPLORER_FIND_OPENED,
     TAGS_CREATED,
     TAGS_APPLIED,
     TAGS_EDITED,

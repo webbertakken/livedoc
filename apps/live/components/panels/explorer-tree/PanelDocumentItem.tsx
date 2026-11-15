@@ -14,6 +14,7 @@ import { isInThisBrowser } from '@/lib/document-space';
 import { startDocumentDrag } from '../explorer-drag-mime';
 import { usePanelTree } from './PanelTreeContext';
 import { usePaneDocumentMenu } from './usePaneDocumentMenu';
+import { HighlightedTitle } from '@/app/explorer/lens/TitleHighlight';
 
 // A document row of the editor's Explorer pane (docs/specs/013-workspace/explorer-structure.md "The pane"): its
 // thumbnail, name and last save; activating it opens the document; it carries the one document menu (⋯,
@@ -55,7 +56,9 @@ export function PanelDocumentItem({
       title={
         <span className="flex min-w-0 items-center gap-1">
           {favourite ? <FavouriteMarker /> : null}
-          <span className="min-w-0 truncate">{name}</span>
+          <span className="min-w-0 truncate">
+            <HighlightedTitle name={name} />
+          </span>
           <DocumentTagDots tags={tags} />
         </span>
       }

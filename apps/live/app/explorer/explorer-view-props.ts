@@ -27,6 +27,8 @@ export type FolderActionBundle = {
 export type FolderActions = (f: Folder, anchor: HTMLElement | null) => FolderActionBundle;
 
 export type ExplorerViewProps = {
+  // Which view the rows are (`folder:<id>`, `recent:`): where its place is kept for Back.
+  listKey?: string;
   folders: Folder[];
   documents: PaneDocument[];
   // Viewer identity, threaded to each row's thumbnail fetch (docs/specs/006-document/document-snapshots.md).
