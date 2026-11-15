@@ -13,8 +13,8 @@ All of it is deterministic: no model is asked, so a deployment without one has t
 - **The other ways in**: a **Review** row in the Event Storming category, which opens and closes it, and
   **Review Board** in the command palette, which opens it. Both are everyone's: the panel changes nothing by being
   opened.
-- **It stands as a card under the corner**, where the suggestions list opens, 360 px wide (default: the corner
-  card, the first of four directions rendered for a ruling; `ReviewHost` alone says where it stands).
+- **It stands as a card under the corner**, where the suggestions list opens, 360 px wide (ruled 2026-11-15: the
+  corner card, of four directions rendered; `ReviewHost` alone says where it stands).
 - **One thing open in the corner**: opening the panel closes the Ask popover and folds the suggestions list to its
   button, and opening either of those closes the panel (default).
 - **The keyboard**: opening moves it to the tab in hand; Escape closes the panel and gives it back to the pill. A tab
