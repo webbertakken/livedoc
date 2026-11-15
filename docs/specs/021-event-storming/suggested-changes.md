@@ -80,6 +80,8 @@ A **note change** is a change proposed to one workshop note. There are four:
 - Every open suggestion counts towards `SUGGESTIONS_MAX`: a suggested note, a suggested context, a name suggestion
   and a note change alike.
 - A note change goes with its note: removing the note removes it.
+- **Suggesting writes the suggestion alone**: a name suggestion or a note change fills nothing else in on the
+  context or note that holds it, such as a text size an older board left unset (default).
 
 ### A reword ripples
 

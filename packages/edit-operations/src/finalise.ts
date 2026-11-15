@@ -37,6 +37,9 @@ import { ALIAS_FIELDS } from './fields';
 type Raw = Record<string, unknown>;
 
 const GEOMETRY: ReadonlySet<string> = new Set(['x', 'y', 'width', 'height', 'from', 'to']);
+// What a suggestion writes on an element already there: offered, so it changes nothing of how the element looks
+// (docs/specs/021-event-storming/suggested-changes.md).
+const SUGGESTED: ReadonlySet<string> = new Set(['esContext', 'esChanges']);
 
 // The coercions normalising may make that change what the caller asked for.
 function noteCoercions(state: EditState, before: Raw, after: Raw, log: EditLog, op: number) {
@@ -62,7 +65,11 @@ function normaliseTouched(state: EditState, log: EditLog): void {
     const el = state.byId.get(id);
     // Normalising settles what an operation wrote; an element only moved, carried or grown changes
     // nothing but where it is and how big.
-    if (!el || (!!state.before.has(id) && written.every((key) => GEOMETRY.has(key)))) continue;
+    if (
+      !el ||
+      (!!state.before.has(id) && written.every((key) => GEOMETRY.has(key) || SUGGESTED.has(key)))
+    )
+      continue;
     const normalised = normaliseElement(el) as Raw;
     // A sticky's borderless look comes with the fill it is given: an existing note whose fill this edit
     // left alone keeps the border it had, so a relabelled note looks like its neighbours.
