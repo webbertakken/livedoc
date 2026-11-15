@@ -1,4 +1,5 @@
 import { ArticleLayout } from '@/components/ArticleLayout';
+import { getSubArticles } from '@/lib/articles';
 import { helpMetadata } from '@/lib/seo';
 import { EsMakeRoomScene } from '@/components/illustrations/canvas-links-notes';
 
@@ -14,6 +15,7 @@ export const metadata = helpMetadata({
   description="A board shaped for the workshop: the notation in the palette, notes that behave like real paper, and nothing in the way of capturing."
   categoryTitle="Canvas"
   categorySlug="canvas"
+  subArticles={getSubArticles('event-storming-boards')}
 >
 
 Event storming is a workshop method for exploring a business domain together. A group puts sticky notes on a wall (things that happened, the commands that caused them, the people and systems involved) until the story of the domain is visible end to end. Alberto Brandolini's notation gives each colour a fixed meaning, so a wall of paper reads the same to everyone who knows the method.
@@ -201,13 +203,15 @@ is placed beside it. Up to 20 photos go in one import.
 
 ## Suggestions From an Agent
 
-An AI agent connected to LiveDoc (through the [MCP connection](/help/account-and-data/connect-ai-mcp/) or the command line) can read your board, find where it is thin, and **suggest** notes: the command nobody wrote, the policy everyone forgot, the external system the flow quietly depends on. A suggestion is only offered; nothing on the board moves until you take it.
+An AI agent connected to LiveDoc (through the [MCP connection](/help/account-and-data/connect-ai-mcp/) or the command line) can read your board, find where it is thin, and **suggest** notes: the command nobody wrote, the policy everyone forgot, the external system the flow quietly depends on. A suggestion is only offered; nothing on the board moves until you take it. To ask for them, from an agent or the built-in model, see [Asking for Suggestions](/help/canvas/event-storming-boards/asking-for-suggestions/).
 
 - Each note with suggestions shows a small **dashed tab** on the side the note would go, with a number when there are several. Point at it, or tab to it, to see the note where it would land, with the agent's reason and who suggested it.
 - Press **Enter** on a tab or a suggestion to apply it, or **Delete** to dismiss it. Applied, it becomes an ordinary note, placed the way the next-note tabs place one, and the board makes room when it needs to: a note above or below another opens that row, moving the notes after it along by one place. It joins the candidate context of the note it was suggested against.
-- The **suggestions** button at the top right lists them all, in timeline order. Pointing at one brings it into view. From there, **Show All Suggestions** draws every suggestion in place, with the board making room as a preview only, and **Apply All** or **Dismiss All** handles them in one go. One Undo puts the board back.
+- The **suggestions** button at the top right, beside **Ask** and **Review**, lists them all, in timeline order. Pointing at one brings it into view. From there, **Show All Suggestions** draws every suggestion in place, with the board making room as a preview only, and **Apply All** or **Dismiss All** handles them in one go. One Undo puts the board back.
 
 Only people who can edit the board see suggestions: applying one reshapes the board.
+
+Suggestions can also change what is already there: other names for a context, better words for a note, the board in fewer lanes. See [Suggested Changes and Lane Plans](/help/canvas/event-storming-boards/suggested-changes/).
 
 ## Candidate Contexts
 
@@ -226,10 +230,18 @@ As a wall fills up, the events start to fall into parts of the business: signing
 
 Everyone on the board sees the contexts that were kept; only people who can edit the board change them or see the suggested ones.
 
+## Arranging and Reviewing
+
+Two more things the board does for itself, with no model involved:
+
+- **[Arrange and Reorder](/help/canvas/event-storming-boards/arrange-and-reorder/)** lays the wall out afresh along its timeline, one column per event, and checks the board still says the same thing.
+- **[Reviewing a Board](/help/canvas/event-storming-boards/reviewing-a-board/)** covers marking pivotal events, naming lanes and answering hotspots, and the **Review** panel: the gaps the board finds, the words it shares, and its story told step by step.
+
 ## Exporting a Domain Model
 
 **Export** in the tab menu offers **Domain Model** on an event storming board. It turns the board into what a team builds from it: a spec of the domain and its types, in the language you choose.
 
+- The dialog opens with the board's readiness: how many events, gaps, open hotspots and events outside a context are left to settle, or "Ready to export". It never stops an export.
 - Where your LiveDoc has an AI model set up, the zip holds the spec and the types it wrote, beside the board reading they came from. Review them as you would a colleague's first draft.
 - Without one, the zip holds the board reading and a brief, `CONVERT.md`: hand the brief to a coding agent working in your repository and it writes the spec and the types there.
 - After the board changes, export again and choose the earlier zip under **Update an earlier export**: the spec and the types are changed to match the board, keeping what people wrote by hand.

@@ -1718,6 +1718,46 @@ export const articles: Article[] = [
     parentSlug: 'templates',
   },
   {
+    slug: 'asking-for-suggestions',
+    title: 'Asking for Suggestions',
+    description: 'Ask an agent or the built-in model for suggestions on the board.',
+    keywords:
+      'ask asking prompt copy prompt agent ai model llm gemini claude cli command line mcp built-in builtin hand who answers fill the gaps group into contexts suggest names name the merge sharpen the wording reorganise into lanes reorganize fold the lanes about this domain domain description context glossary declined dismissed forget declined event storming eventstorming suggestion suggestions',
+    category: 'Canvas',
+    categorySlug: 'canvas/event-storming-boards',
+    parentSlug: 'event-storming-boards',
+  },
+  {
+    slug: 'suggested-changes',
+    title: 'Suggested Changes and Lane Plans',
+    description: 'Preview and accept new names, rewordings, splits and lane plans.',
+    keywords:
+      'suggested change changes rename context name suggestions names chips merge reword rewording wording better words term ripple everywhere change kind split remove duplicate stray change mark preview accept dismiss lane plan lanes fewer lanes reorganise reorganize regroup rows fold apply all dismiss all stale event storming eventstorming',
+    category: 'Canvas',
+    categorySlug: 'canvas/event-storming-boards',
+    parentSlug: 'event-storming-boards',
+  },
+  {
+    slug: 'arrange-and-reorder',
+    title: 'Arrange and Reorder',
+    description: 'Lay the wall out afresh along its timeline, one column per event.',
+    keywords:
+      'arrange reorder tidy tidy up clean up layout lay out auto layout autolayout align columns column per event spacing even out timeline order keep put back preview event storming eventstorming',
+    category: 'Canvas',
+    categorySlug: 'canvas/event-storming-boards',
+    parentSlug: 'event-storming-boards',
+  },
+  {
+    slug: 'reviewing-a-board',
+    title: 'Reviewing a Board',
+    description: 'Pivotal events, lane names, answers, and the Review panel.',
+    keywords:
+      'review panel check gaps missing readiness ready to export pivotal event pivotal phase phases tape mark as pivotal lane name name this lane rename this lane hotspot answer answered decision decided question language terms glossary ubiquitous language rename term story walk through narrate sentences event storming eventstorming',
+    category: 'Canvas',
+    categorySlug: 'canvas/event-storming-boards',
+    parentSlug: 'event-storming-boards',
+  },
+  {
     slug: 'infographic-layouts',
     title: 'Infographic Layouts',
     description:

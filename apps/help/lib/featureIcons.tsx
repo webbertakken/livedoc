@@ -381,6 +381,42 @@ export const FEATURE_ICONS: Record<string, ReactNode> = {
       <rect x="8" y="13.5" width="8" height="8" rx="1" transform="rotate(-3 12 17.5)" />
     </Glyph>
   ),
+  // A note on the wall and a speech bubble asking about it.
+  'asking-for-suggestions': (
+    <Glyph>
+      <rect x="3" y="9" width="10" height="10" rx="1" />
+      <path d="M12 3h8a1 1 0 011 1v6a1 1 0 01-1 1h-3l-2.5 2.5V11H12a1 1 0 01-1-1V4a1 1 0 011-1z" />
+      <path d="M15.2 5.6a1.4 1.4 0 112 1.3c-.4.2-.6.5-.6.9" />
+    </Glyph>
+  ),
+  // A note wearing the worded change tab on its top edge, its words being rewritten.
+  'suggested-changes': (
+    <Glyph>
+      <rect x="3" y="7" width="14" height="14" rx="1" />
+      <path d="M11 7V4h9v3" strokeDasharray="2 1.5" />
+      <path d="M6 12h8M6 16h4" />
+      <path d="M13 18l5-5 2 2-5 5h-2z" />
+    </Glyph>
+  ),
+  // Notes falling into even columns along the timeline arrow.
+  'arrange-and-reorder': (
+    <Glyph>
+      <rect x="3" y="3" width="5" height="5" rx="0.8" />
+      <rect x="3" y="10" width="5" height="5" rx="0.8" />
+      <rect x="10" y="3" width="5" height="5" rx="0.8" />
+      <rect x="17" y="3" width="4" height="5" rx="0.8" />
+      <rect x="17" y="10" width="4" height="5" rx="0.8" />
+      <path d="M3 19.5h17M17.5 17l2.5 2.5-2.5 2.5" />
+    </Glyph>
+  ),
+  // A lens over a note, with the tick of a story that holds.
+  'reviewing-a-board': (
+    <Glyph>
+      <rect x="3" y="3" width="11" height="11" rx="1" />
+      <circle cx="15" cy="15" r="4.5" />
+      <path d="M18.3 18.3L21 21M13 15l1.5 1.5 2.5-3" />
+    </Glyph>
+  ),
   // A board on its stand with a marker scribble.
   // One canvas, two ways of working on it: a clean shape on one side of the split, a hand-drawn
   // stroke on the other.

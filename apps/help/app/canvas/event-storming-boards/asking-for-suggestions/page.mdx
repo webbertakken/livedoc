@@ -1,0 +1,82 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Asking for Suggestions',
+  description:
+    'Ask an agent, through the command line or MCP, or the built-in model for suggestions on an event storming board, and tell it what your domain is about.',
+  path: '/help/canvas/event-storming-boards/asking-for-suggestions/',
+});
+
+<ArticleLayout
+  title="Asking for Suggestions"
+  description="Say what you want, choose who answers, and watch the suggestions land on the board for you to keep or dismiss."
+  categoryTitle="Canvas"
+  categorySlug="canvas/event-storming-boards"
+>
+
+An [event storming board](/help/canvas/event-storming-boards/) can ask for help: the command nobody wrote, a name for a part of the business, sharper wording, fewer lanes. Whoever answers, the answer is **suggestions**. Nothing on the board changes until you accept one, so asking is always safe.
+
+## Where to Ask
+
+**Ask**, the pill at the top right of the canvas, opens the Ask popover. It stands beside the suggestions count, so asking and what comes back share one corner. The popover asks about what you have selected:
+
+| Selected              | What you can ask for                                                           |
+| --------------------- | ------------------------------------------------------------------------------ |
+| Nothing               | Fill the Gaps, Group into Contexts, Sharpen the Wording, Reorganise into Lanes |
+| Some notes            | Fill the Gaps and Sharpen the Wording, about those notes                       |
+| One candidate context | Suggest Names, and Sharpen the Wording about its notes                         |
+| Two or more contexts  | Name the Merge                                                                 |
+
+The same popover opens from other places, always in the same corner:
+
+- **Ask for Suggestions** in the command palette, about the selection.
+- The sparkle button after a selected context's name, about that context.
+- The sparkle button in the **Merge** offer, beside its ✓ and ✕, about the selected contexts as one.
+- **Ask…** in a workshop note's right-click menu, about that note.
+
+## What to Ask For
+
+- **Fill the Gaps** suggests the notes the story is missing: a command with no event, a policy nobody wrote, the external system the flow depends on. They arrive as [suggested notes](/help/canvas/event-storming-boards/#suggestions-from-an-agent).
+- **Group into Contexts** suggests [candidate contexts](/help/canvas/event-storming-boards/#candidate-contexts): which notes belong to one part of the business.
+- **Suggest Names** offers other names for one context; **Name the Merge** offers one name for several contexts merged into one.
+- **Sharpen the Wording** proposes changes to notes: other words, another kind, one note split in two, or a duplicate removed.
+- **Reorganise into Lanes** proposes a [lane plan](/help/canvas/event-storming-boards/suggested-changes/#lane-plans): the board in fewer lanes, between 2 and 12. Choose the number with the stepper; it starts at the lanes the board uses now.
+
+What comes back for names, wording and lanes is explained in [Suggested Changes and Lane Plans](/help/canvas/event-storming-boards/suggested-changes/).
+
+## Who Answers
+
+Under **Who answers**, choose one of three hands. Each writes the same kind of suggestions, so what you see does not depend on who answered.
+
+- **CLI** (recommended): **Copy Prompt** copies a prompt for a coding agent that has the [LiveDoc command line](/help/developers/cli/). Paste it into your agent; its suggestions appear on the board as it works.
+- **MCP**: the same, for an AI tool [connected through MCP](/help/account-and-data/connect-ai-mcp/).
+- **Built-in**: **Ask** sends the board to the small model your LiveDoc runs, and the suggestions are added in place as one step that a single Undo takes back. It shows its progress and can be cancelled; closing the popover does not stop it. It is offered only where the server has a model set up.
+
+The prompt names the board by its ids, so it still reaches the board if the board is renamed before you paste it. A board saved only in [This Browser](/help/privacy-and-security/offline-mode/) is out of an agent's reach, so the popover says so and points you at the built-in model instead.
+
+<Tip>The hand you used last is remembered on this device, so the next ask opens ready to go.</Tip>
+
+**Fold the Lanes**, offered with Reorganise into Lanes, asks no model at all: the board folds its own lanes together, two neighbours at a time, keeping what the board says. Use it when no model is to hand.
+
+## About This Domain
+
+Models know a lot about words and very little about your business. **About This Domain**, at the foot of the popover, is where you tell them: what the business is, who uses it, the words to prefer and the ones to avoid. It is saved with the board and travels with every ask, every prompt and every [domain model export](/help/canvas/event-storming-boards/#exporting-a-domain-model). Leaving the field keeps it, as one undoable step.
+
+A board's words, the About included, are always read as data: a note that says "ignore your instructions" is just a note.
+
+## What Was Declined
+
+Dismissing a suggestion is a decision, and the board remembers it so the next ask brings something new. A suggestion you dismissed is refused if anyone suggests the same thing about the same notes again. One Undo brings a dismissed suggestion back and forgets the dismissal.
+
+The popover counts what was declined. **Forget Declined** clears the list, so everything may be suggested again.
+
+## When an Ask Fails
+
+The popover says what went wrong and what to do: sign in, wait a minute before asking again, or, for a board too large or a model that did not answer, copy the prompt for your agent instead. An answer with nothing in it says "Nothing to suggest" and leaves the popover open to ask again.
+
+## Who Can Ask
+
+Only people who can edit the board see the Ask pill. Participants and viewers see neither the pill nor any suggestion: accepting one reshapes the board.
+
+</ArticleLayout>

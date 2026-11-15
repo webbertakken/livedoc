@@ -1,0 +1,53 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Arrange and Reorder',
+  description:
+    'Lay an event storming board out afresh along its timeline, one column per event, previewed first and checked so the board still says the same thing.',
+  path: '/help/canvas/event-storming-boards/arrange-and-reorder/',
+});
+
+<ArticleLayout
+  title="Arrange and Reorder"
+  description="One column per event, every note in the column of the event it belongs to, worked out by the board itself."
+  categoryTitle="Canvas"
+  categorySlug="canvas/event-storming-boards"
+>
+
+A wall built in a hurry ends up uneven: a wide gap here, three notes squeezed together there. **Arrange and Reorder** lays an [event storming board](/help/canvas/event-storming-boards/) out afresh along its timeline. It is the board's own act, worked out from what the board says. No model is asked, so it works on every LiveDoc.
+
+## What It Does
+
+- **One column per event**, in the timeline's order, left to right.
+- **Every note stands in the column of the event it belongs to**: the commands that lead to it, with their actors and read models; the aggregates and external systems that decide it; the policies it triggers; the hotspots that flag it.
+- **Every note keeps its lane.** Notes move along the timeline only, never up or down. To change the lanes, use a [lane plan](/help/canvas/event-storming-boards/suggested-changes/#lane-plans); the two together lay the board out afresh both ways.
+- **Nothing stands left of what leads to it**, and columns stand as close together as keeps the story readable.
+- **The wall starts where it started**, so the lane names at its left keep their place.
+- **A loose note** that belongs to no event takes a column of its own, where it stands now.
+- **Locked notes, and notes placed off the lanes** with Cmd / Ctrl, stay exactly where they are. Candidate contexts and pivotal tapes follow their notes as always.
+
+## How to Arrange
+
+1. With nothing selected, open **Ask** at the top right and choose **Arrange and Reorder** (or find it in the command palette).
+2. The board previews it: every note glides to where it would stand and the view fits the result. The bar at the bottom says "Arranged and reordered along the timeline", and how many loose notes find a partner when any do.
+3. **Keep** moves the notes, as one step that a single Undo takes back. **Put Back**, or Escape, leaves the board as it was.
+
+The preview does not hold the board: you can still pan, zoom and select while it shows. Start dragging a note and the board is put back, since the board is then yours to move. Under reduced motion the notes jump rather than glide.
+
+## When It Will Not Arrange
+
+Arranging is checked the same way a lane plan is: every relation the board reads before, it must read after.
+
+- **"Arranging would change what the board says."** No spacing keeps the story intact. The bar lists the notes it would change; choose one to select it and bring it into view, then fix that part of the board by hand.
+- **"A note that stays where it is stands in the way."** A locked or free-placed note is where an arranged note would land. Choose it to find it, then move or unlock it.
+- **"No events yet."** The timeline is made of events: add one first.
+- **"Already arranged."** The board is laid out as Arrange and Reorder would lay it.
+
+## Agents Can Arrange Too
+
+An agent working through the [command line](/help/developers/cli/) or [MCP](/help/account-and-data/connect-ai-mcp/) can arrange the board with the `arrange` operation. It is not a suggestion: the board works out the result and checks it exactly as above, and it lands as one change that can be reverted as one.
+
+Only people who can edit the board can arrange it.
+
+</ArticleLayout>
