@@ -54,8 +54,10 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
 
 ## How a person arranges
 
-- **Arrange and Reorder** is offered in the Ask popover, apart from the topics, when nothing is selected; it needs no
-  hand (default; its placement is ruled with the Ask button's).
+- **Arrange and Reorder** is offered in the [Ask popover](asks.md#where-an-ask-starts), apart from the topics, when
+  nothing is selected; it needs no hand, and choosing it closes the popover (default).
+  The Ask pill was ruled to stand beside the suggestions count (2026-11-15), so that corner is where arranging
+  starts.
 - **It is a command too**: the command palette lists "Arrange and Reorder" on an Event Storming board that is not
   locked, for an Editor (default).
 - **Choosing it previews**: every note draws where it would stand and the view fits the board as it would be, under
@@ -104,5 +106,6 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
   `apps/live/lib/board-offer-words.ts`; that a person is arranging: `apps/live/lib/suggestion-view.ts`; the bar with
   Keep and Put Back, and the refusal: `apps/live/components/canvas/suggestions/BoardOffers.tsx` and
   `apps/live/components/canvas/suggestions/BoardOfferBar.tsx`; the acts: `apps/live/hooks/canvas/useLaneActions.ts`;
-  the command: `apps/live/lib/editor-commands.ts`; the glide: `apps/live/hooks/canvas/useOfferGlide.ts`.
+  the command: `apps/live/lib/editor-commands.ts`; the Ask popover's button:
+  `apps/live/components/canvas/ask/AskPopover.tsx`; the glide: `apps/live/hooks/canvas/useOfferGlide.ts`.
 - Proven in a browser by `apps/live/e2e/event-storming-lane-plans.spec.ts`.

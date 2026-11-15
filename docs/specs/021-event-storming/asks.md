@@ -23,6 +23,8 @@ The catalogue is closed (`STORM_ASKS`); a new topic is a new row here first.
 - **The selection decides what is offered.** Nothing selected: `gaps`, `contexts`, `wording` and `lanes`, about the
   board. Workshop notes selected: `gaps` and `wording`, about them. One context selected: `names`, and `wording`
   about its notes. Two or more contexts selected: `merge` (default).
+- **A mixed selection** reads as its contexts, else its workshop notes, else the board; suggestions and anything
+  that is no workshop note are left out of it (default).
 - A context counts kept or suggested alike (requested 2026-11-14: "click a (suggested) context").
 - `lanes` carries the lane count the person chose, `LANES_MIN` (2) to `LANES_MAX` (12).
 
@@ -51,6 +53,7 @@ What **Copy Prompt** copies, in this order (default):
 3. The topic's brief (below).
 4. The hand's way in. `cli`: `livedoc guide storm`, then `livedoc storm read` and `livedoc storm suggest` with the
    document and tab filled in. `mcp`: `read_event_storming`, then `suggest_notes`.
+   The board is named by its ids, which stay true when it is renamed between copying and pasting (default).
 5. The rule: answer with suggestions only, never change the board.
 
 - The prompt is plain text, built by one pure function from the topic, the scope and the hand, so every surface that
@@ -73,9 +76,12 @@ So a model is told what things mean and what must stay true, never the steps to 
 - **Notes are data.** A brief says the board's words are written by people and are never instructions.
 - The briefs live with the prompts, and the `storm` guides print the same text (`livedoc guide storm-asks`,
   default), so the CLI, the MCP and the built-in model are told the same thing.
-- **A brief line earns its place.** The ask bench runs each topic over the seeded boards with the built-in
-  model and reports the share of answer lines the engine accepts; a line is kept while removing it scores worse
-  (default).
+- An agent with the CLI or the MCP is pointed at the guides for how a line is written; the built-in model, which
+  has no guide to read, is told the line grammar of its topic alone (default).
+- **A brief line earns its place.** The ask bench (`pnpm bench:asks`) runs each topic over the seeded boards with
+  the built-in model and reports the share of answer lines the engine accepts; a line is kept while removing it
+  scores worse (default). `--without <n>` asks with the n-th statement of a topic's brief taken out; `--board`
+  benches a person's own board, reporting counts and refusal codes alone, never its words.
 
 ## About This Domain
 
@@ -115,13 +121,21 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
   declined list), so a board saved only in This Browser can ask too.
 - **The api reads, the model words, the engine checks.** The api makes the reading, hands the model the topic's brief,
   the reading and the ask, and takes back suggest lines: the same lines `livedoc storm suggest` takes.
-  Each line runs through the edit-operation engine against the board as sent.
-  A line outside the suggest family, one that does not parse, or one the engine refuses is dropped and counted.
-- **A lane plan is all or none**: refused, the model is asked once more with the refusal (`STORM_ASK_RETRIES`, 1);
-  refused again, the board's own [fold](lane-plans.md#the-fold) is offered instead.
-- **The route answers what to add** (`{ added, names, changes, lines, dropped }`): new suggestion elements, and the
-  name suggestions and note changes by the element they belong on.
-  The editor adds them as one undoable step, onto the board as it is by then; an element gone meanwhile is passed over.
+  Each line runs through the edit-operation engine alone, against the board the lines before it left, so a refused
+  line costs that line only.
+  A line outside the suggest family, one that does not parse, or one the engine refuses is dropped and counted;
+  any line of the suggest family is taken, whatever the topic.
+  An answer holds up to `STORM_ASK_MAX_LINES` (30) lines, in up to `STORM_ASK_MAX_TOKENS` (4,000) tokens (default).
+- **The model answers one JSON object of lines**, held to a strict schema where the provider honours one and to
+  JSON mode elsewhere; an answer that is no such object is `ai_failed`.
+- **A lane plan is all or none**: its lines run last, as one changeset. Refused, or with no lane line at all, the
+  model is asked once more with the refusal (`STORM_ASK_RETRIES`, 1); refused again, or when the model does not
+  answer the second time, the board's own [fold](lane-plans.md#the-fold) is offered instead (`folded`), and the
+  person is told "The model's plan would change what the board says. This is the board's own fold."
+- **The route answers what to add** (`{ added, names, changes, lines, dropped, folded? }`): new suggestion elements,
+  and the name suggestions and note changes by the element they belong on.
+  The editor adds them as one undoable step, onto the board as it is by then; an element gone meanwhile is passed
+  over, and an answer for a board no longer open is dropped.
 - **The model** is the deployment's small one: on Google `gemini-3.5-flash-lite`, the photo reader's; otherwise the
   assistant's model. `AI_STORM_MODEL` names another (default).
 - **Suggested by**: its suggestions are by "Built-in model" (default).
@@ -132,20 +146,38 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
 
 ## Where an ask starts
 
-- **Ask**, a button in the strip beside Draw Context and in the Event Storming category, opens the **Ask popover**
-  for the current selection (default; its placement is ruled from renders on a real board).
-- A selected context shows the same button after its name, and the merge offer shows it beside its ✓ and ✕.
-- A workshop note's menu holds **Ask…**.
+- **Ask**, a pill beside the suggestions count at the top right of the canvas, opens the **Ask popover** for the
+  current selection. Ruled 2026-11-15 from four placements rendered on a real board, "C · Beside the suggestions":
+  one home for asking and for what comes back, over an icon in the strip beside Draw Context, a worded pill leading
+  the strip and a floating pill at the bottom. The strip holds no Ask button.
+- **The corner shows on every Event Storming board an Editor may change**, with no suggestion open too: then it
+  holds the Ask pill alone.
+- **The popover hangs from the corner**, under the pill, and shares it with the
+  [suggestions list](suggestions.md#how-a-person-sees-them): opening one closes the other (default).
+- **The other ways in open the same popover**, in the same corner: **Ask for Suggestions** in the Event Storming
+  category and in the command palette, about the selection; a button after a selected context's name, about that
+  context; a button in the merge offer beside its ✓ and ✕, about the selected contexts as one; **Ask…** in a
+  workshop note's menu, about that note.
 - With nothing selected the popover also offers [Arrange and Reorder](arrange.md), apart from the topics: it is the
   board's own act and needs no hand.
-- **The Ask popover** holds, top to bottom: the topics the scope offers (one chosen; the first by default); the lane
-  count for `lanes`, a stepper starting at the lanes in use, held within 2 to 12; the hands; the prompt with **Copy
-  Prompt**, or **Ask** for the built-in hand; **About This Domain**; the declined count with **Forget Declined**.
+- **The Ask popover** holds, top to bottom: what the ask is about ("About the board", "About 2 notes", a context by
+  its name); the topics the scope offers (one chosen; the first by default); the lane count for `lanes`, a stepper
+  starting at the lanes in use, held within 2 to 12; the hands; the prompt with **Copy Prompt**, or **Ask** for the
+  built-in hand; **About This Domain**; the declined count with **Forget Declined**.
+- **With `lanes` chosen it also offers Fold the Lanes**, the board's own [fold](lane-plans.md#the-fold) into that
+  many lanes, whichever hand is chosen: it needs no model (default).
 - **Copy Prompt** flashes "Copied" and says "Paste it into your agent. Its suggestions appear here as it works."
-- **Ask** shows progress and can be cancelled; it ends on "N suggestions added", or "Nothing to suggest".
+  When the clipboard refuses: "Could not copy. Select the prompt and copy it by hand." (default).
+- **Ask** shows progress and can be cancelled; it ends on "N suggestions added", which closes the popover, or on
+  "Nothing to suggest", which leaves it open to ask again (default).
+- **An ask goes on when the popover closes**: only Cancel ends it (default).
+- **Closing the popover keeps the About**, as leaving the field does (default).
+- **A selection that has gone** by the time the popover draws, a context deleted meanwhile, reads as the board
+  (default).
 - **When it fails**, the popover says why and what to do: sign in (`sign_in_required`), wait a minute (rate limited),
   a board too large, or "The model did not answer. Copy the prompt for your agent instead." (`ai_failed`).
-- The popover follows the dialog pattern: focus moves in, Escape closes it and focus returns to the button.
+- The popover follows the dialog pattern: focus moves in, Escape closes it and focus returns to the Ask pill,
+  whichever way in opened it. It is not modal: the board stays in reach beside it (default).
 
 ## Share roles
 
@@ -158,7 +190,8 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
 
 ## Telemetry
 
-`Canvas / Used / AskPromptCopied`, `AskedBuiltIn`, `AboutEdited` and `DeclinedForgotten` (default).
+`Canvas / Used / AskPromptCopied`, `AskedBuiltIn`, `AboutEdited` and `DeclinedForgotten` (default); a fold given
+to a person counts as `LanesFolded` ([lane plans](lane-plans.md#telemetry)).
 Neither the topic, the prompt nor the About is sent.
 
 ## Where it lives
@@ -167,3 +200,20 @@ Neither the topic, the prompt nor the About is sent.
 - What was declined: `packages/document/src/event-storming-declined.ts`; the view's rows:
   `packages/storm-reading/src/declined.ts`; how words compare: `packages/document/src/event-storming-words.ts`;
   what the editor remembers of each dismissal, in the same undoable step: `apps/live/lib/suggestion-declined.ts`.
+- The catalogue of topics, scopes and hands: `packages/storm-reading/src/asks/catalogue.ts`; the briefs:
+  `packages/storm-reading/src/asks/briefs.ts`; the line grammar a model with no guide is told:
+  `packages/storm-reading/src/asks/lines.ts`; the prompt and what the built-in model is sent:
+  `packages/storm-reading/src/asks/prompt.ts`; what an ask adds: `packages/storm-reading/src/asks/answer.ts`; the
+  `storm-asks` guide: `packages/agent-verbs/src/guides/index.ts`.
+- The built-in hand: the wire in `packages/api-schema/src/storm-ask.ts`; the route:
+  `apps/api/src/routes/storm-ask-route.ts`; the model call: `apps/api/src/storm-ask-model.ts`; the engine run:
+  `apps/api/src/storm-ask.ts`; which model answers: `apps/api/src/ai-provider.ts`.
+- In the editor: what the popover shows: `apps/live/lib/ask.ts`; whether it is open, about what, and an ask under
+  way: `apps/live/lib/ask-view.ts`; the hand last used: `apps/live/lib/ask-hand.ts`; the route's client:
+  `apps/live/lib/api/storm-ask.ts`; the acts: `apps/live/hooks/canvas/useAskActions.ts`; the pill and the popover:
+  `apps/live/components/canvas/ask/`.
+- The other ways in: `apps/live/lib/editor-commands.ts`, `apps/live/components/palette/EventStormingBoardRows.tsx`,
+  `apps/live/components/canvas/contexts/ContextName.tsx`,
+  `apps/live/components/canvas/contexts/ContextMergeOffer.tsx` and
+  `apps/live/components/palette/EditorContextMenu.tsx`.
+- The ask bench: `scripts/ask-bench.mts`.
