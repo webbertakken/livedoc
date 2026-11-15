@@ -300,8 +300,11 @@ seen on the document).
 - **The share page asks the api for its preview on every visit**, a person's too: telling a link
   preview's crawler from a person needs a list of crawlers, which
   [Share-link previews](../013-workspace/share-link-previews.md) does not keep, and a crawler
-  missing from it would lose its preview. The shell is fetched alongside, so a person waits only
-  when the card is the slower of the two.
+  missing from it would lose its preview. The head never waits on it: everything but the title
+  and the preview tags goes out with the shell, so a person's browser fetches the editor's code
+  while the api answers, and only the body waits. The card is one D1 read, and its 1.5 s budget
+  is a crawler's: measured outside Western Europe, a cold card took 0.3 to 0.9 s, where a
+  shorter wait would cost those crawlers their preview.
 
 ## The api
 
@@ -354,3 +357,6 @@ seen on the document).
   1,000-element board held the main thread 200 to 300 ms; replayed on restore it takes about 1 ms.
   `apps/live/hooks/canvas/useDocumentHistory.test.ts` counts the passes and checks every step
   against applying each op to every snapshot on arrival.
+- The room's catch-up log stays in memory across a wake ([Resync without reloading the page](../012-collaboration/resync-without-reload.md)
+  "Measured before persisting it"): 2 resyncs in 21 days of production did not pay for two more rows
+  written per op. It is persisted once resyncs after a wake are measured to be several a week.

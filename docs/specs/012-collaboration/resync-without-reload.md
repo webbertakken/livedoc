@@ -48,6 +48,18 @@ fell behind across a wake genuinely did miss ops that can no longer be sent to
 it. `floor` already reports an empty log honestly, so that client still
 resyncs — correctly, and now only when it really must.
 
+**Measured before persisting it** (performance sweep, November 2026). Keeping
+the log in the room's SQLite across a wake would turn a reader's resync into a
+replay, for two rows written per op beyond the order write (the entry, then its
+prune). Production's telemetry over 21 days (25 October to 15 November 2026)
+held 2 `RealtimeResync` events in all, beside 2 joins of a shared document
+and 4 shares: whatever their cause, a persisted log could have saved at most
+two in-place refetches, which already keep the view and the undo stack. The
+log stays in memory until shared editing grows: when `RealtimeResync` reaches
+several a week, the event first learns why the room answered resync (after a
+wake, behind a trimmed log, another epoch), and the log is persisted if waking
+is the cause.
+
 ## Fault 2 — resync meant reloading
 
 Even a legitimate resync only ever needs the **tab content** back. Everything
@@ -92,6 +104,6 @@ routine hibernation.
 
 ## Out of scope
 
-- **Persisting `opLog`**, per above.
+- **Persisting `opLog`**, per above, until the resyncs it would save are measured to matter.
 - **A CRDT for same-element concurrent edits** — still deliberately dropped
   ([Realtime conflict resolution](realtime-conflict-resolution.md)); the advisory selection lock makes the case rare, and it stays last-writer-wins.

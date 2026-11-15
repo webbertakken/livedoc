@@ -17,7 +17,8 @@
     "./centring": "./src/centring.ts",
     "./lucide": "./src/lucide.generated.ts",
     "./mode-glyphs": "./src/mode-glyphs.ts",
-    "./search": "./src/search.ts"
+    "./search": "./src/search.ts",
+    "./xml": "./src/xml.ts"
   },
   "scripts": {
     "lint": "oxlint",

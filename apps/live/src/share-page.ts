@@ -1,31 +1,37 @@
 // The share page's head (docs/specs/013-workspace/share-link-previews.md). `/document/shared?s=<code>` is the same
 // static shell as every document, so a link preview, whose crawler never runs the page's script, saw "LiveDoc"
 // over an empty box. For a link whose preview may name its document, the api answers its name, and the shell's head
-// is rewritten to carry it and the share card before it is sent.
+// closes with it and the share card.
 //
-// Without the API binding (a self-host that leaves it out), or when the api is slow or says no, the shell goes out as
-// built, with the brand card the root layout declares.
+// The head never waits on the api: its title and preview tags come out of the shell, the rest of the head (every
+// style and script, the inline ones that must run before any chunk) goes out at once, and the tags close the head
+// when the api answers. A person's browser fetches the editor's code meanwhile; a crawler reads the whole page.
+//
+// Without the API binding (a self-host that leaves it out), the shell goes out as built. When the api is slow or says
+// no, the head closes with the shell's own title and tags, with the brand card the root layout declares.
 
 import {
   shareCardImagePath,
   sharePreviewCardPath,
   type SharePreviewResponse,
 } from '@livedoc/api-schema';
+import { xmlEscape } from '@livedoc/icons/xml';
 
 // The few runtime types used here, written out so the app's one DOM-lib typecheck covers this file too.
 export type Fetcher = { fetch: (input: Request | string, init?: RequestInit) => Promise<Response> };
-type RewriterElement = {
-  setAttribute(name: string, value: string): void;
-  setInnerContent(content: string): void;
-};
+type RewriterElement = { getAttribute(name: string): string | null; remove(): void };
 type Rewriter = {
-  on(selector: string, handlers: { element(el: RewriterElement): void }): Rewriter;
+  on(
+    selector: string,
+    handlers: { element(el: RewriterElement): void; text?(chunk: { text: string }): void },
+  ): Rewriter;
   transform(response: Response): Response;
 };
 declare const HTMLRewriter: new () => Rewriter;
 
-// How long the page waits on the api before sending the plain shell. The card is three indexed D1 reads (tens of
-// milliseconds), so this only bites when the api is in trouble.
+// How long the head's end waits on the api before closing with the shell's own tags. A crawler's budget, not a
+// person's, who has the head already: measured from outside Western Europe, a cold api took 0.3 to 0.9 s for its one
+// D1 read, so a shorter wait would cost those crawlers their preview.
 export const SHARE_CARD_TIMEOUT_MS = 1500;
 
 // What a named preview says under the document's name.
@@ -80,28 +86,86 @@ async function sharePreviewName(
   }
 }
 
-// The shell's head, rewritten to name the document. The selectors match what app/layout.tsx's metadata emits.
-function withShareHead(shell: Response, head: ShareHead): Response {
-  const set = (value: string) => ({
-    element(el: RewriterElement) {
-      el.setAttribute('content', value);
-    },
-  });
-  return new HTMLRewriter()
-    .on('title', { element: (el) => void el.setInnerContent(head.title) })
-    .on('meta[name="description"]', set(head.description))
-    .on('meta[property="og:title"]', set(head.title))
-    .on('meta[property="og:description"]', set(head.description))
-    .on('meta[property="og:image"]', set(head.image))
-    .on('meta[property="og:image:alt"]', set(head.imageAlt))
-    .on('meta[name="twitter:title"]', set(head.title))
-    .on('meta[name="twitter:description"]', set(head.description))
-    .on('meta[name="twitter:image"]', set(head.image))
-    .transform(shell);
+// The tags a preview reads, in the order the root layout (app/layout.tsx) emits them, and which of a share
+// head's values each one carries. The title is the first of them.
+const PREVIEW_META = [
+  ['name', 'description', 'description'],
+  ['property', 'og:title', 'title'],
+  ['property', 'og:description', 'description'],
+  ['property', 'og:image', 'image'],
+  ['property', 'og:image:alt', 'imageAlt'],
+  ['name', 'twitter:title', 'title'],
+  ['name', 'twitter:description', 'description'],
+  ['name', 'twitter:image', 'image'],
+] as const satisfies readonly (readonly ['name' | 'property', string, keyof ShareHead])[];
+
+type PreviewMeta = (typeof PREVIEW_META)[number];
+
+// The shell's own title and preview tags, as written in it: the runtime hands attribute values and text over raw,
+// entities and all, so they go back out unchanged.
+type ShellTags = { title: string | null; meta: { tag: PreviewMeta; content: string }[] };
+
+const metaHtml = ([attr, key]: PreviewMeta, content: string) =>
+  `<meta ${attr}="${key}" content="${content}"/>`;
+
+function shellTagsHtml(tags: ShellTags): string {
+  const title = tags.title === null ? '' : `<title>${tags.title}</title>`;
+  return title + tags.meta.map(({ tag, content }) => metaHtml(tag, content)).join('');
 }
 
-// The share page: the shell, its head naming the document when the api allows it. `shell` is the placeholder
-// request the editor route serves for every document address.
+// The same tags, naming the document: every one the shell had, none it did not.
+function shareTagsHtml(tags: ShellTags, head: ShareHead): string {
+  const title = tags.title === null ? '' : `<title>${xmlEscape(head.title)}</title>`;
+  return title + tags.meta.map(({ tag }) => metaHtml(tag, xmlEscape(head[tag[2]]))).join('');
+}
+
+// The shell without its title and preview tags, and those tags as it had them.
+async function takePreviewTags(html: string): Promise<{ html: string; tags: ShellTags }> {
+  const tags: ShellTags = { title: null, meta: [] };
+  const found = new Map<PreviewMeta, string>();
+  let rewriter = new HTMLRewriter().on('title', {
+    element: (el) => {
+      tags.title = '';
+      el.remove();
+    },
+    text: (chunk) => void (tags.title += chunk.text),
+  });
+  for (const tag of PREVIEW_META) {
+    rewriter = rewriter.on(`meta[${tag[0]}="${tag[1]}"]`, {
+      element: (el) => {
+        found.set(tag, el.getAttribute('content') ?? '');
+        el.remove();
+      },
+    });
+  }
+  const stripped = await rewriter.transform(new Response(html)).text();
+  for (const tag of PREVIEW_META) {
+    const content = found.get(tag);
+    if (content !== undefined) tags.meta.push({ tag, content });
+  }
+  return { html: stripped, tags };
+}
+
+// Write the page as it becomes known: the head up to its end now, the tags and the body once `rest` resolves.
+async function writeInTwoParts(
+  writable: WritableStream<Uint8Array>,
+  first: string,
+  rest: Promise<string>,
+): Promise<void> {
+  const writer = writable.getWriter();
+  const encoder = new TextEncoder();
+  try {
+    await writer.write(encoder.encode(first));
+    await writer.write(encoder.encode(await rest));
+    await writer.close();
+  } catch (err) {
+    // The visitor went away mid-page; nothing is left to send them.
+    console.warn('[share-page] visitor left before the page ended', String(err));
+  }
+}
+
+// The share page: the shell, its head sent at once and closed with the document's name when the api allows it.
+// `shell` is the placeholder request the editor route serves for every document address.
 export async function sharePage(
   request: Request,
   api: Fetcher | undefined,
@@ -110,11 +174,27 @@ export async function sharePage(
   const url = new URL(request.url);
   const code = url.searchParams.get('s');
   if (!api || !code || request.method !== 'GET') return shell();
-  // Both at once, so a visitor waits for the slower of the two, never their sum.
-  const [page, name] = await Promise.all([
-    shell(),
-    sharePreviewName(api, request, url.origin, code),
-  ]);
-  if (name === null || !page.ok) return page;
-  return withShareHead(page, shareHead(name, code, url.origin));
+  // Asked first, so the api works while the shell is fetched and its head is sent.
+  const name = sharePreviewName(api, request, url.origin, code);
+  const page = await shell();
+  if (!page.ok) return page;
+  const built = await page.text();
+  const { html, tags } = await takePreviewTags(built);
+  const end = html.indexOf('</head>');
+  if (end === -1) {
+    console.warn('[share-page] shell has no head to close');
+    return new Response(built, page);
+  }
+  const closing = name.then(
+    (found) =>
+      (found === null
+        ? shellTagsHtml(tags)
+        : shareTagsHtml(tags, shareHead(found, code, url.origin))) + html.slice(end),
+  );
+  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+  void writeInTwoParts(writable, html.slice(0, end), closing);
+  // The body is no longer the shell's bytes, so its length goes; every other header stays.
+  const headers = new Headers(page.headers);
+  headers.delete('content-length');
+  return new Response(readable, { status: page.status, statusText: page.statusText, headers });
 }

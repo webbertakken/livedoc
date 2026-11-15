@@ -13,6 +13,7 @@ export * from './tab-save-document';
 export * from './tabs';
 export * from './participants';
 export * from './share';
+export * from './share-preview';
 export * from './shared';
 export * from './folders';
 export * from './favourites';

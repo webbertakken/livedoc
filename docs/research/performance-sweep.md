@@ -195,10 +195,17 @@ To build:
 - S3 the telemetry dashboard prefetches no other view when the browser asks to save data (#187).
 - O4 the Explorer's panel tree becomes infinite scroll, with a search that finds every row, shown or not (#183).
 
-To measure, then build:
+Measured, then decided:
 
-- R3 the room's op log kept across hibernation: count production resyncs (`RealtimeResync`) first (#182).
-- S1 the share-link preview lookup for people: measure its real time in production first (#187).
+- R3 the room's op log kept across hibernation: not built. Production's telemetry held 2 `RealtimeResync` events in
+  21 days (25 October to 15 November 2026), beside 2 joins of a shared document and 4 shares, so a persisted log
+  could have saved at most two in-place refetches, for two more rows written per op. Reopened when resyncs reach
+  several a week ([Resync without reloading the page](../specs/012-collaboration/resync-without-reload.md)) (#182).
+- S1 the share-link preview lookup for people: built, narrower than a shorter timeout. From Amsterdam it added 47 ms
+  at the median (30 pages, curl), with one in 42 reaching the 1.5 s timeout; from seven nodes outside Western
+  Europe, one D1 read on a cold api added 0.3 to 0.9 s (medians of 5, check-host.net, a made-up code). A shorter
+  timeout would have cost those crawlers their preview, so the head now goes out before the lookup (scripts and
+  styles load meanwhile; the preview tags close the head) and the card is one D1 read, not three (#187).
 
 Declined:
 

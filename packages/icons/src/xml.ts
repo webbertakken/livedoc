@@ -1,4 +1,4 @@
-// The one XML escaper for every SVG string this monorepo builds.
+// The one XML escaper for every SVG and HTML string this monorepo builds.
 //
 // It was written three times before this module existed: once here in
 // markup.ts (text nodes only, & < >), once in sticker-markup.ts (& < > " '),
