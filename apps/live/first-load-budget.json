@@ -2,7 +2,7 @@
   "budgets": [
     { "page": "^/embed/workbench(/|$)", "kib": 270 },
     { "page": "^/(document|embed)(/|$)", "kib": 1530 },
-    { "page": "^/new$", "kib": 830 },
+    { "page": "^/new$", "kib": 560 },
     { "page": "^/explorer(/|$)", "kib": 640 },
     { "page": "^/drive/open$", "kib": 410 },
     { "page": "^/form/", "kib": 285 },

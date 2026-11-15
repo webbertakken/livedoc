@@ -54,7 +54,9 @@ import { handStartQuery } from '@/components/start/start-query';
 import { closeStartForBlank } from '@/components/start/close-start-for-blank';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
 import { isBlankTemplate } from '@livedoc/templates';
-import { newDocumentContent } from '@/lib/new-document-content';
+import { loadNewDocumentContent } from '@/lib/new-document/new-document-content-loader';
+import { fetchAheadForNamedDocument } from './named-document-ahead';
+import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { loadEditorPage } from '@/lib/editor-page-loader';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
@@ -77,6 +79,11 @@ const presetModeFromUrl = () => wizardPresetMode(window.location.search);
 const presetQueryFromUrl = () => wizardPresetQuery(window.location.search);
 const noPreset = () => null;
 const noBypass = () => null;
+
+// What makes the document (the template builders, about 280 KiB gzipped) stays out of this page's first load, so the
+// wizard shows sooner; a link that names a document to make fetches it, and the editor's code, as this code first runs.
+fetchAheadForNamedDocument();
+
 // Dedicated welcome / create-new flow, see docs/specs/007-editor/new-document-route.md.
 // Owns identity bootstrap, the mode choice (a one-step wizard),
 // and the actual "commit a new document" handoff. Once the user picks (or
@@ -191,6 +198,8 @@ export default function NewDocumentPage() {
     // Fetch the editor's chunk while identity + the create run. Fire-and-forget: a failure here
     // just leaves `dynamic` to retry the import at handoff.
     loadEditorPage().catch(() => {});
+    // The wizard has shown: what makes the document is fetched while the page is idle, ahead of a choice.
+    return prefetchWhenIdle([loadNewDocumentContent]);
   }, []);
 
   // Back/forward-cache restore: creating navigates away with
@@ -310,6 +319,7 @@ export default function NewDocumentPage() {
         );
       }
       // The template's tabs, card types and example cards, or one blank tab (lib/new-document-content.ts).
+      const { newDocumentContent } = await loadNewDocumentContent();
       const content = await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
       // One create for both stores (lib/new-document/write-new-document.ts). Placement is passed through as given:
       // absent is no choice (a default folder may answer), a null folder the root chosen on purpose.

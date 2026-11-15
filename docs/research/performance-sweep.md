@@ -190,6 +190,8 @@ He ruled on 2026-11-15, with the standing requirement that performance must be u
 To build:
 
 - F1 `/new` loads the template builders at the pick, fetched as `/new` loads when the address names a template (#188).
+  Built: `/new` loads 801 to 525 KiB up front and its wizard can be chosen from 1.7 s sooner at 4 Mbit/s; a template
+  link opens as fast as before (13.3 s both, bound by the editor's code).
 - R5 an offline document's tabs stored one record each, so an autosave writes one tab, not the document (#182):
   built, see "What shipped".
 - S3 the telemetry dashboard prefetches no other view when the browser asks to save data (#187).
