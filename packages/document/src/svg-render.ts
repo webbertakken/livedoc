@@ -57,6 +57,7 @@ import { defaultTextColor, SELF_PAINTING_SHAPES } from './colors';
 // below so existing importers of this module keep resolving.
 import { labelMeasure, r2, wrapLabel, xmlEscape } from './svg-render-primitives';
 import { svgCandidateContexts, withContextReach } from './svg-render-contexts';
+import { svgPivotalTapes } from './svg-render-structure';
 
 export {
   estimatedLabelMeasure,
@@ -619,9 +620,15 @@ export function renderElementsToSvg(
   // Kept candidate contexts, drawn beneath the notes (docs/specs/021-event-storming/candidate-contexts.md), and how
   // far their outlines reach past them.
   const contexts = svgCandidateContexts(tab.elements, visible, surface, bg);
+  // The tape of each pivotal event (docs/specs/021-event-storming/board-structure.md "Pivotal events"), beneath the
+  // notes too.
+  const structure = svgPivotalTapes(tab.elements, visible, surface);
   const bounds = frame
     ? frame.bounds
-    : withContextReach(contentBounds(visible, labels), contexts.bounds);
+    : withContextReach(
+        withContextReach(contentBounds(visible, labels), contexts.bounds),
+        structure.bounds,
+      );
   const vbX = bounds.x - padding;
   const vbY = bounds.y - padding;
   const vbW = bounds.w + padding * 2;
@@ -656,6 +663,7 @@ export function renderElementsToSvg(
   // A wireframe page's elements are cut to its screen, its system bars over them (withinPageFrame).
   const bandsStart = parts.length;
   if (contexts.lines) parts.push(contexts.lines);
+  if (structure.tapes) parts.push(structure.tapes);
   // Numbered mind nodes are led by their number (docs/specs/009-elements/mind-node.md "Numbered nodes"); a group is a
   // frame, drawn as one.
   const numbered = new Map(withMindNumberLabels(tab.elements).map((el) => [el.id, el]));

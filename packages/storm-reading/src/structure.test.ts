@@ -2,7 +2,8 @@
 import { describe, expect, it } from 'vitest';
 import { LANE_NAME_MAX } from '@livedoc/document';
 import { readBoard } from './reading';
-import { board, laneText } from './testing';
+import { laneNameSpot } from './structure';
+import { STEP, board, laneText } from './testing';
 
 describe('readBoard: the About', () => {
   it('carries the board’s About, trimmed', () => {
@@ -213,5 +214,31 @@ describe('readBoard: an event outside every context', () => {
   it('is nothing on a board that keeps no context', () => {
     const reading = readBoard(board({ id: 'e1', kind: 'domain-event', col: 0 }));
     expect(reading.gaps.some((g) => g.code === 'event_without_context')).toBe(false);
+  });
+});
+
+describe('laneNameSpot', () => {
+  const kitchen = board(
+    { id: 'c1', kind: 'command', col: 1, lane: 0 },
+    { id: 'e1', kind: 'domain-event', col: 2, lane: 1 },
+    laneText('t1', 1, STEP - 16, 'Kitchen'),
+    laneText('blank', 0, STEP - 16, '   '),
+  );
+
+  it('says the lane a note stands on, the wall it stands behind, and the text naming the lane', () => {
+    expect(laneNameSpot(kitchen, 'e1')).toEqual({
+      lane: 1,
+      wallLeft: STEP,
+      text: kitchen.elements[2],
+    });
+  });
+
+  it('holds no text for a lane nothing names: a text with no words names nothing', () => {
+    expect(laneNameSpot(kitchen, 'c1')).toEqual({ lane: 0, wallLeft: STEP, text: null });
+  });
+
+  it('is null for anything that is not a workshop note of the board', () => {
+    expect(laneNameSpot(kitchen, 't1')).toBeNull();
+    expect(laneNameSpot(kitchen, 'nowhere')).toBeNull();
   });
 });

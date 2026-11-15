@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ELEMENT_FIELD_NAMES } from './element-fields';
+import { setAnswer, setPivotal } from './event-storming-structure';
 import {
   createAnnotation,
   createArrow,
@@ -62,6 +63,17 @@ const SAMPLES: Sample[] = [
     el: theirs(createSticky(0, 0), 'st'),
     allowed: [...TEXT, ...PLACE, ...STICKY_COLOURS],
   },
+  {
+    // The mark is an Editor's (docs/specs/021-event-storming/board-structure.md "Share roles"): never unmarked.
+    name: 'sticky (a pivotal event)',
+    el: theirs({ ...createSticky(0, 0), esKind: 'domain-event', esPivotal: true }, 'pe'),
+    allowed: [...TEXT, ...PLACE, ...STICKY_COLOURS],
+  },
+  {
+    name: 'sticky (an answered hotspot)',
+    el: theirs({ ...createSticky(0, 0), esKind: 'hotspot', esAnswer: 'Decided' }, 'ah'),
+    allowed: [...TEXT, ...PLACE, ...STICKY_COLOURS],
+  },
   { name: 'image', el: theirs(createImage(0, 0), 'im'), allowed: [...TEXT, ...PLACE, ...IMAGE] },
   {
     name: 'freehand',
@@ -112,6 +124,10 @@ function offers(stored: unknown): unknown[] {
   if (stored && typeof stored === 'object') out.unshift(structuredClone(stored));
   return out;
 }
+
+// The tab's elements with one of them replaced by its changed self.
+const swap = (tab: Tab, changed: Element): Element[] =>
+  tab.elements.map((e) => (e.id === changed.id ? changed : e));
 
 function tabFor(sample: Sample): Tab {
   const elements =
@@ -184,6 +200,81 @@ describe('the participant content rule never leaks', () => {
       const ok = s.el.id === 'mn' || s.el.id === 'ac';
       expect(r.result, s.name).toBe(ok ? 'applied' : 'refused');
     }
+  });
+
+  // An Event Storming board's structure is an Editor's, on a note the Participant added as on anyone's
+  // (docs/specs/021-event-storming/board-structure.md "Share roles").
+  describe("a board's structure", () => {
+    const mine = (el: Element, id: string): Element => ({ ...el, id, addedBy: ME }) as Element;
+    const event = { ...createSticky(0, 0), esKind: 'domain-event' } as Element;
+    const hotspot = { ...createSticky(0, 0), esKind: 'hotspot' } as Element;
+    const boardOf = (...elements: Element[]): Tab => ({ id: 't', name: 't', elements });
+    const stored = (tab: Tab, id: string) => tab.elements.find((e) => e.id === id) as Bag;
+
+    it('marks no event and answers no hotspot, its own included', () => {
+      for (const own of [theirs, mine]) {
+        const tab = boardOf(own(event, 'ev'), own(hotspot, 'hs'));
+        const marked = setPivotal(tab.elements, 'ev', true).find((e) => e.id === 'ev')!;
+        const answered = setAnswer(tab.elements, 'hs', 'Decided').find((e) => e.id === 'hs')!;
+        for (const element of [marked, answered]) {
+          const r = applyParticipantOp(tab, { kind: 'update', element }, ME);
+          const after = r.result === 'applied' ? r.tab : tab;
+          expect(stored(after, 'ev').esPivotal).toBeUndefined();
+          expect(stored(after, 'hs').esAnswer).toBeUndefined();
+          expect(participantTabChange(tab, boardOf(...swap(tab, element)), ME)).toBeNull();
+        }
+      }
+    });
+
+    it('unmarks none and changes no answer, its own included', () => {
+      for (const own of [theirs, mine]) {
+        const tab = boardOf(
+          own({ ...event, esPivotal: true } as Element, 'ev'),
+          own({ ...hotspot, esAnswer: 'Decided' } as Element, 'hs'),
+        );
+        const reworded = { ...stored(tab, 'hs'), esAnswer: 'Undecided' } as Element;
+        const r = applyParticipantOp(tab, { kind: 'update', element: reworded }, ME);
+        expect(stored(r.result === 'applied' ? r.tab : tab, 'hs').esAnswer).toBe('Decided');
+        expect(participantTabChange(tab, boardOf(...swap(tab, reworded)), ME)).toBeNull();
+      }
+      // Someone else's mark stays; a kind change or a delete of its own note is the only way one goes.
+      const others = boardOf(theirs({ ...event, esPivotal: true } as Element, 'ev'));
+      const unmarked = setPivotal(others.elements, 'ev', false)[0]!;
+      const r = applyParticipantOp(others, { kind: 'update', element: unmarked }, ME);
+      expect(stored(r.result === 'applied' ? r.tab : others, 'ev').esPivotal).toBe(true);
+    });
+
+    it('lets the note it added drop its mark and its answer, as a change of kind does', () => {
+      const tab = boardOf(
+        mine({ ...event, esPivotal: true } as Element, 'ev'),
+        mine({ ...hotspot, esAnswer: 'Decided' } as Element, 'hs'),
+      );
+      const command: Bag = { ...stored(tab, 'ev'), esKind: 'command' };
+      delete command.esPivotal;
+      const policy: Bag = { ...stored(tab, 'hs'), esKind: 'policy' };
+      delete policy.esAnswer;
+      const after = boardOf(command as Element, policy as Element);
+      expect(participantTabChange(tab, after, ME)).toEqual(after);
+    });
+
+    it('adds a copy of a marked or answered note plain', () => {
+      const tab = boardOf(theirs({ ...event, esPivotal: true } as Element, 'ev'));
+      const copies = [
+        { ...event, id: 'ev2', esPivotal: true },
+        { ...hotspot, id: 'hs2', esAnswer: 'Decided' },
+      ] as Element[];
+      const after = participantTabChange(tab, boardOf(...tab.elements, ...copies), ME);
+      expect(after).not.toBeNull();
+      expect(stored(after!, 'ev2')).toEqual({ ...event, id: 'ev2', addedBy: ME });
+      expect(stored(after!, 'hs2')).toEqual({ ...hotspot, id: 'hs2', addedBy: ME });
+      for (const copy of copies) {
+        const r = applyParticipantOp(tab, { kind: 'add', element: copy, at: 1 }, ME);
+        expect(r.result).toBe('applied');
+        const landed = r.result === 'applied' ? stored(r.tab, copy.id) : {};
+        expect(landed.esPivotal).toBeUndefined();
+        expect(landed.esAnswer).toBeUndefined();
+      }
+    });
   });
 
   it("never changes a tab's own fields", () => {

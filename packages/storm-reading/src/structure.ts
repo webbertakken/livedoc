@@ -12,7 +12,7 @@ import {
   type Tab,
   type TextElement,
 } from '@livedoc/document';
-import { wordsOf } from './notes';
+import { readNotes, wordsOf } from './notes';
 import type {
   PlacedNote,
   StormDecision,
@@ -41,6 +41,20 @@ export function laneNameTexts(
     if (!held || right > held.x + held.width) nearest.set(lane, el);
   }
   return nearest;
+}
+
+/** Where a workshop note's lane is named (docs/specs/021-event-storming/board-structure.md "Lane names"): the lane
+ *  the note stands on, the wall's left edge, and the text that names the lane now. Null for anything that is not a
+ *  workshop note of the board. */
+export function laneNameSpot(
+  tab: Pick<Tab, 'elements'>,
+  noteId: ElementId,
+): { lane: number; wallLeft: number; text: TextElement | null } | null {
+  const notes = readNotes(tab);
+  const note = notes.find((n) => n.id === noteId);
+  if (!note) return null;
+  const wallLeft = Math.min(...notes.map((n) => n.left));
+  return { lane: note.lane, wallLeft, text: laneNameTexts(tab, wallLeft).get(note.lane) ?? null };
 }
 
 const laneNameOf = (text: TextElement) => wordsOf(text.label).slice(0, LANE_NAME_MAX).trim();

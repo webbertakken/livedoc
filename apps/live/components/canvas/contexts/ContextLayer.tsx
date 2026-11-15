@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, type CSSProperties } from 'react';
+import { useMemo } from 'react';
 import {
-  CONTEXT_INK,
   hiddenLayerElementIds,
   nameSuggestionsFor,
   type Element,
@@ -11,6 +10,7 @@ import {
 } from '@livedoc/document';
 import type { ContextControls, SuggestionControls } from '@/components/canvas/Canvas.types';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
+import { CONTEXT_INK_VARS } from '@/components/canvas/contexts/context-ink';
 import { applyOverlay, useDragPreview, useLocalDragPreview } from '@/lib/drag-preview';
 import { drawnContexts } from '@/lib/context-outlines';
 import {
@@ -43,14 +43,6 @@ import { useClearContextSelection } from './useClearContextSelection';
 // Everyone sees the kept ones; the suggested ones, and every act, are an Editor's. So are the names an agent suggests
 // for a context (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides"): a count beside
 // its name, chips under the name of the one selected, and chips in the merge offer for several.
-
-// The inks as custom properties: the light pair, swapped for the dark pair on a dark canvas (globals.css).
-const INK_VARS = {
-  '--ctx-line-light': CONTEXT_INK.light.line,
-  '--ctx-name-light': CONTEXT_INK.light.name,
-  '--ctx-line-dark': CONTEXT_INK.dark.line,
-  '--ctx-name-dark': CONTEXT_INK.dark.name,
-} as CSSProperties;
 
 const NO_DRAG: ReadonlySet<string> = new Set();
 
@@ -199,7 +191,7 @@ export function ContextLayer({
     <div
       data-testid={`context-${part}`}
       className="lvd-context pointer-events-none absolute left-0 top-0"
-      style={INK_VARS}
+      style={CONTEXT_INK_VARS}
     >
       {drawn.map((d) => {
         const acts = { ...actsFor(d.context.id, d.suggested), select: selectFor(d.context.id) };

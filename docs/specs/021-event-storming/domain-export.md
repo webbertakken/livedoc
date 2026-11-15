@@ -132,6 +132,7 @@ The types are written in the language the team needs, identified, not assumed:
 ## Where it lives
 
 - The zip's pure parts (earlier export, model messages, answer, layout): `packages/storm-reading/src/zip.ts`.
+- The dialog's readiness line: `apps/live/components/dialogs/DomainModelExportPanel.tsx` (`data-readiness`).
 - The route: `apps/api/src/routes/storm-export-route.ts`, the streamed answer read by `apps/api/src/ai-stream.ts`.
 - The dialog: `apps/live/components/dialogs/DomainModelExportPanel.tsx` over `apps/live/lib/domain-export.ts`.
 

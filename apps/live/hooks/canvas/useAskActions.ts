@@ -22,8 +22,8 @@ import { askBuiltIn, type BuiltInAnswer } from '@/lib/api/storm-ask';
 import { askFailure, askedNotice } from '@/lib/ask';
 import { writeAskHand } from '@/lib/ask-hand';
 import { closeAsk, openAsk, setAskFailure, setAsking } from '@/lib/ask-view';
+import { clearCornerFor } from '@/lib/corner-view';
 import { debugLog } from '@/lib/debug-log';
-import { setSuggestionsPanelOpen } from '@/lib/suggestion-view';
 import { track } from '@/lib/telemetry';
 
 // The acts of an ask (docs/specs/021-event-storming/asks.md "Where an ask starts", "The built-in hand"): open the
@@ -94,7 +94,7 @@ export function useAskActions({
   const open = (scope?: AskScope) => {
     if (createBlocked) return refuse('blocked');
     const about = scope ?? askScopeOf(activeTab.elements, selected());
-    setSuggestionsPanelOpen(tabId, false);
+    clearCornerFor(tabId, 'ask');
     openAsk(tabId, about);
     debugLog('[ask] opened', { scope: about.type });
   };

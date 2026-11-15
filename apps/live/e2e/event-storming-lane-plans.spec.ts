@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { freshDarkPage } from './audit-screens';
-import { expect, pageOwnerHeaders, test } from './fixtures';
+import { expect, pageOwnerHeaders, settledBox, test } from './fixtures';
 import { LANE_BOARD_IDS as IDS, LANE_BOARD_PLAN as PLAN, startLaneBoard } from './lane-board';
 import { expectNothingSuggested } from './suggestion-board';
 
@@ -268,9 +268,10 @@ test('a plan is never in a selection: Select All and a marquee take the notes an
 
   await page.keyboard.press('ControlOrMeta+z');
   await note(page, IDS.orderTaken).waitFor();
-  // A marquee round the first column, begun on empty canvas left of it.
-  const waiter = (await note(page, IDS.waiter).boundingBox())!;
-  const taken = (await note(page, IDS.orderTaken).boundingBox())!;
+  // A marquee round the first column, begun on empty canvas left of it, once the notes the Undo brought back
+  // stand still: a box read while they settle ends the marquee short of the column's last note.
+  const waiter = await settledBox(note(page, IDS.waiter));
+  const taken = await settledBox(note(page, IDS.orderTaken));
   await page.mouse.move(waiter.x - 30, waiter.y - 20);
   await page.mouse.down();
   await page.mouse.move(taken.x + taken.width + 20, taken.y + taken.height + 20, { steps: 8 });

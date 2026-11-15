@@ -181,6 +181,22 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone dismissed a lane plan an agent suggested for an event-storming board.',
   'Canvas|Used|BoardArranged':
     'Someone arranged an event-storming board along its timeline with Arrange and Reorder, and kept the result.',
+  'Canvas|Used|PivotalMarked':
+    'Someone marked a domain event on an event-storming board as pivotal: one of the few the whole flow turns on.',
+  'Canvas|Used|PivotalUnmarked':
+    'Someone took the pivotal mark off a domain event on an event-storming board.',
+  'Canvas|Used|LaneNamed':
+    'Someone named a lane of an event-storming board from a note’s menu, or opened the name it has. Never the name.',
+  'Canvas|Used|HotspotAnswered':
+    'Someone kept the answer to a hotspot on an event-storming board. Never the question or the answer.',
+  'Canvas|Used|ReviewOpened':
+    'Someone opened the Review panel of an event-storming board: its check, its language and its story.',
+  'Canvas|Used|StoryWalked':
+    'Someone took a step of the story in hand in the Review panel of an event-storming board. Once per opening of the Story tab; never the story.',
+  'Canvas|Used|GapNoteAdded':
+    'Someone pressed Add on a gap in the Review panel of an event-storming board: a blank note landed where the gap’s remedy says. Never the gap or the note.',
+  'Canvas|Used|TermRenamed':
+    'Someone renamed a term from the Review panel’s Language tab of an event-storming board, everywhere or within one context. Never the term.',
   'Canvas|Used|AskPromptCopied':
     'Someone copied the prompt of an ask on an event-storming board, to paste into their own agent. Never the prompt, its topic or the board.',
   'Canvas|Used|AskedBuiltIn':

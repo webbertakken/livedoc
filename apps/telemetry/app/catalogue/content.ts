@@ -736,6 +736,23 @@ export const ASKS = chart(
     types: ['AskPromptCopied', 'AskedBuiltIn', 'LanesFolded', 'AboutEdited', 'DeclinedForgotten'],
   },
 );
+// An event-storming board's structure (docs/specs/021-event-storming/board-structure.md "Telemetry").
+export const BOARD_STRUCTURE = chart(
+  'Canvas',
+  'Used',
+  'Board Structure',
+  'Someone marked or unmarked a pivotal event on an event-storming board, named one of its lanes, or kept the answer to one of its hotspots.',
+  { types: ['PivotalMarked', 'PivotalUnmarked', 'LaneNamed', 'HotspotAnswered'] },
+);
+// An event-storming board looked over in the Review panel (docs/specs/021-event-storming/board-review.md
+// "Telemetry", board-language.md "Telemetry").
+export const BOARD_REVIEW = chart(
+  'Canvas',
+  'Used',
+  'Board Review',
+  'Someone opened the Review panel of an event-storming board, walked its story, added the note that closes a gap, or renamed a term where it is used.',
+  { types: ['ReviewOpened', 'StoryWalked', 'GapNoteAdded', 'TermRenamed'] },
+);
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -763,6 +780,8 @@ export const ELEMENT_EDITING: MetricStack = {
     SUGGESTED_CHANGES_HANDLED,
     BOARD_REARRANGED,
     ASKS,
+    BOARD_STRUCTURE,
+    BOARD_REVIEW,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],

@@ -150,6 +150,8 @@ export type CommandHandlers = {
   // Ask for Suggestions (docs/specs/021-event-storming/asks.md "Where an ask starts"): opens the Ask popover about
   // whatever is selected.
   askBoard: () => void;
+  // Review Board (docs/specs/021-event-storming/board-review.md "The panel"): opens the Review panel.
+  reviewBoard: () => void;
 };
 
 // The canvas tools reachable from search, in the tool dropdown's own order.
@@ -283,6 +285,17 @@ export function buildEditorCommands(ctx: CommandContext, h: CommandHandlers): Ed
     },
     ...toolCommands(ctx, h),
   ];
+  // View-safe on purpose (docs/specs/021-event-storming/board-review.md "Share roles"): the Review panel reads the
+  // board and changes nothing by being opened, so everyone on an event-storming board may look it over.
+  if (ctx.esBoard) {
+    viewSafe.push({
+      id: 'review-board',
+      name: 'Review Board',
+      keywords:
+        'review check gaps holes readiness ready export language terms words rename story walk timeline event storming',
+      run: h.reviewBoard,
+    });
+  }
   if (ctx.isReadOnly) return viewSafe;
 
   const out: EditorCommand[] = [];

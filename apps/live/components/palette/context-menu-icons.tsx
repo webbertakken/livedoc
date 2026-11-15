@@ -24,6 +24,7 @@ import {
   lucideClipboardPaste,
   lucideImage,
   lucideLayers,
+  lucideMessageSquareText,
   lucidePalette,
   lucidePaintbrush,
   lucideProportions,
@@ -37,6 +38,7 @@ import {
   lucideStar,
   lucideStarOff,
   lucideTable,
+  lucideTag,
   lucideTimer,
   lucideType,
   lucideWandSparkles,
@@ -56,6 +58,19 @@ export const LayerDownIcon = lucideGlyph(lucideSendToBack, MENU_ICON_PX);
 // A note's candidate context (docs/specs/021-event-storming/candidate-contexts.md): joining one, and leaving it.
 export const ContextJoinIcon = lucideGlyph(lucideGroup, MENU_ICON_PX);
 export const ContextLeaveIcon = lucideGlyph(lucideSquareDashed, MENU_ICON_PX);
+// The board's structure (docs/specs/021-event-storming/board-structure.md): a hotspot's answer, a lane's name, and a
+// pivotal event, drawn as the tape it stands on: a band the flow passes through.
+export const AnswerIcon = lucideGlyph(lucideMessageSquareText, MENU_ICON_PX);
+export const LaneNameIcon = lucideGlyph(lucideTag, MENU_ICON_PX);
+export function PivotalIcon() {
+  return (
+    <Glyph size={MENU_ICON_PX} units={24}>
+      <path d="M12 3v18" />
+      <circle cx="5" cy="12" r="1.5" />
+      <circle cx="19" cy="12" r="1.5" />
+    </Glyph>
+  );
+}
 
 // The note / action / comment / link glyphs are the shared element-affordance drawings
 // (@livedoc/ui), the same ones the on-element badge pill shows, at the menu step.

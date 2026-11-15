@@ -23,6 +23,7 @@ import {
 } from '@/lib/change-board.fixture';
 import { askViewFor, openAsk, resetAskViewForTests } from '@/lib/ask-view';
 import { offeredPreview } from '@/lib/change-preview';
+import { openReview, resetReviewViewForTests, reviewViewFor } from '@/lib/review-view';
 import { suggestionPreview } from '@/lib/suggestion-apply';
 import {
   SUGGESTION_PREVIEW_LEAVE_MS,
@@ -35,6 +36,7 @@ import {
 } from '@/lib/suggestion-view';
 import { changeMarkPlace, changeMarkWords } from './NoteChangeMark';
 import { PEEK_PROTRUDE, PEEK_PROTRUDE_ACROSS } from './SuggestionPeekTab';
+import { ReviewButton } from '@/components/canvas/review/ReviewButton';
 import { SuggestionLayer } from './SuggestionLayer';
 
 // The suggestions on the canvas (docs/specs/021-event-storming/suggestions.md "How a person sees them"): peek tabs,
@@ -754,5 +756,52 @@ describe('SuggestionLayer: the Ask pill', () => {
     fireEvent.click(pill);
     expect(askViewFor(TAB).open).toBe(false);
     expect(controls.openAsk).not.toHaveBeenCalled();
+  });
+});
+
+// docs/specs/021-event-storming/board-review.md "The panel".
+describe('SuggestionLayer: the Review pill', () => {
+  beforeEach(resetAskViewForTests);
+  afterEach(() => act(resetReviewViewForTests));
+  const plain = () => [note('placed', 'domain-event', 216)];
+  const layer = (elements: Element[], canAsk = true) =>
+    render(
+      <SuggestionLayer
+        elements={elements}
+        tabId={TAB}
+        controls={{ ...laneActionSpies(), reveal: vi.fn() } as unknown as SuggestionControls}
+        showAllSpots={null}
+        canAsk={canAsk}
+        review={<ReviewButton tabId={TAB} />}
+      />,
+    );
+  const names = () =>
+    within(screen.getByTestId('suggestions-panel'))
+      .getAllByRole('button')
+      .map((b) => b.textContent);
+
+  it('stands last in the corner: after Ask, and after the count when there is one', () => {
+    const view = layer(plain());
+    expect(names()).toEqual(['Ask', 'Review']);
+    view.unmount();
+    layer([...plain(), suggestion('paid', 'domain-event', 'placed', 'after')]);
+    expect(names()).toEqual(['Ask', '1 suggestion', 'Review']);
+  });
+
+  it('holds the corner with nothing beside it', () => {
+    layer(plain(), false);
+    expect(names()).toEqual(['Review']);
+  });
+
+  it('closes the Review panel when the list opens, and folds the list when the panel opens', () => {
+    layer([...plain(), suggestion('paid', 'domain-event', 'placed', 'after')]);
+    const corner = screen.getByTestId('suggestions-panel');
+    act(() => openReview(TAB));
+    fireEvent.click(within(corner).getByRole('button', { name: '1 suggestion' }));
+    expect(reviewViewFor(TAB).open).toBe(false);
+    expect(within(corner).getByRole('list')).toBeTruthy();
+    fireEvent.click(within(corner).getByRole('button', { name: 'Review' }));
+    expect(reviewViewFor(TAB).open).toBe(true);
+    expect(within(corner).queryByRole('list')).toBeNull();
   });
 });

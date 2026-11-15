@@ -1,17 +1,17 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { CheckIcon, CloseIcon } from '@livedoc/ui';
 import type { EventStormingNoteKind, Rect } from '@livedoc/document';
 import type { ChangeCaption as Caption } from '@/lib/change-caption';
-import { clampToViewport } from '@/lib/clamp-to-viewport';
+import { useKeepInWindow } from '@/hooks/canvas/useKeepInWindow';
 import { SUGGESTION_STROKE_TEXT, suggestionStrokeVars } from './suggestion-colours';
 
 // The caption of a previewed note change (docs/specs/021-event-storming/suggested-changes.md "How a person sees and
 // decides"): what changes, the agent's reason, how far a reword reaches, who suggested it, and the decision: ✓, ✕,
 // and Everywhere for a reword that notes beyond its context hold. It sits under the note, never on its paper, so the
-// previewed note reads whole. Canvas units, kept at screen size whatever the zoom, and nudged back inside the window
-// when its note stands at an edge: a decision is never offered out of reach.
+// previewed note reads whole. Canvas units, kept at screen size whatever the zoom, and moved back inside the window
+// while its note stands at an edge (useKeepInWindow): a decision is never offered out of reach.
 
 const WIDTH_PX = 300;
 const ACTION_PX = 28;
@@ -51,15 +51,7 @@ export function ChangeCaption({
 }) {
   const px = 1 / zoom;
   const ref = useRef<HTMLDivElement>(null);
-  // How far the caption is moved to stay inside the window, screen px.
-  const [nudge, setNudge] = useState({ x: 0, y: 0 });
-  useLayoutEffect(() => {
-    const rect = ref.current?.getBoundingClientRect();
-    // Nothing to measure before it is laid out.
-    if (!rect || rect.width === 0) return;
-    const next = clampToViewport(rect, nudge);
-    if (next.x !== nudge.x || next.y !== nudge.y) setNudge(next);
-  }, [anchor.x, anchor.y, anchor.width, anchor.height, zoom, caption, nudge]);
+  useKeepInWindow(ref, px);
   const action = { width: ACTION_PX * px, height: ACTION_PX * px };
   const small = { fontSize: 12 * px };
   return (
@@ -76,7 +68,6 @@ export function ChangeCaption({
         left: anchor.x,
         top: anchor.y + anchor.height + GAP_PX * px,
         width: Math.max(anchor.width, WIDTH_PX * px),
-        transform: `translate(${nudge.x * px}px, ${nudge.y * px}px)`,
         padding: `${10 * px}px ${12 * px}px ${8 * px}px`,
         fontSize: 13 * px,
         lineHeight: 1.4,

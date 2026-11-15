@@ -153,7 +153,8 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
 - **The corner shows on every Event Storming board an Editor may change**, with no suggestion open too: then it
   holds the Ask pill alone.
 - **The popover hangs from the corner**, under the pill, and shares it with the
-  [suggestions list](suggestions.md#how-a-person-sees-them): opening one closes the other (default).
+  [suggestions list](suggestions.md#how-a-person-sees-them) and the [Review panel](board-review.md#the-panel):
+  opening one closes the others (default).
 - **The other ways in open the same popover**, in the same corner: **Ask for Suggestions** in the command palette,
   about the selection; a button after a selected context's name, about that context; a button in the merge offer
   beside its ✓ and ✕, about the selected contexts as one; **Ask…** in a workshop note's menu, about that note.

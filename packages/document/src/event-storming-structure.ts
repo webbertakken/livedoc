@@ -3,9 +3,18 @@
 // board after it, unchanged (the same array) when nothing changes.
 
 import { eventStormingKindOf } from './event-storming';
-import { ES_LANES, ES_NOTE_GAP, laneCentre } from './event-storming-lanes';
+import {
+  ES_LANES,
+  ES_LANE_HEIGHT,
+  ES_LANE_PITCH,
+  ES_NOTE_GAP,
+  laneCentre,
+  laneIndexAt,
+  laneTop,
+} from './event-storming-lanes';
+import { isSuggestion } from './event-storming-suggestions';
 import { GRAPH_MUTED } from './graph-muted';
-import type { Element, ElementId, TextElement } from './index';
+import type { Element, ElementId, StickyElement, TextElement } from './index';
 
 /** The longest hotspot answer, characters (safe range: 100 to 1000; it shows as a caption). */
 export const HOTSPOT_ANSWER_MAX = 300;
@@ -47,6 +56,43 @@ type Answered = Note & { esAnswer?: unknown };
 /** A domain event marked pivotal; a mark on any other note counts for nothing. */
 export function isPivotalEvent(el: Marked): boolean {
   return el.esPivotal === true && eventStormingKindOf(el) === 'domain-event';
+}
+
+/** How wide a pivotal event's tape is, canvas px (safe range: 4 to 12; narrower than a note's margin). */
+export const PIVOTAL_TAPE_PX = 6;
+
+/** A pivotal event's tape: a vertical band through its event's centre. */
+export type PivotalTape = {
+  eventId: ElementId;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+/** The tape of every pivotal event among `shown`, in document order: through the event's centre, from half a lane
+ *  above the top-most lane the shown workshop notes use to half a lane below the lowest. A suggestion is no note of
+ *  the board yet, so it measures nothing and wears no tape. */
+export function pivotalTapes(
+  elements: readonly Element[],
+  shown: readonly Element[] = elements,
+): PivotalTape[] {
+  const notes = shown.filter(
+    (el): el is StickyElement =>
+      el.type === 'sticky' && eventStormingKindOf(el) !== null && !isSuggestion(el),
+  );
+  const events = notes.filter(isPivotalEvent);
+  if (events.length === 0) return [];
+  const lanes = notes.map((n) => laneIndexAt(n.y + n.height / 2, ES_LANES));
+  const y = laneTop(Math.min(...lanes), ES_LANES) - ES_LANE_PITCH / 2;
+  const bottom = laneTop(Math.max(...lanes), ES_LANES) + ES_LANE_HEIGHT + ES_LANE_PITCH / 2;
+  return events.map((event) => ({
+    eventId: event.id,
+    x: event.x + event.width / 2 - PIVOTAL_TAPE_PX / 2,
+    y,
+    width: PIVOTAL_TAPE_PX,
+    height: bottom - y,
+  }));
 }
 
 /** An answer a hotspot may carry: text within the limit. */

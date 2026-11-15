@@ -141,12 +141,36 @@ export function suggestionBoardElements(): Note[] {
 }
 
 /** Nothing is left to decide (docs/specs/021-event-storming/suggestions.md "The suggestions corner"): the corner
- *  stays for an Editor and holds the Ask pill alone, with no count to open and no row listed. */
+ *  stays for an Editor and holds the Ask and Review pills alone, with no count to open and no row listed. */
 export async function expectNothingSuggested(page: Page): Promise<void> {
   const corner = page.getByTestId('suggestions-panel');
-  await expect(corner.getByRole('button')).toHaveCount(1);
-  await expect(corner.getByRole('button')).toHaveAccessibleName('Ask');
+  await expect(corner.getByRole('button')).toHaveCount(2);
+  await expect(corner.getByRole('button').first()).toHaveAccessibleName('Ask');
+  await expect(corner.getByRole('button').last()).toHaveAccessibleName('Review');
   await expect(corner.getByRole('listitem')).toHaveCount(0);
+}
+
+/** The board's tab as the server holds it, once the debounced autosave has flushed. */
+export async function storedBoardTab<T = { elements: Record<string, unknown>[] }>(
+  page: Page,
+): Promise<T> {
+  await page.waitForTimeout(1500);
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
+  const headers = await pageOwnerHeaders(page);
+  return page.evaluate(
+    async ({ base, headers }) => {
+      const id = location.pathname.split('/').filter(Boolean).pop()!;
+      const doc = (await (await fetch(`${base}/documents/${id}`, { headers })).json()) as {
+        document: { tabs: { id: string }[] };
+      };
+      const tabId = doc.document.tabs[0]!.id;
+      const got = (await (
+        await fetch(`${base}/documents/${id}/tabs/${tabId}`, { headers })
+      ).json()) as { tab: unknown };
+      return got.tab;
+    },
+    { base: apiBase, headers },
+  ) as Promise<T>;
 }
 
 // A new Event Storming board holding the order flow and its suggestions, or the elements given.

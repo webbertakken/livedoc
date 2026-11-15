@@ -52,6 +52,10 @@ import { ARRANGE_KEY, useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
 import { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
+import { StructureTapes } from '@/components/canvas/structure/StructureTapes';
+import { StructureMarks } from '@/components/canvas/structure/StructureMarks';
+import { ReviewButton, ReviewCorner } from '@/components/canvas/review/ReviewButton';
+import { ReviewRings } from '@/components/canvas/review/ReviewRings';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
 import { MindNumbersProvider } from './MindMapLayer';
@@ -644,6 +648,15 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                 shiftX={insertShift.xFor}
               />
             ) : null}
+            {/* The tape of each pivotal event (docs/specs/021-event-storming/board-structure.md "Pivotal events"):
+          beneath every element too, and everyone's to see. */}
+            {props.esBoard ? (
+              <StructureTapes
+                tabId={props.activeTabId ?? ''}
+                elements={elements}
+                layers={tabLayers}
+              />
+            ) : null}
             {/* Pages mode cuts elements off at the page edges (PageClip); not in the
           isometric view, whose 3D stack a clip would flatten. */}
             <PageClip
@@ -701,6 +714,16 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                 shiftX={insertShift.xFor}
               />
             ) : null}
+            {/* A hotspot's answer (docs/specs/021-event-storming/board-structure.md "Hotspot answers"): its check, its
+          caption and the field it is typed in, over the notes; the checks are everyone's to see. */}
+            {props.esBoard ? (
+              <StructureMarks
+                tabId={props.activeTabId ?? ''}
+                elements={elements}
+                layers={tabLayers}
+                onAnswer={readOnly || tabLocked ? undefined : props.structure?.saveAnswer}
+              />
+            ) : null}
             {/* A wireframe page's camera and system bars, over what is on its screen. */}
             {props.pagesMode && props.canvasTool !== 'isometric' ? (
               <WireframeDeviceOverlays
@@ -750,6 +773,15 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
             {/* The grips layer (docs/specs/008-canvas/canvas-and-palette.md "Resize"): above every element, so
           no grip is ever covered. The canvas's own grips go in here; each element's are portalled in. */}
             <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
+              {/* What the Review panel points out (docs/specs/021-event-storming/board-review.md): everyone's to see. */}
+              {props.esBoard ? (
+                <ReviewRings tabId={props.activeTabId ?? ''} elements={elements} />
+              ) : null}
+              {/* The Review pill for whoever the suggestions corner is not drawn for: a corner of its own, put
+          away with the rest of the chrome in zen mode. An Editor's stands in the suggestions corner, below. */}
+              {props.esBoard && !suggestionsShown && props.zenMode !== true ? (
+                <ReviewCorner tabId={props.activeTabId ?? ''} />
+              ) : null}
               {/* Suggestions (docs/specs/021-event-storming/suggestions.md): beneath the next-note tabs, standing
           down while a drag is in hand. */}
               {suggestionsShown && props.suggestions ? (
@@ -773,6 +805,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                   layers={tabLayers}
                   offered={offered}
                   canAsk={!props.createBlocked}
+                  review={<ReviewButton tabId={props.activeTabId ?? ''} />}
                   onSelectContexts={(ids) => {
                     props.contexts?.clearSelection();
                     selectContexts(props.activeTabId ?? '', ids);

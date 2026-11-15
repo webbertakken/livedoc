@@ -8,6 +8,7 @@ import {
   chartTypeOf,
   DEFAULT_SESSION_TOOL,
   isMindGroupFrame,
+  isPivotalEvent,
   type BoxedElement,
   type Element,
   type SessionTool,
@@ -145,7 +146,10 @@ export function elementAriaLabel(el: Element): string {
   }
   const kind = kindLabel(el);
   const label = ('label' in el && typeof el.label === 'string' ? el.label : '').trim();
-  return label ? `${kind} "${label}"` : kind;
+  const named = label ? `${kind} "${label}"` : kind;
+  // A pivotal event says so (docs/specs/021-event-storming/board-structure.md "Pivotal events"): its tape is
+  // decoration, so the mark is heard in the note's own name.
+  return el.type === 'sticky' && isPivotalEvent(el) ? `${named}, pivotal` : named;
 }
 
 // The kinds whose face carries controls of its own: a timer's Start, a checklist's ticks, a poll's Ask, a Q&A board's

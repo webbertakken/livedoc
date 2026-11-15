@@ -1,4 +1,5 @@
 import {
+  eventStormingKindOf,
   isBoxed,
   isSuggestion,
   pruneNameSuggestions,
@@ -6,6 +7,7 @@ import {
   withDependents,
   type Element,
   type ElementId,
+  type EsSuggestionSide,
   type Rect,
   type StickyElement,
 } from '@livedoc/document';
@@ -119,4 +121,21 @@ export function suggestionPreview(
     else if (next.x !== el.x) shiftX.set(el.id, next.x - el.x);
   }
   return { shiftX, spots };
+}
+
+// A note of the person's own landed beside `anchorId` exactly as applying a suggestion there lands one
+// (docs/specs/021-event-storming/board-review.md "Check": Add). The same array when the anchor is no workshop note of
+// the board.
+export function landNoteBeside(
+  elements: Element[],
+  note: StickyElement,
+  anchorId: ElementId,
+  side: EsSuggestionSide,
+  inertIds: InertIds = NONE,
+): Element[] {
+  const anchor = elements.find((el) => el.id === anchorId);
+  if (!anchor || isSuggestion(anchor) || !isBoxed(anchor) || !eventStormingKindOf(anchor))
+    return elements;
+  const offered: Element = { ...note, esSuggestion: { anchorId, side } };
+  return land(withoutOrphans([...elements, offered]), note.id, inertIds);
 }

@@ -109,8 +109,9 @@ context (possibly all contexts) if the word Order changes in that suggestion."
     are cut with an ellipsis; its accessible name always says the change whole (default).
 - **Pointing at the mark, or focusing it, previews the note's first change**, with a caption: what changes, the
   reason and who suggested it, ✓ and ✕, and **Everywhere** for a reword that reaches further.
-  The caption sits under the note, never on its paper, so the previewed note reads whole, and it is nudged back
-  inside the window when its note stands at an edge (default).
+  The caption sits under the note, never on its paper, so the previewed note reads whole. It is moved back
+  inside the window while its note stands at an edge, and stands under the note again once it fits, as the board
+  is panned or zoomed (default).
   - `reword`: the note and every note that ripples draw their new words, and the caption counts them
     ("Also rewords 4 notes in Ordering · 3 more on the board").
     Pointing at Everywhere previews the reword across the whole board (default).
@@ -190,5 +191,6 @@ tab with a count, a turned corner, a round badge with a glyph, and a worded tab.
   `apps/live/hooks/canvas/useChangeActions.ts`.
 - On the canvas: the mark, its caption and what a preview adds (a split's parts, a removal's strike) in
   `apps/live/components/canvas/suggestions/` (`NoteChangeMark.tsx`, `ChangeCaption.tsx`, `NoteChangeMarks.tsx`);
+  what keeps the caption inside the window: `apps/live/hooks/canvas/useKeepInWindow.ts`;
   the chips: `apps/live/components/canvas/contexts/NameChips.tsx`.
 - The board seeded by the end-to-end tests: `apps/live/e2e/change-board.ts`.

@@ -4,6 +4,7 @@ import type { ChangeActions } from '@/hooks/canvas/useChangeActions';
 import type { AskActions } from '@/hooks/canvas/useAskActions';
 import type { LaneActions } from '@/hooks/canvas/useLaneActions';
 import type { ContextActions } from '@/hooks/canvas/useContextActions';
+import type { StructureActions } from '@/hooks/canvas/useStructureActions';
 import type { SnapGuideStore } from '@/hooks/canvas/useSnapGuideState';
 import type { CombineOp } from '@/lib/combine/combine';
 import type { RemoteSelector } from '@/lib/presence-rows';
@@ -377,6 +378,9 @@ export type CanvasProps = {
   // Kept candidate contexts' acts: an Editor's alone; absent, contexts are drawn and nothing more
   // (docs/specs/021-event-storming/candidate-contexts.md "Share roles").
   contexts?: ContextControls;
+  // The board's structure acts (docs/specs/021-event-storming/board-structure.md "Share roles"): an Editor's alone;
+  // absent, the tape and the checks are drawn and nothing opens for typing.
+  structure?: StructureActions;
   // Read a photograph of the wall dropped on the canvas (docs/specs/021-event-storming/event-storming.md Phase 8).
   // Present only on an event-storming board with the model configured.
   onDropPhoto?: (file: File) => void;

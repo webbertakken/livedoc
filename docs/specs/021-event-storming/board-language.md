@@ -40,7 +40,11 @@ The **Language** tab of the [Review panel](board-review.md) lists the board's te
   Escape, or choosing it again, lets go.
 - **Rename Term** opens the chosen term for typing. While a new term is typed the board previews it, exactly as a
   reword's ripple previews; **Rename** keeps it, Escape leaves the board as it was.
-  - With a context filter chosen, it renames within that context; otherwise everywhere.
+  - With a context filter chosen, it renames within that context; with "No context" chosen, the notes in none;
+    otherwise everywhere. It reaches what the rings show (default).
+  - **Rename** is disabled while the rename would change nothing: the same term, another casing of it, a blank
+    (default).
+  - Notes that may not change (locked, or on a hidden or locked layer) are left as they are.
   - It is one undoable step through the ordinary choke point.
 - **An empty board, or one with no shared word**, says "No shared terms yet. A term is a word two notes share."
 
@@ -60,3 +64,6 @@ The **Language** tab of the [Review panel](board-review.md) lists the board's te
 
 - Terms: `packages/storm-reading/src/language.ts`.
 - Matching: `packages/document/src/event-storming-terms.ts`.
+- The rename as one write, and its scope: `packages/document/src/term-rename.ts` (`termRename`, `TermScope`).
+- Its preview: `termKey` in `apps/live/lib/suggestion-view.ts`, answered by `apps/live/lib/change-preview.ts`.
+- The tab: `apps/live/components/canvas/review/ReviewLanguage.tsx`.

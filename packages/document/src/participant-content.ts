@@ -28,6 +28,9 @@ const PARTICIPANT_STICKY_FIELDS = [
   'textColor',
   'penTextColour',
 ] as const;
+// The marks of an Event Storming board's structure (a pivotal event, a hotspot's answer): an Editor's alone, on a
+// note the Participant added as on anyone's (docs/specs/021-event-storming/board-structure.md "Share roles").
+const BOARD_STRUCTURE_FIELDS = ['esPivotal', 'esAnswer'] as const;
 // The elements a Participant may place on anyone's behalf: move and resize, since they are the content itself. A
 // text box is not one: it often labels the board's structure, so it stays where its author put it.
 const PARTICIPANT_PLACE_TYPES = ['sticky', 'image'] as const;
@@ -294,7 +297,26 @@ function mergeOwn(stored: Element, incoming: Element): Element {
   next.addedBy = (stored as Bag).addedBy;
   copyField(next, stored, 'locked');
   keepLiveFields(next, stored);
+  keepStructureMarks(next, stored);
   return next as Element;
+}
+
+// A Participant sets and changes no mark of the board's structure. Its own note may drop one, as a change of kind
+// does: no more than deleting the note would.
+function keepStructureMarks(target: Bag, stored: Bag): void {
+  for (const field of BOARD_STRUCTURE_FIELDS) {
+    if (target[field] === undefined) continue;
+    if (stored[field] !== undefined) target[field] = stored[field];
+    else delete target[field];
+  }
+}
+
+// What a Participant adds carries no mark of the board's structure: a copy of a pivotal event is a plain event, a
+// copy of an answered hotspot an open question.
+function withoutStructureMarks(el: Bag): Bag {
+  const plain = { ...el };
+  for (const field of BOARD_STRUCTURE_FIELDS) delete plain[field];
+  return plain;
 }
 
 // The fields that turn `from` into `to`, as a patch: what peers apply over their own live copy.
@@ -397,7 +419,7 @@ function applyAdd(
   if (tab.locked === true) return refuse('tab-locked', undo);
   if (!addableOn(tab, element)) return refuse('not-addable', undo);
   if (adderKey === null || adderKey === '') return refuse('no-adder', undo);
-  const stamped: Bag = { ...(element as Bag), addedBy: adderKey };
+  const stamped: Bag = { ...withoutStructureMarks(element), addedBy: adderKey };
   // A new element carries no answers or threads of its own yet, and a Participant cannot lock what it adds.
   for (const field of LIVE_ELEMENT_FIELDS) delete stamped[field];
   delete stamped.locked;
@@ -427,9 +449,11 @@ export function participantTabChange(before: Tab, after: Tab, adderKey: string |
     const outcome = applyParticipantOp(tab, op, adderKey);
     if (outcome.result === 'refused') return null;
     if (op.kind === 'add') {
-      // The stamp is the only difference the rule may make to an add.
+      // The stamp, and the structure marks a copy leaves behind, are the only differences the rule may make to
+      // an add.
       const stamped = (outcome.op as { element: Element }).element;
-      if (!sameValue({ ...(op.element as Bag), addedBy: adderKey }, stamped)) return null;
+      const sent = { ...withoutStructureMarks(op.element), addedBy: adderKey };
+      if (!sameValue(sent, stamped)) return null;
       elements = elements.map((e) => (e.id === stamped.id ? stamped : e));
     } else if (op.kind === 'update') {
       // The rule took everything the change made, nothing trimmed.

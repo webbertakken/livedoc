@@ -31,6 +31,8 @@ import { canEditSankey } from '@/lib/sankey-edit';
 import { canEditSequence } from '@/lib/sequence-edit';
 import { panelEnabled } from '@/lib/user-preferences';
 import { noteContextMenu } from '@/lib/note-context-menu';
+import { noteStructureMenu } from '@/lib/note-structure-menu';
+import { openAnswer } from '@/lib/structure-view';
 import { editContextName } from '@/lib/context-selection';
 import { askScopeOf } from '@livedoc/storm-reading';
 
@@ -236,6 +238,7 @@ export function EditorContextMenuHost() {
     openAssignAction,
     contextActions,
     suggestionActions,
+    structureActions,
     esBoard,
   } = useEditorContext();
   // The selection the menu acts on, read from the store while a menu is open: a closed menu never
@@ -387,6 +390,16 @@ export function EditorContextMenuHost() {
           : (noteContextMenu(activeTab.elements, contextMenu.elementId, contextActions, (id) =>
               editContextName(activeTab.id, id),
             ) ?? undefined)
+      }
+      // The board's structure is an Editor's alone (docs/specs/021-event-storming/board-structure.md "Share roles").
+      noteStructure={
+        esBoard && can.structure && !createBlocked && contextMenu.mode === 'element'
+          ? (noteStructureMenu(activeTab.elements, contextMenu.elementId, {
+              setPivotal: structureActions.setPivotal,
+              openAnswer: (id) => openAnswer(activeTab.id, id),
+              nameLane: structureActions.nameLane,
+            }) ?? undefined)
+          : undefined
       }
       // Asking is an Editor's alone (docs/specs/021-event-storming/asks.md "Share roles").
       onAskAbout={
