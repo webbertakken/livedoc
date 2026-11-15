@@ -188,4 +188,36 @@ describe('the active tab', () => {
       vi.useRealTimers();
     }
   });
+
+  describe('when the browser says whether to save data', () => {
+    const idle = window.requestIdleCallback;
+    const withSaveData = (saveData: boolean) =>
+      Object.defineProperty(navigator, 'connection', { value: { saveData }, configurable: true });
+    afterEach(() => {
+      Reflect.deleteProperty(navigator, 'connection');
+      window.requestIdleCallback = idle;
+    });
+
+    it('fetches nothing ahead when it asks to save data, so each tab loads when opened', () => {
+      withSaveData(true);
+      const ran = vi.fn(() => 1);
+      window.requestIdleCallback = ran;
+
+      const cancel = prefetchViews();
+
+      expect(ran).not.toHaveBeenCalled();
+      expect(cancel).not.toThrow();
+    });
+
+    it('fetches the other tabs ahead when it does not', () => {
+      withSaveData(false);
+      const ran = vi.fn(() => 1);
+      window.requestIdleCallback = ran;
+      window.cancelIdleCallback = vi.fn();
+
+      prefetchViews()();
+
+      expect(ran).toHaveBeenCalledTimes(1);
+    });
+  });
 });
