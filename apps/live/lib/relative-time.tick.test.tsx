@@ -6,10 +6,10 @@ import { RELATIVE_TICK_MS, useRelativeNow } from './relative-time';
 // docs/specs/016-platform/web-performance.md "Work only when it can change what shows": the shared clock behind
 // every "5 min ago" holds still while the page is hidden, and catches up the moment it shows again.
 
-const rendered = vi.fn();
+let renders = 0;
 function Row() {
   useRelativeNow();
-  rendered();
+  renders += 1;
   return null;
 }
 
@@ -23,7 +23,7 @@ function setHidden(hidden: boolean) {
 
 beforeEach(() => {
   vi.useFakeTimers();
-  rendered.mockClear();
+  renders = 0;
 });
 
 afterEach(() => {
@@ -34,32 +34,23 @@ afterEach(() => {
 describe('useRelativeNow', () => {
   it('ticks while the page shows', () => {
     const view = render(<Row />);
-    rendered.mockClear();
-    act(() => {
-      vi.advanceTimersByTime(RELATIVE_TICK_MS);
-    });
-    act(() => {
-      vi.advanceTimersByTime(RELATIVE_TICK_MS);
-    });
-    expect(rendered).toHaveBeenCalledTimes(2);
+    renders = 0;
+    act(() => vi.advanceTimersByTime(RELATIVE_TICK_MS));
+    act(() => vi.advanceTimersByTime(RELATIVE_TICK_MS));
+    expect(renders).toBe(2);
     view.unmount();
   });
 
   it('renders nothing while the page is hidden, and catches up when it shows', () => {
     const view = render(<Row />);
-    rendered.mockClear();
+    renders = 0;
     act(() => setHidden(true));
-    for (let i = 0; i < 4; i++)
-      act(() => {
-        vi.advanceTimersByTime(RELATIVE_TICK_MS);
-      });
-    expect(rendered).toHaveBeenCalledTimes(0);
+    for (let i = 0; i < 4; i++) act(() => vi.advanceTimersByTime(RELATIVE_TICK_MS));
+    expect(renders).toBe(0);
     act(() => setHidden(false));
-    expect(rendered).toHaveBeenCalledTimes(1);
-    act(() => {
-      vi.advanceTimersByTime(RELATIVE_TICK_MS);
-    });
-    expect(rendered).toHaveBeenCalledTimes(2);
+    expect(renders).toBe(1);
+    act(() => vi.advanceTimersByTime(RELATIVE_TICK_MS));
+    expect(renders).toBe(2);
     view.unmount();
   });
 });
