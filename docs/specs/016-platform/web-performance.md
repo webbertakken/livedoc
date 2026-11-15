@@ -144,19 +144,24 @@ it imports the builders as it loads.
 `apps/live/lib/editor-deferred-code.ts` names every module the editor loads on demand, so a surface's
 `next/dynamic` and the prefetch below share one import:
 
-- **Content a board may draw on open**: Pages mode's pages and their writing, the Draw dock, tables
-  and facilitation panels. Fetched as the editor mounts (`prefetchWhenIdle`), alongside the document
+- **Content a board may draw on open**: Pages mode's pages and their writing, the Draw dock, tables,
+  facilitation panels, sequence diagrams and the Map. Fetched as the editor mounts (`prefetchWhenIdle`), alongside the document
   request, so a board that has one finds its code already in, while the first load does not carry it.
 - **Surfaces someone opens**: the Explorer and Layers popovers (mounted from their first opening on,
   then kept, so their state survives), search, the quick style panel, the tool panels, presenting and
-  session settings. Fetched once the opened document has rendered and the page is idle.
+  session settings, and the landing of another tool's board (`lib/board-scene/land`, `lib/board-scene-import`)
+  that a paste, a drop or an import runs. Fetched once the opened document has rendered and the page is
+  idle; a paste before then waits for it.
 - **At the press**: the photo import's detection pipeline (and the sticky detector in it) loads when a
-  photo is picked; a template's canvas overrides load with its builders when one is applied.
+  photo is picked; a template's canvas overrides, its catalogue and its tab's name load with its builders
+  (`lib/template-builders`) when one is applied.
 - **Pictures of the board**: the Map, slide and page thumbnails and a library shape's picture are
   drawn by the SVG renderer (`@livedoc/document`'s `svg-render*`, the code exports use). The board
   itself is drawn by the element views, so the renderer is no part of the first load: the Map
-  (`components/canvas/Minimap.tsx`) is content a board may draw on open, and everything else that
-  draws a picture imports the renderer when it first draws one.
+  (`components/canvas/Minimap.tsx`) and a sequence diagram's face (`SequenceFace.tsx`, the renderer's
+  own picture of it) are content a board may draw on open, and everything else that draws a picture
+  imports the renderer when it first draws one. A tab's content bounds, which a deck fits to and a
+  library shape is placed by, are `content-bounds.ts`, apart from the renderer.
 - **What waits for on-demand code.** Starting a deck waits for the presentation overlay's code (with
   the deck's unvisited tabs), and the overlay draws in the first slide's commit, so the deck's keys
   listen from its first frame. The top corners give way to a top Draw dock from the commit the dock is
