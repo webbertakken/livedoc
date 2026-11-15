@@ -15,6 +15,9 @@ All of it is deterministic: no model is asked, so a deployment without one has t
   opened.
 - **It stands as a card under the corner**, where the suggestions list opens, 360 px wide (ruled 2026-11-15: the
   corner card, of four directions rendered; `ReviewHost` alone says where it stands).
+- **What it brings into view lands beside it**: notes a row or a step brings into view, and a field it opens, rest
+  in the part of the board the card leaves free, never under the card (ruled 2026-11-15). A card that leaves less
+  than half the board beside it, as on a phone, is not cleared.
 - **One thing open in the corner**: opening the panel closes the Ask popover and folds the suggestions list to its
   button, and opening either of those closes the panel (default).
 - **The keyboard**: opening moves it to the tab in hand; Escape closes the panel and gives it back to the pill. A tab

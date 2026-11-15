@@ -68,6 +68,17 @@ async function offItsNote(page: Page, id: string): Promise<number> {
   return Math.max(Math.abs(box.x - left), Math.abs(box.y - top));
 }
 
+// How much of a box stands under the Review card, px across. Both are read in one look, as the board may glide.
+const underTheCard = (page: Page, selector: string): Promise<number> =>
+  page.evaluate((what) => {
+    const box = document.querySelector(what)?.getBoundingClientRect();
+    const card = document.querySelector('[data-testid="review-panel"]')?.getBoundingClientRect();
+    if (!box || !card) return Infinity;
+    const across = Math.min(box.right, card.right) - Math.max(box.left, card.left);
+    const down = Math.min(box.bottom, card.bottom) - Math.max(box.top, card.top);
+    return across > 0 && down > 0 ? across : 0;
+  }, selector);
+
 // How far a ring is from standing six px round its note, px. Both are read in one look: the row that rings a
 // note may still be gliding it into view, and two looks would find the board in two places.
 const ringOffItsNote = (page: Page, id: string): Promise<number> =>
@@ -221,6 +232,9 @@ test('Answer on a Check row opens the hotspot’s answer; Enter keeps it and the
   await expect(note(page, IDS.sentBack)).toBeInViewport();
   // The field opened while its note was still outside the window; it stands under the note once that has arrived.
   await expect.poll(() => offItsNote(page, IDS.sentBack)).toBeLessThan(1);
+  // It lands in the part of the board the card leaves free, the field with it.
+  await expect.poll(() => underTheCard(page, `[data-element-id="${IDS.sentBack}"]`)).toBe(0);
+  await expect.poll(() => underTheCard(page, '[data-note-callout]')).toBe(0);
   await page.keyboard.type('Remake it; the pass decides.');
   await page.keyboard.press('Enter');
   await expect(answerField(page)).toHaveCount(0);
