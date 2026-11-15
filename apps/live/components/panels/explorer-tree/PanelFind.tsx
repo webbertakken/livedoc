@@ -8,6 +8,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObje
 import { CloseIcon, SearchIcon } from '@livedoc/ui';
 import { debugLog } from '@/lib/debug-log';
 import { isFindShortcut } from '@/lib/find-shortcut';
+import { track } from '@/lib/telemetry';
 
 /** The editor's Explorer panel, by the id its tour step finds it with: focus anywhere in it counts. */
 const PANEL_ROOT = '[data-tour-id="explorer"]';
@@ -50,6 +51,7 @@ export function usePanelFind(
       cameFrom.current = active;
       setOpen(true);
       debugLog(`[panel-find] open scope=${scope}`);
+      track('Explorer', 'Opened', 'PanelFind');
       // Already open: focus it again, words selected.
       inputRef.current?.focus();
       inputRef.current?.select();

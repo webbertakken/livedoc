@@ -5,6 +5,7 @@ import {
   LIST_WINDOW_FROM,
   drawnRowRange,
   rowAtOffset,
+  stepTowards,
   windowSegments,
 } from './window-range';
 
@@ -138,5 +139,47 @@ describe('windowSegments', () => {
       { kind: 'gap', key: 'gap-3', height: 97 * 50 },
       { kind: 'items', from: 400, to: 1001 },
     ]);
+  });
+});
+
+describe('stepTowards', () => {
+  const visible = { first: 600, last: 620 };
+
+  it('draws a few rows a frame, the rows in view first', () => {
+    // Jumped far (a drag of the scrollbar): start at the view, at most the frame's share.
+    expect(stepTowards({ first: 0, last: 40 }, { first: 580, last: 640 }, visible, 8)).toEqual({
+      first: 600,
+      last: 608,
+    });
+    // Then the rest of the view, then the overscan below and above.
+    expect(stepTowards({ first: 600, last: 608 }, { first: 580, last: 640 }, visible, 8)).toEqual({
+      first: 600,
+      last: 616,
+    });
+    expect(stepTowards({ first: 600, last: 620 }, { first: 580, last: 640 }, visible, 8)).toEqual({
+      first: 600,
+      last: 628,
+    });
+  });
+
+  it('drops the rows the target no longer holds at once', () => {
+    expect(stepTowards({ first: 560, last: 630 }, { first: 580, last: 640 }, visible, 8)).toEqual({
+      first: 580,
+      last: 638,
+    });
+  });
+
+  it('is the target once within reach', () => {
+    expect(stepTowards({ first: 582, last: 638 }, { first: 580, last: 640 }, visible, 8)).toEqual({
+      first: 580,
+      last: 640,
+    });
+  });
+
+  it('fills the view above when scrolling up', () => {
+    expect(stepTowards({ first: 610, last: 660 }, { first: 580, last: 640 }, visible, 8)).toEqual({
+      first: 602,
+      last: 640,
+    });
   });
 });

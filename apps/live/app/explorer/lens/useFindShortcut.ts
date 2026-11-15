@@ -7,6 +7,7 @@
 import { useEffect, type RefObject } from 'react';
 import { debugLog } from '@/lib/debug-log';
 import { isFindShortcut } from '@/lib/find-shortcut';
+import { track } from '@/lib/telemetry';
 
 const OPEN_DIALOG = '[role="dialog"][aria-modal="true"], dialog[open]';
 
@@ -20,6 +21,7 @@ export function useFindShortcut(field: RefObject<HTMLInputElement | null>): void
       el.focus();
       el.select();
       debugLog('[explorer-find] focus-search');
+      track('Explorer', 'Opened', 'FindShortcut');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);

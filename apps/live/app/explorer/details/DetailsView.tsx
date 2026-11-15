@@ -48,7 +48,7 @@ export function DetailsView(props: ExplorerViewProps) {
     leading: sorted.folders.length,
     estimateStride: DETAILS_ROW_STRIDE_PX,
     aria: { kind: 'table', rowOffset: 1 },
-    ...useExplorerListPlace(),
+    ...useExplorerListPlace(props.listKey),
   });
   return (
     <div className={`${LIST_CARD} overflow-x-auto`}>

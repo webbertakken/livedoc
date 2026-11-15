@@ -128,7 +128,7 @@ export function ListView(props: ExplorerViewProps) {
     leading: folders.length,
     estimateStride: LIST_ROW_STRIDE_PX,
     aria: { kind: 'list' },
-    ...useExplorerListPlace(),
+    ...useExplorerListPlace(props.listKey),
   });
   return (
     <div className={LIST_CARD}>

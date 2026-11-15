@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useRef } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/lib/telemetry', () => ({ track }));
 import { useFindShortcut } from './useFindShortcut';
 
 function Page({ dialog = false }: { dialog?: boolean }) {
@@ -36,6 +39,7 @@ describe('useFindShortcut', () => {
     const field = screen.getByRole('textbox') as HTMLInputElement;
     expect(document.activeElement).toBe(field);
     expect([field.selectionStart, field.selectionEnd]).toEqual([0, 7]);
+    expect(track).toHaveBeenCalledWith('Explorer', 'Opened', 'FindShortcut');
     row.focus();
     expect(press(row, { metaKey: true }).defaultPrevented).toBe(true);
   });

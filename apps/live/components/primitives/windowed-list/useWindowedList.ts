@@ -16,11 +16,18 @@ import {
   type FocusEvent,
 } from 'react';
 import { debugLog } from '@/lib/debug-log';
-import { placeAt, restoreOffset, type PlaceGeometry, type PlaceStore } from './list-places';
 import {
-  LIST_OVERSCAN_PX,
+  placeAt,
+  restoreOffset,
+  type ListPlace,
+  type PlaceGeometry,
+  type PlaceStore,
+} from './list-places';
+import {
+  LIST_ROWS_PER_FRAME,
   LIST_WINDOW_FROM,
   drawnRowRange,
+  stepTowards,
   windowSegments,
   type RowRange,
   type WindowSegment,
@@ -30,6 +37,8 @@ import {
 export const CASCADE_SETTLE_MS = 450;
 /** How long the scroll rests before a list's place is written down. */
 const PLACE_WRITE_MS = 150;
+/** How long a place taken back is held while the rows and what sits above them settle. */
+const PLACE_HOLD_MS = 1500;
 /** A measure moving by less than this is the same: sub-pixel layout never redraws the list. */
 const MEASURE_TOLERANCE_PX = 0.5;
 
@@ -88,10 +97,14 @@ const drawnIndices = (segments: readonly WindowSegment[]) => {
   return out;
 };
 
+// The first draw: the top of the list, a frame's share and a half (the cascade hides the rows that follow it in).
 function firstDrawing(estimateStride: number): Drawing {
   const view = typeof window === 'undefined' ? 1000 : window.innerHeight;
   return {
-    range: { first: 0, last: Math.ceil((view + LIST_OVERSCAN_PX) / estimateStride) },
+    range: {
+      first: 0,
+      last: Math.min(Math.ceil(view / estimateStride), Math.ceil(LIST_ROWS_PER_FRAME * 1.5)),
+    },
     stride: estimateStride,
     gap: 0,
     lanes: 1,
@@ -144,12 +157,29 @@ export function useWindowedList({
   );
 
   // What the frame callbacks read: the latest render's, synced after it commits.
-  const latest = useRef({ segments, keys, indexByKey, place, leading, grid, scroller, count });
+  const latest = useRef({
+    segments,
+    keys,
+    indexByKey,
+    place,
+    leading,
+    grid,
+    scroller,
+    count,
+    drawing,
+  });
   const metrics = useRef<Metrics>({ stride: estimateStride, gap: 0, lanes: 1, origin: 0 });
   const restorePending = useRef(place?.restore ?? false);
+  const holding = useRef<{ place: ListPlace; until: number } | null>(null);
+  // Another list in the same element (Back from one folder to another): its place may go back too.
+  const placeShown = useRef(place?.key ?? null);
   const schedule = useRef<() => void>(() => {});
   useLayoutEffect(() => {
-    latest.current = { segments, keys, indexByKey, place, leading, grid, scroller, count };
+    if ((place?.key ?? null) !== placeShown.current) {
+      placeShown.current = place?.key ?? null;
+      restorePending.current = place?.restore ?? false;
+    }
+    latest.current = { segments, keys, indexByKey, place, leading, grid, scroller, count, drawing };
   });
 
   // Screen readers: each drawn row's place in the whole list.
@@ -185,10 +215,12 @@ export function useWindowedList({
     });
     if (box) box.scrollTop = target;
     else window.scrollTo(0, target);
+    // The rows and what sits above them may still settle (a header, measures): hold the anchor until they do.
+    holding.current = { place: kept, until: performance.now() + PLACE_HOLD_MS };
     debugLog(
       `[list-place] restored key=${p.key} anchor=${kept.anchorId ?? 'none'} top=${Math.round(target)}`,
     );
-  }, [list, count, indexByKey]);
+  }, [list, count, indexByKey, place?.key]);
 
   // Follow the scroller and the window's size, a frame at a time; write the place down when the scroll rests.
   useEffect(() => {
@@ -205,15 +237,37 @@ export function useWindowedList({
     const sync = () => {
       frame = 0;
       const now = latest.current;
-      const view = measureInto(list, box, metrics.current, now);
+      let view = measureInto(list, box, metrics.current, now);
       const m = metrics.current;
-      const range = drawnRowRange({
+      const held = holding.current;
+      if (held && performance.now() < held.until) {
+        const want = restoreOffset({
+          place: held.place,
+          geometry: geometryOf(m, now.count),
+          indexOf: (k) => now.indexByKey.get(k) ?? -1,
+        });
+        if (Math.abs(want - view.top) > 1) {
+          if (box) box.scrollTop = want;
+          else window.scrollTo(0, want);
+          view = measureInto(list, box, m, now);
+        }
+        // Look again next frame for as long as the place is held.
+        window.setTimeout(request, 0);
+      } else holding.current = null;
+      const geometry = {
         rows: Math.ceil(now.count / m.lanes),
         stride: m.stride,
         origin: m.origin,
         view,
-      });
+      };
       if (now.count > LIST_WINDOW_FROM) {
+        // A frame's share of new rows at most, those in view first; the next frame carries on.
+        const range = stepTowards(
+          now.drawing.range,
+          drawnRowRange(geometry),
+          drawnRowRange({ ...geometry, overscanPx: 0, blockRows: 1 }),
+          Math.max(1, Math.floor(LIST_ROWS_PER_FRAME / m.lanes)),
+        );
         const next: Drawing = { range, stride: m.stride, gap: m.gap, lanes: m.lanes };
         setDrawing((d) => (sameDrawing(d, next) ? d : next));
       }
@@ -229,17 +283,27 @@ export function useWindowedList({
         writeTimer = window.setTimeout(flushWrite, PLACE_WRITE_MS);
       }
     };
+    let live = true;
     const request = () => {
-      if (!frame) frame = window.requestAnimationFrame(sync);
+      if (live && !frame) frame = window.requestAnimationFrame(sync);
     };
     schedule.current = request;
+    // A person scrolling takes over from a held place at once.
+    const letGo = () => {
+      holding.current = null;
+    };
+    for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const)
+      window.addEventListener(type, letGo, { passive: true, capture: true });
     target.addEventListener('scroll', request, { passive: true });
     window.addEventListener('resize', request, { passive: true });
     const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(request);
     resize?.observe(list);
     request();
     return () => {
+      live = false;
       schedule.current = () => {};
+      for (const type of ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const)
+        window.removeEventListener(type, letGo, { capture: true });
       target.removeEventListener('scroll', request);
       window.removeEventListener('resize', request);
       resize?.disconnect();

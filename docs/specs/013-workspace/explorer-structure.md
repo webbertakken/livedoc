@@ -375,7 +375,9 @@ the panel's lists of a space or folder (My Documents, a team, This Browser, Shar
   empty room of their height, and a row is drawn as it comes near the view. No pages, no "load more" button, no row
   ever jumps.
 - **What is drawn**: the rows in view and about a screen's worth past each edge (`LIST_OVERSCAN_PX`, 800), in blocks
-  of `LIST_BLOCK_ROWS` (10) rows, so scrolling draws a block at a time rather than a row a frame.
+  of `LIST_BLOCK_ROWS` (10) rows, so scrolling draws a block at a time rather than a row a frame. A frame adds at most
+  `LIST_ROWS_PER_FRAME` (8) rows (two rows of cards in a three-column grid), those in view first; the rest follow on
+  the frames after, so no frame's work grows long, and a first draw starts with the top dozen as the cascade plays.
 - **Folders draw whole**: a view's subfolders (its folder rows, the panel's folder cards) are always all drawn; only
   its documents are windowed. A view's documents are drawn whole while they number `LIST_WINDOW_FROM` (60) or fewer.
 - **Rows cascade in once**: the rise and fade a list arrives with plays on its first draw; a row drawn later, as it
@@ -433,6 +435,9 @@ Themes, ShapeLibraries, Trash), never a name or id
 ([Telemetry](../017-telemetry/telemetry.md)). Creating the team is still `Team / Created`. The Inbox row was the Activity row, and
 `Sidebar.Activity` (and `ExplorerPanel.Activity`) stay readable on the dashboard as its history.
 
+The Explorer's find emits `Explorer / Opened / FindShortcut` when Ctrl F puts the caret in the page's search, and
+`Explorer / Opened / PanelFind` when it opens the panel's find field.
+
 ## Help
 
 The help centre's [Explorer page](../../../apps/help/app/explorer/explorer-page/page.mdx) article describes the groups;
@@ -456,5 +461,7 @@ The code cites each by its id.
 - **D224** What a kept list place is anchored to: The row at the top of the view and its offset, falling back to the
   scroll offset (default).
 - **D225** How many list places are kept: The last 50, for the tab's session (default).
+- **D226** How many rows a frame may add: 8, a row of cards counting as many rows as it has cards; a place taken back
+  is held for 1.5 s while what sits above the list settles, until the reader scrolls (default).
 - **D170** What "about 36 px" rows and the tile's tones are exactly: Retired: rows are small and bare again
   (explorer-structure.md "Look") (default).

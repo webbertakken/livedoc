@@ -70,7 +70,7 @@ export function CardView(props: CardViewProps) {
     leading: folders.length,
     estimateStride: CARD_ROW_STRIDE_PX,
     grid: true,
-    ...useExplorerListPlace(),
+    ...useExplorerListPlace(props.listKey),
   });
   return (
     <div

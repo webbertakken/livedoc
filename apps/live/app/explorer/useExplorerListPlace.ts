@@ -1,8 +1,8 @@
 'use client';
 
-// The Explorer page's list place (docs/specs/013-workspace/explorer-structure.md "Back"): kept per address for the
-// tab's session, taken back only when the page was reached by Back or Forward. The scope is the address without the
-// lens, so typing in the search keeps the list's cascade and pin while another view or folder starts afresh.
+// The Explorer page's list place (docs/specs/013-workspace/explorer-structure.md "Back"): kept per view for the tab's
+// session, and taken back only when the page was reached by Back or Forward. A view is its node (a folder, Recent);
+// another view starts afresh, its cascade playing again.
 import { useState } from 'react';
 import { sessionPlaces } from '@/components/primitives/windowed-list/list-places';
 import {
@@ -13,20 +13,22 @@ import type { WindowedListOptions } from '@/components/primitives/windowed-list/
 
 watchHistoryTraversal();
 
-const LENS_PARAM = 'q';
+const addressNow = () =>
+  typeof window === 'undefined' ? '' : `${window.location.pathname}${window.location.search}`;
 
-function addressNow(): { key: string; scope: string } {
-  if (typeof window === 'undefined') return { key: '', scope: '' };
-  const { pathname, search } = window.location;
-  const params = new URLSearchParams(search);
-  params.delete(LENS_PARAM);
-  const rest = params.toString();
-  return { key: `${pathname}${search}`, scope: rest ? `${pathname}?${rest}` : pathname };
-}
-
-export function useExplorerListPlace(): Pick<WindowedListOptions, 'place' | 'resetKey'> {
-  const [restore] = useState(() => takeHistoryTraversal(addressNow().key));
-  const { key, scope } = addressNow();
-  if (!key) return { place: null, resetKey: '' };
-  return { place: { key, store: sessionPlaces, restore }, resetKey: scope };
+export function useExplorerListPlace(
+  listKey: string | undefined,
+): Pick<WindowedListOptions, 'place' | 'resetKey'> {
+  // Read as each view is first shown: by then Back has landed on the address it went to.
+  const [shown, setShown] = useState(() => ({
+    listKey,
+    restore: takeHistoryTraversal(addressNow()),
+  }));
+  if (shown.listKey !== listKey) setShown({ listKey, restore: takeHistoryTraversal(addressNow()) });
+  const restore = shown.listKey === listKey && shown.restore;
+  if (!listKey) return { place: null, resetKey: '' };
+  return {
+    place: { key: `explorer:${listKey}`, store: sessionPlaces, restore },
+    resetKey: listKey,
+  };
 }

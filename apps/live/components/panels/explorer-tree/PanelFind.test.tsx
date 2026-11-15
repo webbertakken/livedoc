@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { useRef } from 'react';
+
+const { track } = vi.hoisted(() => ({ track: vi.fn() }));
+vi.mock('@/lib/telemetry', () => ({ track }));
 import { PanelFindField, usePanelFind } from './PanelFind';
 
 function Panel({ enabled = true }: { enabled?: boolean }) {
@@ -32,6 +35,7 @@ describe('the panel find', () => {
     pressFind(row);
     const field = screen.getByRole('searchbox', { name: 'Find in Archive' });
     expect(document.activeElement).toBe(field);
+    expect(track).toHaveBeenCalledWith('Explorer', 'Opened', 'PanelFind');
     fireEvent.change(field, { target: { value: 'road' } });
     expect(screen.getByRole('status').textContent).toBe('2 matches');
     fireEvent.keyDown(field, { key: 'Escape' });

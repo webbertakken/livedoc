@@ -104,3 +104,46 @@ export function windowSegments({
   if (row < rows) room(row, rows);
   return segments;
 }
+
+/** How many rows a frame may add: the rest come on the frames after, so no frame's work grows long (D226). */
+export const LIST_ROWS_PER_FRAME = 8;
+
+/**
+ * One frame's step from the rows drawn towards the rows wanted: rows the target no longer holds go at once; new rows
+ * come at most `maxNew` a frame, those in view first (the side below before the side above), then the rest of the
+ * target, below then above. A target out of reach of what is drawn (a jump) starts again at the view.
+ */
+export function stepTowards(
+  current: RowRange,
+  target: RowRange,
+  visible: RowRange,
+  maxNew: number,
+): RowRange {
+  const view = {
+    first: Math.max(target.first, visible.first),
+    last: Math.min(target.last, visible.last),
+  };
+  let first = Math.max(current.first, target.first);
+  let last = Math.min(current.last, target.last);
+  if (last <= first || last < view.first || first > view.last) {
+    first = view.first;
+    last = view.first;
+  }
+  let budget = maxNew;
+  const grow = (side: 'down' | 'up', limit: number) => {
+    if (side === 'down') {
+      const add = Math.min(budget, Math.max(0, limit - last));
+      last += add;
+      budget -= add;
+    } else {
+      const add = Math.min(budget, Math.max(0, first - limit));
+      first -= add;
+      budget -= add;
+    }
+  };
+  grow('down', view.last);
+  grow('up', view.first);
+  grow('down', target.last);
+  grow('up', target.first);
+  return { first, last };
+}
