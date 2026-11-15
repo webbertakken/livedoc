@@ -137,6 +137,13 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   the tab's look, the handlers) hold: the slot the change added renders, and the slots after one
   it removed (each a place lower in the paint order), not the board's thousand. A change of what
   every element draws with walks them all, as it must.
+- **A one-shot pen's stroke lands in a transition.** Lifting the diagram pencil, the Shape Pen or
+  the highlighter lands the stroke, selects it and puts the pen down in one React transition, so the
+  editor's render that follows is sliced into short tasks rather than run whole in the release's
+  task (on the reference board it was most of a 60-75 ms release). The live stroke shows until the
+  landed one replaces it, in the same commit, and the pointer's moves and lifts after the first lift
+  reach no stroke. A whiteboard pen stays in hand for the next stroke, and handwriting presses again
+  within the time a transition takes, so its strokes land at once.
 - **A break stays local.** An arrow broken where it runs behind a box is masked over its own extent (its path's
   points, control points included, grown for its heads), never a vast region: a mask's region is what the browser
   repaints when its holes change, and a vast one repainted the whole screen for every arrow a dragged box crossed.
