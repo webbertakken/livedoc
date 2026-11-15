@@ -62,6 +62,9 @@ describe('ReviewHost', () => {
     const panel = openCard();
     expect(panel.className).toContain('fixed right-3');
     expect(panel.className).toContain('w-[360px]');
+    // No corner to measure in this test's page: the card stands where the corner would end.
+    expect(panel.style.top).toBe('105px');
+    expect(panel.style.maxHeight).toContain('105px');
     const check = within(panel).getByRole('tab', { name: 'Check' });
     expect(check.getAttribute('aria-selected')).toBe('true');
     expect(document.activeElement).toBe(check);

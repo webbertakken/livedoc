@@ -161,6 +161,41 @@ describe('StructureMarks', () => {
       expect(document.activeElement).toBe(marks()[0]);
     });
 
+    it('waits for the board to draw the kept answer, and goes to its check over what opened the field', () => {
+      const { keep } = board();
+      opener().focus();
+      act(() => openAnswer(TAB, 'who'));
+      fireEvent.change(field()!, { target: { value: 'The host.' } });
+      fireEvent.keyDown(field()!, { key: 'Enter' });
+      // The field is gone and the board has not drawn the answer yet: the keyboard waits.
+      expect(field()).toBeNull();
+      expect(document.activeElement).not.toBe(opener());
+      act(() => keep('The host.'));
+      expect(document.activeElement).toBe(marks()[0]);
+    });
+
+    it('leaves the keyboard with whoever took it while the board was drawing', () => {
+      const { keep } = board();
+      act(() => openAnswer(TAB, 'who'));
+      fireEvent.change(field()!, { target: { value: 'The host.' } });
+      fireEvent.keyDown(field()!, { key: 'Enter' });
+      opener().focus();
+      act(() => keep('The host.'));
+      expect(document.activeElement).toBe(opener());
+    });
+
+    it('goes back to what opened the field when Enter empties the answer', () => {
+      const { keep } = board('The host.');
+      opener().focus();
+      act(() => openAnswer(TAB, 'who'));
+      fireEvent.change(field()!, { target: { value: '  ' } });
+      act(() => {
+        fireEvent.keyDown(field()!, { key: 'Enter' });
+        keep();
+      });
+      expect(document.activeElement).toBe(opener());
+    });
+
     it('goes back to what opened the field while that still stands', () => {
       board();
       opener().focus();

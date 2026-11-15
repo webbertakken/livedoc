@@ -27,8 +27,8 @@ export function AnswerField({
   onKeep: (text: string) => void;
   onLeave: () => void;
   // The field is being put away by a key (Enter, Escape), not by leaving it: called first, with what had the
-  // keyboard when the field opened.
-  onKeyEnd?: (opener: HTMLElement | null) => void;
+  // keyboard when the field opened, and whether an answer is being kept.
+  onKeyEnd?: (opener: HTMLElement | null, keepsAnswer: boolean) => void;
 }) {
   const id = useId();
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -46,7 +46,7 @@ export function AnswerField({
   const end = (keep: boolean, byKey = false) => {
     if (done.current) return;
     done.current = true;
-    if (byKey) onKeyEnd?.(opener.current);
+    if (byKey) onKeyEnd?.(opener.current, keep && draft.trim() !== '');
     if (keep) onKeep(draft);
     else onLeave();
   };

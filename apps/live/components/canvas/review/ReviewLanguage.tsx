@@ -10,6 +10,8 @@ import { REVIEW_MUTED, REVIEW_ROW, ReviewEmpty, RowAct } from './review-parts';
 // used first, each with how many notes hold it and the contexts it is used in. A filter narrows the list to one
 // candidate context or to the notes in none. Choosing a term rings its notes and dims the rest; Rename Term opens
 // it for typing, the board previewing the new term as it is typed, and renames it where the list is narrowed to.
+// The keyboard never falls to the page when what held it is put away: leaving the field hands it to Rename Term,
+// letting a term go to the term, and a rename to the row standing where the renamed term stood.
 
 const ALL = 'all';
 const NONE = 'none';
@@ -18,6 +20,10 @@ const ID_SEPARATOR = '\u0000';
 export type TermRenameAsk = { from: string; to: string; scope: TermScope };
 
 type Row = { term: BoardTerm; notes: ElementId[]; contexts: string[] };
+
+// Where the keyboard goes next: a term's row (by its key, or by where it stands in the list), on the term's own
+// button or on its Rename Term. `after`: not before the board has been read again past this reading.
+type HandTo = { row: string | number; rename?: boolean; after?: StormReading };
 
 const scopeOf = (filter: string): TermScope =>
   filter === ALL
@@ -54,6 +60,25 @@ export function ReviewLanguage({
   const [chosen, setChosen] = useState<string | null>(null);
   const [draft, setDraft] = useState<string | null>(null);
   const field = useRef<HTMLInputElement>(null);
+  const list = useRef<HTMLUListElement>(null);
+  const handTo = useRef<HandTo | null>(null);
+  useEffect(() => {
+    const to = handTo.current;
+    // A rename's rows change once the board is read again: a row focused before then would go with the old term.
+    if (!to || to.after === reading) return;
+    handTo.current = null;
+    // Whoever took the keyboard meanwhile keeps it.
+    const held = document.activeElement;
+    if (held instanceof HTMLElement && held !== document.body && held.isConnected) return;
+    const items = [...(list.current?.querySelectorAll<HTMLElement>('[data-review-term]') ?? [])];
+    const item =
+      typeof to.row === 'number'
+        ? items[Math.min(to.row, items.length - 1)]
+        : items.find((i) => i.dataset.reviewTerm === to.row);
+    item
+      ?.querySelector<HTMLElement>(to.rename ? '[data-rename-term]' : 'button')
+      ?.focus({ preventScroll: true });
+  });
 
   const contexts = reading.contexts;
   const contextOf = new Map<ElementId, ElementId>();
@@ -98,6 +123,7 @@ export function ReviewLanguage({
   };
   const rename = () => {
     if (!ask || !wouldChange(ask)) return;
+    handTo.current = { row: rows.findIndex((r) => r.term.key === chosen), after: reading };
     onRename(ask);
     choose(null);
   };
@@ -110,6 +136,7 @@ export function ReviewLanguage({
         if (e.key !== 'Escape' || chosen === null) return;
         // Escape leaves the field first, then lets the term go; the panel stays.
         e.stopPropagation();
+        handTo.current = { row: chosen, rename: renaming };
         if (renaming) setDraft(null);
         else choose(null);
       }}
@@ -141,7 +168,7 @@ export function ReviewLanguage({
       {rows.length === 0 ? (
         <ReviewEmpty>No shared terms here.</ReviewEmpty>
       ) : (
-        <ul className="py-1.5">
+        <ul ref={list} className="py-1.5">
           {rows.map((r) => {
             const on = r.term.key === chosen;
             return (
@@ -176,7 +203,9 @@ export function ReviewLanguage({
                 {on && mayWrite ? (
                   <div className="flex items-center gap-1.5 px-3.5 pb-2 pt-1">
                     {draft === null ? (
-                      <RowAct onClick={() => setDraft(r.term.term)}>Rename Term</RowAct>
+                      <RowAct data-rename-term="" onClick={() => setDraft(r.term.term)}>
+                        Rename Term
+                      </RowAct>
                     ) : (
                       <>
                         <label htmlFor={fieldId} className="sr-only">

@@ -22,11 +22,13 @@ import { NoteCallout } from './NoteCallout';
 // over the notes and at screen size: the check on each answered hotspot, the answer as a caption while the check is
 // pointed at or focused, and the field the answer is typed in. Everyone sees the checks and the captions; the field
 // is drawn only for whoever may answer (`onAnswer`). Drawn from the notes as they are drawn now, so a check follows
-// its note in hand. A field put away by a key hands the keyboard back: to what opened it while that still stands,
-// else to the note's check, so it never falls to the page.
+// its note in hand. A field put away by a key hands the keyboard on, so it never falls to the page: to the note's
+// check once an answer is kept (waiting for the board to draw it), else back to what opened the field while that
+// still stands, else to the check the note already wears.
 
 // How far the disc's centre stands in from the note's top right corner, screen px.
 const MARK_INSET_PX = 4;
+const ID_SEPARATOR = '\u0000';
 
 export function StructureMarks({
   tabId,
@@ -64,17 +66,28 @@ export function StructureMarks({
   }, [tabId, answeringId, answering]);
   // And with its board.
   useEffect(() => () => closeAnswer(tabId), [tabId]);
-  const handBack = useRef<{ noteId: ElementId; opener: HTMLElement | null } | null>(null);
+  const answered = hotspots.filter((h) => answerOf(h) !== '');
+  const handBack = useRef<{
+    noteId: ElementId;
+    opener: HTMLElement | null;
+    toCheck: boolean;
+  } | null>(null);
+  const checked = answered.map((h) => h.id).join(ID_SEPARATOR);
   useEffect(() => {
     const back = handBack.current;
     if (!back || answeringId) return;
+    const check = document.querySelector<HTMLElement>(
+      `[data-answer-mark="${CSS.escape(back.noteId)}"]`,
+    );
+    // A kept answer's check is drawn once the board has the answer: wait for it.
+    if (back.toCheck && !check) return;
     handBack.current = null;
-    const to = back.opener?.isConnected
-      ? back.opener
-      : document.querySelector<HTMLElement>(`[data-answer-mark="${CSS.escape(back.noteId)}"]`);
+    // Whoever took the keyboard while the board was drawing keeps it.
+    const held = document.activeElement;
+    if (held instanceof HTMLElement && held !== document.body && held.isConnected) return;
+    const to = back.toCheck ? check : back.opener?.isConnected ? back.opener : check;
     to?.focus({ preventScroll: true });
-  }, [answeringId]);
-  const answered = hotspots.filter((h) => answerOf(h) !== '');
+  }, [answeringId, checked]);
   const shown =
     shownId && shownId !== answering?.id ? answered.find((h) => h.id === shownId) : null;
   if (answered.length === 0 && !answering) return null;
@@ -116,8 +129,8 @@ export function StructureMarks({
           <AnswerField
             question={(answering.label ?? '').trim()}
             answer={answerOf(answering)}
-            onKeyEnd={(opener) => {
-              handBack.current = { noteId: answering.id, opener };
+            onKeyEnd={(opener, keepsAnswer) => {
+              handBack.current = { noteId: answering.id, opener, toCheck: keepsAnswer };
             }}
             onKeep={(text) => {
               onAnswer(answering.id, text);

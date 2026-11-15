@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Element, Tab } from '@livedoc/document';
+import { renameTerm, type Element, type Tab } from '@livedoc/document';
 import { readBoard } from '@livedoc/storm-reading';
 import { REVIEW_BOARD_IDS as IDS, reviewBoardElements } from '@/lib/review-board.fixture';
 import type { ReviewTab } from '@/lib/review-view';
@@ -196,6 +196,56 @@ describe('Language', () => {
     expect(acts.rename).not.toHaveBeenCalled();
     expect(acts.previewRename).toHaveBeenLastCalledWith(null);
     expect(term('order').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  // The keyboard never falls to the page when what held it is put away (board-review.md "The panel").
+  it('hands the keyboard to Rename Term when Escape leaves the field, then keeps it on the term', () => {
+    open('language');
+    fireEvent.click(term('order'));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Term' }));
+    const field = screen.getByRole('textbox');
+    field.focus();
+    fireEvent.keyDown(field, { key: 'Escape' });
+    const rename = screen.getByRole('button', { name: 'Rename Term' });
+    expect(document.activeElement).toBe(rename);
+    fireEvent.keyDown(rename, { key: 'Escape' });
+    expect(term('order').getAttribute('aria-pressed')).toBe('false');
+    expect(document.activeElement).toBe(term('order'));
+  });
+
+  it('hands the keyboard to the row where the renamed term stood, once the board is read again', () => {
+    const acts = {
+      ring: vi.fn<ReviewPanelActs['ring']>(),
+      add: vi.fn<ReviewPanelActs['add']>(),
+      answer: vi.fn<ReviewPanelActs['answer']>(),
+      previewRename: vi.fn<ReviewPanelActs['previewRename']>(),
+      renameWouldChange: vi.fn<ReviewPanelActs['renameWouldChange']>(() => true),
+      rename: vi.fn<ReviewPanelActs['rename']>(),
+      storyWalked: vi.fn<ReviewPanelActs['storyWalked']>(),
+    };
+    const tree = (elements: Element[]) => (
+      <ReviewPanel
+        tab="language"
+        reading={read(elements)}
+        mayWrite
+        onTab={vi.fn<(tab: ReviewTab) => void>()}
+        acts={acts}
+      />
+    );
+    const view = render(tree(reviewBoardElements()));
+    fireEvent.click(term('order'));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Term' }));
+    const field = screen.getByRole('textbox');
+    field.focus();
+    fireEvent.change(field, { target: { value: 'item' } });
+    fireEvent.keyDown(field, { key: 'Enter' });
+    // The board has not been read again yet: the keyboard waits rather than land on a row about to go.
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(document.activeElement).toBe(document.body);
+    view.rerender(
+      tree(renameTerm(reviewBoardElements(), 'order', 'item', { type: 'board' }, new Set())),
+    );
+    expect(document.activeElement).toBe(term('item'));
   });
 
   it('shows no Rename Term to whoever may not write', () => {

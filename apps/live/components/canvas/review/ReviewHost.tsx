@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
 import type { ElementId, Tab } from '@livedoc/document';
 import { Portal } from '@livedoc/ui';
 import { CORNER_SURFACE } from '@/components/canvas/corner';
@@ -15,10 +15,14 @@ import { ReviewPanel } from './ReviewPanel';
 // the session may do; mounted for everyone on an event-storming board, and nothing shows until the panel is opened.
 // This file alone says where the panel stands; its working parts are `useReviewPanel`'s, its tabs `ReviewPanel`'s.
 
-// Under the corner's pill: the corner stands 4rem down and is 2.375rem tall, with half a rem between them.
-const CARD_PLACE = 'fixed right-3 top-[6.875rem]';
-// As much of the window as the suggestions list takes, less the pill it stands under.
-const CARD_SIZE = 'max-h-[calc(100vh-12.875rem)] w-[360px] max-w-[calc(100vw-1.5rem)]';
+const CARD_PLACE = 'fixed right-3';
+const CARD_SIZE = 'w-[360px] max-w-[calc(100vw-1.5rem)]';
+/** Between the corner and the card, px (safe range: 4 to 12; the corner's own inset from the window is 12). */
+const CARD_GAP_PX = 8;
+/** Where the card's top stands when no corner is drawn to measure (a drag in hand, zen mode): under where it was. */
+const CARD_TOP_FALLBACK_PX = 105;
+/** What the card leaves free at the foot of the window, as the suggestions list does. */
+const CARD_FOOT = '6rem';
 
 export function ReviewHost({
   tab,
@@ -38,6 +42,16 @@ export function ReviewHost({
 }) {
   const { view, reading, setTab, panelActs } = useReviewPanel({ tab, acts, inertIds, reveal });
   const card = useRef<HTMLElement>(null);
+  // Under the corner its pill stands in, measured as the panel opens: how tall the pill is is the font's to say.
+  useLayoutEffect(() => {
+    const node = card.current;
+    if (!view.open || !node) return;
+    const corner = document.querySelector('[data-review-button]')?.closest('[data-corner]');
+    const bottom = corner?.getBoundingClientRect().bottom ?? 0;
+    const top = bottom > 0 ? Math.round(bottom) + CARD_GAP_PX : CARD_TOP_FALLBACK_PX;
+    node.style.top = `${top}px`;
+    node.style.maxHeight = `calc(100vh - ${top}px - ${CARD_FOOT})`;
+  }, [view.open]);
   // Opening hands the keyboard to the panel: its card is drawn at the end of the page, far from the pill in the
   // tab order.
   useEffect(() => {

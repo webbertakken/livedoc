@@ -82,12 +82,14 @@ person's own view (not shared, not saved with the board; off when the board open
   [Ask pill](asks.md#where-an-ask-starts) and, while the board has open suggestions, the panel beside it (ruled
   2026-11-15 with the Ask pill's placement: one home for asking and for what comes back).
   With no suggestion open the corner holds the pill alone.
+  The [Review pill](board-review.md#the-panel) stands last in it.
 - **The suggestions panel** is **collapsed by default** to a small button that says how many there are (default:
   collapsed again each time the board opens). Expanded, it lists every suggestion in timeline order (kind, words, reason, ✓ and ✕) and holds Show
   All Suggestions, Apply All and Dismiss All. Pointing at a row, or focusing it, brings its anchor and its spot into
   view (the least pan that shows both, none when they already show) (default) and previews it as a peek tab does.
   It is the only chrome the feature adds, and it is gone when the last suggestion is; the Ask pill stays.
-  The list shares the corner with the Ask popover: opening one closes the other (default).
+  The list shares the corner with the Ask popover and the [Review panel](board-review.md#the-panel): opening one
+  closes the others (default).
   It lists a [lane plan](lane-plans.md#how-a-person-sees-and-decides) first, then notes, contexts,
   [name suggestions and note changes](suggested-changes.md) in timeline order.
 - **Colour.** A dashed stroke is non-text UI and needs 3:1 against what it stands on (WCAG 2.2 1.4.11): on the light

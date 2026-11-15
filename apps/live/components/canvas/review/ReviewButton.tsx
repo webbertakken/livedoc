@@ -54,6 +54,7 @@ export function ReviewCorner({ tabId }: { tabId: string }) {
     <Portal>
       <div
         data-testid="review-corner"
+        data-corner=""
         className={`${CORNER_PLACE} ${CORNER_SURFACE} flex items-center rounded-full p-0.5`}
       >
         <ReviewButton tabId={tabId} />

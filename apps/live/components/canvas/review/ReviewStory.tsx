@@ -193,7 +193,7 @@ export function ReviewStory({
           Previous
         </RowAct>
         <RowAct
-          lead={<ChevronRightIcon size={13} />}
+          trail={<ChevronRightIcon size={13} />}
           disabled={index >= steps.length - 1}
           onClick={() => take(index + 1)}
         >

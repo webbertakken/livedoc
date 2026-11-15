@@ -17,12 +17,13 @@ export function KindSwatch({ kind, size = 9 }: { kind: EventStormingNoteKind; si
   );
 }
 
-/** An act on a row: a quiet pill, 28 px tall. */
+/** An act on a row: a quiet pill, 28 px tall, with a mark before its word or after it. */
 export function RowAct({
   lead,
+  trail,
   children,
   ...rest
-}: ButtonHTMLAttributes<HTMLButtonElement> & { lead?: ReactNode }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { lead?: ReactNode; trail?: ReactNode }) {
   return (
     <button
       type="button"
@@ -31,6 +32,7 @@ export function RowAct({
     >
       {lead ? <span className="flex shrink-0">{lead}</span> : null}
       <span className="text-optical-centre">{children}</span>
+      {trail ? <span className="flex shrink-0">{trail}</span> : null}
     </button>
   );
 }

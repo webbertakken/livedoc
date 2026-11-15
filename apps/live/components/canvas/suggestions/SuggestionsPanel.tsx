@@ -226,6 +226,8 @@ export function SuggestionsPanel({
       <aside
         aria-label="Suggestions"
         data-testid="suggestions-panel"
+        // What a card that opens under the corner measures itself against.
+        data-corner=""
         className={`${CORNER_PLACE} ${CORNER_SURFACE} flex max-h-[calc(100vh-10rem)] flex-col ${
           listed ? 'w-[320px] rounded-xl' : 'rounded-full'
         }`}
