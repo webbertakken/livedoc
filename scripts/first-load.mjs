@@ -39,7 +39,7 @@ const BUDGET_FILE = 'first-load-budget.json';
  * @param {string} dir
  * @returns {string[]}
  */
-function htmlFiles(dir) {
+export function htmlFiles(dir) {
   /** @type {string[]} */
   const found = [];
   /** @param {string} at */

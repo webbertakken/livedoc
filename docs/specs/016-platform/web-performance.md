@@ -188,6 +188,26 @@ alongside the editor's code, so a template link waits for nothing extra.
 - `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if any of these become static
   imports again.
 
+### A page's first-load scripts compile as they download
+
+Every script a page's HTML names runs as the page starts, so the editor's build marks each one for compiling on
+the way in: `apps/live/scripts/compile-hints.mjs` runs after `next build` and puts V8's file-level hint,
+`//# allFunctionsCalledOnLoad`, on the first line of every script some page of the export names. Chrome (136 and
+later) then compiles a hinted script's functions on the thread that streams it in, while the rest still downloads,
+rather than one at a time on the main thread as the page first calls each. Other browsers read a comment.
+
+- Only first-load scripts carry it. A script only a dynamic import loads stays lazy, as V8 advises: compiling
+  what may never run costs time and memory. The editor's own scripts are first-load for the document page, so they
+  carry the hint wherever they load, `/new` and the Explorer's fetch ahead included.
+- The hint is part of the file, not its name: a browser that still holds an unhinted copy under the same name
+  keeps compiling it lazily, as before, until the name changes. Production ships no source maps; one would need
+  its mappings moved down a line.
+- Measured on the document page (a shared link opened by a first-time guest, a production-shaped local stack:
+  HTTP/2, zstd, 4 Mbit/s, 100 ms, CPU 4x): opening the editor's main script took the main thread 1,077 ms, 662 of
+  them compiling, and 304 ms with the hint; the first render 412 ms and 215 ms. The main thread's busy time until
+  the board was editable fell from 3,326 to 2,185 ms, and the page holds about 7 MiB more of compiled code.
+- `apps/live/scripts/compile-hints.test.ts` pins which scripts are hinted, and that a second run changes nothing.
+
 ### A page loads only the scene it shows
 
 A features page plays one hero scene; the scene catalogue keeps its data apart from the boards
