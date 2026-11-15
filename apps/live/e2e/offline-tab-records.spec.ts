@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
-import type { Element } from '@livedoc/document';
 import { box } from './home-seed';
 import {
   test,
@@ -36,7 +35,7 @@ function wholeRecord(id: string) {
       elements: [
         box(`t${t}-a`, `${name} first`, 40, 40),
         box(`t${t}-b`, `${name} second`, 320, 160),
-      ] satisfies Element[],
+      ],
     })),
   };
 }
