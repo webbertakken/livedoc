@@ -315,7 +315,9 @@ export async function handleImages(ctx: RouteContext): Promise<Response> {
       }
     }
     if (!allowed) return notFound();
-    const object = await env.IMAGES.get(imageId);
+    // The request's own conditions go to R2: a browser revalidating a copy past its max-age sends its ETag, and
+    // a match comes back as the object's metadata with no body.
+    const object = await env.IMAGES.get(imageId, { onlyIf: request.headers });
     if (!object) return notFound();
     const headers = new Headers(CORS_HEADERS);
     headers.set('Content-Type', object.httpMetadata?.contentType ?? 'application/octet-stream');
@@ -324,8 +326,11 @@ export async function handleImages(ctx: RouteContext): Promise<Response> {
     // addressed so cached bytes stay valid for the lifetime
     // of the row.
     headers.set('Cache-Control', 'private, max-age=86400');
+    headers.set('ETag', object.httpEtag);
     // The stored type is the sniffed one; never let a browser re-guess it.
     headers.set('X-Content-Type-Options', 'nosniff');
+    // The browser's copy is current: the same picture, re-authorised above, without its bytes.
+    if (!('body' in object)) return new Response(null, { status: 304, headers });
     return new Response(object.body, { headers });
   }
 

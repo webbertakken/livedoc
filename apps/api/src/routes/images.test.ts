@@ -403,3 +403,53 @@ describe('originalNameOf', () => {
     );
   });
 });
+
+// An image's bytes never change under its id (docs/specs/009-elements/images.md): a browser whose cached copy has
+// aged past its max-age asks again with the copy's ETag, and after the same authorisation it hears 304 with no
+// bytes rather than the whole picture again.
+describe('GET /api/images/:id revalidation', () => {
+  const read = (headers: Record<string, string> = {}) => {
+    const images = imagesBinding();
+    const ctx = makeTestRouteContext('GET', '/api/images/i1', {
+      owner: 'owner-1',
+      headers,
+      env: { IMAGES: images } as unknown as Env,
+    });
+    return { ctx, images };
+  };
+
+  it('sends the ETag with the bytes, and asks R2 with the request’s conditions', async () => {
+    db.getImage.mockResolvedValue({ id: 'i1', ownerId: 'owner-1' });
+    const { ctx, images } = read();
+    images.get.mockResolvedValue({
+      body: 'bytes',
+      httpEtag: '"e1"',
+      httpMetadata: { contentType: 'image/png' },
+    });
+    const res = await handleImages(ctx);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('ETag')).toBe('"e1"');
+    expect(res.headers.get('Cache-Control')).toBe('private, max-age=86400');
+    expect(images.get).toHaveBeenCalledWith('i1', { onlyIf: ctx.request.headers });
+  });
+
+  it('answers 304 with no bytes when the browser’s copy is current', async () => {
+    db.getImage.mockResolvedValue({ id: 'i1', ownerId: 'owner-1' });
+    const { ctx, images } = read({ 'If-None-Match': '"e1"' });
+    // R2 answers a failed precondition with the object's metadata and no body.
+    images.get.mockResolvedValue({ httpEtag: '"e1"', httpMetadata: { contentType: 'image/png' } });
+    const res = await handleImages(ctx);
+    expect(res.status).toBe(304);
+    expect(await res.text()).toBe('');
+    expect(res.headers.get('ETag')).toBe('"e1"');
+    expect(res.headers.get('Cache-Control')).toBe('private, max-age=86400');
+  });
+
+  it('checks access before it answers 304', async () => {
+    db.getImage.mockResolvedValue({ id: 'i1', ownerId: 'someone-else' });
+    const { ctx, images } = read({ 'If-None-Match': '"e1"' });
+    const res = await handleImages(ctx);
+    expect(res.status).toBe(404);
+    expect(images.get).not.toHaveBeenCalled();
+  });
+});
