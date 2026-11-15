@@ -1,5 +1,6 @@
 import { contrastRatio } from '@livedoc/document';
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { PRISM_PALETTES, PRISM_STOPS, prismPalette } from './brand-prism';
 
 // The editor tints the mark from the active tab's theme stroke. These are the
@@ -79,10 +80,10 @@ describe('prismPalette', () => {
   });
 
   it('derives a palette well inside a frame budget', () => {
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < 200; i++)
       prismPalette(i % 2 ? 'light' : 'dark', THEME_STROKES[i % THEME_STROKES.length]);
     // 200 derivations; one theme change needs two.
-    expect(performance.now() - start).toBeLessThan(100);
+    expect(cpuNowMs() - start).toBeLessThan(100);
   });
 });

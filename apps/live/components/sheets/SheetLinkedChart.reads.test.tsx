@@ -4,6 +4,7 @@
 // frame, a canvas drag, a resize of the chart) never reads the table again, nor re-compares the kept read.
 import { act, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import * as sheets from '@livedoc/sheets';
 import { emptyLayout, type SheetJson } from '@livedoc/sheets';
 import type { Element, ShapeElement } from '@livedoc/document';
@@ -114,9 +115,9 @@ describe('a chart drawn from a big sheet', () => {
     await waitFor(() => expect(screen.getByTestId('chart').textContent).toBe('500'));
     reads.mockClear();
     // Scroll frames: the same element, a new render function each time.
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     for (let frame = 1; frame <= 60; frame++) act(() => r.rerender(view(chart, frame)));
-    const perFrame = (performance.now() - t0) / 60;
+    const perFrame = (cpuNowMs() - t0) / 60;
     expect(reads).not.toHaveBeenCalled();
     // A resize draws a new element of the same source each frame: still no new read.
     for (let frame = 1; frame <= 10; frame++)

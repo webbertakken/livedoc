@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { EDITOR_MODES } from '@livedoc/document';
 import {
   TEMPLATE_ALSO_IN,
@@ -163,9 +164,9 @@ describe('template search words', () => {
   });
 
   it('matches the whole catalogue in well under a frame (it runs on every keystroke)', () => {
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     for (let i = 0; i < 100; i++)
       TEMPLATES.filter((t) => templateMatchesQuery(t, 'plan board sheet'));
-    expect((performance.now() - t0) / 100).toBeLessThan(4);
+    expect((cpuNowMs() - t0) / 100).toBeLessThan(4);
   });
 });

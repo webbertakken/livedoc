@@ -54,12 +54,16 @@ export default defineProject({ test: { environment: 'jsdom' } });
   canvas geometry. Those are tested first.
 - **Speed budgets are CPU time, not wall-clock.** A test asserting that work
   is fast (a linear scan, a converter, the sticky detector) measures it with
-  `cpuMsOf` (or `cpuMsOfAsync`) from `@livedoc/vitest-config/cpu-time`, never
-  `performance.now()`. Turbo runs every package's suite at once, and a
+  `cpuMsOf` (or `cpuMsOfAsync`) from `@livedoc/vitest-config/cpu-time`, or reads
+  `cpuNowMs()` before and after a stretch whose results it goes on to check;
+  never `performance.now()`. Turbo runs every package's suite at once, and a
   wall-clock budget also counts the time a test waits for a core, which made
   those tests flake on a busy machine. CPU time still catches the regression
   the budget is for. The one exception is a test that asserts nothing WAITS
   (no sleep, no retry delay): only wall-clock time can see a wait.
+  A timestamp the code under test is handed (an animation frame's time, an
+  avatar's birth, a laser point's age) is a clock, not a budget, and stays
+  `performance.now()`.
 - **An inline script is tested as the browser runs it.** A boot script ships as a string the page
   inlines before hydration (appearance, reduce motion, the stale-HTML guard), so its test runs that
   very string with `runInlineScript(source, globals)` from

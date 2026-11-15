@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   hashSharePassword,
   isHashedSharePassword,
@@ -58,9 +59,9 @@ describe('verifySharePassword', () => {
     'pbkdf2-sha256$100000$c2FsdA$',
   ])('refuses the malformed stored value %s', async (stored) => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const started = performance.now();
+    const started = cpuNowMs();
     expect(await verifySharePassword(stored, 'anything')).toEqual({ ok: false, legacy: false });
-    expect(performance.now() - started).toBeLessThan(50);
+    expect(cpuNowMs() - started).toBeLessThan(50);
     expect(warn).toHaveBeenCalledWith('[share-password] malformed stored hash refused');
     warn.mockRestore();
   });
@@ -70,8 +71,8 @@ describe('verifySharePassword', () => {
   // so a loaded CI machine never flakes it.
   it('derives at the default cost within budget', async () => {
     const stored = await hashSharePassword('hunter2');
-    const started = performance.now();
+    const started = cpuNowMs();
     expect((await verifySharePassword(stored, 'hunter2')).ok).toBe(true);
-    expect(performance.now() - started).toBeLessThan(1_000);
+    expect(cpuNowMs() - started).toBeLessThan(1_000);
   });
 });

@@ -1,6 +1,7 @@
 // docs/specs/029-sheets/sheet.md "Sheet templates": every template builds a valid sheet whose formulas all read,
 // works its example data out to the totals the spec states, places its charts over real ranges, and takes each look.
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { book } from '../testing/book';
 import { applySheetWrite } from '../store';
 import { validateWrite } from '../validate';
@@ -232,9 +233,9 @@ describe('the example data works out', () => {
 
 describe('cost', () => {
   it('builds every template in well under a frame', () => {
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     for (const id of SHEET_TEMPLATE_IDS) make(id);
-    const per = (performance.now() - t0) / SHEET_TEMPLATE_IDS.length;
+    const per = (cpuNowMs() - t0) / SHEET_TEMPLATE_IDS.length;
     // Measured 0.2 to 1.2 ms each on a laptop (the Loan Calculator, 206 cells, the largest); the budget leaves room for
     // a slow CI machine.
     expect(per).toBeLessThan(100);

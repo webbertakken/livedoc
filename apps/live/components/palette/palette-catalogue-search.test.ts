@@ -1,6 +1,7 @@
 // The Toolbar strip's Search over Icons, Stickers and Technology
 // (docs/specs/007-editor/toolbar-layout.md "Search: every element type").
 import { beforeAll, describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import type { Element } from '@livedoc/document';
 import { ensureIconCatalogs } from '@/lib/icon-registry';
 import { getLineArtIconCatalog } from '@/lib/icons';
@@ -86,10 +87,10 @@ describe('searchCatalogueTiles', () => {
   });
 
   it('searches every catalogue well inside a keystroke budget', () => {
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < 20; i++) searchCatalogueTiles({ query: 'e', mode: 'diagram' });
     // A query matching most of every catalogue; a keystroke runs one.
-    expect((performance.now() - start) / 20).toBeLessThan(16);
+    expect((cpuNowMs() - start) / 20).toBeLessThan(16);
   });
 
   it('lists nothing until the catalogues have loaded', () => {

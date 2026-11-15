@@ -4,6 +4,7 @@
 // layouts"): what pressing it puts on the page.
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   layOutPages,
   newLogoPage,
@@ -45,10 +46,10 @@ describe('logo layout tiles', () => {
   });
 
   it('render every logo layout quickly enough for a card of them', () => {
-    const t = performance.now();
+    const t = cpuNowMs();
     for (const l of LOGO_LAYOUTS) layoutRenderSvg(tab, page!, l.id);
     // 25 layouts; a card draws at most 7 at once plus 8 small ones.
-    expect(performance.now() - t).toBeLessThan(500);
+    expect(cpuNowMs() - t).toBeLessThan(500);
   });
 });
 
@@ -79,8 +80,8 @@ describe('slide layout tiles', () => {
   });
 
   it('render all sixty-one quickly enough for the whole gallery', () => {
-    const t = performance.now();
+    const t = cpuNowMs();
     for (const l of SLIDE_LAYOUTS) layoutRenderSvg(deck, slide!, l.id);
-    expect(performance.now() - t).toBeLessThan(1000);
+    expect(cpuNowMs() - t).toBeLessThan(1000);
   });
 });

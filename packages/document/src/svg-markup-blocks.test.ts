@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { faceAttrs } from './face-finish';
 import { markedGroup, replaceBlocks } from './svg-markup-blocks';
 import { svgMarkerFace, svgProfessionalFace } from './svg-render-face-finish';
@@ -35,9 +36,9 @@ describe('replaceBlocks', () => {
 describe('linear on hostile markup', () => {
   const budgetMs = 250;
   const time = (fn: () => void) => {
-    const t = performance.now();
+    const t = cpuNowMs();
     fn();
-    return performance.now() - t;
+    return cpuNowMs() - t;
   };
 
   it('reads attributes from a long run of name characters', () => {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import type { PageChange } from '@livedoc/api-schema';
 import {
   articlesOf,
@@ -475,10 +476,10 @@ describe('worst case', () => {
         ? { op: 'move', page: (i % 90) + 1, to: 1 }
         : { op: 'set', page: (i % 90) + 1, name: `N${i}` },
     );
-    const started = performance.now();
+    const started = cpuNowMs();
     run(tab, changes);
     // Measured 29 to 57 ms on a loaded machine (load average 50); held at 2,000 ms for CI under load.
-    expect(performance.now() - started).toBeLessThan(2000);
+    expect(cpuNowMs() - started).toBeLessThan(2000);
   });
 });
 

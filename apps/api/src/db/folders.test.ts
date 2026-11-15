@@ -1,5 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { beforeEach, describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { deleteFolder, moveFolder } from './folders';
 import { trashDocument } from './trash';
@@ -202,8 +203,8 @@ describe('moveFolder', () => {
   it('walks a deep chain in one statement', async () => {
     folder('f0', null);
     for (let i = 1; i < 500; i++) folder(`f${i}`, `f${i - 1}`);
-    const started = performance.now();
+    const started = cpuNowMs();
     expect(await moveFolder(db.env, 'f0', 'f499')).toBe(false);
-    expect(performance.now() - started).toBeLessThan(250);
+    expect(cpuNowMs() - started).toBeLessThan(250);
   });
 });

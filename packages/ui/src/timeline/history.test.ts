@@ -2,6 +2,7 @@
 // headings, the runs that fold, the filter's chips, the summary strip and when it was made.
 
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   buildHistory,
   eventCountLabel,
@@ -130,11 +131,11 @@ describe('buildHistory', () => {
         occurredAt: NOW - i * 600_000,
       }),
     );
-    const started = performance.now();
+    const started = cpuNowMs();
     const days = buildHistory(events, NOW, personKey);
     historyCategories(events);
     summariseHistory(events, personKey);
-    const ms = performance.now() - started;
+    const ms = cpuNowMs() - started;
     expect(days.reduce((n, d) => n + d.count, 0)).toBe(1_000);
     expect(ms).toBeLessThan(16);
   });

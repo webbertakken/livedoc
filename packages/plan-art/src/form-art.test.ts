@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { formLook } from '@livedoc/document';
 import { QUESTION_TYPES, blankQuestion, type FormDefinition } from '@livedoc/forms';
 import { FORM_ART_HEIGHT_MAX, FORM_ART_WIDTH, formArt } from './form-art';
@@ -89,9 +90,9 @@ describe('formArt', () => {
         },
       ],
     };
-    const started = performance.now();
+    const started = cpuNowMs();
     const art = formArt(many, formLook({}));
-    expect(performance.now() - started).toBeLessThan(200);
+    expect(cpuNowMs() - started).toBeLessThan(200);
     expect(art.width).toBe(FORM_ART_WIDTH * 2);
     expect(art.height).toBeLessThanOrEqual(FORM_ART_HEIGHT_MAX);
     const drawn = (art.svg.match(/>P\d+</g) ?? []).length;

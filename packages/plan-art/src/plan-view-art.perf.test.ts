@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import type { ShapeElement } from '@livedoc/document';
 import { PLAN_VIEW_IDS } from '@livedoc/items';
 import { planViewArt } from './plan-view-art';
@@ -29,10 +30,10 @@ describe('plan view pictures at the limits', () => {
         planView: { view: PLAN_VIEW_IDS[i % PLAN_VIEW_IDS.length] },
       }),
     ) as ShapeElement[];
-    const t = performance.now();
+    const t = cpuNowMs();
     let size = 0;
     for (const v of views) size += planViewArt(v, data, 'light').length;
-    const ms = performance.now() - t;
+    const ms = cpuNowMs() - t;
     expect(size).toBeGreaterThan(0);
     // Measured at 67 ms on an M-series laptop; a loaded CI runner gets four times that.
     expect(ms).toBeLessThan(1500);

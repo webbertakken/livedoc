@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { createShape, createText } from '@livedoc/document';
 import {
   TEXT_ANIM_MAX_LETTERS,
@@ -164,12 +165,12 @@ describe('textAnimationView', () => {
 describe('performance', () => {
   it('splits a label at the letter limit well within budget', () => {
     const text = 'The quick brown fox jumps. '.repeat(Math.ceil(TEXT_ANIM_MAX_LETTERS / 22));
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < 10; i++) {
       const plan = planTextAnimation([text], 'scramble', 'el1');
       void renderUnits(text, plan, { next: 0 });
     }
     // Ten splits; the budget is 5 ms each, generous for a loaded CI machine.
-    expect((performance.now() - start) / 10).toBeLessThan(5);
+    expect((cpuNowMs() - start) / 10).toBeLessThan(5);
   });
 });

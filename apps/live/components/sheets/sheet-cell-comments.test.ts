@@ -1,6 +1,7 @@
 // Cell comment markers (docs/specs/029-sheets/sheet.md "Cell comments"): which cells show one, kept per change, what
 // the preview says, the shortcut, and the cost at the bounds (1,000 threads on a 10,000-row sheet).
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { CELL_THREADS_MAX, type CellCommentThreads, type Comment } from '@livedoc/document';
 import type { SheetLayout } from '@livedoc/sheets';
 import {
@@ -48,12 +49,12 @@ describe('cellMarkers', () => {
     for (let i = 0; i < CELL_THREADS_MAX; i++)
       threads[`r${i * 10}:c${i % 26}`] = { comments: [comment(`t${i}`)], resolved: false };
     // The layout's index is the engine's, kept per layout; the first read pays for it.
-    let t = performance.now();
+    let t = cpuNowMs();
     expect(cellMarkers(threads, l)).toHaveLength(CELL_THREADS_MAX);
-    const first = performance.now() - t;
-    t = performance.now();
+    const first = cpuNowMs() - t;
+    t = cpuNowMs();
     for (let i = 0; i < 100; i++) cellMarkers(threads, l);
-    const reads = (performance.now() - t) / 100;
+    const reads = (cpuNowMs() - t) / 100;
     expect(first).toBeLessThan(50);
     expect(reads).toBeLessThan(0.1);
   });

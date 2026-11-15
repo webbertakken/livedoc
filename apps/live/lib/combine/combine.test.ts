@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   packFreehandPoints,
   type BoxedElement,
@@ -145,9 +146,9 @@ describe('combine', () => {
   it('stays within budget for two maximally detailed discs', async () => {
     const big = (id: string, x: number) => disc(id, x, 0, 1024);
     expect(elementRings(big('p', 0))[0]!.length).toBeLessThan(400);
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     await run('unite', [big('p', 0), big('q', 300)]);
-    expect(performance.now() - t0).toBeLessThan(500);
+    expect(cpuNowMs() - t0).toBeLessThan(500);
   });
 });
 
