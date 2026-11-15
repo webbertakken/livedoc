@@ -43,7 +43,9 @@ const MEASURE_TOLERANCE_PX = 0.5;
 export type ListPlaceOption = {
   key: string;
   store: PlaceStore;
-  restore: boolean;
+  /** Whether to go back to the kept place now; a function is asked as the list first shows (an effect, never in
+   *  render), and only once. */
+  restore: boolean | (() => boolean);
   /** Whether the list is still where the reader is: a navigation away scrolls the page before the list goes, and
    *  that scroll is not the reader's place. */
   writable?: () => boolean;
@@ -102,14 +104,13 @@ const drawnIndices = (segments: readonly WindowSegment[]) => {
   return out;
 };
 
-// The first draw: the top of the list, a frame's share and a half (the cascade hides the rows that follow it in).
+/** The rows of a first draw, the same at build time and in the browser: a frame's share and a half (the cascade
+ *  hides the rows that follow it in). */
+const FIRST_DRAW_ROWS = Math.ceil(LIST_ROWS_PER_FRAME * 1.5);
+
 function firstDrawing(estimateStride: number): Drawing {
-  const view = typeof window === 'undefined' ? 1000 : window.innerHeight;
   return {
-    range: {
-      first: 0,
-      last: Math.min(Math.ceil(view / estimateStride), Math.ceil(LIST_ROWS_PER_FRAME * 1.5)),
-    },
+    range: { first: 0, last: FIRST_DRAW_ROWS },
     stride: estimateStride,
     gap: 0,
     lanes: 1,
@@ -174,7 +175,7 @@ export function useWindowedList({
     drawing,
   });
   const metrics = useRef<Metrics>({ stride: estimateStride, gap: 0, lanes: 1, origin: 0 });
-  const restorePending = useRef(place?.restore ?? false);
+  const restorePending = useRef(!!place?.restore);
   const holding = useRef<{ place: ListPlace; until: number } | null>(null);
   // Another list in the same element (Back from one folder to another): its place may go back too.
   const placeShown = useRef(place?.key ?? null);
@@ -182,7 +183,7 @@ export function useWindowedList({
   useLayoutEffect(() => {
     if ((place?.key ?? null) !== placeShown.current) {
       placeShown.current = place?.key ?? null;
-      restorePending.current = place?.restore ?? false;
+      restorePending.current = !!place?.restore;
     }
     latest.current = { segments, keys, indexByKey, place, leading, grid, scroller, count, drawing };
   });
@@ -206,6 +207,7 @@ export function useWindowedList({
     const p = latest.current.place;
     if (!list || count === 0 || !restorePending.current || !p) return;
     restorePending.current = false;
+    if (typeof p.restore === 'function' && !p.restore()) return;
     const kept = p.store.read(p.key);
     if (!kept) {
       debugLog(`[list-place] none-kept key=${p.key}`);

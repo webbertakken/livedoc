@@ -197,6 +197,14 @@ describe('useWindowedList', () => {
       expect(drawnNames()).toContain('k-596');
     });
 
+    it('asks whether Back landed here as the list first shows, once', () => {
+      store.write('folder-a', { anchorId: 'k-596', anchorOffset: 20, scrollTop: 30020 });
+      const asked = vi.fn(() => false);
+      render(<List keys={keysOf(1000)} place={{ key: 'folder-a', store, restore: asked }} />);
+      expect(asked).toHaveBeenCalledTimes(1);
+      expect(window.scrollY).toBe(0);
+    });
+
     it('is left alone when the list was opened anew', () => {
       store.write('folder-a', { anchorId: 'k-596', anchorOffset: 20, scrollTop: 30020 });
       render(<List keys={keysOf(1000)} place={{ key: 'folder-a', store, restore: false }} />);
