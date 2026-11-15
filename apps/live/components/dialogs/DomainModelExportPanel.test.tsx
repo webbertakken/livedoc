@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Tab } from '@livedoc/document';
+import { reviewBoardElements } from '@/lib/review-board.fixture';
 import { DomainModelExportPanel } from './DomainModelExportPanel';
 
 // The Export dialog's Domain Model panel (docs/specs/021-event-storming/domain-export.md "The zip").
@@ -27,12 +28,12 @@ vi.mock('@/lib/telemetry', () => ({ track: (...a: Parameters<typeof track>) => t
 const tab = { id: 't1', name: 'Orders', elements: [], kind: 'event-storming' } as unknown as Tab;
 const context = { ownerId: 'me', documentId: 'd', shareCode: null };
 
-function draw() {
+function draw(board: Tab = tab) {
   const onDone = vi.fn();
   const onBack = vi.fn();
   render(
     <DomainModelExportPanel
-      tab={tab}
+      tab={board}
       documentName="Shop"
       context={context}
       onDone={onDone}
@@ -168,5 +169,20 @@ describe('DomainModelExportPanel', () => {
     const { onBack } = draw();
     fireEvent.click(screen.getByRole('button', { name: /All formats/ }));
     expect(onBack).toHaveBeenCalled();
+  });
+});
+
+describe('the readiness line (docs/specs/021-event-storming/board-review.md "Readiness")', () => {
+  const line = () => document.querySelector('[data-readiness]')!.textContent;
+
+  it('heads the panel with what is left to settle', () => {
+    draw({ ...tab, elements: reviewBoardElements() });
+    expect(line()).toBe('5 events · 3 gaps · 1 open hotspot · 3 events outside a context');
+  });
+
+  it('says a board with no event has none yet, and still offers the export', () => {
+    draw();
+    expect(line()).toBe('No events yet');
+    expect(screen.getByRole<HTMLButtonElement>('button', { name: /export/i }).disabled).toBe(false);
   });
 });

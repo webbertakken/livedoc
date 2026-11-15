@@ -1233,6 +1233,17 @@
     top 160ms ease-out;
 }
 
+/* A chosen term shows where it lives (docs/specs/021-event-storming/board-language.md "The Language tab"): its notes
+   are ringed and the rest of the board dims. The document wears the attribute only while a term is chosen
+   (ReviewRings), and the ringed notes' own nodes are marked lit. The global reduce-motion rules above collapse the
+   fade to ~instant. */
+[data-review-dim] [data-element-id] {
+  transition: opacity 120ms ease-out;
+}
+[data-review-dim] [data-element-id]:not([data-review-lit]) {
+  opacity: 0.35;
+}
+
 /* A stack's reflow (docs/specs/009-elements/stack.md "Animation"): a child the stack holds glides from where it was to
    its new slot. Only on children nothing is dragging (the attribute is dropped for the gesture's elements), so a drag
    still tracks the pointer exactly. The global reduce-motion rules above collapse it to ~instant. */

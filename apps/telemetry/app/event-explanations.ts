@@ -189,6 +189,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone named a lane of an event-storming board from a note’s menu, or opened the name it has. Never the name.',
   'Canvas|Used|HotspotAnswered':
     'Someone kept the answer to a hotspot on an event-storming board. Never the question or the answer.',
+  'Canvas|Used|ReviewOpened':
+    'Someone opened the Review panel of an event-storming board: its check, its language and its story.',
+  'Canvas|Used|StoryWalked':
+    'Someone took a step of the story in hand in the Review panel of an event-storming board. Once per opening of the Story tab; never the story.',
   'Canvas|Used|GapNoteAdded':
     'Someone pressed Add on a gap in the Review panel of an event-storming board: a blank note landed where the gap’s remedy says. Never the gap or the note.',
   'Canvas|Used|TermRenamed':

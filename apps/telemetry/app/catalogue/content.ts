@@ -750,8 +750,8 @@ export const BOARD_REVIEW = chart(
   'Canvas',
   'Used',
   'Board Review',
-  'Someone used the Review panel of an event-storming board to add the note that closes a gap, or to rename a term where it is used.',
-  { types: ['GapNoteAdded', 'TermRenamed'] },
+  'Someone opened the Review panel of an event-storming board, walked its story, added the note that closes a gap, or renamed a term where it is used.',
+  { types: ['ReviewOpened', 'StoryWalked', 'GapNoteAdded', 'TermRenamed'] },
 );
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,

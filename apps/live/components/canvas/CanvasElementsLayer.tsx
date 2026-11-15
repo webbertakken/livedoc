@@ -54,6 +54,7 @@ import { PageClip } from '@/components/canvas/PageClip';
 import { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
 import { StructureTapes } from '@/components/canvas/structure/StructureTapes';
 import { StructureMarks } from '@/components/canvas/structure/StructureMarks';
+import { ReviewRings } from '@/components/canvas/review/ReviewRings';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
 import { MindNumbersProvider } from './MindMapLayer';
@@ -771,6 +772,10 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
             {/* The grips layer (docs/specs/008-canvas/canvas-and-palette.md "Resize"): above every element, so
           no grip is ever covered. The canvas's own grips go in here; each element's are portalled in. */}
             <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
+              {/* What the Review panel points out (docs/specs/021-event-storming/board-review.md): everyone's to see. */}
+              {props.esBoard ? (
+                <ReviewRings tabId={props.activeTabId ?? ''} elements={elements} />
+              ) : null}
               {/* Suggestions (docs/specs/021-event-storming/suggestions.md): beneath the next-note tabs, standing
           down while a drag is in hand. */}
               {suggestionsShown && props.suggestions ? (

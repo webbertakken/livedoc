@@ -164,6 +164,7 @@ import { contextSelectionFor } from '@/lib/context-selection';
 import { selectionIds } from '@/lib/selection-store';
 import { useContextActions } from '@/hooks/canvas/useContextActions';
 import { useStructureActions } from '@/hooks/canvas/useStructureActions';
+import { useReviewActions } from '@/hooks/canvas/useReviewActions';
 import { usePhotoPicker } from '@/hooks/canvas/usePhotoPicker';
 import { warmBoundaryModel } from '@/lib/photo-model/client';
 import { usePhotoDraft } from '@/hooks/canvas/usePhotoDraft';
@@ -2692,6 +2693,18 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     addBoxedAt,
     startEditing: (id) => beginEditRef.current?.(id),
   });
+  // The Review panel's writes (docs/specs/021-event-storming/board-review.md "Share roles"): Add and Rename Term,
+  // an Editor's alone.
+  const reviewActions = useReviewActions({
+    activeTab,
+    blocked: createBlocked || !participant.can.structure,
+    layerInertIds,
+    commit,
+    openForTyping: (id) => {
+      setSelectedId(id);
+      setEditingId(id);
+    },
+  });
 
   // --- Tab actions ---------------------------------------------------------
 
@@ -4155,6 +4168,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     contextActions,
     // Board structure acts (docs/specs/021-event-storming/board-structure.md).
     structureActions,
+    reviewActions,
     // Photo import (docs/specs/021-event-storming/event-storming.md Phase 8): the draft run, whether the entry
     // points may be offered, and the hidden file input they open.
     photoDraft,

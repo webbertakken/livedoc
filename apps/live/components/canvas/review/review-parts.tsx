@@ -29,7 +29,7 @@ export function RowAct({
       {...rest}
       className="flex h-7 shrink-0 items-center gap-1.5 rounded-full border border-slate-300 px-2.5 text-xs font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
     >
-      {lead}
+      {lead ? <span className="flex shrink-0">{lead}</span> : null}
       <span className="text-optical-centre">{children}</span>
     </button>
   );

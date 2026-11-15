@@ -3,10 +3,16 @@
 // The Export dialog's Domain Model panel (docs/specs/021-event-storming/domain-export.md "The zip"): the language,
 // an earlier export to update, what the zip will hold (said before the export, never after), then the export, which
 // may take a minute when the deployment's model writes the spec and the types, with progress and a cancel.
-import { useId, useRef, useState } from 'react';
+import { useId, useRef, useState, useMemo } from 'react';
 import { Button, Select } from '@livedoc/ui';
 import type { Tab } from '@livedoc/document';
-import { LANGUAGE_IDIOMS, type DomainLanguage } from '@livedoc/storm-reading';
+import {
+  LANGUAGE_IDIOMS,
+  formatReadiness,
+  readBoard,
+  readinessOf,
+  type DomainLanguage,
+} from '@livedoc/storm-reading';
 import { BackBar } from '@/components/primitives/BackBar';
 import { useCapabilities } from '@/hooks/persistence/useCapabilities';
 import {
@@ -65,6 +71,9 @@ export function DomainModelExportPanel({
   const [run, setRun] = useState<Run>({ phase: 'idle' });
   const abort = useRef<AbortController | null>(null);
   const running = run.phase === 'running';
+  // What a person would settle before exporting (docs/specs/021-event-storming/board-review.md "Readiness"): it
+  // informs, and never blocks the export.
+  const readiness = useMemo(() => formatReadiness(readinessOf(readBoard(tab))), [tab]);
 
   const pickEarlier = async (file: File | undefined) => {
     if (!file) return setEarlier(null);
@@ -118,6 +127,12 @@ export function DomainModelExportPanel({
   return (
     <div className="flex flex-col gap-4">
       <BackBar label="All formats" current="Domain Model" onClick={onBack} disabled={running} />
+      <p
+        data-readiness
+        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium text-slate-700 dark:border-slate-700 dark:text-slate-200"
+      >
+        {readiness}
+      </p>
       <p className="text-sm text-slate-600 dark:text-slate-300">
         {aiEnabled
           ? 'A spec of the domain and its types, written from this board by the model, with the board reading beside them, in one .zip.'
