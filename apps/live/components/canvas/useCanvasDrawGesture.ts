@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useState, type RefObject } from 'react';
+import { startTransition, useEffect, useEffectEvent, useState, type RefObject } from 'react';
 import { snapResizeBounds, snapToAlignment, snapToArrowPoint } from '@livedoc/document';
 import { ARROW_SNAP_THRESHOLD_PX, pointerToCanvas, snapLeadingAxis } from '@/lib/canvas';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
@@ -371,7 +371,10 @@ export function useCanvasDrawGesture({
     if (!penning) return;
     let buffer = penAtPress();
     let rafId: number | null = null;
+    // Set by the lift: the listeners stay attached until the transition below commits.
+    let lifted = false;
     const onMove = (e: PointerEvent) => {
+      if (lifted) return;
       const point = penSample(e);
       if (!point) return;
       buffer = [...buffer, point];
@@ -382,13 +385,20 @@ export function useCanvasDrawGesture({
       });
     };
     const onUp = () => {
+      if (lifted) return;
+      lifted = true;
       if (rafId !== null) {
         window.cancelAnimationFrame(rafId);
         rafId = null;
       }
       const snapshot = buffer;
-      setPenPoints(null);
-      commitPenStroke(snapshot);
+      // These pens are one-shot: the stroke lands, is selected and the pen goes down in one transition, so the
+      // editor's render is sliced rather than run whole in this task, and the live stroke shows until it commits
+      // (docs/specs/008-canvas/canvas-performance.md "A one-shot pen's stroke lands in a transition").
+      startTransition(() => {
+        setPenPoints(null);
+        commitPenStroke(snapshot);
+      });
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);

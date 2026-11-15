@@ -8,6 +8,25 @@ import type { PendingDraw } from '@/lib/draw-mode';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { useCanvasDrawGesture } from './useCanvasDrawGesture';
 
+// Whether a call runs inside React's startTransition (docs/specs/008-canvas/canvas-performance.md "A one-shot
+// pen's stroke lands in a transition"); React itself still runs the transition.
+const transition = vi.hoisted(() => ({ open: false }));
+vi.mock('react', async (importOriginal) => {
+  const react = await importOriginal<typeof import('react')>();
+  return {
+    ...react,
+    startTransition: (scope: () => void) =>
+      react.startTransition(() => {
+        transition.open = true;
+        try {
+          scope();
+        } finally {
+          transition.open = false;
+        }
+      }),
+  };
+});
+
 // The draw-to-size and pen gestures (docs/specs/008-canvas/canvas-and-palette.md, docs/specs/008-canvas/two-pens.md):
 // a press starts one, window pointer moves drive it, and the release commits it.
 
@@ -190,6 +209,43 @@ describe('useCanvasDrawGesture pen', () => {
       ],
       false,
     );
+  });
+});
+
+describe('useCanvasDrawGesture one-shot pen release (canvas-performance.md "A one-shot pen\'s stroke lands in a transition")', () => {
+  it('lands the stroke inside a transition', () => {
+    let inTransition: boolean | null = null;
+    const onCommitFreehand = vi.fn(() => {
+      inTransition = transition.open;
+    });
+    const { result } = setup({ pendingDraw: PEN, onCommitFreehand });
+    press(result, 10, 10);
+    pointer('pointermove', 20, 20);
+    pointer('pointerup');
+    expect(onCommitFreehand).toHaveBeenCalledTimes(1);
+    expect(inTransition).toBe(true);
+  });
+
+  it('lets no move or lift after the first lift reach the stroke', () => {
+    const onCommitFreehand = vi.fn();
+    const { result } = setup({ pendingDraw: PEN, onCommitFreehand });
+    press(result, 10, 10);
+    pointer('pointermove', 20, 20);
+    act(() => {
+      window.dispatchEvent(new MouseEvent('pointerup', { clientX: 20, clientY: 20 }));
+      window.dispatchEvent(new MouseEvent('pointermove', { clientX: 90, clientY: 90 }));
+      vi.advanceTimersToNextFrame();
+      window.dispatchEvent(new MouseEvent('pointerup', { clientX: 90, clientY: 90 }));
+    });
+    expect(onCommitFreehand).toHaveBeenCalledTimes(1);
+    expect(onCommitFreehand).toHaveBeenCalledWith(
+      [
+        { x: 10, y: 10 },
+        { x: 20, y: 20 },
+      ],
+      false,
+    );
+    expect(result.current.penPoints).toBeNull();
   });
 });
 
