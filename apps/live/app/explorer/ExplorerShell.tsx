@@ -15,7 +15,7 @@ import { useAccessEndedToast } from './useAccessEndedToast';
 import { commitUserPreferences } from '@/lib/user-preferences';
 import { useSearchShortcut } from '@/hooks/ui/useSearchShortcut';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
-import { afterExplorerSettled, markExplorerSettled } from './explorer-settled';
+import { afterExplorerSettled, markExplorerSettled, settlesWithItsLists } from './explorer-settled';
 import { CustomThemeProvider } from '@/components/primitives/CustomThemeProvider';
 import { ShapeLibraryProvider } from '@/components/primitives/ShapeLibraryProvider';
 import { DocumentTagsProvider } from '@/components/tags/DocumentTagsProvider';
@@ -143,11 +143,12 @@ function ShellChrome({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   // Cmd/Ctrl+K and Cmd/Ctrl+. open search here as in the editor (docs/specs/007-editor/command-palette.md).
   useSearchShortcut(() => setSearchOpen(true));
-  // The Explorer's own first reads have landed once its documents are listed; what is fetched ahead waits for that
-  // (explorer-settled.ts), search here and the editor's code in InPlaceEditor.
+  // A section drawn from the Explorer's lists has drawn once they land (Home says so itself); what is fetched
+  // ahead waits for that (explorer-settled.ts), search here and the editor's code in InPlaceEditor.
+  const drawnWithLists = settlesWithItsLists(selected.kind);
   useEffect(() => {
-    if (!loading) markExplorerSettled();
-  }, [loading]);
+    if (!loading && drawnWithLists) markExplorerSettled();
+  }, [loading, drawnWithLists]);
   useEffect(() => afterExplorerSettled(() => prefetchWhenIdle(EXPLORER_SEARCH_CODE)), []);
 
   // Settings live in the bottom bar's gear (same synced UserPreferences as

@@ -29,6 +29,45 @@ import { HomePane } from './HomePane';
 import { ExplorerProvider } from '@/app/explorer/ExplorerContext';
 import type { ExplorerStateValue } from '@/app/explorer/useExplorerState';
 import { fixtureAction, fixtureGroup, fixtureJumpItem, fixturePerson } from './home-test-utils';
+import {
+  afterExplorerSettled,
+  resetExplorerSettledForTests,
+} from '@/app/explorer/explorer-settled';
+
+// Whether the Explorer has been told its landing content is drawn: what is fetched ahead starts at once only then.
+function explorerSettled(): boolean {
+  const start = vi.fn(() => () => {});
+  afterExplorerSettled(start)();
+  return start.mock.calls.length > 0;
+}
+
+const explorerWith = (over: Partial<ExplorerStateValue>) =>
+  ({
+    ownerId: 'me',
+    loading: false,
+    documents: [{ id: 'd1' }],
+    shared: [],
+    teamDocuments: [],
+    offlineDocuments: [],
+    failedReads: { documents: false, shared: false },
+    accountId: null,
+    ...over,
+  }) as unknown as ExplorerStateValue;
+
+function renderIn(explorer: ExplorerStateValue) {
+  return render(
+    <ExplorerProvider value={explorer}>
+      <HomePane
+        ownerId="me"
+        onSeen={vi.fn()}
+        timelineHref="/explorer/timeline"
+        onSeeTimeline={vi.fn()}
+        recentHref="/explorer/recent"
+        onSeeMore={vi.fn()}
+      />
+    </ExplorerProvider>,
+  );
+}
 
 const data = (over = {}) => ({
   status: 'ready',
@@ -52,6 +91,7 @@ function renderIt() {
 }
 
 beforeEach(() => {
+  resetExplorerSettledForTests();
   track.mockReset();
   useHome.mockReturnValue(data());
 });
@@ -164,6 +204,38 @@ describe('HomePane', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
     expect(retry).toHaveBeenCalledTimes(1);
+  });
+
+  // docs/specs/016-platform/web-performance.md "What is fetched ahead waits for the page's own reads".
+  describe('telling the Explorer its landing has drawn', () => {
+    it('says so once Home has its answer', () => {
+      renderIn(explorerWith({}));
+      expect(explorerSettled()).toBe(true);
+    });
+
+    it('waits while Home is still reading', () => {
+      useHome.mockReturnValue(data({ status: 'loading' }));
+      renderIn(explorerWith({}));
+      expect(explorerSettled()).toBe(false);
+    });
+
+    it('waits while the lists are out: a first run is not decided, and its welcome is code still to fetch', () => {
+      renderIn(explorerWith({ loading: true, documents: [] }));
+      expect(explorerSettled()).toBe(false);
+    });
+
+    it('leaves a first run to its welcome, which says so when it has drawn', async () => {
+      const { container } = renderIn(explorerWith({ documents: [] }));
+      await vi.waitFor(() => expect(container.querySelector('[data-home-welcome]')).not.toBeNull());
+      // The welcome is a stub here; the real one settles the Explorer as it mounts (HomeWelcome.test.tsx).
+      expect(explorerSettled()).toBe(false);
+    });
+
+    it('says so when the read failed: nothing more of Home is coming', () => {
+      useHome.mockReturnValue(data({ status: 'error' }));
+      renderIn(explorerWith({}));
+      expect(explorerSettled()).toBe(true);
+    });
   });
 
   it('keeps the headings in place while loading', () => {

@@ -1,11 +1,18 @@
-// Whether the Explorer's own first reads have landed: its documents are listed. What the Explorer fetches ahead of
-// need (the editor's code, what builds a new document, its search) waits for this, then for an idle moment: an idle
-// main thread is not an idle connection, and code fetched ahead would otherwise share the connection with the reads
-// the landing page is waiting on (docs/specs/016-platform/web-performance.md "What is fetched ahead waits for the
-// page's own reads").
+// Whether the Explorer's landing has drawn what it came to show. What the Explorer fetches ahead of need (the editor's
+// code, what builds a new document, its search) waits for this, then for an idle moment: an idle main thread is not
+// an idle connection, and code fetched ahead would otherwise share the connection with the reads, and the code, the
+// landing page is waiting on (docs/specs/016-platform/web-performance.md "What is fetched ahead waits for the page's
+// own reads").
 
 // How long what is fetched ahead waits for the Explorer's reads before it starts anyway (default).
 export const EXPLORER_SETTLE_TIMEOUT_MS = 5000;
+
+// Whether a section has drawn once the Explorer's lists land. Home has not: it reads its own data, and a first run
+// fetches its welcome only once the lists say there is nothing yet, so Home says when it has drawn (HomePane,
+// HomeWelcome).
+export function settlesWithItsLists(sectionKind: string): boolean {
+  return sectionKind !== 'home';
+}
 
 let settled = false;
 const waiting = new Set<() => void>();

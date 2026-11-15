@@ -98,9 +98,13 @@ thread, not an idle connection: a megabyte of the editor's code fetched "on idle
 connection with the reads the landing page is waiting on (at 4 Mbit/s and 100 ms of latency the
 Explorer learned who the person was two seconds after it hydrated, behind 57 files fetched ahead).
 So what the Explorer fetches ahead (the editor's code and the standby document, what builds a new
-document, its search) starts once the Explorer's documents are listed, or after
-`EXPLORER_SETTLE_TIMEOUT_MS = 5000` (default) when they never are, and then on idle
-(`app/explorer/explorer-settled.ts`).
+document, its search) starts once the landing has drawn what it came to show, or after
+`EXPLORER_SETTLE_TIMEOUT_MS = 5000` (default) when it never does, and then on idle
+(`app/explorer/explorer-settled.ts`). A section drawn from the Explorer's lists has drawn when they
+land. Home has drawn when its own read has answered; a first run, whose welcome is code fetched only
+once the lists say there is nothing yet, when that welcome is on screen. Waiting for the lists alone
+started a megabyte and a half of downloads at the moment a newcomer's welcome was asked for, and
+the welcome showed half a second later than with no waiting at all (4 Mbit/s, 100 ms).
 
 What makes a document loads when one is made. The template builders (every template's elements)
 reach the Explorer only through `lib/new-document-content`, which the New Document menu imports at

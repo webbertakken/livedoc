@@ -16,8 +16,26 @@ vi.mock('@/components/chrome/auth-shared', () => ({
 }));
 
 import { HomeWelcome } from './HomeWelcome';
+import {
+  afterExplorerSettled,
+  resetExplorerSettledForTests,
+} from '@/app/explorer/explorer-settled';
 
-beforeEach(() => track.mockReset());
+beforeEach(() => {
+  track.mockReset();
+  resetExplorerSettledForTests();
+});
+
+// docs/specs/016-platform/web-performance.md "What is fetched ahead waits for the page's own reads".
+it('tells the Explorer its landing has drawn, so what is fetched ahead may start', () => {
+  const start = vi.fn(() => () => {});
+  afterExplorerSettled(start);
+  expect(start).not.toHaveBeenCalled();
+
+  render(<HomeWelcome offerSignIn={false} />);
+
+  expect(start).toHaveBeenCalledOnce();
+});
 afterEach(cleanup);
 
 const section = (name: string) => screen.getByRole('region', { name });

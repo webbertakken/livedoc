@@ -5,7 +5,21 @@ import {
   EXPLORER_SETTLE_TIMEOUT_MS,
   markExplorerSettled,
   resetExplorerSettledForTests,
+  settlesWithItsLists,
 } from './explorer-settled';
+
+describe('settlesWithItsLists', () => {
+  it('is true for a section drawn from the Explorer’s lists', () => {
+    for (const kind of ['recent', 'all', 'folder', 'favourites', 'shared', 'trash', 'team']) {
+      expect(settlesWithItsLists(kind), kind).toBe(true);
+    }
+  });
+
+  // Home reads its own data and, on a first run, fetches its welcome once the lists land: it says when it has drawn.
+  it('is false for Home, which says so itself', () => {
+    expect(settlesWithItsLists('home')).toBe(false);
+  });
+});
 
 // docs/specs/016-platform/web-performance.md "What is fetched ahead waits for the page's own reads".
 describe('afterExplorerSettled', () => {
