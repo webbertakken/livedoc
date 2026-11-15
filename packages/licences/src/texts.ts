@@ -112,6 +112,13 @@ export const TEXT_SOURCES: readonly TextSource[] = [
     sha256: '6d41e05f1d54fe726997cb0334ec539f1dff50600b1d5d90462ec2b392770ced',
   },
   {
+    file: 'caveat-2.000-OFL.txt',
+    sources: [
+      'https://raw.githubusercontent.com/googlefonts/caveat/1ad859b09aeddcc19c19ed83ab39ba47de380795/OFL.txt',
+    ],
+    sha256: '1f9d81d094273d82f3898a1ee8b598a717d050ecbf5ff7bede105b704880157b',
+  },
+  {
     file: 'inter-3.19-LICENSE.txt',
     sources: ['https://raw.githubusercontent.com/rsms/inter/v3.19/LICENSE.txt'],
     sha256: '4d7d9c95e7d7f2f0ebf76d5e0b344826b74e903a34028ee18ab54bb639e45906',

@@ -95,3 +95,14 @@ describe('EMBEDDED_WORKS', () => {
     for (const id of ids) expect(hits).toContain(id);
   });
 });
+
+// The marketing hero's Caveat subset is a hashed build asset (docs/specs/016-platform/web-performance.md "Delivery"),
+// so the licences page names the face it ships.
+describe('the marketing hero hand face', () => {
+  it('is a reviewed binary, under the OFL', () => {
+    const hits = EMBEDDED_WORKS.filter(
+      (w) => 'assets' in w.trigger && w.trigger.assets.test('caveat-hero.1gaup4ll9h1d1.woff2'),
+    );
+    expect(hits.map((w) => [w.name, w.licence])).toEqual([['Caveat', 'OFL-1.1']]);
+  });
+});
