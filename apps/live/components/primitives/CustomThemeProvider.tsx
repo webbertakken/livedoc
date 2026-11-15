@@ -1,8 +1,7 @@
 'use client';
 
 import { pruneCustomThemeSwatchOverrides } from '@/lib/swatch-override-prefs';
-import { useCallback, useEffect, useState } from 'react';
-import { createStoreContext } from '@/hooks/ui/store-context';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { CustomTheme, CustomThemeDefinition } from '@livedoc/api-schema';
 import {
@@ -46,17 +45,13 @@ type CustomThemeContextValue = {
   writable: boolean;
 };
 
-// Reached through a store, not a plain context: it sits above the canvas, and a new value would have React walk the
-// whole board for its readers (docs/specs/008-canvas/canvas-performance.md "A change above the board walks no
-// board").
-const CustomThemeContextStore = createStoreContext<CustomThemeContextValue | null>(null);
-const CustomThemeContext = { Provider: CustomThemeContextStore.Provider };
+const CustomThemeContext = createContext<CustomThemeContextValue | null>(null);
 
 // Safe consumer: returns an inert value when there's no provider (e.g. a
 // surface that doesn't mount one), so callers don't have to null-check.
 export function useCustomThemes(): CustomThemeContextValue {
   return (
-    CustomThemeContextStore.useValue() ?? {
+    useContext(CustomThemeContext) ?? {
       themes: [],
       loading: false,
       createTheme: async () => undefined,

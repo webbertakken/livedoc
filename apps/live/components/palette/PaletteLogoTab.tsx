@@ -5,8 +5,8 @@
 // Draw mode's three markers in this person's colours and widths. A marker is picked up for one
 // stroke; pressed again while held, it opens Draw mode's own flyout for it (colour and width), whose
 // changes re-arm it at once.
-import { useState } from 'react';
-import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
+import { useContext, useState } from 'react';
+import { EditorContext } from '@/app/document/[id]/EditorContext';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { PenFlyoutBody, penFlyoutLabel } from '@/components/canvas/whiteboard/dock-flyouts';
 import { WhiteboardFlyout } from '@/components/canvas/whiteboard/WhiteboardFlyout';
@@ -92,7 +92,7 @@ function MarkerRow({
  *  and widths (the dock model's; outside an editor, as this browser last set them). None while the
  *  category is not offered. */
 export function useLogoMarkerTiles(on: boolean): PaletteTileDef[] {
-  const editor = useOptionalEditorContext();
+  const editor = useContext(EditorContext);
   const surface = useCanvasSurface();
   if (!on) return [];
   const prefs = editor?.whiteboardDock.prefs ?? loadWhiteboardPrefs();
@@ -112,7 +112,7 @@ export function PaletteLogoTab({
   actions: PaletteTileActions;
   pendingDraw: PendingDraw | null | undefined;
 }) {
-  const editor = useOptionalEditorContext();
+  const editor = useContext(EditorContext);
   const model = editor?.whiteboardDock;
   const tools = tiles.filter((t) => t.action.type !== 'marker');
   const markers = tiles.filter((t) => t.action.type === 'marker');

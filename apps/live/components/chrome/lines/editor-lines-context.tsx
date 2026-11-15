@@ -1,7 +1,6 @@
 'use client';
 
-import { type ReactNode } from 'react';
-import { createStoreContext } from '@/hooks/ui/store-context';
+import { createContext, useContext, type ReactNode } from 'react';
 
 // What the editor page hands the canvas chrome for its two lines (docs/specs/007-editor/toolbar-layout.md):
 // the actions group and the document group, built where their state lives (the page), placed where the lines are
@@ -15,12 +14,8 @@ export type EditorLines = {
   embed?: boolean;
 };
 
-// Reached through a store, not a plain context: it sits above the canvas, and a new value would have React walk the
-// whole board for its readers (docs/specs/008-canvas/canvas-performance.md "A change above the board walks no
-// board").
-const EditorLinesContextStore = createStoreContext<EditorLines | null>(null);
-export const EditorLinesContext = { Provider: EditorLinesContextStore.Provider };
+export const EditorLinesContext = createContext<EditorLines | null>(null);
 
 export function useEditorLines(): EditorLines | null {
-  return EditorLinesContextStore.useValue();
+  return useContext(EditorLinesContext);
 }

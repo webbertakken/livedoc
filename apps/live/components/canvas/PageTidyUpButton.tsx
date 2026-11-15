@@ -6,10 +6,10 @@
 // hovering it shows the tidied page in place; leaving it puts the page back. An Editor's alone: the
 // title bar shows controls only to someone who may edit, and the button checks the session's
 // `can` itself.
-import { useEffect, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { lucideBrushCleaning } from '@livedoc/icons/lucide';
 import { lucideGlyph, Tooltip } from '@livedoc/ui';
-import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorContext } from '@/app/document/[id]/EditorContext';
 import type { PageEdits } from '@/hooks/editor/page-edits';
 import { titleButtonClass } from './TitlePopoverButton';
 
@@ -34,7 +34,7 @@ export function PageTidyUpButton({
   // The pages view's edits (absent ones render nothing).
   edit: Pick<PageEdits, 'tidyPage' | 'previewTidy'>;
 }) {
-  const editor = useOptionalEditorContext();
+  const editor = useContext(EditorContext);
   const { tidyPage, previewTidy } = edit;
   // Leaving mid-hover (the button going: the page locked, the mode left) drops the preview.
   const previewing = useRef(false);

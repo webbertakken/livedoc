@@ -158,13 +158,6 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   (the toolbars, panels and overlays the canvas holds) takes the default cursor, not the tool's:
   with it inheriting the tool's, a pencil putting itself down after its stroke restyled some 450
   pieces of chrome inside the release's task. A cursor a piece of chrome sets itself still wins.
-- **A change above the board walks no board.** What the editor hands down past the canvas (its
-  state, the plan, the themes, the tab windows' tabs, the charts' elements, the split view, the
-  mode, the chrome's lines) reaches its readers through a store the provider keeps for its
-  lifetime, never as a context value that changes: React looks for a changed context's readers
-  by walking the whole tree beneath it, the board's thousand elements included, and with the
-  editor's state new on every render that walk ran on every press, release and pointer frame
-  that rendered the editor. Readers still render whenever the value changes.
 - **The canvas re-renders only for what it shows.** The editor around the canvas re-renders for
   many reasons (a panel opening, a toast, a collaborator's presence, the selection); none of them
   re-renders the canvas unless something the canvas shows changed. The canvas's event handlers keep
@@ -198,6 +191,12 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   element views as the view moves, and mounting is what makes long tasks. Culling to snapped canvas
   cells raised a 100% zoom's longest task from about 60-90 ms to 170-195 ms (research notes). Taken
   up again only with a way to show an element that costs no React mount (a raster stand-in).
+- **Handing the editor's values past the board through stores**, so a change above the canvas
+  has React walk no board looking for its readers (about 10 ms of a diagram stroke's release).
+  Measured and set aside: a store's readers behind a memo boundary render in a second, blocking
+  commit, never in the transition that changed the value, so the view transitions the editor
+  starts (the start's mode change, a slide moving) drew nothing. Taken up again only with a way
+  for a store to render its readers inside the transition that changed it.
 - **Level of detail at low zoom**: text and icons below a few screen pixels drawn as simpler
   marks.
 - **Containment** (`contain` on element wrappers) so a change inside one element does not

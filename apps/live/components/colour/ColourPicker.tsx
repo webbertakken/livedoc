@@ -5,11 +5,11 @@
 // colours, and Custom colours ending in +, which opens the custom colour editor in place. Leading
 // options (no colour, a surface's named defaults) go first in the first group. One Tab stop, the
 // arrows move through every swatch, Enter or Space picks.
-import { useId, useRef, useState, type FocusEvent } from 'react';
+import { useContext, useId, useRef, useState, type FocusEvent } from 'react';
 import { Tooltip } from '@livedoc/ui';
 import { isHexColour } from '@livedoc/document';
 import { onMouseHover, useRevertOnUnmount } from '@/components/primitives/hover-preview';
-import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorContext } from '@/app/document/[id]/EditorContext';
 import { YOUR_COLOURS_MAX } from '@/lib/document-colours';
 import { CustomColourEditor } from './CustomColourEditor';
 import { MoreColoursGlyph } from './MoreColoursGlyph';
@@ -72,7 +72,7 @@ export function ColourPicker({
   // the canvas and drop the tool in hand, rather than close the surface the picker sits in).
   const plusRef = useRef<HTMLButtonElement>(null);
   // A colour picked with + becomes one of the document's custom colours (none outside the editor).
-  const addCustomColour = useOptionalEditorContext()?.addCustomColour;
+  const addCustomColour = useContext(EditorContext)?.addCustomColour;
   const headingId = useId();
   useRevertOnUnmount(onPreviewEnd ?? NOOP);
 
