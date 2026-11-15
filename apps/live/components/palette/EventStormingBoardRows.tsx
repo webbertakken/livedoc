@@ -2,6 +2,7 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Glyph, SparkleIcon } from '@livedoc/ui';
+import { ReviewIcon } from '@/components/canvas/review/ReviewButton';
 
 // The BOARD-level controls at the top of the palette's Event Storming category
 // (docs/specs/021-event-storming/event-storming.md). Everything below them adds a note; these change what the board
@@ -27,6 +28,11 @@ export type EsBoardControls = {
   // Ask for Suggestions (docs/specs/021-event-storming/asks.md "Where an ask starts"): opens the Ask popover about
   // what is selected. Absent for someone who may not ask.
   onAsk?: () => void;
+  // Review (docs/specs/021-event-storming/board-review.md "The panel"): opens and closes the Review panel. For
+  // everyone on the board: looking it over changes nothing.
+  onReview?: () => void;
+  // The panel is open.
+  reviewing?: boolean;
 };
 
 export function EventStormingBoardRows({ controls }: { controls: EsBoardControls }) {
@@ -57,6 +63,18 @@ export function EventStormingBoardRows({ controls }: { controls: EsBoardControls
           // Asking is about what is selected: a press here leaves a selected context selected.
           data-keeps-context-selection=""
           onClick={controls.onAsk}
+        />
+      ) : null}
+      {controls.onReview ? (
+        <BoardRow
+          icon={<ReviewIcon size={16} />}
+          title="Review"
+          line="Gaps, shared terms and the story"
+          look={controls.reviewing ? 'pressed' : 'plain'}
+          aria-expanded={controls.reviewing === true}
+          data-review-row=""
+          data-keeps-context-selection=""
+          onClick={controls.onReview}
         />
       ) : null}
       {controls.onImportPhoto ? (

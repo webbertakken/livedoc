@@ -11,6 +11,7 @@ import {
   SwitchRow,
 } from '@livedoc/ui';
 import { eventStormingNote } from '@livedoc/document';
+import { CORNER_PLACE, CORNER_SURFACE } from '@/components/canvas/corner';
 import { changeWords } from '@/lib/change-caption';
 import type { MergeRow, NamesRow } from '@/lib/suggested-changes';
 import { panelRowId, type PanelRow } from '@/lib/suggestion-rows';
@@ -177,6 +178,7 @@ export function SuggestionsPanel({
   onApplyAll,
   onDismissAll,
   ask,
+  review,
 }: {
   rows: PanelRow[];
   open: boolean;
@@ -194,9 +196,12 @@ export function SuggestionsPanel({
   // The Ask pill (docs/specs/021-event-storming/asks.md "Where an ask starts"), left of the count: the corner is
   // one home for asking and for what comes back, and holds the pill alone while the board has no suggestion.
   ask?: ReactNode;
+  // The Review pill (docs/specs/021-event-storming/board-review.md "The panel"), last in the corner: looking the
+  // board over stands beside asking and what comes back.
+  review?: ReactNode;
 }) {
   const listId = useId();
-  if (rows.length === 0 && !ask) return null;
+  if (rows.length === 0 && !ask && !review) return null;
   // The list is gone when the last suggestion is, however it was left: the corner then holds the pill alone, and
   // a suggestion that comes back (an Undo) finds the list as it was left.
   const listed = open && rows.length > 0;
@@ -221,7 +226,7 @@ export function SuggestionsPanel({
       <aside
         aria-label="Suggestions"
         data-testid="suggestions-panel"
-        className={`fixed right-3 top-16 z-[var(--z-overlay)] flex max-h-[calc(100vh-10rem)] flex-col border border-slate-200 bg-white text-slate-900 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40 ${
+        className={`${CORNER_PLACE} ${CORNER_SURFACE} flex max-h-[calc(100vh-10rem)] flex-col ${
           listed ? 'w-[320px] rounded-xl' : 'rounded-full'
         }`}
       >
@@ -230,6 +235,7 @@ export function SuggestionsPanel({
         >
           {ask}
           {rows.length > 0 ? toggle : null}
+          {review}
         </div>
         {listed ? (
           <>

@@ -9,6 +9,7 @@ import { ES_ASK_HAND_KEY } from '@/lib/ask-hand';
 import { askViewFor, openAsk, resetAskViewForTests } from '@/lib/ask-view';
 import { note, orderFlow } from '@/lib/change-board.fixture';
 import { kitchenTab, lanePlan } from '@/lib/lane-board.fixture';
+import { openReview, resetReviewViewForTests, reviewViewFor } from '@/lib/review-view';
 import { setSuggestionsPanelOpen, suggestionViewFor } from '@/lib/suggestion-view';
 import { useAskActions } from './useAskActions';
 
@@ -73,6 +74,7 @@ beforeEach(() => {
   info.mockClear();
   localStorage.clear();
   resetAskViewForTests();
+  resetReviewViewForTests();
 });
 afterEach(() => vi.unstubAllGlobals());
 
@@ -88,8 +90,11 @@ describe('useAskActions: opening', () => {
   it('closes the suggestions list: the two share one corner', () => {
     const { acts } = setup();
     setSuggestionsPanelOpen('t', true);
+    openReview('t');
     acts.openAsk();
     expect(suggestionViewFor('t').panelOpen).toBe(false);
+    // The Review panel too: one thing open in the corner (board-review.md "The panel").
+    expect(reviewViewFor('t').open).toBe(false);
   });
 
   it('stays shut where the board may not be changed', () => {

@@ -41,6 +41,7 @@ function handlers(): CommandHandlers {
     openPhotoImport: vi.fn(),
     arrangeBoard: vi.fn(),
     askBoard: vi.fn(),
+    reviewBoard: vi.fn(),
   };
 }
 
@@ -576,5 +577,27 @@ describe('the Ask for Suggestions command', () => {
     expect(command.name).toBe('Ask for Suggestions');
     command.run();
     expect(h.askBoard).toHaveBeenCalledTimes(1);
+  });
+});
+
+// docs/specs/021-event-storming/board-review.md "The panel".
+describe('the Review Board command', () => {
+  it('is offered on an event-storming board alone, to everyone on it', () => {
+    expect(ids(base)).not.toContain('review-board');
+    expect(ids({ ...base, esBoard: true })).toContain('review-board');
+    // Looking a board over changes nothing: a locked tab's and a read-only visitor's too.
+    expect(ids({ ...base, esBoard: true, tabLocked: true })).toContain('review-board');
+    expect(ids({ ...base, esBoard: true, isReadOnly: true })).toContain('review-board');
+    expect(ids({ ...base, isReadOnly: true })).not.toContain('review-board');
+  });
+
+  it('opens the Review panel', () => {
+    const h = handlers();
+    const command = buildEditorCommands({ ...base, esBoard: true }, h).find(
+      (c) => c.id === 'review-board',
+    )!;
+    expect(command.name).toBe('Review Board');
+    command.run();
+    expect(h.reviewBoard).toHaveBeenCalledTimes(1);
   });
 });

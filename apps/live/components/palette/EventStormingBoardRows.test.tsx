@@ -65,6 +65,27 @@ describe('EventStormingBoardRows Ask for Suggestions', () => {
   });
 });
 
+// docs/specs/021-event-storming/board-review.md "The panel".
+describe('EventStormingBoardRows Review', () => {
+  it('opens and closes the Review panel from its row, saying which it is', () => {
+    const onReview = vi.fn();
+    const view = render(<EventStormingBoardRows controls={{ onReview }} />);
+    const row = screen.getByRole('button', { name: /^review/i });
+    expect(row.getAttribute('aria-expanded')).toBe('false');
+    fireEvent.click(row);
+    expect(onReview).toHaveBeenCalledTimes(1);
+    view.rerender(<EventStormingBoardRows controls={{ onReview, reviewing: true }} />);
+    expect(screen.getByRole('button', { name: /^review/i }).getAttribute('aria-expanded')).toBe(
+      'true',
+    );
+  });
+
+  it('shows no row off an event-storming board', () => {
+    render(<EventStormingBoardRows controls={{}} />);
+    expect(screen.queryByRole('button', { name: /^review/i })).toBeNull();
+  });
+});
+
 describe('the Event Storming palette category', () => {
   it('puts the board rows above the notation', () => {
     render(

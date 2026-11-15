@@ -38,6 +38,7 @@ import { readDrawPattern } from '@/lib/whiteboard-dock-prefs';
 import { useAppearance } from '@/hooks/ui/useAppearance';
 import { useIsLandscapePhone } from '@/hooks/ui/useIsMobileViewport';
 import { AskHost } from '@/components/canvas/ask/AskHost';
+import { ReviewHost } from '@/components/canvas/review/ReviewHost';
 import { Canvas } from '@/components/canvas/Canvas';
 import { useStableObject } from '@/hooks/ui/useStableObject';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
@@ -59,6 +60,8 @@ import { useDeadPageBrush } from '@/hooks/editor/useDeadPageBrush';
 import { elementSelector } from '@/lib/canvas-selectors';
 import { useWorkbenchSession } from '@/components/providers/workbench-session-context';
 import { setDrawingContext, useContextSelection } from '@/lib/context-selection';
+import { useReviewOpen } from '@/lib/review-view';
+import { toggleReview } from '@/hooks/canvas/useReviewPanel';
 
 // The Canvas element's wiring, lifted out of EditorView (which carried
 // ~500 lines of prop plumbing for it). Reads everything straight from
@@ -140,6 +143,7 @@ export function EditorCanvasHost() {
     suggestionActions,
     contextActions,
     structureActions,
+    reviewActions,
     photoImportAvailable,
     photoImportBlocked,
     openPhotoImport,
@@ -614,6 +618,7 @@ export function EditorCanvasHost() {
   const drawingContext = useContextSelection(activeTab.id).drawing;
   // Asking is an Editor's alone, where a suggestion may land (docs/specs/021-event-storming/asks.md "Share roles").
   const mayAsk = esBoard && can.suggestions && !createBlocked;
+  const reviewing = useReviewOpen(activeTab.id);
   const esBoardControls = useStableObject({
     ...(esBoard && can.contexts && !createBlocked
       ? {
@@ -622,6 +627,8 @@ export function EditorCanvasHost() {
         }
       : {}),
     ...(mayAsk ? { onAsk: () => suggestionActions.openAsk() } : {}),
+    // Looking the board over is everyone's (docs/specs/021-event-storming/board-review.md "Share roles").
+    ...(esBoard ? { onReview: () => toggleReview(activeTab.id), reviewing } : {}),
     ...(photoImportAvailable
       ? {
           onImportPhoto: openPhotoImport,
@@ -678,6 +685,17 @@ export function EditorCanvasHost() {
               documentName={documentName}
               aiEnabled={aiCapable}
               acts={suggestionActions}
+            />
+          ) : null}
+          {/* The Review panel (docs/specs/021-event-storming/board-review.md): everyone on the board reads it; its
+          Add, Answer and Rename Term are an Editor's. */}
+          {esBoard ? (
+            <ReviewHost
+              tab={activeTab}
+              acts={reviewActions}
+              inertIds={layerInertIds}
+              reveal={(r) => scrollIntoView(r.x, r.y, r.width, r.height)}
+              mayWrite={can.structure && !createBlocked}
             />
           ) : null}
           <SuppressElementIndicators when={presentingElements != null}>

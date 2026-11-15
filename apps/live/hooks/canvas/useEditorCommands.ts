@@ -9,6 +9,7 @@
 // get the view-safe subset only (zen / fit / export, docs/specs/007-editor/command-palette.md), with every
 // mutating command withheld inside the pure builder.
 
+import { showReview } from '@/hooks/canvas/useReviewPanel';
 import { useSelectionOf } from '@/hooks/canvas/useSelectionStore';
 import { EMPTY_SELECTION, type Selection } from '@/lib/selection-store';
 import { useCallback, useMemo } from 'react';
@@ -72,6 +73,7 @@ const INERT_HANDLERS: CommandHandlers = {
   openPhotoImport: noop,
   arrangeBoard: noop,
   askBoard: noop,
+  reviewBoard: noop,
 };
 
 // `open`: the search is showing. Only then does the catalogue follow the selection, so a closed search
@@ -309,6 +311,8 @@ export function useEditorCommands(open: boolean): {
     arrangeBoard: () => suggestionActions.arrange(),
     // Tracks when a prompt is copied or the model is asked (useAskActions).
     askBoard: () => suggestionActions.openAsk(),
+    // Counts when it opens (showReview).
+    reviewBoard: () => showReview(activeTab.id),
     fitToScreen,
     autoLayout: autoLayoutTab,
     autoAlign: autoAlignTab,

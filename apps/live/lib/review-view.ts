@@ -107,6 +107,15 @@ export function useReviewView(tabId: string): ReviewView {
   return stored.tabId === tabId ? stored : reviewViewFor(tabId);
 }
 
+/** Whether this board's panel is open, for what only cares about that: it does not re-render as the rings move. */
+export function useReviewOpen(tabId: string): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => view.tabId === tabId && view.open,
+    () => false,
+  );
+}
+
 export function resetReviewViewForTests(): void {
   view = { tabId: null, ...CLOSED };
 }

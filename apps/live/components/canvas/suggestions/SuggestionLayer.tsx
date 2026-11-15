@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import type { Element, ElementId, Layer, Rect } from '@livedoc/document';
 import { AskButton } from '@/components/canvas/ask/AskButton';
 import type { SuggestionControls } from '@/components/canvas/Canvas.types';
 import { useCanvasZoom } from '@/components/canvas/CanvasZoomContext';
-import { closeAsk } from '@/lib/ask-view';
 import type { OfferedPreview } from '@/lib/change-preview';
+import { clearCornerFor } from '@/lib/corner-view';
 import { changeMarks } from '@/lib/suggested-changes';
 import {
   suggestionHints,
@@ -51,6 +51,7 @@ export function SuggestionLayer({
   offered = null,
   onSelectContexts,
   canAsk = false,
+  review,
 }: {
   elements: Element[];
   tabId: string;
@@ -68,6 +69,8 @@ export function SuggestionLayer({
   // The Ask pill stands in the corner (docs/specs/021-event-storming/asks.md "Where an ask starts"): where a new
   // suggestion may land, so never on a locked board.
   canAsk?: boolean;
+  // The Review pill, drawn last in the corner (docs/specs/021-event-storming/board-review.md "The panel").
+  review?: ReactNode;
 }) {
   const zoom = useCanvasZoom();
   const view = useSuggestionView(tabId);
@@ -136,12 +139,13 @@ export function SuggestionLayer({
       rows={rows}
       open={view.panelOpen}
       showAll={view.showAll}
-      // The list and the Ask popover share the corner: opening one closes the other.
+      // The list, the Ask popover and the Review panel share the corner: opening one closes the others.
       onOpenChange={(open) => {
-        if (open) closeAsk(tabId);
+        if (open) clearCornerFor(tabId, 'list');
         setSuggestionsPanelOpen(tabId, open);
       }}
       ask={canAsk ? <AskButton tabId={tabId} onAsk={() => controls.openAsk()} /> : undefined}
+      review={review}
       onShowAllChange={(on) => {
         if (on) track('Canvas', 'Used', 'SuggestionsShown');
         setShowAllSuggestions(tabId, on);

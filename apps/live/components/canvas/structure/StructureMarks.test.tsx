@@ -130,6 +130,66 @@ describe('StructureMarks', () => {
     expect(structureViewFor(TAB).answeringId).toBeNull();
   });
 
+  // Where the keyboard goes when the field is put away by a key (board-structure.md "Hotspot answers").
+  describe('the keyboard after the field', () => {
+    // The board as the editor redraws it once an answer is kept.
+    function board(answer?: string) {
+      const onAnswer = vi.fn<(id: string, text: string) => void>();
+      const tree = (kept?: string) => (
+        <>
+          <button type="button">Opener</button>
+          <StructureMarks
+            tabId={TAB}
+            elements={[hotspot('who', kept ? { esAnswer: kept } : {})]}
+            onAnswer={onAnswer}
+          />
+        </>
+      );
+      const view = render(tree(answer));
+      return { onAnswer, keep: (kept?: string) => view.rerender(tree(kept)) };
+    }
+    const opener = () => screen.getByRole('button', { name: 'Opener' });
+
+    it('goes to the check once Enter keeps an answer on a hotspot that had none', () => {
+      const { keep } = board();
+      act(() => openAnswer(TAB, 'who'));
+      fireEvent.change(field()!, { target: { value: 'The host.' } });
+      act(() => {
+        fireEvent.keyDown(field()!, { key: 'Enter' });
+        keep('The host.');
+      });
+      expect(document.activeElement).toBe(marks()[0]);
+    });
+
+    it('goes back to what opened the field while that still stands', () => {
+      board();
+      opener().focus();
+      act(() => openAnswer(TAB, 'who'));
+      expect(document.activeElement).toBe(field());
+      fireEvent.keyDown(field()!, { key: 'Escape' });
+      expect(document.activeElement).toBe(opener());
+    });
+
+    it('goes back to the check the field was opened from', () => {
+      board('The host.');
+      const check = screen.getByRole('button', { name: 'Answered: The host.' });
+      check.focus();
+      fireEvent.click(check);
+      fireEvent.keyDown(field()!, { key: 'Escape' });
+      expect(document.activeElement).toBe(marks()[0]);
+    });
+
+    it('goes nowhere when the field is left by pointing elsewhere', () => {
+      const { onAnswer } = board();
+      opener().focus();
+      act(() => openAnswer(TAB, 'who'));
+      fireEvent.change(field()!, { target: { value: 'The host.' } });
+      fireEvent.blur(field()!);
+      expect(onAnswer).toHaveBeenCalledWith('who', 'The host.');
+      expect(document.activeElement).not.toBe(opener());
+    });
+  });
+
   it('closes the field when its board is left', () => {
     const { unmount } = render(
       <StructureMarks tabId={TAB} elements={[hotspot('why')]} onAnswer={vi.fn()} />,

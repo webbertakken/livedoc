@@ -6,7 +6,8 @@ import { HOTSPOT_ANSWER_MAX } from '@livedoc/document';
 // The field a hotspot is answered in (docs/specs/021-event-storming/board-structure.md "Hotspot answers"): it opens
 // focused and holding the answer, Enter or leaving it keeps what it holds, Escape leaves the answer as it was. An
 // answer is one paragraph, so Enter keeps with or without Shift. It says its outcome once: the Enter that keeps is
-// followed by the blur of the field going.
+// followed by the blur of the field going. Put away by a key, it says what had the keyboard before it, so the
+// keyboard has somewhere to go back to.
 
 /** From how many characters the counter shows (safe range: 200 to 290; near the limit, never from the start). */
 const ANSWER_COUNTER_FROM = 240;
@@ -18,26 +19,34 @@ export function AnswerField({
   answer,
   onKeep,
   onLeave,
+  onKeyEnd,
 }: {
   // The hotspot's words: what the field answers.
   question: string;
   answer: string;
   onKeep: (text: string) => void;
   onLeave: () => void;
+  // The field is being put away by a key (Enter, Escape), not by leaving it: called first, with what had the
+  // keyboard when the field opened.
+  onKeyEnd?: (opener: HTMLElement | null) => void;
 }) {
   const id = useId();
   const ref = useRef<HTMLTextAreaElement>(null);
   const done = useRef(false);
+  const opener = useRef<HTMLElement | null>(null);
   const [draft, setDraft] = useState(answer);
   useEffect(() => {
     const field = ref.current;
     if (!field) return;
+    const had = document.activeElement;
+    opener.current = had instanceof HTMLElement && had !== document.body ? had : null;
     field.focus();
     field.setSelectionRange(field.value.length, field.value.length);
   }, []);
-  const end = (keep: boolean) => {
+  const end = (keep: boolean, byKey = false) => {
     if (done.current) return;
     done.current = true;
+    if (byKey) onKeyEnd?.(opener.current);
     if (keep) onKeep(draft);
     else onLeave();
   };
@@ -68,8 +77,8 @@ export function AnswerField({
           if (e.nativeEvent.isComposing) return;
           if (e.key === 'Enter') {
             e.preventDefault();
-            end(true);
-          } else if (e.key === 'Escape') end(false);
+            end(true, true);
+          } else if (e.key === 'Escape') end(false, true);
         }}
         onBlur={() => end(true)}
         className="block w-full resize-none rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-[13px] leading-snug text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-400"
