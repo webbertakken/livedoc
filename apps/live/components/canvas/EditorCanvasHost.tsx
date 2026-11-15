@@ -139,6 +139,7 @@ export function EditorCanvasHost() {
     addNextNote,
     suggestionActions,
     contextActions,
+    structureActions,
     photoImportAvailable,
     photoImportBlocked,
     openPhotoImport,
@@ -643,6 +644,8 @@ export function EditorCanvasHost() {
       setMultiSelectedIds(new Set());
     },
   });
+  // The board's structure is an Editor's alone (docs/specs/021-event-storming/board-structure.md "Share roles").
+  const structureControls = useStableObject(structureActions);
   const stableSlideDeck = useStableObject(slideDeck);
   const activeTheme = getTheme(activeTab.theme);
   // Tab windows (docs/specs/009-elements/tab-window.md): the tabs they show, fetched as they are shown.
@@ -929,6 +932,7 @@ export function EditorCanvasHost() {
               onAddNextNote={createBlocked ? undefined : addNextNote}
               suggestions={esBoard && can.suggestions ? suggestionControls : undefined}
               contexts={esBoard && can.contexts ? contextControls : undefined}
+              structure={esBoard && can.structure && !createBlocked ? structureControls : undefined}
               onDropPhoto={readPhotoFile}
               onDropFile={isReadOnly ? undefined : dropBoardFile}
               onDropLibraryShape={isReadOnly ? undefined : dropLibraryShape}

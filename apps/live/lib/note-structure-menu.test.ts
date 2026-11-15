@@ -3,7 +3,7 @@ import type { Element } from '@livedoc/document';
 import { noteStructureMenu } from './note-structure-menu';
 
 // What a workshop note's menu offers about the board's structure (docs/specs/021-event-storming/board-structure.md
-// "Pivotal events", "Hotspot answers").
+// "Pivotal events", "Lane names", "Hotspot answers").
 
 const note = (id: string, esKind: string, extra: Record<string, unknown> = {}): Element =>
   ({
@@ -30,6 +30,7 @@ const board: Element[] = [
 const acts = () => ({
   setPivotal: vi.fn<(id: string, on: boolean) => void>(),
   openAnswer: vi.fn<(id: string) => void>(),
+  nameLane: vi.fn<(id: string) => void>(),
 });
 
 describe('noteStructureMenu', () => {
@@ -60,9 +61,26 @@ describe('noteStructureMenu', () => {
     expect(noteStructureMenu(board, 'who', a)!.answer!.answered).toBe(true);
   });
 
-  it('offers nothing on a note of another kind, on what is no note, or on one that is gone', () => {
+  it('offers Name This Lane on any workshop note, and no other row on a note of another kind', () => {
     const a = acts();
-    expect(noteStructureMenu(board, 'place', a)).toBeNull();
+    const menu = noteStructureMenu(board, 'place', a)!;
+    expect(menu.pivotal).toBeNull();
+    expect(menu.answer).toBeNull();
+    expect(menu.lane.named).toBe(false);
+    menu.lane.onName();
+    expect(a.nameLane).toHaveBeenCalledWith('place');
+  });
+
+  it('says the lane has a name when a text left of the wall names it', () => {
+    const named: Element[] = [
+      ...board,
+      { id: 'lane', type: 'text', x: -200, y: 84, width: 180, height: 32, label: 'Floor' },
+    ];
+    expect(noteStructureMenu(named, 'place', acts())!.lane.named).toBe(true);
+  });
+
+  it('offers nothing on what is no note, or on one that is gone', () => {
+    const a = acts();
     expect(noteStructureMenu(board, 'text', a)).toBeNull();
     expect(noteStructureMenu(board, 'gone', a)).toBeNull();
   });

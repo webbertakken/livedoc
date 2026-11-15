@@ -6,6 +6,7 @@ export * from './types';
 export { readBoard } from './reading';
 export { withReadingDefaults, type OlderStormReading } from './reading-defaults';
 export { wordsOf } from './notes';
+export { laneNameSpot } from './structure';
 export {
   readSuggestions,
   type StormContextSuggestion,

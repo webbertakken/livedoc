@@ -77,6 +77,15 @@ describe('elementAriaLabel', () => {
     expect(elementAriaLabel(arrow('yes'))).toBe('Arrow "yes"');
     expect(elementAriaLabel(createSticky(0, 0))).toBe('Sticky note');
   });
+
+  it('says a pivotal event is pivotal, and nothing of a mark on any other note', () => {
+    const event = { ...createSticky(0, 0), label: 'Order taken', esKind: 'domain-event' as const };
+    const plain = elementAriaLabel(event);
+    expect(elementAriaLabel({ ...event, esPivotal: true })).toBe(`${plain}, pivotal`);
+    expect(elementAriaLabel({ ...event, esKind: 'command' as const, esPivotal: true })).toBe(
+      elementAriaLabel({ ...event, esKind: 'command' as const }),
+    );
+  });
 });
 
 describe('a path (docs/specs/023-draw-mode/path-tool.md "Accessibility")', () => {

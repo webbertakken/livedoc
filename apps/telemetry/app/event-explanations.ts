@@ -185,6 +185,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone marked a domain event on an event-storming board as pivotal: one of the few the whole flow turns on.',
   'Canvas|Used|PivotalUnmarked':
     'Someone took the pivotal mark off a domain event on an event-storming board.',
+  'Canvas|Used|LaneNamed':
+    'Someone named a lane of an event-storming board from a note’s menu, or opened the name it has. Never the name.',
   'Canvas|Used|HotspotAnswered':
     'Someone kept the answer to a hotspot on an event-storming board. Never the question or the answer.',
   'Canvas|Used|AskPromptCopied':

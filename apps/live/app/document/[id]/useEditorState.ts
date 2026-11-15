@@ -2682,12 +2682,15 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   };
   // Kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): rename, delete, notes in and out.
   const contextActions = useContextActions({ activeTab, createBlocked, commit });
-  // The board's structure (docs/specs/021-event-storming/board-structure.md): a pivotal event marked, a hotspot
-  // answered. An Editor's alone.
+  // The board's structure (docs/specs/021-event-storming/board-structure.md): a pivotal event marked, a lane named,
+  // a hotspot answered. An Editor's alone.
+  const beginEditRef = useRef<((id: string) => void) | null>(null);
   const structureActions = useStructureActions({
     activeTab,
     blocked: createBlocked || !participant.can.structure,
     commit,
+    addBoxedAt,
+    startEditing: (id) => beginEditRef.current?.(id),
   });
 
   // --- Tab actions ---------------------------------------------------------
@@ -3692,6 +3695,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
       setContextMenu,
     },
   });
+  useAssignRef(beginEditRef, beginEdit);
 
   // Canvas accessibility baseline (docs/specs/004-interface-design/canvas-accessibility.md): Tab / Shift+Tab element
   // traversal while the canvas surface is focused, plus SR live-region

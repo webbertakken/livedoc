@@ -2,6 +2,7 @@ import type { ElementStyleOps } from '@/lib/element-style-ops';
 import type { CombineOp } from '@/lib/combine/combine';
 import type { WordmarkPatch } from '@/lib/style-presets';
 import type { EventStormingNoteKind } from '@livedoc/document';
+import type { NoteStructureMenu } from '@/lib/note-structure-menu';
 import type {
   AnimationSpeed,
   FlipDirection,
@@ -397,6 +398,9 @@ export type EditorContextMenuProps = {
   // Ask… on a workshop note (docs/specs/021-event-storming/asks.md "Where an ask starts"): opens the Ask popover about
   // the note. Absent when the session may not ask.
   onAskAbout?: () => void;
+  // The board's structure on a workshop note (docs/specs/021-event-storming/board-structure.md): Mark as Pivotal on a
+  // domain event, Answer… on a hotspot, Name This Lane on any. Absent when the session may not change the structure.
+  noteStructure?: NoteStructureMenu;
   // An Event Storming board (candidate-contexts.md "The board's element menu"): its selection menu holds Text and New
   // Context alone.
   esBoard?: boolean;

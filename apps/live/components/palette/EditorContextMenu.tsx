@@ -49,6 +49,7 @@ import {
 } from '@/components/palette/context-menu-icons';
 import { SparkleIcon } from '@livedoc/ui';
 import { NoteContextRows } from './NoteContextRows';
+import { NoteStructureRows } from './NoteStructureRows';
 import {
   MenuAccordionSection,
   MenuActionRow,
@@ -254,6 +255,9 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
                 runAndClose={runAndClose}
                 sectionProps={sectionProps}
               />
+            ) : null}
+            {props.noteStructure ? (
+              <NoteStructureRows menu={props.noteStructure} runAndClose={runAndClose} />
             ) : null}
             {/* Ask… (docs/specs/021-event-storming/asks.md "Where an ask starts"): the Ask popover, about this note. */}
             {props.onAskAbout ? (

@@ -741,8 +741,8 @@ export const BOARD_STRUCTURE = chart(
   'Canvas',
   'Used',
   'Board Structure',
-  'Someone marked or unmarked a pivotal event on an event-storming board, or kept the answer to one of its hotspots.',
-  { types: ['PivotalMarked', 'PivotalUnmarked', 'HotspotAnswered'] },
+  'Someone marked or unmarked a pivotal event on an event-storming board, named one of its lanes, or kept the answer to one of its hotspots.',
+  { types: ['PivotalMarked', 'PivotalUnmarked', 'LaneNamed', 'HotspotAnswered'] },
 );
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
