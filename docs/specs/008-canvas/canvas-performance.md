@@ -230,6 +230,9 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   trace, which snapshots the page before and after every input action: on the reference board each
   snapshot is a task of up to 60 ms, which the budget counted as the board's own (a whiteboard zoom
   read 62 ms with them).
+- **A probe that cannot set a gesture up says why.** Each step of getting a board or a deck ready
+  (opening it, a menu, a panel) fails within a minute, keeping a screenshot, the accessibility
+  tree and the page's console errors with the report, rather than waiting out the whole run.
 - **It runs nightly on its own**, in a scheduled workflow, against the head of `main`; a night with
   no new commit on `main` since the last run is skipped, so it spends no CI minutes on an unchanged
   build. Each run writes the budget table to the job summary and keeps the raw traces as an
