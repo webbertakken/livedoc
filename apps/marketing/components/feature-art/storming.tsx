@@ -3,7 +3,7 @@
 // fills are the catalogue's own (packages/document/src/event-storming.ts), which keep their colour
 // under every theme, so they are identity colours rather than Default-theme ink.
 
-import { HAIRLINE, PANEL, SHADOW, Scene, TEXT_MUTED } from './canvas-marks';
+import { HAIRLINE, PANEL, SHADOW, Scene, TEXT_BODY, TEXT_MUTED, TEXT_STRONG } from './canvas-marks';
 import { Frame } from './shared';
 
 // The catalogue's paper for each note kind the cards show.
@@ -277,6 +277,158 @@ export function StickyPhotoArt() {
             tilt={i % 2 ? 3 : -2}
           />
         ))}
+      </Scene>
+    </Frame>
+  );
+}
+
+// Asking, arranging and reviewing: notes in even columns along the lanes, a pivotal tape through the
+// event the story turns on, a suggested note waiting dashed where the agent would put it, an answered
+// hotspot wearing its check, and the corner's Ask and Review pills over the Review card's readiness.
+export function StormReviewArt() {
+  const columns = [14, 52, 90, 128];
+  return (
+    <Frame canvas>
+      <Scene>
+        {[20, 48, 76].map((y) => (
+          <line
+            key={y}
+            className={HAIRLINE}
+            x1="8"
+            x2="196"
+            y1={y}
+            y2={y}
+            strokeWidth="0.8"
+            strokeDasharray="3 3"
+          />
+        ))}
+        {/* The pivotal tape, behind the notes, through the event the flow turns on. */}
+        <rect x="103" y="4" width="4" height="88" fill="#64748b" fillOpacity="0.8" />
+        <StormNote
+          x={columns[0]!}
+          y={9}
+          w={24}
+          h={20}
+          fill={NOTE.actor}
+          lines={['GUEST']}
+          tilt={-2}
+        />
+        <StormNote
+          x={columns[0]!}
+          y={35}
+          w={28}
+          h={26}
+          fill={NOTE.command}
+          lines={['BOOK', 'TABLE']}
+          tilt={1.5}
+        />
+        <StormNote
+          x={columns[1]!}
+          y={35}
+          w={28}
+          h={26}
+          fill={NOTE.event}
+          lines={['TABLE', 'BOOKED']}
+          tilt={-1.5}
+        />
+        <StormNote
+          x={columns[2]!}
+          y={35}
+          w={30}
+          h={26}
+          fill={NOTE.event}
+          lines={['ORDER', 'TAKEN']}
+          tilt={1}
+        />
+        <StormNote
+          x={columns[2]! + 2}
+          y={64}
+          w={30}
+          h={24}
+          fill={NOTE.hotspot}
+          lines={['SPLIT', 'BILL?']}
+          tilt={2.5}
+        />
+        {/* The hotspot's answer: a check on its corner. */}
+        <circle
+          cx={columns[2]! + 32}
+          cy="65"
+          r="3.6"
+          fill="#059669"
+          className="stroke-white dark:stroke-slate-900"
+          strokeWidth="1"
+        />
+        <path
+          d={`M${columns[2]! + 30.4} 65 l1.1 1.1 l2 -2.3`}
+          stroke="#fff"
+          strokeWidth="0.9"
+          fill="none"
+        />
+        {/* A suggested note, offered and not yet taken: dashed, never paper. */}
+        <rect
+          x={columns[3]!}
+          y="35"
+          width="30"
+          height="26"
+          rx="1"
+          fill={NOTE.event}
+          fillOpacity="0.25"
+          stroke="#c2410c"
+          strokeWidth="0.9"
+          strokeDasharray="2.5 2"
+        />
+        <text
+          x={columns[3]! + 15}
+          y="46"
+          fontSize="4.4"
+          fontWeight="700"
+          fill={MARKER}
+          textAnchor="middle"
+          opacity="0.7"
+        >
+          <tspan x={columns[3]! + 15}>BILL</tspan>
+          <tspan x={columns[3]! + 15} dy="5.4">
+            PAID
+          </tspan>
+        </text>
+        {/* The corner: Ask and Review, and the Review card under them. */}
+        <g className={SHADOW}>
+          <rect x="216" y="8" width="30" height="11" rx="5.5" className="fill-brand-700" />
+        </g>
+        <text x="231" y="15.4" fontSize="5.2" fontWeight="700" fill="#fff" textAnchor="middle">
+          Ask
+        </text>
+        <rect x="250" y="8" width="40" height="11" rx="5.5" className={PANEL} strokeWidth="0.7" />
+        <text
+          className={TEXT_STRONG}
+          x="270"
+          y="15.4"
+          fontSize="5.2"
+          fontWeight="700"
+          textAnchor="middle"
+        >
+          Review
+        </text>
+        <g className={SHADOW}>
+          <rect x="206" y="24" width="84" height="64" rx="3" className={PANEL} strokeWidth="0.7" />
+        </g>
+        <text className={TEXT_STRONG} x="212" y="34" fontSize="4.8" fontWeight="700">
+          Check · Language · Story
+        </text>
+        <text className={TEXT_BODY} x="212" y="44" fontSize="4.4">
+          2 events · 1 gap
+        </text>
+        <line className={HAIRLINE} x1="212" x2="284" y1="49" y2="49" strokeWidth="0.6" />
+        <text className={TEXT_MUTED} x="212" y="57" fontSize="4" fontWeight="600">
+          The story has a hole
+        </text>
+        <text className={TEXT_BODY} x="212" y="65" fontSize="4.2">
+          Nothing causes Order Taken
+        </text>
+        <rect x="212" y="70" width="18" height="9" rx="4.5" className="fill-brand-700" />
+        <text x="221" y="76.2" fontSize="4.2" fontWeight="700" fill="#fff" textAnchor="middle">
+          Add
+        </text>
       </Scene>
     </Frame>
   );

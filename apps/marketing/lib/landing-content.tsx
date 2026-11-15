@@ -107,6 +107,7 @@ import {
   SlideTimingArt,
   SpotlightArt,
   StickyPhotoArt,
+  StormReviewArt,
   TabCopyArt,
   TabFoldersArt,
   TabWindowArt,
@@ -489,6 +490,14 @@ export const LANDING_SECTIONS: LandingSection[] = [
         title: 'Bring the paper wall in from a photo',
         description:
           'Ran the session on a real wall? Take a photo and every sticky comes in as a note: its words read from the handwriting, its kind from the paper\u2019s colour, laid out where it was. Untick what is not a note, fix a misreading, then add them as a draft you check in place.',
+      },
+      {
+        art: <StormReviewArt />,
+        href: '/help/canvas/event-storming-boards/asking-for-suggestions/',
+        group: 'Event storming',
+        title: 'Ask for suggestions, then review the wall',
+        description:
+          'Ask your coding agent, an AI tool or the built-in model for the notes the story is missing, names for its contexts, sharper wording or fewer lanes, and accept each one after a preview. Arrange the wall along its timeline, mark the pivotal events, answer the hotspots and check the gaps before you build.',
       },
       {
         art: <IconsArt />,
