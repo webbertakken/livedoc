@@ -28,6 +28,12 @@ export const ITEM_ID_PATTERN = /^[A-Za-z0-9_-]{6,32}$/;
 export const ITEM_FIELD_KEY_PATTERN = /^[A-Za-z0-9_-]{1,40}$/;
 export const ITEM_TYPE_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
 
+// A custom field's bounds (docs/specs/026-plan/item-types.md). A Choice field's options are a form question's too
+// (@livedoc/forms), so a form's page reads them here, apart from the type catalogue.
+export const CUSTOM_FIELD_LABEL_MAX = 32;
+export const CUSTOM_CHOICE_OPTIONS_MAX = 20;
+export const CUSTOM_CHOICE_OPTION_MAX = 100;
+
 // Board set-up bounds (docs/specs/026-plan/plan-board.md).
 export const PLAN_COLUMNS_MAX = 12;
 export const PLAN_COLUMN_NAME_MAX = 40;

@@ -9,7 +9,8 @@
 import { canvasSurface, type CanvasSurface } from './colors';
 import { elementIndexFor } from './geometry';
 import { pageAt, type LaidOutPage } from './page';
-import { elementAnchorPoint, pageFillTone } from './page-content';
+import { elementAnchorPoint } from './page-content';
+import { pageFillTone } from './page-fill-tone';
 import { isChartShape } from './data-shapes';
 import { isSankeyShape } from './sankey-model';
 import { layerBands } from './layers';

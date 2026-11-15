@@ -26,7 +26,7 @@ import {
 } from '@livedoc/document';
 import type { PageLayoutId } from '@livedoc/templates';
 import { resolveIconArtLoaded, resolveStickerArtLoaded } from '@/lib/icon-registry';
-import { pageSheetStyle } from '@/lib/page-paint';
+import { pageSheetStyle } from '@/lib/page-sheet-style';
 import { PageMotionLayer } from './PageMotionLayer';
 import { buildPageLayoutOver } from '@livedoc/templates';
 import { useCanvasChartPalette, useCanvasSurface } from './CanvasSurfaceContext';

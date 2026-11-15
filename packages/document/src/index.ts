@@ -513,6 +513,7 @@ export * from './element-symmetry';
 export * from './logo-guide-snap';
 export * from './wordmark';
 export * from './page-content';
+export * from './page-fill-tone';
 export * from './page-frame';
 export * from './page-ink';
 export * from './page-ink-contrast';

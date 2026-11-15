@@ -21,7 +21,13 @@ import {
   type ItemTypeDef,
   type ItemTypeTab,
 } from './item-types';
-import { ITEM_STATUS_MAX, ITEM_TYPE_PATTERN } from './limits';
+import {
+  CUSTOM_CHOICE_OPTION_MAX,
+  CUSTOM_CHOICE_OPTIONS_MAX,
+  CUSTOM_FIELD_LABEL_MAX,
+  ITEM_STATUS_MAX,
+  ITEM_TYPE_PATTERN,
+} from './limits';
 import { cutSlug, slugText, uniqueSlug } from './slug';
 import { statusNamed } from './status-names';
 import { HEX_COLOUR, isObj } from './validate';
@@ -36,9 +42,6 @@ export function customFieldCount(custom: readonly unknown[]): number {
   return custom.filter((c) => !isObj(c) || c['id'] !== PARENT_FIELD_ID).length;
 }
 export const ITEM_TYPE_LABEL_MAX = 32;
-export const CUSTOM_FIELD_LABEL_MAX = 32;
-export const CUSTOM_CHOICE_OPTIONS_MAX = 20;
-export const CUSTOM_CHOICE_OPTION_MAX = 100;
 // The stored catalogue's JSON, at most (room for 32 full types).
 const ITEM_TYPES_BYTES = 32_768;
 export const ITEM_TYPE_CATALOGUE_VERSION = 1;

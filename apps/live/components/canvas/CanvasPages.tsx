@@ -48,7 +48,7 @@ import {
 } from '@/hooks/canvas/usePageReorderDrag';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
 import { useLogoPaletteSwitch } from '@/hooks/canvas/useLogoPaletteSwitch';
-import { pageSheetStyle } from '@/lib/page-paint';
+import { pageSheetStyle } from '@/lib/page-sheet-style';
 import { usePageImageSources } from './page-image-access';
 import { PagePanel, type PagePanelTab } from './PagePanel';
 import {

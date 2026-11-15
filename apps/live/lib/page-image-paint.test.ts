@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PageImageFill } from '@livedoc/document';
-import { backgroundCategoryOf, fillCss, pageSheetStyle } from './page-paint';
+import { backgroundCategoryOf } from './page-paint';
+import { fillCss, pageSheetStyle } from './page-sheet-style';
 import {
   pageImageCssUrl,
   pageImageOverlayCss,

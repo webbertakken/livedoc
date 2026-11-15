@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { pagesOf } from './page';
-import { pageIsDark, pageSurface } from './page-content';
+import { pageSurface } from './page-content';
+import { pageIsDark } from './page-fill-tone';
 import { sameFill } from './page-paint';
 import {
   defaultPageImageOverlay,

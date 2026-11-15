@@ -5,7 +5,7 @@
 // Pure.
 import { mixHex } from './page-ink-contrast';
 import type { Page, PageRect } from './page';
-import { pageFillTone } from './page-content';
+import { pageFillTone } from './page-fill-tone';
 import type { Rect } from './geometry-primitives';
 
 // The plain paper, measured as printed and exported.

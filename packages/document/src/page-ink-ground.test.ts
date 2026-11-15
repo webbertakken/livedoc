@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pageFillTone } from './page-content';
+import { pageFillTone } from './page-fill-tone';
 import { gradientPosition, pageGroundUnder, PAPER_TONE } from './page-ink-ground';
 
 // docs/specs/007-editor/pages-mode.md "Re-inking": what the page is under an element.

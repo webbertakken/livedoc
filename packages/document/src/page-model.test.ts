@@ -15,12 +15,11 @@ import {
   elementsOnPage,
   elementPageSurfaces,
   legibleOn,
-  pageFillTone,
-  pageIsDark,
   pageSurface,
   withDuplicatedPage,
   withPageContentReplaced,
 } from './page-content';
+import { pageFillTone, pageIsDark } from './page-fill-tone';
 import { withPageInkFor } from './page-ink';
 import { contrastRatio } from './colour-math';
 import type { Element } from './index';

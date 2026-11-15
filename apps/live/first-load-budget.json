@@ -5,7 +5,7 @@
     { "page": "^/new$", "kib": 830 },
     { "page": "^/explorer(/|$)", "kib": 640 },
     { "page": "^/drive/open$", "kib": 410 },
-    { "page": "^/form/", "kib": 370 },
+    { "page": "^/form/", "kib": 285 },
     { "page": "^/(sign-in|get-started)$", "kib": 290 },
     { "page": ".", "kib": 270 }
   ]

@@ -14,9 +14,8 @@ import {
   withPages,
   type Page,
   type LaidOutPage,
-  type PageFill,
 } from './page';
-import { pageImageTone } from './page-image';
+import { pageFillTone } from './page-fill-tone';
 import { pageContentBox, pageScreenRect } from './wireframe-page';
 import { PAGE_INK_CONTRAST, PAGE_INK_FLOOR } from './page-ink-rules';
 import { isBoxed, type Element, type Endpoint, type ShapeElement, type Tab } from './index';
@@ -158,40 +157,11 @@ export function withPageContentReplaced<T extends Pick<Tab, 'elements'>>(
   return { ...tab, elements: [...kept, ...placed] };
 }
 
-/** The colour a page's fill reads as: a solid's colour, a gradient's two stops averaged, a
- *  picture's tone under its overlay. */
-export function pageFillTone(fill: PageFill): string {
-  if (fill.kind === 'solid') return fill.color;
-  if (fill.kind === 'image') return pageImageTone(fill);
-  const rgb = (hex: string) => {
-    const h = hex.length === 4 ? hex.replace(/^#(.)(.)(.)$/, '#$1$1$2$2$3$3') : hex;
-    return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
-  };
-  const a = rgb(fill.from);
-  const b = rgb(fill.to);
-  return (
-    '#' +
-    a
-      .map((v, i) =>
-        Math.round((v + b[i]!) / 2)
-          .toString(16)
-          .padStart(2, '0'),
-      )
-      .join('')
-  );
-}
-
 /** The surface a page's own fill makes, or null for the plain paper (which leaves elements inked
  *  as the canvas inks them). */
 export function pageSurface(page: Pick<Page, 'background'>): CanvasSurface | null {
   const fill = page.background?.fill;
   return fill ? canvasSurface(pageFillTone(fill)) : null;
-}
-
-/** Whether a page's fill is dark: its elements with no colour of their own take light ink. */
-export function pageIsDark(page: Pick<Page, 'background'>): boolean {
-  const fill = page.background?.fill;
-  return !!fill && !isLightColor(pageFillTone(fill));
 }
 
 /** The surface of every element on a page with a fill of its own, by element id: what that

@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { pageIsDark, type Page } from '@livedoc/document';
 import {
-  fillCss,
   gradientFill,
   PAGE_GRADIENT_PRESETS,
-  pageSheetStyle,
   sameFill,
   themeBackgroundPresets,
   withBackgroundPatch,
 } from './page-paint';
+import { fillCss, pageSheetStyle } from './page-sheet-style';
 
 // docs/specs/007-editor/pages-mode.md "Backgrounds".
 const page = (background?: Page['background']): Page => ({

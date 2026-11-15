@@ -94,6 +94,12 @@ Next renders the root not-found slot inside the layout, so its code is part of e
 - Code that only needs a colour imports the colour maths (`@livedoc/document`'s `colour-math.ts`), which
   knows no element; the element defaults beside it (`colors.ts`) carry every shape kind. The brand
   mark on the sign-in page once brought 50 KiB of shape code with it.
+- A form's page, opened from a link and often on a phone, paints its cover band with the sheet style
+  (`lib/page-sheet-style.ts`), which reads a fill's tone and its pattern's ink from `@livedoc/document`'s
+  `page-fill-tone.ts`, a leaf beside the colour maths. The panel's presets (`lib/page-paint.ts`) and the
+  export frame (`page-frame.ts`) carry the themes and the document model, about 110 KiB the band never
+  used. Its answer checks read the bounds a question shares with a Choice field from `@livedoc/items`'
+  `limits.ts`, never from the type catalogue, whose glyphs and board code came with it (about 60 KiB).
 - `apps/live/app/first-load-lazy.test.ts` fails if any of these become static imports again.
 
 ### A surface that is not on screen loads when it is

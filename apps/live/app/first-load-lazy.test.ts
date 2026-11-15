@@ -94,3 +94,35 @@ describe('the api client barrel', () => {
     }
   });
 });
+
+// A respondent opens a form from a link, often on a phone. Its cover band paints a fill and a pattern: the page's
+// fill tone, never the presets' themes or the export frame, which carry the document model with them.
+describe('the form page’s first load', () => {
+  it('paints the cover band from the sheet style alone', () => {
+    expect(staticImports(read('components/forms/FormCoverBand.tsx'))).not.toContain(
+      '@/lib/page-paint',
+    );
+    expect(staticImports(read('components/forms/FormCoverBand.tsx'))).toContain(
+      '@/lib/page-sheet-style',
+    );
+    expect(staticImports(read('lib/page-sheet-style.ts'))).toEqual([
+      '@livedoc/document',
+      './page-image-paint',
+    ]);
+    expect(staticImports(read('lib/page-image-paint.ts'))).toEqual(['@livedoc/document']);
+  });
+
+  it('checks its answers against bounds that import nothing, never the type catalogue', () => {
+    const itemLimits = read('../../packages/items/src/limits.ts');
+    expect(staticImports(itemLimits)).toEqual([]);
+    for (const bound of [
+      'CUSTOM_CHOICE_OPTIONS_MAX',
+      'CUSTOM_CHOICE_OPTION_MAX',
+      'ITEMS_MAX',
+      'ITEM_TITLE_MAX',
+    ]) {
+      expect(itemLimits, bound).toContain(`export const ${bound} =`);
+    }
+    expect(read('../../packages/forms/src/limits.ts')).toContain("from '@livedoc/items'");
+  });
+});

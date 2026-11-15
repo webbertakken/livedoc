@@ -8,7 +8,8 @@ import type { CSSProperties } from 'react';
 import { lucideImage, lucideSparkles } from '@livedoc/icons/lucide';
 import { lucideGlyph } from '@livedoc/ui';
 import type { PageFill } from '@livedoc/document';
-import { fillCss, type BackgroundCategory } from '@/lib/page-paint';
+import type { BackgroundCategory } from '@/lib/page-paint';
+import { fillCss } from '@/lib/page-sheet-style';
 import { tileClass } from './page-panel-sections';
 
 const ImageGlyph = lucideGlyph(lucideImage, 14);

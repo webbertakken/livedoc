@@ -15,7 +15,8 @@ import {
 import { PagedCarousel } from '@/components/primitives/PagedCarousel';
 import { RANGE_SLIDER } from '@/components/primitives/surface-classes';
 import { CheckIcon, Tooltip } from '@livedoc/ui';
-import { fillCss, type ThemeBackgroundPreset } from '@/lib/page-paint';
+import type { ThemeBackgroundPreset } from '@/lib/page-paint';
+import { fillCss } from '@/lib/page-sheet-style';
 import {
   colouringOf,
   motionColouring,

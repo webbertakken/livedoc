@@ -24,17 +24,16 @@ import { CheckIcon, Tooltip } from '@livedoc/ui';
 import {
   backgroundCategoryOf,
   customGradientSeed,
-  fillCss,
   gradientFill,
   isCustomGradient,
   PAGE_GRADIENT_PRESETS,
   PAGE_PATTERN_LABEL,
-  pageSheetStyle,
   sameFill,
   themePresetAccent,
   type BackgroundCategory,
   type ThemeBackgroundPreset,
 } from '@/lib/page-paint';
+import { fillCss, pageSheetStyle } from '@/lib/page-sheet-style';
 import { PanelSection, tileClass } from './page-panel-sections';
 import { CustomGradientEditor, PAGE_COLOUR_GROUPS, RAINBOW } from './page-background-custom';
 import { AnimatedBackgroundChoices } from './page-background-animated';
