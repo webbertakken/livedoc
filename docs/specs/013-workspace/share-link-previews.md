@@ -56,9 +56,20 @@ The live app's worker fills in the shell's `<head>` for `/document/shared?s=<cod
 `GET /api/share/<code>/card`, which answers `{ name }` for a link whose preview names its document and 404 for every
 other row of the table above.
 
-- **The shell is fetched at the same time as the card**, so a visitor waits for whichever is slower, not both.
-- **The api has 1.5 s.** Slower, failing, or not bound at all (a self-host without the `API` service binding): the
-  shell goes out as built, with the brand card, and the editor works as before.
+- **The head never waits on the card.** The worker takes the title and the preview tags out of the shell and sends
+  the rest of the head, with every style and script, as soon as the shell is fetched. The title and the tags close
+  the head once the api answers: naming the document, or as the shell had them. A person's browser fetches the
+  editor's code while the api answers; a crawler, which reads the whole page, finds the same tags at the end of
+  the head.
+- **The shell is fetched at the same time as the card**, so the head goes out after the shell alone, and the body
+  after whichever is slower, not both.
+- **The api has 1.5 s**, a crawler's budget, not a person's. Measured from outside Western Europe, the card took
+  0.3 to 0.9 s on a cold api (November 2026), so a shorter wait would cost those crawlers their preview.
+  Slower, failing, or not bound at all (a self-host without the `API` service binding): the shell goes out with
+  its own title and tags, with the brand card, and the editor works as before.
+- **The card is one read**: the link, unexpired; its document, not trashed; and no share password, in one D1
+  query, so a preview pays one round trip to the database, not three in a row. The share card's image asks the
+  same question the same way.
 - **The editor still sets its own title** once the document loads; the worker only decides what a crawler reads.
 
 ## Share roles
