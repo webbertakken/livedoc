@@ -1,63 +1,45 @@
 // @vitest-environment jsdom
-import { act } from 'react';
-import { createRoot } from 'react-dom/client';
-import { afterEach, describe, expect, it } from 'vitest';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import type { OutlineHeading } from '@/lib/article-outline';
 import { TableOfContents } from './TableOfContents';
 
-// The contents list is read from the article's committed headings, including an article that commits
-// after the list mounts (a client-side navigation), and each heading gets the anchor its link uses.
-(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+// The contents list is the article's outline (lib/article-outline.ts), drawn into the static HTML with the anchors
+// its headings carry (docs/specs/016-platform/web-performance.md "Layout never shifts after first paint").
 
-const article = (headings: string[]) => {
-  const prose = document.createElement('div');
-  prose.className = 'prose-help';
-  prose.innerHTML = headings.map((h) => `<h2>${h}</h2>`).join('');
-  return prose;
-};
+const items: OutlineHeading[] = [
+  { id: 'first-part', text: 'First part', level: 2 },
+  { id: 'a-detail', text: 'A detail', level: 3 },
+  { id: 'second-part', text: 'Second part', level: 2 },
+];
 
-afterEach(() => {
-  document.body.innerHTML = '';
-});
-
-async function mount() {
-  const host = document.createElement('aside');
-  document.body.appendChild(host);
-  const root = createRoot(host);
-  await act(async () => root.render(<TableOfContents />));
-  return { host, root };
+function render(list: OutlineHeading[]): HTMLElement {
+  const host = document.createElement('div');
+  host.innerHTML = renderToStaticMarkup(<TableOfContents items={list} />);
+  return host;
 }
 
 describe('TableOfContents', () => {
-  it('lists the headings of an article already on the page, with anchors', async () => {
-    document.body.appendChild(article(['First part', 'Second part']));
-    const { host } = await mount();
-    const links = [...host.querySelectorAll('a')].map((a) => a.getAttribute('href'));
-    expect(links).toEqual(['#first-part', '#second-part']);
-    expect(document.querySelector('h2')!.id).toBe('first-part');
+  it('links every heading of the outline, in the static markup', () => {
+    const links = [...render(items).querySelectorAll('a')].map((a) => a.getAttribute('href'));
+    expect(links).toEqual(['#first-part', '#a-detail', '#second-part']);
   });
 
-  it('picks up an article that commits after it mounts', async () => {
-    const { host } = await mount();
-    expect(host.textContent).toBe('');
-    await act(async () => {
-      document.body.appendChild(article(['Alpha', 'Beta']));
-    });
-    expect(host.textContent).toContain('Alpha');
-    expect(host.textContent).toContain('Beta');
+  it('numbers the sections and indents the sub-sections', () => {
+    const rows = [...render(items).querySelectorAll('a')];
+    expect(rows.map((a) => a.textContent)).toEqual(['1First part', 'A detail', '2Second part']);
+    expect(rows[1]!.className).toMatch(/\bpl-7\b/);
   });
 
-  it('shows nothing for a single heading', async () => {
-    document.body.appendChild(article(['Only one']));
-    const { host } = await mount();
-    expect(host.innerHTML).toBe('');
+  it('shows nothing for an article without an outline', () => {
+    expect(render([]).innerHTML).toBe('');
   });
 });
 
 // docs/specs/004-interface-design/touch-targets.md "A list's rows abut at 44px".
 describe('TableOfContents on a touch screen', () => {
-  it('stacks 44px rows with no gap between them', async () => {
-    document.body.appendChild(article(['First part', 'Second part']));
-    const { host } = await mount();
+  it('stacks 44px rows with no gap between them', () => {
+    const host = render(items);
     expect(host.querySelector('ul')!.className).toMatch(/\bpointer-coarse:space-y-0\b/);
     for (const a of host.querySelectorAll('a'))
       expect(a.className).toMatch(/\bpointer-coarse:min-h-11\b/);

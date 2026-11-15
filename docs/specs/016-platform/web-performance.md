@@ -127,6 +127,11 @@ further down the document: the help article's sidebar column is a grid track, th
 sidebar is, where a flex row let the article take the full width until the sidebar was parsed
 (a 0.24 layout shift at 6× CPU throttling).
 
+- A help article's Contents list is worked out from the article while it renders
+  (`lib/article-outline.ts`), so it is in the static HTML: it never pushes the sidebar's Learn more
+  list down after hydration (a 0.007 shift on every article with related guides), and no observer
+  watches the page for headings.
+
 ### The first images a visitor sees load first
 
 A gallery's first row loads its images eagerly with
@@ -152,6 +157,27 @@ seen on the document).
   renders the editor once.
 - The autosave compares a tab's metadata key by key, identity first, never the whole tab serialised.
 - Requests several surfaces make at once (a team's library) share one in-flight request.
+
+## Delivery
+
+- **A page's own data leaves with its HTML.** A static page whose first view waits on one fixed,
+  public api read (the telemetry dashboard's summary) starts it from an inline script at the top
+  of its markup, so it travels while the scripts download; the page's code takes that request
+  rather than asking again, and asks itself only where the script did not run. Not a
+  `<link rel="preload">`: WebKit fetches a preloaded `fetch` a second time, and Firefox does for a
+  `cache: 'no-store'` read, and an unused preload is a wasted request.
+- **A file a stylesheet loads is a build asset.** A font a page's CSS names is imported by that
+  CSS (`url('./…')`), so the build names it by its content under `/_next/static/` and it is cached
+  immutable; at a fixed name under `public/` it is revalidated on every visit
+  ([Stale builds](stale-builds.md) "Caching rules").
+- **The live worker sends no `Link` preload.** A document read carries the owner's headers, which
+  no preload can, and the session read (`cache: 'no-store'`) is taken from a preload only by
+  Chromium; WebKit and Firefox would fetch it twice.
+- **The share page asks the api for its preview on every visit**, a person's too: telling a link
+  preview's crawler from a person needs a list of crawlers, which
+  [Share-link previews](../013-workspace/share-link-previews.md) does not keep, and a crawler
+  missing from it would lose its preview. The shell is fetched alongside, so a person waits only
+  when the card is the slower of the two.
 
 ## The api
 

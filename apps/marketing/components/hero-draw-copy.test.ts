@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DRAW_COPY, HAND_GLYPHS } from './hero-draw-copy';
 
-const FONT = join(__dirname, '..', 'public', 'fonts', 'caveat-hero.woff2');
+const FONT = join(__dirname, '..', 'app', 'hero-scenes', 'caveat-hero.woff2');
 // The subset's budget: it loads with the hero (the overview draws the Draw scene on first paint).
 const FONT_BUDGET_BYTES = 20 * 1024;
 

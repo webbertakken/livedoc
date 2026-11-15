@@ -153,6 +153,18 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     trigger: { assets: /(^|-)index_bg\.wasm$/ },
     texts: text('tiny-skia-0.10.0-LICENSE.txt'),
   },
+  // The hand face the marketing hero's Draw window writes in, a subset of only its glyphs
+  // (apps/marketing/app/hero-scenes/caveat-hero.woff2).
+  {
+    id: 'caveat',
+    name: 'Caveat',
+    version: '2.000',
+    licence: 'OFL-1.1',
+    carrier: 'the marketing site (font)',
+    homepage: 'https://github.com/googlefonts/caveat',
+    trigger: { assets: /^caveat-hero\.[\w-]+\.woff2$/ },
+    texts: [{ label: 'OFL', file: 'caveat-2.000-OFL.txt' }],
+  },
   // The typeface the MCP server and the CLI render PNG previews with (packages/render-png/fonts).
   {
     id: 'inter',

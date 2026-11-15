@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useDeferredValue, useEffect, useRef, useState, type ReactNode } from 'react';
-import { EmptyState, SiteFooter, SiteHeader } from '@livedoc/ui';
+import { EmptyState, SiteFooter, SiteHeader, trustedHtml } from '@livedoc/ui';
 import type { TelemetrySummary, TelemetryWindowKey } from '@livedoc/api-schema';
 import {
   ActivityGlyph,
@@ -19,11 +19,7 @@ import { DashboardSkeleton } from './DashboardSkeleton';
 import { SECTION_TAB, type SectionKey, type ViewKey } from './view-keys';
 import type { SectionFocus } from './SectionedView';
 import { dropRetiredEvents } from './retired-events';
-
-// Same origin as the editor + api under the router (docs.nu).
-// An origin-relative '/api' is correct even though this app is served
-// under '/telemetry' (basePath doesn't rewrite absolute fetch paths).
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
+import { requestSummary, SUMMARY_BOOT_SCRIPT } from './summary-request';
 
 // Ways to read the same summary payload (docs/specs/017-telemetry/telemetry.md). The timeframe
 // window is global (the WindowPanel above the tabs), so it lives here
@@ -66,7 +62,7 @@ export default function TelemetryDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_BASE}/telemetry/summary`)
+    requestSummary()
       .then((r) => {
         if (!r.ok) throw new Error(`telemetry summary: HTTP ${r.status}`);
         return r.json() as Promise<TelemetrySummary>;
@@ -89,6 +85,9 @@ export default function TelemetryDashboard() {
 
   return (
     <>
+      {/* The summary leaves with the HTML (docs/specs/016-platform/web-performance.md "Delivery"): the prerender writes
+          this script at the top of the page, where the parser runs it before any of the scripts below arrive. */}
+      <script dangerouslySetInnerHTML={{ __html: trustedHtml(SUMMARY_BOOT_SCRIPT) }} />
       {/* Same header + footer as the marketing landing page (shared SiteHeader /
           SiteFooter), so telemetry reads as part of the product. */}
       <SiteHeader ctaSurface="Dashboard" />
