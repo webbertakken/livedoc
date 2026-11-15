@@ -10,7 +10,7 @@ import {
   apiAnswerPairingRequest,
   apiReadPairingRequest,
   type PairingAnswerOutcome,
-} from '@/lib/api-client';
+} from '@/lib/api/workbench';
 import { useSignInAvailable } from '@/lib/auth-config';
 import { track } from '@/lib/telemetry';
 import { useAccountApiBootstrap } from '@/hooks/persistence/useAccountApiBootstrap';

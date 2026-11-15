@@ -8,7 +8,7 @@
 // closed-vocabulary token, never user content.
 
 import { createTelemetryEmitter, type TelemetryEmitter } from '@livedoc/telemetry-client';
-import { API_BASE } from './api-client';
+import { API_BASE } from './api/base';
 import {
   PREFERENCES_CHANGED_EVENT,
   readUserPreferences,
@@ -49,9 +49,9 @@ function ensurePreferenceListeners(): void {
 }
 
 // Constructed lazily on the first track(): this module sits inside an
-// import cycle (user-preferences -> api-client barrel), so reading
-// API_BASE at module scope hit the TDZ during Next's build. Deferring
-// to first use restores the old read-at-flush-time semantics.
+// import cycle (user-preferences -> api/preferences -> api/core ->
+// local-identity -> telemetry), so nothing here reads another module of
+// the cycle at module scope, where it would hit the TDZ during Next's build.
 let emitter: TelemetryEmitter | null = null;
 
 export const track: TelemetryEmitter['track'] = (category, action, type) => {

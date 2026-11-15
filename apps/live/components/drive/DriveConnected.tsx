@@ -13,7 +13,7 @@ import {
   apiCancelDriveAccountSwitch,
   apiConfirmDriveAccountSwitch,
   apiDriveConnect,
-} from '@/lib/api-client';
+} from '@/lib/api/drive';
 import { useAccountApiBootstrap } from '@/hooks/persistence/useAccountApiBootstrap';
 import { markConnectCancelled, markConnectConnected, takeConsent } from '@/lib/drive/consent';
 import { driveLog, driveWarn } from '@/lib/drive/log';

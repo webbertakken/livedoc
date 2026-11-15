@@ -4,7 +4,7 @@
 // source, while only the one tab elected to sync loads the engine.
 
 import type { DriveMode } from '@livedoc/api-schema';
-import { apiDriveToken } from '../api-client';
+import { apiDriveToken } from '../api/drive';
 import {
   createBrokerTokenSource,
   createBrowserTokenSource,

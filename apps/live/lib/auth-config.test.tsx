@@ -4,12 +4,12 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const caps = vi.hoisted(() => ({ answer: {} as Record<string, unknown> }));
-vi.mock('@/lib/api-client', () => ({
+vi.mock('@/lib/api/capabilities', () => ({
   apiGetCapabilities: vi.fn(async () => caps.answer),
 }));
 
 import { SIGN_IN_OFFERED_KEY } from '@livedoc/account-session';
-import { apiGetCapabilities } from '@/lib/api-client';
+import { apiGetCapabilities } from '@/lib/api/capabilities';
 import {
   AUTH_CONFIG_UNKNOWN,
   loadAuthConfig,

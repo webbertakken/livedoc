@@ -11,7 +11,7 @@ const track = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/telemetry', () => ({ track }));
 const read = vi.hoisted(() => vi.fn());
 const decline = vi.hoisted(() => vi.fn());
-vi.mock('@/lib/api-client', () => ({
+vi.mock('@/lib/api/teams', () => ({
   apiReadTeamInviteDecline: read,
   apiDeclineTeamInvite: decline,
 }));

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { installClientErrorTracking } from '@livedoc/telemetry-client';
-import { setApiErrorReporter, setApiWarningReporter } from '@/lib/api-client';
+import { setApiErrorReporter, setApiWarningReporter } from '@/lib/api/error-report';
 import { track } from '@/lib/telemetry';
 import { installRecentErrorCapture, recordClientError } from '@/lib/bug-report/recent-errors';
 

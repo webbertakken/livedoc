@@ -13,7 +13,7 @@ import {
 } from '@/components/chrome/LandingCard';
 import { useUrlToken } from '@/hooks/ui/useUrlToken';
 import { track } from '@/lib/telemetry';
-import { apiDeclineTeamInvite, apiReadTeamInviteDecline } from '@/lib/api-client';
+import { apiDeclineTeamInvite, apiReadTeamInviteDecline } from '@/lib/api/teams';
 
 // The landing for a team invite email's Decline link (docs/specs/013-workspace/teams.md "Declining from the
 // email"), served at `/join/decline?token=<token>` outside the Explorer chrome, signed in or not. Opening

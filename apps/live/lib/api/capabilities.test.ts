@@ -1,7 +1,7 @@
 // The capabilities answer is deployment config, so a page asks once however many surfaces need
 // it (the editor, the Drive mirror, each Settings open), and asks again only after a failure.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { apiGetCapabilities, resetCapabilitiesForTests } from './ai';
+import { apiGetCapabilities, resetCapabilitiesForTests } from './capabilities';
 
 const answer = (body: unknown, status = 200) =>
   vi.fn(async () => new Response(JSON.stringify(body), { status }));

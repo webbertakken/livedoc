@@ -11,7 +11,7 @@
 
 import type { WhiteboardShapeKey } from './whiteboard-shape-catalogue';
 import type { UserPreferences } from './user-preferences';
-import { apiPutPreferences } from './api-client';
+import { apiPutPreferences } from './api/preferences';
 import {
   readLocalStorageSafe,
   removeLocalStorageSafe,
