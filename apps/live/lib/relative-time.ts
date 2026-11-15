@@ -72,21 +72,35 @@ const tickListeners = new Set<() => void>();
 let tickIntervalId: number | null = null;
 let tickNow = Date.now();
 
+function tick() {
+  tickNow = Date.now();
+  for (const fn of tickListeners) fn();
+}
+
+// A hidden page shows no times, so the clock holds still there and catches up the moment the page shows again
+// (docs/specs/016-platform/web-performance.md "Work only when it can change what shows"): otherwise every row
+// with a time re-renders every tick in a background tab.
+function tickWhileShown() {
+  if (document.visibilityState !== 'hidden') tick();
+}
+function catchUpOnShow() {
+  if (document.visibilityState === 'visible') tick();
+}
+
 function subscribeTick(listener: () => void): () => void {
   tickListeners.add(listener);
   if (tickIntervalId === null && typeof window !== 'undefined') {
     // Idle since the last subscriber left (or never started): catch the clock up before ticking again.
     // The new subscriber is the only listener, and useSyncExternalStore re-reads after subscribing.
     tickNow = Date.now();
-    tickIntervalId = window.setInterval(() => {
-      tickNow = Date.now();
-      for (const fn of tickListeners) fn();
-    }, RELATIVE_TICK_MS);
+    tickIntervalId = window.setInterval(tickWhileShown, RELATIVE_TICK_MS);
+    document.addEventListener('visibilitychange', catchUpOnShow);
   }
   return () => {
     tickListeners.delete(listener);
     if (tickListeners.size === 0 && tickIntervalId !== null) {
       window.clearInterval(tickIntervalId);
+      document.removeEventListener('visibilitychange', catchUpOnShow);
       tickIntervalId = null;
     }
   };
