@@ -31,7 +31,7 @@ const slide = (elementIds: string[]): Deck => ({
 
 describe('useSlideThumbnails', () => {
   it("draws a board slide's cards from the document's items", () => {
-    const { result } = renderHook(() => useSlideThumbnails(slide(['board']), [tab], plan));
+    const { result } = renderHook(() => useSlideThumbnails(slide(['board']), [tab], { plan }));
     expect(result.current.get('s')?.markup).toContain('Ship the board slide');
   });
 
@@ -43,9 +43,12 @@ describe('useSlideThumbnails', () => {
   it('keeps the thumbnails of a deck without a board when the items change', () => {
     const deck = slide(['box']);
     const tabs = [tab];
-    const { result, rerender } = renderHook(({ p }) => useSlideThumbnails(deck, tabs, p), {
-      initialProps: { p: plan },
-    });
+    const { result, rerender } = renderHook(
+      ({ p }) => useSlideThumbnails(deck, tabs, { plan: p }),
+      {
+        initialProps: { p: plan },
+      },
+    );
     const first = result.current;
     rerender({ p: { ...plan, items: new Map() } });
     expect(result.current).toBe(first);

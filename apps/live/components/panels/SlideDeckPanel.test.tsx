@@ -30,7 +30,7 @@ function state(
     openSlideId: null,
     openSlideInEditor: noop,
     runnable: [],
-    thumbs: new Map(),
+    tabs: [],
     pageLabels,
     headlines: new Map(),
     newSlideFromSelection: noop,
@@ -184,5 +184,47 @@ describe('the Slide Deck popover', () => {
     expect(screen.getByLabelText('Has speaker notes')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Present from slide 2' }));
     expect(start).toHaveBeenCalledWith('s2');
+  });
+});
+
+// docs/specs/016-platform/web-performance.md "Work only when it can change what shows": the rows' pictures are
+// drawn by the open panel, from the tabs the deck holds.
+describe('SlideDeckPanel row pictures', () => {
+  it('draws each slide from its tab', () => {
+    const deck: Deck = { slides: [{ id: 's1', tabId: 'a', elementIds: ['box'] }] };
+    const withTabs = {
+      ...state(deck),
+      tabs: [
+        {
+          id: 'a',
+          name: 'Here',
+          elements: [
+            {
+              id: 'box',
+              type: 'shape',
+              shape: 'square',
+              x: 0,
+              y: 0,
+              width: 120,
+              height: 60,
+              label: 'Box',
+            },
+          ],
+        },
+      ],
+    } as unknown as SlideDeckState;
+    const { container } = render(
+      <SlideDeckPanel
+        state={withTabs}
+        tabs={tabs}
+        activeTabId="a"
+        isReadOnly={false}
+        position={null}
+        onMoveTo={noop}
+      />,
+    );
+    expect(
+      container.querySelector('svg[viewBox][aria-hidden] rect, svg[viewBox][aria-hidden] path'),
+    ).toBeTruthy();
   });
 });

@@ -286,6 +286,68 @@ describe('AuthBridge', () => {
     expect(forgetRecentDiagrams).not.toHaveBeenCalled();
   });
 
+  // docs/specs/016-platform/web-performance.md "The open path asks in parallel": a browser whose last session was
+  // signed in asks for its token beside the session read, so the first data request never waits on both in turn.
+  describe('with a signed-in hint', () => {
+    let releaseSession: (() => void) | null;
+    function holdSession(body: unknown) {
+      releaseSession = null;
+      const answered = fetchMock.getMockImplementation() as (url: string) => Promise<Response>;
+      fetchMock = vi.fn(async (url: string) => {
+        if (url !== '/api/auth/get-session') return answered(url);
+        await new Promise<void>((resolve) => (releaseSession = resolve));
+        return new Response(JSON.stringify(body), { status: 200 });
+      });
+      vi.stubGlobal('fetch', fetchMock);
+    }
+    const tokenAsks = () =>
+      fetchMock.mock.calls.filter(([url]) => url === '/api/auth/token').length;
+
+    it('asks for the token while the session is still being read', async () => {
+      localStorage.setItem(SIGNED_IN_HINT_KEY, '1');
+      const issued = token(900);
+      answer('/api/auth/token', { status: 200, body: { token: issued } });
+      holdSession(SIGNED_IN);
+      mount();
+      await act(async () => {});
+      expect(probe.state!.authLoaded).toBe(false);
+      expect(tokenAsks()).toBe(1);
+      await act(async () => releaseSession!());
+      await waitFor(() => expect(probe.state!.isSignedIn).toBe(true));
+      expect(await probe.state!.getToken()).toBe(issued);
+      expect(tokenAsks()).toBe(1);
+    });
+
+    it('keeps no token when the session turns out signed out', async () => {
+      localStorage.setItem(SIGNED_IN_HINT_KEY, '1');
+      answer('/api/auth/token', { status: 401 });
+      holdSession(null);
+      mount();
+      await act(async () => {});
+      await act(async () => releaseSession!());
+      await waitFor(() => expect(probe.state!.authLoaded).toBe(true));
+      expect(probe.state!.isSignedIn).toBe(false);
+      expect(await probe.state!.getToken()).toBeNull();
+      expect(localStorage.getItem(SIGNED_IN_HINT_KEY)).toBe('0');
+    });
+
+    it('asks for no token on the workbench route', async () => {
+      localStorage.setItem(SIGNED_IN_HINT_KEY, '1');
+      route.pathname = '/embed/workbench/';
+      mount();
+      await act(async () => {});
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
+  it('asks a guest for no token before the session answers', async () => {
+    localStorage.setItem(SIGNED_IN_HINT_KEY, '0');
+    answer('/api/auth/get-session', { status: 200, body: null });
+    mount();
+    await waitFor(() => expect(probe.state!.authLoaded).toBe(true));
+    expect(fetchMock.mock.calls.map((call) => String(call[0]))).toEqual(['/api/auth/get-session']);
+  });
+
   it('stands down on the workbench route', async () => {
     route.pathname = '/embed/workbench/';
     mount();

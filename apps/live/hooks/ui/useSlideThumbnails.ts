@@ -2,7 +2,7 @@
 
 import { useArticleLaidOutSeq } from '@/lib/article/article-editor-store';
 import { useMemo } from 'react';
-import type { Deck, Tab } from '@livedoc/document';
+import type { CanvasSurface, Deck, Tab } from '@livedoc/document';
 import type { Item, ItemTypeDef } from '@livedoc/items';
 import { useIconCatalogs } from '@/hooks/ui/useIconCatalogs';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
@@ -45,12 +45,18 @@ function deckShowsBoard(deck: Deck, tabs: Tab[]): boolean {
 export function useSlideThumbnails(
   deck: Deck,
   tabs: Tab[],
-  plan?: ThumbnailPlan,
+  opts: {
+    plan?: ThumbnailPlan;
+    // The paper the pictures are drawn on, where it is not the canvas the caller sits in.
+    surface?: CanvasSurface;
+  } = {},
 ): Map<string, SlideThumb> {
+  const { plan } = opts;
   // Re-render once the async icon catalogues land so icon glyphs pop in.
   const iconsLoaded = useIconCatalogs();
   // The canvas's surface: a page with no fill is pictured on the paper as the canvas shows it.
-  const surface = useCanvasSurface();
+  const canvasSurface = useCanvasSurface();
+  const surface = opts.surface ?? canvasSurface;
   // An article's writing laid out for the first time: its lines of text can be drawn now.
   const laidOut = useArticleLaidOutSeq();
   const showsBoard = useMemo(() => deckShowsBoard(deck, tabs), [deck, tabs]);

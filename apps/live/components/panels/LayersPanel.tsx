@@ -24,6 +24,8 @@ export const SINGLE_LAYER_HINT =
 
 // The popover never moves, so its MovablePanel's move handler has nothing to do.
 const NO_MOVE = () => {};
+// What a closed panel previews: nothing, so its row previews are not redrawn on every change.
+const NO_ELEMENTS: Element[] = [];
 
 // The Layers panel (docs/specs/006-document/layers.md "The Layers panel"): a header bar (layer
 // count + New Layer), one roomy row per layer, TOP layer first (the panel mirrors the paint stack
@@ -109,8 +111,14 @@ export function LayersPanel({
   const listRef = useRef<HTMLUListElement>(null);
 
   // Per-row layer previews — shared with the context menu's Move-to-layer
-  // tiles via useLayerThumbnails.
-  const { thumbMarkup, thumbViewBox } = useLayerThumbnails(elements, layers, tabFont);
+  // tiles via useLayerThumbnails. Drawn only while the panel is open: it stays mounted once opened, and a
+  // closed panel redrawing the whole board on every change is work nobody sees
+  // (docs/specs/016-platform/web-performance.md "Work only when it can change what shows").
+  const { thumbMarkup, thumbViewBox } = useLayerThumbnails(
+    popoverOpen ? elements : NO_ELEMENTS,
+    layers,
+    tabFont,
+  );
 
   // Row context menu (docs/specs/006-document/layers.md): which layer it targets + where to hang
   // it (the panel's left edge at the clicked row).

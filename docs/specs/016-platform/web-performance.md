@@ -137,6 +137,24 @@ sidebar is, where a flex row let the article take the full width until the sideb
 A gallery's first row loads its images eagerly with
 `fetchpriority="high"`; every other card's image is lazy.
 
+### The open path asks in parallel
+
+Opening a document waits on as few round trips in a row as who is asking allows. Nothing is asked
+as a different person than the one the session settles, even briefly
+([Auth + guest access](../014-identity/auth-and-guest-access.md)).
+
+- **The session and its token together.** A browser whose signed-in hint is `1` asks for its
+  session token beside the session read; the read alone still decides who is signed in, and a read
+  that answers signed out drops the token. A guest (hint `0` or none) asks for no token.
+- **The reader's row and the document together.** Once the reader's id is known (the account's, or
+  the guest's signed id), the document, or the share link it follows, is asked for at once, beside
+  the participant row, never after it. The editor still opens only once both have answered, as the
+  participant they resolved.
+- **The order that remains:** the session (and token), then the participant row and the document,
+  then the first tab: three round trips for a guest, a signed-in person and a share link alike.
+- Guests and share links still wait for the session read before asking for anything: a cleared
+  hint must not open a signed-in person's link as a guest (D25).
+
 ### Ask once
 
 A request whose answer is the same for the whole page load (the api's `/capabilities`) is made once
@@ -147,6 +165,13 @@ and shared; a failed answer is not kept, so the next caller asks again.
 A timer that re-renders a large tree (the editor's presence clock) skips its tick while the page
 is hidden, catching up when it returns, and while it has nothing to update (nobody else has been
 seen on the document).
+
+- The shared clock behind every relative time ("5 min ago") holds still while the page is hidden and
+  ticks the moment it shows again.
+- A panel that stays mounted once opened draws its pictures only while it is open: the Layers
+  panel's row previews are not redrawn on every board change while it is closed.
+- Pictures only a panel shows are drawn by that panel: the Slide Deck panel draws its slides'
+  pictures while it is open; the editor holding the deck draws none.
 
 ### Per keystroke, the least work
 

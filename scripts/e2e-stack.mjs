@@ -34,6 +34,7 @@ import {
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { renameChunkReferences } from './e2e-deploy-rewrite.mjs';
 // The caching rules production's router applies (docs/specs/016-platform/stale-builds.md), run from
 // the same file: type-only TypeScript, which Node runs as is.
 import {
@@ -314,12 +315,10 @@ function simulateDeploy(from) {
     renames.set(name, renamed);
     renameSync(file, path.join(path.dirname(file), renamed));
   }
-  const escaped = [...renames.keys()].map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-  const pattern = new RegExp(`(?<![A-Za-z0-9_-])(${escaped.join('|')})`, 'g');
   for (const file of filesUnder(next)) {
     if (!TEXT_FILES.has(path.extname(file))) continue;
     const text = readFileSync(file, 'utf8');
-    const rewritten = text.replace(pattern, (m) => renames.get(m) ?? m);
+    const rewritten = renameChunkReferences(text, renames);
     if (rewritten !== text) writeFileSync(file, rewritten);
   }
   console.log(`[e2e] simulated deploy ${n}: ${renames.size} chunks renamed, serving ${next}`);
