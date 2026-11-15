@@ -38,9 +38,11 @@ screen. It never stays on the opening screen indefinitely.
   cancels that reload. If auth settles twice (sign-in answering after the guest
   timeout), only the newer load's result is kept.
 - **The offline-store check gives up.** Opening the offline store waits at
-  most **4 seconds**. A store that does not open in time (or reports
-  `blocked`) counts as having no offline documents, for the rest of that page
-  load, so the cloud load continues. An offline document in that browser
+  most **4 seconds** for the browser to answer. A store that does not open in time counts as
+  having no offline documents, for the rest of that page load, so the cloud load continues.
+  A `blocked` open (another tab holding the database during an upgrade) keeps waiting within
+  that limit, and once the browser has started an upgrade the open waits up to **60 seconds**
+  for it to finish ([Offline Mode](../006-document/offline-mode.md) "Tab records"). An offline document in that browser
   cannot open until its IndexedDB recovers, which was already true.
 - **The session token gives up.** Asking the sign-in session for a token waits
   at most **10 seconds** per attempt. A signed-in load with no token fails

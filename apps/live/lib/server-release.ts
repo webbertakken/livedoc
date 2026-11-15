@@ -10,6 +10,11 @@ export const EDITOR_BUILD_ID: string | null = parseBuildId(process.env.NEXT_PUBL
 
 let highestFormat: number | null = null;
 let latestBuild: string | null = null;
+// Another tab of this browser upgraded the offline store past this build (docs/specs/006-document/offline-mode.md
+// "Other browser tabs during an upgrade"): a newer build is live, whatever the api has said.
+let offlineStoreSuperseded = false;
+// How many reasons to reload have arrived: a format above this editor's, each higher one, the store upgraded.
+let reasons = 0;
 const listeners = createListeners();
 
 const notify = () => {
@@ -21,6 +26,7 @@ export function noteServerDocumentFormat(value: unknown): void {
   const format = parseDocumentFormat(value);
   if (format === null || (highestFormat !== null && format <= highestFormat)) return;
   highestFormat = format;
+  if (format > DOCUMENT_FORMAT) reasons++;
   notify();
 }
 
@@ -40,9 +46,22 @@ export function serverBuild(): string | null {
   return latestBuild;
 }
 
-/** The server serves a document format newer than this editor was built for. */
+/** Records that a newer build upgraded this browser's offline store; only the first time notifies. */
+export function noteOfflineStoreSuperseded(): void {
+  if (offlineStoreSuperseded) return;
+  offlineStoreSuperseded = true;
+  reasons++;
+  notify();
+}
+
+/** The server serves a document format newer than this editor was built for, or a newer build upgraded the offline store. */
 export function newVersionAvailable(): boolean {
-  return highestFormat !== null && highestFormat > DOCUMENT_FORMAT;
+  return offlineStoreSuperseded || (highestFormat !== null && highestFormat > DOCUMENT_FORMAT);
+}
+
+/** How many reasons to reload have arrived on this page, so a dismissal can be outlived by a newer one. */
+export function newVersionReason(): number {
+  return reasons;
 }
 
 /** Stale: both build ids are known and differ. */
@@ -52,7 +71,7 @@ export function isStaleBuild(editor: string | null, server: string | null): bool
 
 /** This page runs an older (or other) build than the one now live. */
 export function runningStaleBuild(): boolean {
-  return isStaleBuild(EDITOR_BUILD_ID, latestBuild);
+  return offlineStoreSuperseded || isStaleBuild(EDITOR_BUILD_ID, latestBuild);
 }
 
 export const subscribeServerRelease = listeners.subscribe;
@@ -60,5 +79,7 @@ export const subscribeServerRelease = listeners.subscribe;
 export function resetServerReleaseForTests(): void {
   highestFormat = null;
   latestBuild = null;
+  offlineStoreSuperseded = false;
+  reasons = 0;
   listeners.clear();
 }

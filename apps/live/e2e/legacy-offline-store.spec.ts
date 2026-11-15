@@ -50,6 +50,6 @@ test('offline documents saved before the rename survive the store upgrade', asyn
         };
       }),
   );
-  expect(stores).toEqual(['documents']);
+  expect(stores).toEqual(['documents', 'tabs']);
   expectNoPageErrors(pageErrors);
 });

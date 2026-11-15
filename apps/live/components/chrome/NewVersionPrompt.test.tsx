@@ -2,7 +2,11 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DOCUMENT_FORMAT } from '@livedoc/api-schema';
-import { noteServerDocumentFormat, resetServerReleaseForTests } from '@/lib/server-release';
+import {
+  noteOfflineStoreSuperseded,
+  noteServerDocumentFormat,
+  resetServerReleaseForTests,
+} from '@/lib/server-release';
 import { RELOAD_SAVE_WAIT_MS } from '@/lib/reload-when-saved';
 
 const track = vi.fn<typeof import('@/lib/telemetry').track>();
@@ -95,6 +99,21 @@ describe('NewVersionPrompt', () => {
     act(() => noteServerDocumentFormat(DOCUMENT_FORMAT + 1));
     expect(screen.queryByRole('status')).toBeNull();
     act(() => noteServerDocumentFormat(DOCUMENT_FORMAT + 2));
+    expect(screen.getByRole('status')).toBeTruthy();
+  });
+
+  it('shows when another tab upgraded the offline store, with no server number', () => {
+    render(<NewVersionPrompt hasUnsavedChanges={() => false} reload={vi.fn()} />);
+    act(() => noteOfflineStoreSuperseded());
+    expect(screen.getByRole('status').textContent).toContain('A new version of LiveDoc is ready.');
+  });
+
+  it('shows again on Not now when the store is upgraded after the dismissal', () => {
+    render(<NewVersionPrompt hasUnsavedChanges={() => false} reload={vi.fn()} />);
+    newer();
+    fireEvent.click(screen.getByRole('button', { name: 'Not now' }));
+    expect(screen.queryByRole('status')).toBeNull();
+    act(() => noteOfflineStoreSuperseded());
     expect(screen.getByRole('status')).toBeTruthy();
   });
 });

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Tab } from '@livedoc/document';
 import type { OfflineDocumentRecord } from './offline-store';
+import { metaOf } from './offline-tab-records';
 import {
   __setOfflineBackend,
   applyMeta,
@@ -68,12 +69,13 @@ describe('offline transforms', () => {
     expect(out.tabs[0]!.folder).toBe('F');
   });
 
-  it('upsertTab appends a new tab and replaces an existing one', () => {
-    const appended = upsertTab(rec(), tab('t3'), 200);
-    expect(appended.tabs.map((t) => t.id)).toEqual(['t1', 't2', 't3']);
-    const replaced = upsertTab(rec(), tab('t1', { name: 'renamed' }), 200);
-    expect(replaced.tabs[0]!.name).toBe('renamed');
-    expect(replaced.tabs).toHaveLength(2);
+  it('upsertTab appends a new tab to the order and keeps an existing one in place', () => {
+    const appended = upsertTab(metaOf(rec()), tab('t3'), 200);
+    expect(appended.meta.tabIds).toEqual(['t1', 't2', 't3']);
+    expect(appended.meta.savedAt).toBe(200);
+    const replaced = upsertTab(metaOf(rec()), tab('t1', { name: 'renamed' }), 200);
+    expect(replaced.tab.name).toBe('renamed');
+    expect(replaced.meta.tabIds).toEqual(['t1', 't2']);
   });
 
   it('removeTab drops the tab', () => {
@@ -180,15 +182,15 @@ describe('upsertTab — tab kind', () => {
   const tab = (over: Partial<Tab> = {}): Tab => ({ id: 't', name: 'T', elements: [], ...over });
 
   it('stamps the ordinary kind on the way in', () => {
-    expect(upsertTab(rec(), tab(), 2).tabs[0]!.kind).toBe('diagram');
+    expect(upsertTab(metaOf(rec()), tab(), 2).tab.kind).toBe('diagram');
   });
 
   it('keeps a workshop board a workshop board', () => {
-    expect(upsertTab(rec(), tab({ kind: 'event-storming' }), 2).tabs[0]!.kind).toBe(
+    expect(upsertTab(metaOf(rec()), tab({ kind: 'event-storming' }), 2).tab.kind).toBe(
       'event-storming',
     );
     const legacy = tab({ layers: [{ id: 'layer:es:board', name: 'Event Storming' }] });
-    expect(upsertTab(rec(), legacy, 2).tabs[0]!.kind).toBe('event-storming');
+    expect(upsertTab(metaOf(rec()), legacy, 2).tab.kind).toBe('event-storming');
   });
 });
 

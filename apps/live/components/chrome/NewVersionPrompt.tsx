@@ -1,7 +1,8 @@
 'use client';
 
 // "A new version of LiveDoc is ready." (docs/specs/016-platform/new-version-prompt.md): shown when
-// the server serves a newer document format than this editor was built for. Calm and non-blocking:
+// the server serves a newer document format than this editor was built for, or a newer build upgraded
+// this browser's offline store. Calm and non-blocking:
 // a polite status that never takes focus, never reloads by itself, and reloads only once everything
 // edited has been saved.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
@@ -9,6 +10,7 @@ import { DOCUMENT_FORMAT } from '@livedoc/api-schema';
 import { Button } from '@livedoc/ui';
 import {
   newVersionAvailable,
+  newVersionReason,
   serverDocumentFormat,
   subscribeServerRelease,
 } from '@/lib/server-release';
@@ -26,7 +28,7 @@ const COPY: Record<Phase, string> = {
   unsaved: "Your latest changes aren't saved yet. Reload once they are.",
 };
 
-const getServerFormat = () => serverDocumentFormat();
+const getReason = () => newVersionReason();
 
 export function NewVersionPrompt({
   hasUnsavedChanges,
@@ -35,19 +37,22 @@ export function NewVersionPrompt({
   hasUnsavedChanges: () => boolean;
   reload?: () => void;
 }) {
-  const server = useSyncExternalStore(subscribeServerRelease, getServerFormat, () => null);
+  const reason = useSyncExternalStore(subscribeServerRelease, getReason, () => 0);
   const [phase, setPhase] = useState<Phase>('offered');
   const [dismissedAt, setDismissedAt] = useState<number | null>(null);
   const announced = useRef(false);
   const visible =
-    server !== null && newVersionAvailable() && (dismissedAt === null || server > dismissedAt);
+    reason > 0 && newVersionAvailable() && (dismissedAt === null || reason > dismissedAt);
 
   useEffect(() => {
     if (!visible || announced.current) return;
     announced.current = true;
-    debugLog('[document-format] newer on the server', { editor: DOCUMENT_FORMAT, server });
+    debugLog('[document-format] new version available', {
+      editor: DOCUMENT_FORMAT,
+      server: serverDocumentFormat(),
+    });
     track('UI', 'Opened', 'NewVersionPrompt');
-  }, [visible, server]);
+  }, [visible]);
   // A toast already up stands on the prompt while it shows, and drops back when it goes.
   useEffect(() => {
     announceToastFloorChange();
@@ -80,7 +85,7 @@ export function NewVersionPrompt({
         variant="secondary"
         disabled={phase === 'saving'}
         onClick={() => {
-          setDismissedAt(server);
+          setDismissedAt(reason);
           setPhase('offered');
         }}
       >

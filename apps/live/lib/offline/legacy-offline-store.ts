@@ -6,9 +6,16 @@
 import { debugLog } from '@/lib/debug-log';
 const LEGACY_STORE = 'diagrams';
 
-export function upgradeStores(db: IDBDatabase, tx: IDBTransaction, store: string): void {
+// `then` runs once every record has moved (at once when there is nothing to move), so a later
+// version's step sees them all.
+export function upgradeStores(
+  db: IDBDatabase,
+  tx: IDBTransaction,
+  store: string,
+  then: () => void,
+): void {
   if (!db.objectStoreNames.contains(store)) db.createObjectStore(store, { keyPath: 'id' });
-  if (!db.objectStoreNames.contains(LEGACY_STORE)) return;
+  if (!db.objectStoreNames.contains(LEGACY_STORE)) return then();
   const from = tx.objectStore(LEGACY_STORE);
   const to = tx.objectStore(store);
   let moved = 0;
@@ -22,5 +29,6 @@ export function upgradeStores(db: IDBDatabase, tx: IDBTransaction, store: string
     }
     db.deleteObjectStore(LEGACY_STORE);
     debugLog('[offline-store] moved', moved, 'offline documents to the', store, 'store');
+    then();
   };
 }
