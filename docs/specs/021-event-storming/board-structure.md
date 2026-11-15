@@ -105,3 +105,4 @@ A hotspot is a question the room left open. Its **answer** is what the room deci
   `NoteCallout.tsx` in `apps/live/components/canvas/structure/`; what keeps the field and the caption inside
   the window `apps/live/hooks/canvas/useKeepInWindow.ts`; which answer is open
   `apps/live/lib/structure-view.ts`; a blank lane name `apps/live/lib/lane-name.ts`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/reviewing-a-board/page.mdx`.

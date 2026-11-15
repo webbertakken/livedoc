@@ -162,3 +162,4 @@ person is given the fold, by an [ask](asks.md).
   `apps/live/hooks/canvas/useLaneActions.ts`; the glide: `apps/live/hooks/canvas/useOfferGlide.ts`.
 - Proven in a browser by `apps/live/e2e/event-storming-lane-plans.spec.ts`, on the kitchen of
   `apps/live/e2e/lane-board.ts`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/suggested-changes/page.mdx`.

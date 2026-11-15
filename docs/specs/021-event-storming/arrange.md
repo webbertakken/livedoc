@@ -109,3 +109,4 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
   the command: `apps/live/lib/editor-commands.ts`; the Ask popover's button:
   `apps/live/components/canvas/ask/AskPopover.tsx`; the glide: `apps/live/hooks/canvas/useOfferGlide.ts`.
 - Proven in a browser by `apps/live/e2e/event-storming-lane-plans.spec.ts`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/arrange-and-reorder/page.mdx`.

@@ -3,6 +3,7 @@ import {
   CONTEXT_NAMES_MAX,
   NAMED_CONTEXTS_MAX,
   type CandidateContextElement,
+  type Element,
   type Tab,
 } from '@livedoc/document';
 import { formatOperation } from '../format-operation';
@@ -61,6 +62,17 @@ describe('suggest-name: parsing', () => {
 });
 
 describe('suggest-name: applying', () => {
+  it('touches nothing of the context but its suggestions: no look is filled in', () => {
+    const bare = (el: Element): Element => {
+      if (el.id !== 'kitchen') return el;
+      const { textSize: _size, ...rest } = el as Element & { textSize?: string };
+      return rest;
+    };
+    const outcome = applied(run('suggest-name "Meal prep" kitchen', stormBoard(bare)));
+    expect('textSize' in inBoard(outcome.tab, 'kitchen')).toBe(false);
+    expect(lines(outcome)[0]).not.toContain('textSize');
+  });
+
   it('keeps a name for one context on that context and renames nothing', () => {
     const tab = stormBoard();
     const outcome = applied(

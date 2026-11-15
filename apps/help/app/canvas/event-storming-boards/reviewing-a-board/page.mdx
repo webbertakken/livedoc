@@ -1,0 +1,93 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Reviewing a Board',
+  description:
+    'Mark pivotal events, name lanes and answer hotspots, then check an event storming board for gaps, its shared terms and its story before building from it.',
+  path: '/help/canvas/event-storming-boards/reviewing-a-board/',
+});
+
+<ArticleLayout
+  title="Reviewing a Board"
+  description="Give the wall its structure, then look it over: the gaps, the words and the story told step by step."
+  categoryTitle="Canvas"
+  categorySlug="canvas/event-storming-boards"
+>
+
+Before a team builds from an [event storming board](/help/canvas/event-storming-boards/), the room settles what the wall alone cannot say: where the story turns, what each lane holds, what was decided about each open question. Then it looks the board over for what is still missing. Everything here is worked out by the board itself; no model is asked.
+
+## Giving the Board Its Structure
+
+Each of these is a right-click away on a note, and each is one step that a single Undo takes back.
+
+### Pivotal Events
+
+A **pivotal event** is one of the few events the whole flow turns on, where one phase of the business ends and the next begins: "Order Placed", "Order Shipped".
+
+- Right-click a domain event and choose **Mark as Pivotal** (or **Unmark Pivotal**).
+- A pivotal event draws a slate tape through its middle, top to bottom of the board, behind the notes. It follows the event when you move it, and it shows in PNG and SVG exports.
+- The events up to and including a pivotal event are a **phase**, named after the event that closes it. The Story tab below tells them phase by phase.
+- Changing the note's kind takes the mark away.
+
+### Lane Names
+
+A lane's name says what it holds: "Customer", "Kitchen", "Payments". It is simply text standing to the left of the wall on that lane, so a name you typed there already counts.
+
+- Right-click any note and choose **Name This Lane**: a name is added left of the wall on that note's lane, ready to type. On a lane that has a name, the row reads **Rename This Lane** and opens it.
+- It is ordinary text: move it, restyle it or delete it like any other.
+- A [lane plan](/help/canvas/event-storming-boards/suggested-changes/#lane-plans) writes the names of its lanes the same way.
+
+### Answering a Hotspot
+
+A red hotspot is a question the room left open. When the room decides, keep the decision on the question:
+
+- Right-click a hotspot and choose **Answer…**. A small field opens under the note. **Enter**, or clicking elsewhere, keeps the answer; **Esc** leaves it as it was. Emptying the answer reopens the question.
+- An answered hotspot wears a small green check on its corner. Point at it to read the answer; press it to edit the answer (the row then reads **Edit Answer…**).
+- The note itself does not change: the question stays readable, with its answer beside it.
+
+An answered hotspot counts as a decision, no longer as something left open.
+
+## The Review Panel
+
+**Review**, the pill at the top right of the canvas, opens the Review panel as a card under it. It is also in the Event Storming category of the palette, and **Review Board** opens it from the command palette. **Escape** closes it.
+
+The panel reads the board as it is and follows every change, a collaborator's included. It has three tabs; the one you used last opens next time.
+
+### Check
+
+The Check tab starts with the board's **readiness**: how many events, and what is left to settle before exporting ("42 events · 3 gaps · 2 open hotspots · 5 events outside a context"), or "Ready to export". The same line heads the [domain model export](/help/canvas/event-storming-boards/#exporting-a-domain-model). It informs; it never stops an export.
+
+Below it are the **gaps** the board finds, grouped as "The story has a hole", "The grammar slipped" and "Left open": a command nothing triggers, an event nothing causes, an event not written in the past tense, a hotspot with no answer.
+
+- **Point at a row**, or focus it, to bring its notes into view with a ring round each.
+- **Add** lands the missing note where it belongs, a blank note of the right kind beside the note the gap names, ready to type.
+- **Answer**, on an open hotspot, opens its answer field.
+
+A board with nothing to check says "Nothing to check. The story holds." A gap is a prompt, never a verdict: nothing is drawn on a note because of one.
+
+### Language
+
+The Language tab lists the board's **terms**: the words two or more notes share, most used first, each with how many notes hold it and which candidate contexts use it. A term used in two contexts is marked so: it may be one shared word, or one word meaning two different things, which is where a boundary between contexts often runs.
+
+- Filter the list to one candidate context, or to the notes in none.
+- **Choose a term** to see where it lives: its notes are ringed, the rest of the board dims, and the view fits them. Escape, or choosing it again, lets go.
+- **Rename Term** renames it on every note that holds it, and in context names, within the filter you chose. While you type, the board previews the result; **Rename** keeps it as one step. Plurals and capitals follow along: "Orders" becomes "Bookings".
+
+### Story
+
+The Story tab tells the timeline as sentences, one step per event, so you can walk it aloud and hear where it stumbles: who issues which command ("Customer: Place Order"), the event, then each policy and what it issues ("Whenever Order Placed: Notify kitchen").
+
+- **Next** and **Previous**, or the arrow keys (with Home and End) while the list has focus, walk the steps. The board brings each step's notes into view and rings them.
+- An answered hotspot is told with its answer, and a pivotal event is followed by a line naming the phase it closes.
+- Loose notes, which belong to no step, are listed at the end.
+
+The rings and the dimming are your own view: nobody else sees them, and nothing is saved.
+
+## Who Can Do What
+
+- **Editors** mark pivotal events, name lanes, answer hotspots, and use **Add** and **Rename Term**.
+- **Participants and viewers** see the tapes, lane names and answers, and can open the Review panel and read all three tabs; the buttons that change the board are not shown.
+- **Agents** read all of it through the command line or MCP, alongside the board's notes.
+
+</ArticleLayout>

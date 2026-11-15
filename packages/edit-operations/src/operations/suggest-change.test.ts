@@ -142,10 +142,10 @@ describe('note changes: applying', () => {
     expect(lines(outcome)).toEqual(['~ placed  suggested reword "Booking Placed"']);
   });
 
-  it('says what it suggested before what the engine filled in', () => {
-    expect(lines(run('suggest-remove old', stormBoard()))).toEqual([
-      '~ old  suggested remove · textSize →md',
-    ]);
+  it('fills nothing in on the note: a suggestion changes nothing until it is accepted', () => {
+    const outcome = run('suggest-remove old', stormBoard());
+    expect(lines(outcome)).toEqual(['~ old  suggested remove']);
+    expect('textSize' in inBoard(applied(outcome).tab, 'old')).toBe(false);
   });
 
   it('says each change in its result line', () => {

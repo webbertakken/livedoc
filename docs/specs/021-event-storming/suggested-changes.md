@@ -80,6 +80,8 @@ A **note change** is a change proposed to one workshop note. There are four:
 - Every open suggestion counts towards `SUGGESTIONS_MAX`: a suggested note, a suggested context, a name suggestion
   and a note change alike.
 - A note change goes with its note: removing the note removes it.
+- **Suggesting writes the suggestion alone**: a name suggestion or a note change fills nothing else in on the
+  context or note that holds it, such as a text size an older board left unset (default).
 
 ### A reword ripples
 
@@ -194,3 +196,4 @@ tab with a count, a turned corner, a round badge with a glyph, and a worded tab.
   what keeps the caption inside the window: `apps/live/hooks/canvas/useKeepInWindow.ts`;
   the chips: `apps/live/components/canvas/contexts/NameChips.tsx`.
 - The board seeded by the end-to-end tests: `apps/live/e2e/change-board.ts`.
+- Taught in the help centre by `apps/help/app/canvas/event-storming-boards/suggested-changes/page.mdx`.

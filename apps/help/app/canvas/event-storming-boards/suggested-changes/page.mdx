@@ -1,0 +1,80 @@
+import { ArticleLayout } from '@/components/ArticleLayout';
+import { helpMetadata } from '@/lib/seo';
+
+export const metadata = helpMetadata({
+  title: 'Suggested Changes and Lane Plans',
+  description:
+    'Preview and accept suggested names for contexts, rewordings, kind changes, splits and removals, and plans that fold an event storming board into fewer lanes.',
+  path: '/help/canvas/event-storming-boards/suggested-changes/',
+});
+
+<ArticleLayout
+  title="Suggested Changes and Lane Plans"
+  description="Changes proposed to what is already on the board: point to preview, accept or dismiss, and nothing moves until you do."
+  categoryTitle="Canvas"
+  categorySlug="canvas/event-storming-boards"
+>
+
+Besides new notes, an agent or the built-in model can propose changes to what is already on an [event storming board](/help/canvas/event-storming-boards/): another name for a candidate context, better words for a note, or the whole board in fewer lanes. You get them by [asking](/help/canvas/event-storming-boards/asking-for-suggestions/), or an agent connected to the board offers them on its own.
+
+Every one of them works the same way: **point at it to preview it**, then accept or dismiss it. A preview is drawn over the board as it is; nothing is saved and nobody else sees it until you accept. Each accept is one step that a single Undo takes back.
+
+## Names for a Context
+
+A candidate context that has names waiting says so in words: a small dashed chip under its name, "1 name" or "3 names".
+
+- **Select the context** and the chip unfolds into the names, led by **Rename to**. Point at a chip to read the context with that name, with the reason and who suggested it.
+- **Choose a chip** to rename the context. Its other suggested names go with it.
+- **✕** after the chips dismisses them; **Delete** on a focused chip dismisses that one.
+
+**Select two or more contexts** with Shift-click and the **Merge** offer shows the names suggested for exactly those contexts together. Choosing one merges them and names the result in one step.
+
+## Changes to a Note
+
+A note with a change waiting wears a worded dashed tab on its top edge, saying what the change is:
+
+- **Reword**: other words for the note.
+- **To Policy** (or whichever kind): the note is really another kind.
+- **Split**: the note holds two facts and would be two notes.
+- **Remove**: a duplicate or a stray.
+
+"+1" after it means the note holds more than one change. Point at the tab, or tab to it with the keyboard, to preview the first change, with a caption under the note giving the reason, who suggested it, and **✓** and **✕**. **Enter** accepts and **Delete** dismisses.
+
+- A reword draws the new words; a kind change repaints the note; a split draws its parts beside it, the board making room; a removal draws the note struck through.
+- **A split** keeps the first part on the note and adds the others after it, in the same candidate context.
+
+### A Reword That Ripples
+
+A reword can name a **term**: "Order" becomes "Booking". Accepting it changes that term in every note of the note's own candidate context, and the context's name, not only the one note. The preview shows every note it would change, and the caption counts them ("Also rewords 4 notes in Ordering · 3 more on the board").
+
+One word can mean two things in two parts of the business, so the board never assumes the wider change. When notes outside the context hold the term too, **Everywhere** beside ✓ rewords the whole board instead. Point at it to preview that first.
+
+<Tip>
+  To rename a term yourself, use **Rename Term** in the [Review
+  panel](/help/canvas/event-storming-boards/reviewing-a-board/#language)'s Language tab: the same
+  preview, without waiting for a suggestion.
+</Tip>
+
+## Lane Plans
+
+A **lane plan** proposes the board in fewer lanes: top to bottom, what each lane is called and which notes it holds. Ask for one with **Reorganise into Lanes**, choosing between 2 and 12 lanes.
+
+- **The model decides what belongs together, the board does the rest.** Every note keeps its place in time and only moves up or down onto its new lane; where a lane would grow too crowded, the board opens room to the right.
+- **The board checks the plan.** A plan that would change what the board says (which command causes which event, the order of the events) is refused before you ever see it. The preview says "Reads the same", and how many loose notes find a partner when any do.
+- **The plan is listed first** in the suggestions panel, with its reason and who made it. Point at the row and the notes glide to where they would stand, the lane names appear at the left of the wall, and the view fits the whole board. Under reduced motion they jump instead.
+- **✓** moves the notes and writes the lane names in one step; **✕** dismisses the plan.
+- **One plan at a time.** A new plan replaces the one waiting. A plan made before the board changed is marked as such: dismiss it and ask again.
+
+**Fold the Lanes**, in the Ask popover, makes a plan without any model: the board merges the two neighbouring lanes whose notes overlap least, again and again, keeping what the board says. A plan only ever changes lanes; to lay the board out afresh along the timeline, use [Arrange and Reorder](/help/canvas/event-storming-boards/arrange-and-reorder/).
+
+## All at Once
+
+The **suggestions** button at the top right counts everything waiting and lists it: the lane plan first, then notes, contexts, names and note changes in timeline order. **Apply All** takes the plan, every suggested note and context, each context's first name and each note's first change; a name for a merge is left for you to pick. **Dismiss All** dismisses the lot. Either is one step that a single Undo takes back.
+
+## What Is Remembered
+
+Dismissing a name or a change is remembered, so the same suggestion is not offered again; **Forget Declined** in the Ask popover clears that memory. A lane plan is not remembered: it was for the board as it stood.
+
+Only people who can edit the board see suggested changes. A locked note, or one on a hidden or locked layer, is offered none.
+
+</ArticleLayout>

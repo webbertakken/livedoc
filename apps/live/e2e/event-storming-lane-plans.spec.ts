@@ -92,7 +92,11 @@ async function run(page: Page, command: string): Promise<void> {
   await page.keyboard.press('ControlOrMeta+k');
   const search = page.getByRole('dialog', { name: 'Search' });
   await search.getByRole('combobox', { name: 'Search' }).fill(command);
-  await search.getByRole('option', { name: command, exact: true }).click();
+  // The command, never a help article of the same name.
+  await search
+    .getByRole('group', { name: 'Actions' })
+    .getByRole('option', { name: command, exact: true })
+    .click();
   await expect(search).toHaveCount(0);
 }
 
@@ -412,6 +416,16 @@ for (const role of ['participate', 'view'] as const)
     await search.getByRole('combobox', { name: 'Search' }).fill('Fit to Screen');
     await expect(search.getByRole('option', { name: 'Fit to Screen', exact: true })).toBeVisible();
     await search.getByRole('combobox', { name: 'Search' }).fill('Arrange and Reorder');
-    await expect(search.getByRole('option', { name: 'Arrange and Reorder' })).toHaveCount(0);
+    // The help article of that name is everyone's to read; the command is not offered.
+    await expect(
+      search
+        .getByRole('group', { name: 'Actions' })
+        .getByRole('option', { name: 'Arrange and Reorder' }),
+    ).toHaveCount(0);
+    await expect(
+      search
+        .getByRole('group', { name: 'Help' })
+        .getByRole('option', { name: 'Arrange and Reorder' }),
+    ).toBeVisible();
     await guest.context().close();
   });

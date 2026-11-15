@@ -69,7 +69,11 @@ async function run(page: Page, command: string): Promise<void> {
   await page.keyboard.press('ControlOrMeta+k');
   const search = page.getByRole('dialog', { name: 'Search' });
   await search.getByRole('combobox', { name: 'Search' }).fill(command);
-  await search.getByRole('option', { name: command, exact: true }).click();
+  // The command, never a help article of the same name.
+  await search
+    .getByRole('group', { name: 'Actions' })
+    .getByRole('option', { name: command, exact: true })
+    .click();
   await expect(search).toHaveCount(0);
 }
 

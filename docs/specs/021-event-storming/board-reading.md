@@ -137,3 +137,13 @@ Levels:
   reading, never inside it, so `storm.json` stays what the board says (default). A tab that is not a board is refused as `400 not_event_storming`.
 - Refs are the [document views](../024-agents/document-views.md#refs)' refs, so an agent can name a note from the
   reading in an edit operation.
+
+## Where it lives
+
+- The reading: `packages/storm-reading/src/reading.ts` (`readBoard`), over the notes it reads
+  `packages/storm-reading/src/notes.ts`, the relations `packages/storm-reading/src/relations.ts`, the timeline
+  `packages/storm-reading/src/timeline.ts`, the structure `packages/storm-reading/src/structure.ts`, the context map
+  `packages/storm-reading/src/context-map.ts` and the gaps `packages/storm-reading/src/gaps.ts` (the tense heuristic
+  `packages/storm-reading/src/tense.ts`).
+- The `storm` view: `packages/storm-reading/src/format.ts` (`formatStormView`), answered by
+  `apps/api/src/routes/document-views-route.ts`.
