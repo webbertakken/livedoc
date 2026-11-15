@@ -2,11 +2,20 @@
 import { describe, expect, it } from 'vitest';
 import { changeEventStormingKind, eventStormingNoteFields } from './event-storming';
 import {
+  ES_LANES,
+  ES_LANE_HEIGHT,
+  ES_LANE_PITCH,
+  laneCentre,
+  laneTop,
+} from './event-storming-lanes';
+import {
   HOTSPOT_ANSWER_MAX,
+  PIVOTAL_TAPE_PX,
   answerOf,
   isPivotalEvent,
   isValidEsAnswer,
   laneNameElement,
+  pivotalTapes,
   setAnswer,
   setPivotal,
 } from './event-storming-structure';
@@ -158,5 +167,80 @@ describe('a lane name (board-structure.md "Lane names")', () => {
       layerId: 'layer:es:board',
     });
     expect(name.layerId).toBe('layer:es:board');
+  });
+});
+
+// board-structure.md "Pivotal events": "The tape".
+describe('the tape of a pivotal event', () => {
+  const on = (
+    id: string,
+    kind: Parameters<typeof eventStormingNoteFields>[0],
+    x: number,
+    lane: number,
+    extra = {},
+  ) => {
+    const fields = eventStormingNoteFields(kind);
+    return note(id, kind, { x, y: laneCentre(lane, ES_LANES) - fields.height / 2, ...extra });
+  };
+
+  it('runs through the event’s centre, half a lane beyond the lanes the notes use', () => {
+    const board: Element[] = [
+      on('who', 'actor', 0, 0),
+      on('placed', 'domain-event', 400, 2, { esPivotal: true }),
+      on('then', 'policy', 700, 3),
+    ];
+    expect(pivotalTapes(board)).toEqual([
+      {
+        eventId: 'placed',
+        x: 400 + 100 - PIVOTAL_TAPE_PX / 2,
+        y: laneTop(0, ES_LANES) - ES_LANE_PITCH / 2,
+        width: PIVOTAL_TAPE_PX,
+        height:
+          laneTop(3, ES_LANES) +
+          ES_LANE_HEIGHT +
+          ES_LANE_PITCH / 2 -
+          (laneTop(0, ES_LANES) - ES_LANE_PITCH / 2),
+      },
+    ]);
+  });
+
+  it('answers a tape for each pivotal event, in document order, and none for a board without one', () => {
+    const board: Element[] = [
+      on('a', 'domain-event', 0, 2, { esPivotal: true }),
+      on('b', 'domain-event', 500, 2),
+      on('c', 'domain-event', 900, 2, { esPivotal: true }),
+    ];
+    expect(pivotalTapes(board).map((t) => t.eventId)).toEqual(['a', 'c']);
+    expect(pivotalTapes([on('b', 'domain-event', 0, 2)])).toEqual([]);
+    expect(pivotalTapes([])).toEqual([]);
+  });
+
+  it('counts a mark on a note that is no event for nothing', () => {
+    expect(pivotalTapes([on('c', 'command', 0, 1, { esPivotal: true })])).toEqual([]);
+  });
+
+  it('measures the lanes from the workshop notes alone: no suggestion, no other element', () => {
+    const board: Element[] = [
+      on('placed', 'domain-event', 0, 2, { esPivotal: true }),
+      on('maybe', 'policy', 300, 5, {
+        esSuggestion: { anchorId: 'placed', side: 'below', reason: 'r' },
+      }),
+      { id: 'text', type: 'text', x: 0, y: -2000, width: 100, height: 30, label: 'far away' },
+    ];
+    const [tape] = pivotalTapes(board);
+    expect(tape!.y).toBe(laneTop(2, ES_LANES) - ES_LANE_PITCH / 2);
+    expect(tape!.height).toBe(ES_LANE_HEIGHT + ES_LANE_PITCH);
+  });
+
+  it('draws only the events shown, measured against the notes shown', () => {
+    const board: Element[] = [
+      on('who', 'actor', 0, 0),
+      on('placed', 'domain-event', 0, 2, { esPivotal: true }),
+      on('shipped', 'domain-event', 600, 2, { esPivotal: true }),
+    ];
+    const shown = board.filter((el) => el.id !== 'who' && el.id !== 'shipped');
+    const tapes = pivotalTapes(board, shown);
+    expect(tapes.map((t) => t.eventId)).toEqual(['placed']);
+    expect(tapes[0]!.y).toBe(laneTop(2, ES_LANES) - ES_LANE_PITCH / 2);
   });
 });
