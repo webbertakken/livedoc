@@ -46,6 +46,13 @@ Where a large board spends its time during pan, zoom, drag, marquee and pen stro
 
 - ./canvas-performance.md - when a large board feels slow: method, per-gesture breakdown, named hot spots
 
+## Performance sweep
+
+What the November 2026 sweep measured across first load, the open path, saving, the api and the static sites.
+The resulting rules live in docs/specs/016-platform/web-performance.md.
+
+- ./performance-sweep.md - when proposing a speed-up: what shipped, what was refuted, the open forks, what remains
+
 ## Agent CLI
 
 How an AI agent should read, build, edit and comment on documents through a CLI, and work beside a person live.
