@@ -124,7 +124,7 @@ export function PanelExplorerTree({
   const finding = query.words.length > 0;
   const narrow = <T extends { name: string }>(items: readonly T[]): readonly T[] =>
     finding ? rankByTitle(items, query, (i) => i.name) : items;
-  const place = finding ? null : { key: scope, store: memoryPlaces, restore: true };
+  const place = { key: scope, store: memoryPlaces, restore: true };
   let body: React.ReactNode;
   if (section.kind === 'tags') {
     // Every document a tag can sit on: the reader's own (this browser's included) and their teams', newest first.

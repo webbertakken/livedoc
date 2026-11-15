@@ -104,3 +104,21 @@ describe('the panel find', () => {
     expect(screen.getByRole('status').textContent).toBe('No matches');
   });
 });
+
+describe('the panel find and the panel’s own Escape', () => {
+  it('takes Escape first, so the panel stays open', () => {
+    render(<Panel />);
+    const row = screen.getByRole('button', { name: 'Roadmap 0001' });
+    act(() => row.focus());
+    pressFind(row);
+    let panelSaw: boolean | null = null;
+    const panelEscape = (e: KeyboardEvent) => {
+      panelSaw = e.defaultPrevented;
+    };
+    document.addEventListener('keydown', panelEscape, true);
+    fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Escape' });
+    document.removeEventListener('keydown', panelEscape, true);
+    expect(panelSaw).toBe(true);
+    expect(screen.queryByRole('searchbox')).toBeNull();
+  });
+});

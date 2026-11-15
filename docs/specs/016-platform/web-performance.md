@@ -229,7 +229,8 @@ the fallback face until the faces land, and the canvas re-measures each time the
   wire. Measured 2026-11-15: 1,000 documents are 410 KB, 35 KB gzipped, answered in about 23 ms on the local stack;
   the largest library on docs.nu then held 105. Drawing was the cost: at 4x CPU, opening a folder of 1,000 took 16 to
   19 s on the Explorer page (a single task of up to 13 s, about 37,000 elements) and 34.5 s in the editor's panel,
-  and scrolling it crashed the tab. Measure it again with `apps/live/scripts/explorer-long-list-seed.mjs` and
+  and scrolling it crashed the tab. Windowed, the same folder opened in 0.3 to 0.5 s with its longest task about
+  0.1 s, and scrolled to its end. Measure it again with `apps/live/scripts/explorer-long-list-seed.mjs` and
   `explorer-long-list-measure.mjs`.
 
 ### Layout never shifts after first paint

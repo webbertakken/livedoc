@@ -421,9 +421,11 @@ Going Back to a long list lands where it was left (Webber, 2026-11-15):
 - **On the Explorer page**, Back (or Forward) to a list view restores its scroll position: the row that was at the top
   of the view is at the top again, at the same offset, even when rows were added or removed above it in the meantime;
   when that row is gone, the same scroll offset. Opening a view any other way (the sidebar, a link) starts at the top.
-- **In the panel**, the open folder keeps its place when the panel is drawn again on it: opening a document from the
-  folder, and Back to the document before, show the folder where it was left. Opening a folder, by its card or the
-  back bar, starts at its top.
+- **In the panel**, the open folder keeps its place when the panel is drawn again on it (closed and opened again, on
+  the same document): it shows the folder where it was left. Opening a folder, by its card or the back bar, starts at
+  its top. Opening another document opens the panel on its space's root, as it always has.
+- The panel's find keeps the place too: narrowing the folder and putting the find away leaves the focus on the row it
+  came from, scrolled into view.
 - A place is kept for the browser tab's session only (`sessionStorage` for the page, memory for the panel), for the
   last `LIST_PLACES_KEPT` (50) lists.
 

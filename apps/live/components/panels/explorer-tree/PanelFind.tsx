@@ -39,27 +39,6 @@ export function usePanelFind(
     setText('');
   }
 
-  useEffect(() => {
-    if (!enabled) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (!isFindShortcut(e)) return;
-      const panel = root.current?.closest(PANEL_ROOT) ?? root.current;
-      const active = document.activeElement;
-      if (!panel || !(active instanceof HTMLElement) || !panel.contains(active)) return;
-      if (active === inputRef.current) return;
-      e.preventDefault();
-      cameFrom.current = active;
-      setOpen(true);
-      debugLog(`[panel-find] open scope=${scope}`);
-      track('Explorer', 'Opened', 'PanelFind');
-      // Already open: focus it again, words selected.
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [enabled, root, scope]);
-
   // Put away: once the folder is drawn whole again, the focus goes back to the row it came from (redrawn if the
   // find had narrowed it away, found again by its name), else the first row.
   const refocus = useRef(false);
@@ -80,6 +59,34 @@ export function usePanelFind(
       : (rows.find((r) => label && r.getAttribute('aria-label') === label) ?? rows[0]);
     back?.focus();
   }, [open, root]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const onKey = (e: KeyboardEvent) => {
+      // Escape in the field puts the find away, ahead of the panel's own Escape (which closes the panel): heard in
+      // the capture phase on the window, before the document's.
+      if (e.key === 'Escape' && inputRef.current && document.activeElement === inputRef.current) {
+        e.preventDefault();
+        close();
+        return;
+      }
+      if (!isFindShortcut(e)) return;
+      const panel = root.current?.closest(PANEL_ROOT) ?? root.current;
+      const active = document.activeElement;
+      if (!panel || !(active instanceof HTMLElement) || !panel.contains(active)) return;
+      if (active === inputRef.current) return;
+      e.preventDefault();
+      cameFrom.current = active;
+      setOpen(true);
+      debugLog(`[panel-find] open scope=${scope}`);
+      track('Explorer', 'Opened', 'PanelFind');
+      // Already open: focus it again, words selected.
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [enabled, root, scope, close]);
 
   return { open: open && enabled, text, setText, close, inputRef };
 }
@@ -106,12 +113,6 @@ export function PanelFindField({
         type="search"
         value={find.text}
         onChange={(e) => find.setText(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key !== 'Escape') return;
-          e.preventDefault();
-          e.stopPropagation();
-          find.close();
-        }}
         aria-label={`Find in ${folderName}`}
         placeholder={`Find in ${folderName}`}
         className="min-w-0 flex-1 bg-transparent py-0.5 text-[13px] text-slate-900 outline-none placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden"

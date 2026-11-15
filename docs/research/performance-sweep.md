@@ -196,7 +196,13 @@ To build:
   built, see "What shipped".
 - S3 the telemetry dashboard prefetches no other view when the browser asks to save data (#187).
   Built: with Save-Data on, 4 view chunks (19.7 KiB gzipped) wait until their view is opened.
-- O4 the Explorer's panel tree becomes infinite scroll, with a search that finds every row, shown or not (#183).
+- O4 the Explorer's long lists draw only the rows in view, with a find that reaches every row (#183). Built: the List,
+  Card and Details views and the panel's lists are windowed (full scrollbar, rows drawn as they come into view, at most
+  8 a frame); Ctrl F focuses the Explorer's search, or the panel's find field; Back lands on the row it left. A folder of
+  1,000 at 4x CPU opened in 0.3 to 0.5 s, not 16 to 35 s (longest task about 0.1 s, not 9 to 13 s), with 800 to 1,250
+  elements, not about 37,000, and scrolled to its end where every run had crashed the tab. Tasks over 50 ms remain
+  while thumbnails load (their loader's animations and pictures, on a 40-document folder as on a 1,000 one); the
+  Details view, which draws none, opened and scrolled with at most two tasks of 55 ms.
 
 Measured, then decided:
 
