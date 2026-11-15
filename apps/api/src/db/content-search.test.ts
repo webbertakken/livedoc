@@ -8,6 +8,7 @@ import {
   compileContentQuery,
   contentSearchStatements,
   searchContent,
+  TRIGRAM_SEARCH,
   trimSnippet,
 } from './content-search';
 
@@ -181,5 +182,19 @@ describe('capSearchText', () => {
     const cut = capSearchText(text);
     expect(cut.capped).toBe(true);
     expect(cut.text).toHaveLength(SEARCH_TEXT_MAX_CHARS - 1);
+  });
+});
+
+// Up to SEARCH_CANDIDATES candidates are ranked and filtered, each tab's text up to SEARCH_TEXT_MAX_CHARS: the
+// text rides along only for the matches the search answers, read by key at the end
+// (docs/specs/016-platform/web-performance.md "The api").
+describe('the search query', () => {
+  it('ranks candidates without their text and reads it for the answered matches only', () => {
+    const candidates = TRIGRAM_SEARCH.slice(
+      TRIGRAM_SEARCH.indexOf('hits AS ('),
+      TRIGRAM_SEARCH.indexOf('kept AS ('),
+    );
+    expect(candidates).not.toMatch(/\bs\.text\b/);
+    expect(TRIGRAM_SEARCH).toMatch(/JOIN content_search cs ON cs\.rowid = r\.search_rowid/);
   });
 });

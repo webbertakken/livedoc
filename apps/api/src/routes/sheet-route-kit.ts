@@ -2,7 +2,7 @@
 // confined to, the refusals, the writer, and the room relay (docs/specs/029-sheets/sheet-store.md "Who may do
 // what", "Live for everyone").
 import type { SheetError, SheetsRoomOp } from '@livedoc/api-schema';
-import { getDocument } from '../db';
+import { getDocumentMeta } from '../db';
 import { json } from '../responses';
 import { relaySheets } from '../room-client';
 import {
@@ -73,7 +73,7 @@ export async function sheetCaller(
 ): Promise<SheetCaller | Response> {
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const doc = await getDocument(ctx.env, documentId);
+  const doc = await getDocumentMeta(ctx.env, documentId);
   if (!doc) return missingDocument(ctx, documentId);
   const gate = GATES[level];
   if (await gate(ctx, documentId, doc.ownerId, doc.teamId))

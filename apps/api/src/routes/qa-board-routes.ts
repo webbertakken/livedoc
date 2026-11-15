@@ -18,7 +18,7 @@ import { documentRoom } from '../document-room/document-client';
 // so every peer, and the sender, converges on exactly what D1 holds.
 
 import { isParticipantQaAction, parseQaAction, qaVoterId, type QaNote } from '@livedoc/document';
-import { getDocument, getParticipant } from '../db';
+import { getDocumentMeta, getParticipant } from '../db';
 import type { QaWriteRequest } from '../qa-board-write';
 import { badRequest, conflict, forbidden, json, notFound, payloadTooLarge } from '../responses';
 import { refuseGuestVoteOverCap } from '../vote-integrity';
@@ -45,7 +45,7 @@ export async function handleQaBoardRoute(ctx: RouteContext): Promise<Response | 
   const tabId = segments[4]!;
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const existing = await getDocument(env, id);
+  const existing = await getDocumentMeta(env, id);
   if (!existing) return missingDocument(ctx, id);
 
   const body = await readBody(ctx);

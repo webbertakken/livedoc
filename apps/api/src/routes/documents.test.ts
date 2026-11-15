@@ -2,7 +2,7 @@ import { makeTestRouteContext } from './test-route-context';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { DocumentDTO } from '../types';
 
-// No document here owes its room a purge (G3 is room-purge.test.ts's).
+// No document created here owes its room a purge (the create's check, room-purge.test.ts).
 vi.mock('../room-purge-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../room-purge-client')>()),
   purgeOwed: vi.fn(async () => false),
@@ -33,6 +33,7 @@ const { db, canReadDocument, canEditDocument, resolveDocumentGrant } = vi.hoiste
     getDocument: vi.fn(),
     // The save's own one-query read (db/tab-save-document.ts); answered from getDocument's mock below.
     getDocumentForSave: vi.fn(),
+    getDocumentMeta: vi.fn(),
     getShareLink: vi.fn(async () => null),
     // The thumbnail route's one-query gate + freshness read.
     getDocumentThumbMeta: vi.fn(),
@@ -154,6 +155,10 @@ beforeEach(() => {
     const doc = (await db.getDocument(...args)) as DocumentDTO | null;
     return doc ? { ...doc, tabCount: doc.tabs?.length ?? 0 } : null;
   });
+  // The gate-only read answers from the same document.
+  db.getDocumentMeta.mockImplementation(
+    async (...args: unknown[]) => (await db.getDocument(...args)) as DocumentDTO | null,
+  );
   canReadDocument.mockReset();
   canEditDocument.mockReset();
   resolveDocumentGrant.mockReset();

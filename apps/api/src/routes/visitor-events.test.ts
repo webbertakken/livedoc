@@ -29,6 +29,7 @@ vi.mock('../timeline', () => timeline);
 
 const db = vi.hoisted(() => ({
   getDocument: vi.fn(),
+  getDocumentMeta: vi.fn(),
   getTab: vi.fn(),
   getParticipant: vi.fn(async () => null),
   getMembership: vi.fn(),
@@ -85,6 +86,7 @@ function ctxWith(method: string, path: string, opts: Record<string, unknown> = {
 beforeEach(() => {
   for (const fn of Object.values(timeline)) fn.mockClear();
   db.getDocument.mockResolvedValue(TEAM_DOCUMENT);
+  db.getDocumentMeta.mockResolvedValue(TEAM_DOCUMENT);
   db.getTab.mockResolvedValue({ id: 't1', name: 'Tab', orderIndex: 0, elements: [] });
 });
 

@@ -3,7 +3,7 @@
 // notice"): how many of the document's tabs are also in other documents, and how
 // many documents, so the user hears that those tabs stay before they act.
 
-import { getDocument } from '../db';
+import { getDocumentMeta } from '../db';
 import { sharedTabsSummary } from '../document-room/tab-shares';
 import { forbidden, json } from '../responses';
 import {
@@ -25,7 +25,7 @@ export async function handleDocumentSharedTabs(
   // 400 with no caller, 404 when missing, 403 without a claim.
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const existing = await getDocument(env, segments[2]!);
+  const existing = await getDocumentMeta(env, segments[2]!);
   if (!existing) return missingDocument(ctx, segments[2]!);
   if (!(await mayDeleteDocument(ctx, existing))) return forbidden();
   return json({ sharedTabs: await sharedTabsSummary(env, existing.id) });

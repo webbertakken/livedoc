@@ -188,3 +188,17 @@ describe('handleEvents with an odd body', () => {
     expect(db.insertTelemetryEvents).not.toHaveBeenCalled();
   });
 });
+
+describe('handleEvents when D1 fails', () => {
+  it('still answers 204, and logs the lost batch', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    db.insertTelemetryEvents.mockRejectedValueOnce(new Error('D1_ERROR'));
+    const res = await handleEvents(makeCtx());
+    expect(res.status).toBe(204);
+    expect(warn).toHaveBeenCalledWith('[telemetry] events.insert.failed', {
+      events: 1,
+      error: 'Error: D1_ERROR',
+    });
+    warn.mockRestore();
+  });
+});

@@ -13,8 +13,16 @@ import {
   type Item,
   type ItemPerson,
   type ItemRejection,
+  type ItemTypeCatalogue,
 } from '@livedoc/items';
-import { getDocument, getParticipant, getTab, listItems } from '../db';
+import {
+  getDocumentItemTypesAtRev,
+  getDocumentMeta,
+  getParticipant,
+  getTab,
+  listItems,
+  type DocumentMeta,
+} from '../db';
 import { forbidden, json, notFound } from '../responses';
 import { relayItems } from '../room-client';
 import {
@@ -30,12 +38,18 @@ import {
 
 type Level = 'read' | 'participate' | 'edit';
 
+// What the item routes need of their document: its gate's row (D1) and its card types (the room).
+export type ItemDocument = DocumentMeta & {
+  itemTypes: ItemTypeCatalogue | null;
+  itemTypesRev: number;
+};
+
 export type ItemCaller = {
   documentId: string;
   owner: string;
   // The document, for the gates a comment delete checks (item-comment-routes.ts); absent on a new document's
   // seed, which writes no comments.
-  doc?: NonNullable<Awaited<ReturnType<typeof getDocument>>>;
+  doc?: ItemDocument;
   // The item ids the caller may touch, when their grant is confined to one tab.
   scope: Set<string> | null;
   // Whether that tab shows every card (a board or plan view on it), so a card the caller makes stays in its scope.
@@ -111,8 +125,9 @@ export async function itemCaller(
 ): Promise<ItemCaller | Response> {
   const owner = requireOwner(ctx);
   if (owner instanceof Response) return owner;
-  const doc = await getDocument(ctx.env, documentId);
-  if (!doc) return missingDocument(ctx, documentId);
+  const meta = await getDocumentMeta(ctx.env, documentId);
+  if (!meta) return missingDocument(ctx, documentId);
+  const doc: ItemDocument = { ...meta, ...(await getDocumentItemTypesAtRev(ctx.env, documentId)) };
   const gate = GATES[level];
   if (await gate(ctx, documentId, doc.ownerId, doc.teamId))
     return { documentId, owner, doc, scope: null };

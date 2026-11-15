@@ -162,7 +162,23 @@ seen on the document).
   Inbox reads against the real migrations.
 - Cells named by key are matched as `(row_id, col_id)` pairs, so the primary key seeks each one
   (`apps/api/src/db/sheets-plans.test.ts`).
-- A check that needs only a document's owner and team reads that row, not the full document.
+- A check that needs only a document's owner and team reads that row, not the full document: the tab read,
+  the card, sheet, comment and catalogue routes and a document's Timeline read its gate row (`getDocumentMeta`);
+  the card routes take the card types from the room. The whole document (its owner's name, its tabs) is read
+  only where the answer carries it: opening the document and a document view.
+- A share-link visitor's open is recorded from the grant the read already resolved, not a second resolve.
+- Reads that do not depend on each other go to D1 together: a team request's team and the caller's membership,
+  a team's members and its invite link, a Timeline page and its scope's state.
+- Content search ranks and filters its candidates without their text and reads the text by key for the
+  matches it answers only (`apps/api/src/db/content-search.test.ts`): 600 matching 32 KB tabs search in about
+  half the time.
+- A large module only one route reads loads on that route's first request, not with the worker: the OpenAPI
+  document and its generated schemas (`apps/api/src/routes/openapi.test.ts`), the PNG renderer.
+- A list that names its people reads their profiles in the same statement: a team's members join their
+  participant rows (`apps/api/src/db/team-members.test.ts` pins the round trip and the plan).
+- A request about one document pays no D1 read for the purge guard: the document's own row keeps it
+  ([Document storage](../006-document/document-storage.md) G3). `apps/api/src/routes/document-request-round-trips.test.ts`
+  counts the D1 round trips of the requests an open editor makes all the time.
 - A realtime room reads a socket's fixed session facts once, not on every frame.
 - The tab save reads its document in one query and fetches the room's ledger alongside its other
   reads ([API](../015-api/api.md) "Tab save"); the timeline's event and its scopes are one batch; the

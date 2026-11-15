@@ -225,10 +225,8 @@ export async function handleTeams(ctx: RouteContext): Promise<Response> {
     (segments.length === 6 && segments[3] === 'members' && segments[5] === 'accept');
   if (!teamScoped) return notFound();
   const teamId = segments[2]!;
-  const team = await getTeam(env, teamId);
-  if (!team) return notFound();
-  const me = await getMembership(env, teamId, userId);
-  if (!me) return notFound();
+  const [team, me] = await Promise.all([getTeam(env, teamId), getMembership(env, teamId, userId)]);
+  if (!team || !me) return notFound();
   // Admin verbs need an accepted admin row: a pending invite that was
   // pre-promoted to admin manages nothing until they join.
   const isAdmin = me.role === 'admin' && me.status === 'joined';
@@ -252,12 +250,14 @@ export async function handleTeams(ctx: RouteContext): Promise<Response> {
   // /api/teams/<id> — read / update / delete
   if (segments.length === 3) {
     if (request.method === 'GET') {
-      const members = await listTeamMembers(env, teamId);
       // The invite link is an admin-only management surface (docs/specs/013-workspace/teams.md),
       // so only admins get its token in the detail payload, and only in an interactive
       // session: the token lets any account join and edit the library, and team
       // administration is session-only (docs/specs/015-api/public-api-and-tokens.md §3.4).
-      const inviteLink = isAdmin && sessionAccountId ? await getTeamInviteLink(env, teamId) : null;
+      const [members, inviteLink] = await Promise.all([
+        listTeamMembers(env, teamId),
+        isAdmin && sessionAccountId ? getTeamInviteLink(env, teamId) : null,
+      ]);
       return json({ team, members, myRole: me.role, inviteLink });
     }
     if (request.method === 'PUT') {

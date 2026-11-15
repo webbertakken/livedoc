@@ -79,10 +79,11 @@ export async function handleEvents(ctx: RouteContext): Promise<Response> {
       valid.map((e) => ({ category: e.category, action: e.action, type: e.type ?? null })),
       Date.now(),
     );
-  } catch {
+  } catch (err) {
     // A transient D1 failure must not surface: without this the throw
     // became a 5xx at the edge, breaking the "always 204" contract above
-    // (the batch is lost either way; telemetry is fire-and-forget).
+    // (the batch is lost either way; telemetry is fire-and-forget). Logged, so a lost batch is seen.
+    console.warn('[telemetry] events.insert.failed', { events: valid.length, error: String(err) });
   }
   return noop;
 }

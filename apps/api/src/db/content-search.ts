@@ -187,10 +187,11 @@ const SCOPE = '(v.scope_tab_id IS NULL OR v.scope_tab_id = s.tab_id)';
 const SHORT_WORDS_START =
   "NOT EXISTS (SELECT 1 FROM json_each(?4) w WHERE instr(' ' || s.folded, ' ' || w.value) = 0)";
 
-const TRIGRAM_SEARCH = `
+// Exported for the guard in content-search.test.ts: the candidates carry no tab text; the matches answered read it.
+export const TRIGRAM_SEARCH = `
 WITH ${VISIBLE_DOCUMENTS_CTES},
 hits AS (
-  SELECT s.document_id, s.tab_id, s.tab_name, s.text, s.folded, v.saved_at,
+  SELECT s.rowid AS search_rowid, s.document_id, s.tab_id, s.tab_name, s.folded, v.saved_at,
          bm25(content_search_fts) AS rank
     FROM content_search_fts
     JOIN content_search s ON s.rowid = content_search_fts.rowid
@@ -210,8 +211,10 @@ kept AS (
 ranked AS (
   SELECT k.*, ROW_NUMBER() OVER (PARTITION BY document_id ORDER BY rank, matched DESC) AS n FROM kept k
 )
-SELECT document_id, tab_id, tab_name, text AS snip FROM ranked WHERE n = 1
- ORDER BY rank, matched DESC, saved_at DESC
+SELECT r.document_id, r.tab_id, r.tab_name, cs.text AS snip
+  FROM ranked r JOIN content_search cs ON cs.rowid = r.search_rowid
+ WHERE r.n = 1
+ ORDER BY r.rank, r.matched DESC, r.saved_at DESC
  LIMIT ${SEARCH_RESULTS_MAX}`;
 
 const SHORT_SEARCH = `

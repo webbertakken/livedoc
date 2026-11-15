@@ -125,10 +125,11 @@ export async function retryRoomPurges(
   return outcome;
 }
 
-/** Guard G3's read: whether the document's room still owes a purge. */
-export const PURGE_OWED_SQL = 'SELECT 1 AS owed FROM room_purges WHERE document_id = ?';
+// Whether the document's room still owes a purge.
+const PURGE_OWED_SQL = 'SELECT 1 AS owed FROM room_purges WHERE document_id = ?';
 
-// Guard G3: a document whose room still owes a purge cannot be opened; the worker answers 404 before the room.
+// A create of an id whose room still owes a purge has the room purged first (document-collection-route.ts). No
+// document route asks: a document owing its purge has no D1 row, which each of them reads (G3).
 export async function purgeOwed(env: Env, documentId: string): Promise<boolean> {
   const row = await env.DB.prepare(PURGE_OWED_SQL).bind(documentId).first<{ owed: number }>();
   return row !== null;

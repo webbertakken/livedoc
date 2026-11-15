@@ -15,7 +15,6 @@ import type {
   TeamRole,
 } from '@livedoc/api-schema';
 import type { Env } from '../types';
-import { getParticipant } from './participants';
 import { imageGrantOwnerChangeStatement } from './image-grants';
 
 // TEAM_COLS / JOINED_COUNT / TeamRow / rowToTeam are shared with the
@@ -114,33 +113,32 @@ export async function getTeam(env: Env, id: string): Promise<Team | null> {
   return row ? rowToTeam(row) : null;
 }
 
+// Admins first, then alphabetical by address, so the list reads "who runs this" before "who's in it". Each
+// connected member's display name comes from their participant profile (docs/specs/013-workspace/teams.md), so the
+// list shows real names ("Anna Smith"), not just the prettified invite email; pending and profile-less rows read
+// null and the client falls back to the email. A JOINED member's published profile picture rides along
+// (docs/specs/014-identity/profile-picture.md §5): the list is read only by signed-in members, and a pending
+// invitee has not joined anyone yet. Exported for the query-plan guard in team-members.test.ts.
+export const LIST_TEAM_MEMBERS_SQL = `SELECT tm.id, tm.team_id, tm.user_id, tm.email, tm.role, tm.status, tm.created_at,
+         tm.updated_at, p.name AS participant_name, p.picture_url AS participant_picture_url
+    FROM team_members tm
+    LEFT JOIN participants p ON p.id = tm.user_id
+   WHERE tm.team_id = ?
+   ORDER BY CASE tm.role WHEN 'admin' THEN 0 ELSE 1 END, tm.email ASC`;
+
 export async function listTeamMembers(env: Env, teamId: string): Promise<TeamMember[]> {
-  // Admins first, then alphabetical by address, so the list reads
-  // "who runs this" before "who's in it".
-  const result = await env.DB.prepare(
-    `SELECT ${MEMBER_COLS} FROM team_members WHERE team_id = ?
-     ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, email ASC`,
-  )
+  const result = await env.DB.prepare(LIST_TEAM_MEMBERS_SQL)
     .bind(teamId)
-    .all<MemberRow>();
-  const members = (result.results ?? []).map(rowToMember);
-  // Resolve each connected member's display name from their participant
-  // profile (docs/specs/013-workspace/teams.md) so the list shows real names ("Anna Smith"), not
-  // just the prettified invite email. Pending / profile-less rows stay
-  // null and the client falls back to the email. A JOINED member's published
-  // profile picture rides along (docs/specs/014-identity/profile-picture.md §5): the list is
-  // read only by signed-in members, and a pending invitee has not joined anyone yet.
-  return Promise.all(
-    members.map(async (m) => {
-      if (!m.userId) return m;
-      const p = await getParticipant(env, m.userId);
-      return {
-        ...m,
-        name: p?.name ?? null,
-        pictureUrl: m.status === 'joined' ? (p?.pictureUrl ?? null) : null,
-      };
-    }),
-  );
+    .all<MemberRow & { participant_name: string | null; participant_picture_url: string | null }>();
+  return (result.results ?? []).map((row) => {
+    const m = rowToMember(row);
+    if (!m.userId) return m;
+    return {
+      ...m,
+      name: row.participant_name ?? null,
+      pictureUrl: m.status === 'joined' ? (row.participant_picture_url ?? null) : null,
+    };
+  });
 }
 
 // The caller's own membership row in a team — the permission check

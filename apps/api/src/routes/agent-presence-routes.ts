@@ -10,7 +10,7 @@ import {
 import { resolveRef } from '@livedoc/document';
 import { buildViewModel } from '@livedoc/document-views';
 import { frontDoorOf } from '../changesets/front-door';
-import { getDocument, getParticipant, getTab } from '../db';
+import { getDocumentMeta, getParticipant, getTab } from '../db';
 import { personTagFor } from '../person-tag';
 import { json, noContent, notFound } from '../responses';
 import { deleteAgentPresence, putAgentPresence, RoomUnavailableError } from '../room-client';
@@ -77,7 +77,7 @@ async function presenceRoute(ctx: DocumentRouteContext): Promise<Response | null
   const token = ctx.token;
   const owner = ctx.resolveOwner();
   if (!token || !owner) return refuse(403, { error: 'presence_requires_token' });
-  const doc = await getDocument(env, documentId);
+  const doc = await getDocumentMeta(env, documentId);
   if (!doc) return missingDocument(ctx, documentId);
   if (!(await gateRead(ctx, documentId, doc.ownerId, doc.teamId, tabId)))
     return deniedOnTab(ctx, doc);

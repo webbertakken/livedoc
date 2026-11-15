@@ -32,7 +32,7 @@ import {
   markScopeSeen,
   readTimeline,
 } from '../db/timeline';
-import { getDocument, getMembership } from '../db';
+import { getDocumentMeta, getMembership } from '../db';
 import { backfillUserScope } from '../timeline';
 import { isNewVisit } from '../timeline/seen';
 import { badRequest, forbidden, json, missingAuth, noContent, notFound } from '../responses';
@@ -62,18 +62,22 @@ export async function handleTimeline(ctx: RouteContext): Promise<Response> {
     if (!allowed) return forbidden();
 
     const limit = clampLimit(url.searchParams.get('limit'));
-    const page = await readTimeline(env, {
-      scope,
-      readerId: ownerId,
-      limit,
-      cursor: url.searchParams.get('cursor'),
-      from: numberParam(url.searchParams.get('from')),
-      to: numberParam(url.searchParams.get('to')),
-      // Bounded: each one is a bound parameter, and D1 refuses past 100.
-      sourceTypes: url.searchParams.getAll('sourceType').filter(Boolean).slice(0, MAX_SOURCE_TYPES),
-    });
-
-    const state = await getScopeState(env, scope);
+    const [page, state] = await Promise.all([
+      readTimeline(env, {
+        scope,
+        readerId: ownerId,
+        limit,
+        cursor: url.searchParams.get('cursor'),
+        from: numberParam(url.searchParams.get('from')),
+        to: numberParam(url.searchParams.get('to')),
+        // Bounded: each one is a bound parameter, and D1 refuses past 100.
+        sourceTypes: url.searchParams
+          .getAll('sourceType')
+          .filter(Boolean)
+          .slice(0, MAX_SOURCE_TYPES),
+      }),
+      getScopeState(env, scope),
+    ]);
     // Seed on first sight, off the response path. The reader gets an
     // empty (or partial) first page and a populated one the moment they
     // reopen — better than holding the response while we walk their
@@ -222,7 +226,7 @@ async function canReadScope(
     // its team, or a valid share-code visitor. A missing document is a
     // refusal rather than a 404, so a guessed id can't be probed for
     // existence through this endpoint either.
-    const liveDoc = await getDocument(ctx.env, scope.scopeId);
+    const liveDoc = await getDocumentMeta(ctx.env, scope.scopeId);
     if (!liveDoc) return false;
     return gateRead(ctx, scope.scopeId, liveDoc.ownerId, liveDoc.teamId);
   }

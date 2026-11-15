@@ -80,7 +80,8 @@ describe('purge tombstones', () => {
     });
   });
 
-  it('make a document unopenable: 404 before its room is reached (G3)', async () => {
+  // Every route's refusal: routes/document-purge-guard.test.ts.
+  it('make a document unopenable: 404, its room left owing the purge (G3)', async () => {
     const db = sqliteD1();
     const { env, purged } = rooms(db, new Set(['A']));
     await trashed(db, ['A']);

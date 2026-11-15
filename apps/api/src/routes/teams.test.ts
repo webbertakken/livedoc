@@ -1141,3 +1141,47 @@ describe('POST /api/teams/:id/notify-mention (docs/specs/012-collaboration/comme
     ).toBe(400);
   });
 });
+
+// The reads a team request needs that do not depend on each other go to D1 together, so the request waits one
+// round trip for them, not one each (docs/specs/016-platform/web-performance.md "The api").
+describe('team reads in flight together', () => {
+  // A read that answers only when released, so a test can see what was asked before anything came back.
+  function held<T>(): { promise: Promise<T>; release: (value: T) => void } {
+    let release!: (value: T) => void;
+    const promise = new Promise<T>((resolve) => (release = resolve));
+    return { promise, release };
+  }
+  const flushed = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  it("asks for the team and the caller's membership together", async () => {
+    const teamRead = held<typeof team>();
+    db.getTeam.mockReturnValue(teamRead.promise);
+    db.getMembership.mockResolvedValue(member({ role: 'member' }));
+    db.listFoldersByTeam.mockResolvedValue([]);
+    db.listDocumentsByTeam.mockResolvedValue([]);
+    const answer = handleTeams(makeCtx('GET', '/api/teams/t1/library'));
+    await flushed();
+    expect(db.getMembership).toHaveBeenCalledWith({}, 't1', 'user-1');
+    teamRead.release(team);
+    expect((await answer).status).toBe(200);
+  });
+
+  it('still answers 404 for a team that does not exist, whatever the membership read says', async () => {
+    db.getTeam.mockResolvedValue(null);
+    db.getMembership.mockResolvedValue(member());
+    expect((await handleTeams(makeCtx('GET', '/api/teams/t1'))).status).toBe(404);
+  });
+
+  it("asks for an admin's members and invite link together", async () => {
+    const membersRead = held<TeamMember[]>();
+    db.getTeam.mockResolvedValue(team);
+    db.getMembership.mockResolvedValue(member());
+    db.listTeamMembers.mockReturnValue(membersRead.promise);
+    db.getTeamInviteLink.mockResolvedValue({ token: 'tok-1', expiresAt: 999 });
+    const answer = handleTeams(makeCtx('GET', '/api/teams/t1'));
+    await flushed();
+    expect(db.getTeamInviteLink).toHaveBeenCalledWith({}, 't1');
+    membersRead.release([member()]);
+    expect(await (await answer).json()).toMatchObject({ inviteLink: { token: 'tok-1' } });
+  });
+});
