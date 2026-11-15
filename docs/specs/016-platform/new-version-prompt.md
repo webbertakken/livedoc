@@ -73,7 +73,9 @@ its next api response; once the editor is deployed a reload ends it.
 ## Help
 
 The troubleshooting article "My Changes Are Missing" explains the prompt under "How saving works":
-what it means, that Reload saves first, and that Not now is always safe.
+what it means, that Reload saves first, and that Not now is always safe; and that it also shows once
+another tab has moved the documents kept in This Browser to a newer storage, when this tab should
+reload before editing on.
 
 ## Defaults
 
