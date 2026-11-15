@@ -495,9 +495,9 @@ export const LANDING_SECTIONS: LandingSection[] = [
         art: <StormReviewArt />,
         href: '/help/canvas/event-storming-boards/asking-for-suggestions/',
         group: 'Event storming',
-        title: 'Ask for suggestions, then review the wall',
+        title: 'Ask, arrange and review',
         description:
-          'Ask your coding agent, an AI tool or the built-in model for the notes the story is missing, names for its contexts, sharper wording or fewer lanes, and accept each one after a preview. Arrange the wall along its timeline, mark the pivotal events, answer the hotspots and check the gaps before you build.',
+          'Ask your agent or the built-in model for missing notes, context names, sharper wording or fewer lanes, and keep each after a preview. Arrange the wall along its timeline, mark pivotal events, answer hotspots and check the gaps before you build.',
       },
       {
         art: <IconsArt />,

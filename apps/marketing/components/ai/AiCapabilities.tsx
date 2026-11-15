@@ -21,7 +21,7 @@ const CAPABILITIES = [
   {
     icon: lucideGlyph(lucideSquareKanban, 20),
     title: 'Boards and templates',
-    body: 'Kanban, sprints, retros, SWOT and more from the template library, with Plan cards your AI can add, edit and move.',
+    body: 'Kanban, sprints, retros, SWOT and more from the template library, with Plan cards your AI can add, edit and move, and suggestions on an event storming board for you to keep or dismiss.',
   },
   {
     icon: lucideGlyph(lucideTable, 20),

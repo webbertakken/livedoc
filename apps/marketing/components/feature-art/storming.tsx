@@ -364,15 +364,14 @@ export function StormReviewArt() {
           strokeWidth="0.9"
           fill="none"
         />
-        {/* A suggested note, offered and not yet taken: dashed, never paper. */}
+        {/* A suggested note, offered and not yet taken: pale paper inside a dashed border. */}
         <rect
           x={columns[3]!}
           y="35"
           width="30"
           height="26"
           rx="1"
-          fill={NOTE.event}
-          fillOpacity="0.25"
+          fill="#ffedd5"
           stroke="#c2410c"
           strokeWidth="0.9"
           strokeDasharray="2.5 2"
