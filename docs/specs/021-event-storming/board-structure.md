@@ -62,6 +62,12 @@ A hotspot is a question the room left open. Its **answer** is what the room deci
 | Viewer      | the same                                         | nothing                                        |
 
 - Marking, naming and answering are an Editor's (default).
+- **The room holds it, not only the menu.** A Participant's change sets and changes no `esPivotal` and no `esAnswer`,
+  on a note it added as on anyone's; a copy it makes of a marked or answered note lands plain. Its own note may drop
+  the mark or the answer, as a change of kind does (default).
+- **Name This Lane is an Editor's; a lane's name is still geometry.** A Participant may add text
+  ([Share roles](../013-workspace/share-roles.md#what-a-participant-changes)), and text it leaves left of the wall
+  reads as that lane's name, as any text there does (default).
 - An agent reads all of it in the `storm` view; it marks no event and answers no hotspot (default).
 
 ## Telemetry
