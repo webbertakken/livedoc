@@ -146,17 +146,18 @@ async function takePreviewTags(html: string): Promise<{ html: string; tags: Shel
   return { html: stripped, tags };
 }
 
-// Write the page as it becomes known: the head up to its end now, the tags and the body once `rest` resolves.
+// Write the page as it becomes known: the head up to its end now, then the tags and the body. `rest` starts only once
+// the head has been taken, so nothing it does can hold the head back.
 async function writeInTwoParts(
   writable: WritableStream<Uint8Array>,
   first: string,
-  rest: Promise<string>,
+  rest: () => Promise<string>,
 ): Promise<void> {
   const writer = writable.getWriter();
   const encoder = new TextEncoder();
   try {
     await writer.write(encoder.encode(first));
-    await writer.write(encoder.encode(await rest));
+    await writer.write(encoder.encode(await rest()));
     await writer.close();
   } catch (err) {
     // The visitor went away mid-page; nothing is left to send them.
@@ -174,8 +175,6 @@ export async function sharePage(
   const url = new URL(request.url);
   const code = url.searchParams.get('s');
   if (!api || !code || request.method !== 'GET') return shell();
-  // Asked first, so the api works while the shell is fetched and its head is sent.
-  const name = sharePreviewName(api, request, url.origin, code);
   const page = await shell();
   if (!page.ok) return page;
   const built = await page.text();
@@ -185,12 +184,16 @@ export async function sharePage(
     console.warn('[share-page] shell has no head to close');
     return new Response(built, page);
   }
-  const closing = name.then(
-    (found) =>
-      (found === null
+  // Asked once the head is on its way, never alongside the shell: a cold api held the whole response, head and all,
+  // for up to 0.9 s in production.
+  const closing = async () => {
+    const found = await sharePreviewName(api, request, url.origin, code);
+    const tagsHtml =
+      found === null
         ? shellTagsHtml(tags)
-        : shareTagsHtml(tags, shareHead(found, code, url.origin))) + html.slice(end),
-  );
+        : shareTagsHtml(tags, shareHead(found, code, url.origin));
+    return tagsHtml + html.slice(end);
+  };
   const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
   void writeInTwoParts(writable, html.slice(0, end), closing);
   // The body is no longer the shell's bytes, so its length goes; every other header stays.
