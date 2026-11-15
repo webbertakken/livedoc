@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createShape } from './shape-factory';
 import { layOutPages, newLogoPage } from './page';
 import type { PageImageFill } from './page-image';
-import { pageExportFrame, pageGradientLine, pageImageSvg, pagePatternInk } from './page-frame';
+import { pageExportFrame, pageGradientLine, pageImageSvg } from './page-frame';
+import { pagePatternInk } from './page-fill-tone';
 import type { Element } from './index';
 
 // docs/specs/007-editor/pages-mode.md "Export": one page as an export draws it, shared by the editor's exports

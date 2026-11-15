@@ -17,7 +17,8 @@ import {
 } from './article-style';
 import { isLightColor } from './colour-math';
 import { resolveFontStack } from './fonts';
-import { legibleOn, pageFillTone } from './page-content';
+import { legibleOn } from './page-content';
+import { pageFillTone } from './page-fill-tone';
 import type { LaidOutPage } from './page';
 
 // An average glyph's advance as a share of the font size (a bold one a little wider), as the headless renders

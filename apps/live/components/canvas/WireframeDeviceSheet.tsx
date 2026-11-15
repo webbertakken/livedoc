@@ -15,7 +15,7 @@ import {
   type PageBackground,
   type WireframeFrameTheme,
 } from '@livedoc/document';
-import { pageSheetStyle } from '@/lib/page-paint';
+import { pageSheetStyle } from '@/lib/page-sheet-style';
 
 export const WireframeDeviceSheet = memo(function WireframeDeviceSheet({
   page,

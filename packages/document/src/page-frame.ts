@@ -7,16 +7,14 @@
 import type { CanvasSurface } from './colors';
 import type { Element } from './index';
 import { endpointPosition } from './geometry';
-import { pageIsDark, pageSurface } from './page-content';
+import { pageSurface } from './page-content';
+import { PAGE_PATTERN_PITCH, pageIsDark, pagePatternInk } from './page-fill-tone';
 import { pageImageOverlayColor, pageImageTone } from './page-image';
-import type { LaidOutPage, PageBackground, PageFill } from './page';
+import type { LaidOutPage, PageFill } from './page';
 import type { PageImageFill } from './page-image';
 import { r2, xmlEscape } from './svg-render-primitives';
 import { pageScreenRect, wireframeFrameSvg } from './wireframe-page';
 import type { WireframeFrameTheme } from './wireframe-device-svg';
-
-// The pattern's pitch on a page, in px (the page panel's dots, grid and lines).
-export const PAGE_PATTERN_PITCH = 24;
 
 /** The elements' markup cut to a wireframe page's screen, and its overlay after them; as it is on
  *  any other page. */
@@ -26,12 +24,6 @@ export function withinPageFrame(
 ): string {
   if (!frame?.clipId) return elementsSvg;
   return `<g clip-path="url(#${frame.clipId})">${elementsSvg}</g>${frame.overlaySvg ?? ''}`;
-}
-
-/** The pattern's ink on a page: faint white on a dark fill, faint slate on a light one (and on the
- *  plain paper, whose sheet sets it by class on screen). */
-export function pagePatternInk(background: PageBackground | undefined): string {
-  return pageIsDark({ background }) ? 'rgb(255 255 255 / 0.14)' : 'rgb(15 23 42 / 0.1)';
 }
 
 /**

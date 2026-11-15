@@ -12,7 +12,8 @@ import {
 } from './colors';
 import { elementIndexFor, endpointPosition, type ElementIndex } from './geometry';
 import { pagesOf, rowPageAt, layOutPages, type Page, type PageRect } from './page';
-import { elementAnchorPoint, pageFillTone } from './page-content';
+import { elementAnchorPoint } from './page-content';
+import { pageFillTone } from './page-fill-tone';
 import { layerBands } from './layers';
 import { inkToward, isOpaqueHex, worstContrast } from './page-ink-contrast';
 import { PAPER_TONE, pageGroundUnder, type PageGround } from './page-ink-ground';

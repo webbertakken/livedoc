@@ -26,9 +26,9 @@ import {
   detailsLabelOf,
   DETAILS_LABEL_DEFAULT,
   ITEM_TYPE_CUSTOM_MAX,
-  CUSTOM_CHOICE_OPTION_MAX,
   legacyCatalogue,
 } from './type-catalogue';
+import { CUSTOM_CHOICE_OPTION_MAX } from './limits';
 
 // docs/specs/026-plan/item-types.md.
 const call = {
