@@ -61,8 +61,9 @@ other row of the table above.
   the head once the api answers: naming the document, or as the shell had them. A person's browser fetches the
   editor's code while the api answers; a crawler, which reads the whole page, finds the same tags at the end of
   the head.
-- **The shell is fetched at the same time as the card**, so the head goes out after the shell alone, and the body
-  after whichever is slower, not both.
+- **The card is asked once the head is on its way**, never before: asked alongside the shell, a cold api held the
+  whole response, head and all, for up to 0.9 s in production (November 2026). The head goes out after the shell
+  alone; the body follows the card.
 - **The api has 1.5 s**, a crawler's budget, not a person's. Measured from outside Western Europe, the card took
   0.3 to 0.9 s on a cold api (November 2026), so a shorter wait would cost those crawlers their preview.
   Slower, failing, or not bound at all (a self-host without the `API` service binding): the shell goes out with

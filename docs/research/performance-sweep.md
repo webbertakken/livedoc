@@ -208,7 +208,9 @@ Measured, then decided:
   at the median (30 pages, curl), with one in 42 reaching the 1.5 s timeout; from seven nodes outside Western
   Europe, one D1 read on a cold api added 0.3 to 0.9 s (medians of 5, check-host.net, a made-up code). A shorter
   timeout would have cost those crawlers their preview, so the head now goes out before the lookup (scripts and
-  styles load meanwhile; the preview tags close the head) and the card is one D1 read, not three (#187).
+  styles load meanwhile; the preview tags close the head) and the card is one D1 read, not three (#187, #203).
+  Asked alongside the shell, a cold api still held the whole response in 5 of 16 production pages (up to 0.9 s),
+  so the card is now asked once the head is on its way.
 
 Declined:
 

@@ -164,7 +164,6 @@ describe('live worker: the share page', () => {
     });
     const res = await get('/document/shared?s=CODE1234', env);
     expect(assets).toEqual(['/document/placeholder']);
-    expect(seen).toEqual(['/api/share/CODE1234/card']);
     expect(res.status).toBe(200);
     // Still the editor page's headers, less a length the rewritten body no longer has.
     expect(res.headers.get('X-Frame-Options')).toBe('DENY');
@@ -172,7 +171,9 @@ describe('live worker: the share page', () => {
     const name = 'Q3 &lt;plan&gt; &amp; &quot;risks&quot;';
     const image = 'https://docs.nu/api/share/CODE1234/image.png';
     const pitch = SHARE_PITCH;
-    expect(await res.text()).toBe(
+    const page = await res.text();
+    expect(seen).toEqual(['/api/share/CODE1234/card']);
+    expect(page).toBe(
       HEAD_WITHOUT_TAGS +
         `<title>${name}</title>` +
         `<meta name="description" content="${pitch}"/>` +
@@ -203,16 +204,33 @@ describe('live worker: the share page', () => {
     expect(rest).toMatch(/^<title>Payments flow<\/title>.*<\/head><body>editor<\/body><\/html>$/);
   });
 
+  it('asks the api only once the head is on its way', async () => {
+    const api = vi.fn(() => Response.json({ name: 'Payments flow' }));
+    const { env } = makeEnv(api);
+    const res = await get('/document/shared?s=CODE1234', env);
+    expect(api).not.toHaveBeenCalled();
+    const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
+    let sent = '';
+    while (sent.length < HEAD_WITHOUT_TAGS.length) sent += (await reader.read()).value;
+    let rest = '';
+    for (let chunk = await reader.read(); !chunk.done; chunk = await reader.read())
+      rest += chunk.value;
+    expect(api).toHaveBeenCalledOnce();
+    expect(rest).toContain('<title>Payments flow</title>');
+  });
+
   it("forwards the visitor's address, so the api limits previews per visitor", async () => {
     let init: RequestInit | undefined;
     const { env } = makeEnv((_, i) => {
       init = i;
       return Response.json({ name: 'n' });
     });
-    await get('/document/shared?s=C', env, { headers: { 'CF-Connecting-IP': '203.0.113.9' } });
+    await (
+      await get('/document/shared?s=C', env, { headers: { 'CF-Connecting-IP': '203.0.113.9' } })
+    ).text();
     expect(new Headers(init!.headers).get('CF-Connecting-IP')).toBe('203.0.113.9');
     expect(init!.signal).toBeInstanceOf(AbortSignal);
-    await get('/document/shared?s=C', env);
+    await (await get('/document/shared?s=C', env)).text();
     expect(new Headers(init!.headers).has('CF-Connecting-IP')).toBe(false);
   });
 
@@ -241,7 +259,7 @@ describe('live worker: the share page', () => {
   it('waits on the api no longer than its budget', async () => {
     const timeout = vi.spyOn(AbortSignal, 'timeout');
     const { env } = makeEnv(() => Response.json({ name: 'n' }));
-    await get('/document/shared?s=C', env);
+    await (await get('/document/shared?s=C', env)).text();
     expect(timeout).toHaveBeenCalledWith(SHARE_CARD_TIMEOUT_MS);
   });
 
