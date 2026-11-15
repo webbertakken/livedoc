@@ -197,6 +197,9 @@ export function SuggestionsPanel({
 }) {
   const listId = useId();
   if (rows.length === 0 && !ask) return null;
+  // The list is gone when the last suggestion is, however it was left: the corner then holds the pill alone, and
+  // a suggestion that comes back (an Undo) finds the list as it was left.
+  const listed = open && rows.length > 0;
   const toggle = (
     <button
       type="button"
@@ -219,16 +222,16 @@ export function SuggestionsPanel({
         aria-label="Suggestions"
         data-testid="suggestions-panel"
         className={`fixed right-3 top-16 z-[var(--z-overlay)] flex max-h-[calc(100vh-10rem)] flex-col border border-slate-200 bg-white text-slate-900 shadow-lg shadow-slate-900/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100 dark:shadow-slate-950/40 ${
-          open ? 'w-[320px] rounded-xl' : 'rounded-full'
+          listed ? 'w-[320px] rounded-xl' : 'rounded-full'
         }`}
       >
         <div
-          className={`flex items-center gap-0.5 ${open ? 'border-b border-slate-200 p-1.5 dark:border-slate-800' : 'p-0.5'}`}
+          className={`flex items-center gap-0.5 ${listed ? 'border-b border-slate-200 p-1.5 dark:border-slate-800' : 'p-0.5'}`}
         >
           {ask}
           {rows.length > 0 ? toggle : null}
         </div>
-        {open ? (
+        {listed ? (
           <>
             <ol id={listId} className="min-h-0 flex-1 overflow-y-auto py-1">
               {rows.map((row) => {

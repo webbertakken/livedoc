@@ -726,6 +726,19 @@ describe('SuggestionLayer: the Ask pill', () => {
     expect(screen.queryByTestId('suggestions-panel')).toBeNull();
   });
 
+  it('folds the list away with the last suggestion, though it was left open: the pill alone', () => {
+    layer(plain(), true);
+    act(() => setSuggestionsPanelOpen(TAB, true));
+    const corner = screen.getByTestId('suggestions-panel');
+    const pill = within(corner).getByRole('button', { name: 'Ask' });
+    expect(within(corner).getAllByRole('button')).toEqual([pill]);
+    expect(within(corner).queryByRole('list')).toBeNull();
+    expect(within(corner).queryByRole('switch')).toBeNull();
+    // A pill, not the list's card.
+    expect(corner.className).toContain('rounded-full');
+    expect(corner.className).not.toContain('w-[320px]');
+  });
+
   it('closes the Ask popover when the list opens, and closes instead of opening again', () => {
     const controls = layer(
       [...plain(), suggestion('paid', 'domain-event', 'placed', 'after')],
