@@ -513,7 +513,9 @@ test('a caption whose note stands at the window’s edge is moved inside the win
 
   // Panned away from the edge, where it fits unmoved, it stands under its note again.
   await page.mouse.wheel(420, 0);
-  await expect.poll(async () => (await hotspot.boundingBox())!.x + said.width).toBeLessThan(width - 8);
+  await expect
+    .poll(async () => (await hotspot.boundingBox())!.x + said.width)
+    .toBeLessThan(width - 8);
   await expect.poll(() => offItsNote(page, IDS.whoCalls)).toBeLessThan(1);
   await expect(page.getByText('Something went wrong in the canvas.')).toHaveCount(0);
   expect(pageErrors).toEqual([]);
