@@ -1,6 +1,7 @@
 'use client';
 
 import type { Folder } from '@/lib/api-client';
+import { HighlightedTitle } from '@/app/explorer/lens/TitleHighlight';
 import { InlineRenameInput } from '@/components/primitives/InlineRenameInput';
 import { EllipsisTriggerButton } from '@/components/primitives/EllipsisTriggerButton';
 import { useRowMenu } from '@/components/primitives/useRowMenu';
@@ -135,10 +136,19 @@ export function SidebarFolderSubtree({
 // A folder row's label: its name, truncating, then its default marker
 // (docs/specs/013-workspace/default-folders.md "The default marker"), which never truncates. The
 // row announces the marker's words as its description, so the marker carries none of its own.
-export function FolderLabel({ folderId, name }: { folderId: string; name: string }) {
+export function FolderLabel({
+  folderId,
+  name,
+  marked = false,
+}: {
+  folderId: string;
+  name: string;
+  // The panel's find marks what its words matched (explorer-structure.md "Find").
+  marked?: boolean;
+}) {
   return (
     <span className="flex min-w-0 items-center gap-1">
-      <span className="truncate">{name}</span>
+      <span className="truncate">{marked ? <HighlightedTitle name={name} /> : name}</span>
       <DefaultFolderMarker folderId={folderId} withWords={false} />
     </span>
   );

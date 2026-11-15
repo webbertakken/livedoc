@@ -1,6 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { compileTitleQuery, rankByTitle } from '@livedoc/explorer-lens';
+import { TitleHighlightProvider } from '@/app/explorer/lens/TitleHighlight';
+import { memoryPlaces } from '@/components/primitives/windowed-list/list-places';
+import { WindowedPaneList } from '../explorer-panel/WindowedPaneList';
+import { PanelFindField, usePanelFind } from './PanelFind';
 import { useDefaultFolderMenus } from '@/hooks/persistence/useDefaultFolderMenus';
 import type { DocumentListItem, SharedWithItem } from '@/lib/api-client';
 import { sharedToPaneDocument, type PaneDocument, type SelectedNode } from '@/app/explorer/views';
@@ -8,7 +13,7 @@ import { EmptyPane } from '@/app/explorer/ExplorerEmptyState';
 import { BackBar } from '@/components/primitives/BackBar';
 import { groupDocumentsByFolder, indexFolders } from '@/lib/folder-tree';
 import type { PanelSection } from '../explorer-panel/panel-sections';
-import { PaneGrid, PaneList, PaneSkeleton } from '../explorer-panel/pane-parts';
+import { PaneGrid, PaneSkeleton } from '../explorer-panel/pane-parts';
 import { PanelFolderItem, type PanelFolder, type PanelFolderIndex } from './PanelFolderItem';
 import { PanelDocumentItem } from './PanelDocumentItem';
 import { PanelTagsSection } from './PanelTagsSection';
@@ -100,7 +105,26 @@ export function PanelExplorerTree({
   );
   const draggable = !!tree.onMoveDocumentToFolder;
 
-  const value = { ...tree, defaultFolders, onOpenFolder };
+  // The open folder's place in the pane, kept while the panel is drawn again on it; opening a folder starts at its
+  // top (explorer-structure.md "Back").
+  const placeKey = (folder: string | null) =>
+    `panel:${section.kind}:${'id' in section ? section.id : ''}:${folder ?? 'root'}`;
+  const openFolder = (id: string | null) => {
+    memoryPlaces.forget(placeKey(id));
+    onOpenFolder(id);
+  };
+  const value = { ...tree, defaultFolders, onOpenFolder: openFolder };
+  // The panel's find (explorer-structure.md "Find"): every section that lists a space's documents.
+  const root = useRef<HTMLDivElement>(null);
+  const here = section.kind === 'mine' || section.kind === 'team' ? folderId : null;
+  const scope = placeKey(here);
+  const find = usePanelFind(root, section.kind !== 'tags', scope);
+  const words = find.open ? find.text.split(/\s+/).filter(Boolean) : [];
+  const query = compileTitleQuery(words);
+  const finding = query.words.length > 0;
+  const narrow = <T extends { name: string }>(items: readonly T[]): readonly T[] =>
+    finding ? rankByTitle(items, query, (i) => i.name) : items;
+  const place = finding ? null : { key: scope, store: memoryPlaces, restore: true };
   let body: React.ReactNode;
   if (section.kind === 'tags') {
     // Every document a tag can sit on: the reader's own (this browser's included) and their teams', newest first.
@@ -116,12 +140,24 @@ export function PanelExplorerTree({
   } else if (section.kind === 'browser' || section.kind === 'shared') {
     const docs: PaneDocument[] =
       section.kind === 'browser' ? offlineDocuments : shared.map(sharedToPaneDocument);
+    const shown = narrow(docs);
     body = docs.length ? (
-      <PaneList label={rootLabel}>
-        {docs.map((d) => (
-          <PanelDocumentItem key={d.id} document={d} />
-        ))}
-      </PaneList>
+      <div className="flex flex-col gap-1">
+        {find.open ? (
+          <PanelFindField
+            find={find}
+            folderName={rootLabel}
+            matches={finding ? shown.length : null}
+          />
+        ) : null}
+        <WindowedPaneList
+          label={rootLabel}
+          items={shown}
+          scope={scope}
+          place={place}
+          renderItem={(d) => <PanelDocumentItem key={d.id} document={d} />}
+        />
+      </div>
     ) : (
       <EmptyPane compact selected={{ kind: section.kind === 'browser' ? 'offline' : 'shared' }} />
     );
@@ -129,17 +165,20 @@ export function PanelExplorerTree({
     const index = section.kind === 'team' ? teamIndex : ownIndex;
     const byId = new Map([...index.foldersByParent.values()].flat().map((f) => [f.id, f]));
     // A folder deleted (or moved away) while open: back to the root.
-    const here = paneFolderParent(byId.values(), folderId);
+    const shownHere = paneFolderParent(byId.values(), folderId);
     const trail: PanelFolder[] = [];
     for (
-      let f = here ? byId.get(here) : undefined;
+      let f = shownHere ? byId.get(shownHere) : undefined;
       f;
       f = f.parentId ? byId.get(f.parentId) : undefined
     )
       trail.unshift(f);
-    const folders = index.foldersByParent.get(here) ?? [];
-    const docs = index.documentsByFolder.get(here) ?? [];
-    const empty: SelectedNode = here ? { kind: 'folder', id: here } : { kind: 'all' };
+    const allFolders = index.foldersByParent.get(shownHere) ?? [];
+    const allDocs = index.documentsByFolder.get(shownHere) ?? [];
+    const folders = narrow(allFolders);
+    const docs = narrow(allDocs);
+    const folderName = trail.at(-1)?.name ?? rootLabel;
+    const empty: SelectedNode = shownHere ? { kind: 'folder', id: shownHere } : { kind: 'all' };
     body = (
       <div className="flex flex-col gap-1">
         {/* The import and export screens' back bar: back to the folder above (or the space's root), the folder open
@@ -149,32 +188,43 @@ export function PanelExplorerTree({
             gap="tight"
             label={trail.at(-2)?.name ?? rootLabel}
             current={trail.at(-1)!.name}
-            onClick={() => onOpenFolder(trail.at(-2)?.id ?? null)}
+            onClick={() => openFolder(trail.at(-2)?.id ?? null)}
+          />
+        ) : null}
+        {find.open ? (
+          <PanelFindField
+            find={find}
+            folderName={folderName}
+            matches={finding ? folders.length + docs.length : null}
           />
         ) : null}
         {folders.length + docs.length ? (
           // Keyed by the folder open, so opening one slides its contents in.
-          <div key={here ?? 'root'} className="flex animate-view-forward flex-col gap-3">
+          <div key={shownHere ?? 'root'} className="flex animate-view-forward flex-col gap-3">
             {folders.length ? (
-              <PaneGrid label={`Folders in ${trail.at(-1)?.name ?? rootLabel}`}>
+              <PaneGrid label={`Folders in ${folderName}`}>
                 {folders.map((f) => (
                   <PanelFolderItem key={f.id} folder={f} index={index} team={team} />
                 ))}
               </PaneGrid>
             ) : null}
             {docs.length ? (
-              <PaneList label={trail.at(-1)?.name ?? rootLabel}>
-                {docs.map((d) => (
+              <WindowedPaneList
+                label={folderName}
+                items={docs}
+                scope={scope}
+                place={place}
+                renderItem={(d) => (
                   <PanelDocumentItem
                     key={d.id}
                     document={team ? { ...d, team } : d}
                     draggable={!team && draggable}
                   />
-                ))}
-              </PaneList>
+                )}
+              />
             ) : null}
           </div>
-        ) : (
+        ) : finding ? null : (
           <EmptyPane compact cta={false} selected={empty} />
         )}
       </div>
@@ -182,7 +232,11 @@ export function PanelExplorerTree({
   }
   return (
     <PanelTreeProvider value={value}>
-      {busy && section.kind !== 'shared' ? <PaneSkeleton /> : body}
+      <TitleHighlightProvider text={words}>
+        <div ref={root} className="contents">
+          {busy && section.kind !== 'shared' ? <PaneSkeleton /> : body}
+        </div>
+      </TitleHighlightProvider>
     </PanelTreeProvider>
   );
 }

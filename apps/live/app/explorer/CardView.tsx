@@ -41,6 +41,13 @@ import { FolderPreview } from './FolderPreview';
 import { RelativeTimeChip } from '@/components/primitives/RelativeTimeChip';
 import { DocumentRowTags } from '@/components/tags/DocumentRowTags';
 import { HighlightedTitle } from '@/app/explorer/lens/TitleHighlight';
+import { useWindowedList } from '@/components/primitives/windowed-list/useWindowedList';
+import { WindowGap, windowChildren } from '@/components/primitives/windowed-list/WindowGap';
+import { useEntryKeys } from './explorer-entry-keys';
+import { useExplorerListPlace } from './useExplorerListPlace';
+
+// A row of cards' height before one is measured (preview, name, chips, the grid's gap).
+const CARD_ROW_STRIDE_PX = 240;
 
 export function CardView(props: CardViewProps) {
   const {
@@ -57,32 +64,56 @@ export function CardView(props: CardViewProps) {
     folderContents,
     showVisibilityBadge = true,
   } = props;
+  // Long folders draw only the rows of cards near the view (explorer-structure.md "Long lists").
+  const { attachList, segments, cascading, onFocus, onDragStart } = useWindowedList({
+    keys: useEntryKeys(folders, liveDocs),
+    leading: folders.length,
+    estimateStride: CARD_ROW_STRIDE_PX,
+    grid: true,
+    ...useExplorerListPlace(),
+  });
   return (
-    <div className={`lvd-cascade ${CARD_GRID}`}>
-      {folders.map((f) => (
-        <FolderCard
-          key={f.id}
-          folder={f}
-          renaming={renamingFolderId === f.id}
-          childCount={childrenCount(f.id) + documentsCount(f.id)}
-          preview={
-            folderContents ? (
-              <FolderPreview contents={folderContents(f.id)} ownerId={ownerId} />
-            ) : null
-          }
-          onOpen={() => onOpenFolder(f.id)}
-          onCommitRename={(name) => onCommitRenameFolder(f.id, name)}
-          onCancelRename={onCancelRenameFolder}
-          getActions={(anchor) => folderActions(f, anchor)}
-        />
-      ))}
-      {liveDocs.map((d) => (
-        <DocumentCard
-          key={d.id}
-          {...documentEntryPropsFor(props, d)}
-          showVisibilityBadge={showVisibilityBadge}
-        />
-      ))}
+    <div
+      ref={attachList}
+      onFocus={onFocus}
+      onDragStart={onDragStart}
+      className={`${cascading ? 'lvd-cascade ' : ''}${CARD_GRID}`}
+    >
+      {windowChildren(
+        segments,
+        (i) => {
+          const f = folders[i];
+          if (f)
+            return (
+              <FolderCard
+                key={f.id}
+                folder={f}
+                renaming={renamingFolderId === f.id}
+                childCount={childrenCount(f.id) + documentsCount(f.id)}
+                preview={
+                  folderContents ? (
+                    <FolderPreview contents={folderContents(f.id)} ownerId={ownerId} />
+                  ) : null
+                }
+                onOpen={() => onOpenFolder(f.id)}
+                onCommitRename={(name) => onCommitRenameFolder(f.id, name)}
+                onCancelRename={onCancelRenameFolder}
+                getActions={(anchor) => folderActions(f, anchor)}
+              />
+            );
+          const d = liveDocs[i - folders.length]!;
+          return (
+            <DocumentCard
+              key={d.id}
+              {...documentEntryPropsFor(props, d)}
+              showVisibilityBadge={showVisibilityBadge}
+            />
+          );
+        },
+        (height) => (
+          <WindowGap as="div" height={height} />
+        ),
+      )}
     </div>
   );
 }

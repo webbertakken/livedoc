@@ -20,6 +20,13 @@ import { HoverCard } from '@livedoc/ui';
 import { LIST_CARD } from '@/components/primitives/surface-classes';
 import type { AccessLevel } from '@livedoc/api-schema';
 import { HighlightedTitle } from '@/app/explorer/lens/TitleHighlight';
+import { useWindowedList } from '@/components/primitives/windowed-list/useWindowedList';
+import { WindowGap, windowChildren } from '@/components/primitives/windowed-list/WindowGap';
+import { useEntryKeys } from './explorer-entry-keys';
+import { useExplorerListPlace } from './useExplorerListPlace';
+
+// A List view row's height before one is measured (thumbnail, name, one line of chips).
+const LIST_ROW_STRIDE_PX = 45;
 
 // The Shared with you chip per level (docs/specs/013-workspace/share-roles.md).
 const SHARED_CHIP: Record<AccessLevel, string> = {
@@ -115,6 +122,14 @@ export function ListView(props: ExplorerViewProps) {
     documentsCount,
     showOwner = false,
   } = props;
+  // Long folders draw only the rows near the view (explorer-structure.md "Long lists").
+  const { attachList, segments, cascading, onFocus, onDragStart } = useWindowedList({
+    keys: useEntryKeys(folders, liveDocs),
+    leading: folders.length,
+    estimateStride: LIST_ROW_STRIDE_PX,
+    aria: { kind: 'list' },
+    ...useExplorerListPlace(),
+  });
   return (
     <div className={LIST_CARD}>
       <div
@@ -131,22 +146,36 @@ export function ListView(props: ExplorerViewProps) {
         <span>Updated</span>
         <span aria-hidden></span>
       </div>
-      <ul className="lvd-cascade divide-y divide-slate-100 dark:divide-slate-700/60">
-        {folders.map((f) => (
-          <FolderRow
-            key={f.id}
-            folder={f}
-            renaming={renamingFolderId === f.id}
-            childCount={childrenCount(f.id) + documentsCount(f.id)}
-            onOpen={() => onOpenFolder(f.id)}
-            onCommitRename={(name) => onCommitRenameFolder(f.id, name)}
-            onCancelRename={onCancelRenameFolder}
-            getActionsForAnchor={(anchor) => folderActions(f, anchor)}
-          />
-        ))}
-        {liveDocs.map((d) => (
-          <DocumentRow key={d.id} {...documentEntryPropsFor(props, d)} />
-        ))}
+      <ul
+        ref={attachList}
+        onFocus={onFocus}
+        onDragStart={onDragStart}
+        className={`${cascading ? 'lvd-cascade ' : ''}divide-y divide-slate-100 dark:divide-slate-700/60`}
+      >
+        {windowChildren(
+          segments,
+          (i) => {
+            const f = folders[i];
+            if (f)
+              return (
+                <FolderRow
+                  key={f.id}
+                  folder={f}
+                  renaming={renamingFolderId === f.id}
+                  childCount={childrenCount(f.id) + documentsCount(f.id)}
+                  onOpen={() => onOpenFolder(f.id)}
+                  onCommitRename={(name) => onCommitRenameFolder(f.id, name)}
+                  onCancelRename={onCancelRenameFolder}
+                  getActionsForAnchor={(anchor) => folderActions(f, anchor)}
+                />
+              );
+            const d = liveDocs[i - folders.length]!;
+            return <DocumentRow key={d.id} {...documentEntryPropsFor(props, d)} />;
+          },
+          (height) => (
+            <WindowGap as="li" height={height} />
+          ),
+        )}
       </ul>
     </div>
   );

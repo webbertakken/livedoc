@@ -3,7 +3,7 @@
 // A long list that draws only the rows near the view (docs/specs/013-workspace/explorer-structure.md "Long lists").
 // The list is as tall as all its rows from the first draw: rows not drawn are room of their height (a gap element),
 // so the scrollbar is the whole list's and nothing jumps. Rows are uniform; the hook measures them from the rows it
-// draws, follows the scroller (the window, or the nearest scrolling pane), keeps the focused or dragged row drawn,
+// draws, follows the scroller (the window, or the box the list scrolls in), keeps the focused or dragged row drawn,
 // tells screen readers each row's place, and keeps the list's place for Back.
 import {
   useCallback,
@@ -18,6 +18,7 @@ import {
 import { debugLog } from '@/lib/debug-log';
 import { placeAt, restoreOffset, type PlaceGeometry, type PlaceStore } from './list-places';
 import {
+  LIST_OVERSCAN_PX,
   LIST_WINDOW_FROM,
   drawnRowRange,
   windowSegments,
@@ -25,10 +26,14 @@ import {
   type WindowSegment,
 } from './window-range';
 
-/** How long a first draw's cascade takes to settle; rows drawn after it appear at once. */
+/** How long a first draw's cascade takes to settle (150 ms rise after at most 100 ms delay, and a margin). */
 export const CASCADE_SETTLE_MS = 450;
 /** How long the scroll rests before a list's place is written down. */
 const PLACE_WRITE_MS = 150;
+/** A measure moving by less than this is the same: sub-pixel layout never redraws the list. */
+const MEASURE_TOLERANCE_PX = 0.5;
+
+export type ListPlaceOption = { key: string; store: PlaceStore; restore: boolean } | null;
 
 export type WindowedListOptions = {
   /** Every entry's stable key (folders first, then documents), in the order drawn. */
@@ -37,21 +42,21 @@ export type WindowedListOptions = {
   leading?: number;
   /** A row's height before one is measured, gap included. */
   estimateStride: number;
-  /** The scrolling ancestor of the list; null (the default) is the window. */
+  /** The box the list scrolls in; null (the default) is the window. */
   scroller?: (list: HTMLElement) => HTMLElement | null;
   /** A CSS grid: rows hold as many entries as it has columns. */
   grid?: boolean;
   /** Each drawn row's place for a screen reader: a list's `aria-posinset`, a table's `aria-rowindex`. */
   aria?: { kind: 'list' } | { kind: 'table'; rowOffset: number };
   /** Where the list's place is kept, and whether to go back to it now (Back, or the panel drawn again). */
-  place?: { key: string; store: PlaceStore; restore: boolean } | null;
-  /** A new scope (another folder, view or sort): the cascade plays again and the pin is let go. */
+  place?: ListPlaceOption;
+  /** A new scope (another folder or view): the cascade plays again and the pin is let go. */
   resetKey?: string;
 };
 
 export type WindowedList = {
-  /** The element whose children are the rows (and the gaps). */
-  listRef: (el: HTMLElement | null) => void;
+  /** Attach to the element whose children are the rows (and the gaps). */
+  attachList: (el: HTMLElement | null) => void;
   segments: WindowSegment[];
   /** True while the first draw's cascade plays: the host adds its cascade class only then. */
   cascading: boolean;
@@ -63,20 +68,35 @@ type Metrics = { stride: number; gap: number; lanes: number; origin: number };
 /** What the drawing depends on: the rows to draw and the measures the room is made of. */
 type Drawing = { range: RowRange; stride: number; gap: number; lanes: number };
 
-/** A measure moving by less than this is the same: sub-pixel layout never redraws the list. */
-const MEASURE_TOLERANCE_PX = 0.5;
-/** The list's drawn rows, its gaps left out. */
-const rowsOf = (list: HTMLElement) =>
-  [...list.children].filter(
-    (c) => (c as HTMLElement).dataset.windowGap === undefined,
-  ) as HTMLElement[];
-
 const sameDrawing = (a: Drawing, b: Drawing) =>
   a.range.first === b.range.first &&
   a.range.last === b.range.last &&
   a.lanes === b.lanes &&
   Math.abs(a.stride - b.stride) < MEASURE_TOLERANCE_PX &&
   Math.abs(a.gap - b.gap) < MEASURE_TOLERANCE_PX;
+
+/** The list's drawn rows, its gaps left out. */
+const rowsOf = (list: HTMLElement) =>
+  [...list.children].filter(
+    (c) => (c as HTMLElement).dataset.windowGap === undefined,
+  ) as HTMLElement[];
+
+const drawnIndices = (segments: readonly WindowSegment[]) => {
+  const out: number[] = [];
+  for (const s of segments)
+    if (s.kind === 'items') for (let i = s.from; i < s.to; i += 1) out.push(i);
+  return out;
+};
+
+function firstDrawing(estimateStride: number): Drawing {
+  const view = typeof window === 'undefined' ? 1000 : window.innerHeight;
+  return {
+    range: { first: 0, last: Math.ceil((view + LIST_OVERSCAN_PX) / estimateStride) },
+    stride: estimateStride,
+    gap: 0,
+    lanes: 1,
+  };
+}
 
 export function useWindowedList({
   keys,
@@ -85,56 +105,18 @@ export function useWindowedList({
   scroller,
   grid = false,
   aria,
-  place,
+  place = null,
   resetKey = '',
 }: WindowedListOptions): WindowedList {
   const count = keys.length;
   const [list, setList] = useState<HTMLElement | null>(null);
-  const metrics = useRef<Metrics>({ stride: estimateStride, gap: 0, lanes: 1, origin: 0 });
-  const [drawing, setDrawing] = useState<Drawing>(() => ({
-    range: {
-      first: 0,
-      last: Math.ceil(
-        (typeof window === 'undefined' ? 1000 : window.innerHeight + 800) / estimateStride,
-      ),
-    },
-    stride: estimateStride,
-    gap: 0,
-    lanes: 1,
-  }));
-  const follow = useCallback((next: Drawing | null) => {
-    if (next) setDrawing((d) => (sameDrawing(d, next) ? d : next));
-  }, []);
+  const [drawing, setDrawing] = useState<Drawing>(() => firstDrawing(estimateStride));
   const [pinnedKey, setPinnedKey] = useState<string | null>(null);
   const [cascading, setCascading] = useState(true);
   const indexByKey = useMemo(() => new Map(keys.map((k, i) => [k, i])), [keys]);
   const pinned = pinnedKey === null ? null : (indexByKey.get(pinnedKey) ?? null);
-  const windowed = count > LIST_WINDOW_FROM;
 
-  const segments = useMemo(
-    () =>
-      windowSegments({
-        count,
-        lanes: drawing.lanes,
-        leading,
-        pinned,
-        range: drawing.range,
-        stride: drawing.stride,
-        gap: drawing.gap,
-      }),
-    [count, leading, pinned, drawing],
-  );
-  // Which entry each drawn child (gaps skipped) shows, in order.
-  const drawn = useMemo(() => {
-    const out: number[] = [];
-    for (const s of segments)
-      if (s.kind === 'items') for (let i = s.from; i < s.to; i += 1) out.push(i);
-    return out;
-  }, [segments]);
-  const drawnRef = useRef(drawn);
-  drawnRef.current = drawn;
-
-  // A new scope: the cascade plays again, the pin goes, and the window starts at the top.
+  // A new scope: the cascade plays again and the pin goes.
   const [scope, setScope] = useState(resetKey);
   if (scope !== resetKey) {
     setScope(resetKey);
@@ -147,155 +129,130 @@ export function useWindowedList({
     return () => window.clearTimeout(timer);
   }, [cascading]);
 
-  const scrollerOf = useCallback((el: HTMLElement) => scroller?.(el) ?? null, [scroller]);
+  const segments = useMemo(
+    () =>
+      windowSegments({
+        count,
+        leading,
+        pinned,
+        lanes: drawing.lanes,
+        range: drawing.range,
+        stride: drawing.stride,
+        gap: drawing.gap,
+      }),
+    [count, leading, pinned, drawing],
+  );
 
-  // Measures the rows drawn and the view, and answers the rows to draw.
-  const measure = useCallback((): Drawing | null => {
-    if (!list) return null;
-    const box = scrollerOf(list);
-    const boxTop = box ? box.getBoundingClientRect().top - box.scrollTop : -window.scrollY;
-    const topOf = (el: Element) => el.getBoundingClientRect().top - boxTop;
-    const children = rowsOf(list);
-    const order = drawnRef.current;
-    const m = metrics.current;
-    if (grid) {
-      const columns = getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length;
-      m.lanes = Math.max(1, columns);
-    }
-    const firstFree = Math.ceil(leading / m.lanes) * m.lanes;
-    const at = new Map<number, HTMLElement>();
-    children.forEach((c, i) => {
-      const index = order[i];
-      if (index !== undefined) at.set(index, c);
-    });
-    // Two rows a lane apart, past the folders, give the stride; the rows from the far end of the range are the
-    // most uniform.
-    let a: number | null = null;
-    for (const index of order) if (index >= firstFree && at.has(index + m.lanes)) a = index;
-    if (a !== null) {
-      const top = topOf(at.get(a)!);
-      const stride = topOf(at.get(a + m.lanes)!) - top;
-      if (stride > 0) {
-        m.stride = stride;
-        m.gap = Math.max(0, stride - at.get(a)!.offsetHeight);
-        m.origin = top - Math.floor(a / m.lanes) * stride;
-      }
-    } else {
-      const first = order.find((i) => i >= firstFree);
-      if (first !== undefined && at.has(first))
-        m.origin = topOf(at.get(first)!) - Math.floor(first / m.lanes) * m.stride;
-    }
-    const view = box
-      ? { top: box.scrollTop, bottom: box.scrollTop + box.clientHeight }
-      : { top: window.scrollY, bottom: window.scrollY + window.innerHeight };
-    lastView.current = view;
-    const range = drawnRowRange({
-      rows: Math.ceil(count / m.lanes),
-      stride: m.stride,
-      origin: m.origin,
-      view,
-    });
-    return { range, stride: m.stride, gap: m.gap, lanes: m.lanes };
-  }, [list, scrollerOf, grid, leading, count]);
-  const lastView = useRef({ top: 0, bottom: 0 });
+  // What the frame callbacks read: the latest render's, synced after it commits.
+  const latest = useRef({ segments, keys, indexByKey, place, leading, grid, scroller, count });
+  const metrics = useRef<Metrics>({ stride: estimateStride, gap: 0, lanes: 1, origin: 0 });
+  const restorePending = useRef(place?.restore ?? false);
+  const schedule = useRef<() => void>(() => {});
+  useLayoutEffect(() => {
+    latest.current = { segments, keys, indexByKey, place, leading, grid, scroller, count };
+  });
 
   // Screen readers: each drawn row's place in the whole list.
   useLayoutEffect(() => {
     if (!list || !aria) return;
-    const children = rowsOf(list);
-    children.forEach((c, i) => {
+    const drawn = drawnIndices(segments);
+    rowsOf(list).forEach((row, i) => {
       const index = drawn[i];
       if (index === undefined) return;
       if (aria.kind === 'list') {
-        c.setAttribute('aria-setsize', String(count));
-        c.setAttribute('aria-posinset', String(index + 1));
-      } else c.setAttribute('aria-rowindex', String(index + 1 + aria.rowOffset));
+        row.setAttribute('aria-setsize', String(count));
+        row.setAttribute('aria-posinset', String(index + 1));
+      } else row.setAttribute('aria-rowindex', String(index + 1 + aria.rowOffset));
     });
   });
 
-  // The place kept for Back: taken back once, the first time there is a list to place.
-  const restorePending = useRef(place?.restore ?? false);
-  const placeRef = useRef(place);
-  placeRef.current = place;
-  const keysRef = useRef(keys);
-  keysRef.current = keys;
-  const geometry = useCallback((): PlaceGeometry => {
-    const m = metrics.current;
-    return { rows: Math.ceil(count / m.lanes), stride: m.stride, origin: m.origin, lanes: m.lanes };
-  }, [count]);
-
-  // After every draw: measure, follow the view, and take a kept place back.
+  // A kept place goes back before the first paint: the scroll moves at once, the rows there follow next frame.
   useLayoutEffect(() => {
-    if (!list || count === 0) return;
-    const next = measure();
-    const p = placeRef.current;
-    if (restorePending.current && p) {
-      restorePending.current = false;
-      const kept = p.store.read(p.key);
-      if (kept) {
-        const target = restoreOffset({
-          place: kept,
-          geometry: geometry(),
-          indexOf: (k) => indexByKey.get(k) ?? -1,
-        });
-        const box = scrollerOf(list);
-        if (box) box.scrollTop = target;
-        else window.scrollTo(0, target);
-        debugLog(
-          `[list-place] restored key=${p.key} anchor=${kept.anchorId ?? 'none'} top=${Math.round(target)}`,
-        );
-        follow(measure());
-        return;
-      }
+    const p = latest.current.place;
+    if (!list || count === 0 || !restorePending.current || !p) return;
+    restorePending.current = false;
+    const kept = p.store.read(p.key);
+    if (!kept) {
       debugLog(`[list-place] none-kept key=${p.key}`);
+      return;
     }
-    if (windowed) follow(next);
-  });
+    const box = latest.current.scroller?.(list) ?? null;
+    measureInto(list, box, metrics.current, latest.current);
+    const target = restoreOffset({
+      place: kept,
+      geometry: geometryOf(metrics.current, count),
+      indexOf: (k) => indexByKey.get(k) ?? -1,
+    });
+    if (box) box.scrollTop = target;
+    else window.scrollTo(0, target);
+    debugLog(
+      `[list-place] restored key=${p.key} anchor=${kept.anchorId ?? 'none'} top=${Math.round(target)}`,
+    );
+  }, [list, count, indexByKey]);
 
-  // Follow the scroller and the window's size; write the place down when the scroll rests.
+  // Follow the scroller and the window's size, a frame at a time; write the place down when the scroll rests.
   useEffect(() => {
     if (!list || count === 0) return;
-    const box = scrollerOf(list);
+    const box = scroller?.(list) ?? null;
     const target: HTMLElement | Window = box ?? window;
     let frame = 0;
     let writeTimer = 0;
-    let pendingPlace: (() => void) | null = null;
-    const writePlace = () => {
-      pendingPlace?.();
-      pendingPlace = null;
+    let pendingWrite: (() => void) | null = null;
+    const flushWrite = () => {
+      pendingWrite?.();
+      pendingWrite = null;
     };
-    const onScroll = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        const next = measure();
-        if (windowed) follow(next);
-        const p = placeRef.current;
-        if (p && !restorePending.current) {
-          const at = placeAt({
-            viewTop: lastView.current.top,
-            geometry: geometry(),
-            idOf: (i) => keysRef.current[i],
-          });
-          pendingPlace = () => p.store.write(p.key, at);
-          window.clearTimeout(writeTimer);
-          writeTimer = window.setTimeout(writePlace, PLACE_WRITE_MS);
-        }
+    const sync = () => {
+      frame = 0;
+      const now = latest.current;
+      const view = measureInto(list, box, metrics.current, now);
+      const m = metrics.current;
+      const range = drawnRowRange({
+        rows: Math.ceil(now.count / m.lanes),
+        stride: m.stride,
+        origin: m.origin,
+        view,
       });
+      if (now.count > LIST_WINDOW_FROM) {
+        const next: Drawing = { range, stride: m.stride, gap: m.gap, lanes: m.lanes };
+        setDrawing((d) => (sameDrawing(d, next) ? d : next));
+      }
+      const p = now.place;
+      if (p && !restorePending.current) {
+        const at = placeAt({
+          viewTop: view.top,
+          geometry: geometryOf(m, now.count),
+          idOf: (i) => now.keys[i],
+        });
+        pendingWrite = () => p.store.write(p.key, at);
+        window.clearTimeout(writeTimer);
+        writeTimer = window.setTimeout(flushWrite, PLACE_WRITE_MS);
+      }
     };
-    target.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
-    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(onScroll);
+    const request = () => {
+      if (!frame) frame = window.requestAnimationFrame(sync);
+    };
+    schedule.current = request;
+    target.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', request, { passive: true });
+    const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(request);
     resize?.observe(list);
+    request();
     return () => {
-      target.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      schedule.current = () => {};
+      target.removeEventListener('scroll', request);
+      window.removeEventListener('resize', request);
       resize?.disconnect();
       window.cancelAnimationFrame(frame);
       window.clearTimeout(writeTimer);
-      writePlace();
+      flushWrite();
     };
-  }, [list, count, windowed, measure, scrollerOf, geometry, follow]);
+  }, [list, count, scroller]);
+
+  // After every draw the rows may have moved (a new block, a measure): look again next frame.
+  useEffect(() => {
+    schedule.current();
+  });
 
   const pinFrom = useCallback(
     (target: EventTarget | null) => {
@@ -303,19 +260,73 @@ export function useWindowedList({
       let node: Node | null = target;
       while (node && node.parentNode !== list) node = node.parentNode;
       if (!node) return;
-      const children = rowsOf(list);
-      const index = drawnRef.current[children.indexOf(node as Element)];
-      const key = index === undefined ? undefined : keysRef.current[index];
+      const index = drawnIndices(latest.current.segments)[
+        rowsOf(list).indexOf(node as HTMLElement)
+      ];
+      const key = index === undefined ? undefined : latest.current.keys[index];
       if (key !== undefined) setPinnedKey((k) => (k === key ? k : key));
     },
     [list],
   );
 
   return {
-    listRef: setList,
+    attachList: setList,
     segments,
     cascading,
     onFocus: (e) => pinFrom(e.target),
     onDragStart: (e) => pinFrom(e.target),
   };
+}
+
+function geometryOf(m: Metrics, count: number): PlaceGeometry {
+  return { rows: Math.ceil(count / m.lanes), stride: m.stride, origin: m.origin, lanes: m.lanes };
+}
+
+/**
+ * Measures the drawn rows into `m` (stride, gap, lanes, origin, in the scroller's content) and answers the view. Two
+ * rows a lane apart, past the folders, give the stride; the pair furthest down the window is taken, as the rows there
+ * are the most uniform. With no such pair the stride stays as it was and only the origin is measured.
+ */
+function measureInto(
+  list: HTMLElement,
+  box: HTMLElement | null,
+  m: Metrics,
+  {
+    segments,
+    leading,
+    grid,
+  }: { segments: readonly WindowSegment[]; leading: number; grid: boolean },
+): { top: number; bottom: number } {
+  const boxTop = box ? box.getBoundingClientRect().top - box.scrollTop : -window.scrollY;
+  const topOf = (el: Element) => el.getBoundingClientRect().top - boxTop;
+  if (grid)
+    m.lanes = Math.max(
+      1,
+      getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length,
+    );
+  const order = drawnIndices(segments);
+  const at = new Map<number, HTMLElement>();
+  rowsOf(list).forEach((row, i) => {
+    const index = order[i];
+    if (index !== undefined) at.set(index, row);
+  });
+  const firstFree = Math.ceil(leading / m.lanes) * m.lanes;
+  let a: number | null = null;
+  for (const index of order) if (index >= firstFree && at.has(index + m.lanes)) a = index;
+  if (a !== null) {
+    const top = topOf(at.get(a)!);
+    const stride = topOf(at.get(a + m.lanes)!) - top;
+    if (stride > 0) {
+      m.stride = stride;
+      m.gap = Math.max(0, stride - at.get(a)!.offsetHeight);
+      m.origin = top - Math.floor(a / m.lanes) * stride;
+    }
+  } else {
+    const first = order.find((i) => i >= firstFree && at.has(i));
+    if (first !== undefined)
+      m.origin = topOf(at.get(first)!) - Math.floor(first / m.lanes) * m.stride;
+  }
+  return box
+    ? { top: box.scrollTop, bottom: box.scrollTop + box.clientHeight }
+    : { top: window.scrollY, bottom: window.scrollY + window.innerHeight };
 }

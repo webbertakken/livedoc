@@ -36,10 +36,10 @@ function layOut() {
     };
   });
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(ROW);
-  vi.spyOn(window, 'scrollTo').mockImplementation(((_x: number, y: number) => {
-    scrollY = y;
-    Object.defineProperty(window, 'scrollY', { value: y, configurable: true });
-  }) as typeof window.scrollTo);
+  vi.spyOn(window, 'scrollTo').mockImplementation((_x?: ScrollToOptions | number, y?: number) => {
+    scrollY = y ?? 0;
+    Object.defineProperty(window, 'scrollY', { value: scrollY, configurable: true });
+  });
 }
 
 function scrollTo(y: number) {
@@ -53,11 +53,21 @@ function scrollTo(y: number) {
 const keysOf = (n: number) => Array.from({ length: n }, (_, i) => `k-${i}`);
 
 function List(props: Partial<WindowedListOptions> & { keys: readonly string[] }) {
-  const w = useWindowedList({ estimateStride: ROW, aria: { kind: 'list' }, ...props });
+  const { attachList, segments, cascading, onFocus, onDragStart } = useWindowedList({
+    estimateStride: ROW,
+    aria: { kind: 'list' },
+    ...props,
+  });
   return (
-    <ul ref={w.listRef} onFocus={w.onFocus} data-cascading={w.cascading} aria-label="Rows">
+    <ul
+      ref={attachList}
+      onFocus={onFocus}
+      onDragStart={onDragStart}
+      data-cascading={cascading}
+      aria-label="Rows"
+    >
       {windowChildren(
-        w.segments,
+        segments,
         (i) => (
           <li key={props.keys[i]}>
             <button type="button">{props.keys[i]}</button>
@@ -135,7 +145,9 @@ describe('useWindowedList', () => {
   it('plays the cascade on the first draw only', () => {
     const { container } = render(<List keys={keysOf(1000)} />);
     expect(container.querySelector('ul')!.dataset.cascading).toBe('true');
-    act(() => vi.advanceTimersByTime(CASCADE_SETTLE_MS));
+    act(() => {
+      vi.advanceTimersByTime(CASCADE_SETTLE_MS);
+    });
     expect(container.querySelector('ul')!.dataset.cascading).toBe('false');
   });
 
@@ -150,7 +162,9 @@ describe('useWindowedList', () => {
     it('is written down when the scroll rests', () => {
       render(<List keys={keysOf(1000)} place={{ key: 'folder-a', store, restore: false }} />);
       scrollTo(30020);
-      act(() => vi.advanceTimersByTime(200));
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
       expect(store.read('folder-a')).toEqual({
         anchorId: 'k-596',
         anchorOffset: 20,
@@ -163,6 +177,9 @@ describe('useWindowedList', () => {
       const keys = ['new-1', 'new-2', ...keysOf(1000)];
       render(<List keys={keys} place={{ key: 'folder-a', store, restore: true }} />);
       expect(window.scrollY).toBe(LIST_TOP + 598 * ROW + 20);
+      act(() => {
+        vi.advanceTimersByTime(20);
+      });
       expect(drawnNames()).toContain('k-596');
     });
 
