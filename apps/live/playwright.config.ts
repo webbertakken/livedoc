@@ -104,9 +104,10 @@ export default defineConfig({
       // The Drive, signed-in, workbench and sites suites need their own stacks or builds; see below.
       testIgnore: [
         /drive-(mirror|shots)\.spec\.ts/,
-        /account\//,
-        /armed\//,
-        /perf\//,
+        // Folders of this suite, never a folder of the checkout's own path (a worktree named ...-perf).
+        /\/e2e\/account\//,
+        /\/e2e\/armed\//,
+        /\/e2e\/perf\//,
         /optical-audit-sites\.spec\.ts/,
         /workbench-(embed|workspace)\.spec\.ts/,
         GUEST_TIMING_BUDGETS,
