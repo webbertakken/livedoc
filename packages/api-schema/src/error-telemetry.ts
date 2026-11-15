@@ -109,6 +109,8 @@ export const API_ROUTE_RESOURCES: ReadonlySet<string> = new Set([
   'openapi.json',
   'unfurl',
   'ai',
+  // The built-in hand of an ask (docs/specs/021-event-storming/asks.md "The built-in hand").
+  'storm-ask',
   'events',
   'telemetry',
   'share',

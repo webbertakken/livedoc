@@ -727,7 +727,10 @@ describe('SuggestionLayer: the Ask pill', () => {
   });
 
   it('closes the Ask popover when the list opens, and closes instead of opening again', () => {
-    const controls = layer([...plain(), suggestion('paid', 'domain-event', 'placed', 'after')], true);
+    const controls = layer(
+      [...plain(), suggestion('paid', 'domain-event', 'placed', 'after')],
+      true,
+    );
     const corner = screen.getByTestId('suggestions-panel');
     act(() => openAsk(TAB, { type: 'board' }));
     fireEvent.click(within(corner).getByRole('button', { name: '1 suggestion' }));

@@ -248,7 +248,9 @@ export function ContextName({
               e.stopPropagation();
               onAsk();
             }}
-            className="flex size-7 items-center justify-center rounded-full bg-[var(--lvd-canvas-paper,#ffffff)] text-brand-700 hover:bg-brand-50 focus-visible:outline-2 focus-visible:outline-brand-600 in-[[data-dark-canvas]]:text-brand-300 in-[[data-dark-canvas]]:hover:bg-brand-950"
+            // On the canvas's paper, which is dark or light by the canvas's theme and not the app's: the name's own
+            // ink, which follows the canvas.
+            className="flex size-7 items-center justify-center rounded-full bg-[var(--lvd-canvas-paper,#ffffff)] text-[color:var(--ctx-name)] hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-brand-600 in-[[data-dark-canvas]]:hover:bg-slate-800"
           >
             <SparkleIcon size={14} />
           </button>
