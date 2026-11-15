@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readUserPreferences, writeUserPreferences } from './user-preferences';
 import { pruneCustomThemeSwatchOverrides } from './swatch-override-prefs';
 
-vi.mock('./api-client', () => ({ apiPutPreferences: vi.fn(), apiGetPreferences: vi.fn() }));
+vi.mock('./api/preferences', () => ({ apiPutPreferences: vi.fn(), apiGetPreferences: vi.fn() }));
 
 beforeEach(() => localStorage.clear());
 
