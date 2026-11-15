@@ -6,9 +6,10 @@ import { isLanePlan, isSuggestion, type Element, type Tab } from '@livedoc/docum
 import { FOLD_BY } from '@livedoc/storm-reading';
 import { ASK_FAILURES } from '@/lib/ask';
 import { ES_ASK_HAND_KEY } from '@/lib/ask-hand';
-import { askViewFor, openAsk, resetAskViewForTests, type AskAnchor } from '@/lib/ask-view';
+import { askViewFor, openAsk, resetAskViewForTests } from '@/lib/ask-view';
 import { note, orderFlow } from '@/lib/change-board.fixture';
 import { kitchenTab, lanePlan } from '@/lib/lane-board.fixture';
+import { setSuggestionsPanelOpen, suggestionViewFor } from '@/lib/suggestion-view';
 import { useAskActions } from './useAskActions';
 
 // The acts of an ask (docs/specs/021-event-storming/asks.md "Where an ask starts", "The built-in hand"): the prompt
@@ -23,11 +24,6 @@ vi.mock('@/lib/api/storm-ask', () => ({
 }));
 
 const info = vi.spyOn(console, 'info').mockImplementation(() => {});
-const anchor: AskAnchor = {
-  getBoundingClientRect: () => new DOMRect(),
-  focus: () => {},
-  contains: () => false,
-};
 const suggested = (id: string, anchorId: string): Element => ({
   ...note(id, 'Order paid', 2),
   esSuggestion: { anchorId, side: 'after', by: 'Built-in model' },
@@ -62,6 +58,7 @@ function setup(
       activeTab: tab,
       createBlocked: opts.createBlocked ?? false,
       commitTab,
+      liveTab: () => tab,
       notify,
       selected: () => opts.selected ?? { notes: [], contexts: [] },
       caller: { ownerId: 'guest-1', share: null },
@@ -82,15 +79,22 @@ afterEach(() => vi.unstubAllGlobals());
 describe('useAskActions: opening', () => {
   it('opens about the selection, or about what the opener names', () => {
     const { acts } = setup({}, { selected: { notes: ['place'], contexts: [] } });
-    acts.openAsk(anchor);
+    acts.openAsk();
     expect(askViewFor('t')).toMatchObject({ open: true, scope: { type: 'notes', ids: ['place'] } });
-    acts.openAsk(anchor, { type: 'context', id: 'ordering' });
+    acts.openAsk({ type: 'context', id: 'ordering' });
     expect(askViewFor('t').scope).toEqual({ type: 'context', id: 'ordering' });
+  });
+
+  it('closes the suggestions list: the two share one corner', () => {
+    const { acts } = setup();
+    setSuggestionsPanelOpen('t', true);
+    acts.openAsk();
+    expect(suggestionViewFor('t').panelOpen).toBe(false);
   });
 
   it('stays shut where the board may not be changed', () => {
     const { acts } = setup({}, { createBlocked: true });
-    acts.openAsk(anchor);
+    acts.openAsk();
     expect(askViewFor('t').open).toBe(false);
   });
 });
@@ -121,7 +125,7 @@ describe('useAskActions: the built-in hand', () => {
   it('sends the board and adds the answer as one step, then says how many', async () => {
     askBuiltIn.mockResolvedValue(answerOf({ added: [suggested('paid', 'placed')] }));
     const { acts, commitTab, notify, tab } = setup({ esAbout: 'A shop that ships books.' });
-    openAsk('t', { type: 'board' }, anchor);
+    openAsk('t', { type: 'board' });
     await acts.ask({ topic: 'gaps', scope: { type: 'board' } });
     const [request, caller] = askBuiltIn.mock.calls[0]!;
     expect(request).toMatchObject({
@@ -154,7 +158,7 @@ describe('useAskActions: the built-in hand', () => {
   it('says there was nothing to suggest, and stays open', async () => {
     askBuiltIn.mockResolvedValue(answerOf({ dropped: 1 }));
     const { acts, notify, tab } = setup();
-    openAsk('t', { type: 'board' }, anchor);
+    openAsk('t', { type: 'board' });
     const before = tab();
     await acts.ask({ topic: 'wording', scope: { type: 'board' } });
     expect(tab()).toBe(before);
@@ -232,7 +236,7 @@ describe('useAskActions: the built-in hand', () => {
 describe('useAskActions: the board’s own fold', () => {
   it('adds the fold as the open plan, by LiveDoc, in one step', () => {
     const { acts, commitTab, notify, tab } = setup(kitchenTab());
-    openAsk('t', { type: 'board' }, anchor);
+    openAsk('t', { type: 'board' });
     acts.foldBoard(2);
     expect(commitTab).toHaveBeenCalledTimes(1);
     const plan = tab().elements.find(isLanePlan);
@@ -286,5 +290,30 @@ describe('useAskActions: the About and the declined', () => {
     acts.forgetDeclined();
     acts.foldBoard(2);
     expect(commitTab).not.toHaveBeenCalled();
+  });
+});
+
+describe('useAskActions: a board that moved on', () => {
+  it('adds nothing to another board opened while the model worked', async () => {
+    askBuiltIn.mockResolvedValue(answerOf({ added: [suggested('paid', 'placed')] }));
+    let tab: Tab = { id: 't', name: 'Orders', kind: 'event-storming', elements: orderFlow() };
+    const commitTab = vi.fn();
+    const notify = vi.fn();
+    const acts = renderHook(() =>
+      useAskActions({
+        activeTab: tab,
+        createBlocked: false,
+        commitTab,
+        liveTab: () => tab,
+        notify,
+        selected: () => ({ notes: [], contexts: [] }),
+        caller: { ownerId: 'guest-1', share: null },
+      }),
+    ).result.current;
+    const asked = acts.ask({ topic: 'gaps', scope: { type: 'board' } });
+    tab = { ...tab, id: 'another' };
+    await asked;
+    expect(commitTab).not.toHaveBeenCalled();
+    expect(notify).toHaveBeenCalledWith('Nothing to suggest');
   });
 });

@@ -176,6 +176,7 @@ export function SuggestionsPanel({
   onDismiss,
   onApplyAll,
   onDismissAll,
+  ask,
 }: {
   rows: PanelRow[];
   open: boolean;
@@ -190,8 +191,12 @@ export function SuggestionsPanel({
   onDismiss: (row: PanelRow) => void;
   onApplyAll: () => void;
   onDismissAll: () => void;
+  // The Ask pill (docs/specs/021-event-storming/asks.md "Where an ask starts"), left of the count: the corner is
+  // one home for asking and for what comes back, and holds the pill alone while the board has no suggestion.
+  ask?: ReactNode;
 }) {
   const listId = useId();
+  if (rows.length === 0 && !ask) return null;
   const toggle = (
     <button
       type="button"
@@ -200,7 +205,7 @@ export function SuggestionsPanel({
       onClick={() => onOpenChange(!open)}
       className="flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 dark:text-slate-100 dark:hover:bg-slate-800"
     >
-      <SparkleIcon size={14} className="text-brand-700 dark:text-brand-300" />
+      {ask ? null : <SparkleIcon size={14} className="text-brand-700 dark:text-brand-300" />}
       {countLabel(rows.length)}
       <ChevronDownIcon
         size={14}
@@ -217,8 +222,11 @@ export function SuggestionsPanel({
           open ? 'w-[320px] rounded-xl' : 'rounded-full'
         }`}
       >
-        <div className={open ? 'border-b border-slate-200 p-1.5 dark:border-slate-800' : 'p-0.5'}>
-          {toggle}
+        <div
+          className={`flex items-center gap-0.5 ${open ? 'border-b border-slate-200 p-1.5 dark:border-slate-800' : 'p-0.5'}`}
+        >
+          {ask}
+          {rows.length > 0 ? toggle : null}
         </div>
         {open ? (
           <>

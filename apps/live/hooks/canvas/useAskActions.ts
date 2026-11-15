@@ -21,8 +21,9 @@ import {
 import { askBuiltIn, type BuiltInAnswer } from '@/lib/api/storm-ask';
 import { askFailure, askedNotice } from '@/lib/ask';
 import { writeAskHand } from '@/lib/ask-hand';
-import { closeAsk, openAsk, setAskFailure, setAsking, type AskAnchor } from '@/lib/ask-view';
+import { closeAsk, openAsk, setAskFailure, setAsking } from '@/lib/ask-view';
 import { debugLog } from '@/lib/debug-log';
+import { setSuggestionsPanelOpen } from '@/lib/suggestion-view';
 import { track } from '@/lib/telemetry';
 
 // The acts of an ask (docs/specs/021-event-storming/asks.md "Where an ask starts", "The built-in hand"): open the
@@ -36,6 +37,8 @@ type AskActionsDeps = {
   createBlocked: boolean;
   // One undoable step over the whole tab: the About and the declined list are the tab's.
   commitTab: (mapTab: (tab: Tab) => Tab) => void;
+  // The tab as it is now: an answer comes back after the board may have moved on.
+  liveTab: () => Tab;
   // A one-line notice: what an ask ended on.
   notify: (message: string) => void;
   // What is selected when the popover opens: the editor's selection, and the selected contexts.
@@ -45,8 +48,9 @@ type AskActionsDeps = {
 };
 
 export type AskActions = {
-  // Open the popover hanging from `anchor`, about `scope` or, without one, about what is selected.
-  openAsk: (anchor: AskAnchor, scope?: AskScope) => void;
+  // Open the popover about `scope` or, without one, about what is selected. It shares the suggestions corner
+  // with the list: opening one closes the other.
+  openAsk: (scope?: AskScope) => void;
   // Copy the prompt for an agent; false when the clipboard refused.
   copyPrompt: (prompt: string, hand: StormAskHand) => Promise<boolean>;
   // Ask the built-in model and add what it answers.
@@ -64,6 +68,7 @@ export function useAskActions({
   activeTab,
   createBlocked,
   commitTab,
+  liveTab,
   notify,
   selected,
   caller,
@@ -74,22 +79,23 @@ export function useAskActions({
 
   // The answer onto the board as it is by now, as one step; how many suggestions landed.
   const add = (answer: AskAnswer): number => {
-    let added = 0;
-    commitTab((tab) => {
-      // Another board was opened meanwhile: the answer was for the one that asked.
-      if (tab.id !== tabId) return tab;
-      const landed = addAskAnswer(tab.elements, answer);
-      added = landed.added;
-      return landed.added > 0 ? { ...tab, elements: landed.elements } : tab;
-    });
-    if (added > 0) closeAsk(tabId);
+    const now = liveTab();
+    // Another board was opened meanwhile: the answer was for the one that asked.
+    if (now.id !== tabId) return 0;
+    const { added } = addAskAnswer(now.elements, answer);
+    if (added === 0) return 0;
+    commitTab((tab) =>
+      tab.id === tabId ? { ...tab, elements: addAskAnswer(tab.elements, answer).elements } : tab,
+    );
+    closeAsk(tabId);
     return added;
   };
 
-  const open = (anchor: AskAnchor, scope?: AskScope) => {
+  const open = (scope?: AskScope) => {
     if (createBlocked) return refuse('blocked');
     const about = scope ?? askScopeOf(activeTab.elements, selected());
-    openAsk(tabId, about, anchor);
+    setSuggestionsPanelOpen(tabId, false);
+    openAsk(tabId, about);
     debugLog('[ask] opened', { scope: about.type });
   };
 

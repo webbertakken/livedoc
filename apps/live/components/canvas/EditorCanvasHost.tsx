@@ -37,6 +37,7 @@ import { resolveViewBackdrop } from '@/lib/view-backdrop';
 import { readDrawPattern } from '@/lib/whiteboard-dock-prefs';
 import { useAppearance } from '@/hooks/ui/useAppearance';
 import { useIsLandscapePhone } from '@/hooks/ui/useIsMobileViewport';
+import { AskHost } from '@/components/canvas/ask/AskHost';
 import { Canvas } from '@/components/canvas/Canvas';
 import { useStableObject } from '@/hooks/ui/useStableObject';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
@@ -663,6 +664,16 @@ export function EditorCanvasHost() {
         <TabWindowContext.Provider value={tabWindows}>
           {/* Presenting shows the slide as the audience sees it: no indicators or lock badges on its elements
           (docs/specs/008-canvas/element-indicators.md "Unchanged"). */}
+          {/* The Ask popover (docs/specs/021-event-storming/asks.md): an Editor's, where a suggestion may land. */}
+          {esBoard && can.suggestions && !createBlocked && documentId ? (
+            <AskHost
+              tab={activeTab}
+              documentId={documentId}
+              documentName={documentName}
+              aiEnabled={aiCapable}
+              acts={suggestionActions}
+            />
+          ) : null}
           <SuppressElementIndicators when={presentingElements != null}>
             <Canvas
               tabName={activeTab.name}

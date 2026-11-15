@@ -21,6 +21,7 @@ import {
   named,
   orderFlow,
 } from '@/lib/change-board.fixture';
+import { askViewFor, openAsk, resetAskViewForTests } from '@/lib/ask-view';
 import { offeredPreview } from '@/lib/change-preview';
 import { suggestionPreview } from '@/lib/suggestion-apply';
 import {
@@ -687,5 +688,55 @@ describe('the suggestions panel: suggested changes', () => {
     open(4);
     fireEvent.pointerEnter(within(panel()).getAllByRole('listitem')[1]!);
     expect(suggestionViewFor(TAB).previewKey).toBe(contextsKey(['ordering', 'fulfilment']));
+  });
+});
+
+// The Ask pill's corner (docs/specs/021-event-storming/asks.md "Where an ask starts", ruled 2026-11-15: "Beside the
+// suggestions"): the corner shows for whoever may ask, with or without a suggestion, and the list and the Ask
+// popover never stand open together.
+describe('SuggestionLayer: the Ask pill', () => {
+  beforeEach(resetAskViewForTests);
+  const plain = () => [note('placed', 'domain-event', 216)];
+  const layer = (elements: Element[], canAsk: boolean, controls = laneActionSpies()) => {
+    const all = { ...controls, reveal: vi.fn() } as unknown as SuggestionControls;
+    render(
+      <SuggestionLayer
+        elements={elements}
+        tabId={TAB}
+        controls={all}
+        showAllSpots={null}
+        canAsk={canAsk}
+      />,
+    );
+    return controls;
+  };
+
+  it('stands alone in the corner on a board with no suggestion, and opens an ask', () => {
+    const controls = layer(plain(), true);
+    const corner = screen.getByTestId('suggestions-panel');
+    const pill = within(corner).getByRole('button', { name: 'Ask' });
+    expect(within(corner).getAllByRole('button')).toEqual([pill]);
+    fireEvent.click(pill);
+    expect(controls.openAsk).toHaveBeenCalledWith();
+    expect(askViewFor(TAB).anchor).not.toBeNull();
+  });
+
+  it('shows no corner to someone who may not ask, on a board with no suggestion', () => {
+    layer(plain(), false);
+    expect(screen.queryByTestId('suggestions-panel')).toBeNull();
+  });
+
+  it('closes the Ask popover when the list opens, and closes instead of opening again', () => {
+    const controls = layer([...plain(), suggestion('paid', 'domain-event', 'placed', 'after')], true);
+    const corner = screen.getByTestId('suggestions-panel');
+    act(() => openAsk(TAB, { type: 'board' }));
+    fireEvent.click(within(corner).getByRole('button', { name: '1 suggestion' }));
+    expect(askViewFor(TAB).open).toBe(false);
+    act(() => openAsk(TAB, { type: 'board' }));
+    const pill = within(corner).getByRole('button', { name: 'Ask' });
+    expect(pill.getAttribute('aria-expanded')).toBe('true');
+    fireEvent.click(pill);
+    expect(askViewFor(TAB).open).toBe(false);
+    expect(controls.openAsk).not.toHaveBeenCalled();
   });
 });

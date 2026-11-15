@@ -5,12 +5,11 @@ import type { AskScope } from '@livedoc/storm-reading';
 
 // The Ask popover as one person has it (docs/specs/021-event-storming/asks.md "Where an ask starts"): open or not,
 // what the ask is about, what it hangs from, and how the built-in hand is doing. The person's own view: never
-// shared or saved, and closed whenever another board is looked at. Module-level, because the button in the strip,
-// a context's name, a note's menu and the command palette all open the one popover from different parts of the
-// tree.
+// shared or saved, and closed whenever another board is looked at. Module-level, because the pill in the
+// suggestions corner, a context's name, a note's menu and the command palette all open the one popover from
+// different parts of the tree, and the corner it hangs from is drawn by the canvas.
 
-/** What the popover hangs from and hands focus back to: an element, or a place standing in for one that has gone
- *  (a menu's row, the command palette). */
+/** What the popover hangs from and hands focus back to: the suggestions corner, and the Ask pill in it. */
 export type AskAnchor = Pick<HTMLElement, 'getBoundingClientRect' | 'focus' | 'contains'>;
 
 export type AskView = {
@@ -18,6 +17,7 @@ export type AskView = {
   open: boolean;
   // What the ask is about, as it was when the popover opened.
   scope: AskScope;
+  // The corner the popover hangs from, while one is drawn: without it there is nowhere to open.
   anchor: AskAnchor | null;
   // The built-in hand is at work.
   asking: boolean;
@@ -49,13 +49,18 @@ export function askViewFor(tabId: string): AskView {
 const update = (tabId: string, change: Partial<AskView>) =>
   publish({ ...askViewFor(tabId), ...change, tabId });
 
-export function openAsk(tabId: string, scope: AskScope, anchor: AskAnchor): void {
-  update(tabId, { open: true, scope, anchor, failure: null });
+export function openAsk(tabId: string, scope: AskScope): void {
+  update(tabId, { open: true, scope, failure: null });
+}
+
+/** The corner the popover hangs from: set while the Ask pill is drawn, null when it goes. */
+export function setAskAnchor(tabId: string, anchor: AskAnchor | null): void {
+  update(tabId, anchor ? { anchor } : { anchor: null, open: false });
 }
 
 /** Closes the popover; an ask under way goes on, and its suggestions arrive as any do. */
 export function closeAsk(tabId: string): void {
-  if (askViewFor(tabId).open) update(tabId, { open: false, anchor: null, failure: null });
+  if (askViewFor(tabId).open) update(tabId, { open: false, failure: null });
 }
 
 export function setAsking(tabId: string, asking: boolean): void {
