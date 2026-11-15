@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { chartFrame } from './chart-frame';
 import {
   chartMarkInk,
@@ -278,9 +279,9 @@ describe('cost', () => {
       });
     }
     chartPageGrounds(els, [page]);
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let k = 0; k < 10; k += 1) chartPageGrounds(els, [page]);
-    const each = (performance.now() - start) / 10;
+    const each = (cpuNowMs() - start) / 10;
     // Measured about 0.5 ms on an M-series Mac; the budget leaves room for loaded CI.
     expect(each).toBeLessThan(50);
   });

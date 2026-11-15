@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { missingBoardStatuses, missingStatuses, pickableStatuses } from './board-status-picks';
 import { item } from './test-items';
 
@@ -140,9 +141,9 @@ describe('missingBoardStatuses', () => {
       title: `B${i}`,
       statuses: Array.from({ length: 12 }, (_, j) => `s${(i * 4 + j) % 200}`),
     }));
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     const out = missingBoardStatuses(board([]), many, { items: cards, boards: big });
-    const ms = performance.now() - t0;
+    const ms = cpuNowMs() - t0;
     expect(out).toHaveLength(200);
     expect(out[0]!.cards).toBe(100);
     expect(ms).toBeLessThan(250);

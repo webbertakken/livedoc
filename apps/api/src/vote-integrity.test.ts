@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { sqliteD1 } from './test-sqlite-d1';
 import { liveDoc } from './db/test-trash-fixtures';
 import { makeTestRouteContext } from './routes/test-route-context';
@@ -50,9 +51,9 @@ describe('admitGuestVoter', () => {
     const { env } = seeded();
     for (let i = 0; i < GUEST_VOTERS_PER_NETWORK; i++)
       await admitGuestVoter(env, 'd1', 'net-a', `p${i}`);
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < 50; i++) await admitGuestVoter(env, 'd1', 'net-a', `late${i}`);
-    expect((performance.now() - start) / 50).toBeLessThan(20);
+    expect((cpuNowMs() - start) / 50).toBeLessThan(20);
   });
 });
 

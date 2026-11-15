@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { ITEM_TYPES } from './item-types';
 import { planOutline, statusColumnsOfSetups } from './plan-outline';
 import { presetSetup, statusColumn } from './presets';
@@ -82,9 +83,9 @@ describe('planOutline cost', () => {
         ...Array.from({ length: 4 }, (_, b) => board(`b${t}-${b}`, presetSetup('sprint'))),
       ],
     }));
-    const started = performance.now();
+    const started = cpuNowMs();
     const plan = planOutline(big, null);
-    const took = performance.now() - started;
+    const took = cpuNowMs() - started;
     expect(plan.boards).toHaveLength(200);
     // Measured 11.7 ms cold, 1.5 ms warm on an M-series laptop (2026-10-08); the budget allows a loaded CI runner.
     expect(took).toBeLessThan(250);

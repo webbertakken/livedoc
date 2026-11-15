@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 
 vi.mock('./api/preferences', () => ({
   apiGetPreferences: vi.fn(),
@@ -135,10 +136,10 @@ describe('fitPreferences', () => {
       ...fullAccount(),
       customSwatches: Array.from({ length: 280 }, () => '#abcdef'),
     };
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < 20; i++) fitPreferences(prefs);
     // Measured ~0.06 ms; a trim that re-serialised per dropped entry took ~6 ms. Generous for CI.
-    expect((performance.now() - start) / 20).toBeLessThan(3);
+    expect((cpuNowMs() - start) / 20).toBeLessThan(3);
   });
 });
 

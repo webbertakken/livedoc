@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { createShape, type Element } from '@livedoc/document';
 import {
   FENCE_REACH,
@@ -177,10 +178,10 @@ describe('fenceStep', () => {
       a: { x: i * 30, y: 500 },
       b: { x: i * 30 + 20, y: 500 },
     }));
-    const started = performance.now();
+    const started = cpuNowMs();
     for (let i = 0; i < 60; i++) fenceStep({ x: 15, y: 0 }, { x: 15, y: 13 }, fences);
     // 60 frames of walking against 2000 fences: well under a frame's budget each.
-    expect((performance.now() - started) / 60).toBeLessThan(4);
+    expect((cpuNowMs() - started) / 60).toBeLessThan(4);
   });
 });
 

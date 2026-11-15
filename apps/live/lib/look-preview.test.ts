@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import type { Element } from '@livedoc/document';
 import { FINISH_PREVIEW_ELEMENTS } from './finish-preview';
 import { firstSelfClosingRect, lookPreviewSvg, lookPreviewTab } from './look-preview';
@@ -69,8 +70,8 @@ describe('firstSelfClosingRect', () => {
 
   it('stays linear on a run of unclosed rects', () => {
     const svg = '<rect '.repeat(200_000);
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     expect(firstSelfClosingRect(svg)).toBeNull();
-    expect(performance.now() - t0).toBeLessThan(200);
+    expect(cpuNowMs() - t0).toBeLessThan(200);
   });
 });

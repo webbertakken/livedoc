@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   GRAPH_LAYOUT_MAX_EDGES,
   GRAPH_LAYOUT_MAX_NODES,
@@ -205,9 +206,9 @@ describe('a graph-only export past the layout caps', () => {
     const cells: Cell[] = [layer];
     for (let i = 0; i < n; i++) cells.push(node(`n${i}`, `Node ${i}`));
     for (let i = 1; i < n; i++) cells.push(edge(`e${i}`, `n${Math.floor((i - 1) / 2)}`, `n${i}`));
-    const started = performance.now();
+    const started = cpuNowMs();
     const r = await run(exported([page('Big', cells)]));
-    const ms = performance.now() - started;
+    const ms = cpuNowMs() - started;
     const elements = r.pages[0]!.elements;
     const arrows = elements.filter((el) => el.type === 'arrow').length;
     expect(elements.length - arrows).toBe(GRAPH_LAYOUT_MAX_NODES);

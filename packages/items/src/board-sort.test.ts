@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { ITEM_TYPES, type ItemTypeDef } from './item-types';
 import { item } from './test-items';
 import {
@@ -398,9 +399,9 @@ describe('a sorted board', () => {
     const sorted = { ...setup, sortBy: by(['priority', 'desc'], ['due', 'asc']) };
     projectBoard(sorted, items, undefined, types);
     const runs = 20;
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < runs; i++) projectBoard(sorted, items, undefined, types);
-    const took = (performance.now() - start) / runs;
+    const took = (cpuNowMs() - start) / runs;
     const first = projectBoard(sorted, items, undefined, types).columns[0]!.lanes[0]!.items;
     expect(first[0]!.fields['priority']).toBe('urgent');
     expect(first[first.length - 1]!.fields['priority']).toBeUndefined();

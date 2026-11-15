@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import type { Tab } from '@livedoc/document';
 import { FORM_TAB_DELETE_WARNING, deleteTabWarning, formsFeeding } from './forms-feeding';
 
@@ -59,8 +60,8 @@ describe('formsFeeding', () => {
     const many = Array.from({ length: 200 }, (_, i) =>
       i % 4 === 0 ? formTab(`f${i}`, `F${i}`, { board: 'b0' }) : tab(`b${i}`, { kind: 'board' }),
     );
-    const start = performance.now();
+    const start = cpuNowMs();
     for (const t of many) deleteTabWarning(many, t.id);
-    expect(performance.now() - start).toBeLessThan(50);
+    expect(cpuNowMs() - start).toBeLessThan(50);
   });
 });

@@ -1,6 +1,7 @@
 // Validation rules (docs/specs/029-sheets/data-validation.md): what each rule allows, its line, and how a write is
 // checked against the rules, by the editor and the api.
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { applySheetWrite, inverseSheetWrite, type SheetWrite } from '../store';
 import { validateWrite, validateSheetCreate } from '../validate';
 import { book, makeSheets } from '../testing/book';
@@ -141,9 +142,9 @@ describe('what each rule allows', () => {
     ]);
     // A dotted run the old pattern backtracked over quadratically (seconds at this length).
     const text = `!@!.${'!.'.repeat(20_000)}@`;
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     expect(isEmail(text)).toBe(false);
-    expect(performance.now() - t0).toBeLessThan(50);
+    expect(cpuNowMs() - t0).toBeLessThan(50);
   });
   it('a formula, an empty value and an error are never refused as typed', () => {
     expect(inputAllowed(LIST, { f: { t: '1', r: [] } }, x)).toBe(true);

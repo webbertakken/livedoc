@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { ensureIconCatalogs } from '@/lib/icon-registry';
 import { ICON_CATEGORIES } from '@/lib/icons';
 import { STICKER_CATEGORIES } from '@/lib/stickers';
@@ -25,9 +26,9 @@ describe('catalogueStripGroups', () => {
 
   it('is built once the catalogues have loaded, not on every strip render', () => {
     expect(catalogueStripGroups('technology')).toBe(catalogueStripGroups('technology'));
-    const t = performance.now();
+    const t = cpuNowMs();
     for (let i = 0; i < 1000; i++) catalogueStripGroups('icons');
-    expect(performance.now() - t).toBeLessThan(50);
+    expect(cpuNowMs() - t).toBeLessThan(50);
   });
 
   it('is null for a category of tiles', () => {

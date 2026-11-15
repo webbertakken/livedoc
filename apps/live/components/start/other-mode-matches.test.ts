@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { TAB_OPENINGS } from '@livedoc/document';
 import { TEMPLATES, isBlankTemplate, popularKindsFor, templateOpening } from '@livedoc/templates';
 import { otherModeMatches } from './other-mode-matches';
@@ -67,8 +68,8 @@ describe('otherModeMatches', () => {
   // template of four modes stays far inside a frame.
   it('answers the widest query well inside a frame', () => {
     otherModeMatches('diagram', 'e'); // warm the cached haystacks, as the first keystroke does
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < 50; i++) otherModeMatches('diagram', `e${'a'.repeat(i % 3)}`);
-    expect((performance.now() - start) / 50).toBeLessThan(4);
+    expect((cpuNowMs() - start) / 50).toBeLessThan(4);
   });
 });

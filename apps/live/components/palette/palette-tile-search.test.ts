@@ -1,6 +1,7 @@
 // The Toolbar strip's Search (docs/specs/007-editor/toolbar-layout.md "Search: every element type"):
 // the split between this mode's tiles and the others', and the ranking.
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { ITEM_TYPES } from '@livedoc/items';
 import type { Element } from '@livedoc/document';
 import {
@@ -260,11 +261,11 @@ describe('rankTiles', () => {
 
 describe('a worst-case query', () => {
   it('ranks every tile of every mode well inside a keystroke budget', () => {
-    const start = performance.now();
+    const start = cpuNowMs();
     for (let i = 0; i < 50; i++)
       searchElementTiles({ query: 'e', mode: 'diagram', hasImage: true });
     // 50 searches matching most of the catalogue; a keystroke runs one.
-    expect((performance.now() - start) / 50).toBeLessThan(16);
+    expect((cpuNowMs() - start) / 50).toBeLessThan(16);
   });
 });
 

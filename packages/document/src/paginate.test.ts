@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { contentClusters, pageAround, withContentOnAPage, withPageSplit } from './paginate';
 import { elementIdsOnPage } from './page-content';
 import { pagesOf, layOutPages, MAX_PAGES, pageMargin, type Page } from './page';
@@ -285,7 +286,7 @@ describe('withPageSplit', () => {
 });
 
 // Entering the mode runs on every switch: linear, never the O(n²) clustering (measured ~2 ms at 3000 elements).
-// Asserted as growth, not as a wall-clock budget: a fixed millisecond budget failed on a machine busy with other
+// Asserted as growth in CPU time, not as a wall-clock budget: a fixed millisecond budget failed on a machine busy with other
 // work while the code was as fast as ever. Eight times the elements must cost well under the sixty-four times a
 // quadratic pass would (24 sits between them, with room for an n log n sort at ~9); each size takes its best of
 // nine runs, so a stall in a few runs does not count. A four-fold step with a limit of 8 sat too close to the
@@ -298,9 +299,9 @@ describe('withContentOnAPage: cost', () => {
   const bestOf = (runs: number, work: () => void) => {
     let best = Infinity;
     for (let i = 0; i < runs; i++) {
-      const start = performance.now();
+      const start = cpuNowMs();
       work();
-      best = Math.min(best, performance.now() - start);
+      best = Math.min(best, cpuNowMs() - start);
     }
     return best;
   };

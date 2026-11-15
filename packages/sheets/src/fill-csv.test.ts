@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { fillSeries } from './fill';
 import { csvSafeField, parseCsv, toCsv } from './csv';
 import { serialFromDate } from './dates';
@@ -171,8 +172,8 @@ describe('CSV', () => {
     expect(csvSafeField('- x')).toBe("'- x");
     // A field that is a sign then 100,000 spaces backtracked quadratically before (seconds); now well under a budget.
     const field = `-${' '.repeat(100_000)}x`;
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     expect(csvSafeField(field)).toBe(`'${field}`);
-    expect(performance.now() - t0).toBeLessThan(50);
+    expect(cpuNowMs() - t0).toBeLessThan(50);
   });
 });

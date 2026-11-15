@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { afterWord, parseSequenceDiagram } from './mermaid-sequence';
 import { resolveGraphInput } from './graph-input';
 
@@ -8,9 +9,9 @@ const SPACES = ' '.repeat(100_000);
 const BUDGET_MS = 250;
 
 const timed = (run: () => void): number => {
-  const started = performance.now();
+  const started = cpuNowMs();
   run();
-  return performance.now() - started;
+  return cpuNowMs() - started;
 };
 
 describe('reading Mermaid in linear time', () => {

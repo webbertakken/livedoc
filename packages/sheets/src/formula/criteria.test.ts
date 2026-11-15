@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { makeCriterion } from './criteria';
 
 describe('criteria', () => {
@@ -53,8 +54,8 @@ describe('criteria', () => {
   it('matches a pattern of many wildcards in time proportional to the text', () => {
     const many = makeCriterion('*a*a*a*a*a*a*a*b');
     const text = 'a'.repeat(2_000);
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     for (let i = 0; i < 50; i++) expect(many(text)).toBe(false);
-    expect(performance.now() - t0).toBeLessThan(2_000);
+    expect(cpuNowMs() - t0).toBeLessThan(2_000);
   });
 });

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   RECENT_DIAGRAMS_LIMIT,
   parseRecentDiagrams,
@@ -113,9 +114,9 @@ describe('scalableSnapshotSvg', () => {
   });
 
   it('stays fast on hostile markup', () => {
-    const t = performance.now();
+    const t = cpuNowMs();
     scalableSnapshotSvg('<svg' + ' '.repeat(100_000));
     svgBackgroundColor('<rect'.repeat(50_000));
-    expect(performance.now() - t).toBeLessThan(200);
+    expect(cpuNowMs() - t).toBeLessThan(200);
   });
 });

@@ -4,6 +4,7 @@
 import type { Tab } from '@livedoc/document';
 import type { DocumentListResponse } from '@livedoc/api-schema';
 import { describe, expect, it } from 'vitest';
+import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { sqliteD1 } from '../test-sqlite-d1';
 import { handleDocuments } from '../routes/documents';
 import { makeTestRouteContext } from '../routes/test-route-context';
@@ -128,9 +129,9 @@ describe('listRecentTeamDocuments', () => {
     );
     for (let i = 0; i < 5000; i++) insertDoc.run(`d${i}`, `Doc ${i}`, i, summary);
     sql.exec('DELETE FROM outbox');
-    const t = performance.now();
+    const t = cpuNowMs();
     const list = await listRecentTeamDocuments(env, ME, 12);
-    const ms = performance.now() - t;
+    const ms = cpuNowMs() - t;
     expect(list[0]?.id).toBe('d4999');
     expect(list).toHaveLength(12);
     expect(ms).toBeLessThan(500);
