@@ -18,6 +18,8 @@ describe('resolveEditorCapabilities', () => {
     expect(can.suggestions).toBe(true);
     // So are the kept candidate contexts' acts (docs/specs/021-event-storming/candidate-contexts.md "Share roles").
     expect(can.contexts).toBe(true);
+    // And the board's structure: marking, answering and naming (board-structure.md "Share roles").
+    expect(can.structure).toBe(true);
     expect(can.remove(shape()) && can.move(shape()) && can.recolour(shape())).toBe(true);
   });
 
@@ -47,6 +49,8 @@ describe('resolveEditorCapabilities', () => {
     const can = resolveEditorCapabilities({ level: 'participate', adderKey: ME });
     // A Participant who moves a note changes no context (candidate-contexts.md "Share roles").
     expect(can.contexts).toBe(false);
+    // Marking, answering and naming a lane each reshape the board (board-structure.md "Share roles").
+    expect(can.structure).toBe(false);
     expect(can.takePart && can.addContent && can.planCards && can.sheetCells).toBe(true);
     expect(can.writeText(shape())).toBe(true);
     expect(can.writeText(shape({ locked: true }))).toBe(false);

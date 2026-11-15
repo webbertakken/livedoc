@@ -181,6 +181,12 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone dismissed a lane plan an agent suggested for an event-storming board.',
   'Canvas|Used|BoardArranged':
     'Someone arranged an event-storming board along its timeline with Arrange and Reorder, and kept the result.',
+  'Canvas|Used|PivotalMarked':
+    'Someone marked a domain event on an event-storming board as pivotal: one of the few the whole flow turns on.',
+  'Canvas|Used|PivotalUnmarked':
+    'Someone took the pivotal mark off a domain event on an event-storming board.',
+  'Canvas|Used|HotspotAnswered':
+    'Someone kept the answer to a hotspot on an event-storming board. Never the question or the answer.',
   'Canvas|Used|AskPromptCopied':
     'Someone copied the prompt of an ask on an event-storming board, to paste into their own agent. Never the prompt, its topic or the board.',
   'Canvas|Used|AskedBuiltIn':

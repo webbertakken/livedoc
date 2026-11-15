@@ -736,6 +736,14 @@ export const ASKS = chart(
     types: ['AskPromptCopied', 'AskedBuiltIn', 'LanesFolded', 'AboutEdited', 'DeclinedForgotten'],
   },
 );
+// An event-storming board's structure (docs/specs/021-event-storming/board-structure.md "Telemetry").
+export const BOARD_STRUCTURE = chart(
+  'Canvas',
+  'Used',
+  'Board Structure',
+  'Someone marked or unmarked a pivotal event on an event-storming board, or kept the answer to one of its hotspots.',
+  { types: ['PivotalMarked', 'PivotalUnmarked', 'HotspotAnswered'] },
+);
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -763,6 +771,7 @@ export const ELEMENT_EDITING: MetricStack = {
     SUGGESTED_CHANGES_HANDLED,
     BOARD_REARRANGED,
     ASKS,
+    BOARD_STRUCTURE,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],

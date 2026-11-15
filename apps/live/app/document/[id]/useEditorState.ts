@@ -163,6 +163,7 @@ import { useAskActions } from '@/hooks/canvas/useAskActions';
 import { contextSelectionFor } from '@/lib/context-selection';
 import { selectionIds } from '@/lib/selection-store';
 import { useContextActions } from '@/hooks/canvas/useContextActions';
+import { useStructureActions } from '@/hooks/canvas/useStructureActions';
 import { usePhotoPicker } from '@/hooks/canvas/usePhotoPicker';
 import { warmBoundaryModel } from '@/lib/photo-model/client';
 import { usePhotoDraft } from '@/hooks/canvas/usePhotoDraft';
@@ -2681,6 +2682,13 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   };
   // Kept candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): rename, delete, notes in and out.
   const contextActions = useContextActions({ activeTab, createBlocked, commit });
+  // The board's structure (docs/specs/021-event-storming/board-structure.md): a pivotal event marked, a hotspot
+  // answered. An Editor's alone.
+  const structureActions = useStructureActions({
+    activeTab,
+    blocked: createBlocked || !participant.can.structure,
+    commit,
+  });
 
   // --- Tab actions ---------------------------------------------------------
 
@@ -4141,6 +4149,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     suggestionActions,
     // Candidate context acts (docs/specs/021-event-storming/candidate-contexts.md).
     contextActions,
+    // Board structure acts (docs/specs/021-event-storming/board-structure.md).
+    structureActions,
     // Photo import (docs/specs/021-event-storming/event-storming.md Phase 8): the draft run, whether the entry
     // points may be offered, and the hidden file input they open.
     photoDraft,
