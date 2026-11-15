@@ -68,6 +68,21 @@ async function offItsNote(page: Page, id: string): Promise<number> {
   return Math.max(Math.abs(box.x - left), Math.abs(box.y - top));
 }
 
+// How far a ring is from standing six px round its note, px. Both are read in one look: the row that rings a
+// note may still be gliding it into view, and two looks would find the board in two places.
+const ringOffItsNote = (page: Page, id: string): Promise<number> =>
+  page.evaluate((noteId) => {
+    const around = document
+      .querySelector(`[data-review-ring="${noteId}"]`)
+      ?.getBoundingClientRect();
+    const inside = document.querySelector(`[data-element-id="${noteId}"]`)?.getBoundingClientRect();
+    if (!around || !inside) return Infinity;
+    return Math.max(
+      Math.abs(inside.left - around.left - 6),
+      Math.abs(around.right - inside.right - 6),
+    );
+  }, id);
+
 // Zooms in on the timeline's start, so its far end stands outside the window: what a row brings into view is
 // then seen to arrive.
 async function zoomInOnStart(page: Page): Promise<void> {
@@ -165,10 +180,7 @@ test('Check lists the gaps by level, rings what a row names, and Add lands a not
   await expect(note(page, IDS.tableCleared)).toBeInViewport();
   await expect(ring(page, IDS.tableCleared)).toBeVisible();
   // The ring stands round its note, six px off it, at screen size.
-  const around = (await ring(page, IDS.tableCleared).boundingBox())!;
-  const inside = (await note(page, IDS.tableCleared).boundingBox())!;
-  expect(inside.x - around.x).toBeCloseTo(6, 0);
-  expect(around.x + around.width - (inside.x + inside.width)).toBeCloseTo(6, 0);
+  await expect.poll(() => ringOffItsNote(page, IDS.tableCleared)).toBeLessThan(0.5);
   // Nothing is drawn on a note because of a gap: the ring goes with the pointer.
   await tab(page, 'Check').hover();
   await expect(page.locator('[data-review-ring]')).toHaveCount(0);
