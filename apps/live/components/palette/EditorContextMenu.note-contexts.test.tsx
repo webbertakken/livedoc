@@ -35,6 +35,7 @@ function open(noteContexts: NoteContextsMenu | undefined) {
     layers: [],
     theme: undefined,
     noteContexts,
+    noteStructure: undefined,
     onClose,
   };
   const props = new Proxy(given, {

@@ -45,6 +45,7 @@ function open(target: Element, onAskAbout: (() => void) | undefined) {
     theme: undefined,
     noteContexts: undefined,
     onAskAbout,
+    noteStructure: undefined,
     onClose,
   };
   const props = new Proxy(given, {
