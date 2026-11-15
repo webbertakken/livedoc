@@ -203,9 +203,19 @@ test('Check lists the gaps by level, rings what a row names, and Add lands a not
   const added = (await boardIds(page)).find((id) => !before.includes(id))!;
   await page.keyboard.type('Clear table');
   await expect(note(page, added)).toContainText('Clear table');
-  const gap = (await note(page, IDS.tableCleared).boundingBox())!.x;
-  const landed = (await note(page, added).boundingBox())!;
-  expect(landed.x + landed.width).toBeLessThan(gap);
+  // Both boxes in one look: the row's reveal may still glide the board clear of the card.
+  await expect
+    .poll(() =>
+      page.evaluate(
+        ([event, command]) => {
+          const box = (id: string) =>
+            document.querySelector(`[data-element-id="${id}"]`)!.getBoundingClientRect();
+          return box(event!).left - box(command!).right;
+        },
+        [IDS.tableCleared, added],
+      ),
+    )
+    .toBeGreaterThan(0);
   await page.keyboard.press('Escape');
   // The panel follows the board: the event has a cause now, and the new command wants someone to issue it.
   await expect(hole).toHaveCount(0);
