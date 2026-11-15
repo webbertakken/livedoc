@@ -34,6 +34,7 @@ const tape = (page: Page, id: string) => page.locator(`[data-pivotal-tape="${id}
 const check = (page: Page, id: string) => page.locator(`[data-answer-mark="${id}"]`);
 const answerField = (page: Page) => page.getByRole('textbox', { name: 'Answer', exact: true });
 const caption = (page: Page) => page.locator('[data-answer-caption]');
+const callout = (page: Page) => page.locator('[data-note-callout]');
 const menu = (page: Page) => page.getByRole('dialog', { name: 'Element menu' });
 const boardIds = (page: Page) =>
   page
@@ -52,6 +53,19 @@ async function openPanel(page: Page, name = 'Check'): Promise<Locator> {
   if (name !== 'Check') await tab(page, name).click();
   await expect(tab(page, name)).toHaveAttribute('aria-selected', 'true');
   return panel(page);
+}
+
+// How far the box under a note (the answer field, the caption) stands from where it belongs, px: a gap under its
+// note, moved no further than keeps it a margin inside the window.
+async function offItsNote(page: Page, id: string): Promise<number> {
+  const at = await note(page, id).boundingBox();
+  const box = await callout(page).boundingBox();
+  if (!at || !box) return Infinity;
+  const { width, height } = page.viewportSize()!;
+  const within = (value: number, most: number) => Math.max(8, Math.min(value, most));
+  const left = within(at.x, width - 8 - box.width);
+  const top = within(at.y + at.height + 8, height - 8 - box.height);
+  return Math.max(Math.abs(box.x - left), Math.abs(box.y - top));
 }
 
 // Zooms in on the timeline's start, so its far end stands outside the window: what a row brings into view is
@@ -193,6 +207,8 @@ test('Answer on a Check row opens the hotspot’s answer; Enter keeps it and the
   await review.getByRole('button', { name: 'Answer: What if an order is sent back?' }).click();
   await expect(answerField(page)).toBeFocused();
   await expect(note(page, IDS.sentBack)).toBeInViewport();
+  // The field opened while its note was still outside the window; it stands under the note once that has arrived.
+  await expect.poll(() => offItsNote(page, IDS.sentBack)).toBeLessThan(1);
   await page.keyboard.type('Remake it; the pass decides.');
   await page.keyboard.press('Enter');
   await expect(answerField(page)).toHaveCount(0);
@@ -458,6 +474,49 @@ test('an answered hotspot shows its answer as a caption when its check is pointe
   await expect(caption(page)).toHaveCount(0);
   await mark.focus();
   await expect(caption(page)).toContainText(REVIEW_BOARD_ANSWER);
+});
+
+test('a caption whose note stands at the window’s edge is moved inside the window, on a zoomed board', async ({
+  page,
+  pageErrors,
+}) => {
+  await startReviewBoard(page);
+  const hotspot = note(page, IDS.whoCalls);
+  const { width, height } = page.viewportSize()!;
+  // Zoomed a little, so the board is measured through a scale (no position on it is a whole number of pixels)
+  // and the note stays narrower than its caption.
+  await note(page, IDS.orderTaken).hover();
+  await page.keyboard.down('Control');
+  for (let i = 0; i < 24 && (await settledBox(hotspot)).width < 150; i += 1)
+    await page.mouse.wheel(0, -40);
+  await page.keyboard.up('Control');
+  expect((await settledBox(hotspot)).width).toBeLessThan(240);
+  // The hotspot's right edge a little inside the window's: its caption, 260 px wide, would run off the page.
+  for (let i = 0; i < 4; i += 1) {
+    const box = await settledBox(hotspot);
+    const off = box.x + box.width - (width - 24);
+    if (Math.abs(off) < 2) break;
+    await page.mouse.wheel(off, 0);
+  }
+  const stands = await settledBox(hotspot);
+  expect(Math.abs(stands.x + stands.width - (width - 24))).toBeLessThan(2);
+
+  await check(page, IDS.whoCalls).focus();
+  await expect(caption(page)).toContainText(REVIEW_BOARD_ANSWER);
+  const said = await settledBox(caption(page));
+  expect(said.x).toBeGreaterThanOrEqual(0);
+  expect(said.x + said.width).toBeLessThanOrEqual(width);
+  expect(said.y + said.height).toBeLessThanOrEqual(height);
+  // It was moved, as far as keeps it a margin inside the window and no further.
+  expect(said.x).toBeLessThan(stands.x);
+  expect(await offItsNote(page, IDS.whoCalls)).toBeLessThan(1);
+
+  // Panned away from the edge, where it fits unmoved, it stands under its note again.
+  await page.mouse.wheel(420, 0);
+  await expect.poll(async () => (await hotspot.boundingBox())!.x + said.width).toBeLessThan(width - 8);
+  await expect.poll(() => offItsNote(page, IDS.whoCalls)).toBeLessThan(1);
+  await expect(page.getByText('Something went wrong in the canvas.')).toHaveCount(0);
+  expect(pageErrors).toEqual([]);
 });
 
 test('Name This Lane adds a name left of the wall: a blank one left goes, a typed one is the lane’s name', async ({

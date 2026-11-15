@@ -62,6 +62,9 @@ A hotspot is a question the room left open. Its **answer** is what the room deci
   note. Its paper and words do not change: the question stays readable (default).
 - **Pressing the check opens the answer** for whoever may answer; for everyone else it is an image that shows the
   caption and has nothing to press (default).
+- **The field and the caption stay inside the window**: a gap under their note, moved back in while the note
+  stands at an edge and no further than a margin from it, and under the note again once they fit. That holds as
+  the board is panned or zoomed, the window resized, and their words grow (default).
 - **The keyboard after the field**: kept with Enter, the answer's check takes the keyboard once the board has drawn
   it; put away with Escape, or emptied, the keyboard goes back to what opened the field while that still stands,
   else to the check the note wears. Left by pointing elsewhere, the field hands it nowhere (default).
@@ -99,5 +102,6 @@ A hotspot is a question the room left open. Its **answer** is what the room deci
   `apps/live/lib/editor-capabilities.ts`.
 - The menu rows: `apps/live/lib/note-structure-menu.ts` and `apps/live/components/palette/NoteStructureRows.tsx`.
 - On the canvas: `StructureTapes.tsx`, `StructureMarks.tsx`, `AnswerMark.tsx`, `AnswerField.tsx` and
-  `NoteCallout.tsx` in `apps/live/components/canvas/structure/`; which answer is open
+  `NoteCallout.tsx` in `apps/live/components/canvas/structure/`; what keeps the field and the caption inside
+  the window `apps/live/hooks/canvas/useKeepInWindow.ts`; which answer is open
   `apps/live/lib/structure-view.ts`; a blank lane name `apps/live/lib/lane-name.ts`.
