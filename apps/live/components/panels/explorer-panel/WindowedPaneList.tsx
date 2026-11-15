@@ -4,9 +4,11 @@
 // comes into view in the pane that scrolls it, its rows saying their place to a screen reader, Up and Down moving
 // between them as in every pane list.
 import { useMemo, type ReactNode } from 'react';
-import type { PlaceStore } from '@/components/primitives/windowed-list/list-places';
 import { nearestScroller } from '@/components/primitives/windowed-list/nearest-scroller';
-import { useWindowedList } from '@/components/primitives/windowed-list/useWindowedList';
+import {
+  useWindowedList,
+  type ListPlaceOption,
+} from '@/components/primitives/windowed-list/useWindowedList';
 import { WindowGap, windowChildren } from '@/components/primitives/windowed-list/WindowGap';
 import { paneListKeys } from './pane-parts';
 
@@ -24,7 +26,7 @@ export function WindowedPaneList<T extends { id: string }>({
   items: readonly T[];
   renderItem: (item: T) => ReactNode;
   /** Where the list's place is kept, and whether to go back to it now. */
-  place?: { key: string; store: PlaceStore; restore: boolean } | null;
+  place?: ListPlaceOption;
   /** The folder or section shown: a new one plays the cascade again. */
   scope?: string;
 }) {

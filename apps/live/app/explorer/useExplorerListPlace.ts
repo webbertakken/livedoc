@@ -13,6 +13,9 @@ import type { WindowedListOptions } from '@/components/primitives/windowed-list/
 
 watchHistoryTraversal();
 
+// Opening a document scrolls the page to its top before the Explorer's list goes: not a place to keep.
+const onExplorerPage = () => window.location.pathname.startsWith('/explorer');
+
 const addressNow = () =>
   typeof window === 'undefined' ? '' : `${window.location.pathname}${window.location.search}`;
 
@@ -28,7 +31,7 @@ export function useExplorerListPlace(
   const restore = shown.listKey === listKey && shown.restore;
   if (!listKey) return { place: null, resetKey: '' };
   return {
-    place: { key: `explorer:${listKey}`, store: sessionPlaces, restore },
+    place: { key: `explorer:${listKey}`, store: sessionPlaces, restore, writable: onExplorerPage },
     resetKey: listKey,
   };
 }

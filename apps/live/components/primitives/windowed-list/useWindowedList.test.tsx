@@ -172,6 +172,20 @@ describe('useWindowedList', () => {
       });
     });
 
+    it('is not written down from a scroll made while leaving the list', () => {
+      render(
+        <List
+          keys={keysOf(1000)}
+          place={{ key: 'folder-a', store, restore: false, writable: () => false }}
+        />,
+      );
+      scrollTo(30020);
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(store.read('folder-a')).toBeNull();
+    });
+
     it('is taken back on Back, on the row it was anchored to', () => {
       store.write('folder-a', { anchorId: 'k-596', anchorOffset: 20, scrollTop: 1 });
       const keys = ['new-1', 'new-2', ...keysOf(1000)];

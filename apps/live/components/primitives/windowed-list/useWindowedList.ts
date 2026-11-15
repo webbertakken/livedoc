@@ -35,14 +35,19 @@ import {
 
 /** How long a first draw's cascade takes to settle (150 ms rise after at most 100 ms delay, and a margin). */
 export const CASCADE_SETTLE_MS = 450;
-/** How long the scroll rests before a list's place is written down. */
-const PLACE_WRITE_MS = 150;
 /** How long a place taken back is held while the rows and what sits above them settle. */
 const PLACE_HOLD_MS = 1500;
 /** A measure moving by less than this is the same: sub-pixel layout never redraws the list. */
 const MEASURE_TOLERANCE_PX = 0.5;
 
-export type ListPlaceOption = { key: string; store: PlaceStore; restore: boolean } | null;
+export type ListPlaceOption = {
+  key: string;
+  store: PlaceStore;
+  restore: boolean;
+  /** Whether the list is still where the reader is: a navigation away scrolls the page before the list goes, and
+   *  that scroll is not the reader's place. */
+  writable?: () => boolean;
+} | null;
 
 export type WindowedListOptions = {
   /** Every entry's stable key (folders first, then documents), in the order drawn. */
@@ -228,12 +233,6 @@ export function useWindowedList({
     const box = scroller?.(list) ?? null;
     const target: HTMLElement | Window = box ?? window;
     let frame = 0;
-    let writeTimer = 0;
-    let pendingWrite: (() => void) | null = null;
-    const flushWrite = () => {
-      pendingWrite?.();
-      pendingWrite = null;
-    };
     const sync = () => {
       frame = 0;
       const now = latest.current;
@@ -272,15 +271,24 @@ export function useWindowedList({
         setDrawing((d) => (sameDrawing(d, next) ? d : next));
       }
       const p = now.place;
-      if (p && !restorePending.current) {
+      // Written down each frame the scroll moves, never later: a navigation away can take the list before a timer.
+      if (p && !restorePending.current && (p.writable?.() ?? true)) {
         const at = placeAt({
           viewTop: view.top,
           geometry: geometryOf(m, now.count),
           idOf: (i) => now.keys[i],
         });
-        pendingWrite = () => p.store.write(p.key, at);
-        window.clearTimeout(writeTimer);
-        writeTimer = window.setTimeout(flushWrite, PLACE_WRITE_MS);
+        const kept = p.store.read(p.key);
+        if (
+          !kept ||
+          kept.anchorId !== at.anchorId ||
+          Math.abs(kept.scrollTop - at.scrollTop) >= 1
+        ) {
+          p.store.write(p.key, at);
+          debugLog(
+            `[list-place] kept key=${p.key} anchor=${at.anchorId ?? 'none'} top=${Math.round(at.scrollTop)}`,
+          );
+        }
       }
     };
     let live = true;
@@ -308,8 +316,6 @@ export function useWindowedList({
       window.removeEventListener('resize', request);
       resize?.disconnect();
       window.cancelAnimationFrame(frame);
-      window.clearTimeout(writeTimer);
-      flushWrite();
     };
   }, [list, count, scroller]);
 
