@@ -78,7 +78,9 @@ An email code is only as good as its delivery, so sign-in email is not best-effo
   reaches a preview host, and a preview's never reaches `docs.nu`.
 - **How the rest of the api knows the caller**. The browser
   asks `/api/auth/token` for a **session token**, a 15-minute EdDSA JWT whose `sub` is the account id and which
-  carries the account's email and whether it is verified, and sends it as `Authorization: Bearer`. The api verifies it against its own keys, in-process, with no network call. A request that
+  carries the account's email and whether it is verified, and sends it as `Authorization: Bearer`. A browser whose
+  signed-in hint is `1` asks for it beside the session read rather than after it ([Web performance](../016-platform/web-performance.md)
+  "The open path asks in parallel"); the read alone decides who is signed in. The api verifies it against its own keys, in-process, with no network call. A request that
   carries no cookie cannot be forged from another site, so the api's own routes need no CSRF defence of their own.
 - **Lifetime.** A session lasts 30 days and slides forward at most once a day while used. Signing out ends it at once
   everywhere the api reads it; an issued session token keeps working until its own 15 minutes run out.
