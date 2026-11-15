@@ -96,7 +96,7 @@ describe('the Explorer’s first load', () => {
     expect(staticImports(page)).toContain('@/lib/new-document/new-document-content-loader');
     expect(page).toContain('prefetchWhenIdle([loadNewDocumentContent])');
     // Before the component: as the page's code first runs, not after hydration.
-    const ahead = page.indexOf('fetchNewDocumentContentAhead();');
+    const ahead = page.indexOf('fetchAheadForNamedDocument();');
     expect(ahead).toBeGreaterThan(-1);
     expect(ahead).toBeLessThan(page.indexOf('export default'));
   });

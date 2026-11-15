@@ -54,10 +54,8 @@ import { handStartQuery } from '@/components/start/start-query';
 import { closeStartForBlank } from '@/components/start/close-start-for-blank';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
 import { isBlankTemplate } from '@livedoc/templates';
-import {
-  fetchNewDocumentContentAhead,
-  loadNewDocumentContent,
-} from '@/lib/new-document/new-document-content-loader';
+import { loadNewDocumentContent } from '@/lib/new-document/new-document-content-loader';
+import { fetchAheadForNamedDocument } from './named-document-ahead';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { loadEditorPage } from '@/lib/editor-page-loader';
@@ -82,14 +80,9 @@ const presetQueryFromUrl = () => wizardPresetQuery(window.location.search);
 const noPreset = () => null;
 const noBypass = () => null;
 
-// What makes the document (the template builders, about 280 KiB gzipped) stays out of this page's first load, so the wizard
-// shows sooner (docs/specs/016-platform/web-performance.md "What makes a document loads when one is made"). A link
-// that names a document to make (?template=, ?blank=1) needs it at once: fetched as this code first runs, beside the
-// editor's code, rather than after hydration.
-if (typeof window !== 'undefined' && wizardBypassKind(window.location.search)) {
-  fetchNewDocumentContentAhead();
-  loadEditorPage().catch(() => {});
-}
+// What makes the document (the template builders, about 280 KiB gzipped) stays out of this page's first load, so the
+// wizard shows sooner; a link that names a document to make fetches it, and the editor's code, as this code first runs.
+fetchAheadForNamedDocument();
 
 // Dedicated welcome / create-new flow, see docs/specs/007-editor/new-document-route.md.
 // Owns identity bootstrap, the mode choice (a one-step wizard),
