@@ -1221,6 +1221,10 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone filtered an Explorer list by when documents were last edited.',
   'Explorer|Selected|People':
     'Someone filtered an Explorer list by who owns the documents (Me or Others).',
+  'Explorer|Opened|FindShortcut':
+    "Someone pressed Ctrl F (Cmd F) on an Explorer page, which put the caret in the Explorer's search.",
+  'Explorer|Opened|PanelFind':
+    "Someone pressed Ctrl F (Cmd F) in the editor's Explorer panel, which opened a find field over the open folder.",
   'Explorer|Created|Tag':
     'Someone made a tag, a coloured label for grouping their documents, from the tag picker or the Tags page.',
   'Explorer|Added|Tag': 'Someone put one of their tags on a document.',
@@ -2751,6 +2755,7 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
   'Folder|Cleared':
     'Someone cleared a default folder, so new documents of that kind land in My Documents again.',
   'Trash|Opened': 'Someone opened the Trash, where deleted documents wait for 30 days.',
+  'Explorer|Opened': "Someone opened one of the Explorer's own tools, such as its find.",
   'Explorer|Created': 'Someone made something in the Explorer (a tag).',
   'Explorer|Added': 'Someone put one of their tags on a document.',
   'Explorer|Removed': 'Someone took one of their tags off a document.',
