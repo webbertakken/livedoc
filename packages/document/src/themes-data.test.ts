@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio, MIN_TEXT_CONTRAST } from './colors';
+import { contrastRatio, MIN_TEXT_CONTRAST } from './colour-math';
 import { THEMES } from './themes-data';
 
 // docs/specs/011-theme/multicolour-themes.md: every palette entry and rootColor of a

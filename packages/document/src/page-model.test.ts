@@ -22,7 +22,7 @@ import {
   withPageContentReplaced,
 } from './page-content';
 import { withPageInkFor } from './page-ink';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import type { Element } from './index';
 
 // docs/specs/007-editor/pages-mode.md: a page's size, background and name, and the edits

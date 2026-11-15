@@ -2,14 +2,8 @@
 // (docs/specs/007-editor/pages-mode.md): duplicating a page with everything on it, and
 // replacing a page's content with a layout. Plus the page's own surface, so elements with no colour
 // of their own are inked for a dark page (re-inking colours of their own is page-ink.ts). Pure: tab in, tab out, one tab edit each.
-import {
-  canvasSurface,
-  contrastRatio,
-  isLightColor,
-  shade,
-  tint,
-  type CanvasSurface,
-} from './colors';
+import { contrastRatio, isLightColor, shade, tint } from './colour-math';
+import { canvasSurface, type CanvasSurface } from './colors';
 import { duplicateElements } from './duplicate';
 import { endpointPosition, type ElementIndex } from './geometry';
 import {

@@ -1,7 +1,7 @@
 // A form's look (docs/specs/030-forms/forms.md "Look"): its tab's theme, finish, font and canvas style, as the builder
 // and the form link's page both draw it. Its colour is always the theme's own; each half (light, dark) is worked out so the page
 // can follow the respondent's system.
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { resolveFinish, type Finish } from './finish';
 import { resolveFontStack } from './fonts';
 import { themeAccent } from './page-default-background';

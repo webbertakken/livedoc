@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio, defaultStrokeColor, defaultTextColor, hexToRgb } from './colors';
+import { contrastRatio, hexToRgb } from './colour-math';
+import { defaultStrokeColor, defaultTextColor } from './colors';
 import { createArrow, createShape, createSticky, createTable, createText } from './index';
 import type { Element, ShapeElement, TextElement } from './index';
 import { pagesOf, layOutPages, type Page, type PageFill } from './page';

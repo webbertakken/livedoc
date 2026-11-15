@@ -3,7 +3,8 @@
 // window with their formats, from a render model the caller worked out with the sheets engine. The document
 // package never imports the engine: the model's shape is restated here, structurally.
 import type { BoxedElement } from './index';
-import { bestInk, type CanvasSurface } from './colors';
+import { bestInk } from './colour-math';
+import { type CanvasSurface } from './colors';
 import { resolveFontStack } from './fonts';
 import { planOwnColoursOf, planPalette } from './plan-palette';
 import { r2, xmlEscape } from './svg-render-primitives';

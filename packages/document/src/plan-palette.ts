@@ -4,7 +4,8 @@
 // the colour pickers set them, a theme switch rewrites them) its fill is the board, its stroke the
 // focus and (mixed into the fill) the border, its text the ink, and the columns, cards and muted ink are mixed from those. Ink
 // that would not read on the fill is swapped for a readable one.
-import { contrastRatio, hexToRgb, isLightColor, type CanvasSurface } from './colors';
+import { contrastRatio, hexToRgb, isLightColor } from './colour-math';
+import { type CanvasSurface } from './colors';
 import { mixHex } from './svg-render-face-kit';
 import { planPresetColours } from './plan-presets';
 

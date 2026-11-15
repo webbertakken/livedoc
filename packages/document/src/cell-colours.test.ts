@@ -1,7 +1,7 @@
 // docs/specs/029-sheets/sheet.md "Readable cells": stored colours drawn for the Sheet's surface, the ink always AA.
 import { describe, expect, it } from 'vitest';
 import { cellColours, cellFill, readableInk } from './cell-colours';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 
 const LIGHT = { fill: '#f8fafc', ink: '#0f172a', dark: false };
 const DARK = { fill: '#111827', ink: '#e2e8f0', dark: true };

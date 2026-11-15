@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { canvasSurface, contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
+import { canvasSurface } from './colors';
 import {
   THEME_LINE_CONTRAST,
   THEME_TEXT_CONTRAST,

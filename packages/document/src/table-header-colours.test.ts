@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio, MIN_TEXT_CONTRAST, type CanvasSurface } from './colors';
+import { contrastRatio, MIN_TEXT_CONTRAST } from './colour-math';
+import { type CanvasSurface } from './colors';
 import { createTable } from './factories';
 import { svgTableShape } from './svg-render-table';
 import { TABLE_HEADER_BASE, tableHeaderColours } from './table-header-colours';

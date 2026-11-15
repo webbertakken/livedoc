@@ -2,7 +2,8 @@
 // written as one half (its native half, light or dark by its canvas); the other is derived from it in OKLCH, keeping
 // each colour's hue and moving its lightness to the role's place in that appearance. Both halves are then tuned to the
 // contrast floor (text on its fill 4.5:1, outlines and arrows on the canvas 3:1). Pure and memoised per theme object.
-import { canvasSurface, contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
+import { canvasSurface } from './colors';
 import { hexOklch, oklchHex } from './pen-colours';
 import { DEFAULT_SCHEME_ID, defaultScheme, type Appearance, type ThemeDefinition } from './themes';
 import type { ShapeKind } from './index';

@@ -11,7 +11,7 @@ import { themeHalf } from './theme-halves';
 import { THEME_TEXT_CONTRAST } from './readable-colour';
 import type { TableElement } from './element-types';
 import type { Element } from './index';
-import { contrastRatio, isLightColor } from './colors';
+import { contrastRatio, isLightColor } from './colour-math';
 
 const DEFAULT_THEME = THEMES[0]!;
 

@@ -7,7 +7,7 @@
 import { colorWash } from './color-wash';
 import { labelOn } from './readable-colour';
 import { labelFontPx } from './label-font';
-import { isLightColor } from './colors';
+import { isLightColor } from './colour-math';
 import type { Element, ShapeElement, TextSize } from './index';
 
 type ChipShape = 'badge' | 'step';

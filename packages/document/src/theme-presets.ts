@@ -1,5 +1,6 @@
 import type { BorderStroke, BorderStyle } from './border-style';
-import { canvasSurface, DARK_INK, isLightColor, shade, tint } from './colors';
+import { isLightColor, shade, tint } from './colour-math';
+import { canvasSurface, DARK_INK } from './colors';
 import type { Element } from './index';
 import { labelOn as readableLabelOn, reachContrast, THEME_TEXT_CONTRAST } from './readable-colour';
 import type { ThemeDefinition } from './themes';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { planPalette } from './plan-palette';
 import {
   PLAN_PRESET_HUES,

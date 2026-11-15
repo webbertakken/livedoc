@@ -4,7 +4,7 @@
 
 import { chartMarkInk } from './chart-ink';
 import { chartRamp } from './chart-palettes';
-import { isLightColor } from './colors';
+import { isLightColor } from './colour-math';
 import type { ShapeElement, TextSize, TextSizePreset } from './index';
 import { readTextSize } from './label-font';
 import {

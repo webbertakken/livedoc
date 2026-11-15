@@ -15,7 +15,7 @@ import {
   articleTopMarginPx,
   resolveArticleStyle,
 } from './article-style';
-import { isLightColor } from './colors';
+import { isLightColor } from './colour-math';
 import { resolveFontStack } from './fonts';
 import { legibleOn, pageFillTone } from './page-content';
 import type { LaidOutPage } from './page';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DARK_CANVAS_BACKGROUND_COLOR, DEFAULT_BACKGROUND_COLOR } from './canvas-colors';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import {
   WHITEBOARD_BACKGROUNDS,
   WHITEBOARD_BOARD,

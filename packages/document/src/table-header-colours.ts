@@ -2,13 +2,8 @@
 // for the canvas's TableView and the headless table emitter, so a header reads the same on screen and in
 // every export. The band follows the surface the table is drawn on, the same surface its cell text follows,
 // so a dark page gets a dark band under light ink rather than a light band under white ink.
-import {
-  colourIsOpaque,
-  defaultStrokeColor,
-  defaultTextColor,
-  normaliseHex,
-  type CanvasSurface,
-} from './colors';
+import { colourIsOpaque, normaliseHex } from './colour-math';
+import { defaultStrokeColor, defaultTextColor, type CanvasSurface } from './colors';
 import { readableInk } from './cell-colours';
 import { mixHex } from './svg-render-face-kit';
 import type { TableElement } from './index';
