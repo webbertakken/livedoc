@@ -193,6 +193,7 @@ To build:
 - R5 an offline document's tabs stored one record each, so an autosave writes one tab, not the document (#182):
   built, see "What shipped".
 - S3 the telemetry dashboard prefetches no other view when the browser asks to save data (#187).
+  Built: with Save-Data on, 4 view chunks (19.7 KiB gzipped) wait until their view is opened.
 - O4 the Explorer's panel tree becomes infinite scroll, with a search that finds every row, shown or not (#183).
 
 Measured, then decided:

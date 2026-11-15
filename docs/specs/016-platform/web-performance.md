@@ -110,7 +110,8 @@ A dialog, panel or view that renders only behind an open flag or a tab is loaded
 `next/dynamic` (`ssr: false`), the way the editor's Dashboard page and Sheets host already are.
 The Explorer's Settings and move picker, and every telemetry dashboard view but the first, load
 this way. Where switching to one must stay instant, its code is fetched once the page is idle
-(the telemetry dashboard).
+(the telemetry dashboard), unless the browser asks to save data (`navigator.connection.saveData`, the Save-Data
+setting): then nothing is fetched ahead, and each view loads when it is opened, its skeleton holding its place.
 
 The Explorer's search loads with what it searches: the panel, the help registry and the settings
 catalogue are one piece of code (`app/explorer/ExplorerSearch.tsx`), fetched ahead once the

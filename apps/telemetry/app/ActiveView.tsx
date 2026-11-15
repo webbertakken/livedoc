@@ -26,8 +26,14 @@ const PagesHelpView = dynamic(VIEW_LOADERS.pages, { ssr: false, loading: ViewSke
 const HealthView = dynamic(VIEW_LOADERS.health, { ssr: false, loading: ViewSkeleton });
 const MetricSearch = dynamic(VIEW_LOADERS.search, { ssr: false, loading: ViewSkeleton });
 
-// Fetch every other view's code once the page is idle (a timeout where requestIdleCallback is missing).
+// The browser's Save-Data setting (Network Information API; absent in some browsers, which then do not ask).
+const savesData = (): boolean =>
+  (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+
+// Fetch every other view's code once the page is idle (a timeout where requestIdleCallback is missing). A browser
+// that asks to save data fetches nothing ahead: each view loads when opened, behind its skeleton.
 export function prefetchViews(): () => void {
+  if (savesData()) return () => {};
   const run = () => {
     for (const load of Object.values(VIEW_LOADERS)) void load().catch(() => {});
   };
