@@ -1,6 +1,7 @@
 // A page's content carried into a new layout (docs/specs/007-editor/pages-mode.md "Content
 // carries over").
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import {
   createImage,
   createPinnedArrow,
@@ -172,14 +173,11 @@ describe('carryPageContent', () => {
     expect(labels(slide)).toContain('Q3 Results');
   });
 
+  // In CPU time, not on the wall clock: a carry waiting for a core beside other suites read 28 ms.
   it('stays within budget: placeholders warm in under 400 ms, a carry in under 20 ms', () => {
-    const t0 = performance.now();
-    warmLayoutPlaceholders();
-    expect(performance.now() - t0).toBeLessThan(400);
+    expect(cpuMsOf(() => warmLayoutPlaceholders())).toBeLessThan(cpuBudgetMs(400));
     const big = Array.from({ length: 300 }, (_, i) => text(i * 3, `Line ${i} words`));
-    const t1 = performance.now();
-    carryPageContent(big, build('agenda'));
-    expect(performance.now() - t1).toBeLessThan(20);
+    expect(cpuMsOf(() => carryPageContent(big, build('agenda')))).toBeLessThan(cpuBudgetMs(20));
   });
 
   it('ignores arrows on the old page', () => {
