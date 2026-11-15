@@ -71,6 +71,15 @@ async function zoomInOnStart(page: Page): Promise<void> {
   await expect(farEnd).not.toBeInViewport();
 }
 
+// What the page said went wrong, when a test fails: the canvas's error boundary keeps it off the page.
+test.beforeEach(({ pageErrors }) => {
+  expect(pageErrors).toEqual([]);
+});
+test.afterEach(({ pageErrors }, info) => {
+  if (info.status !== info.expectedStatus && pageErrors.length > 0)
+    console.log(`PAGE ERRORS in "${info.title}":\n${pageErrors.join('\n')}`);
+});
+
 const READY = '5 events · 3 gaps · 1 open hotspot · 3 events outside a context';
 
 test('the Review pill stands in the corner and opens the panel as a card under it', async ({

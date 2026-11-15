@@ -96,14 +96,14 @@ const right = async (locator: Locator) => {
   return box.x + box.width;
 };
 
-test('the Ask pill stands alone in the corner of a board with nothing suggested; its popover hangs under it and hands the focus back', async ({
+test('the Ask pill leads the corner of a board with nothing suggested; its popover hangs under it and hands the focus back', async ({
   page,
 }) => {
   await startAskBoard(page);
   await expect(pill(page)).toBeVisible();
   await expect(pill(page)).toHaveAttribute('aria-expanded', 'false');
-  // Nothing is suggested: no count, no list.
-  await expect(corner(page).getByRole('button')).toHaveCount(1);
+  // Nothing is suggested: no count, no list; the Review pill stands after it.
+  await expect(corner(page).getByRole('button')).toHaveText(['Ask', 'Review']);
 
   await pill(page).click();
   await expect(popover(page)).toBeVisible();
