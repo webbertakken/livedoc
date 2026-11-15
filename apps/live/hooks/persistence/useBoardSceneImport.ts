@@ -4,19 +4,13 @@
 // named and dated as its board (lib/board-scene-import, shared with the Explorer page).
 
 import type { Tab } from '@livedoc/document';
-import { landBoardScene } from '@/lib/board-scene/land';
 import type { BoardScene } from '@/lib/board-scene/scene';
 import type { ImportImageProgress } from '@/lib/import-images';
 import type { ImportOutcome } from '@/lib/import-tab';
 import { isOfflineId } from '@/lib/offline/offline-store';
-import {
-  finishLanding,
-  importBoardsAsDocuments,
-  type BoardImportProgress,
-  type LandingSeams,
-  type NewBoardDocument,
-} from '@/lib/board-scene-import';
+import type { BoardImportProgress, LandingSeams, NewBoardDocument } from '@/lib/board-scene-import';
 import { debugLog } from '@/lib/debug-log';
+import { loadBoardSceneImport, loadBoardSceneLanding } from '@/lib/editor-deferred-code';
 
 export type { BoardImportProgress, NewBoardDocument } from '@/lib/board-scene-import';
 
@@ -49,6 +43,11 @@ export function useBoardSceneImport(deps: BoardSceneImportDeps) {
       return { status: 'error', error: 'This tab is locked. Unlock it before importing.' };
     }
     const whiteboard = deps.drawMode;
+    // Landing is code an import loads (fetched ahead once the board is idle).
+    const [{ landBoardScene }, { finishLanding }] = await Promise.all([
+      loadBoardSceneLanding(),
+      loadBoardSceneImport(),
+    ]);
     const landed = landBoardScene(scene, {
       profile: whiteboard ? 'whiteboard' : 'diagram',
       placement: { kind: 'origin' },
@@ -85,7 +84,7 @@ export function useBoardSceneImport(deps: BoardSceneImportDeps) {
     scenes: BoardScene[],
     onProgress?: (p: BoardImportProgress) => void,
   ): Promise<ImportOutcome> =>
-    importBoardsAsDocuments(scenes, {
+    (await loadBoardSceneImport()).importBoardsAsDocuments(scenes, {
       ownerId: deps.ownerId,
       offline: deps.documentId !== null && (await isOfflineId(deps.documentId)),
       onProgress,

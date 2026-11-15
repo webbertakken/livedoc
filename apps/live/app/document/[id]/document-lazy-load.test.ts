@@ -33,6 +33,11 @@ describe('the document page’s first load', () => {
     ['components/canvas/SessionSettingsMenu.tsx', '@/components/canvas/SessionElementSettings'],
     ['hooks/canvas/usePhotoDraft.ts', '@/lib/photo-detect'],
     ['hooks/canvas/usePhotoReread.ts', '@/lib/photo-detect'],
+    ['components/canvas/view-readers.tsx', '@/components/canvas/Minimap'],
+    ['components/canvas/ElementFaceRouter.tsx', '@/components/canvas/SequenceFace'],
+    ['hooks/canvas/useBoardSceneInsert.ts', '@/lib/board-scene/land'],
+    ['hooks/persistence/useBoardSceneImport.ts', '@/lib/board-scene/land'],
+    ['hooks/persistence/useBoardSceneImport.ts', '@/lib/board-scene-import'],
   ])('%s loads %s on demand', (file, module) => {
     expect(importsOf(file)).not.toContain(module);
   });
@@ -45,5 +50,11 @@ describe('the document page’s first load', () => {
   it('takes the template overrides from the builders loaded at the press', () => {
     const src = read('app/document/[id]/useTemplateFlow.ts');
     expect(src).not.toMatch(/^import\s+\{[^}]*\btemplateCanvasOverrides\b/m);
+  });
+
+  it('takes the template catalogue from the builders loaded at the press', () => {
+    const imports = importsOf('app/document/[id]/useTemplateFlow.ts');
+    expect(imports).not.toContain('@livedoc/templates');
+    expect(imports).not.toContain('@/lib/template-tab-name');
   });
 });

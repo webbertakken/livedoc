@@ -14,10 +14,12 @@ const { ViewMinimap } = await import('./view-readers');
 afterEach(cleanup);
 
 describe('ViewMinimap', () => {
-  it('shows the Map, and hides it while the canvas is covered', () => {
+  // The Map's code loads on demand (docs/specs/016-platform/web-performance.md "Pictures of the board"), so it draws
+  // once its import resolves.
+  it('shows the Map, and hides it while the canvas is covered', async () => {
     const props = {} as Parameters<typeof ViewMinimap>[0];
     render(<ViewMinimap {...props} />);
-    expect(screen.getByText('Map')).toBeTruthy();
+    expect(await screen.findByText('Map')).toBeTruthy();
     cleanup();
     covered = true;
     render(<ViewMinimap {...props} />);

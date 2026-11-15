@@ -21,6 +21,10 @@ export const loadArticleFlows = () =>
 export const loadWhiteboardDock = () =>
   import('@/components/canvas/whiteboard/WhiteboardDock').then((m) => m.WhiteboardDock);
 export const loadTableView = () => import('@/components/canvas/TableView').then((m) => m.TableView);
+// The Map (docs/specs/016-platform/web-performance.md "Pictures of the board"): its picture is the SVG renderer's.
+export const loadMinimap = () => import('@/components/canvas/Minimap').then((m) => m.Minimap);
+export const loadSequenceFace = () =>
+  import('@/components/canvas/SequenceFace').then((m) => m.SequenceFace);
 export const loadCollabFaceRouter = () =>
   import('@/components/canvas/collab/CollabFaceRouter').then((m) => m.CollabFaceRouter);
 
@@ -44,12 +48,19 @@ export const loadToolPanels = () => import('@/components/canvas/tool-panels');
 export const loadSessionElementSettings = () =>
   import('@/components/canvas/SessionElementSettings');
 
+// A board scene's landing (docs/specs/020-import-export/board-scene.md "In the editor"): what a paste, a drop or an
+// import of another tool's board runs.
+export const loadBoardSceneLanding = () => import('@/lib/board-scene/land');
+export const loadBoardSceneImport = () => import('@/lib/board-scene-import');
+
 export const DOCUMENT_CONTENT_CODE = [
   loadCanvasPages,
   loadArticleFlows,
   loadWhiteboardDock,
   loadTableView,
   loadCollabFaceRouter,
+  loadSequenceFace,
+  loadMinimap,
 ] as const;
 
 export const EDITOR_SURFACE_CODE = [
@@ -60,4 +71,6 @@ export const EDITOR_SURFACE_CODE = [
   loadPresentationOverlay,
   loadToolPanels,
   loadSessionElementSettings,
+  loadBoardSceneLanding,
+  loadBoardSceneImport,
 ] as const;

@@ -15,7 +15,7 @@
 // Everything here is pure — `(Deck, Tab[]) -> ...` with no React — so the
 // editor, the api and the MCP worker can all reach for the same answers.
 
-import { contentBounds } from './svg-render';
+import { contentBounds } from './content-bounds';
 import { pagesOf, layOutPages } from './page';
 import { elementIdsOnPage } from './page-content';
 import type { Element, ElementId, Tab, TabId } from './index';
