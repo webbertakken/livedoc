@@ -726,6 +726,16 @@ export const BOARD_REARRANGED = chart(
   "An agent's lane plan for an event-storming board applied or dismissed, or the board arranged along its timeline and kept.",
   { types: ['LanePlanApplied', 'LanePlanDismissed', 'BoardArranged'] },
 );
+// Asking for suggestions on an event-storming board (docs/specs/021-event-storming/asks.md "Telemetry").
+export const ASKS = chart(
+  'Canvas',
+  'Used',
+  'Asks',
+  "Someone asked for suggestions on an event-storming board: a prompt copied for their agent, the built-in model asked, the board's own fold offered, the About kept or the declined list forgotten.",
+  {
+    types: ['AskPromptCopied', 'AskedBuiltIn', 'LanesFolded', 'AboutEdited', 'DeclinedForgotten'],
+  },
+);
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -752,6 +762,7 @@ export const ELEMENT_EDITING: MetricStack = {
     CONTEXTS_HANDLED,
     SUGGESTED_CHANGES_HANDLED,
     BOARD_REARRANGED,
+    ASKS,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],
