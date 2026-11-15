@@ -74,6 +74,24 @@ async function seedDeck(page: Page, baseURL: string, owner: string, size: Size):
   return id;
 }
 
+// How long each step of opening a deck may take before the probe records what the page shows and fails: a step
+// that never comes otherwise ran out the whole test's timeout with nothing to show for it.
+const OPEN_STEP_MS = 60_000;
+
+// What the page showed when a deck would not open: a screenshot, its accessibility tree and what it said, kept with
+// the probe's report.
+async function recordOpenFailure(page: Page, label: string, said: string[]) {
+  const base = `${OUT}/slide-shots/open-failure-${label}-${Date.now()}`;
+  mkdirSync(`${OUT}/slide-shots`, { recursive: true });
+  const tree = await page
+    .locator('body')
+    .ariaSnapshot({ timeout: 10_000 })
+    .catch((e: unknown) => `no accessibility tree: ${String(e)}`);
+  await page.screenshot({ path: `${base}.png`, timeout: 10_000 }).catch(() => {});
+  writeFileSync(`${base}.txt`, [`url: ${page.url()}`, ...said, '', tree].join('\n'));
+  console.log(`[slide-probe] the deck did not open; see ${base}.txt\n${said.join('\n')}`);
+}
+
 async function openDeck(
   browser: Browser,
   // The stack the test runs against: a fresh context has no base URL of its own.
@@ -115,14 +133,26 @@ async function openDeck(
     { o: owner, sig: guestSigFor(owner), transition },
   );
   const page = await ctx.newPage();
+  // What the page said on its way, for a failure to open the deck: its console errors and whether it crashed.
+  const said: string[] = [];
+  page.on('console', (m) => {
+    if (m.type() === 'error') said.push(`console: ${m.text().slice(0, 300)}`);
+  });
+  page.on('pageerror', (e) => said.push(`pageerror: ${e.message.slice(0, 300)}`));
+  page.on('crash', () => said.push('crash: the page crashed'));
   // Chromium only: the trace and the CPU throttle (throttle 0 is another engine, untraced).
   const cdp = throttle > 0 ? await ctx.newCDPSession(page) : null;
-  await page.goto(`/document/${id}`);
-  await page.locator(CANVAS).waitFor({ timeout: 60_000 });
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Selection mode' }).click();
-  await page.getByText('Slide Deck', { exact: true }).first().click();
-  await page.getByRole('button', { name: /^Present \d+$/ }).click();
+  try {
+    await page.goto(`/document/${id}`);
+    await page.locator(CANVAS).waitFor({ timeout: OPEN_STEP_MS });
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Selection mode' }).click({ timeout: OPEN_STEP_MS });
+    await page.getByText('Slide Deck', { exact: true }).first().click({ timeout: OPEN_STEP_MS });
+    await page.getByRole('button', { name: /^Present \d+$/ }).click({ timeout: OPEN_STEP_MS });
+  } catch (error) {
+    await recordOpenFailure(page, `${transition}-${reducedMotion}`, said);
+    throw error;
+  }
   await page.waitForTimeout(1500);
   await cdp?.send('Emulation.setCPUThrottlingRate', { rate: throttle });
   return { ctx, page, cdp: cdp! };
