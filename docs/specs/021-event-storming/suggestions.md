@@ -121,7 +121,8 @@ person's own view (not shared, not saved with the board; off when the board open
   undoable step. Each one dismissed is [remembered as declined](asks.md#what-was-declined) in the same step.
 - Every apply and dismiss also removes the board's orphans, in the same step.
 - Nothing is offered where the change would be refused: a locked tab, a hidden or locked active layer, or a drag in
-  hand hides the tabs, placeholders and panel (default).
+  hand hides the tabs, placeholders and the whole corner, Ask pill and all (default).
+  A board being [arranged](arrange.md#how-a-person-arranges) hides them too: it is the preview's while that lasts.
 - An applied note is selected, not opened for typing: its words were already chosen.
 - **Telemetry**: `Canvas / Used / SuggestionApplied`, `SuggestionDismissed`, `SuggestionsAppliedAll`,
   `SuggestionsDismissedAll`, `SuggestionsShown` (the toggle on), and `Element / Added / Sticky` once per apply.

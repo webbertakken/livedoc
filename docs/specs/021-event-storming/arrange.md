@@ -65,8 +65,8 @@ The same check a lane plan passes ([Lane plans](lane-plans.md#what-must-stay-tru
   **Keep** and **Put Back**.
 - **Keep** moves the notes as one undoable step. **Put Back**, or Escape, leaves the board as it was.
 - **The preview does not hold the board**: panning, zooming and selecting keep working under it, the suggestions
-  on the board stand down while it lasts, and a drag in hand puts the board back, since the board is then the
-  drag's (default).
+  on the board and the [suggestions corner](suggestions.md#how-a-person-sees-them), Ask pill and all, stand down
+  while it lasts, and a drag in hand puts the board back, since the board is then the drag's (default).
 - **A board that is not arranged says why** in the bar's place: the sentence, then each note it names as a line
   that selects that note and brings it into view, and **Close**; Escape closes it too (default).
 - **Nothing to arrange is said in one line** that goes by itself, with no bar (default).

@@ -8,7 +8,7 @@ import {
   type EsSuggestionSide,
   type EventStormingNoteKind,
 } from '@livedoc/document';
-import { pageOwnerHeaders, startTemplateDocument } from './fixtures';
+import { expect, pageOwnerHeaders, startTemplateDocument } from './fixtures';
 
 // An order flow with five open suggestions (docs/specs/021-event-storming/suggestions.md): a gap with a chain on
 // it, one that fits the board's free space, and two on the lane below, so every hint, count and fit case shows.
@@ -138,6 +138,15 @@ export function suggestionBoardElements(): Note[] {
       'Only the happy path is on the wall; a declined payment needs events of its own.',
     ),
   ];
+}
+
+/** Nothing is left to decide (docs/specs/021-event-storming/suggestions.md "The suggestions corner"): the corner
+ *  stays for an Editor and holds the Ask pill alone, with no count to open and no row listed. */
+export async function expectNothingSuggested(page: Page): Promise<void> {
+  const corner = page.getByTestId('suggestions-panel');
+  await expect(corner.getByRole('button')).toHaveCount(1);
+  await expect(corner.getByRole('button')).toHaveAccessibleName('Ask');
+  await expect(corner.getByRole('listitem')).toHaveCount(0);
 }
 
 // A new Event Storming board holding the order flow and its suggestions, or the elements given.
