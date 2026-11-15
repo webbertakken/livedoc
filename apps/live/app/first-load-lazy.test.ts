@@ -64,6 +64,16 @@ describe('the Explorer’s first load', () => {
     expect(shell).toContain("import('./ExplorerSearch')");
   });
 
+  // Search is fetched ahead beside the editor, and each carries its own copy of what both import: what search names
+  // must not bring the editor's code (the shape palette, the sheet engine) with it.
+  it('names the settings it searches without the shape palette or the sheet engine', () => {
+    expect(staticImports(read('components/dialogs/settings/settings-catalogue.ts'))).not.toContain(
+      '@/lib/whiteboard-dock-prefs',
+    );
+    expect(staticImports(read('lib/whiteboard-dock-position.ts'))).toEqual([]);
+    expect(staticImports(read('../../packages/sheets/src/template-start-ids.ts'))).toEqual([]);
+  });
+
   // The template builders are every template's elements: about 400 KiB the Explorer shipped on every page.
   it('loads what makes a document when one is made', () => {
     for (const file of [

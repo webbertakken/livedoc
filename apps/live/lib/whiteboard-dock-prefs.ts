@@ -65,21 +65,6 @@ export function withWhiteboardDockPrefs(
   return next;
 }
 
-// Where the dock sits: the bottom unless the user chose the top.
-export const WHITEBOARD_DOCK_POSITIONS = ['top', 'bottom'] as const;
-export type WhiteboardDockPosition = (typeof WHITEBOARD_DOCK_POSITIONS)[number];
-
-export function readWhiteboardDockPosition(prefs: UserPreferences): WhiteboardDockPosition {
-  return prefs.whiteboardDockPosition === 'top' ? 'top' : 'bottom';
-}
-
-export function withWhiteboardDockPosition(
-  prefs: UserPreferences,
-  position: WhiteboardDockPosition,
-): UserPreferences {
-  return { ...prefs, whiteboardDockPosition: position };
-}
-
 // The dock's wrapper, as wide as its groups: what the top corners are measured against.
 export const WHITEBOARD_DOCK_SELECTOR = '[data-whiteboard-dock]';
 

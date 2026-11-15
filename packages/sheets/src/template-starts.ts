@@ -14,56 +14,11 @@ import { sheetTemplate } from './sheet-templates/template-design';
 import type { SheetLook } from './sheet-starters';
 import type { Rand } from './ids';
 import type { SheetJson } from './sheet-json';
-
-export const TEMPLATE_STARTS = [
-  'budget-planner',
-  'timesheet',
-  'contact-list',
-  'task-tracker',
-  'invoice',
-  'expense-report',
-  'loan-calculator',
-  'sales-pipeline',
-  'inventory',
-  'guest-list',
-  'grade-book',
-  'habit-tracker',
-  // The companion Sheets of three Diagram templates (docs/specs/026-plan/plan-templates.md "How a template with
-  // tabs is made"): each named for the template it follows.
-  'threat-model',
-  'metric-tree',
-  'value-stream-map',
-  // Blank Spreadsheet (docs/specs/026-plan/plan-templates.md "Spreadsheet templates"): an empty sheet, no template.
-  'blank-spreadsheet',
-] as const;
-export type TemplateStartId = (typeof TEMPLATE_STARTS)[number];
-
-// The start that makes an empty sheet rather than a sheet template's.
-export const BLANK_SHEET_START = 'blank-spreadsheet' satisfies TemplateStartId;
-type DesignedStartId = Exclude<TemplateStartId, typeof BLANK_SHEET_START>;
-
-export function isTemplateStart(id: unknown): id is TemplateStartId {
-  return typeof id === 'string' && (TEMPLATE_STARTS as readonly string[]).includes(id);
-}
-
-// The sheet template each Plan template's Sheet is made from (every start but the blank one).
-export const TEMPLATE_START_SHEETS: Record<DesignedStartId, SheetTemplateId> = {
-  'budget-planner': 'budget',
-  timesheet: 'timesheet',
-  'contact-list': 'contacts',
-  'task-tracker': 'tracker',
-  invoice: 'invoice',
-  'expense-report': 'expenses',
-  'loan-calculator': 'loan',
-  'sales-pipeline': 'pipeline',
-  inventory: 'inventory',
-  'guest-list': 'guests',
-  'grade-book': 'grades',
-  'habit-tracker': 'habits',
-  'threat-model': 'threats',
-  'metric-tree': 'drivers',
-  'value-stream-map': 'value-stream',
-};
+import {
+  BLANK_SHEET_START,
+  TEMPLATE_START_SHEETS,
+  type TemplateStartId,
+} from './template-start-ids';
 
 // A blank start's sheet's title.
 const BLANK_SHEET_TITLE = 'Sheet 1';

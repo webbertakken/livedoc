@@ -10,13 +10,13 @@ import { track } from '@/lib/telemetry';
 import { readUserPreferences, type UserPreferences } from '@/lib/user-preferences';
 import {
   readDrawPattern,
-  readWhiteboardDockPosition,
   withDrawPattern,
   readWhiteboardDockPrefs,
   withWhiteboardDockPrefs,
   type DrawPattern,
   type WhiteboardDockPrefs,
 } from '@/lib/whiteboard-dock-prefs';
+import { readWhiteboardDockPosition } from '@/lib/whiteboard-dock-position';
 import type { WhiteboardShapeKey } from '@/lib/whiteboard-shape-catalogue';
 import { recordShapePick, shapeSlots, type SlotOutcome } from '@/lib/whiteboard-shape-slots';
 
