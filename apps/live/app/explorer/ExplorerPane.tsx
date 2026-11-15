@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useExplorer } from './ExplorerContext';
 import { useDocumentEntryFor, useExplorerDocumentsById } from './useDocumentEntryFor';
 import type { HelpArticleKey } from '@/lib/help-articles';
@@ -24,6 +24,19 @@ import { explorerPathFor } from './routes';
 import { rowLocation } from './row-location';
 import { paneHeaderActions } from './pane-header-actions';
 import { useTagsPage } from './tags/useTagsPage';
+import {
+  fetchPaneCode,
+  loadGalleryPane,
+  loadHomePane,
+  loadInboxPane,
+  loadShapeLibrariesPane,
+  loadTagsPane,
+  loadTeamInvitesPane,
+  loadTeamPane,
+  loadThemesPane,
+  loadTimelinePane,
+  loadTrashSection,
+} from './explorer-pane-code';
 
 // The three layouts of a browse section, by the toggle.
 const VIEW_COMPONENTS = { list: ListView, card: CardView, details: DetailsView } as const;
@@ -62,53 +75,20 @@ const SECTION_HELP: Partial<Record<string, HelpArticleKey>> = {
   tags: 'tags',
 };
 
-// Lazy-load the heavier panes — each is only mounted on its own
-// route, so none of them sit in the shared explorer chunk.
-const GalleryPane = dynamic(
-  () => import('@/components/panels/GalleryPane').then((m) => m.GalleryPane),
-  { ssr: false },
-);
-const TrashSection = dynamic(() => import('./TrashSection').then((m) => m.TrashSection), {
-  ssr: false,
-});
-const ThemesPane = dynamic(
-  () => import('@/components/panels/ThemesPane').then((m) => m.ThemesPane),
-  { ssr: false },
-);
-const ShapeLibrariesPane = dynamic(
-  () => import('@/components/panels/ShapeLibrariesPane').then((m) => m.ShapeLibrariesPane),
-  { ssr: false },
-);
-const TeamPane = dynamic(() => import('@/components/panels/TeamPane').then((m) => m.TeamPane), {
-  ssr: false,
-});
-const TeamInvitesPane = dynamic(
-  () => import('@/components/panels/TeamInvitesPane').then((m) => m.TeamInvitesPane),
-  { ssr: false },
-);
-// The Timeline is the landing route, so it's the one lazy pane most
-// visitors DO load. Split anyway: the calendar grid + filter popover
-// are only reached by someone who switches modes, and holding them out
-// of the shared explorer chunk keeps the other sections' first paint
-// unaffected by a feature they don't use.
-const TimelinePane = dynamic(
-  () => import('@/components/panels/TimelinePane').then((m) => m.TimelinePane),
-  { ssr: false },
-);
-// Home is the landing route (docs/specs/013-workspace/explorer-home.md), lazy like every pane so
-// the shared explorer chunk stays the same size for the other sections.
-const HomePane = dynamic(
-  () => import('@/components/panels/home/HomePane').then((m) => m.HomePane),
-  { ssr: false },
-);
-// The Tags page (docs/specs/013-workspace/tags.md), lazy like every pane.
-const TagsPane = dynamic(() => import('./tags/TagsPane').then((m) => m.TagsPane), {
-  ssr: false,
-});
-const InboxPane = dynamic(
-  () => import('@/components/panels/inbox/InboxPane').then((m) => m.InboxPane),
-  { ssr: false },
-);
+// The heavier panes load on demand (explorer-pane-code.ts): each is only mounted on its own route, so none of them
+// sit in the shared explorer chunk. Home and the Timeline are landing routes, split all the same: their code would
+// otherwise ride with every other section's first paint.
+const lazyPane = { ssr: false } as const;
+const GalleryPane = dynamic(loadGalleryPane, lazyPane);
+const TrashSection = dynamic(loadTrashSection, lazyPane);
+const ThemesPane = dynamic(loadThemesPane, lazyPane);
+const ShapeLibrariesPane = dynamic(loadShapeLibrariesPane, lazyPane);
+const TeamPane = dynamic(loadTeamPane, lazyPane);
+const TeamInvitesPane = dynamic(loadTeamInvitesPane, lazyPane);
+const TimelinePane = dynamic(loadTimelinePane, lazyPane);
+const HomePane = dynamic(loadHomePane, lazyPane);
+const TagsPane = dynamic(loadTagsPane, lazyPane);
+const InboxPane = dynamic(loadInboxPane, lazyPane);
 
 // The right pane for whichever /explorer/<section> route is active:
 // PaneHeader (title, breadcrumb, contextual CTAs) + the section's
@@ -209,6 +189,10 @@ export function ExplorerPane() {
   // The toggle only appears on the browse sections (the ones the
   // List/Card swap below applies to).
   const isBrowse = BROWSE_KINDS.has(selected.kind);
+  // The section's pane is asked for as the section is chosen, alongside the reads that let it draw
+  // (explorer-pane-code.ts), rather than after them.
+  const sectionKind = selected.kind;
+  useEffect(() => fetchPaneCode(sectionKind), [sectionKind]);
   // The Timeline's data + control state lives here rather than inside
   // its pane, because its controls render in the header row below while
   // its feed renders in the body. Gated like the other section hooks so
