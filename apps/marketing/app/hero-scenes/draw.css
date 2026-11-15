@@ -2,13 +2,15 @@
 
 /* Sketch mode writes in a hand face (Caveat, the editor's "caveat" font). The hero carries a subset
    holding only the glyphs its Draw window writes (components/hero-draw-copy.ts), about 18 KB,
-   fetched only when that window's text is drawn; until then the fallback hand stands in. */
+   fetched only when that window's text is drawn; until then the fallback hand stands in. Imported
+   from here, so the build names it by its content and it is cached immutable
+   (docs/specs/016-platform/web-performance.md "Delivery"). */
 @font-face {
   font-family: 'Caveat Hero';
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url('/fonts/caveat-hero.woff2') format('woff2');
+  src: url('./caveat-hero.woff2') format('woff2');
 }
 
 /* Hand lettering is written on from left to right, as a pen moves along the line. */
