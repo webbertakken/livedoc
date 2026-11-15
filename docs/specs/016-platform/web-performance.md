@@ -59,6 +59,9 @@ Measured 2026-11-15 on `main` at e8e2d1430f, after the performance sweep (what i
 | Marketing: a `/about/features` page                   | 206 KiB   | 207 KiB   |
 | Marketing: `/about` (HTML, gzipped)                   | 94 KiB    | 93 KiB    |
 
+Then `/new` without the template builders up front (Webber's ruling on fork F1, measured 2026-11-15 the same
+way): 801 to 525 KiB.
+
 ## Rules
 
 ### Every page has a budget
@@ -146,8 +149,11 @@ the welcome showed half a second later than with no waiting at all (4 Mbit/s, 10
 What makes a document loads when one is made. The template builders (every template's elements)
 reach the Explorer only through `lib/new-document-content`, which the New Document menu imports at
 the moment it prepares a document, and which is fetched ahead of that with the editor's code: once
-the Explorer has settled, and when the button is pointed at or focused. `/new` is the page that makes a document, so
-it imports the builders as it loads.
+the Explorer has settled, and when the button is pointed at or focused. `/new` loads them the same way, through the
+same loader (`lib/new-document/new-document-content-loader.ts`): its wizard shows without them, they are fetched once
+it has shown and the page is idle, and a choice made before then waits for them. When the address names a
+document to make at once (`?template=<kind>`, `?blank=1`), `/new` starts fetching them as its code first runs,
+alongside the editor's code, so a template link waits for nothing extra.
 
 ### The document page loads what a board may not need on demand
 

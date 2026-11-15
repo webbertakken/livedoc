@@ -486,6 +486,11 @@ default document name) without walking the wizard:
   page, its restore cleanup and the guard agree on what counts. This is
   the URL the marketing site's template gallery links every card to
   ([Marketing site](../019-marketing/marketing-site.md)); it fires `UI / Used / TemplateLink`.
+- **What makes the document loads when it is needed**: the template builders stay out of `/new`'s first load, so
+  the wizard shows sooner. They are fetched once the wizard has shown and the page is idle, and at once, beside the
+  editor's code, when the address names a document to make (`?template=`, `?blank=1`), so neither a choice nor a
+  link waits on them ([Web performance](../016-platform/web-performance.md) "What makes a document loads when one
+  is made").
 - **`/new?mode=<mode>` and `/new?q=<words>`**: `mode` (any editor mode) preselects that mode's
   card, and its blank, so **Create** starts in it; `q` (trimmed, at most 60 characters)
   is handed to the new document's start as its search, so the templates it meant are the ones shown
