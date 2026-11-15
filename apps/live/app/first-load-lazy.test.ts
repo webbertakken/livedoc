@@ -79,14 +79,26 @@ describe('the Explorer’s first load', () => {
     for (const file of [
       'app/explorer/new-document/start-new-document.ts',
       'lib/new-document/write-new-document.ts',
+      'app/new/page.tsx',
     ]) {
       const imports = staticImports(read(file));
       expect(imports, file).not.toContain('@/lib/new-document-content');
       expect(imports, file).not.toContain('@/lib/template-builders');
     }
-    expect(read('app/explorer/new-document/start-new-document.ts')).toContain(
+    expect(read('lib/new-document/new-document-content-loader.ts')).toContain(
       "import('@/lib/new-document-content')",
     );
+  });
+
+  // /new's wizard shows without the builders; a link that names a document to make fetches them as /new starts.
+  it('keeps the builders out of /new until a document is made or named', () => {
+    const page = read('app/new/page.tsx');
+    expect(staticImports(page)).toContain('@/lib/new-document/new-document-content-loader');
+    expect(page).toContain('prefetchWhenIdle([loadNewDocumentContent])');
+    // Before the component: as the page's code first runs, not after hydration.
+    const ahead = page.indexOf('fetchNewDocumentContentAhead();');
+    expect(ahead).toBeGreaterThan(-1);
+    expect(ahead).toBeLessThan(page.indexOf('export default'));
   });
 });
 
