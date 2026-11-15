@@ -1,63 +1,10 @@
-'use client';
-
-import { useLayoutEffect, useSyncExternalStore } from 'react';
 import { GlyphDisc } from '@livedoc/ui';
-import { slugOf } from '@/lib/heading-id';
+import type { OutlineHeading } from '@/lib/article-outline';
 
-interface TocItem {
-  id: string;
-  text: string;
-  level: number;
-}
-
-const HEADINGS = '.prose-help h2, .prose-help h3';
-
-// The article's headings are an external store: the MDX article renders beside this component, so there
-// is no render-time source, and they exist only once the article has committed (on a client-side
-// navigation that commit can come after this list mounts). The store is the DOM, watched for added or
-// removed nodes; a snapshot is kept per content, so an unchanged article is the same array. The server and
-// hydration snapshot is empty. One heading is no table of contents.
-const NO_ITEMS: TocItem[] = [];
-let cachedKey = '[]';
-let cachedItems = NO_ITEMS;
-
-function readToc(): TocItem[] {
-  const items: TocItem[] = [];
-  document.querySelectorAll(HEADINGS).forEach((heading) => {
-    const text = heading.textContent?.trim() ?? '';
-    if (text)
-      items.push({ id: heading.id || slugOf(text), text, level: heading.tagName === 'H2' ? 2 : 3 });
-  });
-  const list = items.length > 1 ? items : NO_ITEMS;
-  const key = JSON.stringify(list);
-  if (key !== cachedKey) {
-    cachedKey = key;
-    cachedItems = list;
-  }
-  return cachedItems;
-}
-
-function subscribeToArticle(onChange: () => void): () => void {
-  const observer = new MutationObserver(onChange);
-  // Added and removed nodes only: a heading's text never changes in place, and watching text too
-  // re-read the list on every character typed anywhere on the page.
-  observer.observe(document.body, { childList: true, subtree: true });
-  return () => observer.disconnect();
-}
-
-const readNothing = () => NO_ITEMS;
-
-export function TableOfContents() {
-  const items = useSyncExternalStore(subscribeToArticle, readToc, readNothing);
-
-  // The links need anchors: every listed heading without an id gets the one its link already uses.
-  useLayoutEffect(() => {
-    document.querySelectorAll(HEADINGS).forEach((heading) => {
-      const text = heading.textContent?.trim() ?? '';
-      if (text && !heading.id) heading.id = slugOf(text);
-    });
-  }, [items]);
-
+// The article's Contents (docs/specs/018-help/help-pages.md "Article pages"): its outline, worked out from the article
+// while it renders (lib/article-outline.ts), so the list is in the static HTML and never moves the sidebar after
+// hydration (docs/specs/016-platform/web-performance.md "Layout never shifts after first paint").
+export function TableOfContents({ items }: { items: OutlineHeading[] }) {
   if (items.length === 0) return null;
 
   return (

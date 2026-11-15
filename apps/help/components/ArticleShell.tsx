@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Breadcrumb } from './Breadcrumb';
 import { SectionedContent } from './SectionedContent';
 import { TableOfContents } from './TableOfContents';
+import { articleHeadings, type OutlineHeading } from '@/lib/article-outline';
 // The hrefs alone, not lib/articles: that would bundle the whole article registry (about 300 articles with their
 // descriptions and keywords) into every article's JavaScript.
 import { articleHref } from '@livedoc/help-registry/hrefs';
@@ -23,12 +24,18 @@ import type { ArticleLink } from '@/lib/article-neighbours';
 
 /** Sidebar card: shows the TOC and/or a "Learn more" list of related
  *  guides. Renders nothing visible if both are empty (CSS hides it). */
-function SidebarCard({ subArticles }: { subArticles?: Article[] }) {
+function SidebarCard({
+  outline,
+  subArticles,
+}: {
+  outline: OutlineHeading[];
+  subArticles?: Article[];
+}) {
   const hasSubArticles = !!subArticles && subArticles.length > 0;
 
   return (
     <div className="sidebar-card rounded-xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-      <TableOfContents />
+      <TableOfContents items={outline} />
       {hasSubArticles && (
         <>
           <div className="toc-divider my-4 border-t border-slate-200 dark:border-slate-800" />
@@ -106,6 +113,9 @@ export function ArticleShell({
       setReadingTime(Math.max(1, Math.ceil(words / 200)));
     }
   }, []);
+  // The article arrives rendered, its headings plain h2 and h3 elements, so its outline is read here, into the
+  // static HTML (the reading time is still counted off the page: the article's deeper parts are not resolved here).
+  const outline = articleHeadings(children);
 
   // The current article's telemetry id (docs/specs/017-telemetry/telemetry.md): the registry's unique
   // per-article token for this path, never the free-text title (which the
@@ -190,14 +200,16 @@ export function ArticleShell({
                 <CloseIcon size={20} className="h-5 w-5" />
               </button>
             </div>
-            <SidebarCard subArticles={subArticles} />
+            <SidebarCard outline={outline} subArticles={subArticles} />
           </div>
         </div>
       )}
 
       <div className="mx-auto max-w-7xl px-4 pb-8 pt-8 md:px-8">
-        <div className="flex flex-col gap-8 lg:flex-row">
-          <article className="min-w-0 flex-1">
+        {/* The sidebar's column is a grid track, there before the sidebar is parsed: in a flex row the article took
+            the full width until then, and shifted when the sidebar arrived. */}
+        <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <article className="min-w-0">
             <div ref={contentRef}>
               <SectionedContent>{children}</SectionedContent>
             </div>
@@ -246,9 +258,9 @@ export function ArticleShell({
             <StillNeedHelp />
           </article>
 
-          <aside className="hidden shrink-0 lg:block lg:w-80">
+          <aside className="hidden lg:block">
             <div className="sticky top-[128px] max-h-[calc(100vh-148px)] overflow-y-auto rounded-xl">
-              <SidebarCard subArticles={subArticles} />
+              <SidebarCard outline={outline} subArticles={subArticles} />
             </div>
           </aside>
         </div>

@@ -90,6 +90,10 @@ own reading order, which is the registry order of its siblings (the sub-articles
 category's top-level articles). The first article has no previous link and the last no next link. A closing
 **Still need help?** card links Troubleshooting and Contact.
 
+Beside the article, the sidebar's **Contents** list links its sections and sub-sections (`##` and `###`), the
+sections numbered, read from the article as it renders (`lib/article-outline.ts`), so the list is in the page's
+static HTML; an article of one heading or none has no list.
+
 Above the header, the **breadcrumb trail** below Help is read off the article's route (`articleCrumbs`,
 `lib/article-route.ts`): the **top category**, linked to its own landing (the route's first segment, never the
 `categorySlug` prop, which on a nested article is the parent's path), then the **parent article** one level up

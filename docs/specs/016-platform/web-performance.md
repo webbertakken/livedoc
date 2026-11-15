@@ -119,17 +119,18 @@ the fallback face until the faces land, and the canvas re-measures each time the
 ### Layout never shifts after first paint
 
 Content is in its final structure in the static HTML. The help centre groups an article's
-sections while rendering, never by rewriting the DOM after hydration.
+sections while rendering, never by rewriting the DOM after hydration, and the reading-time row
+holds its height before the time is counted.
 
 A slow device paints a page while it is still parsing it, so a layout never depends on markup
 further down the document: the help article's sidebar column is a grid track, there before the
 sidebar is, where a flex row let the article take the full width until the sidebar was parsed
 (a 0.24 layout shift at 6× CPU throttling).
 
-- A help article's Contents list and reading time are worked out from the article while it
-  renders (`lib/article-outline.ts`), so both are in the static HTML: the Contents never pushes
-  the sidebar's Learn more list down after hydration (a 0.007 shift on every article with
-  related guides), the time never pops in, and no observer watches the page for headings.
+- A help article's Contents list is worked out from the article while it renders
+  (`lib/article-outline.ts`), so it is in the static HTML: it never pushes the sidebar's Learn more
+  list down after hydration (a 0.007 shift on every article with related guides), and no observer
+  watches the page for headings.
 
 ### The first images a visitor sees load first
 
