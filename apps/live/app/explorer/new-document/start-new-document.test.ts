@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   assign: vi.fn(),
@@ -71,6 +71,13 @@ const opened = async () => {
   await new Promise((r) => setTimeout(r, 0));
 };
 const openedId = () => window.location.pathname.split('/').pop()!;
+
+// What builds a document's content is imported at the moment one is made (the template builders stay out of the
+// Explorer's first load). Here that import would be paid by whichever test starts a document first, inside its
+// wait; it is brought in ahead, as the Explorer's idle fetch does.
+beforeAll(async () => {
+  await import('@/lib/new-document-content');
+}, 60_000);
 
 let unbind: () => void = () => {};
 beforeEach(() => {
