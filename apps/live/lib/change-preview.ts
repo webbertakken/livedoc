@@ -6,6 +6,7 @@ import {
   nameSuggestionsFor,
   noteChangesOf,
   renameContext,
+  renameTerm,
   sameContextName,
   type Element,
   type ElementId,
@@ -141,6 +142,12 @@ export function offeredPreview(
   if (key?.type === 'lane-plan')
     return boardPreview(lanePlanOffer({ elements, layers }, key.planId));
   if (key?.type === 'arrange') return boardPreview(arrangeOffer({ elements, layers }));
+  if (key?.type === 'term') {
+    // A renamed term draws its new words on every note and context name the rename reaches
+    // (docs/specs/021-event-storming/board-language.md "The Language tab"); nothing when it would change nothing.
+    const renamed = renameTerm(elements, key.from, key.to, key.scope, inertIds);
+    return renamed === elements ? null : plain(renamed);
+  }
   // Contexts brought forward (a Names or a Merge row pointed at) change nothing that is drawn.
   return key?.type === 'name' ? namePreview(elements, key) : null;
 }

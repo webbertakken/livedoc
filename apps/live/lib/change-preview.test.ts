@@ -12,7 +12,7 @@ import {
   orderFlow,
 } from './change-board.fixture';
 import { REMOVE_PREVIEW_OPACITY, offeredPreview } from './change-preview';
-import { ARRANGE_KEY, changeKey, contextsKey, nameKey, planKey } from './suggestion-view';
+import { ARRANGE_KEY, changeKey, contextsKey, nameKey, planKey, termKey } from './suggestion-view';
 import { kitchenNotes, plannedKitchen } from './lane-board.fixture';
 
 // What a suggested change would make of the board while a person looks at it
@@ -111,6 +111,45 @@ describe('offeredPreview', () => {
 });
 
 // docs/specs/021-event-storming/lane-plans.md "How a person sees and decides", arrange.md "How a person arranges".
+describe('a renamed term (docs/specs/021-event-storming/board-language.md "The Language tab")', () => {
+  it('draws the new term on every note the rename reaches, and on nothing else', () => {
+    const board = orderFlow();
+    const preview = offeredPreview(board, termKey('order', 'parcel', { type: 'board' }), NONE)!;
+    expect(differing(board, preview.elements)).toEqual([
+      'place',
+      'placed',
+      'refund',
+      'pack',
+      'packed',
+      'sent',
+    ]);
+    expect(label(preview.elements, 'placed')).toBe('Parcel placed');
+    // A word inside another is no match: the context keeps its name.
+    expect(byId<CandidateContextElement>(preview.elements, 'ordering').label).toBe('Ordering');
+    expect(preview).toMatchObject({ parts: [], struck: null, board: null });
+  });
+
+  it('stays within the context the rename is for', () => {
+    const board = orderFlow();
+    const preview = offeredPreview(
+      board,
+      termKey('order', 'parcel', { type: 'context', id: 'fulfilment' }),
+      NONE,
+    )!;
+    expect(differing(board, preview.elements)).toEqual(['pack', 'packed', 'sent']);
+  });
+
+  it('leaves alone a note that may not change, and draws nothing when nothing would change', () => {
+    const board = orderFlow();
+    const key = termKey('order', 'parcel', { type: 'context', id: 'ordering' });
+    expect(differing(board, offeredPreview(board, key, new Set(['place']))!.elements)).toEqual([
+      'placed',
+    ]);
+    expect(offeredPreview(board, termKey('order', 'order', { type: 'board' }), NONE)).toBeNull();
+    expect(offeredPreview(board, termKey('bill', 'check', { type: 'board' }), NONE)).toBeNull();
+  });
+});
+
 describe('a whole board offered', () => {
   it('draws a lane plan as applying would leave it, and says what the bar needs', () => {
     const tab = plannedKitchen();

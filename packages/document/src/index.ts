@@ -744,6 +744,7 @@ export * from './event-storming-about';
 export * from './event-storming-structure';
 export * from './event-storming-lane-plan';
 export * from './event-storming-terms';
+export * from './term-rename';
 export * from './event-storming-words';
 export * from './context-names';
 export * from './note-changes';

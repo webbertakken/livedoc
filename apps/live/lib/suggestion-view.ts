@@ -1,5 +1,6 @@
 'use client';
 
+import type { TermScope } from '@livedoc/document';
 import { useSyncExternalStore } from 'react';
 
 // How a person is looking at a board's suggestions (docs/specs/021-event-storming/suggestions.md "How a person sees
@@ -31,13 +32,16 @@ export type PreviewedChange =
   | { type: 'contexts'; contextIds: string[] }
   // A whole board rearranged: by its open lane plan, or arranged along the timeline.
   | { type: 'lane-plan'; planId: string }
-  | { type: 'arrange' };
+  | { type: 'arrange' }
+  // A term renamed from the Review panel's Language tab (docs/specs/021-event-storming/board-language.md).
+  | { type: 'term'; from: string; to: string; scope: TermScope };
 
 const CHANGE_PREFIX = 'x:';
 const NAME_PREFIX = 'n:';
 const CONTEXTS_PREFIX = 'g:';
 const CONTEXT_PREFIX = 'c:';
 const PLAN_PREFIX = 'p:';
+const TERM_PREFIX = 't:';
 
 /** The key that draws the board as Arrange and Reorder would leave it. */
 export const ARRANGE_KEY = 'a:';
@@ -45,6 +49,23 @@ export const ARRANGE_KEY = 'a:';
 /** The key of a lane plan's preview: the board as applying the plan would leave it. */
 export function planKey(planId: string): string {
   return PLAN_PREFIX + planId;
+}
+
+/** The key of a renamed term's preview: the board with the term changed where the rename reaches. */
+export function termKey(from: string, to: string, scope: TermScope): string {
+  return (
+    TERM_PREFIX + JSON.stringify([from, to, scope.type, scope.type === 'context' ? scope.id : null])
+  );
+}
+
+function parsedTerm(json: string): PreviewedChange | null {
+  const [from, to, reach, id] = parsedList(json) ?? [];
+  if (typeof from !== 'string' || typeof to !== 'string') return null;
+  if (reach === 'board' || reach === 'none')
+    return { type: 'term', from, to, scope: { type: reach } };
+  return reach === 'context' && typeof id === 'string'
+    ? { type: 'term', from, to, scope: { type: 'context', id } }
+    : null;
 }
 
 /** The key of a note change's preview: the mark previews the note's first, in its context's scope. */
@@ -91,6 +112,7 @@ export function parsePreviewKey(key: string | null): PreviewedChange | null {
     return { type: 'contexts', contextIds };
   }
   if (key === ARRANGE_KEY) return { type: 'arrange' };
+  if (key?.startsWith(TERM_PREFIX)) return parsedTerm(key.slice(TERM_PREFIX.length));
   if (key?.startsWith(PLAN_PREFIX) && key.length > PLAN_PREFIX.length)
     return { type: 'lane-plan', planId: key.slice(PLAN_PREFIX.length) };
   return null;

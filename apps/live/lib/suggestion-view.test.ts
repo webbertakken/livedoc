@@ -12,6 +12,7 @@ import {
   parsePreviewKey,
   planKey,
   previewSuggestion,
+  termKey,
   previewedContextIds,
   setShowAllSuggestions,
   setSuggestionsPanelOpen,
@@ -132,8 +133,33 @@ describe('preview keys', () => {
       'n:["Name", 1]',
       'g:[]',
       'g:[1]',
+      't:[]',
+      't:["order"]',
+      't:["order", "ticket", "context"]',
+      't:["order", "ticket", "elsewhere", null]',
     ])
       expect(parsePreviewKey(key)).toBeNull();
+  });
+
+  it('names a renamed term, and how far the rename reaches', () => {
+    expect(parsePreviewKey(termKey('order', 'ticket', { type: 'board' }))).toEqual({
+      type: 'term',
+      from: 'order',
+      to: 'ticket',
+      scope: { type: 'board' },
+    });
+    expect(parsePreviewKey(termKey('order', 'the "pass"', { type: 'none' }))).toEqual({
+      type: 'term',
+      from: 'order',
+      to: 'the "pass"',
+      scope: { type: 'none' },
+    });
+    expect(parsePreviewKey(termKey('order', 'ticket', { type: 'context', id: 'c:1' }))).toEqual({
+      type: 'term',
+      from: 'order',
+      to: 'ticket',
+      scope: { type: 'context', id: 'c:1' },
+    });
   });
 
   it('says which contexts a preview brings forward', () => {
