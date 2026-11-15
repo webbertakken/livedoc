@@ -41,6 +41,8 @@ CI runs the same five steps on every push, plus `pnpm deploy:check`. Failing any
 
 Adding or upgrading a dependency that ships to a browser or a worker can fail `pnpm build` with a named licences error. `LicenceTextMissing` means the package ships no licence file: add its upstream text to `packages/licences/texts/`, list it in `TEXT_SOURCES` with a pinned URL and checksum, and add an `OVERRIDES` entry for that exact version. `UnreviewedBinaryAsset` means a new `.wasm` or font: add an `EMBEDDED_WORKS` entry naming what is compiled into it. `LicenceNotAllowed` is a decision, not a fix: raise it. See [Third-party licences](../specs/002-project-scope/third-party-licences.md).
 
+A build also fails with `[first-load] over budget` when a page would load more JavaScript up front than its budget (`apps/<app>/first-load-budget.json`). It usually means a static import of something a page shows only on demand: `node scripts/first-load.mjs --chunks <app>` lists what the page loads, and [Web performance](../specs/016-platform/web-performance.md) says what loads when. Raise a budget only on purpose, in the change that needs it.
+
 ### Security alerts and pnpm `overrides`
 
 A Dependabot alert is fixed by upgrading the direct dependency that pulls the vulnerable package in. An entry in the root `pnpm-workspace.yaml` `overrides` is for when no upstream release fixes it; each such entry is listed here with its alert:

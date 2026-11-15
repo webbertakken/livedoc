@@ -12,7 +12,8 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      // The first-load budget check runs at the end of an app's build (scripts/first-load.mjs --check).
+      "inputs": ["$TURBO_DEFAULT$", ".env*", "$TURBO_ROOT$/scripts/first-load.mjs"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "out/**"]
     },
     // Marketing's build also generates the /licences page from what EVERY app

@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -87,6 +87,37 @@ describe('first-load', () => {
       const root = exportOf({ 'index.html': `<html>${script('gone.js')}</html>` });
 
       expect(firstLoadRows(root)[0]?.js).toBe(0);
+    });
+  });
+
+  describe('the budget files', () => {
+    const APPS = ['live', 'marketing', 'help', 'telemetry'];
+    const budgetsOf = (app: string) =>
+      (
+        JSON.parse(
+          readFileSync(join(__dirname, '..', '..', app, 'first-load-budget.json'), 'utf8'),
+        ) as { budgets: { page: string; kib: number }[] }
+      ).budgets;
+
+    it('give every app with pages a budget for each page, the last one for any page', () => {
+      for (const app of APPS) {
+        const budgets = budgetsOf(app);
+        expect(budgets.length, app).toBeGreaterThan(0);
+        for (const { page, kib } of budgets) {
+          expect(() => new RegExp(page), `${app}: ${page}`).not.toThrow();
+          expect(kib, `${app}: ${page}`).toBeGreaterThan(0);
+        }
+        expect(budgets.at(-1)?.page, app).toBe('.');
+      }
+    });
+
+    it('check each app’s export as part of its build', () => {
+      for (const app of APPS) {
+        const { scripts } = JSON.parse(
+          readFileSync(join(__dirname, '..', '..', app, 'package.json'), 'utf8'),
+        ) as { scripts: { build: string } };
+        expect(scripts.build, app).toContain(`first-load.mjs --check ${app}`);
+      }
     });
   });
 
