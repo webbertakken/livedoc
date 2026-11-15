@@ -14,6 +14,7 @@
     "typecheck": "turbo run typecheck",
     "deploy:check": "turbo run deploy:check",
     "licences": "pnpm --filter @livedoc/marketing licences",
+    "bench:asks": "tsx scripts/ask-bench.mts",
     "bench:readers": "tsx scripts/read-bench.mts",
     "bench:stroke-points": "node --expose-gc --import ./scripts/ts-source-hooks.mjs scripts/stroke-points-bench.ts",
     "demo:sticky-vision:build": "node docs/demo/sticky-vision/build.mjs",

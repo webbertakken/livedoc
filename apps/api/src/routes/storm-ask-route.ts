@@ -28,11 +28,10 @@ import {
   isAskScope,
   isAskTopic,
 } from '@livedoc/storm-reading';
-import { chatCompletions } from '../ai-client';
-import { extractJson } from '../ai-json';
-import { resolveAiProvider, type ResolvedAiProvider } from '../ai-provider';
+import { resolveAiProvider } from '../ai-provider';
 import { json } from '../responses';
 import { runAskLines } from '../storm-ask';
+import { askModelLines } from '../storm-ask-model';
 import { aiGate } from './ai-gate';
 import type { RouteContext } from './context';
 
@@ -41,21 +40,8 @@ import type { RouteContext } from './context';
 // words an answer as suggest lines, and the edit-operation engine checks each; the route answers what to add, for
 // the editor to add as one undoable step. The model can only propose.
 
-// Room for thirty lines of two hundred characters, with as much again to spare. Safe range: 2,000 to 8,000.
-export const STORM_ASK_MAX_TOKENS = 4000;
 // How often a refused lane plan is asked for again before the board's own fold is offered. Safe range: 0 to 2.
 export const STORM_ASK_RETRIES = 1;
-
-const ANSWER_SCHEMA = {
-  name: 'ask_answer',
-  strict: true,
-  schema: {
-    type: 'object',
-    properties: { lines: { type: 'array', items: { type: 'string' } } },
-    required: ['lines'],
-    additionalProperties: false,
-  },
-};
 
 // What a model is told when its answer to a lane ask held no plan at all.
 const NO_LANE_LINE = 'the answer held no suggest-lane line: answer with one line per lane';
@@ -80,47 +66,6 @@ function boardOf(tab: Tab): Tab {
     ...(about ? { esAbout: about } : {}),
     esDeclined: declinedOf(tab),
   };
-}
-
-// The lines the model answered, or null when it erred or answered something else.
-async function linesFrom(
-  provider: ResolvedAiProvider,
-  messages: ReturnType<typeof askMessages>,
-): Promise<unknown[] | null> {
-  let content: string;
-  let finish: string;
-  try {
-    const res = await chatCompletions(provider, {
-      model: provider.model,
-      max_tokens: STORM_ASK_MAX_TOKENS,
-      messages,
-      // A strict schema where the provider is known to honour one, JSON mode elsewhere; the answer is checked
-      // below either way.
-      response_format: provider.strictSchema
-        ? { type: 'json_schema', json_schema: ANSWER_SCHEMA }
-        : { type: 'json_object' },
-    });
-    if (!res.ok) {
-      console.error('[storm] ask model error', { status: res.status });
-      return null;
-    }
-    const completion = (await res.json()) as {
-      choices?: { finish_reason?: string; message?: { content?: string } }[];
-    };
-    content = completion.choices?.[0]?.message?.content ?? '';
-    finish = completion.choices?.[0]?.finish_reason ?? 'none';
-  } catch (err) {
-    console.error(
-      '[storm] ask model unreachable',
-      err instanceof Error ? err.message : String(err),
-    );
-    return null;
-  }
-  const answer = extractJson(content) as { lines?: unknown } | null;
-  const lines = Array.isArray(answer?.lines) ? (answer.lines as unknown[]) : null;
-  // The words stay out of the log: an answer may quote the board.
-  if (!lines) console.error('[storm] ask answer unreadable', { chars: content.length, finish });
-  return lines;
 }
 
 export async function handleStormAsk(ctx: RouteContext): Promise<Response> {
@@ -168,7 +113,7 @@ export async function handleStormAsk(ctx: RouteContext): Promise<Response> {
   const provider = resolveAiProvider(env, 'storm')!;
   const asked = { topic, scope, lanes, tab };
   const dropped = (code: string) => console.info('[storm] ask line dropped', { code });
-  let answered = await linesFrom(provider, askMessages(asked));
+  let answered = await askModelLines(provider, askMessages(asked));
   if (!answered) return refuse('ai_failed', 502, 'the model did not answer the ask');
   let run = runAskLines(tab, answered, { dropped });
   const counted = { lines: run.lines, dropped: run.dropped };
@@ -179,7 +124,7 @@ export async function handleStormAsk(ctx: RouteContext): Promise<Response> {
     for (let retry = 0; retry < STORM_ASK_RETRIES && answered && !run.planned; retry += 1) {
       const said = answered.filter((line): line is string => typeof line === 'string');
       const refusal = { lines: said, why: run.refusal ?? NO_LANE_LINE };
-      answered = await linesFrom(provider, askMessages({ ...asked, refused: refusal }));
+      answered = await askModelLines(provider, askMessages({ ...asked, refused: refusal }));
       if (!answered) break;
       run = runAskLines(run.tab, answered, { dropped });
       counted.lines += run.lines;

@@ -11,7 +11,8 @@ import { GOOGLE_DEFAULT_VISION_MODEL } from '../ai-provider';
 import { ASK_BY } from '../storm-ask';
 import { OUT_OF_REACH, TWO_LANES, kitchen, note } from '../storm-ask.fixture';
 import type { Env } from '../types';
-import { STORM_ASK_MAX_TOKENS, handleStormAsk } from './storm-ask-route';
+import { STORM_ASK_MAX_TOKENS } from '../storm-ask-model';
+import { handleStormAsk } from './storm-ask-route';
 import { makeTestRouteContext } from './test-route-context';
 
 // The built-in hand's route (docs/specs/021-event-storming/asks.md "The built-in hand"): the gate, the refusals,
