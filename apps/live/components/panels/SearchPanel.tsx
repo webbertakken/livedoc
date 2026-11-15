@@ -286,6 +286,9 @@ export function SearchPanel({
         role="dialog"
         aria-modal="true"
         aria-label="Search"
+        // A command acts on what is selected: picking one leaves a selected candidate context selected
+        // (docs/specs/021-event-storming/candidate-contexts.md "Selecting several and merging").
+        data-keeps-context-selection=""
         tabIndex={-1}
         className="flex w-[34rem] max-w-full animate-fly-up-in flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
       >

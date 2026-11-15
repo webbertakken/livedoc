@@ -54,6 +54,8 @@ export function EventStormingBoardRows({ controls }: { controls: EsBoardControls
           line="Gaps, contexts, names, wording and lanes"
           aria-haspopup="dialog"
           data-ask-row=""
+          // Asking is about what is selected: a press here leaves a selected context selected.
+          data-keeps-context-selection=""
           onClick={controls.onAsk}
         />
       ) : null}

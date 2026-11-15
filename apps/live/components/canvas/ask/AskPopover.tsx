@@ -73,6 +73,8 @@ export function AskPopover({
     >
       <div
         data-testid="ask-popover"
+        // The ask is about what is selected: working in here leaves a selected context selected.
+        data-keeps-context-selection=""
         className="rounded-lg border border-slate-200 bg-white text-[13px] text-slate-900 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
       >
         <header className="flex items-center gap-2 px-3.5 pb-1.5 pt-3">

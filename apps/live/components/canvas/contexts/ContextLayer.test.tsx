@@ -610,6 +610,25 @@ describe('ContextLayer: asking about a context', () => {
     expect(s.openAsk).toHaveBeenCalledWith({ type: 'contexts', ids: ['k', 's'] });
   });
 
+  it('stays selected through a press on chrome that acts on the selection, and through its Escape', () => {
+    draw(board, { contexts: contextControls(), suggestions: suggestionControls() });
+    fireEvent.click(screen.getByRole('button', { name: 'Candidate context: Ctx k' }));
+    const selected = () => outline('k')!.getAttribute('stroke-dasharray') === null;
+    // The Ask pill, its popover, the category's row and the search all carry the mark.
+    const chrome = document.createElement('div');
+    chrome.setAttribute('data-keeps-context-selection', '');
+    const inside = chrome.appendChild(document.createElement('button'));
+    document.body.append(chrome);
+    fireEvent.pointerDown(inside);
+    expect(selected()).toBe(true);
+    // Escape there closes that chrome, not the selection behind it.
+    fireEvent.keyDown(inside, { key: 'Escape' });
+    expect(selected()).toBe(true);
+    chrome.remove();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(selected()).toBe(false);
+  });
+
   it('offers the merge without Ask to someone who sees no suggestions', () => {
     const kept = [note('a', 0), note('b', 300), note('c', 2000), context('k', ['a', 'b'])];
     draw([...kept, context('m', ['c'])], { contexts: contextControls() });

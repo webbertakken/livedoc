@@ -51,7 +51,7 @@ export const LANE_BOARD_PLAN = {
   by: 'Claude',
 } as const;
 
-function note(
+export function note(
   id: string,
   kind: EventStormingNoteKind,
   label: string,

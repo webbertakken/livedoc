@@ -154,10 +154,11 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
   holds the Ask pill alone.
 - **The popover hangs from the corner**, under the pill, and shares it with the
   [suggestions list](suggestions.md#how-a-person-sees-them): opening one closes the other (default).
-- **The other ways in open the same popover**, in the same corner: **Ask for Suggestions** in the Event Storming
-  category and in the command palette, about the selection; a button after a selected context's name, about that
-  context; a button in the merge offer beside its ✓ and ✕, about the selected contexts as one; **Ask…** in a
-  workshop note's menu, about that note.
+- **The other ways in open the same popover**, in the same corner: **Ask for Suggestions** in the command palette,
+  about the selection; a button after a selected context's name, about that context; a button in the merge offer
+  beside its ✓ and ✕, about the selected contexts as one; **Ask…** in a workshop note's menu, about that note.
+- **The Event Storming category's body lists it too**, with Draw Context and Add from Photo, wherever that body is
+  drawn. On a board the strip stands for that body, so the row is not seen there today (default).
 - With nothing selected the popover also offers [Arrange and Reorder](arrange.md), apart from the topics: it is the
   board's own act and needs no hand.
 - **The Ask popover** holds, top to bottom: what the ask is about ("About the board", "About 2 notes", a context by
@@ -174,6 +175,8 @@ Dismissing a suggestion is a decision, and the board remembers it so the next as
 - **Closing the popover keeps the About**, as leaving the field does (default).
 - **A selection that has gone** by the time the popover draws, a context deleted meanwhile, reads as the board
   (default).
+- **A context asked about stays selected** while the popover is open, and through the press that opened it
+  ([candidate contexts](candidate-contexts.md#selecting-several-and-merging)).
 - **When it fails**, the popover says why and what to do: sign in (`sign_in_required`), wait a minute (rate limited),
   a board too large, or "The model did not answer. Copy the prompt for your agent instead." (`ai_failed`).
 - The popover follows the dialog pattern: focus moves in, Escape closes it and focus returns to the Ask pill,
@@ -217,3 +220,5 @@ Neither the topic, the prompt nor the About is sent.
   `apps/live/components/canvas/contexts/ContextMergeOffer.tsx` and
   `apps/live/components/palette/EditorContextMenu.tsx`.
 - The ask bench: `scripts/ask-bench.mts`.
+- Proven in a browser by `apps/live/e2e/event-storming-ask.spec.ts`, on the kitchen of
+  `apps/live/e2e/ask-board.ts`.

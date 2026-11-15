@@ -128,6 +128,9 @@ them".
   selects that one alone. Tabbing to a name selects that one alone (default).
 - The context selection is cleared by Escape, by a click on the canvas away from every context, and by selecting an
   element (default).
+- **What acts on the selection leaves it selected**: a press on the merge offer, on the
+  [Ask pill or its popover](asks.md#where-an-ask-starts), on the Event Storming category's Ask row or in the search,
+  whose commands read the selection. Escape there closes that, not the selection (default).
 - **With two or more selected**, a **Merge** offer sits between their names, above the highest:
   "Merge 2 contexts" with a ✓ (merge) and ✕ (keep them apart, which clears the selection) (default).
 - **Merging** makes one context of them, in one undoable step:

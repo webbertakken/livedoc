@@ -26,6 +26,8 @@ export function AskButton({ tabId, onAsk }: { tabId: string; onAsk: () => void }
       ref={pill}
       type="button"
       data-ask-button=""
+      // Asking is about what is selected: a press here leaves a selected context selected.
+      data-keeps-context-selection=""
       aria-haspopup="dialog"
       aria-expanded={open}
       onClick={() => (open ? closeAsk(tabId) : onAsk())}
