@@ -43,6 +43,7 @@ export * from './fit-widths';
 export * from './sheet-starters';
 export * from './hyperlink';
 export * from './template-starts';
+export * from './template-start-ids';
 export * from './sheet-templates';
 export * from './formula/values';
 export * from './formula/ast';

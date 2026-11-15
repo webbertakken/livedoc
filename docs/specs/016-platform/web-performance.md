@@ -114,6 +114,14 @@ The Explorer's search loads with what it searches: the panel, the help registry 
 catalogue are one piece of code (`app/explorer/ExplorerSearch.tsx`), fetched ahead once the
 Explorer has settled (below), so the first press of the search key finds it in.
 
+What is fetched ahead in pieces shares no code between them: each dynamic import the Explorer fetches ahead
+(search, the editor, what makes a document) carries its own copy of every module it shares with another, so what
+search names reads leaves that know no editor code. A template's sheet's words come from the starts' names
+(`@livedoc/sheets`' `template-start-ids.ts`), never the sheet engine; where the Draw dock sits is
+`lib/whiteboard-dock-position.ts`, apart from the dock's shape slots and the palette behind them. With search's own
+copies of the sheet engine and the palette, the Explorer fetched 2,281 KiB of JavaScript until idle, 181 KiB of it
+modules it already had; without them, 2,142 KiB and 86 KiB.
+
 A pane's code is asked for with its section. An Explorer section's pane (Home, the Timeline, the
 Inbox, a team) draws only once the person is known, so left to its dynamic import its code would be
 asked for after that answer, and its data after its code. The Explorer asks for the pane as the

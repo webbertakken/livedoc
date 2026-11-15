@@ -54,7 +54,7 @@ import {
   readWhiteboardDockPosition,
   withWhiteboardDockPosition,
   type WhiteboardDockPosition,
-} from '@/lib/whiteboard-dock-prefs';
+} from '@/lib/whiteboard-dock-position';
 import {
   readContentsPlacement,
   withContentsPlacement,

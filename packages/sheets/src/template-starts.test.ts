@@ -3,14 +3,13 @@
 import { describe, expect, it } from 'vitest';
 import { sheetFromJson } from './sheet-json';
 import { validateSheetCreate } from './validate';
+import { sheetFromTemplate, templateSheetWithCharts } from './template-starts';
 import {
   BLANK_SHEET_START,
   isTemplateStart,
-  sheetFromTemplate,
-  templateSheetWithCharts,
   TEMPLATE_START_SHEETS,
   TEMPLATE_STARTS,
-} from './template-starts';
+} from './template-start-ids';
 import { sheetTemplateInfo } from './sheet-templates/catalogue';
 import { sheetTemplate } from './sheet-templates/template-design';
 

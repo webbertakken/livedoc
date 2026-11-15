@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
-  WHITEBOARD_DOCK_POSITIONS,
   readDrawPattern,
-  readWhiteboardDockPosition,
   readWhiteboardDockPrefs,
   withDrawPattern,
-  withWhiteboardDockPosition,
   withWhiteboardDockPrefs,
 } from './whiteboard-dock-prefs';
+import {
+  WHITEBOARD_DOCK_POSITIONS,
+  readWhiteboardDockPosition,
+  withWhiteboardDockPosition,
+} from './whiteboard-dock-position';
 import type { UserPreferences } from './user-preferences';
 
 describe('readWhiteboardDockPrefs', () => {
