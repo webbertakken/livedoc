@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { runInlineScript } from '@livedoc/vitest-config/inline-script';
-import Page from './page';
+import TelemetryDashboard from './page';
 import { requestSummary, SUMMARY_BOOT_SCRIPT, SUMMARY_URL } from './summary-request';
 
 // docs/specs/016-platform/web-performance.md "Delivery": the dashboard's summary leaves with its HTML, from an inline
@@ -58,7 +58,7 @@ describe('requestSummary', () => {
 describe('the dashboard page', () => {
   it('starts the summary before any of its own markup', () => {
     vi.stubGlobal('fetch', () => new Promise(() => {}));
-    const html = renderToStaticMarkup(<Page />);
+    const html = renderToStaticMarkup(<TelemetryDashboard />);
     expect(html.startsWith('<script>')).toBe(true);
     expect(html).toContain(SUMMARY_URL);
   });

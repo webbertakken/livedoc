@@ -5,7 +5,7 @@
 // on shapes that need it). Intentionally minimalist line art so a row
 // of 20+ icons doesn't get visually noisy.
 //
-// Lifted out of apps/telemetry/app/TelemetryDashboard.tsx (was 1296 lines) so the
+// Lifted out of apps/telemetry/app/page.tsx (was 1296 lines) so the
 // dashboard file reads as dashboard layout + chart logic, and these
 // stay as pure-render presentational markup. Adding a new glyph means
 // appending one function here and one branch in EventIcon.

@@ -4,7 +4,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TelemetrySummary } from '@livedoc/api-schema';
 import { ActiveView } from './ActiveView';
-import { TelemetryDashboard } from './TelemetryDashboard';
+import TelemetryDashboard from './page';
 import { DashboardSkeleton } from './DashboardSkeleton';
 
 // docs/specs/017-telemetry/telemetry.md "Dashboard app": while the numbers load, a skeleton holds
