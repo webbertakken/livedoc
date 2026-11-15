@@ -195,19 +195,20 @@ that speaks the OpenAI chat-completions wire.
 
 ### Each feature has its own provider
 
-The worker runs two AI features, and each one resolves its own provider from the
+The worker runs three AI features, and each one resolves its own provider from the
 keys that are set, taking the first present key in its own preference order:
 
-| feature                                 | route                | preference order          |
-| --------------------------------------- | -------------------- | ------------------------- |
-| **assistant** (Ask / Clean)             | `/api/ai`            | openai → google → generic |
-| **reader** (event-storming crop reader) | `/api/ai/read-notes` | google → openai → generic |
+| feature                                       | route                | preference order          |
+| --------------------------------------------- | -------------------- | ------------------------- |
+| **assistant** (Ask / Clean)                   | `/api/ai`            | openai → google → generic |
+| **reader** (event-storming crop reader)       | `/api/ai/read-notes` | google → openai → generic |
+| **storm** (an ask on an Event Storming board) | `/api/storm-ask`     | google → openai → generic |
 
-- **One key serves both.** A deployment with a single key runs both features on
+- **One key serves them all.** A deployment with a single key runs every feature on
   that provider; a self-hoster sets one key and changes nothing.
 - **Two named keys split the features.** With `OPENAI_API_KEY` and
   `GOOGLE_AI_STUDIO_API_KEY` both set, the assistant runs on OpenAI and the
-  reader on Google. This is the hosted site's configuration: the assistant
+  reader and an ask on Google. This is the hosted site's configuration: the assistant
   stays on the OpenAI model it has always used, and the reader uses Gemini,
   which reads handwriting better for less.
 - **The generic key is the last resort.** `AI_API_KEY` serves a feature only
@@ -224,6 +225,10 @@ unused`) rather than left as a dead secret nobody notices.
 - **Reader**: `AI_VISION_MODEL`, else `AI_MODEL` **when the reader shares the
   assistant's provider**, else its provider's reader default, else its
   provider's default model.
+- **Ask** ([Asks](../021-event-storming/asks.md) "The built-in hand"): `AI_STORM_MODEL`, else its
+  provider's reader default (the small model), else as the assistant: `AI_MODEL` when the ask
+  shares the assistant's provider, else its provider's default model. An ask is short, literal
+  work checked by the engine, so it runs on the small model whatever `AI_MODEL` names.
 
 `AI_MODEL` names a model of the provider serving the assistant, so it reaches
 the reader only when both run on that provider: a `gpt-4o` id sent to Gemini is
@@ -234,7 +239,7 @@ on a real wall it read 98-99% of the words against 92-96% for `gemini-2.5-flash-
 (docs/research/vision/handwriting-readers.md). An operator who names `AI_MODEL`
 for a single-provider deployment means it for the reader too, and
 `AI_VISION_MODEL` beats everything. The generic preset has no defaults, so it
-requires `AI_MODEL` for both features, keeping them available together.
+requires `AI_MODEL` for every feature, keeping them available together.
 
 `aiEnabled` is "a provider resolved".
 
@@ -302,6 +307,7 @@ fires it, because the route cannot know whether the author kept the result).
 | `AI_BASE_URL`                                                | Worker var (generic only) | The OpenAI-COMPATIBLE chat-completions base for `AI_API_KEY`: a laptop points it at llama.cpp or Ollama. The google and openai keys bring their own.                                                                      |
 | `AI_MODEL`                                                   | Worker var (optional)     | Model id for the assistant. Defaults per provider (table above); required for the generic key.                                                                                                                            |
 | `AI_VISION_MODEL`                                            | Worker var (optional)     | Model id for reading note crops (`/api/ai/read-notes`, [Event storming](../021-event-storming/event-storming.md) Phase 8). Defaults as in "Which model": `AI_MODEL` only when the reader shares the assistant's provider. |
+| `AI_STORM_MODEL`                                             | Worker var (optional)     | Model id for answering an ask on an Event Storming board (`/api/storm-ask`, [Asks](../021-event-storming/asks.md)). Defaults as in "Which model": the provider's small model, else the assistant's.                       |
 | `AI_ALLOWED_ORIGINS`                                         | Worker var (optional)     | Comma-separated `Origin` values that may call `/api/ai`. Unset = no check. Example: `https://docs.nu,http://localhost:4002`. Entries are matched case-sensitive against the request's `Origin` header verbatim.           |
 | `AI_REQUIRE_ACCOUNT`                                         | Worker var (optional)     | Set to `"true"` to require a verified session token on `/api/ai` (rejects the `X-Owner-Id` guest path with 401). Unset / any other value = guests allowed.                                                                |
 
