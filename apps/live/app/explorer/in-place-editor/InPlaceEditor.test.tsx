@@ -30,6 +30,11 @@ function Editor() {
 
 import { InPlaceEditor, IN_PLACE_SETTLE_POLL_MS, STANDBY_IDLE_TIMEOUT_MS } from './InPlaceEditor';
 import { closeInPlace, openInPlace, setStandbyInPlace } from './in-place-editor-store';
+import {
+  EXPLORER_SETTLE_TIMEOUT_MS,
+  markExplorerSettled,
+  resetExplorerSettledForTests,
+} from '../explorer-settled';
 
 const ID = 'd0c0ffee-0000-4000-8000-0000000000bb';
 
@@ -60,6 +65,7 @@ const goBack = () =>
 
 beforeEach(() => {
   vi.useFakeTimers();
+  resetExplorerSettledForTests();
   settled.value = false;
   setStandbyInPlace(null);
   mounts.count = 0;
@@ -147,12 +153,29 @@ describe('InPlaceEditor', () => {
     expect(screen.getByTestId('editor').dataset.mount).toBe('1');
   });
 
-  it('asks for a standby once the Explorer is idle', () => {
+  it('asks for a standby once the Explorer’s documents are listed and it is idle', () => {
     vi.stubGlobal('requestIdleCallback', (run: () => void) => window.setTimeout(run, 50));
     vi.stubGlobal('cancelIdleCallback', (id: number) => window.clearTimeout(id));
     mount();
     act(() => {
       vi.advanceTimersByTime(STANDBY_IDLE_TIMEOUT_MS);
+    });
+    // Idle, but the Explorer's own reads are still out: nothing is fetched ahead of them.
+    expect(standby.prepare).not.toHaveBeenCalled();
+
+    act(() => {
+      markExplorerSettled();
+      vi.advanceTimersByTime(STANDBY_IDLE_TIMEOUT_MS);
+    });
+    expect(standby.prepare).toHaveBeenCalledWith('diagram');
+  });
+
+  it('asks for a standby anyway when the Explorer’s reads never land', () => {
+    vi.stubGlobal('requestIdleCallback', (run: () => void) => window.setTimeout(run, 50));
+    vi.stubGlobal('cancelIdleCallback', (id: number) => window.clearTimeout(id));
+    mount();
+    act(() => {
+      vi.advanceTimersByTime(EXPLORER_SETTLE_TIMEOUT_MS + STANDBY_IDLE_TIMEOUT_MS);
     });
     expect(standby.prepare).toHaveBeenCalledWith('diagram');
   });

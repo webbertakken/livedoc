@@ -84,8 +84,8 @@ this way. Where switching to one must stay instant, its code is fetched once the
 (the telemetry dashboard).
 
 The Explorer's search loads with what it searches: the panel, the help registry and the settings
-catalogue are one piece of code (`app/explorer/ExplorerSearch.tsx`), fetched once the Explorer is
-idle, so the first press of the search key finds it in.
+catalogue are one piece of code (`app/explorer/ExplorerSearch.tsx`), fetched ahead once the
+Explorer has settled (below), so the first press of the search key finds it in.
 
 A pane's code is asked for with its section. An Explorer section's pane (Home, the Timeline, the
 Inbox, a team) draws only once the person is known, so left to its dynamic import its code would be
@@ -93,10 +93,19 @@ asked for after that answer, and its data after its code. The Explorer asks for 
 section is chosen (`app/explorer/explorer-pane-code.ts`), alongside the reads that let it draw, so
 the landing page waits on the person and then on its own data, never on its code in between.
 
+What is fetched ahead waits for the page's own reads. `requestIdleCallback` means an idle main
+thread, not an idle connection: a megabyte of the editor's code fetched "on idle" shares the
+connection with the reads the landing page is waiting on (at 4 Mbit/s and 100 ms of latency the
+Explorer learned who the person was two seconds after it hydrated, behind 57 files fetched ahead).
+So what the Explorer fetches ahead (the editor's code and the standby document, what builds a new
+document, its search) starts once the Explorer's documents are listed, or after
+`EXPLORER_SETTLE_TIMEOUT_MS = 5000` (default) when they never are, and then on idle
+(`app/explorer/explorer-settled.ts`).
+
 What makes a document loads when one is made. The template builders (every template's elements)
 reach the Explorer only through `lib/new-document-content`, which the New Document menu imports at
-the moment it prepares a document, and which is fetched ahead of that with the editor's code: on
-idle, and when the button is pointed at or focused. `/new` is the page that makes a document, so
+the moment it prepares a document, and which is fetched ahead of that with the editor's code: once
+the Explorer has settled, and when the button is pointed at or focused. `/new` is the page that makes a document, so
 it imports the builders as it loads.
 
 ### The document page loads what a board may not need on demand
