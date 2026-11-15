@@ -286,7 +286,8 @@ export function StickyPhotoArt() {
 // event the story turns on, a suggested note waiting dashed where the agent would put it, an answered
 // hotspot wearing its check, and the corner's Ask and Review pills over the Review card's readiness.
 export function StormReviewArt() {
-  const columns = [14, 52, 90, 128];
+  // The four columns along the timeline, left to right.
+  const [first, second, third, fourth] = [14, 52, 90, 128] as const;
   return (
     <Frame canvas>
       <Scene>
@@ -304,17 +305,9 @@ export function StormReviewArt() {
         ))}
         {/* The pivotal tape, behind the notes, through the event the flow turns on. */}
         <rect x="103" y="4" width="4" height="88" fill="#64748b" fillOpacity="0.8" />
+        <StormNote x={first} y={9} w={24} h={20} fill={NOTE.actor} lines={['GUEST']} tilt={-2} />
         <StormNote
-          x={columns[0]!}
-          y={9}
-          w={24}
-          h={20}
-          fill={NOTE.actor}
-          lines={['GUEST']}
-          tilt={-2}
-        />
-        <StormNote
-          x={columns[0]!}
+          x={first}
           y={35}
           w={28}
           h={26}
@@ -323,7 +316,7 @@ export function StormReviewArt() {
           tilt={1.5}
         />
         <StormNote
-          x={columns[1]!}
+          x={second}
           y={35}
           w={28}
           h={26}
@@ -332,7 +325,7 @@ export function StormReviewArt() {
           tilt={-1.5}
         />
         <StormNote
-          x={columns[2]!}
+          x={third}
           y={35}
           w={30}
           h={26}
@@ -341,7 +334,7 @@ export function StormReviewArt() {
           tilt={1}
         />
         <StormNote
-          x={columns[2]! + 2}
+          x={third + 2}
           y={64}
           w={30}
           h={24}
@@ -351,7 +344,7 @@ export function StormReviewArt() {
         />
         {/* The hotspot's answer: a check on its corner. */}
         <circle
-          cx={columns[2]! + 32}
+          cx={third + 32}
           cy="65"
           r="3.6"
           fill="#059669"
@@ -359,14 +352,14 @@ export function StormReviewArt() {
           strokeWidth="1"
         />
         <path
-          d={`M${columns[2]! + 30.4} 65 l1.1 1.1 l2 -2.3`}
+          d={`M${third + 30.4} 65 l1.1 1.1 l2 -2.3`}
           stroke="#fff"
           strokeWidth="0.9"
           fill="none"
         />
         {/* A suggested note, offered and not yet taken: pale paper inside a dashed border. */}
         <rect
-          x={columns[3]!}
+          x={fourth}
           y="35"
           width="30"
           height="26"
@@ -377,7 +370,7 @@ export function StormReviewArt() {
           strokeDasharray="2.5 2"
         />
         <text
-          x={columns[3]! + 15}
+          x={fourth + 15}
           y="46"
           fontSize="4.4"
           fontWeight="700"
@@ -385,8 +378,8 @@ export function StormReviewArt() {
           textAnchor="middle"
           opacity="0.7"
         >
-          <tspan x={columns[3]! + 15}>BILL</tspan>
-          <tspan x={columns[3]! + 15} dy="5.4">
+          <tspan x={fourth + 15}>BILL</tspan>
+          <tspan x={fourth + 15} dy="5.4">
             PAID
           </tspan>
         </text>

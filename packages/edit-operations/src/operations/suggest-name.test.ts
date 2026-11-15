@@ -66,7 +66,7 @@ describe('suggest-name: applying', () => {
     const bare = (el: Element): Element => {
       if (el.id !== 'kitchen') return el;
       const { textSize: _size, ...rest } = el as Element & { textSize?: string };
-      return rest as Element;
+      return rest;
     };
     const outcome = applied(run('suggest-name "Meal prep" kitchen', stormBoard(bare)));
     expect('textSize' in inBoard(outcome.tab, 'kitchen')).toBe(false);
