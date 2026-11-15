@@ -744,6 +744,15 @@ export const BOARD_STRUCTURE = chart(
   'Someone marked or unmarked a pivotal event on an event-storming board, named one of its lanes, or kept the answer to one of its hotspots.',
   { types: ['PivotalMarked', 'PivotalUnmarked', 'LaneNamed', 'HotspotAnswered'] },
 );
+// An event-storming board looked over in the Review panel (docs/specs/021-event-storming/board-review.md
+// "Telemetry", board-language.md "Telemetry").
+export const BOARD_REVIEW = chart(
+  'Canvas',
+  'Used',
+  'Board Review',
+  'Someone used the Review panel of an event-storming board to add the note that closes a gap, or to rename a term where it is used.',
+  { types: ['GapNoteAdded', 'TermRenamed'] },
+);
 export const ELEMENT_EDITING: MetricStack = {
   stack: true,
   title: 'Element Editing',
@@ -772,6 +781,7 @@ export const ELEMENT_EDITING: MetricStack = {
     BOARD_REARRANGED,
     ASKS,
     BOARD_STRUCTURE,
+    BOARD_REVIEW,
     LINKS_ADDED,
     LINKS_REMOVED,
   ],
