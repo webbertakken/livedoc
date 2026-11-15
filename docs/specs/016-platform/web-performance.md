@@ -351,3 +351,6 @@ seen on the document).
   1,000-element board held the main thread 200 to 300 ms; replayed on restore it takes about 1 ms.
   `apps/live/hooks/canvas/useDocumentHistory.test.ts` counts the passes and checks every step
   against applying each op to every snapshot on arrival.
+- The room's catch-up log stays in memory across a wake ([Resync without reloading the page](../012-collaboration/resync-without-reload.md)
+  "Measured before persisting it"): 2 resyncs in 21 days of production did not pay for two more rows
+  written per op. It is persisted once resyncs after a wake are measured to be several a week.
