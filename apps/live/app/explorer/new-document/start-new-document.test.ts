@@ -211,6 +211,16 @@ describe('prefetchNewDocumentOpen', () => {
   });
 });
 
+describe('a click before anything was fetched ahead', () => {
+  // What builds the content and the editor's code are separate pieces: fetched one after the other, the click
+  // would wait on both in turn.
+  it('asks for everything opening needs at once, before it waits on any of it', () => {
+    startNewDocument(request({ choice: 'template', template: 'flowchart' }));
+    expect(mocks.loadEditor).toHaveBeenCalledOnce();
+    expect(mocks.ensureIconCatalogs).toHaveBeenCalledOnce();
+  });
+});
+
 describe('newDocumentHref', () => {
   it('names the template and the place', () => {
     expect(newDocumentHref(request({ place: { folderId: 'f1' } }))).toBe(

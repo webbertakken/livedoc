@@ -3,7 +3,8 @@
 // `template`); the place the frame shows fills in where it says nothing, a folder view its folder and a team page its
 // team. The document is made as /new makes it (lib/new-document-content.ts) and opened in the frame.
 import { untitledNameForTemplate, type TemplateKind } from '@livedoc/templates';
-import { NEW_DOCUMENT_THEME_ID, newDocumentContent } from '@/lib/new-document-content';
+import { newDocumentContent } from '@/lib/new-document-content';
+import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { writeNewDocument } from '@/lib/new-document/write-new-document';
 import { wizardBypassKind } from '@/lib/new-document-params';
 import type { WorkspacePlace } from '@/lib/workbench/workspace-place';

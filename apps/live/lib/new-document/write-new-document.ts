@@ -14,7 +14,8 @@ import { titleCaseType, track } from '@/lib/telemetry';
 import { themeTelemetryLabel } from '@/lib/custom-theme-registry';
 import { withTemplateSheets } from '@/lib/template-sheets';
 import type { CreateIds } from './create-failure';
-import { NEW_DOCUMENT_THEME_ID, type NewDocumentContent } from '@/lib/new-document-content';
+import type { NewDocumentContent } from '@/lib/new-document-content';
+import { NEW_DOCUMENT_THEME_ID } from './new-document-theme';
 
 export type NewDocumentWrite = {
   ids: CreateIds;
