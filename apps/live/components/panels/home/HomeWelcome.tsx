@@ -23,6 +23,7 @@ import {
 import { HomeSection } from './HomeSection';
 import { CARD_SURFACE, FOCUS_RING, GRID_THUMB, MUTED, PANEL_SURFACE } from './home-styles';
 import { assignAppLocation } from '@/lib/app-location';
+import { markExplorerSettled } from '@/app/explorer/explorer-settled';
 
 export function HomeWelcome({
   offerSignIn,
@@ -35,6 +36,8 @@ export function HomeWelcome({
 }) {
   useEffect(() => {
     track('Home', 'Opened', 'Welcome');
+    // The first run's landing has drawn: what the Explorer fetches ahead may start (explorer-settled.ts).
+    markExplorerSettled();
   }, []);
   const haveWork = offerSignIn || Boolean(importToolbar);
   return (

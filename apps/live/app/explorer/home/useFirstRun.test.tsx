@@ -40,12 +40,12 @@ beforeEach(() => {
 describe('useFirstRun', () => {
   it('is never a first run outside the Explorer', () => {
     const { result } = renderHook(() => useFirstRun());
-    expect(result.current).toEqual({ firstRun: false, offerSignIn: false });
+    expect(result.current).toEqual({ firstRun: false, offerSignIn: false, decided: true });
   });
 
   it('is a first run with nothing loaded, offering a guest the way back', () => {
     const { result } = renderHook(() => useFirstRun(), { wrapper: wrap() });
-    expect(result.current).toEqual({ firstRun: true, offerSignIn: true });
+    expect(result.current).toEqual({ firstRun: true, offerSignIn: true, decided: true });
   });
 
   it('offers no sign-in to someone signed in, or where sign-in is off', () => {
@@ -69,6 +69,8 @@ describe('useFirstRun', () => {
   it('is not a first run while the lists load', () => {
     const { result } = renderHook(() => useFirstRun(), { wrapper: wrap({ loading: true }) });
     expect(result.current.firstRun).toBe(false);
+    // Not decided either way yet: Home has not drawn what it will show.
+    expect(result.current.decided).toBe(false);
   });
 
   it('is no first run when a list failed to load', () => {

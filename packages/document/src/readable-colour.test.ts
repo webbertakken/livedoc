@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { labelOn, reachContrast, THEME_TEXT_CONTRAST } from './readable-colour';
 
 describe('reachContrast', () => {

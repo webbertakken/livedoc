@@ -8,7 +8,8 @@
 import { SHAPE_DEFAULT_SIZE } from './shape-factory';
 import type { BoxedElement } from './index';
 import { r2, xmlEscape } from './svg-render-primitives';
-import { canvasSurface, inkOn } from './colors';
+import { inkOn } from './colour-math';
+import { canvasSurface } from './colors';
 
 export type Face = BoxedElement & { type: 'shape' };
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   looksLikeMarkdown,
   parseInline,
@@ -92,10 +93,10 @@ describe('looksLikeMarkdown on hostile text', () => {
   it('reads text full of brackets in linear time', () => {
     const brackets = '['.repeat(200_000);
     const parens = '[](' + '[(]('.repeat(100_000);
-    const started = performance.now();
+    const started = cpuNowMs();
     expect(looksLikeMarkdown(brackets)).toBe(false);
     expect(looksLikeMarkdown(parens)).toBe(false);
-    expect(performance.now() - started).toBeLessThan(100);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(100));
   });
 
   it('still sees a link, and not bracketed prose', () => {

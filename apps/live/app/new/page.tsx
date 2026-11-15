@@ -54,7 +54,8 @@ import { handStartQuery } from '@/components/start/start-query';
 import { closeStartForBlank } from '@/components/start/close-start-for-blank';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
 import { isBlankTemplate } from '@livedoc/templates';
-import { NEW_DOCUMENT_THEME_ID, newDocumentContent } from '@/lib/new-document-content';
+import { newDocumentContent } from '@/lib/new-document-content';
+import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { loadEditorPage } from '@/lib/editor-page-loader';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
 

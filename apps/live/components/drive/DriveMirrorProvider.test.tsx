@@ -39,8 +39,10 @@ vi.mock('@/components/providers/deferred-auth', () => ({
 }));
 vi.mock('@/hooks/ui/useConfirm', () => ({ useConfirm: () => async () => true }));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
-vi.mock('@/lib/api-client', () => ({
+vi.mock('@/lib/api/capabilities', () => ({
   apiGetCapabilities: async () => ({ driveMode: 'broker' }),
+}));
+vi.mock('@/lib/api/drive', () => ({
   apiDisconnectDrive: vi.fn(),
   apiDriveState: vi.fn(),
   apiPutDriveConnection: vi.fn(),

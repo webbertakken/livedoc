@@ -1,6 +1,6 @@
 // Readable colour pairs (docs/specs/011-theme/light-and-dark.md): walking a colour's lightness until it reads on
 // another. Shared by the theme halves (tuning a theme's text and lines) and the style presets (a label on its fill).
-import { contrastRatio, isLightColor, normaliseHex, shade } from './colors';
+import { contrastRatio, isLightColor, normaliseHex, shade } from './colour-math';
 import { hexOklch, oklchHex } from './pen-colours';
 
 /** The WCAG 2.2 AA floors: text on its fill, and outlines / arrows (non-text) on the canvas. */

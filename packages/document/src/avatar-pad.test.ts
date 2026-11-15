@@ -9,7 +9,7 @@ import {
   avatarPadFootprint,
 } from './avatar-pad';
 import { AVATAR_PALETTE } from './avatar-palette';
-import { tint } from './colors';
+import { tint } from './colour-math';
 import { createShape } from './shape-factory';
 import { isFloorShape } from './office';
 import { isBehaviourShape, carriesSharedSettingsMenu } from './behaviour-shapes';

@@ -3,7 +3,7 @@
 import { readSignInOffered, writeSignInOffered } from '@livedoc/account-session';
 import type { SignInMethod } from '@livedoc/api-schema';
 import { useEffect, useSyncExternalStore } from 'react';
-import { apiGetCapabilities } from '@/lib/api-client';
+import { apiGetCapabilities } from '@/lib/api/capabilities';
 
 // Whether this host offers sign-in, and how (docs/specs/014-identity/auth-and-guest-access.md "Deployment modes": the
 // frontends ask; nothing is baked in). One static build serves a guest-only host and a signed-in one alike, so the

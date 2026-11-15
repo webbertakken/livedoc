@@ -17,9 +17,6 @@ import { buildTemplatedTabs } from '@/lib/template-builders';
 import { templateTabName } from '@/lib/template-tab-name';
 import { getTheme } from '@/lib/themes';
 
-// The theme every new document starts in.
-export const NEW_DOCUMENT_THEME_ID = 'brand';
-
 export type NewDocumentContent = {
   // The template's tabs, or null for no template.
   tabs: Tab[] | null;

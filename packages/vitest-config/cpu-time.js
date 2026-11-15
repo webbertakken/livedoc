@@ -19,6 +19,18 @@ export function cpuMsOf(fn) {
 }
 
 /**
+ * This process's CPU time so far, in ms (user + system): `cpuMsOf` as a clock, for a speed test that
+ * times a stretch of statements whose results it goes on to check. Read it before and after, as
+ * `performance.now()` would be, and it counts the work and not the wait for a core.
+ *
+ * @returns {number}
+ */
+export function cpuNowMs() {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
+}
+
+/**
  * `cpuMsOf` for async work: the CPU time this process spent while `fn`'s
  * promise settled. The worker runs one test at a time, so nothing else is
  * on its CPU meanwhile.

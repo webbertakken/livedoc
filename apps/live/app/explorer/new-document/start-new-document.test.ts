@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   assign: vi.fn(),
@@ -71,6 +71,13 @@ const opened = async () => {
   await new Promise((r) => setTimeout(r, 0));
 };
 const openedId = () => window.location.pathname.split('/').pop()!;
+
+// What builds a document's content is imported at the moment one is made (the template builders stay out of the
+// Explorer's first load). Here that import would be paid by whichever test starts a document first, inside its
+// wait; it is brought in ahead, as the Explorer's idle fetch does.
+beforeAll(async () => {
+  await import('@/lib/new-document-content');
+}, 60_000);
 
 let unbind: () => void = () => {};
 beforeEach(() => {
@@ -206,6 +213,16 @@ describe('prefetchNewDocumentOpen', () => {
   // The hidden standby runs no effects, so a load an effect would start (the icon catalogues) has to come in here.
   it('fetches the editor and the icon catalogues the editor draws with', () => {
     prefetchNewDocumentOpen();
+    expect(mocks.loadEditor).toHaveBeenCalledOnce();
+    expect(mocks.ensureIconCatalogs).toHaveBeenCalledOnce();
+  });
+});
+
+describe('a click before anything was fetched ahead', () => {
+  // What builds the content and the editor's code are separate pieces: fetched one after the other, the click
+  // would wait on both in turn.
+  it('asks for everything opening needs at once, before it waits on any of it', () => {
+    startNewDocument(request({ choice: 'template', template: 'flowchart' }));
     expect(mocks.loadEditor).toHaveBeenCalledOnce();
     expect(mocks.ensureIconCatalogs).toHaveBeenCalledOnce();
   });

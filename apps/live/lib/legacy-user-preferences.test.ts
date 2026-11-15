@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // Preferences cached in a browser before the document rename carry `notifyDiagramJoin`
 // (docs/specs/007-editor/user-preferences.md); an opt-out must survive the rename.
-vi.mock('./api-client', () => ({ apiGetPreferences: vi.fn(), apiPutPreferences: vi.fn() }));
+vi.mock('./api/preferences', () => ({ apiGetPreferences: vi.fn(), apiPutPreferences: vi.fn() }));
 
-import { apiGetPreferences } from './api-client';
+import { apiGetPreferences } from './api/preferences';
 import { STORAGE_KEY, fetchUserPreferences, readUserPreferences } from './user-preferences';
 
 function browserWith(value: string) {

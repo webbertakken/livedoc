@@ -4,7 +4,7 @@
 
 import { eventStormingKindOf } from './event-storming';
 import { ES_LANES, ES_NOTE_GAP, laneCentre } from './event-storming-lanes';
-import { GRAPH_MUTED } from './graph-header';
+import { GRAPH_MUTED } from './graph-muted';
 import type { Element, ElementId, TextElement } from './index';
 
 /** The longest hotspot answer, characters (safe range: 100 to 1000; it shows as a caption). */

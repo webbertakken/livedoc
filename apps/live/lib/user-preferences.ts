@@ -28,7 +28,7 @@ import type { SwatchOverrideStore } from './swatch-overrides';
 import type { WhiteboardShapeKey } from './whiteboard-shape-catalogue';
 import type { ShapePicks } from './whiteboard-shape-slots';
 import { USER_PREFERENCES_STORAGE_KEY } from '@livedoc/telemetry-client';
-import { apiGetPreferences } from './api-client';
+import { apiGetPreferences } from './api/preferences';
 import { fitPreferences, preferencesUnsynced, savePreferences } from './preferences-sync';
 import { getWorkbenchConfinement } from './api/workbench-confinement';
 import { readLocalStorageSafe, writeLocalStorageSafe } from './local-storage-safe';

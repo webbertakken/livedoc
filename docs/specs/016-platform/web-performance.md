@@ -8,8 +8,10 @@ hot paths (drag, pan, zoom on large boards) are a separate subject:
 
 The number that matters for a page is its **first-load JavaScript**: the gzipped size of every
 script its static-export HTML references. It is measured from a production build (`next build` in
-the app), summing the `<script src=".../_next/static/...js">` files a page's HTML names. A change
-that could grow it is measured against `main` the same way before it ships.
+the app), summing the `<script src=".../_next/static/...js">` files a page's HTML names:
+`node scripts/first-load.mjs` prints it for every page of every built app (`--json` to diff two
+builds, `--chunks <app>` for an app's largest scripts). A change that could grow it is measured
+against `main` the same way before it ships.
 
 Why a page carries what it does is read from the Turbopack bundle analyzer (`next analyze`): its route
 summary, its table of the largest contributors, and its diff against an earlier snapshot.
@@ -36,6 +38,17 @@ Then the document page's own first load (measured 2026-10-11 the same way, on to
 
 ## Rules
 
+### Every page has a budget
+
+Each app keeps a `first-load-budget.json`: an ordered list of page patterns, each with the most
+gzipped JavaScript a page it names may load up front. The app's build checks its export against it
+(`node scripts/first-load.mjs --check <app>`) and fails, naming the page, what it loads and what it
+may, when a page is over its budget or no pattern names it. A budget sits a little above what the
+page loads today, so ordinary work passes and a static import that should have been a dynamic one
+does not: the Explorer once grew by 400 KiB in a month, unseen, from one import of the template
+builders. A budget is raised only on purpose, in the change that needs it, and lowered when a page
+shrinks.
+
 ### Nothing heavy in what every route ships
 
 The editor app's root layout, its providers and its root `not-found.tsx` ship with **every route**.
@@ -50,6 +63,16 @@ Next renders the root not-found slot inside the layout, so its code is part of e
   ([Drive mirror](../022-drive-mirror/drive-mirror.md)); every other tab, and every person without
   Drive, never downloads it. The token source every signed-in tab needs lives apart from it
   (`lib/drive/browser-tokens.ts`).
+- What the root layout mounts imports the api module it calls (`lib/api/self`, `lib/api/preferences`),
+  never the api client's barrel (`lib/api-client`): the barrel names every call the editor makes, and
+  with it the offline store and the document model, on sign-in and on a form's page alike. The small
+  pages someone lands on with one call to make (a team invite, the OAuth consent, pairing) do the same.
+- What every route asks of the api is a module of its own: the capability probe is
+  `lib/api/capabilities`, apart from the AI requests, which validate elements and so carry the document
+  model.
+- Code that only needs a colour imports the colour maths (`@livedoc/document`'s `colour-math.ts`), which
+  knows no element; the element defaults beside it (`colors.ts`) carry every shape kind. The brand
+  mark on the sign-in page once brought 50 KiB of shape code with it.
 - `apps/live/app/first-load-lazy.test.ts` fails if any of these become static imports again.
 
 ### A surface that is not on screen loads when it is
@@ -59,6 +82,35 @@ A dialog, panel or view that renders only behind an open flag or a tab is loaded
 The Explorer's Settings and move picker, and every telemetry dashboard view but the first, load
 this way. Where switching to one must stay instant, its code is fetched once the page is idle
 (the telemetry dashboard).
+
+The Explorer's search loads with what it searches: the panel, the help registry and the settings
+catalogue are one piece of code (`app/explorer/ExplorerSearch.tsx`), fetched ahead once the
+Explorer has settled (below), so the first press of the search key finds it in.
+
+A pane's code is asked for with its section. An Explorer section's pane (Home, the Timeline, the
+Inbox, a team) draws only once the person is known, so left to its dynamic import its code would be
+asked for after that answer, and its data after its code. The Explorer asks for the pane as the
+section is chosen (`app/explorer/explorer-pane-code.ts`), alongside the reads that let it draw, so
+the landing page waits on the person and then on its own data, never on its code in between.
+
+What is fetched ahead waits for the page's own reads. `requestIdleCallback` means an idle main
+thread, not an idle connection: a megabyte of the editor's code fetched "on idle" shares the
+connection with the reads the landing page is waiting on (at 4 Mbit/s and 100 ms of latency the
+Explorer learned who the person was two seconds after it hydrated, behind 57 files fetched ahead).
+So what the Explorer fetches ahead (the editor's code and the standby document, what builds a new
+document, its search) starts once the landing has drawn what it came to show, or after
+`EXPLORER_SETTLE_TIMEOUT_MS = 5000` (default) when it never does, and then on idle
+(`app/explorer/explorer-settled.ts`). A section drawn from the Explorer's lists has drawn when they
+land. Home has drawn when its own read has answered; a first run, whose welcome is code fetched only
+once the lists say there is nothing yet, when that welcome is on screen. Waiting for the lists alone
+started a megabyte and a half of downloads at the moment a newcomer's welcome was asked for, and
+the welcome showed half a second later than with no waiting at all (4 Mbit/s, 100 ms).
+
+What makes a document loads when one is made. The template builders (every template's elements)
+reach the Explorer only through `lib/new-document-content`, which the New Document menu imports at
+the moment it prepares a document, and which is fetched ahead of that with the editor's code: once
+the Explorer has settled, and when the button is pointed at or focused. `/new` is the page that makes a document, so
+it imports the builders as it loads.
 
 ### The document page loads what a board may not need on demand
 
@@ -73,6 +125,11 @@ this way. Where switching to one must stay instant, its code is fetched once the
   session settings. Fetched once the opened document has rendered and the page is idle.
 - **At the press**: the photo import's detection pipeline (and the sticky detector in it) loads when a
   photo is picked; a template's canvas overrides load with its builders when one is applied.
+- **Pictures of the board**: the Map, slide and page thumbnails and a library shape's picture are
+  drawn by the SVG renderer (`@livedoc/document`'s `svg-render*`, the code exports use). The board
+  itself is drawn by the element views, so the renderer is no part of the first load: the Map
+  (`components/canvas/Minimap.tsx`) is content a board may draw on open, and everything else that
+  draws a picture imports the renderer when it first draws one.
 - **What waits for on-demand code.** Starting a deck waits for the presentation overlay's code (with
   the deck's unvisited tabs), and the overlay draws in the first slide's commit, so the deck's keys
   listen from its first frame. The top corners give way to a top Draw dock from the commit the dock is

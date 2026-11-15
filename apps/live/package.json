@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node ../../scripts/next-dev.mjs --port 4002",
     "dev:webpack": "node ../../scripts/next-dev.mjs --port 4002 --webpack",
-    "build": "next build && node scripts/asset-size-gate.mjs out",
+    "build": "next build && node scripts/asset-size-gate.mjs out && node ../../scripts/first-load.mjs --check live",
     "lint": "oxlint",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",

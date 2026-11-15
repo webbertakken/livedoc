@@ -22,6 +22,7 @@ import { subscribeNewDocumentCreator } from '@/lib/new-document/new-document-cre
 import { debugLog } from '@/lib/debug-log';
 import { isPendingSettled } from '@/lib/new-document/pending-documents';
 import { closeInPlace, openInPlace, useInPlaceDocuments } from './in-place-editor-store';
+import { afterExplorerSettled } from '../explorer-settled';
 import { documentIdFromPath, isEditorPath } from '@/lib/legacy-editor-path';
 
 // How often an editor kept for its create checks whether it may go (D198).
@@ -79,8 +80,8 @@ export function InPlaceEditor({ children }: { children: ReactNode }) {
     };
   }, [addressed, openId]);
 
-  // What opening needs comes in while the Explorer is idle.
-  useEffect(() => prefetchNewDocumentOpenWhenIdle(), []);
+  // What opening needs comes in once the Explorer's own reads have landed and it is idle (explorer-settled.ts).
+  useEffect(() => afterExplorerSettled(prefetchNewDocumentOpenWhenIdle), []);
 
   // The standby: the blank the face makes next, rendered ahead and hidden, so the click only
   // reveals an editor already built. Made again for the face's blank and whoever is creating, whenever either changes.
@@ -89,7 +90,7 @@ export function InPlaceEditor({ children }: { children: ReactNode }) {
   useEffect(() => subscribeNewDocumentCreator(() => setCreatorTick((t) => t + 1)), []);
   useEffect(() => {
     if (openId !== null) return;
-    return whenIdle(() => void prepareStandbyDocument(lastBlank));
+    return afterExplorerSettled(() => whenIdle(() => void prepareStandbyDocument(lastBlank)));
   }, [openId, lastBlank, creatorTick, standbyId]);
 
   useEffect(() => {

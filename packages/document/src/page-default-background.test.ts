@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { getBuiltInTheme, THEMES } from './themes';
 import { pagesOf } from './page';
 import { PEN_INK } from './pen-colours';

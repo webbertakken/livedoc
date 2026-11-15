@@ -6,7 +6,7 @@ import { getGuestSelfId, setGuestIdentity } from './local-identity';
 const { apiMigrateGuestData } = vi.hoisted(() => ({
   apiMigrateGuestData: vi.fn(),
 }));
-vi.mock('./api-client', () => ({ apiMigrateGuestData }));
+vi.mock('./api/self', () => ({ apiMigrateGuestData }));
 
 const {
   GUEST_MIGRATION_WAIT_MS,

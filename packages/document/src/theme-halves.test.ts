@@ -3,7 +3,7 @@ import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { themeColourMap, themeHalf, viewElementInTheme } from './theme-halves';
 import { THEMES } from './themes';
 import { legacyShapeColorPresets, shapeColorPresets } from './theme-presets';
-import { contrastRatio, isLightColor } from './colors';
+import { contrastRatio, isLightColor } from './colour-math';
 import { defaultScheme } from './themes';
 import { resolveStockColours } from './stock-colours';
 import { createShape } from './factories';

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { parseMermaid, mermaidFromTab, startsWithMermaidHeader } from './mermaid';
 import { graphToElements } from './graph-authoring';
 import { autoLayoutElements } from './auto-layout';
@@ -399,9 +400,9 @@ describe('parseMermaid %% comments', () => {
 
   it('scans a long line of quotes and percents in linear time', () => {
     const line = `A["${'"%%'.repeat(50_000)}"]`;
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     parseMermaid(`flowchart TD\n  ${line}`);
-    expect(performance.now() - t0).toBeLessThan(1000);
+    expect(cpuNowMs() - t0).toBeLessThan(cpuBudgetMs(1000));
   });
 });
 

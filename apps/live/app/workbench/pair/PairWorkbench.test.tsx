@@ -26,7 +26,7 @@ const api = vi.hoisted(() => ({
   apiReadPairingRequest: vi.fn(),
   apiAnswerPairingRequest: vi.fn(),
 }));
-vi.mock('@/lib/api-client', () => api);
+vi.mock('@/lib/api/workbench', () => api);
 const telemetry = vi.hoisted(() => ({ track: vi.fn() }));
 vi.mock('@/lib/telemetry', () => telemetry);
 

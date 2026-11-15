@@ -19,7 +19,7 @@ vi.mock('@/hooks/persistence/useAccountApiBootstrap', () => ({
   useAccountApiBootstrap: () => ({ authLoaded: true, isSignedIn: false, accountId: null }),
 }));
 const resolve = vi.hoisted(() => vi.fn());
-vi.mock('@/lib/api-client', () => ({
+vi.mock('@/lib/api/teams', () => ({
   apiResolveTeamInviteLink: resolve,
   apiJoinTeamByInviteLink: vi.fn(),
 }));

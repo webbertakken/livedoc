@@ -11,13 +11,8 @@ import {
   type BorderStroke,
   type BorderStyle,
 } from './border-style';
-import {
-  MIN_TEXT_CONTRAST,
-  canvasSurface,
-  contrastRatio,
-  inkOn,
-  type CanvasSurface,
-} from './colors';
+import { MIN_TEXT_CONTRAST, contrastRatio, inkOn } from './colour-math';
+import { canvasSurface, type CanvasSurface } from './colors';
 import { clampShadow, type ElementShadow } from './shadow';
 import { isHexColour } from './standard-colours';
 import { mixHex } from './svg-render-face-kit';

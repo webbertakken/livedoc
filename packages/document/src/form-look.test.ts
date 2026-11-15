@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formLook } from './form-look';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { THEMES } from './themes-data';
 import { getBuiltInTheme } from './themes';
 import { themeAccent } from './page-default-background';

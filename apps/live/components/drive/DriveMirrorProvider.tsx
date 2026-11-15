@@ -9,12 +9,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { DRIVE_CONNECT_FAILED } from '@/lib/drive/cloud-sync-copy';
 import { usePathname } from 'next/navigation';
 import type { DriveAccessToken, DriveMode } from '@livedoc/api-schema';
-import {
-  apiDisconnectDrive,
-  apiDriveState,
-  apiGetCapabilities,
-  apiPutDriveConnection,
-} from '@/lib/api-client';
+import { apiGetCapabilities } from '@/lib/api/capabilities';
+import { apiDisconnectDrive, apiDriveState, apiPutDriveConnection } from '@/lib/api/drive';
 import { notifyApiWrite, subscribeApiWrites } from '@/lib/api/write-signal';
 import { useAccountApiBootstrap } from '@/hooks/persistence/useAccountApiBootstrap';
 import { useDeferredAuth } from '@/components/providers/deferred-auth';

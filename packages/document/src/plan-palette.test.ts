@@ -1,6 +1,6 @@
 import { PLAN_PRESET_HUES } from './plan-presets';
 import { describe, expect, it } from 'vitest';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { accentOn, liftAccent, planPalette, PLAN_BORDER_ACCENT_SHARE } from './plan-palette';
 import { mixHex } from './svg-render-face-kit';
 

@@ -5,7 +5,7 @@
 // markup for the canvas (inlined into its sheet and overlay), every export and the agents'
 // previews, so they draw the same frame. Pure strings in canvas coordinates; no DOM.
 import { r2, xmlEscape } from './svg-render-primitives';
-import { isLightColor, shade } from './colors';
+import { isLightColor, shade } from './colour-math';
 import { mixHex } from './color-wash';
 import type { Finish } from './finish';
 import { MARKER_INK_OPACITY, markerStrokes } from './marker';

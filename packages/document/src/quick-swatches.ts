@@ -3,15 +3,8 @@
 // Slot 0 is the theme's own default; slots 1-6 are six colours from the
 // theme's palette. A slot is a stable id, which is what lets a colour picked
 // here follow a theme change (`strokeSwatch` / `fillSwatch` / `textSwatch` on the element).
-import {
-  canvasSurface,
-  contrastRatio,
-  MIN_TEXT_CONTRAST,
-  hexToRgb,
-  rgbToHex,
-  unpaintedShapeInk,
-  type RGB,
-} from './colors';
+import { contrastRatio, MIN_TEXT_CONTRAST, hexToRgb, rgbToHex, type RGB } from './colour-math';
+import { canvasSurface, unpaintedShapeInk } from './colors';
 import { clamp } from './geometry-primitives';
 import type { ThemeDefinition } from './themes';
 

@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('./api-client', () => ({
+vi.mock('./api/preferences', () => ({
   apiGetPreferences: vi.fn(),
   apiPutPreferences: vi.fn(),
 }));
 
-import { apiGetPreferences, apiPutPreferences } from './api-client';
+import { apiGetPreferences, apiPutPreferences } from './api/preferences';
 import {
   __resetPreferencesSync,
   fitPreferences,

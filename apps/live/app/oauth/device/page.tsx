@@ -8,7 +8,8 @@
 import { Suspense, use, useState } from 'react';
 import { browser } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
-import { apiExchangeOauthToken, apiRevokeToken } from '@/lib/api-client';
+import { apiExchangeOauthToken } from '@/lib/api/oauth';
+import { apiRevokeToken } from '@/lib/api/tokens';
 import { useSignInAvailable } from '@/lib/auth-config';
 import {
   completeDevice,

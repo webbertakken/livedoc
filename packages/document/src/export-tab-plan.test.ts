@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import {
   defaultCatalogue,
   ITEM_TYPES,
@@ -158,10 +159,10 @@ describe('a full store', () => {
       full.set(`f${i}`, item(`f${i}`, i + 1, { title: `Card ${i}`, status: 'todo' }));
     }
     const fullPlan = { ...plan, items: full };
-    const t = performance.now();
+    const t = cpuNowMs();
     const env = JSON.parse(tabToJsonText(tabOf(board), fullPlan)) as ExportedTabEnvelope;
     tabToMarkdownText(tabOf(board), fullPlan);
-    expect(performance.now() - t).toBeLessThan(250);
+    expect(cpuNowMs() - t).toBeLessThan(cpuBudgetMs(250));
     expect(env.items).toHaveLength(2000);
   });
 });

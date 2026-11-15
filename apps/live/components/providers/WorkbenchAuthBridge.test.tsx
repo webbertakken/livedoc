@@ -20,8 +20,8 @@ vi.mock('@livedoc/account-session', async (importOriginal) => ({
 }));
 vi.mock('next/navigation', () => ({ usePathname: () => '/embed/workbench/' }));
 const { apiMigrateGuestData } = vi.hoisted(() => ({ apiMigrateGuestData: vi.fn() }));
-vi.mock('@/lib/api-client', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/api-client')>()),
+vi.mock('@/lib/api/self', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/api/self')>()),
   apiMigrateGuestData,
 }));
 

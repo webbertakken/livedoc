@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { contrastRatio, MIN_TEXT_CONTRAST } from './colour-math';
 import {
-  contrastRatio,
   defaultFillColor,
   defaultStrokeColor,
   defaultTextColor,
-  MIN_TEXT_CONTRAST,
   type CanvasSurface,
 } from './colors';
 import { createShape } from './shape-factory';

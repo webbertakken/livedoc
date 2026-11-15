@@ -720,6 +720,7 @@ export * from './web-components';
 // The Behaviours family (docs/specs/010-palette/palette-top-level-categories.md): which kinds are in it, and which of them
 // draw their own `…` rather than taking the shared settings one.
 export * from './behaviour-shapes';
+export * from './colour-math';
 export * from './colors';
 export * from './cell-colours';
 export * from './table-header-colours';

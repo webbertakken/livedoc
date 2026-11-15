@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { STROKE_FIT_START_TOLERANCE_PX, fitStrokeToLimit } from './stroke-fit';
 import { MAX_FREEHAND_POINTS } from './stroke-points';
 
@@ -73,11 +74,11 @@ describe('fitStrokeToLimit', () => {
       x: (i % 400) + Math.sin(i) * 3,
       y: Math.floor(i / 400) * 2 + Math.cos(i * 1.7) * 3,
     }));
-    const t0 = performance.now();
+    const t0 = cpuNowMs();
     const out = fitStrokeToLimit(points);
-    const ms = performance.now() - t0;
+    const ms = cpuNowMs() - t0;
     expect(out.points.length).toBeLessThanOrEqual(MAX_FREEHAND_POINTS);
     // Generous for a loaded CI machine; the fit runs far faster locally.
-    expect(ms).toBeLessThan(1_000);
+    expect(ms).toBeLessThan(cpuBudgetMs(1_000));
   });
 });

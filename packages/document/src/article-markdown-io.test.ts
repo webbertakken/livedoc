@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { MAX_ARTICLE_BLOCK_TEXT, type ArticleBlock, type ArticleFlow } from './article-flow';
 import {
   ARTICLE_MARKDOWN_MAX,
@@ -304,48 +305,48 @@ describe('worst case', () => {
       size += line.length + 2;
     }
     const text = lines.join('\n').slice(0, ARTICLE_MARKDOWN_MAX);
-    const started = performance.now();
+    const started = cpuNowMs();
     const blocks = blocksOf(text);
-    const took = performance.now() - started;
+    const took = cpuNowMs() - started;
     expect(blocks.length).toBeGreaterThan(1000);
     // Measured 77 to 346 ms on a loaded machine; held at 1,000 ms for CI under load.
-    expect(took).toBeLessThan(1000);
+    expect(took).toBeLessThan(cpuBudgetMs(1000));
   });
 
   it('reads a block of unclosed backtick fences in budget', () => {
     // Every fence length up to 190, none closed: each fence scans the rest of the line once.
     const line = Array.from({ length: 190 }, (_, i) => '`'.repeat(i + 1) + 'x').join('');
-    const started = performance.now();
+    const started = cpuNowMs();
     parseInline(line);
     // Measured 3 ms; 250 leaves room for CI under load.
-    expect(performance.now() - started).toBeLessThan(250);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(250));
   });
 
   it('writes and reads inline code of a long run of spaces in budget', () => {
     const code = ' ' + '!'.repeat(15_000) + ' !';
-    const started = performance.now();
+    const started = cpuNowMs();
     const back = articleFromMarkdown(
       articleToMarkdown({
         blocks: [{ id: 'p', type: 'paragraph', runs: [{ text: code, code: true }] }],
       }),
     );
     // CodeQL's case for the edge-space check this replaced: quadratic as a regex.
-    expect(performance.now() - started).toBeLessThan(250);
+    expect(cpuNowMs() - started).toBeLessThan(cpuBudgetMs(250));
     expect('blocks' in back).toBe(true);
   });
 
   it('stays linear on a long run of spaces (no regex backtracking)', () => {
     const spaces = ' '.repeat(50_000);
-    const started = performance.now();
+    const started = cpuNowMs();
     const md = articleToMarkdown({
       blocks: [{ id: 'p', type: 'paragraph', runs: [{ text: `${spaces}x${spaces}y`, b: true }] }],
     });
     const out = articleFromMarkdown(`| a | b |\n|${spaces}x\n| 1 | 2 |`);
-    const took = performance.now() - started;
+    const took = cpuNowMs() - started;
     expect(md).toBe(`${spaces}**x${spaces}y**\n`);
     // Not a table rule, so the line stays a paragraph, then refused as longer than a block takes.
     expect('blocks' in out).toBe(false);
     // Measured under 5 ms; the quadratic regexes this guards took about 3 s each.
-    expect(took).toBeLessThan(250);
+    expect(took).toBeLessThan(cpuBudgetMs(250));
   });
 });

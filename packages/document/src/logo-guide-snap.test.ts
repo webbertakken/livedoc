@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { cpuBudgetMs, cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 import { logoGuides } from './logo-page';
 import {
   logoGuideCrossings,
@@ -44,9 +45,9 @@ describe('snapToLogoGuides', () => {
     expect(logoGuideCrossings(shapes).length).toBeGreaterThan(50);
     // Prepared once, as the editor does per page: a snap is then a scan of the crossings.
     const targets = logoGuideSnapTargets(g, all);
-    const t = performance.now();
+    const t = cpuNowMs();
     // About 11 us a snap at rest; unprepared it was about 1.75 ms, so 1000 would take 1.75 s.
     for (let i = 0; i < 1000; i++) snapToGuideTargets(targets, { x: i, y: 300 }, 10);
-    expect(performance.now() - t).toBeLessThan(500);
+    expect(cpuNowMs() - t).toBeLessThan(cpuBudgetMs(500));
   });
 });

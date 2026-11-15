@@ -1,7 +1,7 @@
 // The colour arithmetic of re-inking a page's content (docs/specs/007-editor/pages-mode.md
 // "Re-inking"): the least change to a colour, keeping its hue, that reaches a contrast against
 // every tone it may sit on. Pure.
-import { contrastRatio, hexToRgb, rgbToHex, shade, tint } from './colors';
+import { contrastRatio, hexToRgb, rgbToHex, shade, tint } from './colour-math';
 
 // The search for the least change: this many even steps toward white (or black), then this many
 // halvings inside the first step that reaches the target. 20 x 0.05, then 8 halvings: the amount

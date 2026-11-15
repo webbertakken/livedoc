@@ -6,7 +6,7 @@ import {
   type WorkbenchSession,
 } from '@/components/providers/workbench-session-context';
 import { useEffect, useLayoutEffect, useState, useSyncExternalStore } from 'react';
-import { registerTokenProvider } from '@/lib/api-client';
+import { registerTokenProvider } from '@/lib/api/core';
 import {
   guestMigrationPending,
   settleGuestMigration,

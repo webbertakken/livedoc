@@ -4,7 +4,7 @@
 // page looks designed rather than bare. Pure:
 // every path that makes a page (adding one, choosing the first page's kind, a template, an AI
 // tool) lands the same background.
-import { shade } from './colors';
+import { shade } from './colour-math';
 import { pagesOf, pageKindOf, type PageBackground } from './page';
 import { PAGE_GRADIENT_ANGLE } from './page-paint';
 import type { Tab, ThemeDefinition } from './index';

@@ -11,6 +11,7 @@ import { ARRIVED_ON_HOME } from '@/app/explorer/entry-path';
 import { HOME_COPY } from '@/app/explorer/home/home-copy';
 import { useHome } from '@/app/explorer/home/useHome';
 import { useFirstRun } from '@/app/explorer/home/useFirstRun';
+import { markExplorerSettled } from '@/app/explorer/explorer-settled';
 import type { DocumentEntryFor } from '@/app/explorer/useDocumentEntryFor';
 import { JumpBackIn } from './JumpBackIn';
 import { WhatHappened } from './WhatHappened';
@@ -45,7 +46,15 @@ export function HomePane({
   documentMenus?: DocumentEntryFor;
 }) {
   const home = useHome(ownerId, onSeen);
-  const { firstRun, offerSignIn } = useFirstRun();
+  const { firstRun, offerSignIn, decided } = useFirstRun();
+
+  // Home has drawn what it came to show once its read has answered and it is known not to be a first run (whose
+  // welcome is code still to fetch, and says so itself): what the Explorer fetches ahead may start
+  // (explorer-settled.ts).
+  const drawn = decided && !firstRun && home.status !== 'loading';
+  useEffect(() => {
+    if (drawn) markExplorerSettled();
+  }, [drawn]);
 
   // Once per visit: Home as the page the Explorer opened on, or reached from elsewhere.
   useEffect(() => {

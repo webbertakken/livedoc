@@ -16,7 +16,7 @@ import { useSignInAvailable } from '@/lib/auth-config';
 import { useSignedGuestId } from '@/hooks/persistence/useSignedGuestId';
 import { useUrlToken } from '@/hooks/ui/useUrlToken';
 import { track } from '@/lib/telemetry';
-import { apiJoinTeamByInviteLink, apiResolveTeamInviteLink } from '@/lib/api-client';
+import { apiJoinTeamByInviteLink, apiResolveTeamInviteLink } from '@/lib/api/teams';
 import { assignAppLocation } from '@/lib/app-location';
 
 // Landing for a shareable team invite link (docs/specs/013-workspace/teams.md), served at the

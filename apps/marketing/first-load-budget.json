@@ -1,0 +1,6 @@
+{
+  "budgets": [
+    { "page": "^/about$", "kib": 290 },
+    { "page": ".", "kib": 215 }
+  ]
+}

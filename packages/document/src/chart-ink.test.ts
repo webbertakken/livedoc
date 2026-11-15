@@ -9,7 +9,7 @@ import {
   CHART_TEXT_TARGET,
 } from './chart-ink';
 import { CHART_PALETTES } from './chart-palettes';
-import { contrastRatio, hexToRgb } from './colors';
+import { contrastRatio, hexToRgb } from './colour-math';
 import { createShape, createSticky, type Element, type ShapeElement } from './index';
 import { layOutPages, type PageFill } from './page';
 import { worstContrast } from './page-ink-contrast';

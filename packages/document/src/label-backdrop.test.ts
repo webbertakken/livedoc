@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { LABEL_BACKDROP_CONTRAST, labelBackdrops, withReadableLabelInks } from './label-backdrop';
 import type { Element } from './index';
 

@@ -1,4 +1,4 @@
-import { apiMigrateGuestData } from './api-client';
+import { apiMigrateGuestData } from './api/self';
 import {
   clearGuestSelfId,
   getGuestSelfId,

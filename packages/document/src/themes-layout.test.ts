@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createShape } from './shape-factory';
 import { getBuiltInTheme, themedForTab } from './themes';
 import { themeHalf } from './theme-halves';
-import { isLightColor } from './colors';
+import { isLightColor } from './colour-math';
 import type { Element } from './index';
 
 // docs/specs/007-editor/pages-mode.md "Layouts": a placed layout takes its tab's theme where it sets no colour.

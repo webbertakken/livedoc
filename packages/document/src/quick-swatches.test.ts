@@ -8,7 +8,8 @@ import {
   quickSwatches,
   quickSwatchSlotOf,
 } from './quick-swatches';
-import { MIN_TEXT_CONTRAST, contrastRatio, unpaintedShapeInk } from './colors';
+import { MIN_TEXT_CONTRAST, contrastRatio } from './colour-math';
+import { unpaintedShapeInk } from './colors';
 import { DEFAULT_SCHEME_DARK, DEFAULT_SCHEME_LIGHT, THEMES } from './themes-data';
 import type { ThemeDefinition } from './themes';
 

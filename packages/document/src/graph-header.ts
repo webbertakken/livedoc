@@ -5,10 +5,9 @@
 import { unionRects } from './geometry-primitives';
 import { glyphWidth } from './graph-authoring';
 import { TONE_PRESET } from './graph-look';
+import { GRAPH_MUTED } from './graph-muted';
 import { isBoxed, type BoxedElement, type Element, type ShapeElement } from './index';
 
-// The template's muted caption grey (template-builders-flowchart.ts MUTED).
-export const GRAPH_MUTED = '#64748b';
 // Header geometry, the flowchart template's: title band, caption line, the gap down to the drawing.
 const TITLE_H = 44;
 const CAPTION_LINE_H = 22;

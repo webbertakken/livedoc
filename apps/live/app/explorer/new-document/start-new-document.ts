@@ -28,12 +28,9 @@ import {
   dropStandbyDocument,
   type NewDocumentPlace,
 } from '@/lib/new-document/pending-documents';
+import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
-import {
-  NEW_DOCUMENT_THEME_ID,
-  newDocumentContent,
-  type NewDocumentContent,
-} from '@/lib/new-document-content';
+import type { NewDocumentContent } from '@/lib/new-document-content';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
 import {
   defaultSaveLocationFor,
@@ -76,11 +73,16 @@ function locationFor(place: NewDocumentPlace, creator: NewDocumentCreator): Save
   });
 }
 
-// What a new document opens with: the editor's code, a Plan template's example cards, and the icon catalogues the
-// editor draws with. The standby is rendered hidden, which runs none of its effects, so a load an effect starts in the
-// editor (useIconCatalogs) would otherwise only begin at the click.
+// What builds a new document's content, and with it every template's builders: loaded when a document is made, never
+// with the Explorer (docs/specs/016-platform/web-performance.md "What makes a document loads when one is made").
+const loadNewDocumentContent = () => import('@/lib/new-document-content');
+
+// What a new document opens with: the editor's code, what builds its content, a Plan template's example cards, and
+// the icon catalogues the editor draws with. The standby is rendered hidden, which runs none of its effects, so a load
+// an effect starts in the editor (useIconCatalogs) would otherwise only begin at the click.
 const OPEN_CODE = [
   loadEditorPage,
+  loadNewDocumentContent,
   () => import('@livedoc/templates/plan-template-seeds'),
   ensureIconCatalogs,
 ] as const;
@@ -112,6 +114,9 @@ export function startNewDocument(request: NewDocumentRequest): void {
   }
   starting = true;
   const startedAt = performance.now();
+  // A click that beat the idle fetch and never crossed the button asks for every piece at once, rather than waiting
+  // on what builds the content and then on the editor.
+  prefetchNewDocumentOpen();
   openNewDocument(request, creator, startedAt)
     .catch((err: unknown) => {
       // Nothing was opened or registered: the /new path makes it instead.
@@ -144,6 +149,7 @@ async function prepareDocument(
   const ids = createIdsFor(null);
   // A blank opens with its start closed (close-start-for-blank.ts).
   if (choice === 'blank') closeStartForBlank(ids.tabId, template);
+  const { newDocumentContent } = await loadNewDocumentContent();
   const content = await newDocumentContent({
     templateKind: template,
     themeId: NEW_DOCUMENT_THEME_ID,

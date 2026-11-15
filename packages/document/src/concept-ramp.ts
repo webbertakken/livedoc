@@ -3,7 +3,7 @@
 // with them.
 
 import { mixHex } from './color-wash';
-import { contrastRatio } from './colors';
+import { contrastRatio } from './colour-math';
 import { THEME_TEXT_CONTRAST, labelOn } from './readable-colour';
 
 const HEX = /^#[0-9a-f]{6}$/i;

@@ -1,10 +1,9 @@
-// AI Assistance (docs/specs/007-editor/ai-assistance.md): server-capability probe + the unified
-// streaming request handler that parses elements out of the SSE feed.
+// AI Assistance (docs/specs/007-editor/ai-assistance.md): the unified streaming request handler that parses
+// elements out of the SSE feed. The server-capability probe is capabilities.ts.
 import type {
   AiConversationTurn,
   AiMode,
   AiRequest,
-  CapabilitiesResponse,
   NoteCrop,
   ReadNotesRequest,
   ReadNotesResponse,
@@ -12,38 +11,6 @@ import type {
 import { READ_MAX_CROPS_PER_REQUEST } from '@livedoc/api-schema';
 import { isTextSize, isValidElement, type Element } from '@livedoc/document';
 import { API_BASE, apiHeaders, apiFetch } from './core';
-
-// Fetch server capabilities. Returns everything fail-closed (false) on any
-// network error so callers degrade gracefully.
-//
-// Fetched once per page: the answer is deployment config, the same for every
-// caller, and the editor, the Drive mirror and each Settings open all ask.
-// A failed answer is not kept, so the next caller asks again.
-let capabilities: Promise<CapabilitiesResponse> | null = null;
-
-export function apiGetCapabilities(): Promise<CapabilitiesResponse> {
-  capabilities ??= fetchCapabilities().then(({ caps, ok }) => {
-    if (!ok) capabilities = null;
-    return caps;
-  });
-  return capabilities;
-}
-
-// Tests only: a fresh page.
-export function resetCapabilitiesForTests(): void {
-  capabilities = null;
-}
-
-async function fetchCapabilities(): Promise<{ caps: CapabilitiesResponse; ok: boolean }> {
-  const closed = { aiEnabled: false, emailEnabled: false };
-  try {
-    const res = await apiFetch(`${API_BASE}/capabilities`);
-    if (!res.ok) return { caps: closed, ok: false };
-    return { caps: (await res.json()) as CapabilitiesResponse, ok: true };
-  } catch {
-    return { caps: closed, ok: false };
-  }
-}
 
 // Shape kinds the AI may emit and we render as-is. A SUPERSET of what the
 // server prompt lists (apps/api SCHEMA), because models routinely stray:

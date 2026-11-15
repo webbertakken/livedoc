@@ -1,13 +1,8 @@
 // What is drawn behind a label, and keeping a label readable on it when a theme repaints one without the other
 // (docs/specs/011-theme/light-and-dark.md "A theme never sinks a label into what is behind it"). Pure.
 import { mixHex } from './color-wash';
-import {
-  canvasSurface,
-  contrastRatio,
-  defaultFillColor,
-  defaultTextColor,
-  type CanvasSurface,
-} from './colors';
+import { contrastRatio } from './colour-math';
+import { canvasSurface, defaultFillColor, defaultTextColor, type CanvasSurface } from './colors';
 import { reachContrast } from './readable-colour';
 import type { BoxedElement, Element } from './index';
 
