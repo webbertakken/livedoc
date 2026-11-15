@@ -132,6 +132,17 @@ In a browser, a first-time guest, 4 Mbit/s and 100 ms, medians of five interleav
 - The cause was a lane name importing one grey from the graph header, which brought its routing and layout.
 - The grey became a module of its own (`graph-muted.ts`).
 
+### An offline document's tabs, one record each (R5)
+
+- A This Browser document keeps each tab in its own IndexedDB record beside one document record.
+- An autosave reads and writes the one tab it saves and the document record, never the other tabs.
+- Version 3 of the store moves every document across in its upgrade, checked tab by tab, all or nothing.
+- An older tab holding the store delays the upgrade; a tab a newer build overtakes asks to reload.
+
+| Measure                                          | Before  | After   |
+| ------------------------------------------------ | ------- | ------- |
+| Bytes one autosave writes, 5 tabs of 1,000 boxes | 509,336 | 102,082 |
+
 ## Refuted or set aside
 
 About half the leads did not survive a check; they are listed so nobody proposes them again.
@@ -181,7 +192,8 @@ To build:
 - F1 `/new` loads the template builders at the pick, fetched as `/new` loads when the address names a template (#188).
   Built: `/new` loads 801 to 525 KiB up front and its wizard can be chosen from 1.7 s sooner at 4 Mbit/s; a template
   link opens as fast as before (13.3 s both, bound by the editor's code).
-- R5 an offline document's tabs stored one record each, so an autosave writes one tab, not the document (#182).
+- R5 an offline document's tabs stored one record each, so an autosave writes one tab, not the document (#182):
+  built, see "What shipped".
 - S3 the telemetry dashboard prefetches no other view when the browser asks to save data (#187).
 - O4 the Explorer's panel tree becomes infinite scroll, with a search that finds every row, shown or not (#183).
 

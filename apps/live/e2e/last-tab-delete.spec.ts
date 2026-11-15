@@ -1,5 +1,7 @@
+import { randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import { box, editLink, seedHomeDocument } from './home-seed';
+import { seedOfflineDocuments } from './offline-seed';
 import {
   test,
   expect,
@@ -110,40 +112,18 @@ test('a This Browser document goes to the local Trash the same way', async ({
   await asOwner(page, owner);
   await page.goto('/explorer/home');
   // A document kept only in this browser, written as the editor writes it, one empty tab.
-  const id = await page.evaluate(
-    () =>
-      new Promise<string>((resolve, reject) => {
-        const docId = crypto.randomUUID();
-        const open = indexedDB.open('livedoc-offline', 2);
-        open.onerror = () => reject(open.error ?? new Error('IndexedDB open failed'));
-        // The store, as the app makes it on first use (offline-backend.ts), when this browser has none yet.
-        open.onupgradeneeded = () => {
-          if (!open.result.objectStoreNames.contains('documents')) {
-            open.result.createObjectStore('documents', { keyPath: 'id' });
-          }
-        };
-        open.onsuccess = () => {
-          let tx: IDBTransaction;
-          try {
-            tx = open.result.transaction('documents', 'readwrite');
-          } catch (error) {
-            reject(error instanceof Error ? error : new Error(String(error)));
-            return;
-          }
-          const now = Date.now();
-          tx.objectStore('documents').put({
-            id: docId,
-            name: 'Kept here',
-            folderId: null,
-            createdAt: now,
-            savedAt: now,
-            tabs: [{ id: 't1', name: 'Tab 1', elements: [] }],
-          });
-          tx.oncomplete = () => resolve(docId);
-          tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
-        };
-      }),
-  );
+  const id = randomUUID();
+  const now = Date.now();
+  await seedOfflineDocuments(page, [
+    {
+      id,
+      name: 'Kept here',
+      folderId: null,
+      createdAt: now,
+      savedAt: now,
+      tabs: [{ id: 't1', name: 'Tab 1', elements: [] }],
+    },
+  ]);
   await page.goto(`/document/${id}`);
   await expect(page.getByRole('button', { name: 'This Browser' })).toBeVisible();
 

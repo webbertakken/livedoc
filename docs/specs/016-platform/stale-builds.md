@@ -96,9 +96,13 @@ back, so a later failure on the page can still reload once.
   document format number ([New version prompt](./new-version-prompt.md)): every api response
   carries `X-Livedoc-Build: <id>` beside `X-Livedoc-Format`, and the realtime room's
   `format` message carries `build`. No request is made for it and nothing polls.
-- **Stale** means both ids are known and differ. One mechanism, two responses: a newer document
+- **The browser's offline store says so too.** When another tab of the browser upgraded the
+  offline store past what this build knows ([Offline Mode](../006-document/offline-mode.md) "Other
+  browser tabs during an upgrade"), a newer build is certainly live: the app counts as stale from
+  then on, without waiting for an api response.
+- **Stale** means both ids are known and differ, or the offline store was upgraded by a newer build. One mechanism, two responses: a newer document
   format offers a reload (the prompt); a newer build changes how the app navigates (below), and
-  shows nothing.
+  shows nothing; an upgraded offline store does both, since this build can no longer read it.
 - An id is a short token (letters, digits, `.`, `_`, `-`, at most 64 characters); anything else is
   ignored.
 

@@ -3,7 +3,9 @@
 // through the api, as the product writes them.
 
 import type { APIRequestContext, Page } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 import { expect, guestSigFor, mintSignedGuest, ownerHeaders } from './fixtures';
+import { seedOfflineDocuments } from './offline-seed';
 
 export const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
 
@@ -158,30 +160,20 @@ type LocalSeed = {
 
 /** Writes local documents into this browser's store; the page must be on the app's origin. */
 export async function seedLocalDocuments(page: Page, docs: LocalSeed[]): Promise<void> {
-  await page.evaluate(async (seeds) => {
-    const now = Date.now();
-    const day = (ago: number) => new Date(now - ago * 86_400_000).toISOString().slice(0, 10);
-    await new Promise<void>((resolve, reject) => {
-      const open = indexedDB.open('livedoc-offline', 2);
-      open.onerror = () => reject(open.error ?? new Error('IndexedDB open failed'));
-      open.onsuccess = () => {
-        const tx = open.result.transaction('documents', 'readwrite');
-        for (const seed of seeds) {
-          tx.objectStore('documents').put({
-            id: crypto.randomUUID(),
-            name: seed.name,
-            folderId: null,
-            createdAt: now - 60 * 86_400_000,
-            savedAt: now - 30 * 86_400_000,
-            tabs: [{ id: 't1', name: 'Tab 1', elements: [] }],
-            opens: { days: seed.daysAgo.map(day), lastOpenedAt: now + seed.lastOpenedIn },
-          });
-        }
-        tx.oncomplete = () => resolve();
-        tx.onerror = () => reject(tx.error ?? new Error('IndexedDB transaction failed'));
-      };
-    });
-  }, docs);
+  const now = Date.now();
+  const day = (ago: number) => new Date(now - ago * 86_400_000).toISOString().slice(0, 10);
+  await seedOfflineDocuments(
+    page,
+    docs.map((seed) => ({
+      id: randomUUID(),
+      name: seed.name,
+      folderId: null,
+      createdAt: now - 60 * 86_400_000,
+      savedAt: now - 30 * 86_400_000,
+      tabs: [{ id: 't1', name: 'Tab 1', elements: [] }],
+      opens: { days: seed.daysAgo.map(day), lastOpenedAt: now + seed.lastOpenedIn },
+    })),
+  );
 }
 
 const DAY_MS = 86_400_000;

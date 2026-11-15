@@ -37,8 +37,22 @@ have cloud documents and offline documents side by side.
 ## Where offline documents live
 
 - Stored in **IndexedDB** in the browser (roomy + async; `localStorage`'s ~5 MB
-  synchronous cap is too small for image-bearing documents). One record per
-  document holds its meta + tabs, keyed by the document id.
+  synchronous cap is too small for image-bearing documents), in the `livedoc-offline`
+  database, as **one record per tab** beside **one record per document**:
+  - **`documents`** holds each document's record without its tab bodies, keyed by the
+    document id: the name, folder, dates, deck, star, tags, opens, items, item types
+    and sheets, and **`tabIds`**, the document's tab order.
+  - **`tabs`** holds each tab body, keyed by `[documentId, tabId]`.
+  - An autosave reads and writes **the one tab it saves** and the document record (its
+    `savedAt`, and `tabIds` when the tab is new), never the other tabs: on a five-tab
+    document of 1,000 boxes a tab, about 102 KB a save instead of 509 KB
+    ([Web performance](../016-platform/web-performance.md) "Realtime and saving").
+  - Every other operation still sees a whole document (the record with its tabs in
+    order): the store assembles it from the two, and a write stores only the tabs it
+    changed, so a rename, a star or a card edit writes no tab body at all.
+  - A tab listed in `tabIds` without a tab record is left out of the document, logged
+    `[offline-store] tab-record-missing`; a tab record no `tabIds` lists is ignored, and
+    removed by the document's next whole write.
 - The app keeps a small **local index** of offline document ids (also in
   IndexedDB) so the Explorer can list them and the persistence layer knows which
   ids resolve locally vs to the API.
@@ -55,10 +69,12 @@ have cloud documents and offline documents side by side.
   autosave shows the failure instead of "Saved", and its retry routes to wherever the
   document now is. A missing record whose id the tab has already forgotten (its own
   Sync Document, with a save still queued) stays a quiet no-op.
-- **Each read-modify-write is one transaction.** A write reads the whole record and
-  writes it back; the two happen in one IndexedDB `readwrite` transaction
-  (`OfflineBackend.update`), so another tab's write cannot land between them and be
-  overwritten. Writes from the same tab are also queued one after another.
+- **Each read-modify-write is one transaction.** A write reads what it changes (the
+  document, or for an autosave the document record and the one tab) and writes it
+  back; the two happen in one IndexedDB `readwrite` transaction over both stores
+  (`OfflineBackend.update`, `OfflineBackend.updateTab`), so another tab's write cannot
+  land between them and be overwritten. Writes from the same tab are also queued one
+  after another.
 
 <!-- legacy-names -->
 
@@ -69,6 +85,58 @@ have cloud documents and offline documents side by side.
   (`apps/live/lib/offline/legacy-offline-store.ts`). A tab still running the code from before the upgrade
   asks for version 1, which the browser refuses once another tab has opened version 2; its offline
   documents are out of reach in that tab until it reloads.
+- **Tab records (version 3).** Until version 3 each document was one record holding
+  every tab body inline (`tabs`), so every autosave rewrote the whole document. Opening
+  version 3 creates the `tabs` store and moves every document across inside the upgrade
+  transaction (`apps/live/lib/offline/offline-tab-records-migration.ts`), after the
+  version 2 rename when a browser skips it:
+  - **Lossless and checked.** For each document it writes every tab record, reads each
+    back and compares it with the inline tab, and only then replaces the document with
+    its record without tab bodies. A tab that does not read back the same aborts the
+    whole upgrade.
+  - **All or nothing.** The upgrade is one transaction: a failure (a mismatch, a full
+    disk, a crash) rolls the database back to version 2, every document still whole, and
+    logs `[offline-store] migration-failed` with the reason (and reports
+    `OfflineStore.MigrationFailed`). Nothing is deleted before its tab records are written
+    and read back.
+  - **Idempotent.** Only a document still holding inline tabs is moved; one already in
+    tab records is left alone, so a second run changes nothing.
+  - **A document that cannot be split stays whole**: two tabs sharing an id, or a tab
+    without one, would lose a tab as records, so that document keeps its inline tabs,
+    logged `[offline-store] migration-kept-whole`.
+  - **Both shapes read.** A document record that still holds inline tabs (kept whole,
+    or written whole by the fallback below) reads as it is, and its next write stores it
+    as tab records.
+  - **A failed upgrade still reads.** When the upgrade fails, the page opens the
+    database at the version it has and keeps working in that shape, whole records in
+    `documents`, for the rest of the page load; the next page load tries the upgrade
+    again.
+  - **Its own time limit.** Once the browser has started the upgrade (it answered),
+    the open waits up to `OFFLINE_STORE_UPGRADE_TIMEOUT_MS` (60 s) for it instead of the
+    usual 4 s, so a large store is not cut off mid-move ([Load recovery](../007-editor/load-recovery.md)).
+- **Other browser tabs during an upgrade.** Every tab of the browser shares the
+  database, and a tab may still run the build from before a deploy:
+  - **A tab holds the database only while it works.** Each operation opens it, runs one
+    transaction and closes it, so an older tab never holds back a newer one's upgrade
+    for longer than one transaction.
+  - **Blocked waits.** An upgrade that another tab's open connection holds back
+    (`blocked`) waits for it to close, within the open's time limit, logged
+    `[offline-store] upgrade-blocked`; it never gives up at once, which would leave the
+    upgrading tab without its offline documents for the page load.
+  - **A newer build wins at once.** Every connection closes itself on `versionchange`,
+    so a newer build's upgrade is never blocked by this one.
+  - **An older tab learns and asks to reload.** A tab whose open is refused because the
+    database is newer than its build (`VersionError`), or whose connection received
+    `versionchange`, knows a newer build is live: it logs `[offline-store] superseded`,
+    shows the [New version prompt](../016-platform/new-version-prompt.md) and navigates
+    with full page loads ([Stale builds](../016-platform/stale-builds.md)). Its offline
+    operations fail with `OfflineStoreSupersededError` rather than hang, and an edit it
+    could not save stays on screen as any failed save does ([Per-tab storage](per-tab-storage.md)
+    "Retrying a failed save"; leaving asks first), never silently dropped. Edits already
+    written before the upgrade are moved with everything else.
+  - **The tab from before version 3** has none of this (it asks for version 2 and is
+    refused): an edit it makes after another tab upgraded fails to save, stays on
+    screen with the save-failure banner, and leaving asks first.
 - **Durability honesty (important).** An offline document has **no backup**:
   clearing site data, some private-browsing sessions, and browser
   storage-pressure eviction can delete it. We request
@@ -523,6 +591,11 @@ Track adoption without content, reusing the closed vocabulary:
 
 - `apps/live/lib/api-client.ts` + `lib/api/*` — the persistence-backend seam;
   each call dispatches per document (`isOfflineId`) to `lib/offline/offline-store.ts` (IndexedDB).
+- The store underneath: `lib/offline/offline-backend.ts` (the `OfflineBackend` seam, opening the
+  database, `versionchange` / `blocked` / `VersionError`), `lib/offline/offline-tab-records.ts`
+  (the two-store layout: assembling a document, writing only what changed),
+  `lib/offline/offline-tab-records-migration.ts` (version 3) and `lib/offline/legacy-offline-store.ts`
+  (version 2).
 - New Document wizard (`TemplatePicker` / `template-picker-settings.tsx`,
   [Dedicated route for new-document creation](../007-editor/new-document-route.md)): the **Settings** step's Save location chooser ([Save Locations](save-locations.md), the
   This Browser tile) + data-loss warning + contextual help link.

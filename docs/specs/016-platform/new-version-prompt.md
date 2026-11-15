@@ -33,8 +33,13 @@ facts.
 
 - When a server number is **greater** than the editor's own. Equal or lower (an editor deployed a
   moment before its api) shows nothing.
+- When **this browser's offline store was upgraded by a newer build** in another tab
+  ([Offline Mode](../006-document/offline-mode.md) "Other browser tabs during an upgrade"): the
+  store refused this build's open (`VersionError`) or sent its connection `versionchange`.
+  That build can no longer read the store, so it is a reason to reload as strong as a newer
+  format, and it needs no api response, which an offline document may never make.
 - Once seen, it stays shown for the page's life; "Not now" hides it until the page is next
-  reloaded or a newer number arrives.
+  reloaded or a newer reason arrives (a newer number, or the store upgraded after the dismissal).
 - Only the document editor (`/document/…`, the shared and embedded views included) shows it: it is
   the page that holds unsaved work and renders stored shapes.
 
@@ -68,7 +73,9 @@ its next api response; once the editor is deployed a reload ends it.
 ## Help
 
 The troubleshooting article "My Changes Are Missing" explains the prompt under "How saving works":
-what it means, that Reload saves first, and that Not now is always safe.
+what it means, that Reload saves first, and that Not now is always safe; and that it also shows once
+another tab has moved the documents kept in This Browser to a newer storage, when this tab should
+reload before editing on.
 
 ## Defaults
 
@@ -77,4 +84,4 @@ The code cites each by its id.
 
 - **D1** How often to check for a saved state: Every 200 ms while waiting, locally (no request) (default).
 - **D2** Where the prompt sits: Bottom centre, 80 px up like the photo import bars, on the chrome layer (default).
-- **D3** What "Not now" remembers: The dismissed server number, for this page only (default).
+- **D3** What "Not now" remembers: The dismissed reason (its place in the order reasons arrived in), for this page only (default).
