@@ -221,8 +221,6 @@ It does by its **halo**: a second outline just outside its own (`mindHaloRoots`,
 - **Everywhere the node is drawn**: on the canvas in every finish, and in the SVG and PNG exports, which share
   `mindHaloRing` with the canvas.
 
-
-
 "The look" is exactly what the format painter copies (`paintableBoxedFields`):
 size, colours and their theme binding, border, corner radius, shadow and text
 styling, never the label, position or links. Growing a template's branch
