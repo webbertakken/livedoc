@@ -21,6 +21,12 @@ function ownPart(item: HTMLElement, part: 'toggle' | 'activate'): HTMLElement | 
   return item.querySelector<HTMLElement>(`:scope > [data-tree-row] [data-tree-${part}]`);
 }
 
+// Only a change is written: writing a focused row's tabIndex, even unchanged, lays the whole page out there and then,
+// for the browser to ask whether the row can still hold focus. Read back as the attribute, which needs no layout.
+function setTabIndex(item: HTMLElement, value: 0 | -1) {
+  if (item.getAttribute('tabindex') !== String(value)) item.tabIndex = value;
+}
+
 export function useTreeNavigation(ref: RefObject<HTMLElement | null>) {
   // The row focus last sat on while inside; null once focus has left.
   const focusedRef = useRef<HTMLElement | null>(null);
@@ -36,7 +42,7 @@ export function useTreeNavigation(ref: RefObject<HTMLElement | null>) {
       (focused && items.includes(focused) ? focused : null) ??
       items.find((i) => i.getAttribute('aria-selected') === 'true') ??
       items[0];
-    for (const i of items) i.tabIndex = i === stop ? 0 : -1;
+    for (const i of items) setTabIndex(i, i === stop ? 0 : -1);
   }, [ref]);
 
   // After every render of the host, and whenever rows change underneath it.

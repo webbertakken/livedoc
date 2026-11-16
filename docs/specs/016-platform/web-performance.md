@@ -18,6 +18,12 @@ against `main` the same way before it ships.
 Why a page carries what it does is read from the Turbopack bundle analyzer (`next analyze`): its route
 summary, its table of the largest contributors, and its diff against an earlier snapshot.
 
+What a long task is made of is read from a Chromium trace with its CPU profile, never inferred:
+`node scripts/trace-long-tasks.mjs <trace.json>` names each main-thread task over 50 ms, its work by kind (scripts,
+style, layout, paint, layerize, events) and the functions that held it, a forced layout under the function that
+asked for it. `apps/live/scripts/explorer-long-list-measure.mjs --trace <dir>` records one per step of the Explorer's
+long-list measure, at 4x CPU.
+
 Measured 2026-10-11 (gzip level 9), before and after the changes that set these rules:
 
 | Page                                         | Before    | After     |
@@ -188,6 +194,26 @@ alongside the editor's code, so a template link waits for nothing extra.
 - `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if any of these become static
   imports again.
 
+### A page's first-load scripts compile as they download
+
+Every script a page's HTML names runs as the page starts, so the editor's build marks each one for compiling on
+the way in: `apps/live/scripts/compile-hints.mjs` runs after `next build` and puts V8's file-level hint,
+`//# allFunctionsCalledOnLoad`, on the first line of every script some page of the export names. Chrome (136 and
+later) then compiles a hinted script's functions on the thread that streams it in, while the rest still downloads,
+rather than one at a time on the main thread as the page first calls each. Other browsers read a comment.
+
+- Only first-load scripts carry it. A script only a dynamic import loads stays lazy, as V8 advises: compiling
+  what may never run costs time and memory. The editor's own scripts are first-load for the document page, so they
+  carry the hint wherever they load, `/new` and the Explorer's fetch ahead included.
+- The hint is part of the file, not its name: a browser that still holds an unhinted copy under the same name
+  keeps compiling it lazily, as before, until the name changes. Production ships no source maps; one would need
+  its mappings moved down a line.
+- Measured on the document page (a shared link opened by a first-time guest, a production-shaped local stack:
+  HTTP/2, zstd, 4 Mbit/s, 100 ms, CPU 4x): opening the editor's main script took the main thread 1,077 ms, 662 of
+  them compiling, and 304 ms with the hint; the first render 412 ms and 215 ms. The main thread's busy time until
+  the board was editable fell from 3,326 to 2,185 ms, and the page holds about 7 MiB more of compiled code.
+- `apps/live/scripts/compile-hints.test.ts` pins which scripts are hinted, and that a second run changes nothing.
+
 ### A page loads only the scene it shows
 
 A features page plays one hero scene; the scene catalogue keeps its data apart from the boards
@@ -296,6 +322,9 @@ seen on the document).
   panel's row previews are not redrawn on every board change while it is closed.
 - Pictures only a panel shows are drawn by that panel: the Slide Deck panel draws its slides'
   pictures while it is open; the editor holding the deck draws none.
+- The Explorer's sidebar tree writes a row's tab stop only when it changes: writing the focused row's, even unchanged,
+  made the browser lay the whole page out there and then, inside the render. On a folder of 1,000 at 4x CPU that was
+  108 ms of the 174 ms click that opened it.
 
 ### Per keystroke, the least work
 
