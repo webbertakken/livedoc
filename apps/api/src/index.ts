@@ -89,6 +89,7 @@ import { resolveWorkbenchSession } from './auth/workbench-session';
 import { workbenchRefusal } from './auth/workbench-confinement';
 import { sweepWorkbench } from './db/workbench';
 import { withServerRelease } from './server-release-header';
+import { apiIsolate, ServerTiming, withServerTiming } from './server-timing';
 import { backgroundWaitUntil } from './background';
 import type { Env } from './types';
 
@@ -478,13 +479,16 @@ const worker = {
   async fetch(request: Request, env: Env, executionCtx?: ExecutionContext): Promise<Response> {
     // One guard for the whole request, identity resolution included (docs/specs/015-api/api.md "When a request
     // fails"): nothing that throws is left to the runtime's bare error page.
+    // Timed (server-timing.ts): the whole answer, and a fresh isolate named, since its start precedes any clock.
+    const timing = new ServerTiming();
+    if (apiIsolate.take()) timing.add('api-cold', 0);
     let response: Response;
     try {
-      response = await routeApiRequest(request, env, executionCtx);
+      response = await timing.measure('api', () => routeApiRequest(request, env, executionCtx));
     } catch (err) {
       response = failedRequestResponse(err, request, env, executionCtx);
     }
-    return withServerRelease(response, env.BUILD_ID);
+    return withServerRelease(withServerTiming(response, timing), env.BUILD_ID);
   },
 
   // Scheduled handler. Wired to the cron schedule in wrangler.toml.

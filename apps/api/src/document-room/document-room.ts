@@ -64,7 +64,7 @@ import type { DocumentCopy, DocumentOutline } from './document-content';
 import type { CreateOutcome, DocumentSeed } from './document-create';
 import type { RouteIdentity } from './document-route';
 import { RoomWake } from './room-wake';
-import { ServerTiming, withServerTiming } from '../server-timing';
+import { roomIsolate, ServerTiming, withServerTiming } from '../server-timing';
 import type { ShareAnswer, ShareMessage, SharedTabCopy } from './tab-shares';
 import {
   newSessionAttachment,
@@ -1201,9 +1201,10 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   // ---------- RPC: what the worker asks of this document (document-client.ts, document-rpc.ts) ----------
 
-  // Timed (server-timing.ts): the wake, the ready gate, each D1 round trip and the handler.
+  // Timed (server-timing.ts): a fresh isolate, the wake, the ready gate, each D1 round trip and the handler.
   async route(documentId: string, request: Request, identity: RouteIdentity): Promise<Response> {
     const timing = new ServerTiming();
+    if (roomIsolate.take()) timing.add('room-cold', 0);
     const woke = this.wake.take();
     if (woke !== null) timing.add('room-wake', woke);
     const response = await this.answer(

@@ -413,10 +413,12 @@ seen on the document).
   ([Document storage](../006-document/document-storage.md) G3). `apps/api/src/routes/document-request-round-trips.test.ts`
   counts the D1 round trips of the requests an open editor makes all the time.
 - A realtime room reads a socket's fixed session facts once, not on every frame.
-- A successful answer under `/api/documents/<id>/` says where its time went in a `Server-Timing` header: the room's
-  wake (on the first request after one), its ready gate, each D1 round trip in order, its handler, and the worker's
-  call to the room (`room-wake`, `room-gate`, `room-d1-<n>`, `room-handler`, `room`). A refusal or failure carries
-  none: timed step by step, it would show which gate a caller failed. Durations only, in whole milliseconds.
+- A successful api answer says where its time went in a `Server-Timing` header: the worker's whole answer (`api`)
+  and, under `/api/documents/<id>/`, its call to the room (`room`) and, inside the room, its wake on the first
+  request after one (`room-wake`), its ready gate (`room-gate`), each D1 round trip in order (`room-d1-<n>`) and its
+  handler (`room-handler`). An isolate's first answer is named (`api-cold`, `room-cold`): its start comes before any
+  clock runs, so it shows as the time beyond the measures. A refusal or failure carries none: timed step by step, it
+  would show which gate a caller failed. Durations only, in whole milliseconds.
 - The tab save reads its document in one query and fetches the room's ledger alongside its other
   reads ([API](../015-api/api.md) "Tab save"); the timeline's event and its scopes are one batch; the
   guest-to-account migration moves its rows in one batch.

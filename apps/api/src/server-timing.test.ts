@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sqliteD1 } from './test-sqlite-d1';
-import { ServerTiming, withServerTiming } from './server-timing';
+import { IsolateFirstUse, ServerTiming, withServerTiming } from './server-timing';
 
 // A clock the test moves by hand, so every duration is exact.
 function manualClock(start = 1_000) {
@@ -110,5 +110,13 @@ describe('withServerTiming', () => {
     const timing = new ServerTiming(() => 0);
     const inner = new Response('{}', { status: 404, headers: { 'Server-Timing': 'x;dur=1' } });
     expect(withServerTiming(inner, timing).headers.get('Server-Timing')).toBeNull();
+  });
+});
+
+describe('IsolateFirstUse', () => {
+  it('is first once, then never again', () => {
+    const isolate = new IsolateFirstUse();
+    expect(isolate.take()).toBe(true);
+    expect(isolate.take()).toBe(false);
   });
 });

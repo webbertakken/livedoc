@@ -1,7 +1,7 @@
 // Server-Timing on a document's answers (docs/specs/016-platform/web-performance.md "The api"): where a document
 // request's time goes, read from the response itself. The worker times its call to the room (`room`); the room
 // times its wake (`room-wake`, on the first request after it woke only), its ready gate (`room-gate`), every D1
-// round trip in order (`room-d1-<n>`) and its handler (`room-handler`).
+// round trip in order (`room-d1-<n>`) and its handler (`room-handler`); the worker its whole answer (`api`).
 //
 // Only a successful answer carries them: a refusal timed step by step would show which gate a caller failed, which
 // is how a guessed document id tells "exists" from "does not".
@@ -92,3 +92,19 @@ export function withServerTiming(response: Response, timing: ServerTiming): Resp
   else answer.headers.delete(HEADER);
   return answer;
 }
+
+// Whether this isolate has served its kind of request before. A cold start (fetching and compiling the bundle)
+// happens before any clock here runs, so it is named, not timed: `api-cold` and `room-cold` mark the first answer
+// a fresh isolate gives, and the answer's time beyond its measures is the start.
+export class IsolateFirstUse {
+  private used = false;
+
+  take(): boolean {
+    const first = !this.used;
+    this.used = true;
+    return first;
+  }
+}
+
+export const apiIsolate = new IsolateFirstUse();
+export const roomIsolate = new IsolateFirstUse();
