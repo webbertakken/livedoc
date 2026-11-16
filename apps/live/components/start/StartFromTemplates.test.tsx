@@ -2,6 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StartFromTemplates } from './StartFromTemplates';
+import { showStart, startShown } from './start-shown';
+import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
 
 // docs/specs/007-editor/start-diagramming.md
 afterEach(() => {
@@ -9,8 +11,9 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const mount = (mode: 'diagram' | 'workshop', onTemplate = vi.fn()) =>
-  render(
+const mount = (mode: 'diagram' | 'workshop', onTemplate = vi.fn(), asked = true) => {
+  if (asked) showStart(`t1:${mode}`);
+  return render(
     <StartFromTemplates
       key={mode}
       mode={mode}
@@ -19,6 +22,7 @@ const mount = (mode: 'diagram' | 'workshop', onTemplate = vi.fn()) =>
       onOtherModeTemplate={vi.fn()}
     />,
   );
+};
 
 describe('StartFromTemplates', () => {
   it('names each mode its own start', () => {
@@ -39,16 +43,51 @@ describe('StartFromTemplates', () => {
     expect(screen.queryByRole('heading', { name: 'Start Diagramming' })).toBeNull();
   });
 
-  it('remembers a close per tab and mode, so switching mode still offers that mode its start', () => {
+  it('stays closed on an empty tab until asked for', () => {
+    mount('diagram', vi.fn(), false);
+    expect(screen.queryByRole('heading', { name: 'Start Diagramming' })).toBeNull();
+  });
+
+  it('remembers a close per tab and mode', () => {
     mount('diagram');
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('heading', { name: 'Start Diagramming' })).toBeNull();
+    expect(startShown('t1:diagram')).toBe(false);
     cleanup();
-    mount('diagram');
+    mount('diagram', vi.fn(), false);
     expect(screen.queryByRole('heading', { name: 'Start Diagramming' })).toBeNull();
     cleanup();
-    mount('workshop');
+    showStart('t1:workshop');
+    mount('workshop', vi.fn(), false);
     expect(screen.getByRole('heading', { name: 'Start a Workshop' })).toBeTruthy();
+  });
+
+  it('opens the next mode’s start when its own switch changes mode', () => {
+    showStart('t1:diagram');
+    const setMode = vi.fn();
+    render(
+      <EditorModeProvider
+        value={{
+          mode: 'diagram',
+          setMode,
+          canSwitch: true,
+          canEdit: true,
+          workshop: false,
+          setWorkshop: vi.fn(),
+        }}
+      >
+        <StartFromTemplates
+          mode="diagram"
+          tabId="t1"
+          onTemplate={vi.fn()}
+          onOtherModeTemplate={vi.fn()}
+        />
+      </EditorModeProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Tab mode: Structured/ }));
+    fireEvent.click(screen.getByRole('menuitemradio', { name: /Sketch/ }));
+    expect(setMode).toHaveBeenCalledWith('draw');
+    expect(startShown('t1:draw')).toBe(true);
   });
 
   it('closes on Escape once its search has nothing to clear', () => {

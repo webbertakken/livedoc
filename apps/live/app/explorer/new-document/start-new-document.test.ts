@@ -7,7 +7,6 @@ const mocks = vi.hoisted(() => ({
   signInOffered: vi.fn((): boolean | null => true),
   write: vi.fn(async () => {}),
   track: vi.fn(),
-  closeStart: vi.fn(),
   openInPlace: vi.fn(),
   setStandbyInPlace: vi.fn(),
   loadEditor: vi.fn(async () => () => null),
@@ -22,9 +21,6 @@ vi.mock('@/lib/auth-config', () => ({ signInOfferedHere: mocks.signInOffered }))
 vi.mock('@/lib/new-document/write-new-document', () => ({
   writeNewDocument: mocks.write,
   trackNewDocumentCreated: mocks.track,
-}));
-vi.mock('@/components/start/close-start-for-blank', () => ({
-  closeStartForBlank: mocks.closeStart,
 }));
 vi.mock('@/app/explorer/in-place-editor/in-place-editor-store', () => ({
   openInPlace: mocks.openInPlace,
@@ -54,6 +50,7 @@ import {
   standbyDocument,
 } from '@/lib/new-document/pending-documents';
 import { resetCreateHoldsForTests } from '@/lib/new-document/create-hold';
+import { startShown } from '@/components/start/start-shown';
 
 const request = (over: Partial<NewDocumentRequest> = {}): NewDocumentRequest => ({
   choice: 'blank',
@@ -102,8 +99,8 @@ describe('startNewDocument', () => {
     const id = openedId();
     expect(window.history.length).toBe(before + 1);
     expect(mocks.openInPlace).toHaveBeenCalledWith(id);
-    expect(mocks.closeStart).toHaveBeenCalledWith(expect.any(String), 'blank');
     const doc = pendingDocument(id)!;
+    expect(startShown(`${doc.tabs[0]!.id}:diagram`)).toBe(false);
     expect(doc.name).toBe('Untitled document');
     expect(doc.tabs).toHaveLength(1);
     expect(mocks.assign).not.toHaveBeenCalled();
@@ -129,12 +126,6 @@ describe('startNewDocument', () => {
         teamId: undefined,
       }),
     );
-  });
-
-  it('leaves a template’s start alone', async () => {
-    startNewDocument(request({ choice: 'template', template: 'flowchart' }));
-    await opened();
-    expect(mocks.closeStart).not.toHaveBeenCalled();
   });
 
   it('makes one document for a double click', async () => {
@@ -182,7 +173,7 @@ describe('the standby', () => {
     await prepareStandbyDocument('diagram');
     const [id] = mocks.setStandbyInPlace.mock.calls.at(-1) as [string];
     expect(standbyDocument(id)?.name).toBe('Untitled document');
-    expect(mocks.closeStart).toHaveBeenCalledWith(expect.any(String), 'blank');
+    expect(startShown(`${standbyDocument(id)!.tabs[0]!.id}:diagram`)).toBe(false);
     expect(mocks.write).not.toHaveBeenCalled();
     expect(pendingDocument(id)).toBeNull();
   });

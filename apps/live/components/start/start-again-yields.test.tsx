@@ -3,7 +3,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { dismissEmptyCard } from '@/components/canvas/empty-card-dismissed';
 import { ModeBanner } from '@/components/chrome/ModeBanner';
 import { usePaletteStripBox } from '@/components/chrome/PaletteTray';
 import { StartAgainTray } from './StartAgainTray';
@@ -39,7 +38,6 @@ function TrayBanner() {
 
 describe('Show Templates and a mode message', () => {
   it('without a strip (Draw), the pill yields and the mode banner marks itself', () => {
-    dismissEmptyCard('t:draw');
     render(
       <>
         <StartAgainTray mode="draw" tabId="t" tabName="Tab 2" />
@@ -55,7 +53,6 @@ describe('Show Templates and a mode message', () => {
 
   it('under the strip, the start-again tray yields and the mode tray marks itself', () => {
     mountStrip();
-    dismissEmptyCard('t:diagram');
     render(
       <>
         <StartAgainTray mode="diagram" tabId="t" tabName="Tab 2" />

@@ -33,8 +33,8 @@ test.describe('the Workshop control', () => {
     await expect(timer(page)).toHaveCount(0);
     await expect(barButton(page, 'Ask')).toHaveCount(0);
 
-    // Structured: the strip, and the category bar with Ask and Session; Start Diagramming gives way to Start a
-    // Workshop on the empty tab.
+    // Structured: the strip, and the category bar with Ask and Session; the empty tab offers Start a Workshop from
+    // the palette tray (its start opens only when asked for).
     await control(page).click();
     await expect(control(page)).toHaveAttribute('aria-pressed', 'true');
     await expect(mode(page)).toHaveAttribute('data-workshop', 'on');
@@ -42,6 +42,7 @@ test.describe('the Workshop control', () => {
     await expect(timer(page)).toBeVisible();
     await expect(barButton(page, 'Ask')).toBeVisible();
     await expect(barButton(page, 'Session')).toBeVisible();
+    await page.getByRole('button', { name: 'Show Templates' }).click();
     await expect(page.getByRole('region', { name: 'Start a Workshop' })).toBeVisible();
 
     // Sketch keeps the control: the strip stays, beside the dock.

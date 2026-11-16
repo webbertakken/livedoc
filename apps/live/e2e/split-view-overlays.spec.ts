@@ -27,9 +27,8 @@ const square = (id: string, x: number) => ({
 async function openSeededTabOnTheRight(page: Page): Promise<void> {
   await page.locator('[data-document-group]').getByRole('button', { name: 'Add tab' }).click();
   await page.getByRole('menuitem', { name: 'Tab', exact: true }).click();
-  const start = page.getByRole('region', { name: /^Start / });
-  await start.getByRole('button', { name: 'Close' }).click();
-  await start.waitFor({ state: 'detached' });
+  // A new tab opens on its empty canvas, its start closed (docs/specs/007-editor/start-diagramming.md).
+  await expect(page.getByRole('button', { name: 'Show Templates' })).toBeVisible();
   await switchToTab(page, 'Tab 1');
   await page.getByRole('button', { name: 'Tab menu' }).click();
   await page

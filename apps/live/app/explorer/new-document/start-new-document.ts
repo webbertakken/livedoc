@@ -38,7 +38,6 @@ import {
   isOfflineLocation,
   type SaveLocationId,
 } from '@/lib/save-locations';
-import { closeStartForBlank } from '@/components/start/close-start-for-blank';
 import {
   openInPlace,
   setStandbyInPlace,
@@ -144,8 +143,6 @@ async function prepareDocument(
   location: SaveLocationId,
 ): Promise<PreparedDocument> {
   const ids = createIdsFor(null);
-  // A blank opens with its start closed (close-start-for-blank.ts).
-  if (choice === 'blank') closeStartForBlank(ids.tabId, template);
   const { newDocumentContent } = await loadNewDocumentContent();
   const content = await newDocumentContent({
     templateKind: template,
