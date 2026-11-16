@@ -11,6 +11,8 @@ import { showsEmptyCanvasCard } from '@/components/canvas/empty-canvas-card';
 import { StartAgainTray } from '@/components/start/StartAgainTray';
 import { StartViewTransition } from '@/components/start/StartViewTransition';
 import { templateStartMode } from '@/components/start/template-start-mode';
+import { hideStart, startKey } from '@/components/start/start-shown';
+import { useStartFollowsMode } from '@/components/start/useStartFollowsMode';
 import { useTemplatePickMove } from '@/components/start/useTemplatePickMove';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
 import { BLANK_SHEET_CHOICE } from '@/lib/sheet-seeds';
@@ -90,6 +92,7 @@ export function EditorStartPanels() {
     pages:
       ctx.editorMode.mode === 'pages' && activeTab.elements.length === 0 ? pagesOf(activeTab) : [],
   });
+  useStartFollowsMode(activeTab.id, templateStart);
   // An empty Plan tab: the board types, in the middle of the canvas. Anything already drawn (a board, a shape, a
   // view) hides it; the palette's Boards still add one.
   const dashboardHasRows = (readDashboard(activeTab.dashboard)?.rows.length ?? 0) > 0;
@@ -114,6 +117,8 @@ export function EditorStartPanels() {
   // load (it is in the start's own chunk, already loaded behind the panel).
   const tabId = activeTab.id;
   const chooseFromOtherMode = (_mode: TabOpening, kind: TemplateKind) => {
+    // The pick ends the choosing: the start it came from closes, so the mode change carries no start with it.
+    if (templateStart) hideStart(startKey(tabId, templateStart));
     track('UI', 'Used', 'StartOtherMode');
     moveOnTemplatePick(kind);
     void import('@/components/start/close-start-for-blank').then(({ closeStartForBlank }) => {

@@ -42,7 +42,7 @@ import { StartPanel } from './StartPanel';
 import { otherModeMatches } from './other-mode-matches';
 import { templateCard } from './template-card';
 import { setStartPanelOpen } from './start-panel-open';
-import { hideStart, showStart, startKey } from './start-shown';
+import { hideStart, startKey } from './start-shown';
 import { useStartShown } from './useStartShown';
 import { TEMPLATE_STARTS, type TemplateStartMode } from './start-template-items';
 import { StartModeSwitch } from '@/components/start/StartModeSwitch';
@@ -189,10 +189,7 @@ export function StartFromTemplates({
           : undefined
       }
       onChooseElsewhere={(m, kind) => onOtherModeTemplate(m, kind as TemplateKind)}
-      lead={
-        // Still choosing: the next mode's start opens too.
-        <StartModeSwitch onSwitch={(next) => showStart(startKey(tabId, next))} />
-      }
+      lead={<StartModeSwitch />}
       onClose={close}
     />
   );

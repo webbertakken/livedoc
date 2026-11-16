@@ -3,12 +3,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   START_SHOWN_KEY,
   hideStart,
-  openStartForModeChoice,
   showStart,
   startKey,
   startShown,
   subscribeStartShown,
 } from './start-shown';
+import { openStartForModeChoice } from './open-start-for-mode-choice';
 
 // docs/specs/007-editor/start-diagramming.md "When it shows": a start is shown only when asked for.
 beforeEach(() => localStorage.clear());

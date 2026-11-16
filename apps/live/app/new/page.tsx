@@ -51,7 +51,7 @@ import { backOutTarget } from '@/lib/back-out';
 import { useLatest } from '@/hooks/ui/useLatest';
 import { debugLog } from '@/lib/debug-log';
 import { handStartQuery } from '@/components/start/start-query';
-import { openStartForModeChoice } from '@/components/start/start-shown';
+import { openStartForModeChoice } from '@/components/start/open-start-for-mode-choice';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
 import { isBlankTemplate } from '@livedoc/templates';
 import { loadNewDocumentContent } from '@/lib/new-document/new-document-content-loader';
