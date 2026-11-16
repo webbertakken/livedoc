@@ -33,6 +33,8 @@ function editor(over: Record<string, unknown> = {}) {
     isReadOnly: false,
     canShareDocument: true,
     canCombine: () => false,
+    canConvertToText: () => false,
+    convertToText: vi.fn(),
     combineSelected: vi.fn(),
     documentId: 'd1',
     activeTab: { id: 't1', elements: [] },
