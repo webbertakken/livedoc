@@ -128,7 +128,10 @@ document renders lazily.
   dot runs down each connector, and the sketch fades to start over. Each
   card starts at a point in the loop derived from its document id, so a
   loading grid ripples rather than pulsing in step. Under reduced motion
-  it is the finished sketch, still.
+  it is the finished sketch, still. A loader more than 200px from the view
+  holds where it is in its loop, and moves on from there once its box comes
+  within 200px: nobody sees it in between, and a long list draws rows past
+  the view's edge.
 - Loader to snapshot is a **crossfade**, never a cut: the image stays
   hidden until the browser has decoded it, then fades and settles in
   (`duration-long`) while the loader fades out, and the box eases into the
