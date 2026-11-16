@@ -12,7 +12,6 @@ import {
   inkTextElement,
   replaceInk,
 } from '@/lib/ink-to-text/ink-to-text';
-import { selectReader } from '@/lib/reading/select';
 import { track } from '@/lib/telemetry';
 import { debugLog } from '@/lib/debug-log';
 import { useLatest } from '@/hooks/ui/useLatest';
@@ -66,12 +65,14 @@ export function useInkToText(deps: InkToTextDeps) {
     const ids = new Set(ink.map((s) => s.id));
     try {
       live.current.toast.info(READING);
-      const { read } = selectReader({
-        aiEnabled: live.current.aiEnabled,
-        ownerId: live.current.ownerId,
-      });
       let words = '';
       try {
+        // The reader loads at the first conversion, so it stays out of the editor's first load.
+        const { selectReader } = await import('@/lib/reading/select');
+        const { read } = selectReader({
+          aiEnabled: live.current.aiEnabled,
+          ownerId: live.current.ownerId,
+        });
         const result = await read([{ id: 1, image }], {});
         const answer = result.textById.get(1);
         if (!answer && result.failure) return fail(FAILED, `the reader failed: ${result.failure}`);
