@@ -1907,7 +1907,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "uncaught",
       "rejection",
       "render",
-      "api"
+      "api",
+      "warning"
     ],
     "type": "string"
   },
