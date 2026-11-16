@@ -175,6 +175,32 @@ On the local stack behind HTTP/2 and zstd, the same throttling, medians of five 
 - Locally a read answers in about 0.1 s; on docs.nu the document read takes 0.5 to 1.3 s, more to hide.
 - What still waits on the editor's code: a first visit's participant row (a write), then the editor's own render.
 
+### The document read's server time (#214, #217, #219, #220, #227)
+
+- Answers under `/api/documents/<id>/` carry `Server-Timing`, and every api answer its own total and cold marks.
+- A room's own work is 13 to 35 ms; a D1 round trip from it 5 to 14 ms. The slow answers were never there.
+- Every slow first byte carried `api-cold` or `room-cold`: an isolate starting, fetching and compiling the bundle.
+- A woken room no longer writes its move record to D1 before answering; the sweep heals a lost one (#217).
+- Opening a document is one D1 round trip: the owner's name rides in the row's query (#220).
+- The worker ships minified, names kept, source maps uploaded (#227).
+- Minifying raised the deploy's Worker Startup Time (64 to 78 ms before, 96 after) yet cut the cold wait: what a
+  fresh isolate pays is mostly fetching and parsing 10 MB, not the top-level CPU that figure counts.
+
+On docs.nu from Amsterdam, curl, a guest's two-tab document:
+
+| Measure                                                  | Before          | After           |
+| -------------------------------------------------------- | --------------- | --------------- |
+| Room ready gate, first request after a wake              | 15 to 27 ms     | 0 ms            |
+| D1 round trips: open the document                        | 2, in series    | 1               |
+| Room handler: open the document                          | 12 to 27 ms     | 7 to 11 ms      |
+| Upload of the api worker                                 | 10,142 KiB      | 6,642 KiB       |
+| Cold api isolate: wait beyond the api's own time, median | 409 ms (n = 35) | 340 ms (n = 29) |
+| Cold api isolate: worst of 60 reads, 20 s apart          | 1,276 ms        | 570 ms          |
+| Warm read beyond the api's own time, median              | 48 ms           | 53 ms           |
+
+- About half of reads 20 s apart found a cold api isolate (36 and 29 of 60): at this traffic, start-up is the read.
+- A woken room adds its own start: `room` 286 to 420 ms against 29 to 33 ms of work inside it.
+
 ## Refuted or set aside
 
 About half the leads did not survive a check; they are listed so nobody proposes them again.
@@ -278,6 +304,8 @@ Parked:
 - The Explorer fetches 155 KiB more JavaScript in the background since #188.
 - Of that, 39 KiB is the search panel fetched ahead; the rest (16 smaller files) is not traced yet.
 - One request for the outline and the first tab would save one more round trip on open (left to the api).
+- Isolate start-up is the document read's largest cost: about 340 ms for a cold api isolate, about 290 for a room.
+- Its levers are design forks: a smaller bundle for the rooms (a worker of their own), or the open as one request.
 - The every-minute move sweep scans documents; the spec's drop release removes it, which is Webber's to schedule.
 - Fifteen canvas-gesture leads belong to the canvas session: zoom and pan re-renders, drag previews, snapping.
 - Among them, the Minimap runs a whole-board arrow label pass for pictures that draw no labels.
