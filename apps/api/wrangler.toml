@@ -4,6 +4,11 @@ compatibility_date = "2026-05-29"
 # better-auth (sign-in, docs/specs/014-identity/auth-and-guest-access.md) imports node:crypto and uses
 # AsyncLocalStorage.
 compatibility_flags = ["nodejs_compat"]
+# A fresh isolate (the worker's or a document room's) fetches and compiles the whole bundle before its first answer
+# (docs/specs/016-platform/web-performance.md "The api"), so it ships minified. Names are kept (wrangler's default):
+# error names and logs read them. Source maps go up with it so a logged stack still reads as source.
+minify = true
+upload_source_maps = true
 
 # Bundle the share card's fonts (packages/render-png/fonts, Inter Regular and Bold) as raw bytes for the resvg PNG
 # renderer (docs/specs/013-workspace/share-link-previews.md): a Worker has no system fonts, so without this the card
