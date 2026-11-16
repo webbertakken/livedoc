@@ -338,6 +338,7 @@ export function EditorCanvasHost() {
     setMapPosition,
     setMultiSelectedIds,
     setSelectedId,
+    deselect,
     toggleChecklistItem,
     setPageHeading,
     setWebRows,
@@ -1170,8 +1171,9 @@ export function EditorCanvasHost() {
                 // background click is the quick way out of paint mode (docs/specs/008-canvas/canvas-and-palette.md).
                 if (canvasTool === 'format') exitFormatTool();
                 cancelConnect();
-                setSelectedId(null);
-                setMultiSelectedIds(new Set());
+                // A step of its own: Undo brings the selection back (docs/specs/008-canvas/canvas-and-palette.md
+                // "Undo / Redo").
+                deselect();
                 setEditingId(null);
                 setFormatSourceId(null);
                 setContextMenu(null);

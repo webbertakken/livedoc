@@ -5,9 +5,11 @@
 // step. Redo mirrors it by the redo side's length, and a new branch of edits drops stale redos.
 // Pure, so the interleaving is tested without React.
 
+// A step returns false when it found nothing left to take back or bring back (a deselect whose elements are gone):
+// the timeline then passes over it to the step before, so undo always undoes something.
 export type ItemUndoStep = {
-  undo: () => void;
-  redo: () => void;
+  undo: () => void | boolean;
+  redo: () => void | boolean;
 };
 
 export type HistoryPosition = { depth: number; branch: number; futureLength: number };
@@ -28,6 +30,16 @@ export function journalPush(
   at: HistoryPosition,
 ): ItemUndoJournal {
   return { undo: [...j.undo, { step, depth: at.depth }].slice(-ITEM_UNDO_LIMIT), redo: [] };
+}
+
+// A step that only changes what this person sees (a deselect, docs/specs/008-canvas/canvas-and-palette.md "Undo /
+// Redo"): it takes its turn in the timeline, and the redo side stays, as nothing on the canvas changed.
+export function journalPushAside(
+  j: ItemUndoJournal,
+  step: ItemUndoStep,
+  at: HistoryPosition,
+): ItemUndoJournal {
+  return { ...j, undo: [...j.undo, { step, depth: at.depth }].slice(-ITEM_UNDO_LIMIT) };
 }
 
 // The item step undo takes now, or null when the canvas's step is the later one.

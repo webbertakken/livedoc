@@ -6,6 +6,7 @@ import {
   journalAfterUndo,
   journalLiveRedo,
   journalPush,
+  journalPushAside,
   journalRedoTarget,
   journalUndoTarget,
   type HistoryPosition,
@@ -76,5 +77,19 @@ describe('the item undo journal', () => {
       j = journalPush(j, step(`s${i}`), { depth: 0, branch: 0, futureLength: 0 });
     expect(j.undo).toHaveLength(ITEM_UNDO_LIMIT);
     expect(journalUndoTarget(EMPTY_JOURNAL, { depth: 0, branch: 0, futureLength: 0 })).toBeNull();
+  });
+});
+
+// docs/specs/008-canvas/canvas-and-palette.md "Undo / Redo": a step that only changes the selection (a deselect) takes
+// its turn in the timeline but leaves the redo side alone.
+describe('a step pushed aside', () => {
+  it('keeps the redo side', () => {
+    const at: HistoryPosition = { depth: 2, branch: 4, futureLength: 1 };
+    const undone = journalAfterUndo(journalPush(EMPTY_JOURNAL, step('A'), at), at);
+
+    const j = journalPushAside(undone, step('D'), at);
+
+    expect(journalRedoTarget(j, at)).not.toBeNull();
+    expect((journalUndoTarget(j, at) as unknown as { name: string }).name).toBe('D');
   });
 });
