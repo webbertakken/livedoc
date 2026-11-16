@@ -37,6 +37,7 @@ import {
   resetCreateHoldsForTests,
 } from '../new-document/create-hold';
 import { setApiErrorReporter, setApiWarningReporter } from './error-report';
+import { askEarly, openEarlyReads, resetEarlyReadsForTests } from './early-reads';
 
 const H = (h: HeadersInit) => h as Record<string, string>;
 
@@ -414,5 +415,62 @@ describe('apiFetch hold on a document still being created', () => {
     await apiFetch(`${API_BASE}/documents`, { method: 'POST' });
     await apiFetch(`${API_BASE}/documents/other/tabs`);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+});
+
+// docs/specs/016-platform/web-performance.md "The open path asks in parallel": the editor takes what was asked early.
+describe('apiFetch and the early reads', () => {
+  beforeEach(() => {
+    resetEarlyReadsForTests();
+    resetServerReleaseForTests();
+    openEarlyReads();
+  });
+  afterEach(() => {
+    resetEarlyReadsForTests();
+    vi.unstubAllGlobals();
+  });
+
+  it('takes a read asked early instead of asking again, and notes what it carries', async () => {
+    const early = vi.fn(
+      async () =>
+        new Response('{"document":"d1"}', { headers: { [BUILD_ID_HEADER]: 'build-early' } }),
+    );
+    await askEarly('share', `${API_BASE}/share/c1`, { 'X-Owner-Id': 'g1' }, early);
+    const later = vi.fn(async () => new Response('{}'));
+    vi.stubGlobal('fetch', later);
+
+    const res = await apiFetch(`${API_BASE}/share/c1`, { headers: { 'X-Owner-Id': 'g1' } });
+
+    expect(await res.json()).toEqual({ document: 'd1' });
+    expect(later).not.toHaveBeenCalled();
+    expect(serverBuild()).toBe('build-early');
+  });
+
+  it('asks itself when the early read failed', async () => {
+    await askEarly('share', `${API_BASE}/share/c1`, { 'X-Owner-Id': 'g1' }, () =>
+      Promise.reject(new TypeError('offline')),
+    );
+    const later = vi.fn(async () => new Response('{"fresh":true}'));
+    vi.stubGlobal('fetch', later);
+
+    const res = await apiFetch(`${API_BASE}/share/c1`, { headers: { 'X-Owner-Id': 'g1' } });
+
+    expect(await res.json()).toEqual({ fresh: true });
+    expect(later).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks itself as anyone else', async () => {
+    await askEarly(
+      'share',
+      `${API_BASE}/share/c1`,
+      { 'X-Owner-Id': 'g1' },
+      async () => new Response('{}'),
+    );
+    const later = vi.fn(async () => new Response('{}'));
+    vi.stubGlobal('fetch', later);
+
+    await apiFetch(`${API_BASE}/share/c1`, { headers: { 'X-Owner-Id': 'g2' } });
+
+    expect(later).toHaveBeenCalledTimes(1);
   });
 });

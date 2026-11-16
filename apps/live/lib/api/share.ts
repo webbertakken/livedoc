@@ -19,6 +19,7 @@ import {
   type SharePasswordResponse,
   apiFetch,
 } from './core';
+import { shareRead } from './open-path-requests';
 import { parseStoredLevel } from '@livedoc/api-schema';
 
 // Resolve a share code to a full document + the role granted by that
@@ -34,9 +35,8 @@ async function _apiLoadShared(
   code: string,
   ownerId: string,
 ): Promise<SharedDocumentResolution | null> {
-  const res = await apiFetch(`${API_BASE}/share/${code}`, {
-    headers: await apiHeaders(ownerId, { share: null }),
-  });
+  const { url, headers } = await shareRead(code, ownerId);
+  const res = await apiFetch(url, { headers });
   // Password gate (docs/specs/013-workspace/share-password.md): 401 = the document is protected and we sent
   // no (or no longer-valid) password; 403 = we sent a wrong one. Both
   // surface as `passwordRequired` so the editor shows the gate; only

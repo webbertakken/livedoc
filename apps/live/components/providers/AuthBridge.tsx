@@ -29,6 +29,7 @@ import { resolveProfilePicture } from '@/lib/account-avatar';
 import { apiDeleteAccount } from '@/lib/api/self';
 import { API_BASE } from '@/lib/api/base';
 import { publishSignInAvailability } from '@/lib/auth-config';
+import { publishFirstSession } from '@/lib/first-session';
 import { debugLog } from '@/lib/debug-log';
 import { forgetRecentDiagrams } from '@/lib/recent-diagrams-snapshot';
 import {
@@ -86,6 +87,11 @@ export function AuthBridge({ children }: { children: ReactNode }) {
       readSession({ apiBase: API_BASE }).then((next) => {
         if (next.status !== 'signed-in') tokens.clear();
         debugLog(`[auth] session_read status=${next.status}`);
+        // Told outside React too: at a document's address this render waits for the editor to hydrate.
+        publishFirstSession({
+          accountId: next.status === 'signed-in' ? next.user.id : null,
+          getToken: tokens.getToken,
+        });
         settle(next);
       }),
     [settle, tokens],

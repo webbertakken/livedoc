@@ -16,7 +16,7 @@ Five mechanisms, layered. Every cell below comes from one of them.
 | Session-only routes   | `routes/tokens.ts`, `routes/oauth.ts`, `routes/account.ts`, `routes/migrate.ts`, `routes/drive.ts`, `routes/teams.ts` (non-GET)     | Need `ctx.clerkUserId` (a Clerk session), so neither a guest nor any API token can reach them.                                                                                                                                                  |
 | Room op gate          | `apps/api/src/document-room/document-room.ts` `webSocketMessage`; op classes in `packages/api-schema/src/room-messages.ts`          | `if (sender.role !== 'edit' && !isPresenceOp) return;` A view session may send only `PRESENCE_OP_KINDS`; `MUTATION_OP_KINDS` need edit; `SYSTEM_OP_KINDS` never come from a socket.                                                             |
 
-The editor mirrors this with two flags: `sessionRole` (`apps/live/app/document/[id]/editor-page-helpers.ts`
+The editor mirrors this with two flags: `sessionRole` (`apps/live/lib/document-session.ts`
 `resolveDocumentSession`, owner or link role) and `isReadOnly = !canEdit` (`useEditorState.ts`, from
 `useViewPreview`). Almost every control keys off `isReadOnly`; session verbs also key off `runBlocked` (the
 facilitator baton, `facilitator.sessionToolsBlocked`).

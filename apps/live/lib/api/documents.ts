@@ -40,6 +40,7 @@ import {
   apiFetch,
   saveTimeoutSignal,
 } from './core';
+import { documentRead } from './open-path-requests';
 import type { RoomTicketResponse } from '@livedoc/api-schema';
 
 // The document-list row every list surface renders: the Explorer
@@ -79,9 +80,8 @@ async function _apiLoadDocument(ownerId: string, id: string): Promise<LiveDoc | 
   // Offline Mode (docs/specs/006-document/offline-mode.md): a document registered offline loads from IndexedDB,
   // never the API. Same for the save / delete / list paths below.
   if (await isOfflineId(id)) return offlineLoadDocument(id);
-  const res = await apiFetch(`${API_BASE}/documents/${id}`, {
-    headers: await apiHeaders(ownerId),
-  });
+  const { url, headers } = await documentRead(ownerId, id);
+  const res = await apiFetch(url, { headers });
   const body = await expectOkOrNull<DocumentResponse>(res, 'load');
   return body?.document ?? null;
 }

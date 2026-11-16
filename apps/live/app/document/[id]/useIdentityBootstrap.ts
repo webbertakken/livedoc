@@ -27,7 +27,7 @@ import { resolveParticipant } from './resolve-participant';
 import type { Participant } from '@/lib/identity';
 import { ensureCollabKey, hasConfirmedName } from '@/lib/local-identity';
 import { trackDailyReturn } from '@/lib/daily-return';
-import { resolveDocumentSession } from './editor-page-helpers';
+import { resolveDocumentSession } from '@/lib/document-session';
 import { makeSeedFetchedDocument } from './seed-fetched-document';
 import { isDocumentTrashedError } from '@/lib/document-trashed';
 import { armLoadWatchdog, getLoadProgress, setLoadStep } from '@/lib/load-progress';

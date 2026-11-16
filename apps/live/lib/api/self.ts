@@ -8,9 +8,9 @@ import {
   expectOkOrNull,
   expectOkVoid,
   type ParticipantResponse,
-  SessionTokenUnavailableError,
   apiFetch,
 } from './core';
+import { participantRead } from './open-path-requests';
 
 // Deduped by id: the editor's hydration effect AND /live/new's
 // initial fetch both call this on first paint; React Strict Mode
@@ -21,7 +21,8 @@ import {
 // rather than a 404 the browser logs as an error (docs/specs/015-api/api.md). The 404 is still read
 // as no profile, for an api from before that answer.
 async function _apiLoadSelf(id: string): Promise<Participant | null> {
-  const res = await apiFetch(`${API_BASE}/participants/${id}`, { headers: await selfHeaders(id) });
+  const { url, headers } = await participantRead(id);
+  const res = await apiFetch(url, { headers });
   const participant = (await expectOkOrNull<ParticipantResponse>(res, 'load self'))?.participant;
   if (!participant) return null;
   return {
@@ -30,16 +31,6 @@ async function _apiLoadSelf(id: string): Promise<Participant | null> {
     color: participant.color,
     status: 'online',
   };
-}
-// The GET is open, so a signed-in session whose token is momentarily unavailable (which apiHeaders
-// reports) still loads its profile, anonymously, as it always could.
-async function selfHeaders(id: string): Promise<HeadersInit> {
-  try {
-    return await apiHeaders(id);
-  } catch (error) {
-    if (error instanceof SessionTokenUnavailableError) return {};
-    throw error;
-  }
 }
 
 const loadSelfOnce = dedupeInFlight(_apiLoadSelf, (id) => id);

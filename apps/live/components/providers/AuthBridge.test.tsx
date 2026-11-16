@@ -17,6 +17,7 @@ vi.mock('@/lib/api/self', () => ({ apiDeleteAccount }));
 
 import { ACCOUNT_CHANNEL_NAME, SIGNED_IN_HINT_KEY } from '@livedoc/account-session';
 import { readAuthConfig, resetAuthConfigForTests } from '@/lib/auth-config';
+import { resetFirstSessionForTests, whenFirstSessionSettled } from '@/lib/first-session';
 import { AuthBridge } from './AuthBridge';
 import { DEFERRED_AUTH_PENDING, useDeferredAuth, type DeferredAuthState } from './deferred-auth';
 
@@ -61,6 +62,7 @@ function mount() {
 }
 
 beforeEach(() => {
+  resetFirstSessionForTests();
   answers = {};
   route.pathname = '/explorer/recent';
   localStorage.clear();
@@ -86,6 +88,24 @@ afterEach(() => {
 });
 
 describe('AuthBridge', () => {
+  // docs/specs/016-platform/web-performance.md "The open path asks in parallel": told outside React, so the early
+  // reads need not wait for the editor to hydrate.
+  it('tells the first settled session outside React, with its token getter', async () => {
+    answer('/api/auth/get-session', { status: 200, body: SIGNED_IN });
+    const issued = token(900);
+    answer('/api/auth/token', { status: 200, body: { token: issued } });
+    mount();
+    const first = await whenFirstSessionSettled();
+    expect(first.accountId).toBe(USER.id);
+    expect(await first.getToken()).toBe(issued);
+  });
+
+  it('tells a guest as no account, a read that could not be made included', async () => {
+    answer('/api/auth/get-session', 'offline');
+    mount();
+    expect((await whenFirstSessionSettled()).accountId).toBeNull();
+  });
+
   it('holds every page unsettled until the session has been read', () => {
     answer('/api/auth/get-session', { status: 200, body: null });
     mount();

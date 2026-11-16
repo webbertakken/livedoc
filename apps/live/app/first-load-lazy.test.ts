@@ -46,6 +46,14 @@ describe('every route’s first load', () => {
     expect(staticImports(src)).not.toContain('@/lib/drive/browser-engine');
     expect(src).toContain("import('@/lib/drive/browser-engine')");
   });
+
+  it('loads the open path’s early reads only at a document’s address', () => {
+    const src = read('components/providers/EarlyDocumentReadsBoot.tsx');
+    expect(staticImports(src)).not.toContain('@/lib/open-path/early-document-reads');
+    expect(src).toContain("import('@/lib/open-path/early-document-reads')");
+    // What every route carries of it: the pool apiFetch consults, a leaf.
+    expect(staticImports(read('lib/api/early-reads.ts'))).toEqual(['../debug-log']);
+  });
 });
 
 describe('the Explorer’s first load', () => {

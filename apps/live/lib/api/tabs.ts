@@ -1,11 +1,6 @@
 // Per-tab calls: lazy load, upsert (the autosave path),
 // cross-document link, and delete.
-import {
-  CHANGESET_SEEN_HEADER,
-  DOCUMENT_OPEN_HEADER,
-  type TabResponse,
-  type TabSummary,
-} from '@livedoc/api-schema';
+import { CHANGESET_SEEN_HEADER, type TabResponse, type TabSummary } from '@livedoc/api-schema';
 import { normalizeTable, type Tab } from '@livedoc/document';
 import { dedupeInFlight } from '../dedupe';
 import {
@@ -31,6 +26,7 @@ import {
   apiFetch,
   saveTimeoutSignal,
 } from './core';
+import { tabRead } from './open-path-requests';
 
 // Full tab payload, including elements + per-tab metadata. Pulled
 // lazily when the user opens a tab; the document-summary fetch only
@@ -58,12 +54,8 @@ async function _apiLoadTabRevisioned(
     const tab = await offlineLoadTab(documentId, tabId);
     return tab ? { tab, rev: 0 } : null;
   }
-  const res = await apiFetch(`${API_BASE}/documents/${documentId}/tabs/${tabId}`, {
-    headers: await apiHeaders(ownerId, {
-      share: shareCode,
-      ...(opts.open ? { extra: { [DOCUMENT_OPEN_HEADER]: '1' } } : {}),
-    }),
-  });
+  const { url, headers } = await tabRead(ownerId, documentId, tabId, shareCode, opts);
+  const res = await apiFetch(url, { headers });
   const body = await expectOkOrNull<TabResponse>(res, 'load tab');
   if (!body) return null;
   const { tab } = body;
