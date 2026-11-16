@@ -102,14 +102,15 @@ route](new-document-route.md) "The empty-canvas hint"), which tells a Viewer the
 Participant at what they may add.
 
 **A start is shown only when asked for.** An empty tab opens with its start closed: a new tab (its mode from
-`newTabOpening` in `apps/live/lib/new-tab-seed.ts`), a tab emptied by deleting what was on it, a tab whose mode
-or Workshop control changes while it is empty, and a document made empty by any route: Skip, Start Blank's
+`newTabOpening` in `apps/live/lib/new-tab-seed.ts`), a tab emptied by deleting what was on it, a tab whose mode changes while its start is closed, and a document made empty by any route: Skip, Start Blank's
 `/new?blank=1`, a blank's `/new?template=` link, a mode chosen after the public sites' Start Blank
 (`/new?start=blank`, [New document route](new-document-route.md) "Start Blank after a mode"), or a blank of the
 Explorer's [New Document menu](../013-workspace/new-document-menu.md).
 A start opens when someone asks for it: **Show Templates** in the palette tray, or the wizard's mode choice
 (`openStartForModeChoice`), which opens the start of the blank it makes.
-Changing mode on an open start's own switch opens the next mode's start too, as the person is still choosing.
+Changing mode while a start is open (its own switch, the one beside the menu button, Shift+D or the Workshop
+control) opens the next mode's start too, as the person is still choosing (`useStartFollowsMode`).
+Picking a template from another mode's search ends the choosing: the start it came from closes.
 Shown starts are kept per tab and mode, for this person in this browser (`start-shown.ts`, under the key
 `<tab id>:<mode>`, `startKey`).
 Plan keeps Start Planning: an empty Plan tab has no canvas to show instead.
