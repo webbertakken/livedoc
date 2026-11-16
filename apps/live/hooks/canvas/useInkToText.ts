@@ -76,7 +76,7 @@ export function useInkToText(deps: InkToTextDeps) {
         const result = await read([{ id: 1, image }], {});
         const answer = result.textById.get(1);
         if (!answer && result.failure) return fail(FAILED, `the reader failed: ${result.failure}`);
-        words = answer?.legible ? answer.text.trim() : '';
+        words = answer?.legible ? lazy.plainWords(answer.text) : '';
       } catch (err) {
         return fail(FAILED, `the reader failed: ${reasonOf(err)}`);
       }

@@ -61,6 +61,25 @@ export function inkPolylines(ink: readonly FreehandElement[]): InkPicture {
   };
 }
 
+// A character of Caveat is about this much of its px size wide, with room to spare.
+const CHAR_WIDTH_OF_SIZE = 0.55;
+// \overline{OK}, \textbf{Order}: a maths command around words.
+const MARKUP_COMMAND = /\\[a-zA-Z]+\{([^{}]*)\}/g;
+// $x$ or $$x$$ around the whole answer.
+const MATHS_WRAPPER = /^\$\$?([\s\S]*?)\$?\$$/;
+
+/** The reader's words as plain text: maths markup it wrapped them in taken off (docs/specs/023-draw-mode/ink-to-text.md). */
+export function plainWords(text: string): string {
+  let words = text.trim();
+  const wrapped = MATHS_WRAPPER.exec(words);
+  if (wrapped && words.length > 1) words = wrapped[1]!;
+  for (let before = ''; before !== words;) {
+    before = words;
+    words = words.replace(MARKUP_COMMAND, '$1');
+  }
+  return words.trim();
+}
+
 /** The text's px size for writing this tall over this many lines. */
 export function inkTextSize(inkHeight: number, lineCount: number): number {
   const size = Math.round((inkHeight / Math.max(1, lineCount)) * TEXT_SIZE_OF_LINE);
@@ -75,14 +94,19 @@ export function inkTextElement(
 ): TextElement {
   const box = inkBox(ink);
   const first = ink[0]!;
+  const lines = words.split('\n');
+  const textSize = inkTextSize(box.height, lines.length);
+  const longest = Math.max(...lines.map((line) => line.length));
   return {
     id,
     type: 'text',
     ...box,
+    // Never narrower than the ink, wider when the longest line needs it, so the box never breaks a line.
+    width: Math.max(box.width, Math.ceil(longest * textSize * CHAR_WIDTH_OF_SIZE)),
     label: words,
     font: 'caveat',
     textAlignX: 'left',
-    textSize: inkTextSize(box.height, words.split('\n').length),
+    textSize,
     ...(first.layerId ? { layerId: first.layerId } : {}),
     ...(first.strokeColor
       ? { textColor: first.strokeColor }

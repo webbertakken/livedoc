@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { packFreehandPoints, type Element, type FreehandElement } from '@livedoc/document';
-import { inkBox, inkPolylines, inkTextElement, inkTextSize, replaceInk } from './ink-to-text';
+import {
+  inkBox,
+  inkPolylines,
+  inkTextElement,
+  inkTextSize,
+  plainWords,
+  replaceInk,
+} from './ink-to-text';
 import { inkSelection } from './ink-selection';
 
 // docs/specs/023-draw-mode/ink-to-text.md
@@ -139,5 +146,32 @@ describe('replaceInk', () => {
     const els = [box('x'), stroke('a', 0, 0), box('y'), stroke('b', 0, 0)];
     const text = inkTextElement([els[1] as FreehandElement], 'Hi', 't');
     expect(replaceInk(els, new Set(['a', 'b']), text).map((e) => e.id)).toEqual(['x', 't', 'y']);
+  });
+});
+
+describe('plainWords', () => {
+  it('takes maths markup off the words', () => {
+    expect(plainWords('\\overline{OK}')).toBe('OK');
+    expect(plainWords('$x + 1$')).toBe('x + 1');
+    expect(plainWords('\\textbf{Order} \\emph{placed}')).toBe('Order placed');
+    expect(plainWords('$$\\underline{Hi}$$')).toBe('Hi');
+  });
+
+  it('leaves plain words, prices and line breaks as they are', () => {
+    expect(plainWords('Order placed\nby phone')).toBe('Order placed\nby phone');
+    expect(plainWords('Costs $5')).toBe('Costs $5');
+    expect(plainWords('  Hi  ')).toBe('Hi');
+  });
+});
+
+describe('the text’s width', () => {
+  it('is wider than the ink when its longest line needs the room', () => {
+    const ink = [stroke('a', 0, 0)];
+    const short = inkTextElement(ink, 'Hi', 't');
+    expect(short.width).toBe(inkBox(ink).width);
+    const long = inkTextElement(ink, 'A much longer line than the ink\nshort', 't');
+    const size = long.textSize as number;
+    expect(long.width).toBe(Math.ceil('A much longer line than the ink'.length * size * 0.55));
+    expect(long.height).toBe(inkBox(ink).height);
   });
 });
