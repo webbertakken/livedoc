@@ -232,6 +232,11 @@ the fallback face until the faces land, and the canvas re-measures each time the
   and scrolling it crashed the tab. Windowed, the same folder opened in 0.3 to 0.5 s with its longest task about
   0.1 s, and scrolled to its end. Measure it again with `apps/live/scripts/explorer-long-list-seed.mjs` and
   `explorer-long-list-measure.mjs`.
+- A document thumbnail's motion stays its own: the loader's animations and the picture's crossfade start, repeat and
+  end without an event reaching React, stopped at the window by one capture listener
+  (`components/panels/thumbnail-motion-events.ts`). Every one bubbled to React's root listener, which looked for a
+  handler that is never there: a folder of 30 opening fired 390 `animationstart` events in one task, 215 ms of it at
+  4x CPU.
 
 ### Layout never shifts after first paint
 
