@@ -11,6 +11,7 @@ import {
   type ThumbnailEntry,
 } from '@/lib/thumbnail-cache';
 import { ThumbnailLoader } from './ThumbnailLoader';
+import { keepThumbnailMotionToItself } from './thumbnail-motion-events';
 
 // A cached SVG snapshot of a document (docs/specs/006-document/document-snapshots.md) so you can recognise it
 // without opening it. Shared by every Explorer surface that lists
@@ -116,6 +117,9 @@ export function DocumentThumbnail({
     return () => clearTimeout(timer);
   }, [shown, settled, fetchKey]);
 
+  // The loader's animations and the crossfade fire events nobody listens for; kept from React (web-performance.md).
+  useEffect(keepThumbnailMotionToItself, []);
+
   // While mounted, this thumbnail holds its picture in the cache, so another one loading never evicts it
   // (document-snapshots.md): an evicted picture still on screen would be asked for again.
   useEffect(() => {
@@ -174,6 +178,7 @@ export function DocumentThumbnail({
     <span
       ref={ref}
       aria-hidden
+      data-document-thumbnail=""
       // Paint the box in the document's own background colour once the
       // snapshot shows, so the object-contain letterbox blends into the
       // preview instead of clashing with a generic slate fill (docs/specs/006-document/document-snapshots.md).
