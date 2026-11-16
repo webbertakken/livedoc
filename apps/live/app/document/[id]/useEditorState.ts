@@ -3877,6 +3877,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     getViewportCanvasRect,
     // An Excalidraw copy or file lands through the board-scene insert below (called at paste time).
     insertBoardScene: (scene, at) => void boardSceneInsert.insertScene(scene, at),
+    // Text pasted onto one selected shape is type-to-edit with the whole text (docs/specs/008-canvas/canvas-and-palette.md "Clipboard").
+    pasteTextIntoSelected: typeIntoSelected,
   });
   // A CSV file dropped in Plan mode places a Sheet from it (docs/specs/029-sheets/sheet.md "Placing a sheet").
   const dropFileOnCanvas = useSheetCsvDrop({

@@ -1467,6 +1467,7 @@ A shape can carry an inline **text label**.
 - **Double-click a shape** to enter label-edit mode. The shape's centre becomes an editable input.
 - With a single element selected, **press Space** for the same effect (keyboard equivalent of the double-click). Multi-selection Space falls through to the canvas pan modifier (see Move) since there's no obvious single label to edit; held Space + drag stays the pan modifier in every selection state.
 - **Type-to-edit:** with a single label-bearing element selected (not yet editing), pressing any **printable character** (a letter, digit, or punctuation; Space is excluded so it stays the pan/edit modifier) opens the label editor seeded with that character, **replacing** the existing label. This intentionally wins over the single-key tool / add shortcuts (`R`/`O`/`D`/`T`/`N`/`A`/`I`/`F`, `S`/`P`/`L`) when an element is selected: a user who selects a shape and starts typing expects to edit its text, not to drop a new element. The shortcuts still fire when nothing (or a multi-selection) is selected. Read-only (view-role) sessions never type-to-edit, so viewers keep the tool shortcuts. Non-labelable selections (image, freehand) fall through to the shortcuts unchanged.
+- **Paste-to-edit:** pasting text onto a single selected, label-bearing element is type-to-edit with the whole text as the seed ([Clipboard](#clipboard)).
 - Type to set or change the label.
 - **Enter** inserts a newline (labels are multi-line). **Commit** by clicking outside / blurring, or with **Escape**.
 - **Escape keeps what you typed.** Escape is how people finish typing on a canvas, so it commits and leaves, as a
@@ -1668,6 +1669,21 @@ in-app buffer (or selected element JSON) at the end of a pan. `useClipboard`
 ignores any paste fired in the same task as a middle-button `pointerup`
 (`apps/live/lib/primary-selection-paste.ts`), for the canvas and label handlers
 alike; a text field still takes its primary-selection paste from the browser.
+
+**Text pasted onto one selected shape becomes its label.** With exactly one label-bearing element selected and
+no label open for typing, a paste of text that is not ours (not an element payload, an image or a scene) is
+type-to-edit with the whole text as its seed (`typeIntoSelected`, [Labels](#labels)).
+The text **replaces** the label, as a typed first character does, and the label editor opens with the caret after it,
+so typing carries on.
+Leaving the editor keeps it as one undo step, synced to the room like any label edit; Escape takes it back.
+The `paste` event does it, so Ctrl+V on a hardware keyboard (a tablet's too), the browser's Paste and a phone's
+paste all land alike.
+Windows line breaks arrive as `\n`; text that is only whitespace pastes nothing.
+Everything else pastes as before: copied elements, images and scenes; text with no selection, several selected, or a
+selection that takes no label (an image, a freehand stroke, a path); a locked element, a tab whose edits are blocked
+and a view-only session.
+After a copy whose clipboard write was refused, a paste still lands the in-app buffer: the text on the clipboard is
+what was there before that copy.
 
 Pasting foreign text as a text element is the obvious next step and is
 deliberately not built: it needs the viewport centre in canvas coordinates,
