@@ -12,7 +12,11 @@ export const COMPILE_HINT = '//# allFunctionsCalledOnLoad';
 
 const BUILD_ASSETS = '/_next/static/';
 
-/** The script with the hint as its first line; a script that has it already is returned as it is. */
+/**
+ * The script with the hint as its first line; a script that has it already is returned as it is.
+ * @param {string} source
+ * @returns {string}
+ */
 export function withCompileHint(source) {
   return source.startsWith(`${COMPILE_HINT}\n`) ? source : `${COMPILE_HINT}\n${source}`;
 }
@@ -22,11 +26,13 @@ export function withCompileHint(source) {
  * naming a script the export does not hold is a broken build: it throws, naming it.
  */
 export function hintFirstLoadScripts(outDir) {
+  /** @type {Set<string>} */
   const urls = new Set();
   for (const page of htmlFiles(outDir)) {
     const html = readFileSync(join(outDir, page), 'utf8');
     for (const url of referencedAssets(html).scripts) urls.add(url);
   }
+  /** @type {string[]} */
   const hinted = [];
   for (const url of urls) {
     const file = join(outDir, url.slice(url.indexOf(BUILD_ASSETS)));
