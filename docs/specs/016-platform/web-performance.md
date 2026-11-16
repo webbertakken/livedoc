@@ -397,6 +397,8 @@ seen on the document).
   the card, sheet, comment and catalogue routes and a document's Timeline read its gate row (`getDocumentMeta`);
   the card routes take the card types from the room. The whole document (its owner's name, its tabs) is read
   only where the answer carries it: opening the document and a document view.
+- Opening a document is one D1 round trip: its row carries its owner's name and colour, each a key seek on the
+  participant, rather than a second read after the row (`document-request-round-trips.test.ts`).
 - A share-link visitor's open is recorded from the grant the read already resolved, not a second resolve.
 - Reads that do not depend on each other go to D1 together: a team request's team and the caller's membership,
   a team's members and its invite link, a Timeline page and its scope's state.
