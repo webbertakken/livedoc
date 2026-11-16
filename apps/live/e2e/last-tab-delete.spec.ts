@@ -50,11 +50,17 @@ test('an empty last tab deletes its document at once', async ({ page, baseURL, p
     'Empty plan',
     [],
   );
+  // The owner's own controls are on, so the editor logs no owner shown greyed controls.
+  const greyedLogs: string[] = [];
+  page.on('console', (m) => {
+    if (m.text().includes('[owner-controls-greyed]')) greyedLogs.push(m.text());
+  });
   await asOwner(page, owner);
   await page.goto(`/document/${doc.id}`);
 
   const remove = await openTabMenuDelete(page);
   await expect(remove).toBeEnabled();
+  expect(greyedLogs).toEqual([]);
   await page.screenshot({
     path: test.info().outputPath('last-tab-enabled.png'),
     animations: 'disabled',

@@ -189,6 +189,8 @@ A document holds one or more tabs, so deleting its last tab deletes the document
 - A last tab that holds content asks first, in the anchored confirmation on its Delete button: "Delete this
   document?", warning "This is its only tab, so the whole document goes to the Trash.", confirmed by **Delete
   Document**; Cancel keeps both.
+- That confirmation is a warning, never a danger: its warning line wears the amber warning tone with a warning mark, and
+  **Delete Document** is the popover's primary button, never red ([Destructive actions](../004-interface-design/destructive-actions.md)).
 - A tab **holds content** by the [empty document clean-up](../013-workspace/empty-document-cleanup.md#which-documents)
   test: an element, an article, a form or a filled dashboard slot (`tabHoldsContent`, `@livedoc/document`).
 - That covers every tab kind: a Diagram or Event Storming tab (Structured, Sketch, Pages and Slides alike) by its
@@ -208,6 +210,18 @@ A document holds one or more tabs, so deleting its last tab deletes the document
 The authority is the document delete's ([Ownership](../013-workspace/share-roles.md#ownership)): the editor reads it as
 `canDeleteDocument`, and the api refuses anyone else's delete whatever the editor shows.
 The command palette's **Delete Document** follows the same `canDeleteDocument`.
+
+**An owner shown greyed controls is logged.** When the editor greys the last tab's Delete (`canDeleteDocument` false)
+or Add to Document (`isOwner` false while the person has other documents) for a session whose reader owns the
+document (its owner id is the signed-in account's or the reader's own), it logs it once per document open:
+
+- `[owner-controls-greyed]` in the console, with the fingerprint;
+- `Error` · `Warning` · `OwnerControlsGreyed` in telemetry;
+- the fingerprint in the bug report's recent errors (source `warning`), so the next report from that session carries it.
+
+The fingerprint holds no id: which controls are greyed, `isOwner`, the session role, whether a share code, a team or
+a workbench is in play, whether the reader is the signed-in account, a guest or neither, and how many other documents
+the Explorer list holds (`ownerControlsFingerprint`, `apps/live/app/document/[id]/owner-controls-watch.ts`).
 
 Telemetry: `Tab` · `Deleted` · `LastTab` when the last tab's Delete deletes the document, then `Document` · `Deleted`
 once the delete lands ([Telemetry](../017-telemetry/telemetry.md)).

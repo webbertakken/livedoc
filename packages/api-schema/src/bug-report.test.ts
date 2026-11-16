@@ -119,6 +119,16 @@ describe('parseBugReportContext', () => {
     expect(parsed?.recentErrors[0]?.message).toHaveLength(BUG_REPORT_LIMITS.errorMessage);
   });
 
+  it('keeps an editor warning among the recent errors', () => {
+    const parsed = parseBugReportContext({
+      ...context(),
+      recentErrors: [{ at: 'now', source: 'warning', message: 'OwnerControlsGreyed delete=1' }],
+    });
+    expect(parsed?.recentErrors).toEqual([
+      { at: 'now', source: 'warning', message: 'OwnerControlsGreyed delete=1' },
+    ]);
+  });
+
   it('keeps only the newest recent errors and drops malformed ones', () => {
     const err = (n: number) => ({ at: `t${n}`, source: 'render', message: `e${n}` });
     const parsed = parseBugReportContext({

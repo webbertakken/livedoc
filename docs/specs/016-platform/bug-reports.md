@@ -125,7 +125,9 @@ failed. Please try again."
 - **embedded**: `true` when the page runs inside another page's frame (`window.self !== window.top`), else left out;
   shown and filed as "Embedded: Yes". With **route** (`/embed`, `/embed/workbench`, ...) it says which embed.
 - **recentErrors**: the newest five client errors, newest last, from a ring buffer installed at boot that records
-  uncaught errors, unhandled rejections, render crashes caught by an error boundary and failed api requests. Each is
+  uncaught errors, unhandled rejections, render crashes caught by an error boundary, failed api requests and the
+  editor's own warnings (source `warning`, such as an owner shown greyed controls,
+  [Document structure](../006-document/document-structure.md#the-last-tab)). Each is
   `{ at, source, message }`, its message redacted (`redactErrorText`: emails, URLs, UUIDs, long tokens and numbers
   replaced) and cut to 200 characters. The buffer is kept in `sessionStorage` too, so the report page a crash links to
   still carries the crash.
