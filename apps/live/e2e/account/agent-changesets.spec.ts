@@ -65,7 +65,9 @@ test("an agent's changeset reaches the open editor, survives its save, and the t
   await expect.poll(() => storedIds(page, s), { timeout: 10_000 }).toHaveLength(3);
   expect(await storedIds(page, s)).toContain('payments');
 
-  // Ctrl+Z undoes the person's own square, never the agent's change.
+  // Ctrl+Z undoes the person's own square, never the agent's change. Escape cleared the square's selection, an undo
+  // step of its own (docs/specs/008-canvas/canvas-and-palette.md "Selection and undo"), so the first brings it back.
+  await page.keyboard.press('ControlOrMeta+z');
   await page.keyboard.press('ControlOrMeta+z');
   await expect.poll(() => storedIds(page, s), { timeout: 10_000 }).toEqual(['api', 'payments']);
   await expect(page.getByText('Payment service', { exact: true })).toBeVisible();

@@ -36,10 +36,10 @@ async function selectBoth(page: Page): Promise<void> {
   await expect(both(page)).toBeVisible();
 }
 
-// A press on empty canvas, well below the squares.
+// A press on empty canvas beside the squares, clear of the chrome along the window's edges.
 async function clickOff(page: Page): Promise<void> {
   const b = (await page.locator('[data-element-id="b"]').first().boundingBox())!;
-  await page.mouse.click(b.x + b.width / 2, b.y + b.height + 200);
+  await page.mouse.click(b.x + b.width + 120, b.y + b.height / 2);
 }
 
 for (const { mode, start } of MODES) {

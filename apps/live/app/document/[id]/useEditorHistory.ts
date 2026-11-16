@@ -4,7 +4,13 @@ import { announce } from '@/lib/announcer';
 import { track } from '@/lib/telemetry';
 import { useLatest } from '@/hooks/ui/useLatest';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
-import { EMPTY_SELECTION, type Selection, type SelectionStore } from '@/lib/selection-store';
+import { debugLog } from '@/lib/debug-log';
+import {
+  EMPTY_SELECTION,
+  selectionIds,
+  type Selection,
+  type SelectionStore,
+} from '@/lib/selection-store';
 import { hasSelection, sameSelection, selectionWithin } from '@/lib/step-selection';
 
 type SetState<T> = (value: T) => void;
@@ -94,17 +100,33 @@ export function useEditorHistory(opts: {
     const before = selection.get();
     if (!hasSelection(before)) return;
     const tabId = live.current.activeId;
+    debugLog('[undo] deselect step', { tabId });
     selection.setSelection(EMPTY_SELECTION);
     pushAside({
       undo: () => {
-        if (live.current.activeId !== tabId) return false;
+        if (live.current.activeId !== tabId) {
+          debugLog('[undo] deselect passed over: another tab', { tabId });
+          return false;
+        }
         const back = selectionWithin(before, live.current.tabs, tabId);
-        if (!hasSelection(back) || sameSelection(back, selection.get())) return false;
+        if (!hasSelection(back) || sameSelection(back, selection.get())) {
+          debugLog('[undo] deselect passed over: nothing to bring back', {
+            gone: !hasSelection(back),
+          });
+          return false;
+        }
+        debugLog('[undo] deselect undone', {
+          ids: [...selectionIds(back.selectedId, back.multiSelectedIds)],
+        });
         selection.setSelection(back);
         return true;
       },
       redo: () => {
-        if (!hasSelection(selection.get())) return false;
+        if (!hasSelection(selection.get())) {
+          debugLog('[undo] deselect redo passed over: nothing selected');
+          return false;
+        }
+        debugLog('[undo] deselect redone');
         selection.setSelection(EMPTY_SELECTION);
         return true;
       },

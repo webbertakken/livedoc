@@ -122,13 +122,18 @@ test('a whole flow converted at once is a mind map, undone in one step', async (
   await closeMenu(page);
   await page.keyboard.press('Escape');
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/convert-tree.png` });
+  // Escape cleared the selection, an undo step of its own (docs/specs/008-canvas/canvas-and-palette.md "Selection and
+  // undo"): the first undo brings it back, the next takes back Tree.
+  await page.keyboard.press('ControlOrMeta+z');
   await page.keyboard.press('ControlOrMeta+z');
   await savedTabElements<Saved>(
     page,
     (e) => e.find((x) => x.id === 'start')?.mindFlow === 'downward',
   );
 
-  // The conversion is one step: one undo leaves the boxes as they were, and redo brings the map back.
+  // The conversion is one step: one undo leaves the boxes as they were, and redo brings the map back. The Escape
+  // after it cleared a selection, a step that undo brings back first.
+  await page.keyboard.press('ControlOrMeta+z');
   await page.keyboard.press('ControlOrMeta+z');
   const undone = await savedTabElements<Saved>(page, (e) =>
     IDS.every((id) => e.find((x) => x.id === id)?.shape === 'square'),
