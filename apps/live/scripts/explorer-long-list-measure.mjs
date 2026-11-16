@@ -1,7 +1,9 @@
 // Measures the Explorer's long lists in Chromium at 4x CPU slowdown (docs/specs/016-platform/web-performance.md
 // "Long lists"): opening a folder of many documents, scrolling it top to bottom, finding a row far down, and Back.
 // Every main-thread task over 50 ms is counted (the Long Tasks API). Dark mode, as every capture is.
-// Usage: node explorer-long-list-measure.mjs <base-url> <seed.json> [list|card|details] [--shots <dir>]
+// With --trace <dir>, each step also writes a Chromium trace with its CPU profile, for scripts/trace-long-tasks.mjs.
+// Usage: node explorer-long-list-measure.mjs <base-url> <seed.json> [list|card|details|panel] [--shots <dir>]
+//        [--trace <dir>]
 import { readFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 
@@ -9,12 +11,23 @@ const [base = 'http://localhost:3522', seedPath = '/tmp/lei-seed.json', view = '
   process.argv.slice(2);
 const shotsAt = process.argv.indexOf('--shots');
 const shots = shotsAt > 0 ? process.argv[shotsAt + 1] : null;
+const traceAt = process.argv.indexOf('--trace');
+const traces = traceAt > 0 ? process.argv[traceAt + 1] : null;
+const TRACE_CATEGORIES = [
+  'devtools.timeline',
+  'disabled-by-default-devtools.timeline',
+  'disabled-by-default-devtools.timeline.stack',
+  'disabled-by-default-v8.cpu_profiler',
+  'v8.execute',
+  'blink.user_timing',
+];
 const seed = JSON.parse(readFileSync(seedPath, 'utf8'));
 const farName = seed.names[seed.count - 7];
 
 const browser = await chromium.launch({ args: ['--mute-audio'] });
 const context = await browser.newContext({
   colorScheme: 'dark',
+  reducedMotion: process.argv.includes('--reduced-motion') ? 'reduce' : 'no-preference',
   viewport: { width: 1440, height: 900 },
 });
 await context.addInitScript(
@@ -38,10 +51,17 @@ const results = [];
 async function step(name, run) {
   await page.evaluate(() => (window.__longTasks = []));
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+  const slug = `${view}-${name.replace(/\W+/g, '-')}`;
+  if (traces)
+    await browser.startTracing(page, {
+      path: `${traces}/${slug}.json`,
+      categories: TRACE_CATEGORIES,
+    });
   const started = Date.now();
   const note = await run();
   const ms = Date.now() - started;
   await page.waitForTimeout(1500);
+  if (traces) await browser.stopTracing();
   await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
   const tasks = await page.evaluate(() => window.__longTasks);
   results.push({
@@ -52,7 +72,7 @@ async function step(name, run) {
     note: note ?? '',
   });
   console.log(JSON.stringify({ ...results.at(-1), tasks: tasks.slice(0, 30) }));
-  if (shots) await page.screenshot({ path: `${shots}/${view}-${name.replace(/\W+/g, '-')}.png` });
+  if (shots) await page.screenshot({ path: `${shots}/${slug}.png` });
 }
 
 const row = (name) => page.getByText(name, { exact: true }).first();
