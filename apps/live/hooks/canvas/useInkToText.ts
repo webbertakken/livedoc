@@ -14,6 +14,7 @@ import {
 } from '@/lib/ink-to-text/ink-to-text';
 import { selectReader } from '@/lib/reading/select';
 import { track } from '@/lib/telemetry';
+import { debugLog } from '@/lib/debug-log';
 import { useLatest } from '@/hooks/ui/useLatest';
 
 export type InkToTextDeps = {
@@ -91,7 +92,7 @@ export function useInkToText(deps: InkToTextDeps) {
       d.commit((els) => replaceInk(els, ids, text));
       d.selectOnly(text.id);
       track('AI', 'Used', 'InkToText');
-      console.info(`[ink-to-text] converted ${ids.size} strokes into ${words.length} characters`);
+      debugLog(`[ink-to-text] converted ${ids.size} strokes into ${words.length} characters`);
     } finally {
       reading.current = false;
     }
