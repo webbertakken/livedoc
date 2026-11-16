@@ -450,7 +450,7 @@ describe('GET /api/share/<code> (docs/specs/013-workspace/share-password.md + do
     getShareLinkMock.mockResolvedValue({ ...shareLink('d1'), role: 'view' });
     getSharePasswordMock.mockResolvedValue('hunter2');
     const first = await handleShare(resolveCtx({ password: 'hunter2' }).ctx);
-    const { shareGrant } = (await first.json()) as { shareGrant: string };
+    const { shareGrant } = await first.json<{ shareGrant: string }>();
     expect(shareGrant).toMatch(/^spg_[A-Za-z0-9_-]{43}$/);
     const again = await handleShare(resolveCtx({ password: shareGrant }).ctx);
     expect(again.status).toBe(200);
@@ -467,7 +467,7 @@ describe('GET /api/share/<code> (docs/specs/013-workspace/share-password.md + do
     // once claim that guest's documents via /api/migrate. A visitor never
     // needs it — the client only compares it to decide isOwner.
     const { ctx } = resolveCtx({ visitor: 'someone-else' });
-    const body = (await (await handleShare(ctx)).json()) as { document: { ownerId: string } };
+    const body = await (await handleShare(ctx)).json<{ document: { ownerId: string } }>();
     expect(body.document.ownerId).toBe('');
   });
 
@@ -476,16 +476,18 @@ describe('GET /api/share/<code> (docs/specs/013-workspace/share-password.md + do
   it('never returns the primary share code, even to a caller claiming to be the owner', async () => {
     for (const visitor of ['someone-else', 'o1']) {
       const { ctx } = resolveCtx({ visitor });
-      const body = (await (await handleShare(ctx)).json()) as {
+      const body = await (
+        await handleShare(ctx)
+      ).json<{
         document: { shareCode: string | null };
-      };
+      }>();
       expect(body.document.shareCode, visitor).toBeNull();
     }
   });
 
   it('shows the owner their own id when they open their own link', async () => {
     const { ctx } = resolveCtx({ visitor: 'o1' });
-    const body = (await (await handleShare(ctx)).json()) as { document: { ownerId: string } };
+    const body = await (await handleShare(ctx)).json<{ document: { ownerId: string } }>();
     expect(body.document.ownerId).toBe('o1');
     // ...and an owner opening their own link must not appear in their own
     // "Shared with you" list.
@@ -516,10 +518,12 @@ describe('GET /api/share/<code> (docs/specs/013-workspace/share-password.md + do
       ],
     });
     const { ctx } = resolveCtx({ visitor: 'visitor-1' });
-    const body = (await (await handleShare(ctx)).json()) as {
+    const body = await (
+      await handleShare(ctx)
+    ).json<{
       tabId: string | null;
       document: { tabs: { name: string; outOfScope?: true }[] };
-    };
+    }>();
     expect(body.tabId).toBe('t2');
     expect(body.document.tabs.map((t) => [t.name, t.outOfScope])).toEqual([
       ['', true],
@@ -537,7 +541,7 @@ describe('GET /api/share/<code> (docs/specs/013-workspace/share-password.md + do
 
   it('tells an All-tabs visitor they have every tab', async () => {
     const { ctx } = resolveCtx({ visitor: 'visitor-1' });
-    const body = (await (await handleShare(ctx)).json()) as { tabId: string | null };
+    const body = await (await handleShare(ctx)).json<{ tabId: string | null }>();
     expect(body.tabId).toBeNull();
   });
 

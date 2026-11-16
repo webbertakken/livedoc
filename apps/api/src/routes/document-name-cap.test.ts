@@ -167,10 +167,10 @@ describe('POST /api/documents/:id/copy name cap', () => {
     });
     const res = await call(db, 'POST', '/api/documents/D/copy', {});
     expect(res.status).toBe(201);
-    const { document: liveDoc } = (await res.json()) as { document: { id: string; name: string } };
+    const { document: liveDoc } = await res.json<{ document: { id: string; name: string } }>();
     expect(liveDoc.name).toBe('Copy of Quarterly platform migration plan for payments');
     const res2 = await call(db, 'POST', '/api/documents/D/copy', { name: LONG });
-    const copy = (await res2.json()) as { document: { id: string; name: string } };
+    const copy = await res2.json<{ document: { id: string; name: string } }>();
     expect(copy.document.name).toBe(LONG_CAPPED);
     expect(documentName(db.sql, copy.document.id)).toBe(LONG_CAPPED);
   });
@@ -179,7 +179,7 @@ describe('POST /api/documents/:id/copy name cap', () => {
     const db = sqliteD1();
     await call(db, 'POST', '/api/documents', { id: 'D', name: LONG_CAPPED });
     const res = await call(db, 'POST', '/api/documents/D/copy', {});
-    const { document: liveDoc } = (await res.json()) as { document: { name: string } };
+    const { document: liveDoc } = await res.json<{ document: { name: string } }>();
     expect([...liveDoc.name].length).toBeLessThanOrEqual(NAME_MAX_LENGTH);
     expect(liveDoc.name.startsWith('Copy of Quarterly')).toBe(true);
   });

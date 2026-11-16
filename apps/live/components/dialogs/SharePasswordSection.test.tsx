@@ -26,7 +26,7 @@ describe('SharePasswordSection', () => {
     const onSetPassword = vi.fn().mockResolvedValue(true);
     renderSection({ onSetPassword });
     fireEvent.click(screen.getByRole('switch', { name: /Password Protection/ }));
-    const field = screen.getByLabelText('Share password') as HTMLInputElement;
+    const field = screen.getByLabelText<HTMLInputElement>('Share password');
     expect(field.value).toBe('');
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Save' }).disabled).toBe(true);
     fireEvent.change(field, { target: { value: 'otters' } });
@@ -39,7 +39,7 @@ describe('SharePasswordSection', () => {
     const onSetPassword = vi.fn().mockResolvedValue(true);
     renderSection({ onSetPassword });
     fireEvent.click(screen.getByRole('switch', { name: /Password Protection/ }));
-    const field = screen.getByLabelText('Share password') as HTMLInputElement;
+    const field = screen.getByLabelText<HTMLInputElement>('Share password');
     const save = () => screen.getByRole<HTMLButtonElement>('button', { name: 'Save' });
 
     fireEvent.change(field, { target: { value: '  abcde ' } });
@@ -68,7 +68,7 @@ describe('SharePasswordSection', () => {
     const onSetPassword = vi.fn().mockResolvedValue(true);
     renderSection({ sharePasswordSet: true, onSetPassword });
     fireEvent.click(screen.getByRole('button', { name: 'Replace' }));
-    const field = screen.getByLabelText('Share password') as HTMLInputElement;
+    const field = screen.getByLabelText<HTMLInputElement>('Share password');
     expect(field.value).toBe('');
     expect(field.placeholder).toBe('Choose a new password');
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

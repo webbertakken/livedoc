@@ -122,11 +122,11 @@ describe('submitting a changeset', () => {
       { token: true, headers: { 'X-Livedoc-Client': 'mcp' } },
     );
     expect(res.status).toBe(200);
-    const body = (await res.json()) as {
+    const body = await res.json<{
       changeset: { id: string; rev: number; previousRev: number };
       text: string;
       warnings: string[];
-    };
+    }>();
     expect(body.changeset).toMatchObject({ rev: 2, previousRev: 1, rebasedOver: 0 });
     expect(body.warnings).toContain('no_base');
     expect(body.text).toContain(body.changeset.id);
@@ -249,10 +249,10 @@ describe('submitting a changeset', () => {
     const { db } = await setUp();
     const res = await submit(db, { operations: 'set a fill=green\nconnect a -> b label=next' });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as {
+    const body = await res.json<{
       text: string;
       lint: { measures: { boxes: number } } | null;
-    };
+    }>();
     expect(body.text.split('\n').at(-1)).toMatch(
       /^rev 1→2 · cs_\w+ · lint (clean|\d+ \w+(, \d+ \w+)*) · revert: /,
     );
@@ -326,9 +326,9 @@ describe('a tab-scoped link', () => {
     await createShareLink(db.env, 'D', 'SCOPED01', 'edit', 'never', 't1');
     const who = { owner: 'guest-1', headers: { 'X-Share-Code': 'SCOPED01' } };
     expect((await submit(db, { operations: 'set a label=A1' }, who)).status).toBe(200);
-    const made = (await (
+    const made = await (
       await call(db, 'POST', '/api/documents/D/items', { type: 'task', fields: { title: 'Card' } })
-    ).json()) as { item: { id: string } };
+    ).json<{ item: { id: string } }>();
     const card = {
       id: 'pc',
       type: 'shape',
@@ -434,13 +434,15 @@ describe('the history and one changeset', () => {
   it('lists newest first, showing the token id to its author only, and reads one with its text', async () => {
     quiet();
     const { db } = await setUp();
-    const first = (await (
+    const first = await (
       await submit(db, { operations: [{ op: 'rm', target: 'b' }], summary: 'drop b' })
-    ).json()) as { changeset: { id: string }; text: string };
+    ).json<{ changeset: { id: string }; text: string }>();
     await submit(db, { operations: [{ op: 'set', target: 'a', fields: { label: 'z' } }] });
-    const mine = (await (await call(db, 'GET', '/api/documents/D/changesets')).json()) as {
+    const mine = await (
+      await call(db, 'GET', '/api/documents/D/changesets')
+    ).json<{
       changesets: { id: string; tokenId?: string }[];
-    };
+    }>();
     expect(mine.changesets).toHaveLength(2);
     expect(mine.changesets[1]).toMatchObject({
       id: first.changeset.id,
@@ -449,12 +451,12 @@ describe('the history and one changeset', () => {
       agent: true,
     });
     await createShareLink(db.env, 'D', 'VIEWCODE', 'view');
-    const theirs = (await (
+    const theirs = await (
       await call(db, 'GET', '/api/documents/D/changesets?limit=1', undefined, {
         owner: 'guest',
         headers: { 'X-Share-Code': 'VIEWCODE' },
       })
-    ).json()) as { changesets: Record<string, unknown>[] };
+    ).json<{ changesets: Record<string, unknown>[] }>();
     expect(theirs.changesets).toHaveLength(1);
     expect(theirs.changesets[0]).not.toHaveProperty('tokenId');
     expect((await call(db, 'GET', '/api/documents/D/changesets?limit=0')).status).toBe(400);
@@ -470,9 +472,11 @@ describe('reverting', () => {
   it('applies the inverse as a new changeset by the reverter, and a second revert changes nothing', async () => {
     quiet();
     const { db, room: r } = await setUp();
-    const cs = (await (await submit(db, { operations: [{ op: 'rm', target: 'b' }] })).json()) as {
+    const cs = await (
+      await submit(db, { operations: [{ op: 'rm', target: 'b' }] })
+    ).json<{
       changeset: { id: string };
-    };
+    }>();
     const res = await call(
       db,
       'POST',
@@ -503,9 +507,9 @@ describe('reverting', () => {
   it('keeps an element a person changed since', async () => {
     quiet();
     const { db } = await setUp();
-    const cs = (await (
+    const cs = await (
       await submit(db, { operations: [{ op: 'set', target: 'a', fields: { label: 'agent' } }] })
-    ).json()) as { changeset: { id: string } };
+    ).json<{ changeset: { id: string } }>();
     await submit(db, { operations: [{ op: 'set', target: 'a', fields: { label: 'person' } }] }, {});
     const res = await call(db, 'POST', `/api/documents/D/changesets/${cs.changeset.id}/revert`);
     expect(await res.json()).toMatchObject({
@@ -517,7 +521,7 @@ describe('reverting', () => {
   it('empties a tab the changeset created and keeps it', async () => {
     quiet();
     const { db } = await setUp();
-    const cs = (await (
+    const cs = await (
       await call(
         db,
         'POST',
@@ -525,7 +529,7 @@ describe('reverting', () => {
         { replace: { elements: [box('x')] } },
         { token: true },
       )
-    ).json()) as { changeset: { id: string } };
+    ).json<{ changeset: { id: string } }>();
     await call(db, 'POST', `/api/documents/D/changesets/${cs.changeset.id}/revert`);
     expect(stored(db, 't2')).toEqual([]);
   });
@@ -533,9 +537,11 @@ describe('reverting', () => {
   it('refuses a viewer, and answers 404 for a changeset swept or of another document', async () => {
     quiet();
     const { db } = await setUp();
-    const cs = (await (await submit(db, { operations: [{ op: 'rm', target: 'b' }] })).json()) as {
+    const cs = await (
+      await submit(db, { operations: [{ op: 'rm', target: 'b' }] })
+    ).json<{
       changeset: { id: string };
-    };
+    }>();
     await createShareLink(db.env, 'D', 'VIEWCODE', 'view');
     const viewer = await call(
       db,
@@ -608,9 +614,11 @@ describe('agent presence after a changeset (docs/specs/024-agents/agent-presence
   it('refreshes after a token’s revert too', async () => {
     quiet();
     const { db, room: r } = await setUp();
-    const written = (await (await submit(db, { operations: 'set a label=A1' })).json()) as {
+    const written = await (
+      await submit(db, { operations: 'set a label=A1' })
+    ).json<{
       changeset: { id: string };
-    };
+    }>();
     await settled();
     r.calls.splice(0);
     const res = await call(

@@ -98,7 +98,7 @@ describe('handleTokens — list / create / revoke', () => {
     db.mintApiToken.mockResolvedValue({ secret: 'livedoc_abc', id: 'tok_1', expiresAt: 123 });
     const res = await handleTokens(makeCtx('POST', '/api/tokens', { body: { name: 'CI' } }));
     expect(res.status).toBe(201);
-    const out = (await res.json()) as { token: string; id: string };
+    const out = await res.json<{ token: string; id: string }>();
     expect(out.token).toBe('livedoc_abc');
     expect(out.id).toBe('tok_1');
     // The route mints for the CALLER, under the name they gave.

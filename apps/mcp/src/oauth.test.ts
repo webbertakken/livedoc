@@ -49,7 +49,7 @@ async function register(): Promise<string> {
 describe('discovery', () => {
   it('advertises S256 + none auth + the endpoints', async () => {
     const res = await app.request('/.well-known/oauth-authorization-server', {}, env);
-    const meta = (await res.json()) as Record<string, unknown>;
+    const meta = await res.json<Record<string, unknown>>();
     expect(meta.code_challenge_methods_supported).toEqual(['S256']);
     expect(meta.token_endpoint_auth_methods_supported).toEqual(['none']);
     expect(meta.registration_endpoint).toContain('/oauth/register');
@@ -179,10 +179,9 @@ describe('GET /oauth/session/:id (what the consent screen may believe)', () => {
 
   it('leaks no token, code or PKCE material', async () => {
     const session = await startAuthorize(await register());
-    const body = (await (await app.request(`/oauth/session/${session}`, {}, env)).json()) as Record<
-      string,
-      unknown
-    >;
+    const body = await (
+      await app.request(`/oauth/session/${session}`, {}, env)
+    ).json<Record<string, unknown>>();
     expect(Object.keys(body).sort()).toEqual(['clientId', 'clientName', 'redirectHost']);
     expect(JSON.stringify(body)).not.toContain('code_challenge');
   });
@@ -218,7 +217,7 @@ describe('GET /oauth/session/:id (what the consent screen may believe)', () => {
       },
       env,
     );
-    const { client_id } = (await res.json()) as { client_id: string };
+    const { client_id } = await res.json<{ client_id: string }>();
     const session = await app.request(
       `/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent('https://evil.test/cb')}` +
         `&code_challenge=${await pkceChallenge('x'.repeat(64))}&response_type=code`,
@@ -261,7 +260,7 @@ describe('full authorize -> complete -> token flow', () => {
       },
       env,
     );
-    const { redirectTo } = (await comp.json()) as { redirectTo: string };
+    const { redirectTo } = await comp.json<{ redirectTo: string }>();
     const redirect = new URL(redirectTo);
     expect(redirect.searchParams.get('state')).toBe('st8');
     const code = redirect.searchParams.get('code')!;
@@ -280,7 +279,7 @@ describe('full authorize -> complete -> token flow', () => {
       },
       env,
     );
-    const token = (await tok.json()) as { access_token: string; expires_in: number };
+    const token = await tok.json<{ access_token: string; expires_in: number }>();
     expect(token.access_token).toBe('livedoc_secret');
     // expires_in reflects the ~6-month token life (docs/specs/015-api/mcp-server.md §3.5).
     expect(token.expires_in).toBeGreaterThan(60 * 60 * 24 * 179);
@@ -305,7 +304,7 @@ describe('full authorize -> complete -> token flow', () => {
       },
       env,
     );
-    const { redirectTo } = (await comp.json()) as { redirectTo: string };
+    const { redirectTo } = await comp.json<{ redirectTo: string }>();
     const code = new URL(redirectTo).searchParams.get('code')!;
 
     const bad = await app.request(
@@ -359,7 +358,7 @@ describe('full authorize -> complete -> token flow', () => {
       },
       env,
     );
-    const { redirectTo } = (await comp.json()) as { redirectTo: string };
+    const { redirectTo } = await comp.json<{ redirectTo: string }>();
     const code = new URL(redirectTo).searchParams.get('code')!;
     const res = await app.request(
       '/oauth/token',
@@ -416,7 +415,7 @@ describe('full authorize -> complete -> token flow', () => {
       },
       env,
     );
-    const { redirectTo } = (await comp.json()) as { redirectTo: string };
+    const { redirectTo } = await comp.json<{ redirectTo: string }>();
     const code = new URL(redirectTo).searchParams.get('code')!;
     const tok = await app.request(
       '/oauth/token',
@@ -496,9 +495,9 @@ describe('the CLI client (docs/specs/015-api/cli.md, CLI35, CLI77)', () => {
   });
 
   it('advertises the device endpoint and grant', async () => {
-    const meta = (await (
+    const meta = await (
       await app.request('/.well-known/oauth-authorization-server', {}, env)
-    ).json()) as Record<string, unknown>;
+    ).json<Record<string, unknown>>();
     expect(meta.device_authorization_endpoint).toContain('/oauth/device_authorization');
     expect(meta.grant_types_supported).toEqual([
       'authorization_code',

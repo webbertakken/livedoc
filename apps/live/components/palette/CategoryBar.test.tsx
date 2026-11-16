@@ -205,7 +205,7 @@ describe('hover intent', () => {
     fireEvent.pointerEnter(button('Session'), mouse);
     fireEvent.pointerMove(button('Session'), mouse);
     wait(HOVER_OPEN_MS);
-    const field = within(flyout()!).getByRole('textbox') as HTMLInputElement;
+    const field = within(flyout()!).getByRole<HTMLInputElement>('textbox');
     field.focus();
     fireEvent.change(field, { target: { value: 'timer' } });
     fireEvent.pointerLeave(flyout()!.firstElementChild!, mouse);

@@ -67,7 +67,7 @@ describe('SettingsAccountNameRow', () => {
   it('saves a changed name and re-reads the session', async () => {
     manage.saveAccountName.mockResolvedValue(true);
     render(<SettingsAccountNameRow row={row()} />);
-    const save = screen.getByRole('button', { name: 'Save' }) as HTMLButtonElement;
+    const save = screen.getByRole<HTMLButtonElement>('button', { name: 'Save' });
     expect(save.disabled).toBe(true);
     fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Ada Lovelace' } });
     fireEvent.click(save);

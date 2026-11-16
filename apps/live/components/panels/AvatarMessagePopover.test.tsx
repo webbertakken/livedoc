@@ -33,7 +33,7 @@ describe('the Avatar panel’s Send a Message (docs/specs/008-canvas/avatar-mode
     panel(onSend);
     fireEvent.click(screen.getByText('Send a Message'));
     const box = screen.getByRole('textbox', { name: 'Message' });
-    const send = screen.getByRole('button', { name: 'Send' }) as HTMLButtonElement;
+    const send = screen.getByRole<HTMLButtonElement>('button', { name: 'Send' });
     expect(send.disabled).toBe(true);
     fireEvent.change(box, { target: { value: 'hello room' } });
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
@@ -53,7 +53,7 @@ describe('the Avatar panel’s Send a Message (docs/specs/008-canvas/avatar-mode
   it('refuses a keystroke past fifty words', () => {
     panel(() => true);
     fireEvent.click(screen.getByText('Send a Message'));
-    const box = screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement;
+    const box = screen.getByRole<HTMLTextAreaElement>('textbox', { name: 'Message' });
     const fifty = Array.from({ length: 50 }, () => 'w').join(' ');
     fireEvent.change(box, { target: { value: fifty } });
     fireEvent.change(box, { target: { value: `${fifty} more` } });

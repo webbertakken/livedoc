@@ -85,7 +85,7 @@ export async function handleAi(ctx: RouteContext): Promise<Response> {
 
   let body: AiRequest;
   try {
-    body = (await request.json()) as AiRequest;
+    body = await request.json<AiRequest>();
   } catch {
     return badRequest('invalid JSON');
   }

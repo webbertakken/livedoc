@@ -106,10 +106,12 @@ describe('lane plans through the api', () => {
       /^ {2}\S+ 2 lanes: "Orders" 3 notes, "Kitchen" 4 notes · by Someone: Two parts of the business$/,
     );
 
-    const body = (await (await stormView(db, 'view=storm&json=1')).json()) as {
+    const body = await (
+      await stormView(db, 'view=storm&json=1')
+    ).json<{
       plan: Plan | null;
       reading: Record<string, unknown>;
-    };
+    }>();
     expect(body.plan).toMatchObject({
       lanes: [
         { name: 'Orders', notes: 3 },
@@ -124,9 +126,11 @@ describe('lane plans through the api', () => {
 
     // The agent takes its plan back by ref.
     expect((await edit(db, `rm ${body.plan!.ref}`)).status).toBe(200);
-    const after = (await (await stormView(db, 'view=storm&json=1')).json()) as {
+    const after = await (
+      await stormView(db, 'view=storm&json=1')
+    ).json<{
       plan: Plan | null;
-    };
+    }>();
     expect(after.plan).toBeNull();
   });
 
@@ -151,7 +155,7 @@ describe('lane plans through the api', () => {
     const db = await kitchen();
     const res = await edit(db, 'arrange');
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { text: string };
+    const body = await res.json<{ text: string }>();
     expect(body.text).toContain('arranged');
     const again = await edit(db, 'arrange');
     expect(again.status).toBe(422);

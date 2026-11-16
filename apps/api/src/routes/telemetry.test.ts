@@ -147,7 +147,7 @@ describe('handleTelemetry', () => {
     expect(db.telemetryDailyCountsSince).toHaveBeenCalledTimes(1);
     // 30 days of series plus the 30 before, for the last-30 trend arrow.
     expect(db.telemetryDailyCountsSince.mock.calls[0]![1]).toBe(MIDNIGHT - 59 * DAY);
-    const body = (await res.json()) as ReturnType<typeof buildTelemetrySummary>;
+    const body = await res.json<ReturnType<typeof buildTelemetrySummary>>();
     expect(body.windows.today.total).toBe(1);
   });
 

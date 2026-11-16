@@ -113,7 +113,7 @@ describe('LogoKitPanel', () => {
   it('names each logo page by its full label', () => {
     open();
     fireEvent.click(screen.getByRole('button', { name: /Logo Kit/ }));
-    const select = screen.getByLabelText('Logo page') as HTMLSelectElement;
+    const select = screen.getByLabelText<HTMLSelectElement>('Logo page');
     expect([...select.options].map((o) => o.textContent)).toEqual([
       'Page 1 · 1024 x 1024 · Logo',
       'Mark · 1024 x 1024 · Logo',

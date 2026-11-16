@@ -43,9 +43,9 @@ export async function askModelLines(
       console.error('[storm] ask model error', { status: res.status });
       return null;
     }
-    const completion = (await res.json()) as {
+    const completion = await res.json<{
       choices?: { finish_reason?: string; message?: { content?: string } }[];
-    };
+    }>();
     content = completion.choices?.[0]?.message?.content ?? '';
     finish = completion.choices?.[0]?.finish_reason ?? 'none';
   } catch (err) {

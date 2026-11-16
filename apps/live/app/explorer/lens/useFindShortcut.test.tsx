@@ -36,7 +36,7 @@ describe('useFindShortcut', () => {
     const row = screen.getByRole('button');
     row.focus();
     expect(press(row, { ctrlKey: true }).defaultPrevented).toBe(true);
-    const field = screen.getByRole('textbox') as HTMLInputElement;
+    const field = screen.getByRole<HTMLInputElement>('textbox');
     expect(document.activeElement).toBe(field);
     expect([field.selectionStart, field.selectionEnd]).toEqual([0, 7]);
     expect(track).toHaveBeenCalledWith('Explorer', 'Opened', 'FindShortcut');

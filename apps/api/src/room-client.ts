@@ -113,7 +113,7 @@ export async function fetchRoomLedger(
     const query = `tab=${encodeURIComponent(tabId)}&epoch=${encodeURIComponent(cursor.epoch)}`;
     const res = await documentRoom(env, documentId).fetch(`https://room/ledger?${query}`);
     if (!res.ok) return null;
-    const ledger = (await res.json()) as TabLedger;
+    const ledger = await res.json<TabLedger>();
     if (!ledger || typeof ledger !== 'object' || !ledger.elements) return null;
     return { ledger, seq: cursor.seq };
   } catch {
@@ -346,7 +346,7 @@ export async function readRoomSelections(
       ROOM_SELECTIONS_TIMEOUT_MS,
     );
     if (!res.ok) throw new Error(`status ${res.status}`);
-    const body = (await res.json()) as { selections?: unknown };
+    const body = await res.json<{ selections?: unknown }>();
     if (!Array.isArray(body.selections)) throw new Error('no selections');
     return body.selections as RoomSelection[];
   } catch (err) {
@@ -411,7 +411,7 @@ export async function putAgentPresence(
   }
   if (res.status === 409) return { ok: false, error: 'agent_presence_full' };
   if (!res.ok) throw new RoomUnavailableError(`status ${res.status}`);
-  const answer = (await res.json()) as { expiresAt: number; created: boolean };
+  const answer = await res.json<{ expiresAt: number; created: boolean }>();
   return { ok: true, expiresAt: answer.expiresAt, created: answer.created };
 }
 

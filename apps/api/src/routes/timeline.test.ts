@@ -120,14 +120,14 @@ describe('handleTimeline read', () => {
       ],
     });
     const res = await handleTimeline(makeCtx('GET', '/api/timeline?scope=document:d-1'));
-    const body = (await res.json()) as { items: { id: string; actorId: string | null }[] };
+    const body = await res.json<{ items: { id: string; actorId: string | null }[] }>();
     expect(body.items.map((e) => e.actorId)).toEqual([null, 'owner-1', null]);
   });
 
   it('keeps actor ids in the readers own user scope', async () => {
     store.readTimeline.mockResolvedValue({ items: [{ id: 'e1', actorId: 'someone' }] });
     const res = await handleTimeline(makeCtx('GET', '/api/timeline'));
-    const body = (await res.json()) as { items: { actorId: string | null }[] };
+    const body = await res.json<{ items: { actorId: string | null }[] }>();
     expect(body.items[0]!.actorId).toBe('someone');
   });
 
