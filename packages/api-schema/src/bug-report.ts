@@ -20,7 +20,13 @@ export const BUG_REPORT_LIMITS = {
   bodyBytes: 1_500_000,
 } as const;
 
-export const BUG_REPORT_ERROR_SOURCES = ['uncaught', 'rejection', 'render', 'api'] as const;
+export const BUG_REPORT_ERROR_SOURCES = [
+  'uncaught',
+  'rejection',
+  'render',
+  'api',
+  'warning',
+] as const;
 export type BugReportErrorSource = (typeof BUG_REPORT_ERROR_SOURCES)[number];
 
 export type BugReportRecentError = {

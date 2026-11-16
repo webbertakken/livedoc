@@ -16,6 +16,7 @@ import { registerUnsavedWork } from '@/lib/unsaved-work';
 import { useRegionCycle } from '@/hooks/ui/useRegionCycle';
 import { useEffect, useMemo } from 'react';
 import { addToDocumentTargets } from '@/lib/add-to-document-targets';
+import { useOwnerControlsWatch } from './owner-controls-watch';
 import { canvasSurface } from '@livedoc/document';
 import { resolveViewBackdrop } from '@/lib/view-backdrop';
 import { CanvasPatternContext } from '@/components/canvas/canvas-pattern-context';
@@ -190,6 +191,35 @@ export function EditorView() {
     { mobile: isMobileViewport },
   );
   const role = useRoleIndicator();
+  // Add to Document's targets: the person's other documents, offered to their owner only.
+  const addTargets = addToDocumentTargets({
+    documentId,
+    documentList,
+    isOffline,
+    workbench: workbench !== null,
+    isOwner,
+  });
+  // An owner shown greyed controls is logged (docs/specs/006-document/document-structure.md "The last tab").
+  useOwnerControlsWatch(documentId, {
+    ready: hydrated && !ctx.loadingDocument,
+    documentOwnerId: ctx.documentOwnerId,
+    accountId: ctx.accountId,
+    selfId: selfParticipant.id,
+    isOwner,
+    canDeleteDocument: canDeleteDocument && !!documentId,
+    sessionRole,
+    hasShareCode: sessionShareCode !== null,
+    teamDocument: !!documentTeamId,
+    workbench: workbench !== null,
+    otherDocuments: addToDocumentTargets({
+      documentId,
+      documentList,
+      isOffline: false,
+      workbench: false,
+      isOwner: true,
+    }).length,
+    addTargets: addTargets.length,
+  });
 
   const selectTab = useSelectTab();
   // A board's Form strip (docs/specs/030-forms/forms.md "On the board"): the forms feeding the open tab.
@@ -395,13 +425,7 @@ export function EditorView() {
                 setExportScope('tab');
                 setExportOpen(true);
               },
-              otherDocuments: addToDocumentTargets({
-                documentId,
-                documentList,
-                isOffline,
-                workbench: workbench !== null,
-                isOwner,
-              }),
+              otherDocuments: addTargets,
               onCopyTabTo: linkActiveTabTo,
               onToggleLockTab: toggleActiveTabLock,
               onReorder: reorderTabs,
