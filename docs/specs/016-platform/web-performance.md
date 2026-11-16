@@ -411,8 +411,10 @@ seen on the document).
   wasm in a module of its own, stays deferred.
 - The worker ships minified, its names kept and its source maps uploaded (`apps/api/src/worker-bundle.test.ts`). A
   fresh isolate, the worker's or a document room's, fetches and compiles the whole bundle before its first answer,
-  and on docs.nu that start is the larger part of a slow document open: an answer marked `api-cold` waits 240 to
-  440 ms beyond its measures, one without none.
+  and on docs.nu that start is the larger part of a slow document open: an answer marked `api-cold` waits about
+  340 ms beyond its measures (409 before minifying), one without about 50. A bundle change is judged by that wait,
+  read from `Server-Timing`, as well as by the deploy's "Worker Startup Time", which counts only the top-level CPU:
+  minifying raised that figure and still cut the wait.
 - A list that names its people reads their profiles in the same statement: a team's members join their
   participant rows (`apps/api/src/db/team-members.test.ts` pins the round trip and the plan).
 - A request about one document pays no D1 read for the purge guard: the document's own row keeps it
