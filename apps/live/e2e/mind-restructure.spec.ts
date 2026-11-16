@@ -4,7 +4,7 @@ import {
   expect,
   expectNoPageErrors,
   openStartBlank,
-  pageOwnerHeaders,
+  savedTabElements,
   seedTab,
   test,
 } from './fixtures';
@@ -53,36 +53,6 @@ const SEED = [
 
 type Shape = { id: string; shape?: string; mindParentId?: string; label?: string };
 
-// The first tab as the api has it, once autosave has caught up with `ready`.
-async function savedElements(page: Page, ready: (els: Shape[]) => boolean): Promise<Shape[]> {
-  const base = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
-  const headers = await pageOwnerHeaders(page);
-  let last: Shape[] = [];
-  await expect
-    .poll(
-      async () => {
-        last = await page.evaluate(
-          async ({ base, headers }) => {
-            const id = location.pathname.split('/').filter(Boolean).pop()!;
-            const doc = (await (await fetch(`${base}/documents/${id}`, { headers })).json()) as {
-              document?: { tabs?: { id: string }[] };
-            };
-            const tabId = doc.document?.tabs?.[0]?.id;
-            const got = (await (
-              await fetch(`${base}/documents/${id}/tabs/${tabId}`, { headers })
-            ).json()) as { tab?: { elements?: Shape[] } };
-            return got.tab?.elements ?? [];
-          },
-          { base, headers },
-        );
-        return ready(last);
-      },
-      { timeout: 20_000 },
-    )
-    .toBe(true);
-  return last;
-}
-
 const element = (page: Page, id: string) => page.locator(`[data-element-id="${id}"]`).first();
 
 test('a box becomes a mind node from its Shape menu, found by search', async ({
@@ -100,7 +70,7 @@ test('a box becomes a mind node from its Shape menu, found by search', async ({
   await expect(match).toBeVisible();
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/shape-search-mind.png` });
   await search.press('Enter');
-  const els = await savedElements(page, (e) =>
+  const els = await savedTabElements<Shape>(page, (e) =>
     e.some((x) => x.id === 'box' && x.shape === 'mind-node'),
   );
   expect(els.find((e) => e.id === 'box')?.mindParentId).toBeUndefined();
@@ -117,7 +87,7 @@ test('Shift+click Add Child keeps the node selected; Add Parent goes above a nod
   const addChild = page.getByRole('button', { name: 'Add Child', exact: true }).first();
   await addChild.click({ modifiers: ['Shift'] });
   await addChild.click({ modifiers: ['Shift'] });
-  const els = await savedElements(
+  const els = await savedTabElements<Shape>(
     page,
     (e) => e.filter((x) => x.mindParentId === 'root').length === 3,
   );
@@ -127,7 +97,7 @@ test('Shift+click Add Child keeps the node selected; Add Parent goes above a nod
   await page.getByRole('button', { name: 'Add Parent', exact: true }).click();
   await page.keyboard.type('Style');
   await page.keyboard.press('Escape');
-  await savedElements(page, (e) => {
+  await savedTabElements<Shape>(page, (e) => {
     const kid = e.find((x) => x.id === 'kid');
     const above = e.find((x) => x.id === kid?.mindParentId);
     return above?.mindParentId === 'root' && above.label === 'Style';
@@ -179,7 +149,7 @@ test('number and group children, drag one between its siblings, and place one by
   // The group is a frame, selected with its title open to type.
   await page.keyboard.type('Essentials');
   await page.keyboard.press('Escape');
-  const withGroup = await savedElements(page, (e) =>
+  const withGroup = await savedTabElements<Shape>(page, (e) =>
     e.some((x) => x.shape === 'frame' && x.label === 'Essentials'),
   );
   const groupId = withGroup.find((x) => x.shape === 'frame')!.id;
@@ -212,7 +182,7 @@ test('number and group children, drag one between its siblings, and place one by
   await page.mouse.down();
   await page.mouse.move(venue!.x + venue!.width / 2, between, { steps: 12 });
   await page.mouse.up();
-  const els = (await savedElements(page, (e) => {
+  const els = (await savedTabElements<Shape>(page, (e) => {
     const y = (id: string) => (e.find((x) => x.id === id) as Node | undefined)?.y ?? 0;
     return y('k1') > y('k3') && y('k1') < y('k4');
   })) as Node[];
@@ -225,11 +195,15 @@ test('number and group children, drag one between its siblings, and place one by
   await page.mouse.down();
   await page.mouse.move(t!.x + t!.width / 2 + 420, t!.y - 120, { steps: 12 });
   await page.mouse.up();
-  await savedElements(page, (e) => e.some((x) => x.id === 'k4' && (x as Node).mindPlaced === true));
+  await savedTabElements<Shape>(page, (e) =>
+    e.some((x) => x.id === 'k4' && (x as Node).mindPlaced === true),
+  );
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/placed-by-hand.png` });
   // The node let go stays selected, its toolbar offering the way back.
   await page.getByRole('button', { name: 'Auto Position', exact: true }).click();
-  await savedElements(page, (e) => e.some((x) => x.id === 'k4' && !(x as Node).mindPlaced));
+  await savedTabElements<Shape>(page, (e) =>
+    e.some((x) => x.id === 'k4' && !(x as Node).mindPlaced),
+  );
   expectNoPageErrors(pageErrors);
 });
 
@@ -254,7 +228,7 @@ test('the quick Text Size row sets five sizes, and a long label shrinks to fit',
   const row = page.getByTestId('quick-style-text-size');
   await expect(row).toBeVisible();
   await row.getByRole('radio', { name: /^Extra large/ }).click();
-  const els = await savedElements(page, (e) =>
+  const els = await savedTabElements<Shape>(page, (e) =>
     e.some((x) => x.id === 'box' && typeof (x as { textSize?: unknown }).textSize === 'number'),
   );
   const px = (els.find((e) => e.id === 'box') as { textSize?: number }).textSize!;
@@ -271,7 +245,7 @@ test('a group is dragged by its frame as one block', async ({ page, pageErrors }
   await page.getByRole('button', { name: 'Group', exact: true }).click();
   await page.keyboard.type('First');
   await page.keyboard.press('Escape');
-  const grouped = await savedElements(page, (e) => e.some((x) => x.label === 'First'));
+  const grouped = await savedTabElements<Shape>(page, (e) => e.some((x) => x.label === 'First'));
   const groupId = grouped.find((x) => x.shape === 'frame')!.id;
   await page.keyboard.press('Escape');
 
@@ -283,7 +257,7 @@ test('a group is dragged by its frame as one block', async ({ page, pageErrors }
   await page.mouse.down();
   await page.mouse.move(from.x, from.y + dy, { steps: 14 });
   await page.mouse.up();
-  await savedElements(page, (e) => {
+  await savedTabElements<Shape>(page, (e) => {
     const y = (id: string) => (e.find((x) => x.id === id) as Node | undefined)?.y ?? 0;
     return y('k1') > y('k4') && y('k2') > y('k4');
   });

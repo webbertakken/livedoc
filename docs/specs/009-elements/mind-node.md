@@ -458,6 +458,37 @@ one end of a connector onto another node) changes the tree (`connectMindNodes`):
 - It lands with the connector in the same change (one undo step). A connector between a mind node and anything else
   stays an ordinary arrow.
 
+## Converting a flow
+
+A tree often starts as something else: boxes joined by arrows, drawn as a process flow before it was clear it was a
+map. Converting those boxes to mind nodes (the Shape category's Mind Node, on one node or on a selection) makes them a
+mind map, not mind-node-shaped boxes (`joinConvertedMindNodes`, `packages/document/src/mind-convert.ts`):
+
+- **The arrows become the tree.** An arrow pinned at both ends between two mind nodes, one of them just converted,
+  joins them as parent and child: the node it points **from** is the parent, the node it points **to** the child.
+- **Converting one node at a time builds the map too.** Its arrows to mind nodes join it into their map; its arrows
+  to boxes stay ordinary arrows until those boxes are converted in turn.
+  Only what is converted changes kind: converting one node never converts its neighbours.
+- **The root is found from the arrows**: a node no arrow points into. The tree is read breadth-first from the roots
+  in document order, so each node takes the first parent that reaches it (default).
+- **Nothing is lost.** An arrow the tree cannot use stays on the canvas as an ordinary arrow, exactly as drawn:
+  a second arrow into a node that already has a parent, an arrow that would close a loop, an arrow back to a box.
+  A loop with no way in is entered at its first node in document order, which becomes the root (default).
+- **The arrows keep their look and labels.** A converted arrow is the map's connector from then on, re-faced by the
+  flow like any other; its colour, dashes, arrowheads and label stay, and a node grown from it copies that look.
+- **Directions come from where the nodes are drawn.** Each child sits on the side of its parent it is drawn on;
+  a parent whose children all sit on one side grows that way, one whose children sit on several grows in
+  **Any direction**. A top-down flow becomes a Downward map, a left-to-right flow a Tree. Directions are kept
+  minimal, as Branching keeps them: a node growing the way it would anyway holds no direction of its own, so a
+  direction picked later on the root reaches the whole map.
+- **A converted node joining an existing map** follows "Connecting nodes": an existing root it is drawn to stops
+  being a root, and an existing branch keeps the direction it grew in.
+- **Layout** follows "Connecting nodes" too: a map made only of freshly converted nodes, or of maps that were tidy,
+  is laid out as a tidy map around its root, which stays where it was drawn; a hand-arranged map keeps its nodes
+  where they are, its connectors re-faced by the flow.
+- The conversion and the map it makes are **one undo step**, and reach collaborators as one change.
+  Hovering Mind Node previews the shape alone; the tree forms on the click.
+
 ## Flows: the shape the map grows in
 
 The arrangement a keyboard-driven outline wants is a child to the right,
@@ -870,3 +901,7 @@ The code cites each by its id.
 - **D139** How far a grown node is revealed: `scrollIntoView` with a 300 screen-px side margin
   (`GROWTH_REVEAL_SIDE_MARGIN`) (default).
 - **D140** Sibling order when positions tie: Document order (default).
+- **D227** A converted node with several parents to take: The first reached breadth-first from the roots, in
+  document order (default).
+- **D228** A converted loop with no way in: Entered at its first node in document order, which becomes the root
+  (default).

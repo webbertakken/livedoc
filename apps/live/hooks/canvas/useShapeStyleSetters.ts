@@ -21,8 +21,8 @@ import {
   applyBorderStrokeToEl,
   applyBorderStyleToEl,
   applyColorPresetToEl,
-  applyShapeKindToEl,
 } from '@/lib/style-presets';
+import { morphShapes } from '@/lib/shape-morph';
 import { track } from '@/lib/telemetry';
 
 type ShapeStyleSetterDeps = {
@@ -57,11 +57,12 @@ export function useShapeStyleSetters({
   // Morph the selected shape into a different kind, preserving width /
   // height / label / colour overrides. Circle and diamond are 1:1
   // shapes — coming from a non-square box, snap to the larger side so
-  // the result fits the original footprint.
+  // the result fits the original footprint. A box becoming a mind node joins the map its arrows draw
+  // (docs/specs/009-elements/mind-node.md "Converting a flow").
   const setShapeKindSelected = (kind: ShapeKind) => {
     const { selectedId } = readSelection();
     if (!selectedId) return;
-    commit((els) => els.map((el) => (el.id === selectedId ? applyShapeKindToEl(el, kind) : el)));
+    commit((els) => morphShapes(els, new Set([selectedId]), kind));
     track('Element', 'Changed', 'ShapeMorph');
   };
 

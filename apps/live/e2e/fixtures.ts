@@ -370,3 +370,36 @@ export async function switchToTab(page: Page, name: string | RegExp): Promise<vo
   await list.getByRole('button', { name, exact: typeof name === 'string' }).click();
   await expect(list).toHaveCount(0);
 }
+
+// The first tab's elements as the api has them, once autosave has caught up with `ready`.
+export async function savedTabElements<T extends { id: string }>(
+  page: Page,
+  ready: (els: T[]) => boolean,
+): Promise<T[]> {
+  const base = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
+  const headers = await pageOwnerHeaders(page);
+  let last: T[] = [];
+  await expect
+    .poll(
+      async () => {
+        last = await page.evaluate(
+          async ({ base, headers }) => {
+            const id = location.pathname.split('/').filter(Boolean).pop()!;
+            const doc = (await (await fetch(`${base}/documents/${id}`, { headers })).json()) as {
+              document?: { tabs?: { id: string }[] };
+            };
+            const tabId = doc.document?.tabs?.[0]?.id;
+            const got = (await (
+              await fetch(`${base}/documents/${id}/tabs/${tabId}`, { headers })
+            ).json()) as { tab?: { elements?: never[] } };
+            return got.tab?.elements ?? [];
+          },
+          { base, headers },
+        );
+        return ready(last);
+      },
+      { timeout: 20_000 },
+    )
+    .toBe(true);
+  return last;
+}
