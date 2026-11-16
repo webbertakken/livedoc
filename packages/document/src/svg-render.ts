@@ -48,11 +48,12 @@ import { svgIconShape, svgImageShape } from './svg-render-image-icon';
 import { DIAMOND_POINTS } from './shape-geometry';
 import { svgTableShape } from './svg-render-table';
 import { withMindNumberLabels } from './mind-layout';
+import { mindHaloRoots, svgMindHalo } from './mind-halo';
 // Which body an element draws, and the list of kinds that have one (docs/specs/020-import-export/export-fidelity.md).
 import { shapeHasBespokeBody, svgElementBody } from './svg-render-body';
 import { svgPageFold } from './svg-render-page';
 import { svgHeroCaption } from './svg-render-web';
-import { defaultTextColor, SELF_PAINTING_SHAPES } from './colors';
+import { defaultStrokeColor, defaultTextColor, SELF_PAINTING_SHAPES } from './colors';
 // Text/number primitives shared with the per-element emitters — re-exported
 // below so existing importers of this module keep resolving.
 import { labelMeasure, r2, wrapLabel, xmlEscape } from './svg-render-primitives';
@@ -92,7 +93,7 @@ import { contentBounds } from './content-bounds';
 
 export { arrowLabelFontStack, svgArrow, svgArrowhead } from './svg-render-arrows';
 export type { ArrowLineMotion } from './svg-render-arrows';
-import type { BoxedElement, Element, Tab } from './index';
+import type { BoxedElement, Element, ShapeElement, Tab } from './index';
 import { layerBands, layerOpacityOf, visibleLayerElements } from './layers';
 // Element drop shadows (docs/specs/008-canvas/element-shadows.md): gate + deterministic filter defs.
 import { shadowFilterId, supportsShadow, svgShadowFilterDef } from './shadow';
@@ -156,7 +157,35 @@ import { tagColoursOf, withTagAccent } from './tag-colours';
 
 export { svgIconShape } from './svg-render-image-icon';
 
+/** A mind node's drawn corner: its own radius, else the soft default, never past a pill. */
+function mindNodeCornerPx(el: ShapeElement, finish: Finish): number {
+  return Math.min(
+    cornerRadiusPx(
+      el.borderRadius,
+      el.width,
+      el.height,
+      finishCornerFallbackPx(MIND_NODE_RADIUS_PX, finish),
+    ),
+    Math.min(el.width, el.height) / 2,
+  );
+}
+
 export function svgBoxed(source: BoxedElement, opts: BoxedExportOptions = {}): string {
+  const out = svgBoxedFinished(source, opts);
+  if (!opts.mindHalo || source.type !== 'shape' || source.shape !== 'mind-node') return out;
+  // A root's halo (docs/specs/009-elements/mind-node.md "The root's halo"): under the node, inside its turn and
+  // opacity, and outside the finish's hand, as the canvas draws it.
+  const surface = opts.surface ?? 'light';
+  const el = resolveStockColours(source, surface);
+  const { shape } = describeBoxedExport(el, opts);
+  const finish = resolveFinish(finishOf(source), opts.tabFinish);
+  const stroke = 'stroke' in shape ? shape.stroke : defaultStrokeColor(el, surface);
+  const halo = svgMindHalo(source, mindNodeCornerPx(source, finish), surface, finish, stroke);
+  const open = out.indexOf('>') + 1;
+  return out.slice(0, open) + halo + out.slice(open);
+}
+
+function svgBoxedFinished(source: BoxedElement, opts: BoxedExportOptions): string {
   // Every word on the element in its face, so a face that writes its own (a panel's rows, a button) wears the tab's
   // font and finish as on the canvas; a word that names its own face keeps it.
   const face = exportFontFamily(source, opts.tabFont, opts.tabFinish);
@@ -335,15 +364,7 @@ function svgBoxedFace(source: BoxedElement, opts: BoxedExportOptions): string {
             // rect kind the canvas rounds further than the usual 6, and the one
             // that honours its corner-radius pick (a round bubble-map node).
             el.type === 'shape' && el.shape === 'mind-node'
-            ? Math.min(
-                cornerRadiusPx(
-                  el.borderRadius,
-                  el.width,
-                  el.height,
-                  finishCornerFallbackPx(MIND_NODE_RADIUS_PX, finish),
-                ),
-                Math.min(el.width, el.height) / 2,
-              )
+            ? mindNodeCornerPx(el, finish)
             : 6;
     // What this element draws INSTEAD of (or under) a plain label: its plot,
     // its value, its rows, its face. See svg-render-body.
@@ -667,6 +688,7 @@ export function renderElementsToSvg(
   // Numbered mind nodes are led by their number (docs/specs/009-elements/mind-node.md "Numbered nodes"); a group is a
   // frame, drawn as one.
   const numbered = new Map(withMindNumberLabels(tab.elements).map((el) => [el.id, el]));
+  const haloRoots = mindHaloRoots(tab.elements);
   for (const band of layerBands(tab.elements, tab.layers)) {
     const shown = frame
       ? band.elements.filter((el) => frame.reaches(el, tab.elements))
@@ -692,6 +714,7 @@ export function renderElementsToSvg(
             resolvePlanArt: opts.resolvePlanArt,
             resolveTabWindow: opts.resolveTabWindow,
             tagColours,
+            mindHalo: haloRoots.has(el.id),
           });
     });
     const opacity = layerOpacityOf(band.layer);

@@ -1,4 +1,5 @@
 import { useMindNumber } from './MindMapLayer';
+import { MindRootHalo } from './MindRootHalo';
 import { memo, useRef, useState } from 'react';
 import { useZoneClip, zoneClipPolygon } from '@/lib/article/zone-clip-store';
 import { PhotoDraftRing, PhotoMatchedBadge } from '@/components/canvas/photo-badges';
@@ -629,6 +630,15 @@ function BoxedElementViewImpl({
             fontFamily={fontFamily}
             svgAnim={svgAnim}
           />
+          {element.type === 'shape' && element.shape === 'mind-node' ? (
+            <MindRootHalo
+              node={element}
+              cornerPx={cornerPx}
+              stroke={own.stroke ?? defaultStrokeColor(element, surface)}
+              surface={surface}
+              finish={finish}
+            />
+          ) : null}
           {/* CSS-rendered shapes (square / circle / stadium / browser) paint
           their border via the wrapper's CSS `border`, which can't draw the
           composite dash patterns. When one of those is picked, stroke the

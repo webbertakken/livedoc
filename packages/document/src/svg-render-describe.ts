@@ -126,6 +126,8 @@ export type BoxedExportOptions = {
   surface?: CanvasSurface;
   // The paper colour under the element, for what cuts through to it (a page's fold).
   paper?: string;
+  // A mind map's root with a child: drawn with its halo (docs/specs/009-elements/mind-node.md "The root's halo").
+  mindHalo?: boolean;
   // The tab theme's categorical ramp, for the chart elements (docs/specs/009-elements/pie-chart.md). The
   // canvas hands its charts the same list; without it they fall back to the
   // built-in one, which is what a caller with no theme in hand wants.
