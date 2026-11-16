@@ -114,6 +114,8 @@ test.describe('Pen and palm on a tablet', () => {
     ]);
 
     await expect.poll(() => elementCount(page)).toBe(count + 1);
+    // Opt-in evidence for a pull request: the board after the stroke, the palm still resting.
+    if (process.env.E2E_SHOT) await page.screenshot({ path: process.env.E2E_SHOT });
     expect(await view(page)).toBe(before);
     expectNoPageErrors(pageErrors);
   });
