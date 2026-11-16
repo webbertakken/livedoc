@@ -13,6 +13,7 @@ import { beginCanvasGesture } from '@/lib/canvas-gesture';
 import { useLatest } from '@/hooks/ui/useLatest';
 import { isPressableControl } from '@livedoc/ui';
 import { anyModalOpen } from '@/lib/modal-guard';
+import { isPalmTouch } from '@/lib/pen-presence';
 import { isTypingTarget } from '@/lib/typing-target';
 
 // Pan + marquee gesture machinery lifted out of Canvas.tsx so the
@@ -44,6 +45,11 @@ type PanState = {
   startOffsetX: number;
   startOffsetY: number;
   movedRef: { current: boolean };
+  // The pointer that started the pan: only its moves and release are the pan's (a hovering pen or a second pointer
+  // never moves or ends it), and a finger's pan holds still while a pen is near (docs/specs/023-draw-mode/draw-mode.md
+  // "Touch and pen input").
+  pointerId: number;
+  pointerType: string;
   // What a press that never moved does instead of deselecting: a tap that walks the Avatar
   // (docs/specs/008-canvas/avatar-mode.md "Walking"), or selects an element too big to drag on a phone
   // (docs/specs/008-canvas/canvas-and-palette.md "Touch (iOS / iPad)").
@@ -172,10 +178,13 @@ export function useCanvasPanAndMarquee(deps: Deps): Api {
       if (pending) depsRef.current.setViewportOffset(pending);
     };
     const onMove = (e: PointerEvent) => {
+      if (e.pointerId !== pan.pointerId) return;
       const d = depsRef.current;
       // Pinch zoom is active — let the pinch hook own viewportOffset.
       // A second finger turned the press into a pinch, so its release is never a tap.
-      if (d.isPinchingRef?.current) {
+      // A pen came near: the finger is a resting palm, so the view holds still and its lift is no tap.
+      if (d.isPinchingRef?.current || isPalmTouch(pan.pointerType)) {
+        pending = null;
         pan.movedRef.current = true;
         return;
       }
@@ -195,19 +204,29 @@ export function useCanvasPanAndMarquee(deps: Deps): Api {
       pending = { x: pan.startOffsetX + dx, y: pan.startOffsetY + dy };
       if (rafId === null) rafId = requestAnimationFrame(flush);
     };
-    const onUp = () => {
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerId !== pan.pointerId) return;
       // Land on the final pointer position even if it arrived in the
       // same frame as a pending rAF (which the cleanup cancels).
       if (pending) depsRef.current.setViewportOffset(pending);
+      if (isPalmTouch(pan.pointerType)) pan.movedRef.current = true;
       if (!pan.movedRef.current) (pan.onTap ?? depsRef.current.onDeselect)();
+      setPan(null);
+    };
+    // The browser took the pointer over: the pan ends where it is, and it was no tap.
+    const onCancel = (e: PointerEvent) => {
+      if (e.pointerId !== pan.pointerId) return;
+      if (pending) depsRef.current.setViewportOffset(pending);
       setPan(null);
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
     };
   }, [depsRef, pan]);
 
