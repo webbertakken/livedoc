@@ -29,6 +29,7 @@ import { notifyApiWrite } from './write-signal';
 import { API_BASE } from './base';
 import { confinementRefusal, noteWorkbenchResponse } from './workbench-confinement';
 import { heldDocumentIn, whenDocumentCreated } from '../new-document/create-hold';
+import { takeEarlyRead } from './early-reads';
 import { debugLog } from '../debug-log';
 // A workbench session's confinement (workbench-confinement.ts), part of this module's surface.
 export {
@@ -127,7 +128,9 @@ export async function apiFetch(input: string, init?: RequestInit): Promise<Respo
   }
   let res: Response;
   try {
-    res = await fetch(input, init);
+    // A read the open path asked while the editor's code downloaded (early-reads.ts), as this request would ask it.
+    const early = takeEarlyRead(input, init);
+    res = (early && (await early)) || (await fetch(input, init));
   } catch (err) {
     // The one place that sees a request fail before any response exists.
     reportNetworkError(method, input, err);

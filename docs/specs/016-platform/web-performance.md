@@ -111,6 +111,8 @@ Next renders the root not-found slot inside the layout, so its code is part of e
   export frame (`page-frame.ts`) carry the themes and the document model, about 110 KiB the band never
   used. Its answer checks read the bounds a question shares with a Choice field from `@livedoc/items`'
   `limits.ts`, never from the type catalogue, whose glyphs and board code came with it (about 60 KiB).
+- The open path's early reads (`lib/open-path/early-document-reads.ts`, "The open path asks in parallel") load
+  by dynamic import, and only at a document's address; every route carries the boot that decides, and the pool.
 - `apps/live/app/first-load-lazy.test.ts` fails if any of these become static imports again.
 
 ### A surface that is not on screen loads when it is
@@ -304,6 +306,25 @@ as a different person than the one the session settles, even briefly
   then the first tab: three round trips for a guest, a signed-in person and a share link alike.
 - Guests and share links still wait for the session read before asking for anything: a cleared
   hint must not open a signed-in person's link as a guest (D25).
+- **Asked while the editor's code downloads.** The editor's code is the most a page loads (about 1.5 MB), and the
+  open path's reads waited for all of it to arrive and run. On a page load that starts at a document's address
+  (`/document/<id>`, a share link), what every route ships starts them instead (`EarlyDocumentReadsBoot`), as
+  soon as the session has settled the way the editor waits for it: a read that answered, never the five-second
+  guest fallback, and any guest migration done. It asks what the editor would, in the same order, as the same
+  person, with the same headers: the guest's signed id (minted once, the editor's own mint), then the participant
+  row beside the document or the share link (with the cached grant the editor would send), then the tab the
+  editor would open first (`firstTabToLoad`), marked as an open. Its code is fetched by a dynamic import as the
+  page starts, so no other route carries it.
+- **The editor takes what was asked early.** Each early answer waits, unread, in a one-shot pool
+  (`lib/api/early-reads.ts`) keyed by its address and every header it was asked with; the editor's own request
+  (through `apiFetch`) for the same address with the same headers takes it instead of asking again. A request as
+  anyone else, or with another password, misses and asks. An answer is taken once, and the pool keeps answers
+  for `EARLY_READS_WINDOW_MS = 30000` (default) from its first ask, then forgets them; an early read the network
+  failed is not kept, so the editor asks itself. The editor's reads made before the early one are never asked
+  twice: what the page asked first, the pool does not ask.
+- Nothing is written early but the guest id the editor would mint: a first visit's participant row is still
+  written by the editor. A document in This Browser asks the server nothing; an embed, a workbench and every
+  other address ask nothing early.
 
 ### Ask once
 
