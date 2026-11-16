@@ -8,11 +8,11 @@ import { useItemUndo } from './useItemUndo';
 // docs/specs/008-canvas/canvas-and-palette.md "Undo / Redo").
 const kept: Selection = { selectedId: 'a', multiSelectedIds: new Set() };
 
-function setup(at = { depth: 1, branch: 1, futureLength: 0 }) {
+function setup(at = { depth: 1, branch: 1, futureLength: 0 }, can = true) {
   const history = {
     ...at,
-    canUndo: true,
-    canRedo: true,
+    canUndo: can,
+    canRedo: can,
     undo: vi.fn(() => kept),
     redo: vi.fn(() => null),
     clearRedo: vi.fn(),
@@ -83,5 +83,22 @@ describe('useItemUndo', () => {
     const { history, view } = setup();
     act(() => view.result.current.push({ undo: vi.fn(), redo: vi.fn() }));
     expect(history.clearRedo).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing with no step on either side, and offers a step pushed aside', () => {
+    const { history, view } = setup(undefined, false);
+    expect(view.result.current.canUndo).toBe(false);
+    act(() => {
+      expect(view.result.current.undo()).toBeUndefined();
+      expect(view.result.current.redo()).toBeUndefined();
+    });
+    expect(history.undo).not.toHaveBeenCalled();
+
+    act(() => view.result.current.pushAside({ undo: vi.fn(), redo: vi.fn() }));
+    expect(view.result.current.canUndo).toBe(true);
+    act(() => {
+      view.result.current.undo();
+    });
+    expect(view.result.current.canRedo).toBe(true);
   });
 });
