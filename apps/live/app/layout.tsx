@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { AuthBridge } from '@/components/providers/AuthBridge';
+import { EarlyDocumentReadsBoot } from '@/components/providers/EarlyDocumentReadsBoot';
 import { SessionEndedNotice } from '@/components/chrome/SessionEndedNotice';
 import { ErrorTelemetryBoot } from '@/components/providers/ErrorTelemetryBoot';
 import { PageViewBoot } from '@/components/providers/PageViewBoot';
@@ -169,6 +170,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <TruthArmBoot />
         <KeyboardAvoidanceBoot />
         <AuthBridge>
+          {/* The open path asked while the editor's code downloads (docs/specs/016-platform/web-performance.md). */}
+          <EarlyDocumentReadsBoot />
           <ToastProvider>
             <SessionEndedNotice />
             <ConfirmProvider>
