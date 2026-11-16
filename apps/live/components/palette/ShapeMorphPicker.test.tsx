@@ -48,7 +48,9 @@ describe('ShapeMorphPicker', () => {
   // docs/specs/004-interface-design/menus.md "Control menus": the menu hears Escape on the document.
   describe('the keys the menu hears', () => {
     const heard = vi.fn();
-    const listen = (e: KeyboardEvent) => heard(e.key);
+    const listen = (e: KeyboardEvent) => {
+      heard(e.key);
+    };
     afterEach(() => {
       document.removeEventListener('keydown', listen);
       heard.mockReset();
