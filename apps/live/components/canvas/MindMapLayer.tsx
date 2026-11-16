@@ -1,9 +1,10 @@
 'use client';
 
-// The number each numbered mind node shows (docs/specs/009-elements/mind-node.md "Numbered nodes"), worked out once
-// for the tab and read by its node.
+// What a mind map draws from its tree, worked out once for the tab: the number each numbered mind node shows
+// (docs/specs/009-elements/mind-node.md "Numbered nodes") and the roots that wear a halo ("The root's halo"),
+// each read by its node.
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { mindNumbers, type Element } from '@livedoc/document';
+import { mindHaloRoots, mindNumbers, type Element } from '@livedoc/document';
 
 const MindNumbersContext = createContext<ReadonlyMap<string, number> | null>(null);
 
@@ -26,4 +27,27 @@ export function MindNumbersProvider({
 /** The number a node is drawn with, or undefined when it is not numbered. */
 export function useMindNumber(id: string): number | undefined {
   return useContext(MindNumbersContext)?.get(id);
+}
+
+// The roots drawn with a halo (docs/specs/009-elements/mind-node.md "The root's halo"), worked out once for the tab.
+const MindHaloRootsContext = createContext<ReadonlySet<string> | null>(null);
+
+export function MindHaloRootsProvider({
+  elements,
+  children,
+}: {
+  elements: Element[];
+  children: ReactNode;
+}) {
+  const roots = useMemo(() => mindHaloRoots(elements), [elements]);
+  // Its identity holds while the roots do, so a change that keeps every map's root re-renders no node through it.
+  const key = [...roots].sort().join();
+  // oxlint-disable-next-line react/exhaustive-deps -- keyed on the entries, not the set
+  const stable = useMemo(() => (key ? roots : null), [key]);
+  return <MindHaloRootsContext.Provider value={stable}>{children}</MindHaloRootsContext.Provider>;
+}
+
+/** Whether a node is a root drawn with its halo. */
+export function useMindHaloRoot(id: string): boolean {
+  return useContext(MindHaloRootsContext)?.has(id) ?? false;
 }

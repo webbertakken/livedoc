@@ -186,12 +186,40 @@ undo step.
 
 ## A new node looks like its level
 
-A mind map's hierarchy is carried by how its levels look: a bold root, tinted
-branches, plain leaves. A new node therefore copies the look of a node at **its
-own level**: a sibling first, else a cousin at the same depth of the same map.
+A mind map's hierarchy is carried by how its levels look: a root ringed by its halo (see "The root's halo"),
+tinted branches, plain leaves. A template's root is bold too, but a map grown from a box or converted from a flow
+has no styled root, so the halo, not a style, is what marks the root on every map.
+A new node therefore copies the look of a node at **its own level**: a sibling first, else a cousin at the same
+depth of the same map.
 Only the first node of a new level falls back to its parent's look, and the
 first child of a **root** takes the element's defaults instead, because a child
-copying a bold root would give the map two roots.
+copying a styled root would look like a second root.
+
+## The root's halo
+
+Branches can leave a root on every side (Any direction, Balanced, Bubble, or after reconnecting), so the root has
+to read as the root at a glance, whatever it looks like.
+It does by its **halo**: a second outline just outside its own (`mindHaloRoots`, `mindHaloRing`,
+`packages/document/src/mind-halo.ts`).
+
+- **Which nodes**: every root with at least one child. A lone node, a root with no children yet, stays plain, so a
+  box turned into a mind node does not change look until it starts a map.
+- **Worked out from the tree, never stored**: it is read from the parent pointers each time the map is drawn, so it
+  follows the root through Add Parent, connecting nodes, converting a flow, deleting a root and undo, and every map
+  on a canvas has its own.
+- **Shape**: an outline a clear 6 px (`MIND_HALO_GAP`) outside the node's edge on every side, its corners rounded
+  by the node's corner radius plus the gap so the two lines stay parallel; a round node gets a round halo. No fill.
+- **Line**: solid, as wide as the node's own border, and 1.5 px (`MIND_HALO_MIN_WIDTH`) when the node's border is
+  thinner or none (default). A dashed or dotted root still has a solid halo, so the halo never reads as a selection
+  (default).
+- **Colour**: the root's own border colour. Where that is under 3:1 against the paper (WCAG 2.2 1.4.11 Non-text
+  Contrast) it is mixed toward the paper's contrasting ink, just far enough to reach 3:1, so the halo is visible
+  on the light and the dark canvas alike (default).
+- **Not a part of the node**: it takes no pointer (a press on it lands on whatever is under it), and it is not in the
+  node's bounds, so selection, snapping, layout and spacing are as they were.
+  It turns with a rotated root and fades with its opacity and layer.
+- **Everywhere the node is drawn**: on the canvas in every finish, and in the SVG and PNG exports, which share
+  `mindHaloRing` with the canvas.
 
 "The look" is exactly what the format painter copies (`paintableBoxedFields`):
 size, colours and their theme binding, border, corner radius, shadow and text
@@ -905,3 +933,5 @@ The code cites each by its id.
   document order (default).
 - **D228** A converted loop with no way in: Entered at its first node in document order, which becomes the root
   (default).
+- **D229** The halo's line on a thin or borderless root: 1.5 px solid (default).
+- **D230** The halo under a low-contrast border colour: mixed toward the paper's contrasting ink to 3:1 (default).

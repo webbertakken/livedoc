@@ -607,6 +607,7 @@ export * from './mind-direction-edit';
 export * from './mind-grow';
 export * from './mind-connect';
 export * from './mind-convert';
+export * from './mind-halo';
 export * from './mind-arrange';
 export * from './mind-group';
 export * from './mind-fit';

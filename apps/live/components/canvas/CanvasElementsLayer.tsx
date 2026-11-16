@@ -58,7 +58,7 @@ import { ReviewButton, ReviewCorner } from '@/components/canvas/review/ReviewBut
 import { ReviewRings } from '@/components/canvas/review/ReviewRings';
 import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
-import { MindNumbersProvider } from './MindMapLayer';
+import { MindHaloRootsProvider, MindNumbersProvider } from './MindMapLayer';
 import {
   SheetChartsContext,
   type SheetChartsValue,
@@ -611,243 +611,245 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
   return (
     <SheetChartsContext.Provider value={sheetCharts}>
       <MindNumbersProvider elements={elements}>
-        <CardVoteProvider value={cardVote}>
-          <SelectionGripsContext.Provider value={gripHosts}>
-            {/* Shared arrowhead defs. Multiple per-arrow <svg>s below
+        <MindHaloRootsProvider elements={elements}>
+          <CardVoteProvider value={cardVote}>
+            <SelectionGripsContext.Provider value={gripHosts}>
+              {/* Shared arrowhead defs. Multiple per-arrow <svg>s below
             all reference url(#arrowhead) — defs are document-scoped
             in SVG so a single defs node lets every arrow render
             with the same marker. */}
-            {hasArrows ? (
-              <svg
-                className="absolute"
-                style={{ width: 0, height: 0, overflow: 'visible' }}
-                aria-hidden
-              >
-                <ArrowDefs />
-              </svg>
-            ) : null}
+              {hasArrows ? (
+                <svg
+                  className="absolute"
+                  style={{ width: 0, height: 0, overflow: 'visible' }}
+                  aria-hidden
+                >
+                  <ArrowDefs />
+                </svg>
+              ) : null}
 
-            {/* Render elements in their natural array order so
+              {/* Render elements in their natural array order so
             `bringToFront` / `sendToBack` reorder arrows relative to
             boxed elements (instead of all arrows perpetually stacking
             above all boxes inside a single SVG layer). Each arrow
             gets its own <svg> overlay; pointer events on the SVG are
             disabled in CSS, only the inner arrow line picks them up. */}
-            {/* Candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): beneath every element. */}
-            {props.esBoard ? (
-              <ContextLayer
-                part="lines"
-                elements={elements}
-                tabId={props.activeTabId ?? ''}
-                layers={tabLayers}
-                contexts={readOnly || tabLocked ? undefined : props.contexts}
-                showSuggested={suggestionsShown}
-                suggestions={
-                  suggestionsShown && !insertShift.dragging ? props.suggestions : undefined
-                }
-                shiftX={insertShift.xFor}
-              />
-            ) : null}
-            {/* The tape of each pivotal event (docs/specs/021-event-storming/board-structure.md "Pivotal events"):
+              {/* Candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): beneath every element. */}
+              {props.esBoard ? (
+                <ContextLayer
+                  part="lines"
+                  elements={elements}
+                  tabId={props.activeTabId ?? ''}
+                  layers={tabLayers}
+                  contexts={readOnly || tabLocked ? undefined : props.contexts}
+                  showSuggested={suggestionsShown}
+                  suggestions={
+                    suggestionsShown && !insertShift.dragging ? props.suggestions : undefined
+                  }
+                  shiftX={insertShift.xFor}
+                />
+              ) : null}
+              {/* The tape of each pivotal event (docs/specs/021-event-storming/board-structure.md "Pivotal events"):
           beneath every element too, and everyone's to see. */}
-            {props.esBoard ? (
-              <StructureTapes
-                tabId={props.activeTabId ?? ''}
-                elements={elements}
-                layers={tabLayers}
-              />
-            ) : null}
-            {/* Pages mode cuts elements off at the page edges (PageClip); not in the
+              {props.esBoard ? (
+                <StructureTapes
+                  tabId={props.activeTabId ?? ''}
+                  elements={elements}
+                  layers={tabLayers}
+                />
+              ) : null}
+              {/* Pages mode cuts elements off at the page edges (PageClip); not in the
           isometric view, whose 3D stack a clip would flatten. */}
-            <PageClip
-              pages={
-                props.pagesMode && props.canvasTool !== 'isometric' ? props.pagesMode.pages : null
-              }
-              // A page under a layout preview shows only the preview.
-              hiddenPageId={props.pagesMode?.layoutPreview?.pageId ?? null}
-              elements={elements}
-              layers={tabLayers}
-            >
-              <CanvasElementList
-                shownOrder={shownOrder}
-                previewStore={previewStore}
-                h={h}
-                boxedShared={boxedShared}
-                editingId={editingId}
-                editCursorAtEnd={editCursorAtEnd}
-                reshapingArrowId={props.reshapingArrowId}
-                isPaintMode={isPaintMode}
-                tabLocked={tabLocked}
-                readOnly={readOnly}
-                insertShift={insertShift}
-                shiftDupGhostIds={shiftDupGhostIds}
-                draftView={draftView}
-                tabVote={tabVote}
-                tabLayers={tabLayers}
-                remoteSelectionsByElement={remoteSelectionsByElement}
-                canMove={canMove}
-                canWriteText={canWriteText}
-                canResize={canResize}
-                voteReview={voteReview}
-                commentActionsFor={commentActionsFor}
-                actionActionsFor={actionActionsFor}
-                revealedIds={revealedIds}
-                reactionBursts={reactionBursts}
-                tabFont={tabFont}
-                tabFinish={tabFinish}
-                fontEpoch={fontEpoch}
-                stackedIds={stackedIds}
-              />
-            </PageClip>
-            {/* Candidate contexts' names, in the middle of their shapes, over the notes. */}
-            {props.esBoard ? (
-              <ContextLayer
-                part="names"
-                elements={elements}
-                tabId={props.activeTabId ?? ''}
-                layers={tabLayers}
-                contexts={readOnly || tabLocked ? undefined : props.contexts}
-                showSuggested={suggestionsShown}
-                suggestions={
-                  suggestionsShown && !insertShift.dragging ? props.suggestions : undefined
+              <PageClip
+                pages={
+                  props.pagesMode && props.canvasTool !== 'isometric' ? props.pagesMode.pages : null
                 }
-                shiftX={insertShift.xFor}
-              />
-            ) : null}
-            {/* A hotspot's answer (docs/specs/021-event-storming/board-structure.md "Hotspot answers"): its check, its
-          caption and the field it is typed in, over the notes; the checks are everyone's to see. */}
-            {props.esBoard ? (
-              <StructureMarks
-                tabId={props.activeTabId ?? ''}
+                // A page under a layout preview shows only the preview.
+                hiddenPageId={props.pagesMode?.layoutPreview?.pageId ?? null}
                 elements={elements}
                 layers={tabLayers}
-                onAnswer={readOnly || tabLocked ? undefined : props.structure?.saveAnswer}
-              />
-            ) : null}
-            {/* A wireframe page's camera and system bars, over what is on its screen. */}
-            {props.pagesMode && props.canvasTool !== 'isometric' ? (
-              <WireframeDeviceOverlays
-                pages={props.pagesMode.pages}
-                frameTheme={props.pagesMode.frameTheme}
-              />
-            ) : null}
-
-            {/* Editor-only marks, left out of an animated GIF (GifOmit). */}
-            <GifOmit>
-              {/* The line or arrow being drawn (docs/specs/023-draw-mode/draw-mode.md "Shapes"): the
-          element the release lands, after every element, where it will land. */}
-              {drawDrag && props.pendingDraw?.type === 'arrow' && props.previewDrawnArrow ? (
-                <DrawnArrowPreview
-                  arrow={props.previewDrawnArrow(
-                    props.pendingDraw,
-                    drawDrag.startX,
-                    drawDrag.startY,
-                    drawDrag.currentX,
-                    drawDrag.currentY,
-                  )}
-                  elementIndex={elementIndex ?? EMPTY_ELEMENT_INDEX}
-                  occluders={drawnElements}
-                  draftLayout={arrowLabels.draftLayout}
-                  fontFamily={tabFontStack}
-                  withDefs={!hasArrows}
+              >
+                <CanvasElementList
+                  shownOrder={shownOrder}
+                  previewStore={previewStore}
+                  h={h}
+                  boxedShared={boxedShared}
+                  editingId={editingId}
+                  editCursorAtEnd={editCursorAtEnd}
+                  reshapingArrowId={props.reshapingArrowId}
+                  isPaintMode={isPaintMode}
+                  tabLocked={tabLocked}
+                  readOnly={readOnly}
+                  insertShift={insertShift}
+                  shiftDupGhostIds={shiftDupGhostIds}
+                  draftView={draftView}
+                  tabVote={tabVote}
+                  tabLayers={tabLayers}
+                  remoteSelectionsByElement={remoteSelectionsByElement}
+                  canMove={canMove}
+                  canWriteText={canWriteText}
+                  canResize={canResize}
+                  voteReview={voteReview}
+                  commentActionsFor={commentActionsFor}
+                  actionActionsFor={actionActionsFor}
+                  revealedIds={revealedIds}
+                  reactionBursts={reactionBursts}
+                  tabFont={tabFont}
+                  tabFinish={tabFinish}
+                  fontEpoch={fontEpoch}
+                  stackedIds={stackedIds}
+                />
+              </PageClip>
+              {/* Candidate contexts' names, in the middle of their shapes, over the notes. */}
+              {props.esBoard ? (
+                <ContextLayer
+                  part="names"
+                  elements={elements}
+                  tabId={props.activeTabId ?? ''}
+                  layers={tabLayers}
+                  contexts={readOnly || tabLocked ? undefined : props.contexts}
+                  showSuggested={suggestionsShown}
+                  suggestions={
+                    suggestionsShown && !insertShift.dragging ? props.suggestions : undefined
+                  }
+                  shiftX={insertShift.xFor}
+                />
+              ) : null}
+              {/* A hotspot's answer (docs/specs/021-event-storming/board-structure.md "Hotspot answers"): its check, its
+          caption and the field it is typed in, over the notes; the checks are everyone's to see. */}
+              {props.esBoard ? (
+                <StructureMarks
+                  tabId={props.activeTabId ?? ''}
+                  elements={elements}
+                  layers={tabLayers}
+                  onAnswer={readOnly || tabLocked ? undefined : props.structure?.saveAnswer}
+                />
+              ) : null}
+              {/* A wireframe page's camera and system bars, over what is on its screen. */}
+              {props.pagesMode && props.canvasTool !== 'isometric' ? (
+                <WireframeDeviceOverlays
+                  pages={props.pagesMode.pages}
+                  frameTheme={props.pagesMode.frameTheme}
                 />
               ) : null}
 
-              {/* What the agents present name in focus (docs/specs/024-agents/agent-presence.md "In the editor"):
+              {/* Editor-only marks, left out of an animated GIF (GifOmit). */}
+              <GifOmit>
+                {/* The line or arrow being drawn (docs/specs/023-draw-mode/draw-mode.md "Shapes"): the
+          element the release lands, after every element, where it will land. */}
+                {drawDrag && props.pendingDraw?.type === 'arrow' && props.previewDrawnArrow ? (
+                  <DrawnArrowPreview
+                    arrow={props.previewDrawnArrow(
+                      props.pendingDraw,
+                      drawDrag.startX,
+                      drawDrag.startY,
+                      drawDrag.currentX,
+                      drawDrag.currentY,
+                    )}
+                    elementIndex={elementIndex ?? EMPTY_ELEMENT_INDEX}
+                    occluders={drawnElements}
+                    draftLayout={arrowLabels.draftLayout}
+                    fontFamily={tabFontStack}
+                    withDefs={!hasArrows}
+                  />
+                ) : null}
+
+                {/* What the agents present name in focus (docs/specs/024-agents/agent-presence.md "In the editor"):
           above the elements, beneath the remote cursors. */}
-              <AgentFocusOverlay elements={elements} />
+                <AgentFocusOverlay elements={elements} />
 
-              <RemoteCursors cursors={remoteCursors} />
+                <RemoteCursors cursors={remoteCursors} />
 
-              {/* Laser overlay sits inside the viewport-transformed wrapper
+                {/* Laser overlay sits inside the viewport-transformed wrapper
             so trail coordinates (canvas-space) pan + zoom with
             elements. The overlay component owns its own RAF loop
             and only runs while there's at least one active trail. */}
-              <ZoomedLaserOverlay trails={laserTrails} />
+                <ZoomedLaserOverlay trails={laserTrails} />
 
-              {/* What a relayed changeset touched (docs/specs/024-agents/agent-changesets.md "In the editor"):
+                {/* What a relayed changeset touched (docs/specs/024-agents/agent-changesets.md "In the editor"):
           above the elements, below the selection chrome. */}
-              <ChangesetRevealOverlay elements={elements} tabId={props.activeTabId ?? ''} />
-            </GifOmit>
+                <ChangesetRevealOverlay elements={elements} tabId={props.activeTabId ?? ''} />
+              </GifOmit>
 
-            {/* The grips layer (docs/specs/008-canvas/canvas-and-palette.md "Resize"): above every element, so
+              {/* The grips layer (docs/specs/008-canvas/canvas-and-palette.md "Resize"): above every element, so
           no grip is ever covered. The canvas's own grips go in here; each element's are portalled in. */}
-            <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
-              {/* What the Review panel points out (docs/specs/021-event-storming/board-review.md): everyone's to see. */}
-              {props.esBoard ? (
-                <ReviewRings tabId={props.activeTabId ?? ''} elements={elements} />
-              ) : null}
-              {/* The Review pill for whoever the suggestions corner is not drawn for: a corner of its own, put
+              <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
+                {/* What the Review panel points out (docs/specs/021-event-storming/board-review.md): everyone's to see. */}
+                {props.esBoard ? (
+                  <ReviewRings tabId={props.activeTabId ?? ''} elements={elements} />
+                ) : null}
+                {/* The Review pill for whoever the suggestions corner is not drawn for: a corner of its own, put
           away with the rest of the chrome in zen mode. An Editor's stands in the suggestions corner, below. */}
-              {props.esBoard && !suggestionsShown && props.zenMode !== true ? (
-                <ReviewCorner tabId={props.activeTabId ?? ''} />
-              ) : null}
-              {/* Suggestions (docs/specs/021-event-storming/suggestions.md): beneath the next-note tabs, standing
+                {props.esBoard && !suggestionsShown && props.zenMode !== true ? (
+                  <ReviewCorner tabId={props.activeTabId ?? ''} />
+                ) : null}
+                {/* Suggestions (docs/specs/021-event-storming/suggestions.md): beneath the next-note tabs, standing
           down while a drag is in hand. */}
-              {suggestionsShown && props.suggestions ? (
-                <BoardOffers
+                {suggestionsShown && props.suggestions ? (
+                  <BoardOffers
+                    tabId={props.activeTabId ?? ''}
+                    elements={elements}
+                    layers={tabLayers}
+                    offer={offered?.board ?? null}
+                    arranging={arranging}
+                    dragging={insertShift.dragging}
+                    controls={props.suggestions}
+                  />
+                ) : null}
+                {suggestionsShown && props.suggestions && !insertShift.dragging && !arranging ? (
+                  <SuggestionLayer
+                    elements={elements}
+                    tabId={props.activeTabId ?? ''}
+                    controls={props.suggestions}
+                    showAllSpots={showAllPreview?.spots ?? null}
+                    inertIds={props.layerInertIds}
+                    layers={tabLayers}
+                    offered={offered}
+                    canAsk={!props.createBlocked}
+                    review={<ReviewButton tabId={props.activeTabId ?? ''} />}
+                    onSelectContexts={(ids) => {
+                      props.contexts?.clearSelection();
+                      selectContexts(props.activeTabId ?? '', ids);
+                    }}
+                  />
+                ) : null}
+                <LayerSelectionChrome
+                  selectionInput={props.selectionInput}
                   tabId={props.activeTabId ?? ''}
                   elements={elements}
-                  layers={tabLayers}
-                  offer={offered?.board ?? null}
-                  arranging={arranging}
-                  dragging={insertShift.dragging}
-                  controls={props.suggestions}
-                />
-              ) : null}
-              {suggestionsShown && props.suggestions && !insertShift.dragging && !arranging ? (
-                <SuggestionLayer
-                  elements={elements}
-                  tabId={props.activeTabId ?? ''}
-                  controls={props.suggestions}
-                  showAllSpots={showAllPreview?.spots ?? null}
-                  inertIds={props.layerInertIds}
-                  layers={tabLayers}
-                  offered={offered}
-                  canAsk={!props.createBlocked}
-                  review={<ReviewButton tabId={props.activeTabId ?? ''} />}
-                  onSelectContexts={(ids) => {
-                    props.contexts?.clearSelection();
-                    selectContexts(props.activeTabId ?? '', ids);
+                  editingId={editingId}
+                  nextNote={
+                    props.esBoard && props.onAddNextNote
+                      ? {
+                          blocked:
+                            readOnly ||
+                            tabLocked ||
+                            props.createBlocked === true ||
+                            insertShift.dragging,
+                          onAdd: props.onAddNextNote,
+                        }
+                      : null
+                  }
+                  pluses={{
+                    quickRingOpen,
+                    setQuickRingOpen,
+                    openOnHover: settings.quickAddOnHover === true,
+                    onSpawnConnect,
+                    onStartArrow,
+                    onStartPencil,
+                    onAddTableRow,
+                    onAddTableColumn,
+                    onAppendWebRow,
+                    onAddEntityField: h.onAddEntityField,
+                    onAddRelatedEntity: h.onAddRelatedEntity,
                   }}
+                  onBeginDrag={onBeginDrag}
+                  pages={props.pagesMode?.pages}
                 />
-              ) : null}
-              <LayerSelectionChrome
-                selectionInput={props.selectionInput}
-                tabId={props.activeTabId ?? ''}
-                elements={elements}
-                editingId={editingId}
-                nextNote={
-                  props.esBoard && props.onAddNextNote
-                    ? {
-                        blocked:
-                          readOnly ||
-                          tabLocked ||
-                          props.createBlocked === true ||
-                          insertShift.dragging,
-                        onAdd: props.onAddNextNote,
-                      }
-                    : null
-                }
-                pluses={{
-                  quickRingOpen,
-                  setQuickRingOpen,
-                  openOnHover: settings.quickAddOnHover === true,
-                  onSpawnConnect,
-                  onStartArrow,
-                  onStartPencil,
-                  onAddTableRow,
-                  onAddTableColumn,
-                  onAppendWebRow,
-                  onAddEntityField: h.onAddEntityField,
-                  onAddRelatedEntity: h.onAddRelatedEntity,
-                }}
-                onBeginDrag={onBeginDrag}
-                pages={props.pagesMode?.pages}
-              />
-            </SelectionGripsLayer>
-          </SelectionGripsContext.Provider>
-        </CardVoteProvider>
+              </SelectionGripsLayer>
+            </SelectionGripsContext.Provider>
+          </CardVoteProvider>
+        </MindHaloRootsProvider>
       </MindNumbersProvider>
     </SheetChartsContext.Provider>
   );
