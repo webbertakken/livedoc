@@ -41,9 +41,11 @@ element in their place, in a handwriting font, at the size they were written.
 
 - One edit, one undo step: the strokes go and one **text element** takes their place, so a single Undo puts the
   ink back exactly as it was.
-- The text is the reader's words, line breaks kept.
-- It sits where the ink was: the ink's box is the text's box, on the first stroke's layer and at the first stroke's
-  place in the stacking order.
+- The text is the reader's words, line breaks kept, as plain text: a reader that wraps them in maths markup
+  (`\overline{OK}`, `$x$`) has the markup taken off, as the ink holds words, not formulas (`plainWords`).
+- It sits where the ink was: at the ink's top-left, as tall as the ink, and at least as wide, wider when its
+  longest line needs the room so a line is never broken by the box (about 0.55 of the text size a character), on
+  the first stroke's layer and at the first stroke's place in the stacking order.
 - It is as big as the writing: its size (`textSize`, px) is the ink's height over its line count, times 0.75,
   whole pixels, between 12 and 160.
 - It is written in **Caveat**, the handwriting font ([Fonts](../004-interface-design/fonts.md)), left-aligned, in
