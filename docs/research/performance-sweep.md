@@ -143,10 +143,10 @@ In a browser, a first-time guest, 4 Mbit/s and 100 ms, medians of five interleav
 | ------------------------------------------------ | ------- | ------- |
 | Bytes one autosave writes, 5 tabs of 1,000 boxes | 509,336 | 102,082 |
 
-### The document page on a slow link (#208, #PR)
+### The document page on a slow link (#208, #215)
 
 - The editor's first-load scripts carry V8's compile hint, so Chrome compiles them as they download (#208).
-- The open path's reads start as the session answers, while the editor's code still downloads (#PR).
+- The open path's reads start as the session answers, while the editor's code still downloads (#215).
 - The root heard the session as the editor's code ran: a root state update waits for the editor to hydrate.
 - So the early reads hear it outside React; the editor takes their answers from a one-shot pool.
 
@@ -161,7 +161,7 @@ On docs.nu, a first-time guest, 4 Mbit/s and 100 ms, CPU 4x, medians of three (#
 | JS heap                                 | 19 MiB    | 25 MiB    |
 | `/document/<id>` first load             | 1,523 KiB | 1,525 KiB |
 
-On the local stack behind HTTP/2 and zstd, the same throttling, medians of five interleaved runs (#PR):
+On the local stack behind HTTP/2 and zstd, the same throttling, medians of five interleaved runs (#215):
 
 | Measure                                     | Before    | After                  |
 | ------------------------------------------- | --------- | ---------------------- |
