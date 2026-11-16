@@ -213,6 +213,8 @@ export function EditorContextMenuHost() {
     pagesMode,
     canCombine,
     combineSelected,
+    canConvertToText,
+    convertToText,
     commitFont,
     previewFont,
     commitPadding,
@@ -574,6 +576,7 @@ export function EditorContextMenuHost() {
       wordmarkOffered={wordmarkOffered}
       onCombine={canCombine() ? (op) => void combineSelected(op) : undefined}
       onMirrorCopy={pagesMode?.logo?.canMirrorCopy() ? pagesMode.logo.mirrorCopy : undefined}
+      onConvertToText={canConvertToText() ? () => void convertToText() : undefined}
       onSetWordmark={commitWordmark}
       onPreviewWordmark={previewWordmark}
       onSetFont={commitFont}

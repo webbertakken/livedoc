@@ -1,5 +1,6 @@
 'use client';
 
+import { useInkToText } from '@/hooks/canvas/useInkToText';
 import { pageStep } from '@/lib/page-step';
 import { useFocusNewPlanElement } from '@/hooks/plan/useFocusNewPlanElement';
 import { contentAddBlocked } from '@/lib/editor-capabilities';
@@ -3109,6 +3110,22 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     getZoom: () => zoomRef.current,
   });
   const { canCombine, combineSelected, canTidyUp, tidyUpSelected } = logo;
+  // Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): selected pen strokes read into a text element.
+  const inkToText = useInkToText({
+    activeTab,
+    selectionIds: currentSelectionIds,
+    layerLockedIds,
+    commit,
+    readOnly: isReadOnly,
+    createBlocked,
+    aiEnabled: aiCapable,
+    ownerId: selfParticipant.id,
+    toast,
+    selectOnly: (id) => {
+      setMultiSelectedIds(new Set());
+      setSelectedId(id);
+    },
+  });
   const {
     pendingDraw,
     beginDraw,
@@ -4107,6 +4124,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     combineSelected,
     canTidyUp,
     tidyUpSelected,
+    canConvertToText: inkToText.canConvertToText,
+    convertToText: inkToText.convertToText,
     // Arms a draw tool: the Logo palette's markers, from the live pen (PaletteLogoTab).
     beginDraw,
     // A page slide presenting outside Pages draws its article's writing from these.

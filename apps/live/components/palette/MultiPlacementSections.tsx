@@ -1,6 +1,7 @@
 import { ShapeMorphPicker } from './ShapeMorphPicker';
 import { Switch } from '@livedoc/ui';
 import { CombineOpGlyph, CombineTiles } from '@/components/canvas/CombineMenu';
+import { ConvertToTextGlyph } from '@/components/canvas/ConvertToTextGlyph';
 import { MirrorCopyGlyph } from '@/components/canvas/logo-glyphs';
 import {
   rotationOf,
@@ -81,6 +82,17 @@ export function MultiPlacementSections({
             }}
           />
         </MenuAccordionSection>
+      ) : null}
+      {/* Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): the selected pen strokes read into text. */}
+      {props.onConvertToText ? (
+        <MenuActionRow
+          icon={<ConvertToTextGlyph />}
+          label="Convert to Text"
+          onClick={() => {
+            onClose();
+            props.onConvertToText!();
+          }}
+        />
       ) : null}
       {/* Mirror Copy on a logo page (docs/specs/007-editor/logo-pages.md "Mirror"). */}
       {props.onMirrorCopy ? (

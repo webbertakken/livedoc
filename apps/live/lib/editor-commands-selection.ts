@@ -79,6 +79,16 @@ export function selectionCommands(ctx: CommandContext, h: CommandHandlers): Edit
     }
   }
 
+  // Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): selected pen strokes read into a text element.
+  if (ctx.canConvertToText) {
+    out.push({
+      id: 'convert-to-text',
+      name: 'Convert to Text',
+      keywords: 'convert handwriting ink pen strokes text read recognise ocr type words',
+      run: h.convertToText,
+    });
+  }
+
   // Mirror Copy (docs/specs/007-editor/logo-pages.md "Mirror").
   if (ctx.canMirrorCopy) {
     out.push({

@@ -13,6 +13,7 @@ function handlers(): CommandHandlers {
     rotate: vi.fn(),
     combine: vi.fn(),
     mirrorCopy: vi.fn(),
+    convertToText: vi.fn(),
     flip: vi.fn(),
     clearAnimation: vi.fn(),
     renumberSteps: vi.fn(),
@@ -183,6 +184,20 @@ describe('buildEditorCommands — selection commands', () => {
     expect(ids({ ...base, selectionCount: 1, singleIsBoxed: true, hasAnimation: true })).toContain(
       'clear-animation',
     );
+  });
+});
+
+// docs/specs/023-draw-mode/ink-to-text.md "When it is offered".
+describe('buildEditorCommands — Convert to Text', () => {
+  it('offers Convert to Text only while the selection is pen strokes to convert', () => {
+    expect(ids({ ...base, selectionCount: 2 })).not.toContain('convert-to-text');
+    const h = handlers();
+    const cmd = buildEditorCommands({ ...base, selectionCount: 2, canConvertToText: true }, h).find(
+      (c) => c.id === 'convert-to-text',
+    );
+    expect(cmd?.name).toBe('Convert to Text');
+    cmd!.run();
+    expect(h.convertToText).toHaveBeenCalledOnce();
   });
 });
 

@@ -49,6 +49,8 @@ export type CommandContext = {
   canCombine?: boolean;
   // True when the selection has an element on a logo page to reflect (Mirror Copy).
   canMirrorCopy?: boolean;
+  // Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): the selection is pen strokes an Editor may convert.
+  canConvertToText?: boolean;
   // True when the selection has an unlocked member to flip (docs/specs/008-canvas/selection-transforms.md).
   canFlip?: boolean;
   // True when the single selection is a plain shape (markers are shape-only).
@@ -112,6 +114,7 @@ export type CommandHandlers = {
   rotate: (deg: number) => void;
   combine: (op: CombineOp) => void;
   mirrorCopy: () => void;
+  convertToText: () => void;
   flip: (direction: FlipDirection) => void;
   clearAnimation: () => void;
   setMarker: (marker: ShapeMarker | null) => void;

@@ -365,6 +365,9 @@ export type EditorContextMenuProps = {
   // Mirror Copy (docs/specs/007-editor/logo-pages.md "Mirror"): present only while the selection
   // has an element on a logo page to reflect.
   onMirrorCopy?: () => void;
+  // Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): present only while the selection is pen strokes an
+  // Editor may convert.
+  onConvertToText?: () => void;
   onSetWordmark?: (patch: WordmarkPatch) => void;
   onPreviewWordmark?: (patch: WordmarkPatch) => void;
   // Arrow Line + Pointer controls (docs/specs/008-canvas/canvas-and-palette.md), surfaced for arrows via the

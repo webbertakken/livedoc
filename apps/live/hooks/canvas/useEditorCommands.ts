@@ -45,6 +45,7 @@ const INERT_HANDLERS: CommandHandlers = {
   rotate: noop,
   combine: noop,
   mirrorCopy: noop,
+  convertToText: noop,
   flip: noop,
   clearAnimation: noop,
   renumberSteps: noop,
@@ -142,6 +143,8 @@ export function useEditorCommands(open: boolean): {
     workbenchMode,
     canCombine,
     combineSelected,
+    canConvertToText,
+    convertToText,
     pagesMode,
   } = ctx;
 
@@ -164,6 +167,7 @@ export function useEditorCommands(open: boolean): {
   const singleRotates = single ? supportsRotation(single) : false;
   const combinable = isMulti && canCombine();
   const mirrorable = selectionCount > 0 && !!pagesMode?.logo?.canMirrorCopy();
+  const convertible = selectionCount > 0 && canConvertToText();
   // A flip needs an unlocked member to mirror (docs/specs/008-canvas/selection-transforms.md).
   const flippable =
     selectionCount > 0 &&
@@ -194,6 +198,7 @@ export function useEditorCommands(open: boolean): {
       singleRotates,
       canCombine: combinable,
       canMirrorCopy: mirrorable,
+      canConvertToText: convertible,
       canFlip: flippable,
       singleIsShape,
       hasAnimation,
@@ -258,6 +263,7 @@ export function useEditorCommands(open: boolean): {
     rotate: setRotationSelected,
     combine: (op) => void combineSelected(op),
     mirrorCopy: () => pagesMode?.logo?.mirrorCopy(),
+    convertToText: () => void convertToText(),
     flip: flipSelected,
     clearAnimation: () =>
       single?.type === 'arrow' ? setArrowFlowSelected(null) : clearAnimationsSelected(),

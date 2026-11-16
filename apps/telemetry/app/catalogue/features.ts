@@ -222,6 +222,16 @@ export const PHOTO_IMPORT: MetricStack = {
   headline: PHOTOS_IMPORTED,
 };
 
+// Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): pen strokes read into a text element by the photo
+// import's reader, counted once the text lands.
+export const HANDWRITING_CONVERTED = chart(
+  'AI',
+  'Used',
+  'Handwriting Converted',
+  'Selected pen strokes read into typed text with Convert to Text, once the text landed on the canvas.',
+  { types: ['InkToText'] },
+);
+
 // Draw mode (docs/specs/023-draw-mode/draw-mode.md): Whiteboard tabs made, and which of the dock's
 // choices people reach for. Headed by the boards made; the rest are settings.
 export const WHITEBOARDS_CREATED = chart(
