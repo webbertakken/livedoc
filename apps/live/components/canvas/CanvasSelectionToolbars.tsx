@@ -304,6 +304,9 @@ export function CanvasSelectionToolbars({
               selectedElements={elements.filter((el) => multiSelectedIds.has(el.id))}
               onDuplicate={props.onDuplicateMultiSelected}
               onCombine={!readOnly && props.canCombine?.() ? props.onCombine : undefined}
+              onConvertToText={
+                !readOnly && props.canConvertToText?.() ? props.onConvertToText : undefined
+              }
               onDelete={props.onDeleteMultiSelected}
               onToggleLock={props.onToggleLockMultiSelected}
               onFilter={readOnly ? undefined : props.onFilterMultiSelected}

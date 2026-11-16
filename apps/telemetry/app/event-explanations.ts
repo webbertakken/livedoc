@@ -82,6 +82,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     'Someone asked the AI Assistant a question about the active tab and got an answer.',
   'AI|Used|Clean':
     "Someone used the AI Assistant's Clean mode to tidy up a tab's labels, sizes, and styles.",
+  'AI|Used|InkToText':
+    'Someone turned their handwriting, drawn with a pen, into typed text with Convert to Text.',
   'AI|Used|PhotoWall':
     'Someone imported a whole wall from several photos at once, stitched into one draft of notes on an event-storming board.',
   'AI|Used|PhotoNotes':
@@ -726,6 +728,8 @@ export const EXACT: Readonly<Record<string, string>> = {
     "The browser's local database did not open in time, so the load carried on without checking for Offline Mode documents.",
   'Error|Warning|SessionToken.TimedOut':
     "A signed-in browser's session did not hand out a token within 10 seconds, so the request gave up instead of waiting forever.",
+  'Error|Warning|InkToText':
+    'Someone used Convert to Text on their handwriting, and it could not be read: the reader found no words, failed, or the strokes changed while it read.',
   'Error|Warning|AiQuota.BrowserReader':
     "Someone imported sticky notes from a photo of a wall, and LiveDoc's free hosted quota for reading the handwriting had run out, so it fell back to the slower job of reading it in the visitor's own browser.",
   'Facilitator|Changed|Granted':

@@ -13,6 +13,7 @@ import {
   NOTES,
   ORGANISATION,
   PHOTO_IMPORT,
+  HANDWRITING_CONVERTED,
   SIDE_BY_SIDE,
   TABLES,
   TRASH,
@@ -61,6 +62,7 @@ export const GROUPS: MetricGroup[] = [
       TRASH,
       AI_ASSISTANCE,
       PHOTO_IMPORT,
+      HANDWRITING_CONVERTED,
     ],
   },
 ];

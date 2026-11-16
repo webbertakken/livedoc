@@ -233,6 +233,8 @@ export function EditorCanvasHost() {
     duplicateDocument,
     duplicateMultiSelected,
     canCombine,
+    canConvertToText,
+    convertToText,
     combineSelected,
     contextMenu,
     duplicateSelected,
@@ -890,6 +892,8 @@ export function EditorCanvasHost() {
               onDuplicateMultiSelected={duplicateMultiSelected}
               canCombine={canCombine}
               onCombine={(op) => void combineSelected(op)}
+              canConvertToText={canConvertToText}
+              onConvertToText={() => void convertToText()}
               onDeleteMultiSelected={deleteMultiSelected}
               onToggleLockMultiSelected={toggleLockMultiSelected}
               onFilterMultiSelected={narrowMultiSelection}

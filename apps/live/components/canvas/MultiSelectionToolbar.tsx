@@ -4,6 +4,7 @@ import type { CombineOp } from '@/lib/combine/combine';
 import { MindArrangeButtons, type MindArrangeState } from '@/components/canvas/MindArrangeButtons';
 import type { MindArrangeActions } from '@/hooks/canvas/useMindMapSetters';
 import { CombineMenuButton } from '@/components/canvas/CombineMenu';
+import { ConvertToTextGlyph } from '@/components/canvas/ConvertToTextGlyph';
 import { buildFilterGroups, SelectionFilterMenu } from '@/components/canvas/SelectionFilterMenu';
 import { TOOLBAR_BTN, TOOLBAR_BTN_ON } from '@/components/canvas/toolbar-buttons';
 import { useCoarsePointer } from '@/hooks/ui/useCoarsePointer';
@@ -21,6 +22,8 @@ type MultiSelectionToolbarProps = {
   // Combine (docs/specs/007-editor/logo-pages.md "Combine"): shown only while the selection can be
   // combined.
   onCombine?: (op: CombineOp) => void;
+  // Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): shown only while the selection is pen strokes.
+  onConvertToText?: () => void;
   onDelete: () => void;
   onToggleLock: () => void;
   // Narrows the selection to one kind (Filter Selection menu). Omitted for
@@ -43,6 +46,7 @@ export function MultiSelectionToolbar({
   selectedElements,
   onDuplicate,
   onCombine,
+  onConvertToText,
   onDelete,
   onToggleLock,
   onFilter,
@@ -105,6 +109,18 @@ export function MultiSelectionToolbar({
         </button>
       </HoverCard>
       {onCombine ? <CombineMenuButton onCombine={onCombine} /> : null}
+      {onConvertToText ? (
+        <HoverCard title="Convert to Text" description="Read the handwriting into typed text.">
+          <button
+            type="button"
+            onClick={onConvertToText}
+            aria-label="Convert to Text"
+            className={TOOLBAR_BTN}
+          >
+            <ConvertToTextGlyph size={14} />
+          </button>
+        </HoverCard>
+      ) : null}
       {/* Duplicate copies the selection; everything after acts ON it
           (export, then lock / delete) — the divider marks that
           boundary, same as the one after More above. */}

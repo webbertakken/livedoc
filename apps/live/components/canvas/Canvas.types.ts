@@ -322,6 +322,9 @@ export type CanvasProps = {
   // is combinable shapes on one logo page.
   canCombine?: () => boolean;
   onCombine?: (op: CombineOp) => void;
+  // Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): selected pen strokes read into a text element.
+  canConvertToText?: () => boolean;
+  onConvertToText?: () => void;
   onDeleteMultiSelected: () => void;
   onToggleLockMultiSelected: () => void;
   // Narrows the multi-selection to just `ids` (Filter Selection menu).

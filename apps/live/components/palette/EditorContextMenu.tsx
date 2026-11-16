@@ -48,6 +48,7 @@ import {
   RemoveIcon,
 } from '@/components/palette/context-menu-icons';
 import { SparkleIcon } from '@livedoc/ui';
+import { ConvertToTextGlyph } from '@/components/canvas/ConvertToTextGlyph';
 import { NoteContextRows } from './NoteContextRows';
 import { NoteStructureRows } from './NoteStructureRows';
 import {
@@ -377,6 +378,14 @@ export function EditorContextMenu(props: EditorContextMenuProps) {
             </div>
             <FlipButtons onFlip={props.onFlip} />
           </MenuAccordionSection>
+        ) : null}
+        {/* Convert to Text (docs/specs/023-draw-mode/ink-to-text.md): a pen stroke read into a text element. */}
+        {props.onConvertToText ? (
+          <MenuActionRow
+            icon={<ConvertToTextGlyph />}
+            label="Convert to Text"
+            onClick={runAndClose(props.onConvertToText)}
+          />
         ) : null}
         {/* Mirror Copy on a logo page (docs/specs/007-editor/logo-pages.md "Mirror"). */}
         {props.onMirrorCopy ? (
