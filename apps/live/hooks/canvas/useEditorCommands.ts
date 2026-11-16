@@ -231,6 +231,7 @@ export function useEditorCommands(open: boolean): {
       singleRotates,
       combinable,
       mirrorable,
+      convertible,
       flippable,
       singleIsShape,
       hasAnimation,

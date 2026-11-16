@@ -26,11 +26,18 @@ function stroke(
       { x: x + 40, y: y + 20 },
     ]),
     ...over,
-  } as FreehandElement;
+  };
 }
 
-const box = (id: string): Element =>
-  ({ id, type: 'shape', shape: 'square', x: 0, y: 0, width: 10, height: 10 }) as Element;
+const box = (id: string): Element => ({
+  id,
+  type: 'shape',
+  shape: 'square',
+  x: 0,
+  y: 0,
+  width: 10,
+  height: 10,
+});
 
 describe('inkSelection', () => {
   const a = stroke('a', 0, 0);
@@ -107,10 +114,7 @@ describe('the text it becomes', () => {
   });
 
   it('sits in the ink’s box, in Caveat, in the ink’s colour, on its layer', () => {
-    const ink = [
-      stroke('a', 10, 20, { penColour: 'blue', layerId: 'L' } as Partial<FreehandElement>),
-      stroke('b', 110, 40),
-    ];
+    const ink = [stroke('a', 10, 20, { penColour: 'blue', layerId: 'L' }), stroke('b', 110, 40)];
     const text = inkTextElement(ink, 'Order placed\nby phone', 't1');
     expect(text).toMatchObject({
       id: 't1',

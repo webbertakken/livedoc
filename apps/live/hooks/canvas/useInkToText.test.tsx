@@ -20,17 +20,16 @@ vi.mock('@/lib/reading/select', () => ({ selectReader: mocks.selectReader }));
 vi.mock('@/lib/telemetry', () => ({ track: mocks.track }));
 vi.mock('@/lib/ink-to-text/ink-image', () => ({ inkImage: mocks.image }));
 
-const stroke = (id: string, x: number, over: Partial<FreehandElement> = {}): FreehandElement =>
-  ({
-    id,
-    type: 'freehand',
-    closed: false,
-    ...packFreehandPoints([
-      { x, y: 0 },
-      { x: x + 40, y: 30 },
-    ]),
-    ...over,
-  }) as FreehandElement;
+const stroke = (id: string, x: number, over: Partial<FreehandElement> = {}): FreehandElement => ({
+  id,
+  type: 'freehand',
+  closed: false,
+  ...packFreehandPoints([
+    { x, y: 0 },
+    { x: x + 40, y: 30 },
+  ]),
+  ...over,
+});
 
 function setup(
   over: Partial<InkToTextDeps> = {},
