@@ -108,6 +108,8 @@ export function testDocumentRoom(
   room: DocumentRoom;
   sql: DatabaseSync;
   alarms: () => number | null;
+  // The same room after a wake: a new instance on the same storage, as the runtime makes after an eviction.
+  wake: () => DocumentRoom;
   kv: Map<string, unknown>;
 } {
   const sql = new DatabaseSync(':memory:');
@@ -173,7 +175,13 @@ export function testDocumentRoom(
     getWebSockets: () => [],
     acceptWebSocket: () => {},
   } as unknown as DurableObjectState;
-  return { room: new DocumentRoom(state, env), sql, alarms: () => alarm, kv };
+  return {
+    room: new DocumentRoom(state, env),
+    sql,
+    alarms: () => alarm,
+    kv,
+    wake: () => new DocumentRoom(state, env),
+  };
 }
 
 // The SQLite half of a room's storage, for a test that builds its own fake DurableObjectState.

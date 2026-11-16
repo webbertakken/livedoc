@@ -213,6 +213,40 @@ describe('a move', () => {
     expect(again).toEqual(first);
     expect(record(d1)).toMatchObject({ status: 'moved', attempts: 0 });
   });
+
+  it('lets a woken room that has moved answer without a D1 round trip of its own', async () => {
+    const { d1, roomOf } = setup();
+    seedD1(d1);
+    d1.sql.exec(
+      "INSERT INTO participants (id, name, color, created_at) VALUES ('o', 'Ada', '#000', 1)",
+    );
+    const { room, wake } = roomOf();
+    await room.move(D);
+    const woken = wake();
+    const queries: string[] = [];
+    const prepare = d1.env.DB.prepare.bind(d1.env.DB);
+    vi.spyOn(d1.env.DB, 'prepare').mockImplementation((query: string) => {
+      queries.push(query);
+      return prepare(query);
+    });
+    const res = await woken.route(D, new Request(`https://api/api/documents/${D}`), identity);
+    expect(res.status).toBe(200);
+    // The document read's own: its row, then its owner.
+    expect(queries).toHaveLength(2);
+    expect(queries.join('\n')).not.toMatch(/content_moves/);
+  });
+
+  it('leaves a lost record of a woken room to the sweep', async () => {
+    const { d1, roomOf } = setup();
+    seedD1(d1);
+    const { room, wake } = roomOf();
+    await room.move(D);
+    d1.sql.exec('DELETE FROM content_moves');
+    await wake().route(D, new Request(`https://api/api/documents/${D}`), identity);
+    expect(record(d1)).toBeUndefined();
+    await wake().move(D);
+    expect(record(d1)).toMatchObject({ status: 'moved' });
+  });
 });
 
 describe('a move that cannot land (M2)', () => {
