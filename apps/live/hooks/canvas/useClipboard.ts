@@ -139,6 +139,9 @@ type ClipboardDeps = {
   // docs/specs/020-import-export/excalidraw-import-export.md "Paste"): one undo step, selected, for
   // the tab's profile. Absent, such a paste is left alone.
   insertBoardScene?: (scene: BoardScene, at?: { x: number; y: number }) => void;
+  // Type-to-edit with the pasted text as its seed (docs/specs/008-canvas/canvas-and-palette.md "Clipboard": text
+  // pasted onto one selected shape becomes its label). False when the element takes no typed label.
+  pasteTextIntoSelected?: (elementId: string, text: string) => boolean;
 };
 
 export function useClipboard(deps: ClipboardDeps) {
@@ -163,6 +166,7 @@ export function useClipboard(deps: ClipboardDeps) {
     canvasPointerRef,
     getViewportCanvasRect,
     insertBoardScene,
+    pasteTextIntoSelected,
   } = deps;
 
   const [clipboard, setClipboard] = useState<Element[] | null>(null);
@@ -424,6 +428,14 @@ export function useClipboard(deps: ClipboardDeps) {
     pasteExcalidrawText,
     pasteExcalidrawFile,
     canPasteScene: !!insertBoardScene,
+    // The one selected element, when a paste of text may become its label: a copy whose clipboard write was refused
+    // leaves the clipboard as it was before, so the in-app buffer, not that text, is what the paste means.
+    labelTarget: (): string | null => {
+      const { selectedId, multiSelectedIds } = readSelection();
+      if (selectedId === null || multiSelectedIds.size > 0) return null;
+      return osWriteOk.current || !clipboard?.length ? selectedId : null;
+    },
+    pasteTextIntoSelected,
   });
 
   // A middle-button release pastes the Linux primary selection. It is never a
@@ -590,9 +602,17 @@ export function useClipboard(deps: ClipboardDeps) {
       // the kind of surprise that makes people stop trusting Cmd+V.
       //
       // Left to the browser, which does nothing with text outside an input.
-      // Turning that text into a text element is the obvious next step and is
+      // With one shape selected, the text became its label above. Turning that text into a text element is the obvious next step and is
       // deliberately not done here — it needs the viewport centre in canvas
       // coordinates, which lives in Canvas rather than in this hook.
+      const labelTarget = text.trim().length > 0 ? pasteRef.current.labelTarget() : null;
+      if (
+        labelTarget !== null &&
+        pasteRef.current.pasteTextIntoSelected?.(labelTarget, text.replace(/\r\n?/g, '\n'))
+      ) {
+        e.preventDefault();
+        return;
+      }
       if (text.trim().length > 0 && osWriteOk.current) return;
       // Nothing readable on the system clipboard (or our write was refused,
       // making the in-app buffer the only record of the copy).
