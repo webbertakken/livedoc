@@ -41,18 +41,21 @@ const names = (res: Response) =>
     .map((entry) => entry.split(';')[0] ?? '');
 
 describe('a room timing a document read', () => {
-  it('times its wake, its gate, each D1 round trip and its handler', async () => {
+  it('names a fresh isolate, times its wake, its gate, each D1 round trip and its handler', async () => {
     const { room } = testDocumentRoom(d1.env);
     const res = await read(room);
     expect(res.status).toBe(200);
     expect(names(res)).toEqual([
+      'room-cold',
       'room-wake',
       'room-gate',
       ...names(res).filter((n) => n.startsWith('room-d1-')),
       'room-handler',
     ]);
     expect(names(res)).toContain('room-d1-1');
-    expect(res.headers.get('Server-Timing')).toMatch(/^room-wake;dur=\d+, room-gate;dur=\d+/);
+    expect(res.headers.get('Server-Timing')).toMatch(
+      /^room-cold;dur=0, room-wake;dur=\d+, room-gate;dur=\d+/,
+    );
   });
 
   it('times the wake on the first request after one only', async () => {
@@ -60,6 +63,7 @@ describe('a room timing a document read', () => {
     await read(room);
     const again = await read(room);
     expect(names(again)).not.toContain('room-wake');
+    expect(names(again)).not.toContain('room-cold');
     expect(names(again)[0]).toBe('room-gate');
   });
 
