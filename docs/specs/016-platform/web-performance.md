@@ -309,8 +309,11 @@ as a different person than the one the session settles, even briefly
 - **Asked while the editor's code downloads.** The editor's code is the most a page loads (about 1.5 MB), and the
   open path's reads waited for all of it to arrive and run. On a page load that starts at a document's address
   (`/document/<id>`, a share link), what every route ships starts them instead (`EarlyDocumentReadsBoot`), as
-  soon as the session has settled the way the editor waits for it: a read that answered, never the five-second
-  guest fallback, and any guest migration done. It asks what the editor would, in the same order, as the same
+  soon as the session read has answered (never on the five-second guest fallback). A sign-in with a guest
+  migration still to run asks nothing early: the editor waits for the migration. It hears the session outside
+  React (`lib/first-session.ts`): a state update at the root waits for every part of the tree still hydrating,
+  which at a document's address is the editor, so the session that answered at 2.6 s reached the page at 3.7 s,
+  as the editor's code ran (4 Mbit/s, 100 ms, CPU 4x). It asks what the editor would, in the same order, as the same
   person, with the same headers: the guest's signed id (minted once, the editor's own mint), then the participant
   row beside the document or the share link (with the cached grant the editor would send), then the tab the
   editor would open first (`firstTabToLoad`), marked as an open. Its code is fetched by a dynamic import as the
