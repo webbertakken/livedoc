@@ -16,7 +16,11 @@ const node = (id: string, o: Partial<ShapeElement> = {}): ShapeElement => ({
   ...o,
 });
 const tab = (elements: Tab['elements']): Tab => ({ id: 't', name: 'T', elements });
-const halos = (svg: string) => svg.match(/<rect[^>]*fill="none" stroke="#1e293b"[^>]*>/g) ?? [];
+// Each tag on its own, no backtracking pattern: the halo is the unfilled rect in the node's border colour.
+const halos = (svg: string) =>
+  svg
+    .split('<')
+    .filter((tag) => tag.startsWith('rect ') && tag.includes('fill="none" stroke="#1e293b"'));
 
 describe('the exported halo', () => {
   it('rings the root of a map, and not its children', () => {
