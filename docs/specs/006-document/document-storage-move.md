@@ -48,6 +48,8 @@ Modelled on upstream's migrate tool (`b0f6444618`: snapshot, plan, apply, verify
   counts and hashes it with the same function it hashed the D1 rows with.
   Two sides that differ undo the transaction: the room stays unmoved and the move record says `mismatch`.
 - **Recorded.** A move that commits writes both hashes and both tab counts to the document's move record as `moved`.
+- **After a wake.** A room that has moved knows it from its own storage and serves its first request at once, with no
+  D1 write in front of it; a lost move record is the sweep's to heal.
 - **A failed move** (a throw, a mismatch, D1 out of reach) leaves the room as it was and is logged; the request that
   started it answers 503 with a retry, and the sweep tries the document again.
 - **Then the outbox.** A moved room's first drain pushes its summary, Inbox rows, images and search text as any
@@ -59,7 +61,7 @@ Modelled on upstream's migrate tool (`b0f6444618`: snapshot, plan, apply, verify
 
 - Every minute, while any document is not `moved`, the api moves up to 25 of them, those never tried first.
 - A document whose last try failed or mismatched is tried again at most once an hour.
-- It is resumable (a run picks up what is left) and idempotent (a moved room does nothing).
+- It is resumable (a run picks up what is left) and idempotent (a moved room only writes its record again).
 - A document created after the release is born moved and never swept.
 - A document in the Trash moves like any other, so a restore finds its content.
 

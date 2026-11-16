@@ -150,6 +150,13 @@ export class RoomContent {
   // `content_moving`, and the next request tries again.
   async ensureMoved(documentId: string, born: boolean): Promise<void> {
     if (this.moved) return;
+    // A room woken after its move serves at once: its own storage says it has moved, and D1's record of it is the
+    // sweep's to heal (content-move-sweep.ts), not a write in front of the first request after every wake.
+    const kv = this.state.storage.kv;
+    if (this.db && kv && storedMove(kv)) {
+      this.moved = true;
+      return;
+    }
     const outcome = await this.moveOnce(documentId, born);
     if (outcome && outcome.status !== 'moved') throw new RoomNotReadyError(documentId, 'move');
   }
