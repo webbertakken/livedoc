@@ -543,9 +543,12 @@ their bottom-row buttons. What changes to fit the width:
   mode banners: a tile in hand, "Select the board column you want this card to appear in"; the Format tool and
   the format painter) and the modifier hint (Shift, Alt) attach to the strip's bottom edge instead of floating
   under it as pills:
-  - One shared look, the **palette tray**: the strip's own surface (white, hairline border, dark in dark mode),
-    no top border, so it joins the strip's bottom edge with no gap; its bottom corners round as the strip's do,
-    and a soft shadow falls below it.
+  - One shared look, the **palette tray**: a drawer that comes out from behind the strip, a layer of its own
+    rather than a part of the bar. It sits one step under the strip (`z-toolbar` less one), its top tucked
+    10 px behind the strip's bottom edge, so the strip's whole rounded border reads over it.
+    Its surface is recessed, a step darker than the strip (slate-100 under white, slate-950 under slate-900), with
+    a hairline border all round, a soft inner shadow under the strip's edge, its bottom corners rounded as the
+    strip's are, and a soft shadow below it.
   - Centred under the strip's card and never wider than it, on a phone too (where the strip may take its own
     row). It follows the card as it moves, including when the card's whole-pixel box re-centres it a beat
     after a resize (the category bar dropping its names left the tray off-centre until it watched that box).
@@ -553,7 +556,8 @@ their bottom-row buttons. What changes to fit the width:
     its actions as small text buttons at the end (**Cancel**, **Done**) and any toggles the message carries. On a
     phone (below `sm`) a message too long for the row wraps to a second line instead of cutting off, so "Tap to
     drop or drag to draw Square" keeps the name it gives.
-  - It fades in (`fade-in`; still under reduced motion) and goes when its message does.
+  - It slides down from behind the strip as it comes (`tray-drawer-in`, short), clipped so it never shows above
+    the strip; under reduced motion it only fades in. It goes when its message does.
   - It also carries an empty tab's **Show Templates**: once a start's × has closed it, "Tab 1 is empty" with **Show
     Templates**, which opens the start again, until the first element lands
     ([Template starts](start-diagramming.md) "Bringing it back").

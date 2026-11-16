@@ -79,7 +79,7 @@ describe('the palette tray', () => {
     }
   });
 
-  it('hangs a mode banner from the strip, flush with its bottom edge and no wider', () => {
+  it('hangs a mode banner from behind the strip, its top tucked under the strip and no wider', () => {
     mountStrip();
     const onAction = vi.fn();
     render(<Banner onAction={onAction} />);
@@ -89,10 +89,19 @@ describe('the palette tray', () => {
     const slot = tray.parentElement!;
     expect(slot.style.left).toBe('300px');
     expect(slot.style.width).toBe('600px');
-    // Up a pixel over the strip's bottom border (12 + 46 - 1).
-    expect(slot.style.top).toBe('57px');
+    // Its top tucked 10 px behind the strip's bottom edge (12 + 46 - 10), its padding making up the difference.
+    expect(slot.style.top).toBe('48px');
+    expect(tray.style.paddingTop).toMatch(/^calc\(.*10px/);
+    expect(tray.style.paddingTop).toContain('0.25rem');
+    // A layer of its own, one step under the strip, clipped so its slide never shows above the strip.
+    expect(slot.className).toContain('z-[calc(var(--z-toolbar)-1)]');
+    expect(slot.className).toContain('overflow-hidden');
+    // A recessed drawer: bordered all round, darker than the strip, sliding down as it comes.
     expect(tray.className).toContain('rounded-b-xl');
-    expect(tray.className).toContain('border-t-0');
+    expect(tray.className).not.toContain('border-t-0');
+    expect(tray.className).toContain('bg-slate-100');
+    expect(tray.className).toContain('dark:bg-slate-950');
+    expect(tray.className).toContain('animate-tray-drawer-in');
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onAction).toHaveBeenCalledTimes(1);
   });

@@ -24,6 +24,14 @@
   --motion-cascade-cap: 100ms;
   /* The small fade every app shares (tooltips, popovers, portal menus). */
   --animate-fade-in: fade-in var(--transition-duration-micro) ease-out;
+  /* The palette tray, a drawer coming out from behind the strip (toolbar-layout.md "Layout details"). */
+  --animate-tray-drawer-in: tray-drawer-in var(--transition-duration-short) ease-out;
+}
+
+@keyframes tray-drawer-in {
+  from {
+    transform: translateY(-100%);
+  }
 }
 
 /* No `to`: the fade lands on the element's own resting opacity rather than
@@ -490,9 +498,10 @@
     animation-name: fade-in;
   }
 
-  /* A drill-in view only fades in: no slide. */
+  /* A drill-in view only fades in: no slide. So does the palette tray's drawer. */
   .animate-view-forward,
-  .animate-view-back {
+  .animate-view-back,
+  .animate-tray-drawer-in {
     animation-name: fade-in;
   }
 
