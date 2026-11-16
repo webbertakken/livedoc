@@ -262,7 +262,7 @@ describe('shareable invite link (docs/specs/013-workspace/teams.md)', () => {
     db.getMembership.mockResolvedValue(member()); // admin, joined
     const res = await handleTeams(makeCtx('POST', '/api/teams/t1/invite-link'));
     expect(res.status).toBe(201);
-    const body = (await res.json()) as { inviteLink: { token: string; expiresAt: number } };
+    const body = await res.json<{ inviteLink: { token: string; expiresAt: number } }>();
     expect(body.inviteLink.token).toBeTruthy();
     expect(body.inviteLink.expiresAt).toBeGreaterThan(Date.now());
     expect(db.setTeamInviteLink).toHaveBeenCalledWith(
@@ -505,7 +505,7 @@ describe('team-scoped access', () => {
     db.listTeamMembers.mockResolvedValue([member()]);
     const res = await handleTeams(makeCtx('GET', '/api/teams/t1'));
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { myRole: string };
+    const body = await res.json<{ myRole: string }>();
     expect(body.myRole).toBe('member');
   });
 

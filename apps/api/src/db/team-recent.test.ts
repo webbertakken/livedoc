@@ -146,7 +146,7 @@ describe('GET /api/documents?include=team-recent', () => {
   ): Promise<DocumentListResponse> {
     const res = await handleDocuments(makeTestRouteContext('GET', path, { env, ...who }));
     expect(res.status).toBe(200);
-    return (await res.json()) as DocumentListResponse;
+    return await res.json<DocumentListResponse>();
   }
 
   it('adds the team documents beside the personal library, only when asked', async () => {

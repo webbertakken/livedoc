@@ -78,7 +78,7 @@ async function jumpBackIn(): Promise<[string, number, number][]> {
   );
   expect(res.status).toBe(200);
   await settle();
-  const { jumpBackIn: items } = (await res.json()) as HomeResponse;
+  const { jumpBackIn: items } = await res.json<HomeResponse>();
   return items.map((d) => [d.documentId, d.useDays, d.lastUsedAt]);
 }
 

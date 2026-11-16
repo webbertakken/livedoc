@@ -248,7 +248,7 @@ describe('PairWorkbench', () => {
     render(<PairWorkbench />);
     fireEvent.click(await screen.findByRole('button', { name: 'Allow' }));
 
-    const allowing = screen.getByRole('button', { name: 'Allowing…' }) as HTMLButtonElement;
+    const allowing = screen.getByRole<HTMLButtonElement>('button', { name: 'Allowing…' });
     expect(allowing.disabled).toBe(true);
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Don’t allow' }).disabled).toBe(
       true,
@@ -315,7 +315,7 @@ describe('PairWorkbench', () => {
       'Something went wrong. Please try again.',
     );
     expect(heading().textContent).toBe('Allow this workbench?');
-    const allow = screen.getByRole('button', { name: 'Allow' }) as HTMLButtonElement;
+    const allow = screen.getByRole<HTMLButtonElement>('button', { name: 'Allow' });
     expect(allow.disabled).toBe(false);
 
     api.apiAnswerPairingRequest.mockResolvedValueOnce('approved');

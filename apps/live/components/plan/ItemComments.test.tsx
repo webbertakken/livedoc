@@ -87,7 +87,7 @@ describe('ItemComments', () => {
 
   it('waits for text before Comment, and names the send shortcut only while typing', () => {
     show(card());
-    const send = screen.getByRole('button', { name: 'Comment' }) as HTMLButtonElement;
+    const send = screen.getByRole<HTMLButtonElement>('button', { name: 'Comment' });
     expect(send.disabled).toBe(true);
     const field = screen.getByRole('textbox', { name: 'Add a comment' });
     expect(screen.queryByText(/Enter to send/)).toBeNull();

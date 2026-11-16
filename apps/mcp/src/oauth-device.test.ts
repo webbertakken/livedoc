@@ -74,7 +74,7 @@ async function start(): Promise<Started> {
     env,
   );
   expect(res.status).toBe(200);
-  return (await res.json()) as Started;
+  return await res.json<Started>();
 }
 
 const poll = async (deviceCode: string, clientId = CLI_CLIENT_ID) => {
@@ -124,7 +124,7 @@ describe('Runa, a second built-in client', () => {
       env,
     );
     expect(res.status).toBe(200);
-    const { user_code } = (await res.json()) as { user_code: string };
+    const { user_code } = await res.json<{ user_code: string }>();
     const found = await app.request(`/oauth/device/session/${user_code}`, {}, env);
     expect(await found.json()).toEqual({ clientName: 'Runa', clientId: RUNA_CLIENT_ID });
   });

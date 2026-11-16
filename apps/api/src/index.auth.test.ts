@@ -31,9 +31,11 @@ async function signIn(email: string): Promise<{ cookie: string; token: string; i
     method: 'POST',
     body: JSON.stringify({ email, type: 'sign-in' }),
   });
-  const mail = (await (await call(`/api/preview/outbox?to=${email}`)).json()) as {
+  const mail = await (
+    await call(`/api/preview/outbox?to=${email}`)
+  ).json<{
     subject: string;
-  };
+  }>();
   const res = await call('/api/auth/sign-in/email-otp', {
     method: 'POST',
     body: JSON.stringify({ email, otp: mail.subject.slice(0, 6), name: 'Ada' }),
@@ -42,12 +44,12 @@ async function signIn(email: string): Promise<{ cookie: string; token: string; i
     .getSetCookie()
     .map((c) => c.split(';')[0])
     .join('; ');
-  const { user } = (await res.json()) as { user: { id: string } };
-  const { token } = (await (
+  const { user } = await res.json<{ user: { id: string } }>();
+  const { token } = await (
     await call('/api/auth/token', { headers: { Cookie: cookie } })
-  ).json()) as {
+  ).json<{
     token: string;
-  };
+  }>();
   return { cookie, token, id: user.id };
 }
 
@@ -65,7 +67,7 @@ afterEach(() => {
 
 describe('sign-in at the front door', () => {
   it('reports the methods in the capabilities', async () => {
-    const caps = (await (await call('/api/capabilities')).json()) as Record<string, unknown>;
+    const caps = await (await call('/api/capabilities')).json<Record<string, unknown>>();
     expect(caps).toMatchObject({
       authEnabled: true,
       signInMethods: ['email-code'],
@@ -77,7 +79,7 @@ describe('sign-in at the front door', () => {
     env = sqliteD1({}).env;
     expect((await call('/api/auth/get-session')).status).toBe(404);
     expect((await call('/api/preview/outbox?to=a@b.c')).status).toBe(404);
-    const caps = (await (await call('/api/capabilities')).json()) as Record<string, unknown>;
+    const caps = await (await call('/api/capabilities')).json<Record<string, unknown>>();
     expect(caps).toMatchObject({ authEnabled: false, signInMethods: [] });
   });
 
@@ -96,10 +98,12 @@ describe('sign-in at the front door', () => {
   });
 
   it('serves the guest behind a bearer that is not a session token', async () => {
-    const guest = (await (await call('/api/guest-id', { method: 'POST' })).json()) as {
+    const guest = await (
+      await call('/api/guest-id', { method: 'POST' })
+    ).json<{
       ownerId: string;
       ownerSig: string | null;
-    };
+    }>();
     const res = await call('/api/documents', {
       headers: {
         Authorization: 'Bearer not-a-session',
@@ -111,10 +115,12 @@ describe('sign-in at the front door', () => {
   });
 
   it("moves a signed guest's data into the account it signs in to", async () => {
-    const guest = (await (await call('/api/guest-id', { method: 'POST' })).json()) as {
+    const guest = await (
+      await call('/api/guest-id', { method: 'POST' })
+    ).json<{
       ownerId: string;
       ownerSig: string;
-    };
+    }>();
     expect(guest.ownerSig).toEqual(expect.any(String));
     const asGuest = { 'X-Owner-Id': guest.ownerId, 'X-Owner-Sig': guest.ownerSig };
     const made = await call('/api/folders', {
@@ -140,9 +146,11 @@ describe('sign-in at the front door', () => {
     expect(moved.status).toBe(200);
     expect(await moved.json()).toMatchObject({ migrated: { folders: 1 } });
 
-    const mine = (await (await call('/api/folders', { headers: bearer })).json()) as {
+    const mine = await (
+      await call('/api/folders', { headers: bearer })
+    ).json<{
       folders: { name: string }[];
-    };
+    }>();
     expect(mine.folders.map((f) => f.name)).toEqual(['Built as a guest']);
     const again = await call('/api/migrate', {
       method: 'POST',
@@ -165,10 +173,12 @@ describe('sign-in at the front door', () => {
 
   it('signs nothing on a guest-only host, and serves the unsigned guest', async () => {
     env = sqliteD1({}).env;
-    const guest = (await (await call('/api/guest-id', { method: 'POST' })).json()) as {
+    const guest = await (
+      await call('/api/guest-id', { method: 'POST' })
+    ).json<{
       ownerId: string;
       ownerSig: string | null;
-    };
+    }>();
     expect(guest.ownerSig).toBeNull();
     const res = await call('/api/folders', { headers: { 'X-Owner-Id': guest.ownerId } });
     expect(res.status).toBe(200);
@@ -202,9 +212,11 @@ describe('sign-in at the front door', () => {
       call('/api/account', { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     expect((await del()).status).toBe(200);
     await Promise.all(background);
-    const mail = (await (await call('/api/preview/outbox?to=grace@example.com')).json()) as {
+    const mail = await (
+      await call('/api/preview/outbox?to=grace@example.com')
+    ).json<{
       subject: string;
-    };
+    }>();
     expect(mail.subject).toContain('has been deleted');
     const sent = () =>
       sql

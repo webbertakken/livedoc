@@ -106,11 +106,13 @@ describe('suggested changes through the api', () => {
       '  cooked remove · by Someone',
     ]);
 
-    const body = (await (await stormView(db, 'view=storm&json=1')).json()) as {
+    const body = await (
+      await stormView(db, 'view=storm&json=1')
+    ).json<{
       changes: { type: string }[];
       declined: unknown[];
       reading: Record<string, unknown>;
-    };
+    }>();
     expect(body.changes.map((c) => c.type)).toEqual(['name', 'change', 'change']);
     expect(body.declined).toEqual([]);
     // What is suggested is no part of what the board says.

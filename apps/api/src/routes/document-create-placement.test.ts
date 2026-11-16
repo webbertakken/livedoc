@@ -103,7 +103,7 @@ describe('POST /documents placement', () => {
     const res = await create(asUser('user_alice'), { teamId: 't1' });
     expect(res.status).toBe(201);
     expect(stored()).toEqual({ owner_id: 'user_alice', folder_id: null, team_id: 't1' });
-    const body = (await res.json()) as { document: { teamId: string | null } };
+    const body = await res.json<{ document: { teamId: string | null } }>();
     expect(body.document.teamId).toBe('t1');
     expect(logs).toContain('placement: resolved scope=team folder=root via=explicit');
   });

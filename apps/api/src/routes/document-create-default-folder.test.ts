@@ -76,7 +76,7 @@ describe('POST /documents with default folders', () => {
     const res = await create(asUser('user_alice'), { intent: DRAW });
     expect(res.status).toBe(201);
     expect(stored()).toEqual({ owner_id: 'user_alice', folder_id: 'team-sketches', team_id: 't1' });
-    const body = (await res.json()) as { document: { teamId: string | null; folderId: string } };
+    const body = await res.json<{ document: { teamId: string | null; folderId: string } }>();
     expect(body.document).toMatchObject({ teamId: 't1', folderId: 'team-sketches' });
     expect(logs).toContain('placement: resolved scope=team folder=set via=default key=mode:draw');
   });

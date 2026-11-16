@@ -99,7 +99,7 @@ describe('TagPicker', () => {
 
   it('Enter makes the tag, puts it on and clears the field', async () => {
     await open();
-    const field = screen.getByRole('textbox') as HTMLInputElement;
+    const field = screen.getByRole<HTMLInputElement>('textbox');
     fireEvent.change(field, { target: { value: 'Q3' } });
     fireEvent.keyDown(field, { key: 'Enter' });
     expect(carried()).toBe('Design,Q3');

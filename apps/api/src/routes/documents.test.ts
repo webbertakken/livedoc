@@ -340,7 +340,7 @@ describe('handleDocuments metadata PUT (PUT /documents/:id)', () => {
       }),
     );
     expect(res.status).toBe(200);
-    const { document: liveDoc } = (await res.json()) as { document: DocumentDTO };
+    const { document: liveDoc } = await res.json<{ document: DocumentDTO }>();
     expect(liveDoc.ownerId).toBe('');
   });
 
@@ -350,7 +350,7 @@ describe('handleDocuments metadata PUT (PUT /documents/:id)', () => {
     const res = await handleDocuments(
       makeCtx('PUT', '/api/documents/d1', { body: { name: 'Doc' } }),
     );
-    const { document: liveDoc } = (await res.json()) as { document: DocumentDTO };
+    const { document: liveDoc } = await res.json<{ document: DocumentDTO }>();
     expect(liveDoc.ownerId).toBe('owner-1');
   });
 
@@ -418,7 +418,7 @@ describe('GET /documents/:id owner-id redaction (docs/specs/014-identity/auth-an
       }),
     );
     expect(res.status).toBe(200);
-    const { document: liveDoc } = (await res.json()) as { document: DocumentDTO };
+    const { document: liveDoc } = await res.json<{ document: DocumentDTO }>();
     expect(liveDoc.ownerId).toBe('');
     // The visitor still gets the document itself — redaction, not refusal.
     expect(liveDoc.id).toBe('d1');
@@ -429,7 +429,7 @@ describe('GET /documents/:id owner-id redaction (docs/specs/014-identity/auth-an
     db.getDocument.mockResolvedValue(fakeDocument('owner-1'));
     canReadDocument.mockResolvedValue(true);
     const res = await handleDocuments(makeCtx('GET', '/api/documents/d1'));
-    const { document: liveDoc } = (await res.json()) as { document: DocumentDTO };
+    const { document: liveDoc } = await res.json<{ document: DocumentDTO }>();
     expect(liveDoc.ownerId).toBe('owner-1');
   });
 
@@ -442,7 +442,7 @@ describe('GET /documents/:id owner-id redaction (docs/specs/014-identity/auth-an
         sessionAccountId: 'user_member',
       }),
     );
-    const { document: liveDoc } = (await res.json()) as { document: DocumentDTO };
+    const { document: liveDoc } = await res.json<{ document: DocumentDTO }>();
     // No regression for them: a teammate already computed isOwner=false from
     // the real id, so they lose nothing they were using.
     expect(liveDoc.ownerId).toBe('');
@@ -817,7 +817,7 @@ describe('a tab-scoped visitor', () => {
 
   it('gets the document with every other tab locked and no deck', async () => {
     const res = await handleDocuments(makeCtx('GET', '/api/documents/d1', visitor));
-    const body = (await res.json()) as { document: DocumentDTO };
+    const body = await res.json<{ document: DocumentDTO }>();
     expect(body.document.tabs.map((t) => t.name)).toEqual(['', 'Roadmap']);
     expect(body.document.presentation).toBeNull();
   });

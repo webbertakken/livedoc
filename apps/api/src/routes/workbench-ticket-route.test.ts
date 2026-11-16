@@ -60,7 +60,7 @@ describe('POST /api/workbench/tickets', () => {
     pairToken(db);
 
     const res = await mint(db, { body: { documentId: 'doc1', tabId: 't1', origin: ORIGIN } });
-    const body = (await res.json()) as { url: string };
+    const body = await res.json<{ url: string }>();
 
     expect(res.status).toBe(201);
     expect(body).toEqual({
@@ -94,7 +94,7 @@ describe('POST /api/workbench/tickets', () => {
     const db = await workbenchDb();
     pairToken(db);
 
-    const body = (await (await mint(db)).json()) as { tabId: string | null };
+    const body = await (await mint(db)).json<{ tabId: string | null }>();
 
     expect(body.tabId).toBeNull();
   });
@@ -114,8 +114,8 @@ describe('POST /api/workbench/tickets', () => {
 
     const first = await mint(db);
     const second = await mint(db);
-    const a = (await first.json()) as { pairingUrl: string };
-    const b = (await second.json()) as { pairingUrl: string };
+    const a = await first.json<{ pairingUrl: string }>();
+    const b = await second.json<{ pairingUrl: string }>();
 
     expect(first.status).toBe(428);
     expect(a).toEqual({

@@ -175,7 +175,7 @@ describe('cell comments over the comment endpoints', () => {
       }),
     ]);
     const res = await call('GET', '/comments?status=open');
-    const { threads } = (await res.json()) as DocumentCommentsResponse;
+    const { threads } = await res.json<DocumentCommentsResponse>();
     expect(threads.map((t) => [t.cell ?? null, t.cellRef ?? null])).toEqual([
       [null, null],
       [B4, 'B4'],

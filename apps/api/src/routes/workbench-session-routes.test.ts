@@ -46,7 +46,7 @@ async function mintTicket(
       body,
     }),
   );
-  const { url } = (await res.json()) as { url: string };
+  const { url } = await res.json<{ url: string }>();
   return new URL(url).hash.replace('#ticket=', '');
 }
 
@@ -73,7 +73,7 @@ describe('POST /api/workbench/sessions', () => {
     const ticket = await mintTicket(db);
 
     const res = await redeem(db, { ticket });
-    const body = (await res.json()) as { session: string };
+    const body = await res.json<{ session: string }>();
 
     expect(res.status).toBe(201);
     expect(body).toEqual({
@@ -105,7 +105,7 @@ describe('POST /api/workbench/sessions', () => {
     pairToken(db);
     const ticket = await mintTicket(db);
 
-    const body = (await (await redeem(db, { ticket })).json()) as { person: unknown };
+    const body = await (await redeem(db, { ticket })).json<{ person: unknown }>();
 
     expect(body.person).toEqual({ id: 'user_1', name: null, color: null, pictureUrl: null });
   });
@@ -116,7 +116,7 @@ describe('POST /api/workbench/sessions', () => {
     db.sql.exec(`UPDATE api_tokens SET expires_at = ${NOW + 1000 * 60 * 5} WHERE id = 'tok1'`);
     const ticket = await mintTicket(db);
 
-    const body = (await (await redeem(db, { ticket })).json()) as { expiresAt: number };
+    const body = await (await redeem(db, { ticket })).json<{ expiresAt: number }>();
 
     expect(body.expiresAt).toBe(NOW + 1000 * 60 * 5);
   });
@@ -126,7 +126,7 @@ describe('POST /api/workbench/sessions', () => {
     pairToken(db, 'tok_ro', 'user_1', 'pair_ro');
     const ticket = await mintTicket(db, { id: 'tok_ro', readOnly: true });
 
-    const body = (await (await redeem(db, { ticket })).json()) as { role: string };
+    const body = await (await redeem(db, { ticket })).json<{ role: string }>();
 
     expect(body.role).toBe('view');
   });

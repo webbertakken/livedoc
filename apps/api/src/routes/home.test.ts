@@ -119,7 +119,7 @@ async function get(path: string, opts: { owner?: string; env?: Env } = {}) {
 async function home(path = '/api/home', owner = ME): Promise<HomeResponse> {
   const res = await get(path, { owner });
   expect(res.status).toBe(200);
-  return (await res.json()) as HomeResponse;
+  return await res.json<HomeResponse>();
 }
 
 beforeEach(() => {

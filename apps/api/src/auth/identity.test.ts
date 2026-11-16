@@ -33,7 +33,7 @@ async function codeFor(env: Env, email: string): Promise<string> {
     new Request(`${ORIGIN}/api/preview/outbox?to=${encodeURIComponent(email)}`),
     env,
   );
-  const { subject } = (await res.json()) as { subject: string };
+  const { subject } = await res.json<{ subject: string }>();
   return subject.slice(0, 6);
 }
 
@@ -173,7 +173,7 @@ describe('identity', () => {
       env,
     );
     expect(tokenRes.status).toBe(200);
-    const { token } = (await tokenRes.json()) as { token: string };
+    const { token } = await tokenRes.json<{ token: string }>();
 
     const account = await getAccountSession(env, token);
     expect(account).toMatchObject({

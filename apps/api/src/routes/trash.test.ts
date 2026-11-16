@@ -80,7 +80,7 @@ describe('GET /api/trash', () => {
     const db = await world();
     const res = await call(db, 'GET', '/api/trash', me);
     expect(res.status).toBe(200);
-    const { trash } = (await res.json()) as { trash: { id: string; teamName: string | null }[] };
+    const { trash } = await res.json<{ trash: { id: string; teamName: string | null }[] }>();
     expect(trash.map((t) => [t.id, t.teamName]).sort()).toEqual([
       ['mine', null],
       ['ours', 'Crew'],

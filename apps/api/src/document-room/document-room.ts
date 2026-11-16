@@ -704,7 +704,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     if (!env) return new Response('no env', { status: 503 });
     let req: QaWriteRequest;
     try {
-      req = (await request.json()) as QaWriteRequest;
+      req = await request.json<QaWriteRequest>();
     } catch {
       return new Response('bad json', { status: 400 });
     }

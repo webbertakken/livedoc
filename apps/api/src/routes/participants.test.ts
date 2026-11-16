@@ -143,7 +143,7 @@ describe('participant pictures', () => {
     const res = await handleParticipants(
       makeCtx('GET', '/api/participants/user_ann', { owner: 'guest-1' }),
     );
-    const body = (await res.json()) as { participant: { pictureUrl: string | null } };
+    const body = await res.json<{ participant: { pictureUrl: string | null } }>();
     expect(body.participant.pictureUrl).toBeNull();
   });
 
@@ -152,7 +152,7 @@ describe('participant pictures', () => {
     const res = await handleParticipants(
       makeCtx('GET', '/api/participants/user_ann', { sessionAccountId: 'user_bob' }),
     );
-    const body = (await res.json()) as { participant: { pictureUrl: string | null } };
+    const body = await res.json<{ participant: { pictureUrl: string | null } }>();
     expect(body.participant.pictureUrl).toBe(PICTURE);
   });
 

@@ -76,7 +76,7 @@ describe('POST …/storm-export', () => {
     const db = await setUp();
     const res = await exportOf(db, { language: 'typescript' });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { files: Record<string, string>; written: boolean };
+    const body = await res.json<{ files: Record<string, string>; written: boolean }>();
     expect(body.written).toBe(false);
     expect(Object.keys(body.files)).toEqual([
       'README.md',
@@ -97,9 +97,11 @@ describe('POST …/storm-export', () => {
   it('has the deployment’s model write the spec and types, keeping what it left out', async () => {
     quiet();
     // An earlier zip of the same board: the bundle alone, from a deployment without a model.
-    const first = (await (await exportOf(await setUp(), { language: 'typescript' })).json()) as {
+    const first = await (
+      await exportOf(await setUp(), { language: 'typescript' })
+    ).json<{
       files: Record<string, string>;
-    };
+    }>();
     const db = await setUp({ OPENAI_API_KEY: 'test-key' });
     modelSays(
       JSON.stringify({
@@ -114,7 +116,7 @@ describe('POST …/storm-export', () => {
       previous: { ...first.files, 'src/orders/order.ts': 'export type Order = {};\n' },
     });
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { files: Record<string, string>; written: boolean };
+    const body = await res.json<{ files: Record<string, string>; written: boolean }>();
     expect(body.written).toBe(true);
     expect(body.files['docs/specs/README.md']).toBe('# Orders\n');
     expect(body.files['src/orders/order.ts']).toBe('export type Order = {};\n');

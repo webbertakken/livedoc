@@ -24,7 +24,7 @@ describe('GET /api/search/content', () => {
       await s.run();
     const res = await handleContentSearch(ctx(env, '/api/search/content?q=flamngo'));
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { matches: { documentId: string; tabName: string }[] };
+    const body = await res.json<{ matches: { documentId: string; tabName: string }[] }>();
     expect(body.matches).toMatchObject([{ documentId: 'd1', tabId: 't1', tabName: 'Tab' }]);
   });
 
