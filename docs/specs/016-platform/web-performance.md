@@ -409,6 +409,10 @@ seen on the document).
   worker is one bundle: a dynamic import wraps every module it reaches for lazy start, so deferring the OpenAPI
   document grew the upload by 430 KB and start-up from about 72 to 97 ms, and it was put back. The PNG renderer,
   wasm in a module of its own, stays deferred.
+- The worker ships minified, its names kept and its source maps uploaded (`apps/api/src/worker-bundle.test.ts`). A
+  fresh isolate, the worker's or a document room's, fetches and compiles the whole bundle before its first answer,
+  and on docs.nu that start is the larger part of a slow document open: an answer marked `api-cold` waits 240 to
+  440 ms beyond its measures, one without none.
 - A list that names its people reads their profiles in the same statement: a team's members join their
   participant rows (`apps/api/src/db/team-members.test.ts` pins the round trip and the plan).
 - A request about one document pays no D1 read for the purge guard: the document's own row keeps it
