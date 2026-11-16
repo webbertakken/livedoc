@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
 import { PlanBoardPicker } from '@/components/plan/PlanBoardPicker';
 import { StartFromTemplates } from './StartFromTemplates';
+import { showStart } from './start-shown';
 import { OTHER_MODE_CARDS_MAX } from './other-mode-matches';
 
 vi.mock('@/components/plan/PlanContext', () => ({ usePlan: () => null }));
@@ -21,6 +22,7 @@ const switchable = (mode: 'diagram' | 'plan', canSwitch = true) =>
 function diagram(canSwitch = true) {
   const onTemplate = vi.fn();
   const onOtherModeTemplate = vi.fn();
+  showStart('t1:diagram');
   render(
     <EditorModeProvider value={switchable('diagram', canSwitch)}>
       <StartFromTemplates

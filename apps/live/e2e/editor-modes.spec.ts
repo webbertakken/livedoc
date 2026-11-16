@@ -150,8 +150,9 @@ test.describe('editor modes', () => {
     await page.locator(CANVAS).click({ position: { x: 800, y: 500 } });
     await page.keyboard.press('Shift+D');
     await expect(mode(page)).toHaveAttribute('data-editor-mode', 'pages');
-    // Start Making Pages takes the keys (its search is focused): close it, then the canvas has them again.
-    await closeStart(page);
+    // The empty Pages tab opens with its start closed (docs/specs/007-editor/start-diagramming.md), so the canvas keeps
+    // the keys.
+    await expect(page.getByRole('region', { name: 'Start Making Pages' })).toHaveCount(0);
     await page.locator(CANVAS).click({ position: { x: 1500, y: 500 } });
     await page.keyboard.press('Shift+D');
     await expect(mode(page)).toHaveAttribute('data-editor-mode', 'draw');
@@ -185,7 +186,9 @@ test.describe('editor modes', () => {
     await page.getByRole('menuitem', { name: 'Tab', exact: true }).click();
     await expect(page.locator('[data-document-group]').getByText('Tab 2')).toBeVisible();
     await expect(mode(page)).toHaveAttribute('data-editor-mode', 'draw');
-    // On its mode's own start, with no Quick Start over it.
+    // On its empty canvas, its mode's own start one click away (docs/specs/007-editor/start-diagramming.md).
+    await expect(page.getByRole('region', { name: /^Start / })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Show Templates' }).click();
     await expect(page.getByRole('region', { name: 'Start Sketching' })).toBeVisible();
     expectNoPageErrors(pageErrors);
   });

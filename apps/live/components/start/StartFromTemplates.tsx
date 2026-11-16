@@ -36,14 +36,14 @@ import {
 import type { TabOpening } from '@livedoc/document';
 import type { TemplateKind } from '@livedoc/templates';
 import { useEditorModeState } from '@/components/chrome/editor-mode/editor-mode-context';
-import { dismissEmptyCard } from '@/components/canvas/empty-card-dismissed';
-import { useEmptyCardDismissed } from '@/components/canvas/useEmptyCardDismissed';
+
 import type { HelpArticleKey } from '@/lib/help-articles';
 import { StartPanel } from './StartPanel';
 import { otherModeMatches } from './other-mode-matches';
 import { templateCard } from './template-card';
 import { setStartPanelOpen } from './start-panel-open';
-import { startClosedKey } from './start-closed-key';
+import { hideStart, startKey } from './start-shown';
+import { useStartShown } from './useStartShown';
 import { TEMPLATE_STARTS, type TemplateStartMode } from './start-template-items';
 import { StartModeSwitch } from '@/components/start/StartModeSwitch';
 import { useStartPalette } from '@/components/start/useStartPalette';
@@ -145,11 +145,10 @@ export function StartFromTemplates({
       })),
     [start],
   );
-  // The × starts from nothing: the panel stays closed on this tab in this mode, for this person (empty-card-dismissed.ts),
-  // until the palette tray's Show Templates brings it back (StartAgainTray). Remembered per mode: closing Start
-  // Diagramming leaves Start a Workshop to show when the Workshop control is turned on.
-  const closedKey = startClosedKey(tabId, mode);
-  const closed = useEmptyCardDismissed(closedKey);
+  // Shown only when asked for (start-shown.ts): the palette tray's Show Templates or the wizard's mode choice. The ×
+  // starts from nothing, closing it on this tab in this mode until Show Templates opens it again (StartAgainTray).
+  const shownKey = startKey(tabId, mode);
+  const closed = !useStartShown(shownKey);
   // On screen: the tours hold their offer until it goes (start-panel-open.ts).
   useEffect(() => {
     if (closed) return;
@@ -158,7 +157,7 @@ export function StartFromTemplates({
   }, [closed]);
   if (closed) return null;
   const close = () => {
-    dismissEmptyCard(closedKey);
+    hideStart(shownKey);
   };
   return (
     <StartPanel

@@ -1,7 +1,7 @@
 'use client';
 
-// Bringing a template start back (docs/specs/007-editor/start-diagramming.md "Bringing it back"): once its × has
-// closed it, an empty Diagram, Workshop or Pages tab says so in the palette tray, hanging from the strip as the
+// Offering a template start (docs/specs/007-editor/start-diagramming.md "Bringing it back"): while its start is
+// closed, as it is until asked for, an empty Diagram, Workshop or Pages tab says so in the palette tray, hanging from the strip as the
 // mode banners do, with Show Templates to open its start again. It goes with the emptiness: the first element ends
 // it. Without a strip on screen (Draw's dock) it is the same message as a top-centre pill, as a mode banner falls
 // back to (ModeBanner). Either way it steps aside while a mode's message is up, which takes the same place.
@@ -15,9 +15,8 @@ import {
 } from '@/components/chrome/PaletteTray';
 import { TopCenterBanner } from '@/components/chrome/TopCenter';
 import { useViewportHeight } from '@/hooks/ui/useViewportHeight';
-import { restoreEmptyCard } from '@/components/canvas/empty-card-dismissed';
-import { useEmptyCardDismissed } from '@/components/canvas/useEmptyCardDismissed';
-import { startClosedKey } from './start-closed-key';
+import { showStart, startKey } from './start-shown';
+import { useStartShown } from './useStartShown';
 import type { TemplateStartMode } from './start-template-items';
 
 const SparklesGlyph = lucideGlyph(lucideSparkles, 15);
@@ -46,14 +45,14 @@ export function StartAgainTray({
   tabId: string;
   tabName: string;
 }) {
-  const key = startClosedKey(tabId, mode);
-  const closed = useEmptyCardDismissed(key);
+  const key = startKey(tabId, mode);
+  const closed = !useStartShown(key);
   const strip = usePaletteStripBox(closed);
   // Without a strip, Draw's dock: the pill sits just clear of it, below a top dock and above a bottom one.
   const dock = useToolbarBox('[data-whiteboard-dock]', closed && !strip);
   const viewportHeight = useViewportHeight();
   if (!closed) return null;
-  const reopen = () => restoreEmptyCard(key);
+  const reopen = () => showStart(key);
   if (!strip)
     return (
       <div

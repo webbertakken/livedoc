@@ -51,7 +51,7 @@ import { backOutTarget } from '@/lib/back-out';
 import { useLatest } from '@/hooks/ui/useLatest';
 import { debugLog } from '@/lib/debug-log';
 import { handStartQuery } from '@/components/start/start-query';
-import { closeStartForBlank } from '@/components/start/close-start-for-blank';
+import { openStartForModeChoice } from '@/components/start/open-start-for-mode-choice';
 import { handTemplatePick } from '@/lib/placement-defaults/template-pick-handoff';
 import { isBlankTemplate } from '@livedoc/templates';
 import { loadNewDocumentContent } from '@/lib/new-document/new-document-content-loader';
@@ -131,7 +131,8 @@ export default function NewDocumentPage() {
   // navigating to the editor for a document that was never persisted (which would 404). The ref
   // keeps the last attempt's args so Retry can re-run the exact same create.
   const [createError, setCreateError] = useState<CreateFailure | null>(null);
-  // Set by Skip and the bypass links: the new tab opens with its start closed (closeStartForBlank).
+  // Set by Skip and the bypass links: the new tab opens with its start closed. Unset, the mode choice opens it
+  // (openStartForModeChoice).
   const explicitBlank = useRef(false);
   const lastCreateArgs = useRef<{
     kind: TemplateKind | null;
@@ -292,8 +293,9 @@ export default function NewDocumentPage() {
     // Save location (docs/specs/006-document/save-locations.md): only This Browser takes the offline branch.
     const offline = isOfflineLocation(settings.saveLocation);
     const { documentId, tabId } = createIdsFor(retrying);
-    // An explicit blank (Skip, Start Blank, a blank's link) opens with its start closed (close-start-for-blank.ts).
-    if (explicitBlank.current) closeStartForBlank(tabId, templateKind);
+    // The mode choice asked for templates next, so its blank opens on its start; an explicit blank (Skip, Start
+    // Blank, a blank's link) opens closed, as every empty tab does (docs/specs/007-editor/start-diagramming.md).
+    if (!explicitBlank.current) openStartForModeChoice(tabId, templateKind);
     // A mode's blank in the cloud: the template picked later on its start screen may move it to that template's
     // default folder (docs/specs/013-workspace/default-folders.md "A template picked after creation").
     handTemplatePick(

@@ -42,7 +42,7 @@ pen widths, dock spacing) are named constants, tuned in place.
   starts](../007-editor/start-diagramming.md)): Blank Whiteboard first under Recommended, then **Visual Notes**,
   **Exercises** and **Prototypes**, with the pen staying in hand around it. The × starts from the blank whiteboard,
   and a top-centre pill brings it back while the tab is empty.
-- **New tab:** a new tab opens on its mode's start; another mode's start finds **Blank Whiteboard** and every
+- **New tab:** a new tab opens on its empty canvas, its mode's start one click away (Show Templates); another mode's start finds **Blank Whiteboard** and every
   Sketch template by search ([Template starts](../007-editor/start-diagramming.md#found-in-other-modes)).
 - **No theme step.** A new whiteboard starts on the default theme; the tab looks the same in either mode
   ([Appearance](#appearance)).
