@@ -42,7 +42,9 @@ export function ShapeMorphPicker({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
-          // The menu's own keys (type-ahead, Escape to the canvas) stay out of the field.
+          // The menu's own keys (type-ahead, Escape to the canvas) stay out of the field, except Escape in an empty
+          // field, which closes the menu as it does anywhere else in it.
+          if (e.key === 'Escape' && query === '') return;
           e.stopPropagation();
           if (e.key === 'Enter' && results[0]) onPick(results[0].kind);
           if (e.key === 'Escape') setQuery('');

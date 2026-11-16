@@ -44,4 +44,30 @@ describe('ShapeMorphPicker', () => {
     fireEvent.keyDown(search, { key: 'Escape' });
     expect(screen.getByRole('button', { name: 'Square' })).toBeTruthy();
   });
+
+  // docs/specs/004-interface-design/menus.md "Control menus": the menu hears Escape on the document.
+  describe('the keys the menu hears', () => {
+    const heard = vi.fn();
+    const listen = (e: KeyboardEvent) => heard(e.key);
+    afterEach(() => {
+      document.removeEventListener('keydown', listen);
+      heard.mockReset();
+    });
+
+    it('keeps an Escape that clears a search, and the keys typed into it, from the menu', () => {
+      const { search } = setup();
+      document.addEventListener('keydown', listen);
+      fireEvent.change(search, { target: { value: 'cloud' } });
+      fireEvent.keyDown(search, { key: 'd' });
+      fireEvent.keyDown(search, { key: 'Escape' });
+      expect(heard).not.toHaveBeenCalled();
+    });
+
+    it('passes Escape in an empty search on to the menu, so it closes', () => {
+      const { search } = setup();
+      document.addEventListener('keydown', listen);
+      fireEvent.keyDown(search, { key: 'Escape' });
+      expect(heard).toHaveBeenCalledExactlyOnceWith('Escape');
+    });
+  });
 });
