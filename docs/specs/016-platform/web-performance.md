@@ -18,6 +18,12 @@ against `main` the same way before it ships.
 Why a page carries what it does is read from the Turbopack bundle analyzer (`next analyze`): its route
 summary, its table of the largest contributors, and its diff against an earlier snapshot.
 
+What a long task is made of is read from a Chromium trace with its CPU profile, never inferred:
+`node scripts/trace-long-tasks.mjs <trace.json>` names each main-thread task over 50 ms, its work by kind (scripts,
+style, layout, paint, layerize, events) and the functions that held it, a forced layout under the function that
+asked for it. `apps/live/scripts/explorer-long-list-measure.mjs --trace <dir>` records one per step of the Explorer's
+long-list measure, at 4x CPU.
+
 Measured 2026-10-11 (gzip level 9), before and after the changes that set these rules:
 
 | Page                                         | Before    | After     |
@@ -289,6 +295,9 @@ seen on the document).
   panel's row previews are not redrawn on every board change while it is closed.
 - Pictures only a panel shows are drawn by that panel: the Slide Deck panel draws its slides'
   pictures while it is open; the editor holding the deck draws none.
+- The Explorer's sidebar tree writes a row's tab stop only when it changes: writing the focused row's, even unchanged,
+  made the browser lay the whole page out there and then, inside the render. On a folder of 1,000 at 4x CPU that was
+  108 ms of the 174 ms click that opened it.
 
 ### Per keystroke, the least work
 
