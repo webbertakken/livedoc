@@ -39,7 +39,7 @@ async function request(
   method: string,
   path: string,
   opts: { body?: unknown; owner?: string; code?: string } = {},
-): Promise<{ status: number; trips: string[]; withBackground: string[] }> {
+): Promise<{ status: number; body: unknown; trips: string[]; withBackground: string[] }> {
   await db.flush();
   trips.reset();
   const background: Promise<unknown>[] = [];
@@ -54,14 +54,27 @@ async function request(
   );
   const made = [...trips.trips];
   await Promise.allSettled(background);
-  return { status: res.status, trips: made, withBackground: [...trips.trips] };
+  return {
+    status: res.status,
+    body: await res.json(),
+    trips: made,
+    withBackground: [...trips.trips],
+  };
 }
 
 describe('the round trips of a document request', () => {
-  it('opening the document reads its row and its owner', async () => {
+  it('opening the document reads its row and its owner together', async () => {
     const res = await request('GET', '');
     expect(res.status).toBe(200);
-    expect(res.trips).toHaveLength(2);
+    expect(res.trips).toHaveLength(1);
+    expect(res.body).toMatchObject({ document: { ownerName: 'Webber', ownerColor: '#3b82f6' } });
+  });
+
+  it('opening a document whose owner has no participant row names no owner', async () => {
+    db.sql.exec("DELETE FROM participants WHERE id = 'owner'");
+    const res = await request('GET', '');
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ document: { ownerName: null, ownerColor: null } });
   });
 
   it.each([

@@ -5,7 +5,6 @@
 import { readItemTypeCatalogue, type ItemTypeCatalogue } from '@livedoc/items';
 import { APPEARANCES, type Appearance } from '@livedoc/document';
 import type { DocumentDTO, DocumentEnv, DocumentSummary, Env } from '../types';
-import { getParticipant } from './participants';
 import { imageGrantCopyStatements, imageGrantOwnerChangeStatement } from './image-grants';
 import { documentRemovalStatements } from './document-removal';
 import { purgeRooms } from '../room-purge-client';
@@ -38,24 +37,17 @@ type DocumentRow = {
   share_code: string | null;
 } & RecordedIntentRow;
 
+// The document read's row: its owner's name and colour ride along (OWNER_COLS), null with no participant row.
+type OpenedDocumentRow = DocumentRow & { owner_name?: string | null; owner_color?: string | null };
+
 export type SummaryRow = DocumentRow & { first_tab_count: number | null; doc_stats: string | null };
 
-async function rowToDocument(env: Env, row: DocumentRow): Promise<DocumentDTO> {
-  // Join owner participant info onto the response so visitors can
-  // render "Owner: <name>" without waiting for the owner to come
-  // online in the realtime room. Null when the owner has no
-  // participant row yet (e.g. a signed-in owner who's never set a
-  // name on a document); the UI hides the badge in that case.
-  // The participant lookup and the outline read are independent,
-  // so issue them concurrently rather than paying two serial round
-  // trips on every document fetch (this path is hit by nearly every
-  // owned-document / share / WS-upgrade request). The tabs, deck and
-  // catalogue are content: one call to the document's room, a local
-  // call when this already runs inside it (document-client.ts).
-  const [ownerParticipant, outline] = await Promise.all([
-    getParticipant(env, row.owner_id),
-    documentRoom(env, row.id).outline(),
-  ]);
+async function rowToDocument(env: Env, row: OpenedDocumentRow): Promise<DocumentDTO> {
+  // The owner's name and colour came with the row, so visitors can render "Owner: <name>" without waiting for the
+  // owner to come online in the realtime room; null when the owner has no participant row yet (the UI hides the
+  // badge). The tabs, deck and catalogue are content: one call to the document's room, a local call when this
+  // already runs inside it (document-client.ts).
+  const outline = await documentRoom(env, row.id).outline();
   return {
     id: row.id,
     ownerId: row.owner_id,
@@ -72,8 +64,8 @@ async function rowToDocument(env: Env, row: DocumentRow): Promise<DocumentDTO> {
     // The room's last save is ahead of D1's copy until its outbox pushes it.
     savedAt: Math.max(row.saved_at, outline.savedAt),
     createdAt: row.created_at,
-    ownerName: ownerParticipant?.name ?? null,
-    ownerColor: ownerParticipant?.color ?? null,
+    ownerName: row.owner_name ?? null,
+    ownerColor: row.owner_color ?? null,
     ...readRecordedIntent(row),
   };
 }
@@ -87,6 +79,11 @@ const SHARE_CODE_EXPR =
 // `opens_in`, `tab_kind`, `template_family`: the recorded creation intent (migration 0062).
 const INTENT_COLS = 'opens_in, tab_kind, template_family';
 const DOCUMENT_COLS = `id, owner_id, name, shareable, folder_id, team_id, source, ${INTENT_COLS}, saved_at, created_at, ${SHARE_CODE_EXPR}`;
+// The owner's name and colour, each a seek on the participant's primary key, in the document's own read rather than
+// a second round trip after it (docs/specs/016-platform/web-performance.md "The api").
+const OWNER_COLS =
+  '(SELECT name FROM participants WHERE participants.id = documents.owner_id) AS owner_name, ' +
+  '(SELECT color FROM participants WHERE participants.id = documents.owner_id) AS owner_color';
 // The list projection reads the content summary the room pushed (content-summary.ts), never a room.
 export const DOCUMENT_SUMMARY_COLS = `id, owner_id, name, shareable, folder_id, team_id, source, ${INTENT_COLS}, saved_at, created_at, ${SHARE_CODE_EXPR}, ${firstTabCountSql('documents.id')}, ${docStatsSql('documents.id')}`;
 
@@ -186,10 +183,10 @@ export async function getDocumentItemTypesAtRev(
 
 export async function getDocument(env: Env, id: string): Promise<DocumentDTO | null> {
   const row = await env.DB.prepare(
-    `SELECT ${DOCUMENT_COLS} FROM documents WHERE id = ? AND trashed_at IS NULL`,
+    `SELECT ${DOCUMENT_COLS}, ${OWNER_COLS} FROM documents WHERE id = ? AND trashed_at IS NULL`,
   )
     .bind(id)
-    .first<DocumentRow>();
+    .first<OpenedDocumentRow>();
   return row ? rowToDocument(env, row) : null;
 }
 

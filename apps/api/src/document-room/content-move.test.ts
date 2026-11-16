@@ -231,8 +231,8 @@ describe('a move', () => {
     });
     const res = await woken.route(D, new Request(`https://api/api/documents/${D}`), identity);
     expect(res.status).toBe(200);
-    // The document read's own: its row, then its owner.
-    expect(queries).toHaveLength(2);
+    // The document read's own: its row, its owner's name with it.
+    expect(queries).toHaveLength(1);
     expect(queries.join('\n')).not.toMatch(/content_moves/);
   });
 
