@@ -89,6 +89,20 @@ describe('useTreeNavigation', () => {
     expect(stops.map((el) => el.getAttribute('aria-label'))).toEqual(['Archive']);
   });
 
+  // Writing a focused row's tabIndex makes the browser lay the whole page out there and then, to ask whether it can
+  // still hold focus (docs/specs/016-platform/web-performance.md "Long lists"): 108 ms of a 174 ms click at 4x CPU.
+  it('writes no tab stop that already holds its value', () => {
+    render(<Tree />);
+    item('Home').focus();
+    const writes = vi.spyOn(HTMLElement.prototype, 'tabIndex', 'set');
+    fireEvent.click(item('My Documents').querySelector('[data-tree-toggle]')!);
+    fireEvent.click(item('My Documents').querySelector('[data-tree-toggle]')!);
+    expect(writes).not.toHaveBeenCalled();
+    expect(item('Home').tabIndex).toBe(0);
+    expect(item('Archive').tabIndex).toBe(-1);
+    writes.mockRestore();
+  });
+
   it('falls back to the first row when no row is selected', () => {
     render(<Tree />);
     fireEvent.click(item('My Documents').querySelector('[data-tree-toggle]')!);
