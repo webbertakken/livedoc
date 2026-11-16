@@ -263,6 +263,8 @@ the fallback face until the faces land, and the canvas re-measures each time the
   (`components/panels/thumbnail-motion-events.ts`). Every one bubbled to React's root listener, which looked for a
   handler that is never there: a folder of 30 opening fired 390 `animationstart` events in one task, 215 ms of it at
   4x CPU.
+- A thumbnail loader away from the view holds still ([Document snapshots](../006-document/document-snapshots.md)): a
+  List view of 1,000 kept 21 loaders past its edge running 252 animations for as long as the folder stayed open.
 
 ### Layout never shifts after first paint
 

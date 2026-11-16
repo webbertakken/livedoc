@@ -69,6 +69,13 @@
   animation: lvd-thumb-spin 0.9s linear infinite;
 }
 
+/* Away from the view (DocumentThumbnail marks its box `data-near` within 200px of it), a loader holds where it is:
+   nobody sees it there, and a running one costs a style pass every frame (docs/specs/016-platform/web-performance.md
+   "Long lists"). Held, not stopped, so it moves on from the same point of its cycle once near. */
+[data-document-thumbnail]:not([data-near]) .lvd-thumb-loader * {
+  animation-play-state: paused;
+}
+
 /* The flow dots ride the connectors' own curves. Hidden unless the browser
    can move them along a path, so an older engine never strands one at the
    sketch's origin. */

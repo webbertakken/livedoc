@@ -127,22 +127,24 @@ export function DocumentThumbnail({
     return holdThumbnail(fetchKey);
   }, [offline, empty, ownerId, fetchKey]);
 
-  // Defer the fetch until the row/card is near the viewport.
+  // Near the view (within 200px of it), until the picture has an answer. The first time, the picture is asked for;
+  // and the loader moves only while near (`data-near`, thumbnail-loader.css), its box marked directly so a scroll
+  // renders nothing: a list draws rows past the view's edge, whose loaders nobody sees.
+  const answered = state.status !== 'idle';
   useEffect(() => {
     const el = ref.current;
-    if (offline || empty || !el || visible) return;
+    if (offline || empty || !el || answered) return;
     const obs = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setVisible(true);
-          obs.disconnect();
-        }
+        const near = entries.at(-1)?.isIntersecting ?? false;
+        el.toggleAttribute('data-near', near);
+        if (near) setVisible(true);
       },
       { rootMargin: '200px' },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [offline, empty, visible]);
+  }, [offline, empty, answered]);
 
   useEffect(() => {
     if (offline || empty || !visible || !ownerId || peekThumbnail(fetchKey)) return;
