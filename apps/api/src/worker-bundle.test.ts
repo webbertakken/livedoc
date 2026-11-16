@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 // a document room's, fetches and compiles the whole bundle before it answers, so it ships minified, its names kept
 // for logs and error names, and its source maps uploaded so a logged stack still reads as source.
 
-const wrangler = readFileSync(fileURLToPath(new URL('../wrangler.toml', import.meta.url)), 'utf8');
+const wrangler = readFileSync(fileURLToPath(new URL('../wrangler.toml', import.meta.url).href), 'utf8');
 // The top-level keys: everything before the first table.
 const topLevel = wrangler.split(/^\[/m)[0] ?? '';
 
