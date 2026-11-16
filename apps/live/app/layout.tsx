@@ -32,6 +32,7 @@ import {
   WEBFONTS_SWAP_SCRIPT,
 } from './pre-hydration-scripts';
 import { EDITOR_BUILD_ID } from '@/lib/server-release';
+import { SESSION_READ_BOOT_SCRIPT } from '@/lib/boot-session-read';
 import { STALE_HTML_GUARD_ATTRIBUTES, STALE_HTML_GUARD_SCRIPT } from '@/lib/stale-html-guard';
 import './globals.css';
 
@@ -122,6 +123,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         {/* Trusted Types before anything else (docs/specs/016-platform/trusted-types.md). */}
         <script dangerouslySetInnerHTML={{ __html: trustedHtml(TRUSTED_TYPES_BOOT) }} />
+        {/* The session read leaves with the HTML, while the scripts download (docs/specs/016-platform/
+            web-performance.md "The open path asks in parallel"); the auth bridge takes it. */}
+        <script dangerouslySetInnerHTML={{ __html: trustedHtml(SESSION_READ_BOOT_SCRIPT) }} />
         {/* Ids work outside a secure context too (docs/specs/016-platform/secure-context.md), before any app code. */}
         <script dangerouslySetInnerHTML={{ __html: trustedHtml(RANDOM_UUID_BOOT_SCRIPT) }} />
         {/* Then the stale HTML guard (docs/specs/016-platform/stale-builds.md "The pre-boot

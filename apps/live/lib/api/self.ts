@@ -1,5 +1,6 @@
 // Participant / account calls: load self, save self, account self-
 // deletion, and guest -> authed data migration.
+import { debugLog } from '../debug-log';
 import { dedupeInFlight } from '../dedupe';
 import type { Participant } from '../identity';
 import {
@@ -45,9 +46,39 @@ function rememberSelf(participant: Participant) {
   recentSelf = { participant, at: Date.now() };
 }
 
-export async function apiLoadSelf(id: string): Promise<Participant | null> {
+function recentlyKnown(id: string): Participant | null {
   if (recentSelf?.participant.id === id && Date.now() - recentSelf.at < RECENT_SELF_MS) {
     return { ...recentSelf.participant };
+  }
+  return null;
+}
+
+// The rows this page is still making (docs/specs/016-platform/web-performance.md "The open path asks in parallel").
+// A guest id the api minted for this page has no row until this page saves one; a save in flight answers the reads
+// made while it lands (/new saves a first visitor's row as it hands the document to the editor, which reads it).
+const mintedHere = new Set<string>();
+const savesInFlight = new Map<string, Promise<void>>();
+
+/** Whether the api minted this guest id for this page and its row is not saved yet: there is nothing to read. */
+export function guestMintedForThisPage(id: string): boolean {
+  return mintedHere.has(id);
+}
+
+export async function apiLoadSelf(id: string): Promise<Participant | null> {
+  const known = recentlyKnown(id);
+  if (known) return known;
+  const saving = savesInFlight.get(id);
+  if (saving) {
+    await saving.catch(() => {});
+    const saved = recentlyKnown(id);
+    if (saved) {
+      debugLog('[self] read answered_by=save');
+      return saved;
+    }
+  }
+  if (guestMintedForThisPage(id)) {
+    debugLog('[self] read skipped reason=minted-here');
+    return null;
   }
   const loaded = await loadSelfOnce(id);
   if (loaded) rememberSelf(loaded);
@@ -134,7 +165,9 @@ export async function apiMintGuestId(): Promise<{
       body: '{}',
     });
     if (!res.ok) return null;
-    return (await res.json()) as { ownerId: string; ownerSig: string | null };
+    const minted = (await res.json()) as { ownerId: string; ownerSig: string | null };
+    mintedHere.add(minted.ownerId);
+    return minted;
   } catch {
     return null;
   }
@@ -147,13 +180,29 @@ export async function apiSaveSelf(p: Participant): Promise<void> {
   // value as `p.id` (a guest's localStorage UUID is also their
   // X-Owner-Id; a signed-in user's account id is also their
   // participant id, see editor-page.tsx identity bootstrap).
-  const res = await apiFetch(`${API_BASE}/participants/${p.id}`, {
-    method: 'PUT',
-    headers: await apiHeaders(p.id, { body: true }),
-    body: JSON.stringify({ name: p.name, color: p.color }),
-  });
-  await expectOkVoid(res, 'save self');
-  rememberSelf({ id: p.id, name: p.name, color: p.color, status: 'online' });
+  const saving = (async () => {
+    const res = await apiFetch(`${API_BASE}/participants/${p.id}`, {
+      method: 'PUT',
+      headers: await apiHeaders(p.id, { body: true }),
+      body: JSON.stringify({ name: p.name, color: p.color }),
+    });
+    await expectOkVoid(res, 'save self');
+    mintedHere.delete(p.id);
+    rememberSelf({ id: p.id, name: p.name, color: p.color, status: 'online' });
+  })();
+  savesInFlight.set(p.id, saving);
+  try {
+    await saving;
+  } finally {
+    if (savesInFlight.get(p.id) === saving) savesInFlight.delete(p.id);
+  }
+}
+
+// Tests only: a fresh page.
+export function resetSelfForTests(): void {
+  recentSelf = null;
+  mintedHere.clear();
+  savesInFlight.clear();
 }
 
 // Publish or clear this account's profile picture (docs/specs/014-identity/profile-picture.md §6).

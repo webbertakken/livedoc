@@ -295,6 +295,11 @@ Opening a document waits on as few round trips in a row as who is asking allows.
 as a different person than the one the session settles, even briefly
 ([Auth + guest access](../014-identity/auth-and-guest-access.md)).
 
+- **The session read leaves with the HTML.** Every page of the editor app starts its session read from an inline
+  script at the top of its head (`lib/boot-session-read.ts`), so it travels while the scripts download, and whatever
+  api isolate answers it starts then, not after the page has hydrated. The auth bridge takes that request for its
+  first read and asks itself for every later one; where the bridge stands down (the workbench) nothing is asked
+  early. It is a read of the session cookie, as the bridge's own is: who is asking is still settled by its answer.
 - **The session and its token together.** A browser whose signed-in hint is `1` asks for its
   session token beside the session read; the read alone still decides who is signed in, and a read
   that answers signed out drops the token. A guest (hint `0` or none) asks for no token.
@@ -304,6 +309,12 @@ as a different person than the one the session settles, even briefly
   participant they resolved.
 - **The order that remains:** the session (and token), then the participant row and the document,
   then the first tab: three round trips for a guest, a signed-in person and a share link alike.
+- **A guest id this page minted has no row to read.** The api mints a guest id fresh (`POST /api/guest-id`), so its
+  participant row cannot exist yet: the row is written, never asked for first, by the editor, by `/new` and by the
+  early reads alike. A first visit pays the mint and the write, not a read between them.
+- **A row being saved answers its own read.** A participant read made while this page's save of that row is in
+  flight waits for the save and answers what it wrote: `/new` saves a first visitor's row and hands the document to
+  the editor in place, whose read would otherwise ask again and, answered before the save landed, write it twice.
 - Guests and share links still wait for the session read before asking for anything: a cleared
   hint must not open a signed-in person's link as a guest (D25).
 - **Asked while the editor's code downloads.** The editor's code is the most a page loads (about 1.5 MB), and the
@@ -365,7 +376,8 @@ seen on the document).
 - **A page's own data leaves with its HTML.** A static page whose first view waits on one fixed,
   public api read (the telemetry dashboard's summary) starts it from an inline script at the top
   of its markup, so it travels while the scripts download; the page's code takes that request
-  rather than asking again, and asks itself only where the script did not run. Not a
+  rather than asking again, and asks itself only where the script did not run. The editor app's session read
+  leaves the same way, on every page ("The open path asks in parallel"). Not a
   `<link rel="preload">`: WebKit fetches a preloaded `fetch` a second time, and Firefox does for a
   `cache: 'no-store'` read, and an unused preload is a wasted request.
 - **A file a stylesheet loads is a build asset.** A font a page's CSS names is imported by that

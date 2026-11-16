@@ -100,6 +100,28 @@ describe('AuthBridge', () => {
     expect(await first.getToken()).toBe(issued);
   });
 
+  // "The session read leaves with the HTML": the first read takes the request the boot script started.
+  it('settles from the session read the HTML started, asking nothing itself', async () => {
+    vi.stubGlobal(
+      '__livedocSessionRead',
+      Promise.resolve(new Response(JSON.stringify(SIGNED_IN), { status: 200 })),
+    );
+    mount();
+    expect((await whenFirstSessionSettled()).accountId).toBe(USER.id);
+    expect(fetchMock).not.toHaveBeenCalledWith('/api/auth/get-session', expect.anything());
+  });
+
+  it('asks for itself on every read after the first', async () => {
+    vi.stubGlobal('__livedocSessionRead', Promise.resolve(new Response('null', { status: 200 })));
+    answer('/api/auth/get-session', { status: 200, body: SIGNED_IN });
+    mount();
+    await waitFor(() => expect(probe.state!.authLoaded).toBe(true));
+    expect(probe.state!.isSignedIn).toBe(false);
+    new BroadcastChannel(ACCOUNT_CHANNEL_NAME).postMessage({ signedIn: true });
+    await waitFor(() => expect(probe.state!.isSignedIn).toBe(true));
+    expect(fetchMock).toHaveBeenCalledWith('/api/auth/get-session', expect.anything());
+  });
+
   it('tells a guest as no account, a read that could not be made included', async () => {
     answer('/api/auth/get-session', 'offline');
     mount();
