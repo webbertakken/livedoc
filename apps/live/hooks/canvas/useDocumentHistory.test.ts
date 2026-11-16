@@ -12,7 +12,10 @@ import {
   historyTick,
   historyCancel,
   historyUndo,
+  historyUndoSelection,
+  historyRedoSelection,
 } from './useDocumentHistory';
+import type { Selection } from '@/lib/selection-store';
 import { REPLAY_LIMIT } from './history-replay';
 
 const tab = (id: string, label = id): Tab => ({
@@ -412,5 +415,61 @@ describe('historyApplyRemoteOp replay', () => {
       m = { past: [...m.past, m.present], present: m.future[0]!, future: m.future.slice(1) };
       expect(h.present).toEqual(m.present);
     }
+  });
+});
+
+// docs/specs/008-canvas/canvas-and-palette.md "Undo / Redo": a step keeps the selection it was made with, undo brings
+// it back, and redo brings back the selection undo left.
+describe('the selection each step keeps', () => {
+  const one = (id: string): Selection => ({ selectedId: id, multiSelectedIds: new Set() });
+  const add = (id: string) => (ts: Tab[]) => [...ts, tab(id)];
+
+  it('keeps the selection a commit was made with, for its undo', () => {
+    const h = historyCommit(start(), add('B'), one('el-a'));
+
+    expect(historyUndoSelection(h)).toEqual(one('el-a'));
+  });
+
+  it('keeps the selection a drag began with, for its undo', () => {
+    const h = historyMarkCheckpoint(start(), one('el-a'));
+
+    expect(historyUndoSelection(h)).toEqual(one('el-a'));
+  });
+
+  it('keeps the selection undo left behind, for its redo', () => {
+    const made = historyCommit(start(), add('B'), one('el-a'));
+    const undone = historyUndo(made, one('el-B'));
+
+    expect(historyRedoSelection(undone)).toEqual(one('el-B'));
+    expect(historyUndoSelection(historyRedo(undone))).toEqual(one('el-a'));
+  });
+
+  it('has nothing for a step made without one, or once history is reset', () => {
+    const plain = historyCommit(start(), add('B'));
+    expect(historyUndoSelection(plain)).toBeNull();
+    expect(historyRedoSelection(historyUndo(plain))).toBeNull();
+
+    const reset = historyReset(historyCommit(start(), add('B'), one('el-a')), [tab('A')]);
+    expect(historyUndoSelection(reset)).toBeNull();
+  });
+
+  it('records no selection for a commit that changes nothing', () => {
+    const h = start();
+    expect(historyCommit(h, (ts) => ts, one('el-a'))).toBe(h);
+  });
+});
+
+describe('the selections steps keep, across history moves', () => {
+  const one = (id: string): Selection => ({ selectedId: id, multiSelectedIds: new Set() });
+  const add = (id: string) => (ts: Tab[]) => [...ts, tab(id)];
+
+  it("keeps an older step's selection through newer steps, undo, redo and a cancelled drag", () => {
+    let h = historyCommit(start(), add('B'), one('el-a'));
+    h = historyCommit(h, add('C'), one('el-B'));
+    h = historyMarkCheckpoint(h, one('el-C'));
+    h = historyCancel(h);
+    h = historyUndo(historyRedo(historyUndo(h)));
+
+    expect(historyUndoSelection(h)).toEqual(one('el-a'));
   });
 });

@@ -1,6 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type RefObject } from 'react';
+import { useLatest } from '@/hooks/ui/useLatest';
+import type { Selection } from '@/lib/selection-store';
+import { StepSelections } from '@/lib/step-selection';
 import { graftLiveTabState, type Tab } from '@livedoc/document';
 import {
   EMPTY_REPLAY,
@@ -42,6 +45,9 @@ export type History = {
   replay?: Replay;
   pastAt?: number[];
   futureAt?: number[];
+  // The selection each step was made with, and the one undo left behind it, by depth (lib/step-selection):
+  // undo and redo bring them back (docs/specs/008-canvas/canvas-and-palette.md "Undo / Redo"). Absent = none.
+  selections?: StepSelections;
 };
 
 const depthOf = (h: History) => h.depth ?? 0;
@@ -89,17 +95,56 @@ export function sameTabs(prev: Tab[], next: Tab[]): boolean {
   });
 }
 
-export function historyCommit(h: History, mapTabs: (tabs: Tab[]) => Tab[]): History {
+export function historyCommit(
+  h: History,
+  mapTabs: (tabs: Tab[]) => Tab[],
+  selection?: Selection,
+): History {
   const present = mapTabs(h.present);
   // A commit that changes nothing is not a step (docs/specs/008-canvas/canvas-and-palette.md "Undo / Redo"):
   // pushing it made Undo appear to do nothing and cleared the redo stack.
   if (sameTabs(h.present, present)) return h;
+  return withStepSelection(
+    {
+      ...pushPast(h),
+      ...keptSelections(h),
+      present,
+      depth: depthOf(h) + 1,
+      branch: branchOf(h) + 1,
+    },
+    selection,
+  );
+}
+
+// The selections the steps keep, carried over a transition that rebuilds the history.
+const keptSelections = (h: History): Pick<History, 'selections'> =>
+  h.selections ? { selections: h.selections } : {};
+
+// A new step, made while `selection` was selected: what its undo brings back.
+function withStepSelection(h: History, selection: Selection | undefined): History {
+  if (!selection) return h;
   return {
-    ...pushPast(h),
-    present,
-    depth: depthOf(h) + 1,
-    branch: branchOf(h) + 1,
+    ...h,
+    selections: StepSelections.record(
+      h.selections ?? StepSelections.empty(),
+      depthOf(h),
+      selection,
+    ),
   };
+}
+
+/** The selection undo brings back: the one the newest step was made with, or null when it kept none. */
+export function historyUndoSelection(h: History): Selection | null {
+  return h.past.length > 0 && h.selections
+    ? StepSelections.forUndo(h.selections, depthOf(h))
+    : null;
+}
+
+/** The selection redo brings back: the one undo left behind the next step, or null when it kept none. */
+export function historyRedoSelection(h: History): Selection | null {
+  return h.future.length > 0 && h.selections
+    ? StepSelections.forRedo(h.selections, depthOf(h) + 1)
+    : null;
 }
 
 // The present onto the undo stack, stamped current, and the redo stack cleared.
@@ -116,13 +161,17 @@ export function historyTick(h: History, mapTabs: (tabs: Tab[]) => Tab[]): Histor
   return { ...h, present: mapTabs(h.present) };
 }
 
-export function historyMarkCheckpoint(h: History): History {
-  return {
-    ...pushPast(h),
-    present: h.present,
-    depth: depthOf(h) + 1,
-    branch: branchOf(h) + 1,
-  };
+export function historyMarkCheckpoint(h: History, selection?: Selection): History {
+  return withStepSelection(
+    {
+      ...pushPast(h),
+      ...keptSelections(h),
+      present: h.present,
+      depth: depthOf(h) + 1,
+      branch: branchOf(h) + 1,
+    },
+    selection,
+  );
 }
 
 // A new step that is not a snapshot (an item change, useItemUndo): the redo side is gone.
@@ -145,9 +194,12 @@ const newestPast = (h: History): Tab[] =>
 // them). Restoring a snapshot verbatim silently dropped both (then
 // autosave persisted + broadcast the stripped tab to every peer).
 
-export function historyUndo(h: History): History {
+export function historyUndo(h: History, leaving?: Selection): History {
   if (h.past.length === 0) return h;
   return {
+    ...(leaving && h.selections
+      ? { selections: StepSelections.leftByUndo(h.selections, depthOf(h), leaving) }
+      : keptSelections(h)),
     ...withStacks(h, {
       past: h.past.slice(0, -1),
       pastAt: pastAtOf(h).slice(0, -1),
@@ -168,6 +220,7 @@ export function historyUndo(h: History): History {
 export function historyCancel(h: History): History {
   if (h.past.length === 0) return h;
   return {
+    ...keptSelections(h),
     ...withStacks(h, {
       past: h.past.slice(0, -1),
       pastAt: pastAtOf(h).slice(0, -1),
@@ -184,6 +237,7 @@ export function historyRedo(h: History): History {
   if (h.future.length === 0) return h;
   const next = catchUp(h.future[0]!, futureAtOf(h)[0]!, replayOf(h));
   return {
+    ...keptSelections(h),
     ...withStacks(h, {
       past: [...h.past, h.present].slice(-HISTORY_LIMIT),
       pastAt: [...pastAtOf(h), replayHead(replayOf(h))].slice(-HISTORY_LIMIT),
@@ -251,8 +305,9 @@ type DocumentHistory = {
   applyRemote: (tabs: Tab[] | ((prev: Tab[]) => Tab[])) => void;
   // A peer's op, into the present and every undo / redo snapshot (historyApplyRemoteOp).
   applyRemoteOp: (apply: RemoteApply) => void;
-  undo: () => void;
-  redo: () => void;
+  // Each returns the selection the step it took kept (null when none): the caller brings it back once the tabs are in.
+  undo: () => Selection | null;
+  redo: () => Selection | null;
   // The counters item undo steps are placed by (useItemUndo).
   depth: number;
   branch: number;
@@ -260,15 +315,23 @@ type DocumentHistory = {
   clearRedo: () => void;
 };
 
-export function useDocumentHistory(initialTabs: Tab[]): DocumentHistory {
+// `readSelection`: this person's selection now, read as each step is made and undone, so undo and redo can bring
+// it back (docs/specs/008-canvas/canvas-and-palette.md "Undo / Redo"). A ref, as the selection comes after the history.
+export function useDocumentHistory(
+  initialTabs: Tab[],
+  readSelection?: RefObject<(() => Selection) | null>,
+): DocumentHistory {
   const [history, setHistory] = useState<History>({
     past: [],
     present: initialTabs,
     future: [],
   });
+  const historyRef = useLatest(history);
+  const selectionNow = () => readSelection?.current?.() ?? undefined;
 
   const commit = (mapTabs: (tabs: Tab[]) => Tab[]) => {
-    setHistory((h) => historyCommit(h, mapTabs));
+    const selection = selectionNow();
+    setHistory((h) => historyCommit(h, mapTabs, selection));
   };
 
   // Stable identity: the delta sender (useElementDeltas) memoises on it.
@@ -277,11 +340,15 @@ export function useDocumentHistory(initialTabs: Tab[]): DocumentHistory {
   }, []);
 
   const markCheckpoint = () => {
-    setHistory(historyMarkCheckpoint);
+    const selection = selectionNow();
+    setHistory((h) => historyMarkCheckpoint(h, selection));
   };
 
   const undo = () => {
-    setHistory(historyUndo);
+    const restores = historyUndoSelection(historyRef.current);
+    const leaving = selectionNow();
+    setHistory((h) => historyUndo(h, leaving));
+    return restores;
   };
 
   // Abort-to-checkpoint for Escape during a drag (see historyCancel).
@@ -290,7 +357,9 @@ export function useDocumentHistory(initialTabs: Tab[]): DocumentHistory {
   };
 
   const redo = () => {
+    const restores = historyRedoSelection(historyRef.current);
     setHistory(historyRedo);
+    return restores;
   };
 
   // Replace the present tab list with `tabs` and CLEAR history. For

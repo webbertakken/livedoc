@@ -2,12 +2,14 @@
 
 import { useCallback, useState } from 'react';
 import { useLatest } from '@/hooks/ui/useLatest';
+import type { Selection } from '@/lib/selection-store';
 import {
   EMPTY_JOURNAL,
   journalAfterRedo,
   journalAfterUndo,
   journalLiveRedo,
   journalPush,
+  journalPushAside,
   journalRedoTarget,
   journalUndoTarget,
   type HistoryPosition,
@@ -22,8 +24,9 @@ export function useItemUndo(history: {
   futureLength: number;
   canUndo: boolean;
   canRedo: boolean;
-  undo: () => void;
-  redo: () => void;
+  // A canvas step's undo and redo return the selection it kept (useDocumentHistory).
+  undo: () => Selection | null;
+  redo: () => Selection | null;
   clearRedo: () => void;
 }) {
   const [journal, setJournal] = useState(EMPTY_JOURNAL);
@@ -47,34 +50,51 @@ export function useItemUndo(history: {
     [clearRedo, atRef],
   );
 
+  // Records a step that changes only what this person sees (a deselect): the redo side stays.
+  const pushAside = useCallback(
+    (step: ItemUndoStep) => setJournal((j) => journalPushAside(j, step, atRef.current)),
+    [atRef],
+  );
+
   const live = journalLiveRedo(journal, at);
   const itemUndo = journalUndoTarget(journal, at);
   const itemRedo = journalRedoTarget(live, at);
 
-  const undo = () => {
-    const j = journalRef.current;
-    const step = journalUndoTarget(j, atRef.current);
-    if (step) {
-      step.undo();
-      setJournal(journalAfterUndo(j, atRef.current));
-      return;
+  // Undo takes the newest step: one beside the canvas when none of the canvas's is newer, passing over any with
+  // nothing left to take back. A canvas step returns the selection it kept; one beside it, undefined.
+  const undo = (): Selection | null | undefined => {
+    const at = atRef.current;
+    let j = journalRef.current;
+    for (let step = journalUndoTarget(j, at); step; step = journalUndoTarget(j, at)) {
+      const took = step.undo();
+      j = journalAfterUndo(j, at);
+      if (took !== false) {
+        setJournal(j);
+        return undefined;
+      }
     }
-    if (history.canUndo) history.undo();
+    setJournal(j);
+    return history.canUndo ? history.undo() : undefined;
   };
 
-  const redo = () => {
-    const j = journalLiveRedo(journalRef.current, atRef.current);
-    const step = journalRedoTarget(j, atRef.current);
-    if (step) {
-      step.redo();
-      setJournal(journalAfterRedo(j, atRef.current));
-      return;
+  const redo = (): Selection | null | undefined => {
+    const at = atRef.current;
+    let j = journalLiveRedo(journalRef.current, at);
+    for (let step = journalRedoTarget(j, at); step; step = journalRedoTarget(j, at)) {
+      const took = step.redo();
+      j = journalAfterRedo(j, at);
+      if (took !== false) {
+        setJournal(j);
+        return undefined;
+      }
     }
-    if (history.canRedo) history.redo();
+    setJournal(j);
+    return history.canRedo ? history.redo() : undefined;
   };
 
   return {
     push,
+    pushAside,
     undo,
     redo,
     canUndo: history.canUndo || itemUndo !== null,

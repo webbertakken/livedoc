@@ -104,10 +104,14 @@ describe('useItemTypes', () => {
     await waitFor(() => expect(hook.result.current.stored.itemTypesRev).toBe(1));
     act(() => hook.result.current.slice.saveType(def('spike')));
     await waitFor(() => expect(hook.result.current.stored.itemTypesRev).toBe(2));
-    act(() => steps[0]!.undo());
+    act(() => {
+      steps[0]!.undo();
+    });
     await waitFor(() => expect(hook.result.current.stored.itemTypesRev).toBe(3));
     expect(sent(2)).toEqual({ ids: ['task', 'spike'], rev: 2 });
-    act(() => steps[0]!.redo());
+    act(() => {
+      steps[0]!.redo();
+    });
     await waitFor(() => expect(hook.result.current.stored.itemTypesRev).toBe(4));
     expect(ids(hook.result.current.slice.catalogue)).toEqual(['task', 'risk', 'spike']);
     expect(steps).toHaveLength(2);

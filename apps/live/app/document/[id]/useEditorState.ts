@@ -161,7 +161,7 @@ import { useChangeActions } from '@/hooks/canvas/useChangeActions';
 import { useLaneActions } from '@/hooks/canvas/useLaneActions';
 import { useAskActions } from '@/hooks/canvas/useAskActions';
 import { contextSelectionFor } from '@/lib/context-selection';
-import { selectionIds } from '@/lib/selection-store';
+import { selectionIds, type Selection } from '@/lib/selection-store';
 import { useContextActions } from '@/hooks/canvas/useContextActions';
 import { useStructureActions } from '@/hooks/canvas/useStructureActions';
 import { useReviewActions } from '@/hooks/canvas/useReviewActions';
@@ -316,6 +316,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // Keep the participant record's profile picture current (docs/specs/014-identity/profile-picture.md §6).
   usePublishPicture(workbenchMode ? null : accountId);
 
+  // This person's selection, read as each step is made and undone (docs/specs/008-canvas/canvas-and-palette.md
+  // "Undo / Redo"). Assigned once the selection store exists, below.
+  const readSelectionRef = useRef<(() => Selection) | null>(null);
   const {
     tabs,
     canUndo: canTabUndo,
@@ -333,7 +336,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     branch: historyBranch,
     futureLength: historyFutureLength,
     clearRedo: clearHistoryRedo,
-  } = useDocumentHistory(initialTabs);
+  } = useDocumentHistory(initialTabs, readSelectionRef);
   // Item changes take their turn in the same undo timeline (docs/specs/026-plan/items.md "Undo").
   const itemUndo = useItemUndo({
     depth: historyDepth,
@@ -498,6 +501,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     identityPromptOpen,
     setIdentityPromptOpen,
   } = uiState;
+  useAssignRef(readSelectionRef, selectionStore.get);
   // Drag state lives inside the useEditorDrag hook, lifted out of
   // this component to keep the page focused on orchestration. The
   // hook is invoked further down (after `tick`, `commit`,
@@ -2471,6 +2475,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // Undo / redo handlers. See useEditorHistory.
   const editorHistory = useEditorHistory({
     activeId,
+    tabs,
     editsBlocked,
     canUndo: canHistoryUndo,
     canRedo: canHistoryRedo,
@@ -2478,9 +2483,11 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     tickTabs,
     undoHistory,
     redoHistory,
-    set: { setSelectedId, setEditingId, setFormatSourceId },
+    pushAside: itemUndo.pushAside,
+    selection: selectionStore,
+    set: { setEditingId, setFormatSourceId },
   });
-  const { tick, undo, redo, canUndo, canRedo } = editorHistory;
+  const { tick, undo, redo, deselect, canUndo, canRedo } = editorHistory;
   // The writing of the active tab's article pages (docs/specs/007-editor/article-pages.md): in
   // Pages mode, and while a page slide presents in any mode (read only, then: nothing is
   // edited while presenting).
@@ -4002,10 +4009,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     onFitToScreen: pagesMode ? pagesMode.fitPageInView : fitToScreen,
     onCycleEditorMode: editorModeShortcut(editorMode, announce),
     onFlipSelection: flipSelected,
-    onDeselect: () => {
-      setSelectedId(null);
-      setMultiSelectedIds(new Set());
-    },
+    onDeselect: deselect,
     onZoomIn: () => setViewportZoom((z) => Math.min(5, Math.round((z + 0.1) * 10) / 10)),
     onZoomOut: () => setViewportZoom((z) => Math.max(0.1, Math.round((z - 0.1) * 10) / 10)),
     onZoomReset: () => setViewportZoom(1),
@@ -4694,6 +4698,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     toggleLockMultiSelected,
     toggleLockSelected,
     toggleTextStyleSelected,
+    deselect,
     undo,
     unresolveThread,
     updateParticipantName,
