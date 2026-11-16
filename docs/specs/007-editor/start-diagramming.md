@@ -1,12 +1,16 @@
 # Template starts: Start Sketching, Start Diagramming, Start Making Pages, Start a Workshop
 
-An empty tab starts from a choice, not a blank page and a modal. A Plan tab has offered **Start Planning** since
+An empty tab offers a choice without standing in the way of a blank page. A Plan tab has offered **Start Planning** since
 Plan shipped ([Working in Plan](../026-plan/plan-mode.md) "Starting a board"); Sketch, Structured and Pages tabs
 now offer their own: **Start Sketching**, **Start Diagramming** and **Start Making Pages**, and a Structured tab
 with the [Workshop control](../012-collaboration/workshop-mode.md) on offers **Start a Workshop**. Each is the same wide
 panel in the middle of the canvas, its rail of groups beside a grid of the mode's templates, so the templates sit
-where the work begins instead of in a step before it. The New Document wizard asks only what to make
-([New document route](new-document-route.md) "Choosing a mode"), and the document opens on that choice's start.
+where the work begins instead of in a step before it.
+Most people start from nothing, so an empty tab opens on its empty canvas, the palette tray offering its start
+one click away ([Bringing it back](#bringing-it-back)).
+The one exception is the New Document wizard's mode choice, which asks only what to make
+([New document route](new-document-route.md) "Choosing a mode"): the document it makes opens on that choice's start,
+since templates are what the wizard asked for next.
 
 ## The panel
 
@@ -97,21 +101,25 @@ A **Participant** or **Viewer** never sees a start: they keep the empty-canvas c
 route](new-document-route.md) "The empty-canvas hint"), which tells a Viewer the owner can build it out and points a
 Participant at what they may add.
 
-A new tab opens on its mode's start (`newTabOpening` in `apps/live/lib/new-tab-seed.ts`).
-
-An **explicit blank** opens with its start already closed (`closeStartForBlank`): a document made by Skip, Start
-Blank's `/new?blank=1`, a blank's `/new?template=` link, a mode chosen after the public sites' Start Blank
+**A start is shown only when asked for.** An empty tab opens with its start closed: a new tab (its mode from
+`newTabOpening` in `apps/live/lib/new-tab-seed.ts`), a tab emptied by deleting what was on it, a tab whose mode
+or Workshop control changes while it is empty, and a document made empty by any route: Skip, Start Blank's
+`/new?blank=1`, a blank's `/new?template=` link, a mode chosen after the public sites' Start Blank
 (`/new?start=blank`, [New document route](new-document-route.md) "Start Blank after a mode"), or a blank of the
-Explorer's [New Document menu](../013-workspace/new-document-menu.md). Plan keeps Start Planning.
+Explorer's [New Document menu](../013-workspace/new-document-menu.md).
+A start opens when someone asks for it: **Show Templates** in the palette tray, or the wizard's mode choice
+(`openStartForModeChoice`), which opens the start of the blank it makes.
+Changing mode on an open start's own switch opens the next mode's start too, as the person is still choosing.
+Shown starts are kept per tab and mode, for this person in this browser (`start-shown.ts`, under the key
+`<tab id>:<mode>`, `startKey`).
+Plan keeps Start Planning: an empty Plan tab has no canvas to show instead.
 
 ## Bringing it back
 
-The × starts from a blank canvas: the start stays closed on that tab in that mode, for this person in this browser
-(`empty-card-dismissed.ts`, under the key `<tab id>:<mode>`, `startClosedKey`). Closing Start Diagramming leaves
-Start a Workshop to show when the Workshop control is turned on (its key is `<tab id>:workshop`). On a phone, dragging the sheet's grab handle down
-closes it too.
+The × starts from a blank canvas: the start closes on that tab in that mode, for this person in this browser.
+On a phone, dragging the sheet's grab handle down closes it too.
 
-While a closed start's tab is still empty, the **palette tray** (the strip that hangs from the palette, as the mode
+While a closed start's tab is still empty (every empty tab, until its start is asked for), the **palette tray** (the strip that hangs from the palette, as the mode
 banners do, [Toolbar layout](toolbar-layout.md)) reads "Tab 1 is empty" with **Show Templates**, which opens the
 start again (`StartAgainTray`). It goes with the emptiness: the first element ends it. Without a strip on screen
 (Sketch's dock) it is the same message as a pill standing just clear of the dock: under it when the dock is at the top, over it when at the bottom. Either way it steps aside while a mode's message is up (an armed tool's Cancel, a modifier hint), as that takes the same place and says what the next click does. The closed list is shared state: the panel and the
@@ -176,7 +184,7 @@ closing the panel, or choosing **Blank Illustration**, shows the first page with
 Blank Logo) lands one page of that kind, already chosen, so it asks nothing and the start does not come back over it.
 
 **The last page can be deleted.** Deleting it (or the last article) clears the tab, its pages, its writing and its
-elements, as one edit that Undo puts back, and brings Start Making Pages back even if it was closed. The agents'
+elements, as one edit that Undo puts back, and leaves the tab empty, its start one click away in the palette tray. The agents'
 page edits keep their own rule (`pageRemoved` refuses the last page, `last_page`).
 
 ## Default folders

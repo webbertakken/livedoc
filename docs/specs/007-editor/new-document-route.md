@@ -201,8 +201,9 @@ From the Explorer, **New Document** makes the document and opens it in place, wi
 
 1. User clears the active tab's content (or opens a tab that was
    created empty).
-2. An Editor sees the mode's start in the middle of the canvas (Start Diagramming,
-   Start a Workshop, Start Making Pages, Start Planning; [Template starts](start-diagramming.md));
+2. An Editor sees the empty canvas, the palette tray offering the mode's start (Start Diagramming,
+   Start a Workshop, Start Making Pages) one click away, or Start Planning on a Plan tab
+   ([Template starts](start-diagramming.md#when-it-shows));
    a Participant or Viewer the empty-canvas card ([The empty-canvas hint](#the-empty-canvas-hint)).
 
 ### Document not found
@@ -402,8 +403,8 @@ the cards are not focused until the wizard mounts.
 ### The empty-canvas hint
 
 The **empty-canvas hint** is a calm **card in the middle of the canvas** (`EmptyCanvasBanner`), shown while the
-active tab has no elements to someone who cannot edit it: an Editor gets the mode's start instead ([Template
-starts](start-diagramming.md)). A **Viewer** reads "Nothing here yet. The owner can build it out, and your view
+active tab has no elements to someone who cannot edit it: an Editor gets the palette tray's Show Templates instead
+([Template starts](start-diagramming.md#bringing-it-back)). A **Viewer** reads "Nothing here yet. The owner can build it out, and your view
 updates live."; a **Participant** is pointed at a sticky, text or an image. It shows in Structured, the Workshop control on or off; Sketch
 (its dock is the hint, [Sketch mode](../023-draw-mode/draw-mode.md)), Pages and Plan show none. It offers no action
 of its own: an Editor's empty tab shows its start instead, and **Help** on a desktop. It goes once the
