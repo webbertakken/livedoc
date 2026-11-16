@@ -318,10 +318,10 @@ as a different person than the one the session settles, even briefly
 - **The editor takes what was asked early.** Each early answer waits, unread, in a one-shot pool
   (`lib/api/early-reads.ts`) keyed by its address and every header it was asked with; the editor's own request
   (through `apiFetch`) for the same address with the same headers takes it instead of asking again. A request as
-  anyone else, or with another password, misses and asks. An answer is taken once, and the pool keeps answers
-  for `EARLY_READS_WINDOW_MS = 30000` (default) from its first ask, then forgets them; an early read the network
-  failed is not kept, so the editor asks itself. The editor's reads made before the early one are never asked
-  twice: what the page asked first, the pool does not ask.
+  anyone else, or with another password, misses and asks. An answer is taken once. The pool opens as the page
+  starts at a document's address and lives `EARLY_READS_WINDOW_MS = 60000` (default), then forgets what it holds;
+  an early read the network failed is not kept, so the editor asks itself. A read the page asked itself while the
+  pool was open is never asked early as well.
 - Nothing is written early but the guest id the editor would mint: a first visit's participant row is still
   written by the editor. A document in This Browser asks the server nothing; an embed, a workbench and every
   other address ask nothing early.
