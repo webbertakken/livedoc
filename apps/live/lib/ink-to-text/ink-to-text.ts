@@ -27,25 +27,6 @@ const TEXT_SIZE_MAX = 160;
 // Writing's height is its ascenders and descenders; a font's px size is a little under that.
 const TEXT_SIZE_OF_LINE = 0.75;
 
-/** The selected pen strokes, in the tab's order; null unless the selection is only unlocked pen strokes. */
-export function inkSelection(
-  elements: readonly Element[],
-  ids: ReadonlySet<string>,
-  layerLockedIds: ReadonlySet<string>,
-): FreehandElement[] | null {
-  if (ids.size === 0) return null;
-  const picked = elements.filter((el) => ids.has(el.id));
-  if (picked.length !== ids.size) return null;
-  const ink = picked.filter(
-    (el): el is FreehandElement =>
-      el.type === 'freehand' &&
-      el.pen !== 'highlighter' &&
-      el.locked !== true &&
-      !layerLockedIds.has(el.id),
-  );
-  return ink.length === picked.length ? ink : null;
-}
-
 /** The box every stroke of the ink sits in. */
 export function inkBox(ink: readonly FreehandElement[]): Box {
   const left = Math.min(...ink.map((s) => s.x));

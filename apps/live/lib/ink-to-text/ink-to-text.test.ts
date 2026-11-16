@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { packFreehandPoints, type Element, type FreehandElement } from '@livedoc/document';
-import {
-  inkBox,
-  inkPolylines,
-  inkSelection,
-  inkTextElement,
-  inkTextSize,
-  replaceInk,
-} from './ink-to-text';
+import { inkBox, inkPolylines, inkTextElement, inkTextSize, replaceInk } from './ink-to-text';
+import { inkSelection } from './ink-selection';
 
 // docs/specs/023-draw-mode/ink-to-text.md
 
