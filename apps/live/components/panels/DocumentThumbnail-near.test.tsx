@@ -91,3 +91,31 @@ describe('a thumbnail loader', () => {
     );
   });
 });
+
+// An element animating opacity or a transform becomes a composited layer of its own (web-performance.md "Long
+// lists"): the strokes fade in by stroke-opacity, and the spinner's arc turns by its dash offset.
+describe('a thumbnail loader stroke', () => {
+  const css = readFileSync(join(__dirname, '../../app/thumbnail-loader.css'), 'utf8');
+  const keyframes = (name: string) => {
+    const start = css.indexOf(`@keyframes ${name} {`);
+    let depth = 0;
+    for (let i = start; i < css.length; i++) {
+      if (css[i] === '{') depth++;
+      if (css[i] === '}' && --depth === 0) return css.slice(start, i + 1);
+    }
+    return '';
+  };
+
+  it.each(['lvd-thumb-draw-a', 'lvd-thumb-draw-link', 'lvd-thumb-draw-b', 'lvd-thumb-draw-c'])(
+    '%s fades in by stroke-opacity, never opacity',
+    (name) => {
+      expect(keyframes(name)).toMatch(/stroke-opacity: 0;/);
+      expect(keyframes(name)).not.toMatch(/[\s{]opacity:/);
+    },
+  );
+
+  it('turns the spinner by its dash offset, never a transform', () => {
+    expect(keyframes('lvd-thumb-spin')).toMatch(/stroke-dashoffset: -1;/);
+    expect(keyframes('lvd-thumb-spin')).not.toMatch(/transform/);
+  });
+});

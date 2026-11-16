@@ -64,8 +64,6 @@
   animation: lvd-thumb-spinner 5.4s linear var(--lvd-thumb-phase, 0s) infinite;
 }
 .lvd-thumb-spin {
-  transform-box: fill-box;
-  transform-origin: center;
   animation: lvd-thumb-spin 0.9s linear infinite;
 }
 
@@ -95,6 +93,10 @@
   }
 }
 
+/* The strokes fade in with stroke-opacity and the spinner's arc turns by its dash offset, never with opacity or a
+   transform: an element animating either becomes a composited layer of its own, and a screen of loaders held hundreds,
+   which the browser rebuilt every frame (docs/specs/016-platform/web-performance.md "Long lists"). On a single
+   stroke the two draw the same, and a dash running round a circle is the circle turning. */
 @keyframes lvd-thumb-spinner {
   0%,
   16% {
@@ -107,7 +109,7 @@
 }
 @keyframes lvd-thumb-spin {
   to {
-    transform: rotate(360deg);
+    stroke-dashoffset: -1;
   }
 }
 @keyframes lvd-thumb-cycle {
@@ -123,30 +125,30 @@
 @keyframes lvd-thumb-draw-a {
   0% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   0.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   16%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-draw-link {
   0%,
   14% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   14.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   34%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-head {
@@ -165,30 +167,30 @@
   0%,
   34% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   34.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   52%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-draw-c {
   0%,
   40% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   40.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   58%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-flow {
