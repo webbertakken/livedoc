@@ -20,6 +20,7 @@ import {
   upkeepAfterWrite,
 } from './room-upkeep';
 import { allShares, drainShares } from './tab-shares';
+import type { ServerTiming } from '../server-timing';
 import type { DocumentEnv, Env } from '../types';
 
 // The drain's pace.
@@ -133,12 +134,14 @@ export class RoomContent {
 
   // The RPC surface, bound to `documentId`, once the room is ready to serve it: the only way in for an RPC, so none
   // skips the gate.
-  async rpc(documentId: string, born = false): Promise<DocumentRoomRpc> {
+  // With a timing, the surface's D1 round trips are timed into it (server-timing.ts).
+  async rpc(documentId: string, born = false, timing?: ServerTiming): Promise<DocumentRoomRpc> {
     this.bind(documentId);
     await this.hooks.prepare(documentId);
     await this.ensureMoved(documentId, born);
     if (!this.env) throw new Error('room has no content store');
-    return documentRpc(this.env, (p) => this.state.waitUntil(p));
+    const env = timing ? { ...this.env, DB: timing.d1(this.env.DB) } : this.env;
+    return documentRpc(env, (p) => this.state.waitUntil(p));
   }
 
   // The move gate (docs/specs/006-document/document-storage-move.md, M1): before any content is served,

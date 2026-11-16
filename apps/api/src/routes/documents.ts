@@ -43,6 +43,7 @@ import { handleDocumentCollection } from './document-collection-route';
 import { handleDocumentCopy } from './document-copy-route';
 import { askRoom, documentRoom } from '../document-room/document-client';
 import { identityOf } from '../document-room/document-route';
+import { ServerTiming, withServerTiming } from '../server-timing';
 
 // The longest document id the worker names a room by. Ids are UUIDs; this only stops a hostile path from naming
 // rooms with huge ids.
@@ -62,7 +63,12 @@ export async function handleDocuments(ctx: RouteContext): Promise<Response> {
   // G3: a document whose room still owes its purge has no D1 row (its removal deleted the row in the batch that
   // wrote the tombstone), and every route below reads that row before it serves or writes anything, so no route
   // reads the tombstone (routes/document-purge-guard.test.ts).
-  return askRoom(request, () => documentRoom(ctx.env, id).route(request, identityOf(ctx)));
+  // Timed as the room call (server-timing.ts), after what the room timed inside.
+  const timing = new ServerTiming();
+  const answer = await timing.measure('room', () =>
+    askRoom(request, () => documentRoom(ctx.env, id).route(request, identityOf(ctx))),
+  );
+  return withServerTiming(answer, timing);
 }
 
 // Everything about one document, inside its room (document-room/document-route.ts).

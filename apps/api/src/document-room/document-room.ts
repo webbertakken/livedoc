@@ -63,6 +63,8 @@ import type { ContentSummary } from '../db/content-summary';
 import type { DocumentCopy, DocumentOutline } from './document-content';
 import type { CreateOutcome, DocumentSeed } from './document-create';
 import type { RouteIdentity } from './document-route';
+import { RoomWake } from './room-wake';
+import { ServerTiming, withServerTiming } from '../server-timing';
 import type { ShareAnswer, ShareMessage, SharedTabCopy } from './tab-shares';
 import {
   newSessionAttachment,
@@ -294,6 +296,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   // Whether this instance has taken its legacy room's state (legacy-handover.ts); the marker in storage decides
   // across instances, this only saves the read.
   private handedOver = false;
+  // Read by a route's timing when it is the first thing this instance is asked; anything else asked first clears it.
+  private readonly wake = new RoomWake();
   private missingIdLogged = false;
 
   // The key-value room this document had before keeps its order state, ledger, poll, baton, selections and agent
@@ -334,6 +338,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   // RoomContent's gate before every RPC, after it bound the room to `documentId`.
   private async prepareForRpc(documentId: string): Promise<void> {
+    this.wake.take();
     if (this.handedOver) return;
     const failed = await this.handOver(documentId);
     if (failed) throw new RoomNotReadyError(documentId, 'handover');
@@ -386,6 +391,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   }
 
   override async fetch(request: Request): Promise<Response> {
+    this.wake.take();
     const notReady = await this.ensureReady(request);
     if (notReady) return notReady;
     const url = new URL(request.url);
@@ -1064,6 +1070,7 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   /** Agent entries past their expiry go; then the grace clock ran out (or did not, if they came back). */
   override async alarm(): Promise<void> {
+    this.wake.take();
     const expired = await this.agents.sweep();
     for (const r of expired) agentPresenceLog('expired', r);
     if (expired.length > 0) this.broadcastPresence();
@@ -1194,8 +1201,17 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
 
   // ---------- RPC: what the worker asks of this document (document-client.ts, document-rpc.ts) ----------
 
+  // Timed (server-timing.ts): the wake, the ready gate, each D1 round trip and the handler.
   async route(documentId: string, request: Request, identity: RouteIdentity): Promise<Response> {
-    return this.answer(documentId, (rpc) => rpc.route(documentId, request, identity));
+    const timing = new ServerTiming();
+    const woke = this.wake.take();
+    if (woke !== null) timing.add('room-wake', woke);
+    const response = await this.answer(
+      documentId,
+      (rpc) => timing.measure('room-handler', () => rpc.route(documentId, request, identity)),
+      timing,
+    );
+    return withServerTiming(response, timing);
   }
 
   async create(documentId: string, seed: DocumentSeed): Promise<CreateOutcome> {
@@ -1297,10 +1313,13 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   private async answer(
     documentId: string,
     call: (rpc: DocumentRoomRpc) => Promise<Response>,
+    timing?: ServerTiming,
   ): Promise<Response> {
     let rpc: DocumentRoomRpc;
     try {
-      rpc = await this.content.rpc(documentId);
+      rpc = timing
+        ? await timing.measure('room-gate', () => this.content.rpc(documentId, false, timing))
+        : await this.content.rpc(documentId);
     } catch (error) {
       if (error instanceof RoomNotReadyError) return error.response();
       throw error;
