@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useRef,
   type PointerEvent as ReactPointerEvent,
   type MouseEvent as ReactMouseEvent,
@@ -18,6 +19,7 @@ import { useLongPress } from '@/hooks/ui/useLongPress';
 import { useRightClickRelease } from '@/hooks/canvas/useRightClickRelease';
 import { isHeldPenIntent } from '@/lib/draw-mode';
 import { markPenSeen, penSeen } from '@/lib/pen-seen';
+import { isPalmTouch, watchPenPresence } from '@/lib/pen-presence';
 import { whiteboardPointerRoute } from '@/lib/whiteboard-tool';
 import { debugLog } from '@/lib/debug-log';
 import { isPanThrough, panThroughTap } from '@/hooks/canvas/pan-through';
@@ -99,6 +101,8 @@ export function useCanvasSurfaceGestures({
   // What pressed last, for the double-click that follows: a dblclick event says nothing of the pointer, and a
   // finger's double-tap zooms where a mouse's double-click drops text.
   const lastPointerType = useRef<string | null>(null);
+  // Which pens are near the screen, so a palm resting beside one is told from a finger (lib/pen-presence).
+  useEffect(() => watchPenPresence(document), []);
   // The live view, for an erase sweep's frame reader (lib/erase-frame): read per sample, after
   // any pan or zoom since the press.
   const viewRef = useLatest({ offset: viewportOffset, zoom: viewportZoom });
@@ -152,6 +156,8 @@ export function useCanvasSurfaceGestures({
       startOffsetX: viewportOffset.x,
       startOffsetY: viewportOffset.y,
       movedRef: { current: false },
+      pointerId: e.pointerId,
+      pointerType: e.pointerType,
       ...(onTap ? { onTap } : {}),
     });
 
@@ -201,6 +207,14 @@ export function useCanvasSurfaceGestures({
     // gesture.
     const surface = mainRef && 'current' in mainRef ? mainRef.current : null;
     if (surface && e.target instanceof Node && !surface.contains(e.target)) return;
+    // A touch while a pen is near is a resting palm (docs/specs/023-draw-mode/draw-mode.md "Touch and pen input"): it
+    // neither pans, draws nor selects, on any tab. Stopped here, in the capture phase, before any element sees it.
+    if (isPalmTouch(e.pointerType)) {
+      debugLog('[canvas] palm rejected', { pointerId: e.pointerId });
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     // Whiteboard (docs/specs/023-draw-mode/draw-mode.md "Touch and pen input"): once a pen has been
     // used, a single finger pans instead of inking, so a resting palm never
     // draws. The pen itself, and a mouse, always ink.
@@ -215,13 +229,7 @@ export function useCanvasSurfaceGestures({
       if (route === 'pan') {
         e.preventDefault();
         e.stopPropagation();
-        setPan({
-          startClientX: e.clientX,
-          startClientY: e.clientY,
-          startOffsetX: viewportOffset.x,
-          startOffsetY: viewportOffset.y,
-          movedRef: { current: false },
-        });
+        startPan(e);
         return;
       }
     }
@@ -351,13 +359,7 @@ export function useCanvasSurfaceGestures({
     if (e.button === 1 && middleMousePan) {
       e.preventDefault();
       e.stopPropagation();
-      setPan({
-        startClientX: e.clientX,
-        startClientY: e.clientY,
-        startOffsetX: viewportOffset.x,
-        startOffsetY: viewportOffset.y,
-        movedRef: { current: false },
-      });
+      startPan(e);
       return;
     }
     // Draw-to-size intercept must run in the capture phase so a

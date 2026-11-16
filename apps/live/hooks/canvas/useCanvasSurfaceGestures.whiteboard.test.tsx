@@ -2,10 +2,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import type { PointerEvent as ReactPointerEvent } from 'react';
 import type { PendingDraw } from '@/lib/draw-mode';
 import { penSeen, resetPenSeenForTests } from '@/lib/pen-seen';
+import { resetPenPresenceForTests } from '@/lib/pen-presence';
 import { useCanvasSurfaceGestures } from './useCanvasSurfaceGestures';
 
 // docs/specs/023-draw-mode/draw-mode.md "Touch and pen input".
@@ -50,16 +51,19 @@ function setup(
       onCanvasDoubleClick: vi.fn(),
     } as never),
   );
-  const press = (pointerType: string, target: Element = main) =>
+  const pressWith = (pointerType: string, extra: object = {}, target: Element = main) =>
     result.current.onPointerDownCapture({
       button: 0,
       pointerType,
+      pointerId: pointerType === 'pen' ? 9 : 1,
       clientX: 10,
       clientY: 10,
       target,
       preventDefault: vi.fn(),
       stopPropagation: vi.fn(),
+      ...extra,
     } as unknown as ReactPointerEvent);
+  const press = (pointerType: string, target: Element = main) => pressWith(pointerType, {}, target);
   // The tools group's Undo button, inside <main> as CanvasChrome renders it.
   const cluster = document.createElement('div');
   cluster.setAttribute('data-zoom-cluster', '');
@@ -78,7 +82,17 @@ function setup(
       preventDefault: vi.fn(),
       stopPropagation: vi.fn(),
     } as unknown as ReactPointerEvent);
-  return { press, bubble, setPan, beginPendingDrawGesture, onEraseStart, undo, cluster, main };
+  return {
+    press,
+    pressWith,
+    bubble,
+    setPan,
+    beginPendingDrawGesture,
+    onEraseStart,
+    undo,
+    cluster,
+    main,
+  };
 }
 
 afterEach(() => resetPenSeenForTests());
@@ -164,5 +178,70 @@ describe('the tools group is chrome, not canvas', () => {
     const cluster = src.indexOf('data-zoom-cluster=""');
     expect(cluster).toBeGreaterThan(-1);
     expect(src.indexOf('<UndoRedoClusterStrip', cluster)).toBeGreaterThan(cluster);
+  });
+});
+
+// docs/specs/023-draw-mode/draw-mode.md "Touch and pen input": a pen near the screen rejects the palm, on every tab.
+describe('a pen near the screen rejects the palm', () => {
+  afterEach(() => resetPenPresenceForTests());
+
+  const penHovers = () =>
+    act(() => {
+      document.body.dispatchEvent(
+        Object.assign(new Event('pointerover', { bubbles: true }), {
+          pointerType: 'pen',
+          pointerId: 9,
+        }),
+      );
+    });
+
+  it('lets a touch neither pan nor draw while the pen hovers', () => {
+    const s = setup(true);
+    s.press('pen');
+    penHovers();
+
+    s.press('touch');
+
+    expect(s.setPan).not.toHaveBeenCalled();
+    expect(s.beginPendingDrawGesture).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets a touch do nothing on a diagram tab while the pen hovers', () => {
+    const s = setup(false, null);
+    penHovers();
+
+    const stopPropagation = vi.fn();
+    s.pressWith('touch', { stopPropagation });
+
+    expect(stopPropagation).toHaveBeenCalled();
+    expect(s.setPan).not.toHaveBeenCalled();
+  });
+
+  it('lets the pen itself draw while it is near', () => {
+    const s = setup(true);
+    penHovers();
+
+    s.press('pen');
+
+    expect(s.beginPendingDrawGesture).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets a finger pan again once the pen leaves range', () => {
+    const s = setup(true);
+    s.press('pen');
+    penHovers();
+    act(() => {
+      document.body.dispatchEvent(
+        Object.assign(new Event('pointerout', { bubbles: true }), {
+          pointerType: 'pen',
+          pointerId: 9,
+          relatedTarget: null,
+        }),
+      );
+    });
+
+    s.press('touch');
+
+    expect(s.setPan).toHaveBeenCalledTimes(1);
   });
 });

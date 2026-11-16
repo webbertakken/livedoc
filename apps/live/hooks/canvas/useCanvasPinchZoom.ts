@@ -6,6 +6,7 @@ import { clamp } from '@livedoc/document';
 import { ZOOM_MIN, ZOOM_MAX } from '@/lib/canvas';
 import { WHEEL_SETTLE_MS, beginCanvasGesture } from '@/lib/canvas-gesture';
 import { useLatest } from '@/hooks/ui/useLatest';
+import { fingerTouches, penNear } from '@/lib/pen-presence';
 import { isCanvasCovered, isSheetCovering } from '@/hooks/plan/plan-cover-store';
 import { getSheetZoom, setSheetZoom } from '@/hooks/sheets/sheet-zoom';
 
@@ -115,8 +116,15 @@ export function useCanvasPinchZoom(deps: Deps): Api {
     };
 
     // ── Touch (mobile pinch) ──────────────────────────────────────────
+    // Only fingers pinch (docs/specs/023-draw-mode/draw-mode.md "Touch and pen input"): a pen the browser also reports as
+    // a touch is never one of the two, and while a pen is near every touch is a resting palm.
+    const pinchFingers = (e: TouchEvent) => {
+      const fingers = fingerTouches(e.touches);
+      return fingers.length === 2 && !penNear() ? fingers : null;
+    };
     const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 2) return;
+      const fingers = pinchFingers(e);
+      if (!fingers) return;
       const canvasEl = depsRef.current.canvasMainRef.current;
       if (!canvasEl || !canvasEl.contains(e.target as Node)) return;
       // Prevent the pointer events that would otherwise fire for these
@@ -124,8 +132,8 @@ export function useCanvasPinchZoom(deps: Deps): Api {
       e.preventDefault();
       isPinchingRef.current = true;
       endPinchGesture ??= beginCanvasGesture('zoom');
-      const t0 = e.touches[0]!;
-      const t1 = e.touches[1]!;
+      const t0 = fingers[0]!;
+      const t1 = fingers[1]!;
       pinch = {
         startDist: touchDist(t0, t1),
         startZoom: depsRef.current.viewport.get().zoom,
@@ -152,10 +160,13 @@ export function useCanvasPinchZoom(deps: Deps): Api {
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (!pinch || e.touches.length !== 2) return;
+      if (!pinch) return;
       e.preventDefault();
-      const t0 = e.touches[0]!;
-      const t1 = e.touches[1]!;
+      const fingers = pinchFingers(e);
+      // A pen came near, or a finger lifted: the view holds still.
+      if (!fingers) return;
+      const t0 = fingers[0]!;
+      const t1 = fingers[1]!;
       pendingPinch = {
         dist: touchDist(t0, t1),
         midX: (t0.clientX + t1.clientX) / 2,

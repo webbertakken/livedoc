@@ -608,7 +608,20 @@ author sets on an element on purpose still plays.
   another tool) discards it.
 - Only the pointer that started a stroke draws it; another finger landing
   meanwhile is a pinch or pan, never part of the stroke.
+- **A pen near the screen rejects the palm.** While a pen touches the screen
+  or hovers over it (from its first `pointerover` or press until it leaves
+  range, `pointerout` with nowhere to go, or is cancelled), a touch does
+  nothing: it does not pan, pinch, draw or select, and a finger pan or pinch
+  already running holds still. Fingers pan and zoom again once the pen is gone.
+  This holds on every tab, not only in Sketch mode.
+- **A pen is never a finger.** A browser that also reports the pen as a touch
+  (Chrome on Android, `touchType: 'stylus'`) never makes a pen and a finger
+  into a two-finger pinch: only fingers pinch.
+- **A pan follows only the pointer that started it.** A hovering pen, or a
+  second pointer, moving or lifting never moves or ends a pan it did not start.
+  Hovering never pans, zooms or moves the view.
 - Palm rejection beyond this is the browser's; no timing heuristics.
+  [`pen-palm.spec.ts`](../003-system-architecture/e2e-smoke.md) plays a tablet's pen and palm events through it.
 
 ## Eraser
 

@@ -3,6 +3,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { canvasGestureNow, resetCanvasGesturesForTests } from '@/lib/canvas-gesture';
+import { resetPenPresenceForTests, watchPenPresence } from '@/lib/pen-presence';
 import { useCanvasPanAndMarquee } from './useCanvasPanAndMarquee';
 
 // Held Space turns a canvas drag into a pan (docs/specs/008-canvas/canvas-and-palette.md). The pointerdown reads the
@@ -188,6 +189,8 @@ describe('useCanvasPanAndMarquee gestures', () => {
         startOffsetX: 0,
         startOffsetY: 0,
         movedRef: { current: false },
+        pointerId: 1,
+        pointerType: 'mouse',
       }),
     );
     expect(canvasGestureNow()).toBe('pan');
@@ -237,12 +240,16 @@ describe('useCanvasPanAndMarquee tap', () => {
           startOffsetX: 0,
           startOffsetY: 0,
           movedRef: { current: false },
+          pointerId: 1,
+          pointerType: 'mouse',
           ...(withTap ? { onTap } : {}),
         }),
       );
     const pointer = (type: string, x = 10) =>
       act(() => {
-        window.dispatchEvent(Object.assign(new Event(type), { clientX: x, clientY: 10 }));
+        window.dispatchEvent(
+          Object.assign(new Event(type), { clientX: x, clientY: 10, pointerId: 1 }),
+        );
       });
     return { begin, pointer, onDeselect, onTap };
   }
@@ -308,5 +315,117 @@ describe('useCanvasPanAndMarquee and a second finger', () => {
     });
     expect(deps.onSelectMarquee).not.toHaveBeenCalled();
     expect(deps.onDeselect).not.toHaveBeenCalled();
+  });
+});
+
+// docs/specs/023-draw-mode/draw-mode.md "Touch and pen input": a pan follows only the pointer that started it, and a
+// finger pan holds still while a pen is near.
+describe('useCanvasPanAndMarquee pan ownership', () => {
+  afterEach(resetPenPresenceForTests);
+
+  function panSetup(pointerType: string) {
+    const setViewportOffset = vi.fn();
+    const onDeselect = vi.fn();
+    const view = renderHook(() =>
+      useCanvasPanAndMarquee({
+        viewportZoom: 1,
+        setViewportOffset,
+        elements: [],
+        wrapperRef: { current: null },
+        onDeselect,
+        onSelectMarquee: vi.fn(),
+      }),
+    );
+    act(() =>
+      view.result.current.setPan({
+        startClientX: 100,
+        startClientY: 100,
+        startOffsetX: 0,
+        startOffsetY: 0,
+        movedRef: { current: false },
+        pointerId: 1,
+        pointerType,
+      }),
+    );
+    const pointer = (type: string, pointerId: number, x: number, extra: object = {}) =>
+      act(() => {
+        window.dispatchEvent(
+          Object.assign(new Event(type), { clientX: x, clientY: 100, pointerId, ...extra }),
+        );
+      });
+    return { view, pointer, setViewportOffset, onDeselect };
+  }
+
+  it('never moves with a hovering pen', () => {
+    const t = panSetup('touch');
+    t.pointer('pointermove', 9, 300, { pointerType: 'pen' });
+    t.pointer('pointerup', 1, 100);
+    expect(t.setViewportOffset).not.toHaveBeenCalled();
+  });
+
+  it('is not ended by another pointer lifting or cancelled', () => {
+    const t = panSetup('touch');
+    t.pointer('pointerup', 9, 100);
+    t.pointer('pointercancel', 9, 100);
+    expect(t.view.result.current.pan).not.toBeNull();
+    t.pointer('pointerup', 1, 100);
+    expect(t.view.result.current.pan).toBeNull();
+  });
+
+  it('ends when its own pointer is cancelled', () => {
+    const t = panSetup('touch');
+    t.pointer('pointercancel', 1, 100);
+    expect(t.view.result.current.pan).toBeNull();
+    expect(t.onDeselect).not.toHaveBeenCalled();
+  });
+
+  it('lands where its pointer was when the browser cancels it', () => {
+    const t = panSetup('touch');
+    t.pointer('pointermove', 1, 130);
+    t.pointer('pointercancel', 1, 130);
+    expect(t.setViewportOffset).toHaveBeenLastCalledWith({ x: 30, y: 0 });
+    expect(t.view.result.current.pan).toBeNull();
+  });
+
+  it('follows its own pointer', () => {
+    const t = panSetup('touch');
+    t.pointer('pointermove', 1, 140);
+    t.pointer('pointerup', 1, 140);
+    expect(t.setViewportOffset).toHaveBeenLastCalledWith({ x: 40, y: 0 });
+  });
+
+  it('holds a finger pan still while a pen is near, and the palm lifting deselects nothing', () => {
+    const stop = watchPenPresence(document);
+    const t = panSetup('touch');
+    act(() => {
+      document.body.dispatchEvent(
+        Object.assign(new Event('pointerover', { bubbles: true }), {
+          pointerType: 'pen',
+          pointerId: 9,
+        }),
+      );
+    });
+    t.pointer('pointermove', 1, 140);
+    t.pointer('pointerup', 1, 140);
+    expect(t.setViewportOffset).not.toHaveBeenCalled();
+    expect(t.onDeselect).not.toHaveBeenCalled();
+    stop();
+  });
+
+  it('lets a mouse pan on while a pen is near', () => {
+    const stop = watchPenPresence(document);
+    act(() => {
+      document.body.dispatchEvent(
+        Object.assign(new Event('pointerover', { bubbles: true }), {
+          pointerType: 'pen',
+          pointerId: 9,
+        }),
+      );
+    });
+    const t = panSetup('mouse');
+    t.pointer('pointermove', 1, 140);
+    t.pointer('pointerup', 1, 140);
+    expect(t.setViewportOffset).toHaveBeenLastCalledWith({ x: 40, y: 0 });
+    stop();
   });
 });

@@ -7,6 +7,7 @@ import {
   canvasGestureNow,
   resetCanvasGesturesForTests,
 } from '@/lib/canvas-gesture';
+import { resetPenPresenceForTests, watchPenPresence } from '@/lib/pen-presence';
 import { useCanvasPinchZoom } from './useCanvasPinchZoom';
 import { maximisePlanElement, releasePlanElement } from '@/hooks/plan/maximised-plan';
 import { getSheetZoom, setSheetZoom } from '@/hooks/sheets/sheet-zoom';
@@ -296,5 +297,102 @@ describe('useCanvasPinchZoom touch pinch', () => {
     expect(result.current.isPinchingRef.current).toBe(true);
     touch('touchend', []);
     expect(result.current.isPinchingRef.current).toBe(false);
+  });
+});
+
+// docs/specs/023-draw-mode/draw-mode.md "Touch and pen input": only fingers pinch. Chrome on Android also reports a pen
+// as a touch (`touchType: 'stylus'`), and a pen near the screen makes any touch a resting palm.
+describe('useCanvasPinchZoom with a pen', () => {
+  beforeEach(() => {
+    canvas.getBoundingClientRect = vi.fn(
+      () => ({ left: 0, top: 0, width: 400, height: 200 }) as DOMRect,
+    );
+  });
+  afterEach(() => resetPenPresenceForTests());
+
+  const typed = (type: string, points: [number, number, string][]) =>
+    act(() => {
+      const e = new Event(type, { bubbles: true, cancelable: true });
+      const touches = points.map(([clientX, clientY, touchType]) => ({
+        clientX,
+        clientY,
+        touchType,
+      }));
+      Object.defineProperty(e, 'touches', { value: touches });
+      canvas.dispatchEvent(e);
+    });
+
+  it('never pinches a pen and a palm', () => {
+    const { result } = setup();
+    typed('touchstart', [
+      [250, 100, 'direct'],
+      [350, 100, 'stylus'],
+    ]);
+    typed('touchmove', [
+      [250, 100, 'direct'],
+      [390, 140, 'stylus'],
+    ]);
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
+
+    expect(result.current.isPinchingRef.current).toBe(false);
+    expect(viewport.get()).toEqual({ zoom: 1, offset: { x: 0, y: 0 } });
+  });
+
+  it('pinches two fingers while a pen rests elsewhere off the screen', () => {
+    const { result } = setup();
+    typed('touchstart', [
+      [250, 100, 'direct'],
+      [350, 100, 'direct'],
+    ]);
+    expect(result.current.isPinchingRef.current).toBe(true);
+  });
+
+  it('never pinches two touches while a pen hovers', () => {
+    const stop = watchPenPresence(document);
+    act(() => {
+      document.body.dispatchEvent(
+        Object.assign(new Event('pointerover', { bubbles: true }), {
+          pointerType: 'pen',
+          pointerId: 9,
+        }),
+      );
+    });
+    const { result } = setup();
+    typed('touchstart', [
+      [250, 100, 'direct'],
+      [350, 100, 'direct'],
+    ]);
+
+    expect(result.current.isPinchingRef.current).toBe(false);
+    stop();
+  });
+
+  it('holds a pinch still once a pen comes near', () => {
+    const stop = watchPenPresence(document);
+    setup();
+    typed('touchstart', [
+      [250, 100, 'direct'],
+      [350, 100, 'direct'],
+    ]);
+    act(() => {
+      document.body.dispatchEvent(
+        Object.assign(new Event('pointerover', { bubbles: true }), {
+          pointerType: 'pen',
+          pointerId: 9,
+        }),
+      );
+    });
+    typed('touchmove', [
+      [200, 100, 'direct'],
+      [400, 100, 'direct'],
+    ]);
+    act(() => {
+      vi.advanceTimersToNextFrame();
+    });
+
+    expect(viewport.get().zoom).toBe(1);
+    stop();
   });
 });
