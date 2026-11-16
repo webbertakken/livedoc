@@ -83,6 +83,9 @@ person's own view (not shared, not saved with the board; off when the board open
   2026-11-15 with the Ask pill's placement: one home for asking and for what comes back).
   With no suggestion open the corner holds the pill alone.
   The [Review pill](board-review.md#the-panel) stands last in it.
+  It stands 64 px down, clear of the top line; where the toolbar strip reaches into the corner's band (a phone,
+  where the strip takes a row of its own under the top line), it starts below the strip and the room a palette tray
+  takes under it, so it never covers the strip or its message (`cornerTopPx`).
 - **The suggestions panel** is **collapsed by default** to a small button that says how many there are (default:
   collapsed again each time the board opens). Expanded, it lists every suggestion in timeline order (kind, words, reason, ✓ and ✕) and holds Show
   All Suggestions, Apply All and Dismiss All. Pointing at a row, or focusing it, brings its anchor and its spot into

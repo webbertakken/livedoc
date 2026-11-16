@@ -74,7 +74,8 @@ describe('ReviewCorner', () => {
     render(<ReviewCorner tabId={TAB} />);
     const corner = screen.getByTestId('review-corner');
     expect(corner.contains(pill())).toBe(true);
-    expect(corner.className).toContain('fixed right-3 top-16');
+    expect(corner.className).toContain('fixed right-3');
+    expect(corner.style.top).toBe('64px');
     expect(corner.className).toContain('rounded-full');
     expect(corner.querySelectorAll('button')).toHaveLength(1);
   });

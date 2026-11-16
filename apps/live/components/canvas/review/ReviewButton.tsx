@@ -4,6 +4,7 @@ import type { KeyboardEvent } from 'react';
 import { lucideListChecks } from '@livedoc/icons/lucide';
 import { lucideGlyph, Portal } from '@livedoc/ui';
 import { CORNER_PLACE, CORNER_SURFACE } from '@/components/canvas/corner';
+import { useCornerTop } from '@/components/canvas/useCornerTop';
 import { toggleReview } from '@/hooks/canvas/useReviewPanel';
 import { closeReview, useReviewOpen } from '@/lib/review-view';
 
@@ -50,12 +51,14 @@ export function focusReviewButton(): void {
  * the pill alone, where that corner stands.
  */
 export function ReviewCorner({ tabId }: { tabId: string }) {
+  const top = useCornerTop();
   return (
     <Portal>
       <div
         data-testid="review-corner"
         data-corner=""
         className={`${CORNER_PLACE} ${CORNER_SURFACE} flex items-center rounded-full p-0.5`}
+        style={{ top }}
       >
         <ReviewButton tabId={tabId} />
       </div>

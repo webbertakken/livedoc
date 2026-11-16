@@ -12,6 +12,7 @@ import {
 } from '@livedoc/ui';
 import { eventStormingNote } from '@livedoc/document';
 import { CORNER_PLACE, CORNER_SURFACE } from '@/components/canvas/corner';
+import { useCornerTop } from '@/components/canvas/useCornerTop';
 import { changeWords } from '@/lib/change-caption';
 import type { MergeRow, NamesRow } from '@/lib/suggested-changes';
 import { panelRowId, type PanelRow } from '@/lib/suggestion-rows';
@@ -200,6 +201,7 @@ export function SuggestionsPanel({
   // board over stands beside asking and what comes back.
   review?: ReactNode;
 }) {
+  const cornerTop = useCornerTop();
   const listId = useId();
   if (rows.length === 0 && !ask && !review) return null;
   // The list is gone when the last suggestion is, however it was left: the corner then holds the pill alone, and
@@ -228,7 +230,8 @@ export function SuggestionsPanel({
         data-testid="suggestions-panel"
         // What a card that opens under the corner measures itself against.
         data-corner=""
-        className={`${CORNER_PLACE} ${CORNER_SURFACE} flex max-h-[calc(100vh-10rem)] flex-col ${
+        style={{ top: cornerTop, maxHeight: `calc(100vh - ${cornerTop}px - 6rem)` }}
+        className={`${CORNER_PLACE} ${CORNER_SURFACE} flex flex-col ${
           listed ? 'w-[320px] rounded-xl' : 'rounded-full'
         }`}
       >
