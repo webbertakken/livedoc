@@ -13,8 +13,8 @@ import { REVIEW_MUTED, REVIEW_ROW, ReviewEmpty, RowAct } from './review-parts';
 // it for typing, the board previewing the new term as it is typed, and renames it where the list is narrowed to.
 // The keyboard never falls to the page when what held it is put away: leaving the field hands it to Rename Term,
 // letting a term go to the term, and a rename to the row standing where the renamed term stood.
-// The rings and the dimming are a highlight on the board: Escape pressed anywhere else, the board included, lets go
-// of the rename first and then the term, and the keyboard stays where it was (docs/specs/004-interface-design/escape.md).
+// The rings and the dimming are a highlight on the board (docs/specs/004-interface-design/escape.md): Escape pressed
+// anywhere else, the board included, lets go of the rename first and then the term, the keyboard staying where it was.
 
 /** The Review panel, whose own keys take an Escape pressed in it. */
 export const REVIEW_PANEL = '[data-review-panel]';
