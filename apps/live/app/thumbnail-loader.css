@@ -2,7 +2,7 @@
  * The document thumbnail loader (docs/specs/006-document/document-snapshots.md, ThumbnailLoader.tsx): the
  * placeholder sketch drawing itself while the snapshot is on its way. An
  * ambient indicator, so it loops (docs/specs/004-interface-design/motion.md); every part runs on the
- * same 5.4s cycle and the same per-card phase, and the percentages below
+ * same 5.4s cycle, entered at the same point, and the percentages below
  * are the storyboard:
  *
  *    0-16%  the first node traces
@@ -14,6 +14,11 @@
  *
  *   16-20%  a spinner fades in inside the first node, then turns on its
  *           own 0.9s loop until the cycle fades
+ *
+ * A loader starts still and draws only once DocumentThumbnail marks its box
+ * `data-drawing` (docs/specs/006-document/document-snapshots.md): until then
+ * no part runs an animation. It then enters the cycle at 84%, where the
+ * sketch is whole, so the still sketch fades out and the drawing begins.
  *
  * Each line is hidden until its trace starts: an undrawn line's round caps
  * would otherwise leave a dot where it begins.
@@ -30,43 +35,46 @@
   stroke-dashoffset: 0;
 }
 
-/* One shorthand per part, all on the same cycle and the same per-card
-   phase, so the parts stay in step with each other. */
+/* One shorthand per part, all on the same cycle and entered at the same point,
+   so the parts stay in step with each other. */
+.lvd-thumb-loader {
+  --lvd-thumb-entry: calc(5.4s * -0.84);
+}
 .lvd-thumb-cycle {
-  animation: lvd-thumb-cycle 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-phase, 0s) infinite;
+  animation: lvd-thumb-cycle 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-entry) infinite;
 }
 .lvd-thumb-a {
-  animation: lvd-thumb-draw-a 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-phase, 0s)
-    infinite;
+  animation: lvd-thumb-draw-a 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-entry) infinite;
 }
 .lvd-thumb-link {
-  animation: lvd-thumb-draw-link 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-phase, 0s)
-    infinite;
+  animation: lvd-thumb-draw-link 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-entry) infinite;
 }
 .lvd-thumb-head {
   transform-box: fill-box;
   transform-origin: left center;
-  animation: lvd-thumb-head 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-phase, 0s) infinite;
+  animation: lvd-thumb-head 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-entry) infinite;
 }
 .lvd-thumb-b {
-  animation: lvd-thumb-draw-b 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-phase, 0s)
-    infinite;
+  animation: lvd-thumb-draw-b 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-entry) infinite;
 }
 .lvd-thumb-c {
-  animation: lvd-thumb-draw-c 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-phase, 0s)
-    infinite;
+  animation: lvd-thumb-draw-c 5.4s cubic-bezier(0.65, 0, 0.35, 1) var(--lvd-thumb-entry) infinite;
 }
 
 /* The spinner in the first node. The group follows the cycle, so it only
    appears once that node has traced; the arc inside turns on its own quick
    loop, so it keeps spinning while the sketch draws, holds and fades. */
 .lvd-thumb-spinner {
-  animation: lvd-thumb-spinner 5.4s linear var(--lvd-thumb-phase, 0s) infinite;
+  animation: lvd-thumb-spinner 5.4s linear var(--lvd-thumb-entry) infinite;
 }
 .lvd-thumb-spin {
-  transform-box: fill-box;
-  transform-origin: center;
   animation: lvd-thumb-spin 0.9s linear infinite;
+}
+
+/* Still until it draws: the resting styles are the finished sketch, and a part with no animation is neither restyled
+   every frame nor a composited layer of its own. */
+[data-document-thumbnail]:not([data-drawing]) .lvd-thumb-loader * {
+  animation: none;
 }
 
 /* Away from the view (DocumentThumbnail marks its box `data-near` within 200px of it), a loader holds where it is:
@@ -85,7 +93,7 @@
 @supports (offset-path: path('M0 0')) {
   .lvd-thumb-dot {
     offset-rotate: 0deg;
-    animation: lvd-thumb-flow 5.4s ease-in-out var(--lvd-thumb-phase, 0s) infinite;
+    animation: lvd-thumb-flow 5.4s ease-in-out var(--lvd-thumb-entry) infinite;
   }
   .lvd-thumb-dot-top {
     offset-path: path('M22 20c8 0 10-11 18-11');
@@ -95,6 +103,10 @@
   }
 }
 
+/* The strokes fade in with stroke-opacity and the spinner's arc turns by its dash offset, never with opacity or a
+   transform: an element animating either becomes a composited layer of its own, and a screen of loaders held hundreds,
+   which the browser rebuilt every frame (docs/specs/016-platform/web-performance.md "Long lists"). On a single
+   stroke the two draw the same, and a dash running round a circle is the circle turning. */
 @keyframes lvd-thumb-spinner {
   0%,
   16% {
@@ -107,7 +119,7 @@
 }
 @keyframes lvd-thumb-spin {
   to {
-    transform: rotate(360deg);
+    stroke-dashoffset: -1;
   }
 }
 @keyframes lvd-thumb-cycle {
@@ -123,30 +135,30 @@
 @keyframes lvd-thumb-draw-a {
   0% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   0.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   16%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-draw-link {
   0%,
   14% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   14.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   34%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-head {
@@ -165,30 +177,30 @@
   0%,
   34% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   34.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   52%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-draw-c {
   0%,
   40% {
     stroke-dashoffset: 1;
-    opacity: 0;
+    stroke-opacity: 0;
   }
   40.5% {
-    opacity: 1;
+    stroke-opacity: 1;
   }
   58%,
   100% {
     stroke-dashoffset: 0;
-    opacity: 1;
+    stroke-opacity: 1;
   }
 }
 @keyframes lvd-thumb-flow {

@@ -121,17 +121,23 @@ document renders lazily.
   made its box ask for it again, which evicted another: a fetch loop with
   more than 200 previews mounted.
 - While the snapshot is on its way the box shows the **loader**: the
-  placeholder's three-node sketch drawing itself in the placeholder's own
-  slate, so it never reads as a real preview. On a 5.4s loop the first
-  node traces, then a small spinner appears and turns inside it, the
+  placeholder's three-node sketch in the placeholder's own slate, so it
+  never reads as a real preview. It starts as the **still sketch**, the
+  finished drawing with a spinner's arc in the first node, held still. Most
+  snapshots land within half a second and replace it without the loader
+  ever moving.
+- A snapshot slower than that sets the loader **drawing**: 500ms after its
+  box first comes within 200px of the view, plus a stagger of up to 400ms
+  derived from the document id so a loading grid ripples rather than
+  starting in step, the still sketch fades out and the 5.4s loop begins.
+  The first node traces, the spinner appears and turns inside it, the
   connectors grow and their arrowheads land, the other two nodes trace, a
-  dot runs down each connector, and the sketch fades to start over. Each
-  card starts at a point in the loop derived from its document id, so a
-  loading grid ripples rather than pulsing in step. Under reduced motion
-  it is the finished sketch, still. A loader more than 200px from the view
-  holds where it is in its loop, and moves on from there once its box comes
-  within 200px: nobody sees it in between, and a long list draws rows past
-  the view's edge.
+  dot runs down each connector, and the sketch fades to start over. A
+  snapshot that lands first means the drawing never starts.
+- Under reduced motion the loader is the still sketch throughout. A
+  drawing loader more than 200px from the view holds where it is in its
+  loop, and moves on from there once its box comes within 200px: nobody
+  sees it in between, and a long list draws rows past the view's edge.
 - Loader to snapshot is a **crossfade**, never a cut: the image stays
   hidden until the browser has decoded it, then fades and settles in
   (`duration-long`) while the loader fades out, and the box eases into the
