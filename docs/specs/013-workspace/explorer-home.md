@@ -320,7 +320,8 @@ The code cites each by its id.
 
 - **D65** Which migration number: 0063; 0061 and 0062 are taken by open branches (default).
 - **D66** How the server tells an open from any other tab read: The editor's first-tab read carries `X-Document-Open: 1`,
-  unless embedded; nothing else does (default).
+  unless embedded; nothing else does (default). The editor's document read carries it too and answers the first tab
+  itself ([API](../015-api/api.md)): the open is recorded once, by whichever read answers that tab.
 - **D67** Which day What Happened uses when no time zone is sent: UTC (default).
 - **D68** How many actions one What Happened read holds: 200, newest first; a capped read logs (default).
 - **D69** Whether a shared document names its team and folder: No: the owner's filing is theirs; both are null for `via: 'shared'`
