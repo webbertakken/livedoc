@@ -109,10 +109,7 @@ test('a first-time guest’s share link is read early, each read once', async ({
   await expect(page.locator('[data-element-id="b1"]')).toBeVisible();
 
   expect(seen.early).toEqual(
-    expect.arrayContaining([
-      '[early-reads] taken share',
-      '[early-reads] taken tab',
-    ]),
+    expect.arrayContaining(['[early-reads] taken share', '[early-reads] taken tab']),
   );
   expect(seen.count('POST /api/guest-id')).toBe(1);
   expect(seen.count(`GET /api/share/${code}`)).toBe(1);
