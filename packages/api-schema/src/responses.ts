@@ -6,6 +6,7 @@
 
 import type {
   LiveDoc,
+  ParticipantRecord,
   DocumentSummary,
   Folder,
   ShareLink,
@@ -17,6 +18,12 @@ import type { TeamRecentDocument } from './recent-diagrams';
 
 // GET / PUT /api/documents/:id, POST /api/documents (+ copy).
 export type DocumentResponse = { document: LiveDoc };
+// GET /api/documents/:id marked as the editor's open (X-Document-Open: 1): the tab it opens first and the reader's own
+// participant row ride along (docs/specs/015-api/api.md). Absent from an api that answers no more than the document.
+export type DocumentOpenResponse = DocumentResponse & {
+  openedTab?: TabRecord | null;
+  reader?: ParticipantRecord | null;
+};
 // GET /api/documents/:id/tabs/:tabId.
 export type TabResponse = { tab: TabRecord };
 // PUT /api/documents/:id/tabs/:tabId: the editor's save, answered without the content it sent.

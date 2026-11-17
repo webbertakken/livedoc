@@ -10,7 +10,7 @@ const { api, guest, offline, seed } = vi.hoisted(() => ({
   api: {
     apiLoadSelf: vi.fn(),
     apiSaveSelf: vi.fn(),
-    apiLoadDocument: vi.fn(),
+    apiOpenDocument: vi.fn(),
     apiLoadShared: vi.fn(),
     apiListShareLinks: vi.fn(),
   },
@@ -80,7 +80,7 @@ const flush = () => new Promise((r) => setTimeout(r, 0));
 beforeEach(() => {
   resetLoadProgressForTests();
   window.history.replaceState(null, '', '/document/doc-1');
-  api.apiLoadDocument.mockResolvedValue(LOCAL_DOC);
+  api.apiOpenDocument.mockResolvedValue({ document: LOCAL_DOC });
   api.apiLoadSelf.mockResolvedValue(GUEST);
   api.apiSaveSelf.mockResolvedValue(undefined);
   guest.ensureSignedGuestIdentity.mockResolvedValue({ id: 'guest-1', sig: 's' });
@@ -92,7 +92,7 @@ describe('useIdentityBootstrap early open', () => {
   it('opens a document in This Browser before auth settles, without the server', async () => {
     const { set, lists } = render({ authLoaded: false });
     await flush();
-    expect(api.apiLoadDocument).toHaveBeenCalledExactlyOnceWith('self', 'doc-1');
+    expect(api.apiOpenDocument).toHaveBeenCalledExactlyOnceWith('self', 'doc-1');
     expect(set.setHydrated).toHaveBeenCalledWith(true);
     expect(set.setIsOwner).toHaveBeenCalledWith(true);
     expect(set.setDocumentServerStored).toHaveBeenCalledWith(false);
@@ -108,7 +108,7 @@ describe('useIdentityBootstrap early open', () => {
     await flush();
     hook.rerender({ authLoaded: true });
     await flush();
-    expect(api.apiLoadDocument).toHaveBeenCalledOnce();
+    expect(api.apiOpenDocument).toHaveBeenCalledOnce();
     expect(set.setSelfParticipant).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'guest-1', key: 'collab' }),
     );
@@ -119,13 +119,13 @@ describe('useIdentityBootstrap early open', () => {
 
   it('waits for auth on a cloud document', async () => {
     offline.isOfflineId.mockResolvedValue(false);
-    api.apiLoadDocument.mockResolvedValue({ ...LOCAL_DOC, ownerId: 'guest-1' });
+    api.apiOpenDocument.mockResolvedValue({ document: { ...LOCAL_DOC, ownerId: 'guest-1' } });
     const { hook } = render({ authLoaded: false });
     await flush();
-    expect(api.apiLoadDocument).not.toHaveBeenCalled();
+    expect(api.apiOpenDocument).not.toHaveBeenCalled();
     hook.rerender({ authLoaded: true });
     await flush();
-    expect(api.apiLoadDocument).toHaveBeenCalledExactlyOnceWith('guest-1', 'doc-1');
+    expect(api.apiOpenDocument).toHaveBeenCalledExactlyOnceWith('guest-1', 'doc-1');
   });
 
   it('waits for auth on a share link', async () => {
@@ -133,13 +133,13 @@ describe('useIdentityBootstrap early open', () => {
     render({ authLoaded: false });
     await flush();
     expect(offline.isOfflineId).not.toHaveBeenCalled();
-    expect(api.apiLoadDocument).not.toHaveBeenCalled();
+    expect(api.apiOpenDocument).not.toHaveBeenCalled();
   });
 
   it('runs the ordinary load when auth has already answered', async () => {
     render({ authLoaded: true });
     await flush();
     expect(guest.ensureSignedGuestIdentity).toHaveBeenCalled();
-    expect(api.apiLoadDocument).toHaveBeenCalledExactlyOnceWith('guest-1', 'doc-1');
+    expect(api.apiOpenDocument).toHaveBeenCalledExactlyOnceWith('guest-1', 'doc-1');
   });
 });

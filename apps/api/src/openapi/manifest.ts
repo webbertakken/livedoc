@@ -392,7 +392,24 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     auth: 'guest-or-session',
     tokenUsable: true,
     query: DOCUMENT_VIEW_QUERY,
-    responseSchema: wrap('document', 'Document'),
+    // The editor's open (`X-Document-Open: 1`) carries the tab it opens first and the reader's own row too.
+    responseSchema: {
+      type: 'object',
+      properties: {
+        document: ref('Document'),
+        openedTab: {
+          description:
+            'With `X-Document-Open: 1`: the tab the reader opens first, as the tab read answers it; the open is recorded.',
+          oneOf: [ref('TabRecord'), { type: 'null' }],
+        },
+        reader: {
+          description:
+            "With `X-Document-Open: 1`: the caller's own participant row, null before they have one.",
+          oneOf: [ref('ParticipantRecord'), { type: 'null' }],
+        },
+      },
+      required: ['document'],
+    },
     textResponse: { description: 'With `view=overview`: the document and one line per tab.' },
     statuses: [200, 400, 401, 404, 410],
   },

@@ -16,9 +16,15 @@ import { documentIdFromPath } from '@/lib/legacy-editor-path';
 import { isOfflineId } from '@/lib/offline/offline-ids';
 import { firstTabToLoad } from '@/lib/tab-scope';
 
-// What the address opened, as the editor reads it: the document, the one tab a scoped link opens, and the share
-// code the tab read presents (null for the document's owner).
-type Opened = { document: LiveDoc; scope: string | null; tabShareCode: string | null };
+// What the address opened, as the editor reads it: the document, the one tab a scoped link opens, the share code the
+// tab read presents (null for the document's owner), and whether the read already carried the tab it opens first (a
+// document's open read: docs/specs/016-platform/web-performance.md "The open is one read").
+type Opened = {
+  document: LiveDoc;
+  scope: string | null;
+  tabShareCode: string | null;
+  carriedTab: boolean;
+};
 
 export async function askEarlyDocumentReads(input: {
   // The account the settled session names, or null for a guest.
@@ -35,14 +41,13 @@ export async function askEarlyDocumentReads(input: {
   try {
     // The editor's own mint: concurrent callers share one, and the id it lands in storage is the one the editor reads.
     const selfId = input.accountId ?? (await ensureSignedGuestIdentity()).id;
-    // A guest id the api minted for this page has no row yet: the editor writes it, never reads it first.
-    if (!guestMintedForThisPage(selfId)) {
-      const participant = await participantRead(selfId);
-      void askEarly('participant', participant.url, participant.headers);
-    }
     const opened = shareCode ? await openShared(shareCode, selfId) : await openOwn(id!, selfId);
     if (!opened) return;
-    const { document, scope, tabShareCode } = opened;
+    const { document, scope, tabShareCode, carriedTab } = opened;
+    if (carriedTab) {
+      debugLog('[early-reads] done reason=open-read');
+      return;
+    }
     const firstId = firstTabToLoad(document.tabs, scope);
     if (!firstId || !document.tabs.some((t) => t.id === firstId)) {
       debugLog('[early-reads] done reason=no-tab');
@@ -58,6 +63,11 @@ export async function askEarlyDocumentReads(input: {
 
 // A share link, with the cached grant the editor would send (docs/specs/013-workspace/share-password.md).
 async function openShared(code: string, selfId: string): Promise<Opened | null> {
+  // A guest id the api minted for this page has no row yet: the editor writes it, never reads it first.
+  if (!guestMintedForThisPage(selfId)) {
+    const participant = await participantRead(selfId);
+    void askEarly('participant', participant.url, participant.headers);
+  }
   const grant = readCachedShareGrant(code);
   if (grant) setSessionSharePassword(grant);
   const share = await shareRead(code, selfId);
@@ -74,18 +84,26 @@ async function openShared(code: string, selfId: string): Promise<Opened | null> 
     document,
     scope: typeof body!.tabId === 'string' ? body!.tabId : null,
     tabShareCode: sessionShareCode,
+    carriedTab: false,
   };
 }
 
-// A document by its id, unless it lives in This Browser: then the server is asked nothing about it.
+// A document by its id, as the editor's open read (the reader's own row rides in it), unless it lives in This Browser:
+// then the server is asked nothing about it.
 async function openOwn(id: string, selfId: string): Promise<Opened | null> {
   if (await isOfflineId(id)) {
     debugLog('[early-reads] done reason=this-browser');
     return null;
   }
-  const read = await documentRead(selfId, id);
-  const document = (await answerOf(askEarly('document', read.url, read.headers)))?.document;
-  return document ? { document: document as LiveDoc, scope: null, tabShareCode: null } : null;
+  const read = await documentRead(selfId, id, { open: true });
+  const body = await answerOf(askEarly('document', read.url, read.headers));
+  if (!body?.document) return null;
+  return {
+    document: body.document as LiveDoc,
+    scope: null,
+    tabShareCode: null,
+    carriedTab: 'openedTab' in body,
+  };
 }
 
 // The body of an early answer the server granted; null when it was not asked, failed, or was refused.

@@ -10,6 +10,7 @@ const { api, identity, seed } = vi.hoisted(() => ({
   api: {
     apiLoadSelf: vi.fn(),
     apiSaveSelf: vi.fn(),
+    apiOpenDocument: vi.fn(),
     apiLoadDocument: vi.fn(),
     apiLoadShared: vi.fn(),
     apiListShareLinks: vi.fn(),
@@ -43,7 +44,7 @@ import { resetLoadProgressForTests } from '@/lib/load-progress';
 
 type Setters = Record<string, ReturnType<typeof vi.fn>>;
 
-function render(accountId: string | null = null) {
+function render(accountId: string | null = null, embed = false) {
   const fns: Setters = {};
   const set = new Proxy(fns, {
     get: (t, k: string) => (t[k] ??= vi.fn()),
@@ -55,7 +56,7 @@ function render(accountId: string | null = null) {
       hydrated: false,
       accountId,
       accountDisplayName: accountId ? 'Ann' : null,
-      embed: false,
+      embed,
       workbench: null,
       activeId: 't1',
       selfParticipant: { id: 'self', name: 'x', color: '#000', status: 'online' },
@@ -91,7 +92,7 @@ beforeEach(() => {
   resetLoadProgressForTests();
   api.apiSaveSelf.mockResolvedValue(undefined);
   api.apiListShareLinks.mockResolvedValue({ links: [], passwordSet: false });
-  api.apiLoadDocument.mockResolvedValue(DOC);
+  api.apiOpenDocument.mockResolvedValue({ document: DOC });
 });
 
 afterEach(() => {
@@ -107,7 +108,7 @@ describe('useIdentityBootstrap open path', () => {
     render();
     await vi.advanceTimersByTimeAsync(0);
     expect(api.apiLoadSelf).toHaveBeenCalledWith('guest-1');
-    expect(api.apiLoadDocument).toHaveBeenCalledWith('guest-1', 'doc-1');
+    expect(api.apiOpenDocument).toHaveBeenCalledWith('guest-1', 'doc-1');
   });
 
   it('asks for the document as the account when signed in', async () => {
@@ -115,7 +116,7 @@ describe('useIdentityBootstrap open path', () => {
     heldSelf();
     render('user_1');
     await vi.advanceTimersByTimeAsync(0);
-    expect(api.apiLoadDocument).toHaveBeenCalledWith('user_1', 'doc-1');
+    expect(api.apiOpenDocument).toHaveBeenCalledWith('user_1', 'doc-1');
   });
 
   it('follows a share link while the participant row is still on its way', async () => {
@@ -133,7 +134,7 @@ describe('useIdentityBootstrap open path', () => {
     api.apiSaveSelf.mockReturnValue(new Promise(() => {}));
     render();
     await vi.advanceTimersByTimeAsync(0);
-    expect(api.apiLoadDocument).toHaveBeenCalledWith('guest-1', 'doc-1');
+    expect(api.apiOpenDocument).toHaveBeenCalledWith('guest-1', 'doc-1');
   });
 
   it('shows the editor only once the participant has answered, as that participant', async () => {
@@ -159,6 +160,28 @@ describe('useIdentityBootstrap open path', () => {
     api.apiLoadSelf.mockResolvedValue(GUEST);
     render();
     await vi.advanceTimersByTimeAsync(0);
-    expect(api.apiLoadDocument).toHaveBeenCalledTimes(1);
+    expect(api.apiOpenDocument).toHaveBeenCalledTimes(1);
+  });
+
+  // docs/specs/016-platform/web-performance.md "The open is one read".
+  it('seeds the tab the open read carried', async () => {
+    window.history.replaceState(null, '', '/document/doc-1');
+    api.apiLoadSelf.mockResolvedValue(GUEST);
+    const opened = { tab: { id: 't1', name: 'One', elements: [] }, rev: 2 };
+    api.apiOpenDocument.mockResolvedValue({ document: DOC, opened });
+    render();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(seed).toHaveBeenCalledWith('guest-1', DOC, null, null, opened);
+  });
+
+  it('reads an embed document plainly, as its read is not an open', async () => {
+    window.history.replaceState(null, '', '/document/doc-1');
+    api.apiLoadSelf.mockResolvedValue(GUEST);
+    api.apiLoadDocument.mockResolvedValue(DOC);
+    render(null, true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.apiLoadDocument).toHaveBeenCalledWith('guest-1', 'doc-1');
+    expect(api.apiOpenDocument).not.toHaveBeenCalled();
+    expect(seed).toHaveBeenCalledWith('guest-1', DOC, null, null, undefined);
   });
 });

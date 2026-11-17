@@ -14,6 +14,7 @@ import {
 import type {
   LiveDoc,
   DocumentListResponse,
+  DocumentOpenResponse,
   DocumentResponse,
   DocumentSummary,
   SharedWithItem,
@@ -21,6 +22,7 @@ import type {
 } from '@livedoc/api-schema';
 import type { Appearance, Tab } from '@livedoc/document';
 import { dedupeInFlight } from '../dedupe';
+import type { Participant } from '../identity';
 import {
   isOfflineId,
   offlineListDocuments,
@@ -40,6 +42,8 @@ import {
   apiFetch,
   saveTimeoutSignal,
 } from './core';
+import { expectReaderFromOpen } from './self';
+import { clientTabOf } from './tabs';
 import { documentRead } from './open-path-requests';
 import type { RoomTicketResponse } from '@livedoc/api-schema';
 
@@ -89,6 +93,54 @@ export const apiLoadDocument = dedupeInFlight(
   _apiLoadDocument,
   (ownerId, id) => `${ownerId}|${id}`,
 );
+
+// The editor opening a document (docs/specs/016-platform/web-performance.md "The open is one read"). `opened` is the
+// tab it opens first and `reader` its own participant row, as the api carried them, null when there is none;
+// undefined where the answer carries neither (an api from before, a document in This Browser), and the editor reads
+// them as ever.
+export type OpenedDocument = {
+  document: LiveDoc;
+  opened?: { tab: Tab; rev: number } | null;
+  reader?: Participant | null;
+};
+
+async function _apiOpenDocument(ownerId: string, id: string): Promise<OpenedDocument | null> {
+  if (await isOfflineId(id)) {
+    const document = await offlineLoadDocument(id);
+    return document ? { document } : null;
+  }
+  const { url, headers } = await documentRead(ownerId, id, { open: true });
+  const res = await apiFetch(url, { headers });
+  const body = await expectOkOrNull<DocumentOpenResponse>(res, 'load');
+  if (!body) return null;
+  const { openedTab, reader } = body;
+  return {
+    document: body.document,
+    ...(openedTab === undefined ? {} : { opened: openedTab ? clientTabOf(openedTab) : null }),
+    ...(reader === undefined
+      ? {}
+      : {
+          reader: reader
+            ? { id: reader.id, name: reader.name, color: reader.color, status: 'online' as const }
+            : null,
+        }),
+  };
+}
+const openDocumentOnce = dedupeInFlight(_apiOpenDocument, (ownerId, id) => `${ownerId}|${id}`);
+
+/** The editor's open of a document: the document, the tab it opens first and the reader's own row, in one read. */
+export function apiOpenDocument(ownerId: string, id: string): Promise<OpenedDocument | null> {
+  const opening = openDocumentOnce(ownerId, id);
+  // The participant read the editor makes beside this one waits for the row it carries.
+  expectReaderFromOpen(
+    ownerId,
+    opening.then(
+      (opened) => opened?.reader,
+      () => undefined,
+    ),
+  );
+  return opening;
+}
 
 // How many of the document's tabs are also in other documents, and how many
 // documents (docs/specs/006-document/tab-document-many-to-many.md, "Shared-tab

@@ -4,7 +4,6 @@
 // under a document id lives here.
 
 import { broadcastShareOp } from '../room-client';
-import { redactCommentAuthorIds } from '../comments';
 import {
   deleteFormLinksForTab,
   deleteShareLinksForTab,
@@ -12,13 +11,11 @@ import {
   getDocument,
   getDocumentForSave,
   getDocumentMeta,
-  getParticipant,
-  getTab,
 } from '../db';
 import { conflict, forbidden, json, noContent, notFound } from '../responses';
-import { recordVisitorOpened, retractTabComments } from '../timeline';
-import { DOCUMENT_OPEN_HEADER, readDocumentOpen, tabEtag } from '@livedoc/api-schema';
-import { recordDocumentOpen } from '../home/record-open';
+import { retractTabComments } from '../timeline';
+import { tabEtag } from '@livedoc/api-schema';
+import { grantedTab, recordTabRead } from './granted-tab';
 import { handleDocumentShareRoutes } from './document-share-routes';
 import { handleQaBoardRoute } from './qa-board-routes';
 import { handleFormLinkRoutes } from './form-link-routes';
@@ -148,52 +145,13 @@ export async function handleDocumentSubresources(
       if (!grant || (grant.tabScope !== null && grant.tabScope !== tabId)) {
         return deniedOnTab(ctx, existing);
       }
-      const tab = await getTab(env, id, tabId);
-      if (!tab) return notFound();
-      // Blank other people's comment author ids before handing the tab
-      // to a non-owner: a visitor should only ever see their OWN author
-      // id (so they can delete-own), never another participant's owner
-      // id. The document owner sees everything (viewerId === ownerId is a
-      // no-op). Same anti-claim posture as redactOwner on the document.
-      const safe =
-        owner === existing.ownerId
-          ? tab
-          : { ...tab, elements: redactCommentAuthorIds(tab.elements, owner) };
+      const safe = await grantedTab(ctx, existing, tabId, owner);
+      if (!safe) return notFound();
       if (view && document) return answerTabView(ctx, view, document, safe, owner);
-      // docs/specs/013-workspace/timeline.md §4.3: somebody arrived through a SHARE LINK and opened this.
-      // The tab read is the honest signal for "opened" — the document GET is hit
-      // by link previews and polls, whereas fetching tab content means a person
-      // is looking at the canvas. Coalesced per visitor per day inside the
-      // emit, so a stranger with a link can't flood the owner's feed by
-      // refreshing.
-      //
-      // Gated on a share code being PRESENT, not merely on the caller not being
-      // the owner. The read gate also admits any joined member of the document's
-      // team (docs/specs/013-workspace/team-shared-documents.md), who presents no code — so the looser test reported
-      // teammates browsing their own library as visitors. The bubble reads
-      // "opened by a visitor · Someone with the share link" and files under the
-      // sharing filter, so an owner saw that for a document they had never
-      // shared a link for, once per teammate per day.
-      //
-      // A visitor is someone the grant admitted through a link, never merely a request carrying a share header:
-      // a teammate following a share link is still a teammate.
-      if (owner !== existing.ownerId && grant.shareCode !== null) {
-        ctx.waitUntil?.(
-          getParticipant(env, owner).then((p) =>
-            recordVisitorOpened(env, existing, owner, p?.name ?? null),
-          ),
-        );
-      }
-      // docs/specs/013-workspace/explorer-home.md "Opens": the reader's own open, for their Home.
-      // Only when the editor declares this read an open: a resync, a duplicate, Take Offline, the
-      // Drive mirror and an embed read the same tab and are not opens. The read gate above has
-      // already admitted the reader, and the open is theirs whoever they are.
-      if (readDocumentOpen(request.headers.get(DOCUMENT_OPEN_HEADER))) {
-        ctx.waitUntil?.(recordDocumentOpen(env, existing, owner, Date.now()));
-      }
+      recordTabRead(ctx, existing, grant, owner);
       // The revision as a weak ETag too (docs/specs/024-agents/agent-changesets.md "The tab
       // revision", CS5): what an agent read, for its changeset base.
-      return json({ tab: safe }, { headers: { ETag: tabEtag(tab.rev) } });
+      return json({ tab: safe }, { headers: { ETag: tabEtag(safe.rev) } });
     }
 
     const existing = await getDocument(env, id);

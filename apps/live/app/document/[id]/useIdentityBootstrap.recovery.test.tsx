@@ -9,7 +9,7 @@ const { api, identity, seed } = vi.hoisted(() => ({
   api: {
     apiLoadSelf: vi.fn(),
     apiSaveSelf: vi.fn(),
-    apiLoadDocument: vi.fn(),
+    apiOpenDocument: vi.fn(),
     apiLoadShared: vi.fn(),
     apiListShareLinks: vi.fn(),
   },
@@ -109,7 +109,7 @@ afterEach(() => {
 
 describe('useIdentityBootstrap recovery', () => {
   it('shows the load-error screen when the document load never answers', async () => {
-    api.apiLoadDocument.mockReturnValue(new Promise(() => {}));
+    api.apiOpenDocument.mockReturnValue(new Promise(() => {}));
     const s = render();
     await vi.advanceTimersByTimeAsync(LOAD_TIMEOUT_MS);
     expect(s.setLoadError).toHaveBeenCalledWith(true);
@@ -130,18 +130,18 @@ describe('useIdentityBootstrap recovery', () => {
 
   it('replaces the load-error screen with the editor when the load lands late', async () => {
     let resolve!: (d: unknown) => void;
-    api.apiLoadDocument.mockReturnValue(new Promise((r) => (resolve = r)));
+    api.apiOpenDocument.mockReturnValue(new Promise((r) => (resolve = r)));
     const s = render();
     await vi.advanceTimersByTimeAsync(LOAD_TIMEOUT_MS);
     expect(s.setLoadError).toHaveBeenLastCalledWith(true);
-    resolve(DOC);
+    resolve({ document: DOC });
     await vi.advanceTimersByTimeAsync(0);
     expect(s.setLoadError).toHaveBeenLastCalledWith(false);
     expect(s.setHydrated).toHaveBeenCalledWith(true);
   });
 
   it('leaves a load that finishes in time alone', async () => {
-    api.apiLoadDocument.mockResolvedValue(DOC);
+    api.apiOpenDocument.mockResolvedValue({ document: DOC });
     const s = render();
     await vi.advanceTimersByTimeAsync(LOAD_TIMEOUT_MS * 2);
     expect(s.setLoadError).not.toHaveBeenCalled();
@@ -153,9 +153,9 @@ describe('useIdentityBootstrap recovery', () => {
   it('drops the writes of a load superseded by a later run', async () => {
     seed.mockClear();
     let resolveFirst!: (d: unknown) => void;
-    api.apiLoadDocument
+    api.apiOpenDocument
       .mockReturnValueOnce(new Promise((r) => (resolveFirst = r)))
-      .mockResolvedValueOnce(DOC);
+      .mockResolvedValueOnce({ document: DOC });
     const fns: Setters = {};
     const set = new Proxy(fns, { get: (t, k: string) => (t[k] ??= vi.fn()) });
     const props = (authLoaded: boolean) => ({
@@ -191,7 +191,7 @@ describe('useIdentityBootstrap recovery', () => {
     hook.rerender({ authLoaded: true });
     await vi.advanceTimersByTimeAsync(0);
     expect(seed).toHaveBeenCalledTimes(1);
-    resolveFirst({ ...DOC, name: 'stale' });
+    resolveFirst({ document: { ...DOC, name: 'stale' } });
     await vi.advanceTimersByTimeAsync(0);
     expect(seed).toHaveBeenCalledTimes(1);
     expect(fns['setHydrated']).toHaveBeenCalledTimes(1);
@@ -207,7 +207,7 @@ describe('useIdentityBootstrap DocumentLoad timing', () => {
   });
 
   it('ends after paint for a load that opened the document', async () => {
-    api.apiLoadDocument.mockResolvedValue(DOC);
+    api.apiOpenDocument.mockResolvedValue({ document: DOC });
     render();
     await vi.advanceTimersByTimeAsync(0);
     expect(timingLib.startEditorTiming).toHaveBeenCalledWith('DocumentLoad', { from: 0 });
@@ -216,7 +216,7 @@ describe('useIdentityBootstrap DocumentLoad timing', () => {
   });
 
   it('is dropped for a document that is not there', async () => {
-    api.apiLoadDocument.mockResolvedValue(null);
+    api.apiOpenDocument.mockResolvedValue(null);
     render();
     await vi.advanceTimersByTimeAsync(0);
     expect(timing.endAfterPaint).not.toHaveBeenCalled();
@@ -235,7 +235,7 @@ describe('useIdentityBootstrap DocumentLoad timing', () => {
   });
 
   it('is not timed on a password retry', async () => {
-    api.apiLoadDocument.mockResolvedValue(DOC);
+    api.apiOpenDocument.mockResolvedValue({ document: DOC });
     render(1);
     await vi.advanceTimersByTimeAsync(0);
     expect(timingLib.startEditorTiming).not.toHaveBeenCalled();

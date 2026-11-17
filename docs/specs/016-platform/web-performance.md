@@ -309,11 +309,17 @@ as a different person than the one the session settles, even briefly
   session token beside the session read; the read alone still decides who is signed in, and a read
   that answers signed out drops the token. A guest (hint `0` or none) asks for no token.
 - **The reader's row and the document together.** Once the reader's id is known (the account's, or
-  the guest's signed id), the document, or the share link it follows, is asked for at once, beside
-  the participant row, never after it. The editor still opens only once both have answered, as the
-  participant they resolved.
-- **The order that remains:** the session (and token), then the participant row and the document,
-  then the first tab: three round trips for a guest, a signed-in person and a share link alike.
+  the guest's signed id), the document, or the share link it follows, is asked for at once, never after the
+  participant row: a share link's row is asked beside it, a document's rides in its open read. The editor still
+  opens only once both have answered, as the participant they resolved.
+- **The open is one read.** The document read the editor makes as an open (`X-Document-Open: 1`) answers the tab it
+  opens first and the reader's own participant row with the document ([API](../015-api/api.md)), so a document opened
+  by its address waits on the session, then one read. Each read on that chain is a toss for a cold api isolate (about
+  300 ms on docs.nu, about half of reads at its traffic), so the chain's length, not the bytes, is what an open pays.
+  The tab and the row cost the room no more D1 round trips: the tab is the room's own storage, the row a subquery of
+  the document's. An answer without them (an api from before) is met by the separate reads, as before.
+- **The order that remains:** a document by its address: the session (and token), then the open read. A share link:
+  the session, then the participant row beside the share read, then the first tab, answered by the room behind it.
 - **A guest id this page minted has no row to read.** The api mints a guest id fresh (`POST /api/guest-id`), so its
   participant row cannot exist yet: the row is written, never asked for first, by the editor, by `/new` and by the
   early reads alike. A first visit pays the mint and the write, not a read between them.
@@ -330,9 +336,9 @@ as a different person than the one the session settles, even briefly
   React (`lib/first-session.ts`): a state update at the root waits for every part of the tree still hydrating,
   which at a document's address is the editor, so the session that answered at 2.6 s reached the page at 3.7 s,
   as the editor's code ran (4 Mbit/s, 100 ms, CPU 4x). It asks what the editor would, in the same order, as the same
-  person, with the same headers: the guest's signed id (minted once, the editor's own mint), then the participant
-  row beside the document or the share link (with the cached grant the editor would send), then the tab the
-  editor would open first (`firstTabToLoad`), marked as an open. Its code is fetched by a dynamic import as the
+  person, with the same headers: the guest's signed id (minted once, the editor's own mint), then a document's open
+  read, or a share link's participant row and share read (with the cached grant the editor would send) and then the
+  tab the editor would open first (`firstTabToLoad`), marked as an open. Its code is fetched by a dynamic import as the
   page starts, so no other route carries it.
 - **The editor takes what was asked early.** Each early answer waits, unread, in a one-shot pool
   (`lib/api/early-reads.ts`) keyed by its address and every header it was asked with; the editor's own request
@@ -414,8 +420,8 @@ seen on the document).
   the card, sheet, comment and catalogue routes and a document's Timeline read its gate row (`getDocumentMeta`);
   the card routes take the card types from the room. The whole document (its owner's name, its tabs) is read
   only where the answer carries it: opening the document and a document view.
-- Opening a document is one D1 round trip: its row carries its owner's name and colour, each a key seek on the
-  participant, rather than a second read after the row (`document-request-round-trips.test.ts`).
+- Opening a document is one D1 round trip: its row carries its owner's name and colour, and on an open the
+  reader's own row, each a key seek on the participant, rather than a second read after the row (`document-request-round-trips.test.ts`).
 - A share-link visitor's open is recorded from the grant the read already resolved, not a second resolve.
 - Reads that do not depend on each other go to D1 together: a team request's team and the caller's membership,
   a team's members and its invite link, a Timeline page and its scope's state.

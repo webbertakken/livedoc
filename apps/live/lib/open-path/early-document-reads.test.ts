@@ -145,25 +145,33 @@ describe('askEarlyDocumentReads', () => {
     }
   });
 
-  it('asks an owner’s document and its first tab with their session token, never the guest header', async () => {
+  // "The open is one read": the document's open read carries its first tab and the reader's own row.
+  it('asks an owner’s document as one open read, with their session token, never the guest header', async () => {
     setTokenProvider(async () => 'jwt-1');
     serve({
-      '/api/documents/d1': json({ document: doc('acct_1') }),
-      '/api/documents/d1/tabs/t1': json({ tab: { id: 't1' } }),
+      '/api/documents/d1': json({ document: doc('acct_1'), openedTab: { id: 't1' }, reader: null }),
     });
 
     await askEarlyDocumentReads({ accountId: 'acct_1', href: `${ORIGIN}/document/d1#t=t2` });
 
     expect(guest.ensureSignedGuestIdentity).not.toHaveBeenCalled();
-    expect(asked.map((a) => a.path)).toEqual([
-      '/api/participants/acct_1',
-      '/api/documents/d1',
-      '/api/documents/d1/tabs/t1',
-    ]);
+    expect(asked.map((a) => a.path)).toEqual(['/api/documents/d1']);
+    expect(asked[0]!.headers['x-document-open']).toBe('1');
     expect(asked.every((a) => a.headers.authorization === 'Bearer jwt-1')).toBe(true);
     expect(asked.some((a) => 'x-owner-id' in a.headers)).toBe(false);
-    expect(await editorWouldTake(documentRead('acct_1', 'd1'))).toBe(true);
-    expect(await editorWouldTake(tabRead('acct_1', 'd1', 't1', null, { open: true }))).toBe(true);
+    expect(await editorWouldTake(documentRead('acct_1', 'd1', { open: true }))).toBe(true);
+  });
+
+  it('asks the first tab itself when the open read carries none (an api from before)', async () => {
+    serve({
+      '/api/documents/d1': json({ document: doc('g1') }),
+      '/api/documents/d1/tabs/t1': json({ tab: { id: 't1' } }),
+    });
+
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+
+    expect(asked.map((a) => a.path)).toEqual(['/api/documents/d1', '/api/documents/d1/tabs/t1']);
+    expect(await editorWouldTake(tabRead('g1', 'd1', 't1', null, { open: true }))).toBe(true);
   });
 
   it('asks the server nothing about a document in This Browser', async () => {
@@ -172,7 +180,7 @@ describe('askEarlyDocumentReads', () => {
 
     await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/local-1` });
 
-    expect(asked.map((a) => a.path)).toEqual(['/api/participants/g1']);
+    expect(asked).toEqual([]);
   });
 
   it('asks nothing at an address that names no document', async () => {
@@ -189,7 +197,7 @@ describe('askEarlyDocumentReads', () => {
 
     await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
 
-    expect(asked.map((a) => a.path)).toEqual(['/api/participants/g1', '/api/documents/d1']);
+    expect(asked.map((a) => a.path)).toEqual(['/api/documents/d1']);
   });
 
   it('stops, and asks nothing more, once the editor has asked the link itself', async () => {

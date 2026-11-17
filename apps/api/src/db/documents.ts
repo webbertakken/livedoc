@@ -4,7 +4,7 @@
 
 import { readItemTypeCatalogue, type ItemTypeCatalogue } from '@livedoc/items';
 import { APPEARANCES, type Appearance } from '@livedoc/document';
-import type { DocumentDTO, DocumentEnv, DocumentSummary, Env } from '../types';
+import type { DocumentDTO, DocumentEnv, DocumentSummary, Env, ParticipantDTO } from '../types';
 import { imageGrantCopyStatements, imageGrantOwnerChangeStatement } from './image-grants';
 import { documentRemovalStatements } from './document-removal';
 import { purgeRooms } from '../room-purge-client';
@@ -188,6 +188,29 @@ export async function getDocument(env: Env, id: string): Promise<DocumentDTO | n
     .bind(id)
     .first<OpenedDocumentRow>();
   return row ? rowToDocument(env, row) : null;
+}
+
+// The reader's own participant row, as one JSON value: a key seek riding the document's query.
+const READER_COL =
+  "(SELECT json_object('id', id, 'name', name, 'color', color, 'createdAt', created_at, 'pictureUrl', picture_url) " +
+  'FROM participants WHERE participants.id = ?) AS reader';
+
+// The editor's open of a document (docs/specs/016-platform/web-performance.md "The open is one read"): the
+// document's row with its owner's display, and the reader's own participant row, in one D1 round trip. `reader` is
+// null when they have no row yet.
+export async function getDocumentForOpen(
+  env: Env,
+  id: string,
+  readerId: string,
+): Promise<{ document: DocumentDTO; reader: ParticipantDTO | null } | null> {
+  const row = await env.DB.prepare(
+    `SELECT ${DOCUMENT_COLS}, ${OWNER_COLS}, ${READER_COL} FROM documents WHERE id = ? AND trashed_at IS NULL`,
+  )
+    .bind(readerId, id)
+    .first<OpenedDocumentRow & { reader: string | null }>();
+  if (!row) return null;
+  const reader = row.reader ? (JSON.parse(row.reader) as ParticipantDTO) : null;
+  return { document: await rowToDocument(env, row), reader };
 }
 
 export function rowToSummary(row: SummaryRow): DocumentSummary {
