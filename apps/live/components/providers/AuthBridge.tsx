@@ -29,6 +29,7 @@ import { resolveProfilePicture } from '@/lib/account-avatar';
 import { apiDeleteAccount } from '@/lib/api/self';
 import { API_BASE } from '@/lib/api/base';
 import { publishSignInAvailability } from '@/lib/auth-config';
+import { sessionReadFetch, WORKBENCH_ROUTE } from '@/lib/boot-session-read';
 import { publishFirstSession } from '@/lib/first-session';
 import { debugLog } from '@/lib/debug-log';
 import { forgetRecentDiagrams } from '@/lib/recent-diagrams-snapshot';
@@ -43,8 +44,7 @@ import {
 // The workbench page (docs/specs/013-workspace/workbench-embeds.md) is
 // signed in by its workbench session, never by a browser session: the bridge stands down there and the state holds
 // DEFERRED_AUTH_PENDING, so nothing above the page reads as a settled guest. WorkbenchAuthBridge publishes the
-// session to the editor beneath.
-const WORKBENCH_ROUTE = '/embed/workbench';
+// session to the editor beneath. The route is lib/boot-session-read.ts's, whose early read stands down there too.
 
 type Settled = SessionState;
 
@@ -84,7 +84,8 @@ export function AuthBridge({ children }: { children: ReactNode }) {
 
   const read = useCallback(
     () =>
-      readSession({ apiBase: API_BASE }).then((next) => {
+      // The first read takes the one the page's HTML started (lib/boot-session-read.ts).
+      readSession({ apiBase: API_BASE, fetch: sessionReadFetch }).then((next) => {
         if (next.status !== 'signed-in') tokens.clear();
         debugLog(`[auth] session_read status=${next.status}`);
         // Told outside React too: at a document's address this render waits for the editor to hydrate.

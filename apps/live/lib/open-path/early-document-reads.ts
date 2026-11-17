@@ -8,6 +8,7 @@ import { parseStoredLevel, type LiveDoc } from '@livedoc/api-schema';
 import { readCachedShareGrant, setSessionSharePassword } from '@/lib/api/core';
 import { askEarly } from '@/lib/api/early-reads';
 import { documentRead, participantRead, shareRead, tabRead } from '@/lib/api/open-path-requests';
+import { guestMintedForThisPage } from '@/lib/api/self';
 import { debugLog } from '@/lib/debug-log';
 import { resolveDocumentSession } from '@/lib/document-session';
 import { ensureSignedGuestIdentity } from '@/lib/guest-identity';
@@ -34,8 +35,11 @@ export async function askEarlyDocumentReads(input: {
   try {
     // The editor's own mint: concurrent callers share one, and the id it lands in storage is the one the editor reads.
     const selfId = input.accountId ?? (await ensureSignedGuestIdentity()).id;
-    const participant = await participantRead(selfId);
-    void askEarly('participant', participant.url, participant.headers);
+    // A guest id the api minted for this page has no row yet: the editor writes it, never reads it first.
+    if (!guestMintedForThisPage(selfId)) {
+      const participant = await participantRead(selfId);
+      void askEarly('participant', participant.url, participant.headers);
+    }
     const opened = shareCode ? await openShared(shareCode, selfId) : await openOwn(id!, selfId);
     if (!opened) return;
     const { document, scope, tabShareCode } = opened;

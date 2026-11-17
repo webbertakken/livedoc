@@ -3,7 +3,8 @@
 // downloads". What the early path asks, in what order, and as whom: always the requests the editor would make.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { guest, offline, identity } = vi.hoisted(() => ({
+const { guest, offline, identity, self } = vi.hoisted(() => ({
+  self: { guestMintedForThisPage: vi.fn((_id: string) => false) },
   guest: { ensureSignedGuestIdentity: vi.fn(async () => ({ id: 'g1', sig: 'sig1' })) },
   offline: { isOfflineId: vi.fn(async (_id: string) => false) },
   identity: { getGuestSelfSig: vi.fn((): string | null => 'sig1') },
@@ -11,6 +12,7 @@ const { guest, offline, identity } = vi.hoisted(() => ({
 vi.mock('@/lib/guest-identity', () => guest);
 vi.mock('@/lib/offline/offline-ids', () => offline);
 vi.mock('@/lib/local-identity', () => identity);
+vi.mock('@/lib/api/self', async (original) => ({ ...(await original<object>()), ...self }));
 
 import { askEarlyDocumentReads } from './early-document-reads';
 import { openEarlyReads, resetEarlyReadsForTests, takeEarlyRead } from '@/lib/api/early-reads';
@@ -65,10 +67,24 @@ beforeEach(() => {
   localStorage.clear();
   guest.ensureSignedGuestIdentity.mockClear();
   offline.isOfflineId.mockResolvedValue(false);
+  self.guestMintedForThisPage.mockReturnValue(false);
 });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('askEarlyDocumentReads', () => {
+  // "A guest id this page minted has no row to read."
+  it('asks no participant row for a guest id minted for this page', async () => {
+    self.guestMintedForThisPage.mockImplementation((id) => id === 'g1');
+    serve({
+      '/api/share/c1': json({ document: doc('owner'), role: 'participate', tabId: null }),
+      '/api/documents/d1/tabs/t1': json({ tab: { id: 't1' } }),
+    });
+
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/shared?s=c1` });
+
+    expect(asked.map((a) => a.path)).toEqual(['/api/share/c1', '/api/documents/d1/tabs/t1']);
+  });
+
   it('asks a share link’s participant row, the link and its first tab, as the guest the editor would be', async () => {
     serve({
       '/api/participants/g1': json({ participant: null }),

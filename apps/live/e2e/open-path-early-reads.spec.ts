@@ -109,15 +109,13 @@ test('a first-time guest’s share link is read early, each read once', async ({
   await expect(page.locator('[data-element-id="b1"]')).toBeVisible();
 
   expect(seen.early).toEqual(
-    expect.arrayContaining([
-      '[early-reads] taken participant',
-      '[early-reads] taken share',
-      '[early-reads] taken tab',
-    ]),
+    expect.arrayContaining(['[early-reads] taken share', '[early-reads] taken tab']),
   );
   expect(seen.count('POST /api/guest-id')).toBe(1);
   expect(seen.count(`GET /api/share/${code}`)).toBe(1);
-  expect(seen.asked.filter((a) => a.startsWith('GET /api/participants/'))).toHaveLength(1);
+  // The api minted the guest's id for this page: its row is written, never read first (web-performance.md).
+  expect(seen.asked.filter((a) => a.startsWith('GET /api/participants/'))).toHaveLength(0);
+  expect(seen.asked.filter((a) => a.startsWith('PUT /api/participants/'))).toHaveLength(1);
   expect(seen.count(`GET /api/documents/${id}/tabs/${tab}`)).toBe(1);
   expectNoPageErrors(pageErrors);
 });
