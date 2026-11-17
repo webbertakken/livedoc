@@ -131,12 +131,18 @@ describe('a thumbnail loader that is still', () => {
     vi.useFakeTimers();
     render(<DocumentThumbnail ownerId="me" documentId="d1" version={1} />);
     const still = loaderStillMs('d1');
-    act(() => vi.advanceTimersByTime(5_000));
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+    });
     expect(box().hasAttribute('data-drawing')).toBe(false);
     see(true);
-    act(() => vi.advanceTimersByTime(still - 1));
+    act(() => {
+      vi.advanceTimersByTime(still - 1);
+    });
     expect(box().hasAttribute('data-drawing')).toBe(false);
-    act(() => vi.advanceTimersByTime(1));
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
     expect(box().hasAttribute('data-drawing')).toBe(true);
   });
 
@@ -153,9 +159,13 @@ describe('a thumbnail loader that is still', () => {
     vi.useFakeTimers();
     const { container } = render(<DocumentThumbnail ownerId="me" documentId="d1" version={1} />);
     see(true);
-    act(() => vi.advanceTimersByTime(200));
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
     await act(async () => pending[0]?.(null));
-    act(() => vi.advanceTimersByTime(5_000));
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+    });
     expect(container.querySelector('[data-drawing]')).toBeNull();
   });
 
