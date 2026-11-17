@@ -322,7 +322,12 @@ as a different person than the one the session settles, even briefly
   the session, then the participant row beside the share read, then the first tab, answered by the room behind it.
 - **A guest id this page minted has no row to read.** The api mints a guest id fresh (`POST /api/guest-id`), so its
   participant row cannot exist yet: the row is written, never asked for first, by the editor, by `/new` and by the
-  early reads alike. A first visit pays the mint and the write, not a read between them.
+  early reads alike. A first visit pays the mint, not a read between it and the write.
+- **The open never waits for a write.** The participant row a first visit (or a signed-in name that changed) saves is
+  written beside the open, never before it: the editor already holds the name and colour it writes, and opens with
+  them. A read of that row made while the save is in flight waits for it (below); a save that fails is logged. On
+  docs.nu a share link's first visit waited for the write after its tab had answered, and the write met a cold api
+  isolate (about 300 ms) as often as any read.
 - **A row being saved answers its own read.** A participant read made while this page's save of that row is in
   flight waits for the save and answers what it wrote: `/new` saves a first visitor's row and hands the document to
   the editor in place, whose read would otherwise ask again and, answered before the save landed, write it twice.

@@ -43,6 +43,10 @@ export async function resolveParticipant(opts: {
     accountDisplayName &&
     storedSelf.name !== accountDisplayName
   );
-  if (!storedSelf || nameDrifted) await apiSaveSelf(self).catch(() => {});
+  // Written beside the open, never before it (docs/specs/016-platform/web-performance.md "The open never waits for a
+  // write"): the editor opens with what it writes, and a read of the row meanwhile waits for the save (lib/api/self.ts).
+  if (!storedSelf || nameDrifted) {
+    apiSaveSelf(self).catch((err: unknown) => console.warn('[participant] save_failed', err));
+  }
   return self;
 }
