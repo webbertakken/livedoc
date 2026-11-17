@@ -37,7 +37,8 @@ The **Language** tab of the [Review panel](board-review.md) lists the board's te
   meaning two things, which is what a context boundary is made of.
 - **A filter** narrows the list to one candidate context, or to the notes in none.
 - **Choosing a term** shows where it lives: its notes are ringed, the rest of the board dims, and the view fits them.
-  Escape, or choosing it again, lets go.
+  Escape, or choosing it again, lets go; Escape lets go wherever the keyboard stands, the board included, as any
+  highlight does ([Escape backs out](../004-interface-design/escape.md)).
 - **Rename Term** opens the chosen term for typing. While a new term is typed the board previews it, exactly as a
   reword's ripple previews; **Rename** keeps it, Escape leaves the board as it was.
   - With a context filter chosen, it renames within that context; with "No context" chosen, the notes in none;

@@ -38,6 +38,8 @@ a grid is not always the better shape:
 
 ## Details that had to survive the change
 
+- **Escape closes it.** Escape on the trigger or in the open menu closes it without picking and gives the
+  keyboard to the trigger, the menu being a surface ([Escape backs out](escape.md)).
 - **Band titles.** The canvas tool's three bands are named — **Edit** (the
   tools that act on the canvas), **Present** (the ones you use in front of an
   audience) and **Preview** (the whole-canvas views). A named band doesn't

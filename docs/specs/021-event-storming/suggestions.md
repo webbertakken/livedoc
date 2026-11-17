@@ -101,6 +101,8 @@ person's own view (not shared, not saved with the board; off when the board open
   scheme.
 - **Keyboard.** Peek tabs, placeholders and panel rows are in the tab order. On a peek tab or a placeholder, Enter
   applies and Delete (or Backspace) dismisses; on a peek tab that holds several, the first in its chain (default).
+  Escape in the expanded list, or on its button, folds it back to its button and gives the keyboard to that button
+  ([Escape backs out](../004-interface-design/escape.md)).
 - **Motion.** The Show All preview eases as the Alt insertion's does, and is instant under reduced motion.
 
 ## Applying and dismissing

@@ -15,6 +15,7 @@ Follow the references below only as needed; never upfront.
 - ./toasts.md - when raising, styling or placing a toast (`useToast`): one line by default, the four tones, timing, the stack's place above bottom chrome and banners, its motion and copy rules
 - ./toolbar-group.md - when drawing any editor toolbar (the Palette strip, Sketch's dock, the two lines' groups): the one toolbar surface, its 36 px buttons, dividers and centre line
 - ./tooltips-hover-cards-popovers.md - when adding a hover or focus hint, a `title`, or a click-opened panel: Tooltip (name, 1 s), Hover card (title + description, instant), Popover (click, interactive), and their WCAG 1.4.13 behaviour
+- ./escape.md - when adding any transient state (a highlight, a tool, a panel, a picker, a mode): Escape backs out of the innermost, one layer per press
 - ./menus.md - when building or changing any menu: command menus (role menu, roving keys, typeahead, submenus) vs control menus (non-modal dialog), focus in and back, the inset focus ring
 - ./within-reach.md - when a surface offers a short "what you want next" list: N most used plus N recent, none twice (Jump Back In, Shape slots)
 - ./report-a-bug-entries.md - when placing or styling a Report a Bug entry: one per screen in the screen's own style, where each sits, the form's look

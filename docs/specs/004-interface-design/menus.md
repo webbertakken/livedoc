@@ -65,6 +65,8 @@ There is one Tab stop: focus lives on one item at a time and the arrow keys move
 - **Focus moving elsewhere closes it.** A click or Tab that takes focus outside the menu (and its
   submenus) closes it; a press that moves focus nowhere (Safari does not focus a pressed button)
   leaves it open.
+- **One layer at a time.** Where a menu stands among the other things Escape backs out of:
+  [Escape backs out](escape.md).
 - **Focus comes back.** When a menu closes while it holds focus (Escape, choosing a verb) focus
   returns to where it was when the menu opened: the trigger that opened it, the tree row Shift+F10
   was pressed on, the element that was right-clicked. If that place is gone, or was nowhere, it
