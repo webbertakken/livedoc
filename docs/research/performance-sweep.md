@@ -201,6 +201,51 @@ On docs.nu from Amsterdam, curl, a guest's two-tab document:
 - About half of reads 20 s apart found a cold api isolate (36 and 29 of 60): at this traffic, start-up is the read.
 - A woken room adds its own start: `room` 286 to 420 ms against 29 to 33 ms of work inside it.
 
+### The open as one read (#232, #234, #235)
+
+- What made a fast-link open slow was the api's isolate start-up, met by each read on the open's chain.
+- A cold isolate answers about 300 ms late; at docs.nu's traffic about half of reads meet one, alone or in a burst.
+- Warming one isolate early did not carry: the next read often lands on another, cold one.
+- So the chain's length is the cost: four reads in three steps after the session became one (#234).
+- The session read leaves with the HTML, from an inline script; the auth bridge takes it (#232).
+- A guest id minted for this page reads no participant row before writing it (#232).
+- The editor's document read, marked as an open, carries the first tab and the reader's own row (#234).
+- The room still makes one D1 round trip: the reader's row is a subquery, the tab the room's own storage.
+- The open never waits for the first visit's participant write; it is written beside the open (#235).
+
+On docs.nu, the owner opening a kanban document, headless Chromium, fast link, n = 8 per column, 20 s apart. #232 was
+measured twice, after its deploy and again just before #234's: the spread between the two is the noise.
+
+| Measure                                    | Before #232 | #232, after deploy | #232, before #234 | #234   |
+| ------------------------------------------ | ----------- | ------------------ | ----------------- | ------ |
+| Session read starts, median                | 335 ms      | 108 ms             | 114 ms            | 131 ms |
+| First tab's content in, median             | 818 ms      | 638 ms             | 591 ms            | 406 ms |
+| Editable, median                           | 955 ms      | 855 ms             | 687 ms            | 498 ms |
+| Editable, slowest                          | 1,723 ms    | 1,306 ms           | 1,925 ms          | 964 ms |
+| Cold api isolates met before editable, all | 11          | 14                 | 11                | 5      |
+
+- At 4 Mbit/s and CPU 4x the owner's open stays about 4.05 s: it waits on the editor's code, not the reads.
+- A shared link, first-time guest, fast link (before #235): the Join prompt at 425 to 995 ms, median 669 (n = 6).
+- Its chain: session, the guest id, then the share read beside the participant write, then the first tab.
+- The share read asks the document's room for the outline: its own time was 76 to 276 ms.
+
+Where the document page's first load goes (Turbopack analyzer at 9bd7128e01, compressed parts, 2,016 KiB):
+
+| Part                              | KiB |
+| --------------------------------- | --- |
+| `@livedoc/document` (343 modules) | 349 |
+| `components/canvas` (307 modules) | 316 |
+| Next and React                    | 170 |
+| `hooks/canvas`                    | 119 |
+| `components/palette`              | 103 |
+| `app/document`                    | 80  |
+| `components/chrome`               | 77  |
+| `globals.css`                     | 64  |
+
+- A long tail of element kinds at about 1 KiB a module, every kind's face and model, whatever the board holds.
+- Loading the face router late frees only 71 KiB: validation, placement and drawing share the element code.
+- The router and the palette together free 199 KiB; the palette is on screen at open, so that is a design fork.
+
 ## Refuted or set aside
 
 About half the leads did not survive a check; they are listed so nobody proposes them again.
@@ -303,9 +348,9 @@ Parked:
 - The form page's cover band brings about 118 KiB of the document model, through `lib/page-paint` and `page-frame`.
 - The Explorer fetches 155 KiB more JavaScript in the background since #188.
 - Of that, 39 KiB is the search panel fetched ahead; the rest (16 smaller files) is not traced yet.
-- One request for the outline and the first tab would save one more round trip on open (left to the api).
-- Isolate start-up is the document read's largest cost: about 340 ms for a cold api isolate, about 290 for a room.
-- Its levers are design forks: a smaller bundle for the rooms (a worker of their own), or the open as one request.
+- Isolate start-up is still a read's largest cost: about 300 ms for a cold api isolate, about 290 for a room.
+- A shared link still reads in three steps after the session; its first tab could ride the share read (the room).
+- On a slow link the open waits on the editor's first load; its levers are element kinds and the palette, loaded late.
 - The every-minute move sweep scans documents; the spec's drop release removes it, which is Webber's to schedule.
 - Fifteen canvas-gesture leads belong to the canvas session: zoom and pan re-renders, drag previews, snapping.
 - Among them, the Minimap runs a whole-board arrow label pass for pictures that draw no labels.
