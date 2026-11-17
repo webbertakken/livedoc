@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react';
 import { fnv1aString } from '@livedoc/document';
 
 // The "preview on its way" state of a DocumentThumbnail (docs/specs/006-document/document-snapshots.md):
@@ -14,14 +13,26 @@ import { fnv1aString } from '@livedoc/document';
 // placeholder's dashes: dashed means "nothing drawn yet", which is what a
 // thumbnail says once it KNOWS the document is empty.
 //
-// Each loader starts at a point in the cycle derived from its document id,
-// so a grid of loading cards ripples instead of pulsing in lockstep.
-// Reduced motion shows the finished sketch, still.
+// It starts still: the finished sketch, which most snapshots replace within
+// half a second. A slower one sets it drawing (DocumentThumbnail marks its
+// box `data-drawing` after loaderStillMs), entering the cycle where the
+// sketch is whole, so the still sketch fades out and the drawing begins.
+// Reduced motion keeps the still sketch throughout.
 
-const CYCLE_MS = 5400;
+/** How long a loader stays the still sketch once its box is near the view, before its stagger. */
+export const LOADER_STILL_MS = 500;
+// Spread over the cards of a grid, so their drawing ripples instead of starting in lockstep.
+const LOADER_STAGGER_MS = 400;
 
-export function ThumbnailLoader({ seed }: { seed: string }) {
-  const style = { '--lvd-thumb-phase': `-${phaseMs(seed)}ms` } as CSSProperties;
+/**
+ * How long this document's loader stays still once near the view: half a second, plus a stagger derived from its
+ * id (FNV-1a), stable across renders and mounts.
+ */
+export function loaderStillMs(seed: string): number {
+  return LOADER_STILL_MS + (fnv1aString(seed) % LOADER_STAGGER_MS);
+}
+
+export function ThumbnailLoader() {
   return (
     <span className="flex h-full flex-col items-center justify-center p-1">
       <svg
@@ -33,7 +44,6 @@ export function ThumbnailLoader({ seed }: { seed: string }) {
         strokeLinejoin="round"
         aria-hidden
         data-testid="thumbnail-loader"
-        style={style}
         className="lvd-thumb-loader h-full max-h-20 w-auto text-slate-300 dark:text-slate-600"
       >
         <g className="lvd-thumb-cycle">
@@ -73,10 +83,4 @@ export function ThumbnailLoader({ seed }: { seed: string }) {
       </svg>
     </span>
   );
-}
-
-// A stable offset into the cycle for this document: FNV-1a over the id.
-// Stable across renders and mounts, so a remount doesn't jump the phase.
-function phaseMs(seed: string): number {
-  return fnv1aString(seed) % CYCLE_MS;
 }

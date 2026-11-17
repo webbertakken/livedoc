@@ -10,7 +10,7 @@ import {
   thumbnailKey,
   type ThumbnailEntry,
 } from '@/lib/thumbnail-cache';
-import { ThumbnailLoader } from './ThumbnailLoader';
+import { loaderStillMs, ThumbnailLoader } from './ThumbnailLoader';
 import { keepThumbnailMotionToItself } from './thumbnail-motion-events';
 
 // A cached SVG snapshot of a document (docs/specs/006-document/document-snapshots.md) so you can recognise it
@@ -24,7 +24,8 @@ import { keepThumbnailMotionToItself } from './thumbnail-motion-events';
 // lightweight (no element data); a thumbnail is fetched only once its
 // row/card scrolls into view, so a long list never fires dozens of
 // requests / server renders for things the user never reaches. While
-// idle / loading it shows that sketch drawing itself (ThumbnailLoader);
+// idle / loading it shows that sketch, still and then, for a slower
+// picture, drawing itself (ThumbnailLoader);
 // broken, the still sketch of an undrawn diagram (and, where there's
 // room, says so). Same box throughout, so the layout never shifts, and an
 // empty or access-denied document degrades gracefully. Settled snapshots
@@ -127,24 +128,36 @@ export function DocumentThumbnail({
     return holdThumbnail(fetchKey);
   }, [offline, empty, ownerId, fetchKey]);
 
-  // Near the view (within 200px of it), until the picture has an answer. The first time, the picture is asked for;
-  // and the loader moves only while near (`data-near`, thumbnail-loader.css), its box marked directly so a scroll
-  // renders nothing: a list draws rows past the view's edge, whose loaders nobody sees.
+  // Near the view (within 200px of it), until the picture has an answer. The first time, the picture is asked for,
+  // and the loader, still until then, starts drawing (`data-drawing`) if the picture has not landed loaderStillMs
+  // later. A drawing loader moves only while near (`data-near`). Both mark the box directly (thumbnail-loader.css),
+  // so neither a scroll nor the drawing renders anything: a list draws rows past the view's edge, whose loaders nobody
+  // sees.
   const answered = state.status !== 'idle';
   useEffect(() => {
     const el = ref.current;
     if (offline || empty || !el || answered) return;
+    el.removeAttribute('data-drawing');
+    let drawing: ReturnType<typeof setTimeout> | undefined;
     const obs = new IntersectionObserver(
       (entries) => {
         const near = entries.at(-1)?.isIntersecting ?? false;
         el.toggleAttribute('data-near', near);
-        if (near) setVisible(true);
+        if (!near) return;
+        setVisible(true);
+        drawing ??= setTimeout(
+          () => el.setAttribute('data-drawing', ''),
+          loaderStillMs(documentId),
+        );
       },
       { rootMargin: '200px' },
     );
     obs.observe(el);
-    return () => obs.disconnect();
-  }, [offline, empty, answered]);
+    return () => {
+      obs.disconnect();
+      clearTimeout(drawing);
+    };
+  }, [offline, empty, answered, documentId]);
 
   useEffect(() => {
     if (offline || empty || !visible || !ownerId || peekThumbnail(fetchKey)) return;
@@ -225,7 +238,7 @@ export function DocumentThumbnail({
             shown ? 'opacity-0' : 'opacity-100'
           }`}
         >
-          <ThumbnailLoader seed={documentId} />
+          <ThumbnailLoader />
         </span>
       )}
     </span>
