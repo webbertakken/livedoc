@@ -13,6 +13,7 @@ import { MAX_DECK_LEN } from '../limits';
 import {} from '../comments';
 import {
   getDocument,
+  getDocumentForOpen,
   getDocumentThumbMeta,
   readReorderEntries,
   reorderTabs,
@@ -21,6 +22,8 @@ import {
 } from '../db';
 import { badRequest, forbidden, json, notFound, svgImage } from '../responses';
 import { isAppearance } from '@livedoc/document';
+import { DOCUMENT_OPEN_HEADER, readDocumentOpen } from '@livedoc/api-schema';
+import { grantedTab, recordTabRead } from './granted-tab';
 import { documentImageSvg } from '../document-image';
 import { redactDocumentForReader, redactDocumentForScope } from '../redact-document';
 import { answerOverview, parseViewQuery } from './document-views-route';
@@ -85,7 +88,14 @@ export async function handleDocumentRequest(ctx: DocumentRouteContext): Promise<
       // 404 (not 403) so a guessed UUID can't probe existence.
       const view = parseViewQuery(new URL(request.url), 'document');
       if (view instanceof Response) return view;
-      const d = await getDocument(env, id);
+      // The editor's open (docs/specs/016-platform/web-performance.md "The open is one read") reads the reader's own
+      // participant row with the document's, in the same query.
+      const openedBy =
+        view === null && readDocumentOpen(request.headers.get(DOCUMENT_OPEN_HEADER))
+          ? ctx.resolveOwner()
+          : null;
+      const opening = openedBy ? await getDocumentForOpen(env, id, openedBy) : null;
+      const d = openedBy ? (opening?.document ?? null) : await getDocument(env, id);
       if (!d) return missingDocument(ctx, id);
       const grant = await gateGrant(ctx, id, d.ownerId, d.teamId);
       // Redacted for every non-owner, exactly as the share-code resolver
@@ -99,7 +109,17 @@ export async function handleDocumentRequest(ctx: DocumentRouteContext): Promise<
       const liveDoc = redactDocumentForScope(reader, grant.tabScope);
       // The overview view (docs/specs/024-agents/document-views.md), after the same gate and scope.
       if (view) return answerOverview(ctx, view, liveDoc, grant.tabScope);
-      return json({ document: liveDoc });
+      if (!openedBy || !opening) return json({ document: liveDoc });
+      // The tab the editor opens first (lib/tab-scope.ts firstTabToLoad): a tab-scoped link's own tab, else the first.
+      const firstId = grant.tabScope ?? liveDoc.tabs[0]?.id ?? null;
+      const openedTab = firstId ? await grantedTab(ctx, d, firstId, openedBy) : null;
+      if (openedTab) recordTabRead(ctx, d, grant, openedBy);
+      const own = opening.reader;
+      return json({
+        document: liveDoc,
+        openedTab,
+        reader: own ? { ...own, pictureUrl: ctx.verifiedAccountId ? own.pictureUrl : null } : null,
+      });
     }
     if (request.method === 'PUT') {
       // Metadata-only PUT now that tabs live in their own table.
