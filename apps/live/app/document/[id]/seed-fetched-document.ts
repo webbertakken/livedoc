@@ -75,6 +75,10 @@ export function makeSeedFetchedDocument(deps: {
     fetched: LiveDoc,
     tabShareCode: string | null,
     tabScope: string | null,
+    // The first tab as the open read carried it (apiOpenDocument), already recorded as the open; absent when the
+    // read carried none, and then the tab is read here (docs/specs/016-platform/web-performance.md "The open is one
+    // read").
+    opened?: { tab: Tab; rev: number } | null,
   ) => {
     // Lazy per-tab fetch (docs/specs/006-document/per-tab-storage.md): the active tab (first in the
     // summaries, or the scoped one) gets its full payload inline so the first
@@ -84,9 +88,12 @@ export function makeSeedFetchedDocument(deps: {
     const firstId = firstTabToLoad(fetched.tabs, tabScope);
     const firstIndex = placeholderTabs.findIndex((t) => t.id === firstId);
     if (firstId && firstIndex >= 0) {
-      const loaded = await apiLoadTabRevisioned(selfId, fetched.id, firstId, tabShareCode, {
-        open: recordOpen,
-      }).catch(() => null);
+      const carried = opened?.tab.id === firstId ? opened : null;
+      const loaded =
+        carried ??
+        (await apiLoadTabRevisioned(selfId, fetched.id, firstId, tabShareCode, {
+          open: recordOpen,
+        }).catch(() => null));
       const first = loaded?.tab ?? null;
       // Only mark the tab loaded when the eager fetch actually
       // returned content. If it failed (e.g. a transient 403 from

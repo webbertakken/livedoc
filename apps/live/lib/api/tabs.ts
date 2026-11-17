@@ -1,6 +1,11 @@
 // Per-tab calls: lazy load, upsert (the autosave path),
 // cross-document link, and delete.
-import { CHANGESET_SEEN_HEADER, type TabResponse, type TabSummary } from '@livedoc/api-schema';
+import {
+  CHANGESET_SEEN_HEADER,
+  type TabRecord,
+  type TabResponse,
+  type TabSummary,
+} from '@livedoc/api-schema';
 import { normalizeTable, type Tab } from '@livedoc/document';
 import { dedupeInFlight } from '../dedupe';
 import {
@@ -58,7 +63,12 @@ async function _apiLoadTabRevisioned(
   const res = await apiFetch(url, { headers });
   const body = await expectOkOrNull<TabResponse>(res, 'load tab');
   if (!body) return null;
-  const { tab } = body;
+  return clientTabOf(body.tab);
+}
+
+// A tab as the api answers it, as the editor holds it: content only, its revision beside it. The tab read's answer
+// and the tab an open read carries (apiOpenDocument) both enter the editor here.
+export function clientTabOf(tab: TabRecord): { tab: Tab; rev: number } {
   const { documentId: _did, orderIndex: _oi, updatedAt: _ua, rev, ...clientTab } = tab;
   void _did;
   void _oi;
@@ -76,6 +86,7 @@ async function _apiLoadTabRevisioned(
   // An api older than tab revisions answers none: nothing held, so every changeset is news.
   return { tab: clientTab, rev: typeof rev === 'number' ? rev : 0 };
 }
+
 export const apiLoadTabRevisioned = dedupeInFlight<
   Parameters<typeof _apiLoadTabRevisioned>,
   { tab: Tab; rev: number } | null

@@ -28,9 +28,17 @@ export async function shareRead(code: string, ownerId: string): Promise<ApiRead>
   };
 }
 
-// A document of the server, by id.
-export async function documentRead(ownerId: string, id: string): Promise<ApiRead> {
-  return { url: `${API_BASE}/documents/${id}`, headers: await apiHeaders(ownerId) };
+// A document of the server, by id. `open` marks it as the editor's open, which answers the tab it opens first and the
+// reader's own participant row with it (docs/specs/016-platform/web-performance.md "The open is one read").
+export async function documentRead(
+  ownerId: string,
+  id: string,
+  opts: { open?: boolean } = {},
+): Promise<ApiRead> {
+  return {
+    url: `${API_BASE}/documents/${id}`,
+    headers: await apiHeaders(ownerId, opts.open ? { extra: { [DOCUMENT_OPEN_HEADER]: '1' } } : {}),
+  };
 }
 
 // One tab's content, presenting the share code that admitted the reader (null for the owner). `open` marks the

@@ -10,7 +10,7 @@ const { api, identity, seed } = vi.hoisted(() => ({
   api: {
     apiLoadSelf: vi.fn(),
     apiSaveSelf: vi.fn(),
-    apiLoadDocument: vi.fn(),
+    apiOpenDocument: vi.fn(),
     apiLoadShared: vi.fn(),
     apiListShareLinks: vi.fn(),
   },
@@ -107,7 +107,7 @@ describe('useIdentityBootstrap on an address that names no document', () => {
       expect(s.setDocumentNotFound).toHaveBeenCalledWith(true);
       expect(s.setHydrated).toHaveBeenCalledWith(true);
       expect(s.setLoadingDocument).toHaveBeenCalledWith(false);
-      expect(api.apiLoadDocument).not.toHaveBeenCalled();
+      expect(api.apiOpenDocument).not.toHaveBeenCalled();
       expect(api.apiLoadShared).not.toHaveBeenCalled();
     },
   );

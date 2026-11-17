@@ -83,3 +83,20 @@ describe('seedFetchedDocument and changesets', () => {
     expect(noteChangesetSeen).toHaveBeenCalledWith('t1', 6);
   });
 });
+
+// docs/specs/016-platform/web-performance.md "The open is one read": the open read carried the first tab.
+describe('seedFetchedDocument with the tab the open read carried', () => {
+  it('seeds that tab and reads it no more', async () => {
+    const noteChangesetSeen = vi.fn();
+    const opened = { tab: { id: 't1', name: 'Tab 1', elements: [] }, rev: 9 };
+    await seed(true, noteChangesetSeen)('me', fetched, null, null, opened);
+    expect(apiLoadTab).not.toHaveBeenCalled();
+    expect(noteChangesetSeen).toHaveBeenCalledWith('t1', 9);
+  });
+
+  it('reads the tab itself when the open read carried another one', async () => {
+    const opened = { tab: { id: 't9', name: 'Other', elements: [] }, rev: 1 };
+    await seed(true)('me', fetched, null, null, opened);
+    expect(apiLoadTab).toHaveBeenCalledWith('me', 'd1', 't1', null, { open: true });
+  });
+});

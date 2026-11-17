@@ -146,7 +146,7 @@ test('a password-protected link still shows the gate, and opens on the password'
   expectNoPageErrors(pageErrors);
 });
 
-test('an owner’s own document is read early, as its owner', async ({
+test('an owner’s own document is read early, as its owner, in one read', async ({
   page,
   pageErrors,
   baseURL,
@@ -196,11 +196,11 @@ test('an owner’s own document is read early, as its owner', async ({
   await page.goto(path);
   await expect(page.locator('[data-element-id="b1"]')).toBeVisible();
 
-  expect(seen.early).toEqual(
-    expect.arrayContaining(['[early-reads] taken document', '[early-reads] taken tab']),
-  );
+  // The open is one read (web-performance.md): the document's read carries its first tab and the owner's own row.
+  expect(seen.early).toEqual(expect.arrayContaining(['[early-reads] taken document']));
   expect(seen.count('POST /api/guest-id')).toBe(0);
   expect(seen.count(`GET /api/documents/${id}`)).toBe(1);
-  expect(seen.count(`GET /api/documents/${id}/tabs/${tab}`)).toBe(1);
+  expect(seen.count(`GET /api/documents/${id}/tabs/${tab}`)).toBe(0);
+  expect(seen.asked.filter((a) => a.startsWith('GET /api/participants/'))).toHaveLength(0);
   expectNoPageErrors(pageErrors);
 });

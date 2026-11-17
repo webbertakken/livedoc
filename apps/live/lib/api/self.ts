@@ -64,6 +64,26 @@ export function guestMintedForThisPage(id: string): boolean {
   return mintedHere.has(id);
 }
 
+// The reader's row an open read carries (apiOpenDocument; docs/specs/016-platform/web-performance.md "The open is one
+// read"), awaited in place of a read of its own. Resolves undefined when that answer carries none (an api from
+// before, a document in This Browser, a failed read): then the row is read as ever. Taken once.
+const readersFromOpens = new Map<string, Promise<Participant | null | undefined>>();
+
+/** Lets the next read of this participant take the row an open read in flight carries. */
+export function expectReaderFromOpen(
+  id: string,
+  reader: Promise<Participant | null | undefined>,
+): void {
+  readersFromOpens.set(id, reader);
+}
+
+async function readerFromOpen(id: string): Promise<Participant | null | undefined> {
+  const pending = readersFromOpens.get(id);
+  if (!pending) return undefined;
+  readersFromOpens.delete(id);
+  return pending;
+}
+
 export async function apiLoadSelf(id: string): Promise<Participant | null> {
   const known = recentlyKnown(id);
   if (known) return known;
@@ -79,6 +99,12 @@ export async function apiLoadSelf(id: string): Promise<Participant | null> {
   if (guestMintedForThisPage(id)) {
     debugLog('[self] read skipped reason=minted-here');
     return null;
+  }
+  const fromOpen = await readerFromOpen(id);
+  if (fromOpen !== undefined) {
+    debugLog(`[self] read answered_by=open row=${fromOpen ? 'found' : 'none'}`);
+    if (fromOpen) rememberSelf(fromOpen);
+    return fromOpen ? { ...fromOpen } : null;
   }
   const loaded = await loadSelfOnce(id);
   if (loaded) rememberSelf(loaded);
@@ -203,6 +229,7 @@ export function resetSelfForTests(): void {
   recentSelf = null;
   mintedHere.clear();
   savesInFlight.clear();
+  readersFromOpens.clear();
 }
 
 // Publish or clear this account's profile picture (docs/specs/014-identity/profile-picture.md §6).

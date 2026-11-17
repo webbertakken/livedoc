@@ -12,10 +12,12 @@ import type { Tab } from '@livedoc/document';
 import {
   apiListShareLinks,
   apiLoadDocument,
+  apiOpenDocument,
   apiLoadShared,
   readCachedShareGrant,
   setSessionSharePassword,
   writeCachedShareGrant,
+  type OpenedDocument,
   type ShareLink,
   type SharePasswordAsk,
   type SharedWithItem,
@@ -344,7 +346,7 @@ export function useIdentityBootstrap(opts: {
       // never after it (docs/specs/016-platform/web-performance.md "The open path asks in parallel"). Asked
       // once; each branch below awaits the answer where it used to make the call.
       let shareAsked: ReturnType<typeof apiLoadShared> | null = null;
-      let documentAsked: ReturnType<typeof apiLoadDocument> | null = null;
+      let documentAsked: Promise<OpenedDocument | null> | null = null;
       const askForShare = (code: string, selfId: string) => {
         if (!shareAsked) {
           // Seed the session with the cached grant before the first call, so a returning visitor whose password
@@ -361,7 +363,13 @@ export function useIdentityBootstrap(opts: {
       };
       const askForOwnDocument = (documentId: string, selfId: string) => {
         if (!documentAsked) {
-          documentAsked = apiLoadDocument(selfId, documentId);
+          // The editor's open is one read: the document, the tab it opens first and the reader's own row
+          // (docs/specs/016-platform/web-performance.md "The open is one read"). An embed's read is not an open.
+          documentAsked = embed
+            ? apiLoadDocument(selfId, documentId).then((document) =>
+                document ? { document } : null,
+              )
+            : apiOpenDocument(selfId, documentId);
           documentAsked.catch(() => {});
         }
         return documentAsked;
@@ -564,9 +572,9 @@ export function useIdentityBootstrap(opts: {
         }
       } else if (id) {
         setLoadStep('document');
-        let fetched;
+        let opening;
         try {
-          fetched = await askForOwnDocument(id, self.id);
+          opening = await askForOwnDocument(id, self.id);
         } catch (err) {
           // The load FAILED (network down / 5xx) — not a clean 404.
           // Surface a retryable error page rather than NotFound, which
@@ -582,6 +590,7 @@ export function useIdentityBootstrap(opts: {
           setNameConfirmed(hasConfirmedName());
           return;
         }
+        const fetched = opening?.document;
         if (!fetched) {
           // URL had a ?d=<id> but the API didn't return anything for
           // us — either the document doesn't exist or we don't own it.
@@ -600,7 +609,7 @@ export function useIdentityBootstrap(opts: {
         // branch above) — see seed-fetched-document.ts. The owner's
         // eager first-tab fetch presents no share code.
         setLoadStep('first-tab');
-        await seedFetchedDocument(self.id, fetched, null, null);
+        await seedFetchedDocument(self.id, fetched, null, null, opening?.opened);
         // An offline document (docs/specs/006-document/offline-mode.md) is yours by construction — its
         // ownerId is the local sentinel, never a participant id, so
         // without this it would wrongly get visitor chrome (Make a

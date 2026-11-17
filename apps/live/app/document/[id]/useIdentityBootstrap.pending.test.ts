@@ -11,7 +11,7 @@ const { api } = vi.hoisted(() => ({
   api: {
     apiLoadSelf: vi.fn(),
     apiSaveSelf: vi.fn(),
-    apiLoadDocument: vi.fn(),
+    apiOpenDocument: vi.fn(),
     apiLoadShared: vi.fn(),
     apiListShareLinks: vi.fn(),
     apiLoadTabRevisioned: vi.fn(),
@@ -110,7 +110,7 @@ describe('useIdentityBootstrap for a document just made', () => {
     expect(getLoadProgress().step).toBe('done');
     expect(resetTabs).not.toHaveBeenCalled();
     expect(set.setHydrated).not.toHaveBeenCalled();
-    expect(api.apiLoadDocument).not.toHaveBeenCalled();
+    expect(api.apiOpenDocument).not.toHaveBeenCalled();
     expect(api.apiLoadTabRevisioned).not.toHaveBeenCalled();
     expect(api.apiListShareLinks).not.toHaveBeenCalled();
   });
@@ -124,7 +124,7 @@ describe('useIdentityBootstrap for a document just made', () => {
         expect.objectContaining({ id: 'user_1', name: 'Pat' }),
       ),
     );
-    expect(api.apiLoadDocument).not.toHaveBeenCalled();
+    expect(api.apiOpenDocument).not.toHaveBeenCalled();
     expect(set.setHydrated).not.toHaveBeenCalled();
   });
 });
