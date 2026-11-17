@@ -35,6 +35,7 @@ import { arrowPageDir } from '@/lib/page-step';
 import { isTypingTarget, passesHistoryChords } from '@/lib/typing-target';
 import { avatarActionForKey } from '@/lib/avatar-action-keys';
 import { altGraphHeld } from '@/lib/composed-key';
+import { restingTool, toolInHand } from '@/lib/escape-ladder';
 
 // Re-exported so existing importers (the unit test) keep resolving.
 export { EDIT_KEYS, VIEW_TOOL_KEYS, type ShortcutAction } from './editor-shortcut-keys';
@@ -48,27 +49,16 @@ export function useEditorKeyboardShortcuts(deps: EditorKeyboardShortcutsDeps): v
   // Re-arms the Escape listener when the tab turns into (or out of) a whiteboard.
   const onWhiteboard = deps.whiteboard !== null;
 
-  // Escape cancels whichever transient editor mode is active:
-  // format-painter, or a pending draw-to-size shape.
+  // Escape puts down the tool in hand (docs/specs/004-interface-design/escape.md "The ladder", the `tool` layer): a
+  // pending draw-to-size, the format painter, or any canvas tool but the resting one, a whiteboard's eraser included
+  // (docs/specs/023-draw-mode/draw-mode.md "Keyboard shortcuts"). One press puts down one thing.
   // Keeping the narrow deps means the listener only attaches while
-  // one of those modes is on, so we pay nothing in the idle case.
+  // a tool is in hand, so we pay nothing in the idle case.
   // The setters come through the ref so the same-render values apply.
   useEffect(() => {
-    const { formatSourceId, pendingDraw, canvasTool, enabled } = liveRef.current;
-    if (!enabled) return;
-    // A whiteboard's eraser is a held tool too: Escape puts it down
-    // (docs/specs/023-draw-mode/draw-mode.md "Keyboard shortcuts").
-    const whiteboardEraser = liveRef.current.whiteboard !== null && canvasTool === 'eraser';
-    if (
-      formatSourceId === null &&
-      pendingDraw === null &&
-      canvasTool !== 'format' &&
-      canvasTool !== 'isometric' &&
-      canvasTool !== 'avatar' &&
-      !whiteboardEraser
-    )
-      return;
+    if (!liveRef.current.enabled || !holdsTool(liveRef.current)) return;
     const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
       // A modal dialog owns the keyboard while open (its own Escape
       // closes it); cancelling canvas modes behind it double-acts.
       if (anyModalOpen()) return;
@@ -77,44 +67,30 @@ export function useEditorKeyboardShortcuts(deps: EditorKeyboardShortcutsDeps): v
       // A closer handler already claimed this keystroke (e.g. the table's
       // selected-cell layer) — don't double-act on it.
       if (e.defaultPrevented) return;
-      if (e.key === 'Escape') {
-        const live = liveRef.current;
-        // Claim the key when it cancelled something, so a later listener
-        // (the non-modal poll sheet's Escape-to-skip) knows it's spoken for.
-        if (
-          live.formatSourceId !== null ||
-          live.pendingDraw !== null ||
-          live.canvasTool === 'format' ||
-          live.canvasTool === 'isometric' ||
-          live.canvasTool === 'avatar' ||
-          (live.whiteboard !== null && live.canvasTool === 'eraser')
-        ) {
-          e.preventDefault();
-        }
-        // Whiteboard: back to Select from any tool in hand.
-        if (live.whiteboard !== null && live.canvasTool === 'eraser') {
-          live.whiteboard.pickSelect();
-          return;
-        }
-        liveRef.current.setFormatSourceId(null);
-        // Persistent Format tool: Escape exits the tool entirely (back to
-        // Select) from either phase, not just disarming the base.
-        if (liveRef.current.canvasTool === 'format') liveRef.current.setCanvasTool('select');
-        // Isometric: Escape leaves the view back to the normal editing tool —
-        // Select on desktop, Hand (pan) on touch where Select isn't the
-        // default. Mirrors how Spotlight reverts to Select.
-        if (liveRef.current.canvasTool === 'isometric') {
-          liveRef.current.setCanvasTool(isMobileViewportSync() ? 'pan' : 'select');
-        }
-        // Avatar mode (docs/specs/008-canvas/avatar-mode.md): Escape puts the walking character away and
-        // hands editing back, same revert rule as Isometric.
-        if (liveRef.current.canvasTool === 'avatar') {
-          liveRef.current.setCanvasTool(isMobileViewportSync() ? 'pan' : 'select');
-        }
-        if (liveRef.current.pendingDraw !== null) {
-          liveRef.current.onCancelDraw();
-        }
+      const live = liveRef.current;
+      if (!holdsTool(live)) return;
+      // Claim the key, so a later listener (the non-modal poll sheet's Escape-to-skip, the selection) knows it's
+      // spoken for.
+      e.preventDefault();
+      // Whiteboard: back to Select from any tool in hand.
+      if (live.whiteboard !== null && live.canvasTool === 'eraser') {
+        live.whiteboard.pickSelect();
+        return;
       }
+      if (live.pendingDraw !== null) {
+        live.onCancelDraw();
+        return;
+      }
+      // Persistent Format tool: Escape exits the tool entirely (back to
+      // Select) from either phase, not just disarming the base.
+      if (live.formatSourceId !== null || live.canvasTool === 'format') {
+        live.setFormatSourceId(null);
+        if (live.canvasTool === 'format') live.setCanvasTool('select');
+        return;
+      }
+      // Every other tool (Hand on a computer, Eraser, Laser, Spotlight, Slide Deck, Isometric, Avatar) goes back to
+      // the resting tool: Select on a computer, Hand on touch, where Select isn't the default.
+      live.setCanvasTool(restingTool(isMobileViewportSync()));
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -213,12 +189,7 @@ export function useEditorKeyboardShortcuts(deps: EditorKeyboardShortcutsDeps): v
         live.zenMode &&
         !inText &&
         live.editingId === null &&
-        live.formatSourceId === null &&
-        live.pendingDraw === null &&
-        live.canvasTool !== 'format' &&
-        live.canvasTool !== 'isometric' &&
-        live.canvasTool !== 'avatar' &&
-        !(live.whiteboard !== null && live.canvasTool === 'eraser') &&
+        !holdsTool(live) &&
         selectedId === null &&
         multiSelectedIds.size === 0
       ) {
@@ -233,6 +204,7 @@ export function useEditorKeyboardShortcuts(deps: EditorKeyboardShortcutsDeps): v
         key === 'Escape' &&
         !inText &&
         live.editingId === null &&
+        !holdsTool(live) &&
         selectedId !== null &&
         multiSelectedIds.size === 0 &&
         live.onEscapeMindNode(selectedId)
@@ -252,13 +224,8 @@ export function useEditorKeyboardShortcuts(deps: EditorKeyboardShortcutsDeps): v
         key === 'Escape' &&
         !inText &&
         live.editingId === null &&
-        live.formatSourceId === null &&
-        live.pendingDraw === null &&
-        live.canvasTool !== 'format' &&
-        live.canvasTool !== 'isometric' &&
-        live.canvasTool !== 'avatar' &&
-        // A whiteboard eraser in hand is put down first (the narrow listener).
-        !(live.whiteboard !== null && live.canvasTool === 'eraser') &&
+        // A tool in hand is put down first (the narrow listener).
+        !holdsTool(live) &&
         (selectedId !== null || multiSelectedIds.size > 0)
       ) {
         e.preventDefault();
@@ -540,4 +507,15 @@ export function useEditorKeyboardShortcuts(deps: EditorKeyboardShortcutsDeps): v
       document.removeEventListener('keyup', onKeyUp);
     };
   }, [deps.enabled, liveRef]);
+}
+
+/** Whether Escape has a tool to put down (docs/specs/004-interface-design/escape.md, the `tool` layer). */
+function holdsTool(
+  live: Pick<EditorKeyboardShortcutsDeps, 'formatSourceId' | 'pendingDraw' | 'canvasTool'>,
+): boolean {
+  return (
+    live.formatSourceId !== null ||
+    live.pendingDraw !== null ||
+    toolInHand(live.canvasTool, isMobileViewportSync())
+  );
 }

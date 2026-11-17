@@ -22,6 +22,8 @@ All of it is deterministic: no model is asked, so a deployment without one has t
   button, and opening either of those closes the panel (default).
 - **The keyboard**: opening moves it to the tab in hand; Escape closes the panel and gives it back to the pill. A tab
   with something of its own to let go of (a chosen term, a rename under way) takes Escape first (default).
+  Escape on the board lets a chosen term go and leaves the panel open, as a companion
+  ([Escape backs out](../004-interface-design/escape.md)).
 - Three tabs, following the WAI-ARIA tabs pattern: **Check**, **Language** and **Story**. The tab last open is
   remembered on this device; Check the first time (default).
 - It reads the board as it is and follows every change, a peer's included.

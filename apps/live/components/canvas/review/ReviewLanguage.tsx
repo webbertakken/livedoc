@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Select } from '@livedoc/ui';
 import { TERM_MAX, type ElementId, type TermScope } from '@livedoc/document';
 import { boardTerms, type BoardTerm, type StormReading } from '@livedoc/storm-reading';
+import { useEscapeLayer } from '@/hooks/ui/useEscapeLayer';
 import { REVIEW_MUTED, REVIEW_ROW, ReviewEmpty, RowAct } from './review-parts';
 
 // The Language tab (docs/specs/021-event-storming/board-language.md "The Language tab"): the board's terms, most
@@ -12,6 +13,11 @@ import { REVIEW_MUTED, REVIEW_ROW, ReviewEmpty, RowAct } from './review-parts';
 // it for typing, the board previewing the new term as it is typed, and renames it where the list is narrowed to.
 // The keyboard never falls to the page when what held it is put away: leaving the field hands it to Rename Term,
 // letting a term go to the term, and a rename to the row standing where the renamed term stood.
+// The rings and the dimming are a highlight on the board (docs/specs/004-interface-design/escape.md): Escape pressed
+// anywhere else, the board included, lets go of the rename first and then the term, the keyboard staying where it was.
+
+/** The Review panel, whose own keys take an Escape pressed in it. */
+export const REVIEW_PANEL = '[data-review-panel]';
 
 const ALL = 'all';
 const NONE = 'none';
@@ -121,6 +127,16 @@ export function ReviewLanguage({
     setChosen(key);
     setDraft(null);
   };
+  // The panel's own keys take an Escape pressed in it (below, and the panel's, which closes it).
+  useEscapeLayer(
+    'highlight',
+    row !== null,
+    () => {
+      if (renaming) setDraft(null);
+      else choose(null);
+    },
+    REVIEW_PANEL,
+  );
   const rename = () => {
     if (!ask || !wouldChange(ask)) return;
     handTo.current = { row: rows.findIndex((r) => r.term.key === chosen), after: reading };

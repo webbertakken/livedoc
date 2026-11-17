@@ -654,3 +654,132 @@ describe('Shift+H and Shift+V', () => {
     expect(onFlipSelection).not.toHaveBeenCalled();
   });
 });
+
+// docs/specs/004-interface-design/escape.md "The ladder": the `tool` layer, then the selection, then Zen.
+describe('Escape puts the tool in hand down', () => {
+  it.each(['pan', 'eraser', 'laser', 'spotlight', 'slide-deck', 'isometric', 'avatar'] as const)(
+    'puts %s down to Select, and leaves the selection for the next press',
+    (canvasTool) => {
+      const onDeselect = vi.fn();
+      const { bag, spies } = deps({ canvasTool, onDeselect });
+      renderHook(() => useEditorKeyboardShortcuts(bag));
+      expect(press('Escape').defaultPrevented).toBe(true);
+      expect(spies.setCanvasTool).toHaveBeenCalledWith('select');
+      expect(onDeselect).not.toHaveBeenCalled();
+    },
+  );
+
+  it('takes the Format tool back to Select, letting go of its base', () => {
+    const setFormatSourceId = vi.fn();
+    const { bag, spies } = deps({ canvasTool: 'format', formatSourceId: 'a', setFormatSourceId });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    press('Escape');
+    expect(setFormatSourceId).toHaveBeenCalledWith(null);
+    expect(spies.setCanvasTool).toHaveBeenCalledWith('select');
+  });
+
+  it('cancels a pending draw alone, one layer per press', () => {
+    const onCancelDraw = vi.fn();
+    const pendingDraw = { kind: 'shape', shape: 'rectangle' };
+    const { bag, spies } = deps({ canvasTool: 'pan', pendingDraw, onCancelDraw });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    press('Escape');
+    expect(onCancelDraw).toHaveBeenCalledTimes(1);
+    expect(spies.setCanvasTool).not.toHaveBeenCalled();
+  });
+
+  it('leaves Zen for a later press while a tool is in hand', () => {
+    const onToggleZen = vi.fn();
+    const { bag, spies } = deps({
+      canvasTool: 'laser',
+      selectedId: null,
+      zenMode: true,
+      onToggleZen,
+    });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    press('Escape');
+    expect(spies.setCanvasTool).toHaveBeenCalledWith('select');
+    expect(onToggleZen).not.toHaveBeenCalled();
+  });
+
+  it('keeps a just-grown mind node while a tool is in hand', () => {
+    const onEscapeMindNode = vi.fn(() => true);
+    const { bag } = deps({ canvasTool: 'laser', onEscapeMindNode });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    press('Escape');
+    expect(onEscapeMindNode).not.toHaveBeenCalled();
+  });
+
+  it('stands aside for a modal dialog', () => {
+    const { bag, spies } = deps({ canvasTool: 'laser' });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    modalOpened();
+    try {
+      press('Escape');
+    } finally {
+      modalClosed();
+    }
+    expect(spies.setCanvasTool).not.toHaveBeenCalled();
+  });
+
+  it('stands aside for a key a closer handler claimed', () => {
+    const { bag, spies } = deps({ canvasTool: 'laser' });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    const e = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    e.preventDefault();
+    window.dispatchEvent(e);
+    expect(spies.setCanvasTool).not.toHaveBeenCalled();
+  });
+
+  it('leaves every other key, and an Escape in a menu, alone', () => {
+    const { bag, spies } = deps({ canvasTool: 'laser' });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    const menu = document.body.appendChild(document.createElement('div'));
+    menu.setAttribute('data-menu-surface', '');
+    const item = menu.appendChild(document.createElement('button'));
+    try {
+      item.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+      );
+    } finally {
+      menu.remove();
+    }
+    press('Tab');
+    expect(spies.setCanvasTool).not.toHaveBeenCalled();
+  });
+
+  it('puts nothing down when the tool was put down since the listener was armed', () => {
+    const { bag, spies } = deps({ canvasTool: 'laser' });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    (bag as { canvasTool: string }).canvasTool = 'select';
+    press('Escape');
+    expect(spies.setCanvasTool).not.toHaveBeenCalled();
+  });
+
+  // A tool picked after the editor's own listener armed puts its Escape listener behind that one: the editor's
+  // selection and Zen still stand aside for the tool.
+  it.each([
+    ['the selection', { selectedId: 'a' }],
+    ['Zen', { selectedId: null, zenMode: true }],
+  ])('puts a tool picked later down before %s', (_name, state) => {
+    const onDeselect = vi.fn();
+    const onToggleZen = vi.fn();
+    const { bag, spies } = deps({ ...state, onDeselect, onToggleZen });
+    const view = renderHook(() => useEditorKeyboardShortcuts(bag));
+    (bag as { canvasTool: string }).canvasTool = 'laser';
+    view.rerender();
+    press('Escape');
+    expect(spies.setCanvasTool).toHaveBeenCalledWith('select');
+    expect(onDeselect).not.toHaveBeenCalled();
+    expect(onToggleZen).not.toHaveBeenCalled();
+  });
+
+  it('puts nothing down from the resting tool', () => {
+    const onDeselect = vi.fn();
+    const { bag, spies } = deps({ canvasTool: 'select', onDeselect });
+    renderHook(() => useEditorKeyboardShortcuts(bag));
+    press('Escape');
+    expect(spies.setCanvasTool).not.toHaveBeenCalled();
+    expect(onDeselect).toHaveBeenCalledTimes(1);
+  });
+});

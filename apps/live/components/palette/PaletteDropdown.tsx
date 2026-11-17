@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronDownIcon, HoverCard, Portal } from '@livedoc/ui';
 import { VIEWPORT_EDGE_MARGIN as EDGE } from '@/lib/clamp-to-viewport';
+import { isTypingTarget } from '@/lib/typing-target';
 
 // openOnHover: a mouse resting this long on the trigger opens the menu (passing over it does not), and the menu
 // closes this long after the pointer leaves both it and the trigger, so a path from one to the other keeps it open.
@@ -210,8 +211,25 @@ export function PaletteDropdown({
       if (t instanceof Element && t.closest('[data-tour-popover]')) return;
       setOpen(false);
     };
+    // Escape closes it without picking, wherever the keyboard stands, and hands the keyboard back to the trigger when
+    // it was on the trigger or in the menu (docs/specs/004-interface-design/escape.md, the `surface` layer). A field
+    // holding focus takes its own Escape first, and so does a tour explaining the menu (it ends the tour).
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented || isTypingTarget(e.target)) return;
+      if (e.target instanceof Element && e.target.closest('[data-tour-popover]')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const t = e.target as Node;
+      const held = triggerRef.current?.contains(t) || menuRef.current?.contains(t);
+      setOpen(false);
+      if (held) triggerRef.current?.querySelector('button')?.focus();
+    };
     document.addEventListener('pointerdown', onDown, true);
-    return () => document.removeEventListener('pointerdown', onDown, true);
+    document.addEventListener('keydown', onKey, true);
+    return () => {
+      document.removeEventListener('pointerdown', onDown, true);
+      document.removeEventListener('keydown', onKey, true);
+    };
   }, [open]);
 
   // Position the menu while open, re-running on scroll / resize so it tracks

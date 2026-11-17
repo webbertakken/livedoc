@@ -5,6 +5,7 @@ import { renameTerm, type Element, type Tab } from '@livedoc/document';
 import { readBoard } from '@livedoc/storm-reading';
 import { REVIEW_BOARD_IDS as IDS, reviewBoardElements } from '@/lib/review-board.fixture';
 import type { ReviewTab } from '@/lib/review-view';
+import { heldEscapeLayers, resetEscapeLayersForTests } from '@/hooks/ui/useEscapeLayer';
 import { ReviewPanel, type ReviewPanelActs } from './ReviewPanel';
 
 // The Review panel's three tabs on the seeded kitchen (docs/specs/021-event-storming/board-review.md, board-language.md
@@ -14,7 +15,10 @@ afterEach(cleanup);
 const read = (elements: Element[] = reviewBoardElements()) =>
   readBoard({ id: 't', name: 'Kitchen', kind: 'event-storming', elements } as Tab);
 
-function open(tab: ReviewTab, { mayWrite = true, elements = reviewBoardElements() } = {}) {
+function open(
+  tab: ReviewTab,
+  { mayWrite = true, elements = reviewBoardElements(), withBoard = false } = {},
+) {
   const acts = {
     ring: vi.fn<ReviewPanelActs['ring']>(),
     add: vi.fn<ReviewPanelActs['add']>(),
@@ -27,14 +31,29 @@ function open(tab: ReviewTab, { mayWrite = true, elements = reviewBoardElements(
     storyWalked: vi.fn<ReviewPanelActs['storyWalked']>(),
   };
   const onTab = vi.fn<(tab: ReviewTab) => void>();
+  // Inside the panel, as ReviewHost draws it: the panel's own keys take an Escape pressed in it.
   render(
-    <ReviewPanel
-      tab={tab}
-      reading={read(elements)}
-      mayWrite={mayWrite}
-      onTab={onTab}
-      acts={acts}
-    />,
+    <>
+      <aside data-review-panel="">
+        <ReviewPanel
+          tab={tab}
+          reading={read(elements)}
+          mayWrite={mayWrite}
+          onTab={onTab}
+          acts={acts}
+        />
+      </aside>
+      {withBoard ? (
+        <main tabIndex={-1} aria-label="Canvas">
+          <input aria-label="A label" />
+          <div role="menu" aria-label="Element menu" data-menu-surface="">
+            <button type="button" role="menuitem">
+              Copy
+            </button>
+          </div>
+        </main>
+      ) : null}
+    </>,
   );
   return { acts, onTab };
 }
@@ -257,6 +276,73 @@ describe('Language', () => {
   it('says so when no two notes share a word', () => {
     open('language', { elements: [] });
     expect(screen.getByText('No shared terms yet. A term is a word two notes share.')).toBeTruthy();
+  });
+});
+
+// docs/specs/004-interface-design/escape.md: a chosen term is a highlight on the board, let go from anywhere.
+describe('Language on Escape from the board', () => {
+  const term = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
+  const canvas = () => screen.getByRole('main', { name: 'Canvas' });
+
+  afterEach(() => resetEscapeLayersForTests());
+
+  it('lets the chosen term go, keeping the keyboard on the board and the panel open', () => {
+    const { acts } = open('language', { withBoard: true });
+    fireEvent.click(term('order'));
+    canvas().focus();
+    expect(fireEvent.keyDown(canvas(), { key: 'Escape' })).toBe(false);
+    expect(term('order').getAttribute('aria-pressed')).toBe('false');
+    expect(lastRing(acts)![0]).toEqual([]);
+    expect(document.activeElement).toBe(canvas());
+    expect(screen.getByRole('tab', { name: 'Language' })).toBeTruthy();
+  });
+
+  it('drops a rename’s preview first, then lets the term go, one press each', () => {
+    const { acts } = open('language', { withBoard: true });
+    fireEvent.click(term('order'));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Term' }));
+    fireEvent.change(screen.getByRole('textbox', { name: /New term/i }), {
+      target: { value: 'ticket' },
+    });
+    canvas().focus();
+    fireEvent.keyDown(canvas(), { key: 'Escape' });
+    expect(acts.previewRename).toHaveBeenLastCalledWith(null);
+    expect(screen.queryByRole('textbox', { name: /New term/i })).toBeNull();
+    expect(term('order').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.keyDown(canvas(), { key: 'Escape' });
+    expect(term('order').getAttribute('aria-pressed')).toBe('false');
+    expect(acts.rename).not.toHaveBeenCalled();
+  });
+
+  it('leaves a field elsewhere and a menu their own Escape', () => {
+    open('language', { withBoard: true });
+    fireEvent.click(term('order'));
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'A label' }), { key: 'Escape' });
+    fireEvent.keyDown(screen.getByRole('menuitem', { name: 'Copy' }), { key: 'Escape' });
+    expect(term('order').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('leaves a key another listener claimed, and every other key', () => {
+    open('language', { withBoard: true });
+    fireEvent.click(term('order'));
+    const claimed = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    });
+    claimed.preventDefault();
+    canvas().dispatchEvent(claimed);
+    fireEvent.keyDown(canvas(), { key: 'Enter' });
+    expect(term('order').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('holds the highlight layer only while a term is chosen', () => {
+    open('language', { withBoard: true });
+    expect(heldEscapeLayers().highlight).toBeUndefined();
+    fireEvent.click(term('order'));
+    expect(heldEscapeLayers().highlight).toBe(true);
+    fireEvent.click(term('order'));
+    expect(heldEscapeLayers().highlight).toBeUndefined();
   });
 });
 
