@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, type CSSProperties, type ReactNode } from 'react';
+import { useId, useRef, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react';
 import {
   Button,
   CheckIcon,
@@ -203,12 +203,15 @@ export function SuggestionsPanel({
 }) {
   const cornerTop = useCornerTop();
   const listId = useId();
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
   if (rows.length === 0 && !ask && !review) return null;
   // The list is gone when the last suggestion is, however it was left: the corner then holds the pill alone, and
   // a suggestion that comes back (an Undo) finds the list as it was left.
   const listed = open && rows.length > 0;
   const toggle = (
     <button
+      ref={toggleRef}
       type="button"
       aria-expanded={open}
       aria-controls={listId}
@@ -223,10 +226,22 @@ export function SuggestionsPanel({
       />
     </button>
   );
+  // Escape in the expanded list, or on its button, folds it back to the button and gives it the keyboard
+  // (docs/specs/004-interface-design/escape.md, the `surface` layer). The Ask and Review pills beside it keep theirs.
+  const onKeyDown = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key !== 'Escape' || !listed || e.defaultPrevented) return;
+    const onPill = headRef.current?.contains(e.target as Node) && e.target !== toggleRef.current;
+    if (onPill) return;
+    e.preventDefault();
+    e.stopPropagation();
+    onOpenChange(false);
+    toggleRef.current?.focus({ preventScroll: true });
+  };
   return (
     <Portal>
       <aside
         aria-label="Suggestions"
+        onKeyDown={onKeyDown}
         data-testid="suggestions-panel"
         // What a card that opens under the corner measures itself against.
         data-corner=""
@@ -236,6 +251,7 @@ export function SuggestionsPanel({
         }`}
       >
         <div
+          ref={headRef}
           className={`flex items-center gap-0.5 ${listed ? 'border-b border-slate-200 p-1.5 dark:border-slate-800' : 'p-0.5'}`}
         >
           {ask}

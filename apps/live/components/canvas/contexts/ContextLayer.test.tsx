@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { laneActionSpies } from '@/hooks/canvas/lane-actions.fixture';
 import type { CandidateContextElement, Element } from '@livedoc/document';
@@ -18,6 +18,7 @@ import {
   resetContextSelectionForTests,
   setDrawingContext,
 } from '@/lib/context-selection';
+import { useEscapeLayer } from '@/hooks/ui/useEscapeLayer';
 import { ContextLayer } from './ContextLayer';
 
 // Candidate contexts on the canvas (docs/specs/021-event-storming/candidate-contexts.md): the outline and its name,
@@ -625,6 +626,27 @@ describe('ContextLayer: asking about a context', () => {
     fireEvent.keyDown(inside, { key: 'Escape' });
     expect(selected()).toBe(true);
     chrome.remove();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(selected()).toBe(false);
+  });
+
+  // docs/specs/004-interface-design/escape.md: a highlight on the board is let go before the selection.
+  it('stays selected through an Escape that lets a highlight go, or one already claimed', () => {
+    draw(board, { contexts: contextControls() });
+    fireEvent.click(screen.getByRole('button', { name: 'Candidate context: Ctx k' }));
+    const selected = () => outline('k')!.getAttribute('stroke-dasharray') === null;
+    const highlight = renderHook(() => useEscapeLayer('highlight', true, () => {}));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(selected()).toBe(true);
+    highlight.unmount();
+    const claimed = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    });
+    claimed.preventDefault();
+    window.dispatchEvent(claimed);
+    expect(selected()).toBe(true);
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(selected()).toBe(false);
   });

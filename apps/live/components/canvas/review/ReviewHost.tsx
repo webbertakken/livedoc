@@ -85,6 +85,7 @@ export function ReviewHost({
         ref={card}
         aria-label="Review"
         data-testid="review-panel"
+        data-review-panel=""
         onKeyDown={onKeyDown}
         className={`${CARD_PLACE} ${CARD_SIZE} ${CORNER_SURFACE} flex flex-col overflow-hidden rounded-xl`}
       >

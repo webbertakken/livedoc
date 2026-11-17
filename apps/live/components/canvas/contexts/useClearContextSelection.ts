@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useOptionalSelectionStore } from '@/hooks/canvas/useSelectionStore';
+import { heldEscapeLayers } from '@/hooks/ui/useEscapeLayer';
 import { clearContextSelection } from '@/lib/context-selection';
 
 // The context selection lets go (docs/specs/021-event-storming/candidate-contexts.md "Selecting several and merging"):
@@ -25,7 +26,9 @@ export function useClearContextSelection(tabId: string, active: boolean): void {
       clearContextSelection(tabId);
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      // A highlight on the board is let go first (docs/specs/004-interface-design/escape.md).
+      if (heldEscapeLayers().highlight) return;
       const target = e.target as Element | null;
       // A name being typed takes its own Escape (it puts the old name back).
       if (target?.tagName === 'INPUT' || target?.closest?.(SELECTION_CHROME)) return;

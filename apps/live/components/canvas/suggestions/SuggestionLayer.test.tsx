@@ -371,6 +371,31 @@ describe('the suggestions panel', () => {
     ).toBe('true');
   });
 
+  // docs/specs/004-interface-design/escape.md: the list is a surface; Escape in it, or on its button, folds it.
+  it('folds back to its button on Escape in the list or on the button, the keyboard on the button', () => {
+    draw(board);
+    const toggle = within(panel()).getByRole('button', { name: '4 suggestions' });
+    fireEvent.click(toggle);
+    const row = within(panel()).getAllByRole('listitem')[0]!;
+    row.focus();
+    fireEvent.keyDown(row, { key: 'Escape' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(within(panel()).queryAllByRole('listitem')).toHaveLength(0);
+    expect(document.activeElement).toBe(toggle);
+    fireEvent.click(toggle);
+    fireEvent.keyDown(toggle, { key: 'Escape' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+  });
+
+  it('leaves Escape alone while folded, and every other key', () => {
+    draw(board);
+    const toggle = within(panel()).getByRole('button', { name: '4 suggestions' });
+    expect(fireEvent.keyDown(toggle, { key: 'Escape' })).toBe(true);
+    fireEvent.click(toggle);
+    fireEvent.keyDown(toggle, { key: 'Enter' });
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+
   it('brings a row into view and previews just it', () => {
     const c = draw(board);
     act(() => setSuggestionsPanelOpen(TAB, true));
@@ -786,6 +811,23 @@ describe('SuggestionLayer: the Review pill', () => {
     view.unmount();
     layer([...plain(), suggestion('paid', 'domain-event', 'placed', 'after')]);
     expect(names()).toEqual(['Ask', '1 suggestion', 'Review']);
+  });
+
+  // docs/specs/004-interface-design/escape.md: the pills beside the list keep their own Escape.
+  it('leaves an Escape on the Ask or Review pill, or one already claimed, to them, the list staying open', () => {
+    layer([...plain(), suggestion('paid', 'domain-event', 'placed', 'after')]);
+    const corner = screen.getByTestId('suggestions-panel');
+    fireEvent.click(within(corner).getByRole('button', { name: '1 suggestion' }));
+    fireEvent.keyDown(within(corner).getByRole('button', { name: 'Review' }), { key: 'Escape' });
+    fireEvent.keyDown(within(corner).getByRole('button', { name: 'Ask' }), { key: 'Escape' });
+    const claimed = new KeyboardEvent('keydown', {
+      key: 'Escape',
+      bubbles: true,
+      cancelable: true,
+    });
+    claimed.preventDefault();
+    within(corner).getAllByRole('listitem')[0]!.dispatchEvent(claimed);
+    expect(within(corner).getByRole('list')).toBeTruthy();
   });
 
   it('holds the corner with nothing beside it', () => {
