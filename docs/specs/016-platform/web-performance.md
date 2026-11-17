@@ -267,6 +267,11 @@ the fallback face until the faces land, and the canvas re-measures each time the
   4x CPU.
 - A thumbnail loader away from the view holds still ([Document snapshots](../006-document/document-snapshots.md)): a
   List view of 1,000 kept 21 loaders past its edge running 252 animations for as long as the folder stayed open.
+- A thumbnail loader is the still sketch for its first half second and draws only for a slower snapshot
+  ([Document snapshots](../006-document/document-snapshots.md)). While it is still it runs no animation, and a
+  drawing one animates its strokes by stroke-opacity and its spinner by its dash offset, never by opacity or a
+  transform: an element animating either becomes a composited layer, eleven per loader, and a screen of loaders held
+  hundreds, rebuilt every frame while a long list scrolled.
 
 ### Layout never shifts after first paint
 
