@@ -11,7 +11,7 @@ import {
   type ShapeAnimation,
 } from './animation-sets';
 import { isChartShape, isProgressShape, isRatingShape } from './data-shapes';
-import { isSankeyShape } from './sankey-model';
+import { isSankeyShape } from './sankey-wire';
 import { isConceptShape } from './concept';
 import { takesTypedLabel } from './element-types';
 import type { Element } from './index';

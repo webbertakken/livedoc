@@ -687,6 +687,7 @@ export * from './plural';
 // Per-element assigned actions (docs/specs/012-collaboration/assigned-actions.md).
 export * from './element-action';
 export * from './data-shapes';
+export * from './sankey-wire';
 export * from './sankey-model';
 export * from './sankey-layout';
 export * from './sankey-frame';

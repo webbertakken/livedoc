@@ -34,7 +34,7 @@ import {
   SANKEY_UNIT_MAX,
   SANKEY_VALUE_LABELS,
   SANKEY_VALUE_MAX,
-} from './sankey-model';
+} from './sankey-wire';
 import { readSankeyNumber } from './sankey-text';
 import { CONCEPT_ROWS, isConceptShape, type ConceptShape } from './concept';
 

@@ -39,7 +39,7 @@ import type {
   SankeyLinkColor,
   SankeyNodeStyle,
   SankeyValueLabel,
-} from './sankey-model';
+} from './sankey-wire';
 import type { ChartSource, SheetAnchor } from './chart-source';
 import type { PickerSource, SelectionMode, SessionButtonConfig } from './selection-mode';
 import type { IconSize } from './icon-size';

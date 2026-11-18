@@ -10,7 +10,7 @@
 // './index', so the public package surface is unchanged.
 
 import type { ShapeKind } from './index';
-import { isSankeyShape } from './sankey-model';
+import { isSankeyShape } from './sankey-wire';
 
 // The two progress ShapeKinds, grouped so renderers + context-menu gates can
 // branch on "is this a progress element" without repeating the literal pair.

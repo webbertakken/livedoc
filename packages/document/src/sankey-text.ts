@@ -13,7 +13,7 @@ import {
   SANKEY_MAX_FLOWS,
   SANKEY_VALUE_MAX,
   type SankeyFlow,
-} from './sankey-model';
+} from './sankey-wire';
 
 type SankeyTextResult = {
   flows: SankeyFlow[];

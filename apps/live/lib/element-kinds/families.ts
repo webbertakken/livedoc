@@ -10,6 +10,7 @@ export const KIND_FAMILY_LOADERS = {
   'web-components': () => import('./families/web-components'),
   'mind-maps': () => import('./families/mind-maps'),
   embeds: () => import('./families/embeds'),
+  charts: () => import('./families/charts'),
 } as const;
 
 export type KindFamilyId = keyof typeof KIND_FAMILY_LOADERS;

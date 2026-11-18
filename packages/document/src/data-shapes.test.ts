@@ -15,7 +15,7 @@ import {
   isRatingShape,
   isSelfDrawingShape,
 } from './data-shapes';
-import { isSankeyShape } from './sankey-model';
+import { isSankeyShape } from './sankey-wire';
 
 // The self-drawing shape family decides real behaviour: BoxedElementView picks
 // a renderer off it, elementSupportsText uses isSelfDrawingShape to decide

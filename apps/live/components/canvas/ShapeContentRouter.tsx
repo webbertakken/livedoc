@@ -41,13 +41,10 @@ import { SketchArtPicture } from '@/components/canvas/SketchArtPicture';
 import { liveFiltersRedrawOnRepaint } from '@/lib/live-filter-cost';
 import { ProgressView } from '@/components/canvas/ProgressView';
 import { RatingView } from '@/components/canvas/RatingView';
-import { PieChartView } from '@/components/canvas/PieChartView';
 import { CodeBlockView } from '@/components/canvas/CodeBlockView';
 import { LegendView } from '@/components/canvas/LegendView';
 import { ChecklistView } from '@/components/canvas/ChecklistView';
-import { BarChartView } from '@/components/canvas/BarChartView';
-import { LineChartView } from '@/components/canvas/LineChartView';
-import { DataChartView } from '@/components/canvas/DataChartView';
+import { familyFace } from '@/lib/element-kinds/react';
 import type { BoxedElementViewProps } from '@/components/canvas/BoxedElementView.types';
 import { useChartGround, useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { useElementFinish } from '@/components/canvas/CanvasFinishContext';
@@ -62,11 +59,13 @@ const PlanViewView = dynamic(
   () => import('@/components/plan/views/PlanViewView').then((m) => m.PlanViewView),
   { ssr: false, loading: FillTabPending },
 );
-// A Sankey (docs/specs/009-elements/sankey.md) loads only when one is drawn: most boards have none.
-const SankeyView = dynamic(
-  () => import('@/components/canvas/SankeyView').then((m) => m.SankeyView),
-  { ssr: false },
-);
+// The charts family's faces (docs/specs/016-platform/web-performance.md "An element kind's code loads with the board
+// that holds it"): drawn only behind BoxedElementView's family gate, so the family is in.
+const PieChartView = familyFace('charts', 'PieChartView');
+const BarChartView = familyFace('charts', 'BarChartView');
+const LineChartView = familyFace('charts', 'LineChartView');
+const DataChartView = familyFace('charts', 'DataChartView');
+const SankeyView = familyFace('charts', 'SankeyView');
 // A chart drawn from a sheet range reads it through the sheets chunk, loaded only for such a chart.
 const SheetLinkedChart = dynamic(
   () => import('@/components/sheets/SheetLinkedChart').then((m) => m.SheetLinkedChart),

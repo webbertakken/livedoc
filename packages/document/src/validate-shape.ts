@@ -80,7 +80,7 @@ import {
   SANKEY_UNIT_MAX,
   SANKEY_VALUE_LABELS,
   SANKEY_VALUE_MAX,
-} from './sankey-model';
+} from './sankey-wire';
 
 // railLabels / lineCategories / pieSlices / lineSeries / pickerOptions / session options.
 const MAX_DATA_ARRAY = 5_000;

@@ -20,7 +20,7 @@ import {
 import { defaultPadding, PADDING_PX } from './index';
 import { svgBarChart, svgLineChart, svgPieChart } from './svg-render-charts';
 import { svgSankey } from './svg-render-sankey';
-import { isSankeyShape } from './sankey-model';
+import { isSankeyShape } from './sankey-wire';
 import { svgProgressBar, svgProgressRing, svgRating } from './svg-render-data';
 import { svgEntityRows } from './svg-render-entity';
 import { svgPageMasthead } from './svg-render-page';
