@@ -1,5 +1,10 @@
 # Pages tour ("Start Pages Tour")
 
+> **Retiring.** Pages mode is removed whole, with its five page kinds and everything only they use (plan 0019, fork
+> C2, ruled 2026-11-18). Articles become [text documents](../034-text-documents/text-document.md); what becomes of
+> stored pages is [Migration from Pages mode](../034-text-documents/migration.md). This spec describes what is built
+> until the removal runs, and is deleted with it.
+
 A short, optional guided tour of one [page kind](pages-mode.md#page-kinds) in Pages mode: a slide, an
 infographic, an article or a logo. Like every tour it is started from the actions group's **Start Pages Tour** button
 and never offers itself; [Show Me](show-me.md) runs the same track from a page's panel. Each kind has its own

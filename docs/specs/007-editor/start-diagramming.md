@@ -1,5 +1,8 @@
 # Template starts: Start Sketching, Start Diagramming, Start Making Pages, Start a Workshop
 
+> **Pages is retiring** (plan 0019, fork C2): its templates, blanks and Start Making Pages go with it; text document
+> templates live in [Starting and finding](../034-text-documents/starting-and-finding.md).
+
 An empty tab offers a choice without standing in the way of a blank page. A Plan tab has offered **Start Planning** since
 Plan shipped ([Working in Plan](../026-plan/plan-mode.md) "Starting a board"); Sketch, Structured and Pages tabs
 now offer their own: **Start Sketching**, **Start Diagramming** and **Start Making Pages**, and a Structured tab

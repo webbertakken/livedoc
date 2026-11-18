@@ -206,3 +206,28 @@ apply the resolved stack; `useElementStyle.setFontSelected` and
 `useTabCanvas.setTabFont` are the mutators. See also
 [Document structure](../006-document/document-structure.md) and
 [Canvas and palette](../008-canvas/canvas-and-palette.md).
+
+## Document fonts
+
+**Status: specified.** Nothing is built.
+
+The fonts of the office kinds ([Text document](../034-text-documents/text-document.md), the spreadsheet of plan 0020),
+apart from the canvas's eleven. The research is [Fonts](../../research/docs-open-standard/fonts.md).
+
+- **The catalogue** is data (`packages/document/src/document-fonts.ts`): each family's name as files write it, its
+  generic family, its pitch, whether LiveDoc serves it, its licence, and its **stand-in**.
+- **The core set is served by LiveDoc** from its own static assets (WOFF2, Latin and Latin Extended subsets, each
+  family's regular, italic, bold and bold italic), so a text document lays out the same offline and self-hosted: the
+  open families of Google Docs' default menu and the metric-compatible stand-ins (Liberation Sans, Serif and Mono for
+  Arial, Times New Roman and Courier New; Carlito for Calibri; Caladea for Cambria). Each family's licence (OFL-1.1 or
+  Apache-2.0) is checked before it ships and listed on the licences page.
+- **More fonts** (the font menu's last item) lists the Google Fonts catalogue and loads a chosen family from Google
+  Fonts where reachable, never required (fork D6, open; this is its default). A family that cannot load draws in its
+  stand-in, and the font menu marks it "Not available offline".
+- **Substitution**: a named family that is not available draws in its stand-in, then its generic family; the font
+  menu shows the named family in italics with "Shown as <stand-in>". Layout, PDF and thumbnails use the same table.
+- **In files**: every face used is declared with its generic family and pitch (ODF `style:font-face`, OOXML
+  `fontTable.xml`), so another suite picks a close fallback. **Embed fonts** (File > Document settings, off by default)
+  writes the used faces into the package (ODF `svg:font-face-uri`, OOXML obfuscated embedded fonts); embedded faces in
+  an arriving file are handed to the browser's font loader for that document only.
+- **PDF** embeds the subsets of every face drawn.

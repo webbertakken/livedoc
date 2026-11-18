@@ -1,5 +1,10 @@
 # Article pages
 
+> **Retiring.** Pages mode is removed whole, with its five page kinds and everything only they use (plan 0019, fork
+> C2, ruled 2026-11-18). Articles become [text documents](../034-text-documents/text-document.md); what becomes of
+> stored pages is [Migration from Pages mode](../034-text-documents/migration.md). This spec describes what is built
+> until the removal runs, and is deleted with it.
+
 An **article page** is the second kind of page in Pages mode ([Pages](pages-mode.md)
 "Page kinds"): a page to **write** on, like a page of a Google Doc or a Word document. Most of it
 is text, typed straight onto the page with no text boxes to place or size; pictures, charts,

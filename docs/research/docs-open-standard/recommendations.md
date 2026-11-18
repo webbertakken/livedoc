@@ -15,6 +15,17 @@ carried into the specs. Researched November 2026.
 | Spelling and grammar   | The browser's; Hunspell in the page; a grammar server | The browser's underlines, a Hunspell card with permissive dictionaries, grammar optional           | [Spelling](spelling.md)               |
 | Import security        | One guard per abuse case                              | Every case a named rejection or a reported drop, tested in Phase 5                                 | [Import security](import-security.md) |
 
+## Rulings since
+
+Webber ruled forks C1 to C3 on 2026-11-18, after this research:
+
+- **C1**: ODF 1.4 and OOXML are **both native**, and a file keeps the format it arrived in until a person converts it.
+  The ODF-native recommendation above is superseded: one model maps onto both, each format's kept content is written
+  back in that format, and every written file validates against its own schema. Which format a document made in
+  LiveDoc is born in is fork C5 (default ODF 1.4).
+- **C2**: all of Pages mode is removed, not only articles; the other page kinds' stored pages are fork D8.
+- **C3**: core only. Scripting, add-ons, any assistant, smart chips and Google's own services are left out.
+
 ## Engineering decisions carried into the specs
 
 - **What the standard lacks is kept beside it, not lost.** Comment replies and resolved state, reactions, assignments,
@@ -25,6 +36,7 @@ carried into the specs. Researched November 2026.
 - **Validation in CI** runs the strict 1.4 schema over LiveDoc's own output with Jing (BSD, Java), after removing the
   documented extension namespaces, as the ODF Toolkit's validator does for extended documents.
 - **The package layer is DOM-free** so the api, the MCP server and the CLI read and write the same files.
+- **One package layer holds both containers**, the ODF package and the OOXML container (C1).
 - **The zip reader and writer move to a shared package**, with their byte budget, from `apps/live/lib`.
 
 ## New forks for Webber

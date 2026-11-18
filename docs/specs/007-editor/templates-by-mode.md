@@ -1,5 +1,8 @@
 # Templates by mode
 
+> **Pages is retiring** (plan 0019, fork C2): its templates, blanks and Start Making Pages go with it; text document
+> templates live in [Starting and finding](../034-text-documents/starting-and-finding.md).
+
 Every template opens as one of five **openings**: in an [editor mode](editor-modes.md), **Sketch**, **Structured**
 or **Pages**; as a **Workshop** (Structured with the [Workshop control](../012-collaboration/workshop-mode.md) on);
 or as **Plan** tabs. The New Document wizard asks for the opening itself

@@ -5,11 +5,11 @@
 Three words describe how a document and its tabs differ. They answer different questions and are never
 interchangeable. These are design decisions, taken before any feature that uses them.
 
-| Term         | Answers                        | Values                                                                   | Where it lives                                |
-| ------------ | ------------------------------ | ------------------------------------------------------------------------ | --------------------------------------------- |
-| **mode**     | How is a tab worked on?        | Sketch, Structured, Pages (`EditorMode` `draw`, `diagram`, `pages`)      | Per tab, the same for everyone; `Tab.opensIn` |
-| **kind**     | What is a tab?                 | the general diagram tab, Event Storming, Markdown, File, ... (`TabKind`) | `Tab.kind`                                    |
-| **template** | What was a document made from? | a template (`TemplateKind`), grouped into template families              | Captured once, at creation                    |
+| Term         | Answers                        | Values                                                                                  | Where it lives                                |
+| ------------ | ------------------------------ | --------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **mode**     | How is a tab worked on?        | Sketch, Structured, Pages (`EditorMode` `draw`, `diagram`, `pages`)                     | Per tab, the same for everyone; `Tab.opensIn` |
+| **kind**     | What is a tab?                 | the general diagram tab, Event Storming, Text document, Markdown, File, ... (`TabKind`) | `Tab.kind`                                    |
+| **template** | What was a document made from? | a template (`TemplateKind`), grouped into template families                             | Captured once, at creation                    |
 
 ### Mode
 
@@ -37,6 +37,10 @@ interchangeable. These are design decisions, taken before any feature that uses 
 - The general diagram tab is the default kind. **Event Storming** is the only other kind among the canvas modes;
   Plan's tabs are kinds of their own ([Plan tabs](../026-plan/plan-tabs.md): Board, Sheet and Dashboard, and the Form
   tab of [Forms](../030-forms/forms.md)), each always in Plan.
+- **Text document** is a kind outside the canvas, worked on in no mode: pages of writing in ODF or OOXML, as Google
+  Docs works ([Text document](../034-text-documents/text-document.md)). Its **editing mode** (Editing, Suggesting,
+  Viewing) is one person's, never the tab's, so it is never called a mode alone. Its **format** is ODF or OOXML, the
+  one it arrived in. Pages mode is retiring (plan 0019, C2); "article" leaves the language with it.
 - **Markdown** and **File** are kinds outside the canvas, worked on in no mode: a markdown tab holds one text
   ([Markdown tab](../031-markdown/markdown-tab.md)), a file tab one file's bytes ([File tab](../006-document/file-tab.md)).
   Every file is a document; a markdown file is a document with one markdown tab, people call it a **page**.

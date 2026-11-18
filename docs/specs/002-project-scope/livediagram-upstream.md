@@ -30,6 +30,9 @@ it, ports it, and it lands through a LiveDoc pull request like any other change.
 - **Diverged:** spreadsheets. LiveDoc's [spreadsheet](../029-sheets/spreadsheet.md) replaces the Plan Sheet both
   products shared; upstream changes to the Plan Sheet, its store or its engine are picked only where they still
   apply to the spreadsheet.
+- **Left behind:** Pages mode and its page kinds, which LiveDoc removes for
+  [text documents](../034-text-documents/text-document.md) (plan 0019, fork C2). An upstream change to Pages mode, or
+  to a piece only it used, is never picked once the removal has run.
 
 ## The git remote
 

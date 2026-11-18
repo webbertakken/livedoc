@@ -1,5 +1,10 @@
 # Logo pages
 
+> **Retiring.** Pages mode is removed whole, with its five page kinds and everything only they use (plan 0019, fork
+> C2, ruled 2026-11-18). Articles become [text documents](../034-text-documents/text-document.md); what becomes of
+> stored pages is [Migration from Pages mode](../034-text-documents/migration.md). This spec describes what is built
+> until the removal runs, and is deleted with it.
+
 A **logo page** is the fourth kind of page in Pages mode ([Pages](pages-mode.md)
 "Page kinds"): a square artboard to design a logo on. It is laid out like an infographic page,
 with ordinary elements, and adds tools a logo needs and an infographic does not: **construction

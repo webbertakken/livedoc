@@ -1,5 +1,10 @@
 # Pages
 
+> **Retiring.** Pages mode is removed whole, with its five page kinds and everything only they use (plan 0019, fork
+> C2, ruled 2026-11-18). Articles become [text documents](../034-text-documents/text-document.md); what becomes of
+> stored pages is [Migration from Pages mode](../034-text-documents/migration.md). This spec describes what is built
+> until the removal runs, and is deleted with it.
+
 Pages mode ([Editor modes](editor-modes.md)) lays a tab out as **pages**: sheets on the
 canvas, each built up into one finished visual. This spec is what a page **is** and everything a
 page offers: its size, its background, a ready-made layout to start from, the page's own actions,
