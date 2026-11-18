@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   createPinnedArrow,
   createShape,
@@ -7,6 +7,10 @@ import {
   type ShapeElement,
 } from '@livedoc/document';
 import { morphShapes } from './shape-morph';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Mind maps draw and edit through their family (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/009-elements/mind-node.md "Converting a flow": boxes joined by arrows, converted to mind nodes, are a
 // mind map; docs/specs/008-canvas/canvas-and-palette.md "Shape": every other morph is the element alone.

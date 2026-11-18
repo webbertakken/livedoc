@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   applyMindMoves,
   createPinnedArrow,
@@ -10,6 +10,10 @@ import {
   type ShapeElement,
 } from '@livedoc/document';
 import { useMindMapSetters } from './useMindMapSetters';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Mind maps draw and edit through their family (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 // Tidy Map says what it did (docs/specs/009-elements/mind-node.md "Tidy Map").
 

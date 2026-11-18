@@ -262,20 +262,6 @@ export function relayoutMindMap(
 }
 
 /**
- * The ids a drag of `ids` should carry (docs/specs/009-elements/mind-node.md "Moving a branch"): every
- * mind node's whole subtree comes along, the way a frame carries its contents.
- */
-export function withMindSubtrees(elements: Element[], ids: ReadonlySet<ElementId>): Set<ElementId> {
-  const out = new Set(ids);
-  for (const id of ids) {
-    const el = elements.find((e) => e.id === id);
-    if (!el || !isMindNode(el)) continue;
-    for (const n of mindSubtree(elements, id)) out.add(n.id);
-  }
-  return out;
-}
-
-/**
  * Apply a plan's moves and re-anchors to `elements` as PATCHES: position on a
  * moved node, faces on a re-anchored connector, nothing else. The editor runs
  * this inside its commit against the elements as they stand then, so a label

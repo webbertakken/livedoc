@@ -1,20 +1,17 @@
 import {
-  applyMindMoves,
-  autoPositionMindNodes,
-  groupMindNodes,
   isMindNode,
   mindRootOf,
-  relayoutMindMap,
-  setMindDirection,
-  setMindNumbered,
   treeIds,
-  ungroupMindNodes,
   type Element,
   type MindDirectionChoice,
   type MindSpacing,
 } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
 import { debugLog } from '@/lib/debug-log';
+import { requireKindFamily } from '@/lib/element-kinds/store';
+
+// Every action here acts on selected mind nodes, which draw only once the mind maps family is in.
+const mindModel = () => requireKindFamily('mind-maps');
 
 type MindMapSetterDeps = {
   currentSelectionIds: () => Set<string>;
@@ -63,6 +60,7 @@ export function useMindMapSetters({
   // Lay each map out again, as one commit (Tidy Map puts its hand-placed nodes back too).
   const relayoutSelected = (ids: Set<string>, unplace = false) => {
     if (ids.size === 0) return;
+    const { applyMindMoves, relayoutMindMap } = mindModel();
     commit((all) => {
       let next = all;
       for (const rootId of selectedRoots(all, ids)) {
@@ -84,6 +82,7 @@ export function useMindMapSetters({
   const setMindFlowSelected = (flow: MindDirectionChoice) => {
     const ids = currentSelectionIds();
     if (ids.size === 0) return;
+    const { setMindDirection } = mindModel();
     commit((all) => {
       let next = all;
       for (const id of ids) {
@@ -100,6 +99,7 @@ export function useMindMapSetters({
   const setMindSpacingSelected = (spacing: MindSpacing) => {
     const ids = currentSelectionIds();
     if (ids.size === 0) return;
+    const { applyMindMoves, relayoutMindMap } = mindModel();
     commit((all) => {
       let next = all;
       for (const rootId of selectedRoots(all, ids)) {
@@ -117,6 +117,7 @@ export function useMindMapSetters({
   // no node moves and no connector re-anchors.
   const tidy = (ids: Set<string>) => {
     if (ids.size === 0) return;
+    const { relayoutMindMap } = mindModel();
     const all = elements();
     const changes = selectedRoots(all, ids).some((rootId) => {
       const free = unplaced(all, rootId);
@@ -145,21 +146,24 @@ export function useMindMapSetters({
   };
   const mindArrangeActions: MindArrangeActions = {
     number: (on) => {
+      const { setMindNumbered } = mindModel();
       if (arrange(on ? 'number' : 'unnumber', (all, ids) => setMindNumbered(all, ids, on)))
         track('Element', 'Changed', 'MindNumber');
     },
     // The new group's frame id, so the editor can select it and open its title.
     group: () => {
+      const { groupMindNodes } = mindModel();
       const id = crypto.randomUUID();
       if (!arrange('group', (all, ids) => groupMindNodes(all, ids, id))) return null;
       track('Element', 'Changed', 'MindGroup');
       return id;
     },
     ungroup: () => {
-      if (arrange('ungroup', ungroupMindNodes)) track('Element', 'Changed', 'MindUngroup');
+      if (arrange('ungroup', mindModel().ungroupMindNodes))
+        track('Element', 'Changed', 'MindUngroup');
     },
     autoPosition: () => {
-      if (arrange('auto-position', autoPositionMindNodes))
+      if (arrange('auto-position', mindModel().autoPositionMindNodes))
         track('Element', 'Changed', 'MindAutoPosition');
     },
   };

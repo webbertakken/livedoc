@@ -2,9 +2,13 @@
 
 // What a mind map draws from its tree, worked out once for the tab: the number each numbered mind node shows
 // (docs/specs/009-elements/mind-node.md "Numbered nodes") and the roots that wear a halo ("The root's halo"),
-// each read by its node.
+// each read by its node. The halo is the mind maps family's: worked out once the family is in, as its nodes are drawn.
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { mindHaloRoots, mindNumbers, type Element } from '@livedoc/document';
+import { mindNumbers, type Element } from '@livedoc/document';
+import { useKindFamilyLoaded } from '@/lib/element-kinds/react';
+import { requireKindFamily } from '@/lib/element-kinds/store';
+
+const noHaloRoots: ReadonlySet<string> = new Set();
 
 const MindNumbersContext = createContext<ReadonlyMap<string, number> | null>(null);
 
@@ -39,7 +43,11 @@ export function MindHaloRootsProvider({
   elements: Element[];
   children: ReactNode;
 }) {
-  const roots = useMemo(() => mindHaloRoots(elements), [elements]);
+  const mindMapsIn = useKindFamilyLoaded('mind-maps');
+  const roots = useMemo(
+    () => (mindMapsIn ? requireKindFamily('mind-maps').mindHaloRoots(elements) : noHaloRoots),
+    [elements, mindMapsIn],
+  );
   // Its identity holds while the roots do, so a change that keeps every map's root re-renders no node through it.
   const key = [...roots].sort().join();
   // oxlint-disable-next-line react/exhaustive-deps -- keyed on the entries, not the set

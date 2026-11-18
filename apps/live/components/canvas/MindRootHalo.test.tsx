@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { beforeAll, afterEach, describe, expect, it } from 'vitest';
 import { createShape, type Element, type ShapeElement } from '@livedoc/document';
 import { MindHaloRootsProvider } from './MindMapLayer';
 import { MindRootHalo } from './MindRootHalo';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Mind maps draw and edit through their family (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/009-elements/mind-node.md "The root's halo": the canvas rings a root with a child, and only that.
 

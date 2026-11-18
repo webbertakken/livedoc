@@ -13,6 +13,7 @@ import {
   mindSubtree,
   nextMindChildPosition,
   withMindBranches,
+  withMindSubtrees,
 } from './mind-map';
 
 // The size a new node is actually created at, so these tests keep exercising
@@ -308,5 +309,22 @@ describe('making room', () => {
   it('never moves the tree being grown', () => {
     const { shifts } = growMindChild([root, firstChild], root);
     expect(shifts).toEqual([]);
+  });
+});
+
+describe('withMindSubtrees', () => {
+  it('carries the whole branch under a dragged node', () => {
+    const els: Element[] = [
+      node('r', 0, 0),
+      node('a', 0, 0, 'r'),
+      node('a1', 0, 0, 'a'),
+      node('b', 0, 0, 'r'),
+    ];
+    expect([...withMindSubtrees(els, new Set(['a']))].sort()).toEqual(['a', 'a1']);
+  });
+
+  it('leaves non-mind selections alone', () => {
+    const sq = createShape('square', 0, 0);
+    expect([...withMindSubtrees([sq], new Set([sq.id]))]).toEqual([sq.id]);
   });
 });

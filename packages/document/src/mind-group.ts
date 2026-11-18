@@ -5,7 +5,7 @@
 
 import { createShape } from './factories';
 import { isMindNode } from './mind-map';
-import { MIND_GROUP_TITLE_PX, mindGroupBoxes, mindGroupColours } from './mind-layout';
+import { MIND_GROUP_TITLE_PX, mindGroupBoxes, mindGroupColours } from './mind-map-view';
 import type { Element, ElementId, ShapeElement } from './index';
 
 /** Whether `el` is a group's frame. */

@@ -1,14 +1,13 @@
 // A mind node dragged in a tidy map (docs/specs/009-elements/mind-node.md "A tidy map stays tidy"): while it moves,
 // a line marks the slot it would be reordered into among its siblings; let go, it is reordered there or placed by
-// hand where it was dropped. Folded into the drag's result, so the move and the new layout land as one change.
+// hand where it was dropped. Folded into the drag's result, so the move and the new layout land as one change. The
+// planning is the mind maps family's, in by the time a mind node is drawn to be dragged.
 import {
   isMindGroupFrame,
   isMindNode,
   mindGroupMembers,
   isVerticalMindFlow,
   mindSideOf,
-  planMindDrop,
-  previewMindDrop,
   withMindSubtrees,
   type AlignmentGuide,
   type Element,
@@ -16,13 +15,16 @@ import {
 } from '@livedoc/document';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
+import { isKindFamilyLoaded, requireKindFamily } from '@/lib/element-kinds/store';
 
 // Only a drag of a mind node below its root, or of a group's frame (standing for its first member), counts; anything
-// else in the selection keeps its plain move.
+// else in the selection keeps its plain move, as does a map whose family could not load (its nodes are not drawn).
 function droppedNode(committed: readonly Element[], primaryId: string) {
   const held = committed.find((el) => el.id === primaryId);
   const node = held && isMindGroupFrame(held) ? mindGroupMembers(committed, held.id)[0] : held;
-  return node && isMindNode(node) && node.mindParentId ? node : null;
+  return node && isMindNode(node) && node.mindParentId && isKindFamilyLoaded('mind-maps')
+    ? node
+    : null;
 }
 
 type DropPreview = Omit<MindDrop, 'elements'>;
@@ -35,7 +37,12 @@ export function mindDropNow(
   draggedIds: ReadonlySet<string>,
 ): DropPreview | null {
   if (!droppedNode(committed, primaryId)) return null;
-  const drop = previewMindDrop(committed, previewed, primaryId, draggedIds);
+  const drop = requireKindFamily('mind-maps').previewMindDrop(
+    committed,
+    previewed,
+    primaryId,
+    draggedIds,
+  );
   return drop.kind ? drop : null;
 }
 
@@ -61,7 +68,7 @@ export function mindDropOnRelease(
 ): (elements: Element[]) => Element[] {
   return (elements) => {
     if (!droppedNode(committed, primaryId)) return elements;
-    const drop = planMindDrop(
+    const drop = requireKindFamily('mind-maps').planMindDrop(
       committed,
       elements,
       primaryId,

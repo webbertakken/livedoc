@@ -2,7 +2,8 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createShape, type Element } from '@livedoc/document';
-import { MindArrangeButtons, mindArrangeState } from './MindArrangeButtons';
+import { MindArrangeButtons } from './MindArrangeButtons';
+import { mindArrangeState } from './mind-arrange-state';
 
 // docs/specs/009-elements/mind-node.md "Numbered nodes", "Groups", "A tidy map stays tidy".
 

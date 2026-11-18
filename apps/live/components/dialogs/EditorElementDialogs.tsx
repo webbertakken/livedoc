@@ -9,8 +9,6 @@ import {
   EMBED_PROVIDER_HINT,
   EMBED_PROVIDER_LABEL,
   embedTargetFor,
-  parseMindOutline,
-  summariseMindOutline,
 } from '@livedoc/document';
 
 import { track } from '@/lib/telemetry';
@@ -254,12 +252,7 @@ export function EditorElementDialogs() {
         <MindOutlineDialog
           key={mindOutline.openForId}
           initialText={mindOutline.text()}
-          summarise={(text) => {
-            const outline = parseMindOutline(text);
-            return outline
-              ? summariseMindOutline(activeTab.elements, mindOutline.openForId!, outline)
-              : null;
-          }}
+          summarise={mindOutline.summarise}
           onSave={mindOutline.save}
           onClose={mindOutline.close}
         />

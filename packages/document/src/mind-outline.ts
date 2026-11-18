@@ -17,7 +17,7 @@ import {
 } from './mind-grow';
 import { isMindNode, mindFlowOf, mindRootOf } from './mind-map';
 import { isMindSide, mindNewChildSide } from './mind-direction';
-import { mindNodesInOrder } from './mind-layout';
+import { mindNodesInOrder } from './mind-order';
 import { mindOutlineNodeText, type MindOutlineNode } from './mind-outline-text';
 import {
   mindNodeMarks,

@@ -18,7 +18,9 @@ import {
   sendManyToBack,
   isBoxed,
   withDependents,
-  relayoutAfterRemoval,
+  isMindGroupFrame,
+  isMindNode,
+  settleMindGroups,
   withMindBranches,
   withSheetCharts,
   type Element,
@@ -32,6 +34,20 @@ import { trackDuplicated } from '@/lib/element-telemetry';
 import { announce } from '@/lib/announcer';
 import { describeMany, describeOne } from '@/lib/element-names';
 import type { SheetDeleteGuard } from '@/hooks/sheets/useSheetDeleteGuard';
+import { isKindFamilyLoaded, requireKindFamily } from '@/lib/element-kinds/store';
+import { debugLog } from '@/lib/debug-log';
+
+// A tidy mind map closes the gap a delete leaves (docs/specs/009-elements/mind-node.md "Deleting"), through the mind
+// maps family; a board without mind nodes has no gap to close. A mind node whose family could not load is not drawn,
+// so its map is left as it stands rather than the delete failing.
+function closeMindGaps(before: Element[], after: Element[]): Element[] {
+  if (!before.some((el) => isMindNode(el) || isMindGroupFrame(el))) return after;
+  if (!isKindFamilyLoaded('mind-maps')) {
+    debugLog('[element-kinds] mind map not re-laid after a delete: family=mind-maps not in');
+    return settleMindGroups(after);
+  }
+  return requireKindFamily('mind-maps').relayoutAfterRemoval(before, after);
+}
 
 type EditorSelectionActionsDeps = {
   // The active selection resolved to ids (the single selection, or the
@@ -136,7 +152,7 @@ export function useElementSelectionActions(deps: EditorSelectionActionsDeps) {
       // The arrows attached to what goes, and those hung off them in turn (docs/specs/008-canvas/arrow-to-arrow.md).
       const gone = withDependents(els, targetIds, isProtected);
       // A tidy mind map closes the gap in the same change (docs/specs/009-elements/mind-node.md "Deleting").
-      return relayoutAfterRemoval(
+      return closeMindGaps(
         els,
         els.filter((el) => {
           // Belt-and-suspenders: never drop a locked element, even via the
@@ -238,7 +254,7 @@ export function useElementSelectionActions(deps: EditorSelectionActionsDeps) {
       // The arrows attached to what goes, and those hung off them in turn (docs/specs/008-canvas/arrow-to-arrow.md).
       const gone = withDependents(els, targetIds, isProtected);
       // A tidy mind map closes the gap in the same change (docs/specs/009-elements/mind-node.md "Deleting").
-      return relayoutAfterRemoval(
+      return closeMindGaps(
         els,
         els.filter((el) => {
           if (el.locked === true || layerLockedIds.has(el.id)) return true;

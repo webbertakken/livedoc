@@ -8,7 +8,8 @@ import {
   setMindNumbered,
   ungroupMindNodes,
 } from './mind-arrange';
-import { isMindTreeTidy, mindGroupBoxes } from './mind-layout';
+import { isMindTreeTidy } from './mind-layout';
+import { mindGroupBoxes } from './mind-map-view';
 import type { Element, ShapeElement } from './index';
 
 // docs/specs/009-elements/mind-node.md "A tidy map stays tidy", "Numbered nodes" and "Groups".

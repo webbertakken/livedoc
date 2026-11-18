@@ -2,19 +2,20 @@
 // its label"). The geometry around a measured block of text: the size the label is laid out at,
 // the padding around it, and the height the node needs. The measuring is the DOM's
 // (components/canvas/text-hug-measure.ts), handed in as a function, as for a hugging text box;
-// growing the node and keeping its map tidy is the document package's (fitMindNodeHeight).
+// growing the node and keeping its map tidy is the document package's (fitMindNodeHeight), reached through the mind
+// maps family: a node's label is only ever written with its node on the board, so the family is in by then.
 
 import {
   labelFontPx,
   PADDING_PX,
   defaultPadding,
-  fitMindNodeHeight,
   isMindNode,
   type Element,
   type ElementId,
   type ShapeElement,
 } from '@livedoc/document';
 import type { MeasureTextBlock } from '@/lib/text-hug';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 
 // The px a mind node's label is laid out at: its size preset's fixed px. Auto ('scale') draws
 // fitted to the box once committed, but is typed at the middling fixed px, which is what has to
@@ -45,5 +46,6 @@ export function fitMindLabel(
 ): Element[] {
   const el = elements.find((e) => e.id === id);
   if (!el || !isMindNode(el)) return elements;
+  const { fitMindNodeHeight } = requireKindFamily('mind-maps');
   return fitMindNodeHeight(elements, id, mindLabelHeight(el, measureFor(el)));
 }

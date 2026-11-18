@@ -1,13 +1,8 @@
 import {
-  applyMindMoves,
-  insertMindParent,
   isMindNode,
-  isMindTreeTidy,
   mindChildren,
   mindFlowOf,
   mindRootOf,
-  planMindGrowth,
-  relayoutMindMap,
   type ArrowElement,
   type Element,
   type MindGrowthPlan,
@@ -27,6 +22,10 @@ import {
 } from './useGrowthLanding';
 import { track } from '@/lib/telemetry';
 import { debugLog } from '@/lib/debug-log';
+import { isKindFamilyLoaded, requireKindFamily } from '@/lib/element-kinds/store';
+
+// Growth runs only from a mind node on the board, so the mind maps family is in by then (canGrowMindNode asks).
+const mindModel = () => requireKindFamily('mind-maps');
 
 // Mind-map growth in the editor (docs/specs/009-elements/mind-node.md). Tab grows a child, Enter a
 // sibling, from the keyboard (the label editor or a selected node) or the "+"
@@ -39,7 +38,7 @@ export function useMindGrowth(opts: GrowthHookOpts) {
   const { reveal, escapeGrown } = useGrowthLanding(opts);
 
   const canGrowMindNode = (id: string) => {
-    if (editsBlocked) return false;
+    if (editsBlocked || !isKindFamilyLoaded('mind-maps')) return false;
     const el = activeTab.elements.find((e) => e.id === id);
     return !!el && isMindNode(el);
   };
@@ -80,13 +79,14 @@ export function useMindGrowth(opts: GrowthHookOpts) {
     label?: string,
     options: GrowOptions = {},
   ) => {
-    if (editsBlocked) return;
+    if (!canGrowMindNode(id)) return;
     const withLabel = (els: Element[]) => (label === undefined ? els : withLabelOn(els, id, label));
     const ids = { node: crypto.randomUUID(), arrow: crypto.randomUUID() };
     // Planned once from the tab as rendered, to bail early and to know where the node lands, and
     // again inside the commit: the label typed before this Tab committed a moment ago (and may
     // have grown its node and re-laid the map), so only the tab as it stands in the commit
     // places the new node clear of it. The ids are fixed, so both plans name the same node.
+    const { applyMindMoves, planMindGrowth } = mindModel();
     const before = activeTab.elements;
     const plan = planMindGrowth(before, id, kind, ids);
     if (!plan) return;
@@ -117,7 +117,7 @@ export function useMindGrowth(opts: GrowthHookOpts) {
   // Add Parent (docs/specs/009-elements/mind-node.md "Add Parent"): a new node between this one and its parent, or
   // above a root, looking like the node it goes above; selected, so typing names it.
   const addMindParent = (id: string) => {
-    if (editsBlocked) return;
+    if (!canGrowMindNode(id)) return;
     const root = rootOf(id);
     const ids = {
       node: crypto.randomUUID(),
@@ -128,6 +128,7 @@ export function useMindGrowth(opts: GrowthHookOpts) {
       node: (node: ShapeElement, from: ShapeElement) => dress(node, from, root),
       connector: dressMindConnector,
     };
+    const { insertMindParent } = mindModel();
     if (!insertMindParent(activeTab.elements, id, ids, dressing)) return;
     patchActive((els) => insertMindParent(els, id, ids, dressing) ?? els);
     setEditingId(null);
@@ -140,7 +141,7 @@ export function useMindGrowth(opts: GrowthHookOpts) {
   // (docs/specs/009-elements/mind-node.md "Escape keeps what you typed"): only a childless node with a
   // parent, so a root or a node with a branch under it is never lost this way.
   const abandonMindNode = (id: string): boolean => {
-    if (editsBlocked) return false;
+    if (!canGrowMindNode(id)) return false;
     const before = activeTab.elements;
     const el = before.find((e) => e.id === id);
     if (!el || !isMindNode(el) || !el.mindParentId) return false;
@@ -149,6 +150,7 @@ export function useMindGrowth(opts: GrowthHookOpts) {
     // The growth that made this node may have slid its siblings apart to make
     // room. A map that was tidy closes the gap again, so it stays tidy and
     // keeps growing tidily; a hand-arranged one is left exactly as it was.
+    const { applyMindMoves, isMindTreeTidy, relayoutMindMap } = mindModel();
     const root = mindRootOf(before, el);
     const wasTidy = isMindTreeTidy(before, root.id, mindFlowOf(before, el));
     const remove = (els: Element[]) => {

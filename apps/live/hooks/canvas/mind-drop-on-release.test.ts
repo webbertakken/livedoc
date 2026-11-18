@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import {
   applyMindMoves,
   createShape,
@@ -7,6 +7,10 @@ import {
   type ShapeElement,
 } from '@livedoc/document';
 import { mindDropGuide, mindDropNow, mindDropOnRelease } from './mind-drop-on-release';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Mind maps draw and edit through their family (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/009-elements/mind-node.md "A tidy map stays tidy": the marker while dragging, the drop on release.
 

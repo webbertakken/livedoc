@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   PADDING_PX,
   createShape,
@@ -10,6 +10,10 @@ import {
   type Tab,
 } from '@livedoc/document';
 import { useSelectionEditing } from './useSelectionEditing';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Mind maps draw and edit through their family (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 // A mind node's lines measure this tall (jsdom lays nothing out).
 const mindLines = { height: 0 };
