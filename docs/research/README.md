@@ -65,6 +65,13 @@ The resulting specs live in docs/specs/024-agents/ and docs/specs/015-api/cli.md
 - ./agent-cli/live-collaboration.md - when an agent edits beside a person: presence, changesets, revert, comments
 - ./agent-cli/shared-core-architecture.md - when deciding what the api, MCP and CLI each own; auth, distribution
 
+## Docs on an open standard
+
+The text document kind on ODF with Google Docs' interface: the standard, the live model, layout, libraries, fonts,
+spelling and import security. The resulting specs will live in their own category under docs/specs/.
+
+- ./docs-open-standard/README.md - when building the text document kind: research per decision, with recommendations
+
 ## Access levels
 
 Who may do what to a document: how other products define levels, what each identity can do in the code, the
