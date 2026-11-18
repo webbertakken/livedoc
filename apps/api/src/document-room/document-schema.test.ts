@@ -81,6 +81,29 @@ describe('the room schema', () => {
     );
   });
 
+  // sheet-store.md "In a spreadsheet" (Layout): an upgraded room's orders move out of their layouts into one chunk.
+  it("moves an upgraded room's sheet orders into chunks", () => {
+    const { db, run } = room();
+    for (const step of DOCUMENT_SCHEMA_STEPS.slice(0, 4)) db.exec(step);
+    db.exec(
+      'CREATE TABLE _document_schema (version INTEGER NOT NULL); INSERT INTO _document_schema VALUES (4)',
+    );
+    db.exec(`INSERT INTO document (id, saved_at, created_at) VALUES ('d', 0, 0);
+      INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, created_at, updated_at, updated_by)
+        VALUES ('d', 's', 't', 'S', '{"rows":["r1","r2"],"cols":["c1"],"frozenRows":1}', 0, 0, 0, '{}'),
+               ('d', 'odd', 't', 'O', 'not json', 0, 0, 0, '{}');`);
+    migrateDocumentSchema(run);
+    const axes = db
+      .prepare('SELECT sheet_id, axis, chunk, ids FROM sheet_axes ORDER BY axis')
+      .all();
+    expect(axes.map((row) => ({ ...row }))).toEqual([
+      { sheet_id: 's', axis: 'c', chunk: 0, ids: '["c1"]' },
+      { sheet_id: 's', axis: 'r', chunk: 0, ids: '["r1","r2"]' },
+    ]);
+    const layouts = db.prepare('SELECT layout FROM sheets ORDER BY id').all();
+    expect(layouts.map((row) => row.layout)).toEqual(['not json', '{"frozenRows":1}']);
+  });
+
   it('is idempotent', () => {
     const { db, run } = room();
     migrateDocumentSchema(run);

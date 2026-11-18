@@ -51,7 +51,7 @@ elements, its snapshots, its changesets or its room.
 
 ## In a spreadsheet
 
-**Status: specified; the workbook row and styles are built** (format and settings, made with the spreadsheet,
+**Status: specified; the workbook row, styles and the chunked order are built** (format and settings, made with the spreadsheet,
 carried on the document read). What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
 this page holds for both until the Plan Sheet retires.
 
@@ -68,7 +68,11 @@ this page holds for both until the Plan Sheet retires.
 - **Layout** stays one JSON a sheet, but for the order of its row and column ids, which lives in a table of its own
   in chunks of 50,000 ids (about 550 KB a chunk, the row cap being 8 MB; [Storage
   research](../../research/sheets-open-standard/storage.md)), always, so a sheet of a million rows stores as one of
-  a hundred does (default).
+  a hundred does (default). Built, for every sheet, a Plan Sheet's too, so there is one way to store an order:
+  - Inserting or deleting rows rewrites only the chunks they fall in; a chunk grown past 100,000 ids splits in place.
+  - Sorting, or moving rows from one chunk to another, writes the order afresh in chunks of 50,000.
+  - A sheet stored before the chunks (or moved in from an older store) reads its order from its layout until its next
+    layout write moves it into chunks.
 - **Named ranges** are the workbook's: each stays in the layout of the sheet its range lies on, its name unique
   across the workbook, and a formula on any sheet reads it (default).
 - **Unknown content** ([Standard mapping](standard-mapping.md#unknown-content)): a table of the file's own XML

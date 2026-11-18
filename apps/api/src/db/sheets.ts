@@ -14,6 +14,15 @@ import {
 import type { DocumentEnv } from '../types';
 import { sheetNoteUnreferencedStatement } from './sheet-refs';
 import { cellFormatSql, styleCellsStatements } from './sheet-styles';
+import {
+  axisWriteStatements,
+  copyAxesStatement,
+  layoutWithAxes,
+  layoutWithoutAxes,
+  NO_AXES,
+  readAxes,
+  type SheetAxes,
+} from './sheet-axes';
 
 type SheetRow = {
   id: string;
@@ -36,7 +45,12 @@ type CellRow = {
   format: string | null;
 };
 
-export type SheetHead = Omit<Sheet, 'cells'> & { cellCount: number; cellBytes: number };
+// `axes` are the chunks its order is stored in (./sheet-axes), what a layout write plans against.
+export type SheetHead = Omit<Sheet, 'cells'> & {
+  cellCount: number;
+  cellBytes: number;
+  axes: SheetAxes;
+};
 
 const HEAD_COLUMNS =
   'id, tab_id, title, layout, rev, cell_count, cell_bytes, created_at, updated_at, updated_by';
@@ -51,12 +65,13 @@ function parseJson<T>(text: string | null, fallback: T): T {
   }
 }
 
-function headFromRow(row: SheetRow): SheetHead {
+function headFromRow(row: SheetRow, axes: SheetAxes = NO_AXES): SheetHead {
   return {
     id: row.id,
     tabId: row.tab_id,
     title: row.title,
-    layout: parseJson<SheetLayout>(row.layout, { rows: [], cols: [] }),
+    layout: layoutWithAxes(parseJson<SheetLayout>(row.layout, { rows: [], cols: [] }), axes),
+    axes,
     rev: row.rev,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -85,6 +100,20 @@ function headToJson(head: SheetHead, cells: CellRow[]): SheetJson {
   };
 }
 
+async function headsWithAxes(
+  env: DocumentEnv,
+  documentId: string,
+  rows: readonly SheetRow[],
+): Promise<SheetHead[]> {
+  if (rows.length === 0) return [];
+  const axes = await readAxes(
+    env,
+    documentId,
+    rows.map((r) => r.id),
+  );
+  return rows.map((row) => headFromRow(row, axes.get(row.id)));
+}
+
 export async function readSheetHead(
   env: DocumentEnv,
   documentId: string,
@@ -95,7 +124,8 @@ export async function readSheetHead(
   )
     .bind(documentId, sheetId)
     .first<SheetRow>();
-  return row ? headFromRow(row) : null;
+  if (!row) return null;
+  return headFromRow(row, (await readAxes(env, documentId, [sheetId])).get(sheetId));
 }
 
 // The heads of a tab's sheets (titles, for uniqueness and references), or of the whole document.
@@ -109,7 +139,7 @@ export async function listSheetHeads(
   )
     .bind(...(tabId ? [documentId, tabId] : [documentId]))
     .all<SheetRow>();
-  return (rows.results ?? []).map(headFromRow);
+  return headsWithAxes(env, documentId, rows.results ?? []);
 }
 
 // Whole sheets, cells included: a tab's, named ones, or the document's.
@@ -125,7 +155,7 @@ export async function listSheets(
     )
       .bind(documentId, JSON.stringify(scope.ids))
       .all<SheetRow>();
-    heads = (rows.results ?? []).map(headFromRow);
+    heads = await headsWithAxes(env, documentId, rows.results ?? []);
   } else {
     heads = await listSheetHeads(env, documentId, scope.tabId);
   }
@@ -350,7 +380,7 @@ export function headWriteStatement(
     nonce,
     now,
     JSON.stringify(by),
-    ...(change.layout ? [JSON.stringify(change.layout)] : []),
+    ...(change.layout ? [layoutWithoutAxes(change.layout)] : []),
     ...(change.title !== undefined ? [change.title] : []),
     documentId,
     sheetId,
@@ -421,13 +451,13 @@ export function insertSheetStatements(
     sheet.id,
     sheet.tabId,
     sheet.title,
-    JSON.stringify(sheet.layout),
+    layoutWithoutAxes(sheet.layout),
     sheet.rev,
     now,
     now,
     JSON.stringify(sheet.updatedBy),
   );
-  const out = [head];
+  const out = [head, ...axisWriteStatements(env, documentId, sheet.id, NO_AXES, sheet.layout)];
   // Chunks of about 1 MB, so no one parameter nears D1's 2 MB value limit.
   for (const chunk of byteChunks(
     sheet.cells.filter((c) => c.i || c.f),
@@ -462,6 +492,7 @@ export function copySheetStatements(
       `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format, style_id)
        SELECT document_id, ?, row_id, col_id, input, format, style_id FROM sheet_cells WHERE document_id = ? AND sheet_id = ?`,
     ).bind(to.id, documentId, fromId),
+    copyAxesStatement(env, documentId, fromId, to.id),
     sheetNoteUnreferencedStatement(env, documentId, to.id, now),
   ];
 }
