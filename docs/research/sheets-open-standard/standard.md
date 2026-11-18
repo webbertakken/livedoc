@@ -31,16 +31,28 @@ Which ISO spreadsheet format a LiveDoc spreadsheet is native to (fork C1). Resea
   Sheets, and theirs to open here. The fork is which one the **model** follows, and which is the **round trip**
   without loss.
 
-## Recommendation
+## Recommendation, and the ruling
 
-- **Native**: ODF 1.4 spreadsheets, with OpenFormula as the stored formula language and the flat `.fods` form for
-  repository sync (C1's default stands).
-- Functions OpenFormula lacks are written as LibreOffice writes them (`COM.MICROSOFT.*`, `ORG.LIBREOFFICE.*`), so
-  LibreOffice and Excel recalculate them; Google-only functions with no name on record (52, [catalogue](function-catalogue.md#google-only-with-no-odff-name))
-  take a LiveDoc namespace (a new fork: the namespace's name), always with the cell's cached value written beside
-  them, so any reader still shows the value.
-- **XLSX in and out**, with its losses listed and none silent.
-- Where Google Sheets and OpenFormula differ on a function's meaning, the spec names which wins, function by
-  function (the plan's rule); the default proposed: **Google wins in the grid** (the request is Google's behaviour),
-  and the file carries the formula under the name whose meaning matches (a namespaced one where OpenFormula's
-  differs).
+The research recommended ODF as the one native format with XLSX in and out. **Webber ruled C1 otherwise
+(2026-11-18): both are native, and a file keeps the format it arrived in.** What follows is the research read in the
+light of that ruling.
+
+- **One live model**, which both formats map onto; each format's mapping is its own, neither an export of the
+  other. What a format holds that the model does not is kept with the workbook and written back to that format.
+- **A workbook remembers its format** (`.ods`, `.fods` or `.xlsx`): it leaves as it arrived until a person
+  converts it, and conversion lists its losses before it runs. The format a spreadsheet made in LiveDoc is born in is
+  C5 (default ODF 1.4).
+- **Formulas in the file's own syntax**: OpenFormula in an ODF file (`of:=SUM([.A1:.B2])`), Excel's grammar in an
+  XLSX file (`SUM(A1:B2)`, `_xlfn.` before functions newer than 2007, assumed from Excel's files). The stored
+  formula in the room is neither: it is the model's own, by row and column ids, as today.
+- **Functions one format lacks**: in ODF, as LibreOffice writes them (`COM.MICROSOFT.*`, `ORG.LIBREOFFICE.*`); in
+  XLSX, as Excel names them. Google-only functions (52 with no ODFF name, [catalogue](function-catalogue.md#google-only-with-no-odff-name))
+  need a convention in **each** format (S5): Google's own XLSX downloads wrap such a formula as
+  `IFERROR(__xludf.DUMMYFUNCTION("…"), <cached value>)` (assumed: widely observed in its downloads; checked against
+  the corpus in Phase 7), which Google Sheets turns back into the formula on import; ODF has no such convention on
+  record, so a LiveDoc namespace (`ORG.LIVEDOC.*`) with the cached value is proposed there.
+- **Which meaning wins** (S6): where Google Sheets and OpenFormula, or Google Sheets and Excel, differ on a function,
+  Google's meaning holds in the grid, and each file writes the name whose meaning matches in its own format.
+- **Schema validation** of every written file against its own format: ODF 1.4's RELAX NG schema, and the ECMA-376
+  Transitional schemas for XLSX.
+- **Repositories**: `.fods` stays the text form for an ODF workbook; an XLSX workbook syncs as its `.xlsx` bytes.

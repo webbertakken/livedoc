@@ -28,5 +28,6 @@ From Google's list (verified, [catalogue](function-catalogue.md)):
 - `IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML`, `IMPORTXML`, `IMAGE`: **A**, through the api Worker with the guards,
   optional when self-hosted (S4's default stands).
 - `IMPORTRANGE`: between LiveDoc documents, with consent and the reader's access.
-- `GOOGLEFINANCE`, `GOOGLETRANSLATE`, `DETECTLANGUAGE`: for C3; proposed: `DETECTLANGUAGE` built in (a small
-  open model or script detection, inferred feasible), the other two left out unless Webber names a source.
+- `GOOGLEFINANCE` and `GOOGLETRANSLATE`: **left out (C3, ruled 2026-11-18)**; in an arriving file each keeps its formula
+  text and its cached value. `DETECTLANGUAGE` could read either way (a Google service, or a function a small open
+  model can answer): it joins the list asked of Webber once with the parity matrix.

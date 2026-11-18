@@ -35,7 +35,7 @@ Specs live in numbered category folders: the reserved `001`–`005` first (visio
 - ./026-plan/README.md - when working on Plan tabs, Plan boards and cards, or items and the item store
 - ./027-repositories/README.md - when linking a repository to LiveDoc: `livedoc.toml`, mirrors, native files (pages and files synced both ways), sync and merge, git branches bound to document branches, committed files, unlinking, diagram-as-code sources
 - ./028-animation/README.md - when working on element animations: the animation set each element takes (Shape, Text, Sticky, Drawing, Media, Table), the per-set menu categories, reveals, loops and the quality bar
-- ./029-sheets/README.md - when working on Sheets: the Sheet element (a spreadsheet tab placed from a Plan tab), its formulas, or the sheet store
+- ./029-sheets/README.md - when working on spreadsheets (a document type on ODF and XLSX, as Google Sheets works), the Plan Sheet it retires, formulas, or the sheet store
 - ./030-forms/README.md - when working on Form tabs: building forms, the public form link and its page, responses that become cards on a board
 - ./031-markdown/README.md - when working on markdown tabs: pages, the byte-faithful round trip to `.md` files, the live merge of text, text changesets
 - ./032-wikis/README.md - when working on wikis (global and project): what makes a folder one, the entry page, wiki health, search, links between pages

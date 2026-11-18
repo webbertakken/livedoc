@@ -1,5 +1,9 @@
 # Sheet
 
+**Superseded** by the [spreadsheet](spreadsheet.md), which retires the Plan Sheet in plan 0020's "Phase 16: migrate and
+retire". Until then this page states what ships; its grid, editing and keyboard rules carry into the spreadsheet's
+area specs, which name what changes.
+
 A **Sheet** is a spreadsheet on the canvas: one tab of a workbook, as a person knows it from Google Sheets or
 Microsoft Excel. It is placed from Plan's **Sheet** palette category (under the **Spreadsheets** heading), moved and resized like a
 [Plan board](../026-plan/plan-board.md), and maximised like one. Its cells are not stored on the canvas: the
