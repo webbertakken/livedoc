@@ -1,7 +1,7 @@
 import { expect, expectNoPageErrors, test } from './fixtures';
 import { openPhotoBoard } from './fixtures/photo-board';
 import { wallPhotoPng, type WallNote } from './fixtures/wall-photo';
-import { writeZip } from '../lib/zip-writer';
+import { writeZip } from '@livedoc/office-packages';
 
 // A whole wall from several photos (docs/specs/021-event-storming/event-storming.md Phase 11), in a real browser: a
 // zip of two overlapping photos, picked once, detected one after another, reviewed together, landed as one draft

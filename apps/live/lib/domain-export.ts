@@ -6,9 +6,7 @@ import {
   type DomainLanguage,
 } from '@livedoc/storm-reading';
 import { API_BASE, apiFetch, apiHeaders } from '@/lib/api/core';
-import { ByteBudget } from './inflate';
-import { listZip, readZipEntry } from './zip-reader';
-import { writeZip } from './zip-writer';
+import { ByteBudget, listZip, readZipEntry, writeZip } from '@livedoc/office-packages';
 
 // The editor's half of the zip export (docs/specs/021-event-storming/domain-export.md "The zip"): it reads an
 // earlier zip, asks the api for the files, and writes them into the archive the person downloads.

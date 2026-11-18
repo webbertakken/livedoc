@@ -195,6 +195,11 @@ const TAGS = [
     description:
       'Spreadsheet tabs on the canvas: cells, formulas and formatting by row and column id, live for everyone with the document open.',
   },
+  {
+    name: 'Text documents',
+    description:
+      'Text documents on an open standard: their live state, edited together through the room, and their files in ODF.',
+  },
   { name: 'Sharing', description: 'Share links, passwords, and the documents shared with you.' },
   { name: 'Folders', description: 'Organise documents into a personal or team folder tree.' },
   {

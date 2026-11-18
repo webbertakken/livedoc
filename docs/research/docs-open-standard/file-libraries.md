@@ -19,7 +19,7 @@ versions and licences from `npm view` on 2026-11-18 (verified).
 ## Sizes and fit
 
 - Zip: the repo already reads and writes zips with the platform's `DecompressionStream` / `CompressionStream` under a
-  byte budget (verified: `apps/live/lib/zip-reader.ts`, `inflate.ts`, `zip-writer.ts`); both streams exist in Workers
+  byte budget (verified: `packages/office-packages/src/zip/zip-reader.ts`, `inflate.ts`, `zip-writer.ts`); both streams exist in Workers
   (assumed: Workers implement the Compression Streams API).
 - XML: `saxes` and `fast-xml-parser` are pure JavaScript, no DOM needed, so they run in Workers where `DOMParser` does
   not exist (inferred: Workers have no DOM).

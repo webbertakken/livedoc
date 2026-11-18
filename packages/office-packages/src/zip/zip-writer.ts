@@ -1,6 +1,6 @@
-// A minimal Zip writer for downloads (docs/specs/007-editor/pages-mode.md "Export": every
-// page as PNG or SVG in one file). Stored entries only: images are already compressed, so
-// deflating them again would cost time for nothing. Pure and browser-safe; the counterpart of
+// A minimal Zip writer: downloads of several files (docs/specs/007-editor/pages-mode.md "Export") and the office
+// packages (docs/specs/020-import-export/office-packages.md "Writing a package"). Stored entries only: pictures are
+// already compressed, and a stored entry is what ODF asks of `mimetype`. Pure and browser-safe; the counterpart of
 // zip-reader.ts.
 
 type ZipFile = { name: string; data: Uint8Array };

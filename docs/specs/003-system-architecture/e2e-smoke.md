@@ -44,6 +44,7 @@ spread over parallel jobs so the wall time is the slowest job, not the sum:
 | **Smoke shard i/6** | live                                  | `test:e2e:smoke --shard=i/6`: a sixth of the `chromium` project's tests; shard 1 then runs `test:e2e:budget` ([Timing budgets](#timing-budgets)) |
 | **Sites audit**     | live, help, telemetry, then marketing | `test:e2e:sites`: the `sites` project, `optical-audit-sites.spec.ts`                                                                             |
 | **Signed-in specs** | live                                  | the `account` project ([Signed-in specs](#signed-in-specs)), then the `workbench` project                                                        |
+| **Office files**    | live                                  | `test:e2e:office`: the `office` project, the specs in `apps/live/e2e/office/` ([Office files](#office-files))                                    |
 
 Only the sites audit opens help, telemetry and marketing, so only its job pays for their builds. Marketing builds after the
 others, as `turbo.json` orders it: its licences page runs Next's analyzer in each other app on that
@@ -234,6 +235,15 @@ the canvas, and no api response is `401`. `pnpm --filter @livedoc/live test:e2e:
 `E2E_GUEST_SIG_ENFORCE=1`, which adds the `armed` project (dark mode) and boots a guest-only stack on its own
 ports (live `:3017`, api `:8789`, marketing `:3018`). It reuses the live export, so `e2e.yml` runs it as a second
 step of the Sites audit job, which has built it already.
+
+## Office files
+
+The specs in `apps/live/e2e/office/` hand a file LiveDoc wrote to LibreOffice, headless, and open what LibreOffice
+saved ([Office packages](../020-import-export/office-packages.md) "Validation"): a text document typed in two browsers,
+downloaded, read and saved again by LibreOffice, and opened back unchanged. LibreOffice's Writer is the one thing a job
+apt-installs (`libreoffice-writer-nogui`), so these specs have a job of their own, running the image as root, which the
+install needs; every other job keeps its no-install image. Each call to `soffice` has its own profile, so the specs
+run in parallel.
 
 ## No uncaught errors
 

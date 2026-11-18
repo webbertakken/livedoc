@@ -43,6 +43,7 @@ import { followerIdsOf, followTargetOf } from '../room-follows';
 import { opForScope } from '../room-scope';
 import { recheckAdmittedLink } from '../room-link-recheck';
 import { gateClientOp } from '../room-op-gate';
+import { RoomTextDocuments } from '../text-documents/room-text-documents';
 import { getTab } from '../db/tabs';
 import { tabShowsEveryCard } from '@livedoc/items';
 import { RoomScopedStructure } from '../room-scoped-structure';
@@ -212,6 +213,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   private readonly internal: InternalRoom;
   // A Participant's content and answers (docs/specs/013-workspace/share-roles.md), see room-participant.ts.
   private participantWrites: RoomParticipantWrites;
+  // A text document's edits: stored by the room before they are relayed (room-text-documents.ts).
+  private readonly textDocuments: RoomTextDocuments;
   // The document's content in this room's SQLite (room-content.ts).
   private readonly content: RoomContent;
   // A tab-scoped session's structure check (docs/specs/013-workspace/tab-scoped-share-links.md "Structure").
@@ -234,6 +237,13 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       sendTo: (ws, payload) => this.sendTo(ws, payload),
       position: () => ({ epoch: this.epoch, seq: this.seq }),
       readLedger: (tabId) => this.ledger.read(tabId),
+    });
+    this.textDocuments = new RoomTextDocuments({
+      env: this.content.env,
+      enqueue: (step) => this.queueTabWrite(step),
+      sequence: (from, op, except) => this.sequenceMutation(from, op, except),
+      sendTo: (ws, payload) => this.sendTo(ws, payload),
+      position: () => ({ epoch: this.epoch }),
     });
     this.poll = new RoomLivePoll(state.storage);
     this.internal = {
@@ -920,6 +930,13 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
           return;
         }
         this.broadcast({ kind: 'op', from: sender.id, op: clientOp }, ws);
+      } else if (opKind === 'text-document') {
+        // The room is a text document's one writer: stored first, then relayed (room-text-documents.ts).
+        void this.textDocuments.accept(
+          { ws, presenceId: sender.id, documentId: session.documentId ?? null },
+          clientOp,
+          msg.ref,
+        );
       } else {
         // No comment author id leaves the room, whatever a client sent: it is
         // the author's owner id, a guest's credential. And a posted comment

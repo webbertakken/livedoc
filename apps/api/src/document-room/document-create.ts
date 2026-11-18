@@ -12,6 +12,7 @@ import { seedTabs } from '../db/tabs';
 import { TabTooLargeError } from '../limits';
 import { seedItems } from '../routes/item-routes';
 import { seedSheets } from '../routes/sheet-routes';
+import { seedTextDocuments, type TextDocumentSeed } from '../text-documents/seed-text-documents';
 import type { DocumentEnv } from '../types';
 import { contentSummaryOf } from './content-summary';
 import { documentRouteContext, type RouteIdentity } from './document-route';
@@ -31,6 +32,8 @@ export type DocumentSeed = {
   tabs: Tab[] | null;
   items: ItemCreate[];
   sheets: SheetCreateRequest[];
+  // Text document tabs opened from files (seed-text-documents.ts); absent when the create opens none.
+  textDocuments?: TextDocumentSeed[];
 };
 
 export type CreateOutcome =
@@ -72,6 +75,10 @@ export async function createDocumentContent(
       console.warn('[documents] create seed refused', { documentId, status: refused.status });
       return { ok: false, status: refused.status, body };
     }
+  }
+  if (!seed.recommit && seed.textDocuments && seed.textDocuments.length > 0) {
+    const seeded = await seedTextDocuments(env, documentId, seed.textDocuments);
+    if (!seeded.ok) return seeded;
   }
   return { ok: true, summary: await contentSummaryOf(env, documentId) };
 }

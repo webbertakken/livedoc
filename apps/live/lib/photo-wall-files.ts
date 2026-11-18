@@ -1,7 +1,6 @@
 import { isPhotoAcceptedType } from '@livedoc/api-schema';
 import { WALL_MAX_PHOTOS, naturalCompare } from '@livedoc/document';
-import { ByteBudget } from './inflate';
-import { listZip, readZipEntry } from './zip-reader';
+import { ByteBudget, listZip, readZipEntry } from '@livedoc/office-packages';
 
 // The photos of one wall, as the person picked them (docs/specs/021-event-storming/event-storming.md Phase 11 "What a
 // person does"): several files, zips of photos as a phone's photo app exports them, or both mixed, opened here in the

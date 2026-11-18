@@ -1,6 +1,6 @@
 // Decoding draw.io payloads (docs/specs/020-import-export/drawio-import.md step 3): base64, then
 // inflated under the import's byte budget (lib/inflate.ts).
-import { inflateBytes, type ByteBudget } from '@/lib/inflate';
+import { inflateBytes, type ByteBudget } from '@livedoc/office-packages';
 
 export const latin1 = (bytes: Uint8Array): string => new TextDecoder('latin1').decode(bytes);
 
