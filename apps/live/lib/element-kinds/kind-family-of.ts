@@ -40,6 +40,10 @@ const SHAPE_FAMILIES: Partial<Record<ShapeKind, KindFamilyId>> = {
   process: 'web-components',
   'site-header': 'web-components',
   'mind-node': 'mind-maps',
+  'pie-chart': 'charts',
+  'bar-chart': 'charts',
+  'line-chart': 'charts',
+  sankey: 'charts',
 };
 
 export function kindFamilyOfShape(kind: string): KindFamilyId | null {

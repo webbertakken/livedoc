@@ -12,7 +12,7 @@ import { pageAt, type LaidOutPage } from './page';
 import { elementAnchorPoint } from './page-content';
 import { pageFillTone } from './page-fill-tone';
 import { isChartShape } from './data-shapes';
-import { isSankeyShape } from './sankey-model';
+import { isSankeyShape } from './sankey-wire';
 import { layerBands } from './layers';
 import { inkToward } from './page-ink-contrast';
 import { pageGroundUnder } from './page-ink-ground';

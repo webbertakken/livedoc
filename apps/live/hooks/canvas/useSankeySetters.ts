@@ -1,12 +1,9 @@
 import {
-  cleanSankeyFlows,
   cleanSankeyName,
   isSankeyShape,
-  pruneSankeyNodes,
   SANKEY_LEFTOVER_NAME,
   SANKEY_NAME_MAX,
   SANKEY_UNIT_MAX,
-  withSankeyNodeColor,
   type Element,
   type SankeyFlow,
   type SankeyNodeStyle,
@@ -14,12 +11,16 @@ import {
 } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
 import { makeShapePatcher } from '@/hooks/canvas/shape-patcher';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 
 // The Sankey diagram's writes (docs/specs/009-elements/sankey.md "The menu", "The Flows dialog"). Each is one
 // commit, so one undo step: a flows edit from the dialog, a node's colour, or one display option.
 //
 // The flows setter names its element rather than reading the selection: the dialog edits the diagram it was
 // opened for, whatever happens to the selection behind it.
+//
+// Reading and editing flows is the charts family's (docs/specs/016-platform/web-performance.md "An element kind's
+// code loads with the board that holds it"): a write comes from a Sankey on the board, so its family is in.
 
 type SankeyPatch = Pick<
   ShapeElement,
@@ -52,6 +53,7 @@ export function useSankeySetters({
     flows: SankeyFlow[],
     nodes: SankeyNodeStyle[] | undefined,
   ) => {
+    const { cleanSankeyFlows, pruneSankeyNodes } = requireKindFamily('charts');
     const clean = cleanSankeyFlows(flows);
     commit((els) =>
       els.map((el) =>
@@ -71,6 +73,7 @@ export function useSankeySetters({
   const setSankeyNodeColorSelected = (name: string, color: string | undefined) => {
     const ids = currentSelectionIds();
     if (ids.size === 0) return;
+    const { withSankeyNodeColor } = requireKindFamily('charts');
     commit((els) =>
       els.map((el) =>
         ids.has(el.id) && el.type === 'shape' && isSankeyShape(el.shape)

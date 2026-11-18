@@ -208,12 +208,16 @@ kinds that share their code (mind maps; pages and articles; charts, Sankey and d
 session controls; office furniture and seating; wireframes; web components; embeds (videos and link cards);
 concepts; entities; sketches; Event Storming). The plain diagram kinds (shapes, text, arrows, notes, images, pen
 strokes, and the diagram furniture: badges, steps, boundaries, keys) are the base and always load. Which family a
-kind belongs to follows the palette's grouping: the Behaviour tiles are session controls (default).
+kind belongs to follows the palette's grouping: the Behaviour tiles are session controls (default). The charts are
+the pie, column and line charts (a chart drawn from a sheet range too) and the Sankey diagram; the Data tiles'
+legend is a key, and its progress bars, rings and ratings stay base with it (default).
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
-  behaviours or model parts only through the registry, never through a static import; the registry answers a
-  family that is not loaded yet with a named error, so a missed path fails a test rather than drawing a wrong board.
+  behaviours or model parts only through the registry, never through a static import; what every board needs of a
+  kind stays base, whatever its family: its wire (validating, normalising and making one), its name and its
+  picture in a thumbnail or an export. The registry answers a family that is not loaded yet with a named error, so
+  a missed path fails a test rather than drawing a wrong board.
 - **At the open.** The open read carries the opened tab ("The open is one read"), so the early reads ask for the
   families its elements belong to as soon as it arrives, alongside the editor's own code. The board's first paint
   waits for them: a board draws every element with its own face in its first frame, never a placeholder that a
@@ -233,7 +237,8 @@ kind belongs to follows the palette's grouping: the Behaviour tiles are session 
   A family that cannot load because a newer build is live recovers as any other chunk does
   ([Stale builds](stale-builds.md)).
 - `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if a family's modules are reachable from the
-  first load again; `scripts/first-load-why.mjs` names the chain of imports that brought one back.
+  first load again, or a first-load file imports a model part its family's entry takes from a package;
+  `scripts/first-load-why.mjs` names the chain of imports that brought one back.
 
 ### A page's first-load scripts compile as they download
 

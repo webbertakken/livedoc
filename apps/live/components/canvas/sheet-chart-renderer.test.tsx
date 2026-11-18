@@ -3,8 +3,9 @@
 // canvas's own element view, so its palette preset, shadow, opacity, animation and indicators reach the page, while
 // it sits square at its frame's origin; shown from another tab it loses only its indicators.
 import { cleanup, render, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { CHART_PALETTES, type ShapeElement } from '@livedoc/document';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { useSheetChartRenderer, sheetChartElement, type BoxedShared } from './sheet-chart-renderer';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -56,6 +57,8 @@ const sliceFills = () =>
   [...view().querySelectorAll('path')].map((p) => p.getAttribute('fill')).filter(Boolean);
 
 afterEach(cleanup);
+
+beforeAll(loadEveryKindFamily);
 
 describe('useSheetChartRenderer', () => {
   it('draws through the canvas element view, findable by its element id at the frame origin', () => {

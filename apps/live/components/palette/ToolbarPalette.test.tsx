@@ -3,6 +3,7 @@
 // reach the editor's add-handlers.
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { PALETTE_ADD_HANDLER_KEYS, type PaletteAddHandlers } from './palette-add-handlers';
 import { ToolbarPalette } from './ToolbarPalette';
 import { ensureIconCatalogs } from '@/lib/icon-registry';
@@ -29,6 +30,9 @@ vi.mock('@/hooks/plan/plan-cover-store', async (importOriginal) => ({
   useBoardFillingTab: () => covering.value,
   useSheetCovering: () => sheetFilling.value,
 }));
+
+// A press of a family's tile places at once once its family is in, as after the idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 beforeAll(() => {
   // The strip's rail measures itself; jsdom has no layout, so a no-op

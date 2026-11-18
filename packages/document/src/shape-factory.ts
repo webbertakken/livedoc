@@ -34,7 +34,7 @@ import { QUIZ_DEFAULT_SECONDS } from './quiz';
 import { DEFAULT_SEATING_FACING } from './seating';
 import { FENCE_DEFAULT_SIZE } from './fence';
 import { AVATAR_PAD_DEFAULT_SIZE } from './avatar-pad';
-import { SANKEY_DEFAULT_FLOWS } from './sankey-model';
+import { SANKEY_DEFAULT_FLOWS } from './sankey-wire';
 import { NAV_DEFAULT_LINKS, PROCESS_DEFAULT_STEPS, STAT_DEFAULTS } from './web-components';
 import type { ShapeElement, ShapeKind } from './index';
 

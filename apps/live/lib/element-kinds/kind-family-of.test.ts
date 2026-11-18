@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   SHAPE_KINDS,
+  isChartShape,
   isCollabPanelShape,
   isConceptShape,
+  isSankeyShape,
   isWebComponentShape,
   type Element,
   type ShapeKind,
@@ -50,7 +52,9 @@ describe('kindFamilyOfShape', () => {
               ? 'web-components'
               : kind === 'mind-node'
                 ? 'mind-maps'
-                : null;
+                : isChartShape(k) || isSankeyShape(k)
+                  ? 'charts'
+                  : null;
     expect(kindFamilyOfShape(kind)).toBe(expected);
   });
 

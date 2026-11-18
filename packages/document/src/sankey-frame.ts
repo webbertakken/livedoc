@@ -16,12 +16,11 @@ import {
 import {
   formatSankeyPercent,
   formatSankeyValue,
-  SANKEY_BALANCE_EPSILON,
   sankeyDrawnFlows,
   sankeyNodeColor,
   sankeyNodeNames,
-  type SankeyLinkColor,
 } from './sankey-model';
+import { SANKEY_BALANCE_EPSILON, type SankeyLinkColor } from './sankey-wire';
 
 /** The node labels' size per Text Size: smaller than a shape label, since a diagram holds many. */
 const SANKEY_LABEL_PX: Record<TextSizePreset, number> = {

@@ -1,16 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import {
-  cleanSankeyName,
-  SANKEY_MAX_NODES,
   formatSankeyPercent,
   formatSankeyValue,
   sankeyGraph,
   sankeyNodeNames,
+} from './sankey-model';
+import {
+  cleanSankeyName,
   SANKEY_DEFAULT_FLOWS,
   SANKEY_MAX_FLOWS,
+  SANKEY_MAX_NODES,
   type SankeyFlow,
-} from './sankey-model';
+} from './sankey-wire';
 import { sankeyBandPath, sankeyLayout } from './sankey-layout';
 import {
   parseSankeyText,

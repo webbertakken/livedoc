@@ -66,6 +66,25 @@ const SOURCE_EXTENSIONS = ['.tsx', '.ts', '/index.tsx', '/index.ts'];
 const reExports = (src: string) =>
   [...src.matchAll(/^export\s+(?!type\b)[^;]*?from\s+'([^']+)'/gms)].map((m) => m[1]!);
 
+const isPackage = (specifier: string) => !specifier.startsWith('@/') && !specifier.startsWith('.');
+
+// The value names a source takes from packages, by `import { a, b as c, type T } from 'pkg'` (types skipped).
+type NamedFromPackage = { from: string; name: string };
+const namedFromPackages = (src: string, statement: RegExp): NamedFromPackage[] =>
+  [...src.matchAll(statement)]
+    .filter((m) => isPackage(m[2]!))
+    .flatMap((m) =>
+      m[1]!
+        .split(',')
+        .map((part) => part.trim())
+        .filter((part) => part !== '' && !part.startsWith('type '))
+        .map((part) => ({ from: m[2]!, name: part.split(/\s+as\s+/)[0]! })),
+    );
+const packageImports = (src: string) =>
+  namedFromPackages(src, /^import\s+\{([^}]*)\}\s*from\s+'([^']+)'/gm);
+const packageReExports = (src: string) =>
+  namedFromPackages(src, /^export\s+\{([^}]*)\}\s*from\s+'([^']+)'/gm);
+
 function resolveLocal(from: string, specifier: string): string | null {
   const base = specifier.startsWith('@/')
     ? specifier.slice(2)
@@ -110,8 +129,21 @@ describe('the element kind families', () => {
 
   it.each(families)('%s is not reachable from the first load', (family) => {
     const entry = `${familiesDir}/${family}`;
-    const faces = reExports(read(entry)).map((s) => resolveLocal(join(root, entry), s)!);
+    const local = reExports(read(entry)).filter((s) => !isPackage(s));
+    const faces = local.map((s) => resolveLocal(join(root, entry), s)!);
     expect(faces.every(Boolean)).toBe(true);
     expect(faces.filter((face) => firstLoad.has(face))).toEqual([]);
+  });
+
+  // A family's model parts come from a package (the family's entry re-exports them): no file of the first load
+  // imports one of them from that package itself.
+  it.each(families)('%s’s model parts are not imported by the first load', (family) => {
+    const parts = packageReExports(read(`${familiesDir}/${family}`));
+    const imported = [...firstLoad].flatMap((file) =>
+      packageImports(read(file))
+        .filter(({ from, name }) => parts.some((p) => p.from === from && p.name === name))
+        .map(({ name }) => `${file}: ${name}`),
+    );
+    expect(imported).toEqual([]);
   });
 });

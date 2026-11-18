@@ -12,13 +12,8 @@
 //      the columns allow.
 
 import type { ChartRect } from './chart-frame';
-import {
-  sankeyGraph,
-  type SankeyAlign,
-  type SankeyFlow,
-  type SankeyGraph,
-  type SankeySkipReason,
-} from './sankey-model';
+import { sankeyGraph, type SankeyGraph, type SankeySkipReason } from './sankey-model';
+import type { SankeyAlign, SankeyFlow } from './sankey-wire';
 
 // Geometry constants (docs/specs/009-elements/sankey.md).
 const SANKEY_NODE_WIDTH_PX = 12; // a node's bar, wide enough to hover, narrow enough to read as a post

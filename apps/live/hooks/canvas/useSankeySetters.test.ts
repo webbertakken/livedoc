@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { createShape, type Element, type ShapeElement } from '@livedoc/document';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 
 const trackMock = vi.fn<typeof import('@/lib/telemetry').track>();
 vi.mock('@/lib/telemetry', () => ({
@@ -26,6 +27,9 @@ function setup(selected: string[]) {
   const sankey = (i = 0) => commits[i]!.find((e) => e.id === 's1') as ShapeElement;
   return { s: result.current, commits, sankey };
 }
+
+// A Sankey's writes come from a diagram on the board, so the charts family is in.
+beforeAll(loadEveryKindFamily);
 
 describe('useSankeySetters', () => {
   it('stores the dialog’s flows on the diagram it was opened for, cleaned, pruning stale colours', () => {
