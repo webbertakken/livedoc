@@ -1,5 +1,10 @@
 # Wireframe pages
 
+> **Retiring.** Pages mode is removed whole, with its five page kinds and everything only they use (plan 0019, fork
+> C2, ruled 2026-11-18). Articles become [text documents](../034-text-documents/text-document.md); what becomes of
+> stored pages is [Migration from Pages mode](../034-text-documents/migration.md). This spec describes what is built
+> until the removal runs, and is deleted with it.
+
 A **wireframe page** is the fifth kind of page in Pages mode ([Pages](pages-mode.md) "Page kinds"):
 a screen to wireframe on, framed by the **device** it is for. Choosing a device (a phone, a tablet,
 a laptop, a desktop monitor, a browser window or a watch) makes the page that device: its sheet is

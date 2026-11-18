@@ -98,6 +98,8 @@ the start:
   product; the canvas is one of their tab kinds.
 - **"Not a documentation platform"**: reversed by this spec. Documentation and
   wikis are what LiveDoc is for.
+- **"Pages are a mode of the canvas"**: reversed by [Text document](../034-text-documents/text-document.md).
+  Writing is a document kind of its own, on ODF and OOXML, worked on as Google Docs is; Pages mode is removed.
 - **"Not a paid product, ever"**: narrowed by
   [Open source + distribution](../002-project-scope/open-source-and-business-model.md).
   Hosting stays free; usage beyond it can be bought, to pay for hosting. No

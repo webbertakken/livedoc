@@ -1,0 +1,100 @@
+# Office packages
+
+**Status: specified.** Nothing is built.
+
+The **office packages** are the shared layer every office file LiveDoc reads or writes stands on, for both native
+formats (fork C1, ruled: ODF and OOXML both native): the **ODF package** and the **OOXML container**, their manifests and
+relationships, metadata, common styles, units and colours, embedded files, and ODF's flat single-XML form. The
+[text document](../034-text-documents/text-document.md) and the spreadsheet of plan 0020 each map their own content
+onto it ([Standard mapping](../034-text-documents/standard-mapping.md)); neither forks a second one. The code is one
+DOM-free package, `@livedoc/office-packages`, so the editor, the api, the MCP server and the CLI read and write the same
+bytes.
+
+## Domain language
+
+| Term                | Means                                                                                                                                                               | Never called           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| **package**         | An office file as a zip: an ODF package or an OOXML container                                                                                                       | archive, bundle        |
+| **ODF package**     | `mimetype`, `META-INF/manifest.xml`, `content.xml`, `styles.xml`, `meta.xml`, `settings.xml`, pictures                                                              | OpenOffice file        |
+| **OOXML container** | An Open Packaging Conventions zip: `[Content_Types].xml`, `_rels/.rels`, parts and their `.rels`                                                                    | Word file (in specs)   |
+| **flat file**       | An ODF document as one XML file (`office:document`), pictures inline as base64                                                                                      | XML export             |
+| **entry**           | One file inside a package (OOXML calls it a part)                                                                                                                   | blob                   |
+| **relationship**    | An OOXML link from one part to another or to an outside address, by id                                                                                              | reference, link        |
+| **media type**      | A document's kind as the package declares it (`application/vnd.oasis.opendocument.text`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`) | MIME (in copy), format |
+| **kept content**    | Foreign elements, attributes and entries a reader does not map, kept to be written back                                                                             | unknown, unsupported   |
+
+## Reading a package
+
+1. The bytes start with a zip local header, or with `<?xml` for an ODF flat file; anything else is `package_damaged`.
+2. **Budgets** apply before anything inflates: `PACKAGE_MAX_BYTES` on the file, `PACKAGE_MAX_ENTRIES` entries, one
+   `PACKAGE_MAX_INFLATED_BYTES` budget shared across every entry (`package_too_large`). The shared zip reader counts
+   as it inflates, never trusting a header's sizes.
+3. Encrypted packages are refused: ODF's `manifest:encryption-data`; an OOXML file that is an OLE compound document
+   (`EncryptionInfo`, a password-protected `.docx`) (`package_encrypted`).
+4. **Which format**: an ODF package by its `mimetype` entry, else its manifest; an OOXML container by
+   `[Content_Types].xml` and the main part `_rels/.rels` points at. A media type the caller does not read is
+   `package_wrong_type` (a spreadsheet opened as a text document is offered as one, never misread).
+5. Entry names are keys, never paths: a name with `..`, a leading `/` (other than OOXML's part names, resolved against
+   the package root), a backslash or a drive letter is `package_damaged`.
+6. XML is parsed by one non-validating streaming parser that never resolves entities; any `DOCTYPE` is
+   `xml_doctype_refused`. Namespaces are resolved by URI, never by prefix; OOXML's `mc:AlternateContent` takes the
+   first `mc:Choice` the reader understands, else `mc:Fallback`, and keeps the rest.
+7. Relationships with `TargetMode="External"` are never followed on read (remote pictures, linked templates); they are
+   kept and reported.
+8. Dropped and reported, never kept: ODF `office:scripts`, `Basic/`, `Scripts/`; OOXML `vbaProject.bin` and its
+   relationships (`.docm`, `.dotm`); ActiveX controls; signatures (`META-INF/documentsignatures.xml`,
+   `_xmlsignatures/`); thumbnails.
+
+## Writing a package
+
+- **ODF**: `mimetype` first and stored, then `META-INF/manifest.xml` listing every entry with its media type,
+  `content.xml`, `styles.xml`, `meta.xml`, `settings.xml`, pictures under `Pictures/` named by the SHA-256 of their
+  bytes, `Thumbnails/thumbnail.png`; every XML entry declaring `office:version="1.4"`.
+- **OOXML**: `[Content_Types].xml` first, `_rels/.rels`, `docProps/core.xml`, `docProps/app.xml`, the main part and its
+  `_rels`, `styles.xml`, `numbering.xml`, `settings.xml`, `fontTable.xml`, comment and note parts as used, media under
+  `media/` named by the SHA-256 of their bytes; relationship ids assigned in order of first use.
+- Every XML entry is UTF-8 and declares only the namespaces it uses.
+- **Deterministic**: the same document gives the same bytes (fixed entry order, zip timestamps of 1980-01-01, fixed
+  attribute order, automatic styles and relationship ids assigned in a fixed order).
+- The ODF flat file follows the same order inside one `office:document`, with `office:mimetype` set.
+
+## Common pieces
+
+- **Units**: lengths read in `cm`, `mm`, `in`, `pt`, `pc`, `px` (ODF) and twentieths of a point, half-points and EMUs
+  (OOXML); the model holds points as numbers; writing uses each format's own units, to three decimals in ODF.
+- **Colours**: `#rrggbb` (ODF) and `rrggbb` or `auto` (OOXML) in and out; OOXML theme colours resolved through the
+  theme part and the theme reference kept.
+- **Metadata**: title (the document's name), creator, creation and modification dates, language, the generator
+  `LiveDoc/<version>`, statistics (pages, paragraphs, words, characters).
+- **Styles**: font declarations, named styles and defaults, automatic styles (ODF) and direct formatting (OOXML), with
+  inheritance resolved by parent (ODF `style:parent-style-name`, OOXML `w:basedOn`).
+- **Embedded files**: pictures (PNG, JPEG, GIF, SVG, WebP, EMF and WMF kept as bytes with their fallback picture),
+  equations, embedded fonts (ODF `svg:font-face-uri`; OOXML obfuscated `w:embedRegular` fonts, de-obfuscated) handed
+  only to the browser's font loader.
+
+## Validation
+
+- Every file LiveDoc writes is validated in CI against **its own format's schema**: ODF against the OASIS ODF 1.4 RELAX
+  NG schemas (main and manifest) with Jing, ID-type checks off, after removing `livedoc:`, `loext:` and kept content as
+  extended conformance defines; OOXML against the ISO/IEC 29500 Transitional XML schemas (WordprocessingML, DrawingML,
+  OPC content types and relationships) after removing the namespaces `mc:Ignorable` names and kept content. A test
+  writes one file per construct of the mapping, in each format, and validates each.
+- A **corpus** of files made by LibreOffice, Microsoft Word and Google Docs, in both formats, lives with the tests, each
+  with the structure it must read as.
+
+## Named rejections
+
+| Rejection             | When                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `package_damaged`     | Not a zip or flat file; a bad entry name; a truncated or corrupt entry; no main part |
+| `package_too_large`   | Past a byte or entry budget                                                          |
+| `package_encrypted`   | An encrypted entry or an encrypted OOXML file                                        |
+| `package_wrong_type`  | A media type the caller does not read                                                |
+| `xml_doctype_refused` | A `DOCTYPE` in any XML entry                                                         |
+| `xml_malformed`       | XML that does not parse; the entry and line are in the report                        |
+
+## Observability
+
+Fingerprints, never content: `[package] read` (format, media type, entries, bytes, milliseconds), `[package] refused`
+(rejection, entry), `[package] dropped` (scripts, macros, signatures, external relationships), `[package] written`
+(format, bytes, milliseconds).

@@ -1,5 +1,9 @@
 # Editor modes
 
+> **Pages mode is retiring** (plan 0019, fork C2, ruled 2026-11-18): Sketch and Structured remain; writing moves to
+> [text documents](../034-text-documents/text-document.md) and stored pages as
+> [Migration from Pages mode](../034-text-documents/migration.md) says. Every rule below about Pages is removed with it.
+
 A general tab is drawn on in one of three **editor modes**: **Sketch**, **Structured** and **Pages**. A mode decides
 which tools and rules are in focus; it never decides what the tab is. Like a drawing tool that switches between a
 pixel mode and a vector mode over the same picture, switching mode keeps every element exactly where it is and
