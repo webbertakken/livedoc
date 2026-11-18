@@ -54,7 +54,9 @@ describe('SplitStaticPane', () => {
       id: 't3',
       name: 'Reports',
       kind: 'board',
-      elements: [{ id: 'b', type: 'shape', shape: 'plan-board', x: 0, y: 0, width: 10, height: 10 }],
+      elements: [
+        { id: 'b', type: 'shape', shape: 'plan-board', x: 0, y: 0, width: 10, height: 10 },
+      ],
     } as unknown as Tab;
     pane({ shown: board, loaded: true });
     expect(screen.getByRole('img', { name: 'Board tab' })).toBeTruthy();
