@@ -12,6 +12,8 @@ themes, conditional formatting and alternating colours, as Google Sheets does. I
 - A cell's format is a **style**: the workbook keeps each distinct style once and a cell holds its style's id, as
   both formats do (ODF's automatic cell styles, XLSX's `cellXfs`). Changing a cell's bold makes or reuses another
   style; nothing is copied per cell.
+- A style's id is the workbook's own, made where the workbook is stored, in the order styles first appear
+  (`s1`, `s2`, ...); two formats that mean the same, whatever order their parts came in, are one style (default).
 - A style holds: number format (a format code), font family and size, bold, italic, underline, strikethrough, text
   colour, fill colour, the four borders (style, width, colour), horizontal and vertical alignment, wrapping,
   rotation, and indent where a file brought one.
