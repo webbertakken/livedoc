@@ -54,11 +54,11 @@ elements, its snapshots, its changesets or its room.
 **Status: specified.** Nothing is built. What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
 this page holds for both until the Plan Sheet retires.
 
-- **A workbook is a tab's sheets.** The sheets whose `tabId` is a workbook tab are its workbook; the tab keeps their
-  **order** (a list of sheet ids), so sheet tabs reorder without touching a sheet. A sheet's `title` is its sheet
-  name, unique in the workbook, up to 100 characters ([Spreadsheet](spreadsheet.md#what-a-workbook-holds)).
-- **The workbook row**: one per workbook tab, holding its file format (`ods`, `fods` or `xlsx`), settings (locale,
-  time zone, recalculation, iterative calculation), theme, named functions, the order of its sheets, and its rev.
+- **A workbook is a document's sheets.** Each sheet tab holds one sheet (its `tabId`); the document's tab order is
+  the sheets' order, and a sheet's `title` is its tab's name, kept as one, unique in the workbook, up to 100
+  characters. References to other sheets are by sheet id across the document's tabs ([Spreadsheet](spreadsheet.md#what-a-workbook-holds)).
+- **The workbook row**: one per spreadsheet, in its room, holding its file format (`ods`, `fods` or `xlsx`), settings
+  (locale, time zone, recalculation, iterative calculation), theme, named ranges and named functions, the document the `CARD` functions read, and its rev.
 - **Styles** move to a table of their own: each distinct style once, by id; a cell holds a style id instead of its
   format JSON ([Formatting](formatting.md#styles-in-the-model)). A cell write may name a style by its keys; the room
   finds or makes its id.
@@ -259,8 +259,8 @@ today (above), by sheet name and A1 references, never ids, with these changes:
   set cells, clear, format (by style keys), insert, delete and move rows and columns, sort, filter, validation and
   format rules, named ranges, sheets (add, rename, move, hide, delete), charts and pivot tables; a changeset is atomic,
   attributed to its agent and revertable as one.
-- **MCP tools**: `list_sheets`, `read_sheet` and `change_sheet` take a spreadsheet (or a workbook tab) and a sheet
-  name; `add_sheet` adds a sheet to a workbook; `create_spreadsheet` makes a spreadsheet, optionally from a template,
+- **MCP tools**: `list_sheets`, `read_sheet` and `change_sheet` take a spreadsheet and a sheet name; `add_sheet` adds
+  a sheet tab to a spreadsheet; `create_spreadsheet` makes a spreadsheet, optionally from a template,
   CSV text or rows; `convert_spreadsheet` changes its file format. `add_sheet`'s Plan-only refusal (`tab_not_plan`)
   is retired with the Plan Sheet.
 - **CLI**: `livedoc sheet ls|get|set|add|insert-rows|insert-cols|rm-rows|rm-cols` as today on a spreadsheet, and

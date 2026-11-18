@@ -10,67 +10,73 @@ open or work one.
 
 ## Domain language
 
-| Term                                                       | Means                                                                                                   | Never called                       |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| **spreadsheet**                                            | A document whose single tab is a workbook tab, as people speak of it (as a page is a markdown document) | sheet (that is one grid), table    |
-| **workbook tab**                                           | A tab of kind `workbook` (`TabKind`): one workbook, outside the canvas, worked on in no mode            | Sheet tab, spreadsheet tab         |
-| **workbook**                                               | What a workbook tab holds: its sheets in order, names, styles, charts, pivot tables and settings        | sheet store, file                  |
-| **sheet**                                                  | One grid of a workbook, with its name, rows, columns and cells                                          | tab (that is the document's)       |
-| **sheet tab**                                              | A sheet's entry in the **sheet bar** at the foot of the grid                                            | page, worksheet tab                |
-| **sheet bar**                                              | The strip at the foot of a workbook tab: Add Sheet, All Sheets, the sheet tabs and the selection's sum  | tab strip (that is the document's) |
-| **cell**                                                   | One square of a sheet, named by column letters and row number (`B4`)                                    | field, box                         |
-| **input**, **value**, **format**, **range**, **selection** | As in [Sheet](sheet.md#domain-language)                                                                 |                                    |
-| **file**                                                   | The workbook as bytes in a standard format: `.ods`, `.fods`, `.xlsx`, `.csv`, `.tsv`                    | export (that is the act)           |
-| **file format**                                            | Which native format a workbook keeps: ODF (`.ods`, or flat `.fods`) or XLSX                             | type, kind, format (a cell's)      |
+| Term                                                       | Means                                                                                                    | Never called                  |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| **spreadsheet**                                            | A document whose tabs are all sheet tabs: one workbook                                                   | table, workbook tab           |
+| **workbook**                                               | What a spreadsheet holds: its sheets in order, named ranges and functions, styles, settings, file format | sheet store, file             |
+| **sheet**                                                  | One grid of a workbook, with its name, rows, columns and cells; it is one tab of the spreadsheet         | worksheet, page               |
+| **sheet tab**                                              | A tab of kind `sheet` (`TabKind`) in a spreadsheet: one sheet, outside the canvas, worked on in no mode  | workbook tab, spreadsheet tab |
+| **sheet bar**                                              | How a spreadsheet draws its tab strip: at the foot of the grid, as Google Sheets' sheet bar              | sheet strip                   |
+| **cell**                                                   | One square of a sheet, named by column letters and row number (`B4`)                                     | field, box                    |
+| **input**, **value**, **format**, **range**, **selection** | As in [Sheet](sheet.md#domain-language)                                                                  |                               |
+| **file**                                                   | The workbook as bytes in a standard format: `.ods`, `.fods`, `.xlsx`, `.csv`, `.tsv`                     | export (that is the act)      |
+| **file format**                                            | Which native format a workbook keeps: ODF (`.ods`, or flat `.fods`) or XLSX                              | type, kind, format (a cell's) |
 
-- The **document's tab strip** and the **sheet bar** are different things: a spreadsheet hides its tab strip, as
-  any document with one tab does ([Document](../006-document/document.md)), and shows its sheet bar.
-- A workbook tab is a **kind** ([Domain language](../003-system-architecture/domain-language.md#kind)), never a
-  mode: it has no editor mode, elements or layers, as a markdown or file tab has none.
-- "Sheet tab", Plan's tab kind, is retired with the Plan Sheet; until then it means only that.
+- A sheet tab is a **kind** ([Domain language](../003-system-architecture/domain-language.md#kind)), never a mode:
+  it has no editor mode, elements or layers, as a markdown or file tab has none.
+- Plan's **Sheet tab** (the kind `sheet` today, a Plan Sheet filling a Plan tab) is migrated into spreadsheets before
+  the kind takes this meaning ([Migration](migration.md)); the two meanings never coexist in stored data.
 
 ## The workbook shape
 
-One tab holds the whole workbook (S1, open: being confirmed with Webber, who leans towards a sheet per document tab; [Workbook shape](../../research/sheets-open-standard/workbook-shape.md)).
+Each sheet is a tab of the document, and a document that holds sheets holds only sheets (S1, ruled 2026-11-18;
+[Workbook shape](../../research/sheets-open-standard/workbook-shape.md)).
 
-- A spreadsheet is a document with one workbook tab. One workbook is one file, both ways.
-- A document may hold a workbook tab beside other tabs (a diagram, a page); each workbook tab is a workbook of its
-  own, with its own sheet bar. A tab of another kind is never a sheet.
-- References between sheets stay inside their workbook. A reference to another workbook is `IMPORTRANGE`
-  ([Formulas](formulas.md#other-workbooks)).
-- The sheets of a workbook are the sheet store's sheets of that tab ([Sheet store](sheet-store.md)): the store already
-  scopes a sheet to its tab for life, so a workbook is that set, in the order the workbook keeps.
+- A spreadsheet's tabs are its sheets, in the document's tab order. One spreadsheet is one workbook is one file, both
+  ways. There are no tabs inside tabs.
+- A spreadsheet holds no tab of another kind, and no other document holds a sheet tab: adding one is refused
+  (`tab_kind_mixed`), and a paste or an agent's changeset that would mix them is refused with the same rejection.
+- The document's tab strip is drawn as the **sheet bar** at the foot of the grid ([Surface](surface.md#sheet-bar)),
+  never at the top, even with one sheet; tab folders are not offered in a spreadsheet.
+- References between sheets are references between the document's tabs. A reference to another spreadsheet is
+  `IMPORTRANGE` ([Formulas](formulas.md#other-workbooks)).
+- A share link to a spreadsheet covers the whole workbook: a tab-scoped link is not offered on a sheet tab, since a
+  sheet's formulas read other sheets the visitor could not see.
+- What belongs to the workbook rather than one sheet lives on the document: the **workbook row** in its room
+  ([Sheet store](sheet-store.md#in-a-spreadsheet)).
+- A diagram and the sheet it goes with (a template's companion sheet) are two documents, linked
+  ([Templates](templates.md)).
 
 ## What a workbook holds
 
-- **Sheets**, in order: each its name (1 to 100 characters, unique in the workbook, never `'` at either end, none of
-  `[ ] * ? / \ :`), tab colour, hidden flag, protection, right-to-left flag, grid (rows and columns by id, sizes,
-  hidden lines, groups, frozen lines), cells, merges, filters, filter views, slicers, validation and format rules,
-  banding, tables, charts, pivot tables, images and drawings.
+- **Sheets**, in tab order: each its name (the tab's name: 1 to 100 characters, unique in the workbook, never `'` at
+  either end, none of `[ ] * ? / \ :`), tab colour (the tab's accent), hidden flag, protection, right-to-left flag,
+  grid (rows and columns by id, sizes, hidden lines, groups, frozen lines), cells, merges, filters, filter views,
+  slicers, validation and format rules, banding, tables, charts, pivot tables, images and drawings.
 - **Named ranges** and **named functions** of the workbook.
 - **Styles**: the workbook's cell styles, number formats and theme ([Formatting](formatting.md)).
 - **Settings**: locale, time zone, recalculation (on change, on change and every minute, on change and every hour),
   iterative calculation (on or off, most iterations 1 to 1,000, threshold) ([Settings](settings.md)).
-- **Its file format**: the one it arrived in, or the one it was born in, kept until a person converts it
+- **Its file format**: the one it arrived in, or ODF for one made here, kept until a person converts it
   ([Files and print](files-and-print.md#converting)).
 - **What the file carried that LiveDoc does not model**, kept and written back untouched to that format
   ([Standard mapping](standard-mapping.md#unknown-content)).
 
 ## Making a spreadsheet
 
-- **New**, in the Explorer's new document menu and on Home: **Spreadsheet** makes a document with one workbook tab
-  holding one empty sheet, **Sheet1**, 1,000 rows by 26 columns, as Google Sheets starts (default), and opens it with
-  A1 selected. It is born in ODF 1.4, `.ods` (C5, ruled 2026-11-18): no setting chooses otherwise; converting is how one becomes XLSX.
+- **New**, in the Explorer's new document menu and on Home: **Spreadsheet** makes a document with one sheet tab,
+  **Sheet1**, 1,000 rows by 26 columns, as Google Sheets starts (default), and opens it with A1 selected. It is born
+  in ODF 1.4, `.ods` (C5, ruled 2026-11-18): no setting chooses otherwise; converting is how one becomes XLSX.
 - **From a template**: the spreadsheet templates ([Templates](templates.md)) make a spreadsheet already filled.
 - **Open a file**: an `.ods`, `.fods`, `.xlsx`, `.csv` or `.tsv` dropped on the Explorer or picked in its Import
   makes a spreadsheet of it ([Files and print](files-and-print.md)). An `.ods`, `.fods` or `.xlsx` keeps its file
-  format; a `.csv` or `.tsv`, which holds one sheet of values, takes the born-in format (C5).
-- **Add to a document**: the tab strip's **+** offers **Workbook**, adding a workbook tab with one empty sheet.
-- Telemetry: `Spreadsheet · Created · <From>` (`Blank`, `Template`, `Import`, `Tab`).
+  format; a `.csv` or `.tsv`, which holds one sheet of values, is born in ODF (C5).
+- Telemetry: `Spreadsheet · Created · <From>` (`Blank`, `Template`, `Import`).
 
 ## Sheets in the sheet bar
 
-The sheet bar is Google Sheets' own ([Surface](surface.md#sheet-bar)); a sheet tab's menu holds:
+The sheet bar is Google Sheets' own ([Surface](surface.md#sheet-bar)). **Add Sheet** (+) adds a sheet tab; a sheet
+tab's menu holds:
 
 | Item                                                        | Does                                                                                   |
 | ----------------------------------------------------------- | -------------------------------------------------------------------------------------- |
@@ -88,11 +94,12 @@ The sheet bar is Google Sheets' own ([Surface](surface.md#sheet-bar)); a sheet t
 - Deleting a sheet makes every reference to it `#REF!`; Undo puts it back with its id.
 - Each is one undo step and is sent live to everyone on the workbook.
 
-## Plan's Sheet tab becomes a workbook tab
+## Plan's Sheet tab becomes a spreadsheet
 
 C4 (ruled 2026-11-18: keep them): what Plan reads from a sheet is kept and re-homed onto the spreadsheet.
 
-- A Plan **Sheet tab** becomes a **workbook tab** holding its sheet, named as the tab was. Its formulas, formats,
+- A Plan **Sheet tab** becomes a **sheet tab** of a spreadsheet, named as the tab was ([Migration](migration.md)
+  says which spreadsheet). Its formulas, formats,
   validation, format rules, comments and charts carry over ([Migration](migration.md)).
 - A Dashboard slot and a form's responses that read a Sheet read the same sheet of the workbook, in this document
   or another one the reader may open ([Plan's links](plan-links.md)).

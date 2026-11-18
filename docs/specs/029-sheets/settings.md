@@ -10,7 +10,8 @@ A [spreadsheet](spreadsheet.md)'s own settings and the Tools and View items arou
 
 - **General**: **Locale** (how numbers, dates and currency read and show, and function argument separators as typed),
   **Time Zone** (what `NOW` and `TODAY` read, and edit history's times), **Display Language** for functions (English
-  only to start; names are always stored in English), the default font.
+  only to start; names are always stored in English), the default font, and **Cards From** (the Plan document the `CARD` functions read,
+  [Plan's links](plan-links.md#the-card-functions)).
 - **Calculation**: **Recalculation** (On Change; On Change and Every Minute; On Change and Every Hour: how often
   `NOW`, `TODAY`, `RAND` and `RANDBETWEEN` recalculate), **Iterative Calculation** (off; on with **Max Number of
   Iterations**, 1 to 1,000, default 50, and **Threshold**, default 0.05).

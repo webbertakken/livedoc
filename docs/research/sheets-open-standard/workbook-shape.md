@@ -26,7 +26,14 @@ Where the sheets of a spreadsheet live in a LiveDoc document. Researched 2026-11
 | Agents                      | `add_tab` makes a sheet; tabs and sheets blur                                                                                                               | A workbook verb set over one tab; tab verbs unchanged                                                                                                                                     |
 | Branches, offline, copies   | Tab machinery handles each sheet (inferred)                                                                                                                 | The workbook's sheets move with its tab, as today's sheet store moves with the document                                                                                                   |
 
-## Recommendation
+## Ruling
+
+Webber ruled **A with a rule added** (2026-11-18): each sheet is a tab of the document, and a document that holds
+sheets holds only sheets. His reason: the document already has its own tabs, so a workbook must not keep a second
+set inside one. The added rule answers A's weak points above: one spreadsheet is one file, there is no mixed
+document, and a share link covers the whole workbook (no tab-scoped link on a sheet tab).
+
+## Recommendation (superseded by the ruling)
 
 **B**: one tab holds the workbook. It is the shape every file document already has, it maps one tab to one file both
 ways, and it keeps references, sharing and sheet operations inside one boundary. A has the one appeal of reusing

@@ -9,7 +9,7 @@
 - **Scrolling**: frames while wheel-scrolling and jumping (Ctrl+End) at the limit.
 - **Recalculation**: a one-cell change at the top of a long chain; a full recalculation; on a 4× slowed CPU too.
 - **Memory**: the browser heap with the limit's workbook open.
-- **Bundle**: the spreadsheet's code and engine, loaded only when a workbook tab opens, against
+- **Bundle**: the spreadsheet's code and engine, loaded only when a spreadsheet opens, against
   [Web performance](../016-platform/web-performance.md).
 
 ## Where it starts (2026-11-18, the Plan Sheet)
@@ -20,7 +20,7 @@
 
 ## Rules
 
-- A spreadsheet costs nothing to a document without a workbook tab: its code and engine load on first open.
+- A spreadsheet costs nothing to every other document: its code and engine load on first open.
 - Recalculation runs off the main thread; the grid never waits on it, showing a cell's last value until its new one
   arrives.
 - Only the cells in view and a screen around them are drawn, and fetched first.

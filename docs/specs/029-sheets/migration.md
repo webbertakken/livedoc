@@ -13,10 +13,12 @@ so no stored sheet is ever left behind.
 
 ## What it does
 
-- Each **Sheet tab** becomes a **workbook tab** of the same name and place, holding its sheet; any other sheets on that
-  tab (copies, older Sheets) join the same workbook in element order.
-- A Sheet element on a general tab (from before Sheet tabs) becomes a workbook tab added after its tab, named as the
-  sheet, and the element is removed.
+- A document whose tabs are **all Sheet tabs** becomes a spreadsheet in place: each Sheet tab a sheet tab, same name
+  and order. Other sheets on one tab (copies, older Sheets) become sheet tabs after it, in element order.
+- A document **mixing** Sheet tabs with other tabs keeps the other tabs; its Sheet tabs (and Sheet elements on
+  general tabs, from before Sheet tabs) move to one new spreadsheet named "<Document> Sheets" in the same folder, with
+  the same owner and share links, in tab order (default). The tabs they leave are removed; a Sheet element's tab keeps
+  its other elements.
 - Cells, formats (each distinct format becomes a style), merges, filters, validation and format rules, named ranges,
   freeze, sizes and comments carry over unchanged in meaning; charts anchored in a Sheet become charts of
   the workbook at the same place.
@@ -24,7 +26,8 @@ so no stored sheet is ever left behind.
   dropped, and a sheet set up from Plan cards becomes an ordinary sheet (C6 and S3, ruled 2026-11-18). Nothing a person typed is lost; a draft row's typed values stay in its cells.
 - The workbook's file format is ODF (C5); its settings take the document owner's locale
   and time zone.
-- Dashboard slots and form responses are re-pointed at the workbook's sheets ([Plan's links](plan-links.md)).
+- Formulas reading another sheet that moved with them still read it; dashboard slots and form responses are
+  re-pointed at the spreadsheet's sheets ([Plan's links](plan-links.md)).
 
 ## How it runs
 
@@ -38,6 +41,6 @@ so no stored sheet is ever left behind.
 
 ## What a person sees
 
-Nothing changes in what they see beyond the new surface: their Sheet tab opens as a workbook tab with the same
-cells. A one-time notice on the first open says "Sheets are now spreadsheets: same cells, more of Google Sheets'
+Nothing changes in what they see beyond the new surface: their Sheet tab opens as a sheet of a spreadsheet with the
+same cells, and a document that mixed them shows a link to "<Document> Sheets" where its Sheet tabs were. A one-time notice on the first open says "Sheets are now spreadsheets: same cells, more of Google Sheets'
 tools." with **Learn More** (the help article) and **Got It**.
