@@ -72,7 +72,7 @@ this page holds for both until the Plan Sheet retires.
 - **Loading by viewport**: opening a workbook fetches its workbook row, sheet list, styles and the active sheet's
   layout and the cells of the rows in view and a screen around them; the rest streams in behind, so a large sheet
   shows before it has loaded.
-- **Limits**: the spreadsheet's ([Spreadsheet](spreadsheet.md#limits)): 20 million cells a workbook (S7, default),
+- **Limits**: the spreadsheet's ([Spreadsheet](spreadsheet.md#limits)): 20 million cells a workbook (S7),
   18,278 columns, 200 sheets; a write still 5,000 cells and 1 MB.
 - **Values are not stored**: as today, the room stores inputs and styles; a file's cached values are written from the
   engine at download, and read from a file only to show a formula LiveDoc cannot evaluate.

@@ -31,7 +31,7 @@ open or work one.
 
 ## The workbook shape
 
-One tab holds the whole workbook (S1, proposed: [Workbook shape](../../research/sheets-open-standard/workbook-shape.md)).
+One tab holds the whole workbook (S1, open: being confirmed with Webber, who leans towards a sheet per document tab; [Workbook shape](../../research/sheets-open-standard/workbook-shape.md)).
 
 - A spreadsheet is a document with one workbook tab. One workbook is one file, both ways.
 - A document may hold a workbook tab beside other tabs (a diagram, a page); each workbook tab is a workbook of its
@@ -97,7 +97,7 @@ C4 (ruled 2026-11-18: keep them): what Plan reads from a sheet is kept and re-ho
 - A Dashboard slot and a form's responses that read a Sheet read the same sheet of the workbook, in this document
   or another one the reader may open ([Plan's links](plan-links.md)).
 - The `CARD` functions are kept and re-homed the same way; the two-way card table is removed (C6, ruled
-  2026-11-18: functions only), its stored rows left as the plain cells they last showed (default).
+  2026-11-18: functions only), its stored rows left as the plain cells they last showed (S3, ruled 2026-11-18).
 
 ## Who may do what
 
@@ -120,7 +120,7 @@ its text and shows its cached value.
 
 ## Limits
 
-- Up to 20 million cells in a workbook (S7, default; Google's own figure, [Inventory](../../research/sheets-open-standard/google-sheets-inventory.md#limits)),
+- Up to 20 million cells in a workbook (S7, ruled 2026-11-18; Google's own figure, [Inventory](../../research/sheets-open-standard/google-sheets-inventory.md#limits)),
   18,278 columns (A to ZZZ) and 200 sheets; a cell's input up to 50,000 characters.
 - A write past a limit is refused with a named rejection (`workbook_full`, `sheet_too_large`, `input_too_long`),
   and an import past one is cut and says so ([Sheet store](sheet-store.md#limits)).

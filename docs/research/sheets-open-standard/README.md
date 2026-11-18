@@ -27,9 +27,9 @@ The specs in `docs/specs/029-sheets/` state what the product does; this folder r
 
 ## Forks found
 
-- **S5** The convention for Google-only functions, per format: in XLSX, Google's own `__xludf.DUMMYFUNCTION` wrapping (proposed); in ODF, `ORG.LIVEDOC.*` (proposed); both with the cached value.
-- **S6** Which wins where Google Sheets differs from OpenFormula or Excel: Google's meaning (proposed).
-- **S7** The grid's limit: Google's current 20 million cells (proposed, [inventory](google-sheets-inventory.md#limits)), or the plan's ten million.
+- **S5** The convention for Google-only functions, per format: in XLSX, Google's own `__xludf.DUMMYFUNCTION` wrapping ; in ODF, `ORG.LIVEDOC.*`; both with the cached value. **Ruled 2026-11-18.**
+- **S6** Which wins where Google Sheets differs from OpenFormula or Excel: Google's meaning. **Ruled 2026-11-18.**
+- **S7** The grid's limit: Google's current 20 million cells ([inventory](google-sheets-inventory.md#limits)). **Ruled 2026-11-18.**
 
 ## Files
 

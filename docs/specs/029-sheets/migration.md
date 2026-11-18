@@ -2,8 +2,8 @@
 
 **Status: specified.** Nothing is run.
 
-How the Plan Sheets already stored become spreadsheets (S3, default: migrated once into the new model, with no
-compatibility layer).
+How the Plan Sheets already stored become spreadsheets (S3, ruled 2026-11-18: migrated once into the new model, with no compatibility layer
+beyond the 30-day way back).
 
 ## What there is
 
@@ -21,8 +21,7 @@ so no stored sheet is ever left behind.
   freeze, sizes and comments carry over unchanged in meaning; charts anchored in a Sheet become charts of
   the workbook at the same place.
 - A card table's rows stay as the plain cells they last showed; only its links, drafts and Controls column are
-  dropped, and a sheet set up from Plan cards becomes an ordinary sheet (C6, ruled; this handling (default),
-  confirmed with S3). Nothing a person typed is lost; a draft row's typed values stay in its cells.
+  dropped, and a sheet set up from Plan cards becomes an ordinary sheet (C6 and S3, ruled 2026-11-18). Nothing a person typed is lost; a draft row's typed values stay in its cells.
 - The workbook's file format is ODF (C5); its settings take the document owner's locale
   and time zone.
 - Dashboard slots and form responses are re-pointed at the workbook's sheets ([Plan's links](plan-links.md)).
