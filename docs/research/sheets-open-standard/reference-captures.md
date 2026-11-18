@@ -24,7 +24,11 @@ Webber, 2026-11-18: "Please ask me just what you need, not everything upfront, e
 
 ## Received
 
-- `sheets-in-use.png` (the main checkout's `plans/` folder, never committed): Google Sheets in use; the one Sheets
-  capture so far. Further captures are asked for one or two at a time, by the step that needs them, never in a batch.
+- `sheets-in-use.png` (the main checkout's `plans/` folder, never committed): a spreadsheet in use in Google Sheets;
+  the one Sheets capture so far (an earlier `empty-spreadsheet.png` was Google Docs and went to plan 0019).
+
+It is the surface reference for the tracer's surface and Phase 8's grid surface
+([Surface](../../specs/029-sheets/surface.md)): every band is checked against it; further captures are asked for one
+or two at a time, by the step that needs them, never in a batch.
 
 Until a row's capture arrives, it rests on the inventory's written items, tagged assumed.
