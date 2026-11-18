@@ -5,6 +5,7 @@ import {
   documentRow,
   freshDarkPage,
   jumpBackIn,
+  nameOwner,
   seedDocument,
   seedOpenedDocument,
   shareLink,
@@ -39,7 +40,9 @@ async function expectCentred(page: Page, screen: string): Promise<void> {
 // A seeded document open in the editor; returns the seeded Spinner shape.
 async function openSeededEditor(page: Page, baseURL: string): Promise<Locator> {
   const owner = await mintSignedGuest(page.request);
-  const id = await seedDocument(page, owner, new URL(baseURL).origin);
+  const origin = new URL(baseURL).origin;
+  const id = await seedDocument(page, owner, origin);
+  await nameOwner(page, owner, origin, 'Olive Otter');
   await darkVisitor(page, owner);
   await page.goto(`/document/${id}`);
   await page.locator(CANVAS).waitFor();

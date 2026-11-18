@@ -33,6 +33,7 @@ const SHAPE_FAMILIES: Partial<Record<ShapeKind, KindFamilyId>> = {
   onion: 'concepts',
   chevrons: 'concepts',
   'timeline-rail': 'concepts',
+  entity: 'entities',
   banner: 'web-components',
   callout: 'web-components',
   card: 'web-components',

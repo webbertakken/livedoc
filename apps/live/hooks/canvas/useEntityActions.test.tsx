@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   CARDINALITY_PRESETS,
   createShape,
@@ -11,12 +11,17 @@ import {
   type Tab,
 } from '@livedoc/document';
 import { getEntityFieldEdit, setEntityFieldEdit } from '@/lib/entity-field-edit';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+import { KindFamilyNotLoaded, resetKindFamiliesForTests } from '@/lib/element-kinds/store';
 import { useEntityActions } from './useEntityActions';
 import { resolveArrowEndpointDrag } from './arrow-endpoint-resolve';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
-// docs/specs/009-elements/entity.md: the editor's entity verbs, each one commit.
+// docs/specs/009-elements/entity.md: the editor's entity verbs, each one commit. Their code is the entities
+// family's (docs/specs/016-platform/web-performance.md), in as after the board's idle prefetch.
+beforeEach(loadEveryKindFamily);
+afterEach(() => resetKindFamiliesForTests());
 
 const source: ShapeElement = {
   ...createShape('entity', 0, 0),
@@ -107,18 +112,33 @@ describe('useEntityActions', () => {
 
 describe('an arrow end dragged over an entity', () => {
   const target: ShapeElement = { ...source, id: 'tgt', x: 600, y: 0 };
+  const args = {
+    cursor: { x: 650, y: entityRowTop(target, 1) + 4 },
+    elements: [source, target, arrow],
+    arrowId: 'a',
+    end: 'to' as const,
+    guidesOn: true,
+  };
+
   it('pins to the field under the cursor, unless Cmd / Ctrl frees it', () => {
-    const cursor = { x: 650, y: entityRowTop(target, 1) + 4 };
-    const args = {
-      cursor,
-      elements: [source, target, arrow],
-      arrowId: 'a',
-      end: 'to' as const,
-      guidesOn: true,
-    };
     const pinned = resolveArrowEndpointDrag({ ...args, noSnap: false });
     expect(pinned.endpoint).toEqual({ kind: 'pinned', elementId: 'tgt', anchor: 'w', field: 1 });
     expect(pinned.snapTargets).toEqual([{ x: 600, y: expect.any(Number), active: true }]);
     expect(resolveArrowEndpointDrag({ ...args, noSnap: true }).endpoint.kind).toBe('free');
+  });
+
+  it('pins to the entity itself while the family is not in', () => {
+    resetKindFamiliesForTests();
+    const pinned = resolveArrowEndpointDrag({ ...args, noSnap: false });
+    expect(pinned.endpoint).toMatchObject({ kind: 'pinned', elementId: 'tgt' });
+    expect(pinned.endpoint).not.toHaveProperty('field');
+  });
+});
+
+describe('before the entities family is in', () => {
+  it('names the family at the press', () => {
+    resetKindFamiliesForTests();
+    const { result } = setup([source], 'src');
+    expect(() => result.addRelatedSelected('right')).toThrow(KindFamilyNotLoaded);
   });
 });

@@ -35,8 +35,6 @@ import { renderLabel } from '@/components/canvas/element-labels';
 import { ElementFaceRouter } from '@/components/canvas/ElementFaceRouter';
 import { LaneGutter } from '@/components/canvas/LaneGutter';
 import { uprightTitleFrame } from '@/components/canvas/upright-title';
-import { EntityView } from '@/components/canvas/entity/EntityView';
-import { openEntityFieldAt } from '@/components/canvas/entity/entity-double-click';
 import { elementAriaLabel, elementRole } from '@/lib/element-names';
 import { captionBandAlignY, captionBandClass } from '@/components/primitives/icon-band';
 import { LockBadge, SelectionChromeLayer } from '@/components/canvas/element-parts';
@@ -83,6 +81,7 @@ import { BrowserChrome } from '@/components/canvas/boxed-element-overlays';
 import type { BoxedElementViewProps } from './BoxedElementView.types';
 import { isPanThrough } from '@/hooks/canvas/pan-through';
 import { familyFace, useKindFamilyReady } from '@/lib/element-kinds/react';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 
 // Wrapped in React.memo at the export below: with id-bearing
 // callbacks the parent passes a single stable function per kind
@@ -100,6 +99,8 @@ const VOTE_DIMMED_OPACITY = 0.35;
 
 // A mind map root's halo, the mind maps family's: drawn on a mind node only, which draws once the family is in.
 const MindRootHalo = familyFace('mind-maps', 'MindRootHalo');
+// A record box's rows and their in-place editing, the entities family's: drawn on an entity only, likewise.
+const EntityView = familyFace('entities', 'EntityView');
 
 function BoxedElementViewImpl({
   element,
@@ -507,7 +508,11 @@ function BoxedElementViewImpl({
           !element.rotation &&
           onSetEntityFields &&
           wrapperRef.current &&
-          openEntityFieldAt(element, wrapperRef.current.getBoundingClientRect(), e.clientY)
+          requireKindFamily('entities').openEntityFieldAt(
+            element,
+            wrapperRef.current.getBoundingClientRect(),
+            e.clientY,
+          )
         ) {
           e.stopPropagation();
           return;

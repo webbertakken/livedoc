@@ -4,29 +4,31 @@ import { rebindArrowAnchorsAfterMove } from './arrow-rebind';
 import type { ShapeElement } from './element-types';
 import {
   CARDINALITY_PRESETS,
-  cardinalityLabel,
   cardinalityPatch,
   cleanEntityFields,
-  entityFieldView,
-  entityKeyGutterPx,
-  entityKeyOf,
   fittedEntityHeight,
   foreignKeyName,
   insertedFieldRemap,
-  joinsEntities,
   nextEntityKey,
   relatedEntityFields,
   relationshipHeads,
   removedFieldRemap,
   withEntityFields,
+} from './entity-edits';
+import {
+  cardinalityLabel,
+  entityFieldView,
+  entityKeyGutterPx,
+  entityKeyOf,
+  joinsEntities,
 } from './entity-fields';
 import {
   ENTITY_KEY_GUTTER_PX,
   ENTITY_KEY_PAIR_GUTTER_PX,
   entityFieldPoint,
-  entityPartAt,
   entityRowTop,
 } from './entity-geometry';
+import { entityPartAt } from './entity-pointing';
 import { endpointPosition } from './geometry';
 import type { Element } from './index';
 import { svgEntityRows } from './svg-render-entity';

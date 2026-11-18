@@ -4,6 +4,7 @@ import {
   isChartShape,
   isCollabPanelShape,
   isConceptShape,
+  isEntity,
   isEventStormingTab,
   ES_BIG_PICTURE_LAYER_ID,
   ES_BOARD_LAYER_ID,
@@ -58,13 +59,15 @@ describe('kindFamilyOfShape', () => {
           ? 'pages-articles'
           : isConceptShape(k)
             ? 'concepts'
-            : isWebComponentShape(k)
-              ? 'web-components'
-              : kind === 'mind-node'
-                ? 'mind-maps'
-                : isChartShape(k) || isSankeyShape(k)
-                  ? 'charts'
-                  : null;
+            : isEntity(shape(kind))
+              ? 'entities'
+              : isWebComponentShape(k)
+                ? 'web-components'
+                : kind === 'mind-node'
+                  ? 'mind-maps'
+                  : isChartShape(k) || isSankeyShape(k)
+                    ? 'charts'
+                    : null;
     expect(kindFamilyOfShape(kind)).toBe(expected);
   });
 
