@@ -7,18 +7,24 @@ import { CellStyle } from '../workbook/cell-style';
 class Axis {
   readonly ids: string[] = [];
   private readonly index = new Map<string, number>();
+  private lastId: string | undefined;
+  private lastN = 0;
 
   find(id: string): number | undefined {
     return this.index.get(id);
   }
 
   intern(id: string): number {
+    // A row's cells, and the references of a filled column, name the same id one after another.
+    if (id === this.lastId) return this.lastN;
     let n = this.index.get(id);
     if (n === undefined) {
       n = this.ids.length;
       this.ids.push(id);
       this.index.set(id, n);
     }
+    this.lastId = id;
+    this.lastN = n;
     return n;
   }
 }
@@ -57,6 +63,7 @@ export class CellInterns {
   // Formula texts, each a shape (docs/specs/029-sheets/performance.md "Held in memory").
   private readonly shapes: string[] = [];
   private readonly shapeIndex = new Map<string, number>();
+  private readonly packing: PackedFormula = [];
 
   style(format: CellFormat | undefined): number {
     if (format === undefined) return 0;
@@ -74,9 +81,14 @@ export class CellInterns {
     return this.styles[n];
   }
 
-  /** A formula as the slots hold it: packed when each of its references is plain, else as given. */
-  formula(f: StoredFormula): PackedFormula | StoredFormula {
-    const packed: PackedFormula = [this.shape(f.t)];
+  /**
+   * A formula as the slots hold it: packed when each of its references is plain, else as given. The packed integers
+   * are one array used again by the next call, so they are copied into a page before then (a load packs millions).
+   */
+  formula(f: StoredFormula): Readonly<PackedFormula> | StoredFormula {
+    const packed = this.packing;
+    packed.length = 0;
+    packed.push(this.shape(f.t));
     for (const ref of f.r) {
       if (!isPlain(ref)) return f;
       let mask = 0;

@@ -5,7 +5,7 @@
 import { CellInterns } from './cell-interns';
 import { CellSlots, SlotKind, type SlotValue } from './cell-slots';
 import { SlotIndex } from './slot-index';
-import type { Cell, CellInput, StoredFormula } from '../sheet';
+import type { Cell, CellFormat, CellInput, StoredFormula } from '../sheet';
 
 // The smallest index; an index is sized to four times its cells when made afresh, so it fills to half before the
 // next.
@@ -22,23 +22,31 @@ function sizeFor(cells: number): number {
 const isObject = (x: unknown): x is Record<string, unknown> =>
   typeof x === 'object' && x !== null && !Array.isArray(x);
 
+// How many keys an object has, without making their list (a load checks every cell).
+function ownKeys(o: object): number {
+  let n = 0;
+  for (const key in o) if (Object.hasOwn(o, key)) n++;
+  return n;
+}
+
 // A cell the slots can hold: no input or one of the four, and no format or a format object. Anything else comes
 // from a request not yet validated, and is held as given (SlotKind.Other).
 function ofCellShape(cell: unknown): cell is Cell {
-  if (!isObject(cell)) return false;
-  const { input, format } = cell;
+  return isObject(cell) && ofParts(cell.input, cell.format);
+}
+
+function ofParts(input: unknown, format: unknown): boolean {
   if (format !== undefined && !isObject(format)) return false;
   if (input === undefined) return true;
   if (!isObject(input)) return false;
-  const keys = Object.keys(input);
-  if (keys.length !== 1) return false;
+  if (ownKeys(input) !== 1) return false;
   if (typeof input.n === 'number') return true;
   if (typeof input.s === 'string') return true;
   if (typeof input.b === 'boolean') return true;
   const f = input.f;
   return (
     isObject(f) &&
-    Object.keys(f).length === 2 &&
+    ownKeys(f) === 2 &&
     typeof f.t === 'string' &&
     Array.isArray(f.r) &&
     f.r.every(isObject)
@@ -57,12 +65,28 @@ export class CellMap implements Map<string, Cell> {
   private interns: CellInterns;
   private live = 0;
   private dead = 0;
+  private readonly encoding: SlotValue = {
+    kind: SlotKind.Blank,
+    num: 0,
+    row: 0,
+    col: 0,
+    style: 0,
+    boxed: undefined,
+    packed: null,
+  };
 
   constructor(entries?: Iterable<readonly [string, Cell]> | null) {
     this.slots = new CellSlots();
     this.index = SlotIndex.sized(INDEX_MIN);
     this.interns = new CellInterns();
     if (entries) for (const [key, cell] of entries) this.set(key, cell);
+  }
+
+  /** An empty store with room for `cells` before its index grows (a load knows how many it reads). */
+  static sized(cells: number): CellMap {
+    const map = new CellMap();
+    map.index = SlotIndex.sized(sizeFor(cells));
+    return map;
   }
 
   /** Cells from entries, as `new Map(entries)` would hold them. */
@@ -99,7 +123,21 @@ export class CellMap implements Map<string, Cell> {
     if (!parts) throw new RangeError(`not a cell key: ${key}`);
     const row = this.interns.rows.intern(parts[0]);
     const col = this.interns.cols.intern(parts[1]);
-    const value = this.encode(row, col, cell);
+    if (!ofCellShape(cell)) return this.put(row, col, this.other(row, col, cell));
+    return this.put(row, col, this.encode(row, col, cell.input, cell.format));
+  }
+
+  /**
+   * As `set`, by row id and column id and the cell's parts: no key made and split again, no cell object made (a load
+   * of every cell).
+   */
+  setCell(rowId: string, colId: string, input: CellInput | undefined, format?: CellFormat): this {
+    const row = this.interns.rows.intern(rowId);
+    const col = this.interns.cols.intern(colId);
+    return this.put(row, col, this.encode(row, col, input, format));
+  }
+
+  private put(row: number, col: number, value: SlotValue): this {
     const slot = this.index.find(row, col, this.slots);
     if (slot >= 0) {
       this.slots.write(slot, value);
@@ -197,19 +235,40 @@ export class CellMap implements Map<string, Cell> {
     }
   }
 
-  private encode(row: number, col: number, cell: Cell): SlotValue {
-    if (!ofCellShape(cell))
-      return { kind: SlotKind.Other, num: 0, row, col, style: 0, boxed: cell, packed: null };
-    const value: SlotValue = {
-      kind: SlotKind.Blank,
-      num: 0,
-      row,
-      col,
-      style: this.interns.style(cell.format),
-      boxed: undefined,
-      packed: null,
-    };
-    const input = cell.input;
+  // A cell held as given (SlotKind.Other).
+  private other(row: number, col: number, cell: unknown): SlotValue {
+    const value = this.blank(row, col);
+    value.kind = SlotKind.Other;
+    value.boxed = cell;
+    return value;
+  }
+
+  // One value used again by every write, as the slots copy it at once.
+  private blank(row: number, col: number): SlotValue {
+    const value = this.encoding;
+    value.kind = SlotKind.Blank;
+    value.row = row;
+    value.col = col;
+    value.num = 0;
+    value.style = 0;
+    value.boxed = undefined;
+    value.packed = null;
+    return value;
+  }
+
+  private encode(
+    row: number,
+    col: number,
+    input: CellInput | undefined,
+    format: CellFormat | undefined,
+  ): SlotValue {
+    if (!ofParts(input, format)) {
+      const cell =
+        input === undefined ? { format } : format === undefined ? { input } : { input, format };
+      return this.other(row, col, cell);
+    }
+    const value = this.blank(row, col);
+    value.style = this.interns.style(format);
     if (!input) return value;
     if ('n' in input) {
       value.kind = SlotKind.Number;

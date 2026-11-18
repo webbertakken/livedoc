@@ -72,10 +72,11 @@ A sheet's cells live in a compact store, the same in the editor, the api and the
 | Held a number cell, in the store                        | 60 bytes           | 46 bytes                    |
 | Held a filled-down formula cell of up to two references | 120 bytes          | 76 bytes                    |
 | One cell written into the next version of the sheet     | Under 1 ms of CPU  | 30 µs                       |
-| Loading the cells from their stored rows                | Under 1.5 s of CPU | 1.1 s                       |
+| Loading the cells from their stored rows                | Under 1.5 s of CPU | 0.7 s                       |
 
 Measured in Node, whose pointers are 8 bytes; a browser's are 4, so a page holds less (inferred).
-`packages/sheets/src/cells/cell-map.perf.test.ts` holds these budgets, at four times each in CI.
+`packages/sheets/src/cells/cell-map.perf.test.ts` holds the bytes and the write (the write at four times in CI); the load is
+held as growth, ten times the cells under thirty times the time, as coverage on a CI runner bends an absolute budget.
 
 The engine's own values and dependencies are measured apart, and come down with the recalculation engine
 ([Recalculation research](../../research/sheets-open-standard/recalculation.md)).

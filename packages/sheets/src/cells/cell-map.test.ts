@@ -75,6 +75,12 @@ describe('CellMap', () => {
     expect(map.get('r0:c')).toEqual({ input: { n: 1 } });
   });
 
+  it("reads only an input's own keys", () => {
+    const input = Object.assign(Object.create({ inherited: true }), { n: 3 });
+    const map = new CellMap([['r1:c1', { input: input as { n: number } }]]);
+    expect(map.get('r1:c1')).toEqual({ input: { n: 3 } });
+  });
+
   it('refuses a key without a row and a column', () => {
     expect(() => new CellMap().set('r1', {})).toThrow(RangeError);
     expect(new CellMap().delete('r1')).toBe(false);
