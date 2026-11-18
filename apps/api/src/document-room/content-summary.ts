@@ -1,6 +1,7 @@
 // The content summary built in the room (docs/specs/006-document/document-storage.md "The content
 // summary"), from its own tables: the D1-era list subqueries (the first tab's count, documentStatsSql) and the empty
 // clean-up's test, moved here unchanged. Pushed to D1 by the outbox's document unit and answered by `create`.
+// In a spreadsheet a sheet tab's content is its sheet's filled cells, counted where a tab counts its elements.
 
 import type { ContentSummary } from '../db/content-summary';
 import { documentStatsSql, readDocumentStats } from '../db/tab-stats';
@@ -20,12 +21,14 @@ const HAS_CONTENT = `CASE
      END`;
 
 type TabCountRow = { tab_id: string; element_count: number; has_content: number };
+// A spreadsheet's sheet tab: its sheets' filled cells and their stored bytes.
+type SheetTabRow = { tab_id: string; cells: number; bytes: number };
 
 export async function contentSummaryOf(
   env: DocumentEnv,
   documentId: string,
 ): Promise<ContentSummary> {
-  const [tabs, stats] = await env.DOCUMENT_DB.batch([
+  const [tabs, stats, sheetTabs] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
       `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${HAS_CONTENT} AS has_content
          FROM document_tabs dt JOIN tabs t ON t.id = dt.tab_id
@@ -33,17 +36,44 @@ export async function contentSummaryOf(
         ORDER BY dt.order_index ASC`,
     ).bind(documentId),
     env.DOCUMENT_DB.prepare(`SELECT ${documentStatsSql('?1')}`).bind(documentId),
+    // Only a spreadsheet's, and only sheets on a tab the document holds (a deleted tab's waits to expire).
+    env.DOCUMENT_DB.prepare(
+      `SELECT s.tab_id, SUM(s.cell_count) AS cells, SUM(s.cell_bytes) AS bytes
+         FROM sheets s JOIN document_tabs dt ON dt.document_id = s.document_id AND dt.tab_id = s.tab_id
+        WHERE s.document_id = ?1 AND EXISTS (SELECT 1 FROM workbook w WHERE w.document_id = ?1)
+        GROUP BY s.tab_id`,
+    ).bind(documentId),
   ]);
   const rows = (tabs?.results ?? []) as TabCountRow[];
+  const sheets = new Map(((sheetTabs?.results ?? []) as SheetTabRow[]).map((r) => [r.tab_id, r]));
+  const countOf = (row: TabCountRow): number => {
+    const sheet = sheets.get(row.tab_id);
+    return sheet ? sheet.cells : row.element_count;
+  };
   const tabCounts: Record<string, number> = {};
-  for (const row of rows) tabCounts[row.tab_id] = row.element_count;
+  for (const row of rows) tabCounts[row.tab_id] = countOf(row);
   const raw = (stats?.results?.[0] as { doc_stats?: string | null } | undefined)?.doc_stats;
   return {
     v: 1,
     tabs: rows.length,
-    firstTabCount: rows[0] ? rows[0].element_count : null,
+    firstTabCount: rows[0] ? countOf(rows[0]) : null,
     tabCounts,
-    stats: readDocumentStats(raw ?? null),
-    hasContent: rows.some((r) => r.has_content === 1),
+    stats: withCells(readDocumentStats(raw ?? null), [...sheets.values()]),
+    hasContent: rows.some((r) => r.has_content === 1 || (sheets.get(r.tab_id)?.cells ?? 0) > 0),
   };
+}
+
+// A spreadsheet's stats: its filled cells are its elements, and their bytes join the tabs'.
+function withCells(
+  stats: ContentSummary['stats'],
+  sheets: readonly SheetTabRow[],
+): ContentSummary['stats'] {
+  if (!stats || sheets.length === 0) return stats;
+  let cells = 0;
+  let bytes = 0;
+  for (const s of sheets) {
+    cells += s.cells;
+    bytes += s.bytes;
+  }
+  return { ...stats, elements: cells, bytes: stats.bytes + bytes };
 }
