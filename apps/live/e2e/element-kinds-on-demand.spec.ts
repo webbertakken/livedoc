@@ -97,6 +97,9 @@ test('a palette press places a family not yet in once it is', async ({
 
   const tile = await paletteTile(page, 'Add Pyramid', 'Concepts');
   await tile.click();
+  // The press arms the tool once the family is in; a tap on the canvas places it.
+  await expect(tile).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('[data-canvas-a11y-root]').click({ position: { x: 480, y: 320 } });
 
   await expect(page.locator('[data-element-id]')).toHaveCount(1);
   expect(waits).toEqual(['[element-kinds] press waits family=concepts']);
