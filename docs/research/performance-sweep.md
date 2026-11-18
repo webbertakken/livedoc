@@ -246,6 +246,27 @@ Where the document page's first load goes (Turbopack analyzer at 9bd7128e01, com
 - Loading the face router late frees only 71 KiB: validation, placement and drawing share the element code.
 - The router and the palette together free 199 KiB; the palette is on screen at open, so that is a design fork.
 
+### A share link in one read (#240)
+
+- The share read, marked as an open, carries the first tab, as the room answers the visitor's own tab read.
+- It carries the visitor's own participant row too, so the editor reads neither before Join.
+- The chain is now session, the guest id, then the share read beside the participant write: no tab read after it.
+- The share read's own time grew from about 100 ms to 150 to 230 ms: it waits on the room's tab read inside it.
+
+On docs.nu, a shared link, first-time guest, headless Chromium, fast link, n = 8 per column. Before was measured in
+alternating pairs with the preview; after, 37 min after the deploy, in the same hour.
+
+| Measure                       | Before #240 | #240     |
+| ----------------------------- | ----------- | -------- |
+| Tab reads before Join         | 1           | 0        |
+| Guest id to editable, median  | 544 ms      | 280 ms   |
+| Guest id to editable, slowest | 959 ms      | 597 ms   |
+| Join prompt, median           | 1,843 ms    | 1,299 ms |
+| Join prompt, slowest          | 2,541 ms    | 1,630 ms |
+
+- That hour the editor's code arrived late (DOMContentLoaded about 500 to 700 ms at the median, up to 1 s).
+- So its Join times sit far above #235's (median 535 ms); guest id to editable is the part the reads own.
+
 ## Refuted or set aside
 
 About half the leads did not survive a check; they are listed so nobody proposes them again.
@@ -349,7 +370,7 @@ Parked:
 - The Explorer fetches 155 KiB more JavaScript in the background since #188.
 - Of that, 39 KiB is the search panel fetched ahead; the rest (16 smaller files) is not traced yet.
 - Isolate start-up is still a read's largest cost: about 300 ms for a cold api isolate, about 290 for a room.
-- A shared link still reads in three steps after the session; its first tab could ride the share read (the room).
+- A shared link's Join waits on the editor's code booting before the guest id is asked for (#240 measured it).
 - On a slow link the open waits on the editor's first load; its levers are element kinds and the palette, loaded late.
 - The every-minute move sweep scans documents; the spec's drop release removes it, which is Webber's to schedule.
 - Fifteen canvas-gesture leads belong to the canvas session: zoom and pan re-renders, drag previews, snapping.
