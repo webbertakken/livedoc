@@ -16,7 +16,10 @@ builds, `--chunks <app>` for an app's largest scripts). A change that could grow
 against `main` the same way before it ships.
 
 Why a page carries what it does is read from the Turbopack bundle analyzer (`next analyze`): its route
-summary, its table of the largest contributors, and its diff against an earlier snapshot.
+summary, its table of the largest contributors, and its diff against an earlier snapshot. Its data, written with
+`next experimental-analyze -o`, is the real module graph: `node scripts/first-load-why.mjs <app> <route>` sums a
+page's first load by package and folder, names the chain of static imports that brings a module in (`why`), and
+what would leave the first load if a set of modules loaded on demand (`cut`).
 
 What a long task is made of is read from a Chromium trace with its CPU profile, never inferred:
 `node scripts/trace-long-tasks.mjs <trace.json>` names each main-thread task over 50 ms, its work by kind (scripts,
@@ -195,6 +198,33 @@ alongside the editor's code, so a template link waits for nothing extra.
   throwing into the screen around it.
 - `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if any of these become static
   imports again.
+
+### An element kind's code loads with the board that holds it
+
+Most of the document page's first load is the long tail of element kinds: each kind's face, its behaviours and its
+share of the model's switches, whatever the board holds. A **kind family** is the unit that loads on demand: the
+kinds that share their code (mind maps; pages and articles; charts, Sankey and dashboards; collaboration panels;
+session controls; office furniture and seating; wireframes; web components; concepts; entities; sketches; Event
+Storming). The plain diagram kinds (shapes, text, arrows, notes, images, pen strokes) are the base and always load.
+
+- **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
+  open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
+  behaviours or model parts only through the registry, never through a static import; the registry answers a
+  family that is not loaded yet with a named error, so a missed path fails a test rather than drawing a wrong board.
+- **At the open.** The open read carries the opened tab ("The open is one read"), so the early reads ask for the
+  families its elements belong to as soon as it arrives, alongside the editor's own code. The board's first paint
+  waits for them: a board draws every element with its own face in its first frame, never a placeholder that a
+  face later replaces.
+- **Another tab.** Opening a tab loads the families its elements need before it draws, from the tab's own read.
+- **From the palette.** Pointing at or focusing a palette entry fetches its family; a press places the element
+  once its family is in, so an element is never placed without its face.
+- **Once the board has settled.** Every remaining family is fetched when the opened board has rendered and the page
+  is idle (`prefetchWhenIdle`), so a paste, a template, a peer's new element or going offline later finds them in.
+  An element that arrives before its family (a peer's, in a session's first seconds) draws when its family is in.
+- **When a family cannot load** (offline before it was fetched), the elements of that family draw nothing and the
+  load-error card offers a retry; the rest of the board works.
+- `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if a family's modules are reachable from the
+  first load again; `scripts/first-load-why.mjs` names the chain of imports that brought one back.
 
 ### A page's first-load scripts compile as they download
 
