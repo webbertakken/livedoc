@@ -597,13 +597,15 @@ their bottom-row buttons. What changes to fit the width:
   Reduced motion collapses it to instant (`ToolbarStripRail`).
 - **The rail is always as wide as its tiles.** Its width follows the tiles as laid out, whenever they change
   (a category switch, a tile added or gone, such as a card type), never a tile caught mid-slide: no empty gap
-  after the last tile once they settle. Until a category switch it holds no width of its own, so it is as wide as
-  its tiles in the very commit they change.
+  after the last tile once they settle. The width is whole pixels, so More and Search after it stay on the pixel
+  grid, and it is written in the very commit the tiles change; only after a category switch does it ease.
 - **The strip opens settled.** As the editor opens, the top line fills in (the Start Tour button, an account's
   button) and the strip refits to it: fewer tiles, More coming in, a row of its own or not. Every refit settles in
   the commit that sets it off, before the frame is laid out, never in a resize report, which Chrome counts as a
   layout shift even before the frame is drawn:
-  - a control joining or leaving a side group is answered in the microtask after its commit (`observeTopLine`);
+  - a control joining or leaving a side group is answered in the microtask after its commit (`observeTopLine`),
+    at once, except during a View Transition (a mode change), where it lands with React's own update: a synchronous
+    one in the middle left the transition with nothing to animate (`settleNow`);
   - what the strip draws changing (its tiles, More, the bar's names) refits the tile count, the whole-pixel box
     (`SnapWidth`'s `contentKey`) and the placement in that commit;
   - the tray follows the strip there (`useToolbarBox`), and a tour on offer as the editor opens is published
