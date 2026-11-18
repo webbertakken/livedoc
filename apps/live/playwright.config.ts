@@ -108,6 +108,7 @@ export default defineConfig({
         /\/e2e\/account\//,
         /\/e2e\/armed\//,
         /\/e2e\/perf\//,
+        /\/e2e\/office\//,
         /optical-audit-sites\.spec\.ts/,
         /workbench-(embed|workspace)\.spec\.ts/,
         GUEST_TIMING_BUDGETS,
@@ -130,6 +131,13 @@ export default defineConfig({
       name: 'sites',
       use: { ...devices['Desktop Chrome'] },
       testMatch: /optical-audit-sites\.spec\.ts/,
+    },
+    // Office files against LibreOffice (docs/specs/020-import-export/office-packages.md "Validation"): the specs that
+    // hand a downloaded file to `soffice`, so CI gives them a job with LibreOffice installed (`test:e2e:office`).
+    {
+      name: 'office',
+      use: { ...devices['Desktop Chrome'], colorScheme: 'dark' as const },
+      testMatch: /\/e2e\/office\/.*\.spec\.ts/,
     },
     // Opt-in (pnpm --filter @livedoc/live test:e2e:drive): the Google Drive mirror against the fake
     // Google, signed in for real (docs/specs/022-drive-mirror/drive-mirror.md, "Testing"). Kept

@@ -13,6 +13,7 @@ const TAB_KIND_LABELS: Readonly<Record<TabKind, string>> = {
   sheet: 'Sheet',
   dashboard: 'Dashboard',
   form: 'Form',
+  'text-document': 'Text document',
 };
 
 /** "Event Storming": the kind's name as the interface shows it. */

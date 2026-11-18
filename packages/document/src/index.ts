@@ -14,7 +14,7 @@ import type { FormDefinition } from '@livedoc/forms';
 // self-drawing data shapes the same way the inline editor does.
 import type { TagColour } from './tag-colours';
 import { isSelfDrawingShape } from './data-shapes';
-import type { TabKind } from './tab-kind';
+import type { TabKind, TextDocumentFormat } from './tab-kind';
 import type { EsDeclined } from './event-storming-declined';
 import type { DashboardLayout } from './dashboard';
 import type { EditorMode } from './editor-mode';
@@ -352,6 +352,9 @@ export type Tab = {
   dashboard?: DashboardLayout;
   // A Form tab's form (docs/specs/030-forms/forms.md), read via `readForm` from @livedoc/forms.
   form?: FormDefinition;
+  // A text document's format (docs/specs/034-text-documents/text-document.md "The format it is in"), read via
+  // `textDocumentFormatOf`. Its writing is not on the tab: the room holds its live state.
+  format?: TextDocumentFormat;
   // The tab's editor mode, the same for everyone on it and the mode it opens in
   // (docs/specs/007-editor/editor-modes.md "Where the mode lives"). Absent = 'diagram' (read via
   // `opensInOf`); a switch sets it as one tab edit (withEditorModeSwitched). A tab stored in Workshop mode keeps
@@ -470,8 +473,13 @@ export {
   isPlanTabKind,
   stampTabKind,
   tabKindOf,
+  isTextDocumentTab,
+  textDocumentFormatOf,
+  BORN_TEXT_DOCUMENT_FORMAT,
+  TEXT_DOCUMENT_FORMATS,
   type PlanTabKind,
   type TabKind,
+  type TextDocumentFormat,
 } from './tab-kind';
 export * from './accent-edge';
 export * from './card';

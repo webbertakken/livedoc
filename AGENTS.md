@@ -226,6 +226,8 @@ packages/
   plan-art/       # Plan tab images (Board, Sheet, Dashboard as laid out) for editor exports + MCP previews (pure)
   items/          # items, item types, fields, ranks, writes and the Plan board projection (pure)
   sheets/         # the Sheet engine: A1 addressing, formulas, recalculation, writes, CSV (pure)
+  office-packages/ # the layer under every office file: zip, XML, the ODF package, named rejections (DOM-free)
+  text-documents/ # the text document: its body, its live state (Yjs) and its ODF mapping (DOM-free)
   document-views/ # read-only text views of a tab (outline, graph, layout, ...) for agents and scripts
   api-schema/     # wire-format DTOs the api worker emits + the live editor consumes
   api-client/     # the api client the MCP server and the CLI share (fetch, timeouts, ApiError)

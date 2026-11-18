@@ -32,6 +32,7 @@ import { handleAgentPresenceRoute } from './agent-presence-routes';
 import { handleTabRender } from './tab-render-route';
 import { handleItemRoutes } from './item-routes';
 import { handleSheetRoutes } from './sheet-routes';
+import { handleTextDocumentRoutes } from './text-document-routes';
 import { handleItemTypeRoutes } from './item-type-routes';
 import { handlePlanRoute } from './plan-route';
 import {
@@ -205,6 +206,9 @@ export async function handleDocumentSubresources(
   // The sheet store (docs/specs/029-sheets/sheet-store.md).
   const sheets = await handleSheetRoutes(ctx);
   if (sheets) return sheets;
+  // A text document's live state and file (docs/specs/034-text-documents/live-editing-and-storage.md).
+  const textDocument = await handleTextDocumentRoutes(ctx);
+  if (textDocument) return textDocument;
   // The document's type catalogue (docs/specs/026-plan/item-types.md).
   const itemTypes = await handleItemTypeRoutes(ctx);
   if (itemTypes) return itemTypes;

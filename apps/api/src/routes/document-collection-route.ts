@@ -58,6 +58,7 @@ import { recordDocumentCreated, recordDocumentSynced } from '../timeline';
 import { compileSeededTabs } from './document-seed';
 import { hasTemplateSheets } from '@livedoc/templates';
 import { materialiseTemplateSheets } from '@livedoc/templates/template-sheets';
+import { readTextDocumentSeeds } from '../text-documents/seed-text-documents';
 import { parsePlacement, resolvePlacement } from '../placement/resolve-placement';
 import { placementLookups } from '../placement/placement-lookups';
 import {
@@ -101,6 +102,7 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
         markUsed?: unknown;
         items?: unknown;
         sheets?: unknown;
+        textDocuments?: unknown;
       };
       const owner = requireOwner(ctx);
       if (owner instanceof Response) return owner;
@@ -193,6 +195,9 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
       };
       const seedSheetCreates = readSeedSheets(withTemplate(body.sheets));
       if (seedSheetCreates instanceof Response) return seedSheetCreates;
+      // Text documents opened from files (docs/specs/034-text-documents/files-and-print.md "Opening").
+      const textDocumentSeeds = readTextDocumentSeeds(body.textDocuments, body.tabs ?? null);
+      if (textDocumentSeeds instanceof Response) return textDocumentSeeds;
       // Ownership guard (security): upsertDocumentMeta is INSERT ... ON
       // CONFLICT(id) DO UPDATE owner_id = excluded.owner_id, so a POST with an
       // id that already exists under a DIFFERENT owner would silently transfer
@@ -306,6 +311,7 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
           tabs: incomingTabs,
           items: seedItemCreates,
           sheets: seedSheetCreates,
+          textDocuments: textDocumentSeeds,
         });
       } catch (error) {
         await discard('room_unavailable');

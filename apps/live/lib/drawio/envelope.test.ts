@@ -5,7 +5,7 @@ import { deflateRawSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { cpuBudgetMs, cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { readDrawioSource, sniffDrawio } from './envelope';
-import { ByteBudget } from '@/lib/inflate';
+import { ByteBudget } from '@livedoc/office-packages';
 import { DrawioRefused } from './refusals';
 
 const fixture = (name: string) => readFileSync(join(__dirname, '__fixtures__', name));

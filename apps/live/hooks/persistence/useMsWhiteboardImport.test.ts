@@ -2,7 +2,7 @@
 
 import { describe, expect, it, vi } from 'vitest';
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { writeZip } from '@/lib/zip-writer-fixture';
+import { writeTestZip as writeZip } from '@livedoc/office-packages/testing';
 import { boardFiles, inkGroup } from '@/lib/ms-whiteboard/ms-whiteboard-fixtures';
 import type { PickedExport } from '@/lib/pick-folder';
 import type { ImportOutcome } from '@/lib/import-tab';

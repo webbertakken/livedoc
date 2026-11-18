@@ -48,6 +48,11 @@ export const TEXT_SOURCES: readonly TextSource[] = [
     sha256: '7c5139e697ee315479a9240cf92f626f90b1999388f8a794196feb4d9488381a',
   },
   {
+    file: 'saxes-6.0.0-LICENSE.txt',
+    sources: ['https://raw.githubusercontent.com/lddubeau/saxes/v6.0.0/LICENSE'],
+    sha256: '0fac2374380621b22e6b50451057721a9c52935b02d16d106a9f04897f061d0e',
+  },
+  {
     file: 'resvg-js-2.6.2-LICENSE.txt',
     sources: ['https://raw.githubusercontent.com/yisibl/resvg-js/v2.6.2/LICENSE'],
     sha256: '1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5',

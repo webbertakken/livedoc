@@ -22,4 +22,5 @@ leaving LiveDoc in the format it arrived in. It works as Google Docs does. The r
 - ./live-editing-and-storage.md - when working on the live model, presence, undo, storage in the room, offline, branches, copies, versions, search, the Explorer
 - ./agents-and-sync.md - when an agent reads or writes a text document, or a repository link syncs one as a native file
 - ./starting-and-finding.md - when working on making a text document, its templates, and finding it in the Explorer
+- ./performance.md - when changing what a text document loads or how fast typing reaches the screen and the peers: the budgets and how they are measured
 - ./migration.md - when retiring Pages mode: what becomes of stored articles and other pages, what a person sees, running the migration

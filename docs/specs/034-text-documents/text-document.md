@@ -147,7 +147,8 @@ role line.
 ## Telemetry and observability
 
 - `Document · Created · TextDocument` (any create path), `Tab · Added · TextDocument` (a text document tab added to a
-  document), `Document · Opened · TextDocument` (the surface mounted). Never text.
+  document), `Tab · Imported · Odt` (a file opened as a text document), `Document · Exported · TextDocumentOdt` (a
+  download). An open is the editor's own `Document · Loaded`, counted once. Never text.
 - Fingerprints, each with the document and tab ids and never text: `[text-document] created`,
   `[text-document] opened`, `[text-document] limit-refused` (with the limit's name).
 

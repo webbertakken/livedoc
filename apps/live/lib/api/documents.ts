@@ -236,6 +236,8 @@ export async function apiCreateDocument(
     sheets?: SheetCreateRequest[];
     // The type catalogue (docs/specs/026-plan/item-types.md): a copy's, a sync's or a Drive file's.
     itemTypes?: ItemTypeCatalogue | null;
+    // Text document tabs opened from files (docs/specs/034-text-documents/files-and-print.md "Opening"), base64.
+    textDocuments?: { tabId: string; file: string }[];
   },
   // Set by the Offline Mode sync path (docs/specs/006-document/offline-mode.md). A sync is a plain POST, so
   // without this the worker records it as a brand-new document being created.
@@ -267,6 +269,7 @@ export async function apiCreateDocument(
       ...(d.sheets && d.sheets.length ? { sheets: d.sheets } : {}),
       // The type catalogue rides the create (a copy's, a Plan template's card types); absent is the default types.
       ...(d.itemTypes ? { itemTypes: d.itemTypes } : {}),
+      ...(d.textDocuments && d.textDocuments.length ? { textDocuments: d.textDocuments } : {}),
     }),
   });
   const { document: liveDoc } = await expectOk<DocumentResponse>(res, 'create document');

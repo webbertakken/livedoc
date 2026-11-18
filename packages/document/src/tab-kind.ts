@@ -19,6 +19,9 @@ export const TAB_KINDS = [
   'sheet',
   'dashboard',
   'form',
+  // A text document (docs/specs/034-text-documents/text-document.md): pages of writing on an open standard, worked
+  // on its own surface outside the canvas, in no editor mode.
+  'text-document',
 ] as const;
 export type TabKind = (typeof TAB_KINDS)[number];
 
@@ -44,6 +47,7 @@ export function tabKindOf(tab: { kind?: string } | undefined): TabKind {
     case 'sheet':
     case 'dashboard':
     case 'form':
+    case 'text-document':
       return tab.kind;
     default:
       return DEFAULT_TAB_KIND;
@@ -67,4 +71,19 @@ export function tabKindOf(tab: { kind?: string } | undefined): TabKind {
 export function stampTabKind<T extends { kind?: string; layers?: Layer[] }>(tab: T): T {
   if (tab.kind !== undefined) return tab;
   return { ...tab, kind: isEventStormingTab(tab) ? 'event-storming' : DEFAULT_TAB_KIND };
+}
+
+// Which standard a text document is held in (docs/specs/034-text-documents/text-document.md "The format it is in"):
+// ODF or OOXML, the format it arrived in. A text document made in LiveDoc is born in ODF (fork C5), so absence reads
+// as ODF.
+export const TEXT_DOCUMENT_FORMATS = ['odf', 'ooxml'] as const;
+export type TextDocumentFormat = (typeof TEXT_DOCUMENT_FORMATS)[number];
+export const BORN_TEXT_DOCUMENT_FORMAT: TextDocumentFormat = 'odf';
+
+export function textDocumentFormatOf(tab: { format?: unknown }): TextDocumentFormat {
+  return tab.format === 'ooxml' ? 'ooxml' : BORN_TEXT_DOCUMENT_FORMAT;
+}
+
+export function isTextDocumentTab(tab: { kind?: string } | undefined): boolean {
+  return tabKindOf(tab) === 'text-document';
 }

@@ -176,7 +176,8 @@ whichever mode the tab is in.
   event-storming board is always Structured, so it shows the Structured icon. A Board, Sheet or Dashboard tab
   shows its kind's glyph instead, and the Plan start the board mark ([Plan tabs](../026-plan/plan-tabs.md#the-kinds)).
 - **A tab's kind is always findable.** On every tab, in every mode and at every size, the person can tell what kind
-  of tab it is, named as `tabKindLabel` names it (Diagram, Event Storming, Board, Sheet, Dashboard, Form):
+  of tab it is, named as `tabKindLabel` names it (Diagram, Event Storming, Board, Sheet, Dashboard, Form, Text
+  document):
   - the tab's glyph, wherever it stands for the tab (the active tab, the tab list, a side-by-side pane's header,
     the tab window's list), names the kind in its hover card or tooltip and to a screen reader;
   - a general tab's glyph is its mode's, so its name says both: "Diagram tab, in Sketch mode";

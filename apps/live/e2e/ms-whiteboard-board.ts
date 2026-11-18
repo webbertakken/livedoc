@@ -14,7 +14,7 @@ import {
   stickyNode,
   textBoxNode,
 } from '../lib/ms-whiteboard/ms-whiteboard-fixtures';
-import { writeZip } from '../lib/zip-writer-fixture';
+import { writeTestZip as writeZip } from '@livedoc/office-packages/testing';
 
 const u = (px: number) => Math.round(px / CURRENT_UNIT_SCALE);
 

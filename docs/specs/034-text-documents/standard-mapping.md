@@ -8,7 +8,8 @@ constructs the one model holds and where each sits in either format, how what th
 trip, the conformance LiveDoc claims, ODF's flat form, conversion between the two, and the limits. The containers
 around them (zip, manifests and relationships, metadata, pictures) are the shared
 [Office packages](../020-import-export/office-packages.md). The research is
-[Standard](../../research/docs-open-standard/standard.md).
+[Standard](../../research/docs-open-standard/standard.md). The code is one DOM-free package, `@livedoc/text-documents`, on
+the office packages' `@livedoc/office-packages`.
 
 ## The rule
 

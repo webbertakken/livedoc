@@ -13,6 +13,7 @@ describe('tabKindLabel', () => {
       'Sheet',
       'Dashboard',
       'Form',
+      'Text document',
     ]);
   });
 });
@@ -21,6 +22,7 @@ describe('tabKindName', () => {
   it('names a Plan kind on its own', () => {
     expect(tabKindName({ kind: 'board', opensIn: 'plan' })).toBe('Board tab');
     expect(tabKindName({ kind: 'form' })).toBe('Form tab');
+    expect(tabKindName({ kind: 'text-document' })).toBe('Text document tab');
   });
 
   it('names an event-storming board, whose glyph is Structured, by its kind alone', () => {
