@@ -159,7 +159,7 @@ describe('creating and listing sheets', () => {
   });
   it.each([
     [{ title: '' }, 400, 'title_invalid'],
-    [{ title: 'x'.repeat(61) }, 400, 'title_invalid'],
+    [{ title: 'x'.repeat(101) }, 400, 'title_invalid'],
     [{ tabId: '' }, 400, 'write_invalid'],
     [{ id: 'x' }, 400, 'write_invalid'],
     [{ copyOf: 'x' }, 400, 'write_invalid'],

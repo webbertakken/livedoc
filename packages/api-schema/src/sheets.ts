@@ -71,6 +71,9 @@ export const SHEET_ERRORS = [
   'value_invalid',
   'rules_full',
   'tab_not_found',
+  // A spreadsheet's sheet name against its rules, or another sheet's (docs/specs/029-sheets/spreadsheet.md "Limits").
+  'sheet_name_invalid',
+  'sheet_name_taken',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 

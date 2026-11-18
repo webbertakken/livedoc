@@ -35,8 +35,10 @@ const offline = () => import('../offline/offline-sheets');
 // A tab's sheets (or named ones, up to 50 a call), cells included.
 export async function fetchSheets(
   scope: SheetsScope,
-  which: { tabId: string } | { ids: readonly string[] },
+  // A tab's sheets, named ones, or every sheet (a spreadsheet's workbook, docs/specs/029-sheets/spreadsheet.md).
+  which: { tabId: string } | { ids: readonly string[] } | { all: true },
 ): Promise<SheetJson[]> {
+  if ('all' in which) return fetchAllSheets(scope);
   if (await isOfflineId(scope.documentId))
     return (await offline()).offlineFetchSheets(scope.documentId, which);
   if ('ids' in which) {

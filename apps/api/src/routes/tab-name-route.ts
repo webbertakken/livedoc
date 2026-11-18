@@ -3,11 +3,13 @@
 // MCP and any script, which never do whole-tab saves. Advances the tab's revision and is relayed to
 // the room as the same tab-meta an editor's own rename sends (CS42).
 
-import { getDocument, renameTab } from '../db';
+import { getDocument, listSheetHeads, renameTab } from '../db';
 import { capStoredName } from '../names';
 import { forbidden, json, notFound } from '../responses';
 import { relayTabRename } from '../room-client';
 import { structureRefusal } from '../tab-structure';
+import { writer } from './item-route-kit';
+import { storeSheetWrite } from './sheet-write-route';
 import {
   gateEdit,
   missingDocument,
@@ -41,6 +43,9 @@ export async function handleTabRename(
       { status: 400 },
     );
   }
+  // A spreadsheet's sheet tab is named as its sheet (docs/specs/029-sheets/spreadsheet.md "The workbook shape"): the
+  // rename is its sheet's, by the sheet name's rules, which renames the tab with it.
+  if (existing.workbook) return renameSheetTab(ctx, id, summary, body.name, owner);
   const name = capStoredName(body.name, summary.name, 'tab');
   const rev = await renameTab(ctx.env, tabId, name);
   if (rev === null) return notFound();
@@ -48,4 +53,29 @@ export async function handleTabRename(
   // Awaited, bounded by ROOM_RELAY_TIMEOUT_MS; a room that misses it is logged and never fails the rename.
   await relayTabRename(ctx.env, id, tabId, name);
   return json({ tab: { ...summary, name } });
+}
+
+async function renameSheetTab(
+  ctx: DocumentRouteContext,
+  id: string,
+  summary: { id: string },
+  name: string,
+  owner: string,
+): Promise<Response> {
+  const tabId = summary.id;
+  const [sheet] = await listSheetHeads(ctx.env, id, tabId);
+  if (!sheet) return notFound();
+  const by = await writer(ctx, owner);
+  const res = await storeSheetWrite(
+    ctx,
+    id,
+    sheet.id,
+    { write: { kind: 'title', title: name } },
+    by,
+    null,
+  );
+  if (!res.ok) return res;
+  const title = name.trim();
+  console.info('[changeset] tab-renamed', { documentId: id, tabId, sheet: sheet.id });
+  return json({ tab: { ...summary, name: title } });
 }

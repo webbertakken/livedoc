@@ -402,6 +402,7 @@ export function EditorView() {
             }}
             tabs={{
               tabs: tabs,
+              spreadsheet: ctx.documentWorkbook !== null,
               activeId: activeId,
               // Clicking an avatar in a presence stack opens the Collaborators
               // modal (docs/specs/012-collaboration/collaborator-enhancements.md), which is where Follow (docs/specs/012-collaboration/follow-me-viewport.md) lives.

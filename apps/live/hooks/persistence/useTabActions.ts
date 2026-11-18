@@ -18,7 +18,7 @@
 import { defaultTabName, isDefaultTabName } from '@livedoc/document';
 import { boardsRenamedWithTab, planTitledWithTab, sheetIdsOn } from '@/lib/tab-named-plan';
 import { withFormHeading } from '@/lib/form-tab';
-import type { ImportedPlanItems } from '@/lib/import-tab';
+import type { ImportedPlanItems, ImportOutcome } from '@/lib/import-tab';
 import type { PlanTabImportResult } from '@/hooks/plan/usePlanTabImport';
 import {
   normalizeFolderOrder,
@@ -91,6 +91,9 @@ type TabActionsDeps = {
   refreshDocumentList: (ownerId: string) => void;
   confirm: ReturnType<typeof useConfirm>;
   toast: ReturnType<typeof useToast>;
+  // The document is a spreadsheet, which holds only sheets (docs/specs/029-sheets/spreadsheet.md "The workbook shape"):
+  // the canvas's tab actions say so and change nothing.
+  spreadsheet?: boolean;
   // A JSON tab export's Plan items, added after its tab lands (usePlanTabImport).
   importPlanItems: (plan: ImportedPlanItems) => Promise<PlanTabImportResult>;
   // A tab renamed away from its default name: its Sheets still named that follow it (lib/tab-named-plan.ts).
@@ -98,6 +101,9 @@ type TabActionsDeps = {
   // A Sheet's title as it is now (a Sheet tab's follows the tab whatever it was).
   sheetTitle?: (sheetId: string) => string | undefined;
 };
+
+// What a canvas tab action in a spreadsheet says (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
+const ONLY_SHEETS = 'A spreadsheet holds only sheets.';
 
 export function useTabActions(deps: TabActionsDeps) {
   const {
@@ -122,12 +128,21 @@ export function useTabActions(deps: TabActionsDeps) {
     toast,
   } = deps;
 
+  // Whether a canvas tab action is refused here: a spreadsheet holds only sheets, added from its sheet bar.
+  const refusedInSpreadsheet = (action: string): boolean => {
+    if (deps.spreadsheet !== true) return false;
+    toast.error(ONLY_SHEETS);
+    debugLog('[workbook] refused tab_kind_mixed', { action });
+    return true;
+  };
+
   // The add menu's choice (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab"): a Tab in the active
   // tab's mode, so a Pages tab's + makes a Pages tab, or a Board, Sheet or Dashboard, a Plan start landing on that
   // choice (newTabOpening, plan-start-landing.ts).
   const addTab = (choice: AddTabChoice = 'tab') => {
     // A session that cannot change the document's tabs adds none, whichever row asked.
     if (!deps.canEditStructure) return;
+    if (refusedInSpreadsheet('add')) return;
     // The new tab takes the active tab's look (newTabSeed); its mode is newTabOpening's.
     // Skips the look when the active tab can't be resolved (mid-mount, or removed in another
     // window), falling back to brand defaults the same way Tab 1 does.
@@ -241,6 +256,7 @@ export function useTabActions(deps: TabActionsDeps) {
   // POST /api/documents/<target>/tabs/<tabId>/link with this document as `from`. The target then holds the same
   // tab, and an edit to it in either document reaches the other.
   const linkActiveTabTo = async (targetDocumentId: string) => {
+    if (refusedInSpreadsheet('copy-to')) return;
     const source = tabs.find((t) => t.id === activeId);
     if (!source || !documentId) return;
     const target =
@@ -261,6 +277,7 @@ export function useTabActions(deps: TabActionsDeps) {
   };
 
   const duplicateTab = (id: string) => {
+    if (refusedInSpreadsheet('duplicate')) return;
     const src = tabs.find((t) => t.id === id);
     if (!src) return;
     // A still-loading source is an empty placeholder — copying it (and
@@ -405,10 +422,19 @@ export function useTabActions(deps: TabActionsDeps) {
     track('Tab', 'Cleared');
   };
 
+  // An import replaces the active tab's canvas, which a sheet tab has none of: the dialog shows why.
+  const guardedImport =
+    <A extends unknown[]>(run: (...args: A) => Promise<ImportOutcome>) =>
+    (...args: A): Promise<ImportOutcome> => {
+      if (deps.spreadsheet !== true) return run(...args);
+      debugLog('[workbook] refused tab_kind_mixed', { action: 'import' });
+      return Promise.resolve({ status: 'error', error: ONLY_SHEETS });
+    };
+
   return {
     addTab,
-    importIntoActiveTab,
-    importTextIntoActiveTab,
+    importIntoActiveTab: guardedImport(importIntoActiveTab),
+    importTextIntoActiveTab: guardedImport(importTextIntoActiveTab),
     importSceneIntoActiveTab,
     importScenesAsNewDocuments,
     toggleActiveTabLock,

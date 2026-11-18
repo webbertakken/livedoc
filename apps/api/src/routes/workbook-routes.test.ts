@@ -96,6 +96,23 @@ describe('making a spreadsheet', () => {
     expect(row).toEqual({ unreferenced_since: null });
   });
 
+  // sheet-store.md "Copies and exports": a copy of a spreadsheet is a spreadsheet, its sheets still its tabs'.
+  it('stays a spreadsheet when copied', async () => {
+    await call({ path: '', body: spreadsheet() });
+    const res = await call({ path: '/book1/copy', body: {} });
+    expect(res.status).toBeLessThan(300);
+    const { document: copied } = await res.json<{ document: { id: string } }>();
+    const id = copied.id;
+    const read = await (await call({ method: 'GET', path: `/${id}` })).json<DocumentResponse>();
+    expect(read.document.workbook).toEqual(record);
+    const unreferenced = sql.sql
+      .prepare(
+        'SELECT COUNT(*) AS n FROM sheets WHERE document_id = ? AND unreferenced_since IS NOT NULL',
+      )
+      .get(id) as { n: number };
+    expect(unreferenced.n).toBe(0);
+  });
+
   it('reads no workbook for any other document', async () => {
     await call({
       path: '',
@@ -113,10 +130,68 @@ describe('making a spreadsheet', () => {
       'tab_kind_mixed',
     ],
     ['no tabs', { tabs: [], sheets: [] }, 'tab_kind_mixed'],
+    [
+      'a sheet tab named against the rules',
+      { tabs: [{ id: 'tab1', name: 'Q3: Plan', kind: 'sheet', elements: [] }] },
+      'sheet_name_invalid',
+    ],
+    [
+      'two sheet tabs of one name',
+      {
+        tabs: [
+          { id: 'tab1', name: 'Sheet1', kind: 'sheet', elements: [] },
+          { id: 'tab2', name: 'sheet1', kind: 'sheet', elements: [] },
+        ],
+      },
+      'sheet_name_taken',
+    ],
   ])('refuses %s', async (_, extra, error) => {
     const res = await call({ path: '', body: spreadsheet(extra) });
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error });
+  });
+});
+
+// spreadsheet.md "The workbook shape": a spreadsheet holds only sheet tabs, whichever way a tab arrives.
+describe('saving a tab into a spreadsheet', () => {
+  beforeEach(async () => {
+    await call({ path: '', body: spreadsheet() });
+  });
+
+  const put = (tab: Record<string, unknown>) =>
+    call({ method: 'PUT', path: `/book1/tabs/${String(tab['id'])}`, body: tab });
+
+  it('refuses a new tab of another kind', async () => {
+    const res = await put({ id: 'tabB', name: 'Board', kind: 'board', elements: [] });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'tab_kind_mixed' });
+  });
+
+  it('refuses turning a sheet tab into another kind', async () => {
+    const res = await put({ id: 'tab1', name: 'Sheet1', elements: [] });
+    expect(res.status).toBe(409);
+  });
+
+  it('takes a sheet tab, keeping its name, which is its sheet’s to change', async () => {
+    const res = await put({ id: 'tab1', name: 'Renamed', kind: 'sheet', elements: [] });
+    expect(res.status).toBe(200);
+    const row = sql.sql.prepare("SELECT name FROM tabs WHERE id = 'tab1'").get() as {
+      name: string;
+    };
+    expect(row.name).toBe('Sheet1');
+  });
+
+  it('leaves a document that is no spreadsheet free to hold a Plan Sheet tab beside others', async () => {
+    await call({
+      path: '',
+      body: { id: 'plan1', name: 'Plan', tabs: [{ id: 'tq', name: 'One', elements: [] }] },
+    });
+    const res = await call({
+      method: 'PUT',
+      path: '/plan1/tabs/tq2',
+      body: { id: 'tq2', name: 'Sheet', kind: 'sheet', elements: [] },
+    });
+    expect(res.status).toBe(200);
   });
 });
 
@@ -198,5 +273,109 @@ describe('workbookFileName', () => {
   it('names the file after the document, safe in a header', () => {
     expect(workbookFileName('Q3 / "Budget"', 'ods')).toBe('Q3 Budget.ods');
     expect(workbookFileName('  ', 'fods')).toBe('Untitled spreadsheet.fods');
+  });
+});
+
+// spreadsheet.md "The workbook shape": a spreadsheet's sheets are one workbook, their names its tabs', unique in it,
+// and their formulas read across it.
+describe('the sheets of one spreadsheet', () => {
+  const second = emptyLayout(rand, 10, 4);
+  function twoSheets() {
+    return spreadsheet({
+      tabs: [
+        { id: 'tab1', name: 'Sheet1', kind: 'sheet', elements: [] },
+        { id: 'tab2', name: 'Costs', kind: 'sheet', elements: [] },
+      ],
+      sheets: [
+        { id: 'sheetBk1', tabId: 'tab1', title: 'Sheet1', layout, cells: [] },
+        {
+          id: 'sheetBk2',
+          tabId: 'tab2',
+          title: 'Costs',
+          layout: second,
+          cells: [
+            {
+              r: second.rows[0],
+              c: second.cols[0],
+              i: {
+                f: {
+                  t: 'SUM(@0)',
+                  r: [
+                    {
+                      s: 'sheetBk1',
+                      r1: layout.rows[3],
+                      c1: layout.cols[0],
+                      r2: layout.rows[5],
+                      c2: layout.cols[0],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    });
+  }
+  const write = (sheetId: string, w: unknown) =>
+    call({ path: `/book1/sheets/${sheetId}/writes`, body: { write: w } });
+  const tabName = (id: string) =>
+    (sql.sql.prepare('SELECT name FROM tabs WHERE id = ?').get(id) as { name: string }).name;
+
+  beforeEach(async () => {
+    expect((await call({ path: '', body: twoSheets() })).status).toBeLessThan(300);
+  });
+
+  it('renames a sheet and its tab as one', async () => {
+    const res = await write('sheetBk1', { kind: 'title', title: 'Income' });
+    expect(res.status).toBe(200);
+    expect(tabName('tab1')).toBe('Income');
+  });
+
+  it('refuses a name another sheet of the workbook has, on another tab', async () => {
+    const res = await write('sheetBk1', { kind: 'title', title: 'costs' });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toMatchObject({ error: 'sheet_name_taken' });
+    expect(tabName('tab1')).toBe('Sheet1');
+  });
+
+  it('renames from the tab rename too, by the sheet name’s rules', async () => {
+    const ok = await call({
+      method: 'PUT',
+      path: '/book1/tabs/tab1/name',
+      body: { name: 'Income' },
+    });
+    expect(ok.status).toBe(200);
+    expect(tabName('tab1')).toBe('Income');
+    const title = sql.sql.prepare("SELECT title FROM sheets WHERE id = 'sheetBk1'").get() as {
+      title: string;
+    };
+    expect(title.title).toBe('Income');
+    const taken = await call({
+      method: 'PUT',
+      path: '/book1/tabs/tab1/name',
+      body: { name: 'Costs' },
+    });
+    expect(taken.status).toBe(409);
+  });
+
+  it('refuses a name against the rules', async () => {
+    const res = await write('sheetBk1', { kind: 'title', title: 'Q3/Q4' });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: 'sheet_name_invalid' });
+  });
+
+  it('shrinks a range another sheet tab reads when its first row is deleted', async () => {
+    const res = await write('sheetBk1', {
+      kind: 'layout',
+      changes: [{ k: 'deleteRows', ids: [layout.rows[3]] }],
+    });
+    expect(res.status).toBe(200);
+    const row = sql.sql
+      .prepare("SELECT input FROM sheet_cells WHERE sheet_id = 'sheetBk2'")
+      .get() as { input: string };
+    expect(JSON.parse(row.input)).toMatchObject({
+      f: { r: [{ s: 'sheetBk1', r1: layout.rows[4], r2: layout.rows[5] }] },
+    });
   });
 });

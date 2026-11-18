@@ -49,7 +49,33 @@ const tabIds = (net: RoomNetwork, id: string) =>
     }[]
   ).map((r) => r.tab_id);
 
+const SETTINGS =
+  '{"locale":"en-GB","timeZone":"UTC","recalc":"change","iterate":{"on":false,"max":50,"threshold":0.05}}';
+const makeSpreadsheet = (net: RoomNetwork, id: string) =>
+  net
+    .room(id)
+    .sql.exec(
+      `INSERT INTO workbook (document_id, format, settings, created_at, updated_at) VALUES ('${id}', 'ods', '${SETTINGS}', 1, 1)`,
+    );
+
 describe('POST /api/documents/:id/tabs/:tabId/link', () => {
+  // docs/specs/029-sheets/spreadsheet.md "The workbook shape": a spreadsheet's sheets live in its own room.
+  it('never shares a spreadsheet’s tab into another document', async () => {
+    const net = await network();
+    makeSpreadsheet(net, 'A');
+    const res = await link(net, { from: 'A' });
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ error: 'tab_not_linkable' });
+    expect(tabIds(net, 'B')).toEqual(['b1']);
+  });
+
+  it('never shares a tab into a spreadsheet', async () => {
+    const net = await network();
+    makeSpreadsheet(net, 'B');
+    expect((await link(net, { from: 'A' })).status).toBe(409);
+    expect(tabIds(net, 'B')).toEqual(['b1']);
+  });
+
   it('adds the tab at the end of the order and answers it', async () => {
     const net = await network();
     const res = await link(net, { from: 'A' });

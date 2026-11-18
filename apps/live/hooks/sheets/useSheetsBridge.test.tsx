@@ -21,6 +21,7 @@ function opts(over: Partial<Opts> = {}): Opts {
     ownerId: 'o1',
     shareCode: null,
     tabScope: null,
+    oneWorkbook: false,
     self: { id: 'me', name: 'Me', color: '#000000' },
     canEdit: true,
     peers: [],

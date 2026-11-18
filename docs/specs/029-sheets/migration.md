@@ -31,8 +31,10 @@ so no stored sheet is ever left behind.
 
 ## How it runs
 
-- A room schema step does it, document by document, on the room's next open or upkeep: idempotent, one transaction
-  a document, logged `[sheets-migrate] <documentId> tabs=<n> sheets=<n> cells=<n>` and a failure
+- It is built first as admin routes that run it one document at a time (default): wiring it to every room before
+  Plan stops making Sheet tabs would only make more to migrate.
+- Once Plan no longer makes Sheet tabs, the room's next open or upkeep does it, document by document: idempotent,
+  one transaction a document, logged `[sheets-migrate] <documentId> tabs=<n> sheets=<n> cells=<n>` and a failure
   `[sheets-migrate] failed <documentId> <reason>` that leaves the document as it was to be tried again.
 - A **dry run** (an admin route, read-only) counts what each document would become, run on preview then production
   before any write, with Webber's yes.

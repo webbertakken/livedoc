@@ -8,6 +8,7 @@ import type { SheetWriteRequest, SheetWriteResponse } from '@livedoc/api-schema'
 import {
   DOCUMENT_CELLS_MAX,
   SHEET_BYTES_MAX,
+  SheetName,
   SHEET_CELLS_MAX,
   applySheetWrite,
   cellKey,
@@ -36,7 +37,10 @@ import {
   documentSavedStatement,
   type SheetHead,
 } from '../db';
+import { sheetTabRenameStatement } from '../db/tabs';
+import { isSpreadsheet } from '../db/workbook';
 import { forbidden, json } from '../responses';
+import { relayTabRename } from '../room-client';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
@@ -72,8 +76,10 @@ async function shrinkReaders(
   head: SheetHead,
   changes: Extract<SheetWrite, { kind: 'layout' }>['changes'],
   by: SheetPerson,
+  // The tab whose sheets read one another, or undefined for a spreadsheet's whole workbook.
+  scope: string | undefined,
 ): Promise<void> {
-  const heads = await listSheetHeads(ctx.env, documentId, head.tabId);
+  const heads = await listSheetHeads(ctx.env, documentId, scope);
   await Promise.all(
     heads
       .filter((h) => h.id !== head.id)
@@ -185,10 +191,20 @@ export async function storeSheetWrite(
     const head = await readSheetHead(ctx.env, documentId, sheetId);
     if (!head || (scopeTab && head.tabId !== scopeTab)) return sheetNotFound();
     const write = body.write;
+    // A spreadsheet's sheets are one workbook: their titles are its tabs' names, unique in it, and their formulas read
+    // across it (docs/specs/029-sheets/spreadsheet.md "The workbook shape"); a Plan Sheet's are its tab's.
+    const spreadsheet = await isSpreadsheet(ctx.env, documentId);
+    const scope = spreadsheet ? undefined : head.tabId;
     if (write.kind === 'title') {
-      const heads = await listSheetHeads(ctx.env, documentId, head.tabId);
-      const lower = typeof write.title === 'string' ? write.title.trim().toLowerCase() : '';
-      if (heads.some((h) => h.id !== sheetId && h.title.toLowerCase() === lower))
+      const others = (await listSheetHeads(ctx.env, documentId, scope))
+        .filter((h) => h.id !== sheetId)
+        .map((h) => h.title);
+      const title = typeof write.title === 'string' ? write.title : '';
+      if (spreadsheet) {
+        const named = SheetName.check(title, others);
+        if (!named.ok)
+          return sheetRejected(named.refusal, named.refusal === 'sheet_name_taken' ? 409 : 400);
+      } else if (others.some((t) => t.toLowerCase() === title.trim().toLowerCase()))
         return sheetRejected('sheet_title_taken', 409);
     }
     // The light sheet the engine applies to: the layout, and the formulas when rows or columns go.
@@ -251,6 +267,15 @@ export async function storeSheetWrite(
     statements.push(...cellWriteStatements(ctx.env, documentId, sheetId, nonce, cells));
     statements.push(recountStatement(ctx.env, documentId, sheetId));
     statements.push(documentSavedStatement(ctx.env, documentId, sheetId, nonce, now));
+    // A spreadsheet's sheet tab is named as its sheet, in the same batch, only when the sheet's write landed (its nonce).
+    if (spreadsheet && applied.kind === 'title')
+      statements.push(
+        sheetTabRenameStatement(
+          ctx.env,
+          { tabId: head.tabId, name: landed.sheet.title, at: now },
+          { documentId, sheetId, nonce },
+        ),
+      );
     const results = await ctx.env.DOCUMENT_DB.batch(statements);
     const raised = (results[0]?.results ?? []) as { rev: number }[];
     if (raised.length === 0) {
@@ -273,8 +298,10 @@ export async function storeSheetWrite(
       by,
       ...(body.wid ? { wid: body.wid } : {}),
     });
+    if (spreadsheet && applied.kind === 'title')
+      await relayTabRename(ctx.env, documentId, head.tabId, landed.sheet.title);
     if (applied.kind === 'layout' && deletes(write))
-      await shrinkReaders(ctx, documentId, head, applied.changes, by);
+      await shrinkReaders(ctx, documentId, head, applied.changes, by, scope);
     return json(answer);
   }
   return sheetBusy();

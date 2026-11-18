@@ -30,6 +30,8 @@ export type SheetsHandlers = {
 
 export type SheetsBridge = {
   scope: SheetsScope;
+  // The document is a spreadsheet: its sheet tabs' sheets are one workbook (docs/specs/029-sheets/spreadsheet.md).
+  oneWorkbook: boolean;
   // The tab open now: where a placed Sheet's sheet is made.
   activeTabId: string;
   self: SheetPerson | null;
@@ -74,6 +76,7 @@ export function useSheetsBridge(opts: {
   ownerId: string;
   shareCode: string | null;
   tabScope: string | null;
+  oneWorkbook: boolean;
   self: SheetPerson | null;
   canEdit: boolean;
   // Absent: as canEdit.
@@ -106,11 +109,22 @@ export function useSheetsBridge(opts: {
       if (handlers.current === h) handlers.current = null;
     };
   }, []);
-  const { documentId, ownerId, shareCode, tabScope, self, canEdit, peers, activeTabId } = opts;
+  const {
+    documentId,
+    ownerId,
+    shareCode,
+    tabScope,
+    oneWorkbook,
+    self,
+    canEdit,
+    peers,
+    activeTabId,
+  } = opts;
   const canShape = opts.canShape ?? canEdit;
   const bridge = useMemo<SheetsBridge>(
     () => ({
       scope: { documentId, ownerId, shareCode, tabId: tabScope },
+      oneWorkbook,
       activeTabId,
       self,
       canEdit,
@@ -133,6 +147,7 @@ export function useSheetsBridge(opts: {
       ownerId,
       shareCode,
       tabScope,
+      oneWorkbook,
       activeTabId,
       self,
       canEdit,

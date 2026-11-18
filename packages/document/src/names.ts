@@ -26,16 +26,22 @@ export const NAME_MAX_LENGTH = 60;
 // Also collapses whitespace: an auto-name derived from a pasted block would
 // otherwise carry newlines and runs of spaces into a single-line title.
 export function truncateName(raw: string): string {
+  return truncateNameTo(raw, NAME_MAX_LENGTH);
+}
+
+// The same at another cap: a spreadsheet's sheet tab takes its sheet's name's (docs/specs/029-sheets/spreadsheet.md).
+// Its own function, so `names.map(truncateName)` never passes an index as the cap.
+export function truncateNameTo(raw: string, max: number): string {
   const collapsed = raw.replace(/\s+/gu, ' ').trim();
   const chars = [...collapsed];
-  if (chars.length <= NAME_MAX_LENGTH) return collapsed;
+  if (chars.length <= max) return collapsed;
   // One char short of the cap so the ellipsis fits inside the budget.
-  const clipped = chars.slice(0, NAME_MAX_LENGTH - 1).join('');
+  const clipped = chars.slice(0, max - 1).join('');
   const lastSpace = clipped.lastIndexOf(' ');
   // Only honour the word boundary if it leaves something worth reading —
   // a very long first word (a URL, a hash) would otherwise truncate to
   // nearly nothing, where a hard cut at least shows its opening.
-  const body = lastSpace > NAME_MAX_LENGTH / 3 ? clipped.slice(0, lastSpace) : clipped;
+  const body = lastSpace > max / 3 ? clipped.slice(0, lastSpace) : clipped;
   return `${body.trimEnd()}…`;
 }
 

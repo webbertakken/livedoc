@@ -63,6 +63,7 @@ let docSeq = 0;
 function bridge(over: Partial<SheetsBridge> = {}): SheetsBridge & { elements: Element[] } {
   const b = {
     scope: { documentId: `charts${docSeq++}`, ownerId: 'o', shareCode: null, tabId: null },
+    oneWorkbook: false,
     activeTabId: 't1',
     self: by,
     canEdit: true,

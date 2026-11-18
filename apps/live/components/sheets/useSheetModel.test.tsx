@@ -66,6 +66,7 @@ type Fake = SheetsBridge & {
 function bridge(over: Partial<SheetsBridge> = {}): Fake {
   const b: Fake = {
     scope: { documentId: `doc${docSeq++}`, ownerId: 'o', shareCode: null, tabId: null },
+    oneWorkbook: false,
     activeTabId: 't1',
     self: by,
     canEdit: true,

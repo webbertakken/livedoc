@@ -187,3 +187,31 @@ describe('a template’s Sheets', () => {
     expect(db.sql.prepare("SELECT id FROM sheets WHERE document_id = 'D'").all()).toEqual([]);
   });
 });
+
+// docs/specs/029-sheets/spreadsheet.md "The workbook shape": an agent's changeset never adds a tab of another kind
+// to a spreadsheet.
+describe('a changeset on a spreadsheet', () => {
+  it('refuses making a tab of another kind, writing nothing', async () => {
+    const db = await setUp();
+    db.sql.exec(
+      `INSERT INTO workbook (document_id, format, settings, created_at, updated_at)
+       VALUES ('D', 'ods', '{"locale":"en-GB","timeZone":"UTC","recalc":"change","iterate":{"on":false,"max":50,"threshold":0.05}}', 1, 1)`,
+    );
+    const parsed = parseChangesetRequest({ replace: { elements: [box('x')] } });
+    if (!parsed.ok) throw new Error('bad request');
+    const result = await submitChangeset({
+      env: db.env,
+      document: (await getDocument(db.env, 'D'))!,
+      tabId: 'new-tab',
+      request: parsed.value,
+      dryRun: false,
+      author: { id: 'user_o', name: 'W', color: '#000' },
+      tokenId: 'tok_1',
+      frontDoor: 'Api',
+    });
+    expect(result).toEqual({ status: 409, body: { error: 'tab_kind_mixed' } });
+    expect(db.sql.prepare("SELECT COUNT(*) AS n FROM tabs WHERE id = 'new-tab'").get()).toEqual({
+      n: 0,
+    });
+  });
+});

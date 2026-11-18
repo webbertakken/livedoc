@@ -21,7 +21,9 @@ export const INPUT_MAX = 10_000;
 export const FORMULA_MAX = 8_000;
 export const FORMULA_DEPTH_MAX = 64;
 
-export const SHEET_TITLE_MAX = 60;
+// A sheet's title: a spreadsheet's sheet names run to 100 (docs/specs/029-sheets/spreadsheet.md, SHEET_NAME_MAX), and a
+// Plan Sheet's title shares the bound.
+export const SHEET_TITLE_MAX = 100;
 // The most rows and columns a freeze keeps in place (more would leave no room to scroll in a Sheet's frame).
 export const SHEET_FREEZE_ROWS_MAX = 100;
 export const SHEET_FREEZE_COLS_MAX = 26;

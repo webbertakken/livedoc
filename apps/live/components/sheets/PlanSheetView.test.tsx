@@ -66,6 +66,7 @@ const element = (planSheet: { sheetId: string; copyOf?: string }): ShapeElement 
 function bridge(over: Partial<SheetsBridge> = {}) {
   const b = {
     scope: { documentId: `docV${docSeq++}`, ownerId: 'o', shareCode: null, tabId: null },
+    oneWorkbook: false,
     activeTabId: 't1',
     self: by,
     canEdit: true,

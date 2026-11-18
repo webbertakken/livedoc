@@ -31,6 +31,7 @@ describe('getDocumentForSave', () => {
       ownerName: 'Ada',
       ownerColor: '#ff0000',
       tabCount: 2,
+      spreadsheet: false,
     });
     expect(saving).toMatchObject({
       ownerId: full!.ownerId,
@@ -39,6 +40,15 @@ describe('getDocumentForSave', () => {
       createdAt: full!.createdAt,
       tabCount: full!.tabs.length,
     });
+  });
+
+  // docs/specs/029-sheets/spreadsheet.md "The workbook shape": a document is a spreadsheet when it has a workbook row.
+  it('says whether the document is a spreadsheet, from its workbook row', async () => {
+    const { env, sql } = setUp();
+    sql.exec(
+      `INSERT INTO workbook (document_id, format, settings, created_at, updated_at) VALUES ('d1', 'ods', '{}', 1, 1)`,
+    );
+    expect(await getDocumentForSave(env, 'd1')).toMatchObject({ spreadsheet: true, tabCount: 2 });
   });
 
   it('reads a trashed or unknown document as missing', async () => {

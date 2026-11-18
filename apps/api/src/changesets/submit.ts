@@ -5,7 +5,7 @@ import type {
   LintReport,
 } from '@livedoc/api-schema';
 import { lintFooterPart } from '@livedoc/diagram-lint';
-import { migrateIncomingTab, preferNewerQaAll, type Tab } from '@livedoc/document';
+import { migrateIncomingTab, preferNewerQaAll, tabMixRefusal, type Tab } from '@livedoc/document';
 import {
   applyEditOperations,
   applyReplace,
@@ -77,6 +77,12 @@ export async function submitChangeset(args: SubmitArgs): Promise<SubmitResult> {
     }
     const compiled = compile(args, stored, selections);
     if ('errors' in compiled) return rejected(args, stored, compiled.errors, where);
+    // A spreadsheet holds only sheet tabs (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
+    const mixed = tabMixRefusal(document.workbook != null, [compiled.tab]);
+    if (mixed) {
+      changesetLog('info', '[workbook] refused', { ...where, error: mixed });
+      return { status: 409, body: { error: mixed } };
+    }
     if (args.scope) {
       const why = structureChange(stored ? stored.tab : null, compiled.tab, args.scope);
       if (why) return structureRefusal(why, where);

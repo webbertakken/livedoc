@@ -103,6 +103,8 @@ export type DocumentCopy = {
   items: Row[];
   sheets: Row[];
   cells: Row[];
+  // A spreadsheet's workbook row (docs/specs/029-sheets/sheet-store.md "Copies and exports"), or null.
+  workbook: Row | null;
 };
 
 const ITEM_COLUMNS =
@@ -164,7 +166,7 @@ export async function exportDocumentCopy(
     itemFilter = ' AND id IN (SELECT value FROM json_each(?))';
     itemBinds.push(JSON.stringify([...shown]));
   }
-  const [head, items, refs, sheets, cells] = await db.batch([
+  const [head, items, refs, sheets, cells, workbook] = await db.batch([
     db
       .prepare('SELECT item_types, items_rev, items_next_key FROM document WHERE id = ?')
       .bind(documentId),
@@ -189,6 +191,9 @@ export async function exportDocumentCopy(
           WHERE c.document_id = ? AND s.tab_id IN (SELECT value FROM json_each(?))`,
       )
       .bind(documentId, tabIds),
+    db
+      .prepare('SELECT format, settings, created_at FROM workbook WHERE document_id = ?')
+      .bind(documentId),
   ]);
   const doc = head?.results?.[0] as
     { item_types: string | null; items_rev: number; items_next_key: number } | undefined;
@@ -201,6 +206,7 @@ export async function exportDocumentCopy(
     items: (items?.results ?? []) as Row[],
     sheets: (sheets?.results ?? []) as Row[],
     cells: (cells?.results ?? []) as Row[],
+    workbook: ((workbook?.results ?? [])[0] as Row | undefined) ?? null,
   };
 }
 
@@ -282,6 +288,22 @@ export async function importDocumentCopy(
         ),
     );
   }
+  // A copy of a spreadsheet is a spreadsheet: its workbook row comes first, so its sheet tabs reference their sheets.
+  if (copy.workbook)
+    stmts.push(
+      db
+        .prepare(
+          `INSERT INTO workbook (document_id, format, settings, rev, created_at, updated_at) VALUES (?, ?, ?, 0, ?, ?)
+           ON CONFLICT (document_id) DO NOTHING`,
+        )
+        .bind(
+          documentId,
+          copy.workbook.format,
+          copy.workbook.settings,
+          copy.workbook.created_at,
+          now,
+        ),
+    );
   for (const sheet of copy.sheets) {
     stmts.push(
       db

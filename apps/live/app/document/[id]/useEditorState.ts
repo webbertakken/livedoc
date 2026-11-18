@@ -1303,6 +1303,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     ownerId: selfParticipant.id,
     shareCode: sessionShareCode,
     tabScope: sessionTabScope,
+    oneWorkbook: persistence.documentWorkbook !== null,
     self: planItems.self,
     // A Participant writes cells; only an Editor shapes the Sheet (docs/specs/013-workspace/share-roles.md).
     canEdit: participant.can.sheetCells,
@@ -2769,6 +2770,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     confirm,
     toast,
     importPlanItems,
+    spreadsheet: persistence.documentWorkbook !== null,
     retitleSheets: sheets.retitleSheets,
     sheetTitle: sheets.sheetTitle,
   });

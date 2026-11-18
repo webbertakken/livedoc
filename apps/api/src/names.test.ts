@@ -38,4 +38,12 @@ describe('capStoredName', () => {
     const stored = capStoredName(long, null, 'tab');
     expect(info).toHaveBeenCalledWith('[names] capped tab name', long.length, [...stored].length);
   });
+
+  // docs/specs/029-sheets/spreadsheet.md "What a workbook holds": a sheet tab is named as its sheet, up to 100.
+  it('lets a spreadsheet’s sheet tab run to its sheet’s 100 characters', () => {
+    const hundred = 'q'.repeat(100);
+    expect(capStoredName(hundred, null, 'sheet-tab')).toBe(hundred);
+    expect([...capStoredName('q'.repeat(140), null, 'sheet-tab')]).toHaveLength(100);
+    expect([...capStoredName(hundred, null, 'tab')]).toHaveLength(60);
+  });
 });

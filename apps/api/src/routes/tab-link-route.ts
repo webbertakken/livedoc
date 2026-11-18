@@ -9,6 +9,7 @@
 // holds its tabs.
 
 import { getDocumentMeta, getTab, getTrashedDocumentMeta } from '../db';
+import { isSpreadsheet } from '../db/workbook';
 import { documentRoom } from '../document-room/document-client';
 import { queueShareBody, sharesTabWith, takeSharedTab } from '../document-room/tab-shares';
 import { badRequest, conflict, forbidden, json, notFound } from '../responses';
@@ -56,6 +57,12 @@ export async function handleTabLink(ctx: DocumentRouteContext): Promise<Response
   }
   const copy = await documentRoom(env, from).sharedTabCopy(tabId);
   if (!copy) return notFound();
+  // A spreadsheet's sheets live in its own room, so its tabs are never shared, either way
+  // (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
+  if (copy.spreadsheet || (await isSpreadsheet(env, id))) {
+    console.info('[tab-link] refused', { documentId: id, tabId, from, reason: 'tab_not_linkable' });
+    return conflict('tab_not_linkable');
+  }
   // Tab ids are unique per document only: a tab of this id that `from` does not share with this one is another tab.
   if (held || !(await takeSharedTab(env, id, tabId, copy))) return refused(id, tabId, from);
   await recordJoin(ctx, id, tabId, from, copy.updatedAt);

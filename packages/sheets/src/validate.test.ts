@@ -40,7 +40,7 @@ describe('validateWrite', () => {
     [{ kind: 'nope' }, 'write_invalid'],
     [null, 'write_invalid'],
     [{ kind: 'title', title: '  ' }, 'title_invalid'],
-    [{ kind: 'title', title: 'x'.repeat(61) }, 'title_invalid'],
+    [{ kind: 'title', title: 'x'.repeat(101) }, 'title_invalid'],
     [{ kind: 'cells', cells: 'x' }, 'write_invalid'],
     [{ kind: 'cells', cells: [{ r: 'BAD', c: C(0) }] }, 'axis_id_invalid'],
     [{ kind: 'cells', cells: [{ r: R(0), c: C(0), i: { n: Infinity } }] }, 'write_invalid'],

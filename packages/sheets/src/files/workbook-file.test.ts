@@ -141,12 +141,12 @@ describe('sheetsFromFile', () => {
       },
       seeded(),
     );
-    expect(made.sheets.map((s) => s.title)).toEqual(['A', 'a 2', 'Sheet']);
+    expect(made.sheets.map((s) => s.title)).toEqual(['A', 'a 2', 'Sheet1']);
     expect(made.sheets[1]!.cells).toEqual([]);
     expect(made.losses).toEqual([
       { k: 'sheet_renamed', from: 'a', to: 'a 2' },
       { k: 'sheet_cut', sheet: 'a 2', rows: 10_000, cols: 200 },
-      { k: 'sheet_renamed', from: '', to: 'Sheet' },
+      { k: 'sheet_renamed', from: '', to: 'Sheet1' },
     ]);
   });
 

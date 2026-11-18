@@ -13,6 +13,7 @@
 import type { Tab } from '@livedoc/document';
 import type { SharedTabsSummary } from '@livedoc/api-schema';
 import { tabWriteStatements } from '../db/tabs';
+import { isSpreadsheet } from '../db/workbook';
 import type { DocumentEnv } from '../types';
 import { pooled, PUSH_CONCURRENCY } from './document-outbox';
 
@@ -39,6 +40,8 @@ export type SharedTabCopy = {
   updatedAt: number;
   // Every holder the joining document will share the tab with, the one joined through first.
   members: string[];
+  // Whether the holder is a spreadsheet, whose tabs are never shared (docs/specs/029-sheets/spreadsheet.md).
+  spreadsheet: boolean;
 };
 
 // Messages one drain sends; each is one call to another room, a body up to a tab's size.
@@ -123,6 +126,7 @@ export async function sharedTabCopy(
     data: tab.data,
     updatedAt: tab.updated_at,
     members: [documentId, ...(await holdersOf(env, tabId))],
+    spreadsheet: await isSpreadsheet(env, documentId),
   };
 }
 
