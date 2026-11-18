@@ -105,3 +105,76 @@ test('a palette press places a family not yet in once it is', async ({
   expect(waits).toEqual(['[element-kinds] press waits family=concepts']);
   expectNoPageErrors(pageErrors);
 });
+
+// The page never idles, so no family is fetched before something needs it; and, while the test holds it, the
+// browser's `online` event stops at the window, as when the connection is back before the browser has said so.
+async function neverIdleAndHoldOnline(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.requestIdleCallback = () => 0;
+    const w = window as unknown as { __holdOnline?: boolean };
+    window.addEventListener(
+      'online',
+      (event) => {
+        if (w.__holdOnline) event.stopImmediatePropagation();
+      },
+      { capture: true },
+    );
+  });
+}
+
+const NOTICE = 'Part of this board couldn’t load.';
+
+// docs/specs/016-platform/web-performance.md "When a family cannot load": offline before a family was fetched, a
+// press of its tile places nothing and the notice shows; Retry, once the connection is back, loads it.
+test('a family that cannot load shows the notice, and Retry loads it', async ({
+  page,
+  context,
+  pageErrors,
+}) => {
+  await neverIdleAndHoldOnline(page);
+  await openStartBlank(page);
+  const tile = await paletteTile(page, 'Add Pyramid', 'Concepts');
+
+  await context.setOffline(true);
+  await tile.click();
+
+  const notice = page.getByText(NOTICE);
+  await expect(notice).toBeVisible();
+  await expect(tile).not.toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('[data-element-id]')).toHaveCount(0);
+
+  await page.evaluate(() => {
+    (window as unknown as { __holdOnline?: boolean }).__holdOnline = true;
+  });
+  await context.setOffline(false);
+  await expect(notice).toBeVisible();
+  await page.getByRole('button', { name: 'Retry', exact: true }).click();
+  await expect(notice).toBeHidden();
+
+  await tile.click();
+  await expect(tile).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('[data-canvas-a11y-root]').click({ position: { x: 480, y: 320 } });
+  await expect(page.locator('[data-element-id]')).toHaveCount(1);
+  expectNoPageErrors(pageErrors);
+});
+
+test('a family that could not load loads by itself once the connection is back', async ({
+  page,
+  context,
+  pageErrors,
+}) => {
+  await neverIdleAndHoldOnline(page);
+  await openStartBlank(page);
+  const tile = await paletteTile(page, 'Add Pyramid', 'Concepts');
+
+  await context.setOffline(true);
+  await tile.click();
+  const notice = page.getByText(NOTICE);
+  await expect(notice).toBeVisible();
+
+  await context.setOffline(false);
+  await expect(notice).toBeHidden();
+  await tile.click();
+  await expect(tile).toHaveAttribute('aria-pressed', 'true');
+  expectNoPageErrors(pageErrors);
+});
