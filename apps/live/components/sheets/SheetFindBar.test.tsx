@@ -143,7 +143,8 @@ describe('the find bar', () => {
     expect(h.value('A4')).toBe('pear');
     expect(count()).toBe('No matches');
     await h.store.settle();
-    expect(h.writes.map((w) => (w.kind === 'cells' ? w.cells.length : 0))).toEqual([1, 1, 1]);
+    // Three replaces in one moment go as one write (sheet-send-batch.ts).
+    expect(h.writes.map((w) => (w.kind === 'cells' ? w.cells.length : 0))).toEqual([3]);
     expect(track).toHaveBeenCalledWith('Sheet', 'Changed', 'Replace');
   });
 

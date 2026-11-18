@@ -160,9 +160,35 @@ describe('the sheet store client', () => {
     await s.settle();
     expect(srv.sheet.rev).toBe(1);
   });
+  // sheet-store.md "Changing a sheet" (write batching): writes made in one moment go as one, each its own undo step.
+  it('sends the writes made in one moment as one, each still undone on its own', async () => {
+    const steps: { undo: () => void }[] = [];
+    const b = store(srv.api, { pushUndo: (st) => steps.push(st as never) });
+    await b.loadTab('t1');
+    b.write('sheet0001', set(0, 0, 1));
+    b.write('sheet0001', set(0, 1, 2));
+    expect([
+      b.workbook('t1').value('sheet0001', 0, 0),
+      b.workbook('t1').value('sheet0001', 0, 1),
+    ]).toEqual([1, 2]);
+    await b.settle();
+    expect(srv.api.writeSheet).toHaveBeenCalledOnce();
+    expect(srv.sheet.rev).toBe(1);
+    for (const op of srv.drain()) b.receive(op);
+    steps.pop()!.undo();
+    await b.settle();
+    expect([
+      b.workbook('t1').value('sheet0001', 0, 0),
+      b.workbook('t1').value('sheet0001', 0, 1),
+    ]).toEqual([1, null]);
+    expect(srv.sheet.cells.size).toBe(1);
+  });
+
   it('shows a write at once, sends writes in order, and converges with others', async () => {
     srv.hold(true);
     s.write('sheet0001', set(0, 0, 1));
+    // A moment apart, so they go as two writes (writes made in one moment go as one: sheet-send-batch.ts).
+    await flush();
     s.write('sheet0001', set(0, 1, 2));
     expect([value(0, 0), value(0, 1)]).toEqual([1, 2]);
     // Someone else writes C1 while ours are in flight; the room relays every write in the server's order.
@@ -716,6 +742,7 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
       cells: [{ r: rows[2]!, c: cols[0]!, i: { s: v } }],
     });
     expect(s.write('sheet0001', cell('Imported'), { unchecked: true })).toBeNull();
+    await flush();
     expect(s.write('sheet0001', cell('Synced'), { undoable: false })).toBeNull();
     await flush();
     await flush();

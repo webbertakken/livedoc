@@ -440,10 +440,10 @@ describe('Import CSV', () => {
     expect(screen.queryByRole('dialog', { name: 'Import CSV' })).toBeNull();
     await waitFor(() => expect(writeSheet).toHaveBeenCalled());
     const cells = sentCells();
-    // A1 cleared, then the file written to A1.
+    // A1 cleared, then the file written to A1: made in one moment, they go as one write, A1 ending as the file has it.
     expect(
       cells.filter((c) => c.r === s.layout.rows[0] && c.c === s.layout.cols[0]).map((c) => c.i),
-    ).toEqual([null, { s: 'new' }]);
+    ).toEqual([{ s: 'new' }]);
   });
 
   it('asks first for a filled sheet: Insert at Selection keeps the other cells', async () => {
