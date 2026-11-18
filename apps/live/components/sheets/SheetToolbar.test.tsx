@@ -156,7 +156,15 @@ describe('the sheet toolbar', () => {
       expect(btn(label).getAttribute('aria-pressed')).toBe('false');
     }
     await h.store.settle();
-    expect(h.writes.length).toBe(8);
+    // Eight presses in one moment go as one write (sheet-send-batch.ts), every key toggled back off.
+    expect(h.writes).toHaveLength(1);
+    expect(h.writes[0]).toMatchObject({
+      kind: 'cells',
+      cells: [
+        { f: { b: null, i: null, u: null, st: null } },
+        { f: { b: null, i: null, u: null, st: null } },
+      ],
+    });
     expect(track).toHaveBeenCalledWith('Sheet', 'Changed', 'Format');
   });
 

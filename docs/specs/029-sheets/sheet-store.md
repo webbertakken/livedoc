@@ -109,6 +109,11 @@ this page holds for both until the Plan Sheet retires.
 - **Cell write**: a set of cells by row and column id, each with an input to set or clear and/or format keys to
   set or clear. Two people writing different cells, or different format keys of a cell, never overwrite each
   other; the same input or format key resolves to the last write.
+- **Writes made in one moment go as one**: the editor shows each write at once and sends a sheet's cell writes made
+  in the same moment (one task, before the next frame) as one, each cell left as the writes in turn would leave it
+  (default). Format keys after a whole-format clear of the same cell, one key set to an object twice, a layout or
+  title write, different flags (an undo, an unchecked write) or a write's caps start another. Each write stays its
+  own undo step.
 - **Layout write**: insert rows or columns (new ids, made by the client, at a place given as "after this id"),
   delete them, move them (after an id), resize them, hide or show them, set the freeze, merge or unmerge a range,
   set or clear the filter and its conditions, set or remove a [validation rule](data-validation.md) or a

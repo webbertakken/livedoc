@@ -53,6 +53,7 @@ import {
   type SheetsScope,
 } from '@/lib/api/sheets';
 import { RowPages } from './sheet-row-pages';
+import { SendBatch, type SendFlags } from './sheet-send-batch';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 
 // How a write is made: `undoable` false for an undo or redo itself (`undo` true then); `alongside`, a change outside
@@ -91,6 +92,8 @@ type SheetStoreDeps = {
   };
   // The wait before a write is sent again; injected in tests.
   wait?: (ms: number) => Promise<void>;
+  // When the writes made in one moment go, merged (sheet-send-batch.ts): the next task; injected in tests.
+  later?: (go: () => void) => void;
 };
 
 type Pending = { wid: string; write: SheetWrite };
@@ -169,6 +172,8 @@ export class SheetStore {
   private cards: CardSource | null = null;
   // A spreadsheet's sheets loading behind their first rows.
   private readonly pages: RowPages;
+  // The writes made in one moment, sent as fewer.
+  private readonly batch: SendBatch;
   version = 0;
 
   constructor(deps: SheetStoreDeps) {
@@ -182,6 +187,13 @@ export class SheetStore {
       deleteSheet,
     };
     this.wait = deps.wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    this.batch = new SendBatch({
+      pending: (sheetId) => this.entries.get(sheetId)?.pending,
+      send: (sheetId, wid, write, flags) =>
+        this.enqueue(sheetId, () => this.send(sheetId, wid, write, flags)),
+      newWid,
+      later: deps.later ?? ((go) => void setTimeout(go, 0)),
+    });
     this.pages = new RowPages({
       fetchCells: (sheetId, rows) => this.api.fetchSheetCells(this.deps.scope, sheetId, rows),
       confirmed: (sheetId) => this.entries.get(sheetId)?.confirmed,
@@ -544,18 +556,11 @@ export class SheetStore {
         // A deletion's undo is worked out again when it is made, against the sheet as it is then.
         ...(undoReadsNow(result.applied) ? { before: before.layout, applied: result.applied } : {}),
       });
-      for (const part of parts) {
-        const wid = newWid();
-        entry.pending.push({ wid, write: part });
-        this.enqueue(sheetId, () =>
-          this.send(sheetId, wid, part, {
-            ...(opts.undo ? { undo: true } : {}),
-            ...(opts.unchecked || (opts.undoable === false && !opts.undo)
-              ? { unchecked: true }
-              : {}),
-          }),
-        );
-      }
+      const flags: SendFlags = {
+        ...(opts.undo ? { undo: true } : {}),
+        ...(opts.unchecked || (opts.undoable === false && !opts.undo) ? { unchecked: true } : {}),
+      };
+      for (const part of parts) this.batch.add(sheetId, part, flags);
       entry.view = { ...result.sheet, rev: entry.confirmed.rev };
       this.workbookUpdate(
         before.tabId,
@@ -670,6 +675,7 @@ export class SheetStore {
 
   // Let pending sends finish (tests, and before a document copy reads the store).
   async settle(): Promise<void> {
+    this.batch.flush();
     await Promise.all([...this.queues.values()]);
   }
 
@@ -677,7 +683,7 @@ export class SheetStore {
     sheetId: string,
     wid: string,
     write: SheetWrite,
-    flags: { undo?: true; unchecked?: true },
+    flags: SendFlags,
     attempt = 0,
   ): Promise<void> {
     let answer: SheetWriteResponse;
