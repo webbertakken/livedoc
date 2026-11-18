@@ -327,6 +327,11 @@ sidebar is, where a flex row let the article take the full width until the sideb
   (`lib/article-outline.ts`), so it is in the static HTML: it never pushes the sidebar's Learn more
   list down after hydration (a 0.007 shift on every article with related guides), and no observer
   watches the page for headings.
+- A box sized or placed from a measurement takes it in the commit that changes what it measures (a layout effect,
+  or the microtask a MutationObserver reports in), never from a ResizeObserver's state update: Chrome counts what a
+  resize callback moves as a layout shift, even before the frame is drawn, and a state update lands a frame later
+  still. The editor's palette strip settles this way as a board opens, from 0.027 to 0.037 on every open to none
+  ([Toolbar layout](../007-editor/toolbar-layout.md#motion)).
 
 ### The first images a visitor sees load first
 
