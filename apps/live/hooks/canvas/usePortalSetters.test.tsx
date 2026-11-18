@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { createShape, type Tab } from '@livedoc/document';
 import { usePortalSetters } from './usePortalSetters';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// The verbs are their family's code (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
