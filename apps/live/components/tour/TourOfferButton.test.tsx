@@ -3,6 +3,7 @@
 // left of Search, offering the most relevant tour on offer, and absent with none.
 import { centreOffsetPx } from '@livedoc/icons/centring';
 import { act, cleanup, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { useLayoutEffect } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   publishTourOffer,
@@ -146,6 +147,30 @@ describe('tour offers', () => {
     expect(tourOffer()?.name).toBe('Draw');
     unmount();
     expect(tourOffer()).toBeNull();
+  });
+
+  // A tour on offer as the editor opens is on the button in the first frame drawn: published after it, the button
+  // joined the actions group a frame late and the palette strip refitted around it, a layout shift on every open.
+  it('publishes an offer before the frame is drawn', () => {
+    function Host() {
+      useOfferTour('draw', { name: 'Draw', rank: TOUR_OFFER_RANK.mode, start: vi.fn() });
+      return null;
+    }
+    let seenBeforePaint: string | null | undefined;
+    function LaterSibling() {
+      // Layout effects all run before the browser paints, and after the host's: passive effects run after both.
+      useLayoutEffect(() => {
+        seenBeforePaint = tourOffer()?.name ?? null;
+      }, []);
+      return null;
+    }
+    render(
+      <>
+        <Host />
+        <LaterSibling />
+      </>,
+    );
+    expect(seenBeforePaint).toBe('Draw');
   });
 
   it('reads the start it was last given', () => {

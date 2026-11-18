@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
 import { createListeners } from '@/lib/listeners';
 
 // The tours on offer on this page (docs/specs/007-editor/editor-tour.md "Where it appears"): each tour host publishes
@@ -81,19 +81,21 @@ export function useTourOffer(): TourOffer | null {
 /**
  * Offers a host's tour on the bottom bar's button while `offer` is non-null, and takes it back when null or on unmount.
  * Republished only when its name or rank changes; `start` and `onShown` are read when called, so a host may pass fresh
- * closures every render.
+ * closures every render. Published in a layout effect, before the frame is drawn: an offer that is on as the editor
+ * opens is on the button in the first frame, so the actions group, and the palette strip measured against it
+ * (docs/specs/007-editor/toolbar-layout.md "Motion"), never change a frame later.
  */
 export function useOfferTour(
   id: string,
   offer: { name: string; rank: number; start: () => void; onShown?: () => void } | null,
 ): void {
   const latest = useRef(offer);
-  useEffect(() => {
+  useLayoutEffect(() => {
     latest.current = offer;
   });
   const name = offer?.name ?? null;
   const rank = offer?.rank ?? 0;
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (name === null) {
       publishTourOffer(id, null);
       return;
@@ -106,7 +108,7 @@ export function useOfferTour(
       onShown: () => latest.current?.onShown?.(),
     });
   }, [id, name, rank]);
-  useEffect(() => () => publishTourOffer(id, null), [id]);
+  useLayoutEffect(() => () => publishTourOffer(id, null), [id]);
 }
 
 /** Every offer withdrawn, for tests. */

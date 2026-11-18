@@ -94,14 +94,43 @@ describe('ToolbarStripRail', () => {
   // A tile sliding to its new slot (fewer card types) overflows sideways while it slides: the rail takes the
   // content's laid-out width, never that overflow, so no gap is left after the last tile.
   it('sizes itself to the tiles as laid out, not to a tile caught mid-slide', () => {
-    const { container } = render(
-      <ToolbarStripRail railKey="a" items={items('one', 'two')} leavingItems={null} />,
-    );
-    const rail = container.querySelector('[data-strip-rail]') as HTMLElement;
+    const view = render(<ToolbarStripRail railKey="a" items={items('one')} leavingItems={null} />);
+    view.rerender(<ToolbarStripRail railKey="b" items={items('one', 'two')} leavingItems={null} />);
+    const rail = view.container.querySelector('[data-strip-rail]') as HTMLElement;
     const content = rail.firstElementChild as HTMLElement;
     Object.defineProperty(content, 'offsetWidth', { configurable: true, value: 80 });
     Object.defineProperty(content, 'scrollWidth', { configurable: true, value: 115 });
     act(() => observers.forEach((cb) => cb()));
     expect(rail.style.width).toBe('80px');
+  });
+
+  // The first set is simply there (toolbar-layout.md "Motion"): as the editor opens, the tiles that fit change as
+  // the top line fills in, and a rail holding a width of its own eased to each new count, a layout shift on load.
+  // Whole pixels, so More and Search after it stay on the pixel grid (optical-alignment.md); taken in the commit the
+  // tiles change, and not eased, so the refits as the editor opens move nothing (toolbar-layout.md "Motion").
+  it("takes its tiles' whole-pixel width in the commit they change, without easing before a switch", async () => {
+    const { container, rerender } = render(
+      <ToolbarStripRail railKey="a" items={items('one', 'two', 'three')} leavingItems={null} />,
+    );
+    const rail = container.querySelector('[data-strip-rail]') as HTMLElement;
+    const content = rail.firstElementChild as HTMLElement;
+    Object.defineProperty(content, 'offsetWidth', { configurable: true, value: 120 });
+    act(() => observers.forEach((cb) => cb()));
+    expect(rail.style.width).toBe('120px');
+    // A frame later, when the rail used to arm its easing.
+    await act(() => new Promise((done) => requestAnimationFrame(() => done(null))));
+    Object.defineProperty(content, 'offsetWidth', { configurable: true, value: 41 });
+    rerender(<ToolbarStripRail railKey="a" items={items('one')} leavingItems={null} />);
+    expect(rail.style.width).toBe('41px');
+    expect(rail.className).not.toContain('transition-[width]');
+  });
+
+  it('eases its width to the new set once the category has switched', () => {
+    const view = render(<ToolbarStripRail railKey="a" items={items('one')} leavingItems={null} />);
+    const rail = view.container.querySelector('[data-strip-rail]') as HTMLElement;
+    view.rerender(
+      <ToolbarStripRail railKey="b" items={items('two', 'three')} leavingItems={null} />,
+    );
+    expect(rail.className).toContain('transition-[width]');
   });
 });

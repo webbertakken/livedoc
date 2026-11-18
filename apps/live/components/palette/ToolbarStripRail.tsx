@@ -67,13 +67,10 @@ export function ToolbarStripRail({
   const contentRef = useRef<HTMLDivElement>(null);
   const enter = tileEnterAnimation(useTabFinish());
   const railRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState<number | null>(null);
-  // Off for the first measured frame, so the strip doesn't animate itself
-  // open on page load (the same gate the category picker uses).
-  const [animate, setAnimate] = useState(false);
-  // Tiles pop in only once the category has CHANGED: the first set is just
-  // there, like the rest of the chrome. Derived during render (React's
-  // "adjusting state when a prop changes" pattern), not in an effect.
+  // Tiles pop in, and the rail eases its width, only once the category has CHANGED: the first set is just there,
+  // like the rest of the chrome. As the editor opens the tiles that fit change while the top line fills in, and an
+  // eased width made each of those refits a layout shift. Derived during render (React's "adjusting state when a
+  // prop changes" pattern), not in an effect.
   const [seenKey, setSeenKey] = useState(railKey);
   const [switched, setSwitched] = useState(false);
   if (railKey !== seenKey) {
@@ -145,23 +142,30 @@ export function ToolbarStripRail({
   // A swiping rail hides a divider whose tiles are not both in view (useEdgeDividers).
   useEdgeDividers(railRef, scrollable, order);
 
+  // The rail's width: its tiles' layout width, in whole pixels (offsetWidth), so every control after it (More,
+  // Search) stays on the pixel grid and sharp. Not scrollWidth: that counts transformed overflow, so a measure taken
+  // while tiles slide to new slots (fewer card types, a reorder) caught them mid-slide and the rail kept that wider
+  // width, with a gap after the last tile, once they settled. Written straight onto the rail in the commit its tiles
+  // change, never a frame later from React state (docs/specs/007-editor/toolbar-layout.md "Motion"); after a
+  // category switch the rail's transition eases it from the old width to the new.
+  const fitWidth = useEffectEvent(() => {
+    const rail = railRef.current;
+    const el = contentRef.current;
+    if (!rail || !el) return;
+    const px = `${el.offsetWidth}px`;
+    if (rail.style.width !== px) rail.style.width = px;
+  });
+  useLayoutEffect(() => fitWidth(), [order]);
+
   useLayoutEffect(() => {
     // A new category starts at its first tile, not wherever the last was swiped to.
     if (railRef.current) railRef.current.scrollLeft = 0;
     const el = contentRef.current;
     if (!el) return;
-    // Its layout width, not scrollWidth: scrollWidth counts transformed overflow, so a measure taken while
-    // tiles slide to new slots (fewer card types, a reorder) caught them mid-slide and the rail kept that
-    // wider width, with a gap after the last tile, once they settled (nothing resizes when a slide ends).
-    const measure = () => setWidth(el.offsetWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
+    // What changes size without a change of tiles (a font arriving).
+    const ro = new ResizeObserver(() => fitWidth());
     ro.observe(el);
-    const raf = requestAnimationFrame(() => setAnimate(true));
-    return () => {
-      ro.disconnect();
-      cancelAnimationFrame(raf);
-    };
+    return () => ro.disconnect();
   }, [railKey]);
 
   return (
@@ -178,8 +182,7 @@ export function ToolbarStripRail({
       data-strip-rail=""
       className={`relative -mx-[3px] flex items-center ${
         scrollable ? STRIP_RAIL_SCROLL : 'overflow-x-clip [overflow-clip-margin:3px]'
-      }${animate ? ' transition-[width] duration-short ease-out' : ''}`}
-      style={{ width: width ?? undefined }}
+      }${switched ? ' transition-[width] duration-short ease-out' : ''}`}
     >
       <div key={railKey} ref={contentRef} className="flex w-max items-center gap-0.5 px-[3px]">
         {items.map((item, i) => (

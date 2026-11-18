@@ -6,7 +6,8 @@
 // tucked behind the strip's bottom edge, sliding down as it comes, rounded bottom corners, centred under the strip's
 // card and never wider. Without a strip on screen there is no box, and the caller draws its usual top-centre pill
 // instead.
-import { useEffect, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useState, type ReactNode } from 'react';
+import { settleNow } from '@/lib/settle-now';
 import { createPortal } from 'react-dom';
 import { EDITOR_VIEWPORT_ATTR } from '@/lib/editor-viewport';
 
@@ -46,19 +47,25 @@ export function usePaletteStripBox(active = true): StripBox | null {
 }
 
 // Where a toolbar is on screen (the strip's card, Draw's dock), kept current as it or the window resizes; null while
-// it is not on screen.
+// it is not on screen. Watched from a layout effect, and an observer's report applied at once (settleNow): both run before
+// the frame is drawn, so what hangs from the toolbar (the tray) moves in the frame the toolbar does. A state update
+// left alone lands a task later, after that frame: the tray drew a frame at the strip's old place, then moved.
 export function useToolbarBox(selector: string, active = true): StripBox | null {
   const [box, setBox] = useState<StripBox | null>(() =>
     typeof document === 'undefined' ? null : measure(selector),
   );
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!active) return;
     let watched: HTMLElement | null = null;
     let watchedParent: HTMLElement | null = null;
-    const observer =
-      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => update()) : null;
-    const arrival =
-      typeof MutationObserver !== 'undefined' ? new MutationObserver(() => update()) : null;
+    let watchedRow: HTMLElement | null = null;
+    const reported = () => settleNow(update);
+    const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(reported) : null;
+    const arrival = typeof MutationObserver !== 'undefined' ? new MutationObserver(reported) : null;
+    // What places the card, changed in a commit: its whole-pixel box's width and the tiles in it, its row's top and
+    // padding. Reported in the microtask straight after that commit, so the tray moves with the strip there. Chrome
+    // counts what a resize callback moves as a layout shift, even before the frame is drawn.
+    const placing = typeof MutationObserver !== 'undefined' ? new MutationObserver(reported) : null;
     const update = () => {
       const card = document.querySelector<HTMLElement>(selector);
       if (card !== watched) {
@@ -70,10 +77,16 @@ export function useToolbarBox(selector: string, active = true): StripBox | null 
       // grandparent) that takes its new width a beat after the card's, so the card MOVES without resizing again;
       // that box's resize is the only signal of it (the category bar dropping its names left the tray off-centre).
       const parent = card?.parentElement?.parentElement ?? null;
-      if (parent !== watchedParent) {
+      const row = card?.closest<HTMLElement>('[data-region]') ?? null;
+      if (parent !== watchedParent || row !== watchedRow) {
         if (watchedParent) observer?.unobserve(watchedParent);
         if (parent) observer?.observe(parent);
+        placing?.disconnect();
+        const style = { attributes: true, attributeFilter: ['style'] };
+        if (parent) placing?.observe(parent, { ...style, childList: true, subtree: true });
+        if (row && row !== parent) placing?.observe(row, style);
         watchedParent = parent;
+        watchedRow = row;
       }
       const next = measure(selector);
       setBox((prev) => (same(prev, next) ? prev : next));
@@ -88,6 +101,7 @@ export function useToolbarBox(selector: string, active = true): StripBox | null 
     return () => {
       observer?.disconnect();
       arrival?.disconnect();
+      placing?.disconnect();
       window.removeEventListener('resize', update);
     };
   }, [active, selector]);

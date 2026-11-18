@@ -8,7 +8,7 @@
 // only while the tab has a logo page) is there to answer. A view that comes to rest on another page
 // (a pan, a scroll, a zoom) moves onto it too. Staying on the same page never asks again, so another
 // category chosen meanwhile is kept.
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { pageKindOf, type LaidOutPage, type PageKind } from '@livedoc/document';
 import { requestPaletteCategory } from '@/lib/palette-category-request';
 import { setCurrentPageKind } from '@/lib/current-page-kind';
@@ -86,9 +86,11 @@ export function useLogoPaletteSwitch(
   });
 
   // A new logo page: one not here before (the first render with pages only records what is there,
-  // and looks at the page in view).
+  // and looks at the page in view). Before the frame is drawn: the page's kind sets the palette's
+  // (an article's strip docks its formatting), and set a frame late the strip was drawn as another
+  // kind's first, then changed (docs/specs/007-editor/toolbar-layout.md "Motion").
   const known = useRef<Set<string> | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const before = known.current;
     known.current = pages.length ? new Set(pages.map((p) => p.id)) : null;
     if (!active || !pages.length) return;

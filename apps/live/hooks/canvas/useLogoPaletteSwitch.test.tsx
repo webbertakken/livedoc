@@ -1,7 +1,9 @@
 // @vitest-environment jsdom
 
 // docs/specs/007-editor/logo-pages.md "The Logo palette": the palette turns to Logo.
-import { act, renderHook } from '@testing-library/react';
+import { act, render, renderHook } from '@testing-library/react';
+import { useLayoutEffect } from 'react';
+import { currentPageIdNow, setCurrentPageKind } from '@/lib/current-page-kind';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { layOutPages, newLogoPage, type LaidOutPage } from '@livedoc/document';
 import { onPaletteCategoryRequest } from '@/lib/palette-category-request';
@@ -47,6 +49,34 @@ const press = (x: number, chrome = false) => {
 };
 
 describe('useLogoPaletteSwitch', () => {
+  // docs/specs/007-editor/toolbar-layout.md "Motion": the page's kind sets the palette's (an article's strip docks its
+  // formatting), so it is known before the frame is drawn, or the strip is drawn as another kind's first.
+  it("knows the opening page's kind before the frame is drawn", () => {
+    setCurrentPageKind(null);
+    const article = layOutPages([{ id: 'a', orientation: 'portrait', kind: 'article' }]);
+    sheets(article);
+    function Pages() {
+      useLogoPaletteSwitch(article, true);
+      return null;
+    }
+    let seenBeforePaint: string | null = null;
+    function LaterSibling() {
+      // Layout effects all run before the browser paints, and after the earlier sibling's: passive ones after both.
+      useLayoutEffect(() => {
+        seenBeforePaint = currentPageIdNow();
+      }, []);
+      return null;
+    }
+    render(
+      <>
+        <Pages />
+        <LaterSibling />
+      </>,
+    );
+    expect(seenBeforePaint).toBe('a');
+    setCurrentPageKind(null);
+  });
+
   it('asks for Logo when a logo page is added, not for what was already there', () => {
     const { rerender } = renderHook(({ pages }) => useLogoPaletteSwitch(pages, true), {
       initialProps: { pages: infographic },

@@ -79,6 +79,76 @@ describe('the palette tray', () => {
     }
   });
 
+  // A resize is reported before the frame is drawn: the tray takes the strip's new place in that frame, never a
+  // frame later at the old one (a layout shift as a board opens, docs/specs/007-editor/toolbar-layout.md "Motion").
+  it("follows the strip's card in the frame the card resizes", () => {
+    let fire: () => void = () => {};
+    const Original = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(cb: () => void) {
+        fire = cb;
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    } as unknown as typeof ResizeObserver;
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', false);
+    try {
+      mountStrip();
+      render(<Banner onAction={() => {}} />);
+      const card = document.querySelector('[data-tour-id="palette"]') as HTMLElement;
+      vi.spyOn(card, 'getBoundingClientRect').mockReturnValue(new DOMRect(380, 12, 440, 46));
+      fire();
+      const slot = (document.querySelector('[data-palette-tray]') as HTMLElement).parentElement!;
+      expect(slot.style.left).toBe('380px');
+      expect(slot.style.width).toBe('440px');
+    } finally {
+      globalThis.ResizeObserver = Original;
+      vi.unstubAllGlobals();
+    }
+  });
+
+  // Chrome counts what a resize callback moves as a layout shift: the strip settles in a commit (its whole-pixel box
+  // takes its width there, its row its top), and the tray follows in the microtask straight after, before any resize.
+  it('follows the strip in the microtask after a commit moves it, before any resize is reported', async () => {
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', false);
+    try {
+      const root = document.createElement('div');
+      root.setAttribute('data-toolbar-palette', '');
+      root.setAttribute('data-region', 'palette');
+      const outer = document.createElement('div');
+      const inner = document.createElement('div');
+      const card = document.createElement('div');
+      card.setAttribute('data-tour-id', 'palette');
+      const rect = vi
+        .spyOn(card, 'getBoundingClientRect')
+        .mockReturnValue(new DOMRect(242, 12, 795, 46));
+      inner.append(card);
+      outer.append(inner);
+      root.append(outer);
+      document.body.append(root);
+      render(<Banner onAction={() => {}} />);
+      const slot = () =>
+        (document.querySelector('[data-palette-tray]') as HTMLElement).parentElement!;
+      expect(slot().style.left).toBe('242px');
+
+      // Its tiles drop: the whole-pixel box takes its narrower width, which centres the card further in.
+      rect.mockReturnValue(new DOMRect(316, 12, 579, 46));
+      outer.style.width = '581px';
+      await Promise.resolve();
+      expect(slot().style.left).toBe('316px');
+      expect(slot().style.width).toBe('579px');
+
+      // It leaves its own row for the top line: its row's top changes.
+      rect.mockReturnValue(new DOMRect(316, 63, 579, 46));
+      root.style.top = '63px';
+      await Promise.resolve();
+      expect(slot().style.top).toBe(`${63 + 46 - 10}px`);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('hangs a mode banner from behind the strip, its top tucked under the strip and no wider', () => {
     mountStrip();
     const onAction = vi.fn();

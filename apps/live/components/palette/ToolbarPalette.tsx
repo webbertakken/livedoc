@@ -5,6 +5,7 @@ import type { Element } from '@livedoc/document';
 import {
   useEffect,
   useEffectEvent,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -156,9 +157,22 @@ function StripRow({
 // Centred alone (desktop), the card is whole-pixel wide with the canvas's
 // parity (see SnapWidth). Beside the menu card (a phone) it is left-aligned
 // and may shrink to the row, its rail scrolling, so it is not snapped there.
-function CardWidth({ swipe, children }: { swipe: boolean; children: ReactNode }) {
+function CardWidth({
+  swipe,
+  drawn,
+  children,
+}: {
+  swipe: boolean;
+  // What the strip draws: its whole-pixel width is taken in the commit that changes it.
+  drawn: string;
+  children: ReactNode;
+}) {
   if (swipe) return <div className="flex min-w-0">{children}</div>;
-  return <SnapWidth matchParentParity>{children}</SnapWidth>;
+  return (
+    <SnapWidth matchParentParity contentKey={drawn}>
+      {children}
+    </SnapWidth>
+  );
 }
 
 export function ToolbarPalette(props: Props) {
@@ -284,13 +298,7 @@ export function ToolbarPalette(props: Props) {
     scale,
   });
   const leadingRef = useRef<HTMLDivElement>(null);
-  // On the top line, centred or off centre between its side groups, or its own row (useStripPlacement). Measured on
-  // the top line only: the phone's row is its own, and turning the measuring on as the window grows out of a phone's
-  // width measures the strip the computer's layout draws, not the phone's it last saw.
-  const { crowded, shift } = useStripPlacement(cardRef, !phoneRow);
-  // Crowded, it takes its own row under the top line, and the top corners follow (centre-row-store).
-  useReportCentreOwnRow(crowded && !props.hidden);
-  const stripLimit = useStripTileLimit(cardRef, {
+  const { limit: stripLimit, refit: refitStripTiles } = useStripTileLimit(cardRef, {
     leadingRef,
     isMobile,
     scale,
@@ -346,6 +354,17 @@ export function ToolbarPalette(props: Props) {
       : null;
   // On a phone only My shapes keeps More: the swipe reaches every other category's tiles or groups.
   const showMore = swipe ? category?.id === 'my-shapes' : hasMore;
+  // On the top line, centred or off centre between its side groups, or its own row (useStripPlacement). Measured on
+  // the top line only: the phone's row is its own, and turning the measuring on as the window grows out of a phone's
+  // width measures the strip the computer's layout draws, not the phone's it last saw. Re-measured in the commit
+  // what it draws changes, so tiles dropping as the editor opens never leave it on a row it no longer needs.
+  // The palette's kind is part of it: an article's strip draws its docked formatting (or the place held for it).
+  const stripDrawn = `${paletteKind}|${articleDock}|${category?.id ?? defaultId}|${tiles.map((t) => t.id).join(',')}|${groups?.length ?? ''}|${showMore}|${barLabels}`;
+  // What it draws changes its own chrome (dropping a tile brings in More): the count is fitted again in that commit.
+  useLayoutEffect(refitStripTiles, [stripDrawn, refitStripTiles]);
+  const { crowded, shift } = useStripPlacement(cardRef, !phoneRow, stripDrawn);
+  // Crowded, it takes its own row under the top line, and the top corners follow (centre-row-store).
+  useReportCentreOwnRow(crowded && !props.hidden);
 
   // The category being switched AWAY from, while its tiles animate out
   // (ToolbarStripRail). Rebuilt from data rather than kept as stale nodes, and
@@ -487,7 +506,7 @@ export function ToolbarPalette(props: Props) {
                   pendingDraw={pendingDraw}
                 />
               ) : sheetFilling ? null : (
-                <CardWidth swipe={swipe}>
+                <CardWidth swipe={swipe} drawn={stripDrawn}>
                   {/* The tour's Palette anchor (docs/specs/007-editor/editor-tour.md) is the card, not the
                 full-width row around it, so the ring frames the strip. */}
                   <ToolbarGroup

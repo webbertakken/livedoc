@@ -49,6 +49,7 @@ import type { View } from '@/lib/viewport-store';
 import { lastPageKey } from '@/lib/last-page';
 import { setCurrentPageKind } from '@/lib/current-page-kind';
 import { useLastPage } from './useLastPage';
+import { useOpeningPageKind } from './useOpeningPageKind';
 import { usePageSnap } from './usePageSnap';
 
 export type { PageEdits };
@@ -255,6 +256,8 @@ export function usePagesMode(deps: {
     canvasMainRef: deps.canvasMainRef,
     viewport: deps.viewport,
   });
+  // The palette's kind is the landing page's from the first frame, before the pages layer loads.
+  useOpeningPageKind(pages, on, last.remembered);
   // The landing frame: the page you were last on, else the first.
   const frameLanding = () => {
     const row = layOutPages(pagesOf(activeTab));

@@ -5,8 +5,13 @@ import { cleanup, render } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { SnapWidth } from './SnapWidth';
 
+// The resize callbacks made, so a test can report the content resizing as a browser does: before the frame is drawn.
+const resized: (() => void)[] = [];
 beforeAll(() => {
-  globalThis.ResizeObserver ??= class {
+  globalThis.ResizeObserver = class {
+    constructor(cb: () => void) {
+      resized.push(cb);
+    }
     observe() {}
     unobserve() {}
     disconnect() {}
@@ -59,5 +64,41 @@ describe('SnapWidth', () => {
     expect(snapped({ matchParentParity: true })).toBe('63px');
     measureAs(61.39, 1440);
     expect(snapped({ matchParentParity: true })).toBe('62px');
+  });
+
+  // A resize is reported before the frame is drawn, and the snapped width is written then: held in React state it
+  // landed a task later, after that frame, so the palette strip drew a frame at its old width and then moved
+  // (a layout shift as a board opens, docs/specs/007-editor/toolbar-layout.md "Motion").
+  it('follows its content in the frame the content resizes, with no render', () => {
+    measureAs(795, 1440);
+    const { container } = render(
+      <div data-parent="">
+        <SnapWidth>label</SnapWidth>
+      </div>,
+    );
+    const box = container.querySelector('[data-parent] > div') as HTMLElement;
+    expect(box.style.width).toBe('795px');
+    measureAs(580.6, 1440);
+    resized.forEach((cb) => cb());
+    expect(box.style.width).toBe('581px');
+  });
+
+  // Chrome counts what a resize callback moves as a layout shift, even before the frame is drawn: a box whose
+  // content changes in a commit takes its width in that commit, named by `contentKey`.
+  it('takes its new width in the commit its contentKey changes, before any resize is reported', () => {
+    measureAs(795, 1440);
+    const { container, rerender } = render(
+      <div data-parent="">
+        <SnapWidth contentKey="twelve">label</SnapWidth>
+      </div>,
+    );
+    const box = container.querySelector('[data-parent] > div') as HTMLElement;
+    measureAs(580.6, 1440);
+    rerender(
+      <div data-parent="">
+        <SnapWidth contentKey="six">label</SnapWidth>
+      </div>,
+    );
+    expect(box.style.width).toBe('581px');
   });
 });

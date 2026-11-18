@@ -597,7 +597,30 @@ their bottom-row buttons. What changes to fit the width:
   Reduced motion collapses it to instant (`ToolbarStripRail`).
 - **The rail is always as wide as its tiles.** Its width follows the tiles as laid out, whenever they change
   (a category switch, a tile added or gone, such as a card type), never a tile caught mid-slide: no empty gap
-  after the last tile once they settle.
+  after the last tile once they settle. The width is whole pixels, so More and Search after it stay on the pixel
+  grid, and it is written in the very commit the tiles change; only after a category switch does it ease.
+- **The strip opens settled.** As the editor opens, the top line fills in (the Start Tour button, an account's
+  button) and the strip refits to it: fewer tiles, More coming in, a row of its own or not. Every refit settles in
+  the commit that sets it off, before the frame is laid out, never in a resize report, which Chrome counts as a
+  layout shift even before the frame is drawn:
+  - a control joining or leaving a side group is answered in the microtask after its commit (`observeTopLine`),
+    at once, except during a View Transition (a mode change), where it lands with React's own update: a synchronous
+    one in the middle left the transition with nothing to animate (`settleNow`);
+  - what the strip draws changing (its tiles, More, the bar's names) refits the tile count, the whole-pixel box
+    (`SnapWidth`'s `contentKey`) and the placement in that commit;
+  - the tray follows the strip there (`useToolbarBox`), and a tour on offer as the editor opens is published
+    before the first frame (`useOfferTour`);
+  - the page someone opens on sets the palette's kind before the first frame: the page the view lands on, from
+    the tab's own pages (`useOpeningPageKind`), until the pages layer, a chunk of its own, finds the page in view
+    (`useLogoPaletteSwitch`);
+  - an article's formatting comes with the article's editor, a chunk of its own, after the strip is drawn: until it
+    docks, the slot holds its place, the same row invisible and inert (`ArticleDockReserve`, its structure and sizes
+    shared with the page toolbar in `article-dock-row.tsx`), and lets it go in the commit the controls arrive.
+
+  Nothing about the strip or its tray moves as a board or an article opens (`palette-open-still.spec.ts`); until
+  November 2026 a board's open shifted it by 0.027 to 0.037 on docs.nu, an article's by 0.02 to 0.08. One trigger
+  remains: a Pages tab's tour is offered by a host that loads after the strip is drawn, so where the strip just
+  fits the line (an article at 1440 wide) its Start Tour button still sends the strip to a row of its own.
 
 ## Look
 

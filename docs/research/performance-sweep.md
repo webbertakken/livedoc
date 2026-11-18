@@ -267,6 +267,41 @@ alternating pairs with the preview; after, 37 min after the deploy, in the same 
 - That hour the editor's code arrived late (DOMContentLoaded about 500 to 700 ms at the median, up to 1 s).
 - So its Join times sit far above #235's (median 535 ms); guest id to editable is the part the reads own.
 
+### The palette strip settles before it is drawn
+
+The 0.0131 shift noted while the sweep worked was the palette strip, traced with the layout-shift entries' sources
+and a per-frame log of the strip, its rail and the top line, in a production build:
+
+- The trigger: the Start Tour button joins the actions group after the strip has measured, so it refits after a
+  paint (12 tiles to 6 at 1280; at 1440, dropping one brings in More, which widens it, and it refits again).
+- The rail eased its width to every refit (armed one frame after mount), and the strip kept its own row until the
+  ease ended, then jumped 61 px up: the 0.0131.
+- The rail, the whole-pixel box round the card (`SnapWidth`) and the tray each mirrored a measurement into React
+  state from a ResizeObserver, a frame behind what they follow.
+- Chrome counts what a ResizeObserver callback moves as a layout shift, even before the frame is drawn (seen on a
+  bare page and in the trace), so each refit now settles in its commit, never in a resize report.
+
+A blank diagram opened from `/new?template=blank`, Chromium, dark mode, three opens each. Before is docs.nu at
+`ffc7f937b4` (a guest's Sign in button on the top line too); after is a local production build of the change.
+
+| Width | Before, docs.nu  | Before, local | After, local |
+| ----- | ---------------- | ------------- | ------------ |
+| 1280  | 0.0370           | 0.0281        | 0            |
+| 1440  | 0.0267 to 0.0273 | not measured  | 0            |
+
+- After, 800 to 1920 wide: a blank diagram and a blank brainstorm, 0 at every width (8 widths).
+
+An article (Webber's ruling: reserve the dock's room). Its strip was drawn first as an infographic page's, since the
+pages layer that names the page someone is on loads later, then as an article's with its formatting docked, which
+loads with the article's editor later still, on a row of its own. Now the tab's landing page names the kind before
+the first frame, and the slot holds the docked row's place, invisible, until the controls arrive.
+
+| Width | Before, local | After, local                             |
+| ----- | ------------- | ---------------------------------------- |
+| 1280  | 0.0325        | 0 (3 opens)                              |
+| 1024  | 0.0526        | 0                                        |
+| 1440  | 0.0265        | 0.0055 to 0.0065: the tour button, below |
+
 ## Refuted or set aside
 
 About half the leads did not survive a check; they are listed so nobody proposes them again.
@@ -376,3 +411,6 @@ Parked:
 - Fifteen canvas-gesture leads belong to the canvas session: zoom and pan re-renders, drag previews, snapping.
 - Among them, the Minimap runs a whole-board arrow label pass for pictures that draw no labels.
 - Those leads are unverified; about half of this sweep's leads did not survive a check.
+- A Pages tab's tour is offered by a host that loads after the strip is drawn (`EditorTours`, `PagesTourHost`): its
+  button joins the top line a frame late. An article at 1440, whose strip just fits the line, then takes a row of its
+  own (0.0055); a slide deck's strip moves 43 px (0.001). Offering it from eager code is a tour refactor of its own.
