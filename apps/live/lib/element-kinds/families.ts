@@ -13,6 +13,7 @@ export const KIND_FAMILY_LOADERS = {
   embeds: () => import('./families/embeds'),
   charts: () => import('./families/charts'),
   'event-storming': () => import('./families/event-storming'),
+  sketches: () => import('./families/sketches'),
 } as const;
 
 export type KindFamilyId = keyof typeof KIND_FAMILY_LOADERS;

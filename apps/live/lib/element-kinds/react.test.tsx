@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Element } from '@livedoc/document';
+import type { Element, Finish } from '@livedoc/document';
 
 let settle: { resolve: (m: unknown) => void; reject: (e: unknown) => void } | null = null;
 const calls: string[] = [];
@@ -9,12 +9,17 @@ const conceptsLoader = () => {
   calls.push('concepts');
   return new Promise((resolve, reject) => (settle = { resolve, reject }));
 };
+const sketchesLoader = () => {
+  calls.push('sketches');
+  return new Promise((resolve, reject) => (settle = { resolve, reject }));
+};
 vi.mock('./families', () => ({
-  KIND_FAMILY_LOADERS: { concepts: conceptsLoader },
-  KIND_FAMILY_IDS: ['concepts'],
+  KIND_FAMILY_LOADERS: { concepts: conceptsLoader, sketches: sketchesLoader },
+  KIND_FAMILY_IDS: ['concepts', 'sketches'],
 }));
 
-const { familyFace, useFailedKindFamilies, useKindFamilyReady } = await import('./react');
+const { familyFace, useFailedKindFamilies, useFinishFamilyReady, useKindFamilyReady } =
+  await import('./react');
 const { resetKindFamiliesForTests, loadKindFamily } = await import('./store');
 
 const concept = { id: 'c', type: 'shape', shape: 'pyramid' } as Element;
@@ -22,6 +27,9 @@ const square = { id: 's', type: 'shape', shape: 'square' } as Element;
 
 function Probe({ element }: { element: Element }) {
   return <span>{useKindFamilyReady(element) ? 'ready' : 'waiting'}</span>;
+}
+function FinishProbe({ finish }: { finish: Finish }) {
+  return <span>{useFinishFamilyReady(finish) ? 'ready' : 'waiting'}</span>;
 }
 function Failures() {
   return <span>{useFailedKindFamilies().join(',') || 'none'}</span>;
@@ -54,6 +62,22 @@ describe('useKindFamilyReady', () => {
     settle!.resolve({});
     await run;
     render(<Probe element={concept} />);
+    expect(screen.getByText('ready')).toBeTruthy();
+  });
+});
+
+describe('useFinishFamilyReady', () => {
+  it('draws in a finish of no family at once, asking for nothing', () => {
+    render(<FinishProbe finish="professional" />);
+    expect(screen.getByText('ready')).toBeTruthy();
+    expect(calls).toEqual([]);
+  });
+
+  it('holds back a hand-drawn finish until the sketches family lands', async () => {
+    render(<FinishProbe finish="marker" />);
+    expect(screen.getByText('waiting')).toBeTruthy();
+    expect(calls).toEqual(['sketches']);
+    await act(async () => settle!.resolve({}));
     expect(screen.getByText('ready')).toBeTruthy();
   });
 });

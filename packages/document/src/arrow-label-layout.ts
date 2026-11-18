@@ -23,6 +23,8 @@ import {
   type ArrowheadShape,
 } from './arrow-style';
 import { isErShape } from './er-heads';
+import { elementFontId, type Finish } from './finish';
+import { resolveFontStack } from './fonts';
 import { arrowPolyline } from './arrow-path-hits';
 import { elementIndexFor, endpointPosition, type ElementIndex } from './geometry';
 import { rectsIntersect, type Rect } from './geometry-primitives';
@@ -589,4 +591,18 @@ export function arrowLabelPass(
       return out;
     },
   };
+}
+
+// The font stack a caption paints in: its own face, else the handwriting font under Sketch, else the tab's
+// (docs/specs/004-interface-design/fonts.md, docs/specs/008-canvas/finish.md). The layout measures with the
+// same stack.
+export function arrowLabelFontStack(
+  arrow: ArrowElement,
+  tabFont?: string,
+  tabFinish?: Finish,
+): string | undefined {
+  return (
+    resolveFontStack(arrow.font) ??
+    resolveFontStack(elementFontId({ finish: arrow.finish }, tabFont, tabFinish))
+  );
 }

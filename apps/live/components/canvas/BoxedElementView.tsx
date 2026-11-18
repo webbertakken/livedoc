@@ -54,7 +54,7 @@ import { isCssNativeBorderStyle } from '@/components/canvas/border-css';
 import { describeVariant, editingLook } from '@/components/canvas/element-variant';
 import { useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { useElementFinish } from '@/components/canvas/CanvasFinishContext';
-import { SketchOverlay, useSketchPaint } from '@/components/canvas/SketchOverlay';
+import { useSketchPaint } from '@/components/canvas/useSketchPaint';
 import { SketchFace } from '@/components/canvas/SketchFace';
 import { FaceFinishProvider } from '@/components/canvas/CanvasFinishContext';
 import { useFaceFinishPass } from '@/components/canvas/useFaceFinishPass';
@@ -80,7 +80,7 @@ import { BrowserChrome } from '@/components/canvas/boxed-element-overlays';
 
 import type { BoxedElementViewProps } from './BoxedElementView.types';
 import { isPanThrough } from '@/hooks/canvas/pan-through';
-import { familyFace, useKindFamilyReady } from '@/lib/element-kinds/react';
+import { familyFace, useFinishFamilyReady, useKindFamilyReady } from '@/lib/element-kinds/react';
 import { requireKindFamily } from '@/lib/element-kinds/store';
 
 // Wrapped in React.memo at the export below: with id-bearing
@@ -101,6 +101,8 @@ const VOTE_DIMMED_OPACITY = 0.35;
 const MindRootHalo = familyFace('mind-maps', 'MindRootHalo');
 // A record box's rows and their in-place editing, the entities family's: drawn on an entity only, likewise.
 const EntityView = familyFace('entities', 'EntityView');
+// A hand-drawn body, the sketches family's: drawn in a hand-drawn finish only, which draws once the family is in.
+const SketchOverlay = familyFace('sketches', 'SketchOverlay');
 
 function BoxedElementViewImpl({
   element,
@@ -948,6 +950,11 @@ function BoxedElementViewImpl({
 // An element of a kind family draws only once its family is in (docs/specs/016-platform/web-performance.md "An
 // element kind's code loads with the board that holds it"): the open waits for the opened tab's families, so this
 // holds back only an element that arrived before its family (a peer's, a paste), until the family lands.
+// Likewise an element in a hand-drawn finish, until the sketches family lands.
 export const BoxedElementView = memo(function BoxedElementView(props: BoxedElementViewProps) {
-  return useKindFamilyReady(props.element) ? <BoxedElementViewImpl {...props} /> : null;
+  const kindReady = useKindFamilyReady(props.element);
+  const finishReady = useFinishFamilyReady(
+    useElementFinish((props.element as { finish?: unknown }).finish),
+  );
+  return kindReady && finishReady ? <BoxedElementViewImpl {...props} /> : null;
 });

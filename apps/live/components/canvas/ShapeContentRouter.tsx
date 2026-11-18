@@ -37,7 +37,6 @@ import { IconGlyph } from '@/components/primitives/icon-glyph';
 import { iconMakesRoomForLabel } from '@/components/primitives/icon-band';
 import { StickerView } from '@/components/canvas/StickerView';
 import { SKETCH_TILE_FILTER_ID } from '@/components/palette/palette-tile-finish';
-import { SketchArtPicture } from '@/components/canvas/SketchArtPicture';
 import { liveFiltersRedrawOnRepaint } from '@/lib/live-filter-cost';
 import { ProgressView } from '@/components/canvas/ProgressView';
 import { RatingView } from '@/components/canvas/RatingView';
@@ -66,6 +65,8 @@ const BarChartView = familyFace('charts', 'BarChartView');
 const LineChartView = familyFace('charts', 'LineChartView');
 const DataChartView = familyFace('charts', 'DataChartView');
 const SankeyView = familyFace('charts', 'SankeyView');
+// Art drawn into still pictures under Sketch in WebKit, the sketches family's: behind the same gate's finish check.
+const SketchArtPicture = familyFace('sketches', 'SketchArtPicture');
 // A chart drawn from a sheet range reads it through the sheets chunk, loaded only for such a chart.
 const SheetLinkedChart = dynamic(
   () => import('@/components/sheets/SheetLinkedChart').then((m) => m.SheetLinkedChart),

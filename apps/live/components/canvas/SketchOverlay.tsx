@@ -1,16 +1,13 @@
 'use client';
 
-import { memo, useMemo } from 'react';
+import { memo } from 'react';
 import {
   MARKER_DETAIL_PX,
   MARKER_INK_OPACITY,
   MARKER_STREAK_OPACITY,
   SHAPE_DETAIL_STROKE_PX,
   SKETCH_HATCH_OPACITY,
-  handDrawnElementPaint,
   handDrawnInk,
-  type BoxedElement,
-  type Finish,
   type HandDrawnPaint,
 } from '@livedoc/document';
 
@@ -22,65 +19,6 @@ import {
 // see-through ink so crossings pool darker.
 
 type SketchPaint = HandDrawnPaint;
-
-/** The element's sketch, memoised on what shapes it: never on position, so a drag recomputes nothing
- *  (docs/specs/008-canvas/canvas-performance.md). Null when the element is not sketched. */
-export function useSketchPaint(
-  element: BoxedElement,
-  finish: Finish,
-  fill: string,
-  // Something sits on this shape (sketch-backdrop-store): a solid fill, never hatching.
-  backdrop = false,
-): SketchPaint | null {
-  const shape = element.type === 'shape' ? element.shape : undefined;
-  const {
-    strokeWidth,
-    strokeStyle,
-    borderRadius,
-    packedPoints,
-    closed,
-    straightEdges,
-    penWidth,
-    nodes,
-    subpaths,
-  } = element as {
-    strokeWidth?: string;
-    strokeStyle?: string;
-    borderRadius?: string;
-    // A Polygon-tool outline's own points (docs/specs/008-canvas/finish.md "Polygons").
-    packedPoints?: string;
-    closed?: boolean;
-    straightEdges?: boolean;
-    penWidth?: number;
-    // A Path-tool curve's nodes.
-    nodes?: unknown;
-    subpaths?: unknown;
-  };
-  return useMemo(
-    () => handDrawnElementPaint(element, finish, fill, backdrop),
-    // The fields the paint reads, so moving the element keeps the drawing.
-    // oxlint-disable-next-line react/exhaustive-deps
-    [
-      element.id,
-      element.type,
-      shape,
-      element.width,
-      element.height,
-      strokeWidth,
-      strokeStyle,
-      borderRadius,
-      packedPoints,
-      closed,
-      straightEdges,
-      penWidth,
-      nodes,
-      subpaths,
-      finish,
-      fill,
-      backdrop,
-    ],
-  );
-}
 
 function SketchOverlayImpl({
   paint,

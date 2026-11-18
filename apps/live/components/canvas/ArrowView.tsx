@@ -27,6 +27,8 @@ import { SelectedArrowHandles } from './SelectedArrowHandles';
 import { ArrowGripsPortal } from './SelectionGripsLayer';
 import { ArrowFlowOverlays, useArrowFlow } from './arrow-flow';
 import { useArrowFinish } from './arrow-finish';
+import { useElementFinish } from './CanvasFinishContext';
+import { useFinishFamilyReady } from '@/lib/element-kinds/react';
 import { BRAND_600 } from './arrow-handle-style';
 import { useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { pressLedger } from '@/lib/double-press';
@@ -547,8 +549,13 @@ function ArrowViewImpl({
 
 // `arrow` and `elementIndex` are reference-stable across renders that don't
 // touch them, and every other prop but the label render is a primitive or a
-// stable id-bearing callback, so a shallow compare suffices for those.
-export const ArrowView = memo(ArrowViewImpl, arrowViewPropsEqual);
+// stable id-bearing callback, so a shallow compare suffices for those. An arrow in a hand-drawn finish draws once the
+// sketches family is in (docs/specs/016-platform/web-performance.md), as an element does (BoxedElementView).
+export const ArrowView = memo(function ArrowView(props: ArrowViewProps) {
+  return useFinishFamilyReady(useElementFinish(props.arrow.finish)) ? (
+    <ArrowViewImpl {...props} />
+  ) : null;
+}, arrowViewPropsEqual);
 
 // The label render is compared by value: the layer lays every label out
 // afresh on each element change (docs/specs/008-canvas/arrow-labels.md).

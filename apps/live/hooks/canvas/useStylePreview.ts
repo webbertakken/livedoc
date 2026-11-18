@@ -89,6 +89,7 @@ import {
 import type { ShapeColorPreset } from '@/lib/themes';
 import { morphShapes, morphWhenReady } from '@/lib/shape-morph';
 import { track } from '@/lib/telemetry';
+import { prefetchFinishFamily, withFinishFamily } from '@/lib/element-kinds/finish-family';
 
 type Snapshot = { ids: Set<string>; originals: Map<string, Element> };
 // A change to the selected members (`ids`) of the tab's elements, returning the whole list.
@@ -283,8 +284,13 @@ export function useStylePreview(deps: {
     commitShadow: (v: ElementShadow | null) =>
       commitStyle((el) => applyShadowToEl(el, v), 'Shadow'),
     // Finish tiles (docs/specs/008-canvas/finish.md); `null` is Follow Tab.
-    previewFinish: (v: Finish | null) => previewStyle((el) => applyFinishToEl(el, v)),
-    commitFinish: (v: Finish | null) => commitStyle((el) => applyFinishToEl(el, v), 'Finish'),
+    // A hand-drawn one fetches its drawing as it is pointed at, and is picked once that is in (finish-family.ts).
+    previewFinish: (v: Finish | null) => {
+      prefetchFinishFamily(v);
+      previewStyle((el) => applyFinishToEl(el, v));
+    },
+    commitFinish: (v: Finish | null) =>
+      withFinishFamily(v, () => commitStyle((el) => applyFinishToEl(el, v), 'Finish')),
     // Rotation angle tiles (fixed 45° steps): the selection turns as one piece, its reference member landing on the
     // angle (docs/specs/008-canvas/selection-transforms.md). A locked member keeps its angle and place
     // (docs/specs/008-canvas/canvas-and-palette.md "Locking").

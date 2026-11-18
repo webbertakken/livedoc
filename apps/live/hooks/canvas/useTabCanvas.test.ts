@@ -5,10 +5,14 @@ import type { Element, Tab } from '@livedoc/document';
 import { rollMashup } from '@/lib/look-mashup';
 import { useTabCanvas } from './useTabCanvas';
 import { loadTidyEngine } from '@/lib/tidy-engine';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+import { isKindFamilyLoaded, resetKindFamiliesForTests } from '@/lib/element-kinds/store';
 
-// The tidiers load on demand (lib/tidy-engine.ts); these tests start with them loaded.
+// The tidiers load on demand (lib/tidy-engine.ts), and the hand-drawn finishes with their family
+// (lib/element-kinds); these tests start with them loaded.
 beforeAll(async () => {
   await loadTidyEngine();
+  await loadEveryKindFamily();
 });
 
 const track = vi.hoisted(() => vi.fn());
@@ -65,6 +69,17 @@ describe('useTabCanvas finish', () => {
     expect(h.tabs()[0]!.finish).toBe('sketch');
     expect(h.tabs()[1]!.finish).toBeUndefined();
     expect(track).toHaveBeenCalledWith('Tab', 'Changed', 'Finish');
+  });
+
+  it('applies a hand-drawn finish once its family is in', async () => {
+    resetKindFamiliesForTests();
+    const h = setup([]);
+    h.api.setTabFinish('marker');
+    expect(h.commitTabs).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(h.commitTabs).toHaveBeenCalledTimes(1));
+    expect(isKindFamilyLoaded('sketches')).toBe(true);
+    expect(h.tabs()[0]!.finish).toBe('marker');
+    await loadEveryKindFamily();
   });
 
   it('makes every element follow the new finish, in the same step', () => {

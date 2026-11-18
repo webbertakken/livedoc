@@ -657,6 +657,7 @@ export * from './face-finish';
 export * from './marker-face';
 export * from './hand-drawn';
 export * from './drawn-outline-finish';
+export * from './drawn-outline-paint';
 // Which elements can be rotated (an annotation marker cannot).
 export * from './rotation';
 // Turning and flipping a selection as one piece (docs/specs/008-canvas/selection-transforms.md).
@@ -842,7 +843,7 @@ export {
 export { ELEMENT_FIELD_VALUES, fieldValueIssue } from './element-field-values';
 export { buildMindTemplate, MIND_HUES, type MindHue, type MindSpec } from './mind-template';
 export { inlineIconGap, inlineIconMetrics } from './svg-render-inline-icon';
-export { SKETCH_ART_FILTER_ID, SKETCH_FACE_FILTER, svgSketchArtFilter } from './svg-render-sketch';
+export { SKETCH_ART_FILTER_ID, SKETCH_FACE_FILTER, svgSketchArtFilter } from './sketch-filters';
 export * from './svg-render-plan-sheet';
 export * from './svg-render-table';
 // The marks the editor's Plan tab images draw with (docs/specs/026-plan/plan-tabs.md "Export"): text, line fitting,

@@ -10,7 +10,7 @@ import {
   handDrawnImagePaint,
   handDrawnPathPaint,
   handDrawnPolygonPaint,
-} from './drawn-outline-finish';
+} from './drawn-outline-paint';
 import { sketchArrow, sketchElementPaint } from './sketch-element';
 
 /** An element's hand-drawn body: the drawing (`drawing.pen` says whose), and the width and dash its outline takes. */

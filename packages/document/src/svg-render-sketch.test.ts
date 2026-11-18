@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createShape, createTable, renderElementsToSvg, type Element, type Tab } from './index';
-import { SKETCH_FACE_FILTER, svgSketchArtDefs, svgSketchFace } from './svg-render-sketch';
+import { SKETCH_FACE_FILTER } from './sketch-filters';
+import { svgSketchArtDefs, svgSketchFace } from './svg-render-sketch';
 
 // docs/specs/008-canvas/finish.md "Every other face is drawn by hand too": a face's ink goes through the wobble, its
 // words stay crisp above it.
