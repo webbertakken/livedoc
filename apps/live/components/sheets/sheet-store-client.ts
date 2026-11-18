@@ -3,12 +3,18 @@
 // they see), one workbook per tab, writes sent one at a time per sheet in order, undo steps, and the room's ops
 // merged by rev. Writes land on ids, so pending writes rebase cleanly over anyone else's.
 import { subscribeOfflineIds } from '@/lib/offline/offline-store';
-import type { SheetCreateRequest, SheetsRoomOp, SheetWriteResponse } from '@livedoc/api-schema';
+import type {
+  SheetCellDto,
+  SheetCreateRequest,
+  SheetsRoomOp,
+  SheetWriteResponse,
+} from '@livedoc/api-schema';
 import {
   Workbook,
   applyLayoutChange,
   applySheetWrite,
   cellKey,
+  cellsWithPage,
   formatA1,
   layoutIndex,
   rangeOptions,
@@ -40,10 +46,13 @@ import { errorStatus, isTransientWriteError, sheetWriteRetryMs } from './sheet-w
 import {
   createSheet,
   deleteSheet,
+  fetchSheetCells,
   fetchSheets,
+  fetchWorkbook,
   writeSheet,
   type SheetsScope,
 } from '@/lib/api/sheets';
+import { RowPages } from './sheet-row-pages';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
 
 // How a write is made: `undoable` false for an undo or redo itself (`undo` true then); `alongside`, a change outside
@@ -74,6 +83,8 @@ type SheetStoreDeps = {
   // Injected in tests.
   api?: {
     fetchSheets: typeof fetchSheets;
+    fetchWorkbook: typeof fetchWorkbook;
+    fetchSheetCells: typeof fetchSheetCells;
     createSheet: typeof createSheet;
     writeSheet: typeof writeSheet;
     deleteSheet: typeof deleteSheet;
@@ -88,6 +99,8 @@ type Pending = { wid: string; write: SheetWrite };
 type Inverse = { sheetId: string; write: SheetWrite; before?: SheetLayout; applied?: SheetWrite };
 type Entry = { confirmed: Sheet; pending: Pending[]; view: Sheet };
 export type TabStatus = 'loading' | 'ready' | 'error';
+// Why the store refused a write: the engine's reasons, or a sheet still loading rows the write reaches.
+export type StoreRejection = SheetRejection | 'sheet_loading';
 
 const NOBODY: SheetPerson = { id: '', name: 'Someone', color: '#94a3b8' };
 export const SHEET_REFETCH_DEBOUNCE_MS = 400;
@@ -102,6 +115,7 @@ const REFUSALS: Partial<Record<string, string>> = {
   input_too_long: 'A cell holds up to 10,000 characters',
   sheet_not_found: 'This sheet is no longer in this document',
   rules_full: 'This sheet holds the most rules it can',
+  sheet_loading: 'This sheet is still loading',
 };
 
 // What a refused write says: a value a validation rule refuses names its cell and what the rule allows.
@@ -153,12 +167,30 @@ export class SheetStore {
   // (sheet-store.md "Deleting a sheet"). Kept for the session, as undo is.
   private readonly released = new Map<string, SheetJson>();
   private cards: CardSource | null = null;
+  // A spreadsheet's sheets loading behind their first rows.
+  private readonly pages: RowPages;
   version = 0;
 
   constructor(deps: SheetStoreDeps) {
     this.deps = deps;
-    this.api = deps.api ?? { fetchSheets, createSheet, writeSheet, deleteSheet };
+    this.api = deps.api ?? {
+      fetchSheets,
+      fetchWorkbook,
+      fetchSheetCells,
+      createSheet,
+      writeSheet,
+      deleteSheet,
+    };
     this.wait = deps.wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+    this.pages = new RowPages({
+      fetchCells: (sheetId, rows) => this.api.fetchSheetCells(this.deps.scope, sheetId, rows),
+      confirmed: (sheetId) => this.entries.get(sheetId)?.confirmed,
+      view: (sheetId) => this.entries.get(sheetId)?.view,
+      land: (sheetId, cells) => this.landPage(sheetId, cells),
+      refetch: (sheetId) => this.refetchSheet(sheetId),
+      wait: this.wait,
+      retryMs: SHEET_REFETCH_DEBOUNCE_MS,
+    });
     // The document synced to the server in place (docs/specs/006-document/offline-mode.md "Syncing in
     // place"): every loaded tab is read again from the server, so the confirmed revisions are its own.
     // The store lives for the session, as does this subscription.
@@ -199,6 +231,11 @@ export class SheetStore {
 
   private inScope(sheet: Sheet, scope: string): boolean {
     return scope === WHOLE_WORKBOOK || sheet.tabId === scope;
+  }
+
+  // Whether a spreadsheet's sheet is still loading rows behind its first (sheet-store.md "Loading by viewport").
+  loading(sheetId: string): boolean {
+    return this.pages.isPartial(sheetId);
   }
 
   status(tabId: string): TabStatus | undefined {
@@ -260,7 +297,7 @@ export class SheetStore {
     const inFlight = this.loads.get(scope);
     if (!force && inFlight) return inFlight;
     if (!force && this.tabStatus.get(scope) === 'ready') return Promise.resolve();
-    const load = this.fetchScope(scope);
+    const load = this.fetchScope(scope, tabId);
     this.loads.set(scope, load);
     void load.finally(() => {
       if (this.loads.get(scope) === load) this.loads.delete(scope);
@@ -268,15 +305,13 @@ export class SheetStore {
     return load;
   }
 
-  private async fetchScope(scope: string): Promise<void> {
+  private async fetchScope(scope: string, tabId: string): Promise<void> {
     this.tabStatus.set(scope, 'loading');
     this.notify();
     try {
-      const sheets = await this.api.fetchSheets(
-        this.deps.scope,
-        scope === WHOLE_WORKBOOK ? { all: true } : { tabId: scope },
-      );
-      for (const json of sheets) this.adopt(json);
+      if (scope === WHOLE_WORKBOOK) await this.openWorkbook(tabId);
+      else
+        for (const json of await this.api.fetchSheets(this.deps.scope, { tabId })) this.adopt(json);
       this.tabStatus.set(scope, 'ready');
     } catch (e) {
       debugLog('[sheets] sheets.load.failed', { status: e instanceof ApiError ? e.status : 0 });
@@ -285,8 +320,36 @@ export class SheetStore {
     this.notify();
   }
 
-  // A sheet from the server: it becomes the confirmed state, pending writes laid back over it.
-  private adopt(json: SheetJson): void {
+  // A spreadsheet opens on its open tab's first rows, every sheet's layout beside them; the rest of each sheet loads
+  // behind, the open one first (docs/specs/029-sheets/sheet-store.md "In a spreadsheet", Loading by viewport).
+  private async openWorkbook(tabId: string): Promise<void> {
+    const sheets = await this.api.fetchWorkbook(this.deps.scope, { tabId });
+    for (const { cellCount: _count, rowsLoaded, ...json } of sheets) this.adopt(json, rowsLoaded);
+    const order = [
+      ...sheets.filter((s) => s.tabId === tabId),
+      ...sheets.filter((s) => s.tabId !== tabId),
+    ].map((s) => s.id);
+    void this.pages.run(order).then(() => debugLog('[sheets] sheets.pages.done', {}));
+  }
+
+  // A page of a sheet's cells at its confirmed rev: set over the confirmed cells, pending writes laid back over them.
+  // RowPages lands a page only on a sheet the store still holds.
+  private landPage(sheetId: string, cells: readonly SheetCellDto[]): void {
+    const entry = this.entries.get(sheetId)!;
+    entry.confirmed = { ...entry.confirmed, cells: cellsWithPage(entry.confirmed.cells, cells) };
+    entry.view = this.rebase(entry.confirmed, entry.pending);
+    this.workbookUpdate(
+      entry.view.tabId,
+      sheetId,
+      cells.map((c) => cellKey(c.r, c.c)),
+    );
+    this.notify();
+  }
+
+  // A sheet from the server: it becomes the confirmed state, pending writes laid back over it. A spreadsheet's may
+  // hold only its first `rowsLoaded` rows' cells, the rest paged in behind.
+  private adopt(json: SheetJson, rowsLoaded = json.layout.rows.length): void {
+    this.pages.arrived(json.id, json.layout.rows, rowsLoaded);
     const confirmed = sheetFromJson(json);
     const entry = this.entries.get(json.id);
     const pending = entry?.pending ?? [];
@@ -328,6 +391,7 @@ export class SheetStore {
     const entry = this.entries.get(sheetId);
     if (!entry) return;
     this.entries.delete(sheetId);
+    this.pages.forget(sheetId);
     this.workbooks.get(this.scopeOf(entry.view.tabId))?.removeSheet(sheetId);
   }
 
@@ -417,7 +481,7 @@ export class SheetStore {
 
   // One change to a sheet, as the person made it: applied now, sent in order, undoable unless `undoable` is false
   // (an undo or redo itself). Refused at once (with the reason) when it breaks a limit.
-  write(sheetId: string, write: SheetWrite, opts: WriteOpts = {}): SheetRejection | null {
+  write(sheetId: string, write: SheetWrite, opts: WriteOpts = {}): StoreRejection | null {
     return this.writeAll([{ sheetId, write }], opts);
   }
 
@@ -428,7 +492,13 @@ export class SheetStore {
   writeAll(
     asMadeEdits: readonly { sheetId: string; write: SheetWrite }[],
     opts: WriteOpts = {},
-  ): SheetRejection | null {
+  ): StoreRejection | null {
+    // A write reaching cells not loaded yet waits for them: its undo and its readers' shrinks would miss them.
+    if (asMadeEdits.some(({ sheetId, write }) => this.pages.holds(sheetId, write))) {
+      debugLog('[sheets] sheets.write.loading', {});
+      this.deps.toast(sheetRefusalMessage('sheet_loading'));
+      return 'sheet_loading';
+    }
     // An undo or redo replays writes that already carry their readers' rewrites.
     const edits = opts.undo ? asMadeEdits : this.withReaders(asMadeEdits);
     const now = Date.now();

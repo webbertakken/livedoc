@@ -53,6 +53,8 @@ export const ROOT_TYPES = [
   'SheetCreateRequest',
   'SheetWriteRequest',
   'SheetWriteResponse',
+  'SheetCellsResponse',
+  'WorkbookResponse',
   'ItemResponse',
   'ItemsBulkRequest',
   'ItemsPatchRequest',

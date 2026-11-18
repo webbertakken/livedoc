@@ -37,7 +37,7 @@ type SheetRow = {
   updated_by: string;
 };
 
-type CellRow = {
+export type CellRow = {
   sheet_id: string;
   row_id: string;
   col_id: string;
@@ -81,7 +81,7 @@ function headFromRow(row: SheetRow, axes: SheetAxes = NO_AXES): SheetHead {
   };
 }
 
-function headToJson(head: SheetHead, cells: CellRow[]): SheetJson {
+export function headToJson(head: SheetHead, cells: readonly CellRow[]): SheetJson {
   return {
     id: head.id,
     tabId: head.tabId,

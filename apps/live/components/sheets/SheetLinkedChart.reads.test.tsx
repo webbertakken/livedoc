@@ -19,6 +19,8 @@ vi.mock('@livedoc/sheets', async (importOriginal) => {
 });
 vi.mock('@/lib/api/sheets', () => ({
   fetchSheets: vi.fn(),
+  fetchWorkbook: vi.fn(),
+  fetchSheetCells: vi.fn(),
   createSheet: vi.fn(),
   writeSheet: vi.fn(),
   deleteSheet: vi.fn(),

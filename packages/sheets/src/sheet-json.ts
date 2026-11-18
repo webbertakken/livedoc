@@ -57,6 +57,16 @@ export function cellsFromJson(cells: readonly SheetCellJson[]): CellMap {
   return out;
 }
 
+/** A page of cells (a spreadsheet loading by rows) set over a copy of the cells held; the held ones are untouched. */
+export function cellsWithPage(cells: CellMap, page: readonly SheetCellJson[]): CellMap {
+  const out = cells.copy();
+  for (const x of page) {
+    if (!x.i && !x.f) continue;
+    out.setCell(x.r, x.c, x.i || undefined, x.f || undefined);
+  }
+  return out;
+}
+
 export function sheetFromJson(json: SheetJson): Sheet {
   return { ...json, cells: cellsFromJson(json.cells) };
 }

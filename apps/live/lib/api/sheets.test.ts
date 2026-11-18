@@ -11,7 +11,9 @@ import {
   createSheet,
   deleteSheet,
   fetchAllSheets,
+  fetchSheetCells,
   fetchSheets,
+  fetchWorkbook,
   sheetAsCreate,
   writeSheet,
   type SheetsScope,
@@ -126,6 +128,36 @@ describe('fetchAllSheets on a cloud document', () => {
   });
 });
 
+describe('a spreadsheet loading by viewport', () => {
+  it('opens the workbook on a tab', async () => {
+    respond(() =>
+      Response.json({ workbook: {}, sheets: [{ ...sheet('s1'), cellCount: 0, rowsLoaded: 1 }] }),
+    );
+    const sheets = await fetchWorkbook(cloud, { tabId: 't 2' });
+    expect(sheets.map((s) => s.id)).toEqual(['s1']);
+    expect(calls[0]!.url).toBe(`${API_BASE}/documents/doc%201/workbook?open=t+2`);
+    expect(header(calls[0]!, 'X-Owner-Id')).toBe('owner-1');
+  });
+
+  it('reads a page of rows, the tab-scoped tab named', async () => {
+    respond(() => Response.json({ rev: 3, from: 0, to: 5, cells: [] }));
+    expect(await fetchSheetCells(shared, 's/1', { from: 0, to: 5 })).toEqual({
+      rev: 3,
+      from: 0,
+      to: 5,
+      cells: [],
+    });
+    expect(calls[0]!.url).toBe(`${base}/s%2F1/cells?tabId=tab-x&rows=0-5`);
+  });
+
+  it('maps a refusal to its code', async () => {
+    respond(() => Response.json({ error: 'rows_invalid' }, { status: 400 }));
+    await expect(fetchSheetCells(cloud, 's1', { from: 0, to: 5 })).rejects.toMatchObject({
+      code: 'rows_invalid',
+    });
+  });
+});
+
 describe('writing on a cloud document', () => {
   it('creates a sheet with a JSON body', async () => {
     respond(() => Response.json({ sheet: sheet('sheetAAAA') }, { status: 201 }));
@@ -230,6 +262,9 @@ describe('an offline document', () => {
     expect((await fetchSheets(offline, { tabId: 't1' })).map((s) => s.id)).toEqual(['sheetAAAA']);
     expect((await fetchSheets(offline, { ids: ['sheetAAAA'] }))[0]!.cells).toHaveLength(1);
     expect(await fetchAllSheets(offline)).toHaveLength(1);
+    expect(await fetchWorkbook(offline, { tabId: 't1' })).toMatchObject([
+      { id: 'sheetAAAA', cellCount: 1, rowsLoaded: 1 },
+    ]);
     await deleteSheet(offline, 'sheetAAAA');
     expect(await fetchAllSheets(offline)).toEqual([]);
     expect(calls).toEqual([]);

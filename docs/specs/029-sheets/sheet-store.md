@@ -51,7 +51,7 @@ elements, its snapshots, its changesets or its room.
 
 ## In a spreadsheet
 
-**Status: specified; the workbook row, styles and the chunked order are built** (format and settings, made with the spreadsheet,
+**Status: specified; the workbook row, styles, the chunked order and loading by viewport are built** (format and settings, made with the spreadsheet,
 carried on the document read). What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
 this page holds for both until the Plan Sheet retires.
 
@@ -81,7 +81,17 @@ this page holds for both until the Plan Sheet retires.
   sheet, their model as JSON.
 - **Loading by viewport**: opening a workbook fetches its workbook row, sheet list, styles and the active sheet's
   layout and the cells of the rows in view and a screen around them; the rest streams in behind, so a large sheet
-  shows before it has loaded.
+  shows before it has loaded. Built:
+  - The open tab's sheet comes with its first 200 rows' cells and every sheet with its layout; a sheet with no cells
+    is whole already (default).
+  - The rest of each sheet loads in pages of 5,000 rows, the open sheet first, then the others in tab order
+    (default); rows not loaded yet draw empty.
+  - What of a sheet is loaded is always its first rows; a page lands only if the sheet is still at the version it was
+    asked at, else it is asked again, and after three misses the whole sheet is fetched (default).
+  - While a sheet loads, a change that reaches rows not loaded yet (cells past them, inserting, deleting, moving or
+    sorting its rows or columns, or deleting rows or columns of any sheet) waits, saying "This sheet is still
+    loading" (default); changing loaded cells and renaming go as ever.
+  - An offline spreadsheet loads whole from this browser.
 - **Limits**: the spreadsheet's ([Spreadsheet](spreadsheet.md#limits)): 20 million cells a workbook (S7),
   18,278 columns, 200 sheets, 1 GiB of stored cells (default); up to 100,000 rows or columns with their own size a
   sheet (default); a write still 5,000 cells and 1 MB.
