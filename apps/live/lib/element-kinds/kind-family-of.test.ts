@@ -4,6 +4,11 @@ import {
   isChartShape,
   isCollabPanelShape,
   isConceptShape,
+  isEventStormingTab,
+  ES_BIG_PICTURE_LAYER_ID,
+  ES_BOARD_LAYER_ID,
+  ES_DESIGN_LAYER_ID,
+  ES_PROCESS_LAYER_ID,
   isSankeyShape,
   isWebComponentShape,
   type Element,
@@ -132,4 +137,25 @@ describe('kindFamiliesOfTab', () => {
   it('reads a tab with no element list as holding none', () => {
     expect(kindFamiliesOfTab({ elements: 'x' })).toEqual([]);
   });
+
+  it('adds the Event Storming family for a board of that kind', () => {
+    expect(kindFamiliesOfTab({ elements: [], kind: 'event-storming' })).toEqual(['event-storming']);
+    expect(kindFamiliesOfTab({ elements: [], kind: 'diagram' })).toEqual([]);
+  });
+
+  it.each([ES_BOARD_LAYER_ID, ES_BIG_PICTURE_LAYER_ID, ES_PROCESS_LAYER_ID, ES_DESIGN_LAYER_ID])(
+    'knows a board from before tabs had a kind by its %s layer, as the model does',
+    (id) => {
+      const tab = { elements: [], layers: [{ id, name: 'Board', visible: true, locked: false }] };
+      expect(isEventStormingTab(tab as never)).toBe(true);
+      expect(kindFamiliesOfTab(tab)).toEqual(['event-storming']);
+    },
+  );
+
+  it.each([undefined, 'x', [null], [{ id: 'layer:other' }]])(
+    'reads layers %j as no board',
+    (layers) => {
+      expect(kindFamiliesOfTab({ elements: [], layers })).toEqual([]);
+    },
+  );
 });

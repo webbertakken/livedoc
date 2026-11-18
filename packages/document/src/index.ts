@@ -772,6 +772,7 @@ export * from './candidate-context-outline';
 export { CONTEXT_FONT, CONTEXT_INK, contextPlate } from './svg-render-contexts';
 export { PIVOTAL_TAPE_OPACITY } from './svg-render-structure';
 export * from './event-storming-photo';
+export * from './event-storming-draft';
 export * from './event-storming-photo-wall';
 export * from './whiteboard';
 export * from './whiteboard-stroke';

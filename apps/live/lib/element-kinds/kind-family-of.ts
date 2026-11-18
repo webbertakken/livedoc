@@ -68,21 +68,55 @@ export function kindFamilyOf(element: Element): KindFamilyId | null {
   }
 }
 
+// The layers an Event Storming board authored before tabs carried a kind is known by (event-storming.ts
+// `isEventStormingTab`, which kind-family-of.test.ts holds this to).
+const LEGACY_EVENT_STORMING_LAYERS = new Set([
+  'layer:es:board',
+  'layer:es:big-picture',
+  'layer:es:process',
+  'layer:es:design',
+]);
+
+function isEventStormingTab(tab: { kind?: unknown; layers?: unknown }): boolean {
+  if (tab.kind === 'event-storming') return true;
+  return (
+    Array.isArray(tab.layers) &&
+    tab.layers.some(
+      (layer: unknown) =>
+        !!layer &&
+        typeof layer === 'object' &&
+        LEGACY_EVENT_STORMING_LAYERS.has((layer as { id?: unknown }).id as string),
+    )
+  );
+}
+
 // A tab's families beyond its elements': an article's writing is the pages family's, whatever elements its pages
-// hold (an article's text lives on the tab, not in an element).
-function tabFamilies(tab: { articles?: unknown }): KindFamilyId[] {
+// hold (an article's text lives on the tab, not in an element); an Event Storming board is its family's by its kind.
+function tabFamilies(tab: {
+  articles?: unknown;
+  kind?: unknown;
+  layers?: unknown;
+}): KindFamilyId[] {
   const { articles } = tab;
   const hasArticles =
     !!articles &&
     typeof articles === 'object' &&
     !Array.isArray(articles) &&
     Object.keys(articles).length > 0;
-  return hasArticles ? ['pages-articles'] : [];
+  return [
+    ...(hasArticles ? (['pages-articles'] as const) : []),
+    ...(isEventStormingTab(tab) ? (['event-storming'] as const) : []),
+  ];
 }
 
 // The families a tab needs, each once: its elements' in the order first met, then its own. Any value shaped like a
 // tab, a read straight off the wire included.
-export function kindFamiliesOfTab(tab: { elements?: unknown; articles?: unknown }): KindFamilyId[] {
+export function kindFamiliesOfTab(tab: {
+  elements?: unknown;
+  articles?: unknown;
+  kind?: unknown;
+  layers?: unknown;
+}): KindFamilyId[] {
   const elements = Array.isArray(tab.elements) ? (tab.elements as Element[]) : [];
   return [...new Set([...kindFamiliesOf(elements), ...tabFamilies(tab)])];
 }

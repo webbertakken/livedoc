@@ -3,11 +3,9 @@
 import { useCallback, useRef, useState } from 'react';
 import {
   acceptDraft,
-  boardNotesOfElements,
   discardDraft,
   draftNotesOf,
   eventStormingNoteSize,
-  stitchWall,
   unionRects,
   type Element,
   type PhotoAddition,
@@ -28,6 +26,7 @@ import type { PhotoDetection } from '@/lib/photo-detect';
 import { photoTypeError } from '@/lib/photo-accept';
 import { detectorTelemetryType } from '@/lib/photo-model/telemetry';
 import { debugLog } from '@/lib/debug-log';
+import { loadKindFamily, requireKindFamily } from '@/lib/element-kinds/store';
 import { track } from '@/lib/telemetry';
 import { useLatest } from '@/hooks/ui/useLatest';
 
@@ -468,6 +467,16 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
       const controller = new AbortController();
       abortRef.current = controller;
 
+      // Reading a wall is the Event Storming family's code (docs/specs/016-platform/web-performance.md): in before the
+      // photos go up (at once after the board's idle prefetch). One that cannot load starts nothing, and the board's
+      // notice says so; a cancel meanwhile ends the run here.
+      const familyIn = await loadKindFamily('event-storming', 'palette');
+      if (!current()) return;
+      if (!familyIn) {
+        debugLog('[photo-import] not started: family=event-storming did not load');
+        return;
+      }
+
       // THE PHOTOS GO UP FIRST. An object URL costs nothing to make and the browser decodes it for display on its
       // own thread, so the author sees the wall they just picked while the detector is still walking it.
       const urls = files.map((file) => URL.createObjectURL(file));
@@ -600,6 +609,7 @@ export function usePhotoDraft(deps: PhotoDraftDeps): PhotoDraftApi {
           : [],
       );
       if (notes.every((n) => n.length === 0)) return;
+      const { boardNotesOfElements, stitchWall } = requireKindFamily('event-storming');
       const existing = boardNotesOfElements(d.activeTab.elements);
       const result = stitchWall(notes, existing);
       const read = reviews.reduce((sum, r) => sum + (r.detection?.stickies.length ?? 0), 0);
