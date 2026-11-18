@@ -25,13 +25,12 @@ async function _apiLoadSelf(id: string): Promise<Participant | null> {
   const { url, headers } = await participantRead(id);
   const res = await apiFetch(url, { headers });
   const participant = (await expectOkOrNull<ParticipantResponse>(res, 'load self'))?.participant;
-  if (!participant) return null;
-  return {
-    id: participant.id,
-    name: participant.name,
-    color: participant.color,
-    status: 'online',
-  };
+  return participant ? participantOf(participant) : null;
+}
+
+/** A participant row as the api answers it, as the editor holds it: online, its picture left to the account. */
+export function participantOf(row: { id: string; name: string; color: string }): Participant {
+  return { id: row.id, name: row.name, color: row.color, status: 'online' };
 }
 
 const loadSelfOnce = dedupeInFlight(_apiLoadSelf, (id) => id);
@@ -59,8 +58,8 @@ function recentlyKnown(id: string): Participant | null {
 const mintedHere = new Set<string>();
 const savesInFlight = new Map<string, Promise<void>>();
 
-/** Whether the api minted this guest id for this page and its row is not saved yet: there is nothing to read. */
-export function guestMintedForThisPage(id: string): boolean {
+// Whether the api minted this guest id for this page and its row is not saved yet: there is nothing to read.
+function guestMintedForThisPage(id: string): boolean {
   return mintedHere.has(id);
 }
 

@@ -19,6 +19,7 @@ import {
 } from '@livedoc/api-schema';
 import { noteServerBuild, noteServerDocumentFormat } from '../server-release';
 import { stampTabKind, type Tab } from '@livedoc/document';
+import type { Participant } from '../identity';
 import {
   readLocalStorageSafe,
   removeLocalStorageSafe,
@@ -197,6 +198,10 @@ export type SharedDocumentResolution =
       tabId: string | null;
       // The grant for a password-protected document, kept instead of the password; null without one.
       shareGrant?: string | null;
+      // What the editor's open read carried (docs/specs/016-platform/web-performance.md "The open is one read"): the tab
+      // it opens first and its own row, null when there is none, absent when the answer carries neither.
+      opened?: { tab: Tab; rev: number } | null;
+      reader?: Participant | null;
     }
   | ({ passwordRequired: true } & SharePasswordAsk);
 

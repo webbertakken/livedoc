@@ -3,8 +3,7 @@
 // downloads". What the early path asks, in what order, and as whom: always the requests the editor would make.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { guest, offline, identity, self } = vi.hoisted(() => ({
-  self: { guestMintedForThisPage: vi.fn((_id: string) => false) },
+const { guest, offline, identity } = vi.hoisted(() => ({
   guest: { ensureSignedGuestIdentity: vi.fn(async () => ({ id: 'g1', sig: 'sig1' })) },
   offline: { isOfflineId: vi.fn(async (_id: string) => false) },
   identity: { getGuestSelfSig: vi.fn((): string | null => 'sig1') },
@@ -12,11 +11,10 @@ const { guest, offline, identity, self } = vi.hoisted(() => ({
 vi.mock('@/lib/guest-identity', () => guest);
 vi.mock('@/lib/offline/offline-ids', () => offline);
 vi.mock('@/lib/local-identity', () => identity);
-vi.mock('@/lib/api/self', async (original) => ({ ...(await original<object>()), ...self }));
 
 import { askEarlyDocumentReads } from './early-document-reads';
 import { openEarlyReads, resetEarlyReadsForTests, takeEarlyRead } from '@/lib/api/early-reads';
-import { participantRead, shareRead, documentRead, tabRead } from '@/lib/api/open-path-requests';
+import { shareRead, documentRead, tabRead } from '@/lib/api/open-path-requests';
 import {
   getSessionSharePassword,
   setSessionSharePassword,
@@ -67,14 +65,31 @@ beforeEach(() => {
   localStorage.clear();
   guest.ensureSignedGuestIdentity.mockClear();
   offline.isOfflineId.mockResolvedValue(false);
-  self.guestMintedForThisPage.mockReturnValue(false);
 });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('askEarlyDocumentReads', () => {
-  // "A guest id this page minted has no row to read."
-  it('asks no participant row for a guest id minted for this page', async () => {
-    self.guestMintedForThisPage.mockImplementation((id) => id === 'g1');
+  // "The open is one read": the link's open read carries its first tab and the visitor's own row.
+  it('asks a share link as one open read, as the guest the editor would be', async () => {
+    serve({
+      '/api/share/c1': json({
+        document: doc('owner'),
+        role: 'participate',
+        tabId: null,
+        openedTab: { id: 't1' },
+        reader: null,
+      }),
+    });
+
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/shared?s=c1` });
+
+    expect(asked.map((a) => a.path)).toEqual(['/api/share/c1']);
+    expect(asked[0]!.headers['x-document-open']).toBe('1');
+    expect(guest.ensureSignedGuestIdentity).toHaveBeenCalledTimes(1);
+    expect(await editorWouldTake(shareRead('c1', 'g1', { open: true }))).toBe(true);
+  });
+
+  it('asks the link and then its first tab when the open read carries none (an api from before)', async () => {
     serve({
       '/api/share/c1': json({ document: doc('owner'), role: 'participate', tabId: null }),
       '/api/documents/d1/tabs/t1': json({ tab: { id: 't1' } }),
@@ -83,25 +98,6 @@ describe('askEarlyDocumentReads', () => {
     await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/shared?s=c1` });
 
     expect(asked.map((a) => a.path)).toEqual(['/api/share/c1', '/api/documents/d1/tabs/t1']);
-  });
-
-  it('asks a share link’s participant row, the link and its first tab, as the guest the editor would be', async () => {
-    serve({
-      '/api/participants/g1': json({ participant: null }),
-      '/api/share/c1': json({ document: doc('owner'), role: 'participate', tabId: null }),
-      '/api/documents/d1/tabs/t1': json({ tab: { id: 't1' } }),
-    });
-
-    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/shared?s=c1` });
-
-    expect(asked.map((a) => a.path)).toEqual([
-      '/api/participants/g1',
-      '/api/share/c1',
-      '/api/documents/d1/tabs/t1',
-    ]);
-    expect(guest.ensureSignedGuestIdentity).toHaveBeenCalledTimes(1);
-    expect(await editorWouldTake(participantRead('g1'))).toBe(true);
-    expect(await editorWouldTake(shareRead('c1', 'g1'))).toBe(true);
     expect(await editorWouldTake(tabRead('g1', 'd1', 't1', 'c1', { open: true }))).toBe(true);
   });
 
@@ -132,7 +128,7 @@ describe('askEarlyDocumentReads', () => {
 
     expect(asked.find((a) => a.path === '/api/share/c1')!.headers['x-share-password']).toBe(GRANT);
     expect(getSessionSharePassword()).toBe(GRANT);
-    expect(await editorWouldTake(shareRead('c1', 'g1'))).toBe(true);
+    expect(await editorWouldTake(shareRead('c1', 'g1', { open: true }))).toBe(true);
   });
 
   it('asks no tab behind the password gate or a link that does not resolve', async () => {
@@ -202,12 +198,12 @@ describe('askEarlyDocumentReads', () => {
 
   it('stops, and asks nothing more, once the editor has asked the link itself', async () => {
     serve({ '/api/share/c1': json({ document: doc('owner'), role: 'view', tabId: null }) });
-    const { url, headers } = await shareRead('c1', 'g1');
+    const { url, headers } = await shareRead('c1', 'g1', { open: true });
     void takeEarlyRead(url, { headers });
 
     await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/shared?s=c1` });
 
-    expect(asked.map((a) => a.path)).toEqual(['/api/participants/g1']);
+    expect(asked).toEqual([]);
   });
 
   it('settles quietly when a signed-in reader has no token to ask with', async () => {

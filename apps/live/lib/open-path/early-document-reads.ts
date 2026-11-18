@@ -7,8 +7,7 @@
 import { parseStoredLevel, type LiveDoc } from '@livedoc/api-schema';
 import { readCachedShareGrant, setSessionSharePassword } from '@/lib/api/core';
 import { askEarly } from '@/lib/api/early-reads';
-import { documentRead, participantRead, shareRead, tabRead } from '@/lib/api/open-path-requests';
-import { guestMintedForThisPage } from '@/lib/api/self';
+import { documentRead, shareRead, tabRead } from '@/lib/api/open-path-requests';
 import { debugLog } from '@/lib/debug-log';
 import { resolveDocumentSession } from '@/lib/document-session';
 import { ensureSignedGuestIdentity } from '@/lib/guest-identity';
@@ -63,14 +62,10 @@ export async function askEarlyDocumentReads(input: {
 
 // A share link, with the cached grant the editor would send (docs/specs/013-workspace/share-password.md).
 async function openShared(code: string, selfId: string): Promise<Opened | null> {
-  // A guest id the api minted for this page has no row yet: the editor writes it, never reads it first.
-  if (!guestMintedForThisPage(selfId)) {
-    const participant = await participantRead(selfId);
-    void askEarly('participant', participant.url, participant.headers);
-  }
   const grant = readCachedShareGrant(code);
   if (grant) setSessionSharePassword(grant);
-  const share = await shareRead(code, selfId);
+  // The editor's open of the link: the visitor's own row rides in it, and its first tab.
+  const share = await shareRead(code, selfId, { open: true });
   const body = await answerOf(askEarly('share', share.url, share.headers));
   const document = body?.document as LiveDoc | undefined;
   if (!document) return null;
@@ -84,7 +79,7 @@ async function openShared(code: string, selfId: string): Promise<Opened | null> 
     document,
     scope: typeof body!.tabId === 'string' ? body!.tabId : null,
     tabShareCode: sessionShareCode,
-    carriedTab: false,
+    carriedTab: 'openedTab' in body!,
   };
 }
 

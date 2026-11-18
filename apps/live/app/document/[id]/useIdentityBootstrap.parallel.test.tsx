@@ -125,7 +125,7 @@ describe('useIdentityBootstrap open path', () => {
     api.apiLoadShared.mockReturnValue(new Promise(() => {}));
     render();
     await vi.advanceTimersByTimeAsync(0);
-    expect(api.apiLoadShared).toHaveBeenCalledWith('CODE2345', 'guest-1');
+    expect(api.apiLoadShared).toHaveBeenCalledWith('CODE2345', 'guest-1', { open: true });
   });
 
   it('asks for the document while a first visit saves its new participant row', async () => {
@@ -183,5 +183,25 @@ describe('useIdentityBootstrap open path', () => {
     expect(api.apiLoadDocument).toHaveBeenCalledWith('guest-1', 'doc-1');
     expect(api.apiOpenDocument).not.toHaveBeenCalled();
     expect(seed).toHaveBeenCalledWith('guest-1', DOC, null, null, undefined);
+  });
+
+  it("seeds the tab a share link's open read carried", async () => {
+    window.history.replaceState(null, '', '/document/shared?s=CODE2345');
+    api.apiLoadSelf.mockResolvedValue(GUEST);
+    const opened = { tab: { id: 't1', name: 'One', elements: [] }, rev: 2 };
+    const shared = { ...DOC, ownerId: 'owner' };
+    api.apiLoadShared.mockResolvedValue({ document: shared, role: 'edit', tabId: null, opened });
+    render();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(seed).toHaveBeenCalledWith('guest-1', shared, 'CODE2345', null, opened);
+  });
+
+  it('follows an embed share link plainly, as its read is not an open', async () => {
+    window.history.replaceState(null, '', '/document/shared?s=CODE2345');
+    heldSelf();
+    api.apiLoadShared.mockReturnValue(new Promise(() => {}));
+    render(null, true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(api.apiLoadShared).toHaveBeenCalledWith('CODE2345', 'guest-1', { open: false });
   });
 });
