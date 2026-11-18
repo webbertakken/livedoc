@@ -21,7 +21,9 @@ import {
 } from '../auth/share-access';
 import { redactDocumentForReader, redactDocumentForScope } from '../redact-document';
 import { sharePasswordOf, type DocumentRouteContext, type RouteContext } from './context';
+import { DOCUMENT_OPEN_HEADER, readDocumentOpen } from '@livedoc/api-schema';
 import { askRoom, documentRoom } from '../document-room/document-client';
+import { openSharedForVisitor } from './share-open';
 import { isDocumentImagePath } from '../document-room/document-image-request';
 import { identityOf } from '../document-room/document-route';
 import { handleSharePreview } from './share-preview';
@@ -121,7 +123,24 @@ export async function handleShare(ctx: RouteContext): Promise<Response> {
       );
       // A protected document's grant, for the browser to keep instead of the password it typed.
       const shareGrant = await shareGrantOf(env, d.id);
-      return json({ document: liveDoc, role: link.role, tabId: link.tabId, shareGrant });
+      // The editor's open of the link carries the tab it opens first and the visitor's own row (share-open.ts).
+      const opening =
+        visitor && readDocumentOpen(request.headers.get(DOCUMENT_OPEN_HEADER))
+          ? await openSharedForVisitor(ctx, {
+              documentId: d.id,
+              ownerId: d.ownerId,
+              code: link.code,
+              tabId: link.tabId ?? liveDoc.tabs[0]?.id ?? null,
+              visitor,
+            })
+          : null;
+      return json({
+        document: liveDoc,
+        role: link.role,
+        tabId: link.tabId,
+        shareGrant,
+        ...opening,
+      });
     }
     // No active link resolves this code: expired, revoked, or never
     // existed. `getShareLink` (above) is the single authority — it

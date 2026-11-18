@@ -1,7 +1,7 @@
 // Share-link + share-password calls (docs/specs/013-workspace/share-password.md): resolve a share code to
 // a document, list/create/delete links, and set the document password.
 import {
-  type DocumentResponse,
+  type DocumentOpenResponse,
   type ShareLink,
   type ShareLinkExpiry,
   type ShareLinkResponse,
@@ -20,6 +20,8 @@ import {
   apiFetch,
 } from './core';
 import { shareRead } from './open-path-requests';
+import { expectReaderFromOpen, participantOf } from './self';
+import { clientTabOf } from './tabs';
 import { parseStoredLevel } from '@livedoc/api-schema';
 
 // Resolve a share code to a full document + the role granted by that
@@ -34,8 +36,9 @@ import { parseStoredLevel } from '@livedoc/api-schema';
 async function _apiLoadShared(
   code: string,
   ownerId: string,
+  opts: { open?: boolean } = {},
 ): Promise<SharedDocumentResolution | null> {
-  const { url, headers } = await shareRead(code, ownerId);
+  const { url, headers } = await shareRead(code, ownerId, opts);
   const res = await apiFetch(url, { headers });
   // Password gate (docs/specs/013-workspace/share-password.md): 401 = the document is protected and we sent
   // no (or no longer-valid) password; 403 = we sent a wrong one. Both
@@ -51,16 +54,21 @@ async function _apiLoadShared(
     return { passwordRequired: true, invalid: false, rateLimited: true };
   }
   const body = await expectOkOrNull<
-    DocumentResponse & {
+    DocumentOpenResponse & {
       role?: ShareRole;
       tabId?: string | null;
+      shareGrant?: string | null;
     }
   >(res, 'load shared');
   if (!body) return null;
+  const { openedTab, reader } = body;
   return {
     document: body.document,
     role: parseStoredLevel(body.role),
     tabId: typeof body.tabId === 'string' ? body.tabId : null,
+    shareGrant: typeof body.shareGrant === 'string' ? body.shareGrant : null,
+    ...(openedTab === undefined ? {} : { opened: openedTab ? clientTabOf(openedTab) : null }),
+    ...(reader === undefined ? {} : { reader: reader ? participantOf(reader) : null }),
   };
 }
 
@@ -72,10 +80,29 @@ async function errorCodeOf(res: Response): Promise<string | null> {
   return typeof body?.error === 'string' ? body.error : null;
 }
 
-export const apiLoadShared = dedupeInFlight(
+const loadSharedOnce = dedupeInFlight(
   _apiLoadShared,
-  (code, ownerId) => `${code}|${ownerId}`,
+  (code, ownerId, opts) => `${code}|${ownerId}|${opts?.open ? 'open' : ''}`,
 );
+
+/** A share code resolved; `open` is the editor's open, whose answer also answers the participant read beside it. */
+export function apiLoadShared(
+  code: string,
+  ownerId: string,
+  opts: { open?: boolean } = {},
+): Promise<SharedDocumentResolution | null> {
+  const loading = loadSharedOnce(code, ownerId, opts);
+  if (opts.open) {
+    expectReaderFromOpen(
+      ownerId,
+      loading.then(
+        (resolved) => (resolved && 'reader' in resolved ? resolved.reader : undefined),
+        () => undefined,
+      ),
+    );
+  }
+  return loading;
+}
 
 // Deduped on `${ownerId}|${id}`: editor mount fires this for the
 // share-dialog state alongside the other read endpoints. Strict

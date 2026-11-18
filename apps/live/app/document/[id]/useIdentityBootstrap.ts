@@ -355,7 +355,9 @@ export function useIdentityBootstrap(opts: {
           if (cachedGrant) setSessionSharePassword(cachedGrant);
           // Pass the visitor's owner id so the api worker can record their visit into shared_with: without it
           // the server can't identify the visitor and the "Shared with you" list stays empty forever.
-          shareAsked = apiLoadShared(code, selfId);
+          // The editor's open of the link carries its first tab and the reader's own row (docs/specs/016-platform/
+          // web-performance.md "The open is one read"); an embed's read is not an open.
+          shareAsked = apiLoadShared(code, selfId, { open: !embed });
           // Handled where it is awaited; never an unhandled rejection while the participant is still answering.
           shareAsked.catch(() => {});
         }
@@ -518,7 +520,13 @@ export function useIdentityBootstrap(opts: {
           // guard refuses any other (docs/specs/013-workspace/tab-scoped-share-links.md).
           setSessionTabScope(scopeTabId);
           setLoadStep('first-tab');
-          await seedFetchedDocument(self.id, fetched, codeForVisitor, scopeTabId);
+          await seedFetchedDocument(
+            self.id,
+            fetched,
+            codeForVisitor,
+            scopeTabId,
+            resolution.opened,
+          );
           // A share link always opens a server document: it has a room.
           setDocumentServerStored(true);
           setDocumentId(fetched.id);

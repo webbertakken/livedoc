@@ -1715,6 +1715,16 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
         document: ref('Document'),
         role: ref('ShareRole'),
         tabId: { type: ['string', 'null'] },
+        openedTab: {
+          description:
+            'With `X-Document-Open: 1` and a known visitor: the tab they open first, as the tab read answers it; the open is recorded.',
+          oneOf: [ref('TabRecord'), { type: 'null' }],
+        },
+        reader: {
+          description:
+            'With `X-Document-Open: 1` and a known visitor: their own participant row, null before they have one.',
+          oneOf: [ref('ParticipantRecord'), { type: 'null' }],
+        },
       },
       required: ['document', 'role', 'tabId'],
     },

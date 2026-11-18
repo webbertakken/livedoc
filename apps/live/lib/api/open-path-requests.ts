@@ -20,11 +20,20 @@ export async function participantRead(id: string): Promise<ApiRead> {
   return { url: `${API_BASE}/participants/${id}`, headers };
 }
 
-// A share code resolved to its document, as the visitor `ownerId`, so the api records the visit.
-export async function shareRead(code: string, ownerId: string): Promise<ApiRead> {
+// A share code resolved to its document, as the visitor `ownerId`, so the api records the visit. `open` marks it as the
+// editor's open, which carries the tab the visitor opens first and their own participant row
+// (docs/specs/016-platform/web-performance.md "The open is one read").
+export async function shareRead(
+  code: string,
+  ownerId: string,
+  opts: { open?: boolean } = {},
+): Promise<ApiRead> {
   return {
     url: `${API_BASE}/share/${code}`,
-    headers: await apiHeaders(ownerId, { share: null }),
+    headers: await apiHeaders(ownerId, {
+      share: null,
+      ...(opts.open ? { extra: { [DOCUMENT_OPEN_HEADER]: '1' } } : {}),
+    }),
   };
 }
 

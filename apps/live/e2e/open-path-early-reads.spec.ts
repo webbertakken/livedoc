@@ -94,7 +94,7 @@ async function seedSharedBoard(
   return { id, tab, code };
 }
 
-test('a first-time guest’s share link is read early, each read once', async ({
+test('a first-time guest’s share link is read early, in one read', async ({
   page,
   pageErrors,
   baseURL,
@@ -108,15 +108,14 @@ test('a first-time guest’s share link is read early, each read once', async ({
   await page.goto(path);
   await expect(page.locator('[data-element-id="b1"]')).toBeVisible();
 
-  expect(seen.early).toEqual(
-    expect.arrayContaining(['[early-reads] taken share', '[early-reads] taken tab']),
-  );
+  // The open is one read (web-performance.md): the link's read carries its first tab and the visitor's own row.
+  expect(seen.early).toEqual(expect.arrayContaining(['[early-reads] taken share']));
   expect(seen.count('POST /api/guest-id')).toBe(1);
   expect(seen.count(`GET /api/share/${code}`)).toBe(1);
   // The api minted the guest's id for this page: its row is written, never read first (web-performance.md).
   expect(seen.asked.filter((a) => a.startsWith('GET /api/participants/'))).toHaveLength(0);
   expect(seen.asked.filter((a) => a.startsWith('PUT /api/participants/'))).toHaveLength(1);
-  expect(seen.count(`GET /api/documents/${id}/tabs/${tab}`)).toBe(1);
+  expect(seen.count(`GET /api/documents/${id}/tabs/${tab}`)).toBe(0);
   expectNoPageErrors(pageErrors);
 });
 
@@ -140,9 +139,10 @@ test('a password-protected link still shows the gate, and opens on the password'
   await password.fill('hunter2');
   await page.getByRole('button', { name: 'Open document' }).click();
   await expect(page.locator('[data-element-id="b1"]')).toBeVisible();
-  // The early answer (no password) went to the gate; the typed password asked again, as itself.
+  // The early answer (no password) went to the gate; the typed password asked again, as itself, and its answer
+  // carried the first tab.
   expect(seen.count(`GET /api/share/${code}`)).toBe(2);
-  expect(seen.count(`GET /api/documents/${id}/tabs/${tab}`)).toBe(1);
+  expect(seen.count(`GET /api/documents/${id}/tabs/${tab}`)).toBe(0);
   expectNoPageErrors(pageErrors);
 });
 

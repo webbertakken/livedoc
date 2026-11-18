@@ -42,7 +42,7 @@ import {
   apiFetch,
   saveTimeoutSignal,
 } from './core';
-import { expectReaderFromOpen } from './self';
+import { expectReaderFromOpen, participantOf } from './self';
 import { clientTabOf } from './tabs';
 import { documentRead } from './open-path-requests';
 import type { RoomTicketResponse } from '@livedoc/api-schema';
@@ -120,9 +120,7 @@ async function _apiOpenDocument(ownerId: string, id: string): Promise<OpenedDocu
     ...(reader === undefined
       ? {}
       : {
-          reader: reader
-            ? { id: reader.id, name: reader.name, color: reader.color, status: 'online' as const }
-            : null,
+          reader: reader ? participantOf(reader) : null,
         }),
   };
 }
