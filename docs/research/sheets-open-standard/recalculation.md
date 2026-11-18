@@ -7,7 +7,7 @@ How values are worked out for a workbook at Google's limit (20 million cells). R
 ## Where it stands
 
 - `Workbook` (`packages/sheets/src/engine/workbook.ts`) evaluates lazily on read and caches; a change forgets the
-  cells that read it (a reverse dependency map, `engine/dependencies.ts`) and the volatile ones; deep chains are
+  cells that read it (a reverse dependency map, `packages/sheets/src/engine/dependencies.ts`) and the volatile ones; deep chains are
   settled iteratively past depth 250; budgets cap a recalculation at 5,000,000 reads (verified, read).
 - It runs on the main thread, built in `sheet-store-client.ts` (verified, read). There is no iterative calculation:
   a cycle is `#REF!` (`formulas.md`, verified).
