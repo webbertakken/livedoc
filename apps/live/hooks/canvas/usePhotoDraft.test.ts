@@ -14,6 +14,13 @@ import { usePhotoDraft, type PhotoReview } from './usePhotoDraft';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn(), titleCaseType: (s: string) => s }));
 vi.mock('@/lib/reading/select', () => ({ selectReader: vi.fn() }));
+// The Event Storming family loads for real; a test may make it fail (docs/specs/016-platform/web-performance.md).
+vi.mock('@/lib/element-kinds/store', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/element-kinds/store')>(
+    '@/lib/element-kinds/store',
+  );
+  return { ...actual, loadKindFamily: vi.fn(actual.loadKindFamily) };
+});
 vi.mock('@/lib/photo-detect', async () => {
   const actual = await vi.importActual<typeof import('@/lib/photo-detect')>('@/lib/photo-detect');
   return { ...actual, detectAndCrop: vi.fn(), cropBoxes: vi.fn() };
@@ -31,6 +38,7 @@ import {
 } from '@/lib/photo-detect';
 import type { DetectedSticky } from '@livedoc/sticky-vision';
 import { track } from '@/lib/telemetry';
+import { loadKindFamily } from '@/lib/element-kinds/store';
 
 // A review with nothing read yet.
 const noText = (): PhotoReview['textById'] => new Map();
@@ -476,6 +484,20 @@ describe('landing a draft', () => {
     expect(h.elements()).toEqual([]);
     expect(h.toasts).toEqual([]);
     expect(h.api().state.stage).toBe('idle');
+  });
+});
+
+describe('when the Event Storming family cannot load', () => {
+  it('starts nothing: no photo goes up and no reader runs', async () => {
+    vi.mocked(loadKindFamily).mockResolvedValueOnce(false);
+    const h = harness();
+    await act(async () => {
+      await h.api().startFromFile(file());
+    });
+    expect(loadKindFamily).toHaveBeenCalledWith('event-storming', 'palette');
+    expect(h.api().state.stage).toBe('idle');
+    expect(h.api().review).toBeNull();
+    expect(detectAndCrop).not.toHaveBeenCalled();
   });
 });
 

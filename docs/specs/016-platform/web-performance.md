@@ -215,7 +215,9 @@ the pages and articles family whatever elements its pages hold: an article's wri
 and turning it into pages load with it, while reading a tab's pages and articles stays base. A mind map's growing,
 laying out, connecting, converting, arranging, outline and its root's halo load with the mind maps family, while
 reading a map (its order, its numbers and its groups' boxes, which an export and every change's settling read) stays
-base; turning a shape into a mind node waits for the family as a palette press does.
+base; turning a shape into a mind node waits for the family as a palette press does. An Event Storming board belongs to its
+family by its kind: reading a photographed wall into a draft loads with it, and a photo import waits for it before
+its photos go up, while a draft's notes and the board's notes, lanes and structure stay base.
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,

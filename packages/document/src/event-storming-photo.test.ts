@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  acceptDraft,
   defaultPhotoScale,
-  discardDraft,
-  draftNotesOf,
-  hasDraftNotes,
-  onlyDraftNotesChanged,
   fitPhotoTransform,
   matchDetectedNotes,
   normaliseNoteText,
@@ -15,6 +10,13 @@ import {
   type BoardNote,
   type PhotoNote,
 } from './event-storming-photo';
+import {
+  acceptDraft,
+  discardDraft,
+  draftNotesOf,
+  hasDraftNotes,
+  onlyDraftNotesChanged,
+} from './event-storming-draft';
 import type { Element } from './index';
 import { laneCentre, type EsTimeline } from './event-storming-lanes';
 
