@@ -912,9 +912,9 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Form|Reported|Other': 'Someone reported a form for another reason.',
   'Spreadsheet|Created|Blank': 'Someone made a blank spreadsheet.',
   'Spreadsheet|Created|Import': 'Someone made a spreadsheet by opening a file in LiveDoc.',
-  'Spreadsheet|Exported|Ods': 'Someone downloaded a spreadsheet as OpenDocument (.ods).',
-  'Spreadsheet|Exported|Fods': 'Someone downloaded a spreadsheet as flat OpenDocument (.fods).',
-  'Spreadsheet|Exported|Xlsx': 'Someone downloaded a spreadsheet as Microsoft Excel (.xlsx).',
+  'Spreadsheet|Exported|Ods': 'Someone downloaded a spreadsheet as an OpenDocument file.',
+  'Spreadsheet|Exported|Fods': 'Someone downloaded a spreadsheet as a flat OpenDocument file.',
+  'Spreadsheet|Exported|Xlsx': 'Someone downloaded a spreadsheet as an Excel file.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
   'Sheet|Searched|Function':
     'Someone searched the functions a Sheet formula can use, from the toolbar’s function picker.',
@@ -2795,6 +2795,9 @@ export const BY_ACTION: Readonly<Record<string, string>> = {
     'Someone saved a Sheet formula using a function for the first time in that formula (the value is the function name, from the fixed list).',
   'Plan|Created':
     'Someone started a Plan tab from Start Planning (the value says which: a Board, Sheet, Dashboard or Visualisation tab, or a suggested dashboard).',
+  'Spreadsheet|Created':
+    'Someone made a spreadsheet (the value says how: blank, a template or a file).',
+  'Spreadsheet|Exported': 'Someone downloaded a spreadsheet (the value says which file format).',
   'Sheet|Searched': 'Someone searched a list on a Sheet (the value says which: the functions).',
   'Plan|Imported': "Someone read a file into a board's cards (the value says which kind: Csv).",
   'Plan|Exported': "Someone downloaded a board's cards as a file (the value says which kind: Csv).",
