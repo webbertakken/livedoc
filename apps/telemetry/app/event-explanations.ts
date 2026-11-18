@@ -912,8 +912,10 @@ export const EXACT: Readonly<Record<string, string>> = {
   'Form|Reported|Other': 'Someone reported a form for another reason.',
   'Spreadsheet|Created|Blank': 'Someone made a blank spreadsheet.',
   'Spreadsheet|Created|Import': 'Someone made a spreadsheet by opening a file in LiveDoc.',
-  'Spreadsheet|Exported|Ods': 'Someone downloaded a spreadsheet as an OpenDocument file.',
-  'Spreadsheet|Exported|Fods': 'Someone downloaded a spreadsheet as a flat OpenDocument file.',
+  'Spreadsheet|Exported|Ods':
+    'Someone downloaded a spreadsheet as an ODF file (the open standard).',
+  'Spreadsheet|Exported|Fods':
+    'Someone downloaded a spreadsheet as a flat ODF file, all in one XML.',
   'Spreadsheet|Exported|Xlsx': 'Someone downloaded a spreadsheet as an Excel file.',
   'Sheet|Opened|Find': 'Someone opened Find on a Sheet, to search its cells.',
   'Sheet|Searched|Function':
