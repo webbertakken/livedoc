@@ -381,11 +381,27 @@ CREATE TABLE IF NOT EXISTS workbook (
 );
 `;
 
+// A spreadsheet's styles (db/sheet-styles.ts; docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): each distinct
+// format once, a cell holding its style's id. `format` is then empty at rest in a spreadsheet, so the index of cells
+// holding one finds a write's fresh formats without reading the sheet.
+const WORKBOOK_STYLES_STEP = `
+CREATE TABLE IF NOT EXISTS sheet_styles (
+  document_id TEXT NOT NULL REFERENCES document (id) ON DELETE CASCADE,
+  id          TEXT NOT NULL,
+  keys        TEXT NOT NULL,
+  PRIMARY KEY (document_id, id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS sheet_styles_keys ON sheet_styles (document_id, keys);
+ALTER TABLE sheet_cells ADD COLUMN style_id TEXT;
+CREATE INDEX IF NOT EXISTS sheet_cells_unstyled ON sheet_cells (document_id, sheet_id) WHERE format IS NOT NULL;
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
   STEP_2,
   WORKBOOK_STEP,
+  WORKBOOK_STYLES_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

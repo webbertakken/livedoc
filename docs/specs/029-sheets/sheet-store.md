@@ -51,8 +51,8 @@ elements, its snapshots, its changesets or its room.
 
 ## In a spreadsheet
 
-**Status: specified; the workbook row is built** (format and settings, made with the spreadsheet, carried on the
-document read). What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
+**Status: specified; the workbook row and styles are built** (format and settings, made with the spreadsheet,
+carried on the document read). What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
 this page holds for both until the Plan Sheet retires.
 
 - **A workbook is a document's sheets.** Each sheet tab holds one sheet (its `tabId`); the document's tab order is
@@ -62,7 +62,9 @@ this page holds for both until the Plan Sheet retires.
   (locale, time zone, recalculation, iterative calculation), theme, named ranges and named functions, the document the `CARD` functions read, and its rev.
 - **Styles** move to a table of their own: each distinct style once, by id; a cell holds a style id instead of its
   format JSON ([Formatting](formatting.md#styles-in-the-model)). A cell write may name a style by its keys; the room
-  finds or makes its id.
+  finds or makes its id. Built: a format that lands in a spreadsheet's cell, by a write, a create, a seed or a copy,
+  becomes its style in the same batch, new styles taking the next ids in the order their cells were written; a read
+  answers the cell's format again, so the wire, the editor and the agents carry formats as before (default).
 - **Layout** stays one JSON a sheet, but for the order of its row and column ids, which lives in a table of its own
   in chunks of 50,000 ids (about 550 KB a chunk, the row cap being 8 MB; [Storage
   research](../../research/sheets-open-standard/storage.md)), always, so a sheet of a million rows stores as one of

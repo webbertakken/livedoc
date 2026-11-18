@@ -13,6 +13,7 @@ import {
 } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 import { sheetNoteUnreferencedStatement } from './sheet-refs';
+import { cellFormatSql, styleCellsStatements } from './sheet-styles';
 
 type SheetRow = {
   id: string;
@@ -130,8 +131,8 @@ export async function listSheets(
   }
   if (heads.length === 0) return [];
   const cells = await env.DOCUMENT_DB.prepare(
-    `SELECT sheet_id, row_id, col_id, input, format FROM sheet_cells
-      WHERE document_id = ? AND sheet_id IN (SELECT value FROM json_each(?))`,
+    `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format FROM sheet_cells c
+      WHERE c.document_id = ? AND c.sheet_id IN (SELECT value FROM json_each(?))`,
   )
     .bind(documentId, JSON.stringify(heads.map((h) => h.id)))
     .all<CellRow>();
@@ -177,8 +178,8 @@ export async function readCells(
 ): Promise<SheetJson['cells']> {
   if (keys.length === 0) return [];
   const rows = await env.DOCUMENT_DB.prepare(
-    `SELECT sheet_id, row_id, col_id, input, format FROM sheet_cells
-      WHERE document_id = ? AND sheet_id = ? AND ${cellsNamedBy('?')}`,
+    `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format FROM sheet_cells c
+      WHERE c.document_id = ? AND c.sheet_id = ? AND ${cellsNamedBy('?')}`,
   )
     .bind(documentId, sheetId, JSON.stringify(keys))
     .all<CellRow>();
@@ -217,9 +218,9 @@ export async function existingCells(
   keys: readonly string[],
 ): Promise<{ count: number; bytes: number }> {
   const row = await env.DOCUMENT_DB.prepare(
-    `SELECT COUNT(*) AS n, COALESCE(SUM(COALESCE(length(input), 0) + COALESCE(length(format), 0)), 0) AS b
-       FROM sheet_cells
-      WHERE document_id = ? AND sheet_id = ? AND ${cellsNamedBy('?')}`,
+    `SELECT COUNT(*) AS n, COALESCE(SUM(COALESCE(length(c.input), 0) + COALESCE(length(${cellFormatSql('c')}), 0)), 0) AS b
+       FROM sheet_cells c
+      WHERE c.document_id = ? AND c.sheet_id = ? AND ${cellsNamedBy('?')}`,
   )
     .bind(documentId, sheetId, JSON.stringify(keys))
     .first<{ n: number; b: number }>();
@@ -279,9 +280,9 @@ export function cellWriteStatements(
          SELECT ?1, ?2, j.value ->> 'r', j.value ->> 'c' FROM json_each(?3) j WHERE ${LANDED}`,
       ).bind(documentId, sheetId, JSON.stringify(fmts), nonce),
       env.DOCUMENT_DB.prepare(
-        `UPDATE sheet_cells SET format = (
+        `UPDATE sheet_cells SET style_id = NULL, format = (
            SELECT CASE WHEN j.value ->> 'fp' IS NULL THEN NULL
-                       ELSE json_patch(COALESCE(sheet_cells.format, '{}'), j.value ->> 'fp') END
+                       ELSE json_patch(COALESCE(${cellFormatSql('sheet_cells')}, '{}'), j.value ->> 'fp') END
              FROM json_each(?3) j
             WHERE j.value ->> 'r' = sheet_cells.row_id AND j.value ->> 'c' = sheet_cells.col_id)
           WHERE document_id = ?1 AND sheet_id = ?2
@@ -290,6 +291,8 @@ export function cellWriteStatements(
       ).bind(documentId, sheetId, JSON.stringify(fmts), nonce),
     );
   }
+  // In a spreadsheet, the formats just merged become styles (./sheet-styles).
+  if (fmts.length) out.push(...styleCellsStatements(env, documentId, sheetId, nonce));
   if (clears.length)
     out.push(
       env.DOCUMENT_DB.prepare(
@@ -304,6 +307,7 @@ export function cellWriteStatements(
       env.DOCUMENT_DB.prepare(
         `DELETE FROM sheet_cells
           WHERE document_id = ?1 AND sheet_id = ?2 AND input IS NULL AND (format IS NULL OR format = '{}')
+            AND style_id IS NULL
             AND ${cellsNamedBy('?3')} AND ${LANDED}`,
       ).bind(documentId, sheetId, JSON.stringify(touched), nonce),
     );
@@ -378,8 +382,8 @@ export function recountStatement(
   return env.DOCUMENT_DB.prepare(
     `UPDATE sheets SET
        cell_count = (SELECT COUNT(*) FROM sheet_cells WHERE document_id = ?1 AND sheet_id = ?2),
-       cell_bytes = (SELECT COALESCE(SUM(COALESCE(length(input), 0) + COALESCE(length(format), 0)), 0)
-                       FROM sheet_cells WHERE document_id = ?1 AND sheet_id = ?2)
+       cell_bytes = (SELECT COALESCE(SUM(COALESCE(length(c.input), 0) + COALESCE(length(${cellFormatSql('c')}), 0)), 0)
+                       FROM sheet_cells c WHERE c.document_id = ?1 AND c.sheet_id = ?2)
      WHERE document_id = ?1 AND id = ?2`,
   ).bind(documentId, sheetId);
 }
@@ -435,6 +439,7 @@ export function insertSheetStatements(
          SELECT ?1, ?2, j.value ->> 'r', j.value ->> 'c', j.value -> 'i', j.value -> 'f' FROM json_each(?3) j`,
       ).bind(documentId, sheet.id, chunk),
     );
+  out.push(...styleCellsStatements(env, documentId, sheet.id));
   out.push(recountStatement(env, documentId, sheet.id));
   out.push(sheetNoteUnreferencedStatement(env, documentId, sheet.id, now));
   return out;
@@ -454,8 +459,8 @@ export function copySheetStatements(
        SELECT document_id, ?, ?, ?, layout, 0, cell_count, cell_bytes, ?, ?, ? FROM sheets WHERE document_id = ? AND id = ?`,
     ).bind(to.id, to.tabId, to.title, now, now, JSON.stringify(to.by), documentId, fromId),
     env.DOCUMENT_DB.prepare(
-      `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format)
-       SELECT document_id, ?, row_id, col_id, input, format FROM sheet_cells WHERE document_id = ? AND sheet_id = ?`,
+      `INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format, style_id)
+       SELECT document_id, ?, row_id, col_id, input, format, style_id FROM sheet_cells WHERE document_id = ? AND sheet_id = ?`,
     ).bind(to.id, documentId, fromId),
     sheetNoteUnreferencedStatement(env, documentId, to.id, now),
   ];
