@@ -1,54 +1,21 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { SheetJson } from '@livedoc/sheets';
-import { CellStyle, emptyLayout, WorkbookRecord, type SheetWrite } from '@livedoc/sheets';
-import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
-import { makeTestRouteContext } from './test-route-context';
-import { handleDocuments } from './documents';
+import { CellStyle } from '@livedoc/sheets';
+import { workbookKit, type WorkbookKit } from './workbook-test-kit';
 
 // docs/specs/029-sheets/sheet-store.md "In a spreadsheet" (Styles), formatting.md "Styles in the model": a format that
 // lands in a spreadsheet's cell becomes its style, each distinct style once by id, and reads answer the format again.
 
-let sql: SqliteD1;
+let kit: WorkbookKit;
+let r0: string, r1: string, r2: string, c0: string, c1: string;
 
-type Call = { method?: string; path: string; body?: unknown };
-
-async function call({ method = 'POST', path, body }: Call): Promise<Response> {
-  const pending: Promise<unknown>[] = [];
-  const ctx = makeTestRouteContext(method, `/api/documents${path}`, {
-    env: sql.env,
-    owner: 'owner',
-    ...(body === undefined ? {} : { body }),
-    waitUntil: (p) => void pending.push(p),
-  });
-  const res = await handleDocuments(ctx);
-  await Promise.all(pending);
-  return res;
-}
-
-let n = 7;
-const rand = () => (n = (n * 16807 + 11) % 2147483647) / 2147483647;
-const layout = emptyLayout(rand, 10, 4);
-const [r0, r1, r2] = layout.rows as [string, string, string];
-const [c0, c1] = layout.cols as [string, string];
-
-function document(id: string, spreadsheet: boolean, cells: SheetJson['cells'] = []) {
-  return {
-    id,
-    name: 'Budget',
-    tabs: [{ id: `${id}t`, name: 'Sheet1', kind: 'sheet', elements: [] }],
-    sheets: [{ id: `${id}Sheet`, tabId: `${id}t`, title: 'Sheet1', layout, cells }],
-    ...(spreadsheet
-      ? { workbook: WorkbookRecord.create({ locale: 'en-GB', timeZone: 'Europe/London' }) }
-      : {}),
-  };
-}
-
-async function write(id: string, w: SheetWrite): Promise<Response> {
-  return call({ path: `/${id}/sheets/${id}Sheet/writes`, body: { write: w } });
-}
+const call = (req: Parameters<WorkbookKit['call']>[0]) => kit.call(req);
+const document = (id: string, spreadsheet: boolean, cells: SheetJson['cells'] = []) =>
+  kit.document(id, spreadsheet, cells);
+const write: WorkbookKit['write'] = (id, w) => kit.write(id, w);
 
 const stored = (id: string) =>
-  sql.sql
+  kit.sql.sql
     .prepare(
       `SELECT row_id AS r, col_id AS c, format, style_id AS style FROM sheet_cells
         WHERE sheet_id = ? ORDER BY rowid`,
@@ -57,27 +24,17 @@ const stored = (id: string) =>
     .map((row) => ({ ...row }));
 
 const styles = (id: string) =>
-  sql.sql
+  kit.sql.sql
     .prepare('SELECT id, keys FROM sheet_styles WHERE document_id = ? ORDER BY rowid')
     .all(id)
     .map((row) => ({ ...row }));
 
-async function cellsRead(id: string): Promise<SheetJson['cells']> {
-  const res = await call({ method: 'GET', path: `/${id}/sheets?all=1` });
-  const body = await res.json<{ sheets: SheetJson[] }>();
-  return body.sheets[0]!.cells;
-}
+const cellsRead = async (id: string) => (await kit.sheets(id))[0]!.cells;
 
 beforeEach(() => {
-  n = 7;
-  sql = sqliteD1();
-  (sql.env as unknown as { DOCUMENT_ROOM: unknown }).DOCUMENT_ROOM = {
-    idFromName: (x: string) => x,
-    get: () => ({ fetch: async () => new Response(null, { status: 204 }) }),
-  };
-  sql.sql.exec(
-    "INSERT INTO participants (id, name, color, created_at) VALUES ('owner', 'Webber', '#3b82f6', 1);",
-  );
+  kit = workbookKit();
+  [r0, r1, r2] = kit.layout.rows as [string, string, string];
+  [c0, c1] = kit.layout.cols as [string, string];
 });
 
 describe('styles in a spreadsheet', () => {
@@ -157,7 +114,7 @@ describe('styles in a spreadsheet', () => {
       ]),
     });
     expect(stored('book').map((c) => c.style)).toEqual(['s1', 's1']);
-    const head = sql.sql
+    const head = kit.sql.sql
       .prepare("SELECT cell_count, cell_bytes FROM sheets WHERE id = 'bookSheet'")
       .get();
     const bytes = '{"n":1}'.length + 2 * '{"b":true}'.length;
@@ -172,7 +129,7 @@ describe('styles in a spreadsheet', () => {
     const res = await call({ path: '/book/copy', body: {} });
     const { document: copied } = await res.json<{ document: { id: string } }>();
     expect(styles(copied.id)).toEqual([{ id: 's1', keys: CellStyle.keyOf({ u: true }) }]);
-    const cell = sql.sql
+    const cell = kit.sql.sql
       .prepare('SELECT format, style_id AS style FROM sheet_cells WHERE document_id = ?')
       .get(copied.id);
     expect({ ...cell }).toEqual({ format: null, style: 's1' });

@@ -41,6 +41,7 @@ import { sheetTabRenameStatement } from '../db/tabs';
 import { isSpreadsheet } from '../db/workbook';
 import { forbidden, json } from '../responses';
 import { relayTabRename } from '../room-client';
+import { axisWriteStatements } from '../db/sheet-axes';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
@@ -251,6 +252,11 @@ export async function storeSheetWrite(
         ...(applied.kind === 'title' ? { title: landed.sheet.title } : {}),
       }),
     ];
+    // The order, in the chunks it changed (db/sheet-axes.ts).
+    if (applied.kind === 'layout' && landed.sheet.layout !== head.layout)
+      statements.push(
+        ...axisWriteStatements(ctx.env, documentId, sheetId, head.axes, landed.sheet.layout, nonce),
+      );
     if (applied.kind === 'layout')
       for (const ch of applied.changes)
         if (ch.k === 'deleteRows' || ch.k === 'deleteCols')

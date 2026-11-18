@@ -396,12 +396,35 @@ ALTER TABLE sheet_cells ADD COLUMN style_id TEXT;
 CREATE INDEX IF NOT EXISTS sheet_cells_unstyled ON sheet_cells (document_id, sheet_id) WHERE format IS NOT NULL;
 `;
 
+// A sheet's row and column order in chunks (db/sheet-axes.ts; docs/specs/029-sheets/sheet-store.md "In a spreadsheet",
+// Layout): every stored order moves out of its layout JSON into one chunk, as no sheet before this holds more than one
+// chunk's ids.
+const SHEET_AXES_STEP = `
+CREATE TABLE IF NOT EXISTS sheet_axes (
+  document_id TEXT    NOT NULL,
+  sheet_id    TEXT    NOT NULL,
+  axis        TEXT    NOT NULL CHECK (axis IN ('r', 'c')),
+  chunk       INTEGER NOT NULL,
+  ids         TEXT    NOT NULL,
+  PRIMARY KEY (document_id, sheet_id, axis, chunk),
+  FOREIGN KEY (document_id, sheet_id) REFERENCES sheets (document_id, id) ON DELETE CASCADE
+);
+INSERT OR IGNORE INTO sheet_axes (document_id, sheet_id, axis, chunk, ids)
+  SELECT document_id, id, 'r', 0, json_extract(layout, '$.rows') FROM sheets
+   WHERE json_valid(layout) AND json_type(layout, '$.rows') = 'array';
+INSERT OR IGNORE INTO sheet_axes (document_id, sheet_id, axis, chunk, ids)
+  SELECT document_id, id, 'c', 0, json_extract(layout, '$.cols') FROM sheets
+   WHERE json_valid(layout) AND json_type(layout, '$.cols') = 'array';
+UPDATE sheets SET layout = json_remove(layout, '$.rows', '$.cols') WHERE json_valid(layout);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
   STEP_2,
   WORKBOOK_STEP,
   WORKBOOK_STYLES_STEP,
+  SHEET_AXES_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

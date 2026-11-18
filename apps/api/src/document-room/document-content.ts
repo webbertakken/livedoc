@@ -104,6 +104,8 @@ export type DocumentCopy = {
   items: Row[];
   sheets: Row[];
   cells: Row[];
+  // The sheets' row and column order, in their chunks (db/sheet-axes.ts).
+  axes: Row[];
   // A spreadsheet's workbook row (docs/specs/029-sheets/sheet-store.md "Copies and exports"), or null.
   workbook: Row | null;
 };
@@ -167,7 +169,7 @@ export async function exportDocumentCopy(
     itemFilter = ' AND id IN (SELECT value FROM json_each(?))';
     itemBinds.push(JSON.stringify([...shown]));
   }
-  const [head, items, refs, sheets, cells, workbook] = await db.batch([
+  const [head, items, refs, sheets, cells, axes, workbook] = await db.batch([
     db
       .prepare('SELECT item_types, items_rev, items_next_key FROM document WHERE id = ?')
       .bind(documentId),
@@ -193,6 +195,13 @@ export async function exportDocumentCopy(
       )
       .bind(documentId, tabIds),
     db
+      .prepare(
+        `SELECT a.sheet_id, a.axis, a.chunk, a.ids
+           FROM sheet_axes a JOIN sheets s ON s.document_id = a.document_id AND s.id = a.sheet_id
+          WHERE a.document_id = ? AND s.tab_id IN (SELECT value FROM json_each(?))`,
+      )
+      .bind(documentId, tabIds),
+    db
       .prepare('SELECT format, settings, created_at FROM workbook WHERE document_id = ?')
       .bind(documentId),
   ]);
@@ -207,6 +216,7 @@ export async function exportDocumentCopy(
     items: (items?.results ?? []) as Row[],
     sheets: (sheets?.results ?? []) as Row[],
     cells: (cells?.results ?? []) as Row[],
+    axes: (axes?.results ?? []) as Row[],
     workbook: ((workbook?.results ?? [])[0] as Row | undefined) ?? null,
   };
 }
@@ -334,6 +344,15 @@ export async function importDocumentCopy(
           'INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format) VALUES (?, ?, ?, ?, ?, ?)',
         )
         .bind(documentId, cell.sheet_id, cell.row_id, cell.col_id, cell.input, cell.format),
+    );
+  }
+  for (const axis of copy.axes) {
+    stmts.push(
+      db
+        .prepare(
+          'INSERT INTO sheet_axes (document_id, sheet_id, axis, chunk, ids) VALUES (?, ?, ?, ?, ?)',
+        )
+        .bind(documentId, axis.sheet_id, axis.axis, axis.chunk, axis.ids),
     );
   }
   // A copy's cells carry their formats; in a spreadsheet copy they become its own styles.
