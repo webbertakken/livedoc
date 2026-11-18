@@ -7,8 +7,7 @@ markdown text, edited together live, that leaves LiveDoc as the very bytes it ho
 with a single markdown tab ([Purpose](../001-project-vision/purpose.md#what-it-is)); its tab strip is hidden, and the
 tab still holds the data, so a second tab can join it later without changing what the document is.
 
-A markdown tab and a [text document](../034-text-documents/text-document.md) stay two kinds (plan 0019, fork D3,
-`(default)`): a page is its Markdown bytes, a text document is an office document in ODF or OOXML. A `.md` file opens
+A markdown tab and a [text document](../034-text-documents/text-document.md) stay two kinds (plan 0019, fork D3, ruled): a page is its Markdown bytes, a text document is an office document in ODF or OOXML. A `.md` file opens
 as a page; a text document may be downloaded as Markdown, and a page is never turned into one silently.
 
 ## Why a tab kind

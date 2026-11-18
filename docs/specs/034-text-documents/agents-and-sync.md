@@ -40,7 +40,7 @@ attributed to the token, and revertable. Its operations:
   to this one), `ref_not_found`.
 - **Verbs**: `text-document.view`, `text-document.edit` (the changeset), `text-document.download` (a format),
   `text-document.import`; CLI commands `livedoc doc view|edit|download|import` and MCP tools `read_text_document`,
-  `edit_text_document`; previews of a page rendered through `render-png`. (Names follow fork D1.)
+  `edit_text_document`; previews of a page rendered through `render-png`.
 - An agent's `create_document` with kind `text-document` makes one, born in ODF (fork C5).
 
 ## Repository sync

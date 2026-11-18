@@ -11,7 +11,7 @@ office kinds; this spec says what a text document puts in them.
 - **Editing** (⌘⌥⇧Z): changes are made. **Suggesting** (⌘⌥⇧X): changes are made as suggestions. **Viewing**
   (⌘⌥⇧C): read only, comments and suggestions hidden, as printed.
 - An editing mode is one person's, never shared, and starts at the most an access level allows: an Editor in
-  Editing, a Participant in Suggesting (fork D7, default; else Viewing with comments), a Viewer in Viewing.
+  Editing, a Participant in Suggesting (fork D7, ruled), a Viewer in Viewing.
 - The switch sits at the right of the title row ([Editing surface](editing-surface.md#the-title-row)).
 
 ## Comments
@@ -78,11 +78,11 @@ setting is not shown and the Inbox carries them. Nothing is sent to someone who 
 
 ## Share roles
 
-| Role            | Comments                            | Suggestions                             | Versions                 |
-| --------------- | ----------------------------------- | --------------------------------------- | ------------------------ |
-| **Editor**      | All                                 | Make, accept, reject                    | See, name, restore, copy |
-| **Participant** | Add, reply, resolve, react, mention | Make (D7, default), reply; never accept | See (as a Viewer does)   |
-| **Viewer**      | Read                                | Read (in Editing and Suggesting views)  | None, as Google's Viewer |
+| Role            | Comments                            | Suggestions                            | Versions                 |
+| --------------- | ----------------------------------- | -------------------------------------- | ------------------------ |
+| **Editor**      | All                                 | Make, accept, reject                   | See, name, restore, copy |
+| **Participant** | Add, reply, resolve, react, mention | Make (D7), reply; never accept         | See (as a Viewer does)   |
+| **Viewer**      | Read                                | Read (in Editing and Suggesting views) | None, as Google's Viewer |
 
 ## Telemetry
 
