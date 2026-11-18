@@ -106,7 +106,9 @@ describe('ToolbarStripRail', () => {
 
   // The first set is simply there (toolbar-layout.md "Motion"): as the editor opens, the tiles that fit change as
   // the top line fills in, and a rail holding a width of its own eased to each new count, a layout shift on load.
-  it('holds no width of its own before a switch, so it is always as wide as its tiles', async () => {
+  // Whole pixels, so More and Search after it stay on the pixel grid (optical-alignment.md); taken in the commit the
+  // tiles change, and not eased, so the refits as the editor opens move nothing (toolbar-layout.md "Motion").
+  it("takes its tiles' whole-pixel width in the commit they change, without easing before a switch", async () => {
     const { container, rerender } = render(
       <ToolbarStripRail railKey="a" items={items('one', 'two', 'three')} leavingItems={null} />,
     );
@@ -114,10 +116,12 @@ describe('ToolbarStripRail', () => {
     const content = rail.firstElementChild as HTMLElement;
     Object.defineProperty(content, 'offsetWidth', { configurable: true, value: 120 });
     act(() => observers.forEach((cb) => cb()));
+    expect(rail.style.width).toBe('120px');
     // A frame later, when the rail used to arm its easing.
     await act(() => new Promise((done) => requestAnimationFrame(() => done(null))));
+    Object.defineProperty(content, 'offsetWidth', { configurable: true, value: 41 });
     rerender(<ToolbarStripRail railKey="a" items={items('one')} leavingItems={null} />);
-    expect(rail.style.width).toBe('');
+    expect(rail.style.width).toBe('41px');
     expect(rail.className).not.toContain('transition-[width]');
   });
 

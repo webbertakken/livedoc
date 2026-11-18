@@ -7,7 +7,7 @@
 // card and never wider. Without a strip on screen there is no box, and the caller draws its usual top-centre pill
 // instead.
 import { useLayoutEffect, useState, type ReactNode } from 'react';
-import { flushSync } from 'react-dom';
+import { settleNow } from '@/lib/settle-now';
 import { createPortal } from 'react-dom';
 import { EDITOR_VIEWPORT_ATTR } from '@/lib/editor-viewport';
 
@@ -47,7 +47,7 @@ export function usePaletteStripBox(active = true): StripBox | null {
 }
 
 // Where a toolbar is on screen (the strip's card, Draw's dock), kept current as it or the window resizes; null while
-// it is not on screen. Watched from a layout effect, and an observer's report applied with flushSync: both run before
+// it is not on screen. Watched from a layout effect, and an observer's report applied at once (settleNow): both run before
 // the frame is drawn, so what hangs from the toolbar (the tray) moves in the frame the toolbar does. A state update
 // left alone lands a task later, after that frame: the tray drew a frame at the strip's old place, then moved.
 export function useToolbarBox(selector: string, active = true): StripBox | null {
@@ -59,7 +59,7 @@ export function useToolbarBox(selector: string, active = true): StripBox | null 
     let watched: HTMLElement | null = null;
     let watchedParent: HTMLElement | null = null;
     let watchedRow: HTMLElement | null = null;
-    const reported = () => flushSync(update);
+    const reported = () => settleNow(update);
     const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(reported) : null;
     const arrival = typeof MutationObserver !== 'undefined' ? new MutationObserver(reported) : null;
     // What places the card, changed in a commit: its whole-pixel box's width and the tiles in it, its row's top and
