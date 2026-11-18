@@ -64,6 +64,12 @@ No tab body, tab order, tab stat, image reference by tab, changeset, item, sheet
 - whether the document has any content, by the [Empty document clean-up](../013-workspace/empty-document-cleanup.md)'s
   own test (a tab with an element, an article, a form or a filled dashboard slot).
 
+In a [spreadsheet](../029-sheets/spreadsheet.md) a sheet tab's content is its sheet's filled cells (default):
+
+- a sheet tab counts its filled cells where a tab counts its elements, so a spreadsheet with a cell is never empty;
+- its stats count the filled cells as elements and add their stored bytes to the tabs';
+- a cell write marks the document saved, which pushes the summary again.
+
 A create writes the first summary with the document, so a new row never reads empty for want of a push.
 A summary that is missing reads as unknown: never empty in the Explorer, and never moved to the Trash by the clean-up.
 

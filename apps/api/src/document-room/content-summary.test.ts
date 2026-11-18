@@ -58,6 +58,24 @@ function stats(
     .run(id, mode, elements, comments, bytes, at);
 }
 
+function spreadsheet(): void {
+  room
+    .prepare(
+      `INSERT INTO workbook (document_id, format, settings, created_at, updated_at) VALUES (?, 'ods', '{}', 1, 1)`,
+    )
+    .run(D);
+}
+
+function sheet(id: string, tabId: string, cells: number, bytes: number): void {
+  room
+    .prepare(
+      `INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, cell_count, cell_bytes, created_at, updated_at,
+                           updated_by)
+       VALUES (?, ?, ?, ?, '{}', 1, ?, ?, 1, 1, '{}')`,
+    )
+    .run(D, id, tabId, id, cells, bytes);
+}
+
 describe('contentSummaryOf', () => {
   it('summarises a document with no tabs as empty', async () => {
     expect(await contentSummaryOf(env, D)).toEqual({
@@ -117,5 +135,59 @@ describe('contentSummaryOf', () => {
     tab('b', 1, '{}', 2);
     stats('a', 'diagram', 4, 1, 100, 10);
     expect((await contentSummaryOf(env, D)).stats).toBeNull();
+  });
+
+  // document-storage.md "The content summary": a spreadsheet's sheet tab counts its sheet's filled cells.
+  describe('in a spreadsheet', () => {
+    it("counts each sheet tab's filled cells as its count", async () => {
+      spreadsheet();
+      tab('a', 0, '{"elements":[]}', 0);
+      tab('b', 1, '{"elements":[]}', 0);
+      sheet('sheet-a1', 'a', 12, 300);
+      sheet('sheet-b1', 'b', 0, 0);
+      const summary = await contentSummaryOf(env, D);
+      expect(summary).toMatchObject({ tabs: 2, firstTabCount: 12, tabCounts: { a: 12, b: 0 } });
+      expect(summary.hasContent).toBe(true);
+    });
+
+    it('holds no content while every sheet is empty', async () => {
+      spreadsheet();
+      tab('a', 0, '{"elements":[]}', 0);
+      sheet('sheet-a1', 'a', 0, 0);
+      expect(await contentSummaryOf(env, D)).toMatchObject({ firstTabCount: 0, hasContent: false });
+    });
+
+    it("adds the cells to the stats: filled cells as elements, their bytes to the tabs'", async () => {
+      spreadsheet();
+      tab('a', 0, '{}', 0);
+      tab('b', 1, '{}', 0);
+      stats('a', 'diagram', 0, 1, 10, 10);
+      stats('b', 'diagram', 0, 0, 10, 20);
+      sheet('sheet-a1', 'a', 5, 100);
+      sheet('sheet-b1', 'b', 7, 200);
+      expect((await contentSummaryOf(env, D)).stats).toEqual({
+        mode: 'diagram',
+        elements: 12,
+        comments: 1,
+        bytes: 320,
+      });
+    });
+
+    it('leaves out a sheet whose tab the document no longer holds', async () => {
+      spreadsheet();
+      tab('a', 0, '{}', 0);
+      sheet('sheet-a1', 'a', 0, 0);
+      sheet('sheet-gone', 'gone', 40, 900);
+      expect(await contentSummaryOf(env, D)).toMatchObject({
+        tabCounts: { a: 0 },
+        hasContent: false,
+      });
+    });
+  });
+
+  it("keeps a Plan Sheet tab's count its elements outside a spreadsheet", async () => {
+    tab('a', 0, '{"elements":[]}', 0);
+    sheet('sheet-a1', 'a', 9, 90);
+    expect(await contentSummaryOf(env, D)).toMatchObject({ firstTabCount: 0, hasContent: false });
   });
 });

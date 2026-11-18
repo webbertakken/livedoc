@@ -20,7 +20,8 @@ one still blank, keeps its document: someone made it to write in. A Form tab's f
 stored the same way ([Forms](../030-forms/forms.md)), so a tab holding a form keeps its
 document too, even a form with no questions yet. A Dashboard tab's slots are stored on its tab too
 ([Plan tabs](../026-plan/plan-tabs.md#dashboard-tab)), so a dashboard with any slot holding something (a note, a
-title, a card, a view, a tab) keeps its document. A document with
+title, a card, a view, a tab) keeps its document. A [spreadsheet](../029-sheets/spreadsheet.md)'s sheet tab holds
+its cells in its sheet, so a spreadsheet with any filled cell keeps its document. A document with
 no tabs at all is empty too. Nothing else counts as content: a name, extra
 blank tabs, a tab's settings (background, grid), a share link, a star or a
 folder never keep a document. Comments and actions live on elements, so an
