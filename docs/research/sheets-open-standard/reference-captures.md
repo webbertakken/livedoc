@@ -25,5 +25,9 @@ Webber, 2026-11-18: "Please ask me just what you need, not everything upfront, e
 
 - `empty-spreadsheet.png` (the main checkout's `plans/` folder, never committed): a new
   spreadsheet as Google Sheets opens it; the title row, menu bar, toolbar, formula bar, grid and sheet bar at rest.
+- `sheets-in-use.png` (beside it, sent unasked: "This is what sheets looks like"): a spreadsheet in use.
+
+The two are the surface reference for the tracer's surface and Phase 8's grid surface
+([Surface](../../specs/029-sheets/surface.md)): every band is checked against them before its finer captures are asked for.
 
 Until a row's capture arrives, it rests on the inventory's written items, tagged assumed.
