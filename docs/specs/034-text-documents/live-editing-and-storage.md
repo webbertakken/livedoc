@@ -11,6 +11,11 @@ branched, copied, versioned, searched and listed. The research is
 - The text document is a **sequence CRDT**, Yjs: the body of each document tab a tree of paragraphs and tables holding
   text with formatting attributes; styles, page setups, lists, comments and suggestions in maps beside it. ProseMirror
   is a view bound to it.
+- The first document tab's body is the root XML fragment `body`, in y-prosemirror's layout (a `paragraph` element
+  holding text) (default). A root type exists in every replica, so no two people ever make it twice.
+- **The seed**: every state is read as one empty paragraph, written by client 0, merged with what is stored; the seed
+  is the same bytes everywhere, so it merges with itself, and a surface binds only after it has loaded the state, so
+  no surface ever invents a first paragraph.
 - **Concurrent edits merge by character**: two people typing in one paragraph both keep every character; typing inside
   a stretch someone deletes keeps the characters typed.
 - **Concurrent formatting** of one stretch resolves per attribute, the later write winning; a person never loses text
@@ -31,12 +36,18 @@ the caret put back; typing within 500 ms is one step, as Google groups it.
 ## Storage
 
 - The **room** holds the text document's CRDT and is the **one writer** of its storage: it applies every edit (a
-  person's, an agent's changeset, a sync), persists after each burst settles, never more often than every
-  `TEXT_DOCUMENT_PERSIST_MS`, and never through the editor's whole-tab save
+  person's, an agent's changeset, a sync), appends each update to the tab's log as it applies it and before it
+  relays it (default), so nothing relayed is unstored and a hibernating room holds no unsaved edit; never through
+  the editor's whole-tab save
   ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-room)).
 - **Chunked under the row cap**: the encoded state is split into rows of at most `TEXT_DOCUMENT_CHUNK_BYTES` in a table
-  of its own (`text_document_chunks`: tab, revision, index, bytes), with an update log since the last compaction;
-  compaction runs when the log passes `TEXT_DOCUMENT_LOG_BYTES` or on the room's idle alarm.
+  of its own (`text_document_chunks`: tab, revision, index, bytes), with an update log since the last compaction
+  (`text_document_updates`: tab, sequence, bytes); both go with their tab. Compaction folds the log into the chunks,
+  as one transaction, when the log passes `TEXT_DOCUMENT_LOG_BYTES`, or on the room's idle alarm.
+- **Reading it**: `GET /api/documents/:id/text-documents/:tabId/state` answers the whole state as one Yjs update
+  (read access, a tab-scoped link on its own tab); `404 text_document_not_found` when the tab is absent or another kind.
+- **Reconnecting**: a surface the room tells to re-hydrate fetches the state again, merges it, and sends what it holds
+  that the state lacks; Yjs makes both harmless to repeat.
 - **The file is derived**: the `.odt` or `.docx` bytes are written from the model on download, sync and export; kept
   content and pictures are stored in the room (pictures as R2 objects keyed by hash, as gallery images are).
 - **Revision and hash**: each persisted state has a revision, as every tab has, and a hash of the file it writes, so a
@@ -48,6 +59,8 @@ the caret put back; typing within 500 ms is one step, as Google groups it.
 
 ## Offline
 
+- Until This Browser holds a text document's state, a new text document is made on LiveDoc whoever makes it, a guest
+  included (default).
 - A text document in This Browser holds its CRDT in IndexedDB and works fully; a cloud document opened offline edits
   its local copy. Either merges by character when it reaches the room, nothing lost
   ([Offline Mode](../006-document/offline-mode.md)).
@@ -84,7 +97,6 @@ suggestion or comment (fork D7); a Viewer's are dropped. Tests: the room refuses
 
 | Constant                        | Value     | Why                                                                                                                                                |
 | ------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEXT_DOCUMENT_PERSIST_MS`      | 2,000     | As the markdown tab's: a burst settles into one write                                                                                              |
 | `TEXT_DOCUMENT_CHUNK_BYTES`     | 1,900,000 | Under the room's 2,000,000-byte row cap with room for the row's other columns                                                                      |
 | `TEXT_DOCUMENT_LOG_BYTES`       | 4,000,000 | (default) Compaction keeps the log to a couple of chunks                                                                                           |
 | `TEXT_DOCUMENT_MAX_STATE_BYTES` | 64 MB     | (default) The encoded state with its history; past it, versions older than 30 days are thinned first, then edits refused with `document_too_large` |

@@ -1,6 +1,6 @@
 import { deflateRawSync, deflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
-import { ByteBudget, BudgetExceeded, inflateBytes } from '@/lib/inflate';
+import { ByteBudget, BudgetExceeded, inflateBytes } from '@livedoc/office-packages';
 import { decompressDiagram } from './inflate';
 
 const compress = (xml: string) =>

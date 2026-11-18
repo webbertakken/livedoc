@@ -159,6 +159,54 @@ jobs:
             apps/live/test-results-armed
           retention-days: 7
 
+  # Office files (docs/specs/020-import-export/office-packages.md "Validation"): the specs that hand a file LiveDoc
+  # wrote to LibreOffice and open what LibreOffice saved. The same build as the shards; LibreOffice's Writer comes
+  # from apt, so this job runs the image as root, which installing needs.
+  office:
+    name: Office files
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+      options: --ipc=host
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install LibreOffice Writer
+        run: |
+          set -euo pipefail
+          apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libreoffice-writer-nogui
+          soffice --version
+
+      - name: Set up
+        uses: ./.github/actions/e2e-setup
+
+      - name: Restore build cache
+        uses: ./.github/actions/next-cache-restore
+        with:
+          name: live
+          paths: apps/live/.next/cache
+
+      - name: Build live app
+        env:
+          NEXT_PUBLIC_BUILD_ID: e2e-build
+        run: bash scripts/next-build-cold-retry.sh pnpm --filter @livedoc/live build
+
+      - name: Run office specs
+        run: pnpm --filter @livedoc/live test:e2e:office
+
+      - name: Upload report with traces
+        if: always() && hashFiles('apps/live/test-results/**/trace.zip', 'apps/live/playwright-report/data/*.zip') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report-office
+          path: |
+            apps/live/playwright-report
+            apps/live/test-results
+          retention-days: 7
+
   # The signed-in specs (docs/specs/003-system-architecture/e2e-smoke.md "Signed-in specs"): the same build as
   # the shards, against a stack with sign-in on, where each spec signs in for real with an email code from the
   # stack's outbox. Then the workbench embed, which needs an account too. No secret and no special build.

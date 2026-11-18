@@ -15489,6 +15489,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "form": {
         "$ref": "#/components/schemas/FormDefinition"
       },
+      "format": {
+        "$ref": "#/components/schemas/TextDocumentFormat"
+      },
       "id": {
         "$ref": "#/components/schemas/TabId"
       },
@@ -15562,7 +15565,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "board",
       "sheet",
       "dashboard",
-      "form"
+      "form",
+      "text-document"
     ],
     "type": "string"
   },
@@ -15644,6 +15648,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       },
       "form": {
         "$ref": "#/components/schemas/FormDefinition"
+      },
+      "format": {
+        "$ref": "#/components/schemas/TextDocumentFormat"
       },
       "id": {
         "$ref": "#/components/schemas/TabId"
@@ -16722,6 +16729,13 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "glow",
       "bounce",
       "float"
+    ],
+    "type": "string"
+  },
+  "TextDocumentFormat": {
+    "enum": [
+      "odf",
+      "ooxml"
     ],
     "type": "string"
   },

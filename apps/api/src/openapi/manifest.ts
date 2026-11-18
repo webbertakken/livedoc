@@ -831,6 +831,39 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'SheetWriteResponse',
     statuses: [200, 400, 401, 403, 404, 409, 410, 413],
   },
+  // A text document's live state and file (docs/specs/034-text-documents/live-editing-and-storage.md "Storage",
+  // files-and-print.md "Downloading").
+  {
+    method: 'GET',
+    path: '/documents/{id}/text-documents/{tabId}/state',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      "A text document's live state as one Yjs update: the seed merged with every update the room stored. 404 text_document_not_found when the tab is absent or another kind. Read access.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    responseMediaType: 'application/octet-stream',
+    statuses: [200, 401, 403, 404, 410],
+  },
+  {
+    method: 'GET',
+    path: '/documents/{id}/text-documents/{tabId}/file',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      'A text document as a file, written from its live state and named after the document: odt or fodt for an ODF text document. 400 file_type_unknown; 409 format_not_native for the other format. Read access.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'type',
+        required: false,
+        description: 'odt (the default), fodt or docx.',
+      },
+    ],
+    responseMediaType: 'application/vnd.oasis.opendocument.text',
+    statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
   // The item store (docs/specs/026-plan/items.md). A caller on a tab-scoped link adds ?tabId=.
   {
     method: 'GET',

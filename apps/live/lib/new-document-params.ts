@@ -10,7 +10,7 @@ import { templateKindOf, type TemplateKind } from '@livedoc/templates';
 
 // The params the bypass reads; the bfcache restore strips exactly these so
 // Back from the editor lands on the plain wizard with placement intact.
-export const WIZARD_BYPASS_PARAMS = ['blank', 'template'] as const;
+export const WIZARD_BYPASS_PARAMS = ['blank', 'template', 'kind'] as const;
 
 // Which template the query asks to commit without the wizard, or null for
 // the wizard itself. `blank` wins when both are present (it is the older,
@@ -19,8 +19,16 @@ export const WIZARD_BYPASS_PARAMS = ['blank', 'template'] as const;
 export function wizardBypassKind(search: string): TemplateKind | null {
   const params = new URLSearchParams(search);
   if (params.has('blank')) return 'blank';
+  // A kind's blank (`?kind=text-document`) skips the wizard as Start Blank does; its tab is the kind's.
+  if (wizardBypassTabKind(search)) return 'blank';
   // A retired template's kind opens its replacement (templateKindOf).
   return templateKindOf(params.get('template'));
+}
+
+// The tab kind a /new URL asks a blank of (docs/specs/034-text-documents/text-document.md "The single-tab
+// document"): `?kind=text-document` makes a text document. Any other kind is ignored, so a stale link opens the wizard.
+export function wizardBypassTabKind(search: string): 'text-document' | null {
+  return new URLSearchParams(search).get('kind') === 'text-document' ? 'text-document' : null;
 }
 
 // The template step's presets (`?mode=`, `?q=`; docs/specs/007-editor/new-document-route.md): the

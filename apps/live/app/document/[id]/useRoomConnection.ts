@@ -1,4 +1,5 @@
 import type { RemoteApply } from '@/hooks/canvas/history-replay';
+import { TextDocumentBus } from '@/lib/text-document/text-document-bus';
 import {
   useEffect,
   useEffectEvent,
@@ -490,6 +491,10 @@ export function useRoomConnection(opts: {
           from,
           op.x !== null && op.y !== null ? { tabId: op.tabId, x: op.x, y: op.y } : null,
         );
+      } else if (op.kind === 'text-document') {
+        // A text document's update (docs/specs/034-text-documents/live-editing-and-storage.md): its surface, when
+        // open, merges it; the room has already stored it, so a surface opened later loads it.
+        TextDocumentBus.deliver(op);
       } else if (op.kind === 'article-caret') {
         // A collaborator's caret in an article's writing (docs/specs/007-editor/article-pages.md
         // "Collaboration"), checked field by field; drawn by that article's writing, never written.
@@ -655,6 +660,8 @@ export function useRoomConnection(opts: {
     // telemetry said otherwise, and a reload also destroyed the
     // viewport, selection, and undo history to fix stale content.
     void resyncFromServer();
+    // A text document's surface merges the stored state again, and sends what the room is missing.
+    TextDocumentBus.resync();
   });
 
   useEffect(() => {

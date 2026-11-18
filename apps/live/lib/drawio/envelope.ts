@@ -4,7 +4,7 @@
 // an SVG carrying one in `content`, or a PNG carrying one in a text chunk.
 
 import { parseInert } from '@livedoc/ui/trusted-types';
-import { BudgetExceeded, type ByteBudget } from '@/lib/inflate';
+import { BudgetExceeded, type ByteBudget } from '@livedoc/office-packages';
 import { base64Bytes, decompressDiagram } from './inflate';
 import { extractPngDiagram, isPng } from './png';
 import { DrawioRefused } from './refusals';

@@ -1,7 +1,6 @@
 // What the card reads from (docs/specs/020-import-export/whiteboard-import.md "Importing in the
 // dialog"): a .zip, or a folder's files, as one file set read on demand.
-import { ByteBudget } from '@/lib/inflate';
-import { listZip, readZipEntry, type ZipRefusal } from '@/lib/zip-reader';
+import { ByteBudget, listZip, readZipEntry, type ZipRefusal } from '@livedoc/office-packages';
 import type { ExportFileSet } from './board-export';
 
 // One pick's cap: the real 83-board export is 245 MB.

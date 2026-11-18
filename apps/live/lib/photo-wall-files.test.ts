@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { writeZip } from './zip-writer';
+import { writeZip } from '@livedoc/office-packages';
 import { WALL_MAX_PHOTOS, wallPhotosOf } from './photo-wall-files';
 
 // The photos of one wall, as picked (docs/specs/021-event-storming/event-storming.md Phase 11 "What a person does"):

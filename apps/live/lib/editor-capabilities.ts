@@ -30,6 +30,9 @@ export type EditorCapabilities = {
   // Plan cards (add, edit, move) and Sheet cells.
   planCards: boolean;
   sheetCells: boolean;
+  // A text document's writing (docs/specs/034-text-documents/text-document.md "Share roles"): an Editor's; a
+  // Participant suggests and comments once Review lands (fork D7).
+  textDocumentEdits: boolean;
   // An event-storming board's suggestions (docs/specs/021-event-storming/suggestions.md "Share roles"): seen and
   // acted on by an Editor alone, since applying one reshapes the board.
   suggestions: boolean;
@@ -66,6 +69,7 @@ export function resolveEditorCapabilities(input: {
       remove: always,
       planCards: true,
       sheetCells: true,
+      textDocumentEdits: true,
       suggestions: true,
       contexts: true,
       structure: true,
@@ -83,6 +87,7 @@ export function resolveEditorCapabilities(input: {
       remove: never,
       planCards: false,
       sheetCells: false,
+      textDocumentEdits: false,
       suggestions: false,
       contexts: false,
       structure: false,
@@ -102,6 +107,7 @@ export function resolveEditorCapabilities(input: {
     remove: (el) => !isLocked(el) && (own(el) || isMindNode(el)),
     planCards: true,
     sheetCells: true,
+    textDocumentEdits: false,
     suggestions: false,
     contexts: false,
     structure: false,
