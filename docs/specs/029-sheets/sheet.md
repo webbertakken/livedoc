@@ -206,7 +206,7 @@ rule under it, gridlines off), **Plain** (no fills, colours or borders; bold and
 
 - The title, in the header's left after the Sheet's glyph (in the focus colour), is edited in place (a double-click on it or the header's empty space in Plan
   mode, as a board's, or the **Title** field in Sheet Settings), its text selected: up
-  to 60 characters, unique on the tab (a taken title is refused: "Another sheet on this tab is called that").
+  to 100 characters, unique on the tab (a taken title is refused: "Another sheet on this tab is called that").
   Renaming changes every reference to it in the tab's other sheets ([Formulas](formulas.md#other-sheets)).
 - The header's buttons end **Focus** ([Focus](../026-plan/plan-board.md#focus)), **Maximise Sheet**, then the cog at the far
   right; a Sheet filling its tab has neither Focus nor Maximise ([Fill Tab](#fill-tab)).

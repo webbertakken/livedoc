@@ -56,3 +56,11 @@ export async function documentTabOrder(env: DocumentEnv, documentId: string): Pr
     .all<{ tab_id: string }>();
   return (rows.results ?? []).map((r) => r.tab_id);
 }
+
+/** Whether the document is a spreadsheet: it has a workbook row (docs/specs/029-sheets/spreadsheet.md). */
+export async function isSpreadsheet(env: DocumentEnv, documentId: string): Promise<boolean> {
+  const row = await env.DOCUMENT_DB.prepare('SELECT 1 AS y FROM workbook WHERE document_id = ?')
+    .bind(documentId)
+    .first<{ y: number }>();
+  return row !== null;
+}

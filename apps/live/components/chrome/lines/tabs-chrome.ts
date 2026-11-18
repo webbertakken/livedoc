@@ -27,6 +27,9 @@ export type CanvasMenuTarget = { x: number; y: number; openUp?: boolean };
 // "The tab list"): the tabs and every tab action the tab bar had, so nothing it did is lost.
 export type TabsChromeProps = {
   tabs: Tab[];
+  // A spreadsheet draws its tabs as the sheet bar at the foot of its grid (docs/specs/029-sheets/spreadsheet.md "The
+  // workbook shape"): the group then shows no active tab, stack or Add tab.
+  spreadsheet?: boolean;
   activeId: string;
   onSelect: (id: string) => void;
   // The add menu's choice (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab").

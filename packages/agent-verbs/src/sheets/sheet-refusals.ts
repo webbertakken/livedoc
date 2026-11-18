@@ -14,7 +14,7 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
   formula_invalid: 'a formula cannot be read.',
   format_invalid: 'a format value is not one a cell takes.',
   axis_id_invalid: 'a row or column is not valid.',
-  title_invalid: 'a sheet title is 1 to 60 characters.',
+  title_invalid: 'a sheet title is 1 to 100 characters.',
   merge_invalid: 'that merge is not valid.',
   filter_invalid: 'that filter is not valid.',
   write_too_large: 'a write changes up to 5,000 cells.',
@@ -23,4 +23,7 @@ export const SHEET_REFUSAL_WORDS: Readonly<Record<SheetError, string>> = {
     "a value is not one its cell's validation rule allows: read_sheet lists the rules and what each allows.",
   rules_full: 'a sheet holds up to 200 validation rules and 100 format rules.',
   tab_not_found: 'no such tab in this document.',
+  sheet_name_invalid:
+    "a sheet's name is 1 to 100 characters, never ' at either end, and none of [ ] * ? / \\ :.",
+  sheet_name_taken: 'another sheet of this spreadsheet is called that.',
 };

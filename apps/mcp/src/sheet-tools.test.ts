@@ -73,7 +73,7 @@ describe('the sheet tools', () => {
       ],
     });
     expect(partly.content[0]!.text).toBe(
-      'A sheet title is 1 to 60 characters. Applied before it: froze 1 row.',
+      'A sheet title is 1 to 100 characters. Applied before it: froze 1 row.',
     );
   });
 

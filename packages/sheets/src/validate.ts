@@ -171,7 +171,7 @@ function cellChangeProblem(ch: CellChange): Validation {
   return OK;
 }
 
-function idRangeOk(range: unknown): range is IdRange {
+export function idRangeOk(range: unknown): range is IdRange {
   if (typeof range !== 'object' || range === null) return false;
   const r = range as Record<string, unknown>;
   return isAxisId(r.r1) && isAxisId(r.c1) && isAxisId(r.r2) && isAxisId(r.c2);

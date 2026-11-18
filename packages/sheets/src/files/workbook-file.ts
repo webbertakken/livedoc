@@ -8,8 +8,8 @@ import { makeSheetId, type Rand } from '../ids';
 import { compileFormula, renderFormula, type SheetHandle, type SheetsCtx } from '../formula/stored';
 import { isArray, isError, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
 import type { Workbook } from '../engine/workbook';
-import { SHEET_COLS_MAX, SHEET_ROWS_MAX, SHEET_TITLE_MAX } from '../limits';
-import { uniqueSheetTitle } from '../sheet';
+import { SHEET_COLS_MAX, SHEET_ROWS_MAX } from '../limits';
+import { SheetName } from '../workbook/sheet-name';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 
 export type FileValue =
@@ -101,8 +101,7 @@ export function sheetsFromFile(file: WorkbookFile, rand: Rand = Math.random): Sh
   const losses: FileLoss[] = [];
   const taken: string[] = [];
   const made = file.sheets.map((sheet) => {
-    const wanted = sheet.name.slice(0, SHEET_TITLE_MAX);
-    const title = uniqueSheetTitle(wanted === '' ? 'Sheet' : wanted, taken);
+    const title = SheetName.fit(sheet.name, taken);
     taken.push(title);
     if (title !== sheet.name) losses.push({ k: 'sheet_renamed', from: sheet.name, to: title });
     const rows = Math.min(Math.max(sheet.rows, WORKBOOK_ROWS_NEW), SHEET_ROWS_MAX);

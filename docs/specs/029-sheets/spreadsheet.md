@@ -38,6 +38,13 @@ Each sheet is a tab of the document, and a document that holds sheets holds only
   ways. There are no tabs inside tabs.
 - A spreadsheet holds no tab of another kind, and no other document holds a sheet tab: adding one is refused
   (`tab_kind_mixed`), and a paste or an agent's changeset that would mix them is refused with the same rejection.
+- A spreadsheet's tabs are never shared with another document, nor another's into it (tab linking, [Tabs in many
+  documents](../006-document/tab-document-many-to-many.md)): its sheets live in its own room, so the link is refused
+  (`tab_not_linkable`); **Copy To** copies a sheet instead.
+- The editor offers none of these: in a spreadsheet the canvas's add, duplicate, import-into-tab and copy-to-document
+  actions say "A spreadsheet holds only sheets." and change nothing (default).
+- Until Plan's Sheet tabs are migrated, a `sheet` tab is a spreadsheet's exactly when its document has a workbook
+  row, and a Plan Sheet tab otherwise; only a spreadsheet refuses other kinds (default).
 - The document's tab strip is drawn as the **sheet bar** at the foot of the grid ([Surface](surface.md#sheet-bar)),
   never at the top, even with one sheet; tab folders are not offered in a spreadsheet.
 - References between sheets are references between the document's tabs. A reference to another spreadsheet is
@@ -131,6 +138,11 @@ its text and shows its cached value.
 
 - Up to 20 million cells in a workbook (S7, ruled 2026-11-18; Google's own figure, [Inventory](../../research/sheets-open-standard/google-sheets-inventory.md#limits)),
   18,278 columns (A to ZZZ) and 200 sheets; a cell's input up to 50,000 characters.
+- Cells are counted as Google counts them: the grid's rows times columns, summed over every sheet, filled or not
+  (default). Adding rows, columns or a sheet past it is refused (`workbook_full`).
+- A workbook stores up to 1 GiB of cells (default; `workbook_full`).
+- A sheet's name breaking its rules is refused (`sheet_name_invalid`), one another sheet has (case aside) too
+  (`sheet_name_taken`).
 - A write past a limit is refused with a named rejection (`workbook_full`, `sheet_too_large`, `input_too_long`),
   and an import past one is cut and says so ([Sheet store](sheet-store.md#limits)).
 - Budgets for load, typing, scrolling and recalculation at these sizes are set from the tracer bullet and held by

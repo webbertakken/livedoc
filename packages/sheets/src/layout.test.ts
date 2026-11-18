@@ -109,7 +109,7 @@ describe('sheet', () => {
     expect(uniqueSheetTitle(' Budget ', [])).toBe('Budget');
     expect(uniqueSheetTitle('Budget', ['budget', 'Budget 2'])).toBe('Budget 3');
     expect(uniqueSheetTitle('   ', ['Sheet 1'])).toBe('Sheet 2');
-    expect(uniqueSheetTitle('x'.repeat(80), [])).toHaveLength(56);
+    expect(uniqueSheetTitle('x'.repeat(120), [])).toHaveLength(96);
   });
   it('keys cells', () => {
     expect(splitCellKey(cellKey('r1', 'c1'))).toEqual({ r: 'r1', c: 'c1' });

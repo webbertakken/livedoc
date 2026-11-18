@@ -11,7 +11,13 @@ import {
   type TabSaveResponse,
 } from '@livedoc/api-schema';
 import { tabShowsEveryCard } from '@livedoc/items';
-import { isValidTab, migrateIncomingTab, preferNewerQaAll, type Tab } from '@livedoc/document';
+import {
+  isValidTab,
+  migrateIncomingTab,
+  preferNewerQaAll,
+  tabMixRefusal,
+  type Tab,
+} from '@livedoc/document';
 import { mergeChangesetsIntoSave } from '../changesets/merge-on-save';
 import { ANONYMOUS_AUTHOR, hasNewComments, rewriteCommentAuthors } from '../comments';
 import { changesetMergePages, getParticipant, getTab, isTabRevStale, upsertTabAtRev } from '../db';
@@ -66,6 +72,13 @@ export async function handleTabPut(
   // Structural schema gate (shared with the app, @livedoc/document): discriminant, required
   // fields, endpoints, array bounds + unique ids.
   if (!isValidTab(received)) return badRequest('invalid tab');
+  // A spreadsheet holds only sheet tabs (docs/specs/029-sheets/spreadsheet.md "The workbook shape"): a tab of
+  // another kind, new or turned, is refused before anything is read or written.
+  const mixed = tabMixRefusal(existing.spreadsheet, [received]);
+  if (mixed) {
+    console.info('[workbook] refused', { error: mixed, documentId: id, tabId });
+    return conflict(mixed);
+  }
   // Byte cap on the single tab (the body cap bounds the whole request; this bounds one tab's
   // element + comment tree). See bodyExceedsCap for why the header alone isn't enough.
   if (bodyExceedsCap(request, received, MAX_TAB_BYTES)) return payloadTooLarge();
@@ -97,7 +110,13 @@ export async function handleTabPut(
     const body: Tab = { ...kept };
     // The name cap (docs/specs/006-document/name-length.md): a new or changed name is shortened;
     // an autosave echoing the stored name unchanged keeps it.
-    body.name = capStoredName(body.name, existingTab?.name ?? null, 'tab');
+    // A spreadsheet's sheet tab is named as its sheet: a rename is the sheet's (tab-name-route.ts), never an autosave's.
+    if (existing.spreadsheet && existingTab) body.name = existingTab.name;
+    body.name = capStoredName(
+      body.name,
+      existingTab?.name ?? null,
+      existing.spreadsheet ? 'sheet-tab' : 'tab',
+    );
     // Data-loss backstop (docs/specs/006-document/per-tab-storage.md): refuse to blank a tab that
     // holds content unless the editor marks the empty write intentional (`X-Allow-Empty: 1`, set
     // only when it had the tab's content authoritatively loaded).

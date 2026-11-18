@@ -6,6 +6,8 @@ Status: shipped
 
 Tab and document names are capped at **`NAME_MAX_LENGTH` = 60 characters**, and
 whitespace inside a name is collapsed to single spaces.
+A spreadsheet's sheet tab is the exception: it is named as its sheet, up to 100 characters
+([Spreadsheet](../029-sheets/spreadsheet.md#what-a-workbook-holds)).
 
 ## Why 60, and why a cap at all
 

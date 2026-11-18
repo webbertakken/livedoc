@@ -315,7 +315,7 @@ const sheetChange = z.discriminatedUnion('op', [
   }),
   z.object({
     op: z.literal('rename').describe('Rename the sheet.'),
-    title: z.string().describe('The new title, 1 to 60 characters, unique on its tab.'),
+    title: z.string().describe('The new title, 1 to 100 characters, unique on its tab.'),
   }),
   z.object({
     op: z.literal('sort').describe('Sort rows by a column.'),

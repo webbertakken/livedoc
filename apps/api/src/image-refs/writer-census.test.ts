@@ -19,9 +19,9 @@ const WRITES_TABS =
 // db/image-refs-writers.test.ts.
 const KNOWN_WRITERS: Record<string, number> = {
   // tabWriteStatements (upsertTab, upsertTabAtRev), seedTabs, deleteTabRow, swapTabData; and
-  // stampTabElementCount and renameTab, which write element_count or the name, never `data`, so
-  // they have no image reference to keep.
-  'api/src/db/tabs.ts': 6,
+  // stampTabElementCount, renameTab and sheetTabRenameStatement, which write element_count or the name, never `data`,
+  // so they have no image reference to keep.
+  'api/src/db/tabs.ts': 7,
   // importDocumentCopy (a copy's tabs, references from the copied bodies)
   'api/src/document-room/document-content.ts': 1,
   // takeSharedTab and a shared tab taken in (receiveShares): each writes the body through tabWriteStatements, then

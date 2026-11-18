@@ -24,7 +24,7 @@ elements, its snapshots, its changesets or its room.
   elements still frame the right sheets.
 - **`tabId`**: the tab it was made on. A sheet belongs to one tab for life: its references to other sheets are
   that tab's, and a tab-scoped link reads only its tab's sheets.
-- **`title`**: up to 60 characters, unique among the tab's sheets.
+- **`title`**: up to 100 characters, unique among the tab's sheets.
 - **Layout**: the rows and the columns, each an ordered list of ids, with each one's size (where set) and hidden
   flag; how many rows and columns are frozen; the merged ranges; the filter (its range and each column's
   condition); the sheet's default column width and row height.
@@ -63,9 +63,12 @@ this page holds for both until the Plan Sheet retires.
 - **Styles** move to a table of their own: each distinct style once, by id; a cell holds a style id instead of its
   format JSON ([Formatting](formatting.md#styles-in-the-model)). A cell write may name a style by its keys; the room
   finds or makes its id.
-- **Layout** stays one JSON a sheet while its row and column ids fit well inside a row (8 MB a row, [Storage
-  research](../../research/sheets-open-standard/storage.md)); past a size Phase 5 measures, the order of ids moves to
-  a table of its own.
+- **Layout** stays one JSON a sheet, but for the order of its row and column ids, which lives in a table of its own
+  in chunks of 50,000 ids (about 550 KB a chunk, the row cap being 8 MB; [Storage
+  research](../../research/sheets-open-standard/storage.md)), always, so a sheet of a million rows stores as one of
+  a hundred does (default).
+- **Named ranges** are the workbook's: each stays in the layout of the sheet its range lies on, its name unique
+  across the workbook, and a formula on any sheet reads it (default).
 - **Unknown content** ([Standard mapping](standard-mapping.md#unknown-content)): a table of the file's own XML
   fragments by part and anchor (a sheet id, a cell, a range by ids), written back to the same format.
 - **Objects**: charts, pivot tables, images, drawings, slicers, filter views, tables and timelines, a row each by
@@ -74,7 +77,8 @@ this page holds for both until the Plan Sheet retires.
   layout and the cells of the rows in view and a screen around them; the rest streams in behind, so a large sheet
   shows before it has loaded.
 - **Limits**: the spreadsheet's ([Spreadsheet](spreadsheet.md#limits)): 20 million cells a workbook (S7),
-  18,278 columns, 200 sheets; a write still 5,000 cells and 1 MB.
+  18,278 columns, 200 sheets, 1 GiB of stored cells (default); up to 100,000 rows or columns with their own size a
+  sheet (default); a write still 5,000 cells and 1 MB.
 - **Referenced by their tabs**: a sheet whose tab is one of a spreadsheet's tabs is referenced by it, so it never waits
   to expire as an unreferenced Plan Sheet does; a sheet tab removed leaves its sheet unreferenced, kept for Undo until it
   expires ([Deleting a sheet](#deleting-a-sheet)).
@@ -198,7 +202,8 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
 
 ## Copies and exports
 
-- **Duplicate** copies the sheet store with the document (same ids).
+- **Duplicate** copies the sheet store with the document (same ids), and a spreadsheet's workbook row with it, so a
+  copy of a spreadsheet is a spreadsheet.
 - **Duplicate Tab** copies the tab's sheets as new sheets on the new tab (new ids, `(copy)` titles kept unique
   per tab), and the new tab's Sheet elements frame the copies.
 - **The `.livedoc` file** (the Google Drive mirror's document file) carries the sheets; the field is additive,

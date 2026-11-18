@@ -17,17 +17,18 @@ Webber, 2026-11-18: "Please ask me just what you need, not everything upfront, e
 
 - Never ask for a batch: ask for one or two captures at a time, only when the step in hand needs them.
 - Each ask names the surface (a menu, a panel, a dialog, the grid at work) and why the step needs it.
+- Ask Webber only for the captures a step needs, one or two at a time, naming the surface and why.
 - Each capture is a PNG in a signed-in Chrome on a desktop, dark theme where Sheets offers it, at 1440 × 900, saved in
   `~/Repositories/livedoc/plans/assets/0020/google/` under the name the ask gives.
 - A capture is linked where it is used, never read whole into an agent's context: one downscaled view at most.
 
 ## Received
 
-- `empty-spreadsheet.png` (the main checkout's `plans/` folder, never committed): a new
-  spreadsheet as Google Sheets opens it; the title row, menu bar, toolbar, formula bar, grid and sheet bar at rest.
-- `sheets-in-use.png` (beside it, sent unasked: "This is what sheets looks like"): a spreadsheet in use.
+- `sheets-in-use.png` (the main checkout's `plans/` folder, never committed): a spreadsheet in use in Google Sheets;
+  the one Sheets capture so far (an earlier `empty-spreadsheet.png` was Google Docs and went to plan 0019).
 
-The two are the surface reference for the tracer's surface and Phase 8's grid surface
-([Surface](../../specs/029-sheets/surface.md)): every band is checked against them before its finer captures are asked for.
+It is the surface reference for the tracer's surface and Phase 8's grid surface
+([Surface](../../specs/029-sheets/surface.md)): every band is checked against it; further captures are asked for one
+or two at a time, by the step that needs them, never in a batch.
 
 Until a row's capture arrives, it rests on the inventory's written items, tagged assumed.

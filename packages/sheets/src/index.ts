@@ -1,6 +1,11 @@
 // @livedoc/sheets: the Sheet element's engine (docs/specs/029-sheets/formulas.md). Pure, no DOM,
 // no dependencies; shared by the editor (lazily loaded), the api worker and the MCP worker.
 export * from './limits';
+export * from './workbook/sheet-name';
+export * from './workbook/cell-style';
+export * from './workbook/workbook-limits';
+export * from './workbook/workbook-parts';
+export * from './workbook/workbook-model';
 export * from './ids';
 export * from './address';
 export * from './sheet';

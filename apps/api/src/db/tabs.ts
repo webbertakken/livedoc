@@ -291,6 +291,19 @@ export async function renameTab(
   return row?.rev ?? null;
 }
 
+// A spreadsheet's sheet tab named as its sheet (docs/specs/029-sheets/spreadsheet.md "The workbook shape"), in the
+// sheet's own write batch: only when that write landed (its nonce), so a lost race renames neither.
+export function sheetTabRenameStatement(
+  env: DocumentEnv,
+  tab: { tabId: string; name: string; at: number },
+  landed: { documentId: string; sheetId: string; nonce: string },
+): D1PreparedStatement {
+  return env.DOCUMENT_DB.prepare(
+    `UPDATE tabs SET name = ?1, rev = rev + 1, updated_at = ?2 WHERE id = ?3
+       AND EXISTS (SELECT 1 FROM sheets WHERE document_id = ?4 AND id = ?5 AND write_nonce = ?6)`,
+  ).bind(tab.name, tab.at, tab.tabId, landed.documentId, landed.sheetId, landed.nonce);
+}
+
 // Bulk-seed a fresh document's tabs in one batch (create path). The
 // per-tab upsertTab does three sequential writes each (tab body,
 // link row, and a redundant saved_at bump), so seeding K tabs that

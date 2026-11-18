@@ -481,6 +481,7 @@ export {
   type TabKind,
   type TextDocumentFormat,
 } from './tab-kind';
+export { tabMixRefusal, type TabMixRefusal } from './tab-mix';
 export * from './accent-edge';
 export * from './card';
 export * from './chip';

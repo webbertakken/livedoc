@@ -303,6 +303,17 @@ describe('DocumentGroup', () => {
     rerender(<DocumentGroup {...props} tabs={{ ...props.tabs, participantsByTab: new Map() }} />);
     expect(screen.queryByRole('dialog', { name: 'Tabs' })).toBeNull();
   });
+  // docs/specs/029-sheets/spreadsheet.md "The workbook shape": a spreadsheet's tabs are its sheet bar, at the foot of
+  // the grid, never at the top; no tab of another kind is offered.
+  it('leaves a spreadsheet’s tabs to its sheet bar: no active tab, no stack, no Add tab', () => {
+    const props = base();
+    props.tabs.spreadsheet = true;
+    render(<DocumentGroup {...props} />);
+    expect(screen.getByRole('toolbar', { name: 'Document' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Add tab' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /all tabs/ })).toBeNull();
+  });
+
   it('renames from the tab menu\u2019s Rename too, closing the menu', () => {
     renderGroup();
     const menuButton = screen.getByRole('button', { name: 'Tab menu' });

@@ -70,6 +70,7 @@ let docSeq = 0;
 function bridge(): SheetsBridge {
   const b = {
     scope: { documentId: `reads${docSeq++}`, ownerId: 'o', shareCode: null, tabId: null },
+    oneWorkbook: false,
     activeTabId: 't1',
     self: by,
     canEdit: false,

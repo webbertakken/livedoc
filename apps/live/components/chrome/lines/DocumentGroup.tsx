@@ -71,14 +71,17 @@ export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: T
         <ToolbarPart className="min-w-0">
           <DocumentName {...name} />
         </ToolbarPart>
-        <ToolbarPart className="shrink-0">
-          {/* The tab stack rides in the active tab: its name, glyph and count are one button. */}
-          {activeTab ? (
-            <ActiveTabSegment tab={activeTab} tabs={tabs} chrome={chrome} stack={stack} />
-          ) : (
-            <TabStackButton name="Tabs" {...stack} />
-          )}
-        </ToolbarPart>
+        {/* A spreadsheet's tabs are its sheet bar, at the foot of its grid. */}
+        {tabs.spreadsheet ? null : (
+          <ToolbarPart className="shrink-0">
+            {/* The tab stack rides in the active tab: its name, glyph and count are one button. */}
+            {activeTab ? (
+              <ActiveTabSegment tab={activeTab} tabs={tabs} chrome={chrome} stack={stack} />
+            ) : (
+              <TabStackButton name="Tabs" {...stack} />
+            )}
+          </ToolbarPart>
+        )}
         <ToolbarPart className="shrink-0">
           {people.length > 0 ? (
             <ContributorsButton
@@ -87,7 +90,9 @@ export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: T
               onToggle={toggle('people')}
             />
           ) : null}
-          {readOnly ? null : <AddTabMenu onAdd={tabs.onAdd} tabMode={newTabMode(activeTab)} />}
+          {readOnly || tabs.spreadsheet ? null : (
+            <AddTabMenu onAdd={tabs.onAdd} tabMode={newTabMode(activeTab)} />
+          )}
         </ToolbarPart>
       </ToolbarGroup>
       {open ? (

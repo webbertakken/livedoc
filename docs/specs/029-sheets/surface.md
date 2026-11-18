@@ -11,7 +11,7 @@ follows 0019's D2 ruling (S2). Every item's copy is **Title Case**, as every Liv
 ## Layout
 
 The reference is Google Sheets as captured ([Reference captures](../../research/sheets-open-standard/reference-captures.md#received):
-an empty spreadsheet and one in use); each band below is checked against them.
+a spreadsheet in use); each band below is checked against it.
 
 | Band        | Height (default) | Holds                                                                                        |
 | ----------- | ---------------- | -------------------------------------------------------------------------------------------- |

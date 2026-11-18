@@ -11,6 +11,9 @@ export type TabSaveDocument = Pick<
 > & {
   // How many tabs the document holds: where a new tab lands.
   tabCount: number;
+  // Whether it is a spreadsheet (it has a workbook row), which holds only sheet tabs
+  // (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
+  spreadsheet: boolean;
 };
 
 type Row = {
@@ -38,9 +41,12 @@ export async function getDocumentForSave(
     )
       .bind(id)
       .first<Row>(),
-    env.DOCUMENT_DB.prepare('SELECT COUNT(*) AS n FROM document_tabs WHERE document_id = ?')
+    env.DOCUMENT_DB.prepare(
+      `SELECT COUNT(*) AS n, EXISTS (SELECT 1 FROM workbook WHERE document_id = ?1) AS spreadsheet
+         FROM document_tabs WHERE document_id = ?1`,
+    )
       .bind(id)
-      .first<{ n: number }>(),
+      .first<{ n: number; spreadsheet: number }>(),
   ]);
   if (!row) return null;
   return {
@@ -52,5 +58,6 @@ export async function getDocumentForSave(
     ownerName: row.owner_name ?? null,
     ownerColor: row.owner_color ?? null,
     tabCount: tabs?.n ?? 0,
+    spreadsheet: tabs?.spreadsheet === 1,
   };
 }

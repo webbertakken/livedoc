@@ -785,3 +785,82 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
     );
   });
 });
+
+// docs/specs/029-sheets/spreadsheet.md "The workbook shape": a spreadsheet's sheet tabs are one workbook, so a
+// formula on one reads another, and one load brings them all.
+describe('a spreadsheet’s store', () => {
+  const one = emptyLayout(rand, 3, 2);
+  const two = emptyLayout(rand, 3, 2);
+  const sheets: SheetJson[] = [
+    {
+      ...sheetToJson({
+        id: 'sheetOne',
+        tabId: 'tabA',
+        title: 'Sheet1',
+        layout: one,
+        cells: new Map([[cellKey(one.rows[0]!, one.cols[0]!), { input: { n: 21 } }]]),
+        rev: 1,
+        createdAt: 0,
+        updatedAt: 0,
+        updatedBy: by,
+      }),
+    },
+    {
+      ...sheetToJson({
+        id: 'sheetTwo',
+        tabId: 'tabB',
+        title: 'Costs',
+        layout: two,
+        cells: new Map([
+          [
+            cellKey(two.rows[0]!, two.cols[0]!),
+            {
+              input: { f: { t: '@0*2', r: [{ s: 'sheetOne', r1: one.rows[0], c1: one.cols[0] }] } },
+            },
+          ],
+        ]),
+        rev: 1,
+        createdAt: 0,
+        updatedAt: 0,
+        updatedBy: by,
+      }),
+    },
+  ];
+  function make(oneWorkbook: boolean) {
+    const fetchSheets = vi.fn(async (_s: unknown, which: { tabId?: string; all?: true }) =>
+      which.all ? sheets : sheets.filter((s) => s.tabId === which.tabId),
+    );
+    const store = new SheetStore({
+      scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
+      oneWorkbook,
+      self: () => by,
+      locale: 'en-GB',
+      pushUndo: vi.fn(),
+      toast: vi.fn(),
+      api: {
+        fetchSheets,
+        createSheet: vi.fn(),
+        writeSheet: vi.fn(),
+        deleteSheet: vi.fn(),
+      } as never,
+    });
+    return { store, fetchSheets };
+  }
+
+  it('loads every sheet with the first tab, and reads across them', async () => {
+    const { store, fetchSheets } = make(true);
+    await store.loadTab('tabB');
+    expect(fetchSheets).toHaveBeenCalledWith(expect.anything(), { all: true });
+    expect(store.status('tabA')).toBe('ready');
+    expect(store.workbook('tabB').value('sheetTwo', 0, 0)).toBe(42);
+    expect(store.workbook('tabA')).toBe(store.workbook('tabB'));
+    expect(store.titlesOn('tabA')).toEqual(['Sheet1', 'Costs']);
+  });
+
+  it('keeps a Plan Sheet tab’s sheets to their tab', async () => {
+    const { store, fetchSheets } = make(false);
+    await store.loadTab('tabB');
+    expect(fetchSheets).toHaveBeenCalledWith(expect.anything(), { tabId: 'tabB' });
+    expect(store.titlesOn('tabB')).toEqual(['Costs']);
+  });
+});

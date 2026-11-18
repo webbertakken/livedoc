@@ -64,6 +64,9 @@ const CREATE_TAB_RETRY_MS = 800;
 
 type SheetStoreDeps = {
   scope: SheetsScope;
+  // A spreadsheet: every sheet tab's sheet is one workbook, loaded and evaluated together
+  // (docs/specs/029-sheets/spreadsheet.md "The workbook shape"); absent, each tab's sheets are their own.
+  oneWorkbook?: boolean;
   self: () => SheetPerson | null;
   locale: string;
   pushUndo: (step: ItemUndoStep) => void;
@@ -94,6 +97,8 @@ const REFUSALS: Partial<Record<string, string>> = {
   sheets_full: 'This document holds the most sheets it can',
   sheet_too_large: 'A sheet holds up to 10,000 rows and 200 columns',
   sheet_title_taken: 'Another sheet on this tab is called that',
+  sheet_name_taken: 'Another sheet in this spreadsheet is called that',
+  sheet_name_invalid: "A sheet's name can't hold [ ] * ? / \\ : or start or end with '",
   input_too_long: 'A cell holds up to 10,000 characters',
   sheet_not_found: 'This sheet is no longer in this document',
   rules_full: 'This sheet holds the most rules it can',
@@ -119,6 +124,10 @@ export function writeRefusalMessage(
 export function sheetRefusalMessage(code: string | null): string {
   return (code && REFUSALS[code]) ?? "Couldn't save that change";
 }
+
+// The scope of a spreadsheet's one workbook: every tab's sheets together (docs/specs/029-sheets/spreadsheet.md "The
+// workbook shape"). A Plan Sheet's scope is its tab.
+const WHOLE_WORKBOOK = '*';
 
 let widCounter = 0;
 const newWid = () => `w${Date.now().toString(36)}${(widCounter++).toString(36)}`;
@@ -160,7 +169,14 @@ export class SheetStore {
 
   // The editor's latest identity, toasts and undo (they change across renders; the store lives for the session).
   update(deps: SheetStoreDeps): void {
+    const rescoped = (deps.oneWorkbook ?? false) !== (this.deps.oneWorkbook ?? false);
     this.deps = { ...deps, api: this.api, wait: this.wait };
+    // The document turned out a spreadsheet (its workbook row arrived): the engines and loads were scoped by tab.
+    if (rescoped) {
+      this.workbooks.clear();
+      this.tabStatus.clear();
+      this.notify();
+    }
   }
 
   // ---- Reading -----------------------------------------------------------------------------------------
@@ -176,19 +192,30 @@ export class SheetStore {
     return this.entries.get(id)?.view;
   }
 
-  status(tabId: string): TabStatus | undefined {
-    return this.tabStatus.get(tabId);
+  // Which sheets read one another: a spreadsheet's whole workbook, else the tab's.
+  private scopeOf(tabId: string): string {
+    return this.deps.oneWorkbook ? WHOLE_WORKBOOK : tabId;
   }
 
+  private inScope(sheet: Sheet, scope: string): boolean {
+    return scope === WHOLE_WORKBOOK || sheet.tabId === scope;
+  }
+
+  status(tabId: string): TabStatus | undefined {
+    return this.tabStatus.get(this.scopeOf(tabId));
+  }
+
+  // The engine over the tab's scope: in a spreadsheet one for every sheet tab, so references cross them.
   workbook(tabId: string): Workbook {
-    let wb = this.workbooks.get(tabId);
+    const scope = this.scopeOf(tabId);
+    let wb = this.workbooks.get(scope);
     if (!wb) {
       wb = new Workbook({
-        sheets: [...this.entries.values()].map((e) => e.view).filter((s) => s.tabId === tabId),
+        sheets: [...this.entries.values()].map((e) => e.view).filter((s) => this.inScope(s, scope)),
         locale: this.deps.locale,
         cards: this.cards,
       });
-      this.workbooks.set(tabId, wb);
+      this.workbooks.set(scope, wb);
     }
     return wb;
   }
@@ -198,9 +225,11 @@ export class SheetStore {
     return [...this.entries.values()].map((e) => e.view).filter((s) => s.tabId === tabId);
   }
 
+  // The titles a sheet on the tab must not take, and its formulas may name: its scope's.
   titlesOn(tabId: string): string[] {
+    const scope = this.scopeOf(tabId);
     return [...this.entries.values()]
-      .filter((e) => e.view.tabId === tabId)
+      .filter((e) => this.inScope(e.view, scope))
       .map((e) => e.view.title);
   }
 
@@ -225,28 +254,33 @@ export class SheetStore {
 
   // Settles once the tab's sheets are in (or the load failed, never rejecting): a second caller while a load is in
   // flight waits for that same load, so what it reads next is the loaded tab, never the empty one.
+  // In a spreadsheet the first tab's load fetches the whole workbook, so a formula reading another sheet has it.
   loadTab(tabId: string, force = false): Promise<void> {
-    const inFlight = this.loads.get(tabId);
+    const scope = this.scopeOf(tabId);
+    const inFlight = this.loads.get(scope);
     if (!force && inFlight) return inFlight;
-    if (!force && this.tabStatus.get(tabId) === 'ready') return Promise.resolve();
-    const load = this.fetchTab(tabId);
-    this.loads.set(tabId, load);
+    if (!force && this.tabStatus.get(scope) === 'ready') return Promise.resolve();
+    const load = this.fetchScope(scope);
+    this.loads.set(scope, load);
     void load.finally(() => {
-      if (this.loads.get(tabId) === load) this.loads.delete(tabId);
+      if (this.loads.get(scope) === load) this.loads.delete(scope);
     });
     return load;
   }
 
-  private async fetchTab(tabId: string): Promise<void> {
-    this.tabStatus.set(tabId, 'loading');
+  private async fetchScope(scope: string): Promise<void> {
+    this.tabStatus.set(scope, 'loading');
     this.notify();
     try {
-      const sheets = await this.api.fetchSheets(this.deps.scope, { tabId });
+      const sheets = await this.api.fetchSheets(
+        this.deps.scope,
+        scope === WHOLE_WORKBOOK ? { all: true } : { tabId: scope },
+      );
       for (const json of sheets) this.adopt(json);
-      this.tabStatus.set(tabId, 'ready');
+      this.tabStatus.set(scope, 'ready');
     } catch (e) {
       debugLog('[sheets] sheets.load.failed', { status: e instanceof ApiError ? e.status : 0 });
-      this.tabStatus.set(tabId, 'error');
+      this.tabStatus.set(scope, 'error');
     }
     this.notify();
   }
@@ -294,7 +328,7 @@ export class SheetStore {
     const entry = this.entries.get(sheetId);
     if (!entry) return;
     this.entries.delete(sheetId);
-    this.workbooks.get(entry.view.tabId)?.removeSheet(sheetId);
+    this.workbooks.get(this.scopeOf(entry.view.tabId))?.removeSheet(sheetId);
   }
 
   // ---- The workbooks -----------------------------------------------------------------------------------
@@ -315,7 +349,7 @@ export class SheetStore {
   }
 
   private workbookUpdate(tabId: string, sheetId: string, keys?: string[]): void {
-    const wb = this.workbooks.get(tabId);
+    const wb = this.workbooks.get(this.scopeOf(tabId));
     const view = this.entries.get(sheetId)?.view;
     if (wb && view) wb.updateSheet(view, keys);
   }
@@ -409,7 +443,7 @@ export class SheetStore {
       const parts = splitWrite(write);
       let state = states.get(sheetId) ?? entry.view;
       // A Dropdown from a Range's options are worked out here, from the tab's workbook (the api cannot).
-      const wb = this.workbooks.get(entry.view.tabId);
+      const wb = this.workbooks.get(this.scopeOf(entry.view.tabId));
       const checks: WriteCheck = {
         // Quiet writes (a card table's sync, a seed) are the system's, stored as they are.
         checkRules: checked,
@@ -494,7 +528,7 @@ export class SheetStore {
       const target = this.entries.get(sheetId)?.view;
       if (!target) continue;
       for (const [id, entry] of this.entries) {
-        if (named.has(id) || entry.view.tabId !== target.tabId) continue;
+        if (named.has(id) || !this.inScope(entry.view, this.scopeOf(target.tabId))) continue;
         const cells = shrinkReadersOf(sheetId, target.layout, write.changes, entry.view.cells);
         if (cells.length) out.push({ sheetId: id, write: { kind: 'cells', cells } });
       }
@@ -661,7 +695,7 @@ export class SheetStore {
       return;
     }
     if (op.created) {
-      if (!entry && this.tabStatus.get(op.tabId) === 'ready') void this.refetchSheet(op.sheetId);
+      if (!entry && this.status(op.tabId) === 'ready') void this.refetchSheet(op.sheetId);
       return;
     }
     if (!entry) return;
@@ -681,6 +715,7 @@ const STORES = new Map<string, SheetStore>();
 export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
   return sheetStoreFor({
     scope: bridge.scope,
+    oneWorkbook: bridge.oneWorkbook,
     self: () => bridge.self,
     locale: bridge.locale,
     pushUndo: bridge.pushUndo,
