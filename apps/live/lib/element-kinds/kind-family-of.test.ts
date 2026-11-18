@@ -10,7 +10,12 @@ import {
   type ShapeKind,
 } from '@livedoc/document';
 import { KIND_FAMILY_IDS } from './families';
-import { kindFamiliesOf, kindFamilyOf, kindFamilyOfShape } from './kind-family-of';
+import {
+  kindFamiliesOf,
+  kindFamiliesOfTab,
+  kindFamilyOf,
+  kindFamilyOfShape,
+} from './kind-family-of';
 
 const shape = (kind: string, extra: object = {}) =>
   ({
@@ -104,5 +109,27 @@ describe('kindFamiliesOf', () => {
   it('names none for a board of base kinds', () => {
     expect(kindFamiliesOf([shape('square'), of({ type: 'text' })])).toEqual([]);
     expect(kindFamiliesOf([])).toEqual([]);
+  });
+});
+
+describe('kindFamiliesOfTab', () => {
+  it('adds the pages family for a tab whose articles hold writing, after its elements’', () => {
+    expect(
+      kindFamiliesOfTab({ elements: [of({ type: 'video' })], articles: { a1: { blocks: [] } } }),
+    ).toEqual(['embeds', 'pages-articles']);
+  });
+
+  it('names the pages family once when a page element holds it too', () => {
+    expect(
+      kindFamiliesOfTab({ elements: [shape('page')], articles: { a1: { blocks: [] } } }),
+    ).toEqual(['pages-articles']);
+  });
+
+  it.each([undefined, null, {}, [], 'article'])('reads articles %j as none', (articles) => {
+    expect(kindFamiliesOfTab({ elements: [], articles })).toEqual([]);
+  });
+
+  it('reads a tab with no element list as holding none', () => {
+    expect(kindFamiliesOfTab({ elements: 'x' })).toEqual([]);
   });
 });

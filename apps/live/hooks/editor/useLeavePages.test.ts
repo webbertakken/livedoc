@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import {
   articlesOf,
   createShape,
@@ -10,6 +11,9 @@ import {
   type Tab,
 } from '@livedoc/document';
 import { useLeavePages } from './useLeavePages';
+
+// An article’s writing draws, and its edits run, once the pages family is in.
+beforeAll(loadEveryKindFamily);
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 

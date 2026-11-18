@@ -29,8 +29,7 @@ type Opened = {
 // The element kind families a tab holds load while the editor's code downloads (docs/specs/016-platform/web-performance.md
 // "At the open"), so the board's first paint, which waits for them, finds them in.
 function startKindFamilies(tab: unknown): void {
-  const elements = (tab as { elements?: unknown } | null)?.elements;
-  if (Array.isArray(elements)) void loadKindFamiliesFor(elements, 'open');
+  if (tab && typeof tab === 'object') void loadKindFamiliesFor(tab, 'open');
 }
 
 export async function askEarlyDocumentReads(input: {

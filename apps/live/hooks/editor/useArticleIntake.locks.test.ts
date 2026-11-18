@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { createShape, pagesOf, layOutPages, type ArticleBlock, type Tab } from '@livedoc/document';
 import { useArticleIntake } from './useArticleIntake';
+
+// An article’s writing draws, and its edits run, once the pages family is in.
+beforeAll(loadEveryKindFamily);
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 const handle = vi.hoisted(() => ({ insertZone: vi.fn(), moveZone: vi.fn() }));

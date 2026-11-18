@@ -210,7 +210,9 @@ concepts; entities; sketches; Event Storming). The plain diagram kinds (shapes, 
 strokes, and the diagram furniture: badges, steps, boundaries, keys) are the base and always load. Which family a
 kind belongs to follows the palette's grouping: the Behaviour tiles are session controls (default). The charts are
 the pie, column and line charts (a chart drawn from a sheet range too) and the Sankey diagram; the Data tiles'
-legend is a key, and its progress bars, rings and ratings stay base with it (default).
+legend is a key, and its progress bars, rings and ratings stay base with it (default). A tab's articles belong to
+the pages and articles family whatever elements its pages hold: an article's writing, its zones, its margin notes
+and turning it into pages load with it, while reading a tab's pages and articles stays base.
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
@@ -219,11 +221,12 @@ legend is a key, and its progress bars, rings and ratings stay base with it (def
   picture in a thumbnail or an export. The registry answers a family that is not loaded yet with a named error, so
   a missed path fails a test rather than drawing a wrong board.
 - **At the open.** The open read carries the opened tab ("The open is one read"), so the early reads ask for the
-  families its elements belong to as soon as it arrives, alongside the editor's own code. The board's first paint
-  waits for them: a board draws every element with its own face in its first frame, never a placeholder that a
-  face later replaces. It waits for them to settle, loaded or failed, with no time limit of its own: a chunk fetch
-  ends by itself (default).
-- **Another tab.** Opening a tab loads the families its elements need before it draws, from the tab's own read.
+  families it needs (its elements' and its articles') as soon as it arrives, alongside the editor's own code. The
+  board's first paint waits for them: a board draws every element with its own face in its first frame, never a
+  placeholder that a face later replaces. It waits for them to settle, loaded or failed, with no time limit of its
+  own: a chunk fetch ends by itself (default).
+- **Another tab.** Opening a tab loads the families it needs before it draws, from the tab's own read. Articles
+  that arrive later (a template, a peer's) ask for their family, and their writing draws once it is in.
 - **From the palette.** Pointing at or focusing a palette entry fetches its family; a press places the element
   (or arms its tool) once its family is in, so an element is never placed without its face. A press whose family
   cannot load places nothing (default).

@@ -11,18 +11,7 @@ import {
   pagesOf,
   layOutPages,
   withArticleFlow,
-  withZoneLanded,
-  withZoneSize,
-  withNotesSettled,
-  articleNoteCorner,
-  newArticleNote,
   type ArticleNoteKind,
-  withZoneMoved,
-  withZoneRemoved,
-  withZoneReleased,
-  withElementsIntoZone,
-  zonePlanFor,
-  withZoneWrap,
   type ArticleZoneAlign,
   type ArticleZoneWrap,
   type ArticleLookId,
@@ -30,13 +19,14 @@ import {
   withArticleStyleChanged,
   withArticlePageCount,
   shouldGrowForAbsentWriter,
-  withZonesSettled,
   type ArticleBlock,
   type ArticleFlow,
   type LaidOutPage,
   type Tab,
 } from '@livedoc/document';
 import { debugLog } from '@/lib/debug-log';
+import { useKindFamilyLoaded } from '@/lib/element-kinds/react';
+import { loadKindFamily, requireKindFamily } from '@/lib/element-kinds/store';
 import { useArticleIntake } from './useArticleIntake';
 import {
   articleHandleOf,
@@ -141,6 +131,11 @@ const NEW_DRAWING_HEIGHT = 240;
 // locked (docs/specs/007-editor/pages-mode.md "Locking a page": the lock holds the writing,
 // its page count and its zones as they are). Every entry point into an article's writing asks this,
 // so a toolbar hovered over a locked page, or a drop beside it, changes nothing.
+// An article's zones and margin notes are the pages family's (docs/specs/016-platform/web-performance.md "An element
+// kind's code loads with the board that holds it"): read when a writing's edit runs, which is only while the
+// writing is drawn, so only once the family is in (useArticles answers null before).
+const articleModel = () => requireKindFamily('pages-articles');
+
 export function articleEditRefused(canEdit: boolean, tab: Tab, flow: string): boolean {
   return !canEdit || tab.locked === true || articleLocked(tab, flow);
 }
@@ -170,6 +165,13 @@ export function useArticles(deps: {
   reveal: (x: number, y: number, w: number, h: number) => void;
 }): ArticlesView | null {
   const { activeTab, on, canEdit } = deps;
+  const articlesIn = useKindFamilyLoaded('pages-articles');
+  // Articles that arrive after the open (a template, a peer's, Pages mode's first article) ask for their family; the
+  // writing draws once it is in, as an element that arrives before its family does.
+  const hasArticles = Object.keys(articlesOf(activeTab)).length > 0;
+  useEffect(() => {
+    if (on && hasArticles && !articlesIn) void loadKindFamily('pages-articles', 'element');
+  }, [on, hasArticles, articlesIn]);
   const tabId = activeTab.id;
   const editable = canEdit && activeTab.locked !== true;
   const latest = useRef(deps);
@@ -258,8 +260,8 @@ export function useArticles(deps: {
           // A locked page holds the article as it is: no page added or dropped, no zone moved.
           if (articleEditRefused(true, t, layout.flow)) return t;
           const paged = withArticlePageCount(t, layout.flow, layout.pagesNeeded);
-          const settled = withNotesSettled(
-            withZonesSettled(paged, layout.flow, layout.zones),
+          const settled = articleModel().withNotesSettled(
+            articleModel().withZonesSettled(paged, layout.flow, layout.zones),
             layout.flow,
             layout.notes,
           );
@@ -313,7 +315,7 @@ export function useArticles(deps: {
         );
         if (!res) return;
         d.commitTabs((ts) =>
-          ts.map((t) => (t.id === tabId ? withZoneLanded(t, flow, res).tab : t)),
+          ts.map((t) => (t.id === tabId ? articleModel().withZoneLanded(t, flow, res).tab : t)),
         );
         // Counted once it went in, never for an insert that found no caret.
         track('Element', 'Added', INSERT_EVENT[what]);
@@ -334,10 +336,11 @@ export function useArticles(deps: {
       const d = latest.current;
       if (articleEditRefused(d.canEdit, d.activeTab, flow)) return;
       const apply = (t: Tab): Tab => {
-        if ('remove' in action) return withZoneRemoved(t, flow, zoneId);
-        if ('float' in action) return withZoneReleased(t, flow, zoneId);
-        if ('size' in action) return withZoneSize(t, flow, zoneId, action.size, textWidth(t, flow));
-        return withZoneWrap(t, flow, zoneId, action, textWidth(t, flow));
+        if ('remove' in action) return articleModel().withZoneRemoved(t, flow, zoneId);
+        if ('float' in action) return articleModel().withZoneReleased(t, flow, zoneId);
+        if ('size' in action)
+          return articleModel().withZoneSize(t, flow, zoneId, action.size, textWidth(t, flow));
+        return articleModel().withZoneWrap(t, flow, zoneId, action, textWidth(t, flow));
       };
       // A choice already in force (the pressed fit, the same size) is no edit: no undo step.
       if (apply(d.activeTab) === d.activeTab) return;
@@ -362,7 +365,7 @@ export function useArticles(deps: {
       const all = d.activeTab.elements;
       const els = all.filter((e) => ids.includes(e.id));
       const width = textWidth(d.activeTab, flow);
-      const plan = zonePlanFor(els, all, width);
+      const plan = articleModel().zonePlanFor(els, all, width);
       const res = handle.insertZone(
         { zone: plan.zone, width: plan.width, height: plan.height },
         { x: plan.bounds.x + plan.bounds.width / 2, y: plan.bounds.y + plan.bounds.height / 2 },
@@ -372,13 +375,19 @@ export function useArticles(deps: {
       d.commitTabs((ts) =>
         ts.map((t) => {
           if (t.id !== tabId) return t;
-          const landed = withZoneLanded(t, flow, res);
+          const landed = articleModel().withZoneLanded(t, flow, res);
           if (!landed.rect) return landed.tab;
           let next = {
             ...landed.tab,
-            elements: withElementsIntoZone(landed.tab.elements, new Set(ids), plan, landed.rect),
+            elements: articleModel().withElementsIntoZone(
+              landed.tab.elements,
+              new Set(ids),
+              plan,
+              landed.rect,
+            ),
           };
-          if (wrap !== 'inline') next = withZoneWrap(next, flow, res.id, { wrap }, width);
+          if (wrap !== 'inline')
+            next = articleModel().withZoneWrap(next, flow, res.id, { wrap }, width);
           return next;
         }),
       );
@@ -402,13 +411,20 @@ export function useArticles(deps: {
           const doc = articlesOf(t)[flow];
           const page = layOutPages(pagesOf(t)).filter((p) => p.flow === flow)[res.place.index];
           if (!doc || !page) return t;
-          const corner = articleNoteCorner(page, articleMarginPx(doc.style), res.place);
+          const corner = articleModel().articleNoteCorner(
+            page,
+            articleMarginPx(doc.style),
+            res.place,
+          );
           const written = withArticleFlow(
             t,
             flow,
             doc.style ? { blocks: res.blocks, style: doc.style } : { blocks: res.blocks },
           );
-          return { ...written, elements: [...written.elements, newArticleNote(id, kind, corner)] };
+          return {
+            ...written,
+            elements: [...written.elements, articleModel().newArticleNote(id, kind, corner)],
+          };
         }),
       );
       d.openNote(id, kind);
@@ -431,7 +447,7 @@ export function useArticles(deps: {
       if (!res) return;
       track('Element', 'Changed', 'ArticleZoneMoved');
       d.commitTabs((ts) =>
-        ts.map((t) => (t.id === tabId ? withZoneMoved(t, flow, zoneId, res) : t)),
+        ts.map((t) => (t.id === tabId ? articleModel().withZoneMoved(t, flow, zoneId, res) : t)),
       );
       debugLog('[article] zone moved', { tabId, flow, zoneId, index: res.index });
     },
@@ -465,7 +481,7 @@ export function useArticles(deps: {
     [],
   );
 
-  if (!on) return null;
+  if (!on || !articlesIn) return null;
   return {
     flows: articlesOf(activeTab),
     editable,

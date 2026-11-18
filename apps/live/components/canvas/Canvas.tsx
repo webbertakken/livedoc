@@ -263,7 +263,8 @@ function CanvasView(props: CanvasProps) {
   // An object in an article's writing (a chart, an image, a table) connects to nothing: no
   // quick-connect pluses on it (docs/specs/007-editor/article-pages.md "Zones"). A predicate the
   // selection derivation applies, so the canvas itself still doesn't read the selection.
-  const articlePages = props.pagesMode?.pages;
+  // Only while the writing is drawn (`articles`, once the pages family is in): no writing, no zone to be in.
+  const articlePages = props.pagesMode?.articles ? props.pagesMode.pages : undefined;
   const plusBlocked = useMemo(
     () => articlePlusBlocked(articlePages, elements),
     [articlePages, elements],

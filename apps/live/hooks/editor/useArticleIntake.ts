@@ -15,18 +15,7 @@ import {
   articlesOf,
   pagesOf,
   layOutPages,
-  looseOnArticles,
-  objectsDraggedOut,
-  withNoteMarksRemoved,
-  withNoteMarkersRemoved,
-  articleNoteIds,
-  zoneCanvasRect,
   type Element,
-  withElementsIntoZone,
-  withZoneLanded,
-  withZoneContentsRemoved,
-  withZonesFitted,
-  zonePlanFor,
   type ArticleFlow,
   type ArticleZoneBlock,
   type LaidOutPage,
@@ -41,6 +30,9 @@ import { useElementGestureActive } from '@/lib/canvas-gesture';
 import { articleTextWidth } from '@/lib/article/article-flow-geometry';
 import { lockedArticleFlows } from '@/lib/article/article-lock';
 import { debugLog } from '@/lib/debug-log';
+import type { KindFamilyModule } from '@/lib/element-kinds/families';
+import { useKindFamilyLoaded } from '@/lib/element-kinds/react';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 import { track } from '@/lib/telemetry';
 
 const textWidthOf = (pages: readonly LaidOutPage[], flow: string, doc: ArticleFlow): number =>
@@ -72,6 +64,9 @@ export function useArticleIntake({
   // Only whether an element gesture is open: the editor root calls this, and must not render for a
   // pan, a zoom or a marquee (docs/specs/008-canvas/canvas-performance.md).
   const elementGesture = useElementGestureActive();
+  // Settling the writing is the pages family's (docs/specs/016-platform/web-performance.md "An element kind's code
+  // loads with the board that holds it"): an edit made before it is in is settled, with any after it, once it is.
+  const articlesIn = useKindFamilyLoaded('pages-articles');
   const gestureEdit = useRef(false);
   useLayoutEffect(() => {
     // Mid-gesture: hold what was seen at its start, to settle against when it ends.
@@ -79,6 +74,7 @@ export function useArticleIntake({
       gestureEdit.current = true;
       return;
     }
+    if (!articlesIn) return;
     const was = seen.current;
     const seq = localEditSeq.current ?? 0;
     const local = seq !== was.seq || gestureEdit.current;
@@ -86,6 +82,7 @@ export function useArticleIntake({
     seen.current = { tabId, elements: activeTab.elements, articles: activeTab.articles, seq };
     if (was.tabId !== tabId || !on || !editable || !pages) return;
     if (!local) return;
+    const A = requireKindFamily('pages-articles');
     if (was.elements === activeTab.elements && was.articles === activeTab.articles) return;
     // An article with a locked page is held as it is (docs/specs/007-editor/pages-mode.md
     // "Locking a page"): nothing goes into its writing, none of its zones move or refit. Asked
@@ -97,7 +94,7 @@ export function useArticleIntake({
     const relocations =
       was.elements === activeTab.elements
         ? []
-        : objectsDraggedOut(
+        : A.objectsDraggedOut(
             { ...activeTab, elements: was.elements, articles: was.articles },
             activeTab,
           )
@@ -121,13 +118,13 @@ export function useArticleIntake({
     const before = new Set(was.elements.map((e) => e.id));
     const added = activeTab.elements.filter((e) => !before.has(e.id)).map((e) => e.id);
     const loose = added.length
-      ? looseOnArticles(activeTab.elements, added, pages, docsNow)
+      ? A.looseOnArticles(activeTab.elements, added, pages, docsNow)
       : new Map<string, string[]>();
     // Each loose group starts a zone in its article's writing (the editor places it), measured now.
     const intakes: {
       flow: string;
       ids: string[];
-      plan: ReturnType<typeof zonePlanFor>;
+      plan: ReturnType<KindFamilyModule<'pages-articles'>['zonePlanFor']>;
       res: NonNullable<ReturnType<NonNullable<ReturnType<typeof articleHandleOf>>['insertZone']>>;
     }[] = [];
     for (const [flow, ids] of loose) {
@@ -140,7 +137,7 @@ export function useArticleIntake({
       }
       if (!handle || !doc) continue;
       const els = activeTab.elements.filter((e) => ids.includes(e.id));
-      const plan = zonePlanFor(els, activeTab.elements, textWidthOf(pages, flow, doc));
+      const plan = A.zonePlanFor(els, activeTab.elements, textWidthOf(pages, flow, doc));
       const near = {
         x: plan.bounds.x + plan.bounds.width / 2,
         y: plan.bounds.y + plan.bounds.height / 2,
@@ -158,13 +155,13 @@ export function useArticleIntake({
         for (const r of relocations) {
           // Moved in the writing: the object goes to its zone's new place. Not moved (dropped by
           // its own place in the writing): back into its zone.
-          const landed = r.res ? withZoneLanded(next, r.flow, r.res) : null;
+          const landed = r.res ? A.withZoneLanded(next, r.flow, r.res) : null;
           if (landed) next = landed.tab;
           const zone = articlesOf(next)[r.flow]?.blocks.find(
             (b): b is ArticleZoneBlock => b.id === r.zoneId && b.type === 'zone',
           );
           const own = layOutPages(pagesOf(next)).filter((p) => p.flow === r.flow);
-          const rect = landed?.rect ?? (zone ? zoneCanvasRect(own, zone) : null);
+          const rect = landed?.rect ?? (zone ? A.zoneCanvasRect(own, zone) : null);
           if (!rect) continue;
           next = {
             ...next,
@@ -190,20 +187,22 @@ export function useArticleIntake({
             )
             .map((e) => e.id),
         );
-        next = withNoteMarksRemoved(next, goneNotes);
+        next = A.withNoteMarksRemoved(next, goneNotes);
         // Text with a margin note deleted takes its marker, and so its comment or action, with it.
-        const kept = articleNoteIds(articlesOf(next));
+        const kept = A.articleNoteIds(articlesOf(next));
         const textGone = new Set(
-          [...articleNoteIds(articlesOf({ articles: was.articles }))].filter((id) => !kept.has(id)),
+          [...A.articleNoteIds(articlesOf({ articles: was.articles }))].filter(
+            (id) => !kept.has(id),
+          ),
         );
-        next = withNoteMarkersRemoved(next, textGone);
-        for (const [flow, gone] of goneZones) next = withZoneContentsRemoved(next, flow, gone);
+        next = A.withNoteMarkersRemoved(next, textGone);
+        for (const [flow, gone] of goneZones) next = A.withZoneContentsRemoved(next, flow, gone);
         for (const { flow, ids, plan, res } of intakes) {
-          const landed = withZoneLanded(next, flow, res);
+          const landed = A.withZoneLanded(next, flow, res);
           if (!landed.rect) continue;
           next = {
             ...landed.tab,
-            elements: withElementsIntoZone(landed.tab.elements, new Set(ids), plan, landed.rect),
+            elements: A.withElementsIntoZone(landed.tab.elements, new Set(ids), plan, landed.rect),
           };
           debugLog('[article] zone took elements in', {
             tabId,
@@ -215,7 +214,8 @@ export function useArticleIntake({
         const laid = layOutPages(pagesOf(next));
         const heldNow = lockedArticleFlows(pagesOf(next));
         for (const [flow, doc] of Object.entries(articlesOf(next)))
-          if (!heldNow.has(flow)) next = withZonesFitted(next, flow, textWidthOf(laid, flow, doc));
+          if (!heldNow.has(flow))
+            next = A.withZonesFitted(next, flow, textWidthOf(laid, flow, doc));
         return next;
       });
       // Nothing to settle: the same tabs back, so the tick changes nothing.
@@ -226,5 +226,5 @@ export function useArticleIntake({
     for (const { plan } of intakes)
       track('Element', 'Added', plan.zone === 'drawing' ? 'ArticleDrawing' : 'ArticleObject');
     // The writing's editors are told of the new blocks through the tab, like any change.
-  }, [activeTab, tabId, on, editable, pages, localEditSeq, tickTabs, elementGesture]);
+  }, [activeTab, tabId, on, editable, pages, localEditSeq, tickTabs, elementGesture, articlesIn]);
 }
