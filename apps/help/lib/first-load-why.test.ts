@@ -4,6 +4,7 @@ import {
   decodeAnalyzerFile,
   firstLoadSizes,
   groupOf,
+  pathMatcher,
   reachFrom,
 } from '../../../scripts/first-load-why.mjs';
 
@@ -89,5 +90,14 @@ describe('first-load-why', () => {
     expect(chainTo(via, 4)).toEqual([0, 1, 3, 4]);
     const cut = reachFrom([0], deps, (n) => n === 3);
     expect([...cut.keys()].sort()).toEqual([0, 1, 2]);
+  });
+
+  it('matches path fragments joined by a bar, a closing $ anchoring the end', () => {
+    const m = pathMatcher('components/canvas/collab/|mind-grow.ts$');
+    expect(m.test('apps/live/components/canvas/collab/QaFace.tsx')).toBe(true);
+    expect(m.test('packages/document/src/mind-grow.ts')).toBe(true);
+    expect(m.test('packages/document/src/mind-grow.ts.map')).toBe(false);
+    expect(m.test('packages/document/src/office.ts')).toBe(false);
+    expect(pathMatcher('a.b').test('axb')).toBe(false);
   });
 });

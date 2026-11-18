@@ -5,12 +5,13 @@
 //
 //   cd apps/live && NEXT_DISTDIR=.next-analyze pnpm exec next experimental-analyze -o    write the data
 //   node scripts/first-load-why.mjs live 'document/[id]' groups        the first load by package and folder
-//   node scripts/first-load-why.mjs live 'document/[id]' top <regex>   its largest modules (matching <regex>)
-//   node scripts/first-load-why.mjs live 'document/[id]' why <regex>   the chain of static imports that brings one in
-//   node scripts/first-load-why.mjs live 'document/[id]' cut <regex>   what leaves it if those load on demand
+//   node scripts/first-load-why.mjs live 'document/[id]' top <paths>   its largest modules (matching <paths>)
+//   node scripts/first-load-why.mjs live 'document/[id]' why <paths>   the chain of static imports that brings one in
+//   node scripts/first-load-why.mjs live 'document/[id]' cut <paths>   what leaves it if those load on demand
 //
 // Sizes are the analyzer's compressed size of each module's part of a chunk, so they sum a little above
 // first-load.mjs's gzip of whole files; compare them with each other, not with its numbers.
+// <paths> is one or more fragments of a module's path joined by `|`; a fragment ending in `$` ends the path.
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -124,13 +125,27 @@ export function chainTo(via, node) {
   return chain.reverse();
 }
 
+/**
+ * A test for module paths: `fragments` is path fragments joined by `|`; a path matches one it holds, and a
+ * fragment ending in `$` only at the path's end. Plain text, never a regular expression built from input.
+ * @param {string} fragments
+ * @returns {{ test: (path: string) => boolean }}
+ */
+export function pathMatcher(fragments) {
+  const terms = fragments.split('|').filter(Boolean);
+  return {
+    test: (path) =>
+      terms.some((t) => (t.endsWith('$') ? path.endsWith(t.slice(0, -1)) : path.includes(t))),
+  };
+}
+
 const kib = (bytes) => (bytes / KIB).toFixed(1).padStart(7);
 
 function main(argv) {
   const [app, route, command = 'groups', pattern] = argv;
   if (!app || !route) {
     console.error(
-      'usage: first-load-why.mjs <app> <route> groups|top [regex]|why <regex>|cut <regex>',
+      'usage: first-load-why.mjs <app> <route> groups|top [paths]|why <paths>|cut <paths>',
     );
     return 2;
   }
@@ -147,7 +162,7 @@ function main(argv) {
   const routeData = decodeAnalyzerFile(readFileSync(join(dataDir, route, 'analyze.data'))).json;
   const sizes = firstLoadSizes(routeData);
   const total = [...sizes.values()].reduce((a, b) => a + b, 0);
-  const re = pattern ? new RegExp(pattern) : null;
+  const re = pattern ? pathMatcher(pattern) : null;
   console.log(`${kib(total)} KiB in ${sizes.size} modules, the first load of ${route}`);
 
   if (command === 'groups' || command === 'top') {
@@ -162,7 +177,7 @@ function main(argv) {
     return 0;
   }
   if (!re) {
-    console.error(`[first-load-why] PatternMissing: ${command} needs a regex`);
+    console.error(`[first-load-why] PatternMissing: ${command} needs path fragments`);
     return 2;
   }
   const modules = decodeAnalyzerFile(readFileSync(join(dataDir, 'modules.data')));
