@@ -175,6 +175,9 @@ export const TELEMETRY_CATEGORIES = [
   // Sheets (docs/specs/029-sheets/sheet.md "Telemetry"): a change by kind, CSV in and out, Find opened, and a
   // function's first use by name (names from the closed function list only, never content).
   'Sheet',
+  // Spreadsheets (docs/specs/029-sheets/spreadsheet.md "Telemetry"): one 'Created' (`type` 'Blank', 'Template' or
+  // 'Import'), 'Opened', 'Imported' and 'Exported' with the file format ('Ods', 'Fods', 'Xlsx', 'Csv', ...). Never content.
+  'Spreadsheet',
   // Forms (docs/specs/030-forms/forms.md "Telemetry"): a form started (its starter), a question added (its type),
   // published ('Link'), opened or closed, and a response sent ('Response', or 'Dropped' for the hidden field, written
   // server-side; 'Preview' for a builder Preview's card) or reported (its reason). Never a form's words.

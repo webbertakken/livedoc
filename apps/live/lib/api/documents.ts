@@ -1,5 +1,6 @@
 // Document-level calls: load / create / save-meta / delete / list, the
 // copy-into-my-files flow, and the "Shared with you" list.
+import type { WorkbookRecord } from '@livedoc/sheets';
 import type { ItemCreate, ItemTypeCatalogue } from '@livedoc/items';
 import {
   DOCUMENT_CONVERSION_HEADER,
@@ -238,6 +239,9 @@ export async function apiCreateDocument(
     itemTypes?: ItemTypeCatalogue | null;
     // Text document tabs opened from files (docs/specs/034-text-documents/files-and-print.md "Opening"), base64.
     textDocuments?: { tabId: string; file: string }[];
+    // A spreadsheet's workbook record (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"): its tabs are
+    // all sheet tabs, its sheets in `sheets`.
+    workbook?: WorkbookRecord;
   },
   // Set by the Offline Mode sync path (docs/specs/006-document/offline-mode.md). A sync is a plain POST, so
   // without this the worker records it as a brand-new document being created.

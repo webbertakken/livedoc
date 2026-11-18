@@ -19,16 +19,23 @@ export const WIZARD_BYPASS_PARAMS = ['blank', 'template', 'kind'] as const;
 export function wizardBypassKind(search: string): TemplateKind | null {
   const params = new URLSearchParams(search);
   if (params.has('blank')) return 'blank';
-  // A kind's blank (`?kind=text-document`) skips the wizard as Start Blank does; its tab is the kind's.
+  // A kind's blank (`?kind=text-document`, `?kind=spreadsheet`) skips the wizard as Start Blank does; its tab is
+  // the kind's.
   if (wizardBypassTabKind(search)) return 'blank';
   // A retired template's kind opens its replacement (templateKindOf).
   return templateKindOf(params.get('template'));
 }
 
-// The tab kind a /new URL asks a blank of (docs/specs/034-text-documents/text-document.md "The single-tab
-// document"): `?kind=text-document` makes a text document. Any other kind is ignored, so a stale link opens the wizard.
-export function wizardBypassTabKind(search: string): 'text-document' | null {
-  return new URLSearchParams(search).get('kind') === 'text-document' ? 'text-document' : null;
+// The kinds a /new URL can ask a blank of: `?kind=text-document` makes a text document
+// (docs/specs/034-text-documents/text-document.md "The single-tab document"), `?kind=spreadsheet` a spreadsheet
+// (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"). Any other kind is ignored, so a stale link opens the
+// wizard.
+export const WIZARD_TAB_KINDS = ['text-document', 'spreadsheet'] as const;
+export type WizardTabKind = (typeof WIZARD_TAB_KINDS)[number];
+
+export function wizardBypassTabKind(search: string): WizardTabKind | null {
+  const kind = new URLSearchParams(search).get('kind');
+  return WIZARD_TAB_KINDS.find((k) => k === kind) ?? null;
 }
 
 // The template step's presets (`?mode=`, `?q=`; docs/specs/007-editor/new-document-route.md): the

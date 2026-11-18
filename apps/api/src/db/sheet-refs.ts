@@ -8,9 +8,12 @@ import type { Element } from '@livedoc/document';
 import type { DocumentEnv } from '../types';
 
 // A sheet id is unique only in its document (a copied document keeps them), so a reference counts only through a
-// tab of the sheet's own document.
-const REFERENCED = `EXISTS (SELECT 1 FROM sheet_refs r JOIN document_tabs dt ON dt.tab_id = r.tab_id
-  WHERE r.sheet_id = sheets.id AND dt.document_id = sheets.document_id)`;
+// tab of the sheet's own document. In a spreadsheet a sheet tab is its sheet, so the tab itself references it while it
+// is one of the document's tabs (docs/specs/029-sheets/spreadsheet.md "The workbook shape").
+const REFERENCED = `(EXISTS (SELECT 1 FROM sheet_refs r JOIN document_tabs dt ON dt.tab_id = r.tab_id
+  WHERE r.sheet_id = sheets.id AND dt.document_id = sheets.document_id)
+  OR EXISTS (SELECT 1 FROM workbook w JOIN document_tabs dt ON dt.document_id = w.document_id
+  WHERE w.document_id = sheets.document_id AND dt.tab_id = sheets.tab_id))`;
 
 // The sheet ids a tab's elements reference.
 export function sheetRefIds(elements: readonly Element[]): string[] {
