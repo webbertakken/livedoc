@@ -240,8 +240,10 @@ step of the Sites audit job, which has built it already.
 
 The specs in `apps/live/e2e/office/` hand a file LiveDoc wrote to LibreOffice, headless, and open what LibreOffice
 saved ([Office packages](../020-import-export/office-packages.md) "Validation"): a text document typed in two browsers,
-downloaded, read and saved again by LibreOffice, and opened back unchanged. LibreOffice's Writer is the one thing a job
-apt-installs (`libreoffice-writer-nogui`), so these specs have a job of their own, running the image as root, which the
+downloaded, read and saved again by LibreOffice, and opened back unchanged; and a spreadsheet's value and formula typed
+in two browsers, downloaded, recalculated by LibreOffice on load (`libreOfficeConvert`'s `recalculate`) to the same values,
+saved again and opened back unchanged. LibreOffice's Writer and Calc are the one thing a job apt-installs
+(`libreoffice-writer-nogui`, `libreoffice-calc-nogui`), so these specs have a job of their own, running the image as root, which the
 install needs; every other job keeps its no-install image. Each call to `soffice` has its own profile, so the specs
 run in parallel.
 

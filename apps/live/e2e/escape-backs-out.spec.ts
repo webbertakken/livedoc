@@ -128,7 +128,7 @@ test('Escape closes each surface of a diagram tab, one press each', async ({ pag
 
 test('Escape leaves each field of a diagram tab', async ({ page }) => {
   await blankWithBox(page);
-  for (const name of ['Rename tab', 'Untitled document', 'Search elements']) {
+  for (const name of ['Rename Diagram tab', 'Untitled document', 'Search elements']) {
     await test.step(name, async () => {
       await page.getByRole('button', { name, exact: true }).click();
       const field = page.locator('input:focus');

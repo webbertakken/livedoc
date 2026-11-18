@@ -1,6 +1,8 @@
 # Spreadsheet
 
-**Status: specified.** Nothing is built. Until it ships, the [Plan Sheet](sheet.md) is what LiveDoc has; the
+**Status: specified; a tracer is built.** `/new?kind=spreadsheet` makes one (Sheet1, born `.ods`), its sheet tab opens
+on a bare surface (title row with File › Open and Download, formula bar, grid, sheet bar), and File › Open makes one
+from an `.ods` or `.fods`. Until it ships, the [Plan Sheet](sheet.md) is what LiveDoc has; the
 overhaul retires it (plan 0020, "Phase 16: migrate and retire").
 
 A **spreadsheet** is a document type of its own: a workbook of sheets, native to both ISO spreadsheet standards,

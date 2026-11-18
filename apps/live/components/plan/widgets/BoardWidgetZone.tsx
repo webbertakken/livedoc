@@ -32,8 +32,8 @@ export function BoardWidgetZone({
   canEdit: boolean;
   // The board is selected: only then do the widgets show their ×, and an empty zone its hint.
   selected?: boolean;
-  // An empty zone shows its + to someone who may edit even while the board is not selected (in a header band, where
-  // the board is maximised or fills its tab and no selection shows), the hint still waiting for a selection.
+  // An empty zone shows its + to someone who may edit even while the board is not selected (maximised or filling its
+  // tab, where no selection shows), the hint still waiting for a selection.
   offerAdd?: boolean;
   palette: PlanPalette;
   onChange: (next: BoardWidgetKind[]) => void;

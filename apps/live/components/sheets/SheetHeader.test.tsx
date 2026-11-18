@@ -286,19 +286,3 @@ describe('the sheet header', () => {
     expect(screen.queryByRole('button', { name: 'Maximise Sheet' })).toBeNull();
   });
 });
-
-describe('the controls in a header band', () => {
-  it('end the toolbar, after Search, when the header carries the toolbar', async () => {
-    const { SheetToolbarEnd, useSheetToolbarEnd } = await import('./sheet-toolbar-end');
-    const { render: r, screen: s } = await import('@testing-library/react');
-    function Probe() {
-      return <div data-testid="end">{useSheetToolbarEnd()}</div>;
-    }
-    r(
-      <SheetToolbarEnd.Provider value={<button type="button">Sheet Settings</button>}>
-        <Probe />
-      </SheetToolbarEnd.Provider>,
-    );
-    expect(s.getByTestId('end').textContent).toBe('Sheet Settings');
-  });
-});

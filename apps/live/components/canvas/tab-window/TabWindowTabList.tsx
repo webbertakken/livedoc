@@ -1,9 +1,9 @@
 'use client';
 
 // The tabs a window may show (docs/specs/009-elements/tab-window.md "Choosing the tab"): every tab of the document but
-// the window's own, Plan tabs included, in tab-bar order, each its mode icon and name, the shown one marked. Shared by the
-// empty window's Choose a Tab and the menu's Tab Window section.
-import { tabWindowOffers, type Tab } from '@livedoc/document';
+// the window's own, Plan tabs included, in tab-bar order, each its glyph and name over its kind, the shown one marked.
+// Shared by the empty window's Choose a Tab and the menu's Tab Window section.
+import { tabKindName, tabWindowOffers, type Tab } from '@livedoc/document';
 import { CompactEmptyState, lucideGlyph } from '@livedoc/ui';
 import { lucideAppWindow } from '@livedoc/icons/lucide';
 import { OptionRows } from '@/components/plan/OptionRows';
@@ -42,6 +42,8 @@ export function TabWindowTabList({
         id: t.id,
         label: t.name || 'Untitled tab',
         icon: <TabModeIcon tab={t} />,
+        // What the tab is (docs/specs/007-editor/editor-modes.md "A tab's kind is always findable").
+        detail: tabKindName(t),
       }))}
       onPick={onPick}
     />

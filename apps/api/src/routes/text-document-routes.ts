@@ -12,6 +12,7 @@ import {
 } from '@livedoc/text-documents';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { getDocumentMeta } from '../db';
+import { downloadFileName } from '../files/download-file-name';
 import { CORS_HEADERS, json } from '../responses';
 import {
   readTextDocumentState,
@@ -41,14 +42,8 @@ const FILE_FORMAT: Record<TextDocumentFileType, TextDocumentFormat> = {
 const notTextDocument = () => json({ error: 'text_document_not_found' }, { status: 404 });
 
 /** A file name safe in a Content-Disposition header, from the document's name. */
-// Characters a file name or a Content-Disposition header cannot carry: controls and the path and quoting ones.
-const UNSAFE_IN_FILE_NAME = new Set(['"', '\\', '/', ':', '*', '?', '<', '>', '|']);
-const safeInFileName = (char: string) => char >= ' ' && !UNSAFE_IN_FILE_NAME.has(char);
-
 export function fileNameOf(name: string, type: TextDocumentFileType): string {
-  const kept = [...name].map((char) => (safeInFileName(char) ? char : ' ')).join('');
-  const base = kept.replace(/\s+/g, ' ').trim().slice(0, 120) || 'Untitled';
-  return `${base}.${type}`;
+  return downloadFileName(name, type, 'Untitled');
 }
 
 function bytesResponse(body: Uint8Array, headers: Record<string, string>): Response {

@@ -30,17 +30,7 @@ type BoardLook = {
   touch: string;
   // The columns snap into view as they scroll sideways.
   snap: boolean;
-  // The body's bottom padding class, when it needs more than its own: a phone's covering board runs under the
-  // bottom-right controls (two rows across the screen there), so its last cards scroll up clear of them.
-  endClearance: string;
 };
-
-// What a phone's bottom controls cover of a covering board (the undo, dock and Plan strip rows, measured 2026-10-11
-// at 390 px: 134 px from the canvas's foot), with the home indicator's safe area.
-export const PHONE_END_CLEARANCE = 'pb-[calc(8.5rem+env(safe-area-inset-bottom))]';
-// A covering Sheet's: its controls are one row (undo, Style, Fit), 72 px from the canvas's foot (measured 2026-10-19 at
-// 390 px), so its Setup Sheet card ends a little above them and keeps its step room to scroll.
-export const PHONE_SHEET_END_CLEARANCE = 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]';
 
 const NO_QUICK: QuickFilter = {};
 
@@ -56,7 +46,6 @@ export function boardLook(place: BoardPlace, cardSize: CardSize | undefined): Bo
     container: covering || oneAScreen,
     touch: interactive ? (scrolls ? 'touch-pan-x touch-pan-y' : 'touch-none') : '',
     snap: oneAScreen && !dragging,
-    endClearance: phone && covering ? PHONE_END_CLEARANCE : '',
   };
 }
 

@@ -13,6 +13,7 @@ import { identityOf, roomUnavailable } from '../document-room/document-route';
 import { purgeOwed, purgeRooms } from '../room-purge-client';
 import { readSeedItems } from './item-routes';
 import { readSeedSheets } from './sheet-routes';
+import { readSeedWorkbook } from './workbook-seed';
 import {
   catalogueWithBoardTypes,
   legacyCatalogue,
@@ -103,6 +104,7 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
         items?: unknown;
         sheets?: unknown;
         textDocuments?: unknown;
+        workbook?: unknown;
       };
       const owner = requireOwner(ctx);
       if (owner instanceof Response) return owner;
@@ -198,6 +200,12 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
       // Text documents opened from files (docs/specs/034-text-documents/files-and-print.md "Opening").
       const textDocumentSeeds = readTextDocumentSeeds(body.textDocuments, body.tabs ?? null);
       if (textDocumentSeeds instanceof Response) return textDocumentSeeds;
+      // A spreadsheet's workbook (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"), over sheet tabs only.
+      const seedWorkbook = readSeedWorkbook(
+        body.workbook,
+        Array.isArray(body.tabs) ? body.tabs : null,
+      );
+      if (seedWorkbook instanceof Response) return seedWorkbook;
       // Ownership guard (security): upsertDocumentMeta is INSERT ... ON
       // CONFLICT(id) DO UPDATE owner_id = excluded.owner_id, so a POST with an
       // id that already exists under a DIFFERENT owner would silently transfer
@@ -312,6 +320,7 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
           items: seedItemCreates,
           sheets: seedSheetCreates,
           textDocuments: textDocumentSeeds,
+          workbook: seedWorkbook,
         });
       } catch (error) {
         await discard('room_unavailable');

@@ -64,7 +64,7 @@ import { PlanBoardHeader } from './PlanBoardHeader';
 import { ExampleCardsNotice } from './ExampleCardsNotice';
 import { AddCardButton } from './AddCardButton';
 import { planBoardKey } from './plan-board-keys';
-import { planBandTint, planOwnColours, planPalette } from './plan-palette';
+import { planOwnColours, planPalette } from './plan-palette';
 import { useBoardMaximised } from '@/hooks/plan/useBoardMaximised';
 import { MaximisePlanButton, MaximisableSlot } from './MaximisedPlanLayer';
 import { FocusElementButton } from './FocusElementButton';
@@ -408,7 +408,7 @@ export function PlanBoardView({
         // its tab or in a Dashboard slot, nothing under the board pans, so a finger on empty board scrolls the board
         // (and past its end, the Dashboard's page); each card is touch-none on its own, so a finger on one still
         // picks it up. On a phone its columns snap into view one at a time (phone-board.ts).
-        className={`min-h-0 flex-1 overflow-auto px-3 ${look.endClearance || 'pb-3'} ${look.container ? '@container' : ''} ${look.touch} ${
+        className={`min-h-0 flex-1 overflow-auto px-3 pb-3 ${look.container ? '@container' : ''} ${look.touch} ${
           look.snap ? 'snap-x snap-mandatory scroll-px-3' : ''
         }`}
         onPointerDown={interactive ? keepBoardPress : undefined}
@@ -676,8 +676,6 @@ export function PlanBoardView({
     <MaximisableSlot
       id={element.id}
       maximised={maximised}
-      tint={planBandTint(element)}
-      blend={{ surface: palette.surface, line: palette.border }}
       fill={filled}
       placeholder={{
         backgroundColor: palette.surface,

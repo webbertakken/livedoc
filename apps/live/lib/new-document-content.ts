@@ -3,7 +3,9 @@
 // template's example cards; or, for no template, one blank tab in the theme's backdrop. Shared by /new and the
 // workspace frame's New document (docs/specs/013-workspace/workbench-embeds.md, WB58), so a document
 // made in either is the same document.
+import type { SheetCreateRequest } from '@livedoc/api-schema';
 import type { Tab } from '@livedoc/document';
+import type { WorkbookRecord } from '@livedoc/sheets';
 import { catalogueWithBoardTypes, type ItemCreate, type ItemTypeCatalogue } from '@livedoc/items';
 import {
   formTemplateStarter,
@@ -24,6 +26,9 @@ export type NewDocumentContent = {
   tab: Tab;
   itemTypes: ItemTypeCatalogue | null;
   seedItems: ItemCreate[];
+  // A spreadsheet's sheets and workbook record (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet").
+  sheets?: SheetCreateRequest[];
+  workbook?: WorkbookRecord;
 };
 
 // `templateChosen` marks the blank tab as decided (Skip, Start Blank): its start stays closed. A blank the editor

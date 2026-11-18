@@ -1,10 +1,11 @@
 'use client';
 
-import type { Tab } from '@livedoc/document';
+import { tabKindName, tabKindNoun, type Tab } from '@livedoc/document';
 import { HoverCard } from '@livedoc/ui';
 import { NameEditor } from '@/components/primitives/NameEditor';
 import { EllipsisMenuButton } from '@/components/chrome/EllipsisMenuButton';
 import { TabLockIcon } from '@/components/chrome/tab-bar-icons';
+import { TabKindGlyph } from '@/components/chrome/editor-mode/TabKindGlyph';
 import { TabModeIcon } from '@/components/chrome/editor-mode/TabModeIcon';
 import { MenuNameSlot } from '@/components/plan/menu-name-slot';
 import { activeTabTint } from './TabListRow';
@@ -13,7 +14,8 @@ import type { TabsChrome, TabsChromeProps } from './tabs-chrome';
 
 // The active tab in the document group (docs/specs/007-editor/toolbar-layout.md "The bottom line", "The tab's name"): a
 // tinted segment (the tab's accent, its inset ring; never a bordered pill), its kind glyph, the tab stack and its tab
-// menu. It never shortens. The kind glyph renames the tab in place for someone who may change the document's tabs; the
+// menu. It never shortens. The kind glyph renames the tab in place for someone who may change the document's tabs, and
+// names the tab's kind (editor-modes.md "A tab's kind is always findable") for everyone; the
 // tab stack (its name, a stack glyph and the count) opens the tab list. `data-tour-id="active-tab"`: the Diagram
 // tour's Tabs step rings it with its ⋯ menu.
 export function ActiveTabSegment({
@@ -64,12 +66,12 @@ export function ActiveTabSegment({
       ) : (
         <>
           {readOnly ? (
-            <TabModeIcon tab={tab} />
+            <TabKindGlyph tab={tab} />
           ) : (
-            <HoverCard title="Rename tab" description="Click to edit its name.">
+            <HoverCard title={tabKindName(tab)} description="Click to rename it.">
               <button
                 type="button"
-                aria-label="Rename tab"
+                aria-label={`Rename ${tabKindNoun(tab)}`}
                 onClick={() => chrome.setEditingId(tab.id)}
                 className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded outline-none transition touch-target hover:bg-black/5 focus-visible:ring-2 focus-visible:ring-brand-400 dark:hover:bg-white/10"
               >

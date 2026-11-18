@@ -4,6 +4,8 @@
 // RPCs (document-rpc.ts).
 
 import { remapTabLinks, type Element } from '@livedoc/document';
+import type { WorkbookRecord } from '@livedoc/sheets';
+import { workbookFromRow, type WorkbookRow } from '../db/workbook';
 import { itemIdsShownOnTab, type TabItemElement } from '@livedoc/items';
 import { redactTabDataAuthors } from '../comments';
 import { imageRefIdsFromData } from '../image-refs/extract';
@@ -24,13 +26,15 @@ export type DocumentOutline = {
   itemTypes: string | null;
   itemTypesRev: number;
   savedAt: number;
+  // The workbook record when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md "In a spreadsheet").
+  workbook: WorkbookRecord | null;
 };
 
 export async function readDocumentOutline(
   env: DocumentEnv,
   documentId: string,
 ): Promise<DocumentOutline> {
-  const [tabs, doc] = await env.DOCUMENT_DB.batch([
+  const [tabs, doc, workbook] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
       `SELECT t.id, dt.document_id, t.name, dt.order_index, '' AS data, t.updated_at, t.rev, dt.folder
          FROM document_tabs dt
@@ -41,6 +45,9 @@ export async function readDocumentOutline(
     env.DOCUMENT_DB.prepare(
       'SELECT presentation, item_types, item_types_rev, saved_at FROM document WHERE id = ?',
     ).bind(documentId),
+    env.DOCUMENT_DB.prepare('SELECT format, settings FROM workbook WHERE document_id = ?').bind(
+      documentId,
+    ),
   ]);
   const row = doc?.results?.[0] as
     | {
@@ -56,6 +63,7 @@ export async function readDocumentOutline(
     itemTypes: row?.item_types ?? null,
     itemTypesRev: row?.item_types_rev ?? 0,
     savedAt: row?.saved_at ?? 0,
+    workbook: workbookFromRow(documentId, workbook?.results?.[0] as WorkbookRow | undefined),
   };
 }
 

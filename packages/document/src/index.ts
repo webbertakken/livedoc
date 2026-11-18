@@ -500,6 +500,7 @@ export * from './concept-ramp';
 export * from './shape-variants';
 export * from './title-caption';
 export * from './editor-mode';
+export * from './tab-kind-name';
 export * from './tab-opening';
 export * from './tab-stats';
 export * from './page';

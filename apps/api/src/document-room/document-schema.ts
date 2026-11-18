@@ -367,8 +367,26 @@ CREATE TABLE IF NOT EXISTS text_document_chunks (
 );
 `;
 
+// The workbook row (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): one per spreadsheet, holding its file
+// format and settings; a document holds one exactly when it is a spreadsheet, and its sheets are then referenced by
+// their tabs (db/sheet-refs.ts).
+const WORKBOOK_STEP = `
+CREATE TABLE IF NOT EXISTS workbook (
+  document_id TEXT    PRIMARY KEY REFERENCES document (id) ON DELETE CASCADE,
+  format      TEXT    NOT NULL,
+  settings    TEXT    NOT NULL,
+  rev         INTEGER NOT NULL DEFAULT 0,
+  created_at  INTEGER NOT NULL,
+  updated_at  INTEGER NOT NULL
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
-export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [STEP_1 + OUTBOX + SHARES, STEP_2];
+export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
+  STEP_1 + OUTBOX + SHARES,
+  STEP_2,
+  WORKBOOK_STEP,
+];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;
 

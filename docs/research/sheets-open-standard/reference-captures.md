@@ -11,23 +11,19 @@ The pictures of Google Sheets each parity matrix row is checked against (Phase 1
 - A spreadsheet published to the web shows the grid and sheet bar read-only, without the menus, toolbar or panels
   (assumed). Editing needs a signed-in Google account, which agents here do not hold and must not create.
 
-## The batched request
+## Asking for captures
 
-So the captures come from Webber, once, in a signed-in Chrome on a desktop, in the dark theme where Sheets offers
-it, at 1440 × 900, each a PNG named as listed, into `~/Repositories/livedoc/plans/assets/0020/google/`:
+Webber, 2026-11-18: "Please ask me just what you need, not everything upfront, especially when it is that many pictures."
 
-1. `menu-file.png` to `menu-help.png`: each of the nine menus open, and each submenu of File, Edit, View, Insert,
-   Format and Data open once (about 30 pictures).
-2. `toolbar.png` (full width) and `toolbar-narrow.png` (a 1024 px window, with More open).
-3. `context-cell.png`, `context-row.png`, `context-column.png`, `context-sheet-tab.png`, `context-chart.png`.
-4. Panels: `panel-chart-setup.png`, `panel-chart-customise.png`, `panel-pivot.png`,
-   `panel-conditional-format.png`, `panel-data-validation.png`, `panel-named-ranges.png`, `panel-protected.png`,
-   `panel-alternating-colours.png`, `panel-column-stats.png`, `panel-cleanup.png`, `panel-version-history.png`.
-5. Dialogs: `dialog-find-replace.png`, `dialog-custom-number.png`, `dialog-custom-date.png`,
-   `dialog-settings-general.png`, `dialog-settings-calculation.png`, `dialog-import.png`, `print-settings.png`,
-   `dialog-shortcuts.png`, `dialog-advanced-sort.png`.
-6. The grid at work: `editing-formula.png` (a formula half typed with the function help card),
-   `fill-handle.png`, `filter-menu.png` (a column's filter open), `dropdown-chip.png`, `table.png`,
-   `sheet-bar.png` (with All sheets open), `status-sum.png` (its menu open).
+- Never ask for a batch: ask for one or two captures at a time, only when the step in hand needs them.
+- Each ask names the surface (a menu, a panel, a dialog, the grid at work) and why the step needs it.
+- Each capture is a PNG in a signed-in Chrome on a desktop, dark theme where Sheets offers it, at 1440 × 900, saved in
+  `~/Repositories/livedoc/plans/assets/0020/google/` under the name the ask gives.
+- A capture is linked where it is used, never read whole into an agent's context: one downscaled view at most.
 
-Until they arrive, matrix rows rest on the inventory's written items, tagged assumed.
+## Received
+
+- `empty-spreadsheet.png` (the main checkout's `plans/` folder, never committed): a new
+  spreadsheet as Google Sheets opens it; the title row, menu bar, toolbar, formula bar, grid and sheet bar at rest.
+
+Until a row's capture arrives, it rests on the inventory's written items, tagged assumed.

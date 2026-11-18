@@ -15,7 +15,7 @@ import {
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { track } from '@/lib/telemetry';
 import { usePlan, type PlanContextValue } from '../PlanContext';
-import { planBandTint, planOwnColours, planPalette, type PlanPalette } from '../plan-palette';
+import { planOwnColours, planPalette, type PlanPalette } from '../plan-palette';
 import { MetricView } from './MetricView';
 import { GanttView } from './GanttView';
 import { CalendarView } from './CalendarView';
@@ -171,8 +171,6 @@ export function PlanViewView({
       id={element.id}
       maximised={maximised}
       fill={filled}
-      tint={planBandTint(element)}
-      blend={{ surface: palette.surface, line: palette.border }}
       placeholder={{
         backgroundColor: palette.surface,
         borderColor: palette.border,

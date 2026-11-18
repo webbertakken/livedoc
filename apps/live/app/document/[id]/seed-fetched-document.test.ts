@@ -1,3 +1,4 @@
+import { WorkbookRecord } from '@livedoc/sheets';
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { LiveDoc } from '@livedoc/api-schema';
@@ -43,7 +44,12 @@ const fetched = {
   templateFamily: null,
 } satisfies LiveDoc;
 
-function seed(recordOpen: boolean, noteChangesetSeen = vi.fn(), resetTabs = vi.fn()) {
+function seed(
+  recordOpen: boolean,
+  noteChangesetSeen = vi.fn(),
+  setDocumentWorkbook = vi.fn(),
+  resetTabs = vi.fn(),
+) {
   const noop = vi.fn();
   return makeSeedFetchedDocument({
     activeId: 't1',
@@ -57,6 +63,7 @@ function seed(recordOpen: boolean, noteChangesetSeen = vi.fn(), resetTabs = vi.f
     setDocumentName: noop,
     setDocumentPresentation: noop,
     setDocumentItemTypes: noop,
+    setDocumentWorkbook,
     setDocumentOwnerColor: noop,
     setDocumentOwnerId: noop,
     setDocumentOwnerName: noop,
@@ -82,6 +89,18 @@ describe('seedFetchedDocument', () => {
   it('declares nothing for an embed', async () => {
     await seed(false)('me', fetched, 'CODE', null);
     expect(apiLoadTab).toHaveBeenCalledWith('me', 'd1', 't1', 'CODE', { open: false });
+  });
+});
+
+// docs/specs/029-sheets/sheet-store.md "In a spreadsheet": the workbook record says the document is a spreadsheet.
+describe('seedFetchedDocument and spreadsheets', () => {
+  it('hands on the workbook record, and null for any other document', async () => {
+    const workbook = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
+    const set = vi.fn();
+    await seed(true, vi.fn(), set)('me', { ...fetched, workbook }, 'CODE', null);
+    expect(set).toHaveBeenLastCalledWith(workbook);
+    await seed(true, vi.fn(), set)('me', fetched, 'CODE', null);
+    expect(set).toHaveBeenLastCalledWith(null);
   });
 });
 
@@ -120,7 +139,7 @@ describe('seedFetchedDocument and element kind families', () => {
     const resetTabs = vi.fn();
     kinds.hold = true;
     kinds.asked.length = 0;
-    const seeding = seed(true, vi.fn(), resetTabs)('me', fetched, null, null);
+    const seeding = seed(true, vi.fn(), vi.fn(), resetTabs)('me', fetched, null, null);
     await vi.waitFor(() => expect(kinds.asked).toEqual([[elements, 'tab']]));
     expect(resetTabs).not.toHaveBeenCalled();
     kinds.release();

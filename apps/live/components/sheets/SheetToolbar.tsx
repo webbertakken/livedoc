@@ -13,8 +13,6 @@ import { ChevronIcon, SearchIcon } from './sheet-icons';
 import { SheetFunctionSearch, type FunctionMatch } from './SheetFunctionSearch';
 import { FUNCTION_FAMILY_LABELS } from './SheetFunctionMenu';
 import { track } from '@/lib/telemetry';
-import { BAND_CARD_PX } from '@/components/plan/band-controls';
-import { useSheetToolbarEnd } from './sheet-toolbar-end';
 import { SheetToolbarMenu, type ToolbarMenuKind } from './SheetToolbarMenus';
 import {
   toolbarCategories,
@@ -68,16 +66,8 @@ const widthOf = (b: ToolbarButton, labelled = false, phone = false) =>
       : BUTTON_PX + (labelled && !b.glyphOnly ? b.label.length * LABEL_CHAR_PX + LABEL_GAP_PX : 0));
 
 // Undo and Redo are the canvas's own (the zoom cluster and the keys), never repeated here.
-export function SheetToolbar({
-  actions,
-  inBand = false,
-}: {
-  actions: SheetActions;
-  // In the header band (maximised or filling its tab): a card of its own in the top row, like the menu box.
-  inBand?: boolean;
-}) {
+export function SheetToolbar({ actions }: { actions: SheetActions }) {
   const c = useSheetController();
-  const end = useSheetToolbarEnd();
   const categories = toolbarCategories(c, actions, actions.activeFormat());
   const [categoryId, setCategoryId] = useState<ToolbarCategoryId>(lastCategory);
   const category = categories.find((k) => k.id === categoryId) ?? categories[0]!;
@@ -90,13 +80,10 @@ export function SheetToolbar({
     setMenu(null);
   };
 
-  // How many buttons fit: measured from the toolbar's width less the switcher's, Search's and, in a header band, the
-  // header's own controls at the end (Maximise or Restore, the cog), which must never be clipped.
+  // How many buttons fit: measured from the toolbar's width less the switcher's and Search's.
   const ref = useRef<HTMLDivElement | null>(null);
   const switcher = useRef<HTMLDivElement | null>(null);
-  const endRef = useRef<HTMLSpanElement | null>(null);
   const [room, setRoom] = useState(1000);
-  const hasEnd = !!end;
   const phone = useIsMobileViewport();
   useLayoutEffect(() => {
     const el = ref.current;
@@ -105,7 +92,6 @@ export function SheetToolbar({
       setRoom(
         el.clientWidth -
           (switcher.current?.offsetWidth ?? 0) -
-          (endRef.current?.offsetWidth ?? 0) -
           (phone ? PHONE_ROW_INSET_PX : ROW_INSET_PX) -
           (phone ? 0 : SEARCH_PX),
       );
@@ -113,9 +99,8 @@ export function SheetToolbar({
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     if (switcher.current) ro.observe(switcher.current);
-    if (endRef.current) ro.observe(endRef.current);
     return () => ro.disconnect();
-  }, [hasEnd, phone]);
+  }, [phone]);
   // On a phone a wide control with a menu (the colour swatches, Font, Font Size's stepper) is its glyph opening that
   // menu, so the rest of the category still has room beside it.
   const all = phone
@@ -218,32 +203,12 @@ export function SheetToolbar({
       ref={ref}
       role="toolbar"
       aria-label="Sheet formatting"
-      className={
-        inBand
-          ? 'flex min-w-0 max-w-full flex-1 items-center gap-0 overflow-hidden p-1'
-          : 'flex shrink-0 items-center gap-0 overflow-hidden border-b px-1'
-      }
-      style={
-        inBand
-          ? // Straight on the Sheet's header in its ink, no card of its own, as its controls are (band-controls.ts).
-            {
-              height: `var(--plan-band-card-h, ${BAND_CARD_PX}px)`,
-              color: c.palette.text,
-            }
-          : { height: TOOLBAR_PX, borderColor: c.palette.cardBorder, color: c.palette.text }
-      }
+      className="flex shrink-0 items-center gap-0 overflow-hidden border-b px-1"
+      style={{ height: TOOLBAR_PX, borderColor: c.palette.cardBorder, color: c.palette.text }}
       onPointerDown={stop}
       onDoubleClick={stop}
     >
-      {/* In a header band the switcher fills the card's height, flush to its inset as the menu box's mode tile is
-          (that box is drawn at the toolbar's UI scale, so a fixed 36 px tile here sat short of it, gaps above and
-          below). */}
-      <div
-        ref={switcher}
-        className={`flex shrink-0 items-center ${phone ? 'pr-1' : 'pr-1.5'}${
-          inBand ? ' self-stretch [&>div>button]:h-full [&>div]:h-full' : ''
-        }`}
-      >
+      <div ref={switcher} className={`flex shrink-0 items-center ${phone ? 'pr-1' : 'pr-1.5'}`}>
         <PaletteDropdown
           ariaLabel="Toolbar category"
           value={category.id}
@@ -317,23 +282,6 @@ export function SheetToolbar({
           </Tooltip>
         </>
       )}
-      {end ? (
-        // The header's controls, the cog last, after Search (sheet-toolbar-end.ts).
-        <span
-          ref={endRef}
-          data-sheet-toolbar-end
-          className="flex shrink-0 items-center gap-1 [&_button]:h-9 [&_button]:w-9"
-          onPointerDown={(e) => e.stopPropagation()}
-          onDoubleClick={(e) => e.stopPropagation()}
-        >
-          <span
-            aria-hidden
-            className="mx-1 h-5 w-px shrink-0"
-            style={{ backgroundColor: c.palette.cardBorder }}
-          />
-          {end}
-        </span>
-      ) : null}
       {searchAt ? (
         <SheetFunctionSearch
           anchor={searchAt}

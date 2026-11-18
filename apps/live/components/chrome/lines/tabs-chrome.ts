@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ComponentProps } from 'react';
-import { folderNamesInDocument, tabFolderName, type Tab } from '@livedoc/document';
+import { folderNamesInDocument, tabFolderName, tabKindNoun, type Tab } from '@livedoc/document';
 import type { AccessLevel } from '@livedoc/api-schema';
 import { hasPlanContent } from '@/hooks/plan/usePlanNeeded';
 import { tabDeletion } from '@/lib/tab-deletion';
@@ -115,6 +115,7 @@ export function useTabsChrome(props: TabsChromeProps) {
       // A Plan tab's cards are its document's items: it is not added to another document
       // (docs/specs/026-plan/plan-mode.md "Switching modes keeps the tab").
       planTab: hasPlanContent(tab.elements, null),
+      kindNoun: tabKindNoun(tab),
       dataRows: tabDataRows(tab),
       selfId: props.selfId,
       otherDocuments: props.otherDocuments,

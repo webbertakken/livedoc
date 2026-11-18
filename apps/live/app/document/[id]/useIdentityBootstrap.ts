@@ -1,3 +1,4 @@
+import type { WorkbookRecord } from '@livedoc/sheets';
 import type { SavedItemTypes } from '@/lib/api/item-types';
 import {
   useLayoutEffect,
@@ -91,6 +92,7 @@ export function useIdentityBootstrap(opts: {
     setDocumentName: SetState<string>;
     setDocumentPresentation: SetState<string | null>;
     setDocumentItemTypes: SetState<SavedItemTypes>;
+    setDocumentWorkbook: SetState<WorkbookRecord | null>;
     setDocumentNotFound: SetState<boolean>;
     setLoadError: SetState<boolean>;
     // The document is in the Trash (docs/specs/013-workspace/trash.md).
@@ -170,6 +172,7 @@ export function useIdentityBootstrap(opts: {
       setDocumentName,
       setDocumentPresentation,
       setDocumentItemTypes,
+      setDocumentWorkbook,
       setDocumentNotFound,
       setLoadError,
       setDocumentTrashed,
@@ -212,6 +215,7 @@ export function useIdentityBootstrap(opts: {
       setDocumentName,
       setDocumentPresentation,
       setDocumentItemTypes,
+      setDocumentWorkbook,
       setDocumentOwnerColor,
       setDocumentOwnerId,
       setDocumentOwnerName,

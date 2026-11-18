@@ -13,6 +13,8 @@ import { TabTooLargeError } from '../limits';
 import { seedItems } from '../routes/item-routes';
 import { seedSheets } from '../routes/sheet-routes';
 import { seedTextDocuments, type TextDocumentSeed } from '../text-documents/seed-text-documents';
+import { insertWorkbookStatement } from '../db/workbook';
+import type { WorkbookRecord } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 import { contentSummaryOf } from './content-summary';
 import { documentRouteContext, type RouteIdentity } from './document-route';
@@ -34,6 +36,8 @@ export type DocumentSeed = {
   sheets: SheetCreateRequest[];
   // Text document tabs opened from files (seed-text-documents.ts); absent when the create opens none.
   textDocuments?: TextDocumentSeed[];
+  // A spreadsheet's workbook row (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"); absent for any other document.
+  workbook?: WorkbookRecord | null;
 };
 
 export type CreateOutcome =
@@ -60,6 +64,15 @@ export async function createDocumentContent(
         return { ok: false, status: 413, body: { error: 'payload_too_large' } };
       throw error;
     }
+  }
+  // The workbook row before the sheets, so a spreadsheet's tabs reference its sheets as they are made.
+  if (seed.workbook) {
+    await insertWorkbookStatement(env, documentId, seed.workbook, seed.createdAt).run();
+    console.info('[workbook] created', {
+      documentId,
+      format: seed.workbook.format,
+      sheets: seed.sheets.length,
+    });
   }
   if (!seed.recommit && (seed.items.length > 0 || seed.sheets.length > 0)) {
     // The seed writers are the item and sheet routes' own; they take a route context.

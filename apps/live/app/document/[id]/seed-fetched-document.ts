@@ -1,3 +1,4 @@
+import type { WorkbookRecord } from '@livedoc/sheets';
 import { readItemTypeCatalogue } from '@livedoc/items';
 import type { SavedItemTypes } from '@/lib/api/item-types';
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
@@ -35,6 +36,8 @@ export function makeSeedFetchedDocument(deps: {
   setDocumentPresentation: SetState<string | null>;
   // The type catalogue (docs/specs/026-plan/item-types.md), null for the default types, and its revision.
   setDocumentItemTypes: SetState<SavedItemTypes>;
+  // The workbook record, when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md).
+  setDocumentWorkbook: SetState<WorkbookRecord | null>;
   setDocumentOwnerColor: SetState<string | null>;
   setDocumentOwnerId: SetState<string | null>;
   setDocumentOwnerName: SetState<string | null>;
@@ -56,6 +59,7 @@ export function makeSeedFetchedDocument(deps: {
     setDocumentName,
     setDocumentPresentation,
     setDocumentItemTypes,
+    setDocumentWorkbook,
     setDocumentOwnerColor,
     setDocumentOwnerId,
     setDocumentOwnerName,
@@ -132,6 +136,7 @@ export function makeSeedFetchedDocument(deps: {
       itemTypes: readItemTypeCatalogue(fetched.itemTypes ?? null),
       itemTypesRev: fetched.itemTypesRev ?? 0,
     });
+    setDocumentWorkbook(fetched.workbook ?? null);
     // Prefer the tab id pinned in the URL fragment (#t=<id>) when
     // it points at a real loaded tab — round-trips the user back
     // to whichever tab they last had open before a refresh.

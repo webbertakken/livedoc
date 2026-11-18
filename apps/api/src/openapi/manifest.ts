@@ -864,6 +864,26 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseMediaType: 'application/vnd.oasis.opendocument.text',
     statuses: [200, 400, 401, 403, 404, 409, 410],
   },
+  // A spreadsheet's file (docs/specs/029-sheets/files-and-print.md, standard-mapping.md).
+  {
+    method: 'GET',
+    path: '/documents/{id}/workbook/file',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "A spreadsheet as a file, written from its sheets with every formula's value cached beside it and named after the document: ods or fods for an ODF workbook. 404 workbook_not_found when the document is no spreadsheet; 400 file_type_unknown; 409 format_not_native for another standard. Read access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'format',
+        required: false,
+        description: "The workbook's own format (the default), or the other ODF form: ods, fods.",
+      },
+    ],
+    responseMediaType: 'application/vnd.oasis.opendocument.spreadsheet',
+    statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
   // The item store (docs/specs/026-plan/items.md). A caller on a tab-scoped link adds ?tabId=.
   {
     method: 'GET',

@@ -3,7 +3,7 @@
 // One Sheet element's view of the sheet store: the store of its document
 // (attached to the room through the bridge once), its tab loaded, its sheet made when it was just placed or copied,
 // and the Plan cards handed to formulas that read them. Re-renders when the store moves on.
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   copyTitle,
   emptyLayout,
@@ -23,7 +23,6 @@ import { templateChartElements } from '@livedoc/templates/template-sheets';
 import { chartsInSheet, type ShapeElement } from '@livedoc/document';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import {
-  registerSheetSource,
   rememberSetupStart,
   sheetSeed,
   takePlacedSheet,
@@ -31,10 +30,9 @@ import {
 } from '@/lib/sheet-seeds';
 import type { PlanContextValue } from '@/components/plan/PlanContext';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
-import { sheetStoreOf, type SheetStore, type TabStatus } from './sheet-store-client';
+import type { SheetStore, TabStatus } from './sheet-store-client';
+import { useAttachedSheetStore } from './useAttachedSheetStore';
 import { useSheetHomeTab } from './sheet-home-tab';
-import { retitleSheets } from './sheet-rename';
-import { sheetPresenceFor } from './sheet-presence-store';
 import { markCardTableSheet } from '@/hooks/sheets/card-table-sheets';
 import { CSV_TRUNCATED, csvWrites } from './sheet-csv';
 
@@ -45,18 +43,6 @@ type SheetModel = {
   status: TabStatus | undefined;
   version: number;
 };
-
-// How many Sheets draw from each store, so the room stays attached while any does.
-const ATTACHED = new WeakMap<SheetStore, { count: number; detach: () => void }>();
-
-function release(store: SheetStore): void {
-  const held = ATTACHED.get(store);
-  if (!held) return;
-  if (--held.count > 0) return;
-  ATTACHED.delete(store);
-  held.detach();
-  registerSheetSource(null);
-}
 
 function fillFromCsv(
   store: SheetStore,
@@ -102,40 +88,8 @@ export function useSheetModel(
   bridge: SheetsBridge,
   plan: PlanContextValue | undefined,
 ): SheetModel {
-  const store = sheetStoreOf(bridge);
+  const { store, version } = useAttachedSheetStore(bridge);
   const dark = useCanvasSurface() === 'dark';
-  // The room reaches this document's store once, whichever Sheet draws first.
-  useEffect(() => {
-    const held = ATTACHED.get(store);
-    if (held) {
-      held.count++;
-      return () => release(store);
-    }
-    const presence = sheetPresenceFor(store);
-    presence.connect((op) => bridge.sendPresence(op));
-    registerSheetSource((id) => {
-      const sheet = store.sheet(id);
-      return sheet ? sheetToJson(sheet) : undefined;
-    });
-    const detach = bridge.attach({
-      receive: (op) => store.receive(op),
-      title: (id) => store.sheet(id)?.title,
-      release: (ids) => store.release(ids),
-      retitle: (ids, from, to) => retitleSheets(store, ids, from, to),
-      presence: (from, op) => presence.receive(from, op),
-      resync: () => store.resync(),
-      reannounce: () => presence.reannounce(),
-    });
-    ATTACHED.set(store, { count: 1, detach });
-    return () => release(store);
-  }, [store, bridge]);
-
-  const version = useSyncExternalStore(store.subscribe, store.getVersion, store.getVersion);
-  // Someone new in the room hears this person's selection (as a Plan card hold is said again).
-  const peerIds = bridge.peers.map((p) => p.id).join(',');
-  useEffect(() => {
-    if (peerIds) sheetPresenceFor(store).reannounce();
-  }, [peerIds, store]);
   const ref = element.planSheet;
   const sheetId = ref?.sheetId ?? '';
   const known = sheetId ? store.sheet(sheetId) : undefined;

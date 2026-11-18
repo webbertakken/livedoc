@@ -103,7 +103,11 @@ describe('TabWindowFace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Choose a Tab' }));
     await screen.findAllByRole('menuitemradio');
     const options = screen.getAllByRole('menuitemradio').map((o) => o.textContent);
-    expect(options).toEqual(['Flow', 'Blank']);
+    // Each its name over its kind (docs/specs/007-editor/editor-modes.md "A tab's kind is always findable").
+    expect(options).toEqual([
+      'FlowDiagram tab, in Structured mode',
+      'BlankDiagram tab, in Structured mode',
+    ]);
     fireEvent.click(screen.getByRole('menuitemradio', { name: /Flow/ }));
     expect(ctx.choose).toHaveBeenCalledWith('w', 'flow');
   });

@@ -61,6 +61,7 @@ async function rowToDocument(env: Env, row: OpenedDocumentRow): Promise<Document
     presentation: outline.presentation,
     itemTypes: readItemTypeCatalogue(outline.itemTypes),
     itemTypesRev: outline.itemTypesRev,
+    workbook: outline.workbook,
     // The room's last save is ahead of D1's copy until its outbox pushes it.
     savedAt: Math.max(row.saved_at, outline.savedAt),
     createdAt: row.created_at,
