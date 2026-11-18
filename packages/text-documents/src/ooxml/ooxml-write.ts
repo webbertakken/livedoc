@@ -92,6 +92,7 @@ class OoxmlWriter {
   readonly numberingPart: string;
   readonly rels: RelationshipList;
   readonly numIds = new Map<string, string>();
+  readonly defaultStyle: string | undefined;
 
   constructor(doc: TextDocument) {
     this.doc = doc;
@@ -112,6 +113,7 @@ class OoxmlWriter {
         (r) => r.type === RELATIONSHIP_TYPES.styles || r.type === RELATIONSHIP_TYPES.numbering,
       ),
     ]);
+    this.defaultStyle = doc.styles.find((s) => s.role === 'normal' && s.family === 'paragraph')?.id;
     this.assignNumIds();
   }
 
@@ -157,9 +159,11 @@ class OoxmlWriter {
     };
     if (p.kept && keptStillHolds(p.kept, values)) return this.kept(p.kept.xml);
     const numbered = list && { id: this.numIds.get(list.id) ?? list.id, level: list.level };
+    // The default paragraph style is what a paragraph without `w:pStyle` has: it is not named.
+    const style = p.style === this.defaultStyle ? undefined : p.style;
     const children = ordered(
       PPR_ORDER,
-      paragraphPropsChildren(p.style, p.props, numbered, ends && this.sectPr(ends)),
+      paragraphPropsChildren(style, p.props, numbered, ends && this.sectPr(ends)),
       (p.kept?.residue ?? []).map((r) => this.kept(r)),
     );
     return children ? `<w:pPr>${children}</w:pPr>` : '';

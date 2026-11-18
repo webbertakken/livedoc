@@ -65,6 +65,7 @@ class OdfWriter {
   readonly masters: string[] = [];
   readonly listNames = new Map<string, string>();
   #sections = 0;
+  readonly #layoutClaims = new Map<string, string>();
 
   readonly document: TextDocument;
 
@@ -172,7 +173,11 @@ class OdfWriter {
   /** The master page a section is written under: its own, kept, with its layout rebuilt when its setup changed. */
   master(section: Section): string {
     const kept = section.kept;
-    if (kept?.name && kept.layout && this.source) {
+    const setup = canonical(section.setup);
+    // Sections may share a master page; one edited apart from the others gets a master page of its own.
+    const claimed = kept?.layout === undefined ? undefined : this.#layoutClaims.get(kept.layout);
+    if (kept?.name && kept.layout && this.source && (claimed === undefined || claimed === setup)) {
+      this.#layoutClaims.set(kept.layout, setup);
       if (!keptStillHolds(kept, section.setup))
         this.pageStyles.replace(
           kept.layout,

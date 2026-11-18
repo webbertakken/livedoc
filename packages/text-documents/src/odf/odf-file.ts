@@ -62,6 +62,8 @@ export async function readOdfFile(
   const refused = parts.find((p): p is PackageRefusal => p !== undefined && !p.ok);
   if (refused) return refused;
   const [c, styles, meta, settings] = parts as (XmlParsed | undefined)[];
+  if (c!.root.uri !== NS.office || c!.root.local !== 'document-content')
+    return refuse('package_damaged', { entry: 'content.xml' });
   const written = new Set([
     'content.xml',
     'styles.xml',

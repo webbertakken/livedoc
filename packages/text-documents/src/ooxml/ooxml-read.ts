@@ -446,8 +446,10 @@ export const byId = (rels: readonly Relationship[]): Relationship[] =>
 const idNumber = (id: string) => Number(id.match(/(\d+)$/)?.[1] ?? Number.MAX_SAFE_INTEGER);
 
 function withoutWritten(scope: Readonly<Record<string, string>>): Record<string, string> {
+  // Every written part declares LiveDoc's own bindings, so a file's other prefix for one of them is not kept.
+  const written = new Set(Object.values(WRITTEN_W_NS));
   return sortedBindings(
-    Object.fromEntries(Object.entries(scope).filter(([p, uri]) => WRITTEN_W_NS[p] !== uri)),
+    Object.fromEntries(Object.entries(scope).filter(([, uri]) => !written.has(uri))),
   );
 }
 

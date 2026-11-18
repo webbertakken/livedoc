@@ -47,8 +47,10 @@ function conformant(text: string): string {
   const root = parsed.root;
   const ignored =
     root.attributes.find((a) => a.uri === MC_NS && a.local === 'Ignorable')?.value ?? '';
-  for (const prefix of ignored.split(/\s+/).filter(Boolean))
-    if (root.scope[prefix]) ignorable.add(root.scope[prefix]!);
+  for (const prefix of ignored.split(/\s+/).filter(Boolean)) {
+    const uri = root.scope[prefix];
+    if (uri) ignorable.add(uri);
+  }
   const write = (e: XmlElement): string => {
     if (ignorable.has(e.uri)) return '';
     const name = e.prefix ? `${e.prefix}:${e.local}` : e.local;

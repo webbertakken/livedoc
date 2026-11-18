@@ -305,7 +305,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
 export const sortedBindings = (ns: Record<string, string>): Record<string, string> =>
   Object.fromEntries(
     Object.entries(ns)
-      .filter(([p, uri]) => p !== 'xml' && WRITTEN_NS[p] !== uri)
+      .filter(([p, uri]) => p !== 'xml' && !Object.values(WRITTEN_NS).includes(uri))
       .sort(([a], [b]) => (a < b ? -1 : 1)),
   );
 
@@ -317,7 +317,6 @@ class BodyReader {
   readonly blocks: Block[] = [];
   section: Section | undefined;
   #setup = PageSetup.of('letter');
-  #inRegion = 0;
 
   readonly r: OdfReader;
   readonly styles: readonly Style[];
@@ -375,9 +374,7 @@ class BodyReader {
       setup: compact({ ...setup, columns }),
       region: { xml: open, ns: keptXmlOf(parsed, e).ns },
     });
-    this.#inRegion += 1;
     this.container(e);
-    this.#inRegion -= 1;
     this.blocks.push({ type: 'section', start: 'continuous', setup });
   }
 

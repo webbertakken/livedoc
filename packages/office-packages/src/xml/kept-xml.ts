@@ -13,11 +13,11 @@ function prefixesUsed(
   shadowed: ReadonlySet<string>,
 ): Set<string> {
   const inner = new Set([...shadowed, ...Object.keys(element.declared)]);
-  const use = (prefix: string) => {
+  const note = (prefix: string) => {
     if (!inner.has(prefix)) into.add(prefix);
   };
-  use(element.prefix);
-  for (const a of element.attributes) if (a.prefix) use(a.prefix);
+  note(element.prefix);
+  for (const a of element.attributes) if (a.prefix) note(a.prefix);
   for (const child of element.children)
     if (typeof child !== 'string') prefixesUsed(child, into, inner);
   return into;

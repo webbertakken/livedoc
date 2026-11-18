@@ -96,7 +96,7 @@ export function readTextProps(style: XmlElement, faces: ReadonlyMap<string, stri
   return compact({
     font: faceName !== undefined ? (faces.get(faceName) ?? faceName) : family && unquote(family),
     size: odfLengthToPt(fo(e, 'font-size')),
-    bold: flag(weight, (w) => w === 'bold' || Number(w) >= 600, 'normal'),
+    bold: weight === undefined ? undefined : weight === 'bold' || Number(weight) >= 600,
     italic: flag(fo(e, 'font-style'), (s) => s === 'italic' || s === 'oblique', 'normal'),
     underline: flag(st(e, 'text-underline-style'), () => true, 'none'),
     strike: flag(st(e, 'text-line-through-style'), () => true, 'none'),

@@ -397,7 +397,7 @@ export function readLevel(lvl: XmlElement): ListLevel {
   }
   return {
     kind: 'number',
-    format: FORMAT_IN[format]!,
+    format: FORMAT_IN[format],
     label: text,
     start: Number(val(child(lvl, 'start')) ?? '1') || 1,
     ...indents,
