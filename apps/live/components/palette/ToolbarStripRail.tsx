@@ -68,12 +68,11 @@ export function ToolbarStripRail({
   const enter = tileEnterAnimation(useTabFinish());
   const railRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState<number | null>(null);
-  // Off for the first measured frame, so the strip doesn't animate itself
-  // open on page load (the same gate the category picker uses).
-  const [animate, setAnimate] = useState(false);
-  // Tiles pop in only once the category has CHANGED: the first set is just
-  // there, like the rest of the chrome. Derived during render (React's
-  // "adjusting state when a prop changes" pattern), not in an effect.
+  // Tiles pop in, and the rail eases its width, only once the category has CHANGED: the first set is just there,
+  // like the rest of the chrome. Until then the rail holds no width of its own, so it is exactly as wide as its
+  // tiles in the very commit they change: as the editor opens, the tiles that fit change while the top line fills
+  // in, and an eased width made each of those refits a layout shift. Derived during render (React's "adjusting
+  // state when a prop changes" pattern), not in an effect.
   const [seenKey, setSeenKey] = useState(railKey);
   const [switched, setSwitched] = useState(false);
   if (railKey !== seenKey) {
@@ -157,11 +156,7 @@ export function ToolbarStripRail({
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
-    const raf = requestAnimationFrame(() => setAnimate(true));
-    return () => {
-      ro.disconnect();
-      cancelAnimationFrame(raf);
-    };
+    return () => ro.disconnect();
   }, [railKey]);
 
   return (
@@ -178,8 +173,8 @@ export function ToolbarStripRail({
       data-strip-rail=""
       className={`relative -mx-[3px] flex items-center ${
         scrollable ? STRIP_RAIL_SCROLL : 'overflow-x-clip [overflow-clip-margin:3px]'
-      }${animate ? ' transition-[width] duration-short ease-out' : ''}`}
-      style={{ width: width ?? undefined }}
+      }${switched ? ' transition-[width] duration-short ease-out' : ''}`}
+      style={{ width: switched ? (width ?? undefined) : undefined }}
     >
       <div key={railKey} ref={contentRef} className="flex w-max items-center gap-0.5 px-[3px]">
         {items.map((item, i) => (

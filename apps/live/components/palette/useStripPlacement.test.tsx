@@ -8,9 +8,9 @@ import { useStripPlacement, type StripPlacement } from './useStripPlacement';
 // centred, off centre between the brand and actions groups while it fits there, and takes its own row only after.
 
 let fire: () => void = () => {};
-// The brand group 12..185, the actions group 200 wide ending 12 from the right.
+// The brand group 12..185, the actions group ending 12 from the right, 200 wide unless a test widens it.
 const BRAND_RIGHT = 185;
-const ACTIONS_WIDTH = 200;
+let actionsWidth = 200;
 
 function group(attr: string, rect: () => DOMRect) {
   const el = document.createElement('div');
@@ -28,10 +28,11 @@ beforeEach(() => {
     unobserve() {}
     disconnect() {}
   } as unknown as typeof ResizeObserver;
+  actionsWidth = 200;
   group('data-toolbar-menu', () => new DOMRect(12, 12, BRAND_RIGHT - 12, 46));
   group(
     'data-toolbar-actions',
-    () => new DOMRect(window.innerWidth - 12 - ACTIONS_WIDTH, 12, ACTIONS_WIDTH, 46),
+    () => new DOMRect(window.innerWidth - 12 - actionsWidth, 12, actionsWidth, 46),
   );
 });
 
@@ -40,6 +41,22 @@ afterEach(() => {
   document.body.innerHTML = '';
   vi.unstubAllGlobals();
 });
+
+// Rendered where the test can read it without act: what the frame would draw.
+function Shown({ width }: { width: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { crowded } = useStripPlacement(ref, true, String(width));
+  return (
+    <div
+      data-testid="strip"
+      data-crowded={String(crowded)}
+      ref={(el) => {
+        ref.current = el;
+        if (el) el.getBoundingClientRect = () => new DOMRect(0, 12, width, 46);
+      }}
+    />
+  );
+}
 
 function Strip({
   width,
@@ -51,7 +68,8 @@ function Strip({
   seen: StripPlacement[];
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  seen.push(useStripPlacement(ref, enabled));
+  // What it draws: here only its width, as tiles dropping change it.
+  seen.push(useStripPlacement(ref, enabled, String(width)));
   return (
     <div
       ref={(el) => {
@@ -109,6 +127,32 @@ describe('useStripPlacement', () => {
     expect(seen.at(-1)).toEqual({ crowded: true, shift: 0 });
     at(1280);
     expect(seen.at(-1)).toEqual({ crowded: false, shift: 0 });
+  });
+
+  // A control joining a side group as the editor opens (the Start Tour button, an account's button) is drawn in
+  // the same frame as the strip's answer to it, so the strip never paints a placement it then leaves.
+  it('answers a control joining a side group before the frame is drawn', async () => {
+    vi.stubGlobal('innerWidth', 864);
+    vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', false);
+    const view = render(<Shown width={440} />);
+    expect(view.getByTestId('strip').dataset.crowded).toBe('false');
+
+    actionsWidth = 241;
+    document.querySelector('[data-toolbar-actions]')!.append(document.createElement('button'));
+    // One microtask: no task has run, so nothing React scheduled for later has been drawn.
+    await Promise.resolve();
+    expect(view.getByTestId('strip').dataset.crowded).toBe('true');
+  });
+
+  // The tiles that fit drop in a commit of their own (useStripTileLimit): the placement follows them in it, never
+  // keeping a row it took for the wider strip until a resize reports the narrower one a frame later.
+  it('places the strip as drawn in the commit its tiles change', () => {
+    vi.stubGlobal('innerWidth', 864);
+    const seen: StripPlacement[] = [];
+    const view = render(<Strip width={452} seen={seen} />);
+    expect(seen.at(-1)!.crowded).toBe(true);
+    view.rerender(<Strip width={440} seen={seen} />);
+    expect(seen.at(-1)!.crowded).toBe(false);
   });
 
   it('stays centred where it is off (a phone, whose strip has its own row)', () => {

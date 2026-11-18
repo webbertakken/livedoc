@@ -2,7 +2,7 @@
 
 import { useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import { editorViewportOf } from '@/lib/editor-viewport';
-import { measureTopLine, topLineGroups } from '@/lib/top-line-clearance';
+import { measureTopLine, observeTopLine } from '@/lib/top-line-clearance';
 
 // Whether the category bar names its categories (docs/specs/007-editor/toolbar-layout.md "The category bar"), from
 // the strip's REAL sizes, as useStripTileLimit fits tiles: the strip may take the room between the top line's side
@@ -47,14 +47,7 @@ export function useBarLabels(
       if (fits !== labels) setLabels(fits);
     };
     measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(card);
-    for (const group of topLineGroups()) observer.observe(group);
-    window.addEventListener('resize', measure);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', measure);
-    };
+    return observeTopLine(measure, [card]);
   }, [cardRef, enabled, categoriesKey, labels, scale]);
 
   return enabled && labels;
