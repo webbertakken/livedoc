@@ -49,6 +49,34 @@ elements, its snapshots, its changesets or its room.
 - A reference to a sheet title no sheet on the tab has is stored by its title and reads `#REF!` until such a
   sheet is there.
 
+## In a spreadsheet
+
+**Status: specified.** Nothing is built. What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
+this page holds for both until the Plan Sheet retires.
+
+- **A workbook is a tab's sheets.** The sheets whose `tabId` is a workbook tab are its workbook; the tab keeps their
+  **order** (a list of sheet ids), so sheet tabs reorder without touching a sheet. A sheet's `title` is its sheet
+  name, unique in the workbook, up to 100 characters ([Spreadsheet](spreadsheet.md#what-a-workbook-holds)).
+- **The workbook row**: one per workbook tab, holding its file format (`ods`, `fods` or `xlsx`), settings (locale,
+  time zone, recalculation, iterative calculation), theme, named functions, the order of its sheets, and its rev.
+- **Styles** move to a table of their own: each distinct style once, by id; a cell holds a style id instead of its
+  format JSON ([Formatting](formatting.md#styles-in-the-model)). A cell write may name a style by its keys; the room
+  finds or makes its id.
+- **Layout** stays one JSON a sheet while its row and column ids fit well inside a row (8 MB a row, [Storage
+  research](../../research/sheets-open-standard/storage.md)); past a size Phase 5 measures, the order of ids moves to
+  a table of its own.
+- **Unknown content** ([Standard mapping](standard-mapping.md#unknown-content)): a table of the file's own XML
+  fragments by part and anchor (a sheet id, a cell, a range by ids), written back to the same format.
+- **Objects**: charts, pivot tables, images, drawings, slicers, filter views, tables and timelines, a row each by
+  sheet, their model as JSON.
+- **Loading by viewport**: opening a workbook fetches its workbook row, sheet list, styles and the active sheet's
+  layout and the cells of the rows in view and a screen around them; the rest streams in behind, so a large sheet
+  shows before it has loaded.
+- **Limits**: the spreadsheet's ([Spreadsheet](spreadsheet.md#limits)): 20 million cells a workbook (S7, default),
+  18,278 columns, 200 sheets; a write still 5,000 cells and 1 MB.
+- **Values are not stored**: as today, the room stores inputs and styles; a file's cached values are written from the
+  engine at download, and read from a file only to show a formula LiveDoc cannot evaluate.
+
 ## Changing a sheet
 
 - **Create** (placing a Sheet element, a copy, a CSV): a title, its tab and optionally its layout and cells. It
@@ -218,6 +246,27 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   filling or placing it fails, so a failed call leaves no unplaced sheet spending the document's cells.
 - A delete of rows or columns says which it deleted: as far as the sheet goes, and never the last one (a sheet keeps
   one row and one column, and the answer names the one it kept).
+
+## Agents in a spreadsheet
+
+**Status: specified.** Nothing is built. Agents work a [spreadsheet](spreadsheet.md) as they work a Plan Sheet
+today (above), by sheet name and A1 references, never ids, with these changes:
+
+- **Views** (`@livedoc/document-views`): a workbook's **outline** (its sheets, each with its used range, tables,
+  charts, pivots, named ranges and rules) and a sheet's **cells** view of a range (input, value and shown text), both
+  cheap at any size: a read answers at most 5,000 cells and 100,000 characters and says where to read on, as today.
+- **Edit operations** over the workbook join agent changesets ([Agent changesets](../024-agents/agent-changesets.md)):
+  set cells, clear, format (by style keys), insert, delete and move rows and columns, sort, filter, validation and
+  format rules, named ranges, sheets (add, rename, move, hide, delete), charts and pivot tables; a changeset is atomic,
+  attributed to its agent and revertable as one.
+- **MCP tools**: `list_sheets`, `read_sheet` and `change_sheet` take a spreadsheet (or a workbook tab) and a sheet
+  name; `add_sheet` adds a sheet to a workbook; `create_spreadsheet` makes a spreadsheet, optionally from a template,
+  CSV text or rows; `convert_spreadsheet` changes its file format. `add_sheet`'s Plan-only refusal (`tab_not_plan`)
+  is retired with the Plan Sheet.
+- **CLI**: `livedoc sheet ls|get|set|add|insert-rows|insert-cols|rm-rows|rm-cols` as today on a spreadsheet, and
+  `livedoc spreadsheet new|import|download|convert`; downloads in the workbook's format by default.
+- **Previews**: a sheet's range drawn as a PNG through `render-png`, as Plan previews are.
+- Values an agent reads are worked out by the same engine; formulas an agent writes are read in `en-GB`, as today.
 
 ## Limits
 

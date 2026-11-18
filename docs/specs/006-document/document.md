@@ -23,6 +23,8 @@ changing what the document is.
 | **event-storming board** | The tab kind for event storming ([Event storming](../021-event-storming/event-storming.md)).                 |
 | **markdown**             | The tab kind holding one markdown text ([Markdown tab](../031-markdown/markdown-tab.md)).                    |
 | **file**                 | The tab kind holding one file's bytes ([File tab](file-tab.md)).                                             |
+| **workbook tab**         | The tab kind holding one workbook of sheets, specified ([Spreadsheet](../029-sheets/spreadsheet.md)).        |
+| **spreadsheet**          | A document whose single tab is a workbook tab, as people speak of it.                                        |
 | **page**                 | A document whose single tab is a markdown tab, as people speak of it.                                        |
 | **document branch**      | A named, live copy of a document beside its main ([Document branches](document-branches.md)).                |
 | **main**                 | The document itself, as its branches see it.                                                                 |
