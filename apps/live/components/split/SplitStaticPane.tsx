@@ -3,7 +3,7 @@
 import { useEffect, useRef, type Ref } from 'react';
 import { tabHasDrawing, type Tab } from '@livedoc/document';
 import { isTextEditFocused } from '@livedoc/ui';
-import { TabModeIcon } from '@/components/chrome/editor-mode/TabModeIcon';
+import { TabKindGlyph } from '@/components/chrome/editor-mode/TabKindGlyph';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { anyModalOpen } from '@/lib/modal-guard';
 import { SPLIT_HOVER_FOCUS_MS } from '@/lib/split-view';
@@ -103,7 +103,7 @@ export function SplitStaticPane({
       )}
       {/* The tab's name, where the editor's Explorer would sit, so the pane says what it shows. */}
       <div className="pointer-events-none absolute left-4 top-4 flex max-w-[calc(100%-8rem)] items-center gap-2 rounded-full border border-slate-200/80 bg-white/90 py-1.5 pl-2.5 pr-3 shadow-sm backdrop-blur dark:border-slate-700/80 dark:bg-slate-900/90">
-        <TabModeIcon tab={tab} style={{ color: legibleTabAccent(tab, isDark) }} />
+        <TabKindGlyph tab={tab} style={{ color: legibleTabAccent(tab, isDark) }} />
         <span className="truncate text-sm font-semibold text-slate-800 dark:text-slate-100">
           {tab.name}
         </span>

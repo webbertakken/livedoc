@@ -1,19 +1,10 @@
 // A bug report's context in plain words (docs/specs/016-platform/bug-reports.md "Context"): the lines the form shows
 // under What's Attached and the card's Context field holds, the browser and system a user agent names, and the
 // redaction every recent error message passes before it leaves the browser.
-import { editorModeLabel, type TabKind } from '@livedoc/document';
+import { editorModeLabel, tabKindLabel } from '@livedoc/document';
 import { BUG_REPORT_LIMITS, type BugReportContext, type BugReportShareRole } from './bug-report';
 
 export type BugReportContextLine = { label: string; value: string };
-
-const TAB_KIND_LABEL: Readonly<Record<TabKind, string>> = {
-  diagram: 'Diagram',
-  'event-storming': 'Event Storming',
-  board: 'Board',
-  sheet: 'Sheet',
-  dashboard: 'Dashboard',
-  form: 'Form',
-};
 
 const SHARE_ROLE_LABEL: Readonly<Record<BugReportShareRole, string>> = {
   owner: 'Owner',
@@ -74,7 +65,7 @@ export function bugReportContextLines(context: BugReportContext): BugReportConte
   const lines: BugReportContextLine[] = [{ label: 'Page', value: context.route }];
   if (context.from) lines.push({ label: 'From', value: context.from });
   if (context.mode) lines.push({ label: 'Mode', value: editorModeLabel(context.mode) });
-  if (context.tabKind) lines.push({ label: 'Tab kind', value: TAB_KIND_LABEL[context.tabKind] });
+  if (context.tabKind) lines.push({ label: 'Tab kind', value: tabKindLabel(context.tabKind) });
   if (context.shareRole)
     lines.push({ label: 'Share role', value: SHARE_ROLE_LABEL[context.shareRole] });
   if (context.release) lines.push({ label: 'App version', value: context.release });

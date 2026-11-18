@@ -26,6 +26,7 @@ function props(over: Partial<Props> = {}): Props {
     onCopyTo: noop,
     onToggleLock: noop,
     locked: false,
+    kindNoun: 'Diagram tab',
     selfId: 'me',
     otherDocuments: [],
     folderNames: [],
