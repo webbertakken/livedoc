@@ -23,9 +23,8 @@ import { PlanSheetView } from './PlanSheetView';
 import { SheetChartsContext } from './sheet-charts-context';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
-// Off but for the Setup Sheet phone case below.
-let phone = false;
-vi.mock('@/hooks/ui/useIsMobileViewport', () => ({ useIsMobileViewport: () => phone }));
+// A desktop: the toolbar lays its buttons out at their full widths.
+vi.mock('@/hooks/ui/useIsMobileViewport', () => ({ useIsMobileViewport: () => false }));
 vi.mock('@/lib/api/sheets', () => ({
   fetchSheets: vi.fn(),
   createSheet: vi.fn(),
@@ -136,7 +135,6 @@ beforeEach(() => {
   }));
 });
 afterEach(() => {
-  phone = false;
   vi.unstubAllGlobals();
   finishRestore();
   releasePlanElement(getMaximisedPlanId() ?? '');
@@ -374,20 +372,6 @@ describe('Import CSV', () => {
         ),
       ).toBe(true),
     );
-  });
-
-  // docs/specs/026-plan/plan-board.md "On a phone": covering the canvas, the card ends clear of the bottom controls,
-  // whose undo and dock rows hid its footer's Next.
-  it('keeps Setup Sheet clear of a phone’s bottom controls while it covers the canvas', async () => {
-    phone = true;
-    const layout = { ...emptyLayout(rand, 5, 3), setupPending: true as const };
-    fetchSheets.mockResolvedValue([sheetJson('sheetAAAA', { layout })]);
-    draw(element({ sheetId: 'sheetAAAA' }), bridge());
-    const card = await screen.findByRole('heading', { name: 'Setup Sheet' });
-    const wrap = () => card.closest('section')!.parentElement!.closest('div.flex-1')!;
-    expect(wrap().className).not.toContain('4.5rem');
-    act(() => maximisePlanElement('el1', 'Sheet'));
-    await waitFor(() => expect(wrap().className).toContain('4.5rem'));
   });
 
   it('opens the file picker from the header menu', async () => {

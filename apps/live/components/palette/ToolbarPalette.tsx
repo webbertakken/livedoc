@@ -23,7 +23,7 @@ import { LANDSCAPE_HANDLE_ROOM } from '@/components/chrome/LandscapeBars';
 import { track } from '@/lib/telemetry';
 import { SnapWidth } from '@/components/primitives/SnapWidth';
 import { PHONE_TOOLBAR_ITEMS } from '@/components/chrome/phone-toolbar-items';
-import { BAND_STRIP_FLUSH, BAND_TINT, TOOLBAR_CARD } from '@/components/chrome/toolbar-surface';
+import { TOOLBAR_CARD } from '@/components/chrome/toolbar-surface';
 import { ToolbarGroup } from '@/components/chrome/ToolbarGroup';
 import { secondRowTopPx } from '@/lib/canvas-chrome';
 import { useReportCentreOwnRow } from '@/hooks/ui/centre-row-store';
@@ -114,9 +114,9 @@ type Props = Pick<
     participant?: boolean;
   };
 // The strip's card, and the leading card beside it on a phone.
-const CARD_CLASS = `${TOOLBAR_CARD} ${BAND_TINT} ${BAND_STRIP_FLUSH} ${PHONE_TOOLBAR_ITEMS}`;
+const CARD_CLASS = `${TOOLBAR_CARD} ${PHONE_TOOLBAR_ITEMS}`;
 // The strip itself is a toolbar group (docs/specs/004-interface-design/toolbar-group.md), which brings the surface.
-const STRIP_CLASS = `${BAND_TINT} ${BAND_STRIP_FLUSH} ${PHONE_TOOLBAR_ITEMS}`;
+const STRIP_CLASS = PHONE_TOOLBAR_ITEMS;
 
 // On a phone's row, the menu card sits at the left gutter and the strip beside
 // it rather than centred (docs/specs/007-editor/toolbar-layout.md "On a phone");
@@ -449,21 +449,19 @@ export function ToolbarPalette(props: Props) {
       // clicks through; the card and the popover take them.
       // Zoomed at the root, which still spans the canvas, so the card stays
       // centred; `top` is restated so the strip keeps its 12px from the top.
-      // In a maximised element's header band the strip moves to the header's right end (CanvasCover's setStripEnd
-      // sets the two properties on the canvas; centred otherwise, docs/specs/026-plan/plan-board.md).
       // Crowded (it would run under a side group of the top line even with its fewest tiles), it takes a row of its own
       // under the line, still centred (docs/specs/007-editor/toolbar-layout.md "When a line runs out of room"); a
       // phone's strip always does.
       style={{
         ...(scale === 1 ? {} : uiScaleStyle(scale)),
         top: toSurfacePx(crowded || phoneRow ? secondRowTopPx(scale) : 12, scale),
-        alignItems: crowded ? 'center' : 'var(--plan-strip-align, center)',
+        alignItems: 'center',
         // Off centre between the side groups: padding twice the shift on one side moves the centred card by it.
         ...(shift > 0
           ? { paddingLeft: toSurfacePx(2 * shift, scale) }
           : shift < 0
             ? { paddingRight: toSurfacePx(-2 * shift, scale) }
-            : { paddingRight: 'var(--plan-strip-end, 0px)' }),
+            : {}),
       }}
       // While one of its popovers is open (a category's flyout, More, Search) the strip rises to the popover layer,
       // so what hangs from it sits over everything on the canvas, an element's toolbar and menus included.

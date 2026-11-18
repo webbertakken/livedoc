@@ -1,22 +1,12 @@
 // The Plan board's colours (docs/specs/026-plan/plan-board.md "Theme and style") come from
 // @livedoc/document, shared with the SVG export; this module adds the editor's own bits.
 import type { CSSProperties } from 'react';
-import {
-  liftAccent,
-  planOwnColoursOf,
-  planPresetColours,
-  type ShapeElement,
-} from '@livedoc/document';
+import { liftAccent, planOwnColoursOf, type ShapeElement } from '@livedoc/document';
 
 export { PRIORITY_COLOURS, accentOn, planPalette, type PlanPalette } from '@livedoc/document';
 
 // A board's or card's own colours, as planPalette reads them (its preset included).
 export const planOwnColours = (el: ShapeElement) => planOwnColoursOf(el);
-
-// The hue a maximised board, view or sheet lends the chrome in its header band (toolbar-surface BAND_TINT): its
-// preset's hue, else its own border colour; none for an element in the theme's neutral colours.
-export const planBandTint = (el: ShapeElement): string | undefined =>
-  planPresetColours(el.colorPreset, 'light')?.hue ?? el.strokeColor ?? undefined;
 
 // A type accent in the app's own chrome (panels, popovers, the palette): the colour as chosen, and in
 // dark mode the lifted one, so Project's black still shows (docs/specs/026-plan/item-types.md). The

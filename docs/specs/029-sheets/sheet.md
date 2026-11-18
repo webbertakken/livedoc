@@ -60,8 +60,8 @@ the left beside Cell Size and Freeze Header Row on the right.
   **Setup Sheet** card in place of the grid (the header, cog and Maximise stay), as a new board shows Setup Board:
   the card in the Sheet's colours (a sheet glyph, "Setup Sheet", "Start from a layout, your cards or a blank grid.
   Everything can change later from its cog.", Help), with Setup Board's wizard stepper: **Start From**, then **Style** (Plan Cards adds **Cards** and **Columns** between). Someone who may only view
-  sees the empty grid. Covering the canvas on a phone, the card ends clear of the bottom controls (one row: undo,
-  Style, Fit), so its footer is never under them.
+  sees the empty grid. Covering the canvas, the Sheet sits in the content frame above the bottom controls, so the
+  card's footer is never under them.
 - **Start From**: an option list ([Option lists](../026-plan/plan-board.md#option-lists)), a row per start with its
   glyph, name and line, **Blank** chosen to start:
 
@@ -177,11 +177,9 @@ rule under it, gridlines off), **Plain** (no fills, colours or borders; bold and
 
 ## Sheet tab
 
-- A Sheet tab ([Plan tabs](../026-plan/plan-tabs.md)) is its one Sheet filling the tab. While its header holds the
-  top row (as a maximised Sheet's does), the **toolbar** rides in that row too, in a card of its own between the menu
-  box (which holds the Sheet's name) and the controls card, in the Sheet's colours, taking the row's free width; the
-  formula bar and grid start under the header. Without room for the band (a phone, a narrow window) it stays under the
-  header as ever.
+- A Sheet tab ([Plan tabs](../026-plan/plan-tabs.md)) is its one Sheet filling the tab, in the content frame the
+  editor's chrome leaves ([It respects the chrome](../026-plan/plan-board.md#maximised-board)): its header (its name
+  and controls), then the **toolbar**, the formula bar and the grid, as on the canvas.
 
 ## The Sheet element
 
@@ -244,8 +242,7 @@ rule under it, gridlines off), **Plain** (no fills, colours or borders; bold and
 ### Toolbar
 
 One row, shown for someone who may edit, on a Plan tab: on its left a **category switcher** (the palette's own
-category dropdown, in its toolbar style, a tile grid; in a header band it fills the band's height, flush to its
-inset, as the brand group's mode switch does), and to its right the chosen category's buttons only:
+category dropdown, in its toolbar style, a tile grid), and to its right the chosen category's buttons only:
 
 | Category  | Buttons                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -283,11 +280,6 @@ inset, as the brand group's mode switch does), and to its right the chosen categ
   colour swatches, Font, Font Size's stepper) are their glyph opening the menu they open from More.
 - Each button reads the selection's active cell (Bold pressed when it is bold) and acts on the whole selection.
 - Undo and Redo are the canvas's own (its controls and the keys), not repeated in the toolbar.
-
-- In a header band (maximised or filling its tab) the Sheet's controls (Focus, Maximise or Restore and the cog) end the toolbar, after Search behind a hairline: the top row's right is one run of buttons, straight on the Sheet's
-  header with no card around it, as the brand group sits at its left ([Plan board](../026-plan/plan-board.md) "The header
-  holds the top row"). Their width is measured and kept out of the room the buttons share, so in a narrow
-  window buttons fold into More rather than the controls being clipped.
 
 ### Formula bar
 

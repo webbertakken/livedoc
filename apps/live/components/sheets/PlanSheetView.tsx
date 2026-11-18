@@ -16,10 +16,8 @@ import { formatA1, normaliseRange, formatRange, quoteSheet } from '@livedoc/shee
 import type { ShapeElement } from '@livedoc/document';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { usePlan } from '@/components/plan/PlanContext';
-import { planBandTint, planOwnColours, planPalette } from '@/components/plan/plan-palette';
+import { planOwnColours, planPalette } from '@/components/plan/plan-palette';
 import { MaximisableSlot } from '@/components/plan/MaximisedPlanLayer';
-import { PHONE_SHEET_END_CLEARANCE } from '@/components/plan/phone-board';
-import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
 import { useBoardMaximised } from '@/hooks/plan/useBoardMaximised';
 import { useSheetsBridgeContext } from '@/hooks/sheets/useSheetsBridge';
 import { SheetCellThreadsProvider } from '@/hooks/sheets/sheet-comments-context';
@@ -31,7 +29,6 @@ import {
 } from './sheet-controller';
 import { SheetHeader } from './SheetHeader';
 import { SheetToolbar } from './SheetToolbar';
-import { useInHeaderBand } from '@/components/plan/menu-name-slot';
 import { SheetFormulaBar } from './SheetFormulaBar';
 import { SheetGrid } from './SheetGrid';
 import { SheetStatusBar } from './SheetStatusBar';
@@ -69,8 +66,6 @@ export function PlanSheetView({
     <MaximisableSlot
       id={element.id}
       maximised={maximised}
-      tint={planBandTint(element)}
-      blend={{ surface: palette.surface, line: palette.border }}
       fill={filled}
       placeholder={{
         backgroundColor: palette.surface,
@@ -312,11 +307,7 @@ function SheetParts({
   // Setup Sheet (sheet.md "Setup Sheet"): a placed sheet awaiting setup shows it while it has no cells; cells
   // arriving any other way (a peer, an agent, an import) end setup, so a sheet cleared later never shows it again.
   const pending = c.sheet.layout.setupPending === true;
-  const phone = useIsMobileViewport();
   const settingUp = pending && c.sheet.cells.size === 0 && canEdit && interactive;
-  // The header holds the top row (menu-name-slot): the toolbar joins it rather than sitting under it.
-  const [bandMarker, inBand] = useInHeaderBand();
-  const toolbarInBand = inBand && c.canShape && !settingUp;
   const filled = pending && c.sheet.cells.size > 0 && canEdit;
   useEffect(() => {
     if (filled)
@@ -352,25 +343,21 @@ function SheetParts({
         c.setFocused(false);
       }}
     >
-      <span ref={bandMarker} hidden />
       <SheetHeader
         elementId={element.id}
         bounds={element}
         actions={actions}
         onImportCsv={onImportCsv}
-        // Maximised or filling its tab, with the top row in its header: the toolbar rides there, in a card.
-        toolbar={toolbarInBand ? <SheetToolbar actions={actions} inBand /> : undefined}
       />
       {settingUp ? (
-        // Covering the canvas on a phone, the card ends clear of the bottom controls as a board's cards do
-        // (phone-board.ts), so its footer's Next is never under them.
-        <div className={`min-h-0 flex-1 ${phone && c.maximised ? PHONE_SHEET_END_CLEARANCE : ''}`}>
+        // Covering the canvas, the Sheet sits above the bottom controls (its content frame), so the footer is clear.
+        <div className="min-h-0 flex-1">
           <SheetSetup onImportCsv={onImportCsv} />
         </div>
       ) : (
         <>
           {/* Merge, sort, filter, freeze and charts reshape the Sheet: an Editor's, never a Participant's. */}
-          {c.canShape && !toolbarInBand ? <SheetToolbar actions={actions} /> : null}
+          {c.canShape ? <SheetToolbar actions={actions} /> : null}
           {interactive ? <SheetFormulaBar actions={actions} input={input} /> : null}
           <SheetGrid
             elementId={element.id}

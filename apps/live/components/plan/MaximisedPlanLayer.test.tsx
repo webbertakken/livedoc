@@ -262,7 +262,8 @@ describe('where a maximised element grows from and shrinks to', () => {
   });
 });
 
-// docs/specs/026-plan/plan-board.md "The header holds the top row": the cover hands the band to the element's header.
+// docs/specs/026-plan/plan-board.md "Maximised board", "It respects the chrome": the cover holds the element in the
+// content frame and leaves the chrome as it is.
 describe('the canvas cover', () => {
   const insets = { top: 0, right: 0, bottom: 0, left: 0 };
   // docs/specs/008-canvas/canvas-and-palette.md "Canvas": a cover inherits the canvas's colour and static pattern, but an
@@ -273,7 +274,7 @@ describe('the canvas cover', () => {
         <CanvasPatternContext.Provider
           value={pattern ? { pattern, color: '#123456', scale: 1.5, speed: 2, opacity: 0.5 } : null}
         >
-          <CanvasCover layout={{ insets, band: null }} marker={{ 'data-x': '' }}>
+          <CanvasCover insets={insets} marker={{ 'data-x': '' }}>
             <span />
           </CanvasCover>
         </CanvasPatternContext.Provider>,
@@ -297,62 +298,26 @@ describe('the canvas cover', () => {
     expect(cover(null).querySelector('[data-tab-pattern-layer]')).toBeNull();
   });
 
-  it('sets the header band for the element it holds, and none without one', () => {
-    // The cover sits in the canvas, as it is portalled there; the strip's place is set on the canvas.
+  it('holds the element at its insets and never touches the chrome around it', () => {
+    // The cover sits in the canvas, as it is portalled there, beside the chrome.
     const main = document.createElement('main');
     document.body.appendChild(main);
-    const { container, rerender } = render(
-      <CanvasCover
-        layout={{ insets, band: { height: 53, left: 124, mid: 349, stripEnd: 300, end: 0 } }}
-        marker={{}}
-      >
+    const { container } = render(
+      <CanvasCover insets={{ top: 66, right: 0, bottom: 68, left: 12 }} marker={{ 'data-y': '' }}>
         <span />
       </CanvasCover>,
       { container: main },
     );
-    expect(main.style.getPropertyValue('--plan-strip-end')).toBe('300px');
-    expect(main.style.getPropertyValue('--plan-strip-align')).toBe('flex-end');
-    // The strip goes flush on the header while it is in the band (BAND_STRIP_FLUSH).
-    expect(main.hasAttribute('data-strip-in-band')).toBe(true);
-    const inner = container.querySelector<HTMLElement>('[data-header-band]')!;
-    expect(inner.style.getPropertyValue('--plan-band-h')).toBe('53px');
-    expect(inner.style.getPropertyValue('--plan-band-left')).toBe('124px');
-    expect(inner.style.getPropertyValue('--plan-band-mid')).toBe('349px');
-    rerender(
-      <CanvasCover layout={{ insets: { ...insets, top: 66 }, band: null }} marker={{}}>
-        <span />
-      </CanvasCover>,
-    );
-    expect(container.querySelector('[data-header-band]')).toBeNull();
-    const plain = container.querySelector<HTMLElement>('[data-canvas-cover] > div')!;
-    expect(plain.style.top).toBe('66px');
-    expect(plain.style.getPropertyValue('--plan-band-h')).toBe('');
-    // No band: the strip is centred again.
-    expect(main.style.getPropertyValue('--plan-strip-end')).toBe('');
-    expect(main.hasAttribute('data-strip-in-band')).toBe(false);
-    main.remove();
-  });
-
-  it("lends the element's hue to the chrome in its band, and takes it back", () => {
-    const main = document.createElement('main');
-    document.body.appendChild(main);
-    const band = { height: 53, left: 124, mid: 349, stripEnd: 300, end: 0 };
-    const { rerender } = render(
-      <CanvasCover layout={{ insets, band }} marker={{}} tint="#0284c7">
-        <span />
-      </CanvasCover>,
-      { container: main },
-    );
-    expect(main.dataset.bandTint).toBe('');
-    expect(main.style.getPropertyValue('--band-tint')).toBe('#0284c7');
-    // No band (the top row has no room for it): the chrome keeps its own colours.
-    rerender(
-      <CanvasCover layout={{ insets, band: null }} marker={{}} tint="#0284c7">
-        <span />
-      </CanvasCover>,
-    );
-    expect(main.dataset.bandTint).toBeUndefined();
-    expect(main.style.getPropertyValue('--band-tint')).toBe('');
+    const frame = container.querySelector<HTMLElement>('[data-y]')!;
+    expect([frame.style.top, frame.style.bottom, frame.style.left, frame.style.right]).toEqual([
+      '66px',
+      '68px',
+      '12px',
+      '0px',
+    ]);
+    // Nothing is set on the canvas for the chrome to wear or follow.
+    expect(main.getAttributeNames()).toEqual([]);
+    expect(main.getAttribute('style')).toBeNull();
     main.remove();
   });
 });

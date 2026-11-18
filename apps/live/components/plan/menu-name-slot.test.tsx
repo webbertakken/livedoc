@@ -1,74 +1,34 @@
 // @vitest-environment jsdom
-// docs/specs/026-plan/plan-board.md "The name rides in the active tab": a name moves into the segment only while its
-// header sits in a header band, and moves back when the band goes; it is the same node, so its handlers still run.
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { announceHeaderBand, InMenuBox, MenuNameSlot } from './menu-name-slot';
+// docs/specs/026-plan/plan-tabs.md "Its name in the active tab": the active tab segment's slot, which a Dashboard tab's
+// name portals into, is known to whoever reads it while it is mounted, and forgotten once it goes.
+import { act, cleanup, render, renderHook } from '@testing-library/react';
+import { afterEach, describe, expect, it } from 'vitest';
+import { MenuNameSlot, setMenuNameSlot, useMenuNameSlot } from './menu-name-slot';
 
 afterEach(cleanup);
 
-function Header({ banded, onDoubleClick }: { banded: boolean; onDoubleClick?: () => void }) {
-  return (
-    <div {...(banded ? { 'data-header-band': '' } : {})}>
-      <div data-testid="header" onDoubleClick={onDoubleClick}>
-        <InMenuBox render={(inBox) => <span data-in-box={inBox ? 'yes' : 'no'}>Roadmap</span>} />
-      </div>
-    </div>
-  );
-}
-
-const slot = () => document.querySelector('[data-menu-name-slot]') as HTMLElement;
-
-describe('InMenuBox', () => {
-  it('stays in its header outside a band', () => {
-    render(
-      <>
-        <MenuNameSlot />
-        <Header banded={false} />
-      </>,
-    );
-    expect(screen.getByTestId('header').textContent).toBe('Roadmap');
-    expect(slot().textContent).toBe('');
-    expect(screen.getByText('Roadmap').dataset.inBox).toBe('no');
+describe('MenuNameSlot', () => {
+  it('is the slot while mounted, and none once it goes', () => {
+    const { result } = renderHook(() => useMenuNameSlot());
+    expect(result.current).toBeNull();
+    const view = render(<MenuNameSlot />);
+    const slot = document.querySelector('[data-menu-name-slot]');
+    expect(result.current).toBe(slot);
+    view.unmount();
+    expect(result.current).toBeNull();
   });
 
-  it('rides in the menu box inside a band, and comes back when the band goes', () => {
-    const view = render(
-      <>
-        <MenuNameSlot />
-        <Header banded />
-      </>,
-    );
-    expect(slot().textContent).toBe('Roadmap');
-    expect(screen.getByTestId('header').textContent).toBe('');
-    expect(screen.getByText('Roadmap').dataset.inBox).toBe('yes');
-    view.rerender(
-      <>
-        <MenuNameSlot />
-        <Header banded={false} />
-      </>,
-    );
-    act(() => announceHeaderBand());
-    expect(slot().textContent).toBe('');
-    expect(screen.getByTestId('header').textContent).toBe('Roadmap');
-  });
-
-  it('keeps its header’s handlers in the box (a double-click renames)', () => {
-    const onDoubleClick = vi.fn();
-    render(
-      <>
-        <MenuNameSlot />
-        <Header banded onDoubleClick={onDoubleClick} />
-      </>,
-    );
-    fireEvent.doubleClick(screen.getByText('Roadmap'));
-    expect(onDoubleClick).toHaveBeenCalledTimes(1);
-  });
-
-  it('stays in its header with no menu box (a phone)', () => {
-    render(<Header banded />);
-    expect(screen.getByTestId('header').textContent).toBe('Roadmap');
+  it('tells no one when the same slot is set again', () => {
+    let renders = 0;
+    renderHook(() => {
+      renders++;
+      return useMenuNameSlot();
+    });
+    const el = document.createElement('span');
+    act(() => setMenuNameSlot(el));
+    const after = renders;
+    act(() => setMenuNameSlot(el));
+    expect(renders).toBe(after);
+    act(() => setMenuNameSlot(null));
   });
 });
-
-// The open tab's name in the menu box (docs/specs/007-editor/toolbar-layout.md "The tab's name").

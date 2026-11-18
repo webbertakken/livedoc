@@ -6,7 +6,6 @@ import { AuthControls } from '@/components/chrome/AuthControls';
 import { ChromeControls } from '@/components/chrome/ChromeControls';
 import { ToolbarGroup, ToolbarPart } from '@/components/chrome/ToolbarGroup';
 import { WorkbenchOpenLink } from '@/components/chrome/WorkbenchChrome';
-import { BAND_BLEND, BAND_TINT } from '@/components/chrome/toolbar-surface';
 import { PHONE_TOOLBAR_ITEMS } from '@/components/chrome/phone-toolbar-items';
 import { TourOfferButton } from '@/components/tour/TourOfferButton';
 import { DocumentActions, type DocumentActionsProps } from './DocumentActions';
@@ -54,7 +53,7 @@ export function ActionsGroup({
       data-region="header"
       style={scale === 1 ? undefined : uiScaleStyle(scale)}
       // On a narrow phone it gives way to the brand group and swipes sideways (STRIP_RAIL_SCROLL's idiom).
-      className={`pointer-events-auto relative ml-auto min-w-0 phone:overflow-x-auto phone:[scrollbar-width:none] [&:not(:has([data-toolbar-part]:not(:empty)))]:hidden ${BAND_TINT} ${BAND_BLEND} ${PHONE_TOOLBAR_ITEMS}`}
+      className={`pointer-events-auto relative ml-auto min-w-0 phone:overflow-x-auto phone:[scrollbar-width:none] [&:not(:has([data-toolbar-part]:not(:empty)))]:hidden ${PHONE_TOOLBAR_ITEMS}`}
       onPointerDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => {
         e.preventDefault();

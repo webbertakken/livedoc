@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PHONE_END_CLEARANCE, boardLook, shownQuick, type BoardPlace } from './phone-board';
+import { boardLook, shownQuick, type BoardPlace } from './phone-board';
 
 // docs/specs/026-plan/plan-board.md "On a phone", "Maximised board".
 const place = (over: Partial<BoardPlace>): BoardPlace => ({
@@ -20,16 +20,7 @@ describe('boardLook', () => {
       container: false,
       touch: 'touch-none',
       snap: false,
-      endClearance: '',
     });
-  });
-
-  it('lets a covering phone board scroll its last cards clear of the bottom controls, and only that', () => {
-    expect(boardLook(place({ phone: true, covering: true }), undefined).endClearance).toBe(
-      PHONE_END_CLEARANCE,
-    );
-    expect(boardLook(place({ phone: true, inSlot: true }), undefined).endClearance).toBe('');
-    expect(boardLook(place({ covering: true }), undefined).endClearance).toBe('');
   });
 
   it('gives a covering desktop board five slots and a body that scrolls under a finger', () => {
