@@ -48,7 +48,7 @@ export const Protection = {
     return {
       id,
       sheetId,
-      range: range as IdRange | null,
+      range,
       editors: editors as string[],
       warnOnly,
       description,
