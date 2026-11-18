@@ -284,10 +284,10 @@ and a per-frame log of the strip, its rail and the top line, in a production bui
 A blank diagram opened from `/new?template=blank`, Chromium, dark mode, three opens each. Before is docs.nu at
 `ffc7f937b4` (a guest's Sign in button on the top line too); after is a local production build of the change.
 
-| Width | Before, docs.nu  | Before, local | After, local |
-| ----- | ---------------- | ------------- | ------------ |
-| 1280  | 0.0370           | 0.0281        | 0            |
-| 1440  | 0.0267 to 0.0273 | not measured  | 0            |
+| Width | Before, docs.nu  | Before, local | After, local | After, docs.nu (#255) |
+| ----- | ---------------- | ------------- | ------------ | --------------------- |
+| 1280  | 0.0370           | 0.0281        | 0            | 0 (3 opens)           |
+| 1440  | 0.0267 to 0.0273 | not measured  | 0            | 0 (3 opens)           |
 
 - After, 800 to 1920 wide: a blank diagram and a blank brainstorm, 0 at every width (8 widths).
 
@@ -296,11 +296,15 @@ pages layer that names the page someone is on loads later, then as an article's 
 loads with the article's editor later still, on a row of its own. Now the tab's landing page names the kind before
 the first frame, and the slot holds the docked row's place, invisible, until the controls arrive.
 
-| Width | Before, local | After, local                             |
-| ----- | ------------- | ---------------------------------------- |
-| 1280  | 0.0325        | 0 (3 opens)                              |
-| 1024  | 0.0526        | 0                                        |
-| 1440  | 0.0265        | 0.0055 to 0.0065: the tour button, below |
+| Width | Before, local | After, local                             | After, docs.nu (#255) |
+| ----- | ------------- | ---------------------------------------- | --------------------- |
+| 1280  | 0.0325        | 0 (3 opens)                              | 0 (3 opens)           |
+| 1024  | 0.0526        | 0                                        | 0 (3 opens)           |
+| 1440  | 0.0265        | 0.0055 to 0.0065: the tour button, below | 0 (3 opens)           |
+
+- At 1440 docs.nu measures 0 where the local build measured 0.0055. Inferred, not traced: a guest there also has the
+  Sign in button on the top line, so the article's strip has a row of its own from the first frame and the late tour
+  button moves nothing. Locally, with sign-in off, the late tour button still moves the strip.
 
 ## Refuted or set aside
 
