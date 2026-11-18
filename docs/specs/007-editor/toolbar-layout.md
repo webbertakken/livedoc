@@ -607,10 +607,18 @@ their bottom-row buttons. What changes to fit the width:
   - what the strip draws changing (its tiles, More, the bar's names) refits the tile count, the whole-pixel box
     (`SnapWidth`'s `contentKey`) and the placement in that commit;
   - the tray follows the strip there (`useToolbarBox`), and a tour on offer as the editor opens is published
-    before the first frame (`useOfferTour`).
+    before the first frame (`useOfferTour`);
+  - the page someone opens on sets the palette's kind before the first frame: the page the view lands on, from
+    the tab's own pages (`useOpeningPageKind`), until the pages layer, a chunk of its own, finds the page in view
+    (`useLogoPaletteSwitch`);
+  - an article's formatting comes with the article's editor, a chunk of its own, after the strip is drawn: until it
+    docks, the slot holds its place, the same row invisible and inert (`ArticleDockReserve`, its structure and sizes
+    shared with the page toolbar in `article-dock-row.tsx`), and lets it go in the commit the controls arrive.
 
-  Nothing about the strip or its tray moves as a board opens (`palette-open-still.spec.ts`); until November 2026
-  each open shifted it by 0.027 to 0.037 on docs.nu.
+  Nothing about the strip or its tray moves as a board or an article opens (`palette-open-still.spec.ts`); until
+  November 2026 a board's open shifted it by 0.027 to 0.037 on docs.nu, an article's by 0.02 to 0.08. One trigger
+  remains: a Pages tab's tour is offered by a host that loads after the strip is drawn, so where the strip just
+  fits the line (an article at 1440 wide) its Start Tour button still sends the strip to a row of its own.
 
 ## Look
 

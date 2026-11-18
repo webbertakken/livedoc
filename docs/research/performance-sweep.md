@@ -291,6 +291,17 @@ A blank diagram opened from `/new?template=blank`, Chromium, dark mode, three op
 
 - After, 800 to 1920 wide: a blank diagram and a blank brainstorm, 0 at every width (8 widths).
 
+An article (Webber's ruling: reserve the dock's room). Its strip was drawn first as an infographic page's, since the
+pages layer that names the page someone is on loads later, then as an article's with its formatting docked, which
+loads with the article's editor later still, on a row of its own. Now the tab's landing page names the kind before
+the first frame, and the slot holds the docked row's place, invisible, until the controls arrive.
+
+| Width | Before, local | After, local                             |
+| ----- | ------------- | ---------------------------------------- |
+| 1280  | 0.0325        | 0 (3 opens)                              |
+| 1024  | 0.0526        | 0                                        |
+| 1440  | 0.0265        | 0.0055 to 0.0065: the tour button, below |
+
 ## Refuted or set aside
 
 About half the leads did not survive a check; they are listed so nobody proposes them again.
@@ -400,6 +411,6 @@ Parked:
 - Fifteen canvas-gesture leads belong to the canvas session: zoom and pan re-renders, drag previews, snapping.
 - Among them, the Minimap runs a whole-board arrow label pass for pictures that draw no labels.
 - Those leads are unverified; about half of this sweep's leads did not survive a check.
-- An article's strip still shifts as it opens (0.02 to 0.08): its formatting docks into the strip once the page
-  editor has loaded, after the strip is drawn. Holding, loading or reserving it is a design fork.
-- A slide deck's tour is offered about 150 ms after the strip is drawn, which moves the strip 43 px (0.001).
+- A Pages tab's tour is offered by a host that loads after the strip is drawn (`EditorTours`, `PagesTourHost`): its
+  button joins the top line a frame late. An article at 1440, whose strip just fits the line, then takes a row of its
+  own (0.0055); a slide deck's strip moves 43 px (0.001). Offering it from eager code is a tour refactor of its own.
