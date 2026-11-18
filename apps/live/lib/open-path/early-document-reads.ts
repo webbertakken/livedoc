@@ -14,6 +14,7 @@ import { ensureSignedGuestIdentity } from '@/lib/guest-identity';
 import { documentIdFromPath } from '@/lib/legacy-editor-path';
 import { isOfflineId } from '@/lib/offline/offline-ids';
 import { firstTabToLoad } from '@/lib/tab-scope';
+import { loadKindFamiliesFor } from '@/lib/element-kinds/load-for';
 
 // What the address opened, as the editor reads it: the document, the one tab a scoped link opens, the share code the
 // tab read presents (null for the document's owner), and whether the read already carried the tab it opens first (a
@@ -24,6 +25,13 @@ type Opened = {
   tabShareCode: string | null;
   carriedTab: boolean;
 };
+
+// The element kind families a tab holds load while the editor's code downloads (docs/specs/016-platform/web-performance.md
+// "At the open"), so the board's first paint, which waits for them, finds them in.
+function startKindFamilies(tab: unknown): void {
+  const elements = (tab as { elements?: unknown } | null)?.elements;
+  if (Array.isArray(elements)) void loadKindFamiliesFor(elements, 'open');
+}
 
 export async function askEarlyDocumentReads(input: {
   // The account the settled session names, or null for a guest.
@@ -53,7 +61,7 @@ export async function askEarlyDocumentReads(input: {
       return;
     }
     const tab = await tabRead(selfId, document.id, firstId, tabShareCode, { open: true });
-    void askEarly('tab', tab.url, tab.headers);
+    startKindFamilies((await answerOf(askEarly('tab', tab.url, tab.headers)))?.tab);
   } catch (err) {
     // A signed-in reader without a token, say: the editor meets the same and handles it; nothing is asked early.
     debugLog(`[early-reads] stopped ${String(err)}`);
@@ -69,6 +77,7 @@ async function openShared(code: string, selfId: string): Promise<Opened | null> 
   const body = await answerOf(askEarly('share', share.url, share.headers));
   const document = body?.document as LiveDoc | undefined;
   if (!document) return null;
+  startKindFamilies(body!.openedTab);
   const { sessionShareCode } = resolveDocumentSession({
     documentOwnerId: document.ownerId,
     selfId,
@@ -93,6 +102,7 @@ async function openOwn(id: string, selfId: string): Promise<Opened | null> {
   const read = await documentRead(selfId, id, { open: true });
   const body = await answerOf(askEarly('document', read.url, read.headers));
   if (!body?.document) return null;
+  startKindFamilies(body.openedTab);
   return {
     document: body.document as LiveDoc,
     scope: null,

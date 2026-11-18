@@ -9,6 +9,7 @@ import { tileDragStart } from './palette-tile-drag';
 import { usePlanCardTileDisabled } from '@/hooks/plan/card-types-taken';
 import type { WhiteboardPenId } from '@/lib/whiteboard-prefs';
 import { MarkerPaletteTile } from './MarkerPaletteTile';
+import { prefetchTileKindFamily, withKindFamily } from '@/lib/element-kinds/tile-family';
 
 // Renders palette tiles from the shared catalogue (palette-tile-defs): maps each tile's action
 // descriptor to the editor's add-handler bundle and derives the pending-draw highlight, so every
@@ -62,6 +63,12 @@ export function tileHandler(
   if (a.type !== 'marker' && actions.cancelDraw && tileActive(def, pendingDraw)) {
     return actions.cancelDraw;
   }
+  // A tile that places an element of a kind family places once the family is in (lib/element-kinds/tile-family.ts).
+  return withKindFamily(a, tilePress(def, actions));
+}
+
+function tilePress(def: PaletteTileDef, actions: PaletteTileActions): () => void {
+  const a = def.action;
   switch (a.type) {
     case 'shape':
       // The creation-time choice rides along, so "Add poll" places a poll and
@@ -273,6 +280,7 @@ function TileButton({
       stripTile={compact}
       shortcutAlwaysVisible={compact}
       finishAction={a}
+      onIntent={() => prefetchTileKindFamily(a)}
     >
       {def.icon}
     </IconButton>

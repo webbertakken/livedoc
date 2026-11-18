@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 import { render } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { createShape, type BoxedElement } from '@livedoc/document';
 import { BoxedElementView } from '@/components/canvas/BoxedElementView';
 import type { RemoteSelector } from '@/lib/presence-rows';
+
+// Every element kind family in, as the editor has them once the board is open (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // A collaborator's selection shows as the element's outline in their colour (docs/specs/007-editor/live-app.md "Concurrent-selection lock");
 // it never recolours a face whose accent paints its content. A card being dragged by someone else turned its header

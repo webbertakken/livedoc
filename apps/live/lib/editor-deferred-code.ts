@@ -3,9 +3,10 @@ import type { PresentationOverlay as PresentationOverlayComponent } from '@/comp
 // The editor's code that loads on demand (docs/specs/016-platform/web-performance.md), in one place so each
 // surface's dynamic import and the prefetch below name the same module.
 //
-// - Content a board may draw as soon as it opens (Pages and their writing, the Draw dock, tables,
-//   facilitation panels): fetched as the editor mounts, alongside the document request, so a board that has
-//   one finds its code already in. A board without one pays nothing on the critical path.
+// - Content a board may draw as soon as it opens (Pages and their writing, the Draw dock, tables, sequence
+//   diagrams, the Map): fetched as the editor mounts, alongside the document request, so a board that has one
+//   finds its code already in. A board without one pays nothing on the critical path. An element kind's own code
+//   loads with its family instead (lib/element-kinds), which the board's first paint waits for.
 // - Surfaces someone opens (the Explorer, search, layers, the style panel, tool panels, presenting): fetched
 //   once the opened document has rendered and the page is idle, so a first open does not wait.
 
@@ -25,8 +26,6 @@ export const loadTableView = () => import('@/components/canvas/TableView').then(
 export const loadMinimap = () => import('@/components/canvas/Minimap').then((m) => m.Minimap);
 export const loadSequenceFace = () =>
   import('@/components/canvas/SequenceFace').then((m) => m.SequenceFace);
-export const loadCollabFaceRouter = () =>
-  import('@/components/canvas/collab/CollabFaceRouter').then((m) => m.CollabFaceRouter);
 
 export const loadExplorerPanel = () => import('@/components/panels/Explorer');
 export const loadEditorSearchPanel = () =>
@@ -58,7 +57,6 @@ export const DOCUMENT_CONTENT_CODE = [
   loadArticleFlows,
   loadWhiteboardDock,
   loadTableView,
-  loadCollabFaceRouter,
   loadSequenceFace,
   loadMinimap,
 ] as const;

@@ -4,12 +4,16 @@
 // browse with its memory.
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import type { EditorMode } from '@livedoc/document';
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
 import { PALETTE_ADD_HANDLER_KEYS, type PaletteAddHandlers } from './palette-add-handlers';
 import { ToolbarPalette } from './ToolbarPalette';
 import { HOVER_CLOSE_MS, HOVER_OPEN_MS } from './CategoryBar';
 import { MinimalChromeProvider } from '@/components/providers/minimal-chrome';
+
+// Every element kind family in, as the editor has them once the board is open (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 beforeAll(() => {
   globalThis.ResizeObserver ??= class {

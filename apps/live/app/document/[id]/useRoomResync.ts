@@ -1,6 +1,6 @@
 import { useCallback, type Dispatch, type MutableRefObject, type SetStateAction } from 'react';
 import type { Tab } from '@livedoc/document';
-import { apiLoadTabRevisioned } from '@/lib/api-client';
+import { loadTabWithKindFamilies } from '@/lib/element-kinds/load-tab';
 import { track } from '@/lib/telemetry';
 import { rebaseLocalEdits } from './rebase-local-edits';
 
@@ -60,7 +60,7 @@ export function useRoomResync(opts: {
       const fetched = await Promise.all(
         targets.map(async (id) => {
           try {
-            return await apiLoadTabRevisioned(selfId, documentId, id, sessionShareCode);
+            return await loadTabWithKindFamilies(selfId, documentId, id, sessionShareCode);
           } catch {
             return null;
           }

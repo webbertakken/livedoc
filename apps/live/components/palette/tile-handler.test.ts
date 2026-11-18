@@ -1,7 +1,11 @@
 // A tile pressed again while its tool is armed puts the tool down (docs/specs/008-canvas/canvas-and-palette.md
 // "Placement on add"); a marker keeps its press.
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { tileHandler, type PaletteTileActions } from './PaletteTileGrid';
+
+// Every element kind family in, as the editor has them once the board is open (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 const actions = () =>
   ({

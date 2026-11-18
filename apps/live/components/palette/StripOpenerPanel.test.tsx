@@ -1,10 +1,14 @@
 // @vitest-environment jsdom
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { getPaletteDragPreview, setPaletteDragPreview } from '@/lib/palette-drag-preview';
 import { tilesForCategory } from './palette-tile-defs';
 import type { PaletteTileActions } from './PaletteTileGrid';
 import { StripOpenerPanel } from './StripOpenerPanel';
+
+// Every element kind family in, as the editor has them once the board is open (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/007-editor/editor-modes.md "Popular": a category opener's popover shows its tiles as cards that place,
 // arm and drag as the tiles do.
