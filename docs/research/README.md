@@ -10,6 +10,12 @@ How boards from Google Drive, Miro and Microsoft Whiteboard can come into LiveDo
 
 - ./migration-readiness.md - when designing the Google Drive mirror or a Miro or Whiteboard import: sourced findings, cost model, Drive sync cadences
 
+## Sheets on an open standard
+
+Making the spreadsheet a document type of its own on ODF, looking and working as Google Sheets does: the standard, Google's inventory, the function catalogue, and each design decision compared. The resulting specs live in docs/specs/029-sheets/.
+
+- ./sheets-open-standard/README.md - when working on spreadsheets as a document type: the research index and its recommendations
+
 ## Vision
 
 How the event-storming photo import finds sticky notes in a wall photo and reads their handwriting.
