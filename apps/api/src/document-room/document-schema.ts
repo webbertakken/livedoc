@@ -347,8 +347,28 @@ BEGIN
 END;
 `;
 
+// A text document's live state (docs/specs/034-text-documents/live-editing-and-storage.md "Storage"): the Yjs
+// updates the room applied, appended as each arrives, and the chunks compaction folds them into, each row under the
+// room's row cap. Both go with their tab.
+const STEP_2 = `
+CREATE TABLE IF NOT EXISTS text_document_updates (
+  tab_id TEXT    NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  seq    INTEGER NOT NULL,
+  bytes  BLOB    NOT NULL,
+  PRIMARY KEY (tab_id, seq)
+);
+
+CREATE TABLE IF NOT EXISTS text_document_chunks (
+  tab_id TEXT    NOT NULL REFERENCES tabs (id) ON DELETE CASCADE,
+  idx    INTEGER NOT NULL,
+  rev    INTEGER NOT NULL,
+  bytes  BLOB    NOT NULL,
+  PRIMARY KEY (tab_id, idx)
+);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
-export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [STEP_1 + OUTBOX + SHARES];
+export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [STEP_1 + OUTBOX + SHARES, STEP_2];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;
 

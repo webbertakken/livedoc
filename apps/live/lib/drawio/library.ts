@@ -15,7 +15,7 @@ import { readGraph } from './cells';
 import { convertPage } from './convert-page';
 import { requestDataUrlImage } from './images';
 import type { DrawioInput } from './envelope';
-import { ByteBudget } from '@/lib/inflate';
+import { ByteBudget } from '@livedoc/office-packages';
 import { decompressDiagram } from './inflate';
 import {
   DRAWIO_MAX_FILE_BYTES,

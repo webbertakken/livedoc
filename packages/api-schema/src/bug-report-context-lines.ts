@@ -13,6 +13,7 @@ const TAB_KIND_LABEL: Readonly<Record<TabKind, string>> = {
   sheet: 'Sheet',
   dashboard: 'Dashboard',
   form: 'Form',
+  'text-document': 'Text document',
 };
 
 const SHARE_ROLE_LABEL: Readonly<Record<BugReportShareRole, string>> = {

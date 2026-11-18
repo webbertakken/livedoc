@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { writeZip } from '@/lib/zip-writer-fixture';
+import { writeTestZip as writeZip } from '@livedoc/office-packages/testing';
 import { findBoards } from './board-export';
 import { fileSetFromFiles, fileSetFromZip } from './file-sets';
 import { boardFiles } from './ms-whiteboard-fixtures';

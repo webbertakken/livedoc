@@ -43,6 +43,7 @@ import {
   choosePlacementAgainUrl,
   placementParamsFromSearch,
   wizardBypassKind,
+  wizardBypassTabKind,
   wizardPresetMode,
   wizardPresetQuery,
   wizardStartsBlank,
@@ -58,6 +59,8 @@ import { loadNewDocumentContent } from '@/lib/new-document/new-document-content-
 import { fetchAheadForNamedDocument } from './named-document-ahead';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
+import { textDocumentContent } from '@/lib/text-document/text-document-content';
+import { UNTITLED_TEXT_DOCUMENT } from '@/lib/text-document/text-document-tab';
 import { loadEditorPage } from '@/lib/editor-page-loader';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
 
@@ -282,7 +285,7 @@ export default function NewDocumentPage() {
   const themeId = NEW_DOCUMENT_THEME_ID;
   const commitNewDocument = async (
     templateKind: TemplateKind | null,
-    settings: NewDocumentSettings,
+    asked: NewDocumentSettings,
     // Set by Retry: the failed attempt's ids, so a create that did land is not made twice.
     retrying: CreateIds | null = null,
   ) => {
@@ -290,6 +293,12 @@ export default function NewDocumentPage() {
     setSubmitting(true);
     // A `?q=` preset becomes the search in the new document's start panel (start-query.ts).
     handStartQuery(presetQuery);
+    // A text document (`?kind=text-document`) is stored on LiveDoc: This Browser does not hold its live state yet
+    // (docs/specs/034-text-documents/live-editing-and-storage.md "Offline").
+    const textDocument = wizardBypassTabKind(window.location.search) === 'text-document';
+    const settings: NewDocumentSettings = textDocument
+      ? { ...asked, saveLocation: 'livedoc' }
+      : asked;
     // Save location (docs/specs/006-document/save-locations.md): only This Browser takes the offline branch.
     const offline = isOfflineLocation(settings.saveLocation);
     const { documentId, tabId } = createIdsFor(retrying);
@@ -306,7 +315,9 @@ export default function NewDocumentPage() {
     // A Retry re-runs the create, not the preference write below.
     lastCreateArgs.current = { kind: templateKind, settings, ids: { documentId, tabId } };
     // Named after its template ("Untitled Diagram"); renamed in the editor.
-    const documentName = untitledNameForTemplate(templateKind);
+    const documentName = textDocument
+      ? UNTITLED_TEXT_DOCUMENT
+      : untitledNameForTemplate(templateKind);
     markNameConfirmed();
     // Never create as the 'pending' placeholder — see resolveSelf above.
     const settleIdentity = resolveSelf;
@@ -322,7 +333,9 @@ export default function NewDocumentPage() {
       }
       // The template's tabs, card types and example cards, or one blank tab (lib/new-document-content.ts).
       const { newDocumentContent } = await loadNewDocumentContent();
-      const content = await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
+      const content = textDocument
+        ? textDocumentContent(tabId, documentName)
+        : await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
       // One create for both stores (lib/new-document/write-new-document.ts). Placement is passed through as given:
       // absent is no choice (a default folder may answer), a null folder the root chosen on purpose.
       await writeNewDocument({
@@ -352,6 +365,7 @@ export default function NewDocumentPage() {
       templateKind,
       teamId: settings.teamId,
     });
+    if (textDocument) track('Document', 'Created', 'TextDocument');
     cta.trackCreated();
     // Hand off in place: the editor URL takes /new's history entry, and the editor mounts here,
     // reading the id from the rewritten path exactly as a direct visit would.
@@ -470,7 +484,7 @@ export default function NewDocumentPage() {
       <script
         dangerouslySetInnerHTML={{
           __html: trustedHtml(
-            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template'))document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q'))document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
+            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template')||p.get('kind')==='text-document')document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q'))document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
           ),
         }}
       />

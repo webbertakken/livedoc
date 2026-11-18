@@ -8,8 +8,7 @@ import {
   rememberedLanguage,
   requestDomainExport,
 } from './domain-export';
-import { listZip } from './zip-reader';
-import { writeZip } from './zip-writer';
+import { listZip, writeZip } from '@livedoc/office-packages';
 
 // The editor's half of the zip export (docs/specs/021-event-storming/domain-export.md "The zip").
 

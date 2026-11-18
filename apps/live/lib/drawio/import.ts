@@ -12,7 +12,7 @@ import { readGraph } from './cells';
 import { convertPage } from './convert-page';
 import { readDrawioSource, sniffDrawio, type DrawioInput, type DrawioMeta } from './envelope';
 import { jsonPageElements, readJsonExport, type JsonExportPage } from './json-export';
-import { ByteBudget } from '@/lib/inflate';
+import { ByteBudget } from '@livedoc/office-packages';
 import {
   DRAWIO_MAX_FILE_BYTES,
   DRAWIO_MAX_INFLATED_BYTES,

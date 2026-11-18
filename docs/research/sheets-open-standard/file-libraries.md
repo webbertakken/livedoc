@@ -7,7 +7,7 @@ licences and sizes from npm (verified).
 
 ## What the repo has
 
-- `apps/live/lib/zip-reader.ts`: reads stored and deflated Zip entries through `DecompressionStream('deflate-raw')`,
+- `packages/office-packages/src/zip/zip-reader.ts`: reads stored and deflated Zip entries through `DecompressionStream('deflate-raw')`,
   every offset bounds-checked, under a byte budget shared by the whole import (a zip-bomb guard); `zip-writer.ts`
   writes stored entries with CRC-32 (verified, read). Both are browser-safe and Web-API only, so they run in Workers
   too (inferred: `DecompressionStream` is a Workers API).

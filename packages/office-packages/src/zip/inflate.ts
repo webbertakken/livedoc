@@ -1,6 +1,6 @@
 // Inflating an import's compressed bytes in the browser with DecompressionStream, under a byte budget shared by
 // the whole import (a zip-bomb guard): draw.io payloads (docs/specs/020-import-export/drawio-import.md
-// step 3) and Zip entries (lib/zip-reader.ts).
+// step 3) and Zip entries (zip-reader.ts), and every office package (docs/specs/020-import-export/office-packages.md).
 
 export class BudgetExceeded extends Error {
   constructor() {

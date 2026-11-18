@@ -6,7 +6,8 @@ import dynamic from 'next/dynamic';
 import { CommentBadgesContext } from '@/components/canvas/CommentBadgesContext';
 import { SuppressElementIndicators } from '@/components/canvas/ElementIndicatorStyleContext';
 import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-context';
-import { tabKindOf } from '@livedoc/document';
+import { isTextDocumentTab, tabKindOf } from '@livedoc/document';
+import { TextDocumentHost } from '@/components/text-document/TextDocumentHost';
 import { applyDocumentRename } from './editor-page-helpers';
 import { useBugReportPlace } from '@/lib/bug-report/place';
 import { openSearchWithPrefetch } from '@/lib/open-search';
@@ -557,7 +558,13 @@ export function EditorView() {
                                           >
                                             {/* Indicators are editor chrome: an embed never draws them (docs/specs/008-canvas/element-indicators.md). */}
                                             <SuppressElementIndicators when={embedMode}>
-                                              <EditorCanvasHost />
+                                              {/* A text document tab has its own surface, never the canvas
+                                              (docs/specs/006-document/kinds-outside-the-canvas.md). */}
+                                              {activeTab && isTextDocumentTab(activeTab) ? (
+                                                <TextDocumentHost tabId={activeTab.id} />
+                                              ) : (
+                                                <EditorCanvasHost />
+                                              )}
                                             </SuppressElementIndicators>
                                           </CommentBadgesContext.Provider>
                                         </AgentFocusContext.Provider>
@@ -679,7 +686,10 @@ export function EditorView() {
                                       notice={boardSceneInsert.notice}
                                       onClose={boardSceneInsert.dismissNotice}
                                     />
-                                    <EditorStartPanels />
+                                    {/* The canvas's starts and hints: none on a text document's surface. */}
+                                    {activeTab && isTextDocumentTab(activeTab) ? null : (
+                                      <EditorStartPanels />
+                                    )}
 
                                     {/* Modifier hint (docs/specs/008-canvas/canvas-and-palette.md, docs/specs/021-event-storming/event-storming.md): names what holding Shift does
           right now, and offers the Alt insert-between gesture while a note is

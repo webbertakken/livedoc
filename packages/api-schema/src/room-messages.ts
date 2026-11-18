@@ -174,6 +174,9 @@ export const MUTATION_OP_KINDS = [
   // One article's writing changing, block by block (docs/specs/007-editor/article-pages.md
   // "Collaboration"): two people writing different paragraphs merge, as `el` does for elements.
   'article',
+  // One Yjs update to a text document (docs/specs/034-text-documents/live-editing-and-storage.md): the room applies
+  // and stores it before relaying it, so nothing relayed is unstored; updates commute, so a replay is harmless.
+  'text-document',
   'poll-start',
   'poll-end',
 ] as const;
@@ -484,6 +487,8 @@ export type RoomOp =
       agent?: true;
     }
   | { kind: 'article'; tabId: string; flow: string; removed: true }
+  // One Yjs update to a text document's live state, base64 (docs/specs/034-text-documents/live-editing-and-storage.md).
+  | { kind: 'text-document'; tabId: string; update: string }
   | {
       kind: 'vote';
       tabId: string;
