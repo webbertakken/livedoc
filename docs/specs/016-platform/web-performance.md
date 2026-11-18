@@ -318,8 +318,12 @@ as a different person than the one the session settles, even briefly
   300 ms on docs.nu, about half of reads at its traffic), so the chain's length, not the bytes, is what an open pays.
   The tab and the row cost the room no more D1 round trips: the tab is the room's own storage, the row a subquery of
   the document's. An answer without them (an api from before) is met by the separate reads, as before.
-- **The order that remains:** a document by its address: the session (and token), then the open read. A share link:
-  the session, then the participant row beside the share read, then the first tab, answered by the room behind it.
+  A share link's read, marked the same way, carries the same two: the api asks the document's room for the tab, as
+  the visitor's own tab read would ask it (their identity, the link's code, the password or grant they sent), so the
+  room's gate, redaction and open record are the tab read's own. The room was already asked for the outline.
+- **The order that remains:** the session (and token), then the open read: a document by its address and a share link
+  alike. A first visit mints its guest id between the two. A password-protected link answers its gate first, and
+  opens once the password is right.
 - **A guest id this page minted has no row to read.** The api mints a guest id fresh (`POST /api/guest-id`), so its
   participant row cannot exist yet: the row is written, never asked for first, by the editor, by `/new` and by the
   early reads alike. A first visit pays the mint, not a read between it and the write.
