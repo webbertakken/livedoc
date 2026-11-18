@@ -5,10 +5,8 @@ import { PACKAGE_BUDGETS, type PackageBudgets } from '../limits';
 import { refuse, type PackageRefusal } from '../rejections';
 import { escapeXmlAttribute, XML_DECLARATION } from '../xml/xml-write';
 import { attributeOf, childElements, parseXml, type XmlElement } from '../xml/xml-tree';
-import { ByteBudget } from '../zip/inflate';
-import { listZip, readZipEntry } from '../zip/zip-reader';
+import { readPackageEntries } from '../zip/package-entries';
 import { writeZip } from '../zip/zip-writer';
-import { isSafeEntryName } from './entry-names';
 import { ODF_NS } from './odf-namespaces';
 
 export type OdfEntry = { name: string; mediaType: string; data: Uint8Array };
@@ -17,6 +15,8 @@ export type OdfEntry = { name: string; mediaType: string; data: Uint8Array };
 export type OdfPackage = {
   mediaType: string;
   entries: ReadonlyMap<string, Uint8Array>;
+  /** Each entry's media type as the manifest lists it (directories included), to write kept entries back. */
+  mediaTypes: ReadonlyMap<string, string>;
   dropped: readonly string[];
 };
 
@@ -24,10 +24,6 @@ export type OdfPackageRead = { ok: true; package: OdfPackage } | PackageRefusal;
 
 // Entries that may run or that sign bytes LiveDoc rewrites: dropped and reported, never kept (step 8).
 const DROPPED = [/^Basic\//, /^Scripts\//, /^META-INF\/documentsignatures\.xml$/, /^Thumbnails\//];
-
-const ZIP_MAGIC = [0x50, 0x4b, 0x03, 0x04];
-
-const startsWithZip = (bytes: Uint8Array) => ZIP_MAGIC.every((b, i) => bytes[i] === b);
 
 /** Whether the bytes start as an ODF flat file would: an XML declaration or root, after an optional BOM. */
 export function looksLikeXml(bytes: Uint8Array): boolean {
@@ -45,29 +41,9 @@ export async function readOdfPackage(
   bytes: Uint8Array<ArrayBuffer>,
   budgets: PackageBudgets = PACKAGE_BUDGETS,
 ): Promise<OdfPackageRead> {
-  if (bytes.byteLength > budgets.bytes) return refuse('package_too_large');
-  if (!startsWithZip(bytes)) return refuse('package_damaged');
-  const listed = listZip(bytes);
-  if (!listed.ok) return refuse('package_damaged');
-  if (listed.entries.length > budgets.entries) return refuse('package_too_large');
-  const budget = new ByteBudget(budgets.inflatedBytes);
-  const entries = new Map<string, Uint8Array>();
-  const dropped: string[] = [];
-  for (const entry of listed.entries) {
-    if (!isSafeEntryName(entry.name)) return refuse('package_damaged', { entry: entry.name });
-    if (entry.name.endsWith('/')) continue;
-    if (DROPPED.some((pattern) => pattern.test(entry.name))) {
-      dropped.push(entry.name);
-      continue;
-    }
-    if (entry.encrypted) return refuse('package_encrypted', { entry: entry.name });
-    const read = await readZipEntry(bytes, entry, budget);
-    if (!read.ok) {
-      const rejection = read.refusal === 'too-large' ? 'package_too_large' : 'package_damaged';
-      return refuse(rejection, { entry: entry.name });
-    }
-    entries.set(entry.name, read.bytes);
-  }
+  const read = await readPackageEntries(bytes, budgets, DROPPED);
+  if (!read.ok) return read;
+  const { entries, dropped } = read;
   const manifestBytes = entries.get(MANIFEST);
   let manifest: XmlElement | undefined;
   if (manifestBytes) {
@@ -81,7 +57,10 @@ export async function readOdfPackage(
     ? new TextDecoder().decode(mimetype).trim()
     : manifest && rootMediaType(manifest);
   if (!mediaType) return refuse('package_damaged', { entry: 'mimetype' });
-  return { ok: true, package: { mediaType, entries, dropped } };
+  return {
+    ok: true,
+    package: { mediaType, entries, mediaTypes: manifestMediaTypes(manifest), dropped },
+  };
 }
 
 function manifestEncrypts(root: XmlElement): boolean {
@@ -90,6 +69,16 @@ function manifestEncrypts(root: XmlElement): boolean {
       (c) => c.uri === ODF_NS.manifest && c.local === 'encryption-data',
     ),
   );
+}
+
+function manifestMediaTypes(manifest: XmlElement | undefined): Map<string, string> {
+  const types = new Map<string, string>();
+  for (const entry of manifest ? childElements(manifest) : []) {
+    const path = attributeOf(entry, ODF_NS.manifest, 'full-path');
+    const type = attributeOf(entry, ODF_NS.manifest, 'media-type');
+    if (path && path !== '/' && type !== undefined) types.set(path, type);
+  }
+  return types;
 }
 
 function rootMediaType(manifest: XmlElement): string | undefined {

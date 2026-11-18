@@ -1,14 +1,19 @@
 // A new document's text documents made from files (docs/specs/034-text-documents/files-and-print.md "Opening"): the
 // create request names each text document tab and the file it opens, as base64; the room reads each file with the
 // package's guards and stores its body as the tab's first update.
-import { tabKindOf, type Tab } from '@livedoc/document';
-import { readOdfText, TextDocumentState } from '@livedoc/text-documents';
+import {
+  tabKindOf,
+  textDocumentFormatOf,
+  type Tab,
+  type TextDocumentFormat,
+} from '@livedoc/document';
+import { readTextDocumentFile, TextDocument, TextDocumentState } from '@livedoc/text-documents';
 import { json } from '../responses';
 import type { DocumentEnv } from '../types';
 import { bytesOfBase64 } from '@livedoc/text-documents';
 import { appendTextDocumentUpdate } from './text-document-store';
 
-export type TextDocumentSeed = { tabId: string; file: Uint8Array };
+export type TextDocumentSeed = { tabId: string; format: TextDocumentFormat; file: Uint8Array };
 
 const refusedSeed = (message: string) =>
   json({ error: 'text_document_seed_invalid', message }, { status: 400 });
@@ -20,8 +25,10 @@ export function readTextDocumentSeeds(
 ): TextDocumentSeed[] | Response {
   if (raw === undefined) return [];
   if (!Array.isArray(raw)) return refusedSeed('textDocuments must be a list');
-  const textTabs = new Set(
-    (tabs ?? []).filter((t) => tabKindOf(t) === 'text-document').map((t) => t.id),
+  const textTabs = new Map(
+    (tabs ?? [])
+      .filter((t) => tabKindOf(t) === 'text-document')
+      .map((t) => [t.id, textDocumentFormatOf(t as { format?: unknown })] as const),
   );
   const seen = new Set<string>();
   const out: TextDocumentSeed[] = [];
@@ -32,7 +39,7 @@ export function readTextDocumentSeeds(
     const bytes = typeof file === 'string' ? bytesOfBase64(file) : null;
     if (!bytes) return refusedSeed('file must be base64');
     seen.add(tabId);
-    out.push({ tabId, file: bytes });
+    out.push({ tabId, format: textTabs.get(tabId)!, file: bytes });
   }
   return out;
 }
@@ -41,6 +48,8 @@ export function readTextDocumentSeeds(
 const REJECTION_STATUS: Record<string, number> = {
   package_too_large: 413,
   package_wrong_type: 415,
+  document_too_large: 413,
+  picture_too_large: 413,
 };
 
 /** Store each seed's body as its tab's first update; the first refusal is answered and nothing more is stored. */
@@ -51,7 +60,15 @@ export async function seedTextDocuments(
 ): Promise<{ ok: true } | { ok: false; status: number; body: unknown }> {
   for (const seed of seeds) {
     const started = Date.now();
-    const read = await readOdfText(seed.file);
+    const read = await readTextDocumentFile(seed.file);
+    // A file keeps the format it arrived in (fork C1): one the tab is not held in is not this tab's to open.
+    const arrived = read.ok && (read.fileType === 'docx' ? 'ooxml' : 'odf');
+    if (read.ok && arrived !== seed.format) {
+      console.warn(
+        `[text-document] refused document=${documentId} tab=${seed.tabId} rejection=package_wrong_type format=${arrived}`,
+      );
+      return { ok: false, status: 415, body: { error: 'package_wrong_type' } };
+    }
     if (!read.ok) {
       console.warn(
         `[text-document] refused document=${documentId} tab=${seed.tabId} rejection=${read.rejection} entry=${read.entry ?? '-'} line=${read.line ?? '-'}`,
@@ -62,11 +79,17 @@ export async function seedTextDocuments(
         body: { error: read.rejection, ...(read.entry ? { entry: read.entry } : {}) },
       };
     }
-    if (read.dropped.length > 0)
-      console.info(`[package] dropped document=${documentId} entries=${read.dropped.length}`);
-    await appendTextDocumentUpdate(env, seed.tabId, TextDocumentState.fromBody(read.body));
+    const dropped = read.report.dropped.reduce((n, d) => n + d.count, 0);
+    const kept = read.report.kept.reduce((n, k) => n + k.count, 0);
+    if (dropped > 0) console.info(`[package] dropped document=${documentId} items=${dropped}`);
+    const texts = TextDocument.paragraphTexts(read.document);
+    await appendTextDocumentUpdate(
+      env,
+      seed.tabId,
+      TextDocumentState.fromBody(texts.map((text) => ({ text }))),
+    );
     console.info(
-      `[text-document] file-read document=${documentId} tab=${seed.tabId} paragraphs=${read.body.length} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
+      `[text-document] file-read document=${documentId} tab=${seed.tabId} paragraphs=${texts.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
     );
   }
   return { ok: true };

@@ -15,7 +15,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf node_modules .turbo coverage"
+    "clean": "rm -rf node_modules .turbo coverage",
+    "validate:files": "bash scripts/fetch-office-schemas.sh >/dev/null && vitest run --config vitest.validate.config.ts"
   },
   "dependencies": {
     "@livedoc/office-packages": "workspace:*",
