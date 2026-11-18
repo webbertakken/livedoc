@@ -842,10 +842,14 @@ open it puts down a pen, the eraser or an armed shape, and only with Select
 already in hand does it clear the selection.
 
 H (hand) and Z (zen) keep working as on any tab, and every modifier shortcut
-(undo, copy, delete and the rest) is unchanged. With a single note or text
-box selected, typing a character still edits it rather than switching tool;
+(undo, copy, delete and the rest) is unchanged. With a single note, text
+box or mind node selected, typing a character still edits it rather than switching tool;
 any other selection (a shape just drawn, a line, a stroke) leaves the key to
 the dock, so R then O draws a rectangle and then an ellipse.
+A mind node takes the key because a map is grown by Tab or Enter and then typing the new node's label
+([The mind node](../009-elements/mind-node.md#keyboard)).
+Left to the dock, a label's letters would arm tools: the next press would drop a shape over the node pressed on,
+or erase it and leave its children as roots of their own.
 
 Shift+H and Shift+V flip the selection horizontally and vertically, as on any diagram tab
 ([Selection transforms](../008-canvas/selection-transforms.md)).
