@@ -1,13 +1,13 @@
 'use client';
 
-import type { DragEvent as ReactDragEvent } from 'react';
-import type { Tab } from '@livedoc/document';
+import { useId, type DragEvent as ReactDragEvent } from 'react';
+import { tabKindName, type Tab } from '@livedoc/document';
 import { SideBySideIcon } from '@livedoc/ui';
 import { NameEditor } from '@/components/primitives/NameEditor';
 import { EllipsisMenuButton } from '@/components/chrome/EllipsisMenuButton';
 import { TabPresenceStack } from '@/components/chrome/TabPresenceStack';
 import { TabLockIcon, TabNotSharedIcon } from '@/components/chrome/tab-bar-icons';
-import { TabModeIcon } from '@/components/chrome/editor-mode/TabModeIcon';
+import { TabKindGlyph } from '@/components/chrome/editor-mode/TabKindGlyph';
 import { useSplitViewContext } from '@/components/split/SplitViewContext';
 import { legibleTabAccent } from '@/lib/tab-accent';
 import type { TabsChrome, TabsChromeProps } from './tabs-chrome';
@@ -27,8 +27,9 @@ export function activeTabTint(tab: Tab, isDark: boolean) {
   };
 }
 
-// One tab in the tab list (docs/specs/007-editor/toolbar-layout.md "The tab list"): its mode glyph, its name (cut
-// short with an ellipsis), the presence stack of who is on it, and on the active row its tab menu. It switches on a
+// One tab in the tab list (docs/specs/007-editor/toolbar-layout.md "The tab list"): its kind glyph (its hover card and
+// the row's description naming the kind: editor-modes.md "A tab's kind is always findable"), its name (cut short with an
+// ellipsis), the presence stack of who is on it, and on the active row its tab menu. It switches on a
 // press, renames on a double-click or F2, drags to reorder, and opens the tab menu on a right-click, for someone who
 // may change the tabs. `indented`: a folder's tab, under its heading.
 export function TabListRow({
@@ -47,6 +48,7 @@ export function TabListRow({
   onDropOnRow: (sourceId: string, target: Tab, before: boolean) => void;
 }) {
   const split = useSplitViewContext();
+  const kindId = useId();
   const readOnly = tabs.readOnly ?? false;
   const participants = tabs.participantsByTab.get(tab.id) ?? [];
   const inset = indented ? 'pl-6' : '';
@@ -131,6 +133,7 @@ export function TabListRow({
           type="button"
           data-tab-list-item=""
           aria-current={isActive ? 'page' : undefined}
+          aria-describedby={kindId}
           onClick={() => onPick(tab.id)}
           onDoubleClick={readOnly ? undefined : () => chrome.setEditingId(tab.id)}
           onKeyDown={(e) => {
@@ -140,10 +143,14 @@ export function TabListRow({
           }}
           className={ROW_BUTTON}
         >
-          <TabModeIcon
+          <TabKindGlyph
             tab={tab}
-            style={isActive ? undefined : { color: legibleTabAccent(tab, chrome.isDark) }}
+            named={false}
+            {...(isActive ? {} : { style: { color: legibleTabAccent(tab, chrome.isDark) } })}
           />
+          <span id={kindId} hidden>
+            {tabKindName(tab)}
+          </span>
           {tab.locked ? <TabLockIcon /> : null}
           <span className="truncate">{tab.name}</span>
           {beside ? (

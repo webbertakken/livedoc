@@ -5,7 +5,6 @@ import { uiScaleStyle } from '@/lib/ui-scale';
 import { EditorModeSwitch } from '@/components/chrome/editor-mode/EditorModeSwitch';
 import { ToolbarExplorerButton } from '@/components/chrome/ToolbarExplorerButton';
 import { ToolbarGroup, ToolbarPart } from '@/components/chrome/ToolbarGroup';
-import { BAND_BLEND, BAND_FLUSH, BAND_TINT } from '@/components/chrome/toolbar-surface';
 import { PHONE_TOOLBAR_ITEMS } from '@/components/chrome/phone-toolbar-items';
 import { BrandBack, useBackTarget, type BackTarget } from './BrandBack';
 
@@ -42,7 +41,7 @@ export function BrandGroup({
       data-toolbar-menu=""
       data-region="header"
       style={scale === 1 ? undefined : uiScaleStyle(scale)}
-      className={`pointer-events-auto relative shrink-0 ${BAND_TINT} ${BAND_BLEND} ${BAND_FLUSH} ${PHONE_TOOLBAR_ITEMS}`}
+      className={`pointer-events-auto relative shrink-0 ${PHONE_TOOLBAR_ITEMS}`}
       onPointerDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => {
         e.preventDefault();

@@ -28,7 +28,7 @@ packages/
   forms/          Form tabs: the form model, answer checks, mapping answers to card fields, starters (pure)
   plan-art/       Plan tab images: Board, Sheet and Dashboard tabs as laid out, plan view and card pictures (pure)
   items/          items and the Plan board: item types, field validation, ranks, writes, board projection
-  sheets/         the Sheet engine: A1 addressing, formulas and functions, recalculation, writes, CSV, clipboard (pure)
+  sheets/         the Sheet engine: formulas, recalculation, writes, CSV, the workbook record, its ODF files (pure)
   office-packages/ the layer under every office file: zip, XML, the ODF package, the OOXML container, metadata, units (DOM-free)
   text-documents/ the text document: its model, its live state (Yjs), its ODF and OOXML files, conversion (DOM-free)
   edit-operations/ the engine agent changesets run on: edit operations and replace into element ops

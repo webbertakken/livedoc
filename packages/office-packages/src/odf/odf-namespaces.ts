@@ -11,6 +11,8 @@ export const ODF_NS = {
   meta: 'urn:oasis:names:tc:opendocument:xmlns:meta:1.0',
   svg: 'urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0',
   manifest: 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0',
+  // OpenFormula (ODF 1.4 part 4): a spreadsheet's `table:formula` names it by its prefix, so a file declares it.
+  of: 'urn:oasis:names:tc:opendocument:xmlns:of:1.2',
 } as const;
 
 /** The ODF version every file LiveDoc writes declares. */

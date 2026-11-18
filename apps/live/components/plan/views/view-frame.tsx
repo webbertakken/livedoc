@@ -9,8 +9,6 @@ import { PLAN_VIEW_TITLE_MAX, STATUS_PHASES, STATUS_PHASE_LABELS } from '@livedo
 import type { PlanPalette } from '../plan-palette';
 import type { PlanContextValue } from '../PlanContext';
 import { CountBadge, Tooltip } from '@livedoc/ui';
-import { IN_BOX_TITLE_CLASS, InMenuBox } from '../menu-name-slot';
-import { BAND_CONTROLS_CLASS, BAND_HEADER_END, bandControlsProps } from '../band-controls';
 
 // The phase colours and the overdue red (phase-colours.ts), shared with the views' still pictures.
 import { OVERDUE_RED, PHASE_COLOURS } from '@livedoc/plan-art';
@@ -112,39 +110,27 @@ export function ViewFrame({
       }}
     >
       <div
-        // In a header band (maximised, MaximisedPlanLayer's --plan-band-*), as tall as the top row, after the menu,
-        // its title and count stopping short of the palette strip.
-        className={`flex h-[var(--plan-band-h,2.5rem)] shrink-0 items-center gap-2 border-b pl-[var(--plan-band-left,0.75rem)] pr-3 ${BAND_HEADER_END}`}
+        className="flex h-10 shrink-0 items-center gap-2 border-b pl-3 pr-3"
         style={{ borderColor: palette.border }}
       >
-        <span className="flex min-w-0 max-w-[var(--plan-band-mid,none)] items-center gap-2">
-          {/* In a header band the title rides in the menu box (menu-name-slot). */}
-          <InMenuBox
-            render={(inBox) =>
-              renaming && own?.rename ? (
-                <TitleField
-                  value={own.title ?? bareViewName(title)}
-                  inBox={inBox}
-                  onDone={(next) => {
-                    setRenaming(false);
-                    if (next) own.rename?.(next);
-                  }}
-                />
-              ) : (
-                <span
-                  className={`${inBox ? IN_BOX_TITLE_CLASS : 'min-w-0 truncate text-[13px] font-semibold'} ${own?.rename ? 'cursor-text' : ''}`}
-                  // In the menu box a click renames; in its own header a double-click (a click there moves the element).
-                  {...(own?.rename
-                    ? inBox
-                      ? { onClick: () => setRenaming(true) }
-                      : { onDoubleClick: () => setRenaming(true) }
-                    : {})}
-                >
-                  {shown}
-                </span>
-              )
-            }
-          />
+        <span className="flex min-w-0 items-center gap-2">
+          {renaming && own?.rename ? (
+            <TitleField
+              value={own.title ?? bareViewName(title)}
+              onDone={(next) => {
+                setRenaming(false);
+                if (next) own.rename?.(next);
+              }}
+            />
+          ) : (
+            <span
+              className={`min-w-0 truncate text-[13px] font-semibold ${own?.rename ? 'cursor-text' : ''}`}
+              // A double-click renames (a click in the header moves the element).
+              {...(own?.rename ? { onDoubleClick: () => setRenaming(true) } : {})}
+            >
+              {shown}
+            </span>
+          )}
           {count !== undefined && state === 'ready' ? (
             <CountBadge
               size="md"
@@ -157,13 +143,9 @@ export function ViewFrame({
           ) : null}
         </span>
         {aside || end || slotCog ? (
-          // In a header band, a card like the menu box (band-controls.ts).
           // A view's own controls give way first in a narrow slot (a phone): they scroll sideways, while Maximise and
           // the cog always stay in reach.
-          <span
-            {...bandControlsProps()}
-            className={`ml-auto flex min-w-0 items-center gap-1 ${BAND_CONTROLS_CLASS}`}
-          >
+          <span className="ml-auto flex min-w-0 items-center gap-1">
             {aside ? (
               <span className="flex min-w-0 items-center gap-1 overflow-x-auto [scrollbar-width:none]">
                 {aside}
@@ -251,15 +233,7 @@ export function ViewStepButton({
 }
 
 // The view's title being renamed: Enter or leaving saves the trimmed name, Escape puts it back.
-function TitleField({
-  value,
-  inBox,
-  onDone,
-}: {
-  value: string;
-  inBox: boolean;
-  onDone: (next: string | null) => void;
-}) {
+function TitleField({ value, onDone }: { value: string; onDone: (next: string | null) => void }) {
   const [draft, setDraft] = useState(value);
   const closed = useRef(false);
   const input = useRef<HTMLInputElement>(null);
@@ -287,7 +261,7 @@ function TitleField({
       }}
       onBlur={() => finish(true)}
       onPointerDown={(e) => e.stopPropagation()}
-      className={`${inBox ? IN_BOX_TITLE_CLASS : 'min-w-0 text-[13px] font-semibold'} w-48 rounded-md border border-brand-400 bg-transparent px-1.5 py-0.5 outline-none`}
+      className="min-w-0 w-48 rounded-md border border-brand-400 bg-transparent px-1.5 py-0.5 text-[13px] font-semibold outline-none"
     />
   );
 }

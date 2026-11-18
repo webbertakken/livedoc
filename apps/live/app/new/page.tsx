@@ -62,6 +62,7 @@ import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { textDocumentContent } from '@/lib/text-document/text-document-content';
 import { UNTITLED_TEXT_DOCUMENT } from '@/lib/text-document/text-document-tab';
 import { loadEditorPage } from '@/lib/editor-page-loader';
+import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
 
 // In-place handoff (docs/specs/007-editor/new-document-route.md): once a document is created, this page
@@ -296,9 +297,11 @@ export default function NewDocumentPage() {
     // A text document (`?kind=text-document`) is stored on LiveDoc: This Browser does not hold its live state yet
     // (docs/specs/034-text-documents/live-editing-and-storage.md "Offline").
     const textDocument = wizardBypassTabKind(window.location.search) === 'text-document';
-    const settings: NewDocumentSettings = textDocument
-      ? { ...asked, saveLocation: 'livedoc' }
-      : asked;
+    // A spreadsheet (`?kind=spreadsheet`) is stored on LiveDoc too: This Browser does not hold a workbook yet
+    // (docs/specs/029-sheets/sheet-store.md "In a spreadsheet").
+    const spreadsheet = wizardBypassTabKind(window.location.search) === 'spreadsheet';
+    const settings: NewDocumentSettings =
+      textDocument || spreadsheet ? { ...asked, saveLocation: 'livedoc' } : asked;
     // Save location (docs/specs/006-document/save-locations.md): only This Browser takes the offline branch.
     const offline = isOfflineLocation(settings.saveLocation);
     const { documentId, tabId } = createIdsFor(retrying);
@@ -317,7 +320,9 @@ export default function NewDocumentPage() {
     // Named after its template ("Untitled Diagram"); renamed in the editor.
     const documentName = textDocument
       ? UNTITLED_TEXT_DOCUMENT
-      : untitledNameForTemplate(templateKind);
+      : spreadsheet
+        ? UNTITLED_SPREADSHEET
+        : untitledNameForTemplate(templateKind);
     markNameConfirmed();
     // Never create as the 'pending' placeholder — see resolveSelf above.
     const settleIdentity = resolveSelf;
@@ -335,7 +340,12 @@ export default function NewDocumentPage() {
       const { newDocumentContent } = await loadNewDocumentContent();
       const content = textDocument
         ? textDocumentContent(tabId, documentName)
-        : await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
+        : spreadsheet
+          ? // The engine's id and layout helpers load only for a spreadsheet.
+            (await import('@/lib/spreadsheet/spreadsheet-document')).spreadsheetDocumentContent(
+              tabId,
+            )
+          : await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
       // One create for both stores (lib/new-document/write-new-document.ts). Placement is passed through as given:
       // absent is no choice (a default folder may answer), a null folder the root chosen on purpose.
       await writeNewDocument({
@@ -366,6 +376,7 @@ export default function NewDocumentPage() {
       teamId: settings.teamId,
     });
     if (textDocument) track('Document', 'Created', 'TextDocument');
+    if (spreadsheet) track('Spreadsheet', 'Created', 'Blank');
     cta.trackCreated();
     // Hand off in place: the editor URL takes /new's history entry, and the editor mounts here,
     // reading the id from the rewritten path exactly as a direct visit would.
@@ -484,7 +495,7 @@ export default function NewDocumentPage() {
       <script
         dangerouslySetInnerHTML={{
           __html: trustedHtml(
-            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template')||p.get('kind')==='text-document')document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q'))document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
+            "try{var p=new URLSearchParams(location.search);if(p.has('blank')||p.has('template')||p.get('kind')==='text-document'||p.get('kind')==='spreadsheet')document.documentElement.setAttribute('data-just-draw','');if(p.has('mode')||p.has('q'))document.documentElement.setAttribute('data-wizard-preset','')}catch(e){}",
           ),
         }}
       />

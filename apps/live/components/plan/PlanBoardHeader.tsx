@@ -22,11 +22,8 @@ import { lucideGlyph } from '@livedoc/ui';
 import { BoardWidgetView, type WidgetContext } from './widgets/BoardWidgetView';
 import { BoardWidgetZone } from './widgets/BoardWidgetZone';
 import { BoardTitle } from './BoardTitle';
-import { useInHeaderBand, useMenuNameSlot } from './menu-name-slot';
-import { createPortal } from 'react-dom';
 import { typeStatusRefusal } from '@/hooks/plan/status-refusal';
 import type { PlanPalette } from './plan-palette';
-import { BAND_CONTROLS_CLASS, BAND_HEADER_END, bandControlsProps } from './band-controls';
 
 // The shared six-dot grip (the article zone bar's), a board's move handle.
 const GripIcon = lucideGlyph(lucideGripVertical, 16);
@@ -107,12 +104,8 @@ export function PlanBoardHeader({
     onOpenItem,
   };
   const [renaming, setRenaming] = useState(false);
-  // In a header band, the title and widgets ride in the menu box (menu-name-slot).
-  const nameSlot = useMenuNameSlot();
-  const [bandMarker, inBand] = useInHeaderBand();
-  const inBox = inBand && !!nameSlot;
-  // The board's widgets: in the header on a canvas; in a header band, in the controls card before the cog. A form
-  // sending its responses here leads them (FormBoardStrip), with no one adding it.
+  // The board's widgets, after its title. A form sending its responses here leads them (FormBoardStrip), with no one
+  // adding it.
   const widgetZone = (
     <>
       <FormBoardStrip palette={palette} />
@@ -120,8 +113,8 @@ export function PlanBoardHeader({
         widgets={widgets}
         canEdit={canEdit}
         selected={selected}
-        // In a header band the board is maximised or fills its tab, where no selection shows: an empty zone keeps its +.
-        offerAdd={inBox}
+        // Maximised or filling its tab (not movable), no selection shows: an empty zone keeps its +.
+        offerAdd={!movable}
         palette={palette}
         onChange={(next) => {
           // Taking a widget off clears what it narrowed.
@@ -150,10 +143,7 @@ export function PlanBoardHeader({
     <div
       ref={headerRef}
       data-board-header
-      // Maximised with a header band (MaximisedPlanLayer's --plan-band-*), it is as tall as the top row and starts
-      // after the menu; elsewhere 52 px and 16 px in.
-      className={`relative flex h-[var(--plan-band-h,52px)] shrink-0 items-center gap-3 pl-[var(--plan-band-left,1rem)] pr-4 ${BAND_HEADER_END} [[data-header-band]_&]:border-b`}
-      // In a header band, a hairline under it as a Sheet's and a view's headers have.
+      className="relative flex h-[52px] shrink-0 items-center gap-3 pl-4 pr-4"
       style={{ color: palette.text, borderColor: palette.border }}
       onDoubleClick={(e) => {
         if (!canRename || renaming) return;
@@ -176,68 +166,23 @@ export function PlanBoardHeader({
           <GripIcon />
         </span>
       ) : null}
-      {/* Title and widgets: in a header band they ride in the menu box together (menu-name-slot), the widgets after
-          the name behind a hairline, so the header's top row is one card; on the canvas they sit in the header. */}
-      <span ref={bandMarker} hidden />
-      {inBox && nameSlot
-        ? createPortal(
-            <>
-              <span data-board-title className="contents">
-                <BoardTitle
-                  title={setup.title}
-                  editing={renaming}
-                  selected={selected}
-                  palette={palette}
-                  inBox
-                  onStart={canRename ? () => setRenaming(true) : undefined}
-                  onRename={(t) => onSetup({ ...setup, title: t }, 'Title')}
-                  onDone={() => setRenaming(false)}
-                />
-              </span>
-            </>,
-            nameSlot,
-          )
-        : null}
-      <div className="flex min-w-0 max-w-[var(--plan-band-mid,none)] flex-1 items-center gap-3">
-        {inBox ? null : (
-          <>
-            <span data-board-title className="contents">
-              <BoardTitle
-                title={setup.title}
-                editing={renaming}
-                selected={selected}
-                palette={palette}
-                inBox={false}
-                capped={showWidgets && (widgets.length > 0 || canEdit)}
-                onRename={(t) => onSetup({ ...setup, title: t }, 'Title')}
-                onDone={() => setRenaming(false)}
-              />
-            </span>
-            {/* No press guard here: a press on the zone's empty space selects and moves the board like the
-                rest of the header; each widget keeps its own presses. */}
-            <div className="flex min-w-0 flex-1 items-center">
-              {showWidgets ? widgetZone : null}
-            </div>
-          </>
-        )}
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span data-board-title className="contents">
+          <BoardTitle
+            title={setup.title}
+            editing={renaming}
+            selected={selected}
+            palette={palette}
+            capped={showWidgets && (widgets.length > 0 || canEdit)}
+            onRename={(t) => onSetup({ ...setup, title: t }, 'Title')}
+            onDone={() => setRenaming(false)}
+          />
+        </span>
+        {/* No press guard here: a press on the zone's empty space selects and moves the board like the
+            rest of the header; each widget keeps its own presses. */}
+        <div className="flex min-w-0 flex-1 items-center">{showWidgets ? widgetZone : null}</div>
       </div>
-      {/* In a header band, a card like the menu box (band-controls.ts). */}
-      <div
-        {...bandControlsProps()}
-        className={`ml-auto flex shrink-0 items-center gap-3 ${BAND_CONTROLS_CLASS}`}
-      >
-        {inBox && showWidgets && (widgets.length > 0 || canEdit) ? (
-          // In a header band the widgets ride here, before the cog, behind a hairline: the top row's right is one card.
-          // Someone who may not edit a board with none sees no zone, so no hairline stands alone before the cog.
-          <span
-            data-widget-zone=""
-            className="flex min-w-0 max-w-[min(56vw,46rem)] items-center border-r pr-2"
-            style={{ borderColor: palette.border }}
-            onPointerDown={stop}
-          >
-            {widgetZone}
-          </span>
-        ) : null}
+      <div className="ml-auto flex shrink-0 items-center gap-3">
         {loadFailed || (setup.hideWriting && canEdit) ? (
           <div className="flex shrink-0 items-center gap-2" onPointerDown={stop}>
             {loadFailed ? (

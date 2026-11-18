@@ -9,6 +9,7 @@ import { EditorModeProvider } from '@/components/chrome/editor-mode/editor-mode-
 import { isTextDocumentTab, tabKindOf } from '@livedoc/document';
 import { TextDocumentHost } from '@/components/text-document/TextDocumentHost';
 import { applyDocumentRename } from './editor-page-helpers';
+import { SpreadsheetHost } from '@/components/spreadsheet/SpreadsheetHost';
 import { useBugReportPlace } from '@/lib/bug-report/place';
 import { openSearchWithPrefetch } from '@/lib/open-search';
 import { track } from '@/lib/telemetry';
@@ -106,6 +107,9 @@ export function EditorView() {
   useEffect(() => registerUnsavedWork(hasUnsavedChanges), [hasUnsavedChanges]);
   // F6 moves between the header, palette, canvas, controls and tab bar (canvas-accessibility.md).
   useRegionCycle();
+  // A spreadsheet's sheet tab (docs/specs/029-sheets/spreadsheet.md): its workbook row tells it from a Plan Sheet tab
+  // until stored Plan Sheets are migrated (docs/specs/029-sheets/migration.md).
+  const spreadsheetTab = ctx.documentWorkbook !== null && tabKindOf(ctx.activeTab) === 'sheet';
   const {
     pasteFromClipboard,
     slideDeck,
@@ -558,10 +562,12 @@ export function EditorView() {
                                           >
                                             {/* Indicators are editor chrome: an embed never draws them (docs/specs/008-canvas/element-indicators.md). */}
                                             <SuppressElementIndicators when={embedMode}>
-                                              {/* A text document tab has its own surface, never the canvas
+                                              {/* A text document tab and a spreadsheet's sheet tab each have their own surface, never the canvas
                                               (docs/specs/006-document/kinds-outside-the-canvas.md). */}
                                               {activeTab && isTextDocumentTab(activeTab) ? (
                                                 <TextDocumentHost tabId={activeTab.id} />
+                                              ) : spreadsheetTab ? (
+                                                <SpreadsheetHost tabId={activeTab.id} />
                                               ) : (
                                                 <EditorCanvasHost />
                                               )}
@@ -686,8 +692,9 @@ export function EditorView() {
                                       notice={boardSceneInsert.notice}
                                       onClose={boardSceneInsert.dismissNotice}
                                     />
-                                    {/* The canvas's starts and hints: none on a text document's surface. */}
-                                    {activeTab && isTextDocumentTab(activeTab) ? null : (
+                                    {/* The canvas's starts and hints: none on a text document's or a spreadsheet's surface. */}
+                                    {(activeTab && isTextDocumentTab(activeTab)) ||
+                                    spreadsheetTab ? null : (
                                       <EditorStartPanels />
                                     )}
 

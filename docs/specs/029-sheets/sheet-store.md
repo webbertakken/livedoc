@@ -51,7 +51,8 @@ elements, its snapshots, its changesets or its room.
 
 ## In a spreadsheet
 
-**Status: specified.** Nothing is built. What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
+**Status: specified; the workbook row is built** (format and settings, made with the spreadsheet, carried on the
+document read). What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
 this page holds for both until the Plan Sheet retires.
 
 - **A workbook is a document's sheets.** Each sheet tab holds one sheet (its `tabId`); the document's tab order is
@@ -74,6 +75,9 @@ this page holds for both until the Plan Sheet retires.
   shows before it has loaded.
 - **Limits**: the spreadsheet's ([Spreadsheet](spreadsheet.md#limits)): 20 million cells a workbook (S7),
   18,278 columns, 200 sheets; a write still 5,000 cells and 1 MB.
+- **Referenced by their tabs**: a sheet whose tab is one of a spreadsheet's tabs is referenced by it, so it never waits
+  to expire as an unreferenced Plan Sheet does; a sheet tab removed leaves its sheet unreferenced, kept for Undo until it
+  expires ([Deleting a sheet](#deleting-a-sheet)).
 - **Values are not stored**: as today, the room stores inputs and styles; a file's cached values are written from the
   engine at download, and read from a file only to show a formula LiveDoc cannot evaluate.
 

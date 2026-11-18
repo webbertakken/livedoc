@@ -82,7 +82,7 @@ export function FormPage({
   const mark = useCallback((node: HTMLElement | null) => {
     if (node) setCanvas(document.querySelector<HTMLElement>(CANVAS_ROOT_SELECTOR));
   }, []);
-  const layout = useCanvasLayerInsets(canvas, false);
+  const insets = useCanvasLayerInsets(canvas);
   const plan = usePlan();
   const types = useMemo(() => plan?.types ?? [], [plan?.types]);
   const form: FormDefinition = useMemo(
@@ -238,7 +238,7 @@ export function FormPage({
       />
       {canvas
         ? createPortal(
-            <CanvasCover layout={layout} marker={{ 'data-form-page': '' }}>
+            <CanvasCover insets={insets} marker={{ 'data-form-page': '' }}>
               <FormBuilderContext.Provider value={value}>
                 <div
                   role="region"
@@ -247,7 +247,7 @@ export function FormPage({
                 >
                   <div
                     ref={scrollRef}
-                    className="h-full min-w-0 flex-1 overflow-y-auto overscroll-contain pb-24 max-sm:pb-[calc(6rem+env(safe-area-inset-bottom))]"
+                    className="h-full min-w-0 flex-1 overflow-y-auto overscroll-contain pb-3"
                   >
                     <div className="mx-auto flex w-full max-w-[640px] flex-col gap-3">
                       <FormStatusBar

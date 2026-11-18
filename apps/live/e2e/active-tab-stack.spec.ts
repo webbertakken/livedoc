@@ -34,9 +34,9 @@ test('the tab name opens the tab list; the kind glyph renames the tab', async ({
   await expect(list).toHaveCount(0);
   await expect(stack).toBeFocused();
 
-  const rename = segment(page).getByRole('button', { name: 'Rename tab' });
+  const rename = segment(page).getByRole('button', { name: 'Rename Diagram tab' });
   await rename.hover();
-  await expect(page.getByText('Click to edit its name.').filter({ visible: true })).toBeVisible();
+  await expect(page.getByText('Click to rename it.').filter({ visible: true })).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath('rename-hover.png'),
     animations: 'disabled',
@@ -54,7 +54,7 @@ test('the keyboard reaches rename, the tab list and the tab menu in that order',
   pageErrors,
 }) => {
   await openStartBlank(page);
-  const rename = segment(page).getByRole('button', { name: 'Rename tab' });
+  const rename = segment(page).getByRole('button', { name: 'Rename Diagram tab' });
   await rename.focus();
   await page.keyboard.press('Tab');
   await expect(segment(page).getByRole('button', { name: 'Tab 1, all tabs (1)' })).toBeFocused();
@@ -80,7 +80,7 @@ test('a phone keeps the rename and the tab list apart in the active tab', async 
   await page.keyboard.press('Escape');
   const stack = segment(page).getByRole('button', { name: 'Tab 2, all tabs (2)' });
   await expect(stack).toBeVisible();
-  await expect(segment(page).getByRole('button', { name: 'Rename tab' })).toBeVisible();
+  await expect(segment(page).getByRole('button', { name: 'Rename Diagram tab' })).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath('active-tab-phone.png'),
     clip: (await page.locator('[data-document-group]').boundingBox())!,

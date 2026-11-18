@@ -3,7 +3,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { touchesChrome, useCanvasLayerInsets } from './useCanvasLayerInsets';
 
-// docs/specs/026-plan/plan-board.md "Maximised board": measured from the chrome, again as the chrome changes, and
+// docs/specs/026-plan/plan-board.md "Maximised board", "It respects the chrome": measured from the chrome, again as the chrome changes, and
 // never for typing or pressing on the board.
 afterEach(() => {
   document.body.innerHTML = '';
@@ -43,11 +43,11 @@ describe('useCanvasLayerInsets', () => {
     const { flush, main, panel } = setup();
     const { result, unmount } = renderHook(() => useCanvasLayerInsets(main));
     flush();
-    expect(result.current.insets.left).toBe(272);
+    expect(result.current.left).toBe(272);
     panel.remove();
     await tick();
     flush();
-    expect(result.current.insets.left).toBe(0);
+    expect(result.current.left).toBe(0);
     unmount();
   });
 
@@ -65,12 +65,26 @@ describe('useCanvasLayerInsets', () => {
     expect(frames).toHaveLength(1);
   });
 
+  it('measures again when the bottom line wraps, ending the frame above it', async () => {
+    const { flush, main } = setup();
+    const line = document.createElement('div');
+    line.setAttribute('data-bottom-line', '');
+    const tools = line.appendChild(document.createElement('div'));
+    tools.getBoundingClientRect = rect(12, 800, 420, 848);
+    main.appendChild(line);
+    const { result } = renderHook(() => useCanvasLayerInsets(main));
+    flush();
+    expect(result.current.bottom).toBe(60);
+    tools.getBoundingClientRect = rect(12, 740, 420, 848);
+    tools.setAttribute('class', 'wrapped');
+    await tick();
+    flush();
+    expect(result.current.bottom).toBe(120);
+  });
+
   it('measures nothing without a canvas', () => {
     const { result } = renderHook(() => useCanvasLayerInsets(null));
-    expect(result.current).toEqual({
-      insets: { top: 0, right: 0, bottom: 0, left: 0 },
-      band: null,
-    });
+    expect(result.current).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
   });
 });
 

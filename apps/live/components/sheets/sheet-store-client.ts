@@ -193,6 +193,11 @@ export class SheetStore {
     return wb;
   }
 
+  // The loaded sheets of a tab: a spreadsheet's sheet tab holds one (docs/specs/029-sheets/spreadsheet.md).
+  sheetsOn(tabId: string): Sheet[] {
+    return [...this.entries.values()].map((e) => e.view).filter((s) => s.tabId === tabId);
+  }
+
   titlesOn(tabId: string): string[] {
     return [...this.entries.values()]
       .filter((e) => e.view.tabId === tabId)

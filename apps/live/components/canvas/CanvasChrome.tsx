@@ -41,12 +41,6 @@ import {
 import { useCardTypesOpener } from '@/hooks/plan/useCardTypesOpener';
 import { usePublishCardTypesTaken } from '@/hooks/plan/card-types-taken';
 import { usePlanVoting } from '@/hooks/plan/usePlanVoting';
-import { useCanvasCovered, usePlanTabKind } from '@/hooks/plan/plan-cover-store';
-
-// How far the tools group moves in and up over a covering board or Sheet: the cover's padding (12 px) and a
-// little more in, and past the element's bottom scrollbar up.
-const COVERED_CLUSTER_INSET = { x: 16, y: 20 };
-const NO_CLUSTER_INSET = { x: 0, y: 0 };
 import { toolbarTopClearancePx } from '@/lib/canvas-chrome';
 import { CONTENTS_SIDEBAR_WIDTH, contentsSidebarClearancePx } from '@/lib/contents-placement';
 import { ContentsClusterSegment } from './ContentsClusterSegment';
@@ -378,13 +372,6 @@ export function CanvasChrome(props: CanvasChromeProps) {
     () => elements.some((e) => e.type === 'shape' && e.shape === 'plan-board'),
     [elements],
   );
-  // A board or Sheet covering the canvas (maximised or filling its tab, not a Dashboard's page): the bottom-right
-  // cluster moves inside its frame.
-  const canvasCovered = useCanvasCovered();
-  const tabPlanKind = usePlanTabKind();
-  // A Dashboard's or a Form tab's page covers the canvas as a page, not an element.
-  const elementCovers = canvasCovered && tabPlanKind !== 'dashboard' && tabPlanKind !== 'form';
-  const clusterInset = elementCovers ? COVERED_CLUSTER_INSET : NO_CLUSTER_INSET;
   // Plan's Timer and Vote, only for a board made for voting (or a session running), never on a Dashboard.
   const planVoting = usePlanVoting(elements, !!props.tabVote || !!props.sessionTools?.timer);
   const stripTools = sessionStripTools(props.editorMode, {
@@ -634,14 +621,14 @@ export function CanvasChrome(props: CanvasChromeProps) {
           Vote, Poll), the mode's own strip (Slides, Plan), the Collaborate button (only while the tab has a thread or an
           action), the Layers and Theme & Canvas strip, then the Zoom controls, each a part after a divider. The buttons
           open their panels as popovers above them (docs/specs/007-editor/live-app.md). Presenting hides the line
-          (docs/specs/012-collaboration/presentation-mode.md): zen keeps the zoom controls as its one way back out. Over
-          a maximised or tab-filling board or Sheet the line sits inside the element's frame, clear of its edge and its
-          scrollbar (docs/specs/026-plan/plan-board.md "Maximised board"); beside Pages' pinned Contents, never under. */}
+          (docs/specs/012-collaboration/presentation-mode.md): zen keeps the zoom controls as its one way back out. A
+          maximised or tab-filling board or Sheet ends above it, the line staying where it is
+          (docs/specs/026-plan/plan-board.md "It respects the chrome"); beside Pages' pinned Contents, never under. */}
       <BottomLine
         inset={{
-          left: clusterInset.x + (contentsDocked && contentsSide === 'left' ? contentsWidth : 0),
-          right: clusterInset.x + (contentsDocked && contentsSide === 'right' ? contentsWidth : 0),
-          bottom: clusterInset.y,
+          left: contentsDocked && contentsSide === 'left' ? contentsWidth : 0,
+          right: contentsDocked && contentsSide === 'right' ? contentsWidth : 0,
+          bottom: 0,
         }}
         document={zenMode ? null : lines?.document}
         dockKey={dockShown ? (props.whiteboardDock?.position ?? '') : ''}

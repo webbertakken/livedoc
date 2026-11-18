@@ -23,6 +23,7 @@ function props(over: Partial<Props> = {}): Props {
     deletion: { kind: 'tab' },
     canClearContent: true,
     locked: false,
+    kindNoun: 'Diagram tab',
     selfId: 'me',
     otherDocuments: [],
     folderNames: [],

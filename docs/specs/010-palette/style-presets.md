@@ -221,8 +221,8 @@ one, and follows a switch between them, a theme change included. The tiles are
 drawn for the canvas surface they will be seen on. Hand-setting a colour clears
 the binding, as for a shape. A multi-selection of only boards and sheets shows
 this grid; one mixing them with shapes shows the shape looks. Maximised, the
-element's hue also tints the chrome in its header band (Plan board "The header
-holds the top row"). Defined in `@livedoc/document` `plan-presets.ts`.
+element's hue stays on the element: it never tints the editor's chrome (Plan board "It
+respects the chrome"). Defined in `@livedoc/document` `plan-presets.ts`.
 
 ## Code-block schemes
 

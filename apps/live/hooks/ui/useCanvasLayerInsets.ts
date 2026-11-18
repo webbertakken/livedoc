@@ -1,6 +1,7 @@
 'use client';
 
-// The insets keeping a maximised or tab-filling Plan element clear of the editor's chrome over the canvas
+// The insets keeping a maximised or tab-filling Plan element in the content frame the editor's chrome over the canvas
+// leaves
 // (lib/canvas-layer-insets.ts). Measured on mount, and again (once per frame at most) when the chrome says it changed:
 // the canvas or a piece of chrome resizes (ResizeObserver), a piece of chrome moves or shows and hides (its own style
 // or class attributes), a chrome transition ends, the window resizes, or chrome comes or goes (the canvas's children
@@ -8,20 +9,19 @@
 // itself measure nothing.
 import { useEffect, useState } from 'react';
 import {
-  BAND_CONTROLS_SELECTOR,
-  NO_LAYOUT,
+  BOTTOM_LINE_SELECTOR,
   PANEL_SELECTOR,
-  TOP_ROW_SELECTOR,
+  TOP_LINE_SELECTOR,
   measureCanvasChrome,
-  sameLayout,
-  type CanvasLayout,
+  sameInsets,
+  type LayerInsets,
 } from '@/lib/canvas-layer-insets';
-import { ACTIONS_GROUP_SELECTOR } from '@/lib/top-line-clearance';
 
-// The strip itself (its root runs the canvas width; its card changes width with the category) for the header band.
-// The covering element's controls card too: the strip stops short of it, so its width matters.
-// The top line's actions group too: the band ends before it.
-const OBSERVED = `${TOP_ROW_SELECTOR}, ${ACTIONS_GROUP_SELECTOR}, ${PANEL_SELECTOR}, [data-toolbar-palette], [data-toolbar-palette] > *, ${BAND_CONTROLS_SELECTOR}`;
+const NO_INSETS: LayerInsets = { top: 0, right: 0, bottom: 0, left: 0 };
+
+// The top line's groups, the strip (its card changes height on a phone's wrap), the panels, and the bottom line with
+// its groups, however wrapped (a group growing or the line wrapping moves the frame's foot).
+const OBSERVED = `${TOP_LINE_SELECTOR}, ${PANEL_SELECTOR}, [data-toolbar-palette], [data-toolbar-palette] > *, ${BOTTOM_LINE_SELECTOR}, ${BOTTOM_LINE_SELECTOR} > *, ${BOTTOM_LINE_SELECTOR} [data-region]`;
 
 // A child-list change that adds or removes a piece of chrome (or something holding one).
 export function touchesChrome(
@@ -32,9 +32,9 @@ export function touchesChrome(
   return [...record.addedNodes].some(hit) || [...record.removedNodes].some(hit);
 }
 
-// The element's insets, and its header band when the top row leaves room (lib/canvas-layer-insets.ts headerBand).
-export function useCanvasLayerInsets(canvas: HTMLElement | null, withBand = true): CanvasLayout {
-  const [layout, setLayout] = useState<CanvasLayout>(NO_LAYOUT);
+// The element's insets: the content frame the chrome leaves.
+export function useCanvasLayerInsets(canvas: HTMLElement | null): LayerInsets {
+  const [insets, setInsets] = useState<LayerInsets>(NO_INSETS);
   useEffect(() => {
     if (!canvas || canvas === document.body) return;
     let frame = 0;
@@ -71,8 +71,8 @@ export function useCanvasLayerInsets(canvas: HTMLElement | null, withBand = true
           }
         }
       }
-      const next = measureCanvasChrome(canvas, withBand);
-      setLayout((prev) => (sameLayout(prev, next) ? prev : next));
+      const next = measureCanvasChrome(canvas);
+      setInsets((prev) => (sameInsets(prev, next) ? prev : next));
     };
     function schedule() {
       if (!frame) frame = requestAnimationFrame(measure);
@@ -93,6 +93,6 @@ export function useCanvasLayerInsets(canvas: HTMLElement | null, withBand = true
       window.removeEventListener('resize', schedule);
       window.removeEventListener('transitionend', onTransitionEnd, true);
     };
-  }, [canvas, withBand]);
-  return layout;
+  }, [canvas]);
+  return insets;
 }

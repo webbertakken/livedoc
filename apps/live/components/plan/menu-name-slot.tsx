@@ -1,23 +1,9 @@
 'use client';
 
-// The name rides in the menu box (docs/specs/026-plan/plan-board.md "The name rides in the menu box"): while a
-// maximised or tab-filling board, view or Sheet holds the top row in its header band, its title moves out of its header
-// into the Toolbar layout's menu box, after the mode menu. The title is portalled, not copied, so it is the same
-// component with the same state: a double-click on it still reaches its header's rename (React events follow the
-// component tree through a portal). The slot is a module store, like maximised-plan.ts.
-//
-// Whether a header is in a band is read off the page: maximising moves the element's own DOM into the cover
-// (MaximisedPlanLayer, FilledTabLayer) rather than rendering it there, so no React context reaches it. The cover says
-// when its band comes or goes (`announceHeaderBand`), and each name checks for `[data-header-band]` above it then.
-import {
-  useLayoutEffect,
-  useRef,
-  useState,
-  useSyncExternalStore,
-  type ReactNode,
-  type RefObject,
-} from 'react';
-import { createPortal } from 'react-dom';
+// The name rides in the active tab (docs/specs/026-plan/plan-tabs.md "Its name in the active tab"): a Dashboard tab's
+// name, and its rename, sit in the document group's active tab segment (DashboardMenuName portals them into this slot).
+// The slot is a module store, like maximised-plan.ts.
+import { useSyncExternalStore } from 'react';
 import { createListeners } from '@/lib/listeners';
 
 let slot: HTMLElement | null = null;
@@ -36,24 +22,7 @@ export function useMenuNameSlot(): HTMLElement | null {
   return useSyncExternalStore(listeners.subscribe, getSlot, noSlot);
 }
 
-// The cover's band came or went (CanvasCover): every name looks again for a band above it.
-let bandEpoch = 0;
-const bandListeners = new Set<() => void>();
-export function announceHeaderBand(): void {
-  bandEpoch++;
-  for (const l of bandListeners) l();
-}
-function subscribeBand(listener: () => void): () => void {
-  bandListeners.add(listener);
-  return () => bandListeners.delete(listener);
-}
-const getEpoch = () => bandEpoch;
-
-// The selector CanvasCover marks its element's box with while it has a band.
-const HEADER_BAND_SELECTOR = '[data-header-band]';
-
-// The slot in the document group's active tab segment (docs/specs/026-plan/plan-board.md "The name rides in the active
-// tab"), in the segment's ink, hidden while it holds nothing.
+// The slot in the document group's active tab segment, in the segment's ink, hidden while it holds nothing.
 export function MenuNameSlot() {
   return (
     <span
@@ -61,33 +30,6 @@ export function MenuNameSlot() {
       data-menu-name-slot=""
       className="flex min-w-0 items-center gap-1.5 whitespace-nowrap empty:hidden"
     />
-  );
-}
-
-// The element's name: in the menu box while its header holds the top row (and the box is there), in place otherwise.
-// `render` is told which, so the name can take the box's size and ink.
-// Whether the element holding `marker` is in a header band, looked at again whenever a band comes or goes.
-export function useInHeaderBand(): [RefObject<HTMLSpanElement | null>, boolean] {
-  const target = useMenuNameSlot();
-  const epoch = useSyncExternalStore(subscribeBand, getEpoch, getEpoch);
-  const marker = useRef<HTMLSpanElement>(null);
-  const [inBand, setInBand] = useState(false);
-  useLayoutEffect(() => {
-    setInBand(!!marker.current?.closest(HEADER_BAND_SELECTOR));
-  }, [epoch, target]);
-  return [marker, inBand];
-}
-
-export function InMenuBox({ render }: { render: (inBox: boolean) => ReactNode }) {
-  const target = useMenuNameSlot();
-  // A marker that stays in the header, so the check reads where the header is, whichever way the name went.
-  const [marker, inBand] = useInHeaderBand();
-  const inBox = inBand && !!target;
-  return (
-    <>
-      <span ref={marker} hidden />
-      {inBox ? createPortal(render(true), target) : render(false)}
-    </>
   );
 }
 

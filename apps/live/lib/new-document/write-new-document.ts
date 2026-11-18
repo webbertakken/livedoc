@@ -68,6 +68,8 @@ export async function writeNewDocument(write: NewDocumentWrite): Promise<void> {
     tabs: tabs ?? [tab],
     ...(itemTypes ? { itemTypes } : {}),
     ...(seedItems.length ? { items: seedItems } : {}),
+    ...(content.sheets?.length ? { sheets: content.sheets } : {}),
+    ...(content.workbook ? { workbook: content.workbook } : {}),
     teamId: write.teamId,
     folderId: write.folderId,
     // What it opens as, captured now and never re-derived (docs/specs/013-workspace/default-folders.md).

@@ -48,6 +48,21 @@ describe('SplitStaticPane', () => {
     document.body.innerHTML = '';
   });
 
+  // docs/specs/007-editor/editor-modes.md "A tab's kind is always findable".
+  it('names the shown tab’s kind beside its name', () => {
+    const board = {
+      id: 't3',
+      name: 'Reports',
+      kind: 'board',
+      elements: [
+        { id: 'b', type: 'shape', shape: 'plan-board', x: 0, y: 0, width: 10, height: 10 },
+      ],
+    } as unknown as Tab;
+    pane({ shown: board, loaded: true });
+    expect(screen.getByRole('img', { name: 'Board tab' })).toBeTruthy();
+    expect(screen.getByText('Reports')).toBeTruthy();
+  });
+
   it('says a tab that could not be fetched, rather than loading forever', () => {
     pane({ failed: true });
     expect(screen.getByText("Couldn't load Roadmap. Click to try again.")).toBeTruthy();

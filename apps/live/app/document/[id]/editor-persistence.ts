@@ -1,3 +1,4 @@
+import type { WorkbookRecord } from '@livedoc/sheets';
 import type { SavedItemTypes } from '@/lib/api/item-types';
 import { getOnline } from '@/lib/online-status';
 import { useEffect, useState } from 'react';
@@ -47,6 +48,9 @@ export function useEditorPersistence({
   // The document's type catalogue as stored (docs/specs/026-plan/item-types.md), null for the default
   // types, with its revision: seeded on load, then set by a save here or the room's `item-types` op.
   // See useItemTypes, which shows this editor's unsaved changes over it.
+  // The workbook record when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md "In a
+  // spreadsheet"): seeded on load; null for any other document.
+  const [documentWorkbook, setDocumentWorkbook] = useState<WorkbookRecord | null>(null);
   const [documentItemTypes, setDocumentItemTypes] = useState<SavedItemTypes>(
     seed?.itemTypes ?? { itemTypes: null, itemTypesRev: 0 },
   );
@@ -172,6 +176,8 @@ export function useEditorPersistence({
     setDocumentPresentation,
     documentItemTypes,
     setDocumentItemTypes,
+    documentWorkbook,
+    setDocumentWorkbook,
     documentList,
     setDocumentList,
     documentListLoading,
