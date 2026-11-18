@@ -13,7 +13,7 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
   text document **in that format**, named after the file, in the current folder.
 - Other formats are **imported**: `.rtf`, `.txt`, `.html`, `.md` (as a text document; a `.md` dropped where pages are
   made stays a [page](../031-markdown/markdown-tab.md), fork D3) and `.pdf` (text and pictures, reading order guessed);
-  an imported document is born in the C5 format (default ODF).
+  an imported document is born in ODF (fork C5).
 - An import that drops anything shows the **import report** ([below](#import-report)).
 
 ## Downloading

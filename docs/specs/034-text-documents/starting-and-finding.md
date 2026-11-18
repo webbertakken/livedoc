@@ -12,7 +12,7 @@ How a person starts a [text document](text-document.md) and finds it again.
 - **File > New > Document** (in a text document) opens a blank one in a new browser tab; **From a template** opens the
   gallery filtered to text documents.
 - **Adding a tab** to any document offers Text document.
-- A blank text document is born in the C5 format (default ODF 1.4), with the person's default styles and page setup.
+- A blank text document is born in ODF 1.4 (fork C5), with the person's default styles and page setup.
 
 ## The template gallery's text documents
 

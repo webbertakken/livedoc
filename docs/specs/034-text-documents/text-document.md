@@ -85,8 +85,8 @@ Pictures, drawings and charts placed in it are its objects, held in its model an
   `.odt` (or `.fodt` where a repository link asks for diffs).
 - **One model.** Both formats map onto the same model ([Standard mapping](standard-mapping.md)); what a format holds
   that the model does not is kept and written back in that format, untouched.
-- **Born in.** A text document made in LiveDoc (blank, template, agent) is born in **ODF 1.4** (fork C5, open;
-  `(default)`).
+- **Born in.** A text document made in LiveDoc (blank, template, agent) is born in **ODF 1.4**, as
+  an `.odt` (fork C5, ruled). It is no setting: conversion is how one becomes OOXML.
 - **Converting** is a person's choice, never a side effect: File > Convert to Word format (or to OpenDocument format)
   lists what the other format cannot hold before it runs, then changes `format` as one undo step. Downloading in the
   other format writes a converted copy and leaves the document as it is ([Files and print](files-and-print.md#downloading)).

@@ -41,7 +41,7 @@ attributed to the token, and revertable. Its operations:
 - **Verbs**: `text-document.view`, `text-document.edit` (the changeset), `text-document.download` (a format),
   `text-document.import`; CLI commands `livedoc doc view|edit|download|import` and MCP tools `read_text_document`,
   `edit_text_document`; previews of a page rendered through `render-png`. (Names follow fork D1.)
-- An agent's `create_document` with kind `text-document` makes one, born in the C5 format.
+- An agent's `create_document` with kind `text-document` makes one, born in ODF (fork C5).
 
 ## Repository sync
 

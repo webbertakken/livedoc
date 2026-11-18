@@ -22,7 +22,7 @@ Webber ruled forks C1 to C3 on 2026-11-18, after this research:
 - **C1**: ODF 1.4 and OOXML are **both native**, and a file keeps the format it arrived in until a person converts it.
   The ODF-native recommendation above is superseded: one model maps onto both, each format's kept content is written
   back in that format, and every written file validates against its own schema. Which format a document made in
-  LiveDoc is born in is fork C5 (default ODF 1.4).
+  LiveDoc is born in is fork C5, ruled the same day: ODF 1.4, no setting.
 - **C2**: all of Pages mode is removed, not only articles; the other page kinds' stored pages are fork D8.
 - **C3**: core only. Scripting, add-ons, any assistant, smart chips and Google's own services are left out.
 
