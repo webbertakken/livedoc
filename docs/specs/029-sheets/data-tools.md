@@ -1,0 +1,96 @@
+# Data tools
+
+**Status: specified.** Nothing is built.
+
+Sorting, filtering, validation, names, protection, tables and clean-up in a [spreadsheet](spreadsheet.md), as
+Google Sheets' Data menu does. Its rows of the [parity matrix](parity-matrix.md) name this page.
+
+## Sort
+
+- **Sort Sheet** A to Z, Z to A by the active column (a header row frozen stays put).
+- **Sort Range** A to Z, Z to A, and **Advanced Range Sorting Options**: "Data has header row", then sort keys in
+  order, each a column and A to Z or Z to A, **Add Another Sort Column**.
+- Text sorts by the workbook's locale, numbers before text, blanks last, as Google's.
+- A whole-sheet sort is a layout write of row order; a range sort a cell write (as today, [Sheet store](sheet-store.md)).
+
+## Filters, filter views and slicers
+
+- **Create a Filter** (Ctrl+Alt+R in the matrix's list): a filter over the data region, its header cells with
+  filter buttons; one filter a sheet, seen by everyone.
+- A column's filter menu: Sort A to Z, Sort Z to A, **Filter by Colour** (fill, text), **Filter by Condition** (every
+  condition of Google's list and Custom Formula), **Filter by Values** (a searchable list with counts, Select All,
+  Clear).
+- **Filter views**: **Create Filter View** makes a named filter that changes only the viewer's view; others see it
+  in Data › Filter Views and may open it. **Save as Filter View**, **Duplicate**, **Rename**, **Delete**; a link opens
+  one. A Viewer may make temporary filter views of their own, as Google's.
+- **Slicers**: a floating control over the grid filtering a range by one column (values or condition), Editors place
+  it; it filters for everyone.
+- **Group by view** (Data › Create Group by View, tables only): groups a table's rows by a column, collapsed and
+  expanded per viewer.
+
+## Data validation
+
+Iterated from today's spec ([Data validation](data-validation.md)) to Google's panel: criteria Dropdown, Dropdown
+(From a Range), Text Contains, Does Not Contain, Exactly, Is Valid Email, Is Valid URL, Date (is, before, after,
+between, valid date), Greater Than and every number comparison, Checkbox (with custom ticked and unticked values),
+Custom Formula Is; advanced options **Show a Warning** or **Reject the Input**, help text, and the dropdown's
+display style (Chip, Arrow, Plain Text) with option colours. Dropdowns and tick boxes are validation, never chips.
+
+## Named ranges and named functions
+
+- **Named Ranges** panel: each name and range, **Add a Range**, edit, delete. Rules for names as today ([Sheet](sheet.md#named-ranges)),
+  but scoped to the workbook.
+- **Named Functions** panel: a name, argument placeholders, a definition formula that uses the placeholders by name, a description and argument hints; usable in every cell of the workbook; **Import Function**
+  from another spreadsheet the person may read.
+
+## Protected ranges
+
+- **Protect Sheets and Ranges** panel: a range or a sheet (with **Except Certain Cells**), a description, and
+  permissions: **Show a Warning When Editing This Range** or **Restrict Who Can Edit**: only the owner, only the
+  Editors chosen, or as another range.
+- Protection binds to share roles: a protected range is editable only by the people named on it among those whose
+  role may edit; a Participant may write into a protected range only if named.
+- A protected range shows hatched with View › Show › Protected Ranges.
+
+## Tables
+
+- **Convert to Table** (Format menu or Ctrl+Alt+T): a range becomes a named table with a header row, a column type per
+  column (Text, Number, Percent, Currency, Date, Time, Date Time, Dropdown, Checkbox; People and smart chip types are
+  left out, C3), alternating colours, a filter, and a total row on request.
+- **Table references** in formulas: `Table1[Column]`, `Table1[#ALL]`, `Table1[#HEADERS]`, `Table1[#TOTALS]`, read and
+  written as both formats hold them.
+
+## Clean-up, split, randomise, stats
+
+- **Clean-up Suggestions** panel: duplicates, extra spaces, inconsistent formats it finds, each with **Apply**.
+- **Remove Duplicates**: columns to compare, "Data has header row"; then "N duplicate rows found and removed".
+- **Trim Whitespace**: "N cells trimmed".
+- **Split Text to Columns**: splits the selection by a detected separator, with a chip to choose Comma, Semicolon,
+  Period, Space, Custom.
+- **Randomise Range**: shuffles the rows of a range.
+- **Column Stats** panel: a column's counts, sum, average, distribution chart and frequent values.
+
+## Find and replace
+
+- Ctrl+F finds in the sheet (a bar over the grid); Ctrl+H opens **Find and Replace**: find, replace with, search
+  (All Sheets, This Sheet, Specific Range), Match Case, Match Entire Cell Contents, Search Using Regular Expressions,
+  Also Search Within Formulas, Also Search Within Links; **Find**, **Replace**, **Replace All** ("Replaced N
+  instances of …"), **Done**. Regular expressions are bounded as formulas' are.
+
+## Who may do what
+
+- **Editor**: everything here.
+- **Participant**: sort and filter only through filter views of their own; writes values through validation; picks
+  from dropdowns and ticks tick boxes; finds; never replaces formulas or protected cells unless named.
+- **Viewer**: finds, uses filter views of their own, reads named ranges.
+
+## Errors and limits
+
+- Up to 200 validation rules, 100 format rules, 100 named ranges, 100 named functions, 50 filter views and 50 slicers
+  a sheet; past one, a named rejection (`rules_full`, `names_full`, ...).
+- A replace touching more than the write limit is split, one undo step.
+
+## Telemetry
+
+`Spreadsheet · Changed · <Kind>`: `Sort`, `Filter`, `FilterView`, `Slicer`, `Validation`, `NamedRange`,
+`NamedFunction`, `Protection`, `Table`, `Cleanup`, `Split`, `Randomise`, `Replace`; `Spreadsheet · Opened · Find`.
