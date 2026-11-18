@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { cellBytes, validInput, validateSheetCreate, validateWrite } from './validate';
 import { makeSheets } from './testing/book';
 import { cellKey, type Sheet } from './sheet';
+import { CellMap } from './cells/cell-map';
 import type { SheetWrite } from './store';
 
 const base = (): Sheet =>
@@ -188,7 +189,7 @@ describe('validateWrite', () => {
   });
   it('refuses a full sheet, but lets an oversized sheet shrink', () => {
     const s = base();
-    const cells = new Map(s.cells);
+    const cells = s.cells.copy();
     for (let i = 0; i < 50_000; i++) cells.set(cellKey(`x${i}`, 'y'), { input: { n: i } });
     const full = { ...s, cells };
     expect(v({ kind: 'cells', cells: [{ r: R(1), c: C(1), i: { n: 1 } }] }, full)).toMatchObject({
@@ -197,7 +198,7 @@ describe('validateWrite', () => {
     expect(v({ kind: 'layout', changes: [{ k: 'deleteRows', ids: [R(1)] }] }, full)).toEqual({
       ok: true,
     });
-    const fat = new Map(s.cells);
+    const fat = s.cells.copy();
     for (let i = 0; i < 500; i++)
       fat.set(cellKey(R(0), `c${i}`), { input: { s: 'x'.repeat(9000) } });
     expect(
@@ -310,12 +311,12 @@ describe('validateSheetCreate', () => {
     expect(validateSheetCreate({ ...s, layout: { rows: [], cols: [] } })).toMatchObject({
       error: 'write_invalid',
     });
-    const bad = new Map(s.cells);
-    bad.set('k', { input: { x: 1 } as never });
+    const bad = s.cells.copy();
+    bad.set('r:c', { input: { x: 1 } as never });
     expect(validateSheetCreate({ ...s, cells: bad })).toMatchObject({ error: 'write_invalid' });
-    const long = new Map([['k', { input: { s: 'x'.repeat(10_001) } }]]);
+    const long = CellMap.from([['r:c', { input: { s: 'x'.repeat(10_001) } }]]);
     expect(validateSheetCreate({ ...s, cells: long })).toMatchObject({ error: 'input_too_long' });
-    const fmt = new Map([['k', { format: { b: false } as never }]]);
+    const fmt = CellMap.from([['r:c', { format: { b: false } as never }]]);
     expect(validateSheetCreate({ ...s, cells: fmt })).toMatchObject({ error: 'format_invalid' });
   });
   it('counts bytes and reads inputs', () => {

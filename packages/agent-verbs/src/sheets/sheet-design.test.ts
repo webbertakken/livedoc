@@ -10,6 +10,7 @@ import {
   posRangeOf,
   type Sheet,
   type SheetWrite,
+  CellMap,
 } from '@livedoc/sheets';
 import { buildDesign, darkCanvas, type SheetDesignInput } from './sheet-design';
 import { buildSheetChange } from './sheet-change-build';
@@ -24,7 +25,7 @@ function blankBook(cols = 12) {
     tabId: 'tab',
     title: 'Budget',
     layout: emptyLayout(rand, 30, cols),
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: 0,
     updatedAt: 0,

@@ -174,7 +174,7 @@ export function applySheetWrite(sheet: Sheet, write: SheetWrite, ctx: ApplyConte
       touched: [],
     };
   }
-  const cells = new Map(sheet.cells);
+  const cells = sheet.cells.copy();
   if (write.kind === 'cells') {
     const landed = applyCells(cells, sheet.layout, write.cells, touched);
     return {

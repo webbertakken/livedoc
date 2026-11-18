@@ -36,6 +36,11 @@ export const SHEET_WRITE_BYTES_MAX = 1024 * 1024;
 
 // The evaluator's budgets: a hostile sheet costs at most this much per recalculation.
 export const RECALC_READS_MAX = 5_000_000;
+
+// Formula shapes whose parse is kept (formula/stored.ts), shared by every workbook open: a workbook holds far fewer
+// distinct shapes than formulas (a filled column is one). Past it the oldest shape is parsed again when next read;
+// safe from 1,000 (more parsing) to 200,000 (more memory).
+export const AST_SHAPES_MAX = 50_000;
 export const RANGE_CELLS_MAX = 1_000_000;
 export const ARRAY_CELLS_MAX = 100_000;
 export const TEXT_RESULT_MAX = 10_000;

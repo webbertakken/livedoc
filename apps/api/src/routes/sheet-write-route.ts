@@ -17,7 +17,7 @@ import {
   validateWrite,
   valuesOnly,
   writesFormats,
-  type Cell,
+  CellMap,
   type CellChange,
   type Sheet,
   type SheetPerson,
@@ -212,7 +212,7 @@ export async function storeSheetWrite(
       ...head,
       cells: deletes(write)
         ? cellsFromJson(await readFormulaCells(ctx.env, documentId, sheetId))
-        : new Map<string, Cell>(),
+        : new CellMap(),
     };
     let landed;
     try {

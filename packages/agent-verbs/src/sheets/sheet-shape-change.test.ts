@@ -9,6 +9,7 @@ import {
   emptyLayout,
   posRangeOf,
   type Sheet,
+  CellMap,
 } from '@livedoc/sheets';
 import { buildSheetChange, type SheetChange } from './sheet-change-build';
 
@@ -22,7 +23,7 @@ function book() {
     tabId: 'tab',
     title: 'Shape',
     layout: emptyLayout(rand, 20, 6),
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: 0,
     updatedAt: 0,

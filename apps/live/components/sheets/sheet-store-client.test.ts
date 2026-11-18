@@ -8,6 +8,7 @@ import {
   type Sheet,
   type SheetJson,
   type SheetWrite,
+  CellMap,
 } from '@livedoc/sheets';
 import { ApiError } from '@/lib/api/core';
 import {
@@ -798,7 +799,7 @@ describe('a spreadsheet’s store', () => {
         tabId: 'tabA',
         title: 'Sheet1',
         layout: one,
-        cells: new Map([[cellKey(one.rows[0]!, one.cols[0]!), { input: { n: 21 } }]]),
+        cells: CellMap.from([[cellKey(one.rows[0]!, one.cols[0]!), { input: { n: 21 } }]]),
         rev: 1,
         createdAt: 0,
         updatedAt: 0,
@@ -811,7 +812,7 @@ describe('a spreadsheet’s store', () => {
         tabId: 'tabB',
         title: 'Costs',
         layout: two,
-        cells: new Map([
+        cells: CellMap.from([
           [
             cellKey(two.rows[0]!, two.cols[0]!),
             {

@@ -1,6 +1,7 @@
 // Test helpers: a workbook built from A1-keyed typed inputs, as a person would type them.
 import { parseA1 } from '../address';
 import type { CardSource } from '../cards';
+import { CellMap } from '../cells/cell-map';
 import { Workbook } from '../engine/workbook';
 import { cellKey, type Sheet, type SheetLayout } from '../sheet';
 import { readTypedInput } from '../typed-input';
@@ -20,7 +21,7 @@ export function makeSheets(spec: BookSpec, opts: { rows?: number; cols?: number 
     tabId: 'tab',
     title,
     layout: gridLayout(`s${i}`, opts.rows, opts.cols),
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: i,
     updatedAt: i,
@@ -86,7 +87,7 @@ export function book(
       const { sheet, pos } = at(a1, title);
       const key = cellKey(sheet.layout.rows[pos.r]!, sheet.layout.cols[pos.c]!);
       const read = readTypedInput(text, 'en-GB', wb.ctxFor(sheet.id));
-      const cells = new Map(sheet.cells);
+      const cells = sheet.cells.copy();
       if (read.kind === 'value') cells.set(key, { input: read.input });
       else cells.delete(key);
       const next = { ...sheet, cells };

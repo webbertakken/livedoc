@@ -1,7 +1,14 @@
 // A card table's Controls column (docs/specs/029-sheets/sheet.md "Card tables"): a table made before it had one gets
 // the column just past it when the table's rows are empty there, else a new column inserted.
 import { describe, expect, it } from 'vitest';
-import { applySheetWrite, cellKey, emptyLayout, type CardTable, type Sheet } from '@livedoc/sheets';
+import {
+  CellMap,
+  applySheetWrite,
+  cellKey,
+  emptyLayout,
+  type CardTable,
+  type Sheet,
+} from '@livedoc/sheets';
 import { controlsColumnWrite } from './useCardTableSync';
 
 let seq = 9;
@@ -20,7 +27,7 @@ const sheetOf = (cells: [number, number][] = []): Sheet => ({
   tabId: 't1',
   title: 'S',
   layout: { ...layout, cardTables: [table] },
-  cells: new Map(
+  cells: CellMap.from(
     cells.map(([r, c]) => [cellKey(layout.rows[r]!, layout.cols[c]!), { input: { s: 'x' } }]),
   ),
   rev: 0,

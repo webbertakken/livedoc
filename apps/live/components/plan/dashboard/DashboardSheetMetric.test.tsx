@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Workbook, cellKey, type Sheet } from '@livedoc/sheets';
+import { CellMap, Workbook, cellKey, type Sheet } from '@livedoc/sheets';
 import type { SheetMetricContent } from '@livedoc/document';
 import { DashboardContext, type DashboardContextValue } from './dashboard-context';
 import { DashboardSheetMetric } from './DashboardSheetMetric';
@@ -16,7 +16,7 @@ const rows = ['row0a', 'row1a', 'row2a', 'row3a'];
 const cols = ['colAa', 'colBa'];
 function budget(rent = 1200): Extract<SheetRead, { state: 'ready' }> {
   const cell = (s: string | number) => ({ input: typeof s === 'number' ? { n: s } : { s } });
-  const cells = new Map([
+  const cells = CellMap.from([
     [cellKey('row0a', 'colAa'), cell('Item')],
     [cellKey('row0a', 'colBa'), cell('Spent')],
     [cellKey('row1a', 'colAa'), cell('Rent')],

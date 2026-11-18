@@ -9,6 +9,7 @@ import {
   type CardTable,
   type Sheet,
   type SheetWrite,
+  CellMap,
 } from '@livedoc/sheets';
 import { cardCell, pullChanges, pushPlan, rowSave, type CardPlan } from './card-table-sync';
 
@@ -57,7 +58,7 @@ const table: CardTable = {
 };
 
 function sheetOf(cells: Record<string, string | number> = {}): Sheet {
-  const map: Sheet['cells'] = new Map();
+  const map = new CellMap();
   for (const [k, v] of Object.entries(cells)) {
     const [r, c] = k.split(',').map(Number);
     map.set(cellKey(R[r!]!, C[c!]!), { input: typeof v === 'number' ? { n: v } : { s: v } });

@@ -2,6 +2,7 @@
 // Cells are keyed by row id and column id, never by position: a row's place is only its index in the layout.
 import { makeAxisIds, type Rand } from './ids';
 import { SHEET_COLS_NEW, SHEET_ROWS_NEW, SHEET_TITLE_MAX } from './limits';
+import { CellMap } from './cells/cell-map';
 
 // A reference in a stored formula, by ids. Absent corner ids mean a whole column (no
 // rows) or a whole row (no columns).
@@ -198,7 +199,8 @@ export type Sheet = {
   tabId: string;
   title: string;
   layout: SheetLayout;
-  cells: Map<string, Cell>;
+  // The compact store (./cells/cell-map): a Map of cell key to cell.
+  cells: CellMap;
   rev: number;
   createdAt: number;
   updatedAt: number;
@@ -240,7 +242,7 @@ export function emptySheet(init: {
     tabId: init.tabId,
     title: init.title,
     layout: init.layout ?? emptyLayout(init.rand),
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: now,
     updatedAt: now,
