@@ -3,12 +3,7 @@ import { createPinnedArrow, createShape } from './factories';
 import { SHAPE_DEFAULT_SIZE } from './shape-factory';
 import { MIND_SIBLING_GAP_Y } from './mind-flow';
 import { isMindTreeTidy, layoutMindTree } from './mind-layout';
-import {
-  planMindGrowth,
-  relayoutMindMap,
-  withMindSubtrees,
-  type MindGrowthPlan,
-} from './mind-grow';
+import { planMindGrowth, relayoutMindMap, type MindGrowthPlan } from './mind-grow';
 import type { ArrowElement, Element, ShapeElement } from './index';
 
 // docs/specs/009-elements/mind-node.md: growth, the level's look, connectors, Tidy Map, branch drags.
@@ -194,17 +189,5 @@ describe('relayoutMindMap', () => {
     expect(isMindTreeTidy(out, 'r', 'downward')).toBe(true);
     // Read top to bottom before, left to right after.
     expect(box(out, 'a').x).toBeLessThan(box(out, 'b').x);
-  });
-});
-
-describe('withMindSubtrees', () => {
-  it('carries the whole branch under a dragged node', () => {
-    const els: Element[] = [node('r'), node('a', 'r'), node('a1', 'a'), node('b', 'r')];
-    expect([...withMindSubtrees(els, new Set(['a']))].sort()).toEqual(['a', 'a1']);
-  });
-
-  it('leaves non-mind selections alone', () => {
-    const sq = createShape('square', 0, 0);
-    expect([...withMindSubtrees([sq], new Set([sq.id]))]).toEqual([sq.id]);
   });
 });

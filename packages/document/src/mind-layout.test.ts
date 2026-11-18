@@ -7,14 +7,8 @@ import {
   MIND_FLOWS,
   type MindFlow,
 } from './mind-flow';
-import {
-  MIND_GROUP_PADDING,
-  isMindTreeTidy,
-  layoutMindTree,
-  mindGroupBoxes,
-  mindNumbers,
-  reanchorMindConnectors,
-} from './mind-layout';
+import { isMindTreeTidy, layoutMindTree, reanchorMindConnectors } from './mind-layout';
+import { MIND_GROUP_PADDING, mindGroupBoxes, mindNumbers } from './mind-map-view';
 import type { ArrowElement, Element, ShapeElement } from './index';
 
 // docs/specs/009-elements/mind-node.md "A tidy map stays tidy".

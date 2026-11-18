@@ -10,7 +10,8 @@ import {
   SendToBackIcon,
   TextIcon,
 } from '@/components/canvas/selection-popover-icons';
-import { MindArrangeButtons, type MindArrangeState } from '@/components/canvas/MindArrangeButtons';
+import type { MindArrangeState } from '@/components/canvas/mind-arrange-state';
+import { familyFace } from '@/lib/element-kinds/react';
 import type { MindArrangeActions } from '@/hooks/canvas/useMindMapSetters';
 import {
   MIND_CHILD_OPTION,
@@ -26,6 +27,9 @@ import dynamic from 'next/dynamic';
 import type { CardinalityToolbar } from '@/components/canvas/entity/CardinalityButton';
 import { Divider, PopoverButton } from '@/components/canvas/SelectionPopoverButton';
 import type { Rect } from '@livedoc/document';
+
+// Drawn only with mindArrange given, which the toolbars offer once the mind maps family is in.
+const MindArrangeButtons = familyFace('mind-maps', 'MindArrangeButtons');
 
 // A relationship's Cardinality group shows only on a selected arrow between two entities: loaded then.
 const CardinalityButton = dynamic(

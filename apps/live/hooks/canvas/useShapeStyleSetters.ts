@@ -22,7 +22,7 @@ import {
   applyBorderStyleToEl,
   applyColorPresetToEl,
 } from '@/lib/style-presets';
-import { morphShapes } from '@/lib/shape-morph';
+import { morphShapes, morphWhenReady } from '@/lib/shape-morph';
 import { track } from '@/lib/telemetry';
 
 type ShapeStyleSetterDeps = {
@@ -62,8 +62,10 @@ export function useShapeStyleSetters({
   const setShapeKindSelected = (kind: ShapeKind) => {
     const { selectedId } = readSelection();
     if (!selectedId) return;
-    commit((els) => morphShapes(els, new Set([selectedId]), kind));
-    track('Element', 'Changed', 'ShapeMorph');
+    morphWhenReady(kind, () => {
+      commit((els) => morphShapes(els, new Set([selectedId]), kind));
+      track('Element', 'Changed', 'ShapeMorph');
+    });
   };
 
   // Reset the selected shape to its kind's default aspect ratio. The

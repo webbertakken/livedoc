@@ -47,7 +47,7 @@ import { inlineIconLayout } from './svg-render-inline-icon';
 import { svgIconShape, svgImageShape } from './svg-render-image-icon';
 import { DIAMOND_POINTS } from './shape-geometry';
 import { svgTableShape } from './svg-render-table';
-import { withMindNumberLabels } from './mind-layout';
+import { withMindNumberLabels } from './mind-map-view';
 import { mindHaloRoots, svgMindHalo } from './mind-halo';
 // Which body an element draws, and the list of kinds that have one (docs/specs/020-import-export/export-fidelity.md).
 import { shapeHasBespokeBody, svgElementBody } from './svg-render-body';

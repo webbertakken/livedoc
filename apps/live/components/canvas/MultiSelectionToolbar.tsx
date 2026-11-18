@@ -1,7 +1,8 @@
 import type { Element } from '@livedoc/document';
 import { DuplicateIcon, EllipsisIcon, LockIcon, TrashIcon, HoverCard, Glyph } from '@livedoc/ui';
 import type { CombineOp } from '@/lib/combine/combine';
-import { MindArrangeButtons, type MindArrangeState } from '@/components/canvas/MindArrangeButtons';
+import type { MindArrangeState } from '@/components/canvas/mind-arrange-state';
+import { familyFace } from '@/lib/element-kinds/react';
 import type { MindArrangeActions } from '@/hooks/canvas/useMindMapSetters';
 import { CombineMenuButton } from '@/components/canvas/CombineMenu';
 import { ConvertToTextGlyph } from '@/components/canvas/ConvertToTextGlyph';
@@ -9,6 +10,9 @@ import { buildFilterGroups, SelectionFilterMenu } from '@/components/canvas/Sele
 import { TOOLBAR_BTN, TOOLBAR_BTN_ON } from '@/components/canvas/toolbar-buttons';
 import { useCoarsePointer } from '@/hooks/ui/useCoarsePointer';
 import { useMinimalChrome, usePowerUser } from '@/components/providers/minimal-chrome';
+
+// Drawn only with mindArrange given, which the toolbars offer once the mind maps family is in.
+const MindArrangeButtons = familyFace('mind-maps', 'MindArrangeButtons');
 
 type MultiSelectionToolbarProps = {
   // True when EVERY member is locked. The Lock button reads as Unlock only then, since a click unlocks only a

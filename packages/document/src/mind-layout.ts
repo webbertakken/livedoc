@@ -21,12 +21,10 @@ import {
   type MindFlow,
   type MindGaps,
 } from './mind-flow';
-import { mindFlowOn, mindSideOf, mindStackedSideUnder, type MindSide } from './mind-direction';
-import { isMindNode, mindFlowOf, mindRootOf, mindSubtree } from './mind-map';
+import { mindSideOf, mindStackedSideUnder, type MindSide } from './mind-direction';
+import { isMindNode, mindRootOf } from './mind-map';
 import { stackMindBranch, type StackContext } from './mind-layout-stack';
 import {
-  MIND_GROUP_PADDING,
-  MIND_GROUP_TITLE_BAND,
   buildTree,
   centre,
   isPlaced,
@@ -36,30 +34,20 @@ import {
   type MindPoint,
   type Tree,
 } from './mind-layout-tree';
-import { unionRects } from './geometry-primitives';
+import { BUBBLE_SEAM, TAU, orderKeyFor } from './mind-order';
 import type { ArrowElement, Element, ElementId, ShapeElement } from './index';
 
-export { MIND_GROUP_PADDING, MIND_GROUP_TITLE_BAND, type MindLayout, type MindPoint };
-/** A group box's corner radius. */
-export const MIND_GROUP_RADIUS = 14;
-/** A group title's text size, in px. */
-export const MIND_GROUP_TITLE_PX = 14;
+export type { MindLayout, MindPoint };
 
 /** How far a node may sit from its laid-out slot and still count as tidy.
  *  Rounding in the layout itself is the only drift a tidy map ever has. */
 const MIND_TIDY_TOLERANCE = 1;
 
-const TAU = Math.PI * 2;
-const wrap = (a: number) => ((a % TAU) + TAU) % TAU;
-
 // --- Bubble: radial wedges --------------------------------------------------
 
 // The root's children share the full circle equally, and every deeper level
 // splits its parent's wedge by leaf count, on rings around the ROOT that grow
-// until the nodes on them clear each other. The
-// circle is cut on the root's WEST side and runs clockwise, so a lone first
-// branch points east, the way a tree would start.
-const BUBBLE_SEAM = Math.PI;
+// until the nodes on them clear each other, starting at the seam (mind-order.ts).
 
 function bubbleLayout(tree: Tree, out: MindLayout, root: ShapeElement, gaps: MindGaps) {
   const leaves = new Map<ElementId, number>();
@@ -117,56 +105,6 @@ function bubbleLayout(tree: Tree, out: MindLayout, root: ShapeElement, gaps: Min
 }
 
 // --- Public API ---------------------------------------------------------------
-
-/**
- * The sibling-order key for `node` under `parent`, read from where it is drawn, the map read as growing `flow`
- * from its root. Stacked: along the axis its side stacks across (across a row above or below, down a column
- * either side). Bubble: clockwise around the ROOT from the seam opposite the parent's own direction, which is
- * outside the parent's wedge, so the order a layout produces reads back unchanged. Asked parent first, as
- * `buildTree` does, so each node's direction is known by the time its children are keyed.
- */
-function orderKeyFor(
-  flow: MindFlow,
-  root: ShapeElement,
-): (node: ShapeElement, parent: ShapeElement) => number {
-  if (flow !== 'bubble') {
-    const flows = new Map<ElementId, MindFlow>([[root.id, flow]]);
-    return (n, parent) => {
-      // Asked parent first, so the parent's direction is known; never Bubble here.
-      const parentFlow = flows.get(parent.id)! as Exclude<MindFlow, 'bubble'>;
-      const side = mindStackedSideUnder(parentFlow, parent, n);
-      flows.set(n.id, mindFlowOn(n, side));
-      return side === 'downward' || side === 'upward' ? centre(n).x : centre(n).y;
-    };
-  }
-  const o = centre(root);
-  const angle = (n: ShapeElement) => Math.atan2(centre(n).y - o.y, centre(n).x - o.x);
-  return (n, parent) => {
-    const towards = parent.id === root.id ? 0 : angle(parent);
-    return wrap(angle(n) - (towards + BUBBLE_SEAM));
-  };
-}
-
-/**
- * The map rooted at `rootId`, depth first, each node with its depth (the root's is 0), siblings in
- * the order the layout reads them in the map's flow: the order an outline of the map lists them.
- */
-export function mindNodesInOrder(
-  elements: Element[],
-  rootId: ElementId,
-  flow: MindFlow,
-): { node: ShapeElement; depth: number }[] {
-  const root = elements.find((el) => el.id === rootId);
-  if (!root || !isMindNode(root)) return [];
-  const tree = buildTree(elements, root, orderKeyFor(flow, root));
-  const out: { node: ShapeElement; depth: number }[] = [];
-  const walk = (node: ShapeElement, depth: number) => {
-    out.push({ node, depth });
-    for (const kid of kidsOf(tree, node.id)) walk(kid, depth + 1);
-  };
-  walk(root, 0);
-  return out;
-}
 
 /**
  * Lay out the map rooted at `rootId` in `flow`. The root stays put; every
@@ -321,103 +259,4 @@ export function reanchorMindConnectors(
     out.push({ ...el, from: { ...el.from, anchor: fromA }, to: { ...el.to, anchor: toA } });
   }
   return out;
-}
-
-/** A group's tinted box (docs/specs/009-elements/mind-node.md "Groups"): its members and their branches, padded. */
-export type MindGroupBox = {
-  parentId: ElementId;
-  groupId: string;
-  memberIds: ElementId[];
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-/** Every group's box on the tab: siblings sharing a `mindGroup` under one parent, a branch placed elsewhere by hand
- *  left out. */
-export function mindGroupBoxes(elements: Element[]): MindGroupBox[] {
-  const groups = new Map<string, ShapeElement[]>();
-  for (const el of elements) {
-    if (!isMindNode(el) || !el.mindGroup || !el.mindParentId) continue;
-    const key = `${el.mindParentId}\u0000${el.mindGroup}`;
-    const list = groups.get(key);
-    if (list) list.push(el);
-    else groups.set(key, [el]);
-  }
-  const out: MindGroupBox[] = [];
-  for (const members of groups.values()) {
-    const nodes: ShapeElement[] = [];
-    for (const m of members) {
-      nodes.push(m);
-      const away = new Set<ElementId>();
-      for (const n of mindSubtree(elements, m.id)) {
-        const parentAway = n.mindParentId ? away.has(n.mindParentId) : false;
-        if (isPlaced(n) || parentAway) away.add(n.id);
-        else nodes.push(n);
-      }
-    }
-    const r = unionRects(nodes)!;
-    out.push({
-      parentId: members[0]!.mindParentId!,
-      groupId: members[0]!.mindGroup!,
-      memberIds: members.map((m) => m.id),
-      x: r.x - MIND_GROUP_PADDING,
-      y: r.y - MIND_GROUP_PADDING - MIND_GROUP_TITLE_BAND,
-      width: r.width + 2 * MIND_GROUP_PADDING,
-      height: r.height + 2 * MIND_GROUP_PADDING + MIND_GROUP_TITLE_BAND,
-    });
-  }
-  return out;
-}
-
-/** The number each numbered node is drawn with (docs/specs/009-elements/mind-node.md "Numbered nodes"): its place
- *  among its numbered siblings, in the order the map reads them, 1 up. */
-export function mindNumbers(elements: Element[]): Map<ElementId, number> {
-  const out = new Map<ElementId, number>();
-  if (!elements.some((el) => isMindNode(el) && el.mindNumbered === true)) return out;
-  const roots = new Set<ElementId>();
-  for (const el of elements) if (isMindNode(el)) roots.add(mindRootOf(elements, el).id);
-  for (const rootId of roots) {
-    const root = elements.find((e) => e.id === rootId) as ShapeElement;
-    const counts = new Map<ElementId, number>();
-    for (const { node } of mindNodesInOrder(elements, rootId, mindFlowOf(elements, root))) {
-      if (node.mindNumbered !== true || !node.mindParentId || node.id === rootId) continue;
-      const n = (counts.get(node.mindParentId) ?? 0) + 1;
-      counts.set(node.mindParentId, n);
-      out.set(node.id, n);
-    }
-  }
-  return out;
-}
-
-// One hue per group, picked from its id so a group keeps its colour wherever it is drawn.
-const GROUP_HUES = [210, 150, 35, 280, 345, 185, 95, 260] as const;
-
-/** A group's tint (docs/specs/009-elements/mind-node.md "Groups"): mostly transparent, its edge a little stronger, in
- *  one mid tone that reads on light and dark paper alike. */
-export function mindGroupColours(groupId: string): { fill: string; stroke: string } {
-  let hash = 0;
-  for (const ch of groupId) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
-  const hue = GROUP_HUES[hash % GROUP_HUES.length]!;
-  return { fill: `hsla(${hue}, 70%, 55%, 0.1)`, stroke: `hsla(${hue}, 70%, 55%, 0.5)` };
-}
-
-/** The elements as an export draws them: a numbered node's label led by its number ("2. Venue"). */
-export function withMindNumberLabels(elements: Element[]): Element[] {
-  const numbers = mindNumbers(elements);
-  if (numbers.size === 0) return elements;
-  return elements.map((el) => {
-    const n = numbers.get(el.id);
-    if (n === undefined || el.type !== 'shape') return el;
-    const prefix = `${n}. `;
-    const runs = el.richText;
-    return {
-      ...el,
-      label: prefix + (el.label ?? ''),
-      ...(runs && runs.length > 0
-        ? { richText: [{ ...runs[0]!, text: prefix + runs[0]!.text }, ...runs.slice(1)] }
-        : {}),
-    };
-  });
 }

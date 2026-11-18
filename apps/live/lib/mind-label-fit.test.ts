@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   LABEL_FONT_PX,
   PADDING_PX,
@@ -7,6 +7,10 @@ import {
   type ShapeElement,
 } from '@livedoc/document';
 import { fitMindLabel, mindLabelFontPx, mindLabelHeight, mindLabelPadding } from './mind-label-fit';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Mind maps draw and edit through their family (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/009-elements/mind-node.md "A node grows to fit its label".
 

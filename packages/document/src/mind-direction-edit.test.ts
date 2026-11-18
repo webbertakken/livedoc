@@ -2,14 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { createPinnedArrow, createShape } from './factories';
 import { connectMindNodes } from './mind-connect';
 import { mindBranchFlowOf, mindSideOf } from './mind-direction';
-import {
-  MIND_DIRECTION_LABEL,
-  mindDirectionChoices,
-  setMindDirection,
-} from './mind-direction-edit';
+import { MIND_DIRECTION_LABEL, mindDirectionChoices } from './mind-direction-choice';
+import { setMindDirection } from './mind-direction-edit';
 import type { MindFlow } from './mind-flow';
 import { applyMindMoves, relayoutMindMap } from './mind-grow';
-import { isMindTreeTidy, mindNodesInOrder } from './mind-layout';
+import { isMindTreeTidy } from './mind-layout';
+import { mindNodesInOrder } from './mind-order';
 import type { ArrowElement, Element, ShapeElement } from './index';
 
 // docs/specs/009-elements/mind-node.md "A direction per node" and "Connecting a branch keeps its direction".

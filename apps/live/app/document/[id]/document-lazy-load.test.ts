@@ -116,6 +116,105 @@ function reachableFrom(entry: string): Set<string> {
   return seen;
 }
 
+// A package's modules as the bundler shakes them: a name taken from the package is its defining module's, and a module
+// brings in every module it takes a value from (a name it takes from the package's index, its defining module).
+const repoRoot = join(root, '..', '..');
+const VALUE_DECLARATION =
+  /^export\s+(?:declare\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|enum)\s+(\w+)/gm;
+const NAMED_FROM = /^(import|export)\s+(?!type\b)\{([^}]*)\}\s*from\s+'\.\/([^']+)'/gm;
+const parts = (list: string) =>
+  list
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part !== '' && !part.startsWith('type '))
+    .map((part) => {
+      const [own, as] = part.split(/\s+as\s+/);
+      return { own: own!, as: as ?? own! };
+    });
+
+// What one module says about names: those it declares, re-exports or passes on, and the modules it takes values from.
+type PackageModule = {
+  declared: Set<string>;
+  // A name exported from another module of the package, by its name there.
+  forwarded: Map<string, { from: string; name: string }>;
+  stars: string[];
+  dependencies: { from: string; names: string[] | null }[];
+};
+
+function readPackageModule(dir: string, mod: string): PackageModule {
+  const src = readFileSync(join(dir, `${mod}.ts`), 'utf8');
+  const declared = new Set([...src.matchAll(VALUE_DECLARATION)].map((m) => m[1]!));
+  const forwarded = new Map<string, { from: string; name: string }>();
+  const imported = new Map<string, string>();
+  const dependencies: PackageModule['dependencies'] = [];
+  for (const m of src.matchAll(NAMED_FROM)) {
+    const names = parts(m[2]!);
+    if (m[1] === 'import') for (const p of names) imported.set(p.as, m[3]!);
+    else for (const p of names) forwarded.set(p.as, { from: m[3]!, name: p.own });
+    // The index's re-exports are taken by name, never as a whole.
+    if (names.length > 0 && !(mod === 'index' && m[1] === 'export'))
+      dependencies.push({ from: m[3]!, names: names.map((p) => p.own) });
+  }
+  // `import { a } from './x'; export { a };`
+  for (const m of src.matchAll(/^export\s+\{([^}]*)\}\s*;/gm))
+    for (const p of parts(m[1]!)) {
+      const from = imported.get(p.own);
+      if (from) forwarded.set(p.as, { from, name: p.own });
+    }
+  const stars = [...src.matchAll(/^export\s+\*\s+from\s+'\.\/([^']+)'/gm)].map((m) => m[1]!);
+  if (mod !== 'index') for (const from of stars) dependencies.push({ from, names: null });
+  for (const m of src.matchAll(
+    /^import\s+(?!type\b)(?:(?:\*\s+as\s+)?\w+\s+from\s+)?'\.\/([^']+)'/gm,
+  ))
+    dependencies.push({ from: m[1]!, names: null });
+  return { declared, forwarded, stars, dependencies };
+}
+
+function packageModules(pkg: string) {
+  const name = /^@livedoc\/([\w-]+)$/.exec(pkg)?.[1];
+  const dir = name ? join(repoRoot, 'packages', name, 'src') : null;
+  if (!dir || !existsSync(join(dir, 'index.ts'))) return null;
+  const modules = new Map<string, PackageModule>();
+  const moduleOf = (mod: string) => {
+    if (!modules.has(mod)) modules.set(mod, readPackageModule(dir, mod));
+    return modules.get(mod)!;
+  };
+  // The module that defines `name` for one taking it from `mod`.
+  const definer = (mod: string, name: string, seen = new Set<string>()): string | null => {
+    if (seen.has(mod)) return null;
+    seen.add(mod);
+    const m = moduleOf(mod);
+    if (m.declared.has(name)) return mod;
+    const next = m.forwarded.get(name);
+    if (next) return definer(next.from, next.name, seen);
+    for (const from of m.stars) {
+      const found = definer(from, name, seen);
+      if (found) return found;
+    }
+    return null;
+  };
+  // Every module reached from those defining `names`, each module bringing in what it takes values from.
+  const reachedBy = (names: readonly string[]) => {
+    const seen = new Set(names.map((n) => definer('index', n)).filter((m): m is string => !!m));
+    const queue = [...seen];
+    while (queue.length > 0) {
+      for (const dep of moduleOf(queue.pop()!).dependencies) {
+        const targets =
+          dep.from === 'index' && dep.names
+            ? dep.names.map((n) => definer('index', n)).filter((m): m is string => !!m)
+            : [dep.from];
+        for (const next of targets) {
+          if (seen.has(next)) continue;
+          seen.add(next);
+          queue.push(next);
+        }
+      }
+    }
+    return seen;
+  };
+  return { definer: (n: string) => definer('index', n), reachedBy };
+}
+
 describe('the element kind families', () => {
   const familiesDir = 'lib/element-kinds/families';
   const families = readdirSync(join(root, familiesDir)).filter((f) => f.endsWith('.ts'));
@@ -145,5 +244,24 @@ describe('the element kind families', () => {
         .map(({ name }) => `${file}: ${name}`),
     );
     expect(imported).toEqual([]);
+  });
+
+  // Nor through the package: no module the first load takes a value from imports, in turn, a module that defines one
+  // of them (a model part split from its wire, as sankey-wire.ts from sankey-model.ts, stays split).
+  it.each(families)('%s’s model modules are not reached through their package', (family) => {
+    const parts = packageReExports(read(`${familiesDir}/${family}`));
+    for (const pkg of new Set(parts.map((p) => p.from))) {
+      const modules = packageModules(pkg);
+      if (!modules) continue;
+      const own = parts.filter((p) => p.from === pkg).map((p) => modules.definer(p.name));
+      expect(own.every(Boolean)).toBe(true);
+      const taken = [...firstLoad].flatMap((file) =>
+        packageImports(read(file))
+          .filter(({ from }) => from === pkg)
+          .map(({ name }) => name),
+      );
+      const reached = modules.reachedBy(taken);
+      expect(own.filter((m) => reached.has(m!))).toEqual([]);
+    }
   });
 });

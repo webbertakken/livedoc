@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, renderHook } from '@testing-library/react';
 import { useState } from 'react';
 import {
@@ -12,6 +12,10 @@ import {
 } from '@livedoc/document';
 import { resetMindHandoff } from '@/lib/mind-handoff';
 import { useMindGrowth } from './useMindGrowth';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Mind maps draw and edit through their family (lib/element-kinds), in as after the board's idle prefetch.
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/009-elements/mind-node.md: a growth selects the new node and never opens its
 // label editor; Escape on it while still empty removes it.

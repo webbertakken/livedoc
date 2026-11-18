@@ -1,5 +1,4 @@
 import { useMindNumber } from './MindMapLayer';
-import { MindRootHalo } from './MindRootHalo';
 import { memo, useRef, useState } from 'react';
 import { useZoneClip, zoneClipPolygon } from '@/lib/article/zone-clip-store';
 import { PhotoDraftRing, PhotoMatchedBadge } from '@/components/canvas/photo-badges';
@@ -83,7 +82,7 @@ import { BrowserChrome } from '@/components/canvas/boxed-element-overlays';
 
 import type { BoxedElementViewProps } from './BoxedElementView.types';
 import { isPanThrough } from '@/hooks/canvas/pan-through';
-import { useKindFamilyReady } from '@/lib/element-kinds/react';
+import { familyFace, useKindFamilyReady } from '@/lib/element-kinds/react';
 
 // Wrapped in React.memo at the export below: with id-bearing
 // callbacks the parent passes a single stable function per kind
@@ -98,6 +97,9 @@ import { useKindFamilyReady } from '@/lib/element-kinds/react';
 // Enough to push it back clearly, not so far it stops being legible
 // context for the elements you ARE voting on.
 const VOTE_DIMMED_OPACITY = 0.35;
+
+// A mind map root's halo, the mind maps family's: drawn on a mind node only, which draws once the family is in.
+const MindRootHalo = familyFace('mind-maps', 'MindRootHalo');
 
 function BoxedElementViewImpl({
   element,

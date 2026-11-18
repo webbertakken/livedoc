@@ -212,7 +212,10 @@ kind belongs to follows the palette's grouping: the Behaviour tiles are session 
 the pie, column and line charts (a chart drawn from a sheet range too) and the Sankey diagram; the Data tiles'
 legend is a key, and its progress bars, rings and ratings stay base with it (default). A tab's articles belong to
 the pages and articles family whatever elements its pages hold: an article's writing, its zones, its margin notes
-and turning it into pages load with it, while reading a tab's pages and articles stays base.
+and turning it into pages load with it, while reading a tab's pages and articles stays base. A mind map's growing,
+laying out, connecting, converting, arranging, outline and its root's halo load with the mind maps family, while
+reading a map (its order, its numbers and its groups' boxes, which an export and every change's settling read) stays
+base; turning a shape into a mind node waits for the family as a palette press does.
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
@@ -240,7 +243,8 @@ and turning it into pages load with it, while reading a tab's pages and articles
   A family that cannot load because a newer build is live recovers as any other chunk does
   ([Stale builds](stale-builds.md)).
 - `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if a family's modules are reachable from the
-  first load again, or a first-load file imports a model part its family's entry takes from a package;
+  first load again, or a first-load file imports a model part its family's entry takes from a package, or reaches
+  the package module that defines one through the package's own imports;
   `scripts/first-load-why.mjs` names the chain of imports that brought one back.
 
 ### A page's first-load scripts compile as they download

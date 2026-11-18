@@ -5,7 +5,7 @@
 // headings, with inline Markdown stripped. Pure text.
 import type { Element, ElementId } from './index';
 import type { MindFlow } from './mind-flow';
-import { mindNodesInOrder } from './mind-layout';
+import { mindNodesInOrder } from './mind-order';
 import {
   mindMarkdownToMarks,
   mindMarksLines,

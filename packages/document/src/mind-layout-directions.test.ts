@@ -1,13 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createShape } from './factories';
 import { MIND_CHILD_GAP_X, MIND_CHILD_GAP_Y, type MindFlow } from './mind-flow';
-import {
-  MIND_GROUP_PADDING,
-  isMindTreeTidy,
-  layoutMindTree,
-  mindNodesInOrder,
-  reanchorMindConnectors,
-} from './mind-layout';
+import { isMindTreeTidy, layoutMindTree, reanchorMindConnectors } from './mind-layout';
+import { MIND_GROUP_PADDING } from './mind-map-view';
+import { mindNodesInOrder } from './mind-order';
 import type { Element, ShapeElement } from './index';
 
 // docs/specs/009-elements/mind-node.md "A direction per node": each branch is laid out on the side its direction

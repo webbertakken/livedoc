@@ -4,23 +4,24 @@
 // out as an indented outline in a dialog, and applied back on Save as ONE change (one undo step):
 // lines keep their nodes, new lines become nodes dressed like their level (lib/mind-dress.ts), lines
 // that are gone take their nodes with them, and the map is laid out again in the outline's order.
-// The pure work is the document package's (mind-outline.ts); this holds the dialog's open root and
-// commits.
+// The pure work is the document package's (mind-outline.ts), reached through the mind maps family: the dialog opens
+// only once it is in (canEdit); this holds the dialog's open root and commits.
 import { useState } from 'react';
 import {
-  applyMindOutline,
   isMindNode,
   mindFlowOf,
-  mindOutlineText,
   mindRootOf,
-  parseMindOutline,
   type Element,
+  type MindOutlineSummary,
   type ShapeElement,
   type Tab,
 } from '@livedoc/document';
 import { dressMindConnector, dressMindNode } from '@/lib/mind-dress';
 import { track } from '@/lib/telemetry';
 import { debugLog } from '@/lib/debug-log';
+import { isKindFamilyLoaded, requireKindFamily } from '@/lib/element-kinds/store';
+
+const mindModel = () => requireKindFamily('mind-maps');
 
 type MindOutlineApi = {
   // The root whose outline is open in the dialog, or null.
@@ -31,6 +32,8 @@ type MindOutlineApi = {
   close: () => void;
   // The open map written out.
   text: () => string;
+  // What saving `text` would add and remove, or null when it is not an outline.
+  summarise: (text: string) => MindOutlineSummary | null;
   // Applies `text` to the open map; false when it changed nothing (or could not apply).
   save: (text: string) => boolean;
 };
@@ -54,7 +57,10 @@ export function useMindOutline(opts: {
   if (openForId && !openRoot) setOpenForId(null);
 
   const canEdit = (id: string) =>
-    !editsBlocked && !activeTab.locked && !!rootAt(activeTab.elements, id);
+    !editsBlocked &&
+    !activeTab.locked &&
+    isKindFamilyLoaded('mind-maps') &&
+    !!rootAt(activeTab.elements, id);
 
   const open = (id: string) => {
     if (!canEdit(id)) return;
@@ -64,15 +70,23 @@ export function useMindOutline(opts: {
 
   const text = () => {
     if (!openRoot) return '';
-    return mindOutlineText(
+    return mindModel().mindOutlineText(
       activeTab.elements,
       openRoot.id,
       mindFlowOf(activeTab.elements, openRoot),
     );
   };
 
+  const summarise = (input: string): MindOutlineSummary | null => {
+    if (!openRoot) return null;
+    const { parseMindOutline, summariseMindOutline } = mindModel();
+    const outline = parseMindOutline(input);
+    return outline ? summariseMindOutline(activeTab.elements, openRoot.id, outline) : null;
+  };
+
   const save = (input: string) => {
     if (!openRoot || editsBlocked) return false;
+    const { applyMindOutline, parseMindOutline } = mindModel();
     const outline = parseMindOutline(input);
     if (!outline) return false;
     const rootId = openRoot.id;
@@ -102,6 +116,7 @@ export function useMindOutline(opts: {
     open,
     close: () => setOpenForId(null),
     text,
+    summarise,
     save,
   };
 }

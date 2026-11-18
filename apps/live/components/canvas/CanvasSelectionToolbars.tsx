@@ -27,7 +27,8 @@ import { selectionMoving, useCanvasGesture } from '@/lib/canvas-gesture';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { FloatingToolbar } from '@/components/chrome/FloatingToolbar';
 import { MultiSelectionToolbar } from '@/components/canvas/MultiSelectionToolbar';
-import { mindArrangeState } from '@/components/canvas/MindArrangeButtons';
+import { mindArrangeState } from '@/components/canvas/mind-arrange-state';
+import { useKindFamilyLoaded } from '@/lib/element-kinds/react';
 import { flowchartStepToolbarFor } from '@/components/flowchart/flowchart-step-toolbar';
 import { SelectionPopover } from '@/components/canvas/SelectionPopover';
 import { useInsertionSlot } from '@/lib/insertion-preview';
@@ -93,12 +94,15 @@ export function CanvasSelectionToolbars({
     onOpenElementContextMenu,
     onOpenMultiContextMenu,
   } = props;
-  const multiArrange = showMultiToolbar
-    ? mindArrangeState(
-        elements.filter((el) => multiSelectedIds.has(el.id)),
-        elements,
-      )
-    : null;
+  // The arrangement buttons are the mind maps family's: offered once it is in, as its nodes are drawn.
+  const mindMapsIn = useKindFamilyLoaded('mind-maps');
+  const multiArrange =
+    showMultiToolbar && mindMapsIn
+      ? mindArrangeState(
+          elements.filter((el) => multiSelectedIds.has(el.id)),
+          elements,
+        )
+      : null;
   return (
     <>
       {/* SelectionPopover rides on a sibling wrapper that mirrors
@@ -184,7 +188,7 @@ export function CanvasSelectionToolbars({
               : {})}
             // Number, Group and Auto Position (docs/specs/009-elements/mind-node.md): a mind node below its
             // root, or a group's frame (Number and Ungroup). An Editor's.
-            {...(!readOnly && !selectedLocked && selected && props.mindArrangeActions
+            {...(!readOnly && !selectedLocked && selected && mindMapsIn && props.mindArrangeActions
               ? (() => {
                   const state = mindArrangeState([selected], elements);
                   return state ? { mindArrange: { state, actions: props.mindArrangeActions } } : {};

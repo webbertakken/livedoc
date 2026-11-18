@@ -87,7 +87,7 @@ import {
   type WordmarkPatch,
 } from '@/lib/style-presets';
 import type { ShapeColorPreset } from '@/lib/themes';
-import { morphShapes } from '@/lib/shape-morph';
+import { morphShapes, morphWhenReady } from '@/lib/shape-morph';
 import { track } from '@/lib/telemetry';
 
 type Snapshot = { ids: Set<string>; originals: Map<string, Element> };
@@ -300,7 +300,9 @@ export function useStylePreview(deps: {
     // The commit morphs the whole selection at once: boxes becoming mind nodes join the map their arrows draw
     // (docs/specs/009-elements/mind-node.md "Converting a flow"), which the hover preview leaves to the click.
     commitShapeKind: (ids: string[], kind: ShapeKind) =>
-      commitSelection((els, sel) => morphShapes(els, sel, kind), 'ShapeMorph', new Set(ids)),
+      morphWhenReady(kind, () =>
+        commitSelection((els, sel) => morphShapes(els, sel, kind), 'ShapeMorph', new Set(ids)),
+      ),
     // Tech-icon fixed tile size (docs/specs/010-palette/technology-icons.md).
     previewIconSize: (v: IconSize) => previewStyle((el) => applyIconSizeToEl(el, v)),
     commitIconSize: (v: IconSize) => commitStyle((el) => applyIconSizeToEl(el, v), 'IconSize'),
