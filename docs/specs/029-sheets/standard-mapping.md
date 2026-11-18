@@ -52,10 +52,10 @@ The table is the contract the readers and writers are tested against, one test p
   functions Excel added after 2007.
 - A function a format lacks is written as that format's other writers write it: in ODF, LibreOffice's names
   (`COM.MICROSOFT.XLOOKUP`, `ORG.LIBREOFFICE.REGEX`, [Function catalogue](../../research/sheets-open-standard/function-catalogue.md));
-  a Google-only function by S5's convention (default: in XLSX, `IFERROR(__xludf.DUMMYFUNCTION("…"), <cached>)` as
+  a Google-only function by S5's convention (ruled 2026-11-18: in XLSX, `IFERROR(__xludf.DUMMYFUNCTION("…"), <cached>)` as
   Google writes it; in ODF, `ORG.LIVEDOC.<NAME>`), always with its cached value.
 - Where Google Sheets differs from OpenFormula or Excel on what a function means, Google's meaning holds in the grid
-  and each file names the function whose meaning matches (S6, default) ([Formulas](formulas.md)).
+  and each file names the function whose meaning matches (S6, ruled 2026-11-18) ([Formulas](formulas.md)).
 - A formula read from a file that LiveDoc cannot evaluate keeps its text and shows its cached value, with a marker
   saying so; it is written back as it came.
 

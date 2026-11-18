@@ -37,7 +37,9 @@ the person's own view except Freeze, Group and Hidden Sheets, which are the shee
 
 ## Left out
 
-Tools › Create a New Form, Activity Dashboard and Conditional Notifications are on the either-way list; Extensions
+Tools › **Create a New Form** makes a LiveDoc form whose responses land in a new sheet of this workbook, and
+**Activity Dashboard** shows who viewed and edited, from the Timeline (an Editor's); Conditional Notifications are
+left out (C3 list, ruled 2026-11-18). Extensions
 (Add-ons, Macros, Apps Script, AppSheet) is left out (C3) ([Parity matrix](parity-matrix.md)).
 
 ## Who may do what

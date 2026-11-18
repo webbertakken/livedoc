@@ -29,5 +29,4 @@ From Google's list (verified, [catalogue](function-catalogue.md)):
   optional when self-hosted (S4's default stands).
 - `IMPORTRANGE`: between LiveDoc documents, with consent and the reader's access.
 - `GOOGLEFINANCE` and `GOOGLETRANSLATE`: **left out (C3, ruled 2026-11-18)**; in an arriving file each keeps its formula
-  text and its cached value. `DETECTLANGUAGE` could read either way (a Google service, or a function a small open
-  model can answer): it joins the list asked of Webber once with the parity matrix.
+  text and its cached value. `DETECTLANGUAGE` is left out too (C3 list, ruled 2026-11-18).

@@ -46,7 +46,7 @@ A side panel of two tabs:
 
 - An Editor selects, moves, resizes, deletes (Delete), copies and pastes a chart; its menu (⋮): **Edit Chart**,
   **Delete Chart**, **Download** (PNG, PDF, SVG), **Copy Chart**, **Move to Own Sheet**, **Alt Text**.
-  **Publish Chart** is on the either-way list ([Parity matrix](parity-matrix.md#rows-that-could-read-either-way)).
+  **Publish Chart**: a LiveDoc share link to the chart alone, read-only, live, and its embed (C3 list, ruled 2026-11-18).
 - Arrow keys nudge a selected chart (1 px, 10 px with Shift), Alt and the arrows resize it; Escape returns to the grid.
 - A Participant and a Viewer see charts and download them; they cannot select them to move.
 

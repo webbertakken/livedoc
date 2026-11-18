@@ -231,13 +231,13 @@ Every function a [spreadsheet](spreadsheet.md) answers, the target of the overha
 OpenFormula functions Google lacks, and LiveDoc's four card functions (sources and method:
 [Function catalogue research](../../research/sheets-open-standard/function-catalogue.md)).
 
-- **Authority**: whose meaning the grid follows. Google wins wherever Google has the function (S6, default); a
+- **Authority**: whose meaning the grid follows. Google wins wherever Google has the function (S6, ruled 2026-11-18); a
   function only OpenFormula defines follows OpenFormula Part 4; the card functions are LiveDoc's own.
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
   Excel asks for it, and S5's convention for the same Google-only names.
-- **Status**: **built** (in the engine today, re-proven against the oracle), **planned**, **planned (S4, default)**
-  (fetches through the api Worker), **left out (C3)**, **either way (ask)** (on the parity matrix's list), or left
+- **Status**: **built** (in the engine today, re-proven against the oracle), **planned**, **planned (S4)**
+  (fetches through the api Worker), **left out (C3)**, or left
   out with a reason. A left-out function in an arriving file keeps its formula text and shows its cached value.
 - Every built or planned row is proven by the oracle (below) before it reads built.
 
@@ -371,7 +371,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `DECIMAL`             | Math        | `DECIMAL(value, base)`                                                                                         | Google      | `DECIMAL`                        | planned                                                       |
 | `DEGREES`             | Math        | `DEGREES(angle)`                                                                                               | Google      | `DEGREES`                        | planned                                                       |
 | `DELTA`               | Engineering | `DELTA(number1, [number2])`                                                                                    | Google      | `DELTA`                          | planned                                                       |
-| `DETECTLANGUAGE`      | Google      | `DETECTLANGUAGE(text_or_range)`                                                                                | Google      | S5                               | either way (ask)                                              |
+| `DETECTLANGUAGE`      | Google      | `DETECTLANGUAGE(text_or_range)`                                                                                | Google      | S5                               | left out (C3)                                                 |
 | `DEVSQ`               | Statistical | `DEVSQ(value1, value2)`                                                                                        | Google      | `DEVSQ`                          | planned                                                       |
 | `DGET`                | Database    | `DGET(database, field, criteria)`                                                                              | Google      | `DGET`                           | planned                                                       |
 | `DISC`                | Financial   | `DISC(settlement, maturity, price, redemption, [day_count_convention])`                                        | Google      | `DISC`                           | planned                                                       |
@@ -466,7 +466,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `IFNA`                | Logical     | `IFNA(value, value_if_na)`                                                                                     | Google      | `IFNA`                           | built                                                         |
 | `IFS`                 | Logical     | `IFS(condition1, value1, [condition2, value2], …)`                                                             | Google      | `COM.MICROSOFT.IFS`              | built                                                         |
 | `IMABS`               | Engineering | `IMABS(number)`                                                                                                | Google      | `IMABS`                          | planned                                                       |
-| `IMAGE`               | Google      | `IMAGE(url, [mode], [height], [width])`                                                                        | Google      | S5                               | planned (S4, default)                                         |
+| `IMAGE`               | Google      | `IMAGE(url, [mode], [height], [width])`                                                                        | Google      | S5                               | planned (S4)                                                  |
 | `IMAGINARY`           | Engineering | `IMAGINARY(complex_number)`                                                                                    | Google      | `IMAGINARY`                      | planned                                                       |
 | `IMARGUMENT`          | Engineering | `IMARGUMENT(number)`                                                                                           | Google      | `IMARGUMENT`                     | planned                                                       |
 | `IMCONJUGATE`         | Engineering | `IMCONJUGATE(number)`                                                                                          | Google      | `IMCONJUGATE`                    | planned                                                       |
@@ -482,11 +482,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `IMLOG`               | Engineering | `IMLOG(value, base)`                                                                                           | Google      | S5                               | planned                                                       |
 | `IMLOG10`             | Engineering | `IMLOG10(value)`                                                                                               | Google      | `IMLOG10`                        | planned                                                       |
 | `IMLOG2`              | Engineering | `IMLOG2(value)`                                                                                                | Google      | `IMLOG2`                         | planned                                                       |
-| `IMPORTDATA`          | Web         | `IMPORTDATA(url)`                                                                                              | Google      | S5                               | planned (S4, default)                                         |
-| `IMPORTFEED`          | Web         | `IMPORTFEED(url, [query], [headers], [num_items])`                                                             | Google      | S5                               | planned (S4, default)                                         |
-| `IMPORTHTML`          | Web         | `IMPORTHTML(url, query, index)`                                                                                | Google      | S5                               | planned (S4, default)                                         |
+| `IMPORTDATA`          | Web         | `IMPORTDATA(url)`                                                                                              | Google      | S5                               | planned (S4)                                                  |
+| `IMPORTFEED`          | Web         | `IMPORTFEED(url, [query], [headers], [num_items])`                                                             | Google      | S5                               | planned (S4)                                                  |
+| `IMPORTHTML`          | Web         | `IMPORTHTML(url, query, index)`                                                                                | Google      | S5                               | planned (S4)                                                  |
 | `IMPORTRANGE`         | Web         | `IMPORTRANGE(spreadsheet_url, range_string)`                                                                   | Google      | S5                               | planned                                                       |
-| `IMPORTXML`           | Web         | `IMPORTXML(url, xpath_query)`                                                                                  | Google      | S5                               | planned (S4, default)                                         |
+| `IMPORTXML`           | Web         | `IMPORTXML(url, xpath_query)`                                                                                  | Google      | S5                               | planned (S4)                                                  |
 | `IMPOWER`             | Math        | `IMPOWER(complex_base, exponent)`                                                                              | Google      | `IMPOWER`                        | planned                                                       |
 | `IMPRODUCT`           | Engineering | `IMPRODUCT(factor1, [factor2, ...])`                                                                           | Google      | `IMPRODUCT`                      | planned                                                       |
 | `IMREAL`              | Engineering | `IMREAL(complex_number)`                                                                                       | Google      | `IMREAL`                         | planned                                                       |

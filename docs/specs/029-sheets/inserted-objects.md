@@ -9,7 +9,7 @@ their own pages: [Charts](charts.md), [Pivot tables](pivot-tables.md)). Its rows
 ## Images
 
 - **Insert Image › In Cell**: the image fills the cell, kept in proportion, moving and sorting with it; `IMAGE()` does
-  the same from an address (S4, default).
+  the same from an address (S4).
 - **Insert Image › Over Cells**: a floating image anchored at a cell's corner with an offset, moved and resized by an
   Editor; its menu: Edit (crop, replace), Alt Text, Place Image in Selected Cell, Delete.
 - Upload, a link, or the gallery of the person's images ([Images](../009-elements/images.md)); camera and Drive are
