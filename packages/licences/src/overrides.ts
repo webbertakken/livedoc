@@ -45,6 +45,12 @@ export const OVERRIDES: readonly Override[] = [
     ],
   },
   {
+    // ISC; the npm package ships only its package.json's licence field. The repository's LICENSE at the tag.
+    package: 'saxes',
+    version: '6.0.0',
+    texts: [{ label: 'LICENSE (saxes 6.0.0)', file: 'saxes-6.0.0-LICENSE.txt' }],
+  },
+  {
     package: '@resvg/resvg-wasm',
     version: '2.6.2',
     texts: [{ label: 'LICENSE (resvg-js 2.6.2)', file: 'resvg-js-2.6.2-LICENSE.txt' }],
