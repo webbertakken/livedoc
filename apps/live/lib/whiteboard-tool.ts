@@ -96,11 +96,14 @@ export function boardShape<T extends Element>(el: T): T {
   }
 }
 
-// On a whiteboard only a note or a text box turns a keypress into typing
+// On a whiteboard only a note, a text box or a mind node turns a keypress into typing
 // (docs/specs/023-draw-mode/draw-mode.md "Keyboard shortcuts"): a shape just drawn stays selected,
-// and R, O, D and the rest must still pick the next tool rather than label it.
-export function whiteboardTakesTyping(el: Pick<Element, 'type'>): boolean {
-  return el.type === 'sticky' || el.type === 'text';
+// and R, O, D and the rest must still pick the next tool rather than label it. A mind node is grown by
+// Tab or Enter and then named by typing (docs/specs/009-elements/mind-node.md "Keyboard").
+export function whiteboardTakesTyping(el: Pick<Element, 'type'> & { shape?: string }): boolean {
+  return (
+    el.type === 'sticky' || el.type === 'text' || (el.type === 'shape' && el.shape === 'mind-node')
+  );
 }
 
 // Microsoft Whiteboard's rule (docs/specs/023-draw-mode/draw-mode.md "Touch and pen input"): once a

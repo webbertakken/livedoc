@@ -164,14 +164,21 @@ describe('boardShape', () => {
 });
 
 describe('whiteboardTakesTyping', () => {
-  // docs/specs/023-draw-mode/draw-mode.md "Keyboard shortcuts": on a whiteboard only a note or text
-  // box turns a keypress into typing; a selected shape or stroke leaves the key to the dock.
+  // docs/specs/023-draw-mode/draw-mode.md "Keyboard shortcuts": on a whiteboard only a note, a text
+  // box or a mind node turns a keypress into typing; a selected shape or stroke leaves the key to the dock.
   it('lets a note or a text box take the keypress', () => {
     expect(whiteboardTakesTyping({ type: 'sticky' })).toBe(true);
     expect(whiteboardTakesTyping({ type: 'text' })).toBe(true);
   });
 
+  // docs/specs/009-elements/mind-node.md "Keyboard": a map grows by Tab or Enter and then typing the new node's label,
+  // so a label's letters never arm the dock's shapes or eraser over the map.
+  it('lets a mind node take the keypress, so typing its label never picks a tool', () => {
+    expect(whiteboardTakesTyping({ type: 'shape', shape: 'mind-node' })).toBe(true);
+  });
+
   it('leaves the key to the tools for a shape, a line or a stroke', () => {
+    expect(whiteboardTakesTyping({ type: 'shape', shape: 'rectangle' })).toBe(false);
     expect(whiteboardTakesTyping({ type: 'shape' })).toBe(false);
     expect(whiteboardTakesTyping({ type: 'arrow' })).toBe(false);
     expect(whiteboardTakesTyping({ type: 'freehand' })).toBe(false);

@@ -316,6 +316,10 @@ trunk. Routing is the same on the canvas and in every export, and costs one pass
 Tab and Enter fire off the **selected** node, with no label editor open, and
 again from inside the label editor so a chain of nodes is typed without pausing.
 
+The keys are the same in every editor mode. In Sketch mode a selected mind node takes typing as a note does, so its
+label's letters never pick the dock's tools ([Sketch mode](../023-draw-mode/draw-mode.md#keyboard-shortcuts)):
+growing a map never drops a shape over a node or arms the eraser, so no node loses its branch to a stray key.
+
 Tab is also the canvas's element-traversal key ([Canvas accessibility baseline](../004-interface-design/canvas-accessibility.md)),
 and both listeners sit on `window`. The traversal one is mounted first, so the
 selected element gets first refusal on the key; otherwise pressing Tab on a mind
