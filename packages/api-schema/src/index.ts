@@ -18,6 +18,7 @@ import type { DriveMode } from './drive';
 import type { BackgroundPattern, ShapeKind, Tab, TabOpening } from '@livedoc/document';
 import type { CreationTabKind, TemplateFamily } from './placement-defaults';
 import type { ItemTypeCatalogue } from '@livedoc/items';
+import type { WorkbookRecord } from '@livedoc/sheets';
 
 export type { AvatarClothing, AvatarConfig, AvatarFigure, AvatarHair, AvatarSize } from './avatar';
 
@@ -63,6 +64,9 @@ export type LiveDoc = {
   itemTypes?: ItemTypeCatalogue | null;
   // The catalogue's revision (ItemTypesRequest `expectedRev`): 0 until its first write.
   itemTypesRev?: number;
+  // The workbook record when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md "In a
+  // spreadsheet"): its file format and settings. Null (or absent, from an older api) for any other document.
+  workbook?: WorkbookRecord | null;
   savedAt: number;
   createdAt: number;
   // Owner's display name + avatar colour, joined server-side from the

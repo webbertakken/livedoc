@@ -160,7 +160,7 @@ jobs:
           retention-days: 7
 
   # Office files (docs/specs/020-import-export/office-packages.md "Validation"): the specs that hand a file LiveDoc
-  # wrote to LibreOffice and open what LibreOffice saved. The same build as the shards; LibreOffice's Writer comes
+  # wrote to LibreOffice and open what LibreOffice saved. The same build as the shards; LibreOffice's Writer and Calc come
   # from apt, so this job runs the image as root, which installing needs.
   office:
     name: Office files
@@ -173,12 +173,12 @@ jobs:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Install LibreOffice Writer
+      - name: Install LibreOffice Writer and Calc
         shell: bash
         run: |
           set -euo pipefail
           apt-get update -qq
-          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libreoffice-writer-nogui
+          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libreoffice-writer-nogui libreoffice-calc-nogui
           soffice --version
 
       - name: Set up

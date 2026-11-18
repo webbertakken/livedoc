@@ -1197,6 +1197,31 @@ export const SHEETS: MetricStack = {
   ],
 };
 
+// Spreadsheets (docs/specs/029-sheets/spreadsheet.md "Telemetry"): spreadsheets made, opened from a file and
+// downloaded, by how and in which format. Never content.
+export const SPREADSHEETS_CREATED = chart(
+  'Spreadsheet',
+  'Created',
+  'Spreadsheets Made',
+  'A spreadsheet made blank, from a template, or from a file opened in LiveDoc.',
+  { types: ['Blank', 'Template', 'Import'] },
+);
+
+export const SPREADSHEETS_EXPORTED = chart(
+  'Spreadsheet',
+  'Exported',
+  'Spreadsheets Downloaded',
+  'A spreadsheet downloaded as a file, by its format.',
+  { types: ['Ods', 'Fods', 'Xlsx', 'Csv', 'Tsv', 'Pdf', 'Html'] },
+);
+
+export const SPREADSHEETS: MetricStack = {
+  stack: true,
+  title: 'Spreadsheets',
+  blurb: 'Spreadsheet documents on the open standards: made, opened from files and downloaded.',
+  members: [SPREADSHEETS_CREATED, SPREADSHEETS_EXPORTED],
+};
+
 // Forms (docs/specs/030-forms/forms.md "Telemetry"): forms started and built, published, opened and closed, and the
 // responses and reports their links take. Never a form's words.
 export const FORMS_CREATED = chart(

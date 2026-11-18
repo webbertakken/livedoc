@@ -12,7 +12,6 @@ import { placeSheetChart, sheetChartsRemoval } from './sheet-charts';
 import { OPEN_TAB_TO_CHART, useSheetCharts } from './sheet-charts-context';
 import { Button } from '@livedoc/ui';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { formatA1, normaliseRange, formatRange, quoteSheet } from '@livedoc/sheets';
 import type { ShapeElement } from '@livedoc/document';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { usePlan } from '@/components/plan/PlanContext';
@@ -39,12 +38,9 @@ import { SheetFindBar } from './SheetFindBar';
 import { SheetMenus } from './SheetMenus';
 import { useSheetActions } from './useSheetActions';
 import { useFormulaInput } from './useFormulaInput';
-import { insertReference, referenceSlot } from './formula-assist';
 import { importCsvText } from './sheet-csv';
 import { SheetFace } from './SheetFace';
-import type { PointRef } from './useSheetPointer';
-import { clearPointingTarget, setPointingTarget } from './sheet-pointing';
-import { useLatest } from '@/hooks/ui/useLatest';
+import { useFormulaPointing } from './useFormulaPointing';
 import { useFillsTab } from '@/hooks/plan/plan-cover-store';
 import { useSheetZoom } from '@/hooks/sheets/sheet-zoom';
 
@@ -266,48 +262,7 @@ function SheetParts({
   }, [canEdit, maximised, focusGrid]);
   const file = useRef<HTMLInputElement | null>(null);
   const [importText, setImportText] = useState<string | null>(null);
-  // Where the last pointed reference sits in the draft, so a drag grows it into a range.
-  const pointed = useRef<{ start: number; end: number } | null>(null);
-  const pointRef = useCallback<PointRef>(
-    (from, to, sheet) => {
-      const e = c.editing;
-      if (!e || !e.draft.startsWith('=')) return false;
-      const slot =
-        from.r === to.r && from.c === to.c ? referenceSlot(e.draft, input.caret) : pointed.current;
-      if (!slot) return false;
-      const cells =
-        from.r === to.r && from.c === to.c
-          ? formatA1(to.r, to.c)
-          : formatRange(normaliseRange(from, to));
-      const text = sheet ? `${quoteSheet(sheet)}!${cells}` : cells;
-      const next = insertReference(e.draft, slot, text);
-      pointed.current = next.slot;
-      c.setEditing({ ...e, draft: next.draft });
-      input.setCaret(next.caret);
-      return true;
-    },
-    [c, input],
-  );
-  // While this sheet writes a formula, the tab's other sheets point into it.
-  const latestPoint = useLatest(pointRef);
-  const latestCaret = useLatest(input.caret);
-  const writingFormula = !!c.editing?.draft.startsWith('=');
-  useEffect(() => {
-    if (!writingFormula) return;
-    const id = c.sheet.id;
-    setPointingTarget({
-      sheetId: id,
-      tabId: c.sheet.tabId,
-      point: (from, to, sheet) => latestPoint.current(from, to, sheet),
-      refocus: () => {
-        const el = document.querySelector<HTMLTextAreaElement>(`[data-sheet-editor="${id}"]`);
-        if (!el) return;
-        el.focus({ preventScroll: true });
-        el.setSelectionRange(latestCaret.current, latestCaret.current);
-      },
-    });
-    return () => clearPointingTarget(c.sheet.id);
-  }, [writingFormula, c.sheet.id, c.sheet.tabId, latestPoint, latestCaret]);
+  const pointRef = useFormulaPointing(c, input);
   const onImportCsv = () => file.current?.click();
   // Setup Sheet (sheet.md "Setup Sheet"): a placed sheet awaiting setup shows it while it has no cells; cells
   // arriving any other way (a peer, an agent, an import) end setup, so a sheet cleared later never shows it again.

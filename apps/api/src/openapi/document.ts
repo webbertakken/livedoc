@@ -196,6 +196,11 @@ const TAGS = [
       'Spreadsheet tabs on the canvas: cells, formulas and formatting by row and column id, live for everyone with the document open.',
   },
   {
+    name: 'Spreadsheets',
+    description:
+      'Spreadsheets on an open standard: workbooks of sheet tabs, kept in the format they arrived in, and their files in ODF.',
+  },
+  {
     name: 'Text documents',
     description:
       'Text documents on an open standard: their live state, edited together through the room, and their files in ODF.',
