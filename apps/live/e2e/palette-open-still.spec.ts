@@ -33,6 +33,35 @@ async function recordShifts(page: Page) {
 
 // Its own row at 1280 until the tour button drops its tiles to fit; at 1440 dropping one brings in More, which widened
 // the strip past the room and needed a second refit.
+const chromeShifts = (page: Page) =>
+  page.evaluate(() =>
+    (window as unknown as { __shifts: Shift[] }).__shifts.filter((s) =>
+      s.moved.some((m) => m === 'strip' || m === 'tray'),
+    ),
+  );
+const twoFrames = (page: Page) =>
+  page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
+
+// An article's formatting docks into the strip with the article's editor, a chunk of its own: the strip holds its
+// place from the first frame, so it neither grows nor takes a row of its own when the controls arrive.
+test('an article opens with its strip already as wide as its docked formatting', async ({
+  page,
+  pageErrors,
+}) => {
+  await recordShifts(page);
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/new?template=blank-article');
+  await expect(page.locator('[data-article-dock] [data-page-toolbar]')).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.locator('[data-article-dock-reserve]')).toHaveCount(0);
+  await twoFrames(page);
+  expect(await chromeShifts(page)).toEqual([]);
+  expectNoPageErrors(pageErrors);
+});
+
 for (const width of [1280, 1440]) {
   test(`a board opens with the strip and its tray where they stay (${width})`, async ({
     page,
@@ -46,13 +75,8 @@ for (const width of [1280, 1440]) {
     await expect(page.locator('[data-toolbar-actions] [data-tour-offer]')).toBeVisible();
     await expect(page.locator('[data-palette-tray]')).toBeVisible();
     // Two frames past it, so any refit it set off has been drawn.
-    await page.evaluate(
-      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-    );
-
-    const shifts = await page.evaluate(() => (window as unknown as { __shifts: Shift[] }).__shifts);
-    const chrome = shifts.filter((s) => s.moved.some((m) => m === 'strip' || m === 'tray'));
-    expect(chrome).toEqual([]);
+    await twoFrames(page);
+    expect(await chromeShifts(page)).toEqual([]);
     expectNoPageErrors(pageErrors);
   });
 }

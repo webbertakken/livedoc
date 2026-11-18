@@ -12,7 +12,12 @@
 import { keyLabel } from '@/lib/key-label';
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { useArticleDock } from '@/lib/article/article-dock';
+import { setArticleDockFilled, useArticleDock } from '@/lib/article/article-dock';
+import {
+  ARTICLE_DOCK_ROW_CLASS,
+  articleDockButtonBox,
+  articleDockStyleBox,
+} from './article-dock-row';
 import {
   lucideBaseline,
   lucideBold,
@@ -205,6 +210,15 @@ export function PageToolbar({
     topRoomOf,
   });
 
+  // Docked, its controls take the place the strip's slot held for them (ArticleDockReserve) in the commit they
+  // arrive, before the frame is drawn: the strip keeps its width.
+  const docked = !!dock && !!shown;
+  useLayoutEffect(() => {
+    if (!docked) return;
+    setArticleDockFilled(true);
+    return () => setArticleDockFilled(false);
+  }, [docked]);
+
   if (!shown) return null;
   const { handle, selection } = shown;
   const run = (command: Parameters<typeof handle.run>[0], event?: keyof typeof FORMAT_EVENT) => {
@@ -272,7 +286,7 @@ export function PageToolbar({
       onPointerDown={(e) => e.stopPropagation()}
       className={
         dock
-          ? 'flex min-w-0 items-center gap-0.5'
+          ? ARTICLE_DOCK_ROW_CLASS
           : `fixed left-0 top-0 z-[var(--z-toolbar)] overflow-x-auto [scrollbar-width:none] ${TOOLBAR_CARD}`
       }
       style={dock ? undefined : { visibility: 'hidden' }}
@@ -284,7 +298,7 @@ export function PageToolbar({
         aria-haspopup="menu"
         aria-expanded={open === 'style'}
         onClick={() => toggleOpen('style')}
-        className={`flex h-9 ${phone ? '' : 'min-w-[124px]'} shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium transition ${
+        className={`${articleDockStyleBox(phone)} transition ${
           open === 'style' ? TOOLBAR_CONTROL_PRESSED : TOOLBAR_TRIGGER_TONE
         }`}
       >
@@ -517,9 +531,7 @@ function Button({
         aria-expanded={menu ? (expanded ?? false) : undefined}
         disabled={disabled}
         onClick={onPress}
-        className={`flex h-9 shrink-0 items-center justify-center gap-1 rounded-md transition focus-visible:outline-2 focus-visible:outline-brand-600 disabled:opacity-35 ${
-          menu ? 'px-2' : 'w-9'
-        } ${pressed || expanded ? TOOLBAR_CONTROL_PRESSED : TOOLBAR_CONTROL_REST}`}
+        className={`${articleDockButtonBox(!!menu)} transition focus-visible:outline-2 focus-visible:outline-brand-600 disabled:opacity-35 ${pressed || expanded ? TOOLBAR_CONTROL_PRESSED : TOOLBAR_CONTROL_REST}`}
       >
         {children}
         {menu ? <ChevronDownIcon className="shrink-0" /> : null}

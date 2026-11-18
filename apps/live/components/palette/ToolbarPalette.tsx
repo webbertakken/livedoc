@@ -358,7 +358,8 @@ export function ToolbarPalette(props: Props) {
   // the top line only: the phone's row is its own, and turning the measuring on as the window grows out of a phone's
   // width measures the strip the computer's layout draws, not the phone's it last saw. Re-measured in the commit
   // what it draws changes, so tiles dropping as the editor opens never leave it on a row it no longer needs.
-  const stripDrawn = `${category?.id ?? defaultId}|${tiles.map((t) => t.id).join(',')}|${groups?.length ?? ''}|${showMore}|${barLabels}`;
+  // The palette's kind is part of it: an article's strip draws its docked formatting (or the place held for it).
+  const stripDrawn = `${paletteKind}|${articleDock}|${category?.id ?? defaultId}|${tiles.map((t) => t.id).join(',')}|${groups?.length ?? ''}|${showMore}|${barLabels}`;
   // What it draws changes its own chrome (dropping a tile brings in More): the count is fitted again in that commit.
   useLayoutEffect(refitStripTiles, [stripDrawn, refitStripTiles]);
   const { crowded, shift } = useStripPlacement(cardRef, !phoneRow, stripDrawn);
