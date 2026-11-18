@@ -27,6 +27,9 @@ it, ports it, and it lands through a LiveDoc pull request like any other change.
 - **Left behind:** livediagram's Community gallery. LiveDoc has no public gallery
   ([purpose](../001-project-vision/purpose.md#boundaries-that-have-moved)), so an upstream change to it, or to a
   piece only it used, is never picked.
+- **Diverged:** spreadsheets. LiveDoc's [spreadsheet](../029-sheets/spreadsheet.md) replaces the Plan Sheet both
+  products shared; upstream changes to the Plan Sheet, its store or its engine are picked only where they still
+  apply to the spreadsheet.
 
 ## The git remote
 

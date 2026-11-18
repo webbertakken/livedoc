@@ -8,6 +8,10 @@ whose responses become cards on a Board tab), has its own spec: [Forms](../030-f
 ([Domain language](../003-system-architecture/domain-language.md)), as Event Storming is: it is what the tab is, and
 it brings its own behaviour.
 
+The **Sheet tab** is superseded by the [spreadsheet](../029-sheets/spreadsheet.md): a Sheet tab becomes a
+**workbook tab**, and the dashboard's figures and charts read sheets of a workbook, in this document or another
+([Plan's links](../029-sheets/plan-links.md)). Until that ships, this page states what Plan has.
+
 ## Domain language
 
 | Term              | Meaning                                                                                       | Not                    |

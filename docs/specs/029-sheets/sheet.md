@@ -1,5 +1,9 @@
 # Sheet
 
+**Superseded** by the [spreadsheet](spreadsheet.md), which retires the Plan Sheet in plan 0020's "Phase 16: migrate and
+retire". Until then this page states what ships; its grid, editing and keyboard rules carry into the spreadsheet's
+area specs, which name what changes.
+
 A **Sheet** is a spreadsheet on the canvas: one tab of a workbook, as a person knows it from Google Sheets or
 Microsoft Excel. It is placed from Plan's **Sheet** palette category (under the **Spreadsheets** heading), moved and resized like a
 [Plan board](../026-plan/plan-board.md), and maximised like one. Its cells are not stored on the canvas: the
@@ -688,6 +692,9 @@ whole Sheet.
   draws only those in view. A Sheet without cell threads draws nothing for them.
 
 ## Card tables
+
+Removed by the spreadsheet overhaul (C6, ruled 2026-11-18: [Plan's links](plan-links.md#the-card-functions)); until
+then, what ships:
 
 - A sheet set up from Plan Cards holds a **card table** (`layout.cardTables`): its header row, each column's card
   field (by the name the header gave it), which row is which card, and the card type new rows take (the import's

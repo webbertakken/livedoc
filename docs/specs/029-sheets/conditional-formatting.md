@@ -54,6 +54,16 @@ the sheet's, seen by everyone, and worked out in every browser that shows it, as
 - Format rules draw everywhere the grid is drawn: on the canvas, maximised, filling a tab, in a Dashboard slot, and in
   exports, images and api or MCP renders (the static render works them out from the same engine).
 
+## In a spreadsheet
+
+**Status: specified.** Nothing is built. The rules above carry into the [spreadsheet](spreadsheet.md), with these
+changes ([Formatting](formatting.md#conditional-formatting)):
+
+- The Conditional Format Rules **side panel** replaces the popover: the sheet's rules in order, dragged to reorder,
+  **Add Another Rule**; a rule's range may be several ranges (`A1:A10,C1:C10`).
+- **Custom Formula Is** may read other sheets of the workbook, and named ranges.
+- ODF keeps rules as `calcext:conditional-formats`, XLSX as `conditionalFormatting` ([Standard mapping](standard-mapping.md)).
+
 ## Making and changing rules
 
 - The toolbar's **Data** category gains **Conditional Formatting** (after Data Validation, with the rules); the cell

@@ -42,6 +42,21 @@ Every rule also has:
 A dropdown also has its **Display**: **Chip** (the default), **Arrow** (the value, and an arrow at the cell's right)
 or **Plain Text** (the value alone; the arrow shows on the active cell only).
 
+## In a spreadsheet
+
+**Status: specified.** Nothing is built. The rules above carry into the [spreadsheet](spreadsheet.md), with these
+changes ([Data tools](data-tools.md#data-validation)):
+
+- The Data Validation Rules **side panel** replaces the popover, listing the sheet's rules with **Add Rule**.
+- **Dropdown from a Range** may read a range of **any sheet** of the workbook (`Sheet2!A2:A20`).
+- **Checkbox** takes **Use Custom Cell Values** (a ticked and an unticked value).
+- **Number**, **Date** and **Text** gain Google's remaining criteria: Text Is Valid Email and URL (kept), Date Is Valid
+  Date, and **Custom Formula Is**.
+- A dropdown's options take **colours** (the one colour picker), drawn on its chips; **Allow Multiple Selections**
+  holds several options in one cell, comma-separated.
+- Both file formats keep every rule ([Standard mapping](standard-mapping.md)); a criterion a format lacks is kept for
+  LiveDoc as unknown content and listed on conversion.
+
 ## Where values are checked
 
 - Checked: a typed edit (the cell, the formula bar, **Ctrl+Enter** into every selected cell), a dropdown pick, a

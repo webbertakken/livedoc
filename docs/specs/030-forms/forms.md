@@ -6,6 +6,9 @@ document, in the status the form names, so collecting answers leads straight int
 LiveDoc's answer to Google Forms: building a form, sharing it and reading the answers happen in the document
 where the work then happens.
 
+Responses that go to a sheet go to a sheet of a [spreadsheet](../029-sheets/spreadsheet.md) once it ships: a new
+spreadsheet, a workbook tab in the form's document, or one the Editor may edit ([Plan's links](../029-sheets/plan-links.md#form-responses)).
+
 ## Why
 
 Boards and Sheets are where a team keeps its data, but data often starts with someone outside the team: a bug
