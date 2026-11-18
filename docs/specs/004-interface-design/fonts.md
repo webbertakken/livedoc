@@ -222,7 +222,7 @@ apart from the canvas's eleven. The research is [Fonts](../../research/docs-open
   Arial, Times New Roman and Courier New; Carlito for Calibri; Caladea for Cambria). Each family's licence (OFL-1.1 or
   Apache-2.0) is checked before it ships and listed on the licences page.
 - **More fonts** (the font menu's last item) lists the Google Fonts catalogue and loads a chosen family from Google
-  Fonts where reachable, never required (fork D6, open; this is its default). A family that cannot load draws in its
+  Fonts where reachable, never required (fork D6, ruled). A family that cannot load draws in its
   stand-in, and the font menu marks it "Not available offline".
 - **Substitution**: a named family that is not available draws in its stand-in, then its generic family; the font
   menu shows the named family in italics with "Shown as <stand-in>". Layout, PDF and thumbnails use the same table.

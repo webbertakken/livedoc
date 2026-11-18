@@ -10,7 +10,7 @@ through the editor since telemetry began (`Tab · Changed · ArticleAdded` 0); a
 
 ## Articles (fork D4)
 
-`(default)`: each article is **migrated once** into a new text document, with no compatibility layer:
+Ruled 2026-11-18: each article is **migrated once** into a new text document, with no compatibility layer:
 
 - One text document per article, in the article's document's folder, named after the article's title (else the
   document's name and "Article"), born in ODF 1.4.
@@ -31,9 +31,9 @@ through the editor since telemetry began (`Tab · Changed · ArticleAdded` 0); a
 
 ## Slides, infographics, logos and wireframes (fork D8)
 
-`(default)`: **no stored content is deleted**: each page's elements stay on the tab's canvas where they are, as leaving
+Ruled 2026-11-18: **no stored content is deleted**: each page's elements stay on the tab's canvas where they are, as leaving
 Pages already does ([Editor modes](../007-editor/editor-modes.md) "Leaving Pages"); the pages' sheets, backgrounds and
-labels go, and the tab opens in Structured. Asked of Webber with the evidence before the removal runs.
+labels go, and the tab opens in Structured.
 
 ## What a person sees
 

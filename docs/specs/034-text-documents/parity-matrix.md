@@ -219,7 +219,7 @@ Rows that could read either way under C3 (core only), asked of Webber once with 
 - **Citations**: core writing; Google's source search is a service.
 - **Activity dashboard**: who viewed and when, from LiveDoc's own opens.
 - **Linked objects**: charts and drawings linked to their LiveDoc sources.
-- **Grammar**: spelling is core; grammar needs a server (fork D5).
+- **Grammar**: spelling is core; grammar needs a server (fork D5, ruled: none on docs.nu, hosts may configure one).
 
 ## Context menus, side panels and dialogs
 

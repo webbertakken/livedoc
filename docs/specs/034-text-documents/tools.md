@@ -35,7 +35,7 @@ language and activity in a [text document](text-document.md), and what fork C3 (
   ([Spelling](../../research/docs-open-standard/spelling.md)).
 - **Personal dictionary** (Tools > Spelling and grammar > Personal dictionary): stored with the account (in this
   browser for a guest), shared by the person's documents.
-- **Grammar** needs a server: shown only where the host configures one (fork D5, default: none on docs.nu).
+- **Grammar** needs a server: shown only where the host configures one (fork D5, ruled: none on docs.nu; a self-hoster may configure one).
 - Show spelling suggestions, show grammar suggestions: per person.
 
 ## Dictionary

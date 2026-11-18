@@ -7,7 +7,7 @@ writing, edited together live, held in one model that both open standards for wo
 LiveDoc in the **format it arrived in**: an `.odt` or `.fodt` file as ODF 1.4, a `.docx` file as OOXML, each one any
 office suite opens (fork C1, ruled: both native). It is worked on as Google Docs is: the same title row, menus, toolbar, ruler,
 pages, side panels, dialogs and shortcuts ([Editing surface](editing-surface.md)), every function accounted for in the
-[parity matrix](parity-matrix.md). (The name is fork D1, open; "text document" is its default.)
+[parity matrix](parity-matrix.md). (The name is fork D1, ruled 2026-11-18.)
 
 A text document is a document with a single text document tab: its tab strip is hidden, and the tab holds the data,
 so a second tab can join it later without changing what the document is, as a [page](../031-markdown/markdown-tab.md)
@@ -134,11 +134,11 @@ An edit that would pass a limit is refused as a whole, with the limit named
 
 ## Share roles
 
-| Role            | With a text document                                                                                                                      |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| **Editor**      | Everything: edits, formats, sets up pages, inserts, accepts and rejects suggestions, restores versions, renames                           |
-| **Participant** | Reads; comments, replies, resolves, reacts; makes suggestions in Suggesting mode (fork D7, open; default: yes, as Google's Commenter may) |
-| **Viewer**      | Reads, comments visible, finds text, counts words, downloads and prints unless the owner turned that off; changes nothing                 |
+| Role            | With a text document                                                                                                         |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Editor**      | Everything: edits, formats, sets up pages, inserts, accepts and rejects suggestions, restores versions, renames              |
+| **Participant** | Reads; comments, replies, resolves, reacts; makes suggestions in Suggesting mode (fork D7, ruled: as Google's Commenter may) |
+| **Viewer**      | Reads, comments visible, finds text, counts words, downloads and prints unless the owner turned that off; changes nothing    |
 
 Each is gated on the session's `can`, never on read-only alone
 ([Gate a feature by share role](../../instructions/gate-a-feature-by-share-role.md)); each area's spec carries its own
