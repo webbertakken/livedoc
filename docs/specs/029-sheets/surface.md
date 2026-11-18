@@ -2,7 +2,7 @@
 
 **Status: specified.** Nothing is built.
 
-The screen of a workbook tab, top to bottom, as Google Sheets lays it out. The frame (title row, menu bar, menu
+The screen of a spreadsheet, top to bottom, as Google Sheets lays it out. The frame (title row, menu bar, menu
 search, toolbar, side panel, dialogs) is the **office shell** shared with plan 0019's documents and specified there;
 this page names what a workbook puts in it and specifies the parts only a spreadsheet has. How literal the look is
 follows 0019's D2 ruling (S2). Every item's copy is **Title Case**, as every LiveDoc menu item and button is
@@ -20,8 +20,8 @@ follows 0019's D2 ruling (S2). Every item's copy is **Title Case**, as every Liv
 | Sheet bar   | 38 px            | Add Sheet, All Sheets, sheet tabs, the selection's summary                                   |
 | Side panel  | 300 px, right    | Opened by a menu item; one at a time; closes with ✕ or Escape                                |
 
-- A spreadsheet hides the document's tab strip (one tab). A workbook tab in a document of several tabs keeps the
-  tab strip above the title row's menus and adds its own sheet bar.
+- A spreadsheet draws the document's tab strip as its sheet bar, at the foot, never at the top: its sheets are its
+  tabs ([Spreadsheet](spreadsheet.md#the-workbook-shape)).
 - **Hide the Menus** (^, Ctrl+Shift+F) folds the title row and menu bar into the toolbar's row, as Google's
   compact controls do; the choice is the person's, kept in their browser.
 

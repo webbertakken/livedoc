@@ -7,7 +7,7 @@ LiveDoc's answer to Google Forms: building a form, sharing it and reading the an
 where the work then happens.
 
 Responses that go to a sheet go to a sheet of a [spreadsheet](../029-sheets/spreadsheet.md) once it ships: a new
-spreadsheet, a workbook tab in the form's document, or one the Editor may edit ([Plan's links](../029-sheets/plan-links.md#form-responses)).
+spreadsheet or one the Editor may edit ([Plan's links](../029-sheets/plan-links.md#form-responses)).
 
 ## Why
 

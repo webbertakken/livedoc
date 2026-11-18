@@ -12,6 +12,6 @@ The finished spreadsheets a person starts from, as Google Sheets' template galle
   a chart of the workbook ([Charts](charts.md)). Dates are reckoned from the moment it is made, as today.
 - They show in the Explorer's new document menu under **Spreadsheet › From a Template**, and in the template gallery
   with their previews (`@livedoc/template-previews`).
-- The diagram templates' **companion sheets** (Threat model, Metric tree, Value stream map) become a workbook tab
-  beside the diagram tab in the same document, so the drawing and the sheet still agree when made.
+- The diagram templates' **companion sheets** (Threat model, Metric tree, Value stream map) become a spreadsheet of their own
+  made with the diagram's document and linked from it, so the drawing and the sheet still agree when made.
 - Telemetry: `Spreadsheet · Created · Template` with the template's name without spaces.
