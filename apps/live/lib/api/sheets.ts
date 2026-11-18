@@ -4,13 +4,16 @@
 // from the engine, so this module costs the main bundle nothing.
 
 import type {
+  SheetCellsResponse,
   SheetCreateRequest,
   SheetResponse,
   SheetsResponse,
   SheetWriteRequest,
   SheetWriteResponse,
+  WorkbookResponse,
+  WorkbookSheetDto,
 } from '@livedoc/api-schema';
-import type { SheetJson, SheetPerson } from '@livedoc/sheets';
+import type { RowSpan, SheetJson, SheetPerson } from '@livedoc/sheets';
 import { isOfflineId } from '../offline/offline-store';
 import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
@@ -35,10 +38,8 @@ const offline = () => import('../offline/offline-sheets');
 // A tab's sheets (or named ones, up to 50 a call), cells included.
 export async function fetchSheets(
   scope: SheetsScope,
-  // A tab's sheets, named ones, or every sheet (a spreadsheet's workbook, docs/specs/029-sheets/spreadsheet.md).
-  which: { tabId: string } | { ids: readonly string[] } | { all: true },
+  which: { tabId: string } | { ids: readonly string[] },
 ): Promise<SheetJson[]> {
-  if ('all' in which) return fetchAllSheets(scope);
   if (await isOfflineId(scope.documentId))
     return (await offline()).offlineFetchSheets(scope.documentId, which);
   if ('ids' in which) {
@@ -58,6 +59,45 @@ export async function fetchSheets(
     headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
   });
   return (await expectOk<SheetsResponse>(res, 'sheets')).sheets;
+}
+
+// A spreadsheet opened by viewport (docs/specs/029-sheets/sheet-store.md "In a spreadsheet", Loading by viewport):
+// every sheet's head in tab order, the open tab's sheet with its first rows' cells. An offline spreadsheet is read
+// whole from its local store.
+export async function fetchWorkbook(
+  scope: SheetsScope,
+  open: { tabId: string },
+): Promise<WorkbookSheetDto[]> {
+  if (await isOfflineId(scope.documentId)) {
+    const sheets = await (await offline()).offlineFetchSheets(scope.documentId, null);
+    return sheets.map((s) => ({
+      ...s,
+      cellCount: s.cells.length,
+      rowsLoaded: s.layout.rows.length,
+    }));
+  }
+  const q = new URLSearchParams({ open: open.tabId }).toString();
+  const res = await apiFetch(
+    `${API_BASE}/documents/${encodeURIComponent(scope.documentId)}/workbook?${q}`,
+    {
+      headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
+    },
+  );
+  return (await expectOk<WorkbookResponse>(res, 'workbook')).sheets;
+}
+
+// One page of a sheet's cells, by row position (a spreadsheet loading behind its first rows). Never offline: an
+// offline spreadsheet loads whole.
+export async function fetchSheetCells(
+  scope: SheetsScope,
+  sheetId: string,
+  rows: RowSpan,
+): Promise<SheetCellsResponse> {
+  const res = await apiFetch(
+    sheetsUrl(scope, `/${encodeURIComponent(sheetId)}/cells`, { rows: `${rows.from}-${rows.to}` }),
+    { headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }) },
+  );
+  return expectOk<SheetCellsResponse>(res, 'sheet cells');
 }
 
 // Every sheet of a document (Take offline, Duplicate, the Drive file).

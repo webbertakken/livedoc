@@ -42,6 +42,7 @@ import {
   sheetRejected,
   type SheetCaller,
 } from './sheet-route-kit';
+import { sheetCells } from './sheet-page-routes';
 import { writeSheet } from './sheet-write-route';
 
 const IDS_PER_GET_MAX = 50;
@@ -255,6 +256,8 @@ export async function handleSheetRoutes(ctx: DocumentRouteContext): Promise<Resp
     return method === 'DELETE' ? remove(ctx, documentId, sheetId) : methodNotAllowed();
   if (segments.length === 6 && segments[5] === 'writes')
     return method === 'POST' ? writeSheet(ctx, documentId, sheetId) : methodNotAllowed();
+  if (segments.length === 6 && segments[5] === 'cells')
+    return method === 'GET' ? sheetCells(ctx, documentId, sheetId) : methodNotAllowed();
   return null;
 }
 

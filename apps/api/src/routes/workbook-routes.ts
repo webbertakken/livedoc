@@ -10,6 +10,7 @@ import { documentTabOrder, readWorkbook } from '../db/workbook';
 import { downloadFileName } from '../files/download-file-name';
 import { CORS_HEADERS, forbidden, json, methodNotAllowed } from '../responses';
 import type { DocumentRouteContext } from './context';
+import { openWorkbook } from './sheet-page-routes';
 import { sheetCaller } from './sheet-route-kit';
 
 const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
@@ -84,6 +85,8 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
   const { segments, request } = ctx;
   if (segments[3] !== 'workbook') return null;
   const documentId = segments[2]!;
+  if (segments.length === 4)
+    return request.method === 'GET' ? openWorkbook(ctx, documentId) : methodNotAllowed();
   if (segments.length === 5 && segments[4] === 'file')
     return request.method === 'GET' ? file(ctx, documentId) : methodNotAllowed();
   return null;

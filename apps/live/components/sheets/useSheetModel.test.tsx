@@ -20,6 +20,8 @@ import { SHEET_TOO_BIG_TO_PASTE, useSheetModel } from './useSheetModel';
 
 vi.mock('@/lib/api/sheets', () => ({
   fetchSheets: vi.fn(),
+  fetchWorkbook: vi.fn(),
+  fetchSheetCells: vi.fn(),
   createSheet: vi.fn(),
   writeSheet: vi.fn(),
   deleteSheet: vi.fn(),

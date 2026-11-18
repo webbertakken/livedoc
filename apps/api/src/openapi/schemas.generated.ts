@@ -14293,6 +14293,33 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "SheetCellsResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "cells": {
+        "items": {
+          "$ref": "#/components/schemas/SheetCellDto"
+        },
+        "type": "array"
+      },
+      "from": {
+        "type": "number"
+      },
+      "rev": {
+        "type": "number"
+      },
+      "to": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "rev",
+      "from",
+      "to",
+      "cells"
+    ],
+    "type": "object"
+  },
   "SheetCreateRequest": {
     "additionalProperties": false,
     "properties": {
@@ -18118,6 +18145,25 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "WorkbookResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "sheets": {
+        "items": {
+          "$ref": "#/components/schemas/WorkbookSheetDto"
+        },
+        "type": "array"
+      },
+      "workbook": {
+        "$ref": "#/components/schemas/WorkbookRecord"
+      }
+    },
+    "required": [
+      "workbook",
+      "sheets"
+    ],
+    "type": "object"
+  },
   "WorkbookSettings": {
     "additionalProperties": false,
     "properties": {
@@ -18156,6 +18202,61 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "timeZone",
       "recalc",
       "iterate"
+    ],
+    "type": "object"
+  },
+  "WorkbookSheetDto": {
+    "additionalProperties": false,
+    "properties": {
+      "cellCount": {
+        "type": "number"
+      },
+      "cells": {
+        "items": {
+          "$ref": "#/components/schemas/SheetCellJson"
+        },
+        "type": "array"
+      },
+      "createdAt": {
+        "type": "number"
+      },
+      "id": {
+        "type": "string"
+      },
+      "layout": {
+        "$ref": "#/components/schemas/SheetLayout"
+      },
+      "rev": {
+        "type": "number"
+      },
+      "rowsLoaded": {
+        "type": "number"
+      },
+      "tabId": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "updatedAt": {
+        "type": "number"
+      },
+      "updatedBy": {
+        "$ref": "#/components/schemas/SheetPerson"
+      }
+    },
+    "required": [
+      "cellCount",
+      "cells",
+      "createdAt",
+      "id",
+      "layout",
+      "rev",
+      "rowsLoaded",
+      "tabId",
+      "title",
+      "updatedAt",
+      "updatedBy"
     ],
     "type": "object"
   }

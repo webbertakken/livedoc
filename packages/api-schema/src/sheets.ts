@@ -5,6 +5,7 @@
 
 import type {
   SheetCellJson,
+  WorkbookRecord,
   SheetJson,
   SheetLayout,
   SheetPerson,
@@ -20,6 +21,16 @@ export type SheetDto = SheetJson;
 export type SheetsResponse = { sheets: SheetDto[] };
 
 export type SheetResponse = { sheet: SheetDto };
+
+// A spreadsheet opened by viewport (docs/specs/029-sheets/sheet-store.md "In a spreadsheet", Loading by viewport):
+// every sheet's head and layout, in tab order, and its cells of rows [0, rowsLoaded); the rest come by pages.
+// `cellCount` is how many cells the sheet holds in all.
+export type WorkbookSheetDto = SheetDto & { cellCount: number; rowsLoaded: number };
+
+export type WorkbookResponse = { workbook: WorkbookRecord; sheets: WorkbookSheetDto[] };
+
+// One page of a sheet's cells: those of the rows at positions [from, to) in its order at `rev`.
+export type SheetCellsResponse = { rev: number; from: number; to: number; cells: SheetCellDto[] };
 
 // A new sheet: a blank one (layout made by the client), one filled (a CSV, a paste, a restore), or a copy of
 // another of the document's sheets (`copyOf`, its cells copied on the server).
@@ -74,6 +85,8 @@ export const SHEET_ERRORS = [
   // A spreadsheet's sheet name against its rules, or another sheet's (docs/specs/029-sheets/spreadsheet.md "Limits").
   'sheet_name_invalid',
   'sheet_name_taken',
+  // A span of rows that is not `<from>-<to>`, runs backwards or passes a page (SHEET_PAGE_ROWS).
+  'rows_invalid',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 

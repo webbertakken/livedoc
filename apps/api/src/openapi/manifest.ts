@@ -831,6 +831,26 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseSchema: 'SheetWriteResponse',
     statuses: [200, 400, 401, 403, 404, 409, 410, 413],
   },
+  {
+    method: 'GET',
+    path: '/documents/{id}/sheets/{sheetId}/cells',
+    segment: 'documents',
+    tag: 'Sheets',
+    summary:
+      "One page of a sheet's cells: those of the rows at positions [from, to) in its order at the answered rev, to clamped to its rows, at most 5,000 rows. 400 rows_invalid; 409 sheet_busy when writes keep landing. Read access; a tab-scoped link reads only its tab's.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      SHEET_TAB_QUERY,
+      {
+        name: 'rows',
+        required: true,
+        description: 'The rows by position, <from>-<to>, half-open.',
+      },
+    ],
+    responseSchema: 'SheetCellsResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
   // A text document's live state and file (docs/specs/034-text-documents/live-editing-and-storage.md "Storage",
   // files-and-print.md "Downloading").
   {
@@ -865,6 +885,30 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     statuses: [200, 400, 401, 403, 404, 409, 410],
   },
   // A spreadsheet's file (docs/specs/029-sheets/files-and-print.md, standard-mapping.md).
+  {
+    method: 'GET',
+    path: '/documents/{id}/workbook',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "A spreadsheet to open: its workbook row and every sheet in tab order, each with its head, layout, cell count and the cells of its first rowsLoaded rows: the open tab's sheet its first rows, a sheet with no cells whole, any other none (fetch the rest from /sheets/{sheetId}/cells). 404 workbook_not_found when the document is no spreadsheet; 400 rows_invalid; 409 sheet_busy. Read access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      {
+        name: 'open',
+        required: false,
+        description: "The tab to open (the first tab's by default).",
+      },
+      {
+        name: 'rows',
+        required: false,
+        description: 'The first rows to load, 0-<to> (0-200 by default).',
+      },
+    ],
+    responseSchema: 'WorkbookResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
   {
     method: 'GET',
     path: '/documents/{id}/workbook/file',

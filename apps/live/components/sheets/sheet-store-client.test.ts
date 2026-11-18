@@ -33,6 +33,10 @@ function server(initial: SheetJson) {
   let hold = false;
   const api = {
     fetchSheets: vi.fn(async () => [sheetToJson(sheet)]),
+    fetchWorkbook: vi.fn(async () => [
+      { ...sheetToJson(sheet), cellCount: sheet.cells.size, rowsLoaded: sheet.layout.rows.length },
+    ]),
+    fetchSheetCells: vi.fn(),
     createSheet: vi.fn(
       async (_s: unknown, c: { id?: string; tabId: string; title: string; layout?: unknown }) => ({
         ...sheetToJson(sheet),
@@ -735,6 +739,8 @@ describe('validation rules in the store (docs/specs/029-sheets/data-validation.m
     const sent: { id: string; write: SheetWrite }[] = [];
     const api = {
       fetchSheets: vi.fn(async () => [...sheets.values()].map(sheetToJson)),
+      fetchWorkbook: vi.fn(),
+      fetchSheetCells: vi.fn(),
       createSheet: vi.fn(),
       deleteSheet: vi.fn(async () => {}),
       writeSheet: vi.fn(async (_s: unknown, id: string, req: { write: SheetWrite }) => {
@@ -828,8 +834,11 @@ describe('a spreadsheet’s store', () => {
     },
   ];
   function make(oneWorkbook: boolean) {
-    const fetchSheets = vi.fn(async (_s: unknown, which: { tabId?: string; all?: true }) =>
-      which.all ? sheets : sheets.filter((s) => s.tabId === which.tabId),
+    const fetchSheets = vi.fn(async (_s: unknown, which: { tabId?: string }) =>
+      sheets.filter((s) => s.tabId === which.tabId),
+    );
+    const fetchWorkbook = vi.fn(async () =>
+      sheets.map((s) => ({ ...s, cellCount: s.cells.length, rowsLoaded: s.layout.rows.length })),
     );
     const store = new SheetStore({
       scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
@@ -840,18 +849,21 @@ describe('a spreadsheet’s store', () => {
       toast: vi.fn(),
       api: {
         fetchSheets,
+        fetchWorkbook,
+        fetchSheetCells: vi.fn(),
         createSheet: vi.fn(),
         writeSheet: vi.fn(),
         deleteSheet: vi.fn(),
       } as never,
     });
-    return { store, fetchSheets };
+    return { store, fetchSheets, fetchWorkbook };
   }
 
   it('loads every sheet with the first tab, and reads across them', async () => {
-    const { store, fetchSheets } = make(true);
+    const { store, fetchWorkbook } = make(true);
     await store.loadTab('tabB');
-    expect(fetchSheets).toHaveBeenCalledWith(expect.anything(), { all: true });
+    expect(fetchWorkbook).toHaveBeenCalledWith(expect.anything(), { tabId: 'tabB' });
+    expect(store.loading('sheetOne')).toBe(false);
     expect(store.status('tabA')).toBe('ready');
     expect(store.workbook('tabB').value('sheetTwo', 0, 0)).toBe(42);
     expect(store.workbook('tabA')).toBe(store.workbook('tabB'));

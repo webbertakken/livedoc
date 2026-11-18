@@ -27,6 +27,8 @@ vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/hooks/ui/useIsMobileViewport', () => ({ useIsMobileViewport: () => false }));
 vi.mock('@/lib/api/sheets', () => ({
   fetchSheets: vi.fn(),
+  fetchWorkbook: vi.fn(),
+  fetchSheetCells: vi.fn(),
   createSheet: vi.fn(),
   writeSheet: vi.fn(),
   deleteSheet: vi.fn(),
