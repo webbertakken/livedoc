@@ -117,8 +117,8 @@ matches, with its menu path; Up and Down move, Enter runs it, Escape closes. Dim
 ## Keyboard shortcuts
 
 - ⌘/ opens the Keyboard shortcuts dialog: a search field and every shortcut by group, as Google's.
-- The full table of shortcuts, one row per entry of Google's list for each platform, lives in
-  `docs/specs/034-text-documents/keyboard-shortcuts.md` (written with Phase 7's shell), each row `specified` until
+- The full table of shortcuts, one row per entry of Google's list for each platform, is a spec of its own in this
+  folder, Keyboard shortcuts, written with the office shell, each row `specified` until
   built. The browser's own shortcuts are never taken where Google does not take them.
 
 ## Phone and tablet

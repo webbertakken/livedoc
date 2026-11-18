@@ -214,7 +214,7 @@ apply the resolved stack; `useElementStyle.setFontSelected` and
 The fonts of the office kinds ([Text document](../034-text-documents/text-document.md), the spreadsheet of plan 0020),
 apart from the canvas's eleven. The research is [Fonts](../../research/docs-open-standard/fonts.md).
 
-- **The catalogue** is data (`packages/document/src/document-fonts.ts`): each family's name as files write it, its
+- **The catalogue** is data, one module of `@livedoc/document`: each family's name as files write it, its
   generic family, its pitch, whether LiveDoc serves it, its licence, and its **stand-in**.
 - **The core set is served by LiveDoc** from its own static assets (WOFF2, Latin and Latin Extended subsets, each
   family's regular, italic, bold and bold italic), so a text document lays out the same offline and self-hosted: the
