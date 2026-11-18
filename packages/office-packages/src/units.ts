@@ -15,7 +15,7 @@ const POINTS_PER: Record<string, number> = {
 
 /** An ODF length (`2cm`, `0.5in`, `12pt`, ...) in points, or undefined when it is not one. */
 export function odfLengthToPt(value: string | undefined): number | undefined {
-  const match = value?.trim().match(/^([-+]?(?:\d+\.?\d*|\.\d+))(cm|mm|in|pt|pc|px)$/);
+  const match = value?.trim().match(/^([-+]?(?:\d+(?:\.\d*)?|\.\d+))(cm|mm|in|pt|pc|px)$/);
   if (!match) return undefined;
   return round3(Number(match[1]) * POINTS_PER[match[2]!]!);
 }
@@ -25,7 +25,7 @@ export const ptToOdf = (pt: number): string => `${round3(pt)}pt`;
 
 /** An ODF percentage (`115%`) as a fraction, or undefined. */
 export function odfPercent(value: string | undefined): number | undefined {
-  const match = value?.trim().match(/^([-+]?(?:\d+\.?\d*|\.\d+))%$/);
+  const match = value?.trim().match(/^([-+]?(?:\d+(?:\.\d*)?|\.\d+))%$/);
   return match ? round3(Number(match[1]) / 100) : undefined;
 }
 

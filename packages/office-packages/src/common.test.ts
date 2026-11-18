@@ -29,6 +29,15 @@ describe('lengths', () => {
     expect(odfLengthToPt(undefined)).toBeUndefined();
   });
 
+  it('reads a long run of digits in linear time (no backtracking)', () => {
+    const long = `0${'00'.repeat(50_000)}x`;
+    const started = performance.now();
+    expect(odfLengthToPt(long)).toBeUndefined();
+    expect(odfPercent(long)).toBeUndefined();
+    expect(performance.now() - started).toBeLessThan(100);
+    expect(odfLengthToPt('3.cm')).toBe(85.039);
+  });
+
   it('writes points that read back equal', () => {
     expect(ptToOdf(56.693)).toBe('56.693pt');
     expect(odfLengthToPt(ptToOdf(odfLengthToPt('2cm')!))).toBe(56.693);
