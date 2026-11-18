@@ -45,6 +45,19 @@ describe('SheetName.fit', () => {
     expect(SheetName.fit('y'.repeat(150), [])).toBe('y'.repeat(SHEET_NAME_MAX));
   });
 
+  // A file's name is untrusted: mending it stays linear however it is made.
+  it('never leaves an apostrophe at the end where the cut falls', () => {
+    const fitted = SheetName.fit(`${'y'.repeat(99)}' tail`, []);
+    expect(SheetName.check(fitted, [])).toEqual({ ok: true, name: 'y'.repeat(99) });
+  });
+
+  it('mends a name of many apostrophes quickly', () => {
+    const hostile = `${'\x27'.repeat(100_000)}x${'\x27'.repeat(100_000)}`;
+    const started = performance.now();
+    expect(SheetName.fit(hostile, [])).toBe('x');
+    expect(performance.now() - started).toBeLessThan(50);
+  });
+
   it('numbers a taken name, keeping it within the limit', () => {
     expect(SheetName.fit('Costs', ['costs'])).toBe('Costs 2');
     expect(SheetName.fit('Costs', ['Costs', 'Costs 2'])).toBe('Costs 3');

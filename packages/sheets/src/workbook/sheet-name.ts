@@ -41,15 +41,20 @@ function nextFree(taken: readonly string[]): string {
   for (let n = 1; ; n++) if (!isTaken(`Sheet${n}`, taken)) return `Sheet${n}`;
 }
 
+// The name without apostrophes at either end, in one linear pass (a file's name is untrusted: no backtracking).
+function withoutEndQuotes(name: string): string {
+  let start = 0;
+  let end = name.length;
+  while (start < end && name[start] === "'") start++;
+  while (end > start && name[end - 1] === "'") end--;
+  return name.slice(start, end);
+}
+
 /** A name that keeps the rules, made from one that may not (a file's, a copy's): mended, cut, numbered if taken. */
 function fit(raw: string, taken: readonly string[]): string {
-  const mended = raw
-    .replace(FORBIDDEN_ALL, ' ')
-    .replace(/\s+/gu, ' ')
-    .trim()
-    .replace(/^'+|'+$/gu, '')
-    .trim();
-  const base = cut(mended, SHEET_NAME_MAX);
+  const mended = raw.replace(FORBIDDEN_ALL, ' ').replace(/\s+/gu, ' ').trim();
+  // Cut, then mended again: a cut may leave an apostrophe or a space at the end.
+  const base = withoutEndQuotes(cut(withoutEndQuotes(mended).trim(), SHEET_NAME_MAX)).trim();
   if (base === '') return nextFree(taken);
   if (!isTaken(base, taken)) return base;
   for (let n = 2; ; n++) {
