@@ -1,12 +1,11 @@
 'use client';
 
 // The palette while a board covers the canvas (docs/specs/026-plan/plan-board.md "The palette follows what fills the
-// screen"): in place of the mode's strip, a card of its own at the header's right end holding only the cards that
-// board takes, each placed the way the Cards tiles are (dragged into a column, or picked then dropped). Apart from the
-// board's controls card (the cog), and wearing the board's hue as the menu box does (BAND_TINT).
+// screen"): in place of the mode's strip, the palette toolbar's card in its own place on the top line, holding only
+// the cards that board takes, each placed the way the Cards tiles are (dragged into a column, or picked then dropped).
 import { boardAddTypes, normaliseBoardSetup } from '@livedoc/items';
 import type { Element } from '@livedoc/document';
-import { BAND_STRIP_FLUSH, BAND_TINT, TOOLBAR_CARD } from '@/components/chrome/toolbar-surface';
+import { TOOLBAR_CARD } from '@/components/chrome/toolbar-surface';
 import { usePlan } from '@/components/plan/PlanContext';
 import { PaletteTile, type PaletteTileActions } from './PaletteTileGrid';
 import { planCardTile } from './palette-plan-tiles';
@@ -35,7 +34,7 @@ export function BoardCardsStrip({
       data-floating-panel=""
       role="group"
       aria-label="Add Cards"
-      className={`${TOOLBAR_CARD} ${BAND_TINT} ${BAND_STRIP_FLUSH}`}
+      className={TOOLBAR_CARD}
     >
       {types.map((t) => {
         const def = planCardTile(t);

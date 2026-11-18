@@ -1,7 +1,7 @@
 'use client';
 
 // A Dashboard tab's page (docs/specs/026-plan/plan-tabs.md "Dashboard tab"): its rows of slots drawn over the canvas
-// area, below the top row and clear of the panels, as a covering board is (CanvasCover): the canvas under it takes no
+// area, in the content frame the chrome leaves, as a covering board is (CanvasCover): the canvas under it takes no
 // input. The page scrolls when taller than the window; rows and slots come from the palette's Layout.
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import {
@@ -158,7 +158,7 @@ export function DashboardPage({
     ),
   });
   // Below the top row: a dashboard has no header to hold it.
-  const layout = useCanvasLayerInsets(canvas, false);
+  const insets = useCanvasLayerInsets(canvas);
   // The tabs the slots show, fetched (a tab's content arrives only when it is opened or swept); until then a slot says
   // it is loading rather than that the tab is empty.
   const shownTabs = useMemo(
@@ -284,7 +284,7 @@ export function DashboardPage({
       ) : null}
       {canvas
         ? createPortal(
-            <CanvasCover layout={layout} marker={{ 'data-dashboard': '' }}>
+            <CanvasCover insets={insets} marker={{ 'data-dashboard': '' }}>
               <DashboardContext.Provider value={value}>
                 <FaceFinishProvider finish={finish}>
                   <div
@@ -293,10 +293,9 @@ export function DashboardPage({
                     role="region"
                     aria-label={`${tab.name} dashboard`}
                     ref={pageRef}
-                    // The bottom padding clears the canvas's bottom toolbars (about 64 px with their margin), so the
-                    // last row scrolls fully into view above them; on a phone also the home indicator's safe area.
+                    // The page ends above the bottom toolbars (its content frame), so its own padding is even.
                     // A tinted background washes the page behind the slots (Dashboard Settings).
-                    className={`relative h-full overflow-y-auto overscroll-contain px-3 pb-20 pt-3 max-sm:pb-[calc(6rem+env(safe-area-inset-bottom))] ${dashboard.background === 'tint' ? 'bg-brand-500/[0.07] dark:bg-brand-400/[0.09]' : ''}`}
+                    className={`relative h-full overflow-y-auto overscroll-contain px-3 pb-3 pt-3 ${dashboard.background === 'tint' ? 'bg-brand-500/[0.07] dark:bg-brand-400/[0.09]' : ''}`}
                     onDragOver={onDragOver}
                     onDragLeave={(e) => {
                       if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setZone(null);

@@ -37,19 +37,16 @@ import { TabPatternLayer } from '@/components/canvas/TabPatternLayer';
 import { useCanvasPattern } from '@/components/canvas/canvas-pattern-context';
 import { prefersReducedMotion } from '@/lib/motion-preference';
 import { useCanvasLayerInsets } from '@/hooks/ui/useCanvasLayerInsets';
-import type { CanvasLayout, PhoneRow } from '@/lib/canvas-layer-insets';
-import { announceHeaderBand } from './menu-name-slot';
-import { BAND_CARD_PX } from './band-controls';
-import { useUiScale } from '@/components/providers/ui-scale';
+import type { LayerInsets } from '@/lib/canvas-layer-insets';
 import type { PlanPalette } from './plan-palette';
 import { CANVAS_ROOT_SELECTOR, elementSelector } from '@/lib/canvas-selectors';
 
 const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
-// A maximised or tab-filling element is drawn over the canvas area (the canvas's own `main`), over its content, inset
-// clear of the chrome laid over the canvas (the Toolbar layout's top row, side panels, the zoom controls:
-// useCanvasLayerInsets), with the header, tab bar and footer outside `main`: docs/specs/026-plan/plan-board.md
-// "Maximised board", "Fill Tab". Under the panels too, should one be dragged over it.
+// A maximised or tab-filling element is drawn over the canvas area (the canvas's own `main`), over its content, in the
+// content frame the chrome laid over the canvas leaves (the top line, the bottom line, side panels:
+// useCanvasLayerInsets), the chrome itself untouched: docs/specs/026-plan/plan-board.md "Maximised board", "It
+// respects the chrome", "Fill Tab". Under the panels too, should one be dragged over it.
 const CANVAS_LAYER_Z = 'z-[calc(var(--z-panel)-1)]';
 
 // The cover over the whole canvas area while a Plan element is maximised or fills its tab: painted with the canvas's
@@ -59,69 +56,19 @@ const CANVAS_LAYER_Z = 'z-[calc(var(--z-panel)-1)]';
 // bottom controls) stays reachable. `data-canvas-cover` also tells the canvas's capture-phase handler to stand down
 // for a press inside it (useCanvasSurfaceGestures). The element sits in it at its insets, `marker` naming which.
 export function CanvasCover({
-  layout,
+  insets,
   marker,
-  tint,
-  blend,
   children,
 }: {
-  layout: CanvasLayout;
+  insets: LayerInsets;
   marker: Record<string, string>;
-  // The element's hue (planBandTint), worn by the menu box and palette while its header holds the top row.
-  tint?: string | undefined;
-  // The element's own surface and border (planBandBlend): with it, the chrome in the band takes them instead, flat
-  // (no shadow), so the top row reads as part of the element.
-  blend?: BandBlend | undefined;
   children: ReactNode;
 }) {
-  const { insets, band, row } = layout;
   // An animated canvas style is a layer of the canvas's own, under this cover: drawn again here, as the inherited
   // background carries only the colour and a static pattern (the canvas's copy stops meanwhile: canvas-motion.css).
   const pattern = useCanvasPattern();
-  // The menu box is drawn at the toolbar's UI scale; the band's cards take its height (band-controls BAND_CARD_PX).
-  const toolbarScale = useUiScale('toolbar');
-  // The element's name moves to the menu box while there is a band, and back when it goes (menu-name-slot).
-  const banded = !!band;
-  useLayoutEffect(() => {
-    announceHeaderBand();
-    return announceHeaderBand;
-  }, [banded]);
-  // The palette moves to the header's right end, before its controls (plan-board.md "The header holds the top row"):
-  // set on the canvas the strip sits in, so the strip itself never re-renders for it.
-  const coverRef = useRef<HTMLDivElement>(null);
-  const stripEnd = band?.stripEnd ?? null;
-  useLayoutEffect(() => {
-    const main = coverRef.current?.parentElement;
-    if (!main || stripEnd === null) return;
-    setStripEnd(main, stripEnd);
-    return () => clearStripEnd(main);
-  }, [stripEnd]);
-  // The chrome in the band wears the element's hue (toolbar-surface BAND_TINT): set on the canvas they sit in.
-  const bandTint = band && tint && !blend ? tint : null;
-  useLayoutEffect(() => {
-    const main = coverRef.current?.parentElement;
-    if (!main || !bandTint) return;
-    setBandTint(main, bandTint);
-    return () => clearBandTint(main);
-  }, [bandTint]);
-  // On a phone's shared row too (canvas-layer-insets phoneRow), so the menu box reads as part of the element.
-  const blendSurface = (band || row) && blend ? blend.surface : null;
-  const blendLine = blend?.line ?? null;
-  useLayoutEffect(() => {
-    const main = coverRef.current?.parentElement;
-    if (!main || !blendSurface || !blendLine) return;
-    main.setAttribute('data-band-blend', '');
-    main.style.setProperty('--band-surface', blendSurface);
-    main.style.setProperty('--band-line', blendLine);
-    return () => {
-      main.removeAttribute('data-band-blend');
-      main.style.removeProperty('--band-surface');
-      main.style.removeProperty('--band-line');
-    };
-  }, [blendSurface, blendLine]);
   return (
     <div
-      ref={coverRef}
       data-canvas-cover=""
       // The default cursor: it takes every press, so the canvas's pan hand (inherited from `main`) never shows over it.
       className={`absolute inset-0 cursor-default ${CANVAS_LAYER_Z}`}
@@ -137,74 +84,11 @@ export function CanvasCover({
       onWheel={stop}
     >
       {pattern && isAnimatedPattern(pattern.pattern) ? <TabPatternLayer {...pattern} /> : null}
-      <div
-        {...marker}
-        {...(band ? { 'data-header-band': '' } : {})}
-        className="absolute p-2 sm:p-3"
-        // The header band (docs/specs/026-plan/plan-board.md "The header holds the top row"): the element's header
-        // reads these, each with its own size as the fallback, so on the canvas nothing changes.
-        // On a phone, the row it shares with the menu (canvas-layer-insets phoneRow): the same height and start, no more.
-        style={{
-          ...insets,
-          ...(band ? bandVars(band, toolbarScale) : row ? rowVars(row) : {}),
-        }}
-      >
+      <div {...marker} className="absolute p-2 sm:p-3" style={insets}>
         {children}
       </div>
     </div>
   );
-}
-
-// The strip's place in a header band, as the properties its root reads (ToolbarPalette): pressed to the right,
-// `stripEnd` screen px from the canvas's right edge, written in the strip's own px (its UI scale zooms it).
-function setStripEnd(main: HTMLElement, stripEnd: number): void {
-  const strip = main.querySelector<HTMLElement>('[data-toolbar-palette]');
-  const zoom = strip ? parseFloat(getComputedStyle(strip).zoom) || 1 : 1;
-  main.setAttribute('data-strip-in-band', '');
-  main.style.setProperty('--plan-strip-align', 'flex-end');
-  main.style.setProperty('--plan-strip-end', `${Math.round(stripEnd / zoom)}px`);
-}
-
-// An element's own surface and border, for the chrome in its band to take (toolbar-surface BAND_BLEND).
-type BandBlend = { surface: string; line: string };
-
-// The element's hue on the chrome in its band (toolbar-surface BAND_TINT), set on the canvas they sit in.
-function setBandTint(main: HTMLElement, tint: string): void {
-  main.setAttribute('data-band-tint', '');
-  main.style.setProperty('--band-tint', tint);
-}
-
-function clearBandTint(main: HTMLElement): void {
-  main.removeAttribute('data-band-tint');
-  main.style.removeProperty('--band-tint');
-}
-
-function clearStripEnd(main: HTMLElement): void {
-  main.removeAttribute('data-strip-in-band');
-  main.style.removeProperty('--plan-strip-align');
-  main.style.removeProperty('--plan-strip-end');
-}
-
-// The header band as the CSS properties a maximised element's header reads (PLAN_BAND_*).
-function bandVars(
-  band: NonNullable<CanvasLayout['band']>,
-  toolbarScale = 1,
-): Record<string, string> {
-  return {
-    '--plan-band-h': `${band.height}px`,
-    // The menu box's height on screen, which each card in the band matches: its controls and inset at the toolbar's
-    // scale, its hairline border a screen px whatever the scale.
-    '--plan-band-card-h': `${Math.round(((BAND_CARD_PX - 2) * toolbarScale + 2) * 10) / 10}px`,
-    '--plan-band-left': `${band.left}px`,
-    '--plan-band-mid': `${band.mid}px`,
-    // Clear of the top line's actions group at the top right (HeaderBand `end`).
-    '--plan-band-end': `${band.end}px`,
-  };
-}
-
-// A phone's shared top row as the properties the element's header reads: its height and where its content starts.
-function rowVars(row: PhoneRow): Record<string, string> {
-  return { '--plan-band-h': `${row.height}px`, '--plan-band-left': `${row.left}px` };
 }
 
 // The canvas `main` holding the slot, found from a marker rendered in the slot as it mounts: the marker's ref
@@ -332,8 +216,6 @@ export function MaximisableSlot({
   fill = false,
   placeholder,
   onMaximisedSize,
-  tint,
-  blend,
   children,
 }: {
   id: string;
@@ -343,9 +225,6 @@ export function MaximisableSlot({
   fill?: boolean;
   placeholder: CSSProperties;
   onMaximisedSize?: (size: { width: number; height: number } | null) => void;
-  // The element's hue for the chrome in its header band (planBandTint), or its own surface and border (blend).
-  tint?: string | undefined;
-  blend?: BandBlend | undefined;
   children: ReactNode;
 }) {
   const [host] = useState(() => {
@@ -360,10 +239,7 @@ export function MaximisableSlot({
   const over = maximised || fill;
   useLayoutEffect(() => {
     const slot = slotRef.current;
-    if (!over && host && slot && host.parentElement !== slot) {
-      slot.appendChild(host);
-      announceHeaderBand();
-    }
+    if (!over && host && slot && host.parentElement !== slot) slot.appendChild(host);
   }, [over, host]);
   useEffect(() => () => host?.remove(), [host]);
   if (!host) return <>{children}</>;
@@ -398,18 +274,11 @@ export function MaximisableSlot({
         host,
       )}
       {fill ? (
-        <FilledTabLayer
-          host={host}
-          tint={tint}
-          blend={blend}
-          {...(onMaximisedSize ? { onSize: onMaximisedSize } : {})}
-        />
+        <FilledTabLayer host={host} {...(onMaximisedSize ? { onSize: onMaximisedSize } : {})} />
       ) : maximised ? (
         <MaximisedPlanLayer
           id={id}
           host={host}
-          tint={tint}
-          blend={blend}
           {...(onMaximisedSize ? { onSize: onMaximisedSize } : {})}
         />
       ) : null}
@@ -447,11 +316,7 @@ export function openBox(box: HTMLElement, id: string, host: HTMLElement): () => 
   const origin = originOf(id);
   box.style.opacity = '';
   const reveal = () => {
-    if (host.parentElement !== box) {
-      box.appendChild(host);
-      // Moved under the band: its name looks again (menu-name-slot).
-      announceHeaderBand();
-    }
+    if (host.parentElement !== box) box.appendChild(host);
   };
   const settle = () => box.classList.remove(...GHOST_CLASSES);
   if (!origin || prefersReducedMotion()) {
@@ -499,10 +364,7 @@ export function openBox(box: HTMLElement, id: string, host: HTMLElement): () => 
 // once without motion). Returns the cancel (maximising again while it shrinks back).
 function closeBox(box: HTMLElement, id: string, host: HTMLElement): () => void {
   const slot = document.querySelector(`[data-plan-slot="${CSS.escape(id)}"]`);
-  if (slot && host.parentElement !== slot) {
-    slot.appendChild(host);
-    announceHeaderBand();
-  }
+  if (slot && host.parentElement !== slot) slot.appendChild(host);
   const origin = originOf(id);
   if (!origin || prefersReducedMotion()) {
     finishRestore();
@@ -534,20 +396,16 @@ export function MaximisedPlanLayer({
   id,
   host,
   onSize,
-  tint,
-  blend,
 }: {
   id: string;
   host: HTMLElement;
-  tint?: string | undefined;
-  blend?: BandBlend | undefined;
   onSize?: (size: { width: number; height: number } | null) => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const closing = useMaximisedPlanClosing();
   const [mark, canvas] = useCanvasRoot();
-  // Clear of the chrome over the canvas: the top row (or holding it in the header band), side panels.
-  const layout = useCanvasLayerInsets(canvas);
+  // In the content frame the chrome over the canvas leaves.
+  const insets = useCanvasLayerInsets(canvas);
 
   // One phase at a time, opening or closing, in one effect: when restoring begins (or the layer goes), the opening's
   // cleanup cancels its pending reveal and settle (timers and listener) without running them, so an opening still
@@ -567,12 +425,7 @@ export function MaximisedPlanLayer({
       <span hidden ref={mark} />
       {canvas
         ? createPortal(
-            <CanvasCover
-              layout={layout}
-              marker={{ 'data-maximised-board': '' }}
-              tint={tint}
-              blend={blend}
-            >
+            <CanvasCover insets={insets} marker={{ 'data-maximised-board': '' }}>
               <div
                 ref={boxRef}
                 className="relative h-full w-full origin-top-left will-change-transform"
@@ -589,26 +442,19 @@ export function MaximisedPlanLayer({
 // grow). Presses stop here, as on a maximised board.
 function FilledTabLayer({
   host,
-  tint,
-  blend,
   onSize,
 }: {
   host: HTMLElement;
-  tint?: string | undefined;
-  blend?: BandBlend | undefined;
   // The layer's size, for a view to lay itself out at (a Visualisation tab's chart).
   onSize?: ((size: { width: number; height: number } | null) => void) | undefined;
 }) {
   const [mark, canvas] = useCanvasRoot();
-  // Clear of the chrome over the canvas: the top row (or holding it in the header band), side panels.
-  const layout = useCanvasLayerInsets(canvas);
+  // In the content frame the chrome over the canvas leaves.
+  const insets = useCanvasLayerInsets(canvas);
   const boxRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const box = boxRef.current;
-    if (box && host.parentElement !== box) {
-      box.appendChild(host);
-      announceHeaderBand();
-    }
+    if (box && host.parentElement !== box) box.appendChild(host);
   }, [canvas, host]);
   useReportedBoxSize(boxRef, onSize, canvas);
   return (
@@ -616,12 +462,7 @@ function FilledTabLayer({
       <span hidden ref={mark} />
       {canvas
         ? createPortal(
-            <CanvasCover
-              layout={layout}
-              marker={{ 'data-fill-tab-board': '' }}
-              tint={tint}
-              blend={blend}
-            >
+            <CanvasCover insets={insets} marker={{ 'data-fill-tab-board': '' }}>
               <div ref={boxRef} className="relative h-full w-full" />
             </CanvasCover>,
             canvas,

@@ -12,7 +12,6 @@ import {
   type SheetHarness,
 } from './sheet-ui-test-utils';
 import { SheetToolbar } from './SheetToolbar';
-import { SheetToolbarEnd } from './sheet-toolbar-end';
 import { FUNCTION_FAMILY_LABELS, FUNCTION_HIGHLIGHT_MS } from './SheetFunctionMenu';
 import { FUNCTION_SEARCH_MAX, searchFunctions } from './SheetFunctionSearch';
 import { FUNCTION_FAMILIES } from '@livedoc/sheets';
@@ -545,54 +544,6 @@ describe('the sheet toolbar', () => {
     fireEvent.click(row('Font Size'));
     fireEvent.click(row('18'));
     expect(h.cell('A1')?.format?.fs).toBe(18);
-  });
-
-  // In a header band the header's own controls (Maximise or Restore, the cog) end the row: the buttons fold to leave
-  // them their room, so they are never clipped in a narrow window.
-  it('leaves the header controls at its end their room', () => {
-    const endPx = 400;
-    const was = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
-    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
-      configurable: true,
-      get(this: HTMLElement) {
-        return this.hasAttribute('data-sheet-toolbar-end') ? endPx : 0;
-      },
-    });
-    try {
-      renderSheet(h, ({ actions }) => (
-        <SheetToolbarEnd.Provider
-          value={
-            <>
-              <button type="button" aria-label="Maximise" />
-              <button type="button" aria-label="Sheet Settings" />
-            </>
-          }
-        >
-          <SheetToolbar actions={actions} inBand />
-        </SheetToolbarEnd.Provider>
-      ));
-      pickCategory('Text');
-      // At 1,000 px every Text button fits on its own; with the end's 400 px taken, some fold into More.
-      expect(screen.getByRole('button', { name: 'More' })).toBeTruthy();
-      expect(screen.getByRole('button', { name: 'Sheet Settings' })).toBeTruthy();
-    } finally {
-      if (was) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', was);
-    }
-  });
-
-  it("fills a header band card's height with the category switcher, as the menu box's mode tile does", () => {
-    renderSheet(h, ({ actions }) => <SheetToolbar actions={actions} inBand />);
-    const wrap = screen.getByRole('button', { name: 'Toolbar category' }).parentElement!
-      .parentElement!;
-    expect(wrap.className).toContain('self-stretch');
-    expect(wrap.className).toContain('[&>div>button]:h-full');
-  });
-
-  it('keeps the switcher its own size on the canvas', () => {
-    show(h);
-    const wrap = screen.getByRole('button', { name: 'Toolbar category' }).parentElement!
-      .parentElement!;
-    expect(wrap.className).not.toContain('self-stretch');
   });
 
   it("wears the Sheet's colours on Font and Font Size", () => {

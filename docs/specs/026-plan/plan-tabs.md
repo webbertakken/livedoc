@@ -46,13 +46,12 @@ sheet of a spreadsheet document, and the dashboard's figures and charts read she
 
 - The one board (or Sheet) fills the tab ([Fill Tab](plan-board.md#fill-tab)) for everyone, always: there is no Fill
   Tab switch anywhere (not on Setup Board, Board Setup or Sheet Settings; a flag stored on an old board or Sheet still
-  reads), no Maximise or Restore, no Focus and no Add to Slides, and Escape restores nothing. Its header holds the
-  top row where there is room ([The header holds the top row](plan-board.md#maximised-board)).
+  reads), no Maximise or Restore, no Focus and no Add to Slides, and Escape restores nothing. It sits in the content frame the
+  chrome leaves, its header at its top ([It respects the chrome](plan-board.md#maximised-board)).
 - A Board tab's board fills the screen, so it starts with its cards **Detailed**, whatever its preset uses on a canvas
   (a Kanban's Compact): from Start Planning and from a template alike. Card Layout changes it as ever.
 - A Board, Sheet or Dashboard tab shows no palette, as nothing in Plan does ([No palette](plan-mode.md#no-palette)); a
-  Sheet tab's toolbar sits in the top row beside the brand group, in a card of its own
-  ([Sheet](../029-sheets/sheet.md#sheet-tab)).
+  Sheet tab's toolbar sits under the Sheet's own header ([Sheet](../029-sheets/sheet.md#sheet-tab)).
 - Anything else added to a Board or Sheet tab (a paste, an agent) is hidden under the element, as for Fill Tab.
 - **Import and Export** in a Board or Sheet tab's tab menu are only what fits its element, in place of the
   document's Import dialog: **Import CSV…** and **Export** (the Export dialog, with only the formats that suit the
@@ -116,7 +115,9 @@ in Plan, so one on a Sketch, Structured or Pages tab could never be worked there
 
 - The tab's `dashboard` holds its **rows**, top to bottom; each row its **slots**, left to right. Drawn over the
   canvas area as a page (the canvas is not panned, zoomed or drawn on), it scrolls vertically when taller than the
-  window. The page is 24 px in from the canvas edges with 12 px between rows and slots.
+  window. It sits in the content frame the editor's chrome leaves, as a covering board does
+  ([It respects the chrome](plan-board.md#maximised-board)): below the top line, above the bottom line, the chrome
+  untouched. The page is 24 px in from that frame with 12 px between rows and slots.
 - **Theme**: the Dashboard tab's theme draws everything on it. A slot card's border is the theme's stroke colour (the
   Default scheme, with none, keeps the soft neutral line), under a card style of its own. A Board or Sheet tab shown
   in a slot is drawn in the Dashboard's theme, its colours switched from its own tab's theme as a theme switch would
@@ -293,8 +294,7 @@ in Plan, so one on a Sketch, Structured or Pages tab could never be worked there
   Sheet**, **Card Metrics**, **Form Metrics** (only while the document has a Form tab), **Visualisations**, **From a Sheet** (Sheet Figure, Column Summary, Trend, Sheet Chart) and **Utilities** (Note, Title, Status, Checklist, Key Date, Links); picking
   one fills that slot. Each fill is one undo step, replacing what the slot held (an element it held leaves the tab
   with it).
-- **Its name in the active tab**: as a maximised or tab-filling board's or Sheet's name rides there
-  ([The name rides in the active tab](plan-board.md)), a Dashboard tab's name is the document group's active tab
+- **Its name in the active tab**: a Dashboard tab's name is the document group's active tab
   segment's ([The tab's name](../007-editor/toolbar-layout.md#the-tabs-name)). For an Editor the name is a button
   (**Rename Dashboard**): a click, or Enter or Space on it, opens the field (Enter or leaving saves the trimmed name,
   up to 80 characters; Escape puts it back; focus returns to the name), and the tab list follows.
@@ -525,8 +525,8 @@ only a run from the footer marks the `dashboards` track taken.
 A row may **fill the page** (`fill`): it takes the height the page has left (at least 24 rem) rather than its own,
 has no resize handle, and is as tall as anything needs (What fits). A **Visualisation tab** is a Dashboard of one such
 row holding one visualisation (Start Planning's Visualisations, [Working in Plan](plan-mode.md#starting-a-board)): its
-chart fills the tab as a Board tab's board does (`fill-tab.ts`, `View`), its header holding the top row (its title in
-the active tab segment, its own controls in the card at the right, no Maximise), the page drawing nothing over it.
+chart fills the tab as a Board tab's board does (`fill-tab.ts`, `View`), its header at its top inside the content frame
+(its title, its own controls at the right, no Maximise), the page drawing nothing over it.
 
 ## On a phone
 
@@ -550,7 +550,7 @@ the slot before or after it in the stack's reading order (as the grip's drop on 
 step each; the cog closes, its slot now holding the other's content). The two cards glide past each other over the
 long motion token, the moved one drawn above, and the moved slot scrolls into view; under reduced motion the swap is
 instant. A separator in the toolbar sets the pair apart from the slot's own verbs. Each is dimmed, saying why, at either end of the
-stack, and where the swap would squeeze either slot below what its content needs on a wide page (What fits). The page scrolls vertically and its end clears the bottom toolbar and the home indicator's safe area.
+stack, and where the swap would squeeze either slot below what its content needs on a wide page (What fits). The page scrolls vertically and ends above the bottom toolbar (its content frame).
 Nothing waits for a hover on a touch screen: a slot's floating cog and a link's × are always shown there, and the slot's
 cog, Add to Slot (which offers everything, as the stacked slot takes the height its content needs) and the Dashboard
 Settings cog in the top row all work by tap. A view's header gives way in a narrow slot: its own controls (a Gantt's

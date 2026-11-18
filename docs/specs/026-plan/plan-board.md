@@ -563,57 +563,31 @@ A board can be maximised to work on it without the rest of the canvas around it.
 
 - On a Plan tab, the board's header ends with **Maximise Board** (a maximise icon, with a tooltip) at its top
   right.
-- Maximised, the board fills the canvas area: it is drawn over the canvas and everything on it, while the
-  editor's chrome stays as the person has it (the two lines and the palette,
-  [Toolbar layout](../007-editor/toolbar-layout.md#the-two-lines)); zen mode is not switched on (a zen mode the person had on stays on). It starts clear
-  of the chrome laid over the canvas, measured from that chrome as it is (never a fixed number): below the Toolbar
-  layout's top line (the brand group at the top left, the palette toolbar at the top centre, the actions group at
-  the top right), and
-  beside the layout's own panels (the Explorer, the Palette as panels: a panel nearer the left edge pushes the left
-  side in, one nearer the right the right side). It runs down to the canvas's foot: the bottom line's groups (the tools group, the dock, the document group) float over it,
-  still clickable, and its last cards are reached by scrolling. The Map is hidden while a board is maximised or fills
+- Maximised, the board fills the canvas area's **content frame**: it is drawn over the canvas and everything on it,
+  while the editor's chrome stays as the person has it (the two lines and the palette,
+  [Toolbar layout](../007-editor/toolbar-layout.md#the-two-lines)); zen mode is not switched on (a zen mode the person
+  had on stays on). The frame is the room the chrome leaves, measured from that chrome as it is (never a fixed
+  number): below the Toolbar layout's top line (the brand group at the top left, the palette toolbar at the top
+  centre, the actions group at the top right), above its bottom line (the tools group, the dock, the document group),
+  and beside the layout's own panels (a panel nearer the left edge pushes the left side in, one nearer the right the
+  right side). The board sits inside it with the cover's own margin (12 px, 8 px on a phone), so its first and last
+  cards are never under a piece of chrome. The Map is hidden while a board is maximised or fills
   its tab (there is no canvas to map) and comes back when it is restored. Around the board, the whole canvas area is
   painted with the canvas's own background (its colour and pattern, an animated pattern moving there as on the canvas),
-  so nothing on the canvas shows through, in any strip the board leaves beside or below the panels. A sheet
+  so nothing on the canvas shows through, in any strip the board leaves beside, above or below it. A sheet
   across the canvas (a phone) pushes the top or bottom instead. It never gives up more than 45% of the canvas on an
-  axis. It follows the chrome as it changes (a panel opened, closed, moved or collapsed, the window resized), and a
-  panel dragged over it still floats above it. A panel opened for a moment (the Trash, the Cards panel, card search,
-  Card Types, Layers, a vote or poll, the AI panel, the item panel) floats over the board and never moves or resizes
-  it, so nothing jumps as it opens or closes. Everything on the board works as it does on the canvas: cards drag,
-  open and add, and widgets filter. The header does not move the board while it is maximised.
-- **The header holds the top row**: maximised (or filling its tab), a board, view or Sheet does not start below the
-  Toolbar layout's top row; it starts at the top of the canvas area, and its header grows to that row's height
-  (`HeaderBand`), so the brand group and the palette toolbar float inside the header instead of over
-  a strip of canvas above it. The palette leaves the centre for the header's right end, 12 px before its controls,
-  so the middle of the header is the title's and widgets'. Its controls (the view's own, Maximise or Restore, the cog)
-  sit together at its right end straight on the header, with no card of their own, its buttons the palette's tile size
-  (36 px); the last one stands as far in from the element's right edge as the menu's first does from its left. In the
-  band the brand group and the palette (a mode's strip, or a board's cards) drop their cards too (no border, no fill, no
-  shadow, no hue), so the top row reads as the board's,
-  view's or sheet's own header: the menu and name at the left, the controls at the right, and a hairline under it all
-  (a board's header draws one there, as a Sheet's and a view's always have). The tools group's buttons (Undo, the Plan strip, Theme, Zoom) move inside its frame while it covers the canvas: 16
-  px further in and 20 px further up than on a canvas, clear of its edge and its scrollbar (not on a Dashboard's
-  page). A board's **widgets** ride with the controls at the band's right, before the cog behind a hairline, so the right
-  of the top row is one run of widgets and controls. The controls and a Sheet's toolbar are the brand group's height on screen (46 px at a 100% toolbar UI scale, its
-  controls and inset scaling with it, its hairline not; `--plan-band-card-h`). The header's own content keeps clear of them: its title, count and widgets
-  start after the mode menu and stop short of the palette (truncating, or the widgets scrolling, as they do when
-  narrow). It is laid out this way only when there is room: at least 140 px between the mode menu and the palette
-  with the palette at the right (a desktop or a wide tablet). On a phone (under 640 px of canvas) it still holds the
-  top row, more simply: its header grows to the brand group's height and its content starts 12 px after the group, the
-  name staying in the header and the controls as they are, with at least 160 px left after the menu (else, as in a
-  narrow window, the element starts below the top row as before). The brand group takes the element's surface there too. The header follows the row
-  as it changes (the palette's category switching its width, the window resizing). With no palette in the row (it is
-  hidden, below, or the person may not edit) the header holds the menu alone, its content running on to its controls.
-  The brand group and the palette in the band wear the element's hue: a 10% mix of it into the chrome's own light or
-  dark card, and a 40% mix for their border, so their ink reads as ever. The hue is the element's board or sheet
-  preset's (Style presets "Boards and sheets"), else its own border colour; an element in the theme's neutral colours
-  leaves the chrome as it is.
-- **The name rides in the active tab**: while the header holds the top row, the element's name (a board's or view's
-  title, a Sheet's title) moves out of its header into the document group's active tab segment, bottom right, in
-  place of the tab's name ([Toolbar layout](../007-editor/toolbar-layout.md#the-tabs-name)), in the chrome's own text
-  colour. It is the same title: a click on it renames it in place, as every name in the segment does. The band's room
-  never depends on the name, so the name coming or going never takes the band away. Without a band (a phone, a
-  narrow window) the name stays in the header.
+  axis. It follows the chrome as it changes (a panel opened, closed, moved or collapsed, the bottom line wrapping, the
+  window resized), and a panel dragged over it still floats above it. A panel opened for a moment (the Trash, the
+  Cards panel, card search, Card Types, Layers, a vote or poll, the AI panel, the item panel) floats over the board
+  and never moves or resizes it, so nothing jumps as it opens or closes. Everything on the board works as it does on
+  the canvas: cards drag, open and add, and widgets filter. The header does not move the board while it is maximised.
+- **It respects the chrome**: maximised (or filling its tab), a board, view or Sheet never draws into the chrome nor
+  restyles it. Its own header (title, count, widgets and controls) stays at its top, inside the frame; the brand group,
+  the palette toolbar, the actions group, the tools group and the document group keep their own cards, colours and
+  places, exactly as on any other tab, and its name stays in its header (the active tab keeps the tab's name).
+  The same holds on a phone and in either theme.
+  Why: the chrome is the editor's, the same on every tab; a board that took it over read as a different app, hid
+  its own last cards behind the bottom line and left the top line's controls squeezed into its header.
 - **It is not placed on the canvas while it fills it**: maximised or filling its tab, a board, view or Sheet's
   element menu leaves out **Layer**, **Size**, **Rotation** and its **Animation** categories (they would change
   where and how it sits on the canvas it hides), and its animation does not play; restored, it animates in its
@@ -639,10 +613,9 @@ A board can be maximised to work on it without the rest of the canvas around it.
   Escape restores even with something selected: it restores and does nothing else (it does not also deselect).
 - **The palette follows what fills the screen**:
   - A board **maximised or filling its tab** ([Fill Tab](#fill-tab)): the palette gives way to the board's own
-    **cards**: a card of its own at the header's right end, apart from the controls card (the cog), holding a card
-    tile for each card type the board takes (none for an Archive board, or one taking no types: the card is not
-    shown), placed as the Cards tiles are (dragged into a column, or picked and then a column chosen). It wears the
-    board's hue in the header band as the brand group does. On a phone the
+    **cards**: the palette toolbar, in its own place and look on the top line, holds a card
+    tile for each card type the board takes (none for an Archive board, or one taking no types: the toolbar is not
+    shown), placed as the Cards tiles are (dragged into a column, or picked and then a column chosen). On a phone the
     palette stays and opens on Plan's **Cards** alone, whatever the mode.
   - A Sheet **maximised or filling its tab**: the palette is hidden altogether (nothing it offers can land in a
     Sheet); on a phone the brand group stays.
@@ -698,9 +671,9 @@ for a moment at most ([Maximised board](#maximised-board)).
   fills its tab as a Board tab's does. Nothing sets it any more, and nothing offers to turn it off; converting an old
   Plan tab makes it a Board tab ([Converting old Plan tabs](plan-tabs.md#converting-old-plan-tabs)).
 - **Filled**: whenever the tab is shown (opening the document, switching to the tab, a reload, a collaborator's or
-  a share link's view), the board is drawn over the canvas area as a maximised board is (its header holding the top
-  row where there is room), on a Plan tab. The editor's two lines and panels stay, so the person can
-  move between tabs; the board sits clear of them. It appears at once (no grow). There is no Maximise/Restore, no
+  a share link's view), the board is drawn in the canvas area's content frame as a maximised board is
+  ([It respects the chrome](#maximised-board)), on a Plan tab. The editor's two lines and panels stay, so the person
+  can move between tabs; the board sits clear of them. It appears at once (no grow). There is no Maximise/Restore, no
   Focus and no Add to Slides, and Escape restores nothing. Presses, wheel and right-click on it stay on the board,
   so the canvas under it is never selected, panned, zoomed or menu'd; the board's settings are its cog.
 - **Never seen small first.** A new Board or Sheet tab (Start Planning) is covered from its first frame: while the
@@ -822,8 +795,8 @@ some card types, an Editor is offered, optionally, to tidy those away too, as de
   it keeps to 40% of the header), then the controls. The quick filter the widgets set
   stands down with them, so a filter set on a wider screen never hides cards with nothing on screen saying so.
 - A board that scrolls on its own (maximised, filling its tab, or in a Dashboard slot) shows one column a screen (see
-  "Five slots across"); covering the canvas, its body ends 8.5 rem (and the home indicator's safe area) past its last
-  cards, so they scroll up clear of the bottom controls that run across a phone's screen.
+  "Five slots across"); covering the canvas, it ends above the bottom controls (its content frame), so its last cards
+  are never under them.
 - A finger on a board's empty space (between and below cards, column backgrounds) pans the canvas, as it does
   anywhere else, whatever the tool: it never selects or moves the board, and holding it opens no menu. Only the
   board's header moves the board, as with a mouse. A finger on a card picks the card up, and buttons and fields
@@ -906,10 +879,6 @@ The code cites each by its id.
   is hidden (default).
 - **D44** How much of the next column a phone shows: 48 px (`PHONE_COLUMN_PEEK_PX`, gap included): enough to say there
   is more to the right without crowding the column in view (default).
-- **D45** How far a covering phone board's body runs past its cards: 8.5 rem plus the safe area (`PHONE_END_CLEARANCE`):
-  the bottom controls' two rows at 390 px, measured 134 px (default).
-- **D46** The least room a phone's header needs beside the menu: 160 px (`PHONE_ROW_MIN_PX`): a short title, Restore and
-  the cog (default).
 - **D47** Where the Columns section adds a column: At the end, or before the done columns when the board ends with them
   (`columnsInsertAfter`): a new state is work in flight, not done (default).
 - **D48** How long a column just added from Columns stays tinted: 1600 ms (`ADDED_TINT_MS`): long enough to spot it in

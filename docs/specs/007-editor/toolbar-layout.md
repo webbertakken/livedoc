@@ -437,21 +437,19 @@ so a new page load starts on the mode's landing (Plan's Cards, or Boards while t
 ## The tab's name
 
 - The open tab's name is in the document group's **active tab** segment, bottom right ("The bottom line"), after
-  the tab's kind glyph, in every mode: Sketch, Structured, Pages and on Plan tabs alike, as a board's name rides there
-  ([The name rides in the active tab](../026-plan/plan-board.md)). It is the chrome's ink, 14 px at regular weight
+  the tab's kind glyph, in every mode: Sketch, Structured, Pages and on Plan tabs alike. It is the chrome's ink, 14 px at regular weight
   (never bold), never shortens ("When a line runs out of room"), and follows a rename at once. The brand group, top
   left, carries no name.
-- While a board, Sheet or view filling the tab (or maximised) has its own name, that name shows in the segment
-  instead, so the segment never shows two.
+- A board, Sheet or view filling the tab (or maximised) keeps its own name in its own header, so the segment always
+  holds the tab's name ([It respects the chrome](../026-plan/plan-board.md#maximised-board)).
 - A click (a tap) on the name opens the tab list: the name, the stack glyph and the count are one button.
 - The kind glyph before the name renames the tab in place, for someone who may change the document's tabs: Enter
   or leaving saves, Escape puts it back; up to 60 characters. The tab menu's **Rename**, the command palette's
   **Rename Tab** and the tab list's double-click and `F2` rename it too.
 - Why: the tab's name is what people reach for to see and switch tabs, far more often than to rename one, and a name
   that renamed on a click left the tab list behind a small separate button. Decided by Webber.
-- A board's, Sheet's, chart's or Dashboard's own name riding in the segment keeps its own rename on a click, and sits
-  before the stack, which then shows only the glyph and the count. In an element's own header a press moves the
-  element, so there a double-click renames, as before.
+- A Dashboard's name riding in the segment ([Plan tabs](../026-plan/plan-tabs.md) "Its name in the active tab") keeps
+  its own rename on a click, and sits before the stack, which then shows only the glyph and the count.
 - On a phone too: the active tab is drawn there; only the document's name is not ("On a phone").
 
 ## The Explorer and the other panels
@@ -674,8 +672,6 @@ fits a phone, with three figures.
 Each default below was applied where this spec is silent or qualitative, and holds until a human confirms it.
 The code cites each by its id.
 
-- **D92** Where a maximised or tab-filling board's or Sheet's name rides without a menu box: In the document group's
-  active tab segment, in place of the tab's name (default).
 - **D93** Where Start Tour, Make a Copy, Present and Share sit, and how Search, Settings and appearance show: The
   actions group; Search, Settings and the appearance toggle icon-only there, named by Button Labels, which is off by
   default: a decision (Webber), recorded in toolbar-layout.md "Decided in review", not a default (default).
