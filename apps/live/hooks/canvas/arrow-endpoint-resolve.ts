@@ -9,13 +9,13 @@ import {
   snapToAlignment,
   snapToAnchor,
   snapToArrowPoint,
-  snapToEntityField,
   type AlignmentGuide,
   type ArrowElement,
   type Element,
   type Endpoint,
   type LaidOutPage,
 } from '@livedoc/document';
+import { isKindFamilyLoaded, requireKindFamily } from '@/lib/element-kinds/store';
 import {
   ALIGN_SNAP_THRESHOLD,
   ARROW_SNAP_REVEAL_PX,
@@ -102,11 +102,12 @@ export function resolveArrowEndpointDrag({
   const otherEnd = arrow ? arrow[end === 'from' ? 'to' : 'from'] : null;
   // Over an entity's field row, the end joins that field (docs/specs/009-elements/entity.md "Field to
   // field"), on the side facing its other end. Within the row, a field beats the anchors along the
-  // entity's sides; Cmd / Ctrl leaves the end free, as it does every snap.
+  // entity's sides; Cmd / Ctrl leaves the end free, as it does every snap. The rows are the entities family's:
+  // a board where it is not in draws no entity to join.
   const fieldSnap =
-    noSnap || !otherEnd
+    noSnap || !otherEnd || !isKindFamilyLoaded('entities')
       ? null
-      : snapToEntityField(
+      : requireKindFamily('entities').snapToEntityField(
           cursor,
           reach.elements,
           endpointPosition(otherEnd, elements),

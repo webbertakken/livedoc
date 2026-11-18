@@ -20,17 +20,9 @@ import type { EditorDragApi } from './useEditorDrag.types';
 // The entity's editor verbs (docs/specs/009-elements/entity.md): saving fields from the canvas, drawing a
 // relationship from a field, the ring's Add Field and Add Related Entity, and the Cardinality presets.
 // Every write is one `commit`, one undo step; `editsBlocked` (a read-only session, a locked tab) stops
-// each before it writes, as the controls that call them are not rendered there either.
-export function useEntityActions({
-  activeTab,
-  readSelection,
-  commit,
-  styleNewElement,
-  setSelectedId,
-  setEditingId,
-  beginAnchorDrag,
-  editsBlocked,
-}: {
+// each before it writes, as the controls that call them are not rendered there either. The entities family's
+// (docs/specs/016-platform/web-performance.md), read through useEntityActions at the press.
+export type EntityDeps = {
   activeTab: Tab;
   readSelection: () => Selection;
   commit: (mapElements: (els: Element[]) => Element[]) => void;
@@ -39,7 +31,18 @@ export function useEntityActions({
   setEditingId: (id: string | null) => void;
   beginAnchorDrag: EditorDragApi['beginAnchorDrag'];
   editsBlocked: boolean;
-}) {
+};
+
+export function entityVerbs({
+  activeTab,
+  readSelection,
+  commit,
+  styleNewElement,
+  setSelectedId,
+  setEditingId,
+  beginAnchorDrag,
+  editsBlocked,
+}: EntityDeps) {
   const selectedEntity = () => {
     const { selectedId } = readSelection();
     const el = activeTab.elements.find((e) => e.id === selectedId);
@@ -111,4 +114,4 @@ export function useEntityActions({
   };
 }
 
-export type EntityActions = ReturnType<typeof useEntityActions>;
+export type EntityActions = ReturnType<typeof entityVerbs>;

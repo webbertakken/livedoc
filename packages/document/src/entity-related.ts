@@ -9,7 +9,7 @@ import {
   fittedEntityHeight,
   primaryKeyIndex,
   relatedEntityFields,
-} from './entity-fields';
+} from './entity-edits';
 import { entityRowTop } from './entity-geometry';
 import type { ShapeElement } from './element-types';
 import { createShape } from './shape-factory';

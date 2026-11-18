@@ -2,7 +2,8 @@
 // canvas face uses: the spine and its arrowhead in the accent, each milestone a dot in the accent ringed in the fill so
 // it sits clear of the spine, a stem out to its when (in the accent) and its name (in the ink). The rest frame.
 
-import { arrowheadPoints, conceptFitPx, type ConceptRow } from './concept';
+import { arrowheadPoints, conceptFitPx } from './concept-layout';
+import type { ConceptRow } from './concept';
 import { timelineLayout } from './concept-timeline';
 import type { BoxedElement } from './index';
 import { r2, xmlEscape } from './svg-render-primitives';

@@ -27,12 +27,12 @@ import {
   nearestElementTowards,
   opposingAnchor,
   rebindArrowAnchorsAfterMove,
-  withRelationshipHeads,
   type ArrowElement,
   type Element,
 } from '@livedoc/document';
 import { track } from '@/lib/telemetry';
 import { mindConnectionOnRelease } from './mind-connect-on-release';
+import { relationshipOnRelease } from './entity-relationship-on-release';
 import { mindDropGuide, mindDropNow, mindDropOnRelease } from './mind-drop-on-release';
 import { contextDropOnRelease } from './context-drop-on-release';
 import { trackDuplicated } from '@/lib/element-telemetry';
@@ -653,7 +653,7 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
       // "Cardinality ends"). Folded into the gesture's result like the bow above.
       if (drag?.kind === 'arrow-endpoint' && !tapStill) {
         const arrowId = drag.arrowId;
-        previewTick((els) => withRelationshipHeads(els, arrowId));
+        previewTick(relationshipOnRelease(arrowId));
         previewTick(
           mindConnectionOnRelease(
             depsRef.current.activeTab.elements,
@@ -916,7 +916,7 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
       // Joined to two entities: a relationship, as in onUp above (docs/specs/009-elements/entity.md).
       {
         const arrowId = drag.arrowId;
-        previewTick((els) => withRelationshipHeads(els, arrowId));
+        previewTick(relationshipOnRelease(arrowId));
         previewTick(
           mindConnectionOnRelease(
             depsRef.current.activeTab.elements,

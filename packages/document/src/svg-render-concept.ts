@@ -4,16 +4,14 @@
 import {
   arrowheadPoints,
   chevronLayout,
-  conceptDrawsNotes,
   conceptFitPx,
   cycleLayout,
-  hubDrawsSpokes,
   hubLayout,
   layerStackLayout,
   onionLayout,
   pyramidLayout,
-  pyramidVariantOf,
-} from './concept';
+} from './concept-layout';
+import { conceptDrawsNotes, hubDrawsSpokes, pyramidVariantOf } from './concept';
 import { conceptDiscInk, conceptRamp } from './concept-ramp';
 import type { BoxedElement } from './index';
 import { r2, xmlEscape } from './svg-render-primitives';

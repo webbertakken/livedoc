@@ -7,6 +7,7 @@ export const KIND_FAMILY_LOADERS = {
   'collab-panels': () => import('./families/collab-panels'),
   'pages-articles': () => import('./families/pages-articles'),
   concepts: () => import('./families/concepts'),
+  entities: () => import('./families/entities'),
   'web-components': () => import('./families/web-components'),
   'mind-maps': () => import('./families/mind-maps'),
   embeds: () => import('./families/embeds'),

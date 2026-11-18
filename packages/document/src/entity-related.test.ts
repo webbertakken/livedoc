@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ShapeElement } from './element-types';
-import { fittedEntityHeight } from './entity-fields';
-import { entityRowTop, snapToEntityField } from './entity-geometry';
+import { fittedEntityHeight } from './entity-edits';
+import { entityRowTop } from './entity-geometry';
+import { snapToEntityField } from './entity-pointing';
 import { buildRelatedEntity, RELATED_ENTITY_GAP_PX } from './entity-related';
 import { endpointPosition } from './geometry';
 

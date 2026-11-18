@@ -68,6 +68,10 @@ const BOARD = [
   { id: 'embeds', type: 'link-card', x: 40, y: 320, width: 280, height: 120 },
   box('charts', 'pie-chart', 360, { y: 320 }),
   box('sankey', 'sankey', 560, { y: 320 }),
+  box('entities', 'entity', 760, {
+    y: 320,
+    entityFields: [{ name: 'id', type: 'uuid', key: 'pk' }],
+  }),
 ];
 
 test('a board draws every family’s face in its first frame', async ({ page, pageErrors }) => {

@@ -219,7 +219,12 @@ base; turning a shape into a mind node waits for the family as a palette press d
 family by its kind: reading a photographed wall into a draft loads with it, and a photo import waits for it before
 its photos go up, while a draft's notes and the board's notes, lanes and structure stay base. The
 collaboration panels' and the quiz's verbs, and the Behaviour elements' menu setters, load with their families, read
-at the press; the panels' wire and the room's live state (polls, Q&A, idea posts, reaction bursts) stay base.
+at the press; the panels' wire and the room's live state (polls, Q&A, idea posts, reaction bursts) stay base. An
+entity's rows and their editing in place, its verbs, writing its fields, its relationships and a related entity, and
+pointing at its rows load with the entities family, while reading its fields (an export, the text views) and telling
+which arrows join two entities stay base: an arrow end pins to a field, and a released arrow takes its relationship's
+ends, once the family is in, as a board without it draws no entity to join. Where a concept graphic's rows sit loads
+with the concepts family; its kinds, rows, variants and their writes stay base.
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
