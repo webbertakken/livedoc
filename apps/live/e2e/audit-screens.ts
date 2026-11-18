@@ -98,6 +98,21 @@ async function seedDrawnDocument(
   return { id, tabId };
 }
 
+// The owner's participant row with a fixed name, so the avatar's initials are the same on every run: a random
+// name's initials ink differently, and a glyph audit reads that ink.
+export async function nameOwner(
+  page: Page,
+  owner: string,
+  origin: string,
+  name: string,
+): Promise<void> {
+  const res = await page.request.put(`${apiBase}/participants/${owner}`, {
+    headers: ownerHeaders(owner, { Origin: origin, 'Content-Type': 'application/json' }),
+    data: { name, color: '#ef4444' },
+  });
+  expect(res.ok(), `naming the owner failed: ${res.status()}`).toBe(true);
+}
+
 export async function shareLink(
   page: Page,
   owner: string,
