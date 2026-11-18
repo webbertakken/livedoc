@@ -36,10 +36,22 @@ describe('WorkbookRecord', () => {
     ['no time zone', { ...made, settings: { ...made.settings, timeZone: 7 } }],
     ['an unknown recalculation', { ...made, settings: { ...made.settings, recalc: 'second' } }],
     ['no iteration', { ...made, settings: { ...made.settings, iterate: null } }],
-    ['a non-boolean switch', { ...made, settings: { ...made.settings, iterate: { on: 1, max: 5, threshold: 0 } } }],
-    ['too many iterations', { ...made, settings: { ...made.settings, iterate: { on: true, max: 1001, threshold: 0 } } }],
-    ['no iterations', { ...made, settings: { ...made.settings, iterate: { on: true, max: 0, threshold: 0 } } }],
-    ['a negative threshold', { ...made, settings: { ...made.settings, iterate: { on: true, max: 5, threshold: -1 } } }],
+    [
+      'a non-boolean switch',
+      { ...made, settings: { ...made.settings, iterate: { on: 1, max: 5, threshold: 0 } } },
+    ],
+    [
+      'too many iterations',
+      { ...made, settings: { ...made.settings, iterate: { on: true, max: 1001, threshold: 0 } } },
+    ],
+    [
+      'no iterations',
+      { ...made, settings: { ...made.settings, iterate: { on: true, max: 0, threshold: 0 } } },
+    ],
+    [
+      'a negative threshold',
+      { ...made, settings: { ...made.settings, iterate: { on: true, max: 5, threshold: -1 } } },
+    ],
   ])('refuses %s', (_, raw) => {
     expect(WorkbookRecord.read(raw)).toBeNull();
   });

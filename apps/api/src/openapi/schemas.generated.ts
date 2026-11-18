@@ -5376,6 +5376,16 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
             "type": "null"
           }
         ]
+      },
+      "workbook": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/WorkbookRecord"
+          },
+          {
+            "type": "null"
+          }
+        ]
       }
     },
     "required": [
@@ -16454,6 +16464,7 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "Agent",
       "Plan",
       "Sheet",
+      "Spreadsheet",
       "Form",
       "Feedback",
       "Timing"
@@ -18072,6 +18083,79 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "scope",
       "folderId",
       "expiresAt"
+    ],
+    "type": "object"
+  },
+  "WorkbookFormat": {
+    "enum": [
+      "ods",
+      "fods",
+      "xlsx"
+    ],
+    "type": "string"
+  },
+  "WorkbookRecalc": {
+    "enum": [
+      "change",
+      "minute",
+      "hour"
+    ],
+    "type": "string"
+  },
+  "WorkbookRecord": {
+    "additionalProperties": false,
+    "properties": {
+      "format": {
+        "$ref": "#/components/schemas/WorkbookFormat"
+      },
+      "settings": {
+        "$ref": "#/components/schemas/WorkbookSettings"
+      }
+    },
+    "required": [
+      "format",
+      "settings"
+    ],
+    "type": "object"
+  },
+  "WorkbookSettings": {
+    "additionalProperties": false,
+    "properties": {
+      "iterate": {
+        "additionalProperties": false,
+        "properties": {
+          "max": {
+            "type": "number"
+          },
+          "on": {
+            "type": "boolean"
+          },
+          "threshold": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "on",
+          "max",
+          "threshold"
+        ],
+        "type": "object"
+      },
+      "locale": {
+        "type": "string"
+      },
+      "recalc": {
+        "$ref": "#/components/schemas/WorkbookRecalc"
+      },
+      "timeZone": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "locale",
+      "timeZone",
+      "recalc",
+      "iterate"
     ],
     "type": "object"
   }

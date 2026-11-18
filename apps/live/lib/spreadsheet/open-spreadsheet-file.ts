@@ -5,7 +5,8 @@ import type { SheetCreateRequest } from '@livedoc/api-schema';
 import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
 import { ApiError, apiCreateDocument } from '@/lib/api-client';
 import { debugLog } from '@/lib/debug-log';
-import { newSheetTab, UNTITLED_SPREADSHEET, workbookMadeHere } from './spreadsheet-document';
+import { newSheetTab, workbookMadeHere } from './spreadsheet-document';
+import { UNTITLED_SPREADSHEET } from './spreadsheet-name';
 
 export type OpenedSpreadsheet = { ok: true; documentId: string } | { ok: false; message: string };
 
@@ -13,7 +14,8 @@ export type OpenedSpreadsheet = { ok: true; documentId: string } | { ok: false; 
 const REJECTION_COPY: Record<string, string> = {
   package_damaged: 'This file is damaged and could not be opened.',
   package_too_large: 'This file is too large to open.',
-  package_encrypted: 'This file is protected by a password. Remove the password, then open it again.',
+  package_encrypted:
+    'This file is protected by a password. Remove the password, then open it again.',
   package_wrong_type: 'This file is not a spreadsheet LiveDoc can open yet.',
   xml_doctype_refused: 'This file holds content LiveDoc never opens.',
   xml_malformed: 'This file is damaged and could not be opened.',

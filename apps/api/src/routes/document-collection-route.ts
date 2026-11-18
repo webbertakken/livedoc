@@ -201,7 +201,10 @@ export async function handleDocumentCollection(ctx: RouteContext): Promise<Respo
       const textDocumentSeeds = readTextDocumentSeeds(body.textDocuments, body.tabs ?? null);
       if (textDocumentSeeds instanceof Response) return textDocumentSeeds;
       // A spreadsheet's workbook (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"), over sheet tabs only.
-      const seedWorkbook = readSeedWorkbook(body.workbook, Array.isArray(body.tabs) ? body.tabs : null);
+      const seedWorkbook = readSeedWorkbook(
+        body.workbook,
+        Array.isArray(body.tabs) ? body.tabs : null,
+      );
       if (seedWorkbook instanceof Response) return seedWorkbook;
       // Ownership guard (security): upsertDocumentMeta is INSERT ... ON
       // CONFLICT(id) DO UPDATE owner_id = excluded.owner_id, so a POST with an

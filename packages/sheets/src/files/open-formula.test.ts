@@ -66,7 +66,7 @@ describe('fromOpenFormula', () => {
   });
 
   it('round-trips what it writes', () => {
-    for (const typed of ['=SUM(A1:B2, Sheet2!C3) / 2', "='My Sheet'!$B$4 & \"x\"", '=AVERAGE(1:1)'])
+    for (const typed of ['=SUM(A1:B2, Sheet2!C3) / 2', '=\'My Sheet\'!$B$4 & "x"', '=AVERAGE(1:1)'])
       expect(fromOpenFormula(toOpenFormula(typed)!)).toBe(typed);
   });
 });

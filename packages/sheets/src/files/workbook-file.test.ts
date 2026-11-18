@@ -91,7 +91,8 @@ describe('sheetsFromFile', () => {
     expect(budget!.layout.cols).toHaveLength(26);
     expect(costs!.id).not.toBe(budget!.id);
     const at = (r: number, c: number) =>
-      budget!.cells.find((x) => x.r === budget!.layout.rows[r] && x.c === budget!.layout.cols[c])?.i;
+      budget!.cells.find((x) => x.r === budget!.layout.rows[r] && x.c === budget!.layout.cols[c])
+        ?.i;
     expect(at(0, 0)).toEqual({ n: 2 });
     expect(at(1, 0)).toEqual({ s: 'rent' });
     expect(at(1, 1)).toEqual({ b: false });
@@ -110,14 +111,18 @@ describe('sheetsFromFile', () => {
   it('keeps the value of a formula it cannot read and names the loss', () => {
     const made = sheetsFromFile(file, seeded());
     const budget = made.sheets[0]!;
-    const cell = budget.cells.find((x) => x.r === budget.layout.rows[2] && x.c === budget.layout.cols[0]);
+    const cell = budget.cells.find(
+      (x) => x.r === budget.layout.rows[2] && x.c === budget.layout.cols[0],
+    );
     expect(cell?.i).toEqual({ n: 9 });
     expect(made.losses).toEqual([{ k: 'formula_unread', sheet: 'Budget', r: 2, c: 0 }]);
   });
 
   it('drops a lone error value, which no input holds', () => {
     const budget = sheetsFromFile(file, seeded()).sheets[0]!;
-    expect(budget.cells.some((x) => x.r === budget.layout.rows[2] && x.c === budget.layout.cols[1])).toBe(false);
+    expect(
+      budget.cells.some((x) => x.r === budget.layout.rows[2] && x.c === budget.layout.cols[1]),
+    ).toBe(false);
   });
 
   it('names a renamed sheet, a cut sheet and skips cells past the grid', () => {
@@ -125,7 +130,12 @@ describe('sheetsFromFile', () => {
       {
         sheets: [
           { name: 'A', rows: 1, cols: 1, cells: [] },
-          { name: 'a', rows: 20_000, cols: 300, cells: [{ r: 15_000, c: 0, value: { k: 'n', v: 1 } }] },
+          {
+            name: 'a',
+            rows: 20_000,
+            cols: 300,
+            cells: [{ r: 15_000, c: 0, value: { k: 'n', v: 1 } }],
+          },
           { name: '', rows: 1, cols: 1, cells: [] },
         ],
       },
@@ -141,6 +151,8 @@ describe('sheetsFromFile', () => {
   });
 
   it('uses Math.random when no source is given', () => {
-    expect(sheetsFromFile({ sheets: [{ name: 'S', rows: 1, cols: 1, cells: [] }] }).sheets).toHaveLength(1);
+    expect(
+      sheetsFromFile({ sheets: [{ name: 'S', rows: 1, cols: 1, cells: [] }] }).sheets,
+    ).toHaveLength(1);
   });
 });

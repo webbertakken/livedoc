@@ -14,7 +14,13 @@ let sql: SqliteD1;
 
 type Call = { method?: string; path: string; body?: unknown; owner?: string; code?: string };
 
-async function call({ method = 'POST', path, body, owner = 'owner', code }: Call): Promise<Response> {
+async function call({
+  method = 'POST',
+  path,
+  body,
+  owner = 'owner',
+  code,
+}: Call): Promise<Response> {
   const pending: Promise<unknown>[] = [];
   const ctx = makeTestRouteContext(method, `/api/documents${path}`, {
     env: sql.env,
@@ -46,7 +52,11 @@ function spreadsheet(extra: Record<string, unknown> = {}) {
         layout,
         cells: [
           { r: layout.rows[0], c: layout.cols[0], i: { n: 21 } },
-          { r: layout.rows[0], c: layout.cols[1], i: { f: { t: '@0*2', r: [{ r1: layout.rows[0], c1: layout.cols[0] }] } } },
+          {
+            r: layout.rows[0],
+            c: layout.cols[1],
+            i: { f: { t: '@0*2', r: [{ r1: layout.rows[0], c1: layout.cols[0] }] } },
+          },
           { r: layout.rows[1], c: layout.cols[0], i: { s: 'rent' } },
         ],
       },
@@ -71,26 +81,37 @@ beforeEach(() => {
 describe('making a spreadsheet', () => {
   it('stores its workbook row and hands it on with the document', async () => {
     expect((await call({ path: '', body: spreadsheet() })).status).toBeLessThan(300);
-    const read = (await (await call({ method: 'GET', path: '/book1' })).json()) as DocumentResponse;
+    const read = await (await call({ method: 'GET', path: '/book1' })).json<DocumentResponse>();
     expect(read.document.workbook).toEqual(record);
   });
 
   // spreadsheet.md "The workbook shape": a sheet tab is its sheet, so the sheet is referenced and never expires.
   it('keeps its sheets referenced by their tabs', async () => {
     await call({ path: '', body: spreadsheet() });
-    const row = sql.sql.exec("SELECT unreferenced_since FROM sheets WHERE id = 'sheetBk1'").toArray()[0];
+    const row = {
+      ...(sql.sql
+        .prepare("SELECT unreferenced_since FROM sheets WHERE id = 'sheetBk1'")
+        .get() as object),
+    };
     expect(row).toEqual({ unreferenced_since: null });
   });
 
   it('reads no workbook for any other document', async () => {
-    await call({ path: '', body: { id: 'plain1', name: 'Plain', tabs: [{ id: 'tp', name: 'One', elements: [] }] } });
-    const read = (await (await call({ method: 'GET', path: '/plain1' })).json()) as DocumentResponse;
+    await call({
+      path: '',
+      body: { id: 'plain1', name: 'Plain', tabs: [{ id: 'tp', name: 'One', elements: [] }] },
+    });
+    const read = await (await call({ method: 'GET', path: '/plain1' })).json<DocumentResponse>();
     expect(read.document.workbook).toBeNull();
   });
 
   it.each([
     ['a record that is not one', { workbook: { format: 'numbers' } }, 'workbook_invalid'],
-    ['a tab of another kind', { tabs: [{ id: 'tab1', name: 'Board', elements: [] }] }, 'tab_kind_mixed'],
+    [
+      'a tab of another kind',
+      { tabs: [{ id: 'tab1', name: 'Board', elements: [] }] },
+      'tab_kind_mixed',
+    ],
     ['no tabs', { tabs: [], sheets: [] }, 'tab_kind_mixed'],
   ])('refuses %s', async (_, extra, error) => {
     const res = await call({ path: '', body: spreadsheet(extra) });
@@ -142,18 +163,28 @@ describe('downloading a spreadsheet', () => {
   });
 
   it('refuses a document that is no spreadsheet', async () => {
-    await call({ path: '', body: { id: 'plain1', name: 'Plain', tabs: [{ id: 'tp', name: 'One', elements: [] }] } });
+    await call({
+      path: '',
+      body: { id: 'plain1', name: 'Plain', tabs: [{ id: 'tp', name: 'One', elements: [] }] },
+    });
     const res = await call({ method: 'GET', path: '/plain1/workbook/file' });
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: 'workbook_not_found' });
   });
 
   it('gives a stranger nothing and a tab-scoped link no file', async () => {
-    expect((await call({ method: 'GET', path: '/book1/workbook/file', owner: 'stranger' })).status).toBe(404);
+    expect(
+      (await call({ method: 'GET', path: '/book1/workbook/file', owner: 'stranger' })).status,
+    ).toBe(403);
     sql.sql.exec(
       "INSERT INTO share_links (code, document_id, role, tab_id, created_at) VALUES ('TAB1', 'book1', 'view', 'tab1', 1);",
     );
-    const scoped = await call({ method: 'GET', path: '/book1/workbook/file?tabId=tab1', owner: 'visitor', code: 'TAB1' });
+    const scoped = await call({
+      method: 'GET',
+      path: '/book1/workbook/file?tabId=tab1',
+      owner: 'visitor',
+      code: 'TAB1',
+    });
     expect(scoped.status).toBe(403);
   });
 

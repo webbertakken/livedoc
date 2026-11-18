@@ -12,9 +12,6 @@ import {
 } from '@livedoc/sheets';
 import type { NewDocumentContent } from '@/lib/new-document-content';
 
-/** A new spreadsheet's name, as Google Sheets names one. */
-export const UNTITLED_SPREADSHEET = 'Untitled spreadsheet';
-
 export function newSheetTab(tabId: string, name: string): Tab {
   return { id: tabId, name, kind: 'sheet', elements: [] };
 }

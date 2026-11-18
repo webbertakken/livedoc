@@ -12,8 +12,15 @@ const SpreadsheetSurface = dynamic(
 );
 
 export function SpreadsheetHost({ tabId }: { tabId: string }) {
-  const { documentId, selfParticipant, sessionShareCode, documentName, tabs, setActiveId, documentWorkbook } =
-    useEditorContext();
+  const {
+    documentId,
+    selfParticipant,
+    sessionShareCode,
+    documentName,
+    tabs,
+    setActiveId,
+    documentWorkbook,
+  } = useEditorContext();
   if (!documentId || !documentWorkbook) return null;
   return (
     <SpreadsheetSurface

@@ -6,9 +6,12 @@ import type { DocumentEnv } from '../types';
 export type WorkbookRow = { format: string; settings: string };
 
 /** A workbook row as its record, or null when it cannot be read (logged). */
-export function workbookFromRow(documentId: string, row: WorkbookRow | undefined): WorkbookRecord | null {
+export function workbookFromRow(
+  documentId: string,
+  row: WorkbookRow | undefined,
+): WorkbookRecord | null {
   if (!row) return null;
-  let settings: unknown = null;
+  let settings: unknown;
   try {
     settings = JSON.parse(row.settings);
   } catch {

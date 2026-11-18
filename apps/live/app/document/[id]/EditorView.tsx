@@ -693,7 +693,8 @@ export function EditorView() {
                                       onClose={boardSceneInsert.dismissNotice}
                                     />
                                     {/* The canvas's starts and hints: none on a text document's or a spreadsheet's surface. */}
-                                    {(activeTab && isTextDocumentTab(activeTab)) || spreadsheetTab ? null : (
+                                    {(activeTab && isTextDocumentTab(activeTab)) ||
+                                    spreadsheetTab ? null : (
                                       <EditorStartPanels />
                                     )}
 

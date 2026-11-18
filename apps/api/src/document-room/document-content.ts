@@ -45,7 +45,9 @@ export async function readDocumentOutline(
     env.DOCUMENT_DB.prepare(
       'SELECT presentation, item_types, item_types_rev, saved_at FROM document WHERE id = ?',
     ).bind(documentId),
-    env.DOCUMENT_DB.prepare('SELECT format, settings FROM workbook WHERE document_id = ?').bind(documentId),
+    env.DOCUMENT_DB.prepare('SELECT format, settings FROM workbook WHERE document_id = ?').bind(
+      documentId,
+    ),
   ]);
   const row = doc?.results?.[0] as
     | {

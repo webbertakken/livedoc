@@ -53,7 +53,12 @@ function readIterate(raw: unknown): WorkbookSettings['iterate'] | null {
 function readSettings(raw: unknown): WorkbookSettings | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const { locale, timeZone, recalc, iterate } = raw as Record<string, unknown>;
-  if (typeof locale !== 'string' || locale === '' || typeof timeZone !== 'string' || timeZone === '')
+  if (
+    typeof locale !== 'string' ||
+    locale === '' ||
+    typeof timeZone !== 'string' ||
+    timeZone === ''
+  )
     return null;
   if (!isRecalc(recalc)) return null;
   const it = readIterate(iterate);

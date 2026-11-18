@@ -7,6 +7,7 @@ import { sheetFromJson, Workbook, WorkbookRecord, type WorkbookFormat } from '@l
 import { workbookFileOf, writeFlatOds, writeOds } from '@livedoc/sheets/files';
 import { getDocumentMeta, listSheets } from '../db';
 import { documentTabOrder, readWorkbook } from '../db/workbook';
+import { downloadFileName } from '../files/download-file-name';
 import { CORS_HEADERS, forbidden, json, methodNotAllowed } from '../responses';
 import type { DocumentRouteContext } from './context';
 import { sheetCaller } from './sheet-route-kit';
@@ -28,14 +29,11 @@ function refused(error: string, status: number): Response {
 
 /** A file name safe in a Content-Disposition header, from the document's name. */
 export function workbookFileName(name: string, format: WorkbookFormat): string {
-  const base =
-    name
-      .replace(/[\u0000-\u001f"\\/:*?<>|]+/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-      .slice(0, 120) || 'Untitled spreadsheet';
-  return `${base}.${format}`;
+  return downloadFileName(name, format, UNTITLED_SPREADSHEET);
 }
+
+// What a spreadsheet with no name is called (spreadsheet.md "Making a spreadsheet").
+const UNTITLED_SPREADSHEET = 'Untitled spreadsheet';
 
 async function file(ctx: DocumentRouteContext, documentId: string): Promise<Response> {
   const started = Date.now();
@@ -47,7 +45,8 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   const asked = ctx.url.searchParams.get('format') ?? record.format;
   if (!WorkbookRecord.isFormat(asked)) return refused('file_type_unknown', 400);
   // Conversion is a person's choice (files-and-print.md "Converting"), and the XLSX mapping is still ahead.
-  if (!ODF.includes(asked) || !ODF.includes(record.format)) return refused('format_not_native', 409);
+  if (!ODF.includes(asked) || !ODF.includes(record.format))
+    return refused('format_not_native', 409);
   const [meta, order, stored] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
     documentTabOrder(ctx.env, documentId),
@@ -62,7 +61,9 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   const name = meta?.name ?? '';
   const workbookFile = workbookFileOf(engine, sheets);
   const flat = asked === 'fods' ? writeFlatOds(workbookFile, name) : null;
-  const written = flat ? { data: new TextEncoder().encode(flat.data), losses: flat.losses } : writeOds(workbookFile, name);
+  const written = flat
+    ? { data: new TextEncoder().encode(flat.data), losses: flat.losses }
+    : writeOds(workbookFile, name);
   const body = written.data;
   console.info(
     `[workbook] file written document=${documentId} format=${asked} sheets=${sheets.length} bytes=${body.byteLength} losses=${written.losses.length} ms=${Date.now() - started}`,

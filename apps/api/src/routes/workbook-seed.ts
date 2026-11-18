@@ -12,7 +12,10 @@ function refused(error: 'workbook_invalid' | 'tab_kind_mixed'): Response {
   return json({ error }, { status: 400 });
 }
 
-export function readSeedWorkbook(raw: unknown, tabs: readonly Tab[] | null): SeedWorkbook | Response {
+export function readSeedWorkbook(
+  raw: unknown,
+  tabs: readonly Tab[] | null,
+): SeedWorkbook | Response {
   if (raw === undefined || raw === null) return null;
   const record = WorkbookRecord.read(raw);
   if (!record) return refused('workbook_invalid');

@@ -68,7 +68,11 @@ export async function createDocumentContent(
   // The workbook row before the sheets, so a spreadsheet's tabs reference its sheets as they are made.
   if (seed.workbook) {
     await insertWorkbookStatement(env, documentId, seed.workbook, seed.createdAt).run();
-    console.info('[workbook] created', { documentId, format: seed.workbook.format, sheets: seed.sheets.length });
+    console.info('[workbook] created', {
+      documentId,
+      format: seed.workbook.format,
+      sheets: seed.sheets.length,
+    });
   }
   if (!seed.recommit && (seed.items.length > 0 || seed.sheets.length > 0)) {
     // The seed writers are the item and sheet routes' own; they take a route context.

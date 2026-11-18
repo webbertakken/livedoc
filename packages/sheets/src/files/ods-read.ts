@@ -61,7 +61,14 @@ function dateSerial(text: string): number | null {
   const m = ISO_DATE.exec(text);
   if (!m) return null;
   const [, y, mo, d, h, mi, s] = m;
-  return serialFromParts(Number(y), Number(mo), Number(d), Number(h ?? 0), Number(mi ?? 0), Number(s ?? 0));
+  return serialFromParts(
+    Number(y),
+    Number(mo),
+    Number(d),
+    Number(h ?? 0),
+    Number(mi ?? 0),
+    Number(s ?? 0),
+  );
 }
 
 function durationDays(text: string): number | null {
@@ -136,7 +143,8 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
           }
           const out: FileCell = { r: 0, c: c + k };
           if (formula) out.formula = formula;
-          else if (formulaText !== undefined) losses.push({ k: 'formula_unread', sheet: name, r, c: c + k });
+          else if (formulaText !== undefined)
+            losses.push({ k: 'formula_unread', sheet: name, r, c: c + k });
           if (value) out.value = value;
           rowCells.push(out);
         }
@@ -163,7 +171,11 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
 }
 
 function readBody(root: XmlElement): OdsRead {
-  const spreadsheet = childElement(childElement(root, OFFICE, 'body') ?? root, OFFICE, 'spreadsheet');
+  const spreadsheet = childElement(
+    childElement(root, OFFICE, 'body') ?? root,
+    OFFICE,
+    'spreadsheet',
+  );
   if (!spreadsheet) return refuse('package_wrong_type');
   const tables = childElements(spreadsheet).filter((e) => is(e, TABLE, 'table'));
   const losses: FileLoss[] = [];

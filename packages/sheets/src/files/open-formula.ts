@@ -22,7 +22,12 @@ function ofSheetName(title: string): string {
   return /^[A-Za-z_][A-Za-z0-9_]*$/.test(title) ? title : `'${title.replace(/'/g, "''")}'`;
 }
 
-function ofPart(r: number | undefined, c: number | undefined, absR: boolean, absC: boolean): string {
+function ofPart(
+  r: number | undefined,
+  c: number | undefined,
+  absR: boolean,
+  absC: boolean,
+): string {
   const col = c === undefined ? '' : `${absC ? '$' : ''}${columnLetters(c)}`;
   const row = r === undefined ? '' : `${absR ? '$' : ''}${r + 1}`;
   return `${col}${row}`;

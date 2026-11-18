@@ -62,7 +62,7 @@ import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { textDocumentContent } from '@/lib/text-document/text-document-content';
 import { UNTITLED_TEXT_DOCUMENT } from '@/lib/text-document/text-document-tab';
 import { loadEditorPage } from '@/lib/editor-page-loader';
-import { spreadsheetDocumentContent, UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-document';
+import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
 
 // In-place handoff (docs/specs/007-editor/new-document-route.md): once a document is created, this page
@@ -341,7 +341,10 @@ export default function NewDocumentPage() {
       const content = textDocument
         ? textDocumentContent(tabId, documentName)
         : spreadsheet
-          ? spreadsheetDocumentContent(tabId)
+          ? // The engine's id and layout helpers load only for a spreadsheet.
+            (await import('@/lib/spreadsheet/spreadsheet-document')).spreadsheetDocumentContent(
+              tabId,
+            )
           : await newDocumentContent({ templateKind, themeId, tabId, via: 'new' });
       // One create for both stores (lib/new-document/write-new-document.ts). Placement is passed through as given:
       // absent is no choice (a default folder may answer), a null folder the root chosen on purpose.

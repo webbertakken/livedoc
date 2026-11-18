@@ -47,7 +47,8 @@ The table is the contract the readers and writers are tested against, one test p
 
 ## Formulas in the file's own syntax
 
-- An ODF file's formulas are OpenFormula: `of:=SUM([.A1:.B2])`, sheets as `[$Sheet2.A1]`, `;` between arguments.
+- An ODF file's formulas are OpenFormula: `of:=SUM([.A1:.B2])`, sheets as `[$Sheet2.A1]`, `;` between arguments; the
+  root declares the `of` namespace, without which LibreOffice reads every formula as `Err:510`.
 - An XLSX file's formulas are Excel's grammar: `SUM(A1:B2)`, `Sheet2!A1`, `,` between arguments, `_xlfn.` before
   functions Excel added after 2007.
 - A function a format lacks is written as that format's other writers write it: in ODF, LibreOffice's names
@@ -87,7 +88,7 @@ The table is the contract the readers and writers are tested against, one test p
 ## Limits
 
 - A file over 100 MB, or one that inflates past 1 GB, or holds more than the workbook's limits
-  ([Spreadsheet](spreadsheet.md#limits)), is refused with a named rejection (`file_too_large`), or cut and said so
+  ([Spreadsheet](spreadsheet.md#limits)), is refused with a named rejection (`package_too_large`, [Office packages](../020-import-export/office-packages.md#named-rejections)), or cut and said so
   where a part can be taken (rows past the limit).
 - Every import guard of [Security](../../research/sheets-open-standard/security.md) is a test with a named
   rejection.

@@ -23,9 +23,9 @@ export const ODS_GENERATOR = 'LiveDoc';
 type Prefix = keyof typeof ODF_NS;
 
 // Each root declares only the namespaces its entry uses (office-packages.md "Writing a package").
-const CONTENT_NAMESPACES: readonly Prefix[] = ['office', 'table', 'text'];
+const CONTENT_NAMESPACES: readonly Prefix[] = ['office', 'table', 'text', 'of'];
 const META_NAMESPACES: readonly Prefix[] = ['office', 'meta', 'dc'];
-const FLAT_NAMESPACES: readonly Prefix[] = ['office', 'meta', 'dc', 'table', 'text'];
+const FLAT_NAMESPACES: readonly Prefix[] = ['office', 'meta', 'dc', 'table', 'text', 'of'];
 
 function namespaces(prefixes: readonly Prefix[]): string {
   return prefixes.map((p) => `xmlns:${p}="${ODF_NS[p]}"`).join(' ');
@@ -85,7 +85,12 @@ function emptyCells(n: number): string {
   return `<table:table-cell${repeated('columns', n)}/>`;
 }
 
-function rowXml(cells: readonly FileCell[], cols: number, sheet: string, losses: FileLoss[]): string[] {
+function rowXml(
+  cells: readonly FileCell[],
+  cols: number,
+  sheet: string,
+  losses: FileLoss[],
+): string[] {
   const lines = ['<table:table-row>'];
   let at = 0;
   for (const cell of cells) {
@@ -118,7 +123,14 @@ function tableXml(sheet: FileSheet, losses: FileLoss[]): string[] {
   let at = 0;
   for (const r of [...rows.keys()].sort((a, b) => a - b)) {
     if (r > at) lines.push(emptyRows(r - at, cols));
-    lines.push(...rowXml(rows.get(r)!.sort((a, b) => a.c - b.c), cols, sheet.name, losses));
+    lines.push(
+      ...rowXml(
+        rows.get(r)!.sort((a, b) => a.c - b.c),
+        cols,
+        sheet.name,
+        losses,
+      ),
+    );
     at = r + 1;
   }
   if (rowCount > at) lines.push(emptyRows(rowCount - at, cols));
@@ -162,15 +174,24 @@ export function writeFlatOds(file: WorkbookFile, title: string): OdsWritten<stri
 /** The workbook as an ODF package (`.ods`): `content.xml` and `meta.xml` in the shared package. */
 export function writeOds(file: WorkbookFile, title: string): OdsWritten<Uint8Array<ArrayBuffer>> {
   const losses: FileLoss[] = [];
-  const xml = (lines: string[]) => new TextEncoder().encode([XML_DECLARATION, ...lines, ''].join('\n'));
+  const xml = (lines: string[]) =>
+    new TextEncoder().encode([XML_DECLARATION, ...lines, ''].join('\n'));
   const root = (name: string, prefixes: readonly Prefix[], inner: string[]) => [
     `<office:${name} ${namespaces(prefixes)} office:version="${ODF_VERSION}">`,
     ...inner,
     `</office:${name}>`,
   ];
   const data = writeOdfPackage(ODF_MEDIA_TYPES.spreadsheet, [
-    { name: 'content.xml', mediaType: 'text/xml', data: xml(root('document-content', CONTENT_NAMESPACES, bodyXml(file, losses))) },
-    { name: 'meta.xml', mediaType: 'text/xml', data: xml(root('document-meta', META_NAMESPACES, metaXml(title))) },
+    {
+      name: 'content.xml',
+      mediaType: 'text/xml',
+      data: xml(root('document-content', CONTENT_NAMESPACES, bodyXml(file, losses))),
+    },
+    {
+      name: 'meta.xml',
+      mediaType: 'text/xml',
+      data: xml(root('document-meta', META_NAMESPACES, metaXml(title))),
+    },
   ]);
   return { data, losses };
 }

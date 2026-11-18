@@ -25,7 +25,10 @@ const file: WorkbookFile = {
 };
 
 // A flat document around a spreadsheet body, as LibreOffice writes one.
-function flat(body: string, mimetype = 'application/vnd.oasis.opendocument.spreadsheet'): Uint8Array<ArrayBuffer> {
+function flat(
+  body: string,
+  mimetype = 'application/vnd.oasis.opendocument.spreadsheet',
+): Uint8Array<ArrayBuffer> {
   return encode(
     `<?xml version="1.0"?><office:document xmlns:office="${ODF_NS.office}" xmlns:table="${ODF_NS.table}" ` +
       `xmlns:text="${ODF_NS.text}" office:mimetype="${mimetype}"><office:body><office:spreadsheet>${body}` +
@@ -59,15 +62,28 @@ describe('writeFlatOds', () => {
       '<table:table-cell table:formula="of:=[$\'Budget &amp; Plan\'.A1]"></table:table-cell>',
     );
     expect(lines).toContain('<table:table table:name="Budget &amp; Plan">');
-    expect(lines).toContain('<table:table-row><table:table-cell table:number-columns-repeated="3"/></table:table-row>');
+    expect(lines).toContain(
+      '<table:table-row><table:table-cell table:number-columns-repeated="3"/></table:table-row>',
+    );
     expect(lines).toContain('<meta:generator>LiveDoc</meta:generator>');
     expect(data).toContain('office:version="1.4"');
+    // The formulas' `of:` prefix is declared, or LibreOffice cannot read them.
+    expect(data).toContain('xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2"');
     expect(writeFlatOds(file, 'Budget').data).toBe(data);
   });
 
   it('names a formula OpenFormula cannot say, and keeps its value', () => {
     const { data, losses } = writeFlatOds(
-      { sheets: [{ name: 'S', rows: 1, cols: 1, cells: [{ r: 0, c: 0, formula: '=A1#', value: { k: 'n', v: 1 } }] }] },
+      {
+        sheets: [
+          {
+            name: 'S',
+            rows: 1,
+            cols: 1,
+            cells: [{ r: 0, c: 0, formula: '=A1#', value: { k: 'n', v: 1 } }],
+          },
+        ],
+      },
       'S',
     );
     expect(losses).toEqual([{ k: 'formula_unwritten', sheet: 'S', r: 0, c: 0 }]);
@@ -76,7 +92,9 @@ describe('writeFlatOds', () => {
 
   it('writes an empty sheet as one empty row and column', () => {
     const { data } = writeFlatOds({ sheets: [{ name: 'S', rows: 0, cols: 0, cells: [] }] }, 'S');
-    expect(data).toContain('<table:table-column/>\n<table:table-row><table:table-cell/></table:table-row>');
+    expect(data).toContain(
+      '<table:table-column/>\n<table:table-row><table:table-cell/></table:table-row>',
+    );
   });
 });
 
@@ -125,7 +143,8 @@ describe('readOds', () => {
   });
 
   it('reads every value type', async () => {
-    const cell = (attrs: string, body = '') => `<table:table-cell ${attrs}>${body}</table:table-cell>`;
+    const cell = (attrs: string, body = '') =>
+      `<table:table-cell ${attrs}>${body}</table:table-cell>`;
     const read = await sheetsOf(
       flat(
         '<table:table table:name="T"><table:table-row>' +
@@ -137,7 +156,10 @@ describe('readOds', () => {
           cell('office:value-type="time" office:time-value="-PT12H"') +
           cell('office:value-type="boolean" office:boolean-value="false"') +
           cell('office:value-type="string" office:string-value="given"', '<text:p>shown</text:p>') +
-          cell('office:value-type="string"', '<text:p>a<text:s text:c="3"/>b<text:tab/>c<text:line-break/>d<text:s/><text:span>e</text:span><office:annotation><text:p>note</text:p></office:annotation></text:p>') +
+          cell(
+            'office:value-type="string"',
+            '<text:p>a<text:s text:c="3"/>b<text:tab/>c<text:line-break/>d<text:s/><text:span>e</text:span><office:annotation><text:p>note</text:p></office:annotation></text:p>',
+          ) +
           cell('office:value-type="float" office:value="oops"') +
           cell('office:value-type="date" office:date-value="never"') +
           cell('office:value-type="time" office:time-value="soon"') +
@@ -210,23 +232,41 @@ describe('readOds', () => {
 
   it.each([
     ['a text document', flat('', 'application/vnd.oasis.opendocument.text'), 'package_wrong_type'],
-    ['a flat document with no spreadsheet', encode(`<office:document xmlns:office="${ODF_NS.office}" office:mimetype="application/vnd.oasis.opendocument.spreadsheet"><office:body/></office:document>`), 'package_wrong_type'],
+    [
+      'a flat document with no spreadsheet',
+      encode(
+        `<office:document xmlns:office="${ODF_NS.office}" office:mimetype="application/vnd.oasis.opendocument.spreadsheet"><office:body/></office:document>`,
+      ),
+      'package_wrong_type',
+    ],
     ['another root', encode('<html/>'), 'package_wrong_type'],
-    ['a DOCTYPE', encode('<?xml version="1.0"?><!DOCTYPE x [<!ENTITY e "boom">]><x>&e;</x>'), 'xml_doctype_refused'],
+    [
+      'a DOCTYPE',
+      encode('<?xml version="1.0"?><!DOCTYPE x [<!ENTITY e "boom">]><x>&e;</x>'),
+      'xml_doctype_refused',
+    ],
     ['bytes that are neither', encode('PK not really'), 'package_damaged'],
     [
       'a text package',
-      writeOdfPackage('application/vnd.oasis.opendocument.text', [{ name: 'content.xml', mediaType: 'text/xml', data: encode('<x/>') }]),
+      writeOdfPackage('application/vnd.oasis.opendocument.text', [
+        { name: 'content.xml', mediaType: 'text/xml', data: encode('<x/>') },
+      ]),
       'package_wrong_type',
     ],
-    ['a package with no content', writeOdfPackage('application/vnd.oasis.opendocument.spreadsheet', []), 'package_damaged'],
+    [
+      'a package with no content',
+      writeOdfPackage('application/vnd.oasis.opendocument.spreadsheet', []),
+      'package_damaged',
+    ],
     [
       'a package with malformed content',
-      writeOdfPackage('application/vnd.oasis.opendocument.spreadsheet', [{ name: 'content.xml', mediaType: 'text/xml', data: encode('<x>') }]),
+      writeOdfPackage('application/vnd.oasis.opendocument.spreadsheet', [
+        { name: 'content.xml', mediaType: 'text/xml', data: encode('<x>') },
+      ]),
       'xml_malformed',
     ],
   ])('refuses %s', async (_, bytes, rejection) => {
-    const read = await readOds(bytes as Uint8Array<ArrayBuffer>);
+    const read = await readOds(bytes);
     expect(read.ok ? null : read.rejection).toBe(rejection);
   });
 });

@@ -4,13 +4,17 @@
 // "The surface"): the title row, the formula bar, the grid of the open sheet tab and the sheet bar at the foot. The
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { planPalette } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
-import { SheetControllerProvider, useSheetController, useSheetControllerState } from '@/components/sheets/sheet-controller';
+import {
+  SheetControllerProvider,
+  useSheetController,
+  useSheetControllerState,
+} from '@/components/sheets/sheet-controller';
 import { SheetFormulaBar } from '@/components/sheets/SheetFormulaBar';
 import { SheetGrid } from '@/components/sheets/SheetGrid';
 import { SheetMenus } from '@/components/sheets/SheetMenus';
@@ -23,29 +27,26 @@ import { useSheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useShe
 import type { WorkbookScope } from '@/lib/api/workbook';
 import { apiDownloadWorkbook } from '@/lib/api/workbook';
 import { debugLog } from '@/lib/debug-log';
+import { downloadBlob } from '@/lib/download-blob';
 import { openSpreadsheetFile } from '@/lib/spreadsheet/open-spreadsheet-file';
+import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { track } from '@/lib/telemetry';
 import { SheetBar, type SheetBarTab } from './SheetBar';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
 
 const FORMAT_PILL = { ods: '.ODS', fods: '.FODS', xlsx: '.XLSX' } as const;
-const FORMAT_TITLE = { ods: 'OpenDocument format', fods: 'OpenDocument format, flat', xlsx: 'Excel format' } as const;
+const FORMAT_TITLE = {
+  ods: 'OpenDocument format',
+  fods: 'OpenDocument format, flat',
+  xlsx: 'Excel format',
+} as const;
 const DOWNLOAD_LABEL = {
   ods: 'Download as OpenDocument (.ods)',
   fods: 'Download as Flat OpenDocument (.fods)',
   xlsx: 'Download as Microsoft Excel (.xlsx)',
 } as const;
 const TELEMETRY_FORMAT = { ods: 'Ods', fods: 'Fods', xlsx: 'Xlsx' } as const;
-
-function saveBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 export function SpreadsheetSurface({
   scope,
@@ -69,7 +70,7 @@ export function SpreadsheetSurface({
     setProblem(null);
     try {
       const { blob, fileName } = await apiDownloadWorkbook(scope, format);
-      saveBlob(blob, fileName);
+      downloadBlob(blob, fileName);
       track('Spreadsheet', 'Exported', TELEMETRY_FORMAT[format]);
     } catch (error) {
       setProblem('The file could not be downloaded. Try again.');
@@ -84,9 +85,12 @@ export function SpreadsheetSurface({
     window.location.assign(`/document/${opened.documentId}`);
   };
   return (
-    <section aria-label="Spreadsheet" className="absolute inset-0 flex flex-col bg-white dark:bg-slate-950">
+    <section
+      aria-label="Spreadsheet"
+      className="absolute inset-0 flex flex-col bg-white dark:bg-slate-950"
+    >
       <OfficeTitleRow
-        name={documentName || 'Untitled spreadsheet'}
+        name={documentName || UNTITLED_SPREADSHEET}
         format={FORMAT_PILL[format]}
         formatTitle={FORMAT_TITLE[format]}
         openAccept=".ods,.fods,application/vnd.oasis.opendocument.spreadsheet"
@@ -100,7 +104,13 @@ export function SpreadsheetSurface({
   );
 }
 
-function Status({ state, retry }: { state: Exclude<SpreadsheetSurfaceState, 'ready'>; retry?: () => void }) {
+function Status({
+  state,
+  retry,
+}: {
+  state: Exclude<SpreadsheetSurfaceState, 'ready'>;
+  retry?: () => void;
+}) {
   const copy = {
     loading: 'Opening the sheet…',
     failed: "This sheet couldn't be opened.",
@@ -124,19 +134,32 @@ function Status({ state, retry }: { state: Exclude<SpreadsheetSurfaceState, 'rea
 
 function OpenSheet({ bridge, tabId }: { bridge: SheetsBridge; tabId: string }) {
   const { store, version } = useAttachedSheetStore(bridge);
-  const status = store.status(tabId);
   useEffect(() => {
     void store.loadTab(tabId);
   }, [store, tabId]);
-  const sheet = store.sheetsOn(tabId)[0];
+  // The store is mutable: what it holds is read again whenever it moves on (`version`), never memoised past it.
+  const { status, sheet } = useMemo(
+    () => ({ status: store.status(tabId), sheet: store.sheetsOn(tabId)[0] }),
+    [store, tabId, version], // oxlint-disable-line react/exhaustive-deps
+  );
   const state: SpreadsheetSurfaceState =
     status === 'error' ? 'failed' : sheet ? 'ready' : status === 'ready' ? 'gone' : 'loading';
   useEffect(() => {
     debugLog(`[workbook] surface ${state}`, { tabId });
   }, [state, tabId]);
-  if (state === 'failed') return <Status state="failed" retry={() => void store.loadTab(tabId, true)} />;
+  if (state === 'failed')
+    return <Status state="failed" retry={() => void store.loadTab(tabId, true)} />;
   if (!sheet) return <Status state={state === 'gone' ? 'gone' : 'loading'} />;
-  return <SheetWorkspace key={sheet.id} store={store} sheetId={sheet.id} tabId={tabId} version={version} bridge={bridge} />;
+  return (
+    <SheetWorkspace
+      key={sheet.id}
+      store={store}
+      sheetId={sheet.id}
+      tabId={tabId}
+      version={version}
+      bridge={bridge}
+    />
+  );
 }
 
 function SheetWorkspace({
@@ -154,10 +177,14 @@ function SheetWorkspace({
 }) {
   const palette = planPalette(useCanvasSurface());
   const [announcement, setAnnouncement] = useState('');
+  const { sheet, workbook } = useMemo(
+    () => ({ sheet: store.sheet(sheetId)!, workbook: store.workbook(tabId) }),
+    [store, sheetId, tabId, version], // oxlint-disable-line react/exhaustive-deps
+  );
   const c = useSheetControllerState({
     store,
-    sheet: store.sheet(sheetId)!,
-    workbook: store.workbook(tabId),
+    sheet,
+    workbook,
     version,
     palette,
     interactive: true,
@@ -204,7 +231,10 @@ function SheetParts({ bridge }: { bridge: SheetsBridge }) {
       onFocus={() => c.setFocused(true)}
       onBlur={(e) => {
         const next = e.relatedTarget;
-        if (next instanceof Element && (e.currentTarget.contains(next) || next.closest('[data-menu-surface]')))
+        if (
+          next instanceof Element &&
+          (e.currentTarget.contains(next) || next.closest('[data-menu-surface]'))
+        )
           return;
         c.setFocused(false);
       }}

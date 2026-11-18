@@ -27,7 +27,12 @@ export function SheetBar({
   };
   return (
     <div className="flex h-[38px] shrink-0 items-stretch border-t border-slate-200 bg-slate-50 px-2 dark:border-slate-700 dark:bg-slate-900">
-      <div ref={list} role="tablist" aria-label="Sheets" className="flex items-stretch gap-0.5 overflow-x-auto">
+      <div
+        ref={list}
+        role="tablist"
+        aria-label="Sheets"
+        className="flex items-stretch gap-0.5 overflow-x-auto"
+      >
         {tabs.map((tab, i) => {
           const active = tab.id === activeId;
           return (

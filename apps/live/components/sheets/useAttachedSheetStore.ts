@@ -23,7 +23,10 @@ function release(store: SheetStore): void {
   registerSheetSource(null);
 }
 
-export function useAttachedSheetStore(bridge: SheetsBridge): { store: SheetStore; version: number } {
+export function useAttachedSheetStore(bridge: SheetsBridge): {
+  store: SheetStore;
+  version: number;
+} {
   const store = sheetStoreOf(bridge);
   useEffect(() => {
     const held = ATTACHED.get(store);

@@ -1,3 +1,4 @@
+import { WorkbookRecord } from '@livedoc/sheets';
 import type { Tab } from '@livedoc/document';
 import { DOCUMENT_OPEN_HEADER } from '@livedoc/api-schema';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -537,6 +538,24 @@ describe('apiCreateDocument persisted body (docs/specs/006-document/tab-folders.
     );
     expect(bodies[0]!.sheets).toEqual(sheets);
     expect(bodies[1]).not.toHaveProperty('sheets');
+  });
+
+  // docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet": the workbook record makes the document a spreadsheet.
+  it('sends the workbook record when one is given', async () => {
+    const fetchSpy = vi
+      .fn()
+      .mockImplementation(
+        async () => new Response(JSON.stringify({ document: { id: 'd1' } }), { status: 200 }),
+      );
+    vi.stubGlobal('fetch', fetchSpy);
+    const workbook = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
+    await apiCreateDocument('owner', { id: 'd1', name: 'N', tabs: [], workbook });
+    await apiCreateDocument('owner', { id: 'd2', name: 'N', tabs: [] });
+    const bodies = fetchSpy.mock.calls.map(
+      ([, init]) => JSON.parse((init as RequestInit).body as string) as Record<string, unknown>,
+    );
+    expect(bodies[0]!.workbook).toEqual(workbook);
+    expect(bodies[1]).not.toHaveProperty('workbook');
   });
 });
 
