@@ -3,7 +3,7 @@
 // The document group, the bottom line's right (docs/specs/007-editor/toolbar-layout.md "The bottom line"): the
 // document's name, the active tab, the tab stack, the contributors, Add tab.
 
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Tab } from '@livedoc/document';
@@ -91,7 +91,7 @@ describe('DocumentGroup', () => {
     expect(names).toEqual([
       'Private',
       'Product discovery',
-      'Rename tab',
+      'Rename Diagram tab',
       'Checkout flow, all tabs (3)',
       'Tab menu',
       'Add tab',
@@ -123,7 +123,7 @@ describe('DocumentGroup', () => {
 
   it('renames the active tab in place from its kind glyph, for someone who may', () => {
     const { props } = renderGroup();
-    fireEvent.click(screen.getByRole('button', { name: 'Rename tab' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Diagram tab' }));
     const field = screen.getByDisplayValue('Checkout flow');
     fireEvent.change(field, { target: { value: 'Checkout' } });
     fireEvent.keyDown(field, { key: 'Enter' });
@@ -146,7 +146,7 @@ describe('DocumentGroup', () => {
     });
     expect(screen.queryByRole('button', { name: 'Tab menu' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add tab' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Rename tab' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Rename Diagram tab' })).toBeNull();
     expect(screen.getByText('Checkout flow')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Checkout flow, all tabs (3)' })).toBeTruthy();
   });
@@ -163,7 +163,7 @@ describe('DocumentGroup', () => {
       p.tabs.activeId = 'gone';
     });
     expect(screen.getByRole('button', { name: 'Tabs, all tabs (3)' })).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Rename tab' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Rename Diagram tab' })).toBeNull();
   });
 
   it('counts the tabs in a tab-scoped session’s scope', () => {
@@ -225,7 +225,7 @@ describe('DocumentGroup', () => {
   });
   it('cancels a rename with Escape, keeping the name', () => {
     const { props } = renderGroup();
-    fireEvent.click(screen.getByRole('button', { name: 'Rename tab' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Diagram tab' }));
     fireEvent.keyDown(screen.getByDisplayValue('Checkout flow'), { key: 'Escape' });
     expect(screen.queryByDisplayValue('Checkout flow')).toBeNull();
     expect(props.tabs.onRename).not.toHaveBeenCalled();
@@ -263,7 +263,7 @@ describe('DocumentGroup', () => {
   });
   it('keeps the name when a rename commits a blank one', () => {
     const { props } = renderGroup();
-    fireEvent.click(screen.getByRole('button', { name: 'Rename tab' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Diagram tab' }));
     const field = screen.getByDisplayValue('Checkout flow');
     fireEvent.change(field, { target: { value: '   ' } });
     fireEvent.keyDown(field, { key: 'Enter' });
@@ -310,5 +310,68 @@ describe('DocumentGroup', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Rename' }));
     expect(screen.getByDisplayValue('Checkout flow')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Tab menu' })).toBeNull();
+  });
+});
+
+// A tab’s kind is always findable (docs/specs/007-editor/editor-modes.md 'A tab’s kind is always findable').
+describe('DocumentGroup: the tab’s kind', () => {
+  const board = (p: Props) => {
+    p.tabs.tabs = [
+      tab('a', 'Overview'),
+      tab('b', 'Bug Reports', { kind: 'board', opensIn: 'plan' }),
+    ];
+  };
+  const hover = (el: Element) => {
+    fireEvent.pointerEnter(el, { pointerType: 'mouse' });
+    fireEvent.pointerMove(el, { pointerType: 'mouse' });
+  };
+
+  it('names the kind on the active tab’s rename glyph, in its hover card and to a screen reader', () => {
+    renderGroup(board);
+    const rename = screen.getByRole('button', { name: 'Rename Board tab' });
+    hover(rename);
+    expect(screen.getByRole('tooltip').textContent).toBe('Board tabClick to rename it.');
+  });
+
+  it('names a general tab with the mode its glyph shows', () => {
+    renderGroup((p) => {
+      p.tabs.tabs = [tab('b', 'Sketches', { opensIn: 'draw' })];
+    });
+    expect(screen.getByRole('button', { name: 'Rename Diagram tab' })).toBeTruthy();
+    hover(screen.getByRole('button', { name: 'Rename Diagram tab' }));
+    expect(screen.getByRole('tooltip').textContent).toBe(
+      'Diagram tab, in Sketch modeClick to rename it.',
+    );
+  });
+
+  it('names the kind on a read-only glyph too, for a Participant or a Viewer', () => {
+    renderGroup((p) => {
+      board(p);
+      p.tabs.readOnly = true;
+    });
+    const segment = document.querySelector<HTMLElement>("[data-tour-id='active-tab']")!;
+    expect(within(segment).getByRole('img', { name: 'Board tab' })).toBeTruthy();
+  });
+
+  it('describes each tab list row by its kind, keeping the row named by the tab', () => {
+    renderGroup(board);
+    fireEvent.click(screen.getByRole('button', { name: 'Bug Reports, all tabs (2)' }));
+    const list = screen.getByRole('dialog', { name: 'Tabs' });
+    const row = within(list).getByRole('button', { name: 'Bug Reports' });
+    expect(row.getAttribute('aria-describedby')).toBeTruthy();
+    expect(document.getElementById(row.getAttribute('aria-describedby')!)!.textContent).toBe(
+      'Board tab',
+    );
+    const overview = within(list).getByRole('button', { name: 'Overview' });
+    expect(document.getElementById(overview.getAttribute('aria-describedby')!)!.textContent).toBe(
+      'Diagram tab, in Structured mode',
+    );
+  });
+
+  it('heads the tab menu with the tab’s kind', () => {
+    renderGroup(board);
+    fireEvent.click(screen.getByRole('button', { name: 'Tab menu' }));
+    expect(screen.getByText('Board tab', { selector: '[data-tab-menu-kind] *' })).toBeTruthy();
+    fireEvent.keyDown(document, { key: 'Escape' });
   });
 });

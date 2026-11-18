@@ -54,7 +54,10 @@ on two lines over the canvas, a top line and a bottom line, each a single row wh
   2. a divider, then the **active tab** as a tinted segment, which never shortens: its kind glyph, then the **tab
      stack**, then its tab menu (⋯).
      - The **kind glyph** renames the tab in place, for someone who may change the document's tabs: a button named
-       "Rename tab", in its hover card and to a screen reader. For anyone else it is a plain glyph.
+       for the kind it renames ("Rename Board tab"), its hover card headed by the kind ("Board tab", or "Diagram
+       tab, in Sketch mode") over "Click to rename it." For anyone else it is a glyph named by its kind, in its hover
+       card and to a screen reader ([A tab's kind is always findable](editor-modes.md)).
+       Why: the glyph is the tab's only visible mark of its kind; naming it there keeps kind found without a new control.
      - The **tab stack** is one button: the tab's name, a stack glyph and the number of tabs in the session's scope.
        A press opens the **tab list**. It is named by its words and what it does: "Tab 1, all tabs (3)".
      - While the tab is renamed, its name field takes the segment's place.
@@ -73,7 +76,8 @@ the contributors), arrow at that button, kept 12 px inside the canvas, in the me
 - **Header**: "Tabs" and the count; on the right, how many people are here ("3 people here"), when anyone is.
 - **Find a tab**: a filter field, when there are more than five tabs; typing narrows the rows by name.
 - **Rows**, in document order, with [tab folders](../006-document/tab-folders.md) as headings (glyph, name, count)
-  and their tabs indented under them: each row is the tab's kind glyph, its name (cut short with an ellipsis), and
+  and their tabs indented under them: each row is the tab's kind glyph (its tooltip and screen-reader text naming the
+  kind), its name (cut short with an ellipsis), and
   the [presence stack](../012-collaboration/collaborator-enhancements.md) of who is on it. The active tab's row is
   tinted and carries its tab menu (⋯). Pressing a row switches to that tab and closes the list.
 - **Footer**: **New Tab**, **New Board**, **New Sheet** and **New Dashboard** (the add menu's four), for someone

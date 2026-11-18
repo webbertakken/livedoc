@@ -31,6 +31,7 @@ export function EllipsisMenuButton({
   onToggleLock,
   onDelete,
   planTab,
+  kindNoun,
   dataRows,
   selfId,
 }: {
@@ -61,6 +62,8 @@ export function EllipsisMenuButton({
   onToggleLock: () => void;
   onDelete: () => void;
   planTab?: boolean;
+  // What the tab is ("Board tab"): the menu's heading.
+  kindNoun: string;
   dataRows?: TabDataRows;
 }) {
   // In state, so the menu anchors to the button on the render that opens it.
@@ -94,6 +97,7 @@ export function EllipsisMenuButton({
             onToggleLock={onToggleLock}
             locked={locked}
             planTab={planTab}
+            kindNoun={kindNoun}
             {...(dataRows ? { dataRows } : {})}
             selfId={selfId}
             otherDocuments={otherDocuments}

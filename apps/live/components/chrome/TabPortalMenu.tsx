@@ -14,7 +14,7 @@ import {
   MoveIcon,
   TabLockIcon,
 } from '@/components/chrome/tab-bar-icons';
-import { MenuActionRow, MenuGroupSeparator } from '@/components/primitives/PortalMenu';
+import { MenuActionRow, MenuGroupSeparator, MenuHeader } from '@/components/primitives/PortalMenu';
 import { MenuToolbar, MenuToolButton } from '@/components/primitives/MenuTiles';
 import { PasteMenuIcon } from '@/components/palette/context-menu-icons';
 import {
@@ -48,6 +48,7 @@ export function PortalMenu({
   onToggleLock,
   locked,
   planTab = false,
+  kindNoun,
   dataRows,
   selfId,
   otherDocuments,
@@ -78,6 +79,9 @@ export function PortalMenu({
   locked: boolean;
   // A Plan tab: Add to Document is off, its cards belong to this document's items.
   planTab?: boolean;
+  // What the tab is ("Board tab"), the menu's heading (docs/specs/007-editor/editor-modes.md "A tab's kind is always
+  // findable").
+  kindNoun: string;
   // A Board or Sheet tab's own Import, in place of the document's, and its Download CSV after Export (tab-data-rows.ts).
   dataRows?: TabDataRows;
   // Viewer identity for the Add to Document dialog's thumbnail fetches.
@@ -268,6 +272,9 @@ export function PortalMenu({
   // The menu's rows, the same in the anchored box and in a phone's bottom sheet (the pickers returned above).
   const body = (
     <>
+      <div data-tab-menu-kind="">
+        <MenuHeader title={kindNoun} />
+      </div>
       {/* Quick actions: the verbs reached for most often, as a compact
             icon row so they're one glance away. The rest of the menu
             groups the verbose / destructive actions into sections. */}

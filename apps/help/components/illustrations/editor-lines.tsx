@@ -668,9 +668,9 @@ export function documentGroupWidth(props: DocumentGroupProps = {}): number {
 }
 
 /** The document group, its right edge at `right`: the share-state icon, the document's name (none on a phone) and
- *  the role pill; the active tab tinted: its mode glyph (Rename tab), the tab stack (its name, glyph and count, one
- *  button) and ⋯; the people here (up
- *  to three, then +N); and +. Returns the group with the tab stack's centre, where the tab list's arrow points. */
+ *  the role pill; the active tab tinted: its kind glyph (Rename <kind> tab), the tab stack (its name, glyph and
+ *  count, one button) and ⋯; the people here (up to three, then +N); and +. Returns the group with the tab stack's
+ *  centre, where the tab list's arrow points. */
 export function DocumentGroup({
   right,
   y,
