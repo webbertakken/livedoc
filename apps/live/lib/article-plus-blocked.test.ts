@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import type { Element, LaidOutPage } from '@livedoc/document';
 import { articlePlusBlocked } from './article-plus-blocked';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
+
+// Asked only while the writing is drawn, so the pages family is in.
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/007-editor/article-pages.md "Zones": an object in an article's writing gets no quick-connect pluses.
 const page = (x: number, flow: boolean) =>

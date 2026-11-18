@@ -28,7 +28,13 @@ afterEach(() => {
 describe('loadKindFamiliesFor', () => {
   it('asks for every family the elements need, with the reason', async () => {
     await loadKindFamiliesFor(
-      [el({ type: 'video' }), el({ type: 'shape', shape: 'agenda' }), el({ type: 'text' })],
+      {
+        elements: [
+          el({ type: 'video' }),
+          el({ type: 'shape', shape: 'agenda' }),
+          el({ type: 'text' }),
+        ],
+      },
       'open',
     );
     expect(asked).toEqual([
@@ -39,12 +45,19 @@ describe('loadKindFamiliesFor', () => {
 
   it('settles when a family fails, so the board still opens', async () => {
     outcome.set('embeds', false);
-    await expect(loadKindFamiliesFor([el({ type: 'video' })], 'tab')).resolves.toBeUndefined();
+    await expect(
+      loadKindFamiliesFor({ elements: [el({ type: 'video' })] }, 'tab'),
+    ).resolves.toBeUndefined();
   });
 
   it('asks nothing for a board of base kinds', async () => {
-    await loadKindFamiliesFor([el({ type: 'text' })], 'tab');
+    await loadKindFamiliesFor({ elements: [el({ type: 'text' })] }, 'tab');
     expect(asked).toEqual([]);
+  });
+
+  it('asks for the pages family for a tab with articles, whatever its elements', async () => {
+    await loadKindFamiliesFor({ elements: [], articles: { a1: { blocks: [] } } }, 'tab');
+    expect(asked).toEqual([['pages-articles', 'tab']]);
   });
 });
 

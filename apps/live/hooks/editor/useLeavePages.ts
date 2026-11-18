@@ -12,7 +12,6 @@ import { useCallback, useState } from 'react';
 import {
   articlesOf,
   withArticleFlow,
-  withArticlesAsPages,
   type ArticleBlock,
   type EditorMode,
   type Tab,
@@ -20,6 +19,7 @@ import {
 import { articleHandleOf } from '@/lib/article/article-editor-store';
 import { articleLocked } from '@/lib/article/article-lock';
 import { debugLog } from '@/lib/debug-log';
+import { isKindFamilyLoaded, loadKindFamily, requireKindFamily } from '@/lib/element-kinds/store';
 import { track } from '@/lib/telemetry';
 
 export type LeavePages = {
@@ -55,13 +55,27 @@ export function useLeavePages<
     },
     [mode, rawSet, canEdit, tab],
   );
+  // Turning articles into pages is the pages family's (docs/specs/016-platform/web-performance.md "An element kind's
+  // code loads with the board that holds it"), in whenever the writing is drawn; the question stays open, and the
+  // notice shows, if it cannot load.
   const convert = () => {
     if (!pending || !tab) return;
+    if (isKindFamilyLoaded('pages-articles')) {
+      turnIntoPages(pending, tab);
+      return;
+    }
+    void loadKindFamily('pages-articles', 'element').then((loaded) => {
+      if (loaded) turnIntoPages(pending, tab);
+      else debugLog('[article] articles not turned into pages: the pages family did not load');
+    });
+  };
+  const turnIntoPages = (to: EditorMode, from: Tab) => {
+    const { withArticlesAsPages } = requireKindFamily('pages-articles');
     const splits = new Map<string, string[][]>();
     const typed = new Map<string, ArticleBlock[]>();
-    for (const flow of Object.keys(articlesOf(tab))) {
+    for (const flow of Object.keys(articlesOf(from))) {
       // A held article stays as it is: its writing is neither taken nor turned.
-      if (articleLocked(tab, flow)) continue;
+      if (articleLocked(from, flow)) continue;
       const handle = articleHandleOf(flow);
       if (!handle) continue;
       // What is being typed goes into the pages too, in the same edit (one undo step).
@@ -71,7 +85,7 @@ export function useLeavePages<
     track('Tab', 'Changed', 'ArticlesToPages');
     // The articles turned into pages and the switch are one tab edit: one undo puts the tab back in
     // Pages with its articles (docs/specs/007-editor/editor-modes.md "Where the mode lives").
-    rawSet(pending, (t) => {
+    rawSet(to, (t) => {
       let next = t;
       for (const [flow, blocks] of typed) {
         const doc = articleLocked(next, flow) ? undefined : articlesOf(next)[flow];
@@ -81,9 +95,9 @@ export function useLeavePages<
       return withArticlesAsPages(next, splits);
     });
     debugLog('[article] articles turned into pages', {
-      tabId: tab.id,
+      tabId: from.id,
       articles: splits.size,
-      held: Object.keys(articlesOf(tab)).filter((flow) => articleLocked(tab, flow)).length,
+      held: Object.keys(articlesOf(from)).filter((flow) => articleLocked(from, flow)).length,
     });
     setPending(null);
   };

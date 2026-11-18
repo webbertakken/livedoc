@@ -68,6 +68,25 @@ export function kindFamilyOf(element: Element): KindFamilyId | null {
   }
 }
 
+// A tab's families beyond its elements': an article's writing is the pages family's, whatever elements its pages
+// hold (an article's text lives on the tab, not in an element).
+function tabFamilies(tab: { articles?: unknown }): KindFamilyId[] {
+  const { articles } = tab;
+  const hasArticles =
+    !!articles &&
+    typeof articles === 'object' &&
+    !Array.isArray(articles) &&
+    Object.keys(articles).length > 0;
+  return hasArticles ? ['pages-articles'] : [];
+}
+
+// The families a tab needs, each once: its elements' in the order first met, then its own. Any value shaped like a
+// tab, a read straight off the wire included.
+export function kindFamiliesOfTab(tab: { elements?: unknown; articles?: unknown }): KindFamilyId[] {
+  const elements = Array.isArray(tab.elements) ? (tab.elements as Element[]) : [];
+  return [...new Set([...kindFamiliesOf(elements), ...tabFamilies(tab)])];
+}
+
 // The families a set of elements needs, each once, in the order first met.
 export function kindFamiliesOf(elements: readonly Element[]): KindFamilyId[] {
   const families = new Set<KindFamilyId>();

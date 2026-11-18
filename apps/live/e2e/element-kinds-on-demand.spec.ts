@@ -180,3 +180,26 @@ test('a family that could not load loads by itself once the connection is back',
   await expect(tile).toHaveAttribute('aria-pressed', 'true');
   expectNoPageErrors(pageErrors);
 });
+
+// An article's writing is the pages family's whatever elements its pages hold: the open asks for the family from the
+// tab's articles, so a reopened article draws its writing, with the page's on-demand code held back as on a slow link.
+test('a reopened article draws its writing', async ({ page, context, pageErrors }) => {
+  await enableDebugLogs(context);
+  const gates: string[] = [];
+  page.on('console', (msg) => {
+    if (msg.text().startsWith('[element-kinds] gate')) gates.push(msg.text());
+  });
+  await page.goto('/new?template=article');
+  const editor = page.locator('.ProseMirror').first();
+  await editor.waitFor({ timeout: 30_000 });
+  await expect(page).toHaveURL(/\/document\//);
+  const firstLine = (await editor.innerText()).trim().split('\n')[0]!;
+  expect(firstLine.length).toBeGreaterThan(0);
+
+  await holdBackOnDemandCode(page);
+  gates.length = 0;
+  await page.reload();
+  await expect(page.locator('.ProseMirror').first()).toContainText(firstLine, { timeout: 30_000 });
+  expect(gates.some((line) => line.includes('pages-articles'))).toBe(true);
+  expectNoPageErrors(pageErrors);
+});

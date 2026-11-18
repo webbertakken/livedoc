@@ -140,7 +140,9 @@ describe('seedFetchedDocument and element kind families', () => {
     kinds.hold = true;
     kinds.asked.length = 0;
     const seeding = seed(true, vi.fn(), vi.fn(), resetTabs)('me', fetched, null, null);
-    await vi.waitFor(() => expect(kinds.asked).toEqual([[elements, 'tab']]));
+    await vi.waitFor(() =>
+      expect(kinds.asked).toEqual([[expect.objectContaining({ id: 't1', elements }), 'tab']]),
+    );
     expect(resetTabs).not.toHaveBeenCalled();
     kinds.release();
     kinds.hold = false;

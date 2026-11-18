@@ -35,6 +35,16 @@ export function useKindFamilyReady(element: Element): boolean {
   return ready;
 }
 
+// Whether a family is in, for editor behaviours that run only once it is (an article's writing, say); asks for
+// nothing, since the board's own elements already did, and re-renders when it lands.
+export function useKindFamilyLoaded(family: KindFamilyId): boolean {
+  return useSyncExternalStore(
+    subscribeKindFamilies,
+    () => isKindFamilyLoaded(family),
+    () => isKindFamilyLoaded(family),
+  );
+}
+
 const noFailures: readonly KindFamilyId[] = [];
 
 export function useFailedKindFamilies(): readonly KindFamilyId[] {

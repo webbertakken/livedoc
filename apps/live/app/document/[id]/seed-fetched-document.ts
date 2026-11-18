@@ -102,7 +102,7 @@ export function makeSeedFetchedDocument(deps: {
       const first = loaded?.tab ?? null;
       // The board draws every element with its own face in its first frame (docs/specs/016-platform/web-performance.md
       // "At the open"): the tab is put in place once its families are in, which the early reads already asked for.
-      if (first) await loadKindFamiliesFor(first.elements, 'tab');
+      if (first) await loadKindFamiliesFor(first, 'tab');
       // Only mark the tab loaded when the eager fetch actually
       // returned content. If it failed (e.g. a transient 403 from
       // a request that raced ahead of the session token / session
