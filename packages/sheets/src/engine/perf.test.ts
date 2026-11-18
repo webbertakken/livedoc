@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { Workbook } from './workbook';
 import { cellKey, type Sheet } from '../sheet';
+import { CellMap } from '../cells/cell-map';
 import { compileFormula } from '../formula/stored';
 
 const CI_FACTOR = 4;
@@ -21,7 +22,7 @@ function bigSheet(): Sheet {
     tabId: 't',
     title: 'Big',
     layout,
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: 0,
     updatedAt: 0,
@@ -66,7 +67,7 @@ describe('performance', () => {
 
     // Change C5000: half the chain (5,000 cells) depends on it.
     const key = cellKey('r4999', 'c2');
-    const cells = new Map(sheet.cells);
+    const cells = sheet.cells.copy();
     cells.set(key, { input: { n: 2 } });
     const next = { ...sheet, cells };
     let after: unknown;
@@ -78,7 +79,7 @@ describe('performance', () => {
 
     // A change nothing reads.
     const lone = cellKey('r100', 'c1');
-    const cells2 = new Map(next.cells);
+    const cells2 = next.cells.copy();
     cells2.set(lone, { input: { n: 7 } });
     const small = cpuMsOf(() => {
       wb.updateSheet({ ...next, cells: cells2 }, [lone]);

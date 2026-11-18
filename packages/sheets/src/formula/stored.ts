@@ -2,6 +2,7 @@
 // other sheets at their id), so inserting, moving and sorting rows never rewrites a cell, and a write sent before
 // someone else's layout change still lands where its writer meant. People see and type A1; this file converts.
 import { columnLetters } from '../address';
+import { AST_SHAPES_MAX } from '../limits';
 import { layoutIndex } from '../layout';
 import type { SheetLayout, StoredFormula, StoredRef } from '../sheet';
 import type { A1Ref, Node } from './ast';
@@ -201,16 +202,19 @@ export function renderFormula(stored: StoredFormula, ctx: SheetsCtx): string {
   return out;
 }
 
-const AST_CACHE = new WeakMap<StoredFormula, Node | null>();
+// Trees by template text: a formula's shape (docs/specs/029-sheets/performance.md "Held in memory"). Formulas of
+// one shape share one tree, as a reference is only its `@n` there; the oldest shape goes past AST_SHAPES_MAX.
+const AST_BY_SHAPE = new Map<string, Node | null>();
 
-// The template's tree, parsed once per stored formula (stored formulas are never mutated). Null when the template
-// cannot be read (only a hand-made or corrupted one): it evaluates to #ERROR!.
+// The template's tree, parsed once per shape (trees are never mutated). Null when the template cannot be read (only
+// a hand-made or corrupted one): it evaluates to #ERROR!.
 export function storedAst(stored: StoredFormula): Node | null {
-  let ast = AST_CACHE.get(stored);
+  let ast = AST_BY_SHAPE.get(stored.t);
   if (ast === undefined) {
     const parsed = parseFormula(stored.t, true);
     ast = parsed.ok ? parsed.ast : null;
-    AST_CACHE.set(stored, ast);
+    if (AST_BY_SHAPE.size >= AST_SHAPES_MAX) AST_BY_SHAPE.delete(AST_BY_SHAPE.keys().next().value!);
+    AST_BY_SHAPE.set(stored.t, ast);
   }
   return ast;
 }

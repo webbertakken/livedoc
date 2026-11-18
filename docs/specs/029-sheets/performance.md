@@ -50,6 +50,36 @@ the opening budgets are tightened in that change.
 - A 50,000-cell Sheet tab: 5.7 s to its first values (seeded through the api), 60 fps scrolling, 73 MB of heap;
   the engine evaluates 50,000 cells in about 250 ms and holds about 350 bytes a cell (verified, measured;
   [Recalculation research](../../research/sheets-open-standard/recalculation.md)).
+- Before the compact store, a number cell held about 150 bytes and a formula cell about 400 in the sheet's Map, and
+  the engine about 770 more for each formula worked out (verified, measured in Node at 200,000 cells).
+
+## Held in memory
+
+A sheet's cells live in a compact store, the same in the editor, the api and the MCP worker (default):
+
+- **Typed columns**: each filled cell is a slot holding its kind, its number, its style and its row and column, in
+  typed arrays; text is held as strings beside them, and a formula as integers in its page (its shape, then its
+  references' ids), or as given when a reference names another sheet or keeps positions.
+- **Interned**: row and column ids, styles and formula texts are held once each, however many cells name them.
+- **Copy on write by pages**: a sheet's next version shares every page of 4,096 slots with the one before but those
+  its write touched, so a write costs the same at 50 cells as at 20 million, and undo keeps the version before.
+- **Formulas shared by shape**: a formula's shape is its text with each reference taken out; formulas of one shape
+  are parsed once, so a filled-down column holds one parse.
+- **The order kept**: cells read back in the order they were first written, as before.
+
+| Measure (1 million cells, 100,000 rows of 10 columns)   | Budget             | Measured (Node, 2026-11-18) |
+| ------------------------------------------------------- | ------------------ | --------------------------- |
+| Held a number cell, in the store                        | 60 bytes           | 46 bytes                    |
+| Held a filled-down formula cell of up to two references | 120 bytes          | 76 bytes                    |
+| One cell written into the next version of the sheet     | Under 1 ms of CPU  | 30 µs                       |
+| Loading the cells from their stored rows                | Under 1.5 s of CPU | 0.7 s                       |
+
+Measured in Node, whose pointers are 8 bytes; a browser's are 4, so a page holds less (inferred).
+`packages/sheets/src/cells/cell-map.perf.test.ts` holds the bytes and the write (the write at four times in CI); the load is
+held as growth, ten times the cells under thirty times the time, as coverage on a CI runner bends an absolute budget.
+
+The engine's own values and dependencies are measured apart, and come down with the recalculation engine
+([Recalculation research](../../research/sheets-open-standard/recalculation.md)).
 
 ## Rules
 

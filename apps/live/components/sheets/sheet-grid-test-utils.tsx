@@ -12,6 +12,7 @@ import {
   type Sheet,
   type SheetLayout,
   type SheetWrite,
+  CellMap,
 } from '@livedoc/sheets';
 import { planPalette } from '@/components/plan/plan-palette';
 import {
@@ -124,7 +125,7 @@ function initialSheet(id: string, o: MountOptions): Sheet {
     tabId: TAB_ID,
     title: o.title ?? 'Sheet 1',
     layout,
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: 0,
     updatedAt: 0,

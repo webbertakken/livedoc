@@ -1,5 +1,5 @@
 // A small Budget sheet for the Sheet Chart tests (docs/specs/026-plan/plan-tabs.md "Sheet Chart").
-import { Workbook, cellKey, type Sheet } from '@livedoc/sheets';
+import { CellMap, Workbook, cellKey, type Sheet } from '@livedoc/sheets';
 import type { SheetRead } from './useSheetReader';
 
 export const SHEET_ID = 'sheetAAAA';
@@ -13,7 +13,7 @@ export function budgetSheet(): Sheet {
     tabId: 'sheet-tab',
     title: 'Budget',
     layout: { rows: ROWS, cols: COLS },
-    cells: new Map([
+    cells: CellMap.from([
       [cellKey('row0a', 'colAa'), cell('Item')],
       [cellKey('row0a', 'colBa'), cell('Spent')],
       [cellKey('row1a', 'colAa'), cell('Rent')],

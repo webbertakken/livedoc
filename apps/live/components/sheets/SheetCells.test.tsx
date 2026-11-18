@@ -12,6 +12,7 @@ import {
   type CellFormat,
   type Sheet,
   type SheetLayout,
+  CellMap,
 } from '@livedoc/sheets';
 import { planPalette } from '@/components/plan/plan-palette';
 import { SheetCells, fitNumber, fontPx, roughWidth } from './SheetCells';
@@ -48,7 +49,7 @@ function sheetOf(
     tabId: 't1',
     title: 'Sheet 1',
     layout,
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: 0,
     updatedAt: 0,

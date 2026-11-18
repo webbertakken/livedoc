@@ -1,6 +1,6 @@
 // A sheet as JSON (the wire, the offline record, the Drive file): cells as a list, since a Map is not JSON.
+import { CellMap } from './cells/cell-map';
 import {
-  cellKey,
   splitCellKey,
   type Cell,
   type CellFormat,
@@ -48,11 +48,11 @@ export function sheetToJson(sheet: Sheet): SheetJson {
   };
 }
 
-export function cellsFromJson(cells: readonly SheetCellJson[]): Map<string, Cell> {
-  const out = new Map<string, Cell>();
+export function cellsFromJson(cells: readonly SheetCellJson[]): CellMap {
+  const out = CellMap.sized(cells.length);
   for (const x of cells) {
     if (!x.i && !x.f) continue;
-    out.set(cellKey(x.r, x.c), { ...(x.i ? { input: x.i } : {}), ...(x.f ? { format: x.f } : {}) });
+    out.setCell(x.r, x.c, x.i || undefined, x.f || undefined);
   }
   return out;
 }

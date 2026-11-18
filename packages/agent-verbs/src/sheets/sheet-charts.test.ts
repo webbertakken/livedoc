@@ -9,6 +9,7 @@ import {
   posRangeOf,
   templateTints,
   type Sheet,
+  CellMap,
 } from '@livedoc/sheets';
 import {
   anchorAt,
@@ -33,7 +34,7 @@ function book() {
       hiddenRows: [layout.rows[1]!],
       hiddenCols: [layout.cols[6]!],
     },
-    cells: new Map(),
+    cells: new CellMap(),
     rev: 0,
     createdAt: 0,
     updatedAt: 0,

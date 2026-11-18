@@ -9,6 +9,7 @@ export * from './workbook/workbook-model';
 export * from './ids';
 export * from './address';
 export * from './sheet';
+export { CellMap } from './cells/cell-map';
 export * from './sheet-json';
 export * from './layout';
 export * from './dates';
