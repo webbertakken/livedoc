@@ -3,7 +3,8 @@
 // downloads". What the early path asks, in what order, and as whom: always the requests the editor would make.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { guest, offline, identity } = vi.hoisted(() => ({
+const { guest, offline, identity, kinds } = vi.hoisted(() => ({
+  kinds: { loadKindFamiliesFor: vi.fn(async (_elements: unknown[], _reason: string) => {}) },
   guest: { ensureSignedGuestIdentity: vi.fn(async () => ({ id: 'g1', sig: 'sig1' })) },
   offline: { isOfflineId: vi.fn(async (_id: string) => false) },
   identity: { getGuestSelfSig: vi.fn((): string | null => 'sig1') },
@@ -11,6 +12,7 @@ const { guest, offline, identity } = vi.hoisted(() => ({
 vi.mock('@/lib/guest-identity', () => guest);
 vi.mock('@/lib/offline/offline-ids', () => offline);
 vi.mock('@/lib/local-identity', () => identity);
+vi.mock('@/lib/element-kinds/load-for', () => kinds);
 
 import { askEarlyDocumentReads } from './early-document-reads';
 import { openEarlyReads, resetEarlyReadsForTests, takeEarlyRead } from '@/lib/api/early-reads';
@@ -64,6 +66,7 @@ beforeEach(() => {
   setSessionSharePassword(null);
   localStorage.clear();
   guest.ensureSignedGuestIdentity.mockClear();
+  kinds.loadKindFamiliesFor.mockClear();
   offline.isOfflineId.mockResolvedValue(false);
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -212,5 +215,49 @@ describe('askEarlyDocumentReads', () => {
     await expect(
       askEarlyDocumentReads({ accountId: 'acct_1', href: `${ORIGIN}/document/d1` }),
     ).resolves.toBeUndefined();
+  });
+});
+
+// "At the open": the families the opened tab's elements belong to load while the editor's code downloads.
+describe('the opened tab’s element kind families', () => {
+  const elements = [{ id: 'e1', type: 'shape', shape: 'reveal' }];
+
+  it('start from the tab a share link’s open read carries', async () => {
+    serve({
+      '/api/share/c1': json({
+        document: doc('owner'),
+        role: 'participate',
+        tabId: null,
+        openedTab: { id: 't1', elements },
+        reader: null,
+      }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/shared?s=c1` });
+    expect(kinds.loadKindFamiliesFor).toHaveBeenCalledWith(elements, 'open');
+  });
+
+  it('start from the tab an owner’s open read carries', async () => {
+    serve({
+      '/api/documents/d1': json({ document: doc('g1'), openedTab: { id: 't1', elements } }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(kinds.loadKindFamiliesFor).toHaveBeenCalledWith(elements, 'open');
+  });
+
+  it('start from the first tab’s own read when the open read carries none', async () => {
+    serve({
+      '/api/documents/d1': json({ document: doc('g1') }),
+      '/api/documents/d1/tabs/t1': json({ tab: { id: 't1', elements } }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(kinds.loadKindFamiliesFor).toHaveBeenCalledWith(elements, 'open');
+  });
+
+  it('start nothing from a tab without elements or a read that failed', async () => {
+    serve({ '/api/documents/d1': json({ document: doc('g1'), openedTab: null }) });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    serve({ '/api/documents/d1': json({ document: doc('g1') }) });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(kinds.loadKindFamiliesFor).not.toHaveBeenCalled();
   });
 });

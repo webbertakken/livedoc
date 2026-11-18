@@ -6,6 +6,7 @@ import { setSessionSharePassword } from '@/lib/api-client';
 import { ensureIconCatalogs } from '@/lib/icon-registry';
 import { DOCUMENT_CONTENT_CODE, EDITOR_SURFACE_CODE } from '@/lib/editor-deferred-code';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
+import { useKindFamilies } from '@/lib/element-kinds/useKindFamilies';
 import {
   useWorkbenchSession,
   type WorkspaceFrameHooks,
@@ -81,6 +82,8 @@ export default function LivePage({ surface = 'app' }: { surface?: EditorSurface 
     () => (state.loadingDocument ? undefined : prefetchWhenIdle(EDITOR_SURFACE_CODE)),
     [state.loadingDocument],
   );
+  // Every element kind family, once the board is in (lib/element-kinds).
+  useKindFamilies(state.loadingDocument);
   // Leaving a document (another document, the Explorer) flushes its pending
   // Google Drive write (docs/specs/022-drive-mirror/drive-mirror.md, "Cadence").
   useEffect(() => {

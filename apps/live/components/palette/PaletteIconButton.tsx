@@ -124,6 +124,8 @@ type IconButtonProps = {
   // The tile's action: its glyph previews the tab's finish (palette-tile-finish.ts). Omitted for a button that
   // places nothing (a tool).
   finishAction?: PaletteTileDef['action'];
+  // Pointing at or focusing the tile: a head start on what its press needs (an element kind family's code).
+  onIntent?: () => void;
 };
 
 export function IconButton({
@@ -148,6 +150,7 @@ export function IconButton({
   noTint,
   shortcutAlwaysVisible,
   finishAction,
+  onIntent,
 }: IconButtonProps) {
   // A reason greys the tile out as `disabled` does, but keeps it focusable so the reason can be read.
   const refused = !!disabledReason && !disabledProp;
@@ -207,6 +210,8 @@ export function IconButton({
     <button
       type="button"
       onClick={refused ? undefined : onClick}
+      onPointerEnter={onIntent}
+      onFocus={onIntent}
       aria-label={label}
       aria-pressed={active}
       aria-disabled={refused || undefined}

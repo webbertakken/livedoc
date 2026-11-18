@@ -8,6 +8,16 @@ vi.mock('@/lib/api-client', () => ({
   apiLoadTabRevisioned: (...a: Parameters<typeof apiLoadTab>) => apiLoadTab(...a),
 }));
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
+// The families' loads, settled by the test, so the gate's wait is seen.
+const kinds = vi.hoisted(() => ({ hold: false, release: () => {}, asked: [] as unknown[][] }));
+vi.mock('@/lib/element-kinds/load-for', () => ({
+  loadKindFamiliesFor: (...args: unknown[]) => {
+    kinds.asked.push(args);
+    return kinds.hold
+      ? new Promise<void>((resolve) => (kinds.release = resolve))
+      : Promise.resolve();
+  },
+}));
 
 import { makeSeedFetchedDocument } from './seed-fetched-document';
 
@@ -34,12 +44,17 @@ const fetched = {
   templateFamily: null,
 } satisfies LiveDoc;
 
-function seed(recordOpen: boolean, noteChangesetSeen = vi.fn(), setDocumentWorkbook = vi.fn()) {
+function seed(
+  recordOpen: boolean,
+  noteChangesetSeen = vi.fn(),
+  setDocumentWorkbook = vi.fn(),
+  resetTabs = vi.fn(),
+) {
   const noop = vi.fn();
   return makeSeedFetchedDocument({
     activeId: 't1',
     recordOpen,
-    resetTabs: noop,
+    resetTabs,
     lastSavedTabsRef: { current: [] },
     lastSavedNameRef: { current: '' },
     loadedTabIdsRef: { current: new Set() },
@@ -112,5 +127,24 @@ describe('seedFetchedDocument with the tab the open read carried', () => {
     const opened = { tab: { id: 't9', name: 'Other', elements: [] }, rev: 1 };
     await seed(true)('me', fetched, null, null, opened);
     expect(apiLoadTab).toHaveBeenCalledWith('me', 'd1', 't1', null, { open: true });
+  });
+});
+
+// docs/specs/016-platform/web-performance.md "At the open": the board draws every element with its own face in its
+// first frame, so the first tab is put in place only once its element kind families are in.
+describe('seedFetchedDocument and element kind families', () => {
+  it('puts the first tab in place once its families are in', async () => {
+    const elements = [{ id: 'e1', type: 'shape', shape: 'reveal' }];
+    apiLoadTab.mockResolvedValue({ tab: { id: 't1', name: 'Tab 1', elements }, rev: 1 } as never);
+    const resetTabs = vi.fn();
+    kinds.hold = true;
+    kinds.asked.length = 0;
+    const seeding = seed(true, vi.fn(), vi.fn(), resetTabs)('me', fetched, null, null);
+    await vi.waitFor(() => expect(kinds.asked).toEqual([[elements, 'tab']]));
+    expect(resetTabs).not.toHaveBeenCalled();
+    kinds.release();
+    kinds.hold = false;
+    await seeding;
+    expect(resetTabs).toHaveBeenCalledTimes(1);
   });
 });

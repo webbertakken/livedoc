@@ -83,6 +83,7 @@ import { BrowserChrome } from '@/components/canvas/boxed-element-overlays';
 
 import type { BoxedElementViewProps } from './BoxedElementView.types';
 import { isPanThrough } from '@/hooks/canvas/pan-through';
+import { useKindFamilyReady } from '@/lib/element-kinds/react';
 
 // Wrapped in React.memo at the export below: with id-bearing
 // callbacks the parent passes a single stable function per kind
@@ -936,4 +937,10 @@ function BoxedElementViewImpl({
 // commitTabs return new arrays only when something actually
 // changed), every other prop is a primitive or an id-bearing
 // callback that the parent keeps stable.
-export const BoxedElementView = memo(BoxedElementViewImpl);
+//
+// An element of a kind family draws only once its family is in (docs/specs/016-platform/web-performance.md "An
+// element kind's code loads with the board that holds it"): the open waits for the opened tab's families, so this
+// holds back only an element that arrived before its family (a peer's, a paste), until the family lands.
+export const BoxedElementView = memo(function BoxedElementView(props: BoxedElementViewProps) {
+  return useKindFamilyReady(props.element) ? <BoxedElementViewImpl {...props} /> : null;
+});

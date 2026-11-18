@@ -7,7 +7,7 @@ import {
   type SetStateAction,
 } from 'react';
 import type { Tab } from '@livedoc/document';
-import { apiLoadTabRevisioned } from '@/lib/api-client';
+import { loadTabWithKindFamilies } from '@/lib/element-kinds/load-tab';
 import { isTabOutOfScope } from '@/lib/tab-scope';
 import { track } from '@/lib/telemetry';
 import { startEditorTiming } from '@/lib/timing';
@@ -197,7 +197,7 @@ export function usePerTabLoad(opts: {
     // How long the switch took (docs/specs/017-telemetry/timing-telemetry.md): the fetch to the first
     // frame with the content in place. Only the loads that count Tab·Loaded; a failure records nothing.
     const timing = startEditorTiming('TabLoad');
-    const run = apiLoadTabRevisioned(selfId, documentId, targetId, sessionShareCode)
+    const run = loadTabWithKindFamilies(selfId, documentId, targetId, sessionShareCode)
       .then((loaded): TabFetchEnd => {
         if (cancelled) return 'cancelled';
         if (!loaded) {
@@ -322,7 +322,7 @@ export function usePerTabLoad(opts: {
       const sweep = pending.map((targetId) => {
         const run = (async (): Promise<TabFetchEnd> => {
           try {
-            const loaded = await apiLoadTabRevisioned(
+            const loaded = await loadTabWithKindFamilies(
               selfId,
               documentId,
               targetId,

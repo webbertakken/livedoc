@@ -172,9 +172,10 @@ alongside the editor's code, so a template link waits for nothing extra.
 `apps/live/lib/editor-deferred-code.ts` names every module the editor loads on demand, so a surface's
 `next/dynamic` and the prefetch below share one import:
 
-- **Content a board may draw on open**: Pages mode's pages and their writing, the Draw dock, tables,
-  facilitation panels, sequence diagrams and the Map. Fetched as the editor mounts (`prefetchWhenIdle`), alongside the document
-  request, so a board that has one finds its code already in, while the first load does not carry it.
+- **Content a board may draw on open**: Pages mode's pages and their writing, the Draw dock, tables, sequence
+  diagrams and the Map. Fetched as the editor mounts (`prefetchWhenIdle`), alongside the document request, so a
+  board that has one finds its code already in, while the first load does not carry it. An element kind's own face
+  (facilitation panels among them) loads with its family instead (below).
 - **Surfaces someone opens**: the Explorer and Layers popovers (mounted from their first opening on,
   then kept, so their state survives), search, the quick style panel, the tool panels, presenting and
   session settings, and the landing of another tool's board (`lib/board-scene/land`, `lib/board-scene-import`)
@@ -204,8 +205,10 @@ alongside the editor's code, so a template link waits for nothing extra.
 Most of the document page's first load is the long tail of element kinds: each kind's face, its behaviours and its
 share of the model's switches, whatever the board holds. A **kind family** is the unit that loads on demand: the
 kinds that share their code (mind maps; pages and articles; charts, Sankey and dashboards; collaboration panels;
-session controls; office furniture and seating; wireframes; web components; concepts; entities; sketches; Event
-Storming). The plain diagram kinds (shapes, text, arrows, notes, images, pen strokes) are the base and always load.
+session controls; office furniture and seating; wireframes; web components; embeds (videos and link cards);
+concepts; entities; sketches; Event Storming). The plain diagram kinds (shapes, text, arrows, notes, images, pen
+strokes, and the diagram furniture: badges, steps, boundaries, keys) are the base and always load. Which family a
+kind belongs to follows the palette's grouping: the Behaviour tiles are session controls (default).
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
@@ -214,15 +217,21 @@ Storming). The plain diagram kinds (shapes, text, arrows, notes, images, pen str
 - **At the open.** The open read carries the opened tab ("The open is one read"), so the early reads ask for the
   families its elements belong to as soon as it arrives, alongside the editor's own code. The board's first paint
   waits for them: a board draws every element with its own face in its first frame, never a placeholder that a
-  face later replaces.
+  face later replaces. It waits for them to settle, loaded or failed, with no time limit of its own: a chunk fetch
+  ends by itself (default).
 - **Another tab.** Opening a tab loads the families its elements need before it draws, from the tab's own read.
 - **From the palette.** Pointing at or focusing a palette entry fetches its family; a press places the element
-  once its family is in, so an element is never placed without its face.
+  (or arms its tool) once its family is in, so an element is never placed without its face. A press whose family
+  cannot load places nothing (default).
 - **Once the board has settled.** Every remaining family is fetched when the opened board has rendered and the page
   is idle (`prefetchWhenIdle`), so a paste, a template, a peer's new element or going offline later finds them in.
   An element that arrives before its family (a peer's, in a session's first seconds) draws when its family is in.
-- **When a family cannot load** (offline before it was fetched), the elements of that family draw nothing and the
-  load-error card offers a retry; the rest of the board works.
+  A prefetch that fails is forgotten rather than shown; the family is asked again when something needs it (default).
+- **When a family cannot load** (offline before it was fetched), the elements of that family draw nothing and a
+  notice at the top of the board, "Part of this board couldn’t load." with Retry, shows while a load something
+  waited for has failed (default), and retries by itself once the connection is back; the rest of the board works.
+  A family that cannot load because a newer build is live recovers as any other chunk does
+  ([Stale builds](stale-builds.md)).
 - `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if a family's modules are reachable from the
   first load again; `scripts/first-load-why.mjs` names the chain of imports that brought one back.
 

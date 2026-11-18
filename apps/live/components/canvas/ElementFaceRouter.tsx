@@ -1,7 +1,6 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { TabWindowFace } from './tab-window/TabWindowFace';
 import type { CSSProperties, ReactNode } from 'react';
 import { BORDER_STROKE_PX, DEFAULT_BORDER_STROKE } from '@livedoc/document';
 import {
@@ -30,44 +29,50 @@ import {
 import { AnnotationGlyph } from '@/components/canvas/AnnotationMarker';
 import { ElementSettingsButton } from '@/components/canvas/ElementEllipsisMenu';
 import { CollabSettingsSlot } from '@/components/canvas/collab/collab-chrome';
-import { CommentPanelFace } from '@/components/canvas/CommentPanelFace';
-import { ArticleNoteFace } from '@/components/canvas/article/ArticleNoteFace';
-import { ActionPanelFace } from '@/components/canvas/ActionPanelFace';
 import { FreehandSvg } from '@/components/canvas/boxed-element-overlays';
 import { PathSvg } from '@/components/canvas/path/PathSvg';
 import { ImageElementView } from '@/components/canvas/ImageElementView';
-import { LinkCardView } from '@/components/canvas/LinkCardView';
-import { ModeButtonFace } from '@/components/canvas/ModeButtonFace';
 import { PARTICIPANT_CANVAS_TOOLS } from '@/components/palette/palette-layouts';
-import { PageMasthead } from '@/components/canvas/PageMasthead';
-import { FocusButtonFace } from '@/components/canvas/FocusButtonFace';
-import { PickerFace } from '@/components/canvas/PickerFace';
-import { PortalFace } from '@/components/canvas/PortalFace';
-import { ReactionPadFace } from '@/components/canvas/ReactionPadFace';
-import { RevealFace } from '@/components/canvas/RevealFace';
-import { SessionButtonFace } from '@/components/canvas/SessionButtonFace';
-import { SessionTimerFace } from '@/components/canvas/SessionTimerFace';
 import { ShapeInlineIconLayout } from '@/components/canvas/shape-inline-icon-layout';
 import { InsetContent } from '@/components/canvas/InsetContent';
 import type { ContentInset } from '@/components/canvas/useIndicatorLayout';
-import { loadCollabFaceRouter, loadSequenceFace, loadTableView } from '@/lib/editor-deferred-code';
-import { VideoView } from '@/components/canvas/VideoView';
-import { HeroCaptionCard } from '@/components/canvas/web/HeroCaptionCard';
+import { loadSequenceFace, loadTableView } from '@/lib/editor-deferred-code';
+import { familyFace } from '@/lib/element-kinds/react';
 import { ChipFace } from '@/components/canvas/ChipFace';
-import { PersonNodeFace } from '@/components/canvas/PersonNodeFace';
 import { DiagramKeyFace } from '@/components/canvas/DiagramKeyFace';
 import { BoundaryFace } from '@/components/canvas/BoundaryFace';
-import { ConceptFace } from '@/components/canvas/ConceptFace';
-import { WebComponentFace } from '@/components/canvas/web/WebComponentFace';
 import type { BoxedElementViewProps } from './BoxedElementView.types';
 import { useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
 
-// Tables, facilitation panels and sequence diagrams are on few boards, so their faces load on demand; their code
-// is fetched as the editor mounts (lib/editor-deferred-code.ts), so a board that has one finds it already in. A
-// sequence diagram's face is the SVG renderer's picture, which keeps the renderer out of the first load.
+// Tables and sequence diagrams are on few boards, so their faces load on demand; their code is fetched as the
+// editor mounts (lib/editor-deferred-code.ts), so a board that has one finds it already in. A sequence diagram's
+// face is the SVG renderer's picture, which keeps the renderer out of the first load.
 const TableView = dynamic(loadTableView, { ssr: false });
-const CollabFaceRouter = dynamic(loadCollabFaceRouter, { ssr: false });
 const SequenceFace = dynamic(loadSequenceFace, { ssr: false });
+
+// The faces of the kind families (docs/specs/016-platform/web-performance.md "An element kind's code loads with the
+// board that holds it"): each family loads with the board that holds it, and BoxedElementView draws an element only
+// once its family is in, so these read it synchronously and draw in the element's first frame.
+const ModeButtonFace = familyFace('session-controls', 'ModeButtonFace');
+const SessionTimerFace = familyFace('session-controls', 'SessionTimerFace');
+const SessionButtonFace = familyFace('session-controls', 'SessionButtonFace');
+const FocusButtonFace = familyFace('session-controls', 'FocusButtonFace');
+const RevealFace = familyFace('session-controls', 'RevealFace');
+const PickerFace = familyFace('session-controls', 'PickerFace');
+const ReactionPadFace = familyFace('session-controls', 'ReactionPadFace');
+const PortalFace = familyFace('session-controls', 'PortalFace');
+const TabWindowFace = familyFace('session-controls', 'TabWindowFace');
+const CollabFaceRouter = familyFace('collab-panels', 'CollabFaceRouter');
+const CommentPanelFace = familyFace('collab-panels', 'CommentPanelFace');
+const ActionPanelFace = familyFace('collab-panels', 'ActionPanelFace');
+const PageMasthead = familyFace('pages-articles', 'PageMasthead');
+const ArticleNoteFace = familyFace('pages-articles', 'ArticleNoteFace');
+const ConceptFace = familyFace('concepts', 'ConceptFace');
+const WebComponentFace = familyFace('web-components', 'WebComponentFace');
+const HeroCaptionCard = familyFace('web-components', 'HeroCaptionCard');
+const PersonNodeFace = familyFace('mind-maps', 'PersonNodeFace');
+const VideoView = familyFace('embeds', 'VideoView');
+const LinkCardView = familyFace('embeds', 'LinkCardView');
 
 // WHAT AN ELEMENT SHOWS IN PLACE OF A PLAIN LABEL.
 //

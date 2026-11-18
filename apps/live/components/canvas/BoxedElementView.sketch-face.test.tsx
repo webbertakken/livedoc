@@ -1,8 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, afterEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { createShape, type BoxedElement } from '@livedoc/document';
 import { BoxedElementView } from '@/components/canvas/BoxedElementView';
+
+// Every element kind family in, as the editor has them once the board is open (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // docs/specs/008-canvas/finish.md "Every other face is drawn by hand too" and "Lettering", through the real element
 // view: a face is split into its hand-drawn ink and its crisp words only under Sketch, and every word on an element

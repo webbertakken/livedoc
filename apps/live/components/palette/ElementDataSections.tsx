@@ -35,6 +35,7 @@ import {
   RATING_DEFAULT,
   DEFAULT_BUTTON_MODE,
   SELECTION_MODES,
+  SELECTION_MODE_LABEL,
   type ChecklistItem,
   type EntityField,
   type LegendItem,
@@ -50,7 +51,6 @@ import {
   SelectIcon,
   SpotlightIcon,
 } from '@/components/palette/palette-icons';
-import { MODE_LABEL } from '@/components/canvas/ModeButtonFace';
 import { ProgressMenuGlyph, ToolsMenuGlyph } from '@/components/palette/context-menu-icons';
 import { MenuAccordionSection } from '@/components/primitives/PortalMenu';
 import { MindMapMenuSections } from './MindMapMenuSections';
@@ -616,7 +616,7 @@ export function ElementDataSections({
                   <MenuTile
                     key={mode}
                     icon={MODE_TILE_ICON[mode]}
-                    label={MODE_LABEL[mode]}
+                    label={SELECTION_MODE_LABEL[mode]}
                     active={(shapeTarget?.mode ?? DEFAULT_BUTTON_MODE) === mode}
                     onClick={() => props.onSetButtonMode(mode)}
                   />
