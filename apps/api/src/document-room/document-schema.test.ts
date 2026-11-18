@@ -59,6 +59,28 @@ describe('the room schema', () => {
     expect(DOCUMENT_SCHEMA_VERSION).toBe(DOCUMENT_SCHEMA_STEPS.length);
   });
 
+  // docs/specs/029-sheets/sheet-store.md "In a spreadsheet": an upgraded room keeps its cells, each with no style yet.
+  it('gives an upgraded room the styles table, its cells kept', () => {
+    const { db, run } = room();
+    for (const step of DOCUMENT_SCHEMA_STEPS.slice(0, 3)) db.exec(step);
+    db.exec(
+      'CREATE TABLE _document_schema (version INTEGER NOT NULL); INSERT INTO _document_schema VALUES (3)',
+    );
+    db.exec(`INSERT INTO document (id, saved_at, created_at) VALUES ('d', 0, 0);
+      INSERT INTO sheets (document_id, id, tab_id, title, layout, rev, created_at, updated_at, updated_by)
+        VALUES ('d', 's', 't', 'S', '{}', 0, 0, 0, '{}');
+      INSERT INTO sheet_cells (document_id, sheet_id, row_id, col_id, input, format)
+        VALUES ('d', 's', 'r', 'c', '{"n":1}', '{"b":true}');`);
+    expect(migrateDocumentSchema(run)).toEqual({ from: 3, to: DOCUMENT_SCHEMA_VERSION });
+    expect(tables(db)).toContain('sheet_styles');
+    expect({ ...(db.prepare('SELECT format, style_id FROM sheet_cells').get() as object) }).toEqual(
+      {
+        format: '{"b":true}',
+        style_id: null,
+      },
+    );
+  });
+
   it('is idempotent', () => {
     const { db, run } = room();
     migrateDocumentSchema(run);

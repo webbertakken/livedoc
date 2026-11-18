@@ -6,6 +6,7 @@
 import { remapTabLinks, type Element } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { workbookFromRow, type WorkbookRow } from '../db/workbook';
+import { cellFormatSql, styleCellsStatements } from '../db/sheet-styles';
 import { itemIdsShownOnTab, type TabItemElement } from '@livedoc/items';
 import { redactTabDataAuthors } from '../comments';
 import { imageRefIdsFromData } from '../image-refs/extract';
@@ -186,7 +187,7 @@ export async function exportDocumentCopy(
       .bind(documentId, tabIds),
     db
       .prepare(
-        `SELECT c.sheet_id, c.row_id, c.col_id, c.input, c.format
+        `SELECT c.sheet_id, c.row_id, c.col_id, c.input, ${cellFormatSql('c')} AS format
            FROM sheet_cells c JOIN sheets s ON s.document_id = c.document_id AND s.id = c.sheet_id
           WHERE c.document_id = ? AND s.tab_id IN (SELECT value FROM json_each(?))`,
       )
@@ -335,6 +336,8 @@ export async function importDocumentCopy(
         .bind(documentId, cell.sheet_id, cell.row_id, cell.col_id, cell.input, cell.format),
     );
   }
+  // A copy's cells carry their formats; in a spreadsheet copy they become its own styles.
+  if (copy.cells.length > 0) stmts.push(...styleCellsStatements(env, documentId, null));
   // After the sheets, so the reference triggers find them referenced.
   for (const ref of copy.sheetRefs) {
     const tabId = tabIdMap.get(ref.tabId);
