@@ -60,7 +60,7 @@ One tab holds the whole workbook (S1, proposed: [Workbook shape](../../research/
 
 - **New**, in the Explorer's new document menu and on Home: **Spreadsheet** makes a document with one workbook tab
   holding one empty sheet, **Sheet1**, 1,000 rows by 26 columns, as Google Sheets starts (default), and opens it with
-  A1 selected. It is born in ODF 1.4 (C5, default).
+  A1 selected. It is born in ODF 1.4, `.ods` (C5, ruled 2026-11-18): no setting chooses otherwise; converting is how one becomes XLSX.
 - **From a template**: the spreadsheet templates ([Templates](templates.md)) make a spreadsheet already filled.
 - **Open a file**: an `.ods`, `.fods`, `.xlsx`, `.csv` or `.tsv` dropped on the Explorer or picked in its Import
   makes a spreadsheet of it ([Files and print](files-and-print.md)). An `.ods`, `.fods` or `.xlsx` keeps its file
@@ -96,7 +96,8 @@ C4 (ruled 2026-11-18: keep them): what Plan reads from a sheet is kept and re-ho
   validation, format rules, comments and charts carry over ([Migration](migration.md)).
 - A Dashboard slot and a form's responses that read a Sheet read the same sheet of the workbook, in this document
   or another one the reader may open ([Plan's links](plan-links.md)).
-- Card tables and the `CARD` functions are kept and re-homed the same way (C6, default).
+- The `CARD` functions are kept and re-homed the same way; the two-way card table is removed (C6, ruled
+  2026-11-18: functions only), its stored rows left as the plain cells they last showed (default).
 
 ## Who may do what
 

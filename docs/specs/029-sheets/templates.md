@@ -8,7 +8,7 @@ The finished spreadsheets a person starts from, as Google Sheets' template galle
   Loan Calculator, Tracker, Timesheet, Sales Pipeline, Inventory, Threat Register, Driver Model, Value Stream,
   Contacts, Guest List, Grade Book, Habit Tracker, each with its example data, formulas, look and chart, grouped as
   Money, Work, and People and Life.
-- Each makes a **spreadsheet** of one sheet (named as today), in the born-in file format (C5, default ODF), its chart
+- Each makes a **spreadsheet** of one sheet (named as today), born in ODF (C5), its chart
   a chart of the workbook ([Charts](charts.md)). Dates are reckoned from the moment it is made, as today.
 - They show in the Explorer's new document menu under **Spreadsheet › From a Template**, and in the template gallery
   with their previews (`@livedoc/template-previews`).

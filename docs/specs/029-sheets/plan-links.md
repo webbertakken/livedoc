@@ -3,7 +3,7 @@
 **Status: specified.** Nothing is built.
 
 What Plan reads from or writes to a sheet, re-homed onto the [spreadsheet](spreadsheet.md) (C4, ruled 2026-11-18:
-keep them; card tables are C6, default kept).
+keep them; C6, ruled 2026-11-18: the card functions only).
 
 ## Reading a sheet from another document
 
@@ -34,12 +34,18 @@ keep them; card tables are C6, default kept).
 - Rows are appended as today ([Forms](../030-forms/forms.md)), by the api with the form's access, never the
   responder's.
 
-## Card tables and the `CARD` functions
+## The `CARD` functions
 
-C6 (default: kept): a card table links rows of a sheet to cards of **one document's** item store, named on the
-table; a workbook tab in the same document links its own cards as today, and a spreadsheet links another
-document's cards with an Editor's access to both. `CARD`, `CARDS`, `CARDCOUNT` and `CARDSUM` read the linked
-document's items. No card table code is written before C6 is ruled.
+C6 (ruled 2026-11-18: functions only):
+
+- `CARDCOUNT`, `CARDSUM`, `CARD` and `CARDS` stay ([Formulas](formulas.md#plan-cards)) and read the cards of the
+  document the workbook tab is in, live, as today; a spreadsheet of its own has no cards, so they read `#REF!`
+  ("This spreadsheet has no cards") until a later spec lets them name another document.
+- In a file each is written by S5's convention with its cached value, in both formats, so other applications show
+  the last value and LiveDoc reads it live again on return.
+- The **card table** is removed: its links, drafts, Save Card and Cancel Changes, the Controls column, Open Card,
+  and the Plan Cards start of Setup Sheet. No file format knows a card table, and a file that leaves and returns
+  edited could trash cards. Stored tables are handled by the [migration](migration.md).
 
 ## Starts and tours
 

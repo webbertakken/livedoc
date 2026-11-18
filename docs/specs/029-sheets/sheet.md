@@ -693,6 +693,9 @@ whole Sheet.
 
 ## Card tables
 
+Removed by the spreadsheet overhaul (C6, ruled 2026-11-18: [Plan's links](plan-links.md#the-card-functions)); until
+then, what ships:
+
 - A sheet set up from Plan Cards holds a **card table** (`layout.cardTables`): its header row, each column's card
   field (by the name the header gave it), which row is which card, and the card type new rows take (the import's
   one card type when filtered to one, else the type most of its cards have). Up to 8 tables a sheet and 2,000

@@ -41,7 +41,7 @@ light of that ruling.
   other. What a format holds that the model does not is kept with the workbook and written back to that format.
 - **A workbook remembers its format** (`.ods`, `.fods` or `.xlsx`): it leaves as it arrived until a person
   converts it, and conversion lists its losses before it runs. The format a spreadsheet made in LiveDoc is born in is
-  C5 (default ODF 1.4).
+  C5, ruled 2026-11-18: ODF.
 - **Formulas in the file's own syntax**: OpenFormula in an ODF file (`of:=SUM([.A1:.B2])`), Excel's grammar in an
   XLSX file (`SUM(A1:B2)`, `_xlfn.` before functions newer than 2007, assumed from Excel's files). The stored
   formula in the room is neither: it is the model's own, by row and column ids, as today.
