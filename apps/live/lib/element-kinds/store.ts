@@ -6,7 +6,7 @@ import {
   type KindFamilyModule,
 } from './families';
 
-// The page's kind families (docs/specs/016-platform/blueprints/element-kinds-on-demand.md "Behaviour and state"):
+// The page's kind families (docs/specs/016-platform/web-performance.md "An element kind's code loads with the board that holds it"):
 // absent, loading, in, or failed. A family is asked for once however many places ask at the same time, is in for
 // the rest of the page once it resolves, and is read synchronously from here only: the board's faces draw in the
 // same frame as the elements they belong to, never through a lazy wrapper that misses it.

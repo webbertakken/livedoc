@@ -57,7 +57,7 @@ const box = (id: string, shape: string, x: number, extra: Record<string, unknown
   ...extra,
 });
 
-// One element of each family the face router draws from (docs/specs/016-platform/blueprints/element-kinds-on-demand.md).
+// One element of each family the face router draws from (docs/specs/016-platform/web-performance.md).
 const BOARD = [
   box('plain', 'square', 40),
   box('session-controls', 'reveal', 240),

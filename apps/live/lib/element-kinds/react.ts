@@ -19,7 +19,7 @@ import {
 const subscribeNothing = () => () => {};
 const always = () => true;
 
-// Whether an element can draw (docs/specs/016-platform/blueprints/element-kinds-on-demand.md "Transitions" 4): a
+// Whether an element can draw (docs/specs/016-platform/web-performance.md "Once the board has settled"): a
 // base element always, a family's once the family is in. One that arrives before its family (a peer's, a paste)
 // asks for it and draws when it lands; only those subscribe, so a base element costs nothing.
 export function useKindFamilyReady(element: Element): boolean {

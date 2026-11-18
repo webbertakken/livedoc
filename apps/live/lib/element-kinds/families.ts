@@ -1,7 +1,6 @@
 // The kind families (docs/specs/016-platform/web-performance.md "An element kind's code loads with the board that
-// holds it"; docs/specs/016-platform/blueprints/element-kinds-on-demand.md): the units of element code that load on
-// demand, one module each. The open path, the palette and the idle prefetch reach a family only through these
-// loaders, so each family is one chunk however many places ask for it.
+// holds it"): the units of element code that load on demand, one module each. The open path, the palette and the
+// idle prefetch reach a family only through these loaders, so each family is one chunk however many places ask.
 
 export const KIND_FAMILY_LOADERS = {
   'session-controls': () => import('./families/session-controls'),

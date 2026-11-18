@@ -1,4 +1,4 @@
-// The session controls family (docs/specs/016-platform/blueprints/element-kinds-on-demand.md): the Behaviour
+// The session controls family (docs/specs/016-platform/web-performance.md): the Behaviour
 // elements' faces. Loaded through the registry (lib/element-kinds), never imported statically.
 export { ModeButtonFace } from '@/components/canvas/ModeButtonFace';
 export { SessionTimerFace } from '@/components/canvas/SessionTimerFace';

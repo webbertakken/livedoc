@@ -1,7 +1,7 @@
 import type { Element, ShapeKind } from '@livedoc/document';
 import type { KindFamilyId } from './families';
 
-// Which family an element belongs to (docs/specs/016-platform/blueprints/element-kinds-on-demand.md "The families"),
+// Which family an element belongs to (docs/specs/016-platform/web-performance.md "An element kind's code loads with the board that holds it"),
 // or null for the base kinds that always load. Plain lists rather than the model's predicates, so the early reads
 // can ask without the model's code; kind-family-of.test.ts holds them to the predicates.
 

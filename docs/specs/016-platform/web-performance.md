@@ -207,8 +207,8 @@ share of the model's switches, whatever the board holds. A **kind family** is th
 kinds that share their code (mind maps; pages and articles; charts, Sankey and dashboards; collaboration panels;
 session controls; office furniture and seating; wireframes; web components; embeds (videos and link cards);
 concepts; entities; sketches; Event Storming). The plain diagram kinds (shapes, text, arrows, notes, images, pen
-strokes, and the diagram furniture: badges, steps, boundaries, keys) are the base and always load. How the families
-are built: [Element kinds on demand](blueprints/element-kinds-on-demand.md).
+strokes, and the diagram furniture: badges, steps, boundaries, keys) are the base and always load. Which family a
+kind belongs to follows the palette's grouping: the Behaviour tiles are session controls (default).
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
@@ -217,16 +217,20 @@ are built: [Element kinds on demand](blueprints/element-kinds-on-demand.md).
 - **At the open.** The open read carries the opened tab ("The open is one read"), so the early reads ask for the
   families its elements belong to as soon as it arrives, alongside the editor's own code. The board's first paint
   waits for them: a board draws every element with its own face in its first frame, never a placeholder that a
-  face later replaces.
+  face later replaces. It waits for them to settle, loaded or failed, with no time limit of its own: a chunk fetch
+  ends by itself (default).
 - **Another tab.** Opening a tab loads the families its elements need before it draws, from the tab's own read.
 - **From the palette.** Pointing at or focusing a palette entry fetches its family; a press places the element
-  once its family is in, so an element is never placed without its face.
+  (or arms its tool) once its family is in, so an element is never placed without its face. A press whose family
+  cannot load places nothing (default).
 - **Once the board has settled.** Every remaining family is fetched when the opened board has rendered and the page
   is idle (`prefetchWhenIdle`), so a paste, a template, a peer's new element or going offline later finds them in.
   An element that arrives before its family (a peer's, in a session's first seconds) draws when its family is in.
+  A prefetch that fails is forgotten rather than shown; the family is asked again when something needs it (default).
 - **When a family cannot load** (offline before it was fetched), the elements of that family draw nothing and a
-  notice at the top of the board offers a retry (and retries by itself once the connection is back); the rest of
-  the board works. A family that cannot load because a newer build is live recovers as any other chunk does
+  notice at the top of the board, "Part of this board couldn’t load." with Retry, shows while a load something
+  waited for has failed (default), and retries by itself once the connection is back; the rest of the board works.
+  A family that cannot load because a newer build is live recovers as any other chunk does
   ([Stale builds](stale-builds.md)).
 - `apps/live/app/document/[id]/document-lazy-load.test.ts` fails if a family's modules are reachable from the
   first load again; `scripts/first-load-why.mjs` names the chain of imports that brought one back.
