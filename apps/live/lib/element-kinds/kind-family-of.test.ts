@@ -8,6 +8,8 @@ import {
   isEntity,
   isEventStormingTab,
   isHandDrawn,
+  isOfficeShape,
+  isSeatingShape,
   ES_BIG_PICTURE_LAYER_ID,
   ES_BOARD_LAYER_ID,
   ES_DESIGN_LAYER_ID,
@@ -66,11 +68,13 @@ describe('kindFamilyOfShape', () => {
               ? 'entities'
               : isWebComponentShape(k)
                 ? 'web-components'
-                : kind === 'mind-node'
-                  ? 'mind-maps'
-                  : isChartShape(k) || isSankeyShape(k)
-                    ? 'charts'
-                    : null;
+                : isOfficeShape(k) || isSeatingShape(k)
+                  ? 'office-seating'
+                  : kind === 'mind-node'
+                    ? 'mind-maps'
+                    : isChartShape(k) || isSankeyShape(k)
+                      ? 'charts'
+                      : null;
     expect(kindFamilyOfShape(kind)).toBe(expected);
   });
 

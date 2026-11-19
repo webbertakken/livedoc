@@ -15,7 +15,7 @@ import {
   seatPoints,
   SOFA_ART,
   turnedSeatingBox,
-} from './seating';
+} from './index';
 
 // docs/specs/009-elements/chair.md "Desk and sofa"
 describe('seating kinds', () => {

@@ -25,7 +25,7 @@ import { elementFontId, isFinish, resolveFinish, type Finish } from './finish';
 import { hasRichFormatting } from './rich-text';
 import { iconCaptionBand } from './icon-size';
 import { fontSizeFor, labelMaxWidth, shrinkLabelPx } from './svg-render-primitives';
-import { BEHAVIOUR_FACE_SHAPES } from './svg-render-faces';
+import { BEHAVIOUR_FACE_SHAPES } from './behaviour-face-shapes';
 import { isCollabPanelShape } from './collab-shapes';
 import { isSeatingShape } from './seating';
 import { isSelfDrawingShape } from './data-shapes';

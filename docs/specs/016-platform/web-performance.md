@@ -224,7 +224,9 @@ entity's rows and their editing in place, its verbs, writing its fields, its rel
 pointing at its rows load with the entities family, while reading its fields (an export, the text views) and telling
 which arrows join two entities stay base: an arrow end pins to a field, and a released arrow takes its relationship's
 ends, once the family is in, as a board without it draws no entity to join. Where a concept graphic's rows sit loads
-with the concepts family; its kinds, rows, variants and their writes stay base.
+with the concepts family; its kinds, rows, variants and their writes stay base. Furniture and rooms draw, and a
+character finds a seat, with the office and seating family: their drawings load with it, while their kinds,
+facing, walls and footprints (which an Avatar-mode walk reads on any board) stay base.
 Sketches are the hand-drawn finishes, Sketch and Marker, and join by finish rather than kind: a board in one, or
 holding an element in one of its own, needs the family, and an element or arrow drawn in one waits for it as a kind's
 element does. Drawing a body, an arrow, a face's parts and WebKit's still pictures of art by hand loads with it, while

@@ -16,7 +16,6 @@
 import { fenceParts, FENCE_RAIL_OPACITY } from './fence';
 import { avatarPadArtRect, AVATAR_PAD_PARTS } from './avatar-pad';
 import {
-  FURNITURE_ART,
   FURNITURE_FACE_SHADE,
   FURNITURE_GLINT,
   FURNITURE_LINE_STROKE,
@@ -24,19 +23,13 @@ import {
   FURNITURE_RAIL_OPACITY,
   FURNITURE_RAIL_STROKE,
   FURNITURE_SHADOW,
-  furnitureFrame,
   isSeatingShape,
   seatingFacing,
   type FurniturePart,
 } from './seating';
-import {
-  DEFAULT_ROOM_DOOR,
-  isOfficeShape,
-  OFFICE_ART,
-  ROOM_FLOOR,
-  roomParts,
-  RUG_FILL,
-} from './office';
+import { FURNITURE_ART, furnitureFrame } from './seating-art';
+import { OFFICE_ART, roomParts } from './office-art';
+import { DEFAULT_ROOM_DOOR, isOfficeShape, ROOM_FLOOR, RUG_FILL } from './office';
 import { chairSeatFill } from './shape-geometry';
 import type { ResolveEmojiArt } from './svg-render-describe';
 import { REACTION_EMOJI, REACTION_HUES, reactionOf } from './data-shapes';
@@ -84,34 +77,6 @@ function modeGlyph(mode: string, cx: number, cy: number, color: string): string 
     `</svg>`
   );
 }
-
-/** The Behaviour kinds this module draws a face for, so the caller knows not
- *  to print the generic centred label over the top of one. */
-export const BEHAVIOUR_FACE_SHAPES = new Set<string>([
-  'mode-button',
-  'session-button',
-  'reveal',
-  'picker',
-  'reaction-pad',
-  'comment-pin',
-  'action-card',
-  'portal',
-  'chair',
-  'desk',
-  'sofa',
-  'fence',
-  // Avatar Pad (docs/specs/009-elements/avatar-pad.md).
-  'avatar-pad',
-  // The virtual office (docs/specs/009-elements/office.md).
-  'room',
-  'meeting-table',
-  'plant',
-  'bookshelf',
-  'water-cooler',
-  'coffee-machine',
-  'rug',
-  'focus-button',
-]);
 
 // ── Behaviour elements (docs/specs/009-elements/mode-button.md to /107, /135, /136) ───────────────────
 

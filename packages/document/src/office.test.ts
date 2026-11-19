@@ -16,8 +16,8 @@ import {
   roomDoorSpan,
   roomParts,
   roomWalls,
-} from './office';
-import { nearestSeat, seatPoints } from './seating';
+} from './index';
+import { nearestSeat, seatPoints } from './index';
 import { isValidElement } from './validate';
 
 // docs/specs/009-elements/office.md

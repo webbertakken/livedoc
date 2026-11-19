@@ -11,6 +11,7 @@ import {
   type ShapeElement,
   visibleLayerElements,
 } from '@livedoc/document';
+import { isKindFamilyLoaded, requireKindFamily } from '@/lib/element-kinds/store';
 import { track } from '@/lib/telemetry';
 import { useAvatarSpeech } from '@/hooks/canvas/useAvatarSpeech';
 import { useSpeechBubbles } from '@/lib/avatar-speech-store';
@@ -19,13 +20,7 @@ import { useAvatarActionKeys } from '@/hooks/canvas/useAvatarActionKeys';
 import { useAvatarWalk } from '@/hooks/canvas/useAvatarWalk';
 import { useAvatarPadArrivals } from '@/hooks/canvas/useAvatarPadArrivals';
 import { avatarSpawnFromButton, type AvatarPoint } from '@/lib/avatar-walk';
-import {
-  CHAIR_SITTER_FACING,
-  isSeatingShape,
-  nearestSeat,
-  drinkFrom,
-  seatingFacing,
-} from '@livedoc/document';
+import { CHAIR_SITTER_FACING, isSeatingShape, drinkFrom, seatingFacing } from '@livedoc/document';
 import { useAvatarConfig } from '@/hooks/canvas/useAvatarConfig';
 import type { Reaction } from '@livedoc/document';
 import { usePortalTravel } from '@/components/canvas/portal-travel';
@@ -113,7 +108,9 @@ export function useCanvasAvatar({
     // A desk or a sofa does the same (docs/specs/009-elements/chair.md "Desk and sofa"): a sofa seats
     // the character on the cushion nearest where it walked in.
     onWalkIntoChair: (element, feet) => {
-      if (!isSeatingShape(element.shape)) return;
+      // Its seats are the office and seating family's, in once a piece of seating is drawn.
+      if (!isSeatingShape(element.shape) || !isKindFamilyLoaded('office-seating')) return;
+      const { nearestSeat } = requireKindFamily('office-seating');
       const seating = { ...element, shape: element.shape };
       // A meeting table's seats each face the table (docs/specs/009-elements/office.md "Meeting Table").
       const seat = nearestSeat(seating, feet);

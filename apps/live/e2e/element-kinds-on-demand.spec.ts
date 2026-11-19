@@ -74,6 +74,8 @@ const BOARD = [
   }),
   box('sketches', 'square', 960, { y: 320, finish: 'sketch' }),
   box('marker', 'circle', 1160, { y: 320, finish: 'marker' }),
+  box('office-seating', 'chair', 1360, { y: 320 }),
+  box('room', 'room', 40, { y: 520, width: 400, height: 260 }),
 ];
 
 test('a board draws every family’s face in its first frame', async ({ page, pageErrors }) => {

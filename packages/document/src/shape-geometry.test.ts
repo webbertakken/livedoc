@@ -9,7 +9,7 @@ import {
   shapeGeometry,
   type ShapePart,
 } from './shape-geometry';
-import { CHAIR_ART } from './seating';
+import { CHAIR_ART } from './seating-art';
 import { scaledPolygonPoints } from './svg-render-shapes';
 import { boxFit, fitShapePart } from './svg-shape-fit';
 import { SHAPE_KINDS } from './validate';
