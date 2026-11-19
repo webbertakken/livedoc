@@ -1,8 +1,10 @@
 // The sheet routes' shared parts (sheet-routes.ts, sheet-write-route.ts): who the caller is and which tab they are
 // confined to, the refusals, the writer, and the room relay (docs/specs/029-sheets/sheet-store.md "Who may do
 // what", "Live for everyone").
-import type { SheetError, SheetsRoomOp } from '@livedoc/api-schema';
+import type { SheetError, SheetsRoomOp, WorkbookError } from '@livedoc/api-schema';
+import { SheetLimits, type SheetLayout } from '@livedoc/sheets';
 import { getDocumentMeta } from '../db';
+import { gridsWith, workbookGrids } from '../db/sheet-grids';
 import { json } from '../responses';
 import { relaySheets } from '../room-client';
 import {
@@ -13,6 +15,7 @@ import {
   gateRead,
   missingDocument,
   requireOwner,
+  type DocumentRouteContext,
   type RouteContext,
 } from './context';
 import { forbidden } from '../responses';
@@ -55,6 +58,30 @@ export function sheetRejected(
 ): Response {
   console.info('[sheets] sheets.rejected', { error, ...(at ? { at } : {}) });
   return json({ error, ...(at ? { at } : {}), ...(line ? { line } : {}) }, { status });
+}
+
+// A refusal of a workbook door (docs/specs/029-sheets/sheet-store.md "Changing the workbook"), by its name.
+export function workbookRefused(error: WorkbookError | SheetError, status: number): Response {
+  console.info('[workbook] refused', { error });
+  return json({ error }, { status });
+}
+
+// A new sheet of a spreadsheet against the workbook's rows and grid cells over every sheet (spreadsheet.md "Limits").
+export async function newGridProblem(
+  ctx: DocumentRouteContext,
+  documentId: string,
+  id: string,
+  layout: SheetLayout,
+): Promise<Response | null> {
+  const grids = gridsWith(await workbookGrids(ctx.env, documentId), {
+    id,
+    rows: layout.rows.length,
+    cols: layout.cols.length,
+  });
+  const refusal = SheetLimits.workbookRefusal(SheetLimits.spreadsheet, grids);
+  if (!refusal) return null;
+  console.info('[workbook] refused', { error: refusal });
+  return sheetRejected(refusal, 413);
 }
 
 export const sheetNotFound = () => sheetRejected('sheet_not_found', 404);

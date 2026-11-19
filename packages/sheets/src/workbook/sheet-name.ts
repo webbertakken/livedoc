@@ -50,6 +50,11 @@ function withoutEndQuotes(name: string): string {
   return name.slice(start, end);
 }
 
+/** A new sheet's name, as Google Sheets gives one: `Sheet<n>`, n the first from the sheets' count plus one not taken. */
+function next(taken: readonly string[]): string {
+  for (let n = taken.length + 1; ; n++) if (!isTaken(`Sheet${n}`, taken)) return `Sheet${n}`;
+}
+
 /** A name that keeps the rules, made from one that may not (a file's, a copy's): mended, cut, numbered if taken. */
 function fit(raw: string, taken: readonly string[]): string {
   const mended = raw.replace(FORBIDDEN_ALL, ' ').replace(/\s+/gu, ' ').trim();
@@ -64,4 +69,4 @@ function fit(raw: string, taken: readonly string[]): string {
   }
 }
 
-export const SheetName = { check, fit } as const;
+export const SheetName = { check, fit, next } as const;

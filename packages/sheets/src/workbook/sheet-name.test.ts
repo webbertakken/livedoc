@@ -69,3 +69,20 @@ describe('SheetName.fit', () => {
     expect(SheetName.fit('  ', ['Sheet1'])).toBe('Sheet2');
   });
 });
+
+// sheet-store.md "Changing the workbook": `Sheet<n>`, n the first number from the sheets' count plus one not taken.
+describe('SheetName.next', () => {
+  it('numbers a new sheet after the sheets there are', () => {
+    expect(SheetName.next(['Sheet1'])).toBe('Sheet2');
+    expect(SheetName.next(['Costs', 'Budget'])).toBe('Sheet3');
+  });
+
+  it('passes a number a sheet has, case aside', () => {
+    expect(SheetName.next(['Sheet1', 'sheet2'])).toBe('Sheet3');
+    expect(SheetName.next(['Sheet2', 'Sheet3'])).toBe('Sheet4');
+  });
+
+  it('names the first sheet of none Sheet1', () => {
+    expect(SheetName.next([])).toBe('Sheet1');
+  });
+});

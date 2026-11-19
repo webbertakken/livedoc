@@ -18,7 +18,9 @@ export type { CellFormat, CellInput, SheetLayout, SheetPerson, SheetWrite } from
 export type SheetCellDto = SheetCellJson;
 export type SheetDto = SheetJson;
 
-export type SheetsResponse = { sheets: SheetDto[] };
+// The sheets, and the workbook row when the document is a spreadsheet (null for any other; absent from an older api),
+// so a reader knows in the same request whether the sheets are one workbook.
+export type SheetsResponse = { sheets: SheetDto[]; workbook?: WorkbookRecord | null };
 
 export type SheetResponse = { sheet: SheetDto };
 

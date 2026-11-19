@@ -22,6 +22,10 @@ export const WORKBOOK_ITERATIONS_DEFAULT = 50;
 export const WORKBOOK_ITERATIONS_MAX = 1_000;
 export const WORKBOOK_THRESHOLD_DEFAULT = 0.05;
 
+// The longest locale tag and time zone name a workbook keeps: room for any BCP 47 tag a browser reports, with its
+// extensions, and any IANA zone name (the longest is 32 characters).
+export const WORKBOOK_SETTING_TEXT_MAX = 64;
+
 export type WorkbookSettings = {
   readonly locale: string;
   readonly timeZone: string;
@@ -53,13 +57,9 @@ function readIterate(raw: unknown): WorkbookSettings['iterate'] | null {
 function readSettings(raw: unknown): WorkbookSettings | null {
   if (typeof raw !== 'object' || raw === null) return null;
   const { locale, timeZone, recalc, iterate } = raw as Record<string, unknown>;
-  if (
-    typeof locale !== 'string' ||
-    locale === '' ||
-    typeof timeZone !== 'string' ||
-    timeZone === ''
-  )
-    return null;
+  const text = (v: unknown): v is string =>
+    typeof v === 'string' && v !== '' && v.length <= WORKBOOK_SETTING_TEXT_MAX;
+  if (!text(locale) || !text(timeZone)) return null;
   if (!isRecalc(recalc)) return null;
   const it = readIterate(iterate);
   return it ? { locale, timeZone, recalc, iterate: it } : null;
@@ -67,6 +67,9 @@ function readSettings(raw: unknown): WorkbookSettings | null {
 
 export const WorkbookRecord = {
   isFormat,
+
+  /** Settings from the wire or the room, or null when any of them is not one. */
+  readSettings,
 
   /** A new spreadsheet's record: born in ODF, its settings from its maker's locale and time zone. */
   create: (made: { locale: string; timeZone: string }): WorkbookRecord => ({

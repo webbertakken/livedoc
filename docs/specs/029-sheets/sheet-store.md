@@ -101,6 +101,24 @@ this page holds for both until the Plan Sheet retires.
 - **Values are not stored**: as today, the room stores inputs and styles; a file's cached values are written from the
   engine at download, and read from a file only to show a formula LiveDoc cannot evaluate.
 
+### Changing the workbook
+
+Built in the api; the sheet bar and File › Settings call it with the grid surface (plan 0020 Phase 8).
+
+- **Add a sheet**: a sheet tab and its sheet made as one, after the tab named, or last when none is.
+- A new sheet takes the name given, by the sheet name's rules, or `Sheet<n>`, n the first number from the sheets'
+  count plus one that no sheet has (default); it holds 1,000 rows by 26 columns, as a new spreadsheet's (default).
+- A sheet added may name its tab and sheet ids (an undo, a sync), a taken one refused (`sheet_exists`).
+- **Rename a sheet**: its title and its tab's name as one write, by the sheet name's rules.
+- **Delete a sheet**: its tab removed, its sheet left unreferenced and kept for Undo until it expires; never the last
+  visible sheet (`sheet_last_visible`); until a sheet can be hidden, every sheet is visible.
+- **Settings**: saved whole, as the dialog's Save Settings writes them; one that is not a setting is refused
+  (`settings_invalid`); the file format is not a setting, converting is ([Files and print](files-and-print.md#converting)).
+- Editors only, never on a tab-scoped link; on a document that is no spreadsheet, `workbook_not_found`.
+- Each counts against the write rate limit and is sent live: the tab list as the document's, a sheet as a `sheets`
+  op, the settings as a `workbook` op with the row's rev.
+- A refusal is logged `[workbook] refused <name>`; a change done `[workbook] <change> document=<id>`, never content.
+
 ## Changing a sheet
 
 - **Create** (placing a Sheet element, a copy, a CSV): a title, its tab and optionally its layout and cells. It
@@ -279,8 +297,10 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
 
 ## Agents in a spreadsheet
 
-**Status: specified.** Nothing is built. Agents work a [spreadsheet](spreadsheet.md) as they work a Plan Sheet
-today (above), by sheet name and A1 references, never ids, with these changes:
+**Status: specified.** Agents work a [spreadsheet](spreadsheet.md) as they work a Plan Sheet today (above), by sheet
+name and A1 references, never ids, with these changes. Built: `read_sheet` and `change_sheet` read a spreadsheet's
+sheets as one workbook, in tab order, held to its limits; the sheet list carries the workbook row, so one request
+tells them.
 
 - **Views** (`@livedoc/document-views`): a workbook's **outline** (its sheets, each with its used range, tables,
   charts, pivots, named ranges and rules) and a sheet's **cells** view of a range (input, value and shown text), both

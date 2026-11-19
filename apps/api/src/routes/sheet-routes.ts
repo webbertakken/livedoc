@@ -32,12 +32,12 @@ import {
   readSheetHead,
 } from '../db';
 import { sheetDeleteWhenUnreferencedStatements, sheetKeepStatement } from '../db/sheet-refs';
-import { gridsWith, workbookGrids } from '../db/sheet-grids';
-import { isSpreadsheet } from '../db/workbook';
+import { documentTabOrder, isSpreadsheet, readWorkbook } from '../db/workbook';
 import { json, methodNotAllowed, noContent } from '../responses';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
+  newGridProblem,
   relaySheet,
   sheetCaller,
   sheetNotFound,
@@ -57,10 +57,20 @@ async function list(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   const ids = idsParam ? idsParam.split(',').filter(Boolean) : undefined;
   if (ids && (ids.length > IDS_PER_GET_MAX || !ids.every(isSheetId)))
     return sheetRejected('write_invalid');
-  let sheets = await listSheets(ctx.env, documentId, ids ? { ids } : tabId ? { tabId } : {});
-  if (caller.scopeTab) sheets = sheets.filter((s) => s.tabId === caller.scopeTab);
-  const body: SheetsResponse = { sheets };
+  const [stored, workbook] = await Promise.all([
+    listSheets(ctx.env, documentId, ids ? { ids } : tabId ? { tabId } : {}),
+    readWorkbook(ctx.env, documentId),
+  ]);
+  // A spreadsheet's sheets are its tabs', in tab order; a deleted tab's sheet only waits to expire.
+  const all = workbook ? inTabOrder(stored, await documentTabOrder(ctx.env, documentId)) : stored;
+  const sheets = caller.scopeTab ? all.filter((s) => s.tabId === caller.scopeTab) : all;
+  const body: SheetsResponse = { sheets, workbook };
   return json(body);
+}
+
+function inTabOrder(sheets: SheetJson[], order: readonly string[]): SheetJson[] {
+  const at = new Map(order.map((id, i) => [id, i]));
+  return sheets.filter((s) => at.has(s.tabId)).sort((a, b) => at.get(a.tabId)! - at.get(b.tabId)!);
 }
 
 function titleTaken(
@@ -103,24 +113,6 @@ function readCreate(raw: unknown, maxCells = SHEET_WRITE_CELLS_MAX): ReadCreate 
       ...(b.restore === true ? { restore: true as const } : {}),
     },
   };
-}
-
-// A new sheet of a spreadsheet against the workbook's rows and grid cells over every sheet (spreadsheet.md "Limits").
-async function newGridProblem(
-  ctx: DocumentRouteContext,
-  documentId: string,
-  id: string,
-  layout: SheetLayout,
-): Promise<Response | null> {
-  const grids = gridsWith(await workbookGrids(ctx.env, documentId), {
-    id,
-    rows: layout.rows.length,
-    cols: layout.cols.length,
-  });
-  const refusal = SheetLimits.workbookRefusal(SheetLimits.spreadsheet, grids);
-  if (!refusal) return null;
-  console.info('[workbook] refused', { error: refusal });
-  return sheetRejected(refusal, 413);
 }
 
 // Make a sheet (the route, and a new document's seed). Returns the stored sheet, or a refusal.

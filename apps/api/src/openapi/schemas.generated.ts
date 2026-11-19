@@ -14757,6 +14757,16 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "$ref": "#/components/schemas/SheetDto"
         },
         "type": "array"
+      },
+      "workbook": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/WorkbookRecord"
+          },
+          {
+            "type": "null"
+          }
+        ]
       }
     },
     "required": [
@@ -18205,6 +18215,68 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     ],
     "type": "object"
   },
+  "WorkbookSettingsRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "settings": {
+        "$ref": "#/components/schemas/WorkbookSettings"
+      }
+    },
+    "required": [
+      "settings"
+    ],
+    "type": "object"
+  },
+  "WorkbookSettingsResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "rev": {
+        "type": "number"
+      },
+      "workbook": {
+        "$ref": "#/components/schemas/WorkbookRecord"
+      }
+    },
+    "required": [
+      "workbook",
+      "rev"
+    ],
+    "type": "object"
+  },
+  "WorkbookSheetAddRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "after": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "sheetId": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      }
+    },
+    "type": "object"
+  },
+  "WorkbookSheetAddResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "sheet": {
+        "$ref": "#/components/schemas/SheetDto"
+      },
+      "tab": {
+        "$ref": "#/components/schemas/WorkbookSheetTabDto"
+      }
+    },
+    "required": [
+      "tab",
+      "sheet"
+    ],
+    "type": "object"
+  },
   "WorkbookSheetDto": {
     "additionalProperties": false,
     "properties": {
@@ -18257,6 +18329,62 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "title",
       "updatedAt",
       "updatedBy"
+    ],
+    "type": "object"
+  },
+  "WorkbookSheetRenameRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "name"
+    ],
+    "type": "object"
+  },
+  "WorkbookSheetRenameResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "rev": {
+        "type": "number"
+      },
+      "sheetId": {
+        "type": "string"
+      },
+      "tabId": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "tabId",
+      "sheetId",
+      "name",
+      "rev"
+    ],
+    "type": "object"
+  },
+  "WorkbookSheetTabDto": {
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "orderIndex": {
+        "type": "number"
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "orderIndex"
     ],
     "type": "object"
   }

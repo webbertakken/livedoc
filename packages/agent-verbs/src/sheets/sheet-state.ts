@@ -1,10 +1,18 @@
 // What every sheet tool reads first (docs/specs/029-sheets/sheet-store.md "Agents"): the document's sheets, the one a
-// call names (by title or id, never row or column ids), and a workbook over its tab's sheets so values are worked
-// out by the engine the editor uses, Plan cards included when a formula reads them.
+// call names (by title or id, never row or column ids), and a workbook over the sheets its formulas read (its tab's, or
+// a spreadsheet's every sheet) so values are worked out by the engine the editor uses, Plan cards included when a
+// formula reads them.
 import type { ApiClient } from '@livedoc/api-client';
 import type { DocumentResponse, ItemsResponse, SheetsResponse } from '@livedoc/api-schema';
 import { cardSourceOf, readItemTypeCatalogue, typesOf } from '@livedoc/items';
-import { AGENT_LOCALE, sheetFromJson, Workbook, type SheetJson } from '@livedoc/sheets';
+import {
+  AGENT_LOCALE,
+  SheetLimits,
+  sheetFromJson,
+  Workbook,
+  type SheetJson,
+  type WorkbookRecord,
+} from '@livedoc/sheets';
 import { itemsPath } from '../verbs/shared';
 
 export const sheetsPath = (documentId: string) =>
@@ -24,6 +32,14 @@ export async function readSheets(
 ): Promise<SheetJson[]> {
   const query = tabId ? `?tabId=${encodeURIComponent(tabId)}` : '';
   return (await api.json<SheetsResponse>(`${sheetsPath(documentId)}${query}`)).sheets;
+}
+
+// The document's sheets, cells included, and its workbook row when it is a spreadsheet (one request).
+export type SheetsState = { sheets: SheetJson[]; workbook: WorkbookRecord | null };
+
+export async function readSheetsState(api: ApiClient, documentId: string): Promise<SheetsState> {
+  const { sheets, workbook } = await api.json<SheetsResponse>(sheetsPath(documentId));
+  return { sheets, workbook: workbook ?? null };
 }
 
 const listed = (sheets: readonly SheetJson[]) =>
@@ -62,17 +78,21 @@ export function resolveSheet(
   };
 }
 
-// The workbook of a tab's sheets (references reach only the tab's sheets), with the document's Plan cards when a
-// formula on the tab reads them.
+// The workbook the sheet on `tabId` belongs to: a spreadsheet's every sheet, held to its limits
+// (docs/specs/029-sheets/spreadsheet.md "The workbook shape", "Limits"), or a Plan tab's sheets (references reach only
+// the tab's) held to a Plan Sheet's; with the document's Plan cards when a formula reads them.
 export async function workbookFor(
   api: ApiClient,
   documentId: string,
-  sheets: readonly SheetJson[],
+  state: SheetsState,
   tabId: string,
 ): Promise<Workbook> {
+  const spreadsheet = state.workbook !== null;
+  const sheets = spreadsheet ? state.sheets : state.sheets.filter((s) => s.tabId === tabId);
   const wb = new Workbook({
-    sheets: sheets.filter((s) => s.tabId === tabId).map(sheetFromJson),
+    sheets: sheets.map(sheetFromJson),
     locale: AGENT_LOCALE,
+    limits: SheetLimits.of(spreadsheet),
   });
   if (wb.usesCards()) {
     const [{ items }, { document }] = await Promise.all([

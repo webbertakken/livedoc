@@ -928,6 +928,57 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     responseMediaType: 'application/vnd.oasis.opendocument.spreadsheet',
     statuses: [200, 400, 401, 403, 404, 409, 410],
   },
+  // A spreadsheet's sheets and settings changed (docs/specs/029-sheets/sheet-store.md "Changing the workbook").
+  {
+    method: 'PUT',
+    path: '/documents/{id}/workbook/settings',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "Save a spreadsheet's settings whole: locale, time zone, recalculation and iterative calculation. Sent live to everyone on it. 400 settings_invalid; 404 workbook_not_found when the document is no spreadsheet. Edit access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'WorkbookSettingsRequest',
+    responseSchema: 'WorkbookSettingsResponse',
+    statuses: [200, 400, 401, 403, 404, 410],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/workbook/sheets',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      'Add a sheet tab: its tab and a blank sheet of 1,000 rows by 26 columns, made as one, after the tab named or last. Named as asked, or Sheet<n>. Naming a deleted sheet and its tab puts it back as it was. 400 write_invalid or sheet_name_invalid; 404 workbook_not_found or tab_not_found; 409 sheet_exists or sheet_name_taken; 413 sheets_full or workbook_full. Edit access; never on a tab-scoped link.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'WorkbookSheetAddRequest',
+    responseSchema: 'WorkbookSheetAddResponse',
+    statuses: [201, 400, 401, 403, 404, 409, 410, 413],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/workbook/sheets/{sheetId}/rename',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "Rename a sheet: its title and its tab's name as one write, and every formula naming it follows. 400 sheet_name_invalid; 404 workbook_not_found or sheet_not_found; 409 sheet_name_taken or sheet_busy. Edit access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'WorkbookSheetRenameRequest',
+    responseSchema: 'WorkbookSheetRenameResponse',
+    statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
+  {
+    method: 'DELETE',
+    path: '/documents/{id}/workbook/sheets/{sheetId}',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      'Delete a sheet: its tab is removed and its sheet kept, unreferenced, until it expires, so adding it back with its ids restores it. 404 workbook_not_found or sheet_not_found; 409 sheet_last_visible for the last sheet. Edit access; never on a tab-scoped link.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    statuses: [204, 401, 403, 404, 409, 410],
+  },
   // The item store (docs/specs/026-plan/items.md). A caller on a tab-scoped link adds ?tabId=.
   {
     method: 'GET',

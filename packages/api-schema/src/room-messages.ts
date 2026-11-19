@@ -8,6 +8,7 @@ import type { DragPreviewPatch } from './drag-preview';
 import type { ChangesetRoomOp } from './changesets';
 import type { ItemsRoomOp, ItemTypesRoomOp } from './items';
 import type { SheetsRoomOp } from './sheets';
+import type { WorkbookRoomOp } from './workbook';
 
 // ---------------------------------------------------------------------
 // Realtime room messages
@@ -217,6 +218,9 @@ export const SYSTEM_OP_KINDS = [
   // `sheets` (docs/specs/029-sheets/sheet-store.md "Live for everyone"): sheet writes the api made. Sheets change
   // only through the api, so a forged one would show people cells nobody wrote.
   'sheets',
+  // `workbook` (docs/specs/029-sheets/sheet-store.md "Changing the workbook"): a spreadsheet's settings the api saved.
+  // They change only through the api, so a forged one would change how everyone's workbook calculates.
+  'workbook',
 ] as const;
 
 // The whole vocabulary. Every op the editor sends or handles is one of these
@@ -694,6 +698,7 @@ export type RoomOp =
   // Sheet writes the api made (docs/specs/029-sheets/sheet-store.md "Live for everyone"). Worker-originated
   // through an ordered /broadcast; a session scoped to one tab hears only its tab's.
   | SheetsRoomOp
+  | WorkbookRoomOp
   // The document went to the Trash (docs/specs/013-workspace/trash.md). Every
   // session shows the deleted state; the room then closes every socket (4004).
   // Worker-originated, like share-revoked.

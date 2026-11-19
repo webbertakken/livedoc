@@ -507,3 +507,15 @@ export async function documentLinksTab(
     .first<{ present: number }>();
   return row !== null;
 }
+
+// Room for a tab at `from` in the document's order: every tab from there on moves one place along, in the batch that
+// adds the tab (a spreadsheet's sheet added after another, docs/specs/029-sheets/sheet-store.md "Changing the workbook").
+export function tabOrderOpenStatement(
+  env: DocumentEnv,
+  documentId: string,
+  from: number,
+): D1PreparedStatement {
+  return env.DOCUMENT_DB.prepare(
+    'UPDATE document_tabs SET order_index = order_index + 1 WHERE document_id = ? AND order_index >= ?',
+  ).bind(documentId, from);
+}

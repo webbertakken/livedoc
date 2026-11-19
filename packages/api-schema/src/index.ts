@@ -657,6 +657,7 @@ export * from './room-capacity';
 export * from './changesets';
 export * from './items';
 export * from './sheets';
+export * from './workbook';
 export * from './telemetry-schema';
 export * from './timing-telemetry';
 export * from './server-emitted-events';

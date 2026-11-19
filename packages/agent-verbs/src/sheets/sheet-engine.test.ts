@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { ApiClient } from '@livedoc/api-client';
 import { PLACED_BOARD_GAP } from '@livedoc/items';
-import { DOCUMENT_CELLS_MAX, SHEET_WRITE_CELLS_MAX } from '@livedoc/sheets';
+import {
+  DOCUMENT_CELLS_MAX,
+  SHEET_ROWS_MAX,
+  SHEET_WRITE_CELLS_MAX,
+  WorkbookRecord,
+} from '@livedoc/sheets';
 import { DOC_A, fakeApi, tabsOfA } from '../testing/fake-api';
 import { seeded, sheetJson, sheetServer, type SheetServer } from '../testing/sheets';
 import { addSheet } from './add-sheet';
@@ -39,7 +44,7 @@ const notes = () =>
 
 function setup(
   sheets = [costs(), notes()],
-  opts: { refuse?: string; status?: number; refuseAfter?: number } = {},
+  opts: { refuse?: string; status?: number; refuseAfter?: number; workbook?: WorkbookRecord } = {},
 ): { api: ApiClient; server: SheetServer; sent: unknown[] } {
   const server = sheetServer(DOC_A, sheets, opts);
   const sent: unknown[] = [];
@@ -735,6 +740,38 @@ describe('adding a sheet', () => {
 // A change goes to the api in parts of at most 5,000 cells, each checked on its own there; checked whole here first,
 // so a later part's refusal cannot leave half a change stored and reported as nothing
 // (docs/specs/029-sheets/sheet-store.md "Agents").
+// docs/specs/029-sheets/spreadsheet.md "The workbook shape", "Limits": a spreadsheet's sheets are one workbook, held to
+// its limits, so an agent's formulas read across its tabs and its sheets grow past a Plan Sheet's.
+describe('in a spreadsheet', () => {
+  const book = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'Europe/London' });
+  const sheets = () => [
+    sheetJson({ id: 'sheet_costs1', tabId: ONE, title: 'Costs' }, [['Rent', '=Notes!A1*2']]),
+    sheetJson({ id: 'sheet_notes1', tabId: TWO, title: 'Notes', createdAt: 1 }, [[21]]),
+  ];
+
+  it("reads a value from another tab's sheet", async () => {
+    const { api } = setup(sheets(), { workbook: book });
+    expect(valueAt(await read(api, 'Costs'), 'B1')).toBe(42);
+  });
+
+  it("reaches no other tab's sheet in Plan", async () => {
+    const { api } = setup(sheets());
+    expect(valueAt(await read(api, 'Costs'), 'B1')).toBe('#REF!');
+  });
+
+  it("grows a sheet past a Plan Sheet's rows", async () => {
+    const grow = { op: 'insert_rows', at: 1, count: SHEET_ROWS_MAX } as const;
+    const plan = setup(sheets());
+    await changeSheet(plan.api, DOC_A, { sheet: 'Costs', changes: [grow] }, 'mcp');
+    expect(plan.server.sheets[0]!.layout.rows.length).toBe(SHEET_ROWS_MAX);
+    const { api, server } = setup(sheets(), { workbook: book });
+    const before = server.sheets[0]!.layout.rows.length;
+    const grown = await changeSheet(api, DOC_A, { sheet: 'Costs', changes: [grow] }, 'mcp');
+    expect(grown.refusal).toBeUndefined();
+    expect(server.sheets[0]!.layout.rows.length).toBe(before + SHEET_ROWS_MAX);
+  });
+});
+
 describe('changes larger than one write', () => {
   const grid = (rows: number, cols: number) =>
     Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => r * cols + c));
