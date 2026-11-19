@@ -178,6 +178,28 @@ const settle = async () => {
   for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 0));
 };
 
+// docs/specs/029-sheets/sheet-store.md "Live for everyone": a client that reconnects fetches the workbook again.
+describe("a spreadsheet's store after a reconnect", () => {
+  it('opens the workbook again, writes missed come in, a sheet deleted meanwhile goes', async () => {
+    const srv = spreadsheet();
+    const { store } = open(srv);
+    await store.loadTab('tabSum');
+    await settle();
+    // Missed while away: a write to Sum, and Data deleted with its tab.
+    srv.external('sheetSumm', {
+      kind: 'cells',
+      cells: [{ r: srv.small.rows[1]!, c: srv.small.cols[0]!, i: { s: 'missed' } }],
+    });
+    srv.sheets.delete('sheetData');
+    store.resync();
+    await settle();
+    expect(srv.api.fetchWorkbook).toHaveBeenCalledTimes(2);
+    expect(store.sheet('sheetData')).toBeUndefined();
+    expect(store.workbook('tabSum').sheet('sheetData')).toBeUndefined();
+    expect(store.workbook('tabSum').value('sheetSumm', 1, 0)).toBe('missed');
+  });
+});
+
 describe("a spreadsheet's store loading by viewport", () => {
   it('opens on the open sheet’s first rows, then pages in the rest, the open sheet first', async () => {
     const srv = spreadsheet();

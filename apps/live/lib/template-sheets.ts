@@ -20,19 +20,21 @@ export async function withTemplateSheets<T extends Tab>(
   const { materialiseTemplateSheets } = await import('@livedoc/templates/template-sheets');
   const made = materialiseTemplateSheets(tabs, now);
   debugLog('[sheets] template sheets made', { count: made.sheets.length });
-  return {
-    tabs: made.tabs,
-    creates: made.sheets,
-    sheets: made.sheets.map((c) => ({
-      id: c.id!,
-      tabId: c.tabId,
-      title: c.title,
-      layout: c.layout!,
-      cells: c.cells ?? [],
-      rev: 0,
-      createdAt: now,
-      updatedAt: now,
-      updatedBy: MADE_BY,
-    })),
-  };
+  return { tabs: made.tabs, creates: made.sheets, sheets: storedSheets(made.sheets, now) };
+}
+
+// Sheets made in the browser as a store keeps them (rev 0, made now, by nobody yet): a template's, or a new
+// spreadsheet's first sheet in This Browser. Each create names its id and layout.
+export function storedSheets(creates: readonly SheetCreateRequest[], now: number): SheetJson[] {
+  return creates.map((c) => ({
+    id: c.id!,
+    tabId: c.tabId,
+    title: c.title,
+    layout: c.layout!,
+    cells: c.cells ?? [],
+    rev: 0,
+    createdAt: now,
+    updatedAt: now,
+    updatedBy: MADE_BY,
+  }));
 }

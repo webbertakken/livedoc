@@ -12,7 +12,7 @@ import { seedAuthor } from '@/lib/seed-author';
 import { isOfflineLocation, type SaveLocationId } from '@/lib/save-locations';
 import { titleCaseType, track } from '@/lib/telemetry';
 import { themeTelemetryLabel } from '@/lib/custom-theme-registry';
-import { withTemplateSheets } from '@/lib/template-sheets';
+import { storedSheets, withTemplateSheets } from '@/lib/template-sheets';
 import type { CreateIds } from './create-failure';
 import type { NewDocumentContent } from '@/lib/new-document-content';
 import { NEW_DOCUMENT_THEME_ID } from './new-document-theme';
@@ -46,6 +46,11 @@ export async function writeNewDocument(write: NewDocumentWrite): Promise<void> {
         tabs: made?.tabs ?? tabs ?? [tab],
         itemTypes,
         ...(made?.sheets.length ? { sheets: made.sheets } : {}),
+        // A spreadsheet's first sheet and its workbook row (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet").
+        ...(!made && content.sheets?.length
+          ? { sheets: storedSheets(content.sheets, Date.now()) }
+          : {}),
+        ...(content.workbook ? { workbook: content.workbook } : {}),
       },
       Date.now(),
     );

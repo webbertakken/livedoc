@@ -50,3 +50,16 @@ describe('importDocumentCopy', () => {
     expect(createBodies[0]).toHaveProperty('folderId', null);
   });
 });
+
+// docs/specs/029-sheets/sheet-store.md "Copies and exports": a copy of a spreadsheet's file is a spreadsheet.
+describe("a spreadsheet's file copied in", () => {
+  it('sends its workbook row, and none for another document', async () => {
+    const workbook = { format: 'ods', settings: { locale: 'en-GB' } };
+    const book = envelope('sheet');
+    book.document.workbook = workbook;
+    await createApiLivedocPort('owner-1').importDocumentCopy(book);
+    expect(createBodies[0]).toMatchObject({ workbook });
+    await createApiLivedocPort('owner-1').importDocumentCopy(envelope());
+    expect(createBodies[1]).not.toHaveProperty('workbook');
+  });
+});

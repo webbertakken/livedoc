@@ -1,7 +1,14 @@
 // An offline document's sheet store (docs/specs/029-sheets/sheet-store.md "Offline documents"): the sheets live in
 // the record, every write is the api's own transition, and refusals are the api's.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { DOCUMENT_SHEETS_MAX, SHEET_SIZED_AXES_MAX, type SheetJson } from '@livedoc/sheets';
+import {
+  DOCUMENT_SHEETS_MAX,
+  SHEET_ROWS_MAX,
+  SHEET_SIZED_AXES_MAX,
+  WORKBOOK_ROWS_MAX,
+  WorkbookRecord,
+  type SheetJson,
+} from '@livedoc/sheets';
 import { __setOfflineBackend, offlineGetRecord, offlinePutRecord } from './offline-store';
 import { memBackend, testRecord } from './offline-test-utils';
 import {
@@ -280,5 +287,80 @@ describe('offlineDeleteSheet', () => {
   it('refuses on a record with no sheets field', async () => {
     await offlinePutRecord(testRecord());
     await expect(offlineDeleteSheet('d1', 'sheetAAAA')).rejects.toMatchObject({ status: 404 });
+  });
+});
+
+// docs/specs/029-sheets/sheet-store.md "Offline documents": an offline spreadsheet keeps every rule of the api's, minus
+// the room: its sheets are its tabs', named and limited as one workbook, a sheet renamed with its tab.
+describe('an offline spreadsheet', () => {
+  const workbook = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' });
+  const book = (sheets: SheetJson[]) => testRecord({ sheets, workbook });
+
+  it("reads its tabs' sheets in tab order, leaving out a deleted tab's", async () => {
+    await offlinePutRecord(
+      book([
+        stored('sheetBBBB', 't2', 'Two'),
+        stored('sheetGONE', 'gone'),
+        stored('sheetAAAA', 't1', 'One'),
+      ]),
+    );
+    expect((await offlineFetchSheets('d1', null)).map((s) => s.id)).toEqual([
+      'sheetAAAA',
+      'sheetBBBB',
+    ]);
+  });
+
+  it('names a new sheet by the workbook, case aside, and by the name rules', async () => {
+    await offlinePutRecord(book([stored('sheetAAAA', 't1', 'Costs')]));
+    await expect(
+      offlineCreateSheet('d1', { tabId: 't2', title: 'COSTS' }, ME),
+    ).rejects.toMatchObject({
+      status: 409,
+      code: 'sheet_name_taken',
+    });
+    await expect(offlineCreateSheet('d1', { tabId: 't2', title: 'a/b' }, ME)).rejects.toMatchObject(
+      {
+        status: 400,
+        code: 'sheet_name_invalid',
+      },
+    );
+  });
+
+  it("renames a sheet's tab with it, refusing another sheet's name", async () => {
+    await offlinePutRecord(
+      book([stored('sheetAAAA', 't1', 'One'), stored('sheetBBBB', 't2', 'Two')]),
+    );
+    await offlineWriteSheet('d1', 'sheetAAAA', { write: { kind: 'title', title: ' Costs ' } }, ME);
+    const rec = await offlineGetRecord('d1');
+    expect(rec?.tabs.find((t) => t.id === 't1')?.name).toBe('Costs');
+    expect(rec?.sheets?.find((s) => s.id === 'sheetAAAA')?.title).toBe('Costs');
+    await expect(
+      offlineWriteSheet('d1', 'sheetBBBB', { write: { kind: 'title', title: 'costs' } }, ME),
+    ).rejects.toMatchObject({ code: 'sheet_name_taken' });
+  });
+
+  it("grows a sheet past a Plan Sheet's rows, and refuses rows past the workbook's", async () => {
+    await offlinePutRecord(book([stored('sheetAAAA', 't1', 'One')]));
+    const rows = (n: number, p: string) =>
+      Array.from({ length: n }, (_, i) => `${p}${String(i).padStart(7, '0')}`);
+    const insert = (ids: string[]) =>
+      offlineWriteSheet(
+        'd1',
+        'sheetAAAA',
+        { write: { kind: 'layout', changes: [{ k: 'insertRows', after: null, ids }] } },
+        ME,
+      );
+    await insert(rows(SHEET_ROWS_MAX, 'a'));
+    const grown = (await offlineGetRecord('d1'))?.sheets?.[0]?.layout.rows.length;
+    expect(grown).toBe(SHEET_ROWS_MAX + 2);
+    // Another sheet holding the rest of the workbook's rows: one more row passes them.
+    const rec = (await offlineGetRecord('d1'))!;
+    const big = stored('sheetBBBB', 't2', 'Big');
+    big.layout = { rows: rows(WORKBOOK_ROWS_MAX - grown!, 'b'), cols: ['cccc'] };
+    await offlinePutRecord({ ...rec, sheets: [...rec.sheets!, big] });
+    await expect(insert(['zzzz0001'])).rejects.toMatchObject({
+      status: 413,
+      code: 'workbook_full',
+    });
   });
 });

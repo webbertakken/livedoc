@@ -211,6 +211,7 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
 - Every write is pushed to everyone in the document's room at once, in order, with the sheet rev: the changed
   cells, and the new layout if it changed.
 - A client that sees a gap in a sheet's revs, or reconnects, fetches that sheet again.
+- A spreadsheet that reconnects opens its workbook again by viewport, and a sheet deleted while it was away leaves it.
 - Nothing a browser sends over the room changes a sheet: sheets change only through the api. Presence on a sheet
   (`sheet-presence`) is ephemeral and never stored.
 
@@ -238,11 +239,17 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   `sheets` array beside its tabs and items. Every rule above holds, minus the room.
 - **Sync to cloud** sends the sheets with the document; **Take offline** fetches every sheet first, all or
   nothing.
+- A spreadsheet is made in This Browser as anywhere, and its record keeps the workbook row beside its sheets; **Take
+  offline**, **Sync to cloud** and a copy carry the row, so a spreadsheet stays one wherever it goes.
+- An offline spreadsheet holds every rule of the api's: its sheets are its tabs', in tab order, named and limited as
+  one workbook, and a sheet renamed renames its tab; it loads whole, from this browser.
 
 ## Copies and exports
 
 - **Duplicate** copies the sheet store with the document (same ids), and a spreadsheet's workbook row with it, so a
   copy of a spreadsheet is a spreadsheet.
+- A `.livedoc` file (the Drive mirror's) carries the workbook row beside the sheets, optional and additive, and a
+  copy imported from one is a spreadsheet.
 - **Duplicate Tab** copies the tab's sheets as new sheets on the new tab (new ids, `(copy)` titles kept unique
   per tab), and the new tab's Sheet elements frame the copies.
 - **The `.livedoc` file** (the Google Drive mirror's document file) carries the sheets; the field is additive,

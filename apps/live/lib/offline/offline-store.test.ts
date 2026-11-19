@@ -47,6 +47,20 @@ describe('offline transforms', () => {
     ]);
   });
 
+  // docs/specs/029-sheets/sheet-store.md "Offline documents": an offline spreadsheet opens as one.
+  it("projects a spreadsheet's workbook row, and none for another document", () => {
+    const workbook = { format: 'ods', settings: {} } as never;
+    expect(recordToDocument(rec({ workbook })).workbook).toBe(workbook);
+    expect(recordToDocument(rec())).not.toHaveProperty('workbook');
+  });
+
+  it('makes a spreadsheet in this browser with its workbook row', async () => {
+    __setOfflineBackend(memBackend());
+    const workbook = { format: 'ods', settings: {} } as never;
+    const made = await offlineCreateDocument({ id: 'book', name: 'Budget', workbook }, 1);
+    expect(made.workbook).toBe(workbook);
+  });
+
   it('tabToSummary omits folder when absent', () => {
     expect(tabToSummary(tab('t1'), 'd1', 2, 5)).toEqual({
       id: 't1',

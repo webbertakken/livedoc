@@ -15,6 +15,8 @@ vi.mock('@/lib/offline/offline-items', () => ({ offlineWriteItem: mocks.offlineW
 vi.mock('@/lib/seed-author', () => ({ seedAuthor: async () => ({ id: 'p', name: 'P' }) }));
 vi.mock('@/lib/template-sheets', () => ({
   withTemplateSheets: async (tabs: Tab[]) => ({ tabs, sheets: [] }),
+  storedSheets: (creates: { id: string }[], now: number) =>
+    creates.map((c) => ({ ...c, rev: 0, createdAt: now })),
 }));
 vi.mock('@/lib/telemetry', () => ({
   track: mocks.track,
@@ -72,6 +74,26 @@ describe('writeNewDocument', () => {
     );
     expect(w.creator).not.toHaveBeenCalled();
     expect(mocks.apiCreateDocument).not.toHaveBeenCalled();
+  });
+
+  // docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet": This Browser holds a spreadsheet, its first sheet
+  // and workbook row in its record.
+  it('writes a This Browser spreadsheet with its sheet and workbook row', async () => {
+    const workbook = { format: 'ods', settings: {} } as never;
+    const sheets = [{ id: 'sheetOne1', tabId: 't1', title: 'Sheet1' }];
+    await writeNewDocument(
+      write({
+        location: 'browser',
+        content: { tabs: null, tab, itemTypes: null, seedItems: [], sheets, workbook },
+      }),
+    );
+    expect(mocks.offlineCreateDocument).toHaveBeenCalledWith(
+      expect.objectContaining({
+        workbook,
+        sheets: [expect.objectContaining({ id: 'sheetOne1', rev: 0 })],
+      }),
+      expect.any(Number),
+    );
   });
 
   it('writes a This Browser template its example cards', async () => {

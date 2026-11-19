@@ -111,7 +111,13 @@ export async function duplicateDocument(
   if (await isOfflineId(sourceId)) {
     try {
       await offlineCreateDocument(
-        { id: newId, name: `${src.name} copy`, tabs: remappedTabs },
+        {
+          id: newId,
+          name: `${src.name} copy`,
+          tabs: remappedTabs,
+          // A copy of a spreadsheet is a spreadsheet (docs/specs/029-sheets/sheet-store.md "Copies and exports").
+          ...(src.workbook ? { workbook: src.workbook } : {}),
+        },
         Date.now(),
       );
       if (itemStore?.items.length || src.itemTypes || sheets.length) {
@@ -152,6 +158,7 @@ export async function duplicateDocument(
       ...(itemStore?.items.length ? { items: storeAsCreates(itemStore.items) } : {}),
       ...(src.itemTypes ? { itemTypes: src.itemTypes } : {}),
       ...(sheets.length ? { sheets: sheets.map(sheetAsCreate) } : {}),
+      ...(src.workbook ? { workbook: src.workbook } : {}),
     });
   try {
     await create(placement ?? { teamId: src.teamId, folderId: src.folderId });
