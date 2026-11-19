@@ -114,10 +114,13 @@ async function headsWithAxes(
   return rows.map((row) => headFromRow(row, axes.get(row.id)));
 }
 
+// `columnsOnly`: the order of its columns alone, its rows left as its layout JSON holds them (none once chunked), for
+// a caller that finds the rows it needs itself (./sheet-cell-head).
 export async function readSheetHead(
   env: DocumentEnv,
   documentId: string,
   sheetId: string,
+  { columnsOnly = false }: { columnsOnly?: boolean } = {},
 ): Promise<SheetHead | null> {
   const row = await env.DOCUMENT_DB.prepare(
     `SELECT ${HEAD_COLUMNS} FROM sheets WHERE document_id = ? AND id = ?`,
@@ -125,7 +128,8 @@ export async function readSheetHead(
     .bind(documentId, sheetId)
     .first<SheetRow>();
   if (!row) return null;
-  return headFromRow(row, (await readAxes(env, documentId, [sheetId])).get(sheetId));
+  const axes = await readAxes(env, documentId, [sheetId], columnsOnly ? 'c' : undefined);
+  return headFromRow(row, axes.get(sheetId));
 }
 
 // The heads of a tab's sheets (titles, for uniqueness and references), or of the whole document.

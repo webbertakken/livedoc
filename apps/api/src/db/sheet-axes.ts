@@ -23,18 +23,19 @@ function parseIds(text: string): string[] {
   }
 }
 
-/** The chunks of the named sheets; a sheet with none is absent. */
+/** The chunks of the named sheets (of one axis, when named); a sheet with none is absent. */
 export async function readAxes(
   env: DocumentEnv,
   documentId: string,
   sheetIds: readonly string[],
+  only?: Axis,
 ): Promise<Map<string, SheetAxes>> {
   const rows = await env.DOCUMENT_DB.prepare(
     `SELECT sheet_id, axis, chunk, ids FROM sheet_axes
-      WHERE document_id = ?1 AND sheet_id IN (SELECT value FROM json_each(?2))
+      WHERE document_id = ?1 AND sheet_id IN (SELECT value FROM json_each(?2)) AND (?3 IS NULL OR axis = ?3)
       ORDER BY sheet_id, axis, chunk`,
   )
-    .bind(documentId, JSON.stringify(sheetIds))
+    .bind(documentId, JSON.stringify(sheetIds), only ?? null)
     .all<AxisRow>();
   const out = new Map<string, { r: AxisChunk[]; c: AxisChunk[] }>();
   for (const row of rows.results ?? []) {

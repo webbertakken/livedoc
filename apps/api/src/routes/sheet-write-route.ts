@@ -40,6 +40,7 @@ import { isSpreadsheet } from '../db/workbook';
 import { forbidden, json } from '../responses';
 import { relayTabRename } from '../room-client';
 import { axisWriteStatements } from '../db/sheet-axes';
+import { readCellWriteHead } from '../db/sheet-cell-head';
 import { gridsWith, workbookGrids } from '../db/sheet-grids';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
@@ -212,10 +213,14 @@ export async function storeSheetWrite(
   by: SheetPerson,
   scopeTab: string | null,
 ): Promise<Response> {
+  const write = body.write;
   for (let attempt = 0; attempt < SHEET_WRITE_RETRIES; attempt++) {
-    const head = await readSheetHead(ctx.env, documentId, sheetId);
+    // A cell write reads only the rows it needs of the order (db/sheet-cell-head.ts); the rest read it whole.
+    const head =
+      write.kind === 'cells'
+        ? await readCellWriteHead(ctx.env, documentId, sheetId, write)
+        : await readSheetHead(ctx.env, documentId, sheetId);
     if (!head || (scopeTab && head.tabId !== scopeTab)) return sheetNotFound();
-    const write = body.write;
     // A spreadsheet's sheets are one workbook: their titles are its tabs' names, unique in it, and their formulas read
     // across it (docs/specs/029-sheets/spreadsheet.md "The workbook shape"); a Plan Sheet's are its tab's.
     const spreadsheet = await isSpreadsheet(ctx.env, documentId);
