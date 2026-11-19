@@ -13,6 +13,7 @@ import { noteAccessEnded } from '@/lib/access-notice';
 import type { EditorMode, QaNote } from '@livedoc/document';
 import {
   parseArticleCaret,
+  parseTextDocumentCaret,
   type AgentPresence,
   type AvatarPresence,
   type ChangesetRoomOp,
@@ -56,6 +57,11 @@ import {
   resetArticlePeers,
   syncArticlePeople,
 } from '@/lib/article/article-carets-store';
+import {
+  receiveTextDocumentCaret,
+  resetTextDocumentPeers,
+  syncTextDocumentPeople,
+} from '@/lib/text-document/text-document-carets-store';
 import type { RemoteViewport } from '@/hooks/collab/useFollowMe';
 
 // Realtime room: one WebSocket per document, opened for every document saved on
@@ -375,6 +381,7 @@ export function useRoomConnection(opts: {
       // Collaborators' carets in the writing take their names and colours from here, and go with
       // whoever left (docs/specs/007-editor/article-pages.md "Collaboration").
       syncArticlePeople(participants);
+      syncTextDocumentPeople(participants);
       // Drop tab-focus entries for people who left so their avatar
       // dot doesn't linger on a tab they no longer occupy, AND seed
       // from the presence list: the room echoes each peer's current
@@ -495,6 +502,11 @@ export function useRoomConnection(opts: {
         // A text document's update (docs/specs/034-text-documents/live-editing-and-storage.md): its surface, when
         // open, merges it; the room has already stored it, so a surface opened later loads it.
         TextDocumentBus.deliver(op);
+      } else if (op.kind === 'text-document-caret') {
+        // A collaborator's selection in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
+        // "Presence"), checked field by field; drawn by that tab's surface, never written.
+        const caret = parseTextDocumentCaret(op);
+        if (caret) receiveTextDocumentCaret(from, caret);
       } else if (op.kind === 'article-caret') {
         // A collaborator's caret in an article's writing (docs/specs/007-editor/article-pages.md
         // "Collaboration"), checked field by field; drawn by that article's writing, never written.
@@ -676,6 +688,7 @@ export function useRoomConnection(opts: {
       setRemoteSelections(new Map());
       prunePeerDragPreviews(new Set());
       resetArticlePeers();
+      resetTextDocumentPeers();
       return;
     }
     joinedRef.current = false;
@@ -750,6 +763,7 @@ export function useRoomConnection(opts: {
     return () => {
       presence.cancel();
       resetArticlePeers();
+      resetTextDocumentPeers();
       // Nobody's words outlive the room they were said in.
       resetSpeechBubbles();
       openedRoom.close();

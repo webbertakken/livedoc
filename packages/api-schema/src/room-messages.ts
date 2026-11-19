@@ -139,6 +139,9 @@ export const PRESENCE_OP_KINDS = [
   // their caret, as a block id and a character offset, at cursor rates, writing nothing. From any
   // session, like the cursor: a viewer's writing takes no caret, so a viewer never sends one.
   'article-caret',
+  // Where someone is writing in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
+  // "Presence"): their selection as Yjs relative positions, at cursor rates, writing nothing.
+  'text-document-caret',
   // Whose hands are on a Plan board's card (docs/specs/026-plan/plan-board.md "What the board shows"):
   // the card someone is dragging or reading, so peers ring it in their colour. Ephemeral, never
   // logged, from any session (a viewer reads items too).
@@ -535,6 +538,8 @@ export type RoomOp =
   // Throttled like the cursor; parsed with parseArticleCaret.
   | { kind: 'article-caret'; tabId: string; flow: string; blockId: string; offset: number }
   | { kind: 'article-caret'; tabId: string; flow: null }
+  | { kind: 'text-document-caret'; tabId: string; anchor: string; head: string }
+  | { kind: 'text-document-caret'; tabId: string; anchor: null }
   // One sample of the sender's laser-pointer trail (canvas-coords).
   // Sent on every pointer move while the sender is in laser tool
   // mode, throttled like cursor. Receivers append to a per-

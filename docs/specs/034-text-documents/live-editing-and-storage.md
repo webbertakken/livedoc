@@ -48,8 +48,17 @@ api, agents) reads and writes one shape (default):
 ## Presence
 
 Each person's caret and selection in their colour with their name for a moment after it moves and on hover, travelling
-as presence (`text-document-caret`: a relative position in the CRDT, never an offset), never stored or replayed; the
-title row's avatars; a press on an avatar scrolls to their caret. None go out while a hide-cursors vote is open.
+as presence, never stored or replayed; the title row's avatars; a press on an avatar scrolls to their caret. None go out
+while a hide-cursors vote is open.
+
+- **On the wire**: `text-document-caret` with the tab and the selection's `anchor` and `head`, each a Yjs relative
+  position (base64), never an offset, so a caret stays by its character whatever is typed before it; `anchor: null`
+  when the person leaves the writing. Refused when either is not base64 or past `TEXT_DOCUMENT_CARET_MAX_CHARS`.
+- **Sent** while the person's writing has focus and they may edit (Editor, or Participant per fork D7), at the
+  cursor's rate, the last place always following, and only while the room is open (default).
+- **Drawn** as a caret in their colour on the page, the selection behind it tinted in that colour, and their name above
+  the caret for `TEXT_DOCUMENT_CARET_FRESH_MS` after it moves (default); a caret that no longer resolves (its
+  characters deleted) is not drawn. Someone who leaves the document takes their caret with them.
 
 ## Undo
 
@@ -130,6 +139,8 @@ suggestion or comment (fork D7); a Viewer's are dropped. Tests: the room refuses
 | `TEXT_DOCUMENT_CHUNK_BYTES`     | 1,900,000 | Under the room's 2,000,000-byte row cap with room for the row's other columns                                                                      |
 | `TEXT_DOCUMENT_LOG_BYTES`       | 4,000,000 | (default) Compaction keeps the log to a couple of chunks                                                                                           |
 | `TEXT_DOCUMENT_MAX_STATE_BYTES` | 64 MB     | (default) The encoded state with its history; past it, versions older than 30 days are thinned first, then edits refused with `document_too_large` |
+| `TEXT_DOCUMENT_CARET_MAX_CHARS` | 256       | (default) A relative position's base64 is a few dozen characters; anything longer is no caret                                                      |
+| `TEXT_DOCUMENT_CARET_FRESH_MS`  | 1,500     | (default) As long as an article's caret shows its name                                                                                             |
 | `TEXT_DOCUMENT_WORDS_PER_PAGE`  | 500       | (default) A page of 11 pt Arial at single spacing, for counts that need no layout                                                                  |
 | A frame of edits                | 256 KB    | The room's message cap                                                                                                                             |
 

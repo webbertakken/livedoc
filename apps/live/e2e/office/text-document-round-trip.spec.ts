@@ -60,6 +60,10 @@ test('a text document typed together leaves as ODF, survives LibreOffice and com
   const typed = 'Peer here. Minutes of the meeting. Owner here.';
   await expect(page.locator(BODY)).toHaveText(typed);
   await expect(peer.locator(BODY)).toHaveText(typed);
+  // The owner sees the peer's caret in the writing (live-editing-and-storage.md "Presence"). (The owner's own goes
+  // out once its editor knows the document is shared; this test shares it behind the editor's back, by the api.)
+  await expect(page.locator('.text-document-peer-caret')).toHaveCount(1);
+  await page.screenshot({ path: test.info().outputPath('carets.png') });
 
   // Downloaded as ODF: LibreOffice reads the same words.
   await page.getByRole('button', { name: 'File' }).click();

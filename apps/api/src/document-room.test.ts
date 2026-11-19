@@ -774,6 +774,27 @@ describe('DocumentRoom op-role enforcement', () => {
     for (const msg of received) expect(msg).not.toHaveProperty('seq');
   });
 
+  // docs/specs/034-text-documents/live-editing-and-storage.md "Presence": a text document caret is presence too.
+  it("relays a writer's text document caret unordered, and its null too", () => {
+    const { room } = newRoom();
+    const writer = connect(room, 'writer', 'edit');
+    const other = connect(room, 'other', 'edit');
+    other.ws.sent.length = 0;
+
+    sendFrame(room, writer.ws, {
+      kind: 'op',
+      op: { kind: 'text-document-caret', tabId: 't', anchor: 'AQID', head: 'AQID' },
+    });
+    sendFrame(room, writer.ws, {
+      kind: 'op',
+      op: { kind: 'text-document-caret', tabId: 't', anchor: null },
+    });
+
+    const received = opsReceived(other.ws);
+    expect(received).toHaveLength(2);
+    for (const msg of received) expect(msg).not.toHaveProperty('seq');
+  });
+
   // docs/specs/008-canvas/drag-preview.md: an editor's live drag relays unordered, and a viewer's never
   // relays at all — a viewer must not make others' elements appear to move.
   it("relays an editor's drag preview unordered, and drops a viewer's", () => {
