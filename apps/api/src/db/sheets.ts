@@ -260,13 +260,14 @@ export async function existingCells(
 export async function documentSheetTotals(
   env: DocumentEnv,
   documentId: string,
-): Promise<{ sheets: number; cells: number }> {
+): Promise<{ sheets: number; cells: number; bytes: number }> {
   const row = await env.DOCUMENT_DB.prepare(
-    `SELECT COUNT(*) AS n, COALESCE(SUM(cell_count), 0) AS c FROM sheets WHERE document_id = ?`,
+    `SELECT COUNT(*) AS n, COALESCE(SUM(cell_count), 0) AS c, COALESCE(SUM(cell_bytes), 0) AS b
+       FROM sheets WHERE document_id = ?`,
   )
     .bind(documentId)
-    .first<{ n: number; c: number }>();
-  return { sheets: row?.n ?? 0, cells: row?.c ?? 0 };
+    .first<{ n: number; c: number; b: number }>();
+  return { sheets: row?.n ?? 0, cells: row?.c ?? 0, bytes: row?.b ?? 0 };
 }
 
 // Every statement after the head's rev raise runs only when that raise landed: D1 runs a batch's statements in

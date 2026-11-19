@@ -29,7 +29,6 @@ import {
   selectCols,
   selectRows,
   single,
-  SHEET_ROWS_MAX,
 } from '@livedoc/sheets';
 import { restorePlanElement } from '@/hooks/plan/maximised-plan';
 import { useSheetController } from './sheet-controller';
@@ -39,7 +38,7 @@ import { SheetSelectionLayer, type Outline } from './SheetSelectionLayer';
 import { SheetCellEditor } from './SheetCellEditor';
 import { SheetChartsLayer } from './SheetChartsLayer';
 import { useSheetsBridgeContext } from '@/hooks/sheets/useSheetsBridge';
-import { ADD_ROWS_PX, SheetAddRows } from './SheetAddRows';
+import { ADD_ROWS_PX, SheetAddRows, roomFor } from './SheetAddRows';
 import { cellBox, pageRows, scrollToReveal, totalSize, visibleWindow } from './sheet-geometry';
 import { sheetKey } from './sheet-keys';
 import { refSpans, spanRange } from './formula-assist';
@@ -85,7 +84,7 @@ export function SheetGrid({
   const total = totalSize(c.geometry);
   // Room under the last row for Add Rows, for someone who may edit.
   const footer =
-    (c.canShape ?? c.canEdit) && c.sheet.layout.rows.length < SHEET_ROWS_MAX ? ADD_ROWS_PX : 0;
+    (c.canShape ?? c.canEdit) && roomFor(c.workbook, c.sheet).rows > 0 ? ADD_ROWS_PX : 0;
   const window = visibleWindow(c.geometry, c.scroll, {
     width: Math.max(0, c.view.width - c.geometry.headW),
     height: Math.max(0, c.view.height - c.geometry.headH),

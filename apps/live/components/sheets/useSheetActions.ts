@@ -255,9 +255,13 @@ export function useSheetActions() {
       insert: (axis: 'r' | 'c', side: 'before' | 'after') => {
         const g = primary(c);
         const [a, b] = axis === 'r' ? [g.r1, g.r2] : [g.c1, g.c2];
-        const w = insertAxis(c.sheet, axis, side === 'before' ? a : b, b - a + 1, side);
-        if (w) c.write(w, axis === 'r' ? 'Rows' : 'Columns');
-        c.announce(`${b - a + 1} ${axis === 'r' ? 'row' : 'column'}${b > a ? 's' : ''} inserted`);
+        // As many as the grid still has room for, by the sheet's kind's limits over its workbook.
+        const room = c.workbook.room(c.sheet.id);
+        const w = insertAxis(c.sheet, axis, side === 'before' ? a : b, b - a + 1, side, room);
+        if (!w || w.kind !== 'layout') return;
+        c.write(w, axis === 'r' ? 'Rows' : 'Columns');
+        const n = (w.changes[0] as { ids: readonly string[] }).ids.length;
+        c.announce(`${n} ${axis === 'r' ? 'row' : 'column'}${n > 1 ? 's' : ''} inserted`);
       },
       // Insert Cells / Delete Cells: the cells beside the selection move to make room or close the gap.
       shift: (mode: ShiftMode) => {
@@ -265,7 +269,7 @@ export function useSheetActions() {
         if (res) c.writeAll(res.edits, 'Shift');
       },
       appendRows: (count: number) => {
-        const w = appendAxis(c.sheet, 'r', count);
+        const w = appendAxis(c.sheet, 'r', count, c.workbook.room(c.sheet.id));
         if (w) c.write(w, 'Rows');
       },
       remove: (axis: 'r' | 'c') => {

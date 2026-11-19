@@ -8,7 +8,6 @@ import { inputAsText, readTypedInput } from './typed-input';
 import { isError, numberText, type Scalar } from './formula/values';
 import { PARSE_FAILURE_COPY } from './formula/parse';
 import { makeAxisIds, type Rand } from './ids';
-import { SHEET_COLS_MAX, SHEET_ROWS_MAX } from './limits';
 import type { CellChange, LayoutChange, SheetWrite } from './store';
 import type { Workbook } from './engine/workbook';
 
@@ -91,13 +90,14 @@ export function writeRows(
   const width = Math.max(0, ...rows.map((r) => r.length));
   const needRows = Math.max(0, start.r1 + rows.length - sheet.layout.rows.length);
   const needCols = Math.max(0, start.c1 + width - sheet.layout.cols.length);
-  const addRows = Math.min(needRows, SHEET_ROWS_MAX - sheet.layout.rows.length);
-  const addCols = Math.min(needCols, SHEET_COLS_MAX - sheet.layout.cols.length);
+  const room = wb.room(sheetId);
+  const addRows = Math.min(needRows, room.rows);
+  const addCols = Math.min(needCols, room.cols);
   const changes: LayoutChange[] = [];
   let rowIds = sheet.layout.rows;
   let colIds = sheet.layout.cols;
   if (addRows > 0) {
-    const grown = appendAxis(sheet, 'r', addRows, rand);
+    const grown = appendAxis(sheet, 'r', addRows, room, rand);
     if (grown && grown.kind === 'layout') {
       changes.push(...grown.changes);
       rowIds = [...rowIds, ...(grown.changes[0] as { ids: string[] }).ids];

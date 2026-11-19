@@ -10,6 +10,7 @@ import type {
   SheetWriteResponse,
 } from '@livedoc/api-schema';
 import {
+  SheetLimits,
   Workbook,
   applyLayoutChange,
   applySheetWrite,
@@ -121,10 +122,18 @@ const REFUSALS: Partial<Record<string, string>> = {
   sheet_loading: 'This sheet is still loading',
 };
 
+// A spreadsheet's own words where its limits differ (spreadsheet.md "Limits").
+const SPREADSHEET_REFUSALS: Partial<Record<string, string>> = {
+  sheet_too_large: 'A sheet holds up to 18,278 columns (A to ZZZ)',
+  input_too_long: 'A cell holds up to 50,000 characters',
+  workbook_full: 'This spreadsheet holds up to 1,000,000 rows and 20,000,000 cells',
+};
+
 // What a refused write says: a value a validation rule refuses names its cell and what the rule allows.
 export function writeRefusalMessage(
   check: { error: string; at?: string; line?: string },
   layout?: SheetLayout,
+  spreadsheet = false,
 ): string {
   if (check.error === 'value_invalid' && check.line) {
     const ix = layout && check.at ? layoutIndex(layout) : null;
@@ -135,11 +144,14 @@ export function writeRefusalMessage(
       ? `${formatA1(row, col)}: ${check.line}`
       : check.line;
   }
-  return sheetRefusalMessage(check.error);
+  return sheetRefusalMessage(check.error, spreadsheet);
 }
 
-export function sheetRefusalMessage(code: string | null): string {
-  return (code && REFUSALS[code]) ?? "Couldn't save that change";
+export function sheetRefusalMessage(code: string | null, spreadsheet = false): string {
+  return (
+    (code && ((spreadsheet ? SPREADSHEET_REFUSALS[code] : undefined) ?? REFUSALS[code])) ??
+    "Couldn't save that change"
+  );
 }
 
 // The scope of a spreadsheet's one workbook: every tab's sheets together (docs/specs/029-sheets/spreadsheet.md "The
@@ -263,6 +275,7 @@ export class SheetStore {
         sheets: [...this.entries.values()].map((e) => e.view).filter((s) => this.inScope(s, scope)),
         locale: this.deps.locale,
         cards: this.cards,
+        limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
       });
       this.workbooks.set(scope, wb);
     }
@@ -530,12 +543,13 @@ export class SheetStore {
         // Quiet writes (a card table's sync, a seed) are the system's, stored as they are.
         checkRules: checked,
         locale: this.deps.locale,
+        limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
         ...(wb ? { rangeValues: (rule) => rangeOptions(wb, sheetId, rule) } : {}),
       };
       for (const part of parts) {
         const check = validateWrite(state, part, checks);
         if (!check.ok) {
-          this.deps.toast(writeRefusalMessage(check, state.layout));
+          this.deps.toast(writeRefusalMessage(check, state.layout, this.deps.oneWorkbook));
           return check.error;
         }
         // Only a later part or write needs the sheet as this one leaves it.
@@ -752,7 +766,7 @@ export class SheetStore {
   private refused(e: unknown, sheetId: string): void {
     const code = e instanceof ApiError ? e.code : null;
     debugLog('[sheets] sheets.write.failed', { error: code });
-    this.deps.toast(sheetRefusalMessage(code));
+    this.deps.toast(sheetRefusalMessage(code, this.deps.oneWorkbook));
     if (code === 'sheet_not_found') {
       this.drop(sheetId);
       this.notify();

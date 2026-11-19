@@ -33,8 +33,15 @@ import type { MergeRefusal } from './merge-guards';
 import { cellKey, type Sheet } from './sheet';
 import { renderFormula } from './formula/stored';
 import type { Grid } from './selection';
+import { SheetLimits } from './sheet-limits';
 
 const ctx = { now: 1, by: { id: '', name: '', color: '#000000' } };
+// A Plan Sheet's room on its own grid.
+const planRoom = (sheet: Sheet) =>
+  SheetLimits.room(SheetLimits.plan, {
+    rows: sheet.layout.rows.length,
+    cols: sheet.layout.cols.length,
+  });
 const seeded = () => {
   let s = 3;
   return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
@@ -251,11 +258,11 @@ describe('rows and columns', () => {
   it('inserts, appends, deletes, hides, resizes and moves', () => {
     const b = book({ A1: 'a', A2: 'b' }, { rows: 5, cols: 3 });
     const s = () => b.sheets[0]!;
-    run(b, insertAxis(s(), 'r', 0, 2, 'before', seeded()));
+    run(b, insertAxis(s(), 'r', 0, 2, 'before', planRoom(s()), seeded()));
     expect(b.v('A3')).toBe('a');
-    run(b, insertAxis(s(), 'c', 0, 1, 'after', seeded()));
+    run(b, insertAxis(s(), 'c', 0, 1, 'after', planRoom(s()), seeded()));
     expect(s().layout.cols).toHaveLength(4);
-    run(b, appendAxis(s(), 'r', 3, seeded()));
+    run(b, appendAxis(s(), 'r', 3, planRoom(s()), seeded()));
     expect(s().layout.rows).toHaveLength(10);
     run(b, deleteAxis(s(), 'r', 0, 1));
     expect(b.v('A1')).toBe('a');
@@ -283,7 +290,7 @@ describe('rows and columns', () => {
       ...s,
       layout: { ...s.layout, cols: Array.from({ length: 200 }, (_, i) => `q${i}`) },
     };
-    expect(insertAxis(full, 'c', 0, 1, 'before')).toBeNull();
+    expect(insertAxis(full, 'c', 0, 1, 'before', planRoom(full))).toBeNull();
     expect(
       (deleteAxis(s, 'r', 0, 1) as { changes: { ids: string[] }[] }).changes[0]!.ids,
     ).toHaveLength(1);

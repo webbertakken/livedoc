@@ -3,7 +3,7 @@
 import type { GridRange } from './address';
 import { makeAxisIds, type Rand } from './ids';
 import { idRangeOf, layoutIndex, posRangeOf } from './layout';
-import { SHEET_COLS_MAX, SHEET_ROWS_MAX } from './limits';
+import type { GridSize } from './sheet-limits';
 import { cellKey, type FilterCondition, type Sheet } from './sheet';
 import { sortedOrder, type SortKey } from './sort';
 import { shiftForCopy } from './formula/stored';
@@ -21,18 +21,19 @@ import {
 
 export type Side = 'before' | 'after';
 
-// Insert `count` rows (or columns) before or after position `at`, as many as the grid still has room for.
+// Insert `count` rows (or columns) before or after position `at`, as many as the grid still has room for (`room`:
+// Workbook.room, by the sheet's kind's limits over its workbook).
 export function insertAxis(
   sheet: Sheet,
   axis: 'r' | 'c',
   at: number,
   count: number,
   side: Side,
+  room: GridSize,
   rand: Rand = Math.random,
 ): SheetWrite | null {
   const list = axis === 'r' ? sheet.layout.rows : sheet.layout.cols;
-  const room = (axis === 'r' ? SHEET_ROWS_MAX : SHEET_COLS_MAX) - list.length;
-  const n = Math.min(count, room);
+  const n = Math.min(count, axis === 'r' ? room.rows : room.cols);
   if (n <= 0) return null;
   const pos = side === 'before' ? at - 1 : at;
   const after = pos < 0 ? null : (list[Math.min(pos, list.length - 1)] ?? null);
@@ -48,10 +49,11 @@ export function appendAxis(
   sheet: Sheet,
   axis: 'r' | 'c',
   count: number,
+  room: GridSize,
   rand: Rand = Math.random,
 ): SheetWrite | null {
   const list = axis === 'r' ? sheet.layout.rows : sheet.layout.cols;
-  return insertAxis(sheet, axis, list.length - 1, count, 'after', rand);
+  return insertAxis(sheet, axis, list.length - 1, count, 'after', room, rand);
 }
 
 // Delete positions r1..r2 (or c1..c2). The last row or column of a sheet is kept: a sheet always has a cell.

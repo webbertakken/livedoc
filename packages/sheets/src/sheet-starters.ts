@@ -211,9 +211,10 @@ export function grownFor(
 ): { changes: LayoutChange[]; rowIds: string[]; read: StarterRead } {
   const changes: LayoutChange[] = [];
   let rowIds = sheet.layout.rows;
-  const short = Math.min(need - rowIds.length, SHEET_ROWS_MAX - rowIds.length);
+  const room = wb.room(sheet.id);
+  const short = Math.min(need - rowIds.length, room.rows);
   if (short > 0) {
-    const grown = appendAxis(sheet, 'r', short, rand);
+    const grown = appendAxis(sheet, 'r', short, room, rand);
     if (grown?.kind === 'layout') {
       changes.push(...grown.changes);
       rowIds = [...rowIds, ...(grown.changes[0] as { ids: string[] }).ids];

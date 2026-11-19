@@ -140,6 +140,13 @@ its text and shows its cached value.
   18,278 columns (A to ZZZ) and 200 sheets; a cell's input up to 50,000 characters.
 - Cells are counted as Google counts them: the grid's rows times columns, summed over every sheet, filled or not
   (default). Adding rows, columns or a sheet past it is refused (`workbook_full`).
+- Up to 1,000,000 rows over every sheet (Webber, 2026-11-18): rows are kept by id, about 62 MB of memory a million
+  in a room of 128 MB (measured), so the grid's 20 million cells reach a million rows only one column wide. Adding a
+  row past it is refused (`workbook_full`).
+- Built: every sheet of a spreadsheet takes these limits, in the editor (the rows Add Rows, Insert and a paste may add
+  are what the workbook has room for) and in the api (a write or a new sheet past them is refused by name, counted
+  from the stored orders without reading them); a Plan Sheet keeps its own. Opening a file still reads up to a Plan
+  Sheet's grid, and says what it cut, until a file's cells are sent in parts.
 - A workbook stores up to 1 GiB of cells (default; `workbook_full`).
 - A sheet's name breaking its rules is refused (`sheet_name_invalid`), one another sheet has (case aside) too
   (`sheet_name_taken`).

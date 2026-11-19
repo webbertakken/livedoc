@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { DOCUMENT_CELLS_MAX, SHEET_CELLS_MAX } from './limits';
 import { emptyLayout, emptySheet, type Sheet } from './sheet';
 import type { SheetWrite } from './store';
+import { SheetLimits } from './sheet-limits';
 import { documentCellCount, writesCapsProblem } from './write-caps';
 
 function seeded(seed = 7): () => number {
@@ -44,6 +45,17 @@ describe('writesCapsProblem', () => {
   it('refuses a change that would pass the sheet’s cells', () => {
     const s = { ...sheet(), layout: emptyLayout(seeded(), 2_001, 26) };
     expect(writesCapsProblem(s, [fill(s, SHEET_CELLS_MAX + 1)], 0)).toBe('sheet_full');
+  });
+
+  // spreadsheet.md "Limits": a spreadsheet's sheet holds what its grid holds.
+  it("holds a spreadsheet's sheet to the workbook's limits", () => {
+    const s = { ...sheet(), layout: emptyLayout(seeded(), 2_001, 26) };
+    const many = [fill(s, SHEET_CELLS_MAX + 1)];
+    expect(writesCapsProblem(s, many, 0, SheetLimits.spreadsheet)).toBeNull();
+    expect(writesCapsProblem(s, many, DOCUMENT_CELLS_MAX, SheetLimits.spreadsheet)).toBeNull();
+    expect(
+      writesCapsProblem(s, many, SheetLimits.spreadsheet.documentCells, SheetLimits.spreadsheet),
+    ).toBe('sheets_full');
   });
 
   it('never refuses a change that grows nothing, so a full document can still be cleared', () => {

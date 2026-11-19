@@ -10,6 +10,7 @@ import {
   posRangeOf,
   type Sheet,
   CellMap,
+  SheetLimits,
 } from '@livedoc/sheets';
 import { buildSheetChange, type SheetChange } from './sheet-change-build';
 
@@ -219,5 +220,41 @@ describe('sorting past a merge', () => {
     expect(sorted).toMatchObject({ ok: false, code: 'merge_split' });
     expect(code(b, { op: 'sort', by: 'A', range: 'A1:B3' })).toBe('merge_split');
     expect(code(b, { op: 'sort', by: 'A', range: 'A1:A3' })).toBeNull();
+  });
+});
+
+// docs/specs/029-sheets/spreadsheet.md "Limits": a spreadsheet's sheet grows by the workbook's room.
+describe("a spreadsheet's room", () => {
+  it('grows past a Plan Sheet’s 200 columns, and names the workbook when there is no room', () => {
+    n = 11;
+    const sheet: Sheet = {
+      id: 'sheet_shape2',
+      tabId: 'tab',
+      title: 'Wide',
+      layout: emptyLayout(rand, 20, 6),
+      cells: new CellMap(),
+      rev: 0,
+      createdAt: 0,
+      updatedAt: 0,
+      updatedBy: NOBODY,
+    };
+    const wb = new Workbook({ sheets: [sheet], locale: 'en-GB', limits: SheetLimits.spreadsheet });
+    const wide = buildSheetChange(
+      wb,
+      sheet.id,
+      { op: 'insert_cols', at: 'A', count: 300 },
+      [],
+      rand,
+    );
+    expect(wide).toMatchObject({ ok: true, line: 'inserted 300 columns before column A' });
+    const full: Sheet = {
+      ...sheet,
+      layout: { ...sheet.layout, rows: Array.from({ length: 1_000_000 }, (_, i) => `r${i}`) },
+    };
+    const none = new Workbook({ sheets: [full], locale: 'en-GB', limits: SheetLimits.spreadsheet });
+    expect(buildSheetChange(none, sheet.id, { op: 'insert_rows', at: 1 }, [], rand)).toMatchObject({
+      ok: false,
+      code: 'workbook_full',
+    });
   });
 });
