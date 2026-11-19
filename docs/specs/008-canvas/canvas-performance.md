@@ -280,7 +280,8 @@ The code cites each by its id.
 - **D66** What "no main-thread work" at rest means when measured: At most `IDLE_WORK_MS = 5` of main-thread task time
   over the 2 s idle window (browser housekeeping) (default).
 - **D67** When the nightly run fires: `30 2 * * *` (02:30 UTC) (default).
-- **D68** When "interactive" starts and ends for opening a board: From the tab's GET response to the start of the first
+- **D68** When "interactive" starts and ends for opening a board: From the first response that carries the tab (the
+  document's open read, which carries the tab it opens first, or else the tab's own GET) to the start of the first
   500 ms with no long task and no long animation frame; median of five opens (default).
 - **D69** How "at most once every 250 ms" treats the first change after a pause: Leading edge: shown at once; later
   changes in the window wait for one trailing redraw (default).
