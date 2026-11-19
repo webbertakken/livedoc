@@ -126,15 +126,15 @@ The stack serves whatever `apps/live/out` holds and never rebuilds it, so locall
 
 `scripts/e2e-stack.mjs` boots the stack Playwright's `webServer` waits on:
 
-1. **api**: `wrangler dev --local` (`apps/api`) on a fixed port, with
-   `db:migrate:local` applied to a fresh local D1 so persistence works.
+1. **api**: `apps/api` on Miniflare (`scripts/e2e-api.mjs`, [The api worker](#the-api-worker)) on a fixed port,
+   with `db:migrate:local` applied to a fresh local D1 so persistence works.
    `TELEMETRY_ENABLED` unset (the suite asserts on the app, not the
    events pipe), and `AI_ALLOWED_ORIGINS` blanked with `--var` (production
    declares it in `[vars]`, which would refuse the localhost editor). Every var that decides sign-in
    (`BETTER_AUTH_SECRET`, `BETTER_AUTH_SECRETS`, `EMAIL_OUTBOX`, `APP_BASE_URL`, `RESEND_API_KEY`,
    `GOOGLE_AUTH_CLIENT_ID`, `GOOGLE_AUTH_CLIENT_SECRET`) is passed explicitly, so a developer's
    `apps/api/.dev.vars` never changes the answer: a guest stack is guest-only (sign-in on would start guest
-   documents in This Browser), and `APP_BASE_URL` stays blank there because `wrangler dev` simulates the
+   documents in This Browser), and `APP_BASE_URL` stays blank there because the local worker simulates the
    `EMAIL` binding, which alone is a sign-in method once a base URL exists.
 2. **live**: the static `apps/live/out` served by a minimal Node
    server that reproduces the three things the production router +
@@ -146,7 +146,7 @@ The stack serves whatever `apps/live/out` holds and never rebuilds it, so locall
      `out/document/[id].html` ([Dedicated route for new-document creation](../007-editor/new-document-route.md): one HTML backs every document
      URL);
    - proxy `/api/*` to the api worker, WebSocket upgrades included (the realtime room), so the app is same-origin (no CORS
-     surprises, mirroring the router). Every header passes both ways, as through the router: `Cookie` and `Origin`
+     surprises, mirroring the router), each request on a connection of its own. Every header passes both ways, as through the router: `Cookie` and `Origin`
      reach better-auth, and its `Set-Cookie` lands the session cookie on the live origin. A browser context names
      a client address of its own in the `e2e-client-address` cookie, which the proxy forwards as
      `CF-Connecting-IP`: each context is its own visitor to the api's per-address sign-in rate limits, as each
@@ -174,6 +174,26 @@ The stack also runs the editor alone beside a running one (`E2E_LIVE_ONLY`,
 `E2E_LIVE_PORT`, `E2E_API_PORT`) and can pose as a deployment without an AI
 key (`E2E_NO_AI`) or with its AI budget spent (`E2E_AI_BUDGET_SPENT`); see
 [Local development](../../development/local-development.md).
+
+### The api worker
+
+The api runs on Miniflare directly, not under `wrangler dev`. `wrangler dev` puts a proxy in front of the worker
+that forwards each request over a kept-alive connection, which the worker's side closes after 5 s idle; a request
+written into it as it closes fails, and the proxy resends only a GET or a HEAD. A POST lost that way failed a spec
+at random: a new document's create never landed, and the spec waited out its timeout on the editor
+([cloudflare/workers-sdk#14641](https://github.com/cloudflare/workers-sdk/issues/14641)). Without the proxy, the
+stack's requests reach workerd's own socket, and workerd reaches the worker in process.
+
+- The worker is bundled as a deploy bundles it (`wrangler deploy --dry-run`), and its modules are listed from the
+  bundle by wrangler's module rules (`apps/api/scripts/bundle-modules.ts`).
+- Its bindings are the ones wrangler derives from `apps/api/wrangler.toml` and `.dev.vars`; `--var NAME:value`
+  sets a var, as `wrangler dev --var` does.
+- It is named and persisted as `wrangler dev` names and persists it (`apps/api/.wrangler/state/v3`), so the
+  migrations `db:migrate:local` applies are the ones it reads.
+- Miniflare is the one wrangler itself depends on, loaded through wrangler, so the two never drift apart.
+- Each request is logged (`[mf:info] POST /api/documents 201 Created (12ms)`), as `wrangler dev` logged it.
+- The live server's proxy opens a connection per request rather than keeping one alive, so it cannot meet the same
+  race on its own hop.
 
 Locally the same `playwright.config.ts` sets `reuseExistingServer`, so a
 developer with `pnpm dev` already running (live :4002 + api :8787) runs
