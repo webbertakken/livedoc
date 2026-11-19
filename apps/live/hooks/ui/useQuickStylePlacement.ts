@@ -5,8 +5,13 @@
 // clear of the chrome.
 // Re-runs when the chrome moves or resizes, or a panel arrives or leaves, coalesced to one run per frame;
 // never on a timer, and never while the chrome is still.
+// Every run is in a frame, the first one too: never in the commit that shows the panel, which has just changed the
+// page, so a read there would lay the whole board out inside the input's task (docs/specs/008-canvas/canvas-performance.md
+// "Chrome measures itself in the next frame"). The frame lays the page out anyway; the run reads it there and
+// applies before that frame paints, so the panel never shows unplaced (it is hidden until its first spot).
 
 import { useLayoutEffect, useState, type RefObject } from 'react';
+import { flushSync } from 'react-dom';
 import { placeQuickStylePanel, type Rect } from '@/lib/quick-style-placement';
 import { debugLog } from '@/lib/debug-log';
 import { CANVAS_ROOT_SELECTOR } from '@/lib/canvas-selectors';
@@ -82,11 +87,11 @@ export function useQuickStylePlacement(
       if (frame) return;
       frame = requestAnimationFrame(() => {
         frame = 0;
-        measure();
+        flushSync(measure);
       });
     };
     const resizeObserver = new ResizeObserver(schedule);
-    measure();
+    schedule();
     const events = ['resize', 'livedoc:panel-layout-changed', PANEL_PRESENCE_EVENT] as const;
     for (const ev of events) window.addEventListener(ev, schedule);
     const captured = ['pointerup', 'keyup'] as const;
