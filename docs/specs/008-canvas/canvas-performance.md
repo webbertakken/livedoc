@@ -232,7 +232,12 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   JavaScript as it runs and records the stack that forced each style or layout pass.
 - **Each gesture starts from the state it measures.** A drag starts with its shape selected: the
   undo that resets each run clears the selection, and a press that selects is the Selecting row's
-  work, not the drag's (it read as the drag's longest task).
+  work, not the drag's (it read as the drag's longest task). A run ends with nothing in hand and
+  nothing selected: a pencil stroke is undone first, while it is still the last change (clearing a
+  selection is an undo step of its own), then Escape twice puts the pen down and clears the
+  selection before Select is picked. One Escape left a diagram's stroke selected, the Select key
+  typed into its label, and every diagram row at 100% after it was measured at fit, in text
+  editing, with its caret blinking every 500 ms (the 100% still board read 7 ms).
 - **Nothing the probe does lands in a gesture's window either.** It runs without Playwright's own
   trace, which snapshots the page before and after every input action: on the reference board each
   snapshot is a task of up to 60 ms, which the budget counted as the board's own (a whiteboard zoom
@@ -240,6 +245,8 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
 - **A probe that cannot set a gesture up says why.** Each step of getting a board or a deck ready
   (opening it, a menu, a panel) fails within a minute, keeping a screenshot, the accessibility
   tree and the page's console errors with the report, rather than waiting out the whole run.
+  Setting a view fails the same way unless the zoom readout reads the zoom asked for (100%) and no
+  element is left in text editing.
 - **It runs nightly on its own**, in a scheduled workflow, against the head of `main`; a night with
   no new commit on `main` since the last run is skipped, so it spends no CI minutes on an unchanged
   build. Each run writes the budget table to the job summary and keeps the raw traces as an
