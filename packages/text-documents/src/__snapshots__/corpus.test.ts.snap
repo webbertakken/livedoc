@@ -1,0 +1,1512 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the corpus > reads libreoffice/features.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 1,
+        "name": "link",
+        "reason": "link",
+      },
+    ],
+    "kept": [
+      {
+        "count": 2,
+        "name": "br",
+      },
+      {
+        "count": 1,
+        "name": "bookmarkStart",
+      },
+      {
+        "count": 1,
+        "name": "bookmarkEnd",
+      },
+      {
+        "count": 1,
+        "name": "footnoteReference",
+      },
+      {
+        "count": 1,
+        "name": "commentRangeStart",
+      },
+      {
+        "count": 1,
+        "name": "commentRangeEnd",
+      },
+      {
+        "count": 1,
+        "name": "commentReference",
+      },
+      {
+        "count": 1,
+        "name": "tbl",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 2,
+    "paragraphs": [
+      [
+        "Title",
+        "",
+        "Features corpus",
+        "br",
+      ],
+      [
+        "Normal",
+        "",
+        "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
+        "bookmarkStart,bookmarkEnd",
+      ],
+      [
+        "Heading1",
+        "",
+        "Heading one",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "A footnote and a comment here.",
+        "footnoteReference,commentRangeStart,commentRangeEnd,commentReference",
+      ],
+      [
+        "Normal",
+        "0",
+        "Step one",
+        "",
+      ],
+      [
+        "Normal",
+        "1",
+        "Step one point one",
+        "",
+      ],
+      [
+        "Normal",
+        "0",
+        "Step two",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "Step two, second paragraph",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "Between lists, a link to the bookmark and a bad link.",
+        "",
+      ],
+      [
+        "Normal",
+        "0",
+        "Step three, continued",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "Normal",
+        "",
+        "Two columns of text in a section.",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "kept",
+        "tbl",
+      ],
+      [
+        "Normal",
+        "",
+        "After a page break, in blue.
+Second line after a tab.",
+        "br",
+      ],
+      [
+        "section",
+        "next-page",
+        "landscape",
+      ],
+      [
+        "Normal",
+        "",
+        "A landscape section.",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+      "heading1=Heading1",
+      "title=Title",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads libreoffice/features.fodt and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 1,
+        "name": "link",
+        "reason": "link",
+      },
+    ],
+    "kept": [
+      {
+        "count": 1,
+        "name": "sequence-decls",
+      },
+      {
+        "count": 1,
+        "name": "bookmark",
+      },
+      {
+        "count": 1,
+        "name": "note",
+      },
+      {
+        "count": 1,
+        "name": "annotation",
+      },
+      {
+        "count": 1,
+        "name": "annotation-end",
+      },
+      {
+        "count": 1,
+        "name": "table",
+      },
+    ],
+  },
+  "structure": {
+    "format": "odf",
+    "lists": 1,
+    "paragraphs": [
+      [
+        "kept",
+        "sequence-decls",
+      ],
+      [
+        "Title",
+        "",
+        "Features corpus",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "portrait",
+      ],
+      [
+        "Standard",
+        "",
+        "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
+        "bookmark",
+      ],
+      [
+        "Heading_20_1",
+        "",
+        "Heading one",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "A footnote and a comment here.",
+        "note,annotation,annotation-end",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step one",
+        "",
+      ],
+      [
+        "Standard",
+        "1",
+        "Step one point one",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step two",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step two, second paragraph",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "Between lists, a link to the bookmark and a bad link.",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step three, continued",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "Standard",
+        "",
+        "Two columns of text in a section.",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "kept",
+        "table",
+      ],
+      [
+        "Standard",
+        "",
+        "After a page break, in blue.
+Second line after a tab.",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "landscape",
+      ],
+      [
+        "Standard",
+        "",
+        "A landscape section.",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+      "heading1=Heading_20_1",
+      "title=Title",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads libreoffice/features.odt and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 1,
+        "name": "Thumbnails/thumbnail.png",
+        "reason": "thumbnail",
+      },
+      {
+        "count": 1,
+        "name": "link",
+        "reason": "link",
+      },
+    ],
+    "kept": [
+      {
+        "count": 1,
+        "name": "sequence-decls",
+      },
+      {
+        "count": 1,
+        "name": "bookmark",
+      },
+      {
+        "count": 1,
+        "name": "note",
+      },
+      {
+        "count": 1,
+        "name": "annotation",
+      },
+      {
+        "count": 1,
+        "name": "annotation-end",
+      },
+      {
+        "count": 1,
+        "name": "table",
+      },
+    ],
+  },
+  "structure": {
+    "format": "odf",
+    "lists": 1,
+    "paragraphs": [
+      [
+        "kept",
+        "sequence-decls",
+      ],
+      [
+        "Title",
+        "",
+        "Features corpus",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "portrait",
+      ],
+      [
+        "Standard",
+        "",
+        "Centred, with bold underline, emphasis, E=mc2 and a bookmark.",
+        "bookmark",
+      ],
+      [
+        "Heading_20_1",
+        "",
+        "Heading one",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "A footnote and a comment here.",
+        "note,annotation,annotation-end",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step one",
+        "",
+      ],
+      [
+        "Standard",
+        "1",
+        "Step one point one",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step two",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step two, second paragraph",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "Between lists, a link to the bookmark and a bad link.",
+        "",
+      ],
+      [
+        "Standard",
+        "0",
+        "Step three, continued",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "Standard",
+        "",
+        "Two columns of text in a section.",
+        "",
+      ],
+      [
+        "section",
+        "continuous",
+        "portrait",
+      ],
+      [
+        "kept",
+        "table",
+      ],
+      [
+        "Standard",
+        "",
+        "After a page break, in blue.
+Second line after a tab.",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "landscape",
+      ],
+      [
+        "Standard",
+        "",
+        "A landscape section.",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+      "heading1=Heading_20_1",
+      "title=Title",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads libreoffice/rich.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 1,
+        "name": "tbl",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 3,
+    "paragraphs": [
+      [
+        "Heading1",
+        "",
+        "Quarterly report",
+        "",
+      ],
+      [
+        "BodyText",
+        "",
+        "This paragraph has bold, italic, underline, strikethrough, x2, H2O, red text, highlight and a link.",
+        "",
+      ],
+      [
+        "Heading2",
+        "",
+        "Lists",
+        "",
+      ],
+      [
+        "BodyText",
+        "0",
+        "First bullet",
+        "",
+      ],
+      [
+        "BodyText",
+        "1",
+        "Nested bullet",
+        "",
+      ],
+      [
+        "BodyText",
+        "0",
+        "Second bullet",
+        "",
+      ],
+      [
+        "BodyText",
+        "0",
+        "One",
+        "",
+      ],
+      [
+        "BodyText",
+        "0",
+        "Two",
+        "",
+      ],
+      [
+        "BodyText",
+        "1",
+        "Two point one",
+        "",
+      ],
+      [
+        "BodyText",
+        "0",
+        "Three",
+        "",
+      ],
+      [
+        "Heading3",
+        "",
+        "A table",
+        "",
+      ],
+      [
+        "kept",
+        "tbl",
+      ],
+      [
+        "BodyText",
+        "",
+        "Centred paragraph with three spaces.",
+        "",
+      ],
+      [
+        "BodyText",
+        "",
+        "Indented, justified text that goes on long enough to wrap onto a second line in any normal page width, so justification shows.",
+        "",
+      ],
+      [
+        "Heading4",
+        "",
+        "Fourth",
+        "",
+      ],
+      [
+        "Heading5",
+        "",
+        "Fifth",
+        "",
+      ],
+      [
+        "Heading6",
+        "",
+        "Sixth",
+        "",
+      ],
+      [
+        "BodyText",
+        "",
+        "Ünïcödé ✓ 😀 <tags> & ampersands",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+      "heading1=Heading1",
+      "heading2=Heading2",
+      "heading3=Heading3",
+      "heading4=Heading4",
+      "heading5=Heading5",
+      "heading6=Heading6",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads libreoffice/rich.fodt and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 1,
+        "name": "sequence-decls",
+      },
+      {
+        "count": 1,
+        "name": "table",
+      },
+    ],
+  },
+  "structure": {
+    "format": "odf",
+    "lists": 2,
+    "paragraphs": [
+      [
+        "kept",
+        "sequence-decls",
+      ],
+      [
+        "Heading_20_1",
+        "",
+        "Quarterly report",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "This paragraph has bold, italic, underline, strikethrough, x2, H2O, red text, highlight and a link.",
+        "",
+      ],
+      [
+        "Heading_20_2",
+        "",
+        "Lists",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "First bullet",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "1",
+        "Nested bullet",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "Second bullet",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "One",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "Two",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "1",
+        "Two point one",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "Three",
+        "",
+      ],
+      [
+        "Heading_20_3",
+        "",
+        "A table",
+        "",
+      ],
+      [
+        "kept",
+        "table",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "Centred paragraph with three spaces.",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "Indented, justified text that goes on long enough to wrap onto a second line in any normal page width, so justification shows.",
+        "",
+      ],
+      [
+        "Heading_20_4",
+        "",
+        "Fourth",
+        "",
+      ],
+      [
+        "Heading_20_5",
+        "",
+        "Fifth",
+        "",
+      ],
+      [
+        "Heading_20_6",
+        "",
+        "Sixth",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "Ünïcödé ✓ 😀 <tags> & ampersands",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+      "heading1=Heading_20_1",
+      "heading2=Heading_20_2",
+      "heading3=Heading_20_3",
+      "heading4=Heading_20_4",
+      "heading5=Heading_20_5",
+      "heading6=Heading_20_6",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads libreoffice/rich.odt and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 1,
+        "name": "Thumbnails/thumbnail.png",
+        "reason": "thumbnail",
+      },
+    ],
+    "kept": [
+      {
+        "count": 1,
+        "name": "sequence-decls",
+      },
+      {
+        "count": 1,
+        "name": "table",
+      },
+    ],
+  },
+  "structure": {
+    "format": "odf",
+    "lists": 2,
+    "paragraphs": [
+      [
+        "kept",
+        "sequence-decls",
+      ],
+      [
+        "Heading_20_1",
+        "",
+        "Quarterly report",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "This paragraph has bold, italic, underline, strikethrough, x2, H2O, red text, highlight and a link.",
+        "",
+      ],
+      [
+        "Heading_20_2",
+        "",
+        "Lists",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "First bullet",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "1",
+        "Nested bullet",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "Second bullet",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "One",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "Two",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "1",
+        "Two point one",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "0",
+        "Three",
+        "",
+      ],
+      [
+        "Heading_20_3",
+        "",
+        "A table",
+        "",
+      ],
+      [
+        "kept",
+        "table",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "Centred paragraph with three spaces.",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "Indented, justified text that goes on long enough to wrap onto a second line in any normal page width, so justification shows.",
+        "",
+      ],
+      [
+        "Heading_20_4",
+        "",
+        "Fourth",
+        "",
+      ],
+      [
+        "Heading_20_5",
+        "",
+        "Fifth",
+        "",
+      ],
+      [
+        "Heading_20_6",
+        "",
+        "Sixth",
+        "",
+      ],
+      [
+        "Text_20_body",
+        "",
+        "Ünïcödé ✓ 😀 <tags> & ampersands",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+      "heading1=Heading_20_1",
+      "heading2=Heading_20_2",
+      "heading3=Heading_20_3",
+      "heading4=Heading_20_4",
+      "heading5=Heading_20_5",
+      "heading6=Heading_20_6",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/ComplexNumberedLists.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 1,
+        "name": "bookmarkStart",
+      },
+      {
+        "count": 1,
+        "name": "bookmarkEnd",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 6,
+    "paragraphs": [
+      [
+        "Normal",
+        "",
+        "This is a document with numbered lists",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Entry #1",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Entry #2, with children",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "1",
+        "2-a",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "1",
+        "2-b",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "1",
+        "2-c",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Entry #3",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Entry #4",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Restarted to 1 from 5",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Restarted @ 2",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Restarted @ 3",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Jump to new list at 10",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Now 11",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "Normal text here",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Carrying on @ 12",
+        "",
+      ],
+      [
+        "ListParagraph",
+        "0",
+        "Carrying on @ 13",
+        "bookmarkStart,bookmarkEnd",
+      ],
+      [
+        "Normal",
+        "",
+        "All done!",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/FieldCodes.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 1,
+        "name": "bookmarkStart",
+      },
+      {
+        "count": 1,
+        "name": "bookmarkEnd",
+      },
+      {
+        "count": 6,
+        "name": "fldChar",
+      },
+      {
+        "count": 2,
+        "name": "instrText",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 2,
+    "paragraphs": [
+      [
+        "kept",
+        "bookmarkStart",
+      ],
+      [
+        "kept",
+        "bookmarkEnd",
+      ],
+      [
+        "Normal",
+        "",
+        "ANTONI",
+        "fldChar,instrText,fldChar,fldChar",
+      ],
+      [
+        "Normal",
+        "",
+        "16 June 2010",
+        "fldChar,instrText,fldChar,fldChar",
+      ],
+      [
+        "Normal",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+      "heading1=Heading1",
+      "heading2=Heading2",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/Headers.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "a",
+        "",
+        "",
+        "",
+      ],
+      [
+        "a",
+        "",
+        "",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "portrait",
+      ],
+      [
+        "a",
+        "",
+        "",
+        "",
+      ],
+      [
+        "a",
+        "",
+        "",
+        "",
+      ],
+      [
+        "section",
+        "next-page",
+        "portrait",
+      ],
+      [
+        "a",
+        "",
+        "",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=a",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/SampleDoc.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 1,
+        "name": "lastRenderedPageBreak",
+        "reason": "layout-hint",
+      },
+    ],
+    "kept": [
+      {
+        "count": 1,
+        "name": "br",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "Normal",
+        "",
+        "I am a test document",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "This is page 1",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "I am Calibri (Body) in font size 11",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "",
+        "br",
+      ],
+      [
+        "Normal",
+        "",
+        "This is page two",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "It’s Arial Black in 16 point",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "It’s also in blue",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/Styles.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "berschrift1",
+        "",
+        "Heading1",
+        "",
+      ],
+      [
+        "berschrift2",
+        "",
+        "Heading2",
+        "",
+      ],
+      [
+        "berschrift3",
+        "",
+        "Heading3",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "Standard",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+      "heading1=berschrift1",
+      "heading2=berschrift2",
+      "heading3=berschrift3",
+      "title=Titel",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/VariousPictures.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [
+      {
+        "count": 10,
+        "name": "proofErr",
+        "reason": "layout-hint",
+      },
+    ],
+    "kept": [
+      {
+        "count": 5,
+        "name": "drawing",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "Standard",
+        "",
+        "Sheet with various pictures",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "(jpeg, png, wmf, emf and pict) ",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Standard",
+        "",
+        " ",
+        "drawing,drawing,drawing,drawing,drawing",
+      ],
+      [
+        "Standard",
+        "",
+        "",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/WithTabs.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 1,
+        "name": "bookmarkStart",
+      },
+      {
+        "count": 1,
+        "name": "bookmarkEnd",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "Normal",
+        "",
+        "a	b",
+        "bookmarkStart,bookmarkEnd",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/bookmarks.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 2,
+        "name": "bookmarkStart",
+      },
+      {
+        "count": 2,
+        "name": "bookmarkEnd",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "Title",
+        "",
+        "Sample Word Document",
+        "bookmarkStart",
+      ],
+      [
+        "kept",
+        "bookmarkEnd",
+      ],
+      [
+        "Title",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Title",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Title",
+        "",
+        "This is a sample Microsoft Word Document having bookmarks.",
+        "bookmarkStart",
+      ],
+      [
+        "kept",
+        "bookmarkEnd",
+      ],
+      [
+        "Title",
+        "",
+        "",
+        "",
+      ],
+      [
+        "Normal",
+        "",
+        "",
+        "",
+      ],
+    ],
+    "roles": [
+      "normal=Normal",
+      "title=Title",
+    ],
+  },
+}
+`;
+
+exports[`the corpus > reads word/bug56075-changeTracking_on.docx and writes it back the same 1`] = `
+{
+  "report": {
+    "dropped": [],
+    "kept": [
+      {
+        "count": 1,
+        "name": "bookmarkStart",
+      },
+      {
+        "count": 1,
+        "name": "bookmarkEnd",
+      },
+    ],
+  },
+  "structure": {
+    "format": "ooxml",
+    "lists": 0,
+    "paragraphs": [
+      [
+        "Standard",
+        "",
+        "Change Tracking ON",
+        "bookmarkStart,bookmarkEnd",
+      ],
+    ],
+    "roles": [
+      "normal=Standard",
+    ],
+  },
+}
+`;

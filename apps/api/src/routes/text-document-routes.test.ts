@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { Body, readOdfText, TextDocumentState, writeFodt, writeOdt } from '@livedoc/text-documents';
+import {
+  Body,
+  readTextDocumentFile,
+  TextDocument,
+  TextDocumentState,
+  writeTextDocumentFile,
+  type TextDocumentFileType,
+} from '@livedoc/text-documents';
+
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { base64OfBytes } from '@livedoc/text-documents';
 import {
@@ -9,6 +17,26 @@ import {
   storedUpdates,
 } from '../text-documents/text-document-store';
 import { makeTestRouteContext } from './test-route-context';
+
+/** A file of these paragraphs, in the format its type is. */
+function fileOf(body: Body, type: TextDocumentFileType = 'odt'): Uint8Array {
+  const format = type === 'docx' ? 'ooxml' : 'odf';
+  const written = writeTextDocumentFile(
+    TextDocument.fromTexts(
+      body.map((p) => p.text),
+      { format },
+    ),
+    type,
+  );
+  if (!written.ok) throw new Error('fixture');
+  return written.bytes;
+}
+
+/** The paragraphs a downloaded file holds. */
+async function bodyOfFile(res: Response): Promise<Body | undefined> {
+  const read = await readTextDocumentFile(new Uint8Array(await res.arrayBuffer()));
+  return read.ok ? Body.of(...TextDocument.paragraphTexts(read.document)) : undefined;
+}
 import { handleDocuments } from './documents';
 import { fileNameOf } from './text-document-routes';
 
@@ -38,7 +66,7 @@ describe('a text document opened from a file', () => {
   it('holds the file body, and downloads it again as the same file', async () => {
     const db = sqliteD1();
     const body = Body.of('First paragraph', '  spaced  out ', 'tab\there');
-    const file = base64OfBytes(writeOdt(body, 'Anything'));
+    const file = base64OfBytes(fileOf(body));
     expect((await create(db, { textDocuments: [{ tabId: 't1', file }] })).status).toBe(201);
 
     const state = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
@@ -50,11 +78,9 @@ describe('a text document opened from a file', () => {
     expect(download.headers.get('Content-Disposition')).toBe(
       'attachment; filename="Q3 report.odt"',
     );
-    const read = await readOdfText(new Uint8Array(await download.arrayBuffer()));
-    expect(read.ok && read.body).toEqual(body);
+    expect(await bodyOfFile(download)).toEqual(body);
     const flat = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=fodt');
-    const flatRead = await readOdfText(new Uint8Array(await flat.arrayBuffer()));
-    expect(flatRead.ok && flatRead.body).toEqual(body);
+    expect(await bodyOfFile(flat)).toEqual(body);
   });
 
   it('starts a text document made without a file from the seed', async () => {
@@ -64,9 +90,30 @@ describe('a text document opened from a file', () => {
     expect(await bodyOfState(state)).toEqual(Body.of(''));
   });
 
+  it('holds a Word file in an OOXML tab, and leaves it as one (C1)', async () => {
+    const db = sqliteD1();
+    const tab = { ...textTab, format: 'ooxml' };
+    const file = base64OfBytes(fileOf(Body.of('Word', 'file'), 'docx'));
+    expect((await create(db, { textDocuments: [{ tabId: 't1', file }] }, [tab])).status).toBe(201);
+    const download = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=docx');
+    expect(download.status).toBe(200);
+    expect(await bodyOfFile(download)).toEqual(Body.of('Word', 'file'));
+    expect((await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=odt')).status).toBe(
+      409,
+    );
+  });
+
+  it('refuses a Word file for a tab held in ODF, never changing its format', async () => {
+    const db = sqliteD1();
+    const file = base64OfBytes(fileOf(Body.of('Word'), 'docx'));
+    const res = await create(db, { textDocuments: [{ tabId: 't1', file }] });
+    expect(res.status).toBe(415);
+    expect(await res.json()).toEqual({ error: 'package_wrong_type' });
+  });
+
   it('reads a flat file too', async () => {
     const db = sqliteD1();
-    const file = base64OfBytes(writeFodt(Body.of('Flat'), 'F'));
+    const file = base64OfBytes(fileOf(Body.of('Flat'), 'fodt'));
     await create(db, { textDocuments: [{ tabId: 't1', file }] });
     const state = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
     expect(await bodyOfState(state)).toEqual(Body.of('Flat'));
@@ -91,7 +138,7 @@ describe('a text document opened from a file', () => {
   });
 
   it('refuses seeds that do not name one of the request’s text document tabs', async () => {
-    const file = base64OfBytes(writeOdt(Body.of('a'), 'a'));
+    const file = base64OfBytes(fileOf(Body.of('a')));
     for (const textDocuments of [
       'nope',
       [{ tabId: 'other', file }],

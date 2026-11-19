@@ -1,0 +1,69 @@
+// The body's blocks (docs/specs/034-text-documents/standard-mapping.md "The model"): paragraphs of runs and kept
+// inlines, section breaks, and kept blocks.
+import type { KeptXml } from '@livedoc/office-packages';
+import type { ListPlace } from './lists';
+import type { KeptProperties, ParagraphProps, TextProps } from './props';
+import type { Section } from './sections';
+
+/** Characters with one formatting: tabs as `\t`, line breaks as `\n`. */
+export type Run = {
+  readonly type: 'run';
+  readonly text: string;
+  /** A text style by id, under the direct formatting. */
+  readonly style?: string;
+  readonly props: TextProps;
+  /** `http(s):`, `mailto:` or `#bookmark`. */
+  readonly link?: string;
+  readonly kept?: KeptProperties;
+};
+
+/** Something inside a paragraph the model does not map (a bookmark, field, note, picture), kept as the file has it. */
+export type KeptInline = {
+  readonly type: 'kept';
+  /** What it is, for the placeholder and the reports: the element's local name. */
+  readonly name: string;
+  readonly xml: KeptXml;
+  /** The formatting of the run it sat in (ODF writes it around the kept element; OOXML's element holds its own). */
+  readonly props: TextProps;
+  readonly style?: string;
+  readonly link?: string;
+  readonly kept?: KeptProperties;
+};
+
+export type Inline = Run | KeptInline;
+
+export type Paragraph = {
+  readonly type: 'paragraph';
+  /** The paragraph style's id. */
+  readonly style: string;
+  readonly props: ParagraphProps;
+  readonly list?: ListPlace;
+  /** ODF: text formatting the paragraph gives all its characters (its automatic style's text properties). */
+  readonly text?: TextProps;
+  readonly inlines: readonly Inline[];
+  readonly kept?: KeptProperties;
+};
+
+/** Starts a section: everything after it, to the next break, has its setup. */
+export type SectionBreak = {
+  readonly type: 'section';
+  /** ODF: a continuous section that came as a `text:section`, its start tag kept. */
+  readonly region?: KeptXml;
+} & Section;
+
+/** A body-level element the model does not map (a table until tables are built, a table of contents). */
+export type KeptBlock = { readonly type: 'kept'; readonly name: string; readonly xml: KeptXml };
+
+export type Block = Paragraph | SectionBreak | KeptBlock;
+
+export const Paragraph = {
+  of: (text: string, style: string): Paragraph => ({
+    type: 'paragraph',
+    style,
+    props: {},
+    inlines: text ? [{ type: 'run', text, props: {} }] : [],
+  }),
+  /** The paragraph's own characters; kept inlines read as nothing. */
+  text: (paragraph: Paragraph): string =>
+    paragraph.inlines.map((i) => (i.type === 'run' ? i.text : '')).join(''),
+} as const;

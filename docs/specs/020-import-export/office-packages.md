@@ -1,6 +1,7 @@
 # Office packages
 
-**Status: specified.** Nothing is built.
+**Status: built** for both formats' containers, metadata, units, colours, pictures' headers and validation; embedded
+fonts wait for the document fonts.
 
 The **office packages** are the shared layer every office file LiveDoc reads or writes stands on, for both native
 formats (fork C1, ruled: ODF and OOXML both native): the **ODF package** and the **OOXML container**, their manifests and
@@ -39,20 +40,26 @@ bytes.
 6. XML is parsed by one non-validating streaming parser that never resolves entities; any `DOCTYPE` is
    `xml_doctype_refused`. Namespaces are resolved by URI, never by prefix; OOXML's `mc:AlternateContent` takes the
    first `mc:Choice` the reader understands, else `mc:Fallback`, and keeps the rest.
-7. Relationships with `TargetMode="External"` are never followed on read (remote pictures, linked templates); they are
+7. **Relationships** are read from each part's `_rels/<part>.rels` and resolved against the part's folder; a target
+   that resolves outside the package is `package_damaged`. A part the content types do not name is kept with
+   `application/octet-stream`.
+   Relationships with `TargetMode="External"` are never followed on read (remote pictures, linked templates); they are
    kept and reported.
-8. Dropped and reported, never kept: ODF `office:scripts`, `Basic/`, `Scripts/`; OOXML `vbaProject.bin` and its
-   relationships (`.docm`, `.dotm`); ActiveX controls; signatures (`META-INF/documentsignatures.xml`,
-   `_xmlsignatures/`); thumbnails.
+8. Dropped and reported, never kept: ODF `office:scripts`, `Basic/`, `Scripts/`; OOXML `vbaProject.bin`,
+   `vbaData.xml` and their relationships (`.docm`, `.dotm`); ActiveX controls; OLE objects' binaries (their
+   replacement picture stays); signatures (`META-INF/documentsignatures.xml`, `_xmlsignatures/`); thumbnails.
+9. A picture whose header gives more than `PICTURE_MAX_PIXELS` is `picture_too_large`, read before any decoding.
 
 ## Writing a package
 
 - **ODF**: `mimetype` first and stored, then `META-INF/manifest.xml` listing every entry with its media type,
   `content.xml`, `styles.xml`, `meta.xml`, `settings.xml`, pictures under `Pictures/` named by the SHA-256 of their
   bytes, `Thumbnails/thumbnail.png`; every XML entry declaring `office:version="1.4"`.
-- **OOXML**: `[Content_Types].xml` first, `_rels/.rels`, `docProps/core.xml`, `docProps/app.xml`, the main part and its
+- **OOXML**: `[Content_Types].xml` first (a `Default` per extension of kept media, an `Override` per part),
+  `_rels/.rels`, `docProps/core.xml`, `docProps/app.xml`, the main part and its
   `_rels`, `styles.xml`, `numbering.xml`, `settings.xml`, `fontTable.xml`, comment and note parts as used, media under
-  `media/` named by the SHA-256 of their bytes; relationship ids assigned in order of first use.
+  `media/` named by the SHA-256 of their bytes; relationship ids assigned in order of first use, after the ids of
+  kept relationships, which never change ([Kept content](../034-text-documents/standard-mapping.md#kept-content)).
 - Every XML entry is UTF-8 and declares only the namespaces it uses.
 - **Deterministic**: the same document gives the same bytes (fixed entry order, zip timestamps of 1980-01-01, fixed
   attribute order, automatic styles and relationship ids assigned in a fixed order).
@@ -61,37 +68,44 @@ bytes.
 ## Common pieces
 
 - **Units**: lengths read in `cm`, `mm`, `in`, `pt`, `pc`, `px` (ODF) and twentieths of a point, half-points and EMUs
-  (OOXML); the model holds points as numbers; writing uses each format's own units, to three decimals in ODF.
+  (OOXML); the model holds points as numbers rounded to three decimals; ODF lengths are written in points to three
+  decimals, OOXML's in its own units, so a length read and written comes back equal.
 - **Colours**: `#rrggbb` (ODF) and `rrggbb` or `auto` (OOXML) in and out; OOXML theme colours resolved through the
   theme part and the theme reference kept.
-- **Metadata**: title (the document's name), creator, creation and modification dates, language, the generator
+- **Metadata**: one `DocumentMetadata` for both formats (ODF `meta.xml`, OOXML `docProps/core.xml` and `app.xml`),
+  whose unmapped children are kept: title (the document's name), creator, creation and modification dates, language, the generator
   `LiveDoc/<version>`, statistics (pages, paragraphs, words, characters).
 - **Styles**: font declarations, named styles and defaults, automatic styles (ODF) and direct formatting (OOXML), with
   inheritance resolved by parent (ODF `style:parent-style-name`, OOXML `w:basedOn`).
 - **Embedded files**: pictures (PNG, JPEG, GIF, SVG, WebP, EMF and WMF kept as bytes with their fallback picture),
   equations, embedded fonts (ODF `svg:font-face-uri`; OOXML obfuscated `w:embedRegular` fonts, de-obfuscated) handed
-  only to the browser's font loader.
+  only to the browser's font loader. Pictures' media types and pixel sizes are read from their headers (PNG, JPEG,
+  GIF, WebP).
 
 ## Validation
 
 - Every file LiveDoc writes is validated in CI against **its own format's schema**: ODF against the OASIS ODF 1.4 RELAX
-  NG schemas (main and manifest) with Jing, ID-type checks off, after removing `livedoc:`, `loext:` and kept content as
+  NG schemas (main and manifest) with Jing (`-i`), ID-type checks off, after removing `livedoc:`, `loext:` and kept content as
   extended conformance defines; OOXML against the ISO/IEC 29500 Transitional XML schemas (WordprocessingML, DrawingML,
   OPC content types and relationships) after removing the namespaces `mc:Ignorable` names and kept content. A test
   writes one file per construct of the mapping, in each format, and validates each.
+- The OOXML schemas are ECMA-376 Part 4's Transitional RELAX NG (compact syntax) and Part 2's OPC schemas, checked by
+  Jing too (`-c`). Schemas and Jing are fetched from their publishers by the validation script, each pinned by its
+  SHA-256, into a gitignored cache; nothing of them is committed. CI's **Office files** job runs the validation.
 - A **corpus** of files made by LibreOffice, Microsoft Word and Google Docs, in both formats, lives with the tests, each
-  with the structure it must read as.
+  with the structure it must read as, and its maker and licence in the corpus's `README.md`.
 
 ## Named rejections
 
-| Rejection             | When                                                                                 |
-| --------------------- | ------------------------------------------------------------------------------------ |
-| `package_damaged`     | Not a zip or flat file; a bad entry name; a truncated or corrupt entry; no main part |
-| `package_too_large`   | Past a byte or entry budget                                                          |
-| `package_encrypted`   | An encrypted entry or an encrypted OOXML file                                        |
-| `package_wrong_type`  | A media type the caller does not read                                                |
-| `xml_doctype_refused` | A `DOCTYPE` in any XML entry                                                         |
-| `xml_malformed`       | XML that does not parse; the entry and line are in the report                        |
+| Rejection             | When                                                                                           |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| `package_damaged`     | Not a zip or flat file; a bad entry name or relationship target; a corrupt entry; no main part |
+| `package_too_large`   | Past a byte or entry budget                                                                    |
+| `package_encrypted`   | An encrypted entry or an encrypted OOXML file                                                  |
+| `picture_too_large`   | A picture past `PICTURE_MAX_PIXELS`                                                            |
+| `package_wrong_type`  | A media type the caller does not read                                                          |
+| `xml_doctype_refused` | A `DOCTYPE` in any XML entry                                                                   |
+| `xml_malformed`       | XML that does not parse; the entry and line are in the report                                  |
 
 ## Observability
 

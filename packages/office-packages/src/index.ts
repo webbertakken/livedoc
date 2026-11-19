@@ -39,3 +39,62 @@ export {
   type OdfPackage,
   type OdfPackageRead,
 } from './odf/odf-package';
+export { keptXmlOf, keptXmlWithin, serializeXml, type KeptXml } from './xml/kept-xml';
+export { isElementNamed, textContent, type XmlBindings, type XmlParsed } from './xml/xml-tree';
+export { readPackageEntries, startsWithZip } from './zip/package-entries';
+export {
+  emuToPt,
+  fractionToOdfPercent,
+  halfPointsToPt,
+  odfLengthToPt,
+  odfPercent,
+  ptToEmu,
+  ptToHalfPoints,
+  ptToOdf,
+  ptToTwips,
+  round3,
+  twipsToPt,
+} from './units';
+export {
+  colourToOoxml,
+  odfColour,
+  OOXML_HIGHLIGHTS,
+  ooxmlColour,
+  ooxmlHighlightName,
+} from './colours';
+export {
+  isPictureTooLarge,
+  PICTURE_MAX_PIXELS,
+  pictureHeader,
+  type PictureHeader,
+} from './pictures';
+export {
+  EXTENDED_PROPERTIES_NS,
+  odfMetaChildren,
+  ooxmlAppXml,
+  ooxmlCoreXml,
+  readOdfMeta,
+  readOoxmlMetadata,
+  statisticsOf,
+  type DocumentMetadata,
+  type DocumentStatistics,
+} from './metadata/metadata';
+export {
+  OOXML_CONTENT_TYPES,
+  OPC_NS,
+  RELATIONSHIP_TYPES,
+  transitionalType,
+} from './ooxml/ooxml-namespaces';
+export { oleKind } from './ooxml/ole';
+export {
+  readOoxmlPackage,
+  relationshipPartOf,
+  relationshipsXml,
+  resolvePartName,
+  writeOoxmlPackage,
+  type OoxmlPackage,
+  type OoxmlPackageRead,
+  type OoxmlPart,
+  type Relationship,
+  type Relationships,
+} from './ooxml/ooxml-package';

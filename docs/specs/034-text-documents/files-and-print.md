@@ -54,6 +54,11 @@ rejection or a reported drop, in [Office packages](../020-import-export/office-p
 `document_too_large` (past `TEXT_DOCUMENT_MAX_CHARS`), `picture_too_large`; remote pictures are never fetched on import
 and show **Load picture** for an Editor.
 
+- Fields that run things (Word's `DDE`, `DDEAUTO`, `INCLUDETEXT`, `INCLUDEPICTURE`, `LINK`; ODF's DDE connections)
+  are dropped and reported; their last shown text stays as text.
+- A link to anything but `http`, `https`, `mailto` or a place in the document loses its link and keeps its text,
+  reported.
+
 ## Printing
 
 - **Print** (⌘P, the toolbar): the browser's print of the laid-out pages, at their paper size, with headers, footers

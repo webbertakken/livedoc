@@ -5,6 +5,8 @@ export const PACKAGE_REJECTIONS = [
   'package_too_large',
   'package_encrypted',
   'package_wrong_type',
+  'picture_too_large',
+  'document_too_large',
   'xml_doctype_refused',
   'xml_malformed',
 ] as const;

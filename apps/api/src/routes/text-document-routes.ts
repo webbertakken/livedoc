@@ -4,13 +4,11 @@
 // Both are reads, gated as the tab is (a tab-scoped link on its own tab only). Answered inside the document's room.
 import {
   isTextDocumentFileType,
-  readOdfText,
+  TextDocument,
   TextDocumentState,
-  writeFodt,
-  writeOdt,
+  writeTextDocumentFile,
   type TextDocumentFileType,
 } from '@livedoc/text-documents';
-import type { TextDocumentFormat } from '@livedoc/document';
 import { getDocumentMeta } from '../db';
 import { downloadFileName } from '../files/download-file-name';
 import { CORS_HEADERS, json } from '../responses';
@@ -30,13 +28,6 @@ const FILE_MEDIA_TYPES: Record<TextDocumentFileType, string> = {
   odt: 'application/vnd.oasis.opendocument.text',
   fodt: 'application/vnd.oasis.opendocument.text-flat-xml',
   docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-};
-
-// Which format each file is, so a download never changes a document's format behind a person's back (fork C1).
-const FILE_FORMAT: Record<TextDocumentFileType, TextDocumentFormat> = {
-  odt: 'odf',
-  fodt: 'odf',
-  docx: 'ooxml',
 };
 
 const notTextDocument = () => json({ error: 'text_document_not_found' }, { status: 404 });
@@ -82,10 +73,15 @@ export async function handleTextDocumentRoutes(
   const type = ctx.url.searchParams.get('type') ?? 'odt';
   if (!isTextDocumentFileType(type)) return json({ error: 'file_type_unknown' }, { status: 400 });
   // Conversion is a person's choice (File > Convert); until it is built, only the document's own format leaves.
-  if (FILE_FORMAT[type] !== tab.format || type === 'docx')
-    return json({ error: 'format_not_native' }, { status: 409 });
   const body = TextDocumentState.paragraphs(TextDocumentState.load([state]));
-  const file = type === 'fodt' ? writeFodt(body, meta.name) : writeOdt(body, meta.name);
+  const document = TextDocument.fromTexts(
+    body.map((p) => p.text),
+    { format: tab.format, title: meta.name },
+  );
+  // A download never changes a document's format behind a person's back (fork C1): the other format is refused.
+  const written = writeTextDocumentFile(document, type);
+  if (!written.ok) return json({ error: written.rejection }, { status: 409 });
+  const file = written.bytes;
   console.info(
     `[text-document] file-written document=${documentId} tab=${tabId} type=${type} bytes=${file.byteLength} ms=${Date.now() - started}`,
   );
@@ -93,15 +89,4 @@ export async function handleTextDocumentRoutes(
     'Content-Type': FILE_MEDIA_TYPES[type],
     'Content-Disposition': `attachment; filename="${fileNameOf(meta.name, type)}"`,
   });
-}
-
-/** A file read into the update that seeds a new text document tab, or the package's named rejection. */
-export async function seedOfTextDocumentFile(file: Uint8Array) {
-  const read = await readOdfText(file);
-  if (!read.ok) return read;
-  return {
-    ok: true as const,
-    update: TextDocumentState.fromBody(read.body),
-    dropped: read.dropped,
-  };
 }

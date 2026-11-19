@@ -1,6 +1,8 @@
 # Standard mapping
 
-**Status: specified.** Nothing is built.
+**Status: in progress.** The model's paragraphs, runs, links, styles, lists and sections, kept content, conversion and
+the documented losses are built in both formats; every other construct of the table below is kept content until the
+phase that builds it.
 
 How a [text document](text-document.md) maps onto its two native formats (fork C1, ruled: both native): **ODF** 1.4
 part 3's text document (`office:text`) and **OOXML**, ISO/IEC 29500 WordprocessingML (`w:document`). It says which
@@ -44,6 +46,23 @@ are no others. A text document only changes format when a person converts it ([C
 | Suggestions          | `text:tracked-changes`, `text:changed-region` with `text:insertion`, `text:deletion`, `text:format-change`, `office:change-info`; `text:change-start`, `-end`, `text:change`                                                                                   | `w:ins`, `w:del`, `w:rPrChange`, `w:pPrChange` with `w:author`, `w:date`                                                                             | Suggestions, attributed and dated ([Review](review.md))                                                                   |
 | Metadata             | `office:meta`: `dc:title`, `dc:creator`, dates, `meta:document-statistic`, `dc:language`                                                                                                                                                                       | `docProps/core.xml` (`dc:title`, `dc:creator`, dates), `docProps/app.xml` (statistics), `w:lang`                                                     | Name, dates, author, language, statistics written on save                                                                 |
 
+## The model
+
+The model is plain values in `@livedoc/text-documents`, each a namespace of pure functions over immutable data.
+
+- **`TextDocument`**: its format, metadata, styles, lists, the first section's setup, the body, and its kept parts.
+- **Body**: blocks in order, each a **paragraph**, a **section break** or a **kept block**.
+- **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
+  and inlines: **runs** (characters with direct text formatting and an optional link) and **kept inlines**.
+- **`Style`**: a named paragraph or text style, its parent and next style, its formatting; the built-in styles are
+  known by role (Normal text, Title, Subtitle, Heading 1 to 6) in either format's names.
+- **`ListDefinition`**: nine levels, each bullet (with its character), numbered (with its format, its label pattern
+  and its start) or checklist; paragraphs of one list number on across anything between them.
+- **`SectionBreak`**: starts a section, on a new page or continuous, with its page setup (paper, orientation,
+  margins, page colour) and columns.
+- Lengths are points, read from either format's units and rounded to three decimals; colours are `#rrggbb`.
+- Text holds tabs as `\t` and line breaks as `\n`.
+
 ## Extensions
 
 What Google Docs does and neither standard has an element for is written in LiveDoc's extension namespace,
@@ -66,6 +85,16 @@ A file can hold what the model does not: other suites' extensions, form controls
 mail-merge fields, indexes other than the table of contents, smart chips, embedded objects other than equations, custom
 shapes and text boxes, and constructs of newer versions of either standard.
 
+- **Four grains of keeping.** A **kept block** is a body-level element the model does not map (a table until tables
+  are built, a table of contents); a **kept inline** is one inside a paragraph (a bookmark, a field, a note, a picture),
+  with the formatting of the run it sat in; **kept properties** are the file's own formatting element of a paragraph,
+  run, style, list or section, written back as it was while the model's values read from it are unchanged, and
+  rebuilt from the model, its unmapped children kept, once they change; **kept parts** are the package's other
+  entries (pictures, themes, settings, headers, notes), written back with their relationships and media types.
+- **Namespaces travel.** Kept XML carries the namespace bindings it needs; the document's root keeps the arriving
+  root's declarations and OOXML's ignorable list, so kept content reads as it did.
+- **Relationship ids stay.** An OOXML relationship keeps its id; a new one (a link) is numbered after the highest kept
+  one, in order of first use, and a link to a target a kept relationship already names reuses its id.
 - **Kept, untouched, in its own format.** Each such construct is stored where it stood, as its XML (and any package
   entry it needs, with its relationship), with the paragraph or table it sat in, and written back byte-equal while that
   paragraph is not edited. In the editor it shows as a grey placeholder with its name ("Form control, kept from the
@@ -116,16 +145,22 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
 | Either format, edited    | A kept construct inside an edited paragraph keeps its XML but loses any automatic style the edit reshaped        |
 | Either format            | Heading levels past 6 show as Heading 6 (the level is kept and written back)                                     |
-| ODF to OOXML             | Kept content; ODF-only list and page features the mapping table marks (to be completed per construct in Phase 5) |
-| OOXML to ODF             | Kept content, content controls other than checkboxes, OMML equations become MathML                               |
+| ODF to OOXML             | Kept content (by name and count); lowercase and capitalised text transforms (only uppercase has a Word property) |
+| ODF to OOXML             | Continuous sections' own names and their protection                                                              |
+| OOXML to ODF             | Kept content (by name and count), content controls other than checkboxes, OMML equations become MathML           |
+| Either format, converted | Unmapped formatting inside kept properties (theme colours and fonts, revision ids): the model's values stay      |
+| Word files               | Proofing marks (`w:proofErr`) and last-rendered page breaks: Word recomputes them on open                        |
+| ODF files                | Soft page breaks (`text:soft-page-break`): layout hints every suite recomputes                                   |
+| ODF files                | Nested sections are written back one after another, each with its own columns                                    |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                         |
 
 ## Limits
 
-| Constant                     | Value     | Why                                                                                 |
-| ---------------------------- | --------- | ----------------------------------------------------------------------------------- |
-| `TEXT_DOCUMENT_MAX_CHARS`    | 1,020,000 | Google's limit ([Text document](text-document.md#limits))                           |
-| `PACKAGE_MAX_BYTES`          | 100 MB    | (default) An import's file; past it, `package_too_large` before inflating           |
-| `PACKAGE_MAX_INFLATED_BYTES` | 200 MB    | (default) The byte budget across every entry of one import, the zip-bomb guard      |
-| `PACKAGE_MAX_ENTRIES`        | 5,000     | (default) Entries in one package                                                    |
-| `KEPT_CONTENT_MAX_BYTES`     | 1 MB      | (default) Kept content per text document; past it, the rest is dropped and reported |
+| Constant                     | Value     | Why                                                                                                                       |
+| ---------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `TEXT_DOCUMENT_MAX_CHARS`    | 1,020,000 | Google's limit ([Text document](text-document.md#limits))                                                                 |
+| `PACKAGE_MAX_BYTES`          | 100 MB    | (default) An import's file; past it, `package_too_large` before inflating                                                 |
+| `PACKAGE_MAX_INFLATED_BYTES` | 200 MB    | (default) The byte budget across every entry of one import, the zip-bomb guard                                            |
+| `PACKAGE_MAX_ENTRIES`        | 5,000     | (default) Entries in one package                                                                                          |
+| `KEPT_CONTENT_MAX_BYTES`     | 1 MB      | (default) Kept XML per text document (blocks and inlines, not package entries); past it, the rest is dropped and reported |
+| `PICTURE_MAX_PIXELS`         | 100 M     | (default) A picture's width times height, read from its header; past it, `picture_too_large`                              |
