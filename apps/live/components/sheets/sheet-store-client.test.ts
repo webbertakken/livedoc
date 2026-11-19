@@ -891,7 +891,12 @@ describe('a spreadsheet’s store', () => {
         fetchWorkbook,
         fetchSheetCells: vi.fn(),
         createSheet: vi.fn(),
-        writeSheet: vi.fn(),
+        // A write lands as sent, one rev on.
+        writeSheet: vi.fn(async (_s: unknown, _id: string, req: { write: SheetWrite }) => ({
+          applied: req.write,
+          rev: 2,
+          cells: [],
+        })),
         deleteSheet: vi.fn(),
       } as never,
     });
@@ -924,6 +929,7 @@ describe('a spreadsheet’s store', () => {
     await book.loadTab('tabA');
     expect(book.workbook('tabA').limits).toBe(SheetLimits.spreadsheet);
     expect(long(book)).toBeNull();
+    await book.settle();
     const plan = make(false).store;
     await plan.loadTab('tabA');
     expect(long(plan)).toBe('input_too_long');
