@@ -462,6 +462,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     open: ELEMENT_WHY,
   },
   'apps/live/app/document/[id]/useSlideDeck.ts UI·Changed': { values: PRESENTATION_FIELDS },
+  // A text document downloaded in the format it is held in (docs/specs/034-text-documents/text-document.md).
+  'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {
+    values: ['TextDocumentOdt', 'TextDocumentDocx'],
+  },
   'apps/live/components/dialogs/settings/settings-catalogue.ts UI·Toggled': {
     values: PRESENTATION_SETTINGS.toggled,
   },
