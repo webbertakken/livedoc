@@ -45,6 +45,16 @@ const SHAPE_FAMILIES: Partial<Record<ShapeKind, KindFamilyId>> = {
   'bar-chart': 'charts',
   'line-chart': 'charts',
   sankey: 'charts',
+  chair: 'office-seating',
+  desk: 'office-seating',
+  sofa: 'office-seating',
+  room: 'office-seating',
+  'meeting-table': 'office-seating',
+  plant: 'office-seating',
+  bookshelf: 'office-seating',
+  'water-cooler': 'office-seating',
+  'coffee-machine': 'office-seating',
+  rug: 'office-seating',
 };
 
 export function kindFamilyOfShape(kind: string): KindFamilyId | null {

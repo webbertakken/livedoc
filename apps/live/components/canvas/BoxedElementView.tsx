@@ -48,8 +48,7 @@ import { PageCornerFold } from '@/components/canvas/PageCornerFold';
 import { ReactionBurst } from '@/components/canvas/ReactionBurst';
 import { FenceView } from '@/components/canvas/collab/FenceView';
 import { AvatarPadView } from '@/components/canvas/collab/AvatarPadView';
-import { FurnitureView, isFurnitureViewShape } from '@/components/canvas/collab/FurnitureView';
-import { RoomView } from '@/components/canvas/collab/RoomView';
+import { isFurnitureViewShape } from '@/components/canvas/collab/furniture-kinds';
 import { isCssNativeBorderStyle } from '@/components/canvas/border-css';
 import { describeVariant, editingLook } from '@/components/canvas/element-variant';
 import { useElementSurface } from '@/components/canvas/CanvasSurfaceContext';
@@ -99,6 +98,9 @@ const VOTE_DIMMED_OPACITY = 0.35;
 
 // A mind map root's halo, the mind maps family's: drawn on a mind node only, which draws once the family is in.
 const MindRootHalo = familyFace('mind-maps', 'MindRootHalo');
+// Furniture and rooms, the office and seating family's: drawn on such a piece only, which draws once the family is in.
+const FurnitureView = familyFace('office-seating', 'FurnitureView');
+const RoomView = familyFace('office-seating', 'RoomView');
 // A record box's rows and their in-place editing, the entities family's: drawn on an entity only, likewise.
 const EntityView = familyFace('entities', 'EntityView');
 // A hand-drawn body, the sketches family's: drawn in a hand-drawn finish only, which draws once the family is in.

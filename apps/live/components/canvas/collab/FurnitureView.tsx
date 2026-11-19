@@ -25,6 +25,7 @@ import {
   type SeatingKind,
   type ShapeElement,
 } from '@livedoc/document';
+import { isFurnitureViewShape } from './furniture-kinds';
 
 // How long a machine answers a drink.
 const MACHINE_ANSWER_MS = 1500;
@@ -55,11 +56,6 @@ const NOUN: Record<SeatingKind | Exclude<OfficeKind, 'room'>, string> = {
   'coffee-machine': 'Coffee machine',
   rug: 'Rug',
 };
-
-/** Whether FurnitureView draws this kind: seating, and every office piece but the room (RoomView). */
-export function isFurnitureViewShape(kind: string): kind is keyof typeof NOUN {
-  return kind in NOUN;
-}
 
 export function FurnitureView({
   element,

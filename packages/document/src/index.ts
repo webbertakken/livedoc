@@ -729,7 +729,9 @@ export * from './avatar-palette';
 export * from './avatar-pad';
 // Seating (docs/specs/009-elements/chair.md): the chair, desk and sofa drawings and every seat's feet point.
 export * from './seating';
+export * from './seating-art';
 export * from './office';
+export * from './office-art';
 export * from './actor-figure';
 export * from './color-wash';
 export { labelOn } from './readable-colour';
