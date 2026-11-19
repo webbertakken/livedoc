@@ -76,6 +76,7 @@ const BOARD = [
   box('marker', 'circle', 1160, { y: 320, finish: 'marker' }),
   box('office-seating', 'chair', 1360, { y: 320 }),
   box('room', 'room', 40, { y: 520, width: 400, height: 260 }),
+  box('avatar-mode', 'avatar-pad', 480, { y: 520 }),
 ];
 
 test('a board draws every family’s face in its first frame', async ({ page, pageErrors }) => {
@@ -141,6 +142,37 @@ test('a palette press places a family not yet in once it is', async ({
 
   await expect(page.locator('[data-element-id]')).toHaveCount(1);
   expect(waits).toEqual(['[element-kinds] press waits family=concepts']);
+  expectNoPageErrors(pageErrors);
+});
+
+// docs/specs/016-platform/web-performance.md: Avatar mode loads on first use. Its code is held back and never
+// prefetched here, so the character can only step in once picking Avatar has fetched it.
+test('picking Avatar fetches its family, and the character steps in once it is in', async ({
+  page,
+  context,
+  pageErrors,
+}) => {
+  await enableDebugLogs(context);
+  const loads: string[] = [];
+  page.on('console', (msg) => {
+    if (msg.text().includes('family=avatar-mode')) loads.push(msg.text().split(' ms=')[0]!);
+  });
+  await page.addInitScript(() => {
+    window.requestIdleCallback = () => 0;
+  });
+  await openStartBlank(page);
+  await holdBackOnDemandCode(page);
+  await seedTab(page, [
+    box('walk', 'mode-button', 40, { mode: 'avatar', width: 120, height: 120 }),
+  ]);
+  expect(loads).toEqual([]);
+
+  await page.getByRole('button', { name: /switch to Avatar mode/ }).click();
+  await expect(page.locator('[data-avatar="self"]')).toHaveCount(1);
+  expect(loads).toEqual([
+    '[element-kinds] load family=avatar-mode reason=element',
+    '[element-kinds] in family=avatar-mode',
+  ]);
   expectNoPageErrors(pageErrors);
 });
 

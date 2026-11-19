@@ -16,6 +16,7 @@ export const KIND_FAMILY_LOADERS = {
   sketches: () => import('./families/sketches'),
   wireframes: () => import('./families/wireframes'),
   'office-seating': () => import('./families/office-seating'),
+  'avatar-mode': () => import('./families/avatar-mode'),
 } as const;
 
 export type KindFamilyId = keyof typeof KIND_FAMILY_LOADERS;

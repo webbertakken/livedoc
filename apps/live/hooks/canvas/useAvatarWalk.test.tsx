@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
 
 import { act, renderHook } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { createShape, DRINK_HOLD_MS, type Element } from '@livedoc/document';
 import { DEFAULT_AVATAR_CONFIG } from '@/lib/avatar-config';
 import { FENCE_REACH } from '@/lib/avatar-fence';
 import { useAvatarWalk } from './useAvatarWalk';
+
+// The walk's fences are Avatar mode's family's, reached through the registry (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // Leaving Avatar mode (docs/specs/008-canvas/avatar-mode.md) drops whatever the character was doing and
 // vacates its chair, and tells peers to drop it.

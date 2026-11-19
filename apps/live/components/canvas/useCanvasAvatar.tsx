@@ -27,6 +27,7 @@ import { usePortalTravel } from '@/components/canvas/portal-travel';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { useLatest } from '@/hooks/ui/useLatest';
 import { loadAvatarSpeechLayer } from '@/lib/editor-deferred-code';
+import { useKindFamilyLoaded, useKindFamilyNeeded } from '@/lib/element-kinds/react';
 
 type CanvasAvatarInput = {
   props: CanvasProps;
@@ -62,7 +63,15 @@ export function useCanvasAvatar({
   // The character's figure / clothing / hair / size (docs/specs/008-canvas/avatar-mode.md), persisted per
   // browser. Owned here because both the sprite and the Avatar Panel (down in
   // CanvasChrome) read it, and it outlives any one walk.
-  const avatarLook = useAvatarConfig({ active: canvasTool === 'avatar' });
+  const avatarMode = canvasTool === 'avatar';
+  const avatarLook = useAvatarConfig({ active: avatarMode });
+  // The walk, its keys and its words are Avatar mode's family's (docs/specs/016-platform/web-performance.md): picking
+  // Avatar, or a peer's character on the board, asks for it, and the character steps in once it is in, a short
+  // wait the first time only.
+  // Its faces draw only once it is in: needing nothing answers ready, so the family's own state says.
+  useKindFamilyNeeded(avatarMode || props.remoteAvatars.length > 0 ? 'avatar-mode' : null);
+  const avatarModeIn = useKindFamilyLoaded('avatar-mode');
+  const walking = avatarMode && avatarModeIn;
   // Where the next entry into Avatar mode should place the character, when it
   // was entered by pressing a button on the canvas. Cleared once used, so a
   // later entry from the palette spawns at the viewport centre as before.
@@ -81,14 +90,14 @@ export function useCanvasAvatar({
   const [avatarBurst, setAvatarBurst] = useState<{ reaction: Reaction; seed: number } | null>(null);
   const avatarBurstSeq = useRef(0);
   // Your status in Avatar mode (docs/specs/008-canvas/avatar-mode.md "Status"), cleared on leaving it.
-  const [avatarStatus, setAvatarStatus] = useAvatarStatus(canvasTool === 'avatar');
+  const [avatarStatus, setAvatarStatus] = useAvatarStatus(avatarMode);
   // A character walks among what is drawn: a hidden layer's fences, portals and seats are not there.
   const walkElements = useMemo(
     () => visibleLayerElements(elements, tabLayers),
     [elements, tabLayers],
   );
   const avatar = useAvatarWalk({
-    active: canvasTool === 'avatar',
+    active: walking,
     config: avatarLook.config,
     status: avatarStatus,
     onToggleFigure: avatarLook.toggleFigure,
@@ -140,7 +149,7 @@ export function useCanvasAvatar({
   };
   // The panel's Behaviour and Reactions on the keyboard (docs/specs/008-canvas/avatar-mode.md "Keyboard actions").
   useAvatarActionKeys({
-    active: canvasTool === 'avatar',
+    active: walking,
     onReaction: avatar.playReaction,
     onBurst: playAvatarBurst,
   });
@@ -151,7 +160,7 @@ export function useCanvasAvatar({
   // Speech bubbles (docs/specs/008-canvas/avatar-mode.md "Speech bubbles"): an Editor or a Participant says
   // something above their character's head; everyone on the tab sees it float away.
   const speech = useAvatarSpeech({
-    active: canvasTool === 'avatar',
+    active: walking,
     // The session's own say (docs/specs/013-workspace/share-roles.md): an Editor or a Participant, never by
     // whether the canvas is read-only.
     canSpeak: !!props.takePart,
@@ -239,6 +248,7 @@ export function useCanvasAvatar({
   // declared here, repointed on every render, read at call time.
   const enterPortalRef = useLatest<(from: ShapeElement) => void>(enterPortal);
   return {
+    avatarModeIn,
     avatar,
     avatarBurst,
     avatarLook,
