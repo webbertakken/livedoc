@@ -1,4 +1,4 @@
-// Where a web component's parts sit (docs/specs/009-elements/web-components.md): a stat row's cards, a process's
+// Where a web component's parts sit (docs/specs/009-elements/web-components-and-no-groups.md): a stat row's cards, a process's
 // steps, a header's links, a banner's and a hero caption's text. Pure, so the canvas faces (the web components family's,
 // docs/specs/016-platform/web-performance.md) and the headless renderer place them from the same numbers. Apart from
 // web-components.ts, which every board reads.
