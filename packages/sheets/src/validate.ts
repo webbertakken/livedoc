@@ -6,15 +6,10 @@ import { storedAst } from './formula/stored';
 import { tokenize } from './formula/tokens';
 import {
   FORMULA_MAX,
-  INPUT_MAX,
-  SHEET_BYTES_MAX,
-  SHEET_CELLS_MAX,
   SHEET_COLS_MAX,
   SHEET_FREEZE_COLS_MAX,
   SHEET_FREEZE_ROWS_MAX,
   SHEET_MERGES_MAX,
-  SHEET_ROWS_MAX,
-  SHEET_SIZED_AXES_MAX,
   SHEET_TITLE_MAX,
   SHEET_WRITE_BYTES_MAX,
   SHEET_WRITE_CELLS_MAX,
@@ -35,6 +30,8 @@ import { applySheetWrite, type CellChange, type SheetWrite } from './store';
 import { applyLayoutChange, type LayoutChange } from './store-layout';
 import { rangeNameProblem } from './range-names';
 import { isFilterCondition } from './filter';
+import { SheetLimits } from './sheet-limits';
+import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
 import {
   NOBODY,
   type Cell,
@@ -130,8 +127,8 @@ export function validInput(v: unknown): v is CellInput {
   return false;
 }
 
-function inputProblem(input: CellInput): SheetRejection | null {
-  if ('s' in input && input.s.length > INPUT_MAX) return 'input_too_long';
+function inputProblem(input: CellInput, limits: SheetLimits): SheetRejection | null {
+  if ('s' in input && input.s.length > limits.input) return 'input_too_long';
   if ('f' in input) {
     if (input.f.t.length > FORMULA_MAX) return 'input_too_long';
     // Every @n must name a reference and every reference be named; the template must read.
@@ -159,11 +156,11 @@ export function sheetBytes(sheet: Sheet): number {
   return n;
 }
 
-function cellChangeProblem(ch: CellChange): Validation {
+function cellChangeProblem(ch: CellChange, limits: SheetLimits): Validation {
   if (!isAxisId(ch.r) || !isAxisId(ch.c)) return no('axis_id_invalid', `${ch.r}:${ch.c}`);
   if (ch.i !== undefined && ch.i !== null) {
     if (!validInput(ch.i)) return no('write_invalid', `${ch.r}:${ch.c}`);
-    const p = inputProblem(ch.i);
+    const p = inputProblem(ch.i, limits);
     if (p) return no(p, `${ch.r}:${ch.c}`);
   }
   if (ch.f !== undefined && ch.f !== null && !validFormatPatch(ch.f))
@@ -301,7 +298,8 @@ function layoutChangeProblem(ch: LayoutChange, layout: SheetLayout): Validation 
         typeof conds === 'object' &&
         conds !== null &&
         !Array.isArray(conds) &&
-        Object.keys(conds).length <= SHEET_COLS_MAX &&
+        // A condition a column, on a spreadsheet's widest sheet at most.
+        Object.keys(conds).length <= WORKBOOK_COLS_MAX &&
         Object.entries(conds).every(([col, cond]) => isAxisId(col) && isFilterCondition(cond))
         ? OK
         : no('filter_invalid');
@@ -336,16 +334,15 @@ function overlaps(a: { r1: number; c1: number; r2: number; c2: number }, b: type
   return a.r1 <= b.r2 && b.r1 <= a.r2 && a.c1 <= b.c2 && b.c1 <= a.c2;
 }
 
-// The sheet's shape after a write is within the limits.
-export function sheetProblem(sheet: Sheet): Validation {
+// The sheet's shape after a write is within the limits of its kind (a Plan Sheet's by default).
+export function sheetProblem(sheet: Sheet, limits: SheetLimits = SheetLimits.plan): Validation {
   const { layout } = sheet;
-  if (layout.rows.length > SHEET_ROWS_MAX || layout.cols.length > SHEET_COLS_MAX)
+  if (layout.rows.length > limits.rows || layout.cols.length > limits.cols)
     return no('sheet_too_large');
   if (layout.rows.length === 0 || layout.cols.length === 0) return no('write_invalid');
-  if (sheet.cells.size > SHEET_CELLS_MAX || sheetBytes(sheet) > SHEET_BYTES_MAX)
-    return no('sheet_full');
+  if (sheet.cells.size > limits.cells || sheetBytes(sheet) > limits.bytes) return no('sheet_full');
   const sized = Object.keys(layout.rowSize ?? {}).length + Object.keys(layout.colSize ?? {}).length;
-  if (sized > SHEET_SIZED_AXES_MAX) return no('sheet_full');
+  if (sized > limits.sizedAxes) return no('sheet_full');
   if (
     (layout.rules?.length ?? 0) > VALIDATION_RULES_MAX ||
     (layout.formatRules?.length ?? 0) > FORMAT_RULES_MAX
@@ -366,16 +363,22 @@ function mergeProblem(layout: SheetLayout): Validation {
 }
 
 // The sheet's shape after a write is within the limits, its merges aside (mergeProblem).
-function limitsProblem(sheet: Sheet): Validation {
-  return sheetProblem({ ...sheet, layout: { ...sheet.layout, merges: undefined } });
+function limitsProblem(sheet: Sheet, limits: SheetLimits): Validation {
+  return sheetProblem({ ...sheet, layout: { ...sheet.layout, merges: undefined } }, limits);
 }
 
 const refsOk = (refs: unknown[]) => refs.every(isStoredRef);
 
 // Options for checking a write against the sheet's validation rules (data-validation.md "Where values are checked"):
 // `checkRules` false for an undo, a redo and the writes stored as they are; `rangeValues` from the editor, which can
-// work a Dropdown from a Range's options out (the api cannot, so it skips those rules).
-export type WriteCheck = { checkRules?: boolean; locale?: string; rangeValues?: RangeValues };
+// work a Dropdown from a Range's options out (the api cannot, so it skips those rules). `limits`: the sheet's kind's
+// (SheetLimits), a Plan Sheet's by default.
+export type WriteCheck = {
+  checkRules?: boolean;
+  locale?: string;
+  rangeValues?: RangeValues;
+  limits?: SheetLimits;
+};
 
 // The first written value a Reject rule refuses, on the sheet as the write leaves it.
 function rulesProblem(after: Sheet, write: SheetWrite, opts: WriteCheck): Validation {
@@ -414,7 +417,7 @@ export function validateWrite(sheet: Sheet, write: SheetWrite, opts: WriteCheck 
   if (cells.length > SHEET_WRITE_CELLS_MAX) return no('write_too_large');
   if (JSON.stringify(write).length > SHEET_WRITE_BYTES_MAX) return no('write_too_large');
   for (const ch of cells) {
-    const v = cellChangeProblem(ch);
+    const v = cellChangeProblem(ch, opts.limits ?? SheetLimits.plan);
     if (!v.ok) return v;
   }
   if (write.kind === 'layout') {
@@ -448,7 +451,7 @@ export function validateWrite(sheet: Sheet, write: SheetWrite, opts: WriteCheck 
     (after.layout.rules?.length ?? 0) > (sheet.layout.rules?.length ?? 0) ||
     (after.layout.formatRules?.length ?? 0) > (sheet.layout.formatRules?.length ?? 0);
   if (grew || more) {
-    const v = limitsProblem(after);
+    const v = limitsProblem(after, opts.limits ?? SheetLimits.plan);
     if (!v.ok) return v;
   }
   // Merges are judged by what the write did to them, grown or not: a reorder can pull a merge over another without
@@ -467,7 +470,10 @@ export function validateWrite(sheet: Sheet, write: SheetWrite, opts: WriteCheck 
 }
 
 // A whole new sheet (a create, a copy, a restore).
-export function validateSheetCreate(sheet: Sheet): Validation {
+export function validateSheetCreate(
+  sheet: Sheet,
+  limits: SheetLimits = SheetLimits.plan,
+): Validation {
   if (!isSheetId(sheet.id)) return no('write_invalid', 'id');
   const t = sheet.title.trim();
   if (t.length === 0 || t.length > SHEET_TITLE_MAX) return no('title_invalid');
@@ -539,10 +545,10 @@ export function validateSheetCreate(sheet: Sheet): Validation {
   for (const [key, cell] of sheet.cells) {
     if (cell.input) {
       if (!validInput(cell.input)) return no('write_invalid', key);
-      const p = inputProblem(cell.input);
+      const p = inputProblem(cell.input, limits);
       if (p) return no(p, key);
     }
     if (cell.format && !validFormat(cell.format)) return no('format_invalid', key);
   }
-  return sheetProblem(sheet);
+  return sheetProblem(sheet, limits);
 }

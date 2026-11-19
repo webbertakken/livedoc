@@ -3,17 +3,19 @@
 // under the row limit, Enter adds, and it is gone at the limit or for someone who may only look.
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { SHEET_ROWS_MAX } from '@livedoc/sheets';
+import { SHEET_ROWS_MAX, SheetLimits } from '@livedoc/sheets';
 import { planPalette } from '@/components/plan/plan-palette';
 import { SheetControllerProvider, type SheetController } from './sheet-controller';
 import { SheetAddRows } from './SheetAddRows';
 
-function draw(rows: number, canEdit = true) {
+// The engine stands in as the room it answers: a Plan Sheet's own grid, or a spreadsheet's by the workbook's limits.
+function draw(rows: number, canEdit = true, limits = SheetLimits.plan) {
   const onAdd = vi.fn();
   const focusGrid = vi.fn();
   const c = {
     canEdit,
-    sheet: { layout: { rows: { length: rows } } },
+    sheet: { id: 'sheetA00', layout: { rows: { length: rows } } },
+    workbook: { room: () => SheetLimits.room(limits, { rows, cols: 26 }) },
     geometry: { headW: 46, headH: 22 },
     palette: planPalette('light'),
     focusGrid,
@@ -68,6 +70,12 @@ describe('Add Rows', () => {
     const h = draw(SHEET_ROWS_MAX - 40);
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
     expect(h.onAdd).toHaveBeenCalledWith(40);
+  });
+
+  it("grows a spreadsheet's sheet past a Plan Sheet's 10,000 rows", () => {
+    const h = draw(SHEET_ROWS_MAX, true, SheetLimits.spreadsheet);
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    expect(h.onAdd).toHaveBeenCalledWith(100);
   });
 
   it('keeps presses and keys from reaching the grid', () => {

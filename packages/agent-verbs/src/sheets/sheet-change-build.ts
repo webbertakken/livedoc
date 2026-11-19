@@ -31,6 +31,7 @@ import {
   type Rand,
   type SheetWrite,
   type Workbook,
+  SheetLimits,
 } from '@livedoc/sheets';
 import type { SheetRefusal } from './sheet-state';
 import { buildRuleChange, type SheetRuleChange } from './sheet-rule-change';
@@ -238,12 +239,14 @@ export function buildSheetChange(
             ? `Row ${change.at} is past the sheet's ${rowCount} rows.`
             : `Column "${change.at}" is not a column of the sheet (A to ${columnLetters(colCount - 1)}).`,
         );
-      const write = insertAxis(sheet, rows ? 'r' : 'c', at, count, side, rand);
+      const write = insertAxis(sheet, rows ? 'r' : 'c', at, count, side, wb.room(sheetId), rand);
       if (!write)
-        return refuse(
-          'sheet_too_large',
-          'A sheet has up to 10,000 rows and 200 columns (A to GR).',
-        );
+        return wb.limits === SheetLimits.spreadsheet
+          ? refuse(
+              'workbook_full',
+              'A spreadsheet has up to 1,000,000 rows and 20,000,000 cells over every sheet, and 18,278 columns (A to ZZZ) a sheet.',
+            )
+          : refuse('sheet_too_large', 'A sheet has up to 10,000 rows and 200 columns (A to GR).');
       // insertAxis answers one layout insert, its ids the rows or columns made.
       const { changes } = write as Extract<SheetWrite, { kind: 'layout' }>;
       const ids = (changes[0] as { ids: string[] }).ids;

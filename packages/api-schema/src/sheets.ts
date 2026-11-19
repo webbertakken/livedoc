@@ -87,6 +87,8 @@ export const SHEET_ERRORS = [
   'sheet_name_taken',
   // A span of rows that is not `<from>-<to>`, runs backwards or passes a page (SHEET_PAGE_ROWS).
   'rows_invalid',
+  // A spreadsheet past its rows or grid cells over every sheet, or its stored bytes (spreadsheet.md "Limits").
+  'workbook_full',
 ] as const;
 export type SheetError = (typeof SHEET_ERRORS)[number];
 

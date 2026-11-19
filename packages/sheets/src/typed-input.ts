@@ -19,7 +19,8 @@ export function readTypedInput(
   ctx: SheetsCtx,
   asText = false,
 ): TypedRead {
-  if (text.length > INPUT_MAX) return { kind: 'invalid', reason: 'input_too_long', at: INPUT_MAX };
+  const max = ctx.inputMax ?? INPUT_MAX;
+  if (text.length > max) return { kind: 'invalid', reason: 'input_too_long', at: max };
   if (!asText && text.startsWith('=')) {
     if (text.length > FORMULA_MAX) return { kind: 'invalid', reason: 'too_long', at: FORMULA_MAX };
     const compiled = compileFormula(text, ctx);

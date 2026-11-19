@@ -5,7 +5,8 @@ import type { Sheet } from '../sheet';
 import type { WorkbookRecord } from '../workbook-record';
 import { StyleTable } from './cell-style';
 import { SheetName } from './sheet-name';
-import { workbookGridRefusal, type WorkbookLimitRefusal } from './workbook-limits';
+import { SheetLimits } from '../sheet-limits';
+import type { WorkbookLimitRefusal } from './workbook-limits';
 import type { KeptPart, Protection, WorkbookObject } from './workbook-parts';
 
 export type WorkbookModel = {
@@ -33,7 +34,10 @@ function problems(model: WorkbookModel): WorkbookProblem[] {
     if (named.ok) taken.push(named.name);
     else out.push({ k: named.refusal, sheetId: sheet.id });
   }
-  const limit = workbookGridRefusal(model.sheets.map((s) => s.layout));
+  const limit = SheetLimits.workbookRefusal(
+    SheetLimits.spreadsheet,
+    model.sheets.map((s) => ({ rows: s.layout.rows.length, cols: s.layout.cols.length })),
+  );
   if (limit) out.push({ k: limit });
   const ids = new Set(model.sheets.map((s) => s.id));
   for (const part of [...model.protections, ...model.objects])

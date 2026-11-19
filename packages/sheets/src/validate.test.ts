@@ -4,6 +4,8 @@ import { makeSheets } from './testing/book';
 import { cellKey, type Sheet } from './sheet';
 import { CellMap } from './cells/cell-map';
 import type { SheetWrite } from './store';
+import { SheetLimits } from './sheet-limits';
+import { WORKBOOK_COLS_MAX } from './workbook/workbook-limits';
 
 const base = (): Sheet =>
   makeSheets({ 'Sheet 1': { A1: '=SUM(B1:B2)' } }, { rows: 5, cols: 3 })[0]!;
@@ -327,5 +329,65 @@ describe('validateSheetCreate', () => {
     expect(validInput({ b: true })).toBe(true);
     expect(validInput({ q: 1 })).toBe(false);
     expect(validInput({ f: null })).toBe(false);
+  });
+});
+
+// docs/specs/029-sheets/spreadsheet.md "Limits": a spreadsheet's sheets take the workbook's limits.
+describe("a spreadsheet's sheet", () => {
+  const spreadsheet = { limits: SheetLimits.spreadsheet };
+  const ids = (n: number, prefix: string) =>
+    Array.from({ length: n }, (_, i) => `${prefix}${String(i).padStart(5, '0')}`);
+
+  it('takes an input up to 50,000 characters, and refuses one past', () => {
+    const at = (n: number): SheetWrite => ({
+      kind: 'cells',
+      cells: [{ r: R(0), c: C(0), i: { s: 'x'.repeat(n) } }],
+    });
+    expect(validateWrite(base(), at(50_000), spreadsheet)).toEqual({ ok: true });
+    expect(validateWrite(base(), at(50_001), spreadsheet)).toMatchObject({
+      error: 'input_too_long',
+    });
+    // A Plan Sheet keeps its 10,000.
+    expect(validateWrite(base(), at(10_001))).toMatchObject({ error: 'input_too_long' });
+  });
+
+  it('grows past a Plan Sheet’s 10,000 rows and 200 columns', () => {
+    const rows: SheetWrite = {
+      kind: 'layout',
+      changes: [{ k: 'insertRows', after: null, ids: ids(10_000, 'rr') }],
+    };
+    expect(validateWrite(base(), rows)).toMatchObject({ error: 'sheet_too_large' });
+    expect(validateWrite(base(), rows, spreadsheet)).toEqual({ ok: true });
+    const cols: SheetWrite = {
+      kind: 'layout',
+      changes: [{ k: 'insertCols', after: null, ids: ids(300, 'cc') }],
+    };
+    expect(validateWrite(base(), cols, spreadsheet)).toEqual({ ok: true });
+  });
+
+  it('refuses a sheet wider than column ZZZ', () => {
+    const cols: SheetWrite = {
+      kind: 'layout',
+      changes: [{ k: 'insertCols', after: null, ids: ids(WORKBOOK_COLS_MAX, 'cc') }],
+    };
+    expect(validateWrite(base(), cols, spreadsheet)).toMatchObject({ error: 'sheet_too_large' });
+  });
+
+  it('holds more than a Plan Sheet’s 50,000 cells', () => {
+    const s = base();
+    const cells = s.cells.copy();
+    for (let i = 0; i < 50_000; i++) cells.set(cellKey(`x${i}`, 'y'), { input: { n: i } });
+    const write: SheetWrite = { kind: 'cells', cells: [{ r: R(1), c: C(1), i: { n: 1 } }] };
+    expect(validateWrite({ ...s, cells }, write, spreadsheet)).toEqual({ ok: true });
+  });
+
+  it('makes a sheet whole by the same limits', () => {
+    const long = CellMap.from([['r:c', { input: { s: 'x'.repeat(20_000) } }]]);
+    expect(validateSheetCreate({ ...base(), cells: long })).toMatchObject({
+      error: 'input_too_long',
+    });
+    expect(validateSheetCreate({ ...base(), cells: long }, SheetLimits.spreadsheet)).toEqual({
+      ok: true,
+    });
   });
 });

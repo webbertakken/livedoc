@@ -6,10 +6,8 @@
 
 import type { SheetWriteRequest, SheetWriteResponse } from '@livedoc/api-schema';
 import {
-  DOCUMENT_CELLS_MAX,
-  SHEET_BYTES_MAX,
+  SheetLimits,
   SheetName,
-  SHEET_CELLS_MAX,
   applySheetWrite,
   cellKey,
   cellsFromJson,
@@ -42,6 +40,7 @@ import { isSpreadsheet } from '../db/workbook';
 import { forbidden, json } from '../responses';
 import { relayTabRename } from '../room-client';
 import { axisWriteStatements } from '../db/sheet-axes';
+import { gridsWith, workbookGrids } from '../db/sheet-grids';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
 import {
@@ -130,27 +129,52 @@ async function capsProblem(
   documentId: string,
   head: SheetHead,
   cells: readonly CellChange[],
+  limits: SheetLimits,
 ): Promise<Response | null> {
   const g = growth(cells);
   if (g.count === 0) return null;
   let added = g.count;
   let addedBytes = g.bytes;
-  const near =
-    head.cellCount + g.count > SHEET_CELLS_MAX || head.cellBytes + g.bytes > SHEET_BYTES_MAX;
+  const near = head.cellCount + g.count > limits.cells || head.cellBytes + g.bytes > limits.bytes;
   const totals = await documentSheetTotals(ctx.env, documentId);
-  const docNear = totals.cells + g.count > DOCUMENT_CELLS_MAX;
+  const docNear =
+    totals.cells + g.count > limits.documentCells || totals.bytes + g.bytes > limits.documentBytes;
   if (near || docNear) {
     // Close to a cap: count exactly, as cells the write replaces add nothing new.
     const existing = await existingCells(ctx.env, documentId, head.id, g.keys);
     added -= existing.count;
     addedBytes -= existing.bytes;
   }
-  if (head.cellCount + added > SHEET_CELLS_MAX || head.cellBytes + addedBytes > SHEET_BYTES_MAX) {
+  if (head.cellCount + added > limits.cells || head.cellBytes + addedBytes > limits.bytes) {
     console.info('[sheets] sheets.full', { documentId });
     return sheetRejected('sheet_full', 413);
   }
-  if (totals.cells + added > DOCUMENT_CELLS_MAX) return sheetRejected('sheets_full', 413);
+  if (totals.cells + added > limits.documentCells) return sheetRejected('sheets_full', 413);
+  // A spreadsheet's stored bytes over every sheet (spreadsheet.md "Limits").
+  if (totals.bytes + addedBytes > limits.documentBytes) {
+    console.info('[workbook] refused', { error: 'workbook_full', bytes: true });
+    return sheetRejected('workbook_full', 413);
+  }
   return null;
+}
+
+// A spreadsheet's grid grown by a write, against the workbook's rows and grid cells over every sheet
+// (spreadsheet.md "Limits"): read only when the write adds rows or columns.
+async function gridProblem(
+  ctx: DocumentRouteContext,
+  documentId: string,
+  head: SheetHead,
+  after: Sheet,
+  limits: SheetLimits,
+): Promise<Response | null> {
+  const rows = after.layout.rows.length;
+  const cols = after.layout.cols.length;
+  if (rows <= head.layout.rows.length && cols <= head.layout.cols.length) return null;
+  const grids = gridsWith(await workbookGrids(ctx.env, documentId), { id: head.id, rows, cols });
+  const refusal = SheetLimits.workbookRefusal(limits, grids);
+  if (!refusal) return null;
+  console.info('[workbook] refused', { error: refusal, rows, cols });
+  return sheetRejected(refusal, 413);
 }
 
 export async function writeSheet(
@@ -196,6 +220,7 @@ export async function storeSheetWrite(
     // across it (docs/specs/029-sheets/spreadsheet.md "The workbook shape"); a Plan Sheet's are its tab's.
     const spreadsheet = await isSpreadsheet(ctx.env, documentId);
     const scope = spreadsheet ? undefined : head.tabId;
+    const limits = SheetLimits.of(spreadsheet);
     if (write.kind === 'title') {
       const others = (await listSheetHeads(ctx.env, documentId, scope))
         .filter((h) => h.id !== sheetId)
@@ -218,7 +243,10 @@ export async function storeSheetWrite(
     let landed;
     try {
       // Validation rules are checked unless the write is an undo or one stored as it is (data-validation.md).
-      const check = validateWrite(light, write, { checkRules: !body.undo && !body.unchecked });
+      const check = validateWrite(light, write, {
+        checkRules: !body.undo && !body.unchecked,
+        limits,
+      });
       if (!check.ok)
         return sheetRejected(
           check.error,
@@ -239,8 +267,12 @@ export async function storeSheetWrite(
     }
     const applied = landed.applied;
     const cells = applied.kind === 'title' ? [] : (applied.cells ?? []);
-    const caps = await capsProblem(ctx, documentId, head, cells);
+    const caps = await capsProblem(ctx, documentId, head, cells, limits);
     if (caps) return caps;
+    const grid = spreadsheet
+      ? await gridProblem(ctx, documentId, head, landed.sheet, limits)
+      : null;
+    if (grid) return grid;
     const now = Date.now();
     const nextRev = head.rev + 1;
     const nonce = crypto.randomUUID();

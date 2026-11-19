@@ -19,6 +19,8 @@ export type SheetsCtx = {
   byId(id: string): SheetHandle | undefined;
   // A named range by name, as the formula's sheet reads it (formulas.md "Named ranges"); null when it reads none.
   name?(name: string): PosRef | null;
+  // The characters a typed input may hold: the sheet's kind's (SheetLimits), a Plan Sheet's by default.
+  inputMax?: number;
 };
 
 // A reference as positions in its target sheet. `sheet` null is the formula's own sheet.

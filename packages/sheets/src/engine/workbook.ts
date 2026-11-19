@@ -3,6 +3,7 @@
 // the volatile ones. Long chains of references never overflow the stack: past a depth the deep cell is worked
 // out first, from the top, and the read is tried again.
 import type { CardSource } from '../cards';
+import { SheetLimits, type GridSize } from '../sheet-limits';
 import { localMs, serialFromMs } from '../dates';
 import { formatA1 } from '../address';
 import { layoutIndex, posRangeOf } from '../layout';
@@ -36,6 +37,8 @@ type WorkbookOptions = {
   now?: () => number;
   rand?: () => number;
   cards?: CardSource | null;
+  // The limits its sheets are held to: a spreadsheet's, or (by default) a Plan Sheet's (sheet-limits.ts).
+  limits?: SheetLimits;
 };
 
 const DEPTH_MAX = 250;
@@ -58,6 +61,7 @@ type Claim = { sheetId: string; r1: number; c1: number; r2: number; c2: number }
 
 export class Workbook {
   readonly locale: string;
+  readonly limits: SheetLimits;
   private readonly sheets = new Map<string, Sheet>();
   private cards: CardSource | null;
   private readonly nowFn: () => number;
@@ -88,6 +92,7 @@ export class Workbook {
 
   constructor(opts: WorkbookOptions) {
     this.locale = opts.locale;
+    this.limits = opts.limits ?? SheetLimits.plan;
     this.cards = opts.cards ?? null;
     this.nowFn = opts.now ?? localNow;
     this.randFn = opts.rand ?? Math.random;
@@ -96,6 +101,21 @@ export class Workbook {
   }
 
   // ---- The sheets ---------------------------------------------------------------------------------------
+
+  /** The rows and columns a sheet may still grow by: its kind's limits over every sheet of the workbook. */
+  room(sheetId: string): GridSize {
+    const sheet = this.sheets.get(sheetId);
+    if (!sheet) return { rows: 0, cols: 0 };
+    const grids = [...this.sheets.values()].map((s) => ({
+      rows: s.layout.rows.length,
+      cols: s.layout.cols.length,
+    }));
+    return SheetLimits.room(
+      this.limits,
+      { rows: sheet.layout.rows.length, cols: sheet.layout.cols.length },
+      SheetLimits.sizeOf(grids),
+    );
+  }
 
   sheet(id: string): Sheet | undefined {
     return this.sheets.get(id);
@@ -284,6 +304,7 @@ export class Workbook {
       const list = [...this.sheets.values()].sort((a, b) => a.createdAt - b.createdAt);
       ctx = {
         own: own ? handle(own) : { id: sheetId, title: '', layout: { rows: [], cols: [] } },
+        inputMax: this.limits.input,
         byTitle: (t) => {
           const lower = t.toLowerCase();
           const s = list.find((x) => x.title.toLowerCase() === lower);

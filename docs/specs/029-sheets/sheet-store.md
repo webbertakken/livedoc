@@ -93,7 +93,7 @@ this page holds for both until the Plan Sheet retires.
     loading" (default); changing loaded cells and renaming go as ever.
   - An offline spreadsheet loads whole from this browser.
 - **Limits**: the spreadsheet's ([Spreadsheet](spreadsheet.md#limits)): 20 million cells a workbook (S7),
-  18,278 columns, 200 sheets, 1 GiB of stored cells (default); up to 100,000 rows or columns with their own size a
+  1 million rows over every sheet, 18,278 columns, 200 sheets, 1 GiB of stored cells (default); up to 100,000 rows or columns with their own size a
   sheet (default); a write still 5,000 cells and 1 MB.
 - **Referenced by their tabs**: a sheet whose tab is one of a spreadsheet's tabs is referenced by it, so it never waits
   to expire as an unreferenced Plan Sheet does; a sheet tab removed leaves its sheet unreferenced, kept for Undo until it
@@ -299,6 +299,8 @@ today (above), by sheet name and A1 references, never ids, with these changes:
 - Values an agent reads are worked out by the same engine; formulas an agent writes are read in `en-GB`, as today.
 
 ## Limits
+
+A Plan Sheet's; a [spreadsheet](spreadsheet.md#limits)'s sheets take the workbook's instead.
 
 - Up to 200 sheets per document; a create past it is refused (`sheets_full`).
 - A sheet has up to 10,000 rows and 200 columns (A to GR); a write past either is refused (`sheet_too_large`); a

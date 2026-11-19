@@ -6,11 +6,11 @@
 
 import type { SheetCreateRequest, SheetResponse, SheetsResponse } from '@livedoc/api-schema';
 import {
-  DOCUMENT_CELLS_MAX,
   DOCUMENT_SHEETS_MAX,
   SHEET_CELLS_MAX,
   SHEET_TITLE_MAX,
   SHEET_WRITE_CELLS_MAX,
+  SheetLimits,
   emptyLayout,
   isSheetId,
   makeSheetId,
@@ -32,6 +32,8 @@ import {
   readSheetHead,
 } from '../db';
 import { sheetDeleteWhenUnreferencedStatements, sheetKeepStatement } from '../db/sheet-refs';
+import { gridsWith, workbookGrids } from '../db/sheet-grids';
+import { isSpreadsheet } from '../db/workbook';
 import { json, methodNotAllowed, noContent } from '../responses';
 import { readBody, type DocumentRouteContext } from './context';
 import { writer } from './item-route-kit';
@@ -103,6 +105,24 @@ function readCreate(raw: unknown, maxCells = SHEET_WRITE_CELLS_MAX): ReadCreate 
   };
 }
 
+// A new sheet of a spreadsheet against the workbook's rows and grid cells over every sheet (spreadsheet.md "Limits").
+async function newGridProblem(
+  ctx: DocumentRouteContext,
+  documentId: string,
+  id: string,
+  layout: SheetLayout,
+): Promise<Response | null> {
+  const grids = gridsWith(await workbookGrids(ctx.env, documentId), {
+    id,
+    rows: layout.rows.length,
+    cols: layout.cols.length,
+  });
+  const refusal = SheetLimits.workbookRefusal(SheetLimits.spreadsheet, grids);
+  if (!refusal) return null;
+  console.info('[workbook] refused', { error: refusal });
+  return sheetRejected(refusal, 413);
+}
+
 // Make a sheet (the route, and a new document's seed). Returns the stored sheet, or a refusal.
 async function makeSheet(
   ctx: DocumentRouteContext,
@@ -121,13 +141,18 @@ async function makeSheet(
   const heads = await listSheetHeads(ctx.env, documentId, create.tabId);
   if (titleTaken(heads, create.title)) return sheetRejected('sheet_title_taken', 409);
   const totals = await documentSheetTotals(ctx.env, documentId);
-  if (totals.sheets >= DOCUMENT_SHEETS_MAX) return sheetRejected('sheets_full', 413);
+  // A spreadsheet's sheets take the workbook's limits (spreadsheet.md "Limits"), a Plan Sheet its own.
+  const spreadsheet = await isSpreadsheet(ctx.env, documentId);
+  const limits = SheetLimits.of(spreadsheet);
+  if (totals.sheets >= limits.sheets) return sheetRejected('sheets_full', 413);
   const now = Date.now();
   if (create.copyOf) {
     const source = await readSheetHead(ctx.env, documentId, create.copyOf);
     if (!source || (caller.scopeTab && source.tabId !== caller.scopeTab)) return sheetNotFound();
-    if (totals.cells + source.cellCount > DOCUMENT_CELLS_MAX)
+    if (totals.cells + source.cellCount > limits.documentCells)
       return sheetRejected('sheets_full', 413);
+    const grid = spreadsheet ? await newGridProblem(ctx, documentId, id, source.layout) : null;
+    if (grid) return grid;
     await ctx.env.DOCUMENT_DB.batch(
       copySheetStatements(
         ctx.env,
@@ -151,14 +176,16 @@ async function makeSheet(
     };
     let check;
     try {
-      check = validateSheetCreate(sheetFromJson(sheet));
+      check = validateSheetCreate(sheetFromJson(sheet), limits);
     } catch {
       return sheetRejected('write_invalid');
     }
     if (!check.ok)
       return sheetRejected(check.error, check.error === 'sheet_full' ? 413 : 400, check.at);
-    if (totals.cells + sheet.cells.length > DOCUMENT_CELLS_MAX)
+    if (totals.cells + sheet.cells.length > limits.documentCells)
       return sheetRejected('sheets_full', 413);
+    const grid = spreadsheet ? await newGridProblem(ctx, documentId, id, sheet.layout) : null;
+    if (grid) return grid;
     await ctx.env.DOCUMENT_DB.batch(insertSheetStatements(ctx.env, documentId, sheet, now));
   }
   const [stored] = await listSheets(ctx.env, documentId, { ids: [id] });

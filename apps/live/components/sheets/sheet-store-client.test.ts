@@ -9,6 +9,7 @@ import {
   type SheetJson,
   type SheetWrite,
   CellMap,
+  SheetLimits,
 } from '@livedoc/sheets';
 import { ApiError } from '@/lib/api/core';
 import {
@@ -474,6 +475,17 @@ describe('the sheet store client', () => {
     };
     expect(sheetStoreFor(deps)).toBe(sheetStoreFor(deps));
     expect(sheetRefusalMessage(null)).toBe("Couldn't save that change");
+    // A spreadsheet's limits in its own words, and the rest as a Plan Sheet's.
+    expect(sheetRefusalMessage('workbook_full', true)).toBe(
+      'This spreadsheet holds up to 1,000,000 rows and 20,000,000 cells',
+    );
+    expect(sheetRefusalMessage('sheet_too_large', true)).toBe(
+      'A sheet holds up to 18,278 columns (A to ZZZ)',
+    );
+    expect(sheetRefusalMessage('sheet_too_large')).toBe(
+      'A sheet holds up to 10,000 rows and 200 columns',
+    );
+    expect(sheetRefusalMessage('sheet_full', true)).toBe('This sheet holds the most cells it can');
     expect(cellKey('a', 'b')).toBe('a:b');
   });
 });
@@ -879,7 +891,12 @@ describe('a spreadsheet’s store', () => {
         fetchWorkbook,
         fetchSheetCells: vi.fn(),
         createSheet: vi.fn(),
-        writeSheet: vi.fn(),
+        // A write lands as sent, one rev on.
+        writeSheet: vi.fn(async (_s: unknown, _id: string, req: { write: SheetWrite }) => ({
+          applied: req.write,
+          rev: 2,
+          cells: [],
+        })),
         deleteSheet: vi.fn(),
       } as never,
     });
@@ -895,6 +912,27 @@ describe('a spreadsheet’s store', () => {
     expect(store.workbook('tabB').value('sheetTwo', 0, 0)).toBe(42);
     expect(store.workbook('tabA')).toBe(store.workbook('tabB'));
     expect(store.titlesOn('tabA')).toEqual(['Sheet1', 'Costs']);
+  });
+
+  // spreadsheet.md "Limits": a spreadsheet's engine and checks take the workbook's limits, its refusals its words.
+  it("holds a spreadsheet's sheets to the workbook's limits", async () => {
+    const long = (store: SheetStore) => {
+      const sheet = store.sheet('sheetOne')!;
+      return store.write('sheetOne', {
+        kind: 'cells',
+        cells: [
+          { r: sheet.layout.rows[1]!, c: sheet.layout.cols[1]!, i: { s: 'x'.repeat(20_000) } },
+        ],
+      });
+    };
+    const book = make(true).store;
+    await book.loadTab('tabA');
+    expect(book.workbook('tabA').limits).toBe(SheetLimits.spreadsheet);
+    expect(long(book)).toBeNull();
+    await book.settle();
+    const plan = make(false).store;
+    await plan.loadTab('tabA');
+    expect(long(plan)).toBe('input_too_long');
   });
 
   it('keeps a Plan Sheet tab’s sheets to their tab', async () => {
