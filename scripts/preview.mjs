@@ -260,9 +260,11 @@ function run(command, args, cwd) {
 }
 
 // A brand-new worker is briefly invisible to wrangler's workers.dev step, which then fails with
-// 10007 even though the upload succeeded (docs/operations/docs-nu.md). Every preview's first deploy
-// creates seven new workers, so only that answer is retried; any other failure stops the deploy.
-const NEW_WORKER_RACE = /This Worker does not exist on your account\. \[code: 10007\]/;
+// 10007 even though the upload succeeded (docs/operations/docs-nu.md). Retried while still invisible, a worker with
+// Durable Objects is refused 10079 instead: wrangler reads no migration tag, but the first upload stored one. Every
+// preview's first deploy creates seven new workers, so only those answers are retried; any other failure stops it.
+const NEW_WORKER_RACE =
+  /This Worker does not exist on your account\. \[code: 10007\]|Actor migration tag precondition failed, got tag '' when expected tag is '[^']+'\. .*\[code: 10079\]/;
 const RACE_ATTEMPTS = 6;
 const RACE_PAUSE_MS = 30_000;
 
