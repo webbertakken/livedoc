@@ -16,7 +16,7 @@ import {
   type Gesture,
   type Measurement,
 } from './budget';
-import { interactiveMs, OPEN_QUIET_MS } from './interactive';
+import { interactiveMs, OPEN_QUIET_MS, tabArrivedAt } from './interactive';
 import { buildReferenceBoard } from './reference-board';
 import { mainThreadTasks, type TraceEvent } from './trace-tasks';
 
@@ -125,7 +125,7 @@ async function openBoard(browser: Browser, owner: string, id: string, throttle: 
   await page.goto(`/document/${id}`);
   await page.locator('[data-canvas-a11y-root]').waitFor({ timeout: 60_000 });
   await page.locator('[data-element-id="ref-0"]').first().waitFor({ timeout: 60_000 });
-  const ms = await settledOpenMs(page);
+  const ms = await settledOpenMs(page, id);
   await page.keyboard.press('Escape');
   await page.keyboard.press('v');
   await page.waitForTimeout(2000);
@@ -133,23 +133,19 @@ async function openBoard(browser: Browser, owner: string, id: string, throttle: 
 }
 
 // Polls until the quiet window interactiveMs found has actually elapsed, then returns it.
-async function settledOpenMs(page: Page): Promise<number> {
+async function settledOpenMs(page: Page, documentId: string): Promise<number> {
   const deadline = Date.now() + OPEN_SETTLE_TIMEOUT_MS;
   for (;;) {
     await page.waitForTimeout(OPEN_POLL_MS);
-    const { from, busy, now } = await page.evaluate(() => {
-      const tab = performance
+    const { resources, busy, now } = await page.evaluate(() => ({
+      resources: performance
         .getEntriesByType('resource')
-        .filter((e) => /\/documents\/[^/]+\/tabs\/[^/?]+$/.test(new URL(e.name).pathname))
-        .map((e) => (e as PerformanceResourceTiming).responseEnd)
-        .sort((a, b) => a - b)[0];
-      return {
-        from: tab ?? null,
-        busy: (window as unknown as { __busy: { start: number; end: number }[] }).__busy,
-        now: performance.now(),
-      };
-    });
-    if (from === null) throw new Error('no tab response');
+        .map((e) => ({ url: e.name, responseEnd: (e as PerformanceResourceTiming).responseEnd })),
+      busy: (window as unknown as { __busy: { start: number; end: number }[] }).__busy,
+      now: performance.now(),
+    }));
+    const from = tabArrivedAt(resources, documentId);
+    if (from === null) throw new Error("no response carried the board's tab");
     const ms = interactiveMs(from, busy);
     if (now - (from + ms) >= OPEN_QUIET_MS) return ms;
     if (Date.now() > deadline)
