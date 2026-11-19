@@ -28,6 +28,7 @@ import { isBendDelta, isCurvePoints, MAX_CURVE_POINTS } from './malformed-bends'
 import { ELEMENT_KEY_FIELDS, ELEMENT_KEY_MAX, isElementKey } from './malformed-ids';
 import { parseStrokePoints } from './stroke-points';
 import { shapeValidationIssue } from './validate-shape';
+import { TEXT_DOCUMENT_FORMATS } from './tab-kind';
 import {
   FONT_WEIGHTS,
   isFontWeight,
@@ -519,10 +520,12 @@ export function isValidElement(el: unknown): el is Element {
 // Structural validity of a tab: id + name + a bounded `elements` array of
 // valid elements with unique ids (a duplicate id breaks selection + arrow
 // references downstream, so it's rejected). Other tab fields (theme, font,
-// background) are cosmetic and left unchecked.
+// background) are cosmetic and left unchecked. A text document tab holds no element and a format of its union
+// (docs/specs/034-text-documents/text-document.md "What it holds").
 export function isValidTab(tab: unknown): tab is Tab {
   if (!isRecord(tab) || !isNonEmptyStr(tab.id) || typeof tab.name !== 'string') return false;
   if (!boundedArray(tab.elements, MAX_ELEMENTS_PER_TAB)) return false;
+  if (tab.kind === 'text-document' && !isValidTextDocumentTab(tab)) return false;
   const ids = new Set<string>();
   for (const el of tab.elements) {
     if (!isValidElement(el)) return false;
@@ -530,4 +533,11 @@ export function isValidTab(tab: unknown): tab is Tab {
     ids.add(el.id);
   }
   return true;
+}
+
+function isValidTextDocumentTab(tab: Record<string, unknown>): boolean {
+  if ((tab.elements as unknown[]).length > 0) return false;
+  return (
+    tab.format === undefined || (TEXT_DOCUMENT_FORMATS as readonly unknown[]).includes(tab.format)
+  );
 }

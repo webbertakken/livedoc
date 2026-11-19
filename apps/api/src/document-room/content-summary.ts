@@ -1,7 +1,8 @@
 // The content summary built in the room (docs/specs/006-document/document-storage.md "The content
 // summary"), from its own tables: the D1-era list subqueries (the first tab's count, documentStatsSql) and the empty
 // clean-up's test, moved here unchanged. Pushed to D1 by the outbox's document unit and answered by `create`.
-// In a spreadsheet a sheet tab's content is its sheet's filled cells, counted where a tab counts its elements.
+// In a spreadsheet a sheet tab's content is its sheet's filled cells, counted where a tab counts its elements; a text
+// document's is its characters, from its digest (docs/specs/034-text-documents/live-editing-and-storage.md "The digest").
 
 import type { ContentSummary } from '../db/content-summary';
 import { documentStatsSql, readDocumentStats } from '../db/tab-stats';
@@ -15,6 +16,7 @@ const HAS_CONTENT = `CASE
        WHEN COALESCE(json_array_length(t.data, '$.elements'), 0) > 0 THEN 1
        WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.articles')) THEN 1
        WHEN json_type(t.data, '$.form') = 'object' THEN 1
+       WHEN EXISTS (SELECT 1 FROM text_document_digest d WHERE d.tab_id = t.id AND d.has_content = 1) THEN 1
        WHEN EXISTS (SELECT 1 FROM json_each(t.data, '$.dashboard.rows') r, json_each(r.value, '$.slots') s
                      WHERE json_type(s.value, '$.content') = 'object') THEN 1
        ELSE 0
@@ -23,12 +25,14 @@ const HAS_CONTENT = `CASE
 type TabCountRow = { tab_id: string; element_count: number; has_content: number };
 // A spreadsheet's sheet tab: its sheets' filled cells and their stored bytes.
 type SheetTabRow = { tab_id: string; cells: number; bytes: number };
+// A text document tab: its characters and its stored state's bytes, as its last digest counted them.
+type TextDocumentTabRow = { tab_id: string; characters: number; state_bytes: number };
 
 export async function contentSummaryOf(
   env: DocumentEnv,
   documentId: string,
 ): Promise<ContentSummary> {
-  const [tabs, stats, sheetTabs] = await env.DOCUMENT_DB.batch([
+  const [tabs, stats, sheetTabs, textDocumentTabs] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
       `SELECT dt.tab_id, COALESCE(t.element_count, -1) AS element_count, ${HAS_CONTENT} AS has_content
          FROM document_tabs dt JOIN tabs t ON t.id = dt.tab_id
@@ -43,12 +47,20 @@ export async function contentSummaryOf(
         WHERE s.document_id = ?1 AND EXISTS (SELECT 1 FROM workbook w WHERE w.document_id = ?1)
         GROUP BY s.tab_id`,
     ).bind(documentId),
+    env.DOCUMENT_DB.prepare(
+      `SELECT d.tab_id, d.characters, d.state_bytes
+         FROM text_document_digest d JOIN document_tabs dt ON dt.tab_id = d.tab_id
+        WHERE dt.document_id = ?`,
+    ).bind(documentId),
   ]);
   const rows = (tabs?.results ?? []) as TabCountRow[];
   const sheets = new Map(((sheetTabs?.results ?? []) as SheetTabRow[]).map((r) => [r.tab_id, r]));
+  const texts = new Map(
+    ((textDocumentTabs?.results ?? []) as TextDocumentTabRow[]).map((r) => [r.tab_id, r]),
+  );
   const countOf = (row: TabCountRow): number => {
     const sheet = sheets.get(row.tab_id);
-    return sheet ? sheet.cells : row.element_count;
+    return sheet ? sheet.cells : (texts.get(row.tab_id)?.characters ?? row.element_count);
   };
   const tabCounts: Record<string, number> = {};
   for (const row of rows) tabCounts[row.tab_id] = countOf(row);
@@ -58,7 +70,9 @@ export async function contentSummaryOf(
     tabs: rows.length,
     firstTabCount: rows[0] ? countOf(rows[0]) : null,
     tabCounts,
-    stats: withCells(readDocumentStats(raw ?? null), [...sheets.values()]),
+    stats: withText(withCells(readDocumentStats(raw ?? null), [...sheets.values()]), [
+      ...texts.values(),
+    ]),
     hasContent: rows.some((r) => r.has_content === 1 || (sheets.get(r.tab_id)?.cells ?? 0) > 0),
   };
 }
@@ -76,4 +90,19 @@ function withCells(
     bytes += s.bytes;
   }
   return { ...stats, elements: cells, bytes: stats.bytes + bytes };
+}
+
+// A text document's stats: its characters join the elements, its stored state's bytes the tabs'.
+function withText(
+  stats: ContentSummary['stats'],
+  texts: readonly TextDocumentTabRow[],
+): ContentSummary['stats'] {
+  if (!stats || texts.length === 0) return stats;
+  let characters = 0;
+  let bytes = 0;
+  for (const t of texts) {
+    characters += t.characters;
+    bytes += t.state_bytes;
+  }
+  return { ...stats, elements: stats.elements + characters, bytes: stats.bytes + bytes };
 }

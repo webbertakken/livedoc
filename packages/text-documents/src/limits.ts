@@ -9,3 +9,5 @@ export const TEXT_DOCUMENT_CHUNK_BYTES = 1_900_000;
 export const TEXT_DOCUMENT_LOG_BYTES = 4_000_000;
 /** (default) Kept XML per text document, blocks and inlines (standard-mapping.md "Limits"). */
 export const KEPT_CONTENT_MAX_BYTES = 1_048_576;
+/** (default) Words a page holds when pages are counted without layout: 11 pt Arial at single spacing. */
+export const TEXT_DOCUMENT_WORDS_PER_PAGE = 500;

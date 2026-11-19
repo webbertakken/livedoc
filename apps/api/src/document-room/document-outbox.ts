@@ -7,13 +7,14 @@
 // Every D1 write is guarded by the document's D1 row (G2), so a drain racing a purge writes nothing. Every unit is a
 // full replace of what it derives, so D1's rows are safe to drop and refill.
 
-import { collabIndexRowsFromElements, type Element } from '@livedoc/document';
+import { collabIndexRowsFromElements, tabKindOf, type Element } from '@livedoc/document';
 import { tabSearchText } from '@livedoc/document-views';
 import { itemsSearchText } from '@livedoc/items';
 import { sheetSearchInputs } from '@livedoc/sheets';
 import { contentSearchStatements, ITEMS_SEARCH_KEY } from '../db/content-search';
 import { listItems } from '../db/items';
 import { listSheets } from '../db/sheets';
+import { refreshTextDocumentDigest } from '../text-documents/text-document-digest';
 import { documentImageIds } from '../db/image-refs';
 import { imageGrantPlacementStatements } from '../db/image-grants';
 import { formLinkShown } from '../forms/form-link-shown';
@@ -261,18 +262,19 @@ function goneTabStatements(
   ];
 }
 
-// The tab's content search row (docs/specs/013-workspace/content-search.md): its
-// text with the inputs of the sheets it references, or a delete when it has gone or holds no text.
+// The tab's content search row (docs/specs/013-workspace/content-search.md): its text with the texts it holds outside
+// its body (the inputs of the sheets it references, a text document's writing), or a delete when it has gone or holds
+// no text.
 function searchStatements(
   env: DocumentEnv,
   documentId: string,
   tabId: string,
   tab: StoredTab | null,
   body: Record<string, unknown>,
-  sheetInputs: readonly string[],
+  storedTexts: readonly string[],
 ): D1PreparedStatement[] {
   if (!tab) return contentSearchStatements(env, documentId, tabId, '', null);
-  const text = tabSearchText({ ...body, name: tab.name }, sheetInputs);
+  const text = tabSearchText({ ...body, name: tab.name }, storedTexts);
   return contentSearchStatements(env, documentId, tabId, tab.name, text);
 }
 
@@ -311,8 +313,21 @@ async function tabStatements(
     .first<StoredTab>();
   // One body at a time: a drain after a 200-tab import holds one tab in memory, never the document.
   const body = tab ? parseBody(tab.data) : {};
-  const sheetInputs = tab ? await referencedSheetInputs(env, documentId, tabId) : [];
-  return TAB_UNIT_PARTS.flatMap((part) => part(env, documentId, tabId, tab, body, sheetInputs));
+  const storedTexts = tab ? await storedTextsOf(env, documentId, tabId, body) : [];
+  return TAB_UNIT_PARTS.flatMap((part) => part(env, documentId, tabId, tab, body, storedTexts));
+}
+
+// What a tab holds outside its body, as text: a text document's writing, read through its digest
+// (docs/specs/034-text-documents/live-editing-and-storage.md "The digest"), or the inputs of the sheets it references.
+async function storedTextsOf(
+  env: DocumentEnv,
+  documentId: string,
+  tabId: string,
+  body: Record<string, unknown>,
+): Promise<string[]> {
+  if (tabKindOf(body) === 'text-document')
+    return [(await refreshTextDocumentDigest(env, documentId, tabId)).searchText];
+  return referencedSheetInputs(env, documentId, tabId);
 }
 
 // The cards' content search row, under ITEMS_SEARCH_KEY; no cards deletes it.

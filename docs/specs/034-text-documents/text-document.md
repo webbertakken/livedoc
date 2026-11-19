@@ -1,6 +1,6 @@
 # Text document
 
-**Status: specified.** Nothing is built.
+**Status: specified; the kind, its format, opening and downloading a file are built.**
 
 A **text document** is a tab of the `text-document` [tab kind](../006-document/document.md#domain-language): pages of
 writing, edited together live, held in one model that both open standards for word processing map onto, and leaving
@@ -74,7 +74,14 @@ from that model.
 | merge state  | What the live merge needs to keep concurrent edits apart ([Live editing and storage](live-editing-and-storage.md))                    |
 
 A text document tab has **no elements, layers, theme, background, finish or editor mode**. Tab settings that only make
-sense on a canvas are absent, not empty, so nothing that reads a tab mistakes a text document for an empty diagram.
+sense on a canvas are absent; `elements` alone stays, always empty, as the tab shape every reader shares holds it
+(default). Nothing that reads a tab mistakes a text document for an empty diagram:
+
+- the tab validator refuses a text document tab holding any element, or a `format` outside `odf` and `ooxml`;
+- no mode is written onto it and the mode switch is never offered;
+- whether it has content, its counts and its search text come from its live state
+  ([Live editing and storage](live-editing-and-storage.md#the-digest)), never from `elements`.
+
 Pictures, drawings and charts placed in it are its objects, held in its model and its package, never canvas elements
 ([Objects](objects.md)).
 

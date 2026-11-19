@@ -75,9 +75,10 @@ type ModeTab = { kind?: string; opensIn?: string; workshop?: unknown; layers?: L
 
 // Whether anything may write the tab's mode: never on an event-storming board, which keeps its own tools and notation
 // (always Structured), nor on a Board, Sheet, Dashboard or Form tab, always in Plan (docs/specs/026-plan/plan-tabs.md),
-// whatever a forged or stale `opensIn` says. A template chosen on the Plan start may still write it.
+// whatever a forged or stale `opensIn` says. A template chosen on the Plan start may still write it. Nor on a text
+// document, which has no editor mode at all (docs/specs/034-text-documents/text-document.md "What it holds").
 export function tabModeWritable(tab: ModeTab | undefined): boolean {
-  return !isEventStormingTab(tab) && !isPlanTabKind(tab?.kind);
+  return !isEventStormingTab(tab) && !isPlanTabKind(tab?.kind) && tab?.kind !== 'text-document';
 }
 
 // Whether the tab offers the mode switch (docs/specs/007-editor/editor-modes.md "The mode switch"): a tab whose mode

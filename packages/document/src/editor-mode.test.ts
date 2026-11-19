@@ -95,6 +95,12 @@ describe('editorModeSwitchable', () => {
     expect(tabModeWritable({ kind: 'event-storming' })).toBe(false);
   });
 
+  // docs/specs/034-text-documents/text-document.md "What it holds": a text document has no editor mode.
+  it('never writes a mode onto a text document, nor offers the switch', () => {
+    expect(tabModeWritable({ kind: 'text-document' })).toBe(false);
+    expect(editorModeSwitchable({ kind: 'text-document', opensIn: 'draw' })).toBe(false);
+  });
+
   it('offers the switch on a general tab', () => {
     expect(editorModeSwitchable({})).toBe(true);
     expect(editorModeSwitchable({ kind: 'diagram', opensIn: 'draw' })).toBe(true);
