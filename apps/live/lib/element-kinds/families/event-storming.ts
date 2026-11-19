@@ -1,5 +1,6 @@
 // The Event Storming family (docs/specs/016-platform/web-performance.md): reading a photographed wall into a draft of
-// notes (matching, placing, stitching several photos); suggestions, asks and the board's review, their faces
+// notes (matching, placing, stitching several photos); candidate contexts' outlines and names and the board's
+// structure (pivotal tapes, hotspot answers); suggestions, asks and the board's review, their faces
 // (components/canvas/event-storming-faces.ts) and their verbs (hooks/canvas/*-verbs.ts, reached through
 // useSuggestionActions, useChangeActions, useLaneActions, useAskActions and useReviewActions). Loaded with an Event
 // Storming tab, and by a photo import before its photos go up (hooks/canvas/usePhotoDraft.ts); never imported
@@ -11,6 +12,9 @@ export { ReviewButton, ReviewCorner } from '@/components/canvas/review/ReviewBut
 export { ReviewRings } from '@/components/canvas/review/ReviewRings';
 export { ReviewHost } from '@/components/canvas/review/ReviewHost';
 export { AskHost } from '@/components/canvas/ask/AskHost';
+export { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
+export { StructureTapes } from '@/components/canvas/structure/StructureTapes';
+export { StructureMarks } from '@/components/canvas/structure/StructureMarks';
 export { suggestionPreview } from '@/lib/suggestion-apply';
 export { offeredPreview } from '@/lib/change-preview';
 export { suggestionVerbs } from '@/hooks/canvas/suggestion-verbs';
