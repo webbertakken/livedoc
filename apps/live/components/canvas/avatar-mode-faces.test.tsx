@@ -21,9 +21,8 @@ vi.mock('@/lib/element-kinds/families', () => ({
 vi.mock('@/lib/debug-log', () => ({ debugLog: () => {} }));
 
 const { ReactionBurst } = await import('./avatar-mode-faces');
-const { resetKindFamiliesForTests, setKindFamilyFailureHandler } = await import(
-  '@/lib/element-kinds/store'
-);
+const { resetKindFamiliesForTests, setKindFamilyFailureHandler } =
+  await import('@/lib/element-kinds/store');
 
 afterEach(() => {
   resetKindFamiliesForTests();
