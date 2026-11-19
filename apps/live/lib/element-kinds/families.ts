@@ -14,6 +14,7 @@ export const KIND_FAMILY_LOADERS = {
   charts: () => import('./families/charts'),
   'event-storming': () => import('./families/event-storming'),
   sketches: () => import('./families/sketches'),
+  wireframes: () => import('./families/wireframes'),
   'office-seating': () => import('./families/office-seating'),
 } as const;
 

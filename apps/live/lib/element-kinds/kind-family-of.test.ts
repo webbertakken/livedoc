@@ -7,6 +7,7 @@ import {
   FINISHES,
   isEntity,
   isEventStormingTab,
+  isWireframePage,
   isHandDrawn,
   isOfficeShape,
   isSeatingShape,
@@ -26,6 +27,7 @@ import {
   kindFamilyOf,
   kindFamilyOfShape,
   finishFamilyOf,
+  holdsWireframePage,
 } from './kind-family-of';
 
 const shape = (kind: string, extra: object = {}) =>
@@ -195,5 +197,26 @@ describe('finishFamilyOf', () => {
     expect(
       kindFamiliesOfTab({ elements: [shape('square', { finish: 'sketch' })], finish: 'sketch' }),
     ).toEqual(['sketches']);
+  });
+});
+
+describe('holdsWireframePage', () => {
+  it.each(['wireframe', 'sheet', 'slide', undefined])(
+    'reads a %s page as the model does',
+    (kind) => {
+      const page = { id: 'p', ...(kind ? { kind } : {}) };
+      expect(holdsWireframePage([page])).toBe(isWireframePage(page as never));
+    },
+  );
+
+  it.each([undefined, 'x', [null], [{}]])('reads pages %j as holding none', (pages) => {
+    expect(holdsWireframePage(pages)).toBe(false);
+  });
+
+  it('adds the wireframes family for a tab with a wireframe page', () => {
+    expect(
+      kindFamiliesOfTab({ elements: [], pages: [{ kind: 'sheet' }, { kind: 'wireframe' }] }),
+    ).toEqual(['wireframes']);
+    expect(kindFamiliesOfTab({ elements: [], pages: [{ kind: 'sheet' }] })).toEqual([]);
   });
 });

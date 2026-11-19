@@ -86,6 +86,18 @@ export function finishFamilyOf(finish: unknown): KindFamilyId | null {
   return finish === 'sketch' || finish === 'marker' ? 'sketches' : null;
 }
 
+// Whether a tab's pages (any value shaped like them) hold a wireframe page, drawn as a device
+// (docs/specs/007-editor/wireframe-pages.md); kind-family-of.test.ts holds it to isWireframePage.
+export function holdsWireframePage(pages: unknown): boolean {
+  return (
+    Array.isArray(pages) &&
+    pages.some(
+      (page: unknown) =>
+        !!page && typeof page === 'object' && (page as { kind?: unknown }).kind === 'wireframe',
+    )
+  );
+}
+
 // The layers an Event Storming board authored before tabs carried a kind is known by (event-storming.ts
 // `isEventStormingTab`, which kind-family-of.test.ts holds this to).
 const LEGACY_EVENT_STORMING_LAYERS = new Set([
@@ -110,12 +122,13 @@ function isEventStormingTab(tab: { kind?: unknown; layers?: unknown }): boolean 
 
 // A tab's families beyond its elements': an article's writing is the pages family's, whatever elements its pages
 // hold (an article's text lives on the tab, not in an element); an Event Storming board is its family's by its kind;
-// a board in a hand-drawn finish is the sketches family's.
+// a board in a hand-drawn finish is the sketches family's; a board with a wireframe page is the wireframes family's.
 function tabFamilies(tab: {
   articles?: unknown;
   kind?: unknown;
   layers?: unknown;
   finish?: unknown;
+  pages?: unknown;
 }): KindFamilyId[] {
   const finishFamily = finishFamilyOf(tab.finish);
   const { articles } = tab;
@@ -128,6 +141,7 @@ function tabFamilies(tab: {
     ...(hasArticles ? (['pages-articles'] as const) : []),
     ...(isEventStormingTab(tab) ? (['event-storming'] as const) : []),
     ...(finishFamily ? [finishFamily] : []),
+    ...(holdsWireframePage(tab.pages) ? (['wireframes'] as const) : []),
   ];
 }
 
@@ -139,6 +153,7 @@ export function kindFamiliesOfTab(tab: {
   kind?: unknown;
   layers?: unknown;
   finish?: unknown;
+  pages?: unknown;
 }): KindFamilyId[] {
   const elements = Array.isArray(tab.elements) ? (tab.elements as Element[]) : [];
   return [...new Set([...kindFamiliesOf(elements), ...tabFamilies(tab)])];

@@ -56,7 +56,7 @@ import { StructureTapes } from '@/components/canvas/structure/StructureTapes';
 import { StructureMarks } from '@/components/canvas/structure/StructureMarks';
 import { ReviewButton, ReviewCorner } from '@/components/canvas/review/ReviewButton';
 import { ReviewRings } from '@/components/canvas/review/ReviewRings';
-import { WireframeDeviceOverlays } from '@/components/canvas/WireframeDeviceOverlays';
+import { WireframeOverlaysWhenReady } from '@/components/canvas/WireframeOverlaysWhenReady';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
 import { MindHaloRootsProvider, MindNumbersProvider } from './MindMapLayer';
 import {
@@ -727,7 +727,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
               ) : null}
               {/* A wireframe page's camera and system bars, over what is on its screen. */}
               {props.pagesMode && props.canvasTool !== 'isometric' ? (
-                <WireframeDeviceOverlays
+                <WireframeOverlaysWhenReady
                   pages={props.pagesMode.pages}
                   frameTheme={props.pagesMode.frameTheme}
                 />

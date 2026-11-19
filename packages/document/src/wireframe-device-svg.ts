@@ -7,7 +7,6 @@
 import { r2, xmlEscape } from './svg-render-primitives';
 import { isLightColor, shade } from './colour-math';
 import { mixHex } from './color-wash';
-import type { Finish } from './finish';
 import { MARKER_INK_OPACITY, markerStrokes } from './marker';
 import { outlineOfPath, sketchStrokes } from './sketch';
 import { fnv1aString } from './string-hash';
@@ -28,6 +27,7 @@ import {
   type DeviceGeometry,
   type WireframeFrameLook,
 } from './wireframe-device';
+import { NEUTRAL_THEME, type WireframeFrameTheme } from './wireframe-frame-theme';
 
 type Paint = {
   // The body's outer edge and the bezel inside it.
@@ -76,20 +76,6 @@ function lineArt(paint: Paint, d: string, width: number, extra = ''): string {
   return `<path d="${d}" fill="none" stroke="${ink}" stroke-width="${width}"${extra}/>`;
 }
 
-// The colours a Theme frame is drawn from (wireframeFrameTheme): the tab theme's element stroke as
-// the device's colour, its canvas, and its element fill and text for a browser's address field.
-export type WireframeFrameTheme = {
-  accent: string;
-  background: string;
-  fill?: string | null;
-  text?: string | null;
-  // The tab's finish: Sketch and Marker draw the frame by hand, as lines.
-  finish?: Finish;
-};
-
-// A Theme frame with no theme to hand: the slate the default scheme draws in.
-const NEUTRAL_THEME: WireframeFrameTheme = { accent: '#334155', background: '#f8fafc' };
-
 const HEX = /^#[0-9a-f]{6}$/i;
 const hexOr = (v: string | null | undefined, fallback: string) => (v && HEX.test(v) ? v : fallback);
 
@@ -130,22 +116,6 @@ function framePaint(look: WireframeFrameLook, theme?: WireframeFrameTheme): Pain
     return { ...PAINT.outline, line: ink, hairline: ink, fieldText: ink, hand: finish };
   }
   return look === 'theme' ? themePaint(theme ?? NEUTRAL_THEME) : PAINT[look];
-}
-
-/** A theme's colours as a Theme frame reads them. */
-export function wireframeFrameTheme(theme: {
-  elementStroke: string | null;
-  elementFill: string | null;
-  elementText: string | null;
-  backgroundColor: string;
-  rootColor?: { stroke?: string };
-}): WireframeFrameTheme {
-  return {
-    accent: theme.elementStroke ?? theme.rootColor?.stroke ?? NEUTRAL_THEME.accent,
-    background: theme.backgroundColor,
-    fill: theme.elementFill,
-    text: theme.elementText,
-  };
 }
 
 const PAINT: Record<Exclude<WireframeFrameLook, 'theme'>, Paint> = {
@@ -618,9 +588,4 @@ function statusIcons(right: number, cy: number, scale: number, ink: string): str
     `<rect x="49.5" y="-3.5" width="17" height="7.5" rx="1.8" fill="${ink}"/>` +
     `<path d="M73 -1.8V2.3A2 2 0 0 0 73 -1.8Z" fill="${ink}" fill-opacity="0.45"/>`;
   return `<g transform="translate(${r2(right - 76 * scale)} ${r2(cy)}) scale(${scale})">${bars}${wifi}${battery}</g>`;
-}
-
-/** The screen's outline at the page's top-left: what the page's content is clipped to. */
-export function wireframeScreenPath(g: DeviceGeometry, ox: number, oy: number): string {
-  return deviceScreenPath(g, ox, oy);
 }

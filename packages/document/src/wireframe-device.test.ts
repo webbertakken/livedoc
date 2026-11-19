@@ -18,7 +18,7 @@ import {
 } from './page';
 import { pageClipPathData, pageContentBox, pageScreenRect } from './wireframe-page';
 import { pageDeviceSet, pageAdded, pageAddedLike } from './pages-edits';
-import { wireframeFrameSvg } from './wireframe-page';
+import { wireframeFrameSvg } from './wireframe-frame';
 import { pageExportFrame } from './page-frame';
 
 const inside = (

@@ -508,12 +508,9 @@ export * from './tab-stats';
 export * from './page';
 export * from './wireframe-device';
 export * from './wireframe-page';
-export {
-  wireframeFrameOverSvg,
-  wireframeFrameTheme,
-  wireframeFrameUnderSvg,
-  type WireframeFrameTheme,
-} from './wireframe-device-svg';
+export * from './wireframe-frame';
+export * from './wireframe-frame-theme';
+export { wireframeFrameOverSvg, wireframeFrameUnderSvg } from './wireframe-device-svg';
 export * from './page-fit';
 export * from './page-image';
 export * from './page-lock';
@@ -740,6 +737,7 @@ export * from './quick-swatch-rederive';
 // The Q&A board (docs/specs/012-collaboration/qa-board.md)
 export * from './qa-board';
 export * from './web-components';
+export * from './web-component-layout';
 // The Behaviours family (docs/specs/010-palette/palette-top-level-categories.md): which kinds are in it, and which of them
 // draw their own `…` rather than taking the shared settings one.
 export * from './behaviour-shapes';
