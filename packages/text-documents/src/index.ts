@@ -79,3 +79,4 @@ export {
   SECTION_BREAK,
   SECTION_BREAK_ATTRIBUTES,
 } from './live/live-names';
+export { keptPresenceOf, type KeptPresence } from './live/kept-presence';

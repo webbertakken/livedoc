@@ -28,3 +28,6 @@ div.text-document-kept {
 .ProseMirror-selectednode.text-document-section-break {
   outline: 2px solid #1a73e8;
 }
+.text-document-kept-hidden {
+  display: none;
+}

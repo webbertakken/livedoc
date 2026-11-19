@@ -44,6 +44,25 @@ describe('textDocumentSchema', () => {
     for (const mark of RUN_MARKS) expect(textDocumentSchema.marks[mark], mark).toBeDefined();
   });
 
+  // standard-mapping.md "Shown as it reads".
+  it('shows kept content as it reads: hidden, a line break or a named placeholder', () => {
+    const render = (name: string) => {
+      const node = textDocumentSchema.nodes.kept_inline!.create({ name, xml: { xml: '', ns: {} } });
+      const spec = node.type.spec.toDOM!(node) as unknown as [
+        string,
+        Record<string, string>,
+        string?,
+      ];
+      return { tag: spec[0], text: spec[2] ?? '' };
+    };
+    expect(render('bookmarkStart')).toEqual({ tag: 'span', text: '' });
+    expect(render('br')).toEqual({ tag: 'br', text: '' });
+    expect(render('footnoteReference')).toEqual({
+      tag: 'span',
+      text: 'footnoteReference, kept from the file',
+    });
+  });
+
   it.each([
     'libreoffice/features.odt',
     'libreoffice/rich.docx',

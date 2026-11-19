@@ -13,6 +13,7 @@ import {
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
+  keptPresenceOf,
   PARAGRAPH_ATTRIBUTES,
   SECTION_BREAK,
   SECTION_BREAK_ATTRIBUTES,
@@ -75,17 +76,25 @@ const marks: Record<string, MarkSpec> = {
   run_kept: { attrs: { kept: {} }, toDOM: () => ['span', 0] },
 };
 
-// Something kept from the file: a grey placeholder with its name, selected, copied, moved and deleted whole, never
-// edited (standard-mapping.md "Kept content").
-const keptPlaceholder = (tag: string, name: unknown): DOMOutputSpec => [
-  tag,
-  {
-    class: 'text-document-kept',
-    contenteditable: 'false',
-    'data-kept': typeof name === 'string' ? name : '',
-  },
-  `${typeof name === 'string' ? name : 'Content'}, kept from the file`,
-];
+// Something kept from the file, shown as it reads (standard-mapping.md "Kept content", "Shown as it reads"): nothing
+// for what has nothing to see, a line break for a break, else a grey placeholder with its name; selected, copied,
+// moved and deleted whole, never edited.
+function keptPlaceholder(tag: string, raw: unknown): DOMOutputSpec {
+  const name = typeof raw === 'string' ? raw : '';
+  const attributes = { contenteditable: 'false', 'data-kept': name };
+  switch (keptPresenceOf(name)) {
+    case 'hidden':
+      return [tag, { ...attributes, class: 'text-document-kept-hidden' }];
+    case 'break':
+      return ['br', attributes];
+    case 'placeholder':
+      return [
+        tag,
+        { ...attributes, class: 'text-document-kept' },
+        `${name || 'Content'}, kept from the file`,
+      ];
+  }
+}
 
 const nodes: Record<string, NodeSpec> = {
   doc: { content: 'block+' },
