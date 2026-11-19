@@ -2,8 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
-import { canonical } from './model/props';
 import { TextDocument } from './model/text-document';
+import { wholeOf } from './testing/compare';
 
 const CORPUS = join(import.meta.dirname, '..', 'corpus');
 
@@ -15,16 +15,6 @@ const files = ['libreoffice', 'word'].flatMap((maker) =>
     )
     .map((f) => join(maker, f)),
 );
-
-/** The whole document as comparable text: kept bytes and maps included. */
-const whole = (document: TextDocument) =>
-  canonical(
-    JSON.parse(
-      JSON.stringify(document, (_k, v: unknown) =>
-        v instanceof Uint8Array ? Buffer.from(v).toString('base64') : v instanceof Map ? [...v] : v,
-      ),
-    ),
-  );
 
 /** The structure a file must read as: its paragraphs, their styles and lists, and what it kept. */
 function structure(document: TextDocument) {
@@ -63,8 +53,8 @@ describe('the corpus', () => {
       expect(written.ok).toBe(true);
       if (!written.ok) return;
       const again = await readTextDocumentFile(written.bytes);
-      const a = again.ok ? whole(again.document) : 'refused';
-      const b = whole(read.document);
+      const a = again.ok ? wholeOf(again.document) : 'refused';
+      const b = wholeOf(read.document);
       if (a !== b && process.env.DIFF) {
         let i = 0;
         while (a[i] === b[i]) i++;

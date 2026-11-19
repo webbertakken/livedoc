@@ -6,7 +6,7 @@ import { ApiError, apiCreateDocument } from '@/lib/api-client';
 import { createIdsFor } from '@/lib/new-document/create-failure';
 import { debugLog } from '@/lib/debug-log';
 import { track } from '@/lib/telemetry';
-import { newTextDocumentTab, UNTITLED_TEXT_DOCUMENT } from './text-document-tab';
+import { formatOfFileName, newTextDocumentTab, UNTITLED_TEXT_DOCUMENT } from './text-document-tab';
 
 export type OpenedTextDocument = { ok: true; documentId: string } | { ok: false; message: string };
 
@@ -41,10 +41,10 @@ export async function openTextDocumentFile(
     await apiCreateDocument(ownerId, {
       id: documentId,
       name,
-      tabs: [newTextDocumentTab(tabId, name)],
+      tabs: [newTextDocumentTab(tabId, name, formatOfFileName(file.name))],
       textDocuments: [{ tabId, file: base64OfBytes(bytes) }],
     });
-    track('Tab', 'Imported', 'Odt');
+    track('Tab', 'Imported', formatOfFileName(file.name) === 'ooxml' ? 'Docx' : 'Odt');
     return { ok: true, documentId };
   } catch (error) {
     const code = error instanceof ApiError ? error.code : null;

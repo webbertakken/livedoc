@@ -7,7 +7,7 @@ import {
   type Tab,
   type TextDocumentFormat,
 } from '@livedoc/document';
-import { readTextDocumentFile, TextDocument, TextDocumentState } from '@livedoc/text-documents';
+import { readTextDocumentFile, TextDocumentState } from '@livedoc/text-documents';
 import { json } from '../responses';
 import type { DocumentEnv } from '../types';
 import { bytesOfBase64 } from '@livedoc/text-documents';
@@ -82,14 +82,10 @@ export async function seedTextDocuments(
     const dropped = read.report.dropped.reduce((n, d) => n + d.count, 0);
     const kept = read.report.kept.reduce((n, k) => n + k.count, 0);
     if (dropped > 0) console.info(`[package] dropped document=${documentId} items=${dropped}`);
-    const texts = TextDocument.paragraphTexts(read.document);
-    await appendTextDocumentUpdate(
-      env,
-      seed.tabId,
-      TextDocumentState.fromBody(texts.map((text) => ({ text }))),
-    );
+    // The whole model goes into the live state, kept content included (live-editing-and-storage.md "The layout").
+    await appendTextDocumentUpdate(env, seed.tabId, TextDocumentState.fromDocument(read.document));
     console.info(
-      `[text-document] file-read document=${documentId} tab=${seed.tabId} paragraphs=${texts.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
+      `[text-document] file-read document=${documentId} tab=${seed.tabId} blocks=${read.document.body.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
     );
   }
   return { ok: true };
