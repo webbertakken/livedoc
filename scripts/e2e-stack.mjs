@@ -5,7 +5,7 @@
 // Dependency-free (node builtins) so it adds nothing to install cost.
 //
 // Boots:
-//   1. api — `wrangler dev --local` (apps/api) after applying the D1
+//   1. api — apps/api on Miniflare (scripts/e2e-api.mjs) after applying the D1
 //      migrations to a fresh local database, so persistence works.
 //   2. live — a static file server for `out/` that reproduces the three
 //      things production does (docs/specs/003-system-architecture/e2e-smoke.md): strip the `/live` assetPrefix,
@@ -153,7 +153,7 @@ const E2E_AUTH_SECRET = 'e2e-only-better-auth-secret-0123456789ab';
 // The vars that decide whether sign-in is on, each stated explicitly so a developer's
 // apps/api/.dev.vars never changes the answer: on a guest stack sign-in on would start guest
 // documents in This Browser and break the guest specs. APP_BASE_URL stays blank there because
-// `wrangler dev` simulates the EMAIL binding, which alone is a sign-in method once a base URL exists.
+// Miniflare simulates the EMAIL binding, which alone is a sign-in method once a base URL exists.
 const IDENTITY_VARS = {
   BETTER_AUTH_SECRET: SIGN_IN || GUEST_SIG_ENFORCE ? E2E_AUTH_SECRET : '',
   BETTER_AUTH_SECRETS: '',
@@ -392,6 +392,10 @@ function proxyApi(req, res) {
       method: req.method,
       path: req.url,
       headers: { ...req.headers, ...clientAddressHeader(req) },
+      // A fresh connection per request: a kept-alive one the api closes after its idle timeout can close under a
+      // request written into it, which then fails unsent (docs/specs/003-system-architecture/e2e-smoke.md "The api
+      // worker"). On loopback a connection costs next to nothing.
+      agent: false,
     },
     (proxyRes) => {
       res.writeHead(proxyRes.statusCode ?? 502, proxyRes.headers);
@@ -568,19 +572,16 @@ async function main() {
   console.log(
     `[e2e] starting api worker (sign-in ${SIGN_IN ? 'on, codes in the outbox' : 'off'}, guest signatures ${IDENTITY_VARS.BETTER_AUTH_SECRET ? 'enforced' : 'off'})…`,
   );
+  // On Miniflare directly, not `wrangler dev`: its dev proxy drops a POST that meets a closing kept-alive connection
+  // (scripts/e2e-api.mjs). The flags are `wrangler dev`'s.
   run(
-    'pnpm',
+    'node',
     [
-      '--filter',
-      '@livedoc/api',
-      'exec',
-      'wrangler',
-      'dev',
-      '--local',
+      path.join(ROOT, 'scripts', 'e2e-api.mjs'),
       '--port',
       String(API_PORT),
       // Production's origin allow-list lives in wrangler.toml [vars], which
-      // `wrangler dev` reads too; it would 403 every AI call from this
+      // the local worker reads too; it would 403 every AI call from this
       // localhost editor. Blank it, as `pnpm dev` does (docs/specs/007-editor/ai-assistance.md).
       '--var',
       'AI_ALLOWED_ORIGINS:',
