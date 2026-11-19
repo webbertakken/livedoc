@@ -306,6 +306,48 @@ the first frame, and the slot holds the docked row's place, invisible, until the
   Sign in button on the top line, so the article's strip has a row of its own from the first frame and the late tour
   button moves nothing. Locally, with sign-in off, the late tour button still moves the strip.
 
+### Element kinds on demand (#246, #251, #256 to #275)
+
+The sweep's largest lead on the document page was the long tail of element kinds, every kind's face and model
+whatever the board holds (above). Plan 0021 moved them behind a registry of kind families, one per pull request,
+largest first; the rule it left is in [Web performance](../specs/016-platform/web-performance.md) "An element kind's
+code loads with the board that holds it".
+
+- First-load JavaScript of `/document/placeholder` (`scripts/first-load.mjs`, gzip level 9), before and after each.
+- Slow link: a Playwright measure of the open (kept outside the repository) on the owner's kanban, 4 Mbit/s and 100 ms, CPU 4x, five
+  interleaved runs on docs.nu (before) and the change's preview (after); the median time to an editable board.
+- `scripts/first-load-why.mjs` (#246) sized each family before it moved (`cut`) and named what kept one in (`why`).
+
+| Pull request                                       | First load, KiB | Slow link, editable median, ms |
+| -------------------------------------------------- | --------------- | ------------------------------ |
+| #251 the registry, the open's gate, the faces      | 1,534 to 1,498  | 4,181 to 4,132                 |
+| #256 charts and Sankey                             | 1,496 to 1,487  | 4,150 to 4,006                 |
+| #259 pages and articles                            | 1,487 to 1,484  | 4,767 to 4,704, noisy hour     |
+| #262 mind maps                                     | 1,484 to 1,479  | 4,381 to 4,231                 |
+| #266 Event Storming photo reading                  | 1,479 to 1,476  | 4,068 to 4,106, noise          |
+| #268 collaboration panels' and session verbs       | 1,476 to 1,475  | 3,959 to 4,008, noise          |
+| #269 entities and concepts                         | 1,475 to 1,469  | 4,259 to 4,265, noise          |
+| #270 sketches, joined by finish                    | 1,469 to 1,457  | 3,919 to 3,934, noise          |
+| #271 office and seating                            | 1,457 to 1,440  | 3,869 to 3,806                 |
+| #272 web components and wireframes                 | 1,440 to 1,433  | 3,845 to 3,796, noise          |
+| #273 suggestions, review and ask (Event Storming)  | 1,434 to 1,397  | 3,986 to 3,972, noise          |
+| #274 contexts and structure marks (Event Storming) | 1,397 to 1,382  | 3,750 to 3,772, noise          |
+| #275 Avatar mode, on first use                     | 1,382 to 1,368  | 3,834 to 3,846, noise          |
+
+- All told 1,534 to 1,368 KiB (-166 KiB, -11%); the budget for `/document` and `/embed` drops from 1,536 to 1,400.
+- Between rows the number drifts by a KiB or two with unrelated changes on `main`.
+- On a slow link #251, #256 and #262 measured 50 to 150 ms faster; from #266 on each slice was within noise, about 10
+  to 30 KiB less JavaScript before the board is editable being under a run's spread. Across the plan, docs.nu went from
+  4,082 to 4,372 ms at the baseline to 3,750 to 3,850 ms by the last runs (inferred: different days and other changes
+  between them, not one A/B).
+- What stays base by design: each kind's wire, name and picture (every board validates, exports and thumbnails it),
+  the room's live state, Event Storming's lanes, structure, next notes, landing and lane plans (every board's drag,
+  paste, stamp, validation and export read them), and the avatar state a room shares.
+- Hooks that are real React hooks stay base; one without hooks of its own became a shell over the family's plain
+  `*Verbs(deps)` module, read at the press (#268, #273).
+- An E2E caught one wrong gate in #275's draft: a hook that needs no family answers "ready", which drew a family's
+  face before it was in. A face is now drawn behind the family being in, never behind "nothing needed".
+
 ## Refuted or set aside
 
 About half the leads did not survive a check; they are listed so nobody proposes them again.
@@ -402,15 +444,15 @@ Parked:
 
 ## What remains
 
-- The document page's first load, about 1,561 KiB, is a long tail.
-- Its measured candidates: the SVG renderer's dispatcher 67 KiB, Plan hooks 47, the board-scene import 24.
-- Smaller: templates 18 KiB, the tour 15.
+- The document page's first load is about 1,368 KiB since element kinds load on demand (above).
+- Its measured candidates at 1fa376f8c2 (analyzer `cut`): the palette 137 KiB, Plan hooks 42, the tour 15.
+- Smaller: the SVG renderer 9 KiB, templates 4, the board-scene import 2.
 - The form page's cover band brings about 118 KiB of the document model, through `lib/page-paint` and `page-frame`.
 - The Explorer fetches 155 KiB more JavaScript in the background since #188.
 - Of that, 39 KiB is the search panel fetched ahead; the rest (16 smaller files) is not traced yet.
 - Isolate start-up is still a read's largest cost: about 300 ms for a cold api isolate, about 290 for a room.
 - A shared link's Join waits on the editor's code booting before the guest id is asked for (#240 measured it).
-- On a slow link the open waits on the editor's first load; its levers are element kinds and the palette, loaded late.
+- On a slow link the open waits on the editor's first load; element kinds are done, the palette loaded late remains.
 - The every-minute move sweep scans documents; the spec's drop release removes it, which is Webber's to schedule.
 - Fifteen canvas-gesture leads belong to the canvas session: zoom and pan re-renders, drag previews, snapping.
 - Among them, the Minimap runs a whole-board arrow label pass for pictures that draw no labels.
