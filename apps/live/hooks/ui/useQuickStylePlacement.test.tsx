@@ -111,9 +111,24 @@ const mountPanel = () => {
 };
 
 describe('useQuickStylePlacement', () => {
+  // docs/specs/008-canvas/canvas-performance.md "Chrome measures itself in the next frame": the commit that shows the
+  // panel has just changed the page, and a read there lays the whole board out inside the input's task.
+  it('reads no layout in the commit that shows it, and places in the next frame', () => {
+    const panelRef = mountPanel();
+    const { result } = renderHook(() => useQuickStylePlacement(panelRef, true));
+    expect(measures).toBe(0);
+    expect(result.current).toBeNull();
+
+    act(runFrame);
+
+    expect(measures).toBe(1);
+    expect(result.current).not.toBeNull();
+  });
+
   it('places the panel clear of the chrome', () => {
     const panelRef = mountPanel();
     const { result } = renderHook(() => useQuickStylePlacement(panelRef, true));
+    act(runFrame);
     expect(result.current).not.toBeNull();
     expect(result.current!.top).toBeGreaterThanOrEqual(360);
   });
@@ -122,6 +137,7 @@ describe('useQuickStylePlacement', () => {
     box(palette, { left: 0, top: 60.5, width: 240, height: 300 });
     const panelRef = mountPanel();
     const { result } = renderHook(() => useQuickStylePlacement(panelRef, true));
+    act(runFrame);
     expect(Number.isInteger(result.current!.left)).toBe(true);
     expect(Number.isInteger(result.current!.top)).toBe(true);
   });

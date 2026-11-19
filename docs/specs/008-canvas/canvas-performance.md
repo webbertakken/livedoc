@@ -71,12 +71,14 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   resized** and placed again when the gesture ends; elsewhere it positions from canvas geometry
   (bounds, offset, zoom) and a measurement taken outside the gesture.
 - **Chrome measures itself in the next frame.** Chrome that follows a selection (the floating
-  toolbar, the selection popover) reads its own size and the canvas's edges in the frame after the
-  change that shows or moves it, never in that change's commit: the commit has just changed the
-  page, and reading layout there lays out the whole board inside the input's task (a pencil
-  stroke's release, which selects the stroke, laid the board out for about 18 ms of an 84 ms
-  task). It places itself before that frame paints, so it never shows unplaced, and a flip it
-  makes places it again in the same frame.
+  toolbar, the selection popover, the Quick style panel) reads its own size and the canvas's edges
+  in the frame after the change that shows or moves it, never in that change's commit: the commit
+  has just changed the page, and reading layout there lays out the whole board inside the input's
+  task (a pencil stroke's release, which selects the stroke, laid the board out for about 18 ms of
+  an 84 ms task). It places itself before that frame paints, so it never shows unplaced, and a flip
+  it makes places it again in the same frame. The Quick style panel, placed clear of the chrome as a
+  selection shows it, read the chrome and the canvas in that commit too: about 22 ms of the release
+  that ends a marquee and of a press on a selection.
 - **A render never asks the browser for layout.** What a render would read from the browser
   that brings style and layout up to date (a media query's match, the visual viewport a dialog
   fits above the keyboard) is read once, shared by everything that reads it, and kept up to date
