@@ -1,6 +1,8 @@
 import { DatabaseSync } from 'node:sqlite';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Body, TextDocumentState } from '@livedoc/text-documents';
 import { sqliteD1 } from '../test-sqlite-d1';
+import { appendTextDocumentUpdate } from '../text-documents/text-document-store';
 import { nodeDocumentSql, nodeTransaction } from '../test-document-sql';
 import type { DocumentEnv } from '../types';
 import { DocumentDb } from './document-db';
@@ -276,6 +278,47 @@ describe('the content search rows the drain writes', () => {
     room.exec("DELETE FROM tabs WHERE id = 't1'");
     await drainOutbox(env, D);
     expect(searchRows(d1).map((r) => r.tab_id)).toEqual(['t0']);
+  });
+
+  // docs/specs/034-text-documents/live-editing-and-storage.md "The digest" and "The outbox".
+  describe('of a text document', () => {
+    function textDocumentTab(room: DatabaseSync): void {
+      room
+        .prepare('INSERT INTO tabs (id, name, data, updated_at, rev) VALUES (?, ?, ?, 1, 1)')
+        .run('td', 'Notes', '{"kind":"text-document","format":"odf","elements":[]}');
+      room
+        .prepare(
+          'INSERT INTO document_tabs (document_id, tab_id, order_index, added_at) VALUES (?, ?, 0, 1)',
+        )
+        .run(D, 'td');
+    }
+    const digestOf = (room: DatabaseSync) => ({
+      ...(room
+        .prepare('SELECT characters, words, pages, has_content FROM text_document_digest')
+        .get() as object),
+    });
+
+    it('queues the tab for every stored update, then indexes its body and keeps its digest', async () => {
+      const { env, room, d1 } = harness();
+      textDocumentTab(room);
+      await drainOutbox(env, D);
+      await appendTextDocumentUpdate(env, 'td', TextDocumentState.fromBody(Body.of('Two words')));
+      expect(outboxKeys(room)).toContain('tab:td');
+      await drainOutbox(env, D);
+      expect(searchRows(d1)).toEqual([
+        { tab_id: 'td', tab_name: 'Notes', text: 'Notes\nTwo words' },
+      ]);
+      expect(digestOf(room)).toEqual({ characters: 9, words: 2, pages: 1, has_content: 1 });
+      // The digest queues the summary, so the listing learns the document has content on the next drain.
+      expect(outboxKeys(room)).toContain('summary:');
+    });
+
+    it('digests an empty text document as no content', async () => {
+      const { env, room } = harness();
+      textDocumentTab(room);
+      await drainOutbox(env, D);
+      expect(digestOf(room)).toEqual({ characters: 0, words: 0, pages: 1, has_content: 0 });
+    });
   });
 
   it("writes the cards' text under ~items, and deletes it with the last card", async () => {

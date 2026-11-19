@@ -367,6 +367,36 @@ CREATE TABLE IF NOT EXISTS text_document_chunks (
 );
 `;
 
+// A text document's digest (docs/specs/034-text-documents/live-editing-and-storage.md "The digest"): its counts and
+// whether it has content, rebuilt from its state when the outbox drains the tab, which every stored update queues. Its
+// search text is never kept here: it goes to D1 in the same drain, and a long text document's would pass the row cap.
+const TEXT_DOCUMENT_DIGEST_STEP = `
+CREATE TABLE IF NOT EXISTS text_document_digest (
+  tab_id      TEXT    PRIMARY KEY REFERENCES tabs (id) ON DELETE CASCADE,
+  characters  INTEGER NOT NULL,
+  words       INTEGER NOT NULL,
+  pages       INTEGER NOT NULL,
+  has_content INTEGER NOT NULL,
+  state_bytes INTEGER NOT NULL,
+  written_at  INTEGER NOT NULL
+);
+${outboxTrigger(
+  'outbox_text_document_update',
+  'AFTER INSERT ON text_document_updates',
+  "SELECT document_id, 'tab', NEW.tab_id FROM document_tabs WHERE tab_id = NEW.tab_id",
+)}
+${outboxTrigger(
+  'outbox_text_document_digest_insert',
+  'AFTER INSERT ON text_document_digest',
+  "SELECT document_id, 'summary', '' FROM document_tabs WHERE tab_id = NEW.tab_id",
+)}
+${outboxTrigger(
+  'outbox_text_document_digest_update',
+  'AFTER UPDATE ON text_document_digest',
+  "SELECT document_id, 'summary', '' FROM document_tabs WHERE tab_id = NEW.tab_id",
+)}
+`;
+
 // The workbook row (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): one per spreadsheet, holding its file
 // format and settings; a document holds one exactly when it is a spreadsheet, and its sheets are then referenced by
 // their tabs (db/sheet-refs.ts).
@@ -425,6 +455,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   WORKBOOK_STEP,
   WORKBOOK_STYLES_STEP,
   SHEET_AXES_STEP,
+  TEXT_DOCUMENT_DIGEST_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

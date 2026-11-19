@@ -376,6 +376,27 @@ describe('isValidTab', () => {
     }));
     expect(isValidTab({ id: 't', name: 'x', elements: els })).toBe(false);
   });
+
+  // docs/specs/034-text-documents/text-document.md "What it holds": elements always empty, format odf or ooxml.
+  describe('a text document tab', () => {
+    const textDocument = { id: 't', name: 'x', kind: 'text-document', elements: [] };
+
+    it('accepts one with no elements, in either format or none', () => {
+      expect(isValidTab(textDocument)).toBe(true);
+      expect(isValidTab({ ...textDocument, format: 'odf' })).toBe(true);
+      expect(isValidTab({ ...textDocument, format: 'ooxml' })).toBe(true);
+    });
+
+    it('refuses one holding an element', () => {
+      const el = { id: 'a', type: 'shape', shape: 'square', ...box };
+      expect(isValidTab({ ...textDocument, elements: [el] })).toBe(false);
+    });
+
+    it('refuses a format outside odf and ooxml', () => {
+      expect(isValidTab({ ...textDocument, format: 'rtf' })).toBe(false);
+      expect(isValidTab({ ...textDocument, format: 1 })).toBe(false);
+    });
+  });
 });
 
 describe('coerceShapeKind', () => {

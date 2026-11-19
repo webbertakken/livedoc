@@ -1,6 +1,6 @@
 # Live editing and storage
 
-**Status: specified.** Nothing is built.
+**Status: specified; the room's storage, the digest and the live merge of one body are built.**
 
 How a [text document](text-document.md) is edited by people and agents at once, stored in its room, kept offline,
 branched, copied, versioned, searched and listed. The research is
@@ -52,10 +52,17 @@ the caret put back; typing within 500 ms is one step, as Google groups it.
   content and pictures are stored in the room (pictures as R2 objects keyed by hash, as gallery images are).
 - **Revision and hash**: each persisted state has a revision, as every tab has, and a hash of the file it writes, so a
   repository snapshot can say how old it is.
-- **The outbox** feeds D1 as for every tab: the content summary (has content when the body holds any character or
-  object), the search text (the body's plain text, headers, footers, footnotes and comments), and comments and actions
-  for the Inbox ([Document storage](../006-document/document-storage.md#the-outbox)).
-- **Tab stats**: characters, words, pages (estimated without layout: 500 words a page), comments, bytes.
+- <a id="the-digest"></a>**The digest** is what the room knows of a text document without reading its state: its
+  characters, words, pages (estimated without layout: `TEXT_DOCUMENT_WORDS_PER_PAGE` words a page), whether it has
+  content (any character or object in a body), its search text, and the stored state's bytes. It is kept beside the
+  tab (`text_document_digest`), rebuilt from the state when the outbox drains the tab, which every stored update
+  queues, so it costs nothing per keystroke and lags an edit by one drain (default).
+- **The outbox** feeds D1 as for every tab: the content summary (has content when the digest says so), the search text
+  (the digest's: the body's plain text, headers, footers, footnotes and comments), and comments and actions for the
+  Inbox ([Document storage](../006-document/document-storage.md#the-outbox)).
+- **Tab stats**: a text document's characters count where a tab counts its elements, as a spreadsheet's filled cells
+  do, and its stored state's bytes join the tab's; words, pages and comments stay in the digest for the Explorer's
+  Details.
 
 ## Offline
 
@@ -100,6 +107,7 @@ suggestion or comment (fork D7); a Viewer's are dropped. Tests: the room refuses
 | `TEXT_DOCUMENT_CHUNK_BYTES`     | 1,900,000 | Under the room's 2,000,000-byte row cap with room for the row's other columns                                                                      |
 | `TEXT_DOCUMENT_LOG_BYTES`       | 4,000,000 | (default) Compaction keeps the log to a couple of chunks                                                                                           |
 | `TEXT_DOCUMENT_MAX_STATE_BYTES` | 64 MB     | (default) The encoded state with its history; past it, versions older than 30 days are thinned first, then edits refused with `document_too_large` |
+| `TEXT_DOCUMENT_WORDS_PER_PAGE`  | 500       | (default) A page of 11 pt Arial at single spacing, for counts that need no layout                                                                  |
 | A frame of edits                | 256 KB    | The room's message cap                                                                                                                             |
 
 A refused edit names its limit; nothing is half applied.
@@ -107,5 +115,5 @@ A refused edit names its limit; nothing is half applied.
 ## Observability
 
 Fingerprints, each with the document and tab ids and never text: `[text-document] persisted` (revision, bytes,
-chunks, ms), `[text-document] compacted`, `[text-document] merge-offline` (updates, bytes), `[text-document]
+chunks, ms), `[text-document] compacted`, `[text-document] digest` (characters, words, ms), `[text-document] merge-offline` (updates, bytes), `[text-document]
 edit-refused` (limit), `[text-document] branch-merged` (unmerged count).

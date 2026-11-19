@@ -138,6 +138,51 @@ describe('contentSummaryOf', () => {
   });
 
   // document-storage.md "The content summary": a spreadsheet's sheet tab counts its sheet's filled cells.
+  // docs/specs/034-text-documents/live-editing-and-storage.md "The digest" and "Tab stats".
+  describe('with a text document', () => {
+    const textDocument = '{"kind":"text-document","format":"odf","elements":[]}';
+
+    function digest(id: string, characters: number, stateBytes: number): void {
+      room
+        .prepare(
+          `INSERT INTO text_document_digest (tab_id, characters, words, pages, has_content, state_bytes, written_at)
+           VALUES (?, ?, 0, 1, ?, ?, 1)`,
+        )
+        .run(id, characters, characters > 0 ? 1 : 0, stateBytes);
+    }
+
+    it("counts the text document's characters as its count, and has content once it holds one", async () => {
+      tab('a', 0, textDocument, 0);
+      digest('a', 42, 900);
+      expect(await contentSummaryOf(env, D)).toMatchObject({
+        firstTabCount: 42,
+        tabCounts: { a: 42 },
+        hasContent: true,
+      });
+    });
+
+    it('holds no content while its body is empty, or before its first digest', async () => {
+      tab('a', 0, textDocument, 0);
+      expect(await contentSummaryOf(env, D)).toMatchObject({ firstTabCount: 0, hasContent: false });
+      digest('a', 0, 40);
+      expect(await contentSummaryOf(env, D)).toMatchObject({ firstTabCount: 0, hasContent: false });
+    });
+
+    it("adds its characters to the elements and its state's bytes to the tabs'", async () => {
+      tab('a', 0, textDocument, 0);
+      tab('c', 1, '{"elements":[{}]}', 1);
+      stats('a', 'diagram', 0, 0, 50, 10);
+      stats('c', 'diagram', 1, 2, 30, 20);
+      digest('a', 42, 900);
+      expect((await contentSummaryOf(env, D)).stats).toEqual({
+        mode: 'diagram',
+        elements: 43,
+        comments: 2,
+        bytes: 980,
+      });
+    });
+  });
+
   describe('in a spreadsheet', () => {
     it("counts each sheet tab's filled cells as its count", async () => {
       spreadsheet();

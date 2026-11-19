@@ -6,7 +6,9 @@ export {
   TEXT_DOCUMENT_CHUNK_BYTES,
   TEXT_DOCUMENT_LOG_BYTES,
   TEXT_DOCUMENT_MAX_CHARS,
+  TEXT_DOCUMENT_WORDS_PER_PAGE,
 } from './limits';
+export { textDocumentDigest, type TextDocumentDigest } from './digest';
 export { BODY_FRAGMENT, TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 export {
   TEXT_DOCUMENT_FILE_TYPES,
