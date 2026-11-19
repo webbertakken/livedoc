@@ -2,7 +2,7 @@ import { debugLog } from '@/lib/debug-log';
 import { kindFamiliesOfTab } from './kind-family-of';
 import { loadKindFamily, type LoadReason } from './store';
 
-// Loads every family a tab needs (its elements', its articles' and its finish's), in parallel (docs/specs/016-platform/web-performance.md
+// Loads every family a tab needs (its elements', its articles', its finish's and its pages'), in parallel (docs/specs/016-platform/web-performance.md
 // "At the open"). Settles once each is in or has failed, never rejects: the gate waits for settled, not for success,
 // so a family that cannot load leaves its elements undrawn rather than the board unopened.
 export async function loadKindFamiliesFor(
@@ -12,6 +12,7 @@ export async function loadKindFamiliesFor(
     kind?: unknown;
     layers?: unknown;
     finish?: unknown;
+    pages?: unknown;
   },
   reason: LoadReason,
 ): Promise<void> {

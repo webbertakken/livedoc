@@ -95,6 +95,31 @@ test('a board draws every family’s face in its first frame', async ({ page, pa
   expectNoPageErrors(pageErrors);
 });
 
+test('a wireframe page draws its device in its first frame', async ({ page, pageErrors }) => {
+  await openStartBlank(page);
+  await holdBackOnDemandCode(page);
+  await page.addInitScript(() => {
+    const w = window as unknown as { __overFirst?: boolean };
+    new MutationObserver(() => {
+      if (w.__overFirst !== undefined || !document.querySelector('[data-element-id]')) return;
+      w.__overFirst = !!document.querySelector('[data-wireframe-over]');
+    }).observe(document, { subtree: true, childList: true });
+  });
+
+  await seedTab(page, [box('on-screen', 'square', 40)], {
+    opensIn: 'pages',
+    pages: [
+      { id: 'phone', kind: 'wireframe', orientation: 'portrait', size: 'device', device: 'iphone' },
+    ],
+  });
+
+  await expect(page.locator('[data-wireframe-over="phone"]')).toHaveCount(1);
+  expect(
+    await page.evaluate(() => (window as unknown as { __overFirst?: boolean }).__overFirst),
+  ).toBe(true);
+  expectNoPageErrors(pageErrors);
+});
+
 test('a palette press places a family not yet in once it is', async ({
   page,
   context,

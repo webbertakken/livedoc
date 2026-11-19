@@ -15,15 +15,14 @@ import { svgCard } from './svg-render-card';
 import type { TagColour } from './tag-colours';
 import type { ResolveIconArt } from './svg-render-describe';
 import { labelMeasure, r2, wrapLabel, xmlEscape } from './svg-render-primitives';
+import { ACCENT_BAR_TEXT, type LayoutRect } from './web-components';
 import {
-  ACCENT_BAR_TEXT,
   bannerLayout,
   headerLayout,
   heroCaptionLayout,
   processLayout,
   statRowLayout,
-  type LayoutRect,
-} from './web-components';
+} from './web-component-layout';
 
 type Shape = BoxedElement & { type: 'shape' };
 

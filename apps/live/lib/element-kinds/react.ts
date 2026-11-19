@@ -23,16 +23,17 @@ const always = () => true;
 // base element always, a family's once the family is in. One that arrives before its family (a peer's, a paste)
 // asks for it and draws when it lands; only those subscribe, so a base element costs nothing.
 export function useKindFamilyReady(element: Element): boolean {
-  return useFamilyReady(kindFamilyOf(element));
+  return useKindFamilyNeeded(kindFamilyOf(element));
 }
 
 // Whether something drawn in this finish can draw: in a hand-drawn finish, once the sketches family is in. A finish a
 // peer switched the board to before its family landed asks for it, and the board draws when it does.
 export function useFinishFamilyReady(finish: Finish): boolean {
-  return useFamilyReady(finishFamilyOf(finish));
+  return useKindFamilyNeeded(finishFamilyOf(finish));
 }
 
-function useFamilyReady(family: KindFamilyId | null): boolean {
+// Whether a family something on the board needs is in, asking for it when it is not: null needs none.
+export function useKindFamilyNeeded(family: KindFamilyId | null): boolean {
   const ready = useSyncExternalStore(
     family ? subscribeKindFamilies : subscribeNothing,
     family ? () => isKindFamilyLoaded(family) : always,

@@ -1,6 +1,6 @@
 // A wireframe page as a page (docs/specs/007-editor/wireframe-pages.md): its device's geometry
 // placed at the page's rect, the screen its content lives on and is clipped to, the safe area
-// layouts fill and snapping offers, and its frame as SVG. Every other kind of page answers its own
+// layouts fill and snapping offers. Its frame as SVG is wireframe-frame.ts's. Every other kind of page answers its own
 // rect here, so a caller asks once whatever the kind.
 import {
   DEFAULT_WIREFRAME_DEVICE,
@@ -17,11 +17,9 @@ import { isFinish } from './finish';
 import { getBuiltInTheme } from './themes';
 import {
   wireframeFrameTheme,
-  wireframeFrameOverSvg,
-  wireframeFrameUnderSvg,
   wireframeScreenPath,
   type WireframeFrameTheme,
-} from './wireframe-device-svg';
+} from './wireframe-frame-theme';
 import { pageMargin, type LaidOutPage, type Page, type PageRect } from './page';
 
 type WireframeLike = Pick<Page, 'kind' | 'device' | 'orientation'>;
@@ -82,37 +80,6 @@ export function pageClipPathData(page: LaidOutPage): string {
   const g = pageDeviceGeometry(page);
   if (g) return wireframeScreenPath(g, page.rect.x, page.rect.y);
   return roundedRectPath(page.rect, [0, 0, 0, 0]);
-}
-
-export type WireframeFrameSvg = {
-  // Under the screen: the device's body, bezel and its parts outside the screen.
-  under: string;
-  // Over the screen's content: the camera in the screen and the system bars.
-  over: string;
-  // The screen's outline, what the content is clipped to and the background paints.
-  screen: string;
-};
-
-/** A wireframe page's frame as SVG in canvas px (`dark`: its screen's background is dark, so the
- *  system bars are white; `theme`: the tab theme's colours, for a frame in the Theme look), else
- *  null. */
-export function wireframeFrameSvg(
-  page: LaidOutPage,
-  { dark, theme }: { dark: boolean; theme?: WireframeFrameTheme },
-): WireframeFrameSvg | null {
-  const g = pageDeviceGeometry(page);
-  if (!g) return null;
-  const look = page.frameLook ?? 'theme';
-  const { x, y } = page.rect;
-  return {
-    under: wireframeFrameUnderSvg(g, look, x, y, page.name, theme),
-    over: wireframeFrameOverSvg(g, look, x, y, {
-      systemBars: pageShowsSystemBars(page),
-      dark,
-      ...(theme ? { theme } : {}),
-    }),
-    screen: wireframeScreenPath(g, x, y),
-  };
 }
 
 /** The tab's style for its wireframe frames (docs/specs/007-editor/wireframe-pages.md): its

@@ -3,6 +3,8 @@
 // editor (composing, rendering) and the api worker (sanitising, indexing)
 // share, so the two sides agree on what a mention is.
 
+import { kebabSlug } from './kebab-slug';
+
 // One mentioned teammate. `userId` is their account id (null for an invited
 // member the lazy claim hasn't identified); `memberId` their team membership
 // row id. `handle` is what the text carries after the `@`.
@@ -19,13 +21,7 @@ const MENTION_FIELD_MAX = 100;
 // `Thomas McClean` -> `thomas-mcclean`: lower kebab case, accents folded,
 // anything else dropped. Empty when nothing usable is left.
 export function mentionHandle(name: string): string {
-  return name
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, MENTION_FIELD_MAX);
+  return kebabSlug(name).slice(0, MENTION_FIELD_MAX);
 }
 
 // Handles for a list of people, unique in list order: the second

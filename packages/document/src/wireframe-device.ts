@@ -5,6 +5,8 @@
 //
 // A LEAF module: nothing from './page' (which reads the geometry here for a page's sides).
 
+import { kebabSlug } from './kebab-slug';
+
 export type WireframeDeviceId =
   | 'iphone'
   | 'iphone-duo'
@@ -423,12 +425,6 @@ export function deviceScreenPath(g: DeviceGeometry, ox = 0, oy = 0): string {
 /** A browser page's address (docs/specs/007-editor/wireframe-pages.md "Browser toolbar"): the
  *  page's name in lower case with dashes after the domain, or the domain alone. */
 export function wireframeAddress(name: string | undefined): string {
-  const slug = (name ?? '')
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40);
+  const slug = kebabSlug(name ?? '').slice(0, 40);
   return slug ? `example.com/${slug}` : 'example.com';
 }

@@ -13,8 +13,9 @@ import { pageImageOverlayColor, pageImageTone } from './page-image';
 import type { LaidOutPage, PageFill } from './page';
 import type { PageImageFill } from './page-image';
 import { r2, xmlEscape } from './svg-render-primitives';
-import { pageScreenRect, wireframeFrameSvg } from './wireframe-page';
-import type { WireframeFrameTheme } from './wireframe-device-svg';
+import { pageScreenRect } from './wireframe-page';
+import { wireframeFrameSvg } from './wireframe-frame';
+import type { WireframeFrameTheme } from './wireframe-frame-theme';
 
 /** The elements' markup cut to a wireframe page's screen, and its overlay after them; as it is on
  *  any other page. */
