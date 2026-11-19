@@ -297,11 +297,12 @@ export default function NewDocumentPage() {
     // A text document (`?kind=text-document`) is stored on LiveDoc: This Browser does not hold its live state yet
     // (docs/specs/034-text-documents/live-editing-and-storage.md "Offline").
     const textDocument = wizardBypassTabKind(window.location.search) === 'text-document';
-    // A spreadsheet (`?kind=spreadsheet`) is stored on LiveDoc too: This Browser does not hold a workbook yet
-    // (docs/specs/029-sheets/sheet-store.md "In a spreadsheet").
+    // A spreadsheet (`?kind=spreadsheet`) goes where any document goes (docs/specs/029-sheets/sheet-store.md "Offline
+    // documents").
     const spreadsheet = wizardBypassTabKind(window.location.search) === 'spreadsheet';
-    const settings: NewDocumentSettings =
-      textDocument || spreadsheet ? { ...asked, saveLocation: 'livedoc' } : asked;
+    const settings: NewDocumentSettings = textDocument
+      ? { ...asked, saveLocation: 'livedoc' }
+      : asked;
     // Save location (docs/specs/006-document/save-locations.md): only This Browser takes the offline branch.
     const offline = isOfflineLocation(settings.saveLocation);
     const { documentId, tabId } = createIdsFor(retrying);

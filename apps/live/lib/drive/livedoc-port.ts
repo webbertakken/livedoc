@@ -50,7 +50,7 @@ import {
 import { apiFetch, apiHeaders, expectOk } from '../api/core';
 import type { DocumentListResponse } from '@livedoc/api-schema';
 import { fetchAllSheets, sheetAsCreate } from '../api/sheets';
-import type { SheetJson } from '@livedoc/sheets';
+import type { SheetJson, WorkbookRecord } from '@livedoc/sheets';
 
 export type MirrorDocument = {
   id: string;
@@ -192,6 +192,7 @@ export function createApiLivedocPort(ownerId: string): LivedocPort {
           itemStore.items,
           liveDoc.itemTypes ?? null,
           sheets,
+          liveDoc.workbook ?? null,
         ),
         savedAt: liveDoc.savedAt,
       };
@@ -239,6 +240,10 @@ export function createApiLivedocPort(ownerId: string): LivedocPort {
         itemTypes: envelope.document.itemTypes ?? null,
         ...(sheets.length
           ? { sheets: sheets.map((s) => sheetAsCreate(s as unknown as SheetJson)) }
+          : {}),
+        // The api reads the workbook row as it reads the sheets, refusing one that is not (workbook_invalid).
+        ...(envelope.document.workbook
+          ? { workbook: envelope.document.workbook as unknown as WorkbookRecord }
           : {}),
         // Import a copy is an import (docs/specs/013-workspace/default-folders.md): no place chosen
         // and its intent, so it lands in the person's default folder. A copy the mirror placed keeps

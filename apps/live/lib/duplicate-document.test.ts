@@ -70,6 +70,15 @@ describe('duplicateDocument', () => {
     expect(payload.id).not.toBe('src');
   });
 
+  // docs/specs/029-sheets/sheet-store.md "Copies and exports": a copy of a spreadsheet is a spreadsheet.
+  it("copies a spreadsheet's workbook row", async () => {
+    const workbook = { format: 'ods', settings: {} } as never;
+    mLoadDocument.mockResolvedValue({ ...sourceDocument([{ id: 't1' }])!, workbook });
+    mLoadTab.mockResolvedValue(tab('t1'));
+    await duplicateDocument('owner', 'src');
+    expect(mCreate.mock.calls[0]![1]).toMatchObject({ workbook });
+  });
+
   it('mints a fresh id for every copied tab (no reuse of source ids)', async () => {
     mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }, { id: 't2' }]));
     mLoadTab.mockImplementation((_o, _d, tabId) => Promise.resolve(tab(tabId)));

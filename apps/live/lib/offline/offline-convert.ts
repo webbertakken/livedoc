@@ -144,6 +144,8 @@ async function downloadAndRemoveCloudCopy(
       ? { items: itemStore.items, itemsRev: itemStore.rev, itemsNextKey: itemStore.nextKey }
       : {}),
     ...(sheets.length ? { sheets } : {}),
+    // A spreadsheet stays one (docs/specs/029-sheets/sheet-store.md "Offline documents").
+    ...(liveDoc.workbook ? { workbook: liveDoc.workbook } : {}),
   };
   await offlinePutRecord(rec);
   // Raw server delete — the id is now in the offline index, so the dispatching

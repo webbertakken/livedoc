@@ -179,6 +179,18 @@ describe('saveOfflineToCloud (offline -> cloud)', () => {
     });
   });
 
+  it("carries a spreadsheet's workbook row, so the cloud copy is one too", async () => {
+    const workbook = { format: 'ods', settings: { locale: 'en-GB' } };
+    vi.mocked(store.offlineGetRecord).mockResolvedValueOnce({
+      id: 'd1',
+      name: 'Budget',
+      tabs: [],
+      workbook,
+    } as never);
+    await saveOfflineToCloud('d1', 'owner');
+    expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({ workbook });
+  });
+
   it.each(['folder_not_found', 'folder_scope_mismatch'])(
     'files the document at the root, saying so, when the server refuses its folder: %s',
     async (code) => {
@@ -307,6 +319,20 @@ describe('takeCloudOffline (cloud -> offline)', () => {
       folderId: 'f1',
       presentation: '{"decks":[]}',
     });
+  });
+
+  // docs/specs/029-sheets/sheet-store.md "Offline documents": a spreadsheet taken offline stays one.
+  it("keeps a spreadsheet's workbook row on the offline record", async () => {
+    const workbook = { format: 'ods', settings: { locale: 'en-GB' } };
+    vi.mocked(apiClient.apiLoadDocument).mockResolvedValueOnce({
+      id: 'd1',
+      name: 'Budget',
+      tabs: [{ id: 't1' }],
+      teamId: null,
+      workbook,
+    } as never);
+    await takeCloudOffline('d1', 'owner');
+    expect(vi.mocked(store.offlinePutRecord).mock.calls[0]![0]).toMatchObject({ workbook });
   });
 
   it('keeps a starred document starred on the offline record', async () => {

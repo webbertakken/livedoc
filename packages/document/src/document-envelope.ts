@@ -30,8 +30,13 @@ export type DocumentEnvelope = {
     // The sheet store (docs/specs/029-sheets/sheet-store.md "Copies and exports"), the same way. The sheets'
     // shape is the sheets engine's SheetJson; the api validates them on import.
     sheets?: EnvelopeSheet[];
+    // A spreadsheet's workbook row (docs/specs/029-sheets/sheet-store.md "Copies and exports"), the same way: its shape
+    // is the sheets engine's WorkbookRecord, which the api validates on import, so a copy of a spreadsheet is one.
+    workbook?: EnvelopeWorkbook;
   };
 };
+
+export type EnvelopeWorkbook = { format: string; settings: Record<string, unknown> };
 
 export type EnvelopeSheet = { id: string; tabId: string; title: string; [key: string]: unknown };
 
@@ -44,6 +49,7 @@ export function documentToEnvelopeText(
   items: Item[] = [],
   itemTypes: ItemTypeCatalogue | null = null,
   sheets: readonly EnvelopeSheet[] = [],
+  workbook: EnvelopeWorkbook | null = null,
 ): string {
   const envelope: DocumentEnvelope = {
     kind: DOCUMENT_ENVELOPE_KIND,
@@ -57,6 +63,7 @@ export function documentToEnvelopeText(
       ...(items.length ? { items } : {}),
       ...(itemTypes ? { itemTypes } : {}),
       ...(sheets.length ? { sheets: [...sheets] } : {}),
+      ...(workbook ? { workbook } : {}),
     },
   };
   return JSON.stringify(envelope, null, 2);
@@ -66,6 +73,12 @@ function isTab(value: unknown): value is EnvelopeTab {
   if (!value || typeof value !== 'object') return false;
   const t = value as Record<string, unknown>;
   return typeof t.id === 'string' && typeof t.name === 'string' && Array.isArray(t.elements);
+}
+
+function isWorkbookLike(value: unknown): value is EnvelopeWorkbook {
+  if (!value || typeof value !== 'object') return false;
+  const w = value as Record<string, unknown>;
+  return typeof w.format === 'string' && !!w.settings && typeof w.settings === 'object';
 }
 
 function isSheetLike(value: unknown): value is EnvelopeSheet {
@@ -137,6 +150,7 @@ export function parseDocumentEnvelope(
         // Items that do not look like items are left behind; the api validates the rest.
         ...(Array.isArray(d.items) ? { items: d.items.filter(isItemLike) } : {}),
         ...(Array.isArray(d.sheets) ? { sheets: d.sheets.filter(isSheetLike) } : {}),
+        ...(isWorkbookLike(d.workbook) ? { workbook: d.workbook } : {}),
         // A catalogue that does not read back is left behind: the built-in types stand.
         ...(itemTypes ? { itemTypes } : {}),
       },

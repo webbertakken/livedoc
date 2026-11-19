@@ -11,7 +11,7 @@
 // dispatch can answer "is this id offline?" cheaply (./offline-ids, which keeps
 // every tab of the browser in step).
 
-import type { SheetJson } from '@livedoc/sheets';
+import type { SheetJson, WorkbookRecord } from '@livedoc/sheets';
 import type { LiveDoc, DocumentSummary, RecordedIntent, TabSummary } from '@livedoc/api-schema';
 import { utcDay } from '@livedoc/api-schema';
 import { drawnCount, migrateStoredTab, stampTabKind } from '@livedoc/document';
@@ -82,6 +82,9 @@ export type OfflineDocumentRecord = {
   // The document's sheet store (docs/specs/029-sheets/sheet-store.md "Offline documents"): every sheet, cells
   // included. Optional: a record without it has none.
   sheets?: SheetJson[];
+  // The workbook row when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md "Offline documents"):
+  // its file format and settings. Absent for any other document.
+  workbook?: WorkbookRecord;
 };
 
 // A local document's opens, counted like the server's (docs/specs/013-workspace/explorer-home.md
@@ -142,6 +145,7 @@ export function recordToDocument(rec: OfflineDocumentRecord): LiveDoc {
     createdAt: rec.createdAt,
     ownerName: null,
     ownerColor: null,
+    ...(rec.workbook ? { workbook: rec.workbook } : {}),
     ...UNKNOWN_INTENT,
   };
 }
@@ -348,6 +352,8 @@ export async function offlineCreateDocument(
     tabs?: Tab[];
     itemTypes?: ItemTypeCatalogue | null;
     sheets?: SheetJson[];
+    // A spreadsheet's workbook row (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet").
+    workbook?: WorkbookRecord;
   },
   now: number,
   extra: {
@@ -366,6 +372,7 @@ export async function offlineCreateDocument(
     tabs: d.tabs ?? [],
     ...(d.itemTypes ? { itemTypes: d.itemTypes } : {}),
     ...(d.sheets?.length ? { sheets: d.sheets } : {}),
+    ...(d.workbook ? { workbook: d.workbook } : {}),
     ...(extra.markUsed === false ? {} : { opens: { days: [utcDay(now)], lastOpenedAt: now } }),
   };
   await offlineBackend().put(rec);

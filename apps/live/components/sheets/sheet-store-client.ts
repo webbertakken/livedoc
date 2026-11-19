@@ -350,6 +350,9 @@ export class SheetStore {
   private async openWorkbook(tabId: string): Promise<void> {
     const sheets = await this.api.fetchWorkbook(this.deps.scope, { tabId });
     for (const { cellCount: _count, rowsLoaded, ...json } of sheets) this.adopt(json, rowsLoaded);
+    // Opened again after a reconnect: a sheet deleted meanwhile is in the workbook no longer.
+    const answered = new Set(sheets.map((s) => s.id));
+    for (const id of [...this.entries.keys()]) if (!answered.has(id)) this.drop(id);
     const order = [
       ...sheets.filter((s) => s.tabId === tabId),
       ...sheets.filter((s) => s.tabId !== tabId),

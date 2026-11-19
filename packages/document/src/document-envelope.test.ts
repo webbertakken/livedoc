@@ -64,3 +64,33 @@ describe('parseDocumentEnvelope', () => {
     expect(parsed.ok && parsed.envelope.document.presentation).toBeNull();
   });
 });
+
+// docs/specs/029-sheets/sheet-store.md "Copies and exports": a spreadsheet's file carries its workbook row, so a copy
+// read back from it is a spreadsheet.
+describe('a spreadsheet in the envelope', () => {
+  const workbook = { format: 'ods', settings: { locale: 'en-GB', timeZone: 'UTC' } };
+  const sheet = { id: 'sheetAaa1', tabId: 't1', title: 'Sheet1' };
+
+  it('carries the workbook row, and reads it back', () => {
+    const text = documentToEnvelopeText(
+      { id: 'd1', name: 'Budget', presentation: null },
+      [tab],
+      1,
+      [],
+      null,
+      [sheet],
+      workbook,
+    );
+    const read = parseDocumentEnvelope(text);
+    expect(read.ok && read.envelope.document.workbook).toEqual(workbook);
+  });
+
+  it('carries none for another document, and leaves one that is not a workbook behind', () => {
+    const plain = documentToEnvelopeText({ id: 'd1', name: 'Plan', presentation: null }, [tab], 1);
+    const odd = JSON.parse(plain) as { document: Record<string, unknown> };
+    expect(odd.document).not.toHaveProperty('workbook');
+    odd.document.workbook = { format: 3 };
+    const read = parseDocumentEnvelope(JSON.stringify(odd));
+    expect(read.ok && read.envelope.document).not.toHaveProperty('workbook');
+  });
+});

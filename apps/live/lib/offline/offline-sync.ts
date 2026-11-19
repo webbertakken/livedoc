@@ -81,6 +81,8 @@ async function upload(rec: OfflineDocumentRecord, ownerId: string): Promise<Map<
         itemTypes: rec.itemTypes ?? null,
         // The sheet store, whole (docs/specs/029-sheets/sheet-store.md "Offline documents").
         ...(rec.sheets?.length ? { sheets: rec.sheets.map(sheetAsCreate) } : {}),
+        // A spreadsheet's workbook row, so it stays one.
+        ...(rec.workbook ? { workbook: rec.workbook } : {}),
       },
       { conversion: 'sync' },
     );
