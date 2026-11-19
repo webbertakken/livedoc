@@ -48,14 +48,14 @@ import { selectContexts } from '@/lib/context-selection';
 import { ARRANGE_KEY, useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
-import { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
-import { StructureTapes } from '@/components/canvas/structure/StructureTapes';
-import { StructureMarks } from '@/components/canvas/structure/StructureMarks';
 import {
   BoardOffers,
+  ContextLayer,
   ReviewButton,
   ReviewCorner,
   ReviewRings,
+  StructureMarks,
+  StructureTapes,
   SuggestionLayer,
   useEventStormingFaces,
 } from '@/components/canvas/event-storming-faces';
@@ -636,7 +636,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
             gets its own <svg> overlay; pointer events on the SVG are
             disabled in CSS, only the inner arrow line picks them up. */}
               {/* Candidate contexts (docs/specs/021-event-storming/candidate-contexts.md): beneath every element. */}
-              {props.esBoard ? (
+              {esFaces ? (
                 <ContextLayer
                   part="lines"
                   elements={elements}
@@ -652,7 +652,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
               ) : null}
               {/* The tape of each pivotal event (docs/specs/021-event-storming/board-structure.md "Pivotal events"):
           beneath every element too, and everyone's to see. */}
-              {props.esBoard ? (
+              {esFaces ? (
                 <StructureTapes
                   tabId={props.activeTabId ?? ''}
                   elements={elements}
@@ -702,7 +702,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
                 />
               </PageClip>
               {/* Candidate contexts' names, in the middle of their shapes, over the notes. */}
-              {props.esBoard ? (
+              {esFaces ? (
                 <ContextLayer
                   part="names"
                   elements={elements}
@@ -718,7 +718,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
               ) : null}
               {/* A hotspot's answer (docs/specs/021-event-storming/board-structure.md "Hotspot answers"): its check, its
           caption and the field it is typed in, over the notes; the checks are everyone's to see. */}
-              {props.esBoard ? (
+              {esFaces ? (
                 <StructureMarks
                   tabId={props.activeTabId ?? ''}
                   elements={elements}
