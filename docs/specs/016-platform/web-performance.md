@@ -71,6 +71,9 @@ Measured 2026-11-15 on `main` at e8e2d1430f, after the performance sweep (what i
 Then `/new` without the template builders up front (Webber's ruling on fork F1, measured 2026-11-15 the same
 way): 801 to 525 KiB.
 
+Then the document page with its element kinds on demand (plan 0021, measured 2026-11-19 on `main` at 1fa376f8c2 the
+same way): `/document/<id>` and `/embed` 1,534 to 1,368 KiB.
+
 ## Rules
 
 ### Every page has a budget
@@ -202,53 +205,64 @@ alongside the editor's code, so a template link waits for nothing extra.
 
 ### An element kind's code loads with the board that holds it
 
-Most of the document page's first load is the long tail of element kinds: each kind's face, its behaviours and its
-share of the model's switches, whatever the board holds. A **kind family** is the unit that loads on demand: the
-kinds that share their code (mind maps; pages and articles; charts, Sankey and dashboards; collaboration panels;
-session controls; office furniture and seating; wireframes; web components; embeds (videos and link cards);
-concepts; entities; sketches; Event Storming). The plain diagram kinds (shapes, text, arrows, notes, images, pen
-strokes, and the diagram furniture: badges, steps, boundaries, keys) are the base and always load. Which family a
-kind belongs to follows the palette's grouping: the Behaviour tiles are session controls (default). The charts are
-the pie, column and line charts (a chart drawn from a sheet range too) and the Sankey diagram; the Data tiles'
-legend is a key, and its progress bars, rings and ratings stay base with it (default). A tab's articles belong to
-the pages and articles family whatever elements its pages hold: an article's writing, its zones, its margin notes
-and turning it into pages load with it, while reading a tab's pages and articles stays base. A mind map's growing,
-laying out, connecting, converting, arranging, outline and its root's halo load with the mind maps family, while
-reading a map (its order, its numbers and its groups' boxes, which an export and every change's settling read) stays
-base; turning a shape into a mind node waits for the family as a palette press does. An Event Storming board belongs to its
-family by its kind: reading a photographed wall into a draft loads with it, and a photo import waits for it before
-its photos go up. Candidate contexts' outlines and names, the board's structure (its pivotal tapes and hotspot
-answers), suggestions, the board's review and asks load with it too: their faces, their verbs and their
-previews draw on the board's first frame, while who has the suggestions list, the Review panel or an ask open stays
-base, so the pill, the board's menu and the command palette open them. A draft's notes and the board's notes, lanes
-and structure stay base. The
-collaboration panels' and the quiz's verbs, and the Behaviour elements' menu setters, load with their families, read
-at the press; the panels' wire and the room's live state (polls, Q&A, idea posts, reaction bursts) stay base. An
-entity's rows and their editing in place, its verbs, writing its fields, its relationships and a related entity, and
-pointing at its rows load with the entities family, while reading its fields (an export, the text views) and telling
-which arrows join two entities stay base: an arrow end pins to a field, and a released arrow takes its relationship's
-ends, once the family is in, as a board without it draws no entity to join. Where a concept graphic's rows sit loads
-with the concepts family; its kinds, rows, variants and their writes stay base. Furniture and rooms draw, and a
-character finds a seat, with the office and seating family: their drawings load with it, while their kinds,
-facing, walls and footprints (which an Avatar-mode walk reads on any board) stay base.
-Sketches are the hand-drawn finishes, Sketch and Marker, and join by finish rather than kind: a board in one, or
-holding an element in one of its own, needs the family, and an element or arrow drawn in one waits for it as a kind's
-element does. Drawing a body, an arrow, a face's parts and WebKit's still pictures of art by hand loads with it, while
-the finishes' rules, their wobble filters and the export stay base. A finish picked (a tab's, a look's, an
-element's own) applies once its family is in, and pointing at one fetches it. A tab with a wireframe page needs the
-wireframes family by its pages: drawing the device's frame, its camera and its system bars loads with it, while the
-device's geometry, its screen and safe area and its frame's colours stay base. Where a web component's parts sit
-loads with the web components family; its kinds, rows and their writes stay base. Avatar mode is a family
-loaded on first use rather than with a board: picking Avatar, a peer's character on the board, a reaction burst, or a
-board holding an Avatar Pad fetches it, and the character steps in, the burst plays and the pad draws once it is in, a
-short wait the first time only. The characters' art, the bursts, the pad and its arrival beams, and where a fence stops
-a walk load with it, while the room's avatar state (where each character stands, sits and what it says) stays base.
+Most of the document page's first load was the long tail of element kinds: each kind's face, its behaviours and its
+share of the model's switches, whatever the board held. A **kind family** is the unit that loads on demand: the kinds
+that share their code, or a feature only some boards use. The plain diagram kinds (shapes, text, arrows, notes,
+images, pen strokes, and the diagram furniture: badges, steps, boundaries, keys) are the base and always load, and so
+does what every board needs of any kind, whatever its family: its wire (validating, normalising and making one), its
+name, and its picture in a thumbnail or an export. A board needs a family by its elements' kinds, and a few by
+something else: a tab's articles, its kind, its finish or its pages. Which family a kind belongs to follows the
+palette's grouping (default).
+
+- **Session controls**: the Behaviour tiles, but the Avatar Pad (Avatar mode's). Their menu setters load with them,
+  read at the press.
+- **Collaboration panels**: the room-response panels, the quiz, comment pins and action cards, and their verbs, read
+  at the press. The panels' wire and the room's live state (polls, Q&A, idea posts, which pad a burst plays on) stay
+  base.
+- **Charts**: the pie, column and line charts (a chart drawn from a sheet range too) and the Sankey diagram. The Data
+  tiles' legend is a key, and its progress bars, rings and ratings stay base with it. A dashboard is a tab, not a
+  kind: its page already loads on demand, and its wire stays base (default).
+- **Pages and articles**: a page element and an article's margin note, and a tab with articles whatever its pages
+  hold. An article's writing, its zones, its margin notes and turning it into pages load with it; reading a tab's
+  pages and articles stays base.
+- **Mind maps**: a mind node. Growing, laying out, connecting, converting, arranging, the outline and the root's halo
+  load with it; reading a map (its order, its numbers and its groups' boxes, which an export and every change's
+  settling read) stays base. Turning a shape into a mind node waits for the family as a palette press does.
+- **Event Storming**: a tab of that kind. Reading a photographed wall into a draft loads with it, and a photo import
+  waits for it before its photos go up. Candidate contexts' outlines and names, the board's structure (its pivotal
+  tapes and hotspot answers), suggestions, the board's review and asks load with it too: their faces, their verbs and
+  their previews draw on the board's first frame. Who has the suggestions list, the Review panel or an ask open stays
+  base, so the board's menu and the command palette open them. A draft's notes and the board's notes, lanes,
+  structure, next notes, landing and lane plans stay base: every board's drag, paste, stamp, validation and export
+  read them.
+- **Entities**: an entity's rows and their editing in place, its verbs, writing its fields, its relationships and a
+  related entity, and pointing at its rows. Reading its fields (an export, the text views) and telling which arrows
+  join two entities stay base: an arrow end pins to a field, and a released arrow takes its relationship's ends, once
+  the family is in, as a board without it draws no entity to join.
+- **Concepts** and **web components**: where a concept graphic's or a web component's parts sit. Their kinds, rows,
+  variants and their writes stay base.
+- **Office and seating**: furniture and rooms draw, and a character finds a seat, with the family. Their kinds,
+  facing, walls and footprints (which an Avatar-mode walk reads on any board) stay base.
+- **Sketches**: the hand-drawn finishes, Sketch and Marker, joined by finish rather than kind: a board in one, or
+  holding an element in one of its own, needs the family, and an element or arrow drawn in one waits for it as a
+  kind's element does. Drawing a body, an arrow, a face's parts and WebKit's still pictures of art by hand loads with
+  it; the finishes' rules, their wobble filters and the export stay base. A finish picked (a tab's, a look's, an
+  element's own) applies once its family is in, and pointing at one fetches it.
+- **Wireframes**: a tab with a wireframe page. Drawing the device's frame, its camera and its system bars loads with
+  it; the device's geometry, its screen and safe area and its frame's colours stay base.
+- **Embeds**: videos and link cards.
+- **Avatar mode** loads on first use rather than with a board: picking Avatar, a peer's character on the board, a
+  reaction burst, or a board holding an Avatar Pad asks for it, and the character steps in, the burst plays and the pad
+  draws once it is in, a short wait the first time only, before the idle prefetch below has brought it. The
+  characters' art and walk, the bursts, the pad and its arrival beams, and where a fence stops a walk load with it;
+  the room's avatar state (where each character stands and sits, its status and its words) stays base, and the
+  Avatar panel is not the family's, so it opens at once.
+
+How a family is reached and when it loads:
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,
-  behaviours or model parts only through the registry, never through a static import; what every board needs of a
-  kind stays base, whatever its family: its wire (validating, normalising and making one), its name and its
-  picture in a thumbnail or an export. The registry answers a family that is not loaded yet with a named error, so
+  behaviours or model parts only through the registry, never through a static import. The registry answers a family that is not loaded yet with a named error, so
   a missed path fails a test rather than drawing a wrong board.
 - **At the open.** The open read carries the opened tab ("The open is one read"), so the early reads ask for the
   families it needs (its elements' and its articles') as soon as it arrives, alongside the editor's own code. The
