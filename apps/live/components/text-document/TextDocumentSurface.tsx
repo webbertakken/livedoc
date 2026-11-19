@@ -17,6 +17,14 @@ import { apiLoadTextDocumentState, type TextDocumentScope } from '@/lib/api/text
 import { debugLog } from '@/lib/debug-log';
 import { bindRoomYjsProvider } from '@/lib/text-document/room-yjs-provider';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
+import {
+  setLocalTextDocumentCaret,
+  useTextDocumentPeers,
+} from '@/lib/text-document/text-document-carets-store';
+import {
+  setTextDocumentPeers,
+  textDocumentPeersPlugin,
+} from '@/lib/text-document/text-document-peers';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 
 export type TextDocumentSurfaceProps = {
@@ -37,6 +45,9 @@ export function TextDocumentSurface({
   send,
 }: TextDocumentSurfaceProps) {
   const mount = useRef<HTMLDivElement | null>(null);
+  const editor = useRef<EditorView | null>(null);
+  // Collaborators' carets in this tab's writing (live-editing-and-storage.md "Presence"), drawn by the editor.
+  const peers = useTextDocumentPeers(scope.tabId);
   const [state, setState] = useState<SurfaceState>('loading');
   const [attempt, setAttempt] = useState(0);
   const { ownerId, documentId, tabId, shareCode } = scope;
@@ -74,6 +85,10 @@ export function TextDocumentSurface({
               yUndoPlugin(),
               keymap({ 'Mod-z': undo, 'Mod-y': redo, 'Mod-Shift-z': redo }),
               keymap(baseKeymap),
+              textDocumentPeersPlugin({
+                canEdit: () => live.current.canEdit,
+                publish: (selection) => setLocalTextDocumentCaret(tabId, selection),
+              }),
             ],
           }),
           editable: () => live.current.canEdit,
@@ -86,7 +101,9 @@ export function TextDocumentSurface({
             spellcheck: 'true',
           },
         });
+        editor.current = view;
         teardown = () => {
+          editor.current = null;
           view.destroy();
           unbind();
           doc.destroy();
@@ -108,6 +125,10 @@ export function TextDocumentSurface({
       teardown();
     };
   }, [ownerId, documentId, tabId, shareCode, attempt]);
+
+  useEffect(() => {
+    if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
+  }, [peers, state]);
 
   return (
     <div
