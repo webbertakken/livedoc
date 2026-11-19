@@ -34,12 +34,8 @@ import {
   resolveFinish,
   type Finish,
 } from './finish';
-import {
-  SKETCH_ART_FILTER_ID,
-  svgSketchArtDefs,
-  svgSketchedBody,
-  svgSketchFace,
-} from './svg-render-sketch';
+import { svgSketchArtDefs, svgSketchedBody, svgSketchFace } from './svg-render-sketch';
+import { SKETCH_ART_FILTER_ID } from './sketch-filters';
 import { svgMarkerFace, svgProfessionalFace } from './svg-render-face-finish';
 import { sketchBackdropIds } from './sketch-backdrop';
 import { acceptsInlineIcon, canvasSurface } from './colors';
@@ -87,11 +83,12 @@ export {
   type ExportLabel,
   type ExportRun,
 } from './svg-render-labels';
-import { arrowLabelFontStack, svgArrow } from './svg-render-arrows';
+import { svgArrow } from './svg-render-arrows';
+import { arrowLabelFontStack } from './arrow-label-layout';
 import { arrowLabelPass } from './arrow-label-layout';
 import { contentBounds } from './content-bounds';
 
-export { arrowLabelFontStack, svgArrow, svgArrowhead } from './svg-render-arrows';
+export { svgArrow, svgArrowhead } from './svg-render-arrows';
 export type { ArrowLineMotion } from './svg-render-arrows';
 import type { BoxedElement, Element, ShapeElement, Tab } from './index';
 import { layerBands, layerOpacityOf, visibleLayerElements } from './layers';

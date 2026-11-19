@@ -4,7 +4,7 @@
 import type { BoxedElement } from './index';
 import type { CanvasSurface } from './colors';
 import { r2, xmlEscape } from './svg-render-primitives';
-import { SKETCH_FACE_FILTER } from './svg-render-sketch';
+import { SKETCH_FACE_FILTER } from './sketch-filters';
 
 /** A window's size as it lands (16:9). */
 export const TAB_WINDOW_SIZE = { width: 640, height: 360 } as const;

@@ -69,6 +69,13 @@ export function kindFamilyOf(element: Element): KindFamilyId | null {
   }
 }
 
+// The family a finish draws through (docs/specs/008-canvas/finish.md): Sketch's pencil and Marker's felt-tip are
+// drawn by hand, the sketches family's; every other finish is base. A plain check rather than the model's
+// isHandDrawn, so the early reads can ask without the model's code; kind-family-of.test.ts holds it to isHandDrawn.
+export function finishFamilyOf(finish: unknown): KindFamilyId | null {
+  return finish === 'sketch' || finish === 'marker' ? 'sketches' : null;
+}
+
 // The layers an Event Storming board authored before tabs carried a kind is known by (event-storming.ts
 // `isEventStormingTab`, which kind-family-of.test.ts holds this to).
 const LEGACY_EVENT_STORMING_LAYERS = new Set([
@@ -92,12 +99,15 @@ function isEventStormingTab(tab: { kind?: unknown; layers?: unknown }): boolean 
 }
 
 // A tab's families beyond its elements': an article's writing is the pages family's, whatever elements its pages
-// hold (an article's text lives on the tab, not in an element); an Event Storming board is its family's by its kind.
+// hold (an article's text lives on the tab, not in an element); an Event Storming board is its family's by its kind;
+// a board in a hand-drawn finish is the sketches family's.
 function tabFamilies(tab: {
   articles?: unknown;
   kind?: unknown;
   layers?: unknown;
+  finish?: unknown;
 }): KindFamilyId[] {
+  const finishFamily = finishFamilyOf(tab.finish);
   const { articles } = tab;
   const hasArticles =
     !!articles &&
@@ -107,6 +117,7 @@ function tabFamilies(tab: {
   return [
     ...(hasArticles ? (['pages-articles'] as const) : []),
     ...(isEventStormingTab(tab) ? (['event-storming'] as const) : []),
+    ...(finishFamily ? [finishFamily] : []),
   ];
 }
 
@@ -117,17 +128,20 @@ export function kindFamiliesOfTab(tab: {
   articles?: unknown;
   kind?: unknown;
   layers?: unknown;
+  finish?: unknown;
 }): KindFamilyId[] {
   const elements = Array.isArray(tab.elements) ? (tab.elements as Element[]) : [];
   return [...new Set([...kindFamiliesOf(elements), ...tabFamilies(tab)])];
 }
 
-// The families a set of elements needs, each once, in the order first met.
+// The families a set of elements needs, each once, in the order first met: each one's kind's, then its own finish's.
 export function kindFamiliesOf(elements: readonly Element[]): KindFamilyId[] {
   const families = new Set<KindFamilyId>();
   for (const element of elements) {
     const family = kindFamilyOf(element);
     if (family) families.add(family);
+    const finishFamily = finishFamilyOf((element as { finish?: unknown }).finish);
+    if (finishFamily) families.add(finishFamily);
   }
   return [...families];
 }

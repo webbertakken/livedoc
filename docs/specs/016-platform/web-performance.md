@@ -225,6 +225,11 @@ pointing at its rows load with the entities family, while reading its fields (an
 which arrows join two entities stay base: an arrow end pins to a field, and a released arrow takes its relationship's
 ends, once the family is in, as a board without it draws no entity to join. Where a concept graphic's rows sit loads
 with the concepts family; its kinds, rows, variants and their writes stay base.
+Sketches are the hand-drawn finishes, Sketch and Marker, and join by finish rather than kind: a board in one, or
+holding an element in one of its own, needs the family, and an element or arrow drawn in one waits for it as a kind's
+element does. Drawing a body, an arrow, a face's parts and WebKit's still pictures of art by hand loads with it, while
+the finishes' rules, their wobble filters and the export stay base. A finish picked (a tab's, a look's, an
+element's own) applies once its family is in, and pointing at one fetches it.
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { clearMarkerFace, drawMarkerFace } from './useFaceFinishPass';
+import { clearMarkerFace } from './face-finish-marks';
+import { drawMarkerFace } from './hand-drawn-face';
 
 // docs/specs/008-canvas/finish.md "Marker", "Faces: frames and shapes". jsdom lays nothing out, so each box is given
 // its size through data-w / data-h.

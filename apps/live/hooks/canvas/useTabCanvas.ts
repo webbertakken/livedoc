@@ -15,6 +15,7 @@ import {
   type TextSize,
 } from '@livedoc/document';
 import { track, titleCaseType } from '@/lib/telemetry';
+import { withFinishFamily } from '@/lib/element-kinds/finish-family';
 import { AUTO_LAYOUT_CHOICES, type AutoLayoutChoice } from '@/lib/auto-layout-choices';
 import type { CleanupKind } from '@/lib/tab-cleanup';
 import { withTidyEngine, type TidyEngine } from '@/lib/tidy-engine';
@@ -125,10 +126,13 @@ export function useTabCanvas(deps: TabCanvasDeps) {
 
   // The tab's finish (docs/specs/008-canvas/finish.md): how every element without its own is drawn. Flexible
   // is stored when picked, like any other value; one undo step.
+  // A hand-drawn one applies once its drawing is in (withFinishFamily).
   const setTabFinish = (finish: Finish) => {
     if (editsBlocked) return;
-    commitTabs((ts) => ts.map((t) => (t.id === activeId ? withTabFinish(t, finish) : t)));
     track('Tab', 'Changed', 'Finish');
+    withFinishFamily(finish, () =>
+      commitTabs((ts) => ts.map((t) => (t.id === activeId ? withTabFinish(t, finish) : t))),
+    );
   };
 
   // A look (docs/specs/011-theme/canvas-and-theme-dialog.md "Looks"): the tab's theme, finish, font and pattern at
@@ -143,7 +147,9 @@ export function useTabCanvas(deps: TabCanvasDeps) {
       'Changed',
       look.id === 'mashup' ? 'Mashup' : look.season ? 'SeasonalLook' : 'Look',
     );
-    commitTabs((ts) => ts.map((t) => (t.id === activeId ? withLookApplied(t, look) : t)));
+    withFinishFamily(look.finish, () =>
+      commitTabs((ts) => ts.map((t) => (t.id === activeId ? withLookApplied(t, look) : t))),
+    );
   };
 
   // Tab default text size (docs/specs/004-interface-design/fonts.md): seeded onto NEW palette elements.

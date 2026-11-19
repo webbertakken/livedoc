@@ -4,8 +4,10 @@ import {
   isChartShape,
   isCollabPanelShape,
   isConceptShape,
+  FINISHES,
   isEntity,
   isEventStormingTab,
+  isHandDrawn,
   ES_BIG_PICTURE_LAYER_ID,
   ES_BOARD_LAYER_ID,
   ES_DESIGN_LAYER_ID,
@@ -21,6 +23,7 @@ import {
   kindFamiliesOfTab,
   kindFamilyOf,
   kindFamilyOfShape,
+  finishFamilyOf,
 } from './kind-family-of';
 
 const shape = (kind: string, extra: object = {}) =>
@@ -161,4 +164,32 @@ describe('kindFamiliesOfTab', () => {
       expect(kindFamiliesOfTab({ elements: [], layers })).toEqual([]);
     },
   );
+});
+
+describe('finishFamilyOf', () => {
+  it.each([...FINISHES])('places the %s finish as the model draws it by hand', (finish) => {
+    expect(finishFamilyOf(finish)).toBe(isHandDrawn(finish) ? 'sketches' : null);
+  });
+
+  it.each([undefined, null, 'chalk', 3])('reads %j as no finish of a family', (finish) => {
+    expect(finishFamilyOf(finish)).toBeNull();
+  });
+
+  it('adds the sketches family for a board in a hand-drawn finish, after its elements’', () => {
+    expect(kindFamiliesOfTab({ elements: [shape('pyramid')], finish: 'marker' })).toEqual([
+      'concepts',
+      'sketches',
+    ]);
+    expect(kindFamiliesOfTab({ elements: [], finish: 'professional' })).toEqual([]);
+  });
+
+  it('adds the sketches family for an element drawn in a hand-drawn finish of its own', () => {
+    expect(kindFamiliesOf([shape('square', { finish: 'sketch' }), shape('pyramid')])).toEqual([
+      'sketches',
+      'concepts',
+    ]);
+    expect(
+      kindFamiliesOfTab({ elements: [shape('square', { finish: 'sketch' })], finish: 'sketch' }),
+    ).toEqual(['sketches']);
+  });
 });

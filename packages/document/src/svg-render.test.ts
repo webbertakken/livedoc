@@ -15,7 +15,7 @@ import { freehandPenStroke, penStrokePath } from './pen-stroke';
 import { r2 } from './svg-render-primitives';
 import { contentBounds } from './content-bounds';
 import { renderElementsToSvg } from './svg-render';
-import { arrowLabelFontStack } from './svg-render-arrows';
+import { arrowLabelFontStack } from './arrow-label-layout';
 import { arrowLabelPass, layoutArrowLabels } from './arrow-label-layout';
 import { encodeStrokePoints } from './stroke-points';
 import { DEFAULT_BACKGROUND_COLOR as PAPER } from './canvas-colors';

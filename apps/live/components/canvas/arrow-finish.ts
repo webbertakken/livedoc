@@ -3,16 +3,18 @@ import {
   arrowheadShapeOf,
   arrowheadSizeOf,
   finishArrowWidthPx,
-  handDrawnArrow,
+  isHandDrawn,
   type ArrowElement,
   type HandDrawnArrow,
 } from '@livedoc/document';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 import { useElementFinish } from './CanvasFinishContext';
 
 // An arrow in its finish on the canvas (docs/specs/008-canvas/finish.md): Professional thins an arrow that
 // sets no width, Marker draws it at a marker's nib, and Sketch and Marker draw its line and its triangle / line heads
 // by hand. The same rules as the export's svgArrow (packages/document/src/svg-render-arrows.ts), so the canvas and a
-// download agree.
+// download agree. The hand-drawn drawing is the sketches family's (docs/specs/016-platform/web-performance.md), in
+// before a hand-drawn arrow draws (ArrowView).
 
 type ArrowFinishPaint = {
   /** The line's width before the selected-state bump, px. */
@@ -33,14 +35,16 @@ export function useArrowFinish(arrow: ArrowElement, pathD: string): ArrowFinishP
   // arrow redraws nothing (docs/specs/008-canvas/canvas-performance.md).
   const sketch = useMemo(
     () =>
-      handDrawnArrow(finish, arrow.id, pathD, {
-        strokePx: baseStrokeWidth,
-        headSize,
-        headShape,
-        startHead: ends === 'from' || ends === 'both',
-        endHead: ends === 'to' || ends === 'both',
-        flowing,
-      }),
+      !isHandDrawn(finish)
+        ? null
+        : requireKindFamily('sketches').handDrawnArrow(finish, arrow.id, pathD, {
+            strokePx: baseStrokeWidth,
+            headSize,
+            headShape,
+            startHead: ends === 'from' || ends === 'both',
+            endHead: ends === 'to' || ends === 'both',
+            flowing,
+          }),
     [finish, arrow.id, pathD, baseStrokeWidth, headSize, headShape, ends, flowing],
   );
   return { baseStrokeWidth, sketch };

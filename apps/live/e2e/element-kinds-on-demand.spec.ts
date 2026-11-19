@@ -72,6 +72,8 @@ const BOARD = [
     y: 320,
     entityFields: [{ name: 'id', type: 'uuid', key: 'pk' }],
   }),
+  box('sketches', 'square', 960, { y: 320, finish: 'sketch' }),
+  box('marker', 'circle', 1160, { y: 320, finish: 'marker' }),
 ];
 
 test('a board draws every family’s face in its first frame', async ({ page, pageErrors }) => {
@@ -85,6 +87,9 @@ test('a board draws every family’s face in its first frame', async ({ page, pa
     () => (window as unknown as { __firstFrame?: string[] }).__firstFrame,
   );
   expect(firstFrame).toEqual(BOARD.map((el) => el.id).sort());
+  // A hand-drawn element draws its body by hand, never a plain one first.
+  await expect(page.locator('[data-element-id="sketches"] [data-finish="sketch"]')).toHaveCount(1);
+  await expect(page.locator('[data-element-id="marker"] [data-finish="marker"]')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });
 

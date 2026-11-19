@@ -28,10 +28,14 @@ import { ROUTE_BEHIND_MARGIN, routeBehindHoles, routeBehindQueryRect } from './a
 import { elementGridFor, queryElementGrid } from './element-grid';
 import { svgWrappedLabel } from './svg-render-labels';
 import { resolveStockColours } from './stock-colours';
-import { KNOCKOUT_RADIUS_PX, arrowLabelPass, type ArrowLabelPass } from './arrow-label-layout';
+import {
+  KNOCKOUT_RADIUS_PX,
+  arrowLabelFontStack,
+  arrowLabelPass,
+  type ArrowLabelPass,
+} from './arrow-label-layout';
 import type { Rect } from './geometry-primitives';
-import { resolveFontStack } from './fonts';
-import { elementFontId, finishArrowWidthPx, resolveFinish, type Finish } from './finish';
+import { finishArrowWidthPx, resolveFinish, type Finish } from './finish';
 import { finishArrowEnds } from './mind-connector-route';
 import { handDrawnArrow } from './hand-drawn';
 import { r2, xmlEscape } from './svg-render-primitives';
@@ -318,20 +322,6 @@ export function svgArrow(
   }
   parts.push('</g>');
   return parts.join('');
-}
-
-// The font stack a caption paints in: its own face, else the handwriting font under Sketch, else the tab's
-// (docs/specs/004-interface-design/fonts.md, docs/specs/008-canvas/finish.md). The layout measures with the
-// same stack.
-export function arrowLabelFontStack(
-  arrow: ArrowElement,
-  tabFont?: string,
-  tabFinish?: Finish,
-): string | undefined {
-  return (
-    resolveFontStack(arrow.font) ??
-    resolveFontStack(elementFontId({ finish: arrow.finish }, tabFont, tabFinish))
-  );
 }
 
 // A mask that paints the line everywhere except its holes (label knockouts and
