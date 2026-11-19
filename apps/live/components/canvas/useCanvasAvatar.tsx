@@ -27,7 +27,7 @@ import { usePortalTravel } from '@/components/canvas/portal-travel';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { useLatest } from '@/hooks/ui/useLatest';
 import { loadAvatarSpeechLayer } from '@/lib/editor-deferred-code';
-import { useKindFamilyNeeded } from '@/lib/element-kinds/react';
+import { useKindFamilyLoaded, useKindFamilyNeeded } from '@/lib/element-kinds/react';
 
 type CanvasAvatarInput = {
   props: CanvasProps;
@@ -68,9 +68,9 @@ export function useCanvasAvatar({
   // The walk, its keys and its words are Avatar mode's family's (docs/specs/016-platform/web-performance.md): picking
   // Avatar, or a peer's character on the board, asks for it, and the character steps in once it is in, a short
   // wait the first time only.
-  const avatarModeIn = useKindFamilyNeeded(
-    avatarMode || props.remoteAvatars.length > 0 ? 'avatar-mode' : null,
-  );
+  // Its faces draw only once it is in: needing nothing answers ready, so the family's own state says.
+  useKindFamilyNeeded(avatarMode || props.remoteAvatars.length > 0 ? 'avatar-mode' : null);
+  const avatarModeIn = useKindFamilyLoaded('avatar-mode');
   const walking = avatarMode && avatarModeIn;
   // Where the next entry into Avatar mode should place the character, when it
   // was entered by pressing a button on the canvas. Cleared once used, so a
