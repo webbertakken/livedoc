@@ -17,6 +17,7 @@ import {
   type Measurement,
 } from './budget';
 import { interactiveMs, OPEN_QUIET_MS, tabArrivedAt } from './interactive';
+import { viewProblem } from './view-check';
 import { buildReferenceBoard } from './reference-board';
 import { mainThreadTasks, type TraceEvent } from './trace-tasks';
 
@@ -205,6 +206,36 @@ const median = (xs: number[]) => {
 };
 
 // A shape near the middle of the view, and a spot of bare canvas, for the gestures to use.
+// Puts down whatever is in hand and clears the selection, so the next key reaches the tools. One Escape is not
+// enough: it first closes a text edit or puts a pen down (docs/specs/023-draw-mode/draw-mode.md), and a key typed
+// with a single label-bearing element still selected edits its label instead (Type-to-edit,
+// docs/specs/008-canvas/canvas-and-palette.md). A pencil stroke's release selects the stroke it drew.
+async function putEverythingDown(page: Page) {
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('v');
+}
+
+// Fails the run, saying why, when the view is not the one asked for (view-check.ts).
+async function expectView(page: Page, zoom: Measurement['zoom']) {
+  const reading = await page.evaluate(() => {
+    // The percentage is the Fit to screen button's face (ZoomMenu.tsx); the presets beside it read percentages too.
+    const label = document
+      .querySelector('[data-zoom-cluster] button[aria-label="Fit to screen"]')
+      ?.textContent?.trim();
+    const edited = document.querySelector<HTMLElement>(
+      '[data-canvas-a11y-root] [contenteditable="true"]',
+    );
+    const host = edited?.closest('[data-element-id]');
+    return {
+      zoomLabel: label ?? null,
+      editing: edited ? (host?.getAttribute('aria-label') ?? 'an element') : null,
+    };
+  });
+  const problem = viewProblem(reading, zoom);
+  if (problem) throw new Error(`cannot set the board up: ${problem}`);
+}
+
 async function targets(page: Page): Promise<{ shape: Point; bare: Point }> {
   return page.evaluate(
     ({ w, h, shapeIds }) => {
@@ -310,11 +341,11 @@ async function measureZoom(
 ): Promise<Measurement[]> {
   // Fit first, which centres the board; 100% then zooms in on that centre (Mod+0; a bare 0 is the eraser).
   const setView = async () => {
-    await page.keyboard.press('Escape');
-    await page.keyboard.press('v');
+    await putEverythingDown(page);
     await page.keyboard.press('Shift+1');
     if (zoom === '100%') await page.keyboard.press('ControlOrMeta+0');
     await page.waitForTimeout(1000);
+    await expectView(page, zoom);
   };
   await setView();
   await page.waitForTimeout(500);
@@ -389,10 +420,11 @@ async function measureZoom(
         await page.mouse.up();
         await page.waitForTimeout(400);
       },
+      // Undo first, while the stroke is the last change: clearing a selection is an undo step of its own
+      // (useEditorHistory's deselect), so an undo after it brings the stroke's selection back and leaves the stroke.
       reset: async () => {
-        await page.keyboard.press('Escape');
-        await page.keyboard.press('v');
         await settleUndo();
+        await putEverythingDown(page);
       },
     },
     {
