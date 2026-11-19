@@ -72,11 +72,13 @@ describe('kindFamilyOfShape', () => {
                 ? 'web-components'
                 : isOfficeShape(k) || isSeatingShape(k)
                   ? 'office-seating'
-                  : kind === 'mind-node'
-                    ? 'mind-maps'
-                    : isChartShape(k) || isSankeyShape(k)
-                      ? 'charts'
-                      : null;
+                  : kind === 'avatar-pad'
+                    ? 'avatar-mode'
+                    : kind === 'mind-node'
+                      ? 'mind-maps'
+                      : isChartShape(k) || isSankeyShape(k)
+                        ? 'charts'
+                        : null;
     expect(kindFamilyOfShape(kind)).toBe(expected);
   });
 

@@ -18,13 +18,8 @@ import {
   type DrinkKind,
   type Element,
 } from '@livedoc/document';
-import {
-  fenceReachFor,
-  fenceSegments,
-  fenceStalled,
-  fenceStep,
-  type FenceSegment,
-} from '@/lib/avatar-fence';
+import type { FenceSegment } from '@/lib/avatar-fence';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 import { avatarScale, type AvatarConfig } from '@/lib/avatar-config';
 import type { AvatarStatus } from '@/lib/avatar-status';
 import { reactionPose, type AvatarReactionKind, type ReactionPose } from '@/lib/avatar-reactions';
@@ -173,7 +168,11 @@ export function useAvatarWalk({
   // Fences (docs/specs/009-elements/fence.md): the lines the walk may not cross, worked out once per
   // change to the elements rather than per frame.
   // Only while the mode is on: a scan of the whole tab on every edit is wasted when nobody is walking.
-  const fences = useMemo(() => (active ? fenceSegments(elements) : NO_FENCES), [active, elements]);
+  // The fences' geometry is Avatar mode's family's, in whenever the walk is active (useCanvasAvatar).
+  const fences = useMemo(
+    () => (active ? requireKindFamily('avatar-mode').fenceSegments(elements) : NO_FENCES),
+    [active, elements],
+  );
   const targetRef = useRef<AvatarPoint | null>(null);
   const heldRef = useRef<AvatarHeldKeys>({ ...NO_KEYS_HELD });
   const travelledRef = useRef(0);
@@ -454,6 +453,7 @@ export function useAvatarWalk({
         : step!.pos;
       // Fences (docs/specs/009-elements/fence.md "Blocking"): a step into one is refused, or slides
       // along it. A click-walk that can make no progress stops rather than pressing on forever.
+      const { fenceReachFor, fenceStalled, fenceStep } = requireKindFamily('avatar-mode');
       const fenced = fenceStep(from, wanted, fences, fenceReachFor(avatarScale(config.size)));
       const next = fenced.pos;
       if (

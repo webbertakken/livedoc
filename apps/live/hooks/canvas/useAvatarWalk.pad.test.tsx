@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
 
 import { act, renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { avatarPadCore, createShape, type Element } from '@livedoc/document';
 import { DEFAULT_AVATAR_CONFIG } from '@/lib/avatar-config';
 import type { AvatarPoint } from '@/lib/avatar-walk';
 import { track } from '@/lib/telemetry';
 import { useAvatarWalk } from './useAvatarWalk';
+
+// The walk's fences are Avatar mode's family's, reached through the registry (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 

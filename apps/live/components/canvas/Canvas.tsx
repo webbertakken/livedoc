@@ -51,12 +51,14 @@ import { DEFAULT_ERASER_CONFIG, eraserRadius } from '@/lib/eraser-config';
 import { WHITEBOARD_ERASER_RADIUS_PX } from '@/lib/whiteboard-tool';
 import { routeBoardDoubleClick } from '@/lib/whiteboard-edit-target';
 import { useWhiteboardPenCursor } from '@/hooks/canvas/useWhiteboardPenCursor';
-import { AvatarWalker } from '@/components/canvas/AvatarWalker';
-import { AvatarPadArrivals } from '@/components/canvas/AvatarPadArrivals';
+import {
+  AvatarPadArrivals,
+  AvatarWalker,
+  ReactionBurst,
+} from '@/components/canvas/avatar-mode-faces';
 import { parseAvatarStatus } from '@/lib/avatar-status';
 import { headPoint } from '@/lib/avatar-speech';
 import { avatarScale } from '@/lib/avatar-config';
-import { ReactionBurst } from '@/components/canvas/ReactionBurst';
 
 // The footprint a burst is scaled against when it comes from the avatar panel
 // rather than a pad: roughly a character, so the particles read as thrown by a
@@ -311,6 +313,7 @@ function CanvasView(props: CanvasProps) {
     useCanvasPointer({ canvasTool, mainRef, onCanvasPointerMove, wrapperRef, mainSize });
 
   const {
+    avatarModeIn,
     avatar,
     avatarBurst,
     avatarLook,
@@ -752,7 +755,7 @@ function CanvasView(props: CanvasProps) {
             the element layer so they stand in front of the content they walk
             over. Peers' characters render whether or not WE are in the mode —
             someone else walking the canvas is worth seeing regardless. */}
-                {props.remoteAvatars.map((peer) => (
+                {(avatarModeIn ? props.remoteAvatars : []).map((peer) => (
                   <AvatarWalker
                     key={peer.id}
                     pos={{ x: peer.avatar.x, y: peer.avatar.y }}
@@ -805,7 +808,7 @@ function CanvasView(props: CanvasProps) {
                     />
                   </div>
                 ) : null}
-                {avatar.pos ? (
+                {avatar.pos && avatarModeIn ? (
                   <AvatarWalker
                     pos={avatar.pos}
                     facing={avatar.facing}
@@ -824,7 +827,7 @@ function CanvasView(props: CanvasProps) {
                   />
                 ) : null}
                 {/* Arrival beams on an Avatar Pad (docs/specs/009-elements/avatar-pad.md), over the characters. */}
-                <AvatarPadArrivals arrivals={padArrivals} />
+                {avatarModeIn ? <AvatarPadArrivals arrivals={padArrivals} /> : null}
                 {/* Speech bubbles, in front of every character: yours and everyone's, and the composer above your
               own head while you type. */}
                 {speechBubbles.length > 0 || speech.composerOpen ? (

@@ -238,7 +238,11 @@ the finishes' rules, their wobble filters and the export stay base. A finish pic
 element's own) applies once its family is in, and pointing at one fetches it. A tab with a wireframe page needs the
 wireframes family by its pages: drawing the device's frame, its camera and its system bars loads with it, while the
 device's geometry, its screen and safe area and its frame's colours stay base. Where a web component's parts sit
-loads with the web components family; its kinds, rows and their writes stay base.
+loads with the web components family; its kinds, rows and their writes stay base. Avatar mode is a family
+loaded on first use rather than with a board: picking Avatar, a peer's character on the board, a reaction burst, or a
+board holding an Avatar Pad fetches it, and the character steps in, the burst plays and the pad draws once it is in, a
+short wait the first time only. The characters' art, the bursts, the pad and its arrival beams, and where a fence stops
+a walk load with it, while the room's avatar state (where each character stands, sits and what it says) stays base.
 
 - **The registry.** `apps/live/lib/element-kinds/` names every family, which kinds it holds and its loader, so the
   open path, the palette and the prefetch below share one import per family. Code reaches a family's face,

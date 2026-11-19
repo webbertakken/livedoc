@@ -55,6 +55,7 @@ const SHAPE_FAMILIES: Partial<Record<ShapeKind, KindFamilyId>> = {
   'water-cooler': 'office-seating',
   'coffee-machine': 'office-seating',
   rug: 'office-seating',
+  'avatar-pad': 'avatar-mode',
 };
 
 export function kindFamilyOfShape(kind: string): KindFamilyId | null {
