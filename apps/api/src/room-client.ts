@@ -13,7 +13,12 @@ import {
   type RoomOp,
 } from '@livedoc/api-schema';
 import type { AgentPresenceWrite } from './room-agent-presence';
-import type { ItemsRoomOp, ItemTypesRoomOp, SheetsRoomOp } from '@livedoc/api-schema';
+import type {
+  ItemsRoomOp,
+  ItemTypesRoomOp,
+  SheetsRoomOp,
+  WorkbookRoomOp,
+} from '@livedoc/api-schema';
 import { documentRoom } from './document-room/document-client';
 import type { Env } from './types';
 
@@ -209,10 +214,10 @@ export async function relayChangeset(
   return false;
 }
 
-// A document an agent renamed, as the document-meta op an editor's own rename sends: open editors show the new name
-// at once, and their next tab reorder carries it instead of writing the old one back. Best-effort and logged, like
-// the tab rename relay.
-export async function relayDocumentRename(
+// The document's name and tabs as the api changed them (an agent's rename, a spreadsheet's sheet added or deleted), as
+// the document-meta op an editor's own rename or tab change sends: open editors show them at once, and their next tab
+// reorder carries them instead of writing the old ones back. Best-effort and logged, like the tab rename relay.
+export async function relayDocumentMeta(
   env: Env,
   documentId: string,
   name: string,
@@ -487,4 +492,14 @@ export async function relayItems(env: Env, documentId: string, op: ItemsRoomOp):
 // A sheet write the api made (docs/specs/029-sheets/sheet-store.md "Live for everyone"), ordered like items.
 export async function relaySheets(env: Env, documentId: string, op: SheetsRoomOp): Promise<void> {
   await broadcastOp(env, documentId, op, 'sheets', true);
+}
+
+// A spreadsheet's settings saved (docs/specs/029-sheets/sheet-store.md "Changing the workbook"), in the ordered stream so
+// a peer whose socket blipped catches up on them.
+export async function relayWorkbook(
+  env: Env,
+  documentId: string,
+  op: WorkbookRoomOp,
+): Promise<void> {
+  await broadcastOp(env, documentId, op, 'workbook', true);
 }

@@ -34,6 +34,14 @@ describe('WorkbookRecord', () => {
     ['settings that are not an object', { format: 'ods', settings: 3 }],
     ['an empty locale', { ...made, settings: { ...made.settings, locale: '' } }],
     ['no time zone', { ...made, settings: { ...made.settings, timeZone: 7 } }],
+    [
+      'a locale past 64 characters',
+      { ...made, settings: { ...made.settings, locale: 'x'.repeat(65) } },
+    ],
+    [
+      'a time zone past 64 characters',
+      { ...made, settings: { ...made.settings, timeZone: 'x'.repeat(65) } },
+    ],
     ['an unknown recalculation', { ...made, settings: { ...made.settings, recalc: 'second' } }],
     ['no iteration', { ...made, settings: { ...made.settings, iterate: null } }],
     [
@@ -54,6 +62,17 @@ describe('WorkbookRecord', () => {
     ],
   ])('refuses %s', (_, raw) => {
     expect(WorkbookRecord.read(raw)).toBeNull();
+  });
+
+  // sheet-store.md "Changing the workbook": settings are saved whole, refused when any is not one.
+  it('reads settings on their own', () => {
+    expect(WorkbookRecord.readSettings(JSON.parse(JSON.stringify(made.settings)))).toEqual(
+      made.settings,
+    );
+    expect(WorkbookRecord.readSettings({ ...made.settings, recalc: 'never' })).toBeNull();
+    expect(
+      WorkbookRecord.readSettings({ ...made.settings, locale: 'x'.repeat(64) }),
+    ).not.toBeNull();
   });
 
   it('knows its formats', () => {

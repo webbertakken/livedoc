@@ -19,6 +19,7 @@ import { sheetChartElements, type SheetChartOut } from './sheet-charts';
 import { chartsCleared, chartsFollowing, type SheetChartEl } from './sheet-chart-follow';
 import { darkCanvas } from './sheet-design';
 import {
+  SheetLimits,
   applySheetWrite,
   documentCellCount,
   NOBODY,
@@ -34,7 +35,7 @@ import {
 import { apiRefusalOf } from '../plan/api-refusal';
 import { SHEET_REFUSAL_WORDS } from './sheet-refusals';
 import { buildSheetChange, type SheetChange, type SheetChangeContext } from './sheet-change-build';
-import { readSheets, resolveSheet, sheetWritesPath, workbookFor } from './sheet-state';
+import { readSheetsState, resolveSheet, sheetWritesPath, workbookFor } from './sheet-state';
 
 interface SheetChangesResult {
   sheetId: string;
@@ -73,8 +74,9 @@ export function capsRefusal(
   sheet: Sheet,
   writes: readonly SheetWrite[],
   documentCells: number,
+  limits: SheetLimits = SheetLimits.plan,
 ): { code: string; message: string } | null {
-  const code = writesCapsProblem(sheet, writes, documentCells);
+  const code = writesCapsProblem(sheet, writes, documentCells, limits);
   if (!code) return null;
   console.info('[sheets] agent change over a cap', { code });
   return {
@@ -120,7 +122,7 @@ async function applySheetChanges(
     const built = buildSheetChange(wb, sheetId, change, others, rand, context);
     if (!built.ok)
       return { applied, rev, charts, clear, refusal: { code: built.code, message: built.message } };
-    const over = capsRefusal(sheet, built.writes, cells);
+    const over = capsRefusal(sheet, built.writes, cells, wb.limits);
     if (over) return { applied, rev, charts, clear, refusal: over };
     const parts = built.writes.flatMap((w) => splitWrite(w));
     let next = sheet;
@@ -232,14 +234,15 @@ export async function changeSheet(
   input: { sheet: string; changes: readonly SheetChange[] },
   client: 'mcp' | 'cli',
 ): Promise<SheetChangesResult> {
-  const sheets = await readSheets(api, documentId);
+  const state = await readSheetsState(api, documentId);
+  const { sheets } = state;
   const found = resolveSheet(sheets, input.sheet);
   if (!found.ok) {
     const { code, message } = found;
     return { sheetId: '', title: input.sheet, applied: [], rev: null, refusal: { code, message } };
   }
   const { id, tabId } = found.sheet;
-  const wb = await workbookFor(api, documentId, sheets, tabId);
+  const wb = await workbookFor(api, documentId, state, tabId);
   const before = wb.sheet(id)!.layout;
   // A design is tinted for its tab's canvas, and charts are on the tab: read it only when a change needs it.
   const needsTab = input.changes.some((c) => TOUCHES_CHARTS.has(c.op));

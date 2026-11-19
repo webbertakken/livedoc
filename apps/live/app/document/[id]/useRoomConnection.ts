@@ -19,6 +19,7 @@ import {
   type ChangesetRoomOp,
   type ItemsRoomOp,
   type ItemTypesRoomOp,
+  type WorkbookRoomOp,
   type SheetPresenceOp,
   type SheetsRoomOp,
   type FacilitatorReason,
@@ -189,6 +190,8 @@ export function useRoomConnection(opts: {
   receiveItems: (op: ItemsRoomOp) => void;
   // A stored type catalogue (docs/specs/026-plan/item-types.md "Storage and sync"). System-only.
   receiveItemTypes: (op: ItemTypesRoomOp) => void;
+  // A spreadsheet's settings saved (docs/specs/029-sheets/sheet-store.md "Changing the workbook"). System-only.
+  receiveWorkbook: (op: WorkbookRoomOp) => void;
   // A peer's hands on a Plan card (docs/specs/026-plan/plan-board.md). Presence.
   receivePlanPresence: (
     from: string,
@@ -254,6 +257,7 @@ export function useRoomConnection(opts: {
     receiveChangeset,
     receiveItems,
     receiveItemTypes,
+    receiveWorkbook,
     receivePlanPresence,
     receiveSheets,
     receiveSheetPresence,
@@ -618,6 +622,10 @@ export function useRoomConnection(opts: {
         // The type catalogue (docs/specs/026-plan/item-types.md). System-only: it changes only through
         // the api.
         if (from === 'system') receiveItemTypes(op);
+      } else if (op.kind === 'workbook') {
+        // A spreadsheet's settings (docs/specs/029-sheets/sheet-store.md "Changing the workbook"). System-only:
+        // they change only through the api.
+        if (from === 'system') receiveWorkbook(op);
       } else if (op.kind === 'document-trashed') {
         // The document went to the Trash. System-only, like the share ops:
         // the room refuses it from a client socket.

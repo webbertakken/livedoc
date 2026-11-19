@@ -11,12 +11,13 @@ import { headToJson } from '../db/sheets';
 import { documentTabOrder, readWorkbook } from '../db/workbook';
 import { forbidden, json } from '../responses';
 import type { DocumentRouteContext } from './context';
-import { sheetBusy, sheetCaller, sheetNotFound, sheetRejected } from './sheet-route-kit';
-
-function workbookRefused(error: string, status: number): Response {
-  console.info('[workbook] refused', { error });
-  return json({ error }, { status });
-}
+import {
+  sheetBusy,
+  sheetCaller,
+  sheetNotFound,
+  sheetRejected,
+  workbookRefused,
+} from './sheet-route-kit';
 
 // The rows asked, or the default when none are: null for a span that cannot be read.
 function askedRows(ctx: DocumentRouteContext, fallback: RowSpan | null): RowSpan | null {

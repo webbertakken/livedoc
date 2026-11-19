@@ -1,6 +1,6 @@
 // The workbook row of a spreadsheet's room (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): its file format
 // and settings. Present exactly when the document is a spreadsheet.
-import { WorkbookRecord } from '@livedoc/sheets';
+import { WorkbookRecord, type WorkbookSettings } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 
 export type WorkbookRow = { format: string; settings: string };
@@ -63,4 +63,44 @@ export async function isSpreadsheet(env: DocumentEnv, documentId: string): Promi
     .bind(documentId)
     .first<{ y: number }>();
   return row !== null;
+}
+
+/** A spreadsheet's settings saved whole (sheet-store.md "Changing the workbook"): the row's new rev, or null for none. */
+export async function saveWorkbookSettings(
+  env: DocumentEnv,
+  documentId: string,
+  settings: WorkbookSettings,
+  now: number,
+): Promise<number | null> {
+  const row = await env.DOCUMENT_DB.prepare(
+    'UPDATE workbook SET settings = ?, rev = rev + 1, updated_at = ? WHERE document_id = ? RETURNING rev',
+  )
+    .bind(JSON.stringify(settings), now, documentId)
+    .first<{ rev: number }>();
+  return row?.rev ?? null;
+}
+
+/**
+ * Where a tab added after `after` goes in the document's order: just after it, or last when none is named. Null when
+ * the tab named is not one of the document's.
+ */
+export async function tabPlaceAfter(
+  env: DocumentEnv,
+  documentId: string,
+  after: string | undefined,
+): Promise<number | null> {
+  if (after === undefined) {
+    const last = await env.DOCUMENT_DB.prepare(
+      'SELECT MAX(order_index) AS at FROM document_tabs WHERE document_id = ?',
+    )
+      .bind(documentId)
+      .first<{ at: number | null }>();
+    return (last?.at ?? -1) + 1;
+  }
+  const row = await env.DOCUMENT_DB.prepare(
+    'SELECT order_index AS at FROM document_tabs WHERE document_id = ? AND tab_id = ?',
+  )
+    .bind(documentId, after)
+    .first<{ at: number }>();
+  return row ? row.at + 1 : null;
 }

@@ -13,6 +13,7 @@ import {
   type AgentValue,
   type SheetJson,
   type SheetWrite,
+  type WorkbookRecord,
 } from '@livedoc/sheets';
 
 // A seeded random, so row and column ids are the same every run.
@@ -59,7 +60,7 @@ export type SheetServer = {
 export function sheetServer(
   documentId: string,
   sheets: SheetJson[],
-  opts: { refuse?: string; status?: number; refuseAfter?: number } = {},
+  opts: { refuse?: string; status?: number; refuseAfter?: number; workbook?: WorkbookRecord } = {},
 ): SheetServer {
   const server: SheetServer = { sheets, writes: [], creates: [], deletes: [], routes: {} };
   const base = `/documents/${documentId}/sheets`;
@@ -74,7 +75,10 @@ export function sheetServer(
       return Response.json({ sheet: made }, { status: 201 });
     }
     const tabId = new URL(r.url).searchParams.get('tabId');
-    return Response.json({ sheets: server.sheets.filter((s) => !tabId || s.tabId === tabId) });
+    return Response.json({
+      sheets: server.sheets.filter((s) => !tabId || s.tabId === tabId),
+      workbook: opts.workbook ?? null,
+    });
   };
   const writes = async (r: Request) => {
     const sheetId = new URL(r.url).pathname.split('/').at(-2)!;

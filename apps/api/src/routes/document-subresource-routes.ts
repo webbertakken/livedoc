@@ -3,17 +3,8 @@
 // upgrade. The largest resource: every sub-path
 // under a document id lives here.
 
-import { broadcastShareOp } from '../room-client';
-import {
-  deleteFormLinksForTab,
-  deleteShareLinksForTab,
-  deleteTabRow,
-  getDocument,
-  getDocumentForSave,
-  getDocumentMeta,
-} from '../db';
+import { getDocument, getDocumentForSave, getDocumentMeta } from '../db';
 import { conflict, forbidden, json, noContent, notFound } from '../responses';
-import { retractTabComments } from '../timeline';
 import { tabEtag } from '@livedoc/api-schema';
 import { grantedTab, recordTabRead } from './granted-tab';
 import { handleDocumentShareRoutes } from './document-share-routes';
@@ -46,7 +37,7 @@ import {
   type DocumentRouteContext,
 } from './context';
 import { answerTabView, parseViewQuery } from './document-views-route';
-import { pauseFormsFeeding } from '../forms/form-tab';
+import { removeDocumentTab } from './tab-removal';
 
 // Tab-content sub-resource routes for /api/documents/<id>/...,
 // split out of documents.ts. Returns a Response when it handles the path, or
@@ -174,19 +165,7 @@ export async function handleDocumentSubresources(
       // §4.17). The editor is let through: its saves and deletes race, so adding a tab and deleting
       // the other in one save can reach here first.
       if (ctx.token && existing.tabs.length <= 1) return conflict('last_tab');
-      // The links scoped to it die with it (docs/specs/013-workspace/tab-scoped-share-links.md), before it, so no
-      // request finds a live link to a tab that has gone; their holders leave the editor as on a revoke.
-      const revoked = await deleteShareLinksForTab(env, id, tabId);
-      const removed = await deleteTabRow(env, id, tabId);
-      // Its comments' words leave this document's feed with it (docs/specs/013-workspace/timeline.md §4.3).
-      if (removed) ctx.waitUntil?.(retractTabComments(env, id, removed));
-      for (const code of revoked) {
-        ctx.waitUntil?.(broadcastShareOp(env, id, { kind: 'share-revoked', code }));
-      }
-      // A Form tab's link goes with it, and a form whose board or sheet it was stops taking responses (its link kept)
-      // (docs/specs/030-forms/forms.md "Publishing and the form link").
-      await deleteFormLinksForTab(env, id, tabId);
-      await pauseFormsFeeding(env, id, tabId);
+      await removeDocumentTab(ctx, id, tabId);
       return noContent();
     }
   }

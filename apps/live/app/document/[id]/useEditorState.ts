@@ -1393,6 +1393,10 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     receiveChangeset: changesetFeed.receiveChangeset,
     receiveItems: planItems.receive,
     receiveItemTypes: itemTypes.receive,
+    receiveWorkbook: (op) => {
+      debugLog('[workbook] settings received', { rev: op.rev });
+      setDocumentWorkbook(op.workbook);
+    },
     receivePlanPresence: planPresence.receive,
     receiveSheets: sheets.receiveSheets,
     receiveSheetPresence: sheets.receiveSheetPresence,

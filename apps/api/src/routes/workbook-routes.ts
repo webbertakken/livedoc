@@ -1,4 +1,5 @@
-// A spreadsheet's workbook doors (docs/specs/029-sheets/files-and-print.md, standard-mapping.md):
+// A spreadsheet's workbook doors (docs/specs/029-sheets/files-and-print.md, standard-mapping.md); its settings and its
+// sheets' changes have their own (workbook-settings-route.ts, workbook-sheet-routes.ts):
 //   GET /api/documents/<id>/workbook/file?format=ods|fods  the workbook as a file, written from the room's sheets
 // with every value the engine works out cached beside its formula. A read, gated as the sheets are; a tab-scoped link
 // is never offered on a sheet tab (spreadsheet.md "The workbook shape"), so one reaches no file. Answered inside the
@@ -8,10 +9,12 @@ import { workbookFileOf, writeFlatOds, writeOds } from '@livedoc/sheets/files';
 import { getDocumentMeta, listSheets } from '../db';
 import { documentTabOrder, readWorkbook } from '../db/workbook';
 import { downloadFileName } from '../files/download-file-name';
-import { CORS_HEADERS, forbidden, json, methodNotAllowed } from '../responses';
+import { CORS_HEADERS, forbidden, methodNotAllowed } from '../responses';
 import type { DocumentRouteContext } from './context';
 import { openWorkbook } from './sheet-page-routes';
-import { sheetCaller } from './sheet-route-kit';
+import { sheetCaller, workbookRefused } from './sheet-route-kit';
+import { saveSettings } from './workbook-settings-route';
+import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
 
 const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
   ods: 'application/vnd.oasis.opendocument.spreadsheet',
@@ -22,11 +25,6 @@ const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
 // Which standard each file is in: an ODF workbook leaves as either ODF form, never as another standard until a person
 // converts it (fork C1).
 const ODF: readonly WorkbookFormat[] = ['ods', 'fods'];
-
-function refused(error: string, status: number): Response {
-  console.info('[workbook] refused', { error });
-  return json({ error }, { status });
-}
 
 /** A file name safe in a Content-Disposition header, from the document's name. */
 export function workbookFileName(name: string, format: WorkbookFormat): string {
@@ -42,12 +40,12 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   if (caller instanceof Response) return caller;
   if (caller.scopeTab) return forbidden();
   const record = await readWorkbook(ctx.env, documentId);
-  if (!record) return refused('workbook_not_found', 404);
+  if (!record) return workbookRefused('workbook_not_found', 404);
   const asked = ctx.url.searchParams.get('format') ?? record.format;
-  if (!WorkbookRecord.isFormat(asked)) return refused('file_type_unknown', 400);
+  if (!WorkbookRecord.isFormat(asked)) return workbookRefused('file_type_unknown', 400);
   // Conversion is a person's choice (files-and-print.md "Converting"), and the XLSX mapping is still ahead.
   if (!ODF.includes(asked) || !ODF.includes(record.format))
-    return refused('format_not_native', 409);
+    return workbookRefused('format_not_native', 409);
   const [meta, order, stored] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
     documentTabOrder(ctx.env, documentId),
@@ -89,5 +87,7 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
     return request.method === 'GET' ? openWorkbook(ctx, documentId) : methodNotAllowed();
   if (segments.length === 5 && segments[4] === 'file')
     return request.method === 'GET' ? file(ctx, documentId) : methodNotAllowed();
-  return null;
+  if (segments.length === 5 && segments[4] === 'settings')
+    return request.method === 'PUT' ? saveSettings(ctx, documentId) : methodNotAllowed();
+  return handleWorkbookSheetRoutes(ctx);
 }

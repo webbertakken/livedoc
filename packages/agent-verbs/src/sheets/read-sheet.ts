@@ -15,7 +15,7 @@ import {
   rangeOptions,
   type SheetLayout,
 } from '@livedoc/sheets';
-import { readSheets, resolveSheet, workbookFor, type SheetRefusal } from './sheet-state';
+import { readSheetsState, resolveSheet, workbookFor, type SheetRefusal } from './sheet-state';
 import { rulesRead } from './sheet-rule-change';
 
 // The most characters of cells one read answers with (docs/specs/029-sheets/sheet-store.md, Defaults): about
@@ -73,11 +73,11 @@ export async function readSheet(
   documentId: string,
   input: { sheet: string; range?: string },
 ): Promise<SheetRead | SheetRefusal> {
-  const sheets = await readSheets(api, documentId);
-  const found = resolveSheet(sheets, input.sheet);
+  const state = await readSheetsState(api, documentId);
+  const found = resolveSheet(state.sheets, input.sheet);
   if (!found.ok) return found;
   const { id, tabId, title } = found.sheet;
-  const wb = await workbookFor(api, documentId, sheets, tabId);
+  const wb = await workbookFor(api, documentId, state, tabId);
   const read = readRange(wb, id, input.range);
   if (!read.ok)
     return {

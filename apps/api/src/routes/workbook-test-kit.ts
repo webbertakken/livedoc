@@ -9,7 +9,9 @@ import { handleDocuments } from './documents';
 export type WorkbookKit = {
   sql: SqliteD1;
   layout: ReturnType<typeof emptyLayout>;
-  call: (req: { method?: string; path: string; body?: unknown }) => Promise<Response>;
+  call: (req: KitCall) => Promise<Response>;
+  /** Every op the routes sent the room, in order. */
+  relayed: unknown[];
   /** A document `id` with one sheet tab and its sheet `<id>Sheet`, a spreadsheet unless `spreadsheet` is false. */
   document: (
     id: string,
@@ -20,32 +22,41 @@ export type WorkbookKit = {
   sheets: (id: string) => Promise<SheetJson[]>;
 };
 
+// A request through the document routes: as the owner by default, or another person, or a share link's holder.
+export type KitCall = {
+  method?: string;
+  path: string;
+  body?: unknown;
+  owner?: string;
+  code?: string;
+};
+
 export function workbookKit(): WorkbookKit {
   let n = 7;
   const rand = () => (n = (n * 16807 + 11) % 2147483647) / 2147483647;
   const layout = emptyLayout(rand, 10, 4);
   const sql = sqliteD1();
+  const relayed: unknown[] = [];
   (sql.env as unknown as { DOCUMENT_ROOM: unknown }).DOCUMENT_ROOM = {
     idFromName: (x: string) => x,
-    get: () => ({ fetch: async () => new Response(null, { status: 204 }) }),
+    get: () => ({
+      fetch: async (_url: unknown, init?: { body?: unknown }) => {
+        if (typeof init?.body === 'string')
+          relayed.push((JSON.parse(init.body) as { op?: unknown }).op);
+        return new Response(null, { status: 204 });
+      },
+    }),
   };
   sql.sql.exec(
     "INSERT INTO participants (id, name, color, created_at) VALUES ('owner', 'Webber', '#3b82f6', 1);",
   );
 
-  async function call({
-    method = 'POST',
-    path,
-    body,
-  }: {
-    method?: string;
-    path: string;
-    body?: unknown;
-  }) {
+  async function call({ method = 'POST', path, body, owner = 'owner', code }: KitCall) {
     const pending: Promise<unknown>[] = [];
     const ctx = makeTestRouteContext(method, `/api/documents${path}`, {
       env: sql.env,
-      owner: 'owner',
+      owner,
+      ...(code ? { headers: { 'X-Share-Code': code } } : {}),
       ...(body === undefined ? {} : { body }),
       waitUntil: (p) => void pending.push(p),
     });
@@ -58,6 +69,7 @@ export function workbookKit(): WorkbookKit {
     sql,
     layout,
     call,
+    relayed,
     document: (id, spreadsheet, cells = []) => ({
       id,
       name: 'Budget',
