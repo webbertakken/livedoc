@@ -1,18 +1,15 @@
 'use client';
 
 import type { KeyboardEvent } from 'react';
-import { lucideListChecks } from '@livedoc/icons/lucide';
-import { lucideGlyph, Portal } from '@livedoc/ui';
+import { Portal } from '@livedoc/ui';
+import { ReviewIcon } from '@/components/canvas/review/ReviewIcon';
 import { CORNER_PLACE, CORNER_SURFACE } from '@/components/canvas/corner';
 import { useCornerTop } from '@/components/canvas/useCornerTop';
-import { toggleReview } from '@/hooks/canvas/useReviewPanel';
+import { toggleReview } from '@/lib/review-open';
 import { closeReview, useReviewOpen } from '@/lib/review-view';
 
 // The Review pill (docs/specs/021-event-storming/board-review.md "The panel"): in the corner beside Ask, for everyone
 // on the board. It opens and closes the Review panel, and is what the panel gives the focus back to.
-
-/** A checked list: looking the board over. */
-export const ReviewIcon = lucideGlyph(lucideListChecks, 15);
 
 export function ReviewButton({ tabId }: { tabId: string }) {
   const open = useReviewOpen(tabId);

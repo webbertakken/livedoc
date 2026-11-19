@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import {
   candidateContexts,
   nameSuggestionsFor,
@@ -10,6 +11,9 @@ import {
 } from '@livedoc/document';
 import { KIND, REWORD, SPLIT, byId, changed, named, orderFlow } from '@/lib/change-board.fixture';
 import { useChangeActions } from './useChangeActions';
+
+// The acts are the Event Storming family's, reached through the registry (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // The acts on suggested changes (docs/specs/021-event-storming/suggested-changes.md "How a person sees and decides",
 // "Accepting"): each one undoable step, a dismissal remembered in the same step, telemetry once.

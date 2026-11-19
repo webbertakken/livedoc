@@ -37,8 +37,11 @@ import { resolveViewBackdrop } from '@/lib/view-backdrop';
 import { readDrawPattern } from '@/lib/whiteboard-dock-prefs';
 import { useAppearance } from '@/hooks/ui/useAppearance';
 import { useIsLandscapePhone } from '@/hooks/ui/useIsMobileViewport';
-import { AskHost } from '@/components/canvas/ask/AskHost';
-import { ReviewHost } from '@/components/canvas/review/ReviewHost';
+import {
+  AskHost,
+  ReviewHost,
+  useEventStormingFaces,
+} from '@/components/canvas/event-storming-faces';
 import { Canvas } from '@/components/canvas/Canvas';
 import { useStableObject } from '@/hooks/ui/useStableObject';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
@@ -61,7 +64,7 @@ import { elementSelector } from '@/lib/canvas-selectors';
 import { useWorkbenchSession } from '@/components/providers/workbench-session-context';
 import { setDrawingContext, useContextSelection } from '@/lib/context-selection';
 import { useReviewOpen } from '@/lib/review-view';
-import { toggleReview } from '@/hooks/canvas/useReviewPanel';
+import { toggleReview } from '@/lib/review-open';
 
 // The Canvas element's wiring, lifted out of EditorView (which carried
 // ~500 lines of prop plumbing for it). Reads everything straight from
@@ -622,6 +625,7 @@ export function EditorCanvasHost() {
   // Asking is an Editor's alone, where a suggestion may land (docs/specs/021-event-storming/asks.md "Share roles").
   const mayAsk = esBoard && can.suggestions && !createBlocked;
   const reviewing = useReviewOpen(activeTab.id);
+  const esFaces = useEventStormingFaces(esBoard);
   const esBoardControls = useStableObject({
     ...(esBoard && can.contexts && !createBlocked
       ? {
@@ -681,7 +685,7 @@ export function EditorCanvasHost() {
           {/* Presenting shows the slide as the audience sees it: no indicators or lock badges on its elements
           (docs/specs/008-canvas/element-indicators.md "Unchanged"). */}
           {/* The Ask popover (docs/specs/021-event-storming/asks.md "Where an ask starts"). */}
-          {mayAsk && documentId ? (
+          {mayAsk && esFaces && documentId ? (
             <AskHost
               tab={activeTab}
               documentId={documentId}
@@ -692,7 +696,7 @@ export function EditorCanvasHost() {
           ) : null}
           {/* The Review panel (docs/specs/021-event-storming/board-review.md): everyone on the board reads it; its
           Add, Answer and Rename Term are an Editor's. */}
-          {esBoard ? (
+          {esFaces ? (
             <ReviewHost
               tab={activeTab}
               acts={reviewActions}

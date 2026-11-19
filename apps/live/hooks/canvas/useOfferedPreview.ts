@@ -2,14 +2,17 @@
 
 import { useEffect, useMemo } from 'react';
 import type { Element, ElementId, Layer } from '@livedoc/document';
-import { offeredPreview, type OfferedPreview } from '@/lib/change-preview';
+import type { OfferedPreview } from '@/lib/change-preview';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 import { clearOfferedPreview, setOfferedPreview } from '@/lib/drag-preview';
 
 // The suggested change a person is pointing at, drawn over an untouched board
 // (docs/specs/021-event-storming/suggested-changes.md "A preview never writes"): worked out from the board as it
 // stands, and laid into the drag preview's offered channel, so every drawer that follows a drag (the element views,
 // the arrows, the context outlines and names) draws it, while nothing is written, sent or in hand. Answers the
-// preview, for the canvas to draw what no element is: a split's further parts and a removal's strike.
+// preview, for the canvas to draw what no element is: a split's further parts and a removal's strike. Working it out
+// is the Event Storming family's (lib/change-preview.ts): a key is only ever previewed where its suggestions are
+// drawn, once the family is in.
 
 const NO_INERT: ReadonlySet<ElementId> = new Set();
 
@@ -29,7 +32,10 @@ export function useOfferedPreview({
   layers?: Layer[];
 }): OfferedPreview | null {
   const offered = useMemo(
-    () => offeredPreview(elements, previewKey, inertIds, layers),
+    () =>
+      previewKey
+        ? requireKindFamily('event-storming').offeredPreview(elements, previewKey, inertIds, layers)
+        : null,
     [elements, previewKey, inertIds, layers],
   );
   useEffect(() => {

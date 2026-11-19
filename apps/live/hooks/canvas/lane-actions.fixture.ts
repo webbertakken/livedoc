@@ -5,6 +5,7 @@ import type { LaneActions } from './useLaneActions';
 /** The ask acts as spies. */
 export const askActionSpies = (): AskActions => ({
   openAsk: vi.fn<AskActions['openAsk']>(),
+  openAskAbout: vi.fn<AskActions['openAskAbout']>(),
   copyPrompt: vi.fn<AskActions['copyPrompt']>(async () => true),
   ask: vi.fn<AskActions['ask']>(async () => {}),
   cancelAsk: vi.fn<AskActions['cancelAsk']>(),

@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { eventStormingKindOf, type Element, type Tab } from '@livedoc/document';
 import { readBoard, type StormGap } from '@livedoc/storm-reading';
 import { useReviewActions } from './useReviewActions';
+
+// The acts are the Event Storming family's, reached through the registry (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // The Review panel's writes (docs/specs/021-event-storming/board-review.md "Check", board-language.md "The Language
 // tab"): each one commit, telemetry once, a refusal logged and never written, and never the words in a log.
