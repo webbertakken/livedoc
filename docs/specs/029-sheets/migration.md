@@ -1,6 +1,7 @@
 # Migration of stored sheets
 
-**Status: specified.** Nothing is run.
+**Status: specified; the plan is built** (`planSheetMigration` in `@livedoc/sheets`, what a document becomes, worked out
+without touching it). Nothing is run.
 
 How the Plan Sheets already stored become spreadsheets (S3, ruled 2026-11-18: migrated once into the new model, with no compatibility layer
 beyond the 30-day way back).
@@ -24,6 +25,9 @@ so no stored sheet is ever left behind.
   the workbook at the same place.
 - A card table's rows stay as the plain cells they last showed; only its links, drafts and Controls column are
   dropped, and a sheet set up from Plan cards becomes an ordinary sheet (C6 and S3, ruled 2026-11-18). Nothing a person typed is lost; a draft row's typed values stay in its cells.
+- A Sheet tab's first Sheet keeps its tab and name; a sheet's name that breaks the sheet name's rules, or is taken,
+  is fitted to them (`SheetName.fit`), and a second Sheet of the same sheet (a paste) moves nothing more (default).
+- A sheet no Sheet element shows only waits to expire, and is left; a Sheet tab with no Sheet goes (default).
 - The workbook's file format is ODF (C5); its settings take the document owner's locale
   and time zone.
 - Formulas reading another sheet that moved with them still read it; dashboard slots and form responses are
