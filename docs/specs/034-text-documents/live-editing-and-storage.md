@@ -22,6 +22,29 @@ branched, copied, versioned, searched and listed. The research is
   to someone's formatting.
 - **Kept content** is an atom in the tree: moved and deleted whole, never merged inside.
 
+### The layout
+
+How [the model](standard-mapping.md#the-model) lies in the live state, so every reader (the editor, the room, the
+api, agents) reads and writes one shape (default):
+
+- **Blocks** are the body's elements, each attribute a whole value: `paragraph` (`style`, `props`, `list`, `text`,
+  `kept`), `section_break` (the section's setup and its kept region) and `kept_block` (its name and kept XML).
+- **Runs** are a paragraph's text, formatted by attributes: one per text property (`bold`, `italic`, `underline`,
+  `strike`, `vertical`, `font`, `size`, `color`, `highlight`, `small_caps`, `transform`), each holding `{ value }`, so
+  a `false` that overrides a style's `true` is kept; then `link` (`href`), `text_style` (`id`) and `run_kept`
+  (`kept`). Two people formatting one stretch differently each win on their own property.
+- **A kept inline** is a `kept_inline` atom inside its paragraph: its name, XML, formatting and link.
+- **Beside the body**: the root map `document` holds `metadata`, `defaults` and the first `section` as whole values;
+  `styles` and `lists` are root maps by id, so two people changing two styles never collide; `source` holds what a
+  file brought around the model (`json`) and its package entries by name (`entries`, as bytes), written once when the
+  file is opened and replaced only by a conversion.
+- **The format is the tab's**, never in the state: reading the state as the model takes the tab's `format`.
+- **Both ways**: a model written as a state reads back as the same model. A state without the maps beside the body
+  (a new text document's) reads them as a blank text document of the tab's format has them, and a paragraph without a
+  style is in Normal text.
+- **The editor's schema** has a node or mark for every element and attribute here, so binding the editor never drops
+  what it cannot show.
+
 ## Presence
 
 Each person's caret and selection in their colour with their name for a moment after it moves and on hover, travelling

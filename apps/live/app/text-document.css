@@ -1,0 +1,33 @@
+/*
+ * The text document's page (docs/specs/034-text-documents/standard-mapping.md "Kept content"): what a file brought
+ * that the model does not hold shows as a grey placeholder with its name, selected and moved whole, never edited. The
+ * page is paper in both colour schemes, so these are paper colours (#3c4043 on #e8eaed: 8.6:1).
+ */
+.text-document-kept {
+  display: inline-block;
+  margin: 0 1px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #e8eaed;
+  color: #3c4043;
+  font-size: 0.8em;
+  line-height: 1.6;
+  user-select: all;
+}
+div.text-document-kept {
+  display: block;
+  margin: 6px 0;
+  padding: 6px 10px;
+}
+.text-document-section-break {
+  margin: 12px 0;
+  border: 0;
+  border-top: 1px dashed #80868b;
+}
+.ProseMirror-selectednode.text-document-kept,
+.ProseMirror-selectednode.text-document-section-break {
+  outline: 2px solid #1a73e8;
+}
+.text-document-kept-hidden {
+  display: none;
+}

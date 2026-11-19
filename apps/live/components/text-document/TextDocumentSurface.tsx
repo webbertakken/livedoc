@@ -10,6 +10,7 @@ import { EditorView } from 'prosemirror-view';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
 import { redo, undo, ySyncPlugin, yUndoPlugin } from 'y-prosemirror';
+import type { TextDocumentFormat } from '@livedoc/document';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { Button } from '@livedoc/ui';
 import { apiLoadTextDocumentState, type TextDocumentScope } from '@/lib/api/text-documents';
@@ -21,6 +22,7 @@ import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 export type TextDocumentSurfaceProps = {
   scope: TextDocumentScope;
   documentName: string;
+  format: TextDocumentFormat;
   canEdit: boolean;
   send: (op: { kind: 'text-document'; tabId: string; update: string }) => void;
 };
@@ -30,6 +32,7 @@ type SurfaceState = 'loading' | 'ready' | 'failed';
 export function TextDocumentSurface({
   scope,
   documentName,
+  format,
   canEdit,
   send,
 }: TextDocumentSurfaceProps) {
@@ -111,7 +114,7 @@ export function TextDocumentSurface({
       className="flex min-h-0 flex-1 flex-col bg-slate-100 dark:bg-slate-900"
       data-text-document-surface={state}
     >
-      <TextDocumentTitleRow scope={scope} documentName={documentName} />
+      <TextDocumentTitleRow scope={scope} documentName={documentName} format={format} />
       <div className="min-h-0 flex-1 overflow-y-auto py-6">
         {state === 'failed' ? (
           <div

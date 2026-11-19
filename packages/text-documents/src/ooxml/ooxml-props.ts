@@ -211,7 +211,7 @@ export function readParagraphProps(pPr: XmlElement | undefined): ParagraphProps 
     align: JC_IN[val(child(pPr, 'jc')) ?? ''],
     indentStart: twipsToPt(wAttr(ind, 'left') ?? wAttr(ind, 'start')),
     indentEnd: twipsToPt(wAttr(ind, 'right') ?? wAttr(ind, 'end')),
-    indentFirst: hanging !== undefined ? -hanging : twipsToPt(wAttr(ind, 'firstLine')),
+    indentFirst: hanging !== undefined ? 0 - hanging : twipsToPt(wAttr(ind, 'firstLine')),
     spaceBefore: twipsToPt(wAttr(spacing, 'before')),
     spaceAfter: twipsToPt(wAttr(spacing, 'after')),
     lineHeight:

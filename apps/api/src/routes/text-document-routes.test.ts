@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   Body,
@@ -81,6 +83,41 @@ describe('a text document opened from a file', () => {
     expect(await bodyOfFile(download)).toEqual(body);
     const flat = await call(db, 'GET', '/api/documents/D/text-documents/t1/file?type=fodt');
     expect(await bodyOfFile(flat)).toEqual(body);
+  });
+
+  // live-editing-and-storage.md "The layout": the whole model lives in the room, so a file's formatting, lists,
+  // styles and kept content leave as they arrived; its title is the document's name.
+  it("keeps the file's formatting and kept content through the room, both formats", async () => {
+    for (const [name, format] of [
+      ['features.odt', 'odf'],
+      ['features.docx', 'ooxml'],
+    ] as const) {
+      const db = sqliteD1();
+      const bytes = new Uint8Array(
+        readFileSync(
+          join(import.meta.dirname, '../../../../packages/text-documents/corpus/libreoffice', name),
+        ),
+      );
+      const arrived = await readTextDocumentFile(bytes);
+      if (!arrived.ok) throw new Error('fixture');
+      const file = base64OfBytes(bytes);
+      const tab = { ...textTab, format };
+      expect((await create(db, { textDocuments: [{ tabId: 't1', file }] }, [tab])).status).toBe(
+        201,
+      );
+      const type = format === 'odf' ? 'odt' : 'docx';
+      const download = await call(
+        db,
+        'GET',
+        `/api/documents/D/text-documents/t1/file?type=${type}`,
+      );
+      const left = await readTextDocumentFile(new Uint8Array(await download.arrayBuffer()));
+      if (!left.ok) throw new Error('download');
+      expect(left.document.body).toEqual(arrived.document.body);
+      expect(left.document.styles).toEqual(arrived.document.styles);
+      expect(left.document.lists).toEqual(arrived.document.lists);
+      expect(left.document.metadata.title).toBe('Q3 report');
+    }
   });
 
   it('starts a text document made without a file from the seed', async () => {

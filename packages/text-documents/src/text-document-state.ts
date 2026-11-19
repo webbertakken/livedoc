@@ -3,9 +3,12 @@
 // layout: a `paragraph` element holding text). The room, the editor, the api and agents read and write it here.
 import * as Y from 'yjs';
 import type { Body, Paragraph } from './body';
+import type { TextDocument, TextDocumentFormat } from './model/text-document';
+import { readLiveDocument } from './live/live-read';
+import { BODY_FRAGMENT } from './live/live-root';
+import { writeLiveDocument } from './live/live-write';
 
-/** The root fragment holding the first document tab's body. */
-export const BODY_FRAGMENT = 'body';
+export { BODY_FRAGMENT };
 
 /** The client id the seed is written by, so the seed is the same bytes everywhere and merges with itself. */
 export const TEXT_DOCUMENT_SEED_CLIENT = 0;
@@ -103,6 +106,14 @@ export const TextDocumentState = {
   },
   /** The whole state as one update. */
   encode: (doc: Y.Doc): Uint8Array => Y.encodeStateAsUpdate(doc),
+  /** The live state as the model, in the tab's format (live-editing-and-storage.md "The layout"). */
+  document: (doc: Y.Doc, format: TextDocumentFormat): TextDocument => readLiveDocument(doc, format),
+  /** A state holding exactly this model, as one update to store beside the seed. */
+  fromDocument: (document: TextDocument): Uint8Array => {
+    const doc = TextDocumentState.load();
+    writeLiveDocument(doc, document);
+    return Y.encodeStateAsUpdate(doc);
+  },
   /** A state holding exactly these paragraphs, as one update to store beside the seed. */
   fromBody: (body: Body): Uint8Array => {
     const doc = TextDocumentState.load();

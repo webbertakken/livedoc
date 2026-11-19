@@ -1,5 +1,6 @@
 // Comparing documents in tests: the model as read, without what was kept from the file and with list ids numbered by
 // first use, so a document written and read back can be compared with the one written. Test-only.
+import { canonical } from '../model/props';
 import type { TextDocument } from '../model/text-document';
 
 const DROPPED = new Set(['kept', 'source', 'region']);
@@ -24,3 +25,13 @@ export function modelOf(document: TextDocument): unknown {
   };
   return strip(document);
 }
+
+/** The whole document as comparable text: kept bytes and maps included. */
+export const wholeOf = (document: TextDocument): string =>
+  canonical(
+    JSON.parse(
+      JSON.stringify(document, (_k, v: unknown) =>
+        v instanceof Uint8Array ? Buffer.from(v).toString('base64') : v instanceof Map ? [...v] : v,
+      ),
+    ),
+  );

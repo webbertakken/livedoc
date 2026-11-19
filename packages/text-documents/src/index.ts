@@ -68,3 +68,15 @@ export {
 } from './files';
 export { conversionLosses, convertTextDocument, type ConversionLoss } from './convert';
 export { isSafeLink, type DroppedReason, type ImportReport, type ReportItem } from './report';
+export {
+  BODY_BLOCKS,
+  KEPT_BLOCK,
+  KEPT_BLOCK_ATTRIBUTES,
+  KEPT_INLINE,
+  KEPT_INLINE_ATTRIBUTES,
+  PARAGRAPH_ATTRIBUTES,
+  RUN_MARKS,
+  SECTION_BREAK,
+  SECTION_BREAK_ATTRIBUTES,
+} from './live/live-names';
+export { keptPresenceOf, type KeptPresence } from './live/kept-presence';

@@ -4,7 +4,6 @@
 // Both are reads, gated as the tab is (a tab-scoped link on its own tab only). Answered inside the document's room.
 import {
   isTextDocumentFileType,
-  TextDocument,
   TextDocumentState,
   writeTextDocumentFile,
   type TextDocumentFileType,
@@ -73,11 +72,9 @@ export async function handleTextDocumentRoutes(
   const type = ctx.url.searchParams.get('type') ?? 'odt';
   if (!isTextDocumentFileType(type)) return json({ error: 'file_type_unknown' }, { status: 400 });
   // Conversion is a person's choice (File > Convert); until it is built, only the document's own format leaves.
-  const body = TextDocumentState.paragraphs(TextDocumentState.load([state]));
-  const document = TextDocument.fromTexts(
-    body.map((p) => p.text),
-    { format: tab.format, title: meta.name },
-  );
+  // The file is derived from the live state; its title is the document's name, written on save.
+  const live = TextDocumentState.document(TextDocumentState.load([state]), tab.format);
+  const document = { ...live, metadata: { ...live.metadata, title: meta.name } };
   // A download never changes a document's format behind a person's back (fork C1): the other format is refused.
   const written = writeTextDocumentFile(document, type);
   if (!written.ok) return json({ error: written.rejection }, { status: 409 });

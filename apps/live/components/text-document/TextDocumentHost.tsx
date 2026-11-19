@@ -4,6 +4,7 @@
 // surface"): it reads the session from the editor and sends through the document's room. The surface's code, Yjs and
 // ProseMirror's binding load only when a text document tab is open.
 import dynamic from 'next/dynamic';
+import { textDocumentFormatOf } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 
 const TextDocumentSurface = dynamic(
@@ -13,13 +14,15 @@ const TextDocumentSurface = dynamic(
 
 export function TextDocumentHost({ tabId }: { tabId: string }) {
   const ctx = useEditorContext();
-  const { documentId, selfParticipant, sessionShareCode, roomRef, can, documentName } = ctx;
+  const { documentId, selfParticipant, sessionShareCode, roomRef, can, documentName, activeTab } =
+    ctx;
   if (!documentId) return null;
   return (
     <TextDocumentSurface
       key={tabId}
       scope={{ ownerId: selfParticipant.id, documentId, tabId, shareCode: sessionShareCode }}
       documentName={documentName ?? ''}
+      format={textDocumentFormatOf(activeTab)}
       canEdit={can.textDocumentEdits}
       send={(op) => roomRef.current?.send({ kind: 'op', op })}
     />
