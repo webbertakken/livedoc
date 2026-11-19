@@ -14,7 +14,8 @@ import {
   previewSuggestion,
   suggestionViewFor,
 } from '@/lib/suggestion-view';
-import { toggleReview, useReviewPanel } from './useReviewPanel';
+import { toggleReview } from '@/lib/review-open';
+import { useReviewPanel } from './useReviewPanel';
 
 // The Review panel's working parts (docs/specs/021-event-storming/board-review.md).
 
@@ -48,18 +49,6 @@ afterEach(() => {
   resetReviewViewForTests();
   resetStructureViewForTests();
   endSuggestionPreview('t');
-});
-
-describe('toggleReview', () => {
-  it('opens the panel, counting it once and saying the tab, then closes it', () => {
-    toggleReview('t');
-    expect(reviewViewFor('t').open).toBe(true);
-    expect(track).toHaveBeenCalledWith('Canvas', 'Used', 'ReviewOpened');
-    expect(debugLog).toHaveBeenCalledWith('[review] opened', { tab: 'check' });
-    toggleReview('t');
-    expect(reviewViewFor('t').open).toBe(false);
-    expect(track).toHaveBeenCalledTimes(1);
-  });
 });
 
 describe('useReviewPanel', () => {

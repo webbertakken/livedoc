@@ -9,7 +9,7 @@
 // get the view-safe subset only (zen / fit / export, docs/specs/007-editor/command-palette.md), with every
 // mutating command withheld inside the pure builder.
 
-import { showReview } from '@/hooks/canvas/useReviewPanel';
+import { showReview } from '@/lib/review-open';
 import { useSelectionOf } from '@/hooks/canvas/useSelectionStore';
 import { EMPTY_SELECTION, type Selection } from '@/lib/selection-store';
 import { useCallback, useMemo } from 'react';

@@ -1,12 +1,16 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import { isLanePlan, type Element, type StickyElement, type Tab } from '@livedoc/document';
 import { arrangeOffer } from '@/lib/board-offer';
 import { note } from '@/lib/change-board.fixture';
 import { kitchenNotes, kitchenTab, plannedKitchen } from '@/lib/lane-board.fixture';
 import { stopArranging, suggestionViewFor } from '@/lib/suggestion-view';
 import { useLaneActions } from './useLaneActions';
+
+// The acts are the Event Storming family's, reached through the registry (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // The acts on a lane plan and on Arrange and Reorder (docs/specs/021-event-storming/lane-plans.md "How a person sees
 // and decides", docs/specs/021-event-storming/arrange.md "How a person arranges"): each one undoable step, a plan's

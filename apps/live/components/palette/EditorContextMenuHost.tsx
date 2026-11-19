@@ -34,7 +34,6 @@ import { noteContextMenu } from '@/lib/note-context-menu';
 import { noteStructureMenu } from '@/lib/note-structure-menu';
 import { openAnswer } from '@/lib/structure-view';
 import { editContextName } from '@/lib/context-selection';
-import { askScopeOf } from '@livedoc/storm-reading';
 
 // Lazy like the other heavy editor chrome: the menu's chunk loads on the
 // first right-click, not with the page.
@@ -406,10 +405,7 @@ export function EditorContextMenuHost() {
       // Asking is an Editor's alone (docs/specs/021-event-storming/asks.md "Share roles").
       onAskAbout={
         esBoard && can.suggestions && !createBlocked && contextMenu.mode === 'element'
-          ? () =>
-              suggestionActions.openAsk(
-                askScopeOf(activeTab.elements, { notes: [contextMenu.elementId], contexts: [] }),
-              )
+          ? () => suggestionActions.openAskAbout(contextMenu.elementId)
           : undefined
       }
       onStackFront={stackSelectedFront}

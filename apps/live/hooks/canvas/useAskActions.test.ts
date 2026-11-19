@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import type { StormAskResponse } from '@livedoc/api-schema';
 import { isLanePlan, isSuggestion, type Element, type Tab } from '@livedoc/document';
 import { FOLD_BY } from '@livedoc/storm-reading';
@@ -12,6 +13,9 @@ import { kitchenTab, lanePlan } from '@/lib/lane-board.fixture';
 import { openReview, resetReviewViewForTests, reviewViewFor } from '@/lib/review-view';
 import { setSuggestionsPanelOpen, suggestionViewFor } from '@/lib/suggestion-view';
 import { useAskActions } from './useAskActions';
+
+// The acts are the Event Storming family's, reached through the registry (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // The acts of an ask (docs/specs/021-event-storming/asks.md "Where an ask starts", "The built-in hand"): the prompt
 // copied, the built-in model asked and its answer added as one undoable step, the About kept, the declined
@@ -85,6 +89,12 @@ describe('useAskActions: opening', () => {
     expect(askViewFor('t')).toMatchObject({ open: true, scope: { type: 'notes', ids: ['place'] } });
     acts.openAsk({ type: 'context', id: 'ordering' });
     expect(askViewFor('t').scope).toEqual({ type: 'context', id: 'ordering' });
+  });
+
+  it('opens about the note a menu was opened on, whatever is selected', () => {
+    const { acts } = setup({}, { selected: { notes: [], contexts: ['ordering'] } });
+    acts.openAskAbout('place');
+    expect(askViewFor('t')).toMatchObject({ open: true, scope: { type: 'notes', ids: ['place'] } });
   });
 
   it('closes the suggestions list: the two share one corner', () => {

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { loadEveryKindFamily } from '@/lib/element-kinds/load-every-family';
 import {
   nameSuggestionsFor,
   noteChangesOf,
@@ -20,6 +21,9 @@ import {
 import { kitchenNotes, plannedKitchen } from '@/lib/lane-board.fixture';
 import { isLanePlan } from '@livedoc/document';
 import { useSuggestionActions } from './useSuggestionActions';
+
+// The acts are the Event Storming family's, reached through the registry (lib/element-kinds).
+beforeAll(loadEveryKindFamily);
 
 // The suggestion acts (docs/specs/021-event-storming/suggestions.md "Applying and dismissing"): each one commit
 // through the ordinary choke point, the applied note selected, telemetry once.

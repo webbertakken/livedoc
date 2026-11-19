@@ -2,7 +2,7 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { Glyph, SparkleIcon } from '@livedoc/ui';
-import { ReviewIcon } from '@/components/canvas/review/ReviewButton';
+import { ReviewIcon } from '@/components/canvas/review/ReviewIcon';
 
 // The BOARD-level controls at the top of the palette's Event Storming category
 // (docs/specs/021-event-storming/event-storming.md). Everything below them adds a note; these change what the board

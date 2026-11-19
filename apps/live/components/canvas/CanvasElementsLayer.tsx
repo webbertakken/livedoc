@@ -36,8 +36,6 @@ import {
 import { ChangesetRevealOverlay } from '@/components/canvas/ChangesetRevealOverlay';
 import { AgentFocusOverlay } from '@/components/canvas/AgentFocusOverlay';
 import { LayerSelectionChrome } from '@/components/canvas/LayerSelectionChrome';
-import { BoardOffers } from '@/components/canvas/suggestions/BoardOffers';
-import { SuggestionLayer } from '@/components/canvas/suggestions/SuggestionLayer';
 import { useSheetChartRenderer, type BoxedShared } from '@/components/canvas/sheet-chart-renderer';
 import type { CanvasSelectionInput } from '@/hooks/canvas/useCanvasSelectionView';
 import { usePhotoDraftView } from '@/lib/photo-draft-preview';
@@ -47,15 +45,21 @@ import { useInsertShift } from '@/hooks/canvas/useInsertShift';
 import { useOfferGlide } from '@/hooks/canvas/useOfferGlide';
 import { useOfferedPreview } from '@/hooks/canvas/useOfferedPreview';
 import { selectContexts } from '@/lib/context-selection';
-import { suggestionPreview } from '@/lib/suggestion-apply';
 import { ARRANGE_KEY, useSuggestionView } from '@/lib/suggestion-view';
 import type { CanvasProps } from '@/components/canvas/Canvas.types';
 import { PageClip } from '@/components/canvas/PageClip';
 import { ContextLayer } from '@/components/canvas/contexts/ContextLayer';
 import { StructureTapes } from '@/components/canvas/structure/StructureTapes';
 import { StructureMarks } from '@/components/canvas/structure/StructureMarks';
-import { ReviewButton, ReviewCorner } from '@/components/canvas/review/ReviewButton';
-import { ReviewRings } from '@/components/canvas/review/ReviewRings';
+import {
+  BoardOffers,
+  ReviewButton,
+  ReviewCorner,
+  ReviewRings,
+  SuggestionLayer,
+  useEventStormingFaces,
+} from '@/components/canvas/event-storming-faces';
+import { requireKindFamily } from '@/lib/element-kinds/store';
 import { WireframeOverlaysWhenReady } from '@/components/canvas/WireframeOverlaysWhenReady';
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
 import { MindHaloRootsProvider, MindNumbersProvider } from './MindMapLayer';
@@ -365,16 +369,13 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
   // Show All Suggestions (docs/specs/021-event-storming/suggestions.md): the board drawn as Apply All would leave
   // it, through the same render-only shift. Never where the change would be refused.
   const suggestionView = useSuggestionView(props.activeTabId ?? '');
+  const esFaces = useEventStormingFaces(props.esBoard === true);
   const suggestionsShown =
-    !!props.suggestions &&
-    !!props.esBoard &&
-    !readOnly &&
-    !tabLocked &&
-    props.createBlocked !== true;
+    !!props.suggestions && esFaces && !readOnly && !tabLocked && props.createBlocked !== true;
   const showAllPreview = useMemo(
     () =>
       suggestionsShown && suggestionView.showAll
-        ? suggestionPreview(elements, props.layerInertIds)
+        ? requireKindFamily('event-storming').suggestionPreview(elements, props.layerInertIds)
         : null,
     [suggestionsShown, suggestionView.showAll, elements, props.layerInertIds],
   );
@@ -775,12 +776,12 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
           no grip is ever covered. The canvas's own grips go in here; each element's are portalled in. */}
               <SelectionGripsLayer onHosts={setGripHosts} isoDepth={ordered.length}>
                 {/* What the Review panel points out (docs/specs/021-event-storming/board-review.md): everyone's to see. */}
-                {props.esBoard ? (
+                {esFaces ? (
                   <ReviewRings tabId={props.activeTabId ?? ''} elements={elements} />
                 ) : null}
                 {/* The Review pill for whoever the suggestions corner is not drawn for: a corner of its own, put
           away with the rest of the chrome in zen mode. An Editor's stands in the suggestions corner, below. */}
-                {props.esBoard && !suggestionsShown && props.zenMode !== true ? (
+                {esFaces && !suggestionsShown && props.zenMode !== true ? (
                   <ReviewCorner tabId={props.activeTabId ?? ''} />
                 ) : null}
                 {/* Suggestions (docs/specs/021-event-storming/suggestions.md): beneath the next-note tabs, standing
