@@ -101,13 +101,14 @@ function trackedPaths(): Set<string> {
   return paths;
 }
 
-// Of the given paths, those git declares ignored: build outputs such as the
-// marketing app's generated licence manifest. A spec names what the build
-// writes, and that is true on every checkout, built or not. One batched call.
+// Of the given paths, those the repository's own .gitignore files declare ignored: build outputs such as the
+// marketing app's generated licence manifest. A spec names what the build writes, and that is true on every
+// checkout, built or not. A path ignored only by this machine (.git/info/exclude, a global excludes file, both
+// reported by absolute path) is local, and no fresh checkout has it. One batched call.
 function ignoredPaths(paths: string[]): Set<string> {
   const inRepo = paths.filter((p) => !p.startsWith('../'));
   if (inRepo.length === 0) return new Set();
-  const run = spawnSync('git', ['check-ignore', '--no-index', '--stdin'], {
+  const run = spawnSync('git', ['check-ignore', '--verbose', '--no-index', '--stdin'], {
     cwd: ROOT,
     input: inRepo.join('\n'),
     encoding: 'utf8',
@@ -116,7 +117,12 @@ function ignoredPaths(paths: string[]): Set<string> {
   if (run.status !== 0 && run.status !== 1) {
     throw new Error(`git check-ignore failed (${run.status}): ${run.stderr}`);
   }
-  return new Set(run.stdout.split('\n').filter(Boolean));
+  const ignored = new Set<string>();
+  for (const line of run.stdout.split('\n').filter(Boolean)) {
+    const [source, path] = line.split('\t');
+    if (path && !source!.startsWith('/')) ignored.add(path);
+  }
+  return ignored;
 }
 
 function candidates(quoted: string): string[] {

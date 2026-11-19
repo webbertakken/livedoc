@@ -314,7 +314,7 @@ largest first; the rule it left is in [Web performance](../specs/016-platform/we
 code loads with the board that holds it".
 
 - First-load JavaScript of `/document/placeholder` (`scripts/first-load.mjs`, gzip level 9), before and after each.
-- Slow link: `apps/live/scripts/measure-doc-open.mjs` on the owner's kanban, 4 Mbit/s and 100 ms, CPU 4x, five
+- Slow link: a Playwright measure of the open (kept outside the repository) on the owner's kanban, 4 Mbit/s and 100 ms, CPU 4x, five
   interleaved runs on docs.nu (before) and the change's preview (after); the median time to an editable board.
 - `scripts/first-load-why.mjs` (#246) sized each family before it moved (`cut`) and named what kept one in (`why`).
 
