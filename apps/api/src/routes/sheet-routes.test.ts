@@ -4,6 +4,7 @@ import type { SheetResponse, SheetsResponse, SheetWriteResponse } from '@livedoc
 import { emptyLayout, type SheetWrite } from '@livedoc/sheets';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import * as db from '../db';
+import * as cellHead from '../db/sheet-cell-head';
 import { makeTestRouteContext } from './test-route-context';
 import { handleDocuments } from './documents';
 
@@ -632,8 +633,9 @@ describe('writes', () => {
   });
   it('retries a lost rev race, then gives up busy', async () => {
     const s = await sheet();
-    const real = db.readSheetHead;
-    const spy = vi.spyOn(db, 'readSheetHead').mockImplementation(async (...args) => {
+    // A cell write reads its head through the narrowed read (db/sheet-cell-head.ts): it answers a rev behind.
+    const real = cellHead.readCellWriteHead;
+    const spy = vi.spyOn(cellHead, 'readCellWriteHead').mockImplementation(async (...args) => {
       const head = await real(...args);
       return head ? { ...head, rev: head.rev - 1 } : head;
     });

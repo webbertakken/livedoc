@@ -74,6 +74,20 @@ A sheet's cells live in a compact store, the same in the editor, the api and the
 | One cell written into the next version of the sheet     | Under 1 ms of CPU  | 30 µs                       |
 | Loading the cells from their stored rows                | Under 1.5 s of CPU | 0.7 s                       |
 
+In the room, a cell write reads of a sheet's order only the rows it names, the first and last rows of the sheet's
+validation rules and its first row, found by SQLite in the stored chunks, never the whole order (default): which rows
+exist and how they lie against one another is all a cell write asks of it. A change of rows or columns still reads
+the order it changes.
+
+| Measure (a sheet of 1,000,000 rows, in the room on node:sqlite) | Budget      | Before         | Measured (2026-11-19) |
+| --------------------------------------------------------------- | ----------- | -------------- | --------------------- |
+| A one-cell write, start to answer                               | Under 50 ms | 180 to 240 ms  | 7 to 14 ms            |
+| Memory a one-cell write holds while it runs                     | Under 5 MB  | About 100 MB   | Under 1 MB            |
+| A write of 5,000 cells (one write's most), start to answer      | Under 1 s   | (not measured) | 160 ms, 15 MB         |
+
+`apps/api/src/db/sheet-cell-head.test.ts` holds the read (a cell write never reads its rows' order whole); the times
+are measured, not held, as CPU budgets bend under CI coverage.
+
 Measured in Node, whose pointers are 8 bytes; a browser's are 4, so a page holds less (inferred).
 `packages/sheets/src/cells/cell-map.perf.test.ts` holds the bytes and the write (the write at four times in CI); the load is
 held as growth, ten times the cells under thirty times the time, as coverage on a CI runner bends an absolute budget.
