@@ -140,6 +140,13 @@ uncaught error or rejection, an area error boundary, or the app's root error bou
   when the guard stops it, shows a calm page ("This page couldn't load. Reload to try again.")
   with a Reload button, in the app's look, light and dark.
 
+## Background work
+
+Work the app starts on its own, ahead of any request (the Explorer's standby editor, idle prefetches of code a
+surface will need), is not a navigation. When its code is gone after a deploy it is left undone and logged
+(`[new-document] standby not made`): no reload, no claim on the reload guard. The surface that needed it loads its
+code again when someone opens it, and that load recovers as any navigation does.
+
 ## Telemetry
 
 - The failure keeps its event, as today: `Error·Client·Uncaught.<Page>.ChunkLoadError` or
