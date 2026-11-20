@@ -5,6 +5,7 @@
 // the padding, for the paragraphs the selection touches. A field shows what they share, blank where they differ; a
 // blank field changes nothing. Reset sets the dialog to no borders, no background and no padding.
 import { useId, useState } from 'react';
+import { HoverCard } from '@livedoc/ui';
 import type { BorderDash, BorderSide } from '@livedoc/text-documents';
 import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
 import { noColour } from '@/components/colour/colour-options';
@@ -145,13 +146,12 @@ export function TextDocumentBordersDialog({
         >
           {BORDER_POSITIONS.map(({ side, label }) => {
             const dimmed = odf && side === 'between';
-            return (
+            const button = (
               <button
                 key={side}
                 type="button"
                 aria-pressed={sides.includes(side)}
                 aria-disabled={dimmed || undefined}
-                title={dimmed ? NO_BETWEEN_IN_ODF : undefined}
                 onClick={() => {
                   if (!dimmed) toggleSide(side);
                 }}
@@ -159,6 +159,13 @@ export function TextDocumentBordersDialog({
               >
                 {label}
               </button>
+            );
+            return dimmed ? (
+              <HoverCard key={side} title={label} description={NO_BETWEEN_IN_ODF}>
+                {button}
+              </HoverCard>
+            ) : (
+              button
             );
           })}
         </div>

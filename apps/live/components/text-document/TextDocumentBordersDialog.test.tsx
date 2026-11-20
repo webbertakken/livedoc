@@ -101,7 +101,8 @@ describe('TextDocumentBordersDialog', () => {
     const between = position('Between');
     expect(between.getAttribute('aria-disabled')).toBe('true');
     expect(between.getAttribute('aria-pressed')).toBe('false');
-    expect(between.title).toBe(NO_BETWEEN_IN_ODF);
+    const described = between.getAttribute('aria-describedby') ?? '';
+    expect(document.getElementById(described)?.textContent).toContain(NO_BETWEEN_IN_ODF);
     fireEvent.click(between);
     expect(between.getAttribute('aria-pressed')).toBe('false');
     fireEvent.click(screen.getByRole('button', { name: 'Apply' }));
