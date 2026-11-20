@@ -50,7 +50,15 @@ type WorkbookOptions = {
   arrays?: ArrayDialect;
   // Iterative calculation (settings.md "Calculation"); off by default.
   iteration?: Iteration;
+  // Where formulas are worked out (formulas.md "Recalculation"): `here` (by default), or `elsewhere`: the page's copy
+  // of a Web Worker's values, which arrive by acceptValues and are never worked out here.
+  values?: 'here' | 'elsewhere';
+  // Note each formula value forgotten, for takeForgotten (the Worker's engine, sending what changed).
+  trackForgotten?: boolean;
 };
+
+/** A cell by its sheet and position. */
+export type CellAt = { sheetId: string; r: number; c: number };
 
 /** `google`: implicit intersection outside an array context; `dynamic`: every formula an array context (Plan Sheets). */
 export type ArrayDialect = 'google' | 'dynamic';
@@ -99,6 +107,11 @@ export class Workbook {
   // "too large" error, not their own, so the next read works them out afresh.
   private readonly overBudget = new Set<CellNo>();
   private iteration: Iteration;
+  readonly worksOut: 'here' | 'elsewhere';
+  // Formula values forgotten since takeForgotten, or every one (null) after a fresh start; undefined: not tracked.
+  private forgotten: Set<CellNo> | null | undefined;
+  // In a copy: cells whose new value is on its way (formulas.md "Recalculation": shown faded).
+  private stale = new Set<CellNo>();
   private readonly loops = new Loops();
   private readonly rounds = new LoopRounds();
   // What iterative calculation's rounds need of the workbook.
@@ -123,6 +136,8 @@ export class Workbook {
     this.nowFn = opts.now ?? localNow;
     this.randFn = opts.rand ?? Math.random;
     this.iteration = opts.iteration ?? ITERATION_OFF;
+    this.worksOut = opts.values ?? 'here';
+    this.forgotten = opts.trackForgotten ? null : undefined;
     for (const s of opts.sheets) this.sheets.set(s.id, s);
     this.reindexAll();
   }
@@ -159,7 +174,7 @@ export class Workbook {
     this.sheets.set(sheet.id, sheet);
     this.version++;
     if (!before || !keys || before.layout !== sheet.layout || before.title !== sheet.title) {
-      this.resetAll();
+      this.restart(before);
       return;
     }
     this.extents.delete(sheet.id);
@@ -177,13 +192,17 @@ export class Workbook {
       this.rounds.retyped(`${sheet.id}|${key}`);
       changed.push(no);
     }
-    this.invalidate([...changed, ...this.volatileCells]);
+    // A copy keeps a changed formula's last value, waiting for its new one.
+    if (this.worksOut === 'elsewhere') for (const no of changed) this.stale.add(no);
+    else this.invalidate([...changed, ...this.volatileCells]);
+    // Each changed cell is sent again, whatever it held: a new formula had no value to forget.
+    if (this.forgotten) for (const no of changed) this.forgotten.add(no);
   }
 
   removeSheet(id: string): void {
     if (!this.sheets.delete(id)) return;
     this.version++;
-    this.resetAll();
+    this.restart();
   }
 
   setCards(cards: CardSource | null): void {
@@ -197,7 +216,7 @@ export class Workbook {
     if (sameIteration(this.iteration, iteration)) return;
     this.iteration = iteration;
     this.version++;
-    this.resetAll();
+    this.restart();
   }
 
   // TODAY and NOW move on: forget every volatile cell.
@@ -205,6 +224,84 @@ export class Workbook {
     if (this.volatileCells.size === 0) return;
     this.version++;
     this.invalidate([...this.volatileCells]);
+  }
+
+  // ---- Worked out elsewhere (formulas.md "Recalculation") -------------------------------------------------
+
+  /** The formula values forgotten since the last call (each to be worked out and sent), or `all` after a fresh start. */
+  takeForgotten(): CellAt[] | 'all' {
+    const forgotten = this.forgotten;
+    this.forgotten = new Set();
+    if (forgotten === undefined) throw new Error('takeForgotten needs trackForgotten');
+    if (forgotten === null) return 'all';
+    return [...forgotten].map((no) => this.cellAt(no));
+  }
+
+  /** In a copy: a formula's value arrived (its whole array when it spills), so it shows and stops waiting. */
+  acceptValue(sheetId: string, r: number, c: number, value: Value): void {
+    const sheet = this.sheets.get(sheetId);
+    const no = this.noAt(sheetId, r, c);
+    if (!sheet || no === NO_CELL) return;
+    this.stale.delete(no);
+    this.spills.release(no);
+    this.spills.unready(sheetId);
+    this.vals.set(no, isArray(value) ? this.claim(no, sheet, r, c, value) : value);
+    this.version++;
+  }
+
+  /** In a copy: cells whose new value is on its way keep their last one, shown faded. */
+  markStale(cells: readonly CellAt[]): void {
+    for (const at of cells) {
+      const no = this.noAt(at.sheetId, at.r, at.c);
+      if (no !== NO_CELL) this.stale.add(no);
+    }
+    if (cells.length > 0) this.version++;
+  }
+
+  /** Whether a cell's shown value is its last one, its new one on its way. */
+  isStale(sheetId: string, r: number, c: number): boolean {
+    if (this.stale.size === 0) return false;
+    const owner = this.spills.ownerAt(this.nos.find(this.nos.sheetNo(sheetId), r, c));
+    const no = owner ?? this.nos.find(this.nos.sheetNo(sheetId), r, c);
+    return this.stale.has(no);
+  }
+
+  /** In a copy: every value it holds waits for its new one. */
+  markAllStale(): void {
+    for (let no = 1; no < this.nos.size; no++) if (this.vals.has(no)) this.stale.add(no);
+    this.version++;
+  }
+
+  // Everything is worked out afresh. A copy keeps each value with its cell, by ids (`before`: a sheet as it was before
+  // its rows or columns moved), each waiting for its new one from the Worker.
+  private restart(before?: Sheet): void {
+    if (this.worksOut === 'here') {
+      this.resetAll();
+      return;
+    }
+    const held: { sheetId: string; rowId: string; colId: string; value: Value }[] = [];
+    for (let no = 1; no < this.nos.size; no++) {
+      const value = this.vals.get(no);
+      if (value === undefined) continue;
+      const sheetId = this.nos.sheetIdOf(no);
+      const layout = sheetId === before?.id ? before.layout : this.sheets.get(sheetId)?.layout;
+      const rowId = layout?.rows[this.nos.rowOf(no)];
+      const colId = layout?.cols[this.nos.colOf(no)];
+      if (rowId && colId) held.push({ sheetId, rowId, colId, value });
+    }
+    this.resetAll();
+    for (const x of held) {
+      const ix = layoutIndex(this.sheets.get(x.sheetId)!.layout);
+      const r = ix.rowPos.get(x.rowId);
+      const c = ix.colPos.get(x.colId);
+      if (r === undefined || c === undefined) continue;
+      this.acceptValue(x.sheetId, r, c, x.value);
+      this.stale.add(this.noAt(x.sheetId, r, c));
+    }
+  }
+
+  private cellAt(no: CellNo): CellAt {
+    return { sheetId: this.nos.sheetIdOf(no), r: this.nos.rowOf(no), c: this.nos.colOf(no) };
   }
 
   // ---- Reading ------------------------------------------------------------------------------------------
@@ -217,7 +314,8 @@ export class Workbook {
         if (this.depth === 0) {
           this.startRead();
           const input = this.inputAt(sheetId, r, c);
-          if (input && 'f' in input) this.settleFirst(this.noAt(sheetId, r, c));
+          if (input && 'f' in input && this.worksOut === 'here')
+            this.settleFirst(this.noAt(sheetId, r, c));
         }
         return scalarCell(this.cellValue(sheetId, r, c, null));
       } catch (e) {
@@ -508,6 +606,8 @@ export class Workbook {
       const from = this.stack.indexOf(no);
       return err('#REF!', circular(this.describeLoop(this.stack.slice(from), no)));
     }
+    // A copy's value has not arrived yet: empty until it does.
+    if (this.worksOut === 'elsewhere') return null;
     if (this.depth >= DEPTH_MAX) throw new Deep(no);
     const sheetId = this.nos.sheetIdOf(no);
     const row = this.nos.rowOf(no);
@@ -665,7 +765,10 @@ export class Workbook {
       if (this.computing.has(no) || no === NO_CELL) continue;
       const sheetId = this.nos.sheetIdOf(no);
       const sheetNo = this.nos.sheetNoOf(no);
-      if (this.vals.delete(no)) this.spills.unready(sheetId);
+      if (this.vals.delete(no)) {
+        this.spills.unready(sheetId);
+        this.forgotten?.add(no);
+      }
       const claim = this.spills.release(no);
       const readers = new Set<CellNo>();
       const r = this.nos.rowOf(no);
@@ -685,6 +788,8 @@ export class Workbook {
   }
 
   private resetAll(): void {
+    if (this.forgotten) this.forgotten = null;
+    this.stale = new Set();
     this.nos = new CellNumbers();
     this.vals = new CellValues();
     this.deps = new Dependencies();
