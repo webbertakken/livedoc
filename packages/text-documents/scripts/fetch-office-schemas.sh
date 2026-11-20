@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Fetches the schemas every written office file is validated against (docs/specs/020-import-export/office-packages.md
 # "Validation") and Jing, each from its publisher and pinned by its SHA-256, into a cache outside the repository:
-# nothing of them is committed. Prints the cache folder.
+# nothing of them is committed. Prints the cache folder. CI keeps the folder in its cache, keyed on this script, so a
+# run with the cache needs no outside host.
 set -euo pipefail
 
 CACHE="${OFFICE_SCHEMAS_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/livedoc/office-schemas}"
@@ -10,7 +11,13 @@ mkdir -p "$CACHE"
 fetch() {
   local url="$1" sha="$2" file="$CACHE/$3"
   if [[ ! -f "$file" ]] || ! echo "$sha  $file" | sha256sum -c --quiet - >/dev/null 2>&1; then
-    curl -fsSL --retry 3 -o "$file.part" "$url"
+    # A publisher that fails for a moment (a 404 or 5xx from a cache in front of it) is asked again; one that keeps
+    # failing names itself, since curl's own message leaves out the address.
+    if ! curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 20 -o "$file.part" "$url"; then
+      echo "[office-schemas] fetch failed: $url" >&2
+      rm -f "$file.part"
+      exit 1
+    fi
     echo "$sha  $file.part" | sha256sum -c --quiet - || { echo "[office-schemas] checksum mismatch: $url" >&2; rm -f "$file.part"; exit 1; }
     mv "$file.part" "$file"
   fi

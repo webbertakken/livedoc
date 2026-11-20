@@ -92,6 +92,8 @@ bytes.
 - The OOXML schemas are ECMA-376 Part 4's Transitional RELAX NG (compact syntax) and Part 2's OPC schemas, checked by
   Jing too (`-c`). Schemas and Jing are fetched from their publishers by the validation script, each pinned by its
   SHA-256, into a gitignored cache; nothing of them is committed. CI's **Office files** job runs the validation.
+- A fetch that fails is retried (five times, on any HTTP error) and, failing still, names its address. CI keeps the
+  fetched schemas in its cache, keyed on the script that pins them, so a run with the cache reaches no outside host.
 - A **corpus** of files made by LibreOffice, Microsoft Word and Google Docs, in both formats, lives with the tests, each
   with the structure it must read as, and its maker and licence in the corpus's `README.md`.
 
