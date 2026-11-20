@@ -30,7 +30,9 @@ test('the menus, the tool finder and the shortcut layer work a text document', a
 
   // A menu opens on press, the next one with Right, and a dimmed item names what it waits on.
   await bar.getByRole('menuitem', { name: 'File' }).click();
-  await expect(page.getByRole('menuitem', { name: 'Make a copy' })).toBeFocused();
+  await expect(page.getByRole('menuitem', { name: 'New', exact: true })).toBeFocused();
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('menuitem', { name: 'Open', exact: true })).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(bar.getByRole('menuitem', { name: 'Edit' })).toHaveAttribute(
     'aria-expanded',

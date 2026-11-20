@@ -54,9 +54,10 @@ export function OfficeMenuBar({
     else if (!inMenu && e.key === 'End') to = menus.length - 1;
     if (to !== null) {
       e.preventDefault();
-      // In an open menu the next one opens; on the bar, focus only moves.
+      // On the bar, focus only moves. In an open menu the next one opens, its name focused first, so Escape in it
+      // goes back to that name.
+      focusName(to);
       if (inMenu) onOpenMenu({ id: menus[to]!.id, focus: 'first' });
-      else focusName(to);
       return;
     }
     if (!inMenu && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {

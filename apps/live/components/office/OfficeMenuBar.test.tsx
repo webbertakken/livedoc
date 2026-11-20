@@ -139,6 +139,8 @@ describe('OfficeMenuBar', () => {
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
     expect(name('Edit').getAttribute('aria-expanded')).toBe('true');
     expect(document.activeElement?.textContent).toContain('Undo');
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(document.activeElement).toBe(name('Edit'));
   });
 
   it('switches menu on hover once one is open, never before', () => {
