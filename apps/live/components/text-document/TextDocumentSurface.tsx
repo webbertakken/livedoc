@@ -114,7 +114,11 @@ export function TextDocumentSurface({
   const { ownerId, documentId, tabId, shareCode } = scope;
   // The latest sender and gate, read when an update goes out, so a new room connection never rebinds the editor.
   // This person's editing mode (review.md "Editing modes"): the writing takes edits only in Editing.
-  const { mode, choice: modeChoice, actions: modeActions } = useOfficeMode(level, 'TextDocumentMode');
+  const {
+    mode,
+    choice: modeChoice,
+    actions: modeActions,
+  } = useOfficeMode(level, 'TextDocumentMode');
   const writes = canEdit && mode === 'editing';
   const live = useRef({ sequence, canEdit, writes });
   useLayoutEffect(() => {
