@@ -15,8 +15,17 @@ import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 export type FileValue =
   { k: 'n'; v: number } | { k: 's'; v: string } | { k: 'b'; v: boolean } | { k: 'e'; v: ErrorCode };
 
-/** One cell as a file holds it: zero-based position, its formula as typed (`=A1*2`), and its value. */
-export type FileCell = { r: number; c: number; formula?: string; value?: FileValue };
+/**
+ * One cell as a file holds it: zero-based position, its formula as typed (`=A1*2`), and its value. `spans` is the
+ * block an array formula fills (ODF's matrix spans, OOXML's array `ref`), its own cell at the top left.
+ */
+export type FileCell = {
+  r: number;
+  c: number;
+  formula?: string;
+  value?: FileValue;
+  spans?: { rows: number; cols: number };
+};
 
 export type FileSheet = { name: string; rows: number; cols: number; cells: FileCell[] };
 

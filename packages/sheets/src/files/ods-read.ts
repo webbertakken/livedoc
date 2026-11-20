@@ -18,12 +18,14 @@ import {
 } from '@livedoc/office-packages';
 import { serialFromParts } from '../dates';
 import { DOCUMENT_CELLS_MAX, DOCUMENT_SHEETS_MAX, SHEET_COLS_MAX, SHEET_ROWS_MAX } from '../limits';
+import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileSheet, FileValue, WorkbookFile } from './workbook-file';
 
 export type OdsRead = { ok: true; file: WorkbookFile; losses: FileLoss[] } | PackageRefusal;
 
-const { office: OFFICE, table: TABLE, text: TEXT } = ODF_NS;
+const { office: OFFICE, table: TABLE, text: TEXT, calcext: CALCEXT } = ODF_NS;
+const ERRORS: readonly string[] = ERROR_CODES;
 
 const is = (node: XmlNode, uri: string, local: string): node is XmlElement =>
   typeof node !== 'string' && node.uri === uri && node.local === local;
@@ -98,6 +100,11 @@ function cellValue(cell: XmlElement): FileValue | undefined {
     case 'boolean':
       return { k: 'b', v: attr('boolean-value') === 'true' };
     case 'string': {
+      // LibreOffice caches a formula's error as an empty string marked an error, the error's text in the cell.
+      if (attributeOf(cell, CALCEXT, 'value-type') === 'error') {
+        const shown = cellText(cell);
+        return ERRORS.includes(shown) ? { k: 'e', v: shown as ErrorCode } : { k: 's', v: shown };
+      }
       const text = attr('string-value') ?? cellText(cell);
       return text === '' ? undefined : { k: 's', v: text };
     }
@@ -115,6 +122,14 @@ function rowsOf(element: XmlElement): XmlElement[] {
       return rowsOf(child);
     return [];
   });
+}
+
+// The block an array formula fills, when the file says it fills more than its own cell.
+function matrixSpans(cell: XmlElement): FileCell['spans'] {
+  const rows = Number(attributeOf(cell, TABLE, 'number-matrix-rows-spanned') ?? 1);
+  const cols = Number(attributeOf(cell, TABLE, 'number-matrix-columns-spanned') ?? 1);
+  if (!Number.isInteger(rows) || !Number.isInteger(cols) || rows < 1 || cols < 1) return undefined;
+  return rows * cols > 1 ? { rows, cols } : undefined;
 }
 
 type Budget = { cells: number };
@@ -136,6 +151,7 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
       const value = cellValue(cell);
       if (formulaText !== undefined || value) {
         const formula = formulaText === undefined ? undefined : fromOpenFormula(formulaText);
+        const spans = formula ? matrixSpans(cell) : undefined;
         for (let k = 0; k < colRepeat; k++) {
           if (c + k >= SHEET_COLS_MAX) {
             cut = true;
@@ -145,6 +161,7 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
           if (formula) out.formula = formula;
           else if (formulaText !== undefined)
             losses.push({ k: 'formula_unread', sheet: name, r, c: c + k });
+          if (spans) out.spans = spans;
           if (value) out.value = value;
           rowCells.push(out);
         }

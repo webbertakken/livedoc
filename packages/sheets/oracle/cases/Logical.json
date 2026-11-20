@@ -1,0 +1,42 @@
+{
+  "category": "Logical",
+  "data": [
+    [1, "a", true],
+    [0, "b", false],
+    [-2, "", true],
+    [null, "TRUE", 3]
+  ],
+  "cases": [
+    { "id": "AND.1", "f": "=AND(TRUE, 1, \"x\"=\"X\")" },
+    { "id": "AND.2", "f": "=AND(Data!A1:A2)" },
+    { "id": "AND.3", "f": "=AND(Data!C1:C3)" },
+    { "id": "AND.4", "f": "=AND(Data!B1:B2)", "note": "a range of text only holds no truth value" },
+    { "id": "AND.5", "f": "=AND(1/0, TRUE)" },
+    { "id": "OR.1", "f": "=OR(FALSE, 0, Data!A1)" },
+    { "id": "OR.2", "f": "=OR(Data!A2, Data!C2)" },
+    { "id": "OR.3", "f": "=OR(Data!A1:A4)" },
+    { "id": "XOR.1", "f": "=XOR(TRUE, TRUE, TRUE)" },
+    { "id": "XOR.2", "f": "=XOR(Data!C1:C3)" },
+    { "id": "NOT.1", "f": "=NOT(0)" },
+    { "id": "NOT.2", "f": "=NOT(Data!C1)" },
+    { "id": "NOT.3", "f": "=NOT(\"x\")" },
+    { "id": "TRUE.1", "f": "=TRUE()" },
+    { "id": "FALSE.1", "f": "=FALSE()" },
+    { "id": "IF.1", "f": "=IF(Data!A1>0, \"pos\", \"neg\")" },
+    { "id": "IF.2", "f": "=IF(Data!A2, 1, 2)" },
+    { "id": "IF.3", "f": "=IF(FALSE, 1)" },
+    { "id": "IF.4", "f": "=IF(1/0, 1, 2)" },
+    { "id": "IF.5", "f": "=IF(TRUE, 1, 1/0)" },
+    { "id": "IFS.1", "f": "=IFS(Data!A3>0, \"a\", Data!A3<0, \"b\")" },
+    { "id": "IFS.2", "f": "=IFS(FALSE, 1)" },
+    { "id": "SWITCH.1", "f": "=SWITCH(Data!A3, 1, \"one\", -2, \"minus two\", \"other\")" },
+    { "id": "SWITCH.2", "f": "=SWITCH(9, 1, \"one\", \"other\")" },
+    { "id": "SWITCH.3", "f": "=SWITCH(9, 1, \"one\")" },
+    { "id": "IFERROR.1", "f": "=IFERROR(1/0, \"none\")" },
+    { "id": "IFERROR.2", "f": "=IFERROR(5, \"none\")" },
+    { "id": "IFERROR.3", "f": "=IFERROR(NA(), 7)" },
+    { "id": "IFNA.1", "f": "=IFNA(NA(), \"missing\")" },
+    { "id": "IFNA.2", "f": "=IFNA(1/0, \"missing\")" },
+    { "id": "IFNA.3", "f": "=IFNA(4, 0)" }
+  ]
+}

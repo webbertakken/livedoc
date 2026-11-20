@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Browser, Page } from '@playwright/test';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
-import { libreOfficeConvert } from './libreoffice';
+import { libreOfficeConvert } from '@livedoc/office-packages/libreoffice';
 import { officeMenuItem } from './office-menus';
 
 // A text document end to end (docs/specs/034-text-documents/text-document.md,
