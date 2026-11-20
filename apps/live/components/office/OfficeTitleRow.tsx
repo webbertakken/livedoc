@@ -78,22 +78,16 @@ export function OfficeTitleRow({
   const [picker, setPicker] = useState<HTMLInputElement | null>(null);
   const [renameNonce, setRenameNonce] = useState(0);
 
-  const sent = useCallback(
-    (action: 'Toggled' | 'Opened' | 'Used', part: string) => {
-      if (telemetryKind) track('UI', action, `${telemetryKind}${part}`);
-    },
-    [telemetryKind],
-  );
   const rename = chrome?.rename ?? null;
   const share = chrome?.share ?? null;
   const move = chrome?.move ?? null;
   const openMove = useMemo(() => {
     if (!move) return null;
     return () => {
-      sent('Opened', 'Move');
+      if (telemetryKind) track('UI', 'Opened', `${telemetryKind}Move`);
       move();
     };
-  }, [move, sent]);
+  }, [move, telemetryKind]);
 
   // The document's own File items, bound where the session may use them; unbound, they are not drawn.
   const allActions: OfficeActions = useMemo(
@@ -117,11 +111,11 @@ export function OfficeTitleRow({
 
   const follow = useCallback(
     (person: OfficePerson) => {
-      sent('Used', 'Follow');
+      if (telemetryKind) track('UI', 'Used', `${telemetryKind}Follow`);
       if (person.tabId === tabId) onFollow?.(person.participant.id);
       else chrome?.onOpenTab(person.tabId);
     },
-    [chrome, onFollow, sent, tabId],
+    [chrome, onFollow, telemetryKind, tabId],
   );
 
   const onOpenMenu = useCallback(
@@ -176,7 +170,7 @@ export function OfficeTitleRow({
               label={chrome.star.starred ? 'Starred' : 'Star'}
               pressed={chrome.star.starred}
               onClick={() => {
-                sent('Toggled', 'Star');
+                if (telemetryKind) track('UI', 'Toggled', `${telemetryKind}Star`);
                 chrome.star?.onToggle();
               }}
             >

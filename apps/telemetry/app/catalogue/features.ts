@@ -1069,12 +1069,39 @@ export const TOOL_FINDER_USED = chart(
   { types: ['TextDocumentToolFinder'] },
 );
 
+// A text document starred from its title row (docs/specs/034-text-documents/editing-surface.md "The title row").
+export const TEXT_DOCUMENT_STARRED = chart(
+  'UI',
+  'Toggled',
+  'Text Document Star',
+  "A text document's star pressed in its title row.",
+  { types: ['TextDocumentStar'], rising: 'neutral' },
+);
+
+// A person here followed from a text document's title row: their caret brought into view, or their tab opened.
+export const TEXT_DOCUMENT_FOLLOWED = chart(
+  'UI',
+  'Used',
+  'Person Followed',
+  "Someone here pressed in a text document's title row, to see where they are.",
+  { types: ['TextDocumentFollow'] },
+);
+
 export const EDITOR_CHROME: MetricStack = {
   stack: true,
   title: 'Editor Chrome',
   blurb:
     'Getting around and arranging the workspace: zoom, zen mode, the bars on a phone held sideways, panel layout, the Explorer view.',
-  members: [CANVAS_ZOOMS, ZEN_MODE, LANDSCAPE_BARS, PANELS_DOCKED, EXPLORER_VIEW, TOOL_FINDER_USED],
+  members: [
+    CANVAS_ZOOMS,
+    ZEN_MODE,
+    LANDSCAPE_BARS,
+    PANELS_DOCKED,
+    EXPLORER_VIEW,
+    TOOL_FINDER_USED,
+    TEXT_DOCUMENT_STARRED,
+    TEXT_DOCUMENT_FOLLOWED,
+  ],
 };
 
 // Dialogs and panels opened (UI·Opened), split by what was opened.

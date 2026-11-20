@@ -466,14 +466,21 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {
     values: ['TextDocumentOdt', 'TextDocumentFodt', 'TextDocumentDocx'],
   },
-  // The office shell's menu bar and tool finder (docs/specs/004-interface-design/office-shell.md "Telemetry"): a menu
-  // opened, by its name, and a tool finder result run, for the kind that asks for them.
+  // The office shell's title row (docs/specs/004-interface-design/office-shell.md "Telemetry"): a menu opened, by its
+  // name, the folder picker opened, a star toggled, a tool finder result run and a person followed, for the kind that
+  // asks for them.
   'apps/live/components/office/OfficeTitleRow.tsx UI·Opened': {
-    values: ['File', 'Edit', 'View', 'Insert', 'Format', 'Tools', 'Extensions', 'Help'].map(
-      (menu) => `TextDocumentMenu${menu}`,
-    ),
+    values: [
+      ...['File', 'Edit', 'View', 'Insert', 'Format', 'Tools', 'Extensions', 'Help'].map(
+        (menu) => `TextDocumentMenu${menu}`,
+      ),
+      'TextDocumentMove',
+    ],
   },
-  'apps/live/components/office/OfficeTitleRow.tsx UI·Used': { values: ['TextDocumentToolFinder'] },
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Toggled': { values: ['TextDocumentStar'] },
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Used': {
+    values: ['TextDocumentToolFinder', 'TextDocumentFollow'],
+  },
   'apps/live/components/dialogs/settings/settings-catalogue.ts UI·Toggled': {
     values: PRESENTATION_SETTINGS.toggled,
   },
