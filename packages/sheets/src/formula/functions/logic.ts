@@ -1,5 +1,5 @@
-// Logic and information functions (docs/specs/029-sheets/formulas.md "Functions": Logic, Information). IF, IFS,
-// SWITCH, IFERROR and IFNA are lazy: the branch not taken is never worked out.
+// Logic functions (docs/specs/029-sheets/formulas.md "Functions": Logic). IF, IFS, SWITCH, IFERROR and IFNA are
+// lazy: the branch not taken is never worked out.
 import type { EvalValue, Frame } from '../../engine/frame';
 import {
   MANY,
@@ -8,22 +8,11 @@ import {
   fn,
   lazyFn,
   lift,
-  refArg,
   scalarFn,
   type FnDef,
   type Thunk,
 } from '../fn';
-import {
-  type ErrorCode,
-  compareScalars,
-  err,
-  isArray,
-  isError,
-  scalarOf,
-  toBool,
-  type Scalar,
-  type Value,
-} from '../values';
+import { compareScalars, err, isArray, isError, scalarOf, toBool, type Value } from '../values';
 
 function boolsOf(args: EvalValue[], f: Frame): boolean[] | Value {
   const out: boolean[] = [];
@@ -107,52 +96,4 @@ export const LOGIC_FUNCTIONS: Record<string, FnDef> = {
   FALSE: fn(0, 0, () => false),
   IFERROR: caught((v) => isError(v)),
   IFNA: caught((v) => isError(v) && v.e === '#N/A'),
-};
-
-function is(test: (x: Scalar) => boolean): FnDef {
-  return scalarFn(1, 1, ([x]) => test(x!));
-}
-
-// ERROR.TYPE's numbers, as Google Sheets gives them (formulas.md "Errors"): any error past #N/A is 8.
-const ERROR_TYPE_NUMBERS: Record<ErrorCode, number> = {
-  '#NULL!': 1,
-  '#DIV/0!': 2,
-  '#VALUE!': 3,
-  '#REF!': 4,
-  '#NAME?': 5,
-  '#NUM!': 6,
-  '#N/A': 7,
-  '#ERROR!': 8,
-};
-
-export const INFO_FUNCTIONS: Record<string, FnDef> = {
-  ISBLANK: is((x) => x === null),
-  ISNUMBER: is((x) => typeof x === 'number'),
-  ISTEXT: is((x) => typeof x === 'string'),
-  ISLOGICAL: is((x) => typeof x === 'boolean'),
-  ISERROR: is((x) => isError(x)),
-  ISNA: is((x) => isError(x) && x.e === '#N/A'),
-  ISFORMULA: fn(1, 1, (args, f) => {
-    const r = refArg(args[0]);
-    if (!r) return err('#N/A', 'ISFORMULA needs a cell reference');
-    return f.isFormula(r.sheetId, r.r1, r.c1);
-  }),
-  'ERROR.TYPE': scalarFn(1, 1, ([x]) =>
-    isError(x!) ? ERROR_TYPE_NUMBERS[x.e] : err('#N/A', 'The value is not an error'),
-  ),
-  NA: fn(0, 0, () => err('#N/A')),
-  N: scalarFn(1, 1, ([x]) => {
-    if (typeof x === 'number') return x;
-    if (typeof x === 'boolean') return x ? 1 : 0;
-    if (isError(x!)) return x;
-    return 0;
-  }),
-  TYPE: fn(1, 1, (args, f) => {
-    const v = deref(args[0]!, f);
-    if (isArray(v)) return 64;
-    if (typeof v === 'number' || v === null) return 1;
-    if (typeof v === 'string') return 2;
-    if (typeof v === 'boolean') return 4;
-    return 16;
-  }),
 };

@@ -1,46 +1,431 @@
 {
   "category": "Info",
   "data": [
-    [1, "text", true],
-    [null, "", false],
-    [3.5, "12", 0]
+    [1, "text", true, "noreply@google.com"],
+    [null, "", false, "July 20 1969"],
+    [3.5, "12", 0, "July"]
   ],
   "cases": [
-    { "id": "ISBLANK.1", "f": "=ISBLANK(Data!A2)" },
-    { "id": "ISBLANK.2", "f": "=ISBLANK(Data!A1)" },
-    { "id": "ISBLANK.3", "f": "=ISBLANK(\"\")" },
-    { "id": "ISNUMBER.1", "f": "=ISNUMBER(Data!A3)" },
-    { "id": "ISNUMBER.2", "f": "=ISNUMBER(Data!B3)" },
-    { "id": "ISTEXT.1", "f": "=ISTEXT(Data!B1)" },
-    { "id": "ISTEXT.2", "f": "=ISTEXT(Data!A1)" },
-    { "id": "ISLOGICAL.1", "f": "=ISLOGICAL(Data!C2)" },
-    { "id": "ISLOGICAL.2", "f": "=ISLOGICAL(Data!C3)" },
-    { "id": "ISERROR.1", "f": "=ISERROR(1/0)" },
-    { "id": "ISERROR.2", "f": "=ISERROR(NA())" },
-    { "id": "ISERROR.3", "f": "=ISERROR(1)" },
-    { "id": "ISNA.1", "f": "=ISNA(NA())" },
-    { "id": "ISNA.2", "f": "=ISNA(1/0)" },
-    { "id": "ISFORMULA.1", "f": "=ISFORMULA(B1)" },
-    { "id": "ISFORMULA.2", "f": "=ISFORMULA(A1)" },
-    { "id": "ERROR.TYPE.1", "f": "=ERROR.TYPE(1/0)" },
-    { "id": "ERROR.TYPE.2", "f": "=ERROR.TYPE(NA())" },
-    { "id": "ERROR.TYPE.3", "f": "=ERROR.TYPE(\"a\"+1)" },
+    {
+      "id": "ISBLANK.1",
+      "f": "=ISBLANK(Data!A2)"
+    },
+    {
+      "id": "ISBLANK.2",
+      "f": "=ISBLANK(Data!A1)"
+    },
+    {
+      "id": "ISBLANK.3",
+      "f": "=ISBLANK(\"\")"
+    },
+    {
+      "id": "ISNUMBER.1",
+      "f": "=ISNUMBER(Data!A3)"
+    },
+    {
+      "id": "ISNUMBER.2",
+      "f": "=ISNUMBER(Data!B3)"
+    },
+    {
+      "id": "ISTEXT.1",
+      "f": "=ISTEXT(Data!B1)"
+    },
+    {
+      "id": "ISTEXT.2",
+      "f": "=ISTEXT(Data!A1)"
+    },
+    {
+      "id": "ISLOGICAL.1",
+      "f": "=ISLOGICAL(Data!C2)"
+    },
+    {
+      "id": "ISLOGICAL.2",
+      "f": "=ISLOGICAL(Data!C3)"
+    },
+    {
+      "id": "ISERROR.1",
+      "f": "=ISERROR(1/0)"
+    },
+    {
+      "id": "ISERROR.2",
+      "f": "=ISERROR(NA())"
+    },
+    {
+      "id": "ISERROR.3",
+      "f": "=ISERROR(1)"
+    },
+    {
+      "id": "ISNA.1",
+      "f": "=ISNA(NA())"
+    },
+    {
+      "id": "ISNA.2",
+      "f": "=ISNA(1/0)"
+    },
+    {
+      "id": "ISFORMULA.1",
+      "f": "=ISFORMULA(B1)"
+    },
+    {
+      "id": "ISFORMULA.2",
+      "f": "=ISFORMULA(A1)"
+    },
+    {
+      "id": "ERROR.TYPE.1",
+      "f": "=ERROR.TYPE(1/0)"
+    },
+    {
+      "id": "ERROR.TYPE.2",
+      "f": "=ERROR.TYPE(NA())"
+    },
+    {
+      "id": "ERROR.TYPE.3",
+      "f": "=ERROR.TYPE(\"a\"+1)"
+    },
     {
       "id": "ERROR.TYPE.4",
       "f": "=ERROR.TYPE(SQRT(-1))",
       "expect": [[6]],
       "cite": "https://support.google.com/docs/answer/3093577 (SQRT of a negative is #NUM!), https://support.google.com/docs/answer/3238305 (#NUM! is 6)",
-      "differs": { "libreoffice": "SQRT(-1) is its Err:502, which ERROR.TYPE does not number" }
+      "differs": {
+        "libreoffice": "SQRT(-1) is its Err:502, which ERROR.TYPE does not number"
+      }
     },
-    { "id": "ERROR.TYPE.5", "f": "=ERROR.TYPE(5)" },
-    { "id": "NA.1", "f": "=NA()" },
-    { "id": "N.1", "f": "=N(Data!A3)" },
-    { "id": "N.2", "f": "=N(Data!B1)" },
-    { "id": "N.3", "f": "=N(Data!C1)" },
-    { "id": "TYPE.1", "f": "=TYPE(Data!A1)" },
-    { "id": "TYPE.2", "f": "=TYPE(Data!B1)" },
-    { "id": "TYPE.3", "f": "=TYPE(Data!C1)" },
-    { "id": "TYPE.4", "f": "=TYPE(1/0)" },
-    { "id": "TYPE.5", "f": "=TYPE({1,2})" }
+    {
+      "id": "ERROR.TYPE.5",
+      "f": "=ERROR.TYPE(5)"
+    },
+    {
+      "id": "NA.1",
+      "f": "=NA()"
+    },
+    {
+      "id": "N.1",
+      "f": "=N(Data!A3)"
+    },
+    {
+      "id": "N.2",
+      "f": "=N(Data!B1)"
+    },
+    {
+      "id": "N.3",
+      "f": "=N(Data!C1)"
+    },
+    {
+      "id": "TYPE.1",
+      "f": "=TYPE(Data!A1)"
+    },
+    {
+      "id": "TYPE.2",
+      "f": "=TYPE(Data!B1)"
+    },
+    {
+      "id": "TYPE.3",
+      "f": "=TYPE(Data!C1)"
+    },
+    {
+      "id": "TYPE.4",
+      "f": "=TYPE(1/0)"
+    },
+    {
+      "id": "TYPE.5",
+      "f": "=TYPE({1,2})"
+    },
+    {
+      "id": "ISERR.1",
+      "f": "=ISERR(1/0)"
+    },
+    {
+      "id": "ISERR.2",
+      "f": "=ISERR(NA())"
+    },
+    {
+      "id": "ISERR.3",
+      "f": "=ISERR(1)"
+    },
+    {
+      "id": "ISERR.4",
+      "f": "=ISERR(Data!B1)"
+    },
+    {
+      "id": "ISNONTEXT.1",
+      "f": "=ISNONTEXT(Data!A2)"
+    },
+    {
+      "id": "ISNONTEXT.2",
+      "f": "=ISNONTEXT(Data!B1)"
+    },
+    {
+      "id": "ISNONTEXT.3",
+      "f": "=ISNONTEXT(Data!B2)"
+    },
+    {
+      "id": "ISNONTEXT.4",
+      "f": "=ISNONTEXT(1/0)"
+    },
+    {
+      "id": "ISNONTEXT.5",
+      "f": "=ISNONTEXT(Data!C1)"
+    },
+    {
+      "id": "ISREF.1",
+      "f": "=ISREF(Data!A1)"
+    },
+    {
+      "id": "ISREF.2",
+      "f": "=ISREF(\"A1\")"
+    },
+    {
+      "id": "ISREF.3",
+      "f": "=ISREF(Data!A1:B2)"
+    },
+    {
+      "id": "ISREF.4",
+      "f": "=ISREF(INDIRECT(\"Data!A1\"))"
+    },
+    {
+      "id": "ISREF.5",
+      "f": "=ISREF(1)"
+    },
+    {
+      "id": "ISREF.6",
+      "f": "=ISREF(OFFSET(Data!A1, 1, 1))"
+    },
+    {
+      "id": "ISDATE.1",
+      "f": "=ISDATE(\"July 20 1969\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/9061381 (example: `=ISDATE(\"July 20 1969\")` is TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      }
+    },
+    {
+      "id": "ISDATE.2",
+      "f": "=ISDATE(\"July\")",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/9061381 (example: `=ISDATE(\"July\")` is FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      }
+    },
+    {
+      "id": "ISDATE.3",
+      "f": "=ISDATE(\"Feb 30\")",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/9061381 (example: `=ISDATE(\"Feb 30\")` is FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      }
+    },
+    {
+      "id": "ISDATE.4",
+      "f": "=ISDATE(\"1969-20-07\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      },
+      "note": "Google's help page gives TRUE for this text, a year, then 20 as the month; its quotes are typographic, so the example may never have run. Awaits Google's answer."
+    },
+    {
+      "id": "ISDATE.5",
+      "f": "=ISDATE(\"10-11-2023\")",
+      "expect": [[true]],
+      "cite": "https://sheetshelp.com/isdate/ (Example 1: `=ISDATE(\"10-11-2023\")` returns TRUE in Google Sheets)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      }
+    },
+    {
+      "id": "ISDATE.6",
+      "f": "=ISDATE(1)",
+      "expect": [[false]],
+      "cite": "https://infoinspired.com/google-docs/spreadsheet/isdate-function-alternative-in-google-sheets/ (\"if you test a number using ISDATE, it will return FALSE\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      }
+    },
+    {
+      "id": "ISDATE.7",
+      "f": "=ISDATE(Data!D2)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/9061381 (`ISDATE(A1)` reads the cell; `\"July 20 1969\"` is a date, as ISDATE.1)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      }
+    },
+    {
+      "id": "ISDATE.8",
+      "f": "=ISDATE(Data!D1:D3)",
+      "expect": [[false]],
+      "cite": "https://sheetshelp.com/isdate/ (Example 3: a range is TRUE only when every value in it is a date)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISDATE is #NAME? there"
+      }
+    },
+    {
+      "id": "ISEMAIL.1",
+      "f": "=ISEMAIL(\"noreply@google.com\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256503 (sample usage, an email address)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISEMAIL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISEMAIL.2",
+      "f": "=ISEMAIL(\"janesmith@yourname.xyz\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256503 (sample usage, an email address)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISEMAIL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISEMAIL.3",
+      "f": "=ISEMAIL(Data!D1)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3256503 (sample usage `noreply@google.com`, read from a cell)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISEMAIL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISEMAIL.4",
+      "f": "=ISEMAIL(\"noreply\")",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3256503 (\"checks if the value follows a commonly accepted format for email addresses\": no @, no address)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISEMAIL is #NAME? there"
+      }
+    },
+    {
+      "id": "ISEMAIL.5",
+      "f": "=ISEMAIL(Data!A1)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3256503 (\"checks if the value follows a commonly accepted format for email addresses\": a number is none)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISEMAIL is #NAME? there"
+      }
+    },
+    {
+      "id": "CELL.1",
+      "f": "=CELL(\"address\", B3)"
+    },
+    {
+      "id": "CELL.2",
+      "f": "=CELL(\"address\", Data!B3)",
+      "differs": {
+        "libreoffice": "LibreOffice writes the address in its own syntax, `$Data.$B$3`; Google writes `Data!$B$3`"
+      },
+      "note": "Awaits Google's answer: its help page does not show an address on another sheet."
+    },
+    {
+      "id": "CELL.3",
+      "f": "=CELL(\"col\", Data!C2)"
+    },
+    {
+      "id": "CELL.4",
+      "f": "=CELL(\"row\", Data!C2)"
+    },
+    {
+      "id": "CELL.5",
+      "f": "=CELL(\"contents\", Data!B1)"
+    },
+    {
+      "id": "CELL.6",
+      "f": "=CELL(\"type\", Data!A2)"
+    },
+    {
+      "id": "CELL.7",
+      "f": "=CELL(\"type\", Data!B1)"
+    },
+    {
+      "id": "CELL.8",
+      "f": "=CELL(\"type\", Data!A1)"
+    },
+    {
+      "id": "CELL.9",
+      "f": "=CELL(\"sheet\", Data!A1)",
+      "expect": [["Data"]],
+      "cite": "https://support.google.com/docs/answer/3267071 (\"sheet\" - returns the sheet name of the cell in `reference`)",
+      "differs": {
+        "libreoffice": "LibreOffice gives the sheet's number, as OpenFormula defines \"SHEET\"; Google gives its name, and Google's meaning wins where Google has it (S6)"
+      }
+    },
+    {
+      "id": "CELL.10",
+      "f": "=CELL(\"color\", Data!A1)"
+    },
+    {
+      "id": "CELL.11",
+      "f": "=CELL(\"parentheses\", Data!A1)"
+    },
+    {
+      "id": "CELL.12",
+      "f": "=CELL(\"format\", Data!A1)",
+      "expect": [["G"]],
+      "cite": "https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part4-formula.html (6.13.3 CELL, Table 17) (\"G = All other formats\"); https://support.microsoft.com/en-us/office/cell-function-51bd39a5-f338-4dbe-a33f-955d67c2b2cf (General is \"G\")",
+      "differs": {
+        "libreoffice": "LibreOffice names its own General format F0, as a number with no decimals; Google has no \"format\" (D38: the standard's), and General is OpenFormula's G"
+      }
+    },
+    {
+      "id": "CELL.13",
+      "f": "=CELL(\"prefix\", Data!A1)"
+    },
+    {
+      "id": "CELL.14",
+      "f": "=CELL(\"width\", Data!A1)",
+      "differs": {
+        "libreoffice": "LibreOffice measures the column in its own default font and width; Google counts its zero characters at its default font size"
+      },
+      "note": "Awaits Google's answer: LiveDoc counts ECMA-376's characters (7-pixel digit, 5 pixels of padding) of a 120-pixel column (default, formulas.md \"Information\")."
+    },
+    {
+      "id": "CELL.15",
+      "f": "=CELL(\"filename\", Data!A1)",
+      "expect": [[""]],
+      "cite": "https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part4-formula.html (6.13.3 CELL, Table 17) (FILENAME: \"If the file is newly created and has not yet been saved, the file name is empty text\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives the path of the file it opened; a LiveDoc document is no file (default, formulas.md \"Information\")"
+      }
+    },
+    {
+      "id": "CELL.16",
+      "f": "=CELL(\"protect\", Data!A1)",
+      "expect": [[0]],
+      "cite": "https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part4-formula.html (6.13.3 CELL, Table 17) (PROTECT: \"1 = cell is protected 0 = cell is unprotected\"); https://support.google.com/docs/answer/1218656 (a cell is protected by a protected range or sheet)",
+      "differs": {
+        "libreoffice": "LibreOffice marks every cell protected by default (in force once its sheet is protected); in LiveDoc, as in Google Sheets, only a protected range or sheet protects a cell"
+      }
+    },
+    {
+      "id": "CELL.17",
+      "f": "=CELL(\"nonsense\", Data!A1)"
+    },
+    {
+      "id": "CELL.18",
+      "f": "=CELL(\"col\")"
+    },
+    {
+      "id": "CELL.19",
+      "f": "=CELL(\"ROW\", Data!B2:C3)"
+    },
+    {
+      "id": "CELL.20",
+      "f": "=CELL(\"type\", \"A1\")"
+    },
+    {
+      "id": "SHEETS.1",
+      "f": "=SHEETS()"
+    },
+    {
+      "id": "SHEETS.2",
+      "f": "=SHEETS(Data!A1:B2)"
+    },
+    {
+      "id": "SHEETS.3",
+      "f": "=SHEETS(1)"
+    }
   ]
 }

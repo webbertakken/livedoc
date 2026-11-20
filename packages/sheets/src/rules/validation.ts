@@ -15,6 +15,7 @@ import {
 } from '../sheet';
 import type { Workbook } from '../engine/workbook';
 import { DROPDOWN_OPTIONS_MAX } from '../limits';
+import { isEmail, isUrl } from '../text-checks';
 import { firstRuleAt, ruleIndex } from './rule-index';
 
 // A Date rule's dates: 31 December 1899 to 31 December 9999 (data-validation.md "What each rule allows").
@@ -37,22 +38,6 @@ export function validationRuleAt(layout: SheetLayout, r: number, c: number): Val
   const list = layout.rules;
   if (!list?.length) return null;
   return firstRuleAt(ruleIndex(layout, list ?? EMPTY), r, c);
-}
-
-const URL_RE = /^(https?:\/\/[^\s]+|[a-z0-9-]+(\.[a-z0-9-]+)+(\/[^\s]*)?)$/i;
-
-// Something, one @, then a domain with a dot that is neither its first nor its last character; no spaces. Checked
-// without a regular expression: the pattern's dotted domain backtracked quadratically on a long run of dots (a cell is
-// user input), and this reads the text once.
-export function isEmail(text: string): boolean {
-  const t = text.trim();
-  const at = t.indexOf('@');
-  if (at < 1 || at !== t.lastIndexOf('@') || /\s/.test(t)) return false;
-  return t.slice(at + 2, -1).includes('.');
-}
-
-export function isUrl(text: string): boolean {
-  return URL_RE.test(text.trim());
 }
 
 // A checkbox cell's value: true or false, null when empty, undefined for anything else.

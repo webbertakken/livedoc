@@ -141,6 +141,7 @@ export class Workbook {
       ctx: (s) => this.ctxFor(s),
       extent: (s) => this.extent(s),
       sheet: (s) => this.sheets.get(s),
+      sheetCount: () => this.sheets.size,
       input: (s, r, c) => this.inputAt(s, r, c),
       cell: (s, r, c, reader) => this.cellValue(s, r, c, reader),
       noAt: (s, r, c) => this.noAt(s, r, c),

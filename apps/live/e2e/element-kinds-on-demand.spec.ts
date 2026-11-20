@@ -16,15 +16,16 @@ import {
 
 const ON_DEMAND_DELAY_MS = 1_500;
 
-// Every script the page asks for that its HTML does not name: what it loads on demand, the families among it.
-async function holdBackOnDemandCode(page: Page): Promise<void> {
+// Every script the page asks for that its HTML does not name: what it loads on demand, the families among it. Held
+// for ON_DEMAND_DELAY_MS, or until `held` settles when given (a later call's route is asked first).
+async function holdBackOnDemandCode(page: Page, held?: Promise<void>): Promise<void> {
   const html = await (await page.request.get('/new')).text();
   const named = new Set([...html.matchAll(/src="([^"]+\.js)"/g)].map((m) => m[1]!));
   await page.route(
     (url) => url.pathname.includes('/_next/static/') && url.pathname.endsWith('.js'),
     async (route) => {
       if (!named.has(new URL(route.request().url()).pathname)) {
-        await new Promise((resolve) => setTimeout(resolve, ON_DEMAND_DELAY_MS));
+        await (held ?? new Promise((resolve) => setTimeout(resolve, ON_DEMAND_DELAY_MS)));
       }
       await route.continue();
     },
@@ -131,11 +132,21 @@ test('a palette press places a family not yet in once it is', async ({
   page.on('console', (msg) => {
     if (msg.text().startsWith('[element-kinds] press waits')) waits.push(msg.text());
   });
+  // No idle prefetch, and the family's code held from the page's opening until the press is made: a hover prefetches
+  // it, and on a slow runner it could land between the hover and the press, leaving the press nothing to wait for.
+  await page.addInitScript(() => {
+    window.requestIdleCallback = () => 0;
+    window.cancelIdleCallback = () => {};
+  });
   await holdBackOnDemandCode(page);
   await openStartBlank(page);
+  let release = () => {};
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await holdBackOnDemandCode(page, held);
 
   const tile = await paletteTile(page, 'Add Pyramid', 'Concepts');
   await tile.click();
+  release();
   // The press arms the tool once the family is in; a tap on the canvas places it.
   await expect(tile).toHaveAttribute('aria-pressed', 'true');
   await page.locator('[data-canvas-a11y-root]').click({ position: { x: 480, y: 320 } });

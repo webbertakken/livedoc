@@ -51,6 +51,153 @@
     "TYPE.2": [[2]],
     "TYPE.3": [[4]],
     "TYPE.4": [[16]],
-    "TYPE.5": [[64]]
+    "TYPE.5": [[64]],
+    "ISERR.1": [[true]],
+    "ISERR.2": [[false]],
+    "ISERR.3": [[false]],
+    "ISERR.4": [[false]],
+    "ISNONTEXT.1": [[true]],
+    "ISNONTEXT.2": [[false]],
+    "ISNONTEXT.3": [[false]],
+    "ISNONTEXT.4": [[true]],
+    "ISNONTEXT.5": [[true]],
+    "ISREF.1": [[true]],
+    "ISREF.2": [[false]],
+    "ISREF.3": [[true]],
+    "ISREF.4": [[true]],
+    "ISREF.5": [[false]],
+    "ISREF.6": [[true]],
+    "ISDATE.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISDATE.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISDATE.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISDATE.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISDATE.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISDATE.6": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISDATE.7": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISDATE.8": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISEMAIL.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISEMAIL.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISEMAIL.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISEMAIL.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "ISEMAIL.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "CELL.1": [["$B$3"]],
+    "CELL.2": [["$Data.$B$3"]],
+    "CELL.3": [[3]],
+    "CELL.4": [[2]],
+    "CELL.5": [["text"]],
+    "CELL.6": [["b"]],
+    "CELL.7": [["l"]],
+    "CELL.8": [["v"]],
+    "CELL.9": [[1]],
+    "CELL.10": [[0]],
+    "CELL.11": [[0]],
+    "CELL.12": [["F0"]],
+    "CELL.13": [[null]],
+    "CELL.14": [[11]],
+    "CELL.15": [["'file:///tmp/sheets-oracle-IKAji2/Info.fods'#$Data"]],
+    "CELL.16": [[1]],
+    "CELL.17": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "CELL.18": [[2]],
+    "CELL.19": [[2]],
+    "CELL.20": [
+      [
+        {
+          "e": "#REF!"
+        }
+      ]
+    ],
+    "SHEETS.1": [[2]],
+    "SHEETS.2": [[1]],
+    "SHEETS.3": [
+      [
+        {
+          "e": "Err:504"
+        }
+      ]
+    ]
   }
 }
