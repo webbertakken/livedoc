@@ -13,6 +13,8 @@ How to add a function: [Measure a function against the oracle](../../../docs/ins
   formula in column B, blocks a blank row apart; an array case is written as an array formula over its block.
 - `oracle:libreoffice` writes each category as a flat ODF file, has LibreOffice work every formula out afresh
   (`@livedoc/office-packages/libreoffice`), and reads the values back. `SOFFICE` names another LibreOffice.
+- Answers need LibreOffice 24.8 or later (its `FILTER`, `SORT`, `UNIQUE`, `XLOOKUP`, `LET`); each file records its
+  version in `by`. A case naming a difference LibreOffice no longer has fails until the name goes.
 - `oracle:google` reads `ORACLE_FROM/<Category>.ods`: the same workbook opened in Google Sheets and downloaded as ODS.
 - `ORACLE_CATEGORY=<Category>` makes one category's answers. Answers are written whole per category, only when every
   case is answered and none runs past its block.

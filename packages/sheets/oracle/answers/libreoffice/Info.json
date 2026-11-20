@@ -1,7 +1,7 @@
 {
   "source": "libreoffice",
   "category": "Info",
-  "by": "LibreOffice 24.2.7.2",
+  "by": "LibreOffice 26.8.3.1",
   "made": "2026-11-20",
   "answers": {
     "ISBLANK.1": [[true]],
@@ -172,7 +172,7 @@
     "CELL.12": [["F0"]],
     "CELL.13": [[null]],
     "CELL.14": [[11]],
-    "CELL.15": [["'file:///tmp/sheets-oracle-IKAji2/Info.fods'#$Data"]],
+    "CELL.15": [["'file:///tmp/sheets-oracle-MCsMNr/Info.fods'#$Data"]],
     "CELL.16": [[1]],
     "CELL.17": [
       [

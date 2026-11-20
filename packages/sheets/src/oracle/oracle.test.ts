@@ -56,8 +56,18 @@ describe('the oracle corpus', () => {
         ...(libre?.answers[x.id] ? { libreoffice: libre.answers[x.id] } : {}),
       });
       if (!held) {
-        // LibreOffice answers otherwise than Google and no other answer is in yet: it waits for Google's.
-        if (x.differs?.libreoffice) awaiting++;
+        // LibreOffice answers otherwise than Google and no other answer is in yet: it waits for Google's. A
+        // LibreOffice that has come to agree (a newer one) leaves the difference named for nothing.
+        const libreAnswer = libre?.answers[x.id];
+        const mine = engine.get(x.id)!;
+        if (
+          x.differs?.libreoffice &&
+          libreAnswer &&
+          mine.ok &&
+          sameBlock(mine.answer, libreAnswer, x.tol)
+        )
+          failed.push(`${x.id}: LibreOffice now agrees; drop its differs`);
+        else if (x.differs?.libreoffice) awaiting++;
         else failed.push(`${x.id}: unanswered`);
         continue;
       }
@@ -101,7 +111,7 @@ describe('the oracle corpus', () => {
 
 // The catalogue's categories whose boxes have landed (plan 0020 Phase 6): every function built in them is measured.
 // The list grows by one with each category box, and holds every category by the end of the phase.
-const MEASURED_CATEGORIES = ['Info', 'Logical', 'Operator'];
+const MEASURED_CATEGORIES = ['Filter', 'Info', 'Logical', 'Operator'];
 
 // A built catalogue row of formulas.md: its name and category.
 function builtRows(): { name: string; category: string }[] {

@@ -204,7 +204,7 @@
       "rows": 1,
       "cols": 3,
       "differs": {
-        "libreoffice": "LibreOffice 24.2 refuses a boolean in an array literal (Err:539)"
+        "libreoffice": "LibreOffice refuses a boolean in an array literal (Err:539)"
       }
     },
     {
@@ -217,10 +217,7 @@
       "id": "spill.1",
       "f": "=SEQUENCE(2)*2",
       "rows": 2,
-      "cols": 1,
-      "differs": {
-        "libreoffice": "LibreOffice 24.2 has no SEQUENCE"
-      }
+      "cols": 1
     },
     {
       "id": "array.1",
@@ -251,9 +248,7 @@
       "f": "=ARRAYFORMULA(Data!A1:A3+Data!B1:B2)",
       "rows": 3,
       "cols": 1,
-      "differs": {
-        "libreoffice": "arrays of different sizes: Google's answer decides"
-      }
+      "note": "Arrays of different sizes: Google's answer decides; LibreOffice agrees with the padding meanwhile (provisional)."
     },
     {
       "id": "array.7",

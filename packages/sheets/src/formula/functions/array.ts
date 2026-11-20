@@ -1,6 +1,6 @@
 // Array functions (docs/specs/029-sheets/formulas.md "Functions": Arrays, "Arrays and spills"). Each returns an
 // array that spills; results are bounded by ARRAY_CELLS_MAX.
-import { sortKeyCompare } from '../../sort';
+import type { EvalValue, Frame } from '../../engine/frame';
 import {
   MANY,
   arrayArg,
@@ -14,7 +14,8 @@ import {
   tooBig,
   type FnDef,
 } from '../fn';
-import { dims, err, isError, scalarOf, toBool, type Scalar, type Value } from '../values';
+import { dims, err, isError, scalarOf, toBool, type Value, type ValueArray } from '../values';
+import { everyColumn, keyIdentity, rowKeys, sortedIndexes, type RowKey } from './sorting';
 
 const NOTHING = err('#N/A', 'No rows matched');
 
@@ -28,11 +29,70 @@ function cellKey(row: Value[]): string {
   );
 }
 
+// OOXML's SORT: by the column (or, by_col, the row) numbered sort_index, 1 ascending or -1 descending.
+function ooxmlSort(range: ValueArray, args: EvalValue[], f: Frame): Value {
+  const index = intArg(args[1]!, f);
+  const order = intArg(args[2]!, f);
+  const byCol = boolArg(args[3]!, f);
+  if (isError(index)) return index;
+  if (isError(order)) return order;
+  if (isError(byCol)) return byCol;
+  if (order !== 1 && order !== -1) return err('#VALUE!', 'The sort order is 1 or -1');
+  const lines = byCol ? transposed(range) : range.rows;
+  const width = lines[0]?.length ?? 0;
+  if (index < 1 || index > width)
+    return err('#VALUE!', `There is no ${byCol ? 'row' : 'column'} ${index} to sort by`);
+  const key: RowKey = { values: lines.map((l) => scalarOf(l[index - 1]!)), asc: order === 1 };
+  const sorted = sortedIndexes(lines.length, [key]).map((i) => lines[i]!);
+  return { rows: byCol ? transposed({ rows: sorted }) : sorted };
+}
+
+function transposed(a: ValueArray): Value[][] {
+  const d = dims(a);
+  const out: Value[][] = [];
+  for (let j = 0; j < d.cols; j++) out.push(a.rows.map((r) => r[j]!));
+  return out;
+}
+
+// SORTN's rows, sorted: the first n (mode 0); and every row tied with the nth (1); the first n of distinct keys (2);
+// every row of the first n distinct keys (3). Rows tie, or duplicate, when their sort keys are equal.
+function firstN(order: number[], keys: readonly RowKey[], n: number, mode: number): number[] {
+  const id = (i: number) => keyIdentity(keys, i);
+  if (mode === 0) return order.slice(0, n);
+  if (mode === 1) {
+    const out = order.slice(0, n);
+    const last = out.length === n ? id(out[n - 1]!) : null;
+    for (let k = n; k < order.length && last !== null && id(order[k]!) === last; k++)
+      out.push(order[k]!);
+    return out;
+  }
+  const kept = new Set<string>();
+  const out: number[] = [];
+  for (const i of order) {
+    const k = id(i);
+    if (!kept.has(k)) {
+      if (kept.size === n) {
+        if (mode === 2) break;
+        continue;
+      }
+      kept.add(k);
+      out.push(i);
+    } else if (mode === 3) out.push(i);
+  }
+  return out;
+}
+
 export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
   FILTER: fn(2, MANY, (args, f) => {
     const range = arrayArg(args[0]!, f);
     const d = dims(range);
-    const conds = args.slice(1).map((a) => arrayArg(a, f));
+    let conds = args.slice(1).map((a) => arrayArg(a, f));
+    // A single value after one condition longer than one cannot be a condition (Google refuses it): it is OOXML's
+    // if_empty, what FILTER gives when nothing passes (D38).
+    const one = (a: ValueArray) => dims(a).rows === 1 && dims(a).cols === 1;
+    const ifEmpty = conds.length === 2 && one(conds[1]!) && !one(conds[0]!) ? conds[1]! : null;
+    if (ifEmpty) conds = conds.slice(0, 1);
+    const nothing = ifEmpty ? scalarOf(ifEmpty.rows[0]![0]!) : NOTHING;
     // Conditions run along the rows (a column of TRUE/FALSE) or along the columns (a row of them).
     const byRows = conds.every((c) => dims(c).rows === d.rows && dims(c).cols === 1);
     const byCols = !byRows && conds.every((c) => dims(c).cols === d.cols && dims(c).rows === 1);
@@ -53,52 +113,45 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
     }
     if (byRows) {
       const rows = range.rows.filter((_, i) => keep[i]);
-      return rows.length ? { rows } : NOTHING;
+      return rows.length ? { rows } : nothing;
     }
     const rows = range.rows.map((r) => r.filter((_, j) => keep[j]));
-    return rows[0]?.length ? { rows } : NOTHING;
+    return rows[0]?.length ? { rows } : nothing;
   }),
   SORT: fn(1, MANY, (args, f) => {
     const range = arrayArg(args[0]!, f);
-    const keys: { col: number; asc: boolean }[] = [];
-    for (let i = 1; i < args.length; i += 2) {
-      const col = intArg(args[i]!, f);
-      if (isError(col)) return col;
-      const asc = opt(args, i + 1, f, boolArg, true);
-      if (isError(asc)) return asc;
-      if (col < 1 || col > dims(range).cols) return err('#VALUE!', `There is no column ${col}`);
-      keys.push({ col: col - 1, asc });
-    }
-    if (keys.length === 0) keys.push({ col: 0, asc: true });
-    const rows = [...range.rows].sort((a, b) => {
-      for (const k of keys) {
-        const c = sortKeyCompare(scalarOf(a[k.col]!), scalarOf(b[k.col]!), k.asc);
-        if (c !== 0) return c;
-      }
-      return 0;
-    });
-    return { rows };
+    // Four arguments are OOXML's SORT(array, sort_index, sort_order, by_col), which Google refuses (D38).
+    if (args.length === 4) return ooxmlSort(range, args, f);
+    const keys =
+      args.length > 1 ? rowKeys(args, 1, range.rows, f) : everyColumn(range.rows).slice(0, 1);
+    if (isError(keys)) return keys;
+    return { rows: sortedIndexes(range.rows.length, keys).map((i) => range.rows[i]!) };
+  }),
+  SORTN: fn(1, MANY, (args, f) => {
+    const range = arrayArg(args[0]!, f);
+    const n = opt(args, 1, f, intArg, 1);
+    if (isError(n)) return n;
+    if (n < 1) return err('#NUM!', 'SORTN needs at least one row to give');
+    const mode = opt(args, 2, f, intArg, 0);
+    if (isError(mode)) return mode;
+    if (mode < 0 || mode > 3) return err('#NUM!', 'SORTN shows ties by 0, 1, 2 or 3');
+    const keys = args.length > 3 ? rowKeys(args, 3, range.rows, f) : everyColumn(range.rows);
+    if (isError(keys)) return keys;
+    const picked = firstN(sortedIndexes(range.rows.length, keys), keys, n, mode);
+    return picked.length ? { rows: picked.map((i) => range.rows[i]!) } : NOTHING;
   }),
   SORTBY: fn(2, MANY, (args, f) => {
     const range = arrayArg(args[0]!, f);
     const d = dims(range);
-    const keys: { by: Scalar[]; asc: boolean }[] = [];
+    const keys: RowKey[] = [];
     for (let i = 1; i < args.length; i += 2) {
       const by = arrayArg(args[i]!, f);
       if (dims(by).rows !== d.rows) return err('#VALUE!', 'SORTBY ranges must match the rows');
       const order = opt(args, i + 1, f, intArg, 1);
       if (isError(order)) return order;
-      keys.push({ by: by.rows.map((r) => scalarOf(r[0]!)), asc: order !== -1 });
+      keys.push({ values: by.rows.map((r) => scalarOf(r[0]!)), asc: order !== -1 });
     }
-    const index = range.rows.map((_, i) => i);
-    index.sort((a, b) => {
-      for (const k of keys) {
-        const c = sortKeyCompare(k.by[a]!, k.by[b]!, k.asc);
-        if (c !== 0) return c;
-      }
-      return a - b;
-    });
-    return { rows: index.map((i) => range.rows[i]!) };
+    return { rows: sortedIndexes(range.rows.length, keys).map((i) => range.rows[i]!) };
   }),
   UNIQUE: fn(1, 3, (args, f) => {
     const range = arrayArg(args[0]!, f);
@@ -138,16 +191,10 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
     }
     return { rows: out };
   }),
-  TRANSPOSE: fn(1, 1, (args, f) => {
-    const range = arrayArg(args[0]!, f);
-    const d = dims(range);
-    const out: Value[][] = [];
-    for (let j = 0; j < d.cols; j++) out.push(range.rows.map((r) => r[j]!));
-    return { rows: out };
-  }),
+  TRANSPOSE: fn(1, 1, (args, f) => ({ rows: transposed(arrayArg(args[0]!, f)) })),
   ARRAYFORMULA: fn(1, 1, (args, f) => deref(args[0]!, f)),
 };
 
 // Their arguments are an array context (formulas.md "Arrays and spills"): ranges and arrays taken whole.
-for (const name of ['ARRAYFORMULA', 'FILTER', 'SORT', 'SORTBY', 'UNIQUE', 'TRANSPOSE'])
+for (const name of ['ARRAYFORMULA', 'FILTER', 'SORT', 'SORTN', 'SORTBY', 'UNIQUE', 'TRANSPOSE'])
   ARRAY_FUNCTIONS[name] = arrayArgs(ARRAY_FUNCTIONS[name]!);

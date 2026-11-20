@@ -1,0 +1,302 @@
+{
+  "category": "Filter",
+  "data": [
+    ["Alice", 100, 90, null, "Red", "Yellow", "Red"],
+    ["Bob", 75, 85, null, "Blue", "Magenta", "Blue"],
+    ["Carol", 80, 85, null, "Red", "Yellow", "Red"],
+    ["Devon", 100, 95, null, "Green", "White", "Green"],
+    ["Eloise", 80, 90, null, null, null, null]
+  ],
+  "cases": [
+    {
+      "id": "FILTER.1",
+      "f": "=FILTER(Data!A1:C5, Data!B1:B5>=80)",
+      "rows": 4,
+      "cols": 3
+    },
+    {
+      "id": "FILTER.2",
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5=100, Data!C1:C5>90)",
+      "expect": [["Devon"]],
+      "cite": "https://support.google.com/docs/answer/3093197 (sample `FILTER(A2:B26, A2:A26 > 5, D2:D26 < 10)`: \"condition2 ... Additional rows or columns\"); only Devon has 100 and over 90",
+      "differs": {
+        "libreoffice": "LibreOffice reads a third argument as OOXML's if_empty, so a range there is #VALUE!; Google takes it as a second condition"
+      }
+    },
+    {
+      "id": "FILTER.3",
+      "f": "=FILTER(Data!A1:C1, {TRUE, FALSE, TRUE})",
+      "cols": 2,
+      "expect": [["Alice", 90]],
+      "cite": "https://support.google.com/docs/answer/3093197 (sample `FILTER(A2:C5, {TRUE; TRUE; FALSE; TRUE})`; \"condition1 - A column or row containing true or false values\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a boolean in an array literal (Err:539)"
+      }
+    },
+    {
+      "id": "FILTER.4",
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5>200)"
+    },
+    {
+      "id": "FILTER.5",
+      "f": "=FILTER(Data!A1:A5, Data!B1:B3>0)"
+    },
+    {
+      "id": "FILTER.6",
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5>200, \"none\")"
+    },
+    {
+      "id": "FILTER.7",
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5>90, \"none\")",
+      "rows": 2
+    },
+    {
+      "id": "FILTER.8",
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5-80)",
+      "rows": 3,
+      "differs": {
+        "libreoffice": "LibreOffice passes only the positive numbers; LiveDoc reads a number as a truth as AND does, any but 0 TRUE"
+      },
+      "note": "Awaits Google's answer: Google's help asks for TRUE or FALSE values and says nothing of numbers."
+    },
+    {
+      "id": "FILTER.9",
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5/0>0)"
+    },
+    {
+      "id": "SORT.1",
+      "f": "=SORT(Data!A1:C5, 2, FALSE)",
+      "rows": 5,
+      "cols": 3,
+      "expect": [
+        ["Alice", 100, 90],
+        ["Devon", 100, 95],
+        ["Carol", 80, 85],
+        ["Eloise", 80, 90],
+        ["Bob", 75, 85]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093150 (\"is_ascending - TRUE or FALSE indicating whether to sort sort_column in ascending order\"); rows tied keep their order, as https://support.google.com/docs/answer/7354624's `=SORTN(A2:C6, 3, 0, B2:B6, FALSE)` gives Alice before Devon",
+      "differs": {
+        "libreoffice": "LibreOffice reads the third argument as OOXML's sort_order, 1 or -1, so FALSE is Err:504"
+      }
+    },
+    {
+      "id": "SORT.2",
+      "f": "=SORT(Data!A1:C5, 2, TRUE, 3, FALSE)",
+      "rows": 5,
+      "cols": 3,
+      "expect": [
+        ["Bob", 75, 85],
+        ["Eloise", 80, 90],
+        ["Carol", 80, 85],
+        ["Devon", 100, 95],
+        ["Alice", 100, 90]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093150 (\"is_ascending - TRUE or FALSE indicating whether to sort sort_column in ascending order\"); \"sort_column2, is_ascending2 ... in order of precedence\"",
+      "differs": {
+        "libreoffice": "LibreOffice reads the third argument as OOXML's sort_order, 1 or -1, so TRUE is Err:504, and takes at most four arguments"
+      }
+    },
+    {
+      "id": "SORT.3",
+      "f": "=SORT(Data!A1:A5, Data!C1:C5, TRUE)",
+      "rows": 5,
+      "expect": [["Bob"], ["Carol"], ["Alice"], ["Eloise"], ["Devon"]],
+      "cite": "https://support.google.com/docs/answer/3093150 (\"sort_column - The index of the column in range or a range outside of range containing the values by which to sort\"); Data!C1:C5 is 90, 85, 85, 95, 90",
+      "differs": {
+        "libreoffice": "LibreOffice reads the sort column as OOXML does, a number only; Google takes a range beside the range"
+      }
+    },
+    {
+      "id": "SORT.4",
+      "f": "=SORT(Data!B1:B5)",
+      "rows": 5
+    },
+    {
+      "id": "SORT.5",
+      "f": "=SORT(Data!A1:C5, 4, TRUE)"
+    },
+    {
+      "id": "SORT.6",
+      "f": "=SORT(Data!A1:C5, 2, -1, FALSE)",
+      "rows": 5,
+      "cols": 3
+    },
+    {
+      "id": "SORT.7",
+      "f": "=SORT(Data!A1:C2, 1, 1, TRUE)",
+      "rows": 2,
+      "cols": 3
+    },
+    {
+      "id": "SORT.8",
+      "f": "=SORT(Data!B1:B5, 1, -1)",
+      "rows": 5,
+      "differs": {
+        "libreoffice": "LibreOffice reads -1 as OOXML's descending order; Google's is_ascending is TRUE or FALSE, and -1 coerces to TRUE"
+      },
+      "note": "Awaits Google's answer: a formula both accept that answers differently (formulas.md \"Where Google and the standards differ\")."
+    },
+    {
+      "id": "UNIQUE.1",
+      "f": "=UNIQUE(Data!E1:G4)",
+      "rows": 3,
+      "cols": 3,
+      "expect": [
+        ["Red", "Yellow", "Red"],
+        ["Blue", "Magenta", "Blue"],
+        ["Green", "White", "Green"]
+      ],
+      "cite": "https://support.google.com/docs/answer/10522653 (example `=UNIQUE(B2:D5)` over its colours table, which is this fixture)"
+    },
+    {
+      "id": "UNIQUE.2",
+      "f": "=UNIQUE(Data!E1:G4, TRUE)",
+      "rows": 4,
+      "cols": 2,
+      "expect": [
+        ["Red", "Yellow"],
+        ["Blue", "Magenta"],
+        ["Red", "Yellow"],
+        ["Green", "White"]
+      ],
+      "cite": "https://support.google.com/docs/answer/10522653 (example `=UNIQUE(B2:D5, TRUE)`)"
+    },
+    {
+      "id": "UNIQUE.3",
+      "f": "=UNIQUE(Data!E1:G4, FALSE, TRUE)",
+      "rows": 2,
+      "cols": 3,
+      "expect": [
+        ["Blue", "Magenta", "Blue"],
+        ["Green", "White", "Green"]
+      ],
+      "cite": "https://support.google.com/docs/answer/10522653 (example `=UNIQUE(B2:D5, FALSE, TRUE)`)"
+    },
+    {
+      "id": "UNIQUE.4",
+      "f": "=UNIQUE({\"a\"; \"A\"; \"b\"})",
+      "rows": 3,
+      "differs": {
+        "libreoffice": "LibreOffice compares text ignoring case, so \"a\" and \"A\" are one; LiveDoc keeps them two"
+      },
+      "note": "Awaits Google's answer: whether Google's UNIQUE tells case apart."
+    },
+    {
+      "id": "UNIQUE.5",
+      "f": "=UNIQUE(Data!B1:B5)",
+      "rows": 3
+    },
+    {
+      "id": "SORTN.1",
+      "f": "=SORTN(Data!A1:C5)",
+      "rows": 1,
+      "cols": 3,
+      "expect": [["Alice", 100, 90]],
+      "cite": "https://support.google.com/docs/answer/7354624 (example: `=SORTN(A2:C6)`, over its table, which is this fixture)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      }
+    },
+    {
+      "id": "SORTN.2",
+      "f": "=SORTN(Data!A1:C5, 2)",
+      "rows": 2,
+      "cols": 3,
+      "expect": [
+        ["Alice", 100, 90],
+        ["Bob", 75, 85]
+      ],
+      "cite": "https://support.google.com/docs/answer/7354624 (example: `=SORTN(A2:C6, 2)`, over its table, which is this fixture)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      }
+    },
+    {
+      "id": "SORTN.3",
+      "f": "=SORTN(Data!A1:C5, 3, 0, Data!B1:B5, FALSE)",
+      "rows": 3,
+      "cols": 3,
+      "expect": [
+        ["Alice", 100, 90],
+        ["Devon", 100, 95],
+        ["Carol", 80, 85]
+      ],
+      "cite": "https://support.google.com/docs/answer/7354624 (example: `=SORTN(A2:C6, 3, 0, B2:B6, FALSE)`, over its table, which is this fixture)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      }
+    },
+    {
+      "id": "SORTN.4",
+      "f": "=SORTN(Data!A1:C5, 3, 1, Data!B1:B5, FALSE)",
+      "rows": 4,
+      "cols": 3,
+      "expect": [
+        ["Alice", 100, 90],
+        ["Devon", 100, 95],
+        ["Carol", 80, 85],
+        ["Eloise", 80, 90]
+      ],
+      "cite": "https://support.google.com/docs/answer/7354624 (example: `=SORTN(A2:C6, 3, 1, B2:B6, FALSE)`, over its table, which is this fixture)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      }
+    },
+    {
+      "id": "SORTN.5",
+      "f": "=SORTN(Data!A1:C5, 3, 2, Data!B1:B5, FALSE)",
+      "rows": 3,
+      "cols": 3,
+      "expect": [
+        ["Alice", 100, 90],
+        ["Carol", 80, 85],
+        ["Bob", 75, 85]
+      ],
+      "cite": "https://support.google.com/docs/answer/7354624 (example: `=SORTN(A2:C6, 3, 2, B2:B6, FALSE)`, over its table, which is this fixture)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      }
+    },
+    {
+      "id": "SORTN.6",
+      "f": "=SORTN(Data!A1:C5, 3, 3, Data!B1:B5, FALSE)",
+      "rows": 5,
+      "cols": 3,
+      "expect": [
+        ["Alice", 100, 90],
+        ["Devon", 100, 95],
+        ["Carol", 80, 85],
+        ["Eloise", 80, 90],
+        ["Bob", 75, 85]
+      ],
+      "cite": "https://support.google.com/docs/answer/7354624 (example: `=SORTN(A2:C6, 3, 3, B2:B6, FALSE)`, over its table, which is this fixture)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      }
+    },
+    {
+      "id": "SORTN.7",
+      "f": "=SORTN(Data!A1:C5, 3, 3, 2, FALSE, 3, FALSE)",
+      "rows": 3,
+      "cols": 3,
+      "expect": [
+        ["Devon", 100, 95],
+        ["Alice", 100, 90],
+        ["Eloise", 80, 90]
+      ],
+      "cite": "https://support.google.com/docs/answer/7354624 (example: `=SORTN(A2:C6, 3, 3, 2, FALSE, 3, FALSE)`, over its table, which is this fixture)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      }
+    },
+    {
+      "id": "SORTN.8",
+      "f": "=SORTN(Data!A1:C5, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
+      },
+      "note": "Awaits Google's answer: its help page says n \"must be greater than 0\" but not which error 0 gives."
+    }
+  ]
+}

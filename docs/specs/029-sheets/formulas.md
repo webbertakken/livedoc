@@ -242,7 +242,17 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
 `MINUTE`, `SECOND`, `WEEKDAY`, `WEEKNUM`, `ISOWEEKNUM`, `EDATE`, `EOMONTH`, `DATEDIF`, `DAYS`, `NETWORKDAYS`,
 `WORKDAY`, `YEARFRAC`.
 
-**Arrays**: `FILTER`, `SORT`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `TRANSPOSE`, `ARRAYFORMULA`.
+**Arrays**: `FILTER`, `SORT`, `SORTN`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `TRANSPOSE`, `ARRAYFORMULA`.
+
+- `SORT` and `SORTN` sort by a column of the range by its number, or by a column beside it as tall as the range
+  (Google's); rows equal under every key keep their order. `SORT` with four arguments is OOXML's
+  `SORT(array, sort_index, sort_order, by_col)`, which Google refuses (D38): 1 ascending, -1 descending, `by_col`
+  sorting the columns by a row.
+- `SORTN(range, [n], [display_ties_mode], ...)` gives the first `n` rows (1 by default) once sorted, by every column
+  first to last when no key is given. Rows tie when their keys are equal: mode 1 adds the rows tied with the last,
+  mode 2 drops the rows tied with one before them, mode 3 gives every row of the first `n` keys.
+- `FILTER` with a single value after one condition longer than one is OOXML's `FILTER(array, include, if_empty)`
+  (D38): that value is what it gives when nothing passes, where it would be `#N/A`.
 
 **Finance**: `PMT`, `FV`, `PV`, `NPV`, `IRR`, `RATE`, `NPER`.
 
@@ -759,7 +769,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `SMALL`               | Statistical | `SMALL(data, n)`                                                                                               | Google      | `SMALL`                          | built                                                         |
 | `SORT`                | Filter      | `SORT(range, sort_column, is_ascending, [sort_column2], [is_ascending2])`                                      | Google      | `COM.MICROSOFT.SORT`             | built                                                         |
 | `SORTBY`              | Arrays      |                                                                                                                | OpenFormula | `COM.MICROSOFT.SORTBY`           | built                                                         |
-| `SORTN`               | Filter      | `SORTN(range, [n], [display_ties_mode], [sort_column1, is_ascending1], ...)`                                   | Google      | S5                               | planned                                                       |
+| `SORTN`               | Filter      | `SORTN(range, [n], [display_ties_mode], [sort_column1, is_ascending1], ...)`                                   | Google      | S5                               | built                                                         |
 | `SPARKLINE`           | Google      | `SPARKLINE(data, [options])`                                                                                   | Google      | S5                               | planned                                                       |
 | `SPLIT`               | Text        | `SPLIT(text, delimiter, [split_by_each], [remove_empty_text])`                                                 | Google      | S5                               | built                                                         |
 | `SQRT`                | Math        | `SQRT(value)`                                                                                                  | Google      | `SQRT`                           | built                                                         |
@@ -822,7 +832,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `UNARY_PERCENT`       | Operator    | `UNARY_PERCENT(percentage)`                                                                                    | Google      | S5                               | built                                                         |
 | `UNICHAR`             | Text        | `UNICHAR(number)`                                                                                              | Google      | `UNICHAR`                        | planned                                                       |
 | `UNICODE`             | Text        | `UNICODE(text)`                                                                                                | Google      | `UNICODE`                        | planned                                                       |
-| `UNIQUE`              | Filter      | `UNIQUE(range)`                                                                                                | Google      | `COM.MICROSOFT.UNIQUE`           | built                                                         |
+| `UNIQUE`              | Filter      | `UNIQUE(range, [by_column], [exactly_once])`                                                                   | Google      | `COM.MICROSOFT.UNIQUE`           | built                                                         |
 | `UPLUS`               | Operator    | `UPLUS(value)`                                                                                                 | Google      | S5                               | built                                                         |
 | `UPPER`               | Text        | `UPPER(text)`                                                                                                  | Google      | `UPPER`                          | built                                                         |
 | `VALUE`               | Text        | `VALUE(text)`                                                                                                  | Google      | `VALUE`                          | built                                                         |
