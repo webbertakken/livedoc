@@ -55,7 +55,7 @@ export function OfficeModeSwitch({ mode, modes, onChange }: OfficeModeChoice) {
         className="relative flex h-10 shrink-0 items-center gap-1.5 rounded-full pr-2 pl-3 text-sm font-medium text-(--office-ink) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
       >
         <ModeGlyph mode={mode} />
-        <span className="phone:sr-only">{current?.label}</span>
+        <span className="text-optical-centre phone:sr-only">{current?.label}</span>
         <ChevronDownIcon size={14} />
       </button>
       {open ? (
