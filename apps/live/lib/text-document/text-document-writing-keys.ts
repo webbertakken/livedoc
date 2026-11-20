@@ -1,6 +1,6 @@
-// The Tab key in the writing (docs/specs/034-text-documents/text-and-paragraphs.md "Writing"): Tab types a tab; over
-// a selection that spans paragraphs, Tab and Shift+Tab step their indent; elsewhere Shift+Tab is held, so focus stays
-// in the writing. A list item's start is the list's (lists.md "Levels"), bound ahead of these.
+// Keys in the writing (docs/specs/034-text-documents/text-and-paragraphs.md "Writing"): Tab types a tab; over a
+// selection that spans paragraphs, Tab and Shift+Tab step their indent; elsewhere Shift+Tab is held, so focus stays in
+// the writing. Shift+Enter is a line break. A list item's start is the list's (lists.md "Levels"), bound ahead of these.
 import { keymap } from 'prosemirror-keymap';
 import type { Command, EditorState, Plugin } from 'prosemirror-state';
 import type { TextFormatting } from './text-document-formatting';
@@ -27,8 +27,14 @@ export const pressShiftTab =
       ? stepIndent(formatting(), -INDENT_STEP_PT)(state, dispatch, view)
       : true;
 
-/** Tab and Shift+Tab where the writing takes edits; read only, the keys are the browser's. */
-export function tabKeysPlugin(formatting: () => TextFormatting): Plugin {
+/** Shift+Enter: a line break in place of the selection, the paragraph kept whole. */
+export const insertLineBreak: Command = (state, dispatch) => {
+  dispatch?.(state.tr.insertText('\n').scrollIntoView());
+  return true;
+};
+
+/** Tab, Shift+Tab and Shift+Enter where the writing takes edits; read only, the keys are the browser's. */
+export function writingKeysPlugin(formatting: () => TextFormatting): Plugin {
   const editing =
     (command: Command): Command =>
     (state, dispatch, view) =>
@@ -36,5 +42,6 @@ export function tabKeysPlugin(formatting: () => TextFormatting): Plugin {
   return keymap({
     Tab: editing(pressTab(formatting)),
     'Shift-Tab': editing(pressShiftTab(formatting)),
+    'Shift-Enter': editing(insertLineBreak),
   });
 }

@@ -288,3 +288,58 @@ div.text-document-kept {
     12px/1.3 system-ui,
     sans-serif;
 }
+/*
+ * Non-printing characters (docs/specs/034-text-documents/text-and-paragraphs.md "Non-printing characters"): drawn in
+ * the muted ink for the paper (#5f6368 on white 6.3:1, #9aa0a6 on #1e1f20 6.4:1), never selected, their text alt
+ * empty so a screen reader reads none of them.
+ */
+.text-document-page {
+  --text-document-mark-ink: light-dark(#5f6368, #9aa0a6);
+}
+.text-document-pilcrow::after,
+.text-document-space-mark::after,
+.text-document-break-mark::before,
+.text-document-marks .text-document-tab::before,
+.text-document-marks .text-document-section-break::after {
+  color: var(--text-document-mark-ink);
+  user-select: none;
+  pointer-events: none;
+  font-weight: 400;
+  font-style: normal;
+  text-decoration: none;
+}
+.text-document-pilcrow::after {
+  content: '¶' / '';
+}
+.text-document-space-mark {
+  position: relative;
+}
+.text-document-space-mark::after {
+  content: '·' / '';
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.text-document-break-mark::before {
+  content: '↵' / '';
+}
+.text-document-marks .text-document-tab {
+  position: relative;
+}
+.text-document-marks .text-document-tab::before {
+  content: '→' / '';
+  position: absolute;
+  left: 0;
+}
+.text-document-marks .text-document-section-break {
+  overflow: visible;
+  text-align: center;
+}
+.text-document-marks .text-document-section-break::after {
+  content: 'Section break' / '';
+  position: relative;
+  top: -0.75em;
+  padding: 0 6px;
+  background: light-dark(#ffffff, #1e1f20);
+  font-size: 10px;
+}

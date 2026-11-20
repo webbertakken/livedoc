@@ -1,8 +1,8 @@
 # Text and paragraphs
 
 **Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
-keep rules, borders and shading, paint format, clear formatting, the Tab key and tab stops are built; the rest is
-specified.
+keep rules, borders and shading, paint format, clear formatting, the Tab key, Shift+Enter, tab stops and
+non-printing characters are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -277,8 +277,14 @@ returns to the writing. Share roles: an Editor only.
 
 ## Non-printing characters
 
-View > Show non-printing characters: ¶ at each paragraph's end, · for spaces, → for tabs, ↵ for line breaks, and
-"Page break", "Section break" labels at breaks. Per person.
+- **View > Show non-printing characters** (⌘⇧P, Ctrl+Shift+P elsewhere) shows what the writing holds but never prints:
+  off by default, per person, remembered in this browser (`livedoc:v2:text-document-marks`) (default).
+- **Drawn**: ¶ at each paragraph's end, · in the middle of each space (the space keeps its width), → at the start of
+  each tab's space, ↵ at each line break, and "Section break" on a section break's line (page and column breaks get
+  theirs when they are built, [Page layout](page-layout.md#breaks)).
+- In a muted ink for the paper they are on (#5f6368 on white, 6.3:1; #9aa0a6 on dark paper, 6.4:1), never part of the
+  text: not selected, copied, printed or read by a screen reader.
+- Telemetry: `UI · Toggled · TextDocumentNonPrinting`.
 
 ## Typing aids
 

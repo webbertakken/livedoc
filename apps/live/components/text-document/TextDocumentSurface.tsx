@@ -28,7 +28,7 @@ import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-forma
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { listMarkersPlugin } from '@/lib/text-document/text-document-list-markers';
-import { tabKeysPlugin } from '@/lib/text-document/text-document-tab-keys';
+import { writingKeysPlugin } from '@/lib/text-document/text-document-writing-keys';
 import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
 import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
@@ -78,7 +78,12 @@ import {
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
 import { pageBox, useTextDocumentSection } from '@/lib/text-document/text-document-page';
-import { useTextDocumentRuler } from '@/lib/text-document/useTextDocumentRuler';
+import {
+  NON_PRINTING_TOGGLE,
+  RULER_TOGGLE,
+  useTextDocumentViewToggle,
+} from '@/lib/text-document/useTextDocumentViewToggle';
+import { nonPrintingPlugin, setNonPrinting } from '@/lib/text-document/text-document-non-printing';
 import {
   startUndoStep,
   TEXT_DOCUMENT_PAGE_ORIGIN,
@@ -249,9 +254,11 @@ export function TextDocumentSurface({
               paragraphBoxesPlugin(readFormatting),
               // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
               listKeysPlugin(),
-              // Tab types a tab, and each tab is drawn to its stop (text-and-paragraphs.md "Tab stops").
-              tabKeysPlugin(readFormatting),
+              // Tab types a tab, Shift+Enter breaks the line (text-and-paragraphs.md "Writing"), and each tab is
+              // drawn to its stop ("Tab stops").
+              writingKeysPlugin(readFormatting),
               tabStopsPlugin(readFormatting),
+              nonPrintingPlugin(false),
               listMarkersPlugin(
                 () => TextDocumentState.lists(doc),
                 (listener) => subscribeLists(doc, listener),
@@ -346,7 +353,12 @@ export function TextDocumentSurface({
   // The page drawn at its setup, and the ruler that sets its margins, indents and tab stops (editing-surface.md
   // "The ruler", page-layout.md "Page setup").
   const section = useTextDocumentSection(liveDoc, format, state === 'ready');
-  const ruler = useTextDocumentRuler();
+  const ruler = useTextDocumentViewToggle(RULER_TOGGLE);
+  // View > Show non-printing characters (text-and-paragraphs.md "Non-printing characters").
+  const marks = useTextDocumentViewToggle(NON_PRINTING_TOGGLE);
+  useEffect(() => {
+    if (editorView && !editorView.isDestroyed) setNonPrinting(editorView, marks.shown);
+  }, [editorView, marks.shown]);
   const readRulerFormatting = useCallback(
     () =>
       liveDoc.current
@@ -378,9 +390,11 @@ export function TextDocumentSurface({
       ...modeActions,
       ...panels.actions,
       ...ruler.actions,
+      ...marks.actions,
     }),
     [
       ruler.actions,
+      marks.actions,
       editorView,
       writes,
       formatting.actions,

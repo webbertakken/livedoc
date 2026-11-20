@@ -110,7 +110,7 @@ function tabDecorationsAfter(
 }
 
 /** The paragraphs a transaction touched, by their position in its new document. */
-function touchedParagraphs(tr: Transaction): number[] {
+export function touchedParagraphs(tr: Transaction): number[] {
   const out = new Set<number>();
   tr.mapping.maps.forEach((map, i) => {
     map.forEach((_from, _to, start, end) => {

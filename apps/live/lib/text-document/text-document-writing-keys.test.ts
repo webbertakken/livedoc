@@ -1,11 +1,16 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/text-and-paragraphs.md "Writing": Tab types a tab; over paragraphs, Tab and Shift+Tab
-// step the indent; elsewhere Shift+Tab is held so focus stays in the writing.
+// step the indent; elsewhere Shift+Tab is held so focus stays in the writing; Shift+Enter is a line break.
 import { describe, expect, it } from 'vitest';
 import { EditorState, TextSelection, type Command } from 'prosemirror-state';
 import { Styles, type ParagraphProps } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { pressShiftTab, pressTab, tabKeysPlugin } from './text-document-tab-keys';
+import {
+  insertLineBreak,
+  pressShiftTab,
+  pressTab,
+  writingKeysPlugin,
+} from './text-document-writing-keys';
 
 const formatting = () => ({ styles: Styles.builtIn('odf'), defaults: Styles.defaults() });
 const p = (text: string) =>
@@ -35,12 +40,16 @@ describe('the Tab key', () => {
     expect([back.done, back.props(0)]).toEqual([true, undefined]);
   });
 
+  it('breaks the line on Shift+Enter, keeping one paragraph', () => {
+    expect(run(insertLineBreak, 2).text).toBe('o\nne|two');
+  });
+
   it('holds Shift+Tab within a paragraph, changing nothing', () => {
     expect(run(pressShiftTab(formatting), 2)).toMatchObject({ done: true, text: 'one|two' });
   });
 
   it('leaves both keys to the browser where the writing takes no edits', () => {
-    const plugin = tabKeysPlugin(formatting);
+    const plugin = writingKeysPlugin(formatting);
     const doc = schema.node('doc', null, [p('one')]);
     const state = EditorState.create({ doc });
     const press = (key: string, editable: boolean) =>
