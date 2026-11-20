@@ -1,7 +1,8 @@
 # Migration of stored sheets
 
-**Status: specified; the plan is built** (`planSheetMigration` in `@livedoc/sheets`, what a document becomes, worked out
-without touching it). Nothing is run.
+**Status: specified; the plan and its dry run are built** (`planSheetMigration` in `@livedoc/sheets`, what a
+document becomes, worked out without touching it, and counted across documents behind `SHEETS_MIGRATION=dry`).
+Nothing is run.
 
 How the Plan Sheets already stored become spreadsheets (S3, ruled 2026-11-18: migrated once into the new model, with no compatibility layer
 beyond the 30-day way back).
@@ -35,15 +36,24 @@ so no stored sheet is ever left behind.
 
 ## How it runs
 
-- It is built first as admin routes that run it one document at a time (default): wiring it to every room before
-  Plan stops making Sheet tabs would only make more to migrate.
-- Once Plan no longer makes Sheet tabs, the room's next open or upkeep does it, document by document: idempotent,
-  one transaction a document, logged `[sheets-migrate] <documentId> tabs=<n> sheets=<n> cells=<n>` and a failure
-  `[sheets-migrate] failed <documentId> <reason>` that leaves the document as it was to be tried again.
-- A **dry run** (an admin route, read-only) counts what each document would become, run on preview then production
-  before any write, with Webber's yes.
-- **A way back**: until the Plan Sheet's code is removed, a document's pre-migration rows are kept (renamed) for 30
-  days and an admin route restores them.
+Ruled (director, 2026-11-20): a background job behind a Worker variable, as the content move was
+([Moving content into rooms](../006-document/document-storage-move.md)); no admin routes.
+
+- **The switch**: the api's plain variable `SHEETS_MIGRATION`; absent (every fork's default) is off, `dry` plans,
+  and `run` is reserved for the migration itself. docs.nu sets it in `hosted-vars.json`.
+- **A dry run** (built): while the switch is `dry`, each minute up to 25 documents not planned yet, oldest first,
+  are asked by their rooms what they would become; each answer is written to D1's `sheet_migration_plans` as
+  counts (kind, tabs, sheets, cells, card tables, charts, tabs removed, sheets left), never content, logged
+  `[sheets-migrate] dry <documentId> kind=<kind> ...`. A failed plan is named and tried again after an hour.
+- **The operator's read** (built): `scripts/sheets-migration.ts dry (--local | --remote)` in `apps/api` reads those
+  rows through wrangler, never writing, prints the totals by kind and every failure, and exits non-zero until every
+  document is planned and none failed. Run on preview, then production, before any write, with Webber's yes.
+- **The run** (Phase 16, where its targets exist): with the switch at `run`, once Plan no longer makes Sheet tabs,
+  each room does it in one transaction a document: idempotent, logged
+  `[sheets-migrate] <documentId> tabs=<n> sheets=<n> cells=<n>`, and a failure `[sheets-migrate] failed <documentId>
+<reason>` that leaves the document as it was to be tried again.
+- **A way back** (Phase 16): until the Plan Sheet's code is removed, a document's pre-migration rows are kept for 30
+  days and the same switch at `restore` puts them back.
 
 ## What a person sees
 

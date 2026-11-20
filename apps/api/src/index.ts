@@ -1,4 +1,5 @@
 import { CONTENT_MOVE_CRON, sweepContentMoves } from './document-room/content-move-sweep';
+import { sweepSheetMigrationDry } from './sheets-migration/sheet-migration-sweep';
 import {
   fromLegacyRequest,
   isLegacyDocumentsPath,
@@ -625,6 +626,12 @@ const worker = {
       ctx.waitUntil(
         sweepContentMoves(env, Date.now()).catch((err: unknown) =>
           console.error('[content-move] sweep failed', err),
+        ),
+      );
+      // docs/specs/029-sheets/migration.md "How it runs": while SHEETS_MIGRATION is `dry`, documents are planned.
+      ctx.waitUntil(
+        sweepSheetMigrationDry(env, Date.now()).catch((err: unknown) =>
+          console.error('[sheets-migrate] dry sweep failed', err),
         ),
       );
       // docs/specs/016-platform/bug-reports.md "Filing": every 15 minutes, stored bug reports are filed again.

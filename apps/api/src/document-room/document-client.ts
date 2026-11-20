@@ -17,6 +17,7 @@ import type { DocumentCopy, DocumentOutline } from './document-content';
 import type { CreateOutcome, DocumentSeed } from './document-create';
 import { roomUnavailable, type RouteIdentity } from './document-route';
 import type { DocumentRoomRpc } from './document-rpc';
+import type { SheetMigrationDry } from '../sheets-migration/sheet-migration-dry';
 import type { ShareAnswer, ShareMessage, SharedTabCopy } from './tab-shares';
 
 /** Names the document on every worker-to-room fetch. */
@@ -45,6 +46,8 @@ export type DocumentRoomClient = {
   receiveShares(from: string, messages: ShareMessage[]): Promise<ShareAnswer[]>;
   // The sweep's move of the document's content into the room (content-move.ts); null when D1 has no row for it.
   move(): Promise<MoveOutcome | null>;
+  // The Sheets migration's dry run (sheet-migration-dry.ts): what the document would become, as counts.
+  sheetMigrationDry(documentName: string): Promise<SheetMigrationDry>;
 };
 
 type RoomStub = DocumentRoomRpc & {
@@ -85,6 +88,7 @@ export function documentRoom(
     shareJoined: (tabId, member, seen) => room.shareJoined(documentId, tabId, member, seen),
     receiveShares: (from, messages) => room.receiveShares(documentId, from, messages),
     move: () => room.move(documentId),
+    sheetMigrationDry: (documentName) => room.sheetMigrationDry(documentId, documentName),
   };
 }
 

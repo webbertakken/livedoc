@@ -110,6 +110,9 @@ export type Env = {
   // unset means no caller is ever exempt, which is the pre-existing
   // behaviour and keeps self-hosting working with no configuration.
   INTERNAL_EVENTS_KEY?: string;
+  // The Sheets migration's switch (docs/specs/029-sheets/migration.md "How it runs"): `dry` plans every document
+  // and writes counts to D1; absent or anything else is off. A plain var, in hosted-vars.json when docs.nu turns it on.
+  SHEETS_MIGRATION?: string;
   // Resend API key (docs/specs/014-identity/transactional-email.md): the email transport when no `EMAIL` binding
   // exists (email/transport.ts). `wrangler secret put RESEND_API_KEY`; `apps/api/.dev.vars` locally.
   RESEND_API_KEY?: string;

@@ -169,6 +169,10 @@ Older releases kept every document's content in D1; current ones keep it in the 
 2. **The move**: D1 migrations `0105` to `0111` run with the deploy, then the api moves every document's content into its room: an every-minute sweep (the `* * * * *` cron in `apps/api/wrangler.toml`; keep it) moves 25 at a time, and a document opened before its turn moves on that request. Moving reads D1 and never changes its content tables. Wait until every document has moved: from `apps/api`, `node --import ../../scripts/ts-source-hooks.mjs scripts/content-move.ts verify --remote --plan plan.json` passes, given a plan taken before the deploy with `... scripts/content-move.ts plan --remote --out plan.json` (both only read, through wrangler).
 3. **The drop**: D1's content tables, the move records and the legacy room class go. Its migration refuses to run while any document has not moved, so taking it early fails the deploy and changes nothing.
 
+## Sheets migration: a dry run, off by default
+
+Plan Sheets stored before spreadsheets will be migrated in a later release ([Migration](../specs/029-sheets/migration.md)). Until then you can count what it would do: set `SHEETS_MIGRATION = "dry"` under `[vars]` in `apps/api/wrangler.toml` and deploy. The every-minute cron then plans 25 documents at a time into D1's `sheet_migration_plans` (counts only, nothing changed). Read them from `apps/api` with `node --import ../../scripts/ts-source-hooks.mjs scripts/sheets-migration.ts dry --remote`, which only reads and exits non-zero until every document is planned. Remove the variable afterwards.
+
 ## MCP server (optional, needs sign-in)
 
 The `apps/mcp` worker ([MCP server](../specs/015-api/mcp-server.md)) lets people connect an AI tool (Claude, any MCP
