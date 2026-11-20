@@ -63,6 +63,7 @@ export function book(
     cols?: number;
     arrays?: ArrayDialect;
     iteration?: Iteration;
+    locale?: string;
   } = {},
 ) {
   const full: BookSpec = Object.values(spec).every((v) => typeof v === 'string')
@@ -71,7 +72,7 @@ export function book(
   const sheets = makeSheets(full, opts);
   const wb = new Workbook({
     sheets,
-    locale: 'en-GB',
+    locale: opts.locale ?? 'en-GB',
     now: () => opts.now ?? 46303.5,
     rand: opts.rand ?? (() => 0.5),
     cards: opts.cards ?? null,

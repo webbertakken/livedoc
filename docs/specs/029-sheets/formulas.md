@@ -239,12 +239,28 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
 
 **Text**: `CONCATENATE`, `TEXTJOIN`, `LEFT`, `RIGHT`, `MID`, `LEN`, `UPPER`, `LOWER`, `PROPER`, `TRIM`,
 `CLEAN`, `SUBSTITUTE`, `REPLACE`, `FIND`, `SEARCH`, `REPT`, `EXACT`, `TEXT`, `VALUE`, `CHAR`, `CODE`, `SPLIT`,
-`JOIN`, `REGEXMATCH`, `REGEXEXTRACT`, `REGEXREPLACE`, `HYPERLINK`.
+`JOIN`, `REGEXMATCH`, `REGEXEXTRACT`, `REGEXREPLACE`, `HYPERLINK`, `T`, `UNICHAR`, `UNICODE`, `ASC`, `LENB`,
+`LEFTB`, `RIGHTB`, `MIDB`, `REPLACEB`, `FINDB`, `SEARCHB`, `DOLLAR`, `FIXED`, `ROMAN`, `ARABIC`.
 
 - `SPLIT` reads each part as Google Sheets does: one that reads as a number (or a percentage) is that number, and one
   written as an ISO date, `YYYY-MM-DD` (a time after it allowed, `2026-10-26 12:00`), is that date. Other
   date-looking text (`26/10/2026`, `Oct 26 2026`, `2026-1-5`) stays text, as its day and month read differently by
   locale; so does an ISO date that is no date (`2026-02-30`). A blank part stays text.
+- `CONCATENATE` takes ranges, read across rows (Google's); `JOIN` takes one row or one column an argument, a table is
+  `#VALUE!`.
+- `REGEXMATCH`, `REGEXEXTRACT` and `REGEXREPLACE` read text only: a number is `#VALUE!`, as Google's help says.
+  `REGEXEXTRACT` gives the whole match, its one capture group, or its capture groups one column each.
+- The byte functions (`LENB`, `LEFTB`, `RIGHTB`, `MIDB`, `REPLACEB`, `FINDB`, `SEARCHB`) count an East Asian wide or
+  full-width character (CJK, kana, Hangul, the full-width forms) as 2 bytes and any other as 1, half-width katakana
+  too (default, D43). As Google's examples have it, a starting position counts characters, and a character a window
+  of bytes starts or reaches is kept whole (`MIDB("熊本=熊本", 2, 4)` is `本=熊`).
+- `ASC` turns full-width ASCII and katakana half-width, a voiced kana into the kana and its mark (`ガ` to `ｶﾞ`).
+- `UNICHAR` of a number with no character (0, a surrogate half, an unassigned code point) is `#VALUE!`.
+- `DOLLAR` and `FIXED` write in the spreadsheet's locale, rounded half away from zero, left of the point for a
+  negative number of places; `DOLLAR` in the locale's currency, US dollars where the locale names no region LiveDoc
+  knows (default, D44). Past 127 places is `#VALUE!`, Excel's limit.
+- `ROMAN` and `ARABIC` write and read Roman numerals as LibreOffice does: `ROMAN` 0 to 3999 (0 is empty text) with a
+  relaxation from 0 to 4; `ARABIC` any case, empty text 0, and a numeral no relaxation writes (`MMMM`) `#VALUE!`.
 
 **Date and time**: `TODAY`, `NOW`, `DATE`, `TIME`, `DATEVALUE`, `TIMEVALUE`, `YEAR`, `MONTH`, `DAY`, `HOUR`,
 `MINUTE`, `SECOND`, `WEEKDAY`, `WEEKNUM`, `ISOWEEKNUM`, `EDATE`, `EOMONTH`, `DATEDIF`, `DAYS`, `NETWORKDAYS`,
@@ -319,7 +335,47 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   refuses but OpenFormula or OOXML defines (more arguments, a range where Google takes one value) follows that
   standard, in every document. So a file's formula keeps its meaning (C1) and nothing Google accepts changes. `CONCAT`
   is the first: Google's joins two values, the standards' any number, ranges whole; LiveDoc's is the standards'.
-  Formulas both accept but answer differently are ruled one by one as the categories meet them.
+  Formulas both accept but answer differently wait on Webber's ruling (they touch C1); until then they follow Google
+  (S6), and each is listed below as the categories meet it, so the ruling applies in one pass.
+- **Both accept, answered differently**: Google's answer is documented; a file from LibreOffice (measured) shows
+  Google's answer in LiveDoc today, not the one it was written with. The case is the oracle's (`oracle/cases/`).
+
+  | Formula                              | Google (LiveDoc today)       | LibreOffice / the standard           | Case                 |
+  | ------------------------------------ | ---------------------------- | ------------------------------------ | -------------------- |
+  | `CELL("sheet", A1)`                  | the sheet's name             | its number (OpenFormula)             | Info CELL.9          |
+  | `SORT(range, 1, -1)`                 | -1 is TRUE: ascending        | descending (OOXML sort_order)        | Filter SORT.8        |
+  | `TIME(1.9, 0, 0)`                    | 1:00, the hour truncated     | 1:54, the fraction kept              | Date TIME.4          |
+  | `ADDRESS(2, 3, 1, TRUE, "Data")`     | `Data!$C$2`                  | `Data.$C$2` (LibreOffice's syntax)   | Lookup ADDRESS.7     |
+  | `FORMULATEXT(B1)`                    | the formula as Google writes | in LibreOffice's syntax (`$Data.A1`) | Lookup FORMULATEXT.1 |
+  | `CODE("熊")`                         | Unicode: 29066               | an 8-bit code page: 231              | Text CODE.3          |
+  | `MIDB("熊本=熊本", 2, 4)`            | `本=熊`: start in characters | ` 本=`: start in bytes, half a space | Text MIDB.2          |
+  | `REPLACEB("熊本=熊本", 2, 3, "new")` | `熊new熊本`                  | ` new=熊本`                          | Text REPLACEB.2      |
+  | `UNICHAR(0)`, `UNICHAR(55296)`       | `#VALUE!`                    | empty text                           | Text UNICHAR.3, .4   |
+
+- **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
+  (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
+
+  | Formula                                          | LiveDoc today                    | LibreOffice                | Case                                            |
+  | ------------------------------------------------ | -------------------------------- | -------------------------- | ----------------------------------------------- |
+  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")` | 1, never negative                | -2                         | Date DATEDIF.9                                  |
+  | `NETWORKDAYS.INTL(a, b, "1111111")`              | `#VALUE!`                        | 0                          | Date NETWORKDAYS.INTL.4                         |
+  | `FILTER(range, numbers)`                         | any number but 0 passes          | only positive numbers pass | Filter FILTER.8                                 |
+  | `UNIQUE({"a"; "A"})`                             | two values, case kept            | one, case ignored          | Filter UNIQUE.4                                 |
+  | `CELL("address", Data!B3)`                       | `Data!$B$3`                      | `$Data.$B$3`               | Info CELL.2                                     |
+  | `CELL("width", A1)`                              | ECMA-376 characters (D40)        | LibreOffice's own measure  | Info CELL.14                                    |
+  | `AND("TRUE", 1)`                                 | TRUE, text read as a truth       | `#VALUE!`                  | Logical AND.8                                   |
+  | `IFNA(A4, 1)` over an empty cell                 | empty                            | 0                          | Logical IFNA.4                                  |
+  | `ADDRESS(1, 1, 5)`                               | `#VALUE!`                        | `$A$1`                     | Lookup ADDRESS.9                                |
+  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`  | `1TRUE`, `true`: TRUE as text    | `11`, `1`: TRUE as 1       | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
+  | `"z" < TRUE`                                     | TRUE: booleans after text        | FALSE                      | Syntax compare.4                                |
+  | `SUM(1:2)` over booleans                         | booleans skipped                 | booleans counted           | Syntax range.3                                  |
+  | `0^-1`, `(-8)^(1/3)`                             | `#DIV/0!`, `#NUM!`               | `#NUM!`, -2                | Syntax errors.4, .8                             |
+  | `CHAR(0)`, `CODE("")`                            | `#VALUE!`                        | empty text, 0              | Text CHAR.2, CODE.2                             |
+  | `FIND("", "abc")`, `SEARCH("", "abc")`           | 1, as Excel                      | `#VALUE!`                  | Text FIND.5, SEARCH.7                           |
+  | `PROPER("it's 2nd")`                             | `It's 2nd`                       | `It'S 2Nd`                 | Text PROPER.3                                   |
+  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`          | `熊`, `本`: a cut character kept | a space                    | Text LEFTB.6, RIGHTB.5                          |
+  | `LENB("ｶﾀｶﾅ")`                                   | 4: half-width kana 1 byte (D43)  | 8                          | Text LENB.6                                     |
+
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
   Excel asks for it, and S5's convention for the same Google-only names.
@@ -341,11 +397,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `ADDRESS`             | Lookup      | `ADDRESS(row, column, [absolute_relative_mode], [use_a1_notation], [sheet])`                                   | Google      | `ADDRESS`                        | built                                                         |
 | `AMORLINC`            | Financial   | `AMORLINC(cost, purchase_date, first_period_end, salvage, period, rate, [basis])`                              | Google      | `AMORLINC`                       | planned                                                       |
 | `AND`                 | Logical     | `AND(logical_expression1, [logical_expression2, ...])`                                                         | Google      | `AND`                            | built                                                         |
-| `ARABIC`              | Text        | `ARABIC(roman_numeral)`                                                                                        | Google      | `ARABIC`                         | planned                                                       |
+| `ARABIC`              | Text        | `ARABIC(roman_numeral)`                                                                                        | Google      | `ARABIC`                         | built                                                         |
 | `AREAS`               | OpenFormula |                                                                                                                | OpenFormula | `AREAS`                          | planned                                                       |
 | `ARRAYFORMULA`        | Google      | `ARRAYFORMULA(array_formula)`                                                                                  | Google      | S5                               | built                                                         |
 | `ARRAY_CONSTRAIN`     | Array       | `ARRAY_CONSTRAIN(input_range, num_rows, num_cols)`                                                             | Google      | S5                               | planned                                                       |
-| `ASC`                 | Text        | `ASC(text)`                                                                                                    | Google      | `ASC`                            | planned                                                       |
+| `ASC`                 | Text        | `ASC(text)`                                                                                                    | Google      | `ASC`                            | built                                                         |
 | `ASIN`                | Math        | `ASIN(value)`                                                                                                  | Google      | `ASIN`                           | planned                                                       |
 | `ASINH`               | Math        | `ASINH(value)`                                                                                                 | Google      | `ASINH`                          | planned                                                       |
 | `ATAN`                | Math        | `ATAN(value)`                                                                                                  | Google      | `ATAN`                           | planned                                                       |
@@ -465,7 +521,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `DIVIDE`              | Operator    | `DIVIDE(dividend, divisor)`                                                                                    | Google      | S5                               | built                                                         |
 | `DMAX`                | Database    | `DMAX(database, field, criteria)`                                                                              | Google      | `DMAX`                           | planned                                                       |
 | `DMIN`                | Database    | `DMIN(database, field, criteria)`                                                                              | Google      | `DMIN`                           | planned                                                       |
-| `DOLLAR`              | Text        | `DOLLAR(number, [number_of_places])`                                                                           | Google      | `DOLLAR`                         | planned                                                       |
+| `DOLLAR`              | Text        | `DOLLAR(number, [number_of_places])`                                                                           | Google      | `DOLLAR`                         | built                                                         |
 | `DOLLARDE`            | Financial   | `DOLLARDE(fractional_price, unit)`                                                                             | Google      | `DOLLARDE`                       | planned                                                       |
 | `DOLLARFR`            | Financial   | `DOLLARFR(decimal_price, unit)`                                                                                | Google      | `DOLLARFR`                       | planned                                                       |
 | `DPRODUCT`            | Database    | `DPRODUCT(database, field, criteria)`                                                                          | Google      | `DPRODUCT`                       | planned                                                       |
@@ -504,11 +560,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `FDIST`               | Statistical | `FDIST(x, degrees_freedom1, degrees_freedom2)`                                                                 | Google      | `FDIST`                          | planned                                                       |
 | `FILTER`              | Filter      | `FILTER(range, condition1, [condition2])`                                                                      | Google      | `COM.MICROSOFT.FILTER`           | built                                                         |
 | `FIND`                | Text        | `FIND(search_for, text_to_search, [starting_at])`                                                              | Google      | `FIND`                           | built                                                         |
-| `FINDB`               | Text        | `FINDB(search_for, text_to_search, [starting_at])`                                                             | Google      | `FINDB`                          | planned                                                       |
+| `FINDB`               | Text        | `FINDB(search_for, text_to_search, [starting_at])`                                                             | Google      | `FINDB`                          | built                                                         |
 | `FINV`                | Statistical | `FINV(probability, degrees_freedom1, degrees_freedom2)`                                                        | Google      | `FINV`                           | planned                                                       |
 | `FISHER`              | Statistical | `FISHER(value)`                                                                                                | Google      | `FISHER`                         | planned                                                       |
 | `FISHERINV`           | Statistical | `FISHERINV(value)`                                                                                             | Google      | `FISHERINV`                      | planned                                                       |
-| `FIXED`               | Text        | `FIXED(number, [number_of_places], [suppress_separator])`                                                      | Google      | `FIXED`                          | planned                                                       |
+| `FIXED`               | Text        | `FIXED(number, [number_of_places], [suppress_separator])`                                                      | Google      | `FIXED`                          | built                                                         |
 | `FLATTEN`             | Array       | `FLATTEN(range1,[range2,...])`                                                                                 | Google      | S5                               | planned                                                       |
 | `FLOOR`               | Math        | `FLOOR(value, [factor])`                                                                                       | Google      | `FLOOR`                          | built                                                         |
 | `FLOOR.MATH`          | Math        | `FLOOR.MATH(number, [significance], [mode])`                                                                   | Google      | `COM.MICROSOFT.FLOOR.MATH`       | planned                                                       |
@@ -620,7 +676,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `LARGE`               | Statistical | `LARGE(data, n)`                                                                                               | Google      | `LARGE`                          | built                                                         |
 | `LCM`                 | Math        | `LCM(value1, value2)`                                                                                          | Google      | `LCM`                            | built                                                         |
 | `LEFT`                | Text        | `LEFT(string, [number_of_characters])`                                                                         | Google      | `LEFT`                           | built                                                         |
-| `LEFTB`               | Text        | `LEFTB(string, num_of_bytes)`                                                                                  | Google      | `LEFTB`                          | planned                                                       |
+| `LEFTB`               | Text        | `LEFTB(string, num_of_bytes)`                                                                                  | Google      | `LEFTB`                          | built                                                         |
 | `LEGACY.CHIDIST`      | OpenFormula |                                                                                                                | OpenFormula | `LEGACY.CHIDIST`                 | planned                                                       |
 | `LEGACY.CHIINV`       | OpenFormula |                                                                                                                | OpenFormula | `LEGACY.CHIINV`                  | planned                                                       |
 | `LEGACY.CHITEST`      | OpenFormula |                                                                                                                | OpenFormula | `LEGACY.CHITEST`                 | planned                                                       |
@@ -630,7 +686,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `LEGACY.NORMSINV`     | OpenFormula |                                                                                                                | OpenFormula | `LEGACY.NORMSINV`                | planned                                                       |
 | `LEGACY.TDIST`        | OpenFormula |                                                                                                                | OpenFormula | `LEGACY.TDIST`                   | planned                                                       |
 | `LEN`                 | Text        | `LEN(text)`                                                                                                    | Google      | `LEN`                            | built                                                         |
-| `LENB`                | Text        | `LENB(string)`                                                                                                 | Google      | `LENB`                           | planned                                                       |
+| `LENB`                | Text        | `LENB(string)`                                                                                                 | Google      | `LENB`                           | built                                                         |
 | `LET`                 | Logical     | `LET(name1, value_expression1, [name2, …], [value_expression2, …], formula_expression )`                       | Google      | `COM.MICROSOFT.LET`              | planned                                                       |
 | `LINEST`              | Array       | `LINEST(known_data_y, [known_data_x], [calculate_b], [verbose])`                                               | Google      | `LINEST`                         | planned                                                       |
 | `LN`                  | Math        | `LN(value)`                                                                                                    | Google      | `LN`                             | built                                                         |
@@ -656,7 +712,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `MDURATION`           | Financial   | `MDURATION(settlement, maturity, rate, yield, frequency, [day_count_convention])`                              | Google      | `MDURATION`                      | planned                                                       |
 | `MEDIAN`              | Statistical | `MEDIAN(value1, [value2, ...])`                                                                                | Google      | `MEDIAN`                         | built                                                         |
 | `MID`                 | Text        | `MID(string, starting_at, extract_length)`                                                                     | Google      | `MID`                            | built                                                         |
-| `MIDB`                | Text        | `MIDB(string)`                                                                                                 | Google      | `MIDB`                           | planned                                                       |
+| `MIDB`                | Text        | `MIDB(string, starting_at, extract_length_bytes)`                                                              | Google      | `MIDB`                           | built                                                         |
 | `MIN`                 | Statistical | `MIN(value1, [value2, ...])`                                                                                   | Google      | `MIN`                            | built                                                         |
 | `MINA`                | Statistical | `MINA(value1, value2)`                                                                                         | Google      | `MINA`                           | planned                                                       |
 | `MINIFS`              | Statistical | `MINIFS(range, criteria_range1, criterion1, [criteria_range2, criterion2], …)`                                 | Google      | `COM.MICROSOFT.MINIFS`           | built                                                         |
@@ -750,11 +806,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `REGEXMATCH`          | Text        | `REGEXMATCH(text, regular_expression)`                                                                         | Google      | S5                               | built                                                         |
 | `REGEXREPLACE`        | Text        | `REGEXREPLACE(text, regular_expression, replacement)`                                                          | Google      | S5                               | built                                                         |
 | `REPLACE`             | Text        | `REPLACE(text, position, length, new_text)`                                                                    | Google      | `REPLACE`                        | built                                                         |
-| `REPLACEB`            | Text        | `REPLACEB(text, position, num_bytes, new_text)`                                                                | Google      | `REPLACEB`                       | planned                                                       |
+| `REPLACEB`            | Text        | `REPLACEB(text, position, num_bytes, new_text)`                                                                | Google      | `REPLACEB`                       | built                                                         |
 | `REPT`                | Text        | `REPT(text_to_repeat, number_of_repetitions)`                                                                  | Google      | `REPT`                           | built                                                         |
 | `RIGHT`               | Text        | `RIGHT(string, [number_of_characters])`                                                                        | Google      | `RIGHT`                          | built                                                         |
-| `RIGHTB`              | Text        | `RIGHTB(string, num_of_bytes)`                                                                                 | Google      | `RIGHTB`                         | planned                                                       |
-| `ROMAN`               | Text        | `ROMAN(number, [rule_relaxation])`                                                                             | Google      | `ROMAN`                          | planned                                                       |
+| `RIGHTB`              | Text        | `RIGHTB(string, num_of_bytes)`                                                                                 | Google      | `RIGHTB`                         | built                                                         |
+| `ROMAN`               | Text        | `ROMAN(number, [rule_relaxation])`                                                                             | Google      | `ROMAN`                          | built                                                         |
 | `ROUND`               | Math        | `ROUND(value, [places])`                                                                                       | Google      | `ROUND`                          | built                                                         |
 | `ROUNDDOWN`           | Math        | `ROUNDDOWN(value, [places])`                                                                                   | Google      | `ROUNDDOWN`                      | built                                                         |
 | `ROUNDUP`             | Math        | `ROUNDUP(value, [places])`                                                                                     | Google      | `ROUNDUP`                        | built                                                         |
@@ -764,7 +820,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `RSQ`                 | Statistical | `RSQ(data_y, data_x)`                                                                                          | Google      | `RSQ`                            | planned                                                       |
 | `SCAN`                | Array       | `SCAN(initial_value, array_or_range, LAMBDA)`                                                                  | Google      | `COM.MICROSOFT.SCAN`             | planned                                                       |
 | `SEARCH`              | Text        | `SEARCH(search_for, text_to_search, [starting_at])`                                                            | Google      | `SEARCH`                         | built                                                         |
-| `SEARCHB`             | Text        | `SEARCHB(search_for, text_to_search, [starting_at])`                                                           | Google      | `SEARCHB`                        | planned                                                       |
+| `SEARCHB`             | Text        | `SEARCHB(search_for, text_to_search, [starting_at])`                                                           | Google      | `SEARCHB`                        | built                                                         |
 | `SEC`                 | Math        | `SEC(angle)`                                                                                                   | Google      | `SEC`                            | planned                                                       |
 | `SECH`                | Math        | `SECH(value)`                                                                                                  | Google      | `SECH`                           | planned                                                       |
 | `SECOND`              | Date        | `SECOND(time)`                                                                                                 | Google      | `SECOND`                         | built                                                         |
@@ -808,7 +864,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `SUMXMY2`             | Array       | `SUMXMY2(array_x, array_y)`                                                                                    | Google      | `SUMXMY2`                        | planned                                                       |
 | `SWITCH`              | Logical     | `SWITCH(expression, case1, value1, [default or case2, value2], …)`                                             | Google      | `COM.MICROSOFT.SWITCH`           | built                                                         |
 | `SYD`                 | Financial   | `SYD(cost, salvage, life, period)`                                                                             | Google      | `SYD`                            | planned                                                       |
-| `T`                   | Text        | `T(value)`                                                                                                     | Google      | `T`                              | planned                                                       |
+| `T`                   | Text        | `T(value)`                                                                                                     | Google      | `T`                              | built                                                         |
 | `T.DIST`              | Statistical | `T.DIST(x, degrees_freedom, cumulative)`                                                                       | Google      | `COM.MICROSOFT.T.DIST`           | planned                                                       |
 | `T.DIST.2T`           | Statistical | `T.DIST.2T(x, degrees_freedom)`                                                                                | Google      | `COM.MICROSOFT.T.DIST.2T`        | planned                                                       |
 | `T.DIST.RT`           | Statistical | `T.DIST.RT(x, degrees_freedom)`                                                                                | Google      | `COM.MICROSOFT.T.DIST.RT`        | planned                                                       |
@@ -844,8 +900,8 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `TYPE`                | Info        | `TYPE(value)`                                                                                                  | Google      | `TYPE`                           | built                                                         |
 | `UMINUS`              | Operator    | `UMINUS(value)`                                                                                                | Google      | S5                               | built                                                         |
 | `UNARY_PERCENT`       | Operator    | `UNARY_PERCENT(percentage)`                                                                                    | Google      | S5                               | built                                                         |
-| `UNICHAR`             | Text        | `UNICHAR(number)`                                                                                              | Google      | `UNICHAR`                        | planned                                                       |
-| `UNICODE`             | Text        | `UNICODE(text)`                                                                                                | Google      | `UNICODE`                        | planned                                                       |
+| `UNICHAR`             | Text        | `UNICHAR(number)`                                                                                              | Google      | `UNICHAR`                        | built                                                         |
+| `UNICODE`             | Text        | `UNICODE(text)`                                                                                                | Google      | `UNICODE`                        | built                                                         |
 | `UNIQUE`              | Filter      | `UNIQUE(range, [by_column], [exactly_once])`                                                                   | Google      | `COM.MICROSOFT.UNIQUE`           | built                                                         |
 | `UPLUS`               | Operator    | `UPLUS(value)`                                                                                                 | Google      | S5                               | built                                                         |
 | `UPPER`               | Text        | `UPPER(text)`                                                                                                  | Google      | `UPPER`                          | built                                                         |
@@ -961,3 +1017,5 @@ The code cites each by its id.
 - **D40** CELL's "width": ECMA-376's characters, a 7-pixel digit and 5 pixels of padding, whole characters (default).
 - **D41** CELL's "format" for LiveDoc's own formats: Number `,`, Currency `C`, Date `D4`, Time `D8`, ... (default).
 - **D42** CELL's "filename" and "protect": Empty text; 1 only under a protected range or sheet (default).
+- **D43** What the byte functions count as two bytes: East Asian wide and full-width characters (UAX #11) (default).
+- **D44** DOLLAR's currency: The locale's region's, US dollars for a region not in LiveDoc's table (default).

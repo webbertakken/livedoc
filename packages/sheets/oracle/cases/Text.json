@@ -1,0 +1,1198 @@
+{
+  "category": "Text",
+  "data": [
+    ["Aeñds", 1234.567, "a"],
+    ["熊本=熊本", -2.35, null],
+    ["Aeñ", "cat", "b"],
+    ["熊本", true, 3],
+    ["ＡＢＣ　１２３", "XIV", null],
+    ["グーグル", null, null],
+    ["ｶﾀｶﾅ", 499, null],
+    ["  two   spaces ", "hello world", null]
+  ],
+  "cases": [
+    {
+      "id": "ARABIC.1",
+      "f": "=ARABIC(\"XIV\")"
+    },
+    {
+      "id": "ARABIC.2",
+      "f": "=ARABIC(\"MMXIII\")"
+    },
+    {
+      "id": "ARABIC.3",
+      "f": "=ARABIC(\"mcmxii\")"
+    },
+    {
+      "id": "ARABIC.4",
+      "f": "=ARABIC(\"\")"
+    },
+    {
+      "id": "ARABIC.5",
+      "f": "=ARABIC(\"IIII\")"
+    },
+    {
+      "id": "ARABIC.6",
+      "f": "=ARABIC(\"ABC\")"
+    },
+    {
+      "id": "ARABIC.7",
+      "f": "=ARABIC(Data!B5)"
+    },
+    {
+      "id": "ARABIC.8",
+      "f": "=ARABIC(\"-XIV\")"
+    },
+    {
+      "id": "ARABIC.9",
+      "f": "=ARABIC(\" XIV \")"
+    },
+    {
+      "id": "ARABIC.10",
+      "f": "=ARABIC(\"MMMM\")"
+    },
+    {
+      "id": "ASC.1",
+      "f": "=ASC(\"グーグル\")",
+      "expect": [["ｸﾞｰｸﾞﾙ"]],
+      "cite": "https://support.google.com/docs/answer/9061514 (example `=ASC(\"グーグル\")` gives ｸﾞｰｸﾞﾙ)"
+    },
+    {
+      "id": "ASC.2",
+      "f": "=ASC(Data!A5)"
+    },
+    {
+      "id": "ASC.3",
+      "f": "=ASC(\"abc\")"
+    },
+    {
+      "id": "ASC.4",
+      "f": "=ASC(12)"
+    },
+    {
+      "id": "ASC.5",
+      "f": "=ASC(\"カタカナ\")"
+    },
+    {
+      "id": "ASC.6",
+      "f": "=ASC(\"パ\")"
+    },
+    {
+      "id": "CHAR.1",
+      "f": "=CHAR(65)"
+    },
+    {
+      "id": "CHAR.2",
+      "f": "=CHAR(0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives empty text for 0; LiveDoc has no character 0, #VALUE!"
+      },
+      "note": "Awaits Google's answer: its help asks for a Unicode table number and says nothing of 0."
+    },
+    {
+      "id": "CHAR.3",
+      "f": "=CHAR(9731)",
+      "expect": [["☃"]],
+      "cite": "https://support.google.com/docs/answer/3094120 (\"Convert a number into a character according to the current Unicode table\"; U+2603 is ☃)",
+      "differs": {
+        "libreoffice": "LibreOffice reads CHAR through a legacy 8-bit code page, so past 255 is Err:502"
+      }
+    },
+    {
+      "id": "CHAR.4",
+      "f": "=CHAR(65.9)"
+    },
+    {
+      "id": "CHAR.5",
+      "f": "=CHAR(\"x\")"
+    },
+    {
+      "id": "CLEAN.1",
+      "f": "=CLEAN(\"a\"&CHAR(9)&\"b\"&CHAR(10)&\"c\")"
+    },
+    {
+      "id": "CLEAN.2",
+      "f": "=CLEAN(Data!A1)"
+    },
+    {
+      "id": "CLEAN.3",
+      "f": "=CLEAN(12)"
+    },
+    {
+      "id": "CODE.1",
+      "f": "=CODE(\"A\")"
+    },
+    {
+      "id": "CODE.2",
+      "f": "=CODE(\"\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0 for empty text; LiveDoc has no first character, #VALUE!"
+      },
+      "note": "Awaits Google's answer: its help reads \"the first character\" and says nothing of empty text."
+    },
+    {
+      "id": "CODE.3",
+      "f": "=CODE(Data!A4)",
+      "expect": [[29066]],
+      "cite": "https://support.google.com/docs/answer/3094122 (\"Returns the numeric Unicode map value of the first character\"; 熊 is U+718A)",
+      "differs": {
+        "libreoffice": "LibreOffice reads CODE through a legacy 8-bit code page"
+      }
+    },
+    {
+      "id": "CODE.4",
+      "f": "=CODE(12)"
+    },
+    {
+      "id": "CONCATENATE.1",
+      "f": "=CONCATENATE(\"a\", \"b\", \"c\")"
+    },
+    {
+      "id": "CONCATENATE.2",
+      "f": "=CONCATENATE(Data!C1:C4)",
+      "expect": [["ab3"]],
+      "cite": "https://support.google.com/docs/answer/3094123 (sample `CONCATENATE(A2:B7)`: \"cell values are appended across rows\"; the empty C2 adds nothing)",
+      "differs": {
+        "libreoffice": "LibreOffice takes single values only, as OOXML does; Google takes a range (wider, D38)"
+      }
+    },
+    {
+      "id": "CONCATENATE.3",
+      "f": "=CONCATENATE(1, TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice writes TRUE as 1; LiveDoc writes it TRUE, as Google writes a boolean as text"
+      },
+      "note": "Awaits Google's answer: its help shows only strings."
+    },
+    {
+      "id": "CONCATENATE.4",
+      "f": "=CONCATENATE(Data!B6, \"x\")"
+    },
+    {
+      "id": "DOLLAR.1",
+      "f": "=DOLLAR(1.2351, 4)"
+    },
+    {
+      "id": "DOLLAR.2",
+      "f": "=DOLLAR(2.35)"
+    },
+    {
+      "id": "DOLLAR.3",
+      "f": "=DOLLAR(-2.35)"
+    },
+    {
+      "id": "DOLLAR.4",
+      "f": "=DOLLAR(1234.567, -2)"
+    },
+    {
+      "id": "DOLLAR.5",
+      "f": "=DOLLAR(Data!B1)"
+    },
+    {
+      "id": "DOLLAR.6",
+      "f": "=DOLLAR(\"abc\")"
+    },
+    {
+      "id": "DOLLAR.7",
+      "f": "=DOLLAR(0.125, 2)"
+    },
+    {
+      "id": "DOLLAR.8",
+      "f": "=DOLLAR(1234.5, 0)"
+    },
+    {
+      "id": "DOLLAR.9",
+      "f": "=DOLLAR(Data!B6)"
+    },
+    {
+      "id": "EXACT.1",
+      "f": "=EXACT(\"a\", \"a\")"
+    },
+    {
+      "id": "EXACT.2",
+      "f": "=EXACT(\"a\", \"A\")"
+    },
+    {
+      "id": "EXACT.3",
+      "f": "=EXACT(1, \"1\")"
+    },
+    {
+      "id": "EXACT.4",
+      "f": "=EXACT(Data!B6, \"\")"
+    },
+    {
+      "id": "FIND.1",
+      "f": "=FIND(\"ñ\", Data!A1)"
+    },
+    {
+      "id": "FIND.2",
+      "f": "=FIND(\"x\", \"abc\")"
+    },
+    {
+      "id": "FIND.3",
+      "f": "=FIND(\"a\", \"banana\", 3)"
+    },
+    {
+      "id": "FIND.4",
+      "f": "=FIND(\"a\", \"banana\", 0)"
+    },
+    {
+      "id": "FIND.5",
+      "f": "=FIND(\"\", \"abc\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses empty search text; LiveDoc finds it at starting_at, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help says nothing of empty search text."
+    },
+    {
+      "id": "FIND.6",
+      "f": "=FIND(\"A\", \"banana\")"
+    },
+    {
+      "id": "FINDB.1",
+      "f": "=FINDB(\"新\", \"农历新年\", 2)"
+    },
+    {
+      "id": "FINDB.2",
+      "f": "=FINDB(\"x\", \"abc\")"
+    },
+    {
+      "id": "FINDB.3",
+      "f": "=FINDB(\"c\", \"abc\")"
+    },
+    {
+      "id": "FINDB.4",
+      "f": "=FINDB(\"本\", Data!A2)"
+    },
+    {
+      "id": "FINDB.5",
+      "f": "=FINDB(\"熊\", Data!A2, 2)"
+    },
+    {
+      "id": "FINDB.6",
+      "f": "=FINDB(\"c\", \"abc\", 0)"
+    },
+    {
+      "id": "FIXED.1",
+      "f": "=FIXED(3.141592653, 2)"
+    },
+    {
+      "id": "FIXED.2",
+      "f": "=FIXED(966364281, 4, 1)"
+    },
+    {
+      "id": "FIXED.3",
+      "f": "=FIXED(1234.567)"
+    },
+    {
+      "id": "FIXED.4",
+      "f": "=FIXED(-1234.567, 1)"
+    },
+    {
+      "id": "FIXED.5",
+      "f": "=FIXED(1234.567, -2)"
+    },
+    {
+      "id": "FIXED.6",
+      "f": "=FIXED(1234.567, 2, TRUE)"
+    },
+    {
+      "id": "FIXED.7",
+      "f": "=FIXED(\"x\")"
+    },
+    {
+      "id": "FIXED.8",
+      "f": "=FIXED(Data!B6)"
+    },
+    {
+      "id": "FIXED.9",
+      "f": "=FIXED(-0.001, 2)"
+    },
+    {
+      "id": "FIXED.10",
+      "f": "=FIXED(Data!B1, 0, FALSE)"
+    },
+    {
+      "id": "JOIN.1",
+      "f": "=JOIN(\" and-a \", {1, 2, \"1 2 3 4\"})",
+      "expect": [["1 and-a 2 and-a 1 2 3 4"]],
+      "cite": "https://support.google.com/docs/answer/3094077 (sample `JOIN(\" and-a \",{1,2,\"1 2 3 4\"})`: the elements joined with the delimiter)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.JOIN is #NAME? there"
+      }
+    },
+    {
+      "id": "JOIN.2",
+      "f": "=JOIN(\",\", {1, 2, 3}, {4; 5; 6})",
+      "expect": [["1,2,3,4,5,6"]],
+      "cite": "https://support.google.com/docs/answer/3094077 (sample `JOIN(\",\",{1,2,3},{4;5;6})`: one or more one-dimensional arrays, in order)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.JOIN is #NAME? there"
+      }
+    },
+    {
+      "id": "JOIN.3",
+      "f": "=JOIN(, {1, 2, 3})",
+      "expect": [["123"]],
+      "cite": "https://support.google.com/docs/answer/3094077 (\"delimiter may be specified as blank, e.g. JOIN(,{1,2,3})\"; \"similar to that of CONCATENATE\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.JOIN is #NAME? there"
+      }
+    },
+    {
+      "id": "JOIN.4",
+      "f": "=JOIN(\"-\", Data!C1:C4)",
+      "expect": [["a--b-3"]],
+      "cite": "https://support.google.com/docs/answer/3094077 (sample `JOIN(\"-\",A1:A100)`: each element of the range, an empty one as empty text)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.JOIN is #NAME? there"
+      }
+    },
+    {
+      "id": "JOIN.5",
+      "f": "=JOIN(\"-\", {1, 2; 3, 4})",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094077 (\"Concatenates the elements of one or more one-dimensional arrays\"; a table is two-dimensional)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.JOIN is #NAME? there"
+      }
+    },
+    {
+      "id": "LEFT.1",
+      "f": "=LEFT(\"abc\", 2)"
+    },
+    {
+      "id": "LEFT.2",
+      "f": "=LEFT(\"abc\")"
+    },
+    {
+      "id": "LEFT.3",
+      "f": "=LEFT(\"abc\", 0)"
+    },
+    {
+      "id": "LEFT.4",
+      "f": "=LEFT(\"abc\", -1)"
+    },
+    {
+      "id": "LEFT.5",
+      "f": "=LEFT(\"abc\", 10)"
+    },
+    {
+      "id": "LEFT.6",
+      "f": "=LEFT(1234, 2)"
+    },
+    {
+      "id": "LEFTB.1",
+      "f": "=LEFTB(Data!A3, 2)",
+      "expect": [["Ae"]],
+      "cite": "https://support.google.com/docs/answer/9367470 (example `=LEFTB(A2, 2)` over Aeñ gives Ae)"
+    },
+    {
+      "id": "LEFTB.2",
+      "f": "=LEFTB(Data!A4, 2)",
+      "expect": [["熊"]],
+      "cite": "https://support.google.com/docs/answer/9367470 (example `=LEFTB(A4, 2)` over 熊本 gives 熊)"
+    },
+    {
+      "id": "LEFTB.3",
+      "f": "=LEFTB(\"abc\")"
+    },
+    {
+      "id": "LEFTB.4",
+      "f": "=LEFTB(\"abc\", -1)"
+    },
+    {
+      "id": "LEFTB.5",
+      "f": "=LEFTB(\"abc\", 10)"
+    },
+    {
+      "id": "LEFTB.6",
+      "f": "=LEFTB(Data!A4, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice writes half a double-byte character as a space; LiveDoc keeps a character the window starts, as Google's MIDB example does"
+      },
+      "note": "Awaits Google's answer: its examples never cut a character at the start of a window."
+    },
+    {
+      "id": "LEN.1",
+      "f": "=LEN(\"abc\")"
+    },
+    {
+      "id": "LEN.2",
+      "f": "=LEN(Data!A4)"
+    },
+    {
+      "id": "LEN.3",
+      "f": "=LEN(Data!B6)"
+    },
+    {
+      "id": "LEN.4",
+      "f": "=LEN(1234.5)"
+    },
+    {
+      "id": "LEN.5",
+      "f": "=LEN(\"😀\")"
+    },
+    {
+      "id": "LENB.1",
+      "f": "=LENB(Data!A3)",
+      "expect": [[3]],
+      "cite": "https://support.google.com/docs/answer/9367584 (example `=LENB(A2)` over Aeñ gives 3)"
+    },
+    {
+      "id": "LENB.2",
+      "f": "=LENB(Data!A4)",
+      "expect": [[4]],
+      "cite": "https://support.google.com/docs/answer/9367584 (example `=LENB(A4)` over 熊本 gives 4)"
+    },
+    {
+      "id": "LENB.3",
+      "f": "=LENB(\"\")"
+    },
+    {
+      "id": "LENB.4",
+      "f": "=LENB(123)"
+    },
+    {
+      "id": "LENB.5",
+      "f": "=LENB(Data!A5)"
+    },
+    {
+      "id": "LENB.6",
+      "f": "=LENB(Data!A7)",
+      "differs": {
+        "libreoffice": "LibreOffice counts half-width katakana as two bytes (Asian script); LiveDoc as one, as the double-byte character sets do (D43)"
+      },
+      "note": "Awaits Google's answer: its help counts 熊本 as 4 and says nothing of half-width kana."
+    },
+    {
+      "id": "LOWER.1",
+      "f": "=LOWER(\"AbC\")"
+    },
+    {
+      "id": "LOWER.2",
+      "f": "=LOWER(Data!A5)"
+    },
+    {
+      "id": "LOWER.3",
+      "f": "=LOWER(TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice writes TRUE as 1; LiveDoc as TRUE, lowered to true"
+      },
+      "note": "Awaits Google's answer: its help shows only strings."
+    },
+    {
+      "id": "MID.1",
+      "f": "=MID(\"abcdef\", 2, 3)"
+    },
+    {
+      "id": "MID.2",
+      "f": "=MID(\"abc\", 0, 1)"
+    },
+    {
+      "id": "MID.3",
+      "f": "=MID(\"abc\", 2, -1)"
+    },
+    {
+      "id": "MID.4",
+      "f": "=MID(\"abc\", 5, 1)"
+    },
+    {
+      "id": "MID.5",
+      "f": "=MID(Data!A2, 2, 4)",
+      "expect": [["本=熊本"]],
+      "cite": "https://support.google.com/docs/answer/9367691 (example `=MID(A5,2,4)` over 熊本=熊本 gives 本=熊本)"
+    },
+    {
+      "id": "MIDB.1",
+      "f": "=MIDB(Data!A1, 2, 2)",
+      "expect": [["eñ"]],
+      "cite": "https://support.google.com/docs/answer/9367691 (example `=MIDB(A2, 2, 2)` over Aeñds gives eñ)"
+    },
+    {
+      "id": "MIDB.2",
+      "f": "=MIDB(Data!A2, 2, 4)",
+      "expect": [["本=熊"]],
+      "cite": "https://support.google.com/docs/answer/9367691 (example `=MIDB(A4,2,4)` over 熊本=熊本 gives 本=熊)",
+      "differs": {
+        "libreoffice": "LibreOffice counts starting_at in bytes and writes the cut half as a space; Google counts it in characters and keeps the cut character"
+      }
+    },
+    {
+      "id": "MIDB.3",
+      "f": "=MIDB(\"abc\", 0, 1)"
+    },
+    {
+      "id": "MIDB.4",
+      "f": "=MIDB(\"abc\", 2, -1)"
+    },
+    {
+      "id": "MIDB.5",
+      "f": "=MIDB(\"abc\", 5, 1)"
+    },
+    {
+      "id": "MIDB.6",
+      "f": "=MIDB(\"abcdef\", 2, 3)"
+    },
+    {
+      "id": "PROPER.1",
+      "f": "=PROPER(\"hello world\")"
+    },
+    {
+      "id": "PROPER.2",
+      "f": "=PROPER(\"hELLO wORLD\")"
+    },
+    {
+      "id": "PROPER.3",
+      "f": "=PROPER(\"it's 2nd-rate\")",
+      "differs": {
+        "libreoffice": "LibreOffice starts a word after any character but a letter (It'S 2Nd); LiveDoc after a space or mark, not an apostrophe or a digit"
+      },
+      "note": "Awaits Google's answer: its help says \"the first letter of each word\" and does not say what ends a word."
+    },
+    {
+      "id": "PROPER.4",
+      "f": "=PROPER(Data!B8)"
+    },
+    {
+      "id": "REGEXMATCH.1",
+      "f": "=REGEXMATCH(\"Spreadsheets\", \"S.r\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3098292 (sample `REGEXMATCH(\"Spreadsheets\", \"S.r\")`: \"Spr\" matches)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXMATCH.2",
+      "f": "=REGEXMATCH(\"Spreadsheets\", \"^x\")",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3098292 (\"returns a logical value, i.e. TRUE or FALSE\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXMATCH.3",
+      "f": "=REGEXMATCH(123, \"2\")",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3098292 (\"This function only works with text (not numbers) as input\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXEXTRACT.1",
+      "f": "=REGEXEXTRACT(\"My favorite number is 241, but my friend's is 17\", \"\\d+\")",
+      "expect": [["241"]],
+      "cite": "https://support.google.com/docs/answer/3098244 (\"REGEXEXTRACT will return \\\"241\\\" in this example because it returns the first matching case\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXEXTRACT is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXEXTRACT.2",
+      "f": "=REGEXEXTRACT(\"You can also extract multiple values from text.\", \"You can also (\\w+) multiple (\\w+) from text.\")",
+      "cols": 2,
+      "expect": [["extract", "values"]],
+      "cite": "https://support.google.com/docs/answer/3098244 (\"The example above will return two columns of data, \\\"extract\\\" in the first and \\\"values\\\" in the second\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXEXTRACT is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXEXTRACT.3",
+      "f": "=REGEXEXTRACT(241, \"\\d\")",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3098244 (\"This function only works with text (not numbers) as input\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXEXTRACT is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.1",
+      "f": "=REGEXREPLACE(\"Spreadsheets\", \"S.*d\", \"Bed\")",
+      "expect": [["Bedsheets"]],
+      "cite": "https://support.google.com/docs/answer/3098245 (sample `REGEXREPLACE(\"Spreadsheets\", \"S.*d\", \"Bed\")`: \"Spread\" replaced)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.2",
+      "f": "=REGEXREPLACE(\"a1b2\", \"\\d\", \"#\")",
+      "expect": [["a#b#"]],
+      "cite": "https://support.google.com/docs/answer/3098245 (\"All matching instances in text will be replaced\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.3",
+      "f": "=REGEXREPLACE(12, \"1\", \"x\")",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3098245 (\"This function only works with text (not numbers) as input\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REPLACE.1",
+      "f": "=REPLACE(\"abcdef\", 2, 3, \"X\")"
+    },
+    {
+      "id": "REPLACE.2",
+      "f": "=REPLACE(\"abc\", 0, 1, \"X\")"
+    },
+    {
+      "id": "REPLACE.3",
+      "f": "=REPLACE(\"abc\", 5, 1, \"X\")"
+    },
+    {
+      "id": "REPLACE.4",
+      "f": "=REPLACE(Data!A1, 2, 3, \"new\")",
+      "expect": [["Anews"]],
+      "cite": "https://support.google.com/docs/answer/9367752 (example `=REPLACE(A3, 2, 3,\"new\")` over Aeñds gives Anews)"
+    },
+    {
+      "id": "REPLACE.5",
+      "f": "=REPLACE(Data!A2, 2, 3, \"new\")",
+      "expect": [["熊new本"]],
+      "cite": "https://support.google.com/docs/answer/9367752 (example `=REPLACE(A5, 2, 3,\"new\")` over 熊本=熊本 gives 熊new本)"
+    },
+    {
+      "id": "REPLACEB.1",
+      "f": "=REPLACEB(Data!A1, 2, 3, \"new\")",
+      "expect": [["Anews"]],
+      "cite": "https://support.google.com/docs/answer/9367752 (example `=REPLACEB(A2, 2, 3,\"new\")` over Aeñds gives Anews)"
+    },
+    {
+      "id": "REPLACEB.2",
+      "f": "=REPLACEB(Data!A2, 2, 3, \"new\")",
+      "expect": [["熊new熊本"]],
+      "cite": "https://support.google.com/docs/answer/9367752 (example `=REPLACEB(A4, 2, 3,\"new\")` over 熊本=熊本 gives 熊new熊本)",
+      "differs": {
+        "libreoffice": "LibreOffice counts position in bytes and writes the cut half as a space; Google counts it in characters"
+      }
+    },
+    {
+      "id": "REPLACEB.3",
+      "f": "=REPLACEB(\"abc\", 0, 1, \"x\")"
+    },
+    {
+      "id": "REPLACEB.4",
+      "f": "=REPLACEB(\"abc\", 2, -1, \"x\")"
+    },
+    {
+      "id": "REPLACEB.5",
+      "f": "=REPLACEB(\"abc\", 5, 1, \"x\")",
+      "expect": [["abcx"]],
+      "cite": "https://support.google.com/docs/answer/9367752 (\"REPLACEB returns the same value as REPLACE if the input text has only single byte characters\"; REPLACE(\"abc\", 5, 1, \"x\") is abcx)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a position past the end in REPLACEB, not in REPLACE"
+      }
+    },
+    {
+      "id": "REPT.1",
+      "f": "=REPT(\"ab\", 3)"
+    },
+    {
+      "id": "REPT.2",
+      "f": "=REPT(\"ab\", 0)"
+    },
+    {
+      "id": "REPT.3",
+      "f": "=REPT(\"ab\", -1)"
+    },
+    {
+      "id": "REPT.4",
+      "f": "=REPT(\"ab\", 2.9)"
+    },
+    {
+      "id": "RIGHT.1",
+      "f": "=RIGHT(\"abc\", 2)"
+    },
+    {
+      "id": "RIGHT.2",
+      "f": "=RIGHT(\"abc\")"
+    },
+    {
+      "id": "RIGHT.3",
+      "f": "=RIGHT(\"abc\", 0)"
+    },
+    {
+      "id": "RIGHT.4",
+      "f": "=RIGHT(\"abc\", -1)"
+    },
+    {
+      "id": "RIGHT.5",
+      "f": "=RIGHT(\"abc\", 10)"
+    },
+    {
+      "id": "RIGHTB.1",
+      "f": "=RIGHTB(Data!A3, 2)",
+      "expect": [["eñ"]],
+      "cite": "https://support.google.com/docs/answer/9367697 (example `=RIGHTB(A2, 2)` over Aeñ gives eñ)"
+    },
+    {
+      "id": "RIGHTB.2",
+      "f": "=RIGHTB(Data!A4, 2)",
+      "expect": [["本"]],
+      "cite": "https://support.google.com/docs/answer/9367697 (example `=RIGHTB(A4, 2)` over 熊本 gives 本)"
+    },
+    {
+      "id": "RIGHTB.3",
+      "f": "=RIGHTB(\"abc\")"
+    },
+    {
+      "id": "RIGHTB.4",
+      "f": "=RIGHTB(\"abc\", -1)"
+    },
+    {
+      "id": "RIGHTB.5",
+      "f": "=RIGHTB(Data!A4, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice writes half a double-byte character as a space; LiveDoc keeps a character the window reaches, as Google's MIDB example does"
+      },
+      "note": "Awaits Google's answer: its examples never cut a character this way."
+    },
+    {
+      "id": "ROMAN.1",
+      "f": "=ROMAN(499, 0)",
+      "expect": [["CDXCIX"]],
+      "cite": "https://support.google.com/docs/answer/3094153 (rule_relaxation 0: \"ROMAN(499,0) is CDXCIX\")"
+    },
+    {
+      "id": "ROMAN.2",
+      "f": "=ROMAN(499, 1)",
+      "expect": [["LDVLIV"]],
+      "cite": "https://support.google.com/docs/answer/3094153 (rule_relaxation 1: \"ROMAN(499,1) is LDVLIV\")"
+    },
+    {
+      "id": "ROMAN.3",
+      "f": "=ROMAN(499, 2)",
+      "expect": [["XDIX"]],
+      "cite": "https://support.google.com/docs/answer/3094153 (rule_relaxation 2: \"ROMAN(499,2) is XDIX\")"
+    },
+    {
+      "id": "ROMAN.4",
+      "f": "=ROMAN(499, 3)",
+      "expect": [["VDIV"]],
+      "cite": "https://support.google.com/docs/answer/3094153 (rule_relaxation 3: \"ROMAN(499,3) is VDIV\")"
+    },
+    {
+      "id": "ROMAN.5",
+      "f": "=ROMAN(499, 4)",
+      "expect": [["ID"]],
+      "cite": "https://support.google.com/docs/answer/3094153 (rule_relaxation 4: \"ROMAN(499,4) is ID\")"
+    },
+    {
+      "id": "ROMAN.6",
+      "f": "=ROMAN(1999)"
+    },
+    {
+      "id": "ROMAN.7",
+      "f": "=ROMAN(0)"
+    },
+    {
+      "id": "ROMAN.8",
+      "f": "=ROMAN(4000)"
+    },
+    {
+      "id": "ROMAN.9",
+      "f": "=ROMAN(-1)"
+    },
+    {
+      "id": "ROMAN.10",
+      "f": "=ROMAN(12.7)"
+    },
+    {
+      "id": "ROMAN.11",
+      "f": "=ROMAN(499, TRUE)"
+    },
+    {
+      "id": "ROMAN.12",
+      "f": "=ROMAN(499, FALSE)"
+    },
+    {
+      "id": "ROMAN.13",
+      "f": "=ROMAN(499, 5)"
+    },
+    {
+      "id": "ROMAN.14",
+      "f": "=ROMAN(Data!B7)"
+    },
+    {
+      "id": "ROMAN.15",
+      "f": "=ROMAN(\"x\")"
+    },
+    {
+      "id": "ROMAN.16",
+      "f": "=ROMAN(3999, 4)"
+    },
+    {
+      "id": "SEARCH.1",
+      "f": "=SEARCH(\"B\", \"abc\")"
+    },
+    {
+      "id": "SEARCH.2",
+      "f": "=SEARCH(\"x\", \"abc\")"
+    },
+    {
+      "id": "SEARCH.3",
+      "f": "=SEARCH(\"a?c\", \"xabc\")"
+    },
+    {
+      "id": "SEARCH.4",
+      "f": "=SEARCH(\"~*\", \"a*b\")"
+    },
+    {
+      "id": "SEARCH.5",
+      "f": "=SEARCH(\"a\", \"banana\", 3)"
+    },
+    {
+      "id": "SEARCH.6",
+      "f": "=SEARCH(\"a\", \"banana\", 0)"
+    },
+    {
+      "id": "SEARCH.7",
+      "f": "=SEARCH(\"\", \"abc\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses empty search text; LiveDoc finds it at starting_at, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help says nothing of empty search text."
+    },
+    {
+      "id": "SEARCHB.1",
+      "f": "=SEARCHB(\"新\", \"农历新年\", 2)"
+    },
+    {
+      "id": "SEARCHB.2",
+      "f": "=SEARCHB(\"B\", \"abc\")"
+    },
+    {
+      "id": "SEARCHB.3",
+      "f": "=SEARCHB(\"?本\", Data!A2)"
+    },
+    {
+      "id": "SEARCHB.4",
+      "f": "=SEARCHB(\"z\", \"abc\")"
+    },
+    {
+      "id": "SEARCHB.5",
+      "f": "=SEARCHB(\"年\", \"农历新年\")"
+    },
+    {
+      "id": "SPLIT.1",
+      "f": "=SPLIT(\"1,2,3\", \",\")",
+      "cols": 3,
+      "expect": [[1, 2, 3]],
+      "cite": "https://support.google.com/docs/answer/3094136 (sample `SPLIT(\"1,2,3\", \",\")`: each fragment in its own cell of the row)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPLIT is #NAME? there"
+      }
+    },
+    {
+      "id": "SPLIT.2",
+      "f": "=SPLIT(\"Alas, poor Yorick\", \" \")",
+      "cols": 3,
+      "expect": [["Alas,", "poor", "Yorick"]],
+      "cite": "https://support.google.com/docs/answer/3094136 (sample `SPLIT(\"Alas, poor Yorick\",\" \")`; the delimiter not in the result)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPLIT is #NAME? there"
+      }
+    },
+    {
+      "id": "SPLIT.3",
+      "f": "=SPLIT(\"one the two\", \"the\")",
+      "cols": 4,
+      "expect": [["on", " ", " ", "wo"]],
+      "cite": "https://support.google.com/docs/answer/3094136 (\"if delimiter is \\\"the\\\", then text is divided around the characters \\\"t\\\", \\\"h\\\", and \\\"e\\\"\"; consecutive delimiters as one)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPLIT is #NAME? there"
+      }
+    },
+    {
+      "id": "SPLIT.4",
+      "f": "=SPLIT(\"one the two\", \"the\", FALSE)",
+      "cols": 2,
+      "expect": [["one ", " two"]],
+      "cite": "https://support.google.com/docs/answer/3094136 (\"Set split_by_each to FALSE to turn off this behavior\": divided around the whole delimiter)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPLIT is #NAME? there"
+      }
+    },
+    {
+      "id": "SPLIT.5",
+      "f": "=SPLIT(\"a,,b\", \",\", TRUE, FALSE)",
+      "cols": 3,
+      "expect": [["a", "", "b"]],
+      "cite": "https://support.google.com/docs/answer/3094136 (\"If FALSE, empty cells values are added between consecutive delimiters\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPLIT is #NAME? there"
+      }
+    },
+    {
+      "id": "SPLIT.6",
+      "f": "=SPLIT(\"a,,b\", \",\")",
+      "cols": 2,
+      "expect": [["a", "b"]],
+      "cite": "https://support.google.com/docs/answer/3094136 (\"The default behavior is to treat consecutive delimiters as one\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPLIT is #NAME? there"
+      }
+    },
+    {
+      "id": "SUBSTITUTE.1",
+      "f": "=SUBSTITUTE(\"a-b-c\", \"-\", \" \")"
+    },
+    {
+      "id": "SUBSTITUTE.2",
+      "f": "=SUBSTITUTE(\"a-b-c\", \"-\", \" \", 2)"
+    },
+    {
+      "id": "SUBSTITUTE.3",
+      "f": "=SUBSTITUTE(\"a-b-c\", \"-\", \" \", 5)"
+    },
+    {
+      "id": "SUBSTITUTE.4",
+      "f": "=SUBSTITUTE(\"a-b-c\", \"-\", \" \", 0)"
+    },
+    {
+      "id": "SUBSTITUTE.5",
+      "f": "=SUBSTITUTE(\"abc\", \"\", \"x\")"
+    },
+    {
+      "id": "SUBSTITUTE.6",
+      "f": "=SUBSTITUTE(1231, 1, 9)"
+    },
+    {
+      "id": "T.1",
+      "f": "=T(\"cat\")"
+    },
+    {
+      "id": "T.2",
+      "f": "=T(Data!B3)"
+    },
+    {
+      "id": "T.3",
+      "f": "=T(1)"
+    },
+    {
+      "id": "T.4",
+      "f": "=T(Data!B4)"
+    },
+    {
+      "id": "T.5",
+      "f": "=T(Data!B6)"
+    },
+    {
+      "id": "T.6",
+      "f": "=T(NA())"
+    },
+    {
+      "id": "TEXT.1",
+      "f": "=TEXT(1234.567, \"#,##0.00\")"
+    },
+    {
+      "id": "TEXT.2",
+      "f": "=TEXT(0.25, \"0%\")"
+    },
+    {
+      "id": "TEXT.3",
+      "f": "=TEXT(45658, \"yyyy-mm-dd\")"
+    },
+    {
+      "id": "TEXT.4",
+      "f": "=TEXT(1.5, \"0.000\")"
+    },
+    {
+      "id": "TEXT.5",
+      "f": "=TEXT(\"abc\", \"0.00\")"
+    },
+    {
+      "id": "TEXT.6",
+      "f": "=TEXT(-3, \"0;(0)\")"
+    },
+    {
+      "id": "TEXTJOIN.1",
+      "f": "=TEXTJOIN(\"-\", TRUE, Data!C1:C4)"
+    },
+    {
+      "id": "TEXTJOIN.2",
+      "f": "=TEXTJOIN(\"-\", FALSE, Data!C1:C4)"
+    },
+    {
+      "id": "TEXTJOIN.3",
+      "f": "=TEXTJOIN(\", \", TRUE, \"a\", \"\", \"b\")"
+    },
+    {
+      "id": "TEXTJOIN.4",
+      "f": "=TEXTJOIN(\"\", TRUE, {1, 2; 3, 4})"
+    },
+    {
+      "id": "TRIM.1",
+      "f": "=TRIM(Data!A8)"
+    },
+    {
+      "id": "TRIM.2",
+      "f": "=TRIM(\"  a  \")"
+    },
+    {
+      "id": "TRIM.3",
+      "f": "=TRIM(12)"
+    },
+    {
+      "id": "UNICHAR.1",
+      "f": "=UNICHAR(68)",
+      "expect": [["D"]],
+      "cite": "https://support.google.com/docs/answer/9369024 (example 1: `UNICHAR(68)` returns D)"
+    },
+    {
+      "id": "UNICHAR.2",
+      "f": "=UNICHAR(307)",
+      "expect": [["ĳ"]],
+      "cite": "https://support.google.com/docs/answer/9369024 (example 2: `UNICHAR(307)` returns \\u0133)"
+    },
+    {
+      "id": "UNICHAR.3",
+      "f": "=UNICHAR(0)",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/9369024 (\"If number is 0, the method returns a #VALUE error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives empty text for 0"
+      }
+    },
+    {
+      "id": "UNICHAR.4",
+      "f": "=UNICHAR(55296)",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/9369024 (\"If the number does not have a Unicode character, the method returns a #VALUE error\"; 55296 is a surrogate half, no character)",
+      "differs": {
+        "libreoffice": "LibreOffice gives empty text for a surrogate half"
+      }
+    },
+    {
+      "id": "UNICHAR.5",
+      "f": "=UNICHAR(1114112)"
+    },
+    {
+      "id": "UNICHAR.6",
+      "f": "=UNICHAR(128512)"
+    },
+    {
+      "id": "UNICHAR.7",
+      "f": "=UNICHAR(65.9)"
+    },
+    {
+      "id": "UNICHAR.8",
+      "f": "=UNICHAR(\"x\")"
+    },
+    {
+      "id": "UNICODE.1",
+      "f": "=UNICODE(\"Alphabet\")",
+      "expect": [[65]],
+      "cite": "https://support.google.com/docs/answer/9149523 (example `=UNICODE(\"Alphabet\")` gives 65)"
+    },
+    {
+      "id": "UNICODE.2",
+      "f": "=UNICODE(123)",
+      "expect": [[49]],
+      "cite": "https://support.google.com/docs/answer/9149523 (example `=UNICODE(123)` gives 49)"
+    },
+    {
+      "id": "UNICODE.3",
+      "f": "=UNICODE(\"😀😀😄\")",
+      "expect": [[128512]],
+      "cite": "https://support.google.com/docs/answer/9149523 (example `=UNICODE(😀😀😄)` gives 128512)"
+    },
+    {
+      "id": "UNICODE.4",
+      "f": "=UNICODE(\"\")"
+    },
+    {
+      "id": "UNICODE.5",
+      "f": "=UNICODE(Data!A4)"
+    },
+    {
+      "id": "UPPER.1",
+      "f": "=UPPER(\"abc\")"
+    },
+    {
+      "id": "UPPER.2",
+      "f": "=UPPER(Data!A1)"
+    },
+    {
+      "id": "UPPER.3",
+      "f": "=UPPER(1.5)"
+    },
+    {
+      "id": "VALUE.1",
+      "f": "=VALUE(\"123\")"
+    },
+    {
+      "id": "VALUE.2",
+      "f": "=VALUE(\"1,234.5\")"
+    },
+    {
+      "id": "VALUE.3",
+      "f": "=VALUE(\"12%\")"
+    },
+    {
+      "id": "VALUE.4",
+      "f": "=VALUE(\"$5\")"
+    },
+    {
+      "id": "VALUE.5",
+      "f": "=VALUE(\"abc\")"
+    },
+    {
+      "id": "VALUE.6",
+      "f": "=VALUE(Data!B6)"
+    },
+    {
+      "id": "VALUE.7",
+      "f": "=VALUE(\"2025-03-01\")"
+    },
+    {
+      "id": "VALUE.8",
+      "f": "=VALUE(\" 7 \")"
+    }
+  ]
+}

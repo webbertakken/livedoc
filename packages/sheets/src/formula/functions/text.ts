@@ -1,14 +1,15 @@
 // Text functions (docs/specs/029-sheets/formulas.md "Functions": Text). Results are bounded by TEXT_RESULT_MAX;
 // REGEX functions by a work estimate, since a regular expression cannot be interrupted.
-import { REGEX_BACKTRACK_MAX, REGEX_WORK_MAX, TEXT_RESULT_MAX } from '../../limits';
-import { regexShape, regexWork } from '../regex-cost';
+import { TEXT_RESULT_MAX } from '../../limits';
 import { textFormat } from '../../number-format';
 import { parseLocaleNumber } from '../../input';
 import { localeDayFirst, parseDateText, parseTimeText } from '../../dates';
 import {
   MANY,
+  arrayArg,
   boolArg,
   flatScalars,
+  flatValues,
   fn,
   lift,
   opt,
@@ -19,89 +20,22 @@ import {
 } from '../fn';
 import { err, isError, toNumber, toText, type Scalar, type Value } from '../values';
 import { boundedText } from '../operators';
+import { textEach, textFn, texts } from './text-args';
+import { BYTE_TEXT_FUNCTIONS } from './text-bytes';
+import { NUMBER_TEXT_FUNCTIONS } from './text-numbers';
+import { regex, wildcardSource } from './text-patterns';
 
-function texts(xs: Scalar[]): string[] | Value {
-  const out: string[] = [];
-  for (const x of xs) {
-    const t = toText(x);
-    if (isError(t)) return t;
-    out.push(t);
-  }
-  return out;
-}
-
-// A text function of fixed arguments: the first `nText` read as text, the rest as numbers (absent ones undefined).
-// Only an argument left out (`LEFT(A1,)`) is absent: a reference to an empty cell reads as 0, as in Excel and Sheets.
-function textFn(
-  min: number,
-  max: number,
-  nText: number,
-  each: (ts: string[], ns: (number | undefined)[]) => Value,
-): FnDef {
-  return fn(min, max, (args, f) => {
-    const skipped = args.map((a) => a === null);
-    return lift(
+// A REGEX function: its text must be text, not a number, as Google's are (formulas.md "Text").
+function regexFn(n: number, each: (ts: string[]) => Value): FnDef {
+  return fn(n, n, (args, f) =>
+    lift(
       args.map((a) => valueArg(a, f)),
-      (xs) => textEach(xs, skipped, min, nText, each),
-    );
-  });
-}
-
-function textEach(
-  xs: Scalar[],
-  skipped: boolean[],
-  min: number,
-  nText: number,
-  each: (ts: string[], ns: (number | undefined)[]) => Value,
-): Value {
-  const ts: string[] = [];
-  const ns: (number | undefined)[] = [];
-  for (let i = 0; i < xs.length; i++) {
-    const x = xs[i]!;
-    if (i < nText) {
-      const t = toText(x);
-      if (isError(t)) return t;
-      ts.push(t);
-    } else if (skipped[i] && i >= min) {
-      ns.push(undefined);
-    } else {
-      const n = toNumber(x);
-      if (typeof n !== 'number') return n;
-      ns.push(n);
-    }
-  }
-  const out = each(ts, ns);
-  return typeof out === 'string' ? boundedText(out) : out;
-}
-
-function regex(pattern: string, text: string, flags = 'u'): RegExp | Value {
-  // Two bounds: the plain pass over the text, and the backtracking the pattern's repeats allow (regex-cost.ts), which
-  // a pattern only a few characters long can make run for minutes.
-  if (
-    pattern.length * Math.max(1, text.length) > REGEX_WORK_MAX ||
-    regexWork(regexShape(pattern), text.length) > REGEX_BACKTRACK_MAX
-  )
-    return err('#VALUE!', 'This pattern is too costly to run on this text');
-  try {
-    return new RegExp(pattern, flags);
-  } catch {
-    return err('#VALUE!', `"${pattern}" is not a valid regular expression`);
-  }
-}
-
-// A SEARCH pattern as a regular expression: * and ? are wildcards, ~ escapes them, everything else is literal.
-function wildcardSource(pattern: string): string {
-  let out = '';
-  for (let i = 0; i < pattern.length; i++) {
-    const ch = pattern[i]!;
-    if (ch === '~' && i + 1 < pattern.length && '*?~'.includes(pattern[i + 1]!)) {
-      const next = pattern[++i]!;
-      out += next === '~' ? '~' : `\\${next}`;
-    } else if (ch === '*') out += '[\\s\\S]*';
-    else if (ch === '?') out += '[\\s\\S]';
-    else out += ch.replace(/[.+^${}()|[\]\\]/g, '\\$&');
-  }
-  return out;
+      (xs) =>
+        typeof xs[0] === 'number'
+          ? err('#VALUE!', 'A regular expression reads text, not a number')
+          : textEach(xs, [], n, n, (ts) => each(ts)),
+    ),
+  );
 }
 
 /** Every value of every argument, ranges read whole, joined in order: CONCATENATE, and CONCAT as the standards have it. */
@@ -121,10 +55,18 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     if (!Array.isArray(ts)) return ts;
     return boundedText((skip ? ts.filter((t) => t !== '') : ts).join(delim));
   }),
+  // Each value_or_array one row or one column, as Google's are.
   JOIN: fn(2, MANY, (args, f) => {
-    const delim = textArg(args[0]!, f);
+    const delim = args[0] === null ? '' : textArg(args[0]!, f);
     if (isError(delim)) return delim;
-    const ts = texts(flatScalars(args.slice(1), f));
+    const values: Scalar[] = [];
+    for (const a of args.slice(1)) {
+      const arr = arrayArg(a, f);
+      if (arr.rows.length > 1 && arr.rows[0]!.length > 1)
+        return err('#VALUE!', 'JOIN takes one row or one column at a time');
+      values.push(...flatValues(arr));
+    }
+    const ts = texts(values);
     return Array.isArray(ts) ? boundedText(ts.join(delim)) : ts;
   }),
   LEFT: textFn(1, 2, 1, ([t], [n = 1]) => (n < 0 ? err('#VALUE!') : [...t!].slice(0, n).join(''))),
@@ -215,6 +157,19 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     return code < 1 || code > 0x10ffff ? err('#VALUE!') : String.fromCodePoint(code);
   }),
   CODE: textFn(1, 1, 1, ([t]) => (t === '' ? err('#VALUE!') : t!.codePointAt(0)!)),
+  UNICODE: textFn(1, 1, 1, ([t]) => (t === '' ? err('#VALUE!') : t!.codePointAt(0)!)),
+  // A code point that is a character: none for a surrogate half or one Unicode leaves unassigned.
+  UNICHAR: textFn(1, 1, 0, (_t, [n]) => {
+    const code = Math.trunc(n!);
+    if (code < 1 || code > 0x10ffff)
+      return err('#VALUE!', 'There is no character with this number');
+    const ch = String.fromCodePoint(code);
+    return /^[\p{Cs}\p{Cn}]$/u.test(ch)
+      ? err('#VALUE!', 'There is no character with this number')
+      : ch;
+  }),
+  // Text as itself; any other value as empty text, an error as itself.
+  T: scalarFn(1, 1, ([v]) => (typeof v === 'string' || isError(v!) ? v : '')),
   SPLIT: fn(2, 4, (args, f) => {
     const text = textArg(args[0]!, f);
     const delim = textArg(args[1]!, f);
@@ -242,18 +197,21 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     // A part that reads as a number is one, as in Google Sheets: SPLIT("3,4", ",") sums to 7, not 0.
     return { rows: [parts.map(splitPart)] };
   }),
-  REGEXMATCH: textFn(2, 2, 2, ([t, p]) => {
+  REGEXMATCH: regexFn(2, ([t, p]) => {
     const re = regex(p!, t!);
     return re instanceof RegExp ? re.test(t!) : re;
   }),
-  REGEXEXTRACT: textFn(2, 2, 2, ([t, p]) => {
+  // The whole match, or its capture groups, one column each.
+  REGEXEXTRACT: regexFn(2, ([t, p]) => {
     const re = regex(p!, t!);
     if (!(re instanceof RegExp)) return re;
     const m = re.exec(t!);
     if (!m) return err('#N/A', 'The pattern did not match');
-    return m.length > 1 ? (m[1] ?? '') : m[0];
+    if (m.length === 1) return m[0];
+    if (m.length === 2) return m[1] ?? '';
+    return { rows: [m.slice(1).map((g) => g ?? '')] };
   }),
-  REGEXREPLACE: textFn(3, 3, 3, ([t, p, by]) => {
+  REGEXREPLACE: regexFn(3, ([t, p, by]) => {
     const re = regex(p!, t!, 'gu');
     return re instanceof RegExp ? t!.replace(re, by!) : re;
   }),
@@ -261,6 +219,8 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
   HYPERLINK: textFn(1, 2, 2, ([url, label]) =>
     label === undefined || label === '' ? url! : label,
   ),
+  ...BYTE_TEXT_FUNCTIONS,
+  ...NUMBER_TEXT_FUNCTIONS,
 };
 
 // A part written as an ISO date, YYYY-MM-DD, with or without a time after it. Only this form: `26/10/2026` or
