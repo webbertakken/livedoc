@@ -94,3 +94,15 @@ describe('textDocumentSchema', () => {
     view.destroy();
   });
 });
+
+// text-and-paragraphs.md "Paragraph styles": a paragraph names its style for the document's style sheet.
+describe('a paragraph drawn in its style', () => {
+  it('names its style, and none for Normal text', () => {
+    const toDom = (style: string | null): unknown =>
+      textDocumentSchema.nodes.paragraph!.spec.toDOM!(
+        textDocumentSchema.nodes.paragraph!.create({ style }),
+      );
+    expect(toDom('Heading_20_1')).toEqual(['p', { 'data-style': 'Heading_20_1' }, 0]);
+    expect(toDom(null)).toEqual(['p', 0]);
+  });
+});

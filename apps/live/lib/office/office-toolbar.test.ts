@@ -50,8 +50,8 @@ const TOOLBAR: OfficeToolbar = [
 // docs/specs/004-interface-design/office-shell.md "Toolbar".
 describe('visibleToolbar', () => {
   const run = () => {};
-  const BOTH = { zoom: true, fontSize: true, font: true, colour: true };
-  const NEITHER = { zoom: false, fontSize: false, font: false, colour: false };
+  const BOTH = { zoom: true, fontSize: true, font: true, colour: true, choice: true };
+  const NEITHER = { zoom: false, fontSize: false, font: false, colour: false, choice: false };
 
   it('keeps what the level sees, bound or coming soon', () => {
     const shown = visibleToolbar(TOOLBAR, 'edit', { undo: { run }, comment: { run } }, BOTH);
@@ -75,6 +75,7 @@ describe('visibleToolbar', () => {
         fontSize: true,
         font: false,
         colour: false,
+        choice: false,
       },
     );
     expect(shown.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'font-size']);

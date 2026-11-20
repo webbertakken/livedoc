@@ -56,3 +56,29 @@ describe('Styles.textPropsOf (text-and-paragraphs.md "Text formatting": a toggle
     expect(Styles.textPropsOf(looped, defaults, 'Gone', 'Gone')).toEqual(defaults.text);
   });
 });
+
+describe('Styles.paragraphPropsOf (text-and-paragraphs.md "Paragraph styles": a paragraph drawn in its style)', () => {
+  const base: StyleDefaults = {
+    paragraph: { lineHeight: { rule: 'multiple', value: 1.15 } },
+    text: {},
+  };
+  const styles = [
+    style({ id: 'Normal', paragraph: { spaceAfter: 0 } }),
+    style({ id: 'Heading1', parent: 'Normal', paragraph: { spaceBefore: 20, spaceAfter: 6 } }),
+    style({ id: 'Loop', parent: 'Loop', paragraph: { align: 'center' } }),
+  ];
+
+  it('layers a style over its parents over the defaults', () => {
+    expect(Styles.paragraphPropsOf(styles, base, 'Heading1')).toEqual({
+      lineHeight: { rule: 'multiple', value: 1.15 },
+      spaceBefore: 20,
+      spaceAfter: 6,
+    });
+  });
+
+  it('reads the defaults under no style, or one the document lacks, and stops at a loop', () => {
+    expect(Styles.paragraphPropsOf(styles, base, undefined)).toEqual(base.paragraph);
+    expect(Styles.paragraphPropsOf(styles, base, 'Missing')).toEqual(base.paragraph);
+    expect(Styles.paragraphPropsOf(styles, base, 'Loop').align).toBe('center');
+  });
+});

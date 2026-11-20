@@ -1,6 +1,6 @@
 # Text and paragraphs
 
-**Status: partly built.** Text formatting and colour are built; the rest is specified.
+**Status: partly built.** Text formatting, colour and applying paragraph styles are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -96,7 +96,18 @@ picker has no second grid). **Reset** (text) and **None** (highlight) lead each 
   document's styles are Google's defaults (Arial 11 pt, line spacing 1.15; Title 26 pt; Subtitle 15 pt grey; Heading 1
   20 pt, Heading 2 16 pt, Heading 3 14 pt grey, Heading 4 12 pt grey, Heading 5 and 6 11 pt grey, 6 italic)
   (assumed: Google's defaults as known; confirmed with the captures).
+- **A paragraph draws in its style**: the font, size, weight, slant, colour, line spacing and spacing before and after
+  its style gives through its parents and the defaults; the text's own formatting draws over it. A paragraph with no
+  style, or one the document does not hold, draws as Normal text.
+- **Applying a style** (the toolbar's Styles menu, Format > Paragraph styles, ⌘⌥0 and ⌘⌥1 to ⌘⌥6) sets it on every
+  paragraph the selection touches, as one undo step, and returns focus to the writing. The text keeps its own
+  formatting (default). A style the document lacks (a file that never named a Title) is first added from a new
+  document's set (default).
+- **The Styles control** shows the style of the paragraph at the caret, blank when the selection spans several. Its
+  menu lists the nine styles, each drawn in its weight and slant at its size held between 13 and 22 px (default),
+  checked when it is the style at the caret, then Options.
 - ⌘⌥0 applies Normal text, ⌘⌥1 to ⌘⌥6 the headings.
+- Share roles: an Editor applies styles; a Participant and a Viewer see neither the Styles control nor the items.
 - **Update to match**: Styles > a style > "Update '<style>' to match" sets the style from the paragraph at the caret,
   re-styling every paragraph of that style.
 - A paragraph's own formatting over its style is kept as direct formatting (ODF automatic style, OOXML direct
@@ -161,7 +172,7 @@ Tools > Preferences, per person (account or browser), each on by default as Goog
 
 `Element · Changed · TextDocumentFormat<Name>` (Bold, Italic, Underline, Strikethrough, Superscript, Subscript,
 SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight; from toolbar, menu or shortcut),
-`TextDocumentParagraphStyle`, `TextDocumentStyleUpdated`, `TextDocumentPaintFormat`, `TextDocumentPaste` (with the
+`TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut), `TextDocumentStyleUpdated`, `TextDocumentPaintFormat`, `TextDocumentPaste` (with the
 source: Document, Html, Markdown, Plain). Never text.
 
 ## Limits

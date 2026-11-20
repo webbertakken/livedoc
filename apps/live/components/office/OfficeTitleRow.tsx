@@ -30,6 +30,7 @@ import type { OfficeZoom } from './OfficeZoomField';
 import type { OfficeFontSize } from './OfficeFontSizeField';
 import type { OfficeFontFamily } from './OfficeFontMenu';
 import type { OfficeColours } from './OfficeColourControl';
+import type { OfficeChoices } from './OfficeChoiceMenu';
 import {
   visibleToolbar,
   type OfficeToolbar as OfficeToolbarData,
@@ -75,6 +76,7 @@ export function OfficeTitleRow({
   fontSize = null,
   fontFamily = null,
   colours = null,
+  choices = null,
   refresh,
   mode = null,
   contextMenu = null,
@@ -110,6 +112,8 @@ export function OfficeTitleRow({
   fontFamily?: OfficeFontFamily | null;
   // The toolbar's colour controls, by id.
   colours?: OfficeColours | null;
+  // The toolbar's choice controls (the Styles control), by id.
+  choices?: OfficeChoices | null;
   refresh?: (listener: () => void) => () => void;
   // The person's editing mode and the modes their level allows (review.md "Editing modes").
   mode?: OfficeModeChoice | null;
@@ -177,8 +181,9 @@ export function OfficeTitleRow({
         fontSize: fontSize !== null,
         font: fontFamily !== null,
         colour: colours !== null,
+        choice: choices !== null,
       }),
-    [toolbar, level, allActions, zoom, fontSize, fontFamily, colours, phone],
+    [toolbar, level, allActions, zoom, fontSize, fontFamily, colours, choices, phone],
   );
   const shortcutOf = useMemo(() => shortcutTextOf(shortcuts, currentOfficePlatform()), [shortcuts]);
 
@@ -211,11 +216,16 @@ export function OfficeTitleRow({
     if (openAtCaret) out[CONTEXT_MENU] = openAtCaret;
     for (const menu of menus)
       out[accessKeyOf(menu.id)] = () => onOpenMenu({ id: menu.id, focus: 'first' });
+    // A row of several items (`[1-6]`) runs the one its keys' argument names.
+    const byArg: Record<string, Record<string, () => void>> = {};
     for (const { item } of items) {
       const action = allActions[item.id];
-      if (item.shortcut && item.status === 'built' && action && !action.disabled)
-        out[item.shortcut] ??= () => action.run();
+      if (!item.shortcut || item.status !== 'built' || !action || action.disabled) continue;
+      if (item.shortcutArg === undefined) out[item.shortcut] ??= () => action.run();
+      else (byArg[item.shortcut] ??= {})[item.shortcutArg] = () => action.run();
     }
+    for (const [shortcut, runsByArg] of Object.entries(byArg))
+      out[shortcut] ??= (arg) => runsByArg[arg ?? '']?.();
     return out;
   }, [menus, items, allActions, onOpenMenu, openAtCaret]);
   useOfficeShortcuts({ scope: keyScope, rows: shortcuts, runs });
@@ -315,6 +325,7 @@ export function OfficeTitleRow({
           fontSize={fontSize}
           fontFamily={fontFamily}
           colours={colours}
+          choices={choices}
           refresh={refresh}
           phone={phone}
         />

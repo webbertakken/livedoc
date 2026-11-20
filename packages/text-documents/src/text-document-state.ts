@@ -7,7 +7,7 @@ import type { Style, StyleDefaults } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
 import { readLiveDefaults, readLiveDocument, readLiveStyles } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
-import { writeLiveDocument } from './live/live-write';
+import { addLiveStyle, writeLiveDocument } from './live/live-write';
 
 export { BODY_FRAGMENT };
 
@@ -137,6 +137,8 @@ export const TextDocumentState = {
   /** The live state's style defaults alone, under every style (text-and-paragraphs.md "Text formatting"). */
   defaults: (doc: Y.Doc, format: TextDocumentFormat): StyleDefaults =>
     readLiveDefaults(doc, format),
+  /** Adds a style the live state lacks, after its others (text-and-paragraphs.md "Paragraph styles"). */
+  addStyle: (doc: Y.Doc, style: Style): void => addLiveStyle(doc, style),
   /** A state holding exactly this model, as one update to store beside the seed. */
   fromDocument: (document: TextDocument): Uint8Array => {
     const doc = TextDocumentState.load();

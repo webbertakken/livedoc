@@ -242,7 +242,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+0',
     '⌘+Option+0',
     'Ctrl+Alt+0',
-    'specified',
+    'built',
   ),
   row(
     'apply-heading-style-n',
@@ -251,7 +251,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+[1-6]',
     '⌘+Option+[1-6]',
     'Ctrl+Alt+[1-6]',
-    'specified',
+    'built',
   ),
   row(
     'left-align',

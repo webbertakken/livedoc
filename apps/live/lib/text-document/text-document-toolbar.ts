@@ -69,14 +69,6 @@ const icon = (
     extra,
   );
 
-const text = (
-  id: string,
-  label: string,
-  value: string,
-  width: number,
-  list = true,
-): OfficeControl => control(id, label, 'edit', { kind: 'text', text: value, width, list });
-
 export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
   {
     id: 'find',
@@ -106,7 +98,11 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
     label: 'Zoom',
     controls: [control('zoom', 'Zoom', 'view', { kind: 'zoom' }, { built: true })],
   },
-  { id: 'style', label: 'Styles', controls: [text('styles', 'Styles', 'Normal text', 120)] },
+  {
+    id: 'style',
+    label: 'Styles',
+    controls: [control('styles', 'Styles', 'edit', { kind: 'choice', width: 120 })],
+  },
   {
     id: 'font',
     label: 'Font',

@@ -80,8 +80,8 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 | ------------------------------ | ----------------- | ----------------- | ---------------- | --------- |
 | Increase paragraph indentation | `Ctrl+]`          | `⌘+]`             | `Ctrl+]`         | specified |
 | Decrease paragraph indentation | `Ctrl+[`          | `⌘+[`             | `Ctrl+[`         | specified |
-| Apply normal text style        | `Ctrl+Alt+0`      | `⌘+Option+0`      | `Ctrl+Alt+0`     | specified |
-| Apply heading style [1-6]      | `Ctrl+Alt+[1-6]`  | `⌘+Option+[1-6]`  | `Ctrl+Alt+[1-6]` | specified |
+| Apply normal text style        | `Ctrl+Alt+0`      | `⌘+Option+0`      | `Ctrl+Alt+0`     | built     |
+| Apply heading style [1-6]      | `Ctrl+Alt+[1-6]`  | `⌘+Option+[1-6]`  | `Ctrl+Alt+[1-6]` | built     |
 | Left align                     | `Ctrl+Shift+L`    | `⌘+Shift+L`       | `Ctrl+Shift+L`   | specified |
 | Center align                   | `Ctrl+Shift+E`    | `⌘+Shift+E`       | `Ctrl+Shift+E`   | specified |
 | Right align                    | `Ctrl+Shift+R`    | `⌘+Shift+R`       | `Ctrl+Shift+R`   | specified |

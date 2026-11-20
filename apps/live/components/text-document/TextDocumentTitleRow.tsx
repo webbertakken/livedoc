@@ -28,6 +28,7 @@ import type { OfficeZoom } from '@/components/office/OfficeZoomField';
 import type { OfficeFontSize } from '@/components/office/OfficeFontSizeField';
 import type { OfficeFontFamily } from '@/components/office/OfficeFontMenu';
 import type { OfficeColours } from '@/components/office/OfficeColourControl';
+import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import type { OfficeModeChoice } from '@/components/office/OfficeModeSwitch';
 import { openTextDocumentFile } from '@/lib/text-document/open-text-document-file';
 
@@ -78,6 +79,7 @@ export function TextDocumentTitleRow({
   fontSize = null,
   fontFamily = null,
   colours = null,
+  choices = null,
   refresh,
   mode = null,
   caret = null,
@@ -100,6 +102,7 @@ export function TextDocumentTitleRow({
   fontSize?: OfficeFontSize | null;
   fontFamily?: OfficeFontFamily | null;
   colours?: OfficeColours | null;
+  choices?: OfficeChoices | null;
   refresh?: (listener: () => void) => () => void;
   mode?: OfficeModeChoice | null;
   // The caret, for the context menu on text (editing-surface.md "Context menus"); none until the writing is bound.
@@ -175,6 +178,7 @@ export function TextDocumentTitleRow({
       fontSize={fontSize}
       fontFamily={fontFamily}
       colours={colours}
+      choices={choices}
       refresh={refresh}
       mode={mode}
       contextMenu={contextMenu}

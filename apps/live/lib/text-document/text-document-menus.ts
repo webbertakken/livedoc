@@ -10,8 +10,11 @@ import {
   type OfficeItem,
   type OfficeMenu,
 } from '@/lib/office/office-catalogue';
+import { PARAGRAPH_STYLE_ITEMS, paragraphStyleShortcut } from './text-document-paragraph-styles';
 
-type ItemOptions = Partial<Pick<OfficeItem, 'shortcut' | 'keywords' | 'checkable' | 'status'>>;
+type ItemOptions = Partial<
+  Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status'>
+>;
 
 const item = (
   id: string,
@@ -229,15 +232,9 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         ]),
       ]),
       submenu('paragraph-styles', 'Paragraph styles', [
-        item('style-normal', 'Normal text', 'edit', { shortcut: 'apply-normal-text-style' }),
-        item('style-title', 'Title', 'edit'),
-        item('style-subtitle', 'Subtitle', 'edit'),
-        item('style-heading-1', 'Heading 1', 'edit'),
-        item('style-heading-2', 'Heading 2', 'edit'),
-        item('style-heading-3', 'Heading 3', 'edit'),
-        item('style-heading-4', 'Heading 4', 'edit'),
-        item('style-heading-5', 'Heading 5', 'edit'),
-        item('style-heading-6', 'Heading 6', 'edit'),
+        ...PARAGRAPH_STYLE_ITEMS.map((style) =>
+          item(style.item, style.label, 'edit', { ...paragraphStyleShortcut(style), ...BUILT }),
+        ),
         SEPARATOR,
         submenu('style-options', 'Options', [
           item('save-default-styles', 'Save as my default styles', 'edit'),

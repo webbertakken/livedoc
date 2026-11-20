@@ -34,6 +34,7 @@ import { OfficeFontSizeField, type OfficeFontSize } from './OfficeFontSizeField'
 import { useOfficeControlStates } from './useOfficeControlStates';
 import { OfficeFontMenu, type OfficeFontFamily } from './OfficeFontMenu';
 import { OfficeColourControl, type OfficeColours } from './OfficeColourControl';
+import { OfficeChoiceMenu, type OfficeChoices } from './OfficeChoiceMenu';
 
 /** The room a divider takes between groups: 1 px and 4 px either side. */
 const DIVIDER_PX = 9;
@@ -54,6 +55,7 @@ export function OfficeToolbar({
   fontSize = null,
   fontFamily = null,
   colours = null,
+  choices = null,
   refresh,
   phone = false,
 }: {
@@ -64,6 +66,7 @@ export function OfficeToolbar({
   fontSize?: OfficeFontSize | null;
   fontFamily?: OfficeFontFamily | null;
   colours?: OfficeColours | null;
+  choices?: OfficeChoices | null;
   // Told when what the controls show may have changed (the selection, the formatting at the caret): pressed states
   // and the font size are read again.
   refresh?: (listener: () => void) => () => void;
@@ -81,7 +84,7 @@ export function OfficeToolbar({
   const states = useOfficeControlStates(
     controls,
     actions,
-    { fontSize, fontFamily, colours },
+    { fontSize, fontFamily, colours, choices },
     refresh,
   );
   const bar = useRef<HTMLDivElement>(null);
@@ -137,6 +140,8 @@ export function OfficeToolbar({
       family={states.fontFamily}
       colours={colours}
       colourValues={states.colours}
+      choices={choices}
+      choiceValues={states.choices}
       pressed={states.pressed.has(p.control.id)}
       disabled={states.disabled.has(p.control.id)}
       size={states.fontSize}
@@ -268,6 +273,8 @@ function ControlView({
   family,
   colours,
   colourValues,
+  choices,
+  choiceValues,
   pressed: on,
   disabled,
   size,
@@ -283,6 +290,9 @@ function ControlView({
   colours: OfficeColours | null;
   // What each colour control shows now (useOfficeControlStates).
   colourValues: Readonly<Record<string, string | null | undefined>>;
+  choices: OfficeChoices | null;
+  // What each choice control shows now.
+  choiceValues: Readonly<Record<string, string | null>>;
   // What the binding says now (useOfficeControlStates): pressed, dimmed, and the font size.
   pressed: boolean;
   disabled: boolean;
@@ -305,6 +315,21 @@ function ControlView({
         className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
       />
     ) : null;
+  if (look.kind === 'choice') {
+    const choice = choices?.[control.id];
+    return choice ? (
+      <OfficeChoiceMenu
+        id={control.id}
+        label={control.label}
+        value={choiceValues[control.id] ?? null}
+        entries={choice.entries}
+        actions={choice.actions}
+        width={look.width}
+        tabIndex={tabIndex}
+        className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
+      />
+    ) : null;
+  }
   if (look.kind === 'colour') {
     const colour = colours?.[control.id];
     return colour ? (

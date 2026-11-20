@@ -1115,6 +1115,16 @@ export const TEXT_DOCUMENT_FORMATTING = chart(
   { typeIn: (t) => (t ?? '').startsWith('TextDocumentFormat') },
 );
 
+// A paragraph style applied to a text document (docs/specs/034-text-documents/text-and-paragraphs.md "Paragraph
+// styles"): Normal text, a title or a heading, from the toolbar, Format > Paragraph styles or a shortcut.
+export const TEXT_DOCUMENT_PARAGRAPH_STYLE = chart(
+  'Element',
+  'Changed',
+  'Text Document Paragraph Style',
+  "A paragraph style applied to a text document's paragraphs: Normal text, Title, Subtitle or a heading.",
+  { types: ['TextDocumentParagraphStyle'] },
+);
+
 // My fonts changed by the Fonts dialog's OK (docs/specs/004-interface-design/fonts.md "More fonts").
 export const TEXT_DOCUMENT_MY_FONTS = chart(
   'UI',
