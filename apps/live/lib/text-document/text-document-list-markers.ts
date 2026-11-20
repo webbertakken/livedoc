@@ -8,6 +8,7 @@ import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import { ListMarkers, type ListMarker, type ParagraphProps } from '@livedoc/text-documents';
 import { placeOf, toggleItemAt, type Lists } from './text-document-lists';
 import { INDENT_START } from './text-document-style-sheet';
+import { paperInk } from './text-document-paper';
 
 const key = new PluginKey<DecorationSet>('textDocumentListMarkers');
 const REFRESH = 'refresh';
@@ -74,7 +75,7 @@ export function listDecorations(
       own.indentStart === undefined ? `${INDENT_START}: ${indent}pt` : '',
       own.indentFirst === undefined ? `text-indent: ${-hanging}pt` : '',
       marker?.kind === 'check' && marker.checked
-        ? `color: ${TICKED_INK}; text-decoration-line: line-through`
+        ? `color: ${paperInk(TICKED_INK)}; text-decoration-line: line-through`
         : '',
     ]
       .filter(Boolean)

@@ -94,7 +94,7 @@ describe('listMarkersPlugin', () => {
     expect(box().getAttribute('aria-checked')).toBe('true');
     const item = v.dom.querySelector('p')!;
     expect(item.style.textDecorationLine).toBe('line-through');
-    expect(item.style.color).toBe('rgb(95, 99, 104)');
+    expect(item.style.color).toContain('light-dark(rgb(95, 99, 104)');
     expect(TICKED_INK).toBe('#5f6368');
     box().dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     expect((v.state.doc.firstChild!.attrs as { list: ListPlace }).list.checked).toBeUndefined();
