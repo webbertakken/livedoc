@@ -67,7 +67,7 @@ test('the menus, the tool finder and the shortcut layer work a text document', a
   const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
   await toolbar.getByRole('button', { name: 'Undo' }).click();
   await expect(page.locator(BODY)).toHaveText('');
-  await expect(toolbar.getByRole('button', { name: 'Bold' })).toHaveAttribute(
+  await expect(toolbar.getByRole('button', { name: 'Text colour' })).toHaveAttribute(
     'aria-disabled',
     'true',
   );

@@ -1,6 +1,6 @@
 // Paragraph and text styles (docs/specs/034-text-documents/text-and-paragraphs.md "Paragraph styles"): named sets of
 // formatting, the built-in ones known by role in either format's names.
-import type { KeptProperties, ParagraphProps, TextProps } from './props';
+import { compact, type KeptProperties, type ParagraphProps, type TextProps } from './props';
 
 export const STYLE_ROLES = [
   'normal',
@@ -155,6 +155,34 @@ export const Styles = {
   /** The id of the style with this role, if the document has one. */
   idOfRole: (styles: readonly Style[], role: StyleRole): string | undefined =>
     styles.find((s) => s.role === role)?.id,
+  /**
+   * The text formatting a character gets from its styles: the defaults, then its paragraph style through its parents,
+   * then its text style through its parents, each nearer one overriding (a `false` too).
+   */
+  textPropsOf: (
+    styles: readonly Style[],
+    defaults: StyleDefaults,
+    paragraphStyle: string | undefined,
+    textStyle?: string,
+  ): TextProps => {
+    const chain = (id: string | undefined): TextProps[] => {
+      const seen = new Set<string>();
+      const out: TextProps[] = [];
+      let style = Styles.byId(styles, id);
+      while (style && !seen.has(style.id)) {
+        out.unshift(compact(style.text));
+        seen.add(style.id);
+        style = Styles.byId(styles, style.parent);
+      }
+      return out;
+    };
+    return Object.assign(
+      {},
+      compact(defaults.text),
+      ...chain(paragraphStyle),
+      ...chain(textStyle),
+    ) as TextProps;
+  },
   /** The outline level a paragraph style gives, through its parents. */
   outlineLevel: (styles: readonly Style[], id: string | undefined): number | undefined => {
     const seen = new Set<string>();

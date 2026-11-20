@@ -9,8 +9,12 @@ export type OfficeControlLook =
   | { kind: 'icon'; icon: readonly IconPrim[]; toggle?: boolean; menu?: boolean }
   // A value shown as text (Styles, Font with a chevron for their list; the font size without), `width` px wide.
   | { kind: 'text'; text: string; width: number; list?: boolean }
-  // The zoom field, bound by the shell's `zoom`, not by an action.
-  | { kind: 'zoom' };
+  // A value field, bound by the shell's field of that name (the zoom, the font size), not by an action.
+  | { kind: 'zoom' }
+  | { kind: 'fontSize' };
+
+/** The toolbar's value fields (office-shell.md "Toolbar"). */
+export type OfficeFieldKind = 'zoom' | 'fontSize';
 
 export type OfficeControl = {
   id: string;
@@ -26,19 +30,20 @@ export type OfficeToolbarGroup = { id: string; label: string; controls: readonly
 export type OfficeToolbar = readonly OfficeToolbarGroup[];
 
 /**
- * What the session sees: controls at or below its level that are coming soon or bound (the zoom, when the shell has a
- * zoom), and the groups left with any.
+ * What the session sees: controls at or below its level that are coming soon or bound (a value field, when the shell has it), and the groups left with any.
  */
 export function visibleToolbar(
   toolbar: OfficeToolbar,
   level: AccessLevel,
   actions: OfficeActions,
-  zoomBound: boolean,
+  fields: Readonly<Record<OfficeFieldKind, boolean>>,
 ): OfficeToolbarGroup[] {
   const shown = (control: OfficeControl) =>
     levelAtLeast(level, control.level) &&
     (control.status === 'comingSoon' ||
-      (control.look.kind === 'zoom' ? zoomBound : actions[control.id] !== undefined));
+      (control.look.kind === 'zoom' || control.look.kind === 'fontSize'
+        ? fields[control.look.kind]
+        : actions[control.id] !== undefined));
   return toolbar.flatMap((group) => {
     const controls = group.controls.filter(shown);
     if (controls.length === 0) return [];

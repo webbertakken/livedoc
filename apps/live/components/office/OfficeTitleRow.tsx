@@ -27,6 +27,7 @@ import { OfficeModeSwitch, type OfficeModeChoice } from './OfficeModeSwitch';
 import { OfficeNameField } from './OfficeNameField';
 import { OfficeToolbar } from './OfficeToolbar';
 import type { OfficeZoom } from './OfficeZoomField';
+import type { OfficeFontSize } from './OfficeFontSizeField';
 import {
   visibleToolbar,
   type OfficeToolbar as OfficeToolbarData,
@@ -69,6 +70,8 @@ export function OfficeTitleRow({
   saveStatus = null,
   toolbar = [],
   zoom = null,
+  fontSize = null,
+  refresh,
   mode = null,
   contextMenu = null,
 }: {
@@ -98,6 +101,9 @@ export function OfficeTitleRow({
   // The kind's toolbar, and the zoom its zoom field works (null: no zoom field).
   toolbar?: OfficeToolbarData;
   zoom?: OfficeZoom | null;
+  // The toolbar's font size field, and when what the toolbar shows may have changed.
+  fontSize?: OfficeFontSize | null;
+  refresh?: (listener: () => void) => () => void;
   // The person's editing mode and the modes their level allows (review.md "Editing modes").
   mode?: OfficeModeChoice | null;
   // The document's context menu (office-shell.md "Context menus"); none: the browser's own.
@@ -158,8 +164,12 @@ export function OfficeTitleRow({
   });
   const { openAtCaret } = context;
   const bar = useMemo(
-    () => visibleToolbar(toolbar, level, allActions, zoom !== null && !phone),
-    [toolbar, level, allActions, zoom, phone],
+    () =>
+      visibleToolbar(toolbar, level, allActions, {
+        zoom: zoom !== null && !phone,
+        fontSize: fontSize !== null,
+      }),
+    [toolbar, level, allActions, zoom, fontSize, phone],
   );
   const shortcutOf = useMemo(() => shortcutTextOf(shortcuts, currentOfficePlatform()), [shortcuts]);
 
@@ -293,6 +303,8 @@ export function OfficeTitleRow({
           actions={allActions}
           shortcutOf={shortcutOf}
           zoom={phone ? null : zoom}
+          fontSize={fontSize}
+          refresh={refresh}
           phone={phone}
         />
       ) : null}

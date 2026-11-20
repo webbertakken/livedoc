@@ -30,6 +30,8 @@ import {
   type OfficeToolbarGroup,
 } from '@/lib/office/office-toolbar';
 import { OfficeZoomField, type OfficeZoom } from './OfficeZoomField';
+import { OfficeFontSizeField, type OfficeFontSize } from './OfficeFontSizeField';
+import { useOfficeControlStates } from './useOfficeControlStates';
 
 /** The room a divider takes between groups: 1 px and 4 px either side. */
 const DIVIDER_PX = 9;
@@ -47,12 +49,18 @@ export function OfficeToolbar({
   actions,
   shortcutOf,
   zoom,
+  fontSize = null,
+  refresh,
   phone = false,
 }: {
   groups: readonly OfficeToolbarGroup[];
   actions: OfficeActions;
   shortcutOf: (id: string) => ShortcutText | null;
   zoom: OfficeZoom | null;
+  fontSize?: OfficeFontSize | null;
+  // Told when what the controls show may have changed (the selection, the formatting at the caret): pressed states
+  // and the font size are read again.
+  refresh?: (listener: () => void) => () => void;
   // A phone: every control in one row that scrolls, none behind More.
   phone?: boolean;
 }) {
@@ -63,6 +71,8 @@ export function OfficeToolbar({
       ),
     [groups],
   );
+  const controls = useMemo(() => placed.map((p) => p.control), [placed]);
+  const states = useOfficeControlStates(controls, actions, fontSize, refresh);
   const bar = useRef<HTMLDivElement>(null);
   const widths = useRef(new Map<string, number>());
   const [measuredFit, setFit] = useState(placed.length);
@@ -111,6 +121,10 @@ export function OfficeToolbar({
       action={actions[p.control.id]}
       shortcut={p.control.shortcut ? shortcutOf(p.control.shortcut) : null}
       zoom={zoom}
+      fontSize={fontSize}
+      pressed={states.pressed.has(p.control.id)}
+      disabled={states.disabled.has(p.control.id)}
+      size={states.fontSize}
       tabIndex={row === 'bar' && index === Math.min(focusIndex, fit - 1) ? 0 : -1}
     />
   );
@@ -234,20 +248,33 @@ function ControlView({
   action,
   shortcut,
   zoom,
+  fontSize,
+  pressed: on,
+  disabled,
+  size,
   tabIndex,
 }: {
   control: OfficeControl;
   action: OfficeActions[string];
   shortcut: ShortcutText | null;
   zoom: OfficeZoom | null;
+  fontSize: OfficeFontSize | null;
+  // What the binding says now (useOfficeControlStates): pressed, dimmed, and the font size.
+  pressed: boolean;
+  disabled: boolean;
+  size: number | null;
   tabIndex: number;
 }) {
   const { look } = control;
   if (look.kind === 'zoom')
     return zoom ? <OfficeZoomField zoom={zoom} tabIndex={tabIndex} /> : null;
+  if (look.kind === 'fontSize')
+    return fontSize ? (
+      <OfficeFontSizeField size={fontSize} value={size} tabIndex={tabIndex} />
+    ) : null;
   const soon = control.status === 'comingSoon' || !action;
-  const inert = soon || action?.disabled === true;
-  const pressed = look.kind === 'icon' && look.toggle ? action?.checked === true : undefined;
+  const inert = soon || disabled;
+  const pressed = look.kind === 'icon' && look.toggle ? on : undefined;
   const description = soon ? 'Coming soon' : shortcut?.shown;
   return (
     <HoverCard title={control.label} description={description}>

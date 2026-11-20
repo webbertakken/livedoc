@@ -103,7 +103,12 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   between controls (wrapping), Home and End to the first and last; Down or Enter opens a control's menu. In a text
   field of the bar (the zoom) Left, Right, Home and End move in its text, and Left at its start or Right at its end
   moves on to the next control, so every control is in reach.
-- A control's tooltip names it and its shortcut in the platform's notation; a toggle carries `aria-pressed`.
+- A control's tooltip names it and its shortcut in the platform's notation; a toggle carries `aria-pressed`, read
+  afresh as the selection or the formatting at the caret changes.
+- **Value fields** (the zoom, the font size) are a field with a list, the WAI-ARIA combobox: a typed value applies on
+  Enter, anything else puts the value back; Down or the chevron opens the list, Up and Down move in it, Enter takes
+  one, Escape closes it, then puts back what was typed. The font size field shows the value at the caret, blank over
+  a mixed selection, with − and + either side; taking a size returns focus to the writing.
 - A `comingSoon` control is drawn dimmed (`aria-disabled`), its tooltip saying "Coming soon"; a `built` control left
   unbound for the session, or above its level, is not drawn; a group left empty is not drawn, nor its divider.
 - **Overflow**: the controls that do not fit move, from the right, behind a ⋮ button ("More") at the bar's end; it

@@ -61,18 +61,18 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 
 | Action                | PC                     | Mac              | ChromeOS       | Status    |
 | --------------------- | ---------------------- | ---------------- | -------------- | --------- |
-| Bold                  | `Ctrl+B`               | `⌘+B`            | `Ctrl+B`       | specified |
-| Italicize             | `Ctrl+I`               | `⌘+I`            | `Ctrl+I`       | specified |
-| Underline             | `Ctrl+U`               | `⌘+U`            | `Ctrl+U`       | specified |
-| Strikethrough         | `Alt+Shift+5`          | `⌘+Shift+X`      | `Alt+Shift+5`  | specified |
-| Superscript           | `Ctrl+.`               | `⌘+.`            | `Ctrl+.`       | specified |
-| Subscript             | `Ctrl+,`               | `⌘+,`            | `Ctrl+,`       | specified |
+| Bold                  | `Ctrl+B`               | `⌘+B`            | `Ctrl+B`       | built     |
+| Italicize             | `Ctrl+I`               | `⌘+I`            | `Ctrl+I`       | built     |
+| Underline             | `Ctrl+U`               | `⌘+U`            | `Ctrl+U`       | built     |
+| Strikethrough         | `Alt+Shift+5`          | `⌘+Shift+X`      | `Alt+Shift+5`  | built     |
+| Superscript           | `Ctrl+.`               | `⌘+.`            | `Ctrl+.`       | built     |
+| Subscript             | `Ctrl+,`               | `⌘+,`            | `Ctrl+,`       | built     |
 | Copy text formatting  | `Ctrl+Alt+C`           | `⌘+Option+C`     | `Ctrl+Alt+C`   | specified |
 | Paste text formatting | `Ctrl+Alt+V`           | `⌘+Option+V`     | `Ctrl+Alt+V`   | specified |
 | Clear text formatting | `Ctrl+\ or Ctrl+Space` | `⌘+\`            | `Ctrl+\`       | specified |
-| Increase font size    | `Ctrl+Shift+.`         | `⌘+Shift+.`      | `Ctrl+Shift+.` | specified |
-| Decrease font size    | `Ctrl+Shift+,`         | `⌘+Shift+,`      | `Ctrl+Shift+,` | specified |
-| Small caps            | `Ctrl+Shift+K`         | `Option+Shift+K` | —              | specified |
+| Increase font size    | `Ctrl+Shift+.`         | `⌘+Shift+.`      | `Ctrl+Shift+.` | built     |
+| Decrease font size    | `Ctrl+Shift+,`         | `⌘+Shift+,`      | `Ctrl+Shift+,` | built     |
+| Small caps            | `Ctrl+Shift+K`         | `Option+Shift+K` | —              | built     |
 
 ## Paragraph formatting
 

@@ -11,6 +11,7 @@ import { OFFICE_MODES } from '@/lib/office/office-mode';
 import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
+import { TEXT_DOCUMENT_FORMAT_ITEMS } from './text-document-format-actions';
 import { textDocumentMenus } from './text-document-menus';
 import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
@@ -29,6 +30,8 @@ describe('the text document menus', () => {
       const bound = [
         ...Object.keys(textDocumentEditorActions(null, { canEdit: true })),
         ...DOWNLOADS[format],
+        // Format > Text (text-document-format-actions), bound by the surface.
+        ...TEXT_DOCUMENT_FORMAT_ITEMS,
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),

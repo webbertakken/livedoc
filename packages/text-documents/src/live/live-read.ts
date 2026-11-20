@@ -14,7 +14,7 @@ import type {
 import type { ListDefinition } from '../model/lists';
 import type { TextProps } from '../model/props';
 import type { Section } from '../model/sections';
-import { Styles, type Style } from '../model/styles';
+import { Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
   DOCUMENT_MAP,
@@ -116,6 +116,14 @@ function stylesOf(map: Y.Map<unknown>): Style[] | null {
 }
 
 /** The live state's styles, or the format's own while it holds none. */
+/** The live state's style defaults alone. */
+export function readLiveDefaults(doc: Y.Doc, format: TextDocumentFormat): StyleDefaults {
+  return (
+    (doc.getMap<unknown>(DOCUMENT_MAP).get('defaults') as StyleDefaults | undefined) ??
+    TextDocument.blank({ format }).defaults
+  );
+}
+
 export function readLiveStyles(doc: Y.Doc, format: TextDocumentFormat): Style[] {
   return stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? [...TextDocument.blank({ format }).styles];
 }
