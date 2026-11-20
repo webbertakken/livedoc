@@ -97,7 +97,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Enter',
     '⌘+Enter',
     'Ctrl+Enter',
-    'specified',
+    'built',
   ),
   row(
     'tool-finder',

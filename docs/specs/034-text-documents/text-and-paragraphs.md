@@ -238,6 +238,7 @@ Styles > Options and Format > Paragraph styles > Options hold three items, as Go
 - **Keep with next**, **Keep lines together** and **Prevent single lines** (widows and orphans of two) are switches on
   every paragraph the selection touches: checked when all have it, and on for all unless all have it. A new
   document's paragraphs prevent single lines; headings keep with next.
+- **Add page break before** is a fourth such switch: the paragraph starts a new page ([Page layout](page-layout.md#breaks)).
 - The keep rules shape where pages break: they are drawn as the print layout's break rules (`break-after`,
   `break-inside`, `widows` and `orphans`), and laid out with pagination ([Page layout](page-layout.md)).
 - A value equal to the style's is stored as none of the paragraph's own, as alignment is.
@@ -320,8 +321,7 @@ returns to the writing. Share roles: an Editor only.
 - **View > Show non-printing characters** (⌘⇧P, Ctrl+Shift+P elsewhere) shows what the writing holds but never prints:
   off by default, per person, remembered in this browser (`livedoc:v2:text-document-marks`) (default).
 - **Drawn**: ¶ at each paragraph's end, · in the middle of each space (the space keeps its width), → at the start of
-  each tab's space, ↵ at each line break, and "Section break" on a section break's line (page and column breaks get
-  theirs when they are built, [Page layout](page-layout.md#breaks)).
+  each tab's space, ↵ at each line break, and a page or section break as a line with its name ([Page layout](page-layout.md#breaks)).
 - In a muted ink for the paper they are on (#5f6368 on white, 6.3:1; #9aa0a6 on dark paper, 6.4:1), never part of the
   text: not selected, copied, printed or read by a screen reader.
 - Telemetry: `UI · Toggled · TextDocumentNonPrinting`.

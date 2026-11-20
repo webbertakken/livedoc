@@ -99,6 +99,18 @@ describe('paginate', () => {
     ]);
   });
 
+  it('starts a page at a Word page break inside a paragraph, or after it when nothing follows', () => {
+    // A page break after the second line: the third starts the next page whatever the rules.
+    expect(starts([para(4, { forced: [2], widowControl: true })])).toEqual([
+      [0, 0, 0, 0],
+      [0, 2, 100 - 40 + 50, 0],
+    ]);
+    expect(starts([para(1, { breakAfter: true }), para(1)])).toEqual([
+      [0, 0, 0, 0],
+      [1, 0, 100 - 20 + 50, 0],
+    ]);
+  });
+
   it('keeps space before at the top of a page and lets space after fall in the margin', () => {
     const spaced = { ...para(2, { widowControl: true }), marginTop: 10, marginBottom: 30 };
     // 10-50, then max(30, 10) = 30 apart: 80-120 does not fit; the gap starts after the first's space after.

@@ -1,6 +1,7 @@
 // The text document (docs/specs/034-text-documents/text-document.md): its model, its live state, and its mapping onto
 // the open standards (standard-mapping.md), shared by the editor, the api, the MCP server and the CLI.
 export { Body, type Paragraph as BodyParagraph } from './body';
+export { odfSectionRegion } from './odf/odf-region';
 export {
   KEPT_CONTENT_MAX_BYTES,
   TEXT_DOCUMENT_CHUNK_BYTES,
@@ -132,4 +133,4 @@ export {
   TEXT_PROPERTY_MARKS,
   TEXT_STYLE_MARK,
 } from './live/live-names';
-export { keptPresenceOf, type KeptPresence } from './live/kept-presence';
+export { keptBreakOf, keptPresenceOf, type KeptPresence } from './live/kept-presence';

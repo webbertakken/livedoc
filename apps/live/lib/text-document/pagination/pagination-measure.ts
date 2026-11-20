@@ -17,6 +17,9 @@ import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-l
 /** A page spacer's class: between blocks, or inside a paragraph between two of its lines. */
 export const PAGE_GAP_CLASS = 'text-document-page-gap';
 
+// A Word page break kept from the file, drawn as a line break (text-document-schema.ts).
+const PAGE_BREAK_MARK = 'br[data-page-break]';
+
 export type BlockRules = Pick<
   BlockMetrics,
   'atom' | 'keepWithNext' | 'keepTogether' | 'widowControl' | 'breakBefore' | 'startsSection'
@@ -80,6 +83,8 @@ export function measureBlock(
   const spacers = spacersIn(element, box.top, ratio);
   const height = box.height / ratio - spacers.reduce((sum, s) => sum + s.bottom - s.top, 0);
   let lines: BlockMetrics['lines'] = [];
+  const forced: number[] = [];
+  let breakAfter = false;
   if (!rules.atom) {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -92,6 +97,14 @@ export function measureBlock(
       px(style.borderTopWidth) + px(style.paddingTop),
       height - px(style.borderBottomWidth) - px(style.paddingBottom),
     );
+    // A Word page break starts the page at the line after its own, or the next block when it ends the paragraph.
+    for (const mark of element.querySelectorAll(PAGE_BREAK_MARK)) {
+      const r = mark.getBoundingClientRect();
+      const middle = naturalOf(((r.top + r.bottom) / 2 - box.top) / ratio, spacers);
+      const own = lines.findIndex((line) => middle >= line.top && middle < line.bottom);
+      if (own >= 0 && own + 1 < lines.length) forced.push(own + 1);
+      else breakAfter = true;
+    }
   }
   return {
     metrics: {
@@ -99,6 +112,8 @@ export function measureBlock(
       marginTop: px(style.marginTop),
       marginBottom: px(style.marginBottom),
       lines,
+      ...(forced.length > 0 ? { forced } : {}),
+      ...(breakAfter ? { breakAfter } : {}),
       ...rules,
     },
     inset: (box.left - left) / ratio,

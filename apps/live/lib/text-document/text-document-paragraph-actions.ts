@@ -111,6 +111,7 @@ export const LINE_SPACING_ENTRIES: readonly OfficeEntry[] = [
     checkable: 'checkbox',
     keywords: ['widow', 'orphan'],
   }),
+  built('add-page-break-before', 'Add page break before', { checkable: 'checkbox' }),
 ];
 
 const ICON_OF_LABEL = new Map(ALIGNMENTS.map((a) => [a.label, a.icon]));
