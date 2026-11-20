@@ -87,3 +87,23 @@ export const COMBINATORICS_FUNCTIONS: Record<string, FnDef> = {
   ERFC: numFn(1, 1, ([x]) => erfc(x!)),
   'ERFC.PRECISE': numFn(1, 1, ([x]) => erfc(x!)),
 };
+
+// Ordered selections, which Google files under Statistical (its Statistics family here).
+export const PERMUTATION_FUNCTIONS: Record<string, FnDef> = {
+  // n! / (n - k)!, the k factors multiplied out.
+  PERMUT: numFn(2, 2, ([a, b]) => {
+    const n = Math.trunc(a!);
+    const k = Math.trunc(b!);
+    if (n < 0 || k < 0 || k > n) return err('#NUM!', 'PERMUT needs 0 ≤ k ≤ n');
+    let out = 1;
+    for (let i = n - k + 1; i <= n; i++) out *= i;
+    return finite(out);
+  }),
+  // With repetition: n^k. Google's help: n of 0 is #NUM!, and k may not pass n.
+  PERMUTATIONA: numFn(2, 2, ([a, b]) => {
+    const n = Math.trunc(a!);
+    const k = Math.trunc(b!);
+    if (n <= 0 || k < 0 || k > n) return err('#NUM!', 'PERMUTATIONA needs 0 < n and 0 ≤ k ≤ n');
+    return finite(n ** k);
+  }),
+};

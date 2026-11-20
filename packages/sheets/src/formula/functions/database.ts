@@ -12,7 +12,7 @@ import {
   type SheetError,
   type Value,
 } from '../values';
-import { variance } from './stats';
+import { variance } from './variances';
 
 const NO_FIELD = (what: string) => err('#VALUE!', `There is no field ${what}`);
 
