@@ -250,7 +250,7 @@ its own status there. Shortcuts of left-out rows (voice typing, Explore, input t
 | Row                          | Rule                      | Status    | Spec                                                          |
 | ---------------------------- | ------------------------- | --------- | ------------------------------------------------------------- |
 | Editing, Suggesting, Viewing | One person's editing mode | specified | [Review](review.md#editing-modes)                             |
-| Print layout, pageless       | Per document              | specified | [Page layout](page-layout.md)                                 |
+| Print layout, pageless       | Print layout per person; pageless per document | specified | [Page layout](page-layout.md)                                 |
 | Compact mode, full screen    | Per person                | specified | [Editing surface](editing-surface.md#compact-and-full-screen) |
 | Screen reader, braille       | Per person                | specified | [Tools](tools.md#accessibility-settings)                      |
 | 1.02 million characters      | `TEXT_DOCUMENT_MAX_CHARS` | specified | [Text document](text-document.md#limits)                      |

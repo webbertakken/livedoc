@@ -1163,13 +1163,14 @@ export const TEXT_DOCUMENT_RULER = chart(
   { types: ['TextDocumentRulerIndent', 'TextDocumentTabStop'] },
 );
 
-// A text document's margins dragged on the ruler (docs/specs/034-text-documents/page-layout.md "Page setup").
-export const TEXT_DOCUMENT_MARGINS = chart(
+// A text document's page setup changed (docs/specs/034-text-documents/page-layout.md "Page setup"): margins dragged on
+// the ruler, File > Page setup's OK, Format > Page orientation's OK.
+export const TEXT_DOCUMENT_PAGE_SETUP = chart(
   'Tab',
   'Changed',
-  'Text Document Margins',
-  "A text document's margins dragged on the ruler.",
-  { types: ['TextDocumentMargins'] },
+  'Text Document Page Setup',
+  "A text document's margins dragged on the ruler, or its page setup or orientation changed by their dialogs.",
+  { types: ['TextDocumentMargins', 'TextDocumentPageSetup', 'TextDocumentPageOrientation'] },
 );
 
 // The ruler shown or hidden (docs/specs/034-text-documents/editing-surface.md "The ruler").
@@ -1220,13 +1221,14 @@ export const TEXT_DOCUMENT_SELECTION = chart(
   { types: ['TextDocumentStretches', 'TextDocumentSelectMatching'] },
 );
 
-// Someone kept a text document's styles as their default styles (text-and-paragraphs.md "Default styles").
+// Someone kept a text document's styles or page setup as their default (text-and-paragraphs.md "Default styles",
+// page-layout.md "Page setup").
 export const TEXT_DOCUMENT_DEFAULT_STYLES = chart(
   'UI',
   'Changed',
-  'Text Document Default Styles',
-  "Someone saved a text document's styles as their default styles, for the documents they make next.",
-  { types: ['TextDocumentDefaultStyles'], rising: 'neutral' },
+  'Text Document Defaults',
+  "Someone saved a text document's styles or page setup as their default, for the documents they make next.",
+  { types: ['TextDocumentDefaultStyles', 'TextDocumentPageDefault'], rising: 'neutral' },
 );
 
 // Someone changed their typing aids with Tools > Preferences' OK (docs/specs/034-text-documents/tools.md "Preferences").

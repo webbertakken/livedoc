@@ -4,18 +4,13 @@
 // indents"): the left and right indents and the special indent of the paragraphs the selection touches, in the
 // browser's unit. A field shows the paragraphs' value, blank where they differ; a blank field changes nothing.
 import { useId, useState } from 'react';
-import {
-  INDENT_FIELD_MAX,
-  ptOf,
-  readIndentField,
-  unitOf,
-  type IndentUnit,
-} from '@/lib/text-document/indent-units';
+import { ptOf, readIndentField, unitOf, type IndentUnit } from '@/lib/text-document/indent-units';
 import {
   INDENT_STEP_PT,
   type Indents,
 } from '@/lib/text-document/text-document-paragraph-formatting';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
+import { TextDocumentLengthField } from './TextDocumentLengthField';
 
 type Special = 'none' | 'first' | 'hanging';
 
@@ -25,58 +20,12 @@ const SPECIALS: readonly { value: Special; label: string }[] = [
   { value: 'hanging', label: 'Hanging' },
 ];
 
-const FIELD =
-  'h-9 w-28 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-[invalid=true]:border-red-600 dark:aria-[invalid=true]:border-red-400 disabled:opacity-40';
-
 const shown = (pt: number | null, unit: IndentUnit) =>
   pt === null ? '' : String(unitOf(pt, unit));
 
 function specialOf(first: number | null): Special | null {
   if (first === null) return null;
   return first > 0 ? 'first' : first < 0 ? 'hanging' : 'none';
-}
-
-function IndentField({
-  label,
-  value,
-  unit,
-  disabled = false,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  unit: IndentUnit;
-  disabled?: boolean;
-  onChange: (value: string) => void;
-}) {
-  const id = useId();
-  const invalid = !disabled && readIndentField(value, unit) === 'invalid';
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="flex items-center gap-2">
-        <input
-          id={id}
-          type="text"
-          inputMode="decimal"
-          aria-label={`${label} (${unit})`}
-          aria-invalid={invalid}
-          aria-describedby={invalid ? `${id}-error` : undefined}
-          disabled={disabled}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={FIELD}
-        />
-        <span aria-hidden="true" className="text-sm text-(--office-muted)">
-          {unit}
-        </span>
-      </span>
-      {invalid ? (
-        <span id={`${id}-error`} className="text-xs text-red-700 dark:text-red-300">
-          Enter a number from 0 to {INDENT_FIELD_MAX[unit]}.
-        </span>
-      ) : null}
-    </div>
-  );
 }
 
 export function TextDocumentIndentationDialog({
@@ -129,9 +78,9 @@ export function TextDocumentIndentationDialog({
     >
       <div className="grid grid-cols-[auto_1fr] items-start gap-x-6 gap-y-4 pt-1">
         <span className="pt-2 text-sm">Left</span>
-        <IndentField label="Left" value={left} unit={unit} onChange={setLeft} />
+        <TextDocumentLengthField label="Left" value={left} unit={unit} onChange={setLeft} />
         <span className="pt-2 text-sm">Right</span>
-        <IndentField label="Right" value={right} unit={unit} onChange={setRight} />
+        <TextDocumentLengthField label="Right" value={right} unit={unit} onChange={setRight} />
         <label htmlFor={specialId} className="pt-2 text-sm">
           Special indent
         </label>
@@ -154,7 +103,7 @@ export function TextDocumentIndentationDialog({
               </option>
             ))}
           </select>
-          <IndentField
+          <TextDocumentLengthField
             label="Special indent size"
             value={sized ? size : ''}
             unit={unit}

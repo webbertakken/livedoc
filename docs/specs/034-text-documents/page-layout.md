@@ -1,7 +1,7 @@
 # Page layout
 
-**Status: partly built.** The page is drawn at the first section's width and margins, set on the ruler; the rest is
-specified.
+**Status: partly built.** Page setup's Pages tab, page orientation and the page drawn at its setup are built; the
+rest is specified.
 
 Pages, sections, breaks, columns, headers and footers, page numbers and footnotes in a [text document](text-document.md).
 The layout is drawn by the measured DOM layout the research recommends
@@ -20,9 +20,46 @@ File > Page setup, a dialog with two tabs, **Pages** and **Pageless**:
   elsewhere by the browser's locale, margins 1 in (2.54 cm), white, portrait (assumed: Google's defaults; confirmed with
   the captures).
 
-- **The page is drawn at its setup**: its paper's width and its margins (the first section's until sections are
-  built); the ruler's margins set the same values ([Editing surface](editing-surface.md#the-ruler)). Margins dragged on
-  the ruler: `Tab · Changed · TextDocumentMargins`.
+The Pages tab, rule by rule:
+
+- **Paper sizes**, portrait, as Google lists them: Letter 8.5 × 11 in, Tabloid 11 × 17 in, Legal 8.5 × 14 in,
+  Statement 5.5 × 8.5 in, Executive 7.25 × 10.5 in, Folio 8.5 × 13 in, A3 297 × 420 mm, A4 210 × 297 mm, A5 148 × 210
+  mm, B4 250 × 353 mm, B5 176 × 250 mm. Each option reads its name and size in the person's unit.
+- The paper shown is the one the page has either way round, to within half a point (a file's rounding). A size a file
+  brings that is none of them shows as **Custom** with its size, first in the list, and is kept until another is picked.
+- **Orientation**: landscape lays the paper's longer side across. Switching swaps the page's width and height and keeps
+  the margins as they are (assumed: Google's).
+- **Margins** are shown and typed in the person's unit, as indents are (inches where the browser's language is
+  American English, centimetres elsewhere; two decimals). A field takes 0 to 55.88 cm (22 in), else "Enter a number
+  from 0 to 55.88." Left and right together leave the text at least 1 in (72 pt) wide, top and bottom at least 1 in
+  high, else both fields of the pair read "Margins leave too little room for text." (default) While any field is
+  refused, OK is held.
+- **Page colour**: the one colour picker in its swatch skin, with the office colour rows; white is stored as no
+  colour, so the file writes none.
+- **Apply to**: until sections are built the dialog applies to the whole document and the field is not shown. A file
+  that brings section breaks has every section's paper, orientation and margins set; the page colour is the whole
+  document's in both formats.
+- **OK** applies what changed as one undo step and returns focus to the writing; nothing changed changes nothing.
+  **Cancel** and Escape change nothing.
+- **Set as default** keeps the tab's paper, orientation, margins and colour as the person's default page setup, in
+  their [preferences](../007-editor/user-preferences.md) as default styles are; the dialog stays open, the button reads
+  **Saved as default** until a field changes, and a polite live region says so (default). It changes no document.
+- **A new text document starts in its maker's default page setup**, the first time its maker opens it in the browser
+  tab that made it, as default styles do ([Default styles](text-and-paragraphs.md#default-styles)): their default, else
+  the locale's paper (A4 outside the United States and Canada). Never an undo step. A file opened keeps its own setup;
+  someone else's new document keeps its maker's.
+- A saved default that does not read back as a page setup is ignored whole and logged
+  `[text-document] default page setup unreadable`.
+
+Format > **Page orientation** is a small dialog of the two orientations, applying to the whole document as Page
+setup's does, one undo step (assumed: Google's).
+
+- **The page is drawn at its setup**: its paper's width and height, its margins and its colour (the first section's
+  until sections are built); the ruler's margins set the same values ([Editing surface](editing-surface.md#the-ruler)).
+  A page colour is drawn as a fill is on the paper it is on: as written in the light scheme, its lightness mirrored on
+  dark paper ([The page in the dark scheme](editing-surface.md#the-page-in-the-dark-scheme)); the writing's inks are
+  drawn for the paper, not for the page colour, as Google draws them on white (default). Margins dragged on the ruler:
+  `Tab · Changed · TextDocumentMargins`.
 
 ## Print layout
 
@@ -94,9 +131,11 @@ file is kept and drawn where the format holds it.
 ## Share roles
 
 Editors change page setup, breaks, columns, headers, footers, page numbers and footnotes; a Participant only as
-suggestions (D7); a Viewer chooses print layout and text width for themself.
+suggestions (D7); a Viewer chooses print layout and text width for themself. Until suggestions are built a
+Participant and a Viewer see neither Page setup nor Page orientation.
 
 ## Telemetry
 
-`Tab · Changed · TextDocumentPageSetup`, `TextDocumentPageless`, `TextDocumentColumns`, `TextDocumentHeaderFooter`;
-`Element · Added · TextDocumentBreak<Kind>`, `TextDocumentFootnote`, `TextDocumentPageNumbers`. Never text.
+`Tab · Changed · TextDocumentPageSetup`, `TextDocumentPageOrientation`, `TextDocumentPageless`, `TextDocumentColumns`, `TextDocumentHeaderFooter`;
+`Element · Added · TextDocumentBreak<Kind>`, `TextDocumentFootnote`, `TextDocumentPageNumbers`;
+`UI · Changed · TextDocumentPageDefault` when Set as default keeps one, before it is kept. Never text.

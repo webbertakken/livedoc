@@ -13,12 +13,7 @@ import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import {
-  TextDocumentState,
-  type ListDefinition,
-  type PageSetup,
-  type Style,
-} from '@livedoc/text-documents';
+import { TextDocumentState, type ListDefinition, type Style } from '@livedoc/text-documents';
 import { Button } from '@livedoc/ui';
 import {
   apiLoadTextDocumentState,
@@ -35,6 +30,7 @@ import { stretchesPlugin } from '@/lib/text-document/text-document-stretches';
 import { typingAidsPlugin } from '@/lib/text-document/text-document-typing-aids-plugin';
 import { TypingAids } from '@/lib/text-document/text-document-typing-aids';
 import { useTextDocumentPreferences } from './useTextDocumentPreferences';
+import { useTextDocumentPageSetup } from './useTextDocumentPageSetup';
 import { useTextDocumentClipboard } from './useTextDocumentClipboard';
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
@@ -47,7 +43,7 @@ import { textDocumentEditorActions } from '@/lib/text-document/text-document-edi
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
 import { useTextDocumentParagraphStyles } from '@/lib/text-document/useTextDocumentParagraphStyles';
-import { startInDefaultStyles } from '@/lib/text-document/text-document-default-styles';
+import { startInMakersDefaults } from '@/lib/text-document/text-document-new-start';
 import {
   TEXT_DOCUMENT_LIMIT_NOTICES,
   textDocumentLimitPlugin,
@@ -88,7 +84,7 @@ import {
 } from '@/lib/text-document/text-document-caret';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
-import { pageBox, useTextDocumentSection } from '@/lib/text-document/text-document-page';
+import { pageBox } from '@/lib/text-document/text-document-page';
 import {
   NON_PRINTING_TOGGLE,
   RULER_TOGGLE,
@@ -96,9 +92,7 @@ import {
 } from '@/lib/text-document/useTextDocumentViewToggle';
 import { nonPrintingPlugin, setNonPrinting } from '@/lib/text-document/text-document-non-printing';
 import {
-  startUndoStep,
   TEXT_DOCUMENT_LISTS_ORIGIN,
-  TEXT_DOCUMENT_PAGE_ORIGIN,
   textDocumentUndoPlugins,
 } from '@/lib/text-document/text-document-undo';
 import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
@@ -249,8 +243,8 @@ export function TextDocumentSurface({
           doc.destroy();
           return;
         }
-        // A text document just made here starts in its maker's default styles (text-and-paragraphs.md).
-        startInDefaultStyles(doc, { tabId, format: live.current.format, canEdit: gate.canEdit });
+        // A text document just made here starts in its maker's default styles and page setup (page-layout.md).
+        startInMakersDefaults(doc, { tabId, format: live.current.format, canEdit: gate.canEdit });
         const readFormatting = () => ({
           styles: TextDocumentState.styles(doc, live.current.format),
           defaults: TextDocumentState.defaults(doc, live.current.format),
@@ -404,7 +398,14 @@ export function TextDocumentSurface({
   );
   // The page drawn at its setup, and the ruler that sets its margins, indents and tab stops (editing-surface.md
   // "The ruler", page-layout.md "Page setup").
-  const section = useTextDocumentSection(liveDoc, format, state === 'ready');
+  const page = useTextDocumentPageSetup({
+    view: editorView,
+    liveDoc,
+    format,
+    ready: state === 'ready',
+    writes,
+    ownerId,
+  });
   const ruler = useTextDocumentViewToggle(RULER_TOGGLE);
   // View > Show non-printing characters (text-and-paragraphs.md "Non-printing characters").
   const marks = useTextDocumentViewToggle(NON_PRINTING_TOGGLE);
@@ -421,16 +422,6 @@ export function TextDocumentSurface({
         : null,
     [format],
   );
-  const setPageSetup = useCallback(
-    (setup: PageSetup) => {
-      const doc = liveDoc.current;
-      if (!doc || !writes) return;
-      if (editorView) startUndoStep(editorView);
-      TextDocumentState.setSection(doc, { ...section, setup }, TEXT_DOCUMENT_PAGE_ORIGIN);
-      if (editorView) startUndoStep(editorView);
-    },
-    [section, writes, editorView],
-  );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -445,8 +436,10 @@ export function TextDocumentSurface({
       ...panels.actions,
       ...ruler.actions,
       ...marks.actions,
+      ...page.actions,
     }),
     [
+      page.actions,
       ruler.actions,
       marks.actions,
       editorView,
@@ -528,6 +521,7 @@ export function TextDocumentSurface({
       {paragraphs.dialog}
       {clipboard.dialog}
       {preferences.dialog}
+      {page.dialog}
       {lists.dialog}
       {limitReached ? (
         <p
@@ -557,8 +551,8 @@ export function TextDocumentSurface({
             <TextDocumentRuler
               view={editorView}
               readFormatting={readRulerFormatting}
-              setup={section.setup}
-              onSetup={setPageSetup}
+              setup={page.section.setup}
+              onSetup={page.setSetup}
               scale={scale}
               canEdit={writes}
               refresh={changes.subscribeCaret}
@@ -586,7 +580,7 @@ export function TextDocumentSurface({
           <div
             // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
             // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
-            style={{ zoom: scale, ...pageBox(section.setup) }}
+            style={{ zoom: scale, ...pageBox(page.section.setup) }}
             className={`mx-auto mt-6 min-h-(--page-height) w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
           >
             {state === 'loading' ? (

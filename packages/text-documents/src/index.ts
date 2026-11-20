@@ -67,7 +67,18 @@ export {
   type ParagraphProps,
   type TextProps,
 } from './model/props';
-export { PAPER, PageSetup, type Margins, type Section, type SectionStart } from './model/sections';
+export {
+  MIN_TEXT_SIDE_PT,
+  PAGE_SIDE_MAX_PT,
+  PAPER,
+  PAPER_ORDER,
+  PageSetup,
+  type Margins,
+  type Orientation,
+  type PaperName,
+  type Section,
+  type SectionStart,
+} from './model/sections';
 export {
   ROLE_IDS,
   roleOfStyleName,

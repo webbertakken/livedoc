@@ -1,11 +1,12 @@
 /*
  * The text document's page (docs/specs/034-text-documents/editing-surface.md "The page in the dark scheme"): white
  * paper and black ink in the light scheme, dark paper (#1e1f20) and light ink (#e3e3e3, 13.6:1) in the dark one. The
- * page's colour scheme picks every light-dark() value the writing is drawn with (text-document-paper.ts).
+ * page's colour scheme picks every light-dark() value the writing is drawn with (text-document-paper.ts). A page colour
+ * (page-layout.md "Page setup") arrives as --page-colour, drawn as a fill for the paper it is on.
  */
 .text-document-page {
   color-scheme: light;
-  background: light-dark(#ffffff, #1e1f20);
+  background: var(--page-colour, light-dark(#ffffff, #1e1f20));
   color: light-dark(#000000, #e3e3e3);
 }
 .dark .text-document-page {

@@ -2,7 +2,9 @@
 // setup, and a dragged margin held so the text area keeps an inch.
 import { describe, expect, it } from 'vitest';
 import { PageSetup } from '@livedoc/text-documents';
-import { MIN_TEXT_WIDTH_PT, pageBox, setMargin, textWidthOf } from './text-document-page';
+import { MIN_TEXT_SIDE_PT } from '@livedoc/text-documents';
+import { pageBox, setMargin, textWidthOf } from './text-document-page';
+import { paperFill } from './text-document-paper';
 
 const letter = PageSetup.of('letter');
 
@@ -22,6 +24,15 @@ describe('the page at its setup', () => {
   it('holds a margin between the edge and an inch short of the other margin', () => {
     expect(setMargin(letter, 'left', 36.0004).margins).toMatchObject({ left: 36, right: 72 });
     expect(setMargin(letter, 'right', -5).margins.right).toBe(0);
-    expect(setMargin(letter, 'left', 600).margins.left).toBe(612 - 72 - MIN_TEXT_WIDTH_PT);
+    expect(setMargin(letter, 'left', 600).margins.left).toBe(612 - 72 - MIN_TEXT_SIDE_PT);
+  });
+});
+
+describe('the page colour', () => {
+  it('draws a page colour as a fill for the paper it is on, and none for white', () => {
+    expect(pageBox({ ...letter, pageColor: '#fff2cc' })).toMatchObject({
+      '--page-colour': paperFill('#fff2cc'),
+    });
+    expect(pageBox(letter)).not.toHaveProperty('--page-colour');
   });
 });

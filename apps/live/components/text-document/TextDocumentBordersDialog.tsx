@@ -7,11 +7,11 @@
 import { useId, useState } from 'react';
 import { HoverCard } from '@livedoc/ui';
 import type { BorderDash, BorderSide } from '@livedoc/text-documents';
-import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
-import { noColour } from '@/components/colour/colour-options';
-import { useDocumentColours } from '@/hooks/ui/useDocumentColours';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
-import { OFFICE_COLOUR_ROWS } from '@/components/office/OfficeColourControl';
+import {
+  OFFICE_NO_COLOUR,
+  OfficeDialogColourField,
+} from '@/components/office/OfficeDialogColourField';
 import { readSpacingField } from './TextDocumentSpacingDialog';
 import {
   BORDER_DASHES,
@@ -30,8 +30,6 @@ export const BORDER_POSITIONS: readonly { side: BorderSide; label: string }[] = 
 ];
 const ALL_SIDES = BORDER_POSITIONS.map((p) => p.side);
 const PADDING_RANGE = { min: 0, max: BORDER_PADDING_MAX_PT } as const;
-const NONE_ID = 'none';
-const NO_THEME: readonly never[] = [];
 /** Why Between is dimmed in an OpenDocument text document. */
 export const NO_BETWEEN_IN_ODF = 'OpenDocument files have no line between paragraphs';
 
@@ -40,46 +38,6 @@ const CONTROL =
 
 const shownNumber = (value: number | null) =>
   value === null ? '' : String(Math.round(value * 100) / 100);
-
-function ColourField({
-  label,
-  value,
-  leading,
-  onPick,
-}: {
-  label: string;
-  // `#rrggbb`, 'none' (the leading option), or null where the paragraphs differ.
-  value: string | null;
-  leading?: string;
-  onPick: (value: string) => void;
-}) {
-  const yours = useDocumentColours();
-  const none = value === NONE_ID || value === null;
-  return (
-    <ColourSwatchButton
-      label={label}
-      swatch={none ? 'transparent' : value}
-      none={none}
-      value={value ?? ''}
-      leading={leading ? [noColour(NONE_ID, leading)] : []}
-      theme={NO_THEME}
-      standard={OFFICE_COLOUR_ROWS}
-      yours={yours}
-      className={`${CONTROL} flex w-28 items-center gap-2`}
-      onPick={onPick}
-    >
-      <span
-        aria-hidden="true"
-        data-colour-chip={none ? 'none' : value}
-        className="size-4 rounded-sm border border-(--office-line)"
-        style={none ? undefined : { background: value }}
-      />
-      <span className="text-xs text-(--office-muted)">
-        {value === null ? 'Mixed' : value === NONE_ID ? (leading ?? '') : ''}
-      </span>
-    </ColourSwatchButton>
-  );
-}
 
 export function TextDocumentBordersDialog({
   open,
@@ -119,7 +77,8 @@ export function TextDocumentBordersDialog({
       title="Borders and shading"
       secondary={{
         label: 'Reset',
-        onPress: () => setFields((f) => ({ ...f, width: 0, padding: '0', shading: NONE_ID })),
+        onPress: () =>
+          setFields((f) => ({ ...f, width: 0, padding: '0', shading: OFFICE_NO_COLOUR })),
       }}
       primary={{
         label: 'Apply',
@@ -209,14 +168,16 @@ export function TextDocumentBordersDialog({
         </select>
 
         <span className="text-sm">Border colour</span>
-        <ColourField
+        <OfficeDialogColourField
+          className={CONTROL}
           label="Border colour"
           value={fields.color}
           onPick={(color) => setFields((f) => ({ ...f, color }))}
         />
 
         <span className="text-sm">Background colour</span>
-        <ColourField
+        <OfficeDialogColourField
+          className={CONTROL}
           label="Background colour"
           value={fields.shading}
           leading="None"

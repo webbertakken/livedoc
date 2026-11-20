@@ -296,6 +296,9 @@ export type UserPreferences = {
   // A text document's typing aids (docs/specs/034-text-documents/text-and-paragraphs.md "Typing aids"): only what
   // differs from Google's. Read through TypingAids.parse.
   textDocumentTypingAids?: Record<string, unknown>;
+  // A text document's default page setup (docs/specs/034-text-documents/page-layout.md "Page setup"): sides,
+  // orientation, margins and colour in points. Read through PageSetup.parse.
+  textDocumentPageSetup?: Record<string, unknown>;
 };
 
 // How many excluded ids we keep. A document id is a 36-char UUID, so 200
