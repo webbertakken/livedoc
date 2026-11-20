@@ -28,6 +28,7 @@ import { OfficeNameField } from './OfficeNameField';
 import { OfficeToolbar } from './OfficeToolbar';
 import type { OfficeZoom } from './OfficeZoomField';
 import type { OfficeFontSize } from './OfficeFontSizeField';
+import type { OfficeFontFamily } from './OfficeFontMenu';
 import {
   visibleToolbar,
   type OfficeToolbar as OfficeToolbarData,
@@ -71,6 +72,7 @@ export function OfficeTitleRow({
   toolbar = [],
   zoom = null,
   fontSize = null,
+  fontFamily = null,
   refresh,
   mode = null,
   contextMenu = null,
@@ -103,6 +105,7 @@ export function OfficeTitleRow({
   zoom?: OfficeZoom | null;
   // The toolbar's font size field, and when what the toolbar shows may have changed.
   fontSize?: OfficeFontSize | null;
+  fontFamily?: OfficeFontFamily | null;
   refresh?: (listener: () => void) => () => void;
   // The person's editing mode and the modes their level allows (review.md "Editing modes").
   mode?: OfficeModeChoice | null;
@@ -168,8 +171,9 @@ export function OfficeTitleRow({
       visibleToolbar(toolbar, level, allActions, {
         zoom: zoom !== null && !phone,
         fontSize: fontSize !== null,
+        font: fontFamily !== null,
       }),
-    [toolbar, level, allActions, zoom, fontSize, phone],
+    [toolbar, level, allActions, zoom, fontSize, fontFamily, phone],
   );
   const shortcutOf = useMemo(() => shortcutTextOf(shortcuts, currentOfficePlatform()), [shortcuts]);
 
@@ -304,6 +308,7 @@ export function OfficeTitleRow({
           shortcutOf={shortcutOf}
           zoom={phone ? null : zoom}
           fontSize={fontSize}
+          fontFamily={fontFamily}
           refresh={refresh}
           phone={phone}
         />

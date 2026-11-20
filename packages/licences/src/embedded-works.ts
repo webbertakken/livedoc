@@ -1,3 +1,4 @@
+import { DOCUMENT_FONT_WORKS } from './document-font-works.ts';
 import type { TextRef } from './texts.ts';
 
 // Material a bundler cannot see into: libraries compiled into an emitted
@@ -226,4 +227,18 @@ export const EMBEDDED_WORKS: readonly EmbeddedWork[] = [
     },
     texts: text('feather-4.29.2-LICENSE.txt'),
   },
+  // The document fonts the editor serves (docs/specs/004-interface-design/fonts.md "Served from LiveDoc"), each a
+  // family's Latin faces from its Fontsource package (apps/live/app/document-fonts.css).
+  ...DOCUMENT_FONT_WORKS.map((work): EmbeddedWork => ({
+    id: `fontsource-${work.id}`,
+    name: work.name,
+    version: work.version,
+    licence: work.licence,
+    carrier: 'the editor (font)',
+    homepage: `https://fontsource.org/fonts/${work.id}`,
+    trigger: {
+      assets: new RegExp(`^${work.id}-latin(-ext)?-[47]00-(normal|italic)\\.[\\w-]+\\.woff2$`),
+    },
+    texts: [{ label: 'LICENSE', file: work.file }],
+  })),
 ];

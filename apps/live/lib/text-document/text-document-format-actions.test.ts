@@ -46,6 +46,7 @@ describe('textDocumentFormatActions', () => {
     expect(textDocumentFormatActions(null, readFormatting, { canEdit: true })).toEqual({
       actions: {},
       fontSize: null,
+      fontFamily: null,
     });
     expect(textDocumentFormatActions(view, readFormatting, { canEdit: false }).actions).toEqual({});
   });
@@ -89,6 +90,15 @@ describe('textDocumentFormatActions', () => {
     expect(track).toHaveBeenLastCalledWith('Element', 'Changed', 'TextDocumentFormatSize');
   });
 
+  it('sets a family from the font menu, reads it back and counts it', () => {
+    const { fontFamily } = textDocumentFormatActions(view, readFormatting, { canEdit: true });
+    expect(fontFamily!.read()).toBe('Arial');
+    fontFamily!.set('Lora');
+    expect(marksOfFirst()).toEqual({ font: 'Lora' });
+    expect(fontFamily!.read()).toBe('Lora');
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentFormatFont');
+  });
+
   it('rewrites the case, and counts nothing when nothing changed', () => {
     const { actions } = textDocumentFormatActions(view, readFormatting, { canEdit: true });
     actions.uppercase!.run();
@@ -103,12 +113,13 @@ describe('textDocumentFormatActions', () => {
   });
 
   it('does nothing once the editor is gone', () => {
-    const { actions, fontSize } = textDocumentFormatActions(view, readFormatting, {
+    const { actions, fontSize, fontFamily } = textDocumentFormatActions(view, readFormatting, {
       canEdit: true,
     });
     view.destroy();
     actions.bold!.run();
     expect(fontSize!.read()).toBeNull();
+    expect(fontFamily!.read()).toBeNull();
     expect(track).not.toHaveBeenCalled();
   });
 });

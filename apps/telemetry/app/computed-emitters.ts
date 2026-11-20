@@ -485,7 +485,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/text-document/text-document-format-actions.ts Element·Changed': {
     values: [
       ...['Bold', 'Italic', 'Underline', 'Strikethrough', 'Superscript', 'Subscript', 'SmallCaps'],
-      ...['Size', 'Lowercase', 'Uppercase', 'TitleCase'],
+      ...['Size', 'Font', 'Lowercase', 'Uppercase', 'TitleCase'],
     ].map((name) => `TextDocumentFormat${name}`),
   },
   // An office kind's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").

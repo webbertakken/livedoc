@@ -218,3 +218,14 @@ export function capitalise(mode: Capitalisation): Command {
     return true;
   };
 }
+
+/** The family the selection is in, when it has one; null when mixed. */
+export function textFontOf(state: EditorState, formatting: TextFormatting): string | null {
+  const values = textValuesOf(state, formatting, 'font');
+  return values.length === 1 && typeof values[0] === 'string' ? values[0] : null;
+}
+
+/** One family for every character of the selection (or the next typed), as files name it. */
+export function setTextFont(formatting: TextFormatting, family: string): Command {
+  return setProperty(formatting, 'font', () => family);
+}

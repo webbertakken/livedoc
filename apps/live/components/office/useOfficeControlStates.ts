@@ -6,11 +6,13 @@ import { useCallback, useRef, useSyncExternalStore } from 'react';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficeControl } from '@/lib/office/office-toolbar';
 import type { OfficeFontSize } from './OfficeFontSizeField';
+import type { OfficeFontFamily } from './OfficeFontMenu';
 
 export type OfficeControlStates = {
   readonly pressed: ReadonlySet<string>;
   readonly disabled: ReadonlySet<string>;
   readonly fontSize: number | null;
+  readonly fontFamily: string | null;
 };
 
 const NEVER = () => () => {};
@@ -19,6 +21,7 @@ function readStates(
   controls: readonly OfficeControl[],
   actions: OfficeActions,
   fontSize: OfficeFontSize | null,
+  fontFamily: OfficeFontFamily | null,
 ): OfficeControlStates {
   const pressed = new Set<string>();
   const disabled = new Set<string>();
@@ -27,25 +30,31 @@ function readStates(
     if (action?.checked === true) pressed.add(id);
     if (action?.disabled === true) disabled.add(id);
   }
-  return { pressed, disabled, fontSize: fontSize?.read() ?? null };
+  return {
+    pressed,
+    disabled,
+    fontSize: fontSize?.read() ?? null,
+    fontFamily: fontFamily?.read() ?? null,
+  };
 }
 
-const keyOf = ({ pressed, disabled, fontSize }: OfficeControlStates) =>
-  `${[...pressed].join(',')}|${[...disabled].join(',')}|${fontSize ?? ''}`;
+const keyOf = ({ pressed, disabled, fontSize, fontFamily }: OfficeControlStates) =>
+  JSON.stringify([[...pressed], [...disabled], fontSize, fontFamily]);
 
 export function useOfficeControlStates(
   controls: readonly OfficeControl[],
   actions: OfficeActions,
   fontSize: OfficeFontSize | null,
+  fontFamily: OfficeFontFamily | null,
   refresh: ((listener: () => void) => () => void) | undefined,
 ): OfficeControlStates {
   // The last states read, handed back while nothing they show has changed, as the store's snapshot must be.
   const last = useRef<{ key: string; states: OfficeControlStates } | null>(null);
   const snapshot = useCallback(() => {
-    const states = readStates(controls, actions, fontSize);
+    const states = readStates(controls, actions, fontSize, fontFamily);
     const key = keyOf(states);
     if (last.current?.key !== key) last.current = { key, states };
     return last.current.states;
-  }, [controls, actions, fontSize]);
+  }, [controls, actions, fontSize, fontFamily]);
   return useSyncExternalStore(refresh ?? NEVER, snapshot, snapshot);
 }

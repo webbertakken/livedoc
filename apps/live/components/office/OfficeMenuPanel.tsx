@@ -75,7 +75,12 @@ function ItemRow({
       }}
     >
       <Check on={item.checkable !== undefined && action?.checked === true} />
-      <span className="flex-1 whitespace-nowrap">{item.label}</span>
+      <span
+        className="flex-1 whitespace-nowrap"
+        style={item.face ? { fontFamily: item.face } : undefined}
+      >
+        {item.label}
+      </span>
       {soon ? (
         <span
           id={soonId}
@@ -165,7 +170,8 @@ export function OfficeMenuPanel({
   trigger: HTMLElement | null;
   initialFocus: MenuInitialFocus;
   // Under a menu bar name, beside a submenu row, or at a point in the window (a context menu, at `at`).
-  placement: 'below' | 'below-end' | 'side' | 'side-start' | 'point';
+  // `popup`: placed by the popup that holds it, scrolling when it is long (a font menu).
+  placement: 'below' | 'below-end' | 'side' | 'side-start' | 'point' | 'popup';
   at?: Point;
   // Its name, when no trigger names it (a context menu).
   label?: string;
@@ -196,15 +202,17 @@ export function OfficeMenuPanel({
     element.style.top = `${top}px`;
   }, [placement, at]);
   const where =
-    placement === 'point'
-      ? 'fixed'
-      : placement === 'below'
-        ? 'absolute top-full left-0 mt-0.5'
-        : placement === 'below-end'
-          ? 'absolute top-full right-0 mt-0.5'
-          : placement === 'side-start'
-            ? 'absolute top-full right-2'
-            : 'absolute -top-1.5 left-full';
+    placement === 'popup'
+      ? 'relative max-h-[70vh] overflow-y-auto'
+      : placement === 'point'
+        ? 'fixed'
+        : placement === 'below'
+          ? 'absolute top-full left-0 mt-0.5'
+          : placement === 'below-end'
+            ? 'absolute top-full right-0 mt-0.5'
+            : placement === 'side-start'
+              ? 'absolute top-full right-2'
+              : 'absolute -top-1.5 left-full';
   return (
     <div
       ref={ref}

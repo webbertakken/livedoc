@@ -962,6 +962,8 @@ export { recogniseShape, type RecognisedShape, type RecognisedShapeKind } from '
 // to paint a label in the face the canvas painted it in, and they run in the
 // mcp worker as well as the browser.
 export * from './fonts';
+// The document fonts of the office kinds (docs/specs/004-interface-design/fonts.md "Document fonts").
+export * from './document-fonts';
 
 // Slide decks (docs/specs/012-collaboration/presentation-mode.md): the Slide / Deck types plus the pure resolution
 // helpers a presentation is built from. Kept here rather than in apps/live

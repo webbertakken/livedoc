@@ -32,6 +32,7 @@ import {
 import { OfficeZoomField, type OfficeZoom } from './OfficeZoomField';
 import { OfficeFontSizeField, type OfficeFontSize } from './OfficeFontSizeField';
 import { useOfficeControlStates } from './useOfficeControlStates';
+import { OfficeFontMenu, type OfficeFontFamily } from './OfficeFontMenu';
 
 /** The room a divider takes between groups: 1 px and 4 px either side. */
 const DIVIDER_PX = 9;
@@ -50,6 +51,7 @@ export function OfficeToolbar({
   shortcutOf,
   zoom,
   fontSize = null,
+  fontFamily = null,
   refresh,
   phone = false,
 }: {
@@ -58,6 +60,7 @@ export function OfficeToolbar({
   shortcutOf: (id: string) => ShortcutText | null;
   zoom: OfficeZoom | null;
   fontSize?: OfficeFontSize | null;
+  fontFamily?: OfficeFontFamily | null;
   // Told when what the controls show may have changed (the selection, the formatting at the caret): pressed states
   // and the font size are read again.
   refresh?: (listener: () => void) => () => void;
@@ -72,7 +75,7 @@ export function OfficeToolbar({
     [groups],
   );
   const controls = useMemo(() => placed.map((p) => p.control), [placed]);
-  const states = useOfficeControlStates(controls, actions, fontSize, refresh);
+  const states = useOfficeControlStates(controls, actions, fontSize, fontFamily, refresh);
   const bar = useRef<HTMLDivElement>(null);
   const widths = useRef(new Map<string, number>());
   const [measuredFit, setFit] = useState(placed.length);
@@ -122,6 +125,8 @@ export function OfficeToolbar({
       shortcut={p.control.shortcut ? shortcutOf(p.control.shortcut) : null}
       zoom={zoom}
       fontSize={fontSize}
+      fontFamily={fontFamily}
+      family={states.fontFamily}
       pressed={states.pressed.has(p.control.id)}
       disabled={states.disabled.has(p.control.id)}
       size={states.fontSize}
@@ -249,6 +254,8 @@ function ControlView({
   shortcut,
   zoom,
   fontSize,
+  fontFamily,
+  family,
   pressed: on,
   disabled,
   size,
@@ -259,6 +266,8 @@ function ControlView({
   shortcut: ShortcutText | null;
   zoom: OfficeZoom | null;
   fontSize: OfficeFontSize | null;
+  fontFamily: OfficeFontFamily | null;
+  family: string | null;
   // What the binding says now (useOfficeControlStates): pressed, dimmed, and the font size.
   pressed: boolean;
   disabled: boolean;
@@ -271,6 +280,15 @@ function ControlView({
   if (look.kind === 'fontSize')
     return fontSize ? (
       <OfficeFontSizeField size={fontSize} value={size} tabIndex={tabIndex} />
+    ) : null;
+  if (look.kind === 'font')
+    return fontFamily ? (
+      <OfficeFontMenu
+        font={fontFamily}
+        value={family}
+        tabIndex={tabIndex}
+        className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
+      />
     ) : null;
   const soon = control.status === 'comingSoon' || !action;
   const inert = soon || disabled;

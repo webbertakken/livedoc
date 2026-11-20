@@ -11,10 +11,11 @@ export type OfficeControlLook =
   | { kind: 'text'; text: string; width: number; list?: boolean }
   // A value field, bound by the shell's field of that name (the zoom, the font size), not by an action.
   | { kind: 'zoom' }
-  | { kind: 'fontSize' };
+  | { kind: 'fontSize' }
+  | { kind: 'font' };
 
 /** The toolbar's value fields (office-shell.md "Toolbar"). */
-export type OfficeFieldKind = 'zoom' | 'fontSize';
+export type OfficeFieldKind = 'zoom' | 'fontSize' | 'font';
 
 export type OfficeControl = {
   id: string;
@@ -41,7 +42,9 @@ export function visibleToolbar(
   const shown = (control: OfficeControl) =>
     levelAtLeast(level, control.level) &&
     (control.status === 'comingSoon' ||
-      (control.look.kind === 'zoom' || control.look.kind === 'fontSize'
+      (control.look.kind === 'zoom' ||
+      control.look.kind === 'fontSize' ||
+      control.look.kind === 'font'
         ? fields[control.look.kind]
         : actions[control.id] !== undefined));
   return toolbar.flatMap((group) => {

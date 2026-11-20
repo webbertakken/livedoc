@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { DOCUMENT_FONT_TEXT_SOURCES } from './document-font-works.ts';
 
 // A licence text a work publishes: a committed file in packages/licences/texts,
 // or a file inside a package the same bundle ships.
@@ -143,4 +144,6 @@ export const TEXT_SOURCES: readonly TextSource[] = [
     sources: ['https://raw.githubusercontent.com/feathericons/feather/v4.29.2/LICENSE'],
     sha256: '308028e93fcf84972523cdf6e616f73168546b4953895f516d01287f16fe7bee',
   },
+  // The served document fonts (document-font-works.ts).
+  ...DOCUMENT_FONT_TEXT_SOURCES,
 ];
