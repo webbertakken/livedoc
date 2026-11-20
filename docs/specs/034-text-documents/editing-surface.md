@@ -143,10 +143,14 @@ browser's own (Google leaves them to the browser); pinch zoom on touch screens z
 
 ## Context menus
 
-On text, as the inventory lists: Cut, Copy, Paste, Paste without formatting, Delete; Comment, Suggest edits; Insert
-link; Format options; Clear formatting; Select all matching text. On a table, a picture, a link: their area's menu
+The shell's [context menu](../004-interface-design/office-shell.md#context-menus) on text, in Google's order: Cut,
+Copy, Paste, Paste without formatting, Delete; Comment, Suggest edits; Insert link; Format options, Clear formatting;
+Select all matching text. Each is the menu bar's item of the same name (Insert link is Insert > Link, Suggest edits
+the Suggesting mode); Format options opens its side panel and Select all matching text selects every stretch with the
+selection's formatting, each built in its area's phase. Delete removes the selection and is dimmed while nothing is
+selected, in Edit > Delete too. On a table, a picture, a link: their area's menu
 ([Tables](tables.md#context-menu), [Objects](objects.md#pictures), [Links and navigation](links-and-navigation.md#links)).
-Shift with the right button shows the browser's own menu. ⌘⇧\ and Shift+F10 open it at the caret.
+A Viewer's holds Copy; a Participant's adds Comment and Suggest edits.
 
 ## Tool finder
 
@@ -187,4 +191,4 @@ What each role sees is stated with each control above; the server refuses every 
 `UI · Opened · TextDocumentMenu<Name>` (a menu opened), `UI · Used · TextDocumentToolFinder`,
 `UI · Toggled · TextDocumentCompact`, `UI · Toggled · TextDocumentRuler`, `UI · Toggled · TextDocumentStar`,
 `UI · Opened · TextDocumentMove`, `UI · Used · TextDocumentFollow` (a press on a person),
-`UI · Opened · TextDocumentShortcuts`. Never text.
+`UI · Opened · TextDocumentShortcuts`, `UI · Opened · TextDocumentContextMenu`. Never text.

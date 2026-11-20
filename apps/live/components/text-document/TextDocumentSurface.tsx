@@ -59,6 +59,10 @@ import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import { TEXT_DOCUMENT_PANELS } from '@/lib/text-document/text-document-panels';
 import { TextDocumentOutline } from './TextDocumentOutline';
+import {
+  placeTextDocumentCaret,
+  textDocumentCaretPoint,
+} from '@/lib/text-document/text-document-caret';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -282,6 +286,18 @@ export function TextDocumentSurface({
     }),
     [editorView, writes, modeActions, panels.actions],
   );
+  // The caret, for the context menu on text.
+  const caret = useMemo(
+    () =>
+      editorView
+        ? {
+            point: () => textDocumentCaretPoint(editorView),
+            place: (point: { x: number; y: number }) => placeTextDocumentCaret(editorView, point),
+          }
+        : null,
+    [editorView],
+  );
+
   // A mode change re-reads whether the writing is editable.
   useEffect(() => {
     if (editorView && !editorView.isDestroyed) editorView.setProps({});
@@ -310,6 +326,7 @@ export function TextDocumentSurface({
         level={levelInMode(level, mode)}
         editorActions={editorActions}
         mode={modeChoice}
+        caret={caret}
         keyScope={root}
         localDoc={local ? () => liveDoc.current : null}
         chrome={chrome}

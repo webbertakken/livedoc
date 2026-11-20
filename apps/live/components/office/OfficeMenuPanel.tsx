@@ -3,7 +3,7 @@
 // One open menu of the office shell (docs/specs/004-interface-design/office-shell.md "Menu bar"): a command menu on
 // the shared keyboard model (useMenu), drawn from the kind's catalogue. A row shows its check, label, shortcut and ▸;
 // a `comingSoon` row is dimmed and inert, with "Coming soon" in the shortcut's place.
-import { useId, useState } from 'react';
+import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -18,10 +18,11 @@ import type {
   OfficeSubmenu,
 } from '@/lib/office/office-catalogue';
 
+import { contextMenuPlace, type Point } from '@/lib/office/context-menu-place';
 import type { ShortcutText } from '@/lib/office/shortcut-notation';
 
 const PANEL =
-  'absolute z-40 min-w-64 rounded-md border border-(--office-line) bg-(--office-menu) py-1.5 text-sm text-(--office-ink) shadow-lg animate-fade-in motion-reduce:animate-none';
+  'z-40 min-w-64 rounded-md border border-(--office-line) bg-(--office-menu) py-1.5 text-sm text-(--office-ink) shadow-lg animate-fade-in motion-reduce:animate-none';
 
 const ROW =
   'flex w-full items-center gap-3 py-1.5 pr-4 pl-2 text-left outline-none hover:bg-(--office-menu-hover) focus-visible:bg-(--office-menu-hover) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--office-focus)';
@@ -149,6 +150,8 @@ export function OfficeMenuPanel({
   trigger,
   initialFocus,
   placement,
+  at,
+  label,
   onClose,
   onDone,
 }: {
@@ -157,19 +160,49 @@ export function OfficeMenuPanel({
   shortcutOf: (id: string) => ShortcutText | null;
   trigger: HTMLElement | null;
   initialFocus: MenuInitialFocus;
-  // Under a menu bar name, or beside a submenu row.
-  placement: 'below' | 'side';
+  // Under a menu bar name, beside a submenu row, or at a point in the window (a context menu, at `at`).
+  placement: 'below' | 'side' | 'point';
+  at?: Point;
+  // Its name, when no trigger names it (a context menu).
+  label?: string;
   // Closes this menu only.
   onClose: () => void;
   // An item ran: the whole menu closes.
   onDone: () => void;
 }) {
-  const { attach, surfaceProps, tree } = useMenu({ onClose, trigger, initialFocus });
+  const { attach, surfaceProps, tree } = useMenu({ onClose, trigger, initialFocus, label });
+  const panel = useRef<HTMLDivElement | null>(null);
+  const ref = useCallback(
+    (element: HTMLDivElement | null) => {
+      attach(element);
+      panel.current = element;
+    },
+    [attach],
+  );
+  // At a point: measured once drawn, then moved inside the window before it is painted.
+  useLayoutEffect(() => {
+    const element = panel.current;
+    if (placement !== 'point' || !at || !element) return;
+    const { left, top } = contextMenuPlace(
+      at,
+      { width: element.offsetWidth, height: element.offsetHeight },
+      { width: window.innerWidth, height: window.innerHeight },
+    );
+    element.style.left = `${left}px`;
+    element.style.top = `${top}px`;
+  }, [placement, at]);
+  const where =
+    placement === 'point'
+      ? 'fixed'
+      : placement === 'below'
+        ? 'absolute top-full left-0 mt-0.5'
+        : 'absolute -top-1.5 left-full';
   return (
     <div
-      ref={attach}
+      ref={ref}
       {...surfaceProps}
-      className={`${PANEL} ${placement === 'below' ? 'top-full left-0 mt-0.5' : '-top-1.5 left-full'}`}
+      style={placement === 'point' ? { left: at?.x, top: at?.y } : undefined}
+      className={`${PANEL} ${where}`}
     >
       <MenuTreeContext.Provider value={tree}>
         {entries.map((entry, index) =>

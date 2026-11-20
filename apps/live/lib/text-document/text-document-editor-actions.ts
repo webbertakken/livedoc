@@ -1,7 +1,8 @@
 // What the text document's menus and shortcuts run in its editor (docs/specs/034-text-documents/editing-surface.md
-// "The menu bar"): Edit > Undo, Redo (one person's own, live-editing-and-storage.md "Undo") and Select all. Each acts
+// "The menu bar"): Edit > Undo, Redo (one person's own, live-editing-and-storage.md "Undo"), Select all and Delete
+// (dimmed while nothing is selected, "Context menus"). Each acts
 // on the editor there is now and gives it focus back, as Google's menus return to the writing.
-import { selectAll } from 'prosemirror-commands';
+import { deleteSelection, selectAll } from 'prosemirror-commands';
 import type { EditorView } from 'prosemirror-view';
 import { redo, undo } from 'y-prosemirror';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
@@ -20,6 +21,13 @@ export function textDocumentEditorActions(
       ? {
           undo: { run: run((v) => undo(v.state)) },
           redo: { run: run((v) => redo(v.state)) },
+          delete: {
+            run: run((v) => deleteSelection(v.state, v.dispatch)),
+            // Read as the menu draws, so it follows the selection.
+            get disabled() {
+              return !view || view.state.selection.empty;
+            },
+          },
         }
       : {}),
     'select-all': { run: run((v) => selectAll(v.state, v.dispatch)) },

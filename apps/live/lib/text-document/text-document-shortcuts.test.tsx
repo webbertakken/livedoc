@@ -51,6 +51,7 @@ describe('the text document menus', () => {
       .map((item) => item.shortcut!);
     const shellRows = [
       'tool-finder',
+      'context-right-click-menu',
       ...['file', 'edit', 'view', 'insert', 'format', 'tools', 'help'].map((m) => `${m}-menu`),
     ];
     const builtRows = TEXT_DOCUMENT_SHORTCUTS.filter((r) => r.status === 'built').map((r) => r.id);
@@ -143,6 +144,20 @@ describe('the text document shortcuts', () => {
     fireEvent.click(within(screen.getByRole('menubar')).getByRole('menuitem', { name: 'Help' }));
     fireEvent.click(screen.getByRole('menuitem', { name: /^Keyboard shortcuts/ }));
     expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeDefined();
+    view.destroy();
+  });
+
+  // docs/specs/034-text-documents/editing-surface.md "Context menus": Delete removes the selection.
+  it('deletes the selection, and is dimmed while nothing is selected', async () => {
+    const view = await surfaceWithEditor();
+    view.dispatch(view.state.tr.insertText('One two', 1));
+    const actions = textDocumentEditorActions(view, { canEdit: true });
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 4)));
+    expect(actions.delete!.disabled).toBe(true);
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 4, 8)));
+    expect(actions.delete!.disabled).toBe(false);
+    actions.delete!.run();
+    expect(view.state.doc.textContent).toBe('One');
     view.destroy();
   });
 
