@@ -11,6 +11,7 @@ import type {
 import type { ArrowEnd, DragMode, DragState } from '@/lib/canvas';
 import type { InsertionGate } from '@/lib/insert-between';
 import type { SnapGuideStore } from './useSnapGuideState';
+import type { ValueStore } from '@/hooks/ui/useValueStore';
 
 // External state + callbacks the drag machine reads on every move.
 // Bundled into one object so the hook signature doesn't sprout
@@ -116,7 +117,9 @@ export type EditorDragDeps = {
 };
 
 export type EditorDragApi = {
-  drag: DragState | null;
+  // The drag in hand, null between gestures: read with useValueStoreSnapshot by what shows it
+  // (docs/specs/008-canvas/canvas-performance.md "A press renders what shows it").
+  dragStore: ValueStore<DragState | null>;
   // The dragged element ids to render translucent while a shift-duplicate
   // is in progress (docs/specs/008-canvas/shift-drag-duplicate.md): copies already sit at the drag's start
   // position, so the set following the cursor shows as a ghost. Null

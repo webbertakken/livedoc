@@ -3813,11 +3813,11 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // Wiring it up here passes the editor-page's "what is going on
   // right now" state as deps so the hook can read fresh values on
   // every pointer move without re-attaching listeners.
-  // `drag` itself isn't consumed in the page (Canvas pulls cursor
-  // styling from `canvasTool`, not the drag state); only the four
+  // The drag in hand is a store (`dragStore`), read only by what shows it (the modifier hint, a
+  // reshaped arrow's frame), so a press re-renders no editor; only the
   // begin-handlers below are passed through to Canvas as props.
   const {
-    drag,
+    dragStore,
     shiftDupGhostIds,
     snapGuideStore,
     beginDrag,
@@ -4305,7 +4305,7 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     deleteCurvePoint,
     beginArrowElbowDrag,
     beginArrowLabelDrag,
-    drag,
+    dragStore,
     beginArrowTranslate,
     beginDrag,
     pressArmedAction,

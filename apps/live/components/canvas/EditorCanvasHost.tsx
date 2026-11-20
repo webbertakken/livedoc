@@ -17,7 +17,7 @@ import {
 import { createStockColourProjector } from '@/lib/stock-colour-projector';
 import { usePageView } from '@/hooks/canvas/usePageView';
 import { drawnArrowAsShown } from '@/lib/drawn-arrow-preview';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { isBoxed, isVoteHost, labelsFollowCanvas, threadAt } from '@livedoc/document';
 import { commentPersisters } from '@/lib/comment-persistence';
 import { pollHostFor } from '@/hooks/collab/useLivePoll';
@@ -64,6 +64,7 @@ import { elementSelector } from '@/lib/canvas-selectors';
 import { useWorkbenchSession } from '@/components/providers/workbench-session-context';
 import { setDrawingContext, useContextSelection } from '@/lib/context-selection';
 import { useReviewOpen } from '@/lib/review-view';
+import type { DragState } from '@/lib/canvas';
 import { toggleReview } from '@/lib/review-open';
 
 // The Canvas element's wiring, lifted out of EditorView (which carried
@@ -380,7 +381,7 @@ export function EditorCanvasHost() {
     userPreferences,
     zenMode,
     whiteboardDock,
-    drag,
+    dragStore,
     editorMode,
     pagesMode,
     presentArticles,
@@ -408,14 +409,12 @@ export function EditorCanvasHost() {
     insertLibraryShape(item, at);
   };
   // A free arrow's frame stands down while a handle reshapes it (arrow-bending.md).
-  const reshapingArrowId =
-    drag &&
-    (drag.kind === 'arrow-bend' ||
-      drag.kind === 'arrow-curve' ||
-      drag.kind === 'arrow-elbow' ||
-      drag.kind === 'arrow-endpoint')
-      ? drag.arrowId
-      : null;
+  // Read as the arrow's id alone, so a press elsewhere re-renders no canvas.
+  const reshapingArrowId = useSyncExternalStore(
+    dragStore.subscribe,
+    () => reshapingArrowOf(dragStore.get()),
+    () => null,
+  );
 
   // Somebody else is running this session (docs/specs/012-collaboration/facilitator.md). The facilitator verbs
   // below fall away for everybody else, exactly as they do on a read-only
@@ -1412,4 +1411,15 @@ export function EditorCanvasHost() {
       </TagColoursProvider>
     </CanvasThemeProvider>
   );
+}
+
+// The arrow a handle is reshaping, if the drag in hand is one.
+function reshapingArrowOf(drag: DragState | null): string | null {
+  return drag &&
+    (drag.kind === 'arrow-bend' ||
+      drag.kind === 'arrow-curve' ||
+      drag.kind === 'arrow-elbow' ||
+      drag.kind === 'arrow-endpoint')
+    ? drag.arrowId
+    : null;
 }
