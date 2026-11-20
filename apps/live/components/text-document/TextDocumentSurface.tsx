@@ -5,7 +5,7 @@
 // the body, edited live through the room. Its bare form: the office shell's title row, menus and toolbar take this
 // one's place. One surface is one tab: its host keys it by the tab, so another tab mounts a fresh one.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
@@ -25,7 +25,18 @@ import {
   setTextDocumentPeers,
   textDocumentPeersPlugin,
 } from '@/lib/text-document/text-document-peers';
+import { useSurfaceView } from '@/hooks/ui/useSurfaceView';
+import type { SurfaceSelection } from '@/lib/surface-view';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
+
+// A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
+// "Switching tabs"): the text may have changed since it was left.
+function restoreSelectionIn(view: EditorView, { anchor, head }: SurfaceSelection): void {
+  const { doc } = view.state;
+  const clamp = (at: number) => Math.min(at, doc.content.size);
+  const selection = TextSelection.between(doc.resolve(clamp(anchor)), doc.resolve(clamp(head)));
+  view.dispatch(view.state.tr.setSelection(selection).setMeta('addToHistory', false));
+}
 
 export type TextDocumentSurfaceProps = {
   scope: TextDocumentScope;
@@ -45,6 +56,7 @@ export function TextDocumentSurface({
   send,
 }: TextDocumentSurfaceProps) {
   const mount = useRef<HTMLDivElement | null>(null);
+  const scroller = useRef<HTMLDivElement | null>(null);
   const editor = useRef<EditorView | null>(null);
   // Collaborators' carets in this tab's writing (live-editing-and-storage.md "Presence"), drawn by the editor.
   const peers = useTextDocumentPeers(scope.tabId);
@@ -55,6 +67,28 @@ export function TextDocumentSurface({
   const live = useRef({ send, canEdit });
   useLayoutEffect(() => {
     live.current = { send, canEdit };
+  });
+  // Where the person was in this tab, back when they return to it.
+  const { noteViewChanged } = useSurfaceView({
+    documentId,
+    tabId,
+    ready: state === 'ready',
+    scroller,
+    readSelection: () => {
+      const selection = editor.current?.state.selection;
+      return selection ? { anchor: selection.anchor, head: selection.head } : null;
+    },
+    restoreSelection: (selection) => {
+      const view = editor.current;
+      if (!view) return;
+      restoreSelectionIn(view, selection);
+      // Back in the writing where it was left, as a word processor keeps its caret; focus never scrolls the page.
+      if (live.current.canEdit) view.focus();
+    },
+  });
+  const viewChanged = useRef(noteViewChanged);
+  useLayoutEffect(() => {
+    viewChanged.current = noteViewChanged;
   });
 
   useEffect(() => {
@@ -85,6 +119,14 @@ export function TextDocumentSurface({
               yUndoPlugin(),
               keymap({ 'Mod-z': undo, 'Mod-y': redo, 'Mod-Shift-z': redo }),
               keymap(baseKeymap),
+              // A moved selection is part of the view remembered for this tab.
+              new Plugin({
+                view: () => ({
+                  update: (view, previous) => {
+                    if (!view.state.selection.eq(previous.selection)) viewChanged.current();
+                  },
+                }),
+              }),
               textDocumentPeersPlugin({
                 canEdit: () => live.current.canEdit,
                 publish: (selection) => setLocalTextDocumentCaret(tabId, selection),
@@ -136,7 +178,7 @@ export function TextDocumentSurface({
       data-text-document-surface={state}
     >
       <TextDocumentTitleRow scope={scope} documentName={documentName} format={format} />
-      <div className="min-h-0 flex-1 overflow-y-auto py-6">
+      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-6">
         {state === 'failed' ? (
           <div
             role="alert"

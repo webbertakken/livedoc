@@ -74,6 +74,10 @@ way): 801 to 525 KiB.
 Then the document page with its element kinds on demand (plan 0021, measured 2026-11-19 on `main` at 1fa376f8c2 the
 same way): `/document/<id>` and `/embed` 1,534 to 1,368 KiB.
 
+Then the document page with the canvas on demand ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md),
+measured 2026-11-20 on `main` at 0230a157e7 plus the change, the same way): `/document/<id>` and `/embed` 1,368 to
+1,020 KiB; a canvas document loads the canvas's chunk alongside, asked for at the open.
+
 ## Rules
 
 ### Every page has a budget
@@ -175,15 +179,18 @@ alongside the editor's code, so a template link waits for nothing extra.
 `apps/live/lib/editor-deferred-code.ts` names every module the editor loads on demand, so a surface's
 `next/dynamic` and the prefetch below share one import:
 
+- **The canvas itself**: the canvas, its palette and toolbars, and the chrome only a canvas uses are one chunk
+  (`lib/canvas-code`), asked for at the open when the opened tab is a canvas tab, and never for a document whose
+  tabs all have a surface ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-canvass-code)).
 - **Content a board may draw on open**: Pages mode's pages and their writing, the Draw dock, tables, sequence
-  diagrams and the Map. Fetched as the editor mounts (`prefetchWhenIdle`), alongside the document request, so a
+  diagrams and the Map. Fetched with the canvas's code (`prefetchWhenIdle`), alongside the document request, so a
   board that has one finds its code already in, while the first load does not carry it. An element kind's own face
   (facilitation panels among them) loads with its family instead (below).
 - **Surfaces someone opens**: the Explorer and Layers popovers (mounted from their first opening on,
   then kept, so their state survives), search, the quick style panel, the tool panels, presenting and
   session settings, and the landing of another tool's board (`lib/board-scene/land`, `lib/board-scene-import`)
   that a paste, a drop or an import runs. Fetched once the opened document has rendered and the page is
-  idle; a paste before then waits for it.
+  idle, the canvas's own only for a document with a canvas tab; a paste before then waits for it.
 - **At the press**: the photo import's detection pipeline (and the sticky detector in it) loads when a
   photo is picked; a template's canvas overrides, its catalogue and its tab's name load with its builders
   (`lib/template-builders`) when one is applied.
@@ -276,6 +283,8 @@ How a family is reached and when it loads:
   cannot load places nothing (default).
 - **Once the board has settled.** Every remaining family is fetched when the opened board has rendered and the page
   is idle (`prefetchWhenIdle`), so a paste, a template, a peer's new element or going offline later finds them in.
+  A document whose tabs all have a surface fetches none of them
+  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-canvass-code)).
   An element that arrives before its family (a peer's, in a session's first seconds) draws when its family is in.
   A prefetch that fails is forgotten rather than shown; the family is asked again when something needs it (default).
 - **When a family cannot load** (offline before it was fetched), the elements of that family draw nothing and a

@@ -15819,6 +15819,9 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "id": {
         "type": "string"
       },
+      "kind": {
+        "$ref": "#/components/schemas/TabKind"
+      },
       "name": {
         "type": "string"
       },

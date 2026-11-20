@@ -30,6 +30,7 @@ import {
 } from '@livedoc/document';
 import { apiLinkTab } from '@/lib/api-client';
 import { newTabOpening, newTabSeed, type AddTabChoice } from '@/lib/new-tab-seed';
+import { newTextDocumentTab, TEXT_DOCUMENT_TAB_NAME } from '@/lib/text-document/text-document-tab';
 import { PLAN_START_LANDING, setPlanStartLanding } from '@/lib/plan-start-landing';
 import { track } from '@/lib/telemetry';
 import { debugLog } from '@/lib/debug-log';
@@ -143,6 +144,20 @@ export function useTabActions(deps: TabActionsDeps) {
     // A session that cannot change the document's tabs adds none, whichever row asked.
     if (!deps.canEditStructure) return;
     if (refusedInSpreadsheet('add')) return;
+    // A text document tab (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip"): born ODF, its writing
+    // held by the room, never by the tab; it opens on its own surface.
+    if (choice === 'text-document') {
+      const tab = newTextDocumentTab(createTab(TEXT_DOCUMENT_TAB_NAME).id, TEXT_DOCUMENT_TAB_NAME);
+      commitTabs((ts) => [...ts, tab]);
+      markTabLoaded(tab.id);
+      track('Tab', 'Created', 'TextDocument');
+      debugLog('[tabs] added', { tabId: tab.id, choice });
+      setActiveId(tab.id);
+      setSelectedId(null);
+      setEditingId(null);
+      setFormatSourceId(null);
+      return;
+    }
     // The new tab takes the active tab's look (newTabSeed); its mode is newTabOpening's.
     // Skips the look when the active tab can't be resolved (mid-mount, or removed in another
     // window), falling back to brand defaults the same way Tab 1 does.

@@ -19,6 +19,17 @@ vi.mock('@/lib/element-kinds/load-for', () => ({
   },
 }));
 
+// The canvas's code, settled by the test likewise.
+const canvas = vi.hoisted(() => ({ hold: false, release: () => {}, asked: [] as unknown[][] }));
+vi.mock('@/lib/canvas-code/canvas-code', () => ({
+  loadCanvasCode: (...args: unknown[]) => {
+    canvas.asked.push(args);
+    return canvas.hold
+      ? new Promise<boolean>((resolve) => (canvas.release = () => resolve(true)))
+      : Promise.resolve(true);
+  },
+}));
+
 import { makeSeedFetchedDocument } from './seed-fetched-document';
 
 // The editor's eager first-tab read is the one that counts as an open of the document, for the
@@ -148,5 +159,32 @@ describe('seedFetchedDocument and element kind families', () => {
     kinds.hold = false;
     await seeding;
     expect(resetTabs).toHaveBeenCalledTimes(1);
+  });
+});
+
+// docs/specs/006-document/kinds-outside-the-canvas.md "The canvas's code": a board opened at the open waits for the
+// canvas's code as it waits for its families; a tab with a surface never asks for it.
+describe('seedFetchedDocument and the canvas’s code', () => {
+  it('puts a canvas tab in place once the canvas’s code is in', async () => {
+    const resetTabs = vi.fn();
+    canvas.hold = true;
+    canvas.asked.length = 0;
+    const seeding = seed(true, vi.fn(), vi.fn(), resetTabs)('me', fetched, null, null);
+    await vi.waitFor(() => expect(canvas.asked).toEqual([['open']]));
+    expect(resetTabs).not.toHaveBeenCalled();
+    canvas.release();
+    canvas.hold = false;
+    await seeding;
+    expect(resetTabs).toHaveBeenCalledTimes(1);
+  });
+
+  it('never asks for it for a text document tab', async () => {
+    apiLoadTab.mockResolvedValue({
+      tab: { id: 't1', name: 'Tab 1', kind: 'text-document', format: 'odf', elements: [] },
+      rev: 1,
+    } as never);
+    canvas.asked.length = 0;
+    await seed(true)('me', fetched, null, null);
+    expect(canvas.asked).toEqual([]);
   });
 });

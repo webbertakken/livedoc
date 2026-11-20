@@ -215,10 +215,46 @@ function packageModules(pkg: string) {
   return { definer: (n: string) => definer('index', n), reachedBy };
 }
 
+// docs/specs/006-document/kinds-outside-the-canvas.md "The canvas's code": the canvas, its palette and the chrome only
+// a canvas uses are one chunk, reached from the document page only through lib/canvas-code's dynamic import, so a
+// document whose tabs all have a surface never downloads them.
+const CANVAS_CODE_ENTRY = 'components/canvas/canvas-code-entry.ts';
+
+describe('the canvas’s code', () => {
+  const page = reachableFrom('app/document/[id]/page.tsx');
+  const canvas = reachableFrom(CANVAS_CODE_ENTRY);
+
+  it.each([
+    'components/canvas/EditorCanvasHost.tsx',
+    'components/canvas/EditorCanvasChrome.tsx',
+    'components/canvas/Canvas.tsx',
+    'components/canvas/QuickStyleHost.tsx',
+    'components/chrome/ModifierHintBanner.tsx',
+    'components/start/EditorStartPanels.tsx',
+    'components/chrome/EditorPhotoImport.tsx',
+    'components/canvas/BoardSceneNotice.tsx',
+    'components/palette/EditorContextMenuHost.tsx',
+    'components/dialogs/EditorElementDialogs.tsx',
+  ])('%s loads with the canvas, never with the page', (module) => {
+    expect(canvas.has(module)).toBe(true);
+    expect(page.has(module)).toBe(false);
+  });
+
+  it('is reached through its loader', () => {
+    expect(read('lib/canvas-code/canvas-code.ts')).toContain(
+      "import('@/components/canvas/canvas-code-entry')",
+    );
+  });
+});
+
 describe('the element kind families', () => {
   const familiesDir = 'lib/element-kinds/families';
   const families = readdirSync(join(root, familiesDir)).filter((f) => f.endsWith('.ts'));
-  const firstLoad = reachableFrom('app/document/[id]/page.tsx');
+  // The page and the canvas's code (its own chunk, loaded with every canvas): a family reaches neither statically.
+  const firstLoad = new Set([
+    ...reachableFrom('app/document/[id]/page.tsx'),
+    ...reachableFrom(CANVAS_CODE_ENTRY),
+  ]);
 
   it('reach the page only through the registry', () => {
     expect(families.length).toBeGreaterThan(0);

@@ -448,6 +448,15 @@ INSERT OR IGNORE INTO sheet_axes (document_id, sheet_id, axis, chunk, ids)
 UPDATE sheets SET layout = json_remove(layout, '$.rows', '$.cols') WHERE json_valid(layout);
 `;
 
+// Each tab row's kind (docs/specs/006-document/kinds-outside-the-canvas.md "The surface"), so a document's outline
+// names it without reading a body. Every writer of a body writes it in the write itself, as it writes the element
+// count (no trigger re-parses a body); the bodies stored before it are read once here. A body that is not JSON leaves
+// the kind unknown.
+const TAB_KIND_STEP = `
+ALTER TABLE tabs ADD COLUMN kind TEXT;
+UPDATE tabs SET kind = json_extract(data, '$.kind') WHERE json_valid(data);
+`;
+
 /** Every step the room's schema has taken, in order; a change appends one and never edits a shipped step. */
 export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   STEP_1 + OUTBOX + SHARES,
@@ -456,6 +465,7 @@ export const DOCUMENT_SCHEMA_STEPS: readonly string[] = [
   WORKBOOK_STYLES_STEP,
   SHEET_AXES_STEP,
   TEXT_DOCUMENT_DIGEST_STEP,
+  TAB_KIND_STEP,
 ];
 
 export const DOCUMENT_SCHEMA_VERSION = DOCUMENT_SCHEMA_STEPS.length;

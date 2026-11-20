@@ -482,6 +482,7 @@ export {
   type TextDocumentFormat,
 } from './tab-kind';
 export { tabMixRefusal, type TabMixRefusal } from './tab-mix';
+export { TAB_SURFACES, hasCanvasTab, surfaceOf, type TabSurface } from './tab-surface';
 export * from './accent-edge';
 export * from './card';
 export * from './chip';

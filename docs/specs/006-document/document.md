@@ -8,7 +8,8 @@ which fixes what that tab is. A general tab is worked on in one of three
 
 **Every file is a document.** A markdown file is a document with one
 [markdown tab](../031-markdown/markdown-tab.md); any other file is a document
-with one [file tab](file-tab.md). A document with one tab hides its tab strip,
+with one [file tab](file-tab.md). A document whose one tab is outside the canvas
+hides its tab strip ([Kinds outside the canvas](kinds-outside-the-canvas.md#the-tab-strip)),
 and the tab still holds the data, so a second tab can join later without
 changing what the document is.
 

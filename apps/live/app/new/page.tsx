@@ -62,6 +62,7 @@ import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { textDocumentContent } from '@/lib/text-document/text-document-content';
 import { UNTITLED_TEXT_DOCUMENT } from '@/lib/text-document/text-document-tab';
 import { loadEditorPage } from '@/lib/editor-page-loader';
+import { loadCanvasCode } from '@/lib/canvas-code/canvas-code';
 import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { trackNewDocumentCreated, writeNewDocument } from '@/lib/new-document/write-new-document';
 
@@ -203,6 +204,9 @@ export default function NewDocumentPage() {
     // Fetch the editor's chunk while identity + the create run. Fire-and-forget: a failure here
     // just leaves `dynamic` to retry the import at handoff.
     loadEditorPage().catch(() => {});
+    // A document of a canvas kind opens on the canvas, whose code is its own chunk: fetched alongside
+    // (docs/specs/006-document/kinds-outside-the-canvas.md "The canvas's code"); a text document or a spreadsheet never.
+    if (wizardBypassTabKind(window.location.search) === null) void loadCanvasCode('open');
     // The wizard has shown: what makes the document is fetched while the page is idle, ahead of a choice.
     return prefetchWhenIdle([loadNewDocumentContent]);
   }, []);

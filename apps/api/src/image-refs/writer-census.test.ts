@@ -27,6 +27,8 @@ const KNOWN_WRITERS: Record<string, number> = {
   // takeSharedTab and a shared tab taken in (receiveShares): each writes the body through tabWriteStatements, then
   // dates the row as the copy it took, which sets `updated_at` only and has no image reference to keep.
   'api/src/document-room/tab-shares.ts': 2,
+  // TAB_KIND_STEP's backfill of the `kind` column from the bodies already stored, which changes no body.
+  'api/src/document-room/document-schema.ts': 1,
 };
 
 // The last migration that wrote `tabs` without having to think about the
