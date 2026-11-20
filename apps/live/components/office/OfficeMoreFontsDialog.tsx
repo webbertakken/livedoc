@@ -221,7 +221,7 @@ function Choice<T extends string>({
   );
 }
 
-function MyFontsColumn({
+export function MyFontsColumn({
   fonts,
   onRemove,
   onEmptied,
@@ -233,11 +233,13 @@ function MyFontsColumn({
 }) {
   const headingId = useId();
   const list = useRef<HTMLUListElement | null>(null);
-  // After a removal, focus goes to the row that took its place (or the one before it), never lost to the page.
-  const refocus = useRef<number | null>(null);
+  // After a removal, focus goes to the row that took its place (or the one before it), never lost to the page. The
+  // intent holds the list it was made against and waits for that list to change: a render that comes between (one
+  // left over from the catalogue or a preview loading, flushed before the removal's) must not spend it.
+  const refocus = useRef<{ index: number; from: string } | null>(null);
   useEffect(() => {
-    const at = refocus.current;
-    if (at === null) return;
+    if (refocus.current === null || refocus.current.from === fonts.join('\n')) return;
+    const at = refocus.current.index;
     refocus.current = null;
     const buttons = list.current?.querySelectorAll<HTMLButtonElement>('button');
     const next = buttons?.[Math.min(at, buttons.length - 1)];
@@ -265,8 +267,8 @@ function MyFontsColumn({
                 type="button"
                 aria-label={`Remove ${name}`}
                 onClick={() => {
+                  refocus.current = { index, from: fonts.join('\n') };
                   onRemove(name);
-                  refocus.current = index;
                 }}
                 className="touch-target relative flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)"
               >
