@@ -26,9 +26,9 @@ describe('TextDocumentIndentationDialog', () => {
     const { field } = setup({ start: 36, end: null, first: -18 });
     expect((field('Left') as HTMLInputElement).value).toBe('1.27');
     expect((field('Right') as HTMLInputElement).value).toBe('');
-    expect(
-      (screen.getByRole('combobox', { name: 'Special indent' }) as HTMLSelectElement).value,
-    ).toBe('hanging');
+    expect(screen.getByRole<HTMLSelectElement>('combobox', { name: 'Special indent' }).value).toBe(
+      'hanging',
+    );
     expect((field('Special indent size') as HTMLInputElement).value).toBe('0.64');
   });
 
@@ -52,9 +52,9 @@ describe('TextDocumentIndentationDialog', () => {
 
   it('keeps mixed special indents unless one is chosen', () => {
     const { apply, onApply } = setup({ start: 0, end: 0, first: null });
-    expect(
-      (screen.getByRole('combobox', { name: 'Special indent' }) as HTMLSelectElement).value,
-    ).toBe('');
+    expect(screen.getByRole<HTMLSelectElement>('combobox', { name: 'Special indent' }).value).toBe(
+      '',
+    );
     fireEvent.click(apply);
     expect(onApply).toHaveBeenCalledWith({ start: 0, end: 0, first: null });
   });

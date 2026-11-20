@@ -19,7 +19,6 @@ import {
   SECTION_BREAK_ATTRIBUTES,
 } from '@livedoc/text-documents';
 import { DocumentFonts } from '@livedoc/document';
-import type { ParagraphProps } from '@livedoc/text-documents';
 import { cssText, paragraphDeclarations } from './text-document-style-sheet';
 
 const nullAttributes = (names: readonly string[]) =>
@@ -110,10 +109,7 @@ const nodes: Record<string, NodeSpec> = {
     // own paragraph formatting over it ("Alignment and indents").
     toDOM: (node) => {
       const { style, props } = node.attrs as { style: unknown; props: unknown };
-      const own =
-        props && typeof props === 'object'
-          ? cssText(paragraphDeclarations(props as ParagraphProps))
-          : '';
+      const own = props && typeof props === 'object' ? cssText(paragraphDeclarations(props)) : '';
       const attrs = {
         ...(typeof style === 'string' && style ? { 'data-style': style } : {}),
         ...(own ? { style: own } : {}),

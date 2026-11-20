@@ -15,7 +15,7 @@ export const INDENT_STEP_PT = 36;
 export const INDENT_MAX_PT = 432;
 
 const ownOf = (node: PmNode): ParagraphProps =>
-  ((node.attrs as { props: ParagraphProps | null }).props ?? {}) as ParagraphProps;
+  (node.attrs as { props: ParagraphProps | null }).props ?? {};
 
 /** What the paragraph's style gives it. */
 function inheritedOf(node: PmNode, { styles, defaults }: TextFormatting): ParagraphProps {
@@ -68,9 +68,7 @@ function sharedValue<K extends keyof ParagraphProps>(
 ): ParagraphProps[K] | null {
   const values = selectedParagraphs(state).map((p) => paragraphPropsOf(p.node, formatting)[key]);
   const first = values[0];
-  return values.length > 0 && values.every((v) => canonical(v) === canonical(first))
-    ? (first as ParagraphProps[K])
-    : null;
+  return values.length > 0 && values.every((v) => canonical(v) === canonical(first)) ? first : null;
 }
 
 /** The alignment of the paragraphs the selection touches; null when they differ. */
