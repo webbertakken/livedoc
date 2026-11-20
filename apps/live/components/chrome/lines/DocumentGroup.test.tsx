@@ -314,6 +314,32 @@ describe('DocumentGroup', () => {
     expect(screen.queryByRole('button', { name: /all tabs/ })).toBeNull();
   });
 
+  // docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip": a document whose one tab is outside the canvas
+  // hides its active tab segment and keeps Add tab; two tabs, or one canvas tab, show it.
+  it('hides the active tab of a document whose one tab is a text document, keeping Add tab', () => {
+    const props = base();
+    props.tabs.tabs = [tab('t', 'Notes', { kind: 'text-document' })];
+    props.tabs.activeId = 't';
+    render(<DocumentGroup {...props} />);
+    expect(screen.queryByRole('button', { name: /all tabs/ })).toBeNull();
+    expect(screen.queryByText('Product discovery')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Add tab' })).toBeTruthy();
+  });
+
+  it.each([
+    [
+      'two tabs, one a text document',
+      [tab('t', 'Notes', { kind: 'text-document' }), tab('a', 'Overview')],
+    ],
+    ['one canvas tab', [tab('a', 'Overview')]],
+  ])('shows the active tab of a document of %s', (_, tabs) => {
+    const props = base();
+    props.tabs.tabs = tabs;
+    props.tabs.activeId = tabs[0]!.id;
+    render(<DocumentGroup {...props} />);
+    expect(screen.getByRole('button', { name: /all tabs/ })).toBeTruthy();
+  });
+
   it('renames from the tab menu\u2019s Rename too, closing the menu', () => {
     renderGroup();
     const menuButton = screen.getByRole('button', { name: 'Tab menu' });

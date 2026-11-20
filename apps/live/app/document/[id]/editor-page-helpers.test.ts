@@ -65,6 +65,16 @@ describe('placeholdersFromSummaries', () => {
     ]);
     expect(out.map((t) => t.folder)).toEqual(['Org', undefined]);
   });
+
+  // docs/specs/006-document/kinds-outside-the-canvas.md "The surface": a tab's kind is known before its body loads.
+  it('carries the tab’s kind from the summary, none for a general tab', () => {
+    const out = placeholdersFromSummaries([
+      { id: 'a', name: 'Notes', kind: 'text-document' },
+      { id: 'b', name: 'Tab 2' },
+    ]);
+    expect(out.map((t) => t.kind)).toEqual(['text-document', undefined]);
+    expect(out[1]).not.toHaveProperty('kind');
+  });
 });
 
 describe('patchTab', () => {

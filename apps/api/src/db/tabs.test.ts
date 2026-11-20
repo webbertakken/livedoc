@@ -119,6 +119,34 @@ describe('tab revisions', () => {
     expect(copied.rev).toBe(1);
   });
 
+  // docs/specs/006-document/kinds-outside-the-canvas.md "The surface": the row keeps its tab's kind, written with the
+  // body by every writer, so a document's outline names it without reading a body.
+  it('keeps the tab’s kind in its row, through a seed, a save and a copy', async () => {
+    const db = documentWith();
+    const kindOf = (id: string) =>
+      db.sql.prepare('SELECT kind FROM tabs WHERE id = ?').get(id)!.kind as string | null;
+    const textDocument: Tab = {
+      id: 'w',
+      name: 'Notes',
+      kind: 'text-document',
+      format: 'odf',
+      elements: [],
+    };
+    await seedTabs(db.env, 'D', [textDocument, tab('t1')]);
+    expect(kindOf('w')).toBe('text-document');
+    expect(kindOf('t1')).toBeNull();
+    await upsertTab(db.env, 'D', { ...tab('t2'), kind: 'board' }, 1);
+    expect(kindOf('t2')).toBe('board');
+    await copyDocument(db.env, 'D', 'D2', 'o', 'Copy');
+    const copied = db.sql
+      .prepare(
+        "SELECT t.kind FROM tabs t JOIN document_tabs dt ON dt.tab_id = t.id WHERE dt.document_id = 'D2' ORDER BY dt.order_index",
+      )
+      .all()
+      .map((r) => r.kind);
+    expect(copied).toEqual(['text-document', null, 'board']);
+  });
+
   it('reads the revision with the tab', async () => {
     const db = documentWith();
     await upsertTab(db.env, 'D', tab('t1'), 0);

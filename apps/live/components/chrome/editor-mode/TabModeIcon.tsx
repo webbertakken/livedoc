@@ -1,6 +1,7 @@
 import { EDITOR_MODE_ICONS, lucideGlyph } from '@livedoc/ui';
 import {
   lucideClipboardList,
+  lucideFileText,
   lucideGrid3x3,
   lucideLayoutGrid,
   lucideSquareKanban,
@@ -22,8 +23,17 @@ export const PLAN_KIND_ICONS: Record<PlanTabKind, ReturnType<typeof lucideGlyph>
 // The tab pill's leading icon (docs/specs/007-editor/editor-modes.md "The tab pill shows the tab's
 // mode"): the tab's own mode, the same for everyone, so a switch, Shift+D, a Mode choice or a
 // collaborator's switch updates it at once; a Board, Sheet, Dashboard or Form tab shows its kind instead.
+// A text document tab, worked in no mode, shows its kind's glyph too
+// (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
+const TEXT_DOCUMENT_ICON = lucideGlyph(lucideFileText, 12);
+
 export function TabModeIcon({ tab, style }: { tab: EditorModeTab; style?: CSSProperties }) {
   const kind = isPlanTabKind(tab.kind) ? tab.kind : null;
-  const Icon = kind ? PLAN_KIND_ICONS[kind] : EDITOR_MODE_ICONS[opensInOf(tab)];
+  const Icon =
+    tab.kind === 'text-document'
+      ? TEXT_DOCUMENT_ICON
+      : kind
+        ? PLAN_KIND_ICONS[kind]
+        : EDITOR_MODE_ICONS[opensInOf(tab)];
   return <Icon aria-hidden size={12} className="shrink-0" style={style} />;
 }

@@ -16,11 +16,12 @@ platform's [web performance](../016-platform/web-performance.md) rules.
 | Opening, 4x CPU, 4 Mbit/s, 100 ms                        | Never slower than a canvas document opened the same way                                       | 15.4 s; a canvas document 15.9 s |
 | Layout shift while opening                               | CLS under 0.1                                                                                 | 0.005                            |
 | The surface's own code (Yjs, y-prosemirror, the surface) | Under 48 KiB gzipped, loaded only with a text document tab                                    | 34 KiB                           |
-| The document route's first load                          | Within its budget in `apps/live/first-load-budget.json`; Yjs and the file mapping never in it | 1,533 KiB of 1,536               |
+| The document route's first load                          | Within its budget in `apps/live/first-load-budget.json`; Yjs and the file mapping never in it | 1,020 KiB of 1,060; no canvas    |
 
-The throttled open is the editor's own: a text document still loads the canvas editor around its surface.
-[Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md) takes the canvas out of a text document's load,
-and its open must then fall well below a canvas document's; the budget is tightened in that change.
+The throttled open above was measured while a text document still loaded the canvas editor around its surface.
+[Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md) took the canvas out of its load (the route's
+first load 1,368 to 1,020 KiB); its open must now fall well below a canvas document's, measured again with Phase 18's
+300-page document.
 
 ## How it is measured
 

@@ -37,7 +37,7 @@ export async function readDocumentOutline(
 ): Promise<DocumentOutline> {
   const [tabs, doc, workbook] = await env.DOCUMENT_DB.batch([
     env.DOCUMENT_DB.prepare(
-      `SELECT t.id, dt.document_id, t.name, dt.order_index, '' AS data, t.updated_at, t.rev, dt.folder
+      `SELECT t.id, dt.document_id, t.name, dt.order_index, '' AS data, t.updated_at, t.rev, dt.folder, t.kind
          FROM document_tabs dt
          JOIN tabs t ON t.id = dt.tab_id
         WHERE dt.document_id = ?
@@ -88,6 +88,8 @@ type CopiedTab = {
   name: string;
   data: string;
   elementCount: number | null;
+  // The row's kind (docs/specs/006-document/kinds-outside-the-canvas.md "The surface"), carried as the count is.
+  kind: string | null;
   orderIndex: number;
 };
 type Row = Record<string, string | number | null>;
@@ -135,7 +137,7 @@ export async function exportDocumentCopy(
   const tabRows = (
     await db
       .prepare(
-        `SELECT t.id, t.name, t.data, t.element_count, dt.order_index
+        `SELECT t.id, t.name, t.data, t.element_count, t.kind, dt.order_index
            FROM document_tabs dt JOIN tabs t ON t.id = dt.tab_id
           WHERE dt.document_id = ?${onlyTabId === null ? '' : ' AND dt.tab_id = ?'}
           ORDER BY dt.order_index ASC`,
@@ -146,6 +148,7 @@ export async function exportDocumentCopy(
         name: string;
         data: string;
         element_count: number | null;
+        kind: string | null;
         order_index: number;
       }>()
   ).results;
@@ -155,6 +158,7 @@ export async function exportDocumentCopy(
     name: row.name,
     data: redactAuthorsFor === null ? row.data : redactTabDataAuthors(row.data, redactAuthorsFor),
     elementCount: row.element_count,
+    kind: row.kind,
     orderIndex: row.order_index,
   }));
   const tabIds = JSON.stringify(tabs.map((t) => t.id));
@@ -265,9 +269,9 @@ export async function importDocumentCopy(
       // Link remapping rewrites ids inside elements, never their number, so the count carries over.
       db
         .prepare(
-          'INSERT INTO tabs (id, name, data, updated_at, element_count, rev) VALUES (?, ?, ?, ?, ?, 1)',
+          'INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind) VALUES (?, ?, ?, ?, ?, 1, ?)',
         )
-        .bind(id, tab.name, data, now, tab.elementCount),
+        .bind(id, tab.name, data, now, tab.elementCount, tab.kind ?? null),
       db
         .prepare(
           'INSERT INTO document_tabs (document_id, tab_id, order_index, added_at) VALUES (?, ?, ?, ?)',

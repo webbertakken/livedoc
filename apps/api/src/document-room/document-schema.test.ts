@@ -104,6 +104,30 @@ describe('the room schema', () => {
     expect(layouts.map((row) => row.layout)).toEqual(['not json', '{"frozenRows":1}']);
   });
 
+  // docs/specs/006-document/kinds-outside-the-canvas.md "The surface": the row names its tab's kind, read once from the
+  // bodies an upgraded room holds (db/tabs.test.ts proves each writer writes it).
+  it('backfills each tab row’s kind from its body', () => {
+    const { db, run } = room();
+    const before = DOCUMENT_SCHEMA_STEPS.length - 1;
+    for (const step of DOCUMENT_SCHEMA_STEPS.slice(0, before)) db.exec(step);
+    db.exec(
+      `CREATE TABLE _document_schema (version INTEGER NOT NULL); INSERT INTO _document_schema VALUES (${before})`,
+    );
+    db.exec(`INSERT INTO tabs (id, name, data, updated_at) VALUES ('a', 'A', '{"kind":"text-document"}', 0);
+      INSERT INTO tabs (id, name, data, updated_at) VALUES ('b', 'B', '{"elements":[]}', 0);
+      INSERT INTO tabs (id, name, data, updated_at) VALUES ('x', 'X', 'not json', 0);`);
+    migrateDocumentSchema(run);
+    const kinds = () =>
+      (db.prepare('SELECT id, kind FROM tabs ORDER BY id').all() as object[]).map((r) => ({
+        ...r,
+      }));
+    expect(kinds()).toEqual([
+      { id: 'a', kind: 'text-document' },
+      { id: 'b', kind: null },
+      { id: 'x', kind: null },
+    ]);
+  });
+
   it('is idempotent', () => {
     const { db, run } = room();
     migrateDocumentSchema(run);

@@ -234,4 +234,15 @@ describe('rowToTabSummary', () => {
     expect(rowToTabSummary(baseRow({ folder: 'Org' })).folder).toBe('Org');
     expect(rowToTabSummary(baseRow({ folder: null })).folder).toBeUndefined();
   });
+
+  // docs/specs/006-document/kinds-outside-the-canvas.md "The surface": the outline names each tab's kind, absent for a
+  // general tab, so the editor knows a tab's surface before its body loads.
+  it('names the tab’s kind from its row, absent for a general tab or an unknown one', () => {
+    expect(rowToTabSummary(baseRow({ kind: 'text-document' })).kind).toBe('text-document');
+    expect(rowToTabSummary(baseRow({ kind: 'sheet' })).kind).toBe('sheet');
+    expect(rowToTabSummary(baseRow({ kind: 'diagram' })).kind).toBeUndefined();
+    expect(rowToTabSummary(baseRow({ kind: null })).kind).toBeUndefined();
+    expect(rowToTabSummary(baseRow({ kind: 'nonsense' })).kind).toBeUndefined();
+    expect(rowToTabSummary(baseRow())).not.toHaveProperty('kind');
+  });
 });

@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef, useState, type ComponentType } from 'react';
 import {
   EDITOR_MODE_ICONS,
+  lucideGlyph,
   POPOVER_VIEWPORT_MARGIN,
   Portal,
   clampIntoRange,
@@ -13,6 +14,7 @@ import {
   type MenuInitialFocus,
 } from '@livedoc/ui';
 import type { SwitchableEditorMode } from '@livedoc/document';
+import { lucideFileText } from '@livedoc/icons/lucide';
 import { TOOLBAR_ICON_BUTTON } from '@/components/chrome/toolbar-surface';
 import { PLAN_KIND_ICONS } from '@/components/chrome/editor-mode/TabModeIcon';
 import {
@@ -33,11 +35,27 @@ export const ADD_TAB_ROWS: readonly { choice: AddTabChoice; label: string; foote
   { choice: 'dashboard', label: 'Dashboard', footer: 'New Dashboard' },
 ];
 
+// A text document tab, after the Plan rows, where the document can hold one: stored on LiveDoc, as This Browser does not
+// hold a text document yet (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
+const TEXT_DOCUMENT_ROW = {
+  choice: 'text-document',
+  label: 'Text document',
+  footer: 'New Text Document',
+} as const;
+
+/** The add menu's rows, and the tab list footer's: Text document only where it is offered. */
+export function addTabRows(offerTextDocument: boolean): typeof ADD_TAB_ROWS {
+  return offerTextDocument ? [...ADD_TAB_ROWS, TEXT_DOCUMENT_ROW] : ADD_TAB_ROWS;
+}
+
+const TEXT_DOCUMENT_MARK = lucideGlyph(lucideFileText, 16);
+
 /** A row's mark: the Tab row the mark of the mode its tab opens in, a Plan row its kind's glyph. */
 export function addTabMark(
   choice: AddTabChoice,
   tabMode: SwitchableEditorMode,
 ): ComponentType<IconProps> {
+  if (choice === 'text-document') return TEXT_DOCUMENT_MARK;
   return choice === 'tab' ? EDITOR_MODE_ICONS[tabMode] : PLAN_KIND_ICONS[choice];
 }
 
@@ -48,10 +66,13 @@ export function addTabMark(
 export function AddTabMenu({
   onAdd,
   tabMode,
+  offerTextDocument = false,
 }: {
   onAdd: (choice: AddTabChoice) => void;
   // The mode a Tab added now opens in (newTabOpening), whose mark the Tab row wears.
   tabMode: SwitchableEditorMode;
+  // Whether the document can hold a text document tab (addTabRows).
+  offerTextDocument?: boolean;
 }) {
   const { open, close, toggle, initialFocus, trigger, onTriggerKeyDown, setTrigger } =
     useMenuButton();
@@ -84,6 +105,7 @@ export function AddTabMenu({
           trigger={trigger}
           initialFocus={initialFocus}
           tabMode={tabMode}
+          offerTextDocument={offerTextDocument}
           onClose={close}
           onAdd={onAdd}
         />
@@ -96,12 +118,14 @@ function AddTabPanel({
   trigger,
   initialFocus,
   tabMode,
+  offerTextDocument,
   onClose,
   onAdd,
 }: {
   trigger: HTMLElement | null;
   initialFocus: MenuInitialFocus;
   tabMode: SwitchableEditorMode;
+  offerTextDocument: boolean;
   onClose: () => void;
   onAdd: (choice: AddTabChoice) => void;
 }) {
@@ -148,7 +172,7 @@ function AddTabPanel({
         }
         className={`fixed z-(--z-popover) min-w-44 max-w-[calc(100vw-1rem)] ${CHROME_MENU_SURFACE}`}
       >
-        {ADD_TAB_ROWS.map(({ choice, label }) => {
+        {addTabRows(offerTextDocument).map(({ choice, label }) => {
           const Mark = addTabMark(choice, tabMode);
           return (
             <button

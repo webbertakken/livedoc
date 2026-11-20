@@ -14,12 +14,12 @@ each later area keeps to them, and the limit's workbook (S7) is measured against
 | Layout shift while opening                             | CLS under 0.1                                                                               | 0 unthrottled; 0.005 throttled                   |
 | The surface's own code                                 | Under 16 KiB gzipped, loaded only with a spreadsheet                                        | 6 KiB                                            |
 | The file mapping (`@livedoc/sheets/files` and its XML) | Under 24 KiB gzipped, loaded only for File › Open                                           | 11 KiB                                           |
-| The document route's first load                        | Within its budget in `apps/live/first-load-budget.json`; the engine and mapping never in it | 1,534 KiB of 1,536                               |
+| The document route's first load                        | Within its budget in `apps/live/first-load-budget.json`; the engine and mapping never in it | 1,020 KiB of 1,060; no canvas                    |
 
-The throttled open is the editor's own: a spreadsheet still loads the canvas editor around its surface, and its largest
-paint comes a step later (14.0 s against 11.6 s) because the surface's chunk follows the editor's.
-[Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md) takes the canvas out of a spreadsheet's load;
-the opening budgets are tightened in that change.
+The throttled open above was measured while a spreadsheet still loaded the canvas editor around its surface, its
+largest paint a step later (14.0 s against 11.6 s) because the surface's chunk follows the editor's.
+[Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md) took the canvas out of its load (the route's
+first load 1,368 to 1,020 KiB); the opening budgets are tightened when the open is measured again.
 
 ## What is measured
 

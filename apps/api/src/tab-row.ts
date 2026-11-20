@@ -1,4 +1,10 @@
-import { migrateStoredTab, type Tab } from '@livedoc/document';
+import {
+  DEFAULT_TAB_KIND,
+  migrateStoredTab,
+  tabKindOf,
+  type Tab,
+  type TabKind,
+} from '@livedoc/document';
 import type { TabDTO, TabSummaryDTO } from './types';
 
 // tabs row shape as read from D1. The `data` column is the
@@ -22,6 +28,9 @@ export type TabRow = {
   // for folder (none today) leave it undefined, which maps the same
   // as NULL.
   folder?: string | null;
+  // The tab's kind, kept from its body by the room's triggers (docs/specs/006-document/kinds-outside-the-canvas.md
+  // "The surface"); NULL for a general tab written without one. Read only by the outline.
+  kind?: string | null;
 };
 
 // Pure mapper from D1 tab row to wire-format DTO. Pulled out of db.ts
@@ -60,6 +69,12 @@ export function rowToTab(row: TabRow): TabDTO {
   };
 }
 
+// A general tab names no kind: absence reads as one everywhere (tabKindOf).
+function kindOfRow(stored: string | null | undefined): { kind?: TabKind } {
+  const kind = tabKindOf({ kind: stored ?? undefined });
+  return kind === DEFAULT_TAB_KIND ? {} : { kind };
+}
+
 // Lightweight version, no JSON parse: returns just the columns the
 // Explorer / TabBar need to list tabs without paying for the full
 // data deserialise. Used by listTabSummariesFor in db.ts.
@@ -71,5 +86,6 @@ export function rowToTabSummary(row: TabRow): TabSummaryDTO {
     orderIndex: row.order_index,
     updatedAt: row.updated_at,
     folder: row.folder ?? undefined,
+    ...kindOfRow(row.kind),
   };
 }

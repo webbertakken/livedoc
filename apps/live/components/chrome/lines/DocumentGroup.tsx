@@ -7,6 +7,7 @@ import { ToolbarGroup, ToolbarPart } from '@/components/chrome/ToolbarGroup';
 import { track } from '@/lib/telemetry';
 import type { Participant } from '@/lib/identity';
 import { newTabMode } from '@/lib/new-tab-seed';
+import { surfaceOf } from '@livedoc/document';
 import { ActiveTabSegment } from './ActiveTabSegment';
 import { AddTabMenu } from './AddTabMenu';
 import { DocumentName, type DocumentNameProps } from './DocumentName';
@@ -45,6 +46,10 @@ export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: T
     : tabs.tabs.length;
   const readOnly = tabs.readOnly ?? false;
   const { activeTab } = chrome;
+  // A spreadsheet's tabs are its sheet bar, at the foot of its grid; a document whose one tab is outside the canvas
+  // shows no strip at all (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
+  const oneSurfaceTab =
+    tabs.tabs.length === 1 && surfaceOf(tabs.tabs[0], tabs.spreadsheet === true) !== null;
 
   const toggle = (from: Opener['from']) => (button: HTMLElement) => {
     if (opener?.from === from) {
@@ -68,11 +73,13 @@ export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: T
         className="pointer-events-auto ml-auto min-w-0"
         onPointerDown={(e) => e.stopPropagation()}
       >
-        <ToolbarPart className="min-w-0">
-          <DocumentName {...name} />
-        </ToolbarPart>
-        {/* A spreadsheet's tabs are its sheet bar, at the foot of its grid. */}
-        {tabs.spreadsheet ? null : (
+        {/* The surface's own title row names a document of one surface tab. */}
+        {oneSurfaceTab ? null : (
+          <ToolbarPart className="min-w-0">
+            <DocumentName {...name} />
+          </ToolbarPart>
+        )}
+        {tabs.spreadsheet || oneSurfaceTab ? null : (
           <ToolbarPart className="shrink-0">
             {/* The tab stack rides in the active tab: its name, glyph and count are one button. */}
             {activeTab ? (
@@ -91,7 +98,11 @@ export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: T
             />
           ) : null}
           {readOnly || tabs.spreadsheet ? null : (
-            <AddTabMenu onAdd={tabs.onAdd} tabMode={newTabMode(activeTab)} />
+            <AddTabMenu
+              onAdd={tabs.onAdd}
+              tabMode={newTabMode(activeTab)}
+              offerTextDocument={tabs.offerTextDocument ?? false}
+            />
           )}
         </ToolbarPart>
       </ToolbarGroup>

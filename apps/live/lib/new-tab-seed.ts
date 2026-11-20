@@ -11,9 +11,9 @@ import {
 } from '@livedoc/document';
 import type { PlanTabChoice } from './plan-start-landing';
 
-// What the add menu adds (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab"): a Tab, or a Plan tab
-// of a kind.
-export type AddTabChoice = 'tab' | PlanTabChoice;
+// What the add menu adds (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab"): a Tab, a Plan tab of a
+// kind, or a text document tab (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
+export type AddTabChoice = 'tab' | PlanTabChoice | 'text-document';
 
 export function newTabSeed(source: Tab | undefined): Partial<Tab> {
   if (!source) return {};
@@ -35,6 +35,7 @@ export function newTabSeed(source: Tab | undefined): Partial<Tab> {
 // (an absent `opensIn` reads as Structured). A **Board**, **Sheet** or **Dashboard** opens a Plan start (Start
 // Planning), whose landing the caller sets (plan-start-landing.ts).
 export function newTabOpening(source: Tab | undefined, choice: AddTabChoice): Pick<Tab, 'opensIn'> {
+  if (choice === 'text-document') return {};
   if (choice !== 'tab') return { opensIn: 'plan' };
   const mode = newTabMode(source);
   return mode === 'diagram' ? {} : { opensIn: mode };

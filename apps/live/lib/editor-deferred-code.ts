@@ -4,11 +4,14 @@ import type { PresentationOverlay as PresentationOverlayComponent } from '@/comp
 // surface's dynamic import and the prefetch below name the same module.
 //
 // - Content a board may draw as soon as it opens (Pages and their writing, the Draw dock, tables, sequence
-//   diagrams, the Map): fetched as the editor mounts, alongside the document request, so a board that has one
-//   finds its code already in. A board without one pays nothing on the critical path. An element kind's own code
-//   loads with its family instead (lib/element-kinds), which the board's first paint waits for.
-// - Surfaces someone opens (the Explorer, search, layers, the style panel, tool panels, presenting): fetched
-//   once the opened document has rendered and the page is idle, so a first open does not wait.
+//   diagrams, the Map): fetched with the canvas's code (lib/canvas-code), alongside the document request, so a board
+//   that has one finds its code already in. A board without one pays nothing on the critical path, and a document
+//   without a canvas never fetches it. An element kind's own code loads with its family instead (lib/element-kinds),
+//   which the board's first paint waits for.
+// - Surfaces someone opens: the editor's own (the Explorer, search) once the opened document has rendered and the page
+//   is idle, so a first open does not wait; the canvas's (layers, the style panel, tool panels, presenting, a board
+//   scene's landing) likewise, and only for a document with a canvas tab
+//   (docs/specs/006-document/kinds-outside-the-canvas.md "The canvas's code").
 
 // Speech bubbles and the composer (docs/specs/008-canvas/avatar-mode.md "Speech bubbles"): fetched once someone who
 // may speak enters Avatar mode, or when a bubble first arrives.
@@ -61,9 +64,9 @@ export const DOCUMENT_CONTENT_CODE = [
   loadMinimap,
 ] as const;
 
-export const EDITOR_SURFACE_CODE = [
-  loadExplorerPanel,
-  loadEditorSearchPanel,
+export const EDITOR_SURFACE_CODE = [loadExplorerPanel, loadEditorSearchPanel] as const;
+
+export const CANVAS_SURFACE_CODE = [
   loadLayersPanel,
   loadQuickStylePanel,
   loadPresentationOverlay,
