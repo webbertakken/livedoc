@@ -296,7 +296,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+7',
     '⌘+Shift+7',
     'Ctrl+Shift+7',
-    'specified',
+    'built',
   ),
   row(
     'bulleted-list',
@@ -305,17 +305,9 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+8',
     '⌘+Shift+8',
     'Ctrl+Shift+8',
-    'specified',
+    'built',
   ),
-  row(
-    'checklist',
-    'Paragraph formatting',
-    'Checklist',
-    'Ctrl+Shift+9',
-    '⌘+Shift+9',
-    '—',
-    'specified',
-  ),
+  row('checklist', 'Paragraph formatting', 'Checklist', 'Ctrl+Shift+9', '⌘+Shift+9', '—', 'built'),
   row(
     'move-paragraph-up',
     'Paragraph formatting',
@@ -1495,6 +1487,6 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Enter',
     '⌘+Option+Enter',
     'Ctrl+Alt+Enter',
-    'specified',
+    'built',
   ),
 ];

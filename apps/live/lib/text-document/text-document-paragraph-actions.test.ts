@@ -85,6 +85,25 @@ describe('textDocumentParagraphActions', () => {
     expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentIndent');
   });
 
+  // lists.md "Levels": in a list, Increase and Decrease indent move the items a level instead.
+  it('moves list items a level in place of an indent', () => {
+    open();
+    const stepList = vi.fn(() => true);
+    const { actions } = textDocumentParagraphActions({
+      view,
+      readFormatting,
+      canEdit: true,
+      openIndentation,
+      openSpacing,
+      openBorders,
+      stepList,
+    });
+    actions['indent-increase']!.run();
+    actions['indent-decrease']!.run();
+    expect(stepList.mock.calls).toEqual([[1], [-1]]);
+    expect(propsOf()).toEqual([null, null]);
+  });
+
   it('opens Indentation options', () => {
     open();
     bind().actions['indentation-options']!.run();

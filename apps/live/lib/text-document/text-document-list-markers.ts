@@ -21,7 +21,7 @@ function markerDom(marker: ListMarker, hanging: number, item: PmNode, onTick: ()
     const document = view.dom.ownerDocument;
     const span = document.createElement('span');
     span.className = 'text-document-list-marker';
-    span.contentEditable = 'false';
+    span.setAttribute('contenteditable', 'false');
     span.style.minWidth = `${hanging}pt`;
     if (marker.kind === 'check') {
       const box = document.createElement('span');
@@ -47,7 +47,11 @@ function markerDom(marker: ListMarker, hanging: number, item: PmNode, onTick: ()
 }
 
 /** The decorations that draw every list item. */
-export function listDecorations(doc: PmNode, lists: Lists, tick: (pos: number) => void): DecorationSet {
+export function listDecorations(
+  doc: PmNode,
+  lists: Lists,
+  tick: (pos: number) => void,
+): DecorationSet {
   const items: { node: PmNode; pos: number }[] = [];
   doc.forEach((node, pos) => {
     if (node.type.name === 'paragraph') items.push({ node, pos });
@@ -69,7 +73,9 @@ export function listDecorations(doc: PmNode, lists: Lists, tick: (pos: number) =
     const style = [
       own.indentStart === undefined ? `${INDENT_START}: ${indent}pt` : '',
       own.indentFirst === undefined ? `text-indent: ${-hanging}pt` : '',
-      marker?.kind === 'check' && marker.checked ? `color: ${TICKED_INK}; text-decoration-line: line-through` : '',
+      marker?.kind === 'check' && marker.checked
+        ? `color: ${TICKED_INK}; text-decoration-line: line-through`
+        : '',
     ]
       .filter(Boolean)
       .join('; ');
@@ -82,11 +88,15 @@ export function listDecorations(doc: PmNode, lists: Lists, tick: (pos: number) =
     );
     if (marker)
       decorations.push(
-        Decoration.widget(pos + 1, markerDom(marker, hanging, node, () => tick(pos)), {
-          side: -1,
-          ignoreSelection: true,
-          key: `${marker.kind}:${marker.text}:${marker.kind === 'check' && marker.checked}:${hanging}:${node.textContent.slice(0, NAME_MAX)}`,
-        }),
+        Decoration.widget(
+          pos + 1,
+          markerDom(marker, hanging, node, () => tick(pos)),
+          {
+            side: -1,
+            ignoreSelection: true,
+            key: `${marker.kind}:${marker.text}:${marker.kind === 'check' && marker.checked}:${hanging}:${node.textContent.slice(0, NAME_MAX)}`,
+          },
+        ),
       );
   });
   return DecorationSet.create(doc, decorations);
@@ -116,7 +126,8 @@ export function listMarkersPlugin(
     view: (editor) => {
       view = editor;
       const stop = subscribe(() => {
-        if (!editor.isDestroyed) editor.dispatch(editor.state.tr.setMeta(key, REFRESH).setMeta('addToHistory', false));
+        if (!editor.isDestroyed)
+          editor.dispatch(editor.state.tr.setMeta(key, REFRESH).setMeta('addToHistory', false));
       });
       return {
         destroy: () => {

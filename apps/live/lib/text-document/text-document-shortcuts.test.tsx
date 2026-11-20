@@ -17,6 +17,7 @@ import {
   textDocumentFormatActions,
 } from './text-document-format-actions';
 import { paintFormatPlugin } from './text-document-paint-format';
+import { LIST_ITEMS, TOGGLE_CHECKBOX } from './text-document-list-actions';
 import {
   PARAGRAPH_STYLE_ITEMS,
   STYLE_OPTIONS,
@@ -61,6 +62,8 @@ describe('the text document menus', () => {
         // Format > Line & paragraph spacing (text-document-paragraph-actions), bound by the surface.
         ...LINE_SPACING_ENTRIES.flatMap((e) => (e.kind === 'item' ? [e.id] : [])),
         BORDERS_ITEM,
+        // Format > Bullets & numbering (text-document-list-actions), bound by the surface.
+        ...LIST_ITEMS.map((l) => l.item),
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
@@ -88,7 +91,7 @@ describe('the text document menus', () => {
     ];
     const builtRows = TEXT_DOCUMENT_SHORTCUTS.filter((r) => r.status === 'built').map((r) => r.id);
     // Rows no item names, bound by their own id (office-shell.md "Shortcut layer").
-    const keyRows = TEXT_DOCUMENT_KEY_ACTIONS;
+    const keyRows = [...TEXT_DOCUMENT_KEY_ACTIONS, TOGGLE_CHECKBOX];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),
     );

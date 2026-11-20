@@ -287,9 +287,9 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('columns-more', 'More options', 'edit'),
       ]),
       submenu('bullets-and-numbering', 'Bullets & numbering', [
-        item('numbered-list', 'Numbered list', 'edit', { shortcut: 'numbered-list' }),
-        item('bulleted-list', 'Bulleted list', 'edit', { shortcut: 'bulleted-list' }),
-        item('checklist', 'Checklist', 'edit', { shortcut: 'checklist' }),
+        item('numbered-list', 'Numbered list', 'edit', { shortcut: 'numbered-list', ...BUILT }),
+        item('bulleted-list', 'Bulleted list', 'edit', { shortcut: 'bulleted-list', ...BUILT }),
+        item('checklist', 'Checklist', 'edit', { shortcut: 'checklist', ...BUILT }),
         item('list-options', 'List options', 'edit'),
       ]),
       SEPARATOR,

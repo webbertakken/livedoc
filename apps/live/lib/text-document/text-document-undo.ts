@@ -1,7 +1,7 @@
 // A text document's undo (docs/specs/034-text-documents/live-editing-and-storage.md "Undo"): the person's own changes
 // only (y-prosemirror's undo tracks the local origin), with typing within TEXT_DOCUMENT_UNDO_GROUP_MS one step. The
-// document's styles are on the same timeline: a change to them made with TEXT_DOCUMENT_STYLES_ORIGIN is undone with
-// the paragraphs it changes.
+// document's styles and lists are on the same timeline: a change to them made with TEXT_DOCUMENT_STYLES_ORIGIN or
+// TEXT_DOCUMENT_LISTS_ORIGIN is undone with the paragraphs it changes.
 import { Plugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { yUndoPlugin, yUndoPluginKey } from 'y-prosemirror';
@@ -9,6 +9,8 @@ import { TEXT_DOCUMENT_UNDO_GROUP_MS, TextDocumentState } from '@livedoc/text-do
 
 /** The origin a person's change to the document's styles is made with, so undo takes it back. */
 export const TEXT_DOCUMENT_STYLES_ORIGIN = Symbol('text-document-styles');
+/** The origin a person's change to the document's lists is made with (lists.md "Making a list"). */
+export const TEXT_DOCUMENT_LISTS_ORIGIN = Symbol('text-document-lists');
 
 export function textDocumentUndoPlugins(): Plugin[] {
   return [
@@ -21,6 +23,8 @@ export function textDocumentUndoPlugins(): Plugin[] {
           undoManager.captureTimeout = TEXT_DOCUMENT_UNDO_GROUP_MS;
           undoManager.addToScope(TextDocumentState.stylesType(undoManager.doc));
           undoManager.addTrackedOrigin(TEXT_DOCUMENT_STYLES_ORIGIN);
+          undoManager.addToScope(TextDocumentState.listsType(undoManager.doc));
+          undoManager.addTrackedOrigin(TEXT_DOCUMENT_LISTS_ORIGIN);
         }
         return {};
       },

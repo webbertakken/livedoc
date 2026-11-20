@@ -171,14 +171,17 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
       icon('checklist', 'Checklist', 'edit', lucideListTodo, {
         shortcut: 'checklist',
         toggle: true,
+        built: true,
       }),
       icon('bulleted-list', 'Bulleted list', 'edit', lucideList, {
         shortcut: 'bulleted-list',
         toggle: true,
+        built: true,
       }),
       icon('numbered-list', 'Numbered list', 'edit', lucideListOrdered, {
         shortcut: 'numbered-list',
         toggle: true,
+        built: true,
       }),
       icon('indent-decrease', 'Decrease indent', 'edit', lucideListIndentDecrease, {
         shortcut: 'decrease-paragraph-indentation',
