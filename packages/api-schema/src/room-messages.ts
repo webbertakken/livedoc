@@ -224,6 +224,9 @@ export const SYSTEM_OP_KINDS = [
   // `workbook` (docs/specs/029-sheets/sheet-store.md "Changing the workbook"): a spreadsheet's settings the api saved.
   // They change only through the api, so a forged one would change how everyone's workbook calculates.
   'workbook',
+  // `text-document-refused` (docs/specs/034-text-documents/live-editing-and-storage.md "Refused edits"): the room
+  // telling one sender its edit was refused; a forged one would only show a notice, but it comes from the room alone.
+  'text-document-refused',
 ] as const;
 
 // The whole vocabulary. Every op the editor sends or handles is one of these
