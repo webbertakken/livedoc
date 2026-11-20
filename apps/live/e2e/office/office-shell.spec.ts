@@ -83,6 +83,20 @@ test('the menus, the tool finder and the shortcut layer work a text document', a
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Zoom' })).toHaveValue('150%');
 
+  // The editing mode (review.md "Editing modes"): Viewing makes the writing read only and the toolbar a Viewer's;
+  // the shortcut brings Editing back.
+  await page.getByRole('button', { name: 'Mode: Editing' }).click();
+  await page.getByRole('menuitemradio', { name: /Viewing/ }).click();
+  await expect(page.locator(BODY)).toHaveAttribute('contenteditable', 'false');
+  await expect(
+    page.getByRole('toolbar', { name: 'Toolbar' }).getByRole('button', { name: 'Undo' }),
+  ).toHaveCount(0);
+  await page.screenshot({ path: test.info().outputPath('viewing.png') });
+  await page.locator(BODY).click();
+  await page.keyboard.press('ControlOrMeta+Alt+Shift+z');
+  await expect(page.getByRole('button', { name: 'Mode: Editing' })).toBeVisible();
+  await expect(page.locator(BODY)).toHaveAttribute('contenteditable', 'true');
+
   // A narrow window moves the controls that do not fit behind More.
   await page.setViewportSize({ width: 700, height: 860 });
   await page.getByRole('button', { name: 'More' }).click();

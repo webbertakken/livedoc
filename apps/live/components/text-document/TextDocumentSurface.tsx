@@ -52,6 +52,8 @@ import type { OfficeChrome } from '@/components/office/office-chrome';
 import type { SaveFactsSource } from '@/lib/text-document/text-document-save-status';
 import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSaveStatus';
 import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
+import { levelInMode } from '@/lib/office/office-mode';
+import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -111,9 +113,12 @@ export function TextDocumentSurface({
   const { zoom, scale } = useTextDocumentZoom(scope.documentId, scroller);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // The latest sender and gate, read when an update goes out, so a new room connection never rebinds the editor.
-  const live = useRef({ sequence, canEdit });
+  // This person's editing mode (review.md "Editing modes"): the writing takes edits only in Editing.
+  const { mode, choice: modeChoice, actions: modeActions } = useOfficeMode(level, 'TextDocumentMode');
+  const writes = canEdit && mode === 'editing';
+  const live = useRef({ sequence, canEdit, writes });
   useLayoutEffect(() => {
-    live.current = { sequence, canEdit };
+    live.current = { sequence, canEdit, writes };
   });
   // Where the person was in this tab, back when they return to it.
   const { noteViewChanged } = useSurfaceView({
@@ -130,7 +135,7 @@ export function TextDocumentSurface({
       if (!view) return;
       restoreSelectionIn(view, selection);
       // Back in the writing where it was left, as a word processor keeps its caret; focus never scrolls the page.
-      if (live.current.canEdit) view.focus();
+      if (live.current.writes) view.focus();
     },
   });
   const viewChanged = useRef(noteViewChanged);
@@ -197,20 +202,23 @@ export function TextDocumentSurface({
                 }),
               }),
               textDocumentPeersPlugin({
-                canEdit: () => live.current.canEdit,
+                canEdit: () => live.current.writes,
                 publish: (selection) => setLocalTextDocumentCaret(tabId, selection),
               }),
             ],
           }),
-          editable: () => live.current.canEdit,
-          attributes: {
+          editable: () => live.current.writes,
+          // Read only in Viewing (or for a Viewer), yet still focusable: the keyboard reads it, and its shortcuts work.
+          attributes: () => ({
             role: 'textbox',
             'aria-multiline': 'true',
             'aria-label': 'Document body',
+            'aria-readonly': live.current.writes ? 'false' : 'true',
+            tabindex: '0',
             // Spaces and line breaks show as typed; the caret is the focus mark, as in any word processor.
             class: 'text-document-body whitespace-pre-wrap break-words outline-none',
             spellcheck: 'true',
-          },
+          }),
         });
         editor.current = view;
         setEditorView(view);
@@ -249,9 +257,13 @@ export function TextDocumentSurface({
 
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
-    () => textDocumentEditorActions(editorView, { canEdit }),
-    [editorView, canEdit],
+    () => ({ ...textDocumentEditorActions(editorView, { canEdit: writes }), ...modeActions }),
+    [editorView, writes, modeActions],
   );
+  // A mode change re-reads whether the writing is editable.
+  useEffect(() => {
+    if (editorView && !editorView.isDestroyed) editorView.setProps({});
+  }, [editorView, writes]);
 
   // An edit the room refused names its limit.
   useEffect(() => TextDocumentBus.onRefused(tabId, setLimitReached), [tabId]);
@@ -266,8 +278,9 @@ export function TextDocumentSurface({
         scope={scope}
         documentName={documentName}
         format={format}
-        level={level}
+        level={levelInMode(level, mode)}
         editorActions={editorActions}
+        mode={modeChoice}
         keyScope={root}
         localDoc={local ? () => liveDoc.current : null}
         chrome={chrome}

@@ -21,6 +21,7 @@ import { track } from '@/lib/telemetry';
 import type { OfficeChrome, OfficePerson } from './office-chrome';
 import { OfficeMoveIcon, OfficeStarIcon } from './office-icons';
 import { OfficeMenuBar, type OpenMenu } from './OfficeMenuBar';
+import { OfficeModeSwitch, type OfficeModeChoice } from './OfficeModeSwitch';
 import { OfficeNameField } from './OfficeNameField';
 import { OfficeToolbar } from './OfficeToolbar';
 import type { OfficeZoom } from './OfficeZoomField';
@@ -62,6 +63,7 @@ export function OfficeTitleRow({
   saveStatus = null,
   toolbar = [],
   zoom = null,
+  mode = null,
 }: {
   name: string;
   // The format's pill (".ODT") and what it is called ("OpenDocument format").
@@ -88,6 +90,8 @@ export function OfficeTitleRow({
   // The kind's toolbar, and the zoom its zoom field works (null: no zoom field).
   toolbar?: OfficeToolbarData;
   zoom?: OfficeZoom | null;
+  // The person's editing mode and the modes their level allows (review.md "Editing modes").
+  mode?: OfficeModeChoice | null;
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [finding, setFinding] = useState(false);
@@ -235,7 +239,11 @@ export function OfficeTitleRow({
         </div>
         {chrome ? (
           <div className="self-center">
-            <OfficeTitleActions chrome={chrome} onFollow={follow} />
+            <OfficeTitleActions chrome={chrome} onFollow={follow} mode={mode} />
+          </div>
+        ) : mode ? (
+          <div className="self-center">
+            <OfficeModeSwitch {...mode} />
           </div>
         ) : null}
       </div>

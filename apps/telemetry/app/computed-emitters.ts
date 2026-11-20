@@ -477,6 +477,8 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       'TextDocumentMove',
     ],
   },
+  // An office kind's editing mode changed (docs/specs/034-text-documents/review.md "Editing modes"), typed by its kind.
+  'apps/live/lib/office/useOfficeMode.ts UI·Changed': { values: ['TextDocumentMode'] },
   'apps/live/components/office/OfficeTitleRow.tsx UI·Toggled': { values: ['TextDocumentStar'] },
   'apps/live/components/office/OfficeTitleRow.tsx UI·Used': {
     values: ['TextDocumentToolFinder', 'TextDocumentFollow'],

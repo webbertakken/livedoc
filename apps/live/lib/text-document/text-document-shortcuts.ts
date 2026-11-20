@@ -135,7 +135,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+Z',
     '⌘+Option+Shift+Z',
     'Ctrl+Alt+Shift+Z',
-    'specified',
+    'built',
   ),
   row(
     'switch-to-suggesting',
@@ -153,7 +153,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+C',
     '⌘+Option+Shift+C',
     'Ctrl+Alt+Shift+C',
-    'specified',
+    'built',
   ),
   row('zoom-in', 'Common actions', 'Zoom in', 'Ctrl+Plus', '⌘+Plus', '—', 'browser'),
   row('zoom-out', 'Common actions', 'Zoom out', 'Ctrl+-', '⌘+-', '—', 'browser'),
