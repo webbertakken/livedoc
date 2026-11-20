@@ -529,6 +529,82 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   MUNIT: D('size', 'The identity matrix of a size', '=MUNIT(3)'),
   RANDARRAY: D('[rows], [columns]', 'Random numbers from 0 to 1, recalculated', '=RANDARRAY(3, 2)'),
   TRANSPOSE: D('range', 'A range with rows and columns swapped', '=TRANSPOSE(A1:C4)'),
+  CHOOSECOLS: D(
+    'array, col_num1, [col_num2, …]',
+    'The columns of an array picked by number, negative from the end',
+    '=CHOOSECOLS(A1:E5, 1, -1)',
+  ),
+  CHOOSEROWS: D(
+    'array, row_num1, [row_num2, …]',
+    'The rows of an array picked by number, negative from the end',
+    '=CHOOSEROWS(A1:B5, 1, 3)',
+  ),
+  HSTACK: D('range1, [range2, …]', 'Ranges side by side, as one array', '=HSTACK(A1:B3, D1:D3)'),
+  VSTACK: D('range1, [range2, …]', 'Ranges one under another, as one array', '=VSTACK(A2:C4, A6:C8)'),
+  TOCOL: D(
+    'array_or_range, [ignore], [scan_by_column]',
+    'An array as one column, empties or errors left out if asked',
+    '=TOCOL(A1:C3, 1)',
+  ),
+  TOROW: D(
+    'array_or_range, [ignore], [scan_by_column]',
+    'An array as one row, empties or errors left out if asked',
+    '=TOROW(A1:C3, 1)',
+  ),
+  WRAPROWS: D(
+    'range, wrap_count, [pad_with]',
+    'A row or column wrapped into rows of a length',
+    '=WRAPROWS(A1:E1, 2)',
+  ),
+  WRAPCOLS: D(
+    'range, wrap_count, [pad_with]',
+    'A row or column wrapped into columns of a length',
+    '=WRAPCOLS(A1:E1, 2)',
+  ),
+  FLATTEN: D('range1, [range2, …]', 'Every value of the ranges in one column', '=FLATTEN(A1:B2)'),
+  FREQUENCY: D(
+    'data, classes',
+    'How many values fall in each class, and above them all',
+    '=FREQUENCY(A2:A40, B2:B5)',
+  ),
+  MMULT: D('matrix1, matrix2', 'The matrix product of two matrices', '=MMULT(A1:B3, C1:F2)'),
+  MDETERM: D('square_matrix', 'The determinant of a square matrix', '=MDETERM(A1:C3)'),
+  MINVERSE: D('square_matrix', 'The inverse of a square matrix', '=MINVERSE(A1:C3)'),
+  SUMX2MY2: D(
+    'array_x, array_y',
+    'Adds the differences of the squares of paired values',
+    '=SUMX2MY2(A2:A9, B2:B9)',
+  ),
+  SUMX2PY2: D(
+    'array_x, array_y',
+    'Adds the sums of the squares of paired values',
+    '=SUMX2PY2(A2:A9, B2:B9)',
+  ),
+  SUMXMY2: D(
+    'array_x, array_y',
+    'Adds the squares of the differences of paired values',
+    '=SUMXMY2(A2:A9, B2:B9)',
+  ),
+  LINEST: D(
+    'known_data_y, [known_data_x], [calculate_b], [verbose]',
+    'The slopes and intercept of the least-squares line, with its statistics if asked',
+    '=LINEST(B2:B10, A2:A10)',
+  ),
+  LOGEST: D(
+    'known_data_y, [known_data_x], [b], [verbose]',
+    'The factors of the best exponential curve, with its statistics if asked',
+    '=LOGEST(B2:B10, A2:A10)',
+  ),
+  TREND: D(
+    'known_data_y, [known_data_x], [new_data_x], [b]',
+    'Values on the least-squares line at new x values',
+    '=TREND(B2:B10, A2:A10, A11:A13)',
+  ),
+  GROWTH: D(
+    'known_data_y, [known_data_x], [new_data_x], [b]',
+    'Values on the best exponential curve at new x values',
+    '=GROWTH(B2:B10, A2:A10, A11:A13)',
+  ),
   ARRAYFORMULA: D(
     'formula',
     'Works a formula out over whole ranges',
