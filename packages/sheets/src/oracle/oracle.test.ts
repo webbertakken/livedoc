@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 import { heldAnswer, sameBlock, showBlock, unnamedDifferences } from './compare';
 import { OracleCorpus, type OracleAnswers, type OracleCategory } from './corpus';
 import { engineAnswers } from './oracle-engine';
+import { FUNCTIONS } from '../formula/registry';
 
 const ROOT = join(import.meta.dirname, '../../oracle');
 
@@ -111,7 +112,7 @@ describe('the oracle corpus', () => {
 
 // The catalogue's categories whose boxes have landed (plan 0020 Phase 6): every function built in them is measured.
 // The list grows by one with each category box, and holds every category by the end of the phase.
-const MEASURED_CATEGORIES = ['Filter', 'Info', 'Logical', 'Lookup', 'Operator'];
+const MEASURED_CATEGORIES = ['Date', 'Filter', 'Info', 'Logical', 'Lookup', 'Operator'];
 
 // A built catalogue row of formulas.md: its name and category.
 function builtRows(): { name: string; category: string }[] {
@@ -135,7 +136,9 @@ describe('the catalogue against the corpus', () => {
     const rows = builtRows();
     expect(rows.length).toBeGreaterThan(100);
     const unmeasured = rows
+      // A volatile function (NOW, RAND) is held by its own unit tests, never an oracle's answer: no two runs agree.
       .filter((r) => MEASURED_CATEGORIES.includes(r.category) && !measured.has(r.name))
+      .filter((r) => !FUNCTIONS[r.name]?.volatile)
       .map((r) => `${r.category} ${r.name}`);
     expect(unmeasured).toEqual([]);
   });

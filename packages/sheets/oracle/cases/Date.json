@@ -1,0 +1,410 @@
+{
+  "category": "Date",
+  "data": [
+    [45658, "2025-03-01", 45659],
+    [45716, "14:30", 45670],
+    [45747, "nonsense"],
+    [46022],
+    [0.5],
+    [45658.75]
+  ],
+  "cases": [
+    {
+      "id": "DATE.1",
+      "f": "=DATE(2025, 1, 1)"
+    },
+    {
+      "id": "DATE.2",
+      "f": "=DATE(2025, 13, 1)"
+    },
+    {
+      "id": "DATE.3",
+      "f": "=DATE(2025, 1, 0)"
+    },
+    {
+      "id": "DATE.4",
+      "f": "=DATE(99, 1, 1)"
+    },
+    {
+      "id": "DATE.5",
+      "f": "=DATE(-1, 1, 1)"
+    },
+    {
+      "id": "DATE.6",
+      "f": "=DATE(2025, 2, 31)"
+    },
+    {
+      "id": "TIME.1",
+      "f": "=TIME(12, 30, 0)"
+    },
+    {
+      "id": "TIME.2",
+      "f": "=TIME(25, 0, 0)"
+    },
+    {
+      "id": "TIME.3",
+      "f": "=TIME(0, -1, 0)"
+    },
+    {
+      "id": "TIME.4",
+      "f": "=TIME(1.9, 0, 0)",
+      "expect": [[0.041666666666666664]],
+      "cite": "https://support.google.com/docs/answer/3093056 (\"TIME will silently truncate decimal values input into the function, e.g. an hour of 12.75 will be interpreted as 12\")",
+      "differs": {
+        "libreoffice": "LibreOffice keeps the fraction of an hour (1.9 hours); Google truncates it to 1"
+      }
+    },
+    {
+      "id": "DATEVALUE.1",
+      "f": "=DATEVALUE(\"2025-03-01\")"
+    },
+    {
+      "id": "DATEVALUE.2",
+      "f": "=DATEVALUE(Data!B1)"
+    },
+    {
+      "id": "DATEVALUE.3",
+      "f": "=DATEVALUE(\"nonsense\")"
+    },
+    {
+      "id": "DATEVALUE.4",
+      "f": "=DATEVALUE(\"March 1, 2025\")"
+    },
+    {
+      "id": "DATEVALUE.5",
+      "f": "=DATEVALUE(\"2025-03-01 10:00\")"
+    },
+    {
+      "id": "TIMEVALUE.1",
+      "f": "=TIMEVALUE(\"14:30\")"
+    },
+    {
+      "id": "TIMEVALUE.2",
+      "f": "=TIMEVALUE(\"2:30 PM\")"
+    },
+    {
+      "id": "TIMEVALUE.3",
+      "f": "=TIMEVALUE(\"nonsense\")"
+    },
+    {
+      "id": "TIMEVALUE.4",
+      "f": "=TIMEVALUE(\"2025-03-01 06:00\")"
+    },
+    {
+      "id": "YEAR.1",
+      "f": "=YEAR(Data!A1)"
+    },
+    {
+      "id": "YEAR.2",
+      "f": "=YEAR(Data!B1)"
+    },
+    {
+      "id": "YEAR.3",
+      "f": "=YEAR(-1)"
+    },
+    {
+      "id": "MONTH.1",
+      "f": "=MONTH(Data!A2)"
+    },
+    {
+      "id": "DAY.1",
+      "f": "=DAY(Data!A3)"
+    },
+    {
+      "id": "DAY.2",
+      "f": "=DAY(\"nonsense\")"
+    },
+    {
+      "id": "HOUR.1",
+      "f": "=HOUR(Data!A6)"
+    },
+    {
+      "id": "HOUR.2",
+      "f": "=HOUR(Data!B2)"
+    },
+    {
+      "id": "MINUTE.1",
+      "f": "=MINUTE(Data!B2)"
+    },
+    {
+      "id": "SECOND.1",
+      "f": "=SECOND(TIME(1, 2, 3))"
+    },
+    {
+      "id": "WEEKDAY.1",
+      "f": "=WEEKDAY(Data!A1)"
+    },
+    {
+      "id": "WEEKDAY.2",
+      "f": "=WEEKDAY(Data!A1, 2)"
+    },
+    {
+      "id": "WEEKDAY.3",
+      "f": "=WEEKDAY(Data!A1, 3)"
+    },
+    {
+      "id": "WEEKDAY.4",
+      "f": "=WEEKDAY(Data!A1, 11)"
+    },
+    {
+      "id": "WEEKDAY.5",
+      "f": "=WEEKDAY(Data!A1, 17)"
+    },
+    {
+      "id": "WEEKDAY.6",
+      "f": "=WEEKDAY(Data!A1, 4)"
+    },
+    {
+      "id": "WEEKNUM.1",
+      "f": "=WEEKNUM(Data!A3)"
+    },
+    {
+      "id": "WEEKNUM.2",
+      "f": "=WEEKNUM(Data!A3, 2)"
+    },
+    {
+      "id": "WEEKNUM.3",
+      "f": "=WEEKNUM(Data!A4, 21)"
+    },
+    {
+      "id": "WEEKNUM.4",
+      "f": "=WEEKNUM(Data!A3, 15)"
+    },
+    {
+      "id": "WEEKNUM.5",
+      "f": "=WEEKNUM(Data!A3, 9)"
+    },
+    {
+      "id": "ISOWEEKNUM.1",
+      "f": "=ISOWEEKNUM(Data!A4)"
+    },
+    {
+      "id": "ISOWEEKNUM.2",
+      "f": "=ISOWEEKNUM(Data!A1)"
+    },
+    {
+      "id": "EDATE.1",
+      "f": "=EDATE(Data!A1, 1)"
+    },
+    {
+      "id": "EDATE.2",
+      "f": "=EDATE(Data!A3, -1)"
+    },
+    {
+      "id": "EDATE.3",
+      "f": "=EDATE(Data!A3, 1.9)"
+    },
+    {
+      "id": "EOMONTH.1",
+      "f": "=EOMONTH(Data!A1, 1)"
+    },
+    {
+      "id": "EOMONTH.2",
+      "f": "=EOMONTH(Data!A1, -1)"
+    },
+    {
+      "id": "EOMONTH.3",
+      "f": "=EOMONTH(Data!B1, 0)"
+    },
+    {
+      "id": "DATEDIF.1",
+      "f": "=DATEDIF(Data!A1, Data!A4, \"Y\")"
+    },
+    {
+      "id": "DATEDIF.2",
+      "f": "=DATEDIF(Data!A1, Data!A4, \"M\")"
+    },
+    {
+      "id": "DATEDIF.3",
+      "f": "=DATEDIF(Data!A1, Data!A4, \"D\")"
+    },
+    {
+      "id": "DATEDIF.4",
+      "f": "=DATEDIF(Data!A1, Data!A4, \"MD\")"
+    },
+    {
+      "id": "DATEDIF.5",
+      "f": "=DATEDIF(Data!A1, Data!A4, \"YM\")"
+    },
+    {
+      "id": "DATEDIF.6",
+      "f": "=DATEDIF(Data!A1, Data!A4, \"YD\")"
+    },
+    {
+      "id": "DATEDIF.7",
+      "f": "=DATEDIF(Data!A4, Data!A1, \"D\")"
+    },
+    {
+      "id": "DATEDIF.8",
+      "f": "=DATEDIF(Data!A1, Data!A4, \"X\")"
+    },
+    {
+      "id": "DATEDIF.9",
+      "f": "=DATEDIF(DATE(2025, 1, 31), DATE(2025, 3, 1), \"MD\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives -2, as Excel does (31 January moved on by a month overruns February); LiveDoc counts from the start clamped to the month's end, never negative"
+      },
+      "note": "Awaits Google's answer: its help says \"the number of days ... after subtracting whole months\" and shows no month end."
+    },
+    {
+      "id": "DAYS.1",
+      "f": "=DAYS(Data!A4, Data!A1)"
+    },
+    {
+      "id": "DAYS.2",
+      "f": "=DAYS(\"2025-03-01\", \"2025-01-01\")"
+    },
+    {
+      "id": "DAYS.3",
+      "f": "=DAYS(\"x\", 1)"
+    },
+    {
+      "id": "NETWORKDAYS.1",
+      "f": "=NETWORKDAYS(Data!A1, Data!A3)"
+    },
+    {
+      "id": "NETWORKDAYS.2",
+      "f": "=NETWORKDAYS(Data!A1, Data!A3, Data!C1:C2)"
+    },
+    {
+      "id": "NETWORKDAYS.3",
+      "f": "=NETWORKDAYS(Data!A3, Data!A1)"
+    },
+    {
+      "id": "NETWORKDAYS.INTL.1",
+      "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3, 7)"
+    },
+    {
+      "id": "NETWORKDAYS.INTL.2",
+      "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3, \"0000011\")"
+    },
+    {
+      "id": "NETWORKDAYS.INTL.3",
+      "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3, 11)"
+    },
+    {
+      "id": "NETWORKDAYS.INTL.4",
+      "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3, \"1111111\")",
+      "differs": {
+        "libreoffice": "LibreOffice counts no working day, 0; Excel refuses a weekend of every day with #VALUE!, as LiveDoc does"
+      },
+      "note": "Awaits Google's answer: its help does not say what seven 1s give."
+    },
+    {
+      "id": "NETWORKDAYS.INTL.5",
+      "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3, 8)"
+    },
+    {
+      "id": "NETWORKDAYS.INTL.6",
+      "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3, 1, Data!C1:C2)"
+    },
+    {
+      "id": "NETWORKDAYS.INTL.7",
+      "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3)"
+    },
+    {
+      "id": "WORKDAY.1",
+      "f": "=WORKDAY(Data!A1, 10)"
+    },
+    {
+      "id": "WORKDAY.2",
+      "f": "=WORKDAY(Data!A1, 10, Data!C1:C2)"
+    },
+    {
+      "id": "WORKDAY.3",
+      "f": "=WORKDAY(Data!A1, -5)"
+    },
+    {
+      "id": "WORKDAY.INTL.1",
+      "f": "=WORKDAY.INTL(Data!A1, 10, 7)"
+    },
+    {
+      "id": "WORKDAY.INTL.2",
+      "f": "=WORKDAY.INTL(Data!A1, 10, \"1000001\")"
+    },
+    {
+      "id": "WORKDAY.INTL.3",
+      "f": "=WORKDAY.INTL(Data!A1, 10, 1, Data!C1:C2)"
+    },
+    {
+      "id": "WORKDAY.INTL.4",
+      "f": "=WORKDAY.INTL(Data!A1, 10, \"11\")"
+    },
+    {
+      "id": "WORKDAY.INTL.5",
+      "f": "=WORKDAY.INTL(Data!A1, -3, 17)"
+    },
+    {
+      "id": "YEARFRAC.1",
+      "f": "=YEARFRAC(Data!A1, Data!A4)"
+    },
+    {
+      "id": "YEARFRAC.2",
+      "f": "=YEARFRAC(Data!A1, Data!A4, 1)"
+    },
+    {
+      "id": "YEARFRAC.3",
+      "f": "=YEARFRAC(Data!A1, Data!A4, 2)"
+    },
+    {
+      "id": "YEARFRAC.4",
+      "f": "=YEARFRAC(Data!A1, Data!A4, 3)"
+    },
+    {
+      "id": "YEARFRAC.5",
+      "f": "=YEARFRAC(Data!A1, Data!A4, 4)"
+    },
+    {
+      "id": "YEARFRAC.6",
+      "f": "=YEARFRAC(Data!A1, Data!A4, 5)"
+    },
+    {
+      "id": "YEARFRAC.7",
+      "f": "=YEARFRAC(DATE(2024, 1, 1), DATE(2025, 6, 30), 1)"
+    },
+    {
+      "id": "EPOCHTODATE.1",
+      "f": "=EPOCHTODATE(1655906710)",
+      "expect": [[44734.5869212963]],
+      "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A3,1)` with 1655906710, 6/22/2022 14:05:10`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
+      }
+    },
+    {
+      "id": "EPOCHTODATE.2",
+      "f": "=EPOCHTODATE(1655906568893, 2)",
+      "expect": [[44734.58528811343]],
+      "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A2,2)` with 1655906568893, 6/22/2022 14:02:49`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
+      }
+    },
+    {
+      "id": "EPOCHTODATE.3",
+      "f": "=EPOCHTODATE(0, 2)",
+      "expect": [[25569]],
+      "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A4,2)` with 0, 1/1/1970 0:00:00`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
+      }
+    },
+    {
+      "id": "EPOCHTODATE.4",
+      "f": "=EPOCHTODATE(1656356678000410, 3)",
+      "expect": [[44739.79488425926]],
+      "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A6,3)` with 1656356678000410; \"Fractional amounts of milliseconds are shortened\"`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
+      }
+    },
+    {
+      "id": "EPOCHTODATE.5",
+      "f": "=EPOCHTODATE(-1)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
+      },
+      "note": "Awaits Google's answer: its help says \"Negative timestamps aren't accepted\" but not which error."
+    }
+  ]
+}

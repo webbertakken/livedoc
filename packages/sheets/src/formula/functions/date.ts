@@ -1,33 +1,27 @@
 // Date and time functions (docs/specs/029-sheets/formulas.md "Functions": Date and time). Dates are serials
 // (dates.ts); TODAY and NOW read the viewer's local time through the frame.
 import {
-  SERIAL_MAX,
   dateFromSerial,
   localeDayFirst,
   parseDateText,
   parseTimeText,
   serialFromDate,
 } from '../../dates';
-import type { EvalValue, Frame } from '../../engine/frame';
 import {
-  arrayArg,
   finite,
-  flatValues,
   fn,
+  intArg,
   numArg,
   numFn,
   opt,
-  scalarArg,
   scalarFn,
   textArg,
   volatileFn,
   type FnDef,
 } from '../fn';
 import { err, isError, toNumber, type Value } from '../values';
-
-function checkSerial(n: number): Value {
-  return n < 0 || n > SERIAL_MAX ? err('#NUM!', 'The date is out of range') : n;
-}
+import { checkSerial, dateArg } from './date-args';
+import { WORKDAY_FUNCTIONS } from './workdays';
 
 // DATE(y, m, d): months and days past their range roll over (DATE(2026, 13, 1) is January 2027), and years before
 // 1900 count from 1900, as spreadsheets do.
@@ -71,32 +65,6 @@ function dateFn(min: number, max: number, each: (ns: number[]) => Value): FnDef 
     }
     return finite(each(ns));
   });
-}
-
-// A date argument: a number, or text that reads as a date ("2026-10-08").
-function dateArg(v: EvalValue, f: Frame): number | Value {
-  const x = scalarArg(v, f);
-  if (typeof x === 'string') {
-    const d = parseDateText(x, localeDayFirst(f.locale));
-    if (d) return d.serial;
-  }
-  return toNumber(x);
-}
-
-function holidaysOf(args: EvalValue[], i: number, f: Frame): Set<number> | Value {
-  const out = new Set<number>();
-  const a = args[i];
-  if (a === undefined || a === null) return out;
-  for (const x of flatValues(arrayArg(a, f))) {
-    if (isError(x)) return x;
-    if (typeof x === 'number') out.add(Math.floor(x));
-  }
-  return out;
-}
-
-function isWeekend(serial: number): boolean {
-  const wd = dateFromSerial(serial).weekday;
-  return wd === 0 || wd === 6;
 }
 
 // The week of the year whose weeks start on `startDay` (0 Sunday), the week holding 1 January being week 1.
@@ -177,6 +145,11 @@ function yearFrac(a: number, b: number, basis: number): Value {
       return err('#NUM!');
   }
 }
+
+// EPOCHTODATE: 1 January 1970 as a serial, a day's milliseconds, and each unit's count in a millisecond.
+const UNIX_EPOCH_SERIAL = 25_569;
+const MS_PER_DAY = 86_400_000;
+const EPOCH_UNITS_PER_MS: Record<number, number> = { 1: 0.001, 2: 1, 3: 1000 };
 
 export const DATE_FUNCTIONS: Record<string, FnDef> = {
   TODAY: volatileFn(0, 0, (_a, f) => Math.floor(f.now())),
@@ -267,36 +240,17 @@ export const DATE_FUNCTIONS: Record<string, FnDef> = {
     if (typeof s !== 'number') return s;
     return Math.floor(e) - Math.floor(s);
   }),
-  NETWORKDAYS: fn(2, 3, (args, f) => {
-    const a = dateArg(args[0]!, f);
-    const b = dateArg(args[1]!, f);
-    if (typeof a !== 'number') return a;
-    if (typeof b !== 'number') return b;
-    const hol = holidaysOf(args, 2, f);
-    if (!(hol instanceof Set)) return hol;
-    const [s, e, sign] =
-      a <= b ? [Math.floor(a), Math.floor(b), 1] : [Math.floor(b), Math.floor(a), -1];
-    if (e - s > 400_000) return err('#NUM!');
-    let n = 0;
-    for (let d = s; d <= e; d++) if (!isWeekend(d) && !hol.has(d)) n++;
-    return n * sign;
-  }),
-  WORKDAY: fn(2, 3, (args, f) => {
-    const a = dateArg(args[0]!, f);
-    const days = numArg(args[1]!, f);
-    if (typeof a !== 'number') return a;
-    if (isError(days)) return days;
-    const hol = holidaysOf(args, 2, f);
-    if (!(hol instanceof Set)) return hol;
-    let d = Math.floor(a);
-    let left = Math.trunc(days);
-    const step = left < 0 ? -1 : 1;
-    if (Math.abs(left) > 300_000) return err('#NUM!');
-    while (left !== 0) {
-      d += step;
-      if (!isWeekend(d) && !hol.has(d)) left -= step;
-    }
-    return checkSerial(d);
+  // A Unix time in UTC (Google's): seconds, milliseconds or microseconds, fractions of a millisecond dropped.
+  EPOCHTODATE: fn(1, 2, (args, f) => {
+    const t = numArg(args[0]!, f);
+    const unit = opt(args, 1, f, intArg, 1);
+    if (isError(t)) return t;
+    if (isError(unit)) return unit;
+    const perMs = EPOCH_UNITS_PER_MS[unit];
+    if (perMs === undefined)
+      return err('#NUM!', 'The unit is 1 (seconds), 2 (milliseconds) or 3 (microseconds)');
+    if (t < 0) return err('#NUM!', 'A timestamp is never negative');
+    return checkSerial(UNIX_EPOCH_SERIAL + Math.trunc(t / perMs) / MS_PER_DAY);
   }),
   YEARFRAC: fn(2, 3, (args, f) => {
     const a = dateArg(args[0]!, f);
@@ -307,4 +261,5 @@ export const DATE_FUNCTIONS: Record<string, FnDef> = {
     if (isError(basis)) return basis;
     return yearFrac(Math.floor(a), Math.floor(b), Math.trunc(basis));
   }),
+  ...WORKDAY_FUNCTIONS,
 };

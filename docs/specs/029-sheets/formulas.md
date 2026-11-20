@@ -63,7 +63,8 @@ as what it means, never as the text typed, so everyone reads it the same whateve
 | Anything else                           | Text                                              | Automatic                      |
 
 - **The formula's format** is the format of what its outermost function returns: a date from `TODAY`, `DATE`,
-  `DATEVALUE`, `EDATE`, `EOMONTH` or `WORKDAY` is Date, `NOW` is Date Time, `TIME` and `TIMEVALUE` are Time, and so
+  `DATEVALUE`, `EDATE`, `EOMONTH`, `WORKDAY` or `WORKDAY.INTL` is Date, `NOW` and `EPOCHTODATE` are Date Time, `TIME`
+  and `TIMEVALUE` are Time, and so
   is one of them plus or minus a plain number (`=TODAY()+7`); any other formula (arithmetic with a cell, `=A1+7`, or
   between dates, `=A1-TODAY()`, which is a number of days) stays Automatic. It is taken only by a cell whose format is
   Automatic, however the formula arrives (typed, pasted, or written by an agent), so a cell someone formatted keeps
@@ -247,7 +248,13 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
 
 **Date and time**: `TODAY`, `NOW`, `DATE`, `TIME`, `DATEVALUE`, `TIMEVALUE`, `YEAR`, `MONTH`, `DAY`, `HOUR`,
 `MINUTE`, `SECOND`, `WEEKDAY`, `WEEKNUM`, `ISOWEEKNUM`, `EDATE`, `EOMONTH`, `DATEDIF`, `DAYS`, `NETWORKDAYS`,
-`WORKDAY`, `YEARFRAC`.
+`NETWORKDAYS.INTL`, `WORKDAY`, `WORKDAY.INTL`, `YEARFRAC`, `EPOCHTODATE`.
+
+- `NETWORKDAYS.INTL` and `WORKDAY.INTL` take a weekend as a number (1 Saturday and Sunday ... 7 Friday and Saturday,
+  11 Sunday alone ... 17 Saturday alone) or seven 0s and 1s from Monday, 1 a day off (`"0000011"`); seven 1s is
+  `#VALUE!`.
+- `EPOCHTODATE(timestamp, [unit])` reads a Unix time in UTC, in seconds (1), milliseconds (2) or microseconds (3),
+  fractions of a millisecond dropped; a negative timestamp is `#NUM!`.
 
 **Arrays**: `FILTER`, `SORT`, `SORTN`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `TRANSPOSE`, `ARRAYFORMULA`.
 
@@ -473,7 +480,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `EFFECT`              | Financial   | `EFFECT(nominal_rate, periods_per_year)`                                                                       | Google      | `EFFECT`                         | planned                                                       |
 | `ENCODEURL`           | Web         | `ENCODEURL(text)`                                                                                              | Google      | `COM.MICROSOFT.ENCODEURL`        | planned                                                       |
 | `EOMONTH`             | Date        | `EOMONTH(start_date, months)`                                                                                  | Google      | `EOMONTH`                        | built                                                         |
-| `EPOCHTODATE`         | Date        | `EPOCHTODATE(timestamp, [unit])`                                                                               | Google      | S5                               | planned                                                       |
+| `EPOCHTODATE`         | Date        | `EPOCHTODATE(timestamp, [unit])`                                                                               | Google      | S5                               | built                                                         |
 | `EQ`                  | Operator    | `EQ(value1, value2)`                                                                                           | Google      | S5                               | built                                                         |
 | `ERF`                 | Engineering | `ERF(lower_bound, [upper_bound])`                                                                              | Google      | `ERF`                            | planned                                                       |
 | `ERF.PRECISE`         | Engineering | `ERF.PRECISE(lower_bound, [upper_bound])`                                                                      | Google      | `COM.MICROSOFT.ERF.PRECISE`      | planned                                                       |
@@ -674,7 +681,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `NEGBINOM.DIST`       | Statistical | `NEGBINOM.DIST(num_failures, num_successes, prob_success)`                                                     | Google      | `COM.MICROSOFT.NEGBINOM.DIST`    | planned                                                       |
 | `NEGBINOMDIST`        | Statistical | `NEGBINOMDIST(num_failures, num_successes, prob_success)`                                                      | Google      | `NEGBINOMDIST`                   | planned                                                       |
 | `NETWORKDAYS`         | Date        | `NETWORKDAYS(start_date, end_date, [holidays])`                                                                | Google      | `NETWORKDAYS`                    | built                                                         |
-| `NETWORKDAYS.INTL`    | Date        | `NETWORKDAYS.INTL(start_date, end_date, [weekend], [holidays])`                                                | Google      | `COM.MICROSOFT.NETWORKDAYS.INTL` | planned                                                       |
+| `NETWORKDAYS.INTL`    | Date        | `NETWORKDAYS.INTL(start_date, end_date, [weekend], [holidays])`                                                | Google      | `COM.MICROSOFT.NETWORKDAYS.INTL` | built                                                         |
 | `NOMINAL`             | Financial   | `NOMINAL(effective_rate, periods_per_year)`                                                                    | Google      | `NOMINAL`                        | planned                                                       |
 | `NORM.DIST`           | Statistical | `NORM.DIST(x, mean, standard_deviation, cumulative)`                                                           | Google      | `COM.MICROSOFT.NORM.DIST`        | planned                                                       |
 | `NORM.INV`            | Statistical | `NORM.INV(x, mean, standard_deviation)`                                                                        | Google      | `COM.MICROSOFT.NORM.INV`         | planned                                                       |
@@ -857,7 +864,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `WEIBULL`             | Statistical | `WEIBULL(x, shape, scale, cumulative)`                                                                         | Google      | `WEIBULL`                        | planned                                                       |
 | `WEIBULL.DIST`        | Statistical | `WEIBULL.DIST(x, shape, scale, cumulative)`                                                                    | Google      | `COM.MICROSOFT.WEIBULL.DIST`     | planned                                                       |
 | `WORKDAY`             | Date        | `WORKDAY(start_date, num_days, [holidays])`                                                                    | Google      | `WORKDAY`                        | built                                                         |
-| `WORKDAY.INTL`        | Date        | `WORKDAY.INTL(start_date, num_days, [weekend], [holidays])`                                                    | Google      | `COM.MICROSOFT.WORKDAY.INTL`     | planned                                                       |
+| `WORKDAY.INTL`        | Date        | `WORKDAY.INTL(start_date, num_days, [weekend], [holidays])`                                                    | Google      | `COM.MICROSOFT.WORKDAY.INTL`     | built                                                         |
 | `WRAPCOLS`            | Array       | `WRAPCOLS(range, wrap_count, [pad_with])`                                                                      | Google      | `COM.MICROSOFT.WRAPCOLS`         | planned                                                       |
 | `WRAPROWS`            | Array       | `WRAPROWS(range, wrap_count, [pad_with])`                                                                      | Google      | `COM.MICROSOFT.WRAPROWS`         | planned                                                       |
 | `XIRR`                | Financial   | `XIRR(cashflow_amounts, cashflow_dates, [rate_guess])`                                                         | Google      | `XIRR`                           | planned                                                       |
