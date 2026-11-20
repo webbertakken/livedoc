@@ -1,8 +1,8 @@
 # Editing surface
 
 **Status: partly built.** The menu bar (every menu and item, those not yet built dimmed), the tool finder, the
-title row (but its comment history), the toolbar's built controls and the keyboard shortcuts dialog are built; the
-rest is specified.
+title row (but its comment history), the toolbar's built controls, the ruler and the keyboard shortcuts dialog are
+built; the rest is specified.
 
 What a person sees and works with on a [text document](text-document.md): Google Docs' layout, control for control,
 built on the shared [Office shell](../004-interface-design/office-shell.md). How literal the look is (Google's metrics

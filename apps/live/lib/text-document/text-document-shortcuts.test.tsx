@@ -38,6 +38,7 @@ import {
 import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
+import { SHOW_RULER } from './useTextDocumentRuler';
 import { textDocumentUndoPlugins } from './text-document-undo';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -76,6 +77,8 @@ describe('the text document menus', () => {
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
         // The panels' items (useOfficePanels), bound by the surface.
         ...TEXT_DOCUMENT_PANELS.map((p) => p.item),
+        // View > Show ruler (useTextDocumentRuler), bound by the surface.
+        SHOW_RULER,
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {

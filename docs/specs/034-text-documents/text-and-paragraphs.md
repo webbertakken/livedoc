@@ -1,8 +1,8 @@
 # Text and paragraphs
 
 **Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
-keep rules, borders and shading, paint format, clear formatting, the Tab key and tab stops (drawn and kept; made
-on the ruler is specified) are built; the rest is specified.
+keep rules, borders and shading, paint format, clear formatting, the Tab key and tab stops are built; the rest is
+specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
