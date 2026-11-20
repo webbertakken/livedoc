@@ -1,6 +1,7 @@
 # Editing surface
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** The menu bar (every menu and item, those not yet built dimmed) and the tool finder are
+built; the rest is specified.
 
 What a person sees and works with on a [text document](text-document.md): Google Docs' layout, control for control,
 built on the shared [Office shell](../004-interface-design/office-shell.md). How literal the look is (Google's metrics
@@ -47,11 +48,11 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 - Items follow the [inventory](../../research/docs-open-standard/google-docs-inventory.md#menus) in Google's order,
   less the rows the matrix leaves out (they are not shown, never dimmed), plus LiveDoc's own (File > Convert, File >
   Download > OpenDocument flat file).
-- **Not yet built** items show dimmed, with the tooltip "Coming soon", until their phase lands; none remain once the
-  matrix is done.
+- **Not yet built** items show dimmed, with "Coming soon" where the shortcut would be, until their phase lands;
+  none remain once the matrix is done.
 - **Extensions** holds **Agents**: how to reach this document from the MCP server and the CLI, with the document's id
   to copy ([Agents and sync](agents-and-sync.md)).
-- **Help** holds: Help (the help centre's text document articles), Training (the help centre's guides), Updates
+- **Help** holds: Search the menus (the tool finder), Help (the help centre's text document articles), Training (the help centre's guides), Updates
   (LiveDoc's changelog), Help improve LiveDoc (Report a Bug), Privacy policy, Terms of service, Keyboard shortcuts.
 - Each item names its shortcut on the right, in the platform's notation (⌘ on a Mac, Ctrl elsewhere).
 - A Viewer's menus hold only what a Viewer may do: File (Make a copy, Download, Print, Details), Edit (Copy, Select
@@ -117,9 +118,8 @@ matches, with its menu path; Up and Down move, Enter runs it, Escape closes. Dim
 ## Keyboard shortcuts
 
 - ⌘/ opens the Keyboard shortcuts dialog: a search field and every shortcut by group, as Google's.
-- The full table of shortcuts, one row per entry of Google's list for each platform, is a spec of its own in this
-  folder, Keyboard shortcuts, written with the office shell, each row `specified` until
-  built. The browser's own shortcuts are never taken where Google does not take them.
+- Every shortcut of Google's list, for each platform, is a row of [Keyboard shortcuts](keyboard-shortcuts.md), read by the
+  menus, the tooltips and the dialog. The browser's own shortcuts are never taken where Google does not take them.
 
 ## Phone and tablet
 

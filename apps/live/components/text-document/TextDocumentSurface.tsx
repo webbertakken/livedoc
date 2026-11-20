@@ -1,16 +1,17 @@
 'use client';
 
 // A text document's surface (docs/specs/034-text-documents/editing-surface.md,
-// docs/specs/006-document/kinds-outside-the-canvas.md "The surface"): the title row, the page on its grey ground, and
-// the body, edited live through the room. Its bare form: the office shell's title row, menus and toolbar take this
-// one's place. One surface is one tab: its host keys it by the tab, so another tab mounts a fresh one.
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+// docs/specs/006-document/kinds-outside-the-canvas.md "The surface"): the office shell's title row and menus, the
+// page on its ground, and the body, edited live through the room; the shell's look tokens colour it all. One surface
+// is one tab: its host keys it by the tab, so another tab mounts a fresh one.
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
-import { redo, undo, ySyncPlugin } from 'y-prosemirror';
+import { ySyncPlugin } from 'y-prosemirror';
+import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { Button } from '@livedoc/ui';
@@ -24,6 +25,7 @@ import { debugLog } from '@/lib/debug-log';
 import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
+import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import {
   TEXT_DOCUMENT_LIMIT_NOTICES,
   textDocumentLimitPlugin,
@@ -61,6 +63,8 @@ export type TextDocumentSurfaceProps = {
   documentName: string;
   format: TextDocumentFormat;
   canEdit: boolean;
+  // The session's share level: what the menus show (editing-surface.md "The menu bar").
+  level: AccessLevel;
   // One frame to the room; true once the room has stored it ("Sending").
   sequence: (op: TextDocumentFrame) => Promise<boolean>;
   // A text document in This Browser: no room; its state lives in its offline record ("A text document in This
@@ -75,12 +79,16 @@ export function TextDocumentSurface({
   documentName,
   format,
   canEdit,
+  level,
   sequence,
   local = false,
 }: TextDocumentSurfaceProps) {
+  const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const editor = useRef<EditorView | null>(null);
+  // The editor as state too: the menus act on the one there is now.
+  const [editorView, setEditorView] = useState<EditorView | null>(null);
   // The live state, for a download written in this browser.
   const liveDoc = useRef<Y.Doc | null>(null);
   // Collaborators' carets in this tab's writing (live-editing-and-storage.md "Presence"), drawn by the editor.
@@ -166,7 +174,6 @@ export function TextDocumentSurface({
               ySyncPlugin(TextDocumentState.body(doc)),
               ...textDocumentUndoPlugins(),
               textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
-              keymap({ 'Mod-z': undo, 'Mod-y': redo, 'Mod-Shift-z': redo }),
               keymap(baseKeymap),
               // A moved selection is part of the view remembered for this tab.
               new Plugin({
@@ -193,9 +200,11 @@ export function TextDocumentSurface({
           },
         });
         editor.current = view;
+        setEditorView(view);
         liveDoc.current = doc;
         teardown = () => {
           editor.current = null;
+          setEditorView(null);
           liveDoc.current = null;
           view.destroy();
           binding.close();
@@ -223,18 +232,28 @@ export function TextDocumentSurface({
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
   }, [peers, state]);
 
+  // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
+  const editorActions = useMemo(
+    () => textDocumentEditorActions(editorView, { canEdit }),
+    [editorView, canEdit],
+  );
+
   // An edit the room refused names its limit.
   useEffect(() => TextDocumentBus.onRefused(tabId, setLimitReached), [tabId]);
 
   return (
     <div
-      className="flex min-h-0 flex-1 flex-col bg-slate-100 dark:bg-slate-900"
+      ref={root}
+      className="office-shell flex min-h-0 flex-1 flex-col bg-(--office-ground)"
       data-text-document-surface={state}
     >
       <TextDocumentTitleRow
         scope={scope}
         documentName={documentName}
         format={format}
+        level={level}
+        editorActions={editorActions}
+        keyScope={root}
         localDoc={local ? () => liveDoc.current : null}
       />
       {limitReached ? (

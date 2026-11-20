@@ -34,6 +34,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       documentName={documentName ?? ''}
       format={textDocumentFormatOf(tab)}
       canEdit={!readOnly && can.textDocumentEdits}
+      level={readOnly ? 'view' : can.level}
       sequence={(op) => roomRef.current?.sequence(op) ?? Promise.resolve(false)}
     />
   );

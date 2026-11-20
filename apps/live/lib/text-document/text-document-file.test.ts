@@ -24,4 +24,18 @@ describe('textDocumentFileOf', () => {
       expect(read.document.metadata.title).toBe('Notes');
     }
   });
+  it('writes an OpenDocument text document as a flat file when asked', async () => {
+    const doc = TextDocumentState.load([TextDocumentState.fromBody(Body.of('Flat'))]);
+    const { blob, fileName } = textDocumentFileOf(doc, 'odf', 'Notes', 'fodt');
+    expect(fileName).toBe('Notes.fodt');
+    expect(blob.type).toBe('application/vnd.oasis.opendocument.text-flat-xml');
+    const read = await readTextDocumentFile(new Uint8Array(await blob.arrayBuffer()));
+    if (!read.ok) throw new Error('unreadable');
+    expect(TextDocument.paragraphTexts(read.document)).toEqual(['Flat']);
+  });
+
+  it('refuses a file of the other format: that is a conversion', () => {
+    const doc = TextDocumentState.load([TextDocumentState.fromBody(Body.of('x'))]);
+    expect(() => textDocumentFileOf(doc, 'odf', 'Notes', 'docx')).toThrow(/format_not_native/);
+  });
 });

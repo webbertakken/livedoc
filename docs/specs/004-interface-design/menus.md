@@ -162,6 +162,9 @@ case. An element's own name in prose ("a Done check") stays sentence case too. A
 that names an item in bold spells it exactly as the editor does
 (`apps/help/lib/ui-labels-in-articles.test.ts`).
 
+The [office shell](office-shell.md#menu-bar)'s menus keep Google's sentence case ("Make a copy"), as the office
+kinds copy Google's menus word for word.
+
 ## The menus
 
 Each menu, how it opens, what it holds, and what the keyboard could do before this spec.

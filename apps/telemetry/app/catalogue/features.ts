@@ -1060,12 +1060,21 @@ export const EXPLORER_VIEW = chart(
   { typeIn: (type) => (type ?? '').startsWith('ExplorerView'), rising: 'neutral' },
 );
 
+// An item run from a text document's tool finder, Search the menus (docs/specs/004-interface-design/office-shell.md).
+export const TOOL_FINDER_USED = chart(
+  'UI',
+  'Used',
+  'Tool Finder Used',
+  "An item run from a text document's tool finder (Search the menus).",
+  { types: ['TextDocumentToolFinder'] },
+);
+
 export const EDITOR_CHROME: MetricStack = {
   stack: true,
   title: 'Editor Chrome',
   blurb:
     'Getting around and arranging the workspace: zoom, zen mode, the bars on a phone held sideways, panel layout, the Explorer view.',
-  members: [CANVAS_ZOOMS, ZEN_MODE, LANDSCAPE_BARS, PANELS_DOCKED, EXPLORER_VIEW],
+  members: [CANVAS_ZOOMS, ZEN_MODE, LANDSCAPE_BARS, PANELS_DOCKED, EXPLORER_VIEW, TOOL_FINDER_USED],
 };
 
 // Dialogs and panels opened (UI·Opened), split by what was opened.
@@ -1234,6 +1243,14 @@ export const LOCAL_MOVE_OFFERED = opened(
 
 OPENED_HOMES.push(PALETTE_GROUPS_OPENED.typeIn!);
 
+// A text document's menus opened from its menu bar (docs/specs/004-interface-design/office-shell.md "Telemetry"):
+// File, Edit, View and the rest, by name.
+export const TEXT_DOCUMENT_MENUS_OPENED = opened(
+  'Text Document Menus',
+  "A menu of a text document's menu bar opened: File, Edit, View, Insert, Format, Tools, Extensions or Help.",
+  (t) => (t ?? '').startsWith('TextDocumentMenu'),
+);
+
 export const OTHER_OPENED = chart(
   'UI',
   'Opened',
@@ -1255,6 +1272,7 @@ export const PANELS_OPENED: MetricStack = {
     SHORTCUTS_OPENED,
     MIND_OUTLINE_OPENED,
     ACTION_SIGN_IN_NUDGE,
+    TEXT_DOCUMENT_MENUS_OPENED,
     OTHER_OPENED,
   ],
   seeAlso: { section: 'editing', label: 'See Each Dialog in Features › Editing' },

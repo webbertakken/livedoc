@@ -1,0 +1,41 @@
+/*
+ * The office shell's look (docs/specs/004-interface-design/office-shell.md "The look"): every colour the shell's parts
+ * draw comes from these tokens, so fork D2 (how literal the look is) changes this block and nothing else. They hold
+ * look A, Google's own, in the app's sans (default) until D2 is ruled; dark is drawn from Google's dark palette.
+ * Every text pair holds 4.5:1 and the focus ring 3:1 on every surface (office-shell-look.test.ts).
+ */
+.office-shell {
+  --office-chrome: #ffffff;
+  --office-ground: #f9fbfd;
+  --office-toolbar: #edf2fa;
+  --office-ink: #1f1f1f;
+  --office-icon: #444746;
+  --office-muted: #5e5e5e;
+  --office-line: #c7c7c7;
+  --office-hover: rgb(68 71 70 / 0.08);
+  --office-menu: #ffffff;
+  --office-menu-hover: #f1f3f4;
+  --office-focus: #0b57d0;
+  --office-share: #c2e7ff;
+  --office-share-ink: #001d35;
+  --office-pressed: #d3e3fd;
+  --office-pressed-ink: #041e49;
+}
+
+.dark .office-shell {
+  --office-chrome: #1f1f1f;
+  --office-ground: #131314;
+  --office-toolbar: #282a2c;
+  --office-ink: #e3e3e3;
+  --office-icon: #c4c7c5;
+  --office-muted: #a8abaa;
+  --office-line: #444746;
+  --office-hover: rgb(227 227 227 / 0.08);
+  --office-menu: #282a2c;
+  --office-menu-hover: #37393b;
+  --office-focus: #a8c7fa;
+  --office-share: #004a77;
+  --office-share-ink: #c2e7ff;
+  --office-pressed: #0842a0;
+  --office-pressed-ink: #d3e3fd;
+}
