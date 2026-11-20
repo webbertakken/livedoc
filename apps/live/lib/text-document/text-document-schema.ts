@@ -108,6 +108,8 @@ const nodes: Record<string, NodeSpec> = {
     group: 'block',
     content: 'inline*',
     attrs: nullAttributes(PARAGRAPH_ATTRIBUTES),
+    // Spaces, tabs and line breaks are text (pre-wrap): typing read back from the page keeps them, never collapsed.
+    whitespace: 'pre',
     parseDOM: [{ tag: 'p' }],
     // Its style by id, which the document's style sheet draws (text-and-paragraphs.md "Paragraph styles"), and its
     // own paragraph formatting over it ("Alignment and indents").

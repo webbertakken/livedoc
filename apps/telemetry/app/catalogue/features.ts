@@ -1176,9 +1176,9 @@ export const TEXT_DOCUMENT_MARGINS = chart(
 export const TEXT_DOCUMENT_RULER_TOGGLED = chart(
   'UI',
   'Toggled',
-  'Text Document Ruler Shown',
-  "Someone showed or hid a text document's ruler (View > Show ruler).",
-  { types: ['TextDocumentRuler'] },
+  'Text Document View Switches',
+  "Someone showed or hid a text document's ruler or its non-printing characters (View menu).",
+  { types: ['TextDocumentRuler', 'TextDocumentNonPrinting'] },
 );
 
 // A text document's lists (docs/specs/034-text-documents/lists.md "Telemetry"): paragraphs put in a list or taken out,

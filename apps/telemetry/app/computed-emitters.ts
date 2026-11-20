@@ -493,6 +493,11 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/text-document/text-document-list-actions.ts Element·Changed': {
     values: ['Bulleted', 'Numbered', 'Checklist'].map((kind) => `TextDocumentList${kind}`),
   },
+  // A text document's View switches flipped (editing-surface.md "The ruler", text-and-paragraphs.md "Non-printing
+  // characters").
+  'apps/live/lib/text-document/useTextDocumentViewToggle.ts UI·Toggled': {
+    values: ['TextDocumentRuler', 'TextDocumentNonPrinting'],
+  },
   // The Fonts dialog of an office kind opened from its font menu, and My fonts changed by its OK
   // (docs/specs/004-interface-design/fonts.md "More fonts").
   'apps/live/components/office/OfficeFontMenu.tsx UI·Opened': { values: ['TextDocumentMoreFonts'] },

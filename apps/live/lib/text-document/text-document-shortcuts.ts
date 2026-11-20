@@ -1363,6 +1363,15 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'specified',
   ),
   row(
+    'show-non-printing-characters',
+    'Other tools and navigation',
+    'Show non-printing characters',
+    'Ctrl+Shift+P',
+    '⌘+Shift+P',
+    'Ctrl+Shift+P',
+    'built',
+  ),
+  row(
     'start-voice-typing',
     'Other tools and navigation',
     'Start voice typing',

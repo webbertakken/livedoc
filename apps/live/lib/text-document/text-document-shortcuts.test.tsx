@@ -38,7 +38,7 @@ import {
 import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
-import { SHOW_RULER } from './useTextDocumentRuler';
+import { NON_PRINTING_TOGGLE, RULER_TOGGLE } from './useTextDocumentViewToggle';
 import { textDocumentUndoPlugins } from './text-document-undo';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -77,8 +77,9 @@ describe('the text document menus', () => {
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
         // The panels' items (useOfficePanels), bound by the surface.
         ...TEXT_DOCUMENT_PANELS.map((p) => p.item),
-        // View > Show ruler (useTextDocumentRuler), bound by the surface.
-        SHOW_RULER,
+        // View > Show ruler and Show non-printing characters (useTextDocumentViewToggle), bound by the surface.
+        RULER_TOGGLE.item,
+        NON_PRINTING_TOGGLE.item,
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {

@@ -149,6 +149,8 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('show-equation-toolbar', 'Show equation toolbar', 'edit', { checkable: 'checkbox' }),
       item('show-non-printing-characters', 'Show non-printing characters', 'view', {
         checkable: 'checkbox',
+        shortcut: 'show-non-printing-characters',
+        status: 'built',
       }),
       SEPARATOR,
       submenu('text-width', 'Text width', [

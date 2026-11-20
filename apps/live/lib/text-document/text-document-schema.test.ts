@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { DOMParser } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
@@ -96,6 +97,15 @@ describe('textDocumentSchema', () => {
 });
 
 // text-and-paragraphs.md "Paragraph styles": a paragraph names its style for the document's style sheet.
+// text-and-paragraphs.md "Writing": typing the browser does is read back from the page, its tabs and line breaks kept.
+describe('a paragraph read from the page', () => {
+  it('keeps its spaces, tabs and line breaks as text', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<p>a  b\tc\nd</p>';
+    expect(DOMParser.fromSchema(textDocumentSchema).parse(element).textContent).toBe('a  b\tc\nd');
+  });
+});
+
 describe('a paragraph drawn in its style', () => {
   it('names its style, and none for Normal text', () => {
     const toDom = (style: string | null): unknown =>
