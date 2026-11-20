@@ -2,7 +2,7 @@
 
 **Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
 keep rules, borders and shading, paint format, clear formatting, the Tab key, Shift+Enter, tab stops,
-non-printing characters, the clipboard (but Markdown) and several stretches are built; the rest is specified.
+non-printing characters, the clipboard, several stretches and the typing aids are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -77,7 +77,8 @@ Every rule maps to a format construct in [Standard mapping](standard-mapping.md#
 - **Paste without formatting** (⌘⇧V) pastes the clipboard's plain text, as in 5, whatever else it holds.
 - A paste is one undo step, its new lists included; text dropped from outside the writing is read as a paste.
 - **Edit > Cut, Copy, Paste, Paste without formatting** ask the browser for the clipboard. Where it refuses, the
-  dialog **Copying and pasting** says to use ⌘X, ⌘C, ⌘V and ⌘⇧V instead, as Google's does.
+  dialog **Copying and pasting** says to use ⌘X, ⌘C, ⌘V and ⌘⇧V instead, as Google's does. Edit > Paste reads text
+  as ⌘V does, Markdown included.
 - Their keys are left to the browser ([Office shell](../004-interface-design/office-shell.md#shortcut-layer)), whose
   clipboard events the writing handles.
 - Pictures pasted are uploaded into the document ([Objects](objects.md#pictures)).

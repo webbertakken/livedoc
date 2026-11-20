@@ -5,6 +5,8 @@ import {
   lastWord,
   linkFor,
   listMarkerFor,
+  markdownHeadingFor,
+  markdownSpanFor,
   smartQuote,
   substitutionFor,
 } from './text-document-typing-aid-rules';
@@ -125,5 +127,53 @@ describe('listMarkerFor', () => {
   it('reads nothing else', () => {
     for (const text of ['', '1', '-.', 'ab.', '12345.', 'word.', '- '])
       expect(listMarkerFor(text)).toBeUndefined();
+  });
+});
+
+describe('markdownSpanFor', () => {
+  it('reads the span the text closes, and where its inner text lies', () => {
+    expect(markdownSpanFor('a **bold**')).toEqual({
+      start: 2,
+      innerStart: 4,
+      innerEnd: 8,
+      makes: { mark: 'bold' },
+    });
+    expect(markdownSpanFor('__b__')).toMatchObject({
+      innerStart: 2,
+      innerEnd: 3,
+      makes: { mark: 'bold' },
+    });
+    expect(markdownSpanFor('x *it*')).toMatchObject({
+      start: 2,
+      innerStart: 3,
+      makes: { mark: 'italic' },
+    });
+    expect(markdownSpanFor('_it_')).toMatchObject({ start: 0, makes: { mark: 'italic' } });
+    expect(markdownSpanFor('~~gone~~')).toMatchObject({
+      start: 0,
+      innerEnd: 6,
+      makes: { mark: 'strike' },
+    });
+    expect(markdownSpanFor('see [x](https://a.example)')).toEqual({
+      start: 4,
+      innerStart: 5,
+      innerEnd: 6,
+      makes: { link: 'https://a.example' },
+    });
+  });
+
+  it('reads nothing that is no closed span', () => {
+    for (const text of ['**b*', '2 * 3 *', 'snake_case_', '* x*', '[x](javascript:y)', 'plain'])
+      expect(markdownSpanFor(text)).toBeUndefined();
+  });
+});
+
+describe('markdownHeadingFor', () => {
+  it('reads one to six hashes', () => {
+    expect([markdownHeadingFor('#'), markdownHeadingFor('######')]).toEqual([1, 6]);
+    expect([markdownHeadingFor('#######'), markdownHeadingFor('#a')]).toEqual([
+      undefined,
+      undefined,
+    ]);
   });
 });

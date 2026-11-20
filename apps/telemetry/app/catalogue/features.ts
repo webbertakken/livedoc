@@ -1200,7 +1200,14 @@ export const TEXT_DOCUMENT_PASTE = chart(
   'Changed',
   'Text Document Paste',
   'Something pasted into a text document: from a text document, HTML from a web page or another editor, or plain text.',
-  { types: ['TextDocumentPasteDocument', 'TextDocumentPasteHtml', 'TextDocumentPastePlain'] },
+  {
+    types: [
+      'TextDocumentPasteDocument',
+      'TextDocumentPasteHtml',
+      'TextDocumentPasteMarkdown',
+      'TextDocumentPastePlain',
+    ],
+  },
 );
 
 // Several stretches of a text document's text selected at once (docs/specs/034-text-documents/text-and-paragraphs.md

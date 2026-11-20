@@ -59,6 +59,7 @@ function editor(
   context: FragmentContext,
   nodes = [schema.nodes.paragraph!.create()],
   editable = true,
+  markdown = false,
 ): Editor {
   const added: [string, List][] = [];
   const leftOut: number[] = [];
@@ -77,6 +78,7 @@ function editor(
             },
           },
           onLeftOut: (n) => leftOut.push(n),
+          markdown: () => markdown,
         }),
       ],
     }),
@@ -222,6 +224,31 @@ describe('paste', () => {
       { content: 'b', style: 'Heading_20_1' },
     ]);
     expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentPastePlain');
+  });
+
+  it('reads Markdown text as Markdown when the person reads it so, but never without formatting', () => {
+    const into = editor(ooxml, undefined, true, true);
+    const data = new FakeData();
+    data.setData('text/plain', '# Plan\n\n- **one**\n- two');
+    into.view.dom.dispatchEvent(clipboardEvent('paste', data));
+    expect(paragraphs(into.view)).toMatchObject([
+      { content: 'Plan', style: 'Heading1' },
+      { content: 'one', list: { id: 'L1', level: 0 } },
+      { content: 'two', list: { id: 'L1', level: 0 } },
+    ]);
+    expect(into.added).toEqual([['L1', ListDefinition.of('bullet')]]);
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentPasteMarkdown');
+    const plain = editor(ooxml, undefined, true, true);
+    plain.view.someProp('handlePaste', () => false);
+    const slice = plain.view.someProp('clipboardTextParser', (f) =>
+      f('# Plan', plain.view.state.selection.$from, true, plain.view),
+    );
+    expect(slice!.content.firstChild!.textContent).toBe('# Plan');
+    const off = editor(ooxml);
+    const offData = new FakeData();
+    offData.setData('text/plain', '# Plan');
+    off.view.dom.dispatchEvent(clipboardEvent('paste', offData));
+    expect(paragraphs(off.view)).toMatchObject([{ content: '# Plan' }]);
   });
 
   it('writes the lists of text dropped in from outside', () => {

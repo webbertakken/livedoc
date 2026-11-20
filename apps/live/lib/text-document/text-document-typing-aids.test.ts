@@ -5,7 +5,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { ListDefinition } from '@livedoc/text-documents';
+import { ListDefinition, Styles } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
   DEFAULT_SUBSTITUTIONS,
@@ -135,6 +135,7 @@ function writing(text = '', aids: Partial<TypingAids> = {}, attrs: Record<string
         typingAidsPlugin({
           read: () => ({ ...TypingAids.defaults(), ...aids }),
           lists: { read: () => lists, set: (id, list) => (lists[id] = list) },
+          readStyles: () => Styles.builtIn('odf'),
         }),
       ],
     }),
@@ -207,6 +208,48 @@ describe('typingAidsPlugin', () => {
     const later = writing('So');
     type(later.view, ' - ');
     expect(textOf(later.view)).toBe('So - ');
+  });
+
+  it('reads Markdown as it is typed, when it is on', () => {
+    const { view } = writing('', { markdown: true });
+    type(view, '## Plan');
+    expect(view.state.doc.firstChild!.attrs.style).toBe('Heading_20_2');
+    expect(textOf(view)).toBe('Plan');
+    type(view, ' **now** _soon_ ~~never~~ [x](https://a.example)');
+    expect(textOf(view)).toBe('Plan now soon never x');
+    const marks = (word: string) => {
+      let found: string[] = [];
+      view.state.doc.descendants((node) => {
+        if (node.isText && node.text === word) found = node.marks.map((m) => m.type.name);
+      });
+      return found;
+    };
+    expect([marks('now'), marks('soon'), marks('never'), marks('x')]).toEqual([
+      ['bold'],
+      ['italic'],
+      ['strike'],
+      ['link'],
+    ]);
+  });
+
+  it('leaves Markdown as typed while it is off, or a heading the document lacks', () => {
+    const off = writing();
+    type(off.view, '# **x**');
+    expect(textOf(off.view)).toBe('# **x**');
+    const view = new EditorView(document.body.appendChild(document.createElement('div')), {
+      state: EditorState.create({
+        doc: schema.node('doc', null, [schema.nodes.paragraph!.create()]),
+        plugins: [
+          typingAidsPlugin({
+            read: () => ({ ...TypingAids.defaults(), markdown: true }),
+            lists: { read: () => ({}), set: () => {} },
+          }),
+        ],
+      }),
+    });
+    views.push(view);
+    type(view, '# a');
+    expect(textOf(view)).toBe('# a');
   });
 
   it('acts on nothing with its aids off, and leaves other characters to the browser', () => {

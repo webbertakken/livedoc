@@ -36,6 +36,7 @@ test('typing aids act as a person types, undo alone, and switch off in Preferenc
   await (await officeMenuItem(page, ['Tools', 'Preferences'])).click();
   const dialog = page.getByRole('dialog', { name: 'Preferences' });
   await dialog.getByRole('checkbox', { name: 'Use smart quotes' }).uncheck();
+  await dialog.getByRole('checkbox', { name: 'Automatically detect Markdown' }).check();
   await dialog.getByRole('tab', { name: 'Substitutions' }).click();
   await page.screenshot({ path: test.info().outputPath('preferences.png') });
   await dialog.getByRole('button', { name: 'OK' }).click();
@@ -47,5 +48,28 @@ test('typing aids act as a person types, undo alone, and switch off in Preferenc
   await page.waitForTimeout(100);
   await page.keyboard.type('"x"');
   await expect(body.locator('p').last()).toHaveText('1. "x"');
+
+  // Markdown, now on: typed, a heading and bold; pasted, a heading and a list.
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('## Next **step** done');
+  const heading = body.locator('p').last();
+  await expect(heading).toHaveAttribute('data-style', /Heading/);
+  await expect(heading).toHaveText('Next step done');
+  expect(
+    await heading
+      .getByText('step', { exact: true })
+      .evaluate((el) => getComputedStyle(el).fontWeight),
+  ).toBe('700');
+  await page.keyboard.press('Enter');
+  await body.evaluate((target) => {
+    const data = new DataTransfer();
+    data.setData('text/plain', '# Pasted\n\n- one\n- two');
+    target.dispatchEvent(
+      new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }),
+    );
+  });
+  await expect(body.locator('p').last()).toHaveText('●two');
+  await expect(body.locator('p', { hasText: 'Pasted' })).toHaveAttribute('data-style', /Heading/);
+  await page.screenshot({ path: test.info().outputPath('markdown.png') });
   expectNoPageErrors(pageErrors);
 });

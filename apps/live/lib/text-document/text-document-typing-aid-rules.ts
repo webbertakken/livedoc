@@ -119,3 +119,49 @@ export function listMarkerFor(text: string): ListMarker | undefined {
     start: label.toLowerCase().charCodeAt(0) - 96,
   };
 }
+
+export type MarkdownSpan = {
+  /** Where the span starts in the text, and where its inner text starts and ends. */
+  readonly start: number;
+  readonly innerStart: number;
+  readonly innerEnd: number;
+  readonly makes: { mark: 'bold' | 'italic' | 'strike' } | { link: string };
+};
+
+const MARKDOWN_SPANS: readonly [RegExp, 'bold' | 'italic' | 'strike'][] = [
+  [/(\*\*|__)([^*_\s](?:[^*_]*[^*_\s])?)\1$/, 'bold'],
+  [/~~([^~\s](?:[^~]*[^~\s])?)~~$/, 'strike'],
+  [/(?:^|[^*\w])(\*)([^*\s](?:[^*]*[^*\s])?)\*$/, 'italic'],
+  [/(?:^|\W)(_)([^_\s](?:[^_]*[^_\s])?)_$/, 'italic'],
+];
+
+/**
+ * Automatically detect Markdown: the span the text now ends by closing (`**bold**`, `*italic*`, `_italic_`,
+ * `~~strikethrough~~`, `[text](address)`), with where its inner text lies; none otherwise.
+ */
+export function markdownSpanFor(text: string): MarkdownSpan | undefined {
+  const link = /\[([^\]]+)\]\(([^)\s]+)\)$/.exec(text);
+  if (link) {
+    if (!isSafeLink(link[2]!)) return undefined;
+    return {
+      start: link.index,
+      innerStart: link.index + 1,
+      innerEnd: link.index + 1 + link[1]!.length,
+      makes: { link: link[2]! },
+    };
+  }
+  for (const [pattern, mark] of MARKDOWN_SPANS) {
+    const match = pattern.exec(text);
+    if (!match) continue;
+    const inner = match.at(-1)!;
+    const delimiter = mark === 'strike' ? '~~' : match[1]!;
+    const innerEnd = text.length - delimiter.length;
+    const innerStart = innerEnd - inner.length;
+    return { start: innerStart - delimiter.length, innerStart, innerEnd, makes: { mark } };
+  }
+  return undefined;
+}
+
+/** Automatically detect Markdown: the heading level a paragraph's `#` to `######` marker stands for. */
+export const markdownHeadingFor = (text: string): number | undefined =>
+  /^#{1,6}$/.test(text) ? text.length : undefined;
