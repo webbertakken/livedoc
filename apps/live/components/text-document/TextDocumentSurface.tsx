@@ -347,6 +347,7 @@ export function TextDocumentSurface({
         zoom={zoom}
         fontSize={formatting.fontSize}
         fontFamily={formatting.fontFamily}
+        colours={formatting.colours}
         refresh={changes.subscribeCaret}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false

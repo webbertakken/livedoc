@@ -33,6 +33,7 @@ import { OfficeZoomField, type OfficeZoom } from './OfficeZoomField';
 import { OfficeFontSizeField, type OfficeFontSize } from './OfficeFontSizeField';
 import { useOfficeControlStates } from './useOfficeControlStates';
 import { OfficeFontMenu, type OfficeFontFamily } from './OfficeFontMenu';
+import { OfficeColourControl, type OfficeColours } from './OfficeColourControl';
 
 /** The room a divider takes between groups: 1 px and 4 px either side. */
 const DIVIDER_PX = 9;
@@ -52,6 +53,7 @@ export function OfficeToolbar({
   zoom,
   fontSize = null,
   fontFamily = null,
+  colours = null,
   refresh,
   phone = false,
 }: {
@@ -61,6 +63,7 @@ export function OfficeToolbar({
   zoom: OfficeZoom | null;
   fontSize?: OfficeFontSize | null;
   fontFamily?: OfficeFontFamily | null;
+  colours?: OfficeColours | null;
   // Told when what the controls show may have changed (the selection, the formatting at the caret): pressed states
   // and the font size are read again.
   refresh?: (listener: () => void) => () => void;
@@ -75,7 +78,12 @@ export function OfficeToolbar({
     [groups],
   );
   const controls = useMemo(() => placed.map((p) => p.control), [placed]);
-  const states = useOfficeControlStates(controls, actions, fontSize, fontFamily, refresh);
+  const states = useOfficeControlStates(
+    controls,
+    actions,
+    { fontSize, fontFamily, colours },
+    refresh,
+  );
   const bar = useRef<HTMLDivElement>(null);
   const widths = useRef(new Map<string, number>());
   const [measuredFit, setFit] = useState(placed.length);
@@ -127,6 +135,8 @@ export function OfficeToolbar({
       fontSize={fontSize}
       fontFamily={fontFamily}
       family={states.fontFamily}
+      colours={colours}
+      colourValues={states.colours}
       pressed={states.pressed.has(p.control.id)}
       disabled={states.disabled.has(p.control.id)}
       size={states.fontSize}
@@ -256,6 +266,8 @@ function ControlView({
   fontSize,
   fontFamily,
   family,
+  colours,
+  colourValues,
   pressed: on,
   disabled,
   size,
@@ -268,6 +280,9 @@ function ControlView({
   fontSize: OfficeFontSize | null;
   fontFamily: OfficeFontFamily | null;
   family: string | null;
+  colours: OfficeColours | null;
+  // What each colour control shows now (useOfficeControlStates).
+  colourValues: Readonly<Record<string, string | null | undefined>>;
   // What the binding says now (useOfficeControlStates): pressed, dimmed, and the font size.
   pressed: boolean;
   disabled: boolean;
@@ -290,6 +305,20 @@ function ControlView({
         className={`${CONTROL} justify-between text-sm text-(--office-ink)`}
       />
     ) : null;
+  if (look.kind === 'colour') {
+    const colour = colours?.[control.id];
+    return colour ? (
+      <OfficeColourControl
+        id={control.id}
+        label={control.label}
+        icon={look.icon}
+        colour={colour}
+        value={colourValues[control.id]}
+        tabIndex={tabIndex}
+        className={`${CONTROL} min-w-7`}
+      />
+    ) : null;
+  }
   const soon = control.status === 'comingSoon' || !action;
   const inert = soon || disabled;
   const pressed = look.kind === 'icon' && look.toggle ? on : undefined;

@@ -47,6 +47,7 @@ describe('textDocumentFormatActions', () => {
       actions: {},
       fontSize: null,
       fontFamily: null,
+      colours: null,
     });
     expect(textDocumentFormatActions(view, readFormatting, { canEdit: false }).actions).toEqual({});
   });
@@ -97,6 +98,32 @@ describe('textDocumentFormatActions', () => {
     expect(marksOfFirst()).toEqual({ font: 'Lora' });
     expect(fontFamily!.read()).toBe('Lora');
     expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentFormatFont');
+  });
+
+  // docs/specs/034-text-documents/text-and-paragraphs.md "Colour".
+  it('colours and highlights the selection, reads them back, resets them and counts them', () => {
+    const { colours } = textDocumentFormatActions(view, readFormatting, { canEdit: true });
+    const text = colours!['text-colour']!;
+    const highlight = colours!['highlight-colour']!;
+    expect([text.leading, text.none, highlight.leading, highlight.none]).toEqual([
+      'Reset',
+      '#000000',
+      'None',
+      undefined,
+    ]);
+    expect(text.read()).toBeUndefined();
+    text.set('#CC0000');
+    highlight.set('#fff2cc');
+    expect(marksOfFirst()).toEqual({ color: '#cc0000', highlight: '#fff2cc' });
+    expect(text.read()).toBe('#cc0000');
+    expect(view.hasFocus()).toBe(true);
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentFormatTextColour');
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentFormatHighlight');
+    text.set(null);
+    highlight.set(null);
+    expect(marksOfFirst()).toEqual({});
+    view.destroy();
+    expect(highlight.read()).toBeNull();
   });
 
   it('rewrites the case, and counts nothing when nothing changed', () => {

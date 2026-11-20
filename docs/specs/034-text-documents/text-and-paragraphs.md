@@ -1,6 +1,6 @@
 # Text and paragraphs
 
-**Status: partly built.** Text formatting is built (fonts with More fonts); the rest is specified.
+**Status: partly built.** Text formatting and colour are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -74,6 +74,22 @@ Text colour and highlight colour are chosen with the one [colour picker](../004-
 its swatch-button skin: Google's grid of colours is the picker's standard colours, tones and Custom colours (the
 picker has no second grid). **Reset** (text) and **None** (highlight) lead each picker.
 
+- **The controls**: the toolbar's Text colour (a lettered A) and Highlight colour (a highlighter), each with a bar
+  under its glyph in the colour at the caret: the text's colour through its styles, its highlight or no colour.
+  Over a selection of more than one colour the bar shows no colour (default).
+- **The picker** shows no Theme Palette, as a text document has no theme (default); the Standard Colours as two
+  rows, Light (the soft tone) then Dark (the strong tone), both drawn for the page's light paper; then Custom
+  Colours and **Add a custom colour**.
+- **Picking** sets the colour of the selection (or of the next characters typed), as one undo step, closes the
+  picker and returns focus to the writing. A standard colour is stored as its light-paper `#rrggbb`, a custom
+  colour as its own; a value equal to what the styles give is stored as none.
+- **Reset** takes away the text's own colour, so it draws in its styles' colour. **None** takes away the text's
+  own highlight; a highlight its style gives still shows (default).
+- **Keyboard**: the picker's own (colour-picker.md "Keyboard"); Escape closes it and returns focus to its control.
+- **Share roles**: an Editor colours text; a Participant and a Viewer see neither control (the Format level).
+- In files: ODF `fo:color` and `fo:background-color`; OOXML `w:color`, and `w:highlight` when the highlight is one
+  of its sixteen named colours, else `w:shd` ([Standard mapping](standard-mapping.md)).
+
 ## Paragraph styles
 
 - **Normal text, Title, Subtitle, Heading 1 to 6**, each with its font, size, weight, colour and spacing. A new text
@@ -144,7 +160,7 @@ Tools > Preferences, per person (account or browser), each on by default as Goog
 ## Telemetry
 
 `Element · Changed · TextDocumentFormat<Name>` (Bold, Italic, Underline, Strikethrough, Superscript, Subscript,
-SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font; from toolbar, menu or shortcut),
+SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight; from toolbar, menu or shortcut),
 `TextDocumentParagraphStyle`, `TextDocumentStyleUpdated`, `TextDocumentPaintFormat`, `TextDocumentPaste` (with the
 source: Document, Html, Markdown, Plain). Never text.
 

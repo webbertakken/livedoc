@@ -12,10 +12,12 @@ export type OfficeControlLook =
   // A value field, bound by the shell's field of that name (the zoom, the font size), not by an action.
   | { kind: 'zoom' }
   | { kind: 'fontSize' }
-  | { kind: 'font' };
+  | { kind: 'font' }
+  // A colour, bound by the shell's colour of its id: its glyph over a bar in the colour, opening the colour picker.
+  | { kind: 'colour'; icon: readonly IconPrim[] };
 
 /** The toolbar's value fields (office-shell.md "Toolbar"). */
-export type OfficeFieldKind = 'zoom' | 'fontSize' | 'font';
+export type OfficeFieldKind = 'zoom' | 'fontSize' | 'font' | 'colour';
 
 export type OfficeControl = {
   id: string;
@@ -44,7 +46,8 @@ export function visibleToolbar(
     (control.status === 'comingSoon' ||
       (control.look.kind === 'zoom' ||
       control.look.kind === 'fontSize' ||
-      control.look.kind === 'font'
+      control.look.kind === 'font' ||
+      control.look.kind === 'colour'
         ? fields[control.look.kind]
         : actions[control.id] !== undefined));
   return toolbar.flatMap((group) => {
