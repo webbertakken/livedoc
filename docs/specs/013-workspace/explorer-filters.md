@@ -240,6 +240,8 @@ Keyboard:
   and a **remove** button named "Remove filter Template: Retrospective, Kanban", in the tab order.
 - After the lens changes, a polite **live region** announces the count once typing settles: "12 of 40 documents",
   "40 documents", or "No documents match".
+- Once settled, the region follows the count: a view still catching up with its lens, or a list still loading, is
+  announced as it lands, never left at a count from before.
 - Chips sit in a `group` named "Filters". A chip is **multi-select**: a button with `aria-haspopup="listbox"` and
   `aria-expanded`, named "Template: Retrospective, Kanban" when set and "Template, any" when not, opening a listbox with
   `aria-multiselectable="true"`. Its options are `option`s with `aria-selected`; choosing one toggles it, and the
