@@ -94,6 +94,8 @@ export function maySpill(node: Node, refs: readonly StoredRef[]): boolean {
     case 'stored':
       return refIsRange(refs[node.i]);
     case 'ref':
+    case 'range':
+    case 'isect':
       return true;
     case 'arr':
       return node.rows.length > 1 || (node.rows[0]?.length ?? 0) > 1;

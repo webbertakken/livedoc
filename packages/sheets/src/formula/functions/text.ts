@@ -8,13 +8,13 @@ import { localeDayFirst, parseDateText, parseTimeText } from '../../dates';
 import {
   MANY,
   boolArg,
-  deref,
   flatScalars,
   fn,
   lift,
   opt,
   scalarFn,
   textArg,
+  valueArg,
   type FnDef,
 } from '../fn';
 import { err, isError, toNumber, toText, type Scalar, type Value } from '../values';
@@ -46,7 +46,7 @@ function textFn(
   return fn(min, max, (args, f) => {
     const skipped = args.map((a) => a === null);
     return lift(
-      args.map((a) => deref(a, f)),
+      args.map((a) => valueArg(a, f)),
       (xs) => textEach(xs, skipped, min, nText, each),
     );
   });

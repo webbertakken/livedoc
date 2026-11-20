@@ -1,0 +1,160 @@
+{
+  "source": "libreoffice",
+  "category": "Syntax",
+  "by": "LibreOffice 24.2.7.2",
+  "made": "2026-11-20",
+  "answers": {
+    "precedence.1": [[4]],
+    "precedence.2": [[64]],
+    "precedence.3": [[5]],
+    "precedence.4": [["15"]],
+    "precedence.5": [[true]],
+    "precedence.6": [[0.25]],
+    "precedence.7": [[-0.5]],
+    "coercion.1": [[4]],
+    "coercion.2": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "coercion.3": [[2]],
+    "coercion.4": [[1]],
+    "coercion.5": [["x"]],
+    "coercion.6": [[4]],
+    "coercion.7": [[1000]],
+    "coercion.8": [[0.5]],
+    "coercion.10": [["11"]],
+    "coercion.11": [[true]],
+    "compare.1": [[true]],
+    "compare.2": [[true]],
+    "compare.3": [[true]],
+    "compare.4": [[false]],
+    "compare.5": [[true]],
+    "compare.6": [[true]],
+    "compare.7": [[true]],
+    "compare.8": [[true]],
+    "errors.1": [
+      [
+        {
+          "e": "#DIV/0!"
+        }
+      ]
+    ],
+    "errors.2": [
+      [
+        {
+          "e": "#DIV/0!"
+        }
+      ]
+    ],
+    "errors.3": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "errors.4": [
+      [
+        {
+          "e": "#NUM!"
+        }
+      ]
+    ],
+    "errors.5": [
+      [
+        {
+          "e": "#NUM!"
+        }
+      ]
+    ],
+    "errors.6": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "errors.7": [[true]],
+    "errors.8": [[-2]],
+    "range.1": [[10]],
+    "range.2": [[10]],
+    "range.3": [[34]],
+    "range.4": [[10]],
+    "range.5": [[6]],
+    "range.6": [[2]],
+    "literal.1": [
+      [1, 2],
+      [3, 4]
+    ],
+    "literal.2": [[10]],
+    "literal.3": [
+      [
+        {
+          "e": "Err:539"
+        },
+        {
+          "e": "Err:539"
+        },
+        {
+          "e": "Err:539"
+        }
+      ]
+    ],
+    "literal.4": [[-1, 2.5]],
+    "spill.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ],
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "array.1": [[300]],
+    "array.2": [[70]],
+    "array.3": [[20]],
+    "array.4": [[10], [40]],
+    "array.5": [
+      [11, 21],
+      [12, 22]
+    ],
+    "array.6": [
+      [11],
+      [22],
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "array.7": [[1], [1]],
+    "intersect.1": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "intersect.2": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "intersect.3": [[11]],
+    "intersect.4": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ]
+  }
+}

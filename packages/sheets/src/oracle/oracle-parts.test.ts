@@ -120,6 +120,25 @@ describe('oracleFile and answersOf', () => {
     ]);
   });
 
+  // An ARRAYFORMULA is written as the array formula of what it wraps, so both suites read one array context.
+  it('writes an ARRAYFORMULA as an array formula over its block', () => {
+    const file = oracleFile({
+      ...category,
+      cases: [
+        { id: 'A.1', f: '=ARRAYFORMULA( A1:A2*2 )', rows: 2, cols: 1, authority: 'google' },
+        { id: 'A.2', f: '=ARRAYFORMULA(SUM(A1:A2*2))', rows: 1, cols: 1, authority: 'google' },
+        { id: 'A.3', f: '=ARRAYFORMULA(1, 2)', rows: 1, cols: 1, authority: 'google' },
+        { id: 'A.4', f: '=SUM(', rows: 1, cols: 1, authority: 'google' },
+      ],
+    });
+    expect(file.sheets[1]!.cells.filter((c) => c.formula)).toEqual([
+      { r: 0, c: 1, formula: '=A1:A2*2', spans: { rows: 2, cols: 1 } },
+      { r: 3, c: 1, formula: '=SUM(A1:A2*2)', spans: { rows: 1, cols: 1 } },
+      { r: 5, c: 1, formula: '=ARRAYFORMULA(1, 2)' },
+      { r: 7, c: 1, formula: '=SUM(' },
+    ]);
+  });
+
   it('reads each block back, errors from their text', () => {
     const file = oracleFile(category);
     const cases = file.sheets[1]!;

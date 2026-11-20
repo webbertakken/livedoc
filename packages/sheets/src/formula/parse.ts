@@ -15,8 +15,7 @@ export type ParseFailure =
   | 'bad_reference'
   | 'unknown_sheet_quote'
   | 'too_long'
-  | 'too_deep'
-  | 'array_ragged';
+  | 'too_deep';
 
 export const PARSE_FAILURE_COPY: Record<ParseFailure, string> = {
   empty: 'There is nothing after the =',
@@ -28,7 +27,6 @@ export const PARSE_FAILURE_COPY: Record<ParseFailure, string> = {
   unknown_sheet_quote: "A sheet's name in quotes must be followed by !",
   too_long: 'This formula is too long: a formula holds up to 8,000 characters',
   too_deep: 'This formula nests too deeply: up to 64 levels',
-  array_ragged: 'Every row of an array must have the same number of values',
 };
 
 export type ParseResult = { ok: true; ast: Node } | { ok: false; reason: ParseFailure; at: number };
@@ -36,6 +34,15 @@ export type ParseResult = { ok: true; ast: Node } | { ok: false; reason: ParseFa
 const CELL_RE = /^(\$?)([A-Za-z]{1,4})(\$?)([0-9]{1,7})$/;
 const COL_RE = /^(\$?)([A-Za-z]{1,4})$/;
 const NAME_RE = /^[A-Za-z_][A-Za-z0-9_.]*$/;
+
+// Tokens a reference can start with, for the intersection's second operand.
+const REFERENCE_START: ReadonlySet<Token['k']> = new Set(['ident', 'sheet', 'stored']);
+
+// Whether a node may give a reference: a reference, a name, a reference operator, or a call (INDEX, OFFSET, ...
+// give references; any other call's value is refused where a reference goes when it is worked out).
+function givesReference(n: Node): boolean {
+  return ['ref', 'stored', 'name', 'range', 'isect', 'union', 'call'].includes(n.k);
+}
 
 // Thrown from anywhere in the descent and caught once, in parseFormula, which answers it as a refusal.
 class Fail extends Error {
@@ -137,13 +144,39 @@ class Parser {
       this.depth--;
       return { k: 'pos', a };
     }
-    let n = this.primary();
+    let n = this.reference();
     while (this.isOp('%')) {
       this.next();
       n = { k: 'pct', a: n };
     }
     return n;
   };
+
+  // The reference operators bind tighter than any other (formulas.md "Reference operators"): `:` between two
+  // references, then a space between two (their intersection).
+  private reference(): Node {
+    let n = this.spanned();
+    for (;;) {
+      const t = this.peek();
+      if (this.toks[this.i]?.k !== 'ws' || !t || !REFERENCE_START.has(t.k) || !givesReference(n))
+        return n;
+      const m = this.spanned();
+      if (!givesReference(m)) throw new Fail('unexpected_token', t.start);
+      n = { k: 'isect', a: n, b: m };
+    }
+  }
+
+  private spanned(): Node {
+    let n = this.primary();
+    while (this.isOp(':')) {
+      const at = this.at();
+      this.next();
+      const m = this.primary();
+      if (!givesReference(n) || !givesReference(m)) throw new Fail('bad_reference', at);
+      n = { k: 'range', a: n, b: m };
+    }
+    return n;
+  }
 
   private part(t: Token): Part | null {
     if (t.k === 'ident') {
@@ -294,14 +327,21 @@ class Parser {
         return { k: 'name', v: upper };
       }
       case 'lparen': {
-        const inner = this.expr();
+        const items = [this.expr()];
+        // Commas in brackets join references (a union).
+        while (this.peek()?.k === 'comma') {
+          this.next();
+          items.push(this.expr());
+        }
         const close = this.next();
         if (close?.k !== 'rparen')
           throw new Fail('missing_close_bracket', close?.start ?? this.end);
-        return inner;
+        if (items.length === 1) return items[0]!;
+        if (!items.every(givesReference)) throw new Fail('unexpected_token', t.start);
+        return { k: 'union', items };
       }
       case 'lbrace':
-        return this.array(t.start);
+        return this.array();
       case 'rparen':
         throw new Fail('missing_open_bracket', t.start);
       default:
@@ -333,26 +373,11 @@ class Parser {
     }
   }
 
-  private literal(): Node {
-    const t = this.next();
-    if (!t) throw new Fail('missing_close_bracket', this.end);
-    if (t.k === 'op' && t.v === '-') {
-      const n = this.next();
-      if (n?.k === 'num') return { k: 'num', v: -Number(n.v) };
-      throw new Fail('unexpected_token', n?.start ?? this.end);
-    }
-    if (t.k === 'num') return { k: 'num', v: Number(t.v) };
-    if (t.k === 'str') return { k: 'str', v: t.v };
-    if (t.k === 'err') return { k: 'err', v: t.v as ErrorCode };
-    if (t.k === 'ident' && /^(true|false)$/i.test(t.v))
-      return { k: 'bool', v: t.v.toUpperCase() === 'TRUE' };
-    throw new Fail('unexpected_token', t.start);
-  }
-
-  private array(start: number): Node {
+  private array(): Node {
     const rows: Node[][] = [[]];
     for (;;) {
-      rows[rows.length - 1]!.push(this.literal());
+      // A slot holds any expression (formulas.md "Operators"): a value, a reference, a formula.
+      rows[rows.length - 1]!.push(this.expr());
       const sep = this.next();
       if (sep?.k === 'comma') continue;
       if (sep?.k === 'semi') {
@@ -362,8 +387,7 @@ class Parser {
       if (sep?.k === 'rbrace') break;
       throw new Fail(sep ? 'unexpected_token' : 'missing_close_bracket', sep?.start ?? this.end);
     }
-    const width = rows[0]!.length;
-    if (rows.some((r) => r.length !== width)) throw new Fail('array_ragged', start);
+    // Rows that do not line up are found when it is worked out: a slot may hold a range of any width.
     return { k: 'arr', rows };
   }
 }

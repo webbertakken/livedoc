@@ -33,7 +33,34 @@ export type Node =
   | { k: 'pct'; a: Node }
   | { k: 'bin'; op: BinaryOp; a: Node; b: Node }
   | { k: 'call'; name: string; args: (Node | null)[]; start: number; end: number }
-  | { k: 'arr'; rows: Node[][] };
+  | { k: 'arr'; rows: Node[][] }
+  // The reference operators (formulas.md "Reference operators"): `:` between expressions, a space (intersection),
+  // and commas in brackets (union).
+  | { k: 'range'; a: Node; b: Node }
+  | { k: 'isect'; a: Node; b: Node }
+  | { k: 'union'; items: Node[] };
+
+/** A node's operands, arguments or slots, in source order. */
+export function childrenOf(node: Node): Node[] {
+  switch (node.k) {
+    case 'neg':
+    case 'pos':
+    case 'pct':
+      return [node.a];
+    case 'bin':
+    case 'range':
+    case 'isect':
+      return [node.a, node.b];
+    case 'call':
+      return node.args.filter((a): a is Node => a !== null);
+    case 'arr':
+      return node.rows.flat();
+    case 'union':
+      return node.items;
+    default:
+      return [];
+  }
+}
 
 // Every reference in a tree, in source order.
 export function refsOf(node: Node): A1Ref[] {
@@ -41,48 +68,14 @@ export function refsOf(node: Node): A1Ref[] {
 }
 
 function collectRefs(node: Node, out: A1Ref[]): A1Ref[] {
-  switch (node.k) {
-    case 'ref':
-      out.push(node.ref);
-      break;
-    case 'neg':
-    case 'pos':
-    case 'pct':
-      collectRefs(node.a, out);
-      break;
-    case 'bin':
-      collectRefs(node.a, out);
-      collectRefs(node.b, out);
-      break;
-    case 'call':
-      for (const a of node.args) if (a) collectRefs(a, out);
-      break;
-    case 'arr':
-      for (const row of node.rows) for (const x of row) collectRefs(x, out);
-      break;
-  }
+  if (node.k === 'ref') out.push(node.ref);
+  for (const child of childrenOf(node)) collectRefs(child, out);
   return out;
 }
 
 // Every function name called in a tree (upper case), for telemetry and card-function detection.
 export function callsOf(node: Node, out: Set<string> = new Set()): Set<string> {
-  switch (node.k) {
-    case 'call':
-      out.add(node.name);
-      for (const a of node.args) if (a) callsOf(a, out);
-      break;
-    case 'neg':
-    case 'pos':
-    case 'pct':
-      callsOf(node.a, out);
-      break;
-    case 'bin':
-      callsOf(node.a, out);
-      callsOf(node.b, out);
-      break;
-    case 'arr':
-      for (const row of node.rows) for (const x of row) callsOf(x, out);
-      break;
-  }
+  if (node.k === 'call') out.add(node.name);
+  for (const child of childrenOf(node)) callsOf(child, out);
   return out;
 }

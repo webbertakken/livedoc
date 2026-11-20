@@ -40,6 +40,12 @@ function show(n: Node): string {
       return `${n.name}(${n.args.map((a) => (a ? show(a) : '∅')).join(', ')})`;
     case 'arr':
       return `{${n.rows.map((r) => r.map(show).join(',')).join(';')}}`;
+    case 'range':
+      return `(${show(n.a)}:${show(n.b)})`;
+    case 'isect':
+      return `(${show(n.a)} ∩ ${show(n.b)})`;
+    case 'union':
+      return `(${n.items.map(show).join(' ∪ ')})`;
   }
 }
 
@@ -101,7 +107,16 @@ describe('parseFormula', () => {
     ['=log10(100)', 'LOG10(100)'],
     ['=TRUE', 'TRUE'],
     ['=false()', 'FALSE()'],
-    ['={1,2;3,-4}', '{1,2;3,-4}'],
+    ['={1,2;3,-4}', '{1,2;3,-(4)}'],
+    // formulas.md "Operators": a slot holds any expression; "Reference operators".
+    ['={1,A1;SUM(B1:B2),-x}', '{1,ref(0,0,_,_);SUM(ref(0,1,1,1)),-(name:X)}'],
+    ['={1,2;3}', '{1,2;3}'],
+    ['=A1:B2:C3', '(ref(0,0,1,1):ref(2,2,_,_))'],
+    ['=SUM(A2:INDEX(A:A, 5))', 'SUM((ref(1,0,_,_):INDEX(ref(_,0,_,0), 5)))'],
+    ['=SUM(TaxRate:C9)', 'SUM((name:TAXRATE:ref(8,2,_,_)))'],
+    ['=SUM(A1:C3 B2:D4)', 'SUM((ref(0,0,2,2) ∩ ref(1,1,3,3)))'],
+    ['=SUM((A1:A3, C1, D1:D2))', 'SUM((ref(0,0,2,0) ∪ ref(0,2,_,_) ∪ ref(0,3,1,3)))'],
+    ['=(A1)', 'ref(0,0,_,_)'],
     ['={"a",TRUE,#N/A}', '{"a",TRUE,#N/A}'],
     ['=foo', 'name:FOO'],
     ['=A', 'name:A'],
@@ -125,13 +140,13 @@ describe('parseFormula', () => {
     ['=1 2', 'unexpected_token', 3],
     ['=SUM(1 2)', 'unexpected_token', 7],
     ['=SUM(1', 'missing_close_bracket', 6],
-    ['={1,2;3}', 'array_ragged', 1],
-    ['={1,A1}', 'unexpected_token', 4],
     ['={1', 'missing_close_bracket', 3],
-    ['={-x}', 'unexpected_token', 3],
     ['={1 2}', 'unexpected_token', 4],
     ['=A:1', 'bad_reference', 1],
-    ['=A1:B2:C3', 'unexpected_token', 6],
+    ['=1:A1', 'bad_reference', 1],
+    ['=A1 TRUE', 'unexpected_token', 4],
+    ['=SUM((A1, 2))', 'unexpected_token', 5],
+    ['=(A1, B1', 'missing_close_bracket', 8],
     ['=~', 'unexpected_token', 1],
     ['=*', 'unexpected_token', 1],
     ['=A$', 'bad_reference', 1],
