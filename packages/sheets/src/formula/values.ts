@@ -1,21 +1,22 @@
 // Values and errors (docs/specs/029-sheets/formulas.md "Values", "Errors").
 import { parsePlainNumber } from '../input';
 
+// Google's errors (formulas.md "Errors"): a blocked spill is #REF!, as Google shows it.
 export type ErrorCode =
-  '#DIV/0!' | '#VALUE!' | '#REF!' | '#NAME?' | '#N/A' | '#NUM!' | '#SPILL!' | '#ERROR!';
+  '#NULL!' | '#DIV/0!' | '#VALUE!' | '#REF!' | '#NAME?' | '#N/A' | '#NUM!' | '#ERROR!';
 
 export const ERROR_CODES: readonly ErrorCode[] = [
+  '#NULL!',
   '#DIV/0!',
   '#VALUE!',
   '#REF!',
   '#NAME?',
   '#N/A',
   '#NUM!',
-  '#SPILL!',
   '#ERROR!',
 ];
 
-// An error carries why, for the hover ("Division by zero", "Circular reference: B2 → C2 → B2").
+// An error carries why, for the hover ("Division by zero", "Circular dependency detected: B2 → C2 → B2").
 export type SheetError = { e: ErrorCode; why?: string };
 export type ValueArray = { rows: Value[][] };
 // `null` is an empty cell.
@@ -30,13 +31,13 @@ export function err(e: ErrorCode, why?: string): SheetError {
 }
 
 export const DEFAULT_WHY: Record<ErrorCode, string> = {
+  '#NULL!': 'The references share no cell',
   '#DIV/0!': 'Division by zero',
   '#VALUE!': 'A value of the wrong kind',
   '#REF!': 'A reference to a cell that is not there',
   '#NAME?': 'Unknown function or name',
   '#N/A': 'Value not available',
   '#NUM!': 'A number out of range',
-  '#SPILL!': 'The result would overwrite other cells',
   '#ERROR!': "This formula can't be read",
 };
 

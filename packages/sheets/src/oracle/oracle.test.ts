@@ -49,13 +49,16 @@ describe('the oracle corpus', () => {
     const engine = engineAnswers(category);
     const failed: string[] = [];
     let provisional = 0;
+    let awaiting = 0;
     for (const x of category.cases) {
       const held = heldAnswer(x, {
         ...(google?.answers[x.id] ? { google: google.answers[x.id] } : {}),
         ...(libre?.answers[x.id] ? { libreoffice: libre.answers[x.id] } : {}),
       });
       if (!held) {
-        failed.push(`${x.id}: unanswered`);
+        // LibreOffice answers otherwise than Google and no other answer is in yet: it waits for Google's.
+        if (x.differs?.libreoffice) awaiting++;
+        else failed.push(`${x.id}: unanswered`);
         continue;
       }
       if (held.provisional) provisional++;
@@ -68,6 +71,8 @@ describe('the oracle corpus', () => {
     }
     if (provisional > 0)
       console.info(`[sheets oracle] provisional ${category.category} ${provisional}`);
+    if (awaiting > 0)
+      console.info(`[sheets oracle] awaiting google ${category.category} ${awaiting}`);
     for (const f of failed) console.error(`[sheets oracle] failed ${f}`);
     expect(failed).toEqual([]);
   });

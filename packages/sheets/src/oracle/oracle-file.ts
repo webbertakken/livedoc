@@ -2,6 +2,7 @@
 // `Data`, each case's id and formula on `Cases`, an array case written as an array formula over its block. And back:
 // the answers a source's copy of that workbook holds, block by block.
 import type { FileCell, FileValue, WorkbookFile } from '../files/workbook-file';
+import { parseFormula } from '../formula/parse';
 import { ERROR_CODES } from '../formula/values';
 import {
   ORACLE_CASES_SHEET,
@@ -21,6 +22,16 @@ function fileValue(v: OracleValue): FileValue | undefined {
   return { k: 's', v: v.e };
 }
 
+// The formula an ARRAYFORMULA at the top of a formula wraps, as typed, or null.
+function arrayFormulaInner(formula: string): string | null {
+  const parsed = parseFormula(formula);
+  if (!parsed.ok) return null;
+  const top = parsed.ast;
+  if (top.k !== 'call' || top.name !== 'ARRAYFORMULA' || top.args.length !== 1) return null;
+  const open = formula.indexOf('(', top.start);
+  return `=${formula.slice(open + 1, top.end - 1).trim()}`;
+}
+
 export function oracleFile(category: OracleCategory): WorkbookFile {
   const data: FileCell[] = [];
   category.data.forEach((row, r) =>
@@ -34,11 +45,14 @@ export function oracleFile(category: OracleCategory): WorkbookFile {
   category.cases.forEach((x, i) => {
     const b = blocks[i]!;
     cases.push({ r: b.r, c: 0, value: { k: 's', v: x.id } });
+    // A formula that is an ARRAYFORMULA is written as the array formula of what it wraps, the form both suites read
+    // as the same array context; any other array case as an array formula over its block.
+    const inner = arrayFormulaInner(x.f);
     cases.push({
       r: b.r,
       c: b.c,
-      formula: x.f,
-      ...(b.rows * b.cols > 1 ? { spans: { rows: b.rows, cols: b.cols } } : {}),
+      formula: inner ?? x.f,
+      ...(inner !== null || b.rows * b.cols > 1 ? { spans: { rows: b.rows, cols: b.cols } } : {}),
     });
   });
   const size = OracleLayout.size(category);

@@ -1,6 +1,6 @@
 // Maths functions (docs/specs/029-sheets/formulas.md "Functions": Maths).
 import type { FnDef } from '../fn';
-import { MANY, arrayArg, fn, numArg, numFn, numbersOf, volatileFn } from '../fn';
+import { MANY, arrayArg, arrayArgs, fn, numArg, numFn, numbersOf, volatileFn } from '../fn';
 import { err, isError, scalarOf, type Value } from '../values';
 import { criteriaMask, ifsNumbers, maskedNumbers, sameSizeAs } from './conditional';
 import { dims } from '../values';
@@ -151,3 +151,6 @@ export const MATH_FUNCTIONS: Record<string, FnDef> = {
     return a + Math.floor(f.rand() * (b - a + 1));
   }),
 };
+
+// Its arguments are an array context (formulas.md "Arrays and spills").
+MATH_FUNCTIONS.SUMPRODUCT = arrayArgs(MATH_FUNCTIONS.SUMPRODUCT!);

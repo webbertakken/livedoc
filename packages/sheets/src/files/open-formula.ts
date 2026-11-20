@@ -3,8 +3,7 @@
 // with `;` between columns and `|` between rows. People type Google's syntax; this file converts both ways, by text,
 // so the formula keeps its words and spacing.
 import { columnIndex, columnLetters } from '../address';
-import type { A1Ref } from '../formula/ast';
-import { refsOf } from '../formula/ast';
+import { childrenOf, refsOf, type A1Ref, type Node } from '../formula/ast';
 import { parseFormula } from '../formula/parse';
 import { quoteSheet } from '../formula/stored';
 import { tokenize, type Token } from '../formula/tokens';
@@ -54,11 +53,17 @@ function nextSolid(tokens: readonly Token[], from: number): Token | undefined {
  * A formula as typed (`=SUM(A1:A2, 3)`) in OpenFormula, with its prefix (`of:=SUM([.A1:.A2]; 3)`); null when it
  * does not parse, or holds what OpenFormula cannot say (a spilled range's `#`).
  */
+function hasRefSetOperator(node: Node): boolean {
+  return node.k === 'isect' || node.k === 'union' || childrenOf(node).some(hasRefSetOperator);
+}
+
 export function toOpenFormula(formula: string): string | null {
   const parsed = parseFormula(formula);
   if (!parsed.ok) return null;
   const refs = refsOf(parsed.ast);
-  if (refs.some((ref) => ref.spill)) return null;
+  // A spill reference, an intersection and a union have no OpenFormula form written here yet: the cell keeps its
+  // value, and the loss is named (formula_unwritten).
+  if (refs.some((ref) => ref.spill) || hasRefSetOperator(parsed.ast)) return null;
   const body = formula.startsWith('=') ? 1 : 0;
   const tokens = tokenize(formula.slice(body), body);
   let out = `${OPEN_FORMULA_PREFIX}=`;

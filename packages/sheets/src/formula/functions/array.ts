@@ -1,7 +1,19 @@
 // Array functions (docs/specs/029-sheets/formulas.md "Functions": Arrays, "Arrays and spills"). Each returns an
 // array that spills; results are bounded by ARRAY_CELLS_MAX.
 import { sortKeyCompare } from '../../sort';
-import { MANY, arrayArg, boolArg, deref, fn, intArg, numArg, opt, tooBig, type FnDef } from '../fn';
+import {
+  MANY,
+  arrayArg,
+  arrayArgs,
+  boolArg,
+  deref,
+  fn,
+  intArg,
+  numArg,
+  opt,
+  tooBig,
+  type FnDef,
+} from '../fn';
 import { dims, err, isError, scalarOf, toBool, type Scalar, type Value } from '../values';
 
 const NOTHING = err('#N/A', 'No rows matched');
@@ -135,3 +147,7 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
   }),
   ARRAYFORMULA: fn(1, 1, (args, f) => deref(args[0]!, f)),
 };
+
+// Their arguments are an array context (formulas.md "Arrays and spills"): ranges and arrays taken whole.
+for (const name of ['ARRAYFORMULA', 'FILTER', 'SORT', 'SORTBY', 'UNIQUE', 'TRANSPOSE'])
+  ARRAY_FUNCTIONS[name] = arrayArgs(ARRAY_FUNCTIONS[name]!);

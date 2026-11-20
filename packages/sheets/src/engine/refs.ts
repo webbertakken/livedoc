@@ -2,7 +2,8 @@
 // typed as A1 text (INDIRECT), to the positions it reads on its sheet.
 import type { A1Ref } from '../formula/ast';
 import { posRefOf, type PosRef } from '../formula/stored';
-import type { Frame, RangeRef } from './frame';
+import { err, type SheetError } from '../formula/values';
+import { isRef, type EvalValue, type Frame, type RangeRef } from './frame';
 
 // A resolved reference as a rectangle on its sheet: whole columns and rows, and open ends, run to the filled
 // extent (never the whole grid), so `SUM(A:A)` reads only rows that hold something.
@@ -64,4 +65,31 @@ export function a1ToPos(ref: A1Ref, f: Frame): PosRef | null {
     sheet = h.id === f.sheetId ? null : { id: h.id };
   }
   return posRefOf(ref, sheet);
+}
+
+// A frame whose ranges and arrays are taken whole (formulas.md "Arrays and spills").
+export function arrayFrame(f: Frame): Frame {
+  return f.arrays ? f : { ...f, arrays: true };
+}
+
+const NO_INTERSECTION = 'An array value could not be found';
+
+// A range where one value goes, outside an array context (formulas.md "Arrays and spills"): the one cell of it in the
+// formula's row (a range one column wide) or column (one row high); none is #VALUE!. Anything else is as it was.
+export function implicit(v: EvalValue, f: Frame): EvalValue {
+  if (f.arrays || !isRef(v)) return v;
+  const r = v.ref;
+  if (r.r1 === r.r2 && r.c1 === r.c2) return v;
+  if (r.c1 === r.c2 && f.row >= r.r1 && f.row <= r.r2)
+    return { ref: { sheetId: r.sheetId, r1: f.row, c1: r.c1, r2: f.row, c2: r.c1 } };
+  if (r.r1 === r.r2 && f.col >= r.c1 && f.col <= r.c2)
+    return { ref: { sheetId: r.sheetId, r1: r.r1, c1: f.col, r2: r.r1, c2: f.col } };
+  return err('#VALUE!', NO_INTERSECTION);
+}
+
+// A value that must be one rectangle (an operand of `:` or the intersection), or the error to give instead.
+export function rectangleOf(v: EvalValue): RangeRef | SheetError {
+  if (isRef(v)) return v.ref;
+  if (typeof v === 'object' && v !== null && 'e' in v) return v;
+  return err('#VALUE!', 'A reference was expected here');
 }

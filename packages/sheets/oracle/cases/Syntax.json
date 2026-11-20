@@ -1,0 +1,282 @@
+{
+  "category": "Syntax",
+  "data": [
+    [1, 10, "a", true],
+    [2, 20, "B", false],
+    [3, 30, "3", null],
+    [4, 40, null, 0.5],
+    ["1/2/2026", "$5", "12%", "2026-01-05"]
+  ],
+  "cases": [
+    {
+      "id": "precedence.1",
+      "f": "=-2^2",
+      "note": "Operators: negation binds tighter than ^"
+    },
+    {
+      "id": "precedence.2",
+      "f": "=2^3^2",
+      "note": "Operators: ^ is left-associative"
+    },
+    {
+      "id": "precedence.3",
+      "f": "=1+2*3-4/2"
+    },
+    {
+      "id": "precedence.4",
+      "f": "=1&2+3"
+    },
+    {
+      "id": "precedence.5",
+      "f": "=1+1=2"
+    },
+    {
+      "id": "precedence.6",
+      "f": "=50%^2"
+    },
+    {
+      "id": "precedence.7",
+      "f": "=-50%"
+    },
+    {
+      "id": "coercion.1",
+      "f": "=\"3\"+1",
+      "note": "Operators: text that reads as a number"
+    },
+    {
+      "id": "coercion.2",
+      "f": "=\"a\"+1"
+    },
+    {
+      "id": "coercion.3",
+      "f": "=TRUE+1"
+    },
+    {
+      "id": "coercion.4",
+      "f": "=Data!D3+1",
+      "note": "Values: empty is 0 in arithmetic"
+    },
+    {
+      "id": "coercion.5",
+      "f": "=Data!D3&\"x\""
+    },
+    {
+      "id": "coercion.6",
+      "f": "=\" 3 \"+1"
+    },
+    {
+      "id": "coercion.7",
+      "f": "=\"1e3\"*1"
+    },
+    {
+      "id": "coercion.8",
+      "f": "=\"50%\"*1"
+    },
+    {
+      "id": "coercion.10",
+      "f": "=1&TRUE",
+      "differs": {
+        "libreoffice": "LibreOffice holds booleans as numbers, so & writes TRUE as 1"
+      }
+    },
+    {
+      "id": "coercion.11",
+      "f": "=0.1+0.2=0.3"
+    },
+    {
+      "id": "compare.1",
+      "f": "=\"a\"=\"A\"",
+      "note": "text compares ignoring case"
+    },
+    {
+      "id": "compare.2",
+      "f": "=\"a\"<\"B\""
+    },
+    {
+      "id": "compare.3",
+      "f": "=1<\"a\"",
+      "note": "numbers before text before booleans"
+    },
+    {
+      "id": "compare.4",
+      "f": "=\"z\"<TRUE",
+      "differs": {
+        "libreoffice": "LibreOffice holds booleans as numbers, so they sort before text"
+      }
+    },
+    {
+      "id": "compare.5",
+      "f": "=Data!D3=0"
+    },
+    {
+      "id": "compare.6",
+      "f": "=Data!D3=\"\""
+    },
+    {
+      "id": "compare.7",
+      "f": "=Data!D3=FALSE"
+    },
+    {
+      "id": "compare.8",
+      "f": "=\"10\"<\"9\""
+    },
+    {
+      "id": "errors.1",
+      "f": "=1/0"
+    },
+    {
+      "id": "errors.2",
+      "f": "=(1/0)+NA()",
+      "note": "the left operand's error wins"
+    },
+    {
+      "id": "errors.3",
+      "f": "=NA()+(1/0)"
+    },
+    {
+      "id": "errors.4",
+      "f": "=0^-1",
+      "differs": {
+        "libreoffice": "LibreOffice gives #NUM! for 0 to a negative power; Google's answer decides"
+      }
+    },
+    {
+      "id": "errors.5",
+      "f": "=10^400"
+    },
+    {
+      "id": "errors.6",
+      "f": "=#N/A"
+    },
+    {
+      "id": "errors.7",
+      "f": "=ISERROR(#REF!)"
+    },
+    {
+      "id": "errors.8",
+      "f": "=(-8)^(1/3)",
+      "differs": {
+        "libreoffice": "LibreOffice takes an odd root of a negative; Google's answer decides"
+      }
+    },
+    {
+      "id": "range.1",
+      "f": "=SUM(Data!A1:A4)"
+    },
+    {
+      "id": "range.2",
+      "f": "=SUM(Data!A:A)"
+    },
+    {
+      "id": "range.3",
+      "f": "=SUM(Data!1:2)",
+      "differs": {
+        "libreoffice": "LibreOffice counts a boolean in a range as a number"
+      }
+    },
+    {
+      "id": "range.4",
+      "f": "=SUM(Data!A4:A1)",
+      "note": "corners in any order"
+    },
+    {
+      "id": "range.5",
+      "f": "=SUM(Data!A1:INDEX(Data!A1:A4, 3))",
+      "note": "References: : between expressions"
+    },
+    {
+      "id": "range.6",
+      "f": "=ROWS(Data!A1:B2)"
+    },
+    {
+      "id": "literal.1",
+      "f": "={1, 2; 3, 4}",
+      "rows": 2,
+      "cols": 2
+    },
+    {
+      "id": "literal.2",
+      "f": "=SUM({1, 2; 3, 4})"
+    },
+    {
+      "id": "literal.3",
+      "f": "={1, \"a\", TRUE}",
+      "rows": 1,
+      "cols": 3,
+      "differs": {
+        "libreoffice": "LibreOffice 24.2 refuses a boolean in an array literal (Err:539)"
+      }
+    },
+    {
+      "id": "literal.4",
+      "f": "={-1, 2.5}",
+      "rows": 1,
+      "cols": 2
+    },
+    {
+      "id": "spill.1",
+      "f": "=SEQUENCE(2)*2",
+      "rows": 2,
+      "cols": 1,
+      "differs": {
+        "libreoffice": "LibreOffice 24.2 has no SEQUENCE"
+      }
+    },
+    {
+      "id": "array.1",
+      "f": "=SUMPRODUCT(Data!A1:A4, Data!B1:B4)"
+    },
+    {
+      "id": "array.2",
+      "f": "=SUMPRODUCT((Data!A1:A4>2)*Data!B1:B4)"
+    },
+    {
+      "id": "array.3",
+      "f": "=ARRAYFORMULA(SUM(Data!A1:A4*2))"
+    },
+    {
+      "id": "array.4",
+      "f": "=ARRAYFORMULA(Data!A1:A2*Data!B1:B2)",
+      "rows": 2,
+      "cols": 1
+    },
+    {
+      "id": "array.5",
+      "f": "=ARRAYFORMULA(Data!A1:A2+{10, 20})",
+      "rows": 2,
+      "cols": 2
+    },
+    {
+      "id": "array.6",
+      "f": "=ARRAYFORMULA(Data!A1:A3+Data!B1:B2)",
+      "rows": 3,
+      "cols": 1,
+      "differs": {
+        "libreoffice": "arrays of different sizes: Google's answer decides"
+      }
+    },
+    {
+      "id": "array.7",
+      "f": "=ARRAYFORMULA(LEN(Data!C1:C2))",
+      "rows": 2,
+      "cols": 1
+    },
+    {
+      "id": "intersect.1",
+      "f": "=Data!A1:A4*2",
+      "note": "Arrays and spills: a range in a scalar place outside ARRAYFORMULA"
+    },
+    {
+      "id": "intersect.2",
+      "f": "=LEN(Data!C1:C4)"
+    },
+    {
+      "id": "intersect.3",
+      "f": "=Data!A1:B1+1"
+    },
+    {
+      "id": "intersect.4",
+      "f": "=Data!A1:B4+1"
+    }
+  ]
+}

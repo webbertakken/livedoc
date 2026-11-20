@@ -113,9 +113,9 @@ function is(test: (x: Scalar) => boolean): FnDef {
   return scalarFn(1, 1, ([x]) => test(x!));
 }
 
-// ERROR.TYPE's numbers, as Excel and Google Sheets give them, so a formula pasted from either agrees
-// (#NULL! is 1 there; this engine has none).
+// ERROR.TYPE's numbers, as Google Sheets gives them (formulas.md "Errors"): any error past #N/A is 8.
 const ERROR_TYPE_NUMBERS: Record<ErrorCode, number> = {
+  '#NULL!': 1,
   '#DIV/0!': 2,
   '#VALUE!': 3,
   '#REF!': 4,
@@ -123,7 +123,6 @@ const ERROR_TYPE_NUMBERS: Record<ErrorCode, number> = {
   '#NUM!': 6,
   '#N/A': 7,
   '#ERROR!': 8,
-  '#SPILL!': 9,
 };
 
 export const INFO_FUNCTIONS: Record<string, FnDef> = {

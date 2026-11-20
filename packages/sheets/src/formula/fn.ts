@@ -1,7 +1,15 @@
 // What a function is, and the helpers every function family shares: reading
 // arguments as numbers, text, booleans and arrays the way Sheets does, lifting scalar functions over arrays, and
 // walking the numbers of a range for the aggregates.
-import { isRef, type EvalValue, type Frame, type RangeRef } from '../engine/frame';
+import {
+  isAreas,
+  isRef,
+  type EvalValue,
+  type Frame,
+  type RangeRef,
+  type RefValue,
+} from '../engine/frame';
+import { implicit } from '../engine/refs';
 import { ARRAY_CELLS_MAX, RANGE_CELLS_MAX } from '../limits';
 import {
   dims,
@@ -26,6 +34,8 @@ export type FnDef =
       max: number;
       lazy?: false;
       volatile?: true;
+      // Its arguments are worked out in an array context (formulas.md "Arrays and spills").
+      arrays?: true;
       impl: (args: EvalValue[], f: Frame) => EvalValue;
     }
   | {
@@ -33,6 +43,7 @@ export type FnDef =
       max: number;
       lazy: true;
       volatile?: true;
+      arrays?: true;
       impl: (args: Thunk[], f: Frame) => EvalValue;
     };
 
@@ -66,8 +77,14 @@ function rangeCells(r: RangeRef): number {
   return (r.r2 - r.r1 + 1) * (r.c2 - r.c1 + 1);
 }
 
-// A reference read as a value: one cell's value, or the range as an array.
+// A function whose arguments are worked out in an array context: SUMPRODUCT's, FILTER's, ARRAYFORMULA's.
+export function arrayArgs(def: FnDef): FnDef {
+  return { ...def, arrays: true };
+}
+
+// A reference read as a value: one cell's value, or the range as an array. A union is no value.
 export function deref(v: EvalValue, f: Frame): Value {
+  if (isAreas(v)) return err('#VALUE!', 'A list of references gives no single value');
   if (!isRef(v)) return v;
   const r = v.ref;
   if (r.r2 < r.r1 || r.c2 < r.c1) return { rows: [] };
@@ -86,20 +103,25 @@ export function deref(v: EvalValue, f: Frame): Value {
   return { rows };
 }
 
+// An argument where one value goes: a range intersected outside an array context, then read.
+export function valueArg(v: EvalValue, f: Frame): Value {
+  return deref(implicit(v, f), f);
+}
+
 export function scalarArg(v: EvalValue, f: Frame): Scalar {
-  return scalarOf(deref(v, f));
+  return scalarOf(valueArg(v, f));
 }
 
 export function numArg(v: EvalValue, f: Frame): number | SheetError {
-  return toNumber(deref(v, f));
+  return toNumber(valueArg(v, f));
 }
 
 export function textArg(v: EvalValue, f: Frame): string | SheetError {
-  return toText(deref(v, f));
+  return toText(valueArg(v, f));
 }
 
 export function boolArg(v: EvalValue, f: Frame): boolean | SheetError {
-  return toBool(deref(v, f));
+  return toBool(valueArg(v, f));
 }
 
 export function intArg(v: EvalValue, f: Frame): number | SheetError {
@@ -166,7 +188,7 @@ export function lift(values: Value[], each: (xs: Scalar[]) => Value): Value {
 export function scalarFn(min: number, max: number, each: (xs: Scalar[], f: Frame) => Value): FnDef {
   return fn(min, max, (args, f) =>
     lift(
-      args.map((a) => deref(a, f)),
+      args.map((a) => valueArg(a, f)),
       (xs) => each(xs, f),
     ),
   );
@@ -190,11 +212,16 @@ export function finite(v: Value): Value {
   return v;
 }
 
+// The arguments with each union taken apart into its references, for the functions that read a union as its cells.
+function eachArea(args: EvalValue[]): (Value | RefValue)[] {
+  return args.flatMap((a) => (a !== null && isAreas(a) ? a.areas.map((ref) => ({ ref })) : [a]));
+}
+
 // The numbers of aggregate arguments, as SUM reads them: in a range, only numbers count (text and booleans are
 // skipped); typed directly, text that reads as a number and booleans count. Any error stops it.
 export function numbersOf(args: EvalValue[], f: Frame): number[] | SheetError {
   const out: number[] = [];
-  for (const a of args) {
+  for (const a of eachArea(args)) {
     if (a === null || a === undefined) continue;
     const fromRange = isRef(a) || isArray(a);
     const v = deref(a, f);
@@ -223,7 +250,7 @@ export function numbersOf(args: EvalValue[], f: Frame): number[] | SheetError {
 // Every scalar of the arguments (arrays flattened), errors kept, for COUNTA, CONCAT, TEXTJOIN...
 export function flatScalars(args: EvalValue[], f: Frame): Scalar[] {
   const out: Scalar[] = [];
-  for (const a of args) {
+  for (const a of eachArea(args)) {
     if (a === null || a === undefined) continue;
     const v = deref(a, f);
     if (isArray(v)) for (const row of v.rows) for (const x of row) out.push(scalarOf(x));

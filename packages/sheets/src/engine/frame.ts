@@ -10,10 +10,17 @@ export type RangeRef = { sheetId: string; r1: number; c1: number; r2: number; c2
 
 // What evaluating a node gives: a value, or a reference a function may want as a reference (ROW, INDEX, OFFSET).
 export type RefValue = { ref: RangeRef };
-export type EvalValue = Value | RefValue;
+// A union of references (formulas.md "Reference operators"): read by the functions that take references, #VALUE!
+// anywhere a value goes.
+export type AreasValue = { areas: RangeRef[] };
+export type EvalValue = Value | RefValue | AreasValue;
 
 export function isRef(v: EvalValue): v is RefValue {
   return typeof v === 'object' && v !== null && 'ref' in v;
+}
+
+export function isAreas(v: EvalValue): v is AreasValue {
+  return typeof v === 'object' && v !== null && 'areas' in v;
 }
 
 export type Frame = {
@@ -23,6 +30,9 @@ export type Frame = {
   col: number;
   ctx: SheetsCtx;
   locale: string;
+  // Whether ranges and arrays are taken whole where one value goes (formulas.md "Arrays and spills"): inside
+  // ARRAYFORMULA, an array literal or an array argument, and everywhere on a Plan Sheet; else they intersect.
+  arrays: boolean;
   // A cell's value (worked out on demand). `inRange` when read as part of a noted range, so it is not noted on
   // its own as well.
   cell(sheetId: string, r: number, c: number, inRange?: boolean): Value;

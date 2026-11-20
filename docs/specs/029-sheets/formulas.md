@@ -23,21 +23,26 @@ A value is one of:
 
 ### Errors
 
-| Error     | When                                                                                  |
-| --------- | ------------------------------------------------------------------------------------- |
-| `#DIV/0!` | Division by zero                                                                      |
-| `#VALUE!` | A value of the wrong kind (`="a"+1`)                                                  |
-| `#REF!`   | A reference to a cell that was deleted, a sheet not on the tab, or a circular formula |
-| `#NAME?`  | A function or name the engine does not know                                           |
-| `#N/A`    | A lookup found nothing; `NA()`                                                        |
-| `#NUM!`   | A number out of range (`=SQRT(-1)`, a result too large)                               |
-| `#SPILL!` | An array result blocked by filled cells, or past the grid                             |
-| `#ERROR!` | A formula that cannot be read (only from an agent or a paste: the editor refuses one) |
+| Error     | When                                                                                                                      |
+| --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `#NULL!`  | An intersection of references that share no cell                                                                          |
+| `#DIV/0!` | Division by zero                                                                                                          |
+| `#VALUE!` | A value of the wrong kind (`="a"+1`)                                                                                      |
+| `#REF!`   | A reference to a cell that was deleted, a sheet not there, a circular formula, or an array result blocked by filled cells |
+| `#NAME?`  | A function or name the engine does not know                                                                               |
+| `#N/A`    | A lookup found nothing; `NA()`                                                                                            |
+| `#NUM!`   | A number out of range (`=SQRT(-1)`, a result too large)                                                                   |
+| `#ERROR!` | A formula that cannot be read (only from an agent or a paste: the editor refuses one)                                     |
 
 - An error flows through: a formula reading an error shows it, except the functions that test for errors
   (`IFERROR`, `IFNA`, `ISERROR`, `ISNA`, `ERROR.TYPE`).
 - A **circular** formula (one that reads itself, directly or through others) shows `#REF!` in every cell of the
-  loop, and hovering says "Circular reference: B2 → C2 → B2". There is no iterative calculation.
+  loop, and hovering says "Circular dependency detected: B2 → C2 → B2", unless the spreadsheet's iterative
+  calculation is on ([Settings](settings.md)), when the loop is worked out again up to its most iterations.
+- `ERROR.TYPE` numbers the errors as Google does: `#NULL!` 1, `#DIV/0!` 2, `#VALUE!` 3, `#REF!` 4, `#NAME?` 5,
+  `#NUM!` 6, `#N/A` 7, any other 8.
+- A file that arrives holding Excel's `#SPILL!` (or another error Google does not have) reads it as `#REF!` until
+  its formula is worked out here.
 
 ## What a typed input becomes
 
@@ -137,18 +142,44 @@ In order of precedence, highest first; same as Google Sheets:
 | `&`                        | Join text                            |
 | `=` `<>` `<` `>` `<=` `>=` | Compare; text compares ignoring case |
 
-- Brackets group. Text is in double quotes, a quote inside doubled (`"say ""hi"""`). Array constants are written
-  `{1, 2; 3, 4}` (commas between columns, semicolons between rows).
-- Arithmetic reads text that looks like a number as the number (`="3"+1` is `4`); other text is `#VALUE!`.
+- Brackets group. Text is in double quotes, a quote inside doubled (`"say ""hi"""`).
+- Arrays are written in braces, commas between columns and semicolons between rows (`{1, 2; 3, 4}`); a slot holds any
+  value, reference or formula, and ranges and arrays in it are joined side by side or stacked (`={A1:A3, C1:C3}`,
+  `={A1:A3; C1:C3}`). Parts that do not line up are `#VALUE!` ("In ARRAY_LITERAL, an Array Literal was missing
+  values for one or more rows.").
+- Arithmetic reads text that looks like a number as the number (`="3"+1` is `4`, `=" 3 "+1` and `="50%"*1`
+  too); other text is `#VALUE!`. Booleans are 1 and 0, an empty cell 0 (or `""` beside `&`).
+- `&` writes a boolean as `TRUE` or `FALSE` (`=1&TRUE` is `1TRUE`), and comparing across kinds orders numbers
+  before text before booleans (`="z"<TRUE` is TRUE), as Google does where LibreOffice holds booleans as numbers.
 - A formula is at most 8,000 characters and nests functions at most 64 deep.
+
+## Reference operators
+
+- `:` joins two references into the rectangle spanning both, and either side may be anything that gives a reference:
+  `=SUM(A2:INDEX(A:A, 5))`, `=SUM(TaxRate:C9)`, `=SUM(OFFSET(A1, 1, 1):C9)`.
+- Google refuses the intersection and union operators; LiveDoc reads both as Excel writes them, so a formula from a
+  file stays editable (default, D30): a space between two references is the cells they share (`=SUM(A1:C3 B2:D4)`, and
+  `#NULL!` when they share none); a comma between references in brackets is their union (`=SUM((A1:A3, C1:C3))`),
+  read by the functions that take references (`SUM`, `COUNT`, `AREAS`, `INDEX`, `LARGE`, ...) and `#VALUE!` elsewhere.
 
 ## Arrays and spills
 
-- A formula whose value is an array (`=A1:A5*2`, `=FILTER(…)`, `=SORT(…)`, `=SEQUENCE(5)`, `=CARDS(…)`) **spills**:
+- **Implicit intersection**: outside an array context, a range where one value goes (an operator's operand, a
+  function's single-value argument) reads the one cell of it in the formula's row (a range one column wide) or
+  column (one row high): in row 3, `=A1:A5*2` is `A3*2`. A range with no such cell is `#VALUE!` ("An array value could
+  not be found").
+- An **array context** takes ranges and arrays whole: inside `ARRAYFORMULA(…)`, in an array literal, and in an argument
+  a function reads as an array (`SUMPRODUCT`'s, `FILTER`'s, `INDEX`'s range, ...). There, operators and single-value
+  functions work cell by cell: `=ARRAYFORMULA(A1:A5*2)` spills five values. A formula that is only a range
+  (`=A1:C3`) or a function giving an array (`=SEQUENCE(5)`) spills as it is.
+- A Plan Sheet keeps working every formula in an array context (as it did before spreadsheets), so its values do not
+  move; the migration wraps each of its spilling formulas in `ARRAYFORMULA` (default, D34).
+- A formula whose value is an array (`=ARRAYFORMULA(A1:A5*2)`, `=FILTER(…)`, `=SORT(…)`, `=SEQUENCE(5)`, `=CARDS(…)`) **spills**:
   its first value shows in its cell and the rest fill the cells below and to the right. Spilled cells are drawn
   as values with no input of their own; selecting one shows the formula greyed in the bar.
-- A spill blocked by a cell with an input shows `#SPILL!` in the formula's cell ("The result would overwrite
-  B3"); emptying the blocker lets it spill.
+- A spill blocked by a cell with an input shows `#REF!` in the formula's cell ("Array result was not expanded because
+  it would overwrite data in B3.", Google's words); emptying the blocker lets it spill. One running past the grid
+  shows `#REF!` too ("Array result was not expanded because it would run past the edge of the sheet.").
 - A reference to a spilling cell followed by `#` (`=SUM(B2#)`) reads its whole spilled range.
 - Spilled cells are worked out, never stored: a CSV export and an agent read their values; an import or paste
   writes inputs only into cells it covers.
@@ -813,11 +844,12 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   the same workbook opened in Google Sheets and downloaded again. An answer a source documents (OpenFormula's own
   test cases, Google's help pages) may be written in its case instead, citing where.
 - A case holds to the answer of its function's **Authority** above; until Google's answer is in, a Google case holds
-  to LibreOffice's and is counted as provisional (default).
+  to LibreOffice's and is counted as provisional (default, D31). A case LibreOffice answers otherwise than Google
+  documents waits for Google's answer, counted, held to none (default, D32).
 - Where two sources answer differently, the case names the difference and why; an unnamed difference fails.
 - Numbers agree to one part in a billion (a case may loosen it to one in a million, saying why); text and booleans
   exactly; errors by their code, never their wording.
-- The corpus runs in `en-US`, in UTC, at a fixed now (default); volatile functions are held by their own tests.
+- The corpus runs in `en-US`, in UTC, at a fixed now (default, D33); volatile functions are held by their own tests.
 - CI runs the corpus on every change, with no LibreOffice needed; a function reads **built** only while its cases pass,
   and every function the engine knows has at least one case.
 
@@ -843,3 +875,8 @@ The code cites each by its id.
 - **D4** How the regex time limit is enforced: A work estimate (text length × pattern length) up to 10,000,000
   (default).
 - **D14** Two-digit years: Below 70 are 20xx, else 19xx (default).
+- **D30** The intersection and union operators: Read as Excel writes them, a superset of Google's (default).
+- **D31** A Google case before Google's answer is in: Held to LibreOffice's, counted as provisional (default).
+- **D32** A case LibreOffice answers otherwise, before Google's answer: Waits, counted, held to none (default).
+- **D33** The oracle's locale, zone and now: `en-US`, UTC, a fixed now (default).
+- **D34** Plan Sheets' arrays until their migration: Every formula an array context, as before (default).

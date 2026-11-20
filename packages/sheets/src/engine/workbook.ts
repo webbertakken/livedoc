@@ -39,9 +39,23 @@ type WorkbookOptions = {
   cards?: CardSource | null;
   // The limits its sheets are held to: a spreadsheet's, or (by default) a Plan Sheet's (sheet-limits.ts).
   limits?: SheetLimits;
+  // How ranges in single-value places read: a spreadsheet's as Google's (intersected), a Plan Sheet's whole
+  // (formulas.md "Arrays and spills"). By default, as its limits say what holds it.
+  arrays?: ArrayDialect;
 };
 
+/** `google`: implicit intersection outside an array context; `dynamic`: every formula an array context (Plan Sheets). */
+export type ArrayDialect = 'google' | 'dynamic';
+
 const DEPTH_MAX = 250;
+
+// Google's words for a spill that cannot land (formulas.md "Arrays and spills").
+const SPILL_PAST_EDGE =
+  'Array result was not expanded because it would run past the edge of the sheet.';
+const spillBlockedBy = (a1: string) =>
+  `Array result was not expanded because it would overwrite data in ${a1}.`;
+// Google's words for a loop, with the loop's path after them.
+const circular = (path: string) => `Circular dependency detected: ${path}`;
 
 // Thrown when a read nests past DEPTH_MAX: the read settles that cell on its own, then starts again.
 class Deep extends Error {
@@ -62,6 +76,7 @@ type Claim = { sheetId: string; r1: number; c1: number; r2: number; c2: number }
 export class Workbook {
   readonly locale: string;
   readonly limits: SheetLimits;
+  readonly arrays: ArrayDialect;
   private readonly sheets = new Map<string, Sheet>();
   private cards: CardSource | null;
   private readonly nowFn: () => number;
@@ -93,6 +108,7 @@ export class Workbook {
   constructor(opts: WorkbookOptions) {
     this.locale = opts.locale;
     this.limits = opts.limits ?? SheetLimits.plan;
+    this.arrays = opts.arrays ?? (this.limits === SheetLimits.spreadsheet ? 'google' : 'dynamic');
     this.cards = opts.cards ?? null;
     this.nowFn = opts.now ?? localNow;
     this.randFn = opts.rand ?? Math.random;
@@ -349,7 +365,7 @@ export class Workbook {
           // stack cannot see whole: each of its restarted cells is a circular reference. Their
           // dependencies were noted before the restart, so an edit breaking the loop still reaches them.
           const loop = pending.splice(from);
-          const value = err('#REF!', `Circular reference: ${this.describeLoop(loop, e.id)}`);
+          const value = err('#REF!', circular(this.describeLoop(loop, e.id)));
           for (const cell of loop) this.vals.set(cell, value);
           continue;
         }
@@ -419,7 +435,7 @@ export class Workbook {
     if (known !== undefined) return known;
     if (this.computing.has(id)) {
       const from = this.stack.indexOf(id);
-      return err('#REF!', `Circular reference: ${this.describeLoop(this.stack.slice(from), id)}`);
+      return err('#REF!', circular(this.describeLoop(this.stack.slice(from), id)));
     }
     if (this.depth >= DEPTH_MAX) throw new Deep(id);
     const bar = id.indexOf('|');
@@ -465,7 +481,7 @@ export class Workbook {
     // A spill reads its whole rectangle, so filling or emptying a cell in it re-works the spill.
     this.deps.noteRange(id, sheet.id, row, col, row + d.rows - 1, col + d.cols - 1);
     if (row + d.rows > sheet.layout.rows.length || col + d.cols > sheet.layout.cols.length)
-      return err('#SPILL!', 'The result runs past the edge of the sheet');
+      return err('#REF!', SPILL_PAST_EDGE);
     const claimed = this.claimed.get(sheet.id) ?? new Map<string, string>();
     for (let i = 0; i < d.rows; i++)
       for (let j = 0; j < d.cols; j++) {
@@ -475,7 +491,7 @@ export class Workbook {
         const key = cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!);
         const other = claimed.get(`${r},${c}`);
         if (sheet.cells.get(key)?.input || (other && other !== id)) {
-          return err('#SPILL!', `The result would overwrite ${formatA1(r, c)}`);
+          return err('#REF!', spillBlockedBy(formatA1(r, c)));
         }
       }
     const readers = new Set<string>();
@@ -520,6 +536,7 @@ export class Workbook {
       col,
       ctx: this.ctxFor(sheetId),
       locale: this.locale,
+      arrays: this.arrays === 'dynamic',
       cell: (s, r, c, inRange) => this.cellValue(s, r, c, inRange ? null : id),
       extent: (s) => this.extent(s),
       isFormula: (s, r, c) => {

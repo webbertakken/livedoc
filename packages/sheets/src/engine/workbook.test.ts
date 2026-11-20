@@ -39,7 +39,7 @@ describe('values and recalculation', () => {
   it('shows #REF! for a circular formula, with its loop', () => {
     const b = book({ A1: '=B1', B1: '=A1' });
     expect(b.v('A1')).toMatchObject({ e: '#REF!' });
-    expect((b.v('B1') as { why: string }).why).toMatch(/Circular reference: .*→/);
+    expect((b.v('B1') as { why: string }).why).toMatch(/Circular dependency detected: .*→/);
     b.set('B1', '5');
     expect(b.v('A1')).toBe(5);
   });
@@ -87,14 +87,20 @@ describe('values and recalculation', () => {
   });
   it('blocks a spill on a filled cell, and lets it go when emptied', () => {
     const b = book({ A1: '=SEQUENCE(3)', A3: 'x', B1: '=A2' });
-    expect(b.v('A1')).toMatchObject({ e: '#SPILL!', why: 'The result would overwrite A3' });
+    expect(b.v('A1')).toMatchObject({
+      e: '#REF!',
+      why: 'Array result was not expanded because it would overwrite data in A3.',
+    });
     expect(b.v('B1')).toBe(null);
     b.set('A3', '');
     expect(b.v('A1')).toBe(1);
     expect(b.v('B1')).toBe(2);
   });
   it('blocks a spill past the grid', () => {
-    expect(book({ A1: '=SEQUENCE(100)' }).v('A1')).toMatchObject({ e: '#SPILL!' });
+    expect(book({ A1: '=SEQUENCE(100)' }).v('A1')).toMatchObject({
+      e: '#REF!',
+      why: 'Array result was not expanded because it would run past the edge of the sheet.',
+    });
   });
   it('re-works volatile cells on any change and on tick', () => {
     let n = 0;

@@ -30,6 +30,13 @@ describe('toOpenFormula', () => {
   it('refuses a spilled range, which OpenFormula cannot say', () => {
     expect(toOpenFormula('=SUM(A1#)')).toBeNull();
   });
+
+  // formulas.md "Reference operators": the intersection and union are not written yet; the cell keeps its value.
+  it('refuses an intersection or a union, and writes a span between expressions', () => {
+    expect(toOpenFormula('=SUM(A1:B2 B1:C2)')).toBeNull();
+    expect(toOpenFormula('=SUM(1, (A1, B1))')).toBeNull();
+    expect(toOpenFormula('=SUM(A1:INDEX(A1:A3, 2))')).toBe('of:=SUM([.A1]:INDEX([.A1:.A3]; 2))');
+  });
 });
 
 describe('fromOpenFormula', () => {
