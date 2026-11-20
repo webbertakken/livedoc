@@ -1,0 +1,923 @@
+{
+  "category": "Engineering",
+  "data": [
+    [101, "1111111111", "f3", "7777777770", null, true],
+    [9, "abc", 2.5, -3, "3+4i", "1+2i"]
+  ],
+  "cases": [
+    {
+      "id": "BIN2DEC.1",
+      "f": "=BIN2DEC(101)"
+    },
+    {
+      "id": "BIN2DEC.2",
+      "f": "=BIN2DEC(\"1111111111\")"
+    },
+    {
+      "id": "BIN2DEC.3",
+      "f": "=BIN2DEC(\"1000000000\")"
+    },
+    {
+      "id": "BIN2DEC.4",
+      "f": "=BIN2DEC(\"0111111111\")"
+    },
+    {
+      "id": "BIN2DEC.5",
+      "f": "=BIN2DEC(\"11111111111\")"
+    },
+    {
+      "id": "BIN2DEC.6",
+      "f": "=BIN2DEC(\"102\")"
+    },
+    {
+      "id": "BIN2DEC.7",
+      "f": "=BIN2DEC(Data!A1)"
+    },
+    {
+      "id": "BIN2DEC.8",
+      "f": "=BIN2DEC(Data!E1)"
+    },
+    {
+      "id": "BIN2DEC.9",
+      "f": "=BIN2DEC(Data!F1)"
+    },
+    {
+      "id": "BIN2DEC.10",
+      "f": "=BIN2DEC(\"\")"
+    },
+    {
+      "id": "BIN2HEX.1",
+      "f": "=BIN2HEX(\"1101\")"
+    },
+    {
+      "id": "BIN2HEX.2",
+      "f": "=BIN2HEX(\"1101\", 4)"
+    },
+    {
+      "id": "BIN2HEX.3",
+      "f": "=BIN2HEX(\"1111111111\")"
+    },
+    {
+      "id": "BIN2HEX.4",
+      "f": "=BIN2HEX(\"1111111111\", 12)",
+      "expect": [["FFFFFFFFFF"]],
+      "cite": "https://support.google.com/docs/answer/3093133 (significant_digits: \"This value is ignored if the most significant bit of signed_binary_number is 1\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses places past 10 even for a negative number, whose places are ignored"
+      }
+    },
+    {
+      "id": "BIN2HEX.5",
+      "f": "=BIN2HEX(\"1101\", 1)"
+    },
+    {
+      "id": "BIN2HEX.6",
+      "f": "=BIN2HEX(\"1101\", -1)"
+    },
+    {
+      "id": "BIN2HEX.7",
+      "f": "=BIN2HEX(\"1101\", 11)"
+    },
+    {
+      "id": "BIN2HEX.8",
+      "f": "=BIN2HEX(\"1101\", 2.9)"
+    },
+    {
+      "id": "BIN2OCT.1",
+      "f": "=BIN2OCT(\"1101\")"
+    },
+    {
+      "id": "BIN2OCT.2",
+      "f": "=BIN2OCT(\"1101\", 3)"
+    },
+    {
+      "id": "BIN2OCT.3",
+      "f": "=BIN2OCT(\"1000000000\")"
+    },
+    {
+      "id": "DEC2BIN.1",
+      "f": "=DEC2BIN(199)"
+    },
+    {
+      "id": "DEC2BIN.2",
+      "f": "=DEC2BIN(\"100\", 8)"
+    },
+    {
+      "id": "DEC2BIN.3",
+      "f": "=DEC2BIN(-1)"
+    },
+    {
+      "id": "DEC2BIN.4",
+      "f": "=DEC2BIN(511)"
+    },
+    {
+      "id": "DEC2BIN.5",
+      "f": "=DEC2BIN(512)"
+    },
+    {
+      "id": "DEC2BIN.6",
+      "f": "=DEC2BIN(-512)"
+    },
+    {
+      "id": "DEC2BIN.7",
+      "f": "=DEC2BIN(-513)"
+    },
+    {
+      "id": "DEC2BIN.8",
+      "f": "=DEC2BIN(5.9)"
+    },
+    {
+      "id": "DEC2BIN.9",
+      "f": "=DEC2BIN(-2.5)"
+    },
+    {
+      "id": "DEC2BIN.10",
+      "f": "=DEC2BIN(5, 2)"
+    },
+    {
+      "id": "DEC2BIN.11",
+      "f": "=DEC2BIN(\"x\")"
+    },
+    {
+      "id": "DEC2BIN.12",
+      "f": "=DEC2BIN(Data!E1)"
+    },
+    {
+      "id": "DEC2HEX.1",
+      "f": "=DEC2HEX(255)"
+    },
+    {
+      "id": "DEC2HEX.2",
+      "f": "=DEC2HEX(255, 4)"
+    },
+    {
+      "id": "DEC2HEX.3",
+      "f": "=DEC2HEX(-1)"
+    },
+    {
+      "id": "DEC2HEX.4",
+      "f": "=DEC2HEX(549755813887)"
+    },
+    {
+      "id": "DEC2HEX.5",
+      "f": "=DEC2HEX(549755813888)"
+    },
+    {
+      "id": "DEC2HEX.6",
+      "f": "=DEC2HEX(-549755813888)"
+    },
+    {
+      "id": "DEC2OCT.1",
+      "f": "=DEC2OCT(8)"
+    },
+    {
+      "id": "DEC2OCT.2",
+      "f": "=DEC2OCT(-1)"
+    },
+    {
+      "id": "DEC2OCT.3",
+      "f": "=DEC2OCT(536870911)"
+    },
+    {
+      "id": "DEC2OCT.4",
+      "f": "=DEC2OCT(536870912)"
+    },
+    {
+      "id": "HEX2BIN.1",
+      "f": "=HEX2BIN(\"f3\", 8)"
+    },
+    {
+      "id": "HEX2BIN.2",
+      "f": "=HEX2BIN(\"1FF\")"
+    },
+    {
+      "id": "HEX2BIN.3",
+      "f": "=HEX2BIN(\"FFFFFFFE00\")"
+    },
+    {
+      "id": "HEX2BIN.4",
+      "f": "=HEX2BIN(\"200\")"
+    },
+    {
+      "id": "HEX2BIN.5",
+      "f": "=HEX2BIN(Data!C1)"
+    },
+    {
+      "id": "HEX2DEC.1",
+      "f": "=HEX2DEC(\"ff\")"
+    },
+    {
+      "id": "HEX2DEC.2",
+      "f": "=HEX2DEC(\"FFFFFFFFFF\")"
+    },
+    {
+      "id": "HEX2DEC.3",
+      "f": "=HEX2DEC(\"8000000000\")"
+    },
+    {
+      "id": "HEX2DEC.4",
+      "f": "=HEX2DEC(\"7fffffffff\")"
+    },
+    {
+      "id": "HEX2DEC.5",
+      "f": "=HEX2DEC(\"g\")"
+    },
+    {
+      "id": "HEX2DEC.6",
+      "f": "=HEX2DEC(\"0xff\")"
+    },
+    {
+      "id": "HEX2DEC.7",
+      "f": "=HEX2DEC(Data!C1)"
+    },
+    {
+      "id": "HEX2OCT.1",
+      "f": "=HEX2OCT(\"ff\", 4)"
+    },
+    {
+      "id": "HEX2OCT.2",
+      "f": "=HEX2OCT(\"FFFFFFFFFF\", 3)"
+    },
+    {
+      "id": "HEX2OCT.3",
+      "f": "=HEX2OCT(\"40000000\")"
+    },
+    {
+      "id": "OCT2BIN.1",
+      "f": "=OCT2BIN(\"17\")"
+    },
+    {
+      "id": "OCT2BIN.2",
+      "f": "=OCT2BIN(\"7777777770\")"
+    },
+    {
+      "id": "OCT2BIN.3",
+      "f": "=OCT2BIN(\"1000\")"
+    },
+    {
+      "id": "OCT2DEC.1",
+      "f": "=OCT2DEC(\"17\")"
+    },
+    {
+      "id": "OCT2DEC.2",
+      "f": "=OCT2DEC(\"7777777777\")"
+    },
+    {
+      "id": "OCT2DEC.3",
+      "f": "=OCT2DEC(\"8\")"
+    },
+    {
+      "id": "OCT2DEC.4",
+      "f": "=OCT2DEC(Data!D1)"
+    },
+    {
+      "id": "OCT2HEX.1",
+      "f": "=OCT2HEX(\"17\", 3)"
+    },
+    {
+      "id": "OCT2HEX.2",
+      "f": "=OCT2HEX(\"7777777777\")"
+    },
+    {
+      "id": "BITAND.1",
+      "f": "=BITAND(10, 9)"
+    },
+    {
+      "id": "BITAND.2",
+      "f": "=BITAND(13, 25)"
+    },
+    {
+      "id": "BITAND.3",
+      "f": "=BITAND(2^47, 2^47+1)"
+    },
+    {
+      "id": "BITAND.4",
+      "f": "=BITAND(2^48, 1)"
+    },
+    {
+      "id": "BITAND.5",
+      "f": "=BITAND(-1, 1)"
+    },
+    {
+      "id": "BITAND.6",
+      "f": "=BITAND(1.5, 1)"
+    },
+    {
+      "id": "BITAND.7",
+      "f": "=BITAND(\"12\", TRUE)"
+    },
+    {
+      "id": "BITOR.1",
+      "f": "=BITOR(10, 9)"
+    },
+    {
+      "id": "BITOR.2",
+      "f": "=BITOR(2^47, 1)"
+    },
+    {
+      "id": "BITXOR.1",
+      "f": "=BITXOR(10, 9)"
+    },
+    {
+      "id": "BITXOR.2",
+      "f": "=BITXOR(5, 5)"
+    },
+    {
+      "id": "BITLSHIFT.1",
+      "f": "=BITLSHIFT(2, 2)"
+    },
+    {
+      "id": "BITLSHIFT.2",
+      "f": "=BITLSHIFT(9, 2)"
+    },
+    {
+      "id": "BITLSHIFT.3",
+      "f": "=BITLSHIFT(8, -2)"
+    },
+    {
+      "id": "BITLSHIFT.4",
+      "f": "=BITLSHIFT(1, 47)"
+    },
+    {
+      "id": "BITLSHIFT.5",
+      "f": "=BITLSHIFT(1, 48)"
+    },
+    {
+      "id": "BITLSHIFT.6",
+      "f": "=BITLSHIFT(1, 54)",
+      "differs": {
+        "libreoffice": "LibreOffice shifts past 53 places (1.8E16); Google says the shift \"Must be a value between -53 and 53\", so LiveDoc refuses it, #NUM!"
+      },
+      "note": "Awaits Google's answer: which error a shift past 53 places is."
+    },
+    {
+      "id": "BITLSHIFT.7",
+      "f": "=BITLSHIFT(-1, 1)"
+    },
+    {
+      "id": "BITLSHIFT.8",
+      "f": "=BITLSHIFT(1.5, 1)"
+    },
+    {
+      "id": "BITRSHIFT.1",
+      "f": "=BITRSHIFT(8, 2)"
+    },
+    {
+      "id": "BITRSHIFT.2",
+      "f": "=BITRSHIFT(13, 1)"
+    },
+    {
+      "id": "BITRSHIFT.3",
+      "f": "=BITRSHIFT(1, -2)"
+    },
+    {
+      "id": "BITRSHIFT.4",
+      "f": "=BITRSHIFT(2^47, 47)"
+    },
+    {
+      "id": "DELTA.1",
+      "f": "=DELTA(2, 1)"
+    },
+    {
+      "id": "DELTA.2",
+      "f": "=DELTA(2, 2)"
+    },
+    {
+      "id": "DELTA.3",
+      "f": "=DELTA(0)"
+    },
+    {
+      "id": "DELTA.4",
+      "f": "=DELTA(Data!E1)"
+    },
+    {
+      "id": "DELTA.5",
+      "f": "=DELTA(\"2\", 2)"
+    },
+    {
+      "id": "DELTA.6",
+      "f": "=DELTA(\"x\")"
+    },
+    {
+      "id": "DELTA.7",
+      "f": "=DELTA(2, 2.0000000000000004)"
+    },
+    {
+      "id": "GESTEP.1",
+      "f": "=GESTEP(5, 2)"
+    },
+    {
+      "id": "GESTEP.2",
+      "f": "=GESTEP(2)"
+    },
+    {
+      "id": "GESTEP.3",
+      "f": "=GESTEP(-0.00001)"
+    },
+    {
+      "id": "GESTEP.4",
+      "f": "=GESTEP(-6, -1)"
+    },
+    {
+      "id": "GESTEP.5",
+      "f": "=GESTEP(\"x\")"
+    },
+    {
+      "id": "GESTEP.6",
+      "f": "=GESTEP(Data!E1)"
+    },
+    {
+      "id": "ERF.1",
+      "f": "=ERF(1)"
+    },
+    {
+      "id": "ERF.2",
+      "f": "=ERF(-2.3, -0.7)"
+    },
+    {
+      "id": "ERF.3",
+      "f": "=ERF(0)"
+    },
+    {
+      "id": "ERF.4",
+      "f": "=ERF(10)"
+    },
+    {
+      "id": "ERF.5",
+      "f": "=ERF(-1)"
+    },
+    {
+      "id": "ERF.6",
+      "f": "=ERF(\"x\")"
+    },
+    {
+      "id": "ERF.7",
+      "f": "=ERF(0.5, 0.5)"
+    },
+    {
+      "id": "ERF.PRECISE.1",
+      "f": "=ERF.PRECISE(1)"
+    },
+    {
+      "id": "ERF.PRECISE.2",
+      "f": "=ERF.PRECISE(-0.5)"
+    },
+    {
+      "id": "COMPLEX.1",
+      "f": "=COMPLEX(3, 4)"
+    },
+    {
+      "id": "COMPLEX.2",
+      "f": "=COMPLEX(3, -1, \"j\")"
+    },
+    {
+      "id": "COMPLEX.3",
+      "f": "=COMPLEX(3, 0)"
+    },
+    {
+      "id": "COMPLEX.4",
+      "f": "=COMPLEX(0, 1)"
+    },
+    {
+      "id": "COMPLEX.5",
+      "f": "=COMPLEX(0, -1)"
+    },
+    {
+      "id": "COMPLEX.6",
+      "f": "=COMPLEX(1.5, 2.5)"
+    },
+    {
+      "id": "COMPLEX.7",
+      "f": "=COMPLEX(3, 4, \"k\")"
+    },
+    {
+      "id": "COMPLEX.8",
+      "f": "=COMPLEX(3, 4, \"I\")"
+    },
+    {
+      "id": "COMPLEX.9",
+      "f": "=COMPLEX(\"x\", 1)"
+    },
+    {
+      "id": "COMPLEX.10",
+      "f": "=COMPLEX(0, 0)"
+    },
+    {
+      "id": "IMABS.1",
+      "f": "=IMABS(\"3+4i\")"
+    },
+    {
+      "id": "IMABS.2",
+      "f": "=IMABS(COMPLEX(3, 4, \"j\"))"
+    },
+    {
+      "id": "IMABS.3",
+      "f": "=IMABS(-5)"
+    },
+    {
+      "id": "IMABS.4",
+      "f": "=IMABS(\"x\")"
+    },
+    {
+      "id": "IMAGINARY.1",
+      "f": "=IMAGINARY(\"3+5i\")"
+    },
+    {
+      "id": "IMAGINARY.2",
+      "f": "=IMAGINARY(\"4j\")"
+    },
+    {
+      "id": "IMAGINARY.3",
+      "f": "=IMAGINARY(\"45\")"
+    },
+    {
+      "id": "IMAGINARY.4",
+      "f": "=IMAGINARY(\"i\")"
+    },
+    {
+      "id": "IMAGINARY.5",
+      "f": "=IMAGINARY(Data!E2)"
+    },
+    {
+      "id": "IMREAL.1",
+      "f": "=IMREAL(\"3+5i\")"
+    },
+    {
+      "id": "IMREAL.2",
+      "f": "=IMREAL(\"4j\")"
+    },
+    {
+      "id": "IMREAL.3",
+      "f": "=IMREAL(-2.5)"
+    },
+    {
+      "id": "IMREAL.4",
+      "f": "=IMREAL(Data!F2)"
+    },
+    {
+      "id": "IMARGUMENT.1",
+      "f": "=IMARGUMENT(COMPLEX(0, 1))"
+    },
+    {
+      "id": "IMARGUMENT.2",
+      "f": "=IMARGUMENT(1)"
+    },
+    {
+      "id": "IMARGUMENT.3",
+      "f": "=IMARGUMENT(\"1+1i\")"
+    },
+    {
+      "id": "IMARGUMENT.4",
+      "f": "=IMARGUMENT(0)"
+    },
+    {
+      "id": "IMARGUMENT.5",
+      "f": "=IMARGUMENT(\"-1\")"
+    },
+    {
+      "id": "IMARGUMENT.6",
+      "f": "=IMARGUMENT(\"-i\")"
+    },
+    {
+      "id": "IMCONJUGATE.1",
+      "f": "=IMCONJUGATE(\"3+4i\")"
+    },
+    {
+      "id": "IMCONJUGATE.2",
+      "f": "=IMCONJUGATE(\"1-2j\")"
+    },
+    {
+      "id": "IMCONJUGATE.3",
+      "f": "=IMCONJUGATE(5)"
+    },
+    {
+      "id": "IMCONJUGATE.4",
+      "f": "=IMCONJUGATE(\"i\")"
+    },
+    {
+      "id": "IMSUM.1",
+      "f": "=IMSUM(\"1+2i\", \"3+4i\")"
+    },
+    {
+      "id": "IMSUM.2",
+      "f": "=IMSUM(\"20+5j\", 4, \"j\")"
+    },
+    {
+      "id": "IMSUM.3",
+      "f": "=IMSUM(COMPLEX(2, 5), COMPLEX(4, 2))"
+    },
+    {
+      "id": "IMSUM.4",
+      "f": "=IMSUM(\"4+3i\", \"1+2j\")",
+      "differs": {
+        "libreoffice": "LibreOffice adds an i number to a j number; Google says \"you can't\", so LiveDoc refuses it, #VALUE!"
+      },
+      "note": "Awaits Google's answer: which error mixed suffixes are."
+    },
+    {
+      "id": "IMSUM.5",
+      "f": "=IMSUM(Data!E2:F2)"
+    },
+    {
+      "id": "IMSUM.6",
+      "f": "=IMSUM(\"1+i\", \"-1-i\")"
+    },
+    {
+      "id": "IMSUB.1",
+      "f": "=IMSUB(\"13+4i\", \"5+3i\")"
+    },
+    {
+      "id": "IMSUB.2",
+      "f": "=IMSUB(\"3+4i\", \"3+4i\")"
+    },
+    {
+      "id": "IMSUB.3",
+      "f": "=IMSUB(\"1+i\", \"1j\")",
+      "differs": {
+        "libreoffice": "LibreOffice subtracts a j number from an i number; Google refuses mixed suffixes (IMSUM, IMDIV), so LiveDoc does, #VALUE!"
+      },
+      "note": "Awaits Google's answer: which error mixed suffixes are."
+    },
+    {
+      "id": "IMSUB.4",
+      "f": "=IMSUB(5, \"2i\")"
+    },
+    {
+      "id": "IMPRODUCT.1",
+      "f": "=IMPRODUCT(COMPLEX(3, 4), 2)"
+    },
+    {
+      "id": "IMPRODUCT.2",
+      "f": "=IMPRODUCT(\"3+4i\", \"2i\", \"2i\")"
+    },
+    {
+      "id": "IMPRODUCT.3",
+      "f": "=IMPRODUCT(\"1+i\", \"1+j\")",
+      "differs": {
+        "libreoffice": "LibreOffice multiplies an i number by a j number; Google says \"you can't\", so LiveDoc refuses it, #VALUE!"
+      },
+      "note": "Awaits Google's answer: which error mixed suffixes are."
+    },
+    {
+      "id": "IMPRODUCT.4",
+      "f": "=IMPRODUCT(\"i\", \"i\")"
+    },
+    {
+      "id": "IMDIV.1",
+      "f": "=IMDIV(\"11+16i\", \"3+2i\")"
+    },
+    {
+      "id": "IMDIV.2",
+      "f": "=IMDIV(\"4+2j\", 2)"
+    },
+    {
+      "id": "IMDIV.3",
+      "f": "=IMDIV(COMPLEX(11, 16), COMPLEX(3, 2))"
+    },
+    {
+      "id": "IMDIV.4",
+      "f": "=IMDIV(\"1+i\", 0)"
+    },
+    {
+      "id": "IMDIV.5",
+      "f": "=IMDIV(1, \"i\")"
+    },
+    {
+      "id": "IMEXP.1",
+      "f": "=IMEXP(\"1+i\")"
+    },
+    {
+      "id": "IMEXP.2",
+      "f": "=IMEXP(\"2-2j\")"
+    },
+    {
+      "id": "IMEXP.3",
+      "f": "=IMEXP(0)"
+    },
+    {
+      "id": "IMEXP.4",
+      "f": "=IMEXP(\"i\")"
+    },
+    {
+      "id": "IMLOG10.1",
+      "f": "=IMLOG10(\"1+i\")"
+    },
+    {
+      "id": "IMLOG10.2",
+      "f": "=IMLOG10(COMPLEX(25, 34))"
+    },
+    {
+      "id": "IMLOG10.3",
+      "f": "=IMLOG10(100)"
+    },
+    {
+      "id": "IMLOG10.4",
+      "f": "=IMLOG10(0)"
+    },
+    {
+      "id": "IMLOG2.1",
+      "f": "=IMLOG2(\"1+i\")"
+    },
+    {
+      "id": "IMLOG2.2",
+      "f": "=IMLOG2(COMPLEX(25, 34))"
+    },
+    {
+      "id": "IMLOG2.3",
+      "f": "=IMLOG2(100)"
+    },
+    {
+      "id": "IMLOG2.4",
+      "f": "=IMLOG2(0)"
+    },
+    {
+      "id": "IMSIN.1",
+      "f": "=IMSIN(\"1+i\")"
+    },
+    {
+      "id": "IMSIN.2",
+      "f": "=IMSIN(\"3-2j\")"
+    },
+    {
+      "id": "IMSIN.3",
+      "f": "=IMSIN(0)"
+    },
+    {
+      "id": "IMSIN.4",
+      "f": "=IMSIN(2)"
+    },
+    {
+      "id": "IMCOS.1",
+      "f": "=IMCOS(\"1+i\")"
+    },
+    {
+      "id": "IMCOS.2",
+      "f": "=IMCOS(\"3-2j\")"
+    },
+    {
+      "id": "IMCOS.3",
+      "f": "=IMCOS(0)"
+    },
+    {
+      "id": "IMTAN.1",
+      "f": "=IMTAN(\"1+i\")"
+    },
+    {
+      "id": "IMTAN.2",
+      "f": "=IMTAN(\"2-3j\")"
+    },
+    {
+      "id": "IMTAN.3",
+      "f": "=IMTAN(0)"
+    },
+    {
+      "id": "IMCOT.1",
+      "f": "=IMCOT(\"1+i\")"
+    },
+    {
+      "id": "IMCOT.2",
+      "f": "=IMCOT(0)"
+    },
+    {
+      "id": "IMCOT.3",
+      "f": "=IMCOT(4)"
+    },
+    {
+      "id": "IMSEC.1",
+      "f": "=IMSEC(\"1+i\")"
+    },
+    {
+      "id": "IMSEC.2",
+      "f": "=IMSEC(0)"
+    },
+    {
+      "id": "IMCSC.1",
+      "f": "=IMCSC(COMPLEX(4, 3))"
+    },
+    {
+      "id": "IMCSC.2",
+      "f": "=IMCSC(0)"
+    },
+    {
+      "id": "IMCSC.3",
+      "f": "=IMCSC(0.213)"
+    },
+    {
+      "id": "IMSINH.1",
+      "f": "=IMSINH(\"1+i\")"
+    },
+    {
+      "id": "IMSINH.2",
+      "f": "=IMSINH(\"3-2j\")"
+    },
+    {
+      "id": "IMSINH.3",
+      "f": "=IMSINH(0)"
+    },
+    {
+      "id": "IMCOSH.1",
+      "f": "=IMCOSH(\"1+i\")"
+    },
+    {
+      "id": "IMCOSH.2",
+      "f": "=IMCOSH(0)"
+    },
+    {
+      "id": "IMSECH.1",
+      "f": "=IMSECH(\"1+i\")"
+    },
+    {
+      "id": "IMSECH.2",
+      "f": "=IMSECH(0)"
+    },
+    {
+      "id": "IMCSCH.1",
+      "f": "=IMCSCH(\"1+i\")"
+    },
+    {
+      "id": "IMCSCH.2",
+      "f": "=IMCSCH(0)"
+    },
+    {
+      "id": "IMLOG.1",
+      "f": "=IMLOG(\"1+i\", 3.5)",
+      "expect": [["0.276647377832556+0.626932774314643i"]],
+      "cite": "https://support.google.com/docs/answer/9366486 (example `=IMLOG(\"1+i\", 3.5)` gives 0.276647377832556+0.626932774314643i)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMLOG is #NAME? there"
+      }
+    },
+    {
+      "id": "IMLOG.2",
+      "f": "=IMLOG(COMPLEX(25, 34), 2.3)",
+      "expect": [["4.49324546771284+1.12470086031758i"]],
+      "cite": "https://support.google.com/docs/answer/9366486 (example `=IMLOG(COMPLEX(25, 34), 2.3)` gives 4.49324546771284+1.12470086031758i)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMLOG is #NAME? there"
+      }
+    },
+    {
+      "id": "IMLOG.3",
+      "f": "=IMLOG(100, 10)",
+      "expect": [["2"]],
+      "cite": "https://support.google.com/docs/answer/9366486 (example `=IMLOG(100, 10)` gives 2)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMLOG is #NAME? there"
+      }
+    },
+    {
+      "id": "IMCOTH.1",
+      "f": "=IMCOTH(COMPLEX(4,1))",
+      "expect": [["0.999720649533931-0.000609900253822228i"]],
+      "cite": "https://support.google.com/docs/answer/9366256 (example `=IMCOTH(COMPLEX(4,1))` gives 0.999720649533931-0.000609900253822228i)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMCOTH is #NAME? there"
+      }
+    },
+    {
+      "id": "IMCOTH.2",
+      "f": "=IMCOTH(3.5)",
+      "expect": [["1.00182542850644"]],
+      "cite": "https://support.google.com/docs/answer/9366256 (example `=IMCOTH(3.5)` gives 1.00182542850644)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMCOTH is #NAME? there"
+      }
+    },
+    {
+      "id": "IMCOTH.3",
+      "f": "=IMCOTH(\"3+2i\")",
+      "expect": [["0.996757796569358+0.00373971037633696i"]],
+      "cite": "https://support.google.com/docs/answer/9366256 (example `=IMCOTH(\"3+2i\")` gives 0.996757796569358+0.00373971037633696i)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMCOTH is #NAME? there"
+      }
+    },
+    {
+      "id": "IMTANH.1",
+      "f": "=IMTANH(COMPLEX(4,1))",
+      "expect": [["1.00027905623447+0.00061024092137626i"]],
+      "cite": "https://support.google.com/docs/answer/9366655 (example `=IMTANH(COMPLEX(4,1))` gives 1.00027905623447+0.00061024092137626i)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMTANH is #NAME? there"
+      }
+    },
+    {
+      "id": "IMTANH.2",
+      "f": "=IMTANH(3.5)",
+      "expect": [["0.998177897611199"]],
+      "cite": "https://support.google.com/docs/answer/9366655 (example `=IMTANH(3.5)` gives 0.998177897611199)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMTANH is #NAME? there"
+      }
+    },
+    {
+      "id": "IMTANH.3",
+      "f": "=IMTANH(\"3+2i\")",
+      "expect": [["1.00323862735361-0.00376402564150425i"]],
+      "cite": "https://support.google.com/docs/answer/9366655 (example `=IMTANH(\"3+2i\")` gives 1.00323862735361-0.00376402564150425i)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.IMTANH is #NAME? there"
+      }
+    }
+  ]
+}
