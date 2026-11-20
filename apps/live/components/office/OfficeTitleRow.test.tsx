@@ -216,3 +216,24 @@ describe('OfficeTitleRow, the document parts', () => {
     expect(screen.queryByRole('link', { name: 'Explorer' })).toBeNull();
   });
 });
+
+describe('OfficeTitleRow, the save status', () => {
+  it('shows the status the kind reports, and none when it reports none', () => {
+    const root = { current: null };
+    const props = {
+      name: 'Minutes',
+      format: '.ODT',
+      formatTitle: 'OpenDocument format',
+      problem: null,
+      catalogue: CATALOGUE,
+      level: 'edit' as const,
+      actions: {},
+      shortcuts: TEXT_DOCUMENT_SHORTCUTS,
+      keyScope: root,
+    };
+    const { rerender } = render(<OfficeTitleRow {...props} saveStatus="saving" />);
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeTruthy();
+    rerender(<OfficeTitleRow {...props} saveStatus={null} />);
+    expect(document.querySelector('[data-save-status]')).toBeNull();
+  });
+});

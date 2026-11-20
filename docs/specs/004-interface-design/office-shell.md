@@ -1,7 +1,7 @@
 # Office shell
 
 **Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer and the
-title row (but its save status) are built; the toolbar, side panel, dialogs, context menus and the shortcuts dialog
+title row are built; the toolbar, side panel, dialogs, context menus and the shortcuts dialog
 are specified.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
@@ -67,7 +67,8 @@ kind's component.
 
 The shell draws the title row's parts the same for every kind, from what the editor page hands it (the document's
 name, star, folder, sharing, people and account), so a kind adds only its own (its format pill, its save status, its
-follow of a person's selection). What each part is, its copy and who sees it:
+follow of a person's selection). The save status is drawn by the shell from one of five statuses the kind
+reports. What each part is, its copy and who sees it:
 [Editing surface](../034-text-documents/editing-surface.md#the-title-row).
 
 - Left to right: the mark, then the name line (name, format pill, star, move, save status) over the menu bar; on the

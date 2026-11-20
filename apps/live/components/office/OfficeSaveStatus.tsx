@@ -1,0 +1,52 @@
+'use client';
+
+// The save status in the office title row (docs/specs/034-text-documents/editing-surface.md "The title row"): its
+// glyph, its words while something is not yet safe, and a press for what it means. Offline and Failed are announced
+// as they begin; the rest change too often to be worth a word.
+import { useRef, useState } from 'react';
+import { HoverCard, useClickOutside, useEscape } from '@livedoc/ui';
+import { OfficeSaveIcons } from './office-icons';
+import { isUnsettled, OFFICE_SAVE_STATUS, type OfficeSaveStatus } from './office-save-status';
+
+const ANNOUNCED: readonly OfficeSaveStatus[] = ['offline', 'failed'];
+
+export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus }) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  useClickOutside(box, () => setOpen(false), open);
+  useEscape(() => setOpen(false), { enabled: open });
+  const { words, meaning } = OFFICE_SAVE_STATUS[status];
+  const Icon = OfficeSaveIcons[status];
+  const failed = status === 'failed';
+  const tone = failed ? 'text-(--office-error)' : 'text-(--office-muted)';
+  return (
+    <div ref={box} className="relative flex min-w-0 shrink items-center">
+      <HoverCard title={words}>
+        <button
+          type="button"
+          aria-label={words}
+          aria-expanded={open}
+          data-save-status={status}
+          onClick={() => setOpen((was) => !was)}
+          className={`relative flex h-8 min-w-8 items-center gap-1.5 rounded-full px-1.5 outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) ${tone}`}
+        >
+          <Icon />
+          {isUnsettled(status) ? (
+            <span data-save-words="" className="truncate text-sm">
+              {words}
+            </span>
+          ) : null}
+        </button>
+      </HoverCard>
+      <span role="status" className="sr-only">
+        {ANNOUNCED.includes(status) ? words : ''}
+      </span>
+      {open ? (
+        <div className="absolute top-full left-0 z-30 mt-1 w-72 rounded-md bg-(--office-menu) px-4 py-3 text-sm text-(--office-ink) shadow-lg">
+          <p className={`font-medium ${failed ? 'text-(--office-error)' : ''}`}>{words}</p>
+          <p className="mt-1 text-(--office-muted)">{meaning}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}

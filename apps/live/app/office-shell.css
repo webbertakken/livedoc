@@ -20,6 +20,7 @@
   --office-share-ink: #001d35;
   --office-pressed: #d3e3fd;
   --office-pressed-ink: #041e49;
+  --office-error: #b3261e;
 }
 
 .dark .office-shell {
@@ -38,4 +39,5 @@
   --office-share-ink: #c2e7ff;
   --office-pressed: #0842a0;
   --office-pressed-ink: #d3e3fd;
+  --office-error: #f2b8b5;
 }

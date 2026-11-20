@@ -1,7 +1,7 @@
 # Editing surface
 
 **Status: partly built.** The menu bar (every menu and item, those not yet built dimmed), the tool finder and the
-title row (but its save status, comment history and mode switch) are built; the rest is specified.
+title row (but its comment history and mode switch) are built; the rest is specified.
 
 What a person sees and works with on a [text document](text-document.md): Google Docs' layout, control for control,
 built on the shared [Office shell](../004-interface-design/office-shell.md). How literal the look is (Google's metrics
@@ -36,10 +36,25 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 - **Star** ("Star", "Starred", `aria-pressed`): LiveDoc's favourites, for everyone the document opens for.
 - **Move** (a folder glyph, "Move"): the shared folder picker over My Documents and the person's teams, for whoever
   files the document (its owner or a member of its team); File > Move opens it too.
-- **Save status** (a cloud glyph): "Saving…", "All changes saved", "Saved in This Browser", "Offline: changes are kept
-  in this browser" and, on failure, "Can't save: we keep trying" in the error colour. A press opens the details.
-- **Last edit**: none in the title row (Google moved it into File > Version history); a press on the save status
-  shows "Last edit was <time> by <name>", which opens version history.
+- **Save status**: one glyph and its words, for whoever may edit the writing (a Viewer saves nothing, so sees none):
+
+  | Status       | When                                             | Glyph       | Words                                       |
+  | ------------ | ------------------------------------------------ | ----------- | ------------------------------------------- |
+  | Saving       | an edit made here is not yet confirmed           | cloud-sync  | "Saving…"                                   |
+  | Saved        | the room holds every edit made here              | cloud-check | "All changes saved"                         |
+  | This Browser | in This Browser, every edit written there        | app-window  | "Saved in This Browser"                     |
+  | Offline      | the room is not open                             | cloud-off   | "Offline: changes are kept in this browser" |
+  | Failed       | an edit refused, or one this browser cannot keep | cloud-alert | "Can't save: we keep trying"                |
+
+  Failed wins over every other status; a text document in This Browser is Saving while a write is due. The words show
+  beside the glyph while the status is Saving, Offline or Failed (Failed in the error colour), and are the glyph's
+  tooltip and accessible name always `(default)`. Offline and Failed are announced politely as they begin.
+  A press opens the details: the words again and one sentence of what it means (the copy is in the code).
+  A text document in This Browser retries a failed write every `TEXT_DOCUMENT_SAVE_RETRY_MS` (5 s) `(default)`;
+  one in a room is retried by its catch-up when the room opens again.
+
+- **Last edit**: none in the title row (Google moved it into File > Version history); once version history is built,
+  the save status's details show "Last edit was <time> by <name>", which opens it.
 - **Comment history** (a speech bubble glyph, "Open comment history", ⌘⌥⇧A): the comments panel. Not drawn until
   comments are built ([Review](review.md)), never a dead button.
 - **Editing mode switch**: a pill with the mode's glyph and name, "Editing" (pencil), "Suggesting" (pencil with a

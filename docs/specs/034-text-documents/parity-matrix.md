@@ -12,19 +12,19 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Title row
 
-| Row              | Rule                                                                               | Status                                                        | Spec                                                             |
-| ---------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------- |
-| Name             | The document's name, renamed in place, with its format (`.DOCX`, `.ODT`) beside it | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Editing surface](editing-surface.md#the-title-row)              |
-| Star             | Favourite the document (LiveDoc's favourites)                                      | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Editing surface](editing-surface.md#the-title-row)              |
-| Move             | Move to a folder (LiveDoc's folders)                                               | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Editing surface](editing-surface.md#the-title-row)              |
-| Save status      | Saved, saving, offline, in This Browser                                            | specified                                                     | [Editing surface](editing-surface.md#the-title-row)              |
-| Last edit        | "Last edit was …" opens version history                                            | specified                                                     | [Review](review.md#version-history)                              |
-| Comment history  | Opens the comments panel                                                           | specified                                                     | [Review](review.md#comments)                                     |
-| Meeting button   | Join or present in a meeting                                                       | left out (C3)                                                 | [Tools](tools.md#google-only-services)                           |
-| Mode switch      | Editing, Suggesting, Viewing                                                       | specified                                                     | [Review](review.md#editing-modes)                                |
-| Share            | LiveDoc's share dialog, links and roles                                            | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Files and print](files-and-print.md#sharing)                    |
-| Presence         | Avatars of everyone on the document                                                | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Live editing and storage](live-editing-and-storage.md#presence) |
-| Assistant button | Gemini, or any assistant                                                           | left out (C3)                                                 | [Tools](tools.md#google-only-services)                           |
+| Row              | Rule                                                                               | Status                                                               | Spec                                                             |
+| ---------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Name             | The document's name, renamed in place, with its format (`.DOCX`, `.ODT`) beside it | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Editing surface](editing-surface.md#the-title-row)              |
+| Star             | Favourite the document (LiveDoc's favourites)                                      | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Editing surface](editing-surface.md#the-title-row)              |
+| Move             | Move to a folder (LiveDoc's folders)                                               | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Editing surface](editing-surface.md#the-title-row)              |
+| Save status      | Saved, saving, offline, in This Browser                                            | built (`OfficeSaveStatus.test.tsx`, `text-document-offline.spec.ts`) | [Editing surface](editing-surface.md#the-title-row)              |
+| Last edit        | "Last edit was …" opens version history                                            | specified                                                            | [Review](review.md#version-history)                              |
+| Comment history  | Opens the comments panel                                                           | specified                                                            | [Review](review.md#comments)                                     |
+| Meeting button   | Join or present in a meeting                                                       | left out (C3)                                                        | [Tools](tools.md#google-only-services)                           |
+| Mode switch      | Editing, Suggesting, Viewing                                                       | specified                                                            | [Review](review.md#editing-modes)                                |
+| Share            | LiveDoc's share dialog, links and roles                                            | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Files and print](files-and-print.md#sharing)                    |
+| Presence         | Avatars of everyone on the document                                                | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Live editing and storage](live-editing-and-storage.md#presence) |
+| Assistant button | Gemini, or any assistant                                                           | left out (C3)                                                        | [Tools](tools.md#google-only-services)                           |
 
 ## File menu
 

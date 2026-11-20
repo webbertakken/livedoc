@@ -15,6 +15,7 @@ import {
   TextDocumentState,
 } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
+import { saveFactsStore, type SaveFactsSource } from './text-document-save-status';
 import type { TextDocumentStateSince } from '@/lib/api/text-documents';
 import { CopyLedger } from './copy-ledger';
 import { TextDocumentBus } from './text-document-bus';
@@ -51,6 +52,8 @@ export type RoomYjsBinding = {
   close: () => void;
   /** Settles once every local copy write and removal asked so far has. */
   settled: () => Promise<void>;
+  /** What the save status reads (editing-surface.md "The title row"). */
+  saveFacts: SaveFactsSource;
 };
 
 const isEmpty = (update: Uint8Array) => update.byteLength <= EMPTY_UPDATE_BYTES;
@@ -116,6 +119,15 @@ export async function openRoomYjs(deps: RoomYjsDeps): Promise<RoomYjsBinding> {
   let chain: Promise<void> = Promise.resolve();
   let catching = false;
   let catchAgain = false;
+  // Failed: the door refused an update, or this browser could not keep its copy; both last until the room holds
+  // everything here (or, for the copy, until a write succeeds).
+  const facts = saveFactsStore(tabId, debugLog);
+  let refused = false;
+  let copyFailed = false;
+  const syncFacts = () => {
+    if (CopyLedger.isClean(ledger)) refused = copyFailed = false;
+    facts.set({ pending: !CopyLedger.isClean(ledger), failed: refused || copyFailed });
+  };
 
   for (const update of early.splice(0)) Y.applyUpdate(live, update, ROOM_ORIGIN);
 
@@ -129,17 +141,22 @@ export async function openRoomYjs(deps: RoomYjsDeps): Promise<RoomYjsBinding> {
       .then(() => deps.copies.write({ ...key, update, savedAt: Date.now() }))
       .then(() => {
         copyStored = true;
+        copyFailed = false;
+        syncFacts();
         debugLog('[text-document] local-copy saved', { tabId, bytes: update.byteLength });
       })
-      .catch((error: unknown) =>
-        debugLog('[text-document] local-copy-failed', { tabId, error: String(error) }),
-      );
+      .catch((error: unknown) => {
+        copyFailed = true;
+        syncFacts();
+        debugLog('[text-document] local-copy-failed', { tabId, error: String(error) });
+      });
   };
   const scheduleCopy = () => {
     if (timer === null) timer = setTimeout(writeCopy, saveDelay);
   };
   // The ledger changed: once clean, the room holds everything here, so the copy goes and the base moves up.
   const ledgerChanged = () => {
+    syncFacts();
     if (!CopyLedger.isClean(ledger)) {
       scheduleCopy();
       return;
@@ -165,6 +182,7 @@ export async function openRoomYjs(deps: RoomYjsDeps): Promise<RoomYjsBinding> {
   // not retried until the next open, so a refused update never loops.
   const send = async (update: Uint8Array, edit: boolean): Promise<boolean> => {
     ledger = CopyLedger.sent(ledger);
+    syncFacts();
     const encoded = base64OfBytes(update);
     let stored = false;
     const framed = encoded.length <= TEXT_DOCUMENT_FRAME_CHARS;
@@ -176,6 +194,7 @@ export async function openRoomYjs(deps: RoomYjsDeps): Promise<RoomYjsBinding> {
         debugLog('[text-document] sent-by-door', { tabId, bytes: update.byteLength });
       }
     } catch (error: unknown) {
+      refused = true;
       debugLog('[text-document] sent-by-door refused', { tabId, error: String(error) });
     }
     ledger = CopyLedger.settled(ledger, stored);
@@ -261,5 +280,6 @@ export async function openRoomYjs(deps: RoomYjsDeps): Promise<RoomYjsBinding> {
       writeCopy();
     },
     settled: () => chain,
+    saveFacts: { get: facts.get, subscribe: facts.subscribe },
   };
 }
