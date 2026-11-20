@@ -14,15 +14,7 @@ import {
   tooBig,
   type FnDef,
 } from '../fn';
-import {
-  dims,
-  err,
-  isError,
-  scalarOf,
-  toBool,
-  type Value,
-  type ValueArray,
-} from '../values';
+import { dims, err, isError, scalarOf, toBool, type Value, type ValueArray } from '../values';
 import { everyColumn, keyIdentity, rowKeys, sortedIndexes, type RowKey } from './sorting';
 
 const NOTHING = err('#N/A', 'No rows matched');
@@ -42,16 +34,15 @@ function ooxmlSort(range: ValueArray, args: EvalValue[], f: Frame): Value {
   const index = intArg(args[1]!, f);
   const order = intArg(args[2]!, f);
   const byCol = boolArg(args[3]!, f);
-  for (const x of [index, order, byCol]) if (isError(x)) return x;
+  if (isError(index)) return index;
+  if (isError(order)) return order;
+  if (isError(byCol)) return byCol;
   if (order !== 1 && order !== -1) return err('#VALUE!', 'The sort order is 1 or -1');
   const lines = byCol ? transposed(range) : range.rows;
   const width = lines[0]?.length ?? 0;
-  if ((index as number) < 1 || (index as number) > width)
+  if (index < 1 || index > width)
     return err('#VALUE!', `There is no ${byCol ? 'row' : 'column'} ${index} to sort by`);
-  const key: RowKey = {
-    values: lines.map((l) => scalarOf(l[(index as number) - 1]!)),
-    asc: order === 1,
-  };
+  const key: RowKey = { values: lines.map((l) => scalarOf(l[index - 1]!)), asc: order === 1 };
   const sorted = sortedIndexes(lines.length, [key]).map((i) => lines[i]!);
   return { rows: byCol ? transposed({ rows: sorted }) : sorted };
 }
