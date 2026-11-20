@@ -237,8 +237,9 @@ export async function apiCreateDocument(
     sheets?: SheetCreateRequest[];
     // The type catalogue (docs/specs/026-plan/item-types.md): a copy's, a sync's or a Drive file's.
     itemTypes?: ItemTypeCatalogue | null;
-    // Text document tabs opened from files (docs/specs/034-text-documents/files-and-print.md "Opening"), base64.
-    textDocuments?: { tabId: string; file: string }[];
+    // Text document tabs opened from files (docs/specs/034-text-documents/files-and-print.md "Opening"), or a copy's
+    // live states (live-editing-and-storage.md "Copies"), base64.
+    textDocuments?: ({ tabId: string; file: string } | { tabId: string; state: string })[];
     // A spreadsheet's workbook record (docs/specs/029-sheets/spreadsheet.md "Making a spreadsheet"): its tabs are
     // all sheet tabs, its sheets in `sheets`.
     workbook?: WorkbookRecord;

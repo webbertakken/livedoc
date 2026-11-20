@@ -6,8 +6,20 @@
 // region not on screen is skipped. Each region's root carries `data-region` with its name.
 import { useEffect } from 'react';
 
-/** The regions, in screen order. */
-export const EDITOR_REGIONS = ['header', 'palette', 'canvas', 'controls', 'tabs'] as const;
+/** The regions, in screen order: the canvas's, and the office shell's parts for a kind outside the canvas (menu bar,
+ *  toolbar, the panels either side of the document). Only one set is on screen at a time. */
+export const EDITOR_REGIONS = [
+  'header',
+  'menubar',
+  'toolbar',
+  'palette',
+  'left',
+  'canvas',
+  'document',
+  'right',
+  'controls',
+  'tabs',
+] as const;
 export type EditorRegion = (typeof EDITOR_REGIONS)[number];
 
 const FOCUSABLE =
@@ -27,10 +39,15 @@ export function shownRegions(doc: Document): HTMLElement[] {
   return out;
 }
 
-/** Where focus lands in a region: the root itself when it takes focus (the canvas), else its first shown control. */
+/** Where focus lands in a region: the root itself when it takes focus (the canvas), else its first shown control of
+ *  its own (not one of a region inside it) in the tab order, so a menu bar or toolbar lands on its tab stop. */
 export function regionTarget(root: HTMLElement): HTMLElement | null {
   if (root.tabIndex >= 0 && root.hasAttribute('tabindex')) return root;
-  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].find(shown) ?? null;
+  return (
+    [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].find(
+      (el) => el.tabIndex >= 0 && el.closest('[data-region]') === root && shown(el),
+    ) ?? null
+  );
 }
 
 /** The region F6 (or Shift+F6, `back`) moves to from the focused element, wrapping round. */

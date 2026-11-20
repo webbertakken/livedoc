@@ -17,8 +17,10 @@ export const FILTERED_EMPTY_TITLE = 'No documents match these filters';
 export const LOAD_FAILED_TITLE = 'Couldn’t load documents';
 
 /**
- * The polite live region that says how many documents the lens left, once the lens has stopped
- * changing for `LENS_SETTLE_MS`. Silent on mount: arriving at a view is not a change.
+ * The polite live region that says how many documents the lens left, once the lens has stopped changing for
+ * `LENS_SETTLE_MS`, and again whenever that count changes after (a view still catching up with its lens, or a list
+ * still loading): it always says what is shown now, never a count from before the view caught up. Silent on mount:
+ * arriving at a view is not a change.
  */
 export function LensAnnouncer({
   input,
@@ -32,23 +34,18 @@ export function LensAnnouncer({
   /** Another region speaks for this view (the team library counts its own rows). */
   muted?: boolean;
 }) {
-  const [message, setMessage] = useState('');
+  // The lens the region has settled on, if any: the count speaks only while it is the lens there is now.
+  const [settledOn, setSettledOn] = useState<string | null>(null);
   // The lens the view arrived with; null once it has changed, so changing back speaks too.
   const arrived = useRef<string | null>(input);
-  const counts = useRef({ shown, total, muted });
-  useEffect(() => {
-    counts.current = { shown, total, muted };
-  }, [shown, total, muted]);
   useEffect(() => {
     if (input === arrived.current) return;
     arrived.current = null;
-    // Read when the lens settles: typing on Home has opened Search results by then.
-    const timer = window.setTimeout(() => {
-      const { shown, total, muted } = counts.current;
-      if (!muted) setMessage(announceResults(shown, total));
-    }, LENS_SETTLE_MS);
+    // Settled when typing stops: typing on Home has opened Search results by then.
+    const timer = window.setTimeout(() => setSettledOn(input), LENS_SETTLE_MS);
     return () => window.clearTimeout(timer);
   }, [input]);
+  const message = settledOn === input && !muted ? announceResults(shown, total) : '';
   return (
     <div role="status" aria-live="polite" className="sr-only">
       {message}

@@ -3,6 +3,11 @@ import { sqliteD1 } from '../test-sqlite-d1';
 import { remapTabDataLinks } from '../document-room/document-content';
 import { copyDocument } from './documents';
 import { upsertTab } from './tabs';
+import { Body, TextDocumentState } from '@livedoc/text-documents';
+import {
+  appendTextDocumentUpdate,
+  readTextDocumentState,
+} from '../text-documents/text-document-store';
 
 // copyDocument re-points a copied tab's internal links at the copy's own tabs.
 describe('remapTabDataLinks', () => {
@@ -94,6 +99,29 @@ describe('copyDocument', () => {
     const copy = await copyDocument(db.env, 'd1', 'd2', 'me', 'Copy', 't2');
     expect(copy?.tabs.map((t) => t.name)).toEqual(['Two']);
     expect(await copyDocument(db.env, 'd1', 'd3', 'me', 'Copy', 'nope')).toBeNull();
+  });
+
+  // docs/specs/034-text-documents/live-editing-and-storage.md "Copies": a text document's state comes with its tab.
+  it("copies a text document's writing under the tab's new id", async () => {
+    const db = await source();
+    await upsertTab(
+      db.env,
+      'd1',
+      { id: 't3', name: 'Notes', kind: 'text-document', format: 'odf', elements: [] } as never,
+      2,
+    );
+    await appendTextDocumentUpdate(
+      db.env,
+      't3',
+      TextDocumentState.fromBody(Body.of('Kept in the copy')),
+    );
+    await copyDocument(db.env, 'd1', 'd2', 'me', 'Copy');
+    const copied = tabsOf(db, 'd2').find((t) => t.name === 'Notes')!;
+    expect(copied.id).not.toBe('t3');
+    const state = await readTextDocumentState(db.env, copied.id);
+    expect(TextDocumentState.paragraphs(TextDocumentState.load([state]))).toEqual(
+      Body.of('Kept in the copy'),
+    );
   });
 
   it('takes the new row back when the import fails, leaving the source whole', async () => {

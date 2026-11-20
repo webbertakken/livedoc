@@ -4,7 +4,9 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState, type ReactNode } from 'react';
 import { setSessionSharePassword } from '@/lib/api-client';
 import { ensureIconCatalogs } from '@/lib/icon-registry';
-import { DOCUMENT_CONTENT_CODE, EDITOR_SURFACE_CODE } from '@/lib/editor-deferred-code';
+import { EDITOR_SURFACE_CODE } from '@/lib/editor-deferred-code';
+import { useCanvasCode } from '@/lib/canvas-code/useCanvasCode';
+import { hasCanvasTab } from '@livedoc/document';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { useKindFamilies } from '@/lib/element-kinds/useKindFamilies';
 import {
@@ -75,15 +77,18 @@ export default function LivePage({ surface = 'app' }: { surface?: EditorSurface 
   useEffect(() => {
     void ensureIconCatalogs();
   }, []);
-  // The code the editor loads on demand (lib/editor-deferred-code.ts): what a board may draw on open
-  // alongside the document request, and the surfaces someone opens once the document has rendered.
-  useEffect(() => prefetchWhenIdle(DOCUMENT_CONTENT_CODE), []);
+  // The code the editor loads on demand (lib/editor-deferred-code.ts): the surfaces someone opens, once the document
+  // has rendered.
   useEffect(
     () => (state.loadingDocument ? undefined : prefetchWhenIdle(EDITOR_SURFACE_CODE)),
     [state.loadingDocument],
   );
-  // Every element kind family, once the board is in (lib/element-kinds).
-  useKindFamilies(state.loadingDocument);
+  // The canvas's code, its surfaces and every element kind family, once a document with a canvas tab is in
+  // (lib/canvas-code, lib/element-kinds); a document whose tabs all have a surface fetches none of them
+  // (docs/specs/006-document/kinds-outside-the-canvas.md "The canvas's code").
+  const needsCanvas = hasCanvasTab(state.tabs, state.documentWorkbook !== null);
+  useCanvasCode({ settled: !state.loadingDocument, needsCanvas });
+  useKindFamilies(state.loadingDocument || !needsCanvas);
   // Leaving a document (another document, the Explorer) flushes its pending
   // Google Drive write (docs/specs/022-drive-mirror/drive-mirror.md, "Cadence").
   useEffect(() => {

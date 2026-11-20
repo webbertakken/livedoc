@@ -15,7 +15,7 @@
 import type { AccessLevel } from './access-levels';
 import type { DocumentSource } from './document-source';
 import type { DriveMode } from './drive';
-import type { BackgroundPattern, ShapeKind, Tab, TabOpening } from '@livedoc/document';
+import type { BackgroundPattern, ShapeKind, Tab, TabKind, TabOpening } from '@livedoc/document';
 import type { CreationTabKind, TemplateFamily } from './placement-defaults';
 import type { ItemTypeCatalogue } from '@livedoc/items';
 import type { WorkbookRecord } from '@livedoc/sheets';
@@ -183,6 +183,9 @@ export type TabSummary = {
   // Set for a tab outside a tab-scoped visitor's scope (docs/specs/013-workspace/tab-scoped-share-links.md):
   // its name is blanked, its folder dropped, and its content never served.
   outOfScope?: true;
+  // The tab's kind (docs/specs/006-document/kinds-outside-the-canvas.md "The surface"), so the editor knows a tab's
+  // surface before its body loads; absent for a general tab.
+  kind?: TabKind;
 };
 
 // Full tab payload returned by `GET /api/documents/:id/tabs/:tabId`:

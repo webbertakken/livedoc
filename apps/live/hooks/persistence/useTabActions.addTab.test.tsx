@@ -88,3 +88,23 @@ describe('adding a tab without the right to change tabs', () => {
       expect(run(choice, false).commitTabs).not.toHaveBeenCalled();
   });
 });
+
+// docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip": Text document adds a text document tab, born
+// ODF, carrying no canvas look or mode.
+describe('adding a Text document', () => {
+  it('adds a text document tab named Text document, born ODF', () => {
+    const added = add('text-document', { ...first, opensIn: 'draw', theme: 'slate' });
+    expect(added).toEqual({
+      id: 't2',
+      name: 'Text document',
+      kind: 'text-document',
+      format: 'odf',
+      elements: [],
+    });
+    expect(track).toHaveBeenCalledWith('Tab', 'Created', 'TextDocument');
+  });
+
+  it('adds none for a session that cannot change the tabs', () => {
+    expect(run('text-document', false).commitTabs).not.toHaveBeenCalled();
+  });
+});

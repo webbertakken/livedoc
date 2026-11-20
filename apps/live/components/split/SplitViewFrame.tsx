@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { tabHasDrawing } from '@livedoc/document';
+import { surfaceOf, tabHasDrawing } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useSelectTab } from '@/app/document/[id]/useSelectTab';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
@@ -24,6 +24,11 @@ import type { TabSvgViewportHandle } from './TabSvgViewport';
 
 // The other pane loads with the first split: the SVG renderer and icon catalogues it draws with
 // stay out of the editor's first load.
+// A surface tab's pane, likewise on demand.
+const SplitSurfacePane = dynamic(
+  () => import('./SplitSurfacePane').then((m) => m.SplitSurfacePane),
+  { ssr: false },
+);
 const SplitStaticPane = dynamic(() => import('./SplitStaticPane').then((m) => m.SplitStaticPane), {
   ssr: false,
 });
@@ -61,6 +66,7 @@ export function SplitViewFrame({
     skipTabFitRef,
     fitToScreen,
     activeTab,
+    documentWorkbook,
   } = ctx;
   const selectTab = useSelectTab();
   const isMobile = useIsMobileViewport();
@@ -228,16 +234,21 @@ export function SplitViewFrame({
               } else setArrived(true);
             }}
           >
-            <SplitStaticPane
-              key={staticTab.id}
-              tab={staticTab}
-              loaded={loadedTabIds.has(staticTab.id)}
-              failed={split.staticLoadFailed}
-              initialAnchor={handoff?.tabId === staticTab.id ? handoff.anchor : null}
-              handleRef={staticHandle}
-              fitNonce={fitNonce}
-              onFocus={focusPane}
-            />
+            {/* A tab outside the canvas is its surface here, live (docs/specs/006-document/kinds-outside-the-canvas.md). */}
+            {surfaceOf(staticTab, documentWorkbook !== null) !== null ? (
+              <SplitSurfacePane key={staticTab.id} tab={staticTab} onFocus={focusPane} />
+            ) : (
+              <SplitStaticPane
+                key={staticTab.id}
+                tab={staticTab}
+                loaded={loadedTabIds.has(staticTab.id)}
+                failed={split.staticLoadFailed}
+                initialAnchor={handoff?.tabId === staticTab.id ? handoff.anchor : null}
+                handleRef={staticHandle}
+                fitNonce={fitNonce}
+                onFocus={focusPane}
+              />
+            )}
           </div>
         ) : null}
         {showing ? (

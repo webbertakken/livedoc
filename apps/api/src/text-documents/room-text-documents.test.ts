@@ -1,5 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Body, TextDocumentState, TEXT_DOCUMENT_LOG_BYTES } from '@livedoc/text-documents';
+import {
+  Body,
+  TextDocumentState,
+  TEXT_DOCUMENT_CHUNK_BYTES,
+  TEXT_DOCUMENT_FRAME_CHARS,
+  TEXT_DOCUMENT_LOG_BYTES,
+  TEXT_DOCUMENT_LOG_UPDATES,
+  TEXT_DOCUMENT_MAX_CHARS,
+} from '@livedoc/text-documents';
 import { gateClientOp } from '../room-op-gate';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { makeTestRouteContext } from '../routes/test-route-context';
@@ -13,7 +21,10 @@ import { storedUpdates } from './text-document-store';
 
 const ws = {} as WebSocket;
 
-async function roomWith(db: SqliteD1) {
+// Sized past the spec's character limit: the compaction and folding tests store more text than one document holds.
+const ROOMY = { characters: Number.MAX_SAFE_INTEGER, stateBytes: Number.MAX_SAFE_INTEGER };
+
+async function roomWith(db: SqliteD1, caps?: typeof ROOMY) {
   await handleDocuments(
     makeTestRouteContext('POST', '/api/documents', {
       env: db.env,
@@ -36,6 +47,7 @@ async function roomWith(db: SqliteD1) {
     sequence,
     sendTo,
     position: () => ({ epoch: 'e' }),
+    ...(caps ? { caps } : {}),
   });
   return { room, sequence, sendTo };
 }
@@ -77,7 +89,7 @@ describe('RoomTextDocuments', () => {
 
   it('compacts the log once it passes its size', async () => {
     const db = sqliteD1();
-    const { room } = await roomWith(db);
+    const { room } = await roomWith(db, ROOMY);
     const sender = { ws, presenceId: 'p1', documentId: 'D' };
     // Text that does not compress in an update: one big paragraph past the log's size.
     const big = Array.from({ length: TEXT_DOCUMENT_LOG_BYTES / 6 }, (_, i) =>
@@ -94,6 +106,116 @@ describe('RoomTextDocuments', () => {
     expect(chunks.n).toBeGreaterThan(1);
     const state = TextDocumentState.load(await storedUpdates(db.env, 't1'));
     expect(TextDocumentState.paragraphs(state)).toEqual(Body.of(big));
+  });
+
+  it('stores an update sent by the door and relays it as an op when it fits a frame', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    const update = TextDocumentState.fromBody(Body.of('Pasted'));
+    expect(await room.acceptPosted('D', 't1', update)).toBe('stored');
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
+    expect(sequence).toHaveBeenCalledWith('system', {
+      kind: 'text-document',
+      tabId: 't1',
+      update: base64OfBytes(update),
+    });
+  });
+
+  it('folds a door update past a chunk into the chunks and tells everyone the tab is stale', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db, ROOMY);
+    const big = Array.from({ length: TEXT_DOCUMENT_CHUNK_BYTES / 5 }, (_, i) =>
+      (i * 7919).toString(36).padStart(6, '0'),
+    ).join('');
+    const update = TextDocumentState.fromBody(Body.of(big));
+    expect(update.byteLength).toBeGreaterThan(TEXT_DOCUMENT_CHUNK_BYTES);
+    expect(await room.acceptPosted('D', 't1', update)).toBe('stored');
+    const logged = db.sql.prepare('SELECT COUNT(*) AS n FROM text_document_updates').get() as {
+      n: number;
+    };
+    expect(logged.n).toBe(0);
+    const state = TextDocumentState.load(await storedUpdates(db.env, 't1'));
+    expect(TextDocumentState.paragraphs(state)).toEqual(Body.of(big));
+    expect(sequence).toHaveBeenCalledWith('system', {
+      kind: 'text-document',
+      tabId: 't1',
+      stale: true,
+    });
+  });
+
+  it('relays a door update too large for a frame as stale, stored in the log', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    const text = Array.from({ length: TEXT_DOCUMENT_FRAME_CHARS / 5 }, (_, i) =>
+      (i * 7919).toString(36).padStart(6, '0'),
+    ).join('');
+    expect(await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of(text)))).toBe(
+      'stored',
+    );
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
+    expect(sequence).toHaveBeenCalledWith('system', {
+      kind: 'text-document',
+      tabId: 't1',
+      stale: true,
+    });
+  });
+
+  it('refuses a door update that does not decode or is for no text document', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    expect(await room.acceptPosted('D', 't1', Uint8Array.of(9, 9, 9))).toBe('decode');
+    expect(await room.acceptPosted('D', 'c', TextDocumentState.fromBody(Body.of('x')))).toBe(
+      'not-text-document',
+    );
+    expect(sequence).not.toHaveBeenCalled();
+  });
+
+  // live-editing-and-storage.md "Storage": reading merges the log, and merging many small updates grows faster than
+  // their count, so a log of keystrokes is folded long before it passes its size.
+  it('compacts the log once it holds its count of updates', async () => {
+    const db = sqliteD1();
+    const { room } = await roomWith(db);
+    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    const doc = TextDocumentState.load();
+    const updates: Uint8Array[] = [];
+    doc.on('update', (u: Uint8Array) => updates.push(u));
+    TextDocumentState.replaceBody(doc, Body.of(''));
+    for (let i = 0; i < TEXT_DOCUMENT_LOG_UPDATES + 1; i++)
+      TextDocumentState.replaceBody(doc, Body.of('x'.repeat(i + 1)));
+    for (const update of updates.slice(-TEXT_DOCUMENT_LOG_UPDATES - 1))
+      await room.accept(sender, {
+        kind: 'text-document',
+        tabId: 't1',
+        update: base64OfBytes(update),
+      });
+    const rows = db.sql.prepare('SELECT COUNT(*) AS n FROM text_document_updates').get() as {
+      n: number;
+    };
+    expect(rows.n).toBeLessThanOrEqual(1);
+  });
+
+  // live-editing-and-storage.md "Refused edits": refused whole, the sender alone told which limit.
+  it('refuses a frame past the characters, storing nothing and telling only the sender', async () => {
+    const db = sqliteD1();
+    const { room, sequence, sendTo } = await roomWith(db);
+    db.sql
+      .prepare(
+        `INSERT OR REPLACE INTO text_document_digest (tab_id, characters, words, pages, has_content, state_bytes, written_at)
+         VALUES ('t1', ?, 0, 1, 1, 0, 1)`,
+      )
+      .run(TEXT_DOCUMENT_MAX_CHARS);
+    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    expect(await room.accept(sender, frame('t1', 'x'))).toBe(false);
+    expect(await storedUpdates(db.env, 't1')).toEqual([]);
+    expect(sequence).not.toHaveBeenCalled();
+    expect(sendTo).toHaveBeenCalledWith(ws, {
+      kind: 'op',
+      from: 'system',
+      op: { kind: 'text-document-refused', tabId: 't1', limit: 'characters' },
+    });
+    expect(await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('y')))).toBe(
+      'characters',
+    );
   });
 
   it('reads only a whole frame', () => {

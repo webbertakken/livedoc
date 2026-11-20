@@ -1,4 +1,4 @@
-import type { Dispatch, PointerEvent as ReactPointerEvent, RefObject, SetStateAction } from 'react';
+import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import {
   containerContents,
   withSheetCharts,
@@ -22,7 +22,7 @@ import { turnFramePivotClient } from '@/lib/turn-frame';
 
 type BoxedDragHandlerDeps = {
   depsRef: RefObject<EditorDragDeps>;
-  setDrag: Dispatch<SetStateAction<DragState | null>>;
+  setDrag: (next: DragState | null) => void;
   checkpointPendingRef: RefObject<boolean>;
 };
 

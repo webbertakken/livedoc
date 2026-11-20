@@ -1,6 +1,6 @@
 # Parity matrix
 
-**Status: specified.** Every row reads `specified` until it is built; a built row names the test that proves it.
+**Status: partly built.** Every row reads `specified` until it is built; a built row names the test that proves it.
 
 One row per entry of the [Google Docs inventory](../../research/docs-open-standard/google-docs-inventory.md). Each
 row states its rule in one line, its status, and the spec that holds the detail. A row is done when it reads **built**
@@ -12,80 +12,80 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Title row
 
-| Row              | Rule                                                                               | Status        | Spec                                                             |
-| ---------------- | ---------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------- |
-| Name             | The document's name, renamed in place, with its format (`.DOCX`, `.ODT`) beside it | specified     | [Editing surface](editing-surface.md#the-title-row)              |
-| Star             | Favourite the document (LiveDoc's favourites)                                      | specified     | [Editing surface](editing-surface.md#the-title-row)              |
-| Move             | Move to a folder (LiveDoc's folders)                                               | specified     | [Editing surface](editing-surface.md#the-title-row)              |
-| Save status      | Saved, saving, offline, in This Browser                                            | specified     | [Editing surface](editing-surface.md#the-title-row)              |
-| Last edit        | "Last edit was …" opens version history                                            | specified     | [Review](review.md#version-history)                              |
-| Comment history  | Opens the comments panel                                                           | specified     | [Review](review.md#comments)                                     |
-| Meeting button   | Join or present in a meeting                                                       | left out (C3) | [Tools](tools.md#google-only-services)                           |
-| Mode switch      | Editing, Suggesting, Viewing                                                       | specified     | [Review](review.md#editing-modes)                                |
-| Share            | LiveDoc's share dialog, links and roles                                            | specified     | [Files and print](files-and-print.md#sharing)                    |
-| Presence         | Avatars of everyone on the document                                                | specified     | [Live editing and storage](live-editing-and-storage.md#presence) |
-| Assistant button | Gemini, or any assistant                                                           | left out (C3) | [Tools](tools.md#google-only-services)                           |
+| Row              | Rule                                                                               | Status                                                               | Spec                                                             |
+| ---------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Name             | The document's name, renamed in place, with its format (`.DOCX`, `.ODT`) beside it | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Editing surface](editing-surface.md#the-title-row)              |
+| Star             | Favourite the document (LiveDoc's favourites)                                      | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Editing surface](editing-surface.md#the-title-row)              |
+| Move             | Move to a folder (LiveDoc's folders)                                               | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Editing surface](editing-surface.md#the-title-row)              |
+| Save status      | Saved, saving, offline, in This Browser                                            | built (`OfficeSaveStatus.test.tsx`, `text-document-offline.spec.ts`) | [Editing surface](editing-surface.md#the-title-row)              |
+| Last edit        | "Last edit was …" opens version history                                            | specified                                                            | [Review](review.md#version-history)                              |
+| Comment history  | Opens the comments panel                                                           | specified                                                            | [Review](review.md#comments)                                     |
+| Meeting button   | Join or present in a meeting                                                       | left out (C3)                                                        | [Tools](tools.md#google-only-services)                           |
+| Mode switch      | Editing, Suggesting, Viewing                                                       | specified                                                            | [Review](review.md#editing-modes)                                |
+| Share            | LiveDoc's share dialog, links and roles                                            | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Files and print](files-and-print.md#sharing)                    |
+| Presence         | Avatars of everyone on the document                                                | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`)        | [Live editing and storage](live-editing-and-storage.md#presence) |
+| Assistant button | Gemini, or any assistant                                                           | left out (C3)                                                        | [Tools](tools.md#google-only-services)                           |
 
 ## File menu
 
-| Row                      | Rule                                                                            | Status        | Spec                                                            |
-| ------------------------ | ------------------------------------------------------------------------------- | ------------- | --------------------------------------------------------------- |
-| New: document            | A new blank text document in a new browser tab                                  | specified     | [Starting and finding](starting-and-finding.md)                 |
-| New: from a template     | The template gallery's text documents                                           | specified     | [Starting and finding](starting-and-finding.md)                 |
-| Open                     | Open a LiveDoc document or a file from the computer                             | specified     | [Files and print](files-and-print.md#opening)                   |
-| Make a copy              | Copy with name, folder, comments, suggestions options                           | specified     | [Files and print](files-and-print.md#make-a-copy)               |
-| Share: share with others | The share dialog                                                                | specified     | [Files and print](files-and-print.md#sharing)                   |
-| Share: publish to web    | LiveDoc's public view link and embed                                            | either way    | [Files and print](files-and-print.md#sharing)                   |
-| Email: this file         | Send as an attachment through the host's email, when configured                 | either way    | [Files and print](files-and-print.md#email)                     |
-| Email: collaborators     | Message everyone on the document, when email is configured                      | either way    | [Files and print](files-and-print.md#email)                     |
-| Download: Microsoft Word | `.docx`: the document itself when OOXML, a converted copy when ODF              | specified     | [Files and print](files-and-print.md#downloading)               |
-| Download: OpenDocument   | `.odt` (and `.fodt`): the document itself when ODF, a converted copy when OOXML | specified     |
-| Convert to Word format   | A person converts an ODF text document to OOXML, losses listed first (C1)       | specified     | [Standard mapping](standard-mapping.md#conversion)              |
-| Convert to OpenDocument  | A person converts an OOXML text document to ODF, losses listed first (C1)       | specified     | [Standard mapping](standard-mapping.md#conversion)              | [Files and print](files-and-print.md#downloading) |
-| Download: Rich Text      | `.rtf`                                                                          | specified     | [Files and print](files-and-print.md#downloading)               |
-| Download: PDF            | `.pdf`, text as text                                                            | specified     | [Files and print](files-and-print.md#downloading)               |
-| Download: Plain Text     | `.txt`                                                                          | specified     | [Files and print](files-and-print.md#downloading)               |
-| Download: Web Page       | `.html` zipped with its pictures                                                | specified     | [Files and print](files-and-print.md#downloading)               |
-| Download: EPUB           | `.epub`                                                                         | specified     | [Files and print](files-and-print.md#downloading)               |
-| Download: Markdown       | `.md`                                                                           | specified     | [Files and print](files-and-print.md#downloading)               |
-| Approvals                | Request and record approvals                                                    | left out (C3) | [Tools](tools.md#google-only-services)                          |
-| Rename                   | Rename the document                                                             | specified     | [Editing surface](editing-surface.md#the-title-row)             |
-| Move                     | Move to a folder                                                                | specified     | [Editing surface](editing-surface.md#the-title-row)             |
-| Add a shortcut to Drive  | Drive-only                                                                      | left out (C3) | [Tools](tools.md#google-only-services)                          |
-| Move to trash            | LiveDoc's Trash                                                                 | specified     | [Files and print](files-and-print.md#trash)                     |
-| Version history          | Name current version; see version history                                       | specified     | [Review](review.md#version-history)                             |
-| Make available offline   | LiveDoc's This Browser and offline open                                         | specified     | [Live editing and storage](live-editing-and-storage.md#offline) |
-| Details                  | Owner, dates, location, size, statistics                                        | specified     | [Files and print](files-and-print.md#details)                   |
-| Security limitations     | Lists what an import dropped (macros, remote pictures)                          | specified     | [Files and print](files-and-print.md#import-report)             |
-| Language                 | The document's language, for spelling and hyphenation                           | specified     | [Tools](tools.md#language)                                      |
-| Page setup               | Pages or pageless; orientation, paper, colour, margins; set as default          | specified     | [Page layout](page-layout.md#page-setup)                        |
-| Print preview            | The pages as printed, with Print                                                | specified     | [Files and print](files-and-print.md#printing)                  |
-| Print                    | ⌘P, the browser's print of the laid-out pages                                   | specified     | [Files and print](files-and-print.md#printing)                  |
+| Row                      | Rule                                                                            | Status                                                        | Spec                                                            |
+| ------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------- |
+| New: document            | A new blank text document in a new browser tab                                  | specified                                                     | [Starting and finding](starting-and-finding.md)                 |
+| New: from a template     | The template gallery's text documents                                           | specified                                                     | [Starting and finding](starting-and-finding.md)                 |
+| Open                     | Open a LiveDoc document or a file from the computer                             | specified                                                     | [Files and print](files-and-print.md#opening)                   |
+| Make a copy              | Copy with name, folder, comments, suggestions options                           | specified                                                     | [Files and print](files-and-print.md#make-a-copy)               |
+| Share: share with others | The share dialog                                                                | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Files and print](files-and-print.md#sharing)                   |
+| Share: publish to web    | LiveDoc's public view link and embed                                            | either way                                                    | [Files and print](files-and-print.md#sharing)                   |
+| Email: this file         | Send as an attachment through the host's email, when configured                 | either way                                                    | [Files and print](files-and-print.md#email)                     |
+| Email: collaborators     | Message everyone on the document, when email is configured                      | either way                                                    | [Files and print](files-and-print.md#email)                     |
+| Download: Microsoft Word | `.docx`: the document itself when OOXML, a converted copy when ODF              | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Download: OpenDocument   | `.odt` (and `.fodt`): the document itself when ODF, a converted copy when OOXML | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Convert to Word format   | A person converts an ODF text document to OOXML, losses listed first (C1)       | specified                                                     | [Standard mapping](standard-mapping.md#conversion)              |
+| Convert to OpenDocument  | A person converts an OOXML text document to ODF, losses listed first (C1)       | specified                                                     | [Standard mapping](standard-mapping.md#conversion)              |
+| Download: Rich Text      | `.rtf`                                                                          | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Download: PDF            | `.pdf`, text as text                                                            | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Download: Plain Text     | `.txt`                                                                          | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Download: Web Page       | `.html` zipped with its pictures                                                | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Download: EPUB           | `.epub`                                                                         | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Download: Markdown       | `.md`                                                                           | specified                                                     | [Files and print](files-and-print.md#downloading)               |
+| Approvals                | Request and record approvals                                                    | left out (C3)                                                 | [Tools](tools.md#google-only-services)                          |
+| Rename                   | Rename the document                                                             | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Editing surface](editing-surface.md#the-title-row)             |
+| Move                     | Move to a folder                                                                | built (`OfficeTitleRow.test.tsx`, `office-title-row.spec.ts`) | [Editing surface](editing-surface.md#the-title-row)             |
+| Add a shortcut to Drive  | Drive-only                                                                      | left out (C3)                                                 | [Tools](tools.md#google-only-services)                          |
+| Move to trash            | LiveDoc's Trash                                                                 | specified                                                     | [Files and print](files-and-print.md#trash)                     |
+| Version history          | Name current version; see version history                                       | specified                                                     | [Review](review.md#version-history)                             |
+| Make available offline   | LiveDoc's This Browser and offline open                                         | specified                                                     | [Live editing and storage](live-editing-and-storage.md#offline) |
+| Details                  | Owner, dates, location, size, statistics                                        | specified                                                     | [Files and print](files-and-print.md#details)                   |
+| Security limitations     | Lists what an import dropped (macros, remote pictures)                          | specified                                                     | [Files and print](files-and-print.md#import-report)             |
+| Language                 | The document's language, for spelling and hyphenation                           | specified                                                     | [Tools](tools.md#language)                                      |
+| Page setup               | Pages or pageless; orientation, paper, colour, margins; set as default          | specified                                                     | [Page layout](page-layout.md#page-setup)                        |
+| Print preview            | The pages as printed, with Print                                                | specified                                                     | [Files and print](files-and-print.md#printing)                  |
+| Print                    | ⌘P, the browser's print of the laid-out pages                                   | specified                                                     | [Files and print](files-and-print.md#printing)                  |
 
 ## Edit menu
 
-| Row                      | Rule                                     | Status    | Spec                                                         |
-| ------------------------ | ---------------------------------------- | --------- | ------------------------------------------------------------ |
-| Undo, Redo               | Personal undo and redo                   | specified | [Live editing and storage](live-editing-and-storage.md#undo) |
-| Cut, Copy, Paste         | Clipboard with formatting                | specified | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
-| Paste without formatting | ⌘⇧V, plain text in the surrounding style | specified | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
-| Select all               | ⌘A, the whole body of the document tab   | specified | [Text and paragraphs](text-and-paragraphs.md#selection)      |
-| Delete                   | Removes the selection                    | specified | [Text and paragraphs](text-and-paragraphs.md#selection)      |
-| Find and replace         | ⌘H, the dialog                           | specified | [Tools](tools.md#find-and-replace)                           |
+| Row                      | Rule                                     | Status                                     | Spec                                                         |
+| ------------------------ | ---------------------------------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Undo, Redo               | Personal undo and redo                   | built (`text-document-shortcuts.test.tsx`) | [Live editing and storage](live-editing-and-storage.md#undo) |
+| Cut, Copy, Paste         | Clipboard with formatting                | specified                                  | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
+| Paste without formatting | ⌘⇧V, plain text in the surrounding style | specified                                  | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
+| Select all               | ⌘A, the whole body of the document tab   | built (`text-document-shortcuts.test.tsx`) | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Delete                   | Removes the selection                    | built (`text-document-shortcuts.test.tsx`) | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Find and replace         | ⌘H, the dialog                           | specified                                  | [Tools](tools.md#find-and-replace)                           |
 
 ## View menu
 
-| Row                          | Rule                                      | Status    | Spec                                                                  |
-| ---------------------------- | ----------------------------------------- | --------- | --------------------------------------------------------------------- |
-| Mode                         | Editing, Suggesting, Viewing              | specified | [Review](review.md#editing-modes)                                     |
-| Show print layout            | Pages with gaps, or one continuous column | specified | [Page layout](page-layout.md#print-layout)                            |
-| Show ruler                   | The ruler on or off                       | specified | [Editing surface](editing-surface.md#the-ruler)                       |
-| Show outline                 | The outline panel                         | specified | [Links and navigation](links-and-navigation.md#the-outline)           |
-| Show equation toolbar        | The equation toolbar under the main one   | specified | [Objects](objects.md#equations)                                       |
-| Show non-printing characters | ¶, spaces, tabs and breaks drawn          | specified | [Text and paragraphs](text-and-paragraphs.md#non-printing-characters) |
-| Full screen                  | Menus and toolbar hidden until Escape     | specified | [Editing surface](editing-surface.md#compact-and-full-screen)         |
-| Text width                   | Pageless: narrow, medium, wide, full      | specified | [Page layout](page-layout.md#pageless)                                |
-| Show tabs and outlines       | The outline panel with document tabs      | specified | [Links and navigation](links-and-navigation.md#the-outline)           |
+| Row                          | Rule                                      | Status                                 | Spec                                                                  |
+| ---------------------------- | ----------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| Mode                         | Editing, Suggesting, Viewing              | specified                              | [Review](review.md#editing-modes)                                     |
+| Show print layout            | Pages with gaps, or one continuous column | specified                              | [Page layout](page-layout.md#print-layout)                            |
+| Show ruler                   | The ruler on or off                       | specified                              | [Editing surface](editing-surface.md#the-ruler)                       |
+| Show outline                 | The outline panel                         | built (`TextDocumentOutline.test.tsx`) | [Links and navigation](links-and-navigation.md#the-outline)           |
+| Show equation toolbar        | The equation toolbar under the main one   | specified                              | [Objects](objects.md#equations)                                       |
+| Show non-printing characters | ¶, spaces, tabs and breaks drawn          | specified                              | [Text and paragraphs](text-and-paragraphs.md#non-printing-characters) |
+| Full screen                  | Menus and toolbar hidden until Escape     | specified                              | [Editing surface](editing-surface.md#compact-and-full-screen)         |
+| Text width                   | Pageless: narrow, medium, wide, full      | specified                              | [Page layout](page-layout.md#pageless)                                |
+| Show tabs and outlines       | The outline panel with document tabs      | specified                              | [Links and navigation](links-and-navigation.md#the-outline)           |
 
 ## Insert menu
 
@@ -175,36 +175,36 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Extensions and Help
 
-| Row                                             | Rule                                     | Status        | Spec                                                     |
-| ----------------------------------------------- | ---------------------------------------- | ------------- | -------------------------------------------------------- |
-| Add-ons                                         | Google's marketplace                     | left out (C3) | [Tools](tools.md#google-only-services)                   |
-| Apps Script                                     | Google's scripting                       | left out (C3) | [Tools](tools.md#google-only-services)                   |
-| Agents (LiveDoc's own)                          | MCP and the CLI in their place           | specified     | [Agents and sync](agents-and-sync.md)                    |
-| Help                                            | The help centre's text document articles | specified     | [Editing surface](editing-surface.md#the-menu-bar)       |
-| Keyboard shortcuts                              | ⌘/, the dialog                           | specified     | [Editing surface](editing-surface.md#keyboard-shortcuts) |
-| Tool finder                                     | ⌥/, search the menus                     | specified     | [Editing surface](editing-surface.md#tool-finder)        |
-| Report abuse, privacy, terms, updates, training | LiveDoc's own pages                      | specified     | [Editing surface](editing-surface.md#the-menu-bar)       |
+| Row                                             | Rule                                     | Status                                   | Spec                                                     |
+| ----------------------------------------------- | ---------------------------------------- | ---------------------------------------- | -------------------------------------------------------- |
+| Add-ons                                         | Google's marketplace                     | left out (C3)                            | [Tools](tools.md#google-only-services)                   |
+| Apps Script                                     | Google's scripting                       | left out (C3)                            | [Tools](tools.md#google-only-services)                   |
+| Agents (LiveDoc's own)                          | MCP and the CLI in their place           | specified                                | [Agents and sync](agents-and-sync.md)                    |
+| Help                                            | The help centre's text document articles | specified                                | [Editing surface](editing-surface.md#the-menu-bar)       |
+| Keyboard shortcuts                              | ⌘/, the dialog                           | built (`OfficeShortcutsDialog.test.tsx`) | [Editing surface](editing-surface.md#keyboard-shortcuts) |
+| Tool finder                                     | ⌥/, search the menus                     | built (`OfficeToolFinder.test.tsx`)      | [Editing surface](editing-surface.md#tool-finder)        |
+| Report abuse, privacy, terms, updates, training | LiveDoc's own pages                      | specified                                | [Editing surface](editing-surface.md#the-menu-bar)       |
 
 ## Toolbar
 
-| Row                           | Rule                                       | Status    | Spec                                                                |
-| ----------------------------- | ------------------------------------------ | --------- | ------------------------------------------------------------------- |
-| Tool finder                   | Search the menus                           | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Undo, Redo, Print             | As the menus                               | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Spelling and grammar check    | Opens the check                            | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Paint format                  | Copy formatting once, double-click to keep | specified | [Text and paragraphs](text-and-paragraphs.md#paint-format)          |
-| Zoom                          | 50 to 200 percent, Fit                     | specified | [Editing surface](editing-surface.md#zoom)                          |
-| Styles, Font, Font size       | Menus and the size field with − and +      | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Bold, Italic, Underline       | Toggles                                    | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Text colour, Highlight colour | The one colour picker                      | specified | [Text and paragraphs](text-and-paragraphs.md#colour)                |
-| Link, Comment, Image          | As the menus                               | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Align, Spacing                | Menus                                      | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Checklist, Bulleted, Numbered | Toggles with a menu of styles              | specified | [Lists](lists.md)                                                   |
-| Indent less and more          | ⌘[ and ⌘]                                  | specified | [Text and paragraphs](text-and-paragraphs.md#alignment-and-indents) |
-| Clear formatting              | ⌘\                                         | specified | [Text and paragraphs](text-and-paragraphs.md#clear-formatting)      |
-| Overflow                      | Controls past the width go into a ⋮ menu   | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Mode switch                   | Editing, Suggesting, Viewing               | specified | [Review](review.md#editing-modes)                                   |
-| Hide the menus                | Compact mode, Ctrl⇧F                       | specified | [Editing surface](editing-surface.md#compact-and-full-screen)       |
+| Row                           | Rule                                       | Status                                                   | Spec                                                                |
+| ----------------------------- | ------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------- |
+| Tool finder                   | Search the menus                           | built (`OfficeToolbar.test.tsx`, `office-shell.spec.ts`) | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Undo, Redo, Print             | As the menus                               | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Spelling and grammar check    | Opens the check                            | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Paint format                  | Copy formatting once, double-click to keep | specified                                                | [Text and paragraphs](text-and-paragraphs.md#paint-format)          |
+| Zoom                          | 50 to 200 percent, Fit                     | built (`OfficeToolbar.test.tsx`, `office-shell.spec.ts`) | [Editing surface](editing-surface.md#zoom)                          |
+| Styles, Font, Font size       | Menus and the size field with − and +      | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Bold, Italic, Underline       | Toggles                                    | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Text colour, Highlight colour | The one colour picker                      | specified                                                | [Text and paragraphs](text-and-paragraphs.md#colour)                |
+| Link, Comment, Image          | As the menus                               | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Align, Spacing                | Menus                                      | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Checklist, Bulleted, Numbered | Toggles with a menu of styles              | specified                                                | [Lists](lists.md)                                                   |
+| Indent less and more          | ⌘[ and ⌘]                                  | specified                                                | [Text and paragraphs](text-and-paragraphs.md#alignment-and-indents) |
+| Clear formatting              | ⌘\                                         | specified                                                | [Text and paragraphs](text-and-paragraphs.md#clear-formatting)      |
+| Overflow                      | Controls past the width go into a ⋮ menu   | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Mode switch                   | Editing, Suggesting, Viewing               | specified                                                | [Review](review.md#editing-modes)                                   |
+| Hide the menus                | Compact mode, Ctrl⇧F                       | specified                                                | [Editing surface](editing-surface.md#compact-and-full-screen)       |
 
 ## Either way
 
@@ -223,24 +223,23 @@ Rows that could read either way under C3 (core only), asked of Webber once with 
 
 ## Context menus, side panels and dialogs
 
-| Row                                          | Rule                                                   | Status        | Spec                                                            |
-| -------------------------------------------- | ------------------------------------------------------ | ------------- | --------------------------------------------------------------- |
-| Context menu: text                           | As the inventory lists                                 | specified     | [Editing surface](editing-surface.md#context-menus)             |
-| Context menu: table                          | Rows, columns, cells, properties                       | specified     | [Tables](tables.md#context-menu)                                |
-| Context menu: image                          | Crop, replace, options, alt text, wrap                 | specified     | [Objects](objects.md#pictures)                                  |
-| Context menu: link, chip                     | Preview, copy, edit, remove                            | specified     | [Links and navigation](links-and-navigation.md#links)           |
-| Panel: outline                               | Document tabs and their headings                       | specified     | [Links and navigation](links-and-navigation.md#the-outline)     |
-| Panel: comments                              | All, for you, filters                                  | specified     | [Review](review.md#comments)                                    |
-| Panel: version history                       | Versions, who changed what                             | specified     | [Review](review.md#version-history)                             |
-| Panel: image options                         | Size, rotation, wrap, position, recolour, adjustments  | specified     | [Objects](objects.md#pictures)                                  |
-| Panel: Calendar, Keep, Tasks, Contacts, Maps | Google's side apps                                     | left out (C3) | [Tools](tools.md#google-only-services)                          |
-| Dialog: every dialog of the inventory        | Each in its area's spec, on the shell's dialog pattern | specified     | [Office shell](../004-interface-design/office-shell.md#dialogs) |
+| Row                                          | Rule                                                   | Status                                                                | Spec                                                            |
+| -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Context menu: text                           | As the inventory lists                                 | built: the menu (`OfficeContextMenu.test.tsx`); items with their rows | [Editing surface](editing-surface.md#context-menus)             |
+| Context menu: table                          | Rows, columns, cells, properties                       | specified                                                             | [Tables](tables.md#context-menu)                                |
+| Context menu: image                          | Crop, replace, options, alt text, wrap                 | specified                                                             | [Objects](objects.md#pictures)                                  |
+| Context menu: link, chip                     | Preview, copy, edit, remove                            | specified                                                             | [Links and navigation](links-and-navigation.md#links)           |
+| Panel: outline                               | Document tabs and their headings                       | headings built (`TextDocumentOutline.test.tsx`); tabs specified       | [Links and navigation](links-and-navigation.md#the-outline)     |
+| Panel: comments                              | All, for you, filters                                  | specified                                                             | [Review](review.md#comments)                                    |
+| Panel: version history                       | Versions, who changed what                             | specified                                                             | [Review](review.md#version-history)                             |
+| Panel: image options                         | Size, rotation, wrap, position, recolour, adjustments  | specified                                                             | [Objects](objects.md#pictures)                                  |
+| Panel: Calendar, Keep, Tasks, Contacts, Maps | Google's side apps                                     | left out (C3)                                                         | [Tools](tools.md#google-only-services)                          |
+| Dialog: every dialog of the inventory        | Each in its area's spec, on the shell's dialog pattern | specified                                                             | [Office shell](../004-interface-design/office-shell.md#dialogs) |
 
 ## Shortcuts
 
-Every shortcut of Google's list for PC, Mac and ChromeOS is a row of the keyboard layer, held in one table in
-[Editing surface](editing-surface.md#keyboard-shortcuts); each reads `specified` there until built. Shortcuts of
-left-out rows (voice typing's languages, Explore) follow their row.
+Every shortcut of Google's list for PC, Mac and ChromeOS is a row of [Keyboard shortcuts](keyboard-shortcuts.md), with
+its own status there. Shortcuts of left-out rows (voice typing, Explore, input tools, people chips) follow their row.
 
 ## Modes and limits
 

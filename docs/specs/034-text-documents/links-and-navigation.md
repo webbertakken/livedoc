@@ -1,6 +1,6 @@
 # Links and navigation
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** The outline's headings are built; the rest is specified.
 
 Links, bookmarks, heading links, the table of contents, the outline and document tabs' navigation in a
 [text document](text-document.md). Smart chips are left out (fork C3, ruled): a chip in an arriving file is kept as
@@ -35,8 +35,14 @@ headings (Heading 1 to 6 by default), each a link; **Update** (the refresh butto
 
 ## The outline
 
-- View > Show outline (or the outline button at the top left): a left panel listing the document tabs, and under the
-  current tab, its headings, indented by level; a press scrolls there.
+- View > Show outline (⌘⌥A then H, holding the modifiers) or the outline button at the top left opens the outline,
+  the shell's [left panel](../004-interface-design/office-shell.md#side-panels), titled **Outline**: the document tabs,
+  and under the current tab, its headings, indented by level. A press on a heading puts the caret at its start and
+  scrolls it into view.
+- A **heading** is a paragraph with an outline level from 1 to 6, its own or its paragraph style's (through the
+  style's parents); it shows its text, or **Untitled heading** while it has none `(default)`. The list follows the
+  writing as it changes, everyone's edits included.
+- With no heading it reads: **Headings you add to the document will appear here.**
 - The panel shows **Summary** (a free text the editor writes, as Google's) above the headings.
 - Document tabs: **+** adds one, each has a menu (Rename, Add subtab, Duplicate, Delete, Copy link, Choose emoji) and
   can be dragged to reorder or nest (depth 3). Ctrl⇧Page Down / Up move between tabs.
@@ -57,4 +63,5 @@ Editors add and change links, bookmarks, the table of contents and document tabs
 ## Telemetry
 
 `Element · Added · TextDocumentLink`, `TextDocumentBookmark`, `TextDocumentTableOfContents`;
-`Tab · Added · TextDocumentTab`; `UI · Toggled · TextDocumentOutline`. Never content.
+`Tab · Added · TextDocumentTab`; `UI · Opened · TextDocumentPanelOutline` (the shell's panel telemetry). Never
+content.

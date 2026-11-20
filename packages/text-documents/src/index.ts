@@ -4,11 +4,19 @@ export { Body, type Paragraph as BodyParagraph } from './body';
 export {
   KEPT_CONTENT_MAX_BYTES,
   TEXT_DOCUMENT_CHUNK_BYTES,
+  TEXT_DOCUMENT_FRAME_CHARS,
+  TEXT_DOCUMENT_LOCAL_SAVE_MS,
+  TEXT_DOCUMENT_SAVE_RETRY_MS,
   TEXT_DOCUMENT_LOG_BYTES,
+  TEXT_DOCUMENT_LOG_UPDATES,
   TEXT_DOCUMENT_MAX_CHARS,
+  TEXT_DOCUMENT_MAX_STATE_BYTES,
+  TEXT_DOCUMENT_UNDO_GROUP_MS,
+  TEXT_DOCUMENT_UPDATE_MAX_BYTES,
   TEXT_DOCUMENT_WORDS_PER_PAGE,
 } from './limits';
 export { textDocumentDigest, type TextDocumentDigest } from './digest';
+export { textDocumentPageSvg } from './art/page-svg';
 export { BODY_FRAGMENT, TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 export {
   TEXT_DOCUMENT_FILE_TYPES,

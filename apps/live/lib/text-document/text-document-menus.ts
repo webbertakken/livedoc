@@ -1,0 +1,357 @@
+// The text document's menus (docs/specs/034-text-documents/editing-surface.md "The menu bar"): Google Docs' menus in
+// Google's order and words, less the rows the parity matrix leaves out, plus LiveDoc's own (Convert, the flat file,
+// Agents). Each item names the least share level that sees it; an item whose phase has not landed is `comingSoon`.
+import type { AccessLevel } from '@livedoc/api-schema';
+import type { TextDocumentFormat } from '@livedoc/document';
+import {
+  contextEntries,
+  type OfficeCatalogue,
+  type OfficeEntry,
+  type OfficeItem,
+  type OfficeMenu,
+} from '@/lib/office/office-catalogue';
+
+type ItemOptions = Partial<Pick<OfficeItem, 'shortcut' | 'keywords' | 'checkable' | 'status'>>;
+
+const item = (
+  id: string,
+  label: string,
+  level: AccessLevel,
+  options: ItemOptions = {},
+): OfficeItem => ({ kind: 'item', id, label, level, status: 'comingSoon', ...options });
+
+const submenu = (id: string, label: string, entries: OfficeEntry[]): OfficeEntry => ({
+  kind: 'submenu',
+  id,
+  label,
+  entries,
+});
+
+const SEPARATOR: OfficeEntry = { kind: 'separator' };
+
+const menu = (id: string, label: string, entries: OfficeEntry[]): OfficeMenu => ({
+  id,
+  label,
+  entries,
+});
+
+const BUILT = { status: 'built' } as const;
+
+// A text document downloads in its own format; the other format's file is a converted copy, built with conversion.
+function downloads(format: TextDocumentFormat): OfficeEntry[] {
+  const odf = format === 'odf' ? BUILT : {};
+  return [
+    item('download-docx', 'Microsoft Word (.docx)', 'view', format === 'ooxml' ? BUILT : {}),
+    item('download-odt', 'OpenDocument format (.odt)', 'view', odf),
+    item('download-fodt', 'OpenDocument flat file (.fodt)', 'view', odf),
+    item('download-rtf', 'Rich Text Format (.rtf)', 'view'),
+    item('download-pdf', 'PDF document (.pdf)', 'view'),
+    item('download-txt', 'Plain Text (.txt)', 'view'),
+    item('download-html', 'Web Page (.html, zipped)', 'view'),
+    item('download-epub', 'EPUB Publication (.epub)', 'view'),
+    item('download-md', 'Markdown (.md)', 'view'),
+  ];
+}
+
+export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
+  return [
+    menu('file', 'File', [
+      submenu('new', 'New', [
+        item('new-document', 'Document', 'view'),
+        item('new-from-template', 'From template gallery', 'view'),
+      ]),
+      item('open', 'Open', 'view', { shortcut: 'open', status: 'built' }),
+      item('make-a-copy', 'Make a copy', 'view'),
+      SEPARATOR,
+      submenu('share', 'Share', [item('share-with-others', 'Share with others', 'edit', BUILT)]),
+      submenu('download', 'Download', downloads(format)),
+      format === 'odf'
+        ? item('convert-to-word', 'Convert to Word format', 'edit', { keywords: ['docx', 'ooxml'] })
+        : item('convert-to-opendocument', 'Convert to OpenDocument', 'edit', {
+            keywords: ['odt', 'odf'],
+          }),
+      SEPARATOR,
+      item('rename', 'Rename', 'edit', BUILT),
+      item('move', 'Move', 'edit', { keywords: ['folder'], status: 'built' }),
+      item('move-to-trash', 'Move to trash', 'edit', { keywords: ['delete'] }),
+      SEPARATOR,
+      submenu('version-history', 'Version history', [
+        item('name-current-version', 'Name current version', 'edit'),
+        item('see-version-history', 'See version history', 'edit', {
+          shortcut: 'open-revision-history',
+        }),
+      ]),
+      item('make-available-offline', 'Make available offline', 'edit', {
+        keywords: ['this browser'],
+      }),
+      SEPARATOR,
+      item('details', 'Details', 'view'),
+      item('security-limitations', 'Security limitations', 'view'),
+      item('language', 'Language', 'edit'),
+      SEPARATOR,
+      item('page-setup', 'Page setup', 'edit'),
+      item('print-preview', 'Print preview', 'view'),
+      item('print', 'Print', 'view', { shortcut: 'print' }),
+    ]),
+    menu('edit', 'Edit', [
+      item('undo', 'Undo', 'edit', { shortcut: 'undo', status: 'built' }),
+      item('redo', 'Redo', 'edit', { shortcut: 'redo', status: 'built' }),
+      SEPARATOR,
+      item('cut', 'Cut', 'edit', { shortcut: 'cut' }),
+      item('copy', 'Copy', 'view', { shortcut: 'copy' }),
+      item('paste', 'Paste', 'edit', { shortcut: 'paste' }),
+      item('paste-without-formatting', 'Paste without formatting', 'edit', {
+        shortcut: 'paste-without-formatting',
+      }),
+      SEPARATOR,
+      item('select-all', 'Select all', 'view', { shortcut: 'select-all', status: 'built' }),
+      item('delete', 'Delete', 'edit', BUILT),
+      SEPARATOR,
+      item('find-and-replace', 'Find and replace', 'view', {
+        shortcut: 'find-and-replace',
+        keywords: ['search'],
+      }),
+    ]),
+    menu('view', 'View', [
+      submenu('mode', 'Mode', [
+        item('mode-editing', 'Editing', 'view', {
+          shortcut: 'switch-to-editing',
+          checkable: 'radio',
+          status: 'built',
+        }),
+        item('mode-suggesting', 'Suggesting', 'view', {
+          shortcut: 'switch-to-suggesting',
+          checkable: 'radio',
+        }),
+        item('mode-viewing', 'Viewing', 'view', {
+          shortcut: 'switch-to-viewing',
+          checkable: 'radio',
+          status: 'built',
+        }),
+      ]),
+      SEPARATOR,
+      item('show-print-layout', 'Show print layout', 'view', { checkable: 'checkbox' }),
+      item('show-ruler', 'Show ruler', 'view', { checkable: 'checkbox' }),
+      item('show-outline', 'Show outline', 'view', {
+        checkable: 'checkbox',
+        shortcut: 'show-outline',
+        status: 'built',
+      }),
+      item('show-tabs-and-outlines', 'Show tabs & outlines', 'view', { checkable: 'checkbox' }),
+      item('show-equation-toolbar', 'Show equation toolbar', 'edit', { checkable: 'checkbox' }),
+      item('show-non-printing-characters', 'Show non-printing characters', 'view', {
+        checkable: 'checkbox',
+      }),
+      SEPARATOR,
+      submenu('text-width', 'Text width', [
+        item('text-width-narrow', 'Narrow', 'view', { checkable: 'radio' }),
+        item('text-width-medium', 'Medium', 'view', { checkable: 'radio' }),
+        item('text-width-wide', 'Wide', 'view', { checkable: 'radio' }),
+        item('text-width-full', 'Full', 'view', { checkable: 'radio' }),
+      ]),
+      item('full-screen', 'Full screen', 'view'),
+    ]),
+    menu('insert', 'Insert', [
+      submenu('image', 'Image', [
+        item('image-upload', 'Upload from computer', 'edit'),
+        item('image-gallery', 'LiveDoc gallery', 'edit'),
+        item('image-by-url', 'By URL', 'edit'),
+      ]),
+      submenu('table', 'Table', [
+        item('table-grid', 'Table', 'edit'),
+        item('table-templates', 'Table templates', 'edit'),
+      ]),
+      SEPARATOR,
+      item('link', 'Link', 'edit', { shortcut: 'insert-or-edit-link' }),
+      submenu('drawing', 'Drawing', [
+        item('drawing-new', 'New', 'edit'),
+        item('drawing-from-document', 'From a LiveDoc document', 'edit'),
+      ]),
+      submenu('chart', 'Chart', [
+        item('chart-bar', 'Bar', 'edit'),
+        item('chart-column', 'Column', 'edit'),
+        item('chart-line', 'Line', 'edit'),
+        item('chart-pie', 'Pie', 'edit'),
+        item('chart-from-spreadsheet', 'From a spreadsheet', 'edit'),
+      ]),
+      submenu('symbols', 'Symbols', [
+        item('special-characters', 'Special characters', 'edit'),
+        item('equation', 'Equation', 'edit'),
+      ]),
+      SEPARATOR,
+      item('tab', 'Tab', 'edit'),
+      item('horizontal-line', 'Horizontal line', 'edit'),
+      item('emoji', 'Emoji', 'edit'),
+      item('footnote', 'Footnote', 'edit', { shortcut: 'insert-footnote' }),
+      submenu('headers-and-footers', 'Headers & footers', [
+        item('header', 'Header', 'edit', { shortcut: 'insert-or-move-to-header' }),
+        item('footer', 'Footer', 'edit', { shortcut: 'insert-or-move-to-footer' }),
+      ]),
+      item('page-numbers', 'Page numbers', 'edit'),
+      submenu('break', 'Break', [
+        item('page-break', 'Page break', 'edit', { shortcut: 'insert-page-break' }),
+        item('section-break-next-page', 'Section break (next page)', 'edit'),
+        item('section-break-continuous', 'Section break (continuous)', 'edit'),
+        item('column-break', 'Column break', 'edit'),
+      ]),
+      item('bookmark', 'Bookmark', 'edit'),
+      submenu('table-of-contents', 'Table of contents', [
+        item('toc-plain', 'Plain text', 'edit'),
+        item('toc-dotted', 'Dotted', 'edit'),
+        item('toc-links', 'With blue links', 'edit'),
+      ]),
+      SEPARATOR,
+      item('comment', 'Comment', 'participate', { shortcut: 'insert-comment' }),
+    ]),
+    menu('format', 'Format', [
+      submenu('text', 'Text', [
+        item('bold', 'Bold', 'edit', { shortcut: 'bold' }),
+        item('italic', 'Italic', 'edit', { shortcut: 'italicize' }),
+        item('underline', 'Underline', 'edit', { shortcut: 'underline' }),
+        item('strikethrough', 'Strikethrough', 'edit', { shortcut: 'strikethrough' }),
+        item('superscript', 'Superscript', 'edit', { shortcut: 'superscript' }),
+        item('subscript', 'Subscript', 'edit', { shortcut: 'subscript' }),
+        item('small-caps', 'Small caps', 'edit', { shortcut: 'small-caps' }),
+        SEPARATOR,
+        item('size-increase', 'Increase font size', 'edit', { shortcut: 'increase-font-size' }),
+        item('size-decrease', 'Decrease font size', 'edit', { shortcut: 'decrease-font-size' }),
+        SEPARATOR,
+        submenu('capitalisation', 'Capitalisation', [
+          item('lowercase', 'lowercase', 'edit'),
+          item('uppercase', 'UPPERCASE', 'edit'),
+          item('title-case', 'Title Case', 'edit'),
+        ]),
+      ]),
+      submenu('paragraph-styles', 'Paragraph styles', [
+        item('style-normal', 'Normal text', 'edit', { shortcut: 'apply-normal-text-style' }),
+        item('style-title', 'Title', 'edit'),
+        item('style-subtitle', 'Subtitle', 'edit'),
+        item('style-heading-1', 'Heading 1', 'edit'),
+        item('style-heading-2', 'Heading 2', 'edit'),
+        item('style-heading-3', 'Heading 3', 'edit'),
+        item('style-heading-4', 'Heading 4', 'edit'),
+        item('style-heading-5', 'Heading 5', 'edit'),
+        item('style-heading-6', 'Heading 6', 'edit'),
+        SEPARATOR,
+        submenu('style-options', 'Options', [
+          item('save-default-styles', 'Save as my default styles', 'edit'),
+          item('use-default-styles', 'Use my default styles', 'edit'),
+          item('reset-styles', 'Reset styles', 'edit'),
+        ]),
+      ]),
+      submenu('align-and-indent', 'Align & indent', [
+        item('align-left', 'Left', 'edit', { shortcut: 'left-align' }),
+        item('align-centre', 'Centre', 'edit', { shortcut: 'center-align', keywords: ['center'] }),
+        item('align-right', 'Right', 'edit', { shortcut: 'right-align' }),
+        item('align-justified', 'Justified', 'edit', { shortcut: 'justify' }),
+        SEPARATOR,
+        item('indent-increase', 'Increase indent', 'edit', {
+          shortcut: 'increase-paragraph-indentation',
+        }),
+        item('indent-decrease', 'Decrease indent', 'edit', {
+          shortcut: 'decrease-paragraph-indentation',
+        }),
+        item('indentation-options', 'Indentation options', 'edit'),
+      ]),
+      submenu('line-spacing', 'Line & paragraph spacing', [
+        item('spacing-single', 'Single', 'edit', { checkable: 'radio' }),
+        item('spacing-115', '1.15', 'edit', { checkable: 'radio' }),
+        item('spacing-15', '1.5', 'edit', { checkable: 'radio' }),
+        item('spacing-double', 'Double', 'edit', { checkable: 'radio' }),
+        SEPARATOR,
+        item('space-before', 'Add space before paragraph', 'edit'),
+        item('space-after', 'Add space after paragraph', 'edit'),
+        item('custom-spacing', 'Custom spacing', 'edit'),
+        SEPARATOR,
+        item('keep-with-next', 'Keep with next', 'edit', { checkable: 'checkbox' }),
+        item('keep-lines-together', 'Keep lines together', 'edit', { checkable: 'checkbox' }),
+        item('prevent-single-lines', 'Prevent single lines', 'edit', {
+          checkable: 'checkbox',
+          keywords: ['widow', 'orphan'],
+        }),
+      ]),
+      submenu('columns', 'Columns', [
+        item('columns-one', 'One column', 'edit'),
+        item('columns-two', 'Two columns', 'edit'),
+        item('columns-three', 'Three columns', 'edit'),
+        item('columns-more', 'More options', 'edit'),
+      ]),
+      submenu('bullets-and-numbering', 'Bullets & numbering', [
+        item('numbered-list', 'Numbered list', 'edit', { shortcut: 'numbered-list' }),
+        item('bulleted-list', 'Bulleted list', 'edit', { shortcut: 'bulleted-list' }),
+        item('checklist', 'Checklist', 'edit', { shortcut: 'checklist' }),
+        item('list-options', 'List options', 'edit'),
+      ]),
+      SEPARATOR,
+      item('headers-and-footers-options', 'Headers & footers', 'edit'),
+      item('page-numbers-options', 'Page numbers', 'edit'),
+      item('page-orientation', 'Page orientation', 'edit'),
+      item('switch-to-pageless', 'Switch to Pageless format', 'edit'),
+      SEPARATOR,
+      item('table-properties', 'Table', 'edit'),
+      item('image-options', 'Image', 'edit'),
+      item('borders-and-lines', 'Borders & lines', 'edit', { keywords: ['shading'] }),
+      SEPARATOR,
+      item('clear-formatting', 'Clear formatting', 'edit', { shortcut: 'clear-text-formatting' }),
+    ]),
+    menu('tools', 'Tools', [
+      item('spelling-and-grammar', 'Spelling and grammar', 'edit', {
+        shortcut: 'open-spelling-and-grammar',
+      }),
+      item('word-count', 'Word count', 'view', { shortcut: 'word-count' }),
+      item('review-suggested-edits', 'Review suggested edits', 'edit', {
+        shortcut: 'review-suggested-edits',
+      }),
+      item('compare-documents', 'Compare documents', 'edit'),
+      SEPARATOR,
+      item('notification-settings', 'Notification settings', 'participate'),
+      item('preferences', 'Preferences', 'edit', { keywords: ['autocorrect', 'substitutions'] }),
+      item('accessibility', 'Accessibility', 'view', { keywords: ['screen reader', 'braille'] }),
+    ]),
+    menu('extensions', 'Extensions', [
+      item('agents', 'Agents', 'view', { keywords: ['mcp', 'cli'] }),
+    ]),
+    menu('help', 'Help', [
+      item('search-the-menus', 'Search the menus', 'view', {
+        shortcut: 'tool-finder',
+        keywords: ['tool finder'],
+        status: 'built',
+      }),
+      SEPARATOR,
+      item('help', 'Help', 'view'),
+      item('training', 'Training', 'view'),
+      item('updates', 'Updates', 'view'),
+      item('help-improve', 'Help improve LiveDoc', 'view', { keywords: ['report a bug'] }),
+      SEPARATOR,
+      item('privacy-policy', 'Privacy policy', 'view'),
+      item('terms-of-service', 'Terms of service', 'view'),
+      SEPARATOR,
+      item('keyboard-shortcuts', 'Keyboard shortcuts', 'view', {
+        shortcut: 'show-common-keyboard-shortcuts',
+        status: 'built',
+      }),
+    ]),
+  ];
+}
+
+// The context menu on text (editing-surface.md "Context menus"), in Google's order: the menus' items, by id, and the two
+// it alone offers. Suggest edits is for whoever may suggest, never a Viewer.
+export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeEntry[] {
+  return contextEntries(catalogue, [
+    'cut',
+    'copy',
+    'paste',
+    'paste-without-formatting',
+    'delete',
+    SEPARATOR,
+    'comment',
+    { id: 'mode-suggesting', label: 'Suggest edits', level: 'participate' },
+    SEPARATOR,
+    { id: 'link', label: 'Insert link' },
+    SEPARATOR,
+    item('format-options', 'Format options', 'edit'),
+    'clear-formatting',
+    SEPARATOR,
+    item('select-all-matching-text', 'Select all matching text', 'edit'),
+  ]);
+}

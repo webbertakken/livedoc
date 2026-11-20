@@ -24,7 +24,7 @@
 // round-trip so it can stand alone.
 
 import type { CreationIntent, DocumentPlacement, RecordedIntent } from '@livedoc/api-schema';
-import { remapTabLinks, type Tab } from '@livedoc/document';
+import { remapTabLinks, tabKindOf, type Tab } from '@livedoc/document';
 import { apiCreateDocument, apiLoadDocument, apiLoadTab, apiSaveDocumentMeta } from './api-client';
 import { ApiError } from './api/core';
 import {
@@ -36,6 +36,8 @@ import {
 import { fetchItems } from './api/items';
 import { storeAsCreates } from '@livedoc/items';
 import { fetchAllSheets, sheetAsCreate } from './api/sheets';
+import { apiLoadTextDocumentState } from './api/text-documents';
+import { base64OfBytes } from '@livedoc/text-documents/base64';
 
 // The refusals that mean "not beside the source for this person", where the copy is filed at the
 // explicit root of My Documents instead (docs/specs/013-workspace/default-folders.md "Duplicate").
@@ -120,7 +122,12 @@ export async function duplicateDocument(
         },
         Date.now(),
       );
-      if (itemStore?.items.length || src.itemTypes || sheets.length) {
+      // Each text document's state under its tab's new id (docs/specs/034-text-documents/
+      // live-editing-and-storage.md "A text document in This Browser").
+      const textDocuments = ((await offlineGetRecord(sourceId))?.textDocuments ?? [])
+        .filter((t) => tabIdMap.has(t.tabId))
+        .map((t) => ({ ...t, tabId: tabIdMap.get(t.tabId)! }));
+      if (itemStore?.items.length || src.itemTypes || sheets.length || textDocuments.length) {
         const rec = await offlineGetRecord(newId);
         if (rec) {
           await offlinePutRecord({
@@ -135,6 +142,7 @@ export async function duplicateDocument(
             // The type catalogue comes with it (docs/specs/026-plan/item-types.md).
             ...(src.itemTypes ? { itemTypes: src.itemTypes } : {}),
             ...(sheets.length ? { sheets } : {}),
+            ...(textDocuments.length ? { textDocuments } : {}),
           });
         }
       }
@@ -147,6 +155,29 @@ export async function duplicateDocument(
   // returning the id anyway made callers toast "Document duplicated"
   // and navigate to a document that doesn't exist.
   const intent = recordedIntentOf(src);
+  // Each text document's writing comes with it (docs/specs/034-text-documents/live-editing-and-storage.md "Copies"):
+  // its whole state, under its tab's new id. A state that cannot be read fails the copy rather than leave it blank.
+  let textDocuments: { tabId: string; state: string }[];
+  try {
+    textDocuments = await Promise.all(
+      fullTabs
+        .filter((t): t is Tab => t !== null && tabKindOf(t) === 'text-document')
+        .map(async (t) => ({
+          tabId: tabIdMap.get(t.id)!,
+          state: base64OfBytes(
+            await apiLoadTextDocumentState({
+              ownerId,
+              documentId: src.id,
+              tabId: t.id,
+              shareCode: null,
+            }),
+          ),
+        })),
+    );
+  } catch (error) {
+    console.warn('[duplicate] text document state unreadable', { sourceId, error: String(error) });
+    return undefined;
+  }
   const create = (place: DocumentPlacement) =>
     apiCreateDocument(ownerId, {
       id: newId,
@@ -159,6 +190,7 @@ export async function duplicateDocument(
       ...(src.itemTypes ? { itemTypes: src.itemTypes } : {}),
       ...(sheets.length ? { sheets: sheets.map(sheetAsCreate) } : {}),
       ...(src.workbook ? { workbook: src.workbook } : {}),
+      ...(textDocuments.length ? { textDocuments } : {}),
     });
   try {
     await create(placement ?? { teamId: src.teamId, folderId: src.folderId });

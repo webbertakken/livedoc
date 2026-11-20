@@ -86,6 +86,9 @@ reads **Close Side by Side**.
   its form as respondents see it, as a [tab window](../009-elements/tab-window.md) draws them. On
   opening it is fitted to the pane (never enlarged past 125%) and stays fitted as the tab grows until
   the person moves it.
+- **A tab outside the canvas** is its surface instead, live and read-only (a text document), or its name with
+  "Click to edit." where its surface has no read-only view yet
+  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#side-by-side)).
 - **Moving around:** scroll pans; Ctrl or Cmd + scroll (and a trackpad pinch) zooms about the
   pointer (5% to 400%).
 - **Chrome:** a chip at the top left names the tab with its mode icon and a **Live** badge. No

@@ -4,6 +4,7 @@
 import {
   TEXT_DOCUMENT_CHUNK_BYTES,
   TEXT_DOCUMENT_LOG_BYTES,
+  TEXT_DOCUMENT_LOG_UPDATES,
   TextDocumentState,
 } from '@livedoc/text-documents';
 import { tabKindOf, textDocumentFormatOf, type TextDocumentFormat } from '@livedoc/document';
@@ -58,12 +59,15 @@ export async function readTextDocumentState(env: DocumentEnv, tabId: string): Pr
   return TextDocumentState.merge(await storedUpdates(env, tabId));
 }
 
+/** The log as compaction weighs it: its bytes and its count of updates. */
+export type LogSize = { bytes: number; updates: number };
+
 /** Append one update to the log; answers the log's size after it, for the compaction check. */
 export async function appendTextDocumentUpdate(
   env: DocumentEnv,
   tabId: string,
   update: Uint8Array,
-): Promise<number> {
+): Promise<LogSize> {
   await env.DOCUMENT_DB.prepare(
     `INSERT INTO text_document_updates (tab_id, seq, bytes)
      VALUES (?, COALESCE((SELECT MAX(seq) FROM text_document_updates WHERE tab_id = ?), 0) + 1, ?)`,
@@ -71,11 +75,11 @@ export async function appendTextDocumentUpdate(
     .bind(tabId, tabId, toBlob(update))
     .run();
   const size = await env.DOCUMENT_DB.prepare(
-    'SELECT COALESCE(SUM(LENGTH(bytes)), 0) AS bytes FROM text_document_updates WHERE tab_id = ?',
+    'SELECT COALESCE(SUM(LENGTH(bytes)), 0) AS bytes, COUNT(*) AS updates FROM text_document_updates WHERE tab_id = ?',
   )
     .bind(tabId)
-    .first<{ bytes: number }>();
-  return size?.bytes ?? 0;
+    .first<LogSize>();
+  return { bytes: size?.bytes ?? 0, updates: size?.updates ?? 0 };
 }
 
 function concat(parts: readonly Uint8Array[]): Uint8Array {
@@ -95,12 +99,33 @@ export function chunksOf(state: Uint8Array, size = TEXT_DOCUMENT_CHUNK_BYTES): U
   return out;
 }
 
-/** Whether the log has grown past the size compaction keeps it to. */
-export const compactionDue = (logBytes: number): boolean => logBytes > TEXT_DOCUMENT_LOG_BYTES;
+/** Store a whole state for a tab that holds none yet (a copy, "Copies"): one update in the log when a row holds it,
+ *  else folded straight into the chunks. */
+export async function storeTextDocumentState(
+  env: DocumentEnv,
+  tabId: string,
+  state: Uint8Array,
+): Promise<void> {
+  if (state.byteLength <= TEXT_DOCUMENT_CHUNK_BYTES)
+    await appendTextDocumentUpdate(env, tabId, state);
+  else await compactTextDocument(env, tabId, state);
+}
 
-/** Fold the log into chunks, as one transaction: the merged state replaces both. Answers the chunk count. */
-export async function compactTextDocument(env: DocumentEnv, tabId: string): Promise<number> {
-  const merged = TextDocumentState.merge(await storedUpdates(env, tabId));
+/** Whether the log has grown past the size or the count compaction keeps it to. */
+export const compactionDue = (log: LogSize): boolean =>
+  log.bytes > TEXT_DOCUMENT_LOG_BYTES || log.updates > TEXT_DOCUMENT_LOG_UPDATES;
+
+/** Fold the log into chunks, as one transaction: the merged state replaces both. Answers the chunk count.
+ *  `extra`: an update folded in with them, one no row of the log could hold ("Sending"). */
+export async function compactTextDocument(
+  env: DocumentEnv,
+  tabId: string,
+  extra?: Uint8Array,
+): Promise<number> {
+  const merged = TextDocumentState.merge([
+    ...(await storedUpdates(env, tabId)),
+    ...(extra ? [extra] : []),
+  ]);
   const rev = Date.now();
   const chunks = chunksOf(merged);
   await env.DOCUMENT_DB.batch([

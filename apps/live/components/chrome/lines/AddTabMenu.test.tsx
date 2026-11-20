@@ -41,6 +41,23 @@ describe('AddTabMenu', () => {
     expect(track).toHaveBeenCalledWith('UI', 'Opened', 'AddTabMenu');
   });
 
+  // docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip": Text document after the Plan rows, only where
+  // the document can hold one (stored on LiveDoc).
+  it('offers Text document after the Plan rows when the document can hold one', () => {
+    const onAdd = vi.fn();
+    render(<AddTabMenu onAdd={onAdd} tabMode="diagram" offerTextDocument />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add tab' }));
+    expect(items().map((i) => i.textContent)).toEqual([
+      'Tab',
+      'Board',
+      'Sheet',
+      'Dashboard',
+      'Text document',
+    ]);
+    fireEvent.click(document.querySelector('[data-add-tab-row="text-document"]')!);
+    expect(onAdd).toHaveBeenCalledWith('text-document');
+  });
+
   it('draws the Tab row with the mark of the mode it will open in', () => {
     open('draw');
     expect(items()[0]!.dataset.addTabRow).toBe('tab');

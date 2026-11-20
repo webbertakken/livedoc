@@ -14,6 +14,7 @@ import { assignAppLocation, interceptAppNavigation } from '@/lib/app-location';
 import { signInOfferedHere } from '@/lib/auth-config';
 import { debugLog } from '@/lib/debug-log';
 import { loadEditorPage } from '@/lib/editor-page-loader';
+import { loadCanvasCode } from '@/lib/canvas-code/canvas-code';
 import { ensureIconCatalogs } from '@/lib/icon-registry';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { markNameConfirmed } from '@/lib/local-identity';
@@ -73,11 +74,13 @@ function locationFor(place: NewDocumentPlace, creator: NewDocumentCreator): Save
   });
 }
 
-// What a new document opens with: the editor's code, what builds its content, a Plan template's example cards, and
-// the icon catalogues the editor draws with. The standby is rendered hidden, which runs none of its effects, so a load
+// What a new document opens with: the editor's code, the canvas's (docs/specs/006-document/kinds-outside-the-canvas.md
+// "The canvas's code"), what builds its content, a Plan template's example cards, and the icon catalogues the editor
+// draws with. The standby is rendered hidden, which runs none of its effects, so a load
 // an effect starts in the editor (useIconCatalogs) would otherwise only begin at the click.
 const OPEN_CODE = [
   loadEditorPage,
+  () => loadCanvasCode('idle'),
   loadNewDocumentContent,
   () => import('@livedoc/templates/plan-template-seeds'),
   ensureIconCatalogs,
@@ -202,6 +205,11 @@ export async function prepareStandbyDocument(lastBlank: NewDocumentBlankId): Pro
     await loadEditorPage();
     setStandby(await prepareDocument(blank.blank, 'blank', creator, location));
     debugLog(`[new-document] standby blank=${blank.id}`);
+  } catch (error) {
+    // Background work (docs/specs/016-platform/stale-builds.md "Background work"): its code gone after a deploy, or
+    // the network down, is no failure of the page the person is on. Left unmade; the click makes the document fresh,
+    // and that load recovers as any navigation does.
+    console.warn('[new-document] standby not made', { error: String(error) });
   } finally {
     preparing = false;
   }

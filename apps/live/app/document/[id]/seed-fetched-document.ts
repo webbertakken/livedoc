@@ -8,6 +8,8 @@ import { apiLoadTabRevisioned } from '@/lib/api-client';
 import { track } from '@/lib/telemetry';
 import { firstTabToLoad, isTabOutOfScope } from '@/lib/tab-scope';
 import { loadKindFamiliesFor } from '@/lib/element-kinds/load-for';
+import { loadCanvasCode } from '@/lib/canvas-code/canvas-code';
+import { surfaceOf } from '@livedoc/document';
 import { placeholdersFromSummaries } from './editor-page-helpers';
 
 type SetState<T> = Dispatch<SetStateAction<T>>;
@@ -101,8 +103,13 @@ export function makeSeedFetchedDocument(deps: {
         }).catch(() => null));
       const first = loaded?.tab ?? null;
       // The board draws every element with its own face in its first frame (docs/specs/016-platform/web-performance.md
-      // "At the open"): the tab is put in place once its families are in, which the early reads already asked for.
-      if (first) await loadKindFamiliesFor(first, 'tab');
+      // "At the open"): the tab is put in place once its families are in, which the early reads already asked for,
+      // and, for a canvas tab, the canvas's code (docs/specs/006-document/kinds-outside-the-canvas.md).
+      if (first)
+        await Promise.all([
+          loadKindFamiliesFor(first, 'tab'),
+          surfaceOf(first, !!fetched.workbook) === null ? loadCanvasCode('open') : null,
+        ]);
       // Only mark the tab loaded when the eager fetch actually
       // returned content. If it failed (e.g. a transient 403 from
       // a request that raced ahead of the session token / session

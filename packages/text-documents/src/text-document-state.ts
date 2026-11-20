@@ -3,8 +3,9 @@
 // layout: a `paragraph` element holding text). The room, the editor, the api and agents read and write it here.
 import * as Y from 'yjs';
 import type { Body, Paragraph } from './body';
+import type { Style } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
-import { readLiveDocument } from './live/live-read';
+import { readLiveDocument, readLiveStyles } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
 import { writeLiveDocument } from './live/live-write';
 
@@ -87,6 +88,29 @@ export const TextDocumentState = {
       return false;
     }
   },
+  /** The characters an update inserts (text only; what it deletes is not counted), read without a document. */
+  insertedCharacters: (update: Uint8Array): number =>
+    Y.decodeUpdate(update).structs.reduce(
+      (n, struct) =>
+        struct instanceof Y.Item && struct.content instanceof Y.ContentString
+          ? n + struct.content.str.length
+          : n,
+      0,
+    ),
+  /** The state vector of an update: what it holds, client by client (live-editing-and-storage.md "Reconnecting"). */
+  stateVectorOf: (update: Uint8Array): Uint8Array => Y.encodeStateVectorFromUpdate(update),
+  /** Whether the bytes decode as a state vector. */
+  isStateVector: (bytes: Uint8Array): boolean => {
+    try {
+      Y.decodeStateVector(bytes);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  /** What `update` holds beyond `stateVector`: a catch-up's answer, small when the reader is nearly current. */
+  since: (update: Uint8Array, stateVector: Uint8Array): Uint8Array =>
+    Y.diffUpdate(update, stateVector),
   body: (doc: Y.Doc): Y.XmlFragment => doc.getXmlFragment(BODY_FRAGMENT),
   /** The body's paragraphs as plain values. */
   paragraphs: (doc: Y.Doc): Body =>
@@ -108,6 +132,8 @@ export const TextDocumentState = {
   encode: (doc: Y.Doc): Uint8Array => Y.encodeStateAsUpdate(doc),
   /** The live state as the model, in the tab's format (live-editing-and-storage.md "The layout"). */
   document: (doc: Y.Doc, format: TextDocumentFormat): TextDocument => readLiveDocument(doc, format),
+  /** The live state's styles alone, cheap to read again as the writing changes (links-and-navigation.md). */
+  styles: (doc: Y.Doc, format: TextDocumentFormat): readonly Style[] => readLiveStyles(doc, format),
   /** A state holding exactly this model, as one update to store beside the seed. */
   fromDocument: (document: TextDocument): Uint8Array => {
     const doc = TextDocumentState.load();

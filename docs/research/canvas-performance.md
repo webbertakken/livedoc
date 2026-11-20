@@ -394,6 +394,78 @@ Measured 2026-10-14 on the reference board, local, calibrated 3.2x, against main
   root on each insertion and restyle the floating panels (ten times in one release); rewriting it
   without `:has` saved only 3-4 ms, so it stays.
 
+## Contexts around the element layer
+
+Measured 2026-11-20 on the reference board, local, throttled 3x (about the hosted runner's
+calibrated 2x), interleaved against main at `3d45f65d0`, both builds served at once.
+
+- **The cost was React looking for readers.** In a release (a drag, a stroke) and in both halves of
+  a click that selects, the editor root re-rendered, and seven contexts above the element views took
+  a new value: the editor's state (a new object every render), the custom themes, Plan, the
+  editor mode, the toolbar groups, the side-by-side split, the tab windows and, inside the canvas,
+  the Sheets' charts. For each memoised element view that bailed out, React walked up to the root
+  for changed providers (`propagateParentContextChanges`) and then down through its subtree looking
+  for readers (`propagateContextChanges`): about 22,500 components. Counters added to a local copy
+  of react-dom put the downward walk at three quarters of it: about 22 of 28 ms in a stroke's
+  release at 4x. Steadying the six smaller contexts alone gained nothing: one changed context is
+  enough to start the walk.
+- **Tried and set aside: the values in stores.** Carrying the editor's state, the toolbar groups,
+  the tab windows and the Sheets' charts in a store the context holds (read with
+  `useSyncExternalStore`, published after the commit) removed the walk: a drag's press 22-23 to
+  13-14 ms and its release 36-38 to 30-32, a stroke's release 32 to 23-24, a select's press 20-21 to
+  16 and its release 12 to 7. But a reader React passed by then updates one commit later, outside the
+  transition, so a View Transition no longer animates it: the start panel's mode cross-fade started
+  none. Only React's context check reaches a passed-by reader in the same commit, and that check is
+  the walk; removing it means the element views must not sit under the editor's contexts at all.
+- **What shipped**: the handlers the smaller contexts carry keep their identity, and the split's value
+  is kept by which tabs there are. On its own it measures as nothing (the editor's state still starts
+  the walk), but it is what the contexts need once the element views leave them.
+- **The probe's drag became a double-press.** Its selecting click and its press were 400 ms apart,
+  inside the 450 ms double-press window: once the board answered quickly enough the press paired
+  with the click and moved nothing. The press now comes after the window. At fit on the whiteboard
+  the pressed shape is about 25 px wide and the press lands on its resize handle, so that row
+  measures a resize.
+- **Traces with stacks inflate DOM work.** `disabled-by-default-devtools.timeline.stack` (and
+  invalidation tracking) record a stack for each style invalidation: a stroke's release traced at
+  109-195 ms with them and 74 ms without, and `setAttribute`, `removeAttribute`, `appendChild` and
+  `removeChild` led the profile's self time. Timed on the page, those calls took under 0.5 ms each.
+  Read DOM costs from a trace without the stack categories.
+- **Long animation frames name the handler.** A frame's `scripts` (for example
+  `DOMWindow.onpointerup`) and `renderStart` give an untraced split of script and rendering; the
+  Event Timing entries' `processingEnd - processingStart` give each handler's time.
+
+## A press, without the editor
+
+Measured 2026-11-20 on the reference board, local, throttled 3x, interleaved against main at
+`6ec9d216e`, both builds served at once; the pointer handler's time in ms, six runs, two rounds.
+
+- **The cause**: pressing an element set the drag in hand as the editor's state, and letting go
+  cleared it, so a click rendered the editor root twice and React checked every element view for
+  readers each time (the context check was 45% of a press's React work). A drag's release rendered it
+  twice: once for the change and once for the drag ending.
+- **What shipped**: the drag lives in a store (`dragStore`); the modifier hint and the canvas host
+  (for a reshaped arrow's id alone) read it, and the gesture's listeners are set up and torn down as
+  it changes. A change made inside a listener waits for the listener to return, as it did when the
+  change was a render away.
+- **What it took**: a drag's press 21-23 to 11-12 and its release 35-39 to 24-28; a select's press
+  18-20 to 10-13 and its release 10-17 to 0-1. A stroke (a pen, no drag) did not change. The select
+  row's longest task at 3x went from 50-52 to under 50 in eleven of twelve runs.
+
+## A stroke's release, label by label
+
+Measured 2026-11-20 on the reference board, in Node, unthrottled, a stroke added to the board and
+taken away again, fifty times each.
+
+- **Label inks were worked out for the whole board on every edit** (`withReadableLabelInks` in the
+  stock-colour projector, whenever the canvas is drawn in the other half): 0.59 ms a change. Now a
+  tracker works out only the labels a change can reach (`createLabelInkTracker`): 0.33 ms, most of
+  it the comparison of the two boards, and a change no label can see keeps every label's object.
+- **The arrows' frames were already worked out per change**: `geometryFor` takes 0.23 ms for a
+  stroke; rebuilding the arrow links (0.27 ms) and the grid (0.08 ms) are the rest.
+- **A profile overstates small functions.** In a traced release the frames and the inks read as
+  about 5% and 4% of the task; timed on their own they are about 1% each. The sampler's cost lands on
+  short calls. Time a suspect on its own before rebuilding it.
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.

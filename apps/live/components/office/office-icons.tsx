@@ -1,0 +1,29 @@
+// The office title row's glyphs, from the vendored Lucide set (docs/specs/004-interface-design/iconography.md).
+import {
+  lucideAppWindow,
+  lucideCloudAlert,
+  lucideCloudCheck,
+  lucideCloudOff,
+  lucideCloudSync,
+  lucideCopy,
+  lucideFolderInput,
+  lucideLock,
+  lucideSettings,
+  lucideStar,
+} from '@livedoc/icons/lucide';
+import { lucideGlyph } from '@livedoc/ui';
+
+export const OfficeStarIcon = lucideGlyph(lucideStar, 18);
+export const OfficeMoveIcon = lucideGlyph(lucideFolderInput, 18);
+export const OfficeSettingsIcon = lucideGlyph(lucideSettings, 20);
+export const OfficeLockIcon = lucideGlyph(lucideLock, 16);
+export const OfficeCopyIcon = lucideGlyph(lucideCopy, 16);
+
+// The save status's glyphs, one per status (editing-surface.md "The title row").
+export const OfficeSaveIcons = {
+  saving: lucideGlyph(lucideCloudSync, 18),
+  saved: lucideGlyph(lucideCloudCheck, 18),
+  'this-browser': lucideGlyph(lucideAppWindow, 18),
+  offline: lucideGlyph(lucideCloudOff, 18),
+  failed: lucideGlyph(lucideCloudAlert, 18),
+} as const;

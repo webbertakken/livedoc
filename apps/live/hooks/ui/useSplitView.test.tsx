@@ -164,3 +164,32 @@ describe('useSplitView', () => {
     expect(track).toHaveBeenCalledWith('Tab', 'Closed', 'SideBySide');
   });
 });
+
+// The split's context sits around the canvas and holds still through edits of the tabs' content
+// (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+describe('useSplitView identity', () => {
+  it('keeps the same value when the tabs change content but not which tabs there are', () => {
+    Object.defineProperty(window, 'innerWidth', { value: 1440, configurable: true });
+    const loaded = new Set(['a']);
+    const loadTabs = async () => [];
+    const selectTab = () => {};
+    const { result, rerender } = renderHook(
+      ({ tabs }: { tabs: Tab[] }) =>
+        useSplitView({
+          tabs,
+          activeId: 'a',
+          selectTab,
+          documentId: 'doc',
+          hydrated: true,
+          loadedTabIds: loaded,
+          loadTabs,
+          suspended: false,
+        }),
+      { initialProps: { tabs: [tab('a'), tab('b')] } },
+    );
+    const before = result.current;
+    rerender({ tabs: [tab('a'), tab('b')] });
+    expect(result.current).toBe(before);
+    expect(result.current.canOpen('b')).toBe(true);
+  });
+});

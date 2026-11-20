@@ -102,3 +102,6 @@ coverage/
 
 # Generated per pull request by scripts/preview.mjs
 wrangler.preview.json
+
+# The office schemas CI fetches into the workspace and caches (packages/text-documents/scripts/fetch-office-schemas.sh)
+/.office-schemas/

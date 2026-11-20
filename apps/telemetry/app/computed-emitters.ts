@@ -464,7 +464,31 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/app/document/[id]/useSlideDeck.ts UI·Changed': { values: PRESENTATION_FIELDS },
   // A text document downloaded in the format it is held in (docs/specs/034-text-documents/text-document.md).
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {
-    values: ['TextDocumentOdt', 'TextDocumentDocx'],
+    values: ['TextDocumentOdt', 'TextDocumentFodt', 'TextDocumentDocx'],
+  },
+  // The office shell's title row (docs/specs/004-interface-design/office-shell.md "Telemetry"): a menu opened, by its
+  // name, the folder picker and the keyboard shortcuts opened, a star toggled, a tool finder result run and a person followed, for the kind that
+  // asks for them.
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Opened': {
+    values: [
+      ...['File', 'Edit', 'View', 'Insert', 'Format', 'Tools', 'Extensions', 'Help'].map(
+        (menu) => `TextDocumentMenu${menu}`,
+      ),
+      'TextDocumentMove',
+      'TextDocumentShortcuts',
+    ],
+  },
+  // A side panel of an office kind opened (docs/specs/004-interface-design/office-shell.md "Side panels"), by its title.
+  'apps/live/lib/office/useOfficePanels.ts UI·Opened': { values: ['TextDocumentPanelOutline'] },
+  // An office kind's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").
+  'apps/live/components/office/useOfficeContextMenu.ts UI·Opened': {
+    values: ['TextDocumentContextMenu'],
+  },
+  // An office kind's editing mode changed (docs/specs/034-text-documents/review.md "Editing modes"), typed by its kind.
+  'apps/live/lib/office/useOfficeMode.ts UI·Changed': { values: ['TextDocumentMode'] },
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Toggled': { values: ['TextDocumentStar'] },
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Used': {
+    values: ['TextDocumentToolFinder', 'TextDocumentFollow'],
   },
   'apps/live/components/dialogs/settings/settings-catalogue.ts UI·Toggled': {
     values: PRESENTATION_SETTINGS.toggled,

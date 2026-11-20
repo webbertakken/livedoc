@@ -13,6 +13,11 @@ office kinds; this spec says what a text document puts in them.
 - An editing mode is one person's, never shared, and starts at the most an access level allows: an Editor in
   Editing, a Participant in Suggesting (fork D7, ruled), a Viewer in Viewing.
 - The switch sits at the right of the title row ([Editing surface](editing-surface.md#the-title-row)).
+- A mode never grants more than the level: Viewing shows the menus and toolbar a Viewer sees, and the writing is read
+  only; a mode the level does not allow is not listed.
+- Until suggesting is built, Suggesting is listed dimmed ("Coming soon") and a Participant starts in Viewing.
+- The mode is kept while the document is open, never stored: each open starts at the level's mode `(default)`.
+- Telemetry: `UI · Changed · TextDocumentMode` when a person changes it.
 
 ## Comments
 

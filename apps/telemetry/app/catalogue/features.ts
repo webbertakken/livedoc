@@ -1060,12 +1060,68 @@ export const EXPLORER_VIEW = chart(
   { typeIn: (type) => (type ?? '').startsWith('ExplorerView'), rising: 'neutral' },
 );
 
+// An item run from a text document's tool finder, Search the menus (docs/specs/004-interface-design/office-shell.md).
+export const TOOL_FINDER_USED = chart(
+  'UI',
+  'Used',
+  'Tool Finder Used',
+  "An item run from a text document's tool finder (Search the menus).",
+  { types: ['TextDocumentToolFinder'] },
+);
+
+// A text document starred from its title row (docs/specs/034-text-documents/editing-surface.md "The title row").
+export const TEXT_DOCUMENT_STARRED = chart(
+  'UI',
+  'Toggled',
+  'Text Document Star',
+  "A text document's star pressed in its title row.",
+  { types: ['TextDocumentStar'], rising: 'neutral' },
+);
+
+// A text document's zoom changed from its toolbar (docs/specs/034-text-documents/editing-surface.md "Zoom").
+export const TEXT_DOCUMENT_ZOOMED = chart(
+  'UI',
+  'Changed',
+  'Text Document Zoom',
+  "A text document's zoom changed from its toolbar: Fit, a preset or a typed value.",
+  { types: ['TextDocumentZoom'], rising: 'neutral' },
+);
+
+// A person changed their editing mode on a text document (docs/specs/034-text-documents/review.md "Editing modes").
+export const TEXT_DOCUMENT_MODE = chart(
+  'UI',
+  'Changed',
+  'Text Document Mode',
+  'Someone switched a text document between Editing and Viewing.',
+  { types: ['TextDocumentMode'], rising: 'neutral' },
+);
+
+// A person here followed from a text document's title row: their caret brought into view, or their tab opened.
+export const TEXT_DOCUMENT_FOLLOWED = chart(
+  'UI',
+  'Used',
+  'Person Followed',
+  "Someone here pressed in a text document's title row, to see where they are.",
+  { types: ['TextDocumentFollow'] },
+);
+
 export const EDITOR_CHROME: MetricStack = {
   stack: true,
   title: 'Editor Chrome',
   blurb:
     'Getting around and arranging the workspace: zoom, zen mode, the bars on a phone held sideways, panel layout, the Explorer view.',
-  members: [CANVAS_ZOOMS, ZEN_MODE, LANDSCAPE_BARS, PANELS_DOCKED, EXPLORER_VIEW],
+  members: [
+    CANVAS_ZOOMS,
+    ZEN_MODE,
+    LANDSCAPE_BARS,
+    PANELS_DOCKED,
+    EXPLORER_VIEW,
+    TOOL_FINDER_USED,
+    TEXT_DOCUMENT_STARRED,
+    TEXT_DOCUMENT_FOLLOWED,
+    TEXT_DOCUMENT_ZOOMED,
+    TEXT_DOCUMENT_MODE,
+  ],
 };
 
 // Dialogs and panels opened (UI·Opened), split by what was opened.
@@ -1108,8 +1164,8 @@ export const HELP_FROM_EDITOR = opened(
 
 export const SHORTCUTS_OPENED = opened(
   'Shortcuts Opened',
-  'The keyboard shortcuts list opened.',
-  (t) => t === 'Shortcuts',
+  'The keyboard shortcuts list opened, on a canvas or in a text document.',
+  (t) => t === 'Shortcuts' || t === 'TextDocumentShortcuts',
 );
 
 // Edit Outline (docs/specs/009-elements/mind-node.md): how often a mind map is opened as text.
@@ -1234,6 +1290,28 @@ export const LOCAL_MOVE_OFFERED = opened(
 
 OPENED_HOMES.push(PALETTE_GROUPS_OPENED.typeIn!);
 
+// A text document's menus opened from its menu bar (docs/specs/004-interface-design/office-shell.md "Telemetry"):
+// File, Edit, View and the rest, by name.
+export const TEXT_DOCUMENT_MENUS_OPENED = opened(
+  'Text Document Menus',
+  "A menu of a text document's menu bar opened: File, Edit, View, Insert, Format, Tools, Extensions or Help.",
+  (t) => (t ?? '').startsWith('TextDocumentMenu'),
+);
+
+// A text document's side panel opened (docs/specs/004-interface-design/office-shell.md "Side panels"): the outline.
+export const TEXT_DOCUMENT_PANELS_OPENED = opened(
+  'Text Document Panels',
+  'A side panel of a text document opened from its menu or shortcut: the outline.',
+  (t) => (t ?? '').startsWith('TextDocumentPanel'),
+);
+
+// A text document's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").
+export const TEXT_DOCUMENT_CONTEXT_MENU_OPENED = opened(
+  'Text Document Context Menu',
+  "The context menu on a text document's writing opened, by a right-click or from the keyboard.",
+  (t) => t === 'TextDocumentContextMenu',
+);
+
 export const OTHER_OPENED = chart(
   'UI',
   'Opened',
@@ -1255,6 +1333,9 @@ export const PANELS_OPENED: MetricStack = {
     SHORTCUTS_OPENED,
     MIND_OUTLINE_OPENED,
     ACTION_SIGN_IN_NUDGE,
+    TEXT_DOCUMENT_MENUS_OPENED,
+    TEXT_DOCUMENT_PANELS_OPENED,
+    TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
     OTHER_OPENED,
   ],
   seeAlso: { section: 'editing', label: 'See Each Dialog in Features › Editing' },

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { Browser, Page } from '@playwright/test';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { libreOfficeConvert } from './libreoffice';
+import { officeMenuItem } from './office-menus';
 
 // A spreadsheet end to end (plan 0020 Phase 4; docs/specs/029-sheets/spreadsheet.md, sheet-store.md "In a
 // spreadsheet", standard-mapping.md, files-and-print.md): a new spreadsheet, stored in its room, a value and a formula
@@ -79,11 +80,8 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   }
 
   // Downloaded as ODF, in the format it was born in (C5).
-  await page.getByRole('button', { name: 'File' }).click();
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('menuitem', { name: 'Download as OpenDocument (.ods)' }).click(),
-  ]);
+  const downloadItem = await officeMenuItem(page, ['File', 'Download as OpenDocument (.ods)']);
+  const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);
   expect(download.suggestedFilename()).toBe('Untitled spreadsheet.ods');
   const dir = mkdtempSync(join(tmpdir(), 'spreadsheet-'));
   const ods = join(dir, 'Budget.ods');
@@ -96,11 +94,8 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   // Saved again by LibreOffice, then opened here: the same inputs, formula included, in a new spreadsheet.
   const resaved = join(dir, 'Budget from LibreOffice.ods');
   writeFileSync(resaved, libreOfficeConvert(ods, 'ods:calc8', { recalculate: true }));
-  await page.getByRole('button', { name: 'File' }).click();
-  const [chooser] = await Promise.all([
-    page.waitForEvent('filechooser'),
-    page.getByRole('menuitem', { name: 'Open', exact: true }).click(),
-  ]);
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
   await chooser.setFiles(resaved);
   await page.waitForURL((url) => !url.pathname.includes(id));
   await expect(page.locator(READY)).toBeVisible();

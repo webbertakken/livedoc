@@ -53,6 +53,10 @@ have cloud documents and offline documents side by side.
   - A tab listed in `tabIds` without a tab record is left out of the document, logged
     `[offline-store] tab-record-missing`; a tab record no `tabIds` lists is ignored, and
     removed by the document's next whole write.
+- A text document's state rides its record (`textDocuments`), as a spreadsheet's sheets do
+  ([This Browser](../034-text-documents/live-editing-and-storage.md#this-browser)).
+- A cloud text document's edits the room has not confirmed are kept apart, in the `livedoc-text-documents`
+  database ([Live editing and storage](../034-text-documents/live-editing-and-storage.md#the-local-copy)).
 - The app keeps a small **local index** of offline document ids (also in
   IndexedDB) so the Explorer can list them and the persistence layer knows which
   ids resolve locally vs to the API.

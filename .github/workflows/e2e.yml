@@ -186,8 +186,26 @@ jobs:
       - name: Set up
         uses: ./.github/actions/e2e-setup
 
+      # The schemas and Jing, pinned by their checksums in the script, kept between runs: a cached run reaches no
+      # outside host (OASIS, ECMA, Maven), so a publisher's bad minute cannot fail the check.
+      - name: Restore the office schemas
+        id: office-schemas
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .office-schemas
+          key: office-schemas-${{ hashFiles('packages/text-documents/scripts/fetch-office-schemas.sh') }}
+
       - name: Validate written files against the ODF and OOXML schemas
-        run: pnpm --filter @livedoc/text-documents validate:files
+        shell: bash
+        run: OFFICE_SCHEMAS_DIR="$GITHUB_WORKSPACE/.office-schemas" pnpm --filter @livedoc/text-documents validate:files
+
+      # Saved once fetched and checked, whatever the validation found, so no failing step costs the next run its cache.
+      - name: Save the office schemas
+        if: always() && steps.office-schemas.outputs.cache-hit != 'true' && hashFiles('.office-schemas/ooxml/wml.rnc') != ''
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .office-schemas
+          key: ${{ steps.office-schemas.outputs.cache-primary-key }}
 
       - name: Restore build cache
         uses: ./.github/actions/next-cache-restore

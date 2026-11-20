@@ -3,6 +3,10 @@
 
 import { capElementActions, drawnCount, type Tab } from '@livedoc/document';
 import { rowToTab, type TabRow } from '../tab-row';
+
+// The kind a body names, as its row's `kind` column keeps it (docs/specs/006-document/kinds-outside-the-canvas.md "The
+// surface"): written with the body, never parsed back out of it.
+const storedKindOf = (tab: Pick<Tab, 'kind'>): string | null => tab.kind ?? null;
 import { MAX_TAB_BYTES, TabTooLargeError, byteLength, logTabRefused } from '../limits';
 
 // Every write of a tab's data meets this first (docs/specs/015-api/api.md "Tab size"): data over the
@@ -201,16 +205,17 @@ export function tabWriteStatements(
   const insertRev = advance ? 1 : revision.expected + 1;
   return [
     env.DOCUMENT_DB.prepare(
-      `INSERT INTO tabs (id, name, data, updated_at, element_count, rev)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          name = excluded.name,
          data = excluded.data,
          updated_at = excluded.updated_at,
          element_count = excluded.element_count,
-         rev = ${advance ? 'tabs.rev + 1' : 'excluded.rev'}
+         rev = ${advance ? 'tabs.rev + 1' : 'excluded.rev'},
+         kind = excluded.kind
        RETURNING rev`,
-    ).bind(id, name, data, now, drawnCount(tab), insertRev),
+    ).bind(id, name, data, now, drawnCount(tab), insertRev, storedKindOf(tab)),
     env.DOCUMENT_DB.prepare(
       `INSERT INTO document_tabs (document_id, tab_id, order_index, added_at)
        VALUES (?, ?, ?, ?)
@@ -330,15 +335,16 @@ export async function seedTabs(
     const data = JSON.stringify(rest);
     return [
       env.DOCUMENT_DB.prepare(
-        `INSERT INTO tabs (id, name, data, updated_at, element_count, rev)
-         VALUES (?, ?, ?, ?, ?, 1)
+        `INSERT INTO tabs (id, name, data, updated_at, element_count, rev, kind)
+         VALUES (?, ?, ?, ?, ?, 1, ?)
          ON CONFLICT(id) DO UPDATE SET
            name = excluded.name,
            data = excluded.data,
            updated_at = excluded.updated_at,
            element_count = excluded.element_count,
-           rev = tabs.rev + 1`,
-      ).bind(id, name, data, now, drawnCount(tab)),
+           rev = tabs.rev + 1,
+           kind = excluded.kind`,
+      ).bind(id, name, data, now, drawnCount(tab), storedKindOf(tab)),
       env.DOCUMENT_DB.prepare(
         `INSERT INTO document_tabs (document_id, tab_id, order_index, added_at)
          VALUES (?, ?, ?, ?)

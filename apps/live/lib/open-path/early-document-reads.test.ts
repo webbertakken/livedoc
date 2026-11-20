@@ -3,8 +3,9 @@
 // downloads". What the early path asks, in what order, and as whom: always the requests the editor would make.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { guest, offline, identity, kinds } = vi.hoisted(() => ({
+const { guest, offline, identity, kinds, canvas } = vi.hoisted(() => ({
   kinds: { loadKindFamiliesFor: vi.fn(async (_tab: unknown, _reason: string) => {}) },
+  canvas: { loadCanvasCode: vi.fn(async (_reason: string) => true) },
   guest: { ensureSignedGuestIdentity: vi.fn(async () => ({ id: 'g1', sig: 'sig1' })) },
   offline: { isOfflineId: vi.fn(async (_id: string) => false) },
   identity: { getGuestSelfSig: vi.fn((): string | null => 'sig1') },
@@ -13,6 +14,7 @@ vi.mock('@/lib/guest-identity', () => guest);
 vi.mock('@/lib/offline/offline-ids', () => offline);
 vi.mock('@/lib/local-identity', () => identity);
 vi.mock('@/lib/element-kinds/load-for', () => kinds);
+vi.mock('@/lib/canvas-code/canvas-code', () => canvas);
 
 import { askEarlyDocumentReads } from './early-document-reads';
 import { openEarlyReads, resetEarlyReadsForTests, takeEarlyRead } from '@/lib/api/early-reads';
@@ -67,6 +69,7 @@ beforeEach(() => {
   localStorage.clear();
   guest.ensureSignedGuestIdentity.mockClear();
   kinds.loadKindFamiliesFor.mockClear();
+  canvas.loadCanvasCode.mockClear();
   offline.isOfflineId.mockResolvedValue(false);
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -259,5 +262,62 @@ describe('the opened tab’s element kind families', () => {
     serve({ '/api/documents/d1': json({ document: doc('g1') }) });
     await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
     expect(kinds.loadKindFamiliesFor).not.toHaveBeenCalled();
+  });
+});
+
+// docs/specs/006-document/kinds-outside-the-canvas.md "The canvas's code": asked at the open when the opened tab is a
+// canvas, never when it has a surface.
+describe('the canvas’s code at the open', () => {
+  it('starts with a canvas tab the open read carries', async () => {
+    serve({
+      '/api/documents/d1': json({ document: doc('g1'), openedTab: { id: 't1', elements: [] } }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(canvas.loadCanvasCode).toHaveBeenCalledWith('open');
+  });
+
+  it('starts with a canvas tab read on its own', async () => {
+    serve({
+      '/api/documents/d1': json({ document: doc('g1') }),
+      '/api/documents/d1/tabs/t1': json({ tab: { id: 't1', elements: [] } }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(canvas.loadCanvasCode).toHaveBeenCalledWith('open');
+  });
+
+  it('is not asked for a text document tab', async () => {
+    serve({
+      '/api/documents/d1': json({
+        document: doc('g1'),
+        openedTab: { id: 't1', kind: 'text-document', format: 'odf', elements: [] },
+      }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(canvas.loadCanvasCode).not.toHaveBeenCalled();
+  });
+
+  it('is not asked for a spreadsheet’s sheet tab, through a share link too', async () => {
+    serve({
+      '/api/share/c1': json({
+        document: { ...doc('owner'), workbook: { id: 'w1' } },
+        role: 'participate',
+        tabId: null,
+        openedTab: { id: 't1', kind: 'sheet', elements: [] },
+        reader: null,
+      }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/shared?s=c1` });
+    expect(canvas.loadCanvasCode).not.toHaveBeenCalled();
+  });
+
+  it('is asked for a Plan Sheet, a sheet tab without a workbook', async () => {
+    serve({
+      '/api/documents/d1': json({
+        document: doc('g1'),
+        openedTab: { id: 't1', kind: 'sheet', elements: [] },
+      }),
+    });
+    await askEarlyDocumentReads({ accountId: null, href: `${ORIGIN}/document/d1` });
+    expect(canvas.loadCanvasCode).toHaveBeenCalledWith('open');
   });
 });

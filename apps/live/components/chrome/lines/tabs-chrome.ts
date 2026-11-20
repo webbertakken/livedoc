@@ -30,6 +30,8 @@ export type TabsChromeProps = {
   // A spreadsheet draws its tabs as the sheet bar at the foot of its grid (docs/specs/029-sheets/spreadsheet.md "The
   // workbook shape"): the group then shows no active tab, stack or Add tab.
   spreadsheet?: boolean;
+  // Whether Add tab offers a text document (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
+  offerTextDocument?: boolean;
   activeId: string;
   onSelect: (id: string) => void;
   // The add menu's choice (docs/specs/007-editor/editor-modes.md "+ adds a tab or a Plan tab").

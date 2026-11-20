@@ -9,7 +9,17 @@ vi.mock('./api-client', () => ({
   apiCreateDocument: vi.fn(),
 }));
 
+vi.mock('./api/text-documents', () => ({ apiLoadTextDocumentState: vi.fn() }));
+vi.mock('./offline/offline-store', () => ({
+  isOfflineId: vi.fn(async () => false),
+  offlineCreateDocument: vi.fn(async () => {}),
+  offlineGetRecord: vi.fn(),
+  offlinePutRecord: vi.fn(async () => {}),
+}));
+
 import { apiCreateDocument, apiLoadDocument, apiLoadTab } from './api-client';
+import { apiLoadTextDocumentState } from './api/text-documents';
+import { isOfflineId, offlineGetRecord, offlinePutRecord } from './offline/offline-store';
 import { ApiError } from './api/core';
 import { duplicateDocument } from './duplicate-document';
 
@@ -77,6 +87,52 @@ describe('duplicateDocument', () => {
     mLoadTab.mockResolvedValue(tab('t1'));
     await duplicateDocument('owner', 'src');
     expect(mCreate.mock.calls[0]![1]).toMatchObject({ workbook });
+  });
+
+  // docs/specs/034-text-documents/live-editing-and-storage.md "Copies": each text document's state seeds the copy.
+  it("seeds the copy with each text document's state, under the tab's new id", async () => {
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }, { id: 'c' }]));
+    mLoadTab.mockImplementation(async (_o, _d, id) =>
+      id === 't1' ? { ...tab('t1'), kind: 'text-document' } : tab('c'),
+    );
+    vi.mocked(apiLoadTextDocumentState).mockResolvedValue(Uint8Array.of(1, 2, 3));
+    await duplicateDocument('owner', 'src');
+    const payload = mCreate.mock.calls[0]![1];
+    const copied = payload.tabs!.find((t) => t.name === 'Tab t1')!;
+    expect(payload.textDocuments).toEqual([{ tabId: copied.id, state: 'AQID' }]);
+    expect(vi.mocked(apiLoadTextDocumentState)).toHaveBeenCalledWith(
+      expect.objectContaining({ documentId: 'src', tabId: 't1' }),
+    );
+  });
+
+  // "A text document in This Browser": a copy of one in This Browser keeps its states, under the new tab ids.
+  it("copies an offline text document's states onto the copy's record", async () => {
+    vi.mocked(isOfflineId).mockImplementation(async (id) => id === 'src');
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    mLoadTab.mockResolvedValue({ ...tab('t1'), kind: 'text-document' });
+    const state = { tabId: 't1', state: Uint8Array.of(4), savedAt: 2 };
+    vi.mocked(offlineGetRecord).mockImplementation(async (id) =>
+      id === 'src'
+        ? ({ id: 'src', textDocuments: [state] } as never)
+        : ({ id, name: 'Flow copy', tabs: [] } as never),
+    );
+    const newId = await duplicateDocument('owner', 'src');
+    const written = vi.mocked(offlinePutRecord).mock.calls[0]![0];
+    expect(written.id).toBe(newId);
+    expect(written.textDocuments).toHaveLength(1);
+    expect(written.textDocuments![0]!.tabId).not.toBe('t1');
+    expect(written.textDocuments![0]!.state).toEqual(Uint8Array.of(4));
+    expect(mCreate).not.toHaveBeenCalled();
+    vi.mocked(isOfflineId).mockImplementation(async () => false);
+  });
+
+  it("makes no copy when a text document's state cannot be read", async () => {
+    mLoadDocument.mockResolvedValue(sourceDocument([{ id: 't1' }]));
+    mLoadTab.mockResolvedValue({ ...tab('t1'), kind: 'text-document' });
+    vi.mocked(apiLoadTextDocumentState).mockRejectedValue(new Error('down'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(await duplicateDocument('owner', 'src')).toBeUndefined();
+    expect(mCreate).not.toHaveBeenCalled();
   });
 
   it('mints a fresh id for every copied tab (no reuse of source ids)', async () => {

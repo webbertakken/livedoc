@@ -4,12 +4,14 @@
 // "The surface"): the title row, the formula bar, the grid of the open sheet tab and the sheet bar at the foot. The
 // grid is the sheet engine's own (components/sheets), on the document's sheet store, live through the room. Loaded as
 // its own chunk, with the engine, only when a spreadsheet opens.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { planPalette } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
+import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
+import type { OfficeCatalogue } from '@/lib/office/office-catalogue';
 import {
   SheetControllerProvider,
   useSheetController,
@@ -48,6 +50,26 @@ const DOWNLOAD_LABEL = {
   xlsx: 'Download as Microsoft Excel (.xlsx)',
 } as const;
 const TELEMETRY_FORMAT = { ods: 'Ods', fods: 'Fods', xlsx: 'Xlsx' } as const;
+const OPEN_ACCEPT = '.ods,.fods,application/vnd.oasis.opendocument.spreadsheet';
+
+// The spreadsheet's menus in the office shell (docs/specs/004-interface-design/office-shell.md "Menus as data"): File
+// with Open and the download of the format it is held in, until plan 0020 declares the rest.
+const spreadsheetMenus = (format: keyof typeof DOWNLOAD_LABEL): OfficeCatalogue => [
+  {
+    id: 'file',
+    label: 'File',
+    entries: [
+      { kind: 'item', id: 'open', label: 'Open', level: 'view', status: 'built' },
+      {
+        kind: 'item',
+        id: 'download',
+        label: DOWNLOAD_LABEL[format],
+        level: 'view',
+        status: 'built',
+      },
+    ],
+  },
+];
 
 export function SpreadsheetSurface({
   scope,
@@ -66,8 +88,12 @@ export function SpreadsheetSurface({
 }) {
   const bridge = useSheetsBridgeContext();
   const sheetBarPeers = useSheetBarPeers(bridge);
+  // The document's own parts in the shell's title row (office-shell.md "Title row").
+  const office = useEditorLines()?.office ?? null;
   const [problem, setProblem] = useState<string | null>(null);
   const format = workbook.format;
+  const root = useRef<HTMLElement | null>(null);
+  const catalogue = useMemo(() => spreadsheetMenus(format), [format]);
   const download = async () => {
     setProblem(null);
     try {
@@ -88,17 +114,23 @@ export function SpreadsheetSurface({
   };
   return (
     <section
+      ref={root}
       aria-label="Spreadsheet"
-      className="absolute inset-0 flex flex-col bg-white dark:bg-slate-950"
+      className="office-shell absolute inset-0 flex flex-col bg-white dark:bg-slate-950"
     >
       <OfficeTitleRow
         name={documentName || UNTITLED_SPREADSHEET}
         format={FORMAT_PILL[format]}
         formatTitle={FORMAT_TITLE[format]}
-        openAccept=".ods,.fods,application/vnd.oasis.opendocument.spreadsheet"
-        onOpenFile={(file) => void open(file)}
-        items={[{ label: DOWNLOAD_LABEL[format], run: download }]}
         problem={problem}
+        catalogue={catalogue}
+        level="view"
+        actions={{ download: { run: () => void download() } }}
+        shortcuts={[]}
+        keyScope={root}
+        opening={{ accept: OPEN_ACCEPT, onFile: (file) => void open(file) }}
+        chrome={office}
+        tabId={tabId}
       />
       {bridge ? <OpenSheet bridge={bridge} tabId={tabId} /> : <Status state="loading" />}
       <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} peers={sheetBarPeers} />

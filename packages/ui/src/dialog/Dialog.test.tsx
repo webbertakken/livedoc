@@ -211,3 +211,23 @@ describe('keyboardBandStyles', () => {
     expect(keyboardBandStyles(band, true).panel?.maxHeight).toBe('100%');
   });
 });
+
+// docs/specs/004-interface-design/office-shell.md "Dialogs": the office shell draws its dialogs in its own look.
+describe('Dialog surface and width', () => {
+  it('draws the white panel by default', () => {
+    const { panel } = open();
+    expect(panel.className).toContain('bg-white');
+  });
+
+  it('takes the caller’s panel colours in place of its own', () => {
+    render(
+      <Dialog open onClose={() => {}} ariaLabel="Office" size="wide" surface="office-surface">
+        <p>Body</p>
+      </Dialog>,
+    );
+    const panel = screen.getByRole('dialog', { name: 'Office' });
+    expect(panel.className).toContain('office-surface');
+    expect(panel.className).not.toContain('bg-white');
+    expect(panel.className).toContain('w-[45rem]');
+  });
+});

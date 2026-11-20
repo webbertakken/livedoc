@@ -133,3 +133,24 @@ describe('useEditorMode', () => {
     expect(es.commitTabs).not.toHaveBeenCalled();
   });
 });
+
+// The mode's context sits around the canvas and holds still while the editor re-renders
+// (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+describe('useEditorMode identity', () => {
+  it('keeps the same value when only the editor handlers change, and switches with the newest', () => {
+    tabs = [{ id: 't', name: 'T', elements: [] }];
+    let commitTabs = vi.fn();
+    const hook = renderHook(() =>
+      useEditorMode(tabs[0], { canEdit: true, commitTabs, toastInfo: vi.fn() }),
+    );
+    const before = hook.result.current;
+    commitTabs = vi.fn((map: (ts: Tab[]) => Tab[]) => {
+      tabs = map(tabs);
+    });
+    hook.rerender();
+    expect(hook.result.current).toBe(before);
+    act(() => hook.result.current.setMode('draw'));
+    expect(commitTabs).toHaveBeenCalledTimes(1);
+    expect(tabs[0]!.opensIn).toBe('draw');
+  });
+});

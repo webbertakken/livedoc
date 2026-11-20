@@ -25,3 +25,7 @@ export function parseTextDocumentCaret(op: unknown): TextDocumentCaret | null {
   if (!position(o.anchor) || !position(o.head)) return null;
   return { tabId: o.tabId, anchor: o.anchor, head: o.head };
 }
+
+/** The header a text document's state answer carries its state vector in, base64
+ *  (docs/specs/034-text-documents/live-editing-and-storage.md "Reconnecting"). */
+export const TEXT_DOCUMENT_STATE_VECTOR_HEADER = 'X-State-Vector';

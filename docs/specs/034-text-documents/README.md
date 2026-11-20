@@ -10,6 +10,7 @@ leaving LiveDoc in the format it arrived in. It works as Google Docs does. The r
 - ./standard-mapping.md - when mapping the model onto ODF or OOXML: constructs, extensions, kept content, conformance, the flat file, conversion, documented losses
 - ./parity-matrix.md - when checking what of Google Docs is built, specified or left out: one row per inventory entry
 - ./editing-surface.md - when working on the text document's chrome: title row, menu bar, toolbar, ruler, zoom, compact mode, context menus, tool finder, phone and tablet
+- ./keyboard-shortcuts.md - when binding, listing or checking a keyboard shortcut: every one of Google's, by platform, with its status
 - ./text-and-paragraphs.md - when working on typing, selection, the clipboard, text formatting, paragraph styles, alignment, spacing, borders, paint format, typing aids
 - ./lists.md - when working on bulleted, numbered and checklist lists, levels and numbering
 - ./page-layout.md - when working on page setup, print layout, pageless, laying out, breaks, columns, headers and footers, page numbers, footnotes

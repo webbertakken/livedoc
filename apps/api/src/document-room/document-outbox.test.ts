@@ -313,6 +313,20 @@ describe('the content search rows the drain writes', () => {
       expect(outboxKeys(room)).toContain('summary:');
     });
 
+    // "Saved": each rebuild of the digest marks the document saved, for Modified and the thumbnail.
+    it('marks the document saved when it rebuilds the digest', async () => {
+      const { env, room } = harness();
+      textDocumentTab(room);
+      room.prepare('UPDATE document SET saved_at = 1 WHERE id = ?').run(D);
+      await appendTextDocumentUpdate(env, 'td', TextDocumentState.fromBody(Body.of('Later')));
+      const before = Date.now();
+      await drainOutbox(env, D);
+      const row = room.prepare('SELECT saved_at FROM document WHERE id = ?').get(D) as {
+        saved_at: number;
+      };
+      expect(row.saved_at).toBeGreaterThanOrEqual(before);
+    });
+
     it('digests an empty text document as no content', async () => {
       const { env, room } = harness();
       textDocumentTab(room);

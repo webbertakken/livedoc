@@ -7,6 +7,7 @@ import { act, renderHook } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CustomTheme } from '@livedoc/api-schema';
+import { apiDeleteCustomTheme } from '@/lib/api-client';
 import { CustomThemeProvider, useCustomThemes } from './CustomThemeProvider';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -93,5 +94,35 @@ describe('CustomThemeProvider writes', () => {
     });
     expect(readOnly.result.current.writable).toBe(false);
     expect(renderHook(() => useCustomThemes()).result.current.writable).toBe(false);
+  });
+});
+
+// The editor's handlers change on every editor render; the context around the canvas holds still
+// (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+describe('CustomThemeProvider value', () => {
+  it('keeps its identity when only the deletion handler changes, and calls the newest one', async () => {
+    list.mockResolvedValue([theme]);
+    vi.mocked(apiDeleteCustomTheme).mockResolvedValue(undefined);
+    const handler = { current: vi.fn<(id: string) => void>() };
+    const view = renderHook(() => useCustomThemes(), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <CustomThemeProvider
+          ownerId="me"
+          onThemeDeleted={(id) => {
+            handler.current(id);
+          }}
+        >
+          {children}
+        </CustomThemeProvider>
+      ),
+    });
+    await act(async () => {});
+    const before = view.result.current;
+    const newest = vi.fn<(id: string) => void>();
+    handler.current = newest;
+    view.rerender();
+    expect(view.result.current).toBe(before);
+    act(() => view.result.current.deleteTheme('custom:1'));
+    expect(newest).toHaveBeenCalledWith('custom:1');
   });
 });

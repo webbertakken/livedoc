@@ -1,6 +1,8 @@
 # Editing surface
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** The menu bar (every menu and item, those not yet built dimmed), the tool finder, the
+title row (but its comment history), the toolbar's built controls and the keyboard shortcuts dialog are built; the
+rest is specified.
 
 What a person sees and works with on a [text document](text-document.md): Google Docs' layout, control for control,
 built on the shared [Office shell](../004-interface-design/office-shell.md). How literal the look is (Google's metrics
@@ -25,20 +27,54 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 ## The title row
 
 - **The LiveDoc mark** goes to the Explorer, as Google's Docs icon goes to the Docs home. Its tooltip: **Explorer**.
+  In a workbench frame it goes where the editor's back does ([Toolbar layout](../007-editor/toolbar-layout.md)).
 - **Name**: the document's name in a field that looks like text until hovered (outlined) or focused (editable);
-  Enter or blur renames, Escape puts it back. Empty is refused ("Give the document a name"). The format sits after it
-  in a small grey pill, `.DOCX` or `.ODT`, with the tooltip "Word format" or "OpenDocument format"; a pill press
-  opens File > Convert.
-- **Star** ("Star", "Starred"): LiveDoc's favourites. **Move** (a folder glyph, "Move"): the folder picker.
-- **Save status** (a cloud glyph): "Saving…", "All changes saved", "Saved in This Browser", "Offline: changes are kept
-  in this browser" and, on failure, "Can't save: we keep trying" in the error colour. A press opens the details.
-- **Last edit**: none in the title row (Google moved it into File > Version history); a press on the save status
-  shows "Last edit was <time> by <name>", which opens version history.
-- **Comment history** (a speech bubble glyph, "Open comment history", ⌘⌥⇧A): the comments panel.
+  Enter or blur renames, Escape puts it back. Empty is refused ("Give the document a name") and the name put back.
+  Its accessible name is **Rename**. For a session that may not rename the document (a Viewer, a Participant, a
+  visitor scoped to one tab) it is text. File > Rename puts the focus in it with the name selected.
+- The format sits after the name in a small grey pill, `.DOCX` or `.ODT`, with the tooltip "Microsoft Word format"
+  or "OpenDocument format"; once conversion is built a pill press opens File > Convert.
+- **Star** ("Star", "Starred", `aria-pressed`): LiveDoc's favourites, for everyone the document opens for.
+- **Move** (a folder glyph, "Move"): the shared folder picker over My Documents and the person's teams, for whoever
+  files the document (its owner or a member of its team); File > Move opens it too.
+- **Save status**: one glyph and its words, for whoever may edit the writing (a Viewer saves nothing, so sees none):
+
+  | Status       | When                                             | Glyph       | Words                                       |
+  | ------------ | ------------------------------------------------ | ----------- | ------------------------------------------- |
+  | Saving       | an edit made here is not yet confirmed           | cloud-sync  | "Saving…"                                   |
+  | Saved        | the room holds every edit made here              | cloud-check | "All changes saved"                         |
+  | This Browser | in This Browser, every edit written there        | app-window  | "Saved in This Browser"                     |
+  | Offline      | the room is not open                             | cloud-off   | "Offline: changes are kept in this browser" |
+  | Failed       | an edit refused, or one this browser cannot keep | cloud-alert | "Can't save: we keep trying"                |
+
+  Failed wins over every other status; a text document in This Browser is Saving while a write is due. The words show
+  beside the glyph while the status is Saving, Offline or Failed (Failed in the error colour), and are the glyph's
+  tooltip and accessible name always `(default)`. Offline and Failed are announced politely as they begin.
+  A press opens the details: the words again and one sentence of what it means (the copy is in the code).
+  A text document in This Browser retries a failed write every `TEXT_DOCUMENT_SAVE_RETRY_MS` (5 s) `(default)`;
+  one in a room is retried by its catch-up when the room opens again.
+
+- **Last edit**: none in the title row (Google moved it into File > Version history); once version history is built,
+  the save status's details show "Last edit was <time> by <name>", which opens it.
+- **Comment history** (a speech bubble glyph, "Open comment history", ⌘⌥⇧A): the comments panel. Not drawn until
+  comments are built ([Review](review.md)), never a dead button.
 - **Editing mode switch**: a pill with the mode's glyph and name, "Editing" (pencil), "Suggesting" (pencil with a
   plus), "Viewing" (eye); its menu lists the three with their one-line descriptions ([Review](review.md#editing-modes)).
+  It sits after Settings, before Share. Descriptions: "Edit document directly", "Edits become suggestions",
+  "Read or print final document". View > Mode and ⌘⌥⇧Z, ⌘⌥⇧X, ⌘⌥⇧C change it too.
 - **Share**: a filled pill, "Share", with a lock glyph when the document is private; opens LiveDoc's share dialog.
-- **Presence**: up to four avatars, then "+n"; a press on one follows that person's caret into view.
+  It is for whoever may share the document (its owner or a member of its team); anyone else sees **Make a copy** in
+  its place, an outlined pill that copies the document into their own files and opens the copy. File > Share > Share
+  with others opens the same dialog; File > Make a copy is its own dialog ([Files and print](files-and-print.md)).
+- **Presence**: everyone else in the document, up to four avatars, then "+n"; each avatar's name is its tooltip and
+  accessible name. A press on one in this text document brings their caret into view (the page scrolls, nobody's
+  selection moves); a press on one elsewhere in the document opens the tab they are on.
+- **Settings** (a gear glyph, "Settings"): LiveDoc's own settings (appearance, preferences), for every role
+  `(default)`. Google's Tools > Preferences is the document's, a different dialog.
+- **Account**: LiveDoc's account control at the far right, as Google's account picture: "Sign in" for a guest where
+  sign-in is offered, the account picture with its menu once signed in, nothing on a host without sign-in.
+- Over a text document the editor's bottom line keeps the tabs and Add tab but not the people: presence is here
+  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)).
 
 ## The menu bar
 
@@ -47,11 +83,11 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 - Items follow the [inventory](../../research/docs-open-standard/google-docs-inventory.md#menus) in Google's order,
   less the rows the matrix leaves out (they are not shown, never dimmed), plus LiveDoc's own (File > Convert, File >
   Download > OpenDocument flat file).
-- **Not yet built** items show dimmed, with the tooltip "Coming soon", until their phase lands; none remain once the
-  matrix is done.
+- **Not yet built** items show dimmed, with "Coming soon" where the shortcut would be, until their phase lands;
+  none remain once the matrix is done.
 - **Extensions** holds **Agents**: how to reach this document from the MCP server and the CLI, with the document's id
   to copy ([Agents and sync](agents-and-sync.md)).
-- **Help** holds: Help (the help centre's text document articles), Training (the help centre's guides), Updates
+- **Help** holds: Search the menus (the tool finder), Help (the help centre's text document articles), Training (the help centre's guides), Updates
   (LiveDoc's changelog), Help improve LiveDoc (Report a Bug), Privacy policy, Terms of service, Keyboard shortcuts.
 - Each item names its shortcut on the right, in the platform's notation (⌘ on a Mac, Ctrl elsewhere).
 - A Viewer's menus hold only what a Viewer may do: File (Make a copy, Download, Print, Details), Edit (Copy, Select
@@ -93,7 +129,10 @@ Left to right, as Google has it, with a divider between groups:
 
 ## Zoom
 
-Per person, per document, remembered in this browser. Fit fits the page width to the window. ⌘+, ⌘− and ⌘0 are the
+Per person, per document, remembered in this browser (`livedoc:v2:text-document-zoom`, the most recent
+`SURFACE_VIEW_MAX_ENTRIES` documents) `(default)`. The toolbar's zoom is a field with a list: Fit, 50%, 75%, 90%,
+100%, 125%, 150%, 200%; a typed whole number from 50 to 200 (with or without %) applies on Enter, anything else puts the
+value back. Fit fits the page width to the window, never above 200%. The pages scale; the chrome never does. ⌘+, ⌘− and ⌘0 are the
 browser's own (Google leaves them to the browser); pinch zoom on touch screens zooms the pages.
 
 ## Compact and full screen
@@ -104,10 +143,14 @@ browser's own (Google leaves them to the browser); pinch zoom on touch screens z
 
 ## Context menus
 
-On text, as the inventory lists: Cut, Copy, Paste, Paste without formatting, Delete; Comment, Suggest edits; Insert
-link; Format options; Clear formatting; Select all matching text. On a table, a picture, a link: their area's menu
+The shell's [context menu](../004-interface-design/office-shell.md#context-menus) on text, in Google's order: Cut,
+Copy, Paste, Paste without formatting, Delete; Comment, Suggest edits; Insert link; Format options, Clear formatting;
+Select all matching text. Each is the menu bar's item of the same name (Insert link is Insert > Link, Suggest edits
+the Suggesting mode); Format options opens its side panel and Select all matching text selects every stretch with the
+selection's formatting, each built in its area's phase. Delete removes the selection and is dimmed while nothing is
+selected, in Edit > Delete too. On a table, a picture, a link: their area's menu
 ([Tables](tables.md#context-menu), [Objects](objects.md#pictures), [Links and navigation](links-and-navigation.md#links)).
-Shift with the right button shows the browser's own menu. ⌘⇧\ and Shift+F10 open it at the caret.
+A Viewer's holds Copy; a Participant's adds Comment and Suggest edits.
 
 ## Tool finder
 
@@ -116,10 +159,11 @@ matches, with its menu path; Up and Down move, Enter runs it, Escape closes. Dim
 
 ## Keyboard shortcuts
 
-- ⌘/ opens the Keyboard shortcuts dialog: a search field and every shortcut by group, as Google's.
-- The full table of shortcuts, one row per entry of Google's list for each platform, is a spec of its own in this
-  folder, Keyboard shortcuts, written with the office shell, each row `specified` until
-  built. The browser's own shortcuts are never taken where Google does not take them.
+- ⌘/ or Help > Keyboard shortcuts opens the shell's
+  [Keyboard shortcuts dialog](../004-interface-design/office-shell.md#keyboard-shortcuts-dialog): a search field and
+  every shortcut by group, as Google's.
+- Every shortcut of Google's list, for each platform, is a row of [Keyboard shortcuts](keyboard-shortcuts.md), read by the
+  menus, the tooltips and the dialog. The browser's own shortcuts are never taken where Google does not take them.
 
 ## Phone and tablet
 
@@ -145,4 +189,6 @@ What each role sees is stated with each control above; the server refuses every 
 ## Telemetry
 
 `UI · Opened · TextDocumentMenu<Name>` (a menu opened), `UI · Used · TextDocumentToolFinder`,
-`UI · Toggled · TextDocumentCompact`, `UI · Toggled · TextDocumentRuler`. Never text.
+`UI · Toggled · TextDocumentCompact`, `UI · Toggled · TextDocumentRuler`, `UI · Toggled · TextDocumentStar`,
+`UI · Opened · TextDocumentMove`, `UI · Used · TextDocumentFollow` (a press on a person),
+`UI · Opened · TextDocumentShortcuts`, `UI · Opened · TextDocumentContextMenu`. Never text.

@@ -1,22 +1,30 @@
 // A text document's doors (docs/specs/034-text-documents/live-editing-and-storage.md, files-and-print.md):
 //   GET /api/documents/<id>/text-documents/<tabId>/state  the live state as one Yjs update, for a surface to load
 //   GET /api/documents/<id>/text-documents/<tabId>/file?type=odt|fodt|docx  the file, written from the live state
-// Both are reads, gated as the tab is (a tab-scoped link on its own tab only). Answered inside the document's room.
+//   POST /api/documents/<id>/text-documents/<tabId>/updates  one Yjs update too large for a frame ("Sending")
+// The reads are gated as the tab is (a tab-scoped link on its own tab only), the update as an edit of the tab.
+// Answered inside the document's room.
 import {
+  base64OfBytes,
+  bytesOfBase64,
   isTextDocumentFileType,
+  TEXT_DOCUMENT_UPDATE_MAX_BYTES,
   TextDocumentState,
   writeTextDocumentFile,
   type TextDocumentFileType,
 } from '@livedoc/text-documents';
+import { TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
 import { getDocumentMeta } from '../db';
 import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, json } from '../responses';
+import { postTextDocumentUpdate } from '../room-client';
 import {
   readTextDocumentState,
   storedTextDocumentTab,
 } from '../text-documents/text-document-store';
 import {
   deniedOnTab,
+  gateEdit,
   gateGrant,
   missingDocument,
   requireOwner,
@@ -48,6 +56,7 @@ export async function handleTextDocumentRoutes(
 ): Promise<Response | null> {
   const { segments, request, env } = ctx;
   if (segments.length !== 6 || segments[3] !== 'text-documents') return null;
+  if (request.method === 'POST' && segments[5] === 'updates') return postUpdate(ctx);
   if (request.method !== 'GET') return null;
   if (segments[5] !== 'state' && segments[5] !== 'file') return null;
   const documentId = segments[2]!;
@@ -63,12 +72,7 @@ export async function handleTextDocumentRoutes(
   if (!tab) return notTextDocument();
   const started = Date.now();
   const state = await readTextDocumentState(env, tabId);
-  if (segments[5] === 'state') {
-    console.info(
-      `[text-document] opened document=${documentId} tab=${tabId} bytes=${state.byteLength} ms=${Date.now() - started}`,
-    );
-    return bytesResponse(state, { 'Content-Type': 'application/octet-stream' });
-  }
+  if (segments[5] === 'state') return stateResponse(ctx, state, started);
   const type = ctx.url.searchParams.get('type') ?? 'odt';
   if (!isTextDocumentFileType(type)) return json({ error: 'file_type_unknown' }, { status: 400 });
   // Conversion is a person's choice (File > Convert); until it is built, only the document's own format leaves.
@@ -86,4 +90,61 @@ export async function handleTextDocumentRoutes(
     'Content-Type': FILE_MEDIA_TYPES[type],
     'Content-Disposition': `attachment; filename="${fileNameOf(meta.name, type)}"`,
   });
+}
+
+// The state, or with `since` (a reader's state vector, base64) only what it holds beyond it: a catch-up's answer
+// ("Reconnecting"). Either way the state's own vector rides `X-State-Vector`, so the reader can send what it lacks.
+function stateResponse(ctx: DocumentRouteContext, state: Uint8Array, started: number): Response {
+  const documentId = ctx.segments[2];
+  const tabId = ctx.segments[4];
+  const since = ctx.url.searchParams.get('since');
+  let body = state;
+  if (since !== null) {
+    const vector = bytesOfBase64(since);
+    if (!vector || !TextDocumentState.isStateVector(vector))
+      return json({ error: 'state_vector_invalid' }, { status: 400 });
+    body = TextDocumentState.since(state, vector);
+  }
+  console.info(
+    `[text-document] opened document=${documentId} tab=${tabId} bytes=${body.byteLength} since=${since !== null} ms=${Date.now() - started}`,
+  );
+  return bytesResponse(body, {
+    'Content-Type': 'application/octet-stream',
+    [TEXT_DOCUMENT_STATE_VECTOR_HEADER]: base64OfBytes(TextDocumentState.stateVectorOf(state)),
+  });
+}
+
+const refusedUpdate = (error: 'update_invalid' | 'update_too_large', status: number) =>
+  json({ error }, { status });
+
+// One update sent by the door: an edit of the tab, stored by the room on its write queue and relayed from there.
+async function postUpdate(ctx: DocumentRouteContext): Promise<Response> {
+  const { segments, request, env } = ctx;
+  const documentId = segments[2]!;
+  const tabId = segments[4]!;
+  const owner = requireOwner(ctx);
+  if (owner instanceof Response) return owner;
+  const meta = await getDocumentMeta(env, documentId);
+  if (!meta) return missingDocument(ctx, documentId);
+  if (!(await gateEdit(ctx, documentId, meta.ownerId, meta.teamId, tabId)))
+    return deniedOnTab(ctx, meta);
+  const update = new Uint8Array(await request.arrayBuffer());
+  if (update.byteLength > TEXT_DOCUMENT_UPDATE_MAX_BYTES) {
+    console.warn(
+      `[text-document] update-refused document=${documentId} tab=${tabId} reason=too-large bytes=${update.byteLength}`,
+    );
+    return refusedUpdate('update_too_large', 413);
+  }
+  if (!TextDocumentState.decodes(update)) {
+    console.warn(
+      `[text-document] update-refused document=${documentId} tab=${tabId} reason=decode`,
+    );
+    return refusedUpdate('update_invalid', 400);
+  }
+  const { status, limit } = await postTextDocumentUpdate(env, documentId, tabId, update);
+  if (status === 413) return json({ error: 'document_too_large', limit }, { status: 413 });
+  if (status === 204) return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (status === 404) return notTextDocument();
+  if (status === 400) return refusedUpdate('update_invalid', 400);
+  return json({ error: 'room_unavailable' }, { status: 503 });
 }

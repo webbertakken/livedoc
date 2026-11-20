@@ -15,7 +15,7 @@
 //   `alsoChange` (what leaving a mode brings, such as articles turned into pages), then the mode
 //   with what entering it brings (withEditorModeSwitched). One undo puts the tab back in the mode
 //   it was in, for everyone. A no-op when the switch is not offered or `next` is already the mode.
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLatest } from '@/hooks/ui/useLatest';
 import {
   editorModeLabel,
@@ -75,17 +75,20 @@ export function useEditorMode(
   const { canEdit, commitTabs, toastInfo } = deps;
   const tabId = tab?.id;
   const { mode, canSwitch } = resolveEditorMode({ tab, canEdit });
-  // The tab as it is now, read when a switch is asked for: a stable setter rather than a new one per edit of the tab.
-  const tabRef = useLatest(tab);
+  const workshop = workshopOf(tab);
+  // The tab and the editor's handlers as they are now, read when a switch is asked for: the setters keep their
+  // identity, so the mode's context around the canvas holds still while the editor re-renders
+  // (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+  const latest = useLatest({ tab, tabId, mode, canSwitch, workshop, commitTabs, toastInfo });
   const setMode = useCallback(
     (next: EditorMode, alsoChange?: (tab: Tab) => Tab) => {
+      const { tab: seen, tabId, mode, canSwitch, commitTabs, toastInfo } = latest.current;
       // Never into Plan: a Plan tab is added from +, never switched to (docs/specs/007-editor/editor-modes.md).
       if (!canSwitch || !tabId || next === mode || next === 'plan') return;
       trackModeSwitch(next);
       // Whether the board goes onto a page is read from the tab as it is, not from inside the commit's updater,
       // which React may run after this returns (the toast and its event would be lost). The switch worked out
       // here is the one committed, unless the tab moved on meanwhile: a board's transform, layout and fit once.
-      const seen = tabRef.current;
       const out = seen ? switchedTab(seen, next, alsoChange) : null;
       const paged = !!out?.pagedContent;
       commitTabs((ts) =>
@@ -99,17 +102,20 @@ export function useEditorMode(
       }
       debugLog('[editor-mode] switched', { tabId, from: mode, to: next, paged });
     },
-    [canSwitch, tabRef, tabId, mode, commitTabs, toastInfo],
+    [latest],
   );
-  const workshop = workshopOf(tab);
   const setWorkshop = useCallback(
     (on: boolean) => {
+      const { tabId, canSwitch, workshop, commitTabs } = latest.current;
       if (!canSwitch || !tabId || on === workshop) return;
       track('Editor', 'Toggled', on ? 'WorkshopOn' : 'WorkshopOff');
       commitTabs((ts) => ts.map((t) => (t.id === tabId ? setTabWorkshop(t, on) : t)));
       debugLog('[workshop] control turned', { tabId, on });
     },
-    [canSwitch, tabId, workshop, commitTabs],
+    [latest],
   );
-  return { mode, setMode, canSwitch, canEdit, workshop, setWorkshop };
+  return useMemo(
+    () => ({ mode, setMode, canSwitch, canEdit, workshop, setWorkshop }),
+    [mode, setMode, canSwitch, canEdit, workshop, setWorkshop],
+  );
 }

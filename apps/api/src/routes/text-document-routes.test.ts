@@ -6,6 +6,9 @@ import {
   readTextDocumentFile,
   TextDocument,
   TextDocumentState,
+  TEXT_DOCUMENT_CHUNK_BYTES,
+  TEXT_DOCUMENT_MAX_CHARS,
+  TEXT_DOCUMENT_UPDATE_MAX_BYTES,
   writeTextDocumentFile,
   type TextDocumentFileType,
 } from '@livedoc/text-documents';
@@ -19,6 +22,7 @@ import {
   storedUpdates,
 } from '../text-documents/text-document-store';
 import { makeTestRouteContext } from './test-route-context';
+import { RoomTextDocuments } from '../text-documents/room-text-documents';
 
 /** A file of these paragraphs, in the format its type is. */
 function fileOf(body: Body, type: TextDocumentFileType = 'odt'): Uint8Array {
@@ -174,6 +178,23 @@ describe('a text document opened from a file', () => {
     expect(res.status).toBe(415);
   });
 
+  // live-editing-and-storage.md "Copies": a Duplicate seeds the copy with each state, a big one folded into chunks.
+  it('holds a state a copy seeds it with, and refuses one that is no update', async () => {
+    const db = sqliteD1();
+    const big = Array.from({ length: TEXT_DOCUMENT_CHUNK_BYTES / 5 }, (_, i) =>
+      (i * 7919).toString(36).padStart(6, '0'),
+    ).join('');
+    const state = base64OfBytes(TextDocumentState.fromBody(Body.of('Copied', big)));
+    expect((await create(db, { textDocuments: [{ tabId: 't1', state }] })).status).toBe(201);
+    const res = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
+    expect(await bodyOfState(res)).toEqual(Body.of('Copied', big));
+    const refused = await create(sqliteD1(), {
+      textDocuments: [{ tabId: 't1', state: base64OfBytes(Uint8Array.of(9, 9, 9)) }],
+    });
+    expect(refused.status).toBe(400);
+    expect(await refused.json()).toMatchObject({ error: 'text_document_seed_invalid' });
+  });
+
   it('refuses seeds that do not name one of the request’s text document tabs', async () => {
     const file = base64OfBytes(fileOf(Body.of('a')));
     for (const textDocuments of [
@@ -244,5 +265,133 @@ describe('the stored state', () => {
       TextDocumentState.paragraphs(TextDocumentState.load([before])),
     );
     expect(chunksOf(new Uint8Array(5), 2).map((c) => c.byteLength)).toEqual([2, 2, 1]);
+  });
+});
+
+// live-editing-and-storage.md "Sending": an update too large for a frame goes by the door, an edit of the tab, stored
+// by the room on its write queue.
+describe('the update door', () => {
+  // A room whose internal door runs the real room side over the test's database.
+  function withRoom(db: SqliteD1) {
+    const relayed: unknown[] = [];
+    const room = new RoomTextDocuments({
+      env: db.env,
+      enqueue: (step) => step(),
+      sequence: (_from, op) => relayed.push(op),
+      sendTo: () => {},
+      position: () => ({ epoch: 'e' }),
+    });
+    const binding = {
+      idFromName: (name: string) => name,
+      get: () => ({
+        fetch: async (input: string, init?: RequestInit) => {
+          const url = new URL(input);
+          if (url.pathname !== '/text-document-update') return new Response(null, { status: 404 });
+          const outcome = await room.acceptPosted(
+            url.searchParams.get('document')!,
+            url.searchParams.get('tab')!,
+            new Uint8Array(init!.body as ArrayBuffer),
+          );
+          if (outcome === 'characters' || outcome === 'state')
+            return Response.json({ limit: outcome }, { status: 413 });
+          return new Response(null, { status: outcome === 'stored' ? 204 : 404 });
+        },
+      }),
+    };
+    (db.env as unknown as { DOCUMENT_ROOM: unknown }).DOCUMENT_ROOM = binding;
+    return relayed;
+  }
+
+  const post = (db: SqliteD1, tabId: string, bytes: Uint8Array, owner = 'owner') =>
+    handleDocuments(
+      makeTestRouteContext('POST', `/api/documents/D/text-documents/${tabId}/updates`, {
+        env: db.env,
+        owner,
+        rawBody: bytes as unknown as string,
+        headers: { 'Content-Type': 'application/octet-stream' },
+      }),
+    );
+
+  it('stores an Editor’s update and relays it', async () => {
+    const db = sqliteD1();
+    await create(db);
+    const relayed = withRoom(db);
+    const res = await post(db, 't1', TextDocumentState.fromBody(Body.of('Pasted')));
+    expect(res.status).toBe(204);
+    const state = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
+    expect(await bodyOfState(state)).toEqual(Body.of('Pasted'));
+    expect(relayed).toHaveLength(1);
+  });
+
+  it('names an update that is none, and one past the cap', async () => {
+    const db = sqliteD1();
+    await create(db);
+    withRoom(db);
+    const invalid = await post(db, 't1', Uint8Array.of(9, 9, 9));
+    expect(invalid.status).toBe(400);
+    expect(await invalid.json()).toEqual({ error: 'update_invalid' });
+    const huge = await post(db, 't1', new Uint8Array(TEXT_DOCUMENT_UPDATE_MAX_BYTES + 1));
+    expect(huge.status).toBe(413);
+    expect(await huge.json()).toEqual({ error: 'update_too_large' });
+  });
+
+  // live-editing-and-storage.md "Refused edits": the door names the limit an update would pass.
+  it('refuses an update past the characters with the limit named', async () => {
+    const db = sqliteD1();
+    await create(db);
+    withRoom(db);
+    db.sql
+      .prepare(
+        `INSERT OR REPLACE INTO text_document_digest (tab_id, characters, words, pages, has_content, state_bytes, written_at)
+         VALUES ('t1', ?, 0, 1, 1, 0, 1)`,
+      )
+      .run(TEXT_DOCUMENT_MAX_CHARS);
+    const res = await post(db, 't1', TextDocumentState.fromBody(Body.of('more')));
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: 'document_too_large', limit: 'characters' });
+  });
+
+  it('answers 404 for a tab that is no text document, and 403 for a caller who may not edit', async () => {
+    const db = sqliteD1();
+    await create(db, {}, [textTab, { id: 'c', name: 'Canvas', elements: [] }]);
+    withRoom(db);
+    const update = TextDocumentState.fromBody(Body.of('x'));
+    const canvas = await post(db, 'c', update);
+    expect(canvas.status).toBe(404);
+    expect(await canvas.json()).toEqual({ error: 'text_document_not_found' });
+    expect((await post(db, 't1', update, 'stranger')).status).toBe(403);
+  });
+});
+
+// live-editing-and-storage.md "Reconnecting": a catch-up reads only what it lacks, and the state's vector.
+describe('the state since a reader’s vector', () => {
+  it('answers only what the reader lacks, with the state’s vector', async () => {
+    const db = sqliteD1();
+    await create(db);
+    const first = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
+    const known = new Uint8Array(await first.arrayBuffer());
+    await appendTextDocumentUpdate(db.env, 't1', TextDocumentState.fromBody(Body.of('Later')));
+    const vector = base64OfBytes(TextDocumentState.stateVectorOf(known));
+    const res = await call(
+      db,
+      'GET',
+      `/api/documents/D/text-documents/t1/state?since=${encodeURIComponent(vector)}`,
+    );
+    expect(res.status).toBe(200);
+    const missing = new Uint8Array(await res.arrayBuffer());
+    const reader = TextDocumentState.load([known, missing]);
+    expect(TextDocumentState.paragraphs(reader)).toEqual(Body.of('Later'));
+    const full = TextDocumentState.merge(await storedUpdates(db.env, 't1'));
+    expect(res.headers.get('X-State-Vector')).toBe(
+      base64OfBytes(TextDocumentState.stateVectorOf(full)),
+    );
+  });
+
+  it('names a vector that is none', async () => {
+    const db = sqliteD1();
+    await create(db);
+    const res = await call(db, 'GET', '/api/documents/D/text-documents/t1/state?since=***');
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: 'state_vector_invalid' });
   });
 });

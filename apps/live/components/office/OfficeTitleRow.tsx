@@ -1,115 +1,336 @@
 'use client';
 
-// An office document's title row in its bare form (docs/specs/004-interface-design/office-shell.md "Title row"): the
-// name, the file format it keeps, and a File menu holding Open and its downloads. The office shell takes its place;
-// until then every kind outside the canvas draws this one.
-import { useRef, useState } from 'react';
-import { Tooltip } from '@livedoc/ui';
+// The office shell's title row (docs/specs/004-interface-design/office-shell.md "Parts", "Title row"): the mark, the
+// name with the format it keeps, star and move, the menu bar from the kind's catalogue under them, the tool finder over
+// that, and on the right Settings, Share, the people here and the account; the shortcut layer listens over the kind's
+// surface. Every kind outside the canvas draws this one; its look is the shell's tokens (`office-shell.css`).
+import { useCallback, useMemo, useState, type RefObject } from 'react';
+import type { AccessLevel } from '@livedoc/api-schema';
+import { Brand, Tooltip } from '@livedoc/ui';
+import { EXPLORER_LANDING_PATH } from '@/lib/explorer-landing';
+import {
+  catalogueItems,
+  visibleMenus,
+  type OfficeActions,
+  type OfficeCatalogue,
+} from '@/lib/office/office-catalogue';
+import { currentOfficePlatform } from '@/lib/office/office-platform';
+import type { ShortcutRow } from '@/lib/office/shortcut-registry';
+import { shortcutTextOf } from '@/lib/office/shortcut-notation';
+import { track } from '@/lib/telemetry';
+import type { OfficeChrome, OfficePerson } from './office-chrome';
+import { OfficeMoveIcon, OfficeStarIcon } from './office-icons';
+import { OfficeMenuBar, type OpenMenu } from './OfficeMenuBar';
+import { OfficeModeSwitch, type OfficeModeChoice } from './OfficeModeSwitch';
+import { OfficeNameField } from './OfficeNameField';
+import { OfficeToolbar } from './OfficeToolbar';
+import type { OfficeZoom } from './OfficeZoomField';
+import {
+  visibleToolbar,
+  type OfficeToolbar as OfficeToolbarData,
+} from '@/lib/office/office-toolbar';
+import type { OfficeSaveStatus } from './office-save-status';
+import { OfficeSaveStatusButton } from './OfficeSaveStatus';
+import { OfficeIconButton, OfficeTitleActions } from './OfficeTitleActions';
+import { OfficeContextMenu, type OfficeContextMenuSource } from './OfficeContextMenu';
+import { OfficeShortcutsDialog } from './OfficeShortcutsDialog';
+import { useOfficeContextMenu } from './useOfficeContextMenu';
+import { OfficeToolFinder } from './OfficeToolFinder';
+import { useOfficeShortcuts, type ShortcutRun } from './useOfficeShortcuts';
 
-export type OfficeFileItem = { label: string; run: () => Promise<void> | void };
+// The registry rows the shell itself runs: `<menu>-menu` opens that menu (its access key), and the tool finder.
+const TOOL_FINDER = 'tool-finder';
+const CONTEXT_MENU = 'context-right-click-menu';
+const accessKeyOf = (menuId: string) => `${menuId}-menu`;
+
+export type OfficeFileOpening = {
+  // The file picker's types, and what opening a picked file does.
+  accept: string;
+  onFile: (file: File) => void;
+};
 
 export function OfficeTitleRow({
   name,
   format,
   formatTitle,
-  openAccept,
-  onOpenFile,
-  items,
   problem,
+  catalogue,
+  level,
+  actions,
+  shortcuts,
+  keyScope,
+  opening,
+  telemetryKind,
+  chrome = null,
+  tabId,
+  onFollow,
+  saveStatus = null,
+  toolbar = [],
+  zoom = null,
+  mode = null,
+  contextMenu = null,
 }: {
   name: string;
-  // The format's pill (".ODS") and what it is called ("OpenDocument format").
+  // The format's pill (".ODT") and what it is called ("OpenDocument format").
   format: string;
   formatTitle: string;
-  // The file picker's types, and what opening a picked file does; absent hides Open.
-  openAccept?: string;
-  onOpenFile?: (file: File) => void;
-  items: readonly OfficeFileItem[];
   problem: string | null;
+  catalogue: OfficeCatalogue;
+  level: AccessLevel;
+  actions: OfficeActions;
+  // The kind's shortcut registry: what the layer matches and the Keyboard shortcuts dialog lists.
+  shortcuts: readonly ShortcutRow[];
+  // The surface whose keys the shortcut layer hears.
+  keyScope: RefObject<HTMLElement | null>;
+  // File > Open's picker: binds the item `open`.
+  opening?: OfficeFileOpening;
+  // `TextDocument` sends `UI · Opened · TextDocumentMenu<Name>`, `UI · Used · TextDocumentToolFinder`, ...
+  telemetryKind?: 'TextDocument';
+  // The document's own parts, from the editor page; null outside it (a test), where the name is text alone.
+  chrome?: OfficeChrome | null;
+  // The tab this surface shows, and how it brings a person's selection here into view (false: not found).
+  tabId?: string;
+  onFollow?: (personId: string) => boolean;
+  // The kind's save status; none for a session that saves nothing.
+  saveStatus?: OfficeSaveStatus | null;
+  // The kind's toolbar, and the zoom its zoom field works (null: no zoom field).
+  toolbar?: OfficeToolbarData;
+  zoom?: OfficeZoom | null;
+  // The person's editing mode and the modes their level allows (review.md "Editing modes").
+  mode?: OfficeModeChoice | null;
+  // The document's context menu (office-shell.md "Context menus"); none: the browser's own.
+  contextMenu?: OfficeContextMenuSource | null;
 }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const picker = useRef<HTMLInputElement | null>(null);
-  const itemClass =
-    'block w-full px-3 py-1.5 text-left text-sm text-slate-800 hover:bg-slate-100 focus-visible:bg-slate-100 dark:text-slate-100 dark:hover:bg-slate-800 dark:focus-visible:bg-slate-800';
+  const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  const [finding, setFinding] = useState(false);
+  const [showingShortcuts, setShowingShortcuts] = useState(false);
+  const [picker, setPicker] = useState<HTMLInputElement | null>(null);
+  const [renameNonce, setRenameNonce] = useState(0);
+
+  const rename = chrome?.rename ?? null;
+  const share = chrome?.share ?? null;
+  const move = chrome?.move ?? null;
+  const openMove = useMemo(() => {
+    if (!move) return null;
+    return () => {
+      if (telemetryKind) track('UI', 'Opened', `${telemetryKind}Move`);
+      move();
+    };
+  }, [move, telemetryKind]);
+
+  // The document's own File items, bound where the session may use them; unbound, they are not drawn.
+  const allActions: OfficeActions = useMemo(
+    () => ({
+      ...actions,
+      ...(opening ? { open: { run: () => picker?.click() } } : {}),
+      ...(rename ? { rename: { run: () => setRenameNonce((n) => n + 1) } } : {}),
+      ...(openMove ? { move: { run: openMove } } : {}),
+      ...(share ? { 'share-with-others': { run: share.onOpen } } : {}),
+      'search-the-menus': { run: () => setFinding(true) },
+      'keyboard-shortcuts': {
+        run: () => {
+          if (telemetryKind) track('UI', 'Opened', `${telemetryKind}Shortcuts`);
+          setOpenMenu(null);
+          setShowingShortcuts(true);
+        },
+      },
+    }),
+    [actions, opening, picker, rename, share, openMove, telemetryKind],
+  );
+
+  const menus = useMemo(
+    () => visibleMenus(catalogue, level, allActions),
+    [catalogue, level, allActions],
+  );
+  const items = useMemo(() => catalogueItems(menus), [menus]);
+  const closeMenus = useCallback(() => setOpenMenu(null), []);
+  const context = useOfficeContextMenu({
+    scope: keyScope,
+    source: contextMenu,
+    level,
+    actions: allActions,
+    telemetryKind,
+    onOpen: closeMenus,
+  });
+  const { openAtCaret } = context;
+  const bar = useMemo(
+    () => visibleToolbar(toolbar, level, allActions, zoom !== null),
+    [toolbar, level, allActions, zoom],
+  );
+  const shortcutOf = useMemo(() => shortcutTextOf(shortcuts, currentOfficePlatform()), [shortcuts]);
+
+  const follow = useCallback(
+    (person: OfficePerson) => {
+      if (telemetryKind) track('UI', 'Used', `${telemetryKind}Follow`);
+      if (person.tabId === tabId) onFollow?.(person.participant.id);
+      else chrome?.onOpenTab(person.tabId);
+    },
+    [chrome, onFollow, telemetryKind, tabId],
+  );
+
+  const onOpenMenu = useCallback(
+    (next: OpenMenu) => {
+      setOpenMenu(next);
+      const label = next ? menus.find((m) => m.id === next.id)?.label : null;
+      if (label && telemetryKind) track('UI', 'Opened', `${telemetryKind}Menu${label}`);
+    },
+    [menus, telemetryKind],
+  );
+
+  // What each registry row runs: the menus' access keys, the finder, and every built, bound item's shortcut.
+  const runs = useMemo(() => {
+    const out: Record<string, ShortcutRun> = {
+      [TOOL_FINDER]: () => {
+        setOpenMenu(null);
+        setFinding(true);
+      },
+    };
+    if (openAtCaret) out[CONTEXT_MENU] = openAtCaret;
+    for (const menu of menus)
+      out[accessKeyOf(menu.id)] = () => onOpenMenu({ id: menu.id, focus: 'first' });
+    for (const { item } of items) {
+      const action = allActions[item.id];
+      if (item.shortcut && item.status === 'built' && action && !action.disabled)
+        out[item.shortcut] ??= () => action.run();
+    }
+    return out;
+  }, [menus, items, allActions, onOpenMenu, openAtCaret]);
+  useOfficeShortcuts({ scope: keyScope, rows: shortcuts, runs });
+
   return (
-    <header className="flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-2 dark:border-slate-700 dark:bg-slate-950">
-      <h1 className="truncate text-lg text-slate-900 dark:text-slate-50">{name}</h1>
-      <Tooltip label={formatTitle}>
-        <span
-          role="img"
-          aria-label={formatTitle}
-          className="rounded border border-slate-300 px-1.5 text-xs font-medium text-slate-600 dark:border-slate-600 dark:text-slate-300"
-        >
-          {format}
-        </span>
-      </Tooltip>
-      <div className="relative">
-        <button
-          type="button"
-          aria-haspopup="menu"
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((o) => !o)}
-          className="rounded px-2 py-1 text-sm text-slate-800 hover:bg-slate-100 focus-visible:outline-2 dark:text-slate-100 dark:hover:bg-slate-800"
-        >
-          File
-        </button>
-        {menuOpen ? (
-          <div
-            role="menu"
-            onKeyDown={(e) => {
-              if (e.key === 'Escape') setMenuOpen(false);
-            }}
-            className="absolute left-0 top-full z-30 mt-1 w-72 rounded-md border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
-          >
-            {onOpenFile ? (
-              <button
-                type="button"
-                role="menuitem"
-                className={itemClass}
+    <header data-region="header" className="office-shell bg-(--office-chrome) text-(--office-ink)">
+      <div className="flex items-start gap-1 pt-2 pr-4 pl-2">
+        {chrome ? <OfficeMark back={chrome.back} /> : null}
+        <div className="relative flex min-w-0 flex-1 flex-col">
+          <div className="flex h-[26px] min-w-0 items-center gap-1">
+            <OfficeNameField
+              name={name}
+              onRename={chrome?.rename ?? null}
+              focusNonce={renameNonce + (chrome?.renameNonce ?? 0)}
+            />
+            <Tooltip label={formatTitle}>
+              <span
+                role="img"
+                aria-label={formatTitle}
+                className="shrink-0 rounded border border-(--office-line) px-1.5 text-xs font-medium text-(--office-muted)"
+              >
+                {format}
+              </span>
+            </Tooltip>
+            {chrome?.star ? (
+              <OfficeIconButton
+                label={chrome.star.starred ? 'Starred' : 'Star'}
+                pressed={chrome.star.starred}
                 onClick={() => {
-                  setMenuOpen(false);
-                  picker.current?.click();
+                  if (telemetryKind) track('UI', 'Toggled', `${telemetryKind}Star`);
+                  chrome.star?.onToggle();
                 }}
               >
-                Open
-              </button>
+                <OfficeStarIcon className={chrome.star.starred ? 'fill-current' : undefined} />
+              </OfficeIconButton>
             ) : null}
-            {items.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                role="menuitem"
-                className={itemClass}
-                onClick={() => {
-                  setMenuOpen(false);
-                  void item.run();
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
+            {openMove ? (
+              <OfficeIconButton label="Move" onClick={openMove}>
+                <OfficeMoveIcon />
+              </OfficeIconButton>
+            ) : null}
+            {saveStatus ? <OfficeSaveStatusButton status={saveStatus} /> : null}
+            {problem ? (
+              <p role="alert" className="truncate text-sm text-red-700 dark:text-red-300">
+                {problem}
+              </p>
+            ) : null}
+          </div>
+          <div className="-ml-0.5">
+            <OfficeMenuBar
+              menus={menus}
+              actions={allActions}
+              shortcutOf={shortcutOf}
+              openMenu={openMenu}
+              onOpenMenu={onOpenMenu}
+              onCloseMenu={(id) => setOpenMenu((current) => (current?.id === id ? null : current))}
+              label="Menu bar"
+            />
+          </div>
+          {finding ? (
+            <OfficeToolFinder
+              items={items}
+              actions={allActions}
+              shortcutOf={shortcutOf}
+              onClose={() => setFinding(false)}
+              onRan={() => {
+                if (telemetryKind) track('UI', 'Used', `${telemetryKind}ToolFinder`);
+              }}
+            />
+          ) : null}
+        </div>
+        {chrome ? (
+          <div className="self-center">
+            <OfficeTitleActions chrome={chrome} onFollow={follow} mode={mode} />
+          </div>
+        ) : mode ? (
+          <div className="self-center">
+            <OfficeModeSwitch {...mode} />
           </div>
         ) : null}
-        {onOpenFile ? (
-          <input
-            ref={picker}
-            type="file"
-            accept={openAccept}
-            aria-label="Open a file"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = '';
-              if (file) onOpenFile(file);
-            }}
-          />
-        ) : null}
       </div>
-      {problem ? (
-        <p role="alert" className="text-sm text-red-700 dark:text-red-300">
-          {problem}
-        </p>
+      {bar.length > 0 ? (
+        <OfficeToolbar groups={bar} actions={allActions} shortcutOf={shortcutOf} zoom={zoom} />
+      ) : null}
+      {context.at ? (
+        <OfficeContextMenu
+          entries={context.entries}
+          at={context.at}
+          actions={allActions}
+          shortcutOf={shortcutOf}
+          onClose={context.close}
+        />
+      ) : null}
+      {showingShortcuts ? (
+        <OfficeShortcutsDialog rows={shortcuts} onClose={() => setShowingShortcuts(false)} />
+      ) : null}
+      {opening ? (
+        <input
+          ref={setPicker}
+          type="file"
+          accept={opening.accept}
+          aria-label="Open a file"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = '';
+            if (file) opening.onFile(file);
+          }}
+        />
       ) : null}
     </header>
+  );
+}
+
+// The LiveDoc mark, where Google has its Docs icon: home, the Explorer (or the frame's back in a workbench).
+function OfficeMark({ back }: { back: OfficeChrome['back'] }) {
+  const logo = {
+    wordmark: false,
+    markClassName: 'size-8',
+    className:
+      'relative flex size-10 shrink-0 items-center justify-center rounded-full outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)',
+    assemble: true,
+  } as const;
+  if (back.kind === 'frame')
+    return (
+      <Tooltip label={back.backTitle}>
+        <Brand {...logo} label={`Back to ${back.backTitle}`} onClick={back.back} />
+      </Tooltip>
+    );
+  return (
+    <Tooltip label="Explorer">
+      <Brand
+        {...logo}
+        href={EXPLORER_LANDING_PATH}
+        newTab={back.newTab}
+        label={back.newTab ? 'Explorer (opens in a new tab)' : 'Explorer'}
+        onClick={() => track('UI', 'Opened', 'BrandBack')}
+      />
+    </Tooltip>
   );
 }

@@ -10,6 +10,7 @@ import {
   themeHalf,
 } from '@livedoc/document';
 import { defaultCatalogue, presetSetup, type Item } from '@livedoc/items';
+import { Body, TextDocumentState } from '@livedoc/text-documents';
 import type { DocumentDTO, DocumentEnv } from './types';
 
 // The render-cache reads/writes the snapshot freshness + first-tab body
@@ -31,6 +32,9 @@ const db = vi.hoisted(() => ({
   servableImageIds: vi.fn(async (_env: unknown, _doc: string, ids: string[]) => new Set(ids)),
 }));
 vi.mock('./db', () => db);
+// A text document's state is read from its room's tables (live-editing-and-storage.md "Thumbnails").
+const store = vi.hoisted(() => ({ readTextDocumentState: vi.fn() }));
+vi.mock('./text-documents/text-document-store', () => store);
 
 import { getDocumentTabImageSvg, getDocumentThumbnailSvg } from './thumbnail';
 
@@ -218,6 +222,24 @@ describe('getDocumentThumbnailSvg', () => {
     db.getTabBody.mockResolvedValue(
       stored(JSON.stringify({ kind: 'form', elements: [], form: 'not a form' }), 0),
     );
+    expect(await getDocumentThumbnailSvg(env, liveDoc())).toBeNull();
+  });
+
+  // docs/specs/034-text-documents/live-editing-and-storage.md "Thumbnails": a text document draws its first page.
+  it('draws a text document as its first page, and nothing for an empty one', async () => {
+    const images = r2();
+    db.getThumbRenderedAt.mockResolvedValue(null);
+    db.getTabBody.mockResolvedValue(
+      stored(JSON.stringify({ kind: 'text-document', format: 'odf', elements: [] }), 0),
+    );
+    store.readTextDocumentState.mockResolvedValue(
+      TextDocumentState.fromBody(Body.of('Minutes of the meeting')),
+    );
+    const env = { IMAGES: images } as unknown as DocumentEnv;
+    const out = await getDocumentThumbnailSvg(env, liveDoc());
+    expect(out).toContain('>Minutes of the meeting</text>');
+    expect(store.readTextDocumentState).toHaveBeenCalledWith(env, 't1');
+    store.readTextDocumentState.mockResolvedValue(TextDocumentState.seed());
     expect(await getDocumentThumbnailSvg(env, liveDoc())).toBeNull();
   });
 

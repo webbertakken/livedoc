@@ -153,9 +153,11 @@ role line.
 
 ## Telemetry and observability
 
-- `Document · Created · TextDocument` (any create path), `Tab · Added · TextDocument` (a text document tab added to a
-  document), `Tab · Imported · Odt` or `Docx` (a file opened as a text document), `Document · Exported · TextDocumentOdt` or `TextDocumentDocx` (a
-  download). An open is the editor's own `Document · Loaded`, counted once. Never text.
+- `Document · Created · TextDocument` (any create path), `Tab · Created · TextDocument` (a text document tab added to a
+  document by the add menu), `Tab · Imported · Odt` or `Docx` (a file opened as a text document),
+  `Document · Exported · TextDocumentOdt`, `TextDocumentFodt` or `TextDocumentDocx` (a download), and the office
+  shell's menu and tool finder events ([Office shell](../004-interface-design/office-shell.md#telemetry)).
+  An open is the editor's own `Document · Loaded`, counted once. Never text.
 - Fingerprints, each with the document and tab ids and never text: `[text-document] created`,
   `[text-document] opened`, `[text-document] limit-refused` (with the limit's name).
 
