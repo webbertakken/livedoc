@@ -10,6 +10,7 @@ import {
   lucideLock,
   lucideSettings,
   lucideStar,
+  lucideUsers,
 } from '@livedoc/icons/lucide';
 import { lucideGlyph } from '@livedoc/ui';
 
@@ -18,6 +19,7 @@ export const OfficeMoveIcon = lucideGlyph(lucideFolderInput, 18);
 export const OfficeSettingsIcon = lucideGlyph(lucideSettings, 20);
 export const OfficeLockIcon = lucideGlyph(lucideLock, 16);
 export const OfficeCopyIcon = lucideGlyph(lucideCopy, 16);
+export const OfficeSharedIcon = lucideGlyph(lucideUsers, 16);
 
 // The save status's glyphs, one per status (editing-surface.md "The title row").
 export const OfficeSaveIcons = {

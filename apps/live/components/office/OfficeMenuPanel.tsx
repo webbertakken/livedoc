@@ -95,11 +95,15 @@ function ItemRow({
 
 function SubmenuRow({
   entry,
+  toStart,
   actions,
   shortcutOf,
   onDone,
 }: {
   entry: OfficeSubmenu;
+  // Opens under its row, at the row's right: its menu sits at the window's right edge (More on a phone), with no room
+  // beside it.
+  toStart: boolean;
   actions: OfficeActions;
   shortcutOf: (id: string) => ShortcutText | null;
   onDone: () => void;
@@ -134,7 +138,7 @@ function SubmenuRow({
           shortcutOf={shortcutOf}
           trigger={trigger}
           initialFocus={open}
-          placement="side"
+          placement={toStart ? 'side-start' : 'side'}
           onClose={() => setOpen(null)}
           onDone={onDone}
         />
@@ -161,7 +165,7 @@ export function OfficeMenuPanel({
   trigger: HTMLElement | null;
   initialFocus: MenuInitialFocus;
   // Under a menu bar name, beside a submenu row, or at a point in the window (a context menu, at `at`).
-  placement: 'below' | 'side' | 'point';
+  placement: 'below' | 'below-end' | 'side' | 'side-start' | 'point';
   at?: Point;
   // Its name, when no trigger names it (a context menu).
   label?: string;
@@ -196,7 +200,11 @@ export function OfficeMenuPanel({
       ? 'fixed'
       : placement === 'below'
         ? 'absolute top-full left-0 mt-0.5'
-        : 'absolute -top-1.5 left-full';
+        : placement === 'below-end'
+          ? 'absolute top-full right-0 mt-0.5'
+          : placement === 'side-start'
+            ? 'absolute top-full right-2'
+            : 'absolute -top-1.5 left-full';
   return (
     <div
       ref={ref}
@@ -214,6 +222,7 @@ export function OfficeMenuPanel({
             />
           ) : entry.kind === 'submenu' ? (
             <SubmenuRow
+              toStart={placement === 'below-end' || placement === 'side-start'}
               key={entry.id}
               entry={entry}
               actions={actions}

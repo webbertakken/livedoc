@@ -32,7 +32,7 @@ export function OfficeSaveStatusButton({ status }: { status: OfficeSaveStatus })
         >
           <Icon />
           {isUnsettled(status) ? (
-            <span data-save-words="" className="truncate text-sm">
+            <span data-save-words="" className="truncate text-sm phone:hidden">
               {words}
             </span>
           ) : null}
