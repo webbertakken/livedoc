@@ -61,3 +61,24 @@ export function applyPage(
   startUndoStep(view);
   return { sections };
 }
+
+/**
+ * Sets the setup of a later section, `index` 1 or more, on its section break (page-layout.md "Page setup"), one undo
+ * step; answers whether there was such a section. The first section's is the document's (`TextDocumentState`).
+ */
+export function setSectionSetup(view: EditorView, index: number, setup: PageSetup): boolean {
+  let seen = 0;
+  let at = -1;
+  view.state.doc.forEach((node, pos) => {
+    if (node.type.name !== SECTION_BREAK || at >= 0) return;
+    seen += 1;
+    if (seen === index) at = pos;
+  });
+  if (at < 0) return false;
+  const node = view.state.doc.nodeAt(at)!;
+  startUndoStep(view);
+  view.dispatch(view.state.tr.setNodeMarkup(at, undefined, { ...node.attrs, setup }));
+  startUndoStep(view);
+  debugLog('[text-document] section setup', { section: index });
+  return true;
+}

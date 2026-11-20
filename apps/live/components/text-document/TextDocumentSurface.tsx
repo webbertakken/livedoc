@@ -89,11 +89,22 @@ import {
 } from '@/lib/text-document/text-document-caret';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
-import { sheetsHeight, TextDocumentSheets } from './TextDocumentSheets';
+import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
 import { breaksPlugin } from '@/lib/text-document/text-document-breaks';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
-import { paginationPlugin, relayoutPages } from '@/lib/text-document/pagination/pagination-plugin';
-import { pageBox, pagelessSetup, usePagelessColumn } from '@/lib/text-document/text-document-page';
+import {
+  paginationPlugin,
+  relayoutPages,
+  type PageGeometry,
+} from '@/lib/text-document/pagination/pagination-plugin';
+import { sectionWidthsPlugin } from '@/lib/text-document/pagination/pagination-sections';
+import {
+  pageBox,
+  pagelessSetup,
+  useCaretSection,
+  usePagelessColumn,
+} from '@/lib/text-document/text-document-page';
+import { setSectionSetup } from '@/lib/text-document/text-document-page-setup';
 import {
   NON_PRINTING_TOGGLE,
   RULER_TOGGLE,
@@ -161,7 +172,7 @@ export function TextDocumentSurface({
   const clipboardLeftOut = useRef<(count: number) => void>(() => {});
   // What the layout lays the writing onto (page-layout.md "Laying out"), read as it lays out; and the pages it made.
   const layout = useRef<{ setup: PageSetup; pages: boolean } | null>(null);
-  const [pageTotal, setPageTotal] = useState(1);
+  const [pageList, setPageList] = useState<readonly PageGeometry[]>([]);
   // The person's typing aids, as the writing reads them (text-and-paragraphs.md "Typing aids").
   const typingAids = useRef<() => TypingAids>(TypingAids.defaults);
   // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
@@ -313,6 +324,12 @@ export function TextDocumentSurface({
               ),
               // Page and section breaks: their labels, and Backspace and Delete beside a page break.
               breaksPlugin(readFormatting),
+              // Each section's writing at its own width (page-layout.md "Each page is drawn at its section's setup").
+              sectionWidthsPlugin(
+                () =>
+                  layout.current?.setup ??
+                  TextDocumentState.section(doc, live.current.format).setup,
+              ),
               // The writing laid onto pages (page-layout.md "Laying out").
               paginationPlugin({
                 readFormatting,
@@ -321,7 +338,7 @@ export function TextDocumentSurface({
                     setup: TextDocumentState.section(doc, live.current.format).setup,
                     pages: false,
                   },
-                onPages: setPageTotal,
+                onPages: setPageList,
               }),
               keymap(baseKeymap),
               // A moved selection is part of the view remembered for this tab.
@@ -436,6 +453,18 @@ export function TextDocumentSurface({
   // Pages are laid out unless pageless or on a phone, where the writing flows to the window.
   const wide = useMediaQuery('(min-width: 640px)');
   const paginated = !page.pageless && wide;
+  // The frame the pages need, each page at its section's size (page-layout.md "Laying out").
+  const sheets = paginated && state === 'ready' ? sheetsFrame(pageList) : null;
+  // The ruler shows the section the caret is in, and its margins set that section's.
+  const caretSection = useCaretSection(editorView, page.section, changes.subscribeCaret);
+  const rulerSetup = page.pageless ? drawn : caretSection.section.setup;
+  const setRulerSetup = useCallback(
+    (setup: PageSetup) => {
+      if (caretSection.index === 0) page.setSetup(setup);
+      else if (editorView && writes) setSectionSetup(editorView, caretSection.index, setup);
+    },
+    [caretSection.index, page, editorView, writes],
+  );
   useLayoutEffect(() => {
     layout.current = { setup: page.section.setup, pages: paginated };
     if (editorView && !editorView.isDestroyed) relayoutPages(editorView);
@@ -599,9 +628,9 @@ export function TextDocumentSurface({
             <TextDocumentRuler
               view={editorView}
               readFormatting={readRulerFormatting}
-              setup={drawn}
+              setup={rulerSetup}
               pageless={page.pageless}
-              onSetup={page.setSetup}
+              onSetup={setRulerSetup}
               scale={scale}
               canEdit={writes}
               refresh={changes.subscribeCaret}
@@ -632,15 +661,17 @@ export function TextDocumentSurface({
             style={{
               zoom: scale,
               ...pageBox(drawn),
-              ...(paginated ? { minHeight: sheetsHeight(pageTotal) } : {}),
+              ...(sheets
+                ? { '--pages-width': `${sheets.width}px`, minHeight: `${sheets.height}px` }
+                : { '--pages-width': 'var(--page-width)' }),
             }}
             data-page-format={page.pageless ? 'pageless' : 'pages'}
-            data-pages={paginated ? pageTotal : undefined}
+            data-pages={paginated ? pageList.length : undefined}
             data-laid-out={paginated ? 'pages' : 'flow'}
-            className={`relative isolate mx-auto w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
+            className={`relative isolate mx-auto w-(--pages-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-[calc((var(--pages-width)-var(--page-width))/2+var(--page-right))] sm:pb-(--page-bottom) sm:pl-[calc((var(--pages-width)-var(--page-width))/2+var(--page-left))] leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
           >
             <TextDocumentSheets
-              pages={paginated && state === 'ready' ? pageTotal : null}
+              pages={paginated && state === 'ready' ? pageList : null}
               shadow={!page.pageless}
             />
             {state === 'loading' ? (

@@ -118,7 +118,11 @@ describe('paginationPlugin', () => {
     // From 80 px down to the foot (20), then the gap (12).
     expect((gap as HTMLElement).style.height).toBe('32px');
     expect(gap?.getAttribute('aria-hidden')).toBe('true');
-    expect(onPages).toHaveBeenLastCalledWith(2);
+    // Two pages of the setup, in CSS pixels.
+    expect(onPages).toHaveBeenLastCalledWith([
+      { width: 600, height: 100 },
+      { width: 600, height: 100 },
+    ]);
     view.destroy();
   });
 
@@ -130,6 +134,21 @@ describe('paginationPlugin', () => {
     const [gap] = gaps(view);
     expect(gap?.parentElement).toBe(view.dom);
     expect((gap as HTMLElement).style.height).toBe('32px');
+    view.destroy();
+  });
+
+  it("lays each page out at its section's setup", async () => {
+    // A next-page section on a wider, shorter page: its page drawn at its own size.
+    const wide: PageSetup = { ...setup, width: 600, height: 60, orientation: 'landscape' };
+    const { view, onPages } = await mount([
+      p('a'.repeat(10)),
+      schema.nodes.section_break!.create({ start: 'next-page', setup: wide }),
+      p('b'.repeat(10)),
+    ]);
+    expect(onPages).toHaveBeenLastCalledWith([
+      { width: 600, height: 100 },
+      { width: 800, height: 80 },
+    ]);
     view.destroy();
   });
 

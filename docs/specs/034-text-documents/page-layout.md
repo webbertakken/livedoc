@@ -36,9 +36,18 @@ The Pages tab, rule by rule:
   refused, OK is held.
 - **Page colour**: the one colour picker in its swatch skin, with the office colour rows; white is stored as no
   colour, so the file writes none.
-- **Apply to**: until sections are built the dialog applies to the whole document and the field is not shown. A file
-  that brings section breaks has every section's paper, orientation and margins set; the page colour is the whole
-  document's in both formats.
+- **The dialog shows the section the caret is in**: its paper, orientation and margins.
+- **Apply to** (Google's): **Whole document**; **This section**, while the document has more than one section; **This
+  point forward**; **Selected content**, while text is selected. Whole document is chosen when the dialog opens.
+  - **Whole document** sets every section's paper, orientation and margins.
+  - **This section** sets the caret's section's.
+  - **This point forward** ends the section at the caret with a section break (next page), as Insert > Break does, and
+    sets the new section's and every later one's.
+  - **Selected content** puts the paragraphs the selection touches in a section of their own, with a section break
+    (next page) before and after them where none is; a continuous one there becomes next page, as Google's does; and
+    sets that section's.
+  - The page colour is the whole document's in both formats, whatever Apply to says. The Pageless tab has no Apply to.
+  - Each choice is one undo step with the breaks it makes.
 - **OK** applies what changed as one undo step and returns focus to the writing; nothing changed changes nothing.
   **Cancel** and Escape change nothing.
 - **Set as default** keeps the tab's paper, orientation, margins and colour as the person's default page setup, in
@@ -54,8 +63,10 @@ The Pages tab, rule by rule:
 Format > **Page orientation** is a small dialog of the two orientations, applying to the whole document as Page
 setup's does, one undo step (assumed: Google's).
 
-- **The page is drawn at its setup**: its paper's width and height, its margins and its colour (the first section's
-  until sections are built); the ruler's margins set the same values ([Editing surface](editing-surface.md#the-ruler)).
+- **Each page is drawn at its section's setup**: its paper's width and height, its margins, and the document's
+  page colour; pages of different widths are centred one under another, and each section's writing has its own text
+  width. The ruler shows and sets the margins of the section the caret is in
+  ([Editing surface](editing-surface.md#the-ruler)).
   A page colour is drawn as a fill is on the paper it is on: as written in the light scheme, its lightness mirrored on
   dark paper ([The page in the dark scheme](editing-surface.md#the-page-in-the-dark-scheme)); the writing's inks are
   drawn for the paper, not for the page colour, as Google draws them on white (default). Margins dragged on the ruler:
@@ -92,7 +103,7 @@ pages' setup.
 - **The pages**: the writing is laid onto pages one under another, centred on the ground, 12 px apart at 100% zoom
   (default), 24 px of ground above the first and below the last; each page a sheet of its paper, its page colour and
   a light shadow; the last page is a whole page however little it holds. Each page has the setup of the section its
-  first line belongs to (the first section's until sections are built).
+  first line belongs to.
 - **A page fills** with lines from the top of its text area (the page less its margins) down; a line that would cross
   the foot of the text area starts the next page. Lines break by the paragraph's alignment and the browser's line
   breaking, so a paragraph that does not fit breaks **between two of its lines**, never inside one.

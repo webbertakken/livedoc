@@ -144,7 +144,7 @@ describe('paragraphDeclarations, borders and shading', () => {
     );
     expect(css).toBe(
       '--text-document-indent-start: 36pt; margin-inline-start: var(--text-document-indent-start, 0); ' +
-        `margin-inline-end: var(--text-document-indent-end, 0); border-top: 1pt dotted ${paperInk('#1155cc')}; padding-top: 4pt; ` +
+        `margin-inline-end: var(--text-document-indent-end, 0); --text-document-box-inline: calc(var(--text-document-indent-start, 0pt) + var(--text-document-indent-end, 0pt)); border-top: 1pt dotted ${paperInk('#1155cc')}; padding-top: 4pt; ` +
         `border-bottom: none; padding-bottom: 0pt; border-left: 0.5pt solid ${paperInk('#000000')}; padding-left: 2pt; ` +
         `border-right: none; padding-right: 0pt; background-color: ${paperFill('#fff2cc')};`,
     );
