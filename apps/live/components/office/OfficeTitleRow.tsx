@@ -32,12 +32,15 @@ import {
 import type { OfficeSaveStatus } from './office-save-status';
 import { OfficeSaveStatusButton } from './OfficeSaveStatus';
 import { OfficeIconButton, OfficeTitleActions } from './OfficeTitleActions';
+import { OfficeContextMenu, type OfficeContextMenuSource } from './OfficeContextMenu';
 import { OfficeShortcutsDialog } from './OfficeShortcutsDialog';
+import { useOfficeContextMenu } from './useOfficeContextMenu';
 import { OfficeToolFinder } from './OfficeToolFinder';
 import { useOfficeShortcuts, type ShortcutRun } from './useOfficeShortcuts';
 
 // The registry rows the shell itself runs: `<menu>-menu` opens that menu (its access key), and the tool finder.
 const TOOL_FINDER = 'tool-finder';
+const CONTEXT_MENU = 'context-right-click-menu';
 const accessKeyOf = (menuId: string) => `${menuId}-menu`;
 
 export type OfficeFileOpening = {
@@ -65,6 +68,7 @@ export function OfficeTitleRow({
   toolbar = [],
   zoom = null,
   mode = null,
+  contextMenu = null,
 }: {
   name: string;
   // The format's pill (".ODT") and what it is called ("OpenDocument format").
@@ -94,6 +98,8 @@ export function OfficeTitleRow({
   zoom?: OfficeZoom | null;
   // The person's editing mode and the modes their level allows (review.md "Editing modes").
   mode?: OfficeModeChoice | null;
+  // The document's context menu (office-shell.md "Context menus"); none: the browser's own.
+  contextMenu?: OfficeContextMenuSource | null;
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [finding, setFinding] = useState(false);
@@ -137,6 +143,16 @@ export function OfficeTitleRow({
     [catalogue, level, allActions],
   );
   const items = useMemo(() => catalogueItems(menus), [menus]);
+  const closeMenus = useCallback(() => setOpenMenu(null), []);
+  const context = useOfficeContextMenu({
+    scope: keyScope,
+    source: contextMenu,
+    level,
+    actions: allActions,
+    telemetryKind,
+    onOpen: closeMenus,
+  });
+  const { openAtCaret } = context;
   const bar = useMemo(
     () => visibleToolbar(toolbar, level, allActions, zoom !== null),
     [toolbar, level, allActions, zoom],
@@ -169,6 +185,7 @@ export function OfficeTitleRow({
         setFinding(true);
       },
     };
+    if (openAtCaret) out[CONTEXT_MENU] = openAtCaret;
     for (const menu of menus)
       out[accessKeyOf(menu.id)] = () => onOpenMenu({ id: menu.id, focus: 'first' });
     for (const { item } of items) {
@@ -177,7 +194,7 @@ export function OfficeTitleRow({
         out[item.shortcut] ??= () => action.run();
     }
     return out;
-  }, [menus, items, allActions, onOpenMenu]);
+  }, [menus, items, allActions, onOpenMenu, openAtCaret]);
   useOfficeShortcuts({ scope: keyScope, rows: shortcuts, runs });
 
   return (
@@ -259,6 +276,15 @@ export function OfficeTitleRow({
       </div>
       {bar.length > 0 ? (
         <OfficeToolbar groups={bar} actions={allActions} shortcutOf={shortcutOf} zoom={zoom} />
+      ) : null}
+      {context.at ? (
+        <OfficeContextMenu
+          entries={context.entries}
+          at={context.at}
+          actions={allActions}
+          shortcutOf={shortcutOf}
+          onClose={context.close}
+        />
       ) : null}
       {showingShortcuts ? (
         <OfficeShortcutsDialog rows={shortcuts} onClose={() => setShowingShortcuts(false)} />

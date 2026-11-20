@@ -1,7 +1,7 @@
 # Office shell
 
 **Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer, the
-title row, the toolbar, side panels, dialogs and the keyboard shortcuts dialog are built; context menus are specified.
+title row, the toolbar, side panels, dialogs, context menus and the keyboard shortcuts dialog are built.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
 and the spreadsheet of plan 0020. It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
@@ -133,6 +133,22 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   ChromeOS, or PC for every other.
 - Menus and tooltips show an item's first shortcut for the platform, in its notation (⌘ on a Mac).
 
+## Context menus
+
+A kind declares a **context menu** for each place in its document (the text's; a table's, a picture's and a link's
+later) as catalogue entries, sharing their item ids with the menus, so one binding serves both. The shell draws it as it
+draws a menu: dimmed while `comingSoon`, not drawn above the session's level or while a `built` item is unbound.
+
+- A right-click in the document opens it at the pointer; with Shift held the browser's own menu shows instead, as
+  Google leaves it. Ctrl+Shift+\ (⌘⇧\ on a Mac), Ctrl+Shift+X and Shift+F10, as
+  [Keyboard shortcuts](../034-text-documents/keyboard-shortcuts.md) lists, and the keyboard's menu key open it at the
+  caret.
+- A right-click outside the selection first moves the caret to where it was pressed; inside it, the selection stays.
+- It is a WAI-ARIA menu, as an open menu of the menu bar: focus starts on its first item, arrows move, Enter runs;
+  Escape, a press outside or running an item closes it, and focus goes back to the document.
+- It stays inside the window: it opens to the left of the point, or above it, where it would cross the right or
+  bottom edge.
+
 ## Side panels
 
 A kind declares its **panels** as data, as it does its menus: each has an id, a title, a side (`left` or `right`),
@@ -211,4 +227,4 @@ its row's in the kind's spec ([Editing surface](../034-text-documents/editing-su
 `UI · Opened · <Kind>Menu<Name>` (a menu opened), `UI · Used · <Kind>ToolFinder` (a result run from the finder),
 `UI · Opened · <Kind>Panel<Name>` (a side panel opened), `UI · Toggled · <Kind>Star`, `UI · Opened · <Kind>Move`,
 `UI · Used · <Kind>Follow` (a press on a person here), `UI · Opened · <Kind>Shortcuts` (the keyboard shortcuts
-dialog opened). Never content, never what was typed.
+dialog opened), `UI · Opened · <Kind>ContextMenu` (a context menu opened). Never content, never what was typed.

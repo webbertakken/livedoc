@@ -605,7 +605,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+X or Ctrl+Shift+\\ or Shift+F10',
     '⌘+Shift+\\ or Shift+F10',
     'Ctrl+Shift+X or Shift+F10',
-    'specified',
+    'built',
   ),
   row(
     'file-menu',

@@ -92,6 +92,31 @@ export function catalogueItems(catalogue: OfficeCatalogue): FoundItem[] {
   return catalogue.flatMap((menu) => itemsOf(menu.entries, [menu.label]));
 }
 
+// One entry of a context menu (office-shell.md "Context menus"): a menu item by its id, relabelled where the context
+// names it otherwise ("Insert link") or offers it to fewer (a level of its own), an item of the context's own, or a separator.
+export type ContextEntrySpec =
+  string | { id: string; label: string; level?: AccessLevel } | OfficeItem | { kind: 'separator' };
+
+// A context menu's entries, sharing the menus' items (their status, level and binding) by id, as commands. An id no menu holds is a
+// fault of the kind's declaration, refused as it is built.
+export function contextEntries(
+  catalogue: OfficeCatalogue,
+  specs: readonly ContextEntrySpec[],
+): OfficeEntry[] {
+  const byId = new Map(catalogueItems(catalogue).map(({ item }) => [item.id, item]));
+  return specs.map((spec): OfficeEntry => {
+    if (typeof spec === 'object' && 'kind' in spec) return spec;
+    const id = typeof spec === 'string' ? spec : spec.id;
+    const found = byId.get(id);
+    if (!found) throw new Error(`context menu: no menu item ${id}`);
+    // A context menu holds commands: a menu's check (Suggesting among the modes) is no check here.
+    const { checkable: _check, ...item } = found;
+    return typeof spec === 'string'
+      ? item
+      : { ...item, label: spec.label, ...(spec.level ? { level: spec.level } : {}) };
+  });
+}
+
 // What a kind's catalogue gets wrong: a built item nothing runs, a shortcut its registry lacks, an id used twice.
 export function catalogueFaults(
   catalogue: OfficeCatalogue,

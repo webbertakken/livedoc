@@ -17,7 +17,11 @@ import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
-import { textDocumentMenus } from '@/lib/text-document/text-document-menus';
+import {
+  textDocumentMenus,
+  textDocumentTextContextMenu,
+} from '@/lib/text-document/text-document-menus';
+import type { Point } from '@/lib/office/context-menu-place';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
 import { TEXT_DOCUMENT_TOOLBAR } from '@/lib/text-document/text-document-toolbar';
 import type { OfficeZoom } from '@/components/office/OfficeZoomField';
@@ -69,6 +73,7 @@ export function TextDocumentTitleRow({
   saveStatus = null,
   zoom = null,
   mode = null,
+  caret = null,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -85,9 +90,22 @@ export function TextDocumentTitleRow({
   saveStatus?: OfficeSaveStatus | null;
   zoom?: OfficeZoom | null;
   mode?: OfficeModeChoice | null;
+  // The caret, for the context menu on text (editing-surface.md "Context menus"); none until the writing is bound.
+  caret?: { point: () => Point | null; place: (point: Point) => void } | null;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const catalogue = useMemo(() => textDocumentMenus(format), [format]);
+  const contextMenu = useMemo(
+    () =>
+      caret
+        ? {
+            entries: textDocumentTextContextMenu(catalogue),
+            caretPoint: caret.point,
+            placeCaret: caret.place,
+          }
+        : null,
+    [catalogue, caret],
+  );
 
   const actions = useMemo(() => {
     const download = async (type: TextDocumentFileType) => {
@@ -143,6 +161,7 @@ export function TextDocumentTitleRow({
       toolbar={TEXT_DOCUMENT_TOOLBAR}
       zoom={zoom}
       mode={mode}
+      contextMenu={contextMenu}
     />
   );
 }

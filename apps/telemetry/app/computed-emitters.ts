@@ -480,6 +480,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   },
   // A side panel of an office kind opened (docs/specs/004-interface-design/office-shell.md "Side panels"), by its title.
   'apps/live/lib/office/useOfficePanels.ts UI·Opened': { values: ['TextDocumentPanelOutline'] },
+  // An office kind's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").
+  'apps/live/components/office/useOfficeContextMenu.ts UI·Opened': {
+    values: ['TextDocumentContextMenu'],
+  },
   // An office kind's editing mode changed (docs/specs/034-text-documents/review.md "Editing modes"), typed by its kind.
   'apps/live/lib/office/useOfficeMode.ts UI·Changed': { values: ['TextDocumentMode'] },
   'apps/live/components/office/OfficeTitleRow.tsx UI·Toggled': { values: ['TextDocumentStar'] },

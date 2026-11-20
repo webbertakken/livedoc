@@ -1305,6 +1305,13 @@ export const TEXT_DOCUMENT_PANELS_OPENED = opened(
   (t) => (t ?? '').startsWith('TextDocumentPanel'),
 );
 
+// A text document's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").
+export const TEXT_DOCUMENT_CONTEXT_MENU_OPENED = opened(
+  'Text Document Context Menu',
+  "The context menu on a text document's writing opened, by a right-click or from the keyboard.",
+  (t) => t === 'TextDocumentContextMenu',
+);
+
 export const OTHER_OPENED = chart(
   'UI',
   'Opened',
@@ -1328,6 +1335,7 @@ export const PANELS_OPENED: MetricStack = {
     ACTION_SIGN_IN_NUDGE,
     TEXT_DOCUMENT_MENUS_OPENED,
     TEXT_DOCUMENT_PANELS_OPENED,
+    TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
     OTHER_OPENED,
   ],
   seeAlso: { section: 'editing', label: 'See Each Dialog in Features › Editing' },

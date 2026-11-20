@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   catalogueFaults,
   catalogueItems,
+  contextEntries,
   visibleMenus,
   type OfficeCatalogue,
 } from './office-catalogue';
@@ -182,5 +183,35 @@ describe('findTools', () => {
 
   it('ignores case', () => {
     expect(findTools(items, 'BOLD', 12).map((f) => f.item.id)).toEqual(['bold']);
+  });
+});
+
+// docs/specs/004-interface-design/office-shell.md "Context menus": the menus' items, by id, in the context's order.
+describe('contextEntries', () => {
+  it("picks the menus' items by id, relabelled where asked, with separators and items of its own", () => {
+    const own = {
+      kind: 'item',
+      id: 'own',
+      label: 'Own',
+      level: 'edit',
+      status: 'comingSoon',
+    } as const;
+    const entries = contextEntries(CATALOGUE, [
+      'copy-doc',
+      { kind: 'separator' },
+      { id: 'download-odt', label: 'Save' },
+      own,
+    ]);
+    expect(entries.map((e) => (e.kind === 'item' ? e.label : e.kind))).toEqual([
+      'Make a copy',
+      'separator',
+      'Save',
+      'Own',
+    ]);
+    expect(entries[2]).toMatchObject({ id: 'download-odt', status: 'built', level: 'view' });
+  });
+
+  it('refuses an id no menu holds', () => {
+    expect(() => contextEntries(CATALOGUE, ['nowhere'])).toThrow(/nowhere/);
   });
 });

@@ -136,20 +136,20 @@ row stands for both.
 
 ## Menus
 
-| Action                           | PC                                               | Mac                      | ChromeOS                    | Status                           |
-| -------------------------------- | ------------------------------------------------ | ------------------------ | --------------------------- | -------------------------------- |
-| Context (right-click) menu       | `Ctrl+Shift+X or Ctrl+Shift+\ or Shift+F10`      | `⌘+Shift+\ or Shift+F10` | `Ctrl+Shift+X or Shift+F10` | specified                        |
-| File menu                        | `Alt+F (Chrome) or Alt+Shift+F (other browsers)` | `Ctrl+Option+F`          | `Alt+F`                     | built (`OfficeMenuBar.test.tsx`) |
-| Edit menu                        | `Alt+E (Chrome) or Alt+Shift+E (other browsers)` | `Ctrl+Option+E`          | `Alt+E`                     | built (`OfficeMenuBar.test.tsx`) |
-| View menu                        | `Alt+V (Chrome) or Alt+Shift+V (other browsers)` | `Ctrl+Option+V`          | `Alt+V`                     | built (`OfficeMenuBar.test.tsx`) |
-| Insert menu                      | `Alt+I (Chrome) or Alt+Shift+I (other browsers)` | `Ctrl+Option+I`          | `Alt+I`                     | built (`OfficeMenuBar.test.tsx`) |
-| Format menu                      | `Alt+O (Chrome) or Alt+Shift+O (other browsers)` | `Ctrl+Option+O`          | `Alt+O`                     | built (`OfficeMenuBar.test.tsx`) |
-| Tools menu                       | `Alt+T (Chrome) or Alt+Shift+T (other browsers)` | `Ctrl+Option+T`          | `Alt+T`                     | built (`OfficeMenuBar.test.tsx`) |
-| Help menu                        | `Alt+H (Chrome) or Alt+Shift+H (other browsers)` | `Ctrl+Option+H`          | `Alt+H`                     | built (`OfficeMenuBar.test.tsx`) |
-| Accessibility menu               | `Alt+A (Chrome) or Alt+Shift+A (other browsers)` | `Ctrl+Option+A`          | `Alt+A`                     | specified                        |
-| Input Tools menu                 | `Ctrl+Alt+Shift+K`                               | `⌘+Option+Shift+K`       | `Ctrl+Alt+Shift+K`          | left out (C3)                    |
-| Toggle input controls            | —                                                | `⌘+Shift+K`              | —                           | left out (C3)                    |
-| Show your browser's context menu | `Shift+right-click`                              | `Shift+right-click`      | `Shift+right-click`         | the browser's                    |
+| Action                           | PC                                               | Mac                      | ChromeOS                    | Status                               |
+| -------------------------------- | ------------------------------------------------ | ------------------------ | --------------------------- | ------------------------------------ |
+| Context (right-click) menu       | `Ctrl+Shift+X or Ctrl+Shift+\ or Shift+F10`      | `⌘+Shift+\ or Shift+F10` | `Ctrl+Shift+X or Shift+F10` | built (`OfficeContextMenu.test.tsx`) |
+| File menu                        | `Alt+F (Chrome) or Alt+Shift+F (other browsers)` | `Ctrl+Option+F`          | `Alt+F`                     | built (`OfficeMenuBar.test.tsx`)     |
+| Edit menu                        | `Alt+E (Chrome) or Alt+Shift+E (other browsers)` | `Ctrl+Option+E`          | `Alt+E`                     | built (`OfficeMenuBar.test.tsx`)     |
+| View menu                        | `Alt+V (Chrome) or Alt+Shift+V (other browsers)` | `Ctrl+Option+V`          | `Alt+V`                     | built (`OfficeMenuBar.test.tsx`)     |
+| Insert menu                      | `Alt+I (Chrome) or Alt+Shift+I (other browsers)` | `Ctrl+Option+I`          | `Alt+I`                     | built (`OfficeMenuBar.test.tsx`)     |
+| Format menu                      | `Alt+O (Chrome) or Alt+Shift+O (other browsers)` | `Ctrl+Option+O`          | `Alt+O`                     | built (`OfficeMenuBar.test.tsx`)     |
+| Tools menu                       | `Alt+T (Chrome) or Alt+Shift+T (other browsers)` | `Ctrl+Option+T`          | `Alt+T`                     | built (`OfficeMenuBar.test.tsx`)     |
+| Help menu                        | `Alt+H (Chrome) or Alt+Shift+H (other browsers)` | `Ctrl+Option+H`          | `Alt+H`                     | built (`OfficeMenuBar.test.tsx`)     |
+| Accessibility menu               | `Alt+A (Chrome) or Alt+Shift+A (other browsers)` | `Ctrl+Option+A`          | `Alt+A`                     | specified                            |
+| Input Tools menu                 | `Ctrl+Alt+Shift+K`                               | `⌘+Option+Shift+K`       | `Ctrl+Alt+Shift+K`          | left out (C3)                        |
+| Toggle input controls            | —                                                | `⌘+Shift+K`              | —                           | left out (C3)                        |
+| Show your browser's context menu | `Shift+right-click`                              | `Shift+right-click`      | `Shift+right-click`         | the browser's                        |
 
 The Accessibility menu shows only while screen reader support is on.
 

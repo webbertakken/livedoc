@@ -3,11 +3,12 @@
 // Agents). Each item names the least share level that sees it; an item whose phase has not landed is `comingSoon`.
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import type {
-  OfficeCatalogue,
-  OfficeEntry,
-  OfficeItem,
-  OfficeMenu,
+import {
+  contextEntries,
+  type OfficeCatalogue,
+  type OfficeEntry,
+  type OfficeItem,
+  type OfficeMenu,
 } from '@/lib/office/office-catalogue';
 
 type ItemOptions = Partial<Pick<OfficeItem, 'shortcut' | 'keywords' | 'checkable' | 'status'>>;
@@ -104,7 +105,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       }),
       SEPARATOR,
       item('select-all', 'Select all', 'view', { shortcut: 'select-all', status: 'built' }),
-      item('delete', 'Delete', 'edit'),
+      item('delete', 'Delete', 'edit', BUILT),
       SEPARATOR,
       item('find-and-replace', 'Find and replace', 'view', {
         shortcut: 'find-and-replace',
@@ -331,4 +332,26 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       }),
     ]),
   ];
+}
+
+// The context menu on text (editing-surface.md "Context menus"), in Google's order: the menus' items, by id, and the two
+// it alone offers. Suggest edits is for whoever may suggest, never a Viewer.
+export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeEntry[] {
+  return contextEntries(catalogue, [
+    'cut',
+    'copy',
+    'paste',
+    'paste-without-formatting',
+    'delete',
+    SEPARATOR,
+    'comment',
+    { id: 'mode-suggesting', label: 'Suggest edits', level: 'participate' },
+    SEPARATOR,
+    { id: 'link', label: 'Insert link' },
+    SEPARATOR,
+    item('format-options', 'Format options', 'edit'),
+    'clear-formatting',
+    SEPARATOR,
+    item('select-all-matching-text', 'Select all matching text', 'edit'),
+  ]);
 }

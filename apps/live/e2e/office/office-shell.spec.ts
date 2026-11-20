@@ -114,6 +114,19 @@ test('the menus, the tool finder and the shortcut layer work a text document', a
   await expect(shortcuts).toHaveCount(0);
   await expect(page.locator(BODY)).toBeFocused();
 
+  // The context menu (office-shell.md "Context menus"): a right-click on the selection keeps it, and Delete removes it.
+  await page.locator(BODY).click();
+  await page.keyboard.type('Gone soon');
+  await page.keyboard.press('ControlOrMeta+a');
+  await page.locator(BODY).click({ button: 'right' });
+  const context = page.getByRole('menu', { name: 'Context menu' });
+  await expect(context.getByRole('menuitem', { name: 'Cut' })).toBeFocused();
+  await page.screenshot({ path: test.info().outputPath('context-menu.png') });
+  await context.getByRole('menuitem', { name: /^Delete/ }).click();
+  await expect(context).toHaveCount(0);
+  await expect(page.locator(BODY)).toHaveText('');
+  await expect(page.locator(BODY)).toBeFocused();
+
   // F6 between the parts (office-shell.md "Behaviour"): from the writing to the tab strip, round to the title row,
   // the menu bar, the toolbar, and the writing again.
   await page.keyboard.press('F6');
