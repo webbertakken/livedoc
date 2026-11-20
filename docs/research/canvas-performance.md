@@ -451,6 +451,21 @@ Measured 2026-11-20 on the reference board, local, throttled 3x, interleaved aga
   18-20 to 10-13 and its release 10-17 to 0-1. A stroke (a pen, no drag) did not change. The select
   row's longest task at 3x went from 50-52 to under 50 in eleven of twelve runs.
 
+## A stroke's release, label by label
+
+Measured 2026-11-20 on the reference board, in Node, unthrottled, a stroke added to the board and
+taken away again, fifty times each.
+
+- **Label inks were worked out for the whole board on every edit** (`withReadableLabelInks` in the
+  stock-colour projector, whenever the canvas is drawn in the other half): 0.59 ms a change. Now a
+  tracker works out only the labels a change can reach (`createLabelInkTracker`): 0.33 ms, most of
+  it the comparison of the two boards, and a change no label can see keeps every label's object.
+- **The arrows' frames were already worked out per change**: `geometryFor` takes 0.23 ms for a
+  stroke; rebuilding the arrow links (0.27 ms) and the grid (0.08 ms) are the rest.
+- **A profile overstates small functions.** In a traced release the frames and the inks read as
+  about 5% and 4% of the task; timed on their own they are about 1% each. The sampler's cost lands on
+  short calls. Time a suspect on its own before rebuilding it.
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.

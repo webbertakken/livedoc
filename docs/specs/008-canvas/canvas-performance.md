@@ -189,8 +189,10 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   change it lands. The gesture's listeners follow the store; a change of drag made inside one of
   them waits for it to return.
 - **Derived layouts are computed once per change.** Arrow labels, ink projection and theme
-  colours are laid out per element change and cached per element identity, as arrow labels are
-  today.
+  colours are laid out per element change and cached per element identity. A label's ink against
+  what is behind it is worked out again only for the labels a change can reach: those it changed,
+  and those whose centre lies on a panel it changed, moved, added or removed. An arrow's frame is
+  worked out again only where the change can have moved it.
 - **A render that changes no element hands on the same board.** A pan, a zoom or a marquee frame
   re-renders the editor without touching an element; every display projection of the board (stock
   colours, hidden layers) then returns the same array it returned before, so nothing derived from

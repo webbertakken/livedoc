@@ -69,10 +69,12 @@ const area = (b: Box) => num(b.width) * num(b.height);
 
 /** Each label's ink and the colour drawn behind it, by element index: its own fill (a shape, but not a cycle, which
  *  writes between its discs), else the topmost filled element under its centre that is larger than it (a translucent
- *  one mixed over what is under it), else the canvas. Labels whose ink or backdrop is not a hex colour are left out. */
+ *  one mixed over what is under it), else the canvas. Labels whose ink or backdrop is not a hex colour are left out.
+ *  Given `only`, just the labels at those indices, each against every panel painted before it (no grid). */
 export function labelBackdrops(
   elements: readonly Element[],
   canvas: string,
+  only?: ReadonlySet<number>,
 ): Map<number, { ink: string; behind: string }> {
   const surface = canvasSurface(canvas);
   const boxes = elements.map(boxOf);
@@ -81,6 +83,10 @@ export function labelBackdrops(
   const everywhere: number[] = [];
   boxes.forEach((b, j) => {
     if (!isPanel(b) || !fillOf(b, surface)) return;
+    if (only) {
+      everywhere.push(j);
+      return;
+    }
     const x0 = Math.floor(num(b.x) / LABEL_GRID_PX);
     const y0 = Math.floor(num(b.y) / LABEL_GRID_PX);
     const x1 = Math.floor((num(b.x) + num(b.width)) / LABEL_GRID_PX);
@@ -100,6 +106,7 @@ export function labelBackdrops(
 
   const out = new Map<number, { ink: string; behind: string }>();
   boxes.forEach((b, i) => {
+    if (only && !only.has(i)) return;
     if (!isLabel(b)) return;
     const ink = inkOf(b, surface);
     if (!ink) return;
@@ -173,14 +180,18 @@ export function withReadableLabelInks<T extends Element>(
   beforeCanvas: string,
   after: readonly T[],
   afterCanvas: string,
+  // Just these labels, by id (createLabelInkTracker); every other element is handed back as it is.
+  onlyIds?: ReadonlySet<string>,
 ): readonly T[] {
-  const now = labelBackdrops(after, afterCanvas);
+  const indicesOf = (els: readonly Element[]) =>
+    onlyIds ? new Set(els.flatMap((el, k) => (onlyIds.has(el.id) ? [k] : []))) : undefined;
+  const now = labelBackdrops(after, afterCanvas, indicesOf(after));
   if (now.size === 0) return after;
   let was: Map<number, { ink: string; behind: string }> | null = null;
   let beforeIndex: Map<string, number> | null = null;
   // The label as it was before the change: its element, and its ink and backdrop then.
   const priorOf = (i: number) => {
-    was ??= labelBackdrops(before, beforeCanvas);
+    was ??= labelBackdrops(before, beforeCanvas, indicesOf(before));
     beforeIndex ??= new Map(before.map((el, k) => [el.id, k] as const));
     const k = beforeIndex.get(after[i]!.id);
     return k === undefined ? null : { el: before[k]!, drawn: was.get(k) };
