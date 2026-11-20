@@ -33,7 +33,11 @@ function Surface({
         problem={null}
         catalogue={CATALOGUE}
         level={level}
-        actions={textDocumentEditorActions(null, { canEdit: level === 'edit' })}
+        actions={{
+          ...textDocumentEditorActions(null, { canEdit: level === 'edit' }),
+          // Clear formatting is built: the surface binds it for a session that writes.
+          ...(level === 'edit' ? { 'clear-formatting': { run: () => {} } } : {}),
+        }}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
         keyScope={root}
         telemetryKind="TextDocument"
@@ -91,7 +95,7 @@ describe('the context menu', () => {
       'Suggest edits',
       'Insert link',
       'Format options',
-      'Clear formatting',
+      'Clear formattingCtrl+\\',
       'Select all matching text',
     ]);
     expect(document.activeElement).toBe(within(opened).getAllByRole('menuitem')[0]);

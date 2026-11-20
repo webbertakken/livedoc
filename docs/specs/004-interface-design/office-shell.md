@@ -115,6 +115,9 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   A choice may be a **choice with a submenu** (a style with Apply and Update to match): a press on its row runs the
   choice, while hovering it, or Right, Enter or Space on it, opens its submenu, so the keyboard never runs a row it
   cannot see the submenu of. A choice menu holding submenus never scrolls, so a submenu is never cut off.
+- A toggle may hold a **double press** (the paint roller): a second press in quick succession (a double-click) runs
+  the binding's double press in place of a second plain press, so the toggle stays on; a press from the keyboard is
+  always a plain press.
 - **Colour controls** (Text colour, Highlight colour) show their glyph over a bar in the colour at the caret and open
   the [colour picker](colour-picker.md) in its swatch-button skin.
 - A `comingSoon` control is drawn dimmed (`aria-disabled`), its tooltip saying "Coming soon"; a `built` control left
@@ -142,6 +145,8 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
 - A keydown inside the surface is matched against the registry for the platform; a matched shortcut runs the item
   bound to its id and the browser's default is prevented. Keys the registry does not hold reach the browser and the
   editor untouched; a shortcut whose item is `comingSoon` or not bound is left alone too.
+- A shortcut no item or control names (Copy text formatting) runs what the kind binds under the shortcut's own id;
+  unbound for the session, its keys pass on.
 - A **sequence** ("holding Ctrl+Alt, press N then H") starts on its first key with its modifiers held and runs on its
   second; releasing the modifiers, or any other key, ends it.
 - The platform is read once from the browser (`navigator.userAgentData.platform`, else `navigator.platform`): Mac,

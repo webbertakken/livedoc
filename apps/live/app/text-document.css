@@ -64,3 +64,15 @@ div.text-document-kept {
 .text-document-peer-selection {
   background: color-mix(in srgb, var(--text-document-peer) 25%, transparent);
 }
+
+/*
+ * The paint roller is on (docs/specs/034-text-documents/text-and-paragraphs.md "Paint format"): the pointer over the
+ * writing is a roller (Lucide's paint-roller, ISC), dark on a light outline so it reads on the page; it paints from
+ * the foot of its handle.
+ */
+.text-document-body.text-document-painting {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%23fff' stroke-width='4'%3E%3Crect width='16' height='6' x='2' y='2' rx='2'/%3E%3Cpath d='M10 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2'/%3E%3Crect width='4' height='6' x='8' y='16' rx='1'/%3E%3C/g%3E%3Cg stroke='%23202124' stroke-width='2'%3E%3Crect width='16' height='6' x='2' y='2' rx='2'/%3E%3Cpath d='M10 16v-2a2 2 0 0 1 2-2h8a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2'/%3E%3Crect width='4' height='6' x='8' y='16' rx='1'/%3E%3C/g%3E%3C/svg%3E")
+      10 22,
+    text;
+}

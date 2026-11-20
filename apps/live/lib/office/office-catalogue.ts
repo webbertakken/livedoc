@@ -51,9 +51,11 @@ export type OfficeMenu = {
 export type OfficeCatalogue = readonly OfficeMenu[];
 
 // What an item does, bound by id: `checked` for a checkable item, `disabled` when it cannot run now, `label` for what
-// it does now where that changes (Add or Remove space before a paragraph).
+// it does now where that changes (Add or Remove space before a paragraph), `double` for what a toggle's double press
+// runs in place of its second press (the paint roller held).
 export type OfficeAction = {
   run: () => void;
+  double?: () => void;
   checked?: boolean;
   disabled?: boolean;
   label?: string;

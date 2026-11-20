@@ -1,7 +1,7 @@
 # Text and paragraphs
 
-**Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing and
-keep rules are built; the rest is specified.
+**Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
+keep rules, paint format and clear formatting are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -204,13 +204,31 @@ background colour; **Reset**. Adjacent paragraphs with the same borders share on
 
 ## Paint format
 
-The paint roller copies the selection's formatting (text and paragraph) and applies it once to the next selection;
-a double-click keeps it on until pressed again or Escape. ⌘⌥C and ⌘⌥V copy and paste formatting.
+- **The formatting clipboard** holds one formatting: the text formatting where the selection starts (its own over
+  its styles, as the run holds it) and its paragraph's style and own paragraph formatting. Each surface holds its own,
+  for as long as it is open (default).
+- **Copy text formatting** (⌘⌥C) puts the selection's formatting on the formatting clipboard; it changes nothing.
+- **Paste text formatting** (⌘⌥V) applies the formatting clipboard to the selection: every paragraph it touches takes
+  the paragraph style and paragraph formatting, and its text takes the text formatting in place of its own; with
+  nothing selected, the caret's paragraph and the next characters typed take it. Links, comments and kept content stay.
+  One undo step; with nothing copied it does nothing.
+- **The paint roller** (the toolbar's Paint format) copies the selection's formatting and stays pressed: the next
+  selection made with the pointer takes it, as Paste text formatting, and the roller lets go. A double-click on the
+  roller keeps it pressed until it is pressed again or Escape is pressed in the writing, applying to every selection
+  made with the pointer meanwhile. A press with no drag applies nothing (default). While it is pressed, the pointer
+  over the writing is a paint roller.
+- Share roles: an Editor paints and pastes formatting; Copy text formatting changes nothing, yet is bound with them,
+  so a Participant and a Viewer have none of the three (default).
 
 ## Clear formatting
 
-⌘\ (and Ctrl+Space on PC) removes direct text formatting from the selection, leaving the paragraph style, links and
-comments.
+**Clear formatting** (⌘\, and Ctrl+Space on a PC; Format > Clear formatting; the toolbar; the context menu) removes
+the selection's own text formatting (font, size, toggles, colours, its character style and the file's own run
+formatting), so it draws in its paragraph style. The paragraphs it touches lose their own paragraph formatting
+(alignment, indents, spacing, keep rules) too, back to their style's (default, as Google's does, inferred); they keep
+their paragraph style and list, and the text keeps its links, comments and kept content. With nothing selected, the
+caret's paragraph is cleared and the next characters typed take no formatting of their own. One undo step; focus
+returns to the writing. Share roles: an Editor only.
 
 ## Non-printing characters
 
@@ -237,11 +255,11 @@ Tools > Preferences, per person (account or browser), each on by default as Goog
 ## Telemetry
 
 `Element · Changed · TextDocumentFormat<Name>` (Bold, Italic, Underline, Strikethrough, Superscript, Subscript,
-SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight; from toolbar, menu or shortcut),
-`TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut), `TextDocumentStyleUpdated` (update to match),
-`TextDocumentStylesUsed` (Use my default styles), `TextDocumentStylesReset`, `TextDocumentPaintFormat`,
-`TextDocumentPaste` (with the source: Document, Html, Markdown, Plain), `TextDocumentAlign`, `TextDocumentIndent` (a step),
-`TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`, `TextDocumentParagraphSpace` (add or
+SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight, Paint (painted or pasted), Clear; from
+toolbar, menu or shortcut), `TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut),
+`TextDocumentStyleUpdated` (update to match), `TextDocumentStylesUsed` (Use my default styles),
+`TextDocumentStylesReset`, `TextDocumentPaste` (with the source: Document, Html, Markdown, Plain), `TextDocumentAlign`,
+`TextDocumentIndent` (a step), `TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`, `TextDocumentParagraphSpace` (add or
 remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`; `UI · Changed · TextDocumentDefaultStyles`
 (Save as my default styles). Never text.
 

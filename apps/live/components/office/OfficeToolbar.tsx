@@ -381,8 +381,11 @@ function ControlView({
         }
         data-office-control={control.id}
         tabIndex={tabIndex}
-        onClick={() => {
-          if (!inert) action?.run();
+        onClick={(event) => {
+          if (inert) return;
+          // A double press (office-shell.md "Toolbar"): the second press of a double-click runs the binding's double.
+          if (event.detail === 2 && action?.double) action.double();
+          else action?.run();
         }}
         style={look.kind === 'text' ? { width: look.width } : undefined}
         className={`${CONTROL} ${look.kind !== 'text' ? 'min-w-7' : look.list ? 'justify-between text-sm text-(--office-ink)' : 'justify-center rounded-sm border border-(--office-line) text-sm text-(--office-ink)'}`}

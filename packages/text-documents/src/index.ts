@@ -95,10 +95,12 @@ export {
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
   PARAGRAPH_ATTRIBUTES,
+  RUN_KEPT_MARK,
   RUN_MARKS,
   SECTION_BREAK,
   SECTION_BREAK_ATTRIBUTES,
   TEXT_PROPERTY_MARK_OF,
+  TEXT_PROPERTY_MARKS,
   TEXT_STYLE_MARK,
 } from './live/live-names';
 export { keptPresenceOf, type KeptPresence } from './live/kept-presence';

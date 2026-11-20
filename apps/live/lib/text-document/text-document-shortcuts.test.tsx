@@ -11,7 +11,12 @@ import { OFFICE_MODES } from '@/lib/office/office-mode';
 import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
-import { TEXT_DOCUMENT_FORMAT_ITEMS } from './text-document-format-actions';
+import {
+  TEXT_DOCUMENT_FORMAT_ITEMS,
+  TEXT_DOCUMENT_KEY_ACTIONS,
+  textDocumentFormatActions,
+} from './text-document-format-actions';
+import { paintFormatPlugin } from './text-document-paint-format';
 import {
   PARAGRAPH_STYLE_ITEMS,
   STYLE_OPTIONS,
@@ -76,12 +81,23 @@ describe('the text document menus', () => {
       ...['file', 'edit', 'view', 'insert', 'format', 'tools', 'help'].map((m) => `${m}-menu`),
     ];
     const builtRows = TEXT_DOCUMENT_SHORTCUTS.filter((r) => r.status === 'built').map((r) => r.id);
-    expect(builtRows.sort()).toEqual([...new Set([...builtItems, ...shellRows])].sort());
+    // Rows no item names, bound by their own id (office-shell.md "Shortcut layer").
+    const keyRows = TEXT_DOCUMENT_KEY_ACTIONS;
+    expect(builtRows.sort()).toEqual(
+      [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),
+    );
   });
 });
 
 const blank = TextDocument.blank({ format: 'odf' });
 const readBlank = () => ({ styles: blank.styles, defaults: blank.defaults });
+
+// The format bindings these tests press; Ctrl+B stays unbound for the test that leaves it alone.
+const pickFormatting = (view: EditorView | null) => {
+  const { actions } = textDocumentFormatActions(view, readBlank, { canEdit: true });
+  const ids = ['copy-text-formatting', 'paste-text-formatting', 'clear-formatting'];
+  return Object.fromEntries(ids.flatMap((id) => (actions[id] ? [[id, actions[id]]] : [])));
+};
 
 function Harness({ view }: { view: EditorView | null }) {
   const root = useRef<HTMLDivElement | null>(null);
@@ -104,6 +120,8 @@ function Harness({ view }: { view: EditorView | null }) {
             format: 'odf',
             canEdit: true,
           }).actions,
+          // Copy, paste and clear formatting, but not bold: the test below leaves Ctrl+B unbound.
+          ...pickFormatting(view),
         }}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
         keyScope={root}
@@ -121,7 +139,11 @@ async function surfaceWithEditor() {
   const view = new EditorView(screen.getByTestId('editor'), {
     state: EditorState.create({
       schema: textDocumentSchema,
-      plugins: [ySyncPlugin(TextDocumentState.body(doc)), ...textDocumentUndoPlugins()],
+      plugins: [
+        ySyncPlugin(TextDocumentState.body(doc)),
+        ...textDocumentUndoPlugins(),
+        paintFormatPlugin(),
+      ],
     }),
   });
   rerender(<Harness view={view} />);
@@ -151,6 +173,28 @@ describe('the text document shortcuts', () => {
     expect(styleNow()).toBe(blank.styles.find((s) => s.role === 'heading3')!.id);
     fireEvent.keyDown(view.dom, { code: 'Digit0', key: '0', ctrlKey: true, altKey: true });
     expect(styleNow()).toBeNull();
+    view.destroy();
+  });
+
+  // text-and-paragraphs.md "Paint format", "Clear formatting"; office-shell.md "Shortcut layer" (rows no item names).
+  it('copies formatting with Ctrl+Alt+C, pastes it with Ctrl+Alt+V, and clears it with Ctrl+\\ and Ctrl+Space', async () => {
+    const view = await surfaceWithEditor();
+    const italic = textDocumentSchema.marks.italic!.create({ value: true });
+    view.dispatch(view.state.tr.insertText('one two', 1).addMark(1, 4, italic));
+    const italicAt = (pos: number) =>
+      italic.type.isInSet(view.state.doc.resolve(pos).marks()) !== undefined;
+    const select = (from: number, to: number) =>
+      view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, from, to)));
+    select(1, 2);
+    fireEvent.keyDown(view.dom, { code: 'KeyC', key: 'c', ctrlKey: true, altKey: true });
+    select(5, 8);
+    fireEvent.keyDown(view.dom, { code: 'KeyV', key: 'v', ctrlKey: true, altKey: true });
+    expect(italicAt(6)).toBe(true);
+    fireEvent.keyDown(view.dom, { code: 'Backslash', key: '\\', ctrlKey: true });
+    expect(italicAt(6)).toBe(false);
+    select(1, 4);
+    fireEvent.keyDown(view.dom, { code: 'Space', key: ' ', ctrlKey: true });
+    expect(italicAt(2)).toBe(false);
     view.destroy();
   });
 
