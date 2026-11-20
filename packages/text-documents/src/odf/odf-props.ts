@@ -4,6 +4,7 @@
 import {
   attributeOf,
   childElement,
+  childElements,
   escapeXmlAttribute,
   fractionToOdfPercent,
   odfColour,
@@ -21,6 +22,7 @@ import {
   type TextProps,
 } from '../model/props';
 import type { PageSetup } from '../model/sections';
+import { TabStops, type TabAlign, type TabLeader, type TabStop } from '../model/tab-stops';
 import { NS } from './odf-names';
 
 const fo = (e: XmlElement, local: string) => attributeOf(e, NS.fo, local);
@@ -96,8 +98,89 @@ function readBorders(e: XmlElement): ParagraphBorders | undefined {
   return named ? borders : undefined;
 }
 
-/** The paragraph properties of a style's `style:paragraph-properties`. */
-export function readParagraphProps(style: XmlElement): ParagraphProps {
+// Tab stops (standard-mapping.md "The model"): `style:tab-stop` positions as the file counts them; the reader
+// moves them to the text area's start where the file counts from the indent.
+const TAB_TYPE_IN: Record<string, TabAlign> = {
+  left: 'start',
+  center: 'center',
+  right: 'end',
+  char: 'decimal',
+};
+const TAB_TYPE_OUT: Record<TabAlign, string> = {
+  start: 'left',
+  center: 'center',
+  end: 'right',
+  decimal: 'char',
+};
+const LEADER_IN: Record<string, TabLeader> = {
+  '.': 'dot',
+  '-': 'hyphen',
+  _: 'underscore',
+  '\u00b7': 'middle-dot',
+};
+const LEADER_STYLE_IN: Record<string, TabLeader> = {
+  dotted: 'dot',
+  dash: 'hyphen',
+  solid: 'underscore',
+};
+const LEADER_OUT: Record<TabLeader, { style: string; text: string }> = {
+  dot: { style: 'dotted', text: '.' },
+  hyphen: { style: 'dash', text: '-' },
+  underscore: { style: 'solid', text: '_' },
+  'middle-dot': { style: 'dotted', text: '\u00b7' },
+};
+
+function leaderOf(e: XmlElement): TabLeader | undefined {
+  const text = st(e, 'leader-text');
+  const style = st(e, 'leader-style');
+  if (text !== undefined && text.trim() !== '') return LEADER_IN[text] ?? 'dot';
+  return style === undefined || style === 'none' ? undefined : (LEADER_STYLE_IN[style] ?? 'dot');
+}
+
+/** A paragraph-properties' tab stops: none when it names none, an empty list for an empty `style:tab-stops`. */
+function readTabStops(e: XmlElement, dropped: (count: number) => void): TabStop[] | undefined {
+  const list = childElement(e, NS.style, 'tab-stops');
+  if (!list) return undefined;
+  const stops: TabStop[] = [];
+  let unread = 0;
+  for (const stop of childElements(list)) {
+    const position = odfLengthToPt(st(stop, 'position'));
+    if (position === undefined) {
+      unread += 1;
+      continue;
+    }
+    const align = TAB_TYPE_IN[st(stop, 'type') ?? 'left'] ?? 'start';
+    const char = st(stop, 'char');
+    stops.push(
+      compact({
+        position,
+        align,
+        leader: leaderOf(stop),
+        char: align === 'decimal' && char && char !== '.' ? char : undefined,
+      }),
+    );
+  }
+  const read = TabStops.normalise(stops);
+  if (read.dropped + unread > 0) dropped(read.dropped + unread);
+  return read.stops;
+}
+
+/** `style:tab-stops` for a list; nothing when the paragraph has none of its own. */
+export function tabStopsXml(stops: readonly TabStop[] | undefined): string {
+  if (!stops) return '';
+  if (stops.length === 0) return '<style:tab-stops/>';
+  const each = stops.map((s) => {
+    const leader = s.leader && LEADER_OUT[s.leader];
+    return `<style:tab-stop${attr('style:position', ptToOdf(s.position))}${attr('style:type', TAB_TYPE_OUT[s.align])}${attr('style:char', s.align === 'decimal' ? (s.char ?? '.') : undefined)}${attr('style:leader-style', leader?.style)}${attr('style:leader-text', leader?.text)}/>`;
+  });
+  return `<style:tab-stops>${each.join('')}</style:tab-stops>`;
+}
+
+/** The paragraph properties of a style's `style:paragraph-properties`; `dropped` counts tab stops left out. */
+export function readParagraphProps(
+  style: XmlElement,
+  dropped: (count: number) => void = () => {},
+): ParagraphProps {
   const e = childElement(style, NS.style, 'paragraph-properties');
   if (!e) return {};
   const breakBefore = fo(e, 'break-before');
@@ -115,6 +198,8 @@ export function readParagraphProps(style: XmlElement): ParagraphProps {
     pageBreakBefore: breakBefore === 'page' ? true : breakBefore === 'auto' ? false : undefined,
     borders: readBorders(e),
     shading: odfColour(fo(e, 'background-color')),
+    tabStops: readTabStops(e, dropped),
+    tabInterval: odfLengthToPt(st(e, 'tab-stop-distance')),
   });
 }
 
@@ -216,8 +301,11 @@ export function paragraphPropsXml(p: ParagraphProps, extra = ''): string {
     ),
     bordersXml(p.borders),
     attr('fo:background-color', p.shading),
+    attr('style:tab-stop-distance', length(p.tabInterval)),
   ].join('');
-  if (extra) return `<style:paragraph-properties${attrs}>${extra}</style:paragraph-properties>`;
+  const children = tabStopsXml(p.tabStops) + extra;
+  if (children)
+    return `<style:paragraph-properties${attrs}>${children}</style:paragraph-properties>`;
   return attrs ? `<style:paragraph-properties${attrs}/>` : '';
 }
 

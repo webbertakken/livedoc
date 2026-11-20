@@ -137,7 +137,9 @@ Left to right, as Google has it, with a divider between groups:
 - Across the page at the page's scale, in centimetres or inches (by the browser's locale, per person in Preferences).
 - Shows the margins (the grey ends), the left indent, first-line indent and right indent markers, and tab stops.
 - Dragging a margin changes the section's margins; an indent marker, the selected paragraphs' indents; a press on the
-  ruler adds a left tab stop, dragging one off removes it; right-press offers left, centre, right and decimal tabs.
+  ruler opens a menu of Add left tab stop, Add centre tab stop and Add right tab stop at that point, as Google's;
+  a stop drags along the ruler, and dragging one off the ruler takes it away
+  ([Tab stops](text-and-paragraphs.md#tab-stops)). A decimal stop from a file is drawn and moves like the others.
 - While dragging, a vertical guide runs down the page and a tooltip shows the value.
 - Each marker is a keyboard stop (arrow keys move it by an eighth of the unit, Shift by a whole unit).
 

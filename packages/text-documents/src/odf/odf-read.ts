@@ -28,6 +28,7 @@ import { isSafeLink, type ReportBuilder } from '../report';
 import { LIVEDOC_NS, NS, WRITTEN_NS } from './odf-names';
 import { readListLevels } from './odf-lists';
 import { readPageSetup, readParagraphProps, readTextProps, unquote } from './odf-props';
+import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -75,11 +76,19 @@ class OdfReader {
 
   readonly parts: OdfParts;
   readonly report: ReportBuilder;
+  /** Whether the file counts tab positions from the indent (standard-mapping.md "The model", tab stops). */
+  readonly tabsFromIndent: boolean;
 
   constructor(parts: OdfParts, report: ReportBuilder) {
     this.parts = parts;
     this.report = report;
+    this.tabsFromIndent = tabsFromIndentIn(
+      parts.settings && childElement(parts.settings.root, NS.office, 'settings'),
+    );
   }
+
+  /** Tab stops a read left out (bar stops, past the range or the most), reported. */
+  readonly dropTabs = (count: number): void => this.report.drop('tab-stop', 'tab-stop', count);
 
   /** Kept XML, with what runs things and OLE binaries left out and reported. */
   kept(parsed: XmlParsed, element: XmlElement): KeptXml {
@@ -123,7 +132,7 @@ class OdfReader {
             parent: attributeOf(style, NS.style, 'parent-style-name'),
             master: master || undefined,
           }),
-          paragraph: readParagraphProps(style),
+          paragraph: readParagraphProps(style, this.dropTabs),
           text: readTextProps(style, this.faces),
           kept: xml,
         });
@@ -135,7 +144,7 @@ class OdfReader {
     const id = attributeOf(e, NS.style, 'name') ?? '';
     const name = attributeOf(e, NS.style, 'display-name') ?? id;
     const outline = Number(attributeOf(e, NS.style, 'default-outline-level'));
-    const paragraph = readParagraphProps(e);
+    const paragraph = readParagraphProps(e, this.dropTabs);
     const values = compact({
       id,
       name,
@@ -178,7 +187,10 @@ class OdfReader {
     for (const e of office ? childElements(office) : []) {
       const family = attributeOf(e, NS.style, 'family');
       if (is(e, NS.style, 'default-style') && family === 'paragraph') {
-        const values = { paragraph: readParagraphProps(e), text: readTextProps(e, this.faces) };
+        const values = {
+          paragraph: readParagraphProps(e, this.dropTabs),
+          text: readTextProps(e, this.faces),
+        };
         defaults = { ...values, kept: this.keptProps(styles!, e, values) };
       } else if (is(e, NS.style, 'style') && (family === 'paragraph' || family === 'text')) {
         out.push(this.styleOf(styles!, e));
@@ -191,7 +203,7 @@ class OdfReader {
         kept.push(this.kept(styles!, e));
       }
     }
-    return { styles: out, defaults };
+    return stylesStopsRead(out, defaults, this.tabsFromIndent);
   }
 
   readMasters(styles: XmlParsed | undefined, kept: KeptXml[]): void {
@@ -271,7 +283,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
   reader.readAutomatic(parts.content, automaticStyles, true);
   const masterStyles: KeptXml[] = [];
   reader.readMasters(parts.styles, masterStyles);
-  const body = new BodyReader(reader, styles).read();
+  const body = new BodyReader(reader, styles, defaults).read();
   const settingsRoot = parts.settings && childElement(parts.settings.root, NS.office, 'settings');
   const source: OdfSource = {
     format: 'odf',
@@ -287,6 +299,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
     pageStyles,
     masterStyles,
     ...(settingsRoot ? { settings: keptXmlOf(parts.settings!, settingsRoot) } : {}),
+    tabsFromIndent: reader.tabsFromIndent,
     entries: parts.entries,
   };
   return {
@@ -320,10 +333,12 @@ class BodyReader {
 
   readonly r: OdfReader;
   readonly styles: readonly Style[];
+  readonly defaults: StyleDefaults;
 
-  constructor(r: OdfReader, styles: readonly Style[]) {
+  constructor(r: OdfReader, styles: readonly Style[], defaults: StyleDefaults) {
     this.r = r;
     this.styles = styles;
+    this.defaults = defaults;
   }
 
   read(): { blocks: Block[]; section: Section } {
@@ -437,6 +452,11 @@ class BodyReader {
     if (heading !== undefined && heading !== styleLevel)
       props = { ...props, outlineLevel: heading };
     if (heading === undefined && styleLevel !== undefined) props = { ...props, outlineLevel: 0 };
+    props = stopsRead(
+      { styles: this.styles, defaults: this.defaults, lists: this.r.lists },
+      { style, props, list },
+      this.r.tabsFromIndent,
+    );
     const text = auto && Object.keys(auto.text).length > 0 ? auto.text : undefined;
     const master = auto?.master;
     const isFirst = !this.blocks.some((b) => b.type === 'paragraph');

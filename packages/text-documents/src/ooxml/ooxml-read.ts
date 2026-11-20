@@ -28,7 +28,9 @@ import type { Block, Inline, Paragraph, Run } from '../model/blocks';
 import { LIST_LEVELS, type ListDefinition, type ListPlace } from '../model/lists';
 import { canonical, compact, type KeptProperties, type TextProps } from '../model/props';
 import type { Section } from '../model/sections';
-import { roleOfStyleName, type Style, type StyleDefaults } from '../model/styles';
+import { roleOfStyleName, Styles, type Style, type StyleDefaults } from '../model/styles';
+import { TabStops, type TabStop } from '../model/tab-stops';
+import { readTabEntries, readTabInterval } from './ooxml-tabs';
 import type { OoxmlSource, TextDocument } from '../model/text-document';
 import { isSafeLink, type ReportBuilder } from '../report';
 import { sortedBindings } from '../odf/odf-read';
@@ -70,7 +72,12 @@ const wVal = (e: XmlElement | undefined, local = 'val') =>
 // Field instructions that run things or fetch from elsewhere (files-and-print.md "Import security").
 const UNSAFE_FIELD = /^\s*(DDE|DDEAUTO|INCLUDETEXT|INCLUDEPICTURE|LINK|IMPORT)\b/i;
 
-type Parts = { document: XmlParsed; styles?: XmlParsed; numbering?: XmlParsed };
+type Parts = {
+  document: XmlParsed;
+  styles?: XmlParsed;
+  numbering?: XmlParsed;
+  settings?: XmlParsed;
+};
 
 export type OoxmlFileRead = { ok: true; document: TextDocument } | PackageRefusal;
 
@@ -114,6 +121,7 @@ export async function readOoxmlFile(
   };
   const stylesPart = partOf(RELATIONSHIP_TYPES.styles);
   const numberingPart = partOf(RELATIONSHIP_TYPES.numbering);
+  const settingsPart = partOf(RELATIONSHIP_TYPES.settings);
   const corePart = (pkg.relationships.get('') ?? []).find(
     (r) => r.type === RELATIONSHIP_TYPES.coreProperties,
   );
@@ -128,13 +136,18 @@ export async function readOoxmlFile(
     parse(numberingPart),
     parse(coreName),
     parse(appName),
+    parse(settingsPart),
   ];
   const refused = parsed.find((p): p is PackageRefusal => p !== undefined && !p.ok);
   if (refused) return refused;
-  const [document, styles, numbering, core, app] = parsed as (XmlParsed | undefined)[];
+  const [document, styles, numbering, core, app, settings] = parsed as (XmlParsed | undefined)[];
   const body = document && childElement(document.root, W_NS, 'body');
   if (!document || !body) return refuse('package_damaged', { entry: pkg.mainPart });
-  const reader = new OoxmlReader({ document, ...compact({ styles, numbering }) }, pkg, report);
+  const reader = new OoxmlReader(
+    { document, ...compact({ styles, numbering, settings }) },
+    pkg,
+    report,
+  );
   return {
     ok: true,
     document: reader.read(body, {
@@ -176,6 +189,14 @@ class OoxmlReader {
   readonly pkg: OoxmlPackage;
   readonly report: ReportBuilder;
   readonly rels: readonly Relationship[];
+  /** The styles and defaults read, for the stops each paragraph inherits. */
+  tabs: { styles: readonly Style[]; defaults: StyleDefaults } = {
+    styles: [],
+    defaults: { paragraph: {}, text: {} },
+  };
+
+  /** Tab stops a read left out or read as less (bar and list stops, heavy leaders), reported. */
+  readonly dropTabs = (name: string): void => this.report.drop('tab-stop', name);
 
   constructor(parts: Parts, pkg: OoxmlPackage, report: ReportBuilder) {
     this.parts = parts;
@@ -216,11 +237,17 @@ class OoxmlReader {
     const out: Style[] = [];
     const kept: KeptXml[] = [];
     let defaults: StyleDefaults = { paragraph: {}, text: {} };
+    const tabsOf = this.styleTabs();
+    const interval = readTabInterval(this.parts.settings?.root);
     for (const e of parsed ? childElements(parsed.root) : []) {
       if (isW(e, 'docDefaults')) {
         const pPr = childElement(childElement(e, W_NS, 'pPrDefault') ?? e, W_NS, 'pPr');
         const rPr = childElement(childElement(e, W_NS, 'rPrDefault') ?? e, W_NS, 'rPr');
-        const values = { paragraph: readParagraphProps(pPr), text: readRunProps(rPr).props };
+        const paragraph = compact({
+          ...readParagraphProps(pPr, [], this.dropTabs),
+          tabInterval: interval,
+        });
+        const values = { paragraph, text: readRunProps(rPr).props };
         defaults = {
           ...values,
           kept: { xml: keptXmlOf(parsed!, e), read: canonical(values), residue: [] },
@@ -241,7 +268,11 @@ class OoxmlReader {
         parent: wVal(childElement(e, W_NS, 'basedOn')),
         next: wVal(childElement(e, W_NS, 'next')),
         role: type === 'paragraph' ? (roleOfStyleName(name) ?? roleOfStyleName(id)) : undefined,
-        paragraph: readParagraphProps(childElement(e, W_NS, 'pPr')),
+        paragraph: readParagraphProps(
+          childElement(e, W_NS, 'pPr'),
+          tabsOf(wVal(childElement(e, W_NS, 'basedOn'))),
+          type === 'paragraph' ? this.dropTabs : undefined,
+        ),
         text: readRunProps(childElement(e, W_NS, 'rPr')).props,
       });
       const residue = childElements(e)
@@ -254,7 +285,39 @@ class OoxmlReader {
         kept: { xml: keptXmlOf(parsed!, e), read: canonical(values), residue },
       });
     }
+    this.tabs = { styles: out, defaults };
     return { styles: out, defaults, kept };
+  }
+
+  /**
+   * The stops each paragraph style draws with, by id: Word's `w:tabs` merged down `w:basedOn` from the document
+   * defaults' (standard-mapping.md "The model", tab stops). A style the file does not name inherits the defaults'.
+   */
+  styleTabs(): (id: string | undefined) => readonly TabStop[] {
+    const parsed = this.parts.styles;
+    const elements = new Map<string, XmlElement>();
+    let base: readonly TabStop[] = [];
+    for (const e of parsed ? childElements(parsed.root) : []) {
+      if (isW(e, 'docDefaults')) {
+        const pPr = childElement(childElement(e, W_NS, 'pPrDefault') ?? e, W_NS, 'pPr');
+        base = TabStops.merge([], readTabEntries(pPr, () => {}) ?? { clears: [], sets: [] });
+      } else if (isW(e, 'style') && wVal(e, 'type') === 'paragraph')
+        elements.set(wVal(e, 'styleId') ?? '', e);
+    }
+    const resolved = new Map<string, readonly TabStop[]>();
+    const of = (id: string | undefined, seen: Set<string>): readonly TabStop[] => {
+      const e = id === undefined ? undefined : elements.get(id);
+      if (id === undefined || !e || seen.has(id)) return base;
+      const known = resolved.get(id);
+      if (known) return known;
+      seen.add(id);
+      const inherited = of(wVal(childElement(e, W_NS, 'basedOn')), seen);
+      const entries = readTabEntries(childElement(e, W_NS, 'pPr'), () => {});
+      const stops = entries ? TabStops.merge(inherited, entries) : inherited;
+      resolved.set(id, stops);
+      return stops;
+    };
+    return (id) => of(id, new Set());
   }
 
   readLists(): { lists: Record<string, ListDefinition>; kept: KeptXml[] } {
@@ -443,7 +506,11 @@ class OoxmlReader {
           })
         : undefined;
     const style = wVal(childElement(pPr ?? p, W_NS, 'pStyle')) ?? this.normalId();
-    const props = readParagraphProps(pPr);
+    const props = readParagraphProps(
+      pPr,
+      Styles.paragraphPropsOf(this.tabs.styles, this.tabs.defaults, style).tabStops ?? [],
+      this.dropTabs,
+    );
     const values = {
       style,
       props,

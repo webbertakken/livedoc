@@ -23,6 +23,8 @@ import type { PageSetup, SectionStart } from '../model/sections';
 import { LIVEDOC_NS } from '../odf/odf-names';
 import { SECTPR_ORDER, W_NS } from './ooxml-names';
 import { bordersXml, readBorders, readShading, shadingXml } from './ooxml-borders';
+import { ownTabStops, readTabEntries, tabsXml } from './ooxml-tabs';
+import type { TabStop } from '../model/tab-stops';
 
 const val = (e: XmlElement | undefined) => (e ? attributeOf(e, W_NS, 'val') : undefined);
 const child = (e: XmlElement | undefined, local: string) =>
@@ -179,6 +181,7 @@ export const MAPPED_PPR = new Set([
   'numPr',
   'pBdr',
   'shd',
+  'tabs',
   'spacing',
   'ind',
   'jc',
@@ -202,8 +205,15 @@ const JC_OUT: Record<NonNullable<ParagraphProps['align']>, string> = {
   justify: 'both',
 };
 
-/** Paragraph properties of a `w:pPr` (lists and sections are read apart). */
-export function readParagraphProps(pPr: XmlElement | undefined): ParagraphProps {
+/**
+ * Paragraph properties of a `w:pPr` (lists and sections are read apart); its tab stops over those it inherits, with
+ * `dropped` naming what reads as no stop.
+ */
+export function readParagraphProps(
+  pPr: XmlElement | undefined,
+  inheritedTabs: readonly TabStop[] = [],
+  dropped: (name: string) => void = () => {},
+): ParagraphProps {
   if (!pPr) return {};
   const spacing = child(pPr, 'spacing');
   const ind = child(pPr, 'ind');
@@ -239,6 +249,7 @@ export function readParagraphProps(pPr: XmlElement | undefined): ParagraphProps 
         : undefined,
     borders: readBorders(pPr),
     shading: readShading(pPr),
+    tabStops: ownTabStops(inheritedTabs, readTabEntries(pPr, dropped)),
   });
 }
 
@@ -248,6 +259,7 @@ export function paragraphPropsChildren(
   p: ParagraphProps,
   list: { id: string; level: number } | undefined,
   sectPr: string | undefined,
+  inheritedTabs: readonly TabStop[] = [],
 ): Record<string, string | undefined> {
   const line = p.lineHeight;
   const spacing = compact({
@@ -279,6 +291,7 @@ export function paragraphPropsChildren(
       : undefined,
     pBdr: bordersXml(p.borders),
     shd: shadingXml(p.shading),
+    tabs: tabsXml(inheritedTabs, p.tabStops),
     spacing: Object.keys(spacing).length > 0 ? tag('spacing', spacing) : undefined,
     ind: Object.keys(ind).length > 0 ? tag('ind', ind) : undefined,
     jc: p.align === undefined ? undefined : tag('jc', { 'w:val': JC_OUT[p.align] }),

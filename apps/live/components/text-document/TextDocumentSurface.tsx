@@ -29,6 +29,8 @@ import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-forma
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { listMarkersPlugin } from '@/lib/text-document/text-document-list-markers';
+import { tabKeysPlugin } from '@/lib/text-document/text-document-tab-keys';
+import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
 import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
 import { useTextDocumentLists } from './useTextDocumentLists';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
@@ -222,6 +224,10 @@ export function TextDocumentSurface({
         }
         // A text document just made here starts in its maker's default styles (text-and-paragraphs.md).
         startInDefaultStyles(doc, { tabId, format: live.current.format, canEdit: gate.canEdit });
+        const readFormatting = () => ({
+          styles: TextDocumentState.styles(doc, live.current.format),
+          defaults: TextDocumentState.defaults(doc, live.current.format),
+        });
         const view = new EditorView(mount.current, {
           state: EditorState.create({
             schema: textDocumentSchema,
@@ -233,12 +239,12 @@ export function TextDocumentSurface({
               // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
               paintFormatPlugin(),
               // Adjacent paragraphs with the same borders share one box ("Borders and shading").
-              paragraphBoxesPlugin(() => ({
-                styles: TextDocumentState.styles(doc, live.current.format),
-                defaults: TextDocumentState.defaults(doc, live.current.format),
-              })),
+              paragraphBoxesPlugin(readFormatting),
               // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
               listKeysPlugin(),
+              // Tab types a tab, and each tab is drawn to its stop (text-and-paragraphs.md "Tab stops").
+              tabKeysPlugin(readFormatting),
+              tabStopsPlugin(readFormatting),
               listMarkersPlugin(
                 () => TextDocumentState.lists(doc),
                 (listener) => subscribeLists(doc, listener),

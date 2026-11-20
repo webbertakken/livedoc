@@ -23,6 +23,8 @@ import { TextDocument, type OdfSource } from '../model/text-document';
 import { shortHash } from '../hash';
 import { WRITTEN_NS } from './odf-names';
 import { listStyleXml } from './odf-lists';
+import { ABSOLUTE_TABS_SETTINGS, stopsWritten, type TabContext } from './odf-tabs';
+import { TabStops } from '../model/tab-stops';
 import { columnsXml, pageLayoutPropsXml, paragraphPropsXml, textPropsXml } from './odf-props';
 import { paragraphContentXml, type Segment } from './odf-text-content';
 
@@ -69,11 +71,16 @@ class OdfWriter {
   readonly #layoutClaims = new Map<string, string>();
 
   readonly document: TextDocument;
+  /** Whether tab positions are written from the indent: as the arriving file counted them; never for a new one. */
+  readonly tabsFromIndent: boolean;
+  readonly tabs: TabContext;
 
   constructor(document: TextDocument) {
     this.document = document;
     const source = document.source?.format === 'odf' ? document.source : undefined;
     this.source = source;
+    this.tabsFromIndent = source !== undefined && source.tabsFromIndent !== false;
+    this.tabs = { styles: document.styles, defaults: document.defaults, lists: document.lists };
     const inherited = Object.entries(source?.namespaces ?? {}).filter(
       ([p, uri]) =>
         p !== 'xml' && p !== '' && !(p in WRITTEN_NS) && !Object.values(WRITTEN_NS).includes(uri),
@@ -128,7 +135,7 @@ class OdfWriter {
       const name = this.keptName(p.kept);
       if (name) return name;
     }
-    const { outlineLevel: _, ...props } = p.props;
+    const { outlineLevel: _, ...props } = stopsWritten(this.tabs, p, this.tabsFromIndent);
     if (isEmpty(props) && isEmpty(p.text ?? {}) && master === undefined) return p.style;
     this.font(p.text ?? {});
     const inner = paragraphPropsXml(props) + textPropsXml(p.text ?? {});
@@ -214,7 +221,11 @@ class OdfWriter {
   namedStyleXml(style: Style): string {
     const { kept, ...values } = style;
     if (kept && keptStillHolds(kept, values)) return this.kept(kept.xml);
-    const { outlineLevel, ...paragraph } = style.paragraph;
+    const { outlineLevel, ...paragraph } = stopsWritten(
+      this.tabs,
+      { style: style.parent, props: style.paragraph },
+      this.tabsFromIndent,
+    );
     this.font(style.text);
     const residue = (kept?.residue ?? []).map((r) => this.kept(r)).join('');
     return `<style:style${attr('style:name', style.id)}${attr('style:display-name', style.name === style.id ? undefined : style.name)} style:family="${style.family}"${attr('style:parent-style-name', style.parent)}${attr('style:next-style-name', style.next)}${attr('style:default-outline-level', outlineLevel ? String(outlineLevel) : undefined)}>${style.family === 'paragraph' ? paragraphPropsXml(paragraph) : ''}${textPropsXml(style.text)}${residue}</style:style>`;
@@ -224,7 +235,15 @@ class OdfWriter {
     const { kept, ...values } = this.document.defaults;
     if (kept && keptStillHolds(kept, values)) return this.kept(kept.xml);
     this.font(values.text);
-    return `<style:default-style style:family="paragraph">${paragraphPropsXml(values.paragraph)}${textPropsXml(values.text)}${(kept?.residue ?? []).map((r) => this.kept(r)).join('')}</style:default-style>`;
+    const own = values.paragraph.tabStops;
+    const paragraph =
+      own && this.tabsFromIndent
+        ? {
+            ...values.paragraph,
+            tabStops: TabStops.shift(own, -(values.paragraph.indentStart ?? 0)),
+          }
+        : values.paragraph;
+    return `<style:default-style style:family="paragraph">${paragraphPropsXml(paragraph)}${textPropsXml(values.text)}${(kept?.residue ?? []).map((r) => this.kept(r)).join('')}</style:default-style>`;
   }
 }
 
@@ -407,7 +426,12 @@ function writeParts(document: TextDocument, generator: string): OdfWritten {
     generator,
     w.ns,
   );
-  const settings = w.source?.settings ? w.kept(w.source.settings) : '';
+  // A new text document counts its tab positions from the text area's start, as the model does.
+  const settings = w.source
+    ? w.source.settings
+      ? w.kept(w.source.settings)
+      : ''
+    : ABSOLUTE_TABS_SETTINGS;
   const masters = `<office:master-styles>${w.masters.join('')}</office:master-styles>`;
   const body = `<office:body><office:text>\n${text}\n</office:text></office:body>`;
   const content = `${XML_DECLARATION}\n<office:document-content${root}>${faces}<office:automatic-styles>${w.automatic.xml()}</office:automatic-styles>${body}</office:document-content>\n`;

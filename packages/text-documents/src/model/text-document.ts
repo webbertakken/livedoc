@@ -33,6 +33,8 @@ export type OdfSource = {
   readonly pageStyles: readonly { name: string; xml: KeptXml }[];
   readonly masterStyles: readonly KeptXml[];
   readonly settings?: KeptXml;
+  /** Whether its tab positions count from the indent (`TabsRelativeToIndent`, true unless set false). */
+  readonly tabsFromIndent?: boolean;
   /** Package entries the model does not map (pictures, embedded objects), with their manifest media types. */
   readonly entries: readonly KeptEntry[];
 };

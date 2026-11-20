@@ -1,6 +1,7 @@
 // Direct formatting (docs/specs/034-text-documents/standard-mapping.md "What the model holds" and "The model"): the
 // text and paragraph properties both formats map onto, and the file's own formatting element kept beside them.
 import type { KeptXml } from '@livedoc/office-packages';
+import type { TabStop } from './tab-stops';
 
 /** A run's or a style's text formatting; `false` overrides a style's `true`, absent inherits. */
 export type TextProps = {
@@ -60,6 +61,10 @@ export type ParagraphProps = {
   readonly borders?: ParagraphBorders;
   /** Its background colour, `#rrggbb`. */
   readonly shading?: string;
+  /** Its tab stops, replacing its style's whole; an empty list has none (text-and-paragraphs.md "Tab stops"). */
+  readonly tabStops?: readonly TabStop[];
+  /** The default stops' interval in points: the document's, held by its default paragraph formatting. */
+  readonly tabInterval?: number;
 };
 
 /**

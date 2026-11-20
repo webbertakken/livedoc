@@ -44,6 +44,15 @@ export {
   type ListPlace,
   type NumberFormat,
 } from './model/lists';
+export {
+  DEFAULT_TAB_INTERVAL_PT,
+  TAB_STOP_MAX_PT,
+  TAB_STOPS_MAX,
+  TabStops,
+  type TabAlign,
+  type TabLeader,
+  type TabStop,
+} from './model/tab-stops';
 export { ListMarkers, numberText, type ListMarker } from './model/list-markers';
 export { LIST_PRESETS, ListPresets, type ListKind, type ListPreset } from './model/list-presets';
 export {

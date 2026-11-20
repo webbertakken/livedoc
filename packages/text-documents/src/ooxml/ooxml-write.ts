@@ -18,10 +18,12 @@ import {
 import type { Block, Inline, Paragraph, SectionBreak } from '../model/blocks';
 import { keptStillHolds, type TextProps } from '../model/props';
 import type { Section } from '../model/sections';
-import type { Style } from '../model/styles';
+import { Styles, type Style } from '../model/styles';
+import type { TabStop } from '../model/tab-stops';
+import { settingsXml } from './ooxml-tabs';
 import { TextDocument, type OoxmlSource } from '../model/text-document';
 import { byId } from './ooxml-read';
-import { PPR_ORDER, RPR_ORDER, W_NS, WRITTEN_W_NS } from './ooxml-names';
+import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS } from './ooxml-names';
 import {
   abstractNumXml,
   ordered,
@@ -182,7 +184,13 @@ class OoxmlWriter {
     const style = p.style === this.defaultStyle ? undefined : p.style;
     const children = ordered(
       PPR_ORDER,
-      paragraphPropsChildren(style, p.props, numbered, ends && this.sectPr(ends)),
+      paragraphPropsChildren(
+        style,
+        p.props,
+        numbered,
+        ends && this.sectPr(ends),
+        this.inheritedTabs(p.style),
+      ),
       (p.kept?.residue ?? []).map((r) => this.kept(r)),
     );
     return children ? `<w:pPr>${children}</w:pPr>` : '';
@@ -266,6 +274,11 @@ class OoxmlWriter {
     return `${XML_HEAD}<w:document${declarations(this.ns)} mc:Ignorable="${ignorable}">${background}<w:body>${this.bodyXml()}</w:body></w:document>\n`;
   }
 
+  /** The stops a paragraph or style of this parent inherits, what its `w:tabs` is written over. */
+  inheritedTabs(style: string | undefined): readonly TabStop[] {
+    return Styles.paragraphPropsOf(this.doc.styles, this.doc.defaults, style).tabStops ?? [];
+  }
+
   styleXml(style: Style): string {
     const { kept, ...values } = style;
     if (kept && keptStillHolds(kept, values))
@@ -273,7 +286,13 @@ class OoxmlWriter {
     const { outlineLevel, ...paragraph } = style.paragraph;
     const pPr = ordered(
       PPR_ORDER,
-      paragraphPropsChildren(undefined, { ...paragraph, outlineLevel }, undefined, undefined),
+      paragraphPropsChildren(
+        undefined,
+        { ...paragraph, outlineLevel },
+        undefined,
+        undefined,
+        this.inheritedTabs(style.parent),
+      ),
       [],
     );
     const rPr = ordered(RPR_ORDER, runPropsChildren(undefined, style.text), []);
@@ -393,7 +412,7 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     parts.push({
       name: 'word/settings.xml',
       contentType: OOXML_CONTENT_TYPES.settings,
-      data: encode(`${XML_HEAD}<w:settings xmlns:w="${W_NS}"/>\n`),
+      data: encode(`${XML_HEAD}${settingsXml(document.defaults.paragraph.tabInterval)}\n`),
     });
     w.rels.id(RELATIONSHIP_TYPES.settings, 'settings.xml');
   }
