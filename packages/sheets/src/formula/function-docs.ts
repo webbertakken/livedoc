@@ -376,8 +376,13 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   ),
   SORT: D(
     'range, [column], [ascending], [column2, ascending2, …]',
-    'A range sorted by its columns',
+    'A range sorted by its columns, or by a column beside it',
     '=SORT(A2:C20, 3, FALSE)',
+  ),
+  SORTN: D(
+    'range, [n], [ties_mode], [column1, ascending1, …]',
+    'The first n rows of a range once sorted, ties shown as asked',
+    '=SORTN(A2:C20, 3, 0, B2:B20, FALSE)',
   ),
   SORTBY: D(
     'range, by_range1, [order1], [by_range2, order2, …]',

@@ -1,7 +1,7 @@
 {
   "source": "libreoffice",
   "category": "Syntax",
-  "by": "LibreOffice 24.2.7.2",
+  "by": "LibreOffice 26.8.3.1",
   "made": "2026-11-20",
   "answers": {
     "precedence.1": [[4]],
@@ -104,18 +104,7 @@
       ]
     ],
     "literal.4": [[-1, 2.5]],
-    "spill.1": [
-      [
-        {
-          "e": "#NAME?"
-        }
-      ],
-      [
-        {
-          "e": "#NAME?"
-        }
-      ]
-    ],
+    "spill.1": [[2], [4]],
     "array.1": [[300]],
     "array.2": [[70]],
     "array.3": [[20]],
