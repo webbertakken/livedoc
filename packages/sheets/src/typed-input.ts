@@ -46,6 +46,8 @@ const FORMULA_FORMATS: Readonly<Record<string, FormulaFormat>> = {
   WORKDAY: DATE,
   'WORKDAY.INTL': DATE,
   TO_DATE: DATE,
+  COUPPCD: DATE,
+  COUPNCD: DATE,
   NOW: { nf: 'datetime' },
   EPOCHTODATE: { nf: 'datetime' },
   TIME: { nf: 'time' },

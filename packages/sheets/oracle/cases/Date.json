@@ -1,12 +1,29 @@
 {
   "category": "Date",
   "data": [
-    [45658, "2025-03-01", 45659],
-    [45716, "14:30", 45670],
-    [45747, "nonsense"],
-    [46022],
-    [0.5],
-    [45658.75]
+    [
+      45658,
+      "2025-03-01",
+      45659
+    ],
+    [
+      45716,
+      "14:30",
+      45670
+    ],
+    [
+      45747,
+      "nonsense"
+    ],
+    [
+      46022
+    ],
+    [
+      0.5
+    ],
+    [
+      45658.75
+    ]
   ],
   "cases": [
     {
@@ -48,7 +65,11 @@
     {
       "id": "TIME.4",
       "f": "=TIME(1.9, 0, 0)",
-      "expect": [[0.041666666666666664]],
+      "expect": [
+        [
+          0.041666666666666664
+        ]
+      ],
       "cite": "https://support.google.com/docs/answer/3093056 (\"TIME will silently truncate decimal values input into the function, e.g. an hour of 12.75 will be interpreted as 12\")",
       "differs": {
         "libreoffice": "LibreOffice keeps the fraction of an hour (1.9 hours); Google truncates it to 1"
@@ -365,7 +386,11 @@
     {
       "id": "EPOCHTODATE.1",
       "f": "=EPOCHTODATE(1655906710)",
-      "expect": [[44734.5869212963]],
+      "expect": [
+        [
+          44734.5869212963
+        ]
+      ],
       "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A3,1)` with 1655906710, 6/22/2022 14:05:10`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
@@ -374,7 +399,11 @@
     {
       "id": "EPOCHTODATE.2",
       "f": "=EPOCHTODATE(1655906568893, 2)",
-      "expect": [[44734.58528811343]],
+      "expect": [
+        [
+          44734.58528811343
+        ]
+      ],
       "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A2,2)` with 1655906568893, 6/22/2022 14:02:49`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
@@ -383,7 +412,11 @@
     {
       "id": "EPOCHTODATE.3",
       "f": "=EPOCHTODATE(0, 2)",
-      "expect": [[25569]],
+      "expect": [
+        [
+          25569
+        ]
+      ],
       "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A4,2)` with 0, 1/1/1970 0:00:00`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
@@ -392,7 +425,11 @@
     {
       "id": "EPOCHTODATE.4",
       "f": "=EPOCHTODATE(1656356678000410, 3)",
-      "expect": [[44739.79488425926]],
+      "expect": [
+        [
+          44739.79488425926
+        ]
+      ],
       "cite": "https://support.google.com/docs/answer/13193461 (example `=EPOCHTODATE(A6,3)` with 1656356678000410; \"Fractional amounts of milliseconds are shortened\"`; 0 milliseconds is 1/1/1970 0:00:00, serial 25569)",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
@@ -405,6 +442,58 @@
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
       },
       "note": "Awaits Google's answer: its help says \"Negative timestamps aren't accepted\" but not which error."
+    },
+    {
+      "id": "YEARFRAC.8",
+      "f": "=YEARFRAC(DATE(2011,1,31), DATE(2011,3,15), 0)"
+    },
+    {
+      "id": "YEARFRAC.9",
+      "f": "=YEARFRAC(DATE(2011,1,30), DATE(2011,3,31), 0)"
+    },
+    {
+      "id": "DAYS360.1",
+      "f": "=DAYS360(DATE(1969,7,16), DATE(1969,7,24), 1)"
+    },
+    {
+      "id": "DAYS360.2",
+      "f": "=DAYS360(1, 270, 1)"
+    },
+    {
+      "id": "DAYS360.3",
+      "f": "=DAYS360(DATE(2011,2,28), DATE(2011,3,31))"
+    },
+    {
+      "id": "DAYS360.4",
+      "f": "=DAYS360(DATE(2011,1,30), DATE(2011,3,31))"
+    },
+    {
+      "id": "DAYS360.5",
+      "f": "=DAYS360(DATE(2011,1,15), DATE(2011,3,31))"
+    },
+    {
+      "id": "DAYS360.6",
+      "f": "=DAYS360(DATE(2011,1,31), DATE(2011,3,31), TRUE)"
+    },
+    {
+      "id": "DAYS360.7",
+      "f": "=DAYS360(DATE(2012,2,29), DATE(2012,8,31))"
+    },
+    {
+      "id": "DAYS360.8",
+      "f": "=DAYS360(DATE(2012,2,29), DATE(2012,8,31), 1)"
+    },
+    {
+      "id": "DAYS360.9",
+      "f": "=DAYS360(DATE(2012,8,31), DATE(2012,2,29))"
+    },
+    {
+      "id": "DAYS360.10",
+      "f": "=DAYS360(\"2011-01-15\", \"2011-03-31\")"
+    },
+    {
+      "id": "DAYS360.11",
+      "f": "=DAYS360(Data!A1, Data!A4)"
     }
   ]
 }
