@@ -74,7 +74,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-async function mount(paragraphs: ReturnType<typeof p>[], pages = true) {
+async function mount(paragraphs: ReturnType<typeof p>[], pages = true, laid: PageSetup = setup) {
   const onPages = vi.fn();
   const place = document.createElement('div');
   document.body.append(place);
@@ -84,7 +84,7 @@ async function mount(paragraphs: ReturnType<typeof p>[], pages = true) {
       plugins: [
         paginationPlugin({
           readFormatting: () => formatting,
-          read: () => ({ setup, pages }),
+          read: () => ({ setup: laid, pages }),
           onPages,
         }),
       ],
@@ -177,6 +177,46 @@ describe('paginationPlugin', () => {
     // Away from a page edge the keys are the editor's own.
     view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, at - 5)));
     expect(press('Backspace')).toBeFalsy();
+    view.destroy();
+  });
+});
+
+describe('paginationPlugin, in columns (page-layout.md "Columns")', () => {
+  const columns: PageSetup = { ...setup, columns: { count: 2, gap: 36, separator: true } };
+
+  it('moves a block to the next column, the strip taken back up to the top, and draws the line between', async () => {
+    const { view, onPages } = await mount(
+      [p('a'.repeat(40)), p('b'.repeat(20), { keepTogether: true })],
+      true,
+      columns,
+    );
+    const [spacer] = gaps(view);
+    // Back up from 80 px to the top: a pixel high, 81 px taken back.
+    expect((spacer as HTMLElement).style.height).toBe('1px');
+    expect((spacer as HTMLElement).style.marginTop).toBe('-81px');
+    const second = view.dom.children[2] as HTMLElement;
+    expect(second.dataset.column).toBe('1');
+    expect(second.style.getPropertyValue('--column')).toBe('1');
+    // One page, its line in the middle of the gap: two columns of 276 px (207 pt) with 48 px between.
+    const [page] = onPages.mock.lastCall![0] as {
+      rules: { xs: number[]; top: number; bottom: number }[];
+    }[];
+    expect(page!.rules).toEqual([{ top: 0, bottom: 80, xs: [276 + 24] }]);
+    view.destroy();
+  });
+
+  it('draws a paragraph across columns as a box of columns, its lead and its column start inside it', async () => {
+    const { view } = await mount([p('a'.repeat(60))], true, columns);
+    const box = view.dom.children[0] as HTMLElement;
+    expect(box.classList.contains('text-document-column-cross')).toBe(true);
+    expect(box.style.getPropertyValue('--cross-count')).toBe('2');
+    expect(box.style.getPropertyValue('--cross-height')).toBe('100px');
+    const marks = box.querySelectorAll('.text-document-column-mark');
+    expect(marks).toHaveLength(2);
+    expect(marks[1]!.classList.contains('text-document-column-mark-split')).toBe(true);
+    expect(marks[1]!.getAttribute('aria-hidden')).toBe('true');
+    // Normal text prevents single lines: the fifth line goes with the sixth, so the split is after forty characters.
+    expect(marks[1]!.previousSibling?.textContent).toHaveLength(40);
     view.destroy();
   });
 });

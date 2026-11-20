@@ -1,11 +1,12 @@
 // Laying the writing onto pages (docs/specs/034-text-documents/page-layout.md "Laying out").
 import { describe, expect, it } from 'vitest';
-import { pageCount, pageFrame, paginate, type BlockMetrics } from './pagination';
+import { pageCount, pageFrame, type BlockMetrics } from './pagination';
+import { paginate } from './pagination-engine';
 
 const LINE = 20;
 // A text area five lines high: 50 px from one page's text foot to the next one's text top (19 + 12 + 19); a page and
 // its gap 150 px.
-const page = { width: 400, height: 138, top: 19, bottom: 19, textHeight: 100 };
+const page = { width: 400, height: 138, top: 19, bottom: 19, left: 20, textHeight: 100 };
 const frame = () => page;
 
 const para = (lines: number, rules: Partial<BlockMetrics> = {}): BlockMetrics => ({
@@ -32,6 +33,7 @@ describe('pageFrame', () => {
       height: 792 / 0.75,
       top: 72 / 0.75,
       bottom: 36 / 0.75,
+      left: 72 / 0.75,
       textHeight: (792 - 108) / 0.75,
     });
   });
@@ -255,7 +257,7 @@ describe('paginate, incrementally (page-layout.md "The layout is incremental")',
 
 describe('paginate, by section (page-layout.md "Each page is drawn at its section\'s setup")', () => {
   // A second section on a shorter page: three lines high, margins 10 px.
-  const short = { width: 400, height: 80, top: 10, bottom: 10, textHeight: 60 };
+  const short = { width: 400, height: 80, top: 10, bottom: 10, left: 20, textHeight: 60 };
   const sectionAt = 2;
   const frameOf = (block: number) => (block >= sectionAt ? short : page);
 
@@ -293,5 +295,129 @@ describe('paginate, by section (page-layout.md "Each page is drawn at its sectio
       gap: 100 - 20 + 19 + 12 + 10 + 80 + 12,
       blank: 1,
     });
+  });
+});
+
+describe('paginate, in columns (page-layout.md "Columns")', () => {
+  // Two columns on the five-line page; one more section after it on the same page.
+  const columns = { count: 2, width: 190, gap: 20 };
+  const twoColumns = { ...page, columns };
+  const frameIn =
+    (from: number, to = Number.POSITIVE_INFINITY) =>
+    (block: number) =>
+      block >= from && block <= to ? twoColumns : page;
+  const continuous: BlockMetrics = {
+    height: 0,
+    marginTop: 0,
+    marginBottom: 0,
+    lines: [],
+    atom: true,
+    startsSection: 'continuous',
+  };
+
+  it('fills the first column down the page, then the next from the top, then the next page', () => {
+    const laid = paginate([para(3), para(3), para(3), para(3)], () => twoColumns);
+    // 0-60 and 60-100 in column one (the second splits after two lines), its third line tops column two.
+    expect(laid.starts[0]!.columns).toEqual([{ block: 1, line: 2, column: 1 }]);
+    // Column two: line 3 of the second (0-20), the third (20-80); the fourth would cross onto the next page, which
+    // the browser cannot draw here, so it moves there whole.
+    expect(laid.starts[1]).toMatchObject({ block: 3, line: 0 });
+    expect(laid.starts[1]!.carried).toBeUndefined();
+    expect(laid.starts).toHaveLength(2);
+  });
+
+  it('draws a paragraph across two columns as a box from the region top, and pulls the next block up', () => {
+    const laid = paginate([para(3), para(3), para(1)], () => twoColumns);
+    const [first] = laid.starts;
+    expect(first!.crosses).toEqual([
+      {
+        block: 1,
+        top: 0,
+        count: 2,
+        column: 0,
+        lead: 60,
+        splits: [2],
+        height: 100,
+        rows: 1,
+        rowGap: 0,
+      },
+    ]);
+    // The box stands at the region's top: the strip goes back from 60 to 0.
+    expect(first!.spacers).toContainEqual({ block: 1, height: -60 });
+    // The box ends at the column foot (100); its tail ends at 20 in column two: the next block goes back 80.
+    expect(first!.spacers).toContainEqual({ block: 2, height: -80 });
+  });
+
+  it('starts a column at a block that does not fit, pulling it up to the region top', () => {
+    const laid = paginate([para(4), para(2, { keepTogether: true })], () => twoColumns);
+    expect(laid.starts[0]!.columns).toEqual([{ block: 1, line: 0, column: 1 }]);
+    // The first ends at 80; the second stands at 0 in column two.
+    expect(laid.starts[0]!.spacers).toEqual([{ block: 1, height: -80 }]);
+  });
+
+  it('starts a region where a continuous section leaves the page, and columns there', () => {
+    // A one-column line (0-20), then two columns from 20: each column 80 high.
+    const laid = paginate([para(1), continuous, para(4), para(2)], frameIn(2));
+    expect(laid.starts[0]!.columns).toEqual([{ block: 3, line: 0, column: 1 }]);
+    expect(laid.starts[0]!.spacers).toEqual([{ block: 3, height: -80 }]);
+    expect(laid.starts[0]!.rules).toEqual([{ block: 2, top: 20, bottom: 100, count: 2 }]);
+  });
+
+  it('balances the columns of a section a continuous break ends, the next section under the longest', () => {
+    // Six lines in two columns of a region ended by a continuous break: three and three, then a line below.
+    const laid = paginate([para(6), continuous, para(1)], frameIn(0, 1));
+    const [start] = laid.starts;
+    expect(start!.crosses?.[0]).toMatchObject({ block: 0, splits: [3], height: 60 });
+    expect(start!.rules).toEqual([{ block: 0, top: 0, bottom: 60, count: 2 }]);
+    // The box's foot (60) and the last block after it: no spacer needed, it starts at 60.
+    expect(laid.starts).toHaveLength(1);
+    expect(start!.spacers ?? []).not.toContainEqual(expect.objectContaining({ block: 2 }));
+  });
+
+  it('balances a region of whole paragraphs to the shortest columns that hold them', () => {
+    const laid = paginate([para(2), para(2), para(1), continuous, para(1)], frameIn(0, 3));
+    // Five lines at 60 high: the first and the second's first line, then the second's last and the third.
+    expect(laid.starts[0]!.columns).toEqual([{ block: 1, line: 1, column: 1 }]);
+    expect(laid.starts[0]!.rules![0]!.bottom).toBe(60);
+  });
+
+  it('carries a paragraph from the last column onto the next page as rows where the browser wraps', () => {
+    const blocks = [para(4), para(10)];
+    const wrapped = paginate(blocks, () => twoColumns, undefined, { wrap: true });
+    expect(wrapped.starts[0]!.crosses?.[0]).toMatchObject({
+      block: 1,
+      column: 0,
+      splits: [1, 6],
+      rows: 2,
+      rowGap: 50,
+    });
+    expect(wrapped.starts[1]).toMatchObject({ block: 1, line: 6, carried: true, gap: 0 });
+    // Without wrapping it moves whole to the next page.
+    const whole = paginate(blocks, () => twoColumns);
+    expect(whole.starts[1]).toMatchObject({ block: 1, line: 0 });
+    expect(whole.starts[0]!.crosses).toBeUndefined();
+  });
+
+  it('carries a paragraph taller than a page of columns anyway, from the page top', () => {
+    const laid = paginate([para(12)], () => twoColumns);
+    expect(laid.starts[0]!.crosses?.[0]).toMatchObject({ block: 0, splits: [5, 10], rows: 2 });
+    expect(laid.starts[1]).toMatchObject({ block: 0, line: 10, carried: true });
+  });
+
+  it('equals laying out from the start after edits in columns', () => {
+    const blocks = Array.from({ length: 60 }, (_, i) =>
+      para((i % 3) + 1, { widowControl: i % 2 === 0 }),
+    );
+    const previous = paginate(blocks, () => twoColumns, undefined, { wrap: true });
+    const changed = blocks.map((b, i) => (i === 30 ? para(5) : b));
+    const since = paginate(
+      changed,
+      () => twoColumns,
+      { previous, first: 30, last: 30, delta: 0 },
+      { wrap: true },
+    );
+    expect(since.starts).toEqual(
+      paginate(changed, () => twoColumns, undefined, { wrap: true }).starts,
+    );
   });
 });

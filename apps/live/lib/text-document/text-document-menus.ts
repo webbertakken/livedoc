@@ -284,10 +284,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       submenu('line-spacing', 'Line & paragraph spacing', [...LINE_SPACING_ENTRIES]),
       submenu('columns', 'Columns', [
-        item('columns-one', 'One column', 'edit'),
-        item('columns-two', 'Two columns', 'edit'),
-        item('columns-three', 'Three columns', 'edit'),
-        item('columns-more', 'More options', 'edit'),
+        item('columns-one', 'One column', 'edit', { checkable: 'radio', ...BUILT }),
+        item('columns-two', 'Two columns', 'edit', { checkable: 'radio', ...BUILT }),
+        item('columns-three', 'Three columns', 'edit', { checkable: 'radio', ...BUILT }),
+        item('columns-more', 'More options', 'edit', BUILT),
       ]),
       submenu('bullets-and-numbering', 'Bullets & numbering', [
         item('numbered-list', 'Numbered list', 'edit', { shortcut: 'numbered-list', ...BUILT }),

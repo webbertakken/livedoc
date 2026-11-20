@@ -1,7 +1,7 @@
 // Page setup (docs/specs/034-text-documents/page-layout.md "Page setup"): Google's paper sizes, the paper a page has
 // either way round, orientation, and a saved default read back checked.
 import { describe, expect, it } from 'vitest';
-import { PAGE_SIDE_MAX_PT, PAPER, PAPER_ORDER, PageSetup } from './sections';
+import { Columns, PAGE_SIDE_MAX_PT, PAPER, PAPER_ORDER, PageSetup } from './sections';
 
 const IN = 72;
 const MM = 72 / 25.4;
@@ -130,5 +130,47 @@ describe('PageSetup.parse', () => {
     ['a colour that is not #rrggbb', { ...PageSetup.of('a4'), pageColor: 'red' }],
   ])('refuses %s', (_name, raw) => {
     expect(PageSetup.parse(raw)).toBeNull();
+  });
+});
+
+describe('Columns (page-layout.md "Columns")', () => {
+  const letter = PageSetup.of('letter');
+  const two = { ...letter, columns: { count: 2, gap: 36 } };
+
+  it('reads a section with none as one column with the 0.5 in gap', () => {
+    expect(Columns.of(letter)).toEqual({ count: 1, gap: 36 });
+    expect(Columns.of({ ...letter, columns: { count: 1, gap: 10 } })).toEqual({
+      count: 1,
+      gap: 36,
+    });
+    expect(Columns.of(two)).toEqual({ count: 2, gap: 36 });
+  });
+
+  it('shares the text width between the columns, less the gaps', () => {
+    // Letter less 1 in each side: 6.5 in = 468 pt.
+    expect(Columns.width(letter)).toBe(468);
+    expect(Columns.width(two)).toBe((468 - 36) / 2);
+    expect(Columns.width({ ...letter, columns: { count: 3, gap: 18 } })).toBe((468 - 36) / 3);
+  });
+
+  it('allows a gap up to what leaves each column 0.5 in wide', () => {
+    expect(Columns.mostGap(letter, 2)).toBe(468 - 72);
+    expect(Columns.mostGap(letter, 3)).toBe((468 - 108) / 2);
+    expect(Columns.mostGap(letter, 1)).toBe(0);
+  });
+
+  it('compares count, gap and line, ignoring them on one column', () => {
+    expect(Columns.equal({ count: 2, gap: 36 }, { count: 2, gap: 36 })).toBe(true);
+    expect(Columns.equal({ count: 2, gap: 36 }, { count: 2, gap: 36, separator: true })).toBe(
+      false,
+    );
+    expect(Columns.equal({ count: 2, gap: 36 }, { count: 2, gap: 20 })).toBe(false);
+    expect(Columns.equal({ count: 1, gap: 36 }, { count: 1, gap: 20, separator: true })).toBe(true);
+    expect(Columns.equal({ count: 1, gap: 36 }, { count: 3, gap: 36 })).toBe(false);
+  });
+
+  it('sets columns on a setup, one column as none', () => {
+    expect(Columns.onto(letter, { count: 3, gap: 20 }).columns).toEqual({ count: 3, gap: 20 });
+    expect('columns' in Columns.onto(two, { count: 1, gap: 36 })).toBe(false);
   });
 });

@@ -20,6 +20,7 @@ import {
   PAGE_SETUP_ITEM,
   PAGELESS_ITEM,
 } from '@/components/text-document/useTextDocumentPageSetup';
+import { COLUMN_ITEMS, COLUMNS_MORE_ITEM } from '@/components/text-document/useTextDocumentColumns';
 import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
   TEXT_DOCUMENT_KEY_ACTIONS,
@@ -77,6 +78,9 @@ describe('the text document menus', () => {
         PAGE_SETUP_ITEM,
         PAGE_ORIENTATION_ITEM,
         PAGELESS_ITEM,
+        // Format > Columns (useTextDocumentColumns), by the surface.
+        ...Object.keys(COLUMN_ITEMS),
+        COLUMNS_MORE_ITEM,
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,

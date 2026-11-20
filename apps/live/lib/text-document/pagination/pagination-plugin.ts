@@ -1,7 +1,8 @@
 // The writing laid onto pages as it is edited (docs/specs/034-text-documents/page-layout.md "Laying out"): after each
 // change, before the page is painted, the blocks the change touched are measured, the pages are laid out again from
 // shortly before them until they settle, and a spacer is drawn where each page starts, taking the writing from where
-// it stops on one page to the next page's text area. The spacers are widgets, never part of the text.
+// it stops on one page to the next page's text area; in a section of columns (page-layout.md "Columns") each block is
+// moved to its column and a paragraph across columns is drawn as a box of columns. Spacers are widgets, never text.
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey, TextSelection, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
@@ -13,12 +14,20 @@ import {
   PAGE_GAP_PX,
   pageCount,
   pageFrame,
-  paginate,
   type BlockMetrics,
-  type PageFrame,
-  type PageStart,
   type Pagination,
 } from './pagination';
+import {
+  blockSpacer,
+  columnPlaces,
+  crossAttrs,
+  crossLead,
+  crossSplit,
+  pagesOf,
+  pagesSaid,
+  type PageGeometry,
+} from './pagination-draw';
+import { paginate } from './pagination-engine';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
 import { bodySections, SECTIONS_CHANGED } from './pagination-sections';
 
@@ -33,24 +42,18 @@ export type PaginationOptions = {
   readonly onPages: (pages: readonly PageGeometry[]) => void;
 };
 
-/** A page's size in CSS pixels. */
-export type PageGeometry = { readonly width: number; readonly height: number };
+export type { PageGeometry } from './pagination-draw';
 
-type GapSpec = { readonly key: string; readonly inside: boolean };
+// `inside`: in a paragraph, where Backspace and Delete reach across; `cross`: drawn for a box of columns.
+type GapSpec = { readonly key: string; readonly inside: boolean; readonly cross?: boolean };
+
+/** Whether the browser draws a box of columns in rows, so a paragraph may cross onto the next page in columns. */
+export const canWrapColumns = (): boolean =>
+  typeof CSS !== 'undefined' &&
+  typeof CSS.supports === 'function' &&
+  CSS.supports('column-wrap', 'wrap');
 
 const key = new PluginKey<DecorationSet>('textDocumentPagination');
-
-// The spacer before a block: the ground between pages, drawn by the sheets behind it.
-function blockGap(height: number): () => HTMLElement {
-  return () => {
-    const gap = document.createElement('div');
-    gap.className = PAGE_GAP_CLASS;
-    gap.setAttribute('aria-hidden', 'true');
-    gap.contentEditable = 'false';
-    gap.style.height = `${height}px`;
-    return gap;
-  };
-}
 
 // The spacer inside a paragraph: drawn as the page's foot, the ground and the next page's head over the paragraph's
 // own background and borders, across the whole page.
@@ -82,20 +85,6 @@ function lineGap(
 }
 
 const round = (value: number) => Math.round(value * 100) / 100;
-
-/** Each page's size in CSS pixels, blank pages too, each by the section of the block it starts with. */
-export function pagesOf(
-  pagination: Pagination,
-  frameOf: (block: number) => PageFrame,
-): PageGeometry[] {
-  const pages: PageGeometry[] = [];
-  for (const start of pagination.starts) {
-    const frame = frameOf(start.block);
-    const page = { width: round(frame.width), height: round(frame.height) };
-    for (let blank = 0; blank <= start.blank; blank++) pages.push(page);
-  }
-  return pages;
-}
 
 /** Lays the writing out again from the start: its styles, text or fonts changed. */
 export function relayoutPages(view: EditorView): void {
@@ -142,7 +131,7 @@ class Pager {
   }
 
   private tellPages(pages: readonly PageGeometry[]): void {
-    const said = pages.map((p) => `${p.width}x${p.height}`).join(',');
+    const said = pagesSaid(pages);
     if (said === this.pages) return;
     this.pages = said;
     this.options.onPages(pages);
@@ -154,6 +143,25 @@ class Pager {
     const now = decorations.find().map((d) => `${d.from}:${(d.spec as GapSpec).key}`);
     if (was.length === now.length && was.every((w, i) => w === now[i])) return;
     this.view.dispatch(this.view.state.tr.setMeta(key, decorations).setMeta('addToHistory', false));
+  }
+
+  // Takes away the boxes of columns drawn for the paragraphs `which` picks, so they are read as one column.
+  private unbox(which: (node: PmNode) => boolean): void {
+    const { state } = this.view;
+    const current = key.getState(state) ?? DecorationSet.empty;
+    const boxes = current
+      .find(undefined, undefined, (spec) => (spec as GapSpec).cross === true)
+      .filter((d) => {
+        const node = state.doc.nodeAt(d.from);
+        return d.to > d.from && node !== null && which(node);
+      });
+    if (boxes.length === 0) return;
+    const inside = boxes.flatMap((box) =>
+      current.find(box.from, box.to, (spec) => (spec as GapSpec).cross === true),
+    );
+    this.view.dispatch(
+      state.tr.setMeta(key, current.remove([...boxes, ...inside])).setMeta('addToHistory', false),
+    );
   }
 
   private layOut(): void {
@@ -185,6 +193,8 @@ class Pager {
             s.margins.bottom,
             s.margins.left,
             s.margins.right,
+            s.columns?.count ?? 1,
+            s.columns?.gap ?? 0,
           ].join(','),
         )
         .join(';'),
@@ -222,6 +232,8 @@ class Pager {
     first = Math.max(0, first - 1);
     const last = Math.min(nodes.length - 1, nodes.length - 1 - tail + 1);
     for (let i = first; i <= last; i++) this.measured.delete(nodes[i]!);
+    // A paragraph drawn as a box of columns measures unbroken: its box goes before it is measured.
+    this.unbox((node) => !this.measured.has(node));
 
     const elements = blockElements(view, nodes, positions);
     const formatting = this.options.readFormatting();
@@ -247,39 +259,97 @@ class Pager {
             this.previous
               ? { previous: this.previous, first, last: Math.max(first - 1, last), delta }
               : undefined,
+            { wrap: canWrapColumns() },
           );
     this.previous = pagination;
 
-    const decorations = pagination.starts.slice(1).map((start) => {
-      const height = round(start.gap);
+    const decorations: Decoration[] = [];
+    const widget = (at: number, draw: () => HTMLElement, spec: GapSpec) =>
+      decorations.push(Decoration.widget(at, draw, { side: -1, ignoreSelection: true, ...spec }));
+    pagination.starts.forEach((start, q) => {
       const pos = positions[start.block]!;
-      if (start.line === 0)
-        return Decoration.widget(pos, blockGap(height), {
-          side: -1,
-          ignoreSelection: true,
-          key: `gap:${height}`,
-          inside: false,
+      const height = round(start.gap);
+      if (q > 0 && !start.carried && start.line === 0)
+        widget(pos, blockSpacer(height), { key: `gap:${height}`, inside: false });
+      else if (q > 0 && !start.carried) {
+        const node = nodes[start.block]!;
+        const at =
+          pos +
+          this.splitOffset(
+            node,
+            pos,
+            start.line,
+            metrics[start.block]!,
+            () => elements(start.block),
+            ratio,
+          );
+        const inset = this.measured.get(node)?.inset ?? 0;
+        // The page across, from the first section's text area: pages are centred one under another.
+        const own = sections.setups[sections.sectionOf[start.block] ?? 0]!;
+        const across = {
+          left: round(inset + (setup.margins.left - (setup.width - own.width) / 2) * PX_PER_PT),
+          width: round(own.width * PX_PER_PT),
+        };
+        const head = round(own.margins.top * PX_PER_PT);
+        const bands = { foot: round(height - PAGE_GAP_PX - head), head };
+        widget(at, lineGap(height, bands, across), {
+          key: `line:${height}:${across.left}:${across.width}:${head}`,
+          inside: true,
         });
-      const node = nodes[start.block]!;
-      const at = pos + this.splitOffset(node, pos, start, metrics[start.block]!, elements, ratio);
-      const inset = this.measured.get(node)?.inset ?? 0;
-      // The page across, from the first section's text area: pages are centred one under another.
-      const own = sections.setups[sections.sectionOf[start.block] ?? 0]!;
-      const across = {
-        left: round(inset + (setup.margins.left - (setup.width - own.width) / 2) * PX_PER_PT),
-        width: round(own.width * PX_PER_PT),
-      };
-      const head = round(own.margins.top * PX_PER_PT);
-      const bands = { foot: round(height - PAGE_GAP_PX - head), head };
-      return Decoration.widget(at, lineGap(height, bands, across), {
-        side: -1,
-        ignoreSelection: true,
-        key: `line:${height}:${across.left}:${across.width}:${head}`,
-        inside: true,
-      });
+      }
+      for (const spacer of start.spacers ?? []) {
+        const h = round(spacer.height);
+        widget(positions[spacer.block]!, blockSpacer(h), { key: `spacer:${h}`, inside: false });
+      }
+      for (const cross of start.crosses ?? []) {
+        const at = positions[cross.block]!;
+        const node = nodes[cross.block]!;
+        const attrs = crossAttrs(cross);
+        decorations.push(
+          Decoration.node(at, at + node.nodeSize, attrs, {
+            key: `cross:${attrs.style}:${cross.rows}`,
+            inside: false,
+            cross: true,
+          }),
+        );
+        widget(at + 1, crossLead(cross), {
+          key: `lead:${cross.column}:${round(cross.lead)}`,
+          inside: false,
+          cross: true,
+        });
+        for (const line of cross.splits) {
+          const split =
+            at +
+            this.splitOffset(
+              node,
+              at,
+              line,
+              metrics[cross.block]!,
+              () => elements(cross.block),
+              ratio,
+            );
+          widget(split, crossSplit, { key: `split:${line}`, inside: true, cross: true });
+        }
+      }
     });
+    // Each block of a region past its first column, moved across to its column.
+    for (const [block, column] of columnPlaces(pagination, sections.sectionOf, nodes.length)) {
+      const at = positions[block]!;
+      decorations.push(
+        Decoration.node(
+          at,
+          at + nodes[block]!.nodeSize,
+          { 'data-column': String(column), style: `--column: ${column}` },
+          { key: `column:${column}`, inside: false },
+        ),
+      );
+    }
     this.apply(DecorationSet.create(doc, decorations));
-    this.tellPages(pagesOf(pagination, frameOf));
+    this.tellPages(
+      pagesOf(pagination, frameOf, (block) =>
+        Boolean(sections.setups[sections.sectionOf[block] ?? 0]?.columns?.separator),
+      ),
+    );
     if (count > 0 || !unchanged)
       debugLog('[text-document] layout', {
         pages: pageCount(pagination),
@@ -297,29 +367,24 @@ class Pager {
     }
   }
 
-  // Where block `start.block`'s line `start.line` starts, from the block's start: kept while the block is unchanged.
+  // Where block at `pos`'s line `line` starts, from the block's start: kept while the block is unchanged.
   private splitOffset(
     node: PmNode,
     pos: number,
-    start: PageStart,
+    line: number,
     metrics: BlockMetrics,
-    elements: (i: number) => HTMLElement,
+    element: () => HTMLElement,
     ratio: number,
   ): number {
     let lines = this.splits.get(node);
     if (!lines) this.splits.set(node, (lines = new Map<number, number>()));
-    const known = lines.get(start.line);
+    const known = lines.get(line);
     if (known !== undefined) return known;
+    // Found on the paragraph as one column: a box of columns it is drawn as goes first.
+    this.unbox((boxed) => boxed === node);
     const at =
-      splitPosition(
-        this.view,
-        pos,
-        node,
-        elements(start.block),
-        metrics.lines[start.line]!.top,
-        ratio,
-      ) - pos;
-    lines.set(start.line, at);
+      splitPosition(this.view, pos, node, element(), metrics.lines[line]!.top, ratio) - pos;
+    lines.set(line, at);
     return at;
   }
 }
@@ -357,11 +422,15 @@ export function paginationPlugin(options: PaginationOptions): Plugin<DecorationS
         if (laid) return laid;
         if (!tr.docChanged) return set;
         let mapped = set.map(tr.mapping, tr.doc);
-        // A changed paragraph measures unbroken: its spacers go until it is laid out again.
+        // A changed paragraph measures unbroken: its spacers and box of columns go until it is laid out again.
         for (const pos of touchedParagraphs(tr)) {
           const node = tr.doc.nodeAt(pos)!;
           mapped = mapped.remove(
-            mapped.find(pos, pos + node.nodeSize, (spec) => (spec as GapSpec).inside),
+            mapped.find(
+              pos,
+              pos + node.nodeSize,
+              (spec) => (spec as GapSpec).inside || (spec as GapSpec).cross === true,
+            ),
           );
         }
         return mapped;

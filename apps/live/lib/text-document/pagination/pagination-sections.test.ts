@@ -73,3 +73,32 @@ describe('sectionInset', () => {
     expect(plugin.getState(after.apply(after.tr))).toBe(plugin.getState(after));
   });
 });
+
+describe('sectionInset, with columns (page-layout.md "Columns")', () => {
+  const two = { ...letter, columns: { count: 2, gap: 36 } };
+
+  it("draws a section of columns at a column's width where pages are laid out, and as one column elsewhere", () => {
+    // Letter's 6.5 in less a 0.5 in gap, in two: 3 in each, a column every 3.5 in.
+    expect(sectionInset(letter, two, true)).toEqual({
+      width: 3 * 96,
+      shift: 0,
+      columns: { textWidth: 6.5 * 96, step: 3.5 * 96, gap: 0.5 * 96 },
+    });
+    expect(sectionInset(letter, two, false)).toBeNull();
+  });
+
+  it('marks the blocks of a section of columns with their column step', () => {
+    const columns = schema.nodes.doc!.create(null, [
+      p('a'),
+      schema.nodes.section_break!.create({ start: 'continuous', setup: two }),
+      p('b'),
+    ]);
+    const [, decorated] = sectionWidths(columns, letter, true).find();
+    expect(decorated).toBeUndefined();
+    const set = sectionWidths(columns, two, true).find();
+    expect(set).toHaveLength(3);
+    const attrs = (set[0] as unknown as { type: { attrs: Record<string, string> } }).type.attrs;
+    expect(attrs['data-section-columns']).toBe('');
+    expect(attrs.style).toContain('--column-step: 336px');
+  });
+});

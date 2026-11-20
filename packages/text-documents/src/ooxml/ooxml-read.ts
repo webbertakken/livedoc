@@ -379,7 +379,9 @@ class OoxmlReader {
     const pageColor = ooxmlColour(wVal(childElement(doc.root, W_NS, 'background'), 'color'));
     // The page colour is the whole document's in OOXML (`w:background`): it is the first section's in the model.
     const sectionOf = (sectPr: XmlElement, at: number): Section => {
-      const values = readSection(sectPr, at === 0 ? pageColor : undefined);
+      const values = readSection(sectPr, at === 0 ? pageColor : undefined, () =>
+        this.report.drop('column-width', 'column-width'),
+      );
       return { ...values, kept: this.propsKept(doc, sectPr, values, MAPPED_SECTPR)! };
     };
     const elements = childElements(body);

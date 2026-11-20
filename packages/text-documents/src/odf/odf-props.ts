@@ -21,7 +21,7 @@ import {
   type ParagraphProps,
   type TextProps,
 } from '../model/props';
-import type { PageSetup } from '../model/sections';
+import type { Columns, PageSetup } from '../model/sections';
 import { TabStops, type TabAlign, type TabLeader, type TabStop } from '../model/tab-stops';
 import { NS } from './odf-names';
 
@@ -342,13 +342,11 @@ export function textPropsXml(t: TextProps): string {
 }
 
 /** A page layout's setup from its `style:page-layout-properties`. */
-export function readPageSetup(layout: XmlElement): PageSetup | undefined {
+export function readPageSetup(layout: XmlElement, onUnequal?: () => void): PageSetup | undefined {
   const e = childElement(layout, NS.style, 'page-layout-properties');
   const width = e && odfLengthToPt(fo(e, 'page-width'));
   const height = e && odfLengthToPt(fo(e, 'page-height'));
   if (!e || width === undefined || height === undefined) return undefined;
-  const columns = childElement(e, NS.style, 'columns');
-  const count = Number(columns && attributeOf(columns, NS.fo, 'column-count'));
   return compact({
     width,
     height,
@@ -361,17 +359,47 @@ export function readPageSetup(layout: XmlElement): PageSetup | undefined {
       right: odfLengthToPt(fo(e, 'margin-right')) ?? 0,
     },
     pageColor: odfColour(fo(e, 'background-color')),
-    columns:
-      count > 1
-        ? { count, gap: odfLengthToPt(attributeOf(columns!, NS.fo, 'column-gap')) ?? 0 }
-        : undefined,
+    columns: readColumns(e, onUnequal),
   });
 }
 
-/** `style:columns` for a column count past one. */
+/**
+ * The columns a page layout's or a section's properties hold (page-layout.md "Columns"): count, gap and the line
+ * between; none for one column. Columns of unequal widths read as equal, and `onUnequal` is told.
+ */
+export function readColumns(
+  props: XmlElement | undefined,
+  onUnequal: () => void = () => {},
+): Columns | undefined {
+  const columns = props && childElement(props, NS.style, 'columns');
+  const count = Number(columns && fo(columns, 'column-count'));
+  if (!columns || !(count > 1)) return undefined;
+  const widths = childElements(columns)
+    .filter((c) => c.local === 'column' && c.uri === NS.style)
+    .map((c) => Number.parseFloat(st(c, 'rel-width') ?? ''))
+    .filter((w) => w > 0);
+  // Suites split a total into near halves (32767* and 32768*): within a hundredth is equal.
+  if (widths.length > 1 && Math.max(...widths) - Math.min(...widths) > Math.max(...widths) / 100)
+    onUnequal();
+  const sep = childElement(columns, NS.style, 'column-sep');
+  const line = sep !== undefined && (st(sep, 'style') ?? 'solid') !== 'none';
+  return compact({
+    count,
+    gap: odfLengthToPt(fo(columns, 'column-gap')) ?? 0,
+    separator: line ? (true as const) : undefined,
+  });
+}
+
+// The line between columns as LibreOffice writes it: thin, black, the columns' whole height.
+const COLUMN_SEP =
+  '<style:column-sep style:style="solid" style:width="0.5pt" style:color="#000000" style:height="100%" style:vertical-align="top"/>';
+
+/** `style:columns` for a column count past one, with its line between. */
 export const columnsXml = (columns: PageSetup['columns']): string =>
   columns && columns.count > 1
-    ? `<style:columns fo:column-count="${columns.count}" fo:column-gap="${ptToOdf(columns.gap)}"/>`
+    ? columns.separator
+      ? `<style:columns fo:column-count="${columns.count}" fo:column-gap="${ptToOdf(columns.gap)}">${COLUMN_SEP}</style:columns>`
+      : `<style:columns fo:column-count="${columns.count}" fo:column-gap="${ptToOdf(columns.gap)}"/>`
     : '';
 
 /** `style:page-layout-properties` for a setup, with what was kept of the layout's own children. */

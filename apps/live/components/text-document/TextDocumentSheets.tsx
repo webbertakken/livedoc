@@ -1,9 +1,10 @@
 // The pages' sheets behind the writing (docs/specs/034-text-documents/page-layout.md "Laying out", "Each page is drawn
 // at its section's setup"): one sheet of the page's paper, colour and shadow per page, each at its section's size,
 // centred one under another a gap apart, under the writing the layout spaces onto them. Unlaid out (pageless, a phone)
-// one sheet fills the whole frame. Drawn only: never read, never focused.
+// one sheet fills the whole frame. A section's line between columns (page-layout.md "Columns") is drawn on its sheet,
+// a thin line in the writing's ink. Drawn only: never read, never focused.
 import { PAGE_GAP_PX } from '@/lib/text-document/pagination/pagination';
-import type { PageGeometry } from '@/lib/text-document/pagination/pagination-plugin';
+import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 
 export type TextDocumentSheetsProps = {
   /** Each page's size in CSS pixels, or null when the writing is not laid onto pages. */
@@ -46,7 +47,18 @@ export function TextDocumentSheets({ pages, shadow }: TextDocumentSheetsProps) {
                 width: page.width,
                 height: page.height,
               }}
-            />
+            >
+              {(page.rules ?? []).flatMap((rule, r) =>
+                rule.xs.map((x) => (
+                  <div
+                    key={`${r}:${x}`}
+                    data-column-line=""
+                    className="absolute w-px bg-current"
+                    style={{ left: x, top: rule.top, height: rule.bottom - rule.top }}
+                  />
+                )),
+              )}
+            </div>
           );
         })
       )}
