@@ -7,6 +7,7 @@ import { EditorView } from 'prosemirror-view';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { createTextDocumentChanges } from './text-document-changes';
 import { paintFormatPlugin, pressRoller } from './text-document-paint-format';
+import { listMarkersPlugin } from './text-document-list-markers';
 
 let view: EditorView;
 let changes: ReturnType<typeof createTextDocumentChanges>;
@@ -66,6 +67,34 @@ describe('createTextDocumentChanges', () => {
     const caret = vi.fn();
     changes.subscribeCaret(caret);
     pressRoller(view.state, view.dispatch);
+    vi.advanceTimersToNextFrame();
+    expect(caret).toHaveBeenCalledOnce();
+  });
+
+  // lists.md "List styles": a list restyled presses its button anew, with no edit of the writing.
+  it('tells the caret listeners when the lists drawn change', () => {
+    let notify = () => {};
+    view.destroy();
+    view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        doc: schema.node('doc', null, [
+          schema.nodes.paragraph!.create({ list: { id: 'L1', level: 0 } }, schema.text('a')),
+        ]),
+        plugins: [
+          changes.plugin,
+          listMarkersPlugin(
+            () => ({}),
+            (listener) => {
+              notify = listener;
+              return () => {};
+            },
+          ),
+        ],
+      }),
+    });
+    const caret = vi.fn();
+    changes.subscribeCaret(caret);
+    notify();
     vi.advanceTimersToNextFrame();
     expect(caret).toHaveBeenCalledOnce();
   });

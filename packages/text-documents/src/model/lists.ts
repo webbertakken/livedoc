@@ -20,7 +20,13 @@ export type ListLevel =
       readonly indent?: number;
       readonly hanging?: number;
     }
-  | { readonly kind: 'check'; readonly indent?: number; readonly hanging?: number }
+  | {
+      readonly kind: 'check';
+      /** False: a ticked item is drawn with no line through it (lists.md "List styles"). */
+      readonly strikeChecked?: false;
+      readonly indent?: number;
+      readonly hanging?: number;
+    }
   | {
       readonly kind: 'number';
       readonly format: NumberFormat;
@@ -47,6 +53,10 @@ export type ListPlace = {
   /** A further paragraph of the item above, without a marker of its own. */
   readonly unnumbered?: boolean;
 };
+
+/** The numbers a restart may start at (lists.md "Numbering"): Word's `w:start` holds at most 32767. */
+export const LIST_RESTART_MIN = 0;
+export const LIST_RESTART_MAX = 32767;
 
 /** The checklist's marks, as ODF files carry a checklist item without an element of its own. */
 export const CHECK_MARKS = { open: '☐', done: '☑' } as const;

@@ -20,6 +20,7 @@ import {
 import { CHECK_MARKS, LIST_LEVELS, type ListLevel, type NumberFormat } from '../model/lists';
 import { compact, type ParagraphProps, type TextProps } from '../model/props';
 import type { PageSetup, SectionStart } from '../model/sections';
+import { LIVEDOC_NS } from '../odf/odf-names';
 import { SECTPR_ORDER, W_NS } from './ooxml-names';
 import { bordersXml, readBorders, readShading, shadingXml } from './ooxml-borders';
 
@@ -399,7 +400,13 @@ export function readLevel(lvl: XmlElement): ListLevel {
   const text = val(child(lvl, 'lvlText')) ?? '';
   if (format === 'bullet' || format === 'none' || !FORMAT_IN[format]) {
     if (text === CHECK_MARKS.open || text === CHECK_MARKS.done)
-      return { kind: 'check', ...indents };
+      return {
+        kind: 'check',
+        ...(attributeOf(lvl, LIVEDOC_NS, 'strike-checked') === 'false'
+          ? { strikeChecked: false as const }
+          : {}),
+        ...indents,
+      };
     return { kind: 'bullet', bullet: text, ...indents };
   }
   return {
@@ -444,7 +451,8 @@ export function abstractNumXml(id: string, levels: readonly ListLevel[]): string
     if (level.kind === 'number')
       return `<w:lvl w:ilvl="${at}">${tag('start', { 'w:val': String(level.start) })}${tag('numFmt', { 'w:val': FORMAT_OUT[level.format] })}${tag('lvlText', { 'w:val': level.label })}${tag('lvlJc', { 'w:val': 'left' })}${pPr}</w:lvl>`;
     const bullet = level.kind === 'check' ? CHECK_MARKS.open : level.bullet;
-    return `<w:lvl w:ilvl="${at}">${tag('start', { 'w:val': '1' })}${tag('numFmt', { 'w:val': 'bullet' })}${tag('lvlText', { 'w:val': bullet })}${tag('lvlJc', { 'w:val': 'left' })}${pPr}</w:lvl>`;
+    const plain = level.kind === 'check' && level.strikeChecked === false;
+    return `<w:lvl w:ilvl="${at}"${plain ? ' livedoc:strike-checked="false"' : ''}>${tag('start', { 'w:val': '1' })}${tag('numFmt', { 'w:val': 'bullet' })}${tag('lvlText', { 'w:val': bullet })}${tag('lvlJc', { 'w:val': 'left' })}${pPr}</w:lvl>`;
   };
   return `<w:abstractNum w:abstractNumId="${escapeXmlAttribute(id)}">${tag('multiLevelType', { 'w:val': 'hybridMultilevel' })}${levels.map(lvl).join('')}</w:abstractNum>`;
 }

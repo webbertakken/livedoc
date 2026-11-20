@@ -12,13 +12,7 @@ import type { ReportItem } from './report';
 export type ConversionLoss = ReportItem & {
   /** `kept` for kept content, else the construct the other format cannot hold. */
   readonly kind:
-    | 'kept'
-    | 'text-transform'
-    | 'section-name'
-    | 'list-header'
-    | 'restart'
-    | 'between'
-    | 'border-padding';
+    'kept' | 'text-transform' | 'section-name' | 'list-header' | 'between' | 'border-padding';
 };
 
 function count(map: Map<string, number>, name: string): void {
@@ -48,7 +42,6 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
       Object.values(borders ?? {}).some((line) => line.space > OOXML_BORDER_SPACE_MAX_PT)
     )
       count(other, 'border-padding');
-    if (to === 'ooxml' && block.list?.restart !== undefined) count(other, 'restart');
   }
   for (const entry of document.source?.format === 'odf'
     ? document.source.entries
@@ -172,8 +165,7 @@ export function convertTextDocument(
       return [{ ...rest, setup: setupOf(block.setup) }];
     }
     const { text, list, ...rest } = withoutKept(block);
-    const place =
-      list && to === 'ooxml' ? (({ restart: _r, unnumbered: _u, ...p }) => p)(list) : list;
+    const place = list && to === 'ooxml' ? (({ unnumbered: _u, ...p }) => p)(list) : list;
     return [
       {
         ...rest,

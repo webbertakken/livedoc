@@ -20,8 +20,8 @@ test('lists are made, numbered, nested, left and ticked, kept after a reload', a
 
   // Numbered: three items, the second a level in.
   await body.click();
-  await toolbar.getByRole('button', { name: 'Numbered list' }).click();
-  await expect(toolbar.getByRole('button', { name: 'Numbered list' })).toHaveAttribute(
+  await toolbar.getByRole('button', { name: 'Numbered list', exact: true }).click();
+  await expect(toolbar.getByRole('button', { name: 'Numbered list', exact: true })).toHaveAttribute(
     'aria-pressed',
     'true',
   );

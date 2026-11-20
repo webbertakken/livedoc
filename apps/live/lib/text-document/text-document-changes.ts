@@ -1,9 +1,10 @@
 // Signals from the writing, for parts of the surface that read it without the surface itself drawing again on every
 // keystroke: `subscribe` when the body changed (anyone's edit, a catch-up, an undo; the outline), and `subscribeCaret`
-// when the body, the selection, the formatting at the caret or the paint roller changed (the toolbar's pressed states
-// and font size), at most once a frame.
+// when the body, the selection, the formatting at the caret, the paint roller or the lists drawn changed (the toolbar's
+// pressed states and font size), at most once a frame.
 import { Plugin } from 'prosemirror-state';
 import { paintFormatKey } from './text-document-paint-format';
+import { listMarkersKey } from './text-document-list-markers';
 
 export type TextDocumentChanges = {
   plugin: Plugin;
@@ -47,7 +48,8 @@ export function createTextDocumentChanges(): TextDocumentChanges {
             state.doc !== previous.doc ||
             !state.selection.eq(previous.selection) ||
             state.storedMarks !== previous.storedMarks ||
-            paintFormatKey.getState(state) !== paintFormatKey.getState(previous)
+            paintFormatKey.getState(state) !== paintFormatKey.getState(previous) ||
+            listMarkersKey.getState(state) !== listMarkersKey.getState(previous)
           )
             caretChanged();
         },

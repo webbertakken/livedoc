@@ -3,7 +3,12 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { ListDefinition, type ListPlace, type ParagraphProps } from '@livedoc/text-documents';
+import {
+  ListDefinition,
+  ListPresets,
+  type ListPlace,
+  type ParagraphProps,
+} from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { listMarkersPlugin, TICKED_INK } from './text-document-list-markers';
 
@@ -98,6 +103,17 @@ describe('listMarkersPlugin', () => {
     expect(TICKED_INK).toBe('#5f6368');
     box().dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     expect((v.state.doc.firstChild!.attrs as { list: ListPlace }).list.checked).toBeUndefined();
+  });
+
+  // lists.md "List styles": a checklist without strikethrough.
+  it('draws a ticked item of a checklist without strikethrough as it was', () => {
+    const { view: v } = mount([p('Milk', { id: 'C', level: 0, checked: true })], {
+      C: ListPresets.byId('checklist-plain')!.list,
+    });
+    const item = v.dom.querySelector('p')!;
+    expect(v.dom.querySelector('[role="checkbox"]')!.getAttribute('aria-checked')).toBe('true');
+    expect(item.style.textDecorationLine).toBe('');
+    expect(item.style.color).toBe('');
   });
 
   it('leaves the box inert where the writing is read only', () => {

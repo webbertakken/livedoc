@@ -10,7 +10,8 @@ import { placeOf, toggleItemAt, type Lists } from './text-document-lists';
 import { INDENT_START } from './text-document-style-sheet';
 import { paperInk } from './text-document-paper';
 
-const key = new PluginKey<DecorationSet>('textDocumentListMarkers');
+export const listMarkersKey = new PluginKey<DecorationSet>('textDocumentListMarkers');
+const key = listMarkersKey;
 const REFRESH = 'refresh';
 /** A ticked item's ink (default: Google's grey). */
 export const TICKED_INK = '#5f6368';
@@ -74,7 +75,9 @@ export function listDecorations(
     const style = [
       own.indentStart === undefined ? `${INDENT_START}: ${indent}pt` : '',
       own.indentFirst === undefined ? `text-indent: ${-hanging}pt` : '',
-      marker?.kind === 'check' && marker.checked
+      marker?.kind === 'check' &&
+      marker.checked &&
+      !(def?.kind === 'check' && def.strikeChecked === false)
         ? `color: ${paperInk(TICKED_INK)}; text-decoration-line: line-through`
         : '',
     ]

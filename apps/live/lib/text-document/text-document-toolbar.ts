@@ -32,7 +32,13 @@ import type { IconPrim } from '@livedoc/icons';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { OfficeControl, OfficeControlLook, OfficeToolbar } from '@/lib/office/office-toolbar';
 
-type Extra = { shortcut?: string; built?: boolean; toggle?: boolean; menu?: boolean };
+type Extra = {
+  shortcut?: string;
+  built?: boolean;
+  toggle?: boolean;
+  menu?: boolean;
+  split?: boolean;
+};
 
 const control = (
   id: string,
@@ -65,6 +71,7 @@ const icon = (
       icon: glyph,
       ...(extra.toggle ? { toggle: true } : {}),
       ...(extra.menu ? { menu: true } : {}),
+      ...(extra.split ? { split: true } : {}),
     },
     extra,
   );
@@ -171,16 +178,19 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
       icon('checklist', 'Checklist', 'edit', lucideListTodo, {
         shortcut: 'checklist',
         toggle: true,
+        split: true,
         built: true,
       }),
       icon('bulleted-list', 'Bulleted list', 'edit', lucideList, {
         shortcut: 'bulleted-list',
         toggle: true,
+        split: true,
         built: true,
       }),
       icon('numbered-list', 'Numbered list', 'edit', lucideListOrdered, {
         shortcut: 'numbered-list',
         toggle: true,
+        split: true,
         built: true,
       }),
       icon('indent-decrease', 'Decrease indent', 'edit', lucideListIndentDecrease, {

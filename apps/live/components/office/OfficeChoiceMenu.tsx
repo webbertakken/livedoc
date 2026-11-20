@@ -10,6 +10,7 @@ import type { IconPrim } from '@livedoc/icons';
 import type { OfficeActions, OfficeEntry } from '@/lib/office/office-catalogue';
 import { OfficeMenuPanel } from './OfficeMenuPanel';
 import { OfficePopup } from './OfficePopup';
+import type { OfficeGrid } from './OfficeChoiceGrid';
 
 /** What the kind hands a choice control: the value now (read as the caret changes), its choices and their actions. */
 export type OfficeChoice = {
@@ -18,6 +19,8 @@ export type OfficeChoice = {
   actions: OfficeActions;
   // An icon control's glyph for the value there is (the Align control shows the alignment's icon).
   iconOf?: (value: string | null) => readonly IconPrim[];
+  // A split toggle's grid of choices in place of a menu: its cells run `actions` by id, `read` names the one in force.
+  grid?: OfficeGrid;
 };
 
 /** The kind's choice controls, by control id. */
