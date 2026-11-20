@@ -174,12 +174,15 @@ jobs:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # A stalled mirror connection is dropped after 30 s and tried again, rather than holding the job to its limit.
       - name: Install LibreOffice Writer, Calc and Java
         shell: bash
+        timeout-minutes: 8
         run: |
           set -euo pipefail
-          apt-get update -qq
-          DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends libreoffice-writer-nogui libreoffice-calc-nogui default-jre-headless unzip
+          APT_RETRY=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
+          apt-get "${APT_RETRY[@]}" update -qq
+          DEBIAN_FRONTEND=noninteractive apt-get "${APT_RETRY[@]}" install -y -qq --no-install-recommends libreoffice-writer-nogui libreoffice-calc-nogui default-jre-headless unzip
           soffice --version
           java -version
 
