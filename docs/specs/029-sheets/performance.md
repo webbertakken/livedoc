@@ -96,8 +96,18 @@ held as growth, ten times the cells under thirty times the time, as coverage on 
 formula worked out once, a change working out again only what reads it (each link of a 5,000-cell chain once), and the change's time against the full
 workout's in the same run; its absolute CPU budgets hold only uninstrumented, as coverage slows the engine eightfold.
 
-The engine's own values and dependencies are measured apart, and come down with the recalculation engine
-([Recalculation research](../../research/sheets-open-standard/recalculation.md)).
+The engine holds its own values and dependencies by cell number in typed columns
+([Recalculation research](../../research/sheets-open-standard/recalculation.md)): each cell it works out or reads one
+by one gets a number, found by sheet and position; a value is a kind byte and a number, with text, errors and arrays
+beside them; a read of one cell is an edge on two linked lists, a read of a range a record listed under its columns.
+
+| Measure (the 50,000-cell sheet above, Node)    | Budget    | Before (string keys) | Measured (2026-11-20) |
+| ---------------------------------------------- | --------- | -------------------- | --------------------- |
+| Held by the engine for each formula worked out | 160 bytes | 766 bytes            | 147 bytes             |
+| Working out every cell, CPU, uninstrumented    | 400 ms    | 196 to 202 ms        | 152 to 174 ms         |
+
+`packages/sheets/src/engine/perf.test.ts` holds the bytes everywhere; most of them (128 of 147) are typed
+columns grown by doubling, so a sheet whose cells just pass a power of two holds up to twice what it uses (inferred).
 
 ## Rules
 

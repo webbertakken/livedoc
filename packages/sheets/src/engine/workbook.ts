@@ -1,20 +1,20 @@
 // The sheets of one tab and their values. Values are
 // worked out on demand and kept; a change forgets only the cells that read it, directly or through others, plus
 // the volatile ones. Long chains of references never overflow the stack: past a depth the deep cell is worked
-// out first, from the top, and the read is tried again.
+// out first, from the top, and the read is tried again. Cells are held by number (cell-numbers.ts), their values and
+// dependencies in typed columns (cell-values.ts, dependencies.ts).
 import type { CardSource } from '../cards';
 import { SheetLimits, type GridSize } from '../sheet-limits';
 import { localMs, serialFromMs } from '../dates';
 import { formatA1 } from '../address';
-import { layoutIndex, posRangeOf } from '../layout';
-import { nameHome } from '../range-names';
+import { layoutIndex } from '../layout';
 import { RECALC_READS_MAX } from '../limits';
 import { cellKey, type Sheet } from '../sheet';
 import { CARD_FUNCTION_NAMES } from '../formula/registry';
 import { callsOf, type Node } from '../formula/ast';
 import { safeHyperlink } from '../hyperlink';
-import { storedAst, type SheetHandle, type SheetsCtx } from '../formula/stored';
-import type { StoredFormula } from '../sheet';
+import { storedAst, type SheetsCtx } from '../formula/stored';
+import type { CellInput, StoredFormula } from '../sheet';
 import {
   dims,
   err,
@@ -24,11 +24,14 @@ import {
   type Value,
   type ValueArray,
 } from '../formula/values';
+import { CellNumbers, NO_CELL, type CellNo } from './cell-numbers';
+import { CellValues } from './cell-values';
 import { Dependencies } from './dependencies';
 import { evaluate } from './evaluate';
 import { deref } from '../formula/fn';
 import type { Frame, RangeRef } from './frame';
 import { formulaPrecedents } from './precedents';
+import { sheetsCtxOf } from './sheets-ctx';
 import { maySpill } from './spill-shape';
 
 type WorkbookOptions = {
@@ -61,10 +64,10 @@ const circular = (path: string) => `Circular dependency detected: ${path}`;
 // Thrown when a read nests past DEPTH_MAX: the read settles that cell on its own, then starts again.
 class Deep extends Error {
   override readonly name = 'FormulaTooDeep';
-  readonly id: string;
-  constructor(id: string) {
-    super(`formula chain too deep at ${id}`);
-    this.id = id;
+  readonly no: CellNo;
+  constructor(no: CellNo) {
+    super(`formula chain too deep at cell ${no}`);
+    this.no = no;
   }
 }
 
@@ -82,26 +85,27 @@ export class Workbook {
   private cards: CardSource | null;
   private readonly nowFn: () => number;
   private readonly randFn: () => number;
-  // Worked-out formula values, by cell id (`sheetId|rowId:colId`).
-  private readonly vals = new Map<string, Value>();
-  private readonly deps = new Dependencies();
-  private readonly volatileCells = new Set<string>();
-  private readonly cardReaders = new Set<string>();
-  // Spills: owner -> its rectangle; sheetId -> "r,c" -> owner.
-  private readonly claimOf = new Map<string, Claim>();
-  private readonly claimed = new Map<string, Map<string, string>>();
+  // Cells by number, and worked-out formula values by it. Both start afresh when positions move.
+  private nos = new CellNumbers();
+  private vals = new CellValues();
+  private deps = new Dependencies();
+  private readonly volatileCells = new Set<CellNo>();
+  private readonly cardReaders = new Set<CellNo>();
+  // Spills: owner -> its rectangle; a covered cell -> its owner.
+  private readonly claimOf = new Map<CellNo, Claim>();
+  private readonly claimed = new Map<CellNo, CellNo>();
   // Formulas that may spill, per sheet, and whether all of them have been worked out.
-  private readonly spillers = new Map<string, Set<string>>();
+  private readonly spillers = new Map<string, Set<CellNo>>();
   private readonly spillersReady = new Set<string>();
   private readonly extents = new Map<string, { rows: number; cols: number }>();
   private readonly ctxs = new Map<string, SheetsCtx>();
-  private readonly computing = new Set<string>();
-  private readonly stack: string[] = [];
+  private readonly computing = new Set<CellNo>();
+  private readonly stack: CellNo[] = [];
   private depth = 0;
   private reads = 0;
   // Formulas worked out after one read ran past RECALC_READS_MAX: their value is that read's
   // "too large" error, not their own, so the next read works them out afresh.
-  private readonly overBudget = new Set<string>();
+  private readonly overBudget = new Set<CellNo>();
   // Raised on every change, so views know to read again.
   version = 0;
   truncated = false;
@@ -154,11 +158,17 @@ export class Workbook {
     }
     this.extents.delete(sheet.id);
     this.ctxs.clear();
-    const changed: string[] = [];
+    const ix = layoutIndex(sheet.layout);
+    const sheetNo = this.nos.sheetNo(sheet.id);
+    const changed: CellNo[] = [];
     for (const key of keys) {
-      const id = `${sheet.id}|${key}`;
-      this.indexSpiller(sheet, key);
-      changed.push(id);
+      const colon = key.indexOf(':');
+      const r = ix.rowPos.get(key.slice(0, colon));
+      const c = ix.colPos.get(key.slice(colon + 1));
+      if (r === undefined || c === undefined) continue;
+      const no = this.nos.intern(sheetNo, r, c);
+      this.indexSpiller(sheet, key, no);
+      changed.push(no);
     }
     this.invalidate([...changed, ...this.volatileCells]);
   }
@@ -191,13 +201,13 @@ export class Workbook {
       try {
         if (this.depth === 0) {
           this.startRead();
-          const id = this.idAt(sheetId, r, c);
-          if (id) this.settleFirst(id);
+          const input = this.inputAt(sheetId, r, c);
+          if (input && 'f' in input) this.settleFirst(this.noAt(sheetId, r, c));
         }
         return scalarCell(this.cellValue(sheetId, r, c, null));
       } catch (e) {
         if (!(e instanceof Deep)) throw e;
-        this.settle(e.id);
+        this.settle(e.no);
       }
     }
   }
@@ -207,26 +217,22 @@ export class Workbook {
   evaluateAt(sheetId: string, r: number, c: number, stored: StoredFormula): Value {
     const ast = storedAst(stored);
     if (!ast) return err('#ERROR!');
-    return this.evaluateNodeAt(`${sheetId}|~rule`, sheetId, r, c, ast, stored.r);
+    return this.evaluateNodeAt(sheetId, r, c, ast, stored.r);
   }
 
   // Where a cell's HYPERLINK goes (docs/specs/029-sheets/formulas.md "Text"): the url argument of a formula that is a
   // HYPERLINK call at its top, worked out in the cell as evaluateAt works a rule out (no value kept, no dependency),
   // and kept only when safeHyperlink allows it. Null for any other cell, so the value stays the label everywhere.
   hyperlinkOf(sheetId: string, r: number, c: number): string | null {
-    const id = this.idAt(sheetId, r, c);
-    if (!id) return null;
-    const input = this.sheets.get(sheetId)?.cells.get(id.slice(id.indexOf('|') + 1))?.input;
+    const input = this.inputAt(sheetId, r, c);
     if (!input || !('f' in input)) return null;
     const ast = storedAst(input.f);
     if (ast?.k !== 'call' || ast.name.toUpperCase() !== 'HYPERLINK' || !ast.args[0]) return null;
-    return safeHyperlink(
-      this.evaluateNodeAt(`${sheetId}|~link`, sheetId, r, c, ast.args[0], input.f.r),
-    );
+    return safeHyperlink(this.evaluateNodeAt(sheetId, r, c, ast.args[0], input.f.r));
   }
 
+  // Worked out with NO_CELL as its reader: what it notes is forgotten as it ends.
   private evaluateNodeAt(
-    id: string,
     sheetId: string,
     r: number,
     c: number,
@@ -238,17 +244,17 @@ export class Workbook {
         if (this.depth === 0) this.startRead();
         this.depth++;
         try {
-          const frame = this.frame(id, sheetId, r, c);
+          const frame = this.frame(NO_CELL, sheetId, r, c);
           return scalarCell(deref(evaluate(ast, refs, frame), frame));
         } finally {
           this.depth--;
-          this.deps.clear(id);
-          this.volatileCells.delete(id);
-          this.cardReaders.delete(id);
+          this.deps.clear(NO_CELL);
+          this.volatileCells.delete(NO_CELL);
+          this.cardReaders.delete(NO_CELL);
         }
       } catch (e) {
         if (!(e instanceof Deep)) throw e;
-        this.settle(e.id);
+        this.settle(e.no);
       }
     }
   }
@@ -257,27 +263,27 @@ export class Workbook {
   private startRead(): void {
     this.reads = 0;
     if (this.overBudget.size === 0) return;
-    for (const id of this.overBudget) {
-      this.vals.delete(id);
+    for (const no of this.overBudget) {
+      this.vals.delete(no);
       // A spill it claimed goes with it, and its sheet's spills are worked out again.
-      if (this.releaseClaim(id)) this.spillersReady.delete(id.slice(0, id.indexOf('|')));
+      if (this.releaseClaim(no)) this.spillersReady.delete(this.nos.sheetIdOf(no));
     }
     this.overBudget.clear();
   }
 
   // The whole array a formula gives (its spill), or its value.
   formulaResult(sheetId: string, r: number, c: number): Value {
-    const id = this.idAt(sheetId, r, c);
-    if (!id) return null;
+    const no = this.noAt(sheetId, r, c);
+    if (no === NO_CELL) return null;
     this.value(sheetId, r, c);
-    return this.vals.get(id) ?? null;
+    return this.vals.get(no) ?? null;
   }
 
   // The formula cell whose spill covers (r, c), as positions, when it is not the cell itself.
   spillOwnerAt(sheetId: string, r: number, c: number): { r: number; c: number } | null {
     this.value(sheetId, r, c);
-    const owner = this.claimed.get(sheetId)?.get(`${r},${c}`);
-    if (!owner) return null;
+    const owner = this.claimed.get(this.noAt(sheetId, r, c));
+    if (owner === undefined) return null;
     const claim = this.claimOf.get(owner)!;
     return claim.r1 === r && claim.c1 === c ? null : { r: claim.r1, c: claim.c1 };
   }
@@ -320,27 +326,7 @@ export class Workbook {
   ctxFor(sheetId: string): SheetsCtx {
     let ctx = this.ctxs.get(sheetId);
     if (!ctx) {
-      const handle = (s: Sheet): SheetHandle => ({ id: s.id, title: s.title, layout: s.layout });
-      const own = this.sheets.get(sheetId);
-      const list = [...this.sheets.values()].sort((a, b) => a.createdAt - b.createdAt);
-      ctx = {
-        own: own ? handle(own) : { id: sheetId, title: '', layout: { rows: [], cols: [] } },
-        inputMax: this.limits.input,
-        byTitle: (t) => {
-          const lower = t.toLowerCase();
-          const s = list.find((x) => x.title.toLowerCase() === lower);
-          return s ? handle(s) : undefined;
-        },
-        byId: (id) => {
-          const s = this.sheets.get(id);
-          return s ? handle(s) : undefined;
-        },
-        name: (name) => {
-          const home = nameHome(name, own, list);
-          const at = home && posRangeOf(home.sheet.layout, home.range);
-          return home && at ? { sheet: { id: home.sheet.id }, ...at, a: 15 } : null;
-        },
-      };
+      ctx = sheetsCtxOf(this.sheets, sheetId, this.limits.input);
       this.ctxs.set(sheetId, ctx);
     }
     return ctx;
@@ -348,31 +334,39 @@ export class Workbook {
 
   // ---- Internals ----------------------------------------------------------------------------------------
 
-  private idAt(sheetId: string, r: number, c: number): string | null {
+  // A cell's number, given on first sight; NO_CELL off its sheet's grid.
+  private noAt(sheetId: string, r: number, c: number): CellNo {
+    const sheet = this.sheets.get(sheetId);
+    if (!sheet || r < 0 || c < 0 || r >= sheet.layout.rows.length || c >= sheet.layout.cols.length)
+      return NO_CELL;
+    return this.nos.intern(this.nos.sheetNo(sheetId), r, c);
+  }
+
+  private inputAt(sheetId: string, r: number, c: number): CellInput | undefined {
     const sheet = this.sheets.get(sheetId);
     const rowId = sheet?.layout.rows[r];
     const colId = sheet?.layout.cols[c];
-    return rowId && colId ? `${sheetId}|${rowId}:${colId}` : null;
+    return rowId && colId ? sheet.cells.get(cellKey(rowId, colId))?.input : undefined;
   }
 
   // Work out a formula's static precedents deepest first, on an explicit stack, each once, so the read that follows
   // stays shallow however long the chain (formulas.md "Recalculation"). A loop is left to compute, which names it.
-  private settleFirst(id: string): void {
-    if (this.vals.has(id)) return;
+  private settleFirst(no: CellNo): void {
+    if (this.vals.has(no)) return;
     // Most reads find every precedent worked out already: then nothing is walked.
-    const first = this.precedentsOf(id);
+    const first = this.precedentsOf(no);
     if (first.every((x) => this.vals.has(x))) return;
-    const path = [id];
+    const path = [no];
     const onPath = new Set(path);
-    const left = new Map<string, string[]>();
+    const left = new Map<CellNo, CellNo[]>();
     while (path.length > 0) {
       const top = path[path.length - 1]!;
       let todo = left.get(top);
       if (!todo) {
-        todo = (top === id ? first : this.precedentsOf(top)).reverse();
+        todo = (top === no ? first : this.precedentsOf(top)).reverse();
         left.set(top, todo);
       }
-      let child: string | undefined;
+      let child: CellNo | undefined;
       while (todo.length > 0 && child === undefined) {
         const next = todo.pop()!;
         if (!this.vals.has(next) && !onPath.has(next) && !this.computing.has(next)) child = next;
@@ -389,16 +383,17 @@ export class Workbook {
     }
   }
 
-  private precedentsOf(id: string): string[] {
-    const bar = id.indexOf('|');
-    const sheetId = id.slice(0, bar);
-    const input = this.sheets.get(sheetId)?.cells.get(id.slice(bar + 1))?.input;
+  private precedentsOf(no: CellNo): CellNo[] {
+    const sheetId = this.nos.sheetIdOf(no);
+    const input = this.inputAt(sheetId, this.nos.rowOf(no), this.nos.colOf(no));
     if (!input || !('f' in input)) return [];
-    return formulaPrecedents(input.f, sheetId, (s) => this.sheets.get(s));
+    return formulaPrecedents(input.f, sheetId, (s) => this.sheets.get(s)).map((p) =>
+      this.nos.intern(this.nos.sheetNo(p.sheet.id), p.r, p.c),
+    );
   }
 
-  private settle(id: string): void {
-    const pending = [id];
+  private settle(no: CellNo): void {
+    const pending = [no];
     while (pending.length > 0) {
       const top = pending[pending.length - 1]!;
       try {
@@ -406,43 +401,53 @@ export class Workbook {
         pending.pop();
       } catch (e) {
         if (!(e instanceof Deep)) throw e;
-        const from = pending.indexOf(e.id);
+        const from = pending.indexOf(e.no);
         if (from >= 0) {
           // A chain deeper than DEPTH_MAX that comes back to a cell already restarted is a loop the
           // stack cannot see whole: each of its restarted cells is a circular reference. Their
           // dependencies were noted before the restart, so an edit breaking the loop still reaches them.
           const loop = pending.splice(from);
-          const value = err('#REF!', circular(this.describeLoop(loop, e.id)));
+          const value = err('#REF!', circular(this.describeLoop(loop, e.no)));
           for (const cell of loop) this.vals.set(cell, value);
           continue;
         }
-        pending.push(e.id);
+        pending.push(e.no);
       }
     }
   }
 
-  private cellValue(sheetId: string, r: number, c: number, reader: string | null): Value {
+  private cellValue(sheetId: string, r: number, c: number, reader: CellNo | null): Value {
     const sheet = this.sheets.get(sheetId);
     const rowId = sheet?.layout.rows[r];
     const colId = sheet?.layout.cols[c];
     if (!sheet || !rowId || !colId) return null;
-    const key = cellKey(rowId, colId);
-    const id = `${sheetId}|${key}`;
-    if (reader) this.deps.noteCell(reader, id);
-    const input = sheet.cells.get(key)?.input;
-    if (input) {
+    const input = sheet.cells.get(cellKey(rowId, colId))?.input;
+    // A number, text or truth is read as it stands; only a read noted or a formula needs the cell's number.
+    if (input && reader === null) {
       if ('n' in input) return input.n;
       if ('s' in input) return input.s;
       if ('b' in input) return input.b;
-      return this.compute(id);
     }
-    return this.spilledAt(sheetId, r, c);
+    // Only a cell noted, or a formula, needs a number of its own.
+    const sheetNo = this.nos.sheetNo(sheetId);
+    if (reader !== null || input) {
+      const no = this.nos.intern(sheetNo, r, c);
+      if (reader !== null) this.deps.noteCell(reader, no);
+      if (input) {
+        if ('n' in input) return input.n;
+        if ('s' in input) return input.s;
+        if ('b' in input) return input.b;
+        return this.compute(no);
+      }
+    }
+    return this.spilledAt(sheetId, sheetNo, r, c);
   }
 
-  private spilledAt(sheetId: string, r: number, c: number): Value {
+  // An empty cell's value: what a spill puts there, found by its number once the spills over it are worked out.
+  private spilledAt(sheetId: string, sheetNo: number, r: number, c: number): Value {
     this.ensureSpillers(sheetId, r, c);
-    const owner = this.claimed.get(sheetId)?.get(`${r},${c}`);
-    if (!owner) return null;
+    const owner = this.claimed.get(this.nos.find(sheetNo, r, c));
+    if (owner === undefined) return null;
     const claim = this.claimOf.get(owner)!;
     const arr = this.vals.get(owner);
     if (!arr || !isArray(arr)) return null;
@@ -459,100 +464,89 @@ export class Workbook {
       this.spillersReady.add(sheetId);
       return;
     }
-    const ix = layoutIndex(sheet.layout);
     let all = true;
-    for (const id of set) {
-      if (this.vals.has(id)) continue;
-      const key = id.slice(id.indexOf('|') + 1);
-      const colon = key.indexOf(':');
-      const r0 = ix.rowPos.get(key.slice(0, colon));
-      const c0 = ix.colPos.get(key.slice(colon + 1));
-      if (r0 === undefined || c0 === undefined) continue;
-      if (r0 > r || c0 > c || this.computing.has(id)) {
+    for (const no of set) {
+      if (this.vals.has(no)) continue;
+      if (this.nos.rowOf(no) > r || this.nos.colOf(no) > c || this.computing.has(no)) {
         all = false;
         continue;
       }
-      this.compute(id);
+      this.compute(no);
     }
     if (all && this.computing.size === 0) this.spillersReady.add(sheetId);
   }
 
-  private compute(id: string): Value {
-    const known = this.vals.get(id);
+  private compute(no: CellNo): Value {
+    const known = this.vals.get(no);
     if (known !== undefined) return known;
-    if (this.computing.has(id)) {
-      const from = this.stack.indexOf(id);
-      return err('#REF!', circular(this.describeLoop(this.stack.slice(from), id)));
+    if (this.computing.has(no)) {
+      const from = this.stack.indexOf(no);
+      return err('#REF!', circular(this.describeLoop(this.stack.slice(from), no)));
     }
-    if (this.depth >= DEPTH_MAX) throw new Deep(id);
-    const bar = id.indexOf('|');
-    const sheetId = id.slice(0, bar);
-    const key = id.slice(bar + 1);
+    if (this.depth >= DEPTH_MAX) throw new Deep(no);
+    const sheetId = this.nos.sheetIdOf(no);
+    const row = this.nos.rowOf(no);
+    const col = this.nos.colOf(no);
     const sheet = this.sheets.get(sheetId);
-    const input = sheet?.cells.get(key)?.input;
+    const input = this.inputAt(sheetId, row, col);
     if (!sheet || !input || !('f' in input)) return null;
-    const ix = layoutIndex(sheet.layout);
-    const colon = key.indexOf(':');
-    const row = ix.rowPos.get(key.slice(0, colon)) ?? 0;
-    const col = ix.colPos.get(key.slice(colon + 1)) ?? 0;
-    this.deps.clear(id);
-    this.volatileCells.delete(id);
-    this.cardReaders.delete(id);
-    this.releaseClaim(id);
-    this.computing.add(id);
-    this.stack.push(id);
+    this.deps.clear(no);
+    this.volatileCells.delete(no);
+    this.cardReaders.delete(no);
+    this.releaseClaim(no);
+    this.computing.add(no);
+    this.stack.push(no);
     this.depth++;
     let value: Value;
     try {
       const ast = storedAst(input.f);
       if (!ast) value = err('#ERROR!');
       else {
-        const frame = this.frame(id, sheetId, row, col);
+        const frame = this.frame(no, sheetId, row, col);
         value = deref(evaluate(ast, input.f.r, frame), frame);
       }
     } finally {
       this.depth--;
       this.stack.pop();
-      this.computing.delete(id);
+      this.computing.delete(no);
     }
-    if (isArray(value)) value = this.claim(id, sheet, row, col, value);
-    this.vals.set(id, value);
-    if (this.reads > RECALC_READS_MAX) this.overBudget.add(id);
+    if (isArray(value)) value = this.claim(no, sheet, row, col, value);
+    this.vals.set(no, value);
+    if (this.reads > RECALC_READS_MAX) this.overBudget.add(no);
     return value;
   }
 
-  private claim(id: string, sheet: Sheet, row: number, col: number, value: ValueArray): Value {
+  private claim(no: CellNo, sheet: Sheet, row: number, col: number, value: ValueArray): Value {
     const d = dims(value);
     if (d.rows === 0 || d.cols === 0) return err('#N/A', 'The result is empty');
     if (d.rows === 1 && d.cols === 1) return scalarOf(value.rows[0]![0]!);
+    const sheetNo = this.nos.sheetNo(sheet.id);
     // A spill reads its whole rectangle, so filling or emptying a cell in it re-works the spill.
-    this.deps.noteRange(id, sheet.id, row, col, row + d.rows - 1, col + d.cols - 1);
+    this.deps.noteRange(no, sheetNo, row, col, row + d.rows - 1, col + d.cols - 1);
     if (row + d.rows > sheet.layout.rows.length || col + d.cols > sheet.layout.cols.length)
       return err('#REF!', SPILL_PAST_EDGE);
-    const claimed = this.claimed.get(sheet.id) ?? new Map<string, string>();
     for (let i = 0; i < d.rows; i++)
       for (let j = 0; j < d.cols; j++) {
         if (i === 0 && j === 0) continue;
         const r = row + i;
         const c = col + j;
         const key = cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!);
-        const other = claimed.get(`${r},${c}`);
-        if (sheet.cells.get(key)?.input || (other && other !== id)) {
+        const other = this.claimed.get(this.nos.find(sheetNo, r, c));
+        if (sheet.cells.get(key)?.input || (other !== undefined && other !== no)) {
           return err('#REF!', spillBlockedBy(formatA1(r, c)));
         }
       }
-    const readers = new Set<string>();
+    const readers = new Set<CellNo>();
     for (let i = 0; i < d.rows; i++)
       for (let j = 0; j < d.cols; j++) {
-        claimed.set(`${row + i},${col + j}`, id);
-        if (i === 0 && j === 0) continue;
         const r = row + i;
         const c = col + j;
-        const cellId = `${sheet.id}|${cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!)}`;
-        this.deps.readersOf(cellId, sheet.id, r, c, readers);
+        const cell = this.nos.intern(sheetNo, r, c);
+        this.claimed.set(cell, no);
+        if (i === 0 && j === 0) continue;
+        this.deps.readersOf(cell, sheetNo, r, c, readers);
       }
-    this.claimed.set(sheet.id, claimed);
-    this.claimOf.set(id, {
+    this.claimOf.set(no, {
       sheetId: sheet.id,
       r1: row,
       c1: col,
@@ -560,23 +554,25 @@ export class Workbook {
       c2: col + d.cols - 1,
     });
     // Whatever read these cells as empty before the spill reached them reads again.
-    readers.delete(id);
+    readers.delete(no);
     if (readers.size > 0) this.invalidate([...readers]);
     return value;
   }
 
-  private releaseClaim(id: string): Claim | undefined {
-    const claim = this.claimOf.get(id);
+  private releaseClaim(no: CellNo): Claim | undefined {
+    const claim = this.claimOf.get(no);
     if (!claim) return undefined;
-    const claimed = this.claimed.get(claim.sheetId);
+    const sheetNo = this.nos.sheetNo(claim.sheetId);
     for (let r = claim.r1; r <= claim.r2; r++)
-      for (let c = claim.c1; c <= claim.c2; c++)
-        if (claimed?.get(`${r},${c}`) === id) claimed.delete(`${r},${c}`);
-    this.claimOf.delete(id);
+      for (let c = claim.c1; c <= claim.c2; c++) {
+        const cell = this.nos.find(sheetNo, r, c);
+        if (this.claimed.get(cell) === no) this.claimed.delete(cell);
+      }
+    this.claimOf.delete(no);
     return claim;
   }
 
-  private frame(id: string, sheetId: string, row: number, col: number): Frame {
+  private frame(id: CellNo, sheetId: string, row: number, col: number): Frame {
     return {
       sheetId,
       row,
@@ -587,10 +583,7 @@ export class Workbook {
       cell: (s, r, c, inRange) => this.cellValue(s, r, c, inRange ? null : id),
       extent: (s) => this.extent(s),
       isFormula: (s, r, c) => {
-        const sh = this.sheets.get(s);
-        const rowId = sh?.layout.rows[r];
-        const colId = sh?.layout.cols[c];
-        const input = rowId && colId ? sh.cells.get(cellKey(rowId, colId))?.input : undefined;
+        const input = this.inputAt(s, r, c);
         return !!input && 'f' in input;
       },
       grid: (s) => {
@@ -598,14 +591,21 @@ export class Workbook {
         return sh ? { rows: sh.layout.rows.length, cols: sh.layout.cols.length } : undefined;
       },
       spillOf: (s, r, c): RangeRef | null => {
-        const ownerId = this.idAt(s, r, c);
-        if (!ownerId) return null;
+        const owner = this.noAt(s, r, c);
+        if (owner === NO_CELL) return null;
         this.cellValue(s, r, c, id);
-        const claim = this.claimOf.get(ownerId);
+        const claim = this.claimOf.get(owner);
         return claim ? { ...claim } : null;
       },
       noteRange: (range) =>
-        this.deps.noteRange(id, range.sheetId, range.r1, range.c1, range.r2, range.c2),
+        this.deps.noteRange(
+          id,
+          this.nos.sheetNo(range.sheetId),
+          range.r1,
+          range.c1,
+          range.r2,
+          range.c2,
+        ),
       spend: (n) => {
         this.reads += n;
         if (this.reads > RECALC_READS_MAX) {
@@ -623,48 +623,40 @@ export class Workbook {
   }
 
   // Forget the given cells' values and, transitively, every value that read them.
-  private invalidate(ids: readonly string[]): void {
-    const queue = [...ids];
-    const seen = new Set<string>();
+  private invalidate(nos: readonly CellNo[]): void {
+    const queue = [...nos];
+    const seen = new Set<CellNo>();
     while (queue.length > 0) {
-      const id = queue.pop()!;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      // A cell being worked out right now gets its fresh value anyway.
-      if (this.computing.has(id)) continue;
-      const bar = id.indexOf('|');
-      const sheetId = id.slice(0, bar);
-      const key = id.slice(bar + 1);
-      if (this.vals.delete(id)) this.spillersReady.delete(sheetId);
-      const claim = this.releaseClaim(id);
-      const sheet = this.sheets.get(sheetId);
-      if (!sheet) continue;
-      const readers = new Set<string>();
-      const ix = layoutIndex(sheet.layout);
-      const colon = key.indexOf(':');
-      const r = ix.rowPos.get(key.slice(0, colon));
-      const c = ix.colPos.get(key.slice(colon + 1));
-      if (r !== undefined && c !== undefined) this.deps.readersOf(id, sheetId, r, c, readers);
-      if (r !== undefined && c !== undefined) {
-        // A cell inside someone's spill: the spill's owner is re-worked (it may now be blocked).
-        const owner = this.claimed.get(sheetId)?.get(`${r},${c}`);
-        if (owner && owner !== id) readers.add(owner);
-      }
+      const no = queue.pop()!;
+      if (seen.has(no)) continue;
+      seen.add(no);
+      // A cell being worked out right now gets its fresh value anyway; NO_CELL keeps nothing.
+      if (this.computing.has(no) || no === NO_CELL) continue;
+      const sheetId = this.nos.sheetIdOf(no);
+      const sheetNo = this.nos.sheetNoOf(no);
+      if (this.vals.delete(no)) this.spillersReady.delete(sheetId);
+      const claim = this.releaseClaim(no);
+      const readers = new Set<CellNo>();
+      const r = this.nos.rowOf(no);
+      const c = this.nos.colOf(no);
+      this.deps.readersOf(no, sheetNo, r, c, readers);
+      // A cell inside someone's spill: the spill's owner is re-worked (it may now be blocked).
+      const owner = this.claimed.get(no);
+      if (owner !== undefined && owner !== no) readers.add(owner);
       if (claim) {
         // Everything that read the spilled cells reads again.
         for (let rr = claim.r1; rr <= claim.r2; rr++)
-          for (let cc = claim.c1; cc <= claim.c2; cc++) {
-            const cellId = this.idAt(sheetId, rr, cc);
-            if (cellId) this.deps.readersOf(cellId, sheetId, rr, cc, readers);
-          }
+          for (let cc = claim.c1; cc <= claim.c2; cc++)
+            this.deps.readersOf(this.nos.find(sheetNo, rr, cc), sheetNo, rr, cc, readers);
       }
       for (const x of readers) if (!seen.has(x)) queue.push(x);
     }
   }
 
   private resetAll(): void {
-    this.vals.clear();
-    this.deps.reset();
+    this.nos = new CellNumbers();
+    this.vals = new CellValues();
+    this.deps = new Dependencies();
     this.volatileCells.clear();
     this.cardReaders.clear();
     this.claimOf.clear();
@@ -680,40 +672,46 @@ export class Workbook {
   private reindexAll(): void {
     this.spillers.clear();
     for (const sheet of this.sheets.values())
-      for (const key of sheet.cells.keys()) this.indexSpiller(sheet, key);
+      for (const [key, cell] of sheet.cells) {
+        if (!inputMaySpill(cell.input)) continue;
+        const ix = layoutIndex(sheet.layout);
+        const colon = key.indexOf(':');
+        const r = ix.rowPos.get(key.slice(0, colon));
+        const c = ix.colPos.get(key.slice(colon + 1));
+        if (r !== undefined && c !== undefined)
+          this.spillersOf(sheet.id).add(this.nos.intern(this.nos.sheetNo(sheet.id), r, c));
+      }
   }
 
-  private indexSpiller(sheet: Sheet, key: string): void {
-    const id = `${sheet.id}|${key}`;
-    let set = this.spillers.get(sheet.id);
-    const input = sheet.cells.get(key)?.input;
-    const ast = input && 'f' in input ? storedAst(input.f) : null;
-    if (input && 'f' in input && ast && maySpill(ast, input.f.r)) {
-      if (!set) {
-        set = new Set();
-        this.spillers.set(sheet.id, set);
-      }
-      set.add(id);
+  private indexSpiller(sheet: Sheet, key: string, no: CellNo): void {
+    if (inputMaySpill(sheet.cells.get(key)?.input)) {
+      this.spillersOf(sheet.id).add(no);
       this.spillersReady.delete(sheet.id);
     } else {
-      set?.delete(id);
+      this.spillers.get(sheet.id)?.delete(no);
     }
   }
 
-  private describeLoop(path: string[], back: string): string {
-    const names = [...path, back].map((id) => {
-      const bar = id.indexOf('|');
-      const sheet = this.sheets.get(id.slice(0, bar));
-      const key = id.slice(bar + 1);
-      const colon = key.indexOf(':');
-      if (!sheet) return '?';
-      const ix = layoutIndex(sheet.layout);
-      const r = ix.rowPos.get(key.slice(0, colon));
-      const c = ix.colPos.get(key.slice(colon + 1));
-      return r === undefined || c === undefined ? '?' : formatA1(r, c);
-    });
-    return names.join(' → ');
+  private spillersOf(sheetId: string): Set<CellNo> {
+    let set = this.spillers.get(sheetId);
+    if (!set) {
+      set = new Set();
+      this.spillers.set(sheetId, set);
+    }
+    return set;
   }
+
+  private describeLoop(path: CellNo[], back: CellNo): string {
+    return [...path, back]
+      .map((no) => formatA1(this.nos.rowOf(no), this.nos.colOf(no)))
+      .join(' → ');
+  }
+}
+
+function inputMaySpill(input: CellInput | undefined): boolean {
+  if (!input || !('f' in input)) return false;
+  const ast = storedAst(input.f);
+  return !!ast && maySpill(ast, input.f.r);
 }
 
 function scalarCell(v: Value): Scalar {

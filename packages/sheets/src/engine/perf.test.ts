@@ -3,14 +3,30 @@
 // working out again only what reads it; and the change's cost against the full workout measured in the same run, which
 // v8 coverage slows alike. The laptop's absolute CPU budgets are held only where the code runs uninstrumented: under
 // coverage the same work measured eight times slower (1,639 ms against 205, main 2026-11-20).
+import v8 from 'node:v8';
+import vm from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
 import { cpuMsOf, UNDER_COVERAGE_ENV } from '@livedoc/vitest-config/cpu-time';
 import { Workbook } from './workbook';
 import { cellKey, type Sheet } from '../sheet';
 import { CellMap } from '../cells/cell-map';
+import { layoutIndex } from '../layout';
 import { compileFormula } from '../formula/stored';
 
 const CI_FACTOR = 4;
+
+// What the engine may hold for each formula it has worked out: its value and what it reads (performance.md).
+const HELD_BYTES_PER_FORMULA_MAX = 160;
+
+v8.setFlagsFromString('--expose-gc');
+const gc = vm.runInNewContext('gc') as () => void;
+function heldBytes(): number {
+  gc();
+  gc();
+  // Typed arrays hold their bytes outside the heap.
+  const { heapUsed, arrayBuffers } = process.memoryUsage();
+  return heapUsed + arrayBuffers;
+}
 
 // Every formula the engine works out, counted.
 const evaluated = vi.hoisted(() => ({ n: 0 }));
@@ -74,6 +90,19 @@ function bigSheet(): Sheet {
 }
 
 describe('performance', () => {
+  it('holds under 160 bytes for each formula it has worked out', () => {
+    const sheet = bigSheet();
+    const wb = new Workbook({ sheets: [sheet], locale: 'en' });
+    // The layout's index is the sheet's, built for the grid too: not the engine's to count.
+    layoutIndex(sheet.layout);
+    const before = heldBytes();
+    for (let r = 0; r < 10_000; r++) for (let c = 0; c < 5; c++) wb.value(sheet.id, r, c);
+    const perFormula = (heldBytes() - before) / 20_000;
+    console.info(`[sheets perf] engine ${perFormula.toFixed(0)} bytes held a formula`);
+    expect(wb.value(sheet.id, 9_999, 4)).toBe(10_000);
+    expect(perFormula).toBeLessThan(HELD_BYTES_PER_FORMULA_MAX);
+  }, 30_000);
+
   it('works out every cell of a 50,000-cell sheet, then a one-cell change, within budget', () => {
     const sheet = bigSheet();
     expect(sheet.cells.size).toBe(50_000);
