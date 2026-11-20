@@ -12,7 +12,7 @@ function unscale(steps: number, digits: number): number {
 }
 
 // Round half away from zero, as spreadsheets do, without float drift (2.675 → 2.68).
-function roundHalfAway(x: number, digits: number): number {
+export function roundHalfAway(x: number, digits: number): number {
   const m = 10 ** digits;
   const scaled = Math.abs(x) * m;
   const r = Math.round(Number(scaled.toPrecision(15)));

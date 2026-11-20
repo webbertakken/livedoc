@@ -112,7 +112,7 @@ describe('the oracle corpus', () => {
 
 // The catalogue's categories whose boxes have landed (plan 0020 Phase 6): every function built in them is measured.
 // The list grows by one with each category box, and holds every category by the end of the phase.
-const MEASURED_CATEGORIES = ['Date', 'Filter', 'Info', 'Logical', 'Lookup', 'Operator'];
+const MEASURED_CATEGORIES = ['Date', 'Filter', 'Info', 'Logical', 'Lookup', 'Operator', 'Text'];
 
 // A built catalogue row of formulas.md: its name and category.
 function builtRows(): { name: string; category: string }[] {

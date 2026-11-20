@@ -1,0 +1,645 @@
+{
+  "source": "libreoffice",
+  "category": "Text",
+  "by": "LibreOffice 26.8.3.1",
+  "made": "2026-11-20",
+  "answers": {
+    "ARABIC.1": [[14]],
+    "ARABIC.2": [[2013]],
+    "ARABIC.3": [[1912]],
+    "ARABIC.4": [[0]],
+    "ARABIC.5": [[4]],
+    "ARABIC.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ARABIC.7": [[14]],
+    "ARABIC.8": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ARABIC.9": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ARABIC.10": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ASC.1": [["ｸﾞｰｸﾞﾙ"]],
+    "ASC.2": [["ABC　123"]],
+    "ASC.3": [["abc"]],
+    "ASC.4": [["12"]],
+    "ASC.5": [["ｶﾀｶﾅ"]],
+    "ASC.6": [["ﾊﾟ"]],
+    "CHAR.1": [["A"]],
+    "CHAR.2": [[null]],
+    "CHAR.3": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "CHAR.4": [["A"]],
+    "CHAR.5": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "CLEAN.1": [["abc"]],
+    "CLEAN.2": [["Aeñds"]],
+    "CLEAN.3": [["12"]],
+    "CODE.1": [[65]],
+    "CODE.2": [[0]],
+    "CODE.3": [[231]],
+    "CODE.4": [[49]],
+    "CONCATENATE.1": [["abc"]],
+    "CONCATENATE.2": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "CONCATENATE.3": [["11"]],
+    "CONCATENATE.4": [["x"]],
+    "DOLLAR.1": [["$1.2351"]],
+    "DOLLAR.2": [["$2.35"]],
+    "DOLLAR.3": [["-$2.35"]],
+    "DOLLAR.4": [["$1,200"]],
+    "DOLLAR.5": [["$1,234.57"]],
+    "DOLLAR.6": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "DOLLAR.7": [["$0.13"]],
+    "DOLLAR.8": [["$1,235"]],
+    "DOLLAR.9": [["$0.00"]],
+    "EXACT.1": [[true]],
+    "EXACT.2": [[false]],
+    "EXACT.3": [[true]],
+    "EXACT.4": [[true]],
+    "FIND.1": [[3]],
+    "FIND.2": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "FIND.3": [[4]],
+    "FIND.4": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "FIND.5": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "FIND.6": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "FINDB.1": [[5]],
+    "FINDB.2": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "FINDB.3": [[3]],
+    "FINDB.4": [[3]],
+    "FINDB.5": [[6]],
+    "FINDB.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "FIXED.1": [["3.14"]],
+    "FIXED.2": [["966364281.0000"]],
+    "FIXED.3": [["1,234.57"]],
+    "FIXED.4": [["-1,234.6"]],
+    "FIXED.5": [["1,200"]],
+    "FIXED.6": [["1234.57"]],
+    "FIXED.7": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "FIXED.8": [["0.00"]],
+    "FIXED.9": [["0.00"]],
+    "FIXED.10": [["1,235"]],
+    "JOIN.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JOIN.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JOIN.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JOIN.4": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "JOIN.5": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "LEFT.1": [["ab"]],
+    "LEFT.2": [["a"]],
+    "LEFT.3": [[null]],
+    "LEFT.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "LEFT.5": [["abc"]],
+    "LEFT.6": [["12"]],
+    "LEFTB.1": [["Ae"]],
+    "LEFTB.2": [["熊"]],
+    "LEFTB.3": [["a"]],
+    "LEFTB.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "LEFTB.5": [["abc"]],
+    "LEFTB.6": [[" "]],
+    "LEN.1": [[3]],
+    "LEN.2": [[2]],
+    "LEN.3": [[0]],
+    "LEN.4": [[6]],
+    "LEN.5": [[1]],
+    "LENB.1": [[3]],
+    "LENB.2": [[4]],
+    "LENB.3": [[0]],
+    "LENB.4": [[3]],
+    "LENB.5": [[14]],
+    "LENB.6": [[8]],
+    "LOWER.1": [["abc"]],
+    "LOWER.2": [["ａｂｃ　１２３"]],
+    "LOWER.3": [["1"]],
+    "MID.1": [["bcd"]],
+    "MID.2": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "MID.3": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "MID.4": [[null]],
+    "MID.5": [["本=熊本"]],
+    "MIDB.1": [["eñ"]],
+    "MIDB.2": [[" 本="]],
+    "MIDB.3": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "MIDB.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "MIDB.5": [[null]],
+    "MIDB.6": [["bcd"]],
+    "PROPER.1": [["Hello World"]],
+    "PROPER.2": [["Hello World"]],
+    "PROPER.3": [["It'S 2Nd-Rate"]],
+    "PROPER.4": [["Hello World"]],
+    "REGEXMATCH.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXMATCH.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXMATCH.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXEXTRACT.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXEXTRACT.2": [
+      [
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXEXTRACT.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.2": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REGEXREPLACE.3": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "REPLACE.1": [["aXef"]],
+    "REPLACE.2": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "REPLACE.3": [["abcX"]],
+    "REPLACE.4": [["Anews"]],
+    "REPLACE.5": [["熊new本"]],
+    "REPLACEB.1": [["Anews"]],
+    "REPLACEB.2": [[" new=熊本"]],
+    "REPLACEB.3": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "REPLACEB.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "REPLACEB.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "REPT.1": [["ababab"]],
+    "REPT.2": [[null]],
+    "REPT.3": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "REPT.4": [["abab"]],
+    "RIGHT.1": [["bc"]],
+    "RIGHT.2": [["c"]],
+    "RIGHT.3": [[null]],
+    "RIGHT.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "RIGHT.5": [["abc"]],
+    "RIGHTB.1": [["eñ"]],
+    "RIGHTB.2": [["本"]],
+    "RIGHTB.3": [["c"]],
+    "RIGHTB.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "RIGHTB.5": [[" "]],
+    "ROMAN.1": [["CDXCIX"]],
+    "ROMAN.2": [["LDVLIV"]],
+    "ROMAN.3": [["XDIX"]],
+    "ROMAN.4": [["VDIV"]],
+    "ROMAN.5": [["ID"]],
+    "ROMAN.6": [["MCMXCIX"]],
+    "ROMAN.7": [[null]],
+    "ROMAN.8": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ROMAN.9": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ROMAN.10": [["XII"]],
+    "ROMAN.11": [["LDVLIV"]],
+    "ROMAN.12": [["CDXCIX"]],
+    "ROMAN.13": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "ROMAN.14": [["CDXCIX"]],
+    "ROMAN.15": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "ROMAN.16": [["MMMIM"]],
+    "SEARCH.1": [[2]],
+    "SEARCH.2": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "SEARCH.3": [[2]],
+    "SEARCH.4": [[2]],
+    "SEARCH.5": [[4]],
+    "SEARCH.6": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "SEARCH.7": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "SEARCHB.1": [[5]],
+    "SEARCHB.2": [[2]],
+    "SEARCHB.3": [[1]],
+    "SEARCHB.4": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "SEARCHB.5": [[7]],
+    "SPLIT.1": [
+      [
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "SPLIT.2": [
+      [
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "SPLIT.3": [
+      [
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "SPLIT.4": [
+      [
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "SPLIT.5": [
+      [
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "SPLIT.6": [
+      [
+        {
+          "e": "#NAME?"
+        },
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "SUBSTITUTE.1": [["a b c"]],
+    "SUBSTITUTE.2": [["a-b c"]],
+    "SUBSTITUTE.3": [["a-b-c"]],
+    "SUBSTITUTE.4": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "SUBSTITUTE.5": [["abc"]],
+    "SUBSTITUTE.6": [["9239"]],
+    "T.1": [["cat"]],
+    "T.2": [["cat"]],
+    "T.3": [[null]],
+    "T.4": [[null]],
+    "T.5": [[null]],
+    "T.6": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "TEXT.1": [["1,234.57"]],
+    "TEXT.2": [["25%"]],
+    "TEXT.3": [["2025-01-01"]],
+    "TEXT.4": [["1.500"]],
+    "TEXT.5": [["abc"]],
+    "TEXT.6": [["(3)"]],
+    "TEXTJOIN.1": [["a-b-3"]],
+    "TEXTJOIN.2": [["a--b-3"]],
+    "TEXTJOIN.3": [["a, b"]],
+    "TEXTJOIN.4": [["1234"]],
+    "TRIM.1": [["two spaces"]],
+    "TRIM.2": [["a"]],
+    "TRIM.3": [["12"]],
+    "UNICHAR.1": [["D"]],
+    "UNICHAR.2": [["ĳ"]],
+    "UNICHAR.3": [[null]],
+    "UNICHAR.4": [[null]],
+    "UNICHAR.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "UNICHAR.6": [["😀"]],
+    "UNICHAR.7": [["A"]],
+    "UNICHAR.8": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "UNICODE.1": [[65]],
+    "UNICODE.2": [[49]],
+    "UNICODE.3": [[128512]],
+    "UNICODE.4": [
+      [
+        {
+          "e": "Err:504"
+        }
+      ]
+    ],
+    "UNICODE.5": [[29066]],
+    "UPPER.1": [["ABC"]],
+    "UPPER.2": [["AEÑDS"]],
+    "UPPER.3": [["1.5"]],
+    "VALUE.1": [[123]],
+    "VALUE.2": [[1234.5]],
+    "VALUE.3": [[0.12]],
+    "VALUE.4": [[5]],
+    "VALUE.5": [
+      [
+        {
+          "e": "Err:502"
+        }
+      ]
+    ],
+    "VALUE.6": [[0]],
+    "VALUE.7": [[45717]],
+    "VALUE.8": [[7]]
+  }
+}
