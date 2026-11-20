@@ -1,7 +1,7 @@
 # Editing surface
 
 **Status: partly built.** The menu bar (every menu and item, those not yet built dimmed), the tool finder and the
-title row (but its comment history and mode switch) are built; the rest is specified.
+title row (but its comment history) are built; the rest is specified.
 
 What a person sees and works with on a [text document](text-document.md): Google Docs' layout, control for control,
 built on the shared [Office shell](../004-interface-design/office-shell.md). How literal the look is (Google's metrics
@@ -59,6 +59,8 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
   comments are built ([Review](review.md)), never a dead button.
 - **Editing mode switch**: a pill with the mode's glyph and name, "Editing" (pencil), "Suggesting" (pencil with a
   plus), "Viewing" (eye); its menu lists the three with their one-line descriptions ([Review](review.md#editing-modes)).
+  It sits after Settings, before Share. Descriptions: "Edit document directly", "Edits become suggestions",
+  "Read or print final document". View > Mode and ⌘⌥⇧Z, ⌘⌥⇧X, ⌘⌥⇧C change it too.
 - **Share**: a filled pill, "Share", with a lock glyph when the document is private; opens LiveDoc's share dialog.
   It is for whoever may share the document (its owner or a member of its team); anyone else sees **Make a copy** in
   its place, an outlined pill that copies the document into their own files and opens the copy. File > Share > Share

@@ -113,17 +113,19 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
     ]),
     menu('view', 'View', [
       submenu('mode', 'Mode', [
-        item('mode-editing', 'Editing', 'edit', {
+        item('mode-editing', 'Editing', 'view', {
           shortcut: 'switch-to-editing',
           checkable: 'radio',
+          status: 'built',
         }),
-        item('mode-suggesting', 'Suggesting', 'participate', {
+        item('mode-suggesting', 'Suggesting', 'view', {
           shortcut: 'switch-to-suggesting',
           checkable: 'radio',
         }),
         item('mode-viewing', 'Viewing', 'view', {
           shortcut: 'switch-to-viewing',
           checkable: 'radio',
+          status: 'built',
         }),
       ]),
       SEPARATOR,

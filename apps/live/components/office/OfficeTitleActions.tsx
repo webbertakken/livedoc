@@ -7,6 +7,7 @@ import { HoverCard } from '@livedoc/ui';
 import { AuthControls } from '@/components/chrome/AuthControls';
 import type { OfficeChrome, OfficePerson } from './office-chrome';
 import { OfficeCopyIcon, OfficeLockIcon, OfficeSettingsIcon } from './office-icons';
+import { OfficeModeSwitch, type OfficeModeChoice } from './OfficeModeSwitch';
 import { OfficePeople } from './OfficePeople';
 
 // A round icon button of the title row: 32 px, 44 px reach on touch.
@@ -45,15 +46,19 @@ export function OfficeIconButton({
 export function OfficeTitleActions({
   chrome,
   onFollow,
+  mode = null,
 }: {
   chrome: OfficeChrome;
   onFollow: (person: OfficePerson) => void;
+  // The person's editing mode, between Settings and Share.
+  mode?: OfficeModeChoice | null;
 }) {
   return (
     <div className="flex shrink-0 items-center gap-2">
       <OfficeIconButton label="Settings" onClick={chrome.onOpenSettings}>
         <OfficeSettingsIcon />
       </OfficeIconButton>
+      {mode ? <OfficeModeSwitch {...mode} /> : null}
       {chrome.share ? (
         <HoverCard
           title={chrome.share.shareable ? 'Shared' : 'Private to you'}

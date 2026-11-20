@@ -1087,6 +1087,15 @@ export const TEXT_DOCUMENT_ZOOMED = chart(
   { types: ['TextDocumentZoom'], rising: 'neutral' },
 );
 
+// A person changed their editing mode on a text document (docs/specs/034-text-documents/review.md "Editing modes").
+export const TEXT_DOCUMENT_MODE = chart(
+  'UI',
+  'Changed',
+  'Text Document Mode',
+  'Someone switched a text document between Editing and Viewing.',
+  { types: ['TextDocumentMode'], rising: 'neutral' },
+);
+
 // A person here followed from a text document's title row: their caret brought into view, or their tab opened.
 export const TEXT_DOCUMENT_FOLLOWED = chart(
   'UI',
@@ -1111,6 +1120,7 @@ export const EDITOR_CHROME: MetricStack = {
     TEXT_DOCUMENT_STARRED,
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
+    TEXT_DOCUMENT_MODE,
   ],
 };
 

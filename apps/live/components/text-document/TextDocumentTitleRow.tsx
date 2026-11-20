@@ -21,6 +21,7 @@ import { textDocumentMenus } from '@/lib/text-document/text-document-menus';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
 import { TEXT_DOCUMENT_TOOLBAR } from '@/lib/text-document/text-document-toolbar';
 import type { OfficeZoom } from '@/components/office/OfficeZoomField';
+import type { OfficeModeChoice } from '@/components/office/OfficeModeSwitch';
 import { openTextDocumentFile } from '@/lib/text-document/open-text-document-file';
 
 // A text document no room holds is written in this browser; the writer loads only when it is asked for.
@@ -67,6 +68,7 @@ export function TextDocumentTitleRow({
   onFollow,
   saveStatus = null,
   zoom = null,
+  mode = null,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -82,6 +84,7 @@ export function TextDocumentTitleRow({
   onFollow?: (personId: string) => boolean;
   saveStatus?: OfficeSaveStatus | null;
   zoom?: OfficeZoom | null;
+  mode?: OfficeModeChoice | null;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const catalogue = useMemo(() => textDocumentMenus(format), [format]);
@@ -139,6 +142,7 @@ export function TextDocumentTitleRow({
       saveStatus={saveStatus}
       toolbar={TEXT_DOCUMENT_TOOLBAR}
       zoom={zoom}
+      mode={mode}
     />
   );
 }
