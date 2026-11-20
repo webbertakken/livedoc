@@ -18,13 +18,13 @@ import {
   SECTION_BREAK,
   SECTION_BREAK_ATTRIBUTES,
 } from '@livedoc/text-documents';
+import { DocumentFonts } from '@livedoc/document';
 
 const nullAttributes = (names: readonly string[]) =>
   Object.fromEntries(names.map((name) => [name, { default: null }]));
 
 // A value the model holds as `#rrggbb` (or a highlight's name), checked before it reaches a style attribute.
 const COLOUR = /^(#[0-9a-f]{6}|[a-z]+)$/i;
-const FONT = /^[\w \-.,']+$/;
 const LINK = /^(https?:|mailto:|#)/i;
 
 const styled = (style: string): DOMOutputSpec => ['span', { style }, 0];
@@ -43,8 +43,9 @@ const marks: Record<string, MarkSpec> = {
   vertical: propertyMark((v) =>
     v === 'super' || v === 'sub' ? `vertical-align: ${v}; font-size: 0.7em` : '',
   ),
+  // The named family, then its stand-in, then its generic family (fonts.md "Substitution").
   font: propertyMark((v) =>
-    typeof v === 'string' && FONT.test(v) ? `font-family: '${v.replace(/'/g, '')}'` : '',
+    typeof v === 'string' ? `font-family: ${DocumentFonts.stack(v)}` : '',
   ),
   size: propertyMark((v) =>
     typeof v === 'number' && v > 0 && v < 1000 ? `font-size: ${v}pt` : '',

@@ -65,6 +65,9 @@ import {
   textDocumentCaretPoint,
 } from '@/lib/text-document/text-document-caret';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
+import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
+// The served document fonts' faces, loaded with the surface, never on other pages (fonts.md "Served from LiveDoc").
+import '@/app/document-fonts.css';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
 // "Switching tabs"): the text may have changed since it was left.
@@ -138,9 +141,9 @@ export function TextDocumentSurface({
     actions: modeActions,
   } = useOfficeMode(level, 'TextDocumentMode');
   const writes = canEdit && mode === 'editing';
-  const live = useRef({ sequence, canEdit, writes });
+  const live = useRef({ sequence, canEdit, writes, format });
   useLayoutEffect(() => {
-    live.current = { sequence, canEdit, writes };
+    live.current = { sequence, canEdit, writes, format };
   });
   // Where the person was in this tab, back when they return to it.
   const { noteViewChanged } = useSurfaceView({
@@ -240,6 +243,8 @@ export function TextDocumentSurface({
             tabindex: '0',
             // Spaces and line breaks show as typed; the caret is the focus mark, as in any word processor.
             class: 'text-document-body whitespace-pre-wrap break-words outline-none',
+            // The document's default family and size (fonts.md "Substitution").
+            style: documentTextStyle(TextDocumentState.defaults(doc, live.current.format).text),
             spellcheck: 'true',
           }),
         });
