@@ -24,6 +24,10 @@ import { textDocumentUndoPlugins } from './text-document-undo';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
+// jsdom lays nothing out: a selection scrolled into view (a style applied) has no rectangles.
+Range.prototype.getClientRects = () => [] as unknown as DOMRectList;
+Range.prototype.getBoundingClientRect = () => new DOMRect();
+
 const DOWNLOADS = { odf: ['download-odt', 'download-fodt'], ooxml: ['download-docx'] } as const;
 
 // docs/specs/004-interface-design/office-shell.md "Menus as data": the text document's catalogue has no faults.
