@@ -81,7 +81,7 @@ function ItemRow({
           item.face || item.faceStyle ? { fontFamily: item.face, ...item.faceStyle } : undefined
         }
       >
-        {item.label}
+        {action?.label ?? item.label}
       </span>
       {soon ? (
         <span

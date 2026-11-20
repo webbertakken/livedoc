@@ -1,7 +1,7 @@
 # Text and paragraphs
 
-**Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment and indents are
-built; the rest is specified.
+**Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing and
+keep rules are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -180,10 +180,22 @@ Styles > Options and Format > Paragraph styles > Options hold three items, as Go
 
 ## Spacing and keep rules
 
-- Line spacing: Single, 1.15, 1.5, Double; **Custom spacing** dialog: line spacing (0.06 to 100) and space before and
-  after (0 to 1,584 pt).
-- Add or remove space before and after a paragraph (12 pt steps, as Google).
-- **Keep with next**, **keep lines together**, **prevent single lines** (widows and orphans, on by default).
+- **Line spacing**: Single, 1.15, 1.5 and Double (Format > Line & paragraph spacing; the toolbar's Line & paragraph
+  spacing control, which opens the same menu) set it on every paragraph the selection touches, as one undo step,
+  and return focus to the writing; the one the paragraphs have is checked, none for a custom value or when they differ.
+- **Add space before paragraph** and **Add space after paragraph** add 12 pt (default) where the paragraphs have none;
+  where they have some, the item reads **Remove space before paragraph** (or after) and sets it to 0, as Google's.
+- **Custom spacing** is a dialog for the paragraphs the selection touches: **Line spacing** (a multiple, 0.06 to 100)
+  and **Paragraph spacing** **Before** and **After** (points, 0 to 1,584). A field shows the paragraphs' value, blank
+  where they differ, and a blank field changes nothing; a value out of range is refused in the field ("Enter a
+  number from 0.06 to 100.", "Enter a number from 0 to 1584."). **Apply** sets them as one undo step.
+- **Keep with next**, **Keep lines together** and **Prevent single lines** (widows and orphans of two) are switches on
+  every paragraph the selection touches: checked when all have it, and on for all unless all have it. A new
+  document's paragraphs prevent single lines; headings keep with next.
+- The keep rules shape where pages break: they are drawn as the print layout's break rules (`break-after`,
+  `break-inside`, `widows` and `orphans`), and laid out with pagination ([Page layout](page-layout.md)).
+- A value equal to the style's is stored as none of the paragraph's own, as alignment is.
+- Share roles: an Editor sets spacing and keep rules; a Participant and a Viewer see none of the items or controls.
 
 ## Borders and shading
 
@@ -229,7 +241,8 @@ SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight; f
 `TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut), `TextDocumentStyleUpdated` (update to match),
 `TextDocumentStylesUsed` (Use my default styles), `TextDocumentStylesReset`, `TextDocumentPaintFormat`,
 `TextDocumentPaste` (with the source: Document, Html, Markdown, Plain), `TextDocumentAlign`, `TextDocumentIndent` (a step),
-`TextDocumentIndentation` (Indentation options); `UI · Changed · TextDocumentDefaultStyles`
+`TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`, `TextDocumentParagraphSpace` (add or
+remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`; `UI · Changed · TextDocumentDefaultStyles`
 (Save as my default styles). Never text.
 
 ## Limits

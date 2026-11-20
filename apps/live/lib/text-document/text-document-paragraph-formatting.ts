@@ -109,3 +109,85 @@ export const setIndents = (formatting: TextFormatting, indents: Indents): Comman
     ...(indents.end !== null ? { indentEnd: indents.end } : {}),
     ...(indents.first !== null ? { indentFirst: indents.first } : {}),
   }));
+
+// Spacing and keep rules (text-and-paragraphs.md "Spacing and keep rules").
+
+export type LineSpacing = { readonly item: string; readonly label: string; readonly value: number };
+
+export const LINE_SPACINGS: readonly LineSpacing[] = [
+  { item: 'spacing-single', label: 'Single', value: 1 },
+  { item: 'spacing-115', label: '1.15', value: 1.15 },
+  { item: 'spacing-15', label: '1.5', value: 1.5 },
+  { item: 'spacing-double', label: 'Double', value: 2 },
+];
+
+/** What Add space before (or after) paragraph adds: 12 pt (default). */
+export const PARAGRAPH_SPACE_PT = 12;
+
+/** The multiple the paragraphs' lines are spaced by; null for a spacing in points or when they differ. */
+export function lineSpacingOf(state: EditorState, formatting: TextFormatting): number | null {
+  const height = sharedValue(state, formatting, 'lineHeight');
+  return height?.rule === 'multiple' ? height.value : null;
+}
+
+export const setLineSpacing = (formatting: TextFormatting, value: number): Command =>
+  setParagraphProps(formatting, () => ({ lineHeight: { rule: 'multiple', value } }));
+
+export type SpaceSide = 'spaceBefore' | 'spaceAfter';
+
+/** The space the paragraphs have before (or after) them, points; null when they differ. */
+export function spaceOf(state: EditorState, formatting: TextFormatting, side: SpaceSide) {
+  return sharedValue(state, formatting, side) ?? null;
+}
+
+/** Add space where every paragraph has none; else remove it from all. */
+export const toggleSpace =
+  (formatting: TextFormatting, side: SpaceSide): Command =>
+  (state, dispatch) =>
+    setParagraphProps(formatting, () => ({
+      [side]: spaceOf(state, formatting, side) === 0 ? PARAGRAPH_SPACE_PT : 0,
+    }))(state, dispatch);
+
+export type Spacing = {
+  /** A multiple, or null where the paragraphs differ (or space their lines in points). */
+  lineHeight: number | null;
+  before: number | null;
+  after: number | null;
+};
+
+export const spacingOf = (state: EditorState, formatting: TextFormatting): Spacing => ({
+  lineHeight: lineSpacingOf(state, formatting),
+  before: spaceOf(state, formatting, 'spaceBefore'),
+  after: spaceOf(state, formatting, 'spaceAfter'),
+});
+
+/** Sets the spacing given; one left out (null) keeps each paragraph's own. */
+export const setSpacing = (formatting: TextFormatting, spacing: Spacing): Command =>
+  setParagraphProps(formatting, () => ({
+    ...(spacing.lineHeight !== null
+      ? { lineHeight: { rule: 'multiple', value: spacing.lineHeight } as const }
+      : {}),
+    ...(spacing.before !== null ? { spaceBefore: spacing.before } : {}),
+    ...(spacing.after !== null ? { spaceAfter: spacing.after } : {}),
+  }));
+
+export type KeepKey = 'keepWithNext' | 'keepTogether' | 'widowControl';
+
+export const KEEP_RULES: readonly { readonly item: string; readonly key: KeepKey }[] = [
+  { item: 'keep-with-next', key: 'keepWithNext' },
+  { item: 'keep-lines-together', key: 'keepTogether' },
+  { item: 'prevent-single-lines', key: 'widowControl' },
+];
+
+/** Whether every paragraph the selection touches has the rule. */
+export const isKeepOn = (state: EditorState, formatting: TextFormatting, key: KeepKey): boolean =>
+  sharedValue(state, formatting, key) === true;
+
+/** On for all unless all have it, then off for all. */
+export const toggleKeep =
+  (formatting: TextFormatting, key: KeepKey): Command =>
+  (state, dispatch) =>
+    setParagraphProps(formatting, () => ({ [key]: !isKeepOn(state, formatting, key) }))(
+      state,
+      dispatch,
+    );

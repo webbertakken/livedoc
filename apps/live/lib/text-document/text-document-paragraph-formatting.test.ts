@@ -9,6 +9,17 @@ import {
   alignmentOf,
   indentsOf,
   INDENT_MAX_PT,
+  isKeepOn,
+  KEEP_RULES,
+  LINE_SPACINGS,
+  lineSpacingOf,
+  PARAGRAPH_SPACE_PT,
+  setLineSpacing,
+  setSpacing,
+  spaceOf,
+  spacingOf,
+  toggleKeep,
+  toggleSpace,
   INDENT_STEP_PT,
   setAlignment,
   setIndents,
@@ -116,5 +127,96 @@ describe('indentsOf and setIndents (Indentation options)', () => {
       (tr) => (changed = tr.docChanged),
     );
     expect(changed).toBe(false);
+  });
+});
+
+// text-and-paragraphs.md "Spacing and keep rules".
+describe('line spacing', () => {
+  it('sets a preset, reads it back, and reads none for a custom value or when the paragraphs differ', () => {
+    const state = stateOf([p('a'), p('b')], 1, 4);
+    expect(lineSpacingOf(state, formatting)).toBe(1.15);
+    const doubled = run(state, setLineSpacing(formatting, 2));
+    expect(propsOf(doubled)).toEqual([
+      { lineHeight: { rule: 'multiple', value: 2 } },
+      { lineHeight: { rule: 'multiple', value: 2 } },
+    ]);
+    expect(lineSpacingOf(doubled, formatting)).toBe(2);
+    expect(propsOf(run(doubled, setLineSpacing(formatting, 1.15)))).toEqual([null, null]);
+    const exact = stateOf([p('a', { props: { lineHeight: { rule: 'exact', pt: 14 } } })], 1);
+    expect(lineSpacingOf(exact, formatting)).toBeNull();
+    expect(
+      lineSpacingOf(
+        stateOf([p('a', { props: { lineHeight: { rule: 'multiple', value: 2 } } }), p('b')], 1, 4),
+        formatting,
+      ),
+    ).toBeNull();
+    expect(LINE_SPACINGS.map((s) => [s.label, s.value])).toEqual([
+      ['Single', 1],
+      ['1.15', 1.15],
+      ['1.5', 1.5],
+      ['Double', 2],
+    ]);
+  });
+});
+
+describe('add and remove space', () => {
+  it('adds 12 pt where the paragraphs have none, and removes it where they have some', () => {
+    let state = stateOf([p('a')], 1);
+    expect(spaceOf(state, formatting, 'spaceBefore')).toBe(0);
+    state = run(state, toggleSpace(formatting, 'spaceBefore'));
+    expect(propsOf(state)).toEqual([{ spaceBefore: PARAGRAPH_SPACE_PT }]);
+    expect(spaceOf(state, formatting, 'spaceBefore')).toBe(12);
+    state = run(state, toggleSpace(formatting, 'spaceBefore'));
+    expect(propsOf(state)).toEqual([null]);
+  });
+
+  it("removes a heading's space from its style as its own 0", () => {
+    const state = stateOf([p('H', { style: 'Heading_20_1' })], 1);
+    expect(spaceOf(state, formatting, 'spaceBefore')).toBe(20);
+    expect(propsOf(run(state, toggleSpace(formatting, 'spaceBefore')))).toEqual([
+      { spaceBefore: 0 },
+    ]);
+  });
+});
+
+describe('custom spacing', () => {
+  it('reads line spacing and space before and after, null where the paragraphs differ', () => {
+    const state = stateOf([p('a', { props: { spaceAfter: 6 } }), p('b')], 1, 4);
+    expect(spacingOf(state, formatting)).toEqual({ lineHeight: 1.15, before: 0, after: null });
+  });
+
+  it('sets what is given, leaving a null as each paragraph has it', () => {
+    const state = stateOf([p('a', { props: { spaceAfter: 6 } }), p('b')], 1, 4);
+    const after = run(state, setSpacing(formatting, { lineHeight: 1.5, before: 3, after: null }));
+    expect(propsOf(after)).toEqual([
+      { spaceAfter: 6, lineHeight: { rule: 'multiple', value: 1.5 }, spaceBefore: 3 },
+      { lineHeight: { rule: 'multiple', value: 1.5 }, spaceBefore: 3 },
+    ]);
+  });
+});
+
+describe('keep rules', () => {
+  it('turns a rule on for all unless all have it, then off for all', () => {
+    let state = stateOf([p('a'), p('b', { props: { keepTogether: true } })], 1, 4);
+    expect(isKeepOn(state, formatting, 'keepTogether')).toBe(false);
+    state = run(state, toggleKeep(formatting, 'keepTogether'));
+    expect(propsOf(state)).toEqual([{ keepTogether: true }, { keepTogether: true }]);
+    expect(isKeepOn(state, formatting, 'keepTogether')).toBe(true);
+    state = run(state, toggleKeep(formatting, 'keepTogether'));
+    expect(propsOf(state)).toEqual([null, null]);
+  });
+
+  it("reads a new document's prevent single lines, and a heading's keep with next, from their styles", () => {
+    const state = stateOf([p('H', { style: 'Heading_20_1' })], 1);
+    expect(isKeepOn(state, formatting, 'keepWithNext')).toBe(true);
+    expect(isKeepOn(state, formatting, 'widowControl')).toBe(true);
+    expect(propsOf(run(state, toggleKeep(formatting, 'widowControl')))).toEqual([
+      { widowControl: false },
+    ]);
+    expect(KEEP_RULES.map((k) => k.item)).toEqual([
+      'keep-with-next',
+      'keep-lines-together',
+      'prevent-single-lines',
+    ]);
   });
 });

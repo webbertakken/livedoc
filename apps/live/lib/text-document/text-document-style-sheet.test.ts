@@ -1,7 +1,12 @@
 // docs/specs/034-text-documents/text-and-paragraphs.md "Paragraph styles": a paragraph draws in its style.
 import { describe, expect, it } from 'vitest';
 import { TextDocument, type Style } from '@livedoc/text-documents';
-import { styleRule, textDocumentStyleSheet } from './text-document-style-sheet';
+import {
+  cssText,
+  paragraphDeclarations,
+  styleRule,
+  textDocumentStyleSheet,
+} from './text-document-style-sheet';
 
 const blank = TextDocument.blank({ format: 'odf' });
 
@@ -103,5 +108,22 @@ describe('textDocumentStyleSheet', () => {
       text: { bold: true },
     };
     expect(textDocumentStyleSheet([text], { paragraph: {}, text: {} })).not.toContain('Strong');
+  });
+});
+
+// text-and-paragraphs.md "Spacing and keep rules": the keep rules drawn as the print layout's break rules.
+describe('paragraphDeclarations, the keep rules', () => {
+  it('draws keep with next, keep lines together and prevent single lines', () => {
+    expect(
+      cssText(
+        paragraphDeclarations({ keepWithNext: true, keepTogether: true, widowControl: true }),
+      ),
+    ).toBe('break-after: avoid; break-inside: avoid; widows: 2; orphans: 2;');
+    expect(
+      cssText(
+        paragraphDeclarations({ keepWithNext: false, keepTogether: false, widowControl: false }),
+      ),
+    ).toBe('break-after: auto; break-inside: auto; widows: 1; orphans: 1;');
+    expect(cssText(paragraphDeclarations({}))).toBe('');
   });
 });
