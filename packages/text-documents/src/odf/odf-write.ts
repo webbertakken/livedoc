@@ -23,6 +23,7 @@ import { TextDocument, type OdfSource } from '../model/text-document';
 import { shortHash } from '../hash';
 import { WRITTEN_NS } from './odf-names';
 import { listStyleXml } from './odf-lists';
+import { withPageless } from './odf-settings';
 import { ABSOLUTE_TABS_SETTINGS, stopsWritten, type TabContext } from './odf-tabs';
 import { TabStops } from '../model/tab-stops';
 import { columnsXml, pageLayoutPropsXml, paragraphPropsXml, textPropsXml } from './odf-props';
@@ -427,11 +428,10 @@ function writeParts(document: TextDocument, generator: string): OdfWritten {
     w.ns,
   );
   // A new text document counts its tab positions from the text area's start, as the model does.
-  const settings = w.source
-    ? w.source.settings
-      ? w.kept(w.source.settings)
-      : ''
-    : ABSOLUTE_TABS_SETTINGS;
+  const settings = withPageless(
+    w.source ? (w.source.settings ? w.kept(w.source.settings) : '') : ABSOLUTE_TABS_SETTINGS,
+    document.pageless,
+  );
   const masters = `<office:master-styles>${w.masters.join('')}</office:master-styles>`;
   const body = `<office:body><office:text>\n${text}\n</office:text></office:body>`;
   const content = `${XML_DECLARATION}\n<office:document-content${root}>${faces}<office:automatic-styles>${w.automatic.xml()}</office:automatic-styles>${body}</office:document-content>\n`;

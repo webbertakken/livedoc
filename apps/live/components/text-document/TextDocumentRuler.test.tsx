@@ -23,7 +23,7 @@ afterEach(() => {
   view = null;
 });
 
-function mount(props: ParagraphProps | null, canEdit = true) {
+function mount(props: ParagraphProps | null, canEdit = true, pageless = false) {
   const doc = schema.node('doc', null, [
     schema.nodes.paragraph!.create({ props }, schema.text('Some writing')),
   ]);
@@ -36,6 +36,7 @@ function mount(props: ParagraphProps | null, canEdit = true) {
       view={view}
       readFormatting={() => formatting}
       setup={setup}
+      pageless={pageless}
       onSetup={onSetup}
       scale={1}
       canEdit={canEdit}
@@ -99,6 +100,14 @@ describe('TextDocumentRuler', () => {
         { position: 45, align: 'end' },
       ],
     });
+  });
+
+  // docs/specs/034-text-documents/page-layout.md "Pageless": the ruler spans the column, no margins to drag.
+  it('draws no margins pageless, keeping the indents', () => {
+    mount({ indentStart: 36 }, true, true);
+    expect(screen.queryByRole('slider', { name: 'Left margin' })).toBeNull();
+    expect(screen.queryByRole('slider', { name: 'Right margin' })).toBeNull();
+    expect(screen.getByRole('slider', { name: 'Left indent' })).toBeTruthy();
   });
 
   it('draws the markers for a Viewer without letting them move', () => {

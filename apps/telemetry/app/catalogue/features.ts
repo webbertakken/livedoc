@@ -1164,13 +1164,20 @@ export const TEXT_DOCUMENT_RULER = chart(
 );
 
 // A text document's page setup changed (docs/specs/034-text-documents/page-layout.md "Page setup"): margins dragged on
-// the ruler, File > Page setup's OK, Format > Page orientation's OK.
+// the ruler, File > Page setup's OK, Format > Page orientation's OK, pageless switched on or off.
 export const TEXT_DOCUMENT_PAGE_SETUP = chart(
   'Tab',
   'Changed',
   'Text Document Page Setup',
-  "A text document's margins dragged on the ruler, or its page setup or orientation changed by their dialogs.",
-  { types: ['TextDocumentMargins', 'TextDocumentPageSetup', 'TextDocumentPageOrientation'] },
+  "A text document's margins dragged on the ruler, its page setup or orientation changed by their dialogs, or it switched to pageless or back.",
+  {
+    types: [
+      'TextDocumentMargins',
+      'TextDocumentPageSetup',
+      'TextDocumentPageOrientation',
+      'TextDocumentPageless',
+    ],
+  },
 );
 
 // The ruler shown or hidden (docs/specs/034-text-documents/editing-surface.md "The ruler").

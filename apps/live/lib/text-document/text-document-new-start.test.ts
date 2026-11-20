@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PageSetup, StyleLooks, TextDocumentState } from '@livedoc/text-documents';
 import { saveDefaultStyles } from './text-document-default-styles';
 import { noteTextDocumentMade } from './text-document-made';
-import { saveDefaultPageSetup } from './text-document-page-defaults';
+import { saveDefaultPage } from './text-document-page-defaults';
 import { startInMakersDefaults } from './text-document-new-start';
 
 vi.mock('@/lib/preferences-sync', async (original) => ({
@@ -28,7 +28,7 @@ const opened = (tabId = 't1', canEdit = true) => {
 describe('startInMakersDefaults', () => {
   it("starts a document made here in its maker's default styles and page setup, once", () => {
     saveDefaultStyles({ normal: { text: { font: 'Georgia' } } }, null);
-    saveDefaultPageSetup(a5, null);
+    saveDefaultPage({ setup: a5, pageless: false }, null);
     noteTextDocumentMade('t1');
     const { doc, started } = opened();
     expect(started).toEqual({ styles: true, page: true });
@@ -41,7 +41,7 @@ describe('startInMakersDefaults', () => {
   });
 
   it('leaves a document not made here, or opened by a session that cannot edit', () => {
-    saveDefaultPageSetup(a5, null);
+    saveDefaultPage({ setup: a5, pageless: false }, null);
     expect(opened('elsewhere').started).toEqual({ styles: false, page: false });
     noteTextDocumentMade('t2');
     const { doc, started } = opened('t2', false);

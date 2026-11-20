@@ -3,7 +3,14 @@
 import { describe, expect, it } from 'vitest';
 import { PageSetup } from '@livedoc/text-documents';
 import { MIN_TEXT_SIDE_PT } from '@livedoc/text-documents';
-import { pageBox, setMargin, textWidthOf } from './text-document-page';
+import {
+  PAGELESS_TEXT_WIDTH_PT,
+  pageBox,
+  pagelessColumnPt,
+  pagelessSetup,
+  setMargin,
+  textWidthOf,
+} from './text-document-page';
 import { paperFill } from './text-document-paper';
 
 const letter = PageSetup.of('letter');
@@ -34,5 +41,24 @@ describe('the page colour', () => {
       '--page-colour': paperFill('#fff2cc'),
     });
     expect(pageBox(letter)).not.toHaveProperty('--page-colour');
+  });
+});
+
+describe('the page pageless', () => {
+  it('is a column 8 in wide, narrower where the room is less, never under an inch', () => {
+    expect(pagelessColumnPt(2000, 1)).toBe(PAGELESS_TEXT_WIDTH_PT);
+    // 600 px is 450 pt, less half an inch each side.
+    expect(pagelessColumnPt(600, 1)).toBe(378);
+    expect(pagelessColumnPt(600, 2)).toBe(153);
+    expect(pagelessColumnPt(150, 1)).toBe(MIN_TEXT_SIDE_PT);
+  });
+
+  it('draws the column with no side margins, keeping the colour', () => {
+    const coloured = { ...letter, pageColor: '#fff2cc' };
+    expect(pagelessSetup(coloured, 500)).toEqual({
+      ...coloured,
+      width: 500,
+      margins: { top: 36, bottom: 36, left: 0, right: 0 },
+    });
   });
 });

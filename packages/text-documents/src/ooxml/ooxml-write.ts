@@ -20,10 +20,10 @@ import { keptStillHolds, type TextProps } from '../model/props';
 import type { Section } from '../model/sections';
 import { Styles, type Style } from '../model/styles';
 import type { TabStop } from '../model/tab-stops';
-import { settingsXml } from './ooxml-tabs';
+import { settingsWithPageless, settingsXml } from './ooxml-settings';
 import { TextDocument, type OoxmlSource } from '../model/text-document';
 import { byId } from './ooxml-read';
-import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS } from './ooxml-names';
+import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD } from './ooxml-names';
 import {
   abstractNumXml,
   ordered,
@@ -36,8 +36,6 @@ const STYLE_ORDER =
   'name aliases basedOn next link autoRedefine hidden uiPriority semiHidden unhideWhenUsed qFormat locked personal personalCompose personalReply rsid pPr rPr tblPr trPr tcPr tblStylePr'.split(
     ' ',
   );
-
-const XML_HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
 
 const declarations = (ns: Readonly<Record<string, string>>) =>
   Object.entries(ns)
@@ -408,14 +406,28 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     });
     w.rels.id(RELATIONSHIP_TYPES.numbering, relativeTarget(w.mainPart, w.numberingPart));
   }
-  if (!source) {
+  // A new file's settings, or an arriving file's that held none, written whole; an arriving file's own kept as they
+  // came unless pageless changed (standard-mapping.md "Extensions").
+  const sourceSettings = source?.parts.find((p) => p.mediaType === OOXML_CONTENT_TYPES.settings);
+  const pageless = document.pageless === true;
+  if (!sourceSettings && (!source || pageless)) {
     parts.push({
       name: 'word/settings.xml',
       contentType: OOXML_CONTENT_TYPES.settings,
-      data: encode(`${XML_HEAD}${settingsXml(document.defaults.paragraph.tabInterval)}\n`),
+      data: encode(
+        `${XML_HEAD}${settingsXml(document.defaults.paragraph.tabInterval, pageless)}\n`,
+      ),
     });
-    w.rels.id(RELATIONSHIP_TYPES.settings, 'settings.xml');
+    w.rels.id(RELATIONSHIP_TYPES.settings, relativeTarget(w.mainPart, 'word/settings.xml'));
   }
+  const rewritten =
+    sourceSettings && settingsWithPageless(new TextDecoder().decode(sourceSettings.data), pageless);
+  if (sourceSettings && rewritten)
+    parts.push({
+      name: sourceSettings.name,
+      contentType: sourceSettings.mediaType,
+      data: encode(rewritten),
+    });
   const written = new Set(parts.map((p) => p.name));
   for (const part of source?.parts ?? [])
     if (!written.has(part.name))

@@ -12,7 +12,7 @@ import {
 
 vi.mock('@/hooks/ui/useDocumentColours', () => ({ useDocumentColours: () => [] }));
 
-function open(setup: Setup, unit: 'cm' | 'in' = 'in') {
+function open(setup: Setup, unit: 'cm' | 'in' = 'in', pageless = false) {
   const onApply = vi.fn();
   const onSaveDefault = vi.fn();
   const onClose = vi.fn();
@@ -20,6 +20,7 @@ function open(setup: Setup, unit: 'cm' | 'in' = 'in') {
     <TextDocumentPageSetupDialog
       open
       setup={setup}
+      pageless={pageless}
       unit={unit}
       onApply={onApply}
       onSaveDefault={onSaveDefault}
@@ -28,7 +29,8 @@ function open(setup: Setup, unit: 'cm' | 'in' = 'in') {
   );
   const margin = (side: string) =>
     screen.getByRole<HTMLInputElement>('textbox', { name: `${side} margin (${unit})` });
-  const paper = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Paper size' });
+  // None on the Pageless tab.
+  const paper = screen.queryByRole<HTMLSelectElement>('combobox', { name: 'Paper size' })!;
   const ok = screen.getByRole<HTMLButtonElement>('button', { name: 'OK' });
   return { onApply, onSaveDefault, onClose, margin, paper, ok };
 }
@@ -68,8 +70,11 @@ describe('TextDocumentPageSetupDialog', () => {
     fireEvent.click(ok);
     const a5 = PageSetup.withPaper(PageSetup.of('letter'), 'a5');
     expect(onApply).toHaveBeenCalledWith({
-      ...PageSetup.oriented(a5, 'landscape'),
-      margins: { top: 72, bottom: 72, left: 36, right: 72 },
+      setup: {
+        ...PageSetup.oriented(a5, 'landscape'),
+        margins: { top: 72, bottom: 72, left: 36, right: 72 },
+      },
+      pageless: false,
     });
   });
 
@@ -80,7 +85,7 @@ describe('TextDocumentPageSetupDialog', () => {
     };
     const { ok, onApply } = open(setup, 'cm');
     fireEvent.click(ok);
-    expect(onApply).toHaveBeenCalledWith(setup);
+    expect(onApply).toHaveBeenCalledWith({ setup: setup, pageless: false });
   });
 
   it('refuses margins that leave too little room for text, holding OK and Set as default', () => {
@@ -112,23 +117,29 @@ describe('TextDocumentPageSetupDialog', () => {
     fireEvent.click(screen.getByRole('radio', { name: 'Landscape' }));
     fireEvent.click(ok);
     expect(onApply).toHaveBeenCalledWith({
-      ...custom,
-      width: 600,
-      height: 400,
-      orientation: 'landscape',
+      setup: {
+        ...custom,
+        width: 600,
+        height: 400,
+        orientation: 'landscape',
+      },
+      pageless: false,
     });
   });
 
   it('keeps the page colour, and white as none', () => {
     const { ok, onApply } = open({ ...PageSetup.of('letter'), pageColor: '#fff2cc' });
     fireEvent.click(ok);
-    expect(onApply).toHaveBeenCalledWith({ ...PageSetup.of('letter'), pageColor: '#fff2cc' });
+    expect(onApply).toHaveBeenCalledWith({
+      setup: { ...PageSetup.of('letter'), pageColor: '#fff2cc' },
+      pageless: false,
+    });
   });
 
   it('sets as default without closing, the button and a status saying so until a field changes', () => {
     const { margin, onSaveDefault, onApply, onClose } = open(PageSetup.of('letter'));
     fireEvent.click(screen.getByRole('button', { name: 'Set as default' }));
-    expect(onSaveDefault).toHaveBeenCalledWith(PageSetup.of('letter'));
+    expect(onSaveDefault).toHaveBeenCalledWith({ setup: PageSetup.of('letter'), pageless: false });
     expect(onApply).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: SAVED_AS_DEFAULT })).toBeTruthy();
@@ -136,5 +147,46 @@ describe('TextDocumentPageSetupDialog', () => {
     fireEvent.change(margin('Top'), { target: { value: '0.5' } });
     expect(screen.getByRole('button', { name: 'Set as default' })).toBeTruthy();
     expect(screen.getByRole('status').textContent).toBe('');
+  });
+
+  it('opens on the Pageless tab for a pageless document, and OK keeps it pageless with its colour', () => {
+    const setup = { ...PageSetup.of('a4'), margins: { top: 72, bottom: 72, left: 30, right: 30 } };
+    const { onApply } = open(setup, 'in', true);
+    expect(screen.getByRole('tab', { name: 'Pageless' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(screen.queryByRole('combobox', { name: 'Paper size' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Background colour' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    expect(onApply).toHaveBeenCalledWith({ setup, pageless: true });
+  });
+
+  it('leaves the document in the format of the tab chosen, the Pages tab fields as they are on Pageless', () => {
+    const { margin, onApply } = open(PageSetup.of('letter'));
+    // A refused margin on the Pages tab does not hold OK on the Pageless tab, which leaves the margins as they are.
+    fireEvent.change(margin('Top'), { target: { value: '23' } });
+    fireEvent.click(screen.getByRole('tab', { name: 'Pageless' }));
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    expect(onApply).toHaveBeenCalledWith({ setup: PageSetup.of('letter'), pageless: true });
+  });
+
+  it('moves between the tabs with the arrow keys', () => {
+    open(PageSetup.of('letter'));
+    const pages = screen.getByRole('tab', { name: 'Pages' });
+    fireEvent.keyDown(pages, { key: 'ArrowRight' });
+    expect(screen.getByRole('tab', { name: 'Pageless' }).getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(screen.getByRole('tabpanel', { name: 'Pageless' })).toBeTruthy();
+  });
+
+  it('sets pageless as default from the Pageless tab, the saved state following the tab', () => {
+    const { onSaveDefault } = open(PageSetup.of('letter'));
+    fireEvent.click(screen.getByRole('tab', { name: 'Pageless' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Set as default' }));
+    expect(onSaveDefault).toHaveBeenCalledWith({ setup: PageSetup.of('letter'), pageless: true });
+    expect(screen.getByRole('button', { name: SAVED_AS_DEFAULT })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Pages' }));
+    expect(screen.getByRole('button', { name: 'Set as default' })).toBeTruthy();
   });
 });

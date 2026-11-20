@@ -5,7 +5,7 @@ import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { applyDefaultStylesToNew } from './text-document-default-styles';
 import { takeTextDocumentMade } from './text-document-made';
-import { applyDefaultPageSetupToNew } from './text-document-page-defaults';
+import { applyDefaultPageToNew } from './text-document-page-defaults';
 
 export function startInMakersDefaults(
   doc: Y.Doc,
@@ -14,6 +14,6 @@ export function startInMakersDefaults(
   if (!takeTextDocumentMade(tabId) || !canEdit) return { styles: false, page: false };
   return {
     styles: applyDefaultStylesToNew(doc, format),
-    page: applyDefaultPageSetupToNew(doc, format),
+    page: applyDefaultPageToNew(doc, format),
   };
 }

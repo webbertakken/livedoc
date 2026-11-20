@@ -91,7 +91,7 @@ What Google Docs does and neither standard has an element for is written in Live
 | -------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
 | Reactions, assignee on a comment | `livedoc:reactions`, `livedoc:assignee` on the comment                                              | The comment's text                                       |
 | Document tabs                    | `livedoc:tab-*` on a top-level ODF `text:section`, or a section break with `livedoc:tab-*` in OOXML | The tabs' writing one after another                      |
-| Pageless                         | `livedoc:pageless` and the text width in the document's settings                                    | Pages                                                    |
+| Pageless                         | ODF: config item `livedoc:pageless` (boolean) in a `livedoc:settings` set in `settings.xml`; OOXML: `<livedoc:pageless/>` in `w:settings` | Pages                                                    |
 | Drawings                         | `livedoc:drawing` beside the drawing's picture                                                      | The picture                                              |
 | Checklist without strikethrough  | `livedoc:strike-checked="false"` on its list levels (ODF level styles, OOXML `w:lvl`)               | A checklist struck through or not as that suite draws it |
 

@@ -1,6 +1,6 @@
 # Page layout
 
-**Status: partly built.** Page setup's Pages tab, page orientation and the page drawn at its setup are built; the
+**Status: partly built.** Page setup, page orientation, pageless and the page drawn at its setup are built; the
 rest is specified.
 
 Pages, sections, breaks, columns, headers and footers, page numbers and footnotes in a [text document](text-document.md).
@@ -72,6 +72,20 @@ Format > Switch to pageless format: the document has no pages, breaks, headers, 
 are kept, hidden, and come back when switched back); pictures may be wider than the text; wide tables scroll. View >
 Text width: narrow, medium, wide, full (per person). Printing and PDF of a pageless document lay it on pages with the
 pages' setup.
+
+- **Pageless is the document's**, shared by everyone on it, as the paper is: Format > **Switch to pageless format**
+  turns it on, and the same item reads **Switch to pages format** while it is on; one undo step either way. The tab
+  chosen in Page setup is the format OK leaves the document in (Google's), so Page setup is the other way to switch.
+- The **Pageless tab** holds **Background colour**: the page colour, the same value the Pages tab sets, so a colour
+  outlives a switch either way (default); OK there changes only the colour and the format, leaving what the Pages tab
+  holds as the document has it; **Set as default** keeps the person's default as pageless with that colour,
+  and a new document they make starts pageless.
+- **Drawn pageless**: no sheet and no grey ground; the background colour (or the paper's white or dark) fills the
+  document's whole area, and the writing is a centred column at the text width, 8 in (576 pt) wide at medium, never
+  wider than the window less 0.5 in each side (default: medium until View > Text width is built), with 0.5 in above
+  the first line (default). The page setup's margins and paper are kept, unused, for printing and for switching back.
+- **The ruler pageless** spans the column: indents and tab stops as on a page, no margins to drag.
+- In the file: [Extensions](standard-mapping.md#extensions); another suite shows the document on its pages.
 
 ## Laying out
 

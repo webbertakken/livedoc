@@ -2,9 +2,10 @@
 
 // Tools > Preferences (docs/specs/034-text-documents/tools.md "Preferences"): the typing aids on the General tab, the
 // substitutions on the Substitutions tab, as Google's dialog has them; nothing changes until OK.
-import { useId, useRef, useState, type KeyboardEvent } from 'react';
+import { useId, useState } from 'react';
 import { CloseIcon } from '@livedoc/ui';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
+import { OfficeDialogTabs, officeTabPanel } from '@/components/office/OfficeDialogTabs';
 import {
   isKeepable,
   REPLACE_MAX,
@@ -54,7 +55,6 @@ export function TextDocumentPreferencesDialog({
   const [replace, setReplace] = useState('');
   const [withText, setWithText] = useState('');
   const [problem, setProblem] = useState<string | null>(null);
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const setPair = (index: number, next: Partial<Substitution>) =>
     setDraft((d) => ({
@@ -71,13 +71,6 @@ export function TextDocumentPreferencesDialog({
     setWithText('');
     setProblem(null);
   };
-  const onTabKey = (event: KeyboardEvent, index: number) => {
-    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-    event.preventDefault();
-    const next = (index + (event.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length;
-    setTab(TABS[next]![0]);
-    tabs.current[next]?.focus();
-  };
 
   return (
     <OfficeDialog
@@ -90,38 +83,9 @@ export function TextDocumentPreferencesDialog({
           onSave({ ...draft, pairs: draft.pairs.filter((p) => isKeepable(p.replace, p.with)) }),
       }}
     >
-      <div
-        role="tablist"
-        aria-label="Preferences"
-        className="mb-4 flex border-b border-(--office-line)"
-      >
-        {TABS.map(([value, label], index) => (
-          <button
-            key={value}
-            ref={(el) => {
-              tabs.current[index] = el;
-            }}
-            type="button"
-            role="tab"
-            id={`${id}-${value}-tab`}
-            aria-selected={tab === value}
-            aria-controls={`${id}-${value}`}
-            tabIndex={tab === value ? 0 : -1}
-            onClick={() => setTab(value)}
-            onKeyDown={(e) => onTabKey(e, index)}
-            className="relative flex-1 px-4 py-2 text-sm font-medium text-(--office-muted) outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-selected:text-(--office-primary) aria-selected:after:absolute aria-selected:after:inset-x-4 aria-selected:after:bottom-0 aria-selected:after:h-[3px] aria-selected:after:rounded-t aria-selected:after:bg-(--office-primary)"
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <OfficeDialogTabs id={id} label="Preferences" tabs={TABS} value={tab} onChange={setTab} />
       {tab === 'general' ? (
-        <div
-          role="tabpanel"
-          id={`${id}-general`}
-          aria-labelledby={`${id}-general-tab`}
-          className="flex flex-col gap-3"
-        >
+        <div {...officeTabPanel(id, 'general')} className="flex flex-col gap-3">
           {GENERAL.map(([key, label]) => (
             <label key={key} className="flex items-center gap-3 text-sm">
               <input
@@ -135,12 +99,7 @@ export function TextDocumentPreferencesDialog({
           ))}
         </div>
       ) : (
-        <div
-          role="tabpanel"
-          id={`${id}-substitutions`}
-          aria-labelledby={`${id}-substitutions-tab`}
-          className="flex min-h-0 flex-col gap-3"
-        >
+        <div {...officeTabPanel(id, 'substitutions')} className="flex min-h-0 flex-col gap-3">
           <label className="flex items-center gap-3 text-sm">
             <input
               type="checkbox"

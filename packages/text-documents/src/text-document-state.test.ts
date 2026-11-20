@@ -152,3 +152,30 @@ describe('TextDocumentState section', () => {
     expect(TextDocumentState.metaType(doc).get('section')).toEqual(next);
   });
 });
+
+// docs/specs/034-text-documents/page-layout.md "Pageless": the document's, in the live state and its model.
+describe('TextDocumentState pageless', () => {
+  it('reads pages for a new document, turns pageless on with its origin and off again', () => {
+    const doc = TextDocumentState.load();
+    expect(TextDocumentState.pageless(doc)).toBe(false);
+    expect(TextDocumentState.document(doc, 'odf').pageless).toBeUndefined();
+    const origins: unknown[] = [];
+    doc.on('afterTransaction', (tr) => origins.push(tr.origin));
+    const origin = Symbol('page');
+    TextDocumentState.setPageless(doc, true, origin);
+    expect(TextDocumentState.pageless(doc)).toBe(true);
+    expect(TextDocumentState.document(doc, 'odf').pageless).toBe(true);
+    expect(origins[0]).toBe(origin);
+    TextDocumentState.setPageless(doc, false);
+    expect(TextDocumentState.metaType(doc).has('pageless')).toBe(false);
+  });
+
+  it('writes a pageless model into the live state, and a pages one without it', () => {
+    const blank = TextDocumentState.document(TextDocumentState.load(), 'odf');
+    const pageless = { ...blank, pageless: true as const };
+    const stateOf = (document: typeof blank) =>
+      TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+    expect(TextDocumentState.pageless(stateOf(pageless))).toBe(true);
+    expect(TextDocumentState.pageless(stateOf(blank))).toBe(false);
+  });
+});

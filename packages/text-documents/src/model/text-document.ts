@@ -70,6 +70,8 @@ export type TextDocument = {
   readonly lists: Readonly<Record<string, ListDefinition>>;
   /** The first section's setup; later sections start at section breaks in the body. */
   readonly section: Section;
+  /** Shown as one continuous column, no pages (page-layout.md "Pageless"); absent is pages. */
+  readonly pageless?: true;
   readonly body: readonly Block[];
   readonly source?: OdfSource | OoxmlSource;
 };

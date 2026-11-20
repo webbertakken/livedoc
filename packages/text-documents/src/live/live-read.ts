@@ -158,6 +158,7 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
     styles,
     lists: Object.fromEntries(lists.entries()) as Record<string, ListDefinition>,
     section: (meta.get('section') as Section | undefined) ?? blank.section,
+    pageless: meta.get('pageless') === true ? true : undefined,
     body,
     source,
   });

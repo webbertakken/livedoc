@@ -303,7 +303,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('headers-and-footers-options', 'Headers & footers', 'edit'),
       item('page-numbers-options', 'Page numbers', 'edit'),
       item('page-orientation', 'Page orientation', 'edit', BUILT),
-      item('switch-to-pageless', 'Switch to Pageless format', 'edit'),
+      item('switch-to-pageless', 'Switch to Pageless format', 'edit', BUILT),
       SEPARATOR,
       item('table-properties', 'Table', 'edit'),
       item('image-options', 'Image', 'edit'),
