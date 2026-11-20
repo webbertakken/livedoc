@@ -1,7 +1,6 @@
 # Text and paragraphs
 
-**Status: partly built.** Text formatting is built (the font from the core set; More fonts is specified); the rest
-is specified.
+**Status: partly built.** Text formatting is built (fonts with More fonts); the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).

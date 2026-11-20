@@ -27,6 +27,7 @@ import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
+import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
 import {
   TEXT_DOCUMENT_LIMIT_NOTICES,
   textDocumentLimitPlugin,
@@ -285,6 +286,8 @@ export function TextDocumentSurface({
 
   // Format > Text and the toolbar's text controls (text-and-paragraphs.md "Text formatting").
   const formatting = useTextDocumentFormatting(editorView, liveDoc, format, writes);
+  // A family from Google Fonts that the text names loads from there (fonts.md "Substitution").
+  useGoogleDocumentFonts(editorView, liveDoc, format, changes.subscribe);
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({

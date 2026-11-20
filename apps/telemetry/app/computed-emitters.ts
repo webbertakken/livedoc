@@ -488,6 +488,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
       ...['Size', 'Font', 'Lowercase', 'Uppercase', 'TitleCase'],
     ].map((name) => `TextDocumentFormat${name}`),
   },
+  // The Fonts dialog of an office kind opened from its font menu, and My fonts changed by its OK
+  // (docs/specs/004-interface-design/fonts.md "More fonts").
+  'apps/live/components/office/OfficeFontMenu.tsx UI·Opened': { values: ['TextDocumentMoreFonts'] },
+  'apps/live/components/office/OfficeFontMenu.tsx UI·Changed': { values: ['TextDocumentMyFonts'] },
   // An office kind's context menu opened (docs/specs/004-interface-design/office-shell.md "Context menus").
   'apps/live/components/office/useOfficeContextMenu.ts UI·Opened': {
     values: ['TextDocumentContextMenu'],

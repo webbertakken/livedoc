@@ -2,7 +2,7 @@
 
 // One open menu of the office shell (docs/specs/004-interface-design/office-shell.md "Menu bar"): a command menu on
 // the shared keyboard model (useMenu), drawn from the kind's catalogue. A row shows its check, label, shortcut and ▸;
-// a `comingSoon` row is dimmed and inert, with "Coming soon" in the shortcut's place.
+// a `comingSoon` row is dimmed and inert, with "Coming soon" in the shortcut's place, and a row's note stands there too.
 import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
 import {
   CheckIcon,
@@ -64,7 +64,7 @@ function ItemRow({
       tabIndex={-1}
       aria-disabled={inert || undefined}
       aria-checked={item.checkable ? action?.checked === true : undefined}
-      aria-describedby={soon ? soonId : undefined}
+      aria-describedby={soon || item.note ? soonId : undefined}
       aria-keyshortcuts={shortcut && !soon ? shortcut.aria : undefined}
       data-office-item={item.id}
       className={`${ROW} ${inert ? 'cursor-default opacity-50' : ''}`}
@@ -88,6 +88,14 @@ function ItemRow({
           className="whitespace-nowrap text-xs text-(--office-muted)"
         >
           Coming soon
+        </span>
+      ) : item.note ? (
+        <span
+          id={soonId}
+          aria-hidden="true"
+          className="whitespace-nowrap text-xs text-(--office-muted)"
+        >
+          {item.note}
         </span>
       ) : shortcut ? (
         <span aria-hidden="true" className="whitespace-nowrap text-(--office-muted)">

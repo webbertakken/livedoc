@@ -104,7 +104,7 @@ Left to right, as Google has it, with a divider between groups:
 | History   | Undo, Redo, Print, Spelling and grammar check, Paint format                                                                                                      |
 | Zoom      | Zoom menu: Fit, 50%, 75%, 90%, 100%, 125%, 150%, 200%; typed values from 50 to 200                                                                               |
 | Style     | Styles menu (Normal text, Title, Subtitle, Heading 1 to 6, Options)                                                                                              |
-| Font      | Font menu (the catalogue, More fonts, recent), the size field with − and + (1 to 400 pt)                                                                         |
+| Font      | Font menu (More fonts, recent, My fonts), the size field with − and + (1 to 400 pt)                                                                              |
 | Text      | Bold, Italic, Underline, Text colour, Highlight colour                                                                                                           |
 | Insert    | Insert link, Add comment, Insert image (menu)                                                                                                                    |
 | Paragraph | Align (menu), Line and paragraph spacing (menu), Checklist, Bulleted list, Numbered list (each a toggle with a menu of styles), Decrease indent, Increase indent |

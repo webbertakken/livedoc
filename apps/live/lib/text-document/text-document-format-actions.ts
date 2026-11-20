@@ -104,6 +104,7 @@ export function textDocumentFormatActions(
   const fontFamily: OfficeFontFamily = {
     read: () => (view.isDestroyed ? null : textFontOf(view.state, readFormatting())),
     set: (family) => run('font', (f) => setTextFont(f, family)),
+    telemetryKind: 'TextDocument',
   };
   return { actions, fontSize, fontFamily };
 }
