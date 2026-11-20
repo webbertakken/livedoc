@@ -98,9 +98,14 @@ test('More fonts adds a family from Google Fonts to the font menu', async ({
     'aria-selected',
     'true',
   );
+  // A row's preview is asked for once the list rests with it in view (PREVIEW_REST_MS): wait for Rubik's before the
+  // search moves on, or the next search takes it out of view first.
+  const previewed = (family: string) =>
+    asked.some((url) => url.includes(`family=${family}`) && url.includes('text='));
   for (const family of ['Rubik', 'Bungee']) {
     await dialog.getByRole('searchbox', { name: 'Search fonts' }).fill(family);
     await dialog.getByRole('option', { name: family, exact: true }).click();
+    if (family === 'Rubik') await expect.poll(() => previewed('Rubik')).toBe(true);
   }
   await expect(
     dialog
@@ -110,8 +115,6 @@ test('More fonts adds a family from Google Fonts to the font menu', async ({
   ).toBeVisible();
   await dialog.getByRole('button', { name: 'OK' }).click();
   await expect(dialog).toBeHidden();
-  // Their previews asked for their names' letters only.
-  expect(asked.some((url) => url.includes('family=Rubik') && url.includes('text='))).toBe(true);
 
   // Rubik from the menu, over the selection; Bungee marked as it could not load.
   await page.keyboard.press('ControlOrMeta+a');
