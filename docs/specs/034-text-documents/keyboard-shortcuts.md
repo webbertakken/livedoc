@@ -205,29 +205,29 @@ The Accessibility menu shows only while screen reader support is on.
 
 ## Document navigation
 
-| Action                                    | PC                            | Mac               | ChromeOS                      | Status    |
-| ----------------------------------------- | ----------------------------- | ----------------- | ----------------------------- | --------- |
-| Show outline                              | `Ctrl+Alt+A, H`               | `Ctrl+⌘+A, H`     | `Ctrl+Alt+A, H`               | specified |
-| Move to next heading                      | `Ctrl+Alt+N, H`               | `Ctrl+⌘+N, H`     | `Ctrl+Alt+N, H`               | specified |
-| Move to previous heading                  | `Ctrl+Alt+P, H`               | `Ctrl+⌘+P, H`     | `Ctrl+Alt+P, H`               | specified |
-| Move to next heading [1-6]                | `Ctrl+Alt+N, [1-6]`           | `Ctrl+⌘+N, [1-6]` | `Ctrl+Alt+N, [1-6]`           | specified |
-| Move to previous heading [1-6]            | `Ctrl+Alt+P, [1-6]`           | `Ctrl+⌘+P, [1-6]` | `Ctrl+Alt+P, [1-6]`           | specified |
-| Move to next graphic                      | `Ctrl+Alt+N, G`               | `Ctrl+⌘+N, G`     | `Ctrl+Alt+N, G`               | specified |
-| Move to previous graphic                  | `Ctrl+Alt+P, G`               | `Ctrl+⌘+P, G`     | `Ctrl+Alt+P, G`               | specified |
-| Move to next list                         | `Ctrl+Alt+N, O`               | `Ctrl+⌘+N, O`     | `Ctrl+Alt+N, O`               | specified |
-| Move to previous list                     | `Ctrl+Alt+P, O`               | `Ctrl+⌘+P, O`     | `Ctrl+Alt+P, O`               | specified |
-| Move to next item in the current list     | `Ctrl+Alt+N, I`               | `Ctrl+⌘+N, I`     | `Ctrl+Alt+N, I`               | specified |
-| Move to previous item in the current list | `Ctrl+Alt+P, I`               | `Ctrl+⌘+P, I`     | `Ctrl+Alt+P, I`               | specified |
-| Move to next link                         | `Ctrl+Alt+N, L`               | `Ctrl+⌘+N, L`     | `Ctrl+Alt+N, L`               | specified |
-| Move to previous link                     | `Ctrl+Alt+P, L`               | `Ctrl+⌘+P, L`     | `Ctrl+Alt+P, L`               | specified |
-| Move to next bookmark                     | `Ctrl+Alt+N, B`               | `Ctrl+⌘+N, B`     | `Ctrl+Alt+N, B`               | specified |
-| Move to previous bookmark                 | `Ctrl+Alt+P, B`               | `Ctrl+⌘+P, B`     | `Ctrl+Alt+P, B`               | specified |
-| Move to next formatting change            | `Ctrl+Alt+N, W`               | `Ctrl+⌘+N, W`     | `Ctrl+Alt+N, W`               | specified |
-| Move to previous formatting change        | `Ctrl+Alt+P, W`               | `Ctrl+⌘+P, W`     | `Ctrl+Alt+P, W`               | specified |
-| Move to next edit                         | `Ctrl+Alt+N, R or Ctrl+Alt+K` | `Ctrl+⌘+N, R`     | `Ctrl+Alt+N, R or Ctrl+Alt+K` | specified |
-| Move to previous edit                     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | `Ctrl+⌘+P, R`     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | specified |
-| Move to next tab                          | `Ctrl+Shift+PgDn`             | —                 | —                             | specified |
-| Move to previous tab                      | `Ctrl+Shift+PgUp`             | —                 | —                             | specified |
+| Action                                    | PC                            | Mac               | ChromeOS                      | Status                                 |
+| ----------------------------------------- | ----------------------------- | ----------------- | ----------------------------- | -------------------------------------- |
+| Show outline                              | `Ctrl+Alt+A, H`               | `Ctrl+⌘+A, H`     | `Ctrl+Alt+A, H`               | built (`TextDocumentOutline.test.tsx`) |
+| Move to next heading                      | `Ctrl+Alt+N, H`               | `Ctrl+⌘+N, H`     | `Ctrl+Alt+N, H`               | specified                              |
+| Move to previous heading                  | `Ctrl+Alt+P, H`               | `Ctrl+⌘+P, H`     | `Ctrl+Alt+P, H`               | specified                              |
+| Move to next heading [1-6]                | `Ctrl+Alt+N, [1-6]`           | `Ctrl+⌘+N, [1-6]` | `Ctrl+Alt+N, [1-6]`           | specified                              |
+| Move to previous heading [1-6]            | `Ctrl+Alt+P, [1-6]`           | `Ctrl+⌘+P, [1-6]` | `Ctrl+Alt+P, [1-6]`           | specified                              |
+| Move to next graphic                      | `Ctrl+Alt+N, G`               | `Ctrl+⌘+N, G`     | `Ctrl+Alt+N, G`               | specified                              |
+| Move to previous graphic                  | `Ctrl+Alt+P, G`               | `Ctrl+⌘+P, G`     | `Ctrl+Alt+P, G`               | specified                              |
+| Move to next list                         | `Ctrl+Alt+N, O`               | `Ctrl+⌘+N, O`     | `Ctrl+Alt+N, O`               | specified                              |
+| Move to previous list                     | `Ctrl+Alt+P, O`               | `Ctrl+⌘+P, O`     | `Ctrl+Alt+P, O`               | specified                              |
+| Move to next item in the current list     | `Ctrl+Alt+N, I`               | `Ctrl+⌘+N, I`     | `Ctrl+Alt+N, I`               | specified                              |
+| Move to previous item in the current list | `Ctrl+Alt+P, I`               | `Ctrl+⌘+P, I`     | `Ctrl+Alt+P, I`               | specified                              |
+| Move to next link                         | `Ctrl+Alt+N, L`               | `Ctrl+⌘+N, L`     | `Ctrl+Alt+N, L`               | specified                              |
+| Move to previous link                     | `Ctrl+Alt+P, L`               | `Ctrl+⌘+P, L`     | `Ctrl+Alt+P, L`               | specified                              |
+| Move to next bookmark                     | `Ctrl+Alt+N, B`               | `Ctrl+⌘+N, B`     | `Ctrl+Alt+N, B`               | specified                              |
+| Move to previous bookmark                 | `Ctrl+Alt+P, B`               | `Ctrl+⌘+P, B`     | `Ctrl+Alt+P, B`               | specified                              |
+| Move to next formatting change            | `Ctrl+Alt+N, W`               | `Ctrl+⌘+N, W`     | `Ctrl+Alt+N, W`               | specified                              |
+| Move to previous formatting change        | `Ctrl+Alt+P, W`               | `Ctrl+⌘+P, W`     | `Ctrl+Alt+P, W`               | specified                              |
+| Move to next edit                         | `Ctrl+Alt+N, R or Ctrl+Alt+K` | `Ctrl+⌘+N, R`     | `Ctrl+Alt+N, R or Ctrl+Alt+K` | specified                              |
+| Move to previous edit                     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | `Ctrl+⌘+P, R`     | `Ctrl+Alt+P, R or Ctrl+Alt+J` | specified                              |
+| Move to next tab                          | `Ctrl+Shift+PgDn`             | —                 | —                             | specified                              |
+| Move to previous tab                      | `Ctrl+Shift+PgUp`             | —                 | —                             | specified                              |
 
 ## Table navigation
 

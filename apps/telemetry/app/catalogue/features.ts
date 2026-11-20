@@ -1298,6 +1298,13 @@ export const TEXT_DOCUMENT_MENUS_OPENED = opened(
   (t) => (t ?? '').startsWith('TextDocumentMenu'),
 );
 
+// A text document's side panel opened (docs/specs/004-interface-design/office-shell.md "Side panels"): the outline.
+export const TEXT_DOCUMENT_PANELS_OPENED = opened(
+  'Text Document Panels',
+  'A side panel of a text document opened from its menu or shortcut: the outline.',
+  (t) => (t ?? '').startsWith('TextDocumentPanel'),
+);
+
 export const OTHER_OPENED = chart(
   'UI',
   'Opened',
@@ -1320,6 +1327,7 @@ export const PANELS_OPENED: MetricStack = {
     MIND_OUTLINE_OPENED,
     ACTION_SIGN_IN_NUDGE,
     TEXT_DOCUMENT_MENUS_OPENED,
+    TEXT_DOCUMENT_PANELS_OPENED,
     OTHER_OPENED,
   ],
   seeAlso: { section: 'editing', label: 'See Each Dialog in Features › Editing' },

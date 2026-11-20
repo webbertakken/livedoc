@@ -12,6 +12,7 @@ import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
 import { textDocumentMenus } from './text-document-menus';
+import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
 import { textDocumentUndoPlugins } from './text-document-undo';
@@ -31,6 +32,8 @@ describe('the text document menus', () => {
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
+        // The panels' items (useOfficePanels), bound by the surface.
+        ...TEXT_DOCUMENT_PANELS.map((p) => p.item),
       ];
       expect(
         catalogueFaults(textDocumentMenus(format), {

@@ -37,6 +37,23 @@ test('a Word file opens with its formatting and leaves as the same .docx', async
   await expect(bold).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('word-file-open.png') });
 
+  // Its headings in the outline (links-and-navigation.md "The outline"): View > Show outline opens the left panel,
+  // a press takes the caret there, and Escape closes it, giving the writing the keyboard back.
+  await page
+    .getByRole('menubar', { name: 'Menu bar' })
+    .getByRole('menuitem', { name: 'View' })
+    .click();
+  await page.getByRole('menuitemcheckbox', { name: /^Show outline/ }).click();
+  const outline = page.getByRole('complementary', { name: 'Outline' });
+  await expect(outline.getByRole('button', { name: 'Heading one' })).toBeFocused();
+  await page.screenshot({ path: test.info().outputPath('outline.png') });
+  await outline.getByRole('button', { name: 'Heading one' }).click();
+  await expect(body).toBeFocused();
+  await outline.getByRole('button', { name: 'Heading one' }).focus();
+  await page.keyboard.press('Escape');
+  await expect(outline).toHaveCount(0);
+  await expect(body).toBeFocused();
+
   // Downloaded as the format it is held in: the same model, read by LibreOffice too.
   const downloadItem = await officeMenuItem(page, ['File', 'Download', 'Microsoft Word (.docx)']);
   const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);

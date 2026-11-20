@@ -3,8 +3,9 @@
 // layout: a `paragraph` element holding text). The room, the editor, the api and agents read and write it here.
 import * as Y from 'yjs';
 import type { Body, Paragraph } from './body';
+import type { Style } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
-import { readLiveDocument } from './live/live-read';
+import { readLiveDocument, readLiveStyles } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
 import { writeLiveDocument } from './live/live-write';
 
@@ -131,6 +132,8 @@ export const TextDocumentState = {
   encode: (doc: Y.Doc): Uint8Array => Y.encodeStateAsUpdate(doc),
   /** The live state as the model, in the tab's format (live-editing-and-storage.md "The layout"). */
   document: (doc: Y.Doc, format: TextDocumentFormat): TextDocument => readLiveDocument(doc, format),
+  /** The live state's styles alone, cheap to read again as the writing changes (links-and-navigation.md). */
+  styles: (doc: Y.Doc, format: TextDocumentFormat): readonly Style[] => readLiveStyles(doc, format),
   /** A state holding exactly this model, as one update to store beside the seed. */
   fromDocument: (document: TextDocument): Uint8Array => {
     const doc = TextDocumentState.load();

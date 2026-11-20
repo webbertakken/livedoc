@@ -34,6 +34,9 @@ delete, undo, label edit via Space) that already work on a selection.
   is skipped. It works from anywhere on the page but a modal dialog (whose focus trap keeps it) and with focus in a
   text field, where F6 still moves on: typing never uses it. Each region is marked `data-region` with its name, and
   the tab order inside a region is unchanged. (`hooks/ui/useRegionCycle.ts`.)
+- A kind outside the canvas joins the same cycle with the [office shell](office-shell.md#behaviour)'s parts, in
+  screen order: **Header** (the title row), **Menu bar**, **Toolbar**, **Left panel**, **Document**, **Right panel**,
+  then **Tabs**. A menu bar or toolbar lands on its own tab stop, the one its arrow keys last left.
 - Traversal is **selection**: the existing selection ring is the focus
   indicator (one concept, not two). Works in read-only views (it's
   navigation); the guarded verbs (nudge / delete / …) stay edit-only as

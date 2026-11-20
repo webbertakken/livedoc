@@ -1024,7 +1024,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+A, H',
     'Ctrl+⌘+A, H',
     'Ctrl+Alt+A, H',
-    'specified',
+    'built',
   ),
   row(
     'move-to-next-heading',
