@@ -18,7 +18,6 @@ import {
   type Sheet,
   type Workbook,
 } from '@livedoc/sheets';
-import { cardSourceOf } from '@livedoc/items';
 import { templateChartElements } from '@livedoc/templates/template-sheets';
 import { chartsInSheet, type ShapeElement } from '@livedoc/document';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
@@ -222,7 +221,11 @@ export function useSheetModel(
   const usesCards = useMemo(() => workbook.usesCards(), [workbook, version]); // oxlint-disable-line react/exhaustive-deps
   useEffect(() => {
     if (!usesCards || !items || !types) return;
-    store.setCards(cardSourceOf(items.values(), types, { statusNames, version: Date.now() }));
+    store.setCards({
+      items: [...items.values()],
+      types: [...types],
+      ...(statusNames ? { statusNames } : {}),
+    });
   }, [usesCards, items, types, statusNames, store]);
 
   // Tell the main bundle whether this sheet holds a card table (Plan's strip shows for one).

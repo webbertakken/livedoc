@@ -111,6 +111,14 @@ beside them; a read of one cell is an edge on two linked lists, a read of a rang
 its place in the lookup table). Most of the engine's (128 of 147) are typed columns grown by doubling, so a sheet
 whose cells just pass a power of two holds up to twice what it uses (inferred).
 
+A long chain worked out again holds the page up for no longer than a frame or two, as the engine runs in a Web
+Worker: 10,000 links each summing 400 cells, changed at its head, measured as the longest main-thread task from the
+change until the last link's value arrives (`apps/live/e2e/spreadsheet-live.spec.ts`, held under 250 ms):
+
+| Measure (Chromium, local stack, 2026-11-20)  | The engine on the page | The engine in its Worker |
+| -------------------------------------------- | ---------------------- | ------------------------ |
+| Longest main-thread task while recalculating | 640 ms                 | 55 ms                    |
+
 ## Rules
 
 - A spreadsheet costs nothing to every other document: its code and engine load on first open.

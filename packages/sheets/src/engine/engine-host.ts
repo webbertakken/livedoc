@@ -1,6 +1,7 @@
 // The Web Worker's side (docs/specs/029-sheets/formulas.md "Recalculation"): the only engine in the browser. It takes
 // in the page's sheets and changes, tells the page which cells wait, and works them out in parts, sending each part's
 // values. Pure and synchronous, so the Worker file only wires it to its messages and Node tests drive it directly.
+import type { CardSource } from '../cards';
 import { layoutIndex } from '../layout';
 import { cellKey, type Sheet } from '../sheet';
 import { sheetFromJson } from '../sheet-json';
@@ -52,6 +53,13 @@ export class EngineHost {
       else if (msg.t === 'iteration') wb.setIteration(msg.iteration);
       else wb.tick();
     }
+    this.collect();
+  }
+
+  /** Plan cards changed (built from the page's items where the host runs): the formulas reading them wait. */
+  setCards(cards: CardSource | null): void {
+    if (!this.wb) return;
+    this.wb.setCards(cards);
     this.collect();
   }
 

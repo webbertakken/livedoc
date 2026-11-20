@@ -19,6 +19,7 @@ function joined(sheets: Sheet[]) {
   const wire: Wire = { toHost: [], toPage: [] };
   const host = new EngineHost((out) => wire.toPage.push(out));
   const port = new EnginePort({ sheets, locale: 'en-GB', send: (m) => wire.toHost.push(m) });
+  port.start();
   // Deliver what each side sent: the page's messages first, then the Worker's answers part by part.
   const deliver = (parts = Infinity) => {
     for (const m of wire.toHost.splice(0)) host.receive(m);
@@ -206,5 +207,25 @@ describe('the Worker’s engine at its edges', () => {
   it('says only a tracking engine can tell what it forgot', () => {
     const wb = new Workbook({ sheets: makeSheets({ S: { A1: '1' } }), locale: 'en-GB' });
     expect(() => wb.takeForgotten()).toThrow('trackForgotten');
+  });
+});
+
+describe('Plan cards in the Worker', () => {
+  it('works the card formulas out again when the cards change', () => {
+    const { deliver, port, host, wire } = joined(makeSheets({ S: { A1: '=CARDCOUNT()' } }));
+    deliver();
+    expect(port.copy.value(port.copy.sheetList()[0]!.id, 0, 0)).toMatchObject({
+      e: expect.any(String),
+    });
+    host.setCards({
+      version: 1,
+      cards: () => [{ key: 1 }, { key: 2 }],
+      fieldOf: () => undefined,
+      knowsField: () => true,
+    });
+    while (host.work(Infinity));
+    for (const out of wire.toPage.splice(0)) port.receive(out);
+    expect(port.copy.value(port.copy.sheetList()[0]!.id, 0, 0)).toBe(2);
+    new EngineHost(() => undefined).setCards(null);
   });
 });

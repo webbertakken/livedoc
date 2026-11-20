@@ -1,7 +1,6 @@
 // The page's side (docs/specs/029-sheets/formulas.md "Recalculation"): its copy of the Worker's values, a Workbook
 // that never works a formula out, kept current from the Worker's answers; and the messages that tell the Worker of
 // each change. Values worked out before a sheet's rows or columns last moved are dropped: their positions are old.
-import type { CardSource } from '../cards';
 import type { Sheet } from '../sheet';
 import { cellToJson, sheetToJson } from '../sheet-json';
 import { SheetLimits } from '../sheet-limits';
@@ -14,7 +13,6 @@ type PortOptions = {
   locale: string;
   limits?: SheetLimits;
   iteration?: Iteration;
-  cards?: CardSource | null;
   send: (msg: EngineIn) => void;
 };
 
@@ -35,18 +33,22 @@ export class EnginePort {
       locale: opts.locale,
       limits,
       iteration,
-      cards: opts.cards ?? null,
       values: 'elsewhere',
     });
+  }
+
+  /** Send the Worker its sheets: once, when the page can hear its answers. */
+  start(): void {
     const rev = ++this.rev;
-    for (const s of opts.sheets) this.placed.set(s.id, rev);
+    const sheets = this.copy.sheetList();
+    for (const s of sheets) this.placed.set(s.id, rev);
     this.send({
       t: 'load',
       rev,
-      sheets: opts.sheets.map(sheetToJson),
-      locale: opts.locale,
-      limits: limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
-      iteration,
+      sheets: sheets.map(sheetToJson),
+      locale: this.copy.locale,
+      limits: this.copy.limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
+      iteration: this.copy.iterationSetting(),
     });
   }
 

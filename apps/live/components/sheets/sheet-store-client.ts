@@ -16,6 +16,7 @@ import {
   type Iteration,
   type WorkbookRecalc,
   Workbook,
+  EnginePort,
   applyLayoutChange,
   applySheetWrite,
   cellKey,
@@ -35,7 +36,6 @@ import {
   uniqueSheetTitle,
   validateWrite,
   writeForRules,
-  type CardSource,
   type Sheet,
   type SheetJson,
   type SheetLayout,
@@ -44,6 +44,8 @@ import {
   type SheetWrite,
   type WriteCheck,
 } from '@livedoc/sheets';
+import { engineLink, type EngineLink } from './sheet-engine-link';
+import type { CardData } from './sheet-engine-hosts';
 import { VolatileTicker, volatileTickMs } from './volatile-ticker';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
@@ -104,6 +106,8 @@ type SheetStoreDeps = {
   wait?: (ms: number) => Promise<void>;
   // When the writes made in one moment go, merged (sheet-send-batch.ts): the next task; injected in tests.
   later?: (go: () => void) => void;
+  // Where formulas are worked out (sheet-engine-link.ts): a Web Worker, or in place without one; injected in tests.
+  engine?: () => EngineLink;
 };
 
 type Pending = { wid: string; write: SheetWrite };
@@ -181,7 +185,10 @@ export class SheetStore {
   private readonly wait: (ms: number) => Promise<void>;
   private readonly entries = new Map<string, Entry>();
   private readonly tabStatus = new Map<string, TabStatus>();
-  private readonly workbooks = new Map<string, Workbook>();
+  // Each scope's engine, behind one link: the page reads each port's copy (formulas.md "Recalculation").
+  private readonly ports = new Map<string, EnginePort>();
+  private link: EngineLink | null = null;
+  private answered = false;
   private readonly queues = new Map<string, Promise<void>>();
   // Each tab's load in flight (loadTab).
   private readonly loads = new Map<string, Promise<void>>();
@@ -195,7 +202,7 @@ export class SheetStore {
   // Sheets this person deleted with their elements, as they were: Undo puts the element back and its sheet with it
   // (sheet-store.md "Deleting a sheet"). Kept for the session, as undo is.
   private readonly released = new Map<string, SheetJson>();
-  private cards: CardSource | null = null;
+  private cards: CardData | null = null;
   // A spreadsheet's sheets loading behind their first rows.
   private readonly pages: RowPages;
   // The writes made in one moment, sent as fewer.
@@ -245,12 +252,13 @@ export class SheetStore {
     this.deps = { ...deps, api: this.api, wait: this.wait };
     // Saved settings arrived (any peer's Save Settings): every engine works its values out afresh.
     if (reiterated && !rescoped) {
-      for (const wb of this.workbooks.values()) wb.setIteration(iteration);
+      for (const port of this.ports.values()) port.setIteration(iteration);
       this.notify();
     }
     // The document turned out a spreadsheet (its workbook row arrived): the engines and loads were scoped by tab.
     if (rescoped) {
-      this.workbooks.clear();
+      for (const scope of this.ports.keys()) this.link?.send({ scope, msg: { t: 'drop' } });
+      this.ports.clear();
       this.tabStatus.clear();
       this.notify();
     }
@@ -261,15 +269,9 @@ export class SheetStore {
     return volatileTickMs(this.deps.oneWorkbook ?? false, this.deps.recalc);
   }
 
-  // NOW, TODAY and RAND move on: each engine forgets its volatile cells; readers hear of it only when one had any.
+  // NOW, TODAY and RAND move on: each engine forgets its volatile cells; readers hear of it as their values arrive.
   tick(): void {
-    let moved = false;
-    for (const wb of this.workbooks.values()) {
-      const before = wb.version;
-      wb.tick();
-      if (wb.version !== before) moved = true;
-    }
-    if (moved) this.notify();
+    for (const port of this.ports.values()) port.tick();
   }
 
   // ---- Reading -----------------------------------------------------------------------------------------
@@ -308,20 +310,47 @@ export class SheetStore {
   }
 
   // The engine over the tab's scope: in a spreadsheet one for every sheet tab, so references cross them.
+  // What the page reads is the copy of the Worker's values (formulas.md "Recalculation").
   workbook(tabId: string): Workbook {
     const scope = this.scopeOf(tabId);
-    let wb = this.workbooks.get(scope);
-    if (!wb) {
-      wb = new Workbook({
+    let port = this.ports.get(scope);
+    if (!port) {
+      const link = this.engineLink();
+      port = new EnginePort({
         sheets: [...this.entries.values()].map((e) => e.view).filter((s) => this.inScope(s, scope)),
         locale: this.deps.locale,
-        cards: this.cards,
         limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
         iteration: this.deps.iteration ?? ITERATION_OFF,
+        send: (msg) => link.send({ scope, msg }),
       });
-      this.workbooks.set(scope, wb);
+      this.ports.set(scope, port);
+      port.start();
+      if (this.cards) link.send({ scope, msg: { t: 'cards', cards: this.cards } });
     }
-    return wb;
+    return port.copy;
+  }
+
+  private engineLink(): EngineLink {
+    if (!this.link) {
+      const link = (this.deps.engine ?? engineLink)();
+      link.listen(({ scope, out }) => {
+        this.ports.get(scope)?.receive(out);
+        // "Settled" changes no value: readers hear only of answers that do.
+        if (out.t !== 'settled') this.heard();
+      });
+      this.link = link;
+    }
+    return this.link;
+  }
+
+  // The Worker answered: readers hear once for all the answers of one moment, never inside a render.
+  private heard(): void {
+    if (this.answered) return;
+    this.answered = true;
+    queueMicrotask(() => {
+      this.answered = false;
+      this.notify();
+    });
   }
 
   // The loaded sheets of a tab: a spreadsheet's sheet tab holds one (docs/specs/029-sheets/spreadsheet.md).
@@ -337,15 +366,16 @@ export class SheetStore {
       .map((e) => e.view.title);
   }
 
-  setCards(cards: CardSource | null): void {
+  // Plan cards for the card functions, as the page holds them: the Worker reads them as the engine does.
+  setCards(cards: CardData | null): void {
     if (cards === this.cards) return;
     this.cards = cards;
-    for (const wb of this.workbooks.values()) wb.setCards(cards);
+    for (const scope of this.ports.keys()) this.link?.send({ scope, msg: { t: 'cards', cards } });
     this.notify();
   }
 
   usesCards(): boolean {
-    for (const wb of this.workbooks.values()) if (wb.usesCards()) return true;
+    for (const port of this.ports.values()) if (port.copy.usesCards()) return true;
     return false;
   }
 
@@ -462,7 +492,7 @@ export class SheetStore {
     if (!entry) return;
     this.entries.delete(sheetId);
     this.pages.forget(sheetId);
-    this.workbooks.get(this.scopeOf(entry.view.tabId))?.removeSheet(sheetId);
+    this.ports.get(this.scopeOf(entry.view.tabId))?.removeSheet(sheetId);
   }
 
   // ---- The workbooks -----------------------------------------------------------------------------------
@@ -483,9 +513,9 @@ export class SheetStore {
   }
 
   private workbookUpdate(tabId: string, sheetId: string, keys?: string[]): void {
-    const wb = this.workbooks.get(this.scopeOf(tabId));
+    const port = this.ports.get(this.scopeOf(tabId));
     const view = this.entries.get(sheetId)?.view;
-    if (wb && view) wb.updateSheet(view, keys);
+    if (port && view) port.updateSheet(view, keys);
   }
 
   private by(): SheetPerson {
@@ -583,7 +613,7 @@ export class SheetStore {
       const parts = splitWrite(write);
       let state = states.get(sheetId) ?? entry.view;
       // A Dropdown from a Range's options are worked out here, from the tab's workbook (the api cannot).
-      const wb = this.workbooks.get(this.scopeOf(entry.view.tabId));
+      const wb = this.ports.get(this.scopeOf(entry.view.tabId))?.copy;
       const checks: WriteCheck = {
         // Quiet writes (a card table's sync, a seed) are the system's, stored as they are.
         checkRules: checked,
