@@ -20,7 +20,7 @@ function mean(ns: number[]): number {
   return s / ns.length;
 }
 
-function variance(ns: number[], sample: boolean): number | SheetError {
+export function variance(ns: number[], sample: boolean): number | SheetError {
   if (ns.length < (sample ? 2 : 1)) return err('#DIV/0!');
   const m = mean(ns);
   let s = 0;

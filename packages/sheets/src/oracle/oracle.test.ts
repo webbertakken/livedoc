@@ -114,6 +114,7 @@ describe('the oracle corpus', () => {
 // The list grows by one with each category box, and holds every category by the end of the phase.
 const MEASURED_CATEGORIES = [
   'Array',
+  'Database',
   'Date',
   'Filter',
   'Info',

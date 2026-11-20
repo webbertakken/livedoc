@@ -1,0 +1,256 @@
+{
+  "category": "Database",
+  "data": [
+    [
+      "Name",
+      "Kind",
+      "Price",
+      "Qty",
+      null,
+      "Kind",
+      "Kind",
+      "Price",
+      "Price",
+      "Name",
+      "Kind",
+      "Qty",
+      "Nope",
+      "Kind",
+      "Name",
+      "Qty"
+    ],
+    [
+      "Apple",
+      "Fruit",
+      1.5,
+      10,
+      null,
+      "Fruit",
+      "Fruit",
+      ">0.5",
+      "<2",
+      "Apple",
+      "Fruit",
+      ">4",
+      "x",
+      null,
+      "B*",
+      10
+    ],
+    [
+      "Banana",
+      "Fruit",
+      0.5,
+      null,
+      null,
+      null,
+      "Veg",
+      null,
+      null,
+      null,
+      "Veg",
+      null,
+      null,
+      null,
+      null
+    ],
+    ["Carrot", "Veg", 0.8, 5],
+    ["apple pie", "Bake", 4, 2],
+    ["Date", "Fruit", "n/a", 3],
+    ["Egg", "Other", 0.2, 12]
+  ],
+  "cases": [
+    {
+      "id": "DSUM.1",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!F1:F2)"
+    },
+    {
+      "id": "DSUM.2",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!G1:G3)"
+    },
+    {
+      "id": "DSUM.3",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!H1:I2)"
+    },
+    {
+      "id": "DSUM.4",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!J1:J2)"
+    },
+    {
+      "id": "DSUM.5",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!K1:L3)"
+    },
+    {
+      "id": "DSUM.6",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!M1:M2)"
+    },
+    {
+      "id": "DSUM.7",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!N1:N2)"
+    },
+    {
+      "id": "DSUM.8",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!O1:O2)"
+    },
+    {
+      "id": "DSUM.9",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!F1:F1)"
+    },
+    {
+      "id": "DSUM.10",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", {\"Kind\";\"Veg\"})"
+    },
+    {
+      "id": "DSUM.11",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", {\"Name\";\"=Apple\"})"
+    },
+    {
+      "id": "DSUM.12",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", {\"Qty\";10})",
+      "differs": {
+        "libreoffice": "LibreOffice passes every record for a number in an array of criteria (32), though it matches the number from a range (DSUM.19); LiveDoc matches it (10)"
+      },
+      "note": "Awaits Google's answer: a number in an array of criteria."
+    },
+    {
+      "id": "DSUM.13",
+      "f": "=DSUM(Data!A1:D7, 3, Data!F1:F2)"
+    },
+    {
+      "id": "DSUM.14",
+      "f": "=DSUM(Data!A1:D7, \"price\", Data!F1:F2)"
+    },
+    {
+      "id": "DSUM.15",
+      "f": "=DSUM(Data!A1:D7, \"Nope\", Data!F1:F2)"
+    },
+    {
+      "id": "DSUM.16",
+      "f": "=DSUM(Data!A1:D7, 5, Data!F1:F2)"
+    },
+    {
+      "id": "DSUM.17",
+      "f": "=DSUM(Data!A1:D7, 0, Data!F1:F2)"
+    },
+    {
+      "id": "DSUM.18",
+      "f": "=DSUM(Data!A1:D7, 3.7, Data!F1:F2)"
+    },
+    {
+      "id": "DSUM.19",
+      "f": "=DSUM(Data!A1:D7, \"Qty\", Data!P1:P2)"
+    },
+    {
+      "id": "DAVERAGE.1",
+      "f": "=DAVERAGE(Data!A1:D7, \"Price\", Data!F1:F2)"
+    },
+    {
+      "id": "DAVERAGE.2",
+      "f": "=DAVERAGE(Data!A1:D7, \"Price\", {\"Kind\";\"None\"})"
+    },
+    {
+      "id": "DCOUNT.1",
+      "f": "=DCOUNT(Data!A1:D7, \"Price\", Data!F1:F2)"
+    },
+    {
+      "id": "DCOUNT.2",
+      "f": "=DCOUNT(Data!A1:D7, \"Name\", Data!F1:F2)"
+    },
+    {
+      "id": "DCOUNT.3",
+      "f": "=DCOUNT(Data!A1:D7, , Data!F1:F2)"
+    },
+    {
+      "id": "DCOUNTA.1",
+      "f": "=DCOUNTA(Data!A1:D7, \"Price\", Data!F1:F2)"
+    },
+    {
+      "id": "DCOUNTA.2",
+      "f": "=DCOUNTA(Data!A1:D7, \"Qty\", Data!F1:F2)"
+    },
+    {
+      "id": "DCOUNTA.3",
+      "f": "=DCOUNTA(Data!A1:D7, , Data!F1:F2)"
+    },
+    {
+      "id": "DGET.1",
+      "f": "=DGET(Data!A1:D7, \"Price\", {\"Name\";\"Carrot\"})"
+    },
+    {
+      "id": "DGET.2",
+      "f": "=DGET(Data!A1:D7, \"Price\", Data!F1:F2)"
+    },
+    {
+      "id": "DGET.3",
+      "f": "=DGET(Data!A1:D7, \"Price\", {\"Name\";\"None\"})"
+    },
+    {
+      "id": "DGET.4",
+      "f": "=DGET(Data!A1:D7, \"Qty\", {\"Name\";\"Banana\"})",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a matching record whose field is empty (#VALUE!); LiveDoc gives the empty value"
+      },
+      "note": "Awaits Google's answer: DGET of an empty field."
+    },
+    {
+      "id": "DMAX.1",
+      "f": "=DMAX(Data!A1:D7, \"Price\", Data!F1:F2)"
+    },
+    {
+      "id": "DMAX.2",
+      "f": "=DMAX(Data!A1:D7, \"Price\", {\"Kind\";\"None\"})"
+    },
+    {
+      "id": "DMIN.1",
+      "f": "=DMIN(Data!A1:D7, \"Price\", Data!F1:F2)"
+    },
+    {
+      "id": "DMIN.2",
+      "f": "=DMIN(Data!A1:D7, \"Name\", Data!F1:F2)"
+    },
+    {
+      "id": "DPRODUCT.1",
+      "f": "=DPRODUCT(Data!A1:D7, \"Qty\", Data!G1:G3)"
+    },
+    {
+      "id": "DPRODUCT.2",
+      "f": "=DPRODUCT(Data!A1:D7, \"Qty\", {\"Kind\";\"None\"})"
+    },
+    {
+      "id": "DSTDEV.1",
+      "f": "=DSTDEV(Data!A1:D7, \"Qty\", Data!N1:N2)"
+    },
+    {
+      "id": "DSTDEV.2",
+      "f": "=DSTDEV(Data!A1:D7, \"Qty\", {\"Name\";\"Egg\"})",
+      "differs": {
+        "libreoffice": "LibreOffice gives #NUM! for a sample of one; LiveDoc #DIV/0!, as its STDEV"
+      },
+      "note": "Awaits Google's answer: a sample of one."
+    },
+    {
+      "id": "DSTDEVP.1",
+      "f": "=DSTDEVP(Data!A1:D7, \"Qty\", Data!N1:N2)"
+    },
+    {
+      "id": "DSTDEVP.2",
+      "f": "=DSTDEVP(Data!A1:D7, \"Qty\", {\"Name\";\"Egg\"})"
+    },
+    {
+      "id": "DVAR.1",
+      "f": "=DVAR(Data!A1:D7, \"Qty\", Data!G1:G3)"
+    },
+    {
+      "id": "DVARP.1",
+      "f": "=DVARP(Data!A1:D7, \"Qty\", Data!G1:G3)"
+    },
+    {
+      "id": "DVARP.2",
+      "f": "=DVARP(Data!A1:D7, \"Qty\", {\"Kind\";\"None\"})",
+      "differs": {
+        "libreoffice": "LibreOffice gives #NUM! with no value; LiveDoc #DIV/0!, as its VAR.P"
+      },
+      "note": "Awaits Google's answer: a population of none."
+    }
+  ]
+}

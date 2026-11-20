@@ -226,6 +226,21 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 `COUNTA`, `COUNTBLANK`, `COUNTIF`, `COUNTIFS`, `LARGE`, `SMALL`, `RANK`, `PERCENTILE`, `QUARTILE`, `STDEV`,
 `STDEV.P`, `VAR`, `VAR.P`, `CORREL`, `COUNTUNIQUE`.
 
+**Database**: `DSUM`, `DAVERAGE`, `DCOUNT`, `DCOUNTA`, `DGET`, `DMAX`, `DMIN`, `DPRODUCT`, `DSTDEV`, `DSTDEVP`,
+`DVAR`, `DVARP`: each `(database, field, criteria)`.
+
+- The database's first row names its fields, each further row is a record. `field` is a label, case ignored, or a
+  column's number, rounded toward zero; any other is `#VALUE!`.
+- The criteria's first row names fields (a name not in the database is `#VALUE!`); each further row is a filter. A
+  filter holds when each of its non-empty cells holds for the record, read as `COUNTIF`'s criteria (a value matches
+  whole text, case ignored); a record passes when any filter holds. No filter, or an empty one, passes every record.
+- The aggregates read the numbers of the field (text, booleans and empty cells left out). With none, `DSUM`, `DMAX`,
+  `DMIN` and `DPRODUCT` are 0, `DAVERAGE` is `#DIV/0!`; `DSTDEV` and `DVAR` need two numbers, `DSTDEVP` and
+  `DVARP` one, else `#DIV/0!`, as their plain namesakes.
+- `DCOUNT` counts the numbers, `DCOUNTA` the values; with `field` left empty (`DCOUNT(A1:D9, , F1:F2)`, OOXML's and
+  OpenFormula's wider form, D38) each counts the matching records.
+- `DGET` gives the field of the one matching record, empty when it is empty; none is `#VALUE!`, more than one `#NUM!`.
+
 **Logic**: `IF`, `IFS`, `SWITCH`, `AND`, `OR`, `XOR`, `NOT`, `TRUE`, `FALSE`, `IFERROR`, `IFNA`.
 
 - `IFERROR(value, [value_if_error])` gives a blank for an error when it has no fallback, as Google's does.
@@ -407,40 +422,43 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 - **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
   (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
 
-  | Formula                                             | LiveDoc today                    | LibreOffice                | Case                                            |
-  | --------------------------------------------------- | -------------------------------- | -------------------------- | ----------------------------------------------- |
-  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`    | 1, never negative                | -2                         | Date DATEDIF.9                                  |
-  | `NETWORKDAYS.INTL(a, b, "1111111")`                 | `#VALUE!`                        | 0                          | Date NETWORKDAYS.INTL.4                         |
-  | `FILTER(range, numbers)`                            | any number but 0 passes          | only positive numbers pass | Filter FILTER.8                                 |
-  | `UNIQUE({"a"; "A"})`                                | two values, case kept            | one, case ignored          | Filter UNIQUE.4                                 |
-  | `CELL("address", Data!B3)`                          | `Data!$B$3`                      | `$Data.$B$3`               | Info CELL.2                                     |
-  | `CELL("width", A1)`                                 | ECMA-376 characters (D40)        | LibreOffice's own measure  | Info CELL.14                                    |
-  | `AND("TRUE", 1)`                                    | TRUE, text read as a truth       | `#VALUE!`                  | Logical AND.8                                   |
-  | `IFNA(A4, 1)` over an empty cell                    | empty                            | 0                          | Logical IFNA.4                                  |
-  | `ADDRESS(1, 1, 5)`                                  | `#VALUE!`                        | `$A$1`                     | Lookup ADDRESS.9                                |
-  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`     | `1TRUE`, `true`: TRUE as text    | `11`, `1`: TRUE as 1       | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
-  | `"z" < TRUE`                                        | TRUE: booleans after text        | FALSE                      | Syntax compare.4                                |
-  | `SUM(1:2)` over booleans                            | booleans skipped                 | booleans counted           | Syntax range.3                                  |
-  | `0^-1`, `(-8)^(1/3)`                                | `#DIV/0!`, `#NUM!`               | `#NUM!`, -2                | Syntax errors.4, .8                             |
-  | `CHAR(0)`, `CODE("")`                               | `#VALUE!`                        | empty text, 0              | Text CHAR.2, CODE.2                             |
-  | `FIND("", "abc")`, `SEARCH("", "abc")`              | 1, as Excel                      | `#VALUE!`                  | Text FIND.5, SEARCH.7                           |
-  | `PROPER("it's 2nd")`                                | `It's 2nd`                       | `It'S 2Nd`                 | Text PROPER.3                                   |
-  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`             | `熊`, `本`: a cut character kept | a space                    | Text LEFTB.6, RIGHTB.5                          |
-  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`              | -3, -2: Excel's                  | -2, -3: OpenFormula's      | Math CEILING.4, FLOOR.4                         |
-  | `MROUND(10, -3)`                                    | `#NUM!`, as Excel                | 9                          | Math MROUND.3                                   |
-  | `ISEVEN(A1)` over an empty cell                     | TRUE, as Excel                   | `#VALUE!`                  | Math ISEVEN.6                                   |
-  | `SUM(1, "2", TRUE)`                                 | 4, as Excel                      | `#VALUE!`                  | Math SUM.2                                      |
-  | `IMPOWER("2i", 2)`                                  | `-4`, multiplied out             | `-4+4.89858719658941e-16i` | Math IMPOWER.4                                  |
-  | `LENB("ｶﾀｶﾅ")`                                      | 4: half-width kana 1 byte (D43)  | 8                          | Text LENB.6                                     |
-  | `TRANSPOSE(A1:A3)` over an empty cell               | empty                            | 0                          | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
-  | `HSTACK(1, "a", TRUE)`                              | `TRUE`                           | 1                          | Array HSTACK.2                                  |
-  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans | booleans skipped                 | booleans counted           | Array SUMPRODUCT.6, FREQUENCY.2                 |
-  | `SUMXMY2(a, b)`, a pair with text                   | the pair left out                | `#VALUE!`                  | Array SUMXMY2.4                                 |
-  | `CHOOSECOLS(A1:D3, "4")`                            | the fourth column                | `#VALUE!`                  | Array CHOOSECOLS.7                              |
-  | `TOCOL(5)`                                          | 5, a column of one, as Excel     | `#VALUE!`                  | Array TOCOL.8                                   |
-  | `FREQUENCY(data, classes)`, no class a number       | every value counted (D46)        | `#VALUE!`                  | Array FREQUENCY.5                               |
-  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`            | `#VALUE!`                        | 2                          | Array MMULT.4                                   |
-  | `LINEST(y, x)`, collinear x                         | `#NUM!` (D47)                    | coefficients past 1e13     | Array LINEST.12                                 |
+  | Formula                                                 | LiveDoc today                    | LibreOffice                | Case                                            |
+  | ------------------------------------------------------- | -------------------------------- | -------------------------- | ----------------------------------------------- |
+  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`        | 1, never negative                | -2                         | Date DATEDIF.9                                  |
+  | `NETWORKDAYS.INTL(a, b, "1111111")`                     | `#VALUE!`                        | 0                          | Date NETWORKDAYS.INTL.4                         |
+  | `FILTER(range, numbers)`                                | any number but 0 passes          | only positive numbers pass | Filter FILTER.8                                 |
+  | `UNIQUE({"a"; "A"})`                                    | two values, case kept            | one, case ignored          | Filter UNIQUE.4                                 |
+  | `CELL("address", Data!B3)`                              | `Data!$B$3`                      | `$Data.$B$3`               | Info CELL.2                                     |
+  | `CELL("width", A1)`                                     | ECMA-376 characters (D40)        | LibreOffice's own measure  | Info CELL.14                                    |
+  | `AND("TRUE", 1)`                                        | TRUE, text read as a truth       | `#VALUE!`                  | Logical AND.8                                   |
+  | `IFNA(A4, 1)` over an empty cell                        | empty                            | 0                          | Logical IFNA.4                                  |
+  | `ADDRESS(1, 1, 5)`                                      | `#VALUE!`                        | `$A$1`                     | Lookup ADDRESS.9                                |
+  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`         | `1TRUE`, `true`: TRUE as text    | `11`, `1`: TRUE as 1       | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
+  | `"z" < TRUE`                                            | TRUE: booleans after text        | FALSE                      | Syntax compare.4                                |
+  | `SUM(1:2)` over booleans                                | booleans skipped                 | booleans counted           | Syntax range.3                                  |
+  | `0^-1`, `(-8)^(1/3)`                                    | `#DIV/0!`, `#NUM!`               | `#NUM!`, -2                | Syntax errors.4, .8                             |
+  | `CHAR(0)`, `CODE("")`                                   | `#VALUE!`                        | empty text, 0              | Text CHAR.2, CODE.2                             |
+  | `FIND("", "abc")`, `SEARCH("", "abc")`                  | 1, as Excel                      | `#VALUE!`                  | Text FIND.5, SEARCH.7                           |
+  | `PROPER("it's 2nd")`                                    | `It's 2nd`                       | `It'S 2Nd`                 | Text PROPER.3                                   |
+  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`                 | `熊`, `本`: a cut character kept | a space                    | Text LEFTB.6, RIGHTB.5                          |
+  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`                  | -3, -2: Excel's                  | -2, -3: OpenFormula's      | Math CEILING.4, FLOOR.4                         |
+  | `MROUND(10, -3)`                                        | `#NUM!`, as Excel                | 9                          | Math MROUND.3                                   |
+  | `ISEVEN(A1)` over an empty cell                         | TRUE, as Excel                   | `#VALUE!`                  | Math ISEVEN.6                                   |
+  | `SUM(1, "2", TRUE)`                                     | 4, as Excel                      | `#VALUE!`                  | Math SUM.2                                      |
+  | `IMPOWER("2i", 2)`                                      | `-4`, multiplied out             | `-4+4.89858719658941e-16i` | Math IMPOWER.4                                  |
+  | `LENB("ｶﾀｶﾅ")`                                          | 4: half-width kana 1 byte (D43)  | 8                          | Text LENB.6                                     |
+  | `DSUM(A1:D7, "Qty", {"Qty"; 10})`                       | the records of 10                | every record               | Database DSUM.12                                |
+  | `DGET(A1:D7, "Qty", {"Name"; "Banana"})`, its Qty empty | empty                            | `#VALUE!`                  | Database DGET.4                                 |
+  | `DSTDEV` of one value, `DVARP` of none                  | `#DIV/0!`, as `STDEV`, `VAR.P`   | `#NUM!`                    | Database DSTDEV.2, DVARP.2                      |
+  | `TRANSPOSE(A1:A3)` over an empty cell                   | empty                            | 0                          | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
+  | `HSTACK(1, "a", TRUE)`                                  | `TRUE`                           | 1                          | Array HSTACK.2                                  |
+  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans     | booleans skipped                 | booleans counted           | Array SUMPRODUCT.6, FREQUENCY.2                 |
+  | `SUMXMY2(a, b)`, a pair with text                       | the pair left out                | `#VALUE!`                  | Array SUMXMY2.4                                 |
+  | `CHOOSECOLS(A1:D3, "4")`                                | the fourth column                | `#VALUE!`                  | Array CHOOSECOLS.7                              |
+  | `TOCOL(5)`                                              | 5, a column of one, as Excel     | `#VALUE!`                  | Array TOCOL.8                                   |
+  | `FREQUENCY(data, classes)`, no class a number           | every value counted (D46)        | `#VALUE!`                  | Array FREQUENCY.5                               |
+  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`                | `#VALUE!`                        | 2                          | Array MMULT.4                                   |
+  | `LINEST(y, x)`, collinear x                             | `#NUM!` (D47)                    | coefficients past 1e13     | Array LINEST.12                                 |
 
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
@@ -565,13 +583,13 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `DATE`                | Date        | `DATE(year, month, day)`                                                                                       | Google      | `DATE`                           | built                                                         |
 | `DATEDIF`             | Date        | `DATEDIF(start_date, end_date, unit)`                                                                          | Google      | `DATEDIF`                        | built                                                         |
 | `DATEVALUE`           | Date        | `DATEVALUE(date_string)`                                                                                       | Google      | `DATEVALUE`                      | built                                                         |
-| `DAVERAGE`            | Database    | `DAVERAGE(database, field, criteria)`                                                                          | Google      | `DAVERAGE`                       | planned                                                       |
+| `DAVERAGE`            | Database    | `DAVERAGE(database, field, criteria)`                                                                          | Google      | `DAVERAGE`                       | built                                                         |
 | `DAY`                 | Date        | `DAY(date)`                                                                                                    | Google      | `DAY`                            | built                                                         |
 | `DAYS`                | Date        | `DAYS(end_date, start_date)`                                                                                   | Google      | `DAYS`                           | built                                                         |
 | `DAYS360`             | Date        | `DAYS360(start_date, end_date, [method])`                                                                      | Google      | `DAYS360`                        | planned                                                       |
 | `DB`                  | Financial   | `DB(cost, salvage, life, period, [month])`                                                                     | Google      | `DB`                             | planned                                                       |
-| `DCOUNT`              | Database    | `DCOUNT(database, field, criteria)`                                                                            | Google      | `DCOUNT`                         | planned                                                       |
-| `DCOUNTA`             | Database    | `DCOUNTA(database, field, criteria)`                                                                           | Google      | `DCOUNTA`                        | planned                                                       |
+| `DCOUNT`              | Database    | `DCOUNT(database, field, criteria)`                                                                            | Google      | `DCOUNT`                         | built                                                         |
+| `DCOUNTA`             | Database    | `DCOUNTA(database, field, criteria)`                                                                           | Google      | `DCOUNTA`                        | built                                                         |
 | `DDB`                 | Financial   | `DDB(cost, salvage, life, period, [factor])`                                                                   | Google      | `DDB`                            | planned                                                       |
 | `DDE`                 | OpenFormula |                                                                                                                | OpenFormula | `DDE`                            | left out: kept as text with its cached value (no live source) |
 | `DEC2BIN`             | Engineering | `DEC2BIN(decimal_number, [significant_digits])`                                                                | Google      | `DEC2BIN`                        | planned                                                       |
@@ -582,21 +600,21 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `DELTA`               | Engineering | `DELTA(number1, [number2])`                                                                                    | Google      | `DELTA`                          | planned                                                       |
 | `DETECTLANGUAGE`      | Google      | `DETECTLANGUAGE(text_or_range)`                                                                                | Google      | S5                               | left out (C3)                                                 |
 | `DEVSQ`               | Statistical | `DEVSQ(value1, value2)`                                                                                        | Google      | `DEVSQ`                          | planned                                                       |
-| `DGET`                | Database    | `DGET(database, field, criteria)`                                                                              | Google      | `DGET`                           | planned                                                       |
+| `DGET`                | Database    | `DGET(database, field, criteria)`                                                                              | Google      | `DGET`                           | built                                                         |
 | `DISC`                | Financial   | `DISC(settlement, maturity, price, redemption, [day_count_convention])`                                        | Google      | `DISC`                           | planned                                                       |
 | `DIVIDE`              | Operator    | `DIVIDE(dividend, divisor)`                                                                                    | Google      | S5                               | built                                                         |
-| `DMAX`                | Database    | `DMAX(database, field, criteria)`                                                                              | Google      | `DMAX`                           | planned                                                       |
-| `DMIN`                | Database    | `DMIN(database, field, criteria)`                                                                              | Google      | `DMIN`                           | planned                                                       |
+| `DMAX`                | Database    | `DMAX(database, field, criteria)`                                                                              | Google      | `DMAX`                           | built                                                         |
+| `DMIN`                | Database    | `DMIN(database, field, criteria)`                                                                              | Google      | `DMIN`                           | built                                                         |
 | `DOLLAR`              | Text        | `DOLLAR(number, [number_of_places])`                                                                           | Google      | `DOLLAR`                         | built                                                         |
 | `DOLLARDE`            | Financial   | `DOLLARDE(fractional_price, unit)`                                                                             | Google      | `DOLLARDE`                       | planned                                                       |
 | `DOLLARFR`            | Financial   | `DOLLARFR(decimal_price, unit)`                                                                                | Google      | `DOLLARFR`                       | planned                                                       |
-| `DPRODUCT`            | Database    | `DPRODUCT(database, field, criteria)`                                                                          | Google      | `DPRODUCT`                       | planned                                                       |
-| `DSTDEV`              | Database    | `DSTDEV(database, field, criteria)`                                                                            | Google      | `DSTDEV`                         | planned                                                       |
-| `DSTDEVP`             | Database    | `DSTDEVP(database, field, criteria)`                                                                           | Google      | `DSTDEVP`                        | planned                                                       |
-| `DSUM`                | Database    | `DSUM(database, field, criteria)`                                                                              | Google      | `DSUM`                           | planned                                                       |
+| `DPRODUCT`            | Database    | `DPRODUCT(database, field, criteria)`                                                                          | Google      | `DPRODUCT`                       | built                                                         |
+| `DSTDEV`              | Database    | `DSTDEV(database, field, criteria)`                                                                            | Google      | `DSTDEV`                         | built                                                         |
+| `DSTDEVP`             | Database    | `DSTDEVP(database, field, criteria)`                                                                           | Google      | `DSTDEVP`                        | built                                                         |
+| `DSUM`                | Database    | `DSUM(database, field, criteria)`                                                                              | Google      | `DSUM`                           | built                                                         |
 | `DURATION`            | Financial   | `DURATION(settlement, maturity, rate, yield, frequency, [day_count_convention])`                               | Google      | `DURATION`                       | planned                                                       |
-| `DVAR`                | Database    | `DVAR(database, field, criteria)`                                                                              | Google      | `DVAR`                           | planned                                                       |
-| `DVARP`               | Database    | `DVARP(database, field, criteria)`                                                                             | Google      | `DVARP`                          | planned                                                       |
+| `DVAR`                | Database    | `DVAR(database, field, criteria)`                                                                              | Google      | `DVAR`                           | built                                                         |
+| `DVARP`               | Database    | `DVARP(database, field, criteria)`                                                                             | Google      | `DVARP`                          | built                                                         |
 | `EASTERSUNDAY`        | OpenFormula |                                                                                                                | OpenFormula | `EASTERSUNDAY`                   | planned                                                       |
 | `EDATE`               | Date        | `EDATE(start_date, months)`                                                                                    | Google      | `EDATE`                          | built                                                         |
 | `EFFECT`              | Financial   | `EFFECT(nominal_rate, periods_per_year)`                                                                       | Google      | `EFFECT`                         | planned                                                       |
