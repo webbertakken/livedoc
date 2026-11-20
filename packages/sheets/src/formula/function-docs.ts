@@ -540,7 +540,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     '=CHOOSEROWS(A1:B5, 1, 3)',
   ),
   HSTACK: D('range1, [range2, …]', 'Ranges side by side, as one array', '=HSTACK(A1:B3, D1:D3)'),
-  VSTACK: D('range1, [range2, …]', 'Ranges one under another, as one array', '=VSTACK(A2:C4, A6:C8)'),
+  VSTACK: D(
+    'range1, [range2, …]',
+    'Ranges one under another, as one array',
+    '=VSTACK(A2:C4, A6:C8)',
+  ),
   TOCOL: D(
     'array_or_range, [ignore], [scan_by_column]',
     'An array as one column, empties or errors left out if asked',
