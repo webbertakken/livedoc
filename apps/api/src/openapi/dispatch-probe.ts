@@ -31,7 +31,7 @@ import worker from '../index';
 import { withTestDocumentRooms } from '../test-document-room';
 import type { Env } from '../types';
 
-const PROBE_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] as const;
+export const PROBE_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'] as const;
 export type ProbeMethod = (typeof PROBE_METHODS)[number];
 
 /** Stands in for every path parameter. Matches no literal the dispatch compares against. */
