@@ -1,68 +1,25 @@
-// Statistics functions (docs/specs/029-sheets/formulas.md "Functions": Statistics).
+// Statistics functions (docs/specs/029-sheets/formulas.md "Functions": Statistics): averages, least and greatest,
+// and counts here; the family gathers spread, shape, order and paired data from their own modules.
 import type { EvalValue, Frame } from '../../engine/frame';
-import {
-  MANY,
-  arrayArg,
-  flatScalars,
-  flatValues,
-  fn,
-  numArg,
-  numbersOf,
-  opt,
-  type FnDef,
-} from '../fn';
-import { err, isError, type SheetError, type Value } from '../values';
+import { MANY, arrayArg, flatScalars, flatValues, fn, numbersOf, type FnDef } from '../fn';
+import { mean } from '../descriptive';
+import { err, isError, type Value } from '../values';
+import { PERMUTATION_FUNCTIONS } from './combinatorics';
 import { criteriaMask, ifsNumbers, maskedNumbers, sameSizeAs } from './conditional';
-
-function mean(ns: number[]): number {
-  let s = 0;
-  for (const n of ns) s += n;
-  return s / ns.length;
-}
-
-export function variance(ns: number[], sample: boolean): number | SheetError {
-  if (ns.length < (sample ? 2 : 1)) return err('#DIV/0!');
-  const m = mean(ns);
-  let s = 0;
-  for (const n of ns) s += (n - m) ** 2;
-  return s / (ns.length - (sample ? 1 : 0));
-}
+import { MOMENT_FUNCTIONS } from './moments';
+import { ORDER_FUNCTIONS } from './order-statistics';
+import { PAIRED_FUNCTIONS } from './paired';
+import { VARIANCE_FUNCTIONS } from './variances';
 
 // The least and greatest of a list. Never `Math.min(...ns)`: past ~120,000 arguments the spread overflows the stack,
 // and a formula over two full arrays or a few large ranges reaches that.
 const smallest = (ns: readonly number[]): number => ns.reduce((m, n) => (n < m ? n : m), Infinity);
 const largest = (ns: readonly number[]): number => ns.reduce((m, n) => (n > m ? n : m), -Infinity);
 
-function sorted(ns: number[]): number[] {
-  return [...ns].sort((a, b) => a - b);
-}
-
-function percentile(ns: number[], k: number): number | SheetError {
-  if (ns.length === 0 || k < 0 || k > 1) return err('#NUM!');
-  const s = sorted(ns);
-  const pos = (s.length - 1) * k;
-  const lo = Math.floor(pos);
-  const hi = Math.ceil(pos);
-  return s[lo]! + (s[hi]! - s[lo]!) * (pos - lo);
-}
-
 function aggregate(read: (ns: number[]) => Value) {
   return fn(1, MANY, (args, f) => {
     const ns = numbersOf(args, f);
     return isError(ns) ? ns : read(ns);
-  });
-}
-
-function nth(largest: boolean): FnDef {
-  return fn(2, 2, (args, f) => {
-    const ns = numbersOf([args[0]!], f);
-    if (isError(ns)) return ns;
-    const k = numArg(args[1]!, f);
-    if (isError(k)) return k;
-    const i = Math.ceil(k) - 1;
-    if (i < 0 || i >= ns.length) return err('#NUM!');
-    const s = sorted(ns);
-    return largest ? s[s.length - 1 - i]! : s[i]!;
   });
 }
 
@@ -99,20 +56,6 @@ export const STATS_FUNCTIONS: Record<string, FnDef> = {
   AVERAGEIFS: ifs('avg'),
   MINIFS: ifs('min'),
   MAXIFS: ifs('max'),
-  MEDIAN: aggregate((ns) => (ns.length === 0 ? err('#NUM!') : percentile(ns, 0.5))),
-  // Of the values seen most often, the one that comes first, as Excel and Google Sheets choose: MODE(3, 5, 5, 3)
-  // is 3, not the 5 that reached two first.
-  MODE: aggregate((ns) => {
-    const counts = new Map<number, number>();
-    let bestCount = 1;
-    for (const n of ns) {
-      const c = (counts.get(n) ?? 0) + 1;
-      counts.set(n, c);
-      if (c > bestCount) bestCount = c;
-    }
-    if (bestCount < 2) return err('#N/A', 'No value repeats');
-    return ns.find((n) => counts.get(n) === bestCount)!;
-  }),
   MIN: aggregate((ns) => (ns.length === 0 ? 0 : smallest(ns))),
   MAX: aggregate((ns) => (ns.length === 0 ? 0 : largest(ns))),
   COUNT: fn(1, MANY, (args, f) => {
@@ -143,71 +86,9 @@ export const STATS_FUNCTIONS: Record<string, FnDef> = {
   ),
   COUNTIF: fn(2, 2, (args, f) => countIf(args, f)),
   COUNTIFS: fn(2, MANY, (args, f) => countIf(args, f)),
-  LARGE: nth(true),
-  SMALL: nth(false),
-  RANK: fn(2, 3, (args, f) => {
-    const v = numArg(args[0]!, f);
-    if (isError(v)) return v;
-    const ns = numbersOf([args[1]!], f);
-    if (isError(ns)) return ns;
-    const order = opt(args, 2, f, numArg, 0);
-    if (isError(order)) return order;
-    if (!ns.includes(v)) return err('#N/A', 'The value is not in the range');
-    return 1 + ns.filter((n) => (order ? n < v : n > v)).length;
-  }),
-  PERCENTILE: fn(2, 2, (args, f) => {
-    const ns = numbersOf([args[0]!], f);
-    if (isError(ns)) return ns;
-    const k = numArg(args[1]!, f);
-    return isError(k) ? k : percentile(ns, k);
-  }),
-  QUARTILE: fn(2, 2, (args, f) => {
-    const ns = numbersOf([args[0]!], f);
-    if (isError(ns)) return ns;
-    const q = numArg(args[1]!, f);
-    if (isError(q)) return q;
-    const k = Math.trunc(q);
-    return k < 0 || k > 4 ? err('#NUM!') : percentile(ns, k / 4);
-  }),
-  STDEV: aggregate((ns) => {
-    const v = variance(ns, true);
-    return isError(v) ? v : Math.sqrt(v);
-  }),
-  'STDEV.P': aggregate((ns) => {
-    const v = variance(ns, false);
-    return isError(v) ? v : Math.sqrt(v);
-  }),
-  VAR: aggregate((ns) => variance(ns, true)),
-  'VAR.P': aggregate((ns) => variance(ns, false)),
-  CORREL: fn(2, 2, (args, f) => {
-    const a = flatValues(arrayArg(args[0]!, f));
-    const b = flatValues(arrayArg(args[1]!, f));
-    if (a.length !== b.length) return err('#N/A', 'The ranges must be the same size');
-    const xs: number[] = [];
-    const ys: number[] = [];
-    for (let i = 0; i < a.length; i++) {
-      const x = a[i];
-      const y = b[i];
-      // An error in either range is the answer, as in Google Sheets; text, logicals and blanks are skipped.
-      if (isError(x)) return x;
-      if (isError(y)) return y;
-      if (typeof x === 'number' && typeof y === 'number') {
-        xs.push(x);
-        ys.push(y);
-      }
-    }
-    if (xs.length < 2) return err('#DIV/0!');
-    const mx = mean(xs);
-    const my = mean(ys);
-    let sxy = 0;
-    let sxx = 0;
-    let syy = 0;
-    for (let i = 0; i < xs.length; i++) {
-      sxy += (xs[i]! - mx) * (ys[i]! - my);
-      sxx += (xs[i]! - mx) ** 2;
-      syy += (ys[i]! - my) ** 2;
-    }
-    if (sxx === 0 || syy === 0) return err('#DIV/0!');
-    return sxy / Math.sqrt(sxx * syy);
-  }),
+  ...VARIANCE_FUNCTIONS,
+  ...MOMENT_FUNCTIONS,
+  ...ORDER_FUNCTIONS,
+  ...PAIRED_FUNCTIONS,
+  ...PERMUTATION_FUNCTIONS,
 };

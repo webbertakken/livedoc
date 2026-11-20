@@ -1,0 +1,128 @@
+// The Statistics family's edges the oracle corpus leaves out (docs/specs/029-sheets/formulas.md "Functions":
+// Statistics): errors in the arguments, empty data and the boundaries of each rule.
+import { describe, expect, it } from 'vitest';
+import { book, calc } from '../../testing/book';
+
+const DATA = {
+  A1: '1',
+  A2: '2',
+  A3: '3',
+  A4: '4',
+  B1: '2',
+  B2: '4',
+  B3: '6',
+  B4: '8',
+  C1: '=NA()',
+  C2: '5',
+  D1: 'x',
+  D2: 'y',
+  E1: '5',
+  E2: '5',
+  E3: '5',
+};
+
+describe('the statistics functions', () => {
+  it.each([
+    // Spread: the A forms, the population forms, DEVSQ.
+    ['=VARA(1, TRUE, "x")', 1 / 3],
+    ['=MAXA(D1:D2)', 0],
+    ['=MINA(D1:D2, 4)', 0],
+    ['=MINA(A1:A4)', 1],
+    ['=MAXA(F1:F2)', 0],
+    ['=MINA(F1:F2)', 0],
+    ['=VARA(1, , 3)', 2],
+    ['=SUM(1, , 2)', 3],
+    ['=STDEVPA(A1:A2)', 0.5],
+    ['=DEVSQ(A1:A4)', 5],
+    // Shape and other means.
+    ['=GEOMEAN(4, 9)', 6],
+    ['=HARMEAN(1, 4, 4)', 2],
+    ['=TRIMMEAN(A1:A4, 0.5)', 2.5],
+    ['=AVERAGE.WEIGHTED(A1:A4, B1:B4)', 3],
+    ['=AVERAGE.WEIGHTED(D1:D2, A1:A2, 3, 1)', 3],
+    ['=AVERAGE.WEIGHTED({1, 2}, {0, 1})', 2],
+    ['=SKEW.P(1, 2)', 0],
+    ['=STANDARDIZE(5, 3, 2)', 1],
+    // Order.
+    ['=PERCENTRANK({5}, 5)', 1],
+    ['=PERCENTRANK.EXC({5}, 5)', 1],
+    ['=PERCENTILE.EXC(A1:A4, 0.8)', 4],
+    ['=PERCENTRANK(A1:A4, 2.5, 4)', 0.5],
+    ['=PERCENTRANK.INC({1, 2, 2, 5}, 3)', 0.778],
+    ['=PERCENTRANK.EXC({1, 2, 2, 5}, 2)', 0.4],
+    ['=QUARTILE.EXC(A1:A4, 2)', 2.5],
+    ['=RANK.AVG(5, E1:E3)', 2],
+    ['=LARGE(A1:A4, 1.2)', 3],
+    ['=SMALL(A1:A4, 1.8)', 1],
+    // Paired data.
+    ['=SLOPE(B1:B4, A1:A4)', 2],
+    ['=INTERCEPT(B1:B4, A1:A4)', 0],
+    ['=STEYX(B1:B4, A1:A4)', 0],
+    ['=FORECAST(10, B1:B4, A1:A4)', 20],
+    ['=CORREL(B1:B4, A1:A4)', 1],
+    ['=COVARIANCE.S(B1:B4, A1:A4)', 10 / 3],
+    ['=PROB(A1:A4, {0.1, 0.2, 0.3, 0.4}, 2)', 0.2],
+    ['=PERMUT(10, 3)', 720],
+    ['=PERMUTATIONA(4, 2)', 16],
+  ])('%s is %d', (formula, value) => {
+    expect(calc(formula, DATA) as number).toBeCloseTo(value, 9);
+  });
+
+  it.each([
+    ['=VAR(A1:A2, C1)', '#N/A'],
+    ['=AVERAGEA(F1:F2)', '#DIV/0!'],
+    ['=MAXA(1, C1:C2)', '#N/A'],
+    ['=GEOMEAN(C1:C2)', '#N/A'],
+    ['=HARMEAN(D1:D2)', '#NUM!'],
+    ['=KURT(E1:E3, 5)', '#DIV/0!'],
+    ['=SKEW.P(5)', '#DIV/0!'],
+    ['=TRIMMEAN(C1:C2, 0)', '#N/A'],
+    ['=TRIMMEAN(A1:A4, "x")', '#VALUE!'],
+    ['=AVERAGE.WEIGHTED(1, 2, 3)', '#N/A'],
+    ['=AVERAGE.WEIGHTED(A1:A4, B1:B2)', '#VALUE!'],
+    ['=AVERAGE.WEIGHTED(C1:C2, A1:A2)', '#N/A'],
+    ['=AVERAGE.WEIGHTED(A1:A2, C1:C2)', '#N/A'],
+    ['=AVERAGE.WEIGHTED(A1:A2, {1, -1})', '#NUM!'],
+    ['=AVERAGE.WEIGHTED(A1:A2, {0, 0})', '#DIV/0!'],
+    ['=STANDARDIZE(1, 2, "x")', '#VALUE!'],
+    ['=MODE(C1:C2)', '#N/A'],
+    ['=MODE.MULT(D1:D2)', '#N/A'],
+    ['=MEDIAN(C1, 1)', '#N/A'],
+    ['=PERCENTILE(A1:A4, "x")', '#VALUE!'],
+    ['=PERCENTILE.EXC(D1:D2, 0.5)', '#NUM!'],
+    ['=PERCENTRANK(C1:C2, 5)', '#N/A'],
+    ['=PERCENTRANK(A1:A4, 2, "x")', '#VALUE!'],
+    ['=PERCENTRANK(D1:D2, 5)', '#N/A'],
+    ['=QUARTILE(A1:A4, "x")', '#VALUE!'],
+    ['=RANK("x", A1:A4)', '#VALUE!'],
+    ['=RANK(1, C1:C2)', '#N/A'],
+    ['=RANK(1, A1:A4, "x")', '#VALUE!'],
+    ['=CORREL(C1:C2, A1:A2)', '#N/A'],
+    ['=CORREL(A1:A2, C1:C2)', '#N/A'],
+    ['=CORREL(E1:E3, A1:A3)', '#DIV/0!'],
+    ['=RSQ(A1:A3, E1:E3)', '#DIV/0!'],
+    ['=SLOPE(A1:A3, E1:E3)', '#DIV/0!'],
+    ['=STEYX(A1:A3, E1:E3)', '#DIV/0!'],
+    ['=FORECAST(1, A1:A3, E1:E3)', '#DIV/0!'],
+    ['=FORECAST(1, A1:A3, C1:C3)', '#N/A'],
+    ['=COVARIANCE.S(1, 2)', '#DIV/0!'],
+    ['=PROB(A1:A4, B1:B3, 1)', '#N/A'],
+    ['=PROB(A1:A2, {0.5, 0.5}, "x")', '#VALUE!'],
+    ['=PROB(A1:A2, {0.5, 0.5}, 1, "x")', '#VALUE!'],
+    ['=PROB(C1:C2, {0.5, 0.5}, 1)', '#N/A'],
+    ['=PROB(A1:A2, C1:C2, 1)', '#N/A'],
+    ['=PROB(D1:D2, {0.5, 0.5}, 1)', '#VALUE!'],
+    ['=PERMUT(3, -1)', '#NUM!'],
+    ['=PERMUT(200, 200)', '#NUM!'],
+    ['=PERMUTATIONA(2, -1)', '#NUM!'],
+    ['=COUNTIFS(A1:A4, ">1", B1:B4)', '#N/A'],
+    ['=AVERAGEIF(A1:A2, ">0", C1:C2)', '#N/A'],
+  ])('%s is %s', (formula, code) => {
+    expect(calc(formula, DATA)).toMatchObject({ e: code });
+  });
+
+  it('spills every mode of MODE.MULT down a column, in the order they come', () => {
+    const b = book({ A1: '=MODE.MULT({3, 3, 1, 1, 2})' });
+    expect([b.v('A1'), b.v('A2'), b.v('A3')]).toEqual([3, 1, null]);
+  });
+});

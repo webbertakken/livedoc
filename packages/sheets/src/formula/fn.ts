@@ -247,6 +247,31 @@ export function numbersOf(args: EvalValue[], f: Frame): number[] | SheetError {
   return out;
 }
 
+// The numbers of the A aggregates (AVERAGEA, MAXA, VARA, ...): in a range, text counts as 0 and TRUE and FALSE as
+// 1 and 0, empty cells skipped; typed directly, as numbersOf reads them, but text that reads as no number is 0, or
+// its #VALUE! when `textIsError` (MAXA). Any error stops it.
+export function numbersOfA(
+  args: EvalValue[],
+  f: Frame,
+  textIsError = false,
+): number[] | SheetError {
+  const out: number[] = [];
+  for (const a of eachArea(args)) {
+    if (a === null || a === undefined) continue;
+    const fromRange = isRef(a) || isArray(a);
+    const v = deref(a, f);
+    for (const x of isArray(v) ? v.rows.flat().map(scalarOf) : [v]) {
+      if (isError(x)) return x;
+      if (x === null) continue;
+      const n = fromRange && typeof x === 'string' ? 0 : toNumber(x);
+      if (typeof n === 'number') out.push(n);
+      else if (textIsError) return n;
+      else out.push(0);
+    }
+  }
+  return out;
+}
+
 // Every scalar of the arguments (arrays flattened), errors kept, for COUNTA, CONCAT, TEXTJOIN...
 export function flatScalars(args: EvalValue[], f: Frame): Scalar[] {
   const out: Scalar[] = [];

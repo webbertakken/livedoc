@@ -1,0 +1,1802 @@
+{
+  "category": "Statistical",
+  "data": [
+    [2, 1, 2, 4, 6, 15, 2, 1, 10, 10, 1, 2, 5, 0.25, 1, 0.2, "a", true],
+    [5, 3, 5, 3, 7, 20, 4, 3, "x", 15, 2, null, 5, 0.25, 2, 0.3, "b", 3],
+    [8, 4, 7, 6, 15, 35, null, null, "y", 20, "x", 6, 5, 0.25, 3, 0.1, null, false],
+    [13, 7, 1, 1, 36, 40, null, null, null, 30, 4, 8, null, 0.25, 4, 0.4],
+    [10, 6, 8, 5, 39, 50, null, null, "5", 10, 5, 11],
+    [18, 9, null, null, 40, null, null, null, 2, 15],
+    [23, 12, null, null, 41],
+    [26, 11, null, null, 42],
+    [null, null, null, null, 43],
+    [null, null, null, null, 47],
+    [null, null, null, null, 49]
+  ],
+  "cases": [
+    {
+      "id": "AVEDEV.1",
+      "f": "=AVEDEV(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "AVEDEV.2",
+      "f": "=AVEDEV(Data!A1:A8)"
+    },
+    {
+      "id": "AVEDEV.3",
+      "f": "=AVEDEV(Data!I1:I6)"
+    },
+    {
+      "id": "AVEDEV.4",
+      "f": "=AVEDEV(Data!Q1:Q2)"
+    },
+    {
+      "id": "AVEDEV.5",
+      "f": "=AVEDEV(2, \"x\")"
+    },
+    {
+      "id": "AVEDEV.6",
+      "f": "=AVEDEV(1, NA())"
+    },
+    {
+      "id": "AVERAGE.1",
+      "f": "=AVERAGE(Data!A1:A8)"
+    },
+    {
+      "id": "AVERAGE.2",
+      "f": "=AVERAGE(Data!I1:I6)"
+    },
+    {
+      "id": "AVERAGE.3",
+      "f": "=AVERAGE(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "AVERAGE.4",
+      "f": "=AVERAGE(Data!Q1:Q2)"
+    },
+    {
+      "id": "AVERAGE.5",
+      "f": "=AVERAGE(Data!A1:A3, 4)"
+    },
+    {
+      "id": "AVERAGE.WEIGHTED.1",
+      "f": "=AVERAGE.WEIGHTED(Data!G1:G2, Data!H1:H2)",
+      "expect": [[3.5]],
+      "cite": "https://support.google.com/docs/answer/9084098 (the examples: 3.5, 3.2 and 6.2, the last with 8 and 6 as its additional value and weight)",
+      "differs": {
+        "libreoffice": "AVERAGE.WEIGHTED is Google's own (S5): LibreOffice has no such function (#NAME?)"
+      }
+    },
+    {
+      "id": "AVERAGE.WEIGHTED.2",
+      "f": "=AVERAGE.WEIGHTED(2, 10, 4, 15)",
+      "expect": [[3.2]],
+      "cite": "https://support.google.com/docs/answer/9084098 (the examples: 3.5, 3.2 and 6.2, the last with 8 and 6 as its additional value and weight)",
+      "differs": {
+        "libreoffice": "AVERAGE.WEIGHTED is Google's own (S5): LibreOffice has no such function (#NAME?)"
+      }
+    },
+    {
+      "id": "AVERAGE.WEIGHTED.3",
+      "f": "=AVERAGE.WEIGHTED(Data!G1:G2, Data!H1:H2, 8, 6)",
+      "expect": [[6.2]],
+      "cite": "https://support.google.com/docs/answer/9084098 (the examples: 3.5, 3.2 and 6.2, the last with 8 and 6 as its additional value and weight)",
+      "differs": {
+        "libreoffice": "AVERAGE.WEIGHTED is Google's own (S5): LibreOffice has no such function (#NAME?)"
+      }
+    },
+    {
+      "id": "AVERAGEA.1",
+      "f": "=AVERAGEA(Data!I1:I6)"
+    },
+    {
+      "id": "AVERAGEA.2",
+      "f": "=AVERAGEA(1, TRUE, \"3\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "AVERAGEA.3",
+      "f": "=AVERAGEA(Data!A1:A8)"
+    },
+    {
+      "id": "AVERAGEA.4",
+      "f": "=AVERAGEA(1, \"x\")"
+    },
+    {
+      "id": "AVERAGEA.5",
+      "f": "=AVERAGEA(Data!Q1:Q2)"
+    },
+    {
+      "id": "AVERAGEA.6",
+      "f": "=AVERAGEA(Data!R1:R3)"
+    },
+    {
+      "id": "AVERAGEIF.1",
+      "f": "=AVERAGEIF(Data!A1:A8, \">10\")"
+    },
+    {
+      "id": "AVERAGEIF.2",
+      "f": "=AVERAGEIF(Data!K1:K5, \">1\", Data!L1:L5)"
+    },
+    {
+      "id": "AVERAGEIF.3",
+      "f": "=AVERAGEIF(Data!A1:A8, \">100\")"
+    },
+    {
+      "id": "AVERAGEIFS.1",
+      "f": "=AVERAGEIFS(Data!A1:A8, Data!B1:B8, \">3\", Data!A1:A8, \"<20\")"
+    },
+    {
+      "id": "AVERAGEIFS.2",
+      "f": "=AVERAGEIFS(Data!A1:A8, Data!B1:B8, \">100\")"
+    },
+    {
+      "id": "CORREL.1",
+      "f": "=CORREL(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "CORREL.2",
+      "f": "=CORREL(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "CORREL.3",
+      "f": "=CORREL(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "CORREL.4",
+      "f": "=CORREL(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "CORREL.5",
+      "f": "=CORREL({1,3}, {-1,6})"
+    },
+    {
+      "id": "CORREL.6",
+      "f": "=CORREL(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "COUNT.1",
+      "f": "=COUNT(Data!I1:I6)"
+    },
+    {
+      "id": "COUNT.2",
+      "f": "=COUNT(1, \"2\", TRUE, \"x\")"
+    },
+    {
+      "id": "COUNT.3",
+      "f": "=COUNT(Data!A1:Q11)"
+    },
+    {
+      "id": "COUNTA.1",
+      "f": "=COUNTA(Data!I1:I6)"
+    },
+    {
+      "id": "COUNTA.2",
+      "f": "=COUNTA(1, \"2\", TRUE, \"x\")"
+    },
+    {
+      "id": "COUNTA.3",
+      "f": "=COUNTA(Data!A1:Q11)"
+    },
+    {
+      "id": "COVAR.1",
+      "f": "=COVAR(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "COVAR.2",
+      "f": "=COVAR(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "COVAR.3",
+      "f": "=COVAR(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "COVAR.4",
+      "f": "=COVAR(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "COVAR.5",
+      "f": "=COVAR({1,3}, {-1,6})"
+    },
+    {
+      "id": "COVAR.6",
+      "f": "=COVAR(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "COVARIANCE.P.1",
+      "f": "=COVARIANCE.P(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "COVARIANCE.P.2",
+      "f": "=COVARIANCE.P(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "COVARIANCE.P.3",
+      "f": "=COVARIANCE.P(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "COVARIANCE.P.4",
+      "f": "=COVARIANCE.P(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "COVARIANCE.P.5",
+      "f": "=COVARIANCE.P({1,3}, {-1,6})"
+    },
+    {
+      "id": "COVARIANCE.P.6",
+      "f": "=COVARIANCE.P(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "COVARIANCE.S.1",
+      "f": "=COVARIANCE.S(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "COVARIANCE.S.2",
+      "f": "=COVARIANCE.S(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "COVARIANCE.S.3",
+      "f": "=COVARIANCE.S(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "COVARIANCE.S.4",
+      "f": "=COVARIANCE.S(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "COVARIANCE.S.5",
+      "f": "=COVARIANCE.S({1,3}, {-1,6})"
+    },
+    {
+      "id": "COVARIANCE.S.6",
+      "f": "=COVARIANCE.S(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "DEVSQ.1",
+      "f": "=DEVSQ(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "DEVSQ.2",
+      "f": "=DEVSQ(Data!A1:A8)"
+    },
+    {
+      "id": "DEVSQ.3",
+      "f": "=DEVSQ(5)"
+    },
+    {
+      "id": "DEVSQ.4",
+      "f": "=DEVSQ(Data!Q1:Q2)",
+      "expect": [[0]],
+      "cite": "https://support.google.com/docs/answer/3093625 (\"If the total number of values supplied as value arguments is not at least two, DEVSQ will return a value of 0\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #DIV/0! for no numbers"
+      }
+    },
+    {
+      "id": "DEVSQ.5",
+      "f": "=DEVSQ(Data!I1:I6)"
+    },
+    {
+      "id": "FISHER.1",
+      "f": "=FISHER(0.962)"
+    },
+    {
+      "id": "FISHER.2",
+      "f": "=FISHER(0)"
+    },
+    {
+      "id": "FISHER.3",
+      "f": "=FISHER(-0.5)"
+    },
+    {
+      "id": "FISHER.4",
+      "f": "=FISHER(1)"
+    },
+    {
+      "id": "FISHER.5",
+      "f": "=FISHER(-1)"
+    },
+    {
+      "id": "FISHER.6",
+      "f": "=FISHER(1.5)"
+    },
+    {
+      "id": "FISHERINV.1",
+      "f": "=FISHERINV(0.962)"
+    },
+    {
+      "id": "FISHERINV.2",
+      "f": "=FISHERINV(0)"
+    },
+    {
+      "id": "FISHERINV.3",
+      "f": "=FISHERINV(-2)"
+    },
+    {
+      "id": "FISHERINV.4",
+      "f": "=FISHERINV(40)"
+    },
+    {
+      "id": "FORECAST.1",
+      "f": "=FORECAST(4, Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "FORECAST.2",
+      "f": "=FORECAST(10, Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "FORECAST.3",
+      "f": "=FORECAST(1, Data!C1:C3, Data!M1:M3)"
+    },
+    {
+      "id": "FORECAST.4",
+      "f": "=FORECAST(1, Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "FORECAST.5",
+      "f": "=FORECAST(\"x\", Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "FORECAST.LINEAR.1",
+      "f": "=FORECAST.LINEAR(4, Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "FORECAST.LINEAR.2",
+      "f": "=FORECAST.LINEAR(10, Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "FORECAST.LINEAR.3",
+      "f": "=FORECAST.LINEAR(1, Data!C1:C3, Data!M1:M3)"
+    },
+    {
+      "id": "FORECAST.LINEAR.4",
+      "f": "=FORECAST.LINEAR(1, Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "FORECAST.LINEAR.5",
+      "f": "=FORECAST.LINEAR(\"x\", Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "GEOMEAN.1",
+      "f": "=GEOMEAN(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "GEOMEAN.2",
+      "f": "=GEOMEAN(Data!A1:A8)"
+    },
+    {
+      "id": "GEOMEAN.3",
+      "f": "=GEOMEAN(2, 0)"
+    },
+    {
+      "id": "GEOMEAN.4",
+      "f": "=GEOMEAN(-1, 4)"
+    },
+    {
+      "id": "GEOMEAN.5",
+      "f": "=GEOMEAN(Data!I1:I6)"
+    },
+    {
+      "id": "GEOMEAN.6",
+      "f": "=GEOMEAN(Data!Q1:Q2)"
+    },
+    {
+      "id": "HARMEAN.1",
+      "f": "=HARMEAN(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "HARMEAN.2",
+      "f": "=HARMEAN(Data!A1:A8)"
+    },
+    {
+      "id": "HARMEAN.3",
+      "f": "=HARMEAN(2, 0)"
+    },
+    {
+      "id": "HARMEAN.4",
+      "f": "=HARMEAN(-1, 4)"
+    },
+    {
+      "id": "HARMEAN.5",
+      "f": "=HARMEAN(Data!I1:I6)"
+    },
+    {
+      "id": "HARMEAN.6",
+      "f": "=HARMEAN(Data!Q1:Q2)"
+    },
+    {
+      "id": "INTERCEPT.1",
+      "f": "=INTERCEPT(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "INTERCEPT.2",
+      "f": "=INTERCEPT(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "INTERCEPT.3",
+      "f": "=INTERCEPT(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "INTERCEPT.4",
+      "f": "=INTERCEPT(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "INTERCEPT.5",
+      "f": "=INTERCEPT({1,3}, {-1,6})"
+    },
+    {
+      "id": "INTERCEPT.6",
+      "f": "=INTERCEPT(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "KURT.1",
+      "f": "=KURT(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "KURT.2",
+      "f": "=KURT(Data!A1:A8)"
+    },
+    {
+      "id": "KURT.3",
+      "f": "=KURT(1,2,3)"
+    },
+    {
+      "id": "KURT.4",
+      "f": "=KURT(Data!M1:M3, 5)"
+    },
+    {
+      "id": "KURT.5",
+      "f": "=KURT(Data!E1:E11)"
+    },
+    {
+      "id": "KURT.6",
+      "f": "=KURT(Data!Q1:Q2)"
+    },
+    {
+      "id": "LARGE.1",
+      "f": "=LARGE(Data!A1:A8, 3)"
+    },
+    {
+      "id": "LARGE.2",
+      "f": "=LARGE(Data!A1:A8, 9)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
+    },
+    {
+      "id": "LARGE.3",
+      "f": "=LARGE(Data!A1:A8, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
+    },
+    {
+      "id": "LARGE.4",
+      "f": "=LARGE(Data!I1:I6, 1)"
+    },
+    {
+      "id": "LARGE.5",
+      "f": "=LARGE(Data!A1:A8, 2.5)"
+    },
+    {
+      "id": "MAX.1",
+      "f": "=MAX(Data!I1:I6)"
+    },
+    {
+      "id": "MAX.2",
+      "f": "=MAX(Data!Q1:Q2)"
+    },
+    {
+      "id": "MAX.3",
+      "f": "=MAX(1, \"x\")"
+    },
+    {
+      "id": "MAX.4",
+      "f": "=MAX(1, \"3\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "MAX.5",
+      "f": "=MAX(TRUE, 0)"
+    },
+    {
+      "id": "MAXA.1",
+      "f": "=MAXA(Data!I1:I6)"
+    },
+    {
+      "id": "MAXA.2",
+      "f": "=MAXA(Data!Q1:Q2)"
+    },
+    {
+      "id": "MAXA.3",
+      "f": "=MAXA(-1, TRUE)"
+    },
+    {
+      "id": "MAXA.4",
+      "f": "=MAXA(1, \"x\")",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094016 (\"If an argument contains error values or text that can't be changed into numbers, it will cause an error\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0"
+      }
+    },
+    {
+      "id": "MAXA.5",
+      "f": "=MAXA(Data!A1:A8)"
+    },
+    {
+      "id": "MAXA.6",
+      "f": "=0 + MAXA(Data!R1:R3)"
+    },
+    {
+      "id": "MAXIFS.1",
+      "f": "=MAXIFS(Data!A1:A8, Data!B1:B8, \">3\")"
+    },
+    {
+      "id": "MAXIFS.2",
+      "f": "=MAXIFS(Data!A1:A8, Data!B1:B8, \">100\")"
+    },
+    {
+      "id": "MEDIAN.1",
+      "f": "=MEDIAN(Data!A1:A8)"
+    },
+    {
+      "id": "MEDIAN.2",
+      "f": "=MEDIAN(1,2,3,4,5)"
+    },
+    {
+      "id": "MEDIAN.3",
+      "f": "=MEDIAN(Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "MEDIAN.4",
+      "f": "=MEDIAN(Data!I1:I6)"
+    },
+    {
+      "id": "MEDIAN.5",
+      "f": "=MEDIAN(1,2,3,4)"
+    },
+    {
+      "id": "MIN.1",
+      "f": "=MIN(Data!I1:I6)"
+    },
+    {
+      "id": "MIN.2",
+      "f": "=MIN(Data!Q1:Q2)"
+    },
+    {
+      "id": "MIN.3",
+      "f": "=MIN(1, \"x\")"
+    },
+    {
+      "id": "MIN.4",
+      "f": "=MIN(1, \"3\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "MIN.5",
+      "f": "=MIN(TRUE, 0)"
+    },
+    {
+      "id": "MINA.1",
+      "f": "=MINA(Data!I1:I6)"
+    },
+    {
+      "id": "MINA.2",
+      "f": "=MINA(Data!Q1:Q2)"
+    },
+    {
+      "id": "MINA.3",
+      "f": "=MINA(-1, TRUE)"
+    },
+    {
+      "id": "MINA.4",
+      "f": "=MINA(1, \"x\")"
+    },
+    {
+      "id": "MINA.5",
+      "f": "=MINA(Data!A1:A8)"
+    },
+    {
+      "id": "MINA.6",
+      "f": "=0 + MINA(Data!R1:R3)"
+    },
+    {
+      "id": "MINIFS.1",
+      "f": "=MINIFS(Data!A1:A8, Data!B1:B8, \">3\")"
+    },
+    {
+      "id": "MINIFS.2",
+      "f": "=MINIFS(Data!A1:A8, Data!B1:B8, \">100\")"
+    },
+    {
+      "id": "MODE.1",
+      "f": "=MODE(Data!J1:J6)"
+    },
+    {
+      "id": "MODE.2",
+      "f": "=MODE(1,2,3)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+    },
+    {
+      "id": "MODE.3",
+      "f": "=MODE(3,5,5,3)"
+    },
+    {
+      "id": "MODE.MULT.1",
+      "f": "=MODE.MULT({10, 15, 20, 30, 10, 15})",
+      "rows": 2,
+      "cols": 1
+    },
+    {
+      "id": "MODE.MULT.2",
+      "f": "=MODE.MULT(Data!J1:J6)",
+      "rows": 2,
+      "cols": 1
+    },
+    {
+      "id": "MODE.MULT.3",
+      "f": "=MODE.MULT(1,2,3)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+    },
+    {
+      "id": "MODE.MULT.4",
+      "f": "=MODE.MULT(Data!A1:A8)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+    },
+    {
+      "id": "MODE.MULT.5",
+      "f": "=MODE.MULT({3,3,1,1,2,2})",
+      "rows": 3,
+      "cols": 1
+    },
+    {
+      "id": "MODE.SNGL.1",
+      "f": "=MODE.SNGL(Data!J1:J6)"
+    },
+    {
+      "id": "MODE.SNGL.2",
+      "f": "=MODE.SNGL(1,2,3)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+    },
+    {
+      "id": "MODE.SNGL.3",
+      "f": "=MODE.SNGL(3,5,5,3)"
+    },
+    {
+      "id": "PEARSON.1",
+      "f": "=PEARSON(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "PEARSON.2",
+      "f": "=PEARSON(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "PEARSON.3",
+      "f": "=PEARSON(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "PEARSON.4",
+      "f": "=PEARSON(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "PEARSON.5",
+      "f": "=PEARSON({1,3}, {-1,6})"
+    },
+    {
+      "id": "PEARSON.6",
+      "f": "=PEARSON(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "PERCENTILE.1",
+      "f": "=PERCENTILE(Data!A1:A8, 0.3)"
+    },
+    {
+      "id": "PERCENTILE.2",
+      "f": "=PERCENTILE(Data!A1:A8, 0)"
+    },
+    {
+      "id": "PERCENTILE.3",
+      "f": "=PERCENTILE(Data!A1:A8, 1)"
+    },
+    {
+      "id": "PERCENTILE.4",
+      "f": "=PERCENTILE(Data!A1:A8, 1.1)"
+    },
+    {
+      "id": "PERCENTILE.5",
+      "f": "=PERCENTILE(Data!Q1:Q2, 0.5)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "PERCENTILE.EXC.1",
+      "f": "=PERCENTILE.EXC(Data!F1:F5, 0.15)"
+    },
+    {
+      "id": "PERCENTILE.EXC.2",
+      "f": "=PERCENTILE.EXC(Data!F1:F5, 0.4)"
+    },
+    {
+      "id": "PERCENTILE.EXC.3",
+      "f": "=PERCENTILE.EXC(Data!F1:F5, 0.5)"
+    },
+    {
+      "id": "PERCENTILE.EXC.4",
+      "f": "=PERCENTILE.EXC(Data!F1:F5, 0.8)"
+    },
+    {
+      "id": "PERCENTILE.EXC.5",
+      "f": "=PERCENTILE.EXC(Data!F1:F5, 0.9)"
+    },
+    {
+      "id": "PERCENTILE.EXC.6",
+      "f": "=PERCENTILE.EXC(Data!F1:F5, 0)"
+    },
+    {
+      "id": "PERCENTILE.INC.1",
+      "f": "=PERCENTILE.INC(Data!A1:A8, 0.3)"
+    },
+    {
+      "id": "PERCENTILE.INC.2",
+      "f": "=PERCENTILE.INC(Data!A1:A8, 0)"
+    },
+    {
+      "id": "PERCENTILE.INC.3",
+      "f": "=PERCENTILE.INC(Data!A1:A8, 1)"
+    },
+    {
+      "id": "PERCENTILE.INC.4",
+      "f": "=PERCENTILE.INC(Data!A1:A8, 1.1)"
+    },
+    {
+      "id": "PERCENTILE.INC.5",
+      "f": "=PERCENTILE.INC(Data!Q1:Q2, 0.5)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "PERCENTRANK.1",
+      "f": "=PERCENTRANK(Data!A1:A8, 8)"
+    },
+    {
+      "id": "PERCENTRANK.2",
+      "f": "=PERCENTRANK(Data!A1:A8, 9)"
+    },
+    {
+      "id": "PERCENTRANK.3",
+      "f": "=PERCENTRANK(Data!A1:A8, 2)"
+    },
+    {
+      "id": "PERCENTRANK.4",
+      "f": "=PERCENTRANK(Data!A1:A8, 26)"
+    },
+    {
+      "id": "PERCENTRANK.5",
+      "f": "=PERCENTRANK(Data!A1:A8, 30)",
+      "expect": [
+        [
+          {
+            "e": "#N/A"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094095 (\"If data does not contain value in any cell or element, PERCENTRANK will return the #N/A error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a value outside the data"
+      }
+    },
+    {
+      "id": "PERCENTRANK.6",
+      "f": "=PERCENTRANK(Data!A1:A8, 13, 5)"
+    },
+    {
+      "id": "PERCENTRANK.7",
+      "f": "=PERCENTRANK(Data!A1:A8, 8, 1)"
+    },
+    {
+      "id": "PERCENTRANK.8",
+      "f": "=PERCENTRANK(Data!A1:A8, 8, 0)",
+      "expect": [[0.286]],
+      "cite": "https://support.google.com/docs/answer/3094095 (\"If a number less than or equal to 0 is used for significant_digits then this value will be ignored and the default number of significant digits will be used instead\": PERCENTRANK.1's 0.286)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses fewer than one significant digit (Err:502)"
+      }
+    },
+    {
+      "id": "PERCENTRANK.EXC.1",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 8)"
+    },
+    {
+      "id": "PERCENTRANK.EXC.2",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 9)"
+    },
+    {
+      "id": "PERCENTRANK.EXC.3",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 2)"
+    },
+    {
+      "id": "PERCENTRANK.EXC.4",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 26)"
+    },
+    {
+      "id": "PERCENTRANK.EXC.5",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 30)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a value outside the data; LiveDoc #N/A, as Google documents for PERCENTRANK, the same function"
+      },
+      "note": "Awaits Google's answer: its help for this form says only that a value not in the data is estimated."
+    },
+    {
+      "id": "PERCENTRANK.EXC.6",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 13, 5)"
+    },
+    {
+      "id": "PERCENTRANK.EXC.7",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 8, 1)"
+    },
+    {
+      "id": "PERCENTRANK.EXC.8",
+      "f": "=PERCENTRANK.EXC(Data!A1:A8, 8, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses fewer than one significant digit (Err:502); LiveDoc uses the default 3, as Google documents for PERCENTRANK, the same function"
+      },
+      "note": "Awaits Google's answer: its help for this form does not say."
+    },
+    {
+      "id": "PERCENTRANK.INC.1",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 8)"
+    },
+    {
+      "id": "PERCENTRANK.INC.2",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 9)"
+    },
+    {
+      "id": "PERCENTRANK.INC.3",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 2)"
+    },
+    {
+      "id": "PERCENTRANK.INC.4",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 26)"
+    },
+    {
+      "id": "PERCENTRANK.INC.5",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 30)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a value outside the data; LiveDoc #N/A, as Google documents for PERCENTRANK, the same function"
+      },
+      "note": "Awaits Google's answer: its help for this form says only that a value not in the data is estimated."
+    },
+    {
+      "id": "PERCENTRANK.INC.6",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 13, 5)"
+    },
+    {
+      "id": "PERCENTRANK.INC.7",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 8, 1)"
+    },
+    {
+      "id": "PERCENTRANK.INC.8",
+      "f": "=PERCENTRANK.INC(Data!A1:A8, 8, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses fewer than one significant digit (Err:502); LiveDoc uses the default 3, as Google documents for PERCENTRANK, the same function"
+      },
+      "note": "Awaits Google's answer: its help for this form does not say."
+    },
+    {
+      "id": "PERMUT.1",
+      "f": "=PERMUT(4, 2)"
+    },
+    {
+      "id": "PERMUT.2",
+      "f": "=PERMUT(4.7, 2.9)"
+    },
+    {
+      "id": "PERMUT.3",
+      "f": "=PERMUT(2, 4)"
+    },
+    {
+      "id": "PERMUT.4",
+      "f": "=PERMUT(-1, 0)"
+    },
+    {
+      "id": "PERMUT.5",
+      "f": "=PERMUT(0, 0)"
+    },
+    {
+      "id": "PERMUT.6",
+      "f": "=PERMUT(\"x\", 2)"
+    },
+    {
+      "id": "PERMUTATIONA.1",
+      "f": "=PERMUTATIONA(3, 2)"
+    },
+    {
+      "id": "PERMUTATIONA.2",
+      "f": "=PERMUTATIONA(3.2, 2.3)"
+    },
+    {
+      "id": "PERMUTATIONA.3",
+      "f": "=PERMUTATIONA(0, 2)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/9368324 (\"If the number is zero, PERMUTATIONA returns a #NUM.\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0^2, 0"
+      }
+    },
+    {
+      "id": "PERMUTATIONA.4",
+      "f": "=PERMUTATIONA(3, 4)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/9368324 (number_chosen: \"Must be less than or equal to number.\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 3^4, 81"
+      }
+    },
+    {
+      "id": "PERMUTATIONA.5",
+      "f": "=PERMUTATIONA(-1, 2)"
+    },
+    {
+      "id": "PERMUTATIONA.6",
+      "f": "=PERMUTATIONA(3, 0)"
+    },
+    {
+      "id": "PROB.1",
+      "f": "=PROB({1,2,3,4}, {0.25,0.25,0.25,0.25}, 3)"
+    },
+    {
+      "id": "PROB.2",
+      "f": "=PROB(Data!O1:O4, Data!P1:P4, 2, 3)"
+    },
+    {
+      "id": "PROB.3",
+      "f": "=PROB(Data!O1:O4, Data!N1:N4, 5)"
+    },
+    {
+      "id": "PROB.4",
+      "f": "=PROB({1,2}, {0.5,0.4}, 1)"
+    },
+    {
+      "id": "PROB.5",
+      "f": "=PROB({1,2,3}, {0.5,0.5}, 1)"
+    },
+    {
+      "id": "PROB.6",
+      "f": "=PROB({1,2}, {1.5,-0.5}, 1)"
+    },
+    {
+      "id": "PROB.7",
+      "f": "=PROB(Data!O1:O4, Data!P1:P4, 3, 2)"
+    },
+    {
+      "id": "QUARTILE.1",
+      "f": "=QUARTILE(Data!E1:E11, 1)"
+    },
+    {
+      "id": "QUARTILE.2",
+      "f": "=QUARTILE(Data!E1:E11, 0)"
+    },
+    {
+      "id": "QUARTILE.3",
+      "f": "=QUARTILE(Data!E1:E11, 4)"
+    },
+    {
+      "id": "QUARTILE.4",
+      "f": "=QUARTILE(Data!E1:E11, 5)"
+    },
+    {
+      "id": "QUARTILE.5",
+      "f": "=QUARTILE(Data!E1:E11, 2.7)"
+    },
+    {
+      "id": "QUARTILE.6",
+      "f": "=QUARTILE(Data!E1:E11, -1)"
+    },
+    {
+      "id": "QUARTILE.EXC.1",
+      "f": "=QUARTILE.EXC(Data!E1:E11, 1)"
+    },
+    {
+      "id": "QUARTILE.EXC.2",
+      "f": "=QUARTILE.EXC(Data!E1:E11, 2)"
+    },
+    {
+      "id": "QUARTILE.EXC.3",
+      "f": "=QUARTILE.EXC(Data!E1:E11, 3)"
+    },
+    {
+      "id": "QUARTILE.EXC.4",
+      "f": "=QUARTILE.EXC(Data!E1:E11, 0)"
+    },
+    {
+      "id": "QUARTILE.EXC.5",
+      "f": "=QUARTILE.EXC(Data!E1:E11, 4)"
+    },
+    {
+      "id": "QUARTILE.EXC.6",
+      "f": "=QUARTILE.EXC(Data!E1:E11, 2.7)"
+    },
+    {
+      "id": "QUARTILE.INC.1",
+      "f": "=QUARTILE.INC(Data!E1:E11, 1)"
+    },
+    {
+      "id": "QUARTILE.INC.2",
+      "f": "=QUARTILE.INC(Data!E1:E11, 0)"
+    },
+    {
+      "id": "QUARTILE.INC.3",
+      "f": "=QUARTILE.INC(Data!E1:E11, 4)"
+    },
+    {
+      "id": "QUARTILE.INC.4",
+      "f": "=QUARTILE.INC(Data!E1:E11, 5)"
+    },
+    {
+      "id": "QUARTILE.INC.5",
+      "f": "=QUARTILE.INC(Data!E1:E11, 2.7)"
+    },
+    {
+      "id": "QUARTILE.INC.6",
+      "f": "=QUARTILE.INC(Data!E1:E11, -1)"
+    },
+    {
+      "id": "RANK.1",
+      "f": "=RANK(15, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.2",
+      "f": "=RANK(15, Data!J1:J6, 1)"
+    },
+    {
+      "id": "RANK.3",
+      "f": "=RANK(30, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.4",
+      "f": "=RANK(99, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.5",
+      "f": "=RANK(Data!I1, Data!I1:I6)"
+    },
+    {
+      "id": "RANK.AVG.1",
+      "f": "=RANK.AVG(15, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.AVG.2",
+      "f": "=RANK.AVG(15, Data!J1:J6, 1)"
+    },
+    {
+      "id": "RANK.AVG.3",
+      "f": "=RANK.AVG(30, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.AVG.4",
+      "f": "=RANK.AVG(99, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.AVG.5",
+      "f": "=RANK.AVG(Data!I1, Data!I1:I6)"
+    },
+    {
+      "id": "RANK.EQ.1",
+      "f": "=RANK.EQ(15, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.EQ.2",
+      "f": "=RANK.EQ(15, Data!J1:J6, 1)"
+    },
+    {
+      "id": "RANK.EQ.3",
+      "f": "=RANK.EQ(30, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.EQ.4",
+      "f": "=RANK.EQ(99, Data!J1:J6)"
+    },
+    {
+      "id": "RANK.EQ.5",
+      "f": "=RANK.EQ(Data!I1, Data!I1:I6)"
+    },
+    {
+      "id": "RSQ.1",
+      "f": "=RSQ(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "RSQ.2",
+      "f": "=RSQ(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "RSQ.3",
+      "f": "=RSQ(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "RSQ.4",
+      "f": "=RSQ(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "RSQ.5",
+      "f": "=RSQ({1,3}, {-1,6})"
+    },
+    {
+      "id": "RSQ.6",
+      "f": "=RSQ(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "SKEW.1",
+      "f": "=SKEW(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "SKEW.2",
+      "f": "=SKEW(Data!A1:A8)"
+    },
+    {
+      "id": "SKEW.3",
+      "f": "=SKEW(1, 2)"
+    },
+    {
+      "id": "SKEW.4",
+      "f": "=SKEW(Data!M1:M3)"
+    },
+    {
+      "id": "SKEW.5",
+      "f": "=SKEW(Data!Q1:Q2)"
+    },
+    {
+      "id": "SKEW.P.1",
+      "f": "=SKEW.P(Data!A1:A8)"
+    },
+    {
+      "id": "SKEW.P.2",
+      "f": "=SKEW.P(Data!A1:A8, 30, 40)"
+    },
+    {
+      "id": "SKEW.P.3",
+      "f": "=SKEW.P(5)"
+    },
+    {
+      "id": "SKEW.P.4",
+      "f": "=SKEW.P(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "SLOPE.1",
+      "f": "=SLOPE(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "SLOPE.2",
+      "f": "=SLOPE(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "SLOPE.3",
+      "f": "=SLOPE(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "SLOPE.4",
+      "f": "=SLOPE(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "SLOPE.5",
+      "f": "=SLOPE({1,3}, {-1,6})"
+    },
+    {
+      "id": "SLOPE.6",
+      "f": "=SLOPE(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "SMALL.1",
+      "f": "=SMALL(Data!A1:A8, 3)"
+    },
+    {
+      "id": "SMALL.2",
+      "f": "=SMALL(Data!A1:A8, 9)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
+    },
+    {
+      "id": "SMALL.3",
+      "f": "=SMALL(Data!A1:A8, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
+    },
+    {
+      "id": "SMALL.4",
+      "f": "=SMALL(Data!I1:I6, 1)"
+    },
+    {
+      "id": "SMALL.5",
+      "f": "=SMALL(Data!A1:A8, 2.5)"
+    },
+    {
+      "id": "STANDARDIZE.1",
+      "f": "=STANDARDIZE(96, 80, 6.7)"
+    },
+    {
+      "id": "STANDARDIZE.2",
+      "f": "=STANDARDIZE(1, 2, 0)"
+    },
+    {
+      "id": "STANDARDIZE.3",
+      "f": "=STANDARDIZE(1, 2, -1)"
+    },
+    {
+      "id": "STANDARDIZE.4",
+      "f": "=STANDARDIZE(\"x\", 1, 1)"
+    },
+    {
+      "id": "STDEV.1",
+      "f": "=STDEV(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "STDEV.2",
+      "f": "=STDEV(Data!A1:A8)"
+    },
+    {
+      "id": "STDEV.3",
+      "f": "=STDEV(5)"
+    },
+    {
+      "id": "STDEV.4",
+      "f": "=STDEV(Data!I1:I6)"
+    },
+    {
+      "id": "STDEV.5",
+      "f": "=STDEV(1, \"x\")"
+    },
+    {
+      "id": "STDEV.6",
+      "f": "=STDEV(Data!Q1:Q2)"
+    },
+    {
+      "id": "STDEV.7",
+      "f": "=STDEV(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "STDEV.P.1",
+      "f": "=STDEV.P(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "STDEV.P.2",
+      "f": "=STDEV.P(Data!A1:A8)"
+    },
+    {
+      "id": "STDEV.P.3",
+      "f": "=STDEV.P(5)",
+      "expect": [
+        [
+          {
+            "e": "#DIV/0!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094105 (\"If the total number of values supplied as value arguments is not at least two, STDEVP will return the #DIV/0! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      }
+    },
+    {
+      "id": "STDEV.P.4",
+      "f": "=STDEV.P(Data!I1:I6)"
+    },
+    {
+      "id": "STDEV.P.5",
+      "f": "=STDEV.P(1, \"x\")"
+    },
+    {
+      "id": "STDEV.P.6",
+      "f": "=STDEV.P(Data!Q1:Q2)"
+    },
+    {
+      "id": "STDEV.P.7",
+      "f": "=STDEV.P(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "STDEV.S.1",
+      "f": "=STDEV.S(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "STDEV.S.2",
+      "f": "=STDEV.S(Data!A1:A8)"
+    },
+    {
+      "id": "STDEV.S.3",
+      "f": "=STDEV.S(5)"
+    },
+    {
+      "id": "STDEV.S.4",
+      "f": "=STDEV.S(Data!I1:I6)"
+    },
+    {
+      "id": "STDEV.S.5",
+      "f": "=STDEV.S(1, \"x\")"
+    },
+    {
+      "id": "STDEV.S.6",
+      "f": "=STDEV.S(Data!Q1:Q2)"
+    },
+    {
+      "id": "STDEV.S.7",
+      "f": "=STDEV.S(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "STDEVA.1",
+      "f": "=STDEVA(Data!I1:I6)"
+    },
+    {
+      "id": "STDEVA.2",
+      "f": "=STDEVA(1, TRUE, \"3\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "STDEVA.3",
+      "f": "=STDEVA(5)"
+    },
+    {
+      "id": "STDEVA.4",
+      "f": "=STDEVA(1, \"x\")"
+    },
+    {
+      "id": "STDEVA.5",
+      "f": "=STDEVA(Data!Q1:Q2)"
+    },
+    {
+      "id": "STDEVA.6",
+      "f": "=STDEVA(Data!I4)"
+    },
+    {
+      "id": "STDEVA.7",
+      "f": "=STDEVA(Data!R1:R3)"
+    },
+    {
+      "id": "STDEVP.1",
+      "f": "=STDEVP(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "STDEVP.2",
+      "f": "=STDEVP(Data!A1:A8)"
+    },
+    {
+      "id": "STDEVP.3",
+      "f": "=STDEVP(5)",
+      "expect": [
+        [
+          {
+            "e": "#DIV/0!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094105 (\"If the total number of values supplied as value arguments is not at least two, STDEVP will return the #DIV/0! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      }
+    },
+    {
+      "id": "STDEVP.4",
+      "f": "=STDEVP(Data!I1:I6)"
+    },
+    {
+      "id": "STDEVP.5",
+      "f": "=STDEVP(1, \"x\")"
+    },
+    {
+      "id": "STDEVP.6",
+      "f": "=STDEVP(Data!Q1:Q2)"
+    },
+    {
+      "id": "STDEVP.7",
+      "f": "=STDEVP(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "STDEVPA.1",
+      "f": "=STDEVPA(Data!I1:I6)"
+    },
+    {
+      "id": "STDEVPA.2",
+      "f": "=STDEVPA(1, TRUE, \"3\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "STDEVPA.3",
+      "f": "=STDEVPA(5)",
+      "expect": [
+        [
+          {
+            "e": "#DIV/0!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094058 (\"If the total number of values supplied as value arguments is not at least two, STDEVPA will return the #DIV/0! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      }
+    },
+    {
+      "id": "STDEVPA.4",
+      "f": "=STDEVPA(1, \"x\")"
+    },
+    {
+      "id": "STDEVPA.5",
+      "f": "=STDEVPA(Data!Q1:Q2)"
+    },
+    {
+      "id": "STDEVPA.6",
+      "f": "=STDEVPA(Data!I4)"
+    },
+    {
+      "id": "STDEVPA.7",
+      "f": "=STDEVPA(Data!R1:R3)"
+    },
+    {
+      "id": "STEYX.1",
+      "f": "=STEYX(Data!D1:D5, Data!C1:C5)"
+    },
+    {
+      "id": "STEYX.2",
+      "f": "=STEYX(Data!L1:L5, Data!K1:K5)"
+    },
+    {
+      "id": "STEYX.3",
+      "f": "=STEYX(Data!M1:M3, Data!C1:C3)"
+    },
+    {
+      "id": "STEYX.4",
+      "f": "=STEYX(Data!C1:C5, Data!D1:D4)"
+    },
+    {
+      "id": "STEYX.5",
+      "f": "=STEYX({1,3}, {-1,6})"
+    },
+    {
+      "id": "STEYX.6",
+      "f": "=STEYX(Data!Q1:Q2, Data!Q1:Q2)"
+    },
+    {
+      "id": "TRIMMEAN.1",
+      "f": "=TRIMMEAN({1,1,2,3,5,8,13,21,34,55}, 0.05)"
+    },
+    {
+      "id": "TRIMMEAN.2",
+      "f": "=TRIMMEAN(Data!A1:A8, 0.25)"
+    },
+    {
+      "id": "TRIMMEAN.3",
+      "f": "=TRIMMEAN(Data!A1:A8, 0.3)"
+    },
+    {
+      "id": "TRIMMEAN.4",
+      "f": "=TRIMMEAN(Data!A1:A8, 1)"
+    },
+    {
+      "id": "TRIMMEAN.5",
+      "f": "=TRIMMEAN(Data!A1:A8, -0.1)"
+    },
+    {
+      "id": "TRIMMEAN.6",
+      "f": "=TRIMMEAN(Data!A1:A8, 0)"
+    },
+    {
+      "id": "TRIMMEAN.7",
+      "f": "=TRIMMEAN(Data!Q1:Q2, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "VAR.1",
+      "f": "=VAR(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "VAR.2",
+      "f": "=VAR(Data!A1:A8)"
+    },
+    {
+      "id": "VAR.3",
+      "f": "=VAR(5)"
+    },
+    {
+      "id": "VAR.4",
+      "f": "=VAR(Data!I1:I6)"
+    },
+    {
+      "id": "VAR.5",
+      "f": "=VAR(1, \"x\")"
+    },
+    {
+      "id": "VAR.6",
+      "f": "=VAR(Data!Q1:Q2)"
+    },
+    {
+      "id": "VAR.7",
+      "f": "=VAR(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "VAR.P.1",
+      "f": "=VAR.P(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "VAR.P.2",
+      "f": "=VAR.P(Data!A1:A8)"
+    },
+    {
+      "id": "VAR.P.3",
+      "f": "=VAR.P(5)",
+      "expect": [
+        [
+          {
+            "e": "#DIV/0!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094113 (\"If the total number of values supplied as value arguments is not at least two, VARP will return the #DIV/0! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      }
+    },
+    {
+      "id": "VAR.P.4",
+      "f": "=VAR.P(Data!I1:I6)"
+    },
+    {
+      "id": "VAR.P.5",
+      "f": "=VAR.P(1, \"x\")"
+    },
+    {
+      "id": "VAR.P.6",
+      "f": "=VAR.P(Data!Q1:Q2)"
+    },
+    {
+      "id": "VAR.P.7",
+      "f": "=VAR.P(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "VAR.S.1",
+      "f": "=VAR.S(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "VAR.S.2",
+      "f": "=VAR.S(Data!A1:A8)"
+    },
+    {
+      "id": "VAR.S.3",
+      "f": "=VAR.S(5)"
+    },
+    {
+      "id": "VAR.S.4",
+      "f": "=VAR.S(Data!I1:I6)"
+    },
+    {
+      "id": "VAR.S.5",
+      "f": "=VAR.S(1, \"x\")"
+    },
+    {
+      "id": "VAR.S.6",
+      "f": "=VAR.S(Data!Q1:Q2)"
+    },
+    {
+      "id": "VAR.S.7",
+      "f": "=VAR.S(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "VARA.1",
+      "f": "=VARA(Data!I1:I6)"
+    },
+    {
+      "id": "VARA.2",
+      "f": "=VARA(1, TRUE, \"3\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "VARA.3",
+      "f": "=VARA(5)"
+    },
+    {
+      "id": "VARA.4",
+      "f": "=VARA(1, \"x\")"
+    },
+    {
+      "id": "VARA.5",
+      "f": "=VARA(Data!Q1:Q2)"
+    },
+    {
+      "id": "VARA.6",
+      "f": "=VARA(Data!I4)"
+    },
+    {
+      "id": "VARA.7",
+      "f": "=VARA(Data!R1:R3)"
+    },
+    {
+      "id": "VARP.1",
+      "f": "=VARP(1,2,3,4,5,6,7,8,9,10)"
+    },
+    {
+      "id": "VARP.2",
+      "f": "=VARP(Data!A1:A8)"
+    },
+    {
+      "id": "VARP.3",
+      "f": "=VARP(5)",
+      "expect": [
+        [
+          {
+            "e": "#DIV/0!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094113 (\"If the total number of values supplied as value arguments is not at least two, VARP will return the #DIV/0! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      }
+    },
+    {
+      "id": "VARP.4",
+      "f": "=VARP(Data!I1:I6)"
+    },
+    {
+      "id": "VARP.5",
+      "f": "=VARP(1, \"x\")"
+    },
+    {
+      "id": "VARP.6",
+      "f": "=VARP(Data!Q1:Q2)"
+    },
+    {
+      "id": "VARP.7",
+      "f": "=VARP(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
+      },
+      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "VARPA.1",
+      "f": "=VARPA(Data!I1:I6)"
+    },
+    {
+      "id": "VARPA.2",
+      "f": "=VARPA(1, TRUE, \"3\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+    },
+    {
+      "id": "VARPA.3",
+      "f": "=VARPA(5)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094065 (\"If the total number of values supplied as value arguments is not at least two, VARPA will return the #NUM! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      }
+    },
+    {
+      "id": "VARPA.4",
+      "f": "=VARPA(1, \"x\")"
+    },
+    {
+      "id": "VARPA.5",
+      "f": "=VARPA(Data!Q1:Q2)"
+    },
+    {
+      "id": "VARPA.6",
+      "f": "=VARPA(Data!I4)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094065 (\"If the total number of values supplied as value arguments is not at least two, VARPA will return the #NUM! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #DIV/0! for no numbers"
+      }
+    },
+    {
+      "id": "VARPA.7",
+      "f": "=VARPA(Data!R1:R3)"
+    }
+  ]
+}
