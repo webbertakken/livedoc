@@ -1,6 +1,7 @@
 # Page layout
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** The page is drawn at the first section's width and margins, set on the ruler; the rest is
+specified.
 
 Pages, sections, breaks, columns, headers and footers, page numbers and footnotes in a [text document](text-document.md).
 The layout is drawn by the measured DOM layout the research recommends
@@ -18,6 +19,10 @@ File > Page setup, a dialog with two tabs, **Pages** and **Pageless**:
 - A new text document's page setup: the person's default, else Letter in the United States and Canada and A4
   elsewhere by the browser's locale, margins 1 in (2.54 cm), white, portrait (assumed: Google's defaults; confirmed with
   the captures).
+
+- **The page is drawn at its setup**: its paper's width and its margins (the first section's until sections are
+  built); the ruler's margins set the same values ([Editing surface](editing-surface.md#the-ruler)). Margins dragged on
+  the ruler: `Tab · Changed · TextDocumentMargins`.
 
 ## Print layout
 

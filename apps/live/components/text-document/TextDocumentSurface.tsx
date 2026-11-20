@@ -13,7 +13,7 @@ import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { TextDocumentState, type Style } from '@livedoc/text-documents';
+import { TextDocumentState, type PageSetup, type Style } from '@livedoc/text-documents';
 import { Button } from '@livedoc/ui';
 import {
   apiLoadTextDocumentState,
@@ -24,7 +24,6 @@ import {
 import { debugLog } from '@/lib/debug-log';
 import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
-import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
@@ -77,6 +76,14 @@ import {
   textDocumentCaretPoint,
 } from '@/lib/text-document/text-document-caret';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
+import { TextDocumentRuler } from './TextDocumentRuler';
+import { pageBox, useTextDocumentSection } from '@/lib/text-document/text-document-page';
+import { useTextDocumentRuler } from '@/lib/text-document/useTextDocumentRuler';
+import {
+  startUndoStep,
+  TEXT_DOCUMENT_PAGE_ORIGIN,
+  textDocumentUndoPlugins,
+} from '@/lib/text-document/text-document-undo';
 import { documentTextStyle } from '@/lib/document-fonts/document-text-style';
 // The served document fonts' faces, loaded with the surface, never on other pages (fonts.md "Served from LiveDoc").
 import '@/app/document-fonts.css';
@@ -336,6 +343,30 @@ export function TextDocumentSurface({
     writes,
     lists.stepLevel,
   );
+  // The page drawn at its setup, and the ruler that sets its margins, indents and tab stops (editing-surface.md
+  // "The ruler", page-layout.md "Page setup").
+  const section = useTextDocumentSection(liveDoc, format, state === 'ready');
+  const ruler = useTextDocumentRuler();
+  const readRulerFormatting = useCallback(
+    () =>
+      liveDoc.current
+        ? {
+            styles: TextDocumentState.styles(liveDoc.current, format),
+            defaults: TextDocumentState.defaults(liveDoc.current, format),
+          }
+        : null,
+    [format],
+  );
+  const setPageSetup = useCallback(
+    (setup: PageSetup) => {
+      const doc = liveDoc.current;
+      if (!doc || !writes) return;
+      if (editorView) startUndoStep(editorView);
+      TextDocumentState.setSection(doc, { ...section, setup }, TEXT_DOCUMENT_PAGE_ORIGIN);
+      if (editorView) startUndoStep(editorView);
+    },
+    [section, writes, editorView],
+  );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -346,8 +377,10 @@ export function TextDocumentSurface({
       ...lists.actions,
       ...modeActions,
       ...panels.actions,
+      ...ruler.actions,
     }),
     [
+      ruler.actions,
       editorView,
       writes,
       formatting.actions,
@@ -446,7 +479,19 @@ export function TextDocumentSurface({
         }
         right={null}
       >
-        <div ref={scroller} data-region="document" className="min-h-0 flex-1 overflow-y-auto py-6">
+        <div ref={scroller} data-region="document" className="min-h-0 flex-1 overflow-y-auto pb-6">
+          {ruler.shown && state === 'ready' ? (
+            <TextDocumentRuler
+              view={editorView}
+              readFormatting={readRulerFormatting}
+              setup={section.setup}
+              onSetup={setPageSetup}
+              scale={scale}
+              canEdit={writes}
+              refresh={changes.subscribeCaret}
+              guideHeight={() => scroller.current?.clientHeight ?? 0}
+            />
+          ) : null}
           {state === 'failed' ? (
             <div
               role="alert"
@@ -466,9 +511,10 @@ export function TextDocumentSurface({
           ) : null}
           {/* The page: a fixed width and a page's height before the state arrives, so nothing shifts as it does. */}
           <div
-            // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn.
-            style={{ zoom: scale }}
-            className={`mx-auto min-h-[1056px] w-[816px] max-w-full text-document-page px-6 py-10 text-[11pt] sm:px-24 sm:py-24 leading-[1.15] shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
+            // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
+            // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
+            style={{ zoom: scale, ...pageBox(section.setup) }}
+            className={`mx-auto mt-6 min-h-(--page-height) w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
           >
             {state === 'loading' ? (
               <p className="text-(--office-muted)" aria-live="polite">

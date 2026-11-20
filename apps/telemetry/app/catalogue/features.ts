@@ -1153,6 +1153,34 @@ export const TEXT_DOCUMENT_PARAGRAPH_FORMATTING = chart(
   },
 );
 
+// A text document's ruler (docs/specs/034-text-documents/editing-surface.md "The ruler"): an indent dragged or moved
+// with the keys, and tab stops added, moved or taken away.
+export const TEXT_DOCUMENT_RULER = chart(
+  'Element',
+  'Changed',
+  'Text Document Ruler',
+  "A text document's indents set on the ruler, or its tab stops added, moved or taken away.",
+  { types: ['TextDocumentRulerIndent', 'TextDocumentTabStop'] },
+);
+
+// A text document's margins dragged on the ruler (docs/specs/034-text-documents/page-layout.md "Page setup").
+export const TEXT_DOCUMENT_MARGINS = chart(
+  'Tab',
+  'Changed',
+  'Text Document Margins',
+  "A text document's margins dragged on the ruler.",
+  { types: ['TextDocumentMargins'] },
+);
+
+// The ruler shown or hidden (docs/specs/034-text-documents/editing-surface.md "The ruler").
+export const TEXT_DOCUMENT_RULER_TOGGLED = chart(
+  'UI',
+  'Toggled',
+  'Text Document Ruler Shown',
+  "Someone showed or hid a text document's ruler (View > Show ruler).",
+  { types: ['TextDocumentRuler'] },
+);
+
 // A text document's lists (docs/specs/034-text-documents/lists.md "Telemetry"): paragraphs put in a list or taken out,
 // by its kind, a list style taken, numbering restarted or continued, and checklist items ticked.
 export const TEXT_DOCUMENT_LISTS = chart(

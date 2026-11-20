@@ -11,6 +11,7 @@ import {
   LOCAL_MOVE_OFFERED,
   TEXT_DOCUMENT_PARAGRAPH_FORMATTING,
   TEXT_DOCUMENT_LISTS,
+  TEXT_DOCUMENT_RULER,
   TEXT_DOCUMENT_PARAGRAPH_STYLE,
 } from './features';
 
@@ -548,6 +549,7 @@ export const ELEMENTS_CHANGED = chart(
       !TEXT_DOCUMENT_PARAGRAPH_STYLE.typeIn!(t) &&
       !TEXT_DOCUMENT_PARAGRAPH_FORMATTING.typeIn!(t) &&
       !TEXT_DOCUMENT_LISTS.typeIn!(t) &&
+      !TEXT_DOCUMENT_RULER.typeIn!(t) &&
       !LOGO_TOOL_TYPES.includes(t ?? '') &&
       !DATA_MODEL_CHANGED.includes(t ?? ''),
   },

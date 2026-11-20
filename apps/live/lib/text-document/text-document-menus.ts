@@ -139,7 +139,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       SEPARATOR,
       item('show-print-layout', 'Show print layout', 'view', { checkable: 'checkbox' }),
-      item('show-ruler', 'Show ruler', 'view', { checkable: 'checkbox' }),
+      item('show-ruler', 'Show ruler', 'view', { checkable: 'checkbox', status: 'built' }),
       item('show-outline', 'Show outline', 'view', {
         checkable: 'checkbox',
         shortcut: 'show-outline',

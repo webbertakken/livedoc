@@ -131,3 +131,24 @@ describe('TextDocumentState lists', () => {
     expect(ListDefinition.newId(['3', 'Lx'])).toBe('L1');
   });
 });
+
+// docs/specs/034-text-documents/page-layout.md "Page setup": the first section's setup in the live state.
+describe('TextDocumentState section', () => {
+  it("reads a new document's section, sets one with its origin, and reads it back", () => {
+    const doc = TextDocumentState.load();
+    expect(TextDocumentState.section(doc, 'odf').setup.margins.left).toBe(72);
+    const origins: unknown[] = [];
+    doc.on('afterTransaction', (tr) => origins.push(tr.origin));
+    const origin = Symbol('page');
+    const section = TextDocumentState.section(doc, 'ooxml');
+    const next = {
+      ...section,
+      setup: { ...section.setup, margins: { ...section.setup.margins, left: 36 } },
+    };
+    TextDocumentState.setSection(doc, next, origin);
+    expect(TextDocumentState.section(doc, 'ooxml')).toEqual(next);
+    expect(TextDocumentState.document(doc, 'ooxml').section).toEqual(next);
+    expect(origins[0]).toBe(origin);
+    expect(TextDocumentState.metaType(doc).get('section')).toEqual(next);
+  });
+});
