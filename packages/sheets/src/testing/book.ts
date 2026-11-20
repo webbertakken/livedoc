@@ -3,6 +3,7 @@ import { parseA1 } from '../address';
 import type { CardSource } from '../cards';
 import { CellMap } from '../cells/cell-map';
 import { Workbook, type ArrayDialect } from '../engine/workbook';
+import type { Iteration } from '../engine/loops';
 import { cellKey, type Sheet, type SheetLayout } from '../sheet';
 import { readTypedInput } from '../typed-input';
 
@@ -61,6 +62,7 @@ export function book(
     rows?: number;
     cols?: number;
     arrays?: ArrayDialect;
+    iteration?: Iteration;
   } = {},
 ) {
   const full: BookSpec = Object.values(spec).every((v) => typeof v === 'string')
@@ -74,6 +76,7 @@ export function book(
     rand: opts.rand ?? (() => 0.5),
     cards: opts.cards ?? null,
     ...(opts.arrays ? { arrays: opts.arrays } : {}),
+    ...(opts.iteration ? { iteration: opts.iteration } : {}),
   });
   const at = (a1: string, title = Object.keys(full)[0]!) => {
     const sheet = sheets.find((s) => s.title === title)!;

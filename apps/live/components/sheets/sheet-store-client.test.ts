@@ -935,6 +935,32 @@ describe('a spreadsheet’s store', () => {
     expect(long(plan)).toBe('input_too_long');
   });
 
+  // settings.md "Calculation": a spreadsheet's iterative calculation reaches its engine, and a change to it reworks it.
+  it('gives the engine the workbook’s iterative calculation, and works values out afresh when it changes', async () => {
+    const { store } = make(true);
+    await store.loadTab('tabA');
+    const wb = store.workbook('tabA');
+    const setIteration = vi.spyOn(wb, 'setIteration');
+    const deps = {
+      scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
+      oneWorkbook: true,
+      self: () => by,
+      locale: 'en-GB',
+      pushUndo: vi.fn(),
+      toast: vi.fn(),
+    };
+    const version = store.getVersion();
+    store.update(deps);
+    expect(setIteration).not.toHaveBeenCalled();
+    expect(store.getVersion()).toBe(version);
+    const on = { on: true, max: 10, threshold: 0.01 };
+    store.update({ ...deps, iteration: on });
+    expect(setIteration).toHaveBeenCalledWith(on);
+    expect(store.getVersion()).toBe(version + 1);
+    store.update({ ...deps, iteration: { ...on } });
+    expect(setIteration).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps a Plan Sheet tab’s sheets to their tab', async () => {
     const { store, fetchSheets } = make(false);
     await store.loadTab('tabB');

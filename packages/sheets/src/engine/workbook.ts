@@ -33,6 +33,8 @@ import type { Frame, RangeRef } from './frame';
 import { formulaPrecedents } from './precedents';
 import { sheetsCtxOf } from './sheets-ctx';
 import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
+import { ITERATION_OFF, Loops, sameIteration, type Iteration } from './loops';
+import { LoopRounds, type LoopCells } from './loop-rounds';
 
 type WorkbookOptions = {
   sheets: readonly Sheet[];
@@ -46,6 +48,8 @@ type WorkbookOptions = {
   // How ranges in single-value places read: a spreadsheet's as Google's (intersected), a Plan Sheet's whole
   // (formulas.md "Arrays and spills"). By default, as its limits say what holds it.
   arrays?: ArrayDialect;
+  // Iterative calculation (settings.md "Calculation"); off by default.
+  iteration?: Iteration;
 };
 
 /** `google`: implicit intersection outside an array context; `dynamic`: every formula an array context (Plan Sheets). */
@@ -94,6 +98,19 @@ export class Workbook {
   // Formulas worked out after one read ran past RECALC_READS_MAX: their value is that read's
   // "too large" error, not their own, so the next read works them out afresh.
   private readonly overBudget = new Set<CellNo>();
+  private iteration: Iteration;
+  private readonly loops = new Loops();
+  private readonly rounds = new LoopRounds();
+  // What iterative calculation's rounds need of the workbook.
+  private readonly loopCells: LoopCells = {
+    value: (no) => this.vals.get(no),
+    forget: (no) => {
+      this.vals.delete(no);
+      this.spills.release(no);
+    },
+    compute: (no) => this.compute(no),
+    idOf: (no) => this.idOf(no),
+  };
   // Raised on every change, so views know to read again.
   version = 0;
   truncated = false;
@@ -105,6 +122,7 @@ export class Workbook {
     this.cards = opts.cards ?? null;
     this.nowFn = opts.now ?? localNow;
     this.randFn = opts.rand ?? Math.random;
+    this.iteration = opts.iteration ?? ITERATION_OFF;
     for (const s of opts.sheets) this.sheets.set(s.id, s);
     this.reindexAll();
   }
@@ -156,6 +174,7 @@ export class Workbook {
       if (r === undefined || c === undefined) continue;
       const no = this.nos.intern(sheetNo, r, c);
       this.spills.index(sheet, key, no);
+      this.rounds.retyped(`${sheet.id}|${key}`);
       changed.push(no);
     }
     this.invalidate([...changed, ...this.volatileCells]);
@@ -171,6 +190,14 @@ export class Workbook {
     this.cards = cards;
     this.version++;
     this.invalidate([...this.cardReaders]);
+  }
+
+  /** Iterative calculation turned on or off, or its rounds or threshold changed: every value is worked out afresh. */
+  setIteration(iteration: Iteration): void {
+    if (sameIteration(this.iteration, iteration)) return;
+    this.iteration = iteration;
+    this.version++;
+    this.resetAll();
   }
 
   // TODAY and NOW move on: forget every volatile cell.
@@ -195,6 +222,7 @@ export class Workbook {
         return scalarCell(this.cellValue(sheetId, r, c, null));
       } catch (e) {
         if (!(e instanceof Deep)) throw e;
+        this.abandonLoops();
         this.settle(e.no);
       }
     }
@@ -242,6 +270,7 @@ export class Workbook {
         }
       } catch (e) {
         if (!(e instanceof Deep)) throw e;
+        this.abandonLoops();
         this.settle(e.no);
       }
     }
@@ -389,11 +418,13 @@ export class Workbook {
         pending.pop();
       } catch (e) {
         if (!(e instanceof Deep)) throw e;
+        this.abandonLoops();
         const from = pending.indexOf(e.no);
         if (from >= 0) {
           // A chain deeper than DEPTH_MAX that comes back to a cell already restarted is a loop the
           // stack cannot see whole: each of its restarted cells is a circular reference. Their
-          // dependencies were noted before the restart, so an edit breaking the loop still reaches them.
+          // dependencies were noted before the restart, so an edit breaking the loop still reaches them. Iterative
+          // calculation does not reach such a loop (D36).
           const loop = pending.splice(from);
           const value = err('#REF!', circular(this.describeLoop(loop, e.no)));
           for (const cell of loop) this.vals.set(cell, value);
@@ -464,9 +495,16 @@ export class Workbook {
   }
 
   private compute(no: CellNo): Value {
+    if (this.loops.isWaiting(no)) {
+      // Finished, but its loop is still open: the reader joins the loop.
+      this.loops.readBack(no);
+      return this.vals.get(no)!;
+    }
     const known = this.vals.get(no);
     if (known !== undefined) return known;
     if (this.computing.has(no)) {
+      this.loops.readBack(no);
+      if (this.iteration.on) return this.rounds.seedOf(no, this.loopCells);
       const from = this.stack.indexOf(no);
       return err('#REF!', circular(this.describeLoop(this.stack.slice(from), no)));
     }
@@ -484,6 +522,7 @@ export class Workbook {
     this.computing.add(no);
     this.stack.push(no);
     this.depth++;
+    const visit = this.loops.enter(no);
     let value: Value;
     try {
       const ast = storedAst(input.f);
@@ -500,7 +539,40 @@ export class Workbook {
     if (isArray(value)) value = this.claim(no, sheet, row, col, value);
     this.vals.set(no, value);
     if (this.reads > RECALC_READS_MAX) this.overBudget.add(no);
-    return value;
+    const loop = this.loops.leave(no, visit);
+    return loop && loop.length > 0 ? this.closeLoop(loop) : value;
+  }
+
+  // A loop closed (its first cell first): with iterative calculation off each of its cells is the loop's #REF!; on, it
+  // is worked out round by round. A loop closing inside a round of its own iteration is that round's, left as is.
+  private closeLoop(loop: CellNo[]): Value {
+    const first = loop[0]!;
+    if (this.rounds.isIterating(first)) return this.vals.get(first)!;
+    if (!this.iteration.on) {
+      const value = err('#REF!', circular(this.describeLoop(loop, first)));
+      for (const no of loop) {
+        this.spills.release(no);
+        this.vals.set(no, value);
+      }
+      console.debug(`[sheets engine] loop cells=${loop.length} iterate=false`);
+      return value;
+    }
+    const rounds = this.rounds.run(loop, this.iteration, this.loopCells);
+    console.debug(`[sheets engine] loop cells=${loop.length} iterate=true rounds=${rounds}`);
+    return this.vals.get(first) ?? null;
+  }
+
+  // Formulas waiting on a loop whose work was cut off are worked out afresh.
+  private abandonLoops(): void {
+    for (const no of this.loops.abandon()) {
+      this.vals.delete(no);
+      this.spills.release(no);
+    }
+  }
+
+  private idOf(no: CellNo): string {
+    const sheet = this.sheets.get(this.nos.sheetIdOf(no))!;
+    return `${sheet.id}|${cellKey(sheet.layout.rows[this.nos.rowOf(no)]!, sheet.layout.cols[this.nos.colOf(no)]!)}`;
   }
 
   private claim(no: CellNo, sheet: Sheet, row: number, col: number, value: ValueArray): Value {

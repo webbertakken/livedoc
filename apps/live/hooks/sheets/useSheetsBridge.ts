@@ -7,7 +7,7 @@
 // fetches what it needs when it loads.
 import { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 import type { RoomOp, SheetPresenceOp, SheetsRoomOp } from '@livedoc/api-schema';
-import type { SheetPerson } from '@livedoc/sheets';
+import type { Iteration, SheetPerson } from '@livedoc/sheets';
 import type { BoxedElement, Element } from '@livedoc/document';
 import type { SheetsScope } from '@/lib/api/sheets';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
@@ -32,6 +32,8 @@ export type SheetsBridge = {
   scope: SheetsScope;
   // The document is a spreadsheet: its sheet tabs' sheets are one workbook (docs/specs/029-sheets/spreadsheet.md).
   oneWorkbook: boolean;
+  // A spreadsheet's iterative calculation (docs/specs/029-sheets/settings.md "Calculation"); absent, off.
+  iteration?: Iteration;
   // The tab open now: where a placed Sheet's sheet is made.
   activeTabId: string;
   self: SheetPerson | null;
@@ -77,6 +79,7 @@ export function useSheetsBridge(opts: {
   shareCode: string | null;
   tabScope: string | null;
   oneWorkbook: boolean;
+  iteration?: Iteration;
   self: SheetPerson | null;
   canEdit: boolean;
   // Absent: as canEdit.
@@ -115,6 +118,7 @@ export function useSheetsBridge(opts: {
     shareCode,
     tabScope,
     oneWorkbook,
+    iteration,
     self,
     canEdit,
     peers,
@@ -125,6 +129,7 @@ export function useSheetsBridge(opts: {
     () => ({
       scope: { documentId, ownerId, shareCode, tabId: tabScope },
       oneWorkbook,
+      ...(iteration ? { iteration } : {}),
       activeTabId,
       self,
       canEdit,
@@ -148,6 +153,7 @@ export function useSheetsBridge(opts: {
       shareCode,
       tabScope,
       oneWorkbook,
+      iteration,
       activeTabId,
       self,
       canEdit,

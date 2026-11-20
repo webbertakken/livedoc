@@ -24,6 +24,7 @@ export function writeWorkbook(
     sheets: [...sheets],
     locale: record.settings.locale,
     limits: SheetLimits.spreadsheet,
+    iteration: record.settings.iterate,
   });
   const file = workbookFileOf(engine, sheets);
   if (format === 'ods') return writeOds(file, title);

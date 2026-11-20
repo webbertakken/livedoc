@@ -754,6 +754,21 @@ describe('in a spreadsheet', () => {
     expect(valueAt(await read(api, 'Costs'), 'B1')).toBe(42);
   });
 
+  // settings.md "Calculation": an agent reads a loop as the spreadsheet's iterative calculation works it out.
+  it('works a loop out as the spreadsheet’s iterative calculation says', async () => {
+    const loop = () => [
+      sheetJson({ id: 'sheet_costs1', tabId: ONE, title: 'Costs' }, [['=(A1+10)/2']]),
+    ];
+    const off = setup(loop(), { workbook: book });
+    expect(valueAt(await read(off.api, 'Costs'), 'A1')).toBe('#REF!');
+    const iterating = {
+      ...book,
+      settings: { ...book.settings, iterate: { on: true, max: 50, threshold: 0.05 } },
+    };
+    const on = setup(loop(), { workbook: iterating });
+    expect(valueAt(await read(on.api, 'Costs'), 'A1')).toBe(9.9609375);
+  });
+
   it("reaches no other tab's sheet in Plan", async () => {
     const { api } = setup(sheets());
     expect(valueAt(await read(api, 'Costs'), 'B1')).toBe('#REF!');

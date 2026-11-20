@@ -80,7 +80,8 @@ export function resolveSheet(
 
 // The workbook the sheet on `tabId` belongs to: a spreadsheet's every sheet, held to its limits
 // (docs/specs/029-sheets/spreadsheet.md "The workbook shape", "Limits"), or a Plan tab's sheets (references reach only
-// the tab's) held to a Plan Sheet's; with the document's Plan cards when a formula reads them.
+// the tab's) held to a Plan Sheet's, with the spreadsheet's iterative calculation (settings.md "Calculation"); with
+// the document's Plan cards when a formula reads them.
 export async function workbookFor(
   api: ApiClient,
   documentId: string,
@@ -93,6 +94,7 @@ export async function workbookFor(
     sheets: sheets.map(sheetFromJson),
     locale: AGENT_LOCALE,
     limits: SheetLimits.of(spreadsheet),
+    ...(state.workbook ? { iteration: state.workbook.settings.iterate } : {}),
   });
   if (wb.usesCards()) {
     const [{ items }, { document }] = await Promise.all([

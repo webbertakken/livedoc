@@ -11,6 +11,9 @@ import type {
 } from '@livedoc/api-schema';
 import {
   SheetLimits,
+  ITERATION_OFF,
+  sameIteration,
+  type Iteration,
   Workbook,
   applyLayoutChange,
   applySheetWrite,
@@ -78,6 +81,8 @@ type SheetStoreDeps = {
   // A spreadsheet: every sheet tab's sheet is one workbook, loaded and evaluated together
   // (docs/specs/029-sheets/spreadsheet.md "The workbook shape"); absent, each tab's sheets are their own.
   oneWorkbook?: boolean;
+  // A spreadsheet's iterative calculation (settings.md "Calculation"); absent, off.
+  iteration?: Iteration;
   self: () => SheetPerson | null;
   locale: string;
   pushUndo: (step: ItemUndoStep) => void;
@@ -226,7 +231,14 @@ export class SheetStore {
   // The editor's latest identity, toasts and undo (they change across renders; the store lives for the session).
   update(deps: SheetStoreDeps): void {
     const rescoped = (deps.oneWorkbook ?? false) !== (this.deps.oneWorkbook ?? false);
+    const iteration = deps.iteration ?? ITERATION_OFF;
+    const reiterated = !sameIteration(iteration, this.deps.iteration ?? ITERATION_OFF);
     this.deps = { ...deps, api: this.api, wait: this.wait };
+    // Saved settings arrived (any peer's Save Settings): every engine works its values out afresh.
+    if (reiterated && !rescoped) {
+      for (const wb of this.workbooks.values()) wb.setIteration(iteration);
+      this.notify();
+    }
     // The document turned out a spreadsheet (its workbook row arrived): the engines and loads were scoped by tab.
     if (rescoped) {
       this.workbooks.clear();
@@ -276,6 +288,7 @@ export class SheetStore {
         locale: this.deps.locale,
         cards: this.cards,
         limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
+        iteration: this.deps.iteration ?? ITERATION_OFF,
       });
       this.workbooks.set(scope, wb);
     }
@@ -809,6 +822,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
   return sheetStoreFor({
     scope: bridge.scope,
     oneWorkbook: bridge.oneWorkbook,
+    ...(bridge.iteration ? { iteration: bridge.iteration } : {}),
     self: () => bridge.self,
     locale: bridge.locale,
     pushUndo: bridge.pushUndo,
