@@ -240,7 +240,7 @@ function OfficeMark({ back }: { back: OfficeChrome['back'] }) {
     wordmark: false,
     markClassName: 'size-8',
     className:
-      'flex size-10 shrink-0 items-center justify-center rounded-full outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)',
+      'relative flex size-10 shrink-0 items-center justify-center rounded-full outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus)',
     assemble: true,
   } as const;
   if (back.kind === 'frame')

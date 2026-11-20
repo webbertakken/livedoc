@@ -37,7 +37,7 @@ export function OfficePeople({
             aria-label={person.participant.name}
             data-office-person=""
             onClick={() => onFollow(person)}
-            className={`touch-target ${RING}`}
+            className={`relative touch-target ${RING}`}
           >
             <ParticipantAvatar participant={person.participant} size={AVATAR_PX} />
           </button>
@@ -50,7 +50,7 @@ export function OfficePeople({
             aria-label={`${rest.length} more ${rest.length === 1 ? 'person' : 'people'}`}
             aria-expanded={moreOpen}
             onClick={() => setMoreOpen((open) => !open)}
-            className={`flex size-7 items-center justify-center bg-(--office-hover) text-xs font-medium text-(--office-ink) touch-target ${RING}`}
+            className={`relative flex size-7 items-center justify-center bg-(--office-hover) text-xs font-medium text-(--office-ink) touch-target ${RING}`}
           >
             +{rest.length}
           </button>
