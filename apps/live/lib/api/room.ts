@@ -49,6 +49,10 @@ export type RoomHandlers = {
   // this socket alone, on every change; emptied when a new socket opens, since nobody follows its new id yet.
   onFollowers?: (ids: string[]) => void;
   onClose?: () => void;
+  // A socket opened (`reconnect`: not the first), after it said hello and asked for what it missed: what keeps its
+  // own catch-up (a text document's surface, docs/specs/034-text-documents/live-editing-and-storage.md
+  // "Reconnecting") starts it here.
+  onOpen?: (reconnect: boolean) => void;
   // The document went to the Trash (docs/specs/013-workspace/trash.md): the room
   // closed this socket with DOCUMENT_TRASHED_CLOSE and will refuse every
   // reconnect, so the connector stops and says so, once.
@@ -287,6 +291,7 @@ export function connectRoom(
       );
       // A reconnect (not the first open): ask the room for the ops we missed
       // while we were gone before resuming live traffic.
+      const reconnect = opened;
       if (opened) {
         socket.send(
           JSON.stringify({ kind: 'sync', epoch: lastEpoch, lastSeq } satisfies RoomOutgoing),
@@ -311,6 +316,7 @@ export function connectRoom(
       const held = outbox;
       outbox = [];
       for (const msg of held) socket.send(JSON.stringify(msg));
+      handlers.onOpen?.(reconnect);
     });
     socket.addEventListener('message', (e) => {
       lastHeard = Date.now();

@@ -29,7 +29,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       documentName={documentName ?? ''}
       format={textDocumentFormatOf(tab)}
       canEdit={!readOnly && can.textDocumentEdits}
-      send={(op) => roomRef.current?.send({ kind: 'op', op })}
+      sequence={(op) => roomRef.current?.sequence(op) ?? Promise.resolve(false)}
     />
   );
 }

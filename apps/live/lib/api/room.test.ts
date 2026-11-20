@@ -193,6 +193,25 @@ describe('connectRoom outbox (docs/specs/012-collaboration/collab-race-hardening
     vi.unstubAllGlobals();
   });
 
+  // docs/specs/034-text-documents/live-editing-and-storage.md "Reconnecting": a text document's surface catches up
+  // when the room opens again, after the held ops have gone, and stops sending when it closes.
+  it('says when a socket opens, whether it is a reconnect, and when it closes', () => {
+    const opens: boolean[] = [];
+    const onClose = vi.fn();
+    const room = connectRoom(
+      'd1',
+      { id: 'me', name: 'Me', color: '#000' },
+      { onPresence() {}, onOp() {}, onOpen: (reconnect) => opens.push(reconnect), onClose },
+    );
+    FakeSocket.all[0]!.fire('open');
+    FakeSocket.all[0]!.fire('close');
+    expect(onClose).toHaveBeenCalledTimes(1);
+    vi.runOnlyPendingTimers();
+    FakeSocket.all[1]!.fire('open');
+    expect(opens).toEqual([false, true]);
+    room.close();
+  });
+
   it('holds changes made while the socket is down and sends them, in order, on reconnect', () => {
     const room = connectRoom(
       'd1',

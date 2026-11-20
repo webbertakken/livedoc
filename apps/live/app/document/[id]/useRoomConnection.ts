@@ -681,7 +681,7 @@ export function useRoomConnection(opts: {
     // viewport, selection, and undo history to fix stale content.
     void resyncFromServer();
     // A text document's surface merges the stored state again, and sends what the room is missing.
-    TextDocumentBus.resync();
+    TextDocumentBus.resync(null);
   });
 
   useEffect(() => {
@@ -737,6 +737,10 @@ export function useRoomConnection(opts: {
       onRoomFull: () => roomFull(),
       onRefused: () => roomRefused(),
       onResync: () => roomResync(),
+      // A text document's surface sends only while the room is open, and catches up when it opens again
+      // (docs/specs/034-text-documents/live-editing-and-storage.md "Reconnecting").
+      onOpen: () => TextDocumentBus.connected(),
+      onClose: () => TextDocumentBus.disconnected(),
     };
     // Every session joins through a one-time room ticket (docs/specs/015-api/api.md "Realtime model"),
     // minted over REST, where the access gates already read the guest signature, the share code and its
@@ -775,6 +779,7 @@ export function useRoomConnection(opts: {
       // Nobody's words outlive the room they were said in.
       resetSpeechBubbles();
       openedRoom.close();
+      TextDocumentBus.disconnected();
       roomRef.current = null;
     };
   }, [

@@ -1,6 +1,7 @@
 # Live editing and storage
 
-**Status: specified; the room's storage, the digest and the live merge of one body are built.**
+**Status: specified; the room's storage, the digest, the live merge of one body, presence, reconnect catch-up and
+the local copy of unconfirmed edits are built.**
 
 How a [text document](text-document.md) is edited by people and agents at once, stored in its room, kept offline,
 branched, copied, versioned, searched and listed. The research is
@@ -63,7 +64,7 @@ while a hide-cursors vote is open.
 ## Undo
 
 Undo and redo take back the person's own changes only, newest first (`UndoManager` tracking the local origin), with
-the caret put back; typing within 500 ms is one step, as Google groups it.
+the caret put back; typing within `TEXT_DOCUMENT_UNDO_GROUP_MS` (500 ms) is one step, as Google groups it.
 
 ## Storage
 
@@ -75,11 +76,33 @@ the caret put back; typing within 500 ms is one step, as Google groups it.
 - **Chunked under the row cap**: the encoded state is split into rows of at most `TEXT_DOCUMENT_CHUNK_BYTES` in a table
   of its own (`text_document_chunks`: tab, revision, index, bytes), with an update log since the last compaction
   (`text_document_updates`: tab, sequence, bytes); both go with their tab. Compaction folds the log into the chunks,
-  as one transaction, when the log passes `TEXT_DOCUMENT_LOG_BYTES`, or on the room's idle alarm.
+  as one transaction, when the log passes `TEXT_DOCUMENT_LOG_BYTES` or holds more than `TEXT_DOCUMENT_LOG_UPDATES`
+  updates (every read of the state and every digest merges the log, and merging many small updates costs more than
+  their count), or on the room's idle alarm.
 - **Reading it**: `GET /api/documents/:id/text-documents/:tabId/state` answers the whole state as one Yjs update
   (read access, a tab-scoped link on its own tab); `404 text_document_not_found` when the tab is absent or another kind.
-- **Reconnecting**: a surface the room tells to re-hydrate fetches the state again, merges it, and sends what it holds
-  that the state lacks; Yjs makes both harmless to repeat.
+  With `since` (a state vector, base64) it answers only what the state holds beyond it, `400 state_vector_invalid`
+  when that is no state vector; either way the state's own vector rides `X-State-Vector`, so a reader learns what
+  the room lacks.
+- <a id="sending"></a>**Sending**: an edit goes to the room as one `text-document` op while the room is open and its
+  update's base64 is at most `TEXT_DOCUMENT_FRAME_CHARS`; a larger one (a long paste, a catch-up after a long time
+  offline) goes by `POST /api/documents/:id/text-documents/:tabId/updates`, the update's bytes as the body.
+  - The door asks edit access (a tab-scoped link on its own tab only) and answers `204` once the room has stored it;
+    `400 update_invalid` when the bytes are no Yjs update, `413 update_too_large` past
+    `TEXT_DOCUMENT_UPDATE_MAX_BYTES`, `404 text_document_not_found` when the tab is absent or another kind.
+  - The room applies it on the same write queue as the ops, so compaction never folds the log under it; an update
+    past `TEXT_DOCUMENT_CHUNK_BYTES` is folded into the chunks at once, since no row of the log may hold it.
+  - Everyone else hears it as a `text-document` op when it fits a frame, else as the tab's `stale` op
+    (`{ kind: 'text-document', tabId, stale: true }`), on which a surface re-reads the state as on reconnecting.
+- <a id="reconnecting"></a>**Reconnecting**: while the room is closed, a surface sends nothing (the room's outbox is
+  left to the canvas, and a long spell offline would overflow it); its edits wait in the document and in the
+  [local copy](#the-local-copy).
+  - Each time the room opens and the surface may have missed something (it loaded while the room was closed, or the
+    room closed since), and when the room tells it to re-hydrate, the surface reads what the state holds beyond its
+    own (`since`), merges it, and sends what it holds that the state lacks, by op or by the door by size:
+    `[text-document] caught-up`.
+  - Updates from the room that arrive while the state is being read are held and applied after it, so none fall
+    between the read and the binding. Yjs makes all of it harmless to repeat.
 - **The file is derived**: the `.odt` or `.docx` bytes are written from the model on download, sync and export; kept
   content and pictures are stored in the room (pictures as R2 objects keyed by hash, as gallery images are).
 - **Revision and hash**: each persisted state has a revision, as every tab has, and a hash of the file it writes, so a
@@ -100,9 +123,21 @@ the caret put back; typing within 500 ms is one step, as Google groups it.
 
 - Until This Browser holds a text document's state, a new text document is made on LiveDoc whoever makes it, a guest
   included (default).
-- A text document in This Browser holds its CRDT in IndexedDB and works fully; a cloud document opened offline edits
-  its local copy. Either merges by character when it reaches the room, nothing lost
+- A text document in This Browser holds its CRDT in IndexedDB and works fully
   ([Offline Mode](../006-document/offline-mode.md)).
+- <a id="the-local-copy"></a>**The local copy**: a cloud text document edited while the room cannot confirm it (the
+  network gone, the room closed, a confirmation late) keeps going, and this browser keeps what the room has not
+  confirmed, so closing the tab or a crash loses nothing (default):
+  - It lives in IndexedDB, in the `livedoc-text-documents` database's `copies` store, one record per document and tab:
+    the update since the state the room last confirmed, and when it was saved.
+  - It is written `TEXT_DOCUMENT_LOCAL_SAVE_MS` after an edit the room has not confirmed by then, and at once when the
+    page is hidden or left with one unconfirmed; an edit confirmed in time writes nothing.
+  - It is deleted once the room has confirmed every edit (each op's cursor, or a catch-up that finds nothing
+    missing), so a shared browser keeps no copy of a document beyond its unsent edits.
+  - Opening the tab again merges a copy left behind into the state read from the room and sends what the room
+    lacks: `[text-document] merge-offline` (updates, bytes). Either way the edits merge by character, nothing lost.
+  - A browser without IndexedDB, or one that refuses the write, edits as before and logs
+    `[text-document] local-copy-failed`; the room still catches up on reconnect while the page stays open.
 - File > Make available offline is LiveDoc's This Browser and offline open.
 
 ## Branches
@@ -134,15 +169,20 @@ suggestion or comment (fork D7); a Viewer's are dropped. Tests: the room refuses
 
 ## Limits
 
-| Constant                        | Value     | Why                                                                                                                                                |
-| ------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEXT_DOCUMENT_CHUNK_BYTES`     | 1,900,000 | Under the room's 2,000,000-byte row cap with room for the row's other columns                                                                      |
-| `TEXT_DOCUMENT_LOG_BYTES`       | 4,000,000 | (default) Compaction keeps the log to a couple of chunks                                                                                           |
-| `TEXT_DOCUMENT_MAX_STATE_BYTES` | 64 MB     | (default) The encoded state with its history; past it, versions older than 30 days are thinned first, then edits refused with `document_too_large` |
-| `TEXT_DOCUMENT_CARET_MAX_CHARS` | 256       | (default) A relative position's base64 is a few dozen characters; anything longer is no caret                                                      |
-| `TEXT_DOCUMENT_CARET_FRESH_MS`  | 1,500     | (default) As long as an article's caret shows its name                                                                                             |
-| `TEXT_DOCUMENT_WORDS_PER_PAGE`  | 500       | (default) A page of 11 pt Arial at single spacing, for counts that need no layout                                                                  |
-| A frame of edits                | 256 KB    | The room's message cap                                                                                                                             |
+| Constant                         | Value     | Why                                                                                                                                                |
+| -------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TEXT_DOCUMENT_CHUNK_BYTES`      | 1,900,000 | Under the room's 2,000,000-byte row cap with room for the row's other columns                                                                      |
+| `TEXT_DOCUMENT_LOG_BYTES`        | 4,000,000 | (default) Compaction keeps the log to a couple of chunks                                                                                           |
+| `TEXT_DOCUMENT_LOG_UPDATES`      | 500       | (default) A log of keystrokes merges in about 10 ms at 500 updates, 0.3 s at 5,000 and 5 s at 20,000                                               |
+| `TEXT_DOCUMENT_MAX_STATE_BYTES`  | 64 MB     | (default) The encoded state with its history; past it, versions older than 30 days are thinned first, then edits refused with `document_too_large` |
+| `TEXT_DOCUMENT_CARET_MAX_CHARS`  | 256       | (default) A relative position's base64 is a few dozen characters; anything longer is no caret                                                      |
+| `TEXT_DOCUMENT_CARET_FRESH_MS`   | 1,500     | (default) As long as an article's caret shows its name                                                                                             |
+| `TEXT_DOCUMENT_WORDS_PER_PAGE`   | 500       | (default) A page of 11 pt Arial at single spacing, for counts that need no layout                                                                  |
+| A frame of edits                 | 256 KB    | The room's message cap                                                                                                                             |
+| `TEXT_DOCUMENT_FRAME_CHARS`      | 200,000   | The most base64 one `text-document` op carries: inside the room's 256 KB message cap with room for the envelope                                    |
+| `TEXT_DOCUMENT_UPDATE_MAX_BYTES` | 8 MB      | The api's body cap; an update sent by the door past it is refused `update_too_large` and stays in the local copy                                   |
+| `TEXT_DOCUMENT_LOCAL_SAVE_MS`    | 500       | (default) As long as Google groups typing for undo; an edit the room confirms sooner is never written                                              |
+| `TEXT_DOCUMENT_UNDO_GROUP_MS`    | 500       | Typing within it is one undo step, as Google groups it                                                                                             |
 
 A refused edit names its limit; nothing is half applied.
 
@@ -150,4 +190,5 @@ A refused edit names its limit; nothing is half applied.
 
 Fingerprints, each with the document and tab ids and never text: `[text-document] persisted` (revision, bytes,
 chunks, ms), `[text-document] compacted`, `[text-document] digest` (characters, words, ms), `[text-document] merge-offline` (updates, bytes), `[text-document]
-edit-refused` (limit), `[text-document] branch-merged` (unmerged count).
+edit-refused` (limit), `[text-document] branch-merged` (unmerged count); in the browser `[text-document] caught-up`
+(bytes sent), `[text-document] sent-by-door` (bytes), `[text-document] local-copy saved|cleared|failed` (bytes).

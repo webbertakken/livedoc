@@ -496,6 +496,38 @@ export async function relaySheets(env: Env, documentId: string, op: SheetsRoomOp
 
 // A spreadsheet's settings saved (docs/specs/029-sheets/sheet-store.md "Changing the workbook"), in the ordered stream so
 // a peer whose socket blipped catches up on them.
+// How long the door waits for the room to store an update: a folded one merges the whole state first, which a
+// relay never does. Safe range: 2 s (a relay's) to 30 s (a Worker's wall-clock budget).
+const TEXT_DOCUMENT_DOOR_TIMEOUT_MS = 10_000;
+
+// One text document update sent by the door (docs/specs/034-text-documents/live-editing-and-storage.md "Sending"),
+// handed to the room's write queue; answers the room's status (204 stored, 400, 404, 503), 503 when unreachable.
+export async function postTextDocumentUpdate(
+  env: Env,
+  documentId: string,
+  tabId: string,
+  update: Uint8Array,
+): Promise<number> {
+  const query = new URLSearchParams({ document: documentId, tab: tabId });
+  try {
+    const res = await roomFetch(
+      env,
+      documentId,
+      `/text-document-update?${query.toString()}`,
+      { method: 'POST', body: update.slice().buffer },
+      TEXT_DOCUMENT_DOOR_TIMEOUT_MS,
+    );
+    return res.status;
+  } catch (err) {
+    console.warn('[text-document] door-update did not reach the room', {
+      documentId,
+      tabId,
+      error: String(err),
+    });
+    return 503;
+  }
+}
+
 export async function relayWorkbook(
   env: Env,
   documentId: string,

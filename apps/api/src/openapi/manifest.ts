@@ -859,11 +859,18 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Text documents',
     summary:
-      "A text document's live state as one Yjs update: the seed merged with every update the room stored. 404 text_document_not_found when the tab is absent or another kind. Read access.",
+      "A text document's live state as one Yjs update: the seed merged with every update the room stored; with since, only what it holds beyond that state vector. Its own state vector rides X-State-Vector (base64). 400 state_vector_invalid; 404 text_document_not_found when the tab is absent or another kind. Read access.",
     auth: 'guest-or-session',
     tokenUsable: true,
+    query: [
+      {
+        name: 'since',
+        required: false,
+        description: 'A state vector, base64: answer only what the state holds beyond it.',
+      },
+    ],
     responseMediaType: 'application/octet-stream',
-    statuses: [200, 401, 403, 404, 410],
+    statuses: [200, 400, 401, 403, 404, 410],
   },
   {
     method: 'GET',
@@ -883,6 +890,18 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     ],
     responseMediaType: 'application/vnd.oasis.opendocument.text',
     statuses: [200, 400, 401, 403, 404, 409, 410],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/text-documents/{tabId}/updates',
+    segment: 'documents',
+    tag: 'Text documents',
+    summary:
+      'One Yjs update to a text document, its bytes as the body: for an update too large for a room frame. Stored by the room, then sent live to everyone on it. 400 update_invalid; 413 update_too_large; 404 text_document_not_found; 503 room_unavailable. Edit access (a tab-scoped link on its own tab).',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: { type: 'string', format: 'binary' },
+    statuses: [204, 400, 401, 403, 404, 410, 413, 503],
   },
   // A spreadsheet's file (docs/specs/029-sheets/files-and-print.md, standard-mapping.md).
   {
