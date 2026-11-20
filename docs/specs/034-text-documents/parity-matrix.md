@@ -247,10 +247,10 @@ its own status there. Shortcuts of left-out rows (voice typing, Explore, input t
 
 ## Modes and limits
 
-| Row                          | Rule                      | Status    | Spec                                                          |
-| ---------------------------- | ------------------------- | --------- | ------------------------------------------------------------- |
-| Editing, Suggesting, Viewing | One person's editing mode | specified | [Review](review.md#editing-modes)                             |
+| Row                          | Rule                                           | Status    | Spec                                                          |
+| ---------------------------- | ---------------------------------------------- | --------- | ------------------------------------------------------------- |
+| Editing, Suggesting, Viewing | One person's editing mode                      | specified | [Review](review.md#editing-modes)                             |
 | Print layout, pageless       | Print layout per person; pageless per document | specified | [Page layout](page-layout.md)                                 |
-| Compact mode, full screen    | Per person                | specified | [Editing surface](editing-surface.md#compact-and-full-screen) |
-| Screen reader, braille       | Per person                | specified | [Tools](tools.md#accessibility-settings)                      |
-| 1.02 million characters      | `TEXT_DOCUMENT_MAX_CHARS` | specified | [Text document](text-document.md#limits)                      |
+| Compact mode, full screen    | Per person                                     | specified | [Editing surface](editing-surface.md#compact-and-full-screen) |
+| Screen reader, braille       | Per person                                     | specified | [Tools](tools.md#accessibility-settings)                      |
+| 1.02 million characters      | `TEXT_DOCUMENT_MAX_CHARS`                      | specified | [Text document](text-document.md#limits)                      |
