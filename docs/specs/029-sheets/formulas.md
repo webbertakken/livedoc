@@ -227,7 +227,14 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
 - `SHEETS([reference])` counts the spreadsheet's sheets, hidden ones too, or the sheets a reference spans.
 
 **Lookup**: `VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `LOOKUP`, `INDEX`, `MATCH`, `XMATCH`, `CHOOSE`, `ROW`, `ROWS`, `COLUMN`,
-`COLUMNS`, `OFFSET`, `INDIRECT` (an A1 text on this sheet or another on the tab).
+`COLUMNS`, `OFFSET`, `INDIRECT`, `ADDRESS`, `SHEET`, `FORMULATEXT`.
+
+- `INDIRECT` reads an A1 text, or an R1C1 text when `is_A1_notation` is FALSE (`R2C3`, `R[-1]C[2]` from its own
+  cell, `R2` a row, `C3` a column), on its own sheet or another of the spreadsheet named before `!`.
+- `INDEX` takes OOXML's fourth argument, the area of a union it picks from (`INDEX((A1:B2, D1:E2), 1, 1, 2)`), which
+  Google refuses (D38).
+- `SHEET` counts a sheet's place in the order the spreadsheet holds its sheets, the sheet bar's.
+- `FORMULATEXT` gives a formula as the formula bar shows it, `#N/A` for a cell without one.
 
 **Text**: `CONCATENATE`, `TEXTJOIN`, `LEFT`, `RIGHT`, `MID`, `LEN`, `UPPER`, `LOWER`, `PROPER`, `TRIM`,
 `CLEAN`, `SUBSTITUTE`, `REPLACE`, `FIND`, `SEARCH`, `REPT`, `EXACT`, `TEXT`, `VALUE`, `CHAR`, `CODE`, `SPLIT`,
@@ -324,7 +331,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `ACOT`                | Math        | `ACOT(value)`                                                                                                  | Google      | `ACOT`                           | planned                                                       |
 | `ACOTH`               | Math        | `ACOTH(value)`                                                                                                 | Google      | `ACOTH`                          | planned                                                       |
 | `ADD`                 | Operator    | `ADD(value1, value2)`                                                                                          | Google      | S5                               | built                                                         |
-| `ADDRESS`             | Lookup      | `ADDRESS(row, column, [absolute_relative_mode], [use_a1_notation], [sheet])`                                   | Google      | `ADDRESS`                        | planned                                                       |
+| `ADDRESS`             | Lookup      | `ADDRESS(row, column, [absolute_relative_mode], [use_a1_notation], [sheet])`                                   | Google      | `ADDRESS`                        | built                                                         |
 | `AMORLINC`            | Financial   | `AMORLINC(cost, purchase_date, first_period_end, salvage, period, rate, [basis])`                              | Google      | `AMORLINC`                       | planned                                                       |
 | `AND`                 | Logical     | `AND(logical_expression1, [logical_expression2, ...])`                                                         | Google      | `AND`                            | built                                                         |
 | `ARABIC`              | Text        | `ARABIC(roman_numeral)`                                                                                        | Google      | `ARABIC`                         | planned                                                       |
@@ -502,7 +509,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `FORECAST`            | Statistical | `FORECAST(x, data_y, data_x)`                                                                                  | Google      | `FORECAST`                       | planned                                                       |
 | `FORECAST.LINEAR`     | Statistical | `FORECAST.LINEAR(x, data_y, data_x)`                                                                           | Google      | `COM.MICROSOFT.FORECAST.LINEAR`  | planned                                                       |
 | `FORMULA`             | OpenFormula |                                                                                                                | OpenFormula | `FORMULA`                        | planned                                                       |
-| `FORMULATEXT`         | Lookup      | `FORMULATEXT(cell)`                                                                                            | Google      | S5                               | planned                                                       |
+| `FORMULATEXT`         | Lookup      | `FORMULATEXT(cell)`                                                                                            | Google      | `FORMULA`                        | built                                                         |
 | `FREQUENCY`           | Array       | `FREQUENCY(data, classes)`                                                                                     | Google      | `FREQUENCY`                      | planned                                                       |
 | `FTEST`               | Statistical | `FTEST(range1, range2)`                                                                                        | Google      | `FTEST`                          | planned                                                       |
 | `FV`                  | Financial   | `FV(rate, number_of_periods, payment_amount, [present_value], [end_or_beginning])`                             | Google      | `FV`                             | built                                                         |
@@ -756,7 +763,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `SECOND`              | Date        | `SECOND(time)`                                                                                                 | Google      | `SECOND`                         | built                                                         |
 | `SEQUENCE`            | Math        | `SEQUENCE(rows, columns, start, step)`                                                                         | Google      | `COM.MICROSOFT.SEQUENCE`         | built                                                         |
 | `SERIESSUM`           | Math        | `SERIESSUM(x, n, m, a)`                                                                                        | Google      | `SERIESSUM`                      | planned                                                       |
-| `SHEET`               | Lookup      | `SHEET(value)`                                                                                                 | Google      | `SHEET`                          | planned                                                       |
+| `SHEET`               | Lookup      | `SHEET(value)`                                                                                                 | Google      | `SHEET`                          | built                                                         |
 | `SHEETS`              | Info        | `SHEETS(reference)`                                                                                            | Google      | `SHEETS`                         | built                                                         |
 | `SIGN`                | Math        | `SIGN(value)`                                                                                                  | Google      | `SIGN`                           | built                                                         |
 | `SIN`                 | Math        | `SIN(angle)`                                                                                                   | Google      | `SIN`                            | planned                                                       |

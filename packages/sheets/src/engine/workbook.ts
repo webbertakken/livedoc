@@ -142,6 +142,7 @@ export class Workbook {
       extent: (s) => this.extent(s),
       sheet: (s) => this.sheets.get(s),
       sheetCount: () => this.sheets.size,
+      sheetNumber: (s) => [...this.sheets.keys()].indexOf(s) + 1,
       input: (s, r, c) => this.inputAt(s, r, c),
       cell: (s, r, c, reader) => this.cellValue(s, r, c, reader),
       noAt: (s, r, c) => this.noAt(s, r, c),

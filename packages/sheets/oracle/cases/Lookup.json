@@ -1,0 +1,358 @@
+{
+  "category": "Lookup",
+  "data": [
+    ["Apple", 1, "red", null, "Apple", "Banana", "Cherry", "Date"],
+    ["Banana", 2, "yellow", null, 10, 20, 30, 40],
+    ["Cherry", 3, "red"],
+    ["Date", 5, "brown"],
+    ["Elder", 8, "black"]
+  ],
+  "cases": [
+    {
+      "id": "VLOOKUP.1",
+      "f": "=VLOOKUP(\"Banana\", Data!A1:C5, 2, FALSE)"
+    },
+    {
+      "id": "VLOOKUP.2",
+      "f": "=VLOOKUP(\"banana\", Data!A1:C5, 3, FALSE)"
+    },
+    {
+      "id": "VLOOKUP.3",
+      "f": "=VLOOKUP(\"Fig\", Data!A1:C5, 2, FALSE)"
+    },
+    {
+      "id": "VLOOKUP.4",
+      "f": "=VLOOKUP(4, Data!B1:C5, 2, TRUE)"
+    },
+    {
+      "id": "VLOOKUP.5",
+      "f": "=VLOOKUP(4, Data!B1:C5, 2)"
+    },
+    {
+      "id": "VLOOKUP.6",
+      "f": "=VLOOKUP(\"Apple\", Data!A1:C5, 4, FALSE)"
+    },
+    {
+      "id": "VLOOKUP.7",
+      "f": "=VLOOKUP(\"B*\", Data!A1:C5, 2, FALSE)"
+    },
+    {
+      "id": "VLOOKUP.8",
+      "f": "=VLOOKUP(0, Data!B1:C5, 2, TRUE)"
+    },
+    {
+      "id": "HLOOKUP.1",
+      "f": "=HLOOKUP(\"Banana\", Data!E1:H2, 2, FALSE)"
+    },
+    {
+      "id": "HLOOKUP.2",
+      "f": "=HLOOKUP(\"Zed\", Data!E1:H2, 2, FALSE)"
+    },
+    {
+      "id": "HLOOKUP.3",
+      "f": "=HLOOKUP(\"Banana\", Data!E1:H2, 3, FALSE)"
+    },
+    {
+      "id": "LOOKUP.1",
+      "f": "=LOOKUP(4, Data!B1:B5, Data!C1:C5)"
+    },
+    {
+      "id": "LOOKUP.2",
+      "f": "=LOOKUP(4, Data!B1:C5)"
+    },
+    {
+      "id": "LOOKUP.3",
+      "f": "=LOOKUP(0, Data!B1:B5)"
+    },
+    {
+      "id": "LOOKUP.4",
+      "f": "=LOOKUP(\"Cherry\", Data!E1:H2)"
+    },
+    {
+      "id": "MATCH.1",
+      "f": "=MATCH(\"Cherry\", Data!A1:A5, 0)"
+    },
+    {
+      "id": "MATCH.2",
+      "f": "=MATCH(4, Data!B1:B5)"
+    },
+    {
+      "id": "MATCH.3",
+      "f": "=MATCH(4, Data!B1:B5, 1)"
+    },
+    {
+      "id": "MATCH.4",
+      "f": "=MATCH(\"c*\", Data!A1:A5, 0)"
+    },
+    {
+      "id": "MATCH.5",
+      "f": "=MATCH(\"Fig\", Data!A1:A5, 0)"
+    },
+    {
+      "id": "MATCH.6",
+      "f": "=MATCH(4, {8, 5, 3, 2, 1}, -1)"
+    },
+    {
+      "id": "MATCH.7",
+      "f": "=MATCH(\"Banana\", Data!E1:H1, 0)"
+    },
+    {
+      "id": "XMATCH.1",
+      "f": "=XMATCH(\"Cherry\", Data!A1:A5)"
+    },
+    {
+      "id": "XMATCH.2",
+      "f": "=XMATCH(4, Data!B1:B5, -1)"
+    },
+    {
+      "id": "XMATCH.3",
+      "f": "=XMATCH(4, Data!B1:B5, 1)"
+    },
+    {
+      "id": "XMATCH.4",
+      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2)"
+    },
+    {
+      "id": "XMATCH.5",
+      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2, -1)"
+    },
+    {
+      "id": "XMATCH.6",
+      "f": "=XMATCH(\"Fig\", Data!A1:A5)"
+    },
+    {
+      "id": "XLOOKUP.1",
+      "f": "=XLOOKUP(\"Cherry\", Data!A1:A5, Data!B1:B5)"
+    },
+    {
+      "id": "XLOOKUP.2",
+      "f": "=XLOOKUP(\"Fig\", Data!A1:A5, Data!B1:B5, \"none\")"
+    },
+    {
+      "id": "XLOOKUP.3",
+      "f": "=XLOOKUP(\"Fig\", Data!A1:A5, Data!B1:B5)"
+    },
+    {
+      "id": "XLOOKUP.4",
+      "f": "=XLOOKUP(\"Cherry\", Data!A1:A5, Data!B1:C5)",
+      "cols": 2
+    },
+    {
+      "id": "XLOOKUP.5",
+      "f": "=XLOOKUP(4, Data!B1:B5, Data!A1:A5, , -1)"
+    },
+    {
+      "id": "XLOOKUP.6",
+      "f": "=XLOOKUP(4, Data!B1:B5, Data!A1:A5, , 1)"
+    },
+    {
+      "id": "XLOOKUP.7",
+      "f": "=XLOOKUP(\"Banana\", Data!E1:H1, Data!E2:H2)"
+    },
+    {
+      "id": "XLOOKUP.8",
+      "f": "=XLOOKUP(\"Cherry\", Data!A1:A5, Data!B1:B4)"
+    },
+    {
+      "id": "XLOOKUP.9",
+      "f": "=XLOOKUP(\"r*\", Data!C1:C5, Data!A1:A5, , 2, -1)"
+    },
+    {
+      "id": "INDEX.1",
+      "f": "=INDEX(Data!A1:C5, 2, 3)"
+    },
+    {
+      "id": "INDEX.2",
+      "f": "=INDEX(Data!A1:C5, 0, 2)",
+      "rows": 5
+    },
+    {
+      "id": "INDEX.3",
+      "f": "=INDEX(Data!A1:C5, 2, 0)",
+      "cols": 3
+    },
+    {
+      "id": "INDEX.4",
+      "f": "=INDEX(Data!A1:C5, 6, 1)"
+    },
+    {
+      "id": "INDEX.5",
+      "f": "=SUM(INDEX(Data!A1:C5, 0, 2))"
+    },
+    {
+      "id": "INDEX.6",
+      "f": "=INDEX(Data!E1:H1, 3)"
+    },
+    {
+      "id": "INDEX.7",
+      "f": "=INDEX({1, 2; 3, 4}, 2, 1)"
+    },
+    {
+      "id": "CHOOSE.1",
+      "f": "=CHOOSE(2, \"a\", \"b\", \"c\")"
+    },
+    {
+      "id": "CHOOSE.2",
+      "f": "=CHOOSE(4, \"a\", \"b\")"
+    },
+    {
+      "id": "CHOOSE.3",
+      "f": "=CHOOSE(2.7, \"a\", \"b\", \"c\")"
+    },
+    {
+      "id": "ROW.1",
+      "f": "=ROW(Data!B3)"
+    },
+    {
+      "id": "ROW.2",
+      "f": "=ROW(Data!A2:A4)",
+      "rows": 3
+    },
+    {
+      "id": "ROWS.1",
+      "f": "=ROWS(Data!A1:C5)"
+    },
+    {
+      "id": "ROWS.2",
+      "f": "=ROWS({1; 2; 3})"
+    },
+    {
+      "id": "COLUMN.1",
+      "f": "=COLUMN(Data!C2)"
+    },
+    {
+      "id": "COLUMN.2",
+      "f": "=COLUMN(Data!A1:C1)",
+      "cols": 3
+    },
+    {
+      "id": "COLUMNS.1",
+      "f": "=COLUMNS(Data!A1:C5)"
+    },
+    {
+      "id": "OFFSET.1",
+      "f": "=OFFSET(Data!A1, 2, 1)"
+    },
+    {
+      "id": "OFFSET.2",
+      "f": "=SUM(OFFSET(Data!B1, 0, 0, 3))"
+    },
+    {
+      "id": "OFFSET.3",
+      "f": "=OFFSET(Data!A1, -1, 0)"
+    },
+    {
+      "id": "OFFSET.4",
+      "f": "=OFFSET(Data!A1, 1, 0, 2, 2)",
+      "rows": 2,
+      "cols": 2
+    },
+    {
+      "id": "INDIRECT.1",
+      "f": "=INDIRECT(\"Data!B2\")"
+    },
+    {
+      "id": "INDIRECT.2",
+      "f": "=SUM(INDIRECT(\"Data!B1:B3\"))"
+    },
+    {
+      "id": "INDIRECT.3",
+      "f": "=INDIRECT(\"Data!R2C2\", FALSE)"
+    },
+    {
+      "id": "INDIRECT.4",
+      "f": "=INDIRECT(\"nonsense\")"
+    },
+    {
+      "id": "INDIRECT.5",
+      "f": "=INDIRECT(\"R[0]C[-1]\", FALSE)"
+    },
+    {
+      "id": "INDIRECT.6",
+      "f": "=SUM(INDIRECT(\"Data!R1C2:R3C2\", FALSE))"
+    },
+    {
+      "id": "ADDRESS.1",
+      "f": "=ADDRESS(2, 3)"
+    },
+    {
+      "id": "ADDRESS.2",
+      "f": "=ADDRESS(2, 3, 2)"
+    },
+    {
+      "id": "ADDRESS.3",
+      "f": "=ADDRESS(2, 3, 3)"
+    },
+    {
+      "id": "ADDRESS.4",
+      "f": "=ADDRESS(2, 3, 4)"
+    },
+    {
+      "id": "ADDRESS.5",
+      "f": "=ADDRESS(2, 3, 1, FALSE)"
+    },
+    {
+      "id": "ADDRESS.6",
+      "f": "=ADDRESS(2, 3, 4, FALSE)"
+    },
+    {
+      "id": "ADDRESS.7",
+      "f": "=ADDRESS(2, 3, 1, TRUE, \"Data\")",
+      "expect": [["Data!$C$2"]],
+      "cite": "https://support.google.com/docs/answer/3093308 (\"sheet - A string indicating the name of the sheet into which the address points\"; sample `ADDRESS(1,2,,,\"Sheet2\")`), written as Google writes a reference to another sheet",
+      "differs": {
+        "libreoffice": "LibreOffice writes a sheet in its own syntax, `Data.` before the cell; Google writes it as a reference is written, `Data!`"
+      }
+    },
+    {
+      "id": "ADDRESS.8",
+      "f": "=ADDRESS(0, 1)"
+    },
+    {
+      "id": "ADDRESS.9",
+      "f": "=ADDRESS(1, 1, 5)",
+      "differs": {
+        "libreoffice": "LibreOffice reads mode 5 as 1; Google's help names only 1 to 4, and LiveDoc refuses others with #VALUE!"
+      },
+      "note": "Awaits Google's answer: an absolute_relative_mode past 4."
+    },
+    {
+      "id": "ADDRESS.10",
+      "f": "=ADDRESS(2, 3, 1, TRUE, \"My data\")",
+      "expect": [["'My data'!$C$2"]],
+      "cite": "https://support.google.com/docs/answer/3093308 (the sheet argument), a name with a space quoted as Google writes such a reference",
+      "differs": {
+        "libreoffice": "LibreOffice writes a sheet in its own syntax, `Data.` before the cell; Google writes it as a reference is written, `Data!`"
+      }
+    },
+    {
+      "id": "SHEET.1",
+      "f": "=SHEET()"
+    },
+    {
+      "id": "SHEET.2",
+      "f": "=SHEET(Data!A1)"
+    },
+    {
+      "id": "SHEET.3",
+      "f": "=SHEET(\"Data\")"
+    },
+    {
+      "id": "SHEET.4",
+      "f": "=SHEET(\"Nope\")"
+    },
+    {
+      "id": "FORMULATEXT.1",
+      "f": "=FORMULATEXT(B1)",
+      "expect": [["=VLOOKUP(\"Banana\", Data!A1:C5, 2, FALSE)"]],
+      "cite": "https://support.google.com/docs/answer/9365792 (\"FORMULATEXT returns what is displayed in the formula bar when selecting a cell\"); B1 holds case VLOOKUP.1",
+      "differs": {
+        "libreoffice": "LibreOffice writes the formula in its own syntax (`$Data.A1:C5`, `FALSE()`)"
+      }
+    },
+    {
+      "id": "FORMULATEXT.2",
+      "f": "=FORMULATEXT(Data!A1)"
+    }
+  ]
+}

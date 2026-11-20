@@ -45,8 +45,11 @@ export type Frame = {
   format(sheetId: string, r: number, c: number): CellFormat | undefined;
   // A column's width in pixels (CELL's "width").
   colWidth(sheetId: string, c: number): number;
-  // How many sheets the workbook holds (SHEETS).
+  // How many sheets the workbook holds (SHEETS), and a sheet's place among them from 1 (SHEET); 0 for none.
   sheetCount(): number;
+  sheetNumber(sheetId: string): number;
+  // A cell's formula as its formula bar shows it (FORMULATEXT); null when it holds none.
+  formulaText(sheetId: string, r: number, c: number): string | null;
   // The grid size of a sheet.
   grid(sheetId: string): { rows: number; cols: number } | undefined;
   // The rectangle a spilling formula fills, for `B2#`; null when it does not spill.

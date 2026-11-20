@@ -265,6 +265,13 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     '=SUM(OFFSET(A1, 1, 0, 3))',
   ),
   INDIRECT: D('reference_text, [a1]', 'The cells a text reference names', '=INDIRECT("B" & A2)'),
+  ADDRESS: D(
+    'row, column, [mode], [a1], [sheet]',
+    'A cell reference written as text, absolute or not, A1 or R1C1',
+    '=ADDRESS(2, 3)',
+  ),
+  SHEET: D('[value]', 'The place of a sheet among the sheets, from 1', '=SHEET(Data!A1)'),
+  FORMULATEXT: D('cell', 'A cell’s formula, as text', '=FORMULATEXT(B2)'),
   // Text
   CONCATENATE: D('value1, [value2, …]', 'Joins values together', '=CONCATENATE(A2, " ", B2)'),
   TEXTJOIN: D(
