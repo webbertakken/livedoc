@@ -4,11 +4,11 @@
 // with every value the engine works out cached beside its formula. A read, gated as the sheets are; a tab-scoped link
 // is never offered on a sheet tab (spreadsheet.md "The workbook shape"), so one reaches no file. Answered inside the
 // document's room.
-import { sheetFromJson, Workbook, WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
-import { workbookFileOf, writeFlatOds, writeOds } from '@livedoc/sheets/files';
+import { sheetFromJson, WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
+import { writeWorkbook, type WrittenWorkbookFormat } from '@livedoc/sheets/files';
 import { getDocumentMeta, listSheets } from '../db';
 import { documentTabOrder, readWorkbook } from '../db/workbook';
-import { downloadFileName } from '../files/download-file-name';
+import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, forbidden, methodNotAllowed } from '../responses';
 import type { DocumentRouteContext } from './context';
 import { openWorkbook } from './sheet-page-routes';
@@ -24,7 +24,8 @@ const FILE_MEDIA_TYPES: Record<WorkbookFormat, string> = {
 
 // Which standard each file is in: an ODF workbook leaves as either ODF form, never as another standard until a person
 // converts it (fork C1).
-const ODF: readonly WorkbookFormat[] = ['ods', 'fods'];
+const isOdf = (format: WorkbookFormat): format is WrittenWorkbookFormat =>
+  format === 'ods' || format === 'fods';
 
 /** A file name safe in a Content-Disposition header, from the document's name. */
 export function workbookFileName(name: string, format: WorkbookFormat): string {
@@ -44,8 +45,7 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   const asked = ctx.url.searchParams.get('format') ?? record.format;
   if (!WorkbookRecord.isFormat(asked)) return workbookRefused('file_type_unknown', 400);
   // Conversion is a person's choice (files-and-print.md "Converting"), and the XLSX mapping is still ahead.
-  if (!ODF.includes(asked) || !ODF.includes(record.format))
-    return workbookRefused('format_not_native', 409);
+  if (!isOdf(asked) || !isOdf(record.format)) return workbookRefused('format_not_native', 409);
   const [meta, order, stored] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
     documentTabOrder(ctx.env, documentId),
@@ -56,13 +56,8 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
     .filter((s) => at.has(s.tabId))
     .sort((a, b) => at.get(a.tabId)! - at.get(b.tabId)!)
     .map(sheetFromJson);
-  const engine = new Workbook({ sheets, locale: record.settings.locale });
   const name = meta?.name ?? '';
-  const workbookFile = workbookFileOf(engine, sheets);
-  const flat = asked === 'fods' ? writeFlatOds(workbookFile, name) : null;
-  const written = flat
-    ? { data: new TextEncoder().encode(flat.data), losses: flat.losses }
-    : writeOds(workbookFile, name);
+  const written = writeWorkbook(sheets, record, name, asked);
   const body = written.data;
   console.info(
     `[workbook] file written document=${documentId} format=${asked} sheets=${sheets.length} bytes=${body.byteLength} losses=${written.losses.length} ms=${Date.now() - started}`,

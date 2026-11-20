@@ -4,3 +4,4 @@ export * from './workbook-file';
 export * from './open-formula';
 export * from './ods-write';
 export * from './ods-read';
+export * from './write-workbook';

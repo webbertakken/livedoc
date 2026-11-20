@@ -32,6 +32,7 @@ import { openSpreadsheetFile } from '@/lib/spreadsheet/open-spreadsheet-file';
 import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { track } from '@/lib/telemetry';
 import { SheetBar, type SheetBarTab } from './SheetBar';
+import { useSheetBarPeers } from './useSheetBarPeers';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
 
@@ -64,6 +65,7 @@ export function SpreadsheetSurface({
   onSelectTab: (tabId: string) => void;
 }) {
   const bridge = useSheetsBridgeContext();
+  const sheetBarPeers = useSheetBarPeers(bridge);
   const [problem, setProblem] = useState<string | null>(null);
   const format = workbook.format;
   const download = async () => {
@@ -99,7 +101,7 @@ export function SpreadsheetSurface({
         problem={problem}
       />
       {bridge ? <OpenSheet bridge={bridge} tabId={tabId} /> : <Status state="loading" />}
-      <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} />
+      <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} peers={sheetBarPeers} />
     </section>
   );
 }
