@@ -28,7 +28,7 @@ Bulleted, numbered and checklist lists in a [text document](text-document.md), a
   or 8.
 - Each level has its own marker, number format, indent and start value, from the list's definition.
 - **Drawn**: an item stands at its level's indent, its marker in the hanging space before its first line, in the
-  item's first character's font, size and colour (default); a paragraph's own indents draw over its level's.
+  paragraph's font, size and colour (default); a paragraph's own indents draw over its level's.
 - The marker is no text: it cannot be selected, copied or typed into, and a screen reader reads it as the item's
   position ("1.", "bullet") before its text.
 
