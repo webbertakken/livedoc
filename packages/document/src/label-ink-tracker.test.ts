@@ -48,7 +48,7 @@ const drawnOf = new WeakMap<Element, Element>();
 const drawn = (els: readonly Element[]) =>
   els.map((el) => {
     if (el.type !== 'shape') return el;
-    const known = drawnOf.get(el) ?? ({ ...el, fillColor: '#1e293b' } as Element);
+    const known = drawnOf.get(el) ?? { ...el, fillColor: '#1e293b' };
     drawnOf.set(el, known);
     return known;
   });
@@ -83,7 +83,7 @@ describe('createLabelInkTracker', () => {
     step(track, els);
     els = els.map((el) => (el.id === 'p1' ? ({ ...el, x: 2000 } as Element) : el));
     step(track, els);
-    els = els.map((el) => (el.id === 't2' ? ({ ...el, textColor: '#334155' } as Element) : el));
+    els = els.map((el) => (el.id === 't2' ? { ...el, textColor: '#334155' } : el));
     step(track, els);
     els = els.filter((el) => el.id !== 'p2');
     step(track, els);
