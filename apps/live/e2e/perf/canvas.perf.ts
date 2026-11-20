@@ -18,6 +18,7 @@ import {
 } from './budget';
 import { interactiveMs, OPEN_QUIET_MS, tabArrivedAt } from './interactive';
 import { viewProblem } from './view-check';
+import { DOUBLE_PRESS_MS } from '../../lib/double-press';
 import { buildReferenceBoard } from './reference-board';
 import { mainThreadTasks, type TraceEvent } from './trace-tasks';
 
@@ -371,10 +372,11 @@ async function measureZoom(
     },
     {
       gesture: 'drag',
-      // A selection is what a drag moves: the undo between runs clears it, and selecting is a row of its own.
+      // A selection is what a drag moves: the undo between runs clears it, and selecting is a row of its own. The
+      // press comes after the double-press window, or a quick enough board pairs it with the selecting click.
       setup: async () => {
         await page.mouse.click(shape.x, shape.y);
-        await page.waitForTimeout(400);
+        await page.waitForTimeout(DOUBLE_PRESS_MS + 150);
       },
       act: async () => {
         await page.mouse.move(shape.x, shape.y);

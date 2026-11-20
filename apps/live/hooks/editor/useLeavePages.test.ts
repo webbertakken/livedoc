@@ -197,3 +197,23 @@ describe('leaving Pages', () => {
     expect(JSON.stringify(made)).not.toContain('Held');
   });
 });
+
+// The mode's context sits around the canvas and holds still through edits of the tab
+// (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+describe('useLeavePages identity', () => {
+  it('keeps the same mode value through an edit of the tab, and asks with the tab as it is now', () => {
+    const rawSet = vi.fn<(m: EditorMode, alsoChange?: (t: Tab) => Tab) => void>();
+    const mode = { mode: 'pages' as EditorMode, setMode: rawSet };
+    let current = tab();
+    const { result, rerender } = renderHook(() =>
+      useLeavePages(mode, { tab: current, canEdit: true }),
+    );
+    const before = result.current.editorMode;
+    current = tab({ elements: [createShape('square', 0, 0)] });
+    rerender();
+    expect(result.current.editorMode).toBe(before);
+    act(() => result.current.editorMode.setMode('draw'));
+    expect(rawSet).not.toHaveBeenCalled();
+    expect(result.current.leave.confirming).toBe('draw');
+  });
+});

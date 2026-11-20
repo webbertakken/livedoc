@@ -20,6 +20,7 @@ describe('usePlanSlice', () => {
   const presence = new Map();
   const participants: never[] = [];
   const statusNames = new Map<string, string>();
+  const noPlace = () => null;
 
   it('keeps the context while the editor hands over fresh callbacks', () => {
     const { result, rerender } = renderHook(() =>
@@ -38,6 +39,8 @@ describe('usePlanSlice', () => {
         announce: () => {},
         publishPresence: () => {},
         addItemSlide: () => {},
+        newFormFor: () => {},
+        linkedActions: { placeOf: noPlace, showOnCanvas: () => {} },
       }),
     );
     const first = result.current.context;
@@ -68,6 +71,33 @@ describe('usePlanSlice', () => {
     rerender();
     result.current.context.removeCard('x');
     expect(commits).toEqual(['b']);
+  });
+
+  it('calls the latest form and action handlers the editor handed over', () => {
+    const calls: string[] = [];
+    let tag = 'a';
+    const { result, rerender } = renderHook(() =>
+      usePlanSlice({
+        planItems,
+        itemTypes,
+        editorMode: 'plan',
+        canEdit: true,
+        canVote: true,
+        teamPeople: participants,
+        presence,
+        statusNames,
+        commit: () => {},
+        select: () => {},
+        announce: () => {},
+        newFormFor: (id) => calls.push(`form ${tag} ${id}`),
+        linkedActions: { placeOf: noPlace, showOnCanvas: () => calls.push(`show ${tag}`) },
+      }),
+    );
+    tag = 'b';
+    rerender();
+    result.current.context.newFormFor!('board');
+    result.current.context.linkedActions!.showOnCanvas({} as never);
+    expect(calls).toEqual(['form b board', 'show b']);
   });
 
   it("sets a Plan card's own settings, and leaves every other element alone", () => {
