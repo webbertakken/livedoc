@@ -863,6 +863,7 @@ export * from './theme-graph';
 export * from './themes';
 export * from './theme-halves';
 export * from './label-backdrop';
+export * from './label-ink-tracker';
 // A tab as one appearance sees it, for exports and the server's Explorer thumbnails.
 export * from './tab-as-seen';
 export * from './theme-presets';
