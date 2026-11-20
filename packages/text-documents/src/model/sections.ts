@@ -137,20 +137,15 @@ export const PageSetup = {
     const { top, bottom, left, right } = margins;
     if (!isLength(width) || !isLength(height) || width === 0 || height === 0) return null;
     if (orientation !== 'portrait' && orientation !== 'landscape') return null;
-    if (![top, bottom, left, right].every((m) => isLength(m))) return null;
+    if (!isLength(top) || !isLength(bottom) || !isLength(left) || !isLength(right)) return null;
     if (pageColor !== undefined && (typeof pageColor !== 'string' || !HEX.test(pageColor)))
       return null;
     const setup: PageSetup = {
       width,
       height,
       orientation,
-      margins: {
-        top: top as number,
-        bottom: bottom as number,
-        left: left as number,
-        right: right as number,
-      },
-      ...(pageColor === undefined ? {} : { pageColor: pageColor as string }),
+      margins: { top, bottom, left, right },
+      ...(pageColor === undefined ? {} : { pageColor }),
     };
     const room = PageSetup.room(setup);
     return room.across >= MIN_TEXT_SIDE_PT && room.down >= MIN_TEXT_SIDE_PT ? setup : null;
