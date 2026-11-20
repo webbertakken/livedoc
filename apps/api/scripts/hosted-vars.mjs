@@ -30,7 +30,7 @@
 //
 // The pure helpers are exported for src/hosted-vars.test.ts.
 
-import { execFileSync } from 'node:child_process';
+import { spawnSync } from 'node:child_process';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -170,12 +170,46 @@ export function hostedVarDrift(expected, deployed) {
     .map(([name, value]) => ({ name, expected: value, actual: deployed.get(name) ?? null }));
 }
 
+/** Waits between reads of a version Cloudflare cannot return yet: doubling, about 31 s in all.
+ *  A just-deployed version can answer "not found" for several seconds after its deploy. */
+export const VERSION_READ_WAITS_MS = [1000, 2000, 4000, 8000, 16000];
+
+const VERSION_NOT_FOUND = 'code: 100146';
+
+/** Whether a failed wrangler call is Cloudflare's "version not found", read off its stderr. */
+export function isVersionNotYetReadable(error) {
+  return typeof error?.stderr === 'string' && error.stderr.includes(VERSION_NOT_FOUND);
+}
+
+/** read(), again after each wait while Cloudflare cannot return the version yet; any other error
+ *  throws at once, and the last "not found" throws after the last wait. */
+export function readFreshVersion(read, { waitsMs, sleep, log }) {
+  for (const waitMs of waitsMs) {
+    try {
+      return read();
+    } catch (error) {
+      if (!isVersionNotYetReadable(error)) throw error;
+      log(`hosted-vars verify: version not yet readable, reading again in ${waitMs} ms`);
+      sleep(waitMs);
+    }
+  }
+  return read();
+}
+
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
 function wranglerJson(args) {
-  const out = execFileSync('pnpm', ['exec', 'wrangler', ...args, '--json'], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'inherit'],
-  });
-  return JSON.parse(out);
+  const run = spawnSync('pnpm', ['exec', 'wrangler', ...args, '--json'], { encoding: 'utf8' });
+  if (run.stderr) process.stderr.write(run.stderr);
+  if (run.error) throw run.error;
+  if (run.status !== 0) {
+    throw Object.assign(new Error(`wrangler ${args.join(' ')} exited ${run.status}`), {
+      stderr: run.stderr,
+    });
+  }
+  return JSON.parse(run.stdout);
 }
 
 function verify(args) {
@@ -193,7 +227,12 @@ function verify(args) {
   }
   let failed = false;
   for (const id of versionIds) {
-    const deployed = plainVars(wranglerJson(['versions', 'view', id, ...wranglerArgs]));
+    const view = readFreshVersion(() => wranglerJson(['versions', 'view', id, ...wranglerArgs]), {
+      waitsMs: VERSION_READ_WAITS_MS,
+      sleep: sleepSync,
+      log: (line) => console.error(line),
+    });
+    const deployed = plainVars(view);
     const drift = [...hostedVarDrift(expected, deployed), ...unsetVarDrift(unset, deployed)];
     for (const d of drift) {
       console.error(

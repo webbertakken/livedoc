@@ -32,6 +32,16 @@ interface HostedVarsModule {
   wranglerVarFlags: (vars: Record<string, string>) => string[];
   buildEnv: (vars: Record<string, string>) => string[];
   activeVersionIds: (status: unknown) => string[];
+  VERSION_READ_WAITS_MS: readonly number[];
+  isVersionNotYetReadable: (error: unknown) => boolean;
+  readFreshVersion: <T>(
+    read: () => T,
+    options: {
+      waitsMs: readonly number[];
+      sleep: (ms: number) => void;
+      log: (line: string) => void;
+    },
+  ) => T;
   plainVars: (view: unknown) => Map<string, string>;
   hostedVarDrift: (
     expected: Record<string, string>,
@@ -180,6 +190,71 @@ describe('hosted-vars script', () => {
     const { activeVersionIds } = await load();
     expect(activeVersionIds(status)).toEqual(['v-new']);
     expect(activeVersionIds({})).toEqual([]);
+  });
+
+  describe('a version just deployed', () => {
+    // docs/specs/016-platform/deployment.md "A version just deployed"
+    const notFound = Object.assign(new Error('Command failed'), {
+      stderr: 'The requested Worker version could not be found [code: 100146]',
+    });
+
+    it('reads the version again until Cloudflare can return it', async () => {
+      const { readFreshVersion } = await load();
+      const slept: number[] = [];
+      const logged: string[] = [];
+      let calls = 0;
+      const view = readFreshVersion(
+        () => {
+          calls += 1;
+          if (calls < 3) throw notFound;
+          return { id: 'v-new' };
+        },
+        { waitsMs: [1, 2, 4], sleep: (ms) => slept.push(ms), log: (l) => logged.push(l) },
+      );
+      expect(view).toEqual({ id: 'v-new' });
+      expect(slept).toEqual([1, 2]);
+      expect(logged).toHaveLength(2);
+      expect(logged[0]).toContain('not yet readable');
+    });
+
+    it('fails after the last wait', async () => {
+      const { readFreshVersion } = await load();
+      const slept: number[] = [];
+      expect(() =>
+        readFreshVersion(
+          () => {
+            throw notFound;
+          },
+          { waitsMs: [1, 2], sleep: (ms) => slept.push(ms), log: () => {} },
+        ),
+      ).toThrow(notFound);
+      expect(slept).toEqual([1, 2]);
+    });
+
+    it('never retries another error', async () => {
+      const { readFreshVersion } = await load();
+      const other = Object.assign(new Error('Command failed'), {
+        stderr: 'Authentication error [code: 10000]',
+      });
+      const slept: number[] = [];
+      expect(() =>
+        readFreshVersion(
+          () => {
+            throw other;
+          },
+          { waitsMs: [1], sleep: (ms) => slept.push(ms), log: () => {} },
+        ),
+      ).toThrow(other);
+      expect(slept).toEqual([]);
+    });
+
+    it('waits about half a minute in all, doubling', async () => {
+      const { VERSION_READ_WAITS_MS, isVersionNotYetReadable } = await load();
+      expect(VERSION_READ_WAITS_MS).toEqual([1000, 2000, 4000, 8000, 16000]);
+      expect(isVersionNotYetReadable(notFound)).toBe(true);
+      expect(isVersionNotYetReadable(new Error('code: 100146 in the message'))).toBe(false);
+      expect(isVersionNotYetReadable(null)).toBe(false);
+    });
   });
 
   it('reports every hosted var a deployment lacks or holds with another value', async () => {
