@@ -13,7 +13,11 @@ The corpus lives in `packages/sheets/oracle/` ([its README](../../packages/sheet
 7. Read the new answers in `oracle/answers/libreoffice/<Category>.json`; a `Err:5xx` is LibreOffice's own error.
 8. Where LibreOffice answers otherwise than Google documents, add `differs.libreoffice` with why, and the documented
    answer as `expect` with `cite` (the help page's address and what it says); never type an answer without a cite.
-9. Where Google's answers exist (`oracle/answers/google/`), they win; run `oracle:google` when its downloads are new.
-10. Run `pnpm --filter @livedoc/sheets exec vitest run src/oracle --silent=false` and read `[sheets oracle]` lines.
-11. Fix the engine until the category passes; never loosen a case's `tol` past one in a million, and say why in `note`.
-12. Mark the function **built** in `formulas.md`'s catalogue only once its cases pass.
+9. A Google-only function (ODF name S5, written `ORG.LIVEDOC.`) is `#NAME?` in LibreOffice: give each of its cases
+   `expect` and `cite` from its help page, and `differs.libreoffice` saying so.
+10. Where Google's answers exist (`oracle/answers/google/`), they win; run `oracle:google` when its downloads are new.
+11. Run `pnpm --filter @livedoc/sheets exec vitest run src/oracle --silent=false` and read `[sheets oracle]` lines.
+12. Fix the engine until the category passes; never loosen a case's `tol` past one in a million, and say why in `note`.
+13. Mark the function **built** in `formulas.md`'s catalogue only once its cases pass.
+14. Add the category to `MEASURED_CATEGORIES` in `src/oracle/oracle.test.ts` once all its functions are measured.
+15. A new function family in the registry needs its label in `SheetFunctionMenu.tsx` and its icon in `sheet-icons.tsx`.

@@ -2,86 +2,17 @@
 // with operators broadcasting over arrays as Sheets does. References resolve through the frame's layouts at
 // evaluation time, so a formula always reads the cells its ids name.
 import type { StoredRef } from '../sheet';
-import type { BinaryOp, Node } from '../formula/ast';
+import type { Node } from '../formula/ast';
 import { deref, lift, tooBig } from '../formula/fn';
 import { FUNCTIONS } from '../formula/registry';
 import { resolveRef } from '../formula/stored';
 import { arrayFrame, implicit, posToRange, rectangleOf } from './refs';
-import {
-  compareScalars,
-  err,
-  isArray,
-  isError,
-  toNumber,
-  toText,
-  type Scalar,
-  type Value,
-} from '../formula/values';
+import { err, isArray, isError, type Value } from '../formula/values';
+import { binaryOperation, unaryOperation, type UnaryOperator } from '../formula/operators';
 import { isAreas, isRef, type EvalValue, type Frame, type RangeRef } from './frame';
 
-function arith(op: BinaryOp, a: Scalar, b: Scalar): Value {
-  if (isError(a)) return a;
-  if (isError(b)) return b;
-  if (op === '&') {
-    const x = toText(a);
-    const y = toText(b);
-    if (isError(x)) return x;
-    if (isError(y)) return y;
-    return x + y;
-  }
-  if (op === '=' || op === '<>' || op === '<' || op === '>' || op === '<=' || op === '>=') {
-    const c = compareScalars(a, b);
-    switch (op) {
-      case '=':
-        return c === 0;
-      case '<>':
-        return c !== 0;
-      case '<':
-        return c < 0;
-      case '>':
-        return c > 0;
-      case '<=':
-        return c <= 0;
-      default:
-        return c >= 0;
-    }
-  }
-  const x = toNumber(a);
-  const y = toNumber(b);
-  if (typeof x !== 'number') return x;
-  if (typeof y !== 'number') return y;
-  let r: number;
-  switch (op) {
-    case '+':
-      r = x + y;
-      break;
-    case '-':
-      r = x - y;
-      break;
-    case '*':
-      r = x * y;
-      break;
-    case '/':
-      if (y === 0) return err('#DIV/0!');
-      r = x / y;
-      break;
-    default:
-      if (x === 0 && y < 0) return err('#DIV/0!');
-      r = x ** y;
-  }
-  if (!Number.isFinite(r)) return err('#NUM!');
-  // Full precision is kept; comparisons and display read 15 significant digits (compareScalars, numberText), so
-  // 0.1 + 0.2 = 0.3 is TRUE without compounding rounding through a chain of operations.
-  return r;
-}
-
-function unary(kind: 'neg' | 'pos' | 'pct', v: Value): Value {
-  return lift([v], ([x]) => {
-    if (kind === 'pos') return x!;
-    const n = toNumber(x!);
-    if (typeof n !== 'number') return n;
-    return kind === 'neg' ? -n : n / 100;
-  });
+function unary(kind: UnaryOperator, v: Value): Value {
+  return lift([v], ([x]) => unaryOperation(kind, x!));
 }
 
 // An operator's operand: a range intersected where one value goes, then read as a value.
@@ -171,7 +102,7 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
     case 'bin': {
       const a = operand(node.a, refs, f);
       const b = operand(node.b, refs, f);
-      return lift([a, b], ([x, y]) => arith(node.op, x!, y!));
+      return lift([a, b], ([x, y]) => binaryOperation(node.op, x!, y!));
     }
     case 'arr':
       return joinLiteral(node.rows, refs, arrayFrame(f));

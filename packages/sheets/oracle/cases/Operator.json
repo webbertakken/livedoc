@@ -1,0 +1,417 @@
+{
+  "category": "Operator",
+  "data": [
+    [3, "4", true, null, "abc"],
+    [1.2, 12.45, 7.9, null, null]
+  ],
+  "cases": [
+    {
+      "id": "ADD.1",
+      "f": "=ADD(2, 3)",
+      "expect": [[5]],
+      "cite": "https://support.google.com/docs/answer/3093590 (\"Equivalent to the `+` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ADD is #NAME? there"
+      }
+    },
+    {
+      "id": "ADD.2",
+      "f": "=ADD(Data!A1, Data!B1)",
+      "expect": [[7]],
+      "cite": "https://support.google.com/docs/answer/3093590 (\"Equivalent to the `+` operator\"); text that reads as a number adds as one",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ADD is #NAME? there"
+      }
+    },
+    {
+      "id": "ADD.3",
+      "f": "=ADD(Data!C1, Data!D1)",
+      "expect": [[1]],
+      "cite": "https://support.google.com/docs/answer/3093590 (\"Equivalent to the `+` operator\"); TRUE is 1, an empty cell 0",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ADD is #NAME? there"
+      }
+    },
+    {
+      "id": "ADD.4",
+      "f": "=ADD(\"a\", 1)",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093590 (\"Equivalent to the `+` operator\"); text that is no number is #VALUE!",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ADD is #NAME? there"
+      }
+    },
+    {
+      "id": "ADD.5",
+      "f": "=ADD(1/0, 1)",
+      "expect": [
+        [
+          {
+            "e": "#DIV/0!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093590 (\"Equivalent to the `+` operator\"); an error flows through",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ADD is #NAME? there"
+      }
+    },
+    {
+      "id": "MINUS.1",
+      "f": "=MINUS(5, 8)",
+      "expect": [[-3]],
+      "cite": "https://support.google.com/docs/answer/3093977 (\"Equivalent to the `-` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.MINUS is #NAME? there"
+      }
+    },
+    {
+      "id": "MINUS.2",
+      "f": "=MINUS(Data!A1, Data!D1)",
+      "expect": [[3]],
+      "cite": "https://support.google.com/docs/answer/3093977 (\"Equivalent to the `-` operator\"); an empty cell is 0",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.MINUS is #NAME? there"
+      }
+    },
+    {
+      "id": "MULTIPLY.1",
+      "f": "=MULTIPLY(4, 2.5)",
+      "expect": [[10]],
+      "cite": "https://support.google.com/docs/answer/3093978 (\"Equivalent to the `*` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.MULTIPLY is #NAME? there"
+      }
+    },
+    {
+      "id": "MULTIPLY.2",
+      "f": "=MULTIPLY(Data!C1, 7)",
+      "expect": [[7]],
+      "cite": "https://support.google.com/docs/answer/3093978 (\"Equivalent to the `*` operator\"); TRUE is 1",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.MULTIPLY is #NAME? there"
+      }
+    },
+    {
+      "id": "DIVIDE.1",
+      "f": "=DIVIDE(7, 2)",
+      "expect": [[3.5]],
+      "cite": "https://support.google.com/docs/answer/3093973 (\"Equivalent to the `/` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.DIVIDE is #NAME? there"
+      }
+    },
+    {
+      "id": "DIVIDE.2",
+      "f": "=DIVIDE(1, 0)",
+      "expect": [
+        [
+          {
+            "e": "#DIV/0!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093973 (\"Equivalent to the `/` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.DIVIDE is #NAME? there"
+      }
+    },
+    {
+      "id": "DIVIDE.3",
+      "f": "=DIVIDE(Data!D1, 4)",
+      "expect": [[0]],
+      "cite": "https://support.google.com/docs/answer/3093973 (\"Equivalent to the `/` operator\"); an empty cell is 0",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.DIVIDE is #NAME? there"
+      }
+    },
+    {
+      "id": "POW.1",
+      "f": "=POW(2, 10)",
+      "expect": [[1024]],
+      "cite": "https://support.google.com/docs/answer/3093603 (\"Returns a number raised to a power\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.POW is #NAME? there"
+      }
+    },
+    {
+      "id": "POW.2",
+      "f": "=POW(4, 0.5)",
+      "expect": [[2]],
+      "cite": "https://support.google.com/docs/answer/3093603 (\"Returns a number raised to a power\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.POW is #NAME? there"
+      }
+    },
+    {
+      "id": "CONCAT.1",
+      "f": "=CONCAT(\"a\", 1)"
+    },
+    {
+      "id": "CONCAT.2",
+      "f": "=CONCAT(Data!B1, Data!A1)"
+    },
+    {
+      "id": "CONCAT.3",
+      "f": "=CONCAT(Data!E1, 1)"
+    },
+    {
+      "id": "EQ.1",
+      "f": "=EQ(1, 1)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3093593 (\"Equivalent to the `=` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EQ is #NAME? there"
+      }
+    },
+    {
+      "id": "EQ.2",
+      "f": "=EQ(\"abc\", \"ABC\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3093593 (\"Equivalent to the `=` operator\"); = ignores case",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EQ is #NAME? there"
+      }
+    },
+    {
+      "id": "EQ.3",
+      "f": "=EQ(Data!D1, 0)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3093593 (\"Equivalent to the `=` operator\"); an empty cell equals 0",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EQ is #NAME? there"
+      }
+    },
+    {
+      "id": "EQ.4",
+      "f": "=EQ(1, \"1\")",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3093593 (\"Equivalent to the `=` operator\"); a number never equals text",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EQ is #NAME? there"
+      }
+    },
+    {
+      "id": "NE.1",
+      "f": "=NE(1, 2)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3093981 (\"Equivalent to the `<>` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.NE is #NAME? there"
+      }
+    },
+    {
+      "id": "NE.2",
+      "f": "=NE(\"a\", \"A\")",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3093981 (\"Equivalent to the `<>` operator\"); <> ignores case",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.NE is #NAME? there"
+      }
+    },
+    {
+      "id": "GT.1",
+      "f": "=GT(3, 2)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3098240 (\"Equivalent to the `>` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.GT is #NAME? there"
+      }
+    },
+    {
+      "id": "GT.2",
+      "f": "=GT(2, 2)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3098240 (\"Equivalent to the `>` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.GT is #NAME? there"
+      }
+    },
+    {
+      "id": "GT.3",
+      "f": "=GT(\"b\", \"a\")",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3098240 (\"Equivalent to the `>` operator\"); text compares alphabetically",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.GT is #NAME? there"
+      }
+    },
+    {
+      "id": "GTE.1",
+      "f": "=GTE(2, 2)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3093975 (\"Equivalent to the `>=` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.GTE is #NAME? there"
+      }
+    },
+    {
+      "id": "GTE.2",
+      "f": "=GTE(1, 2)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3093975 (\"Equivalent to the `>=` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.GTE is #NAME? there"
+      }
+    },
+    {
+      "id": "LT.1",
+      "f": "=LT(1, 2)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3093596 (\"Equivalent to the `<` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.LT is #NAME? there"
+      }
+    },
+    {
+      "id": "LT.2",
+      "f": "=LT(2, 2)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3093596 (\"Equivalent to the `<` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.LT is #NAME? there"
+      }
+    },
+    {
+      "id": "LTE.1",
+      "f": "=LTE(2, 2)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/3093976 (\"Equivalent to the `<=` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.LTE is #NAME? there"
+      }
+    },
+    {
+      "id": "LTE.2",
+      "f": "=LTE(3, 2)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/3093976 (\"Equivalent to the `<=` operator\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.LTE is #NAME? there"
+      }
+    },
+    {
+      "id": "UMINUS.1",
+      "f": "=UMINUS(-4)",
+      "expect": [[4]],
+      "cite": "https://support.google.com/docs/answer/3093606 (\"Returns a number with the sign reversed\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.UMINUS is #NAME? there"
+      }
+    },
+    {
+      "id": "UMINUS.2",
+      "f": "=UMINUS(Data!A1)",
+      "expect": [[-3]],
+      "cite": "https://support.google.com/docs/answer/3093606 (\"Returns a number with the sign reversed\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.UMINUS is #NAME? there"
+      }
+    },
+    {
+      "id": "UPLUS.1",
+      "f": "=UPLUS(-4)",
+      "expect": [[-4]],
+      "cite": "https://support.google.com/docs/answer/3093608 (\"Returns a specified number, unchanged\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.UPLUS is #NAME? there"
+      }
+    },
+    {
+      "id": "UPLUS.2",
+      "f": "=UPLUS(Data!A1)",
+      "expect": [[3]],
+      "cite": "https://support.google.com/docs/answer/3093608 (\"Returns a specified number, unchanged\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.UPLUS is #NAME? there"
+      }
+    },
+    {
+      "id": "UNARY_PERCENT.1",
+      "f": "=UNARY_PERCENT(100)",
+      "expect": [[1]],
+      "cite": "https://support.google.com/docs/answer/3093982 (\"UNARY_PERCENT(100) equals 1\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.UNARY_PERCENT is #NAME? there"
+      }
+    },
+    {
+      "id": "UNARY_PERCENT.2",
+      "f": "=UNARY_PERCENT(93)",
+      "expect": [[0.93]],
+      "cite": "https://support.google.com/docs/answer/3093982 (\"Returns a value interpreted as a percentage\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.UNARY_PERCENT is #NAME? there"
+      }
+    },
+    {
+      "id": "ISBETWEEN.1",
+      "f": "=ISBETWEEN(7.9, 1.2, 12.45)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/10538337 (its examples table)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISBETWEEN is #NAME? there"
+      }
+    },
+    {
+      "id": "ISBETWEEN.2",
+      "f": "=ISBETWEEN(1.2, 1.2, 12.45, TRUE)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/10538337 (its examples table)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISBETWEEN is #NAME? there"
+      }
+    },
+    {
+      "id": "ISBETWEEN.3",
+      "f": "=ISBETWEEN(1.2, 1.2, 12.45, FALSE)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/10538337 (its examples table)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISBETWEEN is #NAME? there"
+      }
+    },
+    {
+      "id": "ISBETWEEN.4",
+      "f": "=ISBETWEEN(12.45, 1.2, 12.45, TRUE, TRUE)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/10538337 (its examples table)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISBETWEEN is #NAME? there"
+      }
+    },
+    {
+      "id": "ISBETWEEN.5",
+      "f": "=ISBETWEEN(12.45, 1.2, 12.45, TRUE, FALSE)",
+      "expect": [[false]],
+      "cite": "https://support.google.com/docs/answer/10538337 (its examples table)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISBETWEEN is #NAME? there"
+      }
+    },
+    {
+      "id": "ISBETWEEN.6",
+      "f": "=ISBETWEEN(7.9, 1.2, 12.45, FALSE, FALSE)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/10538337 (its examples table)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISBETWEEN is #NAME? there"
+      }
+    },
+    {
+      "id": "ISBETWEEN.7",
+      "f": "=ISBETWEEN(Data!C2, Data!A2, Data!B2)",
+      "expect": [[true]],
+      "cite": "https://support.google.com/docs/answer/10538337 (both ends included by default)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISBETWEEN is #NAME? there"
+      }
+    }
+  ]
+}

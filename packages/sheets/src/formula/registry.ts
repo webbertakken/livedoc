@@ -8,11 +8,13 @@ import { FINANCE_FUNCTIONS } from './functions/finance';
 import { INFO_FUNCTIONS, LOGIC_FUNCTIONS } from './functions/logic';
 import { LOOKUP_FUNCTIONS } from './functions/lookup';
 import { MATH_FUNCTIONS } from './functions/math';
+import { OPERATOR_FUNCTIONS } from './functions/operator';
 import { STATS_FUNCTIONS } from './functions/stats';
 import { TEXT_FUNCTIONS } from './functions/text';
 
 export type FunctionFamily =
   | 'Maths'
+  | 'Operators'
   | 'Statistics'
   | 'Logic'
   | 'Information'
@@ -25,6 +27,7 @@ export type FunctionFamily =
 
 export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>][] = [
   ['Maths', MATH_FUNCTIONS],
+  ['Operators', OPERATOR_FUNCTIONS],
   ['Statistics', STATS_FUNCTIONS],
   ['Logic', LOGIC_FUNCTIONS],
   ['Information', INFO_FUNCTIONS],

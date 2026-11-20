@@ -26,6 +26,7 @@ import {
   lucideTextAlignStart,
   lucideType,
   lucideCalculator,
+  lucideDiff,
   lucideCalendar,
   lucideChartNoAxesColumnIncreasing,
   lucideCoins,
@@ -217,6 +218,7 @@ export const FormattingIcon = prims(lucidePaintbrush);
 // Each function family's glyph (docs/specs/029-sheets/sheet.md "Toolbar"), beside its name in the Functions category.
 export const FUNCTION_FAMILY_ICONS: Record<FunctionFamily, () => React.JSX.Element> = {
   Maths: prims(lucideCalculator),
+  Operators: prims(lucideDiff),
   Statistics: prims(lucideChartNoAxesColumnIncreasing),
   Logic: prims(lucideGitFork),
   Information: prims(lucideInfo),

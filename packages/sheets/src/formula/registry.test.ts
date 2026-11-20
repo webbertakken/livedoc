@@ -14,7 +14,7 @@ function specNames(): string[] {
   const out: string[] = [];
   for (const line of section.split('\n\n')) {
     if (!line.startsWith('**')) continue;
-    for (const m of line.matchAll(/`([A-Z][A-Z0-9.]*)`/g)) out.push(m[1]!);
+    for (const m of line.matchAll(/`([A-Z][A-Z0-9._]*)`/g)) out.push(m[1]!);
   }
   return out;
 }

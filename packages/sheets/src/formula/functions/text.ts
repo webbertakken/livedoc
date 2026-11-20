@@ -18,12 +18,7 @@ import {
   type FnDef,
 } from '../fn';
 import { err, isError, toNumber, toText, type Scalar, type Value } from '../values';
-
-function bounded(text: string): Value {
-  return text.length > TEXT_RESULT_MAX
-    ? err('#VALUE!', 'The text is longer than a cell holds')
-    : text;
-}
+import { boundedText } from '../operators';
 
 function texts(xs: Scalar[]): string[] | Value {
   const out: string[] = [];
@@ -76,7 +71,7 @@ function textEach(
     }
   }
   const out = each(ts, ns);
-  return typeof out === 'string' ? bounded(out) : out;
+  return typeof out === 'string' ? boundedText(out) : out;
 }
 
 function regex(pattern: string, text: string, flags = 'u'): RegExp | Value {
@@ -110,13 +105,9 @@ function wildcardSource(pattern: string): string {
 }
 
 export const TEXT_FUNCTIONS: Record<string, FnDef> = {
-  CONCAT: fn(1, MANY, (args, f) => {
-    const ts = texts(flatScalars(args, f));
-    return Array.isArray(ts) ? bounded(ts.join('')) : ts;
-  }),
   CONCATENATE: fn(1, MANY, (args, f) => {
     const ts = texts(flatScalars(args, f));
-    return Array.isArray(ts) ? bounded(ts.join('')) : ts;
+    return Array.isArray(ts) ? boundedText(ts.join('')) : ts;
   }),
   TEXTJOIN: fn(3, MANY, (args, f) => {
     const delim = textArg(args[0]!, f);
@@ -125,13 +116,13 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     if (isError(skip)) return skip;
     const ts = texts(flatScalars(args.slice(2), f));
     if (!Array.isArray(ts)) return ts;
-    return bounded((skip ? ts.filter((t) => t !== '') : ts).join(delim));
+    return boundedText((skip ? ts.filter((t) => t !== '') : ts).join(delim));
   }),
   JOIN: fn(2, MANY, (args, f) => {
     const delim = textArg(args[0]!, f);
     if (isError(delim)) return delim;
     const ts = texts(flatScalars(args.slice(1), f));
-    return Array.isArray(ts) ? bounded(ts.join(delim)) : ts;
+    return Array.isArray(ts) ? boundedText(ts.join(delim)) : ts;
   }),
   LEFT: textFn(1, 2, 1, ([t], [n = 1]) => (n < 0 ? err('#VALUE!') : [...t!].slice(0, n).join(''))),
   RIGHT: textFn(1, 2, 1, ([t], [n = 1]) => {
@@ -174,7 +165,7 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     if ((s as number) < 1 || (len as number) < 0) return err('#VALUE!');
     const chars = [...(text as string)];
     chars.splice((s as number) - 1, len as number, rep as string);
-    return bounded(chars.join(''));
+    return boundedText(chars.join(''));
   }),
   FIND: textFn(2, 3, 2, ([needle, hay], [start = 1]) => {
     const i = hay!.indexOf(needle!, start - 1);
@@ -197,10 +188,10 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
   TEXT: scalarFn(2, 2, ([v, code]) => {
     const c = toText(code!);
     if (isError(c)) return c;
-    if (typeof v === 'number') return bounded(textFormat(v, c));
+    if (typeof v === 'number') return boundedText(textFormat(v, c));
     if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
     if (isError(v!)) return v;
-    return bounded(textFormat(v ?? '', c));
+    return boundedText(textFormat(v ?? '', c));
   }),
   VALUE: scalarFn(1, 1, ([v], f) => {
     if (typeof v === 'number') return v;

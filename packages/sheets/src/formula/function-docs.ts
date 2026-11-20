@@ -77,6 +77,27 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   GCD: D('value1, [value2, …]', 'The greatest common divisor', '=GCD(12, 18)'),
   LCM: D('value1, [value2, …]', 'The least common multiple', '=LCM(4, 6)'),
   FACT: D('value', 'The factorial of a number', '=FACT(5)'),
+  // Operators
+  ADD: D('value1, value2', 'Adds two numbers, as +', '=ADD(A2, A3)'),
+  MINUS: D('value1, value2', 'Subtracts the second number from the first, as -', '=MINUS(A2, A3)'),
+  MULTIPLY: D('factor1, factor2', 'Multiplies two numbers, as *', '=MULTIPLY(A2, 3)'),
+  DIVIDE: D('dividend, divisor', 'Divides one number by another, as /', '=DIVIDE(A2, 4)'),
+  POW: D('base, exponent', 'Raises a number to a power, as ^', '=POW(2, 10)'),
+  CONCAT: D('value1, value2', 'Joins two values, as &', '=CONCAT(A2, B2)'),
+  EQ: D('value1, value2', 'Whether two values are equal, as =', '=EQ(A2, B2)'),
+  NE: D('value1, value2', 'Whether two values differ, as <>', '=NE(A2, B2)'),
+  GT: D('value1, value2', 'Whether the first is greater, as >', '=GT(A2, 100)'),
+  GTE: D('value1, value2', 'Whether the first is greater or equal, as >=', '=GTE(A2, 100)'),
+  LT: D('value1, value2', 'Whether the first is less, as <', '=LT(A2, 100)'),
+  LTE: D('value1, value2', 'Whether the first is less or equal, as <=', '=LTE(A2, 100)'),
+  UMINUS: D('value', 'A number with its sign reversed', '=UMINUS(A2)'),
+  UPLUS: D('value', 'A value, unchanged', '=UPLUS(A2)'),
+  UNARY_PERCENT: D('percentage', 'A number read as a percentage: 100 is 1', '=UNARY_PERCENT(93)'),
+  ISBETWEEN: D(
+    'value_to_compare, lower_value, upper_value, [lower_value_is_inclusive], [upper_value_is_inclusive]',
+    'Whether a value lies between two others, ends included unless told otherwise',
+    '=ISBETWEEN(A2, 1, 10)',
+  ),
   // Statistics
   AVERAGE: D('value1, [value2, …]', 'The mean of the numbers', '=AVERAGE(B2:B10)'),
   AVERAGEIF: D(
@@ -226,7 +247,6 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   ),
   INDIRECT: D('reference_text, [a1]', 'The cells a text reference names', '=INDIRECT("B" & A2)'),
   // Text
-  CONCAT: D('value1, [value2, …]', 'Joins values together', '=CONCAT(A2, " ", B2)'),
   CONCATENATE: D('value1, [value2, …]', 'Joins values together', '=CONCATENATE(A2, " ", B2)'),
   TEXTJOIN: D(
     'delimiter, ignore_empty, value1, [value2, …]',
