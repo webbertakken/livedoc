@@ -39,6 +39,31 @@ describe('LensAnnouncer', () => {
     expect(screen.getByRole('status').textContent).toBe('2 of 9 documents');
   });
 
+  // The view may catch up with its lens after the lens settles (a slow navigation, a list still loading): the region
+  // follows the count, never keeping one from before (the race behind main's red explorer-filters smoke, #309).
+  it('follows a count that changes after the lens settled', () => {
+    const { rerender } = render(<LensAnnouncer input="" shown={3} total={3} />);
+    rerender(<LensAnnouncer input="made-by:ai" shown={3} total={3} />);
+    act(() => {
+      vi.advanceTimersByTime(LENS_SETTLE_MS);
+    });
+    expect(screen.getByRole('status').textContent).toBe('3 documents');
+    rerender(<LensAnnouncer input="made-by:ai" shown={2} total={5} />);
+    expect(screen.getByRole('status').textContent).toBe('2 of 5 documents');
+  });
+
+  it('goes quiet while a new lens is being typed, and when muted', () => {
+    const { rerender } = render(<LensAnnouncer input="" shown={9} total={9} />);
+    rerender(<LensAnnouncer input="p" shown={4} total={9} />);
+    act(() => {
+      vi.advanceTimersByTime(LENS_SETTLE_MS);
+    });
+    rerender(<LensAnnouncer input="pl" shown={2} total={9} />);
+    expect(screen.getByRole('status').textContent).toBe('');
+    rerender(<LensAnnouncer input="p" shown={4} total={9} muted />);
+    expect(screen.getByRole('status').textContent).toBe('');
+  });
+
   it('says when nothing matches', () => {
     const { rerender } = render(<LensAnnouncer input="" shown={9} total={9} />);
     rerender(<LensAnnouncer input="zzz" shown={0} total={9} />);
