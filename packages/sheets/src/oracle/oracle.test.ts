@@ -123,6 +123,7 @@ const MEASURED_CATEGORIES = [
   'Lookup',
   'Math',
   'Operator',
+  'Parser',
   'Text',
 ];
 

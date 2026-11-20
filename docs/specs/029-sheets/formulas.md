@@ -63,8 +63,8 @@ as what it means, never as the text typed, so everyone reads it the same whateve
 | Anything else                           | Text                                              | Automatic                      |
 
 - **The formula's format** is the format of what its outermost function returns: a date from `TODAY`, `DATE`,
-  `DATEVALUE`, `EDATE`, `EOMONTH`, `WORKDAY` or `WORKDAY.INTL` is Date, `NOW` and `EPOCHTODATE` are Date Time, `TIME`
-  and `TIMEVALUE` are Time, and so
+  `DATEVALUE`, `EDATE`, `EOMONTH`, `WORKDAY`, `WORKDAY.INTL` or `TO_DATE` is Date, `NOW` and `EPOCHTODATE` are Date
+  Time, `TIME` and `TIMEVALUE` are Time, `TO_DOLLARS` Currency in US dollars and `TO_PERCENT` Percent, and so
   is one of them plus or minus a plain number (`=TODAY()+7`); any other formula (arithmetic with a cell, `=A1+7`, or
   between dates, `=A1-TODAY()`, which is a number of days) stays Automatic. It is taken only by a cell whose format is
   Automatic, however the formula arrives (typed, pasted, or written by an agent), so a cell someone formatted keeps
@@ -373,6 +373,19 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   `#DIV/0!`; a pole (`IMCOT(0)`, `IMCSCH(0)`), division by 0 or a logarithm of 0 is `#NUM!`. `IMLOG`'s base is a
   positive number other than 1. Tangents and cotangents are worked from double angles, so a small part keeps its digits.
 
+**Parser**: `CONVERT`, `TO_DATE`, `TO_DOLLARS`, `TO_PERCENT`, `TO_PURE_NUMBER`, `TO_TEXT`.
+
+- `CONVERT(value, start_unit, end_unit)` knows Excel's and OpenFormula's units, the wider form of Google's list (D38):
+  mass, distance, time, pressure, force, energy, power, magnetism, temperature, volume, area, speed and information,
+  names case kept (`"m^2"` or `"m2"`). A metric unit takes a metric prefix (`"km"`, `"kcal"`, a squared or cubed one
+  squared or cubed: `"cm^3"`), bits and bytes a binary one (`"Gibyte"`). Each unit is sized by its exact definition
+  (NIST SP 811: a pound is 0.45359237 kg, a horsepower 550 foot-pounds-force a second; default, D50). An unknown unit,
+  or two of different kinds, is `#N/A`.
+- `TO_DATE`, `TO_DOLLARS` and `TO_PERCENT` hand a number on, its formula's format Date (default, D49), Currency in
+  US dollars, and Percent; `TO_PURE_NUMBER` hands it on with none. `TO_TEXT` gives a number as the text its cell
+  shows (a percentage as `25.00%`), a number typed in the formula as `TEXT` would write it plainly. Each hands any
+  other value on unchanged.
+
 **Plan cards**: `CARDCOUNT`, `CARDSUM`, `CARD`, `CARDS`.
 
 - **Criteria** (`COUNTIF`, `SUMIFS`, ... and the card functions) take a value to equal, or a text starting with a
@@ -444,45 +457,47 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 - **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
   (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
 
-  | Formula                                                 | LiveDoc today                    | LibreOffice                | Case                                            |
-  | ------------------------------------------------------- | -------------------------------- | -------------------------- | ----------------------------------------------- |
-  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`        | 1, never negative                | -2                         | Date DATEDIF.9                                  |
-  | `NETWORKDAYS.INTL(a, b, "1111111")`                     | `#VALUE!`                        | 0                          | Date NETWORKDAYS.INTL.4                         |
-  | `FILTER(range, numbers)`                                | any number but 0 passes          | only positive numbers pass | Filter FILTER.8                                 |
-  | `UNIQUE({"a"; "A"})`                                    | two values, case kept            | one, case ignored          | Filter UNIQUE.4                                 |
-  | `CELL("address", Data!B3)`                              | `Data!$B$3`                      | `$Data.$B$3`               | Info CELL.2                                     |
-  | `CELL("width", A1)`                                     | ECMA-376 characters (D40)        | LibreOffice's own measure  | Info CELL.14                                    |
-  | `AND("TRUE", 1)`                                        | TRUE, text read as a truth       | `#VALUE!`                  | Logical AND.8                                   |
-  | `IFNA(A4, 1)` over an empty cell                        | empty                            | 0                          | Logical IFNA.4                                  |
-  | `ADDRESS(1, 1, 5)`                                      | `#VALUE!`                        | `$A$1`                     | Lookup ADDRESS.9                                |
-  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`         | `1TRUE`, `true`: TRUE as text    | `11`, `1`: TRUE as 1       | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
-  | `"z" < TRUE`                                            | TRUE: booleans after text        | FALSE                      | Syntax compare.4                                |
-  | `SUM(1:2)` over booleans                                | booleans skipped                 | booleans counted           | Syntax range.3                                  |
-  | `0^-1`, `(-8)^(1/3)`                                    | `#DIV/0!`, `#NUM!`               | `#NUM!`, -2                | Syntax errors.4, .8                             |
-  | `CHAR(0)`, `CODE("")`                                   | `#VALUE!`                        | empty text, 0              | Text CHAR.2, CODE.2                             |
-  | `FIND("", "abc")`, `SEARCH("", "abc")`                  | 1, as Excel                      | `#VALUE!`                  | Text FIND.5, SEARCH.7                           |
-  | `PROPER("it's 2nd")`                                    | `It's 2nd`                       | `It'S 2Nd`                 | Text PROPER.3                                   |
-  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`                 | `熊`, `本`: a cut character kept | a space                    | Text LEFTB.6, RIGHTB.5                          |
-  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`                  | -3, -2: Excel's                  | -2, -3: OpenFormula's      | Math CEILING.4, FLOOR.4                         |
-  | `MROUND(10, -3)`                                        | `#NUM!`, as Excel                | 9                          | Math MROUND.3                                   |
-  | `ISEVEN(A1)` over an empty cell                         | TRUE, as Excel                   | `#VALUE!`                  | Math ISEVEN.6                                   |
-  | `SUM(1, "2", TRUE)`                                     | 4, as Excel                      | `#VALUE!`                  | Math SUM.2                                      |
-  | `IMPOWER("2i", 2)`                                      | `-4`, multiplied out             | `-4+4.89858719658941e-16i` | Math IMPOWER.4                                  |
-  | `LENB("ｶﾀｶﾅ")`                                          | 4: half-width kana 1 byte (D43)  | 8                          | Text LENB.6                                     |
-  | `DSUM(A1:D7, "Qty", {"Qty"; 10})`                       | the records of 10                | every record               | Database DSUM.12                                |
-  | `DGET(A1:D7, "Qty", {"Name"; "Banana"})`, its Qty empty | empty                            | `#VALUE!`                  | Database DGET.4                                 |
-  | `DSTDEV` of one value, `DVARP` of none                  | `#DIV/0!`, as `STDEV`, `VAR.P`   | `#NUM!`                    | Database DSTDEV.2, DVARP.2                      |
-  | `BITLSHIFT(1, 54)`                                      | `#NUM!`: Google's -53 to 53      | 18014398509482000          | Engineering BITLSHIFT.6                         |
-  | `IMSUM("4+3i", "1+2j")`, `IMSUB`, `IMPRODUCT`           | `#VALUE!`: Google's "you can't"  | `5+5i`                     | Engineering IMSUM.4                             |
-  | `TRANSPOSE(A1:A3)` over an empty cell                   | empty                            | 0                          | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
-  | `HSTACK(1, "a", TRUE)`                                  | `TRUE`                           | 1                          | Array HSTACK.2                                  |
-  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans     | booleans skipped                 | booleans counted           | Array SUMPRODUCT.6, FREQUENCY.2                 |
-  | `SUMXMY2(a, b)`, a pair with text                       | the pair left out                | `#VALUE!`                  | Array SUMXMY2.4                                 |
-  | `CHOOSECOLS(A1:D3, "4")`                                | the fourth column                | `#VALUE!`                  | Array CHOOSECOLS.7                              |
-  | `TOCOL(5)`                                              | 5, a column of one, as Excel     | `#VALUE!`                  | Array TOCOL.8                                   |
-  | `FREQUENCY(data, classes)`, no class a number           | every value counted (D46)        | `#VALUE!`                  | Array FREQUENCY.5                               |
-  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`                | `#VALUE!`                        | 2                          | Array MMULT.4                                   |
-  | `LINEST(y, x)`, collinear x                             | `#NUM!` (D47)                    | coefficients past 1e13     | Array LINEST.12                                 |
+  | Formula                                                 | LiveDoc today                          | LibreOffice                         | Case                                            |
+  | ------------------------------------------------------- | -------------------------------------- | ----------------------------------- | ----------------------------------------------- |
+  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`        | 1, never negative                      | -2                                  | Date DATEDIF.9                                  |
+  | `NETWORKDAYS.INTL(a, b, "1111111")`                     | `#VALUE!`                              | 0                                   | Date NETWORKDAYS.INTL.4                         |
+  | `FILTER(range, numbers)`                                | any number but 0 passes                | only positive numbers pass          | Filter FILTER.8                                 |
+  | `UNIQUE({"a"; "A"})`                                    | two values, case kept                  | one, case ignored                   | Filter UNIQUE.4                                 |
+  | `CELL("address", Data!B3)`                              | `Data!$B$3`                            | `$Data.$B$3`                        | Info CELL.2                                     |
+  | `CELL("width", A1)`                                     | ECMA-376 characters (D40)              | LibreOffice's own measure           | Info CELL.14                                    |
+  | `AND("TRUE", 1)`                                        | TRUE, text read as a truth             | `#VALUE!`                           | Logical AND.8                                   |
+  | `IFNA(A4, 1)` over an empty cell                        | empty                                  | 0                                   | Logical IFNA.4                                  |
+  | `ADDRESS(1, 1, 5)`                                      | `#VALUE!`                              | `$A$1`                              | Lookup ADDRESS.9                                |
+  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`         | `1TRUE`, `true`: TRUE as text          | `11`, `1`: TRUE as 1                | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
+  | `"z" < TRUE`                                            | TRUE: booleans after text              | FALSE                               | Syntax compare.4                                |
+  | `SUM(1:2)` over booleans                                | booleans skipped                       | booleans counted                    | Syntax range.3                                  |
+  | `0^-1`, `(-8)^(1/3)`                                    | `#DIV/0!`, `#NUM!`                     | `#NUM!`, -2                         | Syntax errors.4, .8                             |
+  | `CHAR(0)`, `CODE("")`                                   | `#VALUE!`                              | empty text, 0                       | Text CHAR.2, CODE.2                             |
+  | `FIND("", "abc")`, `SEARCH("", "abc")`                  | 1, as Excel                            | `#VALUE!`                           | Text FIND.5, SEARCH.7                           |
+  | `PROPER("it's 2nd")`                                    | `It's 2nd`                             | `It'S 2Nd`                          | Text PROPER.3                                   |
+  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`                 | `熊`, `本`: a cut character kept       | a space                             | Text LEFTB.6, RIGHTB.5                          |
+  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`                  | -3, -2: Excel's                        | -2, -3: OpenFormula's               | Math CEILING.4, FLOOR.4                         |
+  | `MROUND(10, -3)`                                        | `#NUM!`, as Excel                      | 9                                   | Math MROUND.3                                   |
+  | `ISEVEN(A1)` over an empty cell                         | TRUE, as Excel                         | `#VALUE!`                           | Math ISEVEN.6                                   |
+  | `SUM(1, "2", TRUE)`                                     | 4, as Excel                            | `#VALUE!`                           | Math SUM.2                                      |
+  | `IMPOWER("2i", 2)`                                      | `-4`, multiplied out                   | `-4+4.89858719658941e-16i`          | Math IMPOWER.4                                  |
+  | `LENB("ｶﾀｶﾅ")`                                          | 4: half-width kana 1 byte (D43)        | 8                                   | Text LENB.6                                     |
+  | `DSUM(A1:D7, "Qty", {"Qty"; 10})`                       | the records of 10                      | every record                        | Database DSUM.12                                |
+  | `DGET(A1:D7, "Qty", {"Name"; "Banana"})`, its Qty empty | empty                                  | `#VALUE!`                           | Database DGET.4                                 |
+  | `DSTDEV` of one value, `DVARP` of none                  | `#DIV/0!`, as `STDEV`, `VAR.P`         | `#NUM!`                             | Database DSTDEV.2, DVARP.2                      |
+  | `BITLSHIFT(1, 54)`                                      | `#NUM!`: Google's -53 to 53            | 18014398509482000                   | Engineering BITLSHIFT.6                         |
+  | `IMSUM("4+3i", "1+2j")`, `IMSUB`, `IMPRODUCT`           | `#VALUE!`: Google's "you can't"        | `5+5i`                              | Engineering IMSUM.4                             |
+  | `CONVERT(1, "lbm", "kg")` and 13 more units             | 0.45359237: the exact definition (D50) | 0.453592309748811: a rounded factor | Parser CONVERT.4                                |
+  | `CONVERT(1, "MTON", "l")`, `"admkn"`, `"flb"`           | 1132.67386368: 40 cubic feet           | 0.7079211648                        | Parser CONVERT.59, .61, .31                     |
+  | `TRANSPOSE(A1:A3)` over an empty cell                   | empty                                  | 0                                   | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
+  | `HSTACK(1, "a", TRUE)`                                  | `TRUE`                                 | 1                                   | Array HSTACK.2                                  |
+  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans     | booleans skipped                       | booleans counted                    | Array SUMPRODUCT.6, FREQUENCY.2                 |
+  | `SUMXMY2(a, b)`, a pair with text                       | the pair left out                      | `#VALUE!`                           | Array SUMXMY2.4                                 |
+  | `CHOOSECOLS(A1:D3, "4")`                                | the fourth column                      | `#VALUE!`                           | Array CHOOSECOLS.7                              |
+  | `TOCOL(5)`                                              | 5, a column of one, as Excel           | `#VALUE!`                           | Array TOCOL.8                                   |
+  | `FREQUENCY(data, classes)`, no class a number           | every value counted (D46)              | `#VALUE!`                           | Array FREQUENCY.5                               |
+  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`                | `#VALUE!`                              | 2                                   | Array MMULT.4                                   |
+  | `LINEST(y, x)`, collinear x                             | `#NUM!` (D47)                          | coefficients past 1e13              | Array LINEST.12                                 |
 
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
@@ -578,7 +593,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `CONFIDENCE`          | Statistical | `CONFIDENCE(alpha, standard_deviation, pop_size)`                                                              | Google      | `CONFIDENCE`                     | planned                                                       |
 | `CONFIDENCE.NORM`     | Statistical | `CONFIDENCE.NORM(alpha, standard_deviation, pop_size)`                                                         | Google      | `COM.MICROSOFT.CONFIDENCE.NORM`  | planned                                                       |
 | `CONFIDENCE.T`        | Statistical | `CONFIDENCE.T(alpha, standard_deviation, size)`                                                                | Google      | `COM.MICROSOFT.CONFIDENCE.T`     | planned                                                       |
-| `CONVERT`             | Parser      | `CONVERT(value, start_unit, end_unit)`                                                                         | Google      | `CONVERT`                        | planned                                                       |
+| `CONVERT`             | Parser      | `CONVERT(value, start_unit, end_unit)`                                                                         | Google      | `CONVERT`                        | built                                                         |
 | `CORREL`              | Statistical | `CORREL(data_y, data_x)`                                                                                       | Google      | `CORREL`                         | built                                                         |
 | `COS`                 | Math        | `COS(angle)`                                                                                                   | Google      | `COS`                            | built                                                         |
 | `COSH`                | Math        | `COSH(value)`                                                                                                  | Google      | `COSH`                           | built                                                         |
@@ -993,11 +1008,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `TOCOL`               | Array       | `TOCOL(array_or_range, [ignore], [scan_by_column])`                                                            | Google      | `COM.MICROSOFT.TOCOL`            | built                                                         |
 | `TODAY`               | Date        | `TODAY()`                                                                                                      | Google      | `TODAY`                          | built                                                         |
 | `TOROW`               | Array       | `TOROW(array_or_range, [ignore], [scan_by_column])`                                                            | Google      | `COM.MICROSOFT.TOROW`            | built                                                         |
-| `TO_DATE`             | Parser      | `TO_DATE(value)`                                                                                               | Google      | S5                               | planned                                                       |
-| `TO_DOLLARS`          | Parser      | `TO_DOLLARS(value)`                                                                                            | Google      | S5                               | planned                                                       |
-| `TO_PERCENT`          | Parser      | `TO_PERCENT(value)`                                                                                            | Google      | S5                               | planned                                                       |
-| `TO_PURE_NUMBER`      | Parser      | `TO_PURE_NUMBER(value)`                                                                                        | Google      | S5                               | planned                                                       |
-| `TO_TEXT`             | Parser      | `TO_TEXT(value)`                                                                                               | Google      | S5                               | planned                                                       |
+| `TO_DATE`             | Parser      | `TO_DATE(value)`                                                                                               | Google      | S5                               | built                                                         |
+| `TO_DOLLARS`          | Parser      | `TO_DOLLARS(value)`                                                                                            | Google      | S5                               | built                                                         |
+| `TO_PERCENT`          | Parser      | `TO_PERCENT(value)`                                                                                            | Google      | S5                               | built                                                         |
+| `TO_PURE_NUMBER`      | Parser      | `TO_PURE_NUMBER(value)`                                                                                        | Google      | S5                               | built                                                         |
+| `TO_TEXT`             | Parser      | `TO_TEXT(value)`                                                                                               | Google      | S5                               | built                                                         |
 | `TRANSPOSE`           | Array       | `TRANSPOSE(array_or_range)`                                                                                    | Google      | `TRANSPOSE`                      | built                                                         |
 | `TREND`               | Array       | `TREND(known_data_y, [known_data_x], [new_data_x], [b])`                                                       | Google      | `TREND`                          | built                                                         |
 | `TRIM`                | Text        | `TRIM(text)`                                                                                                   | Google      | `TRIM`                           | built                                                         |
@@ -1131,3 +1146,5 @@ The code cites each by its id.
 - **D46** FREQUENCY with no class a number: Every value counted in one row, as Excel documents (default).
 - **D47** LINEST and its kin over collinear x values: `#NUM!`, no single fit (default).
 - **D48** The statistics of an exact fit: Errors 0, F `#N/A`, as LibreOffice gives them (default).
+- **D49** TO_DATE's format: Date, the day without its time (default).
+- **D50** CONVERT's unit sizes: Their exact definitions (NIST SP 811), not LibreOffice's rounded factors (default).

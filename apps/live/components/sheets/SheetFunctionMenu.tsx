@@ -23,6 +23,7 @@ export const FUNCTION_FAMILY_LABELS: Record<FunctionFamily, string> = {
   Arrays: 'Arrays',
   Finance: 'Finance',
   Engineering: 'Engineering',
+  Parser: 'Parser',
   'Plan cards': 'Plan Cards',
 };
 

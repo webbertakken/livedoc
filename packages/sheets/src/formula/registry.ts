@@ -12,6 +12,7 @@ import { LOGIC_FUNCTIONS } from './functions/logic';
 import { LOOKUP_FUNCTIONS } from './functions/lookup';
 import { MATH_FUNCTIONS } from './functions/math';
 import { OPERATOR_FUNCTIONS } from './functions/operator';
+import { PARSER_FUNCTIONS } from './functions/parser';
 import { STATS_FUNCTIONS } from './functions/stats';
 import { TEXT_FUNCTIONS } from './functions/text';
 
@@ -28,6 +29,7 @@ export type FunctionFamily =
   | 'Arrays'
   | 'Finance'
   | 'Engineering'
+  | 'Parser'
   | 'Plan cards';
 
 export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>][] = [
@@ -43,6 +45,7 @@ export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>]
   ['Arrays', ARRAY_FUNCTIONS],
   ['Finance', FINANCE_FUNCTIONS],
   ['Engineering', ENGINEERING_FUNCTIONS],
+  ['Parser', PARSER_FUNCTIONS],
   ['Plan cards', CARD_FUNCTIONS],
 ];
 

@@ -34,31 +34,37 @@ export function readTypedInput(
 // The format of what a formula's outermost function returns (docs/specs/029-sheets/formulas.md "What a typed input
 // becomes"): `=TODAY()` drew as 46314. A whole number of days added to or taken from it (`=TODAY()+7`) keeps it; any
 // other arithmetic (`=A1+7`, `=Due-TODAY()`, days left) and every other formula stay Automatic.
-const FORMULA_FORMATS: Readonly<Record<string, NumberFormatKind>> = {
-  TODAY: 'date',
-  DATE: 'date',
-  DATEVALUE: 'date',
-  EDATE: 'date',
-  EOMONTH: 'date',
-  WORKDAY: 'date',
-  'WORKDAY.INTL': 'date',
-  NOW: 'datetime',
-  EPOCHTODATE: 'datetime',
-  TIME: 'time',
-  TIMEVALUE: 'time',
+// TO_DATE, TO_DOLLARS and TO_PERCENT exist to give their value a format; TO_DOLLARS writes US dollars.
+type FormulaFormat = { nf: NumberFormatKind; cur?: string };
+const DATE: FormulaFormat = { nf: 'date' };
+const FORMULA_FORMATS: Readonly<Record<string, FormulaFormat>> = {
+  TODAY: DATE,
+  DATE,
+  DATEVALUE: DATE,
+  EDATE: DATE,
+  EOMONTH: DATE,
+  WORKDAY: DATE,
+  'WORKDAY.INTL': DATE,
+  TO_DATE: DATE,
+  NOW: { nf: 'datetime' },
+  EPOCHTODATE: { nf: 'datetime' },
+  TIME: { nf: 'time' },
+  TIMEVALUE: { nf: 'time' },
+  TO_DOLLARS: { nf: 'currency', cur: '$' },
+  TO_PERCENT: { nf: 'percent' },
 };
 
-function callFormat(node: Node): NumberFormatKind | undefined {
+function callFormat(node: Node): FormulaFormat | undefined {
   return node.k === 'call' ? FORMULA_FORMATS[node.name.toUpperCase()] : undefined;
 }
 
 function formulaHint(ast: Node): FormatHint | undefined {
-  let nf = callFormat(ast);
-  if (!nf && ast.k === 'bin' && (ast.op === '+' || ast.op === '-')) {
-    if (ast.b.k === 'num') nf = callFormat(ast.a);
-    else if (ast.op === '+' && ast.a.k === 'num') nf = callFormat(ast.b);
+  let format = callFormat(ast);
+  if (!format && ast.k === 'bin' && (ast.op === '+' || ast.op === '-')) {
+    if (ast.b.k === 'num') format = callFormat(ast.a);
+    else if (ast.op === '+' && ast.a.k === 'num') format = callFormat(ast.b);
   }
-  return nf ? { nf, ifAutomatic: true } : undefined;
+  return format ? { ...format, ifAutomatic: true } : undefined;
 }
 
 // An input as the formula bar shows it: a formula as A1 text, a number unformatted, a boolean in capitals.
