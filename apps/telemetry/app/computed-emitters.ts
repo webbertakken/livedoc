@@ -493,6 +493,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/text-document/text-document-list-actions.ts Element·Changed': {
     values: ['Bulleted', 'Numbered', 'Checklist'].map((kind) => `TextDocumentList${kind}`),
   },
+  // Something pasted into a text document, by what was read (text-and-paragraphs.md "Clipboard").
+  'apps/live/lib/text-document/text-document-clipboard.ts Element·Changed': {
+    values: ['Document', 'Html', 'Plain'].map((source) => `TextDocumentPaste${source}`),
+  },
   // A text document's View switches flipped (editing-surface.md "The ruler", text-and-paragraphs.md "Non-printing
   // characters").
   'apps/live/lib/text-document/useTextDocumentViewToggle.ts UI·Toggled': {

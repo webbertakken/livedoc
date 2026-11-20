@@ -30,10 +30,10 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 
 | Action                         | PC                                       | Mac                         | ChromeOS           | Status                                     |
 | ------------------------------ | ---------------------------------------- | --------------------------- | ------------------ | ------------------------------------------ |
-| Copy                           | `Ctrl+C`                                 | `⌘+C`                       | `Ctrl+C`           | specified                                  |
-| Cut                            | `Ctrl+X`                                 | `⌘+X`                       | `Ctrl+X`           | specified                                  |
-| Paste                          | `Ctrl+V`                                 | `⌘+V`                       | `Ctrl+V`           | specified                                  |
-| Paste without formatting       | `Ctrl+Shift+V`                           | `⌘+Shift+V`                 | `Ctrl+Shift+V`     | specified                                  |
+| Copy                           | `Ctrl+C`                                 | `⌘+C`                       | `Ctrl+C`           | the browser's                              |
+| Cut                            | `Ctrl+X`                                 | `⌘+X`                       | `Ctrl+X`           | the browser's                              |
+| Paste                          | `Ctrl+V`                                 | `⌘+V`                       | `Ctrl+V`           | the browser's                              |
+| Paste without formatting       | `Ctrl+Shift+V`                           | `⌘+Shift+V`                 | `Ctrl+Shift+V`     | the browser's                              |
 | Undo                           | `Ctrl+Z`                                 | `⌘+Z`                       | `Ctrl+Z`           | built (`text-document-shortcuts.test.tsx`) |
 | Redo                           | `Ctrl+Shift+Z`                           | `⌘+Shift+Z`                 | `Ctrl+Shift+Z`     | built (`text-document-shortcuts.test.tsx`) |
 | Insert or edit link            | `Ctrl+K`                                 | `⌘+K`                       | `Ctrl+K`           | specified                                  |

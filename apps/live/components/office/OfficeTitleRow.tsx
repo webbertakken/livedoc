@@ -225,9 +225,14 @@ export function OfficeTitleRow({
       out[accessKeyOf(menu.id)] = () => onOpenMenu({ id: menu.id, focus: 'first' });
     // A row of several items (`[1-6]`) runs the one its keys' argument names.
     const byArg: Record<string, Record<string, () => void>> = {};
+    // Keys left to the browser (Copy, Paste) are never bound: its own clipboard events reach the kind.
+    const browsers = new Set(
+      shortcuts.filter((row) => row.status === 'browser').map((row) => row.id),
+    );
     for (const { item } of items) {
       const action = allActions[item.id];
-      if (!item.shortcut || item.status !== 'built' || !action || action.disabled) continue;
+      if (!item.shortcut || browsers.has(item.shortcut)) continue;
+      if (item.status !== 'built' || !action || action.disabled) continue;
       if (item.shortcutArg === undefined) out[item.shortcut] ??= () => action.run();
       else (byArg[item.shortcut] ??= {})[item.shortcutArg] = () => action.run();
     }
