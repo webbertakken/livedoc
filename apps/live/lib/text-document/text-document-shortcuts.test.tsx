@@ -12,6 +12,7 @@ import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
 import { clipboardActions } from './text-document-clipboard';
+import { STRETCH_KEY_ROW } from './text-document-stretches';
 import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
   TEXT_DOCUMENT_KEY_ACTIONS,
@@ -107,7 +108,8 @@ describe('the text document menus', () => {
     ];
     const builtRows = TEXT_DOCUMENT_SHORTCUTS.filter((r) => r.status === 'built').map((r) => r.id);
     // Rows no item names, bound by their own id (office-shell.md "Shortcut layer").
-    const keyRows = [...TEXT_DOCUMENT_KEY_ACTIONS, TOGGLE_CHECKBOX];
+    // The keys of several stretches, answered by the writing's own plugin (text-and-paragraphs.md "Selection").
+    const keyRows = [...TEXT_DOCUMENT_KEY_ACTIONS, TOGGLE_CHECKBOX, STRETCH_KEY_ROW];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),
     );

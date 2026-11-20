@@ -26,6 +26,7 @@ import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yj
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
 import { clipboardPlugin } from '@/lib/text-document/text-document-clipboard';
+import { stretchesPlugin } from '@/lib/text-document/text-document-stretches';
 import { useTextDocumentClipboard } from './useTextDocumentClipboard';
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
@@ -252,6 +253,8 @@ export function TextDocumentSurface({
               changes.plugin,
               ...textDocumentUndoPlugins(),
               textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
+              // Several stretches selected at once (text-and-paragraphs.md "Selection").
+              stretchesPlugin(),
               // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
               clipboardPlugin({
                 read: () => ({

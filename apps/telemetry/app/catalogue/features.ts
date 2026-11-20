@@ -1203,6 +1203,16 @@ export const TEXT_DOCUMENT_PASTE = chart(
   { types: ['TextDocumentPasteDocument', 'TextDocumentPasteHtml', 'TextDocumentPastePlain'] },
 );
 
+// Several stretches of a text document's text selected at once (docs/specs/034-text-documents/text-and-paragraphs.md
+// "Selection"): by the keys or the pointer, or by Select all matching text.
+export const TEXT_DOCUMENT_SELECTION = chart(
+  'UI',
+  'Used',
+  'Text Document Selection',
+  "Several stretches of a text document's text selected at once, by keys or pointer, or by Select all matching text.",
+  { types: ['TextDocumentStretches', 'TextDocumentSelectMatching'] },
+);
+
 // Someone kept a text document's styles as their default styles (text-and-paragraphs.md "Default styles").
 export const TEXT_DOCUMENT_DEFAULT_STYLES = chart(
   'UI',
