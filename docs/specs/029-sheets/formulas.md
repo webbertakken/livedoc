@@ -856,6 +856,8 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 ## Recalculation
 
 - A change recalculates only the cells that depend on it (directly or through others), plus volatile ones.
+- A read works out what a formula names cell by cell first, deepest first, so each formula of a long chain of
+  references is worked out once, however long the chain.
 - A sheet's values are worked out the first time it is drawn, and kept while its document is open.
 - A recalculation that would take longer than a frame is done in parts, values filling in as they are ready; cells
   waiting show their last value, faded.
