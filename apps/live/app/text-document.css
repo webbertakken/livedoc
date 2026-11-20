@@ -88,3 +88,32 @@ div.text-document-kept {
       10 22,
     text;
 }
+
+/*
+ * A list item's marker (docs/specs/034-text-documents/lists.md "Levels"): in the hanging space before the item's first
+ * line, never part of its text; a checklist item's box is a checkbox drawn in the item's ink.
+ */
+.text-document-list-marker {
+  display: inline-block;
+  text-indent: 0;
+  white-space: nowrap;
+  user-select: none;
+}
+.text-document-list-check {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  margin-bottom: -0.1em;
+  border: 1.5px solid currentColor;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.text-document-list-check[aria-checked='true'] {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E")
+      center / 80% no-repeat,
+    currentColor;
+}
+.text-document-list-check[aria-disabled='true'] {
+  cursor: default;
+}

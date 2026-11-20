@@ -486,7 +486,12 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     values: [
       ...['Bold', 'Italic', 'Underline', 'Strikethrough', 'Superscript', 'Subscript', 'SmallCaps'],
       ...['Size', 'Font', 'Lowercase', 'Uppercase', 'TitleCase', 'TextColour', 'Highlight'],
+      ...['Paint', 'Clear'],
     ].map((name) => `TextDocumentFormat${name}`),
+  },
+  // A text document's paragraphs put in a list of a kind or taken out (lists.md "Telemetry").
+  'apps/live/lib/text-document/text-document-list-actions.ts Element·Changed': {
+    values: ['Bulleted', 'Numbered', 'Checklist'].map((kind) => `TextDocumentList${kind}`),
   },
   // The Fonts dialog of an office kind opened from its font menu, and My fonts changed by its OK
   // (docs/specs/004-interface-design/fonts.md "More fonts").

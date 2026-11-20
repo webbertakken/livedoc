@@ -30,6 +30,8 @@ export function useTextDocumentParagraphs(
   liveDoc: RefObject<Y.Doc | null>,
   format: TextDocumentFormat,
   canEdit: boolean,
+  // Moves list items a level, for Increase and Decrease indent (lists.md "Levels").
+  stepList: ((delta: number) => boolean) | null = null,
 ) {
   // The paragraphs' indents as the dialog opened on them; null while it is closed.
   const [indentation, setIndentation] = useState<Indents | null>(null);
@@ -54,8 +56,9 @@ export function useTextDocumentParagraphs(
           if (view) setSpacingDraft(spacingOf(view.state, readFormatting()));
         },
         openBorders: () => setBordering(true),
+        stepList,
       }),
-    [view, readFormatting, canEdit],
+    [view, readFormatting, canEdit, stepList],
   );
   const close = () => {
     setIndentation(null);

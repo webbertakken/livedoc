@@ -1153,6 +1153,18 @@ export const TEXT_DOCUMENT_PARAGRAPH_FORMATTING = chart(
   },
 );
 
+// A text document's lists (docs/specs/034-text-documents/lists.md "Telemetry"): paragraphs put in a list or taken out,
+// by its kind, and checklist items ticked.
+export const TEXT_DOCUMENT_LISTS = chart(
+  'Element',
+  'Changed',
+  'Text Document Lists',
+  "A text document's paragraphs made a bulleted, numbered or checklist list, or taken out of one; checklist items ticked.",
+  {
+    typeIn: (t) => (t ?? '').startsWith('TextDocumentList') || t === 'TextDocumentChecklistTicked',
+  },
+);
+
 // Someone kept a text document's styles as their default styles (text-and-paragraphs.md "Default styles").
 export const TEXT_DOCUMENT_DEFAULT_STYLES = chart(
   'UI',

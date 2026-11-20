@@ -42,6 +42,7 @@ export {
   type ListPlace,
   type NumberFormat,
 } from './model/lists';
+export { ListMarkers, numberText, type ListMarker } from './model/list-markers';
 export {
   BORDER_SIDES,
   canonical,

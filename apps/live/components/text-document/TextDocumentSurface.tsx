@@ -27,6 +27,9 @@ import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
+import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
+import { listMarkersPlugin } from '@/lib/text-document/text-document-list-markers';
+import { subscribeLists, useTextDocumentLists } from '@/lib/text-document/useTextDocumentLists';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
@@ -233,6 +236,12 @@ export function TextDocumentSurface({
                 styles: TextDocumentState.styles(doc, live.current.format),
                 defaults: TextDocumentState.defaults(doc, live.current.format),
               })),
+              // Lists: Enter, Backspace and Tab in an item, and the items drawn (lists.md).
+              listKeysPlugin(),
+              listMarkersPlugin(
+                () => TextDocumentState.lists(doc),
+                (listener) => subscribeLists(doc, listener),
+              ),
               keymap(baseKeymap),
               // A moved selection is part of the view remembered for this tab.
               new Plugin({
@@ -311,7 +320,15 @@ export function TextDocumentSurface({
     ownerId,
   );
   // Format > Align & indent, the toolbar's Align and indent controls, and Indentation options.
-  const paragraphs = useTextDocumentParagraphs(editorView, liveDoc, format, writes);
+  // Format > Bullets & numbering and the toolbar's list buttons (lists.md).
+  const lists = useTextDocumentLists(editorView, liveDoc, writes);
+  const paragraphs = useTextDocumentParagraphs(
+    editorView,
+    liveDoc,
+    format,
+    writes,
+    lists.stepLevel,
+  );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -319,6 +336,7 @@ export function TextDocumentSurface({
       ...formatting.actions,
       ...paragraphStyles.actions,
       ...paragraphs.actions,
+      ...lists.actions,
       ...modeActions,
       ...panels.actions,
     }),
@@ -328,6 +346,7 @@ export function TextDocumentSurface({
       formatting.actions,
       paragraphStyles.actions,
       paragraphs.actions,
+      lists.actions,
       modeActions,
       panels.actions,
     ],

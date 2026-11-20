@@ -122,6 +122,7 @@ export function textDocumentParagraphActions({
   openIndentation,
   openSpacing,
   openBorders,
+  stepList,
 }: {
   view: EditorView | null;
   readFormatting: () => TextFormatting;
@@ -132,6 +133,8 @@ export function textDocumentParagraphActions({
   openSpacing: () => void;
   // Opens the Borders and shading dialog for them.
   openBorders: () => void;
+  // Moves the list items the selection touches a level; false when it touches none (lists.md "Levels").
+  stepList?: ((delta: number) => boolean) | null;
 }): { actions: OfficeActions; choices: OfficeChoices | null } {
   if (!view || !canEdit) return { actions: {}, choices: null };
   const fromWriting = (change: () => void) => () => {
@@ -150,13 +153,14 @@ export function textDocumentParagraphActions({
   const actions: Record<string, OfficeAction> = {
     'indent-increase': {
       run: fromWriting(() => {
-        stepIndent(readFormatting(), INDENT_STEP_PT)(view.state, view.dispatch);
+        if (!stepList?.(1)) stepIndent(readFormatting(), INDENT_STEP_PT)(view.state, view.dispatch);
         track('Element', 'Changed', 'TextDocumentIndent');
       }),
     },
     'indent-decrease': {
       run: fromWriting(() => {
-        stepIndent(readFormatting(), -INDENT_STEP_PT)(view.state, view.dispatch);
+        if (!stepList?.(-1))
+          stepIndent(readFormatting(), -INDENT_STEP_PT)(view.state, view.dispatch);
         track('Element', 'Changed', 'TextDocumentIndent');
       }),
     },

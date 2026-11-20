@@ -86,9 +86,9 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 | Center align                   | `Ctrl+Shift+E`    | `⌘+Shift+E`       | `Ctrl+Shift+E`   | built     |
 | Right align                    | `Ctrl+Shift+R`    | `⌘+Shift+R`       | `Ctrl+Shift+R`   | built     |
 | Justify                        | `Ctrl+Shift+J`    | `⌘+Shift+J`       | `Ctrl+Shift+J`   | built     |
-| Numbered list                  | `Ctrl+Shift+7`    | `⌘+Shift+7`       | `Ctrl+Shift+7`   | specified |
-| Bulleted list                  | `Ctrl+Shift+8`    | `⌘+Shift+8`       | `Ctrl+Shift+8`   | specified |
-| Checklist                      | `Ctrl+Shift+9`    | `⌘+Shift+9`       | —                | specified |
+| Numbered list                  | `Ctrl+Shift+7`    | `⌘+Shift+7`       | `Ctrl+Shift+7`   | built     |
+| Bulleted list                  | `Ctrl+Shift+8`    | `⌘+Shift+8`       | `Ctrl+Shift+8`   | built     |
+| Checklist                      | `Ctrl+Shift+9`    | `⌘+Shift+9`       | —                | built     |
 | Move paragraph up              | `Ctrl+Shift+Up`   | `Ctrl+Shift+Up`   | —                | specified |
 | Move paragraph down            | `Ctrl+Shift+Down` | `Ctrl+Shift+Down` | —                | specified |
 
@@ -270,6 +270,6 @@ The Accessibility menu shows only while screen reader support is on.
 | Move focus out of document text       | `Ctrl+Alt+Shift+M`         | `⌘+Option+Shift+M`         | `Ctrl+Alt+Shift+M`           | specified     |
 | Return focus to document text         | —                          | `Esc`                      | `Esc`                        | specified     |
 | Show person or group info             | `Alt+Right`                | `Option+Right`             | `Alt+Right`                  | left out (C3) |
-| Toggle a checkbox                     | `Ctrl+Alt+Enter`           | `⌘+Option+Enter`           | `Ctrl+Alt+Enter`             | specified     |
+| Toggle a checkbox                     | `Ctrl+Alt+Enter`           | `⌘+Option+Enter`           | `Ctrl+Alt+Enter`             | built         |
 
 Show person or group info acts on a people chip; chips are left out (C3).
