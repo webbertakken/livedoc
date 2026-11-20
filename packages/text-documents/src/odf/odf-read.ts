@@ -347,6 +347,8 @@ class BodyReader {
     const body = childElement(this.r.parts.content.root, NS.office, 'body');
     const text = body && childElement(body, NS.office, 'text');
     if (text) this.container(text);
+    // A region's end that nothing follows ends no section (page-layout.md "Breaks").
+    while (isRegionEnd(this.blocks[this.blocks.length - 1])) this.blocks.pop();
     const normal = Styles.idOfRole(this.styles, 'normal') ?? 'Standard';
     if (!this.blocks.some((b) => b.type === 'paragraph'))
       this.blocks.push({ type: 'paragraph', style: normal, props: {}, inlines: [] });
@@ -465,7 +467,11 @@ class BodyReader {
     if (master !== undefined) {
       const section = this.r.sectionOf(master, 'next-page');
       if (isFirst && !this.section && section) this.section = section;
-      else if (section) this.blocks.push({ type: 'section', ...section } satisfies SectionBreak);
+      else if (section) {
+        // A region's end straight before a new section is that section's start.
+        if (isRegionEnd(this.blocks[this.blocks.length - 1])) this.blocks.pop();
+        this.blocks.push({ type: 'section', ...section } satisfies SectionBreak);
+      }
     }
     const values = { style, props, text, master: isFirst ? undefined : master };
     const kept: KeptProperties | undefined = auto
@@ -602,4 +608,9 @@ class InlineReader {
     } else inner = { ...ctx, ...(name ? { style: name } : {}), kept: undefined };
     for (const child of node.children) this.node(child, inner);
   }
+}
+
+/** The continuous section a `text:section`'s end leaves behind: back to the setup before it. */
+function isRegionEnd(block: Block | undefined): boolean {
+  return block?.type === 'section' && block.start === 'continuous' && !block.region;
 }

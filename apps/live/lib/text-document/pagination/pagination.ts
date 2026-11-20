@@ -31,6 +31,10 @@ export type BlockMetrics = {
   readonly widowControl?: boolean;
   /** A page break before. */
   readonly breakBefore?: boolean;
+  /** A page break after it: the next block starts a new page. */
+  readonly breakAfter?: boolean;
+  /** Lines that start a new page whatever the rules (a page break inside the paragraph before them). */
+  readonly forced?: readonly number[];
   /** A section break: where the section it starts begins. */
   readonly startsSection?: SectionStart;
 };
@@ -182,7 +186,7 @@ export function paginate(
     if (s === 0) {
       const startsSection = blocks[i - 1]?.startsSection;
       const sectionBreaks = startsSection !== undefined && startsSection !== 'continuous';
-      if (!cursor.empty && (block.breakBefore || sectionBreaks)) {
+      if (!cursor.empty && (block.breakBefore || blocks[i - 1]?.breakAfter || sectionBreaks)) {
         const at = starts.length;
         if (newPage(i, 0, cursor.y + cursor.mb, blankBefore(i)))
           return { starts, laidFrom: restart, settledAt: at };
@@ -196,6 +200,15 @@ export function paginate(
       blockTop + (k === lines.length - 1 ? block.height : lines[k]!.bottom);
     let fit = 0;
     while (s + fit < lines.length && bottomOf(s + fit) <= textHeight + FIT_TOLERANCE_PX) fit++;
+    // A page break inside the paragraph starts the next page at the line after it.
+    const forced = block.forced?.find((line) => line > s && line < lines.length);
+    if (forced !== undefined && s + fit >= forced) {
+      const at = starts.length;
+      if (newPage(i, forced, blockTop + lines[forced]!.top, 0))
+        return { starts, laidFrom: restart, settledAt: at };
+      s = forced;
+      continue;
+    }
     const remaining = lines.length - s;
     if (fit === remaining) {
       cursor = { y: blockTop + block.height, mb: block.marginBottom, empty: false };

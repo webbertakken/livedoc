@@ -36,3 +36,16 @@ export function keptPresenceOf(name: string): KeptPresence {
   if (BREAKS.has(name)) return 'break';
   return 'placeholder';
 }
+
+// A `br` element's type attribute, under any prefix.
+const BREAK_TYPE = /<(?:[\w.-]+:)?br\b[^>]*?\s(?:[\w.-]+:)?type="(page|column)"/;
+
+/**
+ * A kept Word break's kind (docs/specs/034-text-documents/page-layout.md "Breaks"): `page` or `column` for a `w:br` of
+ * that type, kept with its run as the file has it; null for anything else.
+ */
+export function keptBreakOf(name: string, xml: string): 'page' | 'column' | null {
+  if (name !== 'br') return null;
+  const type = BREAK_TYPE.exec(xml)?.[1];
+  return type === 'page' || type === 'column' ? type : null;
+}

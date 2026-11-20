@@ -217,6 +217,7 @@ describe('keep rules', () => {
       'keep-with-next',
       'keep-lines-together',
       'prevent-single-lines',
+      'add-page-break-before',
     ]);
   });
 });

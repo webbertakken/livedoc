@@ -28,34 +28,34 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 
 ## Common actions
 
-| Action                         | PC                                       | Mac                         | ChromeOS           | Status                                     |
-| ------------------------------ | ---------------------------------------- | --------------------------- | ------------------ | ------------------------------------------ |
-| Copy                           | `Ctrl+C`                                 | `⌘+C`                       | `Ctrl+C`           | the browser's                              |
-| Cut                            | `Ctrl+X`                                 | `⌘+X`                       | `Ctrl+X`           | the browser's                              |
-| Paste                          | `Ctrl+V`                                 | `⌘+V`                       | `Ctrl+V`           | the browser's                              |
-| Paste without formatting       | `Ctrl+Shift+V`                           | `⌘+Shift+V`                 | `Ctrl+Shift+V`     | the browser's                              |
-| Undo                           | `Ctrl+Z`                                 | `⌘+Z`                       | `Ctrl+Z`           | built (`text-document-shortcuts.test.tsx`) |
-| Redo                           | `Ctrl+Shift+Z`                           | `⌘+Shift+Z`                 | `Ctrl+Shift+Z`     | built (`text-document-shortcuts.test.tsx`) |
-| Insert or edit link            | `Ctrl+K`                                 | `⌘+K`                       | `Ctrl+K`           | specified                                  |
-| Open link                      | `Alt+Enter`                              | `Option+Enter`              | `Alt+Enter`        | specified                                  |
-| Show common keyboard shortcuts | `Ctrl+/`                                 | `⌘+/`                       | `Ctrl+/`           | built (`OfficeShortcutsDialog.test.tsx`)   |
-| Save                           | `Ctrl+S`                                 | `⌘+S`                       | `Ctrl+S`           | specified                                  |
-| Print                          | `Ctrl+P`                                 | `⌘+P`                       | `Ctrl+P`           | specified                                  |
-| Open                           | `Ctrl+O`                                 | `⌘+O`                       | `Ctrl+O`           | built (`text-document-shortcuts.test.tsx`) |
-| Find                           | `Ctrl+F`                                 | `⌘+F`                       | `Ctrl+F`           | specified                                  |
-| Find and replace               | `Ctrl+H`                                 | `⌘+Shift+H`                 | `Ctrl+H`           | specified                                  |
-| Find again                     | `Ctrl+G`                                 | `⌘+G`                       | `Ctrl+G`           | specified                                  |
-| Find previous                  | `Ctrl+Shift+G`                           | `⌘+Shift+G`                 | `Ctrl+Shift+G`     | specified                                  |
-| Hide the menus (compact mode)  | `Ctrl+Shift+F`                           | `Ctrl+Shift+F`              | `Ctrl+Shift+F`     | specified                                  |
-| Insert page break              | `Ctrl+Enter`                             | `⌘+Enter`                   | `Ctrl+Enter`       | specified                                  |
-| Tool finder                    | `Alt+/ or Alt+Shift+Z or Alt+Z (Chrome)` | `Option+/ or Ctrl+Option+Z` | `Alt+Z or Alt+/`   | built (`OfficeToolFinder.test.tsx`)        |
-| Repeat last action             | `Ctrl+Y`                                 | `⌘+Y`                       | —                  | specified                                  |
-| Switch to editing              | `Ctrl+Alt+Shift+Z`                       | `⌘+Option+Shift+Z`          | `Ctrl+Alt+Shift+Z` | built (`OfficeModeSwitch.test.tsx`)        |
-| Switch to suggesting           | `Ctrl+Alt+Shift+X`                       | `⌘+Option+Shift+X`          | `Ctrl+Alt+Shift+X` | specified                                  |
-| Switch to viewing              | `Ctrl+Alt+Shift+C`                       | `⌘+Option+Shift+C`          | `Ctrl+Alt+Shift+C` | built (`OfficeModeSwitch.test.tsx`)        |
-| Zoom in                        | `Ctrl+Plus`                              | `⌘+Plus`                    | —                  | the browser's                              |
-| Zoom out                       | `Ctrl+-`                                 | `⌘+-`                       | —                  | the browser's                              |
-| Zoom 100%                      | `Ctrl+0`                                 | `⌘+0`                       | —                  | the browser's                              |
+| Action                         | PC                                       | Mac                         | ChromeOS           | Status                                                   |
+| ------------------------------ | ---------------------------------------- | --------------------------- | ------------------ | -------------------------------------------------------- |
+| Copy                           | `Ctrl+C`                                 | `⌘+C`                       | `Ctrl+C`           | the browser's                                            |
+| Cut                            | `Ctrl+X`                                 | `⌘+X`                       | `Ctrl+X`           | the browser's                                            |
+| Paste                          | `Ctrl+V`                                 | `⌘+V`                       | `Ctrl+V`           | the browser's                                            |
+| Paste without formatting       | `Ctrl+Shift+V`                           | `⌘+Shift+V`                 | `Ctrl+Shift+V`     | the browser's                                            |
+| Undo                           | `Ctrl+Z`                                 | `⌘+Z`                       | `Ctrl+Z`           | built (`text-document-shortcuts.test.tsx`)               |
+| Redo                           | `Ctrl+Shift+Z`                           | `⌘+Shift+Z`                 | `Ctrl+Shift+Z`     | built (`text-document-shortcuts.test.tsx`)               |
+| Insert or edit link            | `Ctrl+K`                                 | `⌘+K`                       | `Ctrl+K`           | specified                                                |
+| Open link                      | `Alt+Enter`                              | `Option+Enter`              | `Alt+Enter`        | specified                                                |
+| Show common keyboard shortcuts | `Ctrl+/`                                 | `⌘+/`                       | `Ctrl+/`           | built (`OfficeShortcutsDialog.test.tsx`)                 |
+| Save                           | `Ctrl+S`                                 | `⌘+S`                       | `Ctrl+S`           | specified                                                |
+| Print                          | `Ctrl+P`                                 | `⌘+P`                       | `Ctrl+P`           | specified                                                |
+| Open                           | `Ctrl+O`                                 | `⌘+O`                       | `Ctrl+O`           | built (`text-document-shortcuts.test.tsx`)               |
+| Find                           | `Ctrl+F`                                 | `⌘+F`                       | `Ctrl+F`           | specified                                                |
+| Find and replace               | `Ctrl+H`                                 | `⌘+Shift+H`                 | `Ctrl+H`           | specified                                                |
+| Find again                     | `Ctrl+G`                                 | `⌘+G`                       | `Ctrl+G`           | specified                                                |
+| Find previous                  | `Ctrl+Shift+G`                           | `⌘+Shift+G`                 | `Ctrl+Shift+G`     | specified                                                |
+| Hide the menus (compact mode)  | `Ctrl+Shift+F`                           | `Ctrl+Shift+F`              | `Ctrl+Shift+F`     | specified                                                |
+| Insert page break              | `Ctrl+Enter`                             | `⌘+Enter`                   | `Ctrl+Enter`       | built (`text-document-breaks.test.ts`, `breaks.spec.ts`) |
+| Tool finder                    | `Alt+/ or Alt+Shift+Z or Alt+Z (Chrome)` | `Option+/ or Ctrl+Option+Z` | `Alt+Z or Alt+/`   | built (`OfficeToolFinder.test.tsx`)                      |
+| Repeat last action             | `Ctrl+Y`                                 | `⌘+Y`                       | —                  | specified                                                |
+| Switch to editing              | `Ctrl+Alt+Shift+Z`                       | `⌘+Option+Shift+Z`          | `Ctrl+Alt+Shift+Z` | built (`OfficeModeSwitch.test.tsx`)                      |
+| Switch to suggesting           | `Ctrl+Alt+Shift+X`                       | `⌘+Option+Shift+X`          | `Ctrl+Alt+Shift+X` | specified                                                |
+| Switch to viewing              | `Ctrl+Alt+Shift+C`                       | `⌘+Option+Shift+C`          | `Ctrl+Alt+Shift+C` | built (`OfficeModeSwitch.test.tsx`)                      |
+| Zoom in                        | `Ctrl+Plus`                              | `⌘+Plus`                    | —                  | the browser's                                            |
+| Zoom out                       | `Ctrl+-`                                 | `⌘+-`                       | —                  | the browser's                                            |
+| Zoom 100%                      | `Ctrl+0`                                 | `⌘+0`                       | —                  | the browser's                                            |
 
 ## Text formatting
 

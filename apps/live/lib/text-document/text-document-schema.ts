@@ -13,6 +13,7 @@ import {
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,
   KEPT_INLINE_ATTRIBUTES,
+  keptBreakOf,
   keptPresenceOf,
   PARAGRAPH_ATTRIBUTES,
   SECTION_BREAK,
@@ -85,14 +86,18 @@ const marks: Record<string, MarkSpec> = {
 // Something kept from the file, shown as it reads (standard-mapping.md "Kept content", "Shown as it reads"): nothing
 // for what has nothing to see, a line break for a break, else a grey placeholder with its name; selected, copied,
 // moved and deleted whole, never edited.
-function keptPlaceholder(tag: string, raw: unknown): DOMOutputSpec {
+function keptPlaceholder(tag: string, raw: unknown, xml?: unknown): DOMOutputSpec {
   const name = typeof raw === 'string' ? raw : '';
   const attributes = { contenteditable: 'false', 'data-kept': name };
   switch (keptPresenceOf(name)) {
     case 'hidden':
       return [tag, { ...attributes, class: 'text-document-kept-hidden' }];
-    case 'break':
-      return ['br', attributes];
+    case 'break': {
+      // A Word page break starts a new page where pages are laid out (page-layout.md "Breaks").
+      const source = (xml as { xml?: unknown } | null)?.xml;
+      const page = typeof source === 'string' && keptBreakOf(name, source) === 'page';
+      return ['br', page ? { ...attributes, 'data-page-break': '' } : attributes];
+    }
     case 'placeholder':
       return [
         tag,
@@ -128,7 +133,18 @@ const nodes: Record<string, NodeSpec> = {
     atom: true,
     selectable: true,
     attrs: nullAttributes(SECTION_BREAK_ATTRIBUTES),
-    toDOM: () => ['hr', { class: 'text-document-section-break', 'aria-label': 'Section break' }],
+    // Drawn with its start's name where breaks are shown (page-layout.md "Breaks").
+    toDOM: (node) => {
+      const start = (node.attrs as { start: unknown }).start;
+      return [
+        'hr',
+        {
+          class: 'text-document-section-break',
+          'data-start': typeof start === 'string' ? start : 'next-page',
+          'aria-label': 'Section break',
+        },
+      ];
+    },
   },
   [KEPT_BLOCK]: {
     group: 'block',
@@ -143,7 +159,10 @@ const nodes: Record<string, NodeSpec> = {
     atom: true,
     selectable: true,
     attrs: nullAttributes(KEPT_INLINE_ATTRIBUTES),
-    toDOM: (node) => keptPlaceholder('span', (node.attrs as { name: unknown }).name),
+    toDOM: (node) => {
+      const { name, xml } = node.attrs as { name: unknown; xml: unknown };
+      return keptPlaceholder('span', name, xml);
+    },
   },
   text: { group: 'inline' },
 };

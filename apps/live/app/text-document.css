@@ -35,10 +35,54 @@ div.text-document-kept {
   margin: 6px 0;
   padding: 6px 10px;
 }
+/*
+ * Breaks (docs/specs/034-text-documents/page-layout.md "Breaks"): in print layout a section break shows nothing and a
+ * page break is the new page; with non-printing characters shown, or with no pages laid out, each is a dotted line
+ * with its name in the muted ink, never text.
+ */
 .text-document-section-break {
-  margin: 12px 0;
+  height: 0;
+  margin: 0;
   border: 0;
-  border-top: 1px dashed light-dark(#80868b, #9aa0a6);
+  overflow: hidden;
+}
+.text-document-marks .text-document-section-break,
+[data-laid-out='flow'] .text-document-section-break {
+  height: auto;
+  margin: 12px 0;
+  border-top: 1px dotted var(--text-document-mark-ink);
+  overflow: visible;
+  text-align: center;
+}
+.text-document-marks .text-document-section-break::after,
+[data-laid-out='flow'] .text-document-section-break::after {
+  content: 'Section break (next page)' / '';
+  position: relative;
+  top: -0.75em;
+  padding: 0 6px;
+  background: var(--page-colour, light-dark(#ffffff, #1e1f20));
+  font-size: 10px;
+}
+.text-document-section-break[data-start='continuous']::after {
+  content: 'Section break (continuous)' / '';
+}
+.text-document-section-break[data-start='odd-page']::after {
+  content: 'Section break (odd page)' / '';
+}
+.text-document-section-break[data-start='even-page']::after {
+  content: 'Section break (even page)' / '';
+}
+.text-document-marks .text-document-break-before::before,
+[data-laid-out='flow'] .text-document-break-before::before {
+  content: 'Page break' / '';
+  display: block;
+  margin-bottom: 8px;
+  border-bottom: 1px dotted var(--text-document-mark-ink);
+  text-indent: 0;
+  text-align: center;
+  font:
+    400 10px/1.6 system-ui,
+    sans-serif;
 }
 .ProseMirror-selectednode.text-document-kept,
 .ProseMirror-selectednode.text-document-section-break {
@@ -304,7 +348,10 @@ div.text-document-kept {
 .text-document-space-mark::after,
 .text-document-break-mark::before,
 .text-document-marks .text-document-tab::before,
-.text-document-marks .text-document-section-break::after {
+.text-document-marks .text-document-section-break::after,
+[data-laid-out='flow'] .text-document-section-break::after,
+.text-document-marks .text-document-break-before::before,
+[data-laid-out='flow'] .text-document-break-before::before {
   color: var(--text-document-mark-ink);
   user-select: none;
   pointer-events: none;
@@ -334,18 +381,6 @@ div.text-document-kept {
   content: '→' / '';
   position: absolute;
   left: 0;
-}
-.text-document-marks .text-document-section-break {
-  overflow: visible;
-  text-align: center;
-}
-.text-document-marks .text-document-section-break::after {
-  content: 'Section break' / '';
-  position: relative;
-  top: -0.75em;
-  padding: 0 6px;
-  background: light-dark(#ffffff, #1e1f20);
-  font-size: 10px;
 }
 /*
  * Several stretches selected (text-and-paragraphs.md "Selection"): the browser draws one selection, so while there are

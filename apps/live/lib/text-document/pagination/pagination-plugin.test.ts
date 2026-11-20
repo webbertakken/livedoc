@@ -192,4 +192,21 @@ describe('measureBlock', () => {
     expect(metrics).toMatchObject({ height: 60, marginTop: 6, marginBottom: 16 });
     expect(metrics.lines).toHaveLength(3);
   });
+
+  it('reads a Word page break as the start of a page at the line after it, or after the block', () => {
+    const element = document.createElement('p');
+    element.textContent = 'c'.repeat(30);
+    const mark = document.createElement('br');
+    mark.setAttribute('data-page-break', '');
+    element.append(mark);
+    document.body.append(element);
+    // On the second line: the third starts the page.
+    mark.getBoundingClientRect = () => rect(22, 16);
+    expect(measureBlock(element, {}, 1, 0).metrics).toMatchObject({ forced: [2] });
+    // On the last line: the next block does.
+    mark.getBoundingClientRect = () => rect(42, 16);
+    const last = measureBlock(element, {}, 1, 0).metrics;
+    expect(last.breakAfter).toBe(true);
+    expect(last.forced).toBeUndefined();
+  });
 });

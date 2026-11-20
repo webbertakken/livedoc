@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { textDocumentBreakActions } from './text-document-breaks';
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
@@ -66,6 +67,10 @@ describe('the text document menus', () => {
         ...Object.keys(textDocumentEditorActions(null, { canEdit: true })),
         // Edit > Cut, Copy, Paste (text-document-clipboard), bound by the surface.
         ...Object.keys(clipboardActions(null, { canEdit: true, onRefused: () => {} })),
+        // Insert > Break (text-document-breaks), bound by the surface.
+        ...Object.keys(
+          textDocumentBreakActions(null, { canEdit: true, liveDoc: { current: null }, format }),
+        ),
         // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
         PREFERENCES_ITEM,
         // File > Page setup, Format > Page orientation and Switch to pageless (useTextDocumentPageSetup), by the surface.

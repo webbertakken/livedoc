@@ -59,7 +59,9 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 - **`ListDefinition`**: nine levels, each bullet (with its character), numbered (with its format, its label pattern
   and its start) or checklist; paragraphs of one list number on across anything between them.
 - **`SectionBreak`**: starts a section, on a new page or continuous, with its page setup (paper, orientation,
-  margins, page colour) and columns.
+  margins, page colour) and columns. In ODF a section on a new page is a paragraph naming a master page, and a
+  continuous one a `text:section` region to the next break (LiveDoc names the ones it makes `LiveDocSection<n>`); a
+  region's end that only leads to another break, or to the end, is read as no section.
 - **Paragraph borders**: up to five lines (top, bottom, left, right, between), each a width, a dash (solid, dotted,
   dashed) and a colour, with its padding (the space to the text); and a background colour. ODF: `fo:border-<side>`
   (`0.06pt solid #000000`), `fo:padding-<side>` and `fo:background-color` on the paragraph properties, every side

@@ -90,6 +90,8 @@ import {
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
 import { sheetsHeight, TextDocumentSheets } from './TextDocumentSheets';
+import { breaksPlugin } from '@/lib/text-document/text-document-breaks';
+import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import { paginationPlugin, relayoutPages } from '@/lib/text-document/pagination/pagination-plugin';
 import { pageBox, pagelessSetup, usePagelessColumn } from '@/lib/text-document/text-document-page';
 import {
@@ -309,6 +311,8 @@ export function TextDocumentSurface({
                 () => TextDocumentState.lists(doc),
                 (listener) => subscribeLists(doc, listener),
               ),
+              // Page and section breaks: their labels, and Backspace and Delete beside a page break.
+              breaksPlugin(readFormatting),
               // The writing laid onto pages (page-layout.md "Laying out").
               paginationPlugin({
                 readFormatting,
@@ -440,7 +444,11 @@ export function TextDocumentSurface({
   // View > Show non-printing characters (text-and-paragraphs.md "Non-printing characters").
   const marks = useTextDocumentViewToggle(NON_PRINTING_TOGGLE);
   useEffect(() => {
-    if (editorView && !editorView.isDestroyed) setNonPrinting(editorView, marks.shown);
+    if (editorView && !editorView.isDestroyed) {
+      setNonPrinting(editorView, marks.shown);
+      // Breaks shown take room on the page (page-layout.md "Breaks").
+      relayoutPages(editorView);
+    }
   }, [editorView, marks.shown]);
   const readRulerFormatting = useCallback(
     () =>
@@ -452,6 +460,8 @@ export function TextDocumentSurface({
         : null,
     [format],
   );
+  // Insert > Break (page-layout.md "Breaks").
+  const breakActions = useTextDocumentBreaks(editorView, liveDoc, format, writes);
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
@@ -467,8 +477,10 @@ export function TextDocumentSurface({
       ...ruler.actions,
       ...marks.actions,
       ...page.actions,
+      ...breakActions,
     }),
     [
+      breakActions,
       page.actions,
       ruler.actions,
       marks.actions,
@@ -624,6 +636,7 @@ export function TextDocumentSurface({
             }}
             data-page-format={page.pageless ? 'pageless' : 'pages'}
             data-pages={paginated ? pageTotal : undefined}
+            data-laid-out={paginated ? 'pages' : 'flow'}
             className={`relative isolate mx-auto w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
           >
             <TextDocumentSheets

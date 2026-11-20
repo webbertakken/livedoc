@@ -175,12 +175,13 @@ export const setSpacing = (formatting: TextFormatting, spacing: Spacing): Comman
     ...(spacing.after !== null ? { spaceAfter: spacing.after } : {}),
   }));
 
-export type KeepKey = 'keepWithNext' | 'keepTogether' | 'widowControl';
+export type KeepKey = 'keepWithNext' | 'keepTogether' | 'widowControl' | 'pageBreakBefore';
 
 export const KEEP_RULES: readonly { readonly item: string; readonly key: KeepKey }[] = [
   { item: 'keep-with-next', key: 'keepWithNext' },
   { item: 'keep-lines-together', key: 'keepTogether' },
   { item: 'prevent-single-lines', key: 'widowControl' },
+  { item: 'add-page-break-before', key: 'pageBreakBefore' },
 ];
 
 /** Whether every paragraph the selection touches has the rule. */
