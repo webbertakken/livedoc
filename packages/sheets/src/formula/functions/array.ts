@@ -16,6 +16,9 @@ import {
   type FnDef,
 } from '../fn';
 import { dims, err, isError, scalarOf, toBool, type Value, type ValueArray } from '../values';
+import { ARRAY_SHAPE_FUNCTIONS } from './array-shape';
+import { MATRIX_FUNCTIONS } from './matrices';
+import { REGRESSION_FUNCTIONS } from './regression';
 import { everyColumn, keyIdentity, rowKeys, sortedIndexes, type RowKey } from './sorting';
 
 const NOTHING = err('#N/A', 'No rows matched');
@@ -217,6 +220,9 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
     };
   }),
   ARRAYFORMULA: fn(1, 1, (args, f) => deref(args[0]!, f)),
+  ...ARRAY_SHAPE_FUNCTIONS,
+  ...MATRIX_FUNCTIONS,
+  ...REGRESSION_FUNCTIONS,
 };
 
 // Their arguments are an array context (formulas.md "Arrays and spills"): ranges and arrays taken whole.

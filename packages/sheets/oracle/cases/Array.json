@@ -1,0 +1,711 @@
+{
+  "category": "Array",
+  "data": [
+    [1, 2, 3, "a", 10, "Jan"],
+    [4, 5, 6, "b", 5, "Feb"],
+    [7, 8, 10, null, 8, "Mar"],
+    [1, 2, 3.1, 2, 1, 2],
+    [2, 1, 4.9, 4.1, 2, 4],
+    [3, 4, 7.2, 7.9, 3, 6],
+    [4, 3, 8.8, 16.2, 4, 8],
+    [5, 6, 11.1, 31.8, 5, 10],
+    [6, 5, 13, 64.5, 6, 12],
+    [1, true, "5", null, 7, "x"]
+  ],
+  "cases": [
+    {
+      "id": "CHOOSECOLS.1",
+      "f": "=CHOOSECOLS(Data!A1:C3, 1, 3)",
+      "rows": 3,
+      "cols": 2
+    },
+    {
+      "id": "CHOOSECOLS.2",
+      "f": "=CHOOSECOLS(Data!A1:C3, -1)",
+      "rows": 3
+    },
+    {
+      "id": "CHOOSECOLS.3",
+      "f": "=CHOOSECOLS(Data!A1:C3, 1, 3, 1)",
+      "rows": 3,
+      "cols": 3
+    },
+    {
+      "id": "CHOOSECOLS.4",
+      "f": "=CHOOSECOLS(Data!A1:C3, 0)"
+    },
+    {
+      "id": "CHOOSECOLS.5",
+      "f": "=CHOOSECOLS(Data!A1:C3, 4)"
+    },
+    {
+      "id": "CHOOSECOLS.6",
+      "f": "=CHOOSECOLS({1,2,3}, 2)"
+    },
+    {
+      "id": "CHOOSECOLS.7",
+      "f": "=CHOOSECOLS(Data!A1:D3, \"4\")",
+      "rows": 3,
+      "differs": {
+        "libreoffice": "LibreOffice refuses a column number written as text (Err:504); LiveDoc reads it as a number"
+      },
+      "note": "Awaits Google's answer: a column number as text."
+    },
+    {
+      "id": "CHOOSECOLS.8",
+      "f": "=CHOOSECOLS(Data!A1:C3, -4)"
+    },
+    {
+      "id": "CHOOSEROWS.1",
+      "f": "=CHOOSEROWS(Data!A1:C3, 1, 3)",
+      "rows": 2,
+      "cols": 3
+    },
+    {
+      "id": "CHOOSEROWS.2",
+      "f": "=CHOOSEROWS(Data!A1:C3, -1, -2)",
+      "rows": 2,
+      "cols": 3
+    },
+    {
+      "id": "CHOOSEROWS.3",
+      "f": "=CHOOSEROWS(Data!A1:C3, 0)"
+    },
+    {
+      "id": "CHOOSEROWS.4",
+      "f": "=CHOOSEROWS(Data!A1:C3, 4)"
+    },
+    {
+      "id": "CHOOSEROWS.5",
+      "f": "=CHOOSEROWS({1;2;3}, 3)"
+    },
+    {
+      "id": "CHOOSEROWS.6",
+      "f": "=CHOOSEROWS(Data!D1:D3, 3, 1)",
+      "rows": 2,
+      "differs": {
+        "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
+      },
+      "note": "Awaits Google's answer: an empty cell in an array result."
+    },
+    {
+      "id": "HSTACK.1",
+      "f": "=HSTACK(Data!A1:B2, Data!C1:C3)",
+      "rows": 3,
+      "cols": 3
+    },
+    {
+      "id": "HSTACK.2",
+      "f": "=HSTACK(1, \"a\", TRUE)",
+      "cols": 3,
+      "differs": {
+        "libreoffice": "LibreOffice writes TRUE in an array as 1; LiveDoc keeps it TRUE"
+      },
+      "note": "Awaits Google's answer: a boolean in an array result."
+    },
+    {
+      "id": "HSTACK.3",
+      "f": "=HSTACK(Data!A1:A3)",
+      "rows": 3
+    },
+    {
+      "id": "HSTACK.4",
+      "f": "=HSTACK(Data!D1:D3, Data!F1:F3)",
+      "rows": 3,
+      "cols": 2,
+      "differs": {
+        "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
+      },
+      "note": "Awaits Google's answer: an empty cell in an array result."
+    },
+    {
+      "id": "VSTACK.1",
+      "f": "=VSTACK(Data!A1:C1, Data!A3:B3)",
+      "rows": 2,
+      "cols": 3
+    },
+    {
+      "id": "VSTACK.2",
+      "f": "=VSTACK(1, 2)",
+      "rows": 2
+    },
+    {
+      "id": "VSTACK.3",
+      "f": "=VSTACK(Data!A1:B1, Data!D1:D3)",
+      "rows": 4,
+      "cols": 2,
+      "differs": {
+        "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
+      },
+      "note": "Awaits Google's answer: an empty cell in an array result."
+    },
+    {
+      "id": "TOCOL.1",
+      "f": "=TOCOL(Data!A1:D3)",
+      "rows": 12,
+      "differs": {
+        "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
+      },
+      "note": "Awaits Google's answer: an empty cell in an array result."
+    },
+    {
+      "id": "TOCOL.2",
+      "f": "=TOCOL(Data!A1:D3, 1)",
+      "rows": 11
+    },
+    {
+      "id": "TOCOL.3",
+      "f": "=TOCOL(Data!A1:C3, 0, TRUE)",
+      "rows": 9
+    },
+    {
+      "id": "TOCOL.4",
+      "f": "=TOCOL(1/(Data!A2:C2-5), 2)",
+      "rows": 2
+    },
+    {
+      "id": "TOCOL.5",
+      "f": "=TOCOL(1/(Data!A2:D3-5), 3)",
+      "rows": 6
+    },
+    {
+      "id": "TOCOL.6",
+      "f": "=TOCOL(Data!A1:C3, 4)"
+    },
+    {
+      "id": "TOCOL.7",
+      "f": "=TOCOL({1,2;3,4})",
+      "rows": 4
+    },
+    {
+      "id": "TOCOL.8",
+      "f": "=TOCOL(5)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a single value (Err:504); LiveDoc gives it as a column of one, as Excel"
+      },
+      "note": "Awaits Google's answer: a single value."
+    },
+    {
+      "id": "TOCOL.9",
+      "f": "=TOCOL(Data!D3:D3, 1)"
+    },
+    {
+      "id": "TOROW.1",
+      "f": "=TOROW(Data!A1:D3)",
+      "cols": 12,
+      "differs": {
+        "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
+      },
+      "note": "Awaits Google's answer: an empty cell in an array result."
+    },
+    {
+      "id": "TOROW.2",
+      "f": "=TOROW(Data!A1:D3, 1, TRUE)",
+      "cols": 11
+    },
+    {
+      "id": "TOROW.3",
+      "f": "=TOROW(1/(Data!A2:C2-5), 2)",
+      "cols": 2
+    },
+    {
+      "id": "TOROW.4",
+      "f": "=TOROW(Data!A1:C3, -1)"
+    },
+    {
+      "id": "WRAPROWS.1",
+      "f": "=WRAPROWS(Data!A4:A9, 4)",
+      "rows": 2,
+      "cols": 4
+    },
+    {
+      "id": "WRAPROWS.2",
+      "f": "=WRAPROWS(Data!A4:A9, 4, 0)",
+      "rows": 2,
+      "cols": 4
+    },
+    {
+      "id": "WRAPROWS.3",
+      "f": "=WRAPROWS(Data!A4:A9, 2.9)",
+      "rows": 3,
+      "cols": 2
+    },
+    {
+      "id": "WRAPROWS.4",
+      "f": "=WRAPROWS(Data!A4:A9, 0)"
+    },
+    {
+      "id": "WRAPROWS.5",
+      "f": "=WRAPROWS(Data!A1:C3, 2)"
+    },
+    {
+      "id": "WRAPROWS.6",
+      "f": "=WRAPROWS(Data!A1:C1, 2)",
+      "rows": 2,
+      "cols": 2
+    },
+    {
+      "id": "WRAPROWS.7",
+      "f": "=WRAPROWS(Data!A4:A9, 10)",
+      "cols": 10
+    },
+    {
+      "id": "WRAPCOLS.1",
+      "f": "=WRAPCOLS(Data!A4:A9, 4)",
+      "rows": 4,
+      "cols": 2
+    },
+    {
+      "id": "WRAPCOLS.2",
+      "f": "=WRAPCOLS(Data!A1:F1, 4, \"-\")",
+      "rows": 4,
+      "cols": 2
+    },
+    {
+      "id": "WRAPCOLS.3",
+      "f": "=WRAPCOLS(Data!A4:A9, 0)"
+    },
+    {
+      "id": "WRAPCOLS.4",
+      "f": "=WRAPCOLS(Data!A1:B2, 2)"
+    },
+    {
+      "id": "FLATTEN.1",
+      "f": "=FLATTEN(Data!A1:B2)",
+      "rows": 4,
+      "expect": [[1], [2], [4], [5]],
+      "cite": "https://support.google.com/docs/answer/10307761 (\"Values are ordered by argument, then row, then column\": A1, B1, A2, B2)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.FLATTEN is #NAME? there"
+      }
+    },
+    {
+      "id": "FLATTEN.2",
+      "f": "=FLATTEN(\"top\", Data!A1:B1, \"bottom\")",
+      "rows": 4,
+      "expect": [["top"], [1], [2], ["bottom"]],
+      "cite": "https://support.google.com/docs/answer/10307761 (sample `=FLATTEN(\"top\", A1:B2, \"middle\", B3:B4, \"bottom\")`: arguments in order, values need not be ranges)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.FLATTEN is #NAME? there"
+      }
+    },
+    {
+      "id": "FLATTEN.3",
+      "f": "=FLATTEN(Data!D1:D3)",
+      "rows": 3,
+      "expect": [["a"], ["b"], [null]],
+      "cite": "https://support.google.com/docs/answer/10307761 (\"Empty values are not skipped\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.FLATTEN is #NAME? there"
+      }
+    },
+    {
+      "id": "FREQUENCY.1",
+      "f": "=FREQUENCY(Data!C4:C9, Data!E1:E3)",
+      "rows": 4
+    },
+    {
+      "id": "FREQUENCY.2",
+      "f": "=FREQUENCY(Data!A10:F10, 5)",
+      "rows": 2,
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
+      },
+      "note": "Awaits Google's answer: a boolean in a range."
+    },
+    {
+      "id": "FREQUENCY.3",
+      "f": "=FREQUENCY(Data!A4:A9, {2;4})",
+      "rows": 3
+    },
+    {
+      "id": "FREQUENCY.4",
+      "f": "=FREQUENCY({1,2,2,3}, 2)",
+      "rows": 2
+    },
+    {
+      "id": "FREQUENCY.5",
+      "f": "=FREQUENCY(Data!A4:A9, Data!F1:F3)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses classes with no number (#VALUE!); LiveDoc counts every value, as Excel does with no classes"
+      },
+      "note": "Awaits Google's answer: classes with no number."
+    },
+    {
+      "id": "MDETERM.1",
+      "f": "=MDETERM(Data!A1:C3)"
+    },
+    {
+      "id": "MDETERM.2",
+      "f": "=MDETERM({1,2;3,4})"
+    },
+    {
+      "id": "MDETERM.3",
+      "f": "=MDETERM(Data!A1:B3)"
+    },
+    {
+      "id": "MDETERM.4",
+      "f": "=MDETERM(5)"
+    },
+    {
+      "id": "MDETERM.5",
+      "f": "=MDETERM({1,\"a\";2,3})"
+    },
+    {
+      "id": "MDETERM.6",
+      "f": "=MDETERM({1,2;2,4})"
+    },
+    {
+      "id": "MDETERM.7",
+      "f": "=MDETERM(Data!B3:C4)"
+    },
+    {
+      "id": "MINVERSE.1",
+      "f": "=MINVERSE(Data!A1:C3)",
+      "rows": 3,
+      "cols": 3
+    },
+    {
+      "id": "MINVERSE.2",
+      "f": "=MINVERSE({1,2;2,4})"
+    },
+    {
+      "id": "MINVERSE.3",
+      "f": "=MINVERSE(Data!A1:B3)"
+    },
+    {
+      "id": "MINVERSE.4",
+      "f": "=MINVERSE({4})"
+    },
+    {
+      "id": "MINVERSE.5",
+      "f": "=MINVERSE({2,0;0,4})",
+      "rows": 2,
+      "cols": 2
+    },
+    {
+      "id": "MMULT.1",
+      "f": "=MMULT(Data!A1:C3, Data!A4:A6)",
+      "rows": 3
+    },
+    {
+      "id": "MMULT.2",
+      "f": "=MMULT({1,2,3;4,5,6}, {7;8;9})",
+      "rows": 2
+    },
+    {
+      "id": "MMULT.3",
+      "f": "=MMULT(Data!A1:C3, Data!A1:A2)"
+    },
+    {
+      "id": "MMULT.4",
+      "f": "=MMULT(Data!A10:B10, {1;1})",
+      "differs": {
+        "libreoffice": "LibreOffice reads TRUE in a matrix as 1; LiveDoc refuses a matrix with any value but a number, #VALUE!"
+      },
+      "note": "Awaits Google's answer: a boolean in a matrix."
+    },
+    {
+      "id": "MMULT.5",
+      "f": "=MMULT(Data!B3:D3, {1;1;1})"
+    },
+    {
+      "id": "MMULT.6",
+      "f": "=MMULT(2, 3)"
+    },
+    {
+      "id": "SUMX2MY2.1",
+      "f": "=SUMX2MY2({1,2,3}, {4,5,6})"
+    },
+    {
+      "id": "SUMX2MY2.2",
+      "f": "=SUMX2MY2(Data!A4:A9, Data!C4:C9)"
+    },
+    {
+      "id": "SUMX2MY2.3",
+      "f": "=SUMX2MY2(Data!A1:A3, Data!A1:A2)"
+    },
+    {
+      "id": "SUMX2MY2.4",
+      "f": "=SUMX2MY2(Data!A10:F10, Data!A1:F1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
+      },
+      "note": "Awaits Google's answer: a boolean in a range."
+    },
+    {
+      "id": "SUMX2PY2.1",
+      "f": "=SUMX2PY2({1,2,3}, {4,5,6})"
+    },
+    {
+      "id": "SUMX2PY2.2",
+      "f": "=SUMX2PY2(Data!A4:A9, Data!C4:C9)"
+    },
+    {
+      "id": "SUMX2PY2.3",
+      "f": "=SUMX2PY2(Data!A1:A3, Data!A1:A2)"
+    },
+    {
+      "id": "SUMX2PY2.4",
+      "f": "=SUMX2PY2(Data!A10:F10, Data!A1:F1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
+      },
+      "note": "Awaits Google's answer: a boolean in a range."
+    },
+    {
+      "id": "SUMXMY2.1",
+      "f": "=SUMXMY2({1,2,3}, {4,5,6})"
+    },
+    {
+      "id": "SUMXMY2.2",
+      "f": "=SUMXMY2(Data!A4:A9, Data!C4:C9)"
+    },
+    {
+      "id": "SUMXMY2.3",
+      "f": "=SUMXMY2(Data!A1:A3, Data!A1:A2)"
+    },
+    {
+      "id": "SUMXMY2.4",
+      "f": "=SUMXMY2(Data!A10:F10, Data!A1:F1)",
+      "differs": {
+        "libreoffice": "LibreOffice answers #VALUE! for a pair with text, where its SUMX2MY2 leaves the pair out; LiveDoc leaves it out, booleans too (9)"
+      },
+      "note": "Awaits Google's answer: a pair with text or a boolean."
+    },
+    {
+      "id": "LINEST.1",
+      "f": "=LINEST(Data!C4:C9, Data!A4:A9)",
+      "cols": 2
+    },
+    {
+      "id": "LINEST.2",
+      "f": "=LINEST(Data!C4:C9)",
+      "cols": 2
+    },
+    {
+      "id": "LINEST.3",
+      "f": "=LINEST(Data!C4:C9, Data!A4:A9, FALSE)",
+      "cols": 2
+    },
+    {
+      "id": "LINEST.4",
+      "f": "=LINEST(Data!C4:C9, Data!A4:A9, TRUE, TRUE)",
+      "rows": 5,
+      "cols": 2
+    },
+    {
+      "id": "LINEST.5",
+      "f": "=LINEST(Data!C4:C9, Data!A4:B9)",
+      "cols": 3
+    },
+    {
+      "id": "LINEST.6",
+      "f": "=LINEST(Data!C4:C9, Data!A4:B9, TRUE, TRUE)",
+      "rows": 5,
+      "cols": 3
+    },
+    {
+      "id": "LINEST.7",
+      "f": "=LINEST(Data!C4:C9, Data!A4:B9, FALSE, TRUE)",
+      "rows": 5,
+      "cols": 3
+    },
+    {
+      "id": "LINEST.8",
+      "f": "=LINEST({1,2,4,5}, {2,4,5,8})",
+      "cols": 2
+    },
+    {
+      "id": "LINEST.9",
+      "f": "=LINEST({2,4,6}, {1,2,3}, TRUE, TRUE)",
+      "rows": 5,
+      "cols": 2
+    },
+    {
+      "id": "LINEST.10",
+      "f": "=LINEST({1,3}, {1,2}, TRUE, TRUE)",
+      "rows": 5,
+      "cols": 2
+    },
+    {
+      "id": "LINEST.11",
+      "f": "=LINEST(Data!C4:C9, Data!A1:A3)"
+    },
+    {
+      "id": "LINEST.12",
+      "f": "=LINEST(Data!C4:C9, Data!E4:F9)",
+      "differs": {
+        "libreoffice": "LibreOffice fits collinear x values anyway, with meaningless coefficients (7.9e13); LiveDoc refuses them, #NUM!"
+      },
+      "note": "Awaits Google's answer: collinear known x values."
+    },
+    {
+      "id": "LINEST.13",
+      "f": "=LINEST(Data!A1:B2, Data!E1:F2)"
+    },
+    {
+      "id": "LINEST.14",
+      "f": "=LINEST(Data!C4:C8, Data!F1:F5)"
+    },
+    {
+      "id": "LOGEST.1",
+      "f": "=LOGEST(Data!D4:D9, Data!A4:A9)",
+      "cols": 2
+    },
+    {
+      "id": "LOGEST.2",
+      "f": "=LOGEST(Data!D4:D9)",
+      "cols": 2
+    },
+    {
+      "id": "LOGEST.3",
+      "f": "=LOGEST(Data!D4:D9, Data!A4:A9, FALSE)",
+      "cols": 2
+    },
+    {
+      "id": "LOGEST.4",
+      "f": "=LOGEST(Data!D4:D9, Data!A4:A9, TRUE, TRUE)",
+      "rows": 5,
+      "cols": 2
+    },
+    {
+      "id": "LOGEST.5",
+      "f": "=LOGEST({1,-2,3})"
+    },
+    {
+      "id": "LOGEST.6",
+      "f": "=LOGEST(Data!D4:D9, Data!A4:B9)",
+      "cols": 3
+    },
+    {
+      "id": "TREND.1",
+      "f": "=TREND(Data!C4:C9, Data!A4:A9)",
+      "rows": 6
+    },
+    {
+      "id": "TREND.2",
+      "f": "=TREND(Data!C4:C9, Data!A4:A9, {7;8})",
+      "rows": 2
+    },
+    {
+      "id": "TREND.3",
+      "f": "=TREND(Data!C4:C9, Data!A4:A9, {7;8}, FALSE)",
+      "rows": 2
+    },
+    {
+      "id": "TREND.4",
+      "f": "=TREND(Data!C4:C9, Data!A4:B9, {7,1;8,2})",
+      "rows": 2
+    },
+    {
+      "id": "TREND.5",
+      "f": "=TREND(Data!C4:C9, , {7;8})",
+      "rows": 2
+    },
+    {
+      "id": "TREND.6",
+      "f": "=TREND({1,2,4})",
+      "cols": 3
+    },
+    {
+      "id": "TREND.7",
+      "f": "=TREND(Data!C4:C9, Data!A4:A9, {7,8})",
+      "cols": 2
+    },
+    {
+      "id": "TREND.8",
+      "f": "=TREND(Data!C4:C9, Data!A4:A9, 7)"
+    },
+    {
+      "id": "GROWTH.1",
+      "f": "=GROWTH(Data!D4:D9, Data!A4:A9)",
+      "rows": 6
+    },
+    {
+      "id": "GROWTH.2",
+      "f": "=GROWTH(Data!D4:D9, Data!A4:A9, {7;8})",
+      "rows": 2
+    },
+    {
+      "id": "GROWTH.3",
+      "f": "=GROWTH(Data!D4:D9, Data!A4:A9, 7, FALSE)"
+    },
+    {
+      "id": "GROWTH.4",
+      "f": "=GROWTH({1,-1,2})"
+    },
+    {
+      "id": "SORTBY.1",
+      "f": "=SORTBY(Data!F1:F3, Data!A1:A3, -1)",
+      "rows": 3
+    },
+    {
+      "id": "SORTBY.2",
+      "f": "=SORTBY(Data!A1:A3, {3;1;2})",
+      "rows": 3
+    },
+    {
+      "id": "SORTBY.3",
+      "f": "=SORTBY(Data!A1:B3, Data!E1:E3, 1)",
+      "rows": 3,
+      "cols": 2
+    },
+    {
+      "id": "SORTBY.4",
+      "f": "=SORTBY(Data!A1:A3, Data!A1:A2)"
+    },
+    {
+      "id": "SUMPRODUCT.1",
+      "f": "=SUMPRODUCT(Data!A1:C1, Data!A2:C2)"
+    },
+    {
+      "id": "SUMPRODUCT.2",
+      "f": "=SUMPRODUCT(Data!A1:C3)"
+    },
+    {
+      "id": "SUMPRODUCT.3",
+      "f": "=SUMPRODUCT(Data!A1:B1, Data!A1:C1)"
+    },
+    {
+      "id": "SUMPRODUCT.4",
+      "f": "=SUMPRODUCT(Data!A1:D1, Data!A2:D2)"
+    },
+    {
+      "id": "SUMPRODUCT.5",
+      "f": "=SUMPRODUCT((Data!A4:A9>3)*1, Data!C4:C9)"
+    },
+    {
+      "id": "SUMPRODUCT.6",
+      "f": "=SUMPRODUCT(Data!A10:F10, Data!A1:F1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
+      },
+      "note": "Awaits Google's answer: a boolean in a range."
+    },
+    {
+      "id": "TRANSPOSE.1",
+      "f": "=TRANSPOSE(Data!A1:C2)",
+      "rows": 3,
+      "cols": 2
+    },
+    {
+      "id": "TRANSPOSE.2",
+      "f": "=TRANSPOSE(Data!D1:D3)",
+      "cols": 3,
+      "differs": {
+        "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
+      },
+      "note": "Awaits Google's answer: an empty cell in an array result."
+    },
+    {
+      "id": "TRANSPOSE.3",
+      "f": "=TRANSPOSE({1,2,3})",
+      "rows": 3
+    },
+    {
+      "id": "TRANSPOSE.4",
+      "f": "=TRANSPOSE(5)"
+    }
+  ]
+}

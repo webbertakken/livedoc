@@ -297,7 +297,9 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `EPOCHTODATE(timestamp, [unit])` reads a Unix time in UTC, in seconds (1), milliseconds (2) or microseconds (3),
   fractions of a millisecond dropped; a negative timestamp is `#NUM!`.
 
-**Arrays**: `FILTER`, `SORT`, `SORTN`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `TRANSPOSE`, `ARRAYFORMULA`, `MUNIT`, `RANDARRAY`.
+**Arrays**: `FILTER`, `SORT`, `SORTN`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `TRANSPOSE`, `ARRAYFORMULA`, `MUNIT`,
+`RANDARRAY`, `CHOOSECOLS`, `CHOOSEROWS`, `HSTACK`, `VSTACK`, `TOCOL`, `TOROW`, `WRAPROWS`, `WRAPCOLS`, `FLATTEN`,
+`FREQUENCY`, `MMULT`, `MDETERM`, `MINVERSE`, `SUMX2MY2`, `SUMX2PY2`, `SUMXMY2`, `LINEST`, `LOGEST`, `TREND`, `GROWTH`.
 
 - `SORT` and `SORTN` sort by a column of the range by its number, or by a column beside it as tall as the range
   (Google's); rows equal under every key keep their order. `SORT` with four arguments is OOXML's
@@ -308,6 +310,29 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   mode 2 drops the rows tied with one before them, mode 3 gives every row of the first `n` keys.
 - `FILTER` with a single value after one condition longer than one is OOXML's `FILTER(array, include, if_empty)`
   (D38): that value is what it gives when nothing passes, where it would be `#N/A`.
+- An empty cell an array function hands on stays empty in its result, and `TRUE` stays a boolean.
+- `CHOOSECOLS` and `CHOOSEROWS` count a negative number from the end; an array of numbers picks each, text that
+  reads as a number is that number, and 0 or a number past the array is `#VALUE!`.
+- `HSTACK` and `VSTACK` pad an array shorter than the tallest (or narrower than the widest) with `#N/A`.
+- `TOCOL` and `TOROW` read row by row, or column by column with `scan_by_column`; `ignore` 1 leaves out
+  empty cells, 2 errors, 3 both, any other but 0 is `#VALUE!`; nothing left is `#N/A`; one value is an array of one.
+- `WRAPROWS` and `WRAPCOLS` wrap one row or column (a table is `#VALUE!`) by `wrap_count` rounded down (under 1
+  is `#NUM!`), the last line padded with `pad_with`, `#N/A` by default.
+- `FLATTEN` puts every value of its arguments in one column, by argument, then row, then column; empties are kept.
+- `FREQUENCY` counts the numbers of `data` (text and booleans left out) into its classes, in the classes' order:
+  each counts the values above the next smaller class up to itself, a repeated class at its first place only, and a
+  last row counts the values above every class. Classes with no number count every value in one row (default, D46).
+- `MMULT`, `MDETERM` and `MINVERSE` take only numbers (anything else is `#VALUE!`, an error its own);
+  `MDETERM` and `MINVERSE` a square, and a singular matrix has no inverse, `#NUM!`.
+- `SUMX2MY2`, `SUMX2PY2` and `SUMXMY2` take two arrays of as many values (else `#VALUE!`) and leave out a pair
+  that is not two numbers.
+- `LINEST`, `LOGEST`, `TREND` and `GROWTH` fit least squares: y down a column takes each column of x as a
+  variable, y along a row each row, a table of y one x of its shape (x is 1, 2, 3, ... by default; any other shape
+  is `#REF!`). `LOGEST` and `GROWTH` fit ln y, so a y of 0 or below is `#NUM!`. Collinear x values have no single
+  fit, `#NUM!` (default, D47). `LINEST` and `LOGEST` give the slopes last variable first, then b; verbose adds
+  Excel's four rows of statistics, `#N/A` where there is none. An exact fit's errors are 0 and its F `#N/A`
+  (default, D48). `TREND` and `GROWTH` answer in the shape of the new x values for one variable, a value per row
+  (y down a column) or per column (y along a row) for several.
 
 **Finance**: `PMT`, `FV`, `PV`, `NPV`, `IRR`, `RATE`, `NPER`.
 
@@ -382,31 +407,40 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 - **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
   (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
 
-  | Formula                                          | LiveDoc today                    | LibreOffice                | Case                                            |
-  | ------------------------------------------------ | -------------------------------- | -------------------------- | ----------------------------------------------- |
-  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")` | 1, never negative                | -2                         | Date DATEDIF.9                                  |
-  | `NETWORKDAYS.INTL(a, b, "1111111")`              | `#VALUE!`                        | 0                          | Date NETWORKDAYS.INTL.4                         |
-  | `FILTER(range, numbers)`                         | any number but 0 passes          | only positive numbers pass | Filter FILTER.8                                 |
-  | `UNIQUE({"a"; "A"})`                             | two values, case kept            | one, case ignored          | Filter UNIQUE.4                                 |
-  | `CELL("address", Data!B3)`                       | `Data!$B$3`                      | `$Data.$B$3`               | Info CELL.2                                     |
-  | `CELL("width", A1)`                              | ECMA-376 characters (D40)        | LibreOffice's own measure  | Info CELL.14                                    |
-  | `AND("TRUE", 1)`                                 | TRUE, text read as a truth       | `#VALUE!`                  | Logical AND.8                                   |
-  | `IFNA(A4, 1)` over an empty cell                 | empty                            | 0                          | Logical IFNA.4                                  |
-  | `ADDRESS(1, 1, 5)`                               | `#VALUE!`                        | `$A$1`                     | Lookup ADDRESS.9                                |
-  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`  | `1TRUE`, `true`: TRUE as text    | `11`, `1`: TRUE as 1       | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
-  | `"z" < TRUE`                                     | TRUE: booleans after text        | FALSE                      | Syntax compare.4                                |
-  | `SUM(1:2)` over booleans                         | booleans skipped                 | booleans counted           | Syntax range.3                                  |
-  | `0^-1`, `(-8)^(1/3)`                             | `#DIV/0!`, `#NUM!`               | `#NUM!`, -2                | Syntax errors.4, .8                             |
-  | `CHAR(0)`, `CODE("")`                            | `#VALUE!`                        | empty text, 0              | Text CHAR.2, CODE.2                             |
-  | `FIND("", "abc")`, `SEARCH("", "abc")`           | 1, as Excel                      | `#VALUE!`                  | Text FIND.5, SEARCH.7                           |
-  | `PROPER("it's 2nd")`                             | `It's 2nd`                       | `It'S 2Nd`                 | Text PROPER.3                                   |
-  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`          | `熊`, `本`: a cut character kept | a space                    | Text LEFTB.6, RIGHTB.5                          |
-  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`           | -3, -2: Excel's                  | -2, -3: OpenFormula's      | Math CEILING.4, FLOOR.4                         |
-  | `MROUND(10, -3)`                                 | `#NUM!`, as Excel                | 9                          | Math MROUND.3                                   |
-  | `ISEVEN(A1)` over an empty cell                  | TRUE, as Excel                   | `#VALUE!`                  | Math ISEVEN.6                                   |
-  | `SUM(1, "2", TRUE)`                              | 4, as Excel                      | `#VALUE!`                  | Math SUM.2                                      |
-  | `IMPOWER("2i", 2)`                               | `-4`, multiplied out             | `-4+4.89858719658941e-16i` | Math IMPOWER.4                                  |
-  | `LENB("ｶﾀｶﾅ")`                                   | 4: half-width kana 1 byte (D43)  | 8                          | Text LENB.6                                     |
+  | Formula                                             | LiveDoc today                    | LibreOffice                | Case                                            |
+  | --------------------------------------------------- | -------------------------------- | -------------------------- | ----------------------------------------------- |
+  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`    | 1, never negative                | -2                         | Date DATEDIF.9                                  |
+  | `NETWORKDAYS.INTL(a, b, "1111111")`                 | `#VALUE!`                        | 0                          | Date NETWORKDAYS.INTL.4                         |
+  | `FILTER(range, numbers)`                            | any number but 0 passes          | only positive numbers pass | Filter FILTER.8                                 |
+  | `UNIQUE({"a"; "A"})`                                | two values, case kept            | one, case ignored          | Filter UNIQUE.4                                 |
+  | `CELL("address", Data!B3)`                          | `Data!$B$3`                      | `$Data.$B$3`               | Info CELL.2                                     |
+  | `CELL("width", A1)`                                 | ECMA-376 characters (D40)        | LibreOffice's own measure  | Info CELL.14                                    |
+  | `AND("TRUE", 1)`                                    | TRUE, text read as a truth       | `#VALUE!`                  | Logical AND.8                                   |
+  | `IFNA(A4, 1)` over an empty cell                    | empty                            | 0                          | Logical IFNA.4                                  |
+  | `ADDRESS(1, 1, 5)`                                  | `#VALUE!`                        | `$A$1`                     | Lookup ADDRESS.9                                |
+  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`     | `1TRUE`, `true`: TRUE as text    | `11`, `1`: TRUE as 1       | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
+  | `"z" < TRUE`                                        | TRUE: booleans after text        | FALSE                      | Syntax compare.4                                |
+  | `SUM(1:2)` over booleans                            | booleans skipped                 | booleans counted           | Syntax range.3                                  |
+  | `0^-1`, `(-8)^(1/3)`                                | `#DIV/0!`, `#NUM!`               | `#NUM!`, -2                | Syntax errors.4, .8                             |
+  | `CHAR(0)`, `CODE("")`                               | `#VALUE!`                        | empty text, 0              | Text CHAR.2, CODE.2                             |
+  | `FIND("", "abc")`, `SEARCH("", "abc")`              | 1, as Excel                      | `#VALUE!`                  | Text FIND.5, SEARCH.7                           |
+  | `PROPER("it's 2nd")`                                | `It's 2nd`                       | `It'S 2Nd`                 | Text PROPER.3                                   |
+  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`             | `熊`, `本`: a cut character kept | a space                    | Text LEFTB.6, RIGHTB.5                          |
+  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`              | -3, -2: Excel's                  | -2, -3: OpenFormula's      | Math CEILING.4, FLOOR.4                         |
+  | `MROUND(10, -3)`                                    | `#NUM!`, as Excel                | 9                          | Math MROUND.3                                   |
+  | `ISEVEN(A1)` over an empty cell                     | TRUE, as Excel                   | `#VALUE!`                  | Math ISEVEN.6                                   |
+  | `SUM(1, "2", TRUE)`                                 | 4, as Excel                      | `#VALUE!`                  | Math SUM.2                                      |
+  | `IMPOWER("2i", 2)`                                  | `-4`, multiplied out             | `-4+4.89858719658941e-16i` | Math IMPOWER.4                                  |
+  | `LENB("ｶﾀｶﾅ")`                                      | 4: half-width kana 1 byte (D43)  | 8                          | Text LENB.6                                     |
+  | `TRANSPOSE(A1:A3)` over an empty cell               | empty                            | 0                          | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
+  | `HSTACK(1, "a", TRUE)`                              | `TRUE`                           | 1                          | Array HSTACK.2                                  |
+  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans | booleans skipped                 | booleans counted           | Array SUMPRODUCT.6, FREQUENCY.2                 |
+  | `SUMXMY2(a, b)`, a pair with text                   | the pair left out                | `#VALUE!`                  | Array SUMXMY2.4                                 |
+  | `CHOOSECOLS(A1:D3, "4")`                            | the fourth column                | `#VALUE!`                  | Array CHOOSECOLS.7                              |
+  | `TOCOL(5)`                                          | 5, a column of one, as Excel     | `#VALUE!`                  | Array TOCOL.8                                   |
+  | `FREQUENCY(data, classes)`, no class a number       | every value counted (D46)        | `#VALUE!`                  | Array FREQUENCY.5                               |
+  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`            | `#VALUE!`                        | 2                          | Array MMULT.4                                   |
+  | `LINEST(y, x)`, collinear x                         | `#NUM!` (D47)                    | coefficients past 1e13     | Array LINEST.12                                 |
 
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
@@ -488,8 +522,8 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `CHISQINV`            | OpenFormula |                                                                                                                | OpenFormula | `CHISQINV`                       | planned                                                       |
 | `CHITEST`             | Statistical | `CHITEST(observed_range, expected_range)`                                                                      | Google      | `LEGACY.CHITEST`                 | planned                                                       |
 | `CHOOSE`              | Lookup      | `CHOOSE(index, choice1, [choice2, ...])`                                                                       | Google      | `CHOOSE`                         | built                                                         |
-| `CHOOSECOLS`          | Array       | `CHOOSECOLS(array, col_num1, [col_num2])`                                                                      | Google      | `COM.MICROSOFT.CHOOSECOLS`       | planned                                                       |
-| `CHOOSEROWS`          | Array       | `CHOOSEROWS(array, row_num1, [row_num2])`                                                                      | Google      | `COM.MICROSOFT.CHOOSEROWS`       | planned                                                       |
+| `CHOOSECOLS`          | Array       | `CHOOSECOLS(array, col_num1, [col_num2])`                                                                      | Google      | `COM.MICROSOFT.CHOOSECOLS`       | built                                                         |
+| `CHOOSEROWS`          | Array       | `CHOOSEROWS(array, row_num1, [row_num2])`                                                                      | Google      | `COM.MICROSOFT.CHOOSEROWS`       | built                                                         |
 | `CLEAN`               | Text        | `CLEAN(text)`                                                                                                  | Google      | `CLEAN`                          | built                                                         |
 | `CODE`                | Text        | `CODE(string)`                                                                                                 | Google      | `CODE`                           | built                                                         |
 | `COLUMN`              | Lookup      | `COLUMN([cell_reference])`                                                                                     | Google      | `COLUMN`                         | built                                                         |
@@ -597,7 +631,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `FISHER`              | Statistical | `FISHER(value)`                                                                                                | Google      | `FISHER`                         | planned                                                       |
 | `FISHERINV`           | Statistical | `FISHERINV(value)`                                                                                             | Google      | `FISHERINV`                      | planned                                                       |
 | `FIXED`               | Text        | `FIXED(number, [number_of_places], [suppress_separator])`                                                      | Google      | `FIXED`                          | built                                                         |
-| `FLATTEN`             | Array       | `FLATTEN(range1,[range2,...])`                                                                                 | Google      | S5                               | planned                                                       |
+| `FLATTEN`             | Array       | `FLATTEN(range1,[range2,...])`                                                                                 | Google      | S5                               | built                                                         |
 | `FLOOR`               | Math        | `FLOOR(value, [factor])`                                                                                       | Google      | `FLOOR`                          | built                                                         |
 | `FLOOR.MATH`          | Math        | `FLOOR.MATH(number, [significance], [mode])`                                                                   | Google      | `COM.MICROSOFT.FLOOR.MATH`       | built                                                         |
 | `FLOOR.PRECISE`       | Math        | `FLOOR.PRECISE(number, [significance])`                                                                        | Google      | `COM.MICROSOFT.FLOOR.PRECISE`    | built                                                         |
@@ -605,7 +639,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `FORECAST.LINEAR`     | Statistical | `FORECAST.LINEAR(x, data_y, data_x)`                                                                           | Google      | `COM.MICROSOFT.FORECAST.LINEAR`  | planned                                                       |
 | `FORMULA`             | OpenFormula |                                                                                                                | OpenFormula | `FORMULA`                        | planned                                                       |
 | `FORMULATEXT`         | Lookup      | `FORMULATEXT(cell)`                                                                                            | Google      | `FORMULA`                        | built                                                         |
-| `FREQUENCY`           | Array       | `FREQUENCY(data, classes)`                                                                                     | Google      | `FREQUENCY`                      | planned                                                       |
+| `FREQUENCY`           | Array       | `FREQUENCY(data, classes)`                                                                                     | Google      | `FREQUENCY`                      | built                                                         |
 | `FTEST`               | Statistical | `FTEST(range1, range2)`                                                                                        | Google      | `FTEST`                          | planned                                                       |
 | `FV`                  | Financial   | `FV(rate, number_of_periods, payment_amount, [present_value], [end_or_beginning])`                             | Google      | `FV`                             | built                                                         |
 | `FVSCHEDULE`          | Financial   | `FVSCHEDULE(principal, rate_schedule)`                                                                         | Google      | `FVSCHEDULE`                     | planned                                                       |
@@ -623,7 +657,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `GETPIVOTDATA`        | Lookup      | `GETPIVOTDATA(value_name, any_pivot_table_cell, [original_column, ...], [pivot_item, ...]`                     | Google      | `GETPIVOTDATA`                   | planned                                                       |
 | `GOOGLEFINANCE`       | Google      | `GOOGLEFINANCE(ticker, [attribute], [start_date], [end_date\|num_days], [interval])`                           | Google      | S5                               | left out (C3)                                                 |
 | `GOOGLETRANSLATE`     | Google      | `GOOGLETRANSLATE(text, [source_language], [target_language])`                                                  | Google      | S5                               | left out (C3)                                                 |
-| `GROWTH`              | Array       | `GROWTH(known_data_y, [known_data_x], [new_data_x], [b])`                                                      | Google      | `GROWTH`                         | planned                                                       |
+| `GROWTH`              | Array       | `GROWTH(known_data_y, [known_data_x], [new_data_x], [b])`                                                      | Google      | `GROWTH`                         | built                                                         |
 | `GT`                  | Operator    | `GT(value1, value2)`                                                                                           | Google      | S5                               | built                                                         |
 | `GTE`                 | Operator    | `GTE(value1, value2)`                                                                                          | Google      | S5                               | built                                                         |
 | `HARMEAN`             | Statistical | `HARMEAN(value1, value2)`                                                                                      | Google      | `HARMEAN`                        | planned                                                       |
@@ -632,7 +666,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `HEX2OCT`             | Engineering | `HEX2OCT(signed_hexadecimal_number, significant_digits)`                                                       | Google      | `HEX2OCT`                        | planned                                                       |
 | `HLOOKUP`             | Lookup      | `HLOOKUP(search_key, range, index, [is_sorted])`                                                               | Google      | `HLOOKUP`                        | built                                                         |
 | `HOUR`                | Date        | `HOUR(time)`                                                                                                   | Google      | `HOUR`                           | built                                                         |
-| `HSTACK`              | Array       | `HSTACK(range1; [range2, …])`                                                                                  | Google      | `COM.MICROSOFT.HSTACK`           | planned                                                       |
+| `HSTACK`              | Array       | `HSTACK(range1; [range2, …])`                                                                                  | Google      | `COM.MICROSOFT.HSTACK`           | built                                                         |
 | `HYPERLINK`           | Web         | `HYPERLINK(url, [link_label])`                                                                                 | Google      | `HYPERLINK`                      | built                                                         |
 | `HYPGEOM.DIST`        | Statistical | `HYPGEOM.DIST(num_successes, num_draws, successes_in_pop, pop_size)`                                           | Google      | `COM.MICROSOFT.HYPGEOM.DIST`     | planned                                                       |
 | `HYPGEOMDIST`         | Statistical | `HYPGEOMDIST(num_successes, num_draws, successes_in_pop, pop_size)`                                            | Google      | `HYPGEOMDIST`                    | planned                                                       |
@@ -720,11 +754,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `LEN`                 | Text        | `LEN(text)`                                                                                                    | Google      | `LEN`                            | built                                                         |
 | `LENB`                | Text        | `LENB(string)`                                                                                                 | Google      | `LENB`                           | built                                                         |
 | `LET`                 | Logical     | `LET(name1, value_expression1, [name2, …], [value_expression2, …], formula_expression )`                       | Google      | `COM.MICROSOFT.LET`              | planned                                                       |
-| `LINEST`              | Array       | `LINEST(known_data_y, [known_data_x], [calculate_b], [verbose])`                                               | Google      | `LINEST`                         | planned                                                       |
+| `LINEST`              | Array       | `LINEST(known_data_y, [known_data_x], [calculate_b], [verbose])`                                               | Google      | `LINEST`                         | built                                                         |
 | `LN`                  | Math        | `LN(value)`                                                                                                    | Google      | `LN`                             | built                                                         |
 | `LOG`                 | Math        | `LOG(value, base)`                                                                                             | Google      | `LOG`                            | built                                                         |
 | `LOG10`               | Math        | `LOG10(value)`                                                                                                 | Google      | `LOG10`                          | built                                                         |
-| `LOGEST`              | Array       | `LOGEST(known_data_y, [known_data_x], [b], [verbose])`                                                         | Google      | `LOGEST`                         | planned                                                       |
+| `LOGEST`              | Array       | `LOGEST(known_data_y, [known_data_x], [b], [verbose])`                                                         | Google      | `LOGEST`                         | built                                                         |
 | `LOGINV`              | Statistical | `LOGINV(x, mean, standard_deviation)`                                                                          | Google      | `LOGINV`                         | planned                                                       |
 | `LOGNORM.DIST`        | Statistical | `LOGNORM.DIST(x, mean, standard_deviation)`                                                                    | Google      | `COM.MICROSOFT.LOGNORM.DIST`     | planned                                                       |
 | `LOGNORM.INV`         | Statistical | `LOGNORM.INV(x, mean, standard_deviation)`                                                                     | Google      | `COM.MICROSOFT.LOGNORM.INV`      | planned                                                       |
@@ -740,7 +774,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `MAX`                 | Statistical | `MAX(value1, [value2, ...])`                                                                                   | Google      | `MAX`                            | built                                                         |
 | `MAXA`                | Statistical | `MAXA(value1, value2)`                                                                                         | Google      | `MAXA`                           | planned                                                       |
 | `MAXIFS`              | Statistical | `MAXIFS(range, criteria_range1, criterion1, [criteria_range2, criterion2], …)`                                 | Google      | `COM.MICROSOFT.MAXIFS`           | built                                                         |
-| `MDETERM`             | Array       | `MDETERM(square_matrix)`                                                                                       | Google      | `MDETERM`                        | planned                                                       |
+| `MDETERM`             | Array       | `MDETERM(square_matrix)`                                                                                       | Google      | `MDETERM`                        | built                                                         |
 | `MDURATION`           | Financial   | `MDURATION(settlement, maturity, rate, yield, frequency, [day_count_convention])`                              | Google      | `MDURATION`                      | planned                                                       |
 | `MEDIAN`              | Statistical | `MEDIAN(value1, [value2, ...])`                                                                                | Google      | `MEDIAN`                         | built                                                         |
 | `MID`                 | Text        | `MID(string, starting_at, extract_length)`                                                                     | Google      | `MID`                            | built                                                         |
@@ -750,9 +784,9 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `MINIFS`              | Statistical | `MINIFS(range, criteria_range1, criterion1, [criteria_range2, criterion2], …)`                                 | Google      | `COM.MICROSOFT.MINIFS`           | built                                                         |
 | `MINUS`               | Operator    | `MINUS(value1, value2)`                                                                                        | Google      | S5                               | built                                                         |
 | `MINUTE`              | Date        | `MINUTE(time)`                                                                                                 | Google      | `MINUTE`                         | built                                                         |
-| `MINVERSE`            | Array       | `MINVERSE(square_matrix)`                                                                                      | Google      | `MINVERSE`                       | planned                                                       |
+| `MINVERSE`            | Array       | `MINVERSE(square_matrix)`                                                                                      | Google      | `MINVERSE`                       | built                                                         |
 | `MIRR`                | Financial   | `MIRR(cashflow_amounts, financing_rate, reinvestment_return_rate)`                                             | Google      | `MIRR`                           | planned                                                       |
-| `MMULT`               | Array       | `MMULT(matrix1, matrix2)`                                                                                      | Google      | `MMULT`                          | planned                                                       |
+| `MMULT`               | Array       | `MMULT(matrix1, matrix2)`                                                                                      | Google      | `MMULT`                          | built                                                         |
 | `MOD`                 | Math        | `MOD(dividend, divisor)`                                                                                       | Google      | `MOD`                            | built                                                         |
 | `MODE`                | Statistical | `MODE(value1, [value2, ...])`                                                                                  | Google      | `MODE`                           | built                                                         |
 | `MODE.MULT`           | Statistical | `MODE.MULT(value1, value2)`                                                                                    | Google      | `COM.MICROSOFT.MODE.MULT`        | planned                                                       |
@@ -870,7 +904,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `SLOPE`               | Statistical | `SLOPE(data_y, data_x)`                                                                                        | Google      | `SLOPE`                          | planned                                                       |
 | `SMALL`               | Statistical | `SMALL(data, n)`                                                                                               | Google      | `SMALL`                          | built                                                         |
 | `SORT`                | Filter      | `SORT(range, sort_column, is_ascending, [sort_column2], [is_ascending2])`                                      | Google      | `COM.MICROSOFT.SORT`             | built                                                         |
-| `SORTBY`              | Arrays      |                                                                                                                | OpenFormula | `COM.MICROSOFT.SORTBY`           | built                                                         |
+| `SORTBY`              | Array       |                                                                                                                | OpenFormula | `COM.MICROSOFT.SORTBY`           | built                                                         |
 | `SORTN`               | Filter      | `SORTN(range, [n], [display_ties_mode], [sort_column1, is_ascending1], ...)`                                   | Google      | S5                               | built                                                         |
 | `SPARKLINE`           | Google      | `SPARKLINE(data, [options])`                                                                                   | Google      | S5                               | planned                                                       |
 | `SPLIT`               | Text        | `SPLIT(text, delimiter, [split_by_each], [remove_empty_text])`                                                 | Google      | S5                               | built                                                         |
@@ -891,9 +925,9 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `SUMIFS`              | Math        | `SUMIFS(sum_range, criteria_range1, criterion1, [criteria_range2, criterion2, ...])`                           | Google      | `SUMIFS`                         | built                                                         |
 | `SUMPRODUCT`          | Array       | `SUMPRODUCT(array1, [array2, ...])`                                                                            | Google      | `SUMPRODUCT`                     | built                                                         |
 | `SUMSQ`               | Math        | `SUMSQ(value1, [value2, ...])`                                                                                 | Google      | `SUMSQ`                          | built                                                         |
-| `SUMX2MY2`            | Array       | `SUMX2MY2(array_x, array_y)`                                                                                   | Google      | `SUMX2MY2`                       | planned                                                       |
-| `SUMX2PY2`            | Array       | `SUMX2PY2(array_x, array_y)`                                                                                   | Google      | `SUMX2PY2`                       | planned                                                       |
-| `SUMXMY2`             | Array       | `SUMXMY2(array_x, array_y)`                                                                                    | Google      | `SUMXMY2`                        | planned                                                       |
+| `SUMX2MY2`            | Array       | `SUMX2MY2(array_x, array_y)`                                                                                   | Google      | `SUMX2MY2`                       | built                                                         |
+| `SUMX2PY2`            | Array       | `SUMX2PY2(array_x, array_y)`                                                                                   | Google      | `SUMX2PY2`                       | built                                                         |
+| `SUMXMY2`             | Array       | `SUMXMY2(array_x, array_y)`                                                                                    | Google      | `SUMXMY2`                        | built                                                         |
 | `SWITCH`              | Logical     | `SWITCH(expression, case1, value1, [default or case2, value2], …)`                                             | Google      | `COM.MICROSOFT.SWITCH`           | built                                                         |
 | `SYD`                 | Financial   | `SYD(cost, salvage, life, period)`                                                                             | Google      | `SYD`                            | planned                                                       |
 | `T`                   | Text        | `T(value)`                                                                                                     | Google      | `T`                              | built                                                         |
@@ -914,16 +948,16 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `TIME`                | Date        | `TIME(hour, minute, second)`                                                                                   | Google      | `TIME`                           | built                                                         |
 | `TIMEVALUE`           | Date        | `TIMEVALUE(time_string)`                                                                                       | Google      | `TIMEVALUE`                      | built                                                         |
 | `TINV`                | Statistical | `TINV(probability, degrees_freedom)`                                                                           | Google      | `TINV`                           | planned                                                       |
-| `TOCOL`               | Array       | `TOCOL(array_or_range, [ignore], [scan_by_column])`                                                            | Google      | `COM.MICROSOFT.TOCOL`            | planned                                                       |
+| `TOCOL`               | Array       | `TOCOL(array_or_range, [ignore], [scan_by_column])`                                                            | Google      | `COM.MICROSOFT.TOCOL`            | built                                                         |
 | `TODAY`               | Date        | `TODAY()`                                                                                                      | Google      | `TODAY`                          | built                                                         |
-| `TOROW`               | Array       | `TOROW(array_or_range, [ignore], [scan_by_column])`                                                            | Google      | `COM.MICROSOFT.TOROW`            | planned                                                       |
+| `TOROW`               | Array       | `TOROW(array_or_range, [ignore], [scan_by_column])`                                                            | Google      | `COM.MICROSOFT.TOROW`            | built                                                         |
 | `TO_DATE`             | Parser      | `TO_DATE(value)`                                                                                               | Google      | S5                               | planned                                                       |
 | `TO_DOLLARS`          | Parser      | `TO_DOLLARS(value)`                                                                                            | Google      | S5                               | planned                                                       |
 | `TO_PERCENT`          | Parser      | `TO_PERCENT(value)`                                                                                            | Google      | S5                               | planned                                                       |
 | `TO_PURE_NUMBER`      | Parser      | `TO_PURE_NUMBER(value)`                                                                                        | Google      | S5                               | planned                                                       |
 | `TO_TEXT`             | Parser      | `TO_TEXT(value)`                                                                                               | Google      | S5                               | planned                                                       |
 | `TRANSPOSE`           | Array       | `TRANSPOSE(array_or_range)`                                                                                    | Google      | `TRANSPOSE`                      | built                                                         |
-| `TREND`               | Array       | `TREND(known_data_y, [known_data_x], [new_data_x], [b])`                                                       | Google      | `TREND`                          | planned                                                       |
+| `TREND`               | Array       | `TREND(known_data_y, [known_data_x], [new_data_x], [b])`                                                       | Google      | `TREND`                          | built                                                         |
 | `TRIM`                | Text        | `TRIM(text)`                                                                                                   | Google      | `TRIM`                           | built                                                         |
 | `TRIMMEAN`            | Statistical | `TRIMMEAN(data, exclude_proportion)`                                                                           | Google      | `TRIMMEAN`                       | planned                                                       |
 | `TRUE`                | Logical     | `TRUE()`                                                                                                       | Google      | `TRUE`                           | built                                                         |
@@ -946,15 +980,15 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `VARPA`               | Statistical | `VARPA(value1, value2,...)`                                                                                    | Google      | `VARPA`                          | planned                                                       |
 | `VDB`                 | Financial   | `VDB(cost, salvage, life, start_period, end_period, [factor], [no_switch])`                                    | Google      | `VDB`                            | planned                                                       |
 | `VLOOKUP`             | Lookup      | `VLOOKUP(search_key, range, index, [is_sorted])`                                                               | Google      | `VLOOKUP`                        | built                                                         |
-| `VSTACK`              | Array       | `VSTACK(range1; [range2, …])`                                                                                  | Google      | `COM.MICROSOFT.VSTACK`           | planned                                                       |
+| `VSTACK`              | Array       | `VSTACK(range1; [range2, …])`                                                                                  | Google      | `COM.MICROSOFT.VSTACK`           | built                                                         |
 | `WEEKDAY`             | Date        | `WEEKDAY(date, [type])`                                                                                        | Google      | `WEEKDAY`                        | built                                                         |
 | `WEEKNUM`             | Date        | `WEEKNUM(date, [type])`                                                                                        | Google      | `WEEKNUM`                        | built                                                         |
 | `WEIBULL`             | Statistical | `WEIBULL(x, shape, scale, cumulative)`                                                                         | Google      | `WEIBULL`                        | planned                                                       |
 | `WEIBULL.DIST`        | Statistical | `WEIBULL.DIST(x, shape, scale, cumulative)`                                                                    | Google      | `COM.MICROSOFT.WEIBULL.DIST`     | planned                                                       |
 | `WORKDAY`             | Date        | `WORKDAY(start_date, num_days, [holidays])`                                                                    | Google      | `WORKDAY`                        | built                                                         |
 | `WORKDAY.INTL`        | Date        | `WORKDAY.INTL(start_date, num_days, [weekend], [holidays])`                                                    | Google      | `COM.MICROSOFT.WORKDAY.INTL`     | built                                                         |
-| `WRAPCOLS`            | Array       | `WRAPCOLS(range, wrap_count, [pad_with])`                                                                      | Google      | `COM.MICROSOFT.WRAPCOLS`         | planned                                                       |
-| `WRAPROWS`            | Array       | `WRAPROWS(range, wrap_count, [pad_with])`                                                                      | Google      | `COM.MICROSOFT.WRAPROWS`         | planned                                                       |
+| `WRAPCOLS`            | Array       | `WRAPCOLS(range, wrap_count, [pad_with])`                                                                      | Google      | `COM.MICROSOFT.WRAPCOLS`         | built                                                         |
+| `WRAPROWS`            | Array       | `WRAPROWS(range, wrap_count, [pad_with])`                                                                      | Google      | `COM.MICROSOFT.WRAPROWS`         | built                                                         |
 | `XIRR`                | Financial   | `XIRR(cashflow_amounts, cashflow_dates, [rate_guess])`                                                         | Google      | `XIRR`                           | planned                                                       |
 | `XLOOKUP`             | Lookup      | `XLOOKUP(search_key, lookup_range, result_range, missing_value, [match_mode], [search_mode])`                  | Google      | `COM.MICROSOFT.XLOOKUP`          | built                                                         |
 | `XMATCH`              | Lookup      |                                                                                                                | OpenFormula | `COM.MICROSOFT.XMATCH`           | built                                                         |
@@ -1052,3 +1086,6 @@ The code cites each by its id.
 - **D43** What the byte functions count as two bytes: East Asian wide and full-width characters (UAX #11) (default).
 - **D44** DOLLAR's currency: The locale's region's, US dollars for a region not in LiveDoc's table (default).
 - **D45** COUNTUNIQUE's sameness: A value's type and its text, case kept, as UNIQUE compares (default).
+- **D46** FREQUENCY with no class a number: Every value counted in one row, as Excel documents (default).
+- **D47** LINEST and its kin over collinear x values: `#NUM!`, no single fit (default).
+- **D48** The statistics of an exact fit: Errors 0, F `#N/A`, as LibreOffice gives them (default).
