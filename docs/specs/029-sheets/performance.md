@@ -93,7 +93,7 @@ Measured in Node, whose pointers are 8 bytes; a browser's are 4, so a page holds
 held as growth, ten times the cells under thirty times the time, as coverage on a CI runner bends an absolute budget.
 
 `packages/sheets/src/engine/perf.test.ts` holds a 50,000-cell sheet's recalculation by the work it does, everywhere: each
-formula worked out once, a change working out again only what reads it, and the change's time against the full
+formula worked out once, a change working out again only what reads it (each link of a 5,000-cell chain once), and the change's time against the full
 workout's in the same run; its absolute CPU budgets hold only uninstrumented, as coverage slows the engine eightfold.
 
 The engine's own values and dependencies are measured apart, and come down with the recalculation engine

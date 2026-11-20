@@ -28,6 +28,7 @@ import { Dependencies } from './dependencies';
 import { evaluate } from './evaluate';
 import { deref } from '../formula/fn';
 import type { Frame, RangeRef } from './frame';
+import { formulaPrecedents } from './precedents';
 import { maySpill } from './spill-shape';
 
 type WorkbookOptions = {
@@ -188,7 +189,11 @@ export class Workbook {
   value(sheetId: string, r: number, c: number): Value {
     for (;;) {
       try {
-        if (this.depth === 0) this.startRead();
+        if (this.depth === 0) {
+          this.startRead();
+          const id = this.idAt(sheetId, r, c);
+          if (id) this.settleFirst(id);
+        }
         return scalarCell(this.cellValue(sheetId, r, c, null));
       } catch (e) {
         if (!(e instanceof Deep)) throw e;
@@ -348,6 +353,48 @@ export class Workbook {
     const rowId = sheet?.layout.rows[r];
     const colId = sheet?.layout.cols[c];
     return rowId && colId ? `${sheetId}|${rowId}:${colId}` : null;
+  }
+
+  // Work out a formula's static precedents deepest first, on an explicit stack, each once, so the read that follows
+  // stays shallow however long the chain (formulas.md "Recalculation"). A loop is left to compute, which names it.
+  private settleFirst(id: string): void {
+    if (this.vals.has(id)) return;
+    // Most reads find every precedent worked out already: then nothing is walked.
+    const first = this.precedentsOf(id);
+    if (first.every((x) => this.vals.has(x))) return;
+    const path = [id];
+    const onPath = new Set(path);
+    const left = new Map<string, string[]>();
+    while (path.length > 0) {
+      const top = path[path.length - 1]!;
+      let todo = left.get(top);
+      if (!todo) {
+        todo = (top === id ? first : this.precedentsOf(top)).reverse();
+        left.set(top, todo);
+      }
+      let child: string | undefined;
+      while (todo.length > 0 && child === undefined) {
+        const next = todo.pop()!;
+        if (!this.vals.has(next) && !onPath.has(next) && !this.computing.has(next)) child = next;
+      }
+      if (child !== undefined) {
+        path.push(child);
+        onPath.add(child);
+        continue;
+      }
+      path.pop();
+      onPath.delete(top);
+      left.delete(top);
+      if (!this.vals.has(top)) this.compute(top);
+    }
+  }
+
+  private precedentsOf(id: string): string[] {
+    const bar = id.indexOf('|');
+    const sheetId = id.slice(0, bar);
+    const input = this.sheets.get(sheetId)?.cells.get(id.slice(bar + 1))?.input;
+    if (!input || !('f' in input)) return [];
+    return formulaPrecedents(input.f, sheetId, (s) => this.sheets.get(s));
   }
 
   private settle(id: string): void {

@@ -105,10 +105,9 @@ describe('performance', () => {
       });
     });
     expect(after).toBe(10_001);
-    // E5000 to E10000 read C5000 down the chain, and nothing else is worked out again. A read past DEPTH_MAX (250)
-    // settles the deepest cell and starts again, so each link of a chain that deep is begun twice: 10,001 for 5,001
-    // (the recalculation engine of Phase 6 replaces this restart).
-    expect(changeWork).toBe(2 * 5_001 - 1);
+    // E5000 to E10000 read C5000 down the chain, and nothing else is worked out again: the read settles the chain
+    // deepest first, so each link is worked out once (formulas.md "Recalculation").
+    expect(changeWork).toBe(5_001);
 
     // A change nothing reads.
     const lone = cellKey('r100', 'c1');
