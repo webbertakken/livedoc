@@ -6,13 +6,16 @@ import type { Command } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficeFontSize } from '@/components/office/OfficeFontSizeField';
+import type { OfficeFontFamily } from '@/components/office/OfficeFontMenu';
 import { track } from '@/lib/telemetry';
 import { readDomSelection } from './text-document-dom-selection';
 import {
   capitalise,
   isToggleOn,
+  setTextFont,
   setTextSize,
   stepTextSize,
+  textFontOf,
   textSizeOf,
   textValuesOf,
   toggleText,
@@ -33,16 +36,17 @@ export const TEXT_DOCUMENT_FORMAT_TELEMETRY = {
   'size-increase': 'Size',
   'size-decrease': 'Size',
   'font-size': 'Size',
+  font: 'Font',
   lowercase: 'Lowercase',
   uppercase: 'Uppercase',
   'title-case': 'TitleCase',
 } as const;
 type FormatAction = keyof typeof TEXT_DOCUMENT_FORMAT_TELEMETRY;
 
-/** The menu items bound here (the font size is the toolbar's field, not an item). */
+/** The menu items bound here (the font and its size are the toolbar's own controls, not items). */
 export const TEXT_DOCUMENT_FORMAT_ITEMS = (
   Object.keys(TEXT_DOCUMENT_FORMAT_TELEMETRY) as FormatAction[]
-).filter((id) => id !== 'font-size');
+).filter((id) => id !== 'font-size' && id !== 'font');
 
 const TOGGLES: Partial<Record<FormatAction, TextToggle>> = {
   bold: 'bold',
@@ -56,8 +60,12 @@ export function textDocumentFormatActions(
   view: EditorView | null,
   readFormatting: () => TextFormatting,
   { canEdit }: { canEdit: boolean },
-): { actions: OfficeActions; fontSize: OfficeFontSize | null } {
-  if (!view || !canEdit) return { actions: {}, fontSize: null };
+): {
+  actions: OfficeActions;
+  fontSize: OfficeFontSize | null;
+  fontFamily: OfficeFontFamily | null;
+} {
+  if (!view || !canEdit) return { actions: {}, fontSize: null, fontFamily: null };
   const run = (id: FormatAction, command: (f: TextFormatting) => Command) => {
     if (view.isDestroyed) return;
     readDomSelection(view);
@@ -93,5 +101,9 @@ export function textDocumentFormatActions(
     read: () => (view.isDestroyed ? null : textSizeOf(view.state, readFormatting())),
     set: (pt) => run('font-size', (f) => setTextSize(f, pt)),
   };
-  return { actions, fontSize };
+  const fontFamily: OfficeFontFamily = {
+    read: () => (view.isDestroyed ? null : textFontOf(view.state, readFormatting())),
+    set: (family) => run('font', (f) => setTextFont(f, family)),
+  };
+  return { actions, fontSize, fontFamily };
 }

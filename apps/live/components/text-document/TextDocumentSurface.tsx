@@ -343,6 +343,7 @@ export function TextDocumentSurface({
         saveStatus={canEdit ? saveStatus : null}
         zoom={zoom}
         fontSize={formatting.fontSize}
+        fontFamily={formatting.fontFamily}
         refresh={changes.subscribeCaret}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false

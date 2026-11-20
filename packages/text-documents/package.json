@@ -19,6 +19,7 @@
     "validate:files": "bash scripts/fetch-office-schemas.sh >/dev/null && vitest run --config vitest.validate.config.ts"
   },
   "dependencies": {
+    "@livedoc/document": "workspace:*",
     "@livedoc/office-packages": "workspace:*",
     "yjs": "^13.6.33"
   },

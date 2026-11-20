@@ -18,6 +18,8 @@ export type OfficeItem = {
   keywords?: readonly string[];
   // An on/off item, or one of a set: drawn with a check.
   checkable?: 'checkbox' | 'radio';
+  // A CSS font-family its label is drawn in (a font menu draws each family in its face).
+  face?: string;
 };
 
 export type OfficeSubmenu = {

@@ -37,8 +37,9 @@ reach a deployed artefact, and nothing else.
   one entry of the reviewed **embedded-works table**, which names the libraries inside it with their
   own licence texts: XNNPACK and its helpers plus the Emscripten runtime inside the TensorFlow.js
   WASM backend, ONNX Runtime's third-party notices inside its WASM, libwebp inside `@jsquash/webp`,
-  resvg and tiny-skia inside `@resvg/resvg-wasm`, the Inter font inside the mcp worker, and the Caveat
-  subset the marketing hero writes in. The same
+  resvg and tiny-skia inside `@resvg/resvg-wasm`, the Inter font inside the mcp worker, the Caveat
+  subset the marketing hero writes in, and the document fonts the editor serves from their Fontsource
+  packages (`document-font-works.ts`, one row and licence text per family). The same
   table covers material vendored into our own source (Lucide and Feather icon geometry, draw.io's
   view geometry ported into the draw.io importer), triggered by the first-party source file that
   carries it being bundled.

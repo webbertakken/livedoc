@@ -89,6 +89,12 @@ export const DOCUMENT_FONTS: readonly DocumentFont[] = [
   named('Verdana', 'swiss', undefined, { menu: true }),
 ];
 
+/**
+ * The name LiveDoc's own faces of a served family go by in the page, so the page never mixes them with a face of the
+ * same name from elsewhere (the canvas's Google Fonts, a computer's own copy).
+ */
+export const servedFamily = (name: string): string => `LiveDoc ${name}`;
+
 /** The family a document draws in when it names none, or one the catalogue does not know (Google Docs' default). */
 export const DOCUMENT_DEFAULT_FONT = 'Arial';
 
@@ -113,16 +119,17 @@ export const DocumentFonts = {
     return font.served ? font.name : font.standIn;
   },
   /**
-   * The CSS stack text in this family draws with: the family itself (a computer that has it draws it), its stand-in,
-   * its generic family. A family the catalogue does not know falls back to the default family's.
+   * The CSS stack text in this family draws with: a served family in LiveDoc's own faces; another family itself (a
+   * computer that has it draws it), then its stand-in's faces; then the generic family. A family the catalogue does not
+   * know falls back to the default family's.
    */
   stack: (name: string): string => {
     const font = DocumentFonts.find(name);
+    if (font?.served) return `${quoted(servedFamily(font.name))}, ${CSS_GENERIC[font.generic]}`;
     const fallback = font ?? DocumentFonts.find(DOCUMENT_DEFAULT_FONT)!;
     const families = [quoted(name.trim() || DOCUMENT_DEFAULT_FONT)];
-    const standIn = fallback.served ? undefined : fallback.standIn;
     if (!font) families.push(quoted(fallback.name));
-    if (standIn) families.push(quoted(standIn));
+    if (fallback.standIn) families.push(quoted(servedFamily(fallback.standIn)));
     families.push(CSS_GENERIC[fallback.generic]);
     return families.join(', ');
   },

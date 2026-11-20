@@ -2,7 +2,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DOCUMENT_FONTS, type DocumentFont } from '@livedoc/document';
+import { DOCUMENT_FONTS, servedFamily, type DocumentFont } from '@livedoc/document';
 import { DOCUMENT_FONT_FILES, documentFontFaceCss } from './document-font-faces';
 
 const APP = join(import.meta.dirname, '../..');
@@ -37,13 +37,14 @@ describe('documentFontFaceCss', () => {
     served: { id: 'demo', styles: ['400-normal'] },
   };
 
-  it('keeps the Latin subsets, each with its range, as WOFF2 under the catalogue name', () => {
+  it('keeps the Latin subsets, each with its range, as WOFF2 under the served name', () => {
     const css = documentFontFaceCss(
       [demo, { ...demo, name: 'Arial', served: undefined }],
+      servedFamily,
       () => SHEET,
     );
     expect(css.match(/@font-face/g)).toHaveLength(2);
-    expect(css).toContain('font-family: "Demo Sans";');
+    expect(css).toContain('font-family: "LiveDoc Demo Sans";');
     expect(css).toContain(
       `url("${DOCUMENT_FONT_FILES}/demo/files/demo-latin-ext-400-normal.woff2")`,
     );
@@ -59,13 +60,14 @@ describe('documentFontFaceCss', () => {
     };
     const css = documentFontFaceCss(
       [{ ...demo, served: { id: 'demo', styles: ['700-italic'] } }],
+      servedFamily,
       read,
     );
     expect(css).toContain('font-style: italic;\n  font-weight: 700;');
   });
 
   it('is the committed stylesheet, every file it names installed', () => {
-    const css = documentFontFaceCss(DOCUMENT_FONTS, readPackage);
+    const css = documentFontFaceCss(DOCUMENT_FONTS, servedFamily, readPackage);
     expect(readFileSync(join(APP, 'app/document-fonts.css'), 'utf8')).toBe(css);
     for (const [, url] of css.matchAll(/url\("([^"]+)"\)/g))
       expect(existsSync(join(APP, 'app', url!)), url).toBe(true);

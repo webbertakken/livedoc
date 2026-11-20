@@ -2,11 +2,11 @@
 // LiveDoc"). Run: pnpm fonts:document
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { DOCUMENT_FONTS } from '../../../packages/document/src/document-fonts.ts';
+import { DOCUMENT_FONTS, servedFamily } from '../../../packages/document/src/document-fonts.ts';
 import { documentFontFaceCss } from '../lib/document-fonts/document-font-faces.ts';
 
 const app = fileURLToPath(new URL('../', import.meta.url));
-const css = documentFontFaceCss(DOCUMENT_FONTS, (path) =>
+const css = documentFontFaceCss(DOCUMENT_FONTS, servedFamily, (path) =>
   readFileSync(`${app}node_modules/@fontsource/${path}`, 'utf8'),
 );
 writeFileSync(`${app}app/document-fonts.css`, css);

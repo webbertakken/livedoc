@@ -111,7 +111,7 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
     id: 'font',
     label: 'Font',
     controls: [
-      text('font', 'Font', 'Arial', 96),
+      control('font', 'Font', 'edit', { kind: 'font' }, { built: true }),
       icon('size-decrease', 'Decrease font size', 'edit', lucideMinus, {
         shortcut: 'decrease-font-size',
         built: true,

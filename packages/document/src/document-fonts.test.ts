@@ -34,20 +34,26 @@ describe('DOCUMENT_FONTS', () => {
 });
 
 describe('DocumentFonts.stack', () => {
-  it('draws a family itself, then its stand-in, then its generic family', () => {
-    expect(DocumentFonts.stack('Arial')).toBe('"Arial", "Arimo", sans-serif');
-    expect(DocumentFonts.stack('Courier New')).toBe('"Courier New", "Cousine", monospace');
-    expect(DocumentFonts.stack('Lora')).toBe('"Lora", serif');
+  it('draws a served family in its own faces, another itself then its stand-in, then the generic family', () => {
+    expect(DocumentFonts.stack('Arial')).toBe('"Arial", "LiveDoc Arimo", sans-serif');
+    expect(DocumentFonts.stack('Courier New')).toBe('"Courier New", "LiveDoc Cousine", monospace');
+    expect(DocumentFonts.stack('lora')).toBe('"LiveDoc Lora", serif');
     expect(DocumentFonts.stack('Verdana')).toBe('"Verdana", sans-serif');
   });
 
   it('falls back to the default family for one it does not know, or none', () => {
-    expect(DocumentFonts.stack('Wingdings')).toBe('"Wingdings", "Arial", "Arimo", sans-serif');
-    expect(DocumentFonts.stack('  ')).toBe(`"${DOCUMENT_DEFAULT_FONT}", "Arial", "Arimo", sans-serif`);
+    expect(DocumentFonts.stack('Wingdings')).toBe(
+      '"Wingdings", "Arial", "LiveDoc Arimo", sans-serif',
+    );
+    expect(DocumentFonts.stack('  ')).toBe(
+      `"${DOCUMENT_DEFAULT_FONT}", "Arial", "LiveDoc Arimo", sans-serif`,
+    );
   });
 
   it('keeps quotes and backslashes out of the stack', () => {
-    expect(DocumentFonts.stack('Odd"Font\\')).toBe('"OddFont", "Arial", "Arimo", sans-serif');
+    expect(DocumentFonts.stack('Odd"Font\\')).toBe(
+      '"OddFont", "Arial", "LiveDoc Arimo", sans-serif',
+    );
   });
 });
 

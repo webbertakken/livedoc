@@ -7,8 +7,10 @@ import { textDocumentSchema as schema } from './text-document-schema';
 import {
   capitalise,
   isToggleOn,
+  setTextFont,
   setTextSize,
   stepTextSize,
+  textFontOf,
   textSizeOf,
   toggleText,
   toggleVertical,
@@ -197,5 +199,21 @@ describe('capitalise', () => {
   it('changes nothing with nothing selected, or when the case already holds', () => {
     expect(capitalise('uppercase')(stateOf(p([text('abc')]), 1))).toBe(false);
     expect(capitalise('uppercase')(stateOf(p([text('ABC')]), 0, 3))).toBe(false);
+  });
+});
+
+describe('text font', () => {
+  it('reads the default family, a run of its own, and blank when mixed', () => {
+    expect(textFontOf(stateOf(p([text('a')]), 0, 1), formatting)).toBe('Arial');
+    const mixed = stateOf(p([text('a', mark('font', 'Lora')), text('b')]), 0, 2);
+    expect(textFontOf(mixed, formatting)).toBeNull();
+  });
+
+  it('sets one family, none stored where the styles give it', () => {
+    const state = stateOf(p([text('ab')]), 0, 2);
+    const lora = run(state, setTextFont(formatting, 'Lora'));
+    expect(runs(lora)).toEqual([['ab', { font: 'Lora' }]]);
+    expect(textFontOf(lora, formatting)).toBe('Lora');
+    expect(runs(run(lora, setTextFont(formatting, 'Arial')))).toEqual([['ab', {}]]);
   });
 });

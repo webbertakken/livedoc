@@ -1,6 +1,7 @@
 // Writing an ODF text document (standard-mapping.md): the model into `content.xml`, `styles.xml`, `meta.xml` and
 // `settings.xml` of a package, or one flat file, with kept content back where it stood. Deterministic: the same
 // document writes the same bytes.
+import { DocumentFonts } from '@livedoc/document';
 import {
   escapeXmlAttribute,
   keptXmlWithin,
@@ -96,8 +97,10 @@ class OdfWriter {
     if (props.font === undefined || this.faces.has(props.font)) return;
     this.faces.add(props.font);
     const family = /\s/.test(props.font) ? `'${props.font}'` : props.font;
+    // Its generic family and pitch, so a suite without it picks a close fallback (fonts.md "In files").
+    const known = DocumentFonts.find(props.font);
     this.fontFaces.push(
-      `<style:font-face${attr('style:name', props.font)}${attr('svg:font-family', family)}/>`,
+      `<style:font-face${attr('style:name', props.font)}${attr('svg:font-family', family)}${attr('style:font-family-generic', known?.generic)}${attr('style:font-pitch', known?.pitch)}/>`,
     );
   }
 

@@ -1,7 +1,8 @@
 // The served document fonts' faces as one stylesheet (docs/specs/004-interface-design/fonts.md "Served from LiveDoc"):
 // each served family's regular, italic, bold and bold italic, Latin and Latin Extended subsets, WOFF2, from its
 // Fontsource package. Fontsource's own stylesheets carry every subset and a WOFF fallback; this keeps the two subsets,
-// each with its unicode range, so a browser downloads only the files the text uses. Pure: the caller reads the files.
+// each with its unicode range, so a browser downloads only the files the text uses. Each face goes by its served name,
+// so a face of the same name from elsewhere never mixes in. Pure: the caller reads the files.
 import type { DocumentFont, DocumentFontStyle } from '@livedoc/document';
 
 /** The subsets served; Fontsource names each face `<id>-<subset>-<weight>-<style>`. */
@@ -24,6 +25,8 @@ function faceRange(sheet: string, face: string): string | null | undefined {
 /** The stylesheet for these families, from a reader of `<package id>/<file>` in the Fontsource packages. */
 export function documentFontFaceCss(
   fonts: readonly DocumentFont[],
+  // The name a served family's faces go by (`servedFamily`), and a reader of the packages' files.
+  familyOf: (name: string) => string,
   read: (path: string) => string,
 ): string {
   const rules: string[] = [];
@@ -40,7 +43,7 @@ export function documentFontFaceCss(
         rules.push(
           [
             '@font-face {',
-            `  font-family: "${font.name}";`,
+            `  font-family: "${familyOf(font.name)}";`,
             `  font-style: ${slant};`,
             `  font-weight: ${weight};`,
             '  font-display: swap;',

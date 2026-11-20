@@ -209,8 +209,8 @@ apply the resolved stack; `useElementStyle.setFontSelected` and
 
 ## Document fonts
 
-**Status: partly built.** The catalogue, the served core set, substitution and the font menu's list are built; More
-fonts and embedding are specified.
+**Status: partly built.** The catalogue, the served core set, substitution, the font menu and ODF's face declarations
+are built; More fonts, OOXML's font table and embedding are specified.
 
 The fonts of the office kinds ([Text document](../034-text-documents/text-document.md), the spreadsheet of plan 0020),
 apart from the canvas's eleven. The research is [Fonts](../../research/docs-open-standard/fonts.md).
@@ -253,11 +253,17 @@ Fontsource packages, as Liberation is not (default).
 
 ### Substitution
 
-Text draws in the family it names, then its stand-in, then its generic family (`serif`, `sans-serif`, `monospace`,
-`cursive`): a CSS stack per family (`documentFontStack`). The named family comes first so a computer that has it
-(Arial on most systems) draws it; the stand-in has the same metrics, so lines break the same either way. A family the
-catalogue does not know draws in itself, then the default family's stand-in (Arimo). The file keeps the name it
-arrived with; nothing is renamed.
+Text draws through a CSS stack per family (`DocumentFonts.stack`):
+
+- A **served** family draws in LiveDoc's own faces, which the page knows as `LiveDoc <family>` (`servedFamily`), so
+  they never mix with a face of the same name from elsewhere (the canvas's Google Fonts, a computer's own copy).
+- A **named** family draws in itself where the computer has it (Arial on most systems), then in its stand-in's faces;
+  a metric-compatible stand-in breaks lines the same either way.
+- A family the catalogue does not know draws in itself, then as the default family (Arial, then Arimo).
+- Every stack ends in the generic family (`serif`, `sans-serif`, `monospace`, `cursive`).
+
+The file keeps the name it arrived with; nothing is renamed. The writing draws the document's default family and size
+(Google's Arial 11 pt when it names none).
 
 ### The font menu
 

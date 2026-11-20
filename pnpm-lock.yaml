@@ -1879,6 +1879,9 @@ importers:
 
   packages/text-documents:
     dependencies:
+      '@livedoc/document':
+        specifier: workspace:*
+        version: link:../document
       '@livedoc/office-packages':
         specifier: workspace:*
         version: link:../office-packages
