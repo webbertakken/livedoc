@@ -10,6 +10,7 @@ import { readItem } from '../db';
 import { documentPlacesImage } from '../db/image-refs';
 import { answerFormRequest } from '../routes/forms';
 import { fileBugReportInRoom, type BugReportFileOutcome } from '../bug-reports/room-file';
+import { sheetMigrationDry, type SheetMigrationDry } from '../sheets-migration/sheet-migration-dry';
 import type { DocumentEnv } from '../types';
 import { answerDocumentImage } from './document-image-request';
 import {
@@ -71,6 +72,8 @@ export type DocumentRoomRpc = {
     seenUpdatedAt: number,
   ): Promise<boolean>;
   receiveShares(documentId: string, from: string, messages: ShareMessage[]): Promise<ShareAnswer[]>;
+  // The Sheets migration's dry run (docs/specs/029-sheets/migration.md "How it runs"): counts, nothing written.
+  sheetMigrationDry(documentId: string, documentName: string): Promise<SheetMigrationDry>;
 };
 
 export function documentRpc(
@@ -99,5 +102,7 @@ export function documentRpc(
     shareJoined: (documentId, tabId, member, seenUpdatedAt) =>
       recordShareJoin(env, documentId, tabId, member, seenUpdatedAt),
     receiveShares: (documentId, from, messages) => receiveShares(env, documentId, from, messages),
+    sheetMigrationDry: (documentId, documentName) =>
+      sheetMigrationDry(env, documentId, documentName),
   };
 }

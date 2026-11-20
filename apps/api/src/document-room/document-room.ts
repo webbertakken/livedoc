@@ -66,6 +66,7 @@ import type { CreateOutcome, DocumentSeed } from './document-create';
 import type { RouteIdentity } from './document-route';
 import { RoomWake } from './room-wake';
 import { roomIsolate, ServerTiming, withServerTiming } from '../server-timing';
+import type { SheetMigrationDry } from '../sheets-migration/sheet-migration-dry';
 import type { ShareAnswer, ShareMessage, SharedTabCopy } from './tab-shares';
 import {
   newSessionAttachment,
@@ -1317,6 +1318,11 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
     messages: ShareMessage[],
   ): Promise<ShareAnswer[]> {
     return (await this.content.rpc(documentId)).receiveShares(documentId, from, messages);
+  }
+
+  // The Sheets migration's dry run (docs/specs/029-sheets/migration.md "How it runs"): counts only.
+  async sheetMigrationDry(documentId: string, documentName: string): Promise<SheetMigrationDry> {
+    return (await this.content.rpc(documentId)).sheetMigrationDry(documentId, documentName);
   }
 
   // The sweep's move (docs/specs/006-document/document-storage-move.md "The sweep"): the room's move
