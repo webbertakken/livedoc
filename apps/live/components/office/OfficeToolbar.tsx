@@ -2,7 +2,8 @@
 
 // The office shell's toolbar (docs/specs/004-interface-design/office-shell.md "Toolbar"): the kind's groups in a
 // rounded bar, one tab stop with arrow keys between controls, and the controls that do not fit moved, from the right,
-// behind More, which opens them as a second row in the same order.
+// behind More, which opens them as a second row in the same order. On a phone it is one row that scrolls sideways,
+// docked just above the on-screen keyboard while that is up (office-shell.md "Phone and tablet").
 import {
   useLayoutEffect,
   useMemo,
@@ -11,7 +12,15 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { ChevronDownIcon, Glyph, HoverCard, Prims, useClickOutside, useEscape } from '@livedoc/ui';
+import {
+  ChevronDownIcon,
+  Glyph,
+  HoverCard,
+  Prims,
+  useClickOutside,
+  useEscape,
+  useVisualViewportBand,
+} from '@livedoc/ui';
 import { lucideEllipsisVertical } from '@livedoc/icons/lucide';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import type { ShortcutText } from '@/lib/office/shortcut-notation';
@@ -38,11 +47,14 @@ export function OfficeToolbar({
   actions,
   shortcutOf,
   zoom,
+  phone = false,
 }: {
   groups: readonly OfficeToolbarGroup[];
   actions: OfficeActions;
   shortcutOf: (id: string) => ShortcutText | null;
   zoom: OfficeZoom | null;
+  // A phone: every control in one row that scrolls, none behind More.
+  phone?: boolean;
 }) {
   const placed = useMemo<Placed[]>(
     () =>
@@ -53,7 +65,11 @@ export function OfficeToolbar({
   );
   const bar = useRef<HTMLDivElement>(null);
   const widths = useRef(new Map<string, number>());
-  const [fit, setFit] = useState(placed.length);
+  const [measuredFit, setFit] = useState(placed.length);
+  const fit = phone ? placed.length : measuredFit;
+  // The part of the window not under the on-screen keyboard; null while there is none.
+  const band = useVisualViewportBand();
+  const docked = phone && band !== null;
   const [moreOpen, setMoreOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
   const moreBox = useRef<HTMLDivElement>(null);
@@ -63,7 +79,7 @@ export function OfficeToolbar({
   // Each control's width is measured while it is in the bar, and kept: one moved behind More keeps its last width.
   useLayoutEffect(() => {
     const element = bar.current;
-    if (!element) return;
+    if (!element || phone) return;
     const measure = () => {
       // Not laid out (hidden, or no layout at all): nothing to measure, so nothing moves.
       if (element.clientWidth === 0) return;
@@ -87,7 +103,7 @@ export function OfficeToolbar({
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
-  }, [placed]);
+  }, [placed, phone]);
 
   const control = (p: Placed, index: number, row: 'bar' | 'more') => (
     <ControlView
@@ -100,12 +116,11 @@ export function OfficeToolbar({
   );
 
   // One tab stop: Left and Right move between the bar's controls, wrapping; Home and End go to the ends. In the zoom
-  // field Left and Right stay in the text.
+  // field Left and Right move in the text, and on past its first or last character, so every control stays in reach.
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     const keys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
     if (!keys.includes(e.key)) return;
-    if (e.target instanceof HTMLInputElement && (e.key === 'ArrowLeft' || e.key === 'ArrowRight'))
-      return;
+    if (e.target instanceof HTMLInputElement && !leavesField(e.target, e.key)) return;
     const stops = [
       ...e.currentTarget.querySelectorAll<HTMLElement>('[data-office-control]'),
     ].filter((el) => !el.closest('[hidden]'));
@@ -123,7 +138,17 @@ export function OfficeToolbar({
 
   const moved = placed.slice(fit);
   return (
-    <div className="px-4 pt-1.5 pb-2">
+    <div
+      data-office-toolbar-docked={docked || undefined}
+      style={
+        docked ? { top: band.top + band.height, left: band.left, width: band.width } : undefined
+      }
+      className={
+        docked
+          ? 'fixed z-30 -translate-y-full bg-(--office-chrome) px-2 py-1.5'
+          : 'px-4 pt-1.5 pb-2 phone:px-2'
+      }
+    >
       <div
         ref={bar}
         role="toolbar"
@@ -135,7 +160,9 @@ export function OfficeToolbar({
           const index = placed.findIndex((p) => p.control.id === slot?.dataset.controlSlot);
           if (index >= 0 && index < fit) setFocusIndex(index);
         }}
-        className="flex h-10 items-center overflow-hidden rounded-3xl bg-(--office-toolbar) px-2"
+        className={`flex h-10 items-center rounded-3xl bg-(--office-toolbar) px-2 ${
+          phone ? 'overflow-x-auto [scrollbar-width:none]' : 'overflow-hidden'
+        }`}
       >
         {placed.map((p, index) => (
           <Slot key={p.control.id} id={p.control.id} hidden={index >= fit}>
@@ -180,6 +207,14 @@ export function OfficeToolbar({
       ) : null}
     </div>
   );
+}
+
+// Whether a key in a text field moves on to the next control: Left at its start, Right at its end, nothing selected.
+function leavesField(field: HTMLInputElement, key: string): boolean {
+  if (key === 'Home' || key === 'End') return false;
+  const { selectionStart: start, selectionEnd: end, value } = field;
+  if (start === null || start !== end) return false;
+  return key === 'ArrowLeft' ? start === 0 : end === value.length;
 }
 
 function Slot({ id, hidden, children }: { id: string; hidden: boolean; children: ReactNode }) {

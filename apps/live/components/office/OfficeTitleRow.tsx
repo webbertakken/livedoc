@@ -6,7 +6,9 @@
 // surface. Every kind outside the canvas draws this one; its look is the shell's tokens (`office-shell.css`).
 import { useCallback, useMemo, useState, type RefObject } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
-import { Brand, Tooltip } from '@livedoc/ui';
+import { Brand, Tooltip, useMediaQuery } from '@livedoc/ui';
+import { PHONE_MEDIA_QUERY } from '@/lib/responsive';
+import { OfficePhoneMore } from './OfficePhoneMore';
 import { EXPLORER_LANDING_PATH } from '@/lib/explorer-landing';
 import {
   catalogueItems,
@@ -102,6 +104,8 @@ export function OfficeTitleRow({
   contextMenu?: OfficeContextMenuSource | null;
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
+  // A phone (office-shell.md "Phone and tablet"): the toolbar is one scrolling row, the menus live in More.
+  const phone = useMediaQuery(PHONE_MEDIA_QUERY);
   const [finding, setFinding] = useState(false);
   const [showingShortcuts, setShowingShortcuts] = useState(false);
   const [picker, setPicker] = useState<HTMLInputElement | null>(null);
@@ -154,8 +158,8 @@ export function OfficeTitleRow({
   });
   const { openAtCaret } = context;
   const bar = useMemo(
-    () => visibleToolbar(toolbar, level, allActions, zoom !== null),
-    [toolbar, level, allActions, zoom],
+    () => visibleToolbar(toolbar, level, allActions, zoom !== null && !phone),
+    [toolbar, level, allActions, zoom, phone],
   );
   const shortcutOf = useMemo(() => shortcutTextOf(shortcuts, currentOfficePlatform()), [shortcuts]);
 
@@ -199,7 +203,7 @@ export function OfficeTitleRow({
 
   return (
     <header data-region="header" className="office-shell bg-(--office-chrome) text-(--office-ink)">
-      <div className="flex items-start gap-1 pt-2 pr-4 pl-2">
+      <div className="flex items-start gap-1 pt-2 pr-4 pl-2 phone:items-center phone:py-1 phone:pr-1">
         {chrome ? <OfficeMark back={chrome.back} /> : null}
         <div className="relative flex min-w-0 flex-1 flex-col">
           <div className="flex h-[26px] min-w-0 items-center gap-1">
@@ -212,13 +216,14 @@ export function OfficeTitleRow({
               <span
                 role="img"
                 aria-label={formatTitle}
-                className="shrink-0 rounded border border-(--office-line) px-1.5 text-xs font-medium text-(--office-muted)"
+                className="shrink-0 rounded border border-(--office-line) px-1.5 text-xs font-medium text-(--office-muted) phone:hidden"
               >
                 {format}
               </span>
             </Tooltip>
             {chrome?.star ? (
               <OfficeIconButton
+                className="phone:hidden"
                 label={chrome.star.starred ? 'Starred' : 'Star'}
                 pressed={chrome.star.starred}
                 onClick={() => {
@@ -230,7 +235,7 @@ export function OfficeTitleRow({
               </OfficeIconButton>
             ) : null}
             {openMove ? (
-              <OfficeIconButton label="Move" onClick={openMove}>
+              <OfficeIconButton className="phone:hidden" label="Move" onClick={openMove}>
                 <OfficeMoveIcon />
               </OfficeIconButton>
             ) : null}
@@ -241,7 +246,7 @@ export function OfficeTitleRow({
               </p>
             ) : null}
           </div>
-          <div className="-ml-0.5">
+          <div className="-ml-0.5 phone:hidden">
             <OfficeMenuBar
               menus={menus}
               actions={allActions}
@@ -273,9 +278,23 @@ export function OfficeTitleRow({
             <OfficeModeSwitch {...mode} />
           </div>
         ) : null}
+        <div className="self-center">
+          <OfficePhoneMore
+            menus={menus}
+            chrome={chrome}
+            actions={allActions}
+            shortcutOf={shortcutOf}
+          />
+        </div>
       </div>
       {bar.length > 0 ? (
-        <OfficeToolbar groups={bar} actions={allActions} shortcutOf={shortcutOf} zoom={zoom} />
+        <OfficeToolbar
+          groups={bar}
+          actions={allActions}
+          shortcutOf={shortcutOf}
+          zoom={phone ? null : zoom}
+          phone={phone}
+        />
       ) : null}
       {context.at ? (
         <OfficeContextMenu

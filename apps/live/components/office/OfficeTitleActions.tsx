@@ -1,12 +1,18 @@
 'use client';
 
 // The right of the office title row (docs/specs/034-text-documents/editing-surface.md "The title row"): Settings,
-// Share or Make a copy, the people here, and the account at the far right, as Google places its account picture.
+// Share or Make a copy, the people here, and the account at the far right, as Google places its account picture. On a
+// phone Share and Make a copy keep their glyph alone, and the rest moves into More (office-shell.md "Phone and tablet").
 import type { ReactNode } from 'react';
 import { HoverCard } from '@livedoc/ui';
 import { AuthControls } from '@/components/chrome/AuthControls';
 import type { OfficeChrome, OfficePerson } from './office-chrome';
-import { OfficeCopyIcon, OfficeLockIcon, OfficeSettingsIcon } from './office-icons';
+import {
+  OfficeCopyIcon,
+  OfficeLockIcon,
+  OfficeSettingsIcon,
+  OfficeSharedIcon,
+} from './office-icons';
 import { OfficeModeSwitch, type OfficeModeChoice } from './OfficeModeSwitch';
 import { OfficePeople } from './OfficePeople';
 
@@ -15,15 +21,18 @@ export const OFFICE_ICON_BUTTON =
   'relative flex size-8 shrink-0 items-center justify-center rounded-full text-(--office-icon) outline-none touch-target hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:text-(--office-ink)';
 
 const PILL =
-  'flex h-10 shrink-0 items-center gap-2 rounded-full px-5 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2 focus-visible:ring-offset-(--office-chrome) disabled:cursor-wait disabled:opacity-60';
+  'flex h-10 shrink-0 items-center gap-2 rounded-full px-5 phone:size-10 phone:justify-center phone:px-0 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) focus-visible:ring-offset-2 focus-visible:ring-offset-(--office-chrome) disabled:cursor-wait disabled:opacity-60';
 
 export function OfficeIconButton({
   label,
   onClick,
   pressed,
+  className = '',
   children,
 }: {
   label: string;
+  // Where it shows (`phone:hidden`).
+  className?: string;
   onClick: () => void;
   pressed?: boolean;
   children: ReactNode;
@@ -35,7 +44,7 @@ export function OfficeIconButton({
         aria-label={label}
         aria-pressed={pressed}
         onClick={onClick}
-        className={OFFICE_ICON_BUTTON}
+        className={`${OFFICE_ICON_BUTTON} ${className}`}
       >
         {children}
       </button>
@@ -54,8 +63,8 @@ export function OfficeTitleActions({
   mode?: OfficeModeChoice | null;
 }) {
   return (
-    <div className="flex shrink-0 items-center gap-2">
-      <OfficeIconButton label="Settings" onClick={chrome.onOpenSettings}>
+    <div className="flex shrink-0 items-center gap-2 phone:gap-1">
+      <OfficeIconButton className="phone:hidden" label="Settings" onClick={chrome.onOpenSettings}>
         <OfficeSettingsIcon />
       </OfficeIconButton>
       {mode ? <OfficeModeSwitch {...mode} /> : null}
@@ -70,10 +79,17 @@ export function OfficeTitleActions({
             type="button"
             data-office-share=""
             onClick={chrome.share.onOpen}
+            aria-label="Share"
             className={`${PILL} bg-(--office-share) text-(--office-share-ink) hover:brightness-95`}
           >
-            {chrome.share.shareable ? null : <OfficeLockIcon />}
-            Share
+            {chrome.share.shareable ? (
+              <span className="hidden phone:contents">
+                <OfficeSharedIcon />
+              </span>
+            ) : (
+              <OfficeLockIcon />
+            )}
+            <span className="phone:sr-only">Share</span>
           </button>
         </HoverCard>
       ) : chrome.makeCopy ? (
@@ -85,12 +101,16 @@ export function OfficeTitleActions({
             className={`${PILL} border border-(--office-line) text-(--office-ink) hover:bg-(--office-hover)`}
           >
             <OfficeCopyIcon />
-            {chrome.makeCopy.copying ? 'Copying' : 'Make a copy'}
+            <span className="phone:sr-only">
+              {chrome.makeCopy.copying ? 'Copying' : 'Make a copy'}
+            </span>
           </button>
         </HoverCard>
       ) : null}
-      <OfficePeople people={chrome.people} onFollow={onFollow} />
-      <AuthControls onOpenAccount={chrome.onOpenAccount} />
+      <div className="contents phone:hidden">
+        <OfficePeople people={chrome.people} onFollow={onFollow} />
+        <AuthControls onOpenAccount={chrome.onOpenAccount} />
+      </div>
     </div>
   );
 }

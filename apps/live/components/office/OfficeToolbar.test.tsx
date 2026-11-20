@@ -151,3 +151,62 @@ describe('the zoom field', () => {
     expect(onChange).toHaveBeenCalledWith('fit');
   });
 });
+
+// docs/specs/004-interface-design/office-shell.md "Toolbar": a text field of the bar never traps the arrows.
+describe('OfficeToolbar zoom field and the arrows', () => {
+  it('moves in the text, and on past its ends to the next control', () => {
+    setup();
+    const field = screen.getByRole('combobox', { name: 'Zoom' });
+    field.focus();
+    const value = (field as HTMLInputElement).value;
+    (field as HTMLInputElement).setSelectionRange(1, 1);
+    fireEvent.keyDown(field, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(field);
+    (field as HTMLInputElement).setSelectionRange(value.length, value.length);
+    fireEvent.keyDown(field, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Bold' }));
+  });
+});
+
+// docs/specs/004-interface-design/office-shell.md "Phone and tablet".
+describe('OfficeToolbar on a phone', () => {
+  const phone = () =>
+    render(
+      <OfficeToolbar
+        groups={GROUPS}
+        actions={{ undo: { run: vi.fn() }, bold: { run: vi.fn() } }}
+        shortcutOf={shortcutOf}
+        zoom={null}
+        phone
+      />,
+    );
+
+  it('keeps every control in one row that scrolls, with no More', () => {
+    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(40);
+    vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(60);
+    phone();
+    const bar = screen.getByRole('toolbar', { name: 'Toolbar' });
+    expect(within(bar).getByRole('button', { name: 'Bold' }).closest('[hidden]')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'More' })).toBeNull();
+    expect(bar.className).toContain('overflow-x-auto');
+  });
+
+  it('docks just above the on-screen keyboard while it is up', () => {
+    const viewport = Object.assign(new EventTarget(), {
+      height: 400,
+      width: 390,
+      offsetTop: 0,
+      offsetLeft: 0,
+    });
+    vi.stubGlobal('visualViewport', viewport);
+    try {
+      phone();
+      const dock = screen.getByRole('toolbar', { name: 'Toolbar' }).parentElement!;
+      expect(dock.dataset.officeToolbarDocked).toBe('true');
+      expect(dock.style.top).toBe('400px');
+      expect(dock.style.width).toBe('390px');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});

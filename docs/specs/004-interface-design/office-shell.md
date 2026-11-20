@@ -75,7 +75,7 @@ reports. What each part is, its copy and who sees it:
 - The name field is an `input` sized to its text, never wider than the room the right side leaves; the right side
   never shrinks, the name shortens with an ellipsis while not focused.
 - Every icon control is a 32 px round button (44 px on touch) with its name as tooltip and accessible name.
-- On a phone the title row keeps the mark, the name and Share; the rest moves into the kind's phone layout.
+- On a phone the title row is one line and the menus move into More ([Phone and tablet](#phone-and-tablet)).
 
 ## Menu bar
 
@@ -100,7 +100,9 @@ id, the least share level that sees it and its status. A control that runs a men
 binding serves both; a control of its own (the zoom) is bound by its id the same way.
 
 - The WAI-ARIA [toolbar pattern](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/): one tab stop, Left and Right
-  between controls (wrapping), Home and End to the first and last; Down or Enter opens a control's menu.
+  between controls (wrapping), Home and End to the first and last; Down or Enter opens a control's menu. In a text
+  field of the bar (the zoom) Left, Right, Home and End move in its text, and Left at its start or Right at its end
+  moves on to the next control, so every control is in reach.
 - A control's tooltip names it and its shortcut in the platform's notation; a toggle carries `aria-pressed`.
 - A `comingSoon` control is drawn dimmed (`aria-disabled`), its tooltip saying "Coming soon"; a `built` control left
   unbound for the session, or above its level, is not drawn; a group left empty is not drawn, nor its divider.
@@ -166,7 +168,7 @@ and the menu item that opens it. The shell draws the panel's frame; the kind fil
 - Whether a panel is open is per person, remembered in this browser per kind (`livedoc:v2:office-panels`)
   `(default)`, so a person who keeps the outline open finds it open in every document of the kind.
 - The menu item that opens a panel is an on/off check, checked while it is open; choosing it again closes it.
-- Below 600 px a panel covers the pages, full width, over them; its × or Escape closes it.
+- On a phone a panel covers the pages, full width, over them; its × or Escape closes it.
 - Panels appear without sliding: the shell's chrome never animates its layout.
 
 ## Dialogs
@@ -204,6 +206,27 @@ The kind's registry, shown: ⌘/ (Ctrl+/ elsewhere) or Help > Keyboard shortcuts
   announced politely ("12 shortcuts").
 - The list scrolls under the search field, which stays in place; the list is a keyboard stop of its own, so arrow
   keys scroll it.
+
+## Phone and tablet
+
+- **Phone** (LiveDoc's phone: narrower than 640 px, or a touch screen under 500 px tall, as
+  [live app](../007-editor/live-app.md) defines it):
+  - The title row is one line: the mark, the name (shortened with an ellipsis), the save status as its glyph alone, the
+    mode switch as its glyph alone (its mode is its tooltip and accessible name), Share (or Make a copy) as a round
+    glyph button, and **More** (⋮).
+  - More opens a menu holding the kind's menus in the menu bar's order, each a submenu, then **Star** (or
+    **Starred**), **Settings** and **Account** `(default)`. The menu bar, the format pill, the star and move buttons,
+    Settings, the people and the account are not drawn in the row.
+  - The toolbar is one row that scrolls sideways, with no More and no zoom field (pinch zoom scales the pages).
+  - While the on-screen keyboard is up, the toolbar docks just above it, so the writing's controls stay in reach.
+- **Tablet** (640 to 1024 px): the desktop layout; the name shortens before anything on the right does, and the
+  toolbar's overflow takes what does not fit.
+- On a touch screen every control reaches 44 px, as everywhere in LiveDoc.
+
+## Motion
+
+The shell's menus, panels and dialogs appear without sliding; with reduced motion (the system's setting or LiveDoc's
+own) they appear without fading too ([Motion](motion.md#reduced-motion)).
 
 ## Behaviour
 

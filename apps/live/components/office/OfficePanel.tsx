@@ -56,7 +56,7 @@ export function OfficePanel({
         e.stopPropagation();
         onClose();
       }}
-      className={`relative flex shrink-0 flex-col bg-(--office-chrome) text-(--office-ink) max-[599px]:absolute max-[599px]:inset-0 max-[599px]:z-20 max-[599px]:w-full! ${
+      className={`relative flex shrink-0 flex-col bg-(--office-chrome) text-(--office-ink) phone:absolute phone:inset-0 phone:z-20 phone:w-full! ${
         spec.side === 'left' ? 'border-r' : 'border-l'
       } border-(--office-line)`}
     >
@@ -141,7 +141,7 @@ function OfficePanelEdge({
       onPointerCancel={() => {
         drag.current = null;
       }}
-      className="absolute inset-y-0 -left-1 z-10 w-2 cursor-col-resize outline-none hover:bg-(--office-focus)/30 focus-visible:bg-(--office-focus) max-[599px]:hidden"
+      className="absolute inset-y-0 -left-1 z-10 w-2 cursor-col-resize outline-none hover:bg-(--office-focus)/30 focus-visible:bg-(--office-focus) phone:hidden"
     />
   );
 }

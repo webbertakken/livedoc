@@ -62,6 +62,7 @@ export { PageViewBoot } from './PageViewBoot';
 export { WebVitalsBoot, WebVitalsTracker } from './WebVitalsTracker';
 export { POPOVER_VIEWPORT_MARGIN, clampIntoRange } from './popover';
 export { useMediaQuery, PREFERS_REDUCED_MOTION } from './useMediaQuery';
+export { useVisualViewportBand, type VisualViewportBand } from './useVisualViewportBand';
 export { formatRelativeTime, formatRelativeTimeShort, relativeSince } from './relative-time';
 export { useCopiedFlash } from './useCopiedFlash';
 export { useClickOutside } from './useClickOutside';

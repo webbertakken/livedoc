@@ -167,10 +167,8 @@ matches, with its menu path; Up and Down move, Enter runs it, Escape closes. Dim
 
 ## Phone and tablet
 
-- **Phone** (under 600 px): the title row holds back, the name, the mode switch (as a pencil or eye) and ⋮; the menus
-  live in ⋮; the toolbar is a single scrolling row docked above the on-screen keyboard while editing; pages are fitted
-  to the width, or pageless at the width when chosen.
-- **Tablet** (600 to 1024 px): the desktop layout with the toolbar's overflow taking what does not fit.
+The shell's [phone and tablet layouts](../004-interface-design/office-shell.md#phone-and-tablet). On a phone the pages
+flow to the window's width, as pageless, so a line never runs off the screen `(default)`.
 
 ## Share roles
 

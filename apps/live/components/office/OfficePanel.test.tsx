@@ -96,6 +96,6 @@ describe('OfficePanel', () => {
     const panel = screen.getByRole('complementary', { name: 'Outline' });
     expect(panel.style.width).toBe('260px');
     expect(screen.queryByRole('separator')).toBeNull();
-    expect(panel.className).toContain('max-[599px]:absolute');
+    expect(panel.className).toContain('phone:absolute');
   });
 });
