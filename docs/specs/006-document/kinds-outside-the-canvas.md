@@ -56,9 +56,11 @@ How the editor, the tab strip, split view and the Explorer host a tab kind that 
 
 - In the editor's two lines ([Toolbar layout](../007-editor/toolbar-layout.md) "The bottom line"), the tab strip is the
   document group's **active tab** segment with its tab stack.
-- Over a text document's surface the document group floats at the bottom right, as it does over a canvas (default).
+- Over a text document's surface the document group floats at the bottom right, as it does over a canvas (default),
+  without the people here: the surface's title row shows them
+  ([Editing surface](../034-text-documents/editing-surface.md#the-title-row)).
 - A document whose **one tab is outside the canvas** hides that segment and the document's name, which the surface's
-  own title row shows, leaving the people here and Add tab. A document of one canvas tab keeps both, as it always has.
+  own title row shows, leaving Add tab. A document of one canvas tab keeps both, as it always has.
 - With **two or more tabs**, the segment shows as for any document, over the surface.
 - **Add tab** stays for whoever may add tabs, and its add menu offers **Text document** after the Plan rows (the tab
   list's footer: **New Text Document**): it adds a text document tab after the others, born ODF

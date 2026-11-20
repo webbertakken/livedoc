@@ -101,6 +101,18 @@ describe('visibleMenus', () => {
       { kind: 'item', id: 'b', label: 'B', level: 'view', status: 'built' },
     ]);
   });
+
+  // office-shell.md "Menus as data": the binding is the session's permission; a built item is never shown dimmed.
+  it('drops a built item the session leaves unbound, keeping the coming-soon ones', () => {
+    const run = () => {};
+    const shown = visibleMenus(CATALOGUE, 'edit', { 'download-odt': { run } });
+    expect(shown.map((m) => m.id)).toEqual(['file', 'format']);
+    expect(shown[0]!.entries.map((e) => (e.kind === 'separator' ? '—' : e.id))).toEqual([
+      'rename',
+      '—',
+      'download',
+    ]);
+  });
 });
 
 describe('catalogueItems', () => {

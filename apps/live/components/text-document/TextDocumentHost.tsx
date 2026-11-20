@@ -7,6 +7,7 @@
 import dynamic from 'next/dynamic';
 import { textDocumentFormatOf, type Tab } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
+import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
 
 const TextDocumentSurface = dynamic(
@@ -20,6 +21,8 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
   // A text document in This Browser has no room (live-editing-and-storage.md "A text document in This Browser"); a
   // sync or a Take Offline in place mounts the surface afresh on its new home.
   const local = useIsOfflineDocument(documentId);
+  // The document's own parts in the title row, for the editor's pane alone (editing-surface.md "The title row").
+  const office = useEditorLines()?.office ?? null;
   if (!documentId) return null;
   return (
     <TextDocumentSurface
@@ -36,6 +39,7 @@ export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly
       canEdit={!readOnly && can.textDocumentEdits}
       level={readOnly ? 'view' : can.level}
       sequence={(op) => roomRef.current?.sequence(op) ?? Promise.resolve(false)}
+      chrome={readOnly ? null : office}
     />
   );
 }

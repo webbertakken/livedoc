@@ -8,7 +8,12 @@ import { ySyncPlugin } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { TextDocument, TextDocumentState } from '@livedoc/text-documents';
 import { textDocumentSchema } from './text-document-schema';
-import { selectionOf, setTextDocumentPeers, textDocumentPeersPlugin } from './text-document-peers';
+import {
+  scrollToTextDocumentPeer,
+  selectionOf,
+  setTextDocumentPeers,
+  textDocumentPeersPlugin,
+} from './text-document-peers';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
@@ -72,5 +77,25 @@ describe('textDocumentPeersPlugin', () => {
     expect(ben.dom.querySelector('.text-document-peer-selection')?.textContent).toBe('Hello');
     ana.destroy();
     expect(publish).toHaveBeenLastCalledWith(null);
+  });
+});
+
+// docs/specs/034-text-documents/editing-surface.md "The title row": a press on a person follows their caret.
+describe('scrollToTextDocumentPeer', () => {
+  it("scrolls a collaborator's caret into view, moving no selection, and says when they have none here", async () => {
+    const { a, b } = twoReplicas();
+    const ana = await editorOn(a);
+    const ben = await editorOn(b);
+    ana.dispatch(ana.state.tr.setSelection(TextSelection.create(ana.state.doc, 7)));
+    setTextDocumentPeers(ben, [
+      { id: 'ana', name: 'Ana', color: '#1a73e8', ...selectionOf(ana.state)!, fresh: false },
+    ]);
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    const before = ben.state.selection;
+    expect(scrollToTextDocumentPeer(ben, 'ana')).toBe(true);
+    expect(scrolled).toHaveBeenCalledWith(expect.objectContaining({ block: 'center' }));
+    expect(ben.state.selection.eq(before)).toBe(true);
+    expect(scrollToTextDocumentPeer(ben, 'cy')).toBe(false);
   });
 });

@@ -8,6 +8,7 @@ import type * as Y from 'yjs';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
+import type { OfficeChrome } from '@/components/office/office-chrome';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { TextDocumentScope } from '@/lib/api/text-documents';
 import { apiDownloadTextDocument } from '@/lib/api/text-documents';
@@ -59,6 +60,8 @@ export function TextDocumentTitleRow({
   editorActions,
   keyScope,
   localDoc = null,
+  chrome = null,
+  onFollow,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -69,6 +72,9 @@ export function TextDocumentTitleRow({
   keyScope: RefObject<HTMLElement | null>;
   // A text document in This Browser: its file is written here, from its live state (live-editing-and-storage.md).
   localDoc?: (() => Y.Doc | null) | null;
+  chrome?: OfficeChrome | null;
+  // Brings a collaborator's caret into view; false when they have none here.
+  onFollow?: (personId: string) => boolean;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const catalogue = useMemo(() => textDocumentMenus(format), [format]);
@@ -120,6 +126,9 @@ export function TextDocumentTitleRow({
       keyScope={keyScope}
       opening={opening}
       telemetryKind="TextDocument"
+      chrome={chrome}
+      tabId={scope.tabId}
+      onFollow={onFollow}
     />
   );
 }

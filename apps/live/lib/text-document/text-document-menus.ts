@@ -62,7 +62,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('open', 'Open', 'view', { shortcut: 'open', status: 'built' }),
       item('make-a-copy', 'Make a copy', 'view'),
       SEPARATOR,
-      submenu('share', 'Share', [item('share-with-others', 'Share with others', 'edit')]),
+      submenu('share', 'Share', [item('share-with-others', 'Share with others', 'edit', BUILT)]),
       submenu('download', 'Download', downloads(format)),
       format === 'odf'
         ? item('convert-to-word', 'Convert to Word format', 'edit', { keywords: ['docx', 'ooxml'] })
@@ -70,8 +70,8 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
             keywords: ['odt', 'odf'],
           }),
       SEPARATOR,
-      item('rename', 'Rename', 'edit'),
-      item('move', 'Move', 'edit', { keywords: ['folder'] }),
+      item('rename', 'Rename', 'edit', BUILT),
+      item('move', 'Move', 'edit', { keywords: ['folder'], status: 'built' }),
       item('move-to-trash', 'Move to trash', 'edit', { keywords: ['delete'] }),
       SEPARATOR,
       submenu('version-history', 'Version history', [

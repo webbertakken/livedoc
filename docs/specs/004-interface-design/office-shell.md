@@ -1,7 +1,8 @@
 # Office shell
 
-**Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder and the shortcut layer are
-built; the toolbar, side panel, dialogs, context menus and the shortcuts dialog are specified.
+**Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer and the
+title row (but its save status) are built; the toolbar, side panel, dialogs, context menus and the shortcuts dialog
+are specified.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
 and the spreadsheet of plan 0020. It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
@@ -59,6 +60,22 @@ kind's component.
   done.
 - An item above the session's level is not drawn; a submenu or menu left with no item is not drawn; separators never
   lead, trail or double up.
+- A `built` item the kind leaves unbound for this session (Share for someone who may not share) is not drawn either:
+  the binding is the session's permission, and a `built` item is never shown dimmed.
+
+## Title row
+
+The shell draws the title row's parts the same for every kind, from what the editor page hands it (the document's
+name, star, folder, sharing, people and account), so a kind adds only its own (its format pill, its save status, its
+follow of a person's selection). What each part is, its copy and who sees it:
+[Editing surface](../034-text-documents/editing-surface.md#the-title-row).
+
+- Left to right: the mark, then the name line (name, format pill, star, move, save status) over the menu bar; on the
+  right, the kind's actions, Settings, Share or Make a copy, presence, the account.
+- The name field is an `input` sized to its text, never wider than the room the right side leaves; the right side
+  never shrinks, the name shortens with an ellipsis while not focused.
+- Every icon control is a 32 px round button (44 px on touch) with its name as tooltip and accessible name.
+- On a phone the title row keeps the mark, the name and Share; the rest moves into the kind's phone layout.
 
 ## Menu bar
 
@@ -126,4 +143,5 @@ its row's in the kind's spec ([Editing surface](../034-text-documents/editing-su
 ## Telemetry
 
 `UI · Opened · <Kind>Menu<Name>` (a menu opened), `UI · Used · <Kind>ToolFinder` (a result run from the finder),
-`UI · Opened · <Kind>Panel<Name>` (a side panel opened). Never content, never what was typed.
+`UI · Opened · <Kind>Panel<Name>` (a side panel opened), `UI · Toggled · <Kind>Star`, `UI · Opened · <Kind>Move`,
+`UI · Used · <Kind>Follow` (a press on a person here). Never content, never what was typed.

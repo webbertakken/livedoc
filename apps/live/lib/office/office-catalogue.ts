@@ -44,13 +44,16 @@ export type OfficeActions = Readonly<Record<string, OfficeAction | undefined>>;
 // An item with the menus it sits in ("Format", "Text").
 export type FoundItem = { item: OfficeItem; path: readonly string[] };
 
-function visibleEntries(entries: readonly OfficeEntry[], level: AccessLevel): OfficeEntry[] {
+// Shown: at or below the session's level, and, once built, bound for this session (the binding is its permission).
+type Shown = (item: OfficeItem) => boolean;
+
+function visibleEntries(entries: readonly OfficeEntry[], shown: Shown): OfficeEntry[] {
   const kept: OfficeEntry[] = [];
   for (const entry of entries) {
     if (entry.kind === 'item') {
-      if (levelAtLeast(level, entry.level)) kept.push(entry);
+      if (shown(entry)) kept.push(entry);
     } else if (entry.kind === 'submenu') {
-      const inner = visibleEntries(entry.entries, level);
+      const inner = visibleEntries(entry.entries, shown);
       if (inner.length > 0)
         kept.push(inner.length === entry.entries.length ? entry : { ...entry, entries: inner });
     } else if (kept.length > 0 && kept[kept.length - 1]!.kind !== 'separator') {
@@ -61,9 +64,17 @@ function visibleEntries(entries: readonly OfficeEntry[], level: AccessLevel): Of
   return kept;
 }
 
-export function visibleMenus(catalogue: OfficeCatalogue, level: AccessLevel): OfficeMenu[] {
+// What the session sees. Without `actions` the level alone decides (a list of every item a level could reach).
+export function visibleMenus(
+  catalogue: OfficeCatalogue,
+  level: AccessLevel,
+  actions?: OfficeActions,
+): OfficeMenu[] {
+  const shown: Shown = (item) =>
+    levelAtLeast(level, item.level) &&
+    (!actions || item.status === 'comingSoon' || actions[item.id] !== undefined);
   return catalogue.flatMap((menu) => {
-    const entries = visibleEntries(menu.entries, level);
+    const entries = visibleEntries(menu.entries, shown);
     if (entries.length === 0) return [];
     return [entries.length === menu.entries.length ? menu : { ...menu, entries }];
   });
@@ -99,5 +110,12 @@ export function catalogueFaults(
   return faults;
 }
 
-// The items the shell binds itself (OfficeTitleRow): File > Open's picker and Help > Search the menus.
-export const SHELL_BOUND_ITEMS: readonly string[] = ['open', 'search-the-menus'];
+// The items the shell binds itself (OfficeTitleRow): File > Open's picker, the document's own Rename, Move and Share
+// (where the session may use them), and Help > Search the menus.
+export const SHELL_BOUND_ITEMS: readonly string[] = [
+  'open',
+  'rename',
+  'move',
+  'share-with-others',
+  'search-the-menus',
+];
