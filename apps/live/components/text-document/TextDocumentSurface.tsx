@@ -26,6 +26,7 @@ import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yj
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
+import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import {
   TEXT_DOCUMENT_LIMIT_NOTICES,
   textDocumentLimitPlugin,
@@ -277,14 +278,17 @@ export function TextDocumentSurface({
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
   }, [peers, state]);
 
+  // Format > Text and the toolbar's text controls (text-and-paragraphs.md "Text formatting").
+  const formatting = useTextDocumentFormatting(editorView, liveDoc, format, writes);
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
       ...textDocumentEditorActions(editorView, { canEdit: writes }),
+      ...formatting.actions,
       ...modeActions,
       ...panels.actions,
     }),
-    [editorView, writes, modeActions, panels.actions],
+    [editorView, writes, formatting.actions, modeActions, panels.actions],
   );
   // The caret, for the context menu on text.
   const caret = useMemo(
@@ -333,6 +337,8 @@ export function TextDocumentSurface({
         // A session that may not edit saves nothing, so shows no save status.
         saveStatus={canEdit ? saveStatus : null}
         zoom={zoom}
+        fontSize={formatting.fontSize}
+        refresh={changes.subscribeCaret}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }

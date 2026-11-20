@@ -148,9 +148,9 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
   row('zoom-out', 'Common actions', 'Zoom out', 'Ctrl+-', '⌘+-', '—', 'browser'),
   row('zoom-100', 'Common actions', 'Zoom 100%', 'Ctrl+0', '⌘+0', '—', 'browser'),
   // Text formatting
-  row('bold', 'Text formatting', 'Bold', 'Ctrl+B', '⌘+B', 'Ctrl+B', 'specified'),
-  row('italicize', 'Text formatting', 'Italicize', 'Ctrl+I', '⌘+I', 'Ctrl+I', 'specified'),
-  row('underline', 'Text formatting', 'Underline', 'Ctrl+U', '⌘+U', 'Ctrl+U', 'specified'),
+  row('bold', 'Text formatting', 'Bold', 'Ctrl+B', '⌘+B', 'Ctrl+B', 'built'),
+  row('italicize', 'Text formatting', 'Italicize', 'Ctrl+I', '⌘+I', 'Ctrl+I', 'built'),
+  row('underline', 'Text formatting', 'Underline', 'Ctrl+U', '⌘+U', 'Ctrl+U', 'built'),
   row(
     'strikethrough',
     'Text formatting',
@@ -158,10 +158,10 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Alt+Shift+5',
     '⌘+Shift+X',
     'Alt+Shift+5',
-    'specified',
+    'built',
   ),
-  row('superscript', 'Text formatting', 'Superscript', 'Ctrl+.', '⌘+.', 'Ctrl+.', 'specified'),
-  row('subscript', 'Text formatting', 'Subscript', 'Ctrl+,', '⌘+,', 'Ctrl+,', 'specified'),
+  row('superscript', 'Text formatting', 'Superscript', 'Ctrl+.', '⌘+.', 'Ctrl+.', 'built'),
+  row('subscript', 'Text formatting', 'Subscript', 'Ctrl+,', '⌘+,', 'Ctrl+,', 'built'),
   row(
     'copy-text-formatting',
     'Text formatting',
@@ -196,7 +196,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+.',
     '⌘+Shift+.',
     'Ctrl+Shift+.',
-    'specified',
+    'built',
   ),
   row(
     'decrease-font-size',
@@ -205,7 +205,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+,',
     '⌘+Shift+,',
     'Ctrl+Shift+,',
-    'specified',
+    'built',
   ),
   row(
     'small-caps',
@@ -214,7 +214,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+K',
     'Option+Shift+K',
     '—',
-    'specified',
+    'built',
   ),
   // Paragraph formatting
   row(

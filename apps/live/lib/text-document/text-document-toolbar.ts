@@ -114,10 +114,12 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
       text('font', 'Font', 'Arial', 96),
       icon('size-decrease', 'Decrease font size', 'edit', lucideMinus, {
         shortcut: 'decrease-font-size',
+        built: true,
       }),
-      text('font-size', 'Font size', '11', 36, false),
+      control('font-size', 'Font size', 'edit', { kind: 'fontSize' }, { built: true }),
       icon('size-increase', 'Increase font size', 'edit', lucidePlus, {
         shortcut: 'increase-font-size',
+        built: true,
       }),
     ],
   },
@@ -125,11 +127,16 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
     id: 'text',
     label: 'Text',
     controls: [
-      icon('bold', 'Bold', 'edit', lucideBold, { shortcut: 'bold', toggle: true }),
-      icon('italic', 'Italic', 'edit', lucideItalic, { shortcut: 'italicize', toggle: true }),
+      icon('bold', 'Bold', 'edit', lucideBold, { shortcut: 'bold', toggle: true, built: true }),
+      icon('italic', 'Italic', 'edit', lucideItalic, {
+        shortcut: 'italicize',
+        toggle: true,
+        built: true,
+      }),
       icon('underline', 'Underline', 'edit', lucideUnderline, {
         shortcut: 'underline',
         toggle: true,
+        built: true,
       }),
       icon('text-colour', 'Text colour', 'edit', lucideBaseline, { menu: true }),
       icon('highlight-colour', 'Highlight colour', 'edit', lucideHighlighter, { menu: true }),

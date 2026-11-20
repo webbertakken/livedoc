@@ -1105,6 +1105,16 @@ export const TEXT_DOCUMENT_FOLLOWED = chart(
   { types: ['TextDocumentFollow'] },
 );
 
+// A text document's writing formatted (docs/specs/034-text-documents/text-and-paragraphs.md "Telemetry"): bold,
+// italic, a size and the rest, from the toolbar, the Format menu or a shortcut, by the format's name.
+export const TEXT_DOCUMENT_FORMATTING = chart(
+  'Element',
+  'Changed',
+  'Text Document Formatting',
+  "A text document's writing formatted: bold, italic, underline, strikethrough, a size, its case and the rest.",
+  { typeIn: (t) => (t ?? '').startsWith('TextDocumentFormat') },
+);
+
 export const EDITOR_CHROME: MetricStack = {
   stack: true,
   title: 'Editor Chrome',

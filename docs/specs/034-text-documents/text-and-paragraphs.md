@@ -1,6 +1,7 @@
 # Text and paragraphs
 
-**Status: specified.** Nothing is built.
+**Status: partly built.** Text formatting is built but the font, which comes with the document fonts; the rest is
+specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -50,6 +51,23 @@ Every rule maps to a format construct in [Standard mapping](standard-mapping.md#
 | Text colour, highlight  | Toolbar                      | [Colour](#colour)                                                             |
 
 Formatting with no selection applies to the next characters typed at the caret.
+
+- **A toggle** (bold, italic, underline, strikethrough, small caps) is on when every character of the selection has
+  it, through its styles or its own formatting; over an empty selection, when the caret's formatting has it.
+- Pressing a toggle that is on turns it off for the whole selection; one that is off, or mixed, turns it on for all.
+- A value equal to what the character's styles give is stored as no formatting of its own, so a file gains no needless
+  direct formatting (both formats inherit the style's).
+- **Superscript and subscript** are one or the other: pressing the one that is on returns the text to the baseline;
+  pressing the other moves it there.
+- **Size**: the toolbar's size field shows the size at the caret, or the selection's when it has one size; blank when
+  mixed. A number typed from 1 to 400 applies on Enter, rounded to a tenth of a point (default); anything else puts
+  the value back. The field's list holds the steps above.
+- **− and +** and ⌘⇧, and ⌘⇧. change each character's size by one point, kept within 1 to 400 (as Google does,
+  inferred from Google's shortcut list); a mixed selection keeps its differences.
+- **Capitalisation** rewrites the selected characters, each keeping its formatting: lowercase, UPPERCASE, or Title
+  Case (each word's first letter upper case and the rest lower case (default)). With nothing selected it changes
+  nothing (default).
+- Each change is one undo step, and returns focus to the writing.
 
 ## Colour
 
@@ -126,7 +144,8 @@ Tools > Preferences, per person (account or browser), each on by default as Goog
 
 ## Telemetry
 
-`Element · Changed · TextDocumentFormat<Name>` (bold, italic, …, from toolbar, menu or shortcut),
+`Element · Changed · TextDocumentFormat<Name>` (Bold, Italic, Underline, Strikethrough, Superscript, Subscript,
+SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font; from toolbar, menu or shortcut),
 `TextDocumentParagraphStyle`, `TextDocumentStyleUpdated`, `TextDocumentPaintFormat`, `TextDocumentPaste` (with the
 source: Document, Html, Markdown, Plain). Never text.
 

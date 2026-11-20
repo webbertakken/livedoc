@@ -1,0 +1,65 @@
+// @vitest-environment jsdom
+// docs/specs/004-interface-design/office-shell.md "Toolbar": pressed states and the font size are read again as the
+// selection or the formatting at the caret changes; the outline only as the body does.
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { EditorState, TextSelection } from 'prosemirror-state';
+import { EditorView } from 'prosemirror-view';
+import { textDocumentSchema as schema } from './text-document-schema';
+import { createTextDocumentChanges } from './text-document-changes';
+
+let view: EditorView;
+let changes: ReturnType<typeof createTextDocumentChanges>;
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+  changes = createTextDocumentChanges();
+  const doc = schema.node('doc', null, [schema.nodes.paragraph!.create(null, schema.text('abc'))]);
+  view = new EditorView(document.createElement('div'), {
+    state: EditorState.create({ doc, plugins: [changes.plugin] }),
+  });
+});
+afterEach(() => {
+  view.destroy();
+  vi.useRealTimers();
+});
+
+describe('createTextDocumentChanges', () => {
+  it('tells the body listeners of an edit, and the caret listeners once a frame', () => {
+    const body = vi.fn();
+    const caret = vi.fn();
+    changes.subscribe(body);
+    changes.subscribeCaret(caret);
+    view.dispatch(view.state.tr.insertText('x', 1));
+    view.dispatch(view.state.tr.insertText('y', 1));
+    expect(body).toHaveBeenCalledTimes(2);
+    expect(caret).not.toHaveBeenCalled();
+    vi.advanceTimersToNextFrame();
+    expect(caret).toHaveBeenCalledOnce();
+  });
+
+  it('tells only the caret listeners of a moved selection or new stored formatting', () => {
+    const body = vi.fn();
+    const caret = vi.fn();
+    changes.subscribe(body);
+    const stop = changes.subscribeCaret(caret);
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 2)));
+    vi.advanceTimersToNextFrame();
+    view.dispatch(view.state.tr.addStoredMark(schema.marks.bold!.create({ value: true })));
+    vi.advanceTimersToNextFrame();
+    expect(caret).toHaveBeenCalledTimes(2);
+    expect(body).not.toHaveBeenCalled();
+    stop();
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)));
+    vi.advanceTimersToNextFrame();
+    expect(caret).toHaveBeenCalledTimes(2);
+  });
+
+  it('tells no one after the editor is gone', () => {
+    const caret = vi.fn();
+    changes.subscribeCaret(caret);
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 2)));
+    view.destroy();
+    vi.advanceTimersToNextFrame();
+    expect(caret).not.toHaveBeenCalled();
+    view = new EditorView(document.createElement('div'), { state: view.state });
+  });
+});

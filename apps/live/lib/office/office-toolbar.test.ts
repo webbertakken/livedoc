@@ -19,6 +19,19 @@ const TOOLBAR: OfficeToolbar = [
     ],
   },
   {
+    id: 'font',
+    label: 'Font',
+    controls: [
+      {
+        id: 'font-size',
+        label: 'Font size',
+        level: 'edit',
+        status: 'built',
+        look: { kind: 'fontSize' },
+      },
+    ],
+  },
+  {
     id: 'insert',
     label: 'Insert',
     controls: [
@@ -30,25 +43,33 @@ const TOOLBAR: OfficeToolbar = [
 // docs/specs/004-interface-design/office-shell.md "Toolbar".
 describe('visibleToolbar', () => {
   const run = () => {};
+  const BOTH = { zoom: true, fontSize: true };
+  const NEITHER = { zoom: false, fontSize: false };
 
   it('keeps what the level sees, bound or coming soon', () => {
-    const shown = visibleToolbar(TOOLBAR, 'edit', { undo: { run }, comment: { run } }, true);
+    const shown = visibleToolbar(TOOLBAR, 'edit', { undo: { run }, comment: { run } }, BOTH);
     expect(shown.flatMap((g) => g.controls.map((c) => c.id))).toEqual([
       'undo',
       'print',
       'zoom',
+      'font-size',
       'comment',
     ]);
   });
 
-  it('drops a built control left unbound, the zoom without a zoom, and a group left empty', () => {
-    const shown = visibleToolbar(TOOLBAR, 'edit', {}, false);
+  it('shows each value field only when the shell binds it', () => {
+    const shown = visibleToolbar(TOOLBAR, 'edit', {}, { zoom: false, fontSize: true });
+    expect(shown.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'font-size']);
+  });
+
+  it('drops a built control left unbound, a field unbound, and a group left empty', () => {
+    const shown = visibleToolbar(TOOLBAR, 'edit', {}, NEITHER);
     expect(shown.map((g) => g.id)).toEqual(['history']);
     expect(shown[0]!.controls.map((c) => c.id)).toEqual(['print']);
   });
 
   it('shows a Viewer what a Viewer may use', () => {
-    const shown = visibleToolbar(TOOLBAR, 'view', { undo: { run }, comment: { run } }, true);
+    const shown = visibleToolbar(TOOLBAR, 'view', { undo: { run }, comment: { run } }, BOTH);
     expect(shown.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'zoom']);
   });
 });

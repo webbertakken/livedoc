@@ -92,6 +92,15 @@ describe('the live layout', () => {
     expect(TextDocumentState.styles(state, 'ooxml')).toEqual(renamed);
   });
 
+  // text-and-paragraphs.md "Text formatting": a character's formatting through its styles starts at the defaults.
+  it('reads the style defaults alone, the format defaults while the state holds none', () => {
+    const blank = TextDocument.blank({ format: 'odf' });
+    expect(TextDocumentState.defaults(TextDocumentState.load(), 'odf')).toEqual(blank.defaults);
+    const defaults = { ...blank.defaults, text: { font: 'Georgia', size: 12 } };
+    const state = TextDocumentState.load([TextDocumentState.fromDocument({ ...blank, defaults })]);
+    expect(TextDocumentState.defaults(state, 'odf')).toEqual(defaults);
+  });
+
   it('reads a paragraph written without a style, as the tracer wrote them, as Normal text', () => {
     const state = TextDocumentState.load([TextDocumentState.fromBody([{ text: 'Hello' }])]);
     const blank = TextDocument.blank();
