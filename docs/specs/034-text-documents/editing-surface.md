@@ -126,7 +126,10 @@ Left to right, as Google has it, with a divider between groups:
 
 ## Zoom
 
-Per person, per document, remembered in this browser. Fit fits the page width to the window. ⌘+, ⌘− and ⌘0 are the
+Per person, per document, remembered in this browser (`livedoc:v2:text-document-zoom`, the most recent
+`SURFACE_VIEW_MAX_ENTRIES` documents) `(default)`. The toolbar's zoom is a field with a list: Fit, 50%, 75%, 90%,
+100%, 125%, 150%, 200%; a typed whole number from 50 to 200 (with or without %) applies on Enter, anything else puts the
+value back. Fit fits the page width to the window, never above 200%. The pages scale; the chrome never does. ⌘+, ⌘− and ⌘0 are the
 browser's own (Google leaves them to the browser); pinch zoom on touch screens zooms the pages.
 
 ## Compact and full screen

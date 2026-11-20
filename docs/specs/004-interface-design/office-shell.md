@@ -1,8 +1,7 @@
 # Office shell
 
-**Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer and the
-title row are built; the toolbar, side panel, dialogs, context menus and the shortcuts dialog
-are specified.
+**Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer, the
+title row and the toolbar are built; the side panel, dialogs, context menus and the shortcuts dialog are specified.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
 and the spreadsheet of plan 0020. It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
@@ -93,6 +92,21 @@ The WAI-ARIA [menubar pattern](https://www.w3.org/WAI/ARIA/apg/patterns/menubar/
 - A row shows its label, its check where it has one, its shortcut on the right in the platform's notation, and ▸ for
   a submenu. Labels keep Google's sentence case ("Make a copy"), the one exception to the Title Case of
   [item labels](menus.md#item-labels).
+
+## Toolbar
+
+A kind declares its toolbar as data too: groups of **controls**, each with an id, a label, a glyph, its shortcut's
+id, the least share level that sees it and its status. A control that runs a menu item shares the item's id, so one
+binding serves both; a control of its own (the zoom) is bound by its id the same way.
+
+- The WAI-ARIA [toolbar pattern](https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/): one tab stop, Left and Right
+  between controls (wrapping), Home and End to the first and last; Down or Enter opens a control's menu.
+- A control's tooltip names it and its shortcut in the platform's notation; a toggle carries `aria-pressed`.
+- A `comingSoon` control is drawn dimmed (`aria-disabled`), its tooltip saying "Coming soon"; a `built` control left
+  unbound for the session, or above its level, is not drawn; a group left empty is not drawn, nor its divider.
+- **Overflow**: the controls that do not fit move, from the right, behind a ⋮ button ("More") at the bar's end; it
+  opens a second row under the bar holding them in the same order. The order never changes; the second row closes
+  with Escape, a press outside, or once everything fits again.
 
 ## Tool finder
 

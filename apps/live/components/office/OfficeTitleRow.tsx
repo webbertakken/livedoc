@@ -22,6 +22,12 @@ import type { OfficeChrome, OfficePerson } from './office-chrome';
 import { OfficeMoveIcon, OfficeStarIcon } from './office-icons';
 import { OfficeMenuBar, type OpenMenu } from './OfficeMenuBar';
 import { OfficeNameField } from './OfficeNameField';
+import { OfficeToolbar } from './OfficeToolbar';
+import type { OfficeZoom } from './OfficeZoomField';
+import {
+  visibleToolbar,
+  type OfficeToolbar as OfficeToolbarData,
+} from '@/lib/office/office-toolbar';
 import type { OfficeSaveStatus } from './office-save-status';
 import { OfficeSaveStatusButton } from './OfficeSaveStatus';
 import { OfficeIconButton, OfficeTitleActions } from './OfficeTitleActions';
@@ -54,6 +60,8 @@ export function OfficeTitleRow({
   tabId,
   onFollow,
   saveStatus = null,
+  toolbar = [],
+  zoom = null,
 }: {
   name: string;
   // The format's pill (".ODT") and what it is called ("OpenDocument format").
@@ -77,6 +85,9 @@ export function OfficeTitleRow({
   onFollow?: (personId: string) => boolean;
   // The kind's save status; none for a session that saves nothing.
   saveStatus?: OfficeSaveStatus | null;
+  // The kind's toolbar, and the zoom its zoom field works (null: no zoom field).
+  toolbar?: OfficeToolbarData;
+  zoom?: OfficeZoom | null;
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [finding, setFinding] = useState(false);
@@ -112,6 +123,10 @@ export function OfficeTitleRow({
     [catalogue, level, allActions],
   );
   const items = useMemo(() => catalogueItems(menus), [menus]);
+  const bar = useMemo(
+    () => visibleToolbar(toolbar, level, allActions, zoom !== null),
+    [toolbar, level, allActions, zoom],
+  );
   const shortcutOf = useMemo(() => shortcutTextOf(shortcuts, currentOfficePlatform()), [shortcuts]);
 
   const follow = useCallback(
@@ -152,75 +167,80 @@ export function OfficeTitleRow({
   useOfficeShortcuts({ scope: keyScope, rows: shortcuts, runs });
 
   return (
-    <header className="office-shell flex items-start gap-1 bg-(--office-chrome) py-2 pr-4 pl-2 text-(--office-ink)">
-      {chrome ? <OfficeMark back={chrome.back} /> : null}
-      <div className="relative flex min-w-0 flex-1 flex-col">
-        <div className="flex h-[26px] min-w-0 items-center gap-1">
-          <OfficeNameField
-            name={name}
-            onRename={chrome?.rename ?? null}
-            focusNonce={renameNonce + (chrome?.renameNonce ?? 0)}
-          />
-          <Tooltip label={formatTitle}>
-            <span
-              role="img"
-              aria-label={formatTitle}
-              className="shrink-0 rounded border border-(--office-line) px-1.5 text-xs font-medium text-(--office-muted)"
-            >
-              {format}
-            </span>
-          </Tooltip>
-          {chrome?.star ? (
-            <OfficeIconButton
-              label={chrome.star.starred ? 'Starred' : 'Star'}
-              pressed={chrome.star.starred}
-              onClick={() => {
-                if (telemetryKind) track('UI', 'Toggled', `${telemetryKind}Star`);
-                chrome.star?.onToggle();
+    <header className="office-shell bg-(--office-chrome) text-(--office-ink)">
+      <div className="flex items-start gap-1 pt-2 pr-4 pl-2">
+        {chrome ? <OfficeMark back={chrome.back} /> : null}
+        <div className="relative flex min-w-0 flex-1 flex-col">
+          <div className="flex h-[26px] min-w-0 items-center gap-1">
+            <OfficeNameField
+              name={name}
+              onRename={chrome?.rename ?? null}
+              focusNonce={renameNonce + (chrome?.renameNonce ?? 0)}
+            />
+            <Tooltip label={formatTitle}>
+              <span
+                role="img"
+                aria-label={formatTitle}
+                className="shrink-0 rounded border border-(--office-line) px-1.5 text-xs font-medium text-(--office-muted)"
+              >
+                {format}
+              </span>
+            </Tooltip>
+            {chrome?.star ? (
+              <OfficeIconButton
+                label={chrome.star.starred ? 'Starred' : 'Star'}
+                pressed={chrome.star.starred}
+                onClick={() => {
+                  if (telemetryKind) track('UI', 'Toggled', `${telemetryKind}Star`);
+                  chrome.star?.onToggle();
+                }}
+              >
+                <OfficeStarIcon className={chrome.star.starred ? 'fill-current' : undefined} />
+              </OfficeIconButton>
+            ) : null}
+            {openMove ? (
+              <OfficeIconButton label="Move" onClick={openMove}>
+                <OfficeMoveIcon />
+              </OfficeIconButton>
+            ) : null}
+            {saveStatus ? <OfficeSaveStatusButton status={saveStatus} /> : null}
+            {problem ? (
+              <p role="alert" className="truncate text-sm text-red-700 dark:text-red-300">
+                {problem}
+              </p>
+            ) : null}
+          </div>
+          <div className="-ml-0.5">
+            <OfficeMenuBar
+              menus={menus}
+              actions={allActions}
+              shortcutOf={shortcutOf}
+              openMenu={openMenu}
+              onOpenMenu={onOpenMenu}
+              onCloseMenu={(id) => setOpenMenu((current) => (current?.id === id ? null : current))}
+              label="Menu bar"
+            />
+          </div>
+          {finding ? (
+            <OfficeToolFinder
+              items={items}
+              actions={allActions}
+              shortcutOf={shortcutOf}
+              onClose={() => setFinding(false)}
+              onRan={() => {
+                if (telemetryKind) track('UI', 'Used', `${telemetryKind}ToolFinder`);
               }}
-            >
-              <OfficeStarIcon className={chrome.star.starred ? 'fill-current' : undefined} />
-            </OfficeIconButton>
-          ) : null}
-          {openMove ? (
-            <OfficeIconButton label="Move" onClick={openMove}>
-              <OfficeMoveIcon />
-            </OfficeIconButton>
-          ) : null}
-          {saveStatus ? <OfficeSaveStatusButton status={saveStatus} /> : null}
-          {problem ? (
-            <p role="alert" className="truncate text-sm text-red-700 dark:text-red-300">
-              {problem}
-            </p>
+            />
           ) : null}
         </div>
-        <div className="-ml-0.5">
-          <OfficeMenuBar
-            menus={menus}
-            actions={allActions}
-            shortcutOf={shortcutOf}
-            openMenu={openMenu}
-            onOpenMenu={onOpenMenu}
-            onCloseMenu={(id) => setOpenMenu((current) => (current?.id === id ? null : current))}
-            label="Menu bar"
-          />
-        </div>
-        {finding ? (
-          <OfficeToolFinder
-            items={items}
-            actions={allActions}
-            shortcutOf={shortcutOf}
-            onClose={() => setFinding(false)}
-            onRan={() => {
-              if (telemetryKind) track('UI', 'Used', `${telemetryKind}ToolFinder`);
-            }}
-          />
+        {chrome ? (
+          <div className="self-center">
+            <OfficeTitleActions chrome={chrome} onFollow={follow} />
+          </div>
         ) : null}
       </div>
-      {chrome ? (
-        <div className="self-center">
-          <OfficeTitleActions chrome={chrome} onFollow={follow} />
-        </div>
+      {bar.length > 0 ? (
+        <OfficeToolbar groups={bar} actions={allActions} shortcutOf={shortcutOf} zoom={zoom} />
       ) : null}
       {opening ? (
         <input

@@ -19,6 +19,8 @@ import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
 import { textDocumentMenus } from '@/lib/text-document/text-document-menus';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
+import { TEXT_DOCUMENT_TOOLBAR } from '@/lib/text-document/text-document-toolbar';
+import type { OfficeZoom } from '@/components/office/OfficeZoomField';
 import { openTextDocumentFile } from '@/lib/text-document/open-text-document-file';
 
 // A text document no room holds is written in this browser; the writer loads only when it is asked for.
@@ -64,6 +66,7 @@ export function TextDocumentTitleRow({
   chrome = null,
   onFollow,
   saveStatus = null,
+  zoom = null,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -78,6 +81,7 @@ export function TextDocumentTitleRow({
   // Brings a collaborator's caret into view; false when they have none here.
   onFollow?: (personId: string) => boolean;
   saveStatus?: OfficeSaveStatus | null;
+  zoom?: OfficeZoom | null;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const catalogue = useMemo(() => textDocumentMenus(format), [format]);
@@ -133,6 +137,8 @@ export function TextDocumentTitleRow({
       tabId={scope.tabId}
       onFollow={onFollow}
       saveStatus={saveStatus}
+      toolbar={TEXT_DOCUMENT_TOOLBAR}
+      zoom={zoom}
     />
   );
 }
