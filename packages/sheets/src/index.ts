@@ -63,6 +63,7 @@ export * from './formula/stored';
 export * from './formula/registry';
 export * from './formula/function-docs';
 export { Workbook, type CellAt } from './engine/workbook';
+export { WorkbookCopy } from './engine/workbook-copy';
 export { EngineHost } from './engine/engine-host';
 export { EnginePort } from './engine/engine-port';
 export type { CellValue, EngineIn, EngineOut, EngineLimits } from './engine/engine-protocol';

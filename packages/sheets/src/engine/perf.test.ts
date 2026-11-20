@@ -8,6 +8,7 @@ import vm from 'node:vm';
 import { describe, expect, it, vi } from 'vitest';
 import { cpuMsOf, UNDER_COVERAGE_ENV } from '@livedoc/vitest-config/cpu-time';
 import { Workbook } from './workbook';
+import { WorkbookCopy } from './workbook-copy';
 import { cellKey, type Sheet } from '../sheet';
 import { CellMap } from '../cells/cell-map';
 import { layoutIndex } from '../layout';
@@ -177,7 +178,7 @@ describe('performance', () => {
       for (const c of [3, 4]) results.push([r, c, engine.formulaResult(sheet.id, r, c)]);
     layoutIndex(sheet.layout);
     const before = heldBytes();
-    const copy = new Workbook({ sheets: [sheet], locale: 'en', values: 'elsewhere' });
+    const copy = new WorkbookCopy({ sheets: [sheet], locale: 'en' });
     for (const [r, c, v] of results) copy.acceptValue(sheet.id, r, c, v);
     const perFormula = (heldBytes() - before) / results.length;
     console.info(`[sheets perf] copy ${perFormula.toFixed(0)} bytes held a formula`);

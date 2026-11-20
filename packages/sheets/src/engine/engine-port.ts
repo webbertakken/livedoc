@@ -1,4 +1,4 @@
-// The page's side (docs/specs/029-sheets/formulas.md "Recalculation"): its copy of the Worker's values, a Workbook
+// The page's side (docs/specs/029-sheets/formulas.md "Recalculation"): its copy of the Worker's values, a WorkbookCopy
 // that never works a formula out, kept current from the Worker's answers; and the messages that tell the Worker of
 // each change. Values worked out before a sheet's rows or columns last moved are dropped: their positions are old.
 import type { Sheet } from '../sheet';
@@ -6,7 +6,7 @@ import { cellToJson, sheetToJson } from '../sheet-json';
 import { SheetLimits } from '../sheet-limits';
 import type { EngineIn, EngineOut } from './engine-protocol';
 import { ITERATION_OFF, type Iteration } from './loops';
-import { Workbook } from './workbook';
+import { WorkbookCopy } from './workbook-copy';
 
 type PortOptions = {
   sheets: readonly Sheet[];
@@ -18,7 +18,7 @@ type PortOptions = {
 
 export class EnginePort {
   /** The page's copy: every reader reads it. */
-  readonly copy: Workbook;
+  readonly copy: WorkbookCopy;
   private rev = 0;
   // The rev that last moved each sheet's positions (its load, its rows or columns).
   private readonly placed = new Map<string, number>();
@@ -28,12 +28,11 @@ export class EnginePort {
     this.send = opts.send;
     const limits = opts.limits ?? SheetLimits.plan;
     const iteration = opts.iteration ?? ITERATION_OFF;
-    this.copy = new Workbook({
+    this.copy = new WorkbookCopy({
       sheets: opts.sheets,
       locale: opts.locale,
       limits,
       iteration,
-      values: 'elsewhere',
     });
   }
 

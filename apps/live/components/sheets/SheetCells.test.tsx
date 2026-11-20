@@ -6,6 +6,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import {
   Workbook,
+  WorkbookCopy,
   cellKey,
   parseA1,
   readTypedInput,
@@ -302,7 +303,7 @@ describe('the cells', () => {
 describe('a value on its way from the engine', () => {
   it('keeps its last value, faded after a moment, and shows the new one plainly', () => {
     const { sheet } = sheetOf({ A1: '2', B1: '=A1*10' });
-    const copy = new Workbook({ sheets: [sheet], locale: 'en-GB', values: 'elsewhere' });
+    const copy = new WorkbookCopy({ sheets: [sheet], locale: 'en-GB' });
     copy.acceptValue(sheet.id, 0, 1, 20);
     copy.markStale([{ sheetId: sheet.id, r: 0, c: 1 }]);
     const { rerender } = draw({ sheet, workbook: copy });
