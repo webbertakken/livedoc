@@ -114,6 +114,19 @@ test('the menus, the tool finder and the shortcut layer work a text document', a
   await expect(shortcuts).toHaveCount(0);
   await expect(page.locator(BODY)).toBeFocused();
 
+  // F6 between the parts (office-shell.md "Behaviour"): from the writing to the tab strip, round to the title row,
+  // the menu bar, the toolbar, and the writing again.
+  await page.keyboard.press('F6');
+  await expect(page.getByRole('button', { name: 'Add tab' })).toBeFocused();
+  await page.keyboard.press('F6');
+  await expect(page.getByRole('link', { name: 'Explorer' })).toBeFocused();
+  await page.keyboard.press('F6');
+  await expect(bar.locator(':focus')).toHaveCount(1);
+  await page.keyboard.press('F6');
+  await expect(page.getByRole('toolbar', { name: 'Toolbar' }).locator(':focus')).toHaveCount(1);
+  await page.keyboard.press('F6');
+  await expect(page.locator(BODY)).toBeFocused();
+
   // A narrow window moves the controls that do not fit behind More.
   await page.setViewportSize({ width: 700, height: 860 });
   await page.getByRole('button', { name: 'More' }).click();

@@ -128,6 +128,7 @@ export function OfficeToolbar({
         ref={bar}
         role="toolbar"
         aria-label="Toolbar"
+        data-region="toolbar"
         onKeyDown={onKeyDown}
         onFocus={(e) => {
           const slot = (e.target as HTMLElement).closest<HTMLElement>('[data-control-slot]');

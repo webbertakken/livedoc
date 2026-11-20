@@ -1,8 +1,7 @@
 # Office shell
 
 **Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer, the
-title row, the toolbar, dialogs and the keyboard shortcuts dialog are built; the side panel and context menus are
-specified.
+title row, the toolbar, side panels, dialogs and the keyboard shortcuts dialog are built; context menus are specified.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
 and the spreadsheet of plan 0020. It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
@@ -134,6 +133,26 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   ChromeOS, or PC for every other.
 - Menus and tooltips show an item's first shortcut for the platform, in its notation (⌘ on a Mac).
 
+## Side panels
+
+A kind declares its **panels** as data, as it does its menus: each has an id, a title, a side (`left` or `right`),
+and the menu item that opens it. The shell draws the panel's frame; the kind fills its body.
+
+- **The right panel** sits at the right of the pages, under the toolbar, the full height left: 360 px wide `(default)`,
+  resizable from 280 to 560 px by dragging its left edge. The edge is a `separator` (vertical) that holds its width as
+  its value; Left and Right move it 16 px, Home and End to the narrowest and widest. The width is per person, remembered
+  in this browser (`livedoc:v2:office-panel-width`) `(default)`.
+- **The left panel** sits at the left of the pages, 260 px wide, not resizable.
+- One panel at a time on each side: opening a right panel closes the right panel open before it.
+- A panel's header holds its title and a × ("Close <title>"); the body under it scrolls on its own.
+- Each panel is a `complementary` landmark named by its title. Opening it from a menu item or a shortcut puts focus in
+  it; Escape inside it closes it and gives focus back to the document ([Escape](escape.md)); its × closes it too.
+- Whether a panel is open is per person, remembered in this browser per kind (`livedoc:v2:office-panels`)
+  `(default)`, so a person who keeps the outline open finds it open in every document of the kind.
+- The menu item that opens a panel is an on/off check, checked while it is open; choosing it again closes it.
+- Below 600 px a panel covers the pages, full width, over them; its × or Escape closes it.
+- Panels appear without sliding: the shell's chrome never animates its layout.
+
 ## Dialogs
 
 Every dialog of an office kind is the shell's **office dialog** (`OfficeDialog`): the app's modal
@@ -172,7 +191,10 @@ The kind's registry, shown: ⌘/ (Ctrl+/ elsewhere) or Help > Keyboard shortcuts
 
 ## Behaviour
 
-- **Keyboard**: F6 cycles title row, menu bar, toolbar, document, side panel.
+- **Keyboard**: F6 moves focus to the next part, Shift+F6 to the one before, wrapping: the title row, the menu bar,
+  the toolbar, the left panel, the document, the right panel, then the editor's tab strip; a part not shown is skipped.
+  It is the editor's one region cycle ([F6 moves between regions](canvas-accessibility.md)), so the browser's own F6
+  is not used on the page.
 - **Escape** backs out one layer per press, as everywhere ([Escape](escape.md)): a menu, then a dialog, then a panel,
   then focus back to the document.
 - **Colour** is chosen only with the one [colour picker](colour-picker.md), in its swatch-button skin.

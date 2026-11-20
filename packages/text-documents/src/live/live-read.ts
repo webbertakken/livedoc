@@ -115,6 +115,11 @@ function stylesOf(map: Y.Map<unknown>): Style[] | null {
     .map((v) => v.style);
 }
 
+/** The live state's styles, or the format's own while it holds none. */
+export function readLiveStyles(doc: Y.Doc, format: TextDocumentFormat): Style[] {
+  return stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? [...TextDocument.blank({ format }).styles];
+}
+
 /** The live state as the model, in the tab's format. */
 export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDocument {
   const blank = TextDocument.blank({ format });

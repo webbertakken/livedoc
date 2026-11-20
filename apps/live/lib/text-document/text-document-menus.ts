@@ -131,7 +131,11 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       SEPARATOR,
       item('show-print-layout', 'Show print layout', 'view', { checkable: 'checkbox' }),
       item('show-ruler', 'Show ruler', 'view', { checkable: 'checkbox' }),
-      item('show-outline', 'Show outline', 'view', { checkable: 'checkbox' }),
+      item('show-outline', 'Show outline', 'view', {
+        checkable: 'checkbox',
+        shortcut: 'show-outline',
+        status: 'built',
+      }),
       item('show-tabs-and-outlines', 'Show tabs & outlines', 'view', { checkable: 'checkbox' }),
       item('show-equation-toolbar', 'Show equation toolbar', 'edit', { checkable: 'checkbox' }),
       item('show-non-printing-characters', 'Show non-printing characters', 'view', {

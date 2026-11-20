@@ -104,3 +104,56 @@ describe('F6 between regions', () => {
     expect(document.activeElement).toBe(inside);
   });
 });
+
+// A kind outside the canvas joins the cycle with the office shell's parts (canvas-accessibility.md, office-shell.md
+// "Behaviour").
+function OfficeEditor({ outline = false }: { outline?: boolean }) {
+  return (
+    <>
+      <header data-region="header">
+        <a href="/explorer">Mark</a>
+        <div role="menubar" data-region="menubar">
+          <button tabIndex={-1}>File</button>
+          <button tabIndex={0}>Edit</button>
+        </div>
+        <div role="toolbar" data-region="toolbar">
+          <button tabIndex={0}>Undo</button>
+        </div>
+      </header>
+      {outline ? (
+        <aside data-region="left">
+          <button>Heading</button>
+        </aside>
+      ) : null}
+      <div data-region="document">
+        <div role="textbox" tabIndex={0} aria-label="Document body" />
+      </div>
+      <nav data-region="tabs">
+        <button>Tab 1</button>
+      </nav>
+    </>
+  );
+}
+
+describe('F6 through the office shell', () => {
+  it('walks the title row, menu bar, toolbar, left panel, document and tabs, on each tab stop', () => {
+    render(<OfficeEditor outline />);
+    renderHook(() => useRegionCycle());
+    const seen = [];
+    for (let i = 0; i < 7; i++) {
+      press();
+      seen.push(focused());
+    }
+    expect(seen).toEqual(['Mark', 'Edit', 'Undo', 'Heading', 'Document body', 'Tab 1', 'Mark']);
+  });
+
+  it('skips a panel not shown', () => {
+    render(<OfficeEditor />);
+    renderHook(() => useRegionCycle());
+    press();
+    press();
+    press();
+    press();
+    expect(focused()).toBe('Document body');
+  });
+});

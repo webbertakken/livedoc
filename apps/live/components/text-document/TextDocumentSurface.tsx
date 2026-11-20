@@ -4,7 +4,7 @@
 // docs/specs/006-document/kinds-outside-the-canvas.md "The surface"): the office shell's title row and menus, the
 // page on its ground, and the body, edited live through the room; the shell's look tokens colour it all. One surface
 // is one tab: its host keys it by the tab, so another tab mounts a fresh one.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
@@ -13,7 +13,7 @@ import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { TextDocumentState } from '@livedoc/text-documents';
+import { TextDocumentState, type Style } from '@livedoc/text-documents';
 import { Button } from '@livedoc/ui';
 import {
   apiLoadTextDocumentState,
@@ -54,6 +54,11 @@ import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSa
 import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
 import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
+import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
+import { useOfficePanels } from '@/lib/office/useOfficePanels';
+import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
+import { TEXT_DOCUMENT_PANELS } from '@/lib/text-document/text-document-panels';
+import { TextDocumentOutline } from './TextDocumentOutline';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -106,6 +111,14 @@ export function TextDocumentSurface({
   const [state, setState] = useState<SurfaceState>('loading');
   const [attempt, setAttempt] = useState(0);
   const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
+  // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
+  const [changes] = useState(createTextDocumentChanges);
+  // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back.
+  const panels = useOfficePanels({
+    kind: 'TextDocument',
+    panels: TEXT_DOCUMENT_PANELS,
+    onFocusDocument: () => editor.current?.focus(),
+  });
   // What the title row's save status reads (editing-surface.md "The title row"), once the writing is bound.
   const [saveFacts, setSaveFacts] = useState<SaveFactsSource | null>(null);
   const saveStatus = useTextDocumentSaveStatus(saveFacts, local);
@@ -194,6 +207,7 @@ export function TextDocumentSurface({
             schema: textDocumentSchema,
             plugins: [
               ySyncPlugin(TextDocumentState.body(doc)),
+              changes.plugin,
               ...textDocumentUndoPlugins(),
               textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
               keymap(baseKeymap),
@@ -253,7 +267,7 @@ export function TextDocumentSurface({
       cancelled = true;
       teardown();
     };
-  }, [ownerId, documentId, tabId, shareCode, attempt, local]);
+  }, [ownerId, documentId, tabId, shareCode, attempt, local, changes]);
 
   useEffect(() => {
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
@@ -261,13 +275,24 @@ export function TextDocumentSurface({
 
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
-    () => ({ ...textDocumentEditorActions(editorView, { canEdit: writes }), ...modeActions }),
-    [editorView, writes, modeActions],
+    () => ({
+      ...textDocumentEditorActions(editorView, { canEdit: writes }),
+      ...modeActions,
+      ...panels.actions,
+    }),
+    [editorView, writes, modeActions, panels.actions],
   );
   // A mode change re-reads whether the writing is editable.
   useEffect(() => {
     if (editorView && !editorView.isDestroyed) editorView.setProps({});
   }, [editorView, writes]);
+
+  // The styles the outline reads its heading levels through.
+  const readStyles = useCallback(
+    (): readonly Style[] =>
+      liveDoc.current ? TextDocumentState.styles(liveDoc.current, format) : [],
+    [format],
+  );
 
   // An edit the room refused names its limit.
   useEffect(() => TextDocumentBus.onRefused(tabId, setLimitReached), [tabId]);
@@ -303,38 +328,53 @@ export function TextDocumentSurface({
           {TEXT_DOCUMENT_LIMIT_NOTICES[limitReached]}
         </p>
       ) : null}
-      <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-6">
-        {state === 'failed' ? (
-          <div
-            role="alert"
-            className="mx-auto mt-16 max-w-sm text-center text-sm text-slate-700 dark:text-slate-200"
-          >
-            <p>This text document could not be opened.</p>
-            <Button
-              className="mt-3"
-              onClick={() => {
-                setState('loading');
-                setAttempt((n) => n + 1);
-              }}
+      <OfficePanelLayout
+        left={
+          panels.open.left === 'outline' ? (
+            <OfficePanel
+              spec={TEXT_DOCUMENT_PANELS[0]!}
+              onClose={() => panels.close('left')}
+              focusNonce={panels.focusNonce}
             >
-              Try Again
-            </Button>
-          </div>
-        ) : null}
-        {/* The page: a fixed width and a page's height before the state arrives, so nothing shifts as it does. */}
-        <div
-          // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn.
-          style={{ zoom: scale }}
-          className={`mx-auto min-h-[1056px] w-[816px] max-w-full bg-white px-6 py-10 text-[11pt] sm:px-24 sm:py-24 leading-[1.15] text-black shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
-        >
-          {state === 'loading' ? (
-            <p className="text-slate-500" aria-live="polite">
-              Loading the text document…
-            </p>
+              <TextDocumentOutline view={editorView} changes={changes} readStyles={readStyles} />
+            </OfficePanel>
+          ) : null
+        }
+        right={null}
+      >
+        <div ref={scroller} data-region="document" className="min-h-0 flex-1 overflow-y-auto py-6">
+          {state === 'failed' ? (
+            <div
+              role="alert"
+              className="mx-auto mt-16 max-w-sm text-center text-sm text-slate-700 dark:text-slate-200"
+            >
+              <p>This text document could not be opened.</p>
+              <Button
+                className="mt-3"
+                onClick={() => {
+                  setState('loading');
+                  setAttempt((n) => n + 1);
+                }}
+              >
+                Try Again
+              </Button>
+            </div>
           ) : null}
-          <div ref={mount} />
+          {/* The page: a fixed width and a page's height before the state arrives, so nothing shifts as it does. */}
+          <div
+            // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn.
+            style={{ zoom: scale }}
+            className={`mx-auto min-h-[1056px] w-[816px] max-w-full bg-white px-6 py-10 text-[11pt] sm:px-24 sm:py-24 leading-[1.15] text-black shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
+          >
+            {state === 'loading' ? (
+              <p className="text-slate-500" aria-live="polite">
+                Loading the text document…
+              </p>
+            ) : null}
+            <div ref={mount} />
+          </div>
         </div>
-      </div>
+      </OfficePanelLayout>
     </div>
   );
 }

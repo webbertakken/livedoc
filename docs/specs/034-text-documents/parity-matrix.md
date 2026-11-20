@@ -75,17 +75,17 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## View menu
 
-| Row                          | Rule                                      | Status    | Spec                                                                  |
-| ---------------------------- | ----------------------------------------- | --------- | --------------------------------------------------------------------- |
-| Mode                         | Editing, Suggesting, Viewing              | specified | [Review](review.md#editing-modes)                                     |
-| Show print layout            | Pages with gaps, or one continuous column | specified | [Page layout](page-layout.md#print-layout)                            |
-| Show ruler                   | The ruler on or off                       | specified | [Editing surface](editing-surface.md#the-ruler)                       |
-| Show outline                 | The outline panel                         | specified | [Links and navigation](links-and-navigation.md#the-outline)           |
-| Show equation toolbar        | The equation toolbar under the main one   | specified | [Objects](objects.md#equations)                                       |
-| Show non-printing characters | ¶, spaces, tabs and breaks drawn          | specified | [Text and paragraphs](text-and-paragraphs.md#non-printing-characters) |
-| Full screen                  | Menus and toolbar hidden until Escape     | specified | [Editing surface](editing-surface.md#compact-and-full-screen)         |
-| Text width                   | Pageless: narrow, medium, wide, full      | specified | [Page layout](page-layout.md#pageless)                                |
-| Show tabs and outlines       | The outline panel with document tabs      | specified | [Links and navigation](links-and-navigation.md#the-outline)           |
+| Row                          | Rule                                      | Status                                 | Spec                                                                  |
+| ---------------------------- | ----------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- |
+| Mode                         | Editing, Suggesting, Viewing              | specified                              | [Review](review.md#editing-modes)                                     |
+| Show print layout            | Pages with gaps, or one continuous column | specified                              | [Page layout](page-layout.md#print-layout)                            |
+| Show ruler                   | The ruler on or off                       | specified                              | [Editing surface](editing-surface.md#the-ruler)                       |
+| Show outline                 | The outline panel                         | built (`TextDocumentOutline.test.tsx`) | [Links and navigation](links-and-navigation.md#the-outline)           |
+| Show equation toolbar        | The equation toolbar under the main one   | specified                              | [Objects](objects.md#equations)                                       |
+| Show non-printing characters | ¶, spaces, tabs and breaks drawn          | specified                              | [Text and paragraphs](text-and-paragraphs.md#non-printing-characters) |
+| Full screen                  | Menus and toolbar hidden until Escape     | specified                              | [Editing surface](editing-surface.md#compact-and-full-screen)         |
+| Text width                   | Pageless: narrow, medium, wide, full      | specified                              | [Page layout](page-layout.md#pageless)                                |
+| Show tabs and outlines       | The outline panel with document tabs      | specified                              | [Links and navigation](links-and-navigation.md#the-outline)           |
 
 ## Insert menu
 
@@ -223,18 +223,18 @@ Rows that could read either way under C3 (core only), asked of Webber once with 
 
 ## Context menus, side panels and dialogs
 
-| Row                                          | Rule                                                   | Status        | Spec                                                            |
-| -------------------------------------------- | ------------------------------------------------------ | ------------- | --------------------------------------------------------------- |
-| Context menu: text                           | As the inventory lists                                 | specified     | [Editing surface](editing-surface.md#context-menus)             |
-| Context menu: table                          | Rows, columns, cells, properties                       | specified     | [Tables](tables.md#context-menu)                                |
-| Context menu: image                          | Crop, replace, options, alt text, wrap                 | specified     | [Objects](objects.md#pictures)                                  |
-| Context menu: link, chip                     | Preview, copy, edit, remove                            | specified     | [Links and navigation](links-and-navigation.md#links)           |
-| Panel: outline                               | Document tabs and their headings                       | specified     | [Links and navigation](links-and-navigation.md#the-outline)     |
-| Panel: comments                              | All, for you, filters                                  | specified     | [Review](review.md#comments)                                    |
-| Panel: version history                       | Versions, who changed what                             | specified     | [Review](review.md#version-history)                             |
-| Panel: image options                         | Size, rotation, wrap, position, recolour, adjustments  | specified     | [Objects](objects.md#pictures)                                  |
-| Panel: Calendar, Keep, Tasks, Contacts, Maps | Google's side apps                                     | left out (C3) | [Tools](tools.md#google-only-services)                          |
-| Dialog: every dialog of the inventory        | Each in its area's spec, on the shell's dialog pattern | specified     | [Office shell](../004-interface-design/office-shell.md#dialogs) |
+| Row                                          | Rule                                                   | Status                                                          | Spec                                                            |
+| -------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------- | --------------------------------------------------------------- |
+| Context menu: text                           | As the inventory lists                                 | specified                                                       | [Editing surface](editing-surface.md#context-menus)             |
+| Context menu: table                          | Rows, columns, cells, properties                       | specified                                                       | [Tables](tables.md#context-menu)                                |
+| Context menu: image                          | Crop, replace, options, alt text, wrap                 | specified                                                       | [Objects](objects.md#pictures)                                  |
+| Context menu: link, chip                     | Preview, copy, edit, remove                            | specified                                                       | [Links and navigation](links-and-navigation.md#links)           |
+| Panel: outline                               | Document tabs and their headings                       | headings built (`TextDocumentOutline.test.tsx`); tabs specified | [Links and navigation](links-and-navigation.md#the-outline)     |
+| Panel: comments                              | All, for you, filters                                  | specified                                                       | [Review](review.md#comments)                                    |
+| Panel: version history                       | Versions, who changed what                             | specified                                                       | [Review](review.md#version-history)                             |
+| Panel: image options                         | Size, rotation, wrap, position, recolour, adjustments  | specified                                                       | [Objects](objects.md#pictures)                                  |
+| Panel: Calendar, Keep, Tasks, Contacts, Maps | Google's side apps                                     | left out (C3)                                                   | [Tools](tools.md#google-only-services)                          |
+| Dialog: every dialog of the inventory        | Each in its area's spec, on the shell's dialog pattern | specified                                                       | [Office shell](../004-interface-design/office-shell.md#dialogs) |
 
 ## Shortcuts
 

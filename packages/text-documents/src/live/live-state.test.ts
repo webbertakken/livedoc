@@ -81,6 +81,17 @@ describe('the live layout', () => {
     }
   });
 
+  // docs/specs/034-text-documents/links-and-navigation.md "The outline": the outline reads the styles alone.
+  it('reads the styles alone, the format defaults while the state holds none', () => {
+    const blank = TextDocument.blank({ format: 'ooxml' });
+    expect(TextDocumentState.styles(TextDocumentState.load(), 'ooxml')).toEqual(blank.styles);
+    const renamed = blank.styles.map((style) => ({ ...style, name: `${style.name}!` }));
+    const state = TextDocumentState.load([
+      TextDocumentState.fromDocument({ ...blank, styles: renamed }),
+    ]);
+    expect(TextDocumentState.styles(state, 'ooxml')).toEqual(renamed);
+  });
+
   it('reads a paragraph written without a style, as the tracer wrote them, as Normal text', () => {
     const state = TextDocumentState.load([TextDocumentState.fromBody([{ text: 'Hello' }])]);
     const blank = TextDocument.blank();

@@ -70,6 +70,7 @@ export function OfficeMenuBar({
     <div
       role="menubar"
       aria-label={label}
+      data-region="menubar"
       className="flex items-center gap-0.5"
       onKeyDown={onKeyDown}
     >

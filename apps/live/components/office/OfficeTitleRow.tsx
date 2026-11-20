@@ -181,7 +181,7 @@ export function OfficeTitleRow({
   useOfficeShortcuts({ scope: keyScope, rows: shortcuts, runs });
 
   return (
-    <header className="office-shell bg-(--office-chrome) text-(--office-ink)">
+    <header data-region="header" className="office-shell bg-(--office-chrome) text-(--office-ink)">
       <div className="flex items-start gap-1 pt-2 pr-4 pl-2">
         {chrome ? <OfficeMark back={chrome.back} /> : null}
         <div className="relative flex min-w-0 flex-1 flex-col">
