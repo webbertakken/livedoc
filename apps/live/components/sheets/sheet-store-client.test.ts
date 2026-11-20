@@ -20,6 +20,7 @@ import {
   SHEET_REFETCH_DEBOUNCE_MS,
   writeRefusalMessage,
 } from './sheet-store-client';
+import { inPlaceLink, type EngineLink } from './sheet-engine-link';
 
 const by = { id: 'me', name: 'Me', color: '#000000' };
 let seq = 3;
@@ -566,7 +567,7 @@ describe('the sheet store client, edges', () => {
     const v = s.version;
     s.setCards(null);
     expect(s.version).toBe(v);
-    const cards = { version: 1 } as never;
+    const cards = { items: [], types: [] };
     s.setCards(cards);
     expect(s.version).toBe(v + 1);
     s.setCards(cards);
@@ -582,6 +583,8 @@ describe('the sheet store client, edges', () => {
       ],
     });
     expect(s.usesCards()).toBe(true);
+    // The Worker read the cards: none.
+    expect(s.workbook('t1').value('sheet0001', 0, 0)).toBe(0);
   });
 
   it('fetches a sheet made in the room on a loaded tab, and ignores one on a tab not loaded', async () => {
@@ -872,7 +875,7 @@ describe('a spreadsheet’s store', () => {
       }),
     },
   ];
-  function make(oneWorkbook: boolean) {
+  function make(oneWorkbook: boolean, engine?: () => EngineLink) {
     const fetchSheets = vi.fn(async (_s: unknown, which: { tabId?: string }) =>
       sheets.filter((s) => s.tabId === which.tabId),
     );
@@ -882,6 +885,7 @@ describe('a spreadsheet’s store', () => {
     const store = new SheetStore({
       scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
       oneWorkbook,
+      ...(engine ? { engine } : {}),
       self: () => by,
       locale: 'en-GB',
       pushUndo: vi.fn(),
@@ -964,21 +968,33 @@ describe('a spreadsheet’s store', () => {
   // formulas.md "Functions", settings.md "Calculation": volatile formulas tick while anyone reads the store, a Plan
   // Sheet every minute, a spreadsheet as its Recalculation says.
   it('ticks volatile formulas as the document’s Recalculation says, only while read', async () => {
-    const plan = make(false).store;
+    // Each store's engine, counting the ticks it is sent.
+    const ticks = { plan: 0, book: 0 };
+    const counting = (which: keyof typeof ticks) => (): EngineLink => {
+      const link = inPlaceLink();
+      return {
+        ...link,
+        send: (m) => {
+          if (m.msg.t === 'tick') ticks[which]++;
+          link.send(m);
+        },
+      };
+    };
+    const plan = make(false, counting('plan')).store;
     await plan.loadTab('tabA');
-    const book = make(true).store;
+    const book = make(true, counting('book')).store;
     await book.loadTab('tabA');
+    plan.workbook('tabA');
+    book.workbook('tabA');
+    // Their first values are in: readers heard of them.
+    await Promise.resolve();
     vi.useFakeTimers();
     try {
-      const planTick = vi.spyOn(plan.workbook('tabA'), 'tick');
-      const bookWb = book.workbook('tabA');
-      const bookTick = vi.spyOn(bookWb, 'tick');
       const stopPlan = plan.subscribe(() => undefined);
       const listener = vi.fn();
       const stopBook = book.subscribe(listener);
       vi.advanceTimersByTime(60_000);
-      expect(planTick).toHaveBeenCalledTimes(1);
-      expect(bookTick).not.toHaveBeenCalled();
+      expect(ticks).toEqual({ plan: 1, book: 0 });
       stopPlan();
       book.update({
         scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
@@ -988,20 +1004,16 @@ describe('a spreadsheet’s store', () => {
         locale: 'en-GB',
         pushUndo: vi.fn(),
         toast: vi.fn(),
-      });
-      // A tick that moves a value tells the readers; one that moves nothing does not.
-      bookTick.mockImplementationOnce(() => {
-        bookWb.version++;
+        engine: counting('book'),
       });
       vi.advanceTimersByTime(3_600_000);
-      expect(bookTick).toHaveBeenCalledTimes(1);
-      expect(listener).toHaveBeenCalledTimes(1);
-      vi.advanceTimersByTime(3_600_000);
-      expect(listener).toHaveBeenCalledTimes(1);
+      expect(ticks.book).toBe(1);
+      // No formula here is volatile: the tick moves nothing, so readers hear nothing.
+      await Promise.resolve();
+      expect(listener).not.toHaveBeenCalled();
       stopBook();
       vi.advanceTimersByTime(3_600_000);
-      expect(planTick).toHaveBeenCalledTimes(1);
-      expect(bookTick).toHaveBeenCalledTimes(2);
+      expect(ticks).toEqual({ plan: 1, book: 1 });
     } finally {
       vi.useRealTimers();
     }

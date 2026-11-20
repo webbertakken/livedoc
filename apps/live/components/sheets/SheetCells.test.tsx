@@ -296,3 +296,38 @@ describe('the cells', () => {
     expect((container.firstElementChild as HTMLElement).style.fontFamily).toBe('Georgia');
   });
 });
+
+// formulas.md "Recalculation": the page shows the Worker's values; one whose new value is on its way keeps its last,
+// faded once the wait outlasts a moment.
+describe('a value on its way from the engine', () => {
+  it('keeps its last value, faded after a moment, and shows the new one plainly', () => {
+    const { sheet } = sheetOf({ A1: '2', B1: '=A1*10' });
+    const copy = new Workbook({ sheets: [sheet], locale: 'en-GB', values: 'elsewhere' });
+    copy.acceptValue(sheet.id, 0, 1, 20);
+    copy.markStale([{ sheetId: sheet.id, r: 0, c: 1 }]);
+    const { rerender } = draw({ sheet, workbook: copy });
+    const waiting = textBox('20');
+    expect(waiting.hasAttribute('data-sheet-waiting')).toBe(true);
+    expect(waiting.style.opacity).toBe('0.55');
+    expect(waiting.style.transition).toBe('opacity 0s 120ms');
+    copy.acceptValue(sheet.id, 0, 1, 30);
+    rerender(
+      <SheetCells
+        sheet={sheet}
+        workbook={copy}
+        version={1}
+        geometry={geometryOf(sheet.layout)}
+        window={visibleWindow(
+          geometryOf(sheet.layout),
+          { top: 0, left: 0 },
+          { width: 800, height: 400 },
+        )}
+        scroll={{ top: 0, left: 0 }}
+        palette={palette}
+        locale="en-GB"
+      />,
+    );
+    expect(textBox('30').hasAttribute('data-sheet-waiting')).toBe(false);
+    expect(textBox('30').style.opacity).toBe('');
+  });
+});

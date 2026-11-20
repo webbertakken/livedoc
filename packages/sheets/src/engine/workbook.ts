@@ -211,6 +211,11 @@ export class Workbook {
     this.invalidate([...this.cardReaders]);
   }
 
+  /** The iterative calculation in force. */
+  iterationSetting(): Iteration {
+    return this.iteration;
+  }
+
   /** Iterative calculation turned on or off, or its rounds or threshold changed: every value is worked out afresh. */
   setIteration(iteration: Iteration): void {
     if (sameIteration(this.iteration, iteration)) return;
