@@ -123,6 +123,14 @@ export function readLiveDefaults(doc: Y.Doc, format: TextDocumentFormat): StyleD
   );
 }
 
+/** The live state's first section, or a new document's while it holds none (page-layout.md "Page setup"). */
+export function readLiveSection(doc: Y.Doc, format: TextDocumentFormat): Section {
+  return (
+    (doc.getMap<unknown>(DOCUMENT_MAP).get('section') as Section | undefined) ??
+    TextDocument.blank({ format }).section
+  );
+}
+
 /** The live state's styles, or the format's own while it holds none. */
 export function readLiveStyles(doc: Y.Doc, format: TextDocumentFormat): Style[] {
   return stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? [...TextDocument.blank({ format }).styles];

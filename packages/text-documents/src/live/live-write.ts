@@ -6,6 +6,7 @@ import { isEmpty, type TextProps } from '../model/props';
 import { TextDocument } from '../model/text-document';
 import type { Style } from '../model/styles';
 import type { ListDefinition } from '../model/lists';
+import type { Section } from '../model/sections';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
@@ -164,6 +165,12 @@ export function setLiveStyles(
 }
 
 /** A list's definition set by id, as one transaction with `origin` (lists.md "Making a list"). */
+/** Sets the first section, as one transaction with `origin` (page-layout.md "Page setup"). */
+export function setLiveSection(doc: Y.Doc, section: Section, origin?: unknown): void {
+  const meta = doc.getMap<unknown>(DOCUMENT_MAP);
+  doc.transact(() => meta.set('section', plain(section)), origin);
+}
+
 export function setLiveList(doc: Y.Doc, id: string, list: ListDefinition, origin?: unknown): void {
   const lists = doc.getMap<unknown>(LISTS_MAP);
   doc.transact(() => lists.set(id, plain(list)), origin);

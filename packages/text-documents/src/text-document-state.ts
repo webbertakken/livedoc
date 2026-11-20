@@ -5,11 +5,23 @@ import * as Y from 'yjs';
 import type { Body, Paragraph } from './body';
 import type { Style, StyleDefaults } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
-import { readLiveDefaults, readLiveDocument, readLiveStyles } from './live/live-read';
+import {
+  readLiveDefaults,
+  readLiveDocument,
+  readLiveSection,
+  readLiveStyles,
+} from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
-import { LISTS_MAP, STYLES_MAP } from './live/live-names';
+import { DOCUMENT_MAP, LISTS_MAP, STYLES_MAP } from './live/live-names';
+import type { Section } from './model/sections';
 import type { ListDefinition } from './model/lists';
-import { addLiveStyle, setLiveList, setLiveStyles, writeLiveDocument } from './live/live-write';
+import {
+  addLiveStyle,
+  setLiveList,
+  setLiveSection,
+  setLiveStyles,
+  writeLiveDocument,
+} from './live/live-write';
 
 export { BODY_FRAGMENT };
 
@@ -148,6 +160,13 @@ export const TextDocumentState = {
     styles: readonly Style[],
     origin?: unknown,
   ): void => setLiveStyles(doc, format, styles, origin),
+  /** The first section's setup, or a new document's (page-layout.md "Page setup"). */
+  section: (doc: Y.Doc, format: TextDocumentFormat): Section => readLiveSection(doc, format),
+  /** Sets the first section, as one transaction with `origin`. */
+  setSection: (doc: Y.Doc, section: Section, origin?: unknown): void =>
+    setLiveSection(doc, section, origin),
+  /** The live state's document map (metadata, defaults, the first section), which the editor's undo also tracks. */
+  metaType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(DOCUMENT_MAP),
   /** The live state's list definitions by id (lists.md). */
   lists: (doc: Y.Doc): Record<string, ListDefinition> =>
     Object.fromEntries(doc.getMap<unknown>(LISTS_MAP).entries()) as Record<string, ListDefinition>,

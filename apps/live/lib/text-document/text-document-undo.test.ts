@@ -7,6 +7,7 @@ import { TEXT_DOCUMENT_UNDO_GROUP_MS, TextDocumentState } from '@livedoc/text-do
 import { textDocumentSchema } from './text-document-schema';
 import {
   startUndoStep,
+  TEXT_DOCUMENT_PAGE_ORIGIN,
   TEXT_DOCUMENT_STYLES_ORIGIN,
   textDocumentUndoPlugins,
 } from './text-document-undo';
@@ -83,6 +84,30 @@ describe('textDocumentUndoPlugins with the styles', () => {
     TextDocumentState.setStyles(doc, 'odf', [{ ...title, text: { size: 40 } }]);
     undo(view.state);
     expect(TextDocumentState.stylesType(doc).size).toBeGreaterThan(0);
+    view.destroy();
+  });
+});
+
+// docs/specs/034-text-documents/editing-surface.md "The ruler": a margin dragged is one undo step.
+describe('textDocumentUndoPlugins with the page setup', () => {
+  it('undoes a section change made with the page origin', async () => {
+    const doc = TextDocumentState.load();
+    const view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        schema: textDocumentSchema,
+        plugins: [ySyncPlugin(TextDocumentState.body(doc)), ...textDocumentUndoPlugins()],
+      }),
+    });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const section = TextDocumentState.section(doc, 'odf');
+    const wider = {
+      ...section,
+      setup: { ...section.setup, margins: { ...section.setup.margins, left: 36 } },
+    };
+    TextDocumentState.setSection(doc, wider, TEXT_DOCUMENT_PAGE_ORIGIN);
+    expect(TextDocumentState.section(doc, 'odf').setup.margins.left).toBe(36);
+    undo(view.state);
+    expect(TextDocumentState.section(doc, 'odf').setup.margins.left).toBe(72);
     view.destroy();
   });
 });

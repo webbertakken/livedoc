@@ -16,7 +16,7 @@ behaviour, which hold either way. Each control's row is in the [parity matrix](p
 2. **Menu bar** (under the name, in the title row's second line as Google has it): File, Edit, View, Insert, Format,
    Tools, Extensions, Help.
 3. **Toolbar** (40 px), a rounded bar across the window.
-4. **Ruler** (when shown), across the page's width, aligned to it.
+4. **Ruler** (when shown), across the page's width, aligned to it ([The ruler](#the-ruler)).
 5. **The canvas of pages**: the pages centred on a grey ground, scrolling vertically; the outline panel at its left
    edge, side panels at its right.
 6. **No status bar**, as Google has none; the word count shows in a floating box at the bottom left when chosen.
@@ -134,14 +134,40 @@ Left to right, as Google has it, with a divider between groups:
 
 ## The ruler
 
-- Across the page at the page's scale, in centimetres or inches (by the browser's locale, per person in Preferences).
-- Shows the margins (the grey ends), the left indent, first-line indent and right indent markers, and tab stops.
-- Dragging a margin changes the section's margins; an indent marker, the selected paragraphs' indents; a press on the
-  ruler opens a menu of Add left tab stop, Add centre tab stop and Add right tab stop at that point, as Google's;
-  a stop drags along the ruler, and dragging one off the ruler takes it away
-  ([Tab stops](text-and-paragraphs.md#tab-stops)). A decimal stop from a file is drawn and moves like the others.
-- While dragging, a vertical guide runs down the page and a tooltip shows the value.
-- Each marker is a keyboard stop (arrow keys move it by an eighth of the unit, Shift by a whole unit).
+- **Shown** under the toolbar while View > Show ruler is on: on by default, per person, remembered in this browser
+  (`livedoc:v2:text-document-ruler`) (default). It runs across the page at the page's zoom, aligned to it as the page
+  scrolls sideways; a phone has none, as Google's app has none (default).
+- **Its scale**: inches where the browser's language is American English, else centimetres, as Indentation options
+  counts (default). A mark every eighth of an inch (a quarter of a centimetre), a longer one at each half, and each
+  whole unit numbered from the left margin, counting up both ways.
+- **The margins** are the grey ends; the white between them is the text area. Dragging a margin's inner edge sets
+  that margin of the section (the first section's while sections are not built, [Page layout](page-layout.md)), the
+  text area kept at least 1 in wide (default).
+- **The indents** of the paragraph at the selection's start: the **left indent** (a triangle under the line), the
+  **first line indent** (a bar above it) and the **right indent** (a triangle at the right). Dragging the left indent
+  moves the first line with it, as ⌘] does; the first line indent moves alone; each sets every paragraph the
+  selection touches, as Indentation options does, held within the text area and the left and right indents at least
+  0.5 in apart (default).
+- **Tab stops** of the paragraph at the selection's start, each a mark by its alignment, as Google draws them: an
+  angle opening right for left, a T for centre, an angle opening left for right, a T with a dot for decimal.
+- **A press on the ruler** away from a marker opens a menu at that point: **Add left tab stop**, **Add centre tab
+  stop** and **Add right tab stop**, as Google's; the stop goes at the pressed point on every paragraph the selection
+  touches. A stop drags along the ruler; dragged more than 24 px above or below it (default), it is drawn faded and,
+  let go, taken away. A decimal stop from a file is drawn and moves like the others.
+- **Snapping**: a drag and a pressed point snap to the nearest mark (an eighth of an inch, a quarter of a centimetre);
+  Alt (Option) held while dragging moves freely (default, as Word does).
+- **While dragging**, a vertical guide runs down the page at the point and a tooltip shows the value: "Left margin:
+  1 in", "Left indent: 0.5 in", "First line indent: 0.25 in", "Right indent: 0 in", "Tab stop: 2 in" (in cm with the
+  unit "cm"). Escape puts the marker back.
+- Every change is one undo step and returns focus to the writing.
+- **Keyboard**: each marker is a slider and a keyboard stop of its own (`role="slider"`, named as its tooltip names it,
+  its value in the unit as `aria-valuetext`): Left and Right move it by an eighth of the unit, with Shift by a whole
+  unit; on a tab stop, Delete or Backspace takes it away. The ruler's strip is a keyboard stop too: Enter or Space opens
+  the add menu at the first mark past the last stop (default).
+- Share roles: an Editor drags, adds and takes away; a Participant and a Viewer see the ruler without handles (its
+  markers drawn, never focusable) (default, as Google's view-only ruler).
+- Telemetry: `UI · Toggled · TextDocumentRuler`; `Element · Changed · TextDocumentTabStop` (added, moved, taken away),
+  `TextDocumentRulerIndent`; `Tab · Changed · TextDocumentMargins`.
 
 ## Zoom
 
