@@ -14,6 +14,7 @@ export const FUNCTION_FAMILY_LABELS: Record<FunctionFamily, string> = {
   Maths: 'Maths',
   Operators: 'Operator',
   Statistics: 'Statistics',
+  Database: 'Database',
   Logic: 'Logic',
   Information: 'Information',
   Lookup: 'Lookup',

@@ -3,6 +3,7 @@
 import type { FnDef } from './fn';
 import { ARRAY_FUNCTIONS } from './functions/array';
 import { CARD_FUNCTIONS } from './functions/cards';
+import { DATABASE_FUNCTIONS } from './functions/database';
 import { DATE_FUNCTIONS } from './functions/date';
 import { FINANCE_FUNCTIONS } from './functions/finance';
 import { INFO_FUNCTIONS } from './functions/info';
@@ -17,6 +18,7 @@ export type FunctionFamily =
   | 'Maths'
   | 'Operators'
   | 'Statistics'
+  | 'Database'
   | 'Logic'
   | 'Information'
   | 'Lookup'
@@ -30,6 +32,7 @@ export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>]
   ['Maths', MATH_FUNCTIONS],
   ['Operators', OPERATOR_FUNCTIONS],
   ['Statistics', STATS_FUNCTIONS],
+  ['Database', DATABASE_FUNCTIONS],
   ['Logic', LOGIC_FUNCTIONS],
   ['Information', INFO_FUNCTIONS],
   ['Lookup', LOOKUP_FUNCTIONS],

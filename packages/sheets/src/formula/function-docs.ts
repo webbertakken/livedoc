@@ -229,6 +229,68 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   VAR: D('value1, [value2, …]', 'The variance of a sample', '=VAR(B2:B10)'),
   'VAR.P': D('value1, [value2, …]', 'The variance of a whole population', '=VAR.P(B2:B10)'),
   CORREL: D('range1, range2', 'The correlation of two ranges', '=CORREL(A2:A10, B2:B10)'),
+  // Database
+  DSUM: D(
+    'database, field, criteria',
+    'Adds a field of the records that meet criteria',
+    '=DSUM(A1:D20, "Price", F1:F2)',
+  ),
+  DAVERAGE: D(
+    'database, field, criteria',
+    'The average of a field of the records that meet criteria',
+    '=DAVERAGE(A1:D20, "Price", F1:F2)',
+  ),
+  DCOUNT: D(
+    'database, field, criteria',
+    'How many numbers a field of the matching records holds',
+    '=DCOUNT(A1:D20, "Price", F1:F2)',
+  ),
+  DCOUNTA: D(
+    'database, field, criteria',
+    'How many values a field of the matching records holds',
+    '=DCOUNTA(A1:D20, "Price", F1:F2)',
+  ),
+  DGET: D(
+    'database, field, criteria',
+    'The field of the one record that meets criteria',
+    '=DGET(A1:D20, "Price", {"Name"; "Egg"})',
+  ),
+  DMAX: D(
+    'database, field, criteria',
+    'The largest number in a field of the matching records',
+    '=DMAX(A1:D20, "Price", F1:F2)',
+  ),
+  DMIN: D(
+    'database, field, criteria',
+    'The smallest number in a field of the matching records',
+    '=DMIN(A1:D20, "Price", F1:F2)',
+  ),
+  DPRODUCT: D(
+    'database, field, criteria',
+    'Multiplies a field of the records that meet criteria',
+    '=DPRODUCT(A1:D20, "Price", F1:F2)',
+  ),
+  DSTDEV: D(
+    'database, field, criteria',
+    'The sample standard deviation of a field of the matching records',
+    '=DSTDEV(A1:D20, "Price", F1:F2)',
+  ),
+  DSTDEVP: D(
+    'database, field, criteria',
+    'The population standard deviation of a field of the matching records',
+    '=DSTDEVP(A1:D20, "Price", F1:F2)',
+  ),
+  DVAR: D(
+    'database, field, criteria',
+    'The sample variance of a field of the matching records',
+    '=DVAR(A1:D20, "Price", F1:F2)',
+  ),
+  DVARP: D(
+    'database, field, criteria',
+    'The population variance of a field of the matching records',
+    '=DVARP(A1:D20, "Price", F1:F2)',
+  ),
+
   // Logic
   IF: D(
     'condition, if_true, [if_false]',
