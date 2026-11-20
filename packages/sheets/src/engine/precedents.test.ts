@@ -25,14 +25,14 @@ function sheet(id: string, cells: Record<string, StoredFormula | number>): Sheet
 describe('formulaPrecedents', () => {
   it('names the formula cells a formula reads one by one, on its sheet or another by id', () => {
     const f: StoredFormula = { t: '=1', r: [] };
-    const own = sheet('own', { 'r1:c1': f, 'r1:c2': 5 });
+    const own = sheet('own', { 'r1:c1': f, 'r1:c2': 5, 'gone:c1': f });
     const other = sheet('other', { 'r2:c2': f });
     const sheets = new Map([
       ['own', own],
       ['other', other],
     ]);
     const formula: StoredFormula = {
-      t: '=@0+@1+@2+@3+@4+@5+@6+@7',
+      t: '=@0+@1+@2+@3+@4+@5+@6+@7+@8',
       r: [
         { r1: 'r1', c1: 'c1' },
         { r1: 'r1', c1: 'c2' },
@@ -42,12 +42,14 @@ describe('formulaPrecedents', () => {
         { st: 'Gone', p: [0, 0, -1, -1] },
         { c1: 'c1', c2: 'c1' },
         { s: 'missing', r1: 'r1', c1: 'c1' },
+        { r1: 'gone', c1: 'c1' },
       ],
     };
-    expect(formulaPrecedents(formula, 'own', (id) => sheets.get(id))).toEqual([
-      'own|r1:c1',
-      'other|r2:c2',
-    ]);
+    expect(
+      formulaPrecedents(formula, 'own', (id) => sheets.get(id)).map(
+        (p) => `${p.sheet.id}!${p.r},${p.c}`,
+      ),
+    ).toEqual(['own!0,0', 'other!1,1']);
   });
 });
 

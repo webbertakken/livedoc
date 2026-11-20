@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { book } from '../testing/book';
 import { Workbook } from './workbook';
+import { compileFormula } from '../formula/stored';
 
 describe('values and recalculation', () => {
   it('works out formulas through references', () => {
@@ -35,6 +36,23 @@ describe('values and recalculation', () => {
     expect(b.v('A1')).toBe(42);
     b.set('B2', '1', 'Budget');
     expect(b.v('A1')).toBe(2);
+  });
+  it('spills a formula typed in later, over cells nothing read before', () => {
+    const b = book({ C1: '5' });
+    expect(b.v('A3')).toBe(null);
+    b.set('A1', '=SEQUENCE(3)');
+    expect(b.v('A3')).toBe(3);
+    b.set('A1', '7');
+    expect(b.v('A3')).toBe(null);
+  });
+  it('works a rule out at the end of a chain longer than the stack holds', () => {
+    const cells: Record<string, string> = { A1: '1' };
+    for (let i = 2; i <= 600; i++) cells[`A${i}`] = `=A${i - 1}+1`;
+    const b = book(cells, { rows: 600 });
+    const sheet = b.sheets[0]!;
+    const rule = compileFormula('=A600*2', b.wb.ctxFor(sheet.id));
+    if (!rule.ok) throw new Error('rule');
+    expect(b.wb.evaluateAt(sheet.id, 0, 3, rule.formula)).toBe(1_200);
   });
   it('shows #REF! for a circular formula, with its loop', () => {
     const b = book({ A1: '=B1', B1: '=A1' });
