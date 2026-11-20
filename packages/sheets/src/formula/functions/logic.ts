@@ -39,11 +39,14 @@ function whenArray(cond: Value, then: Thunk, otherwise: Thunk | null, f: Frame):
   });
 }
 
-function caught(test: (v: Value) => boolean): FnDef {
-  return lazyFn(2, 2, ([value, fallback], f) => {
+// IFERROR and IFNA: the value, or the fallback where it is caught. IFERROR's fallback is optional, blank by default
+// (Google's); IFNA's is not.
+function caught(test: (v: Value) => boolean, min: 1 | 2): FnDef {
+  return lazyFn(min, 2, ([value, fallback], f) => {
     const v = deref(value!(), f);
-    if (isArray(v)) return lift([v, deref(fallback!(), f)], ([x, y]) => (test(x!) ? y! : x!));
-    return test(v) ? fallback!() : v;
+    const otherwise = fallback ?? (() => null);
+    if (isArray(v)) return lift([v, deref(otherwise(), f)], ([x, y]) => (test(x!) ? y! : x!));
+    return test(v) ? otherwise() : v;
   });
 }
 
@@ -94,6 +97,6 @@ export const LOGIC_FUNCTIONS: Record<string, FnDef> = {
   }),
   TRUE: fn(0, 0, () => true),
   FALSE: fn(0, 0, () => false),
-  IFERROR: caught((v) => isError(v)),
-  IFNA: caught((v) => isError(v) && v.e === '#N/A'),
+  IFERROR: caught((v) => isError(v), 1),
+  IFNA: caught((v) => isError(v) && v.e === '#N/A', 2),
 };

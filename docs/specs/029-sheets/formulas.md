@@ -202,6 +202,8 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
 
 **Logic**: `IF`, `IFS`, `SWITCH`, `AND`, `OR`, `XOR`, `NOT`, `TRUE`, `FALSE`, `IFERROR`, `IFNA`.
 
+- `IFERROR(value, [value_if_error])` gives a blank for an error when it has no fallback, as Google's does.
+
 **Information**: `ISBLANK`, `ISNUMBER`, `ISTEXT`, `ISNONTEXT`, `ISLOGICAL`, `ISERROR`, `ISERR`, `ISNA`, `ISREF`,
 `ISDATE`, `ISEMAIL`, `ISFORMULA`, `ERROR.TYPE`, `NA`, `N`, `TYPE`, `CELL`, `SHEETS`.
 
