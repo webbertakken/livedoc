@@ -8,7 +8,7 @@ import type {
 } from '@livedoc/office-packages';
 import { Paragraph, type Block } from './blocks';
 import type { ListDefinition } from './lists';
-import { PageSetup, type PAPER, type Section } from './sections';
+import { PageSetup, type PaperName, type Section } from './sections';
 import { Styles, type Style, type StyleDefaults } from './styles';
 
 export type TextDocumentFormat = 'odf' | 'ooxml';
@@ -76,7 +76,7 @@ export type TextDocument = {
 
 export type BlankOptions = {
   format?: TextDocumentFormat;
-  paper?: keyof typeof PAPER;
+  paper?: PaperName;
   title?: string;
 };
 

@@ -40,7 +40,7 @@ export function OfficeDialog({
   // What the dialog confirms; Cancel comes with it. None: the dialog only shows, and its × closes it.
   primary?: OfficeDialogPrimary;
   // An action that changes only the dialog (Reset), at the footer's start.
-  secondary?: { label: string; onPress: () => void };
+  secondary?: { label: string; onPress: () => void; disabled?: boolean };
   children: ReactNode;
 }) {
   const titleId = useId();
@@ -95,7 +95,8 @@ export function OfficeDialog({
               <button
                 type="button"
                 onClick={secondary.onPress}
-                className={`${PILL} border border-(--office-line) text-(--office-primary) hover:bg-(--office-hover) sm:mr-auto max-sm:border-0 max-sm:px-3`}
+                disabled={secondary.disabled}
+                className={`${PILL} border border-(--office-line) text-(--office-primary) hover:bg-(--office-hover) disabled:opacity-40 disabled:hover:bg-transparent sm:mr-auto max-sm:border-0 max-sm:px-3`}
               >
                 <span className="text-optical-centre">{secondary.label}</span>
               </button>

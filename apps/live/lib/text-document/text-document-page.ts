@@ -1,20 +1,23 @@
-// The page drawn at its setup (docs/specs/034-text-documents/page-layout.md "Page setup"): the first section's paper
-// width and margins, read live so a margin dragged on the ruler, by anyone, redraws the page.
+// The page drawn at its setup (docs/specs/034-text-documents/page-layout.md "Page setup"): the first section's paper,
+// margins and colour, read live so a margin dragged on the ruler, by anyone, redraws the page.
 import { useEffect, useState, type CSSProperties, type RefObject } from 'react';
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { TextDocumentState, type PageSetup, type Section } from '@livedoc/text-documents';
-
-/** The text area keeps at least this width when a margin is dragged: 1 in (default). */
-export const MIN_TEXT_WIDTH_PT = 72;
+import {
+  MIN_TEXT_SIDE_PT,
+  TextDocumentState,
+  type PageSetup,
+  type Section,
+} from '@livedoc/text-documents';
+import { paperFill } from './text-document-paper';
 
 export type MarginSide = 'left' | 'right';
 
-/** The setup with one side's margin at `pt`, held so the text area keeps `MIN_TEXT_WIDTH_PT`. */
+/** The setup with one side's margin at `pt`, held so the text area keeps `MIN_TEXT_SIDE_PT`. */
 export function setMargin(setup: PageSetup, side: MarginSide, pt: number): PageSetup {
   const other = side === 'left' ? setup.margins.right : setup.margins.left;
   const held =
-    Math.round(Math.min(Math.max(pt, 0), setup.width - other - MIN_TEXT_WIDTH_PT) * 1000) / 1000;
+    Math.round(Math.min(Math.max(pt, 0), setup.width - other - MIN_TEXT_SIDE_PT) * 1000) / 1000;
   return { ...setup, margins: { ...setup.margins, [side]: held } };
 }
 
@@ -22,7 +25,7 @@ export function setMargin(setup: PageSetup, side: MarginSide, pt: number): PageS
 export const textWidthOf = (setup: PageSetup): number =>
   setup.width - setup.margins.left - setup.margins.right;
 
-/** The page's width and margins as CSS variables, read by the page's classes (a phone keeps its own). */
+/** The page's sides, margins and colour as CSS variables, read by the page's classes (a phone keeps its own). */
 export function pageBox(setup: PageSetup): CSSProperties {
   const m = setup.margins;
   return {
@@ -32,6 +35,7 @@ export function pageBox(setup: PageSetup): CSSProperties {
     '--page-bottom': `${m.bottom}pt`,
     '--page-left': `${m.left}pt`,
     '--page-right': `${m.right}pt`,
+    ...(setup.pageColor ? { '--page-colour': paperFill(setup.pageColor) } : {}),
   } as CSSProperties;
 }
 

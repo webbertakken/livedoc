@@ -15,6 +15,10 @@ import { clipboardActions } from './text-document-clipboard';
 import { STRETCH_KEY_ROW } from './text-document-stretches';
 import { PREFERENCES_ITEM } from '@/components/text-document/useTextDocumentPreferences';
 import {
+  PAGE_ORIENTATION_ITEM,
+  PAGE_SETUP_ITEM,
+} from '@/components/text-document/useTextDocumentPageSetup';
+import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
   TEXT_DOCUMENT_KEY_ACTIONS,
   textDocumentFormatActions,
@@ -63,6 +67,9 @@ describe('the text document menus', () => {
         ...Object.keys(clipboardActions(null, { canEdit: true, onRefused: () => {} })),
         // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
         PREFERENCES_ITEM,
+        // File > Page setup and Format > Page orientation (useTextDocumentPageSetup), bound by the surface.
+        PAGE_SETUP_ITEM,
+        PAGE_ORIENTATION_ITEM,
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,

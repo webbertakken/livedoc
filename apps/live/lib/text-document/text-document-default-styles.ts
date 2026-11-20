@@ -1,6 +1,6 @@
 // A person's default styles (docs/specs/034-text-documents/text-and-paragraphs.md "Default styles"): kept in their
 // preferences (with their account, else this browser's guest identity), read back checked, and the text documents
-// they just made (text-document-made.ts) starting in them when they first open.
+// they just made starting in them when they first open (text-document-new-start.ts).
 import type * as Y from 'yjs';
 import {
   DefaultStyles,
@@ -12,7 +12,6 @@ import {
 import type { TextDocumentFormat } from '@livedoc/document';
 import { debugLog } from '@/lib/debug-log';
 import { readUserPreferences, writeUserPreferences } from '@/lib/user-preferences';
-import { takeTextDocumentMade } from './text-document-made';
 
 /** The person's default styles; none saved, or a set that does not read back, is Google's (an empty set). */
 export function readDefaultStyles(): DefaultStyles {
@@ -52,14 +51,10 @@ export function stylesForNewDocument(
 }
 
 /**
- * A text document this browser tab just made starts in its maker's default styles, the first time it opens, before
- * anything is typed and never as an undo step (text-and-paragraphs.md "Default styles"). Answers whether it did.
+ * A text document just made here starts in its maker's default styles, before anything is typed and never as an undo
+ * step (text-and-paragraphs.md "Default styles"). Answers whether it set any.
  */
-export function startInDefaultStyles(
-  doc: Y.Doc,
-  { tabId, format, canEdit }: { tabId: string; format: TextDocumentFormat; canEdit: boolean },
-): boolean {
-  if (!takeTextDocumentMade(tabId) || !canEdit) return false;
+export function applyDefaultStylesToNew(doc: Y.Doc, format: TextDocumentFormat): boolean {
   if (TextDocumentState.stylesType(doc).size > 0) return false;
   const changed = stylesForNewDocument(readDefaultStyles(), {
     styles: TextDocumentState.styles(doc, format),
@@ -69,7 +64,6 @@ export function startInDefaultStyles(
   if (changed.length === 0) return false;
   TextDocumentState.setStyles(doc, format, changed);
   debugLog('[text-document] default styles applied to a new document', {
-    tabId,
     styles: changed.length,
   });
   return true;

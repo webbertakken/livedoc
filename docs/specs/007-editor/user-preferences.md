@@ -305,6 +305,9 @@ type UserPreferences = {
   // A text document's typing aids (../034-text-documents/text-and-paragraphs.md "Typing aids"): only what differs from
   // Google's (switches, defaults off or removed, the person's own pairs). Validated on read (TypingAids.parse), never trimmed.
   textDocumentTypingAids?: Record<string, unknown>;
+  // A text document's default page setup (../034-text-documents/page-layout.md "Page setup"): sides, orientation,
+  // margins and colour in points, as Set as default kept them. Validated on read (PageSetup.parse), never trimmed.
+  textDocumentPageSetup?: Record<string, unknown>;
   // DEAD (../004-interface-design/colour-picker.md "Custom colours"): Custom colours are kept with the document's tabs, not per user.
   // Nothing reads or writes this; it stays because it is already stored.
   customSwatches?: string[];

@@ -4,11 +4,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StyleLooks, Styles, TextDocument, TextDocumentState } from '@livedoc/text-documents';
 import { readUserPreferences, STORAGE_KEY } from '@/lib/user-preferences';
-import { noteTextDocumentMade } from './text-document-made';
 import {
   readDefaultStyles,
   saveDefaultStyles,
-  startInDefaultStyles,
+  applyDefaultStylesToNew,
   stylesForNewDocument,
 } from './text-document-default-styles';
 
@@ -81,43 +80,31 @@ describe('stylesForNewDocument', () => {
   });
 });
 
-describe('startInDefaultStyles', () => {
+describe('applyDefaultStylesToNew', () => {
   const saved = { normal: { text: { font: 'Georgia' } } };
-  const opened = (tabId = 't1', canEdit = true) => {
-    const doc = TextDocumentState.load();
-    return { doc, started: startInDefaultStyles(doc, { tabId, format: 'odf', canEdit }) };
-  };
 
-  it("starts a document made here in its maker's default styles, once", () => {
+  it("sets a new document's styles to its maker's default styles", () => {
     saveDefaultStyles(saved, null);
-    noteTextDocumentMade('t1');
-    const { doc, started } = opened();
-    expect(started).toBe(true);
+    const doc = TextDocumentState.load();
+    expect(applyDefaultStylesToNew(doc, 'odf')).toBe(true);
     const styles = TextDocumentState.styles(doc, 'odf');
     expect(
       StyleLooks.of(styles, TextDocumentState.defaults(doc, 'odf'), 'Standard').text.font,
     ).toBe('Georgia');
-    expect(opened().started).toBe(false);
   });
 
-  it('leaves a document not made here, one made with none saved, or for a session that cannot edit', () => {
-    saveDefaultStyles(saved, null);
-    expect(opened('elsewhere').started).toBe(false);
-    noteTextDocumentMade('t2');
-    expect(opened('t2', false).started).toBe(false);
+  it('leaves a document when none are saved', () => {
     saveDefaultStyles({}, null);
-    noteTextDocumentMade('t3');
-    const { doc, started } = opened('t3');
-    expect(started).toBe(false);
+    const doc = TextDocumentState.load();
+    expect(applyDefaultStylesToNew(doc, 'odf')).toBe(false);
     expect(TextDocumentState.stylesType(doc).size).toBe(0);
   });
 
   it('leaves a document whose styles are already its own', () => {
     saveDefaultStyles(saved, null);
-    noteTextDocumentMade('t4');
     const doc = TextDocumentState.load();
     const blank = TextDocument.blank({ format: 'odf' });
     TextDocumentState.setStyles(doc, 'odf', [blank.styles[0]!]);
-    expect(startInDefaultStyles(doc, { tabId: 't4', format: 'odf', canEdit: true })).toBe(false);
+    expect(applyDefaultStylesToNew(doc, 'odf')).toBe(false);
   });
 });
