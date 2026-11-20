@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { GoogleFont } from '@/lib/document-fonts/google-font-catalogue';
 import { createGoogleFontLoads } from '@/lib/document-fonts/google-font-loading';
-import { OfficeMoreFontsDialog } from './OfficeMoreFontsDialog';
+import { MyFontsColumn, OfficeMoreFontsDialog } from './OfficeMoreFontsDialog';
 
 const google = (
   name: string,
@@ -245,5 +245,39 @@ describe('OfficeMoreFontsDialog', () => {
     reject(new Error('late'));
     await waitFor(() => expect(log).toHaveBeenCalled());
     log.mockRestore();
+  });
+});
+
+// fonts.md "More fonts": focus after a removal follows the list it was made against, whatever renders come between
+// (a render left over from the catalogue or a preview loading runs its effects first).
+describe('MyFontsColumn', () => {
+  it('sends focus on only once the removal has changed the list, however often it draws before', () => {
+    const onRemove = vi.fn();
+    const draw = (fonts: readonly string[], onEmptied: () => void) => (
+      <div>
+        <input aria-label="Search" />
+        <MyFontsColumn fonts={fonts} onRemove={onRemove} onEmptied={onEmptied} />
+      </div>
+    );
+    const search = () => screen.getByRole('textbox', { name: 'Search' });
+    const { rerender } = render(draw(['Lora'], () => search().focus()));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Lora' }));
+    // A render that changes nothing the column shows: the list is as it was.
+    rerender(draw(['Lora'], () => search().focus()));
+    expect(document.activeElement).not.toBe(screen.getByRole('button', { name: 'Remove Lora' }));
+    // The removal lands: the list is empty, so focus goes on to the search.
+    rerender(draw([], () => search().focus()));
+    expect(document.activeElement).toBe(search());
+  });
+
+  it("sends focus to the row that took the removed one's place", () => {
+    const draw = (fonts: readonly string[]) => (
+      <MyFontsColumn fonts={fonts} onRemove={() => {}} onEmptied={() => {}} />
+    );
+    const { rerender } = render(draw(['Arial', 'Lora', 'Rubik']));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Lora' }));
+    rerender(draw(['Arial', 'Lora', 'Rubik']));
+    rerender(draw(['Arial', 'Rubik']));
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Remove Rubik' }));
   });
 });
