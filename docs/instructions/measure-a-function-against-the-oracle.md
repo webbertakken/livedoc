@@ -10,7 +10,8 @@ The corpus lives in `packages/sheets/oracle/` ([its README](../../packages/sheet
    cell, text where a number goes, a range where a value goes, and an array result with its `rows` and `cols`.
 5. Give each case the id `<NAME>.<n>`, numbered on from the last; never renumber or reuse an id.
 6. Run `pnpm --filter @livedoc/sheets oracle:libreoffice` (one category: `ORACLE_CATEGORY=<Category>` before it).
-7. Read the new answers in `oracle/answers/libreoffice/<Category>.json`; a `Err:5xx` is LibreOffice's own error.
+7. Run `npx prettier --write` on the new answers file (the script writes plain JSON; the pre-push check refuses it).
+   Read the new answers in `oracle/answers/libreoffice/<Category>.json`; a `Err:5xx` is LibreOffice's own error.
 8. Where LibreOffice answers otherwise than Google documents, add `differs.libreoffice` with why, and the documented
    answer as `expect` with `cite` (the help page's address and what it says); never type an answer without a cite.
 9. A Google-only function (ODF name S5, written `ORG.LIVEDOC.`) is `#NAME?` in LibreOffice: give each of its cases
