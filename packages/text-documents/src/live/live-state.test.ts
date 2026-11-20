@@ -93,6 +93,26 @@ describe('the live layout', () => {
   });
 
   // text-and-paragraphs.md "Text formatting": a character's formatting through its styles starts at the defaults.
+  it('adds a style the state lacks after its others, and nothing while the format set stands', () => {
+    const blank = TextDocument.blank({ format: 'odf' });
+    const fresh = TextDocumentState.load();
+    const quote = {
+      id: 'Quote',
+      name: 'Quote',
+      family: 'paragraph' as const,
+      paragraph: {},
+      text: {},
+    };
+    TextDocumentState.addStyle(fresh, quote);
+    expect(TextDocumentState.styles(fresh, 'odf')).toEqual(blank.styles);
+    const held = TextDocumentState.load([
+      TextDocumentState.fromDocument({ ...blank, styles: blank.styles.slice(0, 1) }),
+    ]);
+    TextDocumentState.addStyle(held, blank.styles[1]!);
+    TextDocumentState.addStyle(held, blank.styles[0]!);
+    expect(TextDocumentState.styles(held, 'odf')).toEqual(blank.styles.slice(0, 2));
+  });
+
   it('reads the style defaults alone, the format defaults while the state holds none', () => {
     const blank = TextDocument.blank({ format: 'odf' });
     expect(TextDocumentState.defaults(TextDocumentState.load(), 'odf')).toEqual(blank.defaults);

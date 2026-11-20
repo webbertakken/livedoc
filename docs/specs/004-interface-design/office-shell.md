@@ -109,6 +109,10 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   Enter, anything else puts the value back; Down or the chevron opens the list, Up and Down move in it, Enter takes
   one, Escape closes it, then puts back what was typed. The font size field shows the value at the caret, blank over
   a mixed selection, with − and + either side; taking a size returns focus to the writing.
+- **Choice controls** (the Styles control) show the value at the caret as text with a chevron, blank over a mixed
+  selection, and open a menu of the kind's choices, the one at the caret checked; a choice returns focus to the writing.
+- **Colour controls** (Text colour, Highlight colour) show their glyph over a bar in the colour at the caret and open
+  the [colour picker](colour-picker.md) in its swatch-button skin.
 - A `comingSoon` control is drawn dimmed (`aria-disabled`), its tooltip saying "Coming soon"; a `built` control left
   unbound for the session, or above its level, is not drawn; a group left empty is not drawn, nor its divider.
 - **Overflow**: the controls that do not fit move, from the right, behind a ⋮ button ("More") at the bar's end; it

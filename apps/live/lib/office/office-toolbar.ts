@@ -14,10 +14,12 @@ export type OfficeControlLook =
   | { kind: 'fontSize' }
   | { kind: 'font' }
   // A colour, bound by the shell's colour of its id: its glyph over a bar in the colour, opening the colour picker.
-  | { kind: 'colour'; icon: readonly IconPrim[] };
+  | { kind: 'colour'; icon: readonly IconPrim[] }
+  // A choice, bound by the shell's choice of its id: the value at the caret, `width` px wide, opening its menu.
+  | { kind: 'choice'; width: number };
 
 /** The toolbar's value fields (office-shell.md "Toolbar"). */
-export type OfficeFieldKind = 'zoom' | 'fontSize' | 'font' | 'colour';
+export type OfficeFieldKind = 'zoom' | 'fontSize' | 'font' | 'colour' | 'choice';
 
 export type OfficeControl = {
   id: string;
@@ -47,7 +49,8 @@ export function visibleToolbar(
       (control.look.kind === 'zoom' ||
       control.look.kind === 'fontSize' ||
       control.look.kind === 'font' ||
-      control.look.kind === 'colour'
+      control.look.kind === 'colour' ||
+      control.look.kind === 'choice'
         ? fields[control.look.kind]
         : actions[control.id] !== undefined));
   return toolbar.flatMap((group) => {

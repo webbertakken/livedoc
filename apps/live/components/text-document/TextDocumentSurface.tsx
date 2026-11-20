@@ -28,6 +28,7 @@ import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo'
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
+import { useTextDocumentParagraphStyles } from '@/lib/text-document/useTextDocumentParagraphStyles';
 import {
   TEXT_DOCUMENT_LIMIT_NOTICES,
   textDocumentLimitPlugin,
@@ -288,15 +289,18 @@ export function TextDocumentSurface({
   const formatting = useTextDocumentFormatting(editorView, liveDoc, format, writes);
   // A family from Google Fonts that the text names loads from there (fonts.md "Substitution").
   useGoogleDocumentFonts(editorView, liveDoc, format, changes.subscribe);
+  // Format > Paragraph styles and the Styles control, the paragraphs drawn in their styles.
+  const paragraphStyles = useTextDocumentParagraphStyles(editorView, liveDoc, format, writes);
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
       ...textDocumentEditorActions(editorView, { canEdit: writes }),
       ...formatting.actions,
+      ...paragraphStyles.actions,
       ...modeActions,
       ...panels.actions,
     }),
-    [editorView, writes, formatting.actions, modeActions, panels.actions],
+    [editorView, writes, formatting.actions, paragraphStyles.actions, modeActions, panels.actions],
   );
   // The caret, for the context menu on text.
   const caret = useMemo(
@@ -348,6 +352,7 @@ export function TextDocumentSurface({
         fontSize={formatting.fontSize}
         fontFamily={formatting.fontFamily}
         colours={formatting.colours}
+        choices={paragraphStyles.choices}
         refresh={changes.subscribeCaret}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false

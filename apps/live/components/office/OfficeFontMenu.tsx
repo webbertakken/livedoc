@@ -6,16 +6,14 @@
 // remembers it among the recent ones and hands it to the kind; More fonts opens the Fonts dialog, whose OK keeps My
 // fonts. The families of My fonts from Google Fonts load as the menu opens.
 import { useCallback, useMemo, useState, useSyncExternalStore } from 'react';
-import { ChevronDownIcon, HoverCard } from '@livedoc/ui';
 import { track } from '@/lib/telemetry';
 import { loadGoogleFamilies } from '@/lib/document-fonts/google-families';
 import { googleFontLoads } from '@/lib/document-fonts/google-font-loading';
 import { fontMenuActions, fontMenuEntries, fontShownAs } from '@/lib/office/office-font-menu';
 import { MyFonts, readMyFonts, writeMyFonts } from '@/lib/office/office-my-fonts';
 import { noteRecentFont, readRecentFonts } from '@/lib/office/office-recent-fonts';
-import { OfficeMenuPanel } from './OfficeMenuPanel';
+import { OfficeChoiceMenu } from './OfficeChoiceMenu';
 import { OfficeMoreFontsDialog } from './OfficeMoreFontsDialog';
-import { OfficePopup } from './OfficePopup';
 
 /**
  * What the kind hands the font control: the family now (read by the toolbar as the caret changes), how to set one,
@@ -26,8 +24,6 @@ export type OfficeFontFamily = {
   set: (family: string) => void;
   telemetryKind?: string;
 };
-
-const NO_SHORTCUTS = () => null;
 
 export function OfficeFontMenu({
   font,
@@ -42,8 +38,6 @@ export function OfficeFontMenu({
   className: string;
 }) {
   const loads = googleFontLoads();
-  const [trigger, setTrigger] = useState<HTMLButtonElement | null>(null);
-  const [open, setOpen] = useState(false);
   const [choosing, setChoosing] = useState<readonly string[] | null>(null);
   // Read as the menu opens, so a family chosen in another document shows.
   const [recent, setRecent] = useState<readonly string[]>([]);
@@ -56,12 +50,11 @@ export function OfficeFontMenu({
     [statuses],
   );
 
-  const openMenu = () => {
+  const readMenu = () => {
     const fonts = readMyFonts();
     setRecent(readRecentFonts());
     setMyFonts(fonts);
     void loadGoogleFamilies(fonts);
-    setOpen(true);
   };
   const entries = useMemo(
     () => fontMenuEntries(recent, myFonts, statusOf),
@@ -86,43 +79,19 @@ export function OfficeFontMenu({
   const shownAs = value === null ? null : fontShownAs(value, myFonts, statusOf);
   return (
     <>
-      <HoverCard title="Font" description={shownAs ? `Shown as ${shownAs}` : undefined}>
-        <button
-          ref={setTrigger}
-          type="button"
-          aria-label={value ? `Font: ${value}` : 'Font'}
-          aria-haspopup="menu"
-          aria-expanded={open}
-          data-office-control="font"
-          tabIndex={tabIndex}
-          onClick={() => (open ? setOpen(false) : openMenu())}
-          onKeyDown={(e) => {
-            if (e.key !== 'ArrowDown' || open) return;
-            e.preventDefault();
-            openMenu();
-          }}
-          style={{ width: 112 }}
-          className={className}
-        >
-          <span className={`truncate pl-1 ${shownAs ? 'italic' : ''}`}>{value ?? ''}</span>
-          <ChevronDownIcon size={12} />
-        </button>
-      </HoverCard>
-      {open ? (
-        <OfficePopup anchor={trigger}>
-          <OfficeMenuPanel
-            entries={entries}
-            actions={actions}
-            shortcutOf={NO_SHORTCUTS}
-            trigger={trigger}
-            initialFocus="first"
-            placement="popup"
-            label="Font"
-            onClose={() => setOpen(false)}
-            onDone={() => setOpen(false)}
-          />
-        </OfficePopup>
-      ) : null}
+      <OfficeChoiceMenu
+        id="font"
+        label="Font"
+        value={value}
+        italic={shownAs !== null}
+        description={shownAs ? `Shown as ${shownAs}` : undefined}
+        entries={entries}
+        actions={actions}
+        width={112}
+        tabIndex={tabIndex}
+        className={className}
+        onOpen={readMenu}
+      />
       {choosing ? (
         <OfficeMoreFontsDialog
           initial={choosing}

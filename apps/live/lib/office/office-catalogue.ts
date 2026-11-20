@@ -14,12 +14,16 @@ export type OfficeItem = {
   status: OfficeItemStatus;
   // Its row in the kind's shortcut registry.
   shortcut?: string;
+  // The part of its row's keys that names this item, for a row of several (`[1-6]`: '3' for Heading 3).
+  shortcutArg?: string;
   // Other words the tool finder knows it by.
   keywords?: readonly string[];
   // An on/off item, or one of a set: drawn with a check.
   checkable?: 'checkbox' | 'radio';
   // A CSS font-family its label is drawn in (a font menu draws each family in its face).
   face?: string;
+  // Its label drawn in a look of its own as well (a style menu draws each style at its size, weight and slant).
+  faceStyle?: Readonly<{ fontSize?: string; fontWeight?: number; fontStyle?: 'italic' | 'normal' }>;
   // A word on its state, drawn muted where a shortcut would be and read with it (a font that could not load).
   note?: string;
 };

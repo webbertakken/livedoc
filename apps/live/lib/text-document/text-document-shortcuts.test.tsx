@@ -5,13 +5,17 @@ import { useRef } from 'react';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
-import { TextDocumentState } from '@livedoc/text-documents';
+import { TextDocument, TextDocumentState } from '@livedoc/text-documents';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import { OFFICE_MODES } from '@/lib/office/office-mode';
 import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
 import { TEXT_DOCUMENT_FORMAT_ITEMS } from './text-document-format-actions';
+import {
+  PARAGRAPH_STYLE_ITEMS,
+  textDocumentParagraphStyleActions,
+} from './text-document-paragraph-styles';
 import { textDocumentMenus } from './text-document-menus';
 import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
@@ -19,6 +23,10 @@ import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
 import { textDocumentUndoPlugins } from './text-document-undo';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
+
+// jsdom lays nothing out: a selection scrolled into view (a style applied) has no rectangles.
+Range.prototype.getClientRects = () => [] as unknown as DOMRectList;
+Range.prototype.getBoundingClientRect = () => new DOMRect();
 
 const DOWNLOADS = { odf: ['download-odt', 'download-fodt'], ooxml: ['download-docx'] } as const;
 
@@ -32,6 +40,8 @@ describe('the text document menus', () => {
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,
+        // Format > Paragraph styles (text-document-paragraph-styles), bound by the surface.
+        ...PARAGRAPH_STYLE_ITEMS.map((s) => s.item),
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
@@ -62,6 +72,9 @@ describe('the text document menus', () => {
   });
 });
 
+const blank = TextDocument.blank({ format: 'odf' });
+const readBlank = () => ({ styles: blank.styles, defaults: blank.defaults });
+
 function Harness({ view }: { view: EditorView | null }) {
   const root = useRef<HTMLDivElement | null>(null);
   return (
@@ -73,7 +86,11 @@ function Harness({ view }: { view: EditorView | null }) {
         problem={null}
         catalogue={textDocumentMenus('odf')}
         level="edit"
-        actions={textDocumentEditorActions(view, { canEdit: true })}
+        actions={{
+          ...textDocumentEditorActions(view, { canEdit: true }),
+          ...textDocumentParagraphStyleActions(view, readBlank, () => {}, 'odf', { canEdit: true })
+            .actions,
+        }}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
         keyScope={root}
         opening={{ accept: '.odt', onFile: () => {} }}
@@ -108,6 +125,18 @@ describe('the text document shortcuts', () => {
     expect(view.state.doc.textContent).toBe('');
     fireEvent.keyDown(view.dom, { code: 'KeyZ', key: 'Z', ctrlKey: true, shiftKey: true });
     expect(view.state.doc.textContent).toBe('Hello');
+    view.destroy();
+  });
+
+  // text-and-paragraphs.md "Paragraph styles": Ctrl+Alt+0 and Ctrl+Alt+1 to 6.
+  it('applies a heading by its number with Ctrl+Alt+1 to 6, and Normal text with Ctrl+Alt+0', async () => {
+    const view = await surfaceWithEditor();
+    view.dispatch(view.state.tr.insertText('Title', 1));
+    const styleNow = () => (view.state.doc.firstChild!.attrs as { style: unknown }).style;
+    fireEvent.keyDown(view.dom, { code: 'Digit3', key: '3', ctrlKey: true, altKey: true });
+    expect(styleNow()).toBe(blank.styles.find((s) => s.role === 'heading3')!.id);
+    fireEvent.keyDown(view.dom, { code: 'Digit0', key: '0', ctrlKey: true, altKey: true });
+    expect(styleNow()).toBeNull();
     view.destroy();
   });
 

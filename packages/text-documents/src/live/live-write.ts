@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 import type { Block, Inline, KeptInline, Paragraph, Run } from '../model/blocks';
 import { isEmpty, type TextProps } from '../model/props';
 import type { TextDocument } from '../model/text-document';
+import type { Style } from '../model/styles';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
@@ -123,4 +124,15 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
     for (const [id, list] of Object.entries(document.lists)) lists.set(id, plain(list));
     writeSource(source, document.source);
   });
+}
+
+/**
+ * A style added to the live state's own, after the others (text-and-paragraphs.md "Paragraph styles": a style the
+ * document lacks). While the state holds no styles of its own the format's set stands, which holds every role, so
+ * nothing is written; a style the state already holds is left as it is.
+ */
+export function addLiveStyle(doc: Y.Doc, style: Style): void {
+  const styles = doc.getMap<unknown>(STYLES_MAP);
+  if (styles.size === 0 || styles.has(style.id)) return;
+  styles.set(style.id, { order: styles.size, style: plain(style) });
 }

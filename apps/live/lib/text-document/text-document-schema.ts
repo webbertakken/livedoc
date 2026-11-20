@@ -104,7 +104,11 @@ const nodes: Record<string, NodeSpec> = {
     content: 'inline*',
     attrs: nullAttributes(PARAGRAPH_ATTRIBUTES),
     parseDOM: [{ tag: 'p' }],
-    toDOM: () => ['p', 0],
+    // Its style by id, which the document's style sheet draws (text-and-paragraphs.md "Paragraph styles").
+    toDOM: (node) => {
+      const style = (node.attrs as { style: unknown }).style;
+      return typeof style === 'string' && style ? ['p', { 'data-style': style }, 0] : ['p', 0];
+    },
   },
   [SECTION_BREAK]: {
     group: 'block',

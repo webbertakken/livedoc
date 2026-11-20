@@ -183,6 +183,25 @@ export const Styles = {
       ...chain(textStyle),
     ) as TextProps;
   },
+  /**
+   * The paragraph formatting a paragraph gets from its style: the defaults, then its style through its parents, each
+   * nearer one overriding (text-and-paragraphs.md "Paragraph styles").
+   */
+  paragraphPropsOf: (
+    styles: readonly Style[],
+    defaults: StyleDefaults,
+    paragraphStyle: string | undefined,
+  ): ParagraphProps => {
+    const seen = new Set<string>();
+    const chain: ParagraphProps[] = [];
+    let style = Styles.byId(styles, paragraphStyle);
+    while (style && !seen.has(style.id)) {
+      chain.unshift(compact(style.paragraph));
+      seen.add(style.id);
+      style = Styles.byId(styles, style.parent);
+    }
+    return Object.assign({}, compact(defaults.paragraph), ...chain) as ParagraphProps;
+  },
   /** The outline level a paragraph style gives, through its parents. */
   outlineLevel: (styles: readonly Style[], id: string | undefined): number | undefined => {
     const seen = new Set<string>();

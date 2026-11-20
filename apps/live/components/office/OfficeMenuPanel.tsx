@@ -77,7 +77,9 @@ function ItemRow({
       <Check on={item.checkable !== undefined && action?.checked === true} />
       <span
         className="flex-1 whitespace-nowrap"
-        style={item.face ? { fontFamily: item.face } : undefined}
+        style={
+          item.face || item.faceStyle ? { fontFamily: item.face, ...item.faceStyle } : undefined
+        }
       >
         {item.label}
       </span>
