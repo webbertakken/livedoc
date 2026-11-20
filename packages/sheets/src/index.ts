@@ -63,6 +63,7 @@ export * from './formula/stored';
 export * from './formula/registry';
 export * from './formula/function-docs';
 export { Workbook } from './engine/workbook';
+export { ITERATION_OFF, sameIteration, type Iteration } from './engine/loops';
 export * from './workbook-record';
 export {
   renderFrameWindow,

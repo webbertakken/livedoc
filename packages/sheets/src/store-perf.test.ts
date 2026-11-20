@@ -1,6 +1,7 @@
 // Row operations stay linear in the sheet: a sort, a delete
 // and its undo over 10,000 rows once each scanned the layout per id. Timed as growth in CPU time (cpuMsOf), not as a
-// ceiling: four times the rows should cost about four times as much; a scan per id would cost sixteen.
+// ceiling: four times the rows should cost about four times as much; a scan per id would cost sixteen. The fastest of
+// five runs each, as the small sheet's few milliseconds bend with any noise.
 import { describe, expect, it } from 'vitest';
 import { cpuMsOf } from '@livedoc/vitest-config/cpu-time';
 import { makeSheets } from './testing/book';
@@ -17,7 +18,7 @@ function costOf(rows: number): number {
     { kind: 'layout', changes: [{ k: 'deleteRows', ids: ids.slice(1) }] },
   ];
   let fastest = Infinity;
-  for (let run = 0; run < 3; run++) {
+  for (let run = 0; run < 5; run++) {
     fastest = Math.min(
       fastest,
       cpuMsOf(() => {

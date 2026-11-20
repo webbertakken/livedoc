@@ -859,6 +859,16 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 - A read works out what a formula names cell by cell first, deepest first, so each formula of a long chain of
   references is worked out once, however long the chain.
 - A sheet's values are worked out the first time it is drawn, and kept while its document is open.
+- A loop is found whole: every formula that reads itself through the others is one loop, however the reading starts,
+  so every cell of it shows the same `#REF!`, a cell catching errors (`IFERROR`) too; a formula that only reads
+  the loop is not in it.
+- With iterative calculation on ([Settings](settings.md)) a loop is worked out in rounds instead: the first round
+  reads each loop cell as the value it last settled to (empty the first time), each later round as the value the round
+  before gave it, a cell already worked out in the round giving its new value. The rounds stop at Max Number of
+  Iterations, or after a round where no value moved by the Threshold or more; the last round's values stand, and the
+  next recalculation starts from them (verified: Google stops "when results from successive calculations differ by
+  less than that threshold value"; the loop starting from its last values is inferred from Google's self-reading
+  timestamp formulas, D35).
 - A recalculation that would take longer than a frame is done in parts, values filling in as they are ready; cells
   waiting show their last value, faded.
 - The engine bounds its work: a formula reading more than 1,000,000 cells, or a recalculation of more than
@@ -882,3 +892,6 @@ The code cites each by its id.
 - **D32** A case LibreOffice answers otherwise, before Google's answer: Waits, counted, held to none (default).
 - **D33** The oracle's locale, zone and now: `en-US`, UTC, a fixed now (default).
 - **D34** Plan Sheets' arrays until their migration: Every formula an array context, as before (default).
+- **D35** Where a loop's first round starts: The values its cells last settled to, kept by cell for the open document,
+  forgotten when the cell is retyped; a document opened afresh starts its loops from empty (default).
+- **D36** A loop longer than the read stack (250 formulas): `#REF!` with iterative calculation on as well (default).

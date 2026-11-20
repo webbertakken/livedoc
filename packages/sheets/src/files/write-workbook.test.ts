@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { emptyLayout, emptySheet } from '../sheet';
+import { CellMap } from '../cells/cell-map';
+import { compileFormula } from '../formula/stored';
+import { cellKey, emptyLayout, emptySheet } from '../sheet';
 import { WorkbookRecord } from '../workbook-record';
 import { readOds } from './ods-read';
 import { writeWorkbook } from './write-workbook';
@@ -26,5 +28,28 @@ describe('writeWorkbook', () => {
     const written = writeWorkbook([sheet], record, 'Budget', 'fods');
     expect(new TextDecoder().decode(written.data)).toContain('<office:document');
     expect(written.losses).toEqual([]);
+  });
+
+  // settings.md "Calculation": the values cached in the file are worked out as the workbook's settings say.
+  it('caches a loop as the workbook’s iterative calculation works it out', () => {
+    const { layout } = sheet;
+    const compiled = compileFormula('=(A1+10)/2', {
+      own: { id: sheet.id, title: sheet.title, layout },
+      byTitle: () => undefined,
+      byId: () => undefined,
+    });
+    if (!compiled.ok) throw new Error('formula');
+    const looped = {
+      ...sheet,
+      cells: CellMap.from([
+        [cellKey(layout.rows[0]!, layout.cols[0]!), { input: { f: compiled.formula } }],
+      ]),
+    };
+    const on = {
+      ...record,
+      settings: { ...record.settings, iterate: { on: true, max: 50, threshold: 0.05 } },
+    };
+    const flat = new TextDecoder().decode(writeWorkbook([looped], on, 'Budget', 'fods').data);
+    expect(flat).toContain('office:value="9.9609375"');
   });
 });
