@@ -99,6 +99,18 @@ export function chunksOf(state: Uint8Array, size = TEXT_DOCUMENT_CHUNK_BYTES): U
   return out;
 }
 
+/** Store a whole state for a tab that holds none yet (a copy, "Copies"): one update in the log when a row holds it,
+ *  else folded straight into the chunks. */
+export async function storeTextDocumentState(
+  env: DocumentEnv,
+  tabId: string,
+  state: Uint8Array,
+): Promise<void> {
+  if (state.byteLength <= TEXT_DOCUMENT_CHUNK_BYTES)
+    await appendTextDocumentUpdate(env, tabId, state);
+  else await compactTextDocument(env, tabId, state);
+}
+
 /** Whether the log has grown past the size or the count compaction keeps it to. */
 export const compactionDue = (log: LogSize): boolean =>
   log.bytes > TEXT_DOCUMENT_LOG_BYTES || log.updates > TEXT_DOCUMENT_LOG_UPDATES;

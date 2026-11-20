@@ -148,8 +148,20 @@ differently, main's stands and the branch's is kept as a comment, "Not merged fr
 
 ## Copies, snapshots and versions
 
-- **A copy** (Make a copy, the Explorer's Duplicate) copies the room's state into the new document's room.
-- **Thumbnails** draw the first page, at the Explorer's size, from the model without layout of later pages.
+- <a id="copies"></a>**A copy** (Make a copy, a tab-scoped visitor's copy, the Explorer's Duplicate) holds each copied
+  text document tab's whole state, merged into one, under the tab's new id, so it reads as the source did when copied:
+  - the api's copy moves it from room to room with the tabs (the source's room exports it, the copy's imports it);
+  - the Explorer's Duplicate of a cloud document reads each state and seeds the new document with it, as the create's
+    `textDocuments: [{ tabId, state }]` (base64), beside a file's `{ tabId, file }`
+    ([Opening](files-and-print.md#opening)); a state that is no Yjs update is `400 text_document_seed_invalid`.
+- <a id="thumbnails"></a>**Thumbnails** draw the first page from the model, without layout (default): a white page
+  of the first section's paper, its margins, and the paragraphs from the top, each at its style's size, weight and
+  colour, wrapped at an average character width, until the page is full; white in both schemes, as the page is.
+  An empty text document has none, as an empty canvas has none (the row shows its icon).
+- **Saved**: each rebuild of the digest marks the document saved at that moment, so the Explorer's Modified and the
+  thumbnail's freshness follow the writing, an edit late by one drain (default).
+- **The Trash**: a text document in the Trash keeps its state; restoring it brings it back whole, and a purge removes
+  its state with its tabs ([Trash](../013-workspace/trash.md)).
 - <a id="versions"></a>**Versions** are Yjs snapshots (state vector and delete set) with names, kept in the room; the
   CRDT keeps deleted items while any version needs them (garbage collection off, compacted by snapshot), so any
   version renders without a stored copy ([Review](review.md#version-history)).

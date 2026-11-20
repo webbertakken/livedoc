@@ -16,7 +16,8 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
   an imported document is born in ODF (fork C5).
 - An import that drops anything shows the **import report** ([below](#import-report)).
 - An opened file rides the new document's create (default): `POST /api/documents` names the text document tab and its
-  file (`textDocuments: [{ tabId, file }]`, base64); the room reads it with the package's guards and stores its body as
+  file (`textDocuments: [{ tabId, file }]`, base64; a copy's `{ tabId, state }` carries a live state instead,
+  [Copies](live-editing-and-storage.md#copies)); the room reads it with the package's guards and stores its body as
   the tab's first update, or answers the package's rejection (413 `package_too_large`, 415 `package_wrong_type`, 400
   otherwise) and nothing is made. A create's body is capped at the api's 8 MB, so a file past about 6 MB waits for
   a direct upload (default).
