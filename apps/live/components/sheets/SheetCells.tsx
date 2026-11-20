@@ -95,9 +95,8 @@ const FILTER_PAD_PX = 20;
 
 type Region = { r1: number; r2: number; c1: number; c2: number; clip: CSSProperties };
 
-// A waiting value's fade (formulas.md "Recalculation"): its last value, quieter, after a moment.
+// A waiting value's fade (formulas.md "Recalculation"): its last value, quieter, after 120 ms (its transition).
 const WAITING_OPACITY = 0.55;
-const WAITING_FADE_DELAY_MS = 120;
 
 function shownValue(v: Value): { text: string; pending: boolean } {
   return isPending(v) ? { text: 'Loading…', pending: true } : { text: '', pending: false };
@@ -281,11 +280,9 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             alignItems: f?.va === 't' ? 'flex-start' : f?.va === 'b' ? 'flex-end' : 'center',
             paddingBottom: f?.va === 'b' ? 3 : 0,
             textAlign: align === 'r' ? 'right' : align === 'c' ? 'center' : 'left',
-            // Faded only once the wait outlasts WAITING_FADE_DELAY_MS, so a quick answer never flickers; a step, not
+            // Faded only once the wait outlasts 120 ms, so a quick answer never flickers; a step, not
             // a motion.
-            ...(waiting
-              ? { opacity: WAITING_OPACITY, transition: `opacity 0s ${WAITING_FADE_DELAY_MS}ms` }
-              : {}),
+            ...(waiting ? { opacity: WAITING_OPACITY, transition: 'opacity 0s 120ms' } : {}),
           }}
         >
           {text}
