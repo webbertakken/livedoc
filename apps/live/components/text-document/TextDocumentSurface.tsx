@@ -24,6 +24,11 @@ import { debugLog } from '@/lib/debug-log';
 import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
+import {
+  TEXT_DOCUMENT_LIMIT_NOTICES,
+  textDocumentLimitPlugin,
+} from '@/lib/text-document/text-document-limit';
+import { TextDocumentBus, type TextDocumentLimit } from '@/lib/text-document/text-document-bus';
 import { openLocalYjs } from '@/lib/text-document/local-yjs-provider';
 import {
   offlineSaveTextDocumentState,
@@ -82,6 +87,7 @@ export function TextDocumentSurface({
   const peers = useTextDocumentPeers(scope.tabId);
   const [state, setState] = useState<SurfaceState>('loading');
   const [attempt, setAttempt] = useState(0);
+  const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // The latest sender and gate, read when an update goes out, so a new room connection never rebinds the editor.
   const live = useRef({ sequence, canEdit });
@@ -159,6 +165,7 @@ export function TextDocumentSurface({
             plugins: [
               ySyncPlugin(TextDocumentState.body(doc)),
               ...textDocumentUndoPlugins(),
+              textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
               keymap({ 'Mod-z': undo, 'Mod-y': redo, 'Mod-Shift-z': redo }),
               keymap(baseKeymap),
               // A moved selection is part of the view remembered for this tab.
@@ -216,6 +223,9 @@ export function TextDocumentSurface({
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
   }, [peers, state]);
 
+  // An edit the room refused names its limit.
+  useEffect(() => TextDocumentBus.onRefused(tabId, setLimitReached), [tabId]);
+
   return (
     <div
       className="flex min-h-0 flex-1 flex-col bg-slate-100 dark:bg-slate-900"
@@ -227,6 +237,14 @@ export function TextDocumentSurface({
         format={format}
         localDoc={local ? () => liveDoc.current : null}
       />
+      {limitReached ? (
+        <p
+          role="status"
+          className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100"
+        >
+          {TEXT_DOCUMENT_LIMIT_NOTICES[limitReached]}
+        </p>
+      ) : null}
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-6">
         {state === 'failed' ? (
           <div

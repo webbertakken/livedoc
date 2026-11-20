@@ -11,10 +11,14 @@ type UpdateListener = (update: Uint8Array) => void;
 // `tabId`: the one tab to catch up (its `stale` op), or null for every tab (the room's re-hydrate).
 type ResyncListener = (tabId: string | null) => void;
 type ConnectionListener = (connected: boolean) => void;
+/** The limit an edit passed ("Refused edits"). */
+export type TextDocumentLimit = 'characters' | 'state';
+type RefusedListener = (limit: TextDocumentLimit) => void;
 
 const updates = new Map<string, Set<UpdateListener>>();
 const resyncs = new Set<ResyncListener>();
 const connections = new Set<ConnectionListener>();
+const refusals = new Map<string, Set<RefusedListener>>();
 let connected = false;
 
 /** What a `text-document` op from the room carries: an update, or that the tab's state must be read again. */
@@ -53,6 +57,20 @@ export const TextDocumentBus = {
   },
   resync(tabId: string | null): void {
     for (const listener of resyncs) listener(tabId);
+  },
+  /** Listen for the room refusing one of this editor's edits to a tab. */
+  onRefused(tabId: string, listener: RefusedListener): () => void {
+    const set = refusals.get(tabId) ?? new Set();
+    set.add(listener);
+    refusals.set(tabId, set);
+    return () => {
+      set.delete(listener);
+      if (set.size === 0) refusals.delete(tabId);
+    };
+  },
+  refused(tabId: string, limit: TextDocumentLimit): void {
+    debugLog('[text-document] edit-refused', { tabId, limit });
+    for (const listener of refusals.get(tabId) ?? []) listener(limit);
   },
   /** Whether the room is open now: a surface sends only then. */
   isConnected(): boolean {

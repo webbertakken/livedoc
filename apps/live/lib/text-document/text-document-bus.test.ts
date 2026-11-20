@@ -24,6 +24,17 @@ describe('TextDocumentBus', () => {
     expect(resyncs).toHaveBeenCalledTimes(1);
   });
 
+  // live-editing-and-storage.md "Refused edits": the refused tab's surface is told which limit.
+  it('tells a tab of an edit the room refused, and no other', () => {
+    const seen: string[] = [];
+    const off = TextDocumentBus.onRefused('t1', (limit) => seen.push(limit));
+    TextDocumentBus.refused('t2', 'state');
+    TextDocumentBus.refused('t1', 'characters');
+    off();
+    TextDocumentBus.refused('t1', 'state');
+    expect(seen).toEqual(['characters']);
+  });
+
   it('says when the room opens and closes, once per close', () => {
     const seen: boolean[] = [];
     const off = TextDocumentBus.onConnection((open) => seen.push(open));

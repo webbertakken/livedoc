@@ -7,6 +7,7 @@ import {
   TextDocument,
   TextDocumentState,
   TEXT_DOCUMENT_CHUNK_BYTES,
+  TEXT_DOCUMENT_MAX_CHARS,
   TEXT_DOCUMENT_UPDATE_MAX_BYTES,
   writeTextDocumentFile,
   type TextDocumentFileType,
@@ -291,6 +292,8 @@ describe('the update door', () => {
             url.searchParams.get('tab')!,
             new Uint8Array(init!.body as ArrayBuffer),
           );
+          if (outcome === 'characters' || outcome === 'state')
+            return Response.json({ limit: outcome }, { status: 413 });
           return new Response(null, { status: outcome === 'stored' ? 204 : 404 });
         },
       }),
@@ -330,6 +333,22 @@ describe('the update door', () => {
     const huge = await post(db, 't1', new Uint8Array(TEXT_DOCUMENT_UPDATE_MAX_BYTES + 1));
     expect(huge.status).toBe(413);
     expect(await huge.json()).toEqual({ error: 'update_too_large' });
+  });
+
+  // live-editing-and-storage.md "Refused edits": the door names the limit an update would pass.
+  it('refuses an update past the characters with the limit named', async () => {
+    const db = sqliteD1();
+    await create(db);
+    withRoom(db);
+    db.sql
+      .prepare(
+        `INSERT OR REPLACE INTO text_document_digest (tab_id, characters, words, pages, has_content, state_bytes, written_at)
+         VALUES ('t1', ?, 0, 1, 1, 0, 1)`,
+      )
+      .run(TEXT_DOCUMENT_MAX_CHARS);
+    const res = await post(db, 't1', TextDocumentState.fromBody(Body.of('more')));
+    expect(res.status).toBe(413);
+    expect(await res.json()).toEqual({ error: 'document_too_large', limit: 'characters' });
   });
 
   it('answers 404 for a tab that is no text document, and 403 for a caller who may not edit', async () => {

@@ -87,6 +87,15 @@ export const TextDocumentState = {
       return false;
     }
   },
+  /** The characters an update inserts (text only; what it deletes is not counted), read without a document. */
+  insertedCharacters: (update: Uint8Array): number =>
+    Y.decodeUpdate(update).structs.reduce(
+      (n, struct) =>
+        struct instanceof Y.Item && struct.content instanceof Y.ContentString
+          ? n + struct.content.str.length
+          : n,
+      0,
+    ),
   /** The state vector of an update: what it holds, client by client (live-editing-and-storage.md "Reconnecting"). */
   stateVectorOf: (update: Uint8Array): Uint8Array => Y.encodeStateVectorFromUpdate(update),
   /** Whether the bytes decode as a state vector. */

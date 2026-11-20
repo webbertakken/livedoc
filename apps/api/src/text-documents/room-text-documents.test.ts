@@ -6,6 +6,7 @@ import {
   TEXT_DOCUMENT_FRAME_CHARS,
   TEXT_DOCUMENT_LOG_BYTES,
   TEXT_DOCUMENT_LOG_UPDATES,
+  TEXT_DOCUMENT_MAX_CHARS,
 } from '@livedoc/text-documents';
 import { gateClientOp } from '../room-op-gate';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
@@ -20,7 +21,10 @@ import { storedUpdates } from './text-document-store';
 
 const ws = {} as WebSocket;
 
-async function roomWith(db: SqliteD1) {
+// Sized past the spec's character limit: the compaction and folding tests store more text than one document holds.
+const ROOMY = { characters: Number.MAX_SAFE_INTEGER, stateBytes: Number.MAX_SAFE_INTEGER };
+
+async function roomWith(db: SqliteD1, caps?: typeof ROOMY) {
   await handleDocuments(
     makeTestRouteContext('POST', '/api/documents', {
       env: db.env,
@@ -43,6 +47,7 @@ async function roomWith(db: SqliteD1) {
     sequence,
     sendTo,
     position: () => ({ epoch: 'e' }),
+    ...(caps ? { caps } : {}),
   });
   return { room, sequence, sendTo };
 }
@@ -84,7 +89,7 @@ describe('RoomTextDocuments', () => {
 
   it('compacts the log once it passes its size', async () => {
     const db = sqliteD1();
-    const { room } = await roomWith(db);
+    const { room } = await roomWith(db, ROOMY);
     const sender = { ws, presenceId: 'p1', documentId: 'D' };
     // Text that does not compress in an update: one big paragraph past the log's size.
     const big = Array.from({ length: TEXT_DOCUMENT_LOG_BYTES / 6 }, (_, i) =>
@@ -118,7 +123,7 @@ describe('RoomTextDocuments', () => {
 
   it('folds a door update past a chunk into the chunks and tells everyone the tab is stale', async () => {
     const db = sqliteD1();
-    const { room, sequence } = await roomWith(db);
+    const { room, sequence } = await roomWith(db, ROOMY);
     const big = Array.from({ length: TEXT_DOCUMENT_CHUNK_BYTES / 5 }, (_, i) =>
       (i * 7919).toString(36).padStart(6, '0'),
     ).join('');
@@ -187,6 +192,30 @@ describe('RoomTextDocuments', () => {
       n: number;
     };
     expect(rows.n).toBeLessThanOrEqual(1);
+  });
+
+  // live-editing-and-storage.md "Refused edits": refused whole, the sender alone told which limit.
+  it('refuses a frame past the characters, storing nothing and telling only the sender', async () => {
+    const db = sqliteD1();
+    const { room, sequence, sendTo } = await roomWith(db);
+    db.sql
+      .prepare(
+        `INSERT OR REPLACE INTO text_document_digest (tab_id, characters, words, pages, has_content, state_bytes, written_at)
+         VALUES ('t1', ?, 0, 1, 1, 0, 1)`,
+      )
+      .run(TEXT_DOCUMENT_MAX_CHARS);
+    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    expect(await room.accept(sender, frame('t1', 'x'))).toBe(false);
+    expect(await storedUpdates(db.env, 't1')).toEqual([]);
+    expect(sequence).not.toHaveBeenCalled();
+    expect(sendTo).toHaveBeenCalledWith(ws, {
+      kind: 'op',
+      from: 'system',
+      op: { kind: 'text-document-refused', tabId: 't1', limit: 'characters' },
+    });
+    expect(await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of('y')))).toBe(
+      'characters',
+    );
   });
 
   it('reads only a whole frame', () => {

@@ -499,6 +499,8 @@ export type RoomOp =
   // An update too large for a frame was stored by the door ("Sending"): every surface on the tab re-reads its state.
   // Only the room sends it; a client's `stale` is refused as no update.
   | { kind: 'text-document'; tabId: string; stale: true }
+  // An update the room refused whole, to its sender alone ("Refused edits"): the limit it would pass.
+  | { kind: 'text-document-refused'; tabId: string; limit: 'characters' | 'state' }
   | {
       kind: 'vote';
       tabId: string;

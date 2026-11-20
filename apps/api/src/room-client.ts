@@ -501,13 +501,14 @@ export async function relaySheets(env: Env, documentId: string, op: SheetsRoomOp
 const TEXT_DOCUMENT_DOOR_TIMEOUT_MS = 10_000;
 
 // One text document update sent by the door (docs/specs/034-text-documents/live-editing-and-storage.md "Sending"),
-// handed to the room's write queue; answers the room's status (204 stored, 400, 404, 503), 503 when unreachable.
+// handed to the room's write queue; answers the room's status (204 stored, 400, 404, 413 with the limit passed, 503),
+// 503 when unreachable.
 export async function postTextDocumentUpdate(
   env: Env,
   documentId: string,
   tabId: string,
   update: Uint8Array,
-): Promise<number> {
+): Promise<{ status: number; limit?: string }> {
   const query = new URLSearchParams({ document: documentId, tab: tabId });
   try {
     const res = await roomFetch(
@@ -517,14 +518,16 @@ export async function postTextDocumentUpdate(
       { method: 'POST', body: update.slice().buffer },
       TEXT_DOCUMENT_DOOR_TIMEOUT_MS,
     );
-    return res.status;
+    if (res.status !== 413) return { status: res.status };
+    const body = (await res.json().catch(() => ({}))) as { limit?: unknown };
+    return typeof body.limit === 'string' ? { status: 413, limit: body.limit } : { status: 413 };
   } catch (err) {
     console.warn('[text-document] door-update did not reach the room', {
       documentId,
       tabId,
       error: String(err),
     });
-    return 503;
+    return { status: 503 };
   }
 }
 

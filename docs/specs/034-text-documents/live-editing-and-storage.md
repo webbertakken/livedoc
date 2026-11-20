@@ -213,6 +213,19 @@ suggestion or comment (fork D7); a Viewer's are dropped. Tests: the room refuses
 
 A refused edit names its limit; nothing is half applied.
 
+<a id="refused-edits"></a>**Refused edits**:
+
+- The room refuses an update that would take the text document past `TEXT_DOCUMENT_MAX_CHARS` (the digest's characters
+  and the characters the update inserts, deletions not counted, so it never lets one through that it should refuse)
+  or its stored state past `TEXT_DOCUMENT_MAX_STATE_BYTES`; nothing of it is stored or relayed, and it logs
+  `[text-document] edit-refused` with the limit (`characters` or `state`).
+- The sender alone hears `{ kind: 'text-document-refused', tabId, limit }`; the door answers
+  `413 document_too_large` with the `limit`.
+- The editor refuses typing or a paste that would pass `TEXT_DOCUMENT_MAX_CHARS` itself, before anything is sent, and
+  says, as a status beside the title: "This text document has reached its limit of 1,020,000 characters." A refusal from
+  the room says the same, or "This text document has reached its size limit." for the state's.
+- Thinning old versions to make room comes with versions ([Review](review.md#version-history)).
+
 ## Observability
 
 Fingerprints, each with the document and tab ids and never text: `[text-document] persisted` (revision, bytes,

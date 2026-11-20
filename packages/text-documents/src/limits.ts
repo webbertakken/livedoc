@@ -22,3 +22,5 @@ export const TEXT_DOCUMENT_UNDO_GROUP_MS = 500;
 /** (default) The update log's count past which compaction folds it into chunks: merging many small updates costs more
  *  than their count (5,000 keystrokes ~0.3 s, 20,000 ~5 s), and every state read and digest merges the log. */
 export const TEXT_DOCUMENT_LOG_UPDATES = 500;
+/** (default) A text document's stored state, history included: past it, edits are refused with the limit named. */
+export const TEXT_DOCUMENT_MAX_STATE_BYTES = 64 * 1024 * 1024;

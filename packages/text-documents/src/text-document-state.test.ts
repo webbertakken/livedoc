@@ -83,6 +83,14 @@ describe('TextDocumentState', () => {
     expect(TextDocumentState.decodes(Uint8Array.of(9, 9, 9))).toBe(false);
   });
 
+  // live-editing-and-storage.md "Refused edits": the characters an update would add, read without a document.
+  it('counts the characters an update inserts', () => {
+    expect(
+      TextDocumentState.insertedCharacters(TextDocumentState.fromBody(Body.of('abc', 'de'))),
+    ).toBe(5);
+    expect(TextDocumentState.insertedCharacters(TextDocumentState.seed())).toBe(0);
+  });
+
   // live-editing-and-storage.md "Reconnecting": a catch-up reads only what it lacks, and learns what the room holds.
   it("answers what a state holds beyond a reader's state vector", () => {
     const reader = TextDocumentState.load([TextDocumentState.fromBody(Body.of('Kept'))]);
