@@ -16,30 +16,28 @@ export function normalCdf(z: number): number {
 
 // Wichura's AS 241 (PPND16), rational approximations good to about 1e-16, for the centre and the two tails.
 const CENTRE_A = [
-  3.387132872796366608, 133.14166789178437745, 1971.5909503065514427, 13731.693765509461125,
-  45921.953931549871457, 67265.770927008700853, 33430.575583588128105, 2509.0809287301226727,
+  3.3871328727963665, 133.14166789178438, 1971.5909503065513, 13731.69376550946, 45921.95393154987,
+  67265.7709270087, 33430.57558358813, 2509.0809287301227,
 ];
 const CENTRE_B = [
-  1, 42.313330701600911252, 687.1870074920579083, 5394.1960214247511077, 21213.794301586595867,
-  39307.89580009271061, 28729.085735721942674, 5226.495278852545925,
+  1, 42.31333070160091, 687.1870074920579, 5394.196021424751, 21213.794301586597, 39307.89580009271,
+  28729.085735721943, 5226.495278852546,
 ];
 const NEAR_A = [
-  1.42343711074968357734, 4.6303378461565452959, 5.7694972214606914055, 3.64784832476320460504,
-  1.27045825245236838258, 0.24178072517745061177, 0.0227238449892691845833, 7.7454501427834140764e-4,
+  1.4234371107496835, 4.630337846156546, 5.769497221460691, 3.6478483247632045, 1.2704582524523684,
+  0.2417807251774506, 0.022723844989269184, 0.0007745450142783414,
 ];
 const NEAR_B = [
-  1, 2.05319162663775882187, 1.6763848301838038494, 0.68976733498510000455, 0.14810397642748007459,
-  0.0151986665636164571966, 5.475938084995344946e-4, 1.05075007164441684324e-9,
+  1, 2.053191626637759, 1.6763848301838038, 0.6897673349851, 0.14810397642748008,
+  0.015198666563616457, 0.0005475938084995345, 1.0507500716444169e-9,
 ];
 const FAR_A = [
-  6.6579046435011037772, 5.4637849111641143699, 1.7848265399172913358, 0.29656057182850489123,
-  0.026532189526576123093, 0.0012426609473880784386, 2.71155556874348757815e-5,
-  2.01033439929228813265e-7,
+  6.657904643501103, 5.463784911164114, 1.7848265399172913, 0.29656057182850487,
+  0.026532189526576124, 0.0012426609473880784, 0.000027115555687434876, 2.0103343992922881e-7,
 ];
 const FAR_B = [
-  1, 0.59983220655588793769, 0.13692988092273580531, 0.0148753612908506148525,
-  7.868691311456132591e-4, 1.8463183175100546818e-5, 1.4215117583164458887e-7,
-  2.04426310338993978564e-15,
+  1, 0.599832206555888, 0.1369298809227358, 0.014875361290850615, 0.0007868691311456133,
+  0.000018463183175100548, 1.421511758316446e-7, 2.0442631033899397e-15,
 ];
 
 function polynomial(coefficients: readonly number[], r: number): number {
@@ -71,16 +69,12 @@ export function normalInverse(p: number): number {
   return z - tail / normalPdf(z);
 }
 
-/** Γ(x): exact for whole numbers to 170, by reflection below 0.5; NaN at 0 and the negative whole numbers. */
+/** Γ(x) for x > 0, exact for whole numbers up to 170. */
 export function gamma(x: number): number {
-  if (Number.isInteger(x)) {
-    if (x <= 0) return Number.NaN;
-    let out = 1;
-    for (let i = 2; i < x; i++) out *= i;
-    return out;
-  }
-  if (x < 0.5) return Math.PI / (Math.sin(Math.PI * x) * gamma(1 - x));
-  return Math.exp(gammaLn(x));
+  if (!Number.isInteger(x)) return Math.exp(gammaLn(x));
+  let out = 1;
+  for (let i = 2; i < x; i++) out *= i;
+  return out;
 }
 
 const ITERATIONS_MAX = 1000;
@@ -104,7 +98,7 @@ function lowerGammaSeries(a: number, x: number): number {
   return sum * gammaFactor(a, x);
 }
 
-// Q(a, x) by its continued fraction (Lentz's method), for x ≥ a + 1.
+// Q(a, x) by its continued fraction (Lentz's method), for x ≥ a + 1, where no partial denominator nears 0.
 function upperGammaFraction(a: number, x: number): number {
   let b = x + 1 - a;
   let c = 1 / TINY;
@@ -114,9 +108,7 @@ function upperGammaFraction(a: number, x: number): number {
     const an = -n * (n - a);
     b += 2;
     d = an * d + b;
-    if (Math.abs(d) < TINY) d = TINY;
     c = b + an / c;
-    if (Math.abs(c) < TINY) c = TINY;
     d = 1 / d;
     const delta = d * c;
     h *= delta;
@@ -137,30 +129,26 @@ export function gammaUpper(a: number, x: number): number {
   return x < a + 1 ? 1 - lowerGammaSeries(a, x) : upperGammaFraction(a, x);
 }
 
-// The continued fraction of the incomplete beta function (Lentz's method), for x below (a + 1) / (a + b + 2).
+// The continued fraction of the incomplete beta function (Lentz's method), for x below (a + 1) / (a + b + 2),
+// where it converges without a partial denominator nearing 0.
 function betaFraction(x: number, a: number, b: number): number {
   const qab = a + b;
   const qap = a + 1;
   const qam = a - 1;
   let c = 1;
   let d = 1 - (qab * x) / qap;
-  if (Math.abs(d) < TINY) d = TINY;
   d = 1 / d;
   let h = d;
   for (let m = 1; m < ITERATIONS_MAX; m++) {
     const m2 = 2 * m;
     let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
     d = 1 + aa * d;
-    if (Math.abs(d) < TINY) d = TINY;
     c = 1 + aa / c;
-    if (Math.abs(c) < TINY) c = TINY;
     d = 1 / d;
     h *= d * c;
     aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
     d = 1 + aa * d;
-    if (Math.abs(d) < TINY) d = TINY;
     c = 1 + aa / c;
-    if (Math.abs(c) < TINY) c = TINY;
     d = 1 / d;
     const delta = d * c;
     h *= delta;

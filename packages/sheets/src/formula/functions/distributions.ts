@@ -59,7 +59,13 @@ function gammaDist(x: number, a: number, b: number, cumulative: boolean): Value 
 }
 
 const gammaInverse = (p: number, a: number, b: number, fromAbove = false): number =>
-  b * inverse((x) => gammaLower(a, x), (x) => gammaUpper(a, x), p, fromAbove);
+  b *
+  inverse(
+    (x) => gammaLower(a, x),
+    (x) => gammaUpper(a, x),
+    p,
+    fromAbove,
+  );
 
 // Student's t with ν degrees of freedom: its lower tail and density.
 const tUpper = studentUpper;
@@ -69,7 +75,9 @@ function tCdf(t: number, v: number): number {
 }
 
 function tPdf(t: number, v: number): number {
-  return Math.exp(-((v + 1) / 2) * Math.log1p((t * t) / v) - 0.5 * Math.log(v) - betaLn(v / 2, 0.5));
+  return Math.exp(
+    -((v + 1) / 2) * Math.log1p((t * t) / v) - 0.5 * Math.log(v) - betaLn(v / 2, 0.5),
+  );
 }
 
 // The t ≥ 0 whose upper tail is q (q ≤ 0.5).
@@ -95,7 +103,12 @@ function fDensity(x: number, d1: number, d2: number): Value {
 }
 
 const fInverse = (p: number, d1: number, d2: number, fromAbove = false): number =>
-  inverse((x) => fLower(x, d1, d2), (x) => fUpper(x, d1, d2), p, fromAbove);
+  inverse(
+    (x) => fLower(x, d1, d2),
+    (x) => fUpper(x, d1, d2),
+    p,
+    fromAbove,
+  );
 
 const chiInverse = (p: number, v: number, fromAbove = false): number =>
   gammaInverse(p, v / 2, 2, fromAbove);
@@ -133,10 +146,15 @@ const normal = numFn(4, 4, ([x, m, s, c]) =>
   }),
 );
 const normalInv = numFn(3, 3, ([p, m, s]) =>
-  checked([openProbability(p!), positive(s!, 'The standard deviation')], () => m! + s! * normalInverse(p!)),
+  checked(
+    [openProbability(p!), positive(s!, 'The standard deviation')],
+    () => m! + s! * normalInverse(p!),
+  ),
 );
 const standardNormal = numFn(1, 2, ([z, c = 1]) => (c ? normalCdf(z!) : normalPdf(z!)));
-const standardNormalInv = numFn(1, 1, ([p]) => checked([openProbability(p!)], () => normalInverse(p!)));
+const standardNormalInv = numFn(1, 1, ([p]) =>
+  checked([openProbability(p!)], () => normalInverse(p!)),
+);
 // x ≤ 0 has no logarithm: no probability below it and no density.
 const logNormal = numFn(3, 4, ([x, m, s, c = 1]) =>
   checked([positive(s!, 'The standard deviation')], () => {
@@ -225,13 +243,17 @@ const fDist = numFn(3, 4, ([x, a, b, c = 0]) =>
   ),
 );
 const fDistRight = numFn(3, 3, ([x, a, b]) =>
-  checked([x! < 0 ? NEGATIVE_X : x!, degrees(a!), degrees(b!)], ([, d1, d2]) => fUpper(x!, d1!, d2!)),
+  checked([x! < 0 ? NEGATIVE_X : x!, degrees(a!), degrees(b!)], ([, d1, d2]) =>
+    fUpper(x!, d1!, d2!),
+  ),
 );
 const fInv = numFn(3, 3, ([p, a, b]) =>
   checked([openProbability(p!), degrees(a!), degrees(b!)], ([q, d1, d2]) => fInverse(q!, d1!, d2!)),
 );
 const fInvRight = numFn(3, 3, ([p, a, b]) =>
-  checked([openProbability(p!), degrees(a!), degrees(b!)], ([q, d1, d2]) => fInverse(q!, d1!, d2!, true)),
+  checked([openProbability(p!), degrees(a!), degrees(b!)], ([q, d1, d2]) =>
+    fInverse(q!, d1!, d2!, true),
+  ),
 );
 const tDist = numFn(3, 3, ([x, v, c]) =>
   checked([degrees(v!)], ([n]) => (c ? tCdf(x!, n!) : tPdf(x!, n!))),
@@ -245,12 +267,16 @@ const tDistLegacy = numFn(3, 3, ([x, v, tails]) =>
     [
       x! < 0 ? NEGATIVE_X : x!,
       degrees(v!),
-      Math.trunc(tails!) === 1 || Math.trunc(tails!) === 2 ? Math.trunc(tails!) : OUT_OF_DOMAIN('tails is 1 or 2'),
+      Math.trunc(tails!) === 1 || Math.trunc(tails!) === 2
+        ? Math.trunc(tails!)
+        : OUT_OF_DOMAIN('tails is 1 or 2'),
     ],
     ([, n, k]) => k! * tUpper(x!, n!),
   ),
 );
-const tInv = numFn(2, 2, ([p, v]) => checked([openProbability(p!), degrees(v!)], ([q, n]) => tInverse(q!, n!)));
+const tInv = numFn(2, 2, ([p, v]) =>
+  checked([openProbability(p!), degrees(v!)], ([q, n]) => tInverse(q!, n!)),
+);
 const tInvTwo = numFn(2, 2, ([p, v]) =>
   checked([openProbability(p!), degrees(v!)], ([q, n]) => tInverseUpper(q! / 2, n!)),
 );

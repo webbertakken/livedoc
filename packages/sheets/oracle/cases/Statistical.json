@@ -209,7 +209,8 @@
     },
     {
       "id": "BETA.DIST.8",
-      "f": "=BETA.DIST(0.3, 5, 1, -1, 1)"
+      "f": "=BETA.DIST(0.3, 5, 1, -1, 1)",
+      "note": "Google's help shows BETA.DIST(0.3, 5, 1, -1, 1) as 0.1160290625, reading it without cumulative, while its function list gives cumulative fourth, as Excel; LiveDoc reads it as the list does (BETADIST.1 holds the example)."
     },
     {
       "id": "BETA.INV.1",
@@ -241,7 +242,9 @@
     },
     {
       "id": "BETADIST.1",
-      "f": "=BETADIST(0.3, 5, 1, -1, 1)"
+      "f": "=BETADIST(0.3, 5, 1, -1, 1)",
+      "cite": "https://support.google.com/docs/answer/9084099 (the example: 0.1160290625)",
+      "expect": [[0.1160290625]]
     },
     {
       "id": "BETADIST.2",
@@ -329,7 +332,12 @@
     },
     {
       "id": "BINOM.DIST.9",
-      "f": "=BINOM.DIST(4, 100, 0.005)"
+      "f": "=BINOM.DIST(4, 100, 0.005)",
+      "expect": [[0.001514668284222]],
+      "cite": "https://support.google.com/docs/answer/3093987 (cumulative: \"FALSE by default\": BINOMDIST.1's 0.001514668284222)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative (Err:511)"
+      }
     },
     {
       "id": "BINOM.INV.1",
@@ -393,7 +401,12 @@
     },
     {
       "id": "BINOMDIST.9",
-      "f": "=BINOMDIST(4, 100, 0.005)"
+      "f": "=BINOMDIST(4, 100, 0.005)",
+      "expect": [[0.001514668284222]],
+      "cite": "https://support.google.com/docs/answer/3093987 (cumulative: \"FALSE by default\": BINOMDIST.1's 0.001514668284222)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative (Err:511)"
+      }
     },
     {
       "id": "CHIDIST.1",
@@ -409,7 +422,11 @@
     },
     {
       "id": "CHIDIST.4",
-      "f": "=CHIDIST(-1, 2)"
+      "f": "=CHIDIST(-1, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 1 below 0; LiveDoc #NUM!, as Google's help says x \"Must be a positive number\" and CHIDIST is CHISQ.DIST.RT"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
     },
     {
       "id": "CHIDIST.5",
@@ -437,7 +454,11 @@
     },
     {
       "id": "CHIINV.5",
-      "f": "=CHIINV(1, 2)"
+      "f": "=CHIINV(1, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003198) does not say which error."
     },
     {
       "id": "CHIINV.6",
@@ -465,11 +486,19 @@
     },
     {
       "id": "CHISQ.DIST.6",
-      "f": "=CHISQ.DIST(0, 2, FALSE)"
+      "f": "=CHISQ.DIST(0, 2, FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
     },
     {
       "id": "CHISQ.DIST.7",
-      "f": "=CHISQ.DIST(0, 1, FALSE)"
+      "f": "=CHISQ.DIST(0, 1, FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
     },
     {
       "id": "CHISQ.DIST.RT.1",
@@ -509,7 +538,11 @@
     },
     {
       "id": "CHISQ.INV.4",
-      "f": "=CHISQ.INV(0, 2)"
+      "f": "=CHISQ.INV(0, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7004181) does not say which error."
     },
     {
       "id": "CHISQ.INV.5",
@@ -537,7 +570,11 @@
     },
     {
       "id": "CHISQ.INV.RT.5",
-      "f": "=CHISQ.INV.RT(1, 2)"
+      "f": "=CHISQ.INV.RT(1, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003348) does not say which error."
     },
     {
       "id": "CHISQ.INV.RT.6",
@@ -898,7 +935,12 @@
     },
     {
       "id": "F.DIST.6",
-      "f": "=F.DIST(15.35, 7, 6)"
+      "f": "=F.DIST(15.35, 7, 6)",
+      "expect": [[0.000345105468602558]],
+      "cite": "https://support.google.com/docs/answer/6055706 (cumulative: \"Default value is FALSE\": F.DIST.2's density)",
+      "differs": {
+        "libreoffice": "LibreOffice writes F.DIST as ODF FDIST, whose cumulative is TRUE when left out"
+      }
     },
     {
       "id": "F.DIST.RT.1",
@@ -934,7 +976,11 @@
     },
     {
       "id": "F.INV.4",
-      "f": "=F.INV(1, 2, 3)"
+      "f": "=F.INV(1, 2, 3)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7004265) does not say which error."
     },
     {
       "id": "F.INV.5",
@@ -954,7 +1000,11 @@
     },
     {
       "id": "F.INV.RT.4",
-      "f": "=F.INV.RT(1, 2, 3)"
+      "f": "=F.INV.RT(1, 2, 3)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003960) does not say which error."
     },
     {
       "id": "F.INV.RT.5",
@@ -1010,7 +1060,11 @@
     },
     {
       "id": "FINV.4",
-      "f": "=FINV(1, 2, 3)"
+      "f": "=FINV(1, 2, 3)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003960) does not say which error."
     },
     {
       "id": "FINV.5",
@@ -1126,7 +1180,11 @@
     },
     {
       "id": "GAMMA.4",
-      "f": "=GAMMA(-1.5)"
+      "f": "=GAMMA(-1.5)",
+      "differs": {
+        "libreoffice": "LibreOffice extends GAMMA below 0 (2.363); LiveDoc refuses it, as Google's help says \"The number must be positive\""
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
     },
     {
       "id": "GAMMA.5",
@@ -1150,7 +1208,11 @@
     },
     {
       "id": "GAMMA.DIST.3",
-      "f": "=GAMMA.DIST(0, 1, 2, FALSE)"
+      "f": "=GAMMA.DIST(0, 1, 2, FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
     },
     {
       "id": "GAMMA.DIST.4",
@@ -1170,7 +1232,9 @@
     },
     {
       "id": "GAMMA.INV.1",
-      "f": "=GAMMA.INV(0.3, 5, 1)"
+      "f": "=GAMMA.INV(0.3, 5, 1)",
+      "cite": "https://support.google.com/docs/answer/9116467 (the example: 3.633609083)",
+      "expect": [[3.633609083]]
     },
     {
       "id": "GAMMA.INV.2",
@@ -1198,7 +1262,11 @@
     },
     {
       "id": "GAMMADIST.3",
-      "f": "=GAMMADIST(0, 1, 2, FALSE)"
+      "f": "=GAMMADIST(0, 1, 2, FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
     },
     {
       "id": "GAMMADIST.4",
@@ -1206,7 +1274,11 @@
     },
     {
       "id": "GAMMADIST.5",
-      "f": "=GAMMADIST(-1, 2, 2, TRUE)"
+      "f": "=GAMMADIST(-1, 2, 2, TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0 below 0; LiveDoc refuses it, as Google's help says x \"must be greater than or equal to zero\""
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
     },
     {
       "id": "GAMMADIST.6",
@@ -1218,7 +1290,9 @@
     },
     {
       "id": "GAMMAINV.1",
-      "f": "=GAMMAINV(0.3, 5, 1)"
+      "f": "=GAMMAINV(0.3, 5, 1)",
+      "cite": "https://support.google.com/docs/answer/9116467 (the example: 3.633609083)",
+      "expect": [[3.633609083]]
     },
     {
       "id": "GAMMAINV.2",
@@ -1238,7 +1312,9 @@
     },
     {
       "id": "GAUSS.1",
-      "f": "=GAUSS(1)"
+      "f": "=GAUSS(1)",
+      "cite": "https://support.google.com/docs/answer/9116278 (the example: 0.3413447461)",
+      "expect": [[0.3413447461]]
     },
     {
       "id": "GAUSS.2",
@@ -1306,7 +1382,11 @@
     },
     {
       "id": "HYPGEOM.DIST.1",
-      "f": "=HYPGEOM.DIST(4, 12, 20, 40)"
+      "f": "=HYPGEOM.DIST(4, 12, 20, 40)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's four-argument form as HYPGEOMDIST, the probability mass"
+      },
+      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
     },
     {
       "id": "HYPGEOM.DIST.2",
@@ -1326,7 +1406,11 @@
     },
     {
       "id": "HYPGEOM.DIST.6",
-      "f": "=HYPGEOM.DIST(4.9, 12, 20, 40)"
+      "f": "=HYPGEOM.DIST(4.9, 12, 20, 40)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's four-argument form as HYPGEOMDIST, the probability mass"
+      },
+      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
     },
     {
       "id": "HYPGEOMDIST.1",
@@ -1450,7 +1534,11 @@
     },
     {
       "id": "LOGNORM.DIST.1",
-      "f": "=LOGNORM.DIST(4, 4, 6)"
+      "f": "=LOGNORM.DIST(4, 4, 6)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's three-argument form as LOGNORMDIST, the cumulative distribution"
+      },
+      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
     },
     {
       "id": "LOGNORM.DIST.2",
@@ -1462,7 +1550,11 @@
     },
     {
       "id": "LOGNORM.DIST.4",
-      "f": "=LOGNORM.DIST(0, 4, 6)"
+      "f": "=LOGNORM.DIST(0, 4, 6)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's three-argument form as LOGNORMDIST, the cumulative distribution"
+      },
+      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
     },
     {
       "id": "LOGNORM.DIST.5",
@@ -1510,11 +1602,21 @@
     },
     {
       "id": "MARGINOFERROR.1",
-      "f": "=MARGINOFERROR(Data!A1:A8, 0.95)"
+      "f": "=MARGINOFERROR(Data!A1:A8, 0.95)",
+      "expect": [[7.15605864272521]],
+      "cite": "https://support.google.com/docs/answer/12487850 (\"MARGINOFERROR(range, confidence) is equal to CONFIDENCE.T(1 - confidence, STDEV(range), COUNT(range))\": CONFIDENCE.T.7 and .8)",
+      "differs": {
+        "libreoffice": "MARGINOFERROR is Google's own (S5): LibreOffice has no such function (#NAME?)"
+      }
     },
     {
       "id": "MARGINOFERROR.2",
-      "f": "=MARGINOFERROR(Data!A1:A8, 0.99)"
+      "f": "=MARGINOFERROR(Data!A1:A8, 0.99)",
+      "expect": [[10.5904807828175]],
+      "cite": "https://support.google.com/docs/answer/12487850 (\"MARGINOFERROR(range, confidence) is equal to CONFIDENCE.T(1 - confidence, STDEV(range), COUNT(range))\": CONFIDENCE.T.7 and .8)",
+      "differs": {
+        "libreoffice": "MARGINOFERROR is Google's own (S5): LibreOffice has no such function (#NAME?)"
+      }
     },
     {
       "id": "MAX.1",
@@ -1731,7 +1833,11 @@
     },
     {
       "id": "NEGBINOM.DIST.1",
-      "f": "=NEGBINOM.DIST(4, 2, 0.1)"
+      "f": "=NEGBINOM.DIST(4, 2, 0.1)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's three-argument form as NEGBINOMDIST, the probability mass"
+      },
+      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
     },
     {
       "id": "NEGBINOM.DIST.2",
@@ -1755,11 +1861,21 @@
     },
     {
       "id": "NEGBINOMDIST.2",
-      "f": "=NEGBINOMDIST(4, 2, 0.1, TRUE)"
+      "f": "=NEGBINOMDIST(4, 2, 0.1, TRUE)",
+      "expect": [[0.114265]],
+      "cite": "https://support.google.com/docs/answer/3094031 (NEGBINOMDIST(num_failures, num_successes, prob_success, cumulative): NEGBINOM.DIST.2 and .3)",
+      "differs": {
+        "libreoffice": "LibreOffice's NEGBINOMDIST takes three arguments (Err:504)"
+      }
     },
     {
       "id": "NEGBINOMDIST.3",
-      "f": "=NEGBINOMDIST(4, 2, 0.1, FALSE)"
+      "f": "=NEGBINOMDIST(4, 2, 0.1, FALSE)",
+      "expect": [[0.032805]],
+      "cite": "https://support.google.com/docs/answer/3094031 (NEGBINOMDIST(num_failures, num_successes, prob_success, cumulative): NEGBINOM.DIST.2 and .3)",
+      "differs": {
+        "libreoffice": "LibreOffice's NEGBINOMDIST takes three arguments (Err:504)"
+      }
     },
     {
       "id": "NEGBINOMDIST.4",
@@ -1803,11 +1919,19 @@
     },
     {
       "id": "NORM.INV.4",
-      "f": "=NORM.INV(0, 0, 1)"
+      "f": "=NORM.INV(0, 0, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
+      },
+      "note": "Awaits Google's answer: its help for NORMINV does not say."
     },
     {
       "id": "NORM.INV.5",
-      "f": "=NORM.INV(1, 0, 1)"
+      "f": "=NORM.INV(1, 0, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
+      },
+      "note": "Awaits Google's answer: its help for NORMINV does not say."
     },
     {
       "id": "NORM.INV.6",
@@ -1815,7 +1939,12 @@
     },
     {
       "id": "NORM.S.DIST.1",
-      "f": "=NORM.S.DIST(2.4)"
+      "f": "=NORM.S.DIST(2.4)",
+      "expect": [[0.991802464075404]],
+      "cite": "https://support.google.com/docs/answer/3094089 (NORM.S.DIST(x) in Google's function list, \"See NORMSDIST\": the cumulative distribution, NORMSDIST.1 and .4)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative (Err:511)"
+      }
     },
     {
       "id": "NORM.S.DIST.2",
@@ -1827,7 +1956,12 @@
     },
     {
       "id": "NORM.S.DIST.4",
-      "f": "=NORM.S.DIST(-1.5)"
+      "f": "=NORM.S.DIST(-1.5)",
+      "expect": [[0.066807201268858]],
+      "cite": "https://support.google.com/docs/answer/3094089 (NORM.S.DIST(x) in Google's function list, \"See NORMSDIST\": the cumulative distribution, NORMSDIST.1 and .4)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative (Err:511)"
+      }
     },
     {
       "id": "NORM.S.INV.1",
@@ -1843,11 +1977,33 @@
     },
     {
       "id": "NORM.S.INV.4",
-      "f": "=NORM.S.INV(0)"
+      "f": "=NORM.S.INV(0)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094091 (\"x must be greater than 0 and less than 1 or a #NUM! error will occur\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!"
+      }
     },
     {
       "id": "NORM.S.INV.5",
-      "f": "=NORM.S.INV(1)"
+      "f": "=NORM.S.INV(1)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094091 (\"x must be greater than 0 and less than 1 or a #NUM! error will occur\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!"
+      }
     },
     {
       "id": "NORMDIST.1",
@@ -1883,11 +2039,19 @@
     },
     {
       "id": "NORMINV.4",
-      "f": "=NORMINV(0, 0, 1)"
+      "f": "=NORMINV(0, 0, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
+      },
+      "note": "Awaits Google's answer: its help for NORMINV does not say."
     },
     {
       "id": "NORMINV.5",
-      "f": "=NORMINV(1, 0, 1)"
+      "f": "=NORMINV(1, 0, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
+      },
+      "note": "Awaits Google's answer: its help for NORMINV does not say."
     },
     {
       "id": "NORMINV.6",
@@ -1899,11 +2063,21 @@
     },
     {
       "id": "NORMSDIST.2",
-      "f": "=NORMSDIST(2.4, TRUE)"
+      "f": "=NORMSDIST(2.4, TRUE)",
+      "expect": [[0.991802464075404]],
+      "cite": "https://support.google.com/docs/answer/3094089 (NORMSDIST(x, cumulative): NORM.S.DIST.2 and .3)",
+      "differs": {
+        "libreoffice": "LibreOffice's NORMSDIST (ODF LEGACY.NORMSDIST) takes one argument (Err:508)"
+      }
     },
     {
       "id": "NORMSDIST.3",
-      "f": "=NORMSDIST(2.4, FALSE)"
+      "f": "=NORMSDIST(2.4, FALSE)",
+      "expect": [[0.0223945302948429]],
+      "cite": "https://support.google.com/docs/answer/3094089 (NORMSDIST(x, cumulative): NORM.S.DIST.2 and .3)",
+      "differs": {
+        "libreoffice": "LibreOffice's NORMSDIST (ODF LEGACY.NORMSDIST) takes one argument (Err:508)"
+      }
     },
     {
       "id": "NORMSDIST.4",
@@ -1923,11 +2097,33 @@
     },
     {
       "id": "NORMSINV.4",
-      "f": "=NORMSINV(0)"
+      "f": "=NORMSINV(0)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094091 (\"x must be greater than 0 and less than 1 or a #NUM! error will occur\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!"
+      }
     },
     {
       "id": "NORMSINV.5",
-      "f": "=NORMSINV(1)"
+      "f": "=NORMSINV(1)",
+      "expect": [
+        [
+          {
+            "e": "#NUM!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3094091 (\"x must be greater than 0 and less than 1 or a #NUM! error will occur\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE!"
+      }
     },
     {
       "id": "PEARSON.1",
@@ -2225,7 +2421,9 @@
     },
     {
       "id": "PHI.1",
-      "f": "=PHI(0.5)"
+      "f": "=PHI(0.5)",
+      "cite": "https://support.google.com/docs/answer/9116365 (the example: 0.3520653268)",
+      "expect": [[0.3520653268]]
     },
     {
       "id": "PHI.2",
@@ -2297,7 +2495,11 @@
     },
     {
       "id": "POISSON.DIST.7",
-      "f": "=POISSON.DIST(2, 1)"
+      "f": "=POISSON.DIST(2, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's \"[cumulative]\" as POISSON, cumulative when left out"
+      },
+      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
     },
     {
       "id": "PROB.1",
@@ -2838,7 +3040,9 @@
     },
     {
       "id": "T.DIST.1",
-      "f": "=T.DIST(1.96, 60, FALSE)"
+      "f": "=T.DIST(1.96, 60, FALSE)",
+      "cite": "https://support.google.com/docs/answer/9369014 (the example: 0.059847906211419)",
+      "expect": [[0.059847906211419]]
     },
     {
       "id": "T.DIST.2",
@@ -2866,7 +3070,9 @@
     },
     {
       "id": "T.DIST.2T.2",
-      "f": "=T.DIST.2T(1, 2)"
+      "f": "=T.DIST.2T(1, 2)",
+      "cite": "https://support.google.com/docs/answer/9368252 (the example: 0.42264973081037)",
+      "expect": [[0.42264973081037]]
     },
     {
       "id": "T.DIST.2T.3",
@@ -2882,7 +3088,9 @@
     },
     {
       "id": "T.DIST.RT.2",
-      "f": "=T.DIST.RT(-1.98, 2)"
+      "f": "=T.DIST.RT(-1.98, 2)",
+      "cite": "https://support.google.com/docs/answer/9369017 (the example: 0.9068737480782105)",
+      "expect": [[0.9068737480782105]]
     },
     {
       "id": "T.DIST.RT.3",
@@ -2926,7 +3134,11 @@
     },
     {
       "id": "T.INV.2T.4",
-      "f": "=T.INV.2T(1, 1)"
+      "f": "=T.INV.2T(1, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/6055811) does not say which error."
     },
     {
       "id": "T.INV.2T.5",
@@ -2998,7 +3210,11 @@
     },
     {
       "id": "TINV.4",
-      "f": "=TINV(1, 1)"
+      "f": "=TINV(1, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
+      },
+      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/6055811) does not say which error."
     },
     {
       "id": "TINV.5",

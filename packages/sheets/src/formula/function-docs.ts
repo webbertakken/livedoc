@@ -396,6 +396,322 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'The variance of a whole population, text counted as 0',
     '=VARPA(B2:B10)',
   ),
+  'BETA.DIST': D(
+    'value, alpha, beta, cumulative, [lower_bound, upper_bound]',
+    'The beta distribution at a value',
+    '=BETA.DIST(0.42, 3, 8, TRUE)',
+  ),
+  BETADIST: D(
+    'value, alpha, beta, [lower_bound, upper_bound]',
+    'The cumulative beta distribution at a value',
+    '=BETADIST(0.42, 3, 8)',
+  ),
+  'BETA.INV': D(
+    'probability, alpha, beta, [lower_bound, upper_bound]',
+    'The value at a cumulative beta probability',
+    '=BETA.INV(0.3, 5, 1)',
+  ),
+  BETAINV: D(
+    'probability, alpha, beta, [lower_bound, upper_bound]',
+    'The value at a cumulative beta probability',
+    '=BETAINV(0.3, 5, 1)',
+  ),
+  'BINOM.DIST': D(
+    'num_successes, num_trials, prob_success, [cumulative]',
+    'The binomial probability of a number of successes',
+    '=BINOM.DIST(4, 10, 0.5, FALSE)',
+  ),
+  BINOMDIST: D(
+    'num_successes, num_trials, prob_success, [cumulative]',
+    'The binomial probability of a number of successes',
+    '=BINOMDIST(4, 10, 0.5, FALSE)',
+  ),
+  'BINOM.INV': D(
+    'num_trials, prob_success, target_prob',
+    'The fewest successes whose cumulative probability reaches a target',
+    '=BINOM.INV(10, 0.5, 0.75)',
+  ),
+  CRITBINOM: D(
+    'num_trials, prob_success, target_prob',
+    'The fewest successes whose cumulative probability reaches a target',
+    '=CRITBINOM(10, 0.5, 0.75)',
+  ),
+  CHIDIST: D(
+    'x, degrees_freedom',
+    'The right tail of the chi-squared distribution',
+    '=CHIDIST(3.45, 2)',
+  ),
+  CHIINV: D(
+    'probability, degrees_freedom',
+    'The inverse of the right-tailed chi-squared distribution',
+    '=CHIINV(0.42, 2)',
+  ),
+  'CHISQ.DIST': D(
+    'x, degrees_freedom, cumulative',
+    'The chi-squared distribution at x',
+    '=CHISQ.DIST(3.45, 2, TRUE)',
+  ),
+  'CHISQ.DIST.RT': D(
+    'x, degrees_freedom',
+    'The right tail of the chi-squared distribution',
+    '=CHISQ.DIST.RT(3.45, 2)',
+  ),
+  'CHISQ.INV': D(
+    'probability, degrees_freedom',
+    'The inverse of the left-tailed chi-squared distribution',
+    '=CHISQ.INV(0.42, 2)',
+  ),
+  'CHISQ.INV.RT': D(
+    'probability, degrees_freedom',
+    'The inverse of the right-tailed chi-squared distribution',
+    '=CHISQ.INV.RT(0.42, 2)',
+  ),
+  'CHISQ.TEST': D(
+    'observed_range, expected_range',
+    "The p-value of Pearson's chi-squared test",
+    '=CHISQ.TEST(A2:A7, B2:B7)',
+  ),
+  CHITEST: D(
+    'observed_range, expected_range',
+    "The p-value of Pearson's chi-squared test",
+    '=CHITEST(A2:A7, B2:B7)',
+  ),
+  CONFIDENCE: D(
+    'alpha, standard_deviation, pop_size',
+    'Half the width of a normal confidence interval',
+    '=CONFIDENCE(0.05, 1.6, 250)',
+  ),
+  'CONFIDENCE.NORM': D(
+    'alpha, standard_deviation, pop_size',
+    'Half the width of a normal confidence interval',
+    '=CONFIDENCE.NORM(0.05, 1.6, 250)',
+  ),
+  'CONFIDENCE.T': D(
+    'alpha, standard_deviation, size',
+    "Half the width of a Student's t confidence interval",
+    '=CONFIDENCE.T(0.05, 6.4, 27)',
+  ),
+  'EXPON.DIST': D(
+    'x, LAMBDA, cumulative',
+    'The exponential distribution at x',
+    '=EXPON.DIST(4, 0.5, TRUE)',
+  ),
+  EXPONDIST: D(
+    'x, LAMBDA, cumulative',
+    'The exponential distribution at x',
+    '=EXPONDIST(4, 0.5, TRUE)',
+  ),
+  'F.DIST': D(
+    'x, degrees_freedom1, degrees_freedom2, [cumulative]',
+    'The F distribution at x',
+    '=F.DIST(15.35, 7, 6, TRUE)',
+  ),
+  'F.DIST.RT': D(
+    'x, degrees_freedom1, degrees_freedom2',
+    'The right tail of the F distribution',
+    '=F.DIST.RT(15.35, 7, 6)',
+  ),
+  FDIST: D(
+    'x, degrees_freedom1, degrees_freedom2',
+    'The right tail of the F distribution',
+    '=FDIST(15.35, 7, 6)',
+  ),
+  'F.INV': D(
+    'probability, degrees_freedom1, degrees_freedom2',
+    'The inverse of the left-tailed F distribution',
+    '=F.INV(0.42, 2, 3)',
+  ),
+  'F.INV.RT': D(
+    'probability, degrees_freedom1, degrees_freedom2',
+    'The inverse of the right-tailed F distribution',
+    '=F.INV.RT(0.42, 2, 3)',
+  ),
+  FINV: D(
+    'probability, degrees_freedom1, degrees_freedom2',
+    'The inverse of the right-tailed F distribution',
+    '=FINV(0.42, 2, 3)',
+  ),
+  'F.TEST': D(
+    'range1, range2',
+    'The p-value of an F-test for equal variances',
+    '=F.TEST(A2:A9, B2:B9)',
+  ),
+  FTEST: D(
+    'range1, range2',
+    'The p-value of an F-test for equal variances',
+    '=FTEST(A2:A9, B2:B9)',
+  ),
+  GAMMA: D('number', 'The gamma function', '=GAMMA(4.5)'),
+  'GAMMA.DIST': D(
+    'x, alpha, beta, cumulative',
+    'The gamma distribution at x',
+    '=GAMMA.DIST(4.79, 1.234, 7, TRUE)',
+  ),
+  GAMMADIST: D(
+    'x, alpha, beta, cumulative',
+    'The gamma distribution at x',
+    '=GAMMADIST(4.79, 1.234, 7, TRUE)',
+  ),
+  'GAMMA.INV': D(
+    'probability, alpha, beta',
+    'The value at a cumulative gamma probability',
+    '=GAMMA.INV(0.3, 5, 1)',
+  ),
+  GAMMAINV: D(
+    'probability, alpha, beta',
+    'The value at a cumulative gamma probability',
+    '=GAMMAINV(0.3, 5, 1)',
+  ),
+  GAUSS: D('z', 'The chance a standard normal value lies between 0 and z', '=GAUSS(1)'),
+  'HYPGEOM.DIST': D(
+    'num_successes, num_draws, successes_in_pop, pop_size, [cumulative]',
+    'The probability of successes drawn without replacement',
+    '=HYPGEOM.DIST(4, 12, 20, 40)',
+  ),
+  HYPGEOMDIST: D(
+    'num_successes, num_draws, successes_in_pop, pop_size, [cumulative]',
+    'The probability of successes drawn without replacement',
+    '=HYPGEOMDIST(4, 12, 20, 40)',
+  ),
+  LOGINV: D(
+    'x, mean, standard_deviation',
+    'The inverse of the cumulative log-normal distribution',
+    '=LOGINV(0.4, 4, 6)',
+  ),
+  'LOGNORM.DIST': D(
+    'x, mean, standard_deviation, [cumulative]',
+    'The log-normal distribution at x',
+    '=LOGNORM.DIST(4, 4, 6)',
+  ),
+  'LOGNORM.INV': D(
+    'x, mean, standard_deviation',
+    'The inverse of the cumulative log-normal distribution',
+    '=LOGNORM.INV(0.4, 4, 6)',
+  ),
+  LOGNORMDIST: D(
+    'x, mean, standard_deviation, [cumulative]',
+    'The log-normal distribution at x',
+    '=LOGNORMDIST(4, 4, 6)',
+  ),
+  MARGINOFERROR: D(
+    'range, confidence',
+    'The margin of error of a sample at a confidence level',
+    '=MARGINOFERROR(A2:A9, 0.95)',
+  ),
+  'NEGBINOM.DIST': D(
+    'num_failures, num_successes, prob_success, [cumulative]',
+    'The probability of failures before a number of successes',
+    '=NEGBINOM.DIST(4, 2, 0.1)',
+  ),
+  NEGBINOMDIST: D(
+    'num_failures, num_successes, prob_success, [cumulative]',
+    'The probability of failures before a number of successes',
+    '=NEGBINOMDIST(4, 2, 0.1)',
+  ),
+  'NORM.DIST': D(
+    'x, mean, standard_deviation, cumulative',
+    'The normal distribution at x',
+    '=NORM.DIST(2.4, 1, 4, TRUE)',
+  ),
+  NORMDIST: D(
+    'x, mean, standard_deviation, cumulative',
+    'The normal distribution at x',
+    '=NORMDIST(2.4, 1, 4, TRUE)',
+  ),
+  'NORM.INV': D(
+    'x, mean, standard_deviation',
+    'The inverse of the cumulative normal distribution',
+    '=NORM.INV(0.75, 1, 4)',
+  ),
+  NORMINV: D(
+    'x, mean, standard_deviation',
+    'The inverse of the cumulative normal distribution',
+    '=NORMINV(0.75, 1, 4)',
+  ),
+  'NORM.S.DIST': D('x, [cumulative]', 'The standard normal distribution at x', '=NORM.S.DIST(2.4)'),
+  NORMSDIST: D('x, [cumulative]', 'The standard normal distribution at x', '=NORMSDIST(2.4)'),
+  'NORM.S.INV': D(
+    'x',
+    'The inverse of the cumulative standard normal distribution',
+    '=NORM.S.INV(0.75)',
+  ),
+  NORMSINV: D('x', 'The inverse of the cumulative standard normal distribution', '=NORMSINV(0.75)'),
+  PHI: D('x', 'The standard normal density at x', '=PHI(0.5)'),
+  POISSON: D(
+    'x, mean, [cumulative]',
+    'The Poisson probability of x events',
+    '=POISSON(2, 1, FALSE)',
+  ),
+  'POISSON.DIST': D(
+    'x, mean, [cumulative]',
+    'The Poisson probability of x events',
+    '=POISSON.DIST(2, 1, FALSE)',
+  ),
+  'T.DIST': D(
+    'x, degrees_freedom, cumulative',
+    "Student's t distribution at x",
+    '=T.DIST(1.96, 60, TRUE)',
+  ),
+  'T.DIST.2T': D(
+    'x, degrees_freedom',
+    "Both tails of Student's t distribution beyond x",
+    '=T.DIST.2T(1.96, 60)',
+  ),
+  'T.DIST.RT': D(
+    'x, degrees_freedom',
+    "The right tail of Student's t distribution",
+    '=T.DIST.RT(1.96, 60)',
+  ),
+  'T.INV': D(
+    'probability, degrees_freedom',
+    'The inverse of the left-tailed t distribution',
+    '=T.INV(0.35, 1)',
+  ),
+  'T.INV.2T': D(
+    'probability, degrees_freedom',
+    'The inverse of the two-tailed t distribution',
+    '=T.INV.2T(0.05, 10)',
+  ),
+  TINV: D(
+    'probability, degrees_freedom',
+    'The inverse of the two-tailed t distribution',
+    '=TINV(0.05, 10)',
+  ),
+  TDIST: D(
+    'x, degrees_freedom, tails',
+    "One or both tails of Student's t distribution beyond x",
+    '=TDIST(2, 30, 1)',
+  ),
+  'T.TEST': D(
+    'range1, range2, tails, type',
+    "The p-value of Student's t-test",
+    '=T.TEST(A2:A9, B2:B9, 2, 1)',
+  ),
+  TTEST: D(
+    'range1, range2, tails, type',
+    "The p-value of Student's t-test",
+    '=TTEST(A2:A9, B2:B9, 2, 1)',
+  ),
+  WEIBULL: D(
+    'x, shape, scale, cumulative',
+    'The Weibull distribution at x',
+    '=WEIBULL(2.4, 2, 3, TRUE)',
+  ),
+  'WEIBULL.DIST': D(
+    'x, shape, scale, cumulative',
+    'The Weibull distribution at x',
+    '=WEIBULL.DIST(2.4, 2, 3, TRUE)',
+  ),
+  'Z.TEST': D(
+    'data, value, [standard_deviation]',
+    'The one-tailed p-value of a z-test',
+    '=Z.TEST(A2:A9, 10)',
+  ),
+  ZTEST: D(
+    'data, value, [standard_deviation]',
+    'The one-tailed p-value of a z-test',
+    '=ZTEST(A2:A9, 10)',
+  ),
   // Database
   DSUM: D(
     'database, field, criteria',

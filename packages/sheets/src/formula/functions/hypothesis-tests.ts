@@ -30,8 +30,8 @@ function chiTest(args: EvalValue[], f: Frame): Value {
   const observed = arrayArg(args[0]!, f);
   const expected = arrayArg(args[1]!, f);
   const rows = observed.rows.length;
-  const cols = observed.rows[0]?.length ?? 0;
-  if (rows !== expected.rows.length || cols !== (expected.rows[0]?.length ?? 0))
+  const cols = observed.rows[0]!.length;
+  if (rows !== expected.rows.length || cols !== expected.rows[0]!.length)
     return err('#N/A', 'The ranges must be the same size');
   const read = cells(args[0]!, args[1]!, f);
   if (isError(read)) return read;
@@ -76,7 +76,9 @@ function tStatistic(xs: Scalar[], ys: Scalar[], type: number): [number, number] 
     }
     if (d.length < 2) return err('#DIV/0!', 'At least two pairs are needed');
     const sd = Math.sqrt(sampleVariance(d) / d.length);
-    return sd === 0 ? err('#DIV/0!', 'The differences have no spread') : [mean(d) / sd, d.length - 1];
+    return sd === 0
+      ? err('#DIV/0!', 'The differences have no spread')
+      : [mean(d) / sd, d.length - 1];
   }
   const a = xs.filter((x): x is number => typeof x === 'number');
   const b = ys.filter((y): y is number => typeof y === 'number');
@@ -136,7 +138,9 @@ function interval(alpha: number, sd: number, size: number, critical: (n: number)
   return (critical(n) * sd) / Math.sqrt(n);
 }
 
-const normalInterval = numFn(3, 3, ([a, s, n]) => interval(a!, s!, n!, () => -normalInverse(a! / 2)));
+const normalInterval = numFn(3, 3, ([a, s, n]) =>
+  interval(a!, s!, n!, () => -normalInverse(a! / 2)),
+);
 
 // Student's t needs two values: one leaves no degree of freedom.
 function tInterval(alpha: number, sd: number, size: number): Value {
