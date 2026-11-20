@@ -51,9 +51,10 @@ elements, its snapshots, its changesets or its room.
 
 ## In a spreadsheet
 
-**Status: specified; the workbook row, styles, the chunked order and loading by viewport are built** (format and settings, made with the spreadsheet,
-carried on the document read). What the store becomes for the [spreadsheet](spreadsheet.md); the rest of
-this page holds for both until the Plan Sheet retires.
+**Status: specified; built but for objects, unknown content and names unique across the workbook** (each with its
+phase). Built in plan 0020 Phase 5: the workbook row with its format and settings, styles, the chunked order, loading
+by viewport, the limits, the workbook's doors, offline and copies. What the store becomes for the
+[spreadsheet](spreadsheet.md); the rest of this page holds for both until the Plan Sheet retires.
 
 - **A workbook is a document's sheets.** Each sheet tab holds one sheet (its `tabId`); the document's tab order is
   the sheets' order, and a sheet's `title` is its tab's name, kept as one, unique in the workbook, up to 100

@@ -1,9 +1,12 @@
 # Spreadsheet
 
-**Status: specified; a tracer is built.** `/new?kind=spreadsheet` makes one (Sheet1, born `.ods`), its sheet tab opens
-on a bare surface (title row with File › Open and Download, formula bar, grid, sheet bar), and File › Open makes one
-from an `.ods` or `.fods`. Until it ships, the [Plan Sheet](sheet.md) is what LiveDoc has; the
-overhaul retires it (plan 0020, "Phase 16: migrate and retire").
+**Status: specified; the model and the store are built** (plan 0020 Phases 4 and 5). `/new?kind=spreadsheet` makes
+one (Sheet1, born `.ods`), in LiveDoc or This Browser; its sheet tab opens on a bare surface (title row with File ›
+Open and Download, formula bar, grid, sheet bar showing who is on each sheet), and File › Open makes one from an
+`.ods` or `.fods`. Its sheets are one workbook held to its limits, live for everyone, offline and copied whole; the
+api adds, renames and deletes sheet tabs and saves settings ([Sheet store](sheet-store.md#changing-the-workbook)).
+Until it ships, the [Plan Sheet](sheet.md) is what LiveDoc has; the overhaul retires it (plan 0020, "Phase 16: migrate
+and retire").
 
 A **spreadsheet** is a document type of its own: a workbook of sheets, native to both ISO spreadsheet standards,
 OpenDocument 1.4 and Office Open XML (C1, ruled 2026-11-18; [Standard mapping](standard-mapping.md)), that looks
