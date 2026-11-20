@@ -1133,12 +1133,12 @@ export const TEXT_DOCUMENT_PARAGRAPH_STYLE = chart(
 );
 
 // A text document's paragraphs formatted (docs/specs/034-text-documents/text-and-paragraphs.md "Alignment and
-// indents", "Spacing and keep rules"): aligned, indented, spaced, or a keep rule switched.
+// indents", "Spacing and keep rules", "Borders and shading"): aligned, indented, spaced, bordered, or a keep rule switched.
 export const TEXT_DOCUMENT_PARAGRAPH_FORMATTING = chart(
   'Element',
   'Changed',
   'Text Document Paragraph Formatting',
-  "A text document's paragraphs aligned, indented or spaced, or a keep rule switched, from the toolbar or Format.",
+  "A text document's paragraphs aligned, indented, spaced, bordered or shaded, or a keep rule switched.",
   {
     types: [
       'TextDocumentAlign',
@@ -1148,6 +1148,7 @@ export const TEXT_DOCUMENT_PARAGRAPH_FORMATTING = chart(
       'TextDocumentParagraphSpace',
       'TextDocumentCustomSpacing',
       'TextDocumentKeepRule',
+      'TextDocumentBordersAndShading',
     ],
   },
 );

@@ -5,6 +5,8 @@
 import { DocumentFonts } from '@livedoc/document';
 import {
   Styles,
+  type BorderDash,
+  type BorderLine,
   type ParagraphProps,
   type Style,
   type StyleDefaults,
@@ -45,8 +47,9 @@ export function paragraphDeclarations(p: ParagraphProps): (string | undefined)[]
   const height = p.lineHeight;
   return [
     p.align && Object.hasOwn(ALIGN, p.align) ? `text-align: ${ALIGN[p.align]}` : undefined,
-    pt(p.indentStart) && `padding-inline-start: ${pt(p.indentStart)}`,
-    pt(p.indentEnd) && `padding-inline-end: ${pt(p.indentEnd)}`,
+    // Indents as variables the paragraph rule draws: as padding, or as margin around a box (boxDeclarations).
+    pt(p.indentStart) && `${INDENT_START}: ${pt(p.indentStart)}`,
+    pt(p.indentEnd) && `${INDENT_END}: ${pt(p.indentEnd)}`,
     pt(p.indentFirst) && `text-indent: ${pt(p.indentFirst)}`,
     pt(p.spaceBefore) && `margin-top: ${pt(p.spaceBefore)}`,
     pt(p.spaceAfter) && `margin-bottom: ${pt(p.spaceAfter)}`,
@@ -66,6 +69,43 @@ export function paragraphDeclarations(p: ParagraphProps): (string | undefined)[]
       : undefined,
     typeof p.widowControl === 'boolean' ? `widows: ${p.widowControl ? 2 : 1}` : undefined,
     typeof p.widowControl === 'boolean' ? `orphans: ${p.widowControl ? 2 : 1}` : undefined,
+    ...boxDeclarations(p),
+  ];
+}
+
+export const INDENT_START = '--text-document-indent-start';
+export const INDENT_END = '--text-document-indent-end';
+const DASH: Record<BorderDash, string> = { solid: 'solid', dotted: 'dotted', dashed: 'dashed' };
+
+/** One border line as CSS (`1pt solid #000000`), or none for a line that draws nothing. */
+export function borderCss(line: BorderLine | undefined): string {
+  if (!line || !pt(line.width, 12) || !Object.hasOwn(DASH, line.dash) || !HEX.test(line.color))
+    return 'none';
+  return `${pt(line.width, 12)} ${DASH[line.dash]} ${line.color}`;
+}
+
+const SIDES = ['top', 'bottom', 'left', 'right'] as const;
+
+/**
+ * A paragraph with borders or a background is a box (text-and-paragraphs.md "Borders and shading"): it stands at its
+ * indents (as margin), its borders around it, each side's padding inside.
+ */
+export function boxDeclarations(p: ParagraphProps): string[] {
+  const shading = p.shading && HEX.test(p.shading) ? p.shading : undefined;
+  if (!p.borders && !shading) return [];
+  const borders = p.borders ?? {};
+  return [
+    `margin-inline-start: var(${INDENT_START}, 0)`,
+    `margin-inline-end: var(${INDENT_END}, 0)`,
+    ...SIDES.flatMap((side) => {
+      const line = borders[side];
+      const drawn = borderCss(line);
+      return [
+        `border-${side}: ${drawn}`,
+        `padding-${side}: ${drawn !== 'none' ? (pt(line!.space, 72) ?? '0pt') : '0pt'}`,
+      ];
+    }),
+    `background-color: ${shading ?? 'transparent'}`,
   ];
 }
 
@@ -98,7 +138,9 @@ export function textDocumentStyleSheet(
   scope = BODY,
 ): string {
   const normal = Styles.idOfRole(styles, 'normal');
-  const rules = [`${scope} p { ${styleRule(styles, defaults, normal)} }`];
+  // Indents draw as padding, unless a box draws them as its margin.
+  const indents = `padding-inline-start: var(${INDENT_START}, 0); padding-inline-end: var(${INDENT_END}, 0);`;
+  const rules = [`${scope} p { ${indents} ${styleRule(styles, defaults, normal)} }`];
   for (const style of styles)
     if (style.family === 'paragraph')
       rules.push(

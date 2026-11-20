@@ -12,7 +12,14 @@ import {
   ptToOdf,
   type XmlElement,
 } from '@livedoc/office-packages';
-import { compact, type ParagraphProps, type TextProps } from '../model/props';
+import {
+  compact,
+  type BorderDash,
+  type BorderLine,
+  type ParagraphBorders,
+  type ParagraphProps,
+  type TextProps,
+} from '../model/props';
 import type { PageSetup } from '../model/sections';
 import { NS } from './odf-names';
 
@@ -49,6 +56,46 @@ function lineHeight(e: XmlElement): ParagraphProps['lineHeight'] {
   return exact === undefined ? undefined : { rule: 'exact', pt: exact };
 }
 
+// Borders (standard-mapping.md "The model"): `fo:border-<side>` over `fo:border`, each `<width> <style> <colour>` in
+// any order; a style the model has no dash for reads as solid. ODF has no line between paragraphs.
+const ODF_SIDES = ['top', 'bottom', 'left', 'right'] as const;
+
+function dashOf(style: string): BorderDash | null {
+  if (style === 'none' || style === 'hidden') return null;
+  if (style === 'dotted') return 'dotted';
+  return style.includes('dash') ? 'dashed' : 'solid';
+}
+
+function borderLine(
+  value: string | undefined,
+  padding: string | undefined,
+): BorderLine | undefined {
+  if (!value) return undefined;
+  let width: number | undefined;
+  let dash: BorderDash | null = 'solid';
+  let color = '#000000';
+  for (const token of value.trim().split(/\s+/)) {
+    const length = odfLengthToPt(token);
+    if (length !== undefined) width = length;
+    else if (odfColour(token)) color = odfColour(token)!;
+    else dash = dashOf(token);
+  }
+  if (dash === null || !width) return undefined;
+  return { width, dash, color, space: odfLengthToPt(padding) ?? 0 };
+}
+
+function readBorders(e: XmlElement): ParagraphBorders | undefined {
+  const borders: Record<string, BorderLine> = {};
+  let named = false;
+  for (const side of ODF_SIDES) {
+    const value = fo(e, `border-${side}`) ?? fo(e, 'border');
+    named ||= value !== undefined;
+    const line = borderLine(value, fo(e, `padding-${side}`) ?? fo(e, 'padding'));
+    if (line) borders[side] = line;
+  }
+  return named ? borders : undefined;
+}
+
 /** The paragraph properties of a style's `style:paragraph-properties`. */
 export function readParagraphProps(style: XmlElement): ParagraphProps {
   const e = childElement(style, NS.style, 'paragraph-properties');
@@ -66,6 +113,8 @@ export function readParagraphProps(style: XmlElement): ParagraphProps {
     keepTogether: keep(fo(e, 'keep-together')),
     widowControl: widowControl(e),
     pageBreakBefore: breakBefore === 'page' ? true : breakBefore === 'auto' ? false : undefined,
+    borders: readBorders(e),
+    shading: odfColour(fo(e, 'background-color')),
   });
 }
 
@@ -124,6 +173,20 @@ const ALIGN_OUT: Record<NonNullable<ParagraphProps['align']>, string> = {
   justify: 'justify',
 };
 
+const ODF_DASH: Record<BorderDash, string> = { solid: 'solid', dotted: 'dotted', dashed: 'dashed' };
+
+// Every side once any is set, `none` where absent, so a paragraph's borders replace its style's whole.
+function bordersXml(borders: ParagraphBorders | undefined): string {
+  if (!borders) return '';
+  return ODF_SIDES.map((side) => {
+    const line = borders[side];
+    return line
+      ? attr(`fo:border-${side}`, `${ptToOdf(line.width)} ${ODF_DASH[line.dash]} ${line.color}`) +
+          attr(`fo:padding-${side}`, ptToOdf(line.space))
+      : attr(`fo:border-${side}`, 'none');
+  }).join('');
+}
+
 /** `style:paragraph-properties` for these values, or nothing when there are none. */
 export function paragraphPropsXml(p: ParagraphProps, extra = ''): string {
   const line = p.lineHeight;
@@ -151,6 +214,8 @@ export function paragraphPropsXml(p: ParagraphProps, extra = ''): string {
       'fo:break-before',
       p.pageBreakBefore === undefined ? undefined : p.pageBreakBefore ? 'page' : 'auto',
     ),
+    bordersXml(p.borders),
+    attr('fo:background-color', p.shading),
   ].join('');
   if (extra) return `<style:paragraph-properties${attrs}>${extra}</style:paragraph-properties>`;
   return attrs ? `<style:paragraph-properties${attrs}/>` : '';

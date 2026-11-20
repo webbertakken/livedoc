@@ -43,9 +43,14 @@ export {
   type NumberFormat,
 } from './model/lists';
 export {
+  BORDER_SIDES,
   canonical,
+  type BorderDash,
+  type BorderLine,
+  type BorderSide,
   type KeptProperties,
   type LineHeight,
+  type ParagraphBorders,
   type ParagraphProps,
   type TextProps,
 } from './model/props';

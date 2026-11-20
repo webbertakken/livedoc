@@ -34,7 +34,7 @@ export function paragraphPropsOf(node: PmNode, formatting: TextFormatting): Para
 
 /**
  * Sets values on every paragraph the selection touches, each from what it draws with now; a value equal to the
- * style's is stored as none of its own, and a paragraph left with none holds no own formatting.
+ * style's, or left undefined, is stored as none of its own, and a paragraph left with none holds no own formatting.
  */
 export function setParagraphProps(
   formatting: TextFormatting,
@@ -47,7 +47,11 @@ export function setParagraphProps(
       const own: Record<string, unknown> = { ...ownOf(node) };
       for (const [key, value] of Object.entries(next(paragraphPropsOf(node, formatting)))) {
         const k = key as keyof ParagraphProps;
-        if (canonical(settled(k, value as never)) === canonical(settled(k, inherited[k])))
+        // Left out (undefined): none of its own, so its style's shows.
+        if (
+          value === undefined ||
+          canonical(settled(k, value as never)) === canonical(settled(k, inherited[k]))
+        )
           delete own[key];
         else own[key] = value;
       }

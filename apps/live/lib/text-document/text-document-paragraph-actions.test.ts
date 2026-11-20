@@ -23,6 +23,7 @@ const blank = TextDocument.blank({ format: 'odf' });
 const readFormatting = () => ({ styles: blank.styles, defaults: blank.defaults });
 const openIndentation = vi.fn();
 const openSpacing = vi.fn();
+const openBorders = vi.fn();
 let view: EditorView;
 
 function open(props: unknown[] = [null, null]) {
@@ -36,7 +37,14 @@ function open(props: unknown[] = [null, null]) {
   });
 }
 const bind = (canEdit = true) =>
-  textDocumentParagraphActions({ view, readFormatting, canEdit, openIndentation, openSpacing });
+  textDocumentParagraphActions({
+    view,
+    readFormatting,
+    canEdit,
+    openIndentation,
+    openSpacing,
+    openBorders,
+  });
 const propsOf = () => {
   const out: unknown[] = [];
   view.state.doc.forEach((node) => out.push((node.attrs as { props: unknown }).props));
@@ -147,6 +155,9 @@ describe('textDocumentParagraphActions, spacing and keep rules', () => {
     const { actions, choices } = bind();
     actions['custom-spacing']!.run();
     expect(openSpacing).toHaveBeenCalled();
+    // Borders and shading (text-and-paragraphs.md "Borders and shading").
+    actions['borders-and-shading']!.run();
+    expect(openBorders).toHaveBeenCalled();
     expect(choices!['line-spacing']!.entries).toBe(LINE_SPACING_ENTRIES);
     expect(choices!['line-spacing']!.read()).toBeNull();
   });

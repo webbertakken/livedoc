@@ -89,6 +89,8 @@ export const SPACE_ITEMS: readonly {
   { item: 'space-after', side: 'spaceAfter', words: 'space after paragraph' },
 ];
 export const CUSTOM_SPACING_ITEM = 'custom-spacing';
+/** Format > Paragraph styles > Borders and shading. */
+export const BORDERS_ITEM = 'borders-and-shading';
 
 const built = (
   id: string,
@@ -119,6 +121,7 @@ export function textDocumentParagraphActions({
   canEdit,
   openIndentation,
   openSpacing,
+  openBorders,
 }: {
   view: EditorView | null;
   readFormatting: () => TextFormatting;
@@ -127,6 +130,8 @@ export function textDocumentParagraphActions({
   openIndentation: () => void;
   // Opens the Custom spacing dialog for them.
   openSpacing: () => void;
+  // Opens the Borders and shading dialog for them.
+  openBorders: () => void;
 }): { actions: OfficeActions; choices: OfficeChoices | null } {
   if (!view || !canEdit) return { actions: {}, choices: null };
   const fromWriting = (change: () => void) => () => {
@@ -157,6 +162,7 @@ export function textDocumentParagraphActions({
     },
     'indentation-options': { run: opening(openIndentation) },
     [CUSTOM_SPACING_ITEM]: { run: opening(openSpacing) },
+    [BORDERS_ITEM]: { run: opening(openBorders) },
   };
   for (const spacing of LINE_SPACINGS)
     actions[spacing.item] = {

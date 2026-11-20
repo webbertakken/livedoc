@@ -52,6 +52,27 @@ describe('OfficeDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('runs a secondary button that changes only the dialog, closing nothing', () => {
+    const onClose = vi.fn();
+    const onReset = vi.fn();
+    const onApply = vi.fn();
+    render(
+      <OfficeDialog
+        open
+        onClose={onClose}
+        title="Borders"
+        primary={{ label: 'Apply', onPress: onApply }}
+        secondary={{ label: 'Reset', onPress: onReset }}
+      >
+        <p>Body</p>
+      </OfficeDialog>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    expect(onReset).toHaveBeenCalledOnce();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onApply).not.toHaveBeenCalled();
+  });
+
   it('runs nothing while the primary is disabled', () => {
     const onPress = vi.fn();
     renderDialog({ label: 'Apply', onPress, disabled: true });

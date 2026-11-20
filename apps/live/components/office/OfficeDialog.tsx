@@ -29,6 +29,7 @@ export function OfficeDialog({
   title,
   wide = false,
   primary,
+  secondary,
   children,
 }: {
   open: boolean;
@@ -38,6 +39,8 @@ export function OfficeDialog({
   wide?: boolean;
   // What the dialog confirms; Cancel comes with it. None: the dialog only shows, and its × closes it.
   primary?: OfficeDialogPrimary;
+  // An action that changes only the dialog (Reset), at the footer's start.
+  secondary?: { label: string; onPress: () => void };
   children: ReactNode;
 }) {
   const titleId = useId();
@@ -88,6 +91,15 @@ export function OfficeDialog({
         </div>
         {primary ? (
           <div className="flex justify-end gap-2 px-6 pb-6 max-sm:absolute max-sm:top-2.5 max-sm:right-2 max-sm:p-0">
+            {secondary ? (
+              <button
+                type="button"
+                onClick={secondary.onPress}
+                className={`${PILL} border border-(--office-line) text-(--office-primary) hover:bg-(--office-hover) sm:mr-auto max-sm:border-0 max-sm:px-3`}
+              >
+                <span className="text-optical-centre">{secondary.label}</span>
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={onClose}

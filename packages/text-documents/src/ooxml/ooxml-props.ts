@@ -21,6 +21,7 @@ import { CHECK_MARKS, LIST_LEVELS, type ListLevel, type NumberFormat } from '../
 import { compact, type ParagraphProps, type TextProps } from '../model/props';
 import type { PageSetup, SectionStart } from '../model/sections';
 import { SECTPR_ORDER, W_NS } from './ooxml-names';
+import { bordersXml, readBorders, readShading, shadingXml } from './ooxml-borders';
 
 const val = (e: XmlElement | undefined) => (e ? attributeOf(e, W_NS, 'val') : undefined);
 const child = (e: XmlElement | undefined, local: string) =>
@@ -175,6 +176,8 @@ export const MAPPED_PPR = new Set([
   'pageBreakBefore',
   'widowControl',
   'numPr',
+  'pBdr',
+  'shd',
   'spacing',
   'ind',
   'jc',
@@ -233,6 +236,8 @@ export function readParagraphProps(pPr: XmlElement | undefined): ParagraphProps 
           ? 0
           : outline + 1
         : undefined,
+    borders: readBorders(pPr),
+    shading: readShading(pPr),
   });
 }
 
@@ -271,6 +276,8 @@ export function paragraphPropsChildren(
     numPr: list
       ? `<w:numPr>${tag('ilvl', { 'w:val': String(list.level) })}${tag('numId', { 'w:val': list.id })}</w:numPr>`
       : undefined,
+    pBdr: bordersXml(p.borders),
+    shd: shadingXml(p.shading),
     spacing: Object.keys(spacing).length > 0 ? tag('spacing', spacing) : undefined,
     ind: Object.keys(ind).length > 0 ? tag('ind', ind) : undefined,
     jc: p.align === undefined ? undefined : tag('jc', { 'w:val': JC_OUT[p.align] }),

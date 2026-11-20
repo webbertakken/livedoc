@@ -39,6 +39,45 @@ describe('conversion', () => {
     ]);
   });
 
+  it("lists the line between paragraphs going to ODF, and padding past Word's most going to OOXML, then drops or holds them", async () => {
+    const word = CONSTRUCTS.borders!('ooxml');
+    expect(conversionLosses(word, 'odf')).toEqual([{ kind: 'between', name: 'between', count: 1 }]);
+    const odf = convertTextDocument(word, 'odf').document;
+    const ruled = odf.body[1]!;
+    expect(ruled.type === 'paragraph' && Object.keys(ruled.props.borders!)).toEqual([
+      'top',
+      'bottom',
+    ]);
+
+    const wide = CONSTRUCTS.borders!('odf');
+    const boxed = wide.body[0]!;
+    if (boxed.type !== 'paragraph') throw new Error('fixture');
+    const padded: TextDocument = {
+      ...wide,
+      body: [
+        {
+          ...boxed,
+          props: {
+            ...boxed.props,
+            borders: { top: { width: 1.3, dash: 'solid', color: '#000000', space: 40 } },
+          },
+        },
+      ],
+    };
+    expect(conversionLosses(padded, 'ooxml')).toEqual([
+      { kind: 'border-padding', name: 'border-padding', count: 1 },
+    ]);
+    const converted = convertTextDocument(padded, 'ooxml').document;
+    const written = writeTextDocumentFile(converted, 'docx');
+    if (!written.ok) throw new Error(written.rejection);
+    const read = await readTextDocumentFile(written.bytes);
+    if (!read.ok) throw new Error(read.rejection);
+    expect(modelOf(read.document)).toEqual(modelOf(converted));
+    const top =
+      converted.body[0]!.type === 'paragraph' ? converted.body[0]!.props.borders!.top : null;
+    expect(top).toEqual({ width: 1.25, dash: 'solid', color: '#000000', space: 31 });
+  });
+
   it('changes nothing for the format a document is already in', () => {
     const doc = TextDocument.blank();
     expect(convertTextDocument(doc, 'odf')).toEqual({ document: doc, losses: [] });

@@ -133,6 +133,32 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         props: { pageBreakBefore: true },
       }),
     ]),
+  // text-and-paragraphs.md "Borders and shading"; an OpenDocument file has no line between paragraphs.
+  borders: (format) =>
+    base(format, [
+      paragraph(format, 'normal', [run('Boxed, shaded')], {
+        props: {
+          borders: Object.fromEntries(
+            (['top', 'bottom', 'left', 'right'] as const).map((side) => [
+              side,
+              { width: 1, dash: 'solid', color: '#000000', space: 4 },
+            ]),
+          ),
+          shading: '#fff2cc',
+        },
+      }),
+      paragraph(format, 'normal', [run('A dotted rule above, a dashed one below')], {
+        props: {
+          borders: {
+            top: { width: 0.5, dash: 'dotted', color: '#1155cc', space: 1 },
+            bottom: { width: 6, dash: 'dashed', color: '#cc0000', space: 0 },
+            ...(format === 'ooxml'
+              ? { between: { width: 2, dash: 'solid', color: '#999999', space: 0 } }
+              : {}),
+          },
+        },
+      }),
+    ]),
   styles: (format) => {
     const doc = TextDocument.blank({ format });
     const normal = Styles.idOfRole(doc.styles, 'normal')!;

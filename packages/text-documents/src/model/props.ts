@@ -23,6 +23,22 @@ export type LineHeight =
   | { readonly rule: 'multiple'; readonly value: number }
   | { readonly rule: 'exact' | 'atLeast'; readonly pt: number };
 
+export type BorderDash = 'solid' | 'dotted' | 'dashed';
+
+/** One border line: its width and padding (the space to the text) in points, its dash and its `#rrggbb` colour. */
+export type BorderLine = {
+  readonly width: number;
+  readonly dash: BorderDash;
+  readonly color: string;
+  readonly space: number;
+};
+
+export type BorderSide = 'top' | 'bottom' | 'left' | 'right' | 'between';
+export const BORDER_SIDES: readonly BorderSide[] = ['top', 'bottom', 'left', 'right', 'between'];
+
+/** A paragraph's border lines; a side left out has none. */
+export type ParagraphBorders = { readonly [side in BorderSide]?: BorderLine };
+
 /** A paragraph's or a style's paragraph formatting; lengths in points. */
 export type ParagraphProps = {
   readonly align?: 'start' | 'center' | 'end' | 'justify';
@@ -40,6 +56,10 @@ export type ParagraphProps = {
   readonly pageBreakBefore?: boolean;
   /** A heading's outline level, 1 to 10 (Heading 1 is 1). */
   readonly outlineLevel?: number;
+  /** Its borders, replacing its style's whole (standard-mapping.md "The model"). */
+  readonly borders?: ParagraphBorders;
+  /** Its background colour, `#rrggbb`. */
+  readonly shading?: string;
 };
 
 /**
