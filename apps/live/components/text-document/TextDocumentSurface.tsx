@@ -1,9 +1,9 @@
 'use client';
 
 // A text document's surface (docs/specs/034-text-documents/editing-surface.md,
-// docs/specs/006-document/kinds-outside-the-canvas.md "The surface"): the title row, the page on its grey ground, and
-// the body, edited live through the room. Its bare form: the office shell's title row, menus and toolbar take this
-// one's place. One surface is one tab: its host keys it by the tab, so another tab mounts a fresh one.
+// docs/specs/006-document/kinds-outside-the-canvas.md "The surface"): the office shell's title row and menus, the
+// page on its ground, and the body, edited live through the room; the shell's look tokens colour it all. One surface
+// is one tab: its host keys it by the tab, so another tab mounts a fresh one.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
