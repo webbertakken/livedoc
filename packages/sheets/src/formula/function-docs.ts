@@ -561,6 +561,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     '=EPOCHTODATE(1655906710)',
   ),
   YEARFRAC: D('start, end, [basis]', 'The share of a year between two dates', '=YEARFRAC(A2, B2)'),
+  DAYS360: D(
+    'start, end, [method]',
+    'The days between two dates in a 360-day year',
+    '=DAYS360(A2, B2)',
+  ),
   // Arrays
   FILTER: D(
     'range, condition1, [condition2, …]',
@@ -703,6 +708,221 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'rate, payment, present_value, [future_value], [type]',
     'How many periods a loan takes',
     '=NPER(5%/12, -400, 20000)',
+  ),
+  IPMT: D(
+    'rate, period, periods, present_value, [future_value], [type]',
+    'The interest part of one payment',
+    '=IPMT(5%/12, 1, 60, 20000)',
+  ),
+  PPMT: D(
+    'rate, period, periods, present_value, [future_value], [type]',
+    'The principal part of one payment',
+    '=PPMT(5%/12, 1, 60, 20000)',
+  ),
+  CUMIPMT: D(
+    'rate, periods, present_value, first_period, last_period, type',
+    'The interest paid from one period to another',
+    '=CUMIPMT(5%/12, 60, 20000, 1, 12, 0)',
+  ),
+  CUMPRINC: D(
+    'rate, periods, present_value, first_period, last_period, type',
+    'The principal paid from one period to another',
+    '=CUMPRINC(5%/12, 60, 20000, 1, 12, 0)',
+  ),
+  ISPMT: D(
+    'rate, period, periods, present_value',
+    'The interest of one period when the principal is repaid evenly',
+    '=ISPMT(5%, 2, 5, 1000)',
+  ),
+  PDURATION: D(
+    'rate, present_value, future_value',
+    'How many periods an investment takes to grow to a value',
+    '=PDURATION(5%, 1000, 2000)',
+  ),
+  RRI: D(
+    'periods, present_value, future_value',
+    'The rate an investment needs to grow to a value',
+    '=RRI(10, 1000, 2000)',
+  ),
+  EFFECT: D(
+    'nominal_rate, periods_per_year',
+    'The effective annual rate of a nominal rate',
+    '=EFFECT(5%, 12)',
+  ),
+  NOMINAL: D(
+    'effective_rate, periods_per_year',
+    'The nominal annual rate of an effective rate',
+    '=NOMINAL(5.1%, 12)',
+  ),
+  DOLLARDE: D(
+    'fractional_price, unit',
+    'A price written in fractions (100.01 for 100 1/8) as a decimal',
+    '=DOLLARDE(100.01, 8)',
+  ),
+  DOLLARFR: D(
+    'decimal_price, unit',
+    'A decimal price written in fractions',
+    '=DOLLARFR(100.125, 8)',
+  ),
+  MIRR: D(
+    'values, finance_rate, reinvest_rate',
+    'The modified internal rate of return of cash flows',
+    '=MIRR(B2:B6, 10%, 12%)',
+  ),
+  XNPV: D(
+    'rate, values, dates',
+    'The net present value of cash flows on their dates',
+    '=XNPV(8%, B2:B6, A2:A6)',
+  ),
+  XIRR: D(
+    'values, dates, [guess]',
+    'The internal rate of return of cash flows on their dates',
+    '=XIRR(B2:B6, A2:A6)',
+  ),
+  FVSCHEDULE: D(
+    'principal, rates',
+    'A principal compounded by a series of rates',
+    '=FVSCHEDULE(1000, B2:B6)',
+  ),
+  SLN: D(
+    'cost, salvage, life',
+    'Straight-line depreciation for one period',
+    '=SLN(30000, 7500, 10)',
+  ),
+  SYD: D(
+    'cost, salvage, life, period',
+    "Sum-of-years' digits depreciation for a period",
+    '=SYD(30000, 7500, 10, 1)',
+  ),
+  DB: D(
+    'cost, salvage, life, period, [months]',
+    'Fixed declining balance depreciation for a period',
+    '=DB(10000, 1000, 6, 1)',
+  ),
+  DDB: D(
+    'cost, salvage, life, period, [factor]',
+    'Double declining balance depreciation for a period',
+    '=DDB(10000, 1000, 6, 1)',
+  ),
+  VDB: D(
+    'cost, salvage, life, start_period, end_period, [factor], [no_switch]',
+    'Declining balance depreciation over any span of periods',
+    '=VDB(10000, 1000, 6, 0, 1.5)',
+  ),
+  AMORLINC: D(
+    'cost, purchase_date, first_period_end, salvage, period, rate, [basis]',
+    'Depreciation for a period, French accounting',
+    '=AMORLINC(1000, A2, B2, 100, 1, 15%)',
+  ),
+  COUPDAYBS: D(
+    'settlement, maturity, frequency, [basis]',
+    'Days from the last coupon to settlement',
+    '=COUPDAYBS(A2, B2, 2)',
+  ),
+  COUPDAYS: D(
+    'settlement, maturity, frequency, [basis]',
+    'Days in the coupon period holding settlement',
+    '=COUPDAYS(A2, B2, 2)',
+  ),
+  COUPDAYSNC: D(
+    'settlement, maturity, frequency, [basis]',
+    'Days from settlement to the next coupon',
+    '=COUPDAYSNC(A2, B2, 2)',
+  ),
+  COUPNCD: D(
+    'settlement, maturity, frequency, [basis]',
+    'The next coupon date after settlement',
+    '=COUPNCD(A2, B2, 2)',
+  ),
+  COUPNUM: D(
+    'settlement, maturity, frequency, [basis]',
+    'How many coupons are left after settlement',
+    '=COUPNUM(A2, B2, 2)',
+  ),
+  COUPPCD: D(
+    'settlement, maturity, frequency, [basis]',
+    'The last coupon date on or before settlement',
+    '=COUPPCD(A2, B2, 2)',
+  ),
+  PRICE: D(
+    'settlement, maturity, rate, yield, redemption, frequency, [basis]',
+    'The price of a bond paying periodic interest',
+    '=PRICE(A2, B2, 5.75%, 6.5%, 100, 2)',
+  ),
+  YIELD: D(
+    'settlement, maturity, rate, price, redemption, frequency, [basis]',
+    'The yield of a bond paying periodic interest',
+    '=YIELD(A2, B2, 5.75%, 95, 100, 2)',
+  ),
+  DURATION: D(
+    'settlement, maturity, rate, yield, frequency, [basis]',
+    "A bond's Macaulay duration in years",
+    '=DURATION(A2, B2, 8%, 9%, 2)',
+  ),
+  MDURATION: D(
+    'settlement, maturity, rate, yield, frequency, [basis]',
+    "A bond's modified duration in years",
+    '=MDURATION(A2, B2, 8%, 9%, 2)',
+  ),
+  ACCRINT: D(
+    'issue, first_payment, settlement, rate, redemption, frequency, [basis], [calc_method]',
+    'The interest a periodic security accrued',
+    '=ACCRINT(A2, B2, C2, 5%, 1000, 2)',
+  ),
+  ACCRINTM: D(
+    'issue, maturity, rate, [redemption], [basis]',
+    'The interest a security paying at maturity accrued',
+    '=ACCRINTM(A2, B2, 5%, 1000)',
+  ),
+  PRICEMAT: D(
+    'settlement, maturity, issue, rate, yield, [basis]',
+    'The price of a security paying interest at maturity',
+    '=PRICEMAT(A2, B2, C2, 6%, 6.5%)',
+  ),
+  YIELDMAT: D(
+    'settlement, maturity, issue, rate, price, [basis]',
+    'The yield of a security paying interest at maturity',
+    '=YIELDMAT(A2, B2, C2, 6%, 99)',
+  ),
+  DISC: D(
+    'settlement, maturity, price, redemption, [basis]',
+    'The discount rate of a security',
+    '=DISC(A2, B2, 97.5, 100)',
+  ),
+  PRICEDISC: D(
+    'settlement, maturity, discount, redemption, [basis]',
+    'The price of a discounted security',
+    '=PRICEDISC(A2, B2, 5%, 100)',
+  ),
+  YIELDDISC: D(
+    'settlement, maturity, price, redemption, [basis]',
+    'The annual yield of a discounted security',
+    '=YIELDDISC(A2, B2, 99.5, 100)',
+  ),
+  INTRATE: D(
+    'settlement, maturity, investment, redemption, [basis]',
+    'The interest rate of a fully invested security',
+    '=INTRATE(A2, B2, 1000, 1014)',
+  ),
+  RECEIVED: D(
+    'settlement, maturity, investment, discount, [basis]',
+    'What a fully invested security pays at maturity',
+    '=RECEIVED(A2, B2, 1000, 5%)',
+  ),
+  TBILLPRICE: D(
+    'settlement, maturity, discount',
+    'The price of a treasury bill',
+    '=TBILLPRICE(A2, B2, 9%)',
+  ),
+  TBILLYIELD: D(
+    'settlement, maturity, price',
+    'The yield of a treasury bill',
+    '=TBILLYIELD(A2, B2, 98.45)',
+  ),
+  TBILLEQ: D(
+    'settlement, maturity, discount',
+    "A treasury bill's bond-equivalent yield",
+    '=TBILLEQ(A2, B2, 9%)',
   ),
   // Engineering
   BIN2OCT: D(

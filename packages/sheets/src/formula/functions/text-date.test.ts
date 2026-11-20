@@ -204,6 +204,9 @@ describe('dates', () => {
     const v = calc(f, DATES);
     expect(v as number).toBeCloseTo(out, 9);
   });
+  it('gives #NUM! for DATEDIF "MD" when the start moved on by its months is past the last date', () => {
+    expect(calc('=DATEDIF(2958400, 2958500, "MD")')).toMatchObject({ e: '#NUM!' });
+  });
   it('works out year fractions on every basis', () => {
     const f = (b: number) => calc(`=YEARFRAC(DATE(2026,1,1), DATE(2026,7,1), ${b})`) as number;
     expect(f(0)).toBeCloseTo(0.5, 9);

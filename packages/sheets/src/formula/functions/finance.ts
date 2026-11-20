@@ -1,7 +1,14 @@
 // Finance functions (docs/specs/029-sheets/formulas.md "Functions": Finance), with Sheets' sign conventions:
-// money paid out is negative.
-import { MANY, arrayArg, flatValues, fn, numArg, numFn, numbersOf, opt, type FnDef } from '../fn';
-import { err, isError } from '../values';
+// money paid out is negative. This file holds the annuities and rates and gathers the family; cash flows, depreciation,
+// coupons and securities live beside it.
+import { numFn, type FnDef } from '../fn';
+import { err } from '../values';
+import { CASH_FLOW_FUNCTIONS } from './cash-flows';
+import { COUPON_FUNCTIONS } from './coupons';
+import { DEPRECIATION_FUNCTIONS } from './depreciation';
+import { DISCOUNT_SECURITY_FUNCTIONS } from './discount-securities';
+import { SECURITY_FUNCTIONS } from './securities';
+import { solve } from './solve';
 
 function pmt(rate: number, nper: number, pv: number, fv: number, type: number): number {
   if (rate === 0) return -(pv + fv) / nper;
@@ -15,32 +22,59 @@ function fv(rate: number, nper: number, payment: number, pv: number, type: numbe
   return -(pv * pow + (payment * (1 + rate * type) * (pow - 1)) / rate);
 }
 
-// Newton's method from `guess`, up to 100 steps; null when it does not settle.
-function solve(f: (x: number) => number, guess: number): number | null {
-  let x = guess;
-  for (let i = 0; i < 100; i++) {
-    const y = f(x);
-    if (Math.abs(y) < 1e-10) return x;
-    const h = 1e-7 * Math.max(1, Math.abs(x));
-    const d = (f(x + h) - y) / h;
-    if (d === 0 || !Number.isFinite(d)) return null;
-    const next = x - y / d;
-    if (!Number.isFinite(next)) return null;
-    if (Math.abs(next - x) < 1e-12) return next;
-    x = next;
-  }
-  return null;
+// The interest part of payment `per` (1 to nper): none in the first period when payments come at the beginning.
+function ipmt(
+  rate: number,
+  per: number,
+  nper: number,
+  pv: number,
+  f: number,
+  type: number,
+): number {
+  const payment = pmt(rate, nper, pv, f, type);
+  if (per === 1) return type ? 0 : -pv * rate;
+  if (type) return (fv(rate, per - 2, payment, pv, 1) - payment) * rate;
+  return fv(rate, per - 1, payment, pv, 0) * rate;
 }
 
-function npv(rate: number, values: number[]): number {
-  let s = 0;
-  values.forEach((v, i) => {
-    s += v / (1 + rate) ** (i + 1);
+// CUMIPMT and CUMPRINC: the periods from first to last (a fraction moves each inward: 2.1 to 3, 4.9 to 4), summed.
+function cumulative(part: 'interest' | 'principal') {
+  return numFn(6, 6, ([rate, nper, pv, first, last, type]) => {
+    const from = Math.ceil(first!);
+    const to = Math.floor(last!);
+    if (rate! <= 0 || nper! <= 0 || pv! <= 0)
+      return err('#NUM!', 'The rate, periods and value are positive');
+    if (from < 1 || to < from || to > nper!)
+      return err('#NUM!', 'The periods run from 1 to the number of periods');
+    if (type !== 0 && type !== 1)
+      return err('#NUM!', 'Payments are at the end (0) or beginning (1)');
+    const payment = pmt(rate!, nper!, pv!, 0, type);
+    let sum = 0;
+    for (let per = from; per <= to; per++) {
+      const interest = ipmt(rate!, per, nper!, pv!, 0, type);
+      sum += part === 'interest' ? interest : payment - interest;
+    }
+    return sum;
   });
-  return s;
 }
 
-export const FINANCE_FUNCTIONS: Record<string, FnDef> = {
+// The integer and fraction parts of a price, as written (100.01) and as meant (100 1/8): DOLLARDE and DOLLARFR. The
+// written fraction has at least two decimal places, as Google's help reads 100.01 in eighths; in wholes (unit 1) it
+// is the decimal itself (D51).
+const FRACTION_DIGITS_MIN = 2;
+
+function fractionalPrice(toDecimal: boolean) {
+  return numFn(2, 2, ([price, unit]) => {
+    const u = Math.trunc(unit!);
+    if (u < 0) return err('#NUM!', 'The unit is positive');
+    if (u === 0) return err('#DIV/0!', 'The unit is at least 1');
+    const whole = Math.trunc(price!);
+    const scale = u === 1 ? 1 : 10 ** Math.max(FRACTION_DIGITS_MIN, Math.ceil(Math.log10(u)));
+    return whole + (toDecimal ? ((price! - whole) * scale) / u : ((price! - whole) * u) / scale);
+  });
+}
+
+const ANNUITY_FUNCTIONS: Record<string, FnDef> = {
   PMT: numFn(3, 5, ([rate, nper, pv, f = 0, type = 0]) =>
     nper === 0 ? err('#NUM!') : pmt(rate!, nper!, pv!, f, type ? 1 : 0),
   ),
@@ -69,24 +103,53 @@ export const FINANCE_FUNCTIONS: Record<string, FnDef> = {
     );
     return r === null ? err('#NUM!', 'RATE did not settle; try another guess') : r;
   }),
-  NPV: fn(2, MANY, (args, f) => {
-    const rate = numArg(args[0]!, f);
-    if (isError(rate)) return rate;
-    const values = numbersOf(args.slice(1), f);
-    if (isError(values)) return values;
-    return npv(rate, values);
+  IPMT: numFn(4, 6, ([rate, per, nper, pv, f = 0, type = 0]) =>
+    per! < 1 || per! > nper!
+      ? err('#NUM!', 'The period is from 1 to the number of periods')
+      : ipmt(rate!, per!, nper!, pv!, f, type ? 1 : 0),
+  ),
+  PPMT: numFn(4, 6, ([rate, per, nper, pv, f = 0, type = 0]) => {
+    if (per! < 1 || per! > nper!)
+      return err('#NUM!', 'The period is from 1 to the number of periods');
+    const t = type ? 1 : 0;
+    return pmt(rate!, nper!, pv!, f, t) - ipmt(rate!, per!, nper!, pv!, f, t);
   }),
-  IRR: fn(1, 2, (args, f) => {
-    const values: number[] = [];
-    for (const x of flatValues(arrayArg(args[0]!, f))) {
-      if (isError(x)) return x;
-      if (typeof x === 'number') values.push(x);
-    }
-    if (!values.some((v) => v > 0) || !values.some((v) => v < 0))
-      return err('#NUM!', 'IRR needs both a payment and a receipt');
-    const guess = opt(args, 1, f, numArg, 0.1);
-    if (isError(guess)) return guess;
-    const r = solve((x) => values.reduce((s, v, i) => s + v / (1 + x) ** i, 0), guess);
-    return r === null ? err('#NUM!', 'IRR did not settle; try another guess') : r;
+  CUMIPMT: cumulative('interest'),
+  CUMPRINC: cumulative('principal'),
+  ISPMT: numFn(4, 4, ([rate, per, nper, pv]) =>
+    nper === 0 ? err('#NUM!', 'The number of periods is not 0') : pv! * rate! * (per! / nper! - 1),
+  ),
+  PDURATION: numFn(3, 3, ([rate, pv, f]) =>
+    rate! <= 0 || pv! <= 0 || f! <= 0
+      ? err('#NUM!', 'The rate and both values are positive')
+      : Math.log(f! / pv!) / Math.log1p(rate!),
+  ),
+  RRI: numFn(3, 3, ([nper, pv, f]) =>
+    nper! <= 0 || pv === 0
+      ? err('#NUM!', 'The periods are positive and the present value is not 0')
+      : (f! / pv!) ** (1 / nper!) - 1,
+  ),
+  EFFECT: numFn(2, 2, ([nominal, periods]) => {
+    const n = Math.trunc(periods!);
+    if (nominal! < 0 || n < 1)
+      return err('#NUM!', 'The rate is not negative and the periods at least 1');
+    return (1 + nominal! / n) ** n - 1;
   }),
+  NOMINAL: numFn(2, 2, ([effective, periods]) => {
+    const n = Math.trunc(periods!);
+    if (effective! <= 0 || n < 1)
+      return err('#NUM!', 'The rate is positive and the periods at least 1');
+    return ((1 + effective!) ** (1 / n) - 1) * n;
+  }),
+  DOLLARDE: fractionalPrice(true),
+  DOLLARFR: fractionalPrice(false),
+};
+
+export const FINANCE_FUNCTIONS: Record<string, FnDef> = {
+  ...ANNUITY_FUNCTIONS,
+  ...CASH_FLOW_FUNCTIONS,
+  ...DEPRECIATION_FUNCTIONS,
+  ...COUPON_FUNCTIONS,
+  ...SECURITY_FUNCTIONS,
+  ...DISCOUNT_SECURITY_FUNCTIONS,
 };

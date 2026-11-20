@@ -405,6 +405,58 @@
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
       },
       "note": "Awaits Google's answer: its help says \"Negative timestamps aren't accepted\" but not which error."
+    },
+    {
+      "id": "YEARFRAC.8",
+      "f": "=YEARFRAC(DATE(2011,1,31), DATE(2011,3,15), 0)"
+    },
+    {
+      "id": "YEARFRAC.9",
+      "f": "=YEARFRAC(DATE(2011,1,30), DATE(2011,3,31), 0)"
+    },
+    {
+      "id": "DAYS360.1",
+      "f": "=DAYS360(DATE(1969,7,16), DATE(1969,7,24), 1)"
+    },
+    {
+      "id": "DAYS360.2",
+      "f": "=DAYS360(1, 270, 1)"
+    },
+    {
+      "id": "DAYS360.3",
+      "f": "=DAYS360(DATE(2011,2,28), DATE(2011,3,31))"
+    },
+    {
+      "id": "DAYS360.4",
+      "f": "=DAYS360(DATE(2011,1,30), DATE(2011,3,31))"
+    },
+    {
+      "id": "DAYS360.5",
+      "f": "=DAYS360(DATE(2011,1,15), DATE(2011,3,31))"
+    },
+    {
+      "id": "DAYS360.6",
+      "f": "=DAYS360(DATE(2011,1,31), DATE(2011,3,31), TRUE)"
+    },
+    {
+      "id": "DAYS360.7",
+      "f": "=DAYS360(DATE(2012,2,29), DATE(2012,8,31))"
+    },
+    {
+      "id": "DAYS360.8",
+      "f": "=DAYS360(DATE(2012,2,29), DATE(2012,8,31), 1)"
+    },
+    {
+      "id": "DAYS360.9",
+      "f": "=DAYS360(DATE(2012,8,31), DATE(2012,2,29))"
+    },
+    {
+      "id": "DAYS360.10",
+      "f": "=DAYS360(\"2011-01-15\", \"2011-03-31\")"
+    },
+    {
+      "id": "DAYS360.11",
+      "f": "=DAYS360(Data!A1, Data!A4)"
     }
   ]
 }

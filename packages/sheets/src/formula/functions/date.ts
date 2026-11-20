@@ -21,6 +21,7 @@ import {
 } from '../fn';
 import { err, isError, toNumber, type Value } from '../values';
 import { checkSerial, dateArg } from './date-args';
+import { basisOf, days360, yearFrac } from './day-count';
 import { WORKDAY_FUNCTIONS } from './workdays';
 
 // DATE(y, m, d): months and days past their range roll over (DATE(2026, 13, 1) is January 2027), and years before
@@ -90,60 +91,6 @@ function isoWeek(serial: number): number {
   const firstThursdayWeek = serialFromDate(year, 1, 4);
   const fwd = (dateFromSerial(firstThursdayWeek).weekday + 6) % 7;
   return Math.floor((thursday - (firstThursdayWeek - fwd + 3)) / 7) + 1;
-}
-
-const isLeapYear = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
-const isLastOfFebruary = (p: { y: number; m: number; d: number }) =>
-  p.m === 2 && p.d === (isLeapYear(p.y) ? 29 : 28);
-
-// YEARFRAC's year fraction, as Excel and Google Sheets count it. Basis 0 is US 30/360 with its February rule (the
-// last day of February counts as the 30th); basis 1 divides by 366 when a span of a year or less takes in a
-// 29 February, else by 365, and a longer span by the average length of the years it touches.
-function yearFrac(a: number, b: number, basis: number): Value {
-  const [s, e] = a <= b ? [a, b] : [b, a];
-  const ps = dateFromSerial(s);
-  const pe = dateFromSerial(e);
-  switch (basis) {
-    case 0: {
-      let d1 = ps.d;
-      let d2 = pe.d;
-      if (d1 === 31 && d2 === 31) [d1, d2] = [30, 30];
-      else if (d1 === 31) d1 = 30;
-      else if (d1 === 30 && d2 === 31) d2 = 30;
-      else if (isLastOfFebruary(ps) && isLastOfFebruary(pe)) [d1, d2] = [30, 30];
-      else if (isLastOfFebruary(ps)) d1 = 30;
-      return ((pe.y - ps.y) * 360 + (pe.m - ps.m) * 30 + (d2 - d1)) / 360;
-    }
-    case 1: {
-      const days = e - s;
-      const withinAYear =
-        ps.y === pe.y || (pe.y === ps.y + 1 && (ps.m > pe.m || (ps.m === pe.m && ps.d >= pe.d)));
-      if (withinAYear) {
-        let leap = ps.y === pe.y && isLeapYear(ps.y);
-        for (let y = ps.y; !leap && y <= pe.y; y++) {
-          if (!isLeapYear(y)) continue;
-          const feb29 = serialFromDate(y, 2, 29);
-          leap = s <= feb29 && feb29 <= e;
-        }
-        return days / (leap ? 366 : 365);
-      }
-      let total = 0;
-      for (let y = ps.y; y <= pe.y; y++)
-        total += serialFromDate(y + 1, 1, 1) - serialFromDate(y, 1, 1);
-      return days / (total / (pe.y - ps.y + 1));
-    }
-    case 2:
-      return (e - s) / 360;
-    case 3:
-      return (e - s) / 365;
-    case 4: {
-      const d1 = Math.min(ps.d, 30);
-      const d2 = Math.min(pe.d, 30);
-      return ((pe.y - ps.y) * 360 + (pe.m - ps.m) * 30 + (d2 - d1)) / 360;
-    }
-    default:
-      return err('#NUM!');
-  }
 }
 
 // EPOCHTODATE: 1 January 1970 as a serial, a day's milliseconds, and each unit's count in a millisecond.
@@ -257,9 +204,20 @@ export const DATE_FUNCTIONS: Record<string, FnDef> = {
     const b = dateArg(args[1]!, f);
     if (typeof a !== 'number') return a;
     if (typeof b !== 'number') return b;
-    const basis = opt(args, 2, f, numArg, 0);
+    const convention = opt(args, 2, f, numArg, 0);
+    if (isError(convention)) return convention;
+    const basis = basisOf(convention);
     if (isError(basis)) return basis;
-    return yearFrac(Math.floor(a), Math.floor(b), Math.trunc(basis));
+    return yearFrac(Math.floor(a), Math.floor(b), basis);
+  }),
+  DAYS360: fn(2, 3, (args, f) => {
+    const a = dateArg(args[0]!, f);
+    const b = dateArg(args[1]!, f);
+    if (typeof a !== 'number') return a;
+    if (typeof b !== 'number') return b;
+    const method = opt(args, 2, f, numArg, 0);
+    if (isError(method)) return method;
+    return days360(Math.floor(a), Math.floor(b), method !== 0);
   }),
   ...WORKDAY_FUNCTIONS,
 };

@@ -1,0 +1,1632 @@
+{
+  "category": "Financial",
+  "data": [
+    [-10000, 39448, 0.09, -100, 100, 39448],
+    [2750, 39508, 0.11, "x", 200, 39508],
+    [4250, 39751, 0.1, 50, null, "soon"],
+    [3250, 39859, "x", null, null, 39859],
+    [2750, 39904, null, 80, null, 39904],
+    [null, null, null]
+  ],
+  "cases": [
+    {
+      "id": "ACCRINT.1",
+      "f": "=ACCRINT(DATE(2010,1,1), DATE(2010,2,1), DATE(2012,12,31), 0.05, 100, 4)"
+    },
+    {
+      "id": "ACCRINT.2",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 0)"
+    },
+    {
+      "id": "ACCRINT.3",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 1)"
+    },
+    {
+      "id": "ACCRINT.4",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 2)"
+    },
+    {
+      "id": "ACCRINT.5",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 3)"
+    },
+    {
+      "id": "ACCRINT.6",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 4)"
+    },
+    {
+      "id": "ACCRINT.7",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 3)"
+    },
+    {
+      "id": "ACCRINT.8",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 5)"
+    },
+    {
+      "id": "ACCRINT.9",
+      "f": "=ACCRINT(DATE(2008,5,1), DATE(2008,8,31), DATE(2008,3,1), 0.1, 1000, 2)"
+    },
+    {
+      "id": "ACCRINT.10",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), -0.1, 1000, 2)"
+    },
+    {
+      "id": "ACCRINT.11",
+      "f": "=ACCRINT(\"2008-03-01\", DATE(2008,8,31), \"2008-05-01\", 0.1, 1000, 2)"
+    },
+    {
+      "id": "ACCRINT.12",
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), \"x\", 1000, 2)"
+    },
+    {
+      "id": "ACCRINTM.1",
+      "f": "=ACCRINTM(DATE(1969,12,31), DATE(1999,12,31), 0.05, 100, 0)"
+    },
+    {
+      "id": "ACCRINTM.2",
+      "f": "=ACCRINTM(DATE(2008,4,1), DATE(2008,6,15), 0.1, 1000, 3)"
+    },
+    {
+      "id": "ACCRINTM.3",
+      "f": "=ACCRINTM(DATE(2008,4,1), DATE(2008,6,15), 0.1, 1000, 1)"
+    },
+    {
+      "id": "ACCRINTM.4",
+      "f": "=ACCRINTM(DATE(2008,4,1), DATE(2008,6,15), 0.1)"
+    },
+    {
+      "id": "ACCRINTM.5",
+      "f": "=ACCRINTM(DATE(2008,6,15), DATE(2008,4,1), 0.1, 1000)"
+    },
+    {
+      "id": "ACCRINTM.6",
+      "f": "=ACCRINTM(DATE(2008,4,1), DATE(2008,6,15), 0.1, 0)"
+    },
+    {
+      "id": "ACCRINTM.7",
+      "f": "=ACCRINTM(DATE(2008,4,1), DATE(2008,6,15), 0.1, 1000, 7)"
+    },
+    {
+      "id": "ACCRINTM.8",
+      "f": "=ACCRINTM(DATE(2008,2,15), DATE(2008,4,1), 0.1, 1000, 0)"
+    },
+    {
+      "id": "ACCRINTM.9",
+      "f": "=ACCRINTM(DATE(2009,2,15), DATE(2009,4,1), 0.1, 1000, 0)"
+    },
+    {
+      "id": "ACCRINTM.10",
+      "f": "=ACCRINTM(DATE(2009,2,15), DATE(2009,4,1), 0.1, 1000, 1)"
+    },
+    {
+      "id": "ACCRINTM.11",
+      "f": "=ACCRINTM(DATE(2009,1,31), DATE(2009,3,31), 0.1, 1000, 4)"
+    },
+    {
+      "id": "AMORLINC.1",
+      "f": "=AMORLINC(1000, DATE(1969,7,20), DATE(1969,8,20), 100, 6, 0.15)",
+      "expect": [[137.5]],
+      "cite": "https://support.google.com/docs/answer/9083932 (example: cost $1,000, bought 7/20/1969, first period ending 8/20/1969, salvage $100, period 6, rate 15%: 137.5)"
+    },
+    {
+      "id": "AMORLINC.2",
+      "f": "=AMORLINC(1000, DATE(1969,7,20), DATE(1969,8,20), 100, 6, 0.15, 1)"
+    },
+    {
+      "id": "AMORLINC.3",
+      "f": "=AMORLINC(2400, DATE(2008,8,19), DATE(2008,12,31), 300, 1, 0.15, 1)"
+    },
+    {
+      "id": "AMORLINC.4",
+      "f": "=AMORLINC(2400, DATE(2008,8,19), DATE(2008,12,31), 300, 0, 0.15, 1)"
+    },
+    {
+      "id": "AMORLINC.5",
+      "f": "=AMORLINC(2400, DATE(2008,8,19), DATE(2008,12,31), 300, 6, 0.15, 1)"
+    },
+    {
+      "id": "AMORLINC.6",
+      "f": "=AMORLINC(2400, DATE(2008,8,19), DATE(2008,12,31), 300, 7, 0.15, 1)"
+    },
+    {
+      "id": "AMORLINC.7",
+      "f": "=AMORLINC(2400, DATE(2008,8,19), DATE(2008,12,31), 300, 2.7, 0.15, 1)"
+    },
+    {
+      "id": "AMORLINC.8",
+      "f": "=AMORLINC(2400, DATE(2008,8,19), DATE(2008,12,31), 300, 0.5, 0.15, 1)",
+      "expect": [[360]],
+      "cite": "https://support.google.com/docs/answer/9083932 (\"Fractional values less than 1 automatically round up to 1\": period 0.5 is period 1, a whole period at 15% of 2400)",
+      "differs": {
+        "libreoffice": "LibreOffice drops the fraction, so period 0.5 is period 0, the first part period (131.80)"
+      }
+    },
+    {
+      "id": "AMORLINC.9",
+      "f": "=AMORLINC(2400, DATE(2008,12,31), DATE(2008,8,19), 300, 1, 0.15)"
+    },
+    {
+      "id": "AMORLINC.10",
+      "f": "=AMORLINC(2400, DATE(2008,8,19), DATE(2008,12,31), 300, 1, 0)"
+    },
+    {
+      "id": "COUPDAYBS.1",
+      "f": "=COUPDAYBS(DATE(2010,2,1), DATE(2019,12,31), 4)"
+    },
+    {
+      "id": "COUPDAYBS.2",
+      "f": "=COUPDAYBS(DATE(2011,1,25), DATE(2011,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPDAYBS.3",
+      "f": "=COUPDAYBS(DATE(2011,1,25), DATE(2011,11,15), 2, 0)"
+    },
+    {
+      "id": "COUPDAYBS.4",
+      "f": "=COUPDAYBS(DATE(2011,1,25), DATE(2011,11,15), 2, 2)"
+    },
+    {
+      "id": "COUPDAYBS.5",
+      "f": "=COUPDAYBS(DATE(2011,1,25), DATE(2011,11,15), 2, 3)"
+    },
+    {
+      "id": "COUPDAYBS.6",
+      "f": "=COUPDAYBS(DATE(2011,1,25), DATE(2011,11,15), 2, 4)"
+    },
+    {
+      "id": "COUPDAYBS.7",
+      "f": "=COUPDAYBS(DATE(2012,3,15), DATE(2020,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPDAYBS.8",
+      "f": "=COUPDAYBS(DATE(2012,3,15), DATE(2020,8,31), 2, 1)"
+    },
+    {
+      "id": "COUPDAYBS.9",
+      "f": "=COUPDAYBS(DATE(2012,3,15), DATE(2020,8,31), 4, 4)"
+    },
+    {
+      "id": "COUPDAYBS.10",
+      "f": "=COUPDAYBS(DATE(2012,2,29), DATE(2015,8,31), 1, 0)"
+    },
+    {
+      "id": "COUPDAYBS.11",
+      "f": "=COUPDAYBS(DATE(2013,1,31), DATE(2015,11,30), 4, 0)"
+    },
+    {
+      "id": "COUPDAYBS.12",
+      "f": "=COUPDAYBS(DATE(2013,5,15), DATE(2015,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPDAYBS.13",
+      "f": "=COUPDAYBS(DATE(2019,12,31), DATE(2010,2,1), 4)"
+    },
+    {
+      "id": "COUPDAYBS.14",
+      "f": "=COUPDAYBS(DATE(2010,2,1), DATE(2019,12,31), 3)"
+    },
+    {
+      "id": "COUPDAYBS.15",
+      "f": "=COUPDAYBS(DATE(2010,2,1), DATE(2019,12,31), 4, 5)"
+    },
+    {
+      "id": "COUPDAYBS.16",
+      "f": "=COUPDAYBS(\"2011-01-25\", \"2011-11-15\", 2, 1)"
+    },
+    {
+      "id": "COUPDAYBS.17",
+      "f": "=COUPDAYBS(DATE(2011,3,31), DATE(2015,9,15), 2, 0)"
+    },
+    {
+      "id": "COUPDAYBS.18",
+      "f": "=COUPDAYBS(DATE(2011,3,10), DATE(2015,8,31), 2, 4)"
+    },
+    {
+      "id": "COUPDAYBS.19",
+      "f": "=COUPDAYBS(DATE(2011,2,28), DATE(2015,8,15), 2, 4)"
+    },
+    {
+      "id": "COUPDAYBS.20",
+      "f": "=COUPDAYBS(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPDAYS.1",
+      "f": "=COUPDAYS(DATE(2010,2,1), DATE(2019,12,31), 4)"
+    },
+    {
+      "id": "COUPDAYS.2",
+      "f": "=COUPDAYS(DATE(2011,1,25), DATE(2011,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPDAYS.3",
+      "f": "=COUPDAYS(DATE(2011,1,25), DATE(2011,11,15), 2, 0)"
+    },
+    {
+      "id": "COUPDAYS.4",
+      "f": "=COUPDAYS(DATE(2011,1,25), DATE(2011,11,15), 2, 2)"
+    },
+    {
+      "id": "COUPDAYS.5",
+      "f": "=COUPDAYS(DATE(2011,1,25), DATE(2011,11,15), 2, 3)"
+    },
+    {
+      "id": "COUPDAYS.6",
+      "f": "=COUPDAYS(DATE(2011,1,25), DATE(2011,11,15), 2, 4)"
+    },
+    {
+      "id": "COUPDAYS.7",
+      "f": "=COUPDAYS(DATE(2012,3,15), DATE(2020,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPDAYS.8",
+      "f": "=COUPDAYS(DATE(2012,3,15), DATE(2020,8,31), 2, 1)"
+    },
+    {
+      "id": "COUPDAYS.9",
+      "f": "=COUPDAYS(DATE(2012,3,15), DATE(2020,8,31), 4, 4)"
+    },
+    {
+      "id": "COUPDAYS.10",
+      "f": "=COUPDAYS(DATE(2012,2,29), DATE(2015,8,31), 1, 0)"
+    },
+    {
+      "id": "COUPDAYS.11",
+      "f": "=COUPDAYS(DATE(2013,1,31), DATE(2015,11,30), 4, 0)"
+    },
+    {
+      "id": "COUPDAYS.12",
+      "f": "=COUPDAYS(DATE(2013,5,15), DATE(2015,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPDAYS.13",
+      "f": "=COUPDAYS(DATE(2019,12,31), DATE(2010,2,1), 4)"
+    },
+    {
+      "id": "COUPDAYS.14",
+      "f": "=COUPDAYS(DATE(2010,2,1), DATE(2019,12,31), 3)"
+    },
+    {
+      "id": "COUPDAYS.15",
+      "f": "=COUPDAYS(DATE(2010,2,1), DATE(2019,12,31), 4, 5)"
+    },
+    {
+      "id": "COUPDAYS.16",
+      "f": "=COUPDAYS(\"2011-01-25\", \"2011-11-15\", 2, 1)"
+    },
+    {
+      "id": "COUPDAYS.17",
+      "f": "=COUPDAYS(DATE(2011,3,31), DATE(2015,9,15), 2, 0)"
+    },
+    {
+      "id": "COUPDAYS.18",
+      "f": "=COUPDAYS(DATE(2011,3,10), DATE(2015,8,31), 2, 4)"
+    },
+    {
+      "id": "COUPDAYS.19",
+      "f": "=COUPDAYS(DATE(2011,2,28), DATE(2015,8,15), 2, 4)"
+    },
+    {
+      "id": "COUPDAYS.20",
+      "f": "=COUPDAYS(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPDAYSNC.1",
+      "f": "=COUPDAYSNC(DATE(2010,2,1), DATE(2019,12,31), 4)"
+    },
+    {
+      "id": "COUPDAYSNC.2",
+      "f": "=COUPDAYSNC(DATE(2011,1,25), DATE(2011,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPDAYSNC.3",
+      "f": "=COUPDAYSNC(DATE(2011,1,25), DATE(2011,11,15), 2, 0)"
+    },
+    {
+      "id": "COUPDAYSNC.4",
+      "f": "=COUPDAYSNC(DATE(2011,1,25), DATE(2011,11,15), 2, 2)"
+    },
+    {
+      "id": "COUPDAYSNC.5",
+      "f": "=COUPDAYSNC(DATE(2011,1,25), DATE(2011,11,15), 2, 3)"
+    },
+    {
+      "id": "COUPDAYSNC.6",
+      "f": "=COUPDAYSNC(DATE(2011,1,25), DATE(2011,11,15), 2, 4)"
+    },
+    {
+      "id": "COUPDAYSNC.7",
+      "f": "=COUPDAYSNC(DATE(2012,3,15), DATE(2020,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPDAYSNC.8",
+      "f": "=COUPDAYSNC(DATE(2012,3,15), DATE(2020,8,31), 2, 1)"
+    },
+    {
+      "id": "COUPDAYSNC.9",
+      "f": "=COUPDAYSNC(DATE(2012,3,15), DATE(2020,8,31), 4, 4)"
+    },
+    {
+      "id": "COUPDAYSNC.10",
+      "f": "=COUPDAYSNC(DATE(2012,2,29), DATE(2015,8,31), 1, 0)"
+    },
+    {
+      "id": "COUPDAYSNC.11",
+      "f": "=COUPDAYSNC(DATE(2013,1,31), DATE(2015,11,30), 4, 0)"
+    },
+    {
+      "id": "COUPDAYSNC.12",
+      "f": "=COUPDAYSNC(DATE(2013,5,15), DATE(2015,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPDAYSNC.13",
+      "f": "=COUPDAYSNC(DATE(2019,12,31), DATE(2010,2,1), 4)"
+    },
+    {
+      "id": "COUPDAYSNC.14",
+      "f": "=COUPDAYSNC(DATE(2010,2,1), DATE(2019,12,31), 3)"
+    },
+    {
+      "id": "COUPDAYSNC.15",
+      "f": "=COUPDAYSNC(DATE(2010,2,1), DATE(2019,12,31), 4, 5)"
+    },
+    {
+      "id": "COUPDAYSNC.16",
+      "f": "=COUPDAYSNC(\"2011-01-25\", \"2011-11-15\", 2, 1)"
+    },
+    {
+      "id": "COUPDAYSNC.17",
+      "f": "=COUPDAYSNC(DATE(2011,3,31), DATE(2015,9,15), 2, 0)"
+    },
+    {
+      "id": "COUPDAYSNC.18",
+      "f": "=COUPDAYSNC(DATE(2011,3,10), DATE(2015,8,31), 2, 4)"
+    },
+    {
+      "id": "COUPDAYSNC.19",
+      "f": "=COUPDAYSNC(DATE(2011,2,28), DATE(2015,8,15), 2, 4)"
+    },
+    {
+      "id": "COUPDAYSNC.20",
+      "f": "=COUPDAYSNC(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPNCD.1",
+      "f": "=COUPNCD(DATE(2010,2,1), DATE(2019,12,31), 4)"
+    },
+    {
+      "id": "COUPNCD.2",
+      "f": "=COUPNCD(DATE(2011,1,25), DATE(2011,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPNCD.3",
+      "f": "=COUPNCD(DATE(2011,1,25), DATE(2011,11,15), 2, 0)"
+    },
+    {
+      "id": "COUPNCD.4",
+      "f": "=COUPNCD(DATE(2011,1,25), DATE(2011,11,15), 2, 2)"
+    },
+    {
+      "id": "COUPNCD.5",
+      "f": "=COUPNCD(DATE(2011,1,25), DATE(2011,11,15), 2, 3)"
+    },
+    {
+      "id": "COUPNCD.6",
+      "f": "=COUPNCD(DATE(2011,1,25), DATE(2011,11,15), 2, 4)"
+    },
+    {
+      "id": "COUPNCD.7",
+      "f": "=COUPNCD(DATE(2012,3,15), DATE(2020,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPNCD.8",
+      "f": "=COUPNCD(DATE(2012,3,15), DATE(2020,8,31), 2, 1)"
+    },
+    {
+      "id": "COUPNCD.9",
+      "f": "=COUPNCD(DATE(2012,3,15), DATE(2020,8,31), 4, 4)"
+    },
+    {
+      "id": "COUPNCD.10",
+      "f": "=COUPNCD(DATE(2012,2,29), DATE(2015,8,31), 1, 0)"
+    },
+    {
+      "id": "COUPNCD.11",
+      "f": "=COUPNCD(DATE(2013,1,31), DATE(2015,11,30), 4, 0)"
+    },
+    {
+      "id": "COUPNCD.12",
+      "f": "=COUPNCD(DATE(2013,5,15), DATE(2015,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPNCD.13",
+      "f": "=COUPNCD(DATE(2019,12,31), DATE(2010,2,1), 4)"
+    },
+    {
+      "id": "COUPNCD.14",
+      "f": "=COUPNCD(DATE(2010,2,1), DATE(2019,12,31), 3)"
+    },
+    {
+      "id": "COUPNCD.15",
+      "f": "=COUPNCD(DATE(2010,2,1), DATE(2019,12,31), 4, 5)"
+    },
+    {
+      "id": "COUPNCD.16",
+      "f": "=COUPNCD(\"2011-01-25\", \"2011-11-15\", 2, 1)"
+    },
+    {
+      "id": "COUPNCD.17",
+      "f": "=COUPNCD(DATE(2011,3,31), DATE(2015,9,15), 2, 0)"
+    },
+    {
+      "id": "COUPNCD.18",
+      "f": "=COUPNCD(DATE(2011,3,10), DATE(2015,8,31), 2, 4)"
+    },
+    {
+      "id": "COUPNCD.19",
+      "f": "=COUPNCD(DATE(2011,2,28), DATE(2015,8,15), 2, 4)"
+    },
+    {
+      "id": "COUPNCD.20",
+      "f": "=COUPNCD(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPNUM.1",
+      "f": "=COUPNUM(DATE(2010,2,1), DATE(2019,12,31), 4)"
+    },
+    {
+      "id": "COUPNUM.2",
+      "f": "=COUPNUM(DATE(2011,1,25), DATE(2011,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPNUM.3",
+      "f": "=COUPNUM(DATE(2011,1,25), DATE(2011,11,15), 2, 0)"
+    },
+    {
+      "id": "COUPNUM.4",
+      "f": "=COUPNUM(DATE(2011,1,25), DATE(2011,11,15), 2, 2)"
+    },
+    {
+      "id": "COUPNUM.5",
+      "f": "=COUPNUM(DATE(2011,1,25), DATE(2011,11,15), 2, 3)"
+    },
+    {
+      "id": "COUPNUM.6",
+      "f": "=COUPNUM(DATE(2011,1,25), DATE(2011,11,15), 2, 4)"
+    },
+    {
+      "id": "COUPNUM.7",
+      "f": "=COUPNUM(DATE(2012,3,15), DATE(2020,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPNUM.8",
+      "f": "=COUPNUM(DATE(2012,3,15), DATE(2020,8,31), 2, 1)"
+    },
+    {
+      "id": "COUPNUM.9",
+      "f": "=COUPNUM(DATE(2012,3,15), DATE(2020,8,31), 4, 4)"
+    },
+    {
+      "id": "COUPNUM.10",
+      "f": "=COUPNUM(DATE(2012,2,29), DATE(2015,8,31), 1, 0)"
+    },
+    {
+      "id": "COUPNUM.11",
+      "f": "=COUPNUM(DATE(2013,1,31), DATE(2015,11,30), 4, 0)"
+    },
+    {
+      "id": "COUPNUM.12",
+      "f": "=COUPNUM(DATE(2013,5,15), DATE(2015,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPNUM.13",
+      "f": "=COUPNUM(DATE(2019,12,31), DATE(2010,2,1), 4)"
+    },
+    {
+      "id": "COUPNUM.14",
+      "f": "=COUPNUM(DATE(2010,2,1), DATE(2019,12,31), 3)"
+    },
+    {
+      "id": "COUPNUM.15",
+      "f": "=COUPNUM(DATE(2010,2,1), DATE(2019,12,31), 4, 5)"
+    },
+    {
+      "id": "COUPNUM.16",
+      "f": "=COUPNUM(\"2011-01-25\", \"2011-11-15\", 2, 1)"
+    },
+    {
+      "id": "COUPNUM.17",
+      "f": "=COUPNUM(DATE(2011,3,31), DATE(2015,9,15), 2, 0)"
+    },
+    {
+      "id": "COUPNUM.18",
+      "f": "=COUPNUM(DATE(2011,3,10), DATE(2015,8,31), 2, 4)"
+    },
+    {
+      "id": "COUPNUM.19",
+      "f": "=COUPNUM(DATE(2011,2,28), DATE(2015,8,15), 2, 4)"
+    },
+    {
+      "id": "COUPNUM.20",
+      "f": "=COUPNUM(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPPCD.1",
+      "f": "=COUPPCD(DATE(2010,2,1), DATE(2019,12,31), 4)"
+    },
+    {
+      "id": "COUPPCD.2",
+      "f": "=COUPPCD(DATE(2011,1,25), DATE(2011,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPPCD.3",
+      "f": "=COUPPCD(DATE(2011,1,25), DATE(2011,11,15), 2, 0)"
+    },
+    {
+      "id": "COUPPCD.4",
+      "f": "=COUPPCD(DATE(2011,1,25), DATE(2011,11,15), 2, 2)"
+    },
+    {
+      "id": "COUPPCD.5",
+      "f": "=COUPPCD(DATE(2011,1,25), DATE(2011,11,15), 2, 3)"
+    },
+    {
+      "id": "COUPPCD.6",
+      "f": "=COUPPCD(DATE(2011,1,25), DATE(2011,11,15), 2, 4)"
+    },
+    {
+      "id": "COUPPCD.7",
+      "f": "=COUPPCD(DATE(2012,3,15), DATE(2020,8,31), 2, 0)"
+    },
+    {
+      "id": "COUPPCD.8",
+      "f": "=COUPPCD(DATE(2012,3,15), DATE(2020,8,31), 2, 1)"
+    },
+    {
+      "id": "COUPPCD.9",
+      "f": "=COUPPCD(DATE(2012,3,15), DATE(2020,8,31), 4, 4)"
+    },
+    {
+      "id": "COUPPCD.10",
+      "f": "=COUPPCD(DATE(2012,2,29), DATE(2015,8,31), 1, 0)"
+    },
+    {
+      "id": "COUPPCD.11",
+      "f": "=COUPPCD(DATE(2013,1,31), DATE(2015,11,30), 4, 0)"
+    },
+    {
+      "id": "COUPPCD.12",
+      "f": "=COUPPCD(DATE(2013,5,15), DATE(2015,11,15), 2, 1)"
+    },
+    {
+      "id": "COUPPCD.13",
+      "f": "=COUPPCD(DATE(2019,12,31), DATE(2010,2,1), 4)"
+    },
+    {
+      "id": "COUPPCD.14",
+      "f": "=COUPPCD(DATE(2010,2,1), DATE(2019,12,31), 3)"
+    },
+    {
+      "id": "COUPPCD.15",
+      "f": "=COUPPCD(DATE(2010,2,1), DATE(2019,12,31), 4, 5)"
+    },
+    {
+      "id": "COUPPCD.16",
+      "f": "=COUPPCD(\"2011-01-25\", \"2011-11-15\", 2, 1)"
+    },
+    {
+      "id": "COUPPCD.17",
+      "f": "=COUPPCD(DATE(2011,3,31), DATE(2015,9,15), 2, 0)"
+    },
+    {
+      "id": "COUPPCD.18",
+      "f": "=COUPPCD(DATE(2011,3,10), DATE(2015,8,31), 2, 4)"
+    },
+    {
+      "id": "COUPPCD.19",
+      "f": "=COUPPCD(DATE(2011,2,28), DATE(2015,8,15), 2, 4)"
+    },
+    {
+      "id": "COUPPCD.20",
+      "f": "=COUPPCD(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+    },
+    {
+      "id": "CUMIPMT.1",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 13, 24, 0)"
+    },
+    {
+      "id": "CUMIPMT.2",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 1, 1, 0)"
+    },
+    {
+      "id": "CUMIPMT.3",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 1, 12, 1)"
+    },
+    {
+      "id": "CUMIPMT.4",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 2.1, 4.9, 0)",
+      "expect": [[-1872.4241734148]],
+      "cite": "https://support.google.com/docs/answer/3093211 (\"If first_period is 2.8 and last_period is 4.1, the function calculates interest for periods 3 and 4\"; CUMIPMT.10 is periods 3 to 4)",
+      "differs": {
+        "libreoffice": "LibreOffice drops both fractions, so 2.1 to 4.9 is periods 2 to 4 (CUMIPMT.11)"
+      }
+    },
+    {
+      "id": "CUMIPMT.5",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 0, 12, 0)"
+    },
+    {
+      "id": "CUMIPMT.6",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 13, 12, 0)"
+    },
+    {
+      "id": "CUMIPMT.7",
+      "f": "=CUMIPMT(0.09/12, 360, -125000, 13, 24, 0)"
+    },
+    {
+      "id": "CUMIPMT.8",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 13, 24, 2)"
+    },
+    {
+      "id": "CUMIPMT.9",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 350, 361, 0)"
+    },
+    {
+      "id": "CUMIPMT.10",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 3, 4, 0)"
+    },
+    {
+      "id": "CUMIPMT.11",
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 2, 4, 0)"
+    },
+    {
+      "id": "CUMPRINC.1",
+      "f": "=CUMPRINC(0.09/12, 360, 125000, 13, 24, 0)"
+    },
+    {
+      "id": "CUMPRINC.2",
+      "f": "=CUMPRINC(0.09/12, 360, 125000, 1, 1, 0)"
+    },
+    {
+      "id": "CUMPRINC.3",
+      "f": "=CUMPRINC(0.09/12, 360, 125000, 1, 12, 1)"
+    },
+    {
+      "id": "CUMPRINC.4",
+      "f": "=CUMPRINC(0.09/12, 360, 125000, 2.1, 4.9, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice drops both fractions (periods 2 to 4); LiveDoc moves each inward as Google documents for CUMIPMT (periods 3 and 4)"
+      },
+      "note": "Awaits Google's answer: CUMPRINC's help does not say how a fractional period is read."
+    },
+    {
+      "id": "CUMPRINC.5",
+      "f": "=CUMPRINC(0, 360, 125000, 1, 12, 0)"
+    },
+    {
+      "id": "CUMPRINC.6",
+      "f": "=CUMPRINC(0.09/12, 360, 125000, 13, 24, 1)"
+    },
+    {
+      "id": "CUMPRINC.7",
+      "f": "=CUMPRINC(0.09/12, 360, 125000, 13, 24, 2)"
+    },
+    {
+      "id": "DB.1",
+      "f": "=DB(1000000, 100000, 6, 1, 7)"
+    },
+    {
+      "id": "DB.2",
+      "f": "=DB(1000000, 100000, 6, 2, 7)"
+    },
+    {
+      "id": "DB.3",
+      "f": "=DB(1000000, 100000, 6, 6, 7)"
+    },
+    {
+      "id": "DB.4",
+      "f": "=DB(1000000, 100000, 6, 7, 7)"
+    },
+    {
+      "id": "DB.5",
+      "f": "=DB(1000000, 100000, 6, 3)"
+    },
+    {
+      "id": "DB.6",
+      "f": "=DB(1000000, 100000, 6, 8, 7)"
+    },
+    {
+      "id": "DB.7",
+      "f": "=DB(1000000, 100000, 6, 1, 13)"
+    },
+    {
+      "id": "DB.8",
+      "f": "=DB(1000000, 100000, 6, 0)"
+    },
+    {
+      "id": "DB.9",
+      "f": "=DB(100, 200, 5, 1)"
+    },
+    {
+      "id": "DB.10",
+      "f": "=DB(1000, 0, 5, 2)"
+    },
+    {
+      "id": "DB.11",
+      "f": "=DB(1000, 0, 5, 6, 3)"
+    },
+    {
+      "id": "DDB.1",
+      "f": "=DDB(2400, 300, 120, 1)"
+    },
+    {
+      "id": "DDB.2",
+      "f": "=DDB(2400, 300, 10, 1)"
+    },
+    {
+      "id": "DDB.3",
+      "f": "=DDB(2400, 300, 10, 2, 1.5)"
+    },
+    {
+      "id": "DDB.4",
+      "f": "=DDB(2400, 300, 10, 10)"
+    },
+    {
+      "id": "DDB.5",
+      "f": "=DDB(2400, 300, 1, 1, 3)"
+    },
+    {
+      "id": "DDB.6",
+      "f": "=DDB(2400, 300, 10, 0)"
+    },
+    {
+      "id": "DDB.7",
+      "f": "=DDB(2400, 300, 10, 11)"
+    },
+    {
+      "id": "DDB.8",
+      "f": "=DDB(2400, 300, 10, 2, 0)"
+    },
+    {
+      "id": "DDB.9",
+      "f": "=DDB(2400, 3000, 10, 2)"
+    },
+    {
+      "id": "DDB.10",
+      "f": "=DDB(2400, 300, 10, 2.5)"
+    },
+    {
+      "id": "DDB.11",
+      "f": "=DDB(2400, 300, 2, 2, 3)"
+    },
+    {
+      "id": "DISC.1",
+      "f": "=DISC(DATE(2007,1,25), DATE(2007,6,15), 97.975, 100, 1)"
+    },
+    {
+      "id": "DISC.2",
+      "f": "=DISC(DATE(2007,1,25), DATE(2007,6,15), 97.975, 100)"
+    },
+    {
+      "id": "DISC.3",
+      "f": "=DISC(DATE(2007,1,25), DATE(2007,6,15), 97.975, 100, 2)"
+    },
+    {
+      "id": "DISC.4",
+      "f": "=DISC(DATE(2007,1,25), DATE(2007,6,15), 97.975, 100, 4)"
+    },
+    {
+      "id": "DISC.5",
+      "f": "=DISC(DATE(2007,6,15), DATE(2007,1,25), 97.975, 100)"
+    },
+    {
+      "id": "DISC.6",
+      "f": "=DISC(DATE(2007,1,25), DATE(2007,6,15), 0, 100)"
+    },
+    {
+      "id": "DOLLARDE.1",
+      "f": "=DOLLARDE(100.01, 8)",
+      "expect": [[100.125]],
+      "cite": "https://support.google.com/docs/answer/3093167 (\"DOLLARDE(100.01,8) results in 100.125\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads the fraction in as many decimal places as the unit has digits: 100.01 in eighths is 100 1/80 (100.0125)"
+      }
+    },
+    {
+      "id": "DOLLARDE.2",
+      "f": "=DOLLARDE(100.01, 32)",
+      "expect": [[100.03125]],
+      "cite": "https://support.google.com/docs/answer/3093167 (\"DOLLARDE(100.01,32) results in 100.03125\")"
+    },
+    {
+      "id": "DOLLARDE.3",
+      "f": "=DOLLARDE(1.02, 16)"
+    },
+    {
+      "id": "DOLLARDE.4",
+      "f": "=DOLLARDE(1.1, 10)",
+      "differs": {
+        "libreoffice": "LibreOffice reads tenths in one decimal place (1.1 is 1 1/10); LiveDoc in two, as Google reads eighths (1.10 is 1 10/10, 2)"
+      },
+      "note": "Awaits Google's answer: its help shows eighths and thirty-seconds read in two decimal places, no unit under 10."
+    },
+    {
+      "id": "DOLLARDE.5",
+      "f": "=DOLLARDE(-1.02, 16)"
+    },
+    {
+      "id": "DOLLARDE.6",
+      "f": "=DOLLARDE(1.02, 16.9)"
+    },
+    {
+      "id": "DOLLARDE.7",
+      "f": "=DOLLARDE(1.02, 0)"
+    },
+    {
+      "id": "DOLLARDE.8",
+      "f": "=DOLLARDE(1.02, -1)"
+    },
+    {
+      "id": "DOLLARDE.9",
+      "f": "=DOLLARDE(1.5, 1)"
+    },
+    {
+      "id": "DOLLARFR.1",
+      "f": "=DOLLARFR(100.125, 8)",
+      "expect": [[100.01]],
+      "cite": "https://support.google.com/docs/answer/3093217 (\"DOLLARFR(100.125,8) results in 100.01\")",
+      "differs": {
+        "libreoffice": "LibreOffice writes eighths in one decimal place: 100 1/8 is 100.1"
+      }
+    },
+    {
+      "id": "DOLLARFR.2",
+      "f": "=DOLLARFR(100.03125, 32)"
+    },
+    {
+      "id": "DOLLARFR.3",
+      "f": "=DOLLARFR(1.125, 16)"
+    },
+    {
+      "id": "DOLLARFR.4",
+      "f": "=DOLLARFR(-1.125, 16)"
+    },
+    {
+      "id": "DOLLARFR.5",
+      "f": "=DOLLARFR(1.125, 0)"
+    },
+    {
+      "id": "DOLLARFR.6",
+      "f": "=DOLLARFR(1.125, -2)"
+    },
+    {
+      "id": "DOLLARFR.7",
+      "f": "=DOLLARFR(1.25, 100)"
+    },
+    {
+      "id": "DURATION.1",
+      "f": "=DURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 2, 1)"
+    },
+    {
+      "id": "DURATION.2",
+      "f": "=DURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 2)"
+    },
+    {
+      "id": "DURATION.3",
+      "f": "=DURATION(DATE(2010,2,15), DATE(2018,11,30), 0.05, 0.06, 4, 0)"
+    },
+    {
+      "id": "DURATION.4",
+      "f": "=DURATION(DATE(2010,2,15), DATE(2011,1,1), 0.05, 0.06, 1, 3)"
+    },
+    {
+      "id": "DURATION.5",
+      "f": "=DURATION(DATE(2008,1,1), DATE(2016,1,1), -0.08, 0.09, 2)"
+    },
+    {
+      "id": "DURATION.6",
+      "f": "=DURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 5)"
+    },
+    {
+      "id": "DURATION.7",
+      "f": "=DURATION(DATE(2016,1,1), DATE(2008,1,1), 0.08, 0.09, 2)"
+    },
+    {
+      "id": "EFFECT.1",
+      "f": "=EFFECT(0.0525, 4)"
+    },
+    {
+      "id": "EFFECT.2",
+      "f": "=EFFECT(0.0525, 4.9)"
+    },
+    {
+      "id": "EFFECT.3",
+      "f": "=EFFECT(0.05, 1)"
+    },
+    {
+      "id": "EFFECT.4",
+      "f": "=EFFECT(0, 4)"
+    },
+    {
+      "id": "EFFECT.5",
+      "f": "=EFFECT(0.05, 0)"
+    },
+    {
+      "id": "EFFECT.6",
+      "f": "=EFFECT(-0.05, 4)"
+    },
+    {
+      "id": "FV.1",
+      "f": "=FV(0.06/12, 10, -200, -500, 1)"
+    },
+    {
+      "id": "FV.2",
+      "f": "=FV(0.12/12, 12, -1000)"
+    },
+    {
+      "id": "FV.3",
+      "f": "=FV(0, 12, -100, -1000)"
+    },
+    {
+      "id": "FVSCHEDULE.1",
+      "f": "=FVSCHEDULE(1, {0.09, 0.11, 0.1})"
+    },
+    {
+      "id": "FVSCHEDULE.2",
+      "f": "=FVSCHEDULE(1000, Data!C1:C3)"
+    },
+    {
+      "id": "FVSCHEDULE.3",
+      "f": "=FVSCHEDULE(1000, Data!C1:C4)"
+    },
+    {
+      "id": "FVSCHEDULE.4",
+      "f": "=FVSCHEDULE(1000, Data!D1:D3)"
+    },
+    {
+      "id": "FVSCHEDULE.5",
+      "f": "=FVSCHEDULE(1000, Data!C5:C6)"
+    },
+    {
+      "id": "INTRATE.1",
+      "f": "=INTRATE(DATE(2008,2,15), DATE(2008,5,15), 1000000, 1014420, 2)"
+    },
+    {
+      "id": "INTRATE.2",
+      "f": "=INTRATE(DATE(2008,2,15), DATE(2008,5,15), 1000000, 1014420)"
+    },
+    {
+      "id": "INTRATE.3",
+      "f": "=INTRATE(DATE(2008,2,15), DATE(2008,5,15), 1000000, 1014420, 1)"
+    },
+    {
+      "id": "INTRATE.4",
+      "f": "=INTRATE(DATE(2008,5,15), DATE(2008,2,15), 1000000, 1014420)"
+    },
+    {
+      "id": "INTRATE.5",
+      "f": "=INTRATE(DATE(2008,2,15), DATE(2008,5,15), 0, 1014420)"
+    },
+    {
+      "id": "IPMT.1",
+      "f": "=IPMT(0.1/12, 1, 36, 8000)"
+    },
+    {
+      "id": "IPMT.2",
+      "f": "=IPMT(0.1, 3, 3, 8000)"
+    },
+    {
+      "id": "IPMT.3",
+      "f": "=IPMT(0.1/12, 1, 36, 8000, 0, 1)"
+    },
+    {
+      "id": "IPMT.4",
+      "f": "=IPMT(0.1/12, 5, 36, 8000, 1000, 1)"
+    },
+    {
+      "id": "IPMT.5",
+      "f": "=IPMT(0, 2, 36, 8000)"
+    },
+    {
+      "id": "IPMT.6",
+      "f": "=IPMT(0.1, 0, 3, 8000)"
+    },
+    {
+      "id": "IPMT.7",
+      "f": "=IPMT(0.1, 4, 3, 8000)"
+    },
+    {
+      "id": "IPMT.8",
+      "f": "=IPMT(0.1, 2.5, 3, 8000)"
+    },
+    {
+      "id": "IRR.1",
+      "f": "=IRR(Data!A1:A5)"
+    },
+    {
+      "id": "IRR.2",
+      "f": "=IRR({-70000, 12000, 15000, 18000, 21000})"
+    },
+    {
+      "id": "IRR.3",
+      "f": "=IRR(Data!E1:E2)"
+    },
+    {
+      "id": "IRR.4",
+      "f": "=IRR(Data!D1:D5, 0.2)"
+    },
+    {
+      "id": "ISPMT.1",
+      "f": "=ISPMT(0.15, 2, 5, 1000)"
+    },
+    {
+      "id": "ISPMT.2",
+      "f": "=ISPMT(0.1/12, 1, 36, 8000000)"
+    },
+    {
+      "id": "ISPMT.3",
+      "f": "=ISPMT(0.1, 0, 3, 8000)"
+    },
+    {
+      "id": "ISPMT.4",
+      "f": "=ISPMT(0.1, 1, 0, 8000)"
+    },
+    {
+      "id": "MDURATION.1",
+      "f": "=MDURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 2, 1)"
+    },
+    {
+      "id": "MDURATION.2",
+      "f": "=MDURATION(DATE(2010,2,15), DATE(2018,11,30), 0.05, 0.06, 4, 0)"
+    },
+    {
+      "id": "MDURATION.3",
+      "f": "=MDURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, -0.09, 2)"
+    },
+    {
+      "id": "MIRR.1",
+      "f": "=MIRR(Data!A1:A5, 0.1, 0.12)"
+    },
+    {
+      "id": "MIRR.2",
+      "f": "=MIRR(Data!A1:A3, 0.1, 0.12)"
+    },
+    {
+      "id": "MIRR.3",
+      "f": "=MIRR({-120000, 39000, 30000, 21000, 37000, 46000}, 0.1, 0.12)"
+    },
+    {
+      "id": "MIRR.4",
+      "f": "=MIRR(Data!E1:E2, 0.1, 0.12)"
+    },
+    {
+      "id": "MIRR.5",
+      "f": "=MIRR(Data!D1:D5, 0.1, 0.12)"
+    },
+    {
+      "id": "NOMINAL.1",
+      "f": "=NOMINAL(0.053543, 4)"
+    },
+    {
+      "id": "NOMINAL.2",
+      "f": "=NOMINAL(0.053543, 4.5)"
+    },
+    {
+      "id": "NOMINAL.3",
+      "f": "=NOMINAL(0, 4)"
+    },
+    {
+      "id": "NOMINAL.4",
+      "f": "=NOMINAL(0.05, 0)"
+    },
+    {
+      "id": "NPER.1",
+      "f": "=NPER(0.12/12, -100, -1000, 10000, 1)"
+    },
+    {
+      "id": "NPER.2",
+      "f": "=NPER(0.01, -100, -1000)"
+    },
+    {
+      "id": "NPER.3",
+      "f": "=NPER(0, -100, 1000)"
+    },
+    {
+      "id": "NPV.1",
+      "f": "=NPV(0.1, -10000, 3000, 4200, 6800)"
+    },
+    {
+      "id": "NPV.2",
+      "f": "=NPV(0.08, Data!A2:A5)"
+    },
+    {
+      "id": "NPV.3",
+      "f": "=NPV(0.08, Data!D1:D5)"
+    },
+    {
+      "id": "PDURATION.1",
+      "f": "=PDURATION(0.25, 10, 15)"
+    },
+    {
+      "id": "PDURATION.2",
+      "f": "=PDURATION(0.75, 2, 15)"
+    },
+    {
+      "id": "PDURATION.3",
+      "f": "=PDURATION(0.025, 2000, 2200)"
+    },
+    {
+      "id": "PDURATION.4",
+      "f": "=PDURATION(0, 10, 15)"
+    },
+    {
+      "id": "PDURATION.5",
+      "f": "=PDURATION(0.25, -10, 15)"
+    },
+    {
+      "id": "PMT.1",
+      "f": "=PMT(0.08/12, 10, 10000)"
+    },
+    {
+      "id": "PMT.2",
+      "f": "=PMT(0.08/12, 10, 10000, 0, 1)"
+    },
+    {
+      "id": "PMT.3",
+      "f": "=PMT(0, 10, 10000)"
+    },
+    {
+      "id": "PMT.4",
+      "f": "=PMT(0.08, 0, 10000)"
+    },
+    {
+      "id": "PPMT.1",
+      "f": "=PPMT(0.1/12, 1, 24, 2000)"
+    },
+    {
+      "id": "PPMT.2",
+      "f": "=PPMT(0.08, 10, 10, 200000)"
+    },
+    {
+      "id": "PPMT.3",
+      "f": "=PPMT(0.08, 10, 10, 200000, 0, 1)"
+    },
+    {
+      "id": "PPMT.4",
+      "f": "=PPMT(0.08, 1, 10, 200000, 5000, 1)"
+    },
+    {
+      "id": "PPMT.5",
+      "f": "=PPMT(0.08, 11, 10, 200000)"
+    },
+    {
+      "id": "PRICE.1",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2017,11,15), 0.0575, 0.065, 100, 2, 0)"
+    },
+    {
+      "id": "PRICE.2",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2017,11,15), 0.0575, 0.065, 100, 2, 1)"
+    },
+    {
+      "id": "PRICE.3",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2017,11,15), 0.0575, 0.065, 100, 4, 3)"
+    },
+    {
+      "id": "PRICE.4",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2017,11,15), 0.0575, 0.065, 100, 1, 4)"
+    },
+    {
+      "id": "PRICE.5",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2017,11,15), 0.0575, 0.065, 0, 2)"
+    },
+    {
+      "id": "PRICE.6",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2017,11,15), -0.0575, 0.065, 100, 2)"
+    },
+    {
+      "id": "PRICE.7",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2008,11,15), 0.0575, 0.065, 100, 2)"
+    },
+    {
+      "id": "PRICE.8",
+      "f": "=PRICE(DATE(2008,2,15), DATE(2017,11,15), 0.0575, 0, 100, 2)"
+    },
+    {
+      "id": "PRICEDISC.1",
+      "f": "=PRICEDISC(DATE(2008,2,16), DATE(2008,3,1), 0.0525, 100, 2)"
+    },
+    {
+      "id": "PRICEDISC.2",
+      "f": "=PRICEDISC(DATE(2008,2,16), DATE(2008,3,1), 0.0525, 100)"
+    },
+    {
+      "id": "PRICEDISC.3",
+      "f": "=PRICEDISC(DATE(2008,2,16), DATE(2008,3,1), 0.0525, 100, 1)"
+    },
+    {
+      "id": "PRICEDISC.4",
+      "f": "=PRICEDISC(DATE(2008,3,1), DATE(2008,2,16), 0.0525, 100)"
+    },
+    {
+      "id": "PRICEDISC.5",
+      "f": "=PRICEDISC(DATE(2008,2,16), DATE(2008,3,1), 0, 100)"
+    },
+    {
+      "id": "PRICEMAT.1",
+      "f": "=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), 0.061, 0.061, 0)"
+    },
+    {
+      "id": "PRICEMAT.2",
+      "f": "=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), 0.061, 0.061, 1)"
+    },
+    {
+      "id": "PRICEMAT.3",
+      "f": "=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), 0.061, 0.061, 3)"
+    },
+    {
+      "id": "PRICEMAT.4",
+      "f": "=PRICEMAT(DATE(2008,4,13), DATE(2008,2,15), DATE(2007,11,11), 0.061, 0.061)"
+    },
+    {
+      "id": "PRICEMAT.5",
+      "f": "=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), -0.061, 0.061)"
+    },
+    {
+      "id": "PV.1",
+      "f": "=PV(0.08/12, 12*20, 500, , 0)"
+    },
+    {
+      "id": "PV.2",
+      "f": "=PV(0.08/12, 12*20, 500, 1000, 1)"
+    },
+    {
+      "id": "PV.3",
+      "f": "=PV(0, 10, 100)"
+    },
+    {
+      "id": "RATE.1",
+      "f": "=RATE(4*12, -200, 8000)"
+    },
+    {
+      "id": "RATE.2",
+      "f": "=RATE(4*12, -200, 8000, 0, 1)"
+    },
+    {
+      "id": "RATE.3",
+      "f": "=RATE(10, -100, 50000)"
+    },
+    {
+      "id": "RECEIVED.1",
+      "f": "=RECEIVED(DATE(2008,2,15), DATE(2008,5,15), 1000000, 0.0575, 2)"
+    },
+    {
+      "id": "RECEIVED.2",
+      "f": "=RECEIVED(DATE(2008,2,15), DATE(2008,5,15), 1000000, 0.0575)"
+    },
+    {
+      "id": "RECEIVED.3",
+      "f": "=RECEIVED(DATE(2008,2,15), DATE(2008,5,15), 1000000, 0.0575, 1)"
+    },
+    {
+      "id": "RECEIVED.4",
+      "f": "=RECEIVED(DATE(2008,5,15), DATE(2008,2,15), 1000000, 0.0575)"
+    },
+    {
+      "id": "RECEIVED.5",
+      "f": "=RECEIVED(DATE(2008,2,15), DATE(2008,5,15), 1000000, 0)"
+    },
+    {
+      "id": "RRI.1",
+      "f": "=RRI(10.5, 10, 3)"
+    },
+    {
+      "id": "RRI.2",
+      "f": "=RRI(3, 2, 4)"
+    },
+    {
+      "id": "RRI.3",
+      "f": "=RRI(1, 10, 0)",
+      "expect": [[-1]],
+      "cite": "https://support.google.com/docs/answer/9368238 (example \"-1 =RRI(1, 10, 0)\": \"If future_value is 0, the rate returned is -1\")"
+    },
+    {
+      "id": "RRI.4",
+      "f": "=RRI(96, 10000, 11000)"
+    },
+    {
+      "id": "RRI.5",
+      "f": "=RRI(0, 10, 11)"
+    },
+    {
+      "id": "RRI.6",
+      "f": "=RRI(3, 0, 4)"
+    },
+    {
+      "id": "RRI.7",
+      "f": "=RRI(2, -10, 11)"
+    },
+    {
+      "id": "SLN.1",
+      "f": "=SLN(30000, 7500, 10)"
+    },
+    {
+      "id": "SLN.2",
+      "f": "=SLN(30000, 7500, 0)"
+    },
+    {
+      "id": "SLN.3",
+      "f": "=SLN(100, 10, 2.5)"
+    },
+    {
+      "id": "SYD.1",
+      "f": "=SYD(30000, 7500, 10, 1)"
+    },
+    {
+      "id": "SYD.2",
+      "f": "=SYD(30000, 7500, 10, 10)"
+    },
+    {
+      "id": "SYD.3",
+      "f": "=SYD(30000, 7500, 10, 2.5)"
+    },
+    {
+      "id": "SYD.4",
+      "f": "=SYD(30000, 7500, 0, 1)"
+    },
+    {
+      "id": "TBILLEQ.1",
+      "f": "=TBILLEQ(DATE(2008,3,31), DATE(2008,6,1), 0.0914)"
+    },
+    {
+      "id": "TBILLEQ.2",
+      "f": "=TBILLEQ(DATE(2008,1,1), DATE(2008,3,31), 0.05)"
+    },
+    {
+      "id": "TBILLEQ.3",
+      "f": "=TBILLEQ(DATE(2008,6,1), DATE(2008,3,31), 0.0914)"
+    },
+    {
+      "id": "TBILLEQ.4",
+      "f": "=TBILLEQ(DATE(2008,3,31), DATE(2009,6,1), 0.0914)"
+    },
+    {
+      "id": "TBILLEQ.5",
+      "f": "=TBILLEQ(DATE(2008,3,31), DATE(2008,6,1), 0)"
+    },
+    {
+      "id": "TBILLPRICE.1",
+      "f": "=TBILLPRICE(DATE(2008,3,31), DATE(2008,6,1), 0.09)"
+    },
+    {
+      "id": "TBILLPRICE.2",
+      "f": "=TBILLPRICE(DATE(2008,1,1), DATE(2008,3,31), 0.05)"
+    },
+    {
+      "id": "TBILLPRICE.3",
+      "f": "=TBILLPRICE(DATE(2008,6,1), DATE(2008,3,31), 0.09)"
+    },
+    {
+      "id": "TBILLPRICE.4",
+      "f": "=TBILLPRICE(DATE(2008,3,31), DATE(2009,6,1), 0.09)",
+      "differs": {
+        "libreoffice": "LibreOffice prices a bill maturing more than a year after settlement (89.45); LiveDoc gives #NUM!"
+      },
+      "note": "Awaits Google's answer: its help says \"maturity must be one year or less from the settlement date\" but not which error."
+    },
+    {
+      "id": "TBILLPRICE.5",
+      "f": "=TBILLPRICE(DATE(2008,3,31), DATE(2008,6,1), 0)"
+    },
+    {
+      "id": "TBILLYIELD.1",
+      "f": "=TBILLYIELD(DATE(2008,3,31), DATE(2008,6,1), 98.45)"
+    },
+    {
+      "id": "TBILLYIELD.2",
+      "f": "=TBILLYIELD(DATE(2008,1,1), DATE(2008,3,31), 99)",
+      "expect": [[0.0404040404040407]],
+      "cite": "https://support.google.com/docs/answer/3093264 (\"TBILLYIELD is equivalent to using YIELDDISC with US Treasury Bill conventions\", Actual/360: YIELDDISC.6)",
+      "differs": {
+        "libreoffice": "LibreOffice counts the days 30/360 and adds one (0.03996)"
+      }
+    },
+    {
+      "id": "TBILLYIELD.3",
+      "f": "=TBILLYIELD(DATE(2008,6,1), DATE(2008,3,31), 98.45)"
+    },
+    {
+      "id": "TBILLYIELD.4",
+      "f": "=TBILLYIELD(DATE(2008,3,31), DATE(2009,6,1), 98.45)"
+    },
+    {
+      "id": "TBILLYIELD.5",
+      "f": "=TBILLYIELD(DATE(2008,3,31), DATE(2008,6,1), 0)"
+    },
+    {
+      "id": "VDB.1",
+      "f": "=VDB(100, 10, 20, 10, 11, 2, TRUE)"
+    },
+    {
+      "id": "VDB.2",
+      "f": "=VDB(100, 33, 20, 10, 11, 2, FALSE)"
+    },
+    {
+      "id": "VDB.3",
+      "f": "=VDB(2400, 300, 10*365, 0, 1)"
+    },
+    {
+      "id": "VDB.4",
+      "f": "=VDB(2400, 300, 10*12, 0, 1)"
+    },
+    {
+      "id": "VDB.5",
+      "f": "=VDB(2400, 300, 10, 0, 1)"
+    },
+    {
+      "id": "VDB.6",
+      "f": "=VDB(2400, 300, 10*12, 6, 18)"
+    },
+    {
+      "id": "VDB.7",
+      "f": "=VDB(2400, 300, 10*12, 6, 18, 1.5)"
+    },
+    {
+      "id": "VDB.8",
+      "f": "=VDB(2400, 300, 10, 0, 0.875, 1.5)"
+    },
+    {
+      "id": "VDB.9",
+      "f": "=VDB(2400, 300, 10, 1.5, 4.25)"
+    },
+    {
+      "id": "VDB.10",
+      "f": "=VDB(2400, 300, 10, 1.5, 4.25, 2, TRUE)"
+    },
+    {
+      "id": "VDB.11",
+      "f": "=VDB(2400, 300, 10, 8, 10)"
+    },
+    {
+      "id": "VDB.12",
+      "f": "=VDB(2400, 300, 10, 3, 2)"
+    },
+    {
+      "id": "VDB.13",
+      "f": "=VDB(2400, 300, 10, 0, 11)"
+    },
+    {
+      "id": "VDB.14",
+      "f": "=VDB(2400, 300, 10, 0, 1, 0)"
+    },
+    {
+      "id": "VDB.15",
+      "f": "=VDB(2400, 300, 10, 0, 10)"
+    },
+    {
+      "id": "VDB.16",
+      "f": "=VDB(2400, 300, 10, 2, 9.5)"
+    },
+    {
+      "id": "VDB.17",
+      "f": "=VDB(2400, 300, 10, 0, 10, 1)"
+    },
+    {
+      "id": "VDB.18",
+      "f": "=VDB(1000, 0, 5, 0, 5)"
+    },
+    {
+      "id": "XIRR.1",
+      "f": "=XIRR(Data!A1:A5, Data!B1:B5)"
+    },
+    {
+      "id": "XIRR.2",
+      "f": "=XIRR(Data!A1:A5, Data!B1:B5, 0.5)"
+    },
+    {
+      "id": "XIRR.3",
+      "f": "=XIRR(Data!A1:A5, Data!B1:B4)"
+    },
+    {
+      "id": "XIRR.4",
+      "f": "=XIRR(Data!E1:E2, Data!B1:B2)"
+    },
+    {
+      "id": "XIRR.5",
+      "f": "=XIRR({-1000, 1100}, {39448, 39813})"
+    },
+    {
+      "id": "XNPV.1",
+      "f": "=XNPV(0.09, Data!A1:A5, Data!B1:B5)"
+    },
+    {
+      "id": "XNPV.2",
+      "f": "=XNPV(0, Data!A1:A5, Data!B1:B5)"
+    },
+    {
+      "id": "XNPV.3",
+      "f": "=XNPV(0.09, Data!A1:A5, Data!B1:B4)"
+    },
+    {
+      "id": "XNPV.4",
+      "f": "=XNPV(0.09, Data!A1:A1, Data!B1:B1)"
+    },
+    {
+      "id": "XNPV.5",
+      "f": "=XNPV(0.09, Data!A1:A5, Data!F1:F5)",
+      "differs": {
+        "libreoffice": "LibreOffice reads a date that is text (\"soon\") as a number and answers; LiveDoc gives #VALUE!"
+      },
+      "note": "Awaits Google's answer: its help does not say what a date that is not a number gives."
+    },
+    {
+      "id": "YIELD.1",
+      "f": "=YIELD(DATE(2008,2,15), DATE(2016,11,15), 0.0575, 95.04287, 100, 2, 0)"
+    },
+    {
+      "id": "YIELD.2",
+      "f": "=YIELD(DATE(2008,2,15), DATE(2016,11,15), 0.0575, 95.04287, 100, 2, 1)"
+    },
+    {
+      "id": "YIELD.3",
+      "f": "=YIELD(DATE(2008,2,15), DATE(2016,11,15), 0.0575, 105, 100, 4)"
+    },
+    {
+      "id": "YIELD.4",
+      "f": "=YIELD(DATE(2008,2,15), DATE(2016,11,15), 0, 80, 100, 1, 3)"
+    },
+    {
+      "id": "YIELD.5",
+      "f": "=YIELD(DATE(2008,2,15), DATE(2016,11,15), 0.0575, 0, 100, 2)"
+    },
+    {
+      "id": "YIELD.6",
+      "f": "=YIELD(DATE(2016,11,15), DATE(2008,2,15), 0.0575, 95, 100, 2)"
+    },
+    {
+      "id": "YIELDDISC.1",
+      "f": "=YIELDDISC(DATE(2008,2,16), DATE(2008,3,1), 99.795, 100, 2)"
+    },
+    {
+      "id": "YIELDDISC.2",
+      "f": "=YIELDDISC(DATE(2008,2,16), DATE(2008,3,1), 99.795, 100)"
+    },
+    {
+      "id": "YIELDDISC.3",
+      "f": "=YIELDDISC(DATE(2008,2,16), DATE(2008,3,1), 99.795, 100, 1)"
+    },
+    {
+      "id": "YIELDDISC.4",
+      "f": "=YIELDDISC(DATE(2008,3,1), DATE(2008,2,16), 99.795, 100)"
+    },
+    {
+      "id": "YIELDDISC.5",
+      "f": "=YIELDDISC(DATE(2008,2,16), DATE(2008,3,1), 0, 100)"
+    },
+    {
+      "id": "YIELDDISC.6",
+      "f": "=YIELDDISC(DATE(2008,1,1), DATE(2008,3,31), 99, 100, 2)"
+    },
+    {
+      "id": "YIELDDISC.7",
+      "f": "=YIELDDISC(DATE(2008,3,31), DATE(2009,6,1), 91, 100, 2)"
+    },
+    {
+      "id": "YIELDMAT.1",
+      "f": "=YIELDMAT(DATE(2010,1,2), DATE(2010,12,31), DATE(2008,1,1), 0.02, 90, 2)"
+    },
+    {
+      "id": "YIELDMAT.2",
+      "f": "=YIELDMAT(DATE(2008,3,15), DATE(2008,11,3), DATE(2007,11,8), 0.0625, 100.0123, 0)"
+    },
+    {
+      "id": "YIELDMAT.3",
+      "f": "=YIELDMAT(DATE(2008,3,15), DATE(2008,11,3), DATE(2007,11,8), 0.0625, 100.0123, 1)"
+    },
+    {
+      "id": "YIELDMAT.4",
+      "f": "=YIELDMAT(DATE(2008,3,15), DATE(2008,11,3), DATE(2008,4,8), 0.0625, 100.0123)"
+    },
+    {
+      "id": "YIELDMAT.5",
+      "f": "=YIELDMAT(DATE(2008,3,15), DATE(2008,11,3), DATE(2007,11,8), 0.0625, 0)"
+    }
+  ]
+}

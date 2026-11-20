@@ -118,6 +118,7 @@ const MEASURED_CATEGORIES = [
   'Engineering',
   'Date',
   'Filter',
+  'Financial',
   'Info',
   'Logical',
   'Lookup',
