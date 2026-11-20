@@ -115,6 +115,7 @@ describe('the oracle corpus', () => {
 const MEASURED_CATEGORIES = [
   'Array',
   'Database',
+  'Engineering',
   'Date',
   'Filter',
   'Info',

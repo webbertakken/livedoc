@@ -97,3 +97,90 @@ export function complexSqrt(c: Complex): Complex {
   const im = Math.sqrt((m - c.re) / 2);
   return { re, im: c.im < 0 ? -im : im, unit: c.unit };
 }
+
+/** a + b. */
+export function complexPlus(a: Complex, b: Complex): Complex {
+  return { re: a.re + b.re, im: a.im + b.im, unit: a.unit };
+}
+
+/** a × b. */
+export function complexTimes(a: Complex, b: Complex): Complex {
+  return times(a, b);
+}
+
+/** a ÷ b; none for b of 0. */
+export function complexDivide(a: Complex, b: Complex): Complex | null {
+  const d = b.re * b.re + b.im * b.im;
+  if (d === 0) return null;
+  return {
+    re: (a.re * b.re + a.im * b.im) / d,
+    im: (a.im * b.re - a.re * b.im) / d,
+    unit: a.unit,
+  };
+}
+
+/** e to the power c. */
+export function complexExp(c: Complex): Complex {
+  const r = Math.exp(c.re);
+  return { re: r * Math.cos(c.im), im: r * Math.sin(c.im), unit: c.unit };
+}
+
+/** The sine, cosine, hyperbolic sine and hyperbolic cosine; the others are their quotients. */
+export function complexSin(c: Complex): Complex {
+  return {
+    re: Math.sin(c.re) * Math.cosh(c.im),
+    im: Math.cos(c.re) * Math.sinh(c.im),
+    unit: c.unit,
+  };
+}
+
+export function complexCos(c: Complex): Complex {
+  return {
+    re: Math.cos(c.re) * Math.cosh(c.im),
+    im: -Math.sin(c.re) * Math.sinh(c.im),
+    unit: c.unit,
+  };
+}
+
+export function complexSinh(c: Complex): Complex {
+  return {
+    re: Math.sinh(c.re) * Math.cos(c.im),
+    im: Math.cosh(c.re) * Math.sin(c.im),
+    unit: c.unit,
+  };
+}
+
+export function complexCosh(c: Complex): Complex {
+  return {
+    re: Math.cosh(c.re) * Math.cos(c.im),
+    im: Math.sinh(c.re) * Math.sin(c.im),
+    unit: c.unit,
+  };
+}
+
+// Tangents by double angles, which keep a small part exact where sine over cosine would cancel:
+// tan(a+bi) = (sin 2a + i sinh 2b) / (cos 2a + cosh 2b), tanh(a+bi) = (sinh 2a + i sin 2b) / (cosh 2a + cos 2b).
+// Each is none at a pole.
+function quotient(re: number, im: number, d: number, unit: ImaginaryUnit): Complex | null {
+  return d === 0 ? null : { re: re / d, im: im / d, unit };
+}
+
+export function complexTan(c: Complex): Complex | null {
+  const [a, b] = [2 * c.re, 2 * c.im];
+  return quotient(Math.sin(a), Math.sinh(b), Math.cos(a) + Math.cosh(b), c.unit);
+}
+
+export function complexCot(c: Complex): Complex | null {
+  const [a, b] = [2 * c.re, 2 * c.im];
+  return quotient(Math.sin(a), -Math.sinh(b), Math.cosh(b) - Math.cos(a), c.unit);
+}
+
+export function complexTanh(c: Complex): Complex | null {
+  const [a, b] = [2 * c.re, 2 * c.im];
+  return quotient(Math.sinh(a), Math.sin(b), Math.cosh(a) + Math.cos(b), c.unit);
+}
+
+export function complexCoth(c: Complex): Complex | null {
+  const [a, b] = [2 * c.re, 2 * c.im];
+  return quotient(Math.sinh(a), -Math.sin(b), Math.cosh(a) - Math.cos(b), c.unit);
+}

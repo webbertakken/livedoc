@@ -5,6 +5,7 @@ import { ARRAY_FUNCTIONS } from './functions/array';
 import { CARD_FUNCTIONS } from './functions/cards';
 import { DATABASE_FUNCTIONS } from './functions/database';
 import { DATE_FUNCTIONS } from './functions/date';
+import { ENGINEERING_FUNCTIONS } from './functions/engineering';
 import { FINANCE_FUNCTIONS } from './functions/finance';
 import { INFO_FUNCTIONS } from './functions/info';
 import { LOGIC_FUNCTIONS } from './functions/logic';
@@ -26,6 +27,7 @@ export type FunctionFamily =
   | 'Date and time'
   | 'Arrays'
   | 'Finance'
+  | 'Engineering'
   | 'Plan cards';
 
 export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>][] = [
@@ -40,6 +42,7 @@ export const FUNCTION_FAMILIES: readonly [FunctionFamily, Record<string, FnDef>]
   ['Date and time', DATE_FUNCTIONS],
   ['Arrays', ARRAY_FUNCTIONS],
   ['Finance', FINANCE_FUNCTIONS],
+  ['Engineering', ENGINEERING_FUNCTIONS],
   ['Plan cards', CARD_FUNCTIONS],
 ];
 

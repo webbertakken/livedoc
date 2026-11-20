@@ -31,6 +31,7 @@ import {
   lucideCalendar,
   lucideChartNoAxesColumnIncreasing,
   lucideCoins,
+  lucideCpu,
   lucideGitFork,
   lucideGrid3x3,
   lucideInfo,
@@ -229,6 +230,7 @@ export const FUNCTION_FAMILY_ICONS: Record<FunctionFamily, () => React.JSX.Eleme
   'Date and time': prims(lucideCalendar),
   Arrays: prims(lucideGrid3x3),
   Finance: prims(lucideCoins),
+  Engineering: prims(lucideCpu),
   'Plan cards': prims(lucideSquareKanban),
 };
 export const SearchIcon = prims(lucideSearch);
