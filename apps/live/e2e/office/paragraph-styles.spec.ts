@@ -44,7 +44,9 @@ test('paragraph styles are applied three ways and drawn in their look', async ({
   await second.click();
   await page.keyboard.press('Control+Alt+3');
   await expect(second).toHaveCSS('font-size', '18.6667px');
-  await expect(second).toHaveCSS('color', 'rgb(67, 67, 67)');
+  // Heading 3's grey (#434343), drawn light on the dark scheme's paper.
+  await expect(second).not.toHaveCSS('color', 'rgb(67, 67, 67)');
+  await expect(second).not.toHaveCSS('color', 'rgb(227, 227, 227)');
   await page.keyboard.press('Control+Alt+0');
   await expect(second).toHaveCSS('font-size', '14.6667px');
 

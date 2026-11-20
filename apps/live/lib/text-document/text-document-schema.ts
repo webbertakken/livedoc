@@ -20,6 +20,7 @@ import {
 } from '@livedoc/text-documents';
 import { DocumentFonts } from '@livedoc/document';
 import { cssText, paragraphDeclarations } from './text-document-style-sheet';
+import { paperFill, paperInk } from './text-document-paper';
 
 const nullAttributes = (names: readonly string[]) =>
   Object.fromEntries(names.map((name) => [name, { default: null }]));
@@ -51,9 +52,12 @@ const marks: Record<string, MarkSpec> = {
   size: propertyMark((v) =>
     typeof v === 'number' && v > 0 && v < 1000 ? `font-size: ${v}pt` : '',
   ),
-  color: propertyMark((v) => (typeof v === 'string' && COLOUR.test(v) ? `color: ${v}` : '')),
+  // Drawn for the page's paper (editing-surface.md "The page in the dark scheme").
+  color: propertyMark((v) =>
+    typeof v === 'string' && COLOUR.test(v) ? `color: ${paperInk(v)}` : '',
+  ),
   highlight: propertyMark((v) =>
-    typeof v === 'string' && COLOUR.test(v) ? `background-color: ${v}` : '',
+    typeof v === 'string' && COLOUR.test(v) ? `background-color: ${paperFill(v)}` : '',
   ),
   small_caps: propertyMark((v) => `font-variant: ${v ? 'small-caps' : 'normal'}`),
   transform: propertyMark((v) =>
