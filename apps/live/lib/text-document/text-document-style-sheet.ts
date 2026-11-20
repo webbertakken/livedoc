@@ -108,6 +108,8 @@ export function boxDeclarations(p: ParagraphProps): string[] {
   return [
     `margin-inline-start: var(${INDENT_START}, 0)`,
     `margin-inline-end: var(${INDENT_END}, 0)`,
+    // What its margins take from a section's own width (page-layout.md "Each page is drawn at its section's setup").
+    `--text-document-box-inline: calc(var(${INDENT_START}, 0pt) + var(${INDENT_END}, 0pt))`,
     ...SIDES.flatMap((side) => {
       const line = borders[side];
       const drawn = borderCss(line);

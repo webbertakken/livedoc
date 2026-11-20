@@ -1,15 +1,18 @@
 // The page drawn at its setup (docs/specs/034-text-documents/page-layout.md "Page setup"): the first section's paper,
 // margins and colour, read live so a margin dragged on the ruler, by anyone, redraws the page.
-import { useEffect, useState, type CSSProperties, type RefObject } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties, type RefObject } from 'react';
+import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
   MIN_TEXT_SIDE_PT,
+  SECTION_BREAK,
   TextDocumentState,
   type PageSetup,
   type Section,
 } from '@livedoc/text-documents';
 import { paperFill } from './text-document-paper';
+import { sectionAt } from './pagination/pagination-sections';
 
 export type MarginSide = 'left' | 'right';
 
@@ -109,4 +112,49 @@ export function usePagelessColumn(
   }, [scroller, pageless]);
   // Before the scroller is measured, the column at its full width.
   return available > 0 ? pagelessColumnPt(available, scale) : PAGELESS_TEXT_WIDTH_PT;
+}
+
+/** The section the caret is in: its index (0 the first) and its section. */
+export type CaretSection = { readonly index: number; readonly section: Section };
+
+/**
+ * The section the caret is in (page-layout.md "Each page is drawn at its section's setup"), read again as the caret
+ * moves or the writing changes; the first section's while the editor is not there.
+ */
+export function useCaretSection(
+  view: EditorView | null,
+  first: Section,
+  subscribe: (listener: () => void) => () => void,
+): CaretSection {
+  const read = useCallback((): CaretSection => {
+    if (!view || view.isDestroyed) return { index: 0, section: first };
+    const { doc, selection } = view.state;
+    const index = sectionAt(doc, selection.from);
+    if (index === 0) return { index, section: first };
+    let seen = 0;
+    let section: Section = first;
+    doc.forEach((node) => {
+      if (node.type.name !== SECTION_BREAK || seen >= index) return;
+      seen += 1;
+      if (seen === index) {
+        const { start, setup } = node.attrs as {
+          start: Section['start'] | null;
+          setup: PageSetup | null;
+        };
+        section = { start: start ?? 'next-page', setup: setup ?? first.setup };
+      }
+    });
+    return { index, section };
+  }, [view, first]);
+  const [caret, setCaret] = useState(read);
+  useEffect(() => {
+    const update = () =>
+      setCaret((was) => {
+        const now = read();
+        return now.index === was.index && now.section.setup === was.section.setup ? was : now;
+      });
+    update();
+    return subscribe(update);
+  }, [read, subscribe]);
+  return caret;
 }

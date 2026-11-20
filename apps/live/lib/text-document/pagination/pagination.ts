@@ -39,13 +39,13 @@ export type BlockMetrics = {
   readonly startsSection?: SectionStart;
 };
 
-/** A page's geometry in CSS pixels: its text area's height, the room from its foot to the next page's text area. */
+/** A page's geometry in CSS pixels: its height, its margins and the text area between them. */
 export type PageFrame = {
+  readonly width: number;
+  readonly height: number;
+  readonly top: number;
+  readonly bottom: number;
   readonly textHeight: number;
-  /** The bottom margin, the gap and the next page's top margin. */
-  readonly below: number;
-  /** One page and one gap: what a blank page adds. */
-  readonly stride: number;
 };
 
 /**
@@ -75,13 +75,15 @@ export type LayoutChange = {
   readonly delta: number;
 };
 
-/** A page setup's frame (every page of the document has the first section's setup until sections are built). */
+/** A page setup's frame. */
 export function pageFrame(setup: PageSetup): PageFrame {
   const { top, bottom } = setup.margins;
   return {
+    width: setup.width * PX_PER_PT,
+    height: setup.height * PX_PER_PT,
+    top: top * PX_PER_PT,
+    bottom: bottom * PX_PER_PT,
     textHeight: (setup.height - top - bottom) * PX_PER_PT,
-    below: bottom * PX_PER_PT + PAGE_GAP_PX + top * PX_PER_PT,
-    stride: setup.height * PX_PER_PT + PAGE_GAP_PX,
   };
 }
 
@@ -114,10 +116,9 @@ function restartPage(starts: readonly PageStart[], target: number): number {
  */
 export function paginate(
   blocks: readonly BlockMetrics[],
-  frame: PageFrame,
+  frameOf: (block: number) => PageFrame,
   change?: LayoutChange,
 ): Pagination {
-  const { textHeight, below, stride } = frame;
   const parity = blocks.some(
     (b) => b.startsSection === 'odd-page' || b.startsSection === 'even-page',
   );
@@ -131,6 +132,8 @@ export function paginate(
   let pages = starts.reduce((count, start) => count + 1 + start.blank, 0);
   let i = starts[starts.length - 1]!.block;
   let s = starts[starts.length - 1]!.line;
+  // The page being filled.
+  let frame = frameOf(i);
   let cursor = PAGE_TOP;
   // The blocks started on this page, with where the writing stood before each.
   let onPage: { block: number; before: Cursor }[] = [];
@@ -150,12 +153,17 @@ export function paginate(
   // A new page starting at block `block`, line `line`, the writing stopping at `endY` on this one. True when it
   // starts where a page started before the change: the rest is the previous layout's.
   const newPage = (block: number, line: number, endY: number, blank: number): boolean => {
+    // The page it starts has the setup of the section its first line is in.
+    const next = frameOf(block);
     starts.push({
       block,
       line,
-      gap: Math.max(0, textHeight - endY + below) + blank * stride,
+      gap:
+        Math.max(0, frame.textHeight - endY + frame.bottom + PAGE_GAP_PX + next.top) +
+        blank * (next.height + PAGE_GAP_PX),
       blank,
     });
+    frame = next;
     pages += blank;
     cursor = PAGE_TOP;
     onPage = [];
@@ -199,7 +207,8 @@ export function paginate(
     const bottomOf = (k: number) =>
       blockTop + (k === lines.length - 1 ? block.height : lines[k]!.bottom);
     let fit = 0;
-    while (s + fit < lines.length && bottomOf(s + fit) <= textHeight + FIT_TOLERANCE_PX) fit++;
+    while (s + fit < lines.length && bottomOf(s + fit) <= frame.textHeight + FIT_TOLERANCE_PX)
+      fit++;
     // A page break inside the paragraph starts the next page at the line after it.
     const forced = block.forced?.find((line) => line > s && line < lines.length);
     if (forced !== undefined && s + fit >= forced) {

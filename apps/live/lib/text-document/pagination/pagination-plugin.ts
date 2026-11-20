@@ -15,10 +15,12 @@ import {
   pageFrame,
   paginate,
   type BlockMetrics,
+  type PageFrame,
   type PageStart,
   type Pagination,
 } from './pagination';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
+import { bodySections, SECTIONS_CHANGED } from './pagination-sections';
 
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;
@@ -28,8 +30,11 @@ export type PaginationOptions = {
   /** The setup the pages have, and whether pages are laid out at all (not pageless, not on a phone). */
   readonly read: () => { readonly setup: PageSetup; readonly pages: boolean };
   /** How many pages there are now, told when it changes. */
-  readonly onPages: (count: number) => void;
+  readonly onPages: (pages: readonly PageGeometry[]) => void;
 };
+
+/** A page's size in CSS pixels. */
+export type PageGeometry = { readonly width: number; readonly height: number };
 
 type GapSpec = { readonly key: string; readonly inside: boolean };
 
@@ -78,8 +83,25 @@ function lineGap(
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
+/** Each page's size in CSS pixels, blank pages too, each by the section of the block it starts with. */
+export function pagesOf(
+  pagination: Pagination,
+  frameOf: (block: number) => PageFrame,
+): PageGeometry[] {
+  const pages: PageGeometry[] = [];
+  for (const start of pagination.starts) {
+    const frame = frameOf(start.block);
+    const page = { width: round(frame.width), height: round(frame.height) };
+    for (let blank = 0; blank <= start.blank; blank++) pages.push(page);
+  }
+  return pages;
+}
+
 /** Lays the writing out again from the start: its styles, text or fonts changed. */
 export function relayoutPages(view: EditorView): void {
+  // The sections drawn again too: the first section's setup may have changed.
+  if (!view.isDestroyed)
+    view.dispatch(view.state.tr.setMeta(SECTIONS_CHANGED, true).setMeta('addToHistory', false));
   pagers.get(view)?.invalidate();
 }
 
@@ -94,7 +116,7 @@ class Pager {
   private layoutKey = '';
   private generation = 0;
   private scheduled = false;
-  private pages = 1;
+  private pages = '';
 
   private readonly view: EditorView;
   private readonly options: PaginationOptions;
@@ -119,10 +141,11 @@ class Pager {
     });
   }
 
-  private tellPages(count: number): void {
-    if (count === this.pages) return;
-    this.pages = count;
-    this.options.onPages(count);
+  private tellPages(pages: readonly PageGeometry[]): void {
+    const said = pages.map((p) => `${p.width}x${p.height}`).join(',');
+    if (said === this.pages) return;
+    this.pages = said;
+    this.options.onPages(pages);
   }
 
   private apply(decorations: DecorationSet): void {
@@ -140,7 +163,7 @@ class Pager {
       this.previous = null;
       this.nodes = [];
       this.apply(DecorationSet.empty);
-      this.tellPages(1);
+      this.tellPages([]);
       return;
     }
     const body = view.dom;
@@ -150,11 +173,21 @@ class Pager {
     if (!(width > 0) || box.width === 0) return;
     const ratio = box.width / width;
     const started = performance.now();
+    const sections = bodySections(view.state.doc, setup);
     const layoutKey = [
       width,
-      setup.height,
-      setup.margins.top,
-      setup.margins.bottom,
+      sections.setups
+        .map((s) =>
+          [
+            s.width,
+            s.height,
+            s.margins.top,
+            s.margins.bottom,
+            s.margins.left,
+            s.margins.right,
+          ].join(','),
+        )
+        .join(';'),
       body.getAttribute('style') ?? '',
       this.generation,
     ].join('|');
@@ -203,13 +236,14 @@ class Pager {
       return entry.metrics;
     });
     this.nodes = nodes;
-    const frame = pageFrame(setup);
+    const frames = sections.setups.map(pageFrame);
+    const frameOf = (block: number) => frames[sections.sectionOf[block] ?? 0]!;
     const pagination =
       unchanged && this.previous
         ? this.previous
         : paginate(
             metrics,
-            frame,
+            frameOf,
             this.previous
               ? { previous: this.previous, first, last: Math.max(first - 1, last), delta }
               : undefined,
@@ -229,11 +263,13 @@ class Pager {
       const node = nodes[start.block]!;
       const at = pos + this.splitOffset(node, pos, start, metrics[start.block]!, elements, ratio);
       const inset = this.measured.get(node)?.inset ?? 0;
+      // The page across, from the first section's text area: pages are centred one under another.
+      const own = sections.setups[sections.sectionOf[start.block] ?? 0]!;
       const across = {
-        left: round(inset + setup.margins.left * PX_PER_PT),
-        width: round(setup.width * PX_PER_PT),
+        left: round(inset + (setup.margins.left - (setup.width - own.width) / 2) * PX_PER_PT),
+        width: round(own.width * PX_PER_PT),
       };
-      const head = round(setup.margins.top * PX_PER_PT);
+      const head = round(own.margins.top * PX_PER_PT);
       const bands = { foot: round(height - PAGE_GAP_PX - head), head };
       return Decoration.widget(at, lineGap(height, bands, across), {
         side: -1,
@@ -243,7 +279,7 @@ class Pager {
       });
     });
     this.apply(DecorationSet.create(doc, decorations));
-    this.tellPages(pageCount(pagination));
+    this.tellPages(pagesOf(pagination, frameOf));
     if (count > 0 || !unchanged)
       debugLog('[text-document] layout', {
         pages: pageCount(pagination),

@@ -1,10 +1,12 @@
 // Laying the writing onto pages (docs/specs/034-text-documents/page-layout.md "Laying out").
 import { describe, expect, it } from 'vitest';
-import { PAGE_GAP_PX, pageCount, pageFrame, paginate, type BlockMetrics } from './pagination';
+import { pageCount, pageFrame, paginate, type BlockMetrics } from './pagination';
 
 const LINE = 20;
-// A text area five lines high; 50 px from one page's text foot to the next one's text top; pages 200 px apart.
-const frame = { textHeight: 100, below: 50, stride: 200 };
+// A text area five lines high: 50 px from one page's text foot to the next one's text top (19 + 12 + 19); a page and
+// its gap 150 px.
+const page = { width: 400, height: 138, top: 19, bottom: 19, textHeight: 100 };
+const frame = () => page;
 
 const para = (lines: number, rules: Partial<BlockMetrics> = {}): BlockMetrics => ({
   height: lines * LINE,
@@ -18,7 +20,7 @@ const starts = (blocks: readonly BlockMetrics[]) =>
   paginate(blocks, frame).starts.map(({ block, line, gap, blank }) => [block, line, gap, blank]);
 
 describe('pageFrame', () => {
-  it('reads a setup as the text area, the room below it and the page stride in CSS pixels', () => {
+  it('reads a setup as its height, margins and text area in CSS pixels', () => {
     const setup = {
       width: 612,
       height: 792,
@@ -26,9 +28,11 @@ describe('pageFrame', () => {
       margins: { top: 72, bottom: 36, left: 72, right: 72 },
     };
     expect(pageFrame(setup)).toEqual({
+      width: 612 / 0.75,
+      height: 792 / 0.75,
+      top: 72 / 0.75,
+      bottom: 36 / 0.75,
       textHeight: (792 - 108) / 0.75,
-      below: 36 / 0.75 + PAGE_GAP_PX + 72 / 0.75,
-      stride: 792 / 0.75 + PAGE_GAP_PX,
     });
   });
 });
@@ -138,7 +142,7 @@ describe('paginate', () => {
     ]);
     // The next page would be page 2: an odd page start leaves it blank.
     const odd = paginate([para(1), atom('odd-page'), para(1)], frame);
-    expect(odd.starts[1]).toEqual({ block: 2, line: 0, gap: 120 + 200, blank: 1 });
+    expect(odd.starts[1]).toEqual({ block: 2, line: 0, gap: 120 + 150, blank: 1 });
     expect(pageCount(odd)).toBe(3);
     // An even page start on page 2 needs none.
     expect(starts([para(1), atom('even-page'), para(1)])[1]).toEqual([2, 0, 120, 0]);
@@ -246,5 +250,48 @@ describe('paginate, incrementally (page-layout.md "The layout is incremental")',
     const shifted = [para(3), ...document.slice(1)];
     const since = paginate(shifted, frame, { previous, first: 0, last: 0, delta: 0 });
     expect(since.starts).toEqual(paginate(shifted, frame).starts);
+  });
+});
+
+describe('paginate, by section (page-layout.md "Each page is drawn at its section\'s setup")', () => {
+  // A second section on a shorter page: three lines high, margins 10 px.
+  const short = { width: 400, height: 80, top: 10, bottom: 10, textHeight: 60 };
+  const sectionAt = 2;
+  const frameOf = (block: number) => (block >= sectionAt ? short : page);
+
+  it('fills each page by the setup of the section its first line is in', () => {
+    const atom: BlockMetrics = {
+      height: 0,
+      marginTop: 0,
+      marginBottom: 0,
+      lines: [],
+      atom: true,
+      startsSection: 'next-page',
+    };
+    const laid = paginate([para(1), atom, para(5)], frameOf).starts;
+    // From the first page's foot (19) and gap to the short page's top margin (10); then three lines a page.
+    expect(laid.map(({ block, line, gap }) => [block, line, gap])).toEqual([
+      [0, 0, 0],
+      [2, 0, 100 - 20 + 19 + 12 + 10],
+      [2, 3, 60 - 60 + 10 + 12 + 10],
+    ]);
+  });
+
+  it('gives a blank page the height of the section after it', () => {
+    const atom: BlockMetrics = {
+      height: 0,
+      marginTop: 0,
+      marginBottom: 0,
+      lines: [],
+      atom: true,
+      startsSection: 'odd-page',
+    };
+    const laid = paginate([para(1), atom, para(1)], frameOf).starts;
+    expect(laid[1]).toEqual({
+      block: 2,
+      line: 0,
+      gap: 100 - 20 + 19 + 12 + 10 + 80 + 12,
+      blank: 1,
+    });
   });
 });

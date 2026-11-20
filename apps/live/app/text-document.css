@@ -442,3 +442,12 @@ div.text-document-kept {
 .text-document-page-gap-ground {
   background: var(--office-ground);
 }
+/*
+ * A section whose text area is not the first section's (docs/specs/034-text-documents/page-layout.md "Each page is
+ * drawn at its section's setup"): its blocks at its own width, moved to its own place; a box's margins come off it.
+ */
+.text-document-body > [data-section-width] {
+  position: relative;
+  left: var(--section-shift);
+  width: calc(var(--section-width) - var(--text-document-box-inline, 0px));
+}

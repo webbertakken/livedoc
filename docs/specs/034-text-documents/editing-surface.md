@@ -141,8 +141,8 @@ Left to right, as Google has it, with a divider between groups:
   counts (default). A mark every eighth of an inch (a quarter of a centimetre), a longer one at each half, and each
   whole unit numbered from the left margin, counting up both ways.
 - **The margins** are the grey ends; the white between them is the text area. Dragging a margin's inner edge sets
-  that margin of the section (the first section's while sections are not built, [Page layout](page-layout.md)), the
-  text area kept at least 1 in wide (default).
+  that margin of the section the caret is in ([Page layout](page-layout.md#page-setup)), the ruler spanning that
+  section's page, the text area kept at least 1 in wide (default).
 - **The indents** of the paragraph at the selection's start: the **left indent** (a triangle under the line), the
   **first line indent** (a bar above it) and the **right indent** (a triangle at the right). Dragging the left indent
   moves the first line with it, as ⌘] does; the first line indent moves alone; each sets every paragraph the
