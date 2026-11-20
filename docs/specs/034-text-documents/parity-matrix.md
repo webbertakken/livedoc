@@ -39,9 +39,9 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 | Email: this file         | Send as an attachment through the host's email, when configured                 | either way    | [Files and print](files-and-print.md#email)                     |
 | Email: collaborators     | Message everyone on the document, when email is configured                      | either way    | [Files and print](files-and-print.md#email)                     |
 | Download: Microsoft Word | `.docx`: the document itself when OOXML, a converted copy when ODF              | specified     | [Files and print](files-and-print.md#downloading)               |
-| Download: OpenDocument   | `.odt` (and `.fodt`): the document itself when ODF, a converted copy when OOXML | specified     |
+| Download: OpenDocument   | `.odt` (and `.fodt`): the document itself when ODF, a converted copy when OOXML | specified     | [Files and print](files-and-print.md#downloading)               |
 | Convert to Word format   | A person converts an ODF text document to OOXML, losses listed first (C1)       | specified     | [Standard mapping](standard-mapping.md#conversion)              |
-| Convert to OpenDocument  | A person converts an OOXML text document to ODF, losses listed first (C1)       | specified     | [Standard mapping](standard-mapping.md#conversion)              | [Files and print](files-and-print.md#downloading) |
+| Convert to OpenDocument  | A person converts an OOXML text document to ODF, losses listed first (C1)       | specified     | [Standard mapping](standard-mapping.md#conversion)              |
 | Download: Rich Text      | `.rtf`                                                                          | specified     | [Files and print](files-and-print.md#downloading)               |
 | Download: PDF            | `.pdf`, text as text                                                            | specified     | [Files and print](files-and-print.md#downloading)               |
 | Download: Plain Text     | `.txt`                                                                          | specified     | [Files and print](files-and-print.md#downloading)               |
@@ -64,14 +64,14 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Edit menu
 
-| Row                      | Rule                                     | Status    | Spec                                                         |
-| ------------------------ | ---------------------------------------- | --------- | ------------------------------------------------------------ |
-| Undo, Redo               | Personal undo and redo                   | specified | [Live editing and storage](live-editing-and-storage.md#undo) |
-| Cut, Copy, Paste         | Clipboard with formatting                | specified | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
-| Paste without formatting | ⌘⇧V, plain text in the surrounding style | specified | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
-| Select all               | ⌘A, the whole body of the document tab   | specified | [Text and paragraphs](text-and-paragraphs.md#selection)      |
-| Delete                   | Removes the selection                    | specified | [Text and paragraphs](text-and-paragraphs.md#selection)      |
-| Find and replace         | ⌘H, the dialog                           | specified | [Tools](tools.md#find-and-replace)                           |
+| Row                      | Rule                                     | Status                                     | Spec                                                         |
+| ------------------------ | ---------------------------------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Undo, Redo               | Personal undo and redo                   | built (`text-document-shortcuts.test.tsx`) | [Live editing and storage](live-editing-and-storage.md#undo) |
+| Cut, Copy, Paste         | Clipboard with formatting                | specified                                  | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
+| Paste without formatting | ⌘⇧V, plain text in the surrounding style | specified                                  | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
+| Select all               | ⌘A, the whole body of the document tab   | built (`text-document-shortcuts.test.tsx`) | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Delete                   | Removes the selection                    | specified                                  | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Find and replace         | ⌘H, the dialog                           | specified                                  | [Tools](tools.md#find-and-replace)                           |
 
 ## View menu
 
@@ -175,15 +175,15 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Extensions and Help
 
-| Row                                             | Rule                                     | Status        | Spec                                                     |
-| ----------------------------------------------- | ---------------------------------------- | ------------- | -------------------------------------------------------- |
-| Add-ons                                         | Google's marketplace                     | left out (C3) | [Tools](tools.md#google-only-services)                   |
-| Apps Script                                     | Google's scripting                       | left out (C3) | [Tools](tools.md#google-only-services)                   |
-| Agents (LiveDoc's own)                          | MCP and the CLI in their place           | specified     | [Agents and sync](agents-and-sync.md)                    |
-| Help                                            | The help centre's text document articles | specified     | [Editing surface](editing-surface.md#the-menu-bar)       |
-| Keyboard shortcuts                              | ⌘/, the dialog                           | specified     | [Editing surface](editing-surface.md#keyboard-shortcuts) |
-| Tool finder                                     | ⌥/, search the menus                     | specified     | [Editing surface](editing-surface.md#tool-finder)        |
-| Report abuse, privacy, terms, updates, training | LiveDoc's own pages                      | specified     | [Editing surface](editing-surface.md#the-menu-bar)       |
+| Row                                             | Rule                                     | Status                              | Spec                                                     |
+| ----------------------------------------------- | ---------------------------------------- | ----------------------------------- | -------------------------------------------------------- |
+| Add-ons                                         | Google's marketplace                     | left out (C3)                       | [Tools](tools.md#google-only-services)                   |
+| Apps Script                                     | Google's scripting                       | left out (C3)                       | [Tools](tools.md#google-only-services)                   |
+| Agents (LiveDoc's own)                          | MCP and the CLI in their place           | specified                           | [Agents and sync](agents-and-sync.md)                    |
+| Help                                            | The help centre's text document articles | specified                           | [Editing surface](editing-surface.md#the-menu-bar)       |
+| Keyboard shortcuts                              | ⌘/, the dialog                           | specified                           | [Editing surface](editing-surface.md#keyboard-shortcuts) |
+| Tool finder                                     | ⌥/, search the menus                     | built (`OfficeToolFinder.test.tsx`) | [Editing surface](editing-surface.md#tool-finder)        |
+| Report abuse, privacy, terms, updates, training | LiveDoc's own pages                      | specified                           | [Editing surface](editing-surface.md#the-menu-bar)       |
 
 ## Toolbar
 
@@ -238,9 +238,8 @@ Rows that could read either way under C3 (core only), asked of Webber once with 
 
 ## Shortcuts
 
-Every shortcut of Google's list for PC, Mac and ChromeOS is a row of the keyboard layer, held in one table in
-[Editing surface](editing-surface.md#keyboard-shortcuts); each reads `specified` there until built. Shortcuts of
-left-out rows (voice typing's languages, Explore) follow their row.
+Every shortcut of Google's list for PC, Mac and ChromeOS is a row of [Keyboard shortcuts](keyboard-shortcuts.md), with
+its own status there. Shortcuts of left-out rows (voice typing, Explore, input tools, people chips) follow their row.
 
 ## Modes and limits
 

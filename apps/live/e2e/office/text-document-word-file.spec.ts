@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { readTextDocumentFile } from '@livedoc/text-documents';
 import { expect, expectNoPageErrors, test } from '../fixtures';
 import { libreOfficeConvert } from './libreoffice';
+import { officeMenuItem } from './office-menus';
 
 // A Word file through the room (docs/specs/034-text-documents/live-editing-and-storage.md "The layout",
 // text-document.md "The format it is in"): opened from the File menu it is held in OOXML, shows its formatting and
@@ -23,11 +24,8 @@ test('a Word file opens with its formatting and leaves as the same .docx', async
   await page.goto('/new?kind=text-document');
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
 
-  await page.getByRole('button', { name: 'File' }).click();
-  const [chooser] = await Promise.all([
-    page.waitForEvent('filechooser'),
-    page.getByRole('menuitem', { name: 'Open', exact: true }).click(),
-  ]);
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
   await chooser.setFiles(FILE);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('features');
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
@@ -40,11 +38,8 @@ test('a Word file opens with its formatting and leaves as the same .docx', async
   await page.screenshot({ path: test.info().outputPath('word-file-open.png') });
 
   // Downloaded as the format it is held in: the same model, read by LibreOffice too.
-  await page.getByRole('button', { name: 'File' }).click();
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('menuitem', { name: 'Download as Microsoft Word (.docx)' }).click(),
-  ]);
+  const downloadItem = await officeMenuItem(page, ['File', 'Download', 'Microsoft Word (.docx)']);
+  const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);
   expect(download.suggestedFilename()).toBe('features.docx');
   const saved = test.info().outputPath('features.docx');
   await download.saveAs(saved);

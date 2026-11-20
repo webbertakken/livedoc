@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { Browser, Page } from '@playwright/test';
 import { expect, expectNoPageErrors, pageOwnerHeaders, test } from '../fixtures';
 import { libreOfficeConvert } from './libreoffice';
+import { officeMenuItem } from './office-menus';
 
 // A text document end to end (docs/specs/034-text-documents/text-document.md,
 // live-editing-and-storage.md, files-and-print.md): a new text document, stored in its room, typed into together in
@@ -66,11 +67,12 @@ test('a text document typed together leaves as ODF, survives LibreOffice and com
   await page.screenshot({ path: test.info().outputPath('carets.png') });
 
   // Downloaded as ODF: LibreOffice reads the same words.
-  await page.getByRole('button', { name: 'File' }).click();
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('menuitem', { name: 'Download as OpenDocument (.odt)' }).click(),
+  const downloadItem = await officeMenuItem(page, [
+    'File',
+    'Download',
+    'OpenDocument format (.odt)',
   ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);
   expect(download.suggestedFilename()).toBe('Untitled document.odt');
   const dir = mkdtempSync(join(tmpdir(), 'text-document-'));
   const odt = join(dir, 'Minutes.odt');
@@ -85,11 +87,8 @@ test('a text document typed together leaves as ODF, survives LibreOffice and com
   // Saved again by LibreOffice, then opened here: the same words, in a new text document.
   const resaved = join(dir, 'Minutes from LibreOffice.odt');
   writeFileSync(resaved, libreOfficeConvert(odt, 'odt:writer8'));
-  await page.getByRole('button', { name: 'File' }).click();
-  const [chooser] = await Promise.all([
-    page.waitForEvent('filechooser'),
-    page.getByRole('menuitem', { name: 'Open', exact: true }).click(),
-  ]);
+  const open = await officeMenuItem(page, ['File', 'Open']);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), open.click()]);
   await chooser.setFiles(resaved);
   await page.waitForURL((url) => !url.pathname.includes(id));
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();

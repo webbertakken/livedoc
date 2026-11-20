@@ -1,4 +1,5 @@
 import { expect, expectNoPageErrors, test } from '../fixtures';
+import { officeMenuItem } from './office-menus';
 import { seedOfflineDocuments } from '../offline-seed';
 
 // A text document in This Browser (docs/specs/034-text-documents/live-editing-and-storage.md "A text document in This
@@ -54,11 +55,12 @@ test('a text document in This Browser keeps its writing across a reload and down
   await expect(page.locator(READY)).toBeVisible();
   await expect(page.locator(BODY)).toHaveText('Written with no server.');
 
-  await page.getByRole('button', { name: 'File' }).click();
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.getByRole('menuitem', { name: 'Download as OpenDocument (.odt)' }).click(),
+  const downloadItem = await officeMenuItem(page, [
+    'File',
+    'Download',
+    'OpenDocument format (.odt)',
   ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);
   expect(download.suggestedFilename()).toBe('Kept here.odt');
   expectNoPageErrors(pageErrors);
 });

@@ -464,8 +464,16 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/app/document/[id]/useSlideDeck.ts UI·Changed': { values: PRESENTATION_FIELDS },
   // A text document downloaded in the format it is held in (docs/specs/034-text-documents/text-document.md).
   'apps/live/components/text-document/TextDocumentTitleRow.tsx Document·Exported': {
-    values: ['TextDocumentOdt', 'TextDocumentDocx'],
+    values: ['TextDocumentOdt', 'TextDocumentFodt', 'TextDocumentDocx'],
   },
+  // The office shell's menu bar and tool finder (docs/specs/004-interface-design/office-shell.md "Telemetry"): a menu
+  // opened, by its name, and a tool finder result run, for the kind that asks for them.
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Opened': {
+    values: ['File', 'Edit', 'View', 'Insert', 'Format', 'Tools', 'Extensions', 'Help'].map(
+      (menu) => `TextDocumentMenu${menu}`,
+    ),
+  },
+  'apps/live/components/office/OfficeTitleRow.tsx UI·Used': { values: ['TextDocumentToolFinder'] },
   'apps/live/components/dialogs/settings/settings-catalogue.ts UI·Toggled': {
     values: PRESENTATION_SETTINGS.toggled,
   },
