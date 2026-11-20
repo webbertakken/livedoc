@@ -95,6 +95,25 @@ const caretPlace = (state: EditorState): Place => ({
   marks: state.storedMarks ?? state.selection.$from.marks(),
 });
 
+/**
+ * The formatting of the text at the caret, or where the selection starts: each property its own over what its styles
+ * give, undefined where neither sets it (text-and-paragraphs.md "Update to match").
+ */
+export function textPropsAtCaret(state: EditorState, formatting: TextFormatting): TextProps {
+  const { $from, empty } = state.selection;
+  const place: Place = empty
+    ? caretPlace(state)
+    : { paragraph: $from.parent, marks: $from.nodeAfter?.marks ?? $from.marks() };
+  const inherited = inheritedAt(formatting, place);
+  const out: Record<string, unknown> = {};
+  for (const property of Object.keys(TEXT_PROPERTY_MARK_OF) as TextProperty[]) {
+    const own = markValue(place.marks, markTypeOf(state, property));
+    const value = own !== undefined ? own : inherited[property];
+    if (value !== undefined) out[property] = value;
+  }
+  return out;
+}
+
 /** The distinct values a property has over the selection, or at the caret when nothing is selected. */
 export function textValuesOf(
   state: EditorState,

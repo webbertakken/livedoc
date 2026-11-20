@@ -1,7 +1,7 @@
 // The page each person was last on, per tab (docs/specs/007-editor/pages-mode.md "Back to
 // the page you were on"): kept in this browser, so coming back to a tab of pages (switching tabs,
-// a reload) frames that page rather than the first. Not a synced preference: those are capped at
-// 4 KB, and tab ids would fill it. The most recent tabs are kept, the oldest dropped past
+// a reload) frames that page rather than the first. Not a synced preference: those are capped
+// (PREFERENCES_BODY_MAX), and tab ids would fill it. The most recent tabs are kept, the oldest dropped past
 // LAST_PAGE_MAX.
 import type { LaidOutPage } from '@livedoc/document';
 import { readLocalStorageSafe, safeJson, writeLocalStorageSafe } from '@/lib/local-storage-safe';

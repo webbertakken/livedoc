@@ -10,7 +10,11 @@ import {
   type OfficeItem,
   type OfficeMenu,
 } from '@/lib/office/office-catalogue';
-import { PARAGRAPH_STYLE_ITEMS, paragraphStyleShortcut } from './text-document-paragraph-styles';
+import {
+  PARAGRAPH_STYLE_ITEMS,
+  paragraphStyleEntries,
+  STYLE_OPTIONS,
+} from './text-document-paragraph-styles';
 
 type ItemOptions = Partial<
   Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status'>
@@ -231,16 +235,13 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
           item('title-case', 'Title Case', 'edit', BUILT),
         ]),
       ]),
+      // Each style a submenu holding Apply and Update to match, as Google's (text-and-paragraphs.md).
       submenu('paragraph-styles', 'Paragraph styles', [
         ...PARAGRAPH_STYLE_ITEMS.map((style) =>
-          item(style.item, style.label, 'edit', { ...paragraphStyleShortcut(style), ...BUILT }),
+          submenu(`${style.item}-menu`, style.label, paragraphStyleEntries(style)),
         ),
         SEPARATOR,
-        submenu('style-options', 'Options', [
-          item('save-default-styles', 'Save as my default styles', 'edit'),
-          item('use-default-styles', 'Use my default styles', 'edit'),
-          item('reset-styles', 'Reset styles', 'edit'),
-        ]),
+        STYLE_OPTIONS,
       ]),
       submenu('align-and-indent', 'Align & indent', [
         item('align-left', 'Left', 'edit', { shortcut: 'left-align' }),

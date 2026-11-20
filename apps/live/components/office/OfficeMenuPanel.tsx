@@ -126,6 +126,9 @@ function SubmenuRow({
   // Opened by a hover it leaves focus where it is; by a press or a key it takes focus to its first item.
   const [open, setOpen] = useState<MenuInitialFocus | null>(null);
   const [trigger, setTrigger] = useState<HTMLElement | null>(null);
+  // A choice with a submenu (office-shell.md "Toolbar"): a press runs its choice; a key opens its submenu.
+  const choice = entry.run ? actions[entry.run] : undefined;
+  const current = entry.checkable !== undefined && choice?.checked === true;
   return (
     <div className="relative" onPointerLeave={() => setOpen(null)}>
       <button
@@ -135,13 +138,25 @@ function SubmenuRow({
         tabIndex={-1}
         aria-haspopup="menu"
         aria-expanded={open !== null}
+        // A menu item with a submenu takes no check in ARIA; the choice at the caret is its current one.
+        aria-current={current || undefined}
         data-office-submenu={entry.id}
         className={ROW}
         onPointerEnter={() => setOpen((o) => o ?? 'none')}
-        onClick={() => setOpen('first')}
+        onClick={(e) => {
+          // A pointer's press has a click count; Enter and Space, which useMenu clicks with, have none.
+          if (choice && e.detail > 0) {
+            onDone();
+            choice.run();
+            return;
+          }
+          setOpen('first');
+        }}
       >
-        <Check on={false} />
-        <span className="flex-1 whitespace-nowrap">{entry.label}</span>
+        <Check on={current} />
+        <span className="flex-1 whitespace-nowrap" style={entry.faceStyle}>
+          {entry.label}
+        </span>
         <span aria-hidden="true" className="text-(--office-icon)">
           <ChevronRightIcon size={16} />
         </span>
@@ -211,9 +226,13 @@ export function OfficeMenuPanel({
     element.style.left = `${left}px`;
     element.style.top = `${top}px`;
   }, [placement, at]);
+  // A long popup scrolls (a font menu); one holding submenus never does, so they are never cut off.
+  const scrolls = !entries.some((entry) => entry.kind === 'submenu');
   const where =
     placement === 'popup'
-      ? 'relative max-h-[70vh] overflow-y-auto'
+      ? scrolls
+        ? 'relative max-h-[70vh] overflow-y-auto'
+        : 'relative'
       : placement === 'point'
         ? 'fixed'
         : placement === 'below'

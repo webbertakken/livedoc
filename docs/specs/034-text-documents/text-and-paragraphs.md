@@ -1,6 +1,7 @@
 # Text and paragraphs
 
-**Status: partly built.** Text formatting, colour and applying paragraph styles are built; the rest is specified.
+**Status: partly built.** Text formatting, colour, paragraph styles and default styles are built; the rest is
+specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -105,18 +106,58 @@ picker has no second grid). **Reset** (text) and **None** (highlight) lead each 
   document's set (default).
 - **The Styles control** shows the style of the paragraph at the caret, blank when the selection spans several. Its
   menu lists the nine styles, each drawn in its weight and slant at its size held between 13 and 22 px (default),
-  checked when it is the style at the caret, then Options.
+  checked when it is the style at the caret, then Options. A press on a style's row applies it; hovering the row, or
+  Right, Enter or Space on it, opens its submenu: **Apply '<style>'** and **Update '<style>' to match**, as Google's.
+- **Format > Paragraph styles** lists the nine styles, each a submenu holding the same two items (Apply carries its
+  shortcut), then Options; no row is checked there, as in Google's Format menu.
 - ⌘⌥0 applies Normal text, ⌘⌥1 to ⌘⌥6 the headings.
-- Share roles: an Editor applies styles; a Participant and a Viewer see neither the Styles control nor the items.
-- **Update to match**: Styles > a style > "Update '<style>' to match" sets the style from the paragraph at the caret,
-  re-styling every paragraph of that style.
+- Share roles: an Editor applies and updates styles; a Participant and a Viewer see neither the Styles control nor
+  the items.
 - A paragraph's own formatting over its style is kept as direct formatting (ODF automatic style, OOXML direct
   properties).
 
+### A style's look
+
+- A style's **look** is the formatting it draws its paragraphs in, through its parents and the defaults: font, size,
+  bold, italic, underline, strikethrough, small caps, case and colour; alignment, indents, line spacing, space before
+  and after, keep with next, keep lines together and prevent single lines.
+- A highlight and superscript or subscript are never part of a look: they stay the text's own (default).
+- A property the look leaves unset reads as its plain value: black, left aligned, no indent or space, single line
+  spacing, each toggle off (default).
+- A heading's outline level is not part of its look: updating or resetting a style never changes it.
+
+### Update to match
+
+- **Update '<style>' to match** sets the style's look from the text at the caret (where the selection starts) and its
+  paragraph: the text's formatting through its styles and its own, and the paragraph's own alignment, indents and
+  spacing over its style's.
+- Every paragraph of that style redraws in its new look at once; their own formatting stays over it.
+- The paragraph at the caret takes the style (default), and draws wholly in it: its text's and its own formatting of
+  the look's properties is dropped (default).
+- **Every other style keeps its look** (default): a style built on the updated one (each heading is built on Normal
+  text) holds what it drew before, so updating Normal text changes no heading, as Google's styles stand alone.
+- A style the document lacks is first added from a new document's set, as applying does.
+- It is one undo step with the paragraph's change, and returns focus to the writing.
+
 ## Default styles
 
-Styles > Options: **Save as my default styles** (stored with the person's account, or in this browser for a guest);
-**Use my default styles** (applies them to this document); **Reset styles** (back to Google's defaults).
+Styles > Options and Format > Paragraph styles > Options hold three items, as Google's:
+
+- **Save as my default styles** keeps the nine styles' looks in this document as the person's **default styles**, in
+  their [preferences](../007-editor/user-preferences.md): with their account when signed in, else with this browser's
+  guest identity (default). Only what differs from Google's defaults is kept (default), so an unchanged set keeps
+  nothing.
+- **Use my default styles** sets this document's nine styles to the person's default styles (Google's defaults for a
+  look not saved), every other style keeping its look; one undo step.
+- **Reset styles** sets this document's nine styles to Google's defaults, the same way; one undo step.
+- **A new text document starts in its maker's default styles**: when the person who made it first opens it, its
+  styles are set to their default styles before anything is typed (default), never as an undo step. A file opened
+  as a text document keeps its own styles; someone else's new document keeps its maker's.
+- Default styles with all nine looks changed fit the preferences' cap with room for every other key.
+- Share roles: Use and Reset change the document, so an Editor only; Save changes only the person's own preferences,
+  yet sits with the others where an Editor sees them (default).
+- A saved set that does not read back as looks (a cache from elsewhere) is ignored whole and logged
+  `[text-document] default styles unreadable`; Use then applies Google's defaults.
 
 ## Alignment and indents
 
@@ -172,8 +213,10 @@ Tools > Preferences, per person (account or browser), each on by default as Goog
 
 `Element · Changed · TextDocumentFormat<Name>` (Bold, Italic, Underline, Strikethrough, Superscript, Subscript,
 SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight; from toolbar, menu or shortcut),
-`TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut), `TextDocumentStyleUpdated`, `TextDocumentPaintFormat`, `TextDocumentPaste` (with the
-source: Document, Html, Markdown, Plain). Never text.
+`TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut), `TextDocumentStyleUpdated` (update to match),
+`TextDocumentStylesUsed` (Use my default styles), `TextDocumentStylesReset`, `TextDocumentPaintFormat`,
+`TextDocumentPaste` (with the source: Document, Html, Markdown, Plain); `UI · Changed · TextDocumentDefaultStyles`
+(Save as my default styles). Never text.
 
 ## Limits
 

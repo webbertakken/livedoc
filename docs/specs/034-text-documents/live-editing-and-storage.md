@@ -64,7 +64,9 @@ while a hide-cursors vote is open.
 ## Undo
 
 Undo and redo take back the person's own changes only, newest first (`UndoManager` tracking the local origin), with
-the caret put back; typing within `TEXT_DOCUMENT_UNDO_GROUP_MS` (500 ms) is one step, as Google groups it.
+the caret put back; typing within `TEXT_DOCUMENT_UNDO_GROUP_MS` (500 ms) is one step, as Google groups it. A change to
+the document's styles (update to match, use or reset styles) is on the same timeline, one step with the paragraphs it
+changes ([Text and paragraphs](text-and-paragraphs.md#update-to-match)).
 
 ## Storage
 

@@ -1,5 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { PREFERENCES_BODY_MAX } from '@livedoc/api-schema';
+import { DefaultStyles, Styles } from '@livedoc/text-documents';
 import { cpuNowMs } from '@livedoc/vitest-config/cpu-time';
 
 vi.mock('./api/preferences', () => ({
@@ -11,7 +13,6 @@ import { apiGetPreferences, apiPutPreferences } from './api/preferences';
 import {
   __resetPreferencesSync,
   fitPreferences,
-  PREFERENCES_BODY_MAX,
   PREFERENCES_UNSYNCED_KEY,
   preferencesBodyLength,
   savePreferences,
@@ -34,7 +35,7 @@ const mockedPut = vi.mocked(apiPutPreferences);
 const uuid = (i: number) => `00000000-0000-4000-8000-${String(i).padStart(12, '0')}`;
 
 // A full account, as measured: 60 hidden documents, a busy shape history and the usual flags
-// came to 4,967 characters, past the api's cap, after which every save was refused.
+// came to 4,967 characters.
 function fullAccount(): UserPreferences {
   const kinds = [
     'rectangle',
@@ -97,6 +98,37 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+// Every property of all nine looks changed, in the longest font name a saved set takes.
+function largestDefaultStyles(): Record<string, unknown> {
+  const styles = Styles.builtIn('odf').map((style) => ({
+    ...style,
+    text: {
+      font: 'P'.repeat(100),
+      size: 72.5,
+      bold: true,
+      italic: true,
+      underline: true,
+      strike: true,
+      smallCaps: true,
+      transform: 'capitalize' as const,
+      color: '#123456',
+    },
+    paragraph: {
+      align: 'justify' as const,
+      indentStart: 123.25,
+      indentEnd: 123.25,
+      indentFirst: -36.75,
+      spaceBefore: 1234.5,
+      spaceAfter: 1234.5,
+      lineHeight: { rule: 'atLeast' as const, pt: 123.5 },
+      keepWithNext: false,
+      keepTogether: true,
+      widowControl: false,
+    },
+  }));
+  return DefaultStyles.of(styles, Styles.defaults());
+}
+
 describe('fitPreferences', () => {
   it('leaves a blob that fits as it is', () => {
     const prefs = { tourSeen: true };
@@ -105,8 +137,16 @@ describe('fitPreferences', () => {
 
   it('trims the oldest hidden ids, then the oldest shape picks, until it fits', () => {
     const full = fullAccount();
-    // Pad the rest so the hidden list alone cannot make room.
-    const prefs = { ...full, customSwatches: Array.from({ length: 280 }, () => '#abcdef') };
+    // Pad the rest so the hidden list alone cannot make room, and half the shape picks can.
+    const length = preferencesBodyLength({ ...full, customSwatches: [] });
+    const hidden =
+      preferencesBodyLength(full) - preferencesBodyLength({ ...full, recentExcludedIds: [] });
+    const picks =
+      preferencesBodyLength(full) - preferencesBodyLength({ ...full, whiteboardShapePicks: {} });
+    const swatches = Math.ceil(
+      (PREFERENCES_BODY_MAX - length + hidden + picks / 2) / '"#abcdef",'.length,
+    );
+    const prefs = { ...full, customSwatches: Array.from({ length: swatches }, () => '#abcdef') };
     expect(preferencesBodyLength(prefs)).toBeGreaterThan(PREFERENCES_BODY_MAX);
     const fitted = fitPreferences(prefs);
     expect(preferencesBodyLength(fitted)).toBeLessThanOrEqual(PREFERENCES_BODY_MAX);
@@ -116,19 +156,15 @@ describe('fitPreferences', () => {
     const all = Object.values(full.whiteboardShapePicks ?? {}).map((p) => p![1]);
     expect(left.length).toBeLessThan(all.length);
     expect(Math.min(...left)).toBeGreaterThan(Math.max(...all.filter((t) => !left.includes(t))));
-    expect(fitted.customSwatches).toHaveLength(280);
+    expect(fitted.customSwatches).toHaveLength(swatches);
   });
 
-  it('fits the measured full account by dropping only its oldest hidden ids', () => {
-    const prefs = fullAccount();
-    // Within a few characters of the 4,967 measured.
-    expect(preferencesBodyLength(prefs)).toBeGreaterThan(4900);
-    const fitted = fitPreferences(prefs);
-    expect(preferencesBodyLength(fitted)).toBeLessThanOrEqual(PREFERENCES_BODY_MAX);
-    const kept = fitted.recentExcludedIds ?? [];
-    expect(kept.length).toBeGreaterThan(0);
-    expect(kept).toEqual(prefs.recentExcludedIds!.slice(0, kept.length));
-    expect(fitted.whiteboardShapePicks).toEqual(prefs.whiteboardShapePicks);
+  it('keeps the measured full account whole beside the largest default styles (text-and-paragraphs.md)', () => {
+    const prefs = { ...fullAccount(), textDocumentDefaultStyles: largestDefaultStyles() };
+    // Within a few characters of the 4,967 measured, plus the largest set of default styles.
+    expect(preferencesBodyLength(fullAccount())).toBeGreaterThan(4900);
+    expect(JSON.stringify(prefs.textDocumentDefaultStyles).length).toBeGreaterThan(4400);
+    expect(fitPreferences(prefs)).toBe(prefs);
   });
 
   it('stays fast on the largest blob it can be handed', () => {

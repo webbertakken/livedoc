@@ -14,6 +14,7 @@ import { textDocumentEditorActions } from './text-document-editor-actions';
 import { TEXT_DOCUMENT_FORMAT_ITEMS } from './text-document-format-actions';
 import {
   PARAGRAPH_STYLE_ITEMS,
+  STYLE_OPTIONS,
   textDocumentParagraphStyleActions,
 } from './text-document-paragraph-styles';
 import { textDocumentMenus } from './text-document-menus';
@@ -40,8 +41,9 @@ describe('the text document menus', () => {
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,
-        // Format > Paragraph styles (text-document-paragraph-styles), bound by the surface.
-        ...PARAGRAPH_STYLE_ITEMS.map((s) => s.item),
+        // Format > Paragraph styles and its Options (text-document-paragraph-styles), bound by the surface.
+        ...PARAGRAPH_STYLE_ITEMS.flatMap((s) => [s.item, s.update]),
+        ...STYLE_OPTIONS.entries.flatMap((e) => (e.kind === 'item' ? [e.id] : [])),
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
@@ -88,8 +90,14 @@ function Harness({ view }: { view: EditorView | null }) {
         level="edit"
         actions={{
           ...textDocumentEditorActions(view, { canEdit: true }),
-          ...textDocumentParagraphStyleActions(view, readBlank, () => {}, 'odf', { canEdit: true })
-            .actions,
+          ...textDocumentParagraphStyleActions({
+            view,
+            readFormatting: readBlank,
+            styles: { add: () => {}, set: () => {} },
+            defaultStyles: { read: () => ({}), save: () => {} },
+            format: 'odf',
+            canEdit: true,
+          }).actions,
         }}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
         keyScope={root}

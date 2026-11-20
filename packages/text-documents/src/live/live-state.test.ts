@@ -113,6 +113,36 @@ describe('the live layout', () => {
     expect(TextDocumentState.styles(held, 'odf')).toEqual(blank.styles.slice(0, 2));
   });
 
+  // text-and-paragraphs.md "Update to match", "Default styles": styles set, the format's set first while it stands.
+  it('sets styles by id, writing the format set first while the state holds none', () => {
+    const blank = TextDocument.blank({ format: 'ooxml' });
+    const state = TextDocumentState.load();
+    const h1 = { ...blank.styles[3]!, text: { size: 30 } };
+    const origins: unknown[] = [];
+    state.on('afterTransaction', (tr: Y.Transaction) => origins.push(tr.origin));
+    TextDocumentState.setStyles(state, 'ooxml', [h1], 'restyle');
+    expect(TextDocumentState.styles(state, 'ooxml')).toEqual(
+      blank.styles.map((s) => (s.id === h1.id ? h1 : s)),
+    );
+    expect(origins).toEqual(['restyle']);
+    const quote = {
+      id: 'Quote',
+      name: 'Quote',
+      family: 'paragraph' as const,
+      paragraph: {},
+      text: {},
+    };
+    TextDocumentState.setStyles(state, 'ooxml', [quote]);
+    expect(TextDocumentState.styles(state, 'ooxml').at(-1)).toEqual(quote);
+    expect(TextDocumentState.stylesType(state).size).toBe(blank.styles.length + 1);
+  });
+
+  it('sets no styles for an empty change, leaving the format set standing', () => {
+    const state = TextDocumentState.load();
+    TextDocumentState.setStyles(state, 'odf', []);
+    expect(TextDocumentState.stylesType(state).size).toBe(0);
+  });
+
   it('reads the style defaults alone, the format defaults while the state holds none', () => {
     const blank = TextDocument.blank({ format: 'odf' });
     expect(TextDocumentState.defaults(TextDocumentState.load(), 'odf')).toEqual(blank.defaults);

@@ -29,6 +29,7 @@ import { textDocumentEditorActions } from '@/lib/text-document/text-document-edi
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
 import { useTextDocumentParagraphStyles } from '@/lib/text-document/useTextDocumentParagraphStyles';
+import { startInDefaultStyles } from '@/lib/text-document/text-document-default-styles';
 import {
   TEXT_DOCUMENT_LIMIT_NOTICES,
   textDocumentLimitPlugin,
@@ -212,6 +213,8 @@ export function TextDocumentSurface({
           doc.destroy();
           return;
         }
+        // A text document just made here starts in its maker's default styles (text-and-paragraphs.md).
+        startInDefaultStyles(doc, { tabId, format: live.current.format, canEdit: gate.canEdit });
         const view = new EditorView(mount.current, {
           state: EditorState.create({
             schema: textDocumentSchema,
@@ -290,7 +293,13 @@ export function TextDocumentSurface({
   // A family from Google Fonts that the text names loads from there (fonts.md "Substitution").
   useGoogleDocumentFonts(editorView, liveDoc, format, changes.subscribe);
   // Format > Paragraph styles and the Styles control, the paragraphs drawn in their styles.
-  const paragraphStyles = useTextDocumentParagraphStyles(editorView, liveDoc, format, writes);
+  const paragraphStyles = useTextDocumentParagraphStyles(
+    editorView,
+    liveDoc,
+    format,
+    writes,
+    ownerId,
+  );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({

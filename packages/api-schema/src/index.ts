@@ -670,6 +670,7 @@ export * from './activity';
 export * from './responses';
 export * from './trash';
 export { upgradeLegacyPreferences } from './legacy-preferences';
+export { PREFERENCES_BODY_MAX } from './preferences-body';
 export * from './drive';
 export * from './profile-picture';
 // A document's own dates on create (docs/specs/015-api/api.md "Document dates"): the worker's
