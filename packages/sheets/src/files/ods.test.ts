@@ -48,6 +48,11 @@ describe('writeFlatOds', () => {
     const { data, losses } = writeFlatOds(file, 'Budget');
     expect(losses).toEqual([]);
     const lines = data.split('\n');
+    // Its formulas compare as Google's do, so another suite works them out the same.
+    expect(lines).toContain(
+      '<table:calculation-settings table:case-sensitive="false" table:search-criteria-must-apply-to-whole-cell="true" ' +
+        'table:use-regular-expressions="false" table:use-wildcards="true"/>',
+    );
     expect(lines[0]).toBe('<?xml version="1.0" encoding="UTF-8"?>');
     expect(lines).toContain(
       '<table:table-cell table:formula="of:=[.A1]*2" office:value-type="float" office:value="4"><text:p>4</text:p></table:table-cell>',
@@ -113,6 +118,54 @@ describe('readOds', () => {
     );
     expect((await sheetsOf(encode(writeFlatOds(file, 'B').data))).file).toEqual(back);
     expect((await sheetsOf(writeOds(file, 'B').data)).file).toEqual(back);
+  });
+
+  // standard-mapping.md "Array and spilled formulas": an array formula keeps the block it fills.
+  it('writes and reads the block an array formula fills', async () => {
+    const matrix: WorkbookFile = {
+      sheets: [
+        {
+          name: 'S',
+          rows: 2,
+          cols: 2,
+          cells: [{ r: 0, c: 0, formula: '=SEQUENCE(2,2)', spans: { rows: 2, cols: 2 } }],
+        },
+      ],
+    };
+    const written = writeFlatOds(matrix, 'M').data;
+    expect(written).toContain(
+      'table:number-matrix-columns-spanned="2" table:number-matrix-rows-spanned="2"',
+    );
+    const read = await sheetsOf(encode(written));
+    expect(read.file.sheets[0]!.cells).toEqual([
+      { r: 0, c: 0, formula: '=SEQUENCE(2,2)', spans: { rows: 2, cols: 2 } },
+    ]);
+    // A span of one cell, or one that is not a whole number, is no block.
+    const odd = await sheetsOf(
+      flat(
+        '<table:table table:name="S"><table:table-row>' +
+          '<table:table-cell table:formula="of:=1" table:number-matrix-rows-spanned="1" table:number-matrix-columns-spanned="1"/>' +
+          '<table:table-cell table:formula="of:=1" table:number-matrix-rows-spanned="x"/></table:table-row></table:table>',
+      ),
+    );
+    expect(odd.file.sheets[0]!.cells.map((c) => c.spans)).toEqual([undefined, undefined]);
+  });
+
+  // standard-mapping.md: a formula's value as the file cached it, LibreOffice's errors too.
+  it('reads the errors LibreOffice caches, its own texts as text', async () => {
+    const cell = (shown: string) =>
+      `<table:table-cell table:formula="of:=1" office:value-type="string" office:string-value="" ` +
+      `calcext:value-type="error"><text:p>${shown}</text:p></table:table-cell>`;
+    const read = await sheetsOf(
+      flat(
+        `<table:table table:name="S" xmlns:calcext="${ODF_NS.calcext}"><table:table-row>` +
+          `${cell('#DIV/0!')}${cell('Err:502')}</table:table-row></table:table>`,
+      ),
+    );
+    expect(read.file.sheets[0]!.cells.map((c) => c.value)).toEqual([
+      { k: 'e', v: '#DIV/0!' },
+      { k: 's', v: 'Err:502' },
+    ]);
   });
 
   it('unfolds repeats, groups and covered cells, and sizes the sheet by what it holds', async () => {

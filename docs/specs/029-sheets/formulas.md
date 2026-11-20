@@ -805,9 +805,21 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 ## The oracle
 
 - Each function is measured against an **oracle corpus**: OpenFormula's own test cases, values LibreOffice
-  calculates headless from the same inputs, and the cached values in files downloaded from Google Sheets.
-- Where the corpus' authorities disagree, the function's **Authority** above names which the test holds to.
-- CI runs the corpus on every change to the engine; a function reads **built** only while its cases pass.
+  calculates headless from the same inputs, and the values Google Sheets gives the same workbook.
+- The corpus is **cases by category** (the catalogue's categories, and `Syntax` for the language itself): each case
+  a formula over its category's fixture, and the rows and columns its answer fills (one cell unless it spills).
+- **Answers** are kept per source beside the cases, made by a script from the source itself, never typed by hand:
+  LibreOffice's by converting the category's workbook headless with every formula worked out afresh; Google's by
+  the same workbook opened in Google Sheets and downloaded again. An answer a source documents (OpenFormula's own
+  test cases, Google's help pages) may be written in its case instead, citing where.
+- A case holds to the answer of its function's **Authority** above; until Google's answer is in, a Google case holds
+  to LibreOffice's and is counted as provisional (default).
+- Where two sources answer differently, the case names the difference and why; an unnamed difference fails.
+- Numbers agree to one part in a billion (a case may loosen it to one in a million, saying why); text and booleans
+  exactly; errors by their code, never their wording.
+- The corpus runs in `en-US`, in UTC, at a fixed now (default); volatile functions are held by their own tests.
+- CI runs the corpus on every change, with no LibreOffice needed; a function reads **built** only while its cases pass,
+  and every function the engine knows has at least one case.
 
 ## Recalculation
 

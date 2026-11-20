@@ -71,6 +71,11 @@ function cellXml(cell: FileCell, sheet: string, losses: FileLoss[]): string {
     losses.push({ k: 'formula_unwritten', sheet, r: cell.r, c: cell.c });
   const attrs = [
     ...(formula ? [`table:formula="${escapeXmlAttribute(formula)}"`] : []),
+    ...(formula && cell.spans
+      ? [
+          `table:number-matrix-columns-spanned="${cell.spans.cols}" table:number-matrix-rows-spanned="${cell.spans.rows}"`,
+        ]
+      : []),
     ...(cell.value ? [valueAttributes(cell.value)] : []),
   ];
   const body = cell.value ? paragraphs(shownText(cell.value)) : '';
@@ -138,10 +143,18 @@ function tableXml(sheet: FileSheet, losses: FileLoss[]): string[] {
   return lines;
 }
 
+// How the file's formulas compare and match: as Google's do, text ignoring case, criteria with `*` and `?` over the
+// whole cell, no regular expressions (formulas.md "Functions"), so another suite works them out to the same values.
+const CALCULATION_SETTINGS =
+  '<table:calculation-settings table:case-sensitive="false" ' +
+  'table:search-criteria-must-apply-to-whole-cell="true" table:use-regular-expressions="false" ' +
+  'table:use-wildcards="true"/>';
+
 function bodyXml(file: WorkbookFile, losses: FileLoss[]): string[] {
   return [
     '<office:body>',
     '<office:spreadsheet>',
+    CALCULATION_SETTINGS,
     ...file.sheets.flatMap((sheet) => tableXml(sheet, losses)),
     '</office:spreadsheet>',
     '</office:body>',

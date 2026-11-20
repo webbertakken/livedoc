@@ -1,0 +1,46 @@
+{
+  "category": "Info",
+  "data": [
+    [1, "text", true],
+    [null, "", false],
+    [3.5, "12", 0]
+  ],
+  "cases": [
+    { "id": "ISBLANK.1", "f": "=ISBLANK(Data!A2)" },
+    { "id": "ISBLANK.2", "f": "=ISBLANK(Data!A1)" },
+    { "id": "ISBLANK.3", "f": "=ISBLANK(\"\")" },
+    { "id": "ISNUMBER.1", "f": "=ISNUMBER(Data!A3)" },
+    { "id": "ISNUMBER.2", "f": "=ISNUMBER(Data!B3)" },
+    { "id": "ISTEXT.1", "f": "=ISTEXT(Data!B1)" },
+    { "id": "ISTEXT.2", "f": "=ISTEXT(Data!A1)" },
+    { "id": "ISLOGICAL.1", "f": "=ISLOGICAL(Data!C2)" },
+    { "id": "ISLOGICAL.2", "f": "=ISLOGICAL(Data!C3)" },
+    { "id": "ISERROR.1", "f": "=ISERROR(1/0)" },
+    { "id": "ISERROR.2", "f": "=ISERROR(NA())" },
+    { "id": "ISERROR.3", "f": "=ISERROR(1)" },
+    { "id": "ISNA.1", "f": "=ISNA(NA())" },
+    { "id": "ISNA.2", "f": "=ISNA(1/0)" },
+    { "id": "ISFORMULA.1", "f": "=ISFORMULA(B1)" },
+    { "id": "ISFORMULA.2", "f": "=ISFORMULA(A1)" },
+    { "id": "ERROR.TYPE.1", "f": "=ERROR.TYPE(1/0)" },
+    { "id": "ERROR.TYPE.2", "f": "=ERROR.TYPE(NA())" },
+    { "id": "ERROR.TYPE.3", "f": "=ERROR.TYPE(\"a\"+1)" },
+    {
+      "id": "ERROR.TYPE.4",
+      "f": "=ERROR.TYPE(SQRT(-1))",
+      "expect": [[6]],
+      "cite": "https://support.google.com/docs/answer/3093577 (SQRT of a negative is #NUM!), https://support.google.com/docs/answer/3238305 (#NUM! is 6)",
+      "differs": { "libreoffice": "SQRT(-1) is its Err:502, which ERROR.TYPE does not number" }
+    },
+    { "id": "ERROR.TYPE.5", "f": "=ERROR.TYPE(5)" },
+    { "id": "NA.1", "f": "=NA()" },
+    { "id": "N.1", "f": "=N(Data!A3)" },
+    { "id": "N.2", "f": "=N(Data!B1)" },
+    { "id": "N.3", "f": "=N(Data!C1)" },
+    { "id": "TYPE.1", "f": "=TYPE(Data!A1)" },
+    { "id": "TYPE.2", "f": "=TYPE(Data!B1)" },
+    { "id": "TYPE.3", "f": "=TYPE(Data!C1)" },
+    { "id": "TYPE.4", "f": "=TYPE(1/0)" },
+    { "id": "TYPE.5", "f": "=TYPE({1,2})" }
+  ]
+}

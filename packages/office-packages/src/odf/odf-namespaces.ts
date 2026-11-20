@@ -13,6 +13,8 @@ export const ODF_NS = {
   manifest: 'urn:oasis:names:tc:opendocument:xmlns:manifest:1.0',
   // OpenFormula (ODF 1.4 part 4): a spreadsheet's `table:formula` names it by its prefix, so a file declares it.
   of: 'urn:oasis:names:tc:opendocument:xmlns:of:1.2',
+  // LibreOffice's extension: `calcext:value-type="error"` marks a formula's cached error, read, never written.
+  calcext: 'urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0',
 } as const;
 
 /** The ODF version every file LiveDoc writes declares. */

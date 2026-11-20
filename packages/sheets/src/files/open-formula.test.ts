@@ -46,7 +46,8 @@ describe('fromOpenFormula', () => {
     ['of:=SUM([.2:.3])', '=SUM(2:3)'],
     ['of:=IF(TRUE(); "a;b"; FALSE( ))', '=IF(TRUE, "a;b", FALSE)'],
     ['of:={1; 2| 3; 4}', '={1, 2; 3, 4}'],
-    ['of:=COM.MICROSOFT.IFS([.A1]; 1)', '=COM.MICROSOFT.IFS(A1, 1)'],
+    // A name the file writes its own way reads as Google's (odf-function-names.ts).
+    ['of:=COM.MICROSOFT.IFS([.A1]; 1)', '=IFS(A1, 1)'],
     ['=[.A1]+1', '=A1+1'],
   ])('reads %s as %s', (written, typed) => {
     expect(fromOpenFormula(written)).toBe(typed);

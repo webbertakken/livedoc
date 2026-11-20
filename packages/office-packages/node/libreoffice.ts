@@ -1,5 +1,6 @@
-// LibreOffice, headless, for the office specs (docs/specs/020-import-export/office-packages.md "Validation"): a file
-// LiveDoc wrote is opened and saved again by another suite. Each call has its own profile, so specs run in parallel.
+// LibreOffice, headless, for the office specs (docs/specs/020-import-export/office-packages.md "Validation") and the
+// sheets oracle (docs/specs/029-sheets/formulas.md "The oracle"): a file LiveDoc wrote is opened and saved again by
+// another suite. Node only, never shipped. Each call has its own profile, so callers run in parallel.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

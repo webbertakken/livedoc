@@ -8,6 +8,7 @@ import { refsOf } from '../formula/ast';
 import { parseFormula } from '../formula/parse';
 import { quoteSheet } from '../formula/stored';
 import { tokenize, type Token } from '../formula/tokens';
+import { googleFunctionName, odfFunctionName } from './odf-function-names';
 
 /** The namespace prefix OpenFormula's formulas carry in `table:formula`. */
 export const OPEN_FORMULA_PREFIX = 'of:';
@@ -83,6 +84,8 @@ export function toOpenFormula(formula: string): string | null {
     )
       // OpenFormula has no boolean literal: TRUE() and FALSE() are its functions.
       out += `${tok.v}()`;
+    else if (tok.k === 'ident' && nextSolid(tokens, i + 1)?.k === 'lparen')
+      out += odfFunctionName(tok.v);
     else out += formula.slice(tok.start, tok.end);
   }
   return out;
@@ -194,7 +197,7 @@ export function fromOpenFormula(formula: string): string | null {
         out += word;
         i += word.length - 1 + /^\(\s*\)/.exec(after)![0].length;
       } else {
-        out += word;
+        out += /^\s*\(/.test(after) ? googleFunctionName(word) : word;
         i += word.length - 1;
       }
     } else out += ch;

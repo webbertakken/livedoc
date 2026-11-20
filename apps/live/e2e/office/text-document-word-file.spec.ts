@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readTextDocumentFile } from '@livedoc/text-documents';
 import { expect, expectNoPageErrors, test } from '../fixtures';
-import { libreOfficeConvert } from './libreoffice';
+import { libreOfficeConvert } from '@livedoc/office-packages/libreoffice';
 import { officeMenuItem } from './office-menus';
 
 // A Word file through the room (docs/specs/034-text-documents/live-editing-and-storage.md "The layout",
