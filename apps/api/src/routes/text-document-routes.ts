@@ -9,7 +9,7 @@ import {
   type TextDocumentFileType,
 } from '@livedoc/text-documents';
 import { getDocumentMeta } from '../db';
-import { downloadFileName } from '../files/download-file-name';
+import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, json } from '../responses';
 import {
   readTextDocumentState,

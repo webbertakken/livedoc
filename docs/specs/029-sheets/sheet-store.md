@@ -212,6 +212,8 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   cells, and the new layout if it changed.
 - A client that sees a gap in a sheet's revs, or reconnects, fetches that sheet again.
 - A spreadsheet that reconnects opens its workbook again by viewport, and a sheet deleted while it was away leaves it.
+- In a spreadsheet, the sheet bar shows who else is on each sheet: a dot in each person's colour, three at most and
+  the rest counted (default), each tab named with them for a screen reader ("Costs, also here: Ann").
 - Nothing a browser sends over the room changes a sheet: sheets change only through the api. Presence on a sheet
   (`sheet-presence`) is ephemeral and never stored.
 
@@ -243,6 +245,7 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   offline**, **Sync to cloud** and a copy carry the row, so a spreadsheet stays one wherever it goes.
 - An offline spreadsheet holds every rule of the api's: its sheets are its tabs', in tab order, named and limited as
   one workbook, and a sheet renamed renames its tab; it loads whole, from this browser.
+- An offline spreadsheet downloads as the same file the api writes, written in this browser.
 
 ## Copies and exports
 

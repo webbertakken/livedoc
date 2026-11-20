@@ -63,6 +63,13 @@ export class SheetPresence {
     return [...this.peers].filter(([, p]) => p.sheetId === sheetId && p.tabId === tabId);
   }
 
+  // Who is on which tab: each peer with a selection, by the tab of the sheet it is on (the sheet bar's faces).
+  byTab(): Map<string, string[]> {
+    const out = new Map<string, string[]>();
+    for (const [from, p] of this.peers) out.set(p.tabId, [...(out.get(p.tabId) ?? []), from]);
+    return out;
+  }
+
   // Say this person's selection (null: none), at most every PRESENCE_THROTTLE_MS, the last one always sent.
   say(op: SheetPresenceOp): void {
     const key = JSON.stringify([op.sheetId, op.ranges, op.editing]);

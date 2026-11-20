@@ -46,6 +46,25 @@ describe('hearing peers', () => {
   });
 });
 
+// docs/specs/029-sheets/sheet-store.md "Changing the workbook" (box 8, presence): the sheet bar shows who is on which
+// sheet.
+describe('who is on which sheet', () => {
+  it('groups the peers with a selection by the tab they are on', () => {
+    const p = new SheetPresence();
+    p.receive('ann', op('sheetA', [range('r1')]));
+    p.receive('bob', { ...op('sheetB', [range('r2')]), tabId: 't2' });
+    p.receive('cy', op('sheetA', [range('r3')]));
+    expect(p.byTab()).toEqual(
+      new Map([
+        ['t1', ['ann', 'cy']],
+        ['t2', ['bob']],
+      ]),
+    );
+    p.receive('bob', { ...op('sheetB', null), tabId: 't2' });
+    expect(p.byTab().has('t2')).toBe(false);
+  });
+});
+
 describe('saying this person selection', () => {
   let p: SheetPresence;
   let sent: SheetPresenceOp[];

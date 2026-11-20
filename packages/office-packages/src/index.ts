@@ -98,3 +98,4 @@ export {
   type Relationship,
   type Relationships,
 } from './ooxml/ooxml-package';
+export { downloadFileName } from './file-name';
