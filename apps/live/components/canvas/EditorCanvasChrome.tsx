@@ -37,7 +37,7 @@ export function EditorCanvasChrome({
     contextMenu,
     boardSceneInsert,
     isReadOnly,
-    drag,
+    dragStore,
     esBoard,
     activeTab,
     canvasTool,
@@ -66,7 +66,7 @@ export function EditorCanvasChrome({
         {isMinimalChrome(userPreferences) ? null : (
           <ModifierHint
             readOnly={isReadOnly}
-            drag={drag}
+            dragStore={dragStore}
             esBoard={esBoard}
             elements={activeTab.elements}
             hasElements={activeTab.elements.length > 0}

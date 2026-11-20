@@ -1,4 +1,4 @@
-import type { Dispatch, PointerEvent as ReactPointerEvent, RefObject, SetStateAction } from 'react';
+import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
 import {
   angledCornerPoints,
   angledElbow,
@@ -19,7 +19,7 @@ import type { EditorDragDeps } from './useEditorDrag.types';
 
 type ArrowDragHandlerDeps = {
   depsRef: RefObject<EditorDragDeps>;
-  setDrag: Dispatch<SetStateAction<DragState | null>>;
+  setDrag: (next: DragState | null) => void;
   checkpointPendingRef: RefObject<boolean>;
   arrowConnectTrackedRef: RefObject<boolean>;
 };

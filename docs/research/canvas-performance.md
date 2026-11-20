@@ -434,6 +434,23 @@ calibrated 2x), interleaved against main at `3d45f65d0`, both builds served at o
   `DOMWindow.onpointerup`) and `renderStart` give an untraced split of script and rendering; the
   Event Timing entries' `processingEnd - processingStart` give each handler's time.
 
+## A press, without the editor
+
+Measured 2026-11-20 on the reference board, local, throttled 3x, interleaved against main at
+`6ec9d216e`, both builds served at once; the pointer handler's time in ms, six runs, two rounds.
+
+- **The cause**: pressing an element set the drag in hand as the editor's state, and letting go
+  cleared it, so a click rendered the editor root twice and React checked every element view for
+  readers each time (the context check was 45% of a press's React work). A drag's release rendered it
+  twice: once for the change and once for the drag ending.
+- **What shipped**: the drag lives in a store (`dragStore`); the modifier hint and the canvas host
+  (for a reshaped arrow's id alone) read it, and the gesture's listeners are set up and torn down as
+  it changes. A change made inside a listener waits for the listener to return, as it did when the
+  change was a render away.
+- **What it took**: a drag's press 21-23 to 11-12 and its release 35-39 to 24-28; a select's press
+  18-20 to 10-13 and its release 10-17 to 0-1. A stroke (a pen, no drag) did not change. The select
+  row's longest task at 3x went from 50-52 to under 50 in eleven of twelve runs.
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.
