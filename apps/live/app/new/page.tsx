@@ -298,15 +298,12 @@ export default function NewDocumentPage() {
     setSubmitting(true);
     // A `?q=` preset becomes the search in the new document's start panel (start-query.ts).
     handStartQuery(presetQuery);
-    // A text document (`?kind=text-document`) is stored on LiveDoc: This Browser does not hold its live state yet
-    // (docs/specs/034-text-documents/live-editing-and-storage.md "Offline").
+    // A text document (`?kind=text-document`) and a spreadsheet (`?kind=spreadsheet`) go where any document goes
+    // (docs/specs/034-text-documents/live-editing-and-storage.md "Offline", docs/specs/029-sheets/sheet-store.md
+    // "Offline documents").
     const textDocument = wizardBypassTabKind(window.location.search) === 'text-document';
-    // A spreadsheet (`?kind=spreadsheet`) goes where any document goes (docs/specs/029-sheets/sheet-store.md "Offline
-    // documents").
     const spreadsheet = wizardBypassTabKind(window.location.search) === 'spreadsheet';
-    const settings: NewDocumentSettings = textDocument
-      ? { ...asked, saveLocation: 'livedoc' }
-      : asked;
+    const settings: NewDocumentSettings = asked;
     // Save location (docs/specs/006-document/save-locations.md): only This Browser takes the offline branch.
     const offline = isOfflineLocation(settings.saveLocation);
     const { documentId, tabId } = createIdsFor(retrying);

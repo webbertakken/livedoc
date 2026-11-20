@@ -7,6 +7,7 @@
 import dynamic from 'next/dynamic';
 import { textDocumentFormatOf, type Tab } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
+import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
 
 const TextDocumentSurface = dynamic(
   () => import('./TextDocumentSurface').then((m) => m.TextDocumentSurface),
@@ -16,10 +17,14 @@ const TextDocumentSurface = dynamic(
 export function TextDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly?: boolean }) {
   const ctx = useEditorContext();
   const { documentId, selfParticipant, sessionShareCode, roomRef, can, documentName } = ctx;
+  // A text document in This Browser has no room (live-editing-and-storage.md "A text document in This Browser"); a
+  // sync or a Take Offline in place mounts the surface afresh on its new home.
+  const local = useIsOfflineDocument(documentId);
   if (!documentId) return null;
   return (
     <TextDocumentSurface
-      key={tab.id}
+      key={`${tab.id}:${local ? 'local' : 'room'}`}
+      local={local}
       scope={{
         ownerId: selfParticipant.id,
         documentId,

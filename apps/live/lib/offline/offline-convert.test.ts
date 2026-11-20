@@ -62,6 +62,9 @@ vi.mock('../api/sheets', () => ({
   fetchCloudSheets: vi.fn(async () => []),
   sheetAsCreate: (s: unknown) => s,
 }));
+vi.mock('../api/text-documents', () => ({
+  apiLoadTextDocumentState: vi.fn(async () => Uint8Array.of(7, 7)),
+}));
 vi.mock('./offline-images', () => ({
   embedTabImages: vi.fn(async (tabs: unknown) => tabs),
   uploadEmbeddedImages: vi.fn(async (_owner: string, tabs: unknown) => ({
@@ -103,6 +106,7 @@ const items = await import('../api/items');
 const sheets = await import('../api/sheets');
 const store = await import('./offline-store');
 const tagsApi = await import('@/lib/api/tags');
+const textDocuments = await import('../api/text-documents');
 const {
   ConversionInProgressError,
   conversionInProgress,
@@ -189,6 +193,20 @@ describe('saveOfflineToCloud (offline -> cloud)', () => {
     } as never);
     await saveOfflineToCloud('d1', 'owner');
     expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({ workbook });
+  });
+
+  // docs/specs/034-text-documents/live-editing-and-storage.md "A text document in This Browser".
+  it("carries each text document's state with the create", async () => {
+    vi.mocked(store.offlineGetRecord).mockResolvedValueOnce({
+      id: 'd1',
+      name: 'Notes',
+      tabs: [],
+      textDocuments: [{ tabId: 't1', state: Uint8Array.of(1, 2, 3), savedAt: 5 }],
+    } as never);
+    await saveOfflineToCloud('d1', 'owner');
+    expect(vi.mocked(apiClient.apiCreateDocument).mock.calls[0]![1]).toMatchObject({
+      textDocuments: [{ tabId: 't1', state: 'AQID' }],
+    });
   });
 
   it.each(['folder_not_found', 'folder_scope_mismatch'])(
@@ -333,6 +351,32 @@ describe('takeCloudOffline (cloud -> offline)', () => {
     } as never);
     await takeCloudOffline('d1', 'owner');
     expect(vi.mocked(store.offlinePutRecord).mock.calls[0]![0]).toMatchObject({ workbook });
+  });
+
+  // docs/specs/034-text-documents/live-editing-and-storage.md "A text document in This Browser".
+  it("reads every text document's state onto the record, or takes nothing offline", async () => {
+    vi.mocked(apiClient.apiLoadTab).mockResolvedValueOnce({
+      id: 't1',
+      name: 'Notes',
+      kind: 'text-document',
+      elements: [],
+    } as never);
+    await takeCloudOffline('d1', 'owner');
+    expect(vi.mocked(store.offlinePutRecord).mock.calls[0]![0]).toMatchObject({
+      textDocuments: [{ tabId: 't1', state: Uint8Array.of(7, 7) }],
+    });
+    vi.clearAllMocks();
+    calls.length = 0;
+    vi.mocked(apiClient.apiLoadTab).mockResolvedValueOnce({
+      id: 't1',
+      name: 'Notes',
+      kind: 'text-document',
+      elements: [],
+    } as never);
+    vi.mocked(textDocuments.apiLoadTextDocumentState).mockRejectedValueOnce(new Error('down'));
+    await expect(takeCloudOffline('d1', 'owner')).rejects.toThrow('down');
+    expect(calls).not.toContain('offlinePutRecord');
+    expect(calls).not.toContain('apiDelete');
   });
 
   it('keeps a starred document starred on the offline record', async () => {

@@ -122,7 +122,12 @@ export async function duplicateDocument(
         },
         Date.now(),
       );
-      if (itemStore?.items.length || src.itemTypes || sheets.length) {
+      // Each text document's state under its tab's new id (docs/specs/034-text-documents/
+      // live-editing-and-storage.md "A text document in This Browser").
+      const textDocuments = ((await offlineGetRecord(sourceId))?.textDocuments ?? [])
+        .filter((t) => tabIdMap.has(t.tabId))
+        .map((t) => ({ ...t, tabId: tabIdMap.get(t.tabId)! }));
+      if (itemStore?.items.length || src.itemTypes || sheets.length || textDocuments.length) {
         const rec = await offlineGetRecord(newId);
         if (rec) {
           await offlinePutRecord({
@@ -137,6 +142,7 @@ export async function duplicateDocument(
             // The type catalogue comes with it (docs/specs/026-plan/item-types.md).
             ...(src.itemTypes ? { itemTypes: src.itemTypes } : {}),
             ...(sheets.length ? { sheets } : {}),
+            ...(textDocuments.length ? { textDocuments } : {}),
           });
         }
       }

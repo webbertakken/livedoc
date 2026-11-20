@@ -14,7 +14,7 @@
 import type { SheetJson, WorkbookRecord } from '@livedoc/sheets';
 import type { LiveDoc, DocumentSummary, RecordedIntent, TabSummary } from '@livedoc/api-schema';
 import { utcDay } from '@livedoc/api-schema';
-import { drawnCount, migrateStoredTab, stampTabKind } from '@livedoc/document';
+import { drawnCount, migrateStoredTab, stampTabKind, tabKindOf } from '@livedoc/document';
 import type { Tab } from '@livedoc/document';
 import {
   legacyCatalogue,
@@ -85,7 +85,12 @@ export type OfflineDocumentRecord = {
   // The workbook row when the document is a spreadsheet (docs/specs/029-sheets/sheet-store.md "Offline documents"):
   // its file format and settings. Absent for any other document.
   workbook?: WorkbookRecord;
+  // Each text document tab's whole live state and when it was saved (docs/specs/034-text-documents/
+  // live-editing-and-storage.md "A text document in This Browser"). Optional: a tab without one reads as the seed.
+  textDocuments?: OfflineTextDocumentState[];
 };
+
+export type OfflineTextDocumentState = { tabId: string; state: Uint8Array; savedAt: number };
 
 // A local document's opens, counted like the server's (docs/specs/013-workspace/explorer-home.md
 // "Opens"): the UTC days (`YYYY-MM-DD`, newest first) with an open inside the 90-day use window,
@@ -150,6 +155,16 @@ export function recordToDocument(rec: OfflineDocumentRecord): LiveDoc {
   };
 }
 
+// Whether the first tab shows nothing: a canvas with nothing drawn, or a text document whose writing was never saved
+// (docs/specs/034-text-documents/live-editing-and-storage.md "A text document in This Browser"), told without
+// reading its state.
+function firstTabEmpty(rec: OfflineDocumentRecord): boolean {
+  const first = rec.tabs[0];
+  if (first && tabKindOf(first) === 'text-document')
+    return !rec.textDocuments?.some((t) => t.tabId === first.id);
+  return drawnCount(first ?? {}) === 0;
+}
+
 // Project a record into a list row (drops tab bodies).
 export function recordToSummary(rec: OfflineDocumentRecord): DocumentSummary {
   return {
@@ -164,7 +179,7 @@ export function recordToSummary(rec: OfflineDocumentRecord): DocumentSummary {
     ...UNKNOWN_INTENT,
     savedAt: rec.savedAt,
     createdAt: rec.createdAt,
-    empty: drawnCount(rec.tabs[0] ?? {}) === 0,
+    empty: firstTabEmpty(rec),
     stats: offlineDocumentStats(rec),
   };
 }
