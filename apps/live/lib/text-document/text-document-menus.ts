@@ -374,6 +374,6 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
     { id: 'restart-numbering', contextual: true },
     { id: 'continue-numbering', contextual: true },
     SEPARATOR,
-    item('select-all-matching-text', 'Select all matching text', 'edit'),
+    item('select-all-matching-text', 'Select all matching text', 'view', BUILT),
   ]);
 }

@@ -175,13 +175,13 @@ describe('the context menu', () => {
     expect(item('Delete').getAttribute('aria-disabled')).toBe('true');
   });
 
-  it('shows a Viewer only what a Viewer may do: Copy', () => {
+  it('shows a Viewer only what a Viewer may do: Copy, and Select all matching text', () => {
     render(<Surface level="view" />);
     rightClick(screen.getByRole('textbox'));
     expect(
       within(menu()!)
         .getAllByRole('menuitem')
         .map((i) => i.textContent?.replace('Coming soon', '')),
-    ).toEqual(['CopyCtrl+C']);
+    ).toEqual(['CopyCtrl+C', 'Select all matching text']);
   });
 });

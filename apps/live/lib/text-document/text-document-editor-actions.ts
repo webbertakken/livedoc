@@ -6,6 +6,7 @@ import { deleteSelection, selectAll } from 'prosemirror-commands';
 import type { EditorView } from 'prosemirror-view';
 import { redo, undo } from 'y-prosemirror';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
+import { SELECT_MATCHING_ITEM, selectMatching } from './text-document-stretches';
 
 export function textDocumentEditorActions(
   view: EditorView | null,
@@ -31,5 +32,7 @@ export function textDocumentEditorActions(
         }
       : {}),
     'select-all': { run: run((v) => selectAll(v.state, v.dispatch)) },
+    // Every stretch formatted as the text at the caret (text-and-paragraphs.md "Selection").
+    [SELECT_MATCHING_ITEM]: { run: run((v) => selectMatching(v.state, v.dispatch)) },
   };
 }

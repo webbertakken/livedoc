@@ -30,6 +30,7 @@ import {
 } from './text-document-paste-html';
 import { textDocumentSchema } from './text-document-schema';
 import { startUndoStep } from './text-document-undo';
+import { lastStretch, StretchSelection } from './text-document-stretches';
 
 /** What a paste read: a fragment, HTML or plain text. */
 export type PasteSource = 'Document' | 'Html' | 'Plain';
@@ -226,9 +227,11 @@ export function clipboardPlugin({ read, lists, onLeftOut }: ClipboardOptions): P
             ? slice.content.firstChild
             : null;
         const tr: Transaction = view.state.tr;
+        // Over several stretches, the paste goes to the last alone (text-and-paragraphs.md "Selection").
+        if (tr.selection instanceof StretchSelection) tr.setSelection(lastStretch(tr.selection));
         // Pasted over a paragraph's whole text (or into an empty one), the first paragraph pasted keeps its own style,
         // as Google's paste does; into part of one, the paste joins it.
-        const { $from, $to } = view.state.selection;
+        const { $from, $to } = tr.selection;
         const first = slice.content.firstChild;
         if (
           first?.type.name === 'paragraph' &&

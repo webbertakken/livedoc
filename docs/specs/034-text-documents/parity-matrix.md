@@ -64,14 +64,16 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Edit menu
 
-| Row                      | Rule                                     | Status                                                              | Spec                                                         |
-| ------------------------ | ---------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
-| Undo, Redo               | Personal undo and redo                   | built (`text-document-shortcuts.test.tsx`)                          | [Live editing and storage](live-editing-and-storage.md#undo) |
-| Cut, Copy, Paste         | Clipboard with formatting                | built (`text-document-clipboard.test.ts`, `clipboard.spec.ts`)      | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
-| Paste without formatting | ⌘⇧V, plain text in the surrounding style | built (`text-document-clipboard-text.test.ts`, `clipboard.spec.ts`) | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
-| Select all               | ⌘A, the whole body of the document tab   | built (`text-document-shortcuts.test.tsx`)                          | [Text and paragraphs](text-and-paragraphs.md#selection)      |
-| Delete                   | Removes the selection                    | built (`text-document-shortcuts.test.tsx`)                          | [Text and paragraphs](text-and-paragraphs.md#selection)      |
-| Find and replace         | ⌘H, the dialog                           | specified                                                           | [Tools](tools.md#find-and-replace)                           |
+| Row                      | Rule                                        | Status                                                              | Spec                                                         |
+| ------------------------ | ------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Undo, Redo               | Personal undo and redo                      | built (`text-document-shortcuts.test.tsx`)                          | [Live editing and storage](live-editing-and-storage.md#undo) |
+| Cut, Copy, Paste         | Clipboard with formatting                   | built (`text-document-clipboard.test.ts`, `clipboard.spec.ts`)      | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
+| Paste without formatting | ⌘⇧V, plain text in the surrounding style    | built (`text-document-clipboard-text.test.ts`, `clipboard.spec.ts`) | [Text and paragraphs](text-and-paragraphs.md#clipboard)      |
+| Select all               | ⌘A, the whole body of the document tab      | built (`text-document-shortcuts.test.tsx`)                          | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Several stretches        | Ctrl⌘⇧← / →, ⌘-drag; formatting on all      | built (`text-document-stretches.test.ts`, `stretches.spec.ts`)      | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Select all matching text | Context menu: every stretch formatted alike | built (`text-document-stretches.test.ts`, `stretches.spec.ts`)      | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Delete                   | Removes the selection                       | built (`text-document-shortcuts.test.tsx`)                          | [Text and paragraphs](text-and-paragraphs.md#selection)      |
+| Find and replace         | ⌘H, the dialog                              | specified                                                           | [Tools](tools.md#find-and-replace)                           |
 
 ## View menu
 

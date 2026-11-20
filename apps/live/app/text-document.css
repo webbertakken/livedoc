@@ -343,3 +343,35 @@ div.text-document-kept {
   background: light-dark(#ffffff, #1e1f20);
   font-size: 10px;
 }
+/*
+ * Several stretches selected (text-and-paragraphs.md "Selection"): the browser draws one selection, so while there are
+ * several it draws none and each stretch is drawn in the selection's colour; the caret still to place is a thin line.
+ */
+.text-document-body.ProseMirror-hideselection *::selection,
+.text-document-body.ProseMirror-hideselection::selection {
+  background: transparent;
+}
+.text-document-body.ProseMirror-hideselection {
+  caret-color: transparent;
+}
+.text-document-stretch {
+  background: light-dark(#c3d7f7, #3b5b8c);
+}
+.text-document-stretch-caret {
+  display: inline-block;
+  width: 0;
+  height: 1.1em;
+  margin-right: -1px;
+  border-left: 1.5px solid currentColor;
+  vertical-align: text-bottom;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .text-document-stretch-caret {
+    animation: text-document-stretch-blink 1.06s steps(1) infinite;
+  }
+}
+@keyframes text-document-stretch-blink {
+  50% {
+    border-color: transparent;
+  }
+}

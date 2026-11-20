@@ -17,6 +17,8 @@ const markerText = (marker: ListMarker): string =>
 /** The markers of the top-level nodes a selection's slice holds, as drawn in the whole document. */
 export function selectionMarkers(state: EditorState, lists: Lists): (ListMarker | null)[] {
   const { doc, selection } = state;
+  // Several stretches are copied as their text alone.
+  if (selection.ranges.length > 1) return [];
   const markers = ListMarkers.of(
     doc.children.map((node) => placeOf(node) ?? undefined),
     lists,

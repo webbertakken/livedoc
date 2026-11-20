@@ -2,7 +2,7 @@
 
 **Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
 keep rules, borders and shading, paint format, clear formatting, the Tab key, Shift+Enter, tab stops,
-non-printing characters and the clipboard (but Markdown) are built; the rest is specified.
+non-printing characters, the clipboard (but Markdown) and several stretches are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -28,9 +28,18 @@ Every rule maps to a format construct in [Standard mapping](standard-mapping.md#
 ## Selection
 
 - **Select all** (⌘A) selects the current document tab's body; in a header, footer or footnote, that part's text.
-- **Select multiple sections of text**: Ctrl⌘⇧← / → (Ctrl+Alt+Shift elsewhere) after a first selection, then the
-  arrows to a second; formatting applies to all of them.
-- **Select all matching text** (context menu) selects every stretch with the same formatting.
+- **Select multiple sections of text**: with text selected, Ctrl⌘⇧← or → (Ctrl+Alt+Shift elsewhere) keeps it and
+  puts a second caret a character to that side; the arrows move that caret, Shift with them selects from it, and the
+  keys again keep that stretch too and start another. ⌘-drag (Ctrl-drag elsewhere) adds a stretch with the pointer
+  (default, as Google's).
+- **Several stretches** are drawn in the selection's colour, the caret still to place drawn as a caret. Text and
+  paragraph formatting, paragraph styles, lists and Delete act on all of them; Copy copies them in order, each from a
+  new line. Typing, Enter, Tab and Paste act at the last stretch alone, the others let go (default). Escape keeps the
+  last stretch alone. A collaborator's change keeps the last stretch alone, as the live merge restores one selection.
+- How many stretches are selected is announced politely ("3 stretches selected").
+- **Select all matching text** (context menu) selects every stretch of text with the text formatting at the caret (or
+  where the selection starts) in a paragraph of the same paragraph style (default: a run's own formatting, its text
+  style and the file's own run formatting compared, as Paint format copies them).
 - **Delete** removes the selection.
 
 ## Clipboard
@@ -343,6 +352,7 @@ toolbar, menu or shortcut), `TextDocumentParagraphStyle` (applied, from toolbar,
 `TextDocumentIndent` (a step), `TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`,
 `TextDocumentParagraphSpace` (add or remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`,
 `TextDocumentBordersAndShading`, `TextDocumentTabStop` (added, moved or taken away on the ruler);
+`UI · Used · TextDocumentStretches` (a second stretch selected, by keys or pointer), `TextDocumentSelectMatching`;
 `UI · Changed · TextDocumentDefaultStyles` (Save as my default styles). Never text.
 
 ## Limits

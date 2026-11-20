@@ -824,7 +824,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+Shift+Left or Ctrl+Alt+Shift+Right',
     'Ctrl+⌘+Shift+Left or Ctrl+⌘+Shift+Right',
     'Ctrl+Alt+Shift+Left or Ctrl+Alt+Shift+Right',
-    'specified',
+    'built',
   ),
   // Text selection with the mouse
   row(

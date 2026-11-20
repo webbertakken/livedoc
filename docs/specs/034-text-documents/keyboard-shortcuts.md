@@ -171,7 +171,7 @@ The Accessibility menu shows only while screen reader support is on.
 | Extend selection to the end of the document        | `Ctrl+Shift+End`                              | `⌘+Shift+Down`                            | —                                             | specified                                  |
 | Select current list item                           | `Ctrl+Alt+Shift+E, I`                         | `Ctrl+⌘+Shift+E, I`                       | `Ctrl+Alt+Shift+E, I`                         | specified                                  |
 | Select all list items at current level             | `Ctrl+Alt+Shift+E, O`                         | `Ctrl+⌘+Shift+E, O`                       | `Ctrl+Alt+Shift+E, O`                         | specified                                  |
-| Select multiple sections of text                   | `Ctrl+Alt+Shift+Left or Ctrl+Alt+Shift+Right` | `Ctrl+⌘+Shift+Left or Ctrl+⌘+Shift+Right` | `Ctrl+Alt+Shift+Left or Ctrl+Alt+Shift+Right` | specified                                  |
+| Select multiple sections of text                   | `Ctrl+Alt+Shift+Left or Ctrl+Alt+Shift+Right` | `Ctrl+⌘+Shift+Left or Ctrl+⌘+Shift+Right` | `Ctrl+Alt+Shift+Left or Ctrl+Alt+Shift+Right` | built (`text-document-stretches.test.ts`)  |
 
 ## Text selection with the mouse
 
