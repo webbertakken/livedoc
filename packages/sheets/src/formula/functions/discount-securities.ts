@@ -35,7 +35,8 @@ function discountFn(
 function billDays(settlement: number, maturity: number): number | SheetError {
   if (settlement >= maturity) return err('#NUM!', 'Settlement is before maturity');
   const s = dateFromSerial(settlement);
-  if (maturity > serialFromDate(s.y + 1, s.m, s.d)) return err('#NUM!', 'Maturity is within a year of settlement');
+  if (maturity > serialFromDate(s.y + 1, s.m, s.d))
+    return err('#NUM!', 'Maturity is within a year of settlement');
   return maturity - settlement;
 }
 
@@ -51,7 +52,10 @@ export const DISCOUNT_SECURITY_FUNCTIONS: Record<string, FnDef> = {
   DISC: discountFn(yearFrac, (pr, redemption, t) => (1 - pr / redemption) / t),
   PRICEDISC: discountFn(accrualYears, (discount, redemption, t) => redemption * (1 - discount * t)),
   YIELDDISC: discountFn(yearFrac, (pr, redemption, t) => (redemption / pr - 1) / t),
-  INTRATE: discountFn(accrualYears, (investment, redemption, t) => (redemption / investment - 1) / t),
+  INTRATE: discountFn(
+    accrualYears,
+    (investment, redemption, t) => (redemption / investment - 1) / t,
+  ),
   RECEIVED: discountFn(accrualYears, (investment, discount, t) => investment / (1 - discount * t)),
   TBILLPRICE: billFn((discount, days) => 100 * (1 - (discount * days) / 360)),
   TBILLYIELD: billFn((pr, days) => ((100 - pr) / pr) * (360 / days)),

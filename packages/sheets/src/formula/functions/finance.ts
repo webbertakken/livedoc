@@ -23,7 +23,14 @@ function fv(rate: number, nper: number, payment: number, pv: number, type: numbe
 }
 
 // The interest part of payment `per` (1 to nper): none in the first period when payments come at the beginning.
-function ipmt(rate: number, per: number, nper: number, pv: number, f: number, type: number): number {
+function ipmt(
+  rate: number,
+  per: number,
+  nper: number,
+  pv: number,
+  f: number,
+  type: number,
+): number {
   const payment = pmt(rate, nper, pv, f, type);
   if (per === 1) return type ? 0 : -pv * rate;
   if (type) return (fv(rate, per - 2, payment, pv, 1) - payment) * rate;
@@ -35,9 +42,12 @@ function cumulative(part: 'interest' | 'principal') {
   return numFn(6, 6, ([rate, nper, pv, first, last, type]) => {
     const from = Math.ceil(first!);
     const to = Math.floor(last!);
-    if (rate! <= 0 || nper! <= 0 || pv! <= 0) return err('#NUM!', 'The rate, periods and value are positive');
-    if (from < 1 || to < from || to > nper!) return err('#NUM!', 'The periods run from 1 to the number of periods');
-    if (type !== 0 && type !== 1) return err('#NUM!', 'Payments are at the end (0) or beginning (1)');
+    if (rate! <= 0 || nper! <= 0 || pv! <= 0)
+      return err('#NUM!', 'The rate, periods and value are positive');
+    if (from < 1 || to < from || to > nper!)
+      return err('#NUM!', 'The periods run from 1 to the number of periods');
+    if (type !== 0 && type !== 1)
+      return err('#NUM!', 'Payments are at the end (0) or beginning (1)');
     const payment = pmt(rate!, nper!, pv!, 0, type);
     let sum = 0;
     for (let per = from; per <= to; per++) {
@@ -99,7 +109,8 @@ const ANNUITY_FUNCTIONS: Record<string, FnDef> = {
       : ipmt(rate!, per!, nper!, pv!, f, type ? 1 : 0),
   ),
   PPMT: numFn(4, 6, ([rate, per, nper, pv, f = 0, type = 0]) => {
-    if (per! < 1 || per! > nper!) return err('#NUM!', 'The period is from 1 to the number of periods');
+    if (per! < 1 || per! > nper!)
+      return err('#NUM!', 'The period is from 1 to the number of periods');
     const t = type ? 1 : 0;
     return pmt(rate!, nper!, pv!, f, t) - ipmt(rate!, per!, nper!, pv!, f, t);
   }),
@@ -120,12 +131,14 @@ const ANNUITY_FUNCTIONS: Record<string, FnDef> = {
   ),
   EFFECT: numFn(2, 2, ([nominal, periods]) => {
     const n = Math.trunc(periods!);
-    if (nominal! < 0 || n < 1) return err('#NUM!', 'The rate is not negative and the periods at least 1');
+    if (nominal! < 0 || n < 1)
+      return err('#NUM!', 'The rate is not negative and the periods at least 1');
     return (1 + nominal! / n) ** n - 1;
   }),
   NOMINAL: numFn(2, 2, ([effective, periods]) => {
     const n = Math.trunc(periods!);
-    if (effective! <= 0 || n < 1) return err('#NUM!', 'The rate is positive and the periods at least 1');
+    if (effective! <= 0 || n < 1)
+      return err('#NUM!', 'The rate is positive and the periods at least 1');
     return ((1 + effective!) ** (1 / n) - 1) * n;
   }),
   DOLLARDE: fractionalPrice(true),

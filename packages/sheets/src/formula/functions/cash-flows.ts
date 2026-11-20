@@ -38,7 +38,10 @@ function allNumbers(v: EvalValue, f: Frame): number[] | SheetError {
 const bothSigns = (values: number[]) => values.some((v) => v > 0) && values.some((v) => v < 0);
 
 // The amounts and their dates, paired: the same count, at least two, the dates whole days.
-function datedFlows(args: EvalValue[], f: Frame): { values: number[]; years: number[] } | SheetError {
+function datedFlows(
+  args: EvalValue[],
+  f: Frame,
+): { values: number[]; years: number[] } | SheetError {
   const values = allNumbers(args[0]!, f);
   if (isError(values)) return values;
   const dates = allNumbers(args[1]!, f);
@@ -55,7 +58,8 @@ const xnpv = (rate: number, values: number[], years: number[]) =>
 // XIRR: Newton's method from the guess, then from each rate from -99% up by 1% until one settles.
 function xirr(values: number[], years: number[], guess: number): number | null {
   const value = (r: number) => xnpv(r, values, years);
-  const slope = (r: number) => values.reduce((s, v, i) => s - (years[i]! * v) / (1 + r) ** (years[i]! + 1), 0);
+  const slope = (r: number) =>
+    values.reduce((s, v, i) => s - (years[i]! * v) / (1 + r) ** (years[i]! + 1), 0);
   for (let attempt = 0; attempt < 200; attempt++) {
     let rate = attempt === 0 ? guess : -0.99 + (attempt - 1) * 0.01;
     for (let i = 0; i < 50; i++) {

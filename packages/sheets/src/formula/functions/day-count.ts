@@ -7,14 +7,17 @@ import { err, type SheetError } from '../values';
 type Day = { y: number; m: number; d: number };
 
 export const isLeapYear = (y: number) => (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
-export const daysInMonth = (y: number, m: number) => serialFromDate(y, m + 1, 1) - serialFromDate(y, m, 1);
+export const daysInMonth = (y: number, m: number) =>
+  serialFromDate(y, m + 1, 1) - serialFromDate(y, m, 1);
 export const isLastOfMonth = (p: Day) => p.d === daysInMonth(p.y, p.m);
 const isLastOfFebruary = (p: Day) => p.m === 2 && isLastOfMonth(p);
 
 /** A day count convention argument: 0 to 4, its fraction dropped; any other is `#NUM!`. */
 export function basisOf(n: number): number | SheetError {
   const basis = Math.trunc(n);
-  return basis >= 0 && basis <= 4 ? basis : err('#NUM!', 'The day count convention is 0, 1, 2, 3 or 4');
+  return basis >= 0 && basis <= 4
+    ? basis
+    : err('#NUM!', 'The day count convention is 0, 1, 2, 3 or 4');
 }
 
 /** A coupon frequency argument: 1, 2 or 4 a year, its fraction dropped; any other is `#NUM!`. */
@@ -95,7 +98,8 @@ export function accrualYears(s: number, e: number, basis: number): number {
     case 4: {
       const pe = dateFromSerial(e);
       let days = ((pe.y - ps.y) * 12 + pe.m - ps.m) * 30 + pe.d - ps.d;
-      if (basis === 0 && ps.m === 2 && pe.m !== 2 && ps.y === pe.y) days -= isLeapYear(ps.y) ? 1 : 2;
+      if (basis === 0 && ps.m === 2 && pe.m !== 2 && ps.y === pe.y)
+        days -= isLeapYear(ps.y) ? 1 : 2;
       return days / 360;
     }
     case 1:

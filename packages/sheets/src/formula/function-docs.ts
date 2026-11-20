@@ -561,7 +561,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     '=EPOCHTODATE(1655906710)',
   ),
   YEARFRAC: D('start, end, [basis]', 'The share of a year between two dates', '=YEARFRAC(A2, B2)'),
-  DAYS360: D('start, end, [method]', 'The days between two dates in a 360-day year', '=DAYS360(A2, B2)'),
+  DAYS360: D(
+    'start, end, [method]',
+    'The days between two dates in a 360-day year',
+    '=DAYS360(A2, B2)',
+  ),
   // Arrays
   FILTER: D(
     'range, condition1, [condition2, …]',
@@ -740,24 +744,56 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'The rate an investment needs to grow to a value',
     '=RRI(10, 1000, 2000)',
   ),
-  EFFECT: D('nominal_rate, periods_per_year', 'The effective annual rate of a nominal rate', '=EFFECT(5%, 12)'),
-  NOMINAL: D('effective_rate, periods_per_year', 'The nominal annual rate of an effective rate', '=NOMINAL(5.1%, 12)'),
+  EFFECT: D(
+    'nominal_rate, periods_per_year',
+    'The effective annual rate of a nominal rate',
+    '=EFFECT(5%, 12)',
+  ),
+  NOMINAL: D(
+    'effective_rate, periods_per_year',
+    'The nominal annual rate of an effective rate',
+    '=NOMINAL(5.1%, 12)',
+  ),
   DOLLARDE: D(
     'fractional_price, unit',
     'A price written in fractions (100.01 for 100 1/8) as a decimal',
     '=DOLLARDE(100.01, 8)',
   ),
-  DOLLARFR: D('decimal_price, unit', 'A decimal price written in fractions', '=DOLLARFR(100.125, 8)'),
+  DOLLARFR: D(
+    'decimal_price, unit',
+    'A decimal price written in fractions',
+    '=DOLLARFR(100.125, 8)',
+  ),
   MIRR: D(
     'values, finance_rate, reinvest_rate',
     'The modified internal rate of return of cash flows',
     '=MIRR(B2:B6, 10%, 12%)',
   ),
-  XNPV: D('rate, values, dates', 'The net present value of cash flows on their dates', '=XNPV(8%, B2:B6, A2:A6)'),
-  XIRR: D('values, dates, [guess]', 'The internal rate of return of cash flows on their dates', '=XIRR(B2:B6, A2:A6)'),
-  FVSCHEDULE: D('principal, rates', 'A principal compounded by a series of rates', '=FVSCHEDULE(1000, B2:B6)'),
-  SLN: D('cost, salvage, life', 'Straight-line depreciation for one period', '=SLN(30000, 7500, 10)'),
-  SYD: D('cost, salvage, life, period', "Sum-of-years' digits depreciation for a period", '=SYD(30000, 7500, 10, 1)'),
+  XNPV: D(
+    'rate, values, dates',
+    'The net present value of cash flows on their dates',
+    '=XNPV(8%, B2:B6, A2:A6)',
+  ),
+  XIRR: D(
+    'values, dates, [guess]',
+    'The internal rate of return of cash flows on their dates',
+    '=XIRR(B2:B6, A2:A6)',
+  ),
+  FVSCHEDULE: D(
+    'principal, rates',
+    'A principal compounded by a series of rates',
+    '=FVSCHEDULE(1000, B2:B6)',
+  ),
+  SLN: D(
+    'cost, salvage, life',
+    'Straight-line depreciation for one period',
+    '=SLN(30000, 7500, 10)',
+  ),
+  SYD: D(
+    'cost, salvage, life, period',
+    "Sum-of-years' digits depreciation for a period",
+    '=SYD(30000, 7500, 10, 1)',
+  ),
   DB: D(
     'cost, salvage, life, period, [months]',
     'Fixed declining balance depreciation for a period',
@@ -873,9 +909,21 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'What a fully invested security pays at maturity',
     '=RECEIVED(A2, B2, 1000, 5%)',
   ),
-  TBILLPRICE: D('settlement, maturity, discount', 'The price of a treasury bill', '=TBILLPRICE(A2, B2, 9%)'),
-  TBILLYIELD: D('settlement, maturity, price', 'The yield of a treasury bill', '=TBILLYIELD(A2, B2, 98.45)'),
-  TBILLEQ: D('settlement, maturity, discount', "A treasury bill's bond-equivalent yield", '=TBILLEQ(A2, B2, 9%)'),
+  TBILLPRICE: D(
+    'settlement, maturity, discount',
+    'The price of a treasury bill',
+    '=TBILLPRICE(A2, B2, 9%)',
+  ),
+  TBILLYIELD: D(
+    'settlement, maturity, price',
+    'The yield of a treasury bill',
+    '=TBILLYIELD(A2, B2, 98.45)',
+  ),
+  TBILLEQ: D(
+    'settlement, maturity, discount',
+    "A treasury bill's bond-equivalent yield",
+    '=TBILLEQ(A2, B2, 9%)',
+  ),
   // Engineering
   BIN2OCT: D(
     'signed_binary_number, [significant_digits]',

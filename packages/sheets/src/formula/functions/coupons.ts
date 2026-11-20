@@ -46,7 +46,14 @@ export function couponsOf(
   const start = dateFromSerial(settlement);
   let months = Math.floor(((end.y - start.y) * 12 + end.m - start.m) / step) * step;
   while (back(months) > settlement) months += step;
-  return { settlement, frequency, basis, previous: back(months), next: back(months - step), count: months / step };
+  return {
+    settlement,
+    frequency,
+    basis,
+    previous: back(months),
+    next: back(months - step),
+    count: months / step,
+  };
 }
 
 /** The days of the coupon period settlement falls in. */

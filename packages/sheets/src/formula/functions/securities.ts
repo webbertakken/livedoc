@@ -14,7 +14,8 @@ function price(c: Coupons, rate: number, yld: number, redemption: number): numbe
   const days = couponDays(c);
   const toNext = daysToCoupon(c) / days;
   const coupon = (100 * rate) / f;
-  let value = redemption / (1 + yld / f) ** (c.count - 1 + toNext) - (coupon * daysFromCoupon(c)) / days;
+  let value =
+    redemption / (1 + yld / f) ** (c.count - 1 + toNext) - (coupon * daysFromCoupon(c)) / days;
   for (let k = 0; k < c.count; k++) value += coupon / (1 + yld / f) ** (k + toNext);
   return value;
 }
@@ -47,20 +48,34 @@ function durationFn(modified: boolean): FnDef {
 }
 
 export const SECURITY_FUNCTIONS: Record<string, FnDef> = {
-  PRICE: financeFn(6, 7, [0, 1], ([settlement, maturity, rate, yld, redemption, frequency, basis = 0]) => {
-    if (rate! < 0 || yld! < 0 || redemption! <= 0)
-      return err('#NUM!', 'The rate and yield are not negative, and the redemption is positive');
-    const c = couponsOf(settlement!, maturity!, frequency!, basis);
-    return isError(c) ? c : price(c, rate!, yld!, redemption!);
-  }),
-  YIELD: financeFn(6, 7, [0, 1], ([settlement, maturity, rate, pr, redemption, frequency, basis = 0]) => {
-    if (rate! < 0 || pr! <= 0 || redemption! <= 0)
-      return err('#NUM!', 'The rate is not negative, and the price and redemption are positive');
-    const c = couponsOf(settlement!, maturity!, frequency!, basis);
-    if (isError(c)) return c;
-    const y = bisectFalling((x) => price(c, rate!, x, redemption!) - pr!, -c.frequency * 0.999, 1);
-    return y ?? err('#NUM!', 'YIELD did not settle');
-  }),
+  PRICE: financeFn(
+    6,
+    7,
+    [0, 1],
+    ([settlement, maturity, rate, yld, redemption, frequency, basis = 0]) => {
+      if (rate! < 0 || yld! < 0 || redemption! <= 0)
+        return err('#NUM!', 'The rate and yield are not negative, and the redemption is positive');
+      const c = couponsOf(settlement!, maturity!, frequency!, basis);
+      return isError(c) ? c : price(c, rate!, yld!, redemption!);
+    },
+  ),
+  YIELD: financeFn(
+    6,
+    7,
+    [0, 1],
+    ([settlement, maturity, rate, pr, redemption, frequency, basis = 0]) => {
+      if (rate! < 0 || pr! <= 0 || redemption! <= 0)
+        return err('#NUM!', 'The rate is not negative, and the price and redemption are positive');
+      const c = couponsOf(settlement!, maturity!, frequency!, basis);
+      if (isError(c)) return c;
+      const y = bisectFalling(
+        (x) => price(c, rate!, x, redemption!) - pr!,
+        -c.frequency * 0.999,
+        1,
+      );
+      return y ?? err('#NUM!', 'YIELD did not settle');
+    },
+  ),
   DURATION: durationFn(false),
   MDURATION: durationFn(true),
   ACCRINT: financeFn(6, 8, [0, 1, 2], ([issue, , settlement, rate, par, frequency, b = 0]) => {
@@ -88,18 +103,24 @@ export const SECURITY_FUNCTIONS: Record<string, FnDef> = {
     const issueToSettlement = yearFrac(issue!, settlement!, basis);
     const settlementToMaturity = yearFrac(settlement!, maturity!, basis);
     return (
-      100 * ((1 + issueToMaturity * rate!) / (1 + settlementToMaturity * yld!) - issueToSettlement * rate!)
+      100 *
+      ((1 + issueToMaturity * rate!) / (1 + settlementToMaturity * yld!) -
+        issueToSettlement * rate!)
     );
   }),
   YIELDMAT: financeFn(5, 6, [0, 1, 2], ([settlement, maturity, issue, rate, pr, b = 0]) => {
     const basis = basisOf(b);
     if (isError(basis)) return basis;
-    if (rate! < 0 || pr! <= 0) return err('#NUM!', 'The rate is not negative and the price positive');
+    if (rate! < 0 || pr! <= 0)
+      return err('#NUM!', 'The rate is not negative and the price positive');
     if (settlement! >= maturity! || settlement! < issue!)
       return err('#NUM!', 'Settlement is from issue to before maturity');
     const issueToMaturity = yearFrac(issue!, maturity!, basis);
     const issueToSettlement = yearFrac(issue!, settlement!, basis);
     const settlementToMaturity = yearFrac(settlement!, maturity!, basis);
-    return ((1 + issueToMaturity * rate!) / (pr! / 100 + issueToSettlement * rate!) - 1) / settlementToMaturity;
+    return (
+      ((1 + issueToMaturity * rate!) / (pr! / 100 + issueToSettlement * rate!) - 1) /
+      settlementToMaturity
+    );
   }),
 };

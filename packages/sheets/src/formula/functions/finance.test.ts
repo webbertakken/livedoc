@@ -25,11 +25,15 @@ describe('the finance functions', () => {
   });
 
   it('refuses a coupon bond whose settlement is not before maturity', () => {
-    expect(errorOf('=PRICE(DATE(2018,2,15), DATE(2017,11,15), 0.0575, 0.065, 100, 2)')).toBe('#NUM!');
+    expect(errorOf('=PRICE(DATE(2018,2,15), DATE(2017,11,15), 0.0575, 0.065, 100, 2)')).toBe(
+      '#NUM!',
+    );
   });
 
   it('gives #NUM! for a price no yield reaches', () => {
-    expect(errorOf('=YIELD(DATE(2008,2,15), DATE(2016,11,15), 0.0575, 1E300, 100, 2)')).toBe('#NUM!');
+    expect(errorOf('=YIELD(DATE(2008,2,15), DATE(2016,11,15), 0.0575, 1E300, 100, 2)')).toBe(
+      '#NUM!',
+    );
   });
 
   it('passes an argument error on', () => {

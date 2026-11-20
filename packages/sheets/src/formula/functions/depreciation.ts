@@ -70,16 +70,25 @@ function vdb(
     return sum;
   }
   // A fraction of a period at either end is taken off the whole periods around it.
-  const valueAfter = (periods: number) => cost - switchingSum(cost, salvage, life, life, periods, factor);
+  const valueAfter = (periods: number) =>
+    cost - switchingSum(cost, salvage, life, life, periods, factor);
   let part = 0;
   if (start !== firstWhole)
     part +=
-      (start - firstWhole) * switchingSum(valueAfter(firstWhole), salvage, life, life - firstWhole, 1, factor);
+      (start - firstWhole) *
+      switchingSum(valueAfter(firstWhole), salvage, life, life - firstWhole, 1, factor);
   if (end !== lastWhole)
     part +=
       (lastWhole - end) *
       switchingSum(valueAfter(lastWhole - 1), salvage, life, life - (lastWhole - 1), 1, factor);
-  const whole = switchingSum(valueAfter(firstWhole), salvage, life, life - firstWhole, lastWhole - firstWhole, factor);
+  const whole = switchingSum(
+    valueAfter(firstWhole),
+    salvage,
+    life,
+    life - firstWhole,
+    lastWhole - firstWhole,
+    factor,
+  );
   return whole - part;
 }
 
@@ -101,8 +110,11 @@ export const DEPRECIATION_FUNCTIONS: Record<string, FnDef> = {
   SLN: numFn(3, 3, ([cost, salvage, life]) =>
     life === 0 ? err('#DIV/0!', 'The life is not 0') : (cost! - salvage!) / life!,
   ),
-  SYD: numFn(4, 4, ([cost, salvage, life, period]) =>
-    ((cost! - salvage!) * (life! - period! + 1) * 2) / (life! * (life! + 1)),
+  SYD: numFn(
+    4,
+    4,
+    ([cost, salvage, life, period]) =>
+      ((cost! - salvage!) * (life! - period! + 1) * 2) / (life! * (life! + 1)),
   ),
   DDB: numFn(4, 5, ([cost, salvage, life, period, factor = 2]) =>
     cost! < 0 || salvage! < 0 || factor <= 0 || salvage! > cost! || period! < 1 || period! > life!
@@ -127,8 +139,18 @@ export const DEPRECIATION_FUNCTIONS: Record<string, FnDef> = {
   AMORLINC: financeFn(6, 7, [1, 2], ([cost, bought, firstEnd, salvage, period, rate, b = 0]) => {
     const basis = basisOf(b);
     if (isError(basis)) return basis;
-    if (bought! > firstEnd! || rate! <= 0 || salvage! > cost! || cost! <= 0 || salvage! < 0 || period! < 0)
-      return err('#NUM!', 'The purchase is before the first period ends, and the rate and cost are positive');
+    if (
+      bought! > firstEnd! ||
+      rate! <= 0 ||
+      salvage! > cost! ||
+      cost! <= 0 ||
+      salvage! < 0 ||
+      period! < 0
+    )
+      return err(
+        '#NUM!',
+        'The purchase is before the first period ends, and the rate and cost are positive',
+      );
     const per = period! > 0 && period! < 1 ? 1 : Math.floor(period!);
     const full = cost! * rate!;
     const first = yearFrac(bought!, firstEnd!, basis) * full;
