@@ -293,6 +293,9 @@ export type UserPreferences = {
   // A text document's default styles (docs/specs/034-text-documents/text-and-paragraphs.md "Default styles"): per style
   // role, what its look holds that Google's defaults do not. Read through DefaultStyles.parse; never trimmed.
   textDocumentDefaultStyles?: Record<string, unknown>;
+  // A text document's typing aids (docs/specs/034-text-documents/text-and-paragraphs.md "Typing aids"): only what
+  // differs from Google's. Read through TypingAids.parse.
+  textDocumentTypingAids?: Record<string, unknown>;
 };
 
 // How many excluded ids we keep. A document id is a 36-char UUID, so 200

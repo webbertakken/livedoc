@@ -325,7 +325,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('compare-documents', 'Compare documents', 'edit'),
       SEPARATOR,
       item('notification-settings', 'Notification settings', 'participate'),
-      item('preferences', 'Preferences', 'edit', { keywords: ['autocorrect', 'substitutions'] }),
+      item('preferences', 'Preferences', 'edit', {
+        keywords: ['autocorrect', 'substitutions'],
+        status: 'built',
+      }),
       item('accessibility', 'Accessibility', 'view', { keywords: ['screen reader', 'braille'] }),
     ]),
     menu('extensions', 'Extensions', [

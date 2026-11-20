@@ -55,8 +55,17 @@ File > Language: the document's language, used for spelling, hyphenation and sma
 
 ## Preferences
 
-Tools > Preferences: **General** (the typing aids of [Text and paragraphs](text-and-paragraphs.md#typing-aids), ruler
-units) and **Substitutions**. Per person.
+Tools > Preferences: an office dialog titled **Preferences** with two tabs, **General** and **Substitutions**, and
+Cancel and OK; nothing changes until OK. Per person, kept with their account, else this browser.
+
+- **General**: Automatically capitalise words, Use smart quotes, Automatically detect links, Automatically detect lists,
+  Automatically detect Markdown: checkboxes, as [Text and paragraphs](text-and-paragraphs.md#typing-aids) defines them.
+  Show link details joins them with link details ([Links](links-and-navigation.md#links)), and ruler units with the
+  ruler's units (default: the ruler follows the browser's language until then).
+- **Substitutions**: Automatic substitution (a checkbox over the list); a Replace and a With field to add a pair
+  (Enter or leaving the With field adds it); then every pair as a checkbox, its Replace and With fields, and a remove
+  button ("Remove substitution (c)"). A pair with an empty Replace or With is not kept.
+- The tabs are a `tablist`; the list is a table of labelled fields, reached by Tab.
 
 ## Accessibility settings
 

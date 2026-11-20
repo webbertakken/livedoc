@@ -18,7 +18,7 @@ test('selects several stretches, formats them at once, and selects all matching 
   const body = page.locator(BODY);
   const stretches = body.locator('.text-document-stretch');
   await body.click();
-  await page.keyboard.type('alpha beta gamma');
+  await page.keyboard.type('Alpha beta gamma');
   await page.keyboard.press('Home');
   for (let i = 0; i < 5; i += 1) await page.keyboard.press('Shift+ArrowRight');
 
@@ -26,7 +26,7 @@ test('selects several stretches, formats them at once, and selects all matching 
   await page.keyboard.press('ControlOrMeta+Alt+Shift+ArrowRight');
   for (let i = 0; i < 5; i += 1) await page.keyboard.press('ArrowRight');
   for (let i = 0; i < 5; i += 1) await page.keyboard.press('Shift+ArrowRight');
-  await expect(stretches).toHaveText(['alpha', 'gamma']);
+  await expect(stretches).toHaveText(['Alpha', 'gamma']);
   await expect(page.getByRole('status').filter({ hasText: 'stretches selected' })).toHaveText(
     '2 stretches selected',
   );
@@ -36,7 +36,7 @@ test('selects several stretches, formats them at once, and selects all matching 
   await page.keyboard.press('ControlOrMeta+B');
   const weight = (word: string) =>
     body.getByText(word, { exact: true }).evaluate((el) => getComputedStyle(el).fontWeight);
-  expect(await weight('alpha')).toBe('700');
+  expect(await weight('Alpha')).toBe('700');
   expect(await weight('gamma')).toBe('700');
   // The text between stays in the paragraph's own weight.
   expect(
@@ -50,9 +50,9 @@ test('selects several stretches, formats them at once, and selects all matching 
   await page.keyboard.press('Escape');
   await expect(stretches).toHaveCount(0);
 
-  // Select all matching text, from the context menu on alpha: every bold stretch.
-  await body.getByText('alpha', { exact: true }).click({ button: 'right' });
+  // Select all matching text, from the context menu on Alpha: every bold stretch.
+  await body.getByText('Alpha', { exact: true }).click({ button: 'right' });
   await page.getByRole('menuitem', { name: 'Select all matching text' }).click();
-  await expect(stretches).toHaveText(['alpha', 'gamma']);
+  await expect(stretches).toHaveText(['Alpha', 'gamma']);
   expectNoPageErrors(pageErrors);
 });

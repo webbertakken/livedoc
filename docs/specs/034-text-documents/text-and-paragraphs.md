@@ -327,12 +327,36 @@ returns to the writing. Share roles: an Editor only.
 
 ## Typing aids
 
-Tools > Preferences, per person (account or browser), each on by default as Google has them:
+Tools > Preferences ([Tools](tools.md#preferences)), per person (with their account, else this browser), each on by
+default as Google has them but Markdown:
 
-- Automatically capitalise words; use smart quotes; automatically detect links; automatically detect lists (`1.`,
-  `-`, `*` at a paragraph's start); show link details; automatically detect Markdown (off by default); substitutions
-  (a list: `(c)` → ©, `(r)` → ®, `-->` → →, `1/2` → ½, … Google's list, editable, each on or off).
-- An aid's change is undone by the next ⌘Z, leaving what was typed.
+- **Automatically capitalise words**: the first letter of a sentence's first word, and `i` as a word of its own (`i`,
+  `i'm`), become capitals as the word ends. A sentence starts a paragraph or follows `.`, `!` or `?` and a space;
+  `e.g.`, `i.e.`, `etc.`, `vs.` end no sentence, and a word holding a digit, `@`, `/` or a capital stays as typed
+  (default).
+- **Use smart quotes**: a typed `"` or `'` becomes `“` or `‘` at a word's start (after a space, a bracket, a dash or
+  another opening quote, or at the paragraph's start), else `”` or `’`.
+- **Automatically detect links**: a word that is a web address (`https://…`, `http://…`, `www.….…`) or an email
+  address becomes a link as it ends, its trailing `. , ; : ! ? ) "` left out; `www.` links to `https://`, an email to
+  `mailto:`. A word already a link is left alone.
+- **Automatically detect lists**: `1.`, `1)`, `a.`, `A.`, `i.`, `I.` (any number or letter of their kind) and `-` or
+  `*` typed at the start of a paragraph outside a list, then a space, make it a numbered list in that format starting
+  at that number, or a bulleted list; the typed marker goes.
+- **Automatically detect Markdown** (off by default): `#` to `######` and a space at a paragraph's start make a
+  heading; `**bold**`, `*italic*` or `_italic_`, `~~strikethrough~~` and `[text](address)` become formatted as
+  they close; Markdown text pasted is read as Markdown ([Clipboard](#clipboard)).
+- **Substitutions**: **Automatic substitution** on or off, and a list of Replace → With pairs, each on or off,
+  editable, removable, new pairs added at the top. A word that ends exactly as a pair's Replace (from the paragraph's
+  start or a space) becomes its With. Google's list (default, until a capture confirms it): `(c)` ©, `(r)` ®, `(tm)`
+  ™, `--` –, `---` —, `-->` →, `<--` ←, `<->` ↔, `=>` ⇒, `<=` ≤, `>=` ≥, `!=` ≠, `1/2` ½, `1/3` ⅓, `2/3` ⅔,
+  `1/4` ¼, `3/4` ¾, `1/5` ⅕, `2/5` ⅖, `3/5` ⅗, `4/5` ⅘, `1/6` ⅙, `5/6` ⅚, `1/8` ⅛, `3/8` ⅜, `5/8` ⅝, `7/8` ⅞.
+- **A word ends** when a space or Enter is typed after it (default: a mark such as `.` or `:` may still be inside an
+  address); the aids act in the order substitution, link, capital, each on the word before it.
+- **An aid's change is its own undo step** after what was typed: the next ⌘Z takes the aid back, leaving the typing.
+- Aids act only on what a person types in the writing: never on a paste, a drop, an agent's change or a collaborator's.
+- Limits: at most 20 pairs of a person's own (one of Google's edited is their own), a Replace of at most 20
+  characters with no space and a With of at most 100 (default), so their preferences keep room; past 20 the dialog says
+  "Remove a substitution to add another."
 
 ## Share roles
 
@@ -353,7 +377,8 @@ toolbar, menu or shortcut), `TextDocumentParagraphStyle` (applied, from toolbar,
 `TextDocumentParagraphSpace` (add or remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`,
 `TextDocumentBordersAndShading`, `TextDocumentTabStop` (added, moved or taken away on the ruler);
 `UI · Used · TextDocumentStretches` (a second stretch selected, by keys or pointer), `TextDocumentSelectMatching`;
-`UI · Changed · TextDocumentDefaultStyles` (Save as my default styles). Never text.
+`UI · Changed · TextDocumentDefaultStyles` (Save as my default styles), `TextDocumentPreferences` (Preferences saved
+with OK). Never text.
 
 ## Limits
 

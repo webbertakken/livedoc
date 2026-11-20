@@ -1222,6 +1222,15 @@ export const TEXT_DOCUMENT_DEFAULT_STYLES = chart(
   { types: ['TextDocumentDefaultStyles'], rising: 'neutral' },
 );
 
+// Someone changed their typing aids with Tools > Preferences' OK (docs/specs/034-text-documents/tools.md "Preferences").
+export const TEXT_DOCUMENT_PREFERENCES = chart(
+  'UI',
+  'Changed',
+  'Text Document Preferences',
+  "Someone changed their typing aids or substitutions in a text document's Tools > Preferences.",
+  { types: ['TextDocumentPreferences'], rising: 'neutral' },
+);
+
 // My fonts changed by the Fonts dialog's OK (docs/specs/004-interface-design/fonts.md "More fonts").
 export const TEXT_DOCUMENT_MY_FONTS = chart(
   'UI',
@@ -1249,6 +1258,7 @@ export const EDITOR_CHROME: MetricStack = {
     TEXT_DOCUMENT_MODE,
     TEXT_DOCUMENT_MY_FONTS,
     TEXT_DOCUMENT_DEFAULT_STYLES,
+    TEXT_DOCUMENT_PREFERENCES,
   ],
 };
 

@@ -55,7 +55,7 @@ test('the paint roller paints once or held, and Clear formatting clears', async 
   await body.click();
   await page.keyboard.type('Alpha beta');
   await page.keyboard.press('Enter');
-  await page.keyboard.type('gamma delta epsilon');
+  await page.keyboard.type('Gamma delta epsilon');
   await page.keyboard.press('ArrowUp');
   await page.keyboard.press('Home');
   for (let i = 0; i < 5; i += 1) await page.keyboard.press('Shift+ArrowRight');
@@ -69,8 +69,8 @@ test('the paint roller paints once or held, and Clear formatting clears', async 
   await roller.click();
   await expect(roller).toHaveAttribute('aria-pressed', 'true');
   await expect(body).toHaveClass(/text-document-painting/);
-  await dragAcross(page, 'gamma');
-  await expect.poll(async () => (await wordOf(page, 'gamma')).weight).toBe('700');
+  await dragAcross(page, 'Gamma');
+  await expect.poll(async () => (await wordOf(page, 'Gamma')).weight).toBe('700');
   await expect(paragraphs.nth(1)).toHaveCSS('text-align', 'center');
   await expect(roller).toHaveAttribute('aria-pressed', 'false');
   await expect(body).not.toHaveClass(/text-document-painting/);
@@ -93,7 +93,7 @@ test('the paint roller paints once or held, and Clear formatting clears', async 
   await page.keyboard.press('Control+A');
   await toolbar.getByRole('button', { name: 'Clear formatting' }).click();
   await expect(body).toBeFocused();
-  for (const word of ['Alpha', 'gamma', 'delta', 'epsilon'])
+  for (const word of ['Alpha', 'Gamma', 'delta', 'epsilon'])
     expect((await wordOf(page, word)).weight).toBe('400');
   await expect(paragraphs.first()).toHaveCSS('text-align', 'start');
   await expect(paragraphs.nth(1)).toHaveCSS('text-align', 'start');
