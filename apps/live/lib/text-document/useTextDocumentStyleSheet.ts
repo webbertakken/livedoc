@@ -8,6 +8,7 @@ import type { TextDocumentFormat } from '@livedoc/document';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { textDocumentStyleSheet } from './text-document-style-sheet';
 import { relayTextDocumentTabs } from './text-document-tab-layout';
+import { relayoutPages } from './pagination/pagination-plugin';
 
 export function useTextDocumentStyleSheet(
   view: EditorView | null,
@@ -30,8 +31,11 @@ export function useTextDocumentStyleSheet(
       );
       if (sheet.textContent === css) return;
       sheet.textContent = css;
-      // Styles move the writing, so its tabs are laid out again ("Tab stops").
-      if (!view.isDestroyed) relayTextDocumentTabs(view);
+      // Styles move the writing, so its tabs and its pages are laid out again ("Tab stops", page-layout.md).
+      if (!view.isDestroyed) {
+        relayTextDocumentTabs(view);
+        relayoutPages(view);
+      }
     };
     let frame: number | null = null;
     const onUpdate = () => {

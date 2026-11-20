@@ -25,11 +25,13 @@ test('page setup sets the paper, orientation, margins and colour', async ({ page
   await newDocument(page);
   const body = page.locator(BODY);
   const sheet = page.locator('.text-document-page');
+  // The paper: the first page's sheet behind the writing (page-layout.md "Laying out").
+  const paper = page.locator('.text-document-sheet').first();
   await body.click();
   await page.keyboard.type('On the page');
   // A new document in an American English browser: Letter, 8.5 in across.
   await expect.poll(() => pageWidth(page)).toBeCloseTo(612 * PX, 0);
-  const paperBefore = await sheet.evaluate((el) => getComputedStyle(el).backgroundColor);
+  const paperBefore = await paper.evaluate((el) => getComputedStyle(el).backgroundColor);
 
   await (await officeMenuItem(page, ['File', 'Page setup'])).click();
   const dialog = page.getByRole('dialog', { name: 'Page setup' });
@@ -50,13 +52,13 @@ test('page setup sets the paper, orientation, margins and colour', async ({ page
   // A4 landscape, half an inch at the top, coloured.
   await expect.poll(() => pageWidth(page)).toBeCloseTo(841.89 * PX, 0);
   await expect(sheet).toHaveCSS('padding-top', '48px');
-  await expect(sheet).not.toHaveCSS('background-color', paperBefore);
+  await expect(paper).not.toHaveCSS('background-color', paperBefore);
   await page.screenshot({ path: test.info().outputPath('page-setup-applied.png') });
 
   // One undo step takes it all back, and redo brings it again.
   await page.keyboard.press('ControlOrMeta+z');
   await expect.poll(() => pageWidth(page)).toBeCloseTo(612 * PX, 0);
-  await expect(sheet).toHaveCSS('background-color', paperBefore);
+  await expect(paper).toHaveCSS('background-color', paperBefore);
   await expect(page.locator(BODY)).toContainText('On the page');
   await page.keyboard.press('ControlOrMeta+Shift+z');
   await expect.poll(() => pageWidth(page)).toBeCloseTo(841.89 * PX, 0);
@@ -66,7 +68,7 @@ test('page setup sets the paper, orientation, margins and colour', async ({ page
   await page.reload();
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
   await expect.poll(() => pageWidth(page)).toBeCloseTo(841.89 * PX, 0);
-  await expect(sheet).not.toHaveCSS('background-color', paperBefore);
+  await expect(paper).not.toHaveCSS('background-color', paperBefore);
   await body.click();
   await (await officeMenuItem(page, ['File', 'Page setup'])).click();
   await expect(dialog.getByRole('combobox', { name: 'Paper size' })).toHaveValue('a4');
@@ -121,7 +123,7 @@ test('pageless draws one column and switches back', async ({ page, pageErrors })
   await (await officeMenuItem(page, ['Format', 'Switch to Pageless format'])).click();
   await expect(sheet).toHaveAttribute('data-page-format', 'pageless');
   await expect.poll(() => pageWidth(page)).toBeCloseTo(576 * PX, 0);
-  await expect(sheet).toHaveCSS('box-shadow', 'none');
+  await expect(page.locator('.text-document-sheet').first()).toHaveCSS('box-shadow', 'none');
   await expect(page.getByRole('slider', { name: 'Left margin' })).toHaveCount(0);
   await expect(page.getByRole('slider', { name: 'Left indent' })).toBeVisible();
   await expect(body).toBeFocused();

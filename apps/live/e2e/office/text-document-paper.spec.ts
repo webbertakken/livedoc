@@ -30,7 +30,8 @@ async function writeBlackOnYellow(page: Page) {
     .getByRole('group', { name: 'Light' })
     .getByRole('button', { name: 'Yellow' })
     .click();
-  return { body, page: page.locator('.text-document-page') };
+  // The paper: the first page's sheet behind the writing (page-layout.md "Laying out").
+  return { body, page: page.locator('.text-document-sheet').first() };
 }
 
 const spanStyle = (page: Page) =>
