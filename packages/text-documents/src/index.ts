@@ -14,6 +14,7 @@ export {
   TEXT_DOCUMENT_WORDS_PER_PAGE,
 } from './limits';
 export { textDocumentDigest, type TextDocumentDigest } from './digest';
+export { textDocumentPageSvg } from './art/page-svg';
 export { BODY_FRAGMENT, TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 export {
   TEXT_DOCUMENT_FILE_TYPES,

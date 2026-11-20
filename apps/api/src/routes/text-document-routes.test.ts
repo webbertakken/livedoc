@@ -6,6 +6,7 @@ import {
   readTextDocumentFile,
   TextDocument,
   TextDocumentState,
+  TEXT_DOCUMENT_CHUNK_BYTES,
   TEXT_DOCUMENT_UPDATE_MAX_BYTES,
   writeTextDocumentFile,
   type TextDocumentFileType,
@@ -174,6 +175,23 @@ describe('a text document opened from a file', () => {
       textDocuments: [{ tabId: 't1', file: base64OfBytes(new TextEncoder().encode(sheet)) }],
     });
     expect(res.status).toBe(415);
+  });
+
+  // live-editing-and-storage.md "Copies": a Duplicate seeds the copy with each state, a big one folded into chunks.
+  it('holds a state a copy seeds it with, and refuses one that is no update', async () => {
+    const db = sqliteD1();
+    const big = Array.from({ length: TEXT_DOCUMENT_CHUNK_BYTES / 5 }, (_, i) =>
+      (i * 7919).toString(36).padStart(6, '0'),
+    ).join('');
+    const state = base64OfBytes(TextDocumentState.fromBody(Body.of('Copied', big)));
+    expect((await create(db, { textDocuments: [{ tabId: 't1', state }] })).status).toBe(201);
+    const res = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
+    expect(await bodyOfState(res)).toEqual(Body.of('Copied', big));
+    const refused = await create(sqliteD1(), {
+      textDocuments: [{ tabId: 't1', state: base64OfBytes(Uint8Array.of(9, 9, 9)) }],
+    });
+    expect(refused.status).toBe(400);
+    expect(await refused.json()).toMatchObject({ error: 'text_document_seed_invalid' });
   });
 
   it('refuses seeds that do not name one of the request’s text document tabs', async () => {
