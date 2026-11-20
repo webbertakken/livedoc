@@ -23,7 +23,7 @@ vi.mock('@/hooks/ui/useConfirm', () => ({ useConfirm: () => confirm }));
 vi.mock('@/hooks/ui/useToast', () => ({ useToast: () => toast }));
 vi.mock('@/lib/shared-tabs-notice', () => ({ fetchSharedTabsNotice: async () => null }));
 
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { ExplorerProvider } from '@/app/explorer/ExplorerContext';
 import { SyncStillSavingError } from '@/lib/offline/offline-convert';
 import { useOfflineConversion } from './useOfflineConversion';
@@ -42,7 +42,7 @@ function editor(documentId: string) {
 
 function inEditor(value: ReturnType<typeof editor>) {
   return ({ children }: { children: ReactNode }) => (
-    <EditorContext.Provider value={value as never}>{children}</EditorContext.Provider>
+    <EditorStateProvider state={value as never}>{children}</EditorStateProvider>
   );
 }
 

@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { presetSetup, statusColumn } from '@livedoc/items';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { PlanColumnPopover } from './PlanColumnPopover';
 
 // docs/specs/026-plan/plan-board.md "Column settings": the WIP limit's line names its count ("1 card", not "1 cards").
@@ -20,7 +20,7 @@ function open(wipLimit?: number) {
     ],
   };
   render(
-    <EditorContext.Provider value={{ tabs: [] } as never}>
+    <EditorStateProvider state={{ tabs: [] } as never}>
       <PlanColumnPopover
         getAnchor={() => document.body}
         setup={setup}
@@ -30,7 +30,7 @@ function open(wipLimit?: number) {
         onTrashCards={() => {}}
         onClose={() => {}}
       />
-    </EditorContext.Provider>,
+    </EditorStateProvider>,
   );
 }
 

@@ -350,7 +350,7 @@ export function CanvasChrome(props: CanvasChromeProps) {
   const dockOnTop = dockShown && props.whiteboardDock?.position === 'top';
   // The brand group at the top left (docs/specs/007-editor/toolbar-layout.md "The top line"), on a phone too: Back,
   // the menu button (not in a workbench, nor held sideways) and the mode switch.
-  // The actions group and the document group, built by the editor page (EditorLinesContext).
+  // The actions group and the document group, built by the editor page (EditorLinesProvider).
   const lines = useEditorLines();
   const brandGroup = (
     <BrandGroup

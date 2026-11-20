@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { penColourHex, standardColours } from '@livedoc/document';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { getTheme, themePresetColors } from '@/lib/themes';
 import { ColourPicker, type ColourPickerProps } from './ColourPicker';
 import { noColour, stableColours, standardGroup } from './colour-options';
@@ -204,9 +204,9 @@ describe('ColourPicker', () => {
 describe('the Theme Palette', () => {
   const inEditor = (props: Partial<ColourPickerProps>) =>
     render(
-      <EditorContext.Provider value={{ tabs: [], activeTab: { theme: 'ocean' } } as never}>
+      <EditorStateProvider state={{ tabs: [], activeTab: { theme: 'ocean' } } as never}>
         <ColourPicker label="Colour" value={null} onPick={vi.fn()} {...props} />
-      </EditorContext.Provider>,
+      </EditorStateProvider>,
     );
 
   it('shows the active tab’s theme colours first in the editor, whatever the surface', () => {
@@ -248,9 +248,9 @@ describe('a colour picked with +', () => {
     const addCustomColour = vi.fn();
     const onPick = vi.fn();
     render(
-      <EditorContext.Provider value={{ tabs: [], addCustomColour } as never}>
+      <EditorStateProvider state={{ tabs: [], addCustomColour } as never}>
         <ColourPicker label="Colour" value={null} onPick={onPick} />
-      </EditorContext.Provider>,
+      </EditorStateProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: 'Add a custom colour' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Hex' }), {
@@ -268,14 +268,14 @@ describe('a colour picked with +', () => {
   it('records nothing for a swatch picked from the groups', () => {
     const addCustomColour = vi.fn();
     render(
-      <EditorContext.Provider value={{ tabs: [], addCustomColour } as never}>
+      <EditorStateProvider state={{ tabs: [], addCustomColour } as never}>
         <ColourPicker
           label="Colour"
           value={null}
           onPick={vi.fn()}
           standard={[standardGroup('strong', 'light', 'hex')]}
         />
-      </EditorContext.Provider>,
+      </EditorStateProvider>,
     );
     const standard = screen.getByRole('group', { name: 'Standard Colours' });
     fireEvent.click(within(standard).getByRole('button', { name: 'Blue' }));

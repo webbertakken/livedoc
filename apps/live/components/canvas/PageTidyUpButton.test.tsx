@@ -2,14 +2,14 @@
 import type { ReactNode } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { PAGE_TIDY_UP_TOOLTIP, PageTidyUpButton, pageTidyUpRoom } from './PageTidyUpButton';
 
 // docs/specs/007-editor/pages-mode.md "Tidy": an infographic or slide page's title-bar button.
 afterEach(() => cleanup());
 
 const as = (level: 'edit' | 'participate' | 'view', ui: ReactNode) => (
-  <EditorContext.Provider value={{ can: { level } } as never}>{ui}</EditorContext.Provider>
+  <EditorStateProvider state={{ can: { level } } as never}>{ui}</EditorStateProvider>
 );
 
 describe('PageTidyUpButton', () => {

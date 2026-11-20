@@ -8,7 +8,7 @@ import {
   type PlanBoardSetup,
   type PlanColumn,
 } from '@livedoc/items';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { PlanColumnPopover } from './PlanColumnPopover';
 
 // docs/specs/026-plan/plan-board.md "Done columns": Counts as Done is on for a done column found by its name, and
@@ -24,7 +24,7 @@ function open(columns: PlanColumn[], at: number) {
   const setup: PlanBoardSetup = { ...presetSetup('blank'), columns };
   const onChange = vi.fn<(next: PlanBoardSetup, part: string) => void>();
   render(
-    <EditorContext.Provider value={{ tabs: [] } as never}>
+    <EditorStateProvider state={{ tabs: [] } as never}>
       <PlanColumnPopover
         getAnchor={() => document.body}
         setup={setup}
@@ -34,7 +34,7 @@ function open(columns: PlanColumn[], at: number) {
         onTrashCards={() => {}}
         onClose={() => {}}
       />
-    </EditorContext.Provider>,
+    </EditorStateProvider>,
   );
   return onChange;
 }

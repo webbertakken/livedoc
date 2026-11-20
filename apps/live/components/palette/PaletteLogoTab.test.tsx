@@ -4,7 +4,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import type { PendingDraw } from '@/lib/draw-mode';
 import { PaletteLogoTab, useLogoMarkerTiles } from './PaletteLogoTab';
 import { tileById, type PaletteTileDef } from './palette-tile-defs';
@@ -40,7 +40,7 @@ function Tab({ pendingDraw }: { pendingDraw: PendingDraw | null }) {
 
 function show(ctx: ReturnType<typeof editor>, pendingDraw: PendingDraw | null = null) {
   const wrap = ({ children }: { children: ReactNode }) => (
-    <EditorContext.Provider value={ctx as never}>{children}</EditorContext.Provider>
+    <EditorStateProvider state={ctx as never}>{children}</EditorStateProvider>
   );
   render(<Tab pendingDraw={pendingDraw} />, { wrapper: wrap });
 }

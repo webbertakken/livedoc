@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ShapeElement, Tab } from '@livedoc/document';
-import { TabWindowContext, type TabWindowContextValue } from './tab-window-context';
+import { TabWindowProvider, type TabWindowContextValue } from './tab-window-context';
 import { tabWindowState, TabWindowFace } from './TabWindowFace';
 
 // docs/specs/009-elements/tab-window.md "States".
@@ -60,14 +60,14 @@ function show(
     ...over,
   };
   render(
-    <TabWindowContext.Provider value={ctx}>
+    <TabWindowProvider value={ctx}>
       <TabWindowFace
         element={el}
         surface="light"
         selected={face.selected ?? false}
         canChoose={face.canChoose}
       />
-    </TabWindowContext.Provider>,
+    </TabWindowProvider>,
   );
   return ctx;
 }

@@ -4,8 +4,8 @@
 // Search: docs/specs/007-editor/logo-pages.md "The Logo palette"). Pressed, it picks the marker up;
 // pressed again while held, it opens Draw mode's own flyout for it (colour and width), as the
 // whiteboard dock's marker does. A change re-arms the held marker, so the next stroke is in it.
-import { useContext, useState } from 'react';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { useState } from 'react';
+import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import { PenFlyoutBody, penFlyoutLabel } from '@/components/canvas/whiteboard/dock-flyouts';
 import { WhiteboardFlyout } from '@/components/canvas/whiteboard/WhiteboardFlyout';
 import type { WhiteboardDockModel } from '@/hooks/canvas/useWhiteboard';
@@ -24,7 +24,7 @@ export function MarkerPaletteTile({
   pendingDraw: PendingDraw | null | undefined;
   compact?: boolean;
 }) {
-  const editor = useContext(EditorContext);
+  const editor = useOptionalEditorContext();
   const [open, setOpen] = useState(false);
   const a = def.action;
   const model = editor?.whiteboardDock;

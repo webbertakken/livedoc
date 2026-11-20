@@ -86,9 +86,9 @@ export function usePlanSlice(opts: {
   publishPresence?: (itemId: string | null, state: 'drag' | 'view') => void;
   // Shows a refusal on screen (a toast): a canvas Plan card dropped where it cannot go.
   notify?: (message: string) => void;
-  // New Form on a board's cog (useFormActions); stable.
+  // New Form on a board's cog (useFormActions); read at its newest.
   newFormFor?: (boardElementId: string) => void;
-  // The Actions board's links (useLinkedActionCards); stable callbacks, placeOf changes with the tabs.
+  // The Actions board's links (useLinkedActionCards); showOnCanvas read at its newest, placeOf changes with the tabs.
   linkedActions?: PlanContextValue['linkedActions'];
 }) {
   const { planItems, itemTypes, editorMode, canEdit, canVote, presence } = opts;
@@ -101,6 +101,21 @@ export function usePlanSlice(opts: {
   const announceRef = useLatest(opts.announce);
   const publishRef = useLatest(opts.publishPresence);
   const slideRef = useLatest(opts.addItemSlide);
+  const newFormForRef = useLatest(opts.newFormFor);
+  const showOnCanvasRef = useLatest(opts.linkedActions?.showOnCanvas);
+  // The Plan context sits around the canvas: a handler the editor rebuilt must not give it a new value
+  // (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+  const hasNewForm = !!opts.newFormFor;
+  const newFormFor = useCallback(
+    (boardElementId: string) => newFormForRef.current?.(boardElementId),
+    [newFormForRef],
+  );
+  const showOnCanvas = useCallback(
+    (item: Parameters<NonNullable<PlanContextValue['linkedActions']>['showOnCanvas']>[0]) =>
+      showOnCanvasRef.current?.(item),
+    [showOnCanvasRef],
+  );
+  const placeOf = opts.linkedActions?.placeOf;
   const commit = useCallback(
     (mapElements: (els: Element[]) => Element[]) => commitRef.current(mapElements),
     [commitRef],
@@ -519,8 +534,8 @@ export function usePlanSlice(opts: {
       createTypeForView,
       setupBoardId,
       openBoardSetup,
-      ...(opts.newFormFor && canEdit ? { newFormFor: opts.newFormFor } : {}),
-      ...(opts.linkedActions ? { linkedActions: opts.linkedActions } : {}),
+      ...(hasNewForm && canEdit ? { newFormFor } : {}),
+      ...(placeOf ? { linkedActions: { placeOf, showOnCanvas } } : {}),
       status: planItems.status,
       self: planItems.self,
       people,
@@ -608,8 +623,10 @@ export function usePlanSlice(opts: {
       opts.statusPhases,
       opts.statusTypes,
       opts.statusBoards,
-      opts.newFormFor,
-      opts.linkedActions,
+      hasNewForm,
+      newFormFor,
+      placeOf,
+      showOnCanvas,
     ],
   );
 

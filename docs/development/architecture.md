@@ -73,7 +73,7 @@ marketing/      off-site copy + media for listings and promotion (see docs/specs
 The editor route (`apps/live/app/document/[id]/`) is split three ways so no file becomes a god component:
 
 - `useEditorState.ts` is the orchestration hook: it calls each domain sub-hook, threads their dependencies, and assembles the return view-model.
-- `EditorContext.tsx` carries that view-model as `EditorContextValue = ReturnType<typeof useEditorState>`.
+- `EditorContext.tsx` carries that view-model as `EditorContextValue = ReturnType<typeof useEditorState>`, in a store (`EditorStateProvider`, read with `useEditorContext`), so the context around the canvas keeps one value ([Canvas performance](../specs/008-canvas/canvas-performance.md)).
 - `EditorView.tsx` renders the JSX, leaving `editor-page.tsx` a thin page shell.
 
 `useEditorState.ts` is large by design: what remains in it is wiring, not logic, so it is exempt from the ~400-line soft target ([AGENTS.md](../../AGENTS.md#core-principle-no-god-files-plan-placement-first)). New behaviour goes into its own sub-hook, not into it.

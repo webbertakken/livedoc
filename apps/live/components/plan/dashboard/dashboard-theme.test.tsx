@@ -5,7 +5,7 @@ import { cleanup, render } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DashboardSlot, Tab } from '@livedoc/document';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { DashboardContext, type DashboardContextValue } from './dashboard-context';
 import { DashboardSlotView } from './DashboardSlotView';
 import { DashboardTabPreview } from './DashboardTabPreview';
@@ -42,9 +42,9 @@ function wrap(children: ReactNode, tabs: Tab[] = []) {
     retryTab: vi.fn(),
   } as unknown as DashboardContextValue;
   return render(
-    <EditorContext.Provider value={{ activeTab: { theme: 'slate' } } as never}>
+    <EditorStateProvider state={{ activeTab: { theme: 'slate' } } as never}>
       <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>
-    </EditorContext.Provider>,
+    </EditorStateProvider>,
   );
 }
 

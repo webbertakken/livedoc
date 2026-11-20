@@ -27,7 +27,7 @@ import { CustomThemeProvider } from '@/components/primitives/CustomThemeProvider
 import { ShapeLibraryProvider } from '@/components/primitives/ShapeLibraryProvider';
 import { DocumentTagsProvider } from '@/components/tags/DocumentTagsProvider';
 import { LocalMovePrompt } from '@/components/dialogs/LocalMovePrompt';
-import { EditorContext } from './EditorContext';
+import { EditorStateProvider } from './EditorContext';
 import { EditorView } from './EditorView';
 import { useEditorState } from './useEditorState';
 import { takeAccessEnded } from '@/lib/access-notice';
@@ -253,7 +253,7 @@ export default function LivePage({ surface = 'app' }: { surface?: EditorSurface 
   }
 
   return (
-    <EditorContext.Provider value={state}>
+    <EditorStateProvider state={state}>
       {/* Owner-scoped custom themes (docs/specs/011-theme/custom-themes.md): keyed by the current
           user's id (account or guest self id) so the theme picker /
           builder share one source of truth and getTheme resolves saved
@@ -279,7 +279,7 @@ export default function LivePage({ surface = 'app' }: { surface?: EditorSurface 
       {/* Moving this browser's documents in This Browser after signing in
           (docs/specs/014-identity/auth-and-guest-access.md); never inside someone else's page. */}
       {appChrome ? <LocalMovePrompt /> : null}
-    </EditorContext.Provider>
+    </EditorStateProvider>
   );
 }
 

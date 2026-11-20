@@ -54,7 +54,7 @@ import { canEditSankey } from '@/lib/sankey-edit';
 import { canEditSequence } from '@/lib/sequence-edit';
 import { CanvasThemeProvider } from '@/components/canvas/CanvasSurfaceContext';
 import {
-  TabWindowContext,
+  TabWindowProvider,
   useTabWindowContextValue,
 } from '@/components/canvas/tab-window/tab-window-context';
 import { useSelectTab } from '@/app/document/[id]/useSelectTab';
@@ -681,7 +681,7 @@ export function EditorCanvasHost() {
     <CanvasThemeProvider theme={activeTheme}>
       {/* The tab's tag colours (docs/specs/009-elements/tag-colours.md), for the cards that render them. */}
       <TagColoursProvider tab={activeTab}>
-        <TabWindowContext.Provider value={tabWindows}>
+        <TabWindowProvider value={tabWindows}>
           {/* Presenting shows the slide as the audience sees it: no indicators or lock badges on its elements
           (docs/specs/008-canvas/element-indicators.md "Unchanged"). */}
           {/* The Ask popover (docs/specs/021-event-storming/asks.md "Where an ask starts"). */}
@@ -1408,7 +1408,7 @@ export function EditorCanvasHost() {
               />
             ) : null}
           </SuppressElementIndicators>
-        </TabWindowContext.Provider>
+        </TabWindowProvider>
       </TagColoursProvider>
     </CanvasThemeProvider>
   );

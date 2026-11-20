@@ -88,7 +88,11 @@ export function useSplitView({
   if (history.current !== activeId) setHistory({ current: activeId, previous: history.current });
   const previousActiveId = history.current !== activeId ? history.current : history.previous;
 
-  const tabIds = useMemo(() => tabs.map((t) => t.id), [tabs]);
+  // Which tabs there are, kept by content: an edit inside a tab leaves the split's value as it was, as the context
+  // around the canvas must (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold
+  // still").
+  const tabIdsKey = JSON.stringify(tabs.map((t) => t.id));
+  const tabIds = useMemo(() => JSON.parse(tabIdsKey) as string[], [tabIdsKey]);
 
   let current = state;
   // A tab of the pair was deleted (here or by a collaborator). Checked before the active tab is folded in: deleting
@@ -202,19 +206,36 @@ export function useSplitView({
   }, [viewportWidth]);
 
   const showing = available ? pair : null;
-  return {
-    available,
-    activeId,
-    pair: showing,
-    editorSide: showing ? (showing.leftId === activeId ? 'left' : 'right') : null,
-    rightWidth: rightWidthFor(fraction, viewportWidth),
-    canOpen,
-    open,
-    close,
-    focus,
-    staticLoadFailed,
-    prefetch,
-    resize,
-    resetWidth,
-  };
+  const rightWidth = rightWidthFor(fraction, viewportWidth);
+  return useMemo(
+    () => ({
+      available,
+      activeId,
+      pair: showing,
+      editorSide: showing ? (showing.leftId === activeId ? 'left' : 'right') : null,
+      rightWidth,
+      canOpen,
+      open,
+      close,
+      focus,
+      staticLoadFailed,
+      prefetch,
+      resize,
+      resetWidth,
+    }),
+    [
+      available,
+      activeId,
+      showing,
+      rightWidth,
+      canOpen,
+      open,
+      close,
+      focus,
+      staticLoadFailed,
+      prefetch,
+      resize,
+      resetWidth,
+    ],
+  );
 }

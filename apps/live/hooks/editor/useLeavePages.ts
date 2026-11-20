@@ -8,7 +8,8 @@
 // locked tab or an empty tab switches straight away. An article with a locked page is held as it is
 // (docs/specs/007-editor/pages-mode.md "Locking a page"): Convert leaves it an article, and a
 // tab whose articles are all held asks only the lighter question.
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useLatest } from '@/hooks/ui/useLatest';
 import {
   articlesOf,
   withArticleFlow,
@@ -44,8 +45,13 @@ export function useLeavePages<
   const [pending, setPending] = useState<EditorMode | null>(null);
   const [confirming, setConfirming] = useState<EditorMode | null>(null);
   const { mode, setMode: rawSet } = editorMode;
+  // The tab as it is now, read when a switch is asked for: the mode's value keeps its identity through edits of the
+  // tab, as the context around the canvas must (docs/specs/008-canvas/canvas-performance.md "The contexts around the
+  // element layer hold still").
+  const latest = useLatest({ mode, canEdit, tab });
   const setMode = useCallback(
     (next: EditorMode) => {
+      const { mode, canEdit, tab } = latest.current;
       const leaving =
         mode === 'pages' && next !== 'pages' && canEdit && !!tab && tab.locked !== true;
       const flows = leaving ? Object.keys(articlesOf(tab)) : [];
@@ -53,8 +59,9 @@ export function useLeavePages<
       else if (leaving && (tab.elements.length > 0 || flows.length > 0)) setConfirming(next);
       else rawSet(next);
     },
-    [mode, rawSet, canEdit, tab],
+    [rawSet, latest],
   );
+  const switchable = useMemo(() => ({ ...editorMode, setMode }), [editorMode, setMode]);
   // Turning articles into pages is the pages family's (docs/specs/016-platform/web-performance.md "An element kind's
   // code loads with the board that holds it"), in whenever the writing is drawn; the question stays open, and the
   // notice shows, if it cannot load.
@@ -115,7 +122,7 @@ export function useLeavePages<
   };
   const cancelSwitch = () => setConfirming(null);
   return {
-    editorMode: { ...editorMode, setMode },
+    editorMode: switchable,
     leave: { pending, convert, keep, cancel, confirming, confirmSwitch, cancelSwitch },
   };
 }

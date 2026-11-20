@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { penColourHex } from '@livedoc/document';
 import { presetSetup, statusColumn } from '@livedoc/items';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import type { ComponentProps } from 'react';
 import { PlanColumnPopover } from './PlanColumnPopover';
 
@@ -25,7 +25,7 @@ function open(color?: string, onClose: (focus: boolean) => void = () => {}) {
   const onChange = vi.fn<ComponentProps<typeof PlanColumnPopover>['onChange']>();
   // Inside an editor with an empty document: no custom colours picked yet.
   render(
-    <EditorContext.Provider value={{ tabs: [] } as never}>
+    <EditorStateProvider state={{ tabs: [] } as never}>
       <PlanColumnPopover
         getAnchor={() => document.body}
         setup={setup}
@@ -35,7 +35,7 @@ function open(color?: string, onClose: (focus: boolean) => void = () => {}) {
         onTrashCards={() => {}}
         onClose={onClose}
       />
-    </EditorContext.Provider>,
+    </EditorStateProvider>,
   );
   return onChange;
 }

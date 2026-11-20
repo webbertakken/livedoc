@@ -3,7 +3,7 @@
 // The top of the form in the builder (docs/specs/030-forms/forms.md "The form card, top to bottom"): the cover (its
 // colour and style changed from Change Cover), then the heading (the tab's name too) and description, edited in
 // place. A later section's header is SectionHeader.
-import { useContext, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Page, PageBackground } from '@livedoc/document';
 import {
   FORM_DESCRIPTION_MAX,
@@ -16,7 +16,7 @@ import { TrashIcon, Tooltip } from '@livedoc/ui';
 import { patchForm, deleteSection, updateSection } from '@livedoc/forms';
 import { AnchoredPopover } from '@/components/primitives/AnchoredPopover';
 import { BackgroundSection } from '@/components/canvas/page-background-section';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { useOptionalEditorContext } from '@/app/document/[id]/EditorContext';
 import { themeBackgroundPresets } from '@/lib/page-paint';
 import { getTheme } from '@/lib/themes';
 import { FormCoverBand } from '../FormCoverBand';
@@ -56,7 +56,7 @@ export function FormHeaderCard({ sections }: { sections: number }) {
   const shownCover = preview ? patchedCover(form.cover, preview) : form.cover;
   // The tab theme's own gradients lead the Gradient choices, as on a slide.
   // Read as the colour picker reads it (useThemeColours): no editor around it (a test) is the default theme.
-  const themeId = useContext(EditorContext)?.activeTab?.theme;
+  const themeId = useOptionalEditorContext()?.activeTab?.theme;
   const themePresets = useMemo(() => themeBackgroundPresets(getTheme(themeId)), [themeId]);
   // The cover as the slide's Background section reads a page: a wide slide wearing it.
   const coverPage: Page = {

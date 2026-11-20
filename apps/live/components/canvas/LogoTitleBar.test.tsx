@@ -4,7 +4,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { SelectionStoreProvider } from '@/hooks/canvas/useSelectionStore';
 import { DEFAULT_MIRROR } from '@livedoc/document';
 import type { LogoToolsView } from '@/hooks/editor/useLogoTools';
@@ -31,9 +31,9 @@ const tools = (over: Partial<LogoToolsView> = {}) =>
 function show(t: LogoToolsView, canTidyUp = false) {
   const ctx = { canTidyUp: () => canTidyUp, tidyUpSelected: vi.fn() };
   const wrap = ({ children }: { children: ReactNode }) => (
-    <EditorContext.Provider value={ctx as never}>
+    <EditorStateProvider state={ctx as never}>
       <SelectionStoreProvider store={createSelectionStore()}>{children}</SelectionStoreProvider>
-    </EditorContext.Provider>
+    </EditorStateProvider>
   );
   render(<LogoTitleBar pageId="p" tools={t} />, { wrapper: wrap });
   return ctx;

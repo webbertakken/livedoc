@@ -39,7 +39,7 @@ import { PresentationHost } from '@/components/canvas/PresentationHost';
 import { ActionsGroup } from '@/components/chrome/lines/ActionsGroup';
 import { DocumentGroup } from '@/components/chrome/lines/DocumentGroup';
 import { BottomLine } from '@/components/chrome/lines/BottomLine';
-import { EditorLinesContext } from '@/components/chrome/lines/editor-lines-context';
+import { EditorLinesProvider } from '@/components/chrome/lines/editor-lines-context';
 import { EmbedChrome } from '@/components/chrome/EmbedChrome';
 import { WorkbenchReconnectLine } from '@/components/chrome/WorkbenchChrome';
 import { appHrefOfPlace } from '@/lib/workbench/workspace-place';
@@ -282,7 +282,7 @@ export function EditorView() {
   const landscapeBars = useLandscapeBars([renameDocumentNonce, renameTabNonce]);
 
   // The two lines' page-built groups (docs/specs/007-editor/toolbar-layout.md "The two lines"), placed by the
-  // canvas chrome (EditorLinesContext). Zen / focus mode (docs/specs/007-editor/zen-mode.md) hides both; embeds
+  // canvas chrome (EditorLinesProvider). Zen / focus mode (docs/specs/007-editor/zen-mode.md) hides both; embeds
   // (docs/specs/013-workspace/embeds.md) never show them.
   const openShare = () => {
     setShareDialogOpen(true);
@@ -496,7 +496,7 @@ export function EditorView() {
                           <EditorModeProvider value={ctx.editorMode}>
                             {/* Side by side tabs (docs/specs/007-editor/split-view.md): the editor, and another
                       tab of the document live beside it when one has been dragged to the right. */}
-                            <EditorLinesContext.Provider value={lines}>
+                            <EditorLinesProvider lines={lines}>
                               <SplitViewFrame>
                                 {(splitShowing) => (
                                   <div
@@ -651,7 +651,7 @@ export function EditorView() {
                                   </div>
                                 )}
                               </SplitViewFrame>
-                            </EditorLinesContext.Provider>
+                            </EditorLinesProvider>
                           </EditorModeProvider>
                         </UiScaleProvider>
                       </MinimalChromeProvider>

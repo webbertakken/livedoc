@@ -20,7 +20,7 @@ import { SheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheets
 import { forgetSheetStores, sheetStoreOf } from './sheet-store-client';
 import { pointingTargetFor } from './sheet-pointing';
 import { PlanSheetView } from './PlanSheetView';
-import { SheetChartsContext } from './sheet-charts-context';
+import { SheetChartsProvider } from './sheet-charts-context';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 // A desktop: the toolbar lays its buttons out at their full widths.
@@ -522,11 +522,11 @@ describe('a template set up in a slot showing another tab’s Sheet', () => {
       <CanvasSurfaceProvider surface="light">
         <PlanProvider value={plan()}>
           <SheetsBridgeContext.Provider value={b}>
-            <SheetChartsContext.Provider value={{ elements: [], editable: false }}>
+            <SheetChartsProvider value={{ elements: [], editable: false }}>
               <div data-element-id={el.id}>
                 <PlanSheetView element={el} fontFamily="Inter" />
               </div>
-            </SheetChartsContext.Provider>
+            </SheetChartsProvider>
           </SheetsBridgeContext.Provider>
         </PlanProvider>
       </CanvasSurfaceProvider>,

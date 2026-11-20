@@ -177,6 +177,14 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   layer and the Map do not re-render for it. Handlers read the selection from the store when they
   run; effects that follow it (presence, scrolling a selection into view, the screen-reader
   announcement, dropping hidden elements from it) subscribe to the store.
+- **The contexts around the element layer hold still.** A context provided above the element views
+  keeps its value through an edit, a selection, a press and a release, unless what it carries changed:
+  when one changes, React checks every element view under it for readers, about 22,000 components on
+  the reference board, a quarter of a release's task. The editor's state, the toolbar groups the
+  editor builds for the canvas chrome and the board's elements for the Sheets' charts change on every
+  editor render, so each travels in a store the context carries (`useValueStore`); only the
+  components that read it re-render, in the same task, before the frame paints. A handler a context
+  carries keeps its identity and calls the editor's newest version.
 - **Derived layouts are computed once per change.** Arrow labels, ink projection and theme
   colours are laid out per element change and cached per element identity, as arrow labels are
   today.
@@ -208,7 +216,8 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
 ## Measuring
 
 - **Counts, not timings, pin the structural rules** deterministically. In the unit suite: an
-  editor render that changes nothing renders no element view, a zoom renders only counter-scaled
+  editor render that changes nothing renders no element view, a context around the canvas keeps its value
+  when only the editor's handlers or state changed, a zoom renders only counter-scaled
   parts, a one-element move renders only it and the arrows whose geometry it changed, and the Map
   holds its drawing through a gesture. In a real browser, in the end-to-end suite: a still board
   with a selection showing asks for no animation frames.
@@ -234,7 +243,8 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   JavaScript as it runs and records the stack that forced each style or layout pass.
 - **Each gesture starts from the state it measures.** A drag starts with its shape selected: the
   undo that resets each run clears the selection, and a press that selects is the Selecting row's
-  work, not the drag's (it read as the drag's longest task). A run ends with nothing in hand and
+  work, not the drag's (it read as the drag's longest task). Its press comes after the double-press
+  window, so a board quick to answer does not pair it with the selecting click and move nothing. A run ends with nothing in hand and
   nothing selected: a pencil stroke is undone first, while it is still the last change (clearing a
   selection is an undo step of its own), then Escape twice puts the pen down and clears the
   selection before Select is picked. One Escape left a diagram's stroke selected, the Select key

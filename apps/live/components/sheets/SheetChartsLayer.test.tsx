@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
 import type { Element, ShapeElement } from '@livedoc/document';
 import { SheetsBridgeContext, type SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
-import { SheetChartsContext } from './sheet-charts-context';
+import { SheetChartsProvider } from './sheet-charts-context';
 import type { SheetChartRenderer } from '@/components/canvas/sheet-chart-renderer';
 import { SheetChartsLayer } from './SheetChartsLayer';
 import { placeSheetChart } from './sheet-charts';
@@ -79,11 +79,11 @@ function mount(
     h,
     () => (
       <SheetsBridgeContext.Provider value={bridge}>
-        <SheetChartsContext.Provider
+        <SheetChartsProvider
           value={{ elements, editable: opts.editable ?? true, renderChart: opts.renderChart }}
         >
           <SheetChartsLayer />
-        </SheetChartsContext.Provider>
+        </SheetChartsProvider>
       </SheetsBridgeContext.Provider>
     ),
     { canShape: opts.canShape ?? true, interactive: opts.interactive ?? true },

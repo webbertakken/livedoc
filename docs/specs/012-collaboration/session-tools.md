@@ -61,7 +61,7 @@ element it is the element's stored config, so setting it configures the button
 AND the Start button runs it now with that value. One number doing both, so no
 mode flag is needed.
 
-The element menus read the session verbs off `EditorContext` rather than taking
+The element menus read the session verbs off the editor context (`useEditorContext`) rather than taking
 them as props, because threading them would mean new props on `Canvas` and
 every element face, and the faces are memoised so a canvas of a hundred
 elements does not re-render on unrelated state. That is safe because of WHERE

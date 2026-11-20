@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { presetSetup, statusColumn } from '@livedoc/items';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import { PlanColumnPopover } from './PlanColumnPopover';
 
 // docs/specs/026-plan/plan-board.md "Column settings": the name takes focus on a desktop; on a phone only for a column
@@ -23,7 +23,7 @@ function open(selectName = false) {
     columns: [statusColumn('todo', 'To Do'), statusColumn('done', 'Done')],
   };
   render(
-    <EditorContext.Provider value={{ tabs: [] } as never}>
+    <EditorStateProvider state={{ tabs: [] } as never}>
       <PlanColumnPopover
         getAnchor={() => document.body}
         setup={setup}
@@ -34,7 +34,7 @@ function open(selectName = false) {
         onTrashCards={() => {}}
         onClose={() => {}}
       />
-    </EditorContext.Provider>,
+    </EditorStateProvider>,
   );
   return screen.getByRole('textbox', { name: 'Column name' });
 }

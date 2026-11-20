@@ -8,7 +8,7 @@
 import type { ReactNode } from 'react';
 import { isHexColour } from '@livedoc/document';
 import { useAppearance } from '@livedoc/ui';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { OutsideEditor } from '@/app/document/[id]/EditorContext';
 import { ColourSwatchButton } from '@/components/colour/ColourSwatchButton';
 import { ColourPopover } from '@/components/colour/ColourPopover';
 import { standardGroup } from '@/components/colour/colour-options';
@@ -35,7 +35,7 @@ export function useTagColourOptions() {
 // The editor's context is held off: a colour picked here is a tag's, not one of the open document's custom colours,
 // and the tab's theme is not offered.
 export function TagColourIsolation({ children }: { children: ReactNode }) {
-  return <EditorContext.Provider value={null}>{children}</EditorContext.Provider>;
+  return <OutsideEditor>{children}</OutsideEditor>;
 }
 
 export function TagColourButton({

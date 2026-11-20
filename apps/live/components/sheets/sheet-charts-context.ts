@@ -4,8 +4,9 @@
 // tab it is on (its charts are among them) and the theme's chart palette. The canvas provides the open tab's; a
 // Dashboard slot showing another tab's Sheet provides that tab's, not to be changed from there (`editable` false).
 // Kept tiny and free of the sheet chunk: the canvas, in the main bundle, provides it.
-import { createContext, useContext } from 'react';
+import { createContext, createElement, useContext, type ReactNode } from 'react';
 import type { Element } from '@livedoc/document';
+import { useValueStore, useValueStoreSnapshot, type ValueStore } from '@/hooks/ui/useValueStore';
 import type { SheetChartRenderer } from '@/components/canvas/sheet-chart-renderer';
 
 export type SheetChartsValue = {
@@ -18,10 +19,23 @@ export type SheetChartsValue = {
   renderChart?: SheetChartRenderer | undefined;
 };
 
-export const SheetChartsContext = createContext<SheetChartsValue | null>(null);
+// The canvas provides it around every element view, and its elements change with every edit: it travels in a store,
+// so the context holds still and only the Sheets that read it re-render
+// (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+const SheetChartsContext = createContext<ValueStore<SheetChartsValue> | null>(null);
+
+export function SheetChartsProvider({
+  value,
+  children,
+}: {
+  value: SheetChartsValue;
+  children: ReactNode;
+}) {
+  return createElement(SheetChartsContext.Provider, { value: useValueStore(value) }, children);
+}
 
 export function useSheetCharts(): SheetChartsValue | null {
-  return useContext(SheetChartsContext);
+  return useValueStoreSnapshot(useContext(SheetChartsContext));
 }
 
 // Insert Chart in a Sheet whose tab is not the open one (a Dashboard slot).

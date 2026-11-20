@@ -5,7 +5,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ReactNode } from 'react';
-import { EditorContext } from '@/app/document/[id]/EditorContext';
+import { EditorStateProvider } from '@/app/document/[id]/EditorContext';
 import type { PendingDraw } from '@/lib/draw-mode';
 import type { PaletteTileDef } from './palette-tile-defs';
 import { PaletteTile, type PaletteTileActions } from './PaletteTileGrid';
@@ -40,7 +40,7 @@ const held: PendingDraw = {
 function show(pendingDraw: PendingDraw | null) {
   const actions = { beginMarker: vi.fn(), hasImage: false } as unknown as PaletteTileActions;
   const wrap = ({ children }: { children: ReactNode }) => (
-    <EditorContext.Provider value={ctx as never}>{children}</EditorContext.Provider>
+    <EditorStateProvider state={ctx as never}>{children}</EditorStateProvider>
   );
   render(<PaletteTile def={def} actions={actions} pendingDraw={pendingDraw} compact />, {
     wrapper: wrap,

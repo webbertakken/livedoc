@@ -64,7 +64,7 @@ import { WireframeOverlaysWhenReady } from '@/components/canvas/WireframeOverlay
 import { CardVoteProvider, type CardVote } from '@/components/plan/CardVoteContext';
 import { MindHaloRootsProvider, MindNumbersProvider } from './MindMapLayer';
 import {
-  SheetChartsContext,
+  SheetChartsProvider,
   type SheetChartsValue,
 } from '@/components/sheets/sheet-charts-context';
 import { sheetDrawnChartIds, type LaneGutterEdge, type LaneLike } from '@livedoc/document';
@@ -610,7 +610,7 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
     ],
   );
   return (
-    <SheetChartsContext.Provider value={sheetCharts}>
+    <SheetChartsProvider value={sheetCharts}>
       <MindNumbersProvider elements={elements}>
         <MindHaloRootsProvider elements={elements}>
           <CardVoteProvider value={cardVote}>
@@ -852,6 +852,6 @@ export function CanvasElementsLayer(props: CanvasElementsLayerProps) {
           </CardVoteProvider>
         </MindHaloRootsProvider>
       </MindNumbersProvider>
-    </SheetChartsContext.Provider>
+    </SheetChartsProvider>
   );
 }

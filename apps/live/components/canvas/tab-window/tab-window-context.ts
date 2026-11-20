@@ -3,8 +3,19 @@
 // What a tab window on the canvas reads (docs/specs/009-elements/tab-window.md): the document's tabs, where each
 // one's content is, and the few things a window does (ask for its tab, open it, show another). Provided once by the
 // canvas host rather than threaded through every element.
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  createElement,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { Tab } from '@livedoc/document';
+import { useLatest } from '@/hooks/ui/useLatest';
+import { useValueStore, useValueStoreSnapshot, type ValueStore } from '@/hooks/ui/useValueStore';
 import { track } from '@/lib/telemetry';
 
 export type TabWindowStatus = 'loaded' | 'loading' | 'failed';
@@ -25,11 +36,24 @@ export type TabWindowContextValue = {
   choose?: (elementId: string, tabId: string) => void;
 };
 
-export const TabWindowContext = createContext<TabWindowContextValue | null>(null);
+// Provided around every element view, and the tabs change with every edit: the value travels in a store, so the
+// context holds still and only the windows re-render (docs/specs/008-canvas/canvas-performance.md "The contexts
+// around the element layer hold still").
+const TabWindowContext = createContext<ValueStore<TabWindowContextValue> | null>(null);
+
+export function TabWindowProvider({
+  value,
+  children,
+}: {
+  value: TabWindowContextValue;
+  children: ReactNode;
+}) {
+  return createElement(TabWindowContext.Provider, { value: useValueStore(value) }, children);
+}
 
 /** The windows' context, or null where nothing provides it (a renderer outside the editor). */
 export function useTabWindows(): TabWindowContextValue | null {
-  return useContext(TabWindowContext);
+  return useValueStoreSnapshot(useContext(TabWindowContext));
 }
 
 /** The value the canvas host provides, from the editor's tabs and its per-tab loading. */
@@ -65,6 +89,9 @@ export function useTabWindowContextValue({
     () => (isOutOfScope ? tabs.filter((t) => !isOutOfScope(t.id)) : tabs),
     [tabs, isOutOfScope],
   );
+  // The editor's handlers as they are now, read when a window acts: the value keeps its identity while the editor
+  // re-renders (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+  const handlers = useLatest({ loadTabs, openTab, commitElements });
   const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
   // The tabs a Retry is fetching: Loading while it runs, whatever failed before (the editor's own visit included).
   const [retrying, setRetrying] = useState<ReadonlySet<string>>(() => new Set());
@@ -74,7 +101,7 @@ export function useTabWindowContextValue({
     (tabId: string) => {
       if (asked.current.has(tabId)) return;
       asked.current.add(tabId);
-      void loadTabs([tabId]).then((failures) => {
+      void handlers.current.loadTabs([tabId]).then((failures) => {
         asked.current.delete(tabId);
         setRetrying((prev) => {
           if (!prev.has(tabId)) return prev;
@@ -93,7 +120,7 @@ export function useTabWindowContextValue({
         });
       });
     },
-    [loadTabs],
+    [handlers],
   );
   const status = useCallback(
     (tabId: string): TabWindowStatus =>
@@ -126,14 +153,14 @@ export function useTabWindowContextValue({
   const open = useCallback(
     (tabId: string) => {
       track('UI', 'Used', 'TabWindowOpen');
-      openTab(tabId);
+      handlers.current.openTab(tabId);
     },
-    [openTab],
+    [handlers],
   );
   const choose = useCallback(
     (elementId: string, tabId: string) => {
       track('Element', 'Changed', 'TabWindowTab');
-      commitElements((els) =>
+      handlers.current.commitElements((els) =>
         els.map((el) =>
           el.id === elementId && el.type === 'shape' && el.shape === 'tab-window'
             ? { ...el, windowTabId: tabId }
@@ -141,7 +168,7 @@ export function useTabWindowContextValue({
         ),
       );
     },
-    [commitElements],
+    [handlers],
   );
   return useMemo(
     () => ({

@@ -1,7 +1,8 @@
 'use client';
 
 import { pruneCustomThemeSwatchOverrides } from '@/lib/swatch-override-prefs';
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useLatest } from '@/hooks/ui/useLatest';
 import type { ReactNode } from 'react';
 import type { CustomTheme, CustomThemeDefinition } from '@livedoc/api-schema';
 import {
@@ -80,6 +81,9 @@ export function CustomThemeProvider({
   children: ReactNode;
 }) {
   const [themes, setThemes] = useState<CustomTheme[]>([]);
+  // The editor rebuilds its handlers on every render; the value around the canvas keeps its identity and a
+  // deletion calls the newest (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+  const onThemeDeletedLatest = useLatest(onThemeDeleted);
   // The owner whose list has settled (loaded or failed): loading until that is the current owner.
   const [settledFor, setSettledFor] = useState<string | null>(null);
   if (!ownerId && settledFor !== null) setSettledFor(null);
@@ -154,7 +158,7 @@ export function CustomThemeProvider({
       // does a hard reset to the default theme, so it doesn't depend on
       // the dead id still resolving — but keeping this order means the
       // registry and the canvas never disagree mid-delete.
-      onThemeDeleted?.(id);
+      onThemeDeletedLatest.current?.(id);
       pruneCustomThemeSwatchOverrides(ownerId, (themeId) => themeId !== id);
       setThemes((prev) => prev.filter((t) => t.id !== id));
       unregisterCustomTheme(id);
@@ -163,14 +167,13 @@ export function CustomThemeProvider({
         .then(() => track('Theme', 'Deleted', 'Custom'))
         .catch(() => {});
     },
-    [ownerId, onThemeDeleted],
+    [ownerId, onThemeDeletedLatest],
   );
 
-  return (
-    <CustomThemeContext.Provider
-      value={{ themes, loading, createTheme, updateTheme, deleteTheme, writable: !readOnly }}
-    >
-      {children}
-    </CustomThemeContext.Provider>
+  const writable = !readOnly;
+  const value = useMemo(
+    () => ({ themes, loading, createTheme, updateTheme, deleteTheme, writable }),
+    [themes, loading, createTheme, updateTheme, deleteTheme, writable],
   );
+  return <CustomThemeContext.Provider value={value}>{children}</CustomThemeContext.Provider>;
 }

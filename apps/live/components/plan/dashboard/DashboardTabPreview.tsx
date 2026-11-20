@@ -15,7 +15,7 @@ import {
 import { getTheme } from '@/lib/themes';
 import { PlanBoardView } from '@/components/plan/PlanBoardView';
 import { PlanSheetView } from '@/components/sheets/PlanSheetView';
-import { SheetChartsContext, useSheetCharts } from '@/components/sheets/sheet-charts-context';
+import { SheetChartsProvider, useSheetCharts } from '@/components/sheets/sheet-charts-context';
 import { SheetHomeTabContext } from '@/components/sheets/sheet-home-tab';
 import { useDashboard } from './dashboard-context';
 import { Missing, useBoxSize } from './DashboardSlotContent';
@@ -88,16 +88,14 @@ export function DashboardTabPreview({
           <div className="absolute inset-0">
             {el.shape === 'plan-sheet' ? (
               // Its charts are on its own tab: drawn as they are, not moved from here (sheet.md "Charts").
-              <SheetChartsContext.Provider
-                value={{ elements: tab.elements, editable: false, renderChart }}
-              >
+              <SheetChartsProvider value={{ elements: tab.elements, editable: false, renderChart }}>
                 {/* Made and loaded on its own tab, never the Dashboard's (a new Sheet tab first drawn here). */}
                 <SheetHomeTabContext.Provider value={tab.id}>
                   <PlanSheetView
                     element={{ ...el, x: 0, y: 0, width: size.width, height: size.height }}
                   />
                 </SheetHomeTabContext.Provider>
-              </SheetChartsContext.Provider>
+              </SheetChartsProvider>
             ) : (
               <PlanBoardView
                 element={{ ...el, x: 0, y: 0, width: size.width, height: size.height }}
