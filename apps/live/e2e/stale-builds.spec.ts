@@ -95,6 +95,19 @@ test.describe('stale builds', () => {
     await page.screenshot({ path: test.info().outputPath('gave-up.png') });
   });
 
+  // The Explorer builds the next blank document in the background once it is quiet (the standby). Its code gone
+  // after a deploy is no failure of the page: nothing reloads, before or after the person moves on.
+  test('background work whose code is gone reloads nothing', async ({ page }) => {
+    const seen = chunkLedger(page);
+    await openExplorer(page, '/explorer/all');
+    await removeUnseenChunks(page, seen, /^$/);
+    const loads = pageLoads(page);
+    // Past the standby's wait for a quiet moment (STANDBY_IDLE_TIMEOUT_MS) and the Explorer settling first.
+    await page.waitForTimeout(4_000);
+    expect(loads).toEqual([]);
+    await expect(page.getByRole('treeitem', { name: /^Home/ })).toBeVisible();
+  });
+
   test('once a newer build is live, links and back are full page loads', async ({ page }) => {
     await openExplorer(page);
     // Counted first, so an export built without an id skips at once rather than waiting for a meta

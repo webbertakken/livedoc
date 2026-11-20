@@ -169,6 +169,21 @@ describe('startNewDocument', () => {
 });
 
 describe('the standby', () => {
+  // docs/specs/016-platform/stale-builds.md "Background work": the standby is made in the background, so its code
+  // gone after a deploy is no failure of the page: nothing reloads, and the click makes the document fresh.
+  it('is left unmade, quietly, when its code cannot load', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const gone = Object.assign(new Error('Failed to load chunk /_next/static/chunks/x.js'), {
+      name: 'ChunkLoadError',
+    });
+    mocks.loadEditor.mockRejectedValueOnce(gone);
+    const calls = mocks.setStandbyInPlace.mock.calls.length;
+    await expect(prepareStandbyDocument('diagram')).resolves.toBeUndefined();
+    expect(mocks.setStandbyInPlace.mock.calls.length).toBe(calls);
+    expect(warn).toHaveBeenCalledWith('[new-document] standby not made', expect.anything());
+    warn.mockRestore();
+  });
+
   it('is made ahead for the face’s blank, its start closed, and nothing is created', async () => {
     await prepareStandbyDocument('diagram');
     const [id] = mocks.setStandbyInPlace.mock.calls.at(-1) as [string];

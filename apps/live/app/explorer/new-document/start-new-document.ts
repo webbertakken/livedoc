@@ -205,6 +205,11 @@ export async function prepareStandbyDocument(lastBlank: NewDocumentBlankId): Pro
     await loadEditorPage();
     setStandby(await prepareDocument(blank.blank, 'blank', creator, location));
     debugLog(`[new-document] standby blank=${blank.id}`);
+  } catch (error) {
+    // Background work (docs/specs/016-platform/stale-builds.md "Background work"): its code gone after a deploy, or
+    // the network down, is no failure of the page the person is on. Left unmade; the click makes the document fresh,
+    // and that load recovers as any navigation does.
+    console.warn('[new-document] standby not made', { error: String(error) });
   } finally {
     preparing = false;
   }
