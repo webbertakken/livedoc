@@ -127,6 +127,15 @@ export const STATS_FUNCTIONS: Record<string, FnDef> = {
     return n;
   }),
   COUNTA: fn(1, MANY, (args, f) => flatScalars(args, f).filter((x) => x !== null).length),
+  // Distinct values, empty cells aside; a number and its text (1, "1") are two, and text keeps its case, as UNIQUE.
+  COUNTUNIQUE: fn(1, MANY, (args, f) => {
+    const seen = new Set<string>();
+    for (const x of flatScalars(args, f)) {
+      if (x === null || x === '') continue;
+      seen.add(isError(x) ? `e${x.e}` : `${typeof x}:${String(x)}`);
+    }
+    return seen.size;
+  }),
   COUNTBLANK: fn(
     1,
     1,

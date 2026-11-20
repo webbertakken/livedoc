@@ -48,6 +48,10 @@ export type Frame = {
   // How many sheets the workbook holds (SHEETS), and a sheet's place among them from 1 (SHEET); 0 for none.
   sheetCount(): number;
   sheetNumber(sheetId: string): number;
+  // How a row is hidden (SUBTOTAL): by the sheet's filter (its filter cells read, so noted), by hand, or not.
+  rowHidden(sheetId: string, r: number): 'filtered' | 'hidden' | null;
+  // Whether a cell's formula calls a function (SUBTOTAL skips the subtotals inside its range).
+  formulaCalls(sheetId: string, r: number, c: number, name: string): boolean;
   // A cell's formula as its formula bar shows it (FORMULATEXT); null when it holds none.
   formulaText(sheetId: string, r: number, c: number): string | null;
   // The grid size of a sheet.

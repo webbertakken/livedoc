@@ -1,9 +1,15 @@
 // Maths functions (docs/specs/029-sheets/formulas.md "Functions": Maths).
 import type { FnDef } from '../fn';
 import { MANY, arrayArg, arrayArgs, fn, numArg, numFn, numbersOf, volatileFn } from '../fn';
-import { err, isError, scalarOf, type Value } from '../values';
+import { err, isError, scalarOf } from '../values';
 import { criteriaMask, ifsNumbers, maskedNumbers, sameSizeAs } from './conditional';
 import { dims } from '../values';
+import { BASE_FUNCTIONS } from './bases';
+import { COMBINATORICS_FUNCTIONS } from './combinatorics';
+import { COMPLEX_FUNCTIONS } from './complex';
+import { ROUNDING_FUNCTIONS } from './rounding';
+import { SUBTOTAL_FUNCTIONS } from './subtotal';
+import { TRIG_FUNCTIONS } from './trig';
 
 // A whole number of steps of 10^digits back to the value's scale. Negative digits multiply by a whole power of ten
 // rather than divide by an inexact fraction (987654321 to -4 digits is 987650000, not 987650000.0000001).
@@ -31,14 +37,6 @@ function gcd(a: number, b: number): number {
   let y = b;
   while (y) [x, y] = [y, x % y];
   return x;
-}
-
-function toMultiple(x: number, factor: number, up: boolean): Value {
-  if (factor === 0) return 0;
-  if (x > 0 && factor < 0) return err('#NUM!', 'The factor must have the same sign as the value');
-  const q = Number((x / factor).toPrecision(15));
-  // To 15 significant digits, so CEILING(0.3, 0.1) is 0.3 rather than 0.30000000000000004.
-  return Number(((up ? Math.ceil(q) : Math.floor(q)) * factor).toPrecision(15));
 }
 
 function sum(ns: number[]): number {
@@ -112,8 +110,6 @@ export const MATH_FUNCTIONS: Record<string, FnDef> = {
   LOG10: numFn(1, 1, ([x]) => (x! <= 0 ? err('#NUM!') : Math.log10(x!))),
   PI: fn(0, 0, () => Math.PI),
   SIGN: numFn(1, 1, ([x]) => Math.sign(x!)),
-  CEILING: numFn(1, 2, ([x, factor = 1]) => toMultiple(x!, factor, true)),
-  FLOOR: numFn(1, 2, ([x, factor = 1]) => toMultiple(x!, factor, false)),
   MROUND: numFn(2, 2, ([x, m]) => {
     if (m === 0) return 0;
     if (Math.sign(x!) !== Math.sign(m!) && x !== 0) return err('#NUM!');
@@ -150,6 +146,12 @@ export const MATH_FUNCTIONS: Record<string, FnDef> = {
     if (b < a) return err('#NUM!');
     return a + Math.floor(f.rand() * (b - a + 1));
   }),
+  ...ROUNDING_FUNCTIONS,
+  ...TRIG_FUNCTIONS,
+  ...COMBINATORICS_FUNCTIONS,
+  ...BASE_FUNCTIONS,
+  ...COMPLEX_FUNCTIONS,
+  ...SUBTOTAL_FUNCTIONS,
 };
 
 // Its arguments are an array context (formulas.md "Arrays and spills").

@@ -62,9 +62,10 @@ describe('formula assist', () => {
     expect(functionMatches('sum', 3)).toBeNull();
   });
   it('suggests the sheet\u2019s named ranges after the functions, and accepts one without brackets', () => {
-    const m = functionMatches('=B2*ta', 6, 8, ['TaxRate', 'Totals', 'Other'])!;
+    // "tax" starts no function's name (TAN does "ta").
+    const m = functionMatches('=B2*tax', 7, 8, ['TaxRate', 'Totals', 'Other'])!;
     expect(m.names).toEqual(['TaxRate']);
-    expect(acceptFunction('=B2*ta', m, 6, 'TaxRate')).toEqual({ draft: '=B2*TaxRate', caret: 11 });
+    expect(acceptFunction('=B2*tax', m, 7, 'TaxRate')).toEqual({ draft: '=B2*TaxRate', caret: 11 });
     // Typed in full, it is no longer offered, so Enter commits; so too a name that is also a function's (RATE).
     expect(functionMatches('=B2*taxrate', 11, 8, ['TaxRate'])).toBeNull();
     expect(functionMatches('=B2*Rate', 8, 8, ['Rate'])).toBeNull();
