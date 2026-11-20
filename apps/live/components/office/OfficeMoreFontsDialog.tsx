@@ -130,8 +130,8 @@ export function OfficeMoreFontsDialog({
         <Choice label="Show" value={show} options={FONT_SHOW} onChange={setShow} />
         <Choice label="Sort" value={sort} options={FONT_SORT} onChange={setSort} />
       </div>
-      <div className="mt-3 flex min-h-0 flex-1 gap-4 max-sm:flex-col">
-        <div className="flex min-w-0 flex-1 flex-col">
+      <div className="mt-3 flex min-h-0 flex-1 gap-4 sm:h-[440px] sm:flex-none max-sm:flex-col">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           {catalogue.state === 'ready' ? (
             <>
               <p role="status" aria-live="polite" className="sr-only">
@@ -178,7 +178,7 @@ export function OfficeMoreFontsDialog({
 
 function Message({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-[360px] flex-col items-center justify-center rounded border border-(--office-line) text-sm text-(--office-muted) max-sm:h-auto max-sm:flex-1 max-sm:py-8">
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center rounded border border-(--office-line) text-sm text-(--office-muted) max-sm:py-8">
       {children}
     </div>
   );

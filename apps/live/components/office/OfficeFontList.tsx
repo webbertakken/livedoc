@@ -17,6 +17,7 @@ import { MyFonts } from '@/lib/office/office-my-fonts';
 import { rowFace, type MoreFontsFamily } from '@/lib/office/office-more-fonts';
 
 export const FONT_ROW_PX = 36;
+// The list's height until it is measured: the room the dialog gives it, less its search row.
 export const FONT_LIST_PX = 360;
 // Rows drawn past each end of the view, so a fast scroll never shows a gap.
 const OVERSCAN = 5;
@@ -109,7 +110,7 @@ export function OfficeFontList({
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      className="relative h-[360px] min-h-0 overflow-y-auto rounded border border-(--office-line) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) max-sm:h-auto max-sm:flex-1"
+      className="relative min-h-0 flex-1 overflow-y-auto rounded border border-(--office-line) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus)"
     >
       <div style={{ height: rows.length * FONT_ROW_PX }} className="relative">
         {inView.map((family, i) => {
