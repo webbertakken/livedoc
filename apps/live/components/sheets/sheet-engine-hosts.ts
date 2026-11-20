@@ -11,6 +11,9 @@ export type CardData = {
   statusNames?: ReadonlyMap<string, string>;
 };
 
+/** How long the Worker works before it takes in newer changes: half a 60 Hz frame (safe range 4 to 16). */
+export const RECALC_SLICE_MS = 8;
+
 export type ToEngine =
   | { scope: string; msg: EngineIn }
   | { scope: string; msg: { t: 'cards'; cards: CardData | null } }

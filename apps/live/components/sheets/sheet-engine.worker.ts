@@ -1,8 +1,7 @@
 // The spreadsheet engine's Web Worker (docs/specs/029-sheets/formulas.md "Recalculation"): the only engine on the
 // page. It takes the store's sheets and changes and answers with waiting cells and their values, working in parts
 // of RECALC_SLICE_MS so a newer change is taken in between them, never behind a whole recalculation.
-import { EngineHosts, type FromEngine, type ToEngine } from './sheet-engine-hosts';
-import { RECALC_SLICE_MS } from './sheet-engine-link';
+import { EngineHosts, RECALC_SLICE_MS, type FromEngine, type ToEngine } from './sheet-engine-hosts';
 
 const scope = self as unknown as {
   postMessage: (message: FromEngine) => void;
