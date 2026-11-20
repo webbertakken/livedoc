@@ -10,8 +10,6 @@ import {
   checkboxValue,
   inputAllowed,
   inputForRule,
-  isEmail,
-  isUrl,
   optionFor,
   rangeOptions,
   ruleLine,
@@ -22,6 +20,7 @@ import {
   writeForRules,
 } from './validation';
 import { resetSheetWrite } from '../sheet-starters';
+import { isEmail, isUrl } from '../text-checks';
 
 const by = { id: 'p', name: 'P', color: '#000000' };
 const R = (i: number) => `s0r${i}`;

@@ -202,8 +202,27 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
 
 **Logic**: `IF`, `IFS`, `SWITCH`, `AND`, `OR`, `XOR`, `NOT`, `TRUE`, `FALSE`, `IFERROR`, `IFNA`.
 
-**Information**: `ISBLANK`, `ISNUMBER`, `ISTEXT`, `ISLOGICAL`, `ISERROR`, `ISNA`, `ISFORMULA`, `ERROR.TYPE`, `NA`,
-`N`, `TYPE`.
+**Information**: `ISBLANK`, `ISNUMBER`, `ISTEXT`, `ISNONTEXT`, `ISLOGICAL`, `ISERROR`, `ISERR`, `ISNA`, `ISREF`,
+`ISDATE`, `ISEMAIL`, `ISFORMULA`, `ERROR.TYPE`, `NA`, `N`, `TYPE`, `CELL`, `SHEETS`.
+
+- `ISDATE` is TRUE for text that reads as a date in the spreadsheet's locale (a time after it allowed), and for a
+  number read from a cell drawn as a date (a Date, Date Time or Custom format that shows a day, a month or a year).
+  A number worked out in the formula itself (`ISDATE(DATE(2026, 1, 1))`) is no date (default, D39). A range is TRUE
+  only when every cell in it is a date.
+- `ISEMAIL` reads an address as a Text Is Valid Email rule does ([Data validation](data-validation.md)).
+- `CELL(info_type, [reference])` tells of the top-left cell of the reference, or of its own cell when there is none
+  (OpenFormula's, D38): Google's `"address"`, `"col"`, `"color"`, `"contents"`, `"prefix"`, `"row"`, `"sheet"`
+  (the sheet's name), `"type"` and `"width"`, and OpenFormula's `"format"`, `"parentheses"`, `"filename"` and
+  `"protect"`. Any other is `#VALUE!`; a reference that is no reference is `#REF!`.
+  - `"width"` counts characters as an XLSX file does (ECMA-376 Part 1, 18.3.1.13): the column's pixels past 5 of
+    padding, over a 7-pixel digit, whole characters only (default, D40).
+  - `"format"` names a format by OpenFormula's codes (`G`, `F2`, `,2`, `C2`, `P2`, `S2`, `D1` to `D9`, then
+    `-` and `()`). LiveDoc's own: Automatic `G` (`F` and its decimals when set), Number `,`, Currency and
+    Accounting `C`, Percent `P`, Scientific `S`, Date and Date Time `D4`, Time and Duration `D8`; a Custom
+    format by what its code draws, dates as Excel names them (default, D41).
+  - `"filename"` is empty text, as OpenFormula has it for a file never saved: a LiveDoc document is no file; and
+    `"protect"` is 1 only for a cell a protected range or sheet covers (default, D42).
+- `SHEETS([reference])` counts the spreadsheet's sheets, hidden ones too, or the sheets a reference spans.
 
 **Lookup**: `VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `LOOKUP`, `INDEX`, `MATCH`, `XMATCH`, `CHOOSE`, `ROW`, `ROWS`, `COLUMN`,
 `COLUMNS`, `OFFSET`, `INDIRECT` (an A1 text on this sheet or another on the tab).
@@ -342,7 +361,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `CEILING`             | Math        | `CEILING(value, [factor])`                                                                                     | Google      | `CEILING`                        | built                                                         |
 | `CEILING.MATH`        | Math        | `CEILING.MATH(number, [significance], [mode])`                                                                 | Google      | `COM.MICROSOFT.CEILING.MATH`     | planned                                                       |
 | `CEILING.PRECISE`     | Math        | `CEILING.PRECISE(number, [significance])`                                                                      | Google      | `COM.MICROSOFT.CEILING.PRECISE`  | planned                                                       |
-| `CELL`                | Info        | `CELL(info_type, reference)`                                                                                   | Google      | `CELL`                           | planned                                                       |
+| `CELL`                | Info        | `CELL(info_type, reference)`                                                                                   | Google      | `CELL`                           | built                                                         |
 | `CHAR`                | Text        | `CHAR(table_number)`                                                                                           | Google      | `CHAR`                           | built                                                         |
 | `CHIDIST`             | Statistical | `CHIDIST(x, degrees_freedom)`                                                                                  | Google      | `LEGACY.CHIDIST`                 | planned                                                       |
 | `CHIINV`              | Statistical | `CHIINV(probability, degrees_freedom)`                                                                         | Google      | `LEGACY.CHIINV`                  | planned                                                       |
@@ -551,21 +570,21 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `IRR`                 | Financial   | `IRR(cashflow_amounts, [rate_guess])`                                                                          | Google      | `IRR`                            | built                                                         |
 | `ISBETWEEN`           | Operator    | `ISBETWEEN(value_to_compare, lower_value, upper_value, lower_value_is_inclusive, upper_value_is_inclusive)`    | Google      | S5                               | built                                                         |
 | `ISBLANK`             | Info        | `ISBLANK(value)`                                                                                               | Google      | `ISBLANK`                        | built                                                         |
-| `ISDATE`              | Info        | `ISDATE(value)`                                                                                                | Google      | S5                               | planned                                                       |
-| `ISEMAIL`             | Info        | `ISEMAIL(value)`                                                                                               | Google      | S5                               | planned                                                       |
-| `ISERR`               | Info        | `ISERR(value)`                                                                                                 | Google      | `ISERR`                          | planned                                                       |
+| `ISDATE`              | Info        | `ISDATE(value)`                                                                                                | Google      | S5                               | built                                                         |
+| `ISEMAIL`             | Info        | `ISEMAIL(value)`                                                                                               | Google      | S5                               | built                                                         |
+| `ISERR`               | Info        | `ISERR(value)`                                                                                                 | Google      | `ISERR`                          | built                                                         |
 | `ISERROR`             | Info        | `ISERROR(value)`                                                                                               | Google      | `ISERROR`                        | built                                                         |
 | `ISEVEN`              | Math        | `ISEVEN(value)`                                                                                                | Google      | `ISEVEN`                         | planned                                                       |
 | `ISFORMULA`           | Info        | `ISFORMULA(cell)`                                                                                              | Google      | `ISFORMULA`                      | built                                                         |
 | `ISLOGICAL`           | Info        | `ISLOGICAL(value)`                                                                                             | Google      | `ISLOGICAL`                      | built                                                         |
 | `ISNA`                | Info        | `ISNA(value)`                                                                                                  | Google      | `ISNA`                           | built                                                         |
-| `ISNONTEXT`           | Info        | `ISNONTEXT(value)`                                                                                             | Google      | `ISNONTEXT`                      | planned                                                       |
+| `ISNONTEXT`           | Info        | `ISNONTEXT(value)`                                                                                             | Google      | `ISNONTEXT`                      | built                                                         |
 | `ISNUMBER`            | Info        | `ISNUMBER(value)`                                                                                              | Google      | `ISNUMBER`                       | built                                                         |
 | `ISO.CEILING`         | Math        | `ISO.CEILING(number, [significance])`                                                                          | Google      | `COM.MICROSOFT.ISO.CEILING`      | planned                                                       |
 | `ISODD`               | Math        | `ISODD(value)`                                                                                                 | Google      | `ISODD`                          | planned                                                       |
 | `ISOWEEKNUM`          | Date        | `ISOWEEKNUM(date)`                                                                                             | Google      | `ISOWEEKNUM`                     | built                                                         |
 | `ISPMT`               | Financial   | `ISPMT(rate, period, number_of_periods, present_value)`                                                        | Google      | `ISPMT`                          | planned                                                       |
-| `ISREF`               | Info        | `ISREF(value)`                                                                                                 | Google      | `ISREF`                          | planned                                                       |
+| `ISREF`               | Info        | `ISREF(value)`                                                                                                 | Google      | `ISREF`                          | built                                                         |
 | `ISTEXT`              | Info        | `ISTEXT(value)`                                                                                                | Google      | `ISTEXT`                         | built                                                         |
 | `ISURL`               | Web         | `ISURL(value)`                                                                                                 | Google      | S5                               | planned                                                       |
 | `JIS`                 | OpenFormula |                                                                                                                | OpenFormula | `JIS`                            | planned                                                       |
@@ -726,7 +745,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `SEQUENCE`            | Math        | `SEQUENCE(rows, columns, start, step)`                                                                         | Google      | `COM.MICROSOFT.SEQUENCE`         | built                                                         |
 | `SERIESSUM`           | Math        | `SERIESSUM(x, n, m, a)`                                                                                        | Google      | `SERIESSUM`                      | planned                                                       |
 | `SHEET`               | Lookup      | `SHEET(value)`                                                                                                 | Google      | `SHEET`                          | planned                                                       |
-| `SHEETS`              | Info        | `SHEETS(reference)`                                                                                            | Google      | `SHEETS`                         | planned                                                       |
+| `SHEETS`              | Info        | `SHEETS(reference)`                                                                                            | Google      | `SHEETS`                         | built                                                         |
 | `SIGN`                | Math        | `SIGN(value)`                                                                                                  | Google      | `SIGN`                           | built                                                         |
 | `SIN`                 | Math        | `SIN(angle)`                                                                                                   | Google      | `SIN`                            | planned                                                       |
 | `SINH`                | Math        | `SINH(value)`                                                                                                  | Google      | `SINH`                           | planned                                                       |
@@ -912,3 +931,7 @@ The code cites each by its id.
 - **D36** A loop longer than the read stack (250 formulas): `#REF!` with iterative calculation on as well (default).
 - **D37** Volatile ticks while the page is hidden: Held, one tick as the page shows again (default).
 - **D38** A function Google defines more narrowly than a standard: The standard's wider definition, everywhere (default).
+- **D39** ISDATE of a number worked out in its formula: No date; only a cell's format makes a number a date (default).
+- **D40** CELL's "width": ECMA-376's characters, a 7-pixel digit and 5 pixels of padding, whole characters (default).
+- **D41** CELL's "format" for LiveDoc's own formats: Number `,`, Currency `C`, Date `D4`, Time `D8`, ... (default).
+- **D42** CELL's "filename" and "protect": Empty text; 1 only under a protected range or sheet (default).

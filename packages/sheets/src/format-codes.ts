@@ -15,7 +15,7 @@ type Tok =
   | { k: 'at' }
   | { k: 'date'; v: string };
 
-function splitSections(code: string): string[] {
+export function splitSections(code: string): string[] {
   const out: string[] = [];
   let cur = '';
   let quoted = false;
@@ -118,7 +118,7 @@ function tokenize(section: string, dateMode: boolean): Tok[] {
   return out;
 }
 
-function isDateSection(section: string): boolean {
+export function isDateSection(section: string): boolean {
   const bare = section
     .replace(/"[^"]*"/g, '')
     .replace(/\\./g, '')

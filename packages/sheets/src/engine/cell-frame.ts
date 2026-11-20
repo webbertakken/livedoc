@@ -3,7 +3,8 @@
 import type { CardSource } from '../cards';
 import type { SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
-import type { CellInput, Sheet } from '../sheet';
+import { colWidth } from '../layout';
+import { cellKey, type CellInput, type Sheet } from '../sheet';
 import { NO_CELL, type CellNo } from './cell-numbers';
 import type { Frame, RangeRef } from './frame';
 
@@ -18,6 +19,7 @@ export type FrameSource = {
   ctx(sheetId: string): SheetsCtx;
   extent(sheetId: string): { rows: number; cols: number };
   sheet(sheetId: string): Sheet | undefined;
+  sheetCount(): number;
   input(sheetId: string, r: number, c: number): CellInput | undefined;
   // A cell's value, the read noted for `reader` unless null.
   cell(sheetId: string, r: number, c: number, reader: CellNo | null): Value;
@@ -52,6 +54,18 @@ export function cellFrame(
       const input = src.input(s, r, c);
       return !!input && 'f' in input;
     },
+    format: (s, r, c) => {
+      const layout = src.sheet(s)?.layout;
+      const rowId = layout?.rows[r];
+      const colId = layout?.cols[c];
+      return rowId && colId ? src.sheet(s)!.cells.get(cellKey(rowId, colId))?.format : undefined;
+    },
+    colWidth: (s, c) => {
+      const layout = src.sheet(s)?.layout;
+      const colId = layout?.cols[c];
+      return layout && colId ? colWidth(layout, colId) : 0;
+    },
+    sheetCount: () => src.sheetCount(),
     grid: (s) => {
       const sh = src.sheet(s);
       return sh ? { rows: sh.layout.rows.length, cols: sh.layout.cols.length } : undefined;

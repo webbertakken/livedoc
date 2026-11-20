@@ -187,6 +187,21 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   ISERROR: D('value', 'TRUE for any error', '=ISERROR(A2/B2)'),
   ISNA: D('value', 'TRUE for #N/A', '=ISNA(MATCH(A2, D:D, 0))'),
   ISFORMULA: D('cell', 'TRUE when a cell holds a formula', '=ISFORMULA(B2)'),
+  ISNONTEXT: D('value', 'TRUE for anything but text, an empty cell too', '=ISNONTEXT(A2)'),
+  ISERR: D('value', 'TRUE for any error but #N/A', '=ISERR(A2/B2)'),
+  ISREF: D('value', 'TRUE for a reference, not text that reads as one', '=ISREF(INDIRECT(A2))'),
+  ISDATE: D(
+    'value',
+    'TRUE for a date: text that reads as one, or a cell drawn as one',
+    '=ISDATE(A2)',
+  ),
+  ISEMAIL: D('value', 'TRUE for text shaped as an email address', '=ISEMAIL(A2)'),
+  CELL: D(
+    'info_type, [reference]',
+    'What a cell is: its "address", "row", "col", "contents", "type", "format", "width", ...',
+    '=CELL("width", B2)',
+  ),
+  SHEETS: D('[reference]', 'How many sheets the spreadsheet has', '=SHEETS()'),
   'ERROR.TYPE': D(
     'value',
     'The number of an error, as in Excel (2 for #DIV/0!, 7 for #N/A, ...)',

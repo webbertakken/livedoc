@@ -4,6 +4,7 @@
 import type { CardSource } from '../cards';
 import type { SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
+import type { CellFormat } from '../sheet';
 
 // A rectangle of one sheet, by positions, inclusive.
 export type RangeRef = { sheetId: string; r1: number; c1: number; r2: number; c2: number };
@@ -40,6 +41,12 @@ export type Frame = {
   extent(sheetId: string): { rows: number; cols: number };
   // Whether a cell holds a formula (ISFORMULA).
   isFormula(sheetId: string, r: number, c: number): boolean;
+  // A cell's own format (CELL, ISDATE); undefined when it has none. Read its value first, so a change to it is noted.
+  format(sheetId: string, r: number, c: number): CellFormat | undefined;
+  // A column's width in pixels (CELL's "width").
+  colWidth(sheetId: string, c: number): number;
+  // How many sheets the workbook holds (SHEETS).
+  sheetCount(): number;
   // The grid size of a sheet.
   grid(sheetId: string): { rows: number; cols: number } | undefined;
   // The rectangle a spilling formula fills, for `B2#`; null when it does not spill.
