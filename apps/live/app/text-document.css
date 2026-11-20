@@ -6,8 +6,11 @@
  */
 .text-document-page {
   color-scheme: light;
-  background: var(--page-colour, light-dark(#ffffff, #1e1f20));
   color: light-dark(#000000, #e3e3e3);
+}
+.text-document-sheet,
+.text-document-page-gap-paper {
+  background: var(--page-colour, light-dark(#ffffff, #1e1f20));
 }
 .dark .text-document-page {
   color-scheme: dark;
@@ -386,4 +389,21 @@ div.text-document-kept {
 }
 .dark .text-document-pageless-ground {
   color-scheme: dark;
+}
+/*
+ * Where a page starts (docs/specs/034-text-documents/page-layout.md "Laying out"): a spacer from where the writing
+ * stops on one page to the next page's text area, never text. Between blocks it shows the sheets behind it; inside a
+ * paragraph it draws the page's foot, the ground and the next page's head over the paragraph's own background and
+ * borders, across the whole page.
+ */
+.text-document-page-gap {
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+.text-document-page-gap-inside > span {
+  display: block;
+}
+.text-document-page-gap-ground {
+  background: var(--office-ground);
 }

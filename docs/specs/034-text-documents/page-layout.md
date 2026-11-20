@@ -1,7 +1,7 @@
 # Page layout
 
-**Status: partly built.** Page setup, page orientation, pageless and the page drawn at its setup are built; the
-rest is specified.
+**Status: partly built.** Page setup, page orientation, pageless, the page drawn at its setup and laying out onto
+pages are built; the rest is specified.
 
 Pages, sections, breaks, columns, headers and footers, page numbers and footnotes in a [text document](text-document.md).
 The layout is drawn by the measured DOM layout the research recommends
@@ -89,13 +89,40 @@ pages' setup.
 
 ## Laying out
 
-- Lines break by the paragraph's alignment and the browser's line breaking; a paragraph that does not fit at a page's
-  foot breaks between lines, honouring keep with next, keep together and widow and orphan control.
-- Headings keep with the next paragraph by default.
+- **The pages**: the writing is laid onto pages one under another, centred on the ground, 12 px apart at 100% zoom
+  (default), 24 px of ground above the first and below the last; each page a sheet of its paper, its page colour and
+  a light shadow; the last page is a whole page however little it holds. Each page has the setup of the section its
+  first line belongs to (the first section's until sections are built).
+- **A page fills** with lines from the top of its text area (the page less its margins) down; a line that would cross
+  the foot of the text area starts the next page. Lines break by the paragraph's alignment and the browser's line
+  breaking, so a paragraph that does not fit breaks **between two of its lines**, never inside one.
+- A paragraph's space before is kept at the top of a page; its space after never pushes a line onto the next page
+  (assumed: Google's).
+- **Prevent single lines** (widows and orphans of two): a paragraph never leaves its first line alone at a page's
+  foot nor its last line alone at a page's head; the lines move on to the next page in pairs.
+- **Keep lines together**: a paragraph that does not fit where it starts moves whole to the next page.
+- **Keep with next**: a paragraph moves to the next page with the paragraph after it when that one starts there; a run
+  of paragraphs keeping with the next moves as one. Headings keep with the next paragraph by default.
+- A keep rule gives way when keeping it would leave a page empty: a paragraph, or a run kept together, taller than a
+  page, or already at a page's top, breaks where the page fills.
+- **Page break before**: a paragraph that has it starts a new page, unless it is already at a page's top.
+- A **section break** that starts its section on the next page starts a new page after its line; on an odd or even
+  page (a file's), it leaves the page between blank when the next page is the wrong one. A continuous one breaks no
+  page.
+- Content kept from a file, drawn as a placeholder, and a section break's line move whole.
 - Pictures in line move with their line; wrapped and fixed ones keep their position on the page and the text flows
   round them.
-- The layout is **incremental**: an edit re-lays from its paragraph onward and stops once page boundaries settle, so
-  typing on page 300 costs what typing on page 1 does ([Performance](#performance)).
+- **No pages** are laid out when the document is pageless or on a phone, where the writing flows to the window
+  ([Editing surface](editing-surface.md#phone-and-tablet)); a page break is then a break in the column only.
+- The layout is **incremental**: an edit measures only the paragraphs it changed, lays out from the page holding the
+  paragraph before the first of them, and stops at the first page that starts where it started before, so typing on
+  page 300 costs what typing on page 1 does ([Performance](#performance)). A change of text width, styles, the
+  document's default text or loaded fonts measures every paragraph again.
+- **What is read**: the space between pages is drawn, never text; a screen reader reads the writing as one, the caret
+  moves across a page's end as across a line's, and Backspace or Delete at a page's edge deletes the character on the
+  other side.
+- Logs: `[text-document] layout` with the pages, the paragraphs measured, the page laid from and where it settled, and
+  the time it took.
 
 ## Breaks
 

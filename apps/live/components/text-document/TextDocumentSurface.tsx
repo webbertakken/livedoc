@@ -13,8 +13,13 @@ import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { TextDocumentState, type ListDefinition, type Style } from '@livedoc/text-documents';
-import { Button } from '@livedoc/ui';
+import {
+  TextDocumentState,
+  type ListDefinition,
+  type PageSetup,
+  type Style,
+} from '@livedoc/text-documents';
+import { Button, useMediaQuery } from '@livedoc/ui';
 import {
   apiLoadTextDocumentState,
   apiLoadTextDocumentStateSince,
@@ -84,6 +89,8 @@ import {
 } from '@/lib/text-document/text-document-caret';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
+import { sheetsHeight, TextDocumentSheets } from './TextDocumentSheets';
+import { paginationPlugin, relayoutPages } from '@/lib/text-document/pagination/pagination-plugin';
 import { pageBox, pagelessSetup, usePagelessColumn } from '@/lib/text-document/text-document-page';
 import {
   NON_PRINTING_TOGGLE,
@@ -150,6 +157,9 @@ export function TextDocumentSurface({
   const [attempt, setAttempt] = useState(0);
   const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
   const clipboardLeftOut = useRef<(count: number) => void>(() => {});
+  // What the layout lays the writing onto (page-layout.md "Laying out"), read as it lays out; and the pages it made.
+  const layout = useRef<{ setup: PageSetup; pages: boolean } | null>(null);
+  const [pageTotal, setPageTotal] = useState(1);
   // The person's typing aids, as the writing reads them (text-and-paragraphs.md "Typing aids").
   const typingAids = useRef<() => TypingAids>(TypingAids.defaults);
   // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
@@ -299,6 +309,16 @@ export function TextDocumentSurface({
                 () => TextDocumentState.lists(doc),
                 (listener) => subscribeLists(doc, listener),
               ),
+              // The writing laid onto pages (page-layout.md "Laying out").
+              paginationPlugin({
+                readFormatting,
+                read: () =>
+                  layout.current ?? {
+                    setup: TextDocumentState.section(doc, live.current.format).setup,
+                    pages: false,
+                  },
+                onPages: setPageTotal,
+              }),
               keymap(baseKeymap),
               // A moved selection is part of the view remembered for this tab.
               new Plugin({
@@ -409,6 +429,13 @@ export function TextDocumentSurface({
   // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
   const column = usePagelessColumn(scroller, scale, page.pageless);
   const drawn = page.pageless ? pagelessSetup(page.section.setup, column) : page.section.setup;
+  // Pages are laid out unless pageless or on a phone, where the writing flows to the window.
+  const wide = useMediaQuery('(min-width: 640px)');
+  const paginated = !page.pageless && wide;
+  useLayoutEffect(() => {
+    layout.current = { setup: page.section.setup, pages: paginated };
+    if (editorView && !editorView.isDestroyed) relayoutPages(editorView);
+  }, [editorView, page.section.setup, paginated]);
   const ruler = useTextDocumentViewToggle(RULER_TOGGLE);
   // View > Show non-printing characters (text-and-paragraphs.md "Non-printing characters").
   const marks = useTextDocumentViewToggle(NON_PRINTING_TOGGLE);
@@ -590,10 +617,19 @@ export function TextDocumentSurface({
           <div
             // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
             // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
-            style={{ zoom: scale, ...pageBox(drawn) }}
+            style={{
+              zoom: scale,
+              ...pageBox(drawn),
+              ...(paginated ? { minHeight: sheetsHeight(pageTotal) } : {}),
+            }}
             data-page-format={page.pageless ? 'pageless' : 'pages'}
-            className={`mx-auto w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height) shadow-sm'} ${state === 'failed' ? 'hidden' : ''}`}
+            data-pages={paginated ? pageTotal : undefined}
+            className={`relative isolate mx-auto w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height)'} ${state === 'failed' ? 'hidden' : ''}`}
           >
+            <TextDocumentSheets
+              pages={paginated && state === 'ready' ? pageTotal : null}
+              shadow={!page.pageless}
+            />
             {state === 'loading' ? (
               <p className="text-(--office-muted)" aria-live="polite">
                 Loading the text document…
