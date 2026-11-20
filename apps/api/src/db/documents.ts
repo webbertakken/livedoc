@@ -506,12 +506,12 @@ export async function getThumbRenderedAt(env: Env, id: string): Promise<number |
   return row?.thumb_rendered_at ?? null;
 }
 
-// Stamp the snapshot as freshly rendered (docs/specs/006-document/document-snapshots.md). Called after a
+// Stamp the snapshot with the save it was drawn from (docs/specs/006-document/document-snapshots.md). Called after a
 // successful R2 write so the next read streams the cached bytes instead
-// of re-rendering.
-export async function markThumbRendered(env: Env, id: string, now: number): Promise<void> {
+// of re-rendering, until a newer save.
+export async function markThumbRendered(env: Env, id: string, drawnFrom: number): Promise<void> {
   await env.DB.prepare('UPDATE documents SET thumb_rendered_at = ? WHERE id = ?')
-    .bind(now, id)
+    .bind(drawnFrom, id)
     .run();
 }
 

@@ -141,14 +141,19 @@ export async function getDocumentThumbnailSvg(
   // we still return the freshly rendered SVG, just without caching it,
   // so the next read renders again. Only stamp the row as fresh once the
   // object is actually in R2, or a later read would trust a stale/absent
-  // object and skip the re-render.
+  // object and skip the re-render. The stamp is the save the render was drawn
+  // from, never the clock: a save landing while it drew stays newer than it.
   const images = env.IMAGES;
   const write = (async () => {
     try {
       await images.put(key, svg, { httpMetadata: { contentType: THUMBNAIL_CONTENT_TYPE } });
-      await markThumbRendered(env, liveDoc.id, Date.now());
-    } catch {
-      // Swallow: the SVG is still returned to the caller below.
+      await markThumbRendered(env, liveDoc.id, liveDoc.savedAt);
+    } catch (error) {
+      // The SVG is still returned to the caller below; the next read draws again.
+      console.warn('[thumbnail] cache write failed', {
+        documentId: liveDoc.id,
+        error: String(error),
+      });
     }
   })();
   if (opts.defer) opts.defer(write);

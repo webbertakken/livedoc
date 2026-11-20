@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { cpuBudgetMs } from '@livedoc/vitest-config/cpu-time';
 import { ROUTE_MANIFEST } from './manifest';
 import {
   candidatePaths,
   instantiate,
+  PROBE_METHODS,
   matchesTemplate,
   probeDispatch,
   routeSourceFiles,
@@ -32,41 +32,57 @@ vi.mock('../auth/session-token', () => ({
 vi.mock('../auth/account-gate', () => ({ requireAccount: async () => null }));
 
 const vocabulary = routeVocabulary();
+const PROBE_METHODS_COUNT = PROBE_METHODS.length;
 const show = (r: Pick<ProbeResult, 'method' | 'path'>) => `${r.method} /${r.path.join('/')}`;
 
 let results: ProbeResult[] = [];
 
-// The sweep is about 35,000 paths in five methods each: some 175,000 dispatches. They take 5 s on a
-// developer's machine and 15 s under coverage, and CI's shared runners, under coverage beside another
-// package, took 19 to 62 s for the same work. 40 s here, three times that on CI or under coverage.
-const PROBE_BUDGET_MS = cpuBudgetMs(40_000);
+// The paths probed: every literal the dispatch compares, at every position it compares it, crossed, one level
+// deeper than the deepest documented path. The cross grows by multiplying: one new word at a deep position adds a
+// whole layer (the workbook's doors, #286, took 58,652 paths to 107,954).
+const candidates: string[][] = [];
+for (const [segment, byPosition] of vocabulary) {
+  // One level deeper than the deepest literal or documented template, so a
+  // handler that serves an extension of a known path is caught too.
+  const documentedDepth = Math.max(
+    0,
+    ...ROUTE_MANIFEST.filter((r) => r.segment === segment).map(
+      (r) => templateSegments(r.path).length,
+    ),
+  );
+  const maxLength = Math.max(documentedDepth, ...byPosition.keys()) + 1;
+  candidates.push(...candidatePaths(segment, byPosition, maxLength));
+}
+
+// The work is held, not the time: a cross past this is a sweep grown by a new deep word, raised on purpose or the
+// probe pruned. 112,616 paths on main (2026-11-20).
+const PROBE_PATHS_MAX = 150_000;
+// The hook's timeout only bounds a hung probe, so it follows the work: about 0.02 ms a dispatch on a developer's
+// machine (12 s for 563,080), and CI's shared runners under coverage up to thirty times that.
+const PROBE_MS_PER_DISPATCH = 0.02;
+const PROBE_HANG_FACTOR = 30;
+const PROBE_GUARD_MS = Math.max(
+  60_000,
+  candidates.length * PROBE_METHODS_COUNT * PROBE_MS_PER_DISPATCH * PROBE_HANG_FACTOR,
+);
 
 beforeAll(async () => {
   // Trapped requests end in index.ts's catch-all, which logs each one.
   vi.spyOn(console, 'error').mockImplementation(() => undefined);
   vi.spyOn(console, 'warn').mockImplementation(() => undefined);
   vi.spyOn(console, 'log').mockImplementation(() => undefined);
-  const candidates: string[][] = [];
-  for (const [segment, byPosition] of vocabulary) {
-    // One level deeper than the deepest literal or documented template, so a
-    // handler that serves an extension of a known path is caught too.
-    const documentedDepth = Math.max(
-      0,
-      ...ROUTE_MANIFEST.filter((r) => r.segment === segment).map(
-        (r) => templateSegments(r.path).length,
-      ),
-    );
-    const maxLength = Math.max(documentedDepth, ...byPosition.keys()) + 1;
-    candidates.push(...candidatePaths(segment, byPosition, maxLength));
-  }
   results = await probeDispatch(candidates);
-}, PROBE_BUDGET_MS);
+}, PROBE_GUARD_MS);
 
 afterAll(() => {
   vi.restoreAllMocks();
 });
 
 describe('OpenAPI manifest ↔ dispatch (method, path-template) parity', () => {
+  it(`probes at most ${PROBE_PATHS_MAX} paths`, () => {
+    expect(candidates.length).toBeLessThanOrEqual(PROBE_PATHS_MAX);
+  });
+
   it('probes enough of the dispatch to mean something', () => {
     // Vacuity guard: a broken source walk or an env that routes nothing would
     // pass every case below without checking anything.
