@@ -177,3 +177,101 @@ test('a This Browser spreadsheet keeps its edits across a reload', async ({ page
   expect(await inputOf(page, 'B1')).toBe('=LEN(A1)');
   expectNoPageErrors(pageErrors);
 });
+
+// formulas.md "Recalculation", performance.md "Rules": the engine works in a Web Worker, so a long chain worked out
+// again never holds up the page. 10,000 links, each also summing 400 cells (4 million reads), changed at its head.
+test('a long chain worked out again never holds up typing', async ({ page, pageErrors }) => {
+  const owner = await mintSignedGuest(page.request);
+  await page.addInitScript(
+    ({ id, sig }) => {
+      localStorage.setItem('livedoc:v2:self-id', id);
+      if (sig) localStorage.setItem('livedoc:v2:self-sig', sig);
+      localStorage.setItem('livedoc:v2:name-confirmed', '1');
+    },
+    { id: owner, sig: guestSigFor(owner) },
+  );
+  await page.goto('/explorer/home');
+  let n = 17;
+  const rand = () => (n = (n * 16807) % 2147483647) / 2147483647;
+  const LINKS = 10_000;
+  const SUMMED = 400;
+  const layout = emptyLayout(rand, LINKS, 6);
+  const [colA, colB] = [layout.cols[0]!, layout.cols[1]!];
+  const cells: { r: string; c: string; i: object }[] = [
+    { r: layout.rows[0]!, c: colA, i: { n: 1 } },
+  ];
+  for (let r = 0; r < SUMMED; r++) cells.push({ r: layout.rows[r]!, c: colB, i: { n: 1 } });
+  for (let r = 1; r < LINKS; r++)
+    cells.push({
+      r: layout.rows[r]!,
+      c: colA,
+      i: {
+        f: {
+          t: '=@0+SUM(@1)',
+          r: [
+            { r1: layout.rows[r - 1]!, c1: colA },
+            { r1: layout.rows[0]!, c1: colB, r2: layout.rows[SUMMED - 1]!, c2: colB, a: 15 },
+          ],
+        },
+      },
+    });
+  const id = randomUUID();
+  const now = Date.now();
+  await seedOfflineDocuments(page, [
+    {
+      id,
+      name: 'Long chain',
+      folderId: null,
+      createdAt: now,
+      savedAt: now,
+      tabs: [{ id: 'sheet-tab-1', name: 'Sheet1', kind: 'sheet', elements: [] }],
+      sheets: [
+        {
+          id: 'sheetChain1',
+          tabId: 'sheet-tab-1',
+          title: 'Sheet1',
+          layout,
+          cells: cells as never,
+          rev: 0,
+          createdAt: now,
+          updatedAt: now,
+          updatedBy: { id: '', name: 'Someone', color: '#94a3b8' },
+        },
+      ],
+      workbook: WorkbookRecord.create({ locale: 'en-GB', timeZone: 'UTC' }),
+    },
+  ]);
+  await page.goto(`/document/${id}`);
+  await expect(page.locator(READY)).toBeVisible();
+  const grid = page.getByRole('grid', { name: 'Sheet1 grid' });
+  // Its first workout in: the third link is 1 + 2 × 400.
+  await expect(grid).toContainText('801');
+
+  // Every task the page's main thread runs past 50 ms, from the change on.
+  await page.evaluate(() => {
+    const w = window as unknown as { longTasks: number[] };
+    w.longTasks = [];
+    new PerformanceObserver((list) => {
+      for (const e of list.getEntries()) w.longTasks.push(e.duration);
+    }).observe({ type: 'longtask' });
+  });
+  await typeInto(page, 'A1', '2');
+  // Typed while the Worker works the chain out again: it shows straight away.
+  await typeInto(page, 'D1', 'typed');
+  await expect(grid).toContainText('typed');
+  await expect(grid).toContainText('802');
+  // The chain's last link, once the Worker is done.
+  const nameBox = page.getByRole('textbox', { name: 'Name box' });
+  await nameBox.fill(`A${LINKS}`);
+  await nameBox.press('Enter');
+  await expect(grid).toContainText(String(2 + (LINKS - 1) * SUMMED), { timeout: 30_000 });
+  const longest = await page.evaluate(() =>
+    Math.max(0, ...(window as unknown as { longTasks: number[] }).longTasks),
+  );
+  console.info(
+    `[sheets perf] longest main-thread task while recalculating ${longest.toFixed(0)} ms`,
+  );
+  // performance.md "Budgets": no keystroke past 100 ms; a runner's headroom on top.
+  expect(longest).toBeLessThan(250);
+  expectNoPageErrors(pageErrors);
+});
