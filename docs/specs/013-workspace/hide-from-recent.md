@@ -21,8 +21,8 @@ thing here: the same blob syncs to D1 for **guests** (via the per-browser
 follows the account across devices with no migration and no api-schema change.
 
 `recentExcludedIds` is **capped at 60** (`RECENT_EXCLUDED_LIMIT`), newest
-first. The api caps the serialised preferences blob at 4 KB; a 36-char UUID
-means ~200 ids would blow that on their own, and the failure mode is nasty —
+first. The api caps the serialised preferences blob at 16 KB; unbounded, the
+36-char UUIDs would fill it on their own, and the failure mode is nasty —
 the PUT starts rejecting **every** preference write, not just this one. 60 is
 far more than anyone hides by hand and leaves room for the other flags. When
 the cap bites it drops the **oldest** exclusion, so the choice just made always

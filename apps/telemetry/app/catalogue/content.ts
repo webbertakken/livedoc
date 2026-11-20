@@ -7,7 +7,7 @@ import { canonicalElementType, PALETTE_KINDS, type PaletteTab } from '../palette
 import type { Metric, MetricStack } from '../metric-series';
 import { chart } from './helpers';
 import { LOGO_TOOL_TYPES } from '../logo-types';
-import { LOCAL_MOVE_OFFERED } from './features';
+import { LOCAL_MOVE_OFFERED, TEXT_DOCUMENT_PARAGRAPH_STYLE } from './features';
 
 // The Element types that are a table's rows and columns, not elements, and
 // the table's own switches (docs/specs/017-telemetry/telemetry.md).
@@ -533,14 +533,14 @@ export const ELEMENTS_CHANGED = chart(
   'Elements Changed',
   'Restyled or edited: colour, text, arrow ends, size, presets, the format painter and more.',
   // An article's writing formatted (`Article…`) is its own card (Article Formatting, features.ts), as is a text
-  // document's (`TextDocumentFormat…`, Text Document Formatting; `TextDocumentParagraphStyle`, its own card),
+  // document's (`TextDocumentFormat…`, Text Document Formatting; its styles, Text Document Paragraph Style),
   // as are a logo page's tools (Logo Tools Used).
   // An entity's fields and a relationship's cardinality are Data Models'.
   {
     typeIn: (t) =>
       !/^Article[A-Z]/.test(t ?? '') &&
       !(t ?? '').startsWith('TextDocumentFormat') &&
-      t !== 'TextDocumentParagraphStyle' &&
+      !TEXT_DOCUMENT_PARAGRAPH_STYLE.typeIn!(t) &&
       !LOGO_TOOL_TYPES.includes(t ?? '') &&
       !DATA_MODEL_CHANGED.includes(t ?? ''),
   },

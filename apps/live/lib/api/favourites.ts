@@ -1,8 +1,8 @@
 // Per-user document favourites (docs/specs/013-workspace/favourites.md).
 //
 // A star lives in its own D1 table rather than the preferences blob:
-// favourites are meant to be unlimited, and that blob is capped at 4 KB
-// server-side (~100 UUIDs), where overflowing would start failing EVERY
+// favourites are meant to be unlimited, and that blob is capped
+// server-side (PREFERENCES_BODY_MAX), where overflowing would start failing EVERY
 // preference write rather than just this one.
 //
 // Ids only. The Explorer already holds the personal and team document rows

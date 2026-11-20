@@ -48,7 +48,7 @@ export function applySwatchOverrides(
 // Where overrides live (docs/specs/008-canvas/quick-style-panel.md "Custom swatches"): per user, synced,
 // keyed by theme, in the preferences blob. An entry
 // says "in theme t, these slots are these colours". Newest-edited first. Short
-// keys (t / s / f / x), because the whole blob shares the api's 4 KB cap.
+// keys (t / s / f / x), because the whole blob shares the api's cap.
 export type ThemeSwatchOverrides = {
   t: string;
   s?: SwatchOverrideRow;
@@ -61,8 +61,8 @@ export type SwatchOverrideStore = ThemeSwatchOverrides[];
 // A theme id is a built-in id or `custom:<uuid>` (43 chars).
 const SWATCH_OVERRIDE_MAX_THEME_ID = 64;
 export const SWATCH_OVERRIDE_MAX_THEMES = 8;
-// The store's share of the 4 KB preferences blob: recent-exclusions can take
-// ~2.4 KB, so this keeps every other preference writable.
+// The store's share of the preferences blob (PREFERENCES_BODY_MAX): recent-exclusions can take
+// ~2.4 KB and a text document's default styles 5 KB, so this keeps every other preference writable.
 export const SWATCH_OVERRIDE_MAX_BYTES = 800;
 
 const KEY: Record<QuickSwatchRole, 's' | 'f' | 'x'> = { stroke: 's', fill: 'f', text: 'x' };

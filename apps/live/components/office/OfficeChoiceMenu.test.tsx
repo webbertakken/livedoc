@@ -94,6 +94,89 @@ describe('OfficeChoiceMenu', () => {
   });
 });
 
+// office-shell.md "Toolbar": a choice with a submenu runs on a press, and opens its submenu from the keyboard.
+describe('OfficeChoiceMenu with a choice that has a submenu', () => {
+  const STYLE: OfficeEntry = {
+    kind: 'submenu',
+    id: 'style-title-menu',
+    label: 'Title',
+    run: 'style-title',
+    checkable: 'radio',
+    faceStyle: { fontSize: '22px' },
+    entries: [
+      { kind: 'item', id: 'style-title', label: "Apply 'Title'", level: 'edit', status: 'built' },
+      {
+        kind: 'item',
+        id: 'update-style-title',
+        label: "Update 'Title' to match",
+        level: 'edit',
+        status: 'built',
+      },
+    ],
+  };
+  const OPTIONS: OfficeEntry = {
+    kind: 'submenu',
+    id: 'style-options',
+    label: 'Options',
+    entries: [
+      { kind: 'item', id: 'reset-styles', label: 'Reset styles', level: 'edit', status: 'built' },
+    ],
+  };
+
+  function open() {
+    const apply = vi.fn();
+    const update = vi.fn();
+    render(
+      <OfficeChoiceMenu
+        id="styles"
+        label="Styles"
+        value="Title"
+        entries={[STYLE, { kind: 'separator' }, OPTIONS]}
+        actions={{
+          'style-title': { run: apply, checked: true },
+          'update-style-title': { run: update },
+          'reset-styles': { run: vi.fn() },
+        }}
+        width={120}
+        tabIndex={0}
+        className=""
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Styles: Title' }));
+    const menu = screen.getByRole('menu', { name: 'Styles' });
+    return { apply, update, menu, row: within(menu).getByRole('menuitem', { name: 'Title' }) };
+  }
+
+  it('draws the choice at the caret as current and checked, in its look, and never scrolls the menu', () => {
+    const { row, menu } = open();
+    expect(row.getAttribute('aria-current')).toBe('true');
+    expect(row.getAttribute('aria-haspopup')).toBe('menu');
+    expect(row.querySelector('svg')).not.toBeNull();
+    expect(row.querySelector<HTMLElement>('span[style]')!.style.fontSize).toBe('22px');
+    expect(menu.className).not.toContain('overflow-y-auto');
+  });
+
+  it('runs the choice on a press, closing the menu', () => {
+    const { row, apply } = open();
+    fireEvent.click(row, { detail: 1 });
+    expect(apply).toHaveBeenCalled();
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('opens its submenu on Enter, focus on its first item, and runs Update to match from there', () => {
+    const { row, apply, update } = open();
+    row.focus();
+    fireEvent.keyDown(row, { key: 'Enter' });
+    expect(apply).not.toHaveBeenCalled();
+    const submenu = screen.getAllByRole('menu').at(-1)!;
+    expect(document.activeElement).toBe(
+      within(submenu).getByRole('menuitem', { name: "Apply 'Title'" }),
+    );
+    fireEvent.click(within(submenu).getByRole('menuitem', { name: "Update 'Title' to match" }));
+    expect(update).toHaveBeenCalled();
+  });
+});
+
 describe('OfficeToolbar choices', () => {
   it('draws a choice control where the kind binds it, with its value', () => {
     const control = (id: string) => ({

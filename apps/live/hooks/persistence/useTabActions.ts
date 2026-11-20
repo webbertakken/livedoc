@@ -31,6 +31,7 @@ import {
 import { apiLinkTab } from '@/lib/api-client';
 import { newTabOpening, newTabSeed, type AddTabChoice } from '@/lib/new-tab-seed';
 import { newTextDocumentTab, TEXT_DOCUMENT_TAB_NAME } from '@/lib/text-document/text-document-tab';
+import { noteTextDocumentMade } from '@/lib/text-document/text-document-made';
 import { PLAN_START_LANDING, setPlanStartLanding } from '@/lib/plan-start-landing';
 import { track } from '@/lib/telemetry';
 import { debugLog } from '@/lib/debug-log';
@@ -148,6 +149,7 @@ export function useTabActions(deps: TabActionsDeps) {
     // held by the room, never by the tab; it opens on its own surface.
     if (choice === 'text-document') {
       const tab = newTextDocumentTab(createTab(TEXT_DOCUMENT_TAB_NAME).id, TEXT_DOCUMENT_TAB_NAME);
+      noteTextDocumentMade(tab.id);
       commitTabs((ts) => [...ts, tab]);
       markTabLoaded(tab.id);
       track('Tab', 'Created', 'TextDocument');

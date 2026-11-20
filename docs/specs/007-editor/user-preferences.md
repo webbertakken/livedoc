@@ -45,14 +45,17 @@ PRIMARY KEY`, `prefs TEXT NOT NULL` (serialised JSON blob),
   `PUT /api/preferences` with the full updated blob in the
   background. Last-write-wins per device.
 - **Saving to the server** (`apps/live/lib/preferences-sync.ts`):
-  - **It fits.** The blob is trimmed to the api's cap (4,096
+  - **It fits.** The blob is trimmed to the api's cap
+    (`PREFERENCES_BODY_MAX` in `@livedoc/api-schema`, 16,384
     characters of `{"prefs":...}`) before it is cached or sent:
     the oldest hidden-from-Recent ids go first
     ([Hide from Recent](../013-workspace/hide-from-recent.md)), then the
     least recently used shape picks
     ([Sketch mode, Shape slots](../023-draw-mode/draw-mode.md)); every
     other key stays whole. A full account measured 4,967 characters,
-    past which every save was refused. A trim logs
+    and a text document's default styles add at most 5,000 more
+    ([Default styles](../034-text-documents/text-and-paragraphs.md#default-styles)),
+    so the cap holds both with room to spare. A trim logs
     `[preferences] trimmed to fit dropped=<n> length=<n>`.
   - **One save at a time, the latest wins.** A save made while one
     is in flight waits, and replaces any save already waiting, so
@@ -295,6 +298,9 @@ type UserPreferences = {
   // read through lib/presentation-config. Surfaced in Settings as Editor › Presenting. Missing === what this
   // browser kept before they followed the account, else the defaults.
   presentation?: Record<string, unknown>;
+  // A text document's default styles (../034-text-documents/text-and-paragraphs.md "Default styles"): per style
+  // role, what its look holds that Google's defaults do not. Validated on read (DefaultStyles.parse) and never trimmed.
+  textDocumentDefaultStyles?: Record<string, unknown>;
   // DEAD (../004-interface-design/colour-picker.md "Custom colours"): Custom colours are kept with the document's tabs, not per user.
   // Nothing reads or writes this; it stays because it is already stored.
   customSwatches?: string[];
@@ -302,7 +308,7 @@ type UserPreferences = {
   // "Custom swatches"): per theme, newest-edited first, which of a row's six
   // slots you replaced with your own colour. `t` is the theme id, `s` the
   // Stroke row and `f` the Background row, slot (1-6) to lower-case #rrggbb.
-  // Short keys because the blob shares the 4 KB cap; at most 8 themes and
+  // Short keys because the blob shares the api's cap; at most 8 themes and
   // 800 bytes, oldest-edited dropped first. Validated on read in the client
   // (lib/swatch-overrides), like every field here.
   quickSwatchOverrides?: {
@@ -927,7 +933,7 @@ event on the preferences key.
   the standard hybrid identity (session token Bearer OR `X-Owner-Id`).
 - **`PUT /api/preferences`** — body `{ prefs: UserPreferences }`,
   upserts the row for the resolved owner. Returns 204. The blob
-  is opaque to the api worker beyond a size cap (4 KB; defends
+  is opaque to the api worker beyond a size cap (16 KB; defends
   against runaway clients). No per-field validation: the client
   is responsible for the shape, and a malformed client just
   reflects malformed prefs back to itself. It writes only for a

@@ -115,7 +115,6 @@ function stylesOf(map: Y.Map<unknown>): Style[] | null {
     .map((v) => v.style);
 }
 
-/** The live state's styles, or the format's own while it holds none. */
 /** The live state's style defaults alone. */
 export function readLiveDefaults(doc: Y.Doc, format: TextDocumentFormat): StyleDefaults {
   return (
@@ -124,6 +123,7 @@ export function readLiveDefaults(doc: Y.Doc, format: TextDocumentFormat): StyleD
   );
 }
 
+/** The live state's styles, or the format's own while it holds none. */
 export function readLiveStyles(doc: Y.Doc, format: TextDocumentFormat): Style[] {
   return stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? [...TextDocument.blank({ format }).styles];
 }

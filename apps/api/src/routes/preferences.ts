@@ -1,5 +1,6 @@
 // /api/preferences — per-user editor preference flags (docs/specs/007-editor/user-preferences.md).
 
+import { PREFERENCES_BODY_MAX } from '@livedoc/api-schema';
 import { badRequest, json, missingAuth, noContent, notFound } from '../responses';
 import type { RouteContext } from './context';
 
@@ -37,8 +38,8 @@ export async function handlePreferences(ctx: RouteContext): Promise<Response> {
   }
   if (request.method === 'PUT') {
     const text = await request.text();
-    if (text.length > 4096) {
-      return badRequest('preferences payload too large (4 KB max)');
+    if (text.length > PREFERENCES_BODY_MAX) {
+      return badRequest(`preferences payload too large (${PREFERENCES_BODY_MAX} characters max)`);
     }
     // No initialiser: the catch returns, so control only reaches past the block
     // when the assignment succeeded. The `| null` stays because JSON.parse

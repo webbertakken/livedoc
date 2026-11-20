@@ -1115,14 +1115,30 @@ export const TEXT_DOCUMENT_FORMATTING = chart(
   { typeIn: (t) => (t ?? '').startsWith('TextDocumentFormat') },
 );
 
-// A paragraph style applied to a text document (docs/specs/034-text-documents/text-and-paragraphs.md "Paragraph
-// styles"): Normal text, a title or a heading, from the toolbar, Format > Paragraph styles or a shortcut.
+// A text document's paragraph styles (docs/specs/034-text-documents/text-and-paragraphs.md "Paragraph styles",
+// "Update to match", "Default styles"): a style applied from the toolbar, Format > Paragraph styles or a shortcut; a
+// style updated to match the caret; the person's default styles used, or Google's put back.
+const TEXT_DOCUMENT_PARAGRAPH_STYLE_TYPES = [
+  'TextDocumentParagraphStyle',
+  'TextDocumentStyleUpdated',
+  'TextDocumentStylesUsed',
+  'TextDocumentStylesReset',
+];
 export const TEXT_DOCUMENT_PARAGRAPH_STYLE = chart(
   'Element',
   'Changed',
   'Text Document Paragraph Style',
-  "A paragraph style applied to a text document's paragraphs: Normal text, Title, Subtitle or a heading.",
-  { types: ['TextDocumentParagraphStyle'] },
+  "A text document's paragraph styles: one applied, one updated to match, the person's default styles used or reset.",
+  { types: TEXT_DOCUMENT_PARAGRAPH_STYLE_TYPES },
+);
+
+// Someone kept a text document's styles as their default styles (text-and-paragraphs.md "Default styles").
+export const TEXT_DOCUMENT_DEFAULT_STYLES = chart(
+  'UI',
+  'Changed',
+  'Text Document Default Styles',
+  "Someone saved a text document's styles as their default styles, for the documents they make next.",
+  { types: ['TextDocumentDefaultStyles'], rising: 'neutral' },
 );
 
 // My fonts changed by the Fonts dialog's OK (docs/specs/004-interface-design/fonts.md "More fonts").
@@ -1151,6 +1167,7 @@ export const EDITOR_CHROME: MetricStack = {
     TEXT_DOCUMENT_ZOOMED,
     TEXT_DOCUMENT_MODE,
     TEXT_DOCUMENT_MY_FONTS,
+    TEXT_DOCUMENT_DEFAULT_STYLES,
   ],
 };
 

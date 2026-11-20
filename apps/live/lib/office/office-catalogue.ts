@@ -33,6 +33,11 @@ export type OfficeSubmenu = {
   id: string;
   label: string;
   entries: readonly OfficeEntry[];
+  // A choice with a submenu (office-shell.md "Toolbar"): the action a press on its row runs, its check read from it.
+  run?: string;
+  checkable?: 'radio';
+  // Its label drawn in a look of its own, as an item's.
+  faceStyle?: OfficeItem['faceStyle'];
 };
 
 export type OfficeEntry = OfficeItem | OfficeSubmenu | { kind: 'separator' };

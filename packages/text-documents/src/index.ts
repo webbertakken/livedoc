@@ -60,6 +60,18 @@ export {
   type StyleRole,
 } from './model/styles';
 export {
+  LOOK_PARAGRAPH_KEYS,
+  LOOK_TEXT_KEYS,
+  PLAIN_LOOK,
+  StyleLooks,
+  type StyleLook,
+} from './model/style-looks';
+export {
+  DEFAULT_STYLES_MAX_CHARS,
+  DefaultStyles,
+  type DefaultStyleLook,
+} from './model/default-styles';
+export {
   TextDocument,
   type BlankOptions,
   type KeptEntry,

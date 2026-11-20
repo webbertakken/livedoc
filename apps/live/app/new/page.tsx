@@ -60,6 +60,7 @@ import { fetchAheadForNamedDocument } from './named-document-ahead';
 import { prefetchWhenIdle } from '@/lib/idle-prefetch';
 import { NEW_DOCUMENT_THEME_ID } from '@/lib/new-document/new-document-theme';
 import { textDocumentContent } from '@/lib/text-document/text-document-content';
+import { noteTextDocumentMade } from '@/lib/text-document/text-document-made';
 import { UNTITLED_TEXT_DOCUMENT } from '@/lib/text-document/text-document-tab';
 import { loadEditorPage } from '@/lib/editor-page-loader';
 import { loadCanvasCode } from '@/lib/canvas-code/canvas-code';
@@ -340,6 +341,8 @@ export default function NewDocumentPage() {
       }
       // The template's tabs, card types and example cards, or one blank tab (lib/new-document-content.ts).
       const { newDocumentContent } = await loadNewDocumentContent();
+      // A text document made here starts in its maker's default styles when it first opens (text-and-paragraphs.md).
+      if (textDocument) noteTextDocumentMade(tabId);
       const content = textDocument
         ? textDocumentContent(tabId, documentName)
         : spreadsheet

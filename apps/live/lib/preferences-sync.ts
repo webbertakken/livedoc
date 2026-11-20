@@ -9,6 +9,8 @@
 //   local cache win over the server's (now older) blob and sends it again, rather than the
 //   server reverting the settings it never received.
 
+// The api's cap on a preferences PUT body, in characters of `{"prefs":...}`, shared with the api.
+import { PREFERENCES_BODY_MAX } from '@livedoc/api-schema';
 import type { WhiteboardShapeKey } from './whiteboard-shape-catalogue';
 import type { UserPreferences } from './user-preferences';
 import { apiPutPreferences } from './api/preferences';
@@ -17,11 +19,6 @@ import {
   removeLocalStorageSafe,
   writeLocalStorageSafe,
 } from './local-storage-safe';
-
-// The api's cap on a preferences PUT body, in characters of `{"prefs":...}`
-// (apps/api/src/routes/preferences.ts, which checks `text.length`). Mirrored, not imported: the
-// worker is not a dependency of the editor.
-export const PREFERENCES_BODY_MAX = 4096;
 
 // Set while a save for this owner is waiting, in flight or refused; holds the owner id, so a
 // different identity on this browser is not given this one's precedence.

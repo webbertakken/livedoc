@@ -111,6 +111,9 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
   a mixed selection, with − and + either side; taking a size returns focus to the writing.
 - **Choice controls** (the Styles control) show the value at the caret as text with a chevron, blank over a mixed
   selection, and open a menu of the kind's choices, the one at the caret checked; a choice returns focus to the writing.
+  A choice may be a **choice with a submenu** (a style with Apply and Update to match): a press on its row runs the
+  choice, while hovering it, or Right, Enter or Space on it, opens its submenu, so the keyboard never runs a row it
+  cannot see the submenu of. A choice menu holding submenus never scrolls, so a submenu is never cut off.
 - **Colour controls** (Text colour, Highlight colour) show their glyph over a bar in the colour at the caret and open
   the [colour picker](colour-picker.md) in its swatch-button skin.
 - A `comingSoon` control is drawn dimmed (`aria-disabled`), its tooltip saying "Coming soon"; a `built` control left

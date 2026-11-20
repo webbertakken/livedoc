@@ -7,7 +7,8 @@ import type { Style, StyleDefaults } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
 import { readLiveDefaults, readLiveDocument, readLiveStyles } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
-import { addLiveStyle, writeLiveDocument } from './live/live-write';
+import { STYLES_MAP } from './live/live-names';
+import { addLiveStyle, setLiveStyles, writeLiveDocument } from './live/live-write';
 
 export { BODY_FRAGMENT };
 
@@ -139,6 +140,15 @@ export const TextDocumentState = {
     readLiveDefaults(doc, format),
   /** Adds a style the live state lacks, after its others (text-and-paragraphs.md "Paragraph styles"). */
   addStyle: (doc: Y.Doc, style: Style): void => addLiveStyle(doc, style),
+  /** Sets styles by id as one transaction with `origin`, the format's set written first while it stands. */
+  setStyles: (
+    doc: Y.Doc,
+    format: TextDocumentFormat,
+    styles: readonly Style[],
+    origin?: unknown,
+  ): void => setLiveStyles(doc, format, styles, origin),
+  /** The live state's styles map, which the editor's undo also tracks (live-editing-and-storage.md "Undo"). */
+  stylesType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(STYLES_MAP),
   /** A state holding exactly this model, as one update to store beside the seed. */
   fromDocument: (document: TextDocument): Uint8Array => {
     const doc = TextDocumentState.load();

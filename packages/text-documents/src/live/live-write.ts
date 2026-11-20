@@ -3,7 +3,7 @@
 import * as Y from 'yjs';
 import type { Block, Inline, KeptInline, Paragraph, Run } from '../model/blocks';
 import { isEmpty, type TextProps } from '../model/props';
-import type { TextDocument } from '../model/text-document';
+import { TextDocument } from '../model/text-document';
 import type { Style } from '../model/styles';
 import {
   DOCUMENT_MAP,
@@ -135,4 +135,29 @@ export function addLiveStyle(doc: Y.Doc, style: Style): void {
   const styles = doc.getMap<unknown>(STYLES_MAP);
   if (styles.size === 0 || styles.has(style.id)) return;
   styles.set(style.id, { order: styles.size, style: plain(style) });
+}
+
+/**
+ * Styles set by id, replacing a held one and adding one not held, as one transaction with `origin` (undo tracks it:
+ * text-and-paragraphs.md "Update to match"). While the state holds no styles of its own, the format's set is written
+ * first, so the styles not set keep standing.
+ */
+export function setLiveStyles(
+  doc: Y.Doc,
+  format: 'odf' | 'ooxml',
+  changed: readonly Style[],
+  origin: unknown = null,
+): void {
+  if (changed.length === 0) return;
+  const styles = doc.getMap<unknown>(STYLES_MAP);
+  doc.transact(() => {
+    if (styles.size === 0)
+      TextDocument.blank({ format }).styles.forEach((style, order) =>
+        styles.set(style.id, { order, style: plain(style) }),
+      );
+    for (const style of changed) {
+      const held = styles.get(style.id) as { order: number } | undefined;
+      styles.set(style.id, { order: held?.order ?? styles.size, style: plain(style) });
+    }
+  }, origin);
 }
