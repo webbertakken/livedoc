@@ -51,7 +51,7 @@ Ruled (director, 2026-11-20): a background job behind a Worker variable, as the 
 - **The run** (Phase 16, where its targets exist): with the switch at `run`, once Plan no longer makes Sheet tabs,
   each room does it in one transaction a document: idempotent, logged
   `[sheets-migrate] <documentId> tabs=<n> sheets=<n> cells=<n>`, and a failure `[sheets-migrate] failed <documentId>
-  <reason>` that leaves the document as it was to be tried again.
+<reason>` that leaves the document as it was to be tried again.
 - **A way back** (Phase 16): until the Plan Sheet's code is removed, a document's pre-migration rows are kept for 30
   days and the same switch at `restore` puts them back.
 
