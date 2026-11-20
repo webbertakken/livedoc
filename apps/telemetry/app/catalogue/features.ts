@@ -1115,6 +1115,15 @@ export const TEXT_DOCUMENT_FORMATTING = chart(
   { typeIn: (t) => (t ?? '').startsWith('TextDocumentFormat') },
 );
 
+// My fonts changed by the Fonts dialog's OK (docs/specs/004-interface-design/fonts.md "More fonts").
+export const TEXT_DOCUMENT_MY_FONTS = chart(
+  'UI',
+  'Changed',
+  'Text Document My Fonts',
+  'Someone added families to the font menu from More fonts, or took them out.',
+  { types: ['TextDocumentMyFonts'], rising: 'neutral' },
+);
+
 export const EDITOR_CHROME: MetricStack = {
   stack: true,
   title: 'Editor Chrome',
@@ -1131,6 +1140,7 @@ export const EDITOR_CHROME: MetricStack = {
     TEXT_DOCUMENT_FOLLOWED,
     TEXT_DOCUMENT_ZOOMED,
     TEXT_DOCUMENT_MODE,
+    TEXT_DOCUMENT_MY_FONTS,
   ],
 };
 
@@ -1322,6 +1332,13 @@ export const TEXT_DOCUMENT_CONTEXT_MENU_OPENED = opened(
   (t) => t === 'TextDocumentContextMenu',
 );
 
+// The Fonts dialog of a text document opened from its font menu's More fonts (fonts.md "More fonts").
+export const TEXT_DOCUMENT_MORE_FONTS_OPENED = opened(
+  'Text Document More Fonts',
+  "The Fonts dialog opened from a text document's font menu, to add families from Google Fonts.",
+  (t) => t === 'TextDocumentMoreFonts',
+);
+
 export const OTHER_OPENED = chart(
   'UI',
   'Opened',
@@ -1346,6 +1363,7 @@ export const PANELS_OPENED: MetricStack = {
     TEXT_DOCUMENT_MENUS_OPENED,
     TEXT_DOCUMENT_PANELS_OPENED,
     TEXT_DOCUMENT_CONTEXT_MENU_OPENED,
+    TEXT_DOCUMENT_MORE_FONTS_OPENED,
     OTHER_OPENED,
   ],
   seeAlso: { section: 'editing', label: 'See Each Dialog in Features › Editing' },

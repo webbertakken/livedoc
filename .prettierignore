@@ -36,3 +36,7 @@ packages/icons/src/lucide.generated.ts
 # The document views' golden files: each is a view's exact output, compared byte for byte
 # (docs/specs/024-agents/blueprints/document-views.md "Testing").
 packages/document-views/src/__fixtures__/golden/
+
+# Google Fonts' catalogue, written by apps/live/scripts/google-fonts-catalogue.ts one family per line, so a
+# regeneration diffs by family.
+apps/live/lib/document-fonts/google-fonts.json

@@ -209,8 +209,8 @@ apply the resolved stack; `useElementStyle.setFontSelected` and
 
 ## Document fonts
 
-**Status: partly built.** The catalogue, the served core set, substitution, the font menu and ODF's face declarations
-are built; More fonts, OOXML's font table and embedding are specified.
+**Status: partly built.** The catalogue, the served core set, substitution, the font menu, More fonts and ODF's face
+declarations are built; OOXML's font table and embedding are specified.
 
 The fonts of the office kinds ([Text document](../034-text-documents/text-document.md), the spreadsheet of plan 0020),
 apart from the canvas's eleven. The research is [Fonts](../../research/docs-open-standard/fonts.md).
@@ -260,6 +260,8 @@ Text draws through a CSS stack per family (`DocumentFonts.stack`):
 - A **named** family draws in itself where the computer has it (Arial on most systems), then in its stand-in's faces;
   a metric-compatible stand-in breaks lines the same either way.
 - A family the catalogue does not know draws in itself, then as the default family (Arial, then Arimo).
+  When Google Fonts has it, it loads from there (see [More fonts](#more-fonts)), so a file made in Google Docs draws
+  in the faces it was written in.
 - Every stack ends in the generic family (`serif`, `sans-serif`, `monospace`, `cursive`).
 
 The file keeps the name it arrived with; nothing is renamed. The writing draws the document's default family and size
@@ -269,10 +271,10 @@ The file keeps the name it arrived with; nothing is renamed. The writing draws t
 
 The toolbar's Font control shows the family at the caret (blank over a mixed selection) and opens a menu, as Google's:
 
-- **More fonts** first (specified), then a separator, the **recent** families this person chose (up to five, in this
-  browser; default), a separator, and the catalogue's menu families in alphabetical order: the served families and
-  Arial, Comic Sans MS, Courier New, Georgia, Impact, Times New Roman, Trebuchet MS and Verdana, each drawn in its own
-  face (its stack).
+- **More fonts** first, then a separator, the **recent** families this person chose (up to five, in this browser;
+  default), a separator, and **My fonts** in alphabetical order, each drawn in its own face (its stack).
+- My fonts starts as the catalogue's menu families: the served families and Arial, Comic Sans MS, Courier New,
+  Georgia, Impact, Times New Roman, Trebuchet MS and Verdana. More fonts adds and removes families.
 - A family at the caret that the menu does not list (from a file) shows in the control, in italics, with "Shown as
   <stand-in>" as its tooltip.
 - Choosing one sets the font of the selection (or of the next characters typed), as one undo step, and returns focus
@@ -282,9 +284,47 @@ The toolbar's Font control shows the family at the caret (blank over a mixed sel
 
 ### More fonts
 
-**More fonts** (the font menu's first item) lists the Google Fonts catalogue and loads a chosen family from Google
-Fonts where reachable, never required (fork D6, ruled). A family that cannot load draws in its stand-in, and the font
-menu marks it "Not available offline".
+**More fonts** (the font menu's first item) opens the **Fonts** dialog, as Google's: the Google Fonts catalogue beside
+My fonts. A family from it loads from Google Fonts where reachable, never required (fork D6, ruled).
+
+- **The list** holds Google Fonts' families and the catalogue's named menu families, each in one category: Display,
+  Handwriting, Monospace, Serif or Sans Serif (a named family's from its generic family: `roman` Serif, `modern`
+  Monospace, `script` Handwriting, `decorative` Display, `swiss` Sans Serif).
+- **Search fonts** keeps the families whose name holds the words typed, ignoring case.
+- **Show**: All fonts (default), Display, Handwriting, Monospace, Serif, Sans Serif.
+- **Sort**: Popularity (default), Alphabetical, Date added (newest first), Trending, from Google Fonts' own ranks.
+  The named families have no ranks: they lead Popularity, as Google Docs' default menu holds them, and close the
+  other sorts (default).
+- **Each row** is the family's name drawn in its face, with a check while it is in My fonts; choosing a row adds it
+  to My fonts or takes it out.
+- **My fonts**, at the dialog's right (below the list on a phone), lists the chosen families in alphabetical order,
+  each with × (`Remove <family>`).
+- **OK** keeps the changes and the font menu lists the new My fonts; **Cancel** and × keep none. OK is unavailable
+  while My fonts is empty ("Keep at least one font", default).
+- **Nothing matches**: the list reads "No fonts match".
+- My fonts is kept in this browser (`livedoc:v2:office-my-fonts`, default); storage that cannot be read or written
+  gives the starting My fonts.
+- **Keyboard**: Tab moves between the search field, Show, Sort, the list, My fonts and the buttons; in the list, the
+  arrows, Page Up and Page Down, Home and End move, and Space or Enter adds or takes out the family.
+  The list is a listbox of many choices; each row tells its place in the whole list.
+- **Share roles**: it opens from the font menu, so for those who may edit the text; My fonts is this person's own.
+- **Telemetry**: `UI · Opened · <kind>MoreFonts` when it opens, `UI · Changed · <kind>MyFonts` on OK with a change.
+
+The catalogue is Google Fonts' public metadata (`fonts.google.com/metadata/fonts`: name, category, popularity,
+trending rank, date added and faces), written by `pnpm fonts:google` into a file of the editor that loads only when
+the dialog opens or a document names a family LiveDoc does not serve.
+
+Loading, from `fonts.googleapis.com/css2` with `display=swap`:
+
+- **A family in use** (in My fonts as the font menu opens, or named by the document's text) loads its regular and
+  bold, upright and italic, or the nearest faces it has; the browser then fetches only the faces text uses.
+- **The rows in view** load their names' letters only (Google Fonts' `text=`), in one request per scroll, under the
+  name `LiveDoc preview <family>` so a preview never stands in for a family's full faces.
+- **A family that cannot load** (offline, blocked, a self-hosted editor without the outside world) draws as the
+  default family, as any family the catalogue does not know; the font menu marks its row "Not available offline",
+  and the list's rows draw in the dialog's own face.
+- Each load and failure is logged (`[fonts] google family loaded <family>`, `[fonts] google family not loaded
+<family>`).
 
 ### In files
 

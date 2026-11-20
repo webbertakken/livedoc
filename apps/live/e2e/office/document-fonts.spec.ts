@@ -32,10 +32,6 @@ test('a text document draws its fonts from LiveDoc, and the font menu sets one',
   await page.keyboard.press('ControlOrMeta+a');
   await toolbar.getByRole('button', { name: 'Font: Arial' }).click();
   const menu = page.getByRole('menu', { name: 'Font' });
-  await expect(menu.getByRole('menuitem', { name: /More fonts/ })).toHaveAttribute(
-    'aria-disabled',
-    'true',
-  );
   await menu.getByRole('menuitemradio', { name: 'Lora' }).click();
   await expect(body).toBeFocused();
   await expect(toolbar.getByRole('button', { name: 'Font: Lora' })).toBeVisible();
@@ -57,5 +53,85 @@ test('a text document draws its fonts from LiveDoc, and the font menu sets one',
   await page.reload();
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
   await expect(body.locator('span', { hasText: 'Field notes' })).toHaveCSS('font-family', /Lora/);
+  expectNoPageErrors(pageErrors);
+});
+
+// More fonts (fonts.md "More fonts"): a family from Google Fonts added to My fonts, chosen from the menu, and loaded
+// again as the document opens; one that cannot load is marked. Google Fonts is answered here, so the test needs no
+// outside world: Rubik's stylesheet answers, Bungee's never does.
+test('More fonts adds a family from Google Fonts to the font menu', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  const asked: string[] = [];
+  await page.route('https://fonts.googleapis.com/css2**', async (route) => {
+    const url = route.request().url();
+    asked.push(url);
+    if (url.includes('family=Bungee') && !url.includes('text=')) return route.abort();
+    const families = [...url.matchAll(/family=([^:&]+)/g)].map((m) =>
+      decodeURIComponent(m[1]!.replace(/\+/g, ' ')),
+    );
+    const css = families
+      .map((f) => `@font-face { font-family: '${f}'; src: local('Arial'); }`)
+      .join('\n');
+    return route.fulfill({ contentType: 'text/css', body: css });
+  });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator(BODY);
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+  await body.click();
+  await page.keyboard.type('Field notes');
+
+  // The Fonts dialog: search, add Rubik and Bungee, OK.
+  await toolbar.getByRole('button', { name: 'Font: Arial' }).click();
+  await page
+    .getByRole('menu', { name: 'Font' })
+    .getByRole('menuitem', { name: 'More fonts' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Fonts' });
+  await expect(dialog.getByRole('listbox', { name: 'Fonts' })).toBeVisible();
+  await expect(dialog.getByRole('option', { name: 'Arial' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  for (const family of ['Rubik', 'Bungee']) {
+    await dialog.getByRole('searchbox', { name: 'Search fonts' }).fill(family);
+    await dialog.getByRole('option', { name: family, exact: true }).click();
+  }
+  await expect(
+    dialog
+      .getByRole('region', { name: 'My fonts' })
+      .getByRole('listitem')
+      .filter({ hasText: 'Rubik' }),
+  ).toBeVisible();
+  await dialog.getByRole('button', { name: 'OK' }).click();
+  await expect(dialog).toBeHidden();
+  // Their previews asked for their names' letters only.
+  expect(asked.some((url) => url.includes('family=Rubik') && url.includes('text='))).toBe(true);
+
+  // Rubik from the menu, over the selection; Bungee marked as it could not load.
+  await page.keyboard.press('ControlOrMeta+a');
+  await toolbar.getByRole('button', { name: 'Font: Arial' }).click();
+  const menu = page.getByRole('menu', { name: 'Font' });
+  await expect(menu.getByRole('menuitemradio', { name: 'Bungee' })).toContainText(
+    'Not available offline',
+  );
+  await menu.getByRole('menuitemradio', { name: 'Rubik' }).click();
+  await expect(body).toBeFocused();
+  await expect(body.locator('span', { hasText: 'Field notes' })).toHaveCSS('font-family', /Rubik/);
+  const control = toolbar.getByRole('button', { name: 'Font: Rubik' });
+  await expect(control.locator('span').first()).not.toHaveClass(/italic/);
+
+  // As the document opens again, the family its text names loads from Google Fonts.
+  await page.waitForTimeout(800);
+  asked.length = 0;
+  await page.reload();
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await expect.poll(() => asked.some((url) => url.includes('family=Rubik:ital,wght@'))).toBe(true);
+  await expect(page.locator('link[data-google-font="Rubik"]')).toHaveCount(1);
   expectNoPageErrors(pageErrors);
 });

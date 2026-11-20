@@ -25,7 +25,8 @@
     "test:e2e:drive-shots": "NEXT_PUBLIC_GOOGLE_CLIENT_ID=123456789012-e2e.apps.googleusercontent.com NEXT_PUBLIC_GOOGLE_API_KEY=e2e-picker-key next build && E2E_DRIVE=1 playwright test --project=drive-shots",
     "test:e2e:workbench": "E2E_WORKBENCH=1 playwright test --project=workbench",
     "test:e2e:office": "playwright test --project=office",
-    "fonts:document": "node --import ../../scripts/ts-source-hooks.mjs scripts/document-fonts-css.ts"
+    "fonts:document": "node --import ../../scripts/ts-source-hooks.mjs scripts/document-fonts-css.ts",
+    "fonts:google": "node --import ../../scripts/ts-source-hooks.mjs scripts/google-fonts-catalogue.ts"
   },
   "dependencies": {
     "@fontsource/amatic-sc": "^5.3.0",

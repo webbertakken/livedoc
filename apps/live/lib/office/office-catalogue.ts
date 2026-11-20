@@ -20,6 +20,8 @@ export type OfficeItem = {
   checkable?: 'checkbox' | 'radio';
   // A CSS font-family its label is drawn in (a font menu draws each family in its face).
   face?: string;
+  // A word on its state, drawn muted where a shortcut would be and read with it (a font that could not load).
+  note?: string;
 };
 
 export type OfficeSubmenu = {
