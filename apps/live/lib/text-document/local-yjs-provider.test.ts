@@ -101,3 +101,35 @@ describe('openLocalYjs', () => {
     expect(b.storedBody()).toEqual(Body.of('Retried'));
   });
 });
+
+// docs/specs/034-text-documents/editing-surface.md "The title row": what the save status reads.
+describe('openLocalYjs save facts', () => {
+  it('is pending while a write is due, then settled once written', async () => {
+    const b = browser();
+    const binding = await b.tab({ saveDelayMs: 10 });
+    type(binding.doc, 'Here');
+    expect(binding.saveFacts.get()).toEqual({ pending: true, failed: false });
+    await tick();
+    await tick();
+    await binding.settled();
+    expect(binding.saveFacts.get()).toEqual({ pending: false, failed: false });
+    binding.close();
+  });
+
+  it('fails when a write fails, and writes again by itself after the retry delay', async () => {
+    const b = browser();
+    b.save.mockRejectedValueOnce(new Error('disk full'));
+    const binding = await b.tab({ retryDelayMs: 5 });
+    type(binding.doc, 'Kept');
+    await tick();
+    await binding.settled();
+    expect(binding.saveFacts.get()).toEqual({ pending: true, failed: true });
+    await tick();
+    await tick();
+    await binding.settled();
+    expect(b.save).toHaveBeenCalledTimes(2);
+    expect(b.storedBody()).toEqual(Body.of('Kept'));
+    expect(binding.saveFacts.get()).toEqual({ pending: false, failed: false });
+    binding.close();
+  });
+});

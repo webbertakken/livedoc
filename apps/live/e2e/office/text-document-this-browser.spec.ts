@@ -54,6 +54,11 @@ test('a text document in This Browser keeps its writing across a reload and down
   await page.reload();
   await expect(page.locator(READY)).toBeVisible();
   await expect(page.locator(BODY)).toHaveText('Written with no server.');
+  // Its save status says where it is kept (editing-surface.md "The title row").
+  await expect(page.locator('[data-save-status]')).toHaveAttribute(
+    'data-save-status',
+    'this-browser',
+  );
 
   const downloadItem = await officeMenuItem(page, [
     'File',

@@ -260,3 +260,64 @@ describe('openRoomYjs', () => {
     expect(h.deps.loadSince).not.toHaveBeenCalled();
   });
 });
+
+// docs/specs/034-text-documents/editing-surface.md "The title row": what the save status reads.
+describe('openRoomYjs save facts', () => {
+  const long = () =>
+    Array.from({ length: TEXT_DOCUMENT_FRAME_CHARS / 4 }, (_, i) =>
+      (i * 7919).toString(36).padStart(6, '0'),
+    ).join('');
+
+  it('is pending while an edit awaits the room, and settles once it is confirmed', async () => {
+    const h = harness();
+    let answer: (stored: boolean) => void = () => {};
+    h.sequence.mockImplementationOnce(
+      (op) =>
+        new Promise<boolean>((resolve) => {
+          answer = (stored) => {
+            if (stored) h.stored.push(bytesOfBase64(op.update)!);
+            resolve(stored);
+          };
+        }),
+    );
+    const binding = await opened(h.deps);
+    const seen: boolean[] = [];
+    binding.saveFacts.subscribe(() => seen.push(binding.saveFacts.get().pending));
+    expect(binding.saveFacts.get()).toEqual({ pending: false, failed: false });
+    type(binding, 'Typed');
+    expect(binding.saveFacts.get().pending).toBe(true);
+    answer(true);
+    await tick();
+    expect(binding.saveFacts.get()).toEqual({ pending: false, failed: false });
+    expect(seen).toEqual([true, false]);
+  });
+
+  it('fails when the door refuses an update, until a catch-up stores it', async () => {
+    const h = harness();
+    h.post.mockRejectedValueOnce(new Error('413'));
+    const binding = await opened(h.deps);
+    type(binding, long());
+    await tick();
+    expect(binding.saveFacts.get()).toEqual({ pending: true, failed: true });
+    TextDocumentBus.disconnected();
+    TextDocumentBus.connected();
+    await tick();
+    await binding.settled();
+    expect(binding.saveFacts.get()).toEqual({ pending: false, failed: false });
+  });
+
+  it('fails while closed when this browser cannot keep the copy, and recovers when a copy is kept', async () => {
+    const h = harness();
+    const binding = await opened(h.deps);
+    TextDocumentBus.disconnected();
+    h.deps.copies.write.mockRejectedValueOnce(new Error('quota'));
+    type(binding, 'Offline one');
+    await tick();
+    await binding.settled();
+    expect(binding.saveFacts.get()).toEqual({ pending: true, failed: true });
+    type(binding, 'Offline two');
+    await tick();
+    await binding.settled();
+    expect(binding.saveFacts.get()).toEqual({ pending: true, failed: false });
+  });
+});

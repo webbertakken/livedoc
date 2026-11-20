@@ -70,6 +70,7 @@
     "cloud",
     "cloud-alert",
     "cloud-check",
+    "cloud-off",
     "cloud-rain",
     "cloud-sync",
     "cloud-upload",

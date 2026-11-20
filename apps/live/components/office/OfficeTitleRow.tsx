@@ -22,6 +22,8 @@ import type { OfficeChrome, OfficePerson } from './office-chrome';
 import { OfficeMoveIcon, OfficeStarIcon } from './office-icons';
 import { OfficeMenuBar, type OpenMenu } from './OfficeMenuBar';
 import { OfficeNameField } from './OfficeNameField';
+import type { OfficeSaveStatus } from './office-save-status';
+import { OfficeSaveStatusButton } from './OfficeSaveStatus';
 import { OfficeIconButton, OfficeTitleActions } from './OfficeTitleActions';
 import { OfficeToolFinder } from './OfficeToolFinder';
 import { useOfficeShortcuts, type ShortcutRun } from './useOfficeShortcuts';
@@ -51,6 +53,7 @@ export function OfficeTitleRow({
   chrome = null,
   tabId,
   onFollow,
+  saveStatus = null,
 }: {
   name: string;
   // The format's pill (".ODT") and what it is called ("OpenDocument format").
@@ -72,6 +75,8 @@ export function OfficeTitleRow({
   // The tab this surface shows, and how it brings a person's selection here into view (false: not found).
   tabId?: string;
   onFollow?: (personId: string) => boolean;
+  // The kind's save status; none for a session that saves nothing.
+  saveStatus?: OfficeSaveStatus | null;
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [finding, setFinding] = useState(false);
@@ -182,6 +187,7 @@ export function OfficeTitleRow({
               <OfficeMoveIcon />
             </OfficeIconButton>
           ) : null}
+          {saveStatus ? <OfficeSaveStatusButton status={saveStatus} /> : null}
           {problem ? (
             <p role="alert" className="truncate text-sm text-red-700 dark:text-red-300">
               {problem}

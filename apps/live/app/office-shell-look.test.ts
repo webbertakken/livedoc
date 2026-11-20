@@ -22,7 +22,7 @@ describe.each([
   const t = tokens(selector);
 
   it('holds text at 4.5:1 on every surface it sits on', () => {
-    for (const ink of ['ink', 'muted', 'icon'])
+    for (const ink of ['ink', 'muted', 'icon', 'error'])
       for (const ground of ['chrome', 'toolbar', 'menu', 'menu-hover'])
         expect(contrastRatio(t[ink]!, t[ground]!), `${ink} on ${ground}`).toBeGreaterThanOrEqual(
           4.5,

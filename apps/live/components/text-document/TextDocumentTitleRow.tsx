@@ -9,6 +9,7 @@ import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
+import type { OfficeSaveStatus } from '@/components/office/office-save-status';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { TextDocumentScope } from '@/lib/api/text-documents';
 import { apiDownloadTextDocument } from '@/lib/api/text-documents';
@@ -62,6 +63,7 @@ export function TextDocumentTitleRow({
   localDoc = null,
   chrome = null,
   onFollow,
+  saveStatus = null,
 }: {
   scope: TextDocumentScope;
   documentName: string;
@@ -75,6 +77,7 @@ export function TextDocumentTitleRow({
   chrome?: OfficeChrome | null;
   // Brings a collaborator's caret into view; false when they have none here.
   onFollow?: (personId: string) => boolean;
+  saveStatus?: OfficeSaveStatus | null;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
   const catalogue = useMemo(() => textDocumentMenus(format), [format]);
@@ -129,6 +132,7 @@ export function TextDocumentTitleRow({
       chrome={chrome}
       tabId={scope.tabId}
       onFollow={onFollow}
+      saveStatus={saveStatus}
     />
   );
 }

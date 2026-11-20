@@ -49,6 +49,8 @@ import {
 import { useSurfaceView } from '@/hooks/ui/useSurfaceView';
 import type { SurfaceSelection } from '@/lib/surface-view';
 import type { OfficeChrome } from '@/components/office/office-chrome';
+import type { SaveFactsSource } from '@/lib/text-document/text-document-save-status';
+import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSaveStatus';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -101,6 +103,9 @@ export function TextDocumentSurface({
   const [state, setState] = useState<SurfaceState>('loading');
   const [attempt, setAttempt] = useState(0);
   const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
+  // What the title row's save status reads (editing-surface.md "The title row"), once the writing is bound.
+  const [saveFacts, setSaveFacts] = useState<SaveFactsSource | null>(null);
+  const saveStatus = useTextDocumentSaveStatus(saveFacts, local);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // The latest sender and gate, read when an update goes out, so a new room connection never rebinds the editor.
   const live = useRef({ sequence, canEdit });
@@ -206,10 +211,12 @@ export function TextDocumentSurface({
         });
         editor.current = view;
         setEditorView(view);
+        setSaveFacts(binding.saveFacts);
         liveDoc.current = doc;
         teardown = () => {
           editor.current = null;
           setEditorView(null);
+          setSaveFacts(null);
           liveDoc.current = null;
           view.destroy();
           binding.close();
@@ -261,6 +268,8 @@ export function TextDocumentSurface({
         keyScope={root}
         localDoc={local ? () => liveDoc.current : null}
         chrome={chrome}
+        // A session that may not edit saves nothing, so shows no save status.
+        saveStatus={canEdit ? saveStatus : null}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }

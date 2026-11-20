@@ -4,9 +4,14 @@
 // the store merges into what it holds. Browser tabs on the same text document pass each edit to each other on a
 // BroadcastChannel, so both stay live.
 import * as Y from 'yjs';
-import { TEXT_DOCUMENT_LOCAL_SAVE_MS, TextDocumentState } from '@livedoc/text-documents';
+import {
+  TEXT_DOCUMENT_LOCAL_SAVE_MS,
+  TEXT_DOCUMENT_SAVE_RETRY_MS,
+  TextDocumentState,
+} from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { RoomYjsBinding } from './room-yjs-provider';
+import { saveFactsStore } from './text-document-save-status';
 
 export const TEXT_DOCUMENT_CHANNEL = 'livedoc-text-document';
 
@@ -25,6 +30,7 @@ export type LocalYjsDeps = {
   load: () => Promise<Uint8Array | null>;
   save: (update: Uint8Array) => Promise<void>;
   saveDelayMs?: number;
+  retryDelayMs?: number;
   // The channel to the browser's other tabs; none where BroadcastChannel is missing.
   channel?: () => Channel | null;
 };
@@ -52,6 +58,10 @@ export async function openLocalYjs(deps: LocalYjsDeps): Promise<RoomYjsBinding> 
   let dirty = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let chain: Promise<void> = Promise.resolve();
+  let closed = false;
+  // What the save status reads (editing-surface.md "The title row"): a write due or failed, and whether one failed.
+  const facts = saveFactsStore(tabId, debugLog);
+  const retryDelay = deps.retryDelayMs ?? TEXT_DOCUMENT_SAVE_RETRY_MS;
 
   const save = () => {
     if (timer !== null) clearTimeout(timer);
@@ -64,10 +74,14 @@ export async function openLocalYjs(deps: LocalYjsDeps): Promise<RoomYjsBinding> 
       .then(() => deps.save(update))
       .then(() => {
         saved = vector;
+        facts.set({ pending: dirty, failed: false });
         debugLog('[text-document] saved in this browser', { tabId, bytes: update.byteLength });
       })
       .catch((error: unknown) => {
         dirty = true;
+        facts.set({ pending: true, failed: true });
+        // Written again by itself, so a failure clears without another edit.
+        if (!closed && timer === null) timer = setTimeout(save, retryDelay);
         debugLog('[text-document] save in this browser failed', { tabId, error: String(error) });
       });
   };
@@ -83,6 +97,7 @@ export async function openLocalYjs(deps: LocalYjsDeps): Promise<RoomYjsBinding> 
     if (origin === CHANNEL_ORIGIN || !deps.canEdit) return;
     channel?.postMessage({ documentId, tabId, update } satisfies ChannelMessage);
     dirty = true;
+    facts.set({ pending: true });
     if (timer === null) timer = setTimeout(save, saveDelay);
   };
   doc.on('update', onUpdate);
@@ -96,6 +111,7 @@ export async function openLocalYjs(deps: LocalYjsDeps): Promise<RoomYjsBinding> 
   return {
     doc,
     close: () => {
+      closed = true;
       doc.off('update', onUpdate);
       window.removeEventListener('pagehide', save);
       document.removeEventListener('visibilitychange', onHide);
@@ -103,5 +119,6 @@ export async function openLocalYjs(deps: LocalYjsDeps): Promise<RoomYjsBinding> 
       save();
     },
     settled: () => chain,
+    saveFacts: { get: facts.get, subscribe: facts.subscribe },
   };
 }

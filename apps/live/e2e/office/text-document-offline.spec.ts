@@ -99,6 +99,9 @@ test('what is typed while the room is down reaches everyone once it is back', as
   const { ctx, link } = await cuttableContext(browser, baseURL!);
   const peer = await joinShared(ctx, code);
   await expect(peer.locator(BODY)).toHaveText('Agenda.');
+  // The save status (editing-surface.md "The title row"): saved while the room holds everything.
+  const status = peer.locator('[data-save-status]');
+  await expect(status).toHaveAttribute('data-save-status', 'saved');
 
   // The peer's room goes down; both keep typing, the owner at the end and the peer at the start, the peer for longer
   // than the room connection would hold for it (OUTBOX_MAX keystrokes).
@@ -110,12 +113,16 @@ test('what is typed while the room is down reaches everyone once it is back', as
   await page.keyboard.type(' Owner online.');
   await expect(page.locator(BODY)).toHaveText('Agenda. Owner online.');
   await expect(peer.locator(BODY)).toHaveText(`${offline}Agenda.`);
+  await expect(status).toHaveAttribute('data-save-status', 'offline');
+  await expect(status).toHaveText('Offline: changes are kept in this browser');
+  await peer.screenshot({ path: test.info().outputPath('save-status-offline.png') });
 
   // Back: the peer's room opens again by itself and both catch up, by character.
   await link.restore();
   const both = `${offline}Agenda. Owner online.`;
   await expect(page.locator(BODY)).toHaveText(both, { timeout: 45_000 });
   await expect(peer.locator(BODY)).toHaveText(both);
+  await expect(status).toHaveAttribute('data-save-status', 'saved');
   await ctx.close();
   expectNoPageErrors(pageErrors);
 });

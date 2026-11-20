@@ -17,6 +17,8 @@ export const TEXT_DOCUMENT_FRAME_CHARS = 200_000;
 export const TEXT_DOCUMENT_UPDATE_MAX_BYTES = 8 * 1024 * 1024;
 /** (default) How long an edit the room has not confirmed waits before this browser keeps a copy of it. */
 export const TEXT_DOCUMENT_LOCAL_SAVE_MS = 500;
+/** (default) How long a text document in This Browser waits before writing again after a write failed. */
+export const TEXT_DOCUMENT_SAVE_RETRY_MS = 5000;
 /** Typing within this is one undo step, as Google groups it. */
 export const TEXT_DOCUMENT_UNDO_GROUP_MS = 500;
 /** (default) The update log's count past which compaction folds it into chunks: merging many small updates costs more
