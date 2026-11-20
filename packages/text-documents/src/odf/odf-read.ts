@@ -28,6 +28,7 @@ import { isSafeLink, type ReportBuilder } from '../report';
 import { LIVEDOC_NS, NS, WRITTEN_NS } from './odf-names';
 import { readListLevels } from './odf-lists';
 import { readPageSetup, readParagraphProps, readTextProps, unquote } from './odf-props';
+import { keptSettings, pagelessIn } from './odf-settings';
 import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
 
 export type OdfParts = {
@@ -298,7 +299,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
     automaticStyles,
     pageStyles,
     masterStyles,
-    ...(settingsRoot ? { settings: keptXmlOf(parts.settings!, settingsRoot) } : {}),
+    ...(settingsRoot ? { settings: keptSettings(parts.settings!, settingsRoot) } : {}),
     tabsFromIndent: reader.tabsFromIndent,
     entries: parts.entries,
   };
@@ -309,6 +310,7 @@ export function readOdfParts(parts: OdfParts, report: ReportBuilder): TextDocume
     styles,
     lists: reader.lists,
     section: body.section,
+    ...(pagelessIn(settingsRoot) ? { pageless: true as const } : {}),
     body: body.blocks,
     source,
   };

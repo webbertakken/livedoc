@@ -84,7 +84,7 @@ import {
 } from '@/lib/text-document/text-document-caret';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
-import { pageBox } from '@/lib/text-document/text-document-page';
+import { pageBox, pagelessSetup, usePagelessColumn } from '@/lib/text-document/text-document-page';
 import {
   NON_PRINTING_TOGGLE,
   RULER_TOGGLE,
@@ -406,6 +406,9 @@ export function TextDocumentSurface({
     writes,
     ownerId,
   });
+  // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
+  const column = usePagelessColumn(scroller, scale, page.pageless);
+  const drawn = page.pageless ? pagelessSetup(page.section.setup, column) : page.section.setup;
   const ruler = useTextDocumentViewToggle(RULER_TOGGLE);
   // View > Show non-printing characters (text-and-paragraphs.md "Non-printing characters").
   const marks = useTextDocumentViewToggle(NON_PRINTING_TOGGLE);
@@ -546,12 +549,19 @@ export function TextDocumentSurface({
         }
         right={null}
       >
-        <div ref={scroller} data-region="document" className="min-h-0 flex-1 overflow-y-auto pb-6">
+        <div
+          ref={scroller}
+          data-region="document"
+          // Pageless, the page's colour fills the document's whole area (page-layout.md "Pageless").
+          style={page.pageless ? pageBox(page.section.setup) : undefined}
+          className={`min-h-0 flex-1 overflow-y-auto ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
+        >
           {ruler.shown && state === 'ready' ? (
             <TextDocumentRuler
               view={editorView}
               readFormatting={readRulerFormatting}
-              setup={page.section.setup}
+              setup={drawn}
+              pageless={page.pageless}
               onSetup={page.setSetup}
               scale={scale}
               canEdit={writes}
@@ -580,8 +590,9 @@ export function TextDocumentSurface({
           <div
             // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn. Its width and
             // margins are its setup's; a phone flows it to the window (editing-surface.md "Phone and tablet").
-            style={{ zoom: scale, ...pageBox(page.section.setup) }}
-            className={`mx-auto mt-6 min-h-(--page-height) w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
+            style={{ zoom: scale, ...pageBox(drawn) }}
+            data-page-format={page.pageless ? 'pageless' : 'pages'}
+            className={`mx-auto w-(--page-width) max-w-full text-document-page px-6 py-10 text-[11pt] sm:pt-(--page-top) sm:pr-(--page-right) sm:pb-(--page-bottom) sm:pl-(--page-left) leading-[1.15] ${page.pageless ? '' : 'mt-6 min-h-(--page-height) shadow-sm'} ${state === 'failed' ? 'hidden' : ''}`}
           >
             {state === 'loading' ? (
               <p className="text-(--office-muted)" aria-live="polite">

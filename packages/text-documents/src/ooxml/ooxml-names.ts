@@ -30,3 +30,4 @@ export const SECTPR_ORDER =
   'headerReference footerReference footnotePr endnotePr type pgSz pgMar paperSrc pgBorders lnNumType pgNumType cols formProt vAlign noEndnote titlePg textDirection bidi rtlGutter docGrid printerSettings sectPrChange'.split(
     ' ',
   );
+export const XML_HEAD = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';

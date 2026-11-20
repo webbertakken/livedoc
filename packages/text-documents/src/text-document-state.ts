@@ -165,6 +165,13 @@ export const TextDocumentState = {
   /** Sets the first section, as one transaction with `origin`. */
   setSection: (doc: Y.Doc, section: Section, origin?: unknown): void =>
     setLiveSection(doc, section, origin),
+  /** Whether the document is pageless (page-layout.md "Pageless"). */
+  pageless: (doc: Y.Doc): boolean => doc.getMap<unknown>(DOCUMENT_MAP).get('pageless') === true,
+  /** Turns pageless on or off, as one transaction with `origin`. */
+  setPageless: (doc: Y.Doc, on: boolean, origin?: unknown): void => {
+    const meta = doc.getMap<unknown>(DOCUMENT_MAP);
+    doc.transact(() => (on ? meta.set('pageless', true) : meta.delete('pageless')), origin);
+  },
   /** The live state's document map (metadata, defaults, the first section), which the editor's undo also tracks. */
   metaType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(DOCUMENT_MAP),
   /** The live state's list definitions by id (lists.md). */

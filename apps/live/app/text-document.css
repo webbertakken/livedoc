@@ -376,3 +376,14 @@ div.text-document-kept {
     border-color: transparent;
   }
 }
+/*
+ * Pageless (docs/specs/034-text-documents/page-layout.md "Pageless"): no sheet and no grey ground; the page's colour,
+ * or the paper's, fills the document's whole area, the column drawn on it in the same colour.
+ */
+.text-document-pageless-ground {
+  color-scheme: light;
+  background: var(--page-colour, light-dark(#ffffff, #1e1f20));
+}
+.dark .text-document-pageless-ground {
+  color-scheme: dark;
+}

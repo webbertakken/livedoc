@@ -87,13 +87,13 @@ What Google Docs does and neither standard has an element for is written in Live
 `urn:livedoc:xmlns:text:1.0` (`livedoc:`), which ODF's extended conformance and OOXML's markup compatibility
 (`mc:Ignorable`) let other readers ignore, each with a plain fallback any suite shows:
 
-| Construct                        | Written as                                                                                          | Fallback another suite shows                             |
-| -------------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Reactions, assignee on a comment | `livedoc:reactions`, `livedoc:assignee` on the comment                                              | The comment's text                                       |
-| Document tabs                    | `livedoc:tab-*` on a top-level ODF `text:section`, or a section break with `livedoc:tab-*` in OOXML | The tabs' writing one after another                      |
-| Pageless                         | `livedoc:pageless` and the text width in the document's settings                                    | Pages                                                    |
-| Drawings                         | `livedoc:drawing` beside the drawing's picture                                                      | The picture                                              |
-| Checklist without strikethrough  | `livedoc:strike-checked="false"` on its list levels (ODF level styles, OOXML `w:lvl`)               | A checklist struck through or not as that suite draws it |
+| Construct                        | Written as                                                                                                                                | Fallback another suite shows                             |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Reactions, assignee on a comment | `livedoc:reactions`, `livedoc:assignee` on the comment                                                                                    | The comment's text                                       |
+| Document tabs                    | `livedoc:tab-*` on a top-level ODF `text:section`, or a section break with `livedoc:tab-*` in OOXML                                       | The tabs' writing one after another                      |
+| Pageless                         | ODF: config item `livedoc:pageless` (boolean) in a `livedoc:settings` set in `settings.xml`; OOXML: `<livedoc:pageless/>` in `w:settings` | Pages                                                    |
+| Drawings                         | `livedoc:drawing` beside the drawing's picture                                                                                            | The picture                                              |
+| Checklist without strikethrough  | `livedoc:strike-checked="false"` on its list levels (ODF level styles, OOXML `w:lvl`)                                                     | A checklist struck through or not as that suite draws it |
 
 Smart chips are left out (fork C3, ruled): a chip in an arriving file is read as its shown text, and its other data is
 kept ([Kept content](#kept-content)).

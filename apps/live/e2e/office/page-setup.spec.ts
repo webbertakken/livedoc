@@ -107,3 +107,56 @@ test('a new text document starts on the default page setup', async ({ page, page
   await expect.poll(() => pageWidth(page)).toBeCloseTo(419.528 * PX, 0);
   expectNoPageErrors(pageErrors);
 });
+
+test('pageless draws one column and switches back', async ({ page, pageErrors }) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await newDocument(page);
+  const body = page.locator(BODY);
+  const sheet = page.locator('.text-document-page');
+  await body.click();
+  await page.keyboard.type('Without pages');
+
+  // Format > Switch to Pageless format: a column 8 in wide, no sheet, no margins on the ruler.
+  await (await officeMenuItem(page, ['Format', 'Switch to Pageless format'])).click();
+  await expect(sheet).toHaveAttribute('data-page-format', 'pageless');
+  await expect.poll(() => pageWidth(page)).toBeCloseTo(576 * PX, 0);
+  await expect(sheet).toHaveCSS('box-shadow', 'none');
+  await expect(page.getByRole('slider', { name: 'Left margin' })).toHaveCount(0);
+  await expect(page.getByRole('slider', { name: 'Left indent' })).toBeVisible();
+  await expect(body).toBeFocused();
+  await page.screenshot({ path: test.info().outputPath('pageless.png') });
+
+  // One undo step back to pages, and again by redo.
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(sheet).toHaveAttribute('data-page-format', 'pages');
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect(sheet).toHaveAttribute('data-page-format', 'pageless');
+
+  // Kept after a reload; Page setup opens on its Pageless tab, and its Pages tab switches back.
+  await page.waitForTimeout(800);
+  await page.reload();
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await expect(sheet).toHaveAttribute('data-page-format', 'pageless');
+  await body.click();
+  await (await officeMenuItem(page, ['File', 'Page setup'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Page setup' });
+  await expect(dialog.getByRole('tab', { name: 'Pageless' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  // Past the dialog's entrance, for the capture.
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('pageless-dialog.png') });
+  await dialog.getByRole('tab', { name: 'Pages' }).click();
+  await dialog.getByRole('button', { name: 'OK' }).click();
+  await expect(sheet).toHaveAttribute('data-page-format', 'pages');
+  await expect.poll(() => pageWidth(page)).toBeCloseTo(612 * PX, 0);
+
+  // The Format item reads as the switch it makes.
+  await (await officeMenuItem(page, ['Format', 'Switch to Pageless format'])).click();
+  await expect(sheet).toHaveAttribute('data-page-format', 'pageless');
+  await (await officeMenuItem(page, ['Format', 'Switch to Pages format'])).click();
+  await expect(sheet).toHaveAttribute('data-page-format', 'pages');
+  expectNoPageErrors(pageErrors);
+});

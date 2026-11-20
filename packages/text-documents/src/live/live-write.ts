@@ -120,6 +120,8 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
     meta.set('metadata', plain(document.metadata));
     meta.set('defaults', plain(document.defaults));
     meta.set('section', plain(document.section));
+    if (document.pageless) meta.set('pageless', true);
+    else meta.delete('pageless');
     styles.clear();
     document.styles.forEach((style, order) => styles.set(style.id, { order, style: plain(style) }));
     lists.clear();

@@ -31,6 +31,7 @@ import type { Section } from '../model/sections';
 import { roleOfStyleName, Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TabStops, type TabStop } from '../model/tab-stops';
 import { readTabEntries, readTabInterval } from './ooxml-tabs';
+import { readPageless } from './ooxml-settings';
 import type { OoxmlSource, TextDocument } from '../model/text-document';
 import { isSafeLink, type ReportBuilder } from '../report';
 import { sortedBindings } from '../odf/odf-read';
@@ -479,6 +480,7 @@ class OoxmlReader {
       styles,
       lists,
       section: first,
+      ...(readPageless(this.parts.settings?.root) ? { pageless: true as const } : {}),
       body: blocks,
       source,
     };

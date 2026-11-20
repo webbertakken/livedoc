@@ -284,7 +284,10 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         { type: 'section', start: 'continuous', setup: portrait },
         paragraph(format, 'normal', [run('One column again')]),
       ],
-      { section: { start: 'next-page', setup: { ...portrait, pageColor: '#fff2cc' } } },
+      {
+        section: { start: 'next-page', setup: { ...portrait, pageColor: '#fff2cc' } },
+        pageless: true,
+      },
     );
   },
   links: (format) =>

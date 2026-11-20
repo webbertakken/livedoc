@@ -76,6 +76,8 @@ export type TextDocumentRulerProps = {
   view: EditorView | null;
   readFormatting: () => TextFormatting | null;
   setup: PageSetup;
+  // Pageless (page-layout.md "Pageless"): the ruler spans the column, with no margins to drag.
+  pageless?: boolean;
   onSetup: (setup: PageSetup) => void;
   scale: number;
   canEdit: boolean;
@@ -89,6 +91,7 @@ export function TextDocumentRuler({
   view,
   readFormatting,
   setup,
+  pageless = false,
   onSetup,
   scale,
   canEdit,
@@ -254,8 +257,9 @@ export function TextDocumentRuler({
   }, [menu, readFormatting, run]);
 
   const markers: Marker[] = [
-    { kind: 'margin', side: 'left' },
-    { kind: 'margin', side: 'right' },
+    ...(pageless
+      ? []
+      : [{ kind: 'margin', side: 'left' } as const, { kind: 'margin', side: 'right' } as const]),
     { kind: 'indent', marker: 'first' },
     { kind: 'indent', marker: 'left' },
     { kind: 'indent', marker: 'right' },

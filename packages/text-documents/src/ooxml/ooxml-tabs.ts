@@ -10,7 +10,6 @@ import {
 } from '@livedoc/office-packages';
 import { compact } from '../model/props';
 import {
-  DEFAULT_TAB_INTERVAL_PT,
   TabStops,
   type TabAlign,
   type TabEntries,
@@ -117,7 +116,3 @@ export function readTabInterval(settings: XmlElement | undefined): number | unde
   const pt = e && twipsToPt(w(e, 'val'));
   return pt !== undefined && pt > 0 ? pt : undefined;
 }
-
-/** The `settings.xml` a new Word file is written with: the default stops' interval. */
-export const settingsXml = (interval: number | undefined): string =>
-  `<w:settings xmlns:w="${W_NS}"><w:defaultTabStop w:val="${ptToTwips(interval ?? DEFAULT_TAB_INTERVAL_PT)}"/></w:settings>`;

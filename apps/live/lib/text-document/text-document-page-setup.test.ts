@@ -6,7 +6,7 @@ import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { undo, ySyncPlugin } from 'y-prosemirror';
 import { PageSetup, Paragraph, TextDocument, TextDocumentState } from '@livedoc/text-documents';
-import { applyPageSetup, paperForLanguage } from './text-document-page-setup';
+import { applyPage, paperForLanguage } from './text-document-page-setup';
 import { textDocumentSchema } from './text-document-schema';
 import { textDocumentUndoPlugins } from './text-document-undo';
 
@@ -63,7 +63,7 @@ const breaks = (view: EditorView) => {
   return found;
 };
 
-describe('applyPageSetup', () => {
+describe('applyPage', () => {
   it('sets the first section, and each later section its paper, orientation and margins', async () => {
     const { doc, view } = await open(true);
     const a5 = {
@@ -71,7 +71,7 @@ describe('applyPageSetup', () => {
       margins: { top: 36, bottom: 36, left: 54, right: 54 },
       pageColor: '#fff2cc',
     };
-    expect(applyPageSetup(view, doc, 'odf', a5)).toEqual({ sections: 2 });
+    expect(applyPage(view, doc, 'odf', { setup: a5 })).toEqual({ sections: 2 });
     expect(TextDocumentState.section(doc, 'odf').setup).toEqual(a5);
     expect(breaks(view)).toEqual([
       {
@@ -89,10 +89,25 @@ describe('applyPageSetup', () => {
     const { doc, view } = await open(true);
     const before = TextDocumentState.section(doc, 'odf').setup;
     const beforeBreaks = breaks(view);
-    applyPageSetup(view, doc, 'odf', PageSetup.oriented(before, 'landscape'));
+    applyPage(view, doc, 'odf', { setup: PageSetup.oriented(before, 'landscape'), pageless: true });
+    expect(TextDocumentState.pageless(doc)).toBe(true);
     undo(view.state);
     expect(TextDocumentState.section(doc, 'odf').setup).toEqual(before);
+    expect(TextDocumentState.pageless(doc)).toBe(false);
     expect(breaks(view)).toEqual(beforeBreaks);
+    view.destroy();
+  });
+
+  it('switches pageless alone, leaving the setup and sections', async () => {
+    const { doc, view } = await open(true);
+    const section = TextDocumentState.section(doc, 'odf');
+    const beforeBreaks = breaks(view);
+    expect(applyPage(view, doc, 'odf', { pageless: true })).toEqual({ sections: 0 });
+    expect(TextDocumentState.pageless(doc)).toBe(true);
+    expect(TextDocumentState.section(doc, 'odf')).toEqual(section);
+    expect(breaks(view)).toEqual(beforeBreaks);
+    undo(view.state);
+    expect(TextDocumentState.pageless(doc)).toBe(false);
     view.destroy();
   });
 
@@ -103,7 +118,7 @@ describe('applyPageSetup', () => {
       setup: PageSetup.of('letter'),
       kept: { attributes: [], elements: [] } as never,
     });
-    applyPageSetup(view, doc, 'odf', PageSetup.of('a4'));
+    applyPage(view, doc, 'odf', { setup: PageSetup.of('a4') });
     expect(TextDocumentState.section(doc, 'odf')).toMatchObject({
       start: 'next-page',
       setup: PageSetup.of('a4'),

@@ -11,10 +11,13 @@ import { PageSetup, TextDocumentState } from '@livedoc/text-documents';
 import { track } from '@/lib/telemetry';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
-import { readDefaultPageSetup } from '@/lib/text-document/text-document-page-defaults';
+import { readDefaultPage } from '@/lib/text-document/text-document-page-defaults';
 import {
   PAGE_ORIENTATION_ITEM,
   PAGE_SETUP_ITEM,
+  PAGELESS_ITEM,
+  TO_PAGELESS,
+  TO_PAGES,
   useTextDocumentPageSetup,
 } from './useTextDocumentPageSetup';
 
@@ -66,7 +69,7 @@ function Harness({
   return (
     <div>
       {Object.entries(page.actions).map(([id, action]) => (
-        <button key={id} type="button" onClick={() => action!.run()}>
+        <button key={id} type="button" data-label={action!.label} onClick={() => action!.run()}>
           {id}
         </button>
       ))}
@@ -112,7 +115,7 @@ describe('useTextDocumentPageSetup', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: 'Set as default' }));
     expect(track).toHaveBeenCalledWith('UI', 'Changed', 'TextDocumentPageDefault');
-    expect(readDefaultPageSetup()).toEqual(PageSetup.of('a4'));
+    expect(readDefaultPage()).toEqual({ setup: PageSetup.of('a4'), pageless: false });
     expect(TextDocumentState.metaType(doc).has('section')).toBe(false);
   });
 
@@ -137,5 +140,29 @@ describe('useTextDocumentPageSetup', () => {
     rerender(<Harness writes onPage={(p) => (page = p)} />);
     act(() => page!.setSetup(narrow));
     expect(TextDocumentState.section(doc, 'odf').setup).toEqual(narrow);
+  });
+
+  // docs/specs/034-text-documents/page-layout.md "Pageless": Format > Switch to pageless format, both ways.
+  it('switches to pageless and back by Format, its label following, counted, each one undo step', () => {
+    render(<Harness writes />);
+    const item = () => screen.getByRole('button', { name: PAGELESS_ITEM });
+    expect(item().dataset.label).toBe(TO_PAGELESS);
+    fireEvent.click(item());
+    expect(TextDocumentState.pageless(doc)).toBe(true);
+    expect(item().dataset.label).toBe(TO_PAGES);
+    expect(track).toHaveBeenCalledWith('Tab', 'Changed', 'TextDocumentPageless');
+    expect(document.activeElement).toBe(view.dom);
+    fireEvent.click(item());
+    expect(TextDocumentState.pageless(doc)).toBe(false);
+  });
+
+  it('leaves the document pageless by the Page setup Pageless tab, counting the switch', () => {
+    render(<Harness writes />);
+    fireEvent.click(screen.getByRole('button', { name: PAGE_SETUP_ITEM }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Pageless' }));
+    fireEvent.click(screen.getByRole('button', { name: 'OK' }));
+    expect(TextDocumentState.pageless(doc)).toBe(true);
+    expect(track).toHaveBeenCalledWith('Tab', 'Changed', 'TextDocumentPageless');
+    expect(track).not.toHaveBeenCalledWith('Tab', 'Changed', 'TextDocumentPageSetup');
   });
 });
