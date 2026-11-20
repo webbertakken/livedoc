@@ -15,7 +15,7 @@ import {
   type OfficeCatalogue,
 } from '@/lib/office/office-catalogue';
 import { currentOfficePlatform } from '@/lib/office/office-platform';
-import type { ShortcutKeys } from '@/lib/office/shortcut-matcher';
+import type { ShortcutRow } from '@/lib/office/shortcut-registry';
 import { shortcutTextOf } from '@/lib/office/shortcut-notation';
 import { track } from '@/lib/telemetry';
 import type { OfficeChrome, OfficePerson } from './office-chrome';
@@ -32,6 +32,7 @@ import {
 import type { OfficeSaveStatus } from './office-save-status';
 import { OfficeSaveStatusButton } from './OfficeSaveStatus';
 import { OfficeIconButton, OfficeTitleActions } from './OfficeTitleActions';
+import { OfficeShortcutsDialog } from './OfficeShortcutsDialog';
 import { OfficeToolFinder } from './OfficeToolFinder';
 import { useOfficeShortcuts, type ShortcutRun } from './useOfficeShortcuts';
 
@@ -73,12 +74,13 @@ export function OfficeTitleRow({
   catalogue: OfficeCatalogue;
   level: AccessLevel;
   actions: OfficeActions;
-  shortcuts: readonly { id: string; keys: ShortcutKeys }[];
+  // The kind's shortcut registry: what the layer matches and the Keyboard shortcuts dialog lists.
+  shortcuts: readonly ShortcutRow[];
   // The surface whose keys the shortcut layer hears.
   keyScope: RefObject<HTMLElement | null>;
   // File > Open's picker: binds the item `open`.
   opening?: OfficeFileOpening;
-  // `TextDocument` sends `UI · Opened · TextDocumentMenu<Name>` and `UI · Used · TextDocumentToolFinder`.
+  // `TextDocument` sends `UI · Opened · TextDocumentMenu<Name>`, `UI · Used · TextDocumentToolFinder`, ...
   telemetryKind?: 'TextDocument';
   // The document's own parts, from the editor page; null outside it (a test), where the name is text alone.
   chrome?: OfficeChrome | null;
@@ -95,6 +97,7 @@ export function OfficeTitleRow({
 }) {
   const [openMenu, setOpenMenu] = useState<OpenMenu>(null);
   const [finding, setFinding] = useState(false);
+  const [showingShortcuts, setShowingShortcuts] = useState(false);
   const [picker, setPicker] = useState<HTMLInputElement | null>(null);
   const [renameNonce, setRenameNonce] = useState(0);
 
@@ -118,8 +121,15 @@ export function OfficeTitleRow({
       ...(openMove ? { move: { run: openMove } } : {}),
       ...(share ? { 'share-with-others': { run: share.onOpen } } : {}),
       'search-the-menus': { run: () => setFinding(true) },
+      'keyboard-shortcuts': {
+        run: () => {
+          if (telemetryKind) track('UI', 'Opened', `${telemetryKind}Shortcuts`);
+          setOpenMenu(null);
+          setShowingShortcuts(true);
+        },
+      },
     }),
-    [actions, opening, picker, rename, share, openMove],
+    [actions, opening, picker, rename, share, openMove, telemetryKind],
   );
 
   const menus = useMemo(
@@ -249,6 +259,9 @@ export function OfficeTitleRow({
       </div>
       {bar.length > 0 ? (
         <OfficeToolbar groups={bar} actions={allActions} shortcutOf={shortcutOf} zoom={zoom} />
+      ) : null}
+      {showingShortcuts ? (
+        <OfficeShortcutsDialog rows={shortcuts} onClose={() => setShowingShortcuts(false)} />
       ) : null}
       {opening ? (
         <input

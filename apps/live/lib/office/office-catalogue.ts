@@ -111,11 +111,12 @@ export function catalogueFaults(
 }
 
 // The items the shell binds itself (OfficeTitleRow): File > Open's picker, the document's own Rename, Move and Share
-// (where the session may use them), and Help > Search the menus.
+// (where the session may use them), Help > Search the menus and Help > Keyboard shortcuts.
 export const SHELL_BOUND_ITEMS: readonly string[] = [
   'open',
   'rename',
   'move',
   'share-with-others',
   'search-the-menus',
+  'keyboard-shortcuts',
 ];

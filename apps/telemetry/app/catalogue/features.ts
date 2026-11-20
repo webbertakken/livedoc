@@ -1164,8 +1164,8 @@ export const HELP_FROM_EDITOR = opened(
 
 export const SHORTCUTS_OPENED = opened(
   'Shortcuts Opened',
-  'The keyboard shortcuts list opened.',
-  (t) => t === 'Shortcuts',
+  'The keyboard shortcuts list opened, on a canvas or in a text document.',
+  (t) => t === 'Shortcuts' || t === 'TextDocumentShortcuts',
 );
 
 // Edit Outline (docs/specs/009-elements/mind-node.md): how often a mind map is opened as text.

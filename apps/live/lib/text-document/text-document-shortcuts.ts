@@ -1,18 +1,7 @@
 // The text document's keyboard shortcuts (docs/specs/034-text-documents/keyboard-shortcuts.md): every one of Google's,
 // for PC, Mac and ChromeOS, one row per action in the spec's notation. A test reads the spec's tables and fails on any
 // difference, so this file and the spec say the same thing.
-import type { ShortcutKeys } from '@/lib/office/shortcut-matcher';
-
-// `browser`: the key is left to the browser, as Google leaves it. `leftOut`: its function is a Google service (C3).
-export type ShortcutStatus = 'specified' | 'built' | 'browser' | 'leftOut';
-
-export type ShortcutRow = {
-  id: string;
-  group: string;
-  action: string;
-  keys: ShortcutKeys;
-  status: ShortcutStatus;
-};
+import type { ShortcutRow, ShortcutStatus } from '@/lib/office/shortcut-registry';
 
 function row(
   id: string,
@@ -67,7 +56,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+/',
     '⌘+/',
     'Ctrl+/',
-    'specified',
+    'built',
   ),
   row('save', 'Common actions', 'Save', 'Ctrl+S', '⌘+S', 'Ctrl+S', 'specified'),
   row('print', 'Common actions', 'Print', 'Ctrl+P', '⌘+P', 'Ctrl+P', 'specified'),

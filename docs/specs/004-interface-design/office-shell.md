@@ -1,7 +1,8 @@
 # Office shell
 
 **Status: partly built.** The look's tokens, menus as data, the menu bar, the tool finder, the shortcut layer, the
-title row and the toolbar are built; the side panel, dialogs, context menus and the shortcuts dialog are specified.
+title row, the toolbar, dialogs and the keyboard shortcuts dialog are built; the side panel and context menus are
+specified.
 
 The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
 and the spreadsheet of plan 0020. It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
@@ -135,11 +136,39 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
 
 ## Dialogs
 
-- Modal, centred, 480 px wide (wide dialogs 720 px), a title, the body, then the buttons at the bottom right: the
-  primary (filled, the default on Enter) rightmost, Cancel before it. Escape and the × close with no change.
+Every dialog of an office kind is the shell's **office dialog** (`OfficeDialog`): the app's modal
+(`apps/live/components/dialogs/Dialog.tsx`) drawn in the shell's look tokens, so the editor's own
+shortcuts go quiet behind it as behind any LiveDoc dialog.
+
+- Modal, centred, 480 px wide, or 720 px for a wide one; its title (22 px) at the top left and a × ("Close") at the
+  top right; then the body; then the buttons at the bottom right.
+- The **primary** button is a filled pill, rightmost; **Cancel** is a text button before it. Enter in a one-line
+  field runs the primary, unless it is disabled. A dialog with nothing to confirm (Keyboard shortcuts, Word count)
+  has no button row; its × closes it.
+- Escape, the × and a press on the dim around it close it with no change; Escape backs out of a search field with
+  text first ([Escape](escape.md)).
 - Focus starts on the first field (or the primary button); it is trapped inside and returns to the control that
-  opened it.
-- On a phone a dialog is a full-screen sheet with the title and the primary button in a top bar.
+  opened it. The dialog is named by its title.
+- Below 640 px (the app's phone breakpoint, as every LiveDoc dialog) a dialog is a full-screen sheet: a top bar holds
+  the ×, the title and the primary button, and there is no bottom row.
+- Its colours are the look tokens': `--office-dialog` for the panel, `--office-primary` and `--office-primary-ink`
+  for the primary button, `--office-line` for its edge.
+
+## Keyboard shortcuts dialog
+
+The kind's registry, shown: ⌘/ (Ctrl+/ elsewhere) or Help > Keyboard shortcuts opens it, for every share level.
+
+- A wide office dialog titled **Keyboard shortcuts**, with a search field ("Search keyboard shortcuts") focused as it
+  opens, and under it every row of the registry by group, in the registry's order, each group under its heading.
+- Each row shows its action, then every way to give it on this platform and browser, in the platform's notation,
+  joined by "or" (a way that holds only in another browser is not shown).
+- A row with no way on this platform, or left out (C3), is not listed. A row left to the browser is listed: its keys
+  work. A row not yet built is listed dimmed, with **Coming soon** after its action, until its phase lands.
+- Typing filters it: a row is shown when every word typed starts a word of its action or its group's name; a group
+  left with no row is not shown. With nothing shown it reads **No shortcuts match “…”**. How many rows show is
+  announced politely ("12 shortcuts").
+- The list scrolls under the search field, which stays in place; the list is a keyboard stop of its own, so arrow
+  keys scroll it.
 
 ## Behaviour
 
@@ -159,4 +188,5 @@ its row's in the kind's spec ([Editing surface](../034-text-documents/editing-su
 
 `UI · Opened · <Kind>Menu<Name>` (a menu opened), `UI · Used · <Kind>ToolFinder` (a result run from the finder),
 `UI · Opened · <Kind>Panel<Name>` (a side panel opened), `UI · Toggled · <Kind>Star`, `UI · Opened · <Kind>Move`,
-`UI · Used · <Kind>Follow` (a press on a person here). Never content, never what was typed.
+`UI · Used · <Kind>Follow` (a press on a person here), `UI · Opened · <Kind>Shortcuts` (the keyboard shortcuts
+dialog opened). Never content, never what was typed.

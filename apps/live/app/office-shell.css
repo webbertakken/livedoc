@@ -21,6 +21,9 @@
   --office-pressed: #d3e3fd;
   --office-pressed-ink: #041e49;
   --office-error: #b3261e;
+  --office-dialog: #ffffff;
+  --office-primary: #0b57d0;
+  --office-primary-ink: #ffffff;
 }
 
 .dark .office-shell {
@@ -40,4 +43,7 @@
   --office-pressed: #0842a0;
   --office-pressed-ink: #d3e3fd;
   --office-error: #f2b8b5;
+  --office-dialog: #282a2c;
+  --office-primary: #a8c7fa;
+  --office-primary-ink: #062e6f;
 }

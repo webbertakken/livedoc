@@ -323,6 +323,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       SEPARATOR,
       item('keyboard-shortcuts', 'Keyboard shortcuts', 'view', {
         shortcut: 'show-common-keyboard-shortcuts',
+        status: 'built',
       }),
     ]),
   ];

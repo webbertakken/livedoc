@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { parseShortcut } from '@/lib/office/shortcut-notation';
-import { TEXT_DOCUMENT_SHORTCUTS, type ShortcutStatus } from './text-document-shortcuts';
+import type { ShortcutStatus } from '@/lib/office/shortcut-registry';
+import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
 
 const SPEC = fileURLToPath(
   new URL('../../../../docs/specs/034-text-documents/keyboard-shortcuts.md', import.meta.url),
