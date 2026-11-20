@@ -2,7 +2,8 @@
 // losses are listed first; converting drops what was kept from the old format and maps the built-in styles' ids.
 import type { Block, Inline, Paragraph } from './model/blocks';
 import type { ListDefinition } from './model/lists';
-import { compact, type ParagraphProps, type TextProps } from './model/props';
+import { compact, type BorderLine, type ParagraphProps, type TextProps } from './model/props';
+import { borderSize, borderSpace, OOXML_BORDER_SPACE_MAX_PT } from './ooxml/ooxml-borders';
 import type { PageSetup, Section } from './model/sections';
 import { ROLE_IDS, type Style } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
@@ -10,7 +11,14 @@ import type { ReportItem } from './report';
 
 export type ConversionLoss = ReportItem & {
   /** `kept` for kept content, else the construct the other format cannot hold. */
-  readonly kind: 'kept' | 'text-transform' | 'section-name' | 'list-header' | 'restart';
+  readonly kind:
+    | 'kept'
+    | 'text-transform'
+    | 'section-name'
+    | 'list-header'
+    | 'restart'
+    | 'between'
+    | 'border-padding';
 };
 
 function count(map: Map<string, number>, name: string): void {
@@ -33,6 +41,13 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
         count(other, 'text-transform');
     }
     if (to === 'ooxml' && block.list?.unnumbered) count(other, 'list-header');
+    const borders = block.props.borders;
+    if (to === 'odf' && borders?.between) count(other, 'between');
+    if (
+      to === 'ooxml' &&
+      Object.values(borders ?? {}).some((line) => line.space > OOXML_BORDER_SPACE_MAX_PT)
+    )
+      count(other, 'border-padding');
     if (to === 'ooxml' && block.list?.restart !== undefined) count(other, 'restart');
   }
   for (const entry of document.source?.format === 'odf'
@@ -50,11 +65,20 @@ const half = (pt: number) => Math.round(pt * 2) / 2;
 const opt = (n: number | undefined, f: (n: number) => number) =>
   n === undefined ? undefined : f(n);
 
+const ooxmlBorder = (line: BorderLine): BorderLine => ({
+  ...line,
+  width: borderSize(line.width) / 8,
+  space: borderSpace(line.space),
+});
+
 /** Paragraph values in OOXML's resolution: lengths in twentieths of a point, line multiples in 240ths. */
 function ooxmlParagraph(p: ParagraphProps): ParagraphProps {
   const line = p.lineHeight;
   return compact({
     ...p,
+    borders:
+      p.borders &&
+      Object.fromEntries(Object.entries(p.borders).map(([side, b]) => [side, ooxmlBorder(b)])),
     indentStart: opt(p.indentStart, twentieth),
     indentEnd: opt(p.indentEnd, twentieth),
     indentFirst: opt(p.indentFirst, twentieth),
@@ -77,6 +101,13 @@ function ooxmlText(t: TextProps): TextProps {
     transform:
       t.transform === 'lowercase' || t.transform === 'capitalize' ? undefined : t.transform,
   });
+}
+
+/** Paragraph values ODF holds: no line between paragraphs (a loss). */
+function odfParagraph(p: ParagraphProps): ParagraphProps {
+  if (!p.borders?.between) return p;
+  const { between: _, ...borders } = p.borders;
+  return { ...p, borders };
 }
 
 function ooxmlSetup(setup: PageSetup): PageSetup {
@@ -112,7 +143,7 @@ export function convertTextDocument(
   const id = (value: string | undefined) =>
     value === undefined ? undefined : (ids.get(value) ?? value);
   const ooxml = to === 'ooxml';
-  const paragraphOf = (p: ParagraphProps) => (ooxml ? ooxmlParagraph(p) : p);
+  const paragraphOf = (p: ParagraphProps) => (ooxml ? ooxmlParagraph(p) : odfParagraph(p));
   const textOf = (t: TextProps) => (ooxml ? ooxmlText(t) : t);
   const setupOf = (s: PageSetup) => (ooxml ? ooxmlSetup(s) : s);
   const styles: Style[] = document.styles.map((s) => {
@@ -146,6 +177,7 @@ export function convertTextDocument(
     return [
       {
         ...rest,
+        props: paragraphOf(block.props),
         style: id(block.style)!,
         ...(place ? { list: place } : {}),
         ...(text && to === 'odf' ? { text } : {}),

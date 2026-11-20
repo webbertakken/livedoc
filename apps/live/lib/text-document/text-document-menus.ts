@@ -15,7 +15,7 @@ import {
   paragraphStyleEntries,
   STYLE_OPTIONS,
 } from './text-document-paragraph-styles';
-import { LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
+import { BORDERS_ITEM, LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
 
 type ItemOptions = Partial<
   Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status'>
@@ -238,6 +238,8 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       // Each style a submenu holding Apply and Update to match, as Google's (text-and-paragraphs.md).
       submenu('paragraph-styles', 'Paragraph styles', [
+        item(BORDERS_ITEM, 'Borders and shading', 'edit', { keywords: ['background'], ...BUILT }),
+        SEPARATOR,
         ...PARAGRAPH_STYLE_ITEMS.map((style) =>
           submenu(`${style.item}-menu`, style.label, paragraphStyleEntries(style)),
         ),

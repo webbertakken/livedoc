@@ -26,6 +26,7 @@ import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yj
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
+import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
@@ -227,6 +228,11 @@ export function TextDocumentSurface({
               textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
               // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
               paintFormatPlugin(),
+              // Adjacent paragraphs with the same borders share one box ("Borders and shading").
+              paragraphBoxesPlugin(() => ({
+                styles: TextDocumentState.styles(doc, live.current.format),
+                defaults: TextDocumentState.defaults(doc, live.current.format),
+              })),
               keymap(baseKeymap),
               // A moved selection is part of the view remembered for this tab.
               new Plugin({

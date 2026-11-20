@@ -1,7 +1,7 @@
 # Text and paragraphs
 
 **Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
-keep rules, paint format and clear formatting are built; the rest is specified.
+keep rules, borders and shading, paint format and clear formatting are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -199,8 +199,28 @@ Styles > Options and Format > Paragraph styles > Options hold three items, as Go
 
 ## Borders and shading
 
-Format > Paragraph styles > Borders and shading: borders on each side (colour, width 0 to 6 pt, dash), padding,
-background colour; **Reset**. Adjacent paragraphs with the same borders share one box, as in both formats.
+**Borders and shading** (Format > Paragraph styles > Borders and shading, first in that submenu as in Google's) is a
+dialog for the paragraphs the selection touches:
+
+- **Position**: Top, Bottom, Left, Right and Between, each a toggle button; all five are pressed when it opens
+  (default). Width, dash and colour apply to the pressed positions only.
+- **Border width**: 0 pt, 1 pt, 2 pt, 3 pt, 4 pt, 6 pt (default: Google's list as known, assumed); 0 pt takes the
+  border away. **Border dash**: Solid, Dotted, Dashed. **Border colour** and **Background colour** through the one
+  [colour picker](../004-interface-design/colour-picker.md), as text colour is.
+- **Paragraph padding**: the space between a border and the text, 0 to 72 pt (default), on every side with a border.
+- Each field shows the value the paragraphs share over the pressed positions, blank where they differ (or have no
+  border there); a blank field changes nothing.
+- **Reset** sets the dialog to no borders, no background and no padding; **Apply** sets the paragraphs as one undo
+  step and returns focus to the writing; **Cancel** and Escape change nothing.
+- **Between** draws a line between adjacent paragraphs that share their borders. An OpenDocument file has no such
+  line, so in an `.odt` text document Between is drawn dimmed, its tooltip "OpenDocument files have no line between
+  paragraphs" (default).
+- **Drawn as both formats do**: adjacent paragraphs with the same borders, padding and background share one box: the
+  upper one has no bottom border (Between's line instead, where set), the lower one no top border, and the space
+  between them lies inside the box.
+- A paragraph's own borders and background replace its style's whole; Reset takes away its own, so its style's
+  show (default). Clear formatting takes them away too.
+- Share roles: an Editor only; a Participant and a Viewer see no item.
 
 ## Paint format
 
@@ -259,9 +279,9 @@ SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight, P
 toolbar, menu or shortcut), `TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut),
 `TextDocumentStyleUpdated` (update to match), `TextDocumentStylesUsed` (Use my default styles),
 `TextDocumentStylesReset`, `TextDocumentPaste` (with the source: Document, Html, Markdown, Plain), `TextDocumentAlign`,
-`TextDocumentIndent` (a step), `TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`, `TextDocumentParagraphSpace` (add or
-remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`; `UI · Changed · TextDocumentDefaultStyles`
-(Save as my default styles). Never text.
+`TextDocumentIndent` (a step), `TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`,
+`TextDocumentParagraphSpace` (add or remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`,
+`TextDocumentBordersAndShading`; `UI · Changed · TextDocumentDefaultStyles` (Save as my default styles). Never text.
 
 ## Limits
 

@@ -117,7 +117,7 @@ describe('a paragraph drawn in its style', () => {
       {
         'data-style': 'Title',
         style:
-          'text-align: center; padding-inline-start: 36pt; text-indent: -18pt; margin-bottom: 6pt;',
+          'text-align: center; --text-document-indent-start: 36pt; text-indent: -18pt; margin-bottom: 6pt;',
       },
       0,
     ]);

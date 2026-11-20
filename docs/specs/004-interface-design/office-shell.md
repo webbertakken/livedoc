@@ -200,6 +200,8 @@ shortcuts go quiet behind it as behind any LiveDoc dialog.
 - The **primary** button is a filled pill, rightmost; **Cancel** is a text button before it. Enter in a one-line
   field runs the primary, unless it is disabled. A dialog with nothing to confirm (Keyboard shortcuts, Word count)
   has no button row; its × closes it.
+- A dialog may hold a **secondary** button that changes only the dialog (Reset): an outlined pill at the bottom left;
+  on a phone, a text button before the primary in the top bar.
 - Escape, the × and a press on the dim around it close it with no change; Escape backs out of a search field with
   text first ([Escape](escape.md)).
 - Focus starts on the first field (or the primary button); it is trapped inside and returns to the control that

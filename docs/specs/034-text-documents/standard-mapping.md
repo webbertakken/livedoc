@@ -60,6 +60,12 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
   and its start) or checklist; paragraphs of one list number on across anything between them.
 - **`SectionBreak`**: starts a section, on a new page or continuous, with its page setup (paper, orientation,
   margins, page colour) and columns.
+- **Paragraph borders**: up to five lines (top, bottom, left, right, between), each a width, a dash (solid, dotted,
+  dashed) and a colour, with its padding (the space to the text); and a background colour. ODF: `fo:border-<side>`
+  (`0.06pt solid #000000`), `fo:padding-<side>` and `fo:background-color` on the paragraph properties, every side
+  written once any is set (`none` where absent); OOXML: `w:pBdr` (`w:sz` in eighths of a point, `w:space` in
+  points, `w:val` `single`, `dotted` or `dashed`, `nil` where absent) and `w:shd` (`w:fill`). Other line
+  styles read as the nearest dash (double as solid).
 - Lengths are points, read from either format's units and rounded to three decimals; colours are `#rrggbb`.
 - Text holds tabs as `\t` and line breaks as `\n`.
 
@@ -150,6 +156,9 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | Either format            | Heading levels past 6 show as Heading 6 (the level is kept and written back)                                     |
 | ODF to OOXML             | Kept content (by name and count); lowercase and capitalised text transforms (only uppercase has a Word property) |
 | ODF to OOXML             | Continuous sections' own names and their protection                                                              |
+| ODF to OOXML             | A border's padding past 31 pt is written as 31 pt, Word's most                                                   |
+| OOXML to ODF             | The line between paragraphs (`w:pBdr/w:between`): an OpenDocument file has none                                  |
+| Either format            | Border styles the model has no dash for (double, wave, 3-D) read as solid; padding on a side with no border      |
 | OOXML to ODF             | Kept content (by name and count), content controls other than checkboxes, OMML equations become MathML           |
 | Either format, converted | Unmapped formatting inside kept properties (theme colours and fonts, revision ids): the model's values stay      |
 | Word files               | Proofing marks (`w:proofErr`) and last-rendered page breaks: Word recomputes them on open                        |

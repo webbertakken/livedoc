@@ -68,8 +68,8 @@ describe('textDocumentStyleSheet', () => {
       'font-variant: small-caps',
       'text-transform: uppercase',
       'text-align: justify',
-      'padding-inline-start: 36pt',
-      'padding-inline-end: 12pt',
+      '--text-document-indent-start: 36pt',
+      '--text-document-indent-end: 12pt',
       'text-indent: -18pt',
       'margin-top: 6pt',
       'margin-bottom: 3pt',
@@ -125,5 +125,46 @@ describe('paragraphDeclarations, the keep rules', () => {
       ),
     ).toBe('break-after: auto; break-inside: auto; widows: 1; orphans: 1;');
     expect(cssText(paragraphDeclarations({}))).toBe('');
+  });
+});
+
+// text-and-paragraphs.md "Borders and shading": a paragraph with borders or a background is a box at its indents.
+describe('paragraphDeclarations, borders and shading', () => {
+  it('draws a box at the indents: each side its border and padding, and the background', () => {
+    const css = cssText(
+      paragraphDeclarations({
+        indentStart: 36,
+        borders: {
+          top: { width: 1, dash: 'dotted', color: '#1155cc', space: 4 },
+          left: { width: 0.5, dash: 'solid', color: '#000000', space: 2 },
+        },
+        shading: '#fff2cc',
+      }),
+    );
+    expect(css).toBe(
+      '--text-document-indent-start: 36pt; margin-inline-start: var(--text-document-indent-start, 0); ' +
+        'margin-inline-end: var(--text-document-indent-end, 0); border-top: 1pt dotted #1155cc; padding-top: 4pt; ' +
+        'border-bottom: none; padding-bottom: 0pt; border-left: 0.5pt solid #000000; padding-left: 2pt; ' +
+        'border-right: none; padding-right: 0pt; background-color: #fff2cc;',
+    );
+  });
+
+  it('draws no box without borders or a background, and nothing unsafe in one', () => {
+    expect(cssText(paragraphDeclarations({ borders: undefined }))).toBe('');
+    const css = cssText(
+      paragraphDeclarations({
+        borders: { top: { width: 1, dash: 'solid', color: 'red; x: url(y)', space: 1 } },
+        shading: 'url(z)',
+      }),
+    );
+    expect(css).not.toContain('url(');
+    expect(css).toContain('border-top: none');
+    expect(css).toContain('background-color: transparent');
+  });
+
+  it('draws indents as padding on every paragraph, which a box draws as margin', () => {
+    expect(textDocumentStyleSheet([], { paragraph: {}, text: {} })).toContain(
+      'padding-inline-start: var(--text-document-indent-start, 0); padding-inline-end: var(--text-document-indent-end, 0);',
+    );
   });
 });
