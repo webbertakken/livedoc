@@ -335,7 +335,47 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   refuses but OpenFormula or OOXML defines (more arguments, a range where Google takes one value) follows that
   standard, in every document. So a file's formula keeps its meaning (C1) and nothing Google accepts changes. `CONCAT`
   is the first: Google's joins two values, the standards' any number, ranges whole; LiveDoc's is the standards'.
-  Formulas both accept but answer differently are ruled one by one as the categories meet them.
+  Formulas both accept but answer differently wait on Webber's ruling (they touch C1); until then they follow Google
+  (S6), and each is listed below as the categories meet it, so the ruling applies in one pass.
+- **Both accept, answered differently**: Google's answer is documented; a file from LibreOffice (measured) shows
+  Google's answer in LiveDoc today, not the one it was written with. The case is the oracle's (`oracle/cases/`).
+
+  | Formula                              | Google (LiveDoc today)       | LibreOffice / the standard           | Case                 |
+  | ------------------------------------ | ---------------------------- | ------------------------------------ | -------------------- |
+  | `CELL("sheet", A1)`                  | the sheet's name             | its number (OpenFormula)             | Info CELL.9          |
+  | `SORT(range, 1, -1)`                 | -1 is TRUE: ascending        | descending (OOXML sort_order)        | Filter SORT.8        |
+  | `TIME(1.9, 0, 0)`                    | 1:00, the hour truncated     | 1:54, the fraction kept              | Date TIME.4          |
+  | `ADDRESS(2, 3, 1, TRUE, "Data")`     | `Data!$C$2`                  | `Data.$C$2` (LibreOffice's syntax)   | Lookup ADDRESS.7     |
+  | `FORMULATEXT(B1)`                    | the formula as Google writes | in LibreOffice's syntax (`$Data.A1`) | Lookup FORMULATEXT.1 |
+  | `CODE("熊")`                         | Unicode: 29066               | an 8-bit code page: 231              | Text CODE.3          |
+  | `MIDB("熊本=熊本", 2, 4)`            | `本=熊`: start in characters | ` 本=`: start in bytes, half a space | Text MIDB.2          |
+  | `REPLACEB("熊本=熊本", 2, 3, "new")` | `熊new熊本`                  | ` new=熊本`                          | Text REPLACEB.2      |
+  | `UNICHAR(0)`, `UNICHAR(55296)`       | `#VALUE!`                    | empty text                           | Text UNICHAR.3, .4   |
+
+- **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
+  (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
+
+  | Formula                                          | LiveDoc today                    | LibreOffice                | Case                                            |
+  | ------------------------------------------------ | -------------------------------- | -------------------------- | ----------------------------------------------- |
+  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")` | 1, never negative                | -2                         | Date DATEDIF.9                                  |
+  | `NETWORKDAYS.INTL(a, b, "1111111")`              | `#VALUE!`                        | 0                          | Date NETWORKDAYS.INTL.4                         |
+  | `FILTER(range, numbers)`                         | any number but 0 passes          | only positive numbers pass | Filter FILTER.8                                 |
+  | `UNIQUE({"a"; "A"})`                             | two values, case kept            | one, case ignored          | Filter UNIQUE.4                                 |
+  | `CELL("address", Data!B3)`                       | `Data!$B$3`                      | `$Data.$B$3`               | Info CELL.2                                     |
+  | `CELL("width", A1)`                              | ECMA-376 characters (D40)        | LibreOffice's own measure  | Info CELL.14                                    |
+  | `AND("TRUE", 1)`                                 | TRUE, text read as a truth       | `#VALUE!`                  | Logical AND.8                                   |
+  | `IFNA(A4, 1)` over an empty cell                 | empty                            | 0                          | Logical IFNA.4                                  |
+  | `ADDRESS(1, 1, 5)`                               | `#VALUE!`                        | `$A$1`                     | Lookup ADDRESS.9                                |
+  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`  | `1TRUE`, `true`: TRUE as text    | `11`, `1`: TRUE as 1       | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
+  | `"z" < TRUE`                                     | TRUE: booleans after text        | FALSE                      | Syntax compare.4                                |
+  | `SUM(1:2)` over booleans                         | booleans skipped                 | booleans counted           | Syntax range.3                                  |
+  | `0^-1`, `(-8)^(1/3)`                             | `#DIV/0!`, `#NUM!`               | `#NUM!`, -2                | Syntax errors.4, .8                             |
+  | `CHAR(0)`, `CODE("")`                            | `#VALUE!`                        | empty text, 0              | Text CHAR.2, CODE.2                             |
+  | `FIND("", "abc")`, `SEARCH("", "abc")`           | 1, as Excel                      | `#VALUE!`                  | Text FIND.5, SEARCH.7                           |
+  | `PROPER("it's 2nd")`                             | `It's 2nd`                       | `It'S 2Nd`                 | Text PROPER.3                                   |
+  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`          | `熊`, `本`: a cut character kept | a space                    | Text LEFTB.6, RIGHTB.5                          |
+  | `LENB("ｶﾀｶﾅ")`                                   | 4: half-width kana 1 byte (D43)  | 8                          | Text LENB.6                                     |
+
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
   Excel asks for it, and S5's convention for the same Google-only names.
