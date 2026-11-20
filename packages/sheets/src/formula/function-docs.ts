@@ -816,6 +816,17 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   IMSECH: D('number', 'The hyperbolic secant of a complex number', '=IMSECH("1+i")'),
   IMCSC: D('number', 'The cosecant of a complex number', '=IMCSC("1+i")'),
   IMCSCH: D('number', 'The hyperbolic cosecant of a complex number', '=IMCSCH("1+i")'),
+  // Parser
+  CONVERT: D(
+    'value, start_unit, end_unit',
+    'A measurement in one unit as another',
+    '=CONVERT(68, "F", "C")',
+  ),
+  TO_DATE: D('value', 'A number shown as a date', '=TO_DATE(46000)'),
+  TO_DOLLARS: D('value', 'A number shown as US dollars', '=TO_DOLLARS(A2)'),
+  TO_PERCENT: D('value', 'A number shown as a percentage', '=TO_PERCENT(0.25)'),
+  TO_PURE_NUMBER: D('value', 'A number with its format taken off', '=TO_PURE_NUMBER(A2)'),
+  TO_TEXT: D('value', 'A number as the text its cell shows', '=TO_TEXT(A2)'),
   // Plan cards
   CARDCOUNT: D(
     '[field1, value1, …]',

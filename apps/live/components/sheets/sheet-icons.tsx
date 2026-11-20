@@ -35,6 +35,7 @@ import {
   lucideGitFork,
   lucideGrid3x3,
   lucideInfo,
+  lucideScale,
   lucideSearch,
   lucideSquareKanban,
   lucidePaintRoller,
@@ -231,6 +232,7 @@ export const FUNCTION_FAMILY_ICONS: Record<FunctionFamily, () => React.JSX.Eleme
   Arrays: prims(lucideGrid3x3),
   Finance: prims(lucideCoins),
   Engineering: prims(lucideCpu),
+  Parser: prims(lucideScale),
   'Plan cards': prims(lucideSquareKanban),
 };
 export const SearchIcon = prims(lucideSearch);
