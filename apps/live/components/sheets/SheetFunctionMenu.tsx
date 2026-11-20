@@ -12,6 +12,7 @@ import { useMenuItemProps } from '@/components/primitives/menu-item-props';
 // The families as the toolbar names them (Title Case).
 export const FUNCTION_FAMILY_LABELS: Record<FunctionFamily, string> = {
   Maths: 'Maths',
+  Operators: 'Operator',
   Statistics: 'Statistics',
   Logic: 'Logic',
   Information: 'Information',

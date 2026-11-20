@@ -98,3 +98,35 @@ describe('the oracle corpus', () => {
     },
   );
 });
+
+// The catalogue's categories whose boxes have landed (plan 0020 Phase 6): every function built in them is measured.
+// The list grows by one with each category box, and holds every category by the end of the phase.
+const MEASURED_CATEGORIES = ['Info', 'Logical', 'Operator'];
+
+// A built catalogue row of formulas.md: its name and category.
+function builtRows(): { name: string; category: string }[] {
+  const spec = readFileSync(
+    join(import.meta.dirname, '../../../../docs/specs/029-sheets/formulas.md'),
+    'utf8',
+  );
+  const out: { name: string; category: string }[] = [];
+  for (const line of spec.split('\n')) {
+    const m = /^\| `([A-Z][A-Z0-9._]*)`\s*\| (\w[\w ]*?)\s*\|.*\| built\s*\|$/.exec(line);
+    if (m) out.push({ name: m[1]!, category: m[2]! });
+  }
+  return out;
+}
+
+describe('the catalogue against the corpus', () => {
+  it('measures every function built in a measured category', () => {
+    const measured = new Set(
+      corpus.flatMap((c) => c.cases.map((x) => x.id.split('.').slice(0, -1).join('.'))),
+    );
+    const rows = builtRows();
+    expect(rows.length).toBeGreaterThan(100);
+    const unmeasured = rows
+      .filter((r) => MEASURED_CATEGORIES.includes(r.category) && !measured.has(r.name))
+      .map((r) => `${r.category} ${r.name}`);
+    expect(unmeasured).toEqual([]);
+  });
+});
