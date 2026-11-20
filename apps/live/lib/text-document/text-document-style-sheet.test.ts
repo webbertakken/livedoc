@@ -7,6 +7,7 @@ import {
   styleRule,
   textDocumentStyleSheet,
 } from './text-document-style-sheet';
+import { paperFill, paperInk } from './text-document-paper';
 
 const blank = TextDocument.blank({ format: 'odf' });
 
@@ -26,7 +27,7 @@ describe('textDocumentStyleSheet', () => {
     const h6 = blank.styles.find((s) => s.role === 'heading6')!;
     const rule = styleRule(blank.styles, blank.defaults, h6.id);
     expect(rule).toContain('font-style: italic');
-    expect(rule).toContain('color: #666666');
+    expect(rule).toContain(`color: ${paperInk('#666666')}`);
   });
 
   it('draws every text and paragraph property a style may set', () => {
@@ -63,8 +64,8 @@ describe('textDocumentStyleSheet', () => {
       'font-weight: 700',
       'font-style: normal',
       'text-decoration-line: underline line-through',
-      'color: #123456',
-      'background-color: #fff2cc',
+      `color: ${paperInk('#123456')}`,
+      `background-color: ${paperFill('#fff2cc')}`,
       'font-variant: small-caps',
       'text-transform: uppercase',
       'text-align: justify',
@@ -143,9 +144,9 @@ describe('paragraphDeclarations, borders and shading', () => {
     );
     expect(css).toBe(
       '--text-document-indent-start: 36pt; margin-inline-start: var(--text-document-indent-start, 0); ' +
-        'margin-inline-end: var(--text-document-indent-end, 0); border-top: 1pt dotted #1155cc; padding-top: 4pt; ' +
-        'border-bottom: none; padding-bottom: 0pt; border-left: 0.5pt solid #000000; padding-left: 2pt; ' +
-        'border-right: none; padding-right: 0pt; background-color: #fff2cc;',
+        `margin-inline-end: var(--text-document-indent-end, 0); border-top: 1pt dotted ${paperInk('#1155cc')}; padding-top: 4pt; ` +
+        `border-bottom: none; padding-bottom: 0pt; border-left: 0.5pt solid ${paperInk('#000000')}; padding-left: 2pt; ` +
+        `border-right: none; padding-right: 0pt; background-color: ${paperFill('#fff2cc')};`,
     );
   });
 

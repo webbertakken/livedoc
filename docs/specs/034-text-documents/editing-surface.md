@@ -24,6 +24,20 @@ behaviour, which hold either way. Each control's row is in the [parity matrix](p
 The document's canvas chrome (palette, mode switch, minimap, zoom controls) is never mounted
 ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md)).
 
+## The page in the dark scheme
+
+- In the app's dark scheme the pages are **dark paper**: `#1e1f20` on the `#131314` ground, the writing in `#e3e3e3`
+  where it has no colour of its own; in the light scheme, white paper and black ink, as Google draws them.
+- **Colours are drawn for the paper they are on**, never stored for it: the file keeps the colours as written, so a
+  document reads alike in either scheme, in another suite and in print.
+- On dark paper a dark text colour is drawn light and a pale fill (a highlight, a paragraph's background) is drawn
+  dark: each keeps its hue and chroma, and its OKLCH lightness is mirrored about 0.635 (default), so black ink is drawn
+  near white and a pale yellow highlight as a deep yellow. A light text colour and a dark fill are drawn as written.
+- Text on dark paper meets 4.5:1 against what is behind it: a mirrored ink still short of it is lifted toward white.
+- Borders, list markers, ticked checklist items and kept-content placeholders follow the same rules; pictures and
+  drawings are drawn as they are.
+- Printing, PDFs, previews and thumbnails are always light paper (default).
+
 ## The title row
 
 - **The LiveDoc mark** goes to the Explorer, as Google's Docs icon goes to the Docs home. Its tooltip: **Explorer**.

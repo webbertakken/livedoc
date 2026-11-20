@@ -12,6 +12,7 @@ import {
   type StyleDefaults,
   type TextProps,
 } from '@livedoc/text-documents';
+import { paperFill, paperInk } from './text-document-paper';
 
 const BODY = '.text-document-body';
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -28,8 +29,11 @@ function textDeclarations(t: TextProps): (string | undefined)[] {
     t.bold === undefined ? undefined : `font-weight: ${t.bold ? 700 : 400}`,
     t.italic === undefined ? undefined : `font-style: ${t.italic ? 'italic' : 'normal'}`,
     lines.length > 0 ? `text-decoration-line: ${lines.join(' ')}` : undefined,
-    t.color && HEX.test(t.color) ? `color: ${t.color}` : undefined,
-    t.highlight && HEX.test(t.highlight) ? `background-color: ${t.highlight}` : undefined,
+    // Drawn for the page's paper (editing-surface.md "The page in the dark scheme").
+    t.color && HEX.test(t.color) ? `color: ${paperInk(t.color)}` : undefined,
+    t.highlight && HEX.test(t.highlight)
+      ? `background-color: ${paperFill(t.highlight)}`
+      : undefined,
     t.smallCaps ? 'font-variant: small-caps' : undefined,
     t.transform && t.transform !== 'none' ? `text-transform: ${t.transform}` : undefined,
   ];
@@ -81,7 +85,7 @@ const DASH: Record<BorderDash, string> = { solid: 'solid', dotted: 'dotted', das
 export function borderCss(line: BorderLine | undefined): string {
   if (!line || !pt(line.width, 12) || !Object.hasOwn(DASH, line.dash) || !HEX.test(line.color))
     return 'none';
-  return `${pt(line.width, 12)} ${DASH[line.dash]} ${line.color}`;
+  return `${pt(line.width, 12)} ${DASH[line.dash]} ${paperInk(line.color)}`;
 }
 
 const SIDES = ['top', 'bottom', 'left', 'right'] as const;
@@ -105,7 +109,7 @@ export function boxDeclarations(p: ParagraphProps): string[] {
         `padding-${side}: ${drawn !== 'none' ? (pt(line!.space, 72) ?? '0pt') : '0pt'}`,
       ];
     }),
-    `background-color: ${shading ?? 'transparent'}`,
+    `background-color: ${shading ? paperFill(shading) : 'transparent'}`,
   ];
 }
 

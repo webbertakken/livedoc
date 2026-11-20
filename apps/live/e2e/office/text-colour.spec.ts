@@ -39,7 +39,11 @@ test('text colour and highlight colour a text document through the one picker', 
   const words = body.locator('span', { hasText: 'Field notes' }).first();
   const red = await bar(textColour).getAttribute('data-colour-bar');
   expect(red).toMatch(/^#[0-9a-f]{6}$/);
-  await expect(words).toHaveCSS('color', hexToRgb(red!));
+  // Written as picked; drawn for the page's paper (text-document-paper.spec.ts proves the drawing).
+  await expect(words).toHaveAttribute(
+    'style',
+    new RegExp(escaped(`color: light-dark(${hexToRgb(red!)}`)),
+  );
 
   // A custom highlight, kept among Custom Colours.
   await highlight.click();
@@ -48,9 +52,9 @@ test('text colour and highlight colour a text document through the one picker', 
   const hex = page.getByRole('textbox', { name: 'Hex' });
   await hex.fill('#ffe599');
   await hex.press('Enter');
-  await expect(body.locator('span[style*="background-color"]').first()).toHaveCSS(
-    'background-color',
-    'rgb(255, 229, 153)',
+  await expect(body.locator('span[style*="background-color"]').first()).toHaveAttribute(
+    'style',
+    /background-color: light-dark\(rgb\(255, 229, 153\)/,
   );
   await expect(bar(highlight)).toHaveAttribute('data-colour-bar', '#ffe599');
 
@@ -59,9 +63,9 @@ test('text colour and highlight colour a text document through the one picker', 
   await page.reload();
   await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
   await expect(body.locator('span', { hasText: 'Field notes' }).first()).toBeVisible();
-  await expect(body.locator('span[style*="background-color"]').first()).toHaveCSS(
-    'background-color',
-    'rgb(255, 229, 153)',
+  await expect(body.locator('span[style*="background-color"]').first()).toHaveAttribute(
+    'style',
+    /background-color: light-dark\(rgb\(255, 229, 153\)/,
   );
 
   // Reset and None take them away again.
@@ -87,3 +91,5 @@ function hexToRgb(hex: string): string {
   const n = Number.parseInt(hex.slice(1), 16);
   return `rgb(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255})`;
 }
+
+const escaped = (text: string) => text.replace(/[()]/g, (c) => `\\${c}`);

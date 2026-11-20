@@ -63,7 +63,8 @@ describe('paragraphBoxJoins', () => {
       }),
     });
     const [upper, lower] = [...view.dom.querySelectorAll('p')];
-    expect(upper!.style.borderBottom).toBe('1pt dashed rgb(0, 0, 0)');
+    expect(upper!.style.borderBottomStyle).toBe('dashed');
+    expect(upper!.style.borderBottom).toContain('light-dark(rgb(0, 0, 0)');
     expect(upper!.style.paddingBottom).toBe('6pt');
     expect(upper!.style.marginBottom).toBe('0px');
     expect(lower!.style.borderTopStyle).toBe('none');

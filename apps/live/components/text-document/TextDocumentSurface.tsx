@@ -441,10 +441,10 @@ export function TextDocumentSurface({
           <div
             // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn.
             style={{ zoom: scale }}
-            className={`mx-auto min-h-[1056px] w-[816px] max-w-full bg-white px-6 py-10 text-[11pt] sm:px-24 sm:py-24 leading-[1.15] text-black shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
+            className={`mx-auto min-h-[1056px] w-[816px] max-w-full text-document-page px-6 py-10 text-[11pt] sm:px-24 sm:py-24 leading-[1.15] shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
           >
             {state === 'loading' ? (
-              <p className="text-slate-500" aria-live="polite">
+              <p className="text-(--office-muted)" aria-live="polite">
                 Loading the text document…
               </p>
             ) : null}
