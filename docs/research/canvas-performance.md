@@ -451,7 +451,6 @@ Measured 2026-11-20 on the reference board, local, throttled 3x, interleaved aga
   18-20 to 10-13 and its release 10-17 to 0-1. A stroke (a pen, no drag) did not change. The select
   row's longest task at 3x went from 50-52 to under 50 in eleven of twelve runs.
 
-
 ## A stroke's release, label by label
 
 Measured 2026-11-20 on the reference board, in Node, unthrottled, a stroke added to the board and
