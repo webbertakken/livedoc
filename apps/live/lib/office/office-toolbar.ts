@@ -5,8 +5,9 @@ import { levelAtLeast, type AccessLevel } from '@livedoc/api-schema';
 import type { OfficeActions, OfficeItemStatus } from './office-catalogue';
 
 export type OfficeControlLook =
-  // A glyph alone; `toggle` draws its pressed state from the binding's `checked`.
-  | { kind: 'icon'; icon: readonly IconPrim[]; toggle?: boolean; menu?: boolean }
+  // A glyph alone; `toggle` draws its pressed state from the binding's `checked`; `split` adds a chevron of its own
+  // opening the kind's choice grid of its id (a list button).
+  | { kind: 'icon'; icon: readonly IconPrim[]; toggle?: boolean; menu?: boolean; split?: boolean }
   // A value shown as text (Styles, Font with a chevron for their list; the font size without), `width` px wide.
   | { kind: 'text'; text: string; width: number; list?: boolean }
   // A value field, bound by the shell's field of that name (the zoom, the font size), not by an action.

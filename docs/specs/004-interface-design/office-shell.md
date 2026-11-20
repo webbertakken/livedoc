@@ -118,6 +118,10 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
 - A toggle may hold a **double press** (the paint roller): a second press in quick succession (a double-click) runs
   the binding's double press in place of a second plain press, so the toggle stays on; a press from the keyboard is
   always a plain press.
+- A **split toggle** (a list button) is a toggle and, beside it, a chevron of its own (`<name> styles`) opening a
+  **choice grid**: the kind's choices drawn as small previews, a WAI-ARIA menu of `menuitemradio` cells, the one in
+  force checked; arrows move by cell and by row, Home and End to the ends, Enter or Space takes one, Escape closes it
+  and puts focus back on the chevron. Down on the toggle opens its grid. Both halves are stops of the bar's arrows.
 - **Colour controls** (Text colour, Highlight colour) show their glyph over a bar in the colour at the caret and open
   the [colour picker](colour-picker.md) in its swatch-button skin.
 - A `comingSoon` control is drawn dimmed (`aria-disabled`), its tooltip saying "Coming soon"; a `built` control left
@@ -168,6 +172,8 @@ draws a menu: dimmed while `comingSoon`, not drawn above the session's level or 
   Escape, a press outside or running an item closes it, and focus goes back to the document.
 - It stays inside the window: it opens to the left of the point, or above it, where it would cross the right or
   bottom edge.
+- A **contextual item** (a list's Restart numbering) is drawn only while its binding can run, read as the menu opens;
+  the menus show the same item dimmed instead.
 
 ## Side panels
 

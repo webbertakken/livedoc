@@ -92,6 +92,9 @@ class OoxmlWriter {
   readonly numberingPart: string;
   readonly rels: RelationshipList;
   readonly numIds = new Map<string, string>();
+  // Each list paragraph's num: its list's, or, from a restart on, a num of the list's own (standard-mapping.md "Lists").
+  readonly paragraphNumIds = new Map<Paragraph, string>();
+  readonly restartNums: { numId: string; list: string; level: number; start: number }[] = [];
   readonly defaultStyle: string | undefined;
 
   constructor(doc: TextDocument) {
@@ -136,6 +139,19 @@ class OoxmlWriter {
       this.numIds.set(id, String(next));
       used.add(String(next));
     }
+    const current = new Map(this.numIds);
+    for (const block of this.doc.body) {
+      if (block.type !== 'paragraph' || !block.list || !current.has(block.list.id)) continue;
+      const { id, level, restart } = block.list;
+      if (restart !== undefined) {
+        while (used.has(String(next))) next += 1;
+        const numId = String(next);
+        used.add(numId);
+        this.restartNums.push({ numId, list: id, level, start: restart });
+        current.set(id, numId);
+      }
+      this.paragraphNumIds.set(block, current.get(id)!);
+    }
   }
 
   sectPr(section: Section): string {
@@ -150,7 +166,10 @@ class OoxmlWriter {
   }
 
   pPr(p: Paragraph, ends: Section | undefined): string {
-    const list = p.list && { id: p.list.id, level: p.list.level };
+    const list = p.list && {
+      id: this.paragraphNumIds.get(p) ?? this.numIds.get(p.list.id) ?? p.list.id,
+      level: p.list.level,
+    };
     const values = {
       style: p.style,
       props: p.props,
@@ -158,7 +177,7 @@ class OoxmlWriter {
       section: ends && { start: ends.start, setup: ends.setup },
     };
     if (p.kept && keptStillHolds(p.kept, values)) return this.kept(p.kept.xml);
-    const numbered = list && { id: this.numIds.get(list.id) ?? list.id, level: list.level };
+    const numbered = list;
     // The default paragraph style is what a paragraph without `w:pStyle` has: it is not named.
     const style = p.style === this.defaultStyle ? undefined : p.style;
     const children = ordered(
@@ -302,20 +321,27 @@ class OoxmlWriter {
       lists.map(([, l]) => l.kept?.name).filter((n): n is string => n !== undefined),
     );
     let nextAbstract = 0;
+    const abstractOf = new Map<string, string>();
     for (const [id, list] of lists) {
       const numId = this.numIds.get(id)!;
       if (list.kept?.name && keptStillHolds(list.kept, list.levels) && numId === id) {
         const abstract = list.kept.residue[0];
         if (abstract) abstracts.set(list.kept.name, this.kept(abstract, ns));
         nums.push(this.kept(list.kept.xml, ns));
+        abstractOf.set(id, list.kept.name);
         continue;
       }
       while (usedAbstract.has(String(nextAbstract))) nextAbstract += 1;
       const abstractId = String(nextAbstract);
       usedAbstract.add(abstractId);
       abstracts.set(abstractId, abstractNumXml(abstractId, list.levels));
+      abstractOf.set(id, abstractId);
       nums.push(`<w:num w:numId="${numId}"><w:abstractNumId w:val="${abstractId}"/></w:num>`);
     }
+    for (const { numId, list, level, start } of this.restartNums)
+      nums.push(
+        `<w:num w:numId="${numId}"><w:abstractNumId w:val="${escapeXmlAttribute(abstractOf.get(list)!)}"/><w:lvlOverride w:ilvl="${level}"><w:startOverride w:val="${start}"/></w:lvlOverride></w:num>`,
+      );
     const kept = this.source?.numbering ?? [];
     const pictures = kept
       .filter((k) => /^<(?:\w+:)?numPicBullet/.test(k.xml))
@@ -323,7 +349,7 @@ class OoxmlWriter {
     const rest = kept
       .filter((k) => !/^<(?:\w+:)?numPicBullet/.test(k.xml))
       .map((k) => this.kept(k, ns));
-    return `${XML_HEAD}<w:numbering${declarations(ns)}>${pictures.join('')}${[...abstracts.values()].join('')}${nums.join('')}${rest.join('')}</w:numbering>\n`;
+    return `${XML_HEAD}<w:numbering${declarations(ns)} mc:Ignorable="livedoc">${pictures.join('')}${[...abstracts.values()].join('')}${nums.join('')}${rest.join('')}</w:numbering>\n`;
   }
 }
 

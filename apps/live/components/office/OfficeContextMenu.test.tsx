@@ -10,6 +10,7 @@ import {
   textDocumentTextContextMenu,
 } from '@/lib/text-document/text-document-menus';
 import { TEXT_DOCUMENT_SHORTCUTS } from '@/lib/text-document/text-document-shortcuts';
+import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { OfficeTitleRow } from './OfficeTitleRow';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -19,9 +20,11 @@ const CATALOGUE = textDocumentMenus('odf');
 function Surface({
   level = 'edit',
   placeCaret = () => {},
+  extra = {},
 }: {
   level?: AccessLevel;
   placeCaret?: (p: { x: number; y: number }) => void;
+  extra?: OfficeActions;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   return (
@@ -37,6 +40,7 @@ function Surface({
           ...textDocumentEditorActions(null, { canEdit: level === 'edit' }),
           // Clear formatting is built: the surface binds it for a session that writes.
           ...(level === 'edit' ? { 'clear-formatting': { run: () => {} } } : {}),
+          ...extra,
         }}
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
         keyScope={root}
@@ -99,6 +103,40 @@ describe('the context menu', () => {
       'Select all matching text',
     ]);
     expect(document.activeElement).toBe(within(opened).getAllByRole('menuitem')[0]);
+  });
+
+  // lists.md "Numbering": Restart and Continue numbering show on a numbered item only.
+  it('shows a contextual item only while it can run where the menu opens', () => {
+    let onItem = false;
+    const contextual = {
+      run: () => {},
+      get disabled() {
+        return !onItem;
+      },
+    };
+    render(
+      <Surface
+        placeCaret={() => {
+          onItem = true;
+        }}
+        extra={{
+          'restart-numbering': contextual,
+          'continue-numbering': { run: () => {}, disabled: true },
+        }}
+      />,
+    );
+    const names = () =>
+      within(menu()!)
+        .getAllByRole('menuitem')
+        .map((i) => i.textContent?.replace('Coming soon', ''));
+    const writing = screen.getByRole('textbox');
+    writing.focus();
+    fireEvent.keyDown(writing, { key: 'F10', code: 'F10', shiftKey: true });
+    expect(names()).not.toContain('Restart numbering');
+    fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    rightClick(screen.getByRole('textbox'));
+    expect(names()).toContain('Restart numbering');
+    expect(names()).not.toContain('Continue previous numbering');
   });
 
   it('leaves Shift+right-click, and a right-click outside the document, to the browser', () => {

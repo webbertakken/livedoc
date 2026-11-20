@@ -9,8 +9,8 @@ import { selectedParagraphs } from './text-document-paragraphs';
 
 export type ListKind = 'bullet' | 'number' | 'check';
 export type Lists = Readonly<Record<string, ListDefinition>>;
-/** The document's lists, and how a new one is added. */
-export type ListsAccess = { read: () => Lists; add: (id: string, list: ListDefinition) => void };
+/** The document's lists, and how a list's definition is written (a new list's, or a list restyled). */
+export type ListsAccess = { read: () => Lists; set: (id: string, list: ListDefinition) => void };
 
 export const placeOf = (node: PmNode): ListPlace | null =>
   (node.attrs as { list: ListPlace | null }).list ?? null;
@@ -50,7 +50,7 @@ export function toggleList(access: ListsAccess, kind: ListKind): Command {
       let id = before && kindOf(lists, before) === kind ? before.id : null;
       if (id === null) {
         id = ListDefinition.newId(Object.keys(lists));
-        if (dispatch) access.add(id, ListDefinition.of(kind));
+        if (dispatch) access.set(id, ListDefinition.of(kind));
       }
       for (const { node, pos } of paragraphs)
         tr.setNodeMarkup(pos, undefined, withList(node, { id, level: placeOf(node)?.level ?? 0 }));

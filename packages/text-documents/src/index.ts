@@ -36,6 +36,8 @@ export {
 export {
   CHECK_MARKS,
   LIST_LEVELS,
+  LIST_RESTART_MAX,
+  LIST_RESTART_MIN,
   ListDefinition,
   NUMBER_FORMATS,
   type ListLevel,
@@ -43,6 +45,7 @@ export {
   type NumberFormat,
 } from './model/lists';
 export { ListMarkers, numberText, type ListMarker } from './model/list-markers';
+export { LIST_PRESETS, ListPresets, type ListKind, type ListPreset } from './model/list-presets';
 export {
   BORDER_SIDES,
   canonical,

@@ -79,7 +79,13 @@ export function readListLevels(style: XmlElement): ListLevel[] {
       const bullet = attributeOf(child, NS.text, 'bullet-char') ?? '•';
       levels[at] =
         bullet === CHECK_MARKS.open || bullet === CHECK_MARKS.done
-          ? { kind: 'check', ...indents(child) }
+          ? {
+              kind: 'check',
+              ...(attributeOf(child, NS.livedoc, 'strike-checked') === 'false'
+                ? { strikeChecked: false as const }
+                : {}),
+              ...indents(child),
+            }
           : { kind: 'bullet', bullet, ...indents(child) };
     }
   }
@@ -112,7 +118,8 @@ export function listStyleXml(name: string, list: ListDefinition): string {
       return `<text:list-level-style-number text:level="${n}"${attr('style:num-prefix', prefix || undefined)}${attr('style:num-suffix', suffix || undefined)} style:num-format="${FORMAT_OUT[level.format]}"${shown > 1 ? ` text:display-levels="${shown}"` : ''}${level.start === 1 ? '' : ` text:start-value="${level.start}"`}>${levelPropsXml(level, at)}</text:list-level-style-number>`;
     }
     const bullet = level.kind === 'check' ? CHECK_MARKS.open : level.bullet || '•';
-    return `<text:list-level-style-bullet text:level="${n}" text:bullet-char="${escapeXmlAttribute(bullet)}">${levelPropsXml(level, at)}</text:list-level-style-bullet>`;
+    const plain = level.kind === 'check' && level.strikeChecked === false;
+    return `<text:list-level-style-bullet text:level="${n}" text:bullet-char="${escapeXmlAttribute(bullet)}"${plain ? ' livedoc:strike-checked="false"' : ''}>${levelPropsXml(level, at)}</text:list-level-style-bullet>`;
   });
   return `<text:list-style style:name="${escapeXmlAttribute(name)}">${levels.join('')}</text:list-style>`;
 }

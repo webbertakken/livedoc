@@ -26,6 +26,8 @@ export type OfficeItem = {
   faceStyle?: Readonly<{ fontSize?: string; fontWeight?: number; fontStyle?: 'italic' | 'normal' }>;
   // A word on its state, drawn muted where a shortcut would be and read with it (a font that could not load).
   note?: string;
+  // In a context menu, drawn only while its binding can run (office-shell.md "Context menus", contextual item).
+  contextual?: true;
 };
 
 export type OfficeSubmenu = {
@@ -109,6 +111,23 @@ function itemsOf(entries: readonly OfficeEntry[], path: readonly string[]): Foun
   });
 }
 
+/** A context menu's entries as it opens: a contextual item only while its binding can run, no separator left astray. */
+export function contextualEntries(
+  entries: readonly OfficeEntry[],
+  actions: OfficeActions,
+): OfficeEntry[] {
+  const kept: OfficeEntry[] = [];
+  for (const entry of entries) {
+    const action = entry.kind === 'item' ? actions[entry.id] : undefined;
+    if (entry.kind === 'item' && entry.contextual && (!action || action.disabled)) continue;
+    if (entry.kind === 'separator' && (kept.length === 0 || kept.at(-1)!.kind === 'separator'))
+      continue;
+    kept.push(entry);
+  }
+  if (kept.at(-1)?.kind === 'separator') kept.pop();
+  return kept;
+}
+
 export function catalogueItems(catalogue: OfficeCatalogue): FoundItem[] {
   return catalogue.flatMap((menu) => itemsOf(menu.entries, [menu.label]));
 }
@@ -116,7 +135,10 @@ export function catalogueItems(catalogue: OfficeCatalogue): FoundItem[] {
 // One entry of a context menu (office-shell.md "Context menus"): a menu item by its id, relabelled where the context
 // names it otherwise ("Insert link") or offers it to fewer (a level of its own), an item of the context's own, or a separator.
 export type ContextEntrySpec =
-  string | { id: string; label: string; level?: AccessLevel } | OfficeItem | { kind: 'separator' };
+  | string
+  | { id: string; label?: string; level?: AccessLevel; contextual?: true }
+  | OfficeItem
+  | { kind: 'separator' };
 
 // A context menu's entries, sharing the menus' items (their status, level and binding) by id, as commands. An id no menu holds is a
 // fault of the kind's declaration, refused as it is built.
@@ -134,7 +156,12 @@ export function contextEntries(
     const { checkable: _check, ...item } = found;
     return typeof spec === 'string'
       ? item
-      : { ...item, label: spec.label, ...(spec.level ? { level: spec.level } : {}) };
+      : {
+          ...item,
+          ...(spec.label ? { label: spec.label } : {}),
+          ...(spec.level ? { level: spec.level } : {}),
+          ...(spec.contextual ? { contextual: true as const } : {}),
+        };
   });
 }
 

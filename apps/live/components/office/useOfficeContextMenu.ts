@@ -5,7 +5,12 @@
 // Shift held the browser's own menu shows; the menu key's (no pointer) and the registry's keys open it at the caret.
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
-import { visibleMenus, type OfficeActions, type OfficeEntry } from '@/lib/office/office-catalogue';
+import {
+  contextualEntries,
+  visibleMenus,
+  type OfficeActions,
+  type OfficeEntry,
+} from '@/lib/office/office-catalogue';
 import type { Point } from '@/lib/office/context-menu-place';
 import { track } from '@/lib/telemetry';
 import type { OfficeContextMenuSource } from './OfficeContextMenu';
@@ -36,6 +41,8 @@ export function useOfficeContextMenu({
   onOpen: () => void;
 }): OfficeContextMenuState {
   const [at, setAt] = useState<Point | null>(null);
+  // What it draws, read as it opens: a contextual item only while it can run there.
+  const [opened, setOpened] = useState<readonly OfficeEntry[]>([]);
   // Where focus was as it opened (the writing), and goes back to as it closes.
   const returnTo = useRef<HTMLElement | null>(null);
   const entries = useMemo(
@@ -57,9 +64,10 @@ export function useOfficeContextMenu({
       const active = document.activeElement;
       returnTo.current = active instanceof HTMLElement ? active : null;
       returnTo.current?.blur();
+      setOpened(contextualEntries(entries, actions));
       setAt(point);
     },
-    [telemetryKind, onOpen],
+    [telemetryKind, onOpen, entries, actions],
   );
 
   const latest = useRef(source);
@@ -111,5 +119,5 @@ export function useOfficeContextMenu({
     returnTo.current = null;
     if (back?.isConnected) back.focus({ preventScroll: true });
   }, []);
-  return { entries, at, openAtCaret, close };
+  return { entries: at ? opened : entries, at, openAtCaret, close };
 }

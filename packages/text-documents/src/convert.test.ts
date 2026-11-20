@@ -27,7 +27,6 @@ describe('conversion', () => {
     expect(losses).toContainEqual({ kind: 'list-header', name: 'list-header', count: 1 });
     const lists = CONSTRUCTS.lists!('odf');
     expect(conversionLosses(lists, 'ooxml')).toEqual([
-      { kind: 'restart', name: 'restart', count: 1 },
       { kind: 'list-header', name: 'list-header', count: 1 },
     ]);
     expect(conversionLosses(CONSTRUCTS.text!('odf'), 'ooxml')).toEqual([

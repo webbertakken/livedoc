@@ -149,6 +149,43 @@ describe('WordprocessingML properties as files write them', () => {
     expect(ListDefinition.kindAt(undefined, 0)).toBe('bullet');
   });
 
+  // lists.md "In the formats": Word restarts a list with a num of the same abstract numbering and a start override.
+  it('reads a later num of one abstract numbering as its list, restarted at its start overrides or continued', async () => {
+    const lvl = (at: number) =>
+      `<w:lvl w:ilvl="${at}"><w:start w:val="1"/><w:numFmt w:val="decimal"/><w:lvlText w:val="%${at + 1}."/></w:lvl>`;
+    const numbering = `<w:numbering xmlns:w="${W}"><w:abstractNum w:abstractNumId="0">${lvl(0)}${lvl(1)}</w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="2"><w:abstractNumId w:val="0"/><w:lvlOverride w:ilvl="0"><w:startOverride w:val="4"/></w:lvlOverride></w:num><w:num w:numId="3"><w:abstractNumId w:val="0"/></w:num><w:num w:numId="4"><w:abstractNumId w:val="0"/><w:lvlOverride w:ilvl="0">${lvl(0)}</w:lvlOverride></w:num><w:num w:numId="5"><w:abstractNumId w:val="0"/><w:lvlOverride w:ilvl="30"><w:startOverride w:val="2"/></w:lvlOverride></w:num></w:numbering>`;
+    const item = (num: string, text: string, level = 0) =>
+      W_P(
+        `<w:pPr><w:numPr><w:ilvl w:val="${level}"/><w:numId w:val="${num}"/></w:numPr></w:pPr>${W_R(text)}`,
+      );
+    const doc = await read(
+      docx(
+        item('1', 'one') +
+          item('2', 'deeper first', 1) +
+          item('2', 'four') +
+          item('2', 'five') +
+          item('3', 'six') +
+          item('4', 'own') +
+          item('5', 'odd'),
+        {
+          rels: `<Relationship Id="rId2" Type="${RELATIONSHIP_TYPES.numbering}" Target="numbering.xml"/>`,
+          entries: [{ name: 'word/numbering.xml', data: numbering }],
+        },
+      ),
+    );
+    expect(paragraphs(doc).map((p) => p.list)).toEqual([
+      { id: '1', level: 0 },
+      { id: '1', level: 1 },
+      { id: '1', level: 0, restart: 4 },
+      { id: '1', level: 0 },
+      { id: '1', level: 0 },
+      // A num with a level of its own, or an override out of range, is a list of its own.
+      { id: '4', level: 0 },
+      { id: '5', level: 0 },
+    ]);
+    expect(Object.keys(doc.lists).sort()).toEqual(['1', '4', '5']);
+  });
+
   it('reads ISO/IEC 29500 Strict names as Transitional ones', async () => {
     const strict = docx('').slice(0);
     const text = new TextDecoder('latin1').decode(strict);

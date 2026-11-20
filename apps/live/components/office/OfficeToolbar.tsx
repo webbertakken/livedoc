@@ -34,6 +34,7 @@ import { OfficeFontSizeField, type OfficeFontSize } from './OfficeFontSizeField'
 import { useOfficeControlStates } from './useOfficeControlStates';
 import { OfficeFontMenu, type OfficeFontFamily } from './OfficeFontMenu';
 import { OfficeColourControl, type OfficeColours } from './OfficeColourControl';
+import { OfficeSplitToggle } from './OfficeSplitToggle';
 import { OfficeChoiceMenu, type OfficeChoices } from './OfficeChoiceMenu';
 
 /** The room a divider takes between groups: 1 px and 4 px either side. */
@@ -42,8 +43,10 @@ const DIVIDER_PX = 9;
 const MORE_PX = 32;
 const BAR_PADDING_PX = 16;
 
-const CONTROL =
-  'relative flex h-7 shrink-0 items-center justify-center gap-0.5 rounded px-1 text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent';
+// A control's look but for its side padding: a split toggle's chevron is narrower.
+const CONTROL_BODY =
+  'relative flex h-7 shrink-0 items-center justify-center gap-0.5 rounded text-(--office-icon) outline-none touch-target-y hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) aria-pressed:bg-(--office-pressed) aria-pressed:text-(--office-pressed-ink) aria-disabled:opacity-40 aria-disabled:hover:bg-transparent';
+const CONTROL = `${CONTROL_BODY} px-1`;
 
 type Placed = { control: OfficeControl; startsGroup: boolean; group: string };
 
@@ -343,6 +346,25 @@ function ControlView({
         className={`${CONTROL} min-w-7`}
       />
     ) : null;
+  }
+  if (look.kind === 'icon' && look.split) {
+    const soon = control.status === 'comingSoon' || !action;
+    return (
+      <OfficeSplitToggle
+        id={control.id}
+        label={control.label}
+        icon={look.icon}
+        action={action}
+        pressed={on}
+        inert={soon || disabled}
+        description={soon ? 'Coming soon' : shortcut?.shown}
+        shortcut={shortcut}
+        choice={choices?.[control.id]}
+        tabIndex={tabIndex}
+        className={CONTROL}
+        chevronClassName={CONTROL_BODY}
+      />
+    );
   }
   // An icon control with a menu the kind binds as a choice (the Align control).
   const iconChoice = look.kind === 'icon' && look.menu ? choices?.[control.id] : undefined;

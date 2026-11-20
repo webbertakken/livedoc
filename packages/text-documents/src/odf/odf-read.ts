@@ -416,7 +416,7 @@ class BodyReader {
           id,
           level,
           checked: first && checked ? true : undefined,
-          restart: first && restartAt >= 1 ? restartAt : undefined,
+          restart: first && Number.isInteger(restartAt) && restartAt >= 0 ? restartAt : undefined,
           unnumbered: first ? undefined : true,
         });
         this.paragraph(child, place);

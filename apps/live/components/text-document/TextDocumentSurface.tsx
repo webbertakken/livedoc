@@ -29,7 +29,8 @@ import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-forma
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { listMarkersPlugin } from '@/lib/text-document/text-document-list-markers';
-import { subscribeLists, useTextDocumentLists } from '@/lib/text-document/useTextDocumentLists';
+import { subscribeLists } from '@/lib/text-document/text-document-live-lists';
+import { useTextDocumentLists } from './useTextDocumentLists';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
 import { useTextDocumentFormatting } from '@/lib/text-document/useTextDocumentFormatting';
 import { useGoogleDocumentFonts } from '@/lib/text-document/useGoogleDocumentFonts';
@@ -351,13 +352,13 @@ export function TextDocumentSurface({
       panels.actions,
     ],
   );
-  // The toolbar's choice controls: Styles and Align.
+  // The toolbar's choice controls: Styles, Align and spacing, and the list buttons' grids.
   const choices = useMemo(
     () =>
       paragraphStyles.choices || paragraphs.choices
-        ? { ...paragraphStyles.choices, ...paragraphs.choices }
+        ? { ...paragraphStyles.choices, ...paragraphs.choices, ...lists.choices }
         : null,
-    [paragraphStyles.choices, paragraphs.choices],
+    [paragraphStyles.choices, paragraphs.choices, lists.choices],
   );
   // The caret, for the context menu on text.
   const caret = useMemo(
@@ -416,6 +417,7 @@ export function TextDocumentSurface({
         }
       />
       {paragraphs.dialog}
+      {lists.dialog}
       {limitReached ? (
         <p
           role="status"

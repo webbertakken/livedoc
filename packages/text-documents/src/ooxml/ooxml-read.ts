@@ -25,7 +25,7 @@ import {
   type XmlParsed,
 } from '@livedoc/office-packages';
 import type { Block, Inline, Paragraph, Run } from '../model/blocks';
-import type { ListDefinition, ListPlace } from '../model/lists';
+import { LIST_LEVELS, type ListDefinition, type ListPlace } from '../model/lists';
 import { canonical, compact, type KeptProperties, type TextProps } from '../model/props';
 import type { Section } from '../model/sections';
 import { roleOfStyleName, type Style, type StyleDefaults } from '../model/styles';
@@ -147,7 +147,31 @@ export async function readOoxmlFile(
   };
 }
 
+/**
+ * A num read as its abstract numbering's first num's list (standard-mapping.md "Lists"): continuing it, or restarting
+ * levels at their start overrides, each once.
+ */
+type NumAlias = { list: string; starts: Map<number, number>; restarted: Set<number> };
+
+/** A num's start overrides by level, when that is all it holds beyond its abstract numbering; else null. */
+function restartsOf(num: XmlElement): Map<number, number> | null {
+  const starts = new Map<number, number>();
+  for (const c of childElements(num)) {
+    if (isW(c, 'abstractNumId')) continue;
+    if (!isW(c, 'lvlOverride')) return null;
+    const inner = childElements(c);
+    const start = Number(wVal(childElement(c, W_NS, 'startOverride')));
+    const level = Number(wVal(c, 'ilvl'));
+    if (inner.length !== 1 || !isW(inner[0]!, 'startOverride')) return null;
+    if (!(level >= 0 && level < LIST_LEVELS) || !(Number.isInteger(start) && start >= 0))
+      return null;
+    starts.set(level, start);
+  }
+  return starts;
+}
+
 class OoxmlReader {
+  readonly numAliases = new Map<string, NumAlias>();
   readonly parts: Parts;
   readonly pkg: OoxmlPackage;
   readonly report: ReportBuilder;
@@ -241,6 +265,8 @@ class OoxmlReader {
     const abstracts = new Map<string, XmlElement>();
     for (const e of childElements(parsed.root))
       if (isW(e, 'abstractNum')) abstracts.set(wVal(e, 'abstractNumId') ?? '', e);
+    // The first num of each abstract numbering, by abstract id.
+    const baseOf = new Map<string, string>();
     for (const e of childElements(parsed.root)) {
       if (isW(e, 'abstractNum')) continue;
       if (!isW(e, 'num')) {
@@ -250,6 +276,15 @@ class OoxmlReader {
       const id = wVal(e, 'numId') ?? '';
       const abstractId = wVal(childElement(e, W_NS, 'abstractNumId')) ?? '';
       const abstract = abstracts.get(abstractId);
+      // A later num of an abstract numbering already read, with no levels of its own, continues that list, or
+      // restarts it at its start overrides (standard-mapping.md "Lists"): Word counts nums of one abstract on.
+      const base = baseOf.get(abstractId);
+      const starts = restartsOf(e);
+      if (base !== undefined && starts) {
+        this.numAliases.set(id, { list: base, starts, restarted: new Set() });
+        continue;
+      }
+      if (!baseOf.has(abstractId)) baseOf.set(abstractId, id);
       const levels = readLevels(abstract, e);
       lists[id] = {
         levels,
@@ -393,12 +428,18 @@ class OoxmlReader {
     const numId = wVal(childElement(numPr ?? p, W_NS, 'numId'));
     const level = Number(wVal(childElement(numPr ?? p, W_NS, 'ilvl')) ?? '0');
     const checked = attributeOf(p, LIVEDOC_NS, 'checked') === 'true';
+    const at = Math.max(0, Math.min(8, level || 0));
+    const alias = numId === undefined ? undefined : this.numAliases.get(numId);
+    // A restarting num restarts each of its levels once, at the first item of that level.
+    const restart = alias?.restarted.has(at) ? undefined : alias?.starts.get(at);
+    if (restart !== undefined) alias!.restarted.add(at);
     const list: ListPlace | undefined =
       numId !== undefined && numId !== '0'
         ? compact({
-            id: numId,
-            level: Math.max(0, Math.min(8, level || 0)),
+            id: alias?.list ?? numId,
+            level: at,
             checked: checked || undefined,
+            restart,
           })
         : undefined;
     const style = wVal(childElement(pPr ?? p, W_NS, 'pStyle')) ?? this.normalId();
@@ -406,7 +447,8 @@ class OoxmlReader {
     const values = {
       style,
       props,
-      list: list && { id: list.id, level: list.level },
+      // The num as written: a restarting num is its own, so the kept properties hold only while it is written again.
+      list: list && { id: numId!, level: list.level },
       section: endsWith && { start: endsWith.start, setup: endsWith.setup },
     };
     const kept = this.propsKept(doc, pPr, values, MAPPED_PPR);

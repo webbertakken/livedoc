@@ -17,7 +17,12 @@ import {
   textDocumentFormatActions,
 } from './text-document-format-actions';
 import { paintFormatPlugin } from './text-document-paint-format';
-import { LIST_ITEMS, TOGGLE_CHECKBOX } from './text-document-list-actions';
+import {
+  CONTINUE_NUMBERING,
+  LIST_ITEMS,
+  RESTART_NUMBERING,
+  TOGGLE_CHECKBOX,
+} from './text-document-list-actions';
 import {
   PARAGRAPH_STYLE_ITEMS,
   STYLE_OPTIONS,
@@ -64,6 +69,8 @@ describe('the text document menus', () => {
         BORDERS_ITEM,
         // Format > Bullets & numbering (text-document-list-actions), bound by the surface.
         ...LIST_ITEMS.map((l) => l.item),
+        RESTART_NUMBERING,
+        CONTINUE_NUMBERING,
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),

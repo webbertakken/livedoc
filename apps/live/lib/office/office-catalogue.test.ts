@@ -3,6 +3,7 @@ import {
   catalogueFaults,
   catalogueItems,
   contextEntries,
+  contextualEntries,
   visibleMenus,
   type OfficeCatalogue,
 } from './office-catalogue';
@@ -213,5 +214,39 @@ describe('contextEntries', () => {
 
   it('refuses an id no menu holds', () => {
     expect(() => contextEntries(CATALOGUE, ['nowhere'])).toThrow(/nowhere/);
+  });
+
+  // "Context menus", contextual item: drawn only while its binding can run, read as the menu opens.
+  it('marks a contextual item, which shows only while its binding can run, leaving no separator astray', () => {
+    const entries = contextEntries(CATALOGUE, [
+      { kind: 'separator' },
+      'copy-doc',
+      { kind: 'separator' },
+      { id: 'download-odt', contextual: true },
+      { kind: 'separator' },
+      { kind: 'separator' },
+      'rename',
+      { kind: 'separator' },
+    ]);
+    expect(entries[3]).toMatchObject({
+      id: 'download-odt',
+      label: 'OpenDocument (.odt)',
+      contextual: true,
+    });
+    const labels = (actions: Parameters<typeof contextualEntries>[1]) =>
+      contextualEntries(entries, actions).map((e) => (e.kind === 'item' ? e.id : e.kind));
+    expect(labels({ 'download-odt': { run: () => {}, disabled: false } })).toEqual([
+      'copy-doc',
+      'separator',
+      'download-odt',
+      'separator',
+      'rename',
+    ]);
+    expect(labels({ 'download-odt': { run: () => {}, disabled: true } })).toEqual([
+      'copy-doc',
+      'separator',
+      'rename',
+    ]);
+    expect(labels({})).toEqual(['copy-doc', 'separator', 'rename']);
   });
 });

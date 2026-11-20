@@ -159,7 +159,8 @@ browser's own (Google leaves them to the browser); pinch zoom on touch screens z
 
 The shell's [context menu](../004-interface-design/office-shell.md#context-menus) on text, in Google's order: Cut,
 Copy, Paste, Paste without formatting, Delete; Comment, Suggest edits; Insert link; Format options, Clear formatting;
-Select all matching text. Each is the menu bar's item of the same name (Insert link is Insert > Link, Suggest edits
+Select all matching text. On an item of a numbered list, Restart numbering and Continue previous numbering follow
+Clear formatting where they apply ([Lists](lists.md#numbering)). Each is the menu bar's item of the same name (Insert link is Insert > Link, Suggest edits
 the Suggesting mode); Format options opens its side panel and Select all matching text selects every stretch with the
 selection's formatting, each built in its area's phase. Delete removes the selection and is dimmed while nothing is
 selected, in Edit > Delete too. On a table, a picture, a link: their area's menu

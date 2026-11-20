@@ -290,7 +290,11 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('numbered-list', 'Numbered list', 'edit', { shortcut: 'numbered-list', ...BUILT }),
         item('bulleted-list', 'Bulleted list', 'edit', { shortcut: 'bulleted-list', ...BUILT }),
         item('checklist', 'Checklist', 'edit', { shortcut: 'checklist', ...BUILT }),
-        item('list-options', 'List options', 'edit'),
+        submenu('list-options', 'List options', [
+          item('restart-numbering', 'Restart numbering', 'edit', BUILT),
+          item('continue-numbering', 'Continue previous numbering', 'edit', BUILT),
+          item('more-bullets', 'More bullets', 'edit'),
+        ]),
       ]),
       SEPARATOR,
       item('headers-and-footers-options', 'Headers & footers', 'edit'),
@@ -364,6 +368,8 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
     SEPARATOR,
     item('format-options', 'Format options', 'edit'),
     'clear-formatting',
+    { id: 'restart-numbering', contextual: true },
+    { id: 'continue-numbering', contextual: true },
     SEPARATOR,
     item('select-all-matching-text', 'Select all matching text', 'edit'),
   ]);

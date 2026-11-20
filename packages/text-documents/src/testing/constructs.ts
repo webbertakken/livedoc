@@ -3,6 +3,7 @@
 // format's schema (office-packages.md "Validation"). Test-only; never shipped.
 import type { Block, Paragraph } from '../model/blocks';
 import { ListDefinition } from '../model/lists';
+import { ListPresets } from '../model/list-presets';
 import { PageSetup } from '../model/sections';
 import { Styles } from '../model/styles';
 import { TextDocument, type TextDocumentFormat } from '../model/text-document';
@@ -217,11 +218,12 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         p('Open task', '3', 0),
         p('Done task', '3', 0, { checked: true }),
         p('Jumps to level two', '4', 2),
+        p('Restarted at five', '2', 0, { restart: 5 }),
+        p('Counts on from five', '2', 0),
+        p('Restarted deeper at zero', '2', 1, { restart: 0 }),
+        p('Ticked, not struck', '5', 0, { checked: true }),
         ...(format === 'odf'
-          ? [
-              p('Restarted at five', '2', 0, { restart: 5 }),
-              p('A second paragraph of the item', '2', 0, { unnumbered: true }),
-            ]
+          ? [p('A second paragraph of the item', '2', 0, { unnumbered: true })]
           : []),
       ],
       {
@@ -238,6 +240,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
           },
           '3': ListDefinition.of('check'),
           '4': ListDefinition.of('number'),
+          '5': ListPresets.byId('checklist-plain')!.list,
         },
       },
     );
