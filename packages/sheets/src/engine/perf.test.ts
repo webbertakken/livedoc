@@ -1,14 +1,35 @@
-// Performance budgets, measured on the worst case the limits
-// allow: 50,000 filled cells, 20,000 of them formulas. CI machines are slower and shared, so the asserted budget
-// is a multiple of the laptop target.
-import { describe, expect, it } from 'vitest';
-import { cpuMsOf } from '@livedoc/vitest-config/cpu-time';
+// Performance (docs/specs/029-sheets/performance.md), measured on the worst case a Plan Sheet's limits allow: 50,000
+// filled cells, 20,000 of them formulas. What is held everywhere is the WORK: each formula worked out once, and a change
+// working out again only what reads it; and the change's cost against the full workout measured in the same run, which
+// v8 coverage slows alike. The laptop's absolute CPU budgets are held only where the code runs uninstrumented: under
+// coverage the same work measured eight times slower (1,639 ms against 205, main 2026-11-20).
+import { describe, expect, it, vi } from 'vitest';
+import { cpuMsOf, UNDER_COVERAGE_ENV } from '@livedoc/vitest-config/cpu-time';
 import { Workbook } from './workbook';
 import { cellKey, type Sheet } from '../sheet';
 import { CellMap } from '../cells/cell-map';
 import { compileFormula } from '../formula/stored';
 
 const CI_FACTOR = 4;
+
+// Every formula the engine works out, counted.
+const evaluated = vi.hoisted(() => ({ n: 0 }));
+vi.mock('./evaluate', async (load) => {
+  const real = await load<typeof import('./evaluate')>();
+  return {
+    ...real,
+    evaluate: (...args: Parameters<typeof real.evaluate>) => {
+      evaluated.n++;
+      return real.evaluate(...args);
+    },
+  };
+});
+
+const counted = (fn: () => void): number => {
+  evaluated.n = 0;
+  fn();
+  return evaluated.n;
+};
 
 function bigSheet(): Sheet {
   const rows = 10_000;
@@ -59,11 +80,16 @@ describe('performance', () => {
     // CPU time (cpuMsOf), not wall-clock: under turbo's parallel suites a wall-clock budget also
     // counted the time spent waiting for a core.
     let wb!: Workbook;
-    const full = cpuMsOf(() => {
-      wb = new Workbook({ sheets: [sheet], locale: 'en' });
-      for (let r = 0; r < 10_000; r++) for (let c = 0; c < 5; c++) wb.value(sheet.id, r, c);
+    let full = 0;
+    const fullWork = counted(() => {
+      full = cpuMsOf(() => {
+        wb = new Workbook({ sheets: [sheet], locale: 'en' });
+        for (let r = 0; r < 10_000; r++) for (let c = 0; c < 5; c++) wb.value(sheet.id, r, c);
+      });
     });
     expect(wb.value(sheet.id, 9_999, 4)).toBe(10_000);
+    // Each of the 20,000 formulas worked out once, and read again from what was kept.
+    expect(fullWork).toBe(20_000);
 
     // Change C5000: half the chain (5,000 cells) depends on it.
     const key = cellKey('r4999', 'c2');
@@ -71,27 +97,44 @@ describe('performance', () => {
     cells.set(key, { input: { n: 2 } });
     const next = { ...sheet, cells };
     let after: unknown;
-    const change = cpuMsOf(() => {
-      wb.updateSheet(next, [key]);
-      after = wb.value(sheet.id, 9_999, 4);
+    let change = 0;
+    const changeWork = counted(() => {
+      change = cpuMsOf(() => {
+        wb.updateSheet(next, [key]);
+        after = wb.value(sheet.id, 9_999, 4);
+      });
     });
     expect(after).toBe(10_001);
+    // E5000 to E10000 read C5000 down the chain, and nothing else is worked out again. A read past DEPTH_MAX (250)
+    // settles the deepest cell and starts again, so each link of a chain that deep is begun twice: 10,001 for 5,001
+    // (the recalculation engine of Phase 6 replaces this restart).
+    expect(changeWork).toBe(2 * 5_001 - 1);
 
     // A change nothing reads.
     const lone = cellKey('r100', 'c1');
     const cells2 = next.cells.copy();
     cells2.set(lone, { input: { n: 7 } });
-    const small = cpuMsOf(() => {
-      wb.updateSheet({ ...next, cells: cells2 }, [lone]);
-      wb.value(sheet.id, 100, 3);
+    let small = 0;
+    const smallWork = counted(() => {
+      small = cpuMsOf(() => {
+        wb.updateSheet({ ...next, cells: cells2 }, [lone]);
+        wb.value(sheet.id, 100, 3);
+      });
     });
+    // Only the window sum read: one formula.
+    expect(smallWork).toBe(1);
 
     console.info(
       `[sheets perf] full ${full.toFixed(0)} ms, chain change ${change.toFixed(1)} ms, local change ${small.toFixed(2)} ms`,
     );
-    expect(full).toBeLessThan(400 * CI_FACTOR);
-    expect(change).toBeLessThan(100 * CI_FACTOR);
-    expect(small).toBeLessThan(5 * CI_FACTOR);
+    // Against the full workout in the same run: a quarter of the formulas costs well under half its time.
+    expect(change).toBeLessThan(full / 2);
+    expect(small).toBeLessThan(full / 20);
+    if (!process.env[UNDER_COVERAGE_ENV]) {
+      expect(full).toBeLessThan(400 * CI_FACTOR);
+      expect(change).toBeLessThan(100 * CI_FACTOR);
+      expect(small).toBeLessThan(5 * CI_FACTOR);
+    }
     // The budgets above are CPU time; the wall clock only bounds a hung run. On a loaded CI runner
     // building the 50,000-cell sheet outran vitest's default 5 s while its CPU budget still held.
   }, 30_000);
