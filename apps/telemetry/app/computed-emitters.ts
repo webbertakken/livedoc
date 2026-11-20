@@ -502,6 +502,10 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/text-document/useTextDocumentViewToggle.ts UI·Toggled': {
     values: ['TextDocumentRuler', 'TextDocumentNonPrinting'],
   },
+  // A text document's page setup or orientation changed by their dialogs (page-layout.md "Page setup").
+  'apps/live/components/text-document/useTextDocumentPageSetup.tsx Tab·Changed': {
+    values: ['TextDocumentPageSetup', 'TextDocumentPageOrientation'],
+  },
   // The Fonts dialog of an office kind opened from its font menu, and My fonts changed by its OK
   // (docs/specs/004-interface-design/fonts.md "More fonts").
   'apps/live/components/office/OfficeFontMenu.tsx UI·Opened': { values: ['TextDocumentMoreFonts'] },
