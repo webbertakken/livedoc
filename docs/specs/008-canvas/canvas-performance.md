@@ -177,6 +177,11 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   layer and the Map do not re-render for it. Handlers read the selection from the store when they
   run; effects that follow it (presence, scrolling a selection into view, the screen-reader
   announcement, dropping hidden elements from it) subscribe to the store.
+- **A handler a context around the canvas carries keeps its identity.** It calls the editor's newest
+  version, and a value built from the tabs is kept by what it holds (which tabs there are), not by
+  the tabs' identity: a context above the element views that changes makes React check every element
+  view under it for readers. The editor's own state still reaches its readers as a context value, so
+  every reader updates in the commit that changed it, as a View Transition needs.
 - **Derived layouts are computed once per change.** Arrow labels, ink projection and theme
   colours are laid out per element change and cached per element identity, as arrow labels are
   today.
@@ -197,6 +202,12 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   element views as the view moves, and mounting is what makes long tasks. Culling to snapped canvas
   cells raised a 100% zoom's longest task from about 60-90 ms to 170-195 ms (research notes). Taken
   up again only with a way to show an element that costs no React mount (a raster stand-in).
+- **Element views outside the editor's contexts.** Every editor render gives the editor's state context
+  a new value, and React then checks the element views under it for readers: a quarter to a third of
+  a release or a selecting click on the reference board. Carrying the state in a store instead removes
+  the check but lets a reader update one commit later, outside a View Transition (the start panel's
+  cross-fade was lost). Rendering the element views from a host above the editor's providers keeps one
+  context and removes the check; taken up if the drag, stroke or select rows stay over budget.
 - **Level of detail at low zoom**: text and icons below a few screen pixels drawn as simpler
   marks.
 - **Containment** (`contain` on element wrappers) so a change inside one element does not
@@ -208,7 +219,8 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
 ## Measuring
 
 - **Counts, not timings, pin the structural rules** deterministically. In the unit suite: an
-  editor render that changes nothing renders no element view, a zoom renders only counter-scaled
+  editor render that changes nothing renders no element view, a context around the canvas keeps its value
+  when only the editor's handlers changed, a zoom renders only counter-scaled
   parts, a one-element move renders only it and the arrows whose geometry it changed, and the Map
   holds its drawing through a gesture. In a real browser, in the end-to-end suite: a still board
   with a selection showing asks for no animation frames.
@@ -234,7 +246,9 @@ Taken up only when the rules above leave the budget unmet; each is a change to t
   JavaScript as it runs and records the stack that forced each style or layout pass.
 - **Each gesture starts from the state it measures.** A drag starts with its shape selected: the
   undo that resets each run clears the selection, and a press that selects is the Selecting row's
-  work, not the drag's (it read as the drag's longest task). A run ends with nothing in hand and
+  work, not the drag's (it read as the drag's longest task). Its press comes after the double-press
+  window, so a board quick to answer does not pair it with the selecting click and move nothing. A
+  run ends with nothing in hand and
   nothing selected: a pencil stroke is undone first, while it is still the last change (clearing a
   selection is an undo step of its own), then Escape twice puts the pen down and clears the
   selection before Select is picked. One Escape left a diagram's stroke selected, the Select key

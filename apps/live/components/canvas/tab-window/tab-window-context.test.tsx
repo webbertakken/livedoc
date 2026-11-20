@@ -142,3 +142,31 @@ describe('useTabWindowContextValue', () => {
     expect(setup({ canChoose: false }).hook.result.current.choose).toBeUndefined();
   });
 });
+
+// The windows' context sits around the canvas and holds still while the editor re-renders
+// (docs/specs/008-canvas/canvas-performance.md "The contexts around the element layer hold still").
+describe('useTabWindowContextValue identity', () => {
+  it('keeps the same value when only the editor handlers change, and acts with the newest', () => {
+    const loaded = new Set<string>();
+    let handlers = { openTab: vi.fn(), commitElements: vi.fn() };
+    const hook = renderHook(() =>
+      useTabWindowContextValue({
+        tabs,
+        ownTabId: 'slides',
+        loadedTabIds: loaded,
+        loadTabs: async () => [],
+        openTab: handlers.openTab,
+        canChoose: true,
+        commitElements: handlers.commitElements,
+      }),
+    );
+    const before = hook.result.current;
+    handlers = { openTab: vi.fn(), commitElements: vi.fn() };
+    hook.rerender();
+    expect(hook.result.current).toBe(before);
+    act(() => hook.result.current.open('flow'));
+    act(() => hook.result.current.choose!('w', 'flow'));
+    expect(handlers.openTab).toHaveBeenCalledWith('flow');
+    expect(handlers.commitElements).toHaveBeenCalledTimes(1);
+  });
+});

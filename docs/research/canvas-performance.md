@@ -394,6 +394,46 @@ Measured 2026-10-14 on the reference board, local, calibrated 3.2x, against main
   root on each insertion and restyle the floating panels (ten times in one release); rewriting it
   without `:has` saved only 3-4 ms, so it stays.
 
+## Contexts around the element layer
+
+Measured 2026-11-20 on the reference board, local, throttled 3x (about the hosted runner's
+calibrated 2x), interleaved against main at `3d45f65d0`, both builds served at once.
+
+- **The cost was React looking for readers.** In a release (a drag, a stroke) and in both halves of
+  a click that selects, the editor root re-rendered, and seven contexts above the element views took
+  a new value: the editor's state (a new object every render), the custom themes, Plan, the
+  editor mode, the toolbar groups, the side-by-side split, the tab windows and, inside the canvas,
+  the Sheets' charts. For each memoised element view that bailed out, React walked up to the root
+  for changed providers (`propagateParentContextChanges`) and then down through its subtree looking
+  for readers (`propagateContextChanges`): about 22,500 components. Counters added to a local copy
+  of react-dom put the downward walk at three quarters of it: about 22 of 28 ms in a stroke's
+  release at 4x. Steadying the six smaller contexts alone gained nothing: one changed context is
+  enough to start the walk.
+- **Tried and set aside: the values in stores.** Carrying the editor's state, the toolbar groups,
+  the tab windows and the Sheets' charts in a store the context holds (read with
+  `useSyncExternalStore`, published after the commit) removed the walk: a drag's press 22-23 to
+  13-14 ms and its release 36-38 to 30-32, a stroke's release 32 to 23-24, a select's press 20-21 to
+  16 and its release 12 to 7. But a reader React passed by then updates one commit later, outside the
+  transition, so a View Transition no longer animates it: the start panel's mode cross-fade started
+  none. Only React's context check reaches a passed-by reader in the same commit, and that check is
+  the walk; removing it means the element views must not sit under the editor's contexts at all.
+- **What shipped**: the handlers the smaller contexts carry keep their identity, and the split's value
+  is kept by which tabs there are. On its own it measures as nothing (the editor's state still starts
+  the walk), but it is what the contexts need once the element views leave them.
+- **The probe's drag became a double-press.** Its selecting click and its press were 400 ms apart,
+  inside the 450 ms double-press window: once the board answered quickly enough the press paired
+  with the click and moved nothing. The press now comes after the window. At fit on the whiteboard
+  the pressed shape is about 25 px wide and the press lands on its resize handle, so that row
+  measures a resize.
+- **Traces with stacks inflate DOM work.** `disabled-by-default-devtools.timeline.stack` (and
+  invalidation tracking) record a stack for each style invalidation: a stroke's release traced at
+  109-195 ms with them and 74 ms without, and `setAttribute`, `removeAttribute`, `appendChild` and
+  `removeChild` led the profile's self time. Timed on the page, those calls took under 0.5 ms each.
+  Read DOM costs from a trace without the stack categories.
+- **Long animation frames name the handler.** A frame's `scripts` (for example
+  `DOMWindow.onpointerup`) and `renderStart` give an untraced split of script and rendering; the
+  Event Timing entries' `processingEnd - processingStart` give each handler's time.
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.

@@ -31,7 +31,9 @@ browser. The budget it is held to is in [Canvas performance](../specs/008-canvas
     only renders (Layerize, Paint) is missing from it. A LoAF entry's `scripts` name each callback.
 11. For a breakdown, trace the gesture with `devtools.timeline` and
     `disabled-by-default-devtools.timeline`; add `v8.execute` and
-    `disabled-by-default-v8.compile` when compilation is suspected.
+    `disabled-by-default-v8.compile` when compilation is suspected. Leave out
+    `disabled-by-default-devtools.timeline.stack` and invalidation tracking when reading DOM costs:
+    they record a stack per style invalidation and make `setAttribute` and its kin look slow.
 12. Find the longest `RunTask` on `CrRendererMain` and sum the events inside it by name
     (`EventDispatch`, `FunctionCall`, `UpdateLayoutTree`, `Layout`, `PrePaint`, `Paint`,
     `Layerize`, `V8.*`).
