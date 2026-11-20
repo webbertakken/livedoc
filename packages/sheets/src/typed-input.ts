@@ -41,7 +41,9 @@ const FORMULA_FORMATS: Readonly<Record<string, NumberFormatKind>> = {
   EDATE: 'date',
   EOMONTH: 'date',
   WORKDAY: 'date',
+  'WORKDAY.INTL': 'date',
   NOW: 'datetime',
+  EPOCHTODATE: 'datetime',
   TIME: 'time',
   TIMEVALUE: 'time',
 };

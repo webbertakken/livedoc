@@ -374,6 +374,21 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'The date a number of working days away',
     '=WORKDAY(A2, 10)',
   ),
+  'NETWORKDAYS.INTL': D(
+    'start, end, [weekend], [holidays]',
+    'The working days between two dates, with any weekend',
+    '=NETWORKDAYS.INTL(A2, B2, 7)',
+  ),
+  'WORKDAY.INTL': D(
+    'start, days, [weekend], [holidays]',
+    'The date a number of working days away, with any weekend',
+    '=WORKDAY.INTL(A2, 10, "0000011")',
+  ),
+  EPOCHTODATE: D(
+    'timestamp, [unit]',
+    'A Unix time as a date and time in UTC',
+    '=EPOCHTODATE(1655906710)',
+  ),
   YEARFRAC: D('start, end, [basis]', 'The share of a year between two dates', '=YEARFRAC(A2, B2)'),
   // Arrays
   FILTER: D(
