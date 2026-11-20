@@ -1,7 +1,7 @@
 // Lookup and reference functions (docs/specs/029-sheets/formulas.md "Functions": Lookup). INDEX and OFFSET return
 // references, so `SUM(INDEX(A:C, 0, 2))` and `SUM(OFFSET(A1, 0, 0, 3))` read ranges; INDIRECT reads A1 text.
 import type { Frame, RangeRef } from '../../engine/frame';
-import { isRef } from '../../engine/frame';
+import { isAreas, isRef } from '../../engine/frame';
 import { a1ToPos, posToRange } from '../../engine/refs';
 import {
   MANY,
@@ -17,6 +17,8 @@ import {
   type FnDef,
 } from '../fn';
 import { parseFormula } from '../parse';
+import { r1c1Range } from '../r1c1';
+import { REFERENCE_FUNCTIONS } from './reference';
 import { makeCriterion } from '../criteria';
 import {
   compareScalars,
@@ -217,12 +219,17 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
       ? scalarOf(results.rows[0]![i]!)
       : { rows: results.rows.map((r) => [r[i]!]) };
   }),
-  INDEX: fn(1, 3, (args, f) => {
+  // A fourth argument, the area of a union (OOXML's area_num, D38), which Google refuses.
+  INDEX: fn(1, 4, (args, f) => {
     const r = intArg(args[1] ?? 0, f);
     const c = opt(args, 2, f, intArg, 0);
+    const area = opt(args, 3, f, intArg, 1);
     if (isError(r)) return r;
     if (isError(c)) return c;
-    const target = args[0]!;
+    if (isError(area)) return area;
+    const areas = isAreas(args[0]!) ? args[0].areas : null;
+    if (area < 1 || area > (areas?.length ?? 1)) return err('#REF!', `There is no area ${area}`);
+    const target = areas ? { ref: areas[area - 1]! } : args[0]!;
     if (isRef(target)) {
       const ref = target.ref;
       const rows = ref.r2 - ref.r1 + 1;
@@ -312,9 +319,10 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
       if (isError(text)) return text;
       const a1 = opt(args, 1, f, boolArg, true);
       if (isError(a1)) return a1;
-      if (!a1) return err('#REF!', 'Only A1 references are read');
-      const range = typeof text === 'string' ? refFromText(text.trim(), f) : null;
+      const range =
+        typeof text !== 'string' ? null : a1 ? refFromText(text.trim(), f) : r1c1Range(text, f);
       return range ? { ref: range } : err('#REF!', `"${String(text)}" is not a reference`);
     },
   },
+  ...REFERENCE_FUNCTIONS,
 };

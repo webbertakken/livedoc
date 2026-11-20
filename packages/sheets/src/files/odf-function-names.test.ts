@@ -23,7 +23,8 @@ function catalogue(): [string, string][] {
     .split('\n')
     .filter((line) => line.startsWith('| `'))
     .map((line) => {
-      const cells = line.split('|').map((c) => c.trim().replaceAll('`', ''));
+      // Cells split on unescaped pipes: a syntax may hold an escaped one (`search_range\|search_result_array`).
+      const cells = line.split(/(?<!\\)\|/).map((c) => c.trim().replaceAll('`', ''));
       return [cells[1]!, cells[5]!];
     });
 }

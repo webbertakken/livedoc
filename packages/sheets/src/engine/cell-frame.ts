@@ -1,7 +1,7 @@
 // The frame a formula is worked out in: what it reads of its workbook, each read noted against the formula reading
 // (its `reader`; NO_CELL keeps nothing). The workbook gives its parts once, as a FrameSource.
 import type { CardSource } from '../cards';
-import type { SheetsCtx } from '../formula/stored';
+import { renderFormula, type SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
 import { colWidth } from '../layout';
 import { cellKey, type CellInput, type Sheet } from '../sheet';
@@ -20,6 +20,7 @@ export type FrameSource = {
   extent(sheetId: string): { rows: number; cols: number };
   sheet(sheetId: string): Sheet | undefined;
   sheetCount(): number;
+  sheetNumber(sheetId: string): number;
   input(sheetId: string, r: number, c: number): CellInput | undefined;
   // A cell's value, the read noted for `reader` unless null.
   cell(sheetId: string, r: number, c: number, reader: CellNo | null): Value;
@@ -66,6 +67,11 @@ export function cellFrame(
       return layout && colId ? colWidth(layout, colId) : 0;
     },
     sheetCount: () => src.sheetCount(),
+    sheetNumber: (s) => src.sheetNumber(s),
+    formulaText: (s, r, c) => {
+      const input = src.input(s, r, c);
+      return input && 'f' in input ? renderFormula(input.f, src.ctx(s)) : null;
+    },
     grid: (s) => {
       const sh = src.sheet(s);
       return sh ? { rows: sh.layout.rows.length, cols: sh.layout.cols.length } : undefined;
