@@ -121,10 +121,25 @@ the caret put back; typing within `TEXT_DOCUMENT_UNDO_GROUP_MS` (500 ms) is one 
 
 ## Offline
 
-- Until This Browser holds a text document's state, a new text document is made on LiveDoc whoever makes it, a guest
-  included (default).
-- A text document in This Browser holds its CRDT in IndexedDB and works fully
-  ([Offline Mode](../006-document/offline-mode.md)).
+- A new text document goes where any new document goes: This Browser for a guest, LiveDoc for a signed-in person
+  ([Save Locations](../006-document/save-locations.md)).
+- <a id="this-browser"></a>**A text document in This Browser** holds its state in its document's offline record and
+  works fully, with no room ([Offline Mode](../006-document/offline-mode.md)):
+  - The record's `textDocuments` holds, per text document tab, its whole state and when it was saved; a tab with
+    none reads as the seed.
+  - An edit is saved `TEXT_DOCUMENT_LOCAL_SAVE_MS` after it, and at once when the page is hidden or the tab closes;
+    each save merges into the stored state in one transaction, so another browser tab's saves are never undone.
+  - Browser tabs open on the same text document pass each edit to each other on the `livedoc-text-document`
+    BroadcastChannel, so both stay live.
+  - **Sync Document** sends each state with the create (`textDocuments: [{ tabId, state }]`), and a save during the
+    upload counts as a change, as a tab's does; **Take Offline** reads every text document tab's state into the
+    record, all or nothing, before the server copy goes; a **Duplicate** copies the states under the tabs' new ids;
+    the local Trash keeps them, and a purge removes them with the record.
+  - **Download** writes the file in this browser, from the state, as the room would.
+  - In the Explorer's lists it has content once its writing has been saved, told without reading its state (default).
+  - Opening a file still makes a LiveDoc document, so the room's guards read it (default).
+  - Every offline record is read whole by the Explorer's lists, so a large text document in This Browser costs its
+    bytes on each list, as a spreadsheet's sheets do (default).
 - <a id="the-local-copy"></a>**The local copy**: a cloud text document edited while the room cannot confirm it (the
   network gone, the room closed, a confirmation late) keeps going, and this browser keeps what the room has not
   confirmed, so closing the tab or a crash loses nothing (default):

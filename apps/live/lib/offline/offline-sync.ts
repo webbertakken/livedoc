@@ -16,6 +16,7 @@ import { apiSetDocumentTag } from '@/lib/api/tags';
 import { API_BASE, ApiError, apiDelete } from '@/lib/api/core';
 import { fetchCloudItems } from '../api/items';
 import { fetchCloudSheets, sheetAsCreate } from '../api/sheets';
+import { base64OfBytes } from '@livedoc/text-documents/base64';
 import { uploadEmbeddedImages } from './offline-images';
 import {
   offlineDeleteIfUnchanged,
@@ -83,6 +84,16 @@ async function upload(rec: OfflineDocumentRecord, ownerId: string): Promise<Map<
         ...(rec.sheets?.length ? { sheets: rec.sheets.map(sheetAsCreate) } : {}),
         // A spreadsheet's workbook row, so it stays one.
         ...(rec.workbook ? { workbook: rec.workbook } : {}),
+        // Each text document's state (docs/specs/034-text-documents/live-editing-and-storage.md "A text document in
+        // This Browser"); a save during the upload moves savedAt, so it counts as a change.
+        ...(rec.textDocuments?.length
+          ? {
+              textDocuments: rec.textDocuments.map((t) => ({
+                tabId: t.tabId,
+                state: base64OfBytes(t.state),
+              })),
+            }
+          : {}),
       },
       { conversion: 'sync' },
     );

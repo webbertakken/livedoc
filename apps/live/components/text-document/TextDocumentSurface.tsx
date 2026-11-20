@@ -7,6 +7,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import type * as Y from 'yjs';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
 import { redo, undo, ySyncPlugin } from 'y-prosemirror';
@@ -23,6 +24,11 @@ import { debugLog } from '@/lib/debug-log';
 import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
+import { openLocalYjs } from '@/lib/text-document/local-yjs-provider';
+import {
+  offlineSaveTextDocumentState,
+  offlineTextDocumentState,
+} from '@/lib/offline/offline-text-documents';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import {
   setLocalTextDocumentCaret,
@@ -52,6 +58,9 @@ export type TextDocumentSurfaceProps = {
   canEdit: boolean;
   // One frame to the room; true once the room has stored it ("Sending").
   sequence: (op: TextDocumentFrame) => Promise<boolean>;
+  // A text document in This Browser: no room; its state lives in its offline record ("A text document in This
+  // Browser"). Fixed for the surface's life: its host keys it by this.
+  local?: boolean;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
@@ -62,10 +71,13 @@ export function TextDocumentSurface({
   format,
   canEdit,
   sequence,
+  local = false,
 }: TextDocumentSurfaceProps) {
   const mount = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
   const editor = useRef<EditorView | null>(null);
+  // The live state, for a download written in this browser.
+  const liveDoc = useRef<Y.Doc | null>(null);
   // Collaborators' carets in this tab's writing (live-editing-and-storage.md "Presence"), drawn by the editor.
   const peers = useTextDocumentPeers(scope.tabId);
   const [state, setState] = useState<SurfaceState>('loading');
@@ -105,19 +117,35 @@ export function TextDocumentSurface({
     const where = { ownerId, documentId, tabId, shareCode };
     const started = performance.now();
     debugLog('[text-document] surface loading', { documentId, tabId, ownerId, shareCode });
-    // Load, then bind: the editor never sees an empty state, so it never invents a first paragraph.
-    openRoomYjs({
-      documentId,
-      tabId,
+    const gate = {
       get canEdit() {
         return live.current.canEdit;
       },
-      sequence: (op) => live.current.sequence(op),
-      post: (update) => apiPostTextDocumentUpdate(where, update),
-      loadState: () => apiLoadTextDocumentState(where),
-      loadSince: (vector) => apiLoadTextDocumentStateSince(where, vector),
-      copies: TextDocumentCopies,
-    })
+    };
+    // Load, then bind: the editor never sees an empty state, so it never invents a first paragraph.
+    const opening = local
+      ? openLocalYjs({
+          documentId,
+          tabId,
+          get canEdit() {
+            return gate.canEdit;
+          },
+          load: () => offlineTextDocumentState(documentId, tabId),
+          save: (update) => offlineSaveTextDocumentState(documentId, tabId, update),
+        })
+      : openRoomYjs({
+          documentId,
+          tabId,
+          get canEdit() {
+            return gate.canEdit;
+          },
+          sequence: (op) => live.current.sequence(op),
+          post: (update) => apiPostTextDocumentUpdate(where, update),
+          loadState: () => apiLoadTextDocumentState(where),
+          loadSince: (vector) => apiLoadTextDocumentStateSince(where, vector),
+          copies: TextDocumentCopies,
+        });
+    opening
       .then((binding) => {
         const { doc } = binding;
         if (cancelled || !mount.current) {
@@ -158,8 +186,10 @@ export function TextDocumentSurface({
           },
         });
         editor.current = view;
+        liveDoc.current = doc;
         teardown = () => {
           editor.current = null;
+          liveDoc.current = null;
           view.destroy();
           binding.close();
           doc.destroy();
@@ -180,7 +210,7 @@ export function TextDocumentSurface({
       cancelled = true;
       teardown();
     };
-  }, [ownerId, documentId, tabId, shareCode, attempt]);
+  }, [ownerId, documentId, tabId, shareCode, attempt, local]);
 
   useEffect(() => {
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
@@ -191,7 +221,12 @@ export function TextDocumentSurface({
       className="flex min-h-0 flex-1 flex-col bg-slate-100 dark:bg-slate-900"
       data-text-document-surface={state}
     >
-      <TextDocumentTitleRow scope={scope} documentName={documentName} format={format} />
+      <TextDocumentTitleRow
+        scope={scope}
+        documentName={documentName}
+        format={format}
+        localDoc={local ? () => liveDoc.current : null}
+      />
       <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto py-6">
         {state === 'failed' ? (
           <div

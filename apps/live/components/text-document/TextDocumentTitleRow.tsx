@@ -4,6 +4,7 @@
 // the name, its format, and a File menu holding Open and Download, drawn by the office documents' shared row. A text
 // document leaves in the format it is held in (text-document.md "The format it is in").
 import { useState } from 'react';
+import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { TextDocumentScope } from '@/lib/api/text-documents';
@@ -12,6 +13,13 @@ import { debugLog } from '@/lib/debug-log';
 import { downloadBlob } from '@/lib/download-blob';
 import { track } from '@/lib/telemetry';
 import { openTextDocumentFile } from '@/lib/text-document/open-text-document-file';
+
+// A text document no room holds is written in this browser; the writer loads only when it is asked for.
+async function writtenHere(doc: Y.Doc | null, format: TextDocumentFormat, name: string) {
+  if (!doc) throw new Error('text document not loaded');
+  const { textDocumentFileOf } = await import('@/lib/text-document/text-document-file');
+  return textDocumentFileOf(doc, format, name);
+}
 
 // What the title row says of each format, and the file it downloads.
 const FORMATS = {
@@ -35,17 +43,23 @@ export function TextDocumentTitleRow({
   scope,
   documentName,
   format,
+  localDoc = null,
 }: {
   scope: TextDocumentScope;
   documentName: string;
   format: TextDocumentFormat;
+  // A text document in This Browser: its file is written here, from its live state (live-editing-and-storage.md).
+  localDoc?: (() => Y.Doc | null) | null;
 }) {
   const held = FORMATS[format];
   const [problem, setProblem] = useState<string | null>(null);
 
   const download = async () => {
     try {
-      const { blob, fileName } = await apiDownloadTextDocument(scope, held.type);
+      const doc = localDoc?.() ?? null;
+      const { blob, fileName } = localDoc
+        ? await writtenHere(doc, format, documentName)
+        : await apiDownloadTextDocument(scope, held.type);
       downloadBlob(blob, fileName);
       track('Document', 'Exported', held.telemetry);
     } catch (error) {

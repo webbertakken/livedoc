@@ -10,6 +10,7 @@ import { fetchItems } from '../api/items';
 import { apiLoadDocument, apiLoadTab, fetchCloudFavouriteIds } from '@/lib/api-client';
 import { fetchCloudTags } from '@/lib/api/tags';
 import { DOCUMENT_CONVERSION_HEADER } from '@livedoc/api-schema';
+import { tabKindOf } from '@livedoc/document';
 import { API_BASE, ApiError, apiDelete } from '@/lib/api/core';
 import { embedTabImages, isDataImageId, tabImageIds } from './offline-images';
 import {
@@ -19,6 +20,7 @@ import {
   type OfflineDocumentRecord,
 } from './offline-store';
 import { fetchAllSheets } from '../api/sheets';
+import { apiLoadTextDocumentState } from '../api/text-documents';
 import {
   OfflineSyncIncompleteError,
   syncOfflineDocument,
@@ -104,6 +106,18 @@ async function downloadAndRemoveCloudCopy(
   const itemStore = await fetchItems({ ownerId, documentId, shareCode, tabId: null });
   // And the sheet store, all or nothing (docs/specs/029-sheets/sheet-store.md "Offline documents").
   const sheets = await fetchAllSheets({ ownerId, documentId, shareCode, tabId: null });
+  // And every text document's state, all or nothing (docs/specs/034-text-documents/live-editing-and-storage.md "A text
+  // document in This Browser"): a failed read throws and aborts before the server copy goes.
+  const now = Date.now();
+  const textDocuments = await Promise.all(
+    fetchedTabs
+      .filter((t) => tabKindOf(t) === 'text-document')
+      .map(async (t) => ({
+        tabId: t.id,
+        state: await apiLoadTextDocumentState({ ownerId, documentId, tabId: t.id, shareCode }),
+        savedAt: now,
+      })),
+  );
   // Embed referenced R2 images as data URIs BEFORE the server delete below:
   // once the document row is gone, its images count as unused and the api's
   // 30-day retention reaper would delete the bytes the offline document still
@@ -125,7 +139,6 @@ async function downloadAndRemoveCloudCopy(
   const tagIds = (await fetchCloudTags(ownerId)).links
     .filter((l) => l.documentId === liveDoc.id)
     .map((l) => l.tagId);
-  const now = Date.now();
   const rec: OfflineDocumentRecord = {
     id: liveDoc.id,
     name: liveDoc.name,
@@ -146,6 +159,7 @@ async function downloadAndRemoveCloudCopy(
     ...(sheets.length ? { sheets } : {}),
     // A spreadsheet stays one (docs/specs/029-sheets/sheet-store.md "Offline documents").
     ...(liveDoc.workbook ? { workbook: liveDoc.workbook } : {}),
+    ...(textDocuments.length ? { textDocuments } : {}),
   };
   await offlinePutRecord(rec);
   // Raw server delete — the id is now in the offline index, so the dispatching
