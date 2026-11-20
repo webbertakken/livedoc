@@ -5,7 +5,8 @@
 Every shortcut of Google's [Keyboard shortcuts for Google Docs](https://support.google.com/docs/answer/179738?hl=en&co=GENIE.Platform%3DDesktop)
 (retrieved 2026-11-20), for PC, Mac and ChromeOS, one row per action. The text document's registry holds exactly these
 rows (`apps/live/lib/text-document/text-document-shortcuts.ts`); a test reads this table and fails on any difference.
-How the layer matches keys is the [office shell](../004-interface-design/office-shell.md#shortcut-layer)'s.
+How the layer matches keys is the [office shell](../004-interface-design/office-shell.md#shortcut-layer)'s, and so is
+the [dialog](../004-interface-design/office-shell.md#keyboard-shortcuts-dialog) that lists them.
 
 ## Notation
 
@@ -37,7 +38,7 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 | Redo                           | `Ctrl+Shift+Z`                           | `⌘+Shift+Z`                 | `Ctrl+Shift+Z`     | built (`text-document-shortcuts.test.tsx`) |
 | Insert or edit link            | `Ctrl+K`                                 | `⌘+K`                       | `Ctrl+K`           | specified                                  |
 | Open link                      | `Alt+Enter`                              | `Option+Enter`              | `Alt+Enter`        | specified                                  |
-| Show common keyboard shortcuts | `Ctrl+/`                                 | `⌘+/`                       | `Ctrl+/`           | specified                                  |
+| Show common keyboard shortcuts | `Ctrl+/`                                 | `⌘+/`                       | `Ctrl+/`           | built (`OfficeShortcutsDialog.test.tsx`)   |
 | Save                           | `Ctrl+S`                                 | `⌘+S`                       | `Ctrl+S`           | specified                                  |
 | Print                          | `Ctrl+P`                                 | `⌘+P`                       | `Ctrl+P`           | specified                                  |
 | Open                           | `Ctrl+O`                                 | `⌘+O`                       | `Ctrl+O`           | built (`text-document-shortcuts.test.tsx`) |

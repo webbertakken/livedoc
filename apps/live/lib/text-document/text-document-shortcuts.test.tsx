@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -8,6 +8,7 @@ import { ySyncPlugin } from 'y-prosemirror';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import { OFFICE_MODES } from '@/lib/office/office-mode';
+import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
 import { textDocumentMenus } from './text-document-menus';
@@ -69,6 +70,7 @@ function Harness({ view }: { view: EditorView | null }) {
         shortcuts={TEXT_DOCUMENT_SHORTCUTS}
         keyScope={root}
         opening={{ accept: '.odt', onFile: () => {} }}
+        telemetryKind="TextDocument"
       />
       <div data-testid="editor" />
     </div>
@@ -118,6 +120,26 @@ describe('the text document shortcuts', () => {
     const clicked = vi.spyOn(picker, 'click');
     fireEvent.keyDown(view.dom, { code: 'KeyO', key: 'o', ctrlKey: true });
     expect(clicked).toHaveBeenCalled();
+    view.destroy();
+  });
+
+  // docs/specs/004-interface-design/office-shell.md "Keyboard shortcuts dialog".
+  it('opens the Keyboard shortcuts dialog with Ctrl+/', async () => {
+    const view = await surfaceWithEditor();
+    fireEvent.keyDown(view.dom, { code: 'Slash', key: '/', ctrlKey: true });
+    const dialog = screen.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    expect(within(dialog).getByRole('region', { name: 'Common actions' })).toBeDefined();
+    expect(track).toHaveBeenCalledWith('UI', 'Opened', 'TextDocumentShortcuts');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    view.destroy();
+  });
+
+  it('opens the Keyboard shortcuts dialog from Help', async () => {
+    const view = await surfaceWithEditor();
+    fireEvent.click(within(screen.getByRole('menubar')).getByRole('menuitem', { name: 'Help' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /^Keyboard shortcuts/ }));
+    expect(screen.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeDefined();
     view.destroy();
   });
 

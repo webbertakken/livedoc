@@ -1,7 +1,8 @@
 # Editing surface
 
-**Status: partly built.** The menu bar (every menu and item, those not yet built dimmed), the tool finder and the
-title row (but its comment history) are built; the rest is specified.
+**Status: partly built.** The menu bar (every menu and item, those not yet built dimmed), the tool finder, the
+title row (but its comment history), the toolbar's built controls and the keyboard shortcuts dialog are built; the
+rest is specified.
 
 What a person sees and works with on a [text document](text-document.md): Google Docs' layout, control for control,
 built on the shared [Office shell](../004-interface-design/office-shell.md). How literal the look is (Google's metrics
@@ -154,7 +155,9 @@ matches, with its menu path; Up and Down move, Enter runs it, Escape closes. Dim
 
 ## Keyboard shortcuts
 
-- ⌘/ opens the Keyboard shortcuts dialog: a search field and every shortcut by group, as Google's.
+- ⌘/ or Help > Keyboard shortcuts opens the shell's
+  [Keyboard shortcuts dialog](../004-interface-design/office-shell.md#keyboard-shortcuts-dialog): a search field and
+  every shortcut by group, as Google's.
 - Every shortcut of Google's list, for each platform, is a row of [Keyboard shortcuts](keyboard-shortcuts.md), read by the
   menus, the tooltips and the dialog. The browser's own shortcuts are never taken where Google does not take them.
 
@@ -183,4 +186,5 @@ What each role sees is stated with each control above; the server refuses every 
 
 `UI · Opened · TextDocumentMenu<Name>` (a menu opened), `UI · Used · TextDocumentToolFinder`,
 `UI · Toggled · TextDocumentCompact`, `UI · Toggled · TextDocumentRuler`, `UI · Toggled · TextDocumentStar`,
-`UI · Opened · TextDocumentMove`, `UI · Used · TextDocumentFollow` (a press on a person). Never text.
+`UI · Opened · TextDocumentMove`, `UI · Used · TextDocumentFollow` (a press on a person),
+`UI · Opened · TextDocumentShortcuts`. Never text.

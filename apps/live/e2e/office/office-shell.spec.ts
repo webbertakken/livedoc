@@ -1,8 +1,9 @@
 import { expect, expectNoPageErrors, test } from '../fixtures';
 
 // The office shell on a text document (docs/specs/004-interface-design/office-shell.md "Menu bar", "Tool finder",
-// "Shortcut layer"; docs/specs/034-text-documents/keyboard-shortcuts.md): the menus open and move from the keyboard,
-// the tool finder runs what it finds, and Ctrl+Z undoes through the shortcut layer.
+// "Shortcut layer", "Keyboard shortcuts dialog"; docs/specs/034-text-documents/keyboard-shortcuts.md): the menus
+// open and move from the keyboard, the tool finder runs what it finds, Ctrl+Z undoes through the shortcut layer, and
+// Ctrl+/ lists the shortcuts.
 
 const BODY = '[role="textbox"][aria-label="Document body"]';
 
@@ -96,6 +97,22 @@ test('the menus, the tool finder and the shortcut layer work a text document', a
   await page.keyboard.press('ControlOrMeta+Alt+Shift+z');
   await expect(page.getByRole('button', { name: 'Mode: Editing' })).toBeVisible();
   await expect(page.locator(BODY)).toHaveAttribute('contenteditable', 'true');
+
+  // The Keyboard shortcuts dialog (office-shell.md "Keyboard shortcuts dialog"): Ctrl+/ opens it on its search,
+  // typing filters, Escape clears the search, then closes it and the writing has the keyboard back.
+  await page.keyboard.press('ControlOrMeta+/');
+  const shortcuts = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
+  const shortcutSearch = shortcuts.getByRole('searchbox', { name: 'Search keyboard shortcuts' });
+  await expect(shortcutSearch).toBeFocused();
+  await expect(shortcuts.getByRole('region', { name: 'Common actions' })).toBeVisible();
+  await shortcutSearch.fill('redo');
+  await expect(shortcuts.getByRole('region')).toHaveCount(1);
+  await page.screenshot({ path: test.info().outputPath('shortcuts.png') });
+  await page.keyboard.press('Escape');
+  await expect(shortcutSearch).toHaveValue('');
+  await page.keyboard.press('Escape');
+  await expect(shortcuts).toHaveCount(0);
+  await expect(page.locator(BODY)).toBeFocused();
 
   // A narrow window moves the controls that do not fit behind More.
   await page.setViewportSize({ width: 700, height: 860 });

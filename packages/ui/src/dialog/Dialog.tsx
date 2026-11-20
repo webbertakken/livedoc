@@ -27,7 +27,7 @@ import { useVisualViewportBand, type VisualViewportBand } from '../useVisualView
 // Width scale covering the values the hand-rolled dialogs actually used
 // (26 / 30 / 34 / 36rem) so every dialog snaps to one rung instead of a
 // bespoke `w-[..]`.
-export type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+export type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'wide' | '3xl';
 
 // The dialogs big enough to be worth the whole phone screen. Below sm: they
 // drop their inset, radius and border and fill the viewport — a 92%-wide card
@@ -37,7 +37,7 @@ export type DialogSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 // rather than the quick question it is. `md` is in because everything using
 // it is a real panel (Settings, Shortcuts, the import / export panes), not a
 // question.
-const EDGE_TO_EDGE_SIZES = new Set<DialogSize>(['md', 'lg', 'xl', '2xl', '3xl']);
+const EDGE_TO_EDGE_SIZES = new Set<DialogSize>(['md', 'lg', 'xl', '2xl', 'wide', '3xl']);
 
 const WIDTHS: Record<DialogSize, string> = {
   sm: 'w-[26rem]',
@@ -46,6 +46,8 @@ const WIDTHS: Record<DialogSize, string> = {
   xl: 'w-[36rem]',
   // The image picker's two-column grid (640px = 40rem).
   '2xl': 'w-[40rem]',
+  // An office shell's wide dialog (720px = 45rem; docs/specs/004-interface-design/office-shell.md "Dialogs").
+  wide: 'w-[45rem]',
   // A Plan item's panel: a main column beside a details panel (docs/specs/026-plan/plan-board.md).
   '3xl': 'w-[60rem]',
 };
@@ -76,8 +78,13 @@ export type DialogProps = {
   // Where focus lands on open: the first control (default), or the panel itself ('container') when the
   // first control is not where anyone starts (the Plan card panel, whose header opens on its type picker).
   initialFocus?: FocusTrapInitial;
+  // The panel's colours and edge, in place of the white (slate in dark) panel: the office shell draws its dialogs in its
+  // own look tokens (docs/specs/004-interface-design/office-shell.md "Dialogs").
+  surface?: string;
   children: ReactNode;
 };
+
+const DEFAULT_SURFACE = 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900';
 
 // A phone sheet's panel below sm: the BottomSheet's shape, taller (a dialog holds a form).
 const PHONE_SHEET =
@@ -137,6 +144,7 @@ export function Dialog({
   backdrop = 'dim',
   phoneSheet = false,
   initialFocus = 'first',
+  surface = DEFAULT_SURFACE,
   children,
 }: DialogProps) {
   const panelRef = useRef<HTMLDivElement>(null);
@@ -227,7 +235,7 @@ export function Dialog({
           // a short/landscape screen never pushes its footer off the bottom.
           // Dialogs that set their own max-h (e.g. ShareDialog, Export) opt out
           // of the default and manage their own scroll region.
-          className={`flex ${WIDTHS[size]} max-w-[92%] animate-dialog-in flex-col rounded-xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/10 outline-none dark:border-slate-700 dark:bg-slate-900 dark:shadow-slate-950/40${
+          className={`flex ${WIDTHS[size]} max-w-[92%] animate-dialog-in flex-col rounded-xl border ${surface} shadow-2xl shadow-slate-900/10 outline-none dark:shadow-slate-950/40${
             phoneSheet
               ? PHONE_SHEET
               : EDGE_TO_EDGE_SIZES.has(size)

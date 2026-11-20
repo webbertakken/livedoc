@@ -467,7 +467,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     values: ['TextDocumentOdt', 'TextDocumentFodt', 'TextDocumentDocx'],
   },
   // The office shell's title row (docs/specs/004-interface-design/office-shell.md "Telemetry"): a menu opened, by its
-  // name, the folder picker opened, a star toggled, a tool finder result run and a person followed, for the kind that
+  // name, the folder picker and the keyboard shortcuts opened, a star toggled, a tool finder result run and a person followed, for the kind that
   // asks for them.
   'apps/live/components/office/OfficeTitleRow.tsx UI·Opened': {
     values: [
@@ -475,6 +475,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
         (menu) => `TextDocumentMenu${menu}`,
       ),
       'TextDocumentMove',
+      'TextDocumentShortcuts',
     ],
   },
   // An office kind's editing mode changed (docs/specs/034-text-documents/review.md "Editing modes"), typed by its kind.

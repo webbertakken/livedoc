@@ -175,15 +175,15 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Extensions and Help
 
-| Row                                             | Rule                                     | Status                              | Spec                                                     |
-| ----------------------------------------------- | ---------------------------------------- | ----------------------------------- | -------------------------------------------------------- |
-| Add-ons                                         | Google's marketplace                     | left out (C3)                       | [Tools](tools.md#google-only-services)                   |
-| Apps Script                                     | Google's scripting                       | left out (C3)                       | [Tools](tools.md#google-only-services)                   |
-| Agents (LiveDoc's own)                          | MCP and the CLI in their place           | specified                           | [Agents and sync](agents-and-sync.md)                    |
-| Help                                            | The help centre's text document articles | specified                           | [Editing surface](editing-surface.md#the-menu-bar)       |
-| Keyboard shortcuts                              | ⌘/, the dialog                           | specified                           | [Editing surface](editing-surface.md#keyboard-shortcuts) |
-| Tool finder                                     | ⌥/, search the menus                     | built (`OfficeToolFinder.test.tsx`) | [Editing surface](editing-surface.md#tool-finder)        |
-| Report abuse, privacy, terms, updates, training | LiveDoc's own pages                      | specified                           | [Editing surface](editing-surface.md#the-menu-bar)       |
+| Row                                             | Rule                                     | Status                                   | Spec                                                     |
+| ----------------------------------------------- | ---------------------------------------- | ---------------------------------------- | -------------------------------------------------------- |
+| Add-ons                                         | Google's marketplace                     | left out (C3)                            | [Tools](tools.md#google-only-services)                   |
+| Apps Script                                     | Google's scripting                       | left out (C3)                            | [Tools](tools.md#google-only-services)                   |
+| Agents (LiveDoc's own)                          | MCP and the CLI in their place           | specified                                | [Agents and sync](agents-and-sync.md)                    |
+| Help                                            | The help centre's text document articles | specified                                | [Editing surface](editing-surface.md#the-menu-bar)       |
+| Keyboard shortcuts                              | ⌘/, the dialog                           | built (`OfficeShortcutsDialog.test.tsx`) | [Editing surface](editing-surface.md#keyboard-shortcuts) |
+| Tool finder                                     | ⌥/, search the menus                     | built (`OfficeToolFinder.test.tsx`)      | [Editing surface](editing-surface.md#tool-finder)        |
+| Report abuse, privacy, terms, updates, training | LiveDoc's own pages                      | specified                                | [Editing surface](editing-surface.md#the-menu-bar)       |
 
 ## Toolbar
 

@@ -23,16 +23,19 @@ describe.each([
 
   it('holds text at 4.5:1 on every surface it sits on', () => {
     for (const ink of ['ink', 'muted', 'icon', 'error'])
-      for (const ground of ['chrome', 'toolbar', 'menu', 'menu-hover'])
+      for (const ground of ['chrome', 'toolbar', 'menu', 'menu-hover', 'dialog'])
         expect(contrastRatio(t[ink]!, t[ground]!), `${ink} on ${ground}`).toBeGreaterThanOrEqual(
           4.5,
         );
     expect(contrastRatio(t['share-ink']!, t.share!)).toBeGreaterThanOrEqual(4.5);
     expect(contrastRatio(t['pressed-ink']!, t.pressed!)).toBeGreaterThanOrEqual(4.5);
+    expect(contrastRatio(t['primary-ink']!, t.primary!)).toBeGreaterThanOrEqual(4.5);
+    // A text button (Cancel) is drawn in the primary colour on the dialog.
+    expect(contrastRatio(t.primary!, t.dialog!)).toBeGreaterThanOrEqual(4.5);
   });
 
   it('holds the focus ring at 3:1 on every surface', () => {
-    for (const ground of ['chrome', 'toolbar', 'menu', 'menu-hover'])
+    for (const ground of ['chrome', 'toolbar', 'menu', 'menu-hover', 'dialog'])
       expect(contrastRatio(t.focus!, t[ground]!), `focus on ${ground}`).toBeGreaterThanOrEqual(3);
   });
 });
