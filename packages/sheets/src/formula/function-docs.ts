@@ -173,7 +173,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   NOT: D('value', 'The opposite of TRUE or FALSE', '=NOT(B2>0)'),
   TRUE: D('', 'TRUE', '=TRUE()'),
   FALSE: D('', 'FALSE', '=FALSE()'),
-  IFERROR: D('value, if_error', 'The value, or another when it is an error', '=IFERROR(A2/B2, 0)'),
+  IFERROR: D(
+    'value, [if_error]',
+    'The value, or another (blank by default) when it is an error',
+    '=IFERROR(A2/B2, 0)',
+  ),
   IFNA: D(
     'value, if_na',
     'The value, or another when it is #N/A',

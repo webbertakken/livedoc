@@ -7,36 +7,225 @@
     [null, "TRUE", 3]
   ],
   "cases": [
-    { "id": "AND.1", "f": "=AND(TRUE, 1, \"x\"=\"X\")" },
-    { "id": "AND.2", "f": "=AND(Data!A1:A2)" },
-    { "id": "AND.3", "f": "=AND(Data!C1:C3)" },
-    { "id": "AND.4", "f": "=AND(Data!B1:B2)", "note": "a range of text only holds no truth value" },
-    { "id": "AND.5", "f": "=AND(1/0, TRUE)" },
-    { "id": "OR.1", "f": "=OR(FALSE, 0, Data!A1)" },
-    { "id": "OR.2", "f": "=OR(Data!A2, Data!C2)" },
-    { "id": "OR.3", "f": "=OR(Data!A1:A4)" },
-    { "id": "XOR.1", "f": "=XOR(TRUE, TRUE, TRUE)" },
-    { "id": "XOR.2", "f": "=XOR(Data!C1:C3)" },
-    { "id": "NOT.1", "f": "=NOT(0)" },
-    { "id": "NOT.2", "f": "=NOT(Data!C1)" },
-    { "id": "NOT.3", "f": "=NOT(\"x\")" },
-    { "id": "TRUE.1", "f": "=TRUE()" },
-    { "id": "FALSE.1", "f": "=FALSE()" },
-    { "id": "IF.1", "f": "=IF(Data!A1>0, \"pos\", \"neg\")" },
-    { "id": "IF.2", "f": "=IF(Data!A2, 1, 2)" },
-    { "id": "IF.3", "f": "=IF(FALSE, 1)" },
-    { "id": "IF.4", "f": "=IF(1/0, 1, 2)" },
-    { "id": "IF.5", "f": "=IF(TRUE, 1, 1/0)" },
-    { "id": "IFS.1", "f": "=IFS(Data!A3>0, \"a\", Data!A3<0, \"b\")" },
-    { "id": "IFS.2", "f": "=IFS(FALSE, 1)" },
-    { "id": "SWITCH.1", "f": "=SWITCH(Data!A3, 1, \"one\", -2, \"minus two\", \"other\")" },
-    { "id": "SWITCH.2", "f": "=SWITCH(9, 1, \"one\", \"other\")" },
-    { "id": "SWITCH.3", "f": "=SWITCH(9, 1, \"one\")" },
-    { "id": "IFERROR.1", "f": "=IFERROR(1/0, \"none\")" },
-    { "id": "IFERROR.2", "f": "=IFERROR(5, \"none\")" },
-    { "id": "IFERROR.3", "f": "=IFERROR(NA(), 7)" },
-    { "id": "IFNA.1", "f": "=IFNA(NA(), \"missing\")" },
-    { "id": "IFNA.2", "f": "=IFNA(1/0, \"missing\")" },
-    { "id": "IFNA.3", "f": "=IFNA(4, 0)" }
+    {
+      "id": "AND.1",
+      "f": "=AND(TRUE, 1, \"x\"=\"X\")"
+    },
+    {
+      "id": "AND.2",
+      "f": "=AND(Data!A1:A2)"
+    },
+    {
+      "id": "AND.3",
+      "f": "=AND(Data!C1:C3)"
+    },
+    {
+      "id": "AND.4",
+      "f": "=AND(Data!B1:B2)",
+      "note": "a range of text only holds no truth value"
+    },
+    {
+      "id": "AND.5",
+      "f": "=AND(1/0, TRUE)"
+    },
+    {
+      "id": "OR.1",
+      "f": "=OR(FALSE, 0, Data!A1)"
+    },
+    {
+      "id": "OR.2",
+      "f": "=OR(Data!A2, Data!C2)"
+    },
+    {
+      "id": "OR.3",
+      "f": "=OR(Data!A1:A4)"
+    },
+    {
+      "id": "XOR.1",
+      "f": "=XOR(TRUE, TRUE, TRUE)"
+    },
+    {
+      "id": "XOR.2",
+      "f": "=XOR(Data!C1:C3)"
+    },
+    {
+      "id": "NOT.1",
+      "f": "=NOT(0)"
+    },
+    {
+      "id": "NOT.2",
+      "f": "=NOT(Data!C1)"
+    },
+    {
+      "id": "NOT.3",
+      "f": "=NOT(\"x\")"
+    },
+    {
+      "id": "TRUE.1",
+      "f": "=TRUE()"
+    },
+    {
+      "id": "FALSE.1",
+      "f": "=FALSE()"
+    },
+    {
+      "id": "IF.1",
+      "f": "=IF(Data!A1>0, \"pos\", \"neg\")"
+    },
+    {
+      "id": "IF.2",
+      "f": "=IF(Data!A2, 1, 2)"
+    },
+    {
+      "id": "IF.3",
+      "f": "=IF(FALSE, 1)"
+    },
+    {
+      "id": "IF.4",
+      "f": "=IF(1/0, 1, 2)"
+    },
+    {
+      "id": "IF.5",
+      "f": "=IF(TRUE, 1, 1/0)"
+    },
+    {
+      "id": "IFS.1",
+      "f": "=IFS(Data!A3>0, \"a\", Data!A3<0, \"b\")"
+    },
+    {
+      "id": "IFS.2",
+      "f": "=IFS(FALSE, 1)"
+    },
+    {
+      "id": "SWITCH.1",
+      "f": "=SWITCH(Data!A3, 1, \"one\", -2, \"minus two\", \"other\")"
+    },
+    {
+      "id": "SWITCH.2",
+      "f": "=SWITCH(9, 1, \"one\", \"other\")"
+    },
+    {
+      "id": "SWITCH.3",
+      "f": "=SWITCH(9, 1, \"one\")"
+    },
+    {
+      "id": "IFERROR.1",
+      "f": "=IFERROR(1/0, \"none\")"
+    },
+    {
+      "id": "IFERROR.2",
+      "f": "=IFERROR(5, \"none\")"
+    },
+    {
+      "id": "IFERROR.3",
+      "f": "=IFERROR(NA(), 7)"
+    },
+    {
+      "id": "IFNA.1",
+      "f": "=IFNA(NA(), \"missing\")"
+    },
+    {
+      "id": "IFNA.2",
+      "f": "=IFNA(1/0, \"missing\")"
+    },
+    {
+      "id": "IFNA.3",
+      "f": "=IFNA(4, 0)"
+    },
+    {
+      "id": "AND.6",
+      "f": "=AND(Data!A4)"
+    },
+    {
+      "id": "AND.7",
+      "f": "=AND(Data!B4)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text where a truth goes; Google takes \"an expression that can be coerced to a logical value\" (https://support.google.com/docs/answer/3093301), and text TRUE may be one"
+      },
+      "note": "Awaits Google's answer: whether text TRUE in a cell reads as a truth."
+    },
+    {
+      "id": "AND.8",
+      "f": "=AND(\"TRUE\", 1)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text where a truth goes; Google takes \"an expression that can be coerced to a logical value\" (https://support.google.com/docs/answer/3093301), and text TRUE may be one"
+      },
+      "note": "Awaits Google's answer: whether the text \"TRUE\" reads as a truth."
+    },
+    {
+      "id": "OR.4",
+      "f": "=OR(Data!B1:B2)"
+    },
+    {
+      "id": "XOR.3",
+      "f": "=XOR(Data!B1:B2)"
+    },
+    {
+      "id": "XOR.4",
+      "f": "=XOR(FALSE, 0)"
+    },
+    {
+      "id": "NOT.4",
+      "f": "=NOT(Data!A4)"
+    },
+    {
+      "id": "NOT.5",
+      "f": "=NOT(Data!B4)"
+    },
+    {
+      "id": "IF.6",
+      "f": "=IF(Data!A4, 1, 2)"
+    },
+    {
+      "id": "IF.7",
+      "f": "=ARRAYFORMULA(IF(Data!A1:A3>0, \"p\", \"n\"))",
+      "rows": 3
+    },
+    {
+      "id": "IF.8",
+      "f": "=IF(Data!B4, 1, 2)"
+    },
+    {
+      "id": "IF.9",
+      "f": "=IF(\"x\", 1, 2)"
+    },
+    {
+      "id": "IFS.3",
+      "f": "=IFS(TRUE)"
+    },
+    {
+      "id": "IFS.4",
+      "f": "=IFS(1/0, 1, TRUE, 2)"
+    },
+    {
+      "id": "SWITCH.4",
+      "f": "=SWITCH(\"A\", \"a\", 1, 2)"
+    },
+    {
+      "id": "SWITCH.5",
+      "f": "=SWITCH(Data!A4, 0, \"zero\", \"other\")"
+    },
+    {
+      "id": "IFERROR.4",
+      "f": "=IFERROR(1/0)",
+      "expect": [[null]],
+      "cite": "https://support.google.com/docs/answer/3093304 (\"value_if_error - [ OPTIONAL - blank by default ]\"; \"returns ... a blank if the second argument is absent\")",
+      "differs": {
+        "libreoffice": "LibreOffice requires the second argument (Err:511); Google makes it optional, blank by default"
+      }
+    },
+    {
+      "id": "IFERROR.5",
+      "f": "=ARRAYFORMULA(IFERROR(1/Data!A1:A2, -1))",
+      "rows": 2
+    },
+    {
+      "id": "IFNA.4",
+      "f": "=IFNA(Data!A4, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives a formula that hands on an empty cell 0; Google shows such a formula empty"
+      },
+      "note": "Awaits Google's answer: an empty value handed on by a function."
+    }
   ]
 }
