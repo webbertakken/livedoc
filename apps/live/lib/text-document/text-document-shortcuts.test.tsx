@@ -13,6 +13,7 @@ import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office
 import { textDocumentEditorActions } from './text-document-editor-actions';
 import { clipboardActions } from './text-document-clipboard';
 import { STRETCH_KEY_ROW } from './text-document-stretches';
+import { PREFERENCES_ITEM } from '@/components/text-document/useTextDocumentPreferences';
 import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
   TEXT_DOCUMENT_KEY_ACTIONS,
@@ -60,6 +61,8 @@ describe('the text document menus', () => {
         ...Object.keys(textDocumentEditorActions(null, { canEdit: true })),
         // Edit > Cut, Copy, Paste (text-document-clipboard), bound by the surface.
         ...Object.keys(clipboardActions(null, { canEdit: true, onRefused: () => {} })),
+        // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
+        PREFERENCES_ITEM,
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,

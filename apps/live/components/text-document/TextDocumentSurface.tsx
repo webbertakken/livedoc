@@ -13,7 +13,12 @@ import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
-import { TextDocumentState, type PageSetup, type Style } from '@livedoc/text-documents';
+import {
+  TextDocumentState,
+  type ListDefinition,
+  type PageSetup,
+  type Style,
+} from '@livedoc/text-documents';
 import { Button } from '@livedoc/ui';
 import {
   apiLoadTextDocumentState,
@@ -27,6 +32,9 @@ import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
 import { clipboardPlugin } from '@/lib/text-document/text-document-clipboard';
 import { stretchesPlugin } from '@/lib/text-document/text-document-stretches';
+import { typingAidsPlugin } from '@/lib/text-document/text-document-typing-aids-plugin';
+import { TypingAids } from '@/lib/text-document/text-document-typing-aids';
+import { useTextDocumentPreferences } from './useTextDocumentPreferences';
 import { useTextDocumentClipboard } from './useTextDocumentClipboard';
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
@@ -148,6 +156,8 @@ export function TextDocumentSurface({
   const [attempt, setAttempt] = useState(0);
   const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
   const clipboardLeftOut = useRef<(count: number) => void>(() => {});
+  // The person's typing aids, as the writing reads them (text-and-paragraphs.md "Typing aids").
+  const typingAids = useRef<() => TypingAids>(TypingAids.defaults);
   // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
   const [changes] = useState(createTextDocumentChanges);
   // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back.
@@ -245,6 +255,12 @@ export function TextDocumentSurface({
           styles: TextDocumentState.styles(doc, live.current.format),
           defaults: TextDocumentState.defaults(doc, live.current.format),
         });
+        // New lists made by a paste or a typed marker, on the person's undo timeline.
+        const listsAccess = {
+          read: () => TextDocumentState.lists(doc),
+          set: (id: string, list: ListDefinition) =>
+            TextDocumentState.setList(doc, id, list, TEXT_DOCUMENT_LISTS_ORIGIN),
+        };
         const view = new EditorView(mount.current, {
           state: EditorState.create({
             schema: textDocumentSchema,
@@ -255,6 +271,8 @@ export function TextDocumentSurface({
               textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
               // Several stretches selected at once (text-and-paragraphs.md "Selection").
               stretchesPlugin(),
+              // The typing aids: smart quotes, substitutions, links, capitals, lists.
+              typingAidsPlugin({ read: () => typingAids.current(), lists: listsAccess }),
               // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
               clipboardPlugin({
                 read: () => ({
@@ -264,11 +282,7 @@ export function TextDocumentSurface({
                   ...readFormatting(),
                   lists: TextDocumentState.lists(doc),
                 }),
-                lists: {
-                  read: () => TextDocumentState.lists(doc),
-                  set: (id, list) =>
-                    TextDocumentState.setList(doc, id, list, TEXT_DOCUMENT_LISTS_ORIGIN),
-                },
+                lists: listsAccess,
                 onLeftOut: (count) => clipboardLeftOut.current(count),
               }),
               // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
@@ -353,6 +367,11 @@ export function TextDocumentSurface({
 
   // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
   const clipboard = useTextDocumentClipboard(editorView, writes);
+  // Tools > Preferences (tools.md "Preferences"); the writing reads the aids it keeps.
+  const preferences = useTextDocumentPreferences(editorView, ownerId);
+  useLayoutEffect(() => {
+    typingAids.current = preferences.read;
+  });
   useLayoutEffect(() => {
     clipboardLeftOut.current = clipboard.onLeftOut;
   });
@@ -412,6 +431,7 @@ export function TextDocumentSurface({
     () => ({
       ...textDocumentEditorActions(editorView, { canEdit: writes }),
       ...clipboard.actions,
+      ...preferences.actions,
       ...formatting.actions,
       ...paragraphStyles.actions,
       ...paragraphs.actions,
@@ -433,6 +453,7 @@ export function TextDocumentSurface({
       modeActions,
       panels.actions,
       clipboard.actions,
+      preferences.actions,
     ],
   );
   // The toolbar's choice controls: Styles, Align and spacing, and the list buttons' grids.
@@ -501,6 +522,7 @@ export function TextDocumentSurface({
       />
       {paragraphs.dialog}
       {clipboard.dialog}
+      {preferences.dialog}
       {lists.dialog}
       {limitReached ? (
         <p

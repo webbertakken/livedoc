@@ -54,8 +54,9 @@ PRIMARY KEY`, `prefs TEXT NOT NULL` (serialised JSON blob),
     ([Sketch mode, Shape slots](../023-draw-mode/draw-mode.md)); every
     other key stays whole. A full account measured 4,967 characters,
     and a text document's default styles add at most 5,000 more
-    ([Default styles](../034-text-documents/text-and-paragraphs.md#default-styles)),
-    so the cap holds both with room to spare. A trim logs
+    ([Default styles](../034-text-documents/text-and-paragraphs.md#default-styles)) and its typing
+    aids about 3,000 ([Typing aids](../034-text-documents/text-and-paragraphs.md#typing-aids)),
+    so the cap holds them all with room to spare. A trim logs
     `[preferences] trimmed to fit dropped=<n> length=<n>`.
   - **One save at a time, the latest wins.** A save made while one
     is in flight waits, and replaces any save already waiting, so
@@ -301,6 +302,9 @@ type UserPreferences = {
   // A text document's default styles (../034-text-documents/text-and-paragraphs.md "Default styles"): per style
   // role, what its look holds that Google's defaults do not. Validated on read (DefaultStyles.parse) and never trimmed.
   textDocumentDefaultStyles?: Record<string, unknown>;
+  // A text document's typing aids (../034-text-documents/text-and-paragraphs.md "Typing aids"): only what differs from
+  // Google's (switches, defaults off or removed, the person's own pairs). Validated on read (TypingAids.parse), never trimmed.
+  textDocumentTypingAids?: Record<string, unknown>;
   // DEAD (../004-interface-design/colour-picker.md "Custom colours"): Custom colours are kept with the document's tabs, not per user.
   // Nothing reads or writes this; it stays because it is already stored.
   customSwatches?: string[];

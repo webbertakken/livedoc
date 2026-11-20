@@ -37,6 +37,8 @@ test('text colour and highlight colour a text document through the one picker', 
   await expect(textPicker).toBeHidden();
   await expect(body).toBeFocused();
   const words = body.locator('span', { hasText: 'Field notes' }).first();
+  // The toolbar reads the writing's colour once the change has drawn.
+  await expect(bar(textColour)).not.toHaveAttribute('data-colour-bar', '#000000');
   const red = await bar(textColour).getAttribute('data-colour-bar');
   expect(red).toMatch(/^#[0-9a-f]{6}$/);
   // Written as picked; drawn for the page's paper (text-document-paper.spec.ts proves the drawing).
