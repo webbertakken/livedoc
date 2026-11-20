@@ -1,7 +1,9 @@
 // The frame a formula is worked out in: what it reads of its workbook, each read noted against the formula reading
 // (its `reader`; NO_CELL keeps nothing). The workbook gives its parts once, as a FrameSource.
 import type { CardSource } from '../cards';
-import { renderFormula, type SheetsCtx } from '../formula/stored';
+import { childrenOf, type Node } from '../formula/ast';
+import { renderFormula, storedAst, type SheetsCtx } from '../formula/stored';
+import { filterTest, type FilterTest } from '../filter';
 import type { Value } from '../formula/values';
 import { colWidth } from '../layout';
 import { cellKey, type CellInput, type Sheet } from '../sheet';
@@ -34,6 +36,10 @@ export type FrameSource = {
   readsCards(reader: CellNo): void;
 };
 
+function calls(node: Node, name: string): boolean {
+  return (node.k === 'call' && node.name === name) || childrenOf(node).some((n) => calls(n, name));
+}
+
 /** The frame of the formula `reader`, sitting in (row, col) of `sheetId`. */
 export function cellFrame(
   src: FrameSource,
@@ -42,6 +48,22 @@ export function cellFrame(
   row: number,
   col: number,
 ): Frame {
+  // Each sheet's filter test, made once for the formula when it first asks.
+  const filters = new Map<string, FilterTest | null>();
+  const filterOf = (s: string): FilterTest | null => {
+    // A range's sheet exists: a reference to a removed sheet is #REF! before any function reads it.
+    if (!filters.has(s)) filters.set(s, filterTest(src.sheet(s)!, src.locale));
+    return filters.get(s)!;
+  };
+  const hiddenBySheet = new Map<string, ReadonlySet<string>>();
+  const hiddenOf = (s: string): ReadonlySet<string> => {
+    let set = hiddenBySheet.get(s);
+    if (!set) {
+      set = new Set(src.sheet(s)!.layout.hiddenRows ?? []);
+      hiddenBySheet.set(s, set);
+    }
+    return set;
+  };
   return {
     sheetId,
     row,
@@ -68,6 +90,16 @@ export function cellFrame(
     },
     sheetCount: () => src.sheetCount(),
     sheetNumber: (s) => src.sheetNumber(s),
+    rowHidden: (s, r) => {
+      const test = filterOf(s);
+      if (test?.(r, (rr, cc) => src.cell(s, rr, cc, reader))) return 'filtered';
+      return hiddenOf(s).has(src.sheet(s)!.layout.rows[r]!) ? 'hidden' : null;
+    },
+    formulaCalls: (s, r, c, name) => {
+      const input = src.input(s, r, c);
+      const ast = input && 'f' in input ? storedAst(input.f) : null;
+      return !!ast && calls(ast, name);
+    },
     formulaText: (s, r, c) => {
       const input = src.input(s, r, c);
       return input && 'f' in input ? renderFormula(input.f, src.ctx(s)) : null;

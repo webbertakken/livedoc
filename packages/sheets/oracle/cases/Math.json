@@ -1,0 +1,1315 @@
+{
+  "category": "Math",
+  "data": [
+    [2.5, -2.5, "text", 10],
+    [1, 2, 3, 4],
+    [true, null, "5", 0],
+    [0.5, 1.5, -0.5, 100],
+    ["a", "A", "b", 1],
+    [1, 2, 2, "a"]
+  ],
+  "cases": [
+    {
+      "id": "ABS.1",
+      "f": "=ABS(-3)"
+    },
+    {
+      "id": "ABS.2",
+      "f": "=ABS(Data!B1)"
+    },
+    {
+      "id": "ABS.3",
+      "f": "=ABS(\"x\")"
+    },
+    {
+      "id": "ABS.4",
+      "f": "=ABS(Data!B3)"
+    },
+    {
+      "id": "CEILING.1",
+      "f": "=CEILING(23.25, 0.1)"
+    },
+    {
+      "id": "CEILING.2",
+      "f": "=CEILING(2.5)"
+    },
+    {
+      "id": "CEILING.3",
+      "f": "=CEILING(-2.5)"
+    },
+    {
+      "id": "CEILING.4",
+      "f": "=CEILING(-2.5, -1)",
+      "differs": {
+        "libreoffice": "LibreOffice reads CEILING as OpenFormula does, toward +∞ whatever the factor's sign (-2); LiveDoc as Excel, a negative factor rounding a negative value away from zero (-3)"
+      },
+      "note": "Awaits Google's answer: its help says the factor's sign \"determine[s] which direction to round\" and shows no negative example."
+    },
+    {
+      "id": "CEILING.5",
+      "f": "=CEILING(-2.5, 2)",
+      "expect": [[-2]],
+      "cite": "https://support.google.com/docs/answer/3093471 (\"When value is negative, factor can be either negative or positive to determine which direction to round\"; up from -2.5 to a multiple of 2 is -2)",
+      "differs": {
+        "libreoffice": "LibreOffice reads CEILING as OpenFormula does: a value and factor of different signs is Err:502"
+      }
+    },
+    {
+      "id": "CEILING.6",
+      "f": "=CEILING(2.5, -1)"
+    },
+    {
+      "id": "CEILING.7",
+      "f": "=CEILING(2.5, 0)"
+    },
+    {
+      "id": "CEILING.8",
+      "f": "=CEILING(-2.5, 1, 1)"
+    },
+    {
+      "id": "CEILING.9",
+      "f": "=CEILING(2.5, 1, 1)"
+    },
+    {
+      "id": "CEILING.10",
+      "f": "=CEILING(Data!A1:A2)"
+    },
+    {
+      "id": "COUNTBLANK.1",
+      "f": "=COUNTBLANK(Data!A3:D3)"
+    },
+    {
+      "id": "COUNTBLANK.2",
+      "f": "=COUNTBLANK(Data!A1:D6)"
+    },
+    {
+      "id": "COUNTIF.1",
+      "f": "=COUNTIF(Data!A2:D2, \">2\")"
+    },
+    {
+      "id": "COUNTIF.2",
+      "f": "=COUNTIF(Data!A5:D6, \"a\")"
+    },
+    {
+      "id": "COUNTIF.3",
+      "f": "=COUNTIF(Data!A6:D6, 2)"
+    },
+    {
+      "id": "COUNTIFS.1",
+      "f": "=COUNTIFS(Data!A2:D2, \">1\", Data!A6:D6, 2)"
+    },
+    {
+      "id": "EXP.1",
+      "f": "=EXP(1)"
+    },
+    {
+      "id": "EXP.2",
+      "f": "=EXP(0)"
+    },
+    {
+      "id": "EXP.3",
+      "f": "=EXP(710)"
+    },
+    {
+      "id": "FACT.1",
+      "f": "=FACT(5)"
+    },
+    {
+      "id": "FACT.2",
+      "f": "=FACT(0)"
+    },
+    {
+      "id": "FACT.3",
+      "f": "=FACT(-1)"
+    },
+    {
+      "id": "FACT.4",
+      "f": "=FACT(5.9)"
+    },
+    {
+      "id": "FACT.5",
+      "f": "=FACT(171)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! past 170!; LiveDoc #NUM!, as Excel does for a number too large"
+      },
+      "note": "Awaits Google's answer: its help does not say which error."
+    },
+    {
+      "id": "FLOOR.1",
+      "f": "=FLOOR(23.25, 0.1)"
+    },
+    {
+      "id": "FLOOR.2",
+      "f": "=FLOOR(2.5)"
+    },
+    {
+      "id": "FLOOR.3",
+      "f": "=FLOOR(-2.5)"
+    },
+    {
+      "id": "FLOOR.4",
+      "f": "=FLOOR(-2.5, -1)",
+      "differs": {
+        "libreoffice": "LibreOffice reads FLOOR as OpenFormula does, toward −∞ (-3); LiveDoc as Excel, a negative factor rounding a negative value toward zero (-2)"
+      },
+      "note": "Awaits Google's answer: its help shows no negative example."
+    },
+    {
+      "id": "FLOOR.5",
+      "f": "=FLOOR(-2.5, 2)",
+      "expect": [[-4]],
+      "cite": "https://support.google.com/docs/answer/3093487 (\"value can be positive or negative, but factor must be positive\"; down from -2.5 to a multiple of 2 is -4)",
+      "differs": {
+        "libreoffice": "LibreOffice reads FLOOR as OpenFormula does: a value and factor of different signs is Err:502"
+      }
+    },
+    {
+      "id": "FLOOR.6",
+      "f": "=FLOOR(2.5, -1)"
+    },
+    {
+      "id": "FLOOR.7",
+      "f": "=FLOOR(2.5, 0)"
+    },
+    {
+      "id": "FLOOR.8",
+      "f": "=FLOOR(-2.5, 1, 1)"
+    },
+    {
+      "id": "FLOOR.9",
+      "f": "=FLOOR(23.25, 0.18)"
+    },
+    {
+      "id": "GCD.1",
+      "f": "=GCD(12, 18)"
+    },
+    {
+      "id": "GCD.2",
+      "f": "=GCD(12, 18, 8)"
+    },
+    {
+      "id": "GCD.3",
+      "f": "=GCD(-4, 2)"
+    },
+    {
+      "id": "GCD.4",
+      "f": "=GCD(0, 5)"
+    },
+    {
+      "id": "GCD.5",
+      "f": "=GCD(12.7, 18)"
+    },
+    {
+      "id": "INT.1",
+      "f": "=INT(2.5)"
+    },
+    {
+      "id": "INT.2",
+      "f": "=INT(-2.5)"
+    },
+    {
+      "id": "LCM.1",
+      "f": "=LCM(4, 6)"
+    },
+    {
+      "id": "LCM.2",
+      "f": "=LCM(4, 6, 10)"
+    },
+    {
+      "id": "LCM.3",
+      "f": "=LCM(0, 5)"
+    },
+    {
+      "id": "LCM.4",
+      "f": "=LCM(-4, 6)"
+    },
+    {
+      "id": "LN.1",
+      "f": "=LN(1)"
+    },
+    {
+      "id": "LN.2",
+      "f": "=LN(0)"
+    },
+    {
+      "id": "LN.3",
+      "f": "=LN(-1)"
+    },
+    {
+      "id": "LN.4",
+      "f": "=LN(EXP(2))"
+    },
+    {
+      "id": "LOG.1",
+      "f": "=LOG(100)"
+    },
+    {
+      "id": "LOG.2",
+      "f": "=LOG(8, 2)"
+    },
+    {
+      "id": "LOG.3",
+      "f": "=LOG(8, 1)"
+    },
+    {
+      "id": "LOG.4",
+      "f": "=LOG(-1)"
+    },
+    {
+      "id": "LOG.5",
+      "f": "=LOG(8, 0)"
+    },
+    {
+      "id": "LOG10.1",
+      "f": "=LOG10(1000)"
+    },
+    {
+      "id": "LOG10.2",
+      "f": "=LOG10(0)"
+    },
+    {
+      "id": "MOD.1",
+      "f": "=MOD(10, 3)"
+    },
+    {
+      "id": "MOD.2",
+      "f": "=MOD(-10, 3)"
+    },
+    {
+      "id": "MOD.3",
+      "f": "=MOD(10, -3)"
+    },
+    {
+      "id": "MOD.4",
+      "f": "=MOD(10, 0)"
+    },
+    {
+      "id": "MOD.5",
+      "f": "=MOD(5.5, 2)"
+    },
+    {
+      "id": "MROUND.1",
+      "f": "=MROUND(10, 3)"
+    },
+    {
+      "id": "MROUND.2",
+      "f": "=MROUND(-10, -3)"
+    },
+    {
+      "id": "MROUND.3",
+      "f": "=MROUND(10, -3)",
+      "differs": {
+        "libreoffice": "LibreOffice rounds 10 to a multiple of -3 as 9; LiveDoc refuses a factor of the other sign with #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "MROUND.4",
+      "f": "=MROUND(1.3, 0.2)"
+    },
+    {
+      "id": "MROUND.5",
+      "f": "=MROUND(5, 0)"
+    },
+    {
+      "id": "MROUND.6",
+      "f": "=MROUND(2.5, 1)"
+    },
+    {
+      "id": "PI.1",
+      "f": "=PI()"
+    },
+    {
+      "id": "POWER.1",
+      "f": "=POWER(2, 10)"
+    },
+    {
+      "id": "POWER.2",
+      "f": "=POWER(2, -1)"
+    },
+    {
+      "id": "POWER.3",
+      "f": "=POWER(0, -1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #NUM! for 0 to a negative power; LiveDoc #DIV/0!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "POWER.4",
+      "f": "=POWER(-8, 1/3)",
+      "differs": {
+        "libreoffice": "LibreOffice takes an odd root of a negative number (-2); LiveDoc gives #NUM!, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "POWER.5",
+      "f": "=POWER(-2, 0.5)"
+    },
+    {
+      "id": "POWER.6",
+      "f": "=POWER(0, 0)"
+    },
+    {
+      "id": "PRODUCT.1",
+      "f": "=PRODUCT(2, 3, 4)"
+    },
+    {
+      "id": "PRODUCT.2",
+      "f": "=PRODUCT(Data!A2:D2)"
+    },
+    {
+      "id": "PRODUCT.3",
+      "f": "=PRODUCT(Data!A3:D3)"
+    },
+    {
+      "id": "PRODUCT.4",
+      "f": "=PRODUCT(Data!A1:D1)"
+    },
+    {
+      "id": "QUOTIENT.1",
+      "f": "=QUOTIENT(10, 3)"
+    },
+    {
+      "id": "QUOTIENT.2",
+      "f": "=QUOTIENT(-10, 3)"
+    },
+    {
+      "id": "QUOTIENT.3",
+      "f": "=QUOTIENT(10, 0)"
+    },
+    {
+      "id": "ROUND.1",
+      "f": "=ROUND(2.5)"
+    },
+    {
+      "id": "ROUND.2",
+      "f": "=ROUND(-2.5)"
+    },
+    {
+      "id": "ROUND.3",
+      "f": "=ROUND(2.675, 2)"
+    },
+    {
+      "id": "ROUND.4",
+      "f": "=ROUND(1234.5, -2)"
+    },
+    {
+      "id": "ROUND.5",
+      "f": "=ROUND(2.5, 0.9)"
+    },
+    {
+      "id": "ROUNDDOWN.1",
+      "f": "=ROUNDDOWN(2.59, 1)"
+    },
+    {
+      "id": "ROUNDDOWN.2",
+      "f": "=ROUNDDOWN(-2.59, 1)"
+    },
+    {
+      "id": "ROUNDDOWN.3",
+      "f": "=ROUNDDOWN(1234, -2)"
+    },
+    {
+      "id": "ROUNDUP.1",
+      "f": "=ROUNDUP(2.51, 1)"
+    },
+    {
+      "id": "ROUNDUP.2",
+      "f": "=ROUNDUP(-2.51, 1)"
+    },
+    {
+      "id": "ROUNDUP.3",
+      "f": "=ROUNDUP(1234, -2)"
+    },
+    {
+      "id": "SIGN.1",
+      "f": "=SIGN(-3)"
+    },
+    {
+      "id": "SIGN.2",
+      "f": "=SIGN(0)"
+    },
+    {
+      "id": "SIGN.3",
+      "f": "=SIGN(2.5)"
+    },
+    {
+      "id": "SQRT.1",
+      "f": "=SQRT(16)"
+    },
+    {
+      "id": "SQRT.2",
+      "f": "=SQRT(-1)"
+    },
+    {
+      "id": "SQRT.3",
+      "f": "=SQRT(0)"
+    },
+    {
+      "id": "SUM.1",
+      "f": "=SUM(Data!A1:D6)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say what a boolean in a range adds."
+    },
+    {
+      "id": "SUM.2",
+      "f": "=SUM(1, \"2\", TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses text typed into SUM; LiveDoc reads \"2\" as 2 and TRUE as 1, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "SUM.3",
+      "f": "=SUM(Data!A3:D3)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say what a boolean in a range adds."
+    },
+    {
+      "id": "SUM.4",
+      "f": "=SUM(0.1, 0.2)"
+    },
+    {
+      "id": "SUMIF.1",
+      "f": "=SUMIF(Data!A2:D2, \">2\")"
+    },
+    {
+      "id": "SUMIF.2",
+      "f": "=SUMIF(Data!A5:D5, \"a\", Data!A2:D2)"
+    },
+    {
+      "id": "SUMIF.3",
+      "f": "=SUMIF(Data!A6:D6, 2, Data!A2:D2)"
+    },
+    {
+      "id": "SUMIFS.1",
+      "f": "=SUMIFS(Data!A2:D2, Data!A6:D6, 2)"
+    },
+    {
+      "id": "SUMIFS.2",
+      "f": "=SUMIFS(Data!A2:D2, Data!A2:D2, \">1\", Data!A6:D6, \"<>a\")"
+    },
+    {
+      "id": "TRUNC.1",
+      "f": "=TRUNC(2.59)"
+    },
+    {
+      "id": "TRUNC.2",
+      "f": "=TRUNC(-2.59)"
+    },
+    {
+      "id": "TRUNC.3",
+      "f": "=TRUNC(2.59, 1)"
+    },
+    {
+      "id": "TRUNC.4",
+      "f": "=TRUNC(1234, -2)"
+    },
+    {
+      "id": "SEQUENCE.1",
+      "f": "=SEQUENCE(2, 3)",
+      "rows": 2,
+      "cols": 3
+    },
+    {
+      "id": "SEQUENCE.2",
+      "f": "=SEQUENCE(3, 1, 10, -2)",
+      "rows": 3
+    },
+    {
+      "id": "SIN.1",
+      "f": "=SIN(PI()/2)"
+    },
+    {
+      "id": "SIN.2",
+      "f": "=SIN(0)"
+    },
+    {
+      "id": "SIN.3",
+      "f": "=SIN(\"x\")"
+    },
+    {
+      "id": "COS.1",
+      "f": "=COS(0)"
+    },
+    {
+      "id": "COS.2",
+      "f": "=COS(PI())"
+    },
+    {
+      "id": "TAN.1",
+      "f": "=TAN(PI()/4)"
+    },
+    {
+      "id": "TAN.2",
+      "f": "=TAN(0)"
+    },
+    {
+      "id": "ASIN.1",
+      "f": "=ASIN(1)"
+    },
+    {
+      "id": "ASIN.2",
+      "f": "=ASIN(2)"
+    },
+    {
+      "id": "ACOS.1",
+      "f": "=ACOS(1)"
+    },
+    {
+      "id": "ACOS.2",
+      "f": "=ACOS(-1)"
+    },
+    {
+      "id": "ACOS.3",
+      "f": "=ACOS(2)"
+    },
+    {
+      "id": "ATAN.1",
+      "f": "=ATAN(1)"
+    },
+    {
+      "id": "ATAN2.1",
+      "f": "=ATAN2(1, 1)"
+    },
+    {
+      "id": "ATAN2.2",
+      "f": "=ATAN2(-1, 0)"
+    },
+    {
+      "id": "ATAN2.3",
+      "f": "=ATAN2(0, 0)"
+    },
+    {
+      "id": "ATAN2.4",
+      "f": "=ATAN2(0, 1)"
+    },
+    {
+      "id": "SINH.1",
+      "f": "=SINH(1)"
+    },
+    {
+      "id": "COSH.1",
+      "f": "=COSH(1)"
+    },
+    {
+      "id": "TANH.1",
+      "f": "=TANH(1)"
+    },
+    {
+      "id": "ASINH.1",
+      "f": "=ASINH(1)"
+    },
+    {
+      "id": "ACOSH.1",
+      "f": "=ACOSH(1)"
+    },
+    {
+      "id": "ACOSH.2",
+      "f": "=ACOSH(0.5)"
+    },
+    {
+      "id": "ATANH.1",
+      "f": "=ATANH(0.5)"
+    },
+    {
+      "id": "ATANH.2",
+      "f": "=ATANH(1)"
+    },
+    {
+      "id": "COT.1",
+      "f": "=COT(1)"
+    },
+    {
+      "id": "COT.2",
+      "f": "=COT(0)"
+    },
+    {
+      "id": "COTH.1",
+      "f": "=COTH(1)"
+    },
+    {
+      "id": "COTH.2",
+      "f": "=COTH(0)"
+    },
+    {
+      "id": "ACOT.1",
+      "f": "=ACOT(1)"
+    },
+    {
+      "id": "ACOT.2",
+      "f": "=ACOT(0)"
+    },
+    {
+      "id": "ACOTH.1",
+      "f": "=ACOTH(2)"
+    },
+    {
+      "id": "ACOTH.2",
+      "f": "=ACOTH(0.5)"
+    },
+    {
+      "id": "CSC.1",
+      "f": "=CSC(1)"
+    },
+    {
+      "id": "CSC.2",
+      "f": "=CSC(0)"
+    },
+    {
+      "id": "CSCH.1",
+      "f": "=CSCH(1)"
+    },
+    {
+      "id": "CSCH.2",
+      "f": "=CSCH(0)"
+    },
+    {
+      "id": "SEC.1",
+      "f": "=SEC(1)"
+    },
+    {
+      "id": "SEC.2",
+      "f": "=SEC(0)"
+    },
+    {
+      "id": "SECH.1",
+      "f": "=SECH(1)"
+    },
+    {
+      "id": "SECH.2",
+      "f": "=SECH(0)"
+    },
+    {
+      "id": "DEGREES.1",
+      "f": "=DEGREES(PI())"
+    },
+    {
+      "id": "RADIANS.1",
+      "f": "=RADIANS(180)"
+    },
+    {
+      "id": "CEILING.MATH.1",
+      "f": "=CEILING.MATH(11.2)"
+    },
+    {
+      "id": "CEILING.MATH.2",
+      "f": "=CEILING.MATH(-8.8)"
+    },
+    {
+      "id": "CEILING.MATH.3",
+      "f": "=CEILING.MATH(7.7, 0.2)"
+    },
+    {
+      "id": "CEILING.MATH.4",
+      "f": "=CEILING.MATH(-10.2, 2, -1)"
+    },
+    {
+      "id": "CEILING.MATH.5",
+      "f": "=CEILING.MATH(-42, 10, -1)"
+    },
+    {
+      "id": "CEILING.MATH.6",
+      "f": "=CEILING.MATH(32, 5)"
+    },
+    {
+      "id": "CEILING.MATH.7",
+      "f": "=CEILING.MATH(-26.2, 10, 1)"
+    },
+    {
+      "id": "CEILING.MATH.8",
+      "f": "=CEILING.MATH(5, 0)"
+    },
+    {
+      "id": "CEILING.MATH.9",
+      "f": "=CEILING.MATH(-2.5, -2)"
+    },
+    {
+      "id": "FLOOR.MATH.1",
+      "f": "=FLOOR.MATH(11.2)"
+    },
+    {
+      "id": "FLOOR.MATH.2",
+      "f": "=FLOOR.MATH(-8.8)"
+    },
+    {
+      "id": "FLOOR.MATH.3",
+      "f": "=FLOOR.MATH(7.7, 0.2)"
+    },
+    {
+      "id": "FLOOR.MATH.4",
+      "f": "=FLOOR.MATH(-10.2, 2)"
+    },
+    {
+      "id": "FLOOR.MATH.5",
+      "f": "=FLOOR.MATH(-42, 10, -1)"
+    },
+    {
+      "id": "FLOOR.MATH.6",
+      "f": "=FLOOR.MATH(5, 0)"
+    },
+    {
+      "id": "FLOOR.MATH.7",
+      "f": "=FLOOR.MATH(2.5, -2)"
+    },
+    {
+      "id": "CEILING.PRECISE.1",
+      "f": "=CEILING.PRECISE(4.3)"
+    },
+    {
+      "id": "CEILING.PRECISE.2",
+      "f": "=CEILING.PRECISE(-4.3)"
+    },
+    {
+      "id": "CEILING.PRECISE.3",
+      "f": "=CEILING.PRECISE(4.3, -2)"
+    },
+    {
+      "id": "CEILING.PRECISE.4",
+      "f": "=CEILING.PRECISE(4.3, 0)"
+    },
+    {
+      "id": "CEILING.PRECISE.5",
+      "f": "=CEILING.PRECISE(-4.3, 2)"
+    },
+    {
+      "id": "FLOOR.PRECISE.1",
+      "f": "=FLOOR.PRECISE(4.3)"
+    },
+    {
+      "id": "FLOOR.PRECISE.2",
+      "f": "=FLOOR.PRECISE(-4.3)"
+    },
+    {
+      "id": "FLOOR.PRECISE.3",
+      "f": "=FLOOR.PRECISE(4.3, -2)"
+    },
+    {
+      "id": "FLOOR.PRECISE.4",
+      "f": "=FLOOR.PRECISE(4.3, 0)"
+    },
+    {
+      "id": "ISO.CEILING.1",
+      "f": "=ISO.CEILING(4.3)"
+    },
+    {
+      "id": "ISO.CEILING.2",
+      "f": "=ISO.CEILING(-4.3)"
+    },
+    {
+      "id": "ISO.CEILING.3",
+      "f": "=ISO.CEILING(4.3, -2)"
+    },
+    {
+      "id": "ISO.CEILING.4",
+      "f": "=ISO.CEILING(4.3, 0)"
+    },
+    {
+      "id": "EVEN.1",
+      "f": "=EVEN(1.5)"
+    },
+    {
+      "id": "EVEN.2",
+      "f": "=EVEN(3)"
+    },
+    {
+      "id": "EVEN.3",
+      "f": "=EVEN(2)"
+    },
+    {
+      "id": "EVEN.4",
+      "f": "=EVEN(-1)"
+    },
+    {
+      "id": "EVEN.5",
+      "f": "=EVEN(0)"
+    },
+    {
+      "id": "ODD.1",
+      "f": "=ODD(1.5)"
+    },
+    {
+      "id": "ODD.2",
+      "f": "=ODD(3)"
+    },
+    {
+      "id": "ODD.3",
+      "f": "=ODD(2)"
+    },
+    {
+      "id": "ODD.4",
+      "f": "=ODD(-1)"
+    },
+    {
+      "id": "ODD.5",
+      "f": "=ODD(0)"
+    },
+    {
+      "id": "ISEVEN.1",
+      "f": "=ISEVEN(2)"
+    },
+    {
+      "id": "ISEVEN.2",
+      "f": "=ISEVEN(3)"
+    },
+    {
+      "id": "ISEVEN.3",
+      "f": "=ISEVEN(-2.5)"
+    },
+    {
+      "id": "ISEVEN.4",
+      "f": "=ISEVEN(0)"
+    },
+    {
+      "id": "ISEVEN.5",
+      "f": "=ISEVEN(\"x\")"
+    },
+    {
+      "id": "ISEVEN.6",
+      "f": "=ISEVEN(Data!B3)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses an empty cell (Err:504); LiveDoc reads it as 0, even, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say."
+    },
+    {
+      "id": "ISODD.1",
+      "f": "=ISODD(3)"
+    },
+    {
+      "id": "ISODD.2",
+      "f": "=ISODD(2)"
+    },
+    {
+      "id": "ISODD.3",
+      "f": "=ISODD(-3.9)"
+    },
+    {
+      "id": "COMBIN.1",
+      "f": "=COMBIN(5, 3)"
+    },
+    {
+      "id": "COMBIN.2",
+      "f": "=COMBIN(4, 4)"
+    },
+    {
+      "id": "COMBIN.3",
+      "f": "=COMBIN(3, 5)"
+    },
+    {
+      "id": "COMBIN.4",
+      "f": "=COMBIN(-1, 1)"
+    },
+    {
+      "id": "COMBIN.5",
+      "f": "=COMBIN(5.9, 2.1)"
+    },
+    {
+      "id": "COMBINA.1",
+      "f": "=COMBINA(5, 3)"
+    },
+    {
+      "id": "COMBINA.2",
+      "f": "=COMBINA(2, 2)"
+    },
+    {
+      "id": "COMBINA.3",
+      "f": "=COMBINA(0, 0)"
+    },
+    {
+      "id": "COMBINA.4",
+      "f": "=COMBINA(-1, 1)"
+    },
+    {
+      "id": "FACTDOUBLE.1",
+      "f": "=FACTDOUBLE(6)"
+    },
+    {
+      "id": "FACTDOUBLE.2",
+      "f": "=FACTDOUBLE(7)"
+    },
+    {
+      "id": "FACTDOUBLE.3",
+      "f": "=FACTDOUBLE(0)"
+    },
+    {
+      "id": "FACTDOUBLE.4",
+      "f": "=FACTDOUBLE(-1)"
+    },
+    {
+      "id": "MULTINOMIAL.1",
+      "f": "=MULTINOMIAL(1, 2, 3)"
+    },
+    {
+      "id": "MULTINOMIAL.2",
+      "f": "=MULTINOMIAL(Data!A2:C2)"
+    },
+    {
+      "id": "MULTINOMIAL.3",
+      "f": "=MULTINOMIAL(-1, 2)"
+    },
+    {
+      "id": "SERIESSUM.1",
+      "f": "=SERIESSUM(2, 0, 1, {1, 2, 3})"
+    },
+    {
+      "id": "SERIESSUM.2",
+      "f": "=SERIESSUM(1, 1, 1, Data!A2:D2)"
+    },
+    {
+      "id": "SQRTPI.1",
+      "f": "=SQRTPI(1)"
+    },
+    {
+      "id": "SQRTPI.2",
+      "f": "=SQRTPI(-1)"
+    },
+    {
+      "id": "SUMSQ.1",
+      "f": "=SUMSQ(3, 4)"
+    },
+    {
+      "id": "SUMSQ.2",
+      "f": "=SUMSQ(Data!A2:D2)"
+    },
+    {
+      "id": "SUMSQ.3",
+      "f": "=SUMSQ(Data!A3:D3)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say what a boolean in a range adds."
+    },
+    {
+      "id": "GAMMALN.1",
+      "f": "=GAMMALN(5)"
+    },
+    {
+      "id": "GAMMALN.2",
+      "f": "=GAMMALN(0.5)"
+    },
+    {
+      "id": "GAMMALN.3",
+      "f": "=GAMMALN(0)"
+    },
+    {
+      "id": "GAMMALN.4",
+      "f": "=GAMMALN(-1)"
+    },
+    {
+      "id": "GAMMALN.PRECISE.1",
+      "f": "=GAMMALN.PRECISE(5)"
+    },
+    {
+      "id": "GAMMALN.PRECISE.2",
+      "f": "=GAMMALN.PRECISE(0)"
+    },
+    {
+      "id": "ERFC.1",
+      "f": "=ERFC(1)"
+    },
+    {
+      "id": "ERFC.2",
+      "f": "=ERFC(0)"
+    },
+    {
+      "id": "ERFC.3",
+      "f": "=ERFC(-1)"
+    },
+    {
+      "id": "ERFC.PRECISE.1",
+      "f": "=ERFC.PRECISE(1)"
+    },
+    {
+      "id": "ERFC.PRECISE.2",
+      "f": "=ERFC.PRECISE(-1)"
+    },
+    {
+      "id": "BASE.1",
+      "f": "=BASE(255, 16)",
+      "expect": [["FF"]],
+      "cite": "https://support.google.com/docs/answer/9084167 (example `=BASE(255, 16)` gives FF)"
+    },
+    {
+      "id": "BASE.2",
+      "f": "=BASE(21, 2)",
+      "expect": [["10101"]],
+      "cite": "https://support.google.com/docs/answer/9084167 (example `=BASE(A2, B2)` over 21 and 2 gives 10101)"
+    },
+    {
+      "id": "BASE.3",
+      "f": "=BASE(4095, 16, 6)",
+      "expect": [["000FFF"]],
+      "cite": "https://support.google.com/docs/answer/9084167 (example `=BASE(4095, 16, 6)` gives 000FFF)"
+    },
+    {
+      "id": "BASE.4",
+      "f": "=BASE(-1, 2)"
+    },
+    {
+      "id": "BASE.5",
+      "f": "=BASE(10, 1)"
+    },
+    {
+      "id": "BASE.6",
+      "f": "=BASE(10, 37)"
+    },
+    {
+      "id": "BASE.7",
+      "f": "=BASE(10.9, 2)"
+    },
+    {
+      "id": "BASE.8",
+      "f": "=BASE(0, 2)"
+    },
+    {
+      "id": "DECIMAL.1",
+      "f": "=DECIMAL(101, 2)",
+      "expect": [[5]],
+      "cite": "https://support.google.com/docs/answer/9116090 (example `=DECIMAL(101,2)` gives 5)"
+    },
+    {
+      "id": "DECIMAL.2",
+      "f": "=DECIMAL(\"FF\", 16)"
+    },
+    {
+      "id": "DECIMAL.3",
+      "f": "=DECIMAL(\"ff\", 16)"
+    },
+    {
+      "id": "DECIMAL.4",
+      "f": "=DECIMAL(\"12\", 2)"
+    },
+    {
+      "id": "DECIMAL.5",
+      "f": "=DECIMAL(\"zz\", 36)"
+    },
+    {
+      "id": "DECIMAL.6",
+      "f": "=DECIMAL(\"\", 10)"
+    },
+    {
+      "id": "DECIMAL.7",
+      "f": "=DECIMAL(\"0x1F\", 16)"
+    },
+    {
+      "id": "MUNIT.1",
+      "f": "=MUNIT(3)",
+      "rows": 3,
+      "cols": 3
+    },
+    {
+      "id": "MUNIT.2",
+      "f": "=MUNIT(1)"
+    },
+    {
+      "id": "MUNIT.3",
+      "f": "=MUNIT(0)",
+      "expect": [
+        [
+          {
+            "e": "#VALUE!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/9368156 (\"If dimension is less than 1, MUNIT returns a #VALUE error\")"
+    },
+    {
+      "id": "IMLN.1",
+      "f": "=IMLN(\"1+i\")",
+      "expect": [["0.346573590279973+0.785398163397448i"]],
+      "cite": "https://support.google.com/docs/answer/9000651 (example `=IMLN(\"1+i\")` gives 0.346573590279973+0.785398163397448i)"
+    },
+    {
+      "id": "IMLN.2",
+      "f": "=IMLN(\"4+2j\")",
+      "expect": [["1.497866136777+0.463647609000806i"]],
+      "cite": "https://support.google.com/docs/answer/9000651 (example `=IMLN(\"4+2j\")` gives 1.497866136777+0.463647609000806i)",
+      "differs": {
+        "libreoffice": "LibreOffice keeps the j the number was written with; Google's IMLN writes i"
+      }
+    },
+    {
+      "id": "IMLN.3",
+      "f": "=IMLN(\"-4.6\")",
+      "expect": [["1.52605630349505+3.14159265358979i"]],
+      "cite": "https://support.google.com/docs/answer/9000651 (example `=IMLN(\"-4.6\")` gives 1.52605630349505+3.14159265358979i)"
+    },
+    {
+      "id": "IMLN.4",
+      "f": "=IMLN(1)"
+    },
+    {
+      "id": "IMLN.5",
+      "f": "=IMLN(0)"
+    },
+    {
+      "id": "IMLN.6",
+      "f": "=IMLN(\"x\")"
+    },
+    {
+      "id": "IMPOWER.1",
+      "f": "=IMPOWER(\"5+2i\", 3)",
+      "expect": [["65+142i"]],
+      "cite": "https://support.google.com/docs/answer/9003065 (example `=IMPOWER(\"5+2i\", 3)` gives 65+142i)",
+      "differs": {
+        "libreoffice": "LibreOffice works a whole power in polar form and writes 64.9999999999999; Google gives 65"
+      }
+    },
+    {
+      "id": "IMPOWER.2",
+      "f": "=IMPOWER(\"-1-j\", -1)",
+      "expect": [["-0.5+0.5j"]],
+      "cite": "https://support.google.com/docs/answer/9003065 (example `=IMPOWER(\"-1-j\", -1)` gives -0.5+0.5j)"
+    },
+    {
+      "id": "IMPOWER.3",
+      "f": "=IMPOWER(\"0.732-5.349i\", -0.138)",
+      "expect": [["0.776914096672106+0.155872432042838i"]],
+      "cite": "https://support.google.com/docs/answer/9003065 (example gives 0.776914096672106+0.155872432042838i)"
+    },
+    {
+      "id": "IMPOWER.4",
+      "f": "=IMPOWER(\"2i\", 2)",
+      "differs": {
+        "libreoffice": "LibreOffice works a whole power in polar form, leaving 4.9e-16i; LiveDoc multiplies it out, exactly -4"
+      },
+      "note": "Awaits Google's answer: its help shows only (5+2i)³ as 65+142i, exact."
+    },
+    {
+      "id": "IMPOWER.5",
+      "f": "=IMPOWER(0, -1)"
+    },
+    {
+      "id": "IMSQRT.1",
+      "f": "=IMSQRT(4)",
+      "expect": [["2"]],
+      "cite": "https://support.google.com/docs/answer/9003168 (example `=IMSQRT(4)` gives 2)"
+    },
+    {
+      "id": "IMSQRT.2",
+      "f": "=IMSQRT(\"3+4i\")",
+      "expect": [["2+i"]],
+      "cite": "https://support.google.com/docs/answer/9003168 (example `=IMSQRT(\"3+4i\")` gives 2+i)"
+    },
+    {
+      "id": "IMSQRT.3",
+      "f": "=IMSQRT(\"3-4j\")",
+      "expect": [["2-j"]],
+      "cite": "https://support.google.com/docs/answer/9003168 (example `=IMSQRT(\"3-4j\")` gives 2-j)"
+    },
+    {
+      "id": "IMSQRT.4",
+      "f": "=IMSQRT(-4)"
+    },
+    {
+      "id": "IMSQRT.5",
+      "f": "=IMSQRT(\"i\")"
+    },
+    {
+      "id": "COUNTUNIQUE.1",
+      "f": "=COUNTUNIQUE(1, 1, 2, 3, 5, 8, 13)",
+      "expect": [[6]],
+      "cite": "https://support.google.com/docs/answer/3093405 (sample `COUNTUNIQUE(1,1,2,3,5,8,13,A2,B6:B9)`: 1 counted once among 1, 1, 2, 3, 5, 8, 13)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.COUNTUNIQUE is #NAME? there"
+      }
+    },
+    {
+      "id": "COUNTUNIQUE.2",
+      "f": "=COUNTUNIQUE(Data!A6:D6)",
+      "expect": [[3]],
+      "cite": "https://support.google.com/docs/answer/3093405 (\"Counts the number of unique values in a list of specified values and ranges\": 1, 2 and a)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.COUNTUNIQUE is #NAME? there"
+      }
+    },
+    {
+      "id": "COUNTUNIQUE.3",
+      "f": "=COUNTUNIQUE(Data!A2:D2, Data!A6:D6)",
+      "expect": [[5]],
+      "cite": "https://support.google.com/docs/answer/3093405 (sample with values and ranges together: 1, 2, 3, 4 and a)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.COUNTUNIQUE is #NAME? there"
+      }
+    },
+    {
+      "id": "SUBTOTAL.1",
+      "f": "=SUBTOTAL(1, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.2",
+      "f": "=SUBTOTAL(2, Data!A1:D3)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say what a boolean in a range adds."
+    },
+    {
+      "id": "SUBTOTAL.3",
+      "f": "=SUBTOTAL(3, Data!A1:D3)"
+    },
+    {
+      "id": "SUBTOTAL.4",
+      "f": "=SUBTOTAL(4, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.5",
+      "f": "=SUBTOTAL(5, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.6",
+      "f": "=SUBTOTAL(6, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.7",
+      "f": "=SUBTOTAL(7, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.8",
+      "f": "=SUBTOTAL(8, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.9",
+      "f": "=SUBTOTAL(9, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.10",
+      "f": "=SUBTOTAL(10, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.11",
+      "f": "=SUBTOTAL(11, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.12",
+      "f": "=SUBTOTAL(109, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.13",
+      "f": "=SUBTOTAL(9, Data!A2:D2, Data!A6:D6)"
+    },
+    {
+      "id": "SUBTOTAL.14",
+      "f": "=SUBTOTAL(12, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.15",
+      "f": "=SUBTOTAL(0, Data!A2:D2)"
+    },
+    {
+      "id": "SUBTOTAL.16",
+      "f": "=SUBTOTAL(9, Data!A1:D6)",
+      "differs": {
+        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as Excel does"
+      },
+      "note": "Awaits Google's answer: its help does not say what a boolean in a range adds."
+    }
+  ]
+}

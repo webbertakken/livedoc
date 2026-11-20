@@ -4,8 +4,8 @@ import { localeDayFirst, parseDateText } from './dates';
 import { parsePlainNumber } from './input';
 import { displayValue } from './number-format';
 import { layoutIndex, posRangeOf } from './layout';
-import { cellKey, type FilterCondition } from './sheet';
-import { isError, type Scalar } from './formula/values';
+import { cellKey, type FilterCondition, type Sheet } from './sheet';
+import { isError, type Scalar, type Value } from './formula/values';
 import { INPUT_MAX, SHEET_ROWS_MAX } from './limits';
 import type { Workbook } from './engine/workbook';
 
@@ -131,14 +131,16 @@ export function conditionMatcher(
   };
 }
 
-// The row ids the sheet's filter hides (its header row never).
-export function filteredOutRows(wb: Workbook, sheetId: string): Set<string> {
-  const out = new Set<string>();
-  const sheet = wb.sheet(sheetId);
-  const filter = sheet?.layout.filter;
-  if (!sheet || !filter) return out;
+/** Whether a row (by position) is filtered out, its values read through `read`. */
+export type FilterTest = (r: number, read: (r: number, c: number) => Value) => boolean;
+
+// The test of a sheet's filter: rows of its range under the header row that some column's condition rejects; null
+// when the sheet has no filter or no condition. SUBTOTAL reads it through its formula's frame, so its reads are noted.
+export function filterTest(sheet: Sheet, locale: string): FilterTest | null {
+  const filter = sheet.layout.filter;
+  if (!filter) return null;
   const box = posRangeOf(sheet.layout, filter);
-  if (!box) return out;
+  if (!box) return null;
   const ix = layoutIndex(sheet.layout);
   // A condition stored before writes were checked may be malformed (isFilterCondition): it filters
   // nothing, rather than breaking the sheet for every viewer. Checked once here, not per row.
@@ -148,19 +150,29 @@ export function filteredOutRows(wb: Workbook, sheetId: string): Set<string> {
       (x): x is { c: number; col: string; cond: FilterCondition } =>
         x.c !== undefined && isFilterCondition(x.cond),
     )
-    .map((x) => ({ ...x, matches: conditionMatcher(x.cond, wb.locale) }));
-  if (conds.length === 0) return out;
-  for (let r = box.r1 + 1; r <= box.r2; r++) {
+    .map((x) => ({ ...x, matches: conditionMatcher(x.cond, locale) }));
+  if (conds.length === 0) return null;
+  return (r, read) => {
+    if (r <= box.r1 || r > box.r2) return false;
     const rowId = sheet.layout.rows[r]!;
-    for (const { c, col, matches } of conds) {
-      const v = wb.value(sheetId, r, c);
-      const shown = displayValue(v, sheet.cells.get(cellKey(rowId, col))?.format, wb.locale).text;
-      if (!matches(isError(v) ? v : (v as Scalar), shown)) {
-        out.add(rowId);
-        break;
-      }
-    }
-  }
+    return conds.some(({ c, col, matches }) => {
+      const v = read(r, c);
+      const shown = displayValue(v, sheet.cells.get(cellKey(rowId, col))?.format, locale).text;
+      return !matches(isError(v) ? v : (v as Scalar), shown);
+    });
+  };
+}
+
+// The row ids the sheet's filter hides (its header row never).
+export function filteredOutRows(wb: Workbook, sheetId: string): Set<string> {
+  const out = new Set<string>();
+  const sheet = wb.sheet(sheetId);
+  const test = sheet && filterTest(sheet, wb.locale);
+  if (!sheet || !test) return out;
+  const read = (r: number, c: number): Value => wb.value(sheetId, r, c);
+  sheet.layout.rows.forEach((rowId, r) => {
+    if (test(r, read)) out.add(rowId);
+  });
   return out;
 }
 

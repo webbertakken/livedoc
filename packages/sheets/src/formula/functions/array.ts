@@ -12,6 +12,7 @@ import {
   numArg,
   opt,
   tooBig,
+  volatileFn,
   type FnDef,
 } from '../fn';
 import { dims, err, isError, scalarOf, toBool, type Value, type ValueArray } from '../values';
@@ -192,6 +193,29 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
     return { rows: out };
   }),
   TRANSPOSE: fn(1, 1, (args, f) => ({ rows: transposed(arrayArg(args[0]!, f)) })),
+  // The identity matrix of a size.
+  MUNIT: fn(1, 1, (args, f) => {
+    const n = intArg(args[0]!, f);
+    if (isError(n)) return n;
+    if (n < 1) return err('#VALUE!', 'MUNIT needs a size of at least 1');
+    if (tooBig(n, n)) return err('#NUM!', 'The result is too large');
+    return {
+      rows: Array.from({ length: n }, (_, i) =>
+        Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)),
+      ),
+    };
+  }),
+  RANDARRAY: volatileFn(0, 2, (args, f) => {
+    const rows = opt(args, 0, f, intArg, 1);
+    const cols = opt(args, 1, f, intArg, 1);
+    if (isError(rows)) return rows;
+    if (isError(cols)) return cols;
+    if (rows < 1 || cols < 1) return err('#VALUE!', 'RANDARRAY needs at least one row and column');
+    if (tooBig(rows, cols)) return err('#NUM!', 'The result is too large');
+    return {
+      rows: Array.from({ length: rows }, () => Array.from({ length: cols }, () => f.rand())),
+    };
+  }),
   ARRAYFORMULA: fn(1, 1, (args, f) => deref(args[0]!, f)),
 };
 
