@@ -1306,7 +1306,10 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     tabScope: sessionTabScope,
     oneWorkbook: persistence.documentWorkbook !== null,
     ...(persistence.documentWorkbook
-      ? { iteration: persistence.documentWorkbook.settings.iterate }
+      ? {
+          iteration: persistence.documentWorkbook.settings.iterate,
+          recalc: persistence.documentWorkbook.settings.recalc,
+        }
       : {}),
     self: planItems.self,
     // A Participant writes cells; only an Editor shapes the Sheet (docs/specs/013-workspace/share-roles.md).
