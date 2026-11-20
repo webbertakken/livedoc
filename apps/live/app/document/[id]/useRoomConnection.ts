@@ -506,6 +506,9 @@ export function useRoomConnection(opts: {
         // A text document's update (docs/specs/034-text-documents/live-editing-and-storage.md): its surface, when
         // open, merges it; the room has already stored it, so a surface opened later loads it.
         TextDocumentBus.deliver(op);
+      } else if (op.kind === 'text-document-refused') {
+        // An edit of ours the room refused whole ("Refused edits"): that tab's surface says which limit.
+        TextDocumentBus.refused(op.tabId, op.limit);
       } else if (op.kind === 'text-document-caret') {
         // A collaborator's selection in a text document (docs/specs/034-text-documents/live-editing-and-storage.md
         // "Presence"), checked field by field; drawn by that tab's surface, never written.

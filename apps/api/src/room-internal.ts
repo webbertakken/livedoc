@@ -34,6 +34,8 @@ const POSTED_STATUS: Record<PostedOutcome, number> = {
   decode: 400,
   'not-text-document': 404,
   'no-store': 503,
+  characters: 413,
+  state: 413,
 };
 
 // The room ops the worker originates through /mutation: a view-role visitor's comment, an agent
@@ -112,6 +114,9 @@ export async function answerInternal(
     if (!documentId || !tabId) return new Response('bad update', { status: 400 });
     const update = new Uint8Array(await request.arrayBuffer());
     const outcome = await room.acceptPostedTextDocument(documentId, tabId, update);
+    // A refused edit names its limit ("Refused edits").
+    if (outcome === 'characters' || outcome === 'state')
+      return Response.json({ limit: outcome }, { status: POSTED_STATUS[outcome] });
     return new Response(null, { status: POSTED_STATUS[outcome] });
   }
   if (request.method === 'POST' && url.pathname === '/mutation') {

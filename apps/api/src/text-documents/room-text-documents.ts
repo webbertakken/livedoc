@@ -12,6 +12,11 @@ import {
 import type { DocumentEnv } from '../types';
 import { base64OfBytes, bytesOfBase64 } from '@livedoc/text-documents';
 import {
+  textDocumentLimitOf,
+  type TextDocumentCaps,
+  type TextDocumentLimit,
+} from './text-document-limits';
+import {
   appendTextDocumentUpdate,
   compactionDue,
   compactTextDocument,
@@ -24,6 +29,8 @@ type RoomTextDocumentHooks = {
   sequence: (from: string, op: unknown, except?: WebSocket) => number;
   sendTo: (ws: WebSocket, payload: ServerMessage) => void;
   position: () => { epoch: string };
+  // The limits checked ("Refused edits"); the spec's unless a test sizes them.
+  caps?: TextDocumentCaps;
 };
 
 export type TextDocumentSender = { ws: WebSocket; presenceId: string; documentId: string | null };
@@ -31,7 +38,7 @@ export type TextDocumentSender = { ws: WebSocket; presenceId: string; documentId
 type TextDocumentFrame = { kind: 'text-document'; tabId: string; update: string };
 
 /** What became of an update sent by the door: stored (and relayed), or why it was refused. */
-export type PostedOutcome = 'stored' | Exclude<TextDocumentRefusal, 'shape'>;
+export type PostedOutcome = 'stored' | Exclude<TextDocumentRefusal, 'shape'> | TextDocumentLimit;
 
 /** Why a frame was refused, for the log's fingerprint. */
 export type TextDocumentRefusal = 'shape' | 'decode' | 'not-text-document' | 'no-store';
@@ -43,6 +50,9 @@ export function textDocumentFrameOf(op: unknown): TextDocumentFrame | null {
   if (typeof frame.tabId !== 'string' || typeof frame.update !== 'string') return null;
   return { kind: 'text-document', tabId: frame.tabId, update: frame.update };
 }
+
+const refusedEdit = (documentId: string, tabId: string, limit: TextDocumentLimit) =>
+  console.warn(`[text-document] edit-refused document=${documentId} tab=${tabId} limit=${limit}`);
 
 const refused = (documentId: string | null, tabId: string | null, reason: TextDocumentRefusal) =>
   console.warn(
@@ -77,6 +87,17 @@ export class RoomTextDocuments {
     return this.hooks.enqueue(async () => {
       if (!(await storedTextDocumentTab(env, documentId, frame.tabId))) {
         refused(documentId, frame.tabId, 'not-text-document');
+        return false;
+      }
+      const limit = await textDocumentLimitOf(env, frame.tabId, update, this.hooks.caps);
+      if (limit) {
+        // Refused whole ("Refused edits"): nothing stored or relayed; the sender alone is told which limit.
+        refusedEdit(documentId, frame.tabId, limit);
+        this.hooks.sendTo(sender.ws, {
+          kind: 'op',
+          from: 'system',
+          op: { kind: 'text-document-refused', tabId: frame.tabId, limit },
+        });
         return false;
       }
       const started = Date.now();
@@ -123,6 +144,11 @@ export class RoomTextDocuments {
       if (!(await storedTextDocumentTab(env, documentId, tabId))) {
         refused(documentId, tabId, 'not-text-document');
         return 'not-text-document';
+      }
+      const limit = await textDocumentLimitOf(env, tabId, update, this.hooks.caps);
+      if (limit) {
+        refusedEdit(documentId, tabId, limit);
+        return limit;
       }
       const started = Date.now();
       const folded = update.byteLength > TEXT_DOCUMENT_CHUNK_BYTES;

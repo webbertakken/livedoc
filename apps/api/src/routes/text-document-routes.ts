@@ -141,7 +141,8 @@ async function postUpdate(ctx: DocumentRouteContext): Promise<Response> {
     );
     return refusedUpdate('update_invalid', 400);
   }
-  const status = await postTextDocumentUpdate(env, documentId, tabId, update);
+  const { status, limit } = await postTextDocumentUpdate(env, documentId, tabId, update);
+  if (status === 413) return json({ error: 'document_too_large', limit }, { status: 413 });
   if (status === 204) return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (status === 404) return notTextDocument();
   if (status === 400) return refusedUpdate('update_invalid', 400);
