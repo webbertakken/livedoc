@@ -25,8 +25,11 @@ as a 36px list thumbnail and as a full-size embed — there is no separate
 ## Render-on-read, cached in R2
 
 The snapshot bytes live in R2 (the existing `IMAGES` bucket, key
-`thumb/<documentId>`); a `documents.thumb_rendered_at` column records when
-they were last rendered.
+`thumb/<documentId>`); a `documents.thumb_rendered_at` column records the
+save they were drawn from: the document's `saved_at` as it was read before
+the render, never the time the render finished. A save that lands while a
+snapshot is drawing is newer than that stamp, so the next read draws again
+instead of trusting a picture of the older writing.
 
 On a read of either delivery path:
 
@@ -37,7 +40,7 @@ On a read of either delivery path:
   tab's look: `formArt` from `@livedoc/plan-art`, as the MCP preview
   draws it, since a form is not an element) with `renderElementsToSvg` (`@livedoc/document`, the same
   DOM-free renderer the MCP worker uses), write it to R2, stamp
-  `thumb_rendered_at`, and return it. Icon elements render their real
+  `thumb_rendered_at` with the save it was drawn from, and return it. Icon elements render their real
   glyph (line art + Technology brand tiles) via the
   `@livedoc/icons/resolve` resolver the worker passes in — see
   [Technology icons](../010-palette/technology-icons.md) "Rendering". Image elements render their real picture: the
