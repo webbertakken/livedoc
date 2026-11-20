@@ -82,6 +82,21 @@ describe('TextDocumentState', () => {
     expect(TextDocumentState.decodes(TextDocumentState.seed())).toBe(true);
     expect(TextDocumentState.decodes(Uint8Array.of(9, 9, 9))).toBe(false);
   });
+
+  // live-editing-and-storage.md "Reconnecting": a catch-up reads only what it lacks, and learns what the room holds.
+  it("answers what a state holds beyond a reader's state vector", () => {
+    const reader = TextDocumentState.load([TextDocumentState.fromBody(Body.of('Kept'))]);
+    const room = TextDocumentState.load([TextDocumentState.encode(reader)]);
+    TextDocumentState.replaceBody(room, Body.of('Kept', 'Added'));
+    const state = TextDocumentState.encode(room);
+    const vector = TextDocumentState.stateVectorOf(TextDocumentState.encode(reader));
+    expect(TextDocumentState.isStateVector(vector)).toBe(true);
+    expect(TextDocumentState.isStateVector(Uint8Array.of(200))).toBe(false);
+    const missing = TextDocumentState.since(state, vector);
+    expect(missing.byteLength).toBeLessThan(state.byteLength);
+    Y.applyUpdate(reader, missing);
+    expect(TextDocumentState.paragraphs(reader)).toEqual(Body.of('Kept', 'Added'));
+  });
 });
 
 describe('Body', () => {

@@ -496,6 +496,9 @@ export type RoomOp =
   | { kind: 'article'; tabId: string; flow: string; removed: true }
   // One Yjs update to a text document's live state, base64 (docs/specs/034-text-documents/live-editing-and-storage.md).
   | { kind: 'text-document'; tabId: string; update: string }
+  // An update too large for a frame was stored by the door ("Sending"): every surface on the tab re-reads its state.
+  // Only the room sends it; a client's `stale` is refused as no update.
+  | { kind: 'text-document'; tabId: string; stale: true }
   | {
       kind: 'vote';
       tabId: string;

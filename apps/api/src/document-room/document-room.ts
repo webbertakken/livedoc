@@ -260,6 +260,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       readSelections: (tabId, person) => this.selections.read(tabId, this.liveSessions(), person),
       readLedger: (tabId) => this.ledger.read(tabId),
       epoch: () => this.epoch,
+      acceptPostedTextDocument: (documentId, tabId, update) =>
+        this.textDocuments.acceptPosted(documentId, tabId, update),
     };
     this.baton = new RoomFacilitator({
       storage: state.storage,

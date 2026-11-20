@@ -87,6 +87,20 @@ export const TextDocumentState = {
       return false;
     }
   },
+  /** The state vector of an update: what it holds, client by client (live-editing-and-storage.md "Reconnecting"). */
+  stateVectorOf: (update: Uint8Array): Uint8Array => Y.encodeStateVectorFromUpdate(update),
+  /** Whether the bytes decode as a state vector. */
+  isStateVector: (bytes: Uint8Array): boolean => {
+    try {
+      Y.decodeStateVector(bytes);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  /** What `update` holds beyond `stateVector`: a catch-up's answer, small when the reader is nearly current. */
+  since: (update: Uint8Array, stateVector: Uint8Array): Uint8Array =>
+    Y.diffUpdate(update, stateVector),
   body: (doc: Y.Doc): Y.XmlFragment => doc.getXmlFragment(BODY_FRAGMENT),
   /** The body's paragraphs as plain values. */
   paragraphs: (doc: Y.Doc): Body =>

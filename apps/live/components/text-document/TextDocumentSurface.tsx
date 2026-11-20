@@ -9,13 +9,20 @@ import { EditorState, Plugin, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
-import { redo, undo, ySyncPlugin, yUndoPlugin } from 'y-prosemirror';
+import { redo, undo, ySyncPlugin } from 'y-prosemirror';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { Button } from '@livedoc/ui';
-import { apiLoadTextDocumentState, type TextDocumentScope } from '@/lib/api/text-documents';
+import {
+  apiLoadTextDocumentState,
+  apiLoadTextDocumentStateSince,
+  apiPostTextDocumentUpdate,
+  type TextDocumentScope,
+} from '@/lib/api/text-documents';
 import { debugLog } from '@/lib/debug-log';
-import { bindRoomYjsProvider } from '@/lib/text-document/room-yjs-provider';
+import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
+import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
+import { textDocumentUndoPlugins } from '@/lib/text-document/text-document-undo';
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import {
   setLocalTextDocumentCaret,
@@ -43,7 +50,8 @@ export type TextDocumentSurfaceProps = {
   documentName: string;
   format: TextDocumentFormat;
   canEdit: boolean;
-  send: (op: { kind: 'text-document'; tabId: string; update: string }) => void;
+  // One frame to the room; true once the room has stored it ("Sending").
+  sequence: (op: TextDocumentFrame) => Promise<boolean>;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
@@ -53,7 +61,7 @@ export function TextDocumentSurface({
   documentName,
   format,
   canEdit,
-  send,
+  sequence,
 }: TextDocumentSurfaceProps) {
   const mount = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);
@@ -64,9 +72,9 @@ export function TextDocumentSurface({
   const [attempt, setAttempt] = useState(0);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // The latest sender and gate, read when an update goes out, so a new room connection never rebinds the editor.
-  const live = useRef({ send, canEdit });
+  const live = useRef({ sequence, canEdit });
   useLayoutEffect(() => {
-    live.current = { send, canEdit };
+    live.current = { sequence, canEdit };
   });
   // Where the person was in this tab, back when they return to it.
   const { noteViewChanged } = useSurfaceView({
@@ -97,26 +105,32 @@ export function TextDocumentSurface({
     const where = { ownerId, documentId, tabId, shareCode };
     const started = performance.now();
     debugLog('[text-document] surface loading', { documentId, tabId, ownerId, shareCode });
-    apiLoadTextDocumentState(where)
-      .then((stored) => {
-        if (cancelled || !mount.current) return;
-        // Load, then bind: the editor never sees an empty state, so it never invents a first paragraph.
-        const doc = TextDocumentState.load([stored]);
-        const unbind = bindRoomYjsProvider({
-          doc,
-          tabId,
-          get canEdit() {
-            return live.current.canEdit;
-          },
-          send: (op) => live.current.send(op),
-          loadState: () => apiLoadTextDocumentState(where),
-        });
+    // Load, then bind: the editor never sees an empty state, so it never invents a first paragraph.
+    openRoomYjs({
+      documentId,
+      tabId,
+      get canEdit() {
+        return live.current.canEdit;
+      },
+      sequence: (op) => live.current.sequence(op),
+      post: (update) => apiPostTextDocumentUpdate(where, update),
+      loadState: () => apiLoadTextDocumentState(where),
+      loadSince: (vector) => apiLoadTextDocumentStateSince(where, vector),
+      copies: TextDocumentCopies,
+    })
+      .then((binding) => {
+        const { doc } = binding;
+        if (cancelled || !mount.current) {
+          binding.close();
+          doc.destroy();
+          return;
+        }
         const view = new EditorView(mount.current, {
           state: EditorState.create({
             schema: textDocumentSchema,
             plugins: [
               ySyncPlugin(TextDocumentState.body(doc)),
-              yUndoPlugin(),
+              ...textDocumentUndoPlugins(),
               keymap({ 'Mod-z': undo, 'Mod-y': redo, 'Mod-Shift-z': redo }),
               keymap(baseKeymap),
               // A moved selection is part of the view remembered for this tab.
@@ -147,7 +161,7 @@ export function TextDocumentSurface({
         teardown = () => {
           editor.current = null;
           view.destroy();
-          unbind();
+          binding.close();
           doc.destroy();
         };
         setState('ready');

@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Body, TextDocumentState, TEXT_DOCUMENT_LOG_BYTES } from '@livedoc/text-documents';
+import {
+  Body,
+  TextDocumentState,
+  TEXT_DOCUMENT_CHUNK_BYTES,
+  TEXT_DOCUMENT_FRAME_CHARS,
+  TEXT_DOCUMENT_LOG_BYTES,
+  TEXT_DOCUMENT_LOG_UPDATES,
+} from '@livedoc/text-documents';
 import { gateClientOp } from '../room-op-gate';
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { makeTestRouteContext } from '../routes/test-route-context';
@@ -94,6 +101,92 @@ describe('RoomTextDocuments', () => {
     expect(chunks.n).toBeGreaterThan(1);
     const state = TextDocumentState.load(await storedUpdates(db.env, 't1'));
     expect(TextDocumentState.paragraphs(state)).toEqual(Body.of(big));
+  });
+
+  it('stores an update sent by the door and relays it as an op when it fits a frame', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    const update = TextDocumentState.fromBody(Body.of('Pasted'));
+    expect(await room.acceptPosted('D', 't1', update)).toBe('stored');
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
+    expect(sequence).toHaveBeenCalledWith('system', {
+      kind: 'text-document',
+      tabId: 't1',
+      update: base64OfBytes(update),
+    });
+  });
+
+  it('folds a door update past a chunk into the chunks and tells everyone the tab is stale', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    const big = Array.from({ length: TEXT_DOCUMENT_CHUNK_BYTES / 5 }, (_, i) =>
+      (i * 7919).toString(36).padStart(6, '0'),
+    ).join('');
+    const update = TextDocumentState.fromBody(Body.of(big));
+    expect(update.byteLength).toBeGreaterThan(TEXT_DOCUMENT_CHUNK_BYTES);
+    expect(await room.acceptPosted('D', 't1', update)).toBe('stored');
+    const logged = db.sql.prepare('SELECT COUNT(*) AS n FROM text_document_updates').get() as {
+      n: number;
+    };
+    expect(logged.n).toBe(0);
+    const state = TextDocumentState.load(await storedUpdates(db.env, 't1'));
+    expect(TextDocumentState.paragraphs(state)).toEqual(Body.of(big));
+    expect(sequence).toHaveBeenCalledWith('system', {
+      kind: 'text-document',
+      tabId: 't1',
+      stale: true,
+    });
+  });
+
+  it('relays a door update too large for a frame as stale, stored in the log', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    const text = Array.from({ length: TEXT_DOCUMENT_FRAME_CHARS / 5 }, (_, i) =>
+      (i * 7919).toString(36).padStart(6, '0'),
+    ).join('');
+    expect(await room.acceptPosted('D', 't1', TextDocumentState.fromBody(Body.of(text)))).toBe(
+      'stored',
+    );
+    expect(await storedUpdates(db.env, 't1')).toHaveLength(1);
+    expect(sequence).toHaveBeenCalledWith('system', {
+      kind: 'text-document',
+      tabId: 't1',
+      stale: true,
+    });
+  });
+
+  it('refuses a door update that does not decode or is for no text document', async () => {
+    const db = sqliteD1();
+    const { room, sequence } = await roomWith(db);
+    expect(await room.acceptPosted('D', 't1', Uint8Array.of(9, 9, 9))).toBe('decode');
+    expect(await room.acceptPosted('D', 'c', TextDocumentState.fromBody(Body.of('x')))).toBe(
+      'not-text-document',
+    );
+    expect(sequence).not.toHaveBeenCalled();
+  });
+
+  // live-editing-and-storage.md "Storage": reading merges the log, and merging many small updates grows faster than
+  // their count, so a log of keystrokes is folded long before it passes its size.
+  it('compacts the log once it holds its count of updates', async () => {
+    const db = sqliteD1();
+    const { room } = await roomWith(db);
+    const sender = { ws, presenceId: 'p1', documentId: 'D' };
+    const doc = TextDocumentState.load();
+    const updates: Uint8Array[] = [];
+    doc.on('update', (u: Uint8Array) => updates.push(u));
+    TextDocumentState.replaceBody(doc, Body.of(''));
+    for (let i = 0; i < TEXT_DOCUMENT_LOG_UPDATES + 1; i++)
+      TextDocumentState.replaceBody(doc, Body.of('x'.repeat(i + 1)));
+    for (const update of updates.slice(-TEXT_DOCUMENT_LOG_UPDATES - 1))
+      await room.accept(sender, {
+        kind: 'text-document',
+        tabId: 't1',
+        update: base64OfBytes(update),
+      });
+    const rows = db.sql.prepare('SELECT COUNT(*) AS n FROM text_document_updates').get() as {
+      n: number;
+    };
+    expect(rows.n).toBeLessThanOrEqual(1);
   });
 
   it('reads only a whole frame', () => {

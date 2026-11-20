@@ -34,6 +34,8 @@ const WELL_FORMED: Record<string, unknown>[] = [
   { kind: 'tab-meta', tabId: 't1', patch: { name: 'x' }, clear: ['timer'] },
   { kind: 'article', tabId: 't1', flow: 'f', removed: true },
   { kind: 'document-meta', name: 'Doc', tabs: [{ id: 't1', name: 'T', orderIndex: 0 }] },
+  { kind: 'text-document', tabId: 't1', update: 'AAA=' },
+  { kind: 'text-document', tabId: 't1', stale: true },
   // Presence, and a kind this build does not know, pass as they always have.
   { kind: 'cursor', x: 1, y: 2 },
   { kind: 'from-a-newer-build', anything: true },
@@ -68,6 +70,8 @@ describe('roomOpIsWellFormed', () => {
     ['a tab-meta without its patch', { kind: 'tab-meta', tabId: 't1' }],
     ['a document-meta without its tab list', { kind: 'document-meta', name: 'n' }],
     ['a document-meta tab without an id', { kind: 'document-meta', name: 'n', tabs: [null] }],
+    ['a text-document op without its update', { kind: 'text-document', tabId: 't1' }],
+    ['a text-document stale that is not true', { kind: 'text-document', tabId: 't1', stale: 1 }],
     ['no kind at all', { tabId: 't1' }],
     ['not an object', 'el'],
   ])('refuses %s', (_why, op) => {
