@@ -52,7 +52,8 @@ test('paragraph styles are applied three ways and drawn in their look', async ({
   await (await officeMenuItem(page, ['Format', 'Paragraph styles', 'Subtitle'])).click();
   await expect(first).toHaveCSS('font-size', '20px');
   await expect(toolbar.getByRole('button', { name: 'Styles: Subtitle' })).toBeVisible();
-  await second.click();
+  // A press inside the selection would start a drag, so the caret goes to the end by key.
+  await page.keyboard.press('ControlOrMeta+End');
   await page.keyboard.press('Control+Alt+1');
   await page.keyboard.press('ControlOrMeta+a');
   await expect(toolbar.getByRole('button', { name: 'Styles', exact: true })).toBeVisible();

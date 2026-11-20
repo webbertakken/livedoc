@@ -2,7 +2,7 @@
 // docs/specs/034-text-documents/text-and-paragraphs.md "Text formatting": a command acts on the selection the page
 // shows, even before the editor has read it.
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
+import { AllSelection, EditorState, NodeSelection, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { readDomSelection } from './text-document-dom-selection';
@@ -48,6 +48,20 @@ describe('readDomSelection', () => {
     document.getSelection()!.removeAllRanges();
     readDomSelection(view);
     expect(view.state).toBe(before);
+  });
+
+  it('takes a caret moved after Select all, and keeps Select all while the page shows the whole body', () => {
+    view.dispatch(view.state.tr.setSelection(new AllSelection(view.state.doc)));
+    const paragraph = view.dom.querySelector('p')!;
+    const text = paragraph.firstChild!;
+    const all = view.state;
+    showSelection(paragraph, 0, paragraph.childNodes.length);
+    readDomSelection(view);
+    expect(view.state).toBe(all);
+    showSelection(text, 11, 11);
+    readDomSelection(view);
+    expect(view.state.selection.from).toBe(12);
+    expect(view.state.selection.empty).toBe(true);
   });
 
   it('leaves a selected node alone', () => {
