@@ -105,3 +105,5 @@ wrangler.preview.json
 
 # The office schemas CI fetches into the workspace and caches (packages/text-documents/scripts/fetch-office-schemas.sh)
 /.office-schemas/
+# LibreOffice's .deb files the Office files job caches (scripts/ci-office-install.sh)
+/.office-debs/

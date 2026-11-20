@@ -161,7 +161,7 @@ jobs:
 
   # Office files (docs/specs/020-import-export/office-packages.md "Validation"): the specs that hand a file LiveDoc
   # wrote to LibreOffice and open what LibreOffice saved. The same build as the shards; LibreOffice's Writer and Calc come
-  # from apt, so this job runs the image as root, which installing needs. First, every file the text document package
+  # from apt, cached as .deb files, so this job runs the image as root, which installing needs. First, every file the text document package
   # writes is checked against the ODF and OOXML schemas with Jing (Java from apt) and reopened by LibreOffice.
   office:
     name: Office files
@@ -174,17 +174,26 @@ jobs:
       - name: Check out
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # A stalled mirror connection is dropped after 30 s and tried again, rather than holding the job to its limit.
+      # LibreOffice's .deb files, kept between runs and keyed on the package list (the script) and the image: a cached
+      # run reaches no outside host, so a stalled Ubuntu mirror cannot hold the job to its limit.
+      - name: Restore the LibreOffice packages
+        id: office-debs
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .office-debs
+          key: office-debs-playwright-v1.65.1-noble-${{ hashFiles('scripts/ci-office-install.sh') }}
+
       - name: Install LibreOffice Writer, Calc and Java
         shell: bash
         timeout-minutes: 8
-        run: |
-          set -euo pipefail
-          APT_RETRY=(-o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30)
-          apt-get "${APT_RETRY[@]}" update -qq
-          DEBIAN_FRONTEND=noninteractive apt-get "${APT_RETRY[@]}" install -y -qq --no-install-recommends libreoffice-writer-nogui libreoffice-calc-nogui default-jre-headless unzip
-          soffice --version
-          java -version
+        run: bash scripts/ci-office-install.sh "$GITHUB_WORKSPACE/.office-debs"
+
+      - name: Save the LibreOffice packages
+        if: steps.office-debs.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .office-debs
+          key: ${{ steps.office-debs.outputs.cache-primary-key }}
 
       - name: Set up
         uses: ./.github/actions/e2e-setup
