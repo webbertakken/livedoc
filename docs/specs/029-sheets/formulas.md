@@ -253,8 +253,11 @@ optional. Each behaves as its Google Sheets namesake; where Sheets and Excel dif
   `#VALUE!` "This pattern is too costly to run on this text" instead of freezing the sheet for everyone on it.
   `SEARCH`'s `*` wildcards are held to the same bound.
 - `TODAY`, `NOW`, `RAND`, `RANDBETWEEN`, `OFFSET` and `INDIRECT` are **volatile**: they recalculate on every
-  change to the sheet, and `TODAY`/`NOW` also once a minute while the sheet is in view. `RAND` is worked out in
-  each browser, so two people see different numbers, as in a spreadsheet shared live.
+  change to the sheet. With nothing changed they are worked out again on a clock: a Plan Sheet's once a minute, a
+  spreadsheet's as its Recalculation setting says ([Settings](settings.md): on change only, or every minute or hour).
+  The clock runs while the document is open and its page visible; a tick missed while hidden runs as the page shows
+  (default, D37). `RAND` is worked out in each browser, so two people see different numbers, as in a spreadsheet
+  shared live.
 
 ## Function catalogue
 
@@ -895,3 +898,4 @@ The code cites each by its id.
 - **D35** Where a loop's first round starts: The values its cells last settled to, kept by cell for the open document,
   forgotten when the cell is retyped; a document opened afresh starts its loops from empty (default).
 - **D36** A loop longer than the read stack (250 formulas): `#REF!` with iterative calculation on as well (default).
+- **D37** Volatile ticks while the page is hidden: Held, one tick as the page shows again (default).

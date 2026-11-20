@@ -14,6 +14,7 @@ import {
   ITERATION_OFF,
   sameIteration,
   type Iteration,
+  type WorkbookRecalc,
   Workbook,
   applyLayoutChange,
   applySheetWrite,
@@ -43,6 +44,7 @@ import {
   type SheetWrite,
   type WriteCheck,
 } from '@livedoc/sheets';
+import { VolatileTicker, volatileTickMs } from './volatile-ticker';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import { ApiError } from '@/lib/api/core';
@@ -83,6 +85,8 @@ type SheetStoreDeps = {
   oneWorkbook?: boolean;
   // A spreadsheet's iterative calculation (settings.md "Calculation"); absent, off.
   iteration?: Iteration;
+  // A spreadsheet's Recalculation (settings.md "Calculation"): how often volatile formulas tick; absent, on change.
+  recalc?: WorkbookRecalc;
   self: () => SheetPerson | null;
   locale: string;
   pushUndo: (step: ItemUndoStep) => void;
@@ -182,6 +186,11 @@ export class SheetStore {
   // Each tab's load in flight (loadTab).
   private readonly loads = new Map<string, Promise<void>>();
   private readonly listeners = new Set<() => void>();
+  // Volatile formulas worked out again with nothing changed, while anyone reads the store.
+  private readonly ticker = new VolatileTicker(
+    () => this.tick(),
+    typeof document === 'undefined' ? null : document,
+  );
   private readonly refetchTimers = new Map<string, ReturnType<typeof setTimeout>>();
   // Sheets this person deleted with their elements, as they were: Undo puts the element back and its sheet with it
   // (sheet-store.md "Deleting a sheet"). Kept for the session, as undo is.
@@ -245,13 +254,33 @@ export class SheetStore {
       this.tabStatus.clear();
       this.notify();
     }
+    if (this.listeners.size > 0) this.ticker.every(this.tickMs());
+  }
+
+  private tickMs(): number | null {
+    return volatileTickMs(this.deps.oneWorkbook ?? false, this.deps.recalc);
+  }
+
+  // NOW, TODAY and RAND move on: each engine forgets its volatile cells; readers hear of it only when one had any.
+  tick(): void {
+    let moved = false;
+    for (const wb of this.workbooks.values()) {
+      const before = wb.version;
+      wb.tick();
+      if (wb.version !== before) moved = true;
+    }
+    if (moved) this.notify();
   }
 
   // ---- Reading -----------------------------------------------------------------------------------------
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+    this.ticker.every(this.tickMs());
+    return () => {
+      this.listeners.delete(listener);
+      if (this.listeners.size === 0) this.ticker.stop();
+    };
   };
 
   getVersion = (): number => this.version;
@@ -823,6 +852,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
     scope: bridge.scope,
     oneWorkbook: bridge.oneWorkbook,
     ...(bridge.iteration ? { iteration: bridge.iteration } : {}),
+    ...(bridge.recalc ? { recalc: bridge.recalc } : {}),
     self: () => bridge.self,
     locale: bridge.locale,
     pushUndo: bridge.pushUndo,

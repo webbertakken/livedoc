@@ -961,6 +961,52 @@ describe('a spreadsheet’s store', () => {
     expect(setIteration).toHaveBeenCalledTimes(1);
   });
 
+  // formulas.md "Functions", settings.md "Calculation": volatile formulas tick while anyone reads the store, a Plan
+  // Sheet every minute, a spreadsheet as its Recalculation says.
+  it('ticks volatile formulas as the document’s Recalculation says, only while read', async () => {
+    const plan = make(false).store;
+    await plan.loadTab('tabA');
+    const book = make(true).store;
+    await book.loadTab('tabA');
+    vi.useFakeTimers();
+    try {
+      const planTick = vi.spyOn(plan.workbook('tabA'), 'tick');
+      const bookWb = book.workbook('tabA');
+      const bookTick = vi.spyOn(bookWb, 'tick');
+      const stopPlan = plan.subscribe(() => undefined);
+      const listener = vi.fn();
+      const stopBook = book.subscribe(listener);
+      vi.advanceTimersByTime(60_000);
+      expect(planTick).toHaveBeenCalledTimes(1);
+      expect(bookTick).not.toHaveBeenCalled();
+      stopPlan();
+      book.update({
+        scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
+        oneWorkbook: true,
+        recalc: 'hour',
+        self: () => by,
+        locale: 'en-GB',
+        pushUndo: vi.fn(),
+        toast: vi.fn(),
+      });
+      // A tick that moves a value tells the readers; one that moves nothing does not.
+      bookTick.mockImplementationOnce(() => {
+        bookWb.version++;
+      });
+      vi.advanceTimersByTime(3_600_000);
+      expect(bookTick).toHaveBeenCalledTimes(1);
+      expect(listener).toHaveBeenCalledTimes(1);
+      vi.advanceTimersByTime(3_600_000);
+      expect(listener).toHaveBeenCalledTimes(1);
+      stopBook();
+      vi.advanceTimersByTime(3_600_000);
+      expect(planTick).toHaveBeenCalledTimes(1);
+      expect(bookTick).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps a Plan Sheet tab’s sheets to their tab', async () => {
     const { store, fetchSheets } = make(false);
     await store.loadTab('tabB');
