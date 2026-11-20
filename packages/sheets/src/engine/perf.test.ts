@@ -17,6 +17,8 @@ const CI_FACTOR = 4;
 
 // What the engine may hold for each formula it has worked out: its value and what it reads (performance.md).
 const HELD_BYTES_PER_FORMULA_MAX = 160;
+// What the page's copy of the Worker's values may hold for each formula (performance.md).
+const COPY_BYTES_PER_FORMULA_MAX = 64;
 
 v8.setFlagsFromString('--expose-gc');
 const gc = vm.runInNewContext('gc') as () => void;
@@ -165,5 +167,21 @@ describe('performance', () => {
     }
     // The budgets above are CPU time; the wall clock only bounds a hung run. On a loaded CI runner
     // building the 50,000-cell sheet outran vitest's default 5 s while its CPU budget still held.
+  }, 30_000);
+
+  it('holds the page’s copy of the values in under 64 bytes a formula', () => {
+    const sheet = bigSheet();
+    const engine = new Workbook({ sheets: [sheet], locale: 'en' });
+    const results: [number, number, ReturnType<Workbook['formulaResult']>][] = [];
+    for (let r = 0; r < 10_000; r++)
+      for (const c of [3, 4]) results.push([r, c, engine.formulaResult(sheet.id, r, c)]);
+    layoutIndex(sheet.layout);
+    const before = heldBytes();
+    const copy = new Workbook({ sheets: [sheet], locale: 'en', values: 'elsewhere' });
+    for (const [r, c, v] of results) copy.acceptValue(sheet.id, r, c, v);
+    const perFormula = (heldBytes() - before) / results.length;
+    console.info(`[sheets perf] copy ${perFormula.toFixed(0)} bytes held a formula`);
+    expect(copy.value(sheet.id, 9_999, 4)).toBe(10_000);
+    expect(perFormula).toBeLessThan(COPY_BYTES_PER_FORMULA_MAX);
   }, 30_000);
 });

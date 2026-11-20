@@ -1,0 +1,94 @@
+// The page's side (docs/specs/029-sheets/formulas.md "Recalculation"): its copy of the Worker's values, a Workbook
+// that never works a formula out, kept current from the Worker's answers; and the messages that tell the Worker of
+// each change. Values worked out before a sheet's rows or columns last moved are dropped: their positions are old.
+import type { CardSource } from '../cards';
+import type { Sheet } from '../sheet';
+import { cellToJson, sheetToJson } from '../sheet-json';
+import { SheetLimits } from '../sheet-limits';
+import type { EngineIn, EngineOut } from './engine-protocol';
+import { ITERATION_OFF, type Iteration } from './loops';
+import { Workbook } from './workbook';
+
+type PortOptions = {
+  sheets: readonly Sheet[];
+  locale: string;
+  limits?: SheetLimits;
+  iteration?: Iteration;
+  cards?: CardSource | null;
+  send: (msg: EngineIn) => void;
+};
+
+export class EnginePort {
+  /** The page's copy: every reader reads it. */
+  readonly copy: Workbook;
+  private rev = 0;
+  // The rev that last moved each sheet's positions (its load, its rows or columns).
+  private readonly placed = new Map<string, number>();
+  private readonly send: (msg: EngineIn) => void;
+
+  constructor(opts: PortOptions) {
+    this.send = opts.send;
+    const limits = opts.limits ?? SheetLimits.plan;
+    const iteration = opts.iteration ?? ITERATION_OFF;
+    this.copy = new Workbook({
+      sheets: opts.sheets,
+      locale: opts.locale,
+      limits,
+      iteration,
+      cards: opts.cards ?? null,
+      values: 'elsewhere',
+    });
+    const rev = ++this.rev;
+    for (const s of opts.sheets) this.placed.set(s.id, rev);
+    this.send({
+      t: 'load',
+      rev,
+      sheets: opts.sheets.map(sheetToJson),
+      locale: opts.locale,
+      limits: limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
+      iteration,
+    });
+  }
+
+  /** A sheet changed: its cells (\`keys\`), or anything else about it when \`keys\` is undefined. */
+  updateSheet(sheet: Sheet, keys?: readonly string[]): void {
+    const before = this.copy.sheet(sheet.id);
+    this.copy.updateSheet(sheet, keys);
+    const rev = ++this.rev;
+    if (!before || !keys || before.layout !== sheet.layout || before.title !== sheet.title) {
+      this.placed.set(sheet.id, rev);
+      this.send({ t: 'sheet', rev, sheet: sheetToJson(sheet) });
+      return;
+    }
+    const cells = keys.map((key) => cellToJson(key, sheet.cells.get(key)));
+    this.send({ t: 'cells', rev, sheetId: sheet.id, cells });
+  }
+
+  removeSheet(sheetId: string): void {
+    this.copy.removeSheet(sheetId);
+    this.placed.delete(sheetId);
+    this.send({ t: 'remove', rev: ++this.rev, sheetId });
+  }
+
+  setIteration(iteration: Iteration): void {
+    this.copy.setIteration(iteration);
+    this.send({ t: 'iteration', rev: ++this.rev, iteration });
+  }
+
+  tick(): void {
+    this.send({ t: 'tick', rev: ++this.rev });
+  }
+
+  /** An answer from the Worker. */
+  receive(out: EngineOut): void {
+    if (out.t === 'settled') return;
+    if (out.t === 'stale-all') {
+      this.copy.markAllStale();
+      return;
+    }
+    if (out.rev < (this.placed.get(out.sheetId) ?? Infinity)) return;
+    if (out.t === 'stale')
+      this.copy.markStale(out.cells.map(([r, c]) => ({ sheetId: out.sheetId, r, c })));
+    else for (const [r, c, v] of out.cells) this.copy.acceptValue(out.sheetId, r, c, v);
+  }
+}

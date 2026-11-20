@@ -882,6 +882,10 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   timestamp formulas, D35).
 - A recalculation that would take longer than a frame is done in parts, values filling in as they are ready; cells
   waiting show their last value, faded.
+- In the browser the engine runs in a Web Worker, the only engine there. The page keeps a copy of every value it has
+  worked out, sent as they change: first which cells are waiting, then their new values in parts. Everything on the
+  page that reads values (the grid, sort, find, charts, dropdowns, exports, a rule's custom formula) reads the copy,
+  as it stands, never waiting. The api, the MCP worker and agents work values out directly, as before.
 - The engine bounds its work: a formula reading more than 1,000,000 cells, or a recalculation of more than
   5,000,000 cell reads, stops with `#NUM!` in the cells it did not reach and says "This sheet is too large to
   recalculate at once".

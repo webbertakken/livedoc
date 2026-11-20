@@ -62,7 +62,10 @@ export * from './formula/parse';
 export * from './formula/stored';
 export * from './formula/registry';
 export * from './formula/function-docs';
-export { Workbook } from './engine/workbook';
+export { Workbook, type CellAt } from './engine/workbook';
+export { EngineHost } from './engine/engine-host';
+export { EnginePort } from './engine/engine-port';
+export type { CellValue, EngineIn, EngineOut, EngineLimits } from './engine/engine-protocol';
 export { ITERATION_OFF, sameIteration, type Iteration } from './engine/loops';
 export * from './workbook-record';
 export {

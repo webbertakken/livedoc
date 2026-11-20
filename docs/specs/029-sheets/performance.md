@@ -101,13 +101,15 @@ The engine holds its own values and dependencies by cell number in typed columns
 by one gets a number, found by sheet and position; a value is a kind byte and a number, with text, errors and arrays
 beside them; a read of one cell is an edge on two linked lists, a read of a range a record listed under its columns.
 
-| Measure (the 50,000-cell sheet above, Node)    | Budget    | Before (string keys) | Measured (2026-11-20) |
-| ---------------------------------------------- | --------- | -------------------- | --------------------- |
-| Held by the engine for each formula worked out | 160 bytes | 766 bytes            | 147 bytes             |
-| Working out every cell, CPU, uninstrumented    | 400 ms    | 196 to 202 ms        | 152 to 174 ms         |
+| Measure (the 50,000-cell sheet above, Node)     | Budget    | Before (string keys) | Measured (2026-11-20) |
+| ----------------------------------------------- | --------- | -------------------- | --------------------- |
+| Held by the engine for each formula worked out  | 160 bytes | 766 bytes            | 147 bytes             |
+| Working out every cell, CPU, uninstrumented     | 400 ms    | 196 to 202 ms        | 152 to 174 ms         |
+| The page's copy of the values, for each formula | 64 bytes  | (none)               | 50 to 53 bytes        |
 
-`packages/sheets/src/engine/perf.test.ts` holds the bytes everywhere; most of them (128 of 147) are typed
-columns grown by doubling, so a sheet whose cells just pass a power of two holds up to twice what it uses (inferred).
+`packages/sheets/src/engine/perf.test.ts` holds the bytes everywhere, the copy's too (a value, its cell's number and
+its place in the lookup table). Most of the engine's (128 of 147) are typed columns grown by doubling, so a sheet
+whose cells just pass a power of two holds up to twice what it uses (inferred).
 
 ## Rules
 
