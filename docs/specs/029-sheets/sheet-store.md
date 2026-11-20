@@ -212,6 +212,8 @@ Sheets follow the document's access ([Auth and guest access](../014-identity/aut
   cells, and the new layout if it changed.
 - A client that sees a gap in a sheet's revs, or reconnects, fetches that sheet again.
 - A spreadsheet that reconnects opens its workbook again by viewport, and a sheet deleted while it was away leaves it.
+- A gap in one sheet's revs while connected fetches that sheet whole, as a page missed three times does (default):
+  gaps are rare, and the room's ordered stream makes them rarer.
 - In a spreadsheet, the sheet bar shows who else is on each sheet: a dot in each person's colour, three at most and
   the rest counted (default), each tab named with them for a screen reader ("Costs, also here: Ann").
 - Nothing a browser sends over the room changes a sheet: sheets change only through the api. Presence on a sheet
