@@ -18,11 +18,7 @@ import {
   textDocumentParagraphStyleActions,
 } from './text-document-paragraph-styles';
 import { textDocumentMenus } from './text-document-menus';
-import {
-  ALIGNMENTS,
-  INDENT_ITEMS,
-  LINE_SPACING_ENTRIES,
-} from './text-document-paragraph-actions';
+import { ALIGNMENTS, INDENT_ITEMS, LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
 import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';

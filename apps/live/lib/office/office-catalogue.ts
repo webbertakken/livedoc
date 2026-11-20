@@ -52,7 +52,12 @@ export type OfficeCatalogue = readonly OfficeMenu[];
 
 // What an item does, bound by id: `checked` for a checkable item, `disabled` when it cannot run now, `label` for what
 // it does now where that changes (Add or Remove space before a paragraph).
-export type OfficeAction = { run: () => void; checked?: boolean; disabled?: boolean; label?: string };
+export type OfficeAction = {
+  run: () => void;
+  checked?: boolean;
+  disabled?: boolean;
+  label?: string;
+};
 export type OfficeActions = Readonly<Record<string, OfficeAction | undefined>>;
 
 // An item with the menus it sits in ("Format", "Text").
