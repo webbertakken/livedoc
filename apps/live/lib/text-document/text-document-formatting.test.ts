@@ -7,9 +7,11 @@ import { textDocumentSchema as schema } from './text-document-schema';
 import {
   capitalise,
   isToggleOn,
+  setTextColour,
   setTextFont,
   setTextSize,
   stepTextSize,
+  textColourOf,
   textFontOf,
   textSizeOf,
   toggleText,
@@ -215,5 +217,61 @@ describe('text font', () => {
     expect(runs(lora)).toEqual([['ab', { font: 'Lora' }]]);
     expect(textFontOf(lora, formatting)).toBe('Lora');
     expect(runs(run(lora, setTextFont(formatting, 'Arial')))).toEqual([['ab', {}]]);
+  });
+});
+
+// docs/specs/034-text-documents/text-and-paragraphs.md "Colour".
+describe('text colour and highlight', () => {
+  const subtitle = blank.styles.find((st) => st.role === 'subtitle')!.id;
+
+  it('reads the colour at the caret through the styles, none, or null when mixed', () => {
+    expect(textColourOf(stateOf(p([text('Hi')]), 1), formatting, 'color')).toBeUndefined();
+    expect(textColourOf(stateOf(p([text('Hi')], subtitle), 1), formatting, 'color')).toBe(
+      '#666666',
+    );
+    const mixed = p([text('Re', mark('color', '#cc0000')), text('d')]);
+    expect(textColourOf(stateOf(mixed, 0, 3), formatting, 'color')).toBeNull();
+    expect(textColourOf(stateOf(mixed, 0, 2), formatting, 'color')).toBe('#cc0000');
+    expect(textColourOf(stateOf(mixed, 0, 2), formatting, 'highlight')).toBeUndefined();
+  });
+
+  it('colours the selection, lower case, as one step', () => {
+    const state = run(
+      stateOf(p([text('Hello world')]), 0, 5),
+      setTextColour(formatting, 'color', '#CC0000'),
+    );
+    expect(runs(state)).toEqual([
+      ['Hello', { color: '#cc0000' }],
+      [' world', {}],
+    ]);
+  });
+
+  it('highlights the next characters typed at the caret', () => {
+    const state = run(
+      stateOf(p([text('Hi')]), 2),
+      setTextColour(formatting, 'highlight', '#fff2cc'),
+    );
+    expect(
+      state.storedMarks?.map((m) => [m.type.name, (m.attrs as { value: unknown }).value]),
+    ).toEqual([['highlight', '#fff2cc']]);
+  });
+
+  it('stores a colour equal to the styles as none', () => {
+    const state = run(
+      stateOf(p([text('Grey')], subtitle), 0, 4),
+      setTextColour(formatting, 'color', '#666666'),
+    );
+    expect(runs(state)).toEqual([['Grey', {}]]);
+  });
+
+  it("resets to the styles' colour, and None takes away the highlight", () => {
+    const coloured = p(
+      [text('Grey', mark('color', '#cc0000'), mark('highlight', '#fff2cc'))],
+      subtitle,
+    );
+    let state = run(stateOf(coloured, 0, 4), setTextColour(formatting, 'color', null));
+    state = run(state, setTextColour(formatting, 'highlight', null));
+    expect(runs(state)).toEqual([['Grey', {}]]);
+    expect(textColourOf(state, formatting, 'color')).toBe('#666666');
   });
 });

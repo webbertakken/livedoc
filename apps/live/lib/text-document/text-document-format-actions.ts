@@ -7,14 +7,17 @@ import type { EditorView } from 'prosemirror-view';
 import type { OfficeAction, OfficeActions } from '@/lib/office/office-catalogue';
 import type { OfficeFontSize } from '@/components/office/OfficeFontSizeField';
 import type { OfficeFontFamily } from '@/components/office/OfficeFontMenu';
+import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { track } from '@/lib/telemetry';
 import { readDomSelection } from './text-document-dom-selection';
 import {
   capitalise,
   isToggleOn,
+  setTextColour,
   setTextFont,
   setTextSize,
   stepTextSize,
+  textColourOf,
   textFontOf,
   textSizeOf,
   textValuesOf,
@@ -40,13 +43,18 @@ export const TEXT_DOCUMENT_FORMAT_TELEMETRY = {
   lowercase: 'Lowercase',
   uppercase: 'Uppercase',
   'title-case': 'TitleCase',
+  'text-colour': 'TextColour',
+  'highlight-colour': 'Highlight',
 } as const;
 type FormatAction = keyof typeof TEXT_DOCUMENT_FORMAT_TELEMETRY;
 
-/** The menu items bound here (the font and its size are the toolbar's own controls, not items). */
+// The toolbar's own controls, not items: the font, its size and the colours.
+const CONTROLS: readonly FormatAction[] = ['font-size', 'font', 'text-colour', 'highlight-colour'];
+
+/** The menu items bound here. */
 export const TEXT_DOCUMENT_FORMAT_ITEMS = (
   Object.keys(TEXT_DOCUMENT_FORMAT_TELEMETRY) as FormatAction[]
-).filter((id) => id !== 'font-size' && id !== 'font');
+).filter((id) => !CONTROLS.includes(id));
 
 const TOGGLES: Partial<Record<FormatAction, TextToggle>> = {
   bold: 'bold',
@@ -64,8 +72,9 @@ export function textDocumentFormatActions(
   actions: OfficeActions;
   fontSize: OfficeFontSize | null;
   fontFamily: OfficeFontFamily | null;
+  colours: OfficeColours | null;
 } {
-  if (!view || !canEdit) return { actions: {}, fontSize: null, fontFamily: null };
+  if (!view || !canEdit) return { actions: {}, fontSize: null, fontFamily: null, colours: null };
   const run = (id: FormatAction, command: (f: TextFormatting) => Command) => {
     if (view.isDestroyed) return;
     readDomSelection(view);
@@ -106,5 +115,14 @@ export function textDocumentFormatActions(
     set: (family) => run('font', (f) => setTextFont(f, family)),
     telemetryKind: 'TextDocument',
   };
-  return { actions, fontSize, fontFamily };
+  // Text colour and highlight (text-and-paragraphs.md "Colour"): text with no colour of its own draws in black ink.
+  const colourOf = (id: 'text-colour' | 'highlight-colour', property: 'color' | 'highlight') => ({
+    read: () => (view.isDestroyed ? null : textColourOf(view.state, readFormatting(), property)),
+    set: (hex: string | null) => run(id, (f) => setTextColour(f, property, hex)),
+  });
+  const colours: OfficeColours = {
+    'text-colour': { ...colourOf('text-colour', 'color'), leading: 'Reset', none: '#000000' },
+    'highlight-colour': { ...colourOf('highlight-colour', 'highlight'), leading: 'None' },
+  };
+  return { actions, fontSize, fontFamily, colours };
 }

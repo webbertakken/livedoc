@@ -27,6 +27,7 @@ import { TEXT_DOCUMENT_TOOLBAR } from '@/lib/text-document/text-document-toolbar
 import type { OfficeZoom } from '@/components/office/OfficeZoomField';
 import type { OfficeFontSize } from '@/components/office/OfficeFontSizeField';
 import type { OfficeFontFamily } from '@/components/office/OfficeFontMenu';
+import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import type { OfficeModeChoice } from '@/components/office/OfficeModeSwitch';
 import { openTextDocumentFile } from '@/lib/text-document/open-text-document-file';
 
@@ -76,6 +77,7 @@ export function TextDocumentTitleRow({
   zoom = null,
   fontSize = null,
   fontFamily = null,
+  colours = null,
   refresh,
   mode = null,
   caret = null,
@@ -97,6 +99,7 @@ export function TextDocumentTitleRow({
   // The toolbar's font size, and when what the toolbar shows may have changed (text-and-paragraphs.md).
   fontSize?: OfficeFontSize | null;
   fontFamily?: OfficeFontFamily | null;
+  colours?: OfficeColours | null;
   refresh?: (listener: () => void) => () => void;
   mode?: OfficeModeChoice | null;
   // The caret, for the context menu on text (editing-surface.md "Context menus"); none until the writing is bound.
@@ -171,6 +174,7 @@ export function TextDocumentTitleRow({
       zoom={zoom}
       fontSize={fontSize}
       fontFamily={fontFamily}
+      colours={colours}
       refresh={refresh}
       mode={mode}
       contextMenu={contextMenu}

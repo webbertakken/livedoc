@@ -138,8 +138,15 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
         toggle: true,
         built: true,
       }),
-      icon('text-colour', 'Text colour', 'edit', lucideBaseline, { menu: true }),
-      icon('highlight-colour', 'Highlight colour', 'edit', lucideHighlighter, { menu: true }),
+      // The A without its line: the control draws the line in the colour at the caret.
+      control('text-colour', 'Text colour', 'edit', {
+        kind: 'colour',
+        icon: lucideBaseline.slice(1),
+      }),
+      control('highlight-colour', 'Highlight colour', 'edit', {
+        kind: 'colour',
+        icon: lucideHighlighter,
+      }),
     ],
   },
   {

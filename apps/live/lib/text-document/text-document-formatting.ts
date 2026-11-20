@@ -122,13 +122,13 @@ export function textSizeOf(state: EditorState, formatting: TextFormatting): numb
 function setProperty(
   formatting: TextFormatting,
   property: TextProperty,
-  next: (current: unknown) => unknown,
+  next: (current: unknown, inherited: unknown) => unknown,
 ): Command {
   return (state, dispatch) => {
     const type = markTypeOf(state, property);
     const decide = (place: Place): Mark | null => {
-      const value = settled(property, next(valueAt(state, formatting, place, property)));
       const inherited = settled(property, inheritedAt(formatting, place)[property]);
+      const value = settled(property, next(valueAt(state, formatting, place, property), inherited));
       return value === inherited ? null : type.create({ value });
     };
     const tr: Transaction = state.tr;
@@ -146,6 +146,34 @@ function setProperty(
     dispatch?.(tr.scrollIntoView());
     return true;
   };
+}
+
+export type TextColourProperty = 'color' | 'highlight';
+
+/** The colour the selection (or the caret) has: its `#rrggbb`, undefined for none, null when it has several. */
+export function textColourOf(
+  state: EditorState,
+  formatting: TextFormatting,
+  property: TextColourProperty,
+): string | null | undefined {
+  const values = textValuesOf(state, formatting, property);
+  if (values.length !== 1) return null;
+  const [value] = values;
+  return typeof value === 'string' ? value.toLowerCase() : undefined;
+}
+
+/**
+ * One colour (or highlight) for every character of the selection, or the next typed. Null is Reset for a colour and
+ * None for a highlight: the text keeps no colour of its own, so it draws in what its styles give.
+ */
+export function setTextColour(
+  formatting: TextFormatting,
+  property: TextColourProperty,
+  hex: string | null,
+): Command {
+  return setProperty(formatting, property, (_current, inherited) =>
+    hex === null ? inherited : hex.toLowerCase(),
+  );
 }
 
 /** Bold, italic, underline, strikethrough, small caps: off for all when every character has it, else on for all. */

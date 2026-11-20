@@ -1111,7 +1111,7 @@ export const TEXT_DOCUMENT_FORMATTING = chart(
   'Element',
   'Changed',
   'Text Document Formatting',
-  "A text document's writing formatted: bold, italic, underline, strikethrough, a size, its case and the rest.",
+  "A text document's writing formatted: bold, italic, underline, strikethrough, a size, its case, colour and the rest.",
   { typeIn: (t) => (t ?? '').startsWith('TextDocumentFormat') },
 );
 

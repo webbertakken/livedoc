@@ -485,7 +485,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   'apps/live/lib/text-document/text-document-format-actions.ts Element·Changed': {
     values: [
       ...['Bold', 'Italic', 'Underline', 'Strikethrough', 'Superscript', 'Subscript', 'SmallCaps'],
-      ...['Size', 'Font', 'Lowercase', 'Uppercase', 'TitleCase'],
+      ...['Size', 'Font', 'Lowercase', 'Uppercase', 'TitleCase', 'TextColour', 'Highlight'],
     ].map((name) => `TextDocumentFormat${name}`),
   },
   // The Fonts dialog of an office kind opened from its font menu, and My fonts changed by its OK

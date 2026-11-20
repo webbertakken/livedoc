@@ -29,6 +29,13 @@ const TOOLBAR: OfficeToolbar = [
         status: 'built',
         look: { kind: 'fontSize' },
       },
+      {
+        id: 'text-colour',
+        label: 'Text colour',
+        level: 'edit',
+        status: 'built',
+        look: { kind: 'colour', icon: [] },
+      },
     ],
   },
   {
@@ -43,8 +50,8 @@ const TOOLBAR: OfficeToolbar = [
 // docs/specs/004-interface-design/office-shell.md "Toolbar".
 describe('visibleToolbar', () => {
   const run = () => {};
-  const BOTH = { zoom: true, fontSize: true, font: true };
-  const NEITHER = { zoom: false, fontSize: false, font: false };
+  const BOTH = { zoom: true, fontSize: true, font: true, colour: true };
+  const NEITHER = { zoom: false, fontSize: false, font: false, colour: false };
 
   it('keeps what the level sees, bound or coming soon', () => {
     const shown = visibleToolbar(TOOLBAR, 'edit', { undo: { run }, comment: { run } }, BOTH);
@@ -53,13 +60,26 @@ describe('visibleToolbar', () => {
       'print',
       'zoom',
       'font-size',
+      'text-colour',
       'comment',
     ]);
   });
 
   it('shows each value field only when the shell binds it', () => {
-    const shown = visibleToolbar(TOOLBAR, 'edit', {}, { zoom: false, fontSize: true, font: false });
+    const shown = visibleToolbar(
+      TOOLBAR,
+      'edit',
+      {},
+      {
+        zoom: false,
+        fontSize: true,
+        font: false,
+        colour: false,
+      },
+    );
     expect(shown.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'font-size']);
+    const coloured = visibleToolbar(TOOLBAR, 'edit', {}, { ...NEITHER, colour: true });
+    expect(coloured.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'text-colour']);
   });
 
   it('drops a built control left unbound, a field unbound, and a group left empty', () => {
