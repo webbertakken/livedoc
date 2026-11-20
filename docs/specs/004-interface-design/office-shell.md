@@ -149,6 +149,8 @@ binding serves both; a control of its own (the zoom) is bound by its id the same
 - A keydown inside the surface is matched against the registry for the platform; a matched shortcut runs the item
   bound to its id and the browser's default is prevented. Keys the registry does not hold reach the browser and the
   editor untouched; a shortcut whose item is `comingSoon` or not bound is left alone too.
+- A shortcut left to the browser (Copy, Cut, Paste) is never bound, so the browser's own clipboard events reach the
+  kind; the menu item still runs.
 - A shortcut no item or control names (Copy text formatting) runs what the kind binds under the shortcut's own id;
   unbound for the session, its keys pass on.
 - A **sequence** ("holding Ctrl+Alt, press N then H") starts on its first key with its modifiers held and runs on its

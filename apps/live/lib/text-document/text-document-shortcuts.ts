@@ -17,9 +17,9 @@ function row(
 
 export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
   // Common actions
-  row('copy', 'Common actions', 'Copy', 'Ctrl+C', '⌘+C', 'Ctrl+C', 'specified'),
-  row('cut', 'Common actions', 'Cut', 'Ctrl+X', '⌘+X', 'Ctrl+X', 'specified'),
-  row('paste', 'Common actions', 'Paste', 'Ctrl+V', '⌘+V', 'Ctrl+V', 'specified'),
+  row('copy', 'Common actions', 'Copy', 'Ctrl+C', '⌘+C', 'Ctrl+C', 'browser'),
+  row('cut', 'Common actions', 'Cut', 'Ctrl+X', '⌘+X', 'Ctrl+X', 'browser'),
+  row('paste', 'Common actions', 'Paste', 'Ctrl+V', '⌘+V', 'Ctrl+V', 'browser'),
   row(
     'paste-without-formatting',
     'Common actions',
@@ -27,7 +27,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+V',
     '⌘+Shift+V',
     'Ctrl+Shift+V',
-    'specified',
+    'browser',
   ),
   row('undo', 'Common actions', 'Undo', 'Ctrl+Z', '⌘+Z', 'Ctrl+Z', 'built'),
   row('redo', 'Common actions', 'Redo', 'Ctrl+Shift+Z', '⌘+Shift+Z', 'Ctrl+Shift+Z', 'built'),

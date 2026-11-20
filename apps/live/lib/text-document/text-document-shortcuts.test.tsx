@@ -11,6 +11,7 @@ import { OFFICE_MODES } from '@/lib/office/office-mode';
 import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
+import { clipboardActions } from './text-document-clipboard';
 import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
   TEXT_DOCUMENT_KEY_ACTIONS,
@@ -56,6 +57,8 @@ describe('the text document menus', () => {
     (format) => {
       const bound = [
         ...Object.keys(textDocumentEditorActions(null, { canEdit: true })),
+        // Edit > Cut, Copy, Paste (text-document-clipboard), bound by the surface.
+        ...Object.keys(clipboardActions(null, { canEdit: true, onRefused: () => {} })),
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,
@@ -94,7 +97,9 @@ describe('the text document menus', () => {
     const builtItems = catalogueItems(textDocumentMenus('odf'))
       .map(({ item }) => item)
       .filter((item) => item.status === 'built' && item.shortcut)
-      .map((item) => item.shortcut!);
+      .map((item) => item.shortcut!)
+      // Keys left to the browser (Copy, Paste) are its rows, built though their items are.
+      .filter((id) => TEXT_DOCUMENT_SHORTCUTS.find((r) => r.id === id)?.status !== 'browser');
     const shellRows = [
       'tool-finder',
       'context-right-click-menu',
@@ -132,6 +137,7 @@ function Harness({ view }: { view: EditorView | null }) {
         level="edit"
         actions={{
           ...textDocumentEditorActions(view, { canEdit: true }),
+          ...clipboardActions(view, { canEdit: true, onRefused: () => {} }),
           ...textDocumentParagraphStyleActions({
             view,
             readFormatting: readBlank,
@@ -181,6 +187,25 @@ describe('the text document shortcuts', () => {
     expect(view.state.doc.textContent).toBe('');
     fireEvent.keyDown(view.dom, { code: 'KeyZ', key: 'Z', ctrlKey: true, shiftKey: true });
     expect(view.state.doc.textContent).toBe('Hello');
+    view.destroy();
+  });
+
+  // office-shell.md "Shortcut layer": keys left to the browser are never bound, so its clipboard events reach the
+  // writing (text-and-paragraphs.md "Clipboard").
+  it('leaves Ctrl+C, Ctrl+X, Ctrl+V and Ctrl+Shift+V to the browser', async () => {
+    const view = await surfaceWithEditor();
+    view.dispatch(view.state.tr.insertText('Hello', 1));
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1, 6)));
+    const execCommand = vi.fn(() => true);
+    Object.defineProperty(document, 'execCommand', { value: execCommand, configurable: true });
+    for (const [code, key, shiftKey] of [
+      ['KeyC', 'c', false],
+      ['KeyX', 'x', false],
+      ['KeyV', 'v', false],
+      ['KeyV', 'V', true],
+    ] as const)
+      expect(fireEvent.keyDown(view.dom, { code, key, ctrlKey: true, shiftKey })).toBe(true);
+    expect(execCommand).not.toHaveBeenCalled();
     view.destroy();
   });
 

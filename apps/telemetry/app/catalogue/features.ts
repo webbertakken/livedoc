@@ -1193,6 +1193,16 @@ export const TEXT_DOCUMENT_LISTS = chart(
   },
 );
 
+// A text document's pastes (docs/specs/034-text-documents/text-and-paragraphs.md "Clipboard"), by what was read:
+// LiveDoc's own fragment, HTML from elsewhere, or plain text.
+export const TEXT_DOCUMENT_PASTE = chart(
+  'Element',
+  'Changed',
+  'Text Document Paste',
+  'Something pasted into a text document: from a text document, HTML from a web page or another editor, or plain text.',
+  { types: ['TextDocumentPasteDocument', 'TextDocumentPasteHtml', 'TextDocumentPastePlain'] },
+);
+
 // Someone kept a text document's styles as their default styles (text-and-paragraphs.md "Default styles").
 export const TEXT_DOCUMENT_DEFAULT_STYLES = chart(
   'UI',

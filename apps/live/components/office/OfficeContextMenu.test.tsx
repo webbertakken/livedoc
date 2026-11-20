@@ -5,6 +5,7 @@ import { useRef } from 'react';
 import type { AccessLevel } from '@livedoc/api-schema';
 import { track } from '@/lib/telemetry';
 import { textDocumentEditorActions } from '@/lib/text-document/text-document-editor-actions';
+import { clipboardActions } from '@/lib/text-document/text-document-clipboard';
 import {
   textDocumentMenus,
   textDocumentTextContextMenu,
@@ -38,6 +39,7 @@ function Surface({
         level={level}
         actions={{
           ...textDocumentEditorActions(null, { canEdit: level === 'edit' }),
+          ...clipboardActions(null, { canEdit: level === 'edit', onRefused: () => {} }),
           // Clear formatting is built: the surface binds it for a session that writes.
           ...(level === 'edit' ? { 'clear-formatting': { run: () => {} } } : {}),
           ...extra,
@@ -90,10 +92,10 @@ describe('the context menu', () => {
         .getAllByRole('menuitem')
         .map((i) => i.textContent?.replace('Coming soon', '')),
     ).toEqual([
-      'Cut',
-      'Copy',
-      'Paste',
-      'Paste without formatting',
+      'CutCtrl+X',
+      'CopyCtrl+C',
+      'PasteCtrl+V',
+      'Paste without formattingCtrl+Shift+V',
       'Delete',
       'Comment',
       'Suggest edits',
@@ -168,6 +170,7 @@ describe('the context menu', () => {
     rightClick(screen.getByRole('textbox'));
     const item = (name: string) =>
       within(menu()!).getByRole('menuitem', { name: new RegExp(`^${name}`) });
+    expect(item('Comment').getAttribute('aria-disabled')).toBe('true');
     expect(item('Cut').getAttribute('aria-disabled')).toBe('true');
     expect(item('Delete').getAttribute('aria-disabled')).toBe('true');
   });
@@ -179,6 +182,6 @@ describe('the context menu', () => {
       within(menu()!)
         .getAllByRole('menuitem')
         .map((i) => i.textContent?.replace('Coming soon', '')),
-    ).toEqual(['Copy']);
+    ).toEqual(['CopyCtrl+C']);
   });
 });

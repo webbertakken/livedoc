@@ -16,12 +16,19 @@ import { paperFill, paperInk } from './text-document-paper';
 
 const BODY = '.text-document-body';
 const HEX = /^#[0-9a-f]{6}$/i;
-const pt = (value: number | undefined, max = 1584) =>
+/** A length in points as CSS, or none when it is not a sane one. */
+export const pt = (value: number | undefined, max = 1584) =>
   typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= max
     ? `${value}pt`
     : undefined;
 
-function textDeclarations(t: TextProps): (string | undefined)[] {
+/** How colours are drawn: for the page's paper on screen, or as they are, on white paper (the clipboard). */
+export type PaperColours = { ink: (colour: string) => string; fill: (colour: string) => string };
+const SCREEN_PAPER: PaperColours = { ink: paperInk, fill: paperFill };
+export const WHITE_PAPER: PaperColours = { ink: (c) => c, fill: (c) => c };
+
+/** A run's or a style's text formatting as CSS declarations, each value checked. */
+export function textDeclarations(t: TextProps, paper = SCREEN_PAPER): (string | undefined)[] {
   const lines = [t.underline ? 'underline' : '', t.strike ? 'line-through' : ''].filter(Boolean);
   return [
     t.font ? `font-family: ${DocumentFonts.stack(t.font)}` : undefined,
@@ -30,9 +37,9 @@ function textDeclarations(t: TextProps): (string | undefined)[] {
     t.italic === undefined ? undefined : `font-style: ${t.italic ? 'italic' : 'normal'}`,
     lines.length > 0 ? `text-decoration-line: ${lines.join(' ')}` : undefined,
     // Drawn for the page's paper (editing-surface.md "The page in the dark scheme").
-    t.color && HEX.test(t.color) ? `color: ${paperInk(t.color)}` : undefined,
+    t.color && HEX.test(t.color) ? `color: ${paper.ink(t.color)}` : undefined,
     t.highlight && HEX.test(t.highlight)
-      ? `background-color: ${paperFill(t.highlight)}`
+      ? `background-color: ${paper.fill(t.highlight)}`
       : undefined,
     t.smallCaps ? 'font-variant: small-caps' : undefined,
     t.transform && t.transform !== 'none' ? `text-transform: ${t.transform}` : undefined,
@@ -82,10 +89,10 @@ export const INDENT_END = '--text-document-indent-end';
 const DASH: Record<BorderDash, string> = { solid: 'solid', dotted: 'dotted', dashed: 'dashed' };
 
 /** One border line as CSS (`1pt solid #000000`), or none for a line that draws nothing. */
-export function borderCss(line: BorderLine | undefined): string {
+export function borderCss(line: BorderLine | undefined, ink = paperInk): string {
   if (!line || !pt(line.width, 12) || !Object.hasOwn(DASH, line.dash) || !HEX.test(line.color))
     return 'none';
-  return `${pt(line.width, 12)} ${DASH[line.dash]} ${paperInk(line.color)}`;
+  return `${pt(line.width, 12)} ${DASH[line.dash]} ${ink(line.color)}`;
 }
 
 const SIDES = ['top', 'bottom', 'left', 'right'] as const;

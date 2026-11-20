@@ -25,6 +25,8 @@ import { debugLog } from '@/lib/debug-log';
 import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yjs-provider';
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
+import { clipboardPlugin } from '@/lib/text-document/text-document-clipboard';
+import { useTextDocumentClipboard } from './useTextDocumentClipboard';
 import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragraph-boxes';
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { listMarkersPlugin } from '@/lib/text-document/text-document-list-markers';
@@ -86,6 +88,7 @@ import {
 import { nonPrintingPlugin, setNonPrinting } from '@/lib/text-document/text-document-non-printing';
 import {
   startUndoStep,
+  TEXT_DOCUMENT_LISTS_ORIGIN,
   TEXT_DOCUMENT_PAGE_ORIGIN,
   textDocumentUndoPlugins,
 } from '@/lib/text-document/text-document-undo';
@@ -143,6 +146,7 @@ export function TextDocumentSurface({
   const [state, setState] = useState<SurfaceState>('loading');
   const [attempt, setAttempt] = useState(0);
   const [limitReached, setLimitReached] = useState<TextDocumentLimit | null>(null);
+  const clipboardLeftOut = useRef<(count: number) => void>(() => {});
   // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
   const [changes] = useState(createTextDocumentChanges);
   // The side panels (office-shell.md "Side panels"); closing one gives the writing the keyboard back.
@@ -248,6 +252,22 @@ export function TextDocumentSurface({
               changes.plugin,
               ...textDocumentUndoPlugins(),
               textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),
+              // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
+              clipboardPlugin({
+                read: () => ({
+                  documentId,
+                  tabId,
+                  format: live.current.format,
+                  ...readFormatting(),
+                  lists: TextDocumentState.lists(doc),
+                }),
+                lists: {
+                  read: () => TextDocumentState.lists(doc),
+                  set: (id, list) =>
+                    TextDocumentState.setList(doc, id, list, TEXT_DOCUMENT_LISTS_ORIGIN),
+                },
+                onLeftOut: (count) => clipboardLeftOut.current(count),
+              }),
               // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
               paintFormatPlugin(),
               // Adjacent paragraphs with the same borders share one box ("Borders and shading").
@@ -328,6 +348,11 @@ export function TextDocumentSurface({
     if (state === 'ready' && editor.current) setTextDocumentPeers(editor.current, peers);
   }, [peers, state]);
 
+  // Edit > Cut, Copy, Paste (text-and-paragraphs.md "Clipboard"); the editor's plugin tells it of a paste's losses.
+  const clipboard = useTextDocumentClipboard(editorView, writes);
+  useLayoutEffect(() => {
+    clipboardLeftOut.current = clipboard.onLeftOut;
+  });
   // Format > Text and the toolbar's text controls (text-and-paragraphs.md "Text formatting").
   const formatting = useTextDocumentFormatting(editorView, liveDoc, format, writes);
   // A family from Google Fonts that the text names loads from there (fonts.md "Substitution").
@@ -383,6 +408,7 @@ export function TextDocumentSurface({
   const editorActions = useMemo(
     () => ({
       ...textDocumentEditorActions(editorView, { canEdit: writes }),
+      ...clipboard.actions,
       ...formatting.actions,
       ...paragraphStyles.actions,
       ...paragraphs.actions,
@@ -403,6 +429,7 @@ export function TextDocumentSurface({
       lists.actions,
       modeActions,
       panels.actions,
+      clipboard.actions,
     ],
   );
   // The toolbar's choice controls: Styles, Align and spacing, and the list buttons' grids.
@@ -470,6 +497,7 @@ export function TextDocumentSurface({
         }
       />
       {paragraphs.dialog}
+      {clipboard.dialog}
       {lists.dialog}
       {limitReached ? (
         <p
@@ -479,6 +507,7 @@ export function TextDocumentSurface({
           {TEXT_DOCUMENT_LIMIT_NOTICES[limitReached]}
         </p>
       ) : null}
+      {clipboard.notice}
       <OfficePanelLayout
         left={
           panels.open.left === 'outline' ? (

@@ -1,8 +1,8 @@
 # Text and paragraphs
 
 **Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
-keep rules, borders and shading, paint format, clear formatting, the Tab key, Shift+Enter, tab stops and
-non-printing characters are built; the rest is specified.
+keep rules, borders and shading, paint format, clear formatting, the Tab key, Shift+Enter, tab stops,
+non-printing characters and the clipboard (but Markdown) are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -35,12 +35,42 @@ Every rule maps to a format construct in [Standard mapping](standard-mapping.md#
 
 ## Clipboard
 
-- **Copy** puts the selection on the clipboard as HTML (with its formatting and styles), as plain text, and as
-  LiveDoc's own model fragment (so a paste between text documents keeps everything, kept content included).
-- **Paste** from a text document keeps everything; from a web page or another editor, its headings, lists, tables,
-  links, pictures and character formatting are kept and mapped to the nearest paragraph style; from Markdown text, Markdown is read when
-  Preferences > Automatically detect Markdown is on, as Google does.
-- **Paste without formatting** (⌘⇧V) inserts plain text in the formatting at the caret.
+- **Copy** (⌘C) and **Cut** (⌘X) put the selection on the clipboard three ways at once:
+  - **HTML** for other editors: each paragraph and run with its formatting written out in place, its styles resolved,
+    headings as `h1` to `h6`, list items as `li` in `ul` and `ol`, colours as on white paper in either scheme;
+  - **plain text**: a line per paragraph, a list item after its marker as drawn and a space, tabs and line breaks as
+    typed (default);
+  - **LiveDoc's model fragment**, carried in the HTML (`data-livedoc-fragment`), so it travels wherever the HTML does:
+    the paragraphs and runs exactly, with the styles and lists they name.
+- Content kept from the file and section breaks travel in the fragment only; the HTML and the text leave them out.
+- Copy works at every share level; Cut removes the selection where the person may edit.
+- **Paste** (⌘V) reads the first of these the clipboard holds:
+  1. **A model fragment from this tab**: everything as copied, kept content included; list items join their lists.
+  2. **A model fragment from another text document or tab**: a paragraph style with a built-in role becomes this
+     document's style of that role; one this document holds by the same id and name stays; any other becomes Normal
+     text with its look kept as direct formatting (default). Its lists arrive as new lists, numbered as copied.
+     Content kept from the other file stays behind, as it points into that file; the paste says so: "Content kept from
+     the other file was left out (3 items)." (default)
+  3. **HTML** from a web page or another editor: `h1` to `h6` become Heading 1 to 6, other paragraphs Normal text;
+     `ul`, `ol` and Word's list paragraphs become bulleted, numbered or checklist lists at their nesting level; safe
+     links, bold, italic, underline, strikethrough, superscript, subscript, font, size, colour, highlight, small caps,
+     capitalisation, alignment, indents and spacing are read from tags and inline CSS; a page's white behind its
+     text is no highlight (default). Its whitespace is collapsed as a browser draws it, except where the source
+     keeps it (`pre`, `white-space: pre*`); `br` is a line break.
+     A table's cells arrive as paragraphs in reading order until [tables](tables.md) are built; pictures wait for
+     [Objects](objects.md#pictures), left out and logged.
+  4. **Markdown text**, read as Markdown when Preferences > Automatically detect Markdown is on, as Google does.
+  5. **Plain text**: a paragraph per line, empty lines kept, each in the paragraph formatting and the text formatting
+     at the caret.
+- Pasted into an empty paragraph, or over a paragraph's whole text, the first paragraph pasted keeps its own style;
+  into part of a paragraph, it joins that paragraph, as Google's paste does.
+- A fragment that is not one LiveDoc wrote (its shape or size wrong) is ignored and the HTML read instead.
+- **Paste without formatting** (⌘⇧V) pastes the clipboard's plain text, as in 5, whatever else it holds.
+- A paste is one undo step, its new lists included; text dropped from outside the writing is read as a paste.
+- **Edit > Cut, Copy, Paste, Paste without formatting** ask the browser for the clipboard. Where it refuses, the
+  dialog **Copying and pasting** says to use ⌘X, ⌘C, ⌘V and ⌘⇧V instead, as Google's does.
+- Their keys are left to the browser ([Office shell](../004-interface-design/office-shell.md#shortcut-layer)), whose
+  clipboard events the writing handles.
 - Pictures pasted are uploaded into the document ([Objects](objects.md#pictures)).
 
 ## Text formatting
@@ -309,7 +339,7 @@ Tools > Preferences, per person (account or browser), each on by default as Goog
 SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight, Paint (painted or pasted), Clear; from
 toolbar, menu or shortcut), `TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut),
 `TextDocumentStyleUpdated` (update to match), `TextDocumentStylesUsed` (Use my default styles),
-`TextDocumentStylesReset`, `TextDocumentPaste` (with the source: Document, Html, Markdown, Plain), `TextDocumentAlign`,
+`TextDocumentStylesReset`, `TextDocumentPaste<Source>` (Document, Html, Markdown, Plain), `TextDocumentAlign`,
 `TextDocumentIndent` (a step), `TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`,
 `TextDocumentParagraphSpace` (add or remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`,
 `TextDocumentBordersAndShading`, `TextDocumentTabStop` (added, moved or taken away on the ruler);
