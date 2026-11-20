@@ -5,12 +5,7 @@ import { ProductNavLinks } from '@livedoc/ui';
 import { DocumentRowShell } from './DocumentRowShell';
 import { useIsMobileViewport } from '@/hooks/ui/useIsMobileViewport';
 import { MovablePanel } from '@/components/primitives/MovablePanel';
-import { MoveToFolderDialog } from '@/components/dialogs/MoveToFolderDialog';
-import { apiCreateFolder } from '@/lib/api-client';
-import { track } from '@/lib/telemetry';
-import { useToast } from '@/hooks/ui/useToast';
-import { logMoveFailure } from '@/lib/move-failure';
-import { FOLDER_FAILURE } from '@/lib/write-failure-copy';
+import { MoveDocumentDialog } from '@/components/dialogs/MoveDocumentDialog';
 import { useMinimalChrome } from '@/components/providers/minimal-chrome';
 import { SignInPrompt } from '@/components/chrome/SignInPrompt';
 import { ExplorerHeaderMenu } from '@/components/panels/ExplorerHeaderMenu';
@@ -85,7 +80,6 @@ function ExplorerImpl({
   onLibraryChanged,
   inboxDone = null,
 }: ExplorerProps) {
-  const toast = useToast();
   const minimalChrome = useMinimalChrome();
   // Mobile viewport ⇒ render nothing. Mobile users reach the
   // Explorer from the AuthControls "Explorer" menu item (docs/specs/007-editor/live-app.md)
@@ -458,75 +452,21 @@ function ExplorerImpl({
           can be re-homed to the personal tree (and vice versa) right from
           the editor. Purely personal picks keep the optimistic
           onMoveDocumentToFolder path. */}
-      {moveTarget && (onMoveDocumentToFolder || onMoveDocumentTo)
-        ? (() => {
-            const teamRow = moveTarget.teamId
-              ? teamDocuments.find((d) => d.id === moveTarget.id)
-              : undefined;
-            const personalRow = liveDocs.find((d) => d.id === moveTarget.id);
-            const teamDests = onMoveDocumentTo
-              ? teams.map((t) => ({
-                  id: t.id,
-                  name: t.name,
-                  folders: teamFolders
-                    .filter((f) => f.teamId === t.id)
-                    .map((f) => ({ id: f.id, name: f.name, parentId: f.parentId })),
-                }))
-              : undefined;
-            return (
-              <MoveToFolderDialog
-                subjectName={teamRow?.name || personalRow?.name || 'Untitled'}
-                subjectKind="document"
-                personalFolders={folders.map((f) => ({
-                  id: f.id,
-                  name: f.name,
-                  parentId: f.parentId,
-                }))}
-                teams={teamDests}
-                currentTeamId={moveTarget.teamId}
-                currentFolderId={
-                  teamRow ? (teamRow.folderId ?? null) : (personalRow?.folderId ?? null)
-                }
-                onCreateFolder={async (name, parentId, destTeamId) => {
-                  // Personal creates go through the host's folder hook (the
-                  // panel's tree updates immediately); team creates hit the
-                  // API directly, same as the team page's picker.
-                  if (destTeamId === null) {
-                    if (!onCreateFolder) return null;
-                    const created = await onCreateFolder({ name, parentId });
-                    return created
-                      ? { id: created.id, name: created.name, parentId: created.parentId }
-                      : null;
-                  }
-                  if (!ownerId) return null;
-                  try {
-                    const folder = await apiCreateFolder(ownerId, {
-                      id: crypto.randomUUID(),
-                      name,
-                      parentId,
-                      teamId: destTeamId,
-                    });
-                    track('Folder', 'Created', 'Team');
-                    return { id: folder.id, name: folder.name, parentId: folder.parentId };
-                  } catch (err) {
-                    // The tile keeps the name typed, for another try.
-                    logMoveFailure('new-folder', '', err);
-                    toast.error(FOLDER_FAILURE.create(name));
-                    return null;
-                  }
-                }}
-                onPick={(dest) => {
-                  if (dest.teamId === null && moveTarget.teamId === null) {
-                    onMoveDocumentToFolder?.(moveTarget.id, dest.folderId);
-                  } else {
-                    onMoveDocumentTo?.(moveTarget.id, dest, moveTarget.teamId);
-                  }
-                }}
-                onClose={() => setMoveTarget(null)}
-              />
-            );
-          })()
-        : null}
+      {moveTarget && (onMoveDocumentToFolder || onMoveDocumentTo) ? (
+        <MoveDocumentDialog
+          target={moveTarget}
+          ownerId={ownerId ?? null}
+          documents={liveDocs}
+          folders={folders}
+          teams={teams}
+          teamFolders={teamFolders}
+          teamDocuments={teamDocuments}
+          onCreateFolder={onCreateFolder}
+          onMoveDocumentToFolder={onMoveDocumentToFolder}
+          onMoveDocumentTo={onMoveDocumentTo}
+          onClose={() => setMoveTarget(null)}
+        />
+      ) : null}
     </MovablePanel>
   );
 }

@@ -63,6 +63,7 @@ import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
 import { useEditorAccent } from '@/hooks/ui/useEditorAccent';
 import { useAppearance } from '@/hooks/ui/useAppearance';
 import { useEditorContext } from './EditorContext';
+import { useOfficeChrome } from './useOfficeChrome';
 import { useSelectTab } from './useSelectTab';
 import { useRoleIndicator } from './useRoleIndicator';
 import { RolePill, RoleStatusIcon } from '@/components/chrome/RoleIndicator';
@@ -211,6 +212,8 @@ export function EditorView() {
   });
 
   const selectTab = useSelectTab();
+  // A surface's title row: the document's own parts (docs/specs/034-text-documents/editing-surface.md "The title row").
+  const office = useOfficeChrome();
   // A board's Form strip (docs/specs/030-forms/forms.md "On the board"): the forms feeding the open tab.
   const formBoard = useFormBoardValue({
     tabs,
@@ -445,11 +448,18 @@ export function EditorView() {
                 canPaste: hasClipboard,
               },
             }}
+            // Over a text document its title row shows the people (kinds-outside-the-canvas.md "The tab strip").
+            showPeople={surface !== 'text-document'}
           />
         </AreaErrorBoundary>
       </LandscapeBarFold>
     );
-  const lines = { actions: actionsGroup, document: documentGroup, embed: embedMode };
+  const lines = {
+    actions: actionsGroup,
+    document: documentGroup,
+    embed: embedMode,
+    office: office.chrome,
+  };
 
   // The bars handle, at the canvas's top-right corner: only on a phone held sideways (CSS), and only where there are
   // groups to fold (not in zen, an embed, the welcome flow or a running presentation).
@@ -626,6 +636,7 @@ export function EditorView() {
                                       onDismiss={focusInvite.dismissFocus}
                                     />
                                     <AreaErrorBoundary area="Modals">
+                                      {office.dialog}
                                       <EditorModals />
                                     </AreaErrorBoundary>
                                     <AreaErrorBoundary area="Popovers">

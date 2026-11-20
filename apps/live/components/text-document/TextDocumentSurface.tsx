@@ -42,11 +42,13 @@ import {
   useTextDocumentPeers,
 } from '@/lib/text-document/text-document-carets-store';
 import {
+  scrollToTextDocumentPeer,
   setTextDocumentPeers,
   textDocumentPeersPlugin,
 } from '@/lib/text-document/text-document-peers';
 import { useSurfaceView } from '@/hooks/ui/useSurfaceView';
 import type { SurfaceSelection } from '@/lib/surface-view';
+import type { OfficeChrome } from '@/components/office/office-chrome';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -70,6 +72,8 @@ export type TextDocumentSurfaceProps = {
   // A text document in This Browser: no room; its state lives in its offline record ("A text document in This
   // Browser"). Fixed for the surface's life: its host keys it by this.
   local?: boolean;
+  // The title row's document parts (editing-surface.md "The title row"); null in the read-only pane of a split.
+  chrome?: OfficeChrome | null;
 };
 
 type SurfaceState = 'loading' | 'ready' | 'failed';
@@ -82,6 +86,7 @@ export function TextDocumentSurface({
   level,
   sequence,
   local = false,
+  chrome = null,
 }: TextDocumentSurfaceProps) {
   const root = useRef<HTMLDivElement | null>(null);
   const mount = useRef<HTMLDivElement | null>(null);
@@ -255,6 +260,10 @@ export function TextDocumentSurface({
         editorActions={editorActions}
         keyScope={root}
         localDoc={local ? () => liveDoc.current : null}
+        chrome={chrome}
+        onFollow={(personId) =>
+          editorView ? scrollToTextDocumentPeer(editorView, personId) : false
+        }
       />
       {limitReached ? (
         <p

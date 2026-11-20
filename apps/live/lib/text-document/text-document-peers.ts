@@ -67,6 +67,7 @@ function caretDom(peer: TextDocumentPeer): HTMLElement {
   caret.className = 'text-document-peer-caret';
   caret.style.setProperty('--text-document-peer', peer.color);
   caret.dataset.name = peer.name;
+  caret.dataset.peer = peer.id;
   if (peer.fresh) caret.dataset.fresh = '';
   caret.setAttribute('aria-hidden', 'true');
   return caret;
@@ -145,6 +146,20 @@ export function textDocumentPeersPlugin(deps: {
       destroy: () => deps.publish(null),
     }),
   });
+}
+
+/**
+ * Bring a collaborator's caret into view (editing-surface.md "The title row", Presence): the page scrolls, nobody's
+ * selection moves. False when their caret is not drawn here.
+ */
+export function scrollToTextDocumentPeer(view: EditorView, personId: string): boolean {
+  const caret = [...view.dom.querySelectorAll<HTMLElement>('.text-document-peer-caret')].find(
+    (el) => el.dataset.peer === personId,
+  );
+  if (!caret) return false;
+  const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? true;
+  caret.scrollIntoView({ block: 'center', inline: 'nearest', behavior: still ? 'auto' : 'smooth' });
+  return true;
 }
 
 /** Draw these collaborators' carets: a meta transaction, which changes no text and reaches no history. */

@@ -9,6 +9,7 @@ import { planPalette } from '@livedoc/document';
 import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
+import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { OfficeCatalogue } from '@/lib/office/office-catalogue';
 import {
@@ -87,6 +88,8 @@ export function SpreadsheetSurface({
 }) {
   const bridge = useSheetsBridgeContext();
   const sheetBarPeers = useSheetBarPeers(bridge);
+  // The document's own parts in the shell's title row (office-shell.md "Title row").
+  const office = useEditorLines()?.office ?? null;
   const [problem, setProblem] = useState<string | null>(null);
   const format = workbook.format;
   const root = useRef<HTMLElement | null>(null);
@@ -126,6 +129,8 @@ export function SpreadsheetSurface({
         shortcuts={[]}
         keyScope={root}
         opening={{ accept: OPEN_ACCEPT, onFile: (file) => void open(file) }}
+        chrome={office}
+        tabId={tabId}
       />
       {bridge ? <OpenSheet bridge={bridge} tabId={tabId} /> : <Status state="loading" />}
       <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} peers={sheetBarPeers} />

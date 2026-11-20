@@ -1,7 +1,7 @@
 # Editing surface
 
-**Status: partly built.** The menu bar (every menu and item, those not yet built dimmed) and the tool finder are
-built; the rest is specified.
+**Status: partly built.** The menu bar (every menu and item, those not yet built dimmed), the tool finder and the
+title row (but its save status, comment history and mode switch) are built; the rest is specified.
 
 What a person sees and works with on a [text document](text-document.md): Google Docs' layout, control for control,
 built on the shared [Office shell](../004-interface-design/office-shell.md). How literal the look is (Google's metrics
@@ -26,20 +26,37 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
 ## The title row
 
 - **The LiveDoc mark** goes to the Explorer, as Google's Docs icon goes to the Docs home. Its tooltip: **Explorer**.
+  In a workbench frame it goes where the editor's back does ([Toolbar layout](../007-editor/toolbar-layout.md)).
 - **Name**: the document's name in a field that looks like text until hovered (outlined) or focused (editable);
-  Enter or blur renames, Escape puts it back. Empty is refused ("Give the document a name"). The format sits after it
-  in a small grey pill, `.DOCX` or `.ODT`, with the tooltip "Word format" or "OpenDocument format"; a pill press
-  opens File > Convert.
-- **Star** ("Star", "Starred"): LiveDoc's favourites. **Move** (a folder glyph, "Move"): the folder picker.
+  Enter or blur renames, Escape puts it back. Empty is refused ("Give the document a name") and the name put back.
+  Its accessible name is **Rename**. For a session that may not rename the document (a Viewer, a Participant, a
+  visitor scoped to one tab) it is text. File > Rename puts the focus in it with the name selected.
+- The format sits after the name in a small grey pill, `.DOCX` or `.ODT`, with the tooltip "Microsoft Word format"
+  or "OpenDocument format"; once conversion is built a pill press opens File > Convert.
+- **Star** ("Star", "Starred", `aria-pressed`): LiveDoc's favourites, for everyone the document opens for.
+- **Move** (a folder glyph, "Move"): the shared folder picker over My Documents and the person's teams, for whoever
+  files the document (its owner or a member of its team); File > Move opens it too.
 - **Save status** (a cloud glyph): "Saving…", "All changes saved", "Saved in This Browser", "Offline: changes are kept
   in this browser" and, on failure, "Can't save: we keep trying" in the error colour. A press opens the details.
 - **Last edit**: none in the title row (Google moved it into File > Version history); a press on the save status
   shows "Last edit was <time> by <name>", which opens version history.
-- **Comment history** (a speech bubble glyph, "Open comment history", ⌘⌥⇧A): the comments panel.
+- **Comment history** (a speech bubble glyph, "Open comment history", ⌘⌥⇧A): the comments panel. Not drawn until
+  comments are built ([Review](review.md)), never a dead button.
 - **Editing mode switch**: a pill with the mode's glyph and name, "Editing" (pencil), "Suggesting" (pencil with a
   plus), "Viewing" (eye); its menu lists the three with their one-line descriptions ([Review](review.md#editing-modes)).
 - **Share**: a filled pill, "Share", with a lock glyph when the document is private; opens LiveDoc's share dialog.
-- **Presence**: up to four avatars, then "+n"; a press on one follows that person's caret into view.
+  It is for whoever may share the document (its owner or a member of its team); anyone else sees **Make a copy** in
+  its place, an outlined pill that copies the document into their own files and opens the copy. File > Share > Share
+  with others opens the same dialog; File > Make a copy is its own dialog ([Files and print](files-and-print.md)).
+- **Presence**: everyone else in the document, up to four avatars, then "+n"; each avatar's name is its tooltip and
+  accessible name. A press on one in this text document brings their caret into view (the page scrolls, nobody's
+  selection moves); a press on one elsewhere in the document opens the tab they are on.
+- **Settings** (a gear glyph, "Settings"): LiveDoc's own settings (appearance, preferences), for every role
+  `(default)`. Google's Tools > Preferences is the document's, a different dialog.
+- **Account**: LiveDoc's account control at the far right, as Google's account picture: "Sign in" for a guest where
+  sign-in is offered, the account picture with its menu once signed in, nothing on a host without sign-in.
+- Over a text document the editor's bottom line keeps the tabs and Add tab but not the people: presence is here
+  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-tab-strip)).
 
 ## The menu bar
 
@@ -145,4 +162,5 @@ What each role sees is stated with each control above; the server refuses every 
 ## Telemetry
 
 `UI · Opened · TextDocumentMenu<Name>` (a menu opened), `UI · Used · TextDocumentToolFinder`,
-`UI · Toggled · TextDocumentCompact`, `UI · Toggled · TextDocumentRuler`. Never text.
+`UI · Toggled · TextDocumentCompact`, `UI · Toggled · TextDocumentRuler`, `UI · Toggled · TextDocumentStar`,
+`UI · Opened · TextDocumentMove`, `UI · Used · TextDocumentFollow` (a press on a person). Never text.

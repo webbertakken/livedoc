@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { MenuErrorBoundary } from '@/components/primitives/MenuErrorBoundary';
 import { ToolbarGroup, ToolbarPart } from '@/components/chrome/ToolbarGroup';
 import { track } from '@/lib/telemetry';
-import type { Participant } from '@/lib/identity';
+import { othersInDocument } from '@/lib/others-in-document';
 import { newTabMode } from '@/lib/new-tab-seed';
 import { surfaceOf } from '@livedoc/document';
 import { ActiveTabSegment } from './ActiveTabSegment';
@@ -20,26 +20,30 @@ const PortalMenu = dynamic(() => import('../TabPortalMenu').then((m) => m.Portal
   ssr: false,
 });
 
-// Everyone else in the document, once each, in the order the tabs list them.
-function othersHere(byTab: Map<string, Participant[]>, selfId: string): Participant[] {
-  const seen = new Map<string, Participant>();
-  for (const people of byTab.values())
-    for (const p of people) if (p.id !== selfId && !seen.has(p.id)) seen.set(p.id, p);
-  return [...seen.values()];
-}
-
 type Opener = { from: 'stack' | 'people'; button: HTMLElement };
 
 // The document group, the bottom line's right (docs/specs/007-editor/toolbar-layout.md "The bottom line"): the
 // document's share-state icon, name and role pill; the active tab, holding the tab stack; the contributors; Add tab, whose
 // menu adds a Tab, a Board, a Sheet or a Dashboard (AddTabMenu). The stack and the contributors open the same tab
 // list.
-export function DocumentGroup({ name, tabs }: { name: DocumentNameProps; tabs: TabsChromeProps }) {
+export function DocumentGroup({
+  name,
+  tabs,
+  showPeople = true,
+}: {
+  name: DocumentNameProps;
+  tabs: TabsChromeProps;
+  // False over a text document, whose title row shows the people (kinds-outside-the-canvas.md "The tab strip").
+  showPeople?: boolean;
+}) {
   const chrome = useTabsChrome(tabs);
   const [opener, setOpener] = useState<Opener | null>(null);
   const people = useMemo(
-    () => othersHere(tabs.participantsByTab, tabs.selfId),
-    [tabs.participantsByTab, tabs.selfId],
+    () =>
+      showPeople
+        ? othersInDocument(tabs.participantsByTab, tabs.selfId).map((o) => o.participant)
+        : [],
+    [tabs.participantsByTab, tabs.selfId, showPeople],
   );
   const inScope = tabs.isOutOfScope
     ? tabs.tabs.filter((t) => !tabs.isOutOfScope!(t.id)).length
