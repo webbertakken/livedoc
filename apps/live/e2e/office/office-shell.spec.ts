@@ -61,5 +61,36 @@ test('the menus, the tool finder and the shortcut layer work a text document', a
   await page.keyboard.press('Enter');
   await expect(finder).toHaveCount(0);
   await expect(page.locator(BODY)).toHaveText('Written once');
+
+  // The toolbar (office-shell.md "Toolbar"): Undo from it, then the zoom typed to 150%, kept across a reload.
+  const toolbar = page.getByRole('toolbar', { name: 'Toolbar' });
+  await toolbar.getByRole('button', { name: 'Undo' }).click();
+  await expect(page.locator(BODY)).toHaveText('');
+  await expect(toolbar.getByRole('button', { name: 'Bold' })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  const page100 = (await page.locator(BODY).boundingBox())!.width;
+  const zoomField = toolbar.getByRole('combobox', { name: 'Zoom' });
+  await zoomField.fill('150');
+  await zoomField.press('Enter');
+  await expect(zoomField).toHaveValue('150%');
+  await expect
+    .poll(async () => (await page.locator(BODY).boundingBox())!.width)
+    .toBeCloseTo(page100 * 1.5, 0);
+  await page.screenshot({ path: test.info().outputPath('toolbar.png') });
+  await page.reload();
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Zoom' })).toHaveValue('150%');
+
+  // A narrow window moves the controls that do not fit behind More.
+  await page.setViewportSize({ width: 700, height: 860 });
+  await page.getByRole('button', { name: 'More' }).click();
+  await expect(
+    page
+      .getByRole('toolbar', { name: 'More tools' })
+      .getByRole('button', { name: 'Clear formatting' }),
+  ).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath('toolbar-more.png') });
   expectNoPageErrors(pageErrors);
 });

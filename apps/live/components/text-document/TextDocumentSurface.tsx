@@ -51,6 +51,7 @@ import type { SurfaceSelection } from '@/lib/surface-view';
 import type { OfficeChrome } from '@/components/office/office-chrome';
 import type { SaveFactsSource } from '@/lib/text-document/text-document-save-status';
 import { useTextDocumentSaveStatus } from '@/lib/text-document/useTextDocumentSaveStatus';
+import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -106,6 +107,8 @@ export function TextDocumentSurface({
   // What the title row's save status reads (editing-surface.md "The title row"), once the writing is bound.
   const [saveFacts, setSaveFacts] = useState<SaveFactsSource | null>(null);
   const saveStatus = useTextDocumentSaveStatus(saveFacts, local);
+  // The pages' zoom, this person's for this document (editing-surface.md "Zoom").
+  const { zoom, scale } = useTextDocumentZoom(scope.documentId, scroller);
   const { ownerId, documentId, tabId, shareCode } = scope;
   // The latest sender and gate, read when an update goes out, so a new room connection never rebinds the editor.
   const live = useRef({ sequence, canEdit });
@@ -270,6 +273,7 @@ export function TextDocumentSurface({
         chrome={chrome}
         // A session that may not edit saves nothing, so shows no save status.
         saveStatus={canEdit ? saveStatus : null}
+        zoom={zoom}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }
@@ -302,6 +306,8 @@ export function TextDocumentSurface({
         ) : null}
         {/* The page: a fixed width and a page's height before the state arrives, so nothing shifts as it does. */}
         <div
+          // CSS zoom scales the page and its layout box alike, so the scroller scrolls the page as drawn.
+          style={{ zoom: scale }}
           className={`mx-auto min-h-[1056px] w-[816px] max-w-full bg-white px-6 py-10 text-[11pt] sm:px-24 sm:py-24 leading-[1.15] text-black shadow-sm ${state === 'failed' ? 'hidden' : ''}`}
         >
           {state === 'loading' ? (

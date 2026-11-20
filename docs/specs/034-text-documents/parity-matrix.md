@@ -187,24 +187,24 @@ Statuses: `specified`, `built (<test>)`, `left out (<ruling>)`, `left out (C3)`,
 
 ## Toolbar
 
-| Row                           | Rule                                       | Status    | Spec                                                                |
-| ----------------------------- | ------------------------------------------ | --------- | ------------------------------------------------------------------- |
-| Tool finder                   | Search the menus                           | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Undo, Redo, Print             | As the menus                               | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Spelling and grammar check    | Opens the check                            | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Paint format                  | Copy formatting once, double-click to keep | specified | [Text and paragraphs](text-and-paragraphs.md#paint-format)          |
-| Zoom                          | 50 to 200 percent, Fit                     | specified | [Editing surface](editing-surface.md#zoom)                          |
-| Styles, Font, Font size       | Menus and the size field with − and +      | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Bold, Italic, Underline       | Toggles                                    | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Text colour, Highlight colour | The one colour picker                      | specified | [Text and paragraphs](text-and-paragraphs.md#colour)                |
-| Link, Comment, Image          | As the menus                               | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Align, Spacing                | Menus                                      | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Checklist, Bulleted, Numbered | Toggles with a menu of styles              | specified | [Lists](lists.md)                                                   |
-| Indent less and more          | ⌘[ and ⌘]                                  | specified | [Text and paragraphs](text-and-paragraphs.md#alignment-and-indents) |
-| Clear formatting              | ⌘\                                         | specified | [Text and paragraphs](text-and-paragraphs.md#clear-formatting)      |
-| Overflow                      | Controls past the width go into a ⋮ menu   | specified | [Editing surface](editing-surface.md#the-toolbar)                   |
-| Mode switch                   | Editing, Suggesting, Viewing               | specified | [Review](review.md#editing-modes)                                   |
-| Hide the menus                | Compact mode, Ctrl⇧F                       | specified | [Editing surface](editing-surface.md#compact-and-full-screen)       |
+| Row                           | Rule                                       | Status                                                   | Spec                                                                |
+| ----------------------------- | ------------------------------------------ | -------------------------------------------------------- | ------------------------------------------------------------------- |
+| Tool finder                   | Search the menus                           | built (`OfficeToolbar.test.tsx`, `office-shell.spec.ts`) | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Undo, Redo, Print             | As the menus                               | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Spelling and grammar check    | Opens the check                            | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Paint format                  | Copy formatting once, double-click to keep | specified                                                | [Text and paragraphs](text-and-paragraphs.md#paint-format)          |
+| Zoom                          | 50 to 200 percent, Fit                     | built (`OfficeToolbar.test.tsx`, `office-shell.spec.ts`) | [Editing surface](editing-surface.md#zoom)                          |
+| Styles, Font, Font size       | Menus and the size field with − and +      | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Bold, Italic, Underline       | Toggles                                    | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Text colour, Highlight colour | The one colour picker                      | specified                                                | [Text and paragraphs](text-and-paragraphs.md#colour)                |
+| Link, Comment, Image          | As the menus                               | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Align, Spacing                | Menus                                      | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Checklist, Bulleted, Numbered | Toggles with a menu of styles              | specified                                                | [Lists](lists.md)                                                   |
+| Indent less and more          | ⌘[ and ⌘]                                  | specified                                                | [Text and paragraphs](text-and-paragraphs.md#alignment-and-indents) |
+| Clear formatting              | ⌘\                                         | specified                                                | [Text and paragraphs](text-and-paragraphs.md#clear-formatting)      |
+| Overflow                      | Controls past the width go into a ⋮ menu   | specified                                                | [Editing surface](editing-surface.md#the-toolbar)                   |
+| Mode switch                   | Editing, Suggesting, Viewing               | specified                                                | [Review](review.md#editing-modes)                                   |
+| Hide the menus                | Compact mode, Ctrl⇧F                       | specified                                                | [Editing surface](editing-surface.md#compact-and-full-screen)       |
 
 ## Either way
 

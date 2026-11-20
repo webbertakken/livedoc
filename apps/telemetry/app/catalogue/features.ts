@@ -1078,6 +1078,15 @@ export const TEXT_DOCUMENT_STARRED = chart(
   { types: ['TextDocumentStar'], rising: 'neutral' },
 );
 
+// A text document's zoom changed from its toolbar (docs/specs/034-text-documents/editing-surface.md "Zoom").
+export const TEXT_DOCUMENT_ZOOMED = chart(
+  'UI',
+  'Changed',
+  'Text Document Zoom',
+  "A text document's zoom changed from its toolbar: Fit, a preset or a typed value.",
+  { types: ['TextDocumentZoom'], rising: 'neutral' },
+);
+
 // A person here followed from a text document's title row: their caret brought into view, or their tab opened.
 export const TEXT_DOCUMENT_FOLLOWED = chart(
   'UI',
@@ -1101,6 +1110,7 @@ export const EDITOR_CHROME: MetricStack = {
     TOOL_FINDER_USED,
     TEXT_DOCUMENT_STARRED,
     TEXT_DOCUMENT_FOLLOWED,
+    TEXT_DOCUMENT_ZOOMED,
   ],
 };
 
