@@ -7,6 +7,7 @@ import {
   keptXmlWithin,
   ODF_MEDIA_TYPES,
   ODF_VERSION,
+  odfLengthToPt,
   odfMetaChildren,
   statisticsOf,
   writeOdfPackage,
@@ -17,7 +18,7 @@ import type { Block, Inline, Paragraph, SectionBreak } from '../model/blocks';
 import { Paragraph as Paragraphs } from '../model/blocks';
 import type { ListDefinition } from '../model/lists';
 import { canonical, compact, isEmpty, keptStillHolds, type TextProps } from '../model/props';
-import type { PageSetup, Section } from '../model/sections';
+import { Columns, type PageSetup, type Section } from '../model/sections';
 import { Styles, type Style } from '../model/styles';
 import { TextDocument, type OdfSource } from '../model/text-document';
 import { shortHash } from '../hash';
@@ -313,20 +314,62 @@ function bodyXml(w: OdfWriter): string {
   return out.join('\n');
 }
 
+// A section style holding these columns: the kept one's copy when there is one, else LiveDoc's own. The columns go
+// where the schema has them, after a background picture and before notes configurations.
+function sectionStyleXml(name: string, columns: Columns | undefined, kept?: string): string {
+  const inner = columnsXml(columns);
+  const props = kept?.match(/<style:section-properties\b([^>]*?)(\/?)>/);
+  if (!kept || !props) {
+    return `<style:style${attr('style:name', name)} style:family="section"><style:section-properties>${inner}</style:section-properties></style:style>`;
+  }
+  const renamed = kept
+    .replace(/\sstyle:name="[^"]*"/, attr('style:name', name))
+    .replace(/<style:columns\b[^>]*?(?:\/>|>[\s\S]*?<\/style:columns>)/, '');
+  if (props[2]) {
+    return renamed.replace(
+      props[0],
+      `<style:section-properties${props[1]}>${inner}</style:section-properties>`,
+    );
+  }
+  const picture = renamed.match(
+    /<style:background-image\b[^>]*?(?:\/>|>[\s\S]*?<\/style:background-image>)/,
+  );
+  const at = picture
+    ? renamed.indexOf(picture[0]) + picture[0].length
+    : renamed.indexOf(props[0]) + props[0].length;
+  return renamed.slice(0, at) + inner + renamed.slice(at);
+}
+
+// The columns a kept section style's XML holds.
+function columnsInStyle(xml: string | undefined): Columns | undefined {
+  const count = Number(xml?.match(/<style:columns\b[^>]*\sfo:column-count="(\d+)"/)?.[1]);
+  if (!xml || !(count > 1)) return undefined;
+  const gap = odfLengthToPt(xml.match(/<style:columns\b[^>]*\sfo:column-gap="([^"]*)"/)?.[1]) ?? 0;
+  const sep = xml.match(/<style:column-sep\b[^>]*?(?:\sstyle:style="([^"]*)")?[^>]*\/?>/);
+  return { count, gap, ...(sep && sep[1] !== 'none' ? { separator: true as const } : {}) };
+}
+
 function sectionOpen(
   w: OdfWriter,
   block: SectionBreak,
 ): { xml: string; close: string } | undefined {
   if (block.region) {
     const xml = keptXmlWithin(block.region, w.ns);
-    return { xml, close: xml.match(/^<([^\s>/]+)/)![1]! };
+    const close = xml.match(/^<([^\s>/]+)/)![1]!;
+    // A region keeps its own style while its columns are as it named them; else a copy of it with the new columns.
+    const named = xml.match(/\stext:style-name="([^"]*)"/)?.[1];
+    const own = named === undefined ? undefined : w.automatic.byName.get(named);
+    if (Columns.equal(Columns.of({ columns: columnsInStyle(own) }), Columns.of(block.setup)))
+      return { xml, close };
+    const style = w.generated('LDS', (name) => sectionStyleXml(name, block.setup.columns, own));
+    const restyled =
+      named === undefined
+        ? xml.replace(/^<([^\s>/]+)/, `<$1${attr('text:style-name', style)}`)
+        : xml.replace(/\stext:style-name="[^"]*"/, attr('text:style-name', style));
+    return { xml: restyled, close };
   }
   if (!block.setup.columns || block.setup.columns.count < 2) return undefined;
-  const style = w.generated(
-    'LDS',
-    (name) =>
-      `<style:style${attr('style:name', name)} style:family="section"><style:section-properties>${columnsXml(block.setup.columns)}</style:section-properties></style:style>`,
-  );
+  const style = w.generated('LDS', (name) => sectionStyleXml(name, block.setup.columns));
   return {
     xml: `<text:section${attr('text:style-name', style)}${attr('text:name', style)}>`,
     close: 'text:section',

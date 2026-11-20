@@ -29,6 +29,9 @@ import type { TabStop } from '../model/tab-stops';
 const val = (e: XmlElement | undefined) => (e ? attributeOf(e, W_NS, 'val') : undefined);
 const child = (e: XmlElement | undefined, local: string) =>
   e ? childElement(e, W_NS, local) : undefined;
+// An ST_OnOff attribute: absent is `absent`; "0", "false" and "off" are off.
+const onOffOf = (value: string | undefined, absent: boolean): boolean =>
+  value === undefined ? absent : !['0', 'false', 'off'].includes(value);
 const wAttr = (e: XmlElement | undefined, local: string) =>
   e ? attributeOf(e, W_NS, local) : undefined;
 
@@ -321,11 +324,14 @@ const START_OUT: Record<SectionStart, string> = {
 export function readSection(
   sectPr: XmlElement,
   pageColor: string | undefined,
+  onUnequal: () => void = () => {},
 ): { start: SectionStart; setup: PageSetup } {
   const size = child(sectPr, 'pgSz');
   const margin = child(sectPr, 'pgMar');
   const cols = child(sectPr, 'cols');
   const count = Number(wAttr(cols, 'num'));
+  // Columns of their own widths read as equal (page-layout.md "Columns").
+  if (count > 1 && !onOffOf(wAttr(cols, 'equalWidth'), true)) onUnequal();
   return {
     start: START_IN[val(child(sectPr, 'type')) ?? 'nextPage'] ?? 'next-page',
     setup: compact({
@@ -340,7 +346,14 @@ export function readSection(
         right: twipsToPt(wAttr(margin, 'right')) ?? 72,
       },
       pageColor,
-      columns: count > 1 ? { count, gap: twipsToPt(wAttr(cols, 'space')) ?? 36 } : undefined,
+      columns:
+        count > 1
+          ? compact({
+              count,
+              gap: twipsToPt(wAttr(cols, 'space')) ?? 36,
+              separator: onOffOf(wAttr(cols, 'sep'), false) ? (true as const) : undefined,
+            })
+          : undefined,
     }),
   };
 }
@@ -380,6 +393,7 @@ export function sectionXml(
           ? tag('cols', {
               'w:num': String(setup.columns.count),
               'w:space': ptToTwips(setup.columns.gap),
+              'w:sep': setup.columns.separator ? '1' : undefined,
             })
           : undefined,
     },

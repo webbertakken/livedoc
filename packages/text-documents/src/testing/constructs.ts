@@ -270,7 +270,7 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       orientation: 'landscape' as const,
       margins: { top: 36, bottom: 36, left: 54, right: 54 },
     };
-    const columns = { ...portrait, columns: { count: 2, gap: 36 } };
+    const columns = { ...portrait, columns: { count: 2, gap: 36, separator: true as const } };
     return base(
       format,
       [

@@ -17,7 +17,14 @@ export type PageSetup = {
   readonly margins: Margins;
   /** `#rrggbb`; absent is white. */
   readonly pageColor?: string;
-  readonly columns?: { readonly count: number; readonly gap: number };
+  readonly columns?: Columns;
+};
+
+/** A section's columns (page-layout.md "Columns"): how many, the gap between two in points, a line in each gap. */
+export type Columns = {
+  readonly count: number;
+  readonly gap: number;
+  readonly separator?: true;
 };
 
 export type Orientation = PageSetup['orientation'];
@@ -149,5 +156,41 @@ export const PageSetup = {
     };
     const room = PageSetup.room(setup);
     return room.across >= MIN_TEXT_SIDE_PT && room.down >= MIN_TEXT_SIDE_PT ? setup : null;
+  },
+} as const;
+
+/** The gap a section with none yet gets: 0.5 in (assumed: Google's). */
+export const COLUMN_GAP_PT = IN / 2;
+/** Every column keeps at least this width: 0.5 in (default). */
+export const MIN_COLUMN_WIDTH_PT = IN / 2;
+/** Google offers one to three columns. */
+export const MAX_COLUMNS = 3;
+
+const ONE_COLUMN: Columns = { count: 1, gap: COLUMN_GAP_PT };
+
+export const Columns = {
+  /** A section's columns: one, with the default gap, when it has none. */
+  of: (setup: Pick<PageSetup, 'columns'>): Columns =>
+    setup.columns && setup.columns.count > 1 ? setup.columns : ONE_COLUMN,
+  /** The text area's width across all columns, in points. */
+  textWidth: (setup: PageSetup): number => PageSetup.room(setup).across,
+  /** One column's width, in points. */
+  width: (setup: PageSetup): number => {
+    const { count, gap } = Columns.of(setup);
+    return (Columns.textWidth(setup) - gap * (count - 1)) / count;
+  },
+  /** The widest gap that leaves `count` columns each at least the narrowest, in points; 0 when none would. */
+  mostGap: (setup: PageSetup, count: number): number =>
+    count < 2
+      ? 0
+      : Math.max(0, (Columns.textWidth(setup) - MIN_COLUMN_WIDTH_PT * count) / (count - 1)),
+  /** The same columns: count, gap and line (a gap or line on one column counts for nothing). */
+  equal: (a: Columns, b: Columns): boolean =>
+    a.count === b.count &&
+    (a.count < 2 || (a.gap === b.gap && (a.separator ?? false) === (b.separator ?? false))),
+  /** A setup with these columns; one column is none. */
+  onto: (setup: PageSetup, columns: Columns): PageSetup => {
+    const { columns: _was, ...rest } = setup;
+    return columns.count > 1 ? { ...rest, columns } : rest;
   },
 } as const;

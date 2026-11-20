@@ -12,7 +12,8 @@ export type DroppedReason =
   | 'external'
   | 'kept-limit'
   | 'layout-hint'
-  | 'tab-stop';
+  | 'tab-stop'
+  | 'column-width';
 
 export type ReportItem = { readonly name: string; readonly count: number };
 

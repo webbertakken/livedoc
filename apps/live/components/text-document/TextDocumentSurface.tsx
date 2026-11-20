@@ -90,6 +90,7 @@ import {
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
 import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
+import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin } from '@/lib/text-document/text-document-breaks';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
 import {
@@ -323,6 +324,8 @@ export function TextDocumentSurface({
                 () =>
                   layout.current?.setup ??
                   TextDocumentState.section(doc, live.current.format).setup,
+                // Columns are drawn only where pages are laid out (page-layout.md "Columns").
+                () => layout.current?.pages ?? false,
               ),
               // The writing laid onto pages (page-layout.md "Laying out").
               paginationPlugin({
@@ -442,6 +445,15 @@ export function TextDocumentSurface({
     ownerId,
     subscribeCaret: changes.subscribeCaret,
   });
+  // Format > Columns (page-layout.md "Columns").
+  const columns = useTextDocumentColumns({
+    view: editorView,
+    liveDoc,
+    format,
+    writes,
+    pageless: page.pageless,
+    caretSetup: page.caret.section.setup,
+  });
   // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
   const column = usePagelessColumn(scroller, scale, page.pageless);
   const drawn = page.pageless ? pagelessSetup(page.section.setup, column) : page.section.setup;
@@ -493,10 +505,12 @@ export function TextDocumentSurface({
       ...ruler.actions,
       ...marks.actions,
       ...page.actions,
+      ...columns.actions,
       ...breakActions,
     }),
     [
       breakActions,
+      columns.actions,
       page.actions,
       ruler.actions,
       marks.actions,
@@ -580,6 +594,7 @@ export function TextDocumentSurface({
       {clipboard.dialog}
       {preferences.dialog}
       {page.dialog}
+      {columns.dialog}
       {lists.dialog}
       {limitReached ? (
         <p

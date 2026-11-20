@@ -1,7 +1,7 @@
 # Page layout
 
-**Status: partly built.** Page setup, page orientation, pageless, the page drawn at its setup and laying out onto
-pages are built; the rest is specified.
+**Status: partly built.** Page setup, page orientation, pageless, the page drawn at its setup, laying out onto pages,
+breaks, sections and columns are built; the rest is specified.
 
 Pages, sections, breaks, columns, headers and footers, page numbers and footnotes in a [text document](text-document.md).
 The layout is drawn by the measured DOM layout the research recommends
@@ -165,6 +165,39 @@ pages' setup.
 Format > Columns: one, two or three; **More options**: count (1 to 3), spacing (cm or in), **Line between columns**.
 Per section. Text fills the first column down the page, then the next.
 
+- **The submenu**: **One column**, **Two columns**, **Three columns**, the caret's section's count checked, and
+  **More options**, which opens **Column options**. Dimmed while the document is pageless, as Google's.
+- **Column options**, a dialog: **Presets** (one, two or three columns, drawn as small pages), **Number of columns**
+  (1 to 3), **Spacing** in the person's unit, **Line between columns**; **Cancel** and **Apply**. It opens at the
+  caret's section's columns; Presets and Number of columns are one choice shown twice.
+- **Spacing** is the gap between two columns, 0.5 in (36 pt) for a section that has none yet (assumed: Google's). A
+  field takes 0 up to what leaves every column at least 0.5 in (36 pt) wide, else "Enter a number from 0 to
+  <most>." in the person's unit, and Apply is held (default). With one column the spacing and the line are dimmed.
+- **What they apply to**: with text selected, the paragraphs it touches become a section of their own, a section
+  break (continuous) made before and after them where none is (a break already there stays as it is), as Google's;
+  else the caret's section. One undo step with the breaks it makes; a choice that changes nothing changes nothing.
+- **Laid out**: a section's columns share its text width, each `(width − spacing × (count − 1)) / count` wide, left
+  to right. A column fills from the top of the section's part of the page (the text area's top, or the foot of what a
+  continuous section break left above it) down to the foot of the text area; then the next column starts at that top;
+  after the last column the next page. Lines break between columns as between pages: a paragraph splits between two
+  of its lines, and keep with next, keep lines together, prevent single lines and page break before apply with the
+  column for the page; a page break or a next-page section break still starts a new page.
+- **Balanced**: a section of columns that a continuous section break ends lays its last page's part in columns as
+  even as its lines allow, the shortest that holds it, and the next section starts under the longest column (assumed:
+  Google's, as Word's). Elsewhere columns fill one after another.
+- **Line between columns**: a thin line in the middle of each gap, from the top of the section's part of the page to
+  the foot of its longest column, in the writing's ink.
+- A paragraph is drawn across columns, and onto the next page, as one: the caret, selection and a screen reader move
+  through it as through any paragraph. Where the browser cannot carry a paragraph from a page's columns onto the next
+  page (no CSS `column-wrap`), that paragraph moves whole to the next page (default).
+- **One column** where no pages are laid out: pageless, on a phone, and with print layout off; the columns are kept
+  and come back.
+- In the file: `style:columns` (`fo:column-count`, `fo:column-gap`, `style:column-sep` for the line) on the page
+  layout or the continuous section; `w:cols` (`w:num`, `w:space`, `w:sep`). Columns of unequal widths read as equal
+  ([Documented losses](standard-mapping.md#documented-losses)).
+- Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentColumns`, from the
+  submenu and the dialog alike. Logs `[text-document] columns` with the count, the scope and the sections changed.
+
 ## Headers and footers
 
 - Insert > Headers and footers, or a double-click in the top or bottom margin, puts the caret in the header or footer.
@@ -203,7 +236,7 @@ file is kept and drawn where the format holds it.
 
 Editors change page setup, breaks, columns, headers, footers, page numbers and footnotes; a Participant only as
 suggestions (D7); a Viewer chooses print layout and text width for themself. Until suggestions are built a
-Participant and a Viewer see neither Page setup nor Page orientation.
+Participant and a Viewer see none of Page setup, Page orientation and Columns.
 
 ## Telemetry
 

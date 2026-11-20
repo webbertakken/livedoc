@@ -1180,6 +1180,16 @@ export const TEXT_DOCUMENT_PAGE_SETUP = chart(
   },
 );
 
+// A text document's columns changed (docs/specs/034-text-documents/page-layout.md "Columns"): Format > Columns' one,
+// two or three, or Column options' Apply.
+export const TEXT_DOCUMENT_COLUMNS = chart(
+  'Tab',
+  'Changed',
+  'Text Document Columns',
+  "A text document section's columns changed from Format > Columns, or by Column options.",
+  { types: ['TextDocumentColumns'] },
+);
+
 // A page or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
 export const TEXT_DOCUMENT_BREAKS = chart(
   'Element',

@@ -448,6 +448,46 @@ div.text-document-kept {
  */
 .text-document-body > [data-section-width] {
   position: relative;
-  left: var(--section-shift);
+  left: calc(var(--section-shift) + var(--column, 0) * var(--column-step, 0px));
   width: calc(var(--section-width) - var(--text-document-box-inline, 0px));
+}
+/*
+ * A section of columns (docs/specs/034-text-documents/page-layout.md "Columns"): each block at a column's width, moved
+ * across to its column, above any paragraph drawn as a box of columns over the region. That paragraph spans the text
+ * width in columns of its own, from the region's top, the room before its first line and each column's start drawn
+ * inside it; its rows are pages where the browser draws rows of columns.
+ */
+.text-document-body > [data-section-columns] {
+  z-index: 1;
+}
+.text-document-body > .text-document-column-cross {
+  z-index: 0;
+  left: var(--section-shift);
+  width: calc(var(--section-text-width) - var(--text-document-box-inline, 0px));
+  height: var(--cross-height);
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  column-count: var(--cross-count);
+  column-gap: var(--column-gap);
+  column-fill: auto;
+  orphans: 1;
+  widows: 1;
+}
+.text-document-body > .text-document-column-cross[data-cross-rows] {
+  height: auto;
+  column-height: var(--cross-height);
+  column-wrap: wrap;
+  row-gap: var(--cross-row-gap);
+}
+.text-document-column-mark,
+.text-document-column-mark > span {
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+.text-document-column-mark > [data-full] {
+  break-after: column;
+}
+.text-document-column-mark-split {
+  break-before: column;
 }

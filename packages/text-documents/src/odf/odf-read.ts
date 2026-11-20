@@ -27,7 +27,13 @@ import type { KeptEntry, OdfSource, TextDocument } from '../model/text-document'
 import { isSafeLink, type ReportBuilder } from '../report';
 import { LIVEDOC_NS, NS, WRITTEN_NS } from './odf-names';
 import { readListLevels } from './odf-lists';
-import { readPageSetup, readParagraphProps, readTextProps, unquote } from './odf-props';
+import {
+  readColumns,
+  readPageSetup,
+  readParagraphProps,
+  readTextProps,
+  unquote,
+} from './odf-props';
 import { keptSettings, pagelessIn } from './odf-settings';
 import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
 
@@ -50,6 +56,7 @@ type AutoStyle = {
   paragraph: ParagraphProps;
   text: TextProps;
   kept: KeptXml;
+  element: XmlElement;
 };
 
 // Elements that run things: dropped with their declarations, their last shown text kept (files-and-print.md).
@@ -90,6 +97,7 @@ class OdfReader {
 
   /** Tab stops a read left out (bar stops, past the range or the most), reported. */
   readonly dropTabs = (count: number): void => this.report.drop('tab-stop', 'tab-stop', count);
+  readonly unequalColumns = (): void => this.report.drop('column-width', 'column-width');
 
   /** Kept XML, with what runs things and OLE binaries left out and reported. */
   kept(parsed: XmlParsed, element: XmlElement): KeptXml {
@@ -136,6 +144,7 @@ class OdfReader {
           paragraph: readParagraphProps(style, this.dropTabs),
           text: readTextProps(style, this.faces),
           kept: xml,
+          element: style,
         });
       }
     }
@@ -223,7 +232,7 @@ class OdfReader {
   sectionOf(master: string | undefined, start: Section['start']): Section | undefined {
     const layoutName = master === undefined ? undefined : this.masters.get(master);
     const layout = layoutName === undefined ? undefined : this.pageLayouts.get(layoutName);
-    const setup = layout && readPageSetup(layout.element);
+    const setup = layout && readPageSetup(layout.element, this.unequalColumns);
     if (!layout || !setup) return undefined;
     const props = childElement(layout.element, NS.style, 'page-layout-properties');
     const residue = [
@@ -385,7 +394,12 @@ class BodyReader {
       .slice(e.start, parsed.source.indexOf('>', e.start) + 1)
       .replace(/\/>$/, '>');
     const columnsStyle = this.r.auto.get(attributeOf(e, NS.text, 'style-name') ?? '');
-    const columns = columnsStyle ? columnsOfSection(columnsStyle.kept) : undefined;
+    const columns =
+      columnsStyle &&
+      readColumns(
+        childElement(columnsStyle.element, NS.style, 'section-properties'),
+        this.r.unequalColumns,
+      );
     const setup = this.currentSetup();
     this.blocks.push({
       type: 'section',
@@ -487,14 +501,6 @@ class BodyReader {
     };
     this.blocks.push(paragraph);
   }
-}
-
-function columnsOfSection(kept: KeptXml): { count: number; gap: number } | undefined {
-  const count = Number(kept.xml.match(/fo:column-count="(\d+)"/)?.[1]);
-  if (!(count > 1)) return undefined;
-  const gap = kept.xml.match(/fo:column-gap="([^"]+)"/)?.[1];
-  const pt = gap ? Number.parseFloat(gap) : 0;
-  return { count, gap: Number.isNaN(pt) ? 0 : pt };
 }
 
 class InlineReader {

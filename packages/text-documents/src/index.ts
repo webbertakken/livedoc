@@ -69,6 +69,10 @@ export {
   type TextProps,
 } from './model/props';
 export {
+  COLUMN_GAP_PT,
+  Columns,
+  MAX_COLUMNS,
+  MIN_COLUMN_WIDTH_PT,
   MIN_TEXT_SIDE_PT,
   PAGE_SIDE_MAX_PT,
   PAPER,
