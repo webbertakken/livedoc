@@ -5,6 +5,9 @@ import { MANY, arrayArg, flatScalars, flatValues, fn, numbersOf, type FnDef } fr
 import { mean } from '../descriptive';
 import { err, isError, type Value } from '../values';
 import { PERMUTATION_FUNCTIONS } from './combinatorics';
+import { DISCRETE_DISTRIBUTION_FUNCTIONS } from './discrete-distributions';
+import { DISTRIBUTION_FUNCTIONS } from './distributions';
+import { TEST_FUNCTIONS } from './hypothesis-tests';
 import { criteriaMask, ifsNumbers, maskedNumbers, sameSizeAs } from './conditional';
 import { MOMENT_FUNCTIONS } from './moments';
 import { ORDER_FUNCTIONS } from './order-statistics';
@@ -91,4 +94,7 @@ export const STATS_FUNCTIONS: Record<string, FnDef> = {
   ...ORDER_FUNCTIONS,
   ...PAIRED_FUNCTIONS,
   ...PERMUTATION_FUNCTIONS,
+  ...DISTRIBUTION_FUNCTIONS,
+  ...DISCRETE_DISTRIBUTION_FUNCTIONS,
+  ...TEST_FUNCTIONS,
 };
