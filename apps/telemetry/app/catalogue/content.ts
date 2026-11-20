@@ -7,7 +7,11 @@ import { canonicalElementType, PALETTE_KINDS, type PaletteTab } from '../palette
 import type { Metric, MetricStack } from '../metric-series';
 import { chart } from './helpers';
 import { LOGO_TOOL_TYPES } from '../logo-types';
-import { LOCAL_MOVE_OFFERED, TEXT_DOCUMENT_PARAGRAPH_STYLE } from './features';
+import {
+  LOCAL_MOVE_OFFERED,
+  TEXT_DOCUMENT_PARAGRAPH_FORMATTING,
+  TEXT_DOCUMENT_PARAGRAPH_STYLE,
+} from './features';
 
 // The Element types that are a table's rows and columns, not elements, and
 // the table's own switches (docs/specs/017-telemetry/telemetry.md).
@@ -541,6 +545,7 @@ export const ELEMENTS_CHANGED = chart(
       !/^Article[A-Z]/.test(t ?? '') &&
       !(t ?? '').startsWith('TextDocumentFormat') &&
       !TEXT_DOCUMENT_PARAGRAPH_STYLE.typeIn!(t) &&
+      !TEXT_DOCUMENT_PARAGRAPH_FORMATTING.typeIn!(t) &&
       !LOGO_TOOL_TYPES.includes(t ?? '') &&
       !DATA_MODEL_CHANGED.includes(t ?? ''),
   },

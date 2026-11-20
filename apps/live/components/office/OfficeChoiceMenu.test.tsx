@@ -198,4 +198,37 @@ describe('OfficeToolbar choices', () => {
     expect(screen.getByRole('button', { name: 'Styles: Heading 1' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Other/ })).toBeNull();
   });
+
+  it('draws an icon control with a menu the kind binds as a choice, its glyph from the value', () => {
+    const iconOf = vi.fn(() => [{ t: 'path' as const, d: 'M1 1h2' }]);
+    render(
+      <OfficeToolbar
+        groups={[
+          {
+            id: 'paragraph',
+            label: 'Paragraph',
+            controls: [
+              {
+                id: 'align',
+                label: 'Align & indent',
+                level: 'edit',
+                status: 'built',
+                look: { kind: 'icon', icon: [], menu: true },
+              },
+            ],
+          },
+        ]}
+        actions={{}}
+        shortcutOf={() => null}
+        zoom={null}
+        choices={{ align: { read: () => 'Centre', entries: ENTRIES, actions: {}, iconOf } }}
+      />,
+    );
+    const control = screen.getByRole('button', { name: 'Align & indent: Centre' });
+    expect(control.getAttribute('aria-haspopup')).toBe('menu');
+    expect(control.querySelector('path')?.getAttribute('d')).toBe('M1 1h2');
+    expect(iconOf).toHaveBeenCalledWith('Centre');
+    fireEvent.click(control);
+    expect(screen.getByRole('menu', { name: 'Align & indent' })).toBeTruthy();
+  });
 });

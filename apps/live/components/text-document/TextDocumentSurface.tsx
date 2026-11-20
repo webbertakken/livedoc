@@ -63,6 +63,7 @@ import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
 import { TEXT_DOCUMENT_PANELS } from '@/lib/text-document/text-document-panels';
 import { TextDocumentOutline } from './TextDocumentOutline';
+import { useTextDocumentParagraphs } from './useTextDocumentParagraphs';
 import {
   placeTextDocumentCaret,
   textDocumentCaretPoint,
@@ -300,16 +301,35 @@ export function TextDocumentSurface({
     writes,
     ownerId,
   );
+  // Format > Align & indent, the toolbar's Align and indent controls, and Indentation options.
+  const paragraphs = useTextDocumentParagraphs(editorView, liveDoc, format, writes);
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
   const editorActions = useMemo(
     () => ({
       ...textDocumentEditorActions(editorView, { canEdit: writes }),
       ...formatting.actions,
       ...paragraphStyles.actions,
+      ...paragraphs.actions,
       ...modeActions,
       ...panels.actions,
     }),
-    [editorView, writes, formatting.actions, paragraphStyles.actions, modeActions, panels.actions],
+    [
+      editorView,
+      writes,
+      formatting.actions,
+      paragraphStyles.actions,
+      paragraphs.actions,
+      modeActions,
+      panels.actions,
+    ],
+  );
+  // The toolbar's choice controls: Styles and Align.
+  const choices = useMemo(
+    () =>
+      paragraphStyles.choices || paragraphs.choices
+        ? { ...paragraphStyles.choices, ...paragraphs.choices }
+        : null,
+    [paragraphStyles.choices, paragraphs.choices],
   );
   // The caret, for the context menu on text.
   const caret = useMemo(
@@ -361,12 +381,13 @@ export function TextDocumentSurface({
         fontSize={formatting.fontSize}
         fontFamily={formatting.fontFamily}
         colours={formatting.colours}
-        choices={paragraphStyles.choices}
+        choices={choices}
         refresh={changes.subscribeCaret}
         onFollow={(personId) =>
           editorView ? scrollToTextDocumentPeer(editorView, personId) : false
         }
       />
+      {paragraphs.dialog}
       {limitReached ? (
         <p
           role="status"

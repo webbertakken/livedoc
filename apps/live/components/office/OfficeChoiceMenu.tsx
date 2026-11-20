@@ -5,7 +5,8 @@
 // the page, the one at the caret checked. The Styles control is one; the font control draws its own value and menu on
 // it. A choice runs the kind's action, which gives focus back to the writing.
 import { useState } from 'react';
-import { ChevronDownIcon, HoverCard } from '@livedoc/ui';
+import { ChevronDownIcon, Glyph, HoverCard, Prims } from '@livedoc/ui';
+import type { IconPrim } from '@livedoc/icons';
 import type { OfficeActions, OfficeEntry } from '@/lib/office/office-catalogue';
 import { OfficeMenuPanel } from './OfficeMenuPanel';
 import { OfficePopup } from './OfficePopup';
@@ -15,6 +16,8 @@ export type OfficeChoice = {
   read: () => string | null;
   entries: readonly OfficeEntry[];
   actions: OfficeActions;
+  // An icon control's glyph for the value there is (the Align control shows the alignment's icon).
+  iconOf?: (value: string | null) => readonly IconPrim[];
 };
 
 /** The kind's choice controls, by control id. */
@@ -27,6 +30,7 @@ export function OfficeChoiceMenu({
   label,
   value,
   italic = false,
+  icon,
   description,
   entries,
   actions,
@@ -42,6 +46,8 @@ export function OfficeChoiceMenu({
   value: string | null;
   // The value in italics (a font drawn as another).
   italic?: boolean;
+  // Drawn as this glyph and a chevron instead of the value's text (an icon control with a menu).
+  icon?: readonly IconPrim[];
   // The control's tooltip line under its name.
   description?: string;
   entries: readonly OfficeEntry[];
@@ -75,10 +81,16 @@ export function OfficeChoiceMenu({
             e.preventDefault();
             openMenu();
           }}
-          style={{ width }}
+          style={icon ? undefined : { width }}
           className={className}
         >
-          <span className={`truncate pl-1 ${italic ? 'italic' : ''}`}>{value ?? ''}</span>
+          {icon ? (
+            <Glyph size={18} units={24}>
+              <Prims prims={icon} />
+            </Glyph>
+          ) : (
+            <span className={`truncate pl-1 ${italic ? 'italic' : ''}`}>{value ?? ''}</span>
+          )}
           <ChevronDownIcon size={12} />
         </button>
       </HoverCard>

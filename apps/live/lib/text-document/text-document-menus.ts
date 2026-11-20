@@ -244,18 +244,37 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         STYLE_OPTIONS,
       ]),
       submenu('align-and-indent', 'Align & indent', [
-        item('align-left', 'Left', 'edit', { shortcut: 'left-align' }),
-        item('align-centre', 'Centre', 'edit', { shortcut: 'center-align', keywords: ['center'] }),
-        item('align-right', 'Right', 'edit', { shortcut: 'right-align' }),
-        item('align-justified', 'Justified', 'edit', { shortcut: 'justify' }),
+        item('align-left', 'Left', 'edit', {
+          shortcut: 'left-align',
+          checkable: 'radio',
+          ...BUILT,
+        }),
+        item('align-centre', 'Centre', 'edit', {
+          shortcut: 'center-align',
+          keywords: ['center'],
+          checkable: 'radio',
+          ...BUILT,
+        }),
+        item('align-right', 'Right', 'edit', {
+          shortcut: 'right-align',
+          checkable: 'radio',
+          ...BUILT,
+        }),
+        item('align-justified', 'Justified', 'edit', {
+          shortcut: 'justify',
+          checkable: 'radio',
+          ...BUILT,
+        }),
         SEPARATOR,
         item('indent-increase', 'Increase indent', 'edit', {
           shortcut: 'increase-paragraph-indentation',
+          ...BUILT,
         }),
         item('indent-decrease', 'Decrease indent', 'edit', {
           shortcut: 'decrease-paragraph-indentation',
+          ...BUILT,
         }),
-        item('indentation-options', 'Indentation options', 'edit'),
+        item('indentation-options', 'Indentation options', 'edit', BUILT),
       ]),
       submenu('line-spacing', 'Line & paragraph spacing', [
         item('spacing-single', 'Single', 'edit', { checkable: 'radio' }),

@@ -1132,6 +1132,16 @@ export const TEXT_DOCUMENT_PARAGRAPH_STYLE = chart(
   { types: TEXT_DOCUMENT_PARAGRAPH_STYLE_TYPES },
 );
 
+// A text document's paragraphs formatted (docs/specs/034-text-documents/text-and-paragraphs.md "Alignment and
+// indents"): aligned, indented a step, or indented through Indentation options.
+export const TEXT_DOCUMENT_PARAGRAPH_FORMATTING = chart(
+  'Element',
+  'Changed',
+  'Text Document Paragraph Formatting',
+  "A text document's paragraphs aligned or indented, from the toolbar, Format > Align & indent or a shortcut.",
+  { types: ['TextDocumentAlign', 'TextDocumentIndent', 'TextDocumentIndentation'] },
+);
+
 // Someone kept a text document's styles as their default styles (text-and-paragraphs.md "Default styles").
 export const TEXT_DOCUMENT_DEFAULT_STYLES = chart(
   'UI',

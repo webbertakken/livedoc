@@ -11,5 +11,9 @@ export async function officeMenuItem(page: Page, path: readonly string[]): Promi
   const last = rest.pop()!;
   for (const submenu of rest)
     await page.getByRole('menuitem', { name: submenu, exact: true }).click();
-  return page.getByRole('menuitem', { name: last, exact: true });
+  // A checkable item (an alignment, Keep with next) is a radio or a checkbox item.
+  return page
+    .getByRole('menuitem', { name: last, exact: true })
+    .or(page.getByRole('menuitemradio', { name: last, exact: true }))
+    .or(page.getByRole('menuitemcheckbox', { name: last, exact: true }));
 }

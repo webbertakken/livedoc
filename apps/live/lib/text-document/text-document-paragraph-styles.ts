@@ -26,6 +26,7 @@ import type {
 import type { OfficeChoices } from '@/components/office/OfficeChoiceMenu';
 import { track } from '@/lib/telemetry';
 import { readDomSelection } from './text-document-dom-selection';
+import { selectedParagraphs } from './text-document-paragraphs';
 import type { TextFormatting } from './text-document-formatting';
 import { startUndoStep } from './text-document-undo';
 import { conformParagraph, lookAtCaret } from './text-document-update-style';
@@ -61,25 +62,6 @@ const LABEL_OF_ROLE = new Map(PARAGRAPH_STYLE_ITEMS.map((s) => [s.role, s.label]
 const MENU_PX_MIN = 13;
 const MENU_PX_MAX = 22;
 
-/** The paragraphs the selection touches, each once, in order. */
-function paragraphsOf(state: EditorState): { node: PmNode; pos: number }[] {
-  const out: { node: PmNode; pos: number }[] = [];
-  const seen = new Set<number>();
-  for (const { $from, $to } of state.selection.ranges)
-    state.doc.nodesBetween($from.pos, $to.pos, (node, pos) => {
-      if (node.type.name !== 'paragraph') return true;
-      if (!seen.has(pos)) out.push({ node, pos });
-      seen.add(pos);
-      return false;
-    });
-  if (out.length === 0) {
-    const $from = state.selection.$from;
-    if ($from.parent.type.name === 'paragraph')
-      out.push({ node: $from.parent, pos: $from.before() });
-  }
-  return out;
-}
-
 // A paragraph's style as drawn: its own, or Normal text (undefined) for none or one the document lacks.
 const drawnStyleOf = (node: PmNode, styles: readonly Style[]): Style | undefined => {
   const id = (node.attrs as { style: string | null }).style;
@@ -90,7 +72,7 @@ const drawnStyleOf = (node: PmNode, styles: readonly Style[]): Style | undefined
 /** The style of the paragraphs the selection touches, as the Styles control names it; null when they differ. */
 export function paragraphStyleNameOf(state: EditorState, styles: readonly Style[]): string | null {
   const names = new Set(
-    paragraphsOf(state).map((p) => {
+    selectedParagraphs(state).map((p) => {
       const style = drawnStyleOf(p.node, styles);
       if (!style) return LABEL_OF_ROLE.get('normal')!;
       return (style.role && LABEL_OF_ROLE.get(style.role)) ?? style.name;
@@ -103,7 +85,7 @@ export function paragraphStyleNameOf(state: EditorState, styles: readonly Style[
 export function setParagraphStyle(id: string | null): Command {
   return (state, dispatch) => {
     const tr = state.tr;
-    for (const { node, pos } of paragraphsOf(state))
+    for (const { node, pos } of selectedParagraphs(state))
       tr.setNodeMarkup(pos, undefined, { ...node.attrs, style: id });
     dispatch?.(tr.scrollIntoView());
     return true;

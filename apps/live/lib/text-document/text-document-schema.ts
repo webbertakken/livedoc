@@ -19,6 +19,8 @@ import {
   SECTION_BREAK_ATTRIBUTES,
 } from '@livedoc/text-documents';
 import { DocumentFonts } from '@livedoc/document';
+import type { ParagraphProps } from '@livedoc/text-documents';
+import { cssText, paragraphDeclarations } from './text-document-style-sheet';
 
 const nullAttributes = (names: readonly string[]) =>
   Object.fromEntries(names.map((name) => [name, { default: null }]));
@@ -104,10 +106,19 @@ const nodes: Record<string, NodeSpec> = {
     content: 'inline*',
     attrs: nullAttributes(PARAGRAPH_ATTRIBUTES),
     parseDOM: [{ tag: 'p' }],
-    // Its style by id, which the document's style sheet draws (text-and-paragraphs.md "Paragraph styles").
+    // Its style by id, which the document's style sheet draws (text-and-paragraphs.md "Paragraph styles"), and its
+    // own paragraph formatting over it ("Alignment and indents").
     toDOM: (node) => {
-      const style = (node.attrs as { style: unknown }).style;
-      return typeof style === 'string' && style ? ['p', { 'data-style': style }, 0] : ['p', 0];
+      const { style, props } = node.attrs as { style: unknown; props: unknown };
+      const own =
+        props && typeof props === 'object'
+          ? cssText(paragraphDeclarations(props as ParagraphProps))
+          : '';
+      const attrs = {
+        ...(typeof style === 'string' && style ? { 'data-style': style } : {}),
+        ...(own ? { style: own } : {}),
+      };
+      return Object.keys(attrs).length > 0 ? ['p', attrs, 0] : ['p', 0];
     },
   },
   [SECTION_BREAK]: {
