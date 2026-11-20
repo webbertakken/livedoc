@@ -147,7 +147,11 @@ export const Styles = {
     })),
   /** A new text document's defaults: Arial 11 pt, line spacing 1.15, single lines prevented. */
   defaults: (): StyleDefaults => ({
-    paragraph: { lineHeight: { rule: 'multiple', value: 1.15 }, widowControl: true },
+    paragraph: {
+      lineHeight: { rule: 'multiple', value: 1.15 },
+      widowControl: true,
+      tabInterval: 36,
+    },
     text: { font: 'Arial', size: 11 },
   }),
   byId: (styles: readonly Style[], id: string | undefined): Style | undefined =>

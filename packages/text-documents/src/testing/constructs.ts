@@ -160,6 +160,22 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
         },
       }),
     ]),
+  // text-and-paragraphs.md "Tab stops": every alignment and leader, and the default stops.
+  'tab-stops': (format) =>
+    base(format, [
+      paragraph(format, 'normal', [run('Name\tDate\tTotal\t12.50')], {
+        props: {
+          indentStart: 18,
+          tabStops: [
+            { position: 72, align: 'start', leader: 'dot' },
+            { position: 216, align: 'center', leader: 'hyphen' },
+            { position: 360, align: 'end', leader: 'underscore' },
+            { position: 432, align: 'decimal' },
+          ],
+        },
+      }),
+      paragraph(format, 'normal', [run('Default stops\tevery half inch')]),
+    ]),
   styles: (format) => {
     const doc = TextDocument.blank({ format });
     const normal = Styles.idOfRole(doc.styles, 'normal')!;

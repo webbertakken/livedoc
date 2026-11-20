@@ -1,8 +1,8 @@
 # Standard mapping
 
-**Status: in progress.** The model's paragraphs, runs, links, styles, lists and sections, kept content, conversion and
-the documented losses are built in both formats; every other construct of the table below is kept content until the
-phase that builds it.
+**Status: in progress.** The model's paragraphs, runs, links, styles, lists, tab stops and sections, kept content,
+conversion and the documented losses are built in both formats; every other construct of the table below is kept
+content until the phase that builds it.
 
 How a [text document](text-document.md) maps onto its two native formats (fork C1, ruled: both native): **ODF** 1.4
 part 3's text document (`office:text`) and **OOXML**, ISO/IEC 29500 WordprocessingML (`w:document`). It says which
@@ -66,6 +66,18 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
   written once any is set (`none` where absent); OOXML: `w:pBdr` (`w:sz` in eighths of a point, `w:space` in
   points, `w:val` `single`, `dotted` or `dashed`, `nil` where absent) and `w:shd` (`w:fill`). Other line
   styles read as the nearest dash (double as solid).
+- **Tab stops**: a paragraph's or a style's list, replacing the style's whole, each a position from the text area's
+  start, an alignment (start, centre, end, decimal with its character) and a leader (dot, hyphen, underscore, middle
+  dot); and the document's default interval. ODF: `style:tab-stops` in the paragraph properties (`style:position`,
+  `style:type` with `char` for decimal, `style:char`, `style:leader-text`), `style:tab-stop-distance` on the default
+  style. ODF positions count from the paragraph's indent unless `settings.xml` sets `TabsRelativeToIndent` false
+  (LibreOffice's default is relative): read, the paragraph's indent (its own, its list level's, else its style's) is
+  added; written, taken off, and a paragraph whose indent differs from its style's writes the stops it draws with as its
+  own, so LibreOffice draws them where LiveDoc does. A text document made in LiveDoc writes `TabsRelativeToIndent`
+  false. OOXML: `w:tabs` (`w:val` `start`/`left`, `center`, `end`/`right`, `decimal`, `clear`; `w:pos` in twentieths
+  of a point from the margin; `w:leader`), merged down the style chain as Word does, so a paragraph's or style's list is
+  its style's with its `clear`s taken away and its own added; written back as that difference. The interval is
+  `w:defaultTabStop` in `settings.xml`.
 - Lengths are points, read from either format's units and rounded to three decimals; colours are `#rrggbb`.
 - Text holds tabs as `\t` and line breaks as `\n`.
 
@@ -159,6 +171,9 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | ODF to OOXML             | Continuous sections' own names and their protection                                                              |
 | ODF to OOXML             | A border's padding past 31 pt is written as 31 pt, Word's most                                                   |
 | OOXML to ODF             | The line between paragraphs (`w:pBdr/w:between`): an OpenDocument file has none                                  |
+| Word files               | Bar and list tab stops (`w:val` `bar`, `num`) read as no stop; a heavy leader reads as an underline              |
+| Either format            | Tab stops past 64 in a paragraph or past 22 in either way                                                        |
+| ODF files, relative tabs | LibreOffice counts default tab stops from the indent; LiveDoc from the margin, as Word and Google do             |
 | Either format            | Border styles the model has no dash for (double, wave, 3-D) read as solid; padding on a side with no border      |
 | OOXML to ODF             | Kept content (by name and count), content controls other than checkboxes, OMML equations become MathML           |
 | Either format, converted | Unmapped formatting inside kept properties (theme colours and fonts, revision ids): the model's values stay      |

@@ -1,12 +1,13 @@
 // A text document's paragraph styles drawn (docs/specs/034-text-documents/text-and-paragraphs.md "Paragraph styles"):
 // one style sheet for the open body, scoped to it, written as the editor opens and again, at most once a frame, after
-// any change to the live state that changed it (a style updated or added, by anyone).
+// any change to the live state that changed it (a style updated or added, by anyone), when tabs are laid out again.
 import { useEffect, useId, type RefObject } from 'react';
 import type { EditorView } from 'prosemirror-view';
 import type * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
 import { TextDocumentState } from '@livedoc/text-documents';
 import { textDocumentStyleSheet } from './text-document-style-sheet';
+import { relayTextDocumentTabs } from './text-document-tab-layout';
 
 export function useTextDocumentStyleSheet(
   view: EditorView | null,
@@ -27,7 +28,10 @@ export function useTextDocumentStyleSheet(
         TextDocumentState.defaults(doc, format),
         `[data-text-document-styles="${scope}"]`,
       );
-      if (sheet.textContent !== css) sheet.textContent = css;
+      if (sheet.textContent === css) return;
+      sheet.textContent = css;
+      // Styles move the writing, so its tabs are laid out again ("Tab stops").
+      if (!view.isDestroyed) relayTextDocumentTabs(view);
     };
     let frame: number | null = null;
     const onUpdate = () => {

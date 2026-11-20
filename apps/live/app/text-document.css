@@ -117,3 +117,36 @@ div.text-document-kept {
 .text-document-list-check[aria-disabled='true'] {
   cursor: default;
 }
+/*
+ * A tab (docs/specs/034-text-documents/text-and-paragraphs.md "Tab stops"): a box whose width the layout pass sets to
+ * reach its stop (text-document-tab-layout.ts), its leader filling it in the ink; the character itself at no width.
+ */
+.text-document-tab {
+  display: inline-block;
+  height: 1lh;
+  vertical-align: top;
+  background-repeat: repeat-x;
+}
+.text-document-tab-character {
+  tab-size: 0;
+}
+.text-document-tab[data-leader='dot'] {
+  background-image: radial-gradient(circle, currentColor 0.05em, transparent 0.06em);
+  background-size: 0.33em 0.33em;
+  background-position: 0 calc(100% - 0.2em);
+}
+.text-document-tab[data-leader='middle-dot'] {
+  background-image: radial-gradient(circle, currentColor 0.05em, transparent 0.06em);
+  background-size: 0.33em 0.33em;
+  background-position: 0 55%;
+}
+.text-document-tab[data-leader='hyphen'] {
+  background-image: linear-gradient(to right, currentColor 60%, transparent 60%);
+  background-size: 0.5em 0.06em;
+  background-position: 0 60%;
+}
+.text-document-tab[data-leader='underscore'] {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 0.06em;
+  background-position: 0 calc(100% - 0.2em);
+}

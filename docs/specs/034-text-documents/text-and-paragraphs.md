@@ -1,7 +1,8 @@
 # Text and paragraphs
 
 **Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment, indents, spacing,
-keep rules, borders and shading, paint format and clear formatting are built; the rest is specified.
+keep rules, borders and shading, paint format, clear formatting, the Tab key and tab stops (drawn and kept; made
+on the ruler is specified) are built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -16,6 +17,11 @@ Every rule maps to a format construct in [Standard mapping](standard-mapping.md#
   a list, a new item; on an empty list item, the item leaves the list. **Shift+Enter** is a line break.
 - **Backspace** at the start of a list item takes it out of the list, then joins; elsewhere it joins the paragraph
   before. **Delete** at the end joins the next.
+- **Tab** types a tab, which moves the text after it to the next [tab stop](#tab-stops); over a selection that
+  spans paragraphs, Tab and Shift+Tab step their indent as ⌘] and ⌘[ do (default, as Word and Google do, inferred).
+  In a list item Tab and Shift+Tab step its level ([Lists](lists.md#levels)). Elsewhere Shift+Tab does nothing, so
+  focus stays in the writing; F6 leaves it for the next region
+  ([Office shell](../004-interface-design/office-shell.md)).
 - **Move paragraph up and down**: Ctrl⇧↑ / ↓ moves the paragraphs the selection touches past their neighbour.
 - **Repeat last action** (⌘Y) repeats the last formatting or insertion at the new selection.
 
@@ -197,6 +203,25 @@ Styles > Options and Format > Paragraph styles > Options hold three items, as Go
 - A value equal to the style's is stored as none of the paragraph's own, as alignment is.
 - Share roles: an Editor sets spacing and keep rules; a Participant and a Viewer see none of the items or controls.
 
+## Tab stops
+
+- **A tab stop** is a position on a paragraph's line, with an alignment and a leader. Positions count from the
+  text area's start (the left margin), as Word and Google count them, so moving an indent never moves a stop.
+- **Alignment**: Left (the text after the tab starts at the stop), Centre (centred on it), Right (ends at it) and
+  Decimal (its first `.` or `,` sits on it). Google offers Left, Centre and Right; Decimal arrives in files and is
+  drawn and kept. **Leader**: none, dots, hyphens, an underline or middle dots, filling the tab's space.
+- **A tab goes to the next stop past where it starts**: the paragraph's own stops (or its style's), the first one
+  past it; past the last, the default stops, every 0.5 in from the text area's start (the document's own interval
+  where its file names one). On a hanging indent's first line, a tab before the indent goes to the indent, as both
+  suites draw it (default). A Centre, Right or Decimal stop whose text would start before the tab gives no space.
+- **A paragraph's own stops replace its style's whole**, as its borders do; none of its own means its style's; an
+  empty list of its own means none at all. A list equal to its style's is stored as none of the paragraph's own.
+- **Made on the ruler** ([Editing surface](editing-surface.md#the-ruler)), on every paragraph the selection touches:
+  added, moved and taken away, each one undo step. Clear formatting takes a paragraph's own stops away.
+- At most 64 stops in a paragraph (`TAB_STOPS_MAX`, Word's most), each from -22 in to 22 in (`TAB_STOP_MAX_PT`,
+  1,584 pt, Word's range); a file's stops past either are dropped and listed in the import report.
+- Share roles: an Editor makes and moves stops; every role sees the writing drawn at them.
+
 ## Borders and shading
 
 **Borders and shading** (Format > Paragraph styles > Borders and shading, first in that submenu as in Google's) is a
@@ -281,7 +306,8 @@ toolbar, menu or shortcut), `TextDocumentParagraphStyle` (applied, from toolbar,
 `TextDocumentStylesReset`, `TextDocumentPaste` (with the source: Document, Html, Markdown, Plain), `TextDocumentAlign`,
 `TextDocumentIndent` (a step), `TextDocumentIndentation` (Indentation options), `TextDocumentLineSpacing`,
 `TextDocumentParagraphSpace` (add or remove space), `TextDocumentCustomSpacing`, `TextDocumentKeepRule`,
-`TextDocumentBordersAndShading`; `UI · Changed · TextDocumentDefaultStyles` (Save as my default styles). Never text.
+`TextDocumentBordersAndShading`, `TextDocumentTabStop` (added, moved or taken away on the ruler);
+`UI · Changed · TextDocumentDefaultStyles` (Save as my default styles). Never text.
 
 ## Limits
 
