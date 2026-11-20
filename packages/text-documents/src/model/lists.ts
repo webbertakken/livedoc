@@ -71,6 +71,15 @@ export const ListDefinition = {
       };
     }),
   }),
+  /** An id no list in `existing` has: `L<n>`, past the highest such number there. */
+  newId: (existing: Iterable<string>): string => {
+    let high = 0;
+    for (const id of existing) {
+      const n = /^L(\d+)$/.exec(id)?.[1];
+      if (n) high = Math.max(high, Number(n));
+    }
+    return `L${high + 1}`;
+  },
   /** The kind of a list at a level. */
   kindAt: (list: ListDefinition | undefined, level: number): ListLevel['kind'] =>
     list?.levels[level]?.kind ?? 'bullet',

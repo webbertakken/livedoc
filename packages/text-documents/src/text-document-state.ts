@@ -7,8 +7,9 @@ import type { Style, StyleDefaults } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
 import { readLiveDefaults, readLiveDocument, readLiveStyles } from './live/live-read';
 import { BODY_FRAGMENT } from './live/live-root';
-import { STYLES_MAP } from './live/live-names';
-import { addLiveStyle, setLiveStyles, writeLiveDocument } from './live/live-write';
+import { LISTS_MAP, STYLES_MAP } from './live/live-names';
+import type { ListDefinition } from './model/lists';
+import { addLiveStyle, setLiveList, setLiveStyles, writeLiveDocument } from './live/live-write';
 
 export { BODY_FRAGMENT };
 
@@ -147,6 +148,14 @@ export const TextDocumentState = {
     styles: readonly Style[],
     origin?: unknown,
   ): void => setLiveStyles(doc, format, styles, origin),
+  /** The live state's list definitions by id (lists.md). */
+  lists: (doc: Y.Doc): Record<string, ListDefinition> =>
+    Object.fromEntries(doc.getMap<unknown>(LISTS_MAP).entries()) as Record<string, ListDefinition>,
+  /** Sets a list's definition, as one transaction with `origin` (lists.md "Making a list"). */
+  setList: (doc: Y.Doc, id: string, list: ListDefinition, origin?: unknown): void =>
+    setLiveList(doc, id, list, origin),
+  /** The live state's lists map, which the editor's undo also tracks. */
+  listsType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(LISTS_MAP),
   /** The live state's styles map, which the editor's undo also tracks (live-editing-and-storage.md "Undo"). */
   stylesType: (doc: Y.Doc): Y.Map<unknown> => doc.getMap<unknown>(STYLES_MAP),
   /** A state holding exactly this model, as one update to store beside the seed. */

@@ -1,6 +1,7 @@
 import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import { Body } from './body';
+import { ListDefinition } from './model/lists';
 import { TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 
 const typeInto = (doc: Y.Doc, index: number, at: number, text: string) => {
@@ -112,5 +113,21 @@ describe('Body', () => {
     const body = Body.of('ab', 'c');
     expect(Body.plainText(body)).toBe('ab\nc');
     expect(Body.characters(body)).toBe(3);
+  });
+});
+
+// docs/specs/034-text-documents/lists.md "Making a list": a new list's definition in the live state.
+describe('TextDocumentState lists', () => {
+  it('sets a list by id with its origin, reads it back, and names a new one past the highest', () => {
+    const doc = TextDocumentState.load();
+    const origins: unknown[] = [];
+    doc.on('afterTransaction', (tr) => origins.push(tr.origin));
+    const origin = Symbol('lists');
+    TextDocumentState.setList(doc, 'L2', ListDefinition.of('check'), origin);
+    expect(TextDocumentState.lists(doc)).toEqual({ L2: ListDefinition.of('check') });
+    expect(origins).toEqual([origin]);
+    expect(TextDocumentState.listsType(doc).size).toBe(1);
+    expect(ListDefinition.newId(Object.keys(TextDocumentState.lists(doc)))).toBe('L3');
+    expect(ListDefinition.newId(['3', 'Lx'])).toBe('L1');
   });
 });
