@@ -1,10 +1,11 @@
 // Google's Operator functions (docs/specs/029-sheets/formulas.md "Function catalogue", Operator): each operator by
 // name, "Equivalent to the `+` operator" and so on in Google's help, so each is the operator itself, lifted over
-// arrays as the operator is. ISBETWEEN is a pair of comparisons with its ends included unless told otherwise.
+// arrays as the operator is (CONCAT aside, below). ISBETWEEN is a pair of comparisons with its ends included unless told otherwise.
 import type { BinaryOp } from '../ast';
 import { scalarFn, type FnDef } from '../fn';
 import { binaryOperation, unaryOperation, type UnaryOperator } from '../operators';
 import { compareScalars, isError, toBool } from '../values';
+import { JOIN_VALUES } from './text';
 
 const binary = (op: BinaryOp): FnDef => scalarFn(2, 2, ([a, b]) => binaryOperation(op, a!, b!));
 const unary = (kind: UnaryOperator): FnDef => scalarFn(1, 1, ([x]) => unaryOperation(kind, x!));
@@ -15,7 +16,9 @@ export const OPERATOR_FUNCTIONS: Record<string, FnDef> = {
   MULTIPLY: binary('*'),
   DIVIDE: binary('/'),
   POW: binary('^'),
-  CONCAT: binary('&'),
+  // Google's CONCAT joins two values; OpenFormula's and Excel's any number, ranges whole. The wider one stands, so a
+  // file's CONCAT keeps its meaning and two values join alike (formulas.md "Where Google and the standards differ").
+  CONCAT: JOIN_VALUES,
   EQ: binary('='),
   NE: binary('<>'),
   GT: binary('>'),

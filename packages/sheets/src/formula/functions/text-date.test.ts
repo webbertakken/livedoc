@@ -7,6 +7,9 @@ const T = { A1: 'Hello World', A2: '  a   b  ', A3: 'a-b-c', B1: '1', B2: '', B3
 describe('text', () => {
   it.each([
     ['=CONCAT(A3, B1)', 'a-b-c1'],
+    // CONCAT as OpenFormula and Excel have it: any number of values, ranges whole (formulas.md).
+    ['=CONCAT(A3, "!", B1)', 'a-b-c!1'],
+    ['=CONCAT(B1:B3)', '1x'],
     ['=CONCATENATE("a", "b")', 'ab'],
     ['=TEXTJOIN(", ", TRUE, B1:B3)', '1, x'],
     ['=TEXTJOIN(", ", FALSE, B1:B3)', '1, , x'],
@@ -109,8 +112,6 @@ describe('text', () => {
     ['=TEXT(1, F1)', '#DIV/0!'],
     ['=TEXT(F1, "0")', '#DIV/0!'],
     ['=CONCAT(F1, "a")', '#DIV/0!'],
-    // Google's CONCAT joins two values, as & does.
-    ['=CONCAT(A3, "!", B1)', '#N/A'],
     ['=CONCATENATE(F1)', '#DIV/0!'],
     ['=TEXTJOIN(F1, TRUE, "a")', '#DIV/0!'],
     ['=TEXTJOIN(",", "x", "a")', '#VALUE!'],

@@ -20,5 +20,5 @@ The corpus lives in `packages/sheets/oracle/` ([its README](../../packages/sheet
 11. Run `pnpm --filter @livedoc/sheets exec vitest run src/oracle --silent=false` and read `[sheets oracle]` lines.
 12. Fix the engine until the category passes; never loosen a case's `tol` past one in a million, and say why in `note`.
 13. Mark the function **built** in `formulas.md`'s catalogue only once its cases pass.
-14. Add the category to `MEASURED_CATEGORIES` in `src/oracle/oracle.test.ts` once all its functions are measured.
+14. Add the category to `MEASURED_CATEGORIES` in `packages/sheets/src/oracle/oracle.test.ts` once all its functions are measured.
 15. A new function family in the registry needs its label in `SheetFunctionMenu.tsx` and its icon in `sheet-icons.tsx`.

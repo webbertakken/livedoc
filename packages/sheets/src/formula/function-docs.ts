@@ -83,7 +83,7 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   MULTIPLY: D('factor1, factor2', 'Multiplies two numbers, as *', '=MULTIPLY(A2, 3)'),
   DIVIDE: D('dividend, divisor', 'Divides one number by another, as /', '=DIVIDE(A2, 4)'),
   POW: D('base, exponent', 'Raises a number to a power, as ^', '=POW(2, 10)'),
-  CONCAT: D('value1, value2', 'Joins two values, as &', '=CONCAT(A2, B2)'),
+  CONCAT: D('value1, [value2, …]', 'Joins values together', '=CONCAT(A2, " ", B2)'),
   EQ: D('value1, value2', 'Whether two values are equal, as =', '=EQ(A2, B2)'),
   NE: D('value1, value2', 'Whether two values differ, as <>', '=NE(A2, B2)'),
   GT: D('value1, value2', 'Whether the first is greater, as >', '=GT(A2, 100)'),

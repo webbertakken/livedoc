@@ -162,6 +162,18 @@
       "f": "=CONCAT(Data!E1, 1)"
     },
     {
+      "id": "CONCAT.4",
+      "f": "=CONCAT(\"a\", \"b\", \"c\")",
+      "differs": {
+        "google": "Google's CONCAT takes two values (#N/A for three); LiveDoc keeps the standards' wider CONCAT (formulas.md D38)"
+      }
+    },
+    {
+      "id": "CONCAT.5",
+      "f": "=CONCAT(Data!A1:B1, \"x\")",
+      "note": "a range read whole, as OpenFormula and Excel read it (formulas.md D38); Google's answer awaited"
+    },
+    {
       "id": "EQ.1",
       "f": "=EQ(1, 1)",
       "expect": [[true]],

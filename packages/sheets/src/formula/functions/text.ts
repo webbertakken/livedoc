@@ -104,11 +104,14 @@ function wildcardSource(pattern: string): string {
   return out;
 }
 
+/** Every value of every argument, ranges read whole, joined in order: CONCATENATE, and CONCAT as the standards have it. */
+export const JOIN_VALUES: FnDef = fn(1, MANY, (args, f) => {
+  const ts = texts(flatScalars(args, f));
+  return Array.isArray(ts) ? boundedText(ts.join('')) : ts;
+});
+
 export const TEXT_FUNCTIONS: Record<string, FnDef> = {
-  CONCATENATE: fn(1, MANY, (args, f) => {
-    const ts = texts(flatScalars(args, f));
-    return Array.isArray(ts) ? boundedText(ts.join('')) : ts;
-  }),
+  CONCATENATE: JOIN_VALUES,
   TEXTJOIN: fn(3, MANY, (args, f) => {
     const delim = textArg(args[0]!, f);
     if (isError(delim)) return delim;

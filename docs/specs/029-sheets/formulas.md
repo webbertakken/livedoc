@@ -270,6 +270,11 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 
 - **Authority**: whose meaning the grid follows. Google wins wherever Google has the function (S6, ruled 2026-11-18); a
   function only OpenFormula defines follows OpenFormula Part 4; the card functions are LiveDoc's own.
+- **Where Google and the standards differ** (D38): a formula Google accepts follows Google (S6); a formula Google
+  refuses but OpenFormula or OOXML defines (more arguments, a range where Google takes one value) follows that
+  standard, in every document. So a file's formula keeps its meaning (C1) and nothing Google accepts changes. `CONCAT`
+  is the first: Google's joins two values, the standards' any number, ranges whole; LiveDoc's is the standards'.
+  Formulas both accept but answer differently are ruled one by one as the categories meet them.
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
   Excel asks for it, and S5's convention for the same Google-only names.
@@ -902,3 +907,4 @@ The code cites each by its id.
   forgotten when the cell is retyped; a document opened afresh starts its loops from empty (default).
 - **D36** A loop longer than the read stack (250 formulas): `#REF!` with iterative calculation on as well (default).
 - **D37** Volatile ticks while the page is hidden: Held, one tick as the page shows again (default).
+- **D38** A function Google defines more narrowly than a standard: The standard's wider definition, everywhere (default).

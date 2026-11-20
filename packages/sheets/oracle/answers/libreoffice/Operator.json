@@ -105,6 +105,8 @@
     "CONCAT.1": [["a1"]],
     "CONCAT.2": [["43"]],
     "CONCAT.3": [["abc1"]],
+    "CONCAT.4": [["abc"]],
+    "CONCAT.5": [["34x"]],
     "EQ.1": [
       [
         {
