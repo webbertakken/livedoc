@@ -66,12 +66,17 @@ describe('visibleToolbar', () => {
   });
 
   it('shows each value field only when the shell binds it', () => {
-    const shown = visibleToolbar(TOOLBAR, 'edit', {}, {
-      zoom: false,
-      fontSize: true,
-      font: false,
-      colour: false,
-    });
+    const shown = visibleToolbar(
+      TOOLBAR,
+      'edit',
+      {},
+      {
+        zoom: false,
+        fontSize: true,
+        font: false,
+        colour: false,
+      },
+    );
     expect(shown.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'font-size']);
     const coloured = visibleToolbar(TOOLBAR, 'edit', {}, { ...NEITHER, colour: true });
     expect(coloured.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'text-colour']);
