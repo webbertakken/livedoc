@@ -120,6 +120,25 @@ describe('getDocumentThumbnailSvg', () => {
     expect(db.markThumbRendered).toHaveBeenCalledWith(env, 'd1', expect.any(Number));
   });
 
+  // docs/specs/006-document/document-snapshots.md: the stamp is the save the snapshot was drawn from, so a save that
+  // lands while it draws leaves it stale, never trusted as a picture of the newer writing.
+  it('stamps the save it was drawn from, never the time the render finished', async () => {
+    vi.useFakeTimers({ now: 5000 });
+    try {
+      const images = r2();
+      images.get.mockResolvedValue(null);
+      db.getThumbRenderedAt.mockResolvedValue(null);
+      db.getTabBody.mockResolvedValue(stored(TAB_DATA));
+      const env = { IMAGES: images } as unknown as DocumentEnv;
+
+      await getDocumentThumbnailSvg(env, liveDoc({ savedAt: 1000 }));
+
+      expect(db.markThumbRendered).toHaveBeenCalledWith(env, 'd1', 1000);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('trusts a freshness stamp the caller already read, saving the query', async () => {
     const images = r2();
     images.get.mockResolvedValue({ text: async () => '<svg>cached</svg>' });
