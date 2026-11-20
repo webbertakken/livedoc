@@ -64,6 +64,7 @@ function Harness({
     ready: true,
     writes,
     ownerId: null,
+    subscribeCaret: () => () => {},
   });
   onPage?.(page);
   return (

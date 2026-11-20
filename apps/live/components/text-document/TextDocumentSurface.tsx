@@ -98,13 +98,7 @@ import {
   type PageGeometry,
 } from '@/lib/text-document/pagination/pagination-plugin';
 import { sectionWidthsPlugin } from '@/lib/text-document/pagination/pagination-sections';
-import {
-  pageBox,
-  pagelessSetup,
-  useCaretSection,
-  usePagelessColumn,
-} from '@/lib/text-document/text-document-page';
-import { setSectionSetup } from '@/lib/text-document/text-document-page-setup';
+import { pageBox, pagelessSetup, usePagelessColumn } from '@/lib/text-document/text-document-page';
 import {
   NON_PRINTING_TOGGLE,
   RULER_TOGGLE,
@@ -446,6 +440,7 @@ export function TextDocumentSurface({
     ready: state === 'ready',
     writes,
     ownerId,
+    subscribeCaret: changes.subscribeCaret,
   });
   // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
   const column = usePagelessColumn(scroller, scale, page.pageless);
@@ -456,15 +451,7 @@ export function TextDocumentSurface({
   // The frame the pages need, each page at its section's size (page-layout.md "Laying out").
   const sheets = paginated && state === 'ready' ? sheetsFrame(pageList) : null;
   // The ruler shows the section the caret is in, and its margins set that section's.
-  const caretSection = useCaretSection(editorView, page.section, changes.subscribeCaret);
-  const rulerSetup = page.pageless ? drawn : caretSection.section.setup;
-  const setRulerSetup = useCallback(
-    (setup: PageSetup) => {
-      if (caretSection.index === 0) page.setSetup(setup);
-      else if (editorView && writes) setSectionSetup(editorView, caretSection.index, setup);
-    },
-    [caretSection.index, page, editorView, writes],
-  );
+  const rulerSetup = page.pageless ? drawn : page.caret.section.setup;
   useLayoutEffect(() => {
     layout.current = { setup: page.section.setup, pages: paginated };
     if (editorView && !editorView.isDestroyed) relayoutPages(editorView);
@@ -630,7 +617,7 @@ export function TextDocumentSurface({
               readFormatting={readRulerFormatting}
               setup={rulerSetup}
               pageless={page.pageless}
-              onSetup={setRulerSetup}
+              onSetup={page.setCaretSetup}
               scale={scale}
               canEdit={writes}
               refresh={changes.subscribeCaret}

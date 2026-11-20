@@ -11,9 +11,19 @@ import { PageSetup, TextDocumentState } from '@livedoc/text-documents';
 import type { OfficeActions } from '@/lib/office/office-catalogue';
 import { track } from '@/lib/telemetry';
 import { indentUnit } from '@/lib/text-document/indent-units';
-import { useTextDocumentPage } from '@/lib/text-document/text-document-page';
+import { useCaretSection, useTextDocumentPage } from '@/lib/text-document/text-document-page';
+import {
+  applyPageTo,
+  applyToChoices,
+  type ApplyTo,
+} from '@/lib/text-document/text-document-page-scope';
 import { saveDefaultPage } from '@/lib/text-document/text-document-page-defaults';
-import { applyPage, type PageChange } from '@/lib/text-document/text-document-page-setup';
+import {
+  applyPage,
+  setSectionSetup,
+  type PageChange,
+} from '@/lib/text-document/text-document-page-setup';
+import type { DefaultPage } from '@/lib/text-document/text-document-page-defaults';
 import { startUndoStep, TEXT_DOCUMENT_PAGE_ORIGIN } from '@/lib/text-document/text-document-undo';
 import { TextDocumentPageOrientationDialog } from './TextDocumentPageOrientationDialog';
 import { TextDocumentPageSetupDialog } from './TextDocumentPageSetupDialog';
@@ -34,8 +44,11 @@ export function useTextDocumentPageSetup({
   ready,
   writes,
   ownerId,
+  subscribeCaret,
 }: {
   view: EditorView | null;
+  // Told when the caret moves: the dialog and the ruler show the section it is in.
+  subscribeCaret: (listener: () => void) => () => void;
   liveDoc: RefObject<Y.Doc | null>;
   format: TextDocumentFormat;
   ready: boolean;
@@ -43,6 +56,7 @@ export function useTextDocumentPageSetup({
   ownerId: string | null;
 }) {
   const { section, pageless } = useTextDocumentPage(liveDoc, format, ready);
+  const caret = useCaretSection(view, section, subscribeCaret);
   const [open, setOpen] = useState<Open>(null);
   const unit = useMemo(() => indentUnit(), []);
 
@@ -56,6 +70,15 @@ export function useTextDocumentPageSetup({
       if (view) startUndoStep(view);
     },
     [liveDoc, section, writes, view],
+  );
+
+  // A margin dragged on the ruler where the caret is: that section's setup (page-layout.md "Page setup").
+  const setCaretSetup = useCallback(
+    (setup: PageSetup) => {
+      if (caret.index === 0) setSetup(setup);
+      else if (view && writes) setSectionSetup(view, caret.index, setup);
+    },
+    [caret.index, setSetup, view, writes],
   );
 
   // Sets what changed; nothing changed changes nothing and counts nothing.
@@ -92,6 +115,26 @@ export function useTextDocumentPageSetup({
     };
   }, [writes, view, pageless, apply]);
 
+  // The dialog shows the section the caret is in, with the document's page colour.
+  const { pageColor: _own, ...caretSetup } = caret.section.setup;
+  const shown: PageSetup = {
+    ...caretSetup,
+    ...(section.setup.pageColor ? { pageColor: section.setup.pageColor } : {}),
+  };
+  // OK on the Pages tab with Apply to other than the whole document: the setup over that scope; the format as chosen.
+  const applyScoped = (page: DefaultPage, scope: ApplyTo) => {
+    const doc = liveDoc.current;
+    if (page.pageless || scope === 'document' || !doc || !view) {
+      apply(page, 'TextDocumentPageSetup');
+      return;
+    }
+    if (!PageSetup.equal(page.setup, shown)) {
+      applyPageTo(view, doc, format, page.setup, scope);
+      track('Tab', 'Changed', 'TextDocumentPageSetup');
+    }
+    if (pageless) apply({ pageless: false }, 'TextDocumentPageSetup');
+  };
+
   const close = () => {
     setOpen(null);
     view?.focus();
@@ -102,12 +145,13 @@ export function useTextDocumentPageSetup({
       <TextDocumentPageSetupDialog
         key={open.nonce}
         open
-        setup={section.setup}
+        setup={shown}
         pageless={pageless}
         unit={unit}
+        scopes={view ? applyToChoices(view.state) : ['document']}
         onClose={close}
-        onApply={(page) => {
-          apply(page, 'TextDocumentPageSetup');
+        onApply={(page, scope) => {
+          applyScoped(page, scope);
           close();
         }}
         onSaveDefault={(page) => {
@@ -132,5 +176,5 @@ export function useTextDocumentPageSetup({
       />
     ) : null;
 
-  return { section, pageless, setSetup, actions, dialog };
+  return { section, caret, pageless, setSetup, setCaretSetup, actions, dialog };
 }

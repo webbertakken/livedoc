@@ -14,6 +14,7 @@ vi.mock('@/hooks/ui/useDocumentColours', () => ({ useDocumentColours: () => [] }
 
 function open(setup: Setup, unit: 'cm' | 'in' = 'in', pageless = false) {
   const onApply = vi.fn();
+  const onScope = vi.fn();
   const onSaveDefault = vi.fn();
   const onClose = vi.fn();
   render(
@@ -22,7 +23,11 @@ function open(setup: Setup, unit: 'cm' | 'in' = 'in', pageless = false) {
       setup={setup}
       pageless={pageless}
       unit={unit}
-      onApply={onApply}
+      scopes={['document', 'section', 'forward', 'selection']}
+      onApply={(page, scope) => {
+        onApply(page);
+        onScope(scope);
+      }}
       onSaveDefault={onSaveDefault}
       onClose={onClose}
     />,
@@ -32,7 +37,7 @@ function open(setup: Setup, unit: 'cm' | 'in' = 'in', pageless = false) {
   // None on the Pageless tab.
   const paper = screen.queryByRole<HTMLSelectElement>('combobox', { name: 'Paper size' })!;
   const ok = screen.getByRole<HTMLButtonElement>('button', { name: 'OK' });
-  return { onApply, onSaveDefault, onClose, margin, paper, ok };
+  return { onApply, onScope, onSaveDefault, onClose, margin, paper, ok };
 }
 
 describe('TextDocumentPageSetupDialog', () => {
@@ -188,5 +193,29 @@ describe('TextDocumentPageSetupDialog', () => {
     expect(screen.getByRole('button', { name: SAVED_AS_DEFAULT })).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: 'Pages' }));
     expect(screen.getByRole('button', { name: 'Set as default' })).toBeTruthy();
+  });
+});
+
+describe('Apply to (page-layout.md "Page setup")', () => {
+  it('offers its choices with the whole document chosen, and applies to the one picked', () => {
+    const { ok, onScope } = open(PageSetup.of('letter'));
+    const scope = screen.getByRole<HTMLSelectElement>('combobox', { name: 'Apply to' });
+    expect(scope.value).toBe('document');
+    expect([...scope.options].map((o) => o.text)).toEqual([
+      'Whole document',
+      'This section',
+      'This point forward',
+      'Selected content',
+    ]);
+    fireEvent.change(scope, { target: { value: 'selection' } });
+    fireEvent.click(screen.getByRole('radio', { name: 'Landscape' }));
+    fireEvent.click(ok);
+    expect(onScope).toHaveBeenCalledWith('selection');
+  });
+
+  it('applies the Pageless tab to the whole document', () => {
+    const { ok, onScope } = open(PageSetup.of('letter'), 'in', true);
+    fireEvent.click(ok);
+    expect(onScope).toHaveBeenCalledWith('document');
   });
 });

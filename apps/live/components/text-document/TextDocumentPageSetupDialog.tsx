@@ -20,6 +20,7 @@ import { OfficeDialogTabs, officeTabPanel } from '@/components/office/OfficeDial
 import type { DefaultPage } from '@/lib/text-document/text-document-page-defaults';
 import { ptOf, readIndentField, unitOf, type IndentUnit } from '@/lib/text-document/indent-units';
 import { TextDocumentLengthField } from './TextDocumentLengthField';
+import { APPLY_TO_LABELS, type ApplyTo } from '@/lib/text-document/text-document-page-scope';
 
 export const PAPER_LABELS: Record<PaperName, string> = {
   letter: 'Letter',
@@ -94,6 +95,7 @@ export function TextDocumentPageSetupDialog({
   setup,
   pageless,
   unit,
+  scopes = ['document'],
   onApply,
   onSaveDefault,
   onClose,
@@ -104,11 +106,14 @@ export function TextDocumentPageSetupDialog({
   // The document is pageless now: the Pageless tab opens chosen.
   pageless: boolean;
   unit: IndentUnit;
-  onApply: (page: DefaultPage) => void;
+  // What Apply to offers (page-layout.md "Page setup"); the whole document is chosen when it opens.
+  scopes?: readonly ApplyTo[];
+  onApply: (page: DefaultPage, scope: ApplyTo) => void;
   onSaveDefault: (page: DefaultPage) => void;
   onClose: () => void;
 }) {
-  const ids = { tabs: useId(), paper: useId(), orientation: useId() };
+  const ids = { tabs: useId(), paper: useId(), orientation: useId(), scope: useId() };
+  const [scope, setScope] = useState<ApplyTo>('document');
   const [tab, setTab] = useState<Tab>(pageless ? 'pageless' : 'pages');
   const initial = useMemo(() => draftOf(setup, unit), [setup, unit]);
   const [draft, setDraft] = useState(initial);
@@ -168,7 +173,11 @@ export function TextDocumentPageSetupDialog({
       open={open}
       onClose={onClose}
       title="Page setup"
-      primary={{ label: 'OK', disabled: !ready, onPress: () => onApply(chosen()) }}
+      primary={{
+        label: 'OK',
+        disabled: !ready,
+        onPress: () => onApply(chosen(), tab === 'pages' ? scope : 'document'),
+      }}
       secondary={{
         label: isSaved ? SAVED_AS_DEFAULT : 'Set as default',
         disabled: !ready,
@@ -208,6 +217,23 @@ export function TextDocumentPageSetupDialog({
           className="grid gap-x-10 gap-y-5 pt-1 sm:grid-cols-[minmax(0,1fr)_auto]"
         >
           <div className="flex min-w-0 flex-col gap-5">
+            <div className="flex flex-col">
+              <label htmlFor={ids.scope} className={HEADING}>
+                Apply to
+              </label>
+              <select
+                id={ids.scope}
+                value={scope}
+                onChange={(e) => setScope(e.target.value as ApplyTo)}
+                className={`${CONTROL} w-full max-w-64 cursor-pointer [&>option]:bg-(--office-menu)`}
+              >
+                {scopes.map((choice) => (
+                  <option key={choice} value={choice}>
+                    {APPLY_TO_LABELS[choice]}
+                  </option>
+                ))}
+              </select>
+            </div>
             <fieldset>
               <legend className={HEADING}>Orientation</legend>
               <div className="flex flex-wrap gap-x-6 gap-y-2">
