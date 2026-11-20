@@ -6,6 +6,7 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { textDocumentSchema as schema } from './text-document-schema';
 import { createTextDocumentChanges } from './text-document-changes';
+import { paintFormatPlugin, pressRoller } from './text-document-paint-format';
 
 let view: EditorView;
 let changes: ReturnType<typeof createTextDocumentChanges>;
@@ -51,6 +52,22 @@ describe('createTextDocumentChanges', () => {
     view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)));
     vi.advanceTimersToNextFrame();
     expect(caret).toHaveBeenCalledTimes(2);
+  });
+
+  // text-and-paragraphs.md "Paint format": the roller is drawn pressed as soon as it is on.
+  it('tells the caret listeners when the paint roller changes', () => {
+    view.destroy();
+    view = new EditorView(document.createElement('div'), {
+      state: EditorState.create({
+        doc: view.state.doc,
+        plugins: [changes.plugin, paintFormatPlugin()],
+      }),
+    });
+    const caret = vi.fn();
+    changes.subscribeCaret(caret);
+    pressRoller(view.state, view.dispatch);
+    vi.advanceTimersToNextFrame();
+    expect(caret).toHaveBeenCalledOnce();
   });
 
   it('tells no one after the editor is gone', () => {

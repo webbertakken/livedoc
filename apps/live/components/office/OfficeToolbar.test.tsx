@@ -73,6 +73,26 @@ describe('OfficeToolbar', () => {
     expect(screen.getByRole('button', { name: 'Bold' }).getAttribute('aria-pressed')).toBe('true');
   });
 
+  it("runs a toggle's double press in place of the second press of a double-click", () => {
+    const { actions } = setup();
+    const bold = screen.getByRole('button', { name: 'Bold' });
+    const double = vi.fn();
+    Object.assign(actions.bold, { double });
+    fireEvent.click(bold, { detail: 1 });
+    fireEvent.click(bold, { detail: 2 });
+    expect(actions.bold.run).toHaveBeenCalledOnce();
+    expect(double).toHaveBeenCalledOnce();
+    // From the keyboard a press is always a plain press.
+    fireEvent.click(bold, { detail: 0 });
+    expect(actions.bold.run).toHaveBeenCalledTimes(2);
+  });
+
+  it('runs a second press as a press where the binding has no double press', () => {
+    const { actions } = setup();
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }), { detail: 2 });
+    expect(actions.undo.run).toHaveBeenCalledOnce();
+  });
+
   it('moves between controls with Left and Right, wrapping, and Home and End', () => {
     setup();
     const undo = screen.getByRole('button', { name: 'Undo' });

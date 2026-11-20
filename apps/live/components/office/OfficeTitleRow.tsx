@@ -48,6 +48,7 @@ import { useOfficeShortcuts, type ShortcutRun } from './useOfficeShortcuts';
 const TOOL_FINDER = 'tool-finder';
 const CONTEXT_MENU = 'context-right-click-menu';
 const accessKeyOf = (menuId: string) => `${menuId}-menu`;
+const NO_TOOLBAR: OfficeToolbarData = [];
 
 export type OfficeFileOpening = {
   // The file picker's types, and what opening a picked file does.
@@ -71,7 +72,7 @@ export function OfficeTitleRow({
   tabId,
   onFollow,
   saveStatus = null,
-  toolbar = [],
+  toolbar = NO_TOOLBAR,
   zoom = null,
   fontSize = null,
   fontFamily = null,
@@ -232,8 +233,17 @@ export function OfficeTitleRow({
     }
     for (const [shortcut, runsByArg] of Object.entries(byArg))
       out[shortcut] ??= (arg) => runsByArg[arg ?? '']?.();
+    // A shortcut no item or control names runs what the kind binds under its own id (office-shell.md "Shortcut layer").
+    const named = new Set([
+      ...catalogueItems(catalogue).map(({ item }) => item.shortcut),
+      ...toolbar.flatMap((group) => group.controls.map((control) => control.shortcut)),
+    ]);
+    for (const { id } of shortcuts) {
+      const action = allActions[id];
+      if (!named.has(id) && action && !action.disabled) out[id] ??= () => action.run();
+    }
     return out;
-  }, [menus, items, allActions, onOpenMenu, openAtCaret]);
+  }, [menus, items, allActions, onOpenMenu, openAtCaret, catalogue, toolbar, shortcuts]);
   useOfficeShortcuts({ scope: keyScope, rows: shortcuts, runs });
 
   return (

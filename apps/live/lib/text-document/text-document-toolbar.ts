@@ -90,7 +90,10 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
       icon('spelling-and-grammar', 'Spelling and grammar check', 'edit', lucideSpellCheck, {
         shortcut: 'open-spelling-and-grammar',
       }),
-      icon('paint-format', 'Paint format', 'edit', lucidePaintRoller, { toggle: true }),
+      icon('paint-format', 'Paint format', 'edit', lucidePaintRoller, {
+        toggle: true,
+        built: true,
+      }),
     ],
   },
   {
@@ -193,6 +196,7 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
     controls: [
       icon('clear-formatting', 'Clear formatting', 'edit', lucideRemoveFormatting, {
         shortcut: 'clear-text-formatting',
+        built: true,
       }),
     ],
   },

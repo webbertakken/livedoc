@@ -10,6 +10,14 @@ import type { OfficeFontFamily } from '@/components/office/OfficeFontMenu';
 import type { OfficeColours } from '@/components/office/OfficeColourControl';
 import { track } from '@/lib/telemetry';
 import { readDomSelection } from './text-document-dom-selection';
+import { clearFormatting } from './text-document-format-copy';
+import {
+  copyTextFormatting,
+  holdRoller,
+  paintFormatOf,
+  pasteTextFormatting,
+  pressRoller,
+} from './text-document-paint-format';
 import {
   capitalise,
   isToggleOn,
@@ -45,16 +53,24 @@ export const TEXT_DOCUMENT_FORMAT_TELEMETRY = {
   'title-case': 'TitleCase',
   'text-colour': 'TextColour',
   'highlight-colour': 'Highlight',
+  'clear-formatting': 'Clear',
+  'paste-text-formatting': 'Paint',
 } as const;
 type FormatAction = keyof typeof TEXT_DOCUMENT_FORMAT_TELEMETRY;
 
 // The toolbar's own controls, not items: the font, its size and the colours.
 const CONTROLS: readonly FormatAction[] = ['font-size', 'font', 'text-colour', 'highlight-colour'];
 
+/** The shortcuts bound here that no item or control names (office-shell.md "Shortcut layer"). */
+export const TEXT_DOCUMENT_KEY_ACTIONS: readonly string[] = [
+  'copy-text-formatting',
+  'paste-text-formatting',
+];
+
 /** The menu items bound here. */
 export const TEXT_DOCUMENT_FORMAT_ITEMS = (
   Object.keys(TEXT_DOCUMENT_FORMAT_TELEMETRY) as FormatAction[]
-).filter((id) => !CONTROLS.includes(id));
+).filter((id) => !CONTROLS.includes(id) && !TEXT_DOCUMENT_KEY_ACTIONS.includes(id));
 
 const TOGGLES: Partial<Record<FormatAction, TextToggle>> = {
   bold: 'bold',
@@ -106,6 +122,25 @@ export function textDocumentFormatActions(
   actions.lowercase = { run: () => run('lowercase', () => capitalise('lowercase')) };
   actions.uppercase = { run: () => run('uppercase', () => capitalise('uppercase')) };
   actions['title-case'] = { run: () => run('title-case', () => capitalise('titleCase')) };
+  // Paint format and Clear formatting (text-and-paragraphs.md): the roller and the copy are no edits, so not counted.
+  actions['clear-formatting'] = { run: () => run('clear-formatting', () => clearFormatting) };
+  actions['paste-text-formatting'] = {
+    run: () => run('paste-text-formatting', () => pasteTextFormatting),
+  };
+  const roller = (command: Command) => () => {
+    if (view.isDestroyed) return;
+    readDomSelection(view);
+    command(view.state, view.dispatch);
+    view.focus();
+  };
+  actions['copy-text-formatting'] = { run: roller(copyTextFormatting) };
+  actions['paint-format'] = {
+    run: roller(pressRoller),
+    double: roller(holdRoller),
+    get checked() {
+      return paintFormatOf(view.state).roller !== 'off';
+    },
+  };
   const fontSize: OfficeFontSize = {
     read: () => (view.isDestroyed ? null : textSizeOf(view.state, readFormatting())),
     set: (pt) => run('font-size', (f) => setTextSize(f, pt)),

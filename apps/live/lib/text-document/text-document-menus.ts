@@ -300,7 +300,10 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       item('image-options', 'Image', 'edit'),
       item('borders-and-lines', 'Borders & lines', 'edit', { keywords: ['shading'] }),
       SEPARATOR,
-      item('clear-formatting', 'Clear formatting', 'edit', { shortcut: 'clear-text-formatting' }),
+      item('clear-formatting', 'Clear formatting', 'edit', {
+        shortcut: 'clear-text-formatting',
+        ...BUILT,
+      }),
     ]),
     menu('tools', 'Tools', [
       item('spelling-and-grammar', 'Spelling and grammar', 'edit', {

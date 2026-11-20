@@ -169,7 +169,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+C',
     '⌘+Option+C',
     'Ctrl+Alt+C',
-    'specified',
+    'built',
   ),
   row(
     'paste-text-formatting',
@@ -178,7 +178,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+V',
     '⌘+Option+V',
     'Ctrl+Alt+V',
-    'specified',
+    'built',
   ),
   row(
     'clear-text-formatting',
@@ -187,7 +187,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+\\ or Ctrl+Space',
     '⌘+\\',
     'Ctrl+\\',
-    'specified',
+    'built',
   ),
   row(
     'increase-font-size',

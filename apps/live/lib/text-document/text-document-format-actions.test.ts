@@ -7,8 +7,10 @@ import { EditorView } from 'prosemirror-view';
 import { TextDocument } from '@livedoc/text-documents';
 import { track } from '@/lib/telemetry';
 import { textDocumentSchema as schema } from './text-document-schema';
+import { paintFormatPlugin } from './text-document-paint-format';
 import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
+  TEXT_DOCUMENT_KEY_ACTIONS,
   textDocumentFormatActions,
 } from './text-document-format-actions';
 
@@ -27,7 +29,11 @@ beforeEach(() => {
     schema.nodes.paragraph!.create(null, schema.text('hello world')),
   ]);
   view = new EditorView(document.body.appendChild(document.createElement('div')), {
-    state: EditorState.create({ doc, selection: TextSelection.create(doc, 1, 6) }),
+    state: EditorState.create({
+      doc,
+      selection: TextSelection.create(doc, 1, 6),
+      plugins: [paintFormatPlugin()],
+    }),
   });
   vi.mocked(track).mockClear();
 });
@@ -64,8 +70,10 @@ describe('textDocumentFormatActions', () => {
 
   it('binds every Format > Text item', () => {
     const { actions } = textDocumentFormatActions(view, readFormatting, { canEdit: true });
-    expect(Object.keys(actions).sort()).toEqual([...TEXT_DOCUMENT_FORMAT_ITEMS].sort());
-    expect(TEXT_DOCUMENT_FORMAT_ITEMS).toHaveLength(12);
+    expect(Object.keys(actions).sort()).toEqual(
+      [...TEXT_DOCUMENT_FORMAT_ITEMS, ...TEXT_DOCUMENT_KEY_ACTIONS, 'paint-format'].sort(),
+    );
+    expect(TEXT_DOCUMENT_FORMAT_ITEMS).toHaveLength(13);
   });
 
   it('raises the text and reads superscript as on, subscript as off', () => {
@@ -139,12 +147,49 @@ describe('textDocumentFormatActions', () => {
     expect(view.state.doc.textContent).toBe('hello world');
   });
 
+  // docs/specs/034-text-documents/text-and-paragraphs.md "Clear formatting", "Paint format".
+  it("clears the selection's formatting, focuses the writing and counts it", () => {
+    const { actions } = textDocumentFormatActions(view, readFormatting, { canEdit: true });
+    actions.bold!.run();
+    actions['clear-formatting']!.run();
+    expect(marksOfFirst()).toEqual({});
+    expect(view.hasFocus()).toBe(true);
+    expect(track).toHaveBeenLastCalledWith('Element', 'Changed', 'TextDocumentFormatClear');
+  });
+
+  it('copies and pastes formatting, counting only the paste', () => {
+    const { actions } = textDocumentFormatActions(view, readFormatting, { canEdit: true });
+    actions.italic!.run();
+    vi.mocked(track).mockClear();
+    actions['copy-text-formatting']!.run();
+    expect(track).not.toHaveBeenCalled();
+    view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 7, 12)));
+    actions['paste-text-formatting']!.run();
+    expect(view.state.doc.firstChild!.lastChild!.marks.map((m) => m.type.name)).toEqual(['italic']);
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentFormatPaint');
+  });
+
+  it('presses the roller, reads it as pressed, holds it on a double press, and focuses the writing', () => {
+    const roller = textDocumentFormatActions(view, readFormatting, { canEdit: true }).actions[
+      'paint-format'
+    ]!;
+    expect(roller.checked).toBe(false);
+    roller.run();
+    expect(roller.checked).toBe(true);
+    expect(view.hasFocus()).toBe(true);
+    roller.double!();
+    roller.run();
+    expect(roller.checked).toBe(false);
+    expect(track).not.toHaveBeenCalled();
+  });
+
   it('does nothing once the editor is gone', () => {
     const { actions, fontSize, fontFamily } = textDocumentFormatActions(view, readFormatting, {
       canEdit: true,
     });
     view.destroy();
     actions.bold!.run();
+    actions['paint-format']!.run();
     expect(fontSize!.read()).toBeNull();
     expect(fontFamily!.read()).toBeNull();
     expect(track).not.toHaveBeenCalled();
