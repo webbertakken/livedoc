@@ -495,7 +495,7 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
   },
   // Something pasted into a text document, by what was read (text-and-paragraphs.md "Clipboard").
   'apps/live/lib/text-document/text-document-clipboard.ts Element·Changed': {
-    values: ['Document', 'Html', 'Plain'].map((source) => `TextDocumentPaste${source}`),
+    values: ['Document', 'Html', 'Markdown', 'Plain'].map((source) => `TextDocumentPaste${source}`),
   },
   // A text document's View switches flipped (editing-surface.md "The ruler", text-and-paragraphs.md "Non-printing
   // characters").

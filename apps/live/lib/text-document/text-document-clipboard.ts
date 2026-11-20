@@ -30,10 +30,12 @@ import {
 } from './text-document-paste-html';
 import { textDocumentSchema } from './text-document-schema';
 import { startUndoStep } from './text-document-undo';
+import { looksLikeMarkdown } from './text-document-markdown';
+import { markdownSlice } from './text-document-markdown-slice';
 import { lastStretch, StretchSelection } from './text-document-stretches';
 
 /** What a paste read: a fragment, HTML or plain text. */
-export type PasteSource = 'Document' | 'Html' | 'Plain';
+export type PasteSource = 'Document' | 'Html' | 'Markdown' | 'Plain';
 
 export type ClipboardOptions = {
   /** The document the writing is: its place, styles, defaults and lists; null before it is bound. */
@@ -42,6 +44,8 @@ export type ClipboardOptions = {
   lists: ListsAccess;
   /** Content kept from another file was left out of a paste: how many items. */
   onLeftOut: (count: number) => void;
+  /** Whether Markdown text pasted is read as Markdown (Preferences > Automatically detect Markdown). */
+  markdown?: () => boolean;
 };
 
 // What the paste being read found, from its parse to its insertion.
@@ -123,7 +127,12 @@ const countParagraphs = (slice: Slice) => {
   return n;
 };
 
-export function clipboardPlugin({ read, lists, onLeftOut }: ClipboardOptions): Plugin {
+export function clipboardPlugin({
+  read,
+  lists,
+  onLeftOut,
+  markdown = () => false,
+}: ClipboardOptions): Plugin {
   let reading: Reading | null = null;
   const contextOrEmpty = () =>
     read() ?? { styles: [], defaults: { paragraph: {}, text: {} }, lists: {} };
@@ -200,14 +209,22 @@ export function clipboardPlugin({ read, lists, onLeftOut }: ClipboardOptions): P
           debugLog('[text-document] paste left out', { pictures: normalised.pictures });
         return normalised.html;
       },
-      clipboardTextParser: (text, $context) => {
+      clipboardTextParser: (text, $context, plain) => {
+        // Markdown, when the person reads it so; never for Paste without formatting.
+        if (!plain && markdown() && looksLikeMarkdown(text)) {
+          const parsed = markdownSlice(text, textDocumentSchema);
+          reading = { source: 'Markdown', pasted: parsed.lists, lists: {}, left: 0 };
+          return parsed.slice;
+        }
         reading = { source: 'Plain', lists: {}, left: 0 };
         return plainTextSlice(text, $context);
       },
       transformPasted: (slice) => {
         if (!reading) return slice;
         if (reading.slice) return reading.slice;
-        return reading.source === 'Html' ? placePasted(slice, reading, read()) : slice;
+        return reading.source === 'Html' || reading.source === 'Markdown'
+          ? placePasted(slice, reading, read())
+          : slice;
       },
       handlePaste: (view, _event, slice) => {
         if (!reading) return false;
@@ -272,6 +289,22 @@ async function readClipboard(plain: boolean): Promise<{ html: string | null; tex
   return { html: null, text: '' };
 }
 
+/**
+ * Text pasted from the Edit menu as the keys paste it, so Markdown is read as it would be (ProseMirror's pasteText is
+ * always without formatting); where the browser cannot make the event, as plain text.
+ */
+function pasteTextAsKeys(view: EditorView, text: string): void {
+  if (typeof DataTransfer === 'undefined') {
+    view.pasteText(text);
+    return;
+  }
+  const data = new DataTransfer();
+  data.setData('text/plain', text);
+  view.dom.dispatchEvent(
+    new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }),
+  );
+}
+
 /** Edit > Cut, Copy, Paste and Paste without formatting; `onRefused` when the browser keeps the clipboard. */
 export function clipboardActions(
   view: EditorView | null,
@@ -303,7 +336,8 @@ export function clipboardActions(
         if (view.isDestroyed) return;
         view.focus();
         if (html) view.pasteHTML(html);
-        else if (text) view.pasteText(text);
+        else if (text && plain) view.pasteText(text);
+        else if (text) pasteTextAsKeys(view, text);
       },
       (error: unknown) => refused(action, error),
     );

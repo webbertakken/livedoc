@@ -272,7 +272,11 @@ export function TextDocumentSurface({
               // Several stretches selected at once (text-and-paragraphs.md "Selection").
               stretchesPlugin(),
               // The typing aids: smart quotes, substitutions, links, capitals, lists.
-              typingAidsPlugin({ read: () => typingAids.current(), lists: listsAccess }),
+              typingAidsPlugin({
+                read: () => typingAids.current(),
+                lists: listsAccess,
+                readStyles: () => readFormatting().styles,
+              }),
               // Copy, cut and paste (text-and-paragraphs.md "Clipboard").
               clipboardPlugin({
                 read: () => ({
@@ -283,6 +287,7 @@ export function TextDocumentSurface({
                   lists: TextDocumentState.lists(doc),
                 }),
                 lists: listsAccess,
+                markdown: () => typingAids.current().markdown,
                 onLeftOut: (count) => clipboardLeftOut.current(count),
               }),
               // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").

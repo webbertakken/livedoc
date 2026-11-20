@@ -4,7 +4,14 @@
 import type { Mark, Node as PmNode } from 'prosemirror-model';
 import { Plugin, TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
-import { ListDefinition, type ListLevel, type ListPlace } from '@livedoc/text-documents';
+import {
+  ListDefinition,
+  Styles,
+  type ListLevel,
+  type ListPlace,
+  type Style,
+  type StyleRole,
+} from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { ListsAccess } from './text-document-lists';
 import { TypingAids } from './text-document-typing-aids';
@@ -13,6 +20,8 @@ import {
   lastWord,
   linkFor,
   listMarkerFor,
+  markdownHeadingFor,
+  markdownSpanFor,
   smartQuote,
   substitutionFor,
   WORD_ENDS,
@@ -113,13 +122,52 @@ function asOwnStep(view: EditorView, tr: Transaction | null): void {
   startUndoStep(view);
 }
 
+/** Automatically detect Markdown: `#` to `######` and a space make the paragraph that heading, the marker gone. */
+function headingAid(state: EditorState, pos: number, level: number, styles: readonly Style[]) {
+  const id = Styles.idOfRole(styles, `heading${level}` as StyleRole);
+  if (!id) return null;
+  const $pos = state.doc.resolve(pos);
+  debugLog('[text-document] typing aid', { aids: ['markdown-heading'] });
+  return state.tr
+    .delete($pos.start(), pos)
+    .setNodeMarkup($pos.before(), undefined, { ...$pos.parent.attrs, style: id });
+}
+
+/** Automatically detect Markdown: a span the typing just closed, formatted, its delimiters gone. */
+function spanAid(state: EditorState, pos: number): Transaction | null {
+  const read = textBefore(state, pos);
+  const span = read ? markdownSpanFor(read.before) : undefined;
+  if (!read || !span) return null;
+  const at = (offset: number) => read.start + offset;
+  const { schema } = state;
+  const mark =
+    'link' in span.makes
+      ? schema.marks.link!.create({ href: span.makes.link })
+      : schema.marks[span.makes.mark]!.create({ value: true });
+  debugLog('[text-document] typing aid', { aids: ['markdown-span'] });
+  return (
+    state.tr
+      .delete(at(span.innerEnd), pos)
+      .addMark(at(span.innerStart), at(span.innerEnd), mark)
+      .delete(at(span.start), at(span.innerStart))
+      // What is typed next is outside the span, as the closing delimiter left it.
+      .removeStoredMark(mark)
+  );
+}
+
+/** The characters that may close a Markdown span. */
+const SPAN_ENDS = new Set(['*', '_', '~', ')']);
+
 export function typingAidsPlugin({
   read,
   lists,
+  readStyles = () => [],
 }: {
   /** The person's typing aids, read as each character is typed. */
   read: () => TypingAids;
   lists: ListsAccess;
+  /** The document's paragraph styles, for the heading Markdown makes. */
+  readStyles?: () => readonly Style[];
 }): Plugin {
   return new Plugin({
     props: {
@@ -129,7 +177,8 @@ export function typingAidsPlugin({
         const aids = read();
         const quote = (text === '"' || text === "'") && aids.smartQuotes;
         const ends = WORD_ENDS.has(text);
-        if (!quote && !ends) return false;
+        const span = aids.markdown && SPAN_ENDS.has(text);
+        if (!quote && !ends && !span) return false;
         const read0 = textBefore(view.state, from);
         if (!read0) return false;
         // What was typed goes in first, as typing, the caret after it: the editor's selection may not yet know where the
@@ -145,6 +194,16 @@ export function typingAidsPlugin({
             view.state.schema.text(curly, marksAt(view.state.doc, from)),
           );
           asOwnStep(view, tr);
+          return true;
+        }
+        if (span) {
+          asOwnStep(view, spanAid(view.state, at));
+          return true;
+        }
+        const heading =
+          text === ' ' && aids.markdown ? markdownHeadingFor(read0.before) : undefined;
+        if (heading !== undefined) {
+          asOwnStep(view, headingAid(view.state, at, heading, readStyles()));
           return true;
         }
         const marker = text === ' ' && aids.lists ? listMarkerFor(read0.before) : undefined;
