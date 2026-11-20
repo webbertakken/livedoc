@@ -46,7 +46,10 @@ test('the ruler sets indents, tab stops and margins, and hides', async ({ page, 
   // A press three inches in opens the menu; a right tab stop goes there.
   const strip = (await ruler.boundingBox())!;
   const marginLeft = (await page.getByRole('slider', { name: 'Left margin' }).boundingBox())!;
-  await page.mouse.click(marginLeft.x + marginLeft.width / 2 + 3 * INCH, strip.y + strip.height / 2);
+  await page.mouse.click(
+    marginLeft.x + marginLeft.width / 2 + 3 * INCH,
+    strip.y + strip.height / 2,
+  );
   const menu = page.getByRole('menu', { name: 'Add tab stop' });
   await expect(menu).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('ruler-menu.png') });
