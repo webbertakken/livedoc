@@ -1,7 +1,7 @@
 # Text and paragraphs
 
-**Status: partly built.** Text formatting, colour, paragraph styles and default styles are built; the rest is
-specified.
+**Status: partly built.** Text formatting, colour, paragraph styles, default styles, alignment and indents are
+built; the rest is specified.
 
 Typing, selecting and formatting text and paragraphs in a [text document](text-document.md), as Google Docs does.
 Every rule maps to a format construct in [Standard mapping](standard-mapping.md#what-the-model-holds).
@@ -161,9 +161,22 @@ Styles > Options and Format > Paragraph styles > Options hold three items, as Go
 
 ## Alignment and indents
 
-- Left, centre, right, justified: ⌘⇧L, ⌘⇧E, ⌘⇧R, ⌘⇧J.
-- Increase and decrease indent: ⌘] and ⌘[, by 0.5 in (1.27 cm).
-- **Indentation options** dialog: left, right (cm or in), special (none, first line, hanging) with its size.
+- **A paragraph draws in its own paragraph formatting** over its style's: alignment, indents, spacing and line
+  spacing, as in both formats' direct paragraph properties.
+- **Alignment**: Left, Centre, Right and Justified (⌘⇧L, ⌘⇧E, ⌘⇧R, ⌘⇧J; Format > Align & indent; the toolbar's Align
+  control) set it on every paragraph the selection touches, as one undo step, and return focus to the writing. An
+  alignment equal to the style's is stored as none of the paragraph's own, as text formatting is.
+- The **Align control** shows the alignment of the paragraphs the selection touches by its icon (Left when they
+  differ) and opens a menu of the four, the one there is checked (default: Google draws the four as a row of icons).
+- **Increase indent** and **Decrease indent** (⌘] and ⌘[, Format > Align & indent, the toolbar) move every paragraph
+  the selection touches by 0.5 in (36 pt), from what it draws with; decreasing never goes past 0, increasing never
+  past 6 in (432 pt) (default: a letter page's line less 0.5 in). A first-line or hanging indent moves with it.
+- **Indentation options** (Format > Align & indent) is a dialog for the paragraphs the selection touches: **Left**
+  and **Right** indents, and **Special indent** (None, First line, Hanging) with its size, each in centimetres, or in
+  inches where the browser's language is American English (default). A field shows the paragraphs' value, blank when
+  they differ, and a blank field changes nothing. **Apply** sets them as one undo step; **Cancel** and Escape change
+  nothing. A value past 0 to 55.88 cm (22 in) is refused in the field: "Enter a number from 0 to 55.88."
+- Share roles: an Editor aligns and indents; a Participant and a Viewer see none of the items or controls.
 
 ## Spacing and keep rules
 
@@ -215,7 +228,8 @@ Tools > Preferences, per person (account or browser), each on by default as Goog
 SmallCaps, Size, Lowercase, Uppercase, TitleCase, Font, TextColour, Highlight; from toolbar, menu or shortcut),
 `TextDocumentParagraphStyle` (applied, from toolbar, menu or shortcut), `TextDocumentStyleUpdated` (update to match),
 `TextDocumentStylesUsed` (Use my default styles), `TextDocumentStylesReset`, `TextDocumentPaintFormat`,
-`TextDocumentPaste` (with the source: Document, Html, Markdown, Plain); `UI · Changed · TextDocumentDefaultStyles`
+`TextDocumentPaste` (with the source: Document, Html, Markdown, Plain), `TextDocumentAlign`, `TextDocumentIndent` (a step),
+`TextDocumentIndentation` (Indentation options); `UI · Changed · TextDocumentDefaultStyles`
 (Save as my default styles). Never text.
 
 ## Limits

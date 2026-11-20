@@ -176,13 +176,19 @@ export function OfficeTitleRow({
   const { openAtCaret } = context;
   const bar = useMemo(
     () =>
-      visibleToolbar(toolbar, level, allActions, {
-        zoom: zoom !== null && !phone,
-        fontSize: fontSize !== null,
-        font: fontFamily !== null,
-        colour: colours !== null,
-        choice: choices !== null,
-      }),
+      visibleToolbar(
+        toolbar,
+        level,
+        allActions,
+        {
+          zoom: zoom !== null && !phone,
+          fontSize: fontSize !== null,
+          font: fontFamily !== null,
+          colour: colours !== null,
+          choice: choices !== null,
+        },
+        Object.keys(choices ?? {}),
+      ),
     [toolbar, level, allActions, zoom, fontSize, fontFamily, colours, choices, phone],
   );
   const shortcutOf = useMemo(() => shortcutTextOf(shortcuts, currentOfficePlatform()), [shortcuts]);

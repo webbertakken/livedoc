@@ -78,14 +78,14 @@ Statuses: `specified`, `built (<test>)`, `the browser's` (the key is left to the
 
 | Action                         | PC                | Mac               | ChromeOS         | Status    |
 | ------------------------------ | ----------------- | ----------------- | ---------------- | --------- |
-| Increase paragraph indentation | `Ctrl+]`          | `⌘+]`             | `Ctrl+]`         | specified |
-| Decrease paragraph indentation | `Ctrl+[`          | `⌘+[`             | `Ctrl+[`         | specified |
+| Increase paragraph indentation | `Ctrl+]`          | `⌘+]`             | `Ctrl+]`         | built     |
+| Decrease paragraph indentation | `Ctrl+[`          | `⌘+[`             | `Ctrl+[`         | built     |
 | Apply normal text style        | `Ctrl+Alt+0`      | `⌘+Option+0`      | `Ctrl+Alt+0`     | built     |
 | Apply heading style [1-6]      | `Ctrl+Alt+[1-6]`  | `⌘+Option+[1-6]`  | `Ctrl+Alt+[1-6]` | built     |
-| Left align                     | `Ctrl+Shift+L`    | `⌘+Shift+L`       | `Ctrl+Shift+L`   | specified |
-| Center align                   | `Ctrl+Shift+E`    | `⌘+Shift+E`       | `Ctrl+Shift+E`   | specified |
-| Right align                    | `Ctrl+Shift+R`    | `⌘+Shift+R`       | `Ctrl+Shift+R`   | specified |
-| Justify                        | `Ctrl+Shift+J`    | `⌘+Shift+J`       | `Ctrl+Shift+J`   | specified |
+| Left align                     | `Ctrl+Shift+L`    | `⌘+Shift+L`       | `Ctrl+Shift+L`   | built     |
+| Center align                   | `Ctrl+Shift+E`    | `⌘+Shift+E`       | `Ctrl+Shift+E`   | built     |
+| Right align                    | `Ctrl+Shift+R`    | `⌘+Shift+R`       | `Ctrl+Shift+R`   | built     |
+| Justify                        | `Ctrl+Shift+J`    | `⌘+Shift+J`       | `Ctrl+Shift+J`   | built     |
 | Numbered list                  | `Ctrl+Shift+7`    | `⌘+Shift+7`       | `Ctrl+Shift+7`   | specified |
 | Bulleted list                  | `Ctrl+Shift+8`    | `⌘+Shift+8`       | `Ctrl+Shift+8`   | specified |
 | Checklist                      | `Ctrl+Shift+9`    | `⌘+Shift+9`       | —                | specified |

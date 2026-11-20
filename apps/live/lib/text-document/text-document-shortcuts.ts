@@ -224,7 +224,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+]',
     '⌘+]',
     'Ctrl+]',
-    'specified',
+    'built',
   ),
   row(
     'decrease-paragraph-indentation',
@@ -233,7 +233,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+[',
     '⌘+[',
     'Ctrl+[',
-    'specified',
+    'built',
   ),
   row(
     'apply-normal-text-style',
@@ -260,7 +260,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+L',
     '⌘+Shift+L',
     'Ctrl+Shift+L',
-    'specified',
+    'built',
   ),
   row(
     'center-align',
@@ -269,7 +269,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+E',
     '⌘+Shift+E',
     'Ctrl+Shift+E',
-    'specified',
+    'built',
   ),
   row(
     'right-align',
@@ -278,7 +278,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+R',
     '⌘+Shift+R',
     'Ctrl+Shift+R',
-    'specified',
+    'built',
   ),
   row(
     'justify',
@@ -287,7 +287,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Shift+J',
     '⌘+Shift+J',
     'Ctrl+Shift+J',
-    'specified',
+    'built',
   ),
   row(
     'numbered-list',

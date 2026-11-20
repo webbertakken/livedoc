@@ -89,6 +89,26 @@ describe('visibleToolbar', () => {
     expect(shown[0]!.controls.map((c) => c.id)).toEqual(['print']);
   });
 
+  it('shows an icon control with a menu that the kind binds as a choice (office-shell.md "Toolbar")', () => {
+    const toolbar = [
+      {
+        id: 'paragraph',
+        label: 'Paragraph',
+        controls: [
+          {
+            id: 'align',
+            label: 'Align',
+            level: 'edit' as const,
+            status: 'built' as const,
+            look: { kind: 'icon' as const, icon: [], menu: true },
+          },
+        ],
+      },
+    ];
+    expect(visibleToolbar(toolbar, 'edit', {}, NEITHER)).toEqual([]);
+    expect(visibleToolbar(toolbar, 'edit', {}, NEITHER, ['align'])).toEqual(toolbar);
+  });
+
   it('shows a Viewer what a Viewer may use', () => {
     const shown = visibleToolbar(TOOLBAR, 'view', { undo: { run }, comment: { run } }, BOTH);
     expect(shown.flatMap((g) => g.controls.map((c) => c.id))).toEqual(['print', 'zoom']);

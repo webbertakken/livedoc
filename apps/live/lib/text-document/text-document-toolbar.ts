@@ -160,7 +160,7 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
     id: 'paragraph',
     label: 'Paragraph',
     controls: [
-      icon('align', 'Align & indent', 'edit', lucideAlignLeft, { menu: true }),
+      icon('align', 'Align & indent', 'edit', lucideAlignLeft, { menu: true, built: true }),
       icon('line-spacing', 'Line & paragraph spacing', 'edit', lucideArrowUpDown, { menu: true }),
       icon('checklist', 'Checklist', 'edit', lucideListTodo, {
         shortcut: 'checklist',
@@ -176,9 +176,11 @@ export const TEXT_DOCUMENT_TOOLBAR: OfficeToolbar = [
       }),
       icon('indent-decrease', 'Decrease indent', 'edit', lucideListIndentDecrease, {
         shortcut: 'decrease-paragraph-indentation',
+        built: true,
       }),
       icon('indent-increase', 'Increase indent', 'edit', lucideListIndentIncrease, {
         shortcut: 'increase-paragraph-indentation',
+        built: true,
       }),
     ],
   },

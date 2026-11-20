@@ -105,4 +105,27 @@ describe('a paragraph drawn in its style', () => {
     expect(toDom('Heading_20_1')).toEqual(['p', { 'data-style': 'Heading_20_1' }, 0]);
     expect(toDom(null)).toEqual(['p', 0]);
   });
+
+  // text-and-paragraphs.md "Alignment and indents": its own paragraph formatting over its style's.
+  it('draws its own paragraph formatting over its style, and nothing unsafe', () => {
+    const toDom = (props: unknown): unknown =>
+      textDocumentSchema.nodes.paragraph!.spec.toDOM!(
+        textDocumentSchema.nodes.paragraph!.create({ style: 'Title', props }),
+      );
+    expect(toDom({ align: 'center', indentStart: 36, indentFirst: -18, spaceAfter: 6 })).toEqual([
+      'p',
+      {
+        'data-style': 'Title',
+        style:
+          'text-align: center; padding-inline-start: 36pt; text-indent: -18pt; margin-bottom: 6pt;',
+      },
+      0,
+    ]);
+    expect(toDom({ align: 'centre;color:red', indentStart: 'x' })).toEqual([
+      'p',
+      { 'data-style': 'Title' },
+      0,
+    ]);
+    expect(toDom({})).toEqual(['p', { 'data-style': 'Title' }, 0]);
+  });
 });

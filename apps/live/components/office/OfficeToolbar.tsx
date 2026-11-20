@@ -344,6 +344,24 @@ function ControlView({
       />
     ) : null;
   }
+  // An icon control with a menu the kind binds as a choice (the Align control).
+  const iconChoice = look.kind === 'icon' && look.menu ? choices?.[control.id] : undefined;
+  if (look.kind === 'icon' && iconChoice) {
+    const value = choiceValues[control.id] ?? null;
+    return (
+      <OfficeChoiceMenu
+        id={control.id}
+        label={control.label}
+        value={value}
+        icon={iconChoice.iconOf?.(value) ?? look.icon}
+        entries={iconChoice.entries}
+        actions={iconChoice.actions}
+        width={0}
+        tabIndex={tabIndex}
+        className={`${CONTROL} min-w-7`}
+      />
+    );
+  }
   const soon = control.status === 'comingSoon' || !action;
   const inert = soon || disabled;
   const pressed = look.kind === 'icon' && look.toggle ? on : undefined;

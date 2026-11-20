@@ -35,13 +35,15 @@ export type OfficeToolbarGroup = { id: string; label: string; controls: readonly
 export type OfficeToolbar = readonly OfficeToolbarGroup[];
 
 /**
- * What the session sees: controls at or below its level that are coming soon or bound (a value field, when the shell has it), and the groups left with any.
+ * What the session sees: controls at or below its level that are coming soon or bound (a value field, when the shell has it;
+ * an icon with a menu, when the kind binds it as a choice, by `choiceIds`), and the groups left with any.
  */
 export function visibleToolbar(
   toolbar: OfficeToolbar,
   level: AccessLevel,
   actions: OfficeActions,
   fields: Readonly<Record<OfficeFieldKind, boolean>>,
+  choiceIds: readonly string[] = [],
 ): OfficeToolbarGroup[] {
   const shown = (control: OfficeControl) =>
     levelAtLeast(level, control.level) &&
@@ -52,7 +54,10 @@ export function visibleToolbar(
       control.look.kind === 'colour' ||
       control.look.kind === 'choice'
         ? fields[control.look.kind]
-        : actions[control.id] !== undefined));
+        : actions[control.id] !== undefined ||
+          (control.look.kind === 'icon' &&
+            control.look.menu === true &&
+            choiceIds.includes(control.id))));
   return toolbar.flatMap((group) => {
     const controls = group.controls.filter(shown);
     if (controls.length === 0) return [];

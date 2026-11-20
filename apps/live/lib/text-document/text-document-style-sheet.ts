@@ -14,7 +14,7 @@ import {
 const BODY = '.text-document-body';
 const HEX = /^#[0-9a-f]{6}$/i;
 const pt = (value: number | undefined, max = 1584) =>
-  value !== undefined && Number.isFinite(value) && Math.abs(value) <= max
+  typeof value === 'number' && Number.isFinite(value) && Math.abs(value) <= max
     ? `${value}pt`
     : undefined;
 
@@ -40,10 +40,11 @@ const ALIGN: Record<NonNullable<ParagraphProps['align']>, string> = {
   justify: 'justify',
 };
 
-function paragraphDeclarations(p: ParagraphProps): (string | undefined)[] {
+/** A paragraph's formatting as CSS declarations, each value checked (an unknown one draws nothing). */
+export function paragraphDeclarations(p: ParagraphProps): (string | undefined)[] {
   const height = p.lineHeight;
   return [
-    p.align ? `text-align: ${ALIGN[p.align]}` : undefined,
+    p.align && Object.hasOwn(ALIGN, p.align) ? `text-align: ${ALIGN[p.align]}` : undefined,
     pt(p.indentStart) && `padding-inline-start: ${pt(p.indentStart)}`,
     pt(p.indentEnd) && `padding-inline-end: ${pt(p.indentEnd)}`,
     pt(p.indentFirst) && `text-indent: ${pt(p.indentFirst)}`,
@@ -59,19 +60,23 @@ function paragraphDeclarations(p: ParagraphProps): (string | undefined)[] {
   ];
 }
 
+/** Declarations as one CSS text, the empty ones dropped. */
+export const cssText = (declarations: readonly (string | undefined)[]): string =>
+  declarations
+    .filter((d): d is string => typeof d === 'string' && d !== '')
+    .map((d) => `${d};`)
+    .join(' ');
+
 /** One paragraph style's declarations, through its parents and the defaults. */
 export function styleRule(
   styles: readonly Style[],
   defaults: StyleDefaults,
   id: string | undefined,
 ): string {
-  return [
+  return cssText([
     ...textDeclarations(Styles.textPropsOf(styles, defaults, id)),
     ...paragraphDeclarations(Styles.paragraphPropsOf(styles, defaults, id)),
-  ]
-    .filter((d): d is string => typeof d === 'string' && d !== '')
-    .map((d) => `${d};`)
-    .join(' ');
+  ]);
 }
 
 const quoted = (id: string) =>

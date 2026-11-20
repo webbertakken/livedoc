@@ -49,7 +49,10 @@ SOFTWARE.
 import type { IconPrim } from './types';
 
 export const lucideALargeSmall: readonly IconPrim[] = [{"t":"path","d":"m15 16 2.536-7.328a1.02 1.02 1 0 1 1.928 0L22 16"},{"t":"path","d":"M15.697 14h5.606"},{"t":"path","d":"m2 16 4.039-9.69a.5.5 0 0 1 .923 0L11 16"},{"t":"path","d":"M3.304 13h6.392"}];
+export const lucideAlignCenter: readonly IconPrim[] = [{"t":"path","d":"M21 5H3"},{"t":"path","d":"M17 12H7"},{"t":"path","d":"M19 19H5"}];
+export const lucideAlignJustify: readonly IconPrim[] = [{"t":"path","d":"M3 5h18"},{"t":"path","d":"M3 12h18"},{"t":"path","d":"M3 19h18"}];
 export const lucideAlignLeft: readonly IconPrim[] = [{"t":"path","d":"M21 5H3"},{"t":"path","d":"M15 12H3"},{"t":"path","d":"M17 19H3"}];
+export const lucideAlignRight: readonly IconPrim[] = [{"t":"path","d":"M21 5H3"},{"t":"path","d":"M21 12H9"},{"t":"path","d":"M21 19H7"}];
 export const lucideAppWindow: readonly IconPrim[] = [{"t":"rect","x":2,"y":4,"w":20,"h":16,"rx":2},{"t":"path","d":"M10 4v4"},{"t":"path","d":"M2 8h20"},{"t":"path","d":"M6 4v4"}];
 export const lucideApple: readonly IconPrim[] = [{"t":"path","d":"M12 6.528V3a1 1 0 0 1 1-1h0"},{"t":"path","d":"M18.237 21A15 15 0 0 0 22 11a6 6 0 0 0-10-4.472A6 6 0 0 0 2 11a15.1 15.1 0 0 0 3.763 10 3 3 0 0 0 3.648.648 5.5 5.5 0 0 1 5.178 0A3 3 0 0 0 18.237 21"}];
 export const lucideArmchair: readonly IconPrim[] = [{"t":"path","d":"M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"},{"t":"path","d":"M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"},{"t":"path","d":"M5 18v2"},{"t":"path","d":"M19 18v2"}];
