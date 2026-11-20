@@ -52,8 +52,9 @@ kind's component.
 - An **item** has an id, a label, optional keywords for the tool finder, the id of its shortcut in the kind's
   registry, its kind (a command, an on/off check, or one of a set), the least share level that sees it (`view`,
   `participate` or `edit`), and its status: `built` or `comingSoon`.
-- What an item does is bound by id at run time: `run`, and `checked` and `disabled` where they apply. A `built` item
-  with nothing bound is a fault the catalogue's test refuses; it is never drawn dead.
+- What an item does is bound by id at run time: `run`, and `checked`, `disabled` and `label` where they apply; a bound
+  label names what the item does now (Add space or Remove space before a paragraph) and is what the menu draws.
+  A `built` item with nothing bound is a fault the catalogue's test refuses; it is never drawn dead.
 - A `comingSoon` item shows dimmed (`aria-disabled`), with "Coming soon" where its shortcut would be (its
   description, so a touch screen shows it too), until its phase lands. None remain once the kind's parity matrix is
   done.

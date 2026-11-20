@@ -18,7 +18,7 @@ import {
   textDocumentParagraphStyleActions,
 } from './text-document-paragraph-styles';
 import { textDocumentMenus } from './text-document-menus';
-import { ALIGNMENTS, INDENT_ITEMS } from './text-document-paragraph-actions';
+import { ALIGNMENTS, INDENT_ITEMS, LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
 import { TEXT_DOCUMENT_PANELS } from './text-document-panels';
 import { textDocumentSchema } from './text-document-schema';
 import { TEXT_DOCUMENT_SHORTCUTS } from './text-document-shortcuts';
@@ -48,6 +48,8 @@ describe('the text document menus', () => {
         // Format > Align & indent (text-document-paragraph-actions), bound by the surface.
         ...ALIGNMENTS.map((a) => a.item),
         ...INDENT_ITEMS,
+        // Format > Line & paragraph spacing (text-document-paragraph-actions), bound by the surface.
+        ...LINE_SPACING_ENTRIES.flatMap((e) => (e.kind === 'item' ? [e.id] : [])),
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
         ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),

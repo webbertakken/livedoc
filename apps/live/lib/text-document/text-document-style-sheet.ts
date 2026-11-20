@@ -57,6 +57,15 @@ export function paragraphDeclarations(p: ParagraphProps): (string | undefined)[]
           ? `line-height: ${height.value}`
           : undefined
         : pt(height.pt) && `line-height: ${pt(height.pt)}`,
+    // The keep rules, as the print layout's break rules (text-and-paragraphs.md "Spacing and keep rules").
+    typeof p.keepWithNext === 'boolean'
+      ? `break-after: ${p.keepWithNext ? 'avoid' : 'auto'}`
+      : undefined,
+    typeof p.keepTogether === 'boolean'
+      ? `break-inside: ${p.keepTogether ? 'avoid' : 'auto'}`
+      : undefined,
+    typeof p.widowControl === 'boolean' ? `widows: ${p.widowControl ? 2 : 1}` : undefined,
+    typeof p.widowControl === 'boolean' ? `orphans: ${p.widowControl ? 2 : 1}` : undefined,
   ];
 }
 

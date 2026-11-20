@@ -177,6 +177,34 @@ describe('OfficeChoiceMenu with a choice that has a submenu', () => {
   });
 });
 
+// office-shell.md "Menu bar": a bound label names what the item does now.
+describe('OfficeChoiceMenu with a bound label', () => {
+  it('draws the label its binding gives', () => {
+    render(
+      <OfficeChoiceMenu
+        id="spacing"
+        label="Spacing"
+        value={null}
+        entries={[
+          {
+            kind: 'item',
+            id: 'space-before',
+            label: 'Add space before paragraph',
+            level: 'edit',
+            status: 'built',
+          },
+        ]}
+        actions={{ 'space-before': { run: vi.fn(), label: 'Remove space before paragraph' } }}
+        width={120}
+        tabIndex={0}
+        className=""
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Spacing' }));
+    expect(screen.getByRole('menuitem', { name: 'Remove space before paragraph' })).toBeTruthy();
+  });
+});
+
 describe('OfficeToolbar choices', () => {
   it('draws a choice control where the kind binds it, with its value', () => {
     const control = (id: string) => ({

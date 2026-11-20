@@ -8,7 +8,11 @@ import { lucideAlignCenter, lucideAlignLeft } from '@livedoc/icons/lucide';
 import { TextDocument } from '@livedoc/text-documents';
 import { track } from '@/lib/telemetry';
 import { textDocumentSchema as schema } from './text-document-schema';
-import { ALIGNMENTS, textDocumentParagraphActions } from './text-document-paragraph-actions';
+import {
+  ALIGNMENTS,
+  LINE_SPACING_ENTRIES,
+  textDocumentParagraphActions,
+} from './text-document-paragraph-actions';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
@@ -18,6 +22,7 @@ Range.prototype.getBoundingClientRect = () => new DOMRect();
 const blank = TextDocument.blank({ format: 'odf' });
 const readFormatting = () => ({ styles: blank.styles, defaults: blank.defaults });
 const openIndentation = vi.fn();
+const openSpacing = vi.fn();
 let view: EditorView;
 
 function open(props: unknown[] = [null, null]) {
@@ -31,7 +36,7 @@ function open(props: unknown[] = [null, null]) {
   });
 }
 const bind = (canEdit = true) =>
-  textDocumentParagraphActions({ view, readFormatting, canEdit, openIndentation });
+  textDocumentParagraphActions({ view, readFormatting, canEdit, openIndentation, openSpacing });
 const propsOf = () => {
   const out: unknown[] = [];
   view.state.doc.forEach((node) => out.push((node.attrs as { props: unknown }).props));
@@ -41,6 +46,7 @@ const propsOf = () => {
 beforeEach(() => {
   vi.mocked(track).mockClear();
   openIndentation.mockClear();
+  openSpacing.mockClear();
 });
 afterEach(() => view?.destroy());
 
@@ -100,5 +106,48 @@ describe('textDocumentParagraphActions', () => {
     expect(choices!.align!.read()).toBeNull();
     expect(track).not.toHaveBeenCalled();
     expect(openIndentation).not.toHaveBeenCalled();
+  });
+});
+
+// text-and-paragraphs.md "Spacing and keep rules".
+describe('textDocumentParagraphActions, spacing and keep rules', () => {
+  it('sets line spacing from an item, checks the one there is, and counts it', () => {
+    open();
+    const { actions } = bind();
+    expect(actions['spacing-115']!.checked).toBe(true);
+    actions['spacing-double']!.run();
+    expect(propsOf()).toEqual([{ lineHeight: { rule: 'multiple', value: 2 } }, null]);
+    expect(actions['spacing-double']!.checked).toBe(true);
+    expect(view.hasFocus()).toBe(true);
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentLineSpacing');
+  });
+
+  it('names Add or Remove space for what it does now, and does it', () => {
+    open();
+    const { actions } = bind();
+    expect(actions['space-after']!.label).toBe('Add space after paragraph');
+    actions['space-after']!.run();
+    expect(propsOf()).toEqual([{ spaceAfter: 12 }, null]);
+    expect(actions['space-after']!.label).toBe('Remove space after paragraph');
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentParagraphSpace');
+  });
+
+  it('switches a keep rule, checked when every paragraph has it', () => {
+    open();
+    const { actions } = bind();
+    expect(actions['prevent-single-lines']!.checked).toBe(true);
+    expect(actions['keep-with-next']!.checked).toBe(false);
+    actions['keep-with-next']!.run();
+    expect(actions['keep-with-next']!.checked).toBe(true);
+    expect(track).toHaveBeenCalledWith('Element', 'Changed', 'TextDocumentKeepRule');
+  });
+
+  it("opens Custom spacing, and gives the toolbar's control the Format menu's entries", () => {
+    open();
+    const { actions, choices } = bind();
+    actions['custom-spacing']!.run();
+    expect(openSpacing).toHaveBeenCalled();
+    expect(choices!['line-spacing']!.entries).toBe(LINE_SPACING_ENTRIES);
+    expect(choices!['line-spacing']!.read()).toBeNull();
   });
 });

@@ -15,6 +15,7 @@ import {
   paragraphStyleEntries,
   STYLE_OPTIONS,
 } from './text-document-paragraph-styles';
+import { LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
 
 type ItemOptions = Partial<
   Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status'>
@@ -276,23 +277,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         }),
         item('indentation-options', 'Indentation options', 'edit', BUILT),
       ]),
-      submenu('line-spacing', 'Line & paragraph spacing', [
-        item('spacing-single', 'Single', 'edit', { checkable: 'radio' }),
-        item('spacing-115', '1.15', 'edit', { checkable: 'radio' }),
-        item('spacing-15', '1.5', 'edit', { checkable: 'radio' }),
-        item('spacing-double', 'Double', 'edit', { checkable: 'radio' }),
-        SEPARATOR,
-        item('space-before', 'Add space before paragraph', 'edit'),
-        item('space-after', 'Add space after paragraph', 'edit'),
-        item('custom-spacing', 'Custom spacing', 'edit'),
-        SEPARATOR,
-        item('keep-with-next', 'Keep with next', 'edit', { checkable: 'checkbox' }),
-        item('keep-lines-together', 'Keep lines together', 'edit', { checkable: 'checkbox' }),
-        item('prevent-single-lines', 'Prevent single lines', 'edit', {
-          checkable: 'checkbox',
-          keywords: ['widow', 'orphan'],
-        }),
-      ]),
+      submenu('line-spacing', 'Line & paragraph spacing', [...LINE_SPACING_ENTRIES]),
       submenu('columns', 'Columns', [
         item('columns-one', 'One column', 'edit'),
         item('columns-two', 'Two columns', 'edit'),
