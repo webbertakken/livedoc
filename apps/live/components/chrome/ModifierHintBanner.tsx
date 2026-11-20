@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, type ComponentProps } from 'react';
+import { useValueStoreSnapshot, type ValueStore } from '@/hooks/ui/useValueStore';
 import type { Element } from '@livedoc/document';
 import type { DragState } from '@/lib/canvas';
 import { useSelectionOf } from '@/hooks/canvas/useSelectionStore';
@@ -69,23 +70,26 @@ export function selectedKindOf(
   return el.type === 'arrow' ? 'arrow' : el.type === 'table' ? 'table' : 'other';
 }
 
-// The banner with its selection read from the store (docs/specs/008-canvas/canvas-performance.md):
-// a selection change renders this, not the editor view that places it.
+// The banner with its selection and the drag in hand read from their stores (docs/specs/008-canvas/
+// canvas-performance.md): a selection change, a press or a release renders this, not the editor view that places it.
 export function ModifierHint({
   elements,
   readOnly = false,
+  dragStore,
   ...banner
 }: {
   elements: readonly Element[];
   // A read-only session (a Participant, a Viewer) never splits an arrow, so a selected arrow gets the
   // general hint, not the branch one (docs/specs/013-workspace/share-roles.md).
   readOnly?: boolean;
-} & Omit<ComponentProps<typeof ModifierHintBanner>, 'selectedKind'>) {
+  dragStore: ValueStore<DragState | null>;
+} & Omit<ComponentProps<typeof ModifierHintBanner>, 'selectedKind' | 'drag'>) {
   const kind = useSelectionOf(
     useCallback((s: Selection) => selectedKindOf(elements, s.selectedId), [elements]),
   );
+  const drag = useValueStoreSnapshot(dragStore);
   const selectedKind = readOnly && kind === 'arrow' ? 'other' : kind;
-  return <ModifierHintBanner {...banner} selectedKind={selectedKind} />;
+  return <ModifierHintBanner {...banner} drag={drag} selectedKind={selectedKind} />;
 }
 
 const KEY_CHIP =

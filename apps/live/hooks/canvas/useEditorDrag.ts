@@ -5,12 +5,10 @@
 // move / pointer-up effect are unchanged from their previous inline
 // shape; only the surrounding closure has changed.
 //
-// Why a hook (not a lib helper): the drag state IS React state
-// (setDrag triggers re-render so the wrapper element renders with the
-// right cursor + the resize handles see the live drag), and the
-// pointer-move effect attaches global listeners that have to be torn
-// down via the effect-cleanup convention. Both are React-shaped, so
-// they belong in a hook rather than a pure module.
+// Why a hook (not a lib helper): the gesture's listeners are attached and torn down with the canvas, and its
+// preview and guides are React-shaped. The drag in hand itself lives in a store, not React state
+// (docs/specs/008-canvas/canvas-performance.md "A press renders what shows it"): a press and a release re-render
+// only what shows the drag (the modifier hint, a reshaped arrow's frame), never the editor that owns this hook.
 //
 // Why a deps ref: the pointer-move effect's listeners need to read
 // `activeTab.elements`, `tick`, `zoomRef`, etc. on every move event,
@@ -19,6 +17,7 @@
 // fresh view of the parent state on every fire.
 
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { createValueStore } from '@/hooks/ui/useValueStore';
 import {
   acceptsInlineIcon,
   anchorOutward,
@@ -90,7 +89,14 @@ type MovePointer = {
 };
 
 export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
-  const [drag, setDrag] = useState<DragState | null>(null);
+  const [dragStore] = useState(() => createValueStore<DragState | null>(null));
+  const setDrag = dragStore.publish;
+  // While one of the gesture's own listeners runs, a change of drag waits for it to return: the listener's code
+  // after the change still belongs to the gesture it was written for (as it did when the change was a render away).
+  const inListenerRef = useRef(0);
+  const pendingRunRef = useRef(false);
+  // Applies a change that waited for a listener; set by the effect that keeps the gesture in step with the store.
+  const flushDragRef = useRef<(() => void) | null>(null);
   // Alignment guides for the active gesture. Set from the move-effect on
   // every boxed move / single-element resize, cleared on pointer-up. The
   // render layer (CanvasChrome) draws them as faint lines.
@@ -209,7 +215,19 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
   // drag-start, torn down when the drag ends. Every fire reads
   // through depsRef so an external state change (zoom, selection,
   // active-tab swap) is reflected without re-attaching.
-  useEffect(() => {
+  const runDrag = useEffectEvent((drag: DragState | null): (() => void) | undefined => {
+    // Each of the gesture's listeners, run so that a change of drag it makes waits for it to return.
+    const asGestureListener =
+      <A extends unknown[]>(listener: (...args: A) => void) =>
+      (...args: A) => {
+        inListenerRef.current += 1;
+        try {
+          listener(...args);
+        } finally {
+          inListenerRef.current -= 1;
+          if (inListenerRef.current === 0 && pendingRunRef.current) flushDragRef.current?.();
+        }
+      };
     // A gesture that ended by a route that neither committed nor cancelled keeps its result, as when
     // every tick was a write.
     if (!drag) {
@@ -1019,38 +1037,72 @@ export function useEditorDrag(deps: EditorDragDeps): EditorDragApi {
       };
       if (moveScheduled) return;
       moveScheduled = true;
-      moveRaf = requestAnimationFrame(flushMove);
+      moveRaf = requestAnimationFrame(asGestureListener(flushMove));
     };
 
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onUp);
-    window.addEventListener('pointercancel', onPointerCancel);
-    window.addEventListener('pointerdown', onSecondTouch);
-    window.addEventListener('pointerdown', onPlaceClick, true);
-    window.addEventListener('keydown', onKey, true);
-    window.addEventListener('keydown', onAltChange);
-    window.addEventListener('keyup', onAltChange);
+    const pointerMove = asGestureListener(onPointerMove);
+    const pointerUp = asGestureListener(onUp);
+    const pointerCancel = asGestureListener(onPointerCancel);
+    const secondTouch = asGestureListener(onSecondTouch);
+    const placeClick = asGestureListener(onPlaceClick);
+    const key = asGestureListener(onKey);
+    const altChange = asGestureListener(onAltChange);
+    window.addEventListener('pointermove', pointerMove);
+    window.addEventListener('pointerup', pointerUp);
+    window.addEventListener('pointercancel', pointerCancel);
+    window.addEventListener('pointerdown', secondTouch);
+    window.addEventListener('pointerdown', placeClick, true);
+    window.addEventListener('keydown', key, true);
+    window.addEventListener('keydown', altChange);
+    window.addEventListener('keyup', altChange);
     return () => {
       endGesture?.();
       if (moveRaf !== null) cancelAnimationFrame(moveRaf);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onUp);
-      window.removeEventListener('pointercancel', onPointerCancel);
-      window.removeEventListener('pointerdown', onSecondTouch);
-      window.removeEventListener('pointerdown', onPlaceClick, true);
-      window.removeEventListener('keydown', onKey, true);
-      window.removeEventListener('keydown', onAltChange);
-      window.removeEventListener('keyup', onAltChange);
+      window.removeEventListener('pointermove', pointerMove);
+      window.removeEventListener('pointerup', pointerUp);
+      window.removeEventListener('pointercancel', pointerCancel);
+      window.removeEventListener('pointerdown', secondTouch);
+      window.removeEventListener('pointerdown', placeClick, true);
+      window.removeEventListener('keydown', key, true);
+      window.removeEventListener('keydown', altChange);
+      window.removeEventListener('keyup', altChange);
       // No gesture in flight: nothing may be left standing aside.
       insertSlotRef.current = null;
       setInsertionSlot(null);
       setLanePreview(null);
       setInsertionDragInHand(false);
     };
-  }, [depsRef, drag, scheduleGuides, scheduleSnapTargets]);
+  });
+  // The gesture as the store now holds it: torn down and set up again on each change, as an effect on the drag
+  // would be, without a render of the editor.
+  const appliedRef = useRef<{ drag: DragState | null; stop: (() => void) | undefined } | null>(
+    null,
+  );
+  const applyDrag = useEffectEvent(() => {
+    pendingRunRef.current = false;
+    const next = dragStore.get();
+    const applied = appliedRef.current;
+    if (applied && applied.drag === next) return;
+    applied?.stop?.();
+    appliedRef.current = { drag: next, stop: runDrag(next) };
+  });
+  useEffect(() => {
+    flushDragRef.current = () => applyDrag();
+    applyDrag();
+    const stop = dragStore.subscribe(() => {
+      if (inListenerRef.current > 0) pendingRunRef.current = true;
+      else applyDrag();
+    });
+    return () => {
+      stop();
+      flushDragRef.current = null;
+      appliedRef.current?.stop?.();
+      appliedRef.current = null;
+    };
+  }, [dragStore]);
 
   return {
-    drag,
+    dragStore,
     shiftDupGhostIds,
     snapGuideStore,
     beginDrag,

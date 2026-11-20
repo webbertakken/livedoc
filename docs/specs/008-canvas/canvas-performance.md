@@ -182,6 +182,12 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   the tabs' identity: a context above the element views that changes makes React check every element
   view under it for readers. The editor's own state still reaches its readers as a context value, so
   every reader updates in the commit that changed it, as a View Transition needs.
+- **A press renders what shows it.** The drag in hand (a move, a resize, a turn, an arrow's handle)
+  is held in a store, not the editor's state: pressing an element and letting it go without a change
+  re-render only what shows the drag (the modifier hint, a reshaped arrow's frame), never the editor
+  root, so a click that selects renders no editor and a drag's release renders it once, for the
+  change it lands. The gesture's listeners follow the store; a change of drag made inside one of
+  them waits for it to return.
 - **Derived layouts are computed once per change.** Arrow labels, ink projection and theme
   colours are laid out per element change and cached per element identity. A label's ink against
   what is behind it is worked out again only for the labels a change can reach: those it changed,
