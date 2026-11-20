@@ -306,6 +306,18 @@ describe('OfficeToolbar font size', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
 
+  it("draws its list over the page, out of the toolbar's clipping, and takes a pressed step", () => {
+    const { fontSize, field } = sized(() => 11);
+    fireEvent.click(field);
+    const list = screen.getByRole('listbox', { name: 'Font size' });
+    expect(screen.getByRole('toolbar', { name: 'Toolbar' }).contains(list)).toBe(false);
+    expect(list.closest('.office-shell')).not.toBeNull();
+    const step = within(list).getByRole('option', { name: '24' });
+    fireEvent.pointerDown(step);
+    fireEvent.click(step);
+    expect(fontSize.set).toHaveBeenCalledWith(24);
+  });
+
   it('marks no step for a size off the list, and closes it with Escape', () => {
     const { field } = sized(() => 9.5);
     fireEvent.click(field);

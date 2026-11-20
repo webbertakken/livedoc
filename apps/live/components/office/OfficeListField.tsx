@@ -4,8 +4,9 @@
 // WAI-ARIA combobox: a typed value applies on Enter, anything else puts the value back. Down or the chevron (else a press on the
 // field) opens the list; Up and Down move through it, Enter takes one, Escape closes it, then puts back what was typed. The zoom and the
 // font size are two of these.
-import { useId, useRef, useState } from 'react';
+import { useCallback, useId, useRef, useState } from 'react';
 import { ChevronDownIcon, useClickOutside } from '@livedoc/ui';
+import { OFFICE_POPUP, OfficePopup } from './OfficePopup';
 
 export type OfficeListOption<T> = { label: string; value: T };
 
@@ -44,8 +45,14 @@ export function OfficeListField<T>({
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const box = useRef<HTMLDivElement>(null);
+  // The field, as state too: the list opens from it.
+  const [anchor, setAnchor] = useState<HTMLDivElement | null>(null);
+  const attach = useCallback((element: HTMLDivElement | null) => {
+    box.current = element;
+    setAnchor(element);
+  }, []);
   const listId = useId();
-  useClickOutside(box, () => setOpen(false), open);
+  useClickOutside(box, () => setOpen(false), open, OFFICE_POPUP);
 
   const take = (value: T) => {
     setDraft(null);
@@ -58,7 +65,7 @@ export function OfficeListField<T>({
   };
 
   return (
-    <div ref={box} className="relative flex h-7 items-center rounded hover:bg-(--office-hover)">
+    <div ref={attach} className="relative flex h-7 items-center rounded hover:bg-(--office-hover)">
       <input
         role="combobox"
         aria-label={label}
@@ -110,26 +117,28 @@ export function OfficeListField<T>({
         </button>
       ) : null}
       {open ? (
-        <ul
-          id={listId}
-          role="listbox"
-          aria-label={label}
-          className="absolute top-full left-0 z-30 mt-1 max-h-80 min-w-24 overflow-y-auto rounded-md bg-(--office-menu) py-1 text-sm text-(--office-ink) shadow-lg"
-        >
-          {options.map((option, i) => (
-            <li
-              key={option.label}
-              id={`${listId}-${i}`}
-              role="option"
-              aria-selected={i === selected}
-              onPointerDown={(e) => e.preventDefault()}
-              onClick={() => take(option.value)}
-              className={`cursor-default px-4 py-1.5 ${i === active ? 'bg-(--office-menu-hover)' : ''}`}
-            >
-              {option.label}
-            </li>
-          ))}
-        </ul>
+        <OfficePopup anchor={anchor}>
+          <ul
+            id={listId}
+            role="listbox"
+            aria-label={label}
+            className="max-h-80 min-w-24 overflow-y-auto rounded-md bg-(--office-menu) py-1 text-sm text-(--office-ink) shadow-lg"
+          >
+            {options.map((option, i) => (
+              <li
+                key={option.label}
+                id={`${listId}-${i}`}
+                role="option"
+                aria-selected={i === selected}
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={() => take(option.value)}
+                className={`cursor-default px-4 py-1.5 ${i === active ? 'bg-(--office-menu-hover)' : ''}`}
+              >
+                {option.label}
+              </li>
+            ))}
+          </ul>
+        </OfficePopup>
       ) : null}
     </div>
   );

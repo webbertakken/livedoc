@@ -39,6 +39,10 @@ test('bold, italic, size and capitalisation format a text document, kept after a
   await toolbar.getByRole('button', { name: 'Increase font size' }).click();
   await toolbar.getByRole('button', { name: 'Increase font size' }).click();
   await expect(size).toHaveValue('13');
+  // The list opens over the page from a press on the field, and a step is taken by a press.
+  await size.click();
+  await page.getByRole('option', { name: '14', exact: true }).click();
+  await expect(size).toHaveValue('14');
   await size.fill('18');
   await size.press('Enter');
   await expect(body).toBeFocused();
