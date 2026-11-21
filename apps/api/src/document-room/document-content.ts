@@ -17,7 +17,8 @@ import { tabStatsOfData, tabStatsStatement } from '../db/tab-stats';
 import type { ContentSummary } from '../db/content-summary';
 import { rowToTabSummary, type TabRow } from '../tab-row';
 import type { DocumentEnv, TabSummaryDTO } from '../types';
-import { chunksOf, readTextDocumentState } from '../text-documents/text-document-store';
+import { liveTabKindOfTab } from '../live-tabs/live-tab-kinds';
+import { chunkStatements, readLiveTabState } from '../live-tabs/live-tab-store';
 import { contentSummaryOf } from './content-summary';
 
 // What a document read takes from the room: its tabs in order (no body), its slide deck and its item type
@@ -111,9 +112,9 @@ export type DocumentCopy = {
   axes: Row[];
   // A spreadsheet's workbook row (docs/specs/029-sheets/sheet-store.md "Copies and exports"), or null.
   workbook: Row | null;
-  // Each copied text document tab's whole state, by its source id (docs/specs/034-text-documents/
-  // live-editing-and-storage.md "Copies").
-  textDocuments: { tabId: string; state: Uint8Array }[];
+  // Each copied live tab's whole state, by its source id (docs/specs/006-document/kinds-outside-the-canvas.md
+  // "Live state").
+  liveStates: { tabId: string; state: Uint8Array }[];
 };
 
 const ITEM_COLUMNS =
@@ -215,13 +216,16 @@ export async function exportDocumentCopy(
   ]);
   const doc = head?.results?.[0] as
     { item_types: string | null; items_rev: number; items_next_key: number } | undefined;
-  const textDocuments = await Promise.all(
-    tabs
-      .filter((t) => t.kind === 'text-document')
-      .map(async (t) => ({ tabId: t.id, state: await readTextDocumentState(env, t.id) })),
+  const liveStates = await Promise.all(
+    tabs.flatMap((t) => {
+      const live = liveTabKindOfTab(t);
+      return live
+        ? [readLiveTabState(env, live, t.id).then((state) => ({ tabId: t.id, state }))]
+        : [];
+    }),
   );
   return {
-    textDocuments,
+    liveStates,
     itemTypes: doc?.item_types ?? null,
     itemsRev: doc?.items_rev ?? 0,
     itemsNextKey: doc?.items_next_key ?? 1,
@@ -381,17 +385,13 @@ export async function importDocumentCopy(
         .bind(tabId, ref.sheetId),
     );
   }
-  // Each text document's state under its tab's new id, as chunks; the tab's outbox entry rebuilds its digest.
-  for (const { tabId, state } of copy.textDocuments ?? []) {
+  // Each live tab's state under its tab's new id, as chunks; the tab's outbox entry rebuilds its digest.
+  const kindOf = new Map(copy.tabs.map((t) => [t.id, liveTabKindOfTab(t)]));
+  for (const { tabId, state } of copy.liveStates ?? []) {
     const id = tabIdMap.get(tabId);
-    if (!id) continue;
-    chunksOf(state).forEach((chunk, idx) =>
-      stmts.push(
-        db
-          .prepare('INSERT INTO text_document_chunks (tab_id, idx, rev, bytes) VALUES (?, ?, ?, ?)')
-          .bind(id, idx, now, chunk.slice().buffer),
-      ),
-    );
+    const live = kindOf.get(tabId);
+    if (!id || !live) continue;
+    stmts.push(...chunkStatements(env, live, id, state, now));
   }
   await db.batch(stmts);
   return contentSummaryOf(env, documentId);

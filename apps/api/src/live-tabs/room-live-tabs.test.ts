@@ -13,8 +13,12 @@ import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { makeTestRouteContext } from '../routes/test-route-context';
 import { handleDocuments } from '../routes/documents';
 import { base64OfBytes } from '@livedoc/text-documents';
-import { RoomTextDocuments, textDocumentFrameOf } from './room-text-documents';
-import { storedUpdates } from './text-document-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
+import { RoomLiveTabs, liveTabFrameOf } from './room-live-tabs';
+import { storedUpdates as storedOf } from './live-tab-store';
+
+const storedUpdates = (env: Parameters<typeof storedOf>[0], tabId: string) =>
+  storedOf(env, TEXT_DOCUMENT_LIVE_TAB, tabId);
 
 // docs/specs/034-text-documents/live-editing-and-storage.md "Storage" and "Share roles": the room is the one writer,
 // stores an update before relaying it, and relays a text document's edits from an Editor only.
@@ -41,7 +45,7 @@ async function roomWith(db: SqliteD1, caps?: typeof ROOMY) {
   );
   const sequence = vi.fn(() => 7);
   const sendTo = vi.fn();
-  const room = new RoomTextDocuments({
+  const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
     env: db.env,
     enqueue: (step) => step(),
     sequence,
@@ -58,7 +62,7 @@ const frame = (tabId: string, text: string) => ({
   update: base64OfBytes(TextDocumentState.fromBody(Body.of(text))),
 });
 
-describe('RoomTextDocuments', () => {
+describe('RoomLiveTabs, for a text document', () => {
   it('stores an update, then relays it and tells the sender its seq', async () => {
     const db = sqliteD1();
     const { room, sequence, sendTo } = await roomWith(db);
@@ -165,7 +169,7 @@ describe('RoomTextDocuments', () => {
     const { room, sequence } = await roomWith(db);
     expect(await room.acceptPosted('D', 't1', Uint8Array.of(9, 9, 9))).toBe('decode');
     expect(await room.acceptPosted('D', 'c', TextDocumentState.fromBody(Body.of('x')))).toBe(
-      'not-text-document',
+      'wrong-kind',
     );
     expect(sequence).not.toHaveBeenCalled();
   });
@@ -219,9 +223,11 @@ describe('RoomTextDocuments', () => {
   });
 
   it('reads only a whole frame', () => {
-    expect(textDocumentFrameOf(null)).toBeNull();
-    expect(textDocumentFrameOf({ kind: 'el' })).toBeNull();
-    expect(textDocumentFrameOf({ kind: 'text-document', tabId: 1, update: '' })).toBeNull();
+    expect(liveTabFrameOf(TEXT_DOCUMENT_LIVE_TAB, null)).toBeNull();
+    expect(liveTabFrameOf(TEXT_DOCUMENT_LIVE_TAB, { kind: 'el' })).toBeNull();
+    expect(
+      liveTabFrameOf(TEXT_DOCUMENT_LIVE_TAB, { kind: 'text-document', tabId: 1, update: '' }),
+    ).toBeNull();
   });
 });
 

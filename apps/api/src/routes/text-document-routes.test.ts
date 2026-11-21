@@ -16,13 +16,17 @@ import {
 import { sqliteD1, type SqliteD1 } from '../test-sqlite-d1';
 import { base64OfBytes } from '@livedoc/text-documents';
 import {
-  appendTextDocumentUpdate,
-  compactTextDocument,
+  appendLiveTabUpdate,
+  compactLiveTab,
   chunksOf,
-  storedUpdates,
-} from '../text-documents/text-document-store';
+  storedUpdates as storedOf,
+} from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
 import { makeTestRouteContext } from './test-route-context';
-import { RoomTextDocuments } from '../text-documents/room-text-documents';
+import { RoomLiveTabs } from '../live-tabs/room-live-tabs';
+
+const storedUpdates = (env: Parameters<typeof storedOf>[0], tabId: string) =>
+  storedOf(env, TEXT_DOCUMENT_LIVE_TAB, tabId);
 
 /** A file of these paragraphs, in the format its type is. */
 function fileOf(body: Body, type: TextDocumentFileType = 'odt'): Uint8Array {
@@ -256,9 +260,14 @@ describe('the stored state', () => {
   it('folds the log into chunks under the row cap, keeping the state', async () => {
     const db = sqliteD1();
     await create(db);
-    await appendTextDocumentUpdate(db.env, 't1', TextDocumentState.fromBody(Body.of('one')));
+    await appendLiveTabUpdate(
+      db.env,
+      TEXT_DOCUMENT_LIVE_TAB,
+      't1',
+      TextDocumentState.fromBody(Body.of('one')),
+    );
     const before = TextDocumentState.merge(await storedUpdates(db.env, 't1'));
-    expect(await compactTextDocument(db.env, 't1')).toBe(1);
+    expect(await compactLiveTab(db.env, TEXT_DOCUMENT_LIVE_TAB, 't1')).toBe(1);
     const after = await storedUpdates(db.env, 't1');
     expect(after).toHaveLength(1);
     expect(TextDocumentState.paragraphs(TextDocumentState.load(after))).toEqual(
@@ -274,7 +283,7 @@ describe('the update door', () => {
   // A room whose internal door runs the real room side over the test's database.
   function withRoom(db: SqliteD1) {
     const relayed: unknown[] = [];
-    const room = new RoomTextDocuments({
+    const room = new RoomLiveTabs(TEXT_DOCUMENT_LIVE_TAB, {
       env: db.env,
       enqueue: (step) => step(),
       sequence: (_from, op) => relayed.push(op),
@@ -286,7 +295,11 @@ describe('the update door', () => {
       get: () => ({
         fetch: async (input: string, init?: RequestInit) => {
           const url = new URL(input);
-          if (url.pathname !== '/text-document-update') return new Response(null, { status: 404 });
+          if (
+            url.pathname !== '/live-tab-update' ||
+            url.searchParams.get('frame') !== 'text-document'
+          )
+            return new Response(null, { status: 404 });
           const outcome = await room.acceptPosted(
             url.searchParams.get('document')!,
             url.searchParams.get('tab')!,
@@ -370,7 +383,12 @@ describe('the state since a reader’s vector', () => {
     await create(db);
     const first = await call(db, 'GET', '/api/documents/D/text-documents/t1/state');
     const known = new Uint8Array(await first.arrayBuffer());
-    await appendTextDocumentUpdate(db.env, 't1', TextDocumentState.fromBody(Body.of('Later')));
+    await appendLiveTabUpdate(
+      db.env,
+      TEXT_DOCUMENT_LIVE_TAB,
+      't1',
+      TextDocumentState.fromBody(Body.of('Later')),
+    );
     const vector = base64OfBytes(TextDocumentState.stateVectorOf(known));
     const res = await call(
       db,

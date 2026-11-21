@@ -1,3 +1,4 @@
+import type { LiveTabKind } from './live-tabs/live-tab-kind';
 import {
   ledgerCommentAuthors,
   mergeLedgerIntoTab,
@@ -503,18 +504,19 @@ const TEXT_DOCUMENT_DOOR_TIMEOUT_MS = 10_000;
 // One text document update sent by the door (docs/specs/034-text-documents/live-editing-and-storage.md "Sending"),
 // handed to the room's write queue; answers the room's status (204 stored, 400, 404, 413 with the limit passed, 503),
 // 503 when unreachable.
-export async function postTextDocumentUpdate(
+export async function postLiveTabUpdate(
   env: Env,
+  kind: LiveTabKind,
   documentId: string,
   tabId: string,
   update: Uint8Array,
 ): Promise<{ status: number; limit?: string }> {
-  const query = new URLSearchParams({ document: documentId, tab: tabId });
+  const query = new URLSearchParams({ frame: kind.frame, document: documentId, tab: tabId });
   try {
     const res = await roomFetch(
       env,
       documentId,
-      `/text-document-update?${query.toString()}`,
+      `/live-tab-update?${query.toString()}`,
       { method: 'POST', body: update.slice().buffer },
       TEXT_DOCUMENT_DOOR_TIMEOUT_MS,
     );
@@ -522,7 +524,7 @@ export async function postTextDocumentUpdate(
     const body = (await res.json().catch(() => ({}))) as { limit?: unknown };
     return typeof body.limit === 'string' ? { status: 413, limit: body.limit } : { status: 413 };
   } catch (err) {
-    console.warn('[text-document] door-update did not reach the room', {
+    console.warn(`${kind.tag} door-update did not reach the room`, {
       documentId,
       tabId,
       error: String(err),

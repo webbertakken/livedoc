@@ -12,7 +12,8 @@ import { readTextDocumentFile, TextDocumentState } from '@livedoc/text-documents
 import { json } from '../responses';
 import type { DocumentEnv } from '../types';
 import { bytesOfBase64 } from '@livedoc/text-documents';
-import { appendTextDocumentUpdate, storeTextDocumentState } from './text-document-store';
+import { appendLiveTabUpdate, storeLiveTabState } from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from './text-document-live-tab';
 
 export type TextDocumentSeed = { tabId: string; format: TextDocumentFormat } & (
   { file: Uint8Array } | { state: Uint8Array }
@@ -76,7 +77,7 @@ export async function seedTextDocuments(
   for (const seed of seeds) {
     const started = Date.now();
     if ('state' in seed) {
-      await storeTextDocumentState(env, seed.tabId, seed.state);
+      await storeLiveTabState(env, TEXT_DOCUMENT_LIVE_TAB, seed.tabId, seed.state);
       console.info(
         `[text-document] copied document=${documentId} tab=${seed.tabId} bytes=${seed.state.byteLength} ms=${Date.now() - started}`,
       );
@@ -105,7 +106,12 @@ export async function seedTextDocuments(
     const kept = read.report.kept.reduce((n, k) => n + k.count, 0);
     if (dropped > 0) console.info(`[package] dropped document=${documentId} items=${dropped}`);
     // The whole model goes into the live state, kept content included (live-editing-and-storage.md "The layout").
-    await appendTextDocumentUpdate(env, seed.tabId, TextDocumentState.fromDocument(read.document));
+    await appendLiveTabUpdate(
+      env,
+      TEXT_DOCUMENT_LIVE_TAB,
+      seed.tabId,
+      TextDocumentState.fromDocument(read.document),
+    );
     console.info(
       `[text-document] file-read document=${documentId} tab=${seed.tabId} blocks=${read.document.body.length} kept=${kept} bytes=${seed.file.byteLength} ms=${Date.now() - started}`,
     );

@@ -36,7 +36,8 @@ import {
 import { readForm } from '@livedoc/forms';
 import { formArt } from '@livedoc/plan-art';
 import { TextDocumentState, textDocumentPageSvg } from '@livedoc/text-documents';
-import { readTextDocumentState } from './text-documents/text-document-store';
+import { readLiveTabState } from './live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from './text-documents/text-document-live-tab';
 import { cardSourceOf, itemIdsShownOnTab, typesOf, type Item } from '@livedoc/items';
 import { renderModelsForTab, sheetFramesOf } from '@livedoc/sheets';
 // Static-import icon resolver (bundle size is fine in a Worker) so icon
@@ -289,7 +290,7 @@ async function renderTabBodyToSvg(
   // A text document draws its first page from its live state (docs/specs/034-text-documents/
   // live-editing-and-storage.md "Thumbnails"); its tab body holds no elements.
   if (tabKindOf(parsed) === 'text-document') {
-    const state = await readTextDocumentState(env, body.id);
+    const state = await readLiveTabState(env, TEXT_DOCUMENT_LIVE_TAB, body.id);
     const document = TextDocumentState.document(
       TextDocumentState.load([state]),
       textDocumentFormatOf(parsed),

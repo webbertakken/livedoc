@@ -33,10 +33,11 @@ const db = vi.hoisted(() => ({
 }));
 vi.mock('./db', () => db);
 // A text document's state is read from its room's tables (live-editing-and-storage.md "Thumbnails").
-const store = vi.hoisted(() => ({ readTextDocumentState: vi.fn() }));
-vi.mock('./text-documents/text-document-store', () => store);
+const store = vi.hoisted(() => ({ readLiveTabState: vi.fn() }));
+vi.mock('./live-tabs/live-tab-store', () => store);
 
 import { getDocumentTabImageSvg, getDocumentThumbnailSvg } from './thumbnail';
+import { TEXT_DOCUMENT_LIVE_TAB } from './text-documents/text-document-live-tab';
 
 function r2() {
   return { get: vi.fn(), put: vi.fn().mockResolvedValue(undefined), delete: vi.fn() };
@@ -251,14 +252,14 @@ describe('getDocumentThumbnailSvg', () => {
     db.getTabBody.mockResolvedValue(
       stored(JSON.stringify({ kind: 'text-document', format: 'odf', elements: [] }), 0),
     );
-    store.readTextDocumentState.mockResolvedValue(
+    store.readLiveTabState.mockResolvedValue(
       TextDocumentState.fromBody(Body.of('Minutes of the meeting')),
     );
     const env = { IMAGES: images } as unknown as DocumentEnv;
     const out = await getDocumentThumbnailSvg(env, liveDoc());
     expect(out).toContain('>Minutes of the meeting</text>');
-    expect(store.readTextDocumentState).toHaveBeenCalledWith(env, 't1');
-    store.readTextDocumentState.mockResolvedValue(TextDocumentState.seed());
+    expect(store.readLiveTabState).toHaveBeenCalledWith(env, TEXT_DOCUMENT_LIVE_TAB, 't1');
+    store.readLiveTabState.mockResolvedValue(TextDocumentState.seed());
     expect(await getDocumentThumbnailSvg(env, liveDoc())).toBeNull();
   });
 

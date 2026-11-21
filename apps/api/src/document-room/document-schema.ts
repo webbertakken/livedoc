@@ -9,6 +9,8 @@
 // Made on first write, never on construction (document-db.ts `ensureSchema`): a room a stray id wakes stores
 // nothing. Versioned by `_document_schema`; a change appends a step and never edits one that has shipped.
 
+import { outboxTrigger } from './outbox-trigger';
+
 const STEP_1 = `
 CREATE TABLE IF NOT EXISTS document (
   id             TEXT    PRIMARY KEY,
@@ -299,15 +301,6 @@ ${outboxTrigger(
     ' WHERE r.sheet_id = OLD.sheet_id',
 )}
 `;
-
-// A trigger that re-keys every (document_id, kind, key) row `keys` selects.
-function outboxTrigger(name: string, on: string, keys: string): string {
-  return `CREATE TRIGGER IF NOT EXISTS ${name} ${on}
-BEGIN
-  DELETE FROM outbox WHERE (document_id, kind, key) IN (${keys});
-  INSERT INTO outbox (document_id, kind, key) ${keys};
-END;`;
-}
 
 // A tab shared with other documents (tab-shares.ts, docs/specs/006-document/tab-document-many-to-many.md): every
 // holder keeps its own copy under the same tab id. `tab_shares` lists the OTHER documents holding it; `share_outbox`
