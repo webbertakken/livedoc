@@ -3232,6 +3232,30 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
           "sheets"
         ],
         "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "functions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "k": {
+            "const": "answers_differ",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "functions"
+        ],
+        "type": "object"
       }
     ],
     "description": "A loss of converting, one a kind, counted (D88)."
