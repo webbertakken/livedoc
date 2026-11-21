@@ -2,11 +2,11 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const prefetchWhenIdle = vi.fn((_loaders: unknown): (() => void) => () => {});
+const prefetchOnceQuiet = vi.fn((_loaders: unknown): (() => void) => () => {});
 const recoverInBrowser = vi.fn((..._args: unknown[]): void => {});
 const setKindFamilyFailureHandler = vi.fn((_handler: unknown): void => {});
 vi.mock('@/lib/idle-prefetch', () => ({
-  prefetchWhenIdle: (loaders: unknown) => prefetchWhenIdle(loaders),
+  prefetchOnceQuiet: (loaders: unknown) => prefetchOnceQuiet(loaders),
 }));
 vi.mock('@/lib/stale-build-navigation', () => ({
   browserNavigationDeps: () => 'deps',
@@ -34,8 +34,8 @@ describe('useKindFamilies', () => {
     const { rerender } = renderHook(({ loading }) => useKindFamilies(loading), {
       initialProps: { loading: true },
     });
-    expect(prefetchWhenIdle).not.toHaveBeenCalled();
+    expect(prefetchOnceQuiet).not.toHaveBeenCalled();
     rerender({ loading: false });
-    expect(prefetchWhenIdle).toHaveBeenCalledWith(['every family']);
+    expect(prefetchOnceQuiet).toHaveBeenCalledWith(['every family']);
   });
 });

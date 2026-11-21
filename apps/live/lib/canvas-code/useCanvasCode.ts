@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { CANVAS_SURFACE_CODE } from '@/lib/editor-deferred-code';
-import { prefetchWhenIdle } from '@/lib/idle-prefetch';
+import { prefetchOnceQuiet } from '@/lib/idle-prefetch';
 import { browserNavigationDeps, recoverInBrowser } from '@/lib/stale-build-navigation';
 import { CANVAS_CODE_PREFETCH, setCanvasCodeFailureHandler } from './canvas-code';
 
@@ -22,7 +22,7 @@ export function useCanvasCode({
     setCanvasCodeFailureHandler((error) => void recoverInBrowser(error, browserNavigationDeps()));
   }, []);
   useEffect(
-    () => (settled && needsCanvas ? prefetchWhenIdle(CANVAS_PREFETCH) : undefined),
+    () => (settled && needsCanvas ? prefetchOnceQuiet(CANVAS_PREFETCH) : undefined),
     [settled, needsCanvas],
   );
 }

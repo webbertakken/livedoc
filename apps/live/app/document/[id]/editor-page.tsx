@@ -7,7 +7,7 @@ import { ensureIconCatalogs } from '@/lib/icon-registry';
 import { EDITOR_SURFACE_CODE } from '@/lib/editor-deferred-code';
 import { useCanvasCode } from '@/lib/canvas-code/useCanvasCode';
 import { hasCanvasTab } from '@livedoc/document';
-import { prefetchWhenIdle } from '@/lib/idle-prefetch';
+import { prefetchOnceQuiet } from '@/lib/idle-prefetch';
 import { useKindFamilies } from '@/lib/element-kinds/useKindFamilies';
 import {
   useWorkbenchSession,
@@ -80,7 +80,7 @@ export default function LivePage({ surface = 'app' }: { surface?: EditorSurface 
   // The code the editor loads on demand (lib/editor-deferred-code.ts): the surfaces someone opens, once the document
   // has rendered.
   useEffect(
-    () => (state.loadingDocument ? undefined : prefetchWhenIdle(EDITOR_SURFACE_CODE)),
+    () => (state.loadingDocument ? undefined : prefetchOnceQuiet(EDITOR_SURFACE_CODE)),
     [state.loadingDocument],
   );
   // The canvas's code, its surfaces and every element kind family, once a document with a canvas tab is in

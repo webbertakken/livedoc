@@ -189,8 +189,11 @@ alongside the editor's code, so a template link waits for nothing extra.
 - **Surfaces someone opens**: the Explorer and Layers popovers (mounted from their first opening on,
   then kept, so their state survives), search, the quick style panel, the tool panels, presenting and
   session settings, and the landing of another tool's board (`lib/board-scene/land`, `lib/board-scene-import`)
-  that a paste, a drop or an import runs. Fetched once the opened document has rendered and the page is
-  idle, the canvas's own only for a document with a canvas tab; a paste before then waits for it.
+  that a paste, a drop or an import runs. Fetched once the opened document has rendered and the page has
+  gone quiet (no long task for `QUIET_MS = 500`, or at most `QUIET_MAX_WAIT_MS = 10000` after; `prefetchOnceQuiet`),
+  then on idle, the canvas's own only for a document with a canvas tab; a paste or an opening before then waits for
+  it. Evaluating that code runs as long tasks of its own: fetched at the first idle moment, they landed among the
+  opening's last tasks and kept a large board from settling (docs/specs/008-canvas/canvas-performance.md).
 - **At the press**: the photo import's detection pipeline (and the sticky detector in it) loads when a
   photo is picked; a template's canvas overrides, its catalogue and its tab's name load with its builders
   (`lib/template-builders`) when one is applied.
@@ -282,7 +285,7 @@ How a family is reached and when it loads:
   (or arms its tool) once its family is in, so an element is never placed without its face. A press whose family
   cannot load places nothing (default).
 - **Once the board has settled.** Every remaining family is fetched when the opened board has rendered and the page
-  is idle (`prefetchWhenIdle`), so a paste, a template, a peer's new element or going offline later finds them in.
+  has gone quiet, then on idle (`prefetchOnceQuiet`, as the surfaces someone opens), so a paste, a template, a peer's new element or going offline later finds them in.
   A document whose tabs all have a surface fetches none of them
   ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-canvass-code)).
   An element that arrives before its family (a peer's, in a session's first seconds) draws when its family is in.
