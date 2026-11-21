@@ -4,8 +4,8 @@
 title row with its mode switch (each kind's modes), the toolbar, side panels, dialogs, context menus and the keyboard
 shortcuts dialog are built.
 
-The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md)
-and the spreadsheet of plan 0020. It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
+The **office shell** is the frame the office kinds share: the [text document](../034-text-documents/text-document.md),
+the spreadsheet of plan 0020 and the [PDF document](../035-pdf-documents/reading-surface.md). It is Google's office layout (title row, menu bar, toolbar, side panels, dialogs),
 built once and filled by each kind with its own menus, toolbar groups and panels. Each kind's spec says what fills it
 ([Editing surface](../034-text-documents/editing-surface.md)); this spec says how the frame behaves.
 
@@ -42,6 +42,8 @@ Four looks were drawn for D2, each in light and dark, desktop and phone; Webber 
 - The page is paper in every scheme: white in the light one, dark in the dark one (Webber: "in dark mode the paper
   should be dark as well"), unless the document sets a page colour
   ([The page in the dark scheme](../034-text-documents/editing-surface.md#the-page-in-the-dark-scheme)).
+- A PDF's pages are the exception: they are their author's, drawn as the file says in both schemes, until the person
+  turns on [Dark pages](../035-pdf-documents/dark-pages.md), their own view of them.
 - Every token pair meets WCAG 2.2 AA in both schemes: 4.5:1 for text, 3:1 for a control's outline and focus ring.
 
 ## Menus as data

@@ -35,7 +35,7 @@ describe('openSpreadsheetFile', () => {
     );
     expect(opened).toMatchObject({ ok: true, format: 'xlsx' });
     const created = vi.mocked(apiCreateDocument).mock.calls[0]![1];
-    expect(created).toMatchObject({ name: 'Q3', workbook: { format: 'xlsx' } });
+    expect(created).toMatchObject({ name: 'Q3', workbook: { format: 'xlsx', meaning: 'ooxml' } });
     expect(created.sheets![0]!.layout!.rows).toHaveLength(1000);
     expect(created.sheets![0]!.cells).toHaveLength(1000);
     expect(vi.mocked(writeSheet).mock.calls.map(([, , req]) => req.write.kind)).toEqual([

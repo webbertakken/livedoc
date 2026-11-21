@@ -127,8 +127,12 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
     const range = arrayArg(args[0]!, f);
     // Four arguments are OOXML's SORT(array, sort_index, sort_order, by_col), which Google refuses (D38).
     if (args.length === 4) return ooxmlSort(range, args, f);
+    // In a file's meaning, -1 sorts descending, as both standards' sort_order (formulas.md, the file's meaning).
+    const reading = f.meaning === 'google' ? 'truth' : 'minus-one-descends';
     const keys =
-      args.length > 1 ? rowKeys(args, 1, range.rows, f) : everyColumn(range.rows).slice(0, 1);
+      args.length > 1
+        ? rowKeys(args, 1, range.rows, f, reading)
+        : everyColumn(range.rows).slice(0, 1);
     if (isError(keys)) return keys;
     return { rows: sortedIndexes(range.rows.length, keys).map((i) => range.rows[i]!) };
   }),

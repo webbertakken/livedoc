@@ -1012,6 +1012,12 @@ describe('a spreadsheet’s store', () => {
     expect(store.status('tabA')).toBe('ready');
     store.update({ ...deps, locale: 'de-DE', timeZone: 'Asia/Tokyo' });
     expect(store.workbook('tabA')).toBe(after);
+    // formulas.md, the file's meaning: a conversion's new meaning, or its undo, works every value out afresh.
+    store.update({ ...deps, locale: 'de-DE', timeZone: 'Asia/Tokyo', meaning: 'openformula' });
+    const converted = store.workbook('tabA');
+    expect(converted).not.toBe(after);
+    store.update({ ...deps, locale: 'de-DE', timeZone: 'Asia/Tokyo', meaning: 'openformula' });
+    expect(store.workbook('tabA')).toBe(converted);
   });
 
   // formulas.md "Functions", settings.md "Calculation": volatile formulas tick while anyone reads the store, a Plan

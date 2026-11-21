@@ -112,6 +112,7 @@ export async function answerRangeRead(
     sheets,
     locale: record.settings.locale,
     timeZone: record.settings.timeZone,
+    ...(record.meaning ? { meaning: record.meaning } : {}),
     limits: SheetLimits.of(true),
     iteration: record.settings.iterate,
     imports: { access: 'allowed', web: false },

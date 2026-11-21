@@ -22,7 +22,7 @@ vi.mock('../db/workbook', async (actual) => {
       const read = stale.reads.shift();
       if (!read) return real.readWorkbook(...args);
       const made = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'Europe/London' });
-      return WorkbookRecord.withFormat(made, read);
+      return WorkbookRecord.converted(made, read);
     },
   };
 });
@@ -165,6 +165,51 @@ describe('converting', () => {
   it('answers another method as not allowed', async () => {
     const res = await kit.call({ method: 'PUT', path: '/book1/workbook/conversion' });
     expect(res.status).toBe(405);
+  });
+});
+
+// formulas.md, the file's meaning (D100): a spreadsheet opened from a file keeps its meaning, made, copied and stored;
+// converting gives it the new format's, converting back the old one's; the formulas answering otherwise are listed.
+describe('a spreadsheet opened from a file', () => {
+  beforeEach(async () => {
+    const cells = [
+      { r: kit.layout.rows[0], c: kit.layout.cols[0], i: { f: { t: 'CEILING(-2.5,-1)', r: [] } } },
+    ];
+    const made = kit.document('opened', true, cells as never);
+    const created = WorkbookRecord.create({ locale: 'en-GB', timeZone: 'Europe/London' });
+    const workbook = WorkbookRecord.opened(created, 'ods');
+    expect((await kit.call({ path: '', body: { ...made, workbook } })).status).toBe(201);
+  });
+
+  const meaning = async () =>
+    (await (await kit.call({ method: 'GET', path: '/opened' })).json<DocumentResponse>()).document
+      .workbook?.meaning;
+
+  it('keeps the file’s meaning, lists what the new format answers otherwise, and converts it both ways', async () => {
+    expect(await meaning()).toBe('openformula');
+    const list = await kit.call({ method: 'GET', path: '/opened/workbook/conversion?to=xlsx' });
+    expect((await list.json<WorkbookConversionResponse>()).losses).toEqual([
+      { k: 'answers_differ', count: 1, functions: ['CEILING'] },
+    ]);
+    const res = await kit.call({ path: '/opened/workbook/conversion', body: { format: 'xlsx' } });
+    expect((await res.json<WorkbookSettingsResponse>()).workbook.meaning).toBe('ooxml');
+    expect(await meaning()).toBe('ooxml');
+    await kit.call({ path: '/opened/workbook/conversion', body: { format: 'ods' } });
+    expect(await meaning()).toBe('openformula');
+  });
+
+  it('leaves a spreadsheet made in LiveDoc Google’s when it converts', async () => {
+    await convert({ format: 'xlsx' });
+    const book = await kit.call({ method: 'GET', path: '/book1' });
+    expect((await book.json<DocumentResponse>()).document.workbook?.meaning).toBeUndefined();
+  });
+
+  it('reads a meaning it cannot as Google’s, and says so', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    kit.sql.sql.exec("UPDATE workbook SET meaning = 'lotus' WHERE document_id = 'opened'");
+    expect(await meaning()).toBeUndefined();
+    expect(warn).toHaveBeenCalledWith('[workbook] unreadable meaning', { documentId: 'opened' });
+    warn.mockRestore();
   });
 });
 

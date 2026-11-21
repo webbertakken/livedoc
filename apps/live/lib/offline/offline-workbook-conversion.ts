@@ -41,7 +41,7 @@ export async function offlineConvertWorkbook(
   const workbook = await workbookOf(documentId, 'convert workbook');
   if (WorkbookRecord.sameStandard(format, workbook.format))
     throw new ApiError('convert workbook', 409, 'format_same_standard');
-  const converted = WorkbookRecord.withFormat(workbook, format);
+  const converted = WorkbookRecord.converted(workbook, format);
   await offlineSaveWorkbook(documentId, converted, Date.now());
   debugLog('[workbook] offline converted', { from: workbook.format, to: format });
   return { workbook: converted, rev: 0 };

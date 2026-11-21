@@ -2,7 +2,8 @@
 
 **Status: specified.** Nothing is built.
 
-A **native file** is a document in its own file form: a page as its `.md` file, a file document as its bytes. A
+A **native file** is a document in its own file form: a page as its `.md` file, a file document as its bytes, a PDF
+document as its `.pdf`. A
 [repository link](repository-link.md) at the `files` level writes every covered page and file document as a native
 file, so whoever reads the repository with `rg`, `cat` or GitHub reads exactly what people edit in LiveDoc, and it
 folds the changes made to those files back in.
@@ -24,6 +25,7 @@ At the `files` level, per covered document:
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
 | A page: one [markdown tab](../031-markdown/markdown-tab.md)  | `<name>.md` (or `.markdown`, as it was adopted): the text's bytes                                 |
 | A file document: one [file tab](../006-document/file-tab.md) | `<name>.<extension>`: its bytes, with the executable bit when it carries one                      |
+| A [PDF document](../035-pdf-documents/pdf-document.md)       | `<name>.pdf`: its bake, the stored file with every live change written in                         |
 | Any other document                                           | The mirror file and the outline file ([Repository link](repository-link.md#mirror-levels))        |
 | A page or file document that has gained tabs                 | Its native file for its **native tab**, plus a mirror file and an outline file for the other tabs |
 | A document a page embeds as an image                         | Also `<slug>.livedoc.svg`: its first tab drawn, so the page shows it on GitHub too                |
@@ -108,7 +110,9 @@ and the document now. Beyond them:
 
 - A `local-new` file becomes a document in the folder its directory names; missing folders are created.
 - `.md` and `.markdown` files become pages when they read as text
-  ([Markdown tab](../031-markdown/markdown-tab.md#reading-a-file)); everything else becomes a file document.
+  ([Markdown tab](../031-markdown/markdown-tab.md#reading-a-file)); a file whose bytes are a PDF becomes a PDF
+  document ([Repository sync](../035-pdf-documents/files-print-and-sync.md#repository-sync)); everything else becomes
+  a file document.
 - **Ignored**, and reported once per sync where it matters: dotfiles and dot directories (`.git`, `.github`), files
   git ignores, symbolic links (never followed), files over `FILE_TAB_MAX_BYTES`, Git LFS pointer files, and paths
   matching the link file's `[mirror] ignore` globs.

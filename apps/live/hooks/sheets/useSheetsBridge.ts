@@ -7,7 +7,13 @@
 // fetches what it needs when it loads.
 import { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 import type { RoomOp, SheetPresenceOp, SheetsRoomOp } from '@livedoc/api-schema';
-import type { ImportAccess, Iteration, SheetPerson, WorkbookRecalc } from '@livedoc/sheets';
+import type {
+  FileMeaning,
+  ImportAccess,
+  Iteration,
+  SheetPerson,
+  WorkbookRecalc,
+} from '@livedoc/sheets';
 import type { BoxedElement, Element } from '@livedoc/document';
 import type { SheetsScope } from '@/lib/api/sheets';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
@@ -51,6 +57,8 @@ export type SheetsBridge = {
   locale: string;
   // A spreadsheet's time zone (formulas.md "Locale"): the wall clock NOW and TODAY read; absent, this browser's.
   timeZone?: string;
+  // A spreadsheet's meaning (formulas.md, the file's meaning): a standard's for one opened from a file; absent, Google's.
+  meaning?: FileMeaning;
   peers: readonly SheetPeer[];
   pushUndo: (step: ItemUndoStep) => void;
   // A refusal or failure (error toast), and plain news ("Replaced 3 cells").
@@ -100,6 +108,7 @@ export function useSheetsBridge(opts: {
   // A spreadsheet's locale and time zone; absent, this browser's.
   locale?: string;
   timeZone?: string;
+  meaning?: FileMeaning;
   self: SheetPerson | null;
   canEdit: boolean;
   // Absent: as canEdit.
@@ -144,6 +153,7 @@ export function useSheetsBridge(opts: {
     rangeSources,
     locale,
     timeZone,
+    meaning,
     self,
     canEdit,
     peers,
@@ -164,6 +174,7 @@ export function useSheetsBridge(opts: {
       canShape,
       locale: locale ?? browserLocale(),
       ...(timeZone ? { timeZone } : {}),
+      ...(meaning ? { meaning } : {}),
       peers,
       pushUndo: (step) => pushUndo.current(step),
       toast: (m) => toast.current(m),
@@ -188,6 +199,7 @@ export function useSheetsBridge(opts: {
       rangeSources,
       locale,
       timeZone,
+      meaning,
       activeTabId,
       self,
       canEdit,

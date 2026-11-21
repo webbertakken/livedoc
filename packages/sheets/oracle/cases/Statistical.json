@@ -867,6 +867,9 @@
       "cite": "https://support.google.com/docs/answer/3093625 (\"If the total number of values supplied as value arguments is not at least two, DEVSQ will return a value of 0\")",
       "differs": {
         "libreoffice": "LibreOffice gives #DIV/0! for no numbers"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
       }
     },
     {
@@ -940,6 +943,9 @@
       "cite": "https://support.google.com/docs/answer/6055706 (cumulative: \"Default value is FALSE\": F.DIST.2's density)",
       "differs": {
         "libreoffice": "LibreOffice writes F.DIST as ODF FDIST, whose cumulative is TRUE when left out"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
       }
     },
     {
@@ -1667,6 +1673,9 @@
       "cite": "https://support.google.com/docs/answer/3094016 (\"If an argument contains error values or text that can't be changed into numbers, it will cause an error\")",
       "differs": {
         "libreoffice": "LibreOffice reads text typed in as 0"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
       }
     },
     {
@@ -2267,6 +2276,17 @@
       "cite": "https://support.google.com/docs/answer/3094095 (\"If a number less than or equal to 0 is used for significant_digits then this value will be ignored and the default number of significant digits will be used instead\": PERCENTRANK.1's 0.286)",
       "differs": {
         "libreoffice": "LibreOffice refuses fewer than one significant digit (Err:502)"
+      },
+      "meaning": {
+        "ooxml": [
+          [
+            {
+              "e": "#NUM!"
+            }
+          ]
+        ],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, PERCENTRANK function (support.microsoft.com): a significance below 1 is #NUM!"
       }
     },
     {
@@ -2394,6 +2414,11 @@
       "cite": "https://support.google.com/docs/answer/9368324 (\"If the number is zero, PERMUTATIONA returns a #NUM.\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0^2, 0"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, PERMUTATIONA function (support.microsoft.com): number raised to number_chosen; only a negative one is #NUM!"
       }
     },
     {
@@ -2409,6 +2434,11 @@
       "cite": "https://support.google.com/docs/answer/9368324 (number_chosen: \"Must be less than or equal to number.\")",
       "differs": {
         "libreoffice": "LibreOffice gives 3^4, 81"
+      },
+      "meaning": {
+        "ooxml": [[81]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, PERMUTATIONA function (support.microsoft.com): number raised to number_chosen; only a negative one is #NUM!"
       }
     },
     {
@@ -2842,6 +2872,11 @@
       "cite": "https://support.google.com/docs/answer/3094105 (\"If the total number of values supplied as value arguments is not at least two, STDEVP will return the #DIV/0! error\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, STDEV.P function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {
@@ -2949,6 +2984,11 @@
       "cite": "https://support.google.com/docs/answer/3094105 (\"If the total number of values supplied as value arguments is not at least two, STDEVP will return the #DIV/0! error\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, STDEVP function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {
@@ -2996,6 +3036,11 @@
       "cite": "https://support.google.com/docs/answer/3094058 (\"If the total number of values supplied as value arguments is not at least two, STDEVPA will return the #DIV/0! error\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, STDEVPA function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {
@@ -3337,6 +3382,11 @@
       "cite": "https://support.google.com/docs/answer/3094113 (\"If the total number of values supplied as value arguments is not at least two, VARP will return the #DIV/0! error\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, VAR.P function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {
@@ -3444,6 +3494,11 @@
       "cite": "https://support.google.com/docs/answer/3094113 (\"If the total number of values supplied as value arguments is not at least two, VARP will return the #DIV/0! error\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, VARP function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {
@@ -3491,6 +3546,11 @@
       "cite": "https://support.google.com/docs/answer/3094065 (\"If the total number of values supplied as value arguments is not at least two, VARPA will return the #NUM! error\")",
       "differs": {
         "libreoffice": "LibreOffice gives 0, the spread of a population of one"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, VARPA function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {

@@ -19,6 +19,7 @@ import {
 } from '../imports/import-request';
 import { ImportBook, type ImportFamily } from './import-book';
 import { callsOf, type Node } from '../formula/ast';
+import type { FormulaMeaning } from '../formula/meaning';
 import { safeHyperlink } from '../hyperlink';
 import type { Sparkline } from '../sparkline/sparkline-read';
 import { SparklineMemo } from './sparkline-memo';
@@ -58,6 +59,9 @@ import { LoopRounds, type LoopCells } from './loop-rounds';
 export type WorkbookOptions = {
   sheets: readonly Sheet[];
   locale: string;
+  // Whose answer a formula Google and a file's standard answer differently gives (formulas.md, the file's meaning):
+  // a spreadsheet opened from a file, its format's; by default Google's.
+  meaning?: FormulaMeaning;
   // A spreadsheet's time zone (formulas.md "Locale"): the wall clock NOW and TODAY read; absent, the viewer's.
   timeZone?: string;
   // Today and now, as a serial; absent, from the time zone's wall clock.
@@ -109,6 +113,7 @@ const RANGE_IMPORT_NAMES: ReadonlySet<string> = new Set(['IMPORTRANGE']);
 
 export class Workbook {
   readonly locale: string;
+  readonly meaning: FormulaMeaning;
   readonly timeZone: string | undefined;
   readonly limits: SheetLimits;
   readonly arrays: ArrayDialect;
@@ -160,6 +165,7 @@ export class Workbook {
 
   constructor(opts: WorkbookOptions) {
     this.locale = opts.locale;
+    this.meaning = opts.meaning ?? 'google';
     this.timeZone = opts.timeZone;
     this.limits = opts.limits ?? SheetLimits.plan;
     this.arrays = opts.arrays ?? (this.limits === SheetLimits.spreadsheet ? 'google' : 'dynamic');
@@ -172,6 +178,7 @@ export class Workbook {
     this.iteration = opts.iteration ?? ITERATION_OFF;
     this.frameSource = {
       locale: this.locale,
+      meaning: this.meaning,
       arraysWhole: this.arrays === 'dynamic',
       now: this.nowFn,
       rand: this.randFn,

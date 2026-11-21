@@ -46,6 +46,7 @@ import {
   type WriteCheck,
   type ImportAccess,
   type ImportAsk,
+  type FileMeaning,
 } from '@livedoc/sheets';
 import { engineLink, type EngineLink } from './sheet-engine-link';
 import type { CardData } from './sheet-engine-hosts';
@@ -99,6 +100,8 @@ type SheetStoreDeps = {
   locale: string;
   // A spreadsheet's time zone (formulas.md "Locale"); absent, this browser's.
   timeZone?: string;
+  // A spreadsheet's meaning (formulas.md, the file's meaning): a standard's for one opened from a file; absent, Google's.
+  meaning?: FileMeaning;
   pushUndo: (step: ItemUndoStep) => void;
   toast: (message: string) => void;
   // Injected in tests.
@@ -271,8 +274,12 @@ export class SheetStore {
     const rescoped = (deps.oneWorkbook ?? false) !== (this.deps.oneWorkbook ?? false);
     const iteration = deps.iteration ?? ITERATION_OFF;
     const reiterated = !sameIteration(iteration, this.deps.iteration ?? ITERATION_OFF);
-    // A new locale or time zone (any peer's Save Settings, an agent's): every value is worked out again in it.
-    const relocated = deps.locale !== this.deps.locale || deps.timeZone !== this.deps.timeZone;
+    // A new locale, time zone or meaning (any peer's Save Settings or conversion, an agent's): every value is worked
+    // out again in it.
+    const relocated =
+      deps.locale !== this.deps.locale ||
+      deps.timeZone !== this.deps.timeZone ||
+      deps.meaning !== this.deps.meaning;
     this.deps = { ...deps, api: this.api, wait: this.wait };
     this.imports.update(this.importAccessHere(), deps.rangeSources ?? []);
     // Saved settings arrived (any peer's Save Settings): every engine works its values out afresh.
@@ -286,7 +293,11 @@ export class SheetStore {
       this.tabStatus.clear();
       this.notify();
     } else if (relocated) {
-      debugLog('[sheets] relocated', { locale: deps.locale, timeZone: deps.timeZone ?? null });
+      debugLog('[sheets] relocated', {
+        locale: deps.locale,
+        timeZone: deps.timeZone ?? null,
+        meaning: deps.meaning ?? 'google',
+      });
       this.dropEngines();
       this.notify();
     }
@@ -366,6 +377,7 @@ export class SheetStore {
         sheets: [...this.entries.values()].map((e) => e.view).filter((s) => this.inScope(s, scope)),
         locale: this.deps.locale,
         ...(this.deps.timeZone ? { timeZone: this.deps.timeZone } : {}),
+        ...(this.deps.meaning ? { meaning: this.deps.meaning } : {}),
         limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
         iteration: this.deps.iteration ?? ITERATION_OFF,
         send: (msg) => link.send({ scope, msg }),
@@ -960,6 +972,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
     self: () => bridge.self,
     locale: bridge.locale,
     ...(bridge.timeZone ? { timeZone: bridge.timeZone } : {}),
+    ...(bridge.meaning ? { meaning: bridge.meaning } : {}),
     pushUndo: bridge.pushUndo,
     toast: bridge.toast,
   });

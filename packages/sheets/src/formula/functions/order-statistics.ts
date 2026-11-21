@@ -95,7 +95,9 @@ function percentileExc(ns: number[], k: number): Value {
 // function in Excel and OpenFormula and answer alike (default, D57).
 const SIGNIFICANT_DIGITS_DEFAULT = 3;
 
-function percentRankFn(inclusive: boolean): FnDef {
+// PERCENTRANK's significance below 1: Google reads it as 3; both standards refuse it, #NUM! (OpenFormula Part 4
+// §6.18.58, Microsoft's help; the file's meaning).
+function percentRankFn(inclusive: boolean, significanceBelowOneRefused = false): FnDef {
   return fn(2, 3, (args, f) => {
     const read = dataAnd(args, f);
     if (isError(read)) return read;
@@ -104,6 +106,8 @@ function percentRankFn(inclusive: boolean): FnDef {
     const s = ascending(read.ns);
     if (s.length === 0 || read.x < s[0]! || read.x > s[s.length - 1]!)
       return err('#N/A', 'The value is outside the data');
+    if (Math.floor(digits) < 1 && significanceBelowOneRefused && f.meaning !== 'google')
+      return err('#NUM!', 'The significance is at least 1');
     const places = Math.floor(digits) < 1 ? SIGNIFICANT_DIGITS_DEFAULT : Math.floor(digits);
     return roundSignificant(percentRank(s, read.x, inclusive), places);
   });
@@ -142,7 +146,7 @@ export const ORDER_FUNCTIONS: Record<string, FnDef> = {
       ? err('#NUM!', 'The quartile must be 1, 2 or 3')
       : percentileExc(ns, k / 4);
   }),
-  PERCENTRANK: percentRankFn(true),
+  PERCENTRANK: percentRankFn(true, true),
   'PERCENTRANK.INC': percentRankFn(true),
   'PERCENTRANK.EXC': percentRankFn(false),
 };

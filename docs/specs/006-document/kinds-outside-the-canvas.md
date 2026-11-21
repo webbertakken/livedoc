@@ -4,14 +4,16 @@
 
 How the editor, the tab strip, split view and the Explorer host a tab kind that is not a canvas: the
 [text document](../034-text-documents/text-document.md), the [spreadsheet](../029-sheets/spreadsheet.md), the
-[markdown tab](../031-markdown/markdown-tab.md) and the [file tab](file-tab.md). Built once, for every such kind.
+[PDF document](../035-pdf-documents/pdf-document.md), the [markdown tab](../031-markdown/markdown-tab.md) and the
+[file tab](file-tab.md). Built once, for every such kind.
 
 ## The surface
 
 - Each kind outside the canvas has a **surface**: one component that fills the editor's area below the editor's lines
   and owns everything drawn there.
 - Which surface a tab has is one question, `surfaceOf(tab, inSpreadsheet)` in `@livedoc/document`: `text-document`
-  for a text document tab, `spreadsheet` for a sheet tab of a spreadsheet, and none for a canvas tab. A sheet tab in
+  for a text document tab, `spreadsheet` for a sheet tab of a spreadsheet, `pdf` for a PDF tab (specified, not built),
+  and none for a canvas tab. A sheet tab in
   a document without a workbook is a Plan Sheet, drawn on the canvas, until stored Plan Sheets are migrated
   ([Sheet migration](../029-sheets/migration.md)).
 - A document's outline names each tab's kind (`TabSummary.kind`, absent for a general tab), so the editor knows a
@@ -67,6 +69,8 @@ How the editor, the tab strip, split view and the Explorer host a tab kind that 
   ([Text document](../034-text-documents/text-document.md)), named **Text document**, selected at once.
   It is offered only in a document stored on LiveDoc: This Browser does not hold a text document yet
   ([Live editing and storage](../034-text-documents/live-editing-and-storage.md) "Offline").
+- The add menu offers **PDF from a file** once the PDF document is built: it opens the file chooser and adds the
+  chosen PDF as a PDF tab ([PDF document](../035-pdf-documents/pdf-document.md#the-single-tab-document)).
 - A spreadsheet is never a tab of another document: a spreadsheet's tabs are its sheet bar
   ([Spreadsheet](../029-sheets/spreadsheet.md)).
 
@@ -77,6 +81,7 @@ How the editor, the tab strip, split view and the Explorer host a tab kind that 
 - In the other pane, a text document tab shows its surface **live and read-only**; a press or a rest of the pointer
   there moves the editor across, as for a canvas tab. A surface with no read-only view yet (the spreadsheet) shows its
   tab's name and "Click to edit." in that pane.
+- A PDF tab in the other pane shows its pages live and read-only, in Viewing, with no toolbar.
 - Two surfaces of one tab side by side share one live model.
 
 ## The room

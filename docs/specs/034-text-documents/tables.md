@@ -36,7 +36,24 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
   who reads the document may move; moving changes nothing.
 - Insert a row above or below, a column left or right; delete a row, column or the table; **Distribute rows**,
   **Distribute columns**.
+  - A row inserted copies the caret's row's cells (spans across, lines, shading), one row high and empty; a cell
+    spanning down across the place grows by the row. With cells selected, as many rows as the selection spans
+    `(default)`, above its first or below its last.
+  - A column inserted copies the caret's column's cells, empty, at that column's width; then every column narrows in
+    proportion, so the table keeps its width `(default)`. A cell spanning across the place grows by the column. With
+    cells selected, as many columns as the selection spans `(default)`.
+  - Delete row and Delete column delete the rows or columns the caret or the selection is in; the columns left keep
+    their widths, so the table narrows `(default)`. Deleting every row or column deletes the table.
+  - Delete table takes the whole table away, the caret at the start of what follows it.
+  - **Distribute rows** gives the rows the caret or selection spans (every row with the caret alone) one minimum height,
+    the tallest one's as drawn `(default)`. **Distribute columns** gives the columns it spans one width each, their
+    widths' sum shared equally, so the table keeps its width.
+  - Each is one undo step, keeps the caret in its cell where the cell remains, and is an Editor's only.
 - **Merge cells** and **Unmerge cells** over a cell selection.
+  - Merge cells joins a rectangle of two or more selected cells into its first, the others' writing appended to it,
+    its width the columns' it covers; dimmed (and left out of the context menu) without such a selection.
+  - Unmerge cells splits the caret's merged cell back into one cell per place, the writing in the first; dimmed (and left
+    out of the context menu) unless the caret's cell spans more than one place.
 - **Move** rows and columns by dragging their edge handle (Google's six-dot grip).
 - **Resize** columns and rows by dragging their borders; a minimum of 0.1 in.
 - **Sort table** ascending or descending by the column at the caret (text, then numbers, as Google sorts).
@@ -49,11 +66,19 @@ A side panel (Google's) with sections: **Rows** (minimum height, pin header rows
 **Alignment** (cell vertical alignment, table alignment left, centre, right, left indent), **Colour** (border colour
 and width, cell background, by the one colour picker), **Cell** (padding).
 
+## Format > Table
+
+`(default)`, until Webber's capture: **Table properties**; Insert row above, Insert row below, Insert column left,
+Insert column right; Delete row, Delete column, Delete table; Distribute rows, Distribute columns; Merge cells,
+Unmerge cells; Sort table; Pin header rows. Each dimmed outside a table, Merge and Unmerge as above; Table properties,
+Sort table and Pin header rows "Coming soon" until their PRs.
+
 ## Context menu
 
 On a cell: the text menu, then Insert row above, Insert row below, Insert column left, Insert column right, Delete row,
 Delete column, Delete table, Distribute rows, Distribute columns, Merge cells / Unmerge cells, Sort table, Table
-properties.
+properties. Its table items show only in a table (contextual), Merge cells only over a selection that can merge and
+Unmerge cells only on a merged cell; the order is `(default)` until Webber's capture.
 
 ## The model
 
@@ -153,5 +178,6 @@ Editors change tables; a Participant only as suggestions (D7); a Viewer reads an
 ## Telemetry
 
 `Element · Added · TextDocumentTable`, `TextDocumentTableTemplate`; `Element · Changed · TextDocumentTable<Action>`
-(InsertRow, InsertColumn, Merge, Sort, PinHeader, …). Never content. Tab adding a row is `TextDocumentTableInsertRow`.
+(InsertRow, InsertColumn, DeleteRow, DeleteColumn, Delete, DistributeRows, DistributeColumns, Merge, Unmerge, Sort,
+PinHeader, …). Never content. Tab adding a row is `TextDocumentTableInsertRow`.
 The telemetry dashboard draws them as Text Document Tables (added) and Text Document Table Changes (changed).

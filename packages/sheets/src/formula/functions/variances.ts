@@ -15,17 +15,23 @@ type Reader = (args: EvalValue[], f: Frame) => number[] | SheetError;
 const plain: Reader = numbersOf;
 const withText: Reader = (args, f) => numbersOfA(args, f);
 
-function aggregate(read: Reader, each: (ns: number[]) => Value): FnDef {
+function aggregate(read: Reader, each: (ns: number[], f: Frame) => Value): FnDef {
   return fn(1, MANY, (args, f) => {
     const ns = read(args, f);
-    return isError(ns) ? ns : each(ns);
+    return isError(ns) ? ns : each(ns, f);
   });
 }
 
 // Google's help gives every population form (VARP, VAR.P, STDEVP, STDEV.P, STDEVPA) #DIV/0! for fewer than two
-// numbers, and VARPA #NUM!.
-function populationVariance(ns: number[], fewer: '#DIV/0!' | '#NUM!'): number | SheetError {
-  return ns.length < 2 ? err(fewer, 'At least two numbers are needed') : variance(ns, false);
+// numbers, and VARPA #NUM!. Both standards take one number, whose spread is 0 (OpenFormula Part 4 §6.18.74, §6.18.85;
+// Microsoft's help; the file's meaning).
+function populationVariance(
+  ns: number[],
+  f: Frame,
+  fewer: '#DIV/0!' | '#NUM!',
+): number | SheetError {
+  if (f.meaning === 'google' && ns.length < 2) return err(fewer, 'At least two numbers are needed');
+  return variance(ns, false);
 }
 
 function root(v: number | SheetError): Value {
@@ -33,7 +39,8 @@ function root(v: number | SheetError): Value {
 }
 
 const sampleVar = (ns: number[]): number | SheetError => variance(ns, true);
-const populationVar = (ns: number[]): number | SheetError => populationVariance(ns, '#DIV/0!');
+const populationVar = (ns: number[], f: Frame): number | SheetError =>
+  populationVariance(ns, f, '#DIV/0!');
 
 export const VARIANCE_FUNCTIONS: Record<string, FnDef> = {
   VAR: aggregate(plain, sampleVar),
@@ -41,24 +48,29 @@ export const VARIANCE_FUNCTIONS: Record<string, FnDef> = {
   VARA: aggregate(withText, sampleVar),
   VARP: aggregate(plain, populationVar),
   'VAR.P': aggregate(plain, populationVar),
-  VARPA: aggregate(withText, (ns) => populationVariance(ns, '#NUM!')),
+  VARPA: aggregate(withText, (ns, f) => populationVariance(ns, f, '#NUM!')),
   STDEV: aggregate(plain, (ns) => root(sampleVar(ns))),
   'STDEV.S': aggregate(plain, (ns) => root(sampleVar(ns))),
   STDEVA: aggregate(withText, (ns) => root(sampleVar(ns))),
-  STDEVP: aggregate(plain, (ns) => root(populationVar(ns))),
-  'STDEV.P': aggregate(plain, (ns) => root(populationVar(ns))),
-  STDEVPA: aggregate(withText, (ns) => root(populationVar(ns))),
+  STDEVP: aggregate(plain, (ns, f) => root(populationVar(ns, f))),
+  'STDEV.P': aggregate(plain, (ns, f) => root(populationVar(ns, f))),
+  STDEVPA: aggregate(withText, (ns, f) => root(populationVar(ns, f))),
   AVERAGEA: aggregate(withText, (ns) => (ns.length === 0 ? err('#DIV/0!') : mean(ns))),
-  // With no number, 0, as MAX and MIN; MAXA refuses text typed in that reads as no number, MINA reads it as 0.
+  // With no number, 0, as MAX and MIN; MAXA refuses text typed in that reads as no number, MINA reads it as 0. In
+  // OpenFormula's meaning MAXA reads it as 0 too (Part 4 §6.18.46; the file's meaning).
   MAXA: fn(1, MANY, (args, f) => {
-    const ns = numbersOfA(args, f, true);
+    const ns = numbersOfA(args, f, f.meaning !== 'openformula');
     return isError(ns) ? ns : ns.reduce((m, n) => (n > m ? n : m), ns.length === 0 ? 0 : -Infinity);
   }),
   MINA: aggregate(withText, (ns) =>
     ns.reduce((m, n) => (n < m ? n : m), ns.length === 0 ? 0 : Infinity),
   ),
-  // Google's help: fewer than two numbers is 0.
-  DEVSQ: aggregate(plain, (ns) => (ns.length < 2 ? 0 : sumOfSquaredDeviations(ns))),
+  // Google's help: fewer than two numbers is 0. OpenFormula's sums about AVERAGE, which has none of no numbers
+  // (Part 4 §6.18.20; the file's meaning).
+  DEVSQ: aggregate(plain, (ns, f) => {
+    if (ns.length === 0 && f.meaning === 'openformula') return err('#DIV/0!', 'No numbers');
+    return ns.length < 2 ? 0 : sumOfSquaredDeviations(ns);
+  }),
   AVEDEV: aggregate(plain, (ns) => {
     if (ns.length === 0) return err('#NUM!', 'No numbers to average');
     const m = mean(ns);

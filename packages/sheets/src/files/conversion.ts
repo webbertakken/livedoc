@@ -3,6 +3,7 @@
 // format alone, so each loss is what every file written in the new format leaves out; the writers decide each cell
 // through the same functions (xlsx-bounds.ts, open-formula.ts), so the list is what the file does.
 import { callsOf } from '../formula/ast';
+import type { FormulaMeaning } from '../formula/meaning';
 import { parseFormula } from '../formula/parse';
 import type { Sheet } from '../sheet';
 import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
@@ -10,7 +11,7 @@ import { FILE_LAST_COL } from './a1-text';
 import { GOOGLE_ONLY_FUNCTIONS } from './odf-function-names';
 import { toOpenFormula } from './open-formula';
 import type { FileCell, WorkbookFile } from './workbook-file';
-import { workbookFileFor } from './write-workbook';
+import { answersDiffering, workbookFileFor } from './write-workbook';
 import { XLSX_TEXT_MAX, xlsxFormula } from './xlsx-bounds';
 import { xlsxLacks } from './xlsx-function-names';
 import { excelNames } from './xlsx-write';
@@ -27,7 +28,9 @@ export type ConversionLoss =
   | { k: 'formula_uncalculated'; count: number; functions: string[] }
   | { k: 'formula_unwritten'; count: number }
   | { k: 'text_cut'; count: number }
-  | { k: 'columns_cut'; count: number; sheets: string[] };
+  | { k: 'columns_cut'; count: number; sheets: string[] }
+  // Formulas calling a function the spreadsheet's meaning and the new format's standard answer differently (D100).
+  | { k: 'answers_differ'; count: number; functions: string[] };
 
 export type ConversionLossKind = ConversionLoss['k'];
 
@@ -82,11 +85,15 @@ function tallyCell(cell: FileCell, from: WorkbookFormat, to: WorkbookFormat, tal
   for (const name of lackingFunctions(cell.formula, to)) tally.functions.add(name);
 }
 
-/** What a workbook's file loses going from `from` to `to`: nothing within one standard. */
+/**
+ * What a workbook's file loses going from `from` to `to`, the spreadsheet having `meaning`: nothing within one
+ * standard.
+ */
 export function conversionLosses(
   file: WorkbookFile,
   from: WorkbookFormat,
   to: WorkbookFormat,
+  meaning: FormulaMeaning = 'google',
 ): ConversionLoss[] {
   if (WorkbookRecord.sameStandard(from, to)) return [];
   const tally: Tally = { uncalculated: 0, functions: new Set(), unwritten: 0, texts: 0 };
@@ -112,6 +119,8 @@ export function conversionLosses(
   if (tally.unwritten > 0) losses.push({ k: 'formula_unwritten', count: tally.unwritten });
   if (tally.texts > 0) losses.push({ k: 'text_cut', count: tally.texts });
   if (wide.length > 0) losses.push({ k: 'columns_cut', count: wide.length, sheets: wide });
+  const differ = answersDiffering(file, meaning, to);
+  if (differ.count > 0) losses.push({ k: 'answers_differ', ...differ });
   return losses;
 }
 
@@ -123,5 +132,6 @@ export function workbookConversion(
 ): WorkbookConversion {
   const from = record.format;
   if (WorkbookRecord.sameStandard(from, to)) return { from, to, losses: [] };
-  return { from, to, losses: conversionLosses(workbookFileFor(sheets, record), from, to) };
+  const file = workbookFileFor(sheets, record);
+  return { from, to, losses: conversionLosses(file, from, to, record.meaning ?? 'google') };
 }

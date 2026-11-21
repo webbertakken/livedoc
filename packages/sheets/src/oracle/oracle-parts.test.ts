@@ -76,6 +76,35 @@ describe('OracleCorpus.readCategory', () => {
       'locale must be a language and a region, as de-DE',
     ]);
   });
+
+  // formulas.md, the file's meaning: a case's answers in the files' meanings.
+  it("reads a case's answers in the files' meanings, and names what is wrong with them", () => {
+    const cases = [
+      { id: 'M.1', f: '=1', meaning: { openformula: 'libreoffice' } },
+      { id: 'M.2', f: '=1', meaning: { ooxml: [[1]], cite: 'Microsoft' } },
+      { id: 'M.3', f: '=1', meaning: 'ooxml' },
+      { id: 'M.4', f: '=1', meaning: { cite: 'x', excel: [[1]] } },
+      { id: 'M.5', f: '=1', meaning: { ooxml: 'x', openformula: 'excel' } },
+      { id: 'M.6', f: '=1', meaning: { openformula: [[1]] } },
+      { id: 'M.7', f: '=1', meaning: null },
+    ];
+    const read = OracleCorpus.readCategory({ category: 'C', cases });
+    expect(!read.ok && read.problems).toEqual([
+      'M.3: meaning must name answers',
+      'M.4: meaning holds ooxml, openformula and cite',
+      'M.4: meaning names an answer in ooxml or openformula',
+      'M.5: meaning.ooxml must be rows of values',
+      'M.5: meaning.openformula must be rows of values or libreoffice',
+      'M.5: a written meaning cites where',
+      'M.6: a written meaning cites where',
+      'M.7: meaning must name answers',
+    ]);
+    const good = OracleCorpus.readCategory({ category: 'C', cases: cases.slice(0, 2) });
+    expect(good.ok && good.category.cases.map((x) => x.meaning)).toEqual([
+      { openformula: 'libreoffice' },
+      { ooxml: [[1]], cite: 'Microsoft' },
+    ]);
+  });
 });
 
 describe('OracleCorpus.readAnswers', () => {

@@ -69,13 +69,17 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
     a union in OpenDocument; a formula past Excel's 8,192 characters).
   - **Text**: "1 cell's text is cut to Excel's 32,767 characters".
   - **Columns**: "Columns past XFD are left out of 1 sheet: Wide" (Excel's last column; a workbook reaches ZZZ).
+  - **Formulas that may answer differently**: "2 formulas may answer differently in OpenDocument: CEILING and SORT",
+    each formula calling a function the spreadsheet's meaning (Google's for one made in LiveDoc) and the new format's
+    standard answer differently ([The file's meaning](formulas.md#function-catalogue), D100). Converting gives a
+    spreadsheet with a file's meaning the new format's; one with Google's keeps it.
   - When there is none: "Everything in this spreadsheet fits the Excel format."
 - While it checks, the dialog says **Checking what the .xlsx file can hold…** with **Convert** off; a check that fails
   says "This spreadsheet could not be checked. Try again." with **Try Again** and **Cancel**, and nothing changes.
 - A conversion the api refuses or cannot reach closes the dialog and says "The spreadsheet could not be converted. Try
   again." in the title row; the format stays as it was.
-- **Undo** converts back, and **Redo** again, without the dialog: nothing in LiveDoc changed, so the way back loses
-  nothing.
+- **Undo** converts back, and **Redo** again, without the dialog: nothing in LiveDoc changed but the format and its
+  meaning, which undo restores with it, so the way back loses nothing.
 - Everyone on the spreadsheet sees its new format at once, in the title row's pill.
 - Telemetry: `Spreadsheet · Converted · <Format>` (`Xlsx`, `Ods`), the format it went to.
 

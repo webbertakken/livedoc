@@ -45,6 +45,12 @@ interchangeable. These are design decisions, taken before any feature that uses 
   ([Markdown tab](../031-markdown/markdown-tab.md)), a file tab one file's bytes ([File tab](../006-document/file-tab.md)).
   Every file is a document; a markdown file is a document with one markdown tab, people call it a **page**.
   A page is edited on an **editing surface** (Rich, Split or Source), which is one person's choice, never a mode.
+- **PDF document** is a kind outside the canvas, worked on in no mode: one PDF, edited together live and always a
+  PDF ([PDF document](../035-pdf-documents/pdf-document.md)). Its **editing mode** (Viewing, Reviewing, Editing) is one
+  person's, never the tab's. Its words are its own: a **PDF page** (never "page" alone where a markdown page could be
+  meant), the **stored file** and its **live changes** (never "base" or "layer"), a **mark** (never "annotation"), a
+  **field** (never "form"), an **embedded file** (never "attachment"), a **PDF layer**
+  ([its domain language](../035-pdf-documents/pdf-document.md#domain-language)).
 - **Sheet** becomes a kind outside the canvas too, specified: a sheet tab holds one sheet, and a document whose tabs
   are all sheet tabs is a **spreadsheet**, one workbook ([Spreadsheet](../029-sheets/spreadsheet.md)). A document
   holding sheets holds only sheets. It retires Plan's Sheet tab, which is migrated before the kind changes meaning.

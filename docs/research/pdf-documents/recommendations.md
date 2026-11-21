@@ -31,16 +31,16 @@ One row per decision of this research, each with the designs compared and what i
 
 | Fork                              | Default                                               | What the research adds                                                                                  |
 | --------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **F5** The reference              | Acrobat's function inventory                          | The inventory exists at topic level; ready to ask                                                       |
-| **F6** How large a file           | 25 MiB until measured                                 | Measured: recommend 100 MB; ready to ask                                                                |
-| **F7** Share roles for Reviewing  | A Participant reviews; a Viewer reads                 | Nothing new; asked with the editing modes' spec in Phase 3                                              |
+| **F5** The reference              | Acrobat's function inventory                          | **Ruled (Webber, 2026-11-21)**: Acrobat's 403 help topics, as read in the inventory                     |
+| **F6** How large a file           | 25 MiB until measured                                 | **Ruled (Webber, 2026-11-21)**: 100 MB, for every file tab                                              |
+| **F7** Share roles for Reviewing  | A Participant reviews; a Viewer reads                 | **Ruled (Webber, 2026-11-21)**: a Participant does all of Reviewing, certificate signatures included    |
 | **F8** Editing a signed PDF       | Warn, ask once, keep the signed version               | Measured: Reviewing never breaks a signature, Editing always does; asked in Phase 11                    |
 | **F9** Passwords and permissions  | In memory only; locked files open in Viewing          | Permissions are a request, not a lock: a locked file is fully readable by any reader; asked in Phase 11 |
 | **F10** Scanned pages             | Recognition in the browser, on demand                 | Measured: 4.0 MB once, about 4 s a page, 9 words in 10 at 150 dpi; asked in Phase 16                    |
 | **F11** Scripts and dynamic forms | No script runs; safe functions; XFA's static fallback | A count on real forms is owed before it is asked in Phase 10                                            |
 | **F12** Starting from nothing     | None                                                  | Nothing new; asked in Phase 19                                                                          |
 | **F13** The first-time question   | Once per person                                       | The recolouring is chosen from four designs; its four drawn options come in Phase 7                     |
-| **F14** The inventory's edge      | Left out, data kept untouched                         | New, from the inventory; asked with F5                                                                  |
+| **F14** The inventory's edge      | Left out, data kept untouched                         | **Ruled (Webber, 2026-11-21)**: left out, their data in a file kept untouched                           |
 
 ## What the research could not settle
 

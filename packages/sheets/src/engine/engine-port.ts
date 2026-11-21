@@ -5,6 +5,7 @@ import type { Sheet } from '../sheet';
 import { cellToJson, sheetToJson } from '../sheet-json';
 import { SheetLimits } from '../sheet-limits';
 import type { ImportAccess, ImportAnswer, ImportAsk } from '../imports/import-request';
+import type { FileMeaning } from '../formula/meaning';
 import type { EngineIn, EngineOut } from './engine-protocol';
 import type { ImportFamily } from './import-book';
 import { ITERATION_OFF, type Iteration } from './loops';
@@ -15,6 +16,8 @@ type PortOptions = {
   locale: string;
   // A spreadsheet's time zone (formulas.md "Locale"); absent, the viewer's.
   timeZone?: string;
+  // A spreadsheet's meaning (formulas.md, the file's meaning); absent, Google's.
+  meaning?: FileMeaning;
   limits?: SheetLimits;
   iteration?: Iteration;
   // A spreadsheet's imports (imports.md): whether they may fetch, and who fetches what the Worker asks.
@@ -30,10 +33,12 @@ export class EnginePort {
   private readonly placed = new Map<string, number>();
   private readonly send: (msg: EngineIn) => void;
   private readonly imports: PortOptions['imports'];
+  private readonly meaning: FileMeaning | undefined;
 
   constructor(opts: PortOptions) {
     this.send = opts.send;
     this.imports = opts.imports;
+    this.meaning = opts.meaning;
     const limits = opts.limits ?? SheetLimits.plan;
     const iteration = opts.iteration ?? ITERATION_OFF;
     this.copy = new WorkbookCopy({
@@ -56,6 +61,7 @@ export class EnginePort {
       sheets: sheets.map(sheetToJson),
       locale: this.copy.locale,
       ...(this.copy.timeZone ? { timeZone: this.copy.timeZone } : {}),
+      ...(this.meaning ? { meaning: this.meaning } : {}),
       limits: this.copy.limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
       iteration: this.copy.iterationSetting(),
       ...(this.imports ? { imports: this.imports.access } : {}),

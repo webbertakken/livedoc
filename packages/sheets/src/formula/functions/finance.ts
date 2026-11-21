@@ -39,9 +39,10 @@ function ipmt(
 }
 
 // CUMIPMT and CUMPRINC: the periods from first to last (a fraction moves each inward: 2.1 to 3, 4.9 to 4), summed.
+// In OOXML's meaning both are truncated, as Microsoft's help says (2.1 to 2; the file's meaning).
 function cumulative(part: 'interest' | 'principal') {
-  return numFn(6, 6, ([rate, nper, pv, first, last, type]) => {
-    const from = Math.ceil(first!);
+  return numFn(6, 6, ([rate, nper, pv, first, last, type], f) => {
+    const from = f.meaning === 'ooxml' ? Math.trunc(first!) : Math.ceil(first!);
     const to = Math.floor(last!);
     if (rate! <= 0 || nper! <= 0 || pv! <= 0)
       return err('#NUM!', 'The rate, periods and value are positive');
@@ -61,16 +62,19 @@ function cumulative(part: 'interest' | 'principal') {
 
 // The integer and fraction parts of a price, as written (100.01) and as meant (100 1/8): DOLLARDE and DOLLARFR. The
 // written fraction has at least two decimal places, as Google's help reads 100.01 in eighths; in wholes (unit 1) it
-// is the decimal itself (D51).
+// is the decimal itself (D51). In OpenFormula's meaning it has as many places as the unit has digits, no fewer
+// (Part 4 §6.12.16, §6.12.17: 100.01 in eighths is 100 1/80; the file's meaning).
 const FRACTION_DIGITS_MIN = 2;
 
 function fractionalPrice(toDecimal: boolean) {
-  return numFn(2, 2, ([price, unit]) => {
+  return numFn(2, 2, ([price, unit], f) => {
     const u = Math.trunc(unit!);
     if (u < 0) return err('#NUM!', 'The unit is positive');
     if (u === 0) return err('#DIV/0!', 'The unit is at least 1');
     const whole = Math.trunc(price!);
-    const scale = u === 1 ? 1 : 10 ** Math.max(FRACTION_DIGITS_MIN, Math.ceil(Math.log10(u)));
+    const digits = Math.ceil(Math.log10(u));
+    const least = f.meaning === 'openformula' ? 0 : FRACTION_DIGITS_MIN;
+    const scale = u === 1 ? 1 : 10 ** Math.max(least, digits);
     return whole + (toDecimal ? ((price! - whole) * scale) / u : ((price! - whole) * u) / scale);
   });
 }
