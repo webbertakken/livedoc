@@ -2,6 +2,7 @@
 import { textDocumentBreakActions } from './text-document-breaks';
 import { textDocumentTableActions } from './text-document-tables';
 import { TABLE_EDIT_ITEMS } from './text-document-table-actions';
+import { TABLE_NAVIGATION } from './text-document-table-navigation';
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
@@ -171,6 +172,8 @@ describe('the text document menus', () => {
       TOGGLE_CHECKBOX,
       STRETCH_KEY_ROW,
       ...FOOTNOTE_KEY_ACTIONS,
+      // Moving through tables (text-document-table-navigation).
+      ...Object.keys(TABLE_NAVIGATION),
     ];
     expect(builtRows.sort()).toEqual(
       [...new Set([...builtItems, ...shellRows, ...keyRows])].sort(),
