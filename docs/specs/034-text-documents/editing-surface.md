@@ -148,6 +148,12 @@ Left to right, as Google has it, with a divider between groups:
   moves the first line with it, as ⌘] does; the first line indent moves alone; each sets every paragraph the
   selection touches, as Indentation options does, held within the text area and the left and right indents at least
   0.5 in apart (default).
+- **In a section of columns** ([Page layout](page-layout.md#columns)): the white between the margins is cut by each
+  gap between two columns, drawn grey as the margins are. The indents and tab stops are those of the column the caret
+  is in, measured from that column's start and held within its width; its start is the ruler's zero, the numbers
+  counting from it both ways, as Word's (default). The caret's column is the one its line is drawn in, so a paragraph
+  laid across columns reads the column of the caret's line (default). Gaps are set in Column options, never dragged on
+  the ruler (default). Pageless, the ruler has one column.
 - **Tab stops** of the paragraph at the selection's start, each a mark by its alignment, as Google draws them: an
   angle opening right for left, a T for centre, an angle opening left for right, a T with a dot for decimal.
 - **A press on the ruler** away from a marker opens a menu at that point: **Add left tab stop**, **Add centre tab

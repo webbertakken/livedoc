@@ -201,6 +201,8 @@ Per section. Text fills the first column down the page, then the next.
 - In the file: `style:columns` (`fo:column-count`, `fo:column-gap`, `style:column-sep` for the line) on the page
   layout or the continuous section; `w:cols` (`w:num`, `w:space`, `w:sep`). Columns of unequal widths read as equal
   ([Documented losses](standard-mapping.md#documented-losses)).
+- **The ruler** shows the caret's column: the gaps grey, the indents and tab stops measured from the column's start
+  ([Editing surface](editing-surface.md#the-ruler)).
 - Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentColumns`, from the
   submenu and the dialog alike. Logs `[text-document] columns` with the count, the scope and the sections changed.
 

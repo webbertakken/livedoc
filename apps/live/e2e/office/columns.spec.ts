@@ -176,3 +176,55 @@ test('a column break starts the next column, dimmed in one column, one undo step
   await expect(second).not.toHaveAttribute('data-column', '1');
   expectNoPageErrors(pageErrors);
 });
+
+// editing-surface.md "The ruler", "In a section of columns": the gap grey, the caret's column's indents on the ruler.
+test("the ruler shows the caret's column: the gap grey, its indents at the column's start", async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(90_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await newDocument(page);
+  await write(page, ['First column', 'Second column']);
+  const body = page.locator(BODY);
+  await body.locator('> p').first().click();
+  await (await officeMenuItem(page, ['Format', 'Columns', 'Two columns'])).click();
+  await body.locator('> p').nth(1).click();
+  await page.keyboard.press('Home');
+  await page.waitForTimeout(100);
+  await (await officeMenuItem(page, ['Insert', 'Break', 'Column break'])).click();
+  const second = body.locator('> p').filter({ hasText: 'Second column' });
+  await expect(second).toHaveAttribute('data-column', '1');
+  await expect(page.locator('[data-ruler-gap]')).toHaveCount(1);
+
+  const indentX = () =>
+    page
+      .getByRole('slider', { name: 'Left indent' })
+      .evaluate((m) => m.getBoundingClientRect().left + m.getBoundingClientRect().width / 2);
+  const firstParagraph = body.locator('> p').first();
+  // Where a paragraph's text starts: its indent is padding inside its box.
+  const leftOf = (index: 0 | 1) =>
+    (index === 0 ? firstParagraph : second).evaluate((p) => {
+      const range = document.createRange();
+      range.setStart(p.firstChild!, 0);
+      range.setEnd(p.firstChild!, 1);
+      return range.getBoundingClientRect().left;
+    });
+
+  // In the first column, the marker at its start; in the second, at the second's.
+  await firstParagraph.click();
+  await expect.poll(async () => Math.abs((await indentX()) - (await leftOf(0)))).toBeLessThan(2);
+  await second.click();
+  await expect.poll(async () => Math.abs((await indentX()) - (await leftOf(1)))).toBeLessThan(2);
+  await page.screenshot({ path: test.info().outputPath('ruler-in-columns.png') });
+
+  // Moved from the keyboard, the second column's paragraph indents from its own start.
+  const was = await leftOf(1);
+  const slider = page.getByRole('slider', { name: 'Left indent' });
+  await slider.focus();
+  await page.keyboard.press('Shift+ArrowRight');
+  await expect.poll(() => leftOf(1)).toBeGreaterThan(was + 60);
+  await expect(slider).toHaveAttribute('aria-valuetext', /^(1 in|2\.54 cm)$/);
+  await expect.poll(async () => Math.abs((await indentX()) - (await leftOf(1)))).toBeLessThan(2);
+  expectNoPageErrors(pageErrors);
+});

@@ -23,7 +23,12 @@ afterEach(() => {
   view = null;
 });
 
-function mount(props: ParagraphProps | null, canEdit = true, pageless = false) {
+function mount(
+  props: ParagraphProps | null,
+  canEdit = true,
+  pageless = false,
+  pageSetup: PageSetup = setup,
+) {
   const doc = schema.node('doc', null, [
     schema.nodes.paragraph!.create({ props }, schema.text('Some writing')),
   ]);
@@ -35,7 +40,7 @@ function mount(props: ParagraphProps | null, canEdit = true, pageless = false) {
     <TextDocumentRuler
       view={view}
       readFormatting={() => formatting}
-      setup={setup}
+      setup={pageSetup}
       pageless={pageless}
       onSetup={onSetup}
       scale={1}
@@ -116,5 +121,74 @@ describe('TextDocumentRuler', () => {
     expect(slider.getAttribute('aria-disabled')).toBe('true');
     expect(slider.hasAttribute('tabindex')).toBe(false);
     expect(screen.getByRole('group', { name: 'Ruler' }).hasAttribute('tabindex')).toBe(false);
+  });
+
+  // "In a section of columns": the gaps grey, the caret's column's indents measured from its start and held within it.
+  describe('in a section of columns', () => {
+    const two = { ...setup, columns: { count: 2, gap: 36 } };
+    // The strip is the page's 612 pt drawn 816 px wide; the caret is drawn at 540 px, 405 pt, in the right column.
+    function mountInColumns(props: ParagraphProps | null) {
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(
+        new DOMRect(0, 0, 816, 24),
+      );
+      vi.spyOn(EditorView.prototype, 'coordsAtPos').mockReturnValue({
+        left: 540,
+        right: 540,
+        top: 100,
+        bottom: 115,
+      });
+      return mount(props, true, false, two);
+    }
+    afterEach(() => vi.restoreAllMocks());
+    const ptOf = (element: Element) =>
+      (parseFloat((element as HTMLElement).style.left) * 612) / 100;
+
+    it('draws each gap grey, as the margins', () => {
+      mountInColumns(null);
+      const gaps = document.querySelectorAll('[data-ruler-gap]');
+      expect(gaps).toHaveLength(1);
+      expect(ptOf(gaps[0]!)).toBeCloseTo(288, 3);
+    });
+
+    it("reads the indents from the caret's column and numbers the ruler from its start", () => {
+      mountInColumns({ indentStart: 36 });
+      const indent = screen.getByRole('slider', { name: 'Left indent' });
+      expect(indent.getAttribute('aria-valuetext')).toBe('0.5 in');
+      expect(ptOf(indent)).toBeCloseTo(360, 3);
+      const ones = [...document.querySelectorAll('.text-document-ruler-mark')].filter(
+        (mark) => mark.textContent === '1',
+      );
+      expect(ones.map(ptOf).map(Math.round)).toEqual([252, 396]);
+    });
+
+    it("sets an indent within the caret's column", () => {
+      const { own } = mountInColumns({ indentStart: 36 });
+      fireEvent.keyDown(screen.getByRole('slider', { name: 'Left indent' }), { key: 'ArrowRight' });
+      expect(own()).toMatchObject({ indentStart: 45 });
+    });
+
+    it("holds the left indent within the column's width", () => {
+      const { own } = mountInColumns({ indentStart: 180 });
+      fireEvent.keyDown(screen.getByRole('slider', { name: 'Left indent' }), { key: 'ArrowRight' });
+      expect(own()).toMatchObject({ indentStart: 180 });
+    });
+
+    it('keeps the margins at the page edges', () => {
+      mountInColumns(null);
+      expect(
+        screen.getByRole('slider', { name: 'Right margin' }).getAttribute('aria-valuetext'),
+      ).toBe('1 in');
+    });
+
+    it('is one column pageless', () => {
+      vi.spyOn(EditorView.prototype, 'coordsAtPos').mockReturnValue({
+        left: 540,
+        right: 540,
+        top: 100,
+        bottom: 115,
+      });
+      mount({ indentStart: 36 }, true, true, two);
+      expect(document.querySelectorAll('[data-ruler-gap]')).toHaveLength(0);
+    });
   });
 });
