@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Participant } from './identity';
 import type { AvatarPresence } from '@livedoc/api-schema';
 import {
+  sameRemoteSelections,
   buildLaserTrailRows,
   buildParticipantsByTab,
   buildRemoteAvatarRows,
@@ -295,6 +296,31 @@ describe('buildRemoteSelectionsByElement', () => {
       't1',
     );
     expect(out.get('el1')!.map((x) => x.id)).toEqual(['b']);
+  });
+});
+
+// canvas-performance.md "A release re-renders what moved, too": a rebuilt, equal reading keeps its identity, so
+// presence arriving with no one selecting anything walks no element view.
+describe('sameRemoteSelections', () => {
+  const ann = { id: 'p1', name: 'Ann', color: '#f00', holds: true };
+  it('holds two empty readings equal', () => {
+    expect(sameRemoteSelections(new Map(), new Map())).toBe(true);
+  });
+  it('holds readings with the same selectors on the same elements equal', () => {
+    expect(sameRemoteSelections(new Map([['e1', [ann]]]), new Map([['e1', [{ ...ann }]]]))).toBe(
+      true,
+    );
+  });
+  it.each([
+    ['another element', new Map([['e2', [ann]]])],
+    ['another selector', new Map([['e1', [{ ...ann, id: 'p2' }]]])],
+    ['a change of hold', new Map([['e1', [{ ...ann, holds: false }]]])],
+    ['a new colour', new Map([['e1', [{ ...ann, color: '#0f0' }]]])],
+    ['a new name', new Map([['e1', [{ ...ann, name: 'Bo' }]]])],
+    ['a second selector', new Map([['e1', [ann, { ...ann, id: 'p2' }]]])],
+    ['no selection', new Map()],
+  ])('tells %s apart', (_, other) => {
+    expect(sameRemoteSelections(new Map([['e1', [ann]]]), other)).toBe(false);
   });
 });
 

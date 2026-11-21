@@ -5,6 +5,7 @@
 // no handlers, no setters, nothing here mutates state.
 
 import { useCallback, useMemo } from 'react';
+import { useByValue } from '@/hooks/ui/useByValue';
 import { useLocalBesideTab, useRemoteBesideTabs } from '@/lib/split-presence';
 import type { Tab } from '@livedoc/document';
 import type { Participant } from '@/lib/identity';
@@ -20,6 +21,7 @@ import {
   buildRemoteAvatarRows,
   buildRemoteCursorRows,
   buildRemoteSelectionsByElement,
+  sameRemoteSelections,
   type RemoteSelection,
 } from '@/lib/presence-rows';
 
@@ -185,15 +187,20 @@ export function usePresenceRows(deps: PresenceRowsDeps) {
         : buildRemoteAvatarRows(remoteAvatars, livePresenceById, selfParticipant.id, activeId),
     [cursorsHidden, remoteAvatars, livePresenceById, selfParticipant.id, activeId],
   );
-  const remoteSelectionsByElement = useMemo(
-    () =>
-      buildRemoteSelectionsByElement(
-        remoteSelections,
-        livePresenceById,
-        selfParticipant.id,
-        activeId,
-      ),
-    [remoteSelections, livePresenceById, selfParticipant.id, activeId],
+  // Kept while it says the same: every element view reads it, and presence arriving with no one selecting anything
+  // rebuilt it, re-rendering the whole board a few seconds after it opened.
+  const remoteSelectionsByElement = useByValue(
+    useMemo(
+      () =>
+        buildRemoteSelectionsByElement(
+          remoteSelections,
+          livePresenceById,
+          selfParticipant.id,
+          activeId,
+        ),
+      [remoteSelections, livePresenceById, selfParticipant.id, activeId],
+    ),
+    sameRemoteSelections,
   );
   // What each agent names in focus on the active tab, for the focus rings. Never part of the lock below: an agent
   // holds nothing.
