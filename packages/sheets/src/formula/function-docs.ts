@@ -998,6 +998,26 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   ),
   ENCODEURL: D('text', 'Text written so it can go in a web address’s query', '=ENCODEURL(A2)'),
   ISURL: D('value', 'Whether a value is a web address', '=ISURL(A2)'),
+  IMPORTDATA: D(
+    'url',
+    'The rows of a .csv or .tsv file on the web',
+    '=IMPORTDATA("https://example.com/data.csv")',
+  ),
+  IMPORTFEED: D(
+    'url, [query], [headers], [num_items]',
+    'The items of an RSS or Atom feed, or the feed’s own title, description and address',
+    '=IMPORTFEED("https://example.com/feed", "items title", FALSE, 5)',
+  ),
+  IMPORTHTML: D(
+    'url, query, index',
+    'A table or list of a web page, counted from 1',
+    '=IMPORTHTML("https://example.com", "table", 1)',
+  ),
+  IMPORTXML: D(
+    'url, xpath_query, [locale]',
+    'What an XPath query picks out of a web page or XML file',
+    '=IMPORTXML("https://example.com", "//h1")',
+  ),
   HYPERLINK: D(
     'url, [label]',
     'A link to a web page or email address; Ctrl/⌘-click opens it',

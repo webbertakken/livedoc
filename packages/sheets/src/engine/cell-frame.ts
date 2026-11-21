@@ -1,6 +1,8 @@
 // The frame a formula is worked out in: what it reads of its workbook, each read noted against the formula reading
 // (its `reader`; NO_CELL keeps nothing). The workbook gives its parts once, as a FrameSource.
 import type { CardSource } from '../cards';
+import type { ImportRequest } from '../imports/import-request';
+import type { ImportRead } from './import-book';
 import { childrenOf, type Node } from '../formula/ast';
 import { renderFormula, storedAst, type SheetsCtx } from '../formula/stored';
 import { filterTest, type FilterTest } from '../filter';
@@ -35,8 +37,10 @@ export type FrameSource = {
   noteRange(reader: CellNo, range: RangeRef): void;
   // Spend reads from the top-level read's budget: false once it is spent.
   spend(reads: number): boolean;
-  volatile(reader: CellNo): void;
+  volatile(reader: CellNo, name: string): void;
   readsCards(reader: CellNo): void;
+  importOf(reader: CellNo, request: ImportRequest): ImportRead | null;
+  watchNow<T>(run: () => T): [T, boolean];
 };
 
 function calls(node: Node, name: string): boolean {
@@ -125,7 +129,9 @@ export function cellFrame(
     rand: src.rand,
     cards: src.cards(),
     workOut: (target, swaps) => workOutWith(src, reader, target, swaps),
-    volatile: () => src.volatile(reader),
+    volatile: (name) => src.volatile(reader, name),
     readsCards: () => src.readsCards(reader),
+    importOf: (request) => src.importOf(reader, request),
+    watchNow: (run) => src.watchNow(run),
   };
 }

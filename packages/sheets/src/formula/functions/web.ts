@@ -1,6 +1,7 @@
-// Web functions (docs/specs/029-sheets/formulas.md "Functions": Web): links and addresses. The functions that fetch
-// (IMPORTDATA, IMPORTXML, ...) join them through the api Worker (S4).
+// Web functions (docs/specs/029-sheets/formulas.md "Functions": Web): links and addresses, and the functions that
+// fetch through the api Worker (imports.ts, S4).
 import { isUrl } from '../../text-checks';
+import { IMPORT_FNS } from './imports';
 import { scalarFn, type FnDef } from '../fn';
 import { isError, toText } from '../values';
 
@@ -20,6 +21,7 @@ export function encodeUrl(text: string): string {
 }
 
 export const WEB_FUNCTIONS: Record<string, FnDef> = {
+  ...IMPORT_FNS,
   ENCODEURL: scalarFn(1, 1, ([x]) => {
     const t = toText(x!);
     return isError(t) ? t : encodeUrl(t);

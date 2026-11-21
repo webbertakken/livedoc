@@ -158,6 +158,70 @@
     {
       "id": "HYPERLINK.6",
       "f": "=HYPERLINK(\"http://x.test\", Data!A1)"
+    },
+    {
+      "id": "IMPORTDATA.1",
+      "f": "=IMPORTDATA(\"https://example.com/?t=\"&NOW())",
+      "expect": [
+        [
+          {
+            "e": "#ERROR!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/12188454 (\"Import functions cannot directly or indirectly reference a volatile function such as NOW, RAND, or RANDBETWEEN\": #ERROR!)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: Google-only, #NAME?"
+      },
+      "note": "imports.md \"Errors\": arguments reading NOW or RAND are refused before anything is fetched"
+    },
+    {
+      "id": "IMPORTFEED.1",
+      "f": "=IMPORTFEED(\"https://example.com/feed?r=\"&RAND())",
+      "expect": [
+        [
+          {
+            "e": "#ERROR!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/12188454 (\"Import functions cannot directly or indirectly reference a volatile function such as NOW, RAND, or RANDBETWEEN\": #ERROR!)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: Google-only, #NAME?"
+      },
+      "note": "imports.md \"Errors\": arguments reading NOW or RAND are refused before anything is fetched"
+    },
+    {
+      "id": "IMPORTHTML.1",
+      "f": "=IMPORTHTML(\"https://example.com/\", \"table\", RANDBETWEEN(1, 1))",
+      "expect": [
+        [
+          {
+            "e": "#ERROR!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/12188454 (\"Import functions cannot directly or indirectly reference a volatile function such as NOW, RAND, or RANDBETWEEN\": #ERROR!)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: Google-only, #NAME?"
+      },
+      "note": "imports.md \"Errors\": arguments reading NOW or RAND are refused before anything is fetched"
+    },
+    {
+      "id": "IMPORTXML.1",
+      "f": "=IMPORTXML(\"https://example.com/\", \"//a[\"&RANDBETWEEN(1, 1)&\"]\")",
+      "expect": [
+        [
+          {
+            "e": "#ERROR!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/12188454 (\"Import functions cannot directly or indirectly reference a volatile function such as NOW, RAND, or RANDBETWEEN\": #ERROR!)",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: Google-only, #NAME?"
+      },
+      "note": "imports.md \"Errors\": arguments reading NOW or RAND are refused before anything is fetched"
     }
   ]
 }

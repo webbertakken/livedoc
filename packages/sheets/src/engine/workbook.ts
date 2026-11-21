@@ -11,6 +11,12 @@ import { layoutIndex } from '../layout';
 import { RECALC_READS_MAX } from '../limits';
 import { cellKey, type Sheet } from '../sheet';
 import { CARD_FUNCTION_NAMES } from '../formula/registry';
+import {
+  IMPORT_FUNCTION_NAMES,
+  type ImportAnswer,
+  type ImportAsk,
+} from '../imports/import-request';
+import { ImportBook } from './import-book';
 import { callsOf, type Node } from '../formula/ast';
 import { safeHyperlink } from '../hyperlink';
 import { storedAst, type SheetsCtx } from '../formula/stored';
@@ -53,6 +59,8 @@ export type WorkbookOptions = {
   iteration?: Iteration;
   // Note each formula value forgotten, for takeForgotten (the Worker's engine, sending what changed).
   trackForgotten?: boolean;
+  // An editor's engine fetches imports (imports.md), access allowed or not; absent, imports read their refusal.
+  imports?: { allowed: boolean };
 };
 
 export type { CellAt };
@@ -93,6 +101,11 @@ export class Workbook {
   private deps = new Dependencies();
   private readonly volatileCells = new Set<CellNo>();
   private readonly cardReaders = new Set<CellNo>();
+  private readonly importBook: ImportBook | null;
+  // Formulas whose value read NOW, RAND, RANDARRAY or RANDBETWEEN, directly or through cells (imports.md "Errors"),
+  // and whether the formula being worked out has so far.
+  private readonly nowish = new Set<CellNo>();
+  private nowSeen = false;
   protected spills = new Spills(this.nos);
   private readonly extents = new Map<string, { rows: number; cols: number }>();
   private readonly ctxs = new Map<string, SheetsCtx>();
@@ -129,6 +142,7 @@ export class Workbook {
     this.limits = opts.limits ?? SheetLimits.plan;
     this.arrays = opts.arrays ?? (this.limits === SheetLimits.spreadsheet ? 'google' : 'dynamic');
     this.cards = opts.cards ?? null;
+    this.importBook = opts.imports ? new ImportBook(opts.imports.allowed) : null;
     this.nowFn = opts.now ?? localNow;
     this.randFn = opts.rand ?? Math.random;
     this.iteration = opts.iteration ?? ITERATION_OFF;
@@ -158,8 +172,23 @@ export class Workbook {
           range.c2,
         ),
       spend: (n) => this.spend(n),
-      volatile: (reader) => this.volatileCells.add(reader),
+      volatile: (reader, name) => {
+        this.volatileCells.add(reader);
+        // TODAY moves once a day, so an import may read it (Google's exception).
+        if (name !== 'TODAY') this.nowSeen = true;
+      },
       readsCards: (reader) => this.cardReaders.add(reader),
+      importOf: (reader, request) => this.importBook?.read(request, reader) ?? null,
+      watchNow: (run) => {
+        const outer = this.nowSeen;
+        this.nowSeen = false;
+        try {
+          const value = run();
+          return [value, this.nowSeen];
+        } finally {
+          this.nowSeen ||= outer;
+        }
+      },
     };
     this.forgotten = opts.trackForgotten ? null : undefined;
     for (const s of opts.sheets) this.sheets.set(s.id, s);
@@ -216,6 +245,7 @@ export class Workbook {
       this.rounds.retyped(`${sheet.id}|${key}`);
       changed.push(no);
     }
+    this.importBook?.retyped(changed);
     this.cellsChanged(changed);
     // Each changed cell is sent again, whatever it held: a new formula had no value to forget.
     if (this.forgotten) for (const no of changed) this.forgotten.add(no);
@@ -231,6 +261,34 @@ export class Workbook {
     this.cards = cards;
     this.version++;
     this.invalidate([...this.cardReaders]);
+  }
+
+  // ---- Imports (imports.md) ----------------------------------------------------------------------------
+
+  /** An import's answer arrived from the page: the cells reading it are worked out again when it changed. */
+  landImport(key: string, answer: ImportAnswer): void {
+    this.forgetImportReaders(this.importBook?.land(key, answer) ?? []);
+  }
+
+  /** Access to the web allowed for the spreadsheet: every import is read again. */
+  allowImports(): void {
+    this.forgetImportReaders(this.importBook?.allow() ?? []);
+  }
+
+  /** The hour is up: every import still read is asked of the page again. */
+  refreshImports(): void {
+    this.importBook?.refresh();
+  }
+
+  /** The imports to ask of the page since the last call. */
+  takeImportAsks(): ImportAsk[] {
+    return this.importBook?.takeAsks() ?? [];
+  }
+
+  private forgetImportReaders(nos: CellNo[]): void {
+    if (nos.length === 0) return;
+    this.version++;
+    this.invalidate(nos);
   }
 
   /** The iterative calculation in force. */
@@ -410,12 +468,21 @@ export class Workbook {
 
   // Whether any formula on the tab reads Plan cards (so the editor loads the items).
   usesCards(): boolean {
+    return this.calls(CARD_FUNCTION_NAMES);
+  }
+
+  // Whether any formula imports from the web (so the editor shows the Allow Access bar until it is allowed).
+  usesImports(): boolean {
+    return this.calls(IMPORT_FUNCTION_NAMES);
+  }
+
+  private calls(names: ReadonlySet<string>): boolean {
     for (const sheet of this.sheets.values())
       for (const cell of sheet.cells.values()) {
         const f = cell.input && 'f' in cell.input ? cell.input.f : null;
         if (!f) continue;
         const ast = storedAst(f);
-        if (ast && [...callsOf(ast)].some((n) => CARD_FUNCTION_NAMES.has(n))) return true;
+        if (ast && [...callsOf(ast)].some((n) => names.has(n))) return true;
       }
     return false;
   }
@@ -557,6 +624,7 @@ export class Workbook {
     const owner = this.spills.ownerAt(this.nos.find(sheetNo, r, c));
     if (owner === undefined) return null;
     const claim = this.spills.claimOf(owner)!;
+    if (this.nowish.has(owner)) this.nowSeen = true;
     const arr = this.vals.get(owner);
     if (!arr || !isArray(arr)) return null;
     return arr.rows[r - claim.r1]?.[c - claim.c1] ?? null;
@@ -590,7 +658,10 @@ export class Workbook {
       return this.vals.get(no)!;
     }
     const known = this.vals.get(no);
-    if (known !== undefined) return known;
+    if (known !== undefined) {
+      if (this.nowish.has(no)) this.nowSeen = true;
+      return known;
+    }
     if (this.computing.has(no)) {
       this.loops.readBack(no);
       if (this.iteration.on) return this.rounds.seedOf(no, this.loopCells);
@@ -609,7 +680,10 @@ export class Workbook {
     this.deps.clear(no);
     this.volatileCells.delete(no);
     this.cardReaders.delete(no);
+    this.importBook?.dropReader(no);
     this.spills.release(no);
+    const outerNow = this.nowSeen;
+    this.nowSeen = false;
     this.computing.add(no);
     this.stack.push(no);
     this.depth++;
@@ -626,6 +700,9 @@ export class Workbook {
       this.depth--;
       this.stack.pop();
       this.computing.delete(no);
+      if (this.nowSeen) this.nowish.add(no);
+      else this.nowish.delete(no);
+      this.nowSeen ||= outerNow;
     }
     if (isArray(value)) value = this.claim(no, sheet, row, col, value);
     this.vals.set(no, value);
@@ -746,6 +823,8 @@ export class Workbook {
     this.spills = new Spills(this.nos);
     this.volatileCells.clear();
     this.cardReaders.clear();
+    this.nowish.clear();
+    this.importBook?.renumbered();
     this.extents.clear();
     this.ctxs.clear();
     this.overBudget.clear();

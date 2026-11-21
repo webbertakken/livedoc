@@ -25,6 +25,7 @@ XML, looking and working as Google Sheets does. It is specified and being built 
 - ./templates.md - when working on spreadsheet templates
 - ./migration.md - when working on migrating stored Plan Sheets into spreadsheets
 - ./performance.md - when measuring or budgeting a spreadsheet's load, typing, scrolling, recalculation, memory or bundle
+- ./imports.md - when working on IMPORTDATA, IMPORTFEED, IMPORTHTML or IMPORTXML: fetching, Allow Access, the api's guards
 - ./formulas.md - when working on the formula language: values, references, operators, arrays, the function catalogue, other workbooks, the oracle, recalculation
 - ./sheet-store.md - when working on the sheet store: what is stored, writes, rows and columns by id, access, live sync, undo, offline documents, copies, agents, limits
 - ./data-validation.md - when working on validation rules: dropdowns, checkboxes, number, date and text rules, where values are checked, the rule editor
