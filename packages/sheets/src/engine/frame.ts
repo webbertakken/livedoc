@@ -7,6 +7,7 @@ import type { ImportRead } from './import-book';
 import type { SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
 import type { CellFormat } from '../sheet';
+import type { Sparkline } from '../sparkline/sparkline-read';
 
 // A rectangle of one sheet, by positions, inclusive.
 export type RangeRef = { sheetId: string; r1: number; c1: number; r2: number; c2: number };
@@ -97,4 +98,6 @@ export type Frame = {
   importOf(request: ImportRequest): ImportRead | null;
   // What `run` gives, and whether it read NOW, RAND, RANDARRAY or RANDBETWEEN, directly or through cells.
   watchNow<T>(run: () => T): [T, boolean];
+  // Set only while a cell's chart is asked for (Workbook.sparklineOf): each SPARKLINE worked out reports its chart.
+  drawSparkline?: (chart: Sparkline) => void;
 };

@@ -475,6 +475,21 @@
       "differs": {
         "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
       }
+    },
+    {
+      "id": "SPARKLINE.1",
+      "f": "=SPARKLINE({1,2,3}, {\"charttype\",\"bar\"}, 1)",
+      "expect": [
+        [
+          {
+            "e": "#N/A"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3093289 (syntax \"SPARKLINE(data, [options])\": two arguments at most); https://support.google.com/docs/thread/29433263 (Google's arity error: \"#N/A ... Wrong number of arguments to IF\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SPARKLINE is #NAME? there"
+      }
     }
   ]
 }

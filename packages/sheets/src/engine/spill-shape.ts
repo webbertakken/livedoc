@@ -7,6 +7,7 @@ import { LIFTED_PARAMETERS } from '../formula/lifted-parameters';
 import type { StoredRef } from '../sheet';
 
 const SCALAR_RESULT = new Set([
+  'SPARKLINE',
   'SUM',
   'SUMIF',
   'SUMIFS',

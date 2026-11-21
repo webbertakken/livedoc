@@ -19,6 +19,8 @@ import {
 import { ImportBook } from './import-book';
 import { callsOf, type Node } from '../formula/ast';
 import { safeHyperlink } from '../hyperlink';
+import type { Sparkline } from '../sparkline/sparkline-read';
+import { SparklineMemo } from './sparkline-memo';
 import { storedAst, type SheetsCtx } from '../formula/stored';
 import type { CellInput, StoredFormula } from '../sheet';
 import {
@@ -385,6 +387,24 @@ export class Workbook {
     return safeHyperlink(this.evaluateNodeAt(sheetId, r, c, ast.args[0], input.f.r));
   }
 
+  private readonly sparklines = new SparklineMemo();
+
+  // A cell's SPARKLINE chart (charts.md "Sparklines"): its formula worked out again, as hyperlinkOf does, with each
+  // SPARKLINE reporting its chart; drawn when the value is the empty text a SPARKLINE gives. Null for any other cell.
+  sparklineOf(sheetId: string, r: number, c: number): Sparkline | null {
+    const input = this.inputAt(sheetId, r, c);
+    if (!input || !('f' in input)) return null;
+    const ast = storedAst(input.f);
+    if (!ast || !SparklineMemo.calls(ast)) return null;
+    return this.sparklines.get(`${sheetId}!${r},${c}`, this.version, () => {
+      let chart: Sparkline | null = null;
+      const value = this.evaluateNodeAt(sheetId, r, c, ast, input.f.r, (drawn) => {
+        chart = drawn;
+      });
+      return value === '' ? chart : null;
+    });
+  }
+
   // Worked out with NO_CELL as its reader: what it notes is forgotten as it ends.
   private evaluateNodeAt(
     sheetId: string,
@@ -392,6 +412,7 @@ export class Workbook {
     c: number,
     ast: Node,
     refs: StoredFormula['r'],
+    drawSparkline?: (chart: Sparkline) => void,
   ): Value {
     for (;;) {
       try {
@@ -399,6 +420,7 @@ export class Workbook {
         this.depth++;
         try {
           const frame = cellFrame(this.frameSource, NO_CELL, sheetId, r, c);
+          if (drawSparkline) frame.drawSparkline = drawSparkline;
           return scalarCell(deref(evaluate(ast, refs, frame), frame));
         } finally {
           this.depth--;

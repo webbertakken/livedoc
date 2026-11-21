@@ -52,9 +52,34 @@ A side panel of two tabs:
 
 ## Sparklines
 
-`SPARKLINE(data, [options])` draws a line, bar, column or win/loss chart in its cell, with Google's options
-(`charttype`, `color`, `max`, `min`, `rtl`, `linewidth`, `xmin`, `xmax`, `empty`, `nan`, ...). Files keep it by S5's
+`SPARKLINE(data, [options])` draws a small chart filling its cell, as Google Sheets' does. Files keep it by S5's
 convention, with its cached value empty.
+
+- **Its value** is empty text: a formula reading the cell reads `""`, and nothing overflows into it. The chart is
+  drawn when the cell's formula works a `SPARKLINE` out and its value is that empty text, so
+  `=IF(B2>0, SPARKLINE(C2:H2), "")` draws only where `B2` is positive.
+- **Data**: a range or an array, read across rows. Each value is a number; an empty cell is skipped or drawn as 0 by
+  `empty` (`ignore` or `zero`), and any other value (text, a boolean) by `nan` (`ignore` or `convert`, as 0);
+  both skip when not set (default, D71). An error in the data or the options is the cell's value. At most 10,000
+  values are drawn, the first ones, as for a chart.
+- **Options**: a range two cells wide, or an array `{"charttype","column"; "color","red"}`, each row a name (any case)
+  and its value. A name it does not know is left alone; a `charttype` other than `line`, `column`, `winloss` or
+  `bar` is `#VALUE!` (default, D71). Colours are CSS names (`red`) or hex (`#3D3D3D`); one that is neither is
+  left alone.
+- **line** (the default): the values left to right, joined, scaled between `ymin` and `ymax` (the data's own when
+  not set, clipped beyond them); `color` sets the line, else the cell's text colour, else the sheet's accent;
+  `linewidth` its thickness (1). Data two columns wide (more than one row) is x then y: `xmin` and `xmax` keep the
+  points between them; one series spaces its points evenly.
+- **column**: a column each value, up from 0 (or down for a negative), scaled between `ymin` and `ymax` (0 and the
+  data's extremes when not set). `color` for every column, then `negcolor` for negatives, `lowcolor` and
+  `highcolor` for the lowest and highest, `firstcolor` and `lastcolor`, each later one winning (default, D71);
+  `axis` draws the line at 0 in `axiscolor`.
+- **winloss**: a column each value, up for a positive and down for a negative, all the same height, nothing for 0;
+  the same colours and axis as **column**.
+- **bar**: the values side by side in one bar, each as wide as its share of `max` (the values' sum when not set),
+  in `color1` and `color2` by turns; a negative value is 0.
+- `rtl`: `TRUE` draws right to left. Sparklines draw the same in the grid, images, PDFs and SVG exports.
+- Defaults: `color` is the sheet's accent, `color2` its accent lightened, `axiscolor` its muted ink (default, D71).
 
 ## Dashboards
 

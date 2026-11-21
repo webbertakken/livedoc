@@ -52,6 +52,9 @@ export const REGEX_BACKTRACK_MAX = 10_000_000;
 // RE2 patterns kept translated (formula/functions/text-patterns.ts); a sheet's REGEX formulas share a few. Each is a
 // pattern's length or a few class ranges more; safe from 16 to 10,000.
 export const RE2_CACHE_MAX = 256;
+// The values a SPARKLINE draws, the first ones (charts.md "Sparklines": a chart's per-series figure); safe from 100
+// to 100,000.
+export const SPARKLINE_POINTS_MAX = 10_000;
 
 // A new sheet's sizes, and the smallest a person can drag to.
 export const COLUMN_WIDTH_NEW = 120;

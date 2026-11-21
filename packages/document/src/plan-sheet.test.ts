@@ -191,3 +191,36 @@ describe('a HYPERLINK cell in the static render', () => {
     expect(svgPlanSheet(sheet, MODEL, 'light')).not.toContain('<a ');
   });
 });
+
+// docs/specs/029-sheets/charts.md "Sparklines": a SPARKLINE draws the same in an SVG export, in the sheet's accent.
+describe('a SPARKLINE cell in the static render', () => {
+  it('draws its shapes in the cell, the paint tokens in the palette and colours escaped', () => {
+    const svg = svgPlanSheet(
+      sheet,
+      {
+        ...MODEL,
+        cells: [
+          {
+            r: 0,
+            c: 0,
+            text: '',
+            align: 'l',
+            valign: 'm',
+            spark: [
+              { k: 'path', d: 'M2 22L52 2', paint: '@accent', width: 2 },
+              { k: 'path', d: 'M2 12H102', paint: '@muted', width: 1 },
+              { k: 'rect', x: 2, y: 2, w: 10, h: 20, paint: 'red"', opacity: 0.5 },
+              { k: 'rect', x: 12, y: 2, w: 10, h: 20, paint: '#00f' },
+            ],
+          },
+        ],
+      },
+      'light',
+    );
+    expect(svg).toMatch(
+      /<g transform="translate\([\d.]+ [\d.]+\)"><path d="M2 22L52 2" fill="none" stroke="#/,
+    );
+    expect(svg).toContain('fill="red&quot;" fill-opacity="0.5"/>');
+    expect(svg).toContain('<rect x="12" y="2" width="10" height="20" fill="#00f"/></g>');
+  });
+});
