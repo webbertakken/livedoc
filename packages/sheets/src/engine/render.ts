@@ -10,6 +10,7 @@ import { sheetFromJson, type SheetJson } from '../sheet-json';
 import { checkboxValue, optionFor, validationRuleAt } from '../rules/validation';
 import { formatRuleStyle } from '../rules/format-rules';
 import { isArray, isError, scalarOf } from '../formula/values';
+import { sparklineShapes, type SparkShape } from '../sparkline/sparkline-shapes';
 
 type RenderCell = {
   r: number; // index into the model's rows
@@ -37,6 +38,8 @@ type RenderCell = {
   arrow?: true;
   // A HYPERLINK's allowed target (Workbook.hyperlinkOf): drawn as a link, underlined in the sheet's accent.
   link?: string;
+  // A SPARKLINE's chart (Workbook.sparklineOf), its shapes placed in the cell's box (charts.md "Sparklines").
+  spark?: SparkShape[];
 };
 
 export type SheetRenderModel = {
@@ -93,6 +96,20 @@ export function renderWindow(
     for (let r = p.r1; r <= p.r2; r++)
       for (let c = p.c1; c <= p.c2; c++) if (r !== p.r1 || c !== p.c1) covered.add(`${r},${c}`);
   }
+  // A cell's width or height in pixels, merged cells' summed.
+  const spanSize = (
+    r: number,
+    c: number,
+    span: { rowSpan: number; colSpan: number } | undefined,
+    axis: 'row' | 'col',
+  ) => {
+    let size = 0;
+    if (axis === 'col')
+      for (let k = c; k < c + (span?.colSpan ?? 1); k++) size += colWidth(layout, layout.cols[k]!);
+    else
+      for (let k = r; k < r + (span?.rowSpan ?? 1); k++) size += rowHeight(layout, layout.rows[k]!);
+    return size;
+  };
   const cells: RenderCell[] = [];
   for (const r of rows)
     for (const c of cols) {
@@ -125,7 +142,12 @@ export function renderWindow(
       }
       const arrow = (rule?.is === 'list' || rule?.is === 'range') && rule.show === 'arrow';
       const span = spans.get(`${r},${c}`);
-      if (!shown.text && !arrow && !f.bg && !f.bt && !f.br && !f.bb && !f.bl) continue;
+      const chart = wb.sparklineOf(sheetId, r, c);
+      const spark = chart
+        ? sparklineShapes(chart, spanSize(r, c, span, 'col'), spanSize(r, c, span, 'row'), f.fc)
+        : undefined;
+      if (!shown.text && !spark?.length && !arrow && !f.bg && !f.bt && !f.br && !f.bb && !f.bl)
+        continue;
       const out: RenderCell = {
         r: rowAt.get(r)!,
         c: colAt.get(c)!,
@@ -148,6 +170,7 @@ export function renderWindow(
       if (f.bg) out.fill = f.bg;
       if (chip) out.chip = chip;
       if (arrow) out.arrow = true;
+      if (spark?.length) out.spark = spark;
       if (f.ff) out.font = f.ff;
       if (f.fs) out.size = f.fs;
       if (f.wr) out.wrap = f.wr;

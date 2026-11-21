@@ -54,6 +54,8 @@ export * from './search-inputs';
 export * from './fit-widths';
 export * from './sheet-starters';
 export * from './hyperlink';
+export * from './sparkline/sparkline-shapes';
+export type { Sparkline, SparklineKind, SparklineOptions } from './sparkline/sparkline-read';
 export * from './template-starts';
 export * from './template-start-ids';
 export * from './sheet-templates';

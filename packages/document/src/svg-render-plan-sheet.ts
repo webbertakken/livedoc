@@ -45,11 +45,25 @@ export type SheetRenderModel = {
     chip?: { color?: string };
     arrow?: true;
     link?: string;
+    spark?: readonly SparkShape[];
   }[];
   // The sheet's look (Sheet Settings): gridlines and headers left out.
   hideGrid?: true;
   hideHeaders?: true;
 };
+
+// A SPARKLINE's shapes, in its cell's box (the sheets engine's SparkShape, charts.md "Sparklines").
+type SparkShape =
+  | { readonly k: 'path'; readonly d: string; readonly paint: string; readonly width: number }
+  | {
+      readonly k: 'rect';
+      readonly x: number;
+      readonly y: number;
+      readonly w: number;
+      readonly h: number;
+      readonly paint: string;
+      readonly opacity?: number;
+    };
 
 const FONT = 'system-ui, sans-serif';
 export const SHEET_HEADER_H = 40;
@@ -143,6 +157,7 @@ export function svgPlanSheet(
     const ch = (ys[Math.min(cell.r + (cell.rowSpan ?? 1), ys.length - 1)] ?? cy) - cy;
     if (cell.fill || cell.colSpan || cell.rowSpan)
       out += `<rect x="${r2(cx + 0.5)}" y="${r2(cy + 0.5)}" width="${r2(Math.max(0, cw - 1))}" height="${r2(Math.max(0, ch - 1))}" fill="${cell.fill ?? p.surface}"/>`;
+    if (cell.spark) out += sparkSvg(cell.spark, cx, cy, p.focus, p.muted);
     // A link takes the sheet's accent unless the cell has its own text colour (formulas.md "Text").
     let ink = cell.error ? ERROR_INK : (cell.color ?? (cell.link ? p.focus : p.text));
     let textX: number | null = null;
@@ -213,4 +228,23 @@ export function svgPlanSheet(
   out += '</g>';
   out += `<rect x="${r2(x)}" y="${r2(y)}" width="${r2(w)}" height="${r2(h)}" rx="12" fill="none" stroke="${p.border}"/>`;
   return `<g font-family="${FONT}">${out}</g>`;
+}
+
+// A sparkline in its cell at (x, y): the paint tokens take the sheet's accent and muted ink; colours are escaped.
+function sparkSvg(
+  shapes: readonly SparkShape[],
+  x: number,
+  y: number,
+  accent: string,
+  muted: string,
+): string {
+  const paint = (token: string) =>
+    xmlEscape(token === '@accent' ? accent : token === '@muted' ? muted : token);
+  let out = `<g transform="translate(${r2(x)} ${r2(y)})">`;
+  for (const s of shapes)
+    out +=
+      s.k === 'path'
+        ? `<path d="${xmlEscape(s.d)}" fill="none" stroke="${paint(s.paint)}" stroke-width="${s.width}" stroke-linejoin="round" stroke-linecap="round"/>`
+        : `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" fill="${paint(s.paint)}"${s.opacity === undefined ? '' : ` fill-opacity="${s.opacity}"`}/>`;
+  return `${out}</g>`;
 }

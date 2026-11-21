@@ -28,6 +28,7 @@ import {
 import { RULE_ARROW_PX, ruleCellDraw } from './rules/sheet-rule-draw';
 import type { PlanPalette } from '@/components/plan/plan-palette';
 import { cellBox, mergeAt, type Geometry, type GridWindow } from './sheet-geometry';
+import { SheetSparkline } from './SheetSparkline';
 
 const CELL_PAD = 4;
 const BASE_PX = 13;
@@ -250,6 +251,20 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
           />,
         );
       if (ruled) out.push(...ruled.nodes);
+      // A SPARKLINE draws its chart over the cell (charts.md "Sparklines"); its value is empty text.
+      const chart = pending.pending ? null : workbook.sparklineOf(sheet.id, r, c);
+      if (chart)
+        out.push(
+          <SheetSparkline
+            key={`${key}s`}
+            chart={chart}
+            box={box}
+            ink={f?.fc}
+            accent={palette.focus}
+            muted={palette.muted}
+            {...(waiting ? { waitingOpacity: WAITING_OPACITY } : {})}
+          />,
+        );
       if (!text || ruled?.hideText) continue;
       out.push(
         <div

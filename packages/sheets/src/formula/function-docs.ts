@@ -996,6 +996,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
     'Replaces what matches a regular expression; $1 puts back a group, $0 the match',
     '=REGEXREPLACE(A2, "(\\w+) (\\w+)", "$2 $1")',
   ),
+  SPARKLINE: D(
+    'data, [options]',
+    'A small chart in the cell: line, column, winloss or bar',
+    '=SPARKLINE(B2:M2, {"charttype","column"; "color","teal"})',
+  ),
   ENCODEURL: D('text', 'Text written so it can go in a web address’s query', '=ENCODEURL(A2)'),
   ISURL: D('value', 'Whether a value is a web address', '=ISURL(A2)'),
   IMPORTDATA: D(

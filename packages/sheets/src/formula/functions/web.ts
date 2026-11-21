@@ -2,6 +2,7 @@
 // fetch through the api Worker (imports.ts, S4).
 import { isUrl } from '../../text-checks';
 import { IMPORT_FNS } from './imports';
+import { SPARKLINE_FUNCTIONS } from './sparkline';
 import { scalarFn, type FnDef } from '../fn';
 import { isError, toText } from '../values';
 
@@ -32,4 +33,5 @@ export const WEB_FUNCTIONS: Record<string, FnDef> = {
   HYPERLINK: scalarFn(1, 2, ([url, label]) =>
     label === undefined || label === null ? url! : label,
   ),
+  ...SPARKLINE_FUNCTIONS,
 };

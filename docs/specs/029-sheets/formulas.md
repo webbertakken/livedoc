@@ -527,7 +527,8 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   an odd last period as one span (default, D59). Rate, price and redemption are positive and yield not negative, the
   dates in order (maturity, first coupon, settlement, issue; maturity, settlement, last interest), else `#NUM!`.
 
-**Web**: `HYPERLINK` (above), `ENCODEURL`, `ISURL`, `IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML`, `IMPORTXML`.
+**Web**: `HYPERLINK` (above), `ENCODEURL`, `ISURL`, `IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML`, `IMPORTXML`,
+`SPARKLINE` (its chart in [Charts](charts.md#sparklines)).
 
 - `ENCODEURL(text)` writes each byte of the text's UTF-8 as `%XX` but letters, digits, `-` and `_`, as LibreOffice
   and Excel keep them (`"hello, world!"` is `hello%2C%20world%21`, Google's example).
@@ -1180,7 +1181,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `SORT`                | Filter      | `SORT(range, sort_column, is_ascending, [sort_column2], [is_ascending2])`                                      | Google      | `COM.MICROSOFT.SORT`             | built                                                         |
 | `SORTBY`              | Array       |                                                                                                                | OpenFormula | `COM.MICROSOFT.SORTBY`           | built                                                         |
 | `SORTN`               | Filter      | `SORTN(range, [n], [display_ties_mode], [sort_column1, is_ascending1], ...)`                                   | Google      | S5                               | built                                                         |
-| `SPARKLINE`           | Google      | `SPARKLINE(data, [options])`                                                                                   | Google      | S5                               | planned                                                       |
+| `SPARKLINE`           | Google      | `SPARKLINE(data, [options])`                                                                                   | Google      | S5                               | built                                                         |
 | `SPLIT`               | Text        | `SPLIT(text, delimiter, [split_by_each], [remove_empty_text])`                                                 | Google      | S5                               | built                                                         |
 | `SQRT`                | Math        | `SQRT(value)`                                                                                                  | Google      | `SQRT`                           | built                                                         |
 | `SQRTPI`              | Math        | `SQRTPI(value)`                                                                                                | Google      | `SQRTPI`                         | built                                                         |
@@ -1383,4 +1384,6 @@ The code cites each by its id.
   `options` are read and not yet shown (default).
 - **D70** REGEXREPLACE's unnamed edges: a `$` naming no group is `#N/A` only when the pattern matches (Java's
   replacement runs per match); a group that took no part is empty text; a trailing backslash stays (default).
+- **D71** SPARKLINE's unstated choices: empty cells and other values skipped unless set; an unknown chart type
+  `#VALUE!`; column colours applied in the order the help lists them; the accent's colours (charts.md "Sparklines").
 - The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).
