@@ -456,10 +456,24 @@ the writing on every page.
   ([Objects](objects.md#pictures)) and is dimmed until then.
 - The document's own, one for all its pages (Google's); drawn centred on each page laid out, behind the writing and its
   headers (default); pageless, on a phone and with print layout off none is drawn (Google's).
-- In the file: in the default header of each section, as each suite writes one: OOXML a VML shape whose id starts
-  `PowerPlusWaterMarkObject` holding a `v:textpath`; ODF a `draw:custom-shape` whose `draw:name` starts
-  `PowerPlusWaterMarkObject` with its text (LibreOffice's); read back as the watermark, anything else in a header kept
-  as it is.
+- **A text watermark** holds its words, a font (Arial where LiveDoc makes one), a size in points or **Auto** (fits the
+  text width; where LiveDoc makes one), bold, italic, a colour (silver, `#c0c0c0`), a transparency from 0 to 100%
+  (50%) and its layout (diagonal) (defaults). One without words draws nothing and is written as none (default).
+- In the file: in every header a section's pages show, as each suite writes one: OOXML a VML shape whose id starts
+  `PowerPlusWaterMarkObject` holding a `v:textpath` (Word's); ODF a `draw:custom-shape` whose `draw:name` starts
+  `PowerPlusWaterMarkObject` with its text (LibreOffice's). A section that shows a header it does not have (the first
+  section's default, first page or even page) is given an empty one to hold it (default).
+  - OOXML: the words as the text path's `string`; its font, bold and italic in the text path's `style`
+    (`font-family`, `font-weight:bold`, `font-style:italic`); Auto as `font-size:1pt` with the shape fitted to the text
+    width, a size as `font-size` and the shape's height; the colour as the shape's `fillcolor` (a hex colour or one of
+    VML's named colours); the transparency as 1 less the `v:fill` `opacity` (a fraction or a 65536th); diagonal as
+    `rotation:315`, horizontal as none; a Word watermark's block (`w:sdt` of the `Watermarks` gallery) read as the
+    watermark it holds.
+  - ODF: the words as the shape's paragraph text; colour and transparency as its graphic style's `draw:fill-color`
+    and `draw:opacity`; font, size, bold and italic as its text style's text properties (`1pt` is Auto); diagonal as
+    a rotation of a quarter turn's half in `draw:transform`.
+  - Read back as the watermark (the first found), taken out of every header; a header left as one empty paragraph
+    by it is no header (default); anything else in a header kept as it is.
 - Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentWatermark`.
 
 ## Performance

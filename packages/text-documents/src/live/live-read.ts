@@ -215,6 +215,7 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
     lists: Object.fromEntries(lists.entries()) as Record<string, ListDefinition>,
     section: held ? sectionOf(held, stories) : blank.section,
     pageless: meta.get('pageless') === true ? true : undefined,
+    watermark: (meta.get('watermark') as TextDocument['watermark'] | undefined) ?? undefined,
     body,
     source,
   });

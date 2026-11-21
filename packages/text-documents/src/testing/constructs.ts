@@ -366,6 +366,41 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     );
   },
+  // A text watermark (page-layout.md "Watermark"): bold, horizontal, its own colour, in a document whose second section
+  // shows a first page header of its own.
+  watermark: (format) => {
+    const setup = PageSetup.of('a4', format);
+    return base(
+      format,
+      [
+        paragraph(format, 'normal', [run('Behind this writing')]),
+        {
+          type: 'section',
+          start: 'next-page',
+          setup,
+          headers: {
+            header: {
+              first: { blocks: [paragraph(format, 'normal', [run('Its own first page')])] },
+            },
+            differentFirst: true,
+          },
+        },
+        paragraph(format, 'normal', [run('A second section')]),
+      ],
+      {
+        watermark: {
+          kind: 'text',
+          text: 'CONFIDENTIAL',
+          font: 'Georgia',
+          size: 54,
+          bold: true,
+          colour: '#6aa84f',
+          transparency: 0.3,
+          layout: 'horizontal',
+        },
+      },
+    );
+  },
   // Line numbers (page-layout.md "Line numbers"): restarting on each page, a section without, one restarting on its own.
   lineNumbers: (format) => {
     const setup = PageSetup.of('a4', format);

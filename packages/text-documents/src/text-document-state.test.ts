@@ -2,6 +2,7 @@ import * as Y from 'yjs';
 import { describe, expect, it } from 'vitest';
 import { Body } from './body';
 import { ListDefinition } from './model/lists';
+import { Watermarks } from './model/watermark';
 import { TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 
 const typeInto = (doc: Y.Doc, index: number, at: number, text: string) => {
@@ -177,5 +178,24 @@ describe('TextDocumentState pageless', () => {
       TextDocumentState.load([TextDocumentState.fromDocument(document)]);
     expect(TextDocumentState.pageless(stateOf(pageless))).toBe(true);
     expect(TextDocumentState.pageless(stateOf(blank))).toBe(false);
+  });
+});
+
+// docs/specs/034-text-documents/page-layout.md "Watermark": the document's, in the live state and its model.
+describe('TextDocumentState watermark', () => {
+  it('reads none for a new document, sets one with its origin and takes it away again', () => {
+    const doc = TextDocumentState.load();
+    expect(TextDocumentState.watermark(doc)).toBeUndefined();
+    const origins: unknown[] = [];
+    doc.on('afterTransaction', (tr) => origins.push(tr.origin));
+    const origin = Symbol('watermark');
+    const watermark = Watermarks.text('DRAFT');
+    TextDocumentState.setWatermark(doc, watermark, origin);
+    expect(TextDocumentState.watermark(doc)).toEqual(watermark);
+    expect(TextDocumentState.document(doc, 'odf').watermark).toEqual(watermark);
+    expect(origins[0]).toBe(origin);
+    TextDocumentState.setWatermark(doc, undefined);
+    expect(TextDocumentState.metaType(doc).has('watermark')).toBe(false);
+    expect(TextDocumentState.document(doc, 'odf').watermark).toBeUndefined();
   });
 });

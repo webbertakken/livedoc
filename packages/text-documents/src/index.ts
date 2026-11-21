@@ -50,6 +50,13 @@ export {
 } from './model/blocks';
 export { Notes } from './model/notes';
 export {
+  WATERMARK_DEFAULTS,
+  Watermarks,
+  type TextWatermark,
+  type Watermark,
+  type WatermarkLayout,
+} from './model/watermark';
+export {
   CHECK_MARKS,
   LIST_LEVELS,
   LIST_RESTART_MAX,

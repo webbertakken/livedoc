@@ -39,6 +39,13 @@ export class ReportBuilder {
     this.#kept.set(name, (this.#kept.get(name) ?? 0) + 1);
   }
 
+  /** A kept element read as the model after all (a watermark lifted from a header): no longer counted as kept. */
+  mapped(name: string): void {
+    const count = (this.#kept.get(name) ?? 0) - 1;
+    if (count > 0) this.#kept.set(name, count);
+    else this.#kept.delete(name);
+  }
+
   build(): ImportReport {
     return {
       dropped: [...this.#dropped.values()],
