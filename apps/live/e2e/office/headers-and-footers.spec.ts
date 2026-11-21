@@ -151,3 +151,52 @@ test('a header made from the Insert menu is typed on every page, and an empty fo
   await expect(page.locator('[data-page-story="footer"]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });
+
+// "The bar": Different first page gives page 1 a header of its own, page 2 keeping the default; Options > Remove
+// header takes page 1's away; Alt+F10 reaches the bar.
+test('the header’s bar: a different first page, and its header removed', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  await writeLong(page, 30);
+  await expect(page.locator('[data-page-sheet="2"]')).toBeVisible();
+  await page.keyboard.press('Control+Home');
+  const header = (sheet: number) =>
+    page.locator(`[data-page-sheet="${sheet}"] [data-page-story="header"]`);
+
+  await (await officeMenuItem(page, ['Insert', 'Headers & footers', 'Header'])).click();
+  await page.keyboard.type('Running');
+  const bar = page.getByRole('toolbar', { name: 'Header options' });
+  await expect(bar).toBeVisible();
+  await page.keyboard.press('Alt+F10');
+  const first = bar.getByRole('checkbox', { name: 'Different first page' });
+  await expect(first).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(first).toBeChecked();
+  // Page 1 now shows a header of its own, empty, the caret in it; page 2 keeps the default.
+  const editor = page.getByRole('textbox', { name: 'Header' });
+  await expect(editor).toBeFocused();
+  await expect(editor).toHaveText('');
+  await page.keyboard.type('Cover');
+  await expect(header(2)).toHaveText('Running');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('header-bar.png') });
+  await page.keyboard.press('Escape');
+  await expect(header(1)).toHaveText('Cover');
+
+  // Options > Remove header takes page 1's own away.
+  await page.keyboard.press('Control+Home');
+  await (await officeMenuItem(page, ['Insert', 'Headers & footers', 'Header'])).click();
+  await expect(editor).toHaveText('Cover');
+  await bar.getByRole('button', { name: 'Options' }).click();
+  await page.getByRole('menuitem', { name: /Remove header/ }).click();
+  await expect(editor).toHaveCount(0);
+  await expect(header(1)).toHaveCount(0);
+  await expect(header(2)).toHaveText('Running');
+  expectNoPageErrors(pageErrors);
+});

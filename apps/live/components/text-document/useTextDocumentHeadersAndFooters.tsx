@@ -10,6 +10,7 @@ import { TextDocumentState } from '@livedoc/text-documents';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 import { pageAtPoint } from '@/lib/text-document/pagination/pagination-headers';
 import { storyEditingPlugins } from '@/lib/text-document/text-document-story-editing';
+import { TextDocumentHeaderBar } from './TextDocumentHeaderBar';
 import { useTextDocumentHeaderEditing } from './useTextDocumentHeaderEditing';
 import { useTextDocumentStories } from './useTextDocumentStories';
 
@@ -26,6 +27,7 @@ export function useTextDocumentHeadersAndFooters(input: {
 }) {
   const { view, liveDoc, format, pages, writes, heights, caret } = input;
   const leave = useRef(() => {});
+  const toolbar = useRef<HTMLDivElement | null>(null);
   const plugins = useCallback(() => {
     const doc = liveDoc.current;
     if (!doc) return [];
@@ -36,6 +38,7 @@ export function useTextDocumentHeadersAndFooters(input: {
         defaults: TextDocumentState.defaults(doc, format),
       }),
       leave: () => leave.current(),
+      toBar: () => toolbar.current?.querySelector<HTMLElement>('input, button')?.focus(),
     });
   }, [liveDoc, format, caret]);
   const stories = useTextDocumentStories({ view, liveDoc, format, pages, heights, plugins });
@@ -44,6 +47,21 @@ export function useTextDocumentHeadersAndFooters(input: {
     leave.current = editing.leave;
   });
   const { enter } = editing;
+  const edited = editing.editing;
+  // The bar under the one being edited ("The bar").
+  const bar = edited ? (
+    <TextDocumentHeaderBar
+      kind={edited.kind}
+      differentFirst={edited.differentFirst}
+      later={edited.section > 0}
+      linked={edited.linked}
+      onFirst={editing.toggleFirst}
+      onLink={editing.toggleLink}
+      onRemove={editing.remove}
+      onBack={() => edited.view.focus()}
+      toolbar={toolbar}
+    />
+  ) : null;
   // A double-click in a page's top or bottom margin enters its header or footer, the space between pages inside the
   // body too (the body never writes in a margin); `scale` is the pages' zoom.
   const onDoubleClick = useCallback(
@@ -59,6 +77,7 @@ export function useTextDocumentHeadersAndFooters(input: {
     storyHost: stories.host,
     ...editing,
     onDoubleClick,
+    bar,
     /** What the toolbar, the Format menu and Edit act on: the header or footer edited, else the body. */
     activeView: editing.editing?.view ?? view,
   };

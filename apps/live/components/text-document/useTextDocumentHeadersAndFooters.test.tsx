@@ -38,6 +38,7 @@ const pagesWith = (second: Partial<PageGeometry> = {}): PageGeometry[] => [
     bottom: 96,
     section: 0,
     slot: 'first',
+    first: true,
     place,
     header: shown('h'),
   },
@@ -58,7 +59,10 @@ beforeEach(async () => {
   const paragraph = new Y.XmlElement('paragraph');
   paragraph.insert(0, [new Y.XmlText('Header')]);
   storyFragment(doc, 'h').insert(0, [paragraph]);
-  TextDocumentState.setFirstHeaders(doc, 'odf', { header: { first: { story: 'h' } } });
+  TextDocumentState.setFirstHeaders(doc, 'odf', {
+    header: { first: { story: 'h' } },
+    differentFirst: true,
+  });
   view = new EditorView(document.body.appendChild(document.createElement('div')), {
     state: EditorState.create({
       schema: textDocumentSchema,
@@ -106,6 +110,7 @@ function Harness({
         storyHost={headers.storyHost}
         editing={headers.editing}
         editingBox={headers.box}
+        editingBar={headers.bar}
       />
     </div>
   );
@@ -150,6 +155,7 @@ describe('useTextDocumentHeadersAndFooters', () => {
     act(() => seen.current!.leave());
     await settle();
     expect(liveFirstHeaders(doc)!.header).toEqual({ first: { story: 'h' } });
+    expect(liveFirstHeaders(doc)!.differentFirst).toBe(true);
     expect(track).toHaveBeenCalledTimes(2);
     expect(container.querySelector('[data-story-editing]')).toBeNull();
     expect(document.activeElement).toBe(view.dom);
@@ -239,5 +245,119 @@ describe('useTextDocumentHeadersAndFooters', () => {
     expect(seen.current!.editing).toBeNull();
     rerender(<Harness pages={[]} seen={watch(seen)} />);
     expect(seen.current!.actions[FOOTER_ITEM]!.disabled).toBe(true);
+  });
+});
+
+// "The bar": Different first page, Link to previous and Remove, each entering the page's header again after.
+describe('the bar’s changes', () => {
+  const written = (id: string, text: string) => {
+    const paragraph = new Y.XmlElement('paragraph');
+    paragraph.insert(0, [new Y.XmlText(text)]);
+    storyFragment(doc, id).insert(0, [paragraph]);
+  };
+  // Page 3 is the first of section 2, which has none of its own: it shows section 1's default, linked.
+  const pages = (): PageGeometry[] => [
+    ...pagesWith(),
+    {
+      width: 400,
+      height: 500,
+      top: 96,
+      bottom: 96,
+      section: 1,
+      slot: 'default',
+      first: true,
+      place,
+    },
+  ];
+
+  beforeEach(async () => {
+    written('d', 'Default');
+    TextDocumentState.setFirstHeaders(doc, 'odf', {
+      header: { first: { story: 'h' }, default: { story: 'd' } },
+      differentFirst: true,
+    });
+    const later = new Y.XmlElement('section_break');
+    later.setAttribute('start', 'next-page');
+    TextDocumentState.body(doc).push([later, new Y.XmlElement('paragraph')]);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  });
+
+  it('switches Different first page, moving into the header the page now shows', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    const { container } = render(<Harness pages={pages()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.enter('header', 0));
+    await settle();
+    const first = container.querySelector<HTMLInputElement>(
+      '[role="toolbar"][aria-label="Header options"] input[type="checkbox"]',
+    )!;
+    expect(first.checked).toBe(true);
+    act(() => first.click());
+    await settle();
+    expect(liveFirstHeaders(doc)!.differentFirst).toBeUndefined();
+    expect(seen.current!.editing).toMatchObject({ story: 'd', differentFirst: false });
+    expect(track).toHaveBeenCalledWith('Tab', 'Changed', 'TextDocumentHeaderFooter');
+    act(() => seen.current!.toggleFirst());
+    await settle();
+    expect(seen.current!.editing).toMatchObject({ story: 'h', differentFirst: true });
+  });
+
+  it('unlinks a later section with a copy of its own, and links it again', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    const { container } = render(<Harness pages={pages()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.enter('header', 2));
+    await settle();
+    expect(seen.current!.editing).toMatchObject({ section: 1, story: 'd', linked: true });
+    const link = [...container.querySelectorAll<HTMLInputElement>('[role="toolbar"] input')][1]!;
+    expect(link.checked).toBe(true);
+    act(() => link.click());
+    await settle();
+    const own = seen.current!.editing!;
+    expect(own.linked).toBe(false);
+    expect(own.story).not.toBe('d');
+    expect(TextDocumentState.storyParagraphs(doc, own.story)).toEqual([{ text: 'Default' }]);
+    act(() => seen.current!.toggleLink());
+    await settle();
+    expect(seen.current!.editing).toMatchObject({ story: 'd', linked: true });
+  });
+
+  it('removes the section’s own header and leaves; never a linked one', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    render(<Harness pages={pages()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.enter('header', 2));
+    await settle();
+    act(() => seen.current!.remove());
+    expect(seen.current!.editing).toMatchObject({ story: 'd' });
+    act(() => seen.current!.enter('header', 1));
+    await settle();
+    act(() => seen.current!.remove());
+    await settle();
+    expect(seen.current!.editing).toBeNull();
+    expect(liveFirstHeaders(doc)!.header).toEqual({ first: { story: 'h' } });
+    expect(document.activeElement).toBe(view.dom);
+  });
+
+  it('goes into the bar with Alt+F10, along it with the arrows, and back with Escape', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    const { container } = render(<Harness pages={pages()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.enter('header', 2));
+    await settle();
+    const editor = seen.current!.editing!.view;
+    fireEvent.keyDown(editor.dom, { key: 'F10', altKey: true });
+    const controls = [
+      ...container.querySelectorAll<HTMLElement>('[role="toolbar"] input, [role="toolbar"] button'),
+    ];
+    expect(document.activeElement).toBe(controls[0]);
+    fireEvent.keyDown(controls[0]!, { key: 'ArrowRight' });
+    expect(document.activeElement).toBe(controls[1]);
+    fireEvent.keyDown(controls[1]!, { key: 'ArrowLeft' });
+    fireEvent.keyDown(controls[0]!, { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(controls[2]);
+    fireEvent.keyDown(controls[2]!, { key: 'Tab' });
+    fireEvent.keyDown(controls[2]!, { key: 'Escape' });
+    expect(document.activeElement).toBe(editor.dom);
   });
 });

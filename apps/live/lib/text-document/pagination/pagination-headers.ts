@@ -88,6 +88,8 @@ export type PageStories = {
   readonly footer?: PageStory;
   readonly section: number;
   readonly slot: HeaderFooterSlot;
+  /** It is its section's first page. */
+  readonly first: boolean;
   readonly place: StoryPlace;
 };
 
@@ -131,6 +133,7 @@ export function pageLayout(input: {
       ...(ids.footer ? { footer: place(ids.footer, 'footer') } : {}),
       section: s,
       slot: HeadersAndFooters.slotOf(resolved[s], first, number),
+      first,
       place: {
         left,
         width,

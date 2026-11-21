@@ -5,6 +5,7 @@
 // a thin line in the writing's ink. Each page's header and footer (page-layout.md "Headers and footers") is drawn in
 // its margins, an empty one not at all; their sources lie hidden behind the first sheet. Drawn only: never read, never
 // focused.
+import type { ReactNode } from 'react';
 import { PAGE_GAP_PX } from '@/lib/text-document/pagination/pagination';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 import type { HeaderFooterKind } from '@livedoc/text-documents';
@@ -22,6 +23,8 @@ export type TextDocumentSheetsProps = {
   editing?: { readonly page: number; readonly kind: HeaderFooterKind } | null;
   /** The box the edited one is edited in, above the writing. */
   editingBox?: (element: HTMLDivElement | null) => void;
+  /** The bar under the edited header, over the edited footer. */
+  editingBar?: ReactNode;
 };
 
 /** The frame the pages need: the widest page across, every page and gap down; null before there are pages. */
@@ -47,6 +50,7 @@ export function TextDocumentSheets({
   storyHost,
   editing = null,
   editingBox,
+  editingBar = null,
 }: TextDocumentSheetsProps) {
   const className = `text-document-sheet absolute ${shadow ? 'shadow-sm' : ''}`;
   const frame = sheetsFrame(pages);
@@ -129,6 +133,7 @@ export function TextDocumentSheets({
           }}
         >
           <div ref={editingBox} />
+          {editingBar}
         </div>
       ) : null}
     </>
