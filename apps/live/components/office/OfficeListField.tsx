@@ -111,7 +111,7 @@ export function OfficeListField<T>({
           tabIndex={-1}
           aria-label={listLabel}
           onClick={() => (open ? setOpen(false) : openList())}
-          className="flex h-7 w-5 items-center justify-center text-(--office-icon) outline-none"
+          className="flex h-7 w-6 items-center justify-center text-(--office-icon) outline-none"
         >
           <ChevronDownIcon size={12} />
         </button>
