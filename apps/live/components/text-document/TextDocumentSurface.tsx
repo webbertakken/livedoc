@@ -92,7 +92,7 @@ import {
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
 import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
-import { useTextDocumentHeadersAndFooters } from './useTextDocumentHeadersAndFooters';
+import { useTextDocumentPageStories } from './useTextDocumentPageStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin } from '@/lib/text-document/text-document-breaks';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
@@ -121,6 +121,7 @@ import '@/app/document-fonts.css';
 import { FIELD_NODE_VIEWS } from '@/lib/text-document/text-document-fields';
 import { footnoteNumbersPlugin } from '@/lib/text-document/text-document-footnotes';
 import { TextDocumentEndNotes } from './TextDocumentEndNotes';
+import { TextDocumentPageNotes } from './TextDocumentPageNotes';
 import { useTextDocumentEndNotes } from './useTextDocumentEndNotes';
 
 // A remembered selection put back, clamped to the body there is now (docs/specs/006-document/kinds-outside-the-canvas.md
@@ -448,9 +449,9 @@ export function TextDocumentSurface({
     !paginated && state === 'ready',
     changes.subscribe,
   );
-  // Headers and footers drawn on the pages, and one edited in place (page-layout.md "Headers and footers"); while one
-  // is edited, the toolbar, the Format menu and Edit act on it.
-  const headers = useTextDocumentHeadersAndFooters({
+  // Headers, footers and footnotes drawn on the pages, and one edited in place (page-layout.md "Headers and footers",
+  // "Footnotes"); while one is edited, the toolbar, the Format menu and Edit act on it.
+  const headers = useTextDocumentPageStories({
     view: editorView,
     liveDoc,
     format,
@@ -500,8 +501,8 @@ export function TextDocumentSurface({
     liveDoc,
     format,
     writes,
-    // Dimmed while a header or footer is edited, as breaks are.
-    pageless: page.pageless || headers.editing !== null,
+    // Dimmed while a header, footer or footnote is edited, as breaks are.
+    pageless: page.pageless || headers.editing !== null || headers.note !== null,
     caretSetup: page.caret.section.setup,
   });
   // The frame the pages need, each page at its section's size (page-layout.md "Laying out").
@@ -537,8 +538,8 @@ export function TextDocumentSurface({
     editorView,
     liveDoc,
     format,
-    // None while a header or footer is edited (page-layout.md "Editing headers and footers").
-    writes && headers.editing === null,
+    // None while a header, footer or footnote is edited (page-layout.md "Editing headers and footers").
+    writes && headers.editing === null && headers.note === null,
     page.pageless ? 1 : Columns.of(page.caret.section.setup).count,
   );
   // Edit > Undo, Redo and Select all, run by the menus and the shortcut layer (keyboard-shortcuts.md).
@@ -752,7 +753,18 @@ export function TextDocumentSurface({
               </p>
             ) : null}
             <div ref={mount} />
-            <TextDocumentEndNotes notes={endNotes} />
+            <TextDocumentPageNotes
+              pages={paginated && state === 'ready' ? pageList : null}
+              editing={headers.note}
+              box={headers.noteBox}
+              onPress={headers.onNotePress}
+            />
+            <TextDocumentEndNotes
+              notes={endNotes}
+              editing={headers.note}
+              box={headers.noteBox}
+              onPress={headers.onNotePress}
+            />
           </div>
         </div>
       </OfficePanelLayout>

@@ -470,7 +470,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+F',
     '⌘+Option+F',
     'Ctrl+Alt+F',
-    'specified',
+    'built',
   ),
   row(
     'move-to-current-footnote',
@@ -479,7 +479,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+E, F',
     'Ctrl+⌘+E, F',
     'Ctrl+Alt+E, F',
-    'specified',
+    'built',
   ),
   row(
     'move-to-next-footnote',
@@ -488,7 +488,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+N, F',
     'Ctrl+⌘+N, F',
     'Ctrl+Alt+N, F',
-    'specified',
+    'built',
   ),
   row(
     'move-to-previous-footnote',
@@ -497,7 +497,7 @@ export const TEXT_DOCUMENT_SHORTCUTS: readonly ShortcutRow[] = [
     'Ctrl+Alt+P, F',
     'Ctrl+⌘+P, F',
     'Ctrl+Alt+P, F',
-    'specified',
+    'built',
   ),
   row(
     'move-to-next-suggestion',

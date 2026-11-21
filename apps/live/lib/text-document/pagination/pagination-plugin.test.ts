@@ -15,7 +15,13 @@ import {
 import { textDocumentSchema as schema } from '../text-document-schema';
 import { PAGE_GAP_CLASS, measureBlock, rulesOf } from './pagination-measure';
 import { storyKey } from './pagination-headers';
-import { pageIndexAt, paginationPlugin, refreshPages, relayoutPages } from './pagination-plugin';
+import {
+  noteWidthAt,
+  pageIndexAt,
+  paginationPlugin,
+  refreshPages,
+  relayoutPages,
+} from './pagination-plugin';
 
 const LINE = 20;
 const PER_LINE = 10;
@@ -170,6 +176,20 @@ describe('paginationPlugin', () => {
     view.destroy();
     const unlaid = await mount([p('a')], false);
     expect(pageIndexAt(unlaid.view, 1)).toBe(0);
+    unlaid.view.destroy();
+  });
+
+  it('tells the width a mark\'s note is drawn at: its section\'s text width ("Footnotes")', async () => {
+    const later = schema.nodes.section_break!.create({
+      start: 'next-page',
+      setup: { ...setup, margins: { ...setup.margins, left: 75 } },
+    });
+    const { view } = await mount([p('a'), later, p('b')]);
+    expect(noteWidthAt(view, 1)).toBe(600);
+    expect(noteWidthAt(view, view.state.doc.content.size - 1)).toBe(500);
+    view.destroy();
+    const unlaid = await mount([p('a')], false);
+    expect(noteWidthAt(unlaid.view, 1)).toBeNull();
     unlaid.view.destroy();
   });
 

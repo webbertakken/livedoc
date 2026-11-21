@@ -1,8 +1,20 @@
 // Footnotes on the pages (docs/specs/034-text-documents/page-layout.md "Footnotes", "Drawn"): each page draws the notes
 // whose marks' lines are on it, numbered 1, 2, 3 through the document, at its section's left margin and text width.
 // Pure: the marks' lines come measured.
+import type { PageSetup } from '@livedoc/text-documents';
 import type { Pagination } from './pagination';
 import { storyKey } from './pagination-headers';
+
+// Points to CSS pixels.
+const PX_PER_PT = 96 / 72;
+
+/** Where a section's notes stand across its pages: its left margin and text width (px). */
+export function notePlace(setup: PageSetup): { left: number; width: number } {
+  return {
+    left: setup.margins.left * PX_PER_PT,
+    width: (setup.width - setup.margins.left - setup.margins.right) * PX_PER_PT,
+  };
+}
 
 /** A note's mark on a block's line, naming the note's story. */
 export type NoteMark = { readonly line: number; readonly story: string };

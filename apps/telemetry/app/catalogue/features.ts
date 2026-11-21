@@ -1210,6 +1210,16 @@ export const TEXT_DOCUMENT_PAGE_NUMBERS = chart(
   { types: ['TextDocumentPageNumbers', 'TextDocumentPageCount'] },
 );
 
+// A footnote put in a text document (docs/specs/034-text-documents/page-layout.md "Footnotes"): Insert > Footnote or
+// Ctrl+Alt+F.
+export const TEXT_DOCUMENT_FOOTNOTES = chart(
+  'Element',
+  'Added',
+  'Text Document Footnotes',
+  'A footnote put in a text document from Insert > Footnote or with Ctrl+Alt+F.',
+  { types: ['TextDocumentFootnote'] },
+);
+
 // A page, column or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
 export const TEXT_DOCUMENT_BREAKS = chart(
   'Element',

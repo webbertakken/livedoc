@@ -18,7 +18,7 @@ function storyDoc(text: string) {
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-function source(doc: Y.Doc, onLaid = vi.fn()) {
+function source(doc: Y.Doc, onLaid = vi.fn(), drawsEmpty = false) {
   const container = document.createElement('div');
   document.body.append(container);
   const made = new StorySource({
@@ -32,6 +32,7 @@ function source(doc: Y.Doc, onLaid = vi.fn()) {
     stylesScope: 'scope',
     label: 'Header',
     onLaid,
+    drawsEmpty,
   });
   return { made, container, onLaid };
 }
@@ -107,6 +108,26 @@ describe('StorySource', () => {
     expect(made.empty).toBe(true);
     expect(made.height).toBe(0);
     expect(onLaid).not.toHaveBeenCalled();
+  });
+
+  // page-layout.md "Footnotes": a note left empty stays, drawn as its number on a line of its own.
+  it('reads an empty note as a line drawn, where it draws empty', async () => {
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(18);
+    const { made, onLaid } = source(storyDoc(''), vi.fn(), true);
+    await settle();
+    expect(made.empty).toBe(false);
+    expect(made.height).toBe(18);
+    expect(onLaid).toHaveBeenCalledOnce();
+  });
+
+  // page-layout.md "Footnotes": a note left empty stays, drawn as its number on a line of its own.
+  it('reads an empty note as a line drawn, where it draws empty', async () => {
+    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(18);
+    const { made, onLaid } = source(storyDoc(''), vi.fn(), true);
+    await settle();
+    expect(made.empty).toBe(false);
+    expect(made.height).toBe(18);
+    expect(onLaid).toHaveBeenCalledOnce();
   });
 
   it('paints its copies again when its writing changes in the live state', async () => {
