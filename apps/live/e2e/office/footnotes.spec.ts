@@ -200,8 +200,10 @@ test.describe('on the clipboard', () => {
     await page.keyboard.press('ControlOrMeta+C');
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('A claim1');
 
-    // Pasted below: a second mark, numbered 2, with a copy of the note.
+    // Pasted below: a second mark, numbered 2, with a copy of the note. The editor reads a caret moved by a key from
+    // the page a moment later (text-document-dom-selection.ts).
     await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(300);
     await page.keyboard.press('Enter');
     await page.keyboard.press('ControlOrMeta+V');
     const marks = body.locator('sup[data-footnote]');
