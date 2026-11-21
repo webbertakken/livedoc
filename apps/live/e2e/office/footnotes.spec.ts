@@ -168,3 +168,69 @@ test('a footnote is put in, written, left, entered again and undone', async ({
   await expect(page.locator('[data-page-notes]')).toHaveCount(0);
   expectNoPageErrors(pageErrors);
 });
+
+// Footnotes on the clipboard (page-layout.md "Footnotes", "The mark"; text-and-paragraphs.md "Clipboard"): copied,
+// a mark is its number in the text; pasted in the same document it brings a copy of its note; pasted in another
+// document its note's writing comes with it.
+test.describe('on the clipboard', () => {
+  test.use({ permissions: ['clipboard-read', 'clipboard-write'] });
+
+  test('a copied footnote pastes with a note of its own, here and in another document', async ({
+    page,
+    pageErrors,
+  }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const body = page.locator(BODY);
+    const open = async () => {
+      await page.goto('/new?kind=text-document');
+      await page.waitForURL(/\/document\//);
+      await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+      await body.click();
+    };
+    await open();
+    await page.keyboard.type('A claim');
+    await page.keyboard.press('Control+Alt+KeyF');
+    await page.keyboard.type('The source.');
+    await page.keyboard.press('Escape');
+    await expect(body).toBeFocused();
+
+    // Copied: the mark is its number in the text.
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.press('ControlOrMeta+C');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('A claim1');
+
+    // Pasted below: a second mark, numbered 2, with a copy of the note. The editor reads a caret moved by a key from
+    // the page a moment later (text-document-dom-selection.ts).
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('ControlOrMeta+V');
+    const marks = body.locator('sup[data-footnote]');
+    await expect(marks).toHaveCount(2);
+    const stories = await marks.evaluateAll((all) =>
+      all.map((m) => m.getAttribute('data-footnote')),
+    );
+    expect(new Set(stories).size).toBe(2);
+    const notes = page.locator('[data-page-notes-of="1"] [data-note-number]');
+    await expect(notes).toHaveText(['1The source.', '2The source.']);
+
+    // The copy is its own: writing in it leaves the first as it was.
+    await notes.nth(1).click();
+    await page.keyboard.type(' Again');
+    await page.keyboard.press('Escape');
+    await expect(notes).toHaveText(['1The source.', '2The source. Again']);
+
+    // In another document, the note's writing comes with its mark.
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.press('ControlOrMeta+C');
+    await open();
+    await page.keyboard.press('ControlOrMeta+V');
+    await expect(body.locator('sup[data-footnote]')).toHaveCount(2);
+    await expect(page.locator('[data-page-notes-of="1"] [data-note-number]')).toHaveText([
+      '1The source.',
+      '2The source. Again',
+    ]);
+    expectNoPageErrors(pageErrors);
+  });
+});

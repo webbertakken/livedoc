@@ -377,7 +377,9 @@ drawn at the foot of the page the mark falls on, as Google's and Word's.
   one empty paragraph; one step of the body's undo. The mark takes the caret's text formatting (default). Not in a
   header, footer or note (dimmed there, default). Typing in a note is a step of the note's own undo, as a header's.
 - **The mark** is one character to the caret: deleted, the note goes with it, one undo step; copied and pasted in
-  LiveDoc, its note comes too as a new note; copied elsewhere it is its number.
+  LiveDoc, its note comes too as a new note, placed in the document's terms as the rest of the paste is; copied
+  elsewhere it is its number. A mark cut and pasted back into the document it was cut from keeps its own note
+  (default). A mark pasted or dropped into a header, footer or note is left out, as a note holds no notes (default).
 - **Drawn** at the foot of the page its mark's line is on, under a short rule a third of the text width wide (default),
   each note led by its number in superscript; the body's text height on that page shrinks by the notes' height, so a
   line whose note does not fit below it moves to the next page with its mark (Google's: a note never splits, default).

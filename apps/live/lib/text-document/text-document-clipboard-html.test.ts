@@ -120,6 +120,25 @@ describe('clipboardSerializer', () => {
     ]);
     expect(out).toMatch(/Page <span>4<\/span><\/p>$/);
   });
+
+  // page-layout.md "Footnotes": copied elsewhere, a footnote's mark is its number, in superscript.
+  it('writes a footnote’s mark as its number', () => {
+    const holder = document.createElement('div');
+    const numbered = { ...context, noteNumbers: new Map([['n', 2]]) };
+    holder.append(
+      clipboardSerializer(() => numbered).serializeFragment(
+        Fragment.from(
+          schema.nodes.paragraph!.create({}, [
+            schema.text('Said'),
+            schema.nodes.footnote!.create({ story: 'n' }),
+            schema.nodes.footnote!.create({ story: 'gone' }),
+          ]),
+        ),
+        { document },
+      ),
+    );
+    expect(holder.innerHTML).toMatch(/Said<sup>2<\/sup><sup><\/sup><\/p>$/);
+  });
 });
 
 describe('export css', () => {

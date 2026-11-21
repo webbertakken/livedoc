@@ -50,7 +50,9 @@ Every rule maps to a format construct in [Standard mapping](standard-mapping.md#
   - **plain text**: a line per paragraph, a list item after its marker as drawn and a space, tabs and line breaks as
     typed (default);
   - **LiveDoc's model fragment**, carried in the HTML (`data-livedoc-fragment`), so it travels wherever the HTML does:
-    the paragraphs and runs exactly, with the styles and lists they name.
+    the paragraphs and runs exactly, with the styles and lists they name, and the writing of each footnote whose mark
+    is copied ([Footnotes](page-layout.md#footnotes)).
+- A footnote's mark is its number in the HTML (in superscript) and in the text.
 - Content kept from the file and section breaks travel in the fragment only; the HTML and the text leave them out.
 - Copy works at every share level; Cut removes the selection where the person may edit.
 - **Paste** (⌘V) reads the first of these the clipboard holds:

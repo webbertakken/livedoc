@@ -2,6 +2,7 @@
 // whole list item after its marker as drawn; plain text pasted (Paste without formatting), a paragraph per line,
 // empty lines kept, in the formatting at the caret.
 import { describe, expect, it } from 'vitest';
+import { Fragment, Slice } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { ListDefinition } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
@@ -37,6 +38,19 @@ describe('plainTextOf', () => {
   it('reads no markers when none are given', () => {
     const state = EditorState.create({ doc, selection: TextSelection.create(doc, 1, 18) });
     expect(plainTextOf(state.selection.content())).toBe('Intro\tend\none\nt');
+  });
+
+  // page-layout.md "Footnotes": copied elsewhere, a footnote's mark is its number.
+  it('writes a footnote’s mark as its number, a field as its text', () => {
+    const p = schema.nodes.paragraph!.create({}, [
+      schema.text('Said'),
+      schema.nodes.footnote!.create({ story: 'n' }),
+      schema.text(' on page '),
+      schema.nodes.field!.create({ field: 'page-number', text: '4' }),
+    ]);
+    const slice = new Slice(Fragment.from(p), 0, 0);
+    expect(plainTextOf(slice, [], new Map([['n', 3]]))).toBe('Said3 on page 4');
+    expect(plainTextOf(slice)).toBe('Said on page 4');
   });
 });
 

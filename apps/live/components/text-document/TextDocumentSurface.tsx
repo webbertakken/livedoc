@@ -33,6 +33,7 @@ import { openRoomYjs, type TextDocumentFrame } from '@/lib/text-document/room-yj
 import { TextDocumentCopies } from '@/lib/text-document/text-document-copies';
 import { paintFormatPlugin } from '@/lib/text-document/text-document-paint-format';
 import { clipboardPlugin } from '@/lib/text-document/text-document-clipboard';
+import { footnoteClipboard } from '@/lib/text-document/text-document-footnote-clipboard';
 import { stretchesPlugin } from '@/lib/text-document/text-document-stretches';
 import { typingAidsPlugin } from '@/lib/text-document/text-document-typing-aids-plugin';
 import { TypingAids } from '@/lib/text-document/text-document-typing-aids';
@@ -312,6 +313,12 @@ export function TextDocumentSurface({
                 }),
                 lists: listsAccess,
                 markdown: () => typingAids.current().markdown,
+                // A copied footnote's writing goes with its mark (page-layout.md "Footnotes").
+                notes: footnoteClipboard(
+                  doc,
+                  () => live.current.format,
+                  () => editor.current?.state.doc ?? null,
+                ),
                 onLeftOut: (count) => clipboardLeftOut.current(count),
               }),
               // Copy and paste text formatting, and the paint roller (text-and-paragraphs.md "Paint format").
