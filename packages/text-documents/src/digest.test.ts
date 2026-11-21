@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { textDocumentDigest } from './digest';
 import { TEXT_DOCUMENT_WORDS_PER_PAGE } from './limits';
+import { CONSTRUCTS } from './testing/constructs';
 import { TextDocumentState } from './text-document-state';
 
 const stateOf = (...texts: string[]) =>
@@ -36,5 +37,25 @@ describe('textDocumentDigest', () => {
     const words = (n: number) => Array.from({ length: n }, () => 'word').join(' ');
     expect(textDocumentDigest(stateOf(words(TEXT_DOCUMENT_WORDS_PER_PAGE))).pages).toBe(1);
     expect(textDocumentDigest(stateOf(words(TEXT_DOCUMENT_WORDS_PER_PAGE + 1))).pages).toBe(2);
+  });
+
+  // "The digest": the search text gains each header and footer a section names, once each; the counts stay the body's.
+  it('searches headers and footers after the body, each once, counting the body alone', () => {
+    const doc = TextDocumentState.load([
+      TextDocumentState.fromDocument(CONSTRUCTS.headers!('ooxml')),
+    ]);
+    const digest = textDocumentDigest(doc);
+    expect(digest.searchText).toBe(
+      [
+        'First section',
+        'Second section',
+        'Header',
+        'First page header',
+        'Even page header',
+        'Footer',
+        'Second section header',
+      ].join('\n'),
+    );
+    expect(digest.words).toBe(4);
   });
 });

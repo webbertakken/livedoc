@@ -6,7 +6,7 @@
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { Columns, SECTION_BREAK, type PageSetup } from '@livedoc/text-documents';
+import { Columns, SECTION_BREAK, type LiveHeaders, type PageSetup } from '@livedoc/text-documents';
 
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;
@@ -16,18 +16,27 @@ export type BodySections = {
   readonly setups: readonly PageSetup[];
   /** The section each block of the body is in, by its index. */
   readonly sectionOf: readonly number[];
+  /** Each section's own headers and footers, as the live state names them (page-layout.md "Headers and footers"). */
+  readonly headers: readonly (LiveHeaders | undefined)[];
 };
 
-/** The body's sections and the section of each of its blocks. */
-export function bodySections(doc: PmNode, first: PageSetup): BodySections {
+/** The body's sections and the section of each of its blocks; the first section's headers are the document's. */
+export function bodySections(
+  doc: PmNode,
+  first: PageSetup,
+  firstHeaders?: LiveHeaders,
+): BodySections {
   const setups: PageSetup[] = [first];
+  const headers: (LiveHeaders | undefined)[] = [firstHeaders];
   const sectionOf: number[] = [];
   doc.forEach((node) => {
     sectionOf.push(setups.length - 1);
-    if (node.type.name === SECTION_BREAK)
-      setups.push((node.attrs as { setup: PageSetup | null }).setup ?? setups[setups.length - 1]!);
+    if (node.type.name !== SECTION_BREAK) return;
+    const attrs = node.attrs as { setup: PageSetup | null; headers?: LiveHeaders | null };
+    setups.push(attrs.setup ?? setups[setups.length - 1]!);
+    headers.push(attrs.headers ?? undefined);
   });
-  return { setups, sectionOf };
+  return { setups, sectionOf, headers };
 }
 
 /** The section a place in the body is in. */

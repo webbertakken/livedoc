@@ -31,6 +31,13 @@ const SAME_PX = 0.01;
 export type PaginateOptions = {
   /** The browser draws a box of columns in rows (`column-wrap`): a paragraph may cross from a page's columns onto the next page. */
   readonly wrap?: boolean;
+  /**
+   * A page's own frame, by the block and line it starts with and its number: its section's, pushed by a tall header
+   * or footer (page-layout.md "Headers and footers"). Absent, the section's.
+   */
+  readonly pageFrameOf?: (block: number, line: number, number: number) => PageFrame;
+  /** A page's number matters to its frame (different odd and even headers): a layout settles only on its parity. */
+  readonly oddEven?: boolean;
 };
 
 const linesOf = (block: BlockMetrics): readonly LineBox[] =>
@@ -83,6 +90,9 @@ const PAGE_TOP: Cursor = { y: 0, mb: 0, empty: true };
 class Engine {
   readonly blocks: readonly BlockMetrics[];
   readonly frameOf: (block: number) => PageFrame;
+  readonly pageFrameOf: (block: number, line: number, number: number) => PageFrame;
+  // How far page 1's own frame starts its writing below its section's: the page's gap, drawn before the first block.
+  readonly firstPush: number;
   readonly change: LayoutChange | undefined;
   readonly wrap: boolean;
   readonly parity: boolean;
@@ -105,11 +115,12 @@ class Engine {
   ) {
     this.blocks = blocks;
     this.frameOf = frameOf;
+    this.pageFrameOf = options.pageFrameOf ?? ((block) => frameOf(block));
     this.change = change;
     this.wrap = options.wrap ?? false;
-    this.parity = blocks.some(
-      (b) => b.startsSection === 'odd-page' || b.startsSection === 'even-page',
-    );
+    this.parity =
+      options.oddEven === true ||
+      blocks.some((b) => b.startsSection === 'odd-page' || b.startsSection === 'even-page');
     this.restart =
       change && change.previous.starts.length > 0
         ? restartPage(change.previous.starts, change.first - 1)
@@ -121,11 +132,14 @@ class Engine {
       ? { ...thawed(first), columns: [], spacers: [], crosses: [], rules: [] }
       : { block: 0, line: 0, gap: 0, blank: 0, columns: [], spacers: [], crosses: [], rules: [] };
     const pages = this.done.reduce((count, start) => count + 1 + start.blank, 0) + 1 + page.blank;
+    const frame = this.pageFrameOf(page.block, page.line, pages);
+    this.firstPush = Math.max(0, this.pageFrameOf(0, 0, 1).top - frameOf(0).top);
+    if (this.done.length === 0) page.gap = this.firstPush;
     this.state = {
       i: page.block,
       s: page.line,
       pages,
-      frame: frameOf(page.block),
+      frame,
       cursor: PAGE_TOP,
       strip: { y: 0, mb: 0 },
       onBox: [],
@@ -230,7 +244,7 @@ class Engine {
   setSpacer(block: number, height: number): void {
     const { page } = this.state;
     if (page.block === block && page.line === 0 && !page.carried) {
-      page.gap = height;
+      page.gap = height + (this.done.length === 0 ? this.firstPush : 0);
       return;
     }
     const at = page.spacers.findIndex((s) => s.block === block);
@@ -249,7 +263,7 @@ class Engine {
     const state = this.state;
     const { frame } = state;
     this.closeRegion();
-    const next = this.frameOf(block);
+    const next = this.pageFrameOf(block, line, state.pages + blank + 1);
     const blanks = blank * (next.height + PAGE_GAP_PX);
     // From where the writing stops to the next page's text area, inside a paragraph or between blocks; a box of
     // columns carries the writing there itself.
@@ -368,7 +382,7 @@ class Engine {
         // A box of columns carries the paragraph onto the next page, its rows pages.
         this.markCross(line);
         state.cross = { ...state.cross!, rows: state.cross!.rows + 1 };
-        const next = this.frameOf(block);
+        const next = this.pageFrameOf(block, line, state.pages + 1);
         state.cross = { ...state.cross, rowGap: state.frame.bottom + PAGE_GAP_PX + next.top };
         this.syncCross();
         return this.newPage(block, line, endY, 0, true);

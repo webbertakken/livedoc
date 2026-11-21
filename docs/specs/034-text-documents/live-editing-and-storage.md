@@ -115,7 +115,9 @@ changes ([Text and paragraphs](text-and-paragraphs.md#update-to-match)).
   repository snapshot can say how old it is.
 - <a id="the-digest"></a>**The digest** is what the room knows of a text document without reading its state: its
   characters, words, pages (estimated without layout: `TEXT_DOCUMENT_WORDS_PER_PAGE` words a page), whether it has
-  content (any character or object in a body), its search text, and the stored state's bytes. It is kept beside the
+  content (any character or object in a body), its search text (the body's paragraphs, then each header and footer a
+  section names, each once, in section order; the counts stay the body's, as Google's word count), and the stored
+  state's bytes. It is kept beside the
   tab (`text_document_digest`), rebuilt from the state when the outbox drains the tab, which every stored update
   queues, so it costs nothing per keystroke and lags an edit by one drain (default).
 - **The outbox** feeds D1 as for every tab: the content summary (has content when the digest says so), the search text

@@ -15,6 +15,7 @@ import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
   Columns,
+  liveFirstHeaders,
   TextDocumentState,
   type ListDefinition,
   type PageSetup,
@@ -91,6 +92,7 @@ import {
 import { TextDocumentTitleRow } from './TextDocumentTitleRow';
 import { TextDocumentRuler } from './TextDocumentRuler';
 import { sheetsFrame, TextDocumentSheets } from './TextDocumentSheets';
+import { useTextDocumentStories } from './useTextDocumentStories';
 import { useTextDocumentColumns } from './useTextDocumentColumns';
 import { breaksPlugin } from '@/lib/text-document/text-document-breaks';
 import { useTextDocumentBreaks } from '@/lib/text-document/useTextDocumentBreaks';
@@ -169,6 +171,8 @@ export function TextDocumentSurface({
   // What the layout lays the writing onto (page-layout.md "Laying out"), read as it lays out; and the pages it made.
   const layout = useRef<{ setup: PageSetup; pages: boolean } | null>(null);
   const [pageList, setPageList] = useState<readonly PageGeometry[]>([]);
+  // Each header's and footer's height at its width, as the pages draw them (page-layout.md "Headers and footers").
+  const storyHeights = useRef(new Map<string, number>());
   // The person's typing aids, as the writing reads them (text-and-paragraphs.md "Typing aids").
   const typingAids = useRef<() => TypingAids>(TypingAids.defaults);
   // The writing changed: what the outline listens to, so the surface does not draw again on every keystroke.
@@ -331,11 +335,14 @@ export function TextDocumentSurface({
               // The writing laid onto pages (page-layout.md "Laying out").
               paginationPlugin({
                 readFormatting,
-                read: () =>
-                  layout.current ?? {
+                read: () => ({
+                  ...(layout.current ?? {
                     setup: TextDocumentState.section(doc, live.current.format).setup,
                     pages: false,
-                  },
+                  }),
+                  headers: liveFirstHeaders(doc),
+                }),
+                heights: () => storyHeights.current,
                 onPages: setPageList,
               }),
               keymap(baseKeymap),
@@ -463,6 +470,13 @@ export function TextDocumentSurface({
   const paginated = !page.pageless && wide;
   // The frame the pages need, each page at its section's size (page-layout.md "Laying out").
   const sheets = paginated && state === 'ready' ? sheetsFrame(pageList) : null;
+  const storyHost = useTextDocumentStories({
+    view: editorView,
+    liveDoc,
+    format,
+    pages: paginated && state === 'ready' ? pageList : null,
+    heights: storyHeights,
+  });
   // The ruler shows the section the caret is in, and its margins set that section's.
   const rulerSetup = page.pageless ? drawn : page.caret.section.setup;
   useLayoutEffect(() => {
@@ -682,6 +696,7 @@ export function TextDocumentSurface({
             <TextDocumentSheets
               pages={paginated && state === 'ready' ? pageList : null}
               shadow={!page.pageless}
+              storyHost={storyHost}
             />
             {state === 'loading' ? (
               <p className="text-(--office-muted)" aria-live="polite">

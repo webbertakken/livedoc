@@ -34,6 +34,18 @@ describe('bodySections', () => {
     expect(sectionOf).toEqual([0, 0, 1, 1, 2]);
   });
 
+  it('reads each section’s own headers, the first section’s given (page-layout.md "Headers and footers")', () => {
+    const own = { header: { default: { story: '2' } } };
+    const headed = schema.nodes.doc!.create(null, [
+      p('a'),
+      schema.nodes.section_break!.create({ start: 'next-page', setup: null, headers: own }),
+      p('b'),
+    ]);
+    const first = { footer: { default: { story: '1' } } };
+    expect(bodySections(headed, letter, first).headers).toEqual([first, own]);
+    expect(bodySections(headed, letter).headers).toEqual([undefined, own]);
+  });
+
   it('reads the section a place is in', () => {
     expect(sectionAt(doc, 1)).toBe(0);
     const b = 3 + doc.child(1).nodeSize + 1;

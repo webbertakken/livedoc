@@ -1,8 +1,9 @@
 // What the layout draws (docs/specs/034-text-documents/page-layout.md "Laying out", "Columns"): the spacers that take
 // the drawn writing from where it stands to where the layout places the next block (back up too, to a column's top),
 // the column each block of a region is in, a paragraph drawn as a box of columns across them, and each page's size
-// with its lines between columns. Spacers are never text and never read.
+// with its lines between columns, its header and its footer. Spacers are never text and never read.
 import type { Cross, PageFrame, Pagination } from './pagination';
+import type { PageLayout, PageStory } from './pagination-headers';
 import { PAGE_GAP_CLASS } from './pagination-measure';
 
 /** What a box of columns draws inside its paragraph: the room before its first line, and each column's start. */
@@ -10,10 +11,12 @@ export const COLUMN_MARK_CLASS = 'text-document-column-mark';
 /** A paragraph drawn as a box of columns. */
 export const COLUMN_CROSS_CLASS = 'text-document-column-cross';
 
-/** A page's size in CSS pixels, and the lines between its columns (page coordinates). */
+/** A page's size in CSS pixels, the lines between its columns, its header and footer (page coordinates). */
 export type PageGeometry = {
   readonly width: number;
   readonly height: number;
+  readonly header?: PageStory;
+  readonly footer?: PageStory;
   readonly rules?: readonly {
     readonly top: number;
     readonly bottom: number;
@@ -119,17 +122,33 @@ export function columnPlaces(
   return places;
 }
 
-/** Each page's size in CSS pixels, blank pages too, each by the section of the block it starts with; its lines. */
-export function pagesOf(
+/** Each page's number, by its start: every page laid out before it counts, blank ones too. */
+export function pageNumbers(pagination: Pagination): number[] {
+  let number = 0;
+  return pagination.starts.map((start) => (number += 1 + start.blank));
+}
+
+/**
+ * Each page's size in CSS pixels, blank ones too, each by the section of the block it starts with; its lines between
+ * columns from its own text area's top; its header and footer (none on a blank page).
+ */
+export function pageGeometries(
   pagination: Pagination,
-  frameOf: (block: number) => PageFrame,
-  lineBetween: (block: number) => boolean = () => false,
+  input: {
+    readonly frameOf: (block: number) => PageFrame;
+    readonly page?: Pick<PageLayout, 'frameOf' | 'storiesOf'>;
+    readonly lineBetween?: (block: number) => boolean;
+  },
 ): PageGeometry[] {
+  const { frameOf, page, lineBetween = () => false } = input;
+  const numbers = pageNumbers(pagination);
   const pages: PageGeometry[] = [];
-  for (const start of pagination.starts) {
-    const frame = frameOf(start.block);
+  for (const [q, start] of pagination.starts.entries()) {
+    const number = numbers[q]!;
+    const frame = page ? page.frameOf(start.block, start.line, number) : frameOf(start.block);
     const size = { width: round(frame.width), height: round(frame.height) };
     for (let blank = 0; blank < start.blank; blank++) pages.push(size);
+    const stories = page ? page.storiesOf(start.block, start.line, number) : {};
     const rules = (start.rules ?? []).flatMap((rule) => {
       const own = frameOf(rule.block);
       const columns = own.columns;
@@ -138,18 +157,27 @@ export function pagesOf(
       const xs = Array.from({ length: columns.count - 1 }, (_, c) =>
         round(own.left + (c + 1) * columns.width + c * columns.gap + columns.gap / 2),
       );
-      return [{ top: round(own.top + rule.top), bottom: round(own.top + rule.bottom), xs }];
+      return [{ top: round(frame.top + rule.top), bottom: round(frame.top + rule.bottom), xs }];
     });
-    pages.push(rules.length > 0 ? { ...size, rules } : size);
+    pages.push({
+      ...size,
+      ...(stories.header ? { header: stories.header } : {}),
+      ...(stories.footer ? { footer: stories.footer } : {}),
+      ...(rules.length > 0 ? { rules } : {}),
+    });
   }
   return pages;
 }
 
-/** A page list's signature: told again only when a size or a line changes. */
+const storySaid = (s: PageStory | undefined) =>
+  s ? `${s.key}:${round(s.left)}:${round(s.margin)}` : '';
+
+/** A page list's signature: told again only when a size, a line, a header or a footer changes. */
 export const pagesSaid = (pages: readonly PageGeometry[]): string =>
   pages
     .map(
       (p) =>
-        `${p.width}x${p.height}${(p.rules ?? []).map((r) => `|${r.top}-${r.bottom}@${r.xs.join(',')}`).join('')}`,
+        `${p.width}x${p.height}${(p.rules ?? []).map((r) => `|${r.top}-${r.bottom}@${r.xs.join(',')}`).join('')}` +
+        `|h${storySaid(p.header)}|f${storySaid(p.footer)}`,
     )
     .join(',');

@@ -17,6 +17,15 @@ export {
   TEXT_DOCUMENT_WORDS_PER_PAGE,
 } from './limits';
 export { textDocumentDigest, type TextDocumentDigest } from './digest';
+export {
+  liveFirstHeaders,
+  liveSectionHeaders,
+  liveStoryIds,
+  STORY_PREFIX,
+  storyFragment,
+  type LiveHeaders,
+  type LiveStory,
+} from './live/live-stories';
 export { textDocumentPageSvg } from './art/page-svg';
 export { BODY_FRAGMENT, TEXT_DOCUMENT_SEED_CLIENT, TextDocumentState } from './text-document-state';
 export {
@@ -76,9 +85,12 @@ export {
   type HeaderFooter,
   type HeaderFooterKind,
   type HeaderFooterSet,
+  type HeaderFooterSetOf,
   type HeaderFooterSlot,
   type ResolvedHeaders,
+  type ResolvedHeadersOf,
   type SectionHeaders,
+  type SectionHeadersOf,
 } from './model/headers';
 export {
   COLUMN_GAP_PT,

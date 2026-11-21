@@ -2,11 +2,13 @@
 // change, before the page is painted, the blocks the change touched are measured, the pages are laid out again from
 // shortly before them until they settle, and a spacer is drawn where each page starts, taking the writing from where
 // it stops on one page to the next page's text area; in a section of columns (page-layout.md "Columns") each block is
-// moved to its column and a paragraph across columns is drawn as a box of columns. Spacers are widgets, never text.
+// moved to its column and a paragraph across columns is drawn as a box of columns. Each page's frame is its own: a
+// header or footer taller than its room pushes its body (page-layout.md "Headers and footers"), page 1's by a spacer
+// before the first block. Spacers are widgets, never text.
 import type { Node as PmNode } from 'prosemirror-model';
 import { Plugin, PluginKey, TextSelection, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
-import type { PageSetup } from '@livedoc/text-documents';
+import type { LiveHeaders, PageSetup } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { TextFormatting } from '../text-document-formatting';
 import { touchedParagraphs } from '../text-document-tab-layout';
@@ -23,11 +25,13 @@ import {
   crossAttrs,
   crossLead,
   crossSplit,
-  pagesOf,
+  pageGeometries,
+  pageNumbers,
   pagesSaid,
   type PageGeometry,
 } from './pagination-draw';
 import { paginate } from './pagination-engine';
+import { pageLayout, type StoryHeights } from './pagination-headers';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
 import { bodySections, SECTIONS_CHANGED } from './pagination-sections';
 
@@ -36,8 +40,17 @@ const PX_PER_PT = 96 / 72;
 
 export type PaginationOptions = {
   readonly readFormatting: () => TextFormatting;
-  /** The setup the pages have, and whether pages are laid out at all (not pageless, not on a phone). */
-  readonly read: () => { readonly setup: PageSetup; readonly pages: boolean };
+  /**
+   * The setup the pages have, whether pages are laid out at all (not pageless, not on a phone), and the first
+   * section's headers and footers.
+   */
+  readonly read: () => {
+    readonly setup: PageSetup;
+    readonly pages: boolean;
+    readonly headers?: LiveHeaders;
+  };
+  /** Each drawn header's and footer's height, by its story at its width; none known lays the pages unpushed. */
+  readonly heights?: () => StoryHeights;
   /** How many pages there are now, told when it changes. */
   readonly onPages: (pages: readonly PageGeometry[]) => void;
 };
@@ -94,7 +107,15 @@ export function relayoutPages(view: EditorView): void {
   pagers.get(view)?.invalidate();
 }
 
+/** Lays the pages out again with what they are measured at: a header's or footer's height changed. */
+export function refreshPages(view: EditorView): void {
+  pagers.get(view)?.schedule();
+}
+
 const pagers = new WeakMap<EditorView, Pager>();
+
+const heightsSaid = (heights: StoryHeights) =>
+  [...heights].map(([story, height]) => `${story}=${round(height)}`).join(';');
 
 class Pager {
   // What each block measured, by its node, and where its lines start, by node and line.
@@ -103,6 +124,7 @@ class Pager {
   private nodes: PmNode[] = [];
   private previous: Pagination | null = null;
   private layoutKey = '';
+  private heightsKey = '';
   private generation = 0;
   private scheduled = false;
   private pages = '';
@@ -166,7 +188,7 @@ class Pager {
 
   private layOut(): void {
     const { view } = this;
-    const { setup, pages } = this.options.read();
+    const { setup, pages, headers } = this.options.read();
     if (!pages) {
       this.previous = null;
       this.nodes = [];
@@ -181,7 +203,7 @@ class Pager {
     if (!(width > 0) || box.width === 0) return;
     const ratio = box.width / width;
     const started = performance.now();
-    const sections = bodySections(view.state.doc, setup);
+    const sections = bodySections(view.state.doc, setup, headers);
     const layoutKey = [
       width,
       sections.setups
@@ -205,6 +227,13 @@ class Pager {
       this.layoutKey = layoutKey;
       this.measured = new WeakMap();
       this.splits = new WeakMap();
+      this.previous = null;
+    }
+    // A header's or footer's new height moves the pages, never a block's lines.
+    const heights = this.options.heights?.() ?? new Map<string, number>();
+    const heightsKey = heightsSaid(heights);
+    if (heightsKey !== this.heightsKey) {
+      this.heightsKey = heightsKey;
       this.previous = null;
     }
 
@@ -250,6 +279,7 @@ class Pager {
     this.nodes = nodes;
     const frames = sections.setups.map(pageFrame);
     const frameOf = (block: number) => frames[sections.sectionOf[block] ?? 0]!;
+    const page = pageLayout({ ...sections, heights });
     const pagination =
       unchanged && this.previous
         ? this.previous
@@ -259,16 +289,20 @@ class Pager {
             this.previous
               ? { previous: this.previous, first, last: Math.max(first - 1, last), delta }
               : undefined,
-            { wrap: canWrapColumns() },
+            { wrap: canWrapColumns(), pageFrameOf: page.frameOf, oddEven: page.oddEven },
           );
     this.previous = pagination;
 
     const decorations: Decoration[] = [];
     const widget = (at: number, draw: () => HTMLElement, spec: GapSpec) =>
       decorations.push(Decoration.widget(at, draw, { side: -1, ignoreSelection: true, ...spec }));
+    const numbers = pageNumbers(pagination);
     pagination.starts.forEach((start, q) => {
       const pos = positions[start.block]!;
       const height = round(start.gap);
+      // Page 1's writing below a tall header.
+      if (q === 0 && height > 0)
+        widget(pos, blockSpacer(height), { key: `gap:${height}`, inside: false });
       if (q > 0 && !start.carried && start.line === 0)
         widget(pos, blockSpacer(height), { key: `gap:${height}`, inside: false });
       else if (q > 0 && !start.carried) {
@@ -290,7 +324,7 @@ class Pager {
           left: round(inset + (setup.margins.left - (setup.width - own.width) / 2) * PX_PER_PT),
           width: round(own.width * PX_PER_PT),
         };
-        const head = round(own.margins.top * PX_PER_PT);
+        const head = round(page.frameOf(start.block, start.line, numbers[q]!).top);
         const bands = { foot: round(height - PAGE_GAP_PX - head), head };
         widget(at, lineGap(height, bands, across), {
           key: `line:${height}:${across.left}:${across.width}:${head}`,
@@ -346,9 +380,12 @@ class Pager {
     }
     this.apply(DecorationSet.create(doc, decorations));
     this.tellPages(
-      pagesOf(pagination, frameOf, (block) =>
-        Boolean(sections.setups[sections.sectionOf[block] ?? 0]?.columns?.separator),
-      ),
+      pageGeometries(pagination, {
+        frameOf,
+        page,
+        lineBetween: (block) =>
+          Boolean(sections.setups[sections.sectionOf[block] ?? 0]?.columns?.separator),
+      }),
     );
     if (count > 0 || !unchanged)
       debugLog('[text-document] layout', {

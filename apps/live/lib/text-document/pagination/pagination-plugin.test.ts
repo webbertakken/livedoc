@@ -6,10 +6,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { Styles, type PageSetup, type ParagraphProps } from '@livedoc/text-documents';
+import {
+  Styles,
+  type LiveHeaders,
+  type PageSetup,
+  type ParagraphProps,
+} from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from '../text-document-schema';
 import { PAGE_GAP_CLASS, measureBlock, rulesOf } from './pagination-measure';
-import { paginationPlugin, relayoutPages } from './pagination-plugin';
+import { storyKey } from './pagination-headers';
+import { paginationPlugin, refreshPages, relayoutPages } from './pagination-plugin';
 
 const LINE = 20;
 const PER_LINE = 10;
@@ -74,7 +80,12 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-async function mount(paragraphs: ReturnType<typeof p>[], pages = true, laid: PageSetup = setup) {
+async function mount(
+  paragraphs: ReturnType<typeof p>[],
+  pages = true,
+  laid: PageSetup = setup,
+  stories: { headers?: LiveHeaders; heights?: Map<string, number> } = {},
+) {
   const onPages = vi.fn();
   const place = document.createElement('div');
   document.body.append(place);
@@ -84,7 +95,8 @@ async function mount(paragraphs: ReturnType<typeof p>[], pages = true, laid: Pag
       plugins: [
         paginationPlugin({
           readFormatting: () => formatting,
-          read: () => ({ setup: laid, pages }),
+          read: () => ({ setup: laid, pages, headers: stories.headers }),
+          heights: () => stories.heights ?? new Map(),
           onPages,
         }),
       ],
@@ -106,6 +118,27 @@ async function mount(paragraphs: ReturnType<typeof p>[], pages = true, laid: Pag
 const gaps = (view: EditorView) => [...view.dom.querySelectorAll(`.${PAGE_GAP_CLASS}`)];
 
 describe('paginationPlugin', () => {
+  // page-layout.md "Headers and footers": a header taller than its room pushes page 1's first line down.
+  it('draws a header on each page and starts page 1 below a tall one', async () => {
+    const headed = { ...setup, margins: { ...setup.margins, header: 0 } };
+    const key = storyKey('h', 600);
+    const heights = new Map<string, number>();
+    const { view, onPages } = await mount([p('a'.repeat(10))], true, headed, {
+      headers: { header: { default: { story: 'h' } } },
+      heights,
+    });
+    expect(gaps(view)).toHaveLength(0);
+    expect(onPages.mock.lastCall?.[0]).toEqual([
+      expect.objectContaining({ header: { story: 'h', key, left: 0, width: 600, margin: 0 } }),
+    ]);
+    heights.set(key, 30);
+    refreshPages(view);
+    await Promise.resolve();
+    const [gap] = gaps(view);
+    expect(gap?.nextElementSibling?.tagName).toBe('P');
+    expect((gap as HTMLElement).style.height).toBe('30px');
+  });
+
   it('starts a page between two lines of a paragraph, the spacer taking it to the next page', async () => {
     // 20 characters (two lines) then 40 (four): three of its lines fit, but the last would be alone, so two move.
     const { view, onPages } = await mount([
