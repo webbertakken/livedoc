@@ -451,6 +451,17 @@ div.text-document-kept {
 .text-document-table tr.text-document-page-gap {
   display: table-row;
 }
+/*
+ * The page edge inside a row breaking across pages, drawn in one of its cells over the row's other cells; every cell
+ * of the row draws its writing from its top, as Word does.
+ */
+.text-document-page-gap-cell > * {
+  position: relative;
+  z-index: 1;
+}
+.text-document-table tr:has(> * > * > .text-document-page-gap-cell) > * {
+  vertical-align: top !important;
+}
 .text-document-table tr.text-document-page-gap > td {
   padding: 0;
   border: none;

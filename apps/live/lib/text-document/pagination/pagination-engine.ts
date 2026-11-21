@@ -587,6 +587,8 @@ class Engine {
     if (block.atom || (block.keepTogether && s === 0)) taken = 0;
     // A table's header rows never end a page alone.
     else if (block.repeat && s + taken <= block.repeat.lines) taken = 0;
+    // A table row that may not break moves on whole: the page ends before it.
+    if (block.held) while (taken > 0 && block.held.includes(s + taken)) taken -= 1;
     else if (block.widowControl) {
       if (remaining - taken < 2) taken = remaining - 2;
       if (taken < 2) taken = 0;

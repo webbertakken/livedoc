@@ -53,6 +53,8 @@ export type BlockMetrics = {
    * pages"): how many of its lines they are and their height.
    */
   readonly repeat?: { readonly lines: number; readonly height: number };
+  /** Lines a page may not start at (inside a table row that may not break), unless the page would hold none before. */
+  readonly held?: readonly number[];
   /** The notes whose marks are on its lines, each note's height at the page foot (page-layout.md "Footnotes"). */
   readonly notes?: readonly { readonly line: number; readonly height: number }[];
 };

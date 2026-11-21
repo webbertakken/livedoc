@@ -29,6 +29,8 @@ const CONTROL =
   'h-9 rounded border border-(--office-line) bg-transparent px-3 text-sm text-(--office-ink) outline-none focus-visible:ring-2 focus-visible:ring-(--office-focus) disabled:cursor-default disabled:opacity-40';
 const SELECT = `${CONTROL} w-full cursor-pointer [&>option]:bg-(--office-menu)`;
 const LABEL = 'mb-1 text-sm';
+const CHECK_ROW = 'flex min-h-9 cursor-pointer items-center gap-3 text-sm';
+const CHECK = 'size-4 shrink-0 accent-(--office-primary) disabled:cursor-default';
 const SUMMARY =
   'flex cursor-pointer list-none items-center justify-between rounded px-2 py-2 text-sm font-medium outline-none hover:bg-(--office-hover) focus-visible:ring-2 focus-visible:ring-(--office-focus) [&::-webkit-details-marker]:hidden';
 
@@ -210,6 +212,19 @@ export function TextDocumentTablePropertiesPanel({
           )}
           onChoose={(value) => onChange({ field: 'headerRows', value: Number(value) })}
         />
+        <label className={CHECK_ROW}>
+          <input
+            type="checkbox"
+            className={CHECK}
+            checked={p.rowBreaks ?? false}
+            // Mixed where the rows differ.
+            ref={(box) => {
+              if (box) box.indeterminate = p.rowBreaks === null;
+            }}
+            onChange={(e) => onChange({ field: 'rowBreaks', value: e.target.checked })}
+          />
+          Allow row to overflow across pages
+        </label>
       </Section>
       <Section title="Columns">{length('Column width', p.columnWidth, 'columnWidth')}</Section>
       <Section title="Alignment">

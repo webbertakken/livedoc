@@ -9,6 +9,7 @@ import { TextDocumentTablePropertiesPanel } from './TextDocumentTablePropertiesP
 
 const SHOWN: TableProperties = {
   rowHeight: 0,
+  rowBreaks: true,
   headerRows: 0,
   mostHeaderRows: 2,
   columnWidth: 144,
@@ -92,6 +93,26 @@ describe('TextDocumentTablePropertiesPanel', () => {
     expect([...list('Pin header rows').options].map((o) => o.text)).toEqual(['None', '1', '2']);
     fireEvent.change(list('Pin header rows'), { target: { value: '0' } });
     expect(onChange).toHaveBeenCalledWith({ field: 'headerRows', value: 0 });
+  });
+
+  it('lets the rows overflow across pages or not, mixed where they differ', () => {
+    const onChange = panel({ ...SHOWN, rowBreaks: true });
+    const box = screen.getByRole<HTMLInputElement>('checkbox', {
+      name: 'Allow row to overflow across pages',
+    });
+    expect(box.checked).toBe(true);
+    fireEvent.click(box);
+    expect(onChange).toHaveBeenCalledWith({ field: 'rowBreaks', value: false });
+  });
+
+  it('shows a mixed overflow as neither checked nor unchecked', () => {
+    const onChange = panel({ ...SHOWN, rowBreaks: null });
+    const box = screen.getByRole<HTMLInputElement>('checkbox', {
+      name: 'Allow row to overflow across pages',
+    });
+    expect(box.indeterminate).toBe(true);
+    fireEvent.click(box);
+    expect(onChange).toHaveBeenCalledWith({ field: 'rowBreaks', value: true });
   });
 
   it('says where to put the cursor outside a table', () => {

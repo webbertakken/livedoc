@@ -31,6 +31,7 @@ import {
   crossAttrs,
   crossLead,
   crossSplit,
+  cellGap,
   headerCopy,
   lineGap,
   pageGeometries,
@@ -43,7 +44,7 @@ import { paginate } from './pagination-engine';
 import { pageLayout, storyKey, type StoryHeights } from './pagination-headers';
 import { notePlace, pageNotes, type NoteMark } from './pagination-notes';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
-import { tableSplitOffset } from './pagination-tables';
+import { tableRowOffset, type TableLine } from './pagination-tables';
 import { headerRowsOf } from '../text-document-table-edits';
 import { columnWidths } from '../text-document-table-dom';
 import { lineNumberMarks, pageTopsInBody } from './pagination-line-numbers';
@@ -167,7 +168,7 @@ class Pager {
   // What each block measured, by its node, and where its lines start, by node and line.
   private measured = new WeakMap<
     PmNode,
-    { metrics: BlockMetrics; inset: number; marks: NoteMark[] }
+    { metrics: BlockMetrics; inset: number; marks: NoteMark[]; places?: TableLine[] }
   >();
   private splits = new WeakMap<PmNode, Map<number, number>>();
   private nodes: PmNode[] = [];
@@ -398,16 +399,8 @@ class Pager {
         widget(pos, blockSpacer(height), { key: `gap:${height}`, inside: false });
       else if (q > 0 && !start.carried) {
         const node = nodes[start.block]!;
-        const at =
-          pos +
-          this.splitOffset(
-            node,
-            pos,
-            start.line,
-            metrics[start.block]!,
-            () => elements(start.block),
-            ratio,
-          );
+        const place =
+          node.type.name === TABLE ? this.measured.get(node)?.places?.[start.line] : undefined;
         const inset = this.measured.get(node)?.inset ?? 0;
         // The page across, from the first section's text area: pages are centred one under another.
         const own = sections.setups[sections.sectionOf[start.block] ?? 0]!;
@@ -420,21 +413,65 @@ class Pager {
         const repeat = round(start.repeat ?? 0);
         const edge = height - repeat;
         const bands = { foot: round(edge - PAGE_GAP_PX - head), head };
-        const columns = node.type.name === TABLE ? columnWidths(node).length : 0;
-        widget(
-          at,
-          columns > 0 ? rowGap(edge, bands, across, columns) : lineGap(edge, bands, across),
-          {
-            key: `${columns > 0 ? `row:${columns}` : 'line'}:${edge}:${across.left}:${across.width}:${head}`,
-            inside: true,
-            side: -2,
-          },
-        );
-        if (repeat > 0)
-          for (let r = 0; r < headerRowsOf(node); r++) {
-            const row = node.child(r);
-            widget(at, headerCopy(row), { key: `header:${r}:${nodeKey(row)}`, inside: true });
-          }
+        if (place && place.at > 0) {
+          // A table row breaking between its lines: a gap in each cell whose writing goes on past the break.
+          this.rowBreak(node, pos, place, elements(start.block), ratio).forEach((cell, c) => {
+            const left = round(cell.left);
+            const header =
+              repeat > 0 && c === 0
+                ? {
+                    table: node.type.create(
+                      node.attrs,
+                      Array.from({ length: headerRowsOf(node) }, (_, r) => node.child(r)),
+                    ),
+                    left,
+                  }
+                : undefined;
+            widget(
+              cell.at,
+              cellGap(
+                height,
+                c === 0
+                  ? {
+                      bands,
+                      across: { left: round(across.left + left), width: across.width },
+                      ...(header ? { header } : {}),
+                    }
+                  : undefined,
+              ),
+              {
+                key: `cell:${c === 0 ? `${height}:${across.left + left}:${head}:${repeat > 0 ? nodeKey(node) : 0}` : height}`,
+                inside: true,
+              },
+            );
+          });
+        } else {
+          const at =
+            pos +
+            this.splitOffset(
+              node,
+              pos,
+              start.line,
+              metrics[start.block]!,
+              () => elements(start.block),
+              ratio,
+            );
+          const columns = node.type.name === TABLE ? columnWidths(node).length : 0;
+          widget(
+            at,
+            columns > 0 ? rowGap(edge, bands, across, columns) : lineGap(edge, bands, across),
+            {
+              key: `${columns > 0 ? `row:${columns}` : 'line'}:${edge}:${across.left}:${across.width}:${head}`,
+              inside: true,
+              side: -2,
+            },
+          );
+          if (repeat > 0)
+            for (let r = 0; r < headerRowsOf(node); r++) {
+              const row = node.child(r);
+              widget(at, headerCopy(row), { key: `header:${r}:${nodeKey(row)}`, inside: true });
+            }
+        }
       }
       for (const spacer of start.spacers ?? []) {
         const h = round(spacer.height);
@@ -536,6 +573,42 @@ class Pager {
     }
   }
 
+  /**
+   * Where the cells of table `table` (at `pos`, drawn as `element`) go on past a break inside row `place.row`, `place.at`
+   * below its top: each such cell's place in the document and its writing's left edge from the table's, in CSS pixels.
+   */
+  private rowBreak(
+    table: PmNode,
+    pos: number,
+    place: TableLine,
+    element: HTMLElement,
+    ratio: number,
+  ): { at: number; left: number }[] {
+    const rows = [...((element as HTMLTableElement).tBodies?.[0]?.rows ?? [])].filter(
+      (r) => !r.classList.contains(PAGE_GAP_CLASS),
+    );
+    const drawn = rows[place.row];
+    if (!drawn || place.row >= table.childCount) return [];
+    const row = table.child(place.row);
+    const tableLeft = element.getBoundingClientRect().left;
+    const found: { at: number; left: number }[] = [];
+    let cellPos = pos + tableRowOffset(table, place.row) + 1;
+    row.forEach((cell, _offset, c) => {
+      const cellElement = drawn.cells[c];
+      if (cellElement) {
+        const at = splitPosition(this.view, cellPos, cell, cellElement, place.at, ratio);
+        const end = cellPos + cell.nodeSize - 1;
+        // Writing past the break: a character drawn at or below it.
+        if (at < end) {
+          const writing = (cellElement.firstElementChild ?? cellElement).getBoundingClientRect();
+          found.push({ at, left: (writing.left - tableLeft) / ratio });
+        }
+      }
+      cellPos += cell.nodeSize;
+    });
+    return found;
+  }
+
   // Where block at `pos`'s line `line` starts, from the block's start: kept while the block is unchanged.
   private splitOffset(
     node: PmNode,
@@ -549,11 +622,8 @@ class Pager {
     if (!lines) this.splits.set(node, (lines = new Map<number, number>()));
     const known = lines.get(line);
     if (known !== undefined) return known;
-    if (node.type.name === TABLE) {
-      const at = tableSplitOffset(node, line);
-      lines.set(line, at);
-      return at;
-    }
+    if (node.type.name === TABLE)
+      return tableRowOffset(node, this.measured.get(node)?.places?.[line]?.row ?? 0);
     // Found on the paragraph as one column: a box of columns it is drawn as goes first.
     this.unbox((boxed) => boxed === node);
     const at =

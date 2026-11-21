@@ -85,6 +85,7 @@ describe('tablePropertiesAt', () => {
   it('reads the caret\u2019s cell, its row and column, and the table', () => {
     expect(tablePropertiesAt(caretIn('b1'))).toEqual({
       rowHeight: 30,
+      rowBreaks: true,
       headerRows: 0,
       mostHeaderRows: 1,
       columnWidth: 200,
@@ -178,6 +179,21 @@ describe('setTableProperty', () => {
     expect(cellAttrs(state, 'b2').colwidth).toEqual([200]);
     state = apply(state, { field: 'columnWidth', value: 1 }).state;
     expect(cellAttrs(state, 'a1').colwidth).toEqual([7.2]);
+  });
+
+  it('lets the rows break across pages or not, mixed where they differ', () => {
+    let state = apply(caretIn('a1'), { field: 'rowBreaks', value: false }).state;
+    expect(state.doc.firstChild!.child(0).attrs.breaks).toBe(false);
+    expect(tablePropertiesAt(state)!.rowBreaks).toBe(false);
+    const both = state.apply(
+      state.tr.setSelection(
+        CellSelection.create(state.doc, posOf(state.doc, 'a1', true), posOf(state.doc, 'b2', true)),
+      ),
+    );
+    expect(tablePropertiesAt(both)!.rowBreaks).toBeNull();
+    state = apply(both, { field: 'rowBreaks', value: true }).state;
+    expect(state.doc.firstChild!.child(0).attrs.breaks).toBeNull();
+    expect(tablePropertiesAt(state)!.rowBreaks).toBe(true);
   });
 
   it('pins header rows over the whole table', () => {
