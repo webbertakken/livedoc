@@ -16,6 +16,10 @@ import {
   insertRows,
   mergeTableCells,
   unmergeTableCell,
+  compareCells,
+  headerRowsOf,
+  pinHeaderRows,
+  sortTable,
 } from './text-document-table-edits';
 
 const SHADE = { background: '#ff0000' };
@@ -194,5 +198,88 @@ describe('merging', () => {
     const split = run(inMerged, unmergeTableCell).state;
     expect(split.doc.firstChild!.child(0).childCount).toBe(2);
     expect(run(caretIn(grid(), 'a1'), unmergeTableCell).ran).toBe(false);
+  });
+});
+
+describe('sorting', () => {
+  const own = (text: string, header: boolean) =>
+    (header ? schema.nodes.table_header! : schema.nodes.table_cell!).create(
+      { colwidth: [100] },
+      schema.nodes.paragraph!.create(null, text ? schema.text(text) : undefined),
+    );
+  const column = (rows: string[], header = 0) =>
+    schema.nodes.doc!.create(null, [
+      schema.nodes.table!.create(
+        null,
+        rows.map((text, r) => row(own(text, r < header), own(`#${r}`, r < header))),
+      ),
+      after(),
+    ]);
+  const firsts = (state: EditorState) => texts(state).map((r) => r[0]);
+
+  it('orders numbers first by value, then words ignoring case with numbers in them in order', () => {
+    const state = caretIn(column(['b', '10', 'Item 10', '2', 'a', 'Item 2', '1,200']), 'b');
+    expect(firsts(run(state, sortTable('ascending')).state)).toEqual([
+      '2',
+      '10',
+      '1,200',
+      'a',
+      'b',
+      'Item 2',
+      'Item 10',
+    ]);
+    expect(firsts(run(state, sortTable('descending')).state)).toEqual([
+      'Item 10',
+      'Item 2',
+      'b',
+      'a',
+      '1,200',
+      '10',
+      '2',
+    ]);
+  });
+
+  it('keeps header rows on top and empty cells last, and the rows whole', () => {
+    const state = caretIn(column(['Name', 'c', '', 'a'], 1), 'c');
+    const sorted = run(state, sortTable('descending')).state;
+    expect(texts(sorted)).toEqual([
+      ['Name', '#0'],
+      ['c', '#1'],
+      ['a', '#3'],
+      ['', '#2'],
+    ]);
+  });
+
+  it('is refused for a single row and where a body cell spans rows', () => {
+    expect(run(caretIn(column(['Name', 'only'], 1), 'only'), sortTable('ascending')).ran).toBe(
+      false,
+    );
+    const spanning = schema.nodes.doc!.create(null, [
+      schema.nodes.table!.create(null, [
+        row(cell('tall', { rowspan: 2 }), cell('b1')),
+        row(cell('b2')),
+        row(cell('c'), cell('d')),
+      ]),
+    ]);
+    expect(run(caretIn(spanning, 'b1'), sortTable('ascending')).ran).toBe(false);
+  });
+
+  it('compares cells as the spec orders them', () => {
+    expect(compareCells('-2.5', '3')).toBeLessThan(0);
+    expect(compareCells('apple', 'Apple')).toBe(0);
+    expect(compareCells('', 'x')).toBeGreaterThan(0);
+    expect(compareCells('', '')).toBe(0);
+  });
+});
+
+describe('pinning header rows', () => {
+  it('makes the first rows header cells and the rest body cells, refusing every row', () => {
+    const pinned = run(caretIn(grid(), 'a2'), pinHeaderRows(1)).state;
+    expect(headerRowsOf(pinned.doc.firstChild!)).toBe(1);
+    expect(pinned.doc.firstChild!.child(0).child(1).type.name).toBe('table_header');
+    expect(pinned.doc.firstChild!.child(0).child(1).attrs.props).toEqual(SHADE);
+    const none = run(pinned, pinHeaderRows(0)).state;
+    expect(headerRowsOf(none.doc.firstChild!)).toBe(0);
+    expect(run(caretIn(grid(), 'a2'), pinHeaderRows(2)).ran).toBe(false);
   });
 });

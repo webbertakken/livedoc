@@ -334,8 +334,14 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('table-merge-cells', 'Merge cells', 'edit', BUILT),
         item('table-unmerge-cells', 'Unmerge cells', 'edit', BUILT),
         SEPARATOR,
-        item('table-sort', 'Sort table', 'edit'),
-        item('table-pin-header-rows', 'Pin header rows', 'edit'),
+        submenu('table-sort', 'Sort table', [
+          item('table-sort-ascending', 'Sort ascending', 'edit', BUILT),
+          item('table-sort-descending', 'Sort descending', 'edit', BUILT),
+        ]),
+        submenu('table-pin-header-rows', 'Pin header rows', [
+          item('table-pin-none', "Don't pin", 'edit', BUILT),
+          item('table-pin-current', 'Pin up to current row', 'edit', BUILT),
+        ]),
       ]),
       item('image-options', 'Image', 'edit'),
       item('borders-and-lines', 'Borders & lines', 'edit', { keywords: ['shading'] }),
@@ -424,8 +430,9 @@ export function textDocumentTextContextMenu(catalogue: OfficeCatalogue): OfficeE
       'table-distribute-columns',
       'table-merge-cells',
       'table-unmerge-cells',
-      'table-sort',
-      'table-properties',
     ].map((id) => ({ id, contextual: true as const })),
+    { id: 'table-sort-ascending', label: 'Sort table ascending', contextual: true },
+    { id: 'table-sort-descending', label: 'Sort table descending', contextual: true },
+    { id: 'table-properties', contextual: true },
   ]);
 }

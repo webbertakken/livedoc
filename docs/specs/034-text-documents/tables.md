@@ -57,7 +57,21 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
 - **Move** rows and columns by dragging their edge handle (Google's six-dot grip).
 - **Resize** columns and rows by dragging their borders; a minimum of 0.1 in.
 - **Sort table** ascending or descending by the column at the caret (text, then numbers, as Google sorts).
+  - Format > Table > Sort table > **Sort ascending**, **Sort descending**; the cell's context menu has both as **Sort
+    table ascending**, **Sort table descending** `(default)`.
+  - Rows are ordered by the writing of their cell in the caret's column: cells that read as a number (`3`, `-2.5`,
+    `1,200`) come first in number order, then the rest by their words, ignoring case, numbers within words in number
+    order (`Item 2` before `Item 10`); empty cells last either way `(default)`. Rows that compare equal keep their
+    order.
+  - Header rows stay at the top, unsorted. Dimmed where a cell below the header rows spans rows, or fewer than two
+    rows would move. One undo step.
 - **Pin header rows**: the first n rows repeat at the top of each page.
+  - Format > Table > Pin header rows > **Don't pin** and **Pin up to row** n, n the caret's row; Table properties'
+    Rows section has **Pin header rows** (None, 1 to the table's rows less one, at most 10 `(default)`).
+  - Pinned rows are the table's header rows: their cells are column headers (`th scope="col"`), written as each format
+    holds header rows (ODF `table:table-header-rows`, OOXML `w:tblHeader`). Pinning every row is refused (a table
+    keeps one row of its own). One undo step.
+  - Repeating them at the top of each page the table continues on is ahead.
 - **Rows that do not break across pages** (Table properties > Row > Allow row to overflow across pages, off).
 
 ## Table properties
@@ -70,14 +84,14 @@ and width, cell background, by the one colour picker), **Cell** (padding).
 
 `(default)`, until Webber's capture: **Table properties**; Insert row above, Insert row below, Insert column left,
 Insert column right; Delete row, Delete column, Delete table; Distribute rows, Distribute columns; Merge cells,
-Unmerge cells; Sort table; Pin header rows. Each dimmed outside a table, Merge and Unmerge as above; Table properties,
-Sort table and Pin header rows "Coming soon" until their PRs.
+Unmerge cells; Sort table (a submenu); Pin header rows (a submenu). Each dimmed outside a table, Merge and Unmerge as
+above, Sort as above.
 
 ## Context menu
 
 On a cell: the text menu, then Insert row above, Insert row below, Insert column left, Insert column right, Delete row,
-Delete column, Delete table, Distribute rows, Distribute columns, Merge cells / Unmerge cells, Sort table, Table
-properties. Its table items show only in a table (contextual), Merge cells only over a selection that can merge and
+Delete column, Delete table, Distribute rows, Distribute columns, Merge cells / Unmerge cells, Sort table ascending, Sort
+table descending, Table properties. Its table items show only in a table (contextual), Merge cells only over a selection that can merge and
 Unmerge cells only on a merged cell; the order is `(default)` until Webber's capture.
 
 ## The model
@@ -164,7 +178,7 @@ its tallest cell; otherwise it moves whole, unless it is taller than a page, whe
 - In a section of columns a table moves to the next column or page whole, as kept content does `(default)`.
 - A table's rows are not line-numbered and do not count ([Line numbers](page-layout.md#line-numbers)), as Word's.
 - A footnote whose mark is in a cell is at the foot of the page its row is on.
-- Ahead: header rows repeating on each page; a row breaking between its lines; a row that may not break (10e).
+- Ahead: header rows repeating on each page; a row breaking between its lines; a row that may not break.
 
 ## Share roles
 
