@@ -2,7 +2,7 @@
 
 // Format > Headers & footers and the bar's Header format (docs/specs/034-text-documents/page-layout.md "Editing headers
 // and footers"): the header and footer margins in the person's unit, refused past the page's height less 1 in, the
-// section's Different first page and Different odd & even, and Apply to while there are sections; nothing changes
+// section's Different first page and Different odd and even, and Apply to while there are sections; nothing changes
 // until Apply.
 import { useId, useState } from 'react';
 import { OfficeDialog } from '@/components/office/OfficeDialog';
@@ -26,7 +26,7 @@ const MARGINS: readonly { margin: Margin; label: string }[] = [
 ];
 const SWITCHES: readonly { name: 'differentFirst' | 'differentOddEven'; label: string }[] = [
   { name: 'differentFirst', label: 'Different first page' },
-  { name: 'differentOddEven', label: 'Different odd & even' },
+  { name: 'differentOddEven', label: 'Different odd and even' },
 ];
 
 /** The message a margin past the most reads, in the person's unit. */

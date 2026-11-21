@@ -53,7 +53,7 @@ describe('TextDocumentHeaderOptionsDialog', () => {
       screen.getByRole<HTMLInputElement>('checkbox', { name: 'Different first page' }).checked,
     ).toBe(false);
     expect(
-      screen.getByRole<HTMLInputElement>('checkbox', { name: 'Different odd & even' }).checked,
+      screen.getByRole<HTMLInputElement>('checkbox', { name: 'Different odd and even' }).checked,
     ).toBe(true);
   });
 

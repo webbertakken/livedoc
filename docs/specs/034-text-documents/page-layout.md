@@ -287,9 +287,9 @@ A section's pages each have a **header** in the top margin and a **footer** in t
 - **Escape**, or a press on the body, leaves it with the caret where the body had it; empty, it is removed.
 - **Headers and footers options**, a dialog titled "Headers & footers" (Google's): **Margins**, **Header** (from the
   top) and **Footer** (from the bottom), in the person's unit; **Layout**, **Different first page** and **Different
-  odd & even**; **Apply to**, **This section** or **Whole document** (with more than one section); **Cancel** and
-  **Apply**. A margin takes 0 up to the page's height less 1 in, else "Enter a number from 0 to <most>." (default). Format > **Headers & footers** and the
-  bar's **Header format** (**Footer format**) open it for the section of the edited header, else of the body's caret.
+  odd and even**; **Apply to**, **This section** or **Whole document** (with more than one section); **Cancel** and
+  **Apply**. A margin takes 0 up to the page's height less 1 in, else "Enter a number from 0 to <most>." (default).
+  Format > **Headers & footers** and the bar's **Header format** (**Footer format**) open it for the section of the edited header, else of the body's caret.
   - It shows that section's margins and switches, and opens on This section (default).
   - Whole document sets every section's margins and switches alike; a margin then takes 0 up to the shortest page's
     height less 1 in (default).
