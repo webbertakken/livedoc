@@ -378,6 +378,18 @@ describe('rulesOf', () => {
 });
 
 describe('measureBlock', () => {
+  // performance.md "A keystroke's frame": blocks are read through one range, never a range each.
+  it('reads every block through the one range of its document', () => {
+    const create = vi.spyOn(document, 'createRange');
+    for (const text of ['a'.repeat(30), 'b'.repeat(10)]) {
+      const element = document.createElement('p');
+      element.textContent = text;
+      document.body.append(element);
+      measureBlock(element, {}, 1, 0);
+    }
+    expect(create.mock.calls.length).toBeLessThanOrEqual(1);
+  });
+
   it('reads a block without the spacers inside it', () => {
     const element = document.createElement('p');
     element.textContent = 'c'.repeat(30);

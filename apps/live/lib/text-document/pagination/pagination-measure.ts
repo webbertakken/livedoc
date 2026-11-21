@@ -14,6 +14,7 @@ import type { TextFormatting } from '../text-document-formatting';
 import type { BlockMetrics } from './pagination';
 import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
 import type { NoteMark } from './pagination-notes';
+import { measuringRange } from './pagination-range';
 
 /** A page spacer's class: between blocks, or inside a paragraph between two of its lines. */
 export const PAGE_GAP_CLASS = 'text-document-page-gap';
@@ -100,7 +101,7 @@ export function measureBlock(
   let columnBreakAfter = false;
   const marks: NoteMark[] = [];
   if (!rules.atom) {
-    const range = document.createRange();
+    const range = measuringRange(element.ownerDocument);
     range.selectNodeContents(element);
     const rects = [...range.getClientRects()].map((r) => ({
       top: (r.top - box.top) / ratio,
