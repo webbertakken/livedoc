@@ -216,6 +216,42 @@ In order of precedence, highest first; same as Google Sheets:
 - A formula applies a `LAMBDA` at most `LAMBDA_CALLS_MAX` times in all (the recalculation budget); past it the
   formula is `#NUM!` ("This formula calls its LAMBDA too many times") (default, D68).
 
+## QUERY
+
+`QUERY(data, query, [headers])` runs a query in Google's Visualization API Query Language over a range or an array,
+as Google Sheets does, and spills its table.
+
+- **Columns** are named by the sheet's column letters when `data` is a range (`select C` reads the sheet's column
+  C), and `Col1`, `Col2`, ... by place in either case; a name in back-quotes is read as written (`` `A` ``).
+- **Header rows**: `headers` rows at the top are labels, joined with a space when several; left out or -1, the first
+  row is a header when each of its filled cells is text and a column below it holds a value that is not (default, D69).
+- **Types**: each column is a number, text or boolean column by the type most of its values have (dates and times are
+  numbers); a value of another type, or an empty cell, is null (Google's rule).
+- **Clauses**, each optional, in this order: `select` (`*`, columns, aggregates, scalar functions, arithmetic,
+  literals), `where`, `group by`, `pivot`, `order by` (`asc`, `desc`), `limit`, `offset` (applied before
+  `limit`), `label`, `format`, `options`. Keywords ignore case; column names and text do not.
+- **Conditions**: `= != <> < <= > >=`, `is null`, `is not null`, `and`, `or`, `not`, brackets, and on text
+  `contains`, `starts with`, `ends with`, `like` (`%` any run, `_` one character) and `matches` (the whole
+  text against a regular expression). Text compares case-sensitively; a comparison with null, or between two types,
+  is false.
+- **Aggregates** `avg`, `count`, `max`, `min`, `sum` take one column and skip nulls; `avg` and `sum` read numbers
+  only, `max` and `min` of no values are null. **Scalar functions**: `year`, `month` (from 0), `day`, `hour`,
+  `minute`, `second`, `millisecond`, `quarter`, `dayOfWeek` (Sunday 1), `now`, `dateDiff`, `toDate`, `upper`,
+  `lower`; `+ - * /` on numbers, null for null or a division by zero. Literals: text in single or double quotes,
+  numbers, `true`, `false`, `date 'yyyy-MM-dd'`, `timeofday 'HH:mm:ss'`, `datetime 'yyyy-MM-dd HH:mm:ss'`.
+- **Grouping**: `group by` gives a row for each distinct key, sorted by the keys unless `order by` says otherwise;
+  every selected column is grouped or aggregated. `pivot` gives a column for each distinct value (in order) of its
+  columns for each aggregate, labelled with the values (joined by `,`), then the aggregate and its column's label when
+  more than one aggregate is selected; without `group by`, one row.
+- **Labels**: the first row of the result is the labels when `data` had header rows or an aggregate is selected:
+  a column's header text, an aggregate's `sum Price` (its name and its column's label), a scalar function's
+  `year(A)`; `label` sets one, and when every label is empty the row is left out.
+- `format` is read and kept for the files, but the spilled values show without it until a formula's spill can carry
+  formats; `options` is read and changes nothing (default, D69).
+- **Errors**: a query that does not parse, names an unknown column, groups wrongly or uses a column of the wrong type
+  is `#VALUE!` ("Unable to parse query string for Function QUERY parameter 2: …"); a result with no rows and no
+  labels is `#N/A` ("Query completed with an empty output."). Its result holds at most `ARRAY_CELLS_MAX` values.
+
 ## Functions
 
 The engine knows the functions below today (and only these: any other name is `#NAME?`); the [function catalogue](#function-catalogue) is what it grows to. Arguments in brackets are
@@ -409,7 +445,7 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `EPOCHTODATE(timestamp, [unit])` reads a Unix time in UTC, in seconds (1), milliseconds (2) or microseconds (3),
   fractions of a millisecond dropped; a negative timestamp is `#NUM!`.
 
-**Arrays**: `FILTER`, `SORT`, `SORTN`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `TRANSPOSE`, `ARRAYFORMULA`, `MUNIT`,
+**Arrays**: `FILTER`, `SORT`, `SORTN`, `SORTBY`, `UNIQUE`, `SEQUENCE`, `TRANSPOSE`, `ARRAYFORMULA`, `QUERY` ([above](#query)), `MUNIT`,
 `RANDARRAY`, `CHOOSECOLS`, `CHOOSEROWS`, `HSTACK`, `VSTACK`, `TOCOL`, `TOROW`, `WRAPROWS`, `WRAPCOLS`, `FLATTEN`,
 `FREQUENCY`, `MMULT`, `MDETERM`, `MINVERSE`, `SUMX2MY2`, `SUMX2PY2`, `SUMXMY2`, `LINEST`, `LOGEST`, `TREND`, `GROWTH`.
 
@@ -1077,7 +1113,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `QUARTILE`            | Statistical | `QUARTILE(data, quartile_number)`                                                                              | Google      | `QUARTILE`                       | built                                                         |
 | `QUARTILE.EXC`        | Statistical | `QUARTILE.EXC(data, quartile_number)`                                                                          | Google      | `COM.MICROSOFT.QUARTILE.EXC`     | built                                                         |
 | `QUARTILE.INC`        | Statistical | `QUARTILE.INC(data, quartile_number)`                                                                          | Google      | `COM.MICROSOFT.QUARTILE.INC`     | built                                                         |
-| `QUERY`               | Google      | `QUERY(data, query, [headers])`                                                                                | Google      | S5                               | planned                                                       |
+| `QUERY`               | Google      | `QUERY(data, query, [headers])`                                                                                | Google      | S5                               | built                                                         |
 | `QUOTIENT`            | Math        | `QUOTIENT(dividend, divisor)`                                                                                  | Google      | `QUOTIENT`                       | built                                                         |
 | `RADIANS`             | Math        | `RADIANS(angle)`                                                                                               | Google      | `RADIANS`                        | built                                                         |
 | `RAND`                | Math        | `RAND()`                                                                                                       | Google      | `RAND`                           | built                                                         |
@@ -1325,4 +1361,6 @@ The code cites each by its id.
   idioms use them; `SUMIFS` and `COUNTIFS` give one value, as Google's forums report (default).
 - **D68** LAMBDA and LET's errors and limits: uncalled, or a name that is not one, `#VALUE!`; at most 100,000
   applications a formula, past them `#NUM!` (default).
+- **D69** QUERY's guessed header and its format: a first row of text over other types is a header; `format` and
+  `options` are read and not yet shown (default).
 - The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).
