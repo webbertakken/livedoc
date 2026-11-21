@@ -16585,7 +16585,8 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
       "Client",
       "Warning",
       "Reported",
-      "Measured"
+      "Measured",
+      "Converted"
     ],
     "type": "string"
   },
