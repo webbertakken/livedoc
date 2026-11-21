@@ -26,7 +26,11 @@ export const SECTION_BREAK_ATTRIBUTES = [
   'kept',
   'region',
 ] as const;
-export const KEPT_BLOCK_ATTRIBUTES = ['name', 'xml'] as const;
+/**
+ * A kept block's name and XML; or, named `table`, a table held whole as the model's value (`table`), drawn as a kept
+ * block until the editor draws tables (tables.md "Status").
+ */
+export const KEPT_BLOCK_ATTRIBUTES = ['name', 'xml', 'table'] as const;
 export const KEPT_INLINE_ATTRIBUTES = ['name', 'xml', 'props', 'style', 'link', 'kept'] as const;
 export const FIELD_ATTRIBUTES = ['field', 'text', 'props', 'style', 'link', 'kept'] as const;
 export const FOOTNOTE_ATTRIBUTES = ['story', 'props', 'style', 'link', 'kept'] as const;

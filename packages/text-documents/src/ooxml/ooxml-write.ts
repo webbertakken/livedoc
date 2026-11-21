@@ -29,6 +29,8 @@ import { byId } from './ooxml-read';
 import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD } from './ooxml-names';
 import { ooxmlFieldXml } from './ooxml-fields';
 import { footnoteIds, footnotesPartXml } from './ooxml-notes';
+import { ooxmlTableXml } from './ooxml-tables';
+import { Blocks, type Table } from '../model/tables';
 import {
   abstractNumXml,
   ordered,
@@ -130,8 +132,8 @@ class OoxmlWriter {
       used.add(String(next));
     }
     const current = new Map(this.numIds);
-    for (const block of this.doc.body) {
-      if (block.type !== 'paragraph' || !block.list || !current.has(block.list.id)) continue;
+    for (const block of Blocks.paragraphs(this.doc.body)) {
+      if (!block.list || !current.has(block.list.id)) continue;
       const { id, level, restart } = block.list;
       if (restart !== undefined) {
         while (used.has(String(next))) next += 1;
@@ -276,6 +278,29 @@ class OoxmlWriter {
     return `<w:r>${rPr}<w:footnoteReference w:id="${id}"/></w:r>`;
   }
 
+  /** A table, its cells' blocks written as the body's. */
+  tableXml(table: Table): string {
+    return ooxmlTableXml(
+      { kept: (xml) => this.kept(xml), blocksXml: (blocks) => this.blocksXml(blocks) },
+      table,
+    );
+  }
+
+  /** Blocks of a cell: paragraphs, tables and kept elements. */
+  blocksXml(blocks: readonly Block[]): string {
+    return blocks
+      .map((b) =>
+        b.type === 'paragraph'
+          ? this.paragraphXml(b, undefined)
+          : b.type === 'table'
+            ? this.tableXml(b)
+            : b.type === 'kept'
+              ? this.kept(b.xml)
+              : '',
+      )
+      .join('');
+  }
+
   bodyXml(): string {
     const out: string[] = [];
     let current: Section = this.doc.section;
@@ -284,8 +309,8 @@ class OoxmlWriter {
       const next = blocks[i + 1];
       const ends = next?.type === 'section' ? current : undefined;
       if (block.type === 'paragraph') out.push(this.paragraphXml(block, ends));
-      else if (block.type === 'kept') {
-        out.push(this.kept(block.xml));
+      else if (block.type === 'kept' || block.type === 'table') {
+        out.push(block.type === 'kept' ? this.kept(block.xml) : this.tableXml(block));
         if (ends) out.push(`<w:p><w:pPr>${this.sectPr(ends)}</w:pPr></w:p>`);
       } else {
         const previous = blocks[i - 1];

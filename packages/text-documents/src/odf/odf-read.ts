@@ -63,6 +63,7 @@ import {
   type LineNumbering,
   type ParagraphLines,
 } from './odf-lines';
+import { readOdfTable } from './odf-tables';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -464,12 +465,24 @@ class BodyReader {
   readonly styles: readonly Style[];
   readonly defaults: StyleDefaults;
 
-  /** A header's or footer's writing: its paragraphs start no page. */
+  /** A header's, footer's, note's or cell's writing: its paragraphs start no page and are not numbered. */
   readonly story: boolean;
+  /** Whether a footnote is read as the model's: in the body and its tables, never in a header, footer or note. */
+  readonly notes: boolean;
+  /** A table cell's writing: a region in it is kept as it is. */
+  readonly cell: boolean;
 
-  constructor(r: OdfReader, styles: readonly Style[], defaults: StyleDefaults, story = false) {
+  constructor(
+    r: OdfReader,
+    styles: readonly Style[],
+    defaults: StyleDefaults,
+    story = false,
+    { notes = !story, cell = false }: { notes?: boolean; cell?: boolean } = {},
+  ) {
     this.r = r;
     this.story = story;
+    this.notes = notes;
+    this.cell = cell;
     this.styles = styles;
     this.defaults = defaults;
   }
@@ -541,7 +554,8 @@ class BodyReader {
     for (const e of childElements(parent)) {
       if (is(e, NS.text, 'p') || is(e, NS.text, 'h')) this.paragraph(e, undefined);
       else if (is(e, NS.text, 'list')) this.list(e, 0, undefined);
-      else if (is(e, NS.text, 'section')) this.region(e);
+      else if (is(e, NS.text, 'section') && !this.cell) this.region(e);
+      else if (is(e, NS.table, 'table')) this.table(e);
       else if (is(e, NS.text, 'soft-page-break')) this.r.report.drop('layout-hint', e.local);
       else if (isDde(e)) this.r.report.drop('field', e.local);
       else {
@@ -553,6 +567,29 @@ class BodyReader {
         this.r.report.keep(e.local);
       }
     }
+  }
+
+  table(e: XmlElement): void {
+    const auto = this.r.part.auto;
+    const block = readOdfTable(e, {
+      parsed: this.r.part.parsed,
+      style: (name) => {
+        const style = name === undefined ? undefined : auto.get(name);
+        return style && { element: style.element, kept: style.kept };
+      },
+      cellBlocks: (cell) => {
+        const reader = new BodyReader(this.r, this.styles, this.defaults, true, {
+          notes: this.notes,
+          cell: true,
+        });
+        reader.container(cell);
+        return reader.blocks;
+      },
+      kept: (x) => this.r.kept(this.r.part.parsed, x),
+      report: this.r.report,
+      normal: Styles.idOfRole(this.styles, 'normal') ?? 'Standard',
+    });
+    if (block) this.blocks.push(block);
   }
 
   region(e: XmlElement): void {
@@ -649,7 +686,7 @@ class BodyReader {
     const startsPage = !this.story && (isFirst || master !== undefined);
     const start = startsPage ? auto?.pageNumber : undefined;
     if (isFirst && !this.story) this.firstStart = start;
-    if (master !== undefined) {
+    if (master !== undefined && !this.story) {
       const section = this.r.sectionOf(master, 'next-page');
       if (isFirst && !this.section && section) this.section = section;
       else if (section) {
@@ -669,7 +706,7 @@ class BodyReader {
       ? { xml: auto.kept, read: canonical(values), residue: [], name: styleName }
       : undefined;
     // A header's, a footer's or a note's notes stay kept content (page-layout.md "Footnotes").
-    const inlines = new InlineReader(this.r, !this.story).read(e);
+    const inlines = new InlineReader(this.r, this.notes).read(e);
     const paragraph: Paragraph = {
       type: 'paragraph',
       style,

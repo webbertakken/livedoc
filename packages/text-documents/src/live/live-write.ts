@@ -115,6 +115,11 @@ function blockNode(block: Block, stories: StoryWriter): Y.XmlElement {
       setAttributes(element, { name: block.name, xml: block.xml });
       return element;
     }
+    case 'table': {
+      const element = new Y.XmlElement(KEPT_BLOCK);
+      setAttributes(element, { name: 'table', table: block });
+      return element;
+    }
   }
 }
 

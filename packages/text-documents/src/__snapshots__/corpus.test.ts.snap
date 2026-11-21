@@ -35,10 +35,6 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
         "count": 1,
         "name": "commentReference",
       },
-      {
-        "count": 1,
-        "name": "tbl",
-      },
     ],
   },
   "structure": {
@@ -134,8 +130,10 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
         "portrait",
       ],
       [
-        "kept",
-        "tbl",
+        "table",
+        "1x2, 0 header",
+        "A1",
+        "B1",
       ],
       [
         "Normal",
@@ -191,10 +189,6 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
       {
         "count": 1,
         "name": "annotation-end",
-      },
-      {
-        "count": 1,
-        "name": "table",
       },
     ],
   },
@@ -288,8 +282,10 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
         "portrait",
       ],
       [
-        "kept",
         "table",
+        "1x2, 0 header",
+        "A1",
+        "B1",
       ],
       [
         "Standard",
@@ -351,10 +347,6 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
         "count": 1,
         "name": "annotation-end",
       },
-      {
-        "count": 1,
-        "name": "table",
-      },
     ],
   },
   "structure": {
@@ -447,8 +439,10 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
         "portrait",
       ],
       [
-        "kept",
         "table",
+        "1x2, 0 header",
+        "A1",
+        "B1",
       ],
       [
         "Standard",
@@ -482,12 +476,7 @@ exports[`the corpus > reads libreoffice/rich.docx and writes it back the same 1`
 {
   "report": {
     "dropped": [],
-    "kept": [
-      {
-        "count": 1,
-        "name": "tbl",
-      },
-    ],
+    "kept": [],
   },
   "structure": {
     "format": "ooxml",
@@ -560,8 +549,13 @@ exports[`the corpus > reads libreoffice/rich.docx and writes it back the same 1`
         "",
       ],
       [
-        "kept",
-        "tbl",
+        "table",
+        "3x2, 0 header",
+        "Name",
+        "Value",
+        "Alpha",
+        "1",
+        "Merged",
       ],
       [
         "BodyText",
@@ -621,10 +615,6 @@ exports[`the corpus > reads libreoffice/rich.fodt and writes it back the same 1`
       {
         "count": 1,
         "name": "sequence-decls",
-      },
-      {
-        "count": 1,
-        "name": "table",
       },
     ],
   },
@@ -703,8 +693,13 @@ exports[`the corpus > reads libreoffice/rich.fodt and writes it back the same 1`
         "",
       ],
       [
-        "kept",
         "table",
+        "3x2, 0 header",
+        "Name",
+        "Value",
+        "Alpha",
+        "1",
+        "Merged",
       ],
       [
         "Text_20_body",
@@ -771,10 +766,6 @@ exports[`the corpus > reads libreoffice/rich.odt and writes it back the same 1`]
         "count": 1,
         "name": "sequence-decls",
       },
-      {
-        "count": 1,
-        "name": "table",
-      },
     ],
   },
   "structure": {
@@ -852,8 +843,13 @@ exports[`the corpus > reads libreoffice/rich.odt and writes it back the same 1`]
         "",
       ],
       [
-        "kept",
         "table",
+        "3x2, 0 header",
+        "Name",
+        "Value",
+        "Alpha",
+        "1",
+        "Merged",
       ],
       [
         "Text_20_body",

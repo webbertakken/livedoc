@@ -16,6 +16,7 @@ import {
 import { ROLE_IDS, type Style } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
 import type { ReportItem } from './report';
+import type { CellProps, Table } from './model/tables';
 
 export type ConversionLoss = ReportItem & {
   /** `kept` for kept content, else the construct the other format cannot hold. */
@@ -28,8 +29,22 @@ export type ConversionLoss = ReportItem & {
     | 'border-padding'
     | 'header-footer'
     | 'page-number-start'
-    | 'line-number-restart';
+    | 'line-number-restart'
+    | 'table-style';
 };
+
+/** The blocks with every table's cells' blocks after the table, at any depth. */
+const withCells = (blocks: readonly Block[]): Block[] =>
+  blocks.flatMap((b) =>
+    b.type === 'table'
+      ? [b, ...withCells(b.rows.flatMap((row) => row.cells.flatMap((cell) => cell.blocks)))]
+      : [b],
+  );
+
+/** Whether a table keeps a table style the model does not map: `table:template-name`, `w:tblStyle`, `w:tblLook`. */
+const keepsTableStyle = (table: Table): boolean =>
+  /\s[\w.-]+:template-name="/.test(table.tag?.xml ?? '') ||
+  (table.kept?.residue ?? []).some((r) => /^<(?:[\w.-]+:)?(tblStyle|tblLook)\b/.test(r.xml));
 
 function count(map: Map<string, number>, name: string): void {
   map.set(name, (map.get(name) ?? 0) + 1);
@@ -69,8 +84,9 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
     for (let i = 0; i < restartLosses(sectionsOf(document)); i += 1)
       count(other, 'line-number-restart');
   const notes = Notes.all(document.body).flatMap((note) => note.blocks);
-  for (const block of [...document.body, ...stories.flat(), ...notes]) {
+  for (const block of withCells([...document.body, ...stories.flat(), ...notes])) {
     if (block.type === 'kept') count(kept, block.name);
+    if (block.type === 'table' && keepsTableStyle(block)) count(other, 'table-style');
     if (block.type === 'section' && block.region) count(other, 'section-name');
     if (block.type !== 'paragraph') continue;
     for (const inline of block.inlines) {
@@ -220,6 +236,7 @@ export function convertTextDocument(
   const blocksOf = (blocks: readonly Block[]): Block[] =>
     blocks.flatMap((block): Block[] => {
       if (block.type === 'kept') return [];
+      if (block.type === 'table') return [tableOf(block)];
       if (block.type === 'section') {
         const { region: _, headers, ...rest } = withoutKept(block);
         const own = headersOf(headers);
@@ -238,6 +255,54 @@ export function convertTextDocument(
         },
       ];
     });
+  const length = (pt: number) => (ooxml ? twentieth(pt) : pt);
+  const normal = styles.find((s) => s.role === 'normal')?.id ?? ROLE_IDS[to].normal;
+  // A table's values in the other format's resolution, what was kept from the old file left behind.
+  const tableOf = (table: Table): Table => {
+    const { tag: _, ...rest } = withoutKept(table);
+    return compact({
+      ...rest,
+      columns: table.columns.map(length),
+      indent: opt(table.indent, length),
+      rows: table.rows.map((row) => {
+        const { tag: _t, ...r } = withoutKept(row);
+        return compact({
+          ...r,
+          height: opt(row.height, length),
+          cells: row.cells.map((cell) => {
+            const { tag: _c, ...c } = withoutKept(cell);
+            const blocks = blocksOf(cell.blocks);
+            return {
+              ...c,
+              props: cellPropsOf(cell.props),
+              blocks: blocks.some((b) => b.type === 'paragraph')
+                ? blocks
+                : [
+                    ...blocks,
+                    { type: 'paragraph' as const, style: normal, props: {}, inlines: [] },
+                  ],
+            };
+          }),
+        });
+      }),
+    });
+  };
+  const cellPropsOf = (p: CellProps): CellProps =>
+    ooxml
+      ? compact({
+          ...p,
+          borders:
+            p.borders &&
+            Object.fromEntries(
+              Object.entries(p.borders).map(([side, b]) => [side, { ...ooxmlBorder(b), space: 0 }]),
+            ),
+          padding:
+            p.padding &&
+            Object.fromEntries(
+              Object.entries(p.padding).map(([side, pt]) => [side, twentieth(pt)]),
+            ),
+        })
+      : p;
   const body = blocksOf(document.body);
   const lists: Record<string, ListDefinition> = Object.fromEntries(
     Object.entries(document.lists).map(([k, l]) => [k, withoutKept(l)]),

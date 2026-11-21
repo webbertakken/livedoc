@@ -3,8 +3,9 @@
 import { canonical } from '../model/props';
 import type { TextDocument } from '../model/text-document';
 
-// A header's `part` is the package part it was read from, a file-specific name.
-const DROPPED = new Set(['kept', 'source', 'region', 'part']);
+// A header's `part` is the package part it was read from, and a table's `tag` its element's own attributes: both
+// file-specific.
+const DROPPED = new Set(['kept', 'source', 'region', 'part', 'tag']);
 
 /** The document's model values, kept content and file-specific names left out. */
 export function modelOf(document: TextDocument): unknown {

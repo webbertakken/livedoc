@@ -34,7 +34,8 @@ function dashOf(value: string | undefined): BorderDash | null {
   return /dash/i.test(value) ? 'dashed' : 'solid';
 }
 
-function lineOf(e: XmlElement | undefined): BorderLine | undefined {
+/** One border element (`w:top`, `w:insideH`, ...) as a line; undefined for none (`nil`, `none`) or no element. */
+export function lineOf(e: XmlElement | undefined): BorderLine | undefined {
   if (!e) return undefined;
   const dash = dashOf(w(e, 'val'));
   if (dash === null) return undefined;
@@ -60,7 +61,7 @@ export function readBorders(pPr: XmlElement): ParagraphBorders | undefined {
   return borders;
 }
 
-const OOXML_DASH: Record<BorderDash, string> = {
+export const OOXML_DASH: Record<BorderDash, string> = {
   solid: 'single',
   dotted: 'dotted',
   dashed: 'dashed',
