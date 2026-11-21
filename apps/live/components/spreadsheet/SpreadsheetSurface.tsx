@@ -81,6 +81,7 @@ export function SpreadsheetSurface({
   workbook,
   onSelectTab,
   sync,
+  onWorkbook,
 }: {
   scope: WorkbookScope;
   tabId: string;
@@ -90,6 +91,8 @@ export function SpreadsheetSurface({
   onSelectTab: (tabId: string) => void;
   // The document's Sync Document, for a spreadsheet in This Browser (imports.md "A spreadsheet in This Browser").
   sync?: ImportSync;
+  // A workbook record this page saved (Allow Access), applied without waiting for the room.
+  onWorkbook?: (workbook: WorkbookRecord) => void;
 }) {
   const bridge = useSheetsBridgeContext();
   const sheetBarPeers = useSheetBarPeers(bridge);
@@ -138,7 +141,7 @@ export function SpreadsheetSurface({
         tabId={tabId}
       />
       {bridge ? (
-        <OpenSheet bridge={bridge} tabId={tabId} sync={sync} />
+        <OpenSheet bridge={bridge} tabId={tabId} sync={sync} onWorkbook={onWorkbook} />
       ) : (
         <Status state="loading" />
       )}
@@ -179,10 +182,12 @@ function OpenSheet({
   bridge,
   tabId,
   sync,
+  onWorkbook,
 }: {
   bridge: SheetsBridge;
   tabId: string;
   sync: ImportSync | undefined;
+  onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
 }) {
   const { store, version } = useAttachedSheetStore(bridge);
   useEffect(() => {
@@ -210,6 +215,7 @@ function OpenSheet({
       version={version}
       bridge={bridge}
       sync={sync}
+      onWorkbook={onWorkbook}
     />
   );
 }
@@ -221,6 +227,7 @@ function SheetWorkspace({
   version,
   bridge,
   sync,
+  onWorkbook,
 }: {
   store: SheetStore;
   sheetId: string;
@@ -228,6 +235,7 @@ function SheetWorkspace({
   version: number;
   bridge: SheetsBridge;
   sync: ImportSync | undefined;
+  onWorkbook: ((workbook: WorkbookRecord) => void) | undefined;
 }) {
   const palette = planPalette(useCanvasSurface());
   const [announcement, setAnnouncement] = useState('');
@@ -266,6 +274,7 @@ function SheetWorkspace({
               canAllow={bridge.canEdit && bridge.canShape}
               offline={bridge.importAccess === 'offline'}
               sync={sync}
+              onAllowed={onWorkbook}
             />
           ) : null}
           <SheetParts bridge={bridge} />

@@ -4164,6 +4164,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     // (docs/specs/016-platform/new-version-prompt.md).
     hasUnsavedChanges,
     syncToCloud,
+    // A workbook record this page saved (Allow Access), shown at once: the room's echo misses a connection still
+    // joining, as after Sync Document in place (docs/specs/029-sheets/imports.md "Allow access").
+    receiveWorkbookRecord: setDocumentWorkbook,
     takeOfflineInPlace,
     // Tab-scoped share session (docs/specs/013-workspace/tab-scoped-share-links.md).
     sessionTabScope,

@@ -97,6 +97,8 @@ Google asks once per spreadsheet before its imports send and receive data from t
 - Allowing is for the spreadsheet, for everyone, for good: it is kept with the workbook, a copy starts without it,
   and it is never taken back (verified: Google's API refuses to set it back to false).
 - An Editor allows with `POST /api/documents/<id>/workbook/imports`, sent to everyone as a `workbook` op.
+- The allowing Editor's page shows the answer at once, never waiting for that op: a connection still joining (as
+  just after Sync Document) would miss it.
 - The api refuses to fetch for a spreadsheet not allowed, whatever the page asks.
 
 ### A spreadsheet in This Browser

@@ -2,6 +2,7 @@
 // the web and no Editor has allowed it, as Google's warning bar. An Editor allows it for good; everyone else reads it.
 // A spreadsheet in This Browser is offered Sync Document first ("A spreadsheet in This Browser"), as Share is.
 import { useState } from 'react';
+import type { WorkbookRecord } from '@livedoc/sheets';
 import { Button } from '@livedoc/ui';
 import { allowSheetImports } from '@/lib/api/sheet-imports';
 import type { SheetsScope } from '@/lib/api/sheets';
@@ -32,6 +33,7 @@ export function ImportAccessBar({
   canAllow,
   offline = false,
   sync,
+  onAllowed,
   allow = allowSheetImports,
 }: {
   scope: SheetsScope;
@@ -40,12 +42,14 @@ export function ImportAccessBar({
   // The document is in This Browser: Sync Document comes before Allow Access.
   offline?: boolean;
   sync?: ImportSync | undefined;
+  // The workbook as allowed, shown at once rather than when the room's echo arrives.
+  onAllowed?: ((workbook: WorkbookRecord) => void) | undefined;
   allow?: typeof allowSheetImports;
 }) {
   return offline ? (
     <OfflineBar sync={sync} />
   ) : (
-    <AllowBar scope={scope} canAllow={canAllow} allow={allow} />
+    <AllowBar scope={scope} canAllow={canAllow} allow={allow} onAllowed={onAllowed} />
   );
 }
 
@@ -53,10 +57,12 @@ function AllowBar({
   scope,
   canAllow,
   allow,
+  onAllowed,
 }: {
   scope: SheetsScope;
   canAllow: boolean;
   allow: typeof allowSheetImports;
+  onAllowed: ((workbook: WorkbookRecord) => void) | undefined;
 }) {
   const [state, setState] = useState<'idle' | 'allowing' | 'failed'>('idle');
   const onAllow = async () => {
@@ -64,9 +70,10 @@ function AllowBar({
     track('Spreadsheet', 'Unlocked', 'ImportAccess');
     setState('allowing');
     try {
-      await allow(scope);
-      debugLog('[sheet imports] access allowed');
-      // The room sends the workbook to everyone, this page too: the bar goes when it arrives.
+      const allowed = await allow(scope);
+      debugLog('[sheet imports] access allowed', { rev: allowed.rev });
+      // The room sends the workbook to everyone; this page shows it at once, its connection maybe still joining.
+      onAllowed?.(allowed.workbook);
     } catch (error) {
       debugLog('[sheet imports] allowing failed', { error: String(error) });
       setState('failed');

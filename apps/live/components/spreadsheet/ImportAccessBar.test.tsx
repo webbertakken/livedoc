@@ -5,6 +5,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { track } from '@/lib/telemetry';
+import type { allowSheetImports } from '@/lib/api/sheet-imports';
 import { IMPORT_ACCESS_WORDS, ImportAccessBar } from './ImportAccessBar';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -17,18 +18,23 @@ afterEach(() => {
 const scope = { documentId: 'd', ownerId: 'o', shareCode: null, tabId: null };
 
 describe('ImportAccessBar', () => {
-  it('lets an Editor allow access, telling telemetry first', async () => {
+  it('lets an Editor allow access, telling telemetry first, and shows the workbook at once', async () => {
     const order: string[] = [];
     vi.mocked(track).mockImplementation(() => void order.push('track'));
     let done!: () => void;
+    const answer = {
+      workbook: { format: 'ods', importsAllowed: true },
+      rev: 2,
+    } as unknown as Awaited<ReturnType<typeof allowSheetImports>>;
     const allow = vi.fn(
       () =>
-        new Promise<never>((resolve) => {
+        new Promise<typeof answer>((resolve) => {
           order.push('allow');
-          done = () => resolve(undefined as never);
+          done = () => resolve(answer);
         }),
     );
-    render(<ImportAccessBar scope={scope} canAllow allow={allow} />);
+    const onAllowed = vi.fn();
+    render(<ImportAccessBar scope={scope} canAllow allow={allow} onAllowed={onAllowed} />);
     expect(screen.getByRole('status').textContent).toContain(IMPORT_ACCESS_WORDS.warning);
     fireEvent.click(screen.getByRole('button', { name: IMPORT_ACCESS_WORDS.allow }));
     expect(track).toHaveBeenCalledWith('Spreadsheet', 'Unlocked', 'ImportAccess');
@@ -41,6 +47,7 @@ describe('ImportAccessBar', () => {
       ).toBe(true),
     );
     done();
+    await waitFor(() => expect(onAllowed).toHaveBeenCalledWith(answer.workbook));
   });
 
   it('says so when allowing fails', async () => {
