@@ -124,10 +124,10 @@ export class StorySource {
     if (this.#editing) return;
     this.#editing = true;
     this.view.setProps({});
-    this.view.dispatch(
-      this.view.state.tr.setSelection(Selection.atEnd(this.view.state.doc)).scrollIntoView(),
-    );
+    this.view.dispatch(this.view.state.tr.setSelection(Selection.atEnd(this.view.state.doc)));
     this.view.focus();
+    // Into sight below what stands over the pages (the ruler: the pages' scroll padding).
+    this.#host.scrollIntoView?.({ block: 'nearest' });
   }
 
   /** Back to its hidden place, read only. */

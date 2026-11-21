@@ -652,9 +652,10 @@ export function TextDocumentSurface({
         <div
           ref={scroller}
           data-region="document"
-          // Pageless, the page's colour fills the document's whole area (page-layout.md "Pageless").
+          // Pageless, the page's colour fills the document's whole area (page-layout.md "Pageless"). Its scroll padding
+          // keeps what is scrolled into sight below the ruler standing over it.
           style={page.pageless ? pageBox(page.section.setup) : undefined}
-          className={`min-h-0 flex-1 overflow-y-auto ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
+          className={`min-h-0 flex-1 overflow-y-auto scroll-pt-8 ${page.pageless ? 'text-document-pageless-ground' : 'pb-6'}`}
         >
           {ruler.shown && state === 'ready' ? (
             <TextDocumentRuler
