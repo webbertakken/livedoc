@@ -12,7 +12,8 @@ office kinds; this spec says what a text document puts in them.
   (⌘⌥⇧C): read only, comments and suggestions hidden, as printed.
 - An editing mode is one person's, never shared, and starts at the most an access level allows: an Editor in
   Editing, a Participant in Suggesting (fork D7, ruled), a Viewer in Viewing.
-- The switch sits at the right of the title row ([Editing surface](editing-surface.md#the-title-row)).
+- The switch sits at the right of the title row ([Editing surface](editing-surface.md#the-title-row)); these are the
+  text document's modes on the office shell's switch ([Office shell](../004-interface-design/office-shell.md#modes)).
 - A mode never grants more than the level: Viewing shows the menus and toolbar a Viewer sees, and the writing is read
   only; a mode the level does not allow is not listed.
 - Until suggesting is built, Suggesting is listed dimmed ("Coming soon") and a Participant starts in Viewing.

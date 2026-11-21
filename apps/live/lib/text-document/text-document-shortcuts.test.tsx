@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { textDocumentBreakActions } from './text-document-breaks';
+import { textDocumentTableActions } from './text-document-tables';
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
@@ -8,7 +9,7 @@ import { EditorView } from 'prosemirror-view';
 import { ySyncPlugin } from 'y-prosemirror';
 import { TextDocument, TextDocumentState } from '@livedoc/text-documents';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
-import { OFFICE_MODES } from '@/lib/office/office-mode';
+import { TEXT_DOCUMENT_MODES } from './text-document-modes';
 import { track } from '@/lib/telemetry';
 import { SHELL_BOUND_ITEMS, catalogueFaults, catalogueItems } from '@/lib/office/office-catalogue';
 import { textDocumentEditorActions } from './text-document-editor-actions';
@@ -87,6 +88,8 @@ describe('the text document menus', () => {
         ...Object.keys(
           textDocumentBreakActions(null, { canEdit: true, liveDoc: { current: null }, format }),
         ),
+        // Insert > Table (text-document-tables), bound by the surface.
+        ...Object.keys(textDocumentTableActions(null, { canEdit: true, sectionWidth: 468 })),
         // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
         PREFERENCES_ITEM,
         // File > Page setup, Format > Page orientation and Switch to pageless (useTextDocumentPageSetup), by the surface.
@@ -124,7 +127,7 @@ describe('the text document menus', () => {
         CONTINUE_NUMBERING,
         ...SHELL_BOUND_ITEMS,
         // The editing modes (useOfficeMode), bound by the surface.
-        ...OFFICE_MODES.filter((m) => m.status === 'built').map((m) => m.item),
+        ...TEXT_DOCUMENT_MODES.filter((m) => m.status === 'built').map((m) => m.item),
         // The panels' items (useOfficePanels), bound by the surface.
         ...TEXT_DOCUMENT_PANELS.map((p) => p.item),
         // View > Show ruler and Show non-printing characters (useTextDocumentViewToggle), bound by the surface.
