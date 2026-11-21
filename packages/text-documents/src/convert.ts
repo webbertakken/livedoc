@@ -3,6 +3,7 @@
 import type { Block, Inline, Paragraph } from './model/blocks';
 import type { ListDefinition } from './model/lists';
 import { Notes } from './model/notes';
+import { restartLosses } from './odf/odf-lines';
 import { compact, type BorderLine, type ParagraphProps, type TextProps } from './model/props';
 import { borderSize, borderSpace, OOXML_BORDER_SPACE_MAX_PT } from './ooxml/ooxml-borders';
 import type { PageSetup, Section } from './model/sections';
@@ -26,7 +27,8 @@ export type ConversionLoss = ReportItem & {
     | 'between'
     | 'border-padding'
     | 'header-footer'
-    | 'page-number-start';
+    | 'page-number-start'
+    | 'line-number-restart';
 };
 
 function count(map: Map<string, number>, name: string): void {
@@ -62,6 +64,10 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
         for (let i = 0; i < storiesOf(block.headers).length; i += 1) count(other, 'header-footer');
         if (block.numberStart !== undefined) count(other, 'page-number-start');
       }
+  // Restart on each page is the whole document's in ODF (page-layout.md "Line numbers").
+  if (to === 'odf')
+    for (let i = 0; i < restartLosses(sectionsOf(document)); i += 1)
+      count(other, 'line-number-restart');
   const notes = Notes.all(document.body).flatMap((note) => note.blocks);
   for (const block of [...document.body, ...stories.flat(), ...notes]) {
     if (block.type === 'kept') count(kept, block.name);

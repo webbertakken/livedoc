@@ -36,12 +36,24 @@ export type Orientation = PageSetup['orientation'];
 
 export type SectionStart = 'next-page' | 'continuous' | 'even-page' | 'odd-page';
 
+/** How a section's line numbers count (page-layout.md "Line numbers"): on through the document, from 1 on each page, or from
+ * 1 at the section's start. */
+export type LineNumberRestart = 'continuous' | 'page' | 'section';
+
+/** A section's line numbers: how they restart, and a file's own count-by other than 1, kept. */
+export type LineNumbers = {
+  readonly restart: LineNumberRestart;
+  readonly countBy?: number;
+};
+
 export type Section = {
   readonly start: SectionStart;
   readonly setup: PageSetup;
   readonly headers?: SectionHeaders;
   /** The number its first page has (page-layout.md "Page numbers"); absent, it counts on from the pages before. */
   readonly numberStart?: number;
+  /** Numbers beside its lines (page-layout.md "Line numbers"); absent, none. */
+  readonly lineNumbers?: LineNumbers;
   readonly kept?: KeptProperties;
 };
 

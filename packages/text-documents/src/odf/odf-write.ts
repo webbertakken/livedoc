@@ -33,6 +33,13 @@ import { HeadersAndFooters, type ResolvedHeaders } from '../model/headers';
 import { paragraphContentXml, type Segment } from './odf-text-content';
 import { odfFieldXml } from './odf-fields';
 import { odfFootnoteXml } from './odf-notes';
+import {
+  isLineNumberingXml,
+  lineNumberingXml,
+  paragraphLines,
+  withLines,
+  type ParagraphLines,
+} from './odf-lines';
 import { Notes } from '../model/notes';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
@@ -159,6 +166,7 @@ class OdfWriter {
     master: string | undefined,
     first: boolean,
     start: number | undefined,
+    lines?: ParagraphLines,
   ): string {
     const values = {
       style: p.style,
@@ -166,16 +174,25 @@ class OdfWriter {
       text: p.text,
       master: first ? undefined : master,
       start,
+      lines,
     };
     if (keptStillHolds(p.kept, values)) {
       const name = this.keptName(p.kept);
       if (name) return name;
     }
     const { outlineLevel: _, ...props } = stopsWritten(this.tabs, p, this.tabsFromIndent);
-    if (isEmpty(props) && isEmpty(p.text ?? {}) && master === undefined && start === undefined)
+    if (
+      isEmpty(props) &&
+      isEmpty(p.text ?? {}) &&
+      master === undefined &&
+      start === undefined &&
+      lines === undefined
+    )
       return p.style;
     this.font(p.text ?? {});
-    const inner = withPageNumber(paragraphPropsXml(props), start) + textPropsXml(p.text ?? {});
+    const inner =
+      withLines(withPageNumber(paragraphPropsXml(props), start), lines) +
+      textPropsXml(p.text ?? {});
     return this.generated('LDP', (name) => {
       const open = `<style:style${attr('style:name', name)} style:family="paragraph"${attr('style:parent-style-name', p.style)}${attr('style:master-page-name', master)}`;
       return inner ? `${open}>${inner}</style:style>` : `${open}/>`;
@@ -352,6 +369,11 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
   let pendingMaster: string | undefined = firstMaster === 'Standard' ? undefined : firstMaster;
   let pendingStart = story ? undefined : doc.section.numberStart;
   let isFirstParagraph = !story;
+  // Line numbers (page-layout.md "Line numbers"): the section each paragraph is in, and whether it is its first.
+  const anyNumbered =
+    !story && [doc.section, ...doc.body].some((b) => (b as Section).lineNumbers !== undefined);
+  let section: Section = doc.section;
+  let firstInSection = true;
   let regionOpen: string | undefined;
   const lists = new ListWriter(w, out);
   const listsSeen = new Set<string>();
@@ -364,7 +386,9 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
     pendingMaster = undefined;
     pendingStart = undefined;
     isFirstParagraph = false;
-    const style = w.paragraphStyle(p, master, first, start);
+    const lines = story ? undefined : paragraphLines(anyNumbered, section, firstInSection);
+    firstInSection = false;
+    const style = w.paragraphStyle(p, master, first, start, lines);
     const outline = p.props.outlineLevel ?? Styles.outlineLevel(doc.styles, p.style);
     const segments: Segment[] = p.inlines.map((i) => {
       const span = w.textStyle(i);
@@ -396,6 +420,8 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
     if (block.type === 'paragraph') out.push(paragraphXml(block));
     else if (block.type === 'kept') out.push(w.kept(block.xml));
     else {
+      section = block;
+      firstInSection = true;
       if (regionOpen) {
         out.push(`</${regionOpen}>`);
         regionOpen = undefined;
@@ -566,10 +592,20 @@ function writeParts(document: TextDocument, generator: string): OdfWritten {
   const w = new OdfWriter(document);
   w.storyXml = (blocks) => storyContentXml(w, blocks);
   const text = bodyXml(w);
+  const sections = [
+    document.section,
+    ...document.body.filter((b): b is SectionBreak => b.type === 'section'),
+  ];
   const named = [
     w.defaultStyleXml(),
     ...document.styles.map((s) => w.namedStyleXml(s)),
-    ...(w.source?.styles ?? []).map((s) => w.kept(s)),
+    // The whole document's line numbering (page-layout.md "Line numbers"), where the file had it, else last.
+    ...(w.source?.styles ?? []).map((s) =>
+      isLineNumberingXml(s.xml) ? lineNumberingXml(sections, w.kept(s)) : w.kept(s),
+    ),
+    (w.source?.styles ?? []).some((s) => isLineNumberingXml(s.xml))
+      ? ''
+      : lineNumberingXml(sections, undefined),
   ].join('');
   const root = `${declarations(w.ns)} office:version="${ODF_VERSION}"`;
   const faces = `<office:font-face-decls>${w.fontFaces.join('')}</office:font-face-decls>`;

@@ -22,6 +22,7 @@ export const SECTION_BREAK_ATTRIBUTES = [
   'setup',
   'headers',
   'numberStart',
+  'lineNumbers',
   'kept',
   'region',
 ] as const;

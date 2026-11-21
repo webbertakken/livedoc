@@ -151,6 +151,7 @@ class OoxmlWriter {
       setup: section.setup,
       references: this.headerParts.signature(section),
       numberStart: section.numberStart,
+      lineNumbers: section.lineNumbers,
     };
     if (section.kept && keptStillHolds(section.kept, values)) {
       // Its references name the parts by the ids they had: each part is written again under its name.
@@ -166,6 +167,7 @@ class OoxmlWriter {
         references: this.headerParts.referencesXml(section, at),
         titlePage: section.headers?.differentFirst === true,
         numberStart: section.numberStart,
+        lineNumbers: section.lineNumbers,
       },
     );
   }
