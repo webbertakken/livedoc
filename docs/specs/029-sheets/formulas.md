@@ -1284,4 +1284,4 @@ The code cites each by its id.
 - **D58** INFO's answers: One document, recalculation Automatic, `LiveDoc` as system and release; else `#N/A` (default).
 - **D59** The odd-period bonds' sums: Excel's over quasi-coupon periods (ECMA-376), not LibreOffice's (default).
 - **D60** MULTIPLE.OPERATIONS's reach: Ranges read the replacement; spills as they stand; 250 formulas deep (default).
-- **D61** to **D66**: the imports' addresses, answers, errors and fetches ([Imports from the web](imports.md#defaults)).
+- The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).
