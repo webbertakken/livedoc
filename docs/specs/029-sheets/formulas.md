@@ -420,7 +420,24 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `CONCATENATE` takes ranges, read across rows (Google's); `JOIN` takes one row or one column an argument, a table is
   `#VALUE!`.
 - `REGEXMATCH`, `REGEXEXTRACT` and `REGEXREPLACE` read text only: a number is `#VALUE!`, as Google's help says.
-  `REGEXEXTRACT` gives the whole match, its one capture group, or its capture groups one column each.
+  `REGEXEXTRACT` gives the whole match, its one capture group, or its capture groups one column each; a group that
+  took no part is empty text.
+- Their patterns are **RE2's**, as Google's are, less RE2's Unicode classes (`\p`, `\P`), which Google leaves out:
+  - RE2's own syntax reads: flags `(?i)` (case), `(?m)` (lines), `(?s)` (`.` takes `\n`) and `(?U)` (lazy
+    by default), cleared with `-` (`(?i-s)`) and scoped as `(?i:…)`; named groups `(?P<name>…)` and
+    `(?<name>…)`; `\Q…\E` literal text; ASCII classes `[[:alpha:]]` and `[[:^alpha:]]`; `\A` and `\z`;
+    octal `\123`, hex `\x7F` and `\x{10FFFF}`; a `{` that starts no count is a `{`.
+  - RE2's meanings hold: `\d`, `\s` (`[\t\n\f\r ]`), `\w` and `\b` are ASCII; `.` is any character but
+    `\n`; in lines mode `^` and `$` break at `\n` only; `(?i)` folds case as Unicode does, `k` with `K` and
+    the Kelvin sign.
+  - What RE2 refuses is refused: lookarounds, backreferences (`\1`, `(?P=name)`), possessive and atomic forms,
+    comments, `\Z`, `\G`, `\C`, `\cK`, `\e`, any other letter escape RE2 does not name, a repeat of a repeat
+    (`a**`), a count past 1,000 (nested counts multiplied), a repeat of nothing, an unbalanced bracket. Such a
+    pattern is `#REF!` "Function REGEXMATCH parameter 2 value "…" is not a valid regular expression.", Google's words.
+- `REGEXREPLACE`'s replacement is Google's own syntax: `$0` is the match and `$1` on its groups, the longest number
+  that names a group (`$12` with fewer than 12 groups is group 1, then "2"); a `$` before no digit is a `$`; a
+  backslash makes the next character plain (`\$1`, `\\`). A `$` naming no group is `#N/A` once the pattern
+  matches; a group that took no part is empty text; a backslash ending the replacement stays (default, D70).
 - The byte functions (`LENB`, `LEFTB`, `RIGHTB`, `MIDB`, `REPLACEB`, `FINDB`, `SEARCHB`) count an East Asian wide or
   full-width character (CJK, kana, Hangul, the full-width forms) as 2 bytes and any other as 1, half-width katakana
   too (default, D43). As Google's examples have it, a starting position counts characters, and a character a window
@@ -584,11 +601,12 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
     under a link shows its address and "⌘Click to open" (Ctrl+Click elsewhere). The cell menu offers **Open Link** for
     the active cell's link, for every role: opening changes nothing, and it is the way in on a touch screen.
   - Telemetry: `Sheet / Opened / Hyperlink`, never the address.
-- `REGEX…` functions take JavaScript regular expressions. A regular expression cannot be stopped once it runs, so
-  its cost is bounded before it starts: a pattern whose repeats could backtrack for more than a moment on the cell's
-  text (a repeat of a repeat such as `(a+)+`, or three or more open-ended repeats side by side on long text) answers
-  `#VALUE!` "This pattern is too costly to run on this text" instead of freezing the sheet for everyone on it.
-  `SEARCH`'s `*` wildcards are held to the same bound.
+- `REGEX…` functions run their RE2 pattern as a JavaScript regular expression of the same meaning, written from it
+  (Google's runs in time linear in the text; this one backtracks). A regular expression cannot be stopped once it
+  runs, so its cost is bounded before it starts: a pattern whose repeats could backtrack for more than a moment on
+  the cell's text (a repeat of a repeat such as `(a+)+`, or three or more open-ended repeats side by side on long
+  text) answers `#VALUE!` "This pattern is too costly to run on this text" instead of freezing the sheet for
+  everyone on it. `SEARCH`'s `*` wildcards are held to the same bound.
 - `TODAY`, `NOW`, `RAND`, `RANDBETWEEN`, `OFFSET` and `INDIRECT` are **volatile**: they recalculate on every
   change to the sheet. With nothing changed they are worked out again on a clock: a Plan Sheet's once a minute, a
   spreadsheet's as its Recalculation setting says ([Settings](settings.md): on change only, or every minute or hour).
@@ -1363,4 +1381,6 @@ The code cites each by its id.
   applications a formula, past them `#NUM!` (default).
 - **D69** QUERY's guessed header and its format: a first row of text over other types is a header; `format` and
   `options` are read and not yet shown (default).
+- **D70** REGEXREPLACE's unnamed edges: a `$` naming no group is `#N/A` only when the pattern matches (Java's
+  replacement runs per match); a group that took no part is empty text; a trailing backslash stays (default).
 - The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).

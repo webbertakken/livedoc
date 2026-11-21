@@ -594,6 +594,63 @@
       }
     },
     {
+      "id": "REGEXMATCH.4",
+      "f": "=REGEXMATCH(CHAR(160), \"\\s\")",
+      "expect": [[false]],
+      "cite": "https://github.com/google/re2/wiki/Syntax, the RE2 syntax https://support.google.com/docs/answer/3098292 links (\"Google products use RE2\"): \"\\s whitespace (≡ [\\t\\n\\f\\r ])\", ASCII only",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXMATCH.5",
+      "f": "=REGEXMATCH(\"ab\", \"(?=a)\")",
+      "expect": [
+        [
+          {
+            "e": "#REF!"
+          }
+        ]
+      ],
+      "cite": "https://github.com/google/re2/wiki/Syntax, the RE2 syntax https://support.google.com/docs/answer/3098292 links (\"Google products use RE2\"): \"(?=re) ... (NOT SUPPORTED)\"; https://www.regular-expressions.info/googlesheets.html (\"An invalid regular expression results in a #REF! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXMATCH.6",
+      "f": "=REGEXMATCH(\"ABC\", \"(?i)abc\")",
+      "expect": [[true]],
+      "cite": "https://github.com/google/re2/wiki/Syntax, the RE2 syntax https://support.google.com/docs/answer/3098292 links (\"Google products use RE2\"): flag \"i case-insensitive\", syntax \"(?flags)\"",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXMATCH.7",
+      "f": "=REGEXMATCH(\"a\", \"\\p{L}\")",
+      "expect": [
+        [
+          {
+            "e": "#REF!"
+          }
+        ]
+      ],
+      "cite": "https://support.google.com/docs/answer/3098292 (\"Google Sheets supports RE2 except Unicode character class matching\"); https://www.regular-expressions.info/googlesheets.html (\"does not support the \\p syntax\"; \"An invalid regular expression results in a #REF! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXMATCH.8",
+      "f": "=REGEXMATCH(\"axb\", \"\\Qa.b\\E\")",
+      "expect": [[false]],
+      "cite": "https://github.com/google/re2/wiki/Syntax, the RE2 syntax https://support.google.com/docs/answer/3098292 links (\"Google products use RE2\"): \"\\Q...\\E literal text ... even if ... has punctuation\"",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXMATCH is #NAME? there"
+      }
+    },
+    {
       "id": "REGEXEXTRACT.1",
       "f": "=REGEXEXTRACT(\"My favorite number is 241, but my friend's is 17\", \"\\d+\")",
       "expect": [["241"]],
@@ -628,6 +685,30 @@
       }
     },
     {
+      "id": "REGEXEXTRACT.4",
+      "f": "=REGEXEXTRACT(\"ab12\", \"[[:digit:]]+\")",
+      "expect": [["12"]],
+      "cite": "https://github.com/google/re2/wiki/Syntax, the RE2 syntax https://support.google.com/docs/answer/3098292 links (\"Google products use RE2\"): \"[[:digit:]] digits (≡ [0-9])\"",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXEXTRACT is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXEXTRACT.5",
+      "f": "=REGEXEXTRACT(\"aa\", \"(a)\\1\")",
+      "expect": [
+        [
+          {
+            "e": "#REF!"
+          }
+        ]
+      ],
+      "cite": "https://github.com/google/re2/wiki/Syntax, the RE2 syntax https://support.google.com/docs/answer/3098292 links (\"Google products use RE2\"): \"\\1 backreference (NOT SUPPORTED)\"; https://www.regular-expressions.info/googlesheets.html (\"An invalid regular expression results in a #REF! error\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXEXTRACT is #NAME? there"
+      }
+    },
+    {
       "id": "REGEXREPLACE.1",
       "f": "=REGEXREPLACE(\"Spreadsheets\", \"S.*d\", \"Bed\")",
       "expect": [["Bedsheets"]],
@@ -656,6 +737,66 @@
         ]
       ],
       "cite": "https://support.google.com/docs/answer/3098245 (\"This function only works with text (not numbers) as input\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.4",
+      "f": "=REGEXREPLACE(\"2026-11-21\", \"(\\d+)-(\\d+)-(\\d+)\", \"$3/$2/$1\")",
+      "expect": [["21/11/2026"]],
+      "cite": "https://www.regular-expressions.info/googlesheets.html (\"$1 to $999 insert the text matched by a capturing group\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.5",
+      "f": "=REGEXREPLACE(\"abc\", \"b\", \"[$0]\")",
+      "expect": [["a[b]c"]],
+      "cite": "https://www.regular-expressions.info/googlesheets.html (\"$0 inserts the overall regex match\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.6",
+      "f": "=REGEXREPLACE(\"abc\", \"(b)\", \"$12\")",
+      "expect": [["ab2c"]],
+      "cite": "https://www.regular-expressions.info/googlesheets.html (\"Trailing digits are taken as literals if the shorter number results in a valid backreference\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.7",
+      "f": "=REGEXREPLACE(\"abc\", \"(b)\", \"$2\")",
+      "expect": [
+        [
+          {
+            "e": "#N/A"
+          }
+        ]
+      ],
+      "cite": "https://www.regular-expressions.info/googlesheets.html (\"A backreference to a group that does not exist results in the error #N/A\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.8",
+      "f": "=REGEXREPLACE(\"abc\", \"b\", \"\\$1\")",
+      "expect": [["a$1c"]],
+      "cite": "https://www.regular-expressions.info/googlesheets.html (\"A backslash escapes any character that follows, including the dollar sign\")",
+      "differs": {
+        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
+      }
+    },
+    {
+      "id": "REGEXREPLACE.9",
+      "f": "=REGEXREPLACE(\"abc\", \"b\", \"$x\")",
+      "expect": [["a$xc"]],
+      "cite": "https://www.regular-expressions.info/googlesheets.html (\"A dollar sign that is not followed by a digit is a literal dollar sign\")",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.REGEXREPLACE is #NAME? there"
       }
