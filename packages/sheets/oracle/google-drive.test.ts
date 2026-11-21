@@ -90,8 +90,12 @@ describe('oracleDrive', () => {
     expect(slept).toEqual([]);
   });
 
-  it("names the Sheets API's status, a bare failure, and an upload without an id", async () => {
+  it("names the Sheets API's detail and status, a bare failure, and an upload without an id", async () => {
     const answers: Response[] = [
+      Response.json(
+        { error: { status: 'PERMISSION_DENIED', details: [{ reason: 'SERVICE_DISABLED' }] } },
+        { status: 403 },
+      ),
       Response.json({ error: { code: 403, status: 'PERMISSION_DENIED' } }, { status: 403 }),
       new Response('not json', { status: 400 }),
       Response.json({}),
@@ -102,6 +106,9 @@ describe('oracleDrive', () => {
       't',
       async () => {},
       () => {},
+    );
+    expect((await failure(drive.setLocale('x', 'en_US', 'Etc/GMT'))).message).toBe(
+      'locale answered 403 SERVICE_DISABLED',
     );
     expect((await failure(drive.setLocale('x', 'en_US', 'Etc/GMT'))).message).toBe(
       'locale answered 403 PERMISSION_DENIED',

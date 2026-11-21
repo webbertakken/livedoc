@@ -33,12 +33,14 @@ export type OracleDrive = {
   remove(id: string): Promise<void>;
 };
 
-// Google's reason for a failure (`fileNotExportable`, `PERMISSION_DENIED`), never more of its body.
+// Google's reason for a failure, never more of its body: Drive's (`fileNotExportable`), else the Sheets API's
+// detail (`SERVICE_DISABLED`), else its status (`PERMISSION_DENIED`).
 async function reasonOf(res: Response): Promise<string> {
   const body = (await res.json().catch(() => null)) as {
-    error?: { status?: unknown; errors?: { reason?: unknown }[] };
+    error?: { status?: unknown; errors?: { reason?: unknown }[]; details?: { reason?: unknown }[] };
   } | null;
-  const reason = body?.error?.errors?.[0]?.reason ?? body?.error?.status;
+  const reason =
+    body?.error?.errors?.[0]?.reason ?? body?.error?.details?.[0]?.reason ?? body?.error?.status;
   return typeof reason === 'string' ? reason : '';
 }
 
