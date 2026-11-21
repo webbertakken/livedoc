@@ -85,7 +85,6 @@ export function SheetFunctionSearch({
       <div className="flex flex-col gap-1 p-2">
         <TextInput
           autoFocus
-          compact
           type="search"
           aria-label="Search functions"
           placeholder="Search functions"

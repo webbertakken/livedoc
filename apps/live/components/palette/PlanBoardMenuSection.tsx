@@ -65,7 +65,6 @@ export function PlanBoardSettings({
     <MenuGroup title="Title">
       <div className="px-3 pb-2 pt-1">
         <TextInput
-          compact
           aria-label="Board title"
           className="w-full"
           value={title}

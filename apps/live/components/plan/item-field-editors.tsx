@@ -161,9 +161,9 @@ export function DebouncedText({
       <input {...common} className={className} />
     )
   ) : multiline ? (
-    <TextArea {...common} compact className="min-h-28 resize-y" />
+    <TextArea {...common} className="min-h-28 resize-y" />
   ) : (
-    <TextInput {...common} compact />
+    <TextInput {...common} />
   );
   return count ? (
     <div>
@@ -376,7 +376,6 @@ export function DateField({
     <DateInput
       id={id}
       disabled={disabled}
-      compact
       value={typeof value === 'string' ? value : undefined}
       onCommit={(v) => void onSave(v)}
     />

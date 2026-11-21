@@ -10,9 +10,8 @@ import { SOLID_BRAND_DARK_CONTROL } from './brand-classes';
 //
 // `variant` is the intent (brand primary / neutral outline / ghost: no fill or border until hovered, for a
 // quiet action in a header row). There is no red or yellow variant: a delete looks like any other action in
-// its place; `size` is the padding+type scale (sm is the dialog-action
-// rhythm, lg the large CTA, cta / cta-sm the public sites' call-to-action
-// pill). Everything else (onClick, type, disabled, aria-*, ref) passes
+// its place; `size` is the step on the sizing scale (xs a toolbar control, sm a button, md a primary action, lg
+// the large CTA, cta / cta-sm the public sites' call-to-action pill). Only a primary or filled button is medium. Everything else (onClick, type, disabled, aria-*, ref) passes
 // straight through, so this is a drop-in for a raw <button>. Extra `className` is appended last so a caller
 // can still add layout (w-full, mt-…) without re-stating the look.
 
@@ -21,30 +20,31 @@ export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'solid';
 export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'cta-sm' | 'cta';
 
 const BASE =
-  'optical-edges inline-flex items-center justify-center gap-2 rounded-md font-medium transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50';
+  'optical-edges inline-flex items-center justify-center gap-2 rounded-control transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50';
 
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary: `bg-brand-700 text-white hover:bg-brand-800 focus-visible:outline-brand-700 ${SOLID_BRAND_DARK_CONTROL}`,
+  primary: `font-medium bg-brand-700 text-white hover:bg-brand-800 focus-visible:outline-brand-700 ${SOLID_BRAND_DARK_CONTROL}`,
   secondary:
-    'border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800',
+    'font-normal border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-slate-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-600 dark:hover:bg-slate-800',
   ghost:
-    'text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-slate-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
+    'font-normal text-slate-500 hover:bg-slate-100 hover:text-slate-800 focus-visible:outline-slate-400 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100',
   // A filled button whose fill (and hover fill) the caller supplies in `className`, for an action that takes on a
   // colour it represents, such as a share role's. White text, so the fill must hold 4.5:1 against white.
-  solid: 'text-white focus-visible:outline-slate-400',
+  solid: 'font-medium text-white focus-visible:outline-slate-400',
 };
 
 const SIZES: Record<ButtonSize, string> = {
-  // The editor dialogs' compact action rhythm (Share / footer actions).
-  xs: 'px-3 py-1.5 text-xs',
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-sm',
-  lg: 'px-6 py-3 text-base',
+  // The sizing scale (docs/specs/004-interface-design/sizing.md): a toolbar control 28, a button 32, a primary
+  // action 36, each at the one reading size. A minimum, not a height, so a label that wraps still fits.
+  xs: 'min-h-row px-3 text-body',
+  sm: 'min-h-field px-3 text-body',
+  md: 'min-h-prominent px-4 text-body',
+  lg: 'min-h-12 px-6 text-panel-title',
   // The public sites' primary call-to-action pill (marketing's CtaLink, the
   // help centre's contact actions): wider than md, shorter than lg, in the
   // small or the base type scale.
-  'cta-sm': 'px-5 py-2.5 text-sm',
-  cta: 'px-5 py-2.5 text-base',
+  'cta-sm': 'min-h-10 px-6 text-body',
+  cta: 'min-h-11 px-6 text-panel-title',
 };
 
 // Class-string escape hatch for ANCHORS styled as buttons: Next's <Link>

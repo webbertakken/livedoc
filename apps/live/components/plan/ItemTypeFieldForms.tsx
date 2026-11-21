@@ -187,7 +187,6 @@ export function CustomFieldForm({
     <div className={`flex flex-col gap-2 ${className}`}>
       <TextInput
         aria-label="Field name"
-        compact
         value={field.label}
         maxLength={CUSTOM_FIELD_LABEL_MAX}
         onChange={(e) => onChange({ label: e.target.value })}
@@ -205,7 +204,6 @@ export function CustomFieldForm({
         <TextArea
           aria-label="Options, one a line"
           placeholder="Options, one a line"
-          compact
           className="min-h-20"
           value={optionsText}
           onChange={(e) => {
@@ -268,7 +266,6 @@ export function NewFieldForm({
           <TextInput
             aria-label="New field's name"
             placeholder="Name"
-            compact
             value={custom.label}
             maxLength={CUSTOM_FIELD_LABEL_MAX}
             onChange={(e) => setCustom({ ...custom, label: e.target.value })}
@@ -288,7 +285,6 @@ export function NewFieldForm({
             <TextArea
               aria-label="Options, one a line"
               placeholder="Options, one a line"
-              compact
               className="min-h-20"
               onChange={(e) => setCustom({ ...custom, options: optionsFrom(e.target.value) })}
             />

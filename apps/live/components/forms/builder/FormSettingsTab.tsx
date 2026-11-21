@@ -64,7 +64,6 @@ export function FormSettingsTab({ link }: { link: FormLinkState }) {
         <SettingsField label="Close On">
           <div className="flex items-center gap-2">
             <TextInput
-              compact
               type="datetime-local"
               className="min-w-0 flex-1"
               value={localValue(form.closesAt)}
@@ -86,7 +85,6 @@ export function FormSettingsTab({ link }: { link: FormLinkState }) {
         </SettingsField>
         <SettingsField label="Response Limit">
           <TextInput
-            compact
             type="number"
             inputMode="numeric"
             className="w-full"

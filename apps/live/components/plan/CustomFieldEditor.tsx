@@ -59,7 +59,6 @@ export function CustomFieldEditor({
           inputMode="url"
           placeholder="https://"
           disabled={disabled}
-          compact
           defaultValue={text}
           key={text}
           onBlur={(e) => {
@@ -78,7 +77,6 @@ export function CustomFieldEditor({
           type="number"
           step="any"
           disabled={disabled}
-          compact
           defaultValue={typeof value === 'number' ? value : ''}
           key={typeof value === 'number' ? value : 'none'}
           onBlur={(e) => {
@@ -101,7 +99,6 @@ export function CustomFieldEditor({
             step="0.01"
             inputMode="decimal"
             disabled={disabled}
-            compact
             defaultValue={typeof value === 'number' ? value : ''}
             key={typeof value === 'number' ? value : 'none'}
             onBlur={(e) => {
@@ -124,7 +121,6 @@ export function CustomFieldEditor({
             placeholder="name@example.com"
             maxLength={EMAIL_MAX}
             disabled={disabled}
-            compact
             defaultValue={text}
             key={text}
             onBlur={(e) => {

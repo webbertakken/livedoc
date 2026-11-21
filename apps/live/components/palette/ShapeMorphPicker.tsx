@@ -34,7 +34,6 @@ export function ShapeMorphPicker({
   return (
     <div className="flex flex-col gap-1.5 px-2 py-1.5">
       <TextInput
-        compact
         type="search"
         aria-label="Search shapes"
         placeholder="Search shapes"

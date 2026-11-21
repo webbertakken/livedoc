@@ -131,7 +131,6 @@ function GlyphGrid({
           <TextInput
             ref={searchRef}
             id={searchId}
-            compact
             type="search"
             aria-label="Search glyphs"
             placeholder="Search glyphs"

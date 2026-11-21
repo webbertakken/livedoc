@@ -61,3 +61,29 @@ describe('Button ghost variant', () => {
     expect(cls).toContain('hover:bg-slate-100');
   });
 });
+
+// docs/specs/004-interface-design/sizing.md: a button is 32 px, a primary action 36, a toolbar control 28; medium
+// weight marks a primary control only.
+describe('Button size and weight', () => {
+  const classOf = (node: ReturnType<typeof render>) =>
+    node.container.querySelector('button')!.className;
+
+  it('takes its height from the sizing scale for each size', () => {
+    expect(classOf(render(<Button size="xs">A</Button>))).toContain('min-h-row');
+    expect(classOf(render(<Button size="sm">A</Button>))).toContain('min-h-field');
+    expect(classOf(render(<Button size="md">A</Button>))).toContain('min-h-prominent');
+  });
+
+  it('reads every editor size at the one reading size', () => {
+    for (const size of ['xs', 'sm', 'md'] as const) {
+      expect(classOf(render(<Button size={size}>A</Button>))).toContain('text-body');
+    }
+  });
+
+  it('sets a primary or filled button in medium and every other in regular', () => {
+    expect(classOf(render(<Button variant="primary">A</Button>))).toContain('font-medium');
+    expect(classOf(render(<Button variant="solid">A</Button>))).toContain('font-medium');
+    expect(classOf(render(<Button variant="secondary">A</Button>))).toContain('font-normal');
+    expect(classOf(render(<Button variant="ghost">A</Button>))).toContain('font-normal');
+  });
+});
