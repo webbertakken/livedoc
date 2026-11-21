@@ -46,3 +46,49 @@ describe('usePresenceRows cursorsHidden', () => {
     expect(r.laserTrailRows[0]?.points).toEqual([{ x: 3, y: 4, t: 1 }]);
   });
 });
+
+// docs/specs/008-canvas/canvas-performance.md "A release re-renders what moved, too": every element view reads who
+// selects what, so presence arriving with no one selecting anything keeps the reading it had.
+describe('usePresenceRows remoteSelectionsByElement', () => {
+  const props = (
+    livePresence: Participant[],
+    remoteSelections: Map<string, { tabId: string; elementId: string | null }>,
+  ) => ({
+    documentShareable: true,
+    documentTeamId: null,
+    activeId: 't1',
+    selfParticipant: self,
+    tabs: [{ id: 't1', elements: [] } as unknown as Tab],
+    livePresence,
+    liveAgents: [],
+    presenceClock: { now: 1000, lastSeen: new Map([['peer', 1000]]) },
+    remoteTabFocus: new Map([['peer', 't1']]),
+    remoteCursors: new Map(),
+    remoteSelections,
+    remoteLaserTrails: new Map(),
+    remoteAvatars: new Map(),
+    localLaserTrail: [],
+    cursorsHidden: false,
+  });
+
+  it('keeps its reading while it says the same', () => {
+    const hook = renderHook((p: ReturnType<typeof props>) => usePresenceRows(p), {
+      initialProps: props([self], new Map()),
+    });
+    const before = hook.result.current.remoteSelectionsByElement;
+    hook.rerender(props([self, peer], new Map()));
+    expect(hook.result.current.remoteSelectionsByElement).toBe(before);
+  });
+
+  it('gives a new reading once a peer selects something', () => {
+    const hook = renderHook((p: ReturnType<typeof props>) => usePresenceRows(p), {
+      initialProps: props([self, peer], new Map()),
+    });
+    const before = hook.result.current.remoteSelectionsByElement;
+    hook.rerender(props([self, peer], new Map([['peer', { tabId: 't1', elementId: 'e1' }]])));
+    expect(hook.result.current.remoteSelectionsByElement).not.toBe(before);
+    expect(hook.result.current.remoteSelectionsByElement.get('e1')?.map((s) => s.id)).toEqual([
+      'peer',
+    ]);
+  });
+});

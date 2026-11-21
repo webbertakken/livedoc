@@ -131,9 +131,10 @@ A gesture's cost scales with what it changes and what is on screen, never with t
   reads its own part of the preview, so a frame's work follows what moved, not the board, and only
   what follows the moved selection (its chrome) reads the whole preview.
 - **A release re-renders what moved, too.** The release writes the board, and what every element
-  view reads from the board (the mind nodes' numbers, the agents' focus) keeps its identity while
-  its entries hold: a fresh, equal value re-rendered every element view on the board at each
-  release. An arrow slot that cannot wear the free arrow's frame ignores the board, and a step the
+  view reads from the board (the mind nodes' numbers, the agents' focus, who else selects what)
+  keeps its identity while its entries hold: a fresh, equal value re-rendered every element view on
+  the board at each release, and presence arriving a few seconds after opening, with no one
+  selecting anything, did it once more inside the opening. An arrow slot that cannot wear the free arrow's frame ignores the board, and a step the
   release adds to the preview (a mind drop, a context join) redraws it only when it changes
   something.
 - **A change of the board walks what it changed, not the board.** Each element reads what the

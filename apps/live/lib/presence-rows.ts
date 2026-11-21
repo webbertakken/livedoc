@@ -323,3 +323,23 @@ export function buildRemoteSelectionsByElement(
   }
   return out;
 }
+
+const sameSelector = (a: RemoteSelector, b: RemoteSelector) =>
+  a.id === b.id && a.name === b.name && a.color === b.color && a.holds === b.holds;
+
+// Whether two readings of who selects what say the same thing: every element view reads the reading, so a rebuilt,
+// equal one (presence arriving, a peer moving their pointer) keeps the last one's identity
+// (docs/specs/008-canvas/canvas-performance.md "A release re-renders what moved, too").
+export function sameRemoteSelections(
+  a: ReadonlyMap<string, readonly RemoteSelector[]>,
+  b: ReadonlyMap<string, readonly RemoteSelector[]>,
+): boolean {
+  if (a === b) return true;
+  if (a.size !== b.size) return false;
+  for (const [id, selectors] of a) {
+    const other = b.get(id);
+    if (!other || other.length !== selectors.length) return false;
+    if (!selectors.every((s, i) => sameSelector(s, other[i]!))) return false;
+  }
+  return true;
+}

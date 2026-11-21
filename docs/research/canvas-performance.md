@@ -555,6 +555,24 @@ with style invalidation tracking.
   stroke's release the same rewrite of the isometric rule had saved only 3-4 ms, which is why it
   stayed; a drag pays it every frame.)
 
+## The opening's tail
+
+Measured 2026-11-21 on the reference board (whiteboard), locally at 3.5x, traced with the CPU
+profiler and mapped through the build's source maps; three opens.
+
+- **The mount** (1.3-2.0 s from the tab's arrival) forces the board's first style and layout pass
+  inside its commit (`useCanvasBox`'s layout effect, 0.27-0.55 s of style). Moved to the frame
+  after, the same pass runs there instead: the work stays on the opening's path, so it was left.
+  Matching selectors is about 3% of that pass (selector statistics: 31 ms of 965 ms traced); the
+  rest is computing styles for about 8,000 nodes and their `::before` and `::after`.
+- **After the first paint**, a task every 50-250 ms until 3.3-3.6 s: the Map's picture (70-83 ms),
+  every element slot rendering again (56-64 ms), the Draw dock's line placement (19-43 ms of forced
+  layout), a movable panel measuring itself (25 ms), style passes of 89-171 ms, and the idle
+  prefetch's chunks (34-69 ms each).
+- **Every element slot rendering again** was presence arriving: who else selects what was rebuilt
+  as a new, equally empty map, and every slot reads it. It now keeps its identity while it says the
+  same (`sameRemoteSelections`).
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.
