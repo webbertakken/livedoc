@@ -28,6 +28,8 @@ export const OWNER_SCOPED_SEGMENTS = new Set([
   'documents',
   'folders',
   'images',
+  // The blob store: an upload is stored for the resolved owner (docs/specs/006-document/blob-store.md).
+  'files',
   'custom-themes',
   'shape-libraries',
   'participants',

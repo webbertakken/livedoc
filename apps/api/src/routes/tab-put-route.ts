@@ -30,6 +30,7 @@ import { applyRoomLedger, fetchRoomLedger } from '../room-client';
 import { recordTabSave } from '../timeline';
 import type { TabSaveDocument } from '../db/tab-save-document';
 import { keepStoredStructure } from '../tab-structure';
+import { TAB_BLOB_STATUS, tabBlobRefusal } from '../blob-store/tab-blobs';
 import { readBody, type DocumentRouteContext } from './context';
 
 // Fields of the stored record, not of the tab body; a client echoing them back never stores them
@@ -79,6 +80,9 @@ export async function handleTabPut(
     console.info('[workbook] refused', { error: mixed, documentId: id, tabId });
     return conflict(mixed);
   }
+  // A PDF tab names bytes the blob store already holds for the document's owner, or the save is refused.
+  const blobs = await tabBlobRefusal(env, existing.ownerId, [received]);
+  if (blobs) return json({ error: blobs }, { status: TAB_BLOB_STATUS[blobs] });
   // Byte cap on the single tab (the body cap bounds the whole request; this bounds one tab's
   // element + comment tree). See bodyExceedsCap for why the header alone isn't enough.
   if (bodyExceedsCap(request, received, MAX_TAB_BYTES)) return payloadTooLarge();

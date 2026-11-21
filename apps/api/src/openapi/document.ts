@@ -211,6 +211,14 @@ const TAGS = [
     name: 'Trash',
     description: 'Deleted documents, restorable for 30 days before they are purged.',
   },
+  {
+    name: 'PDF documents',
+    description: "A PDF document's live changes: everything changed since its stored file.",
+  },
+  {
+    name: 'Files',
+    description: "The blob store: files' bytes held exactly, named by their SHA-256.",
+  },
   { name: 'Images', description: 'Upload, list, and reference image assets.' },
   { name: 'Themes', description: 'Saved custom themes.' },
   { name: 'API tokens', description: 'Mint and revoke the credentials external callers use.' },

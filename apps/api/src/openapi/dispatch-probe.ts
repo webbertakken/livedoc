@@ -177,6 +177,7 @@ export async function probeDispatch(
   const env = {
     DB: trap('DB'),
     IMAGES: trap('IMAGES'),
+    FILES: trap('FILES'),
     // A room's own SQLite: the room runs the document routes against it (document-route.ts).
     DOCUMENT_DB: trap('DOCUMENT_DB'),
     TELEMETRY_ENABLED: 'true',

@@ -51,6 +51,9 @@ export type Env = {
   // api worker: when unbound, the image endpoints all return 503
   // and the live app hides the Image palette entry.
   IMAGES?: R2Bucket;
+  // R2 bucket holding files' bytes exactly: the blob store (docs/specs/006-document/blob-store.md). Optional as
+  // IMAGES is: without it every blob store route answers 503 files_unavailable, and no PDF document can be made.
+  FILES?: R2Bucket;
   // Report a Bug (docs/specs/016-platform/bug-reports.md): the screenshots bucket (90-day lifecycle), the burst gate
   // per network, and the Bug Tracker document and board tab reports are filed on. Each optional: without the bucket a
   // report goes without its screenshot, without the limiter only the D1 window limits, and without the two ids every
