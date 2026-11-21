@@ -1,7 +1,8 @@
 # Standard mapping
 
-**Status: partly built.** Both formats read and write sheets, cells, formulas and arrays (`@livedoc/sheets/files`);
-styles, number formats, unknown content and the other rows of the table below are ahead.
+**Status: partly built.** Both formats read and write sheets, cells, formulas and arrays (`@livedoc/sheets/files`),
+within Excel's bounds, and a workbook converts between them; styles, number formats, unknown content and the other
+rows of the table below are ahead.
 
 How a [spreadsheet](spreadsheet.md)'s workbook maps onto its two native file formats (C1, ruled 2026-11-18: both
 native; a file keeps the format it arrived in). Research: [The standard](../../research/sheets-open-standard/standard.md).
@@ -101,6 +102,10 @@ The table is the contract the readers and writers are tested against, one test p
   read as its serial.
 - A sheet's name past Excel's 31 characters is cut and numbered as a taken name is, the formulas naming it follow, and
   the loss is named (`sheet_renamed`) (default, D84).
+- Excel's own bounds hold in every XLSX written, each loss named (default, D89): a cell's text past 32,767 characters
+  is cut (`text_cut`); a formula past 8,192 characters, as written, keeps only its value (`formula_unwritten`);
+  cells past column `XFD` (16,384) are left out (`sheet_cut`), and a block spilling past it is written to `XFD`;
+  a formula naming a column past `XFD` is written by S5's convention.
 
 ## Unknown content
 
@@ -110,7 +115,8 @@ The table is the contract the readers and writers are tested against, one test p
 - Kept content whose anchor is gone (its sheet deleted, its cells cleared) is dropped at the next write, and the
   write's report says so; nothing is dropped silently.
 - Converting to the other format carries only what the model holds; the conversion lists what it leaves behind
-  before it runs ([Files and print](files-and-print.md#converting)).
+  before it runs ([Files and print](files-and-print.md#converting)): the kept content, and what the model holds that
+  the new format's file cannot (Excel's bounds and grammar above, OpenFormula's unwritten formulas).
 
 ## Conformance claimed
 
@@ -146,3 +152,5 @@ The code cites each by its id.
 - **D84** A sheet name past 31 characters in XLSX: Cut and numbered as `SheetName.fit` makes a name (default).
 - **D85** An `.xlsm` opened: An XLSX workbook, its macros dropped and reported as the office packages drop them
   (default).
+- **D89** Excel's bounds in an XLSX written: Text cut at 32,767 characters, a formula past 8,192 written as its value,
+  cells past `XFD` left out, a formula naming a column past `XFD` wrapped by S5 (default).

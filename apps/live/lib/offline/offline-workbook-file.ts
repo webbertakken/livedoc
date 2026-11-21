@@ -1,8 +1,9 @@
 // An offline spreadsheet's file (docs/specs/029-sheets/files-and-print.md "Downloading", sheet-store.md "Offline
 // documents"): written in this browser from the sheets its record holds, as the api writes a stored one, so a download
-// never needs the server. Loaded only for that download, as it carries the engine and the file writer.
+// never needs the server; in the other standard, a converted copy (files-and-print.md "Download"). Loaded only for that
+// download, as it carries the engine and the file writer.
 import { downloadFileName } from '@livedoc/office-packages';
-import { sheetFromJson, WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
+import { sheetFromJson, type WorkbookFormat } from '@livedoc/sheets';
 import { writeWorkbook } from '@livedoc/sheets/files';
 import { ApiError } from '../api/core';
 import { UNTITLED_SPREADSHEET } from '../spreadsheet/spreadsheet-name';
@@ -16,9 +17,6 @@ export async function offlineWorkbookFile(
 ): Promise<{ blob: Blob; fileName: string }> {
   const rec = await offlineGetRecord(documentId);
   if (!rec?.workbook) throw new ApiError('workbook file', 404, 'workbook_not_found');
-  // A workbook leaves in its own standard (fork C1): converting is a person's choice (files-and-print.md "Converting").
-  if (!WorkbookRecord.sameStandard(format, rec.workbook.format))
-    throw new ApiError('workbook file', 409, 'format_not_native');
   const sheets = (await offlineFetchSheets(documentId, null)).map(sheetFromJson);
   const written = writeWorkbook(sheets, rec.workbook, rec.name, format);
   debugLog('[workbook] offline file written', {

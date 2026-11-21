@@ -1,8 +1,13 @@
 // A spreadsheet's workbook doors (docs/specs/029-sheets/files-and-print.md): its file, written by the api from the
-// sheets the room holds, in the workbook's own format, or in this browser for an offline one.
+// sheets the room holds (in the other standard a converted copy), and its conversion; in this browser for an offline one.
+import type {
+  WorkbookConversionResponse,
+  WorkbookConvertRequest,
+  WorkbookSettingsResponse,
+} from '@livedoc/api-schema';
 import type { WorkbookFormat } from '@livedoc/sheets';
 import { isOfflineId } from '../offline/offline-store';
-import { API_BASE, apiFetch, apiHeaders, expectOkVoid } from './core';
+import { API_BASE, apiFetch, apiHeaders, expectOk, expectOkVoid } from './core';
 
 export type WorkbookScope = { ownerId: string; documentId: string; shareCode: string | null };
 
@@ -25,4 +30,43 @@ export async function apiDownloadWorkbook(
   const disposition = res.headers.get('Content-Disposition') ?? '';
   const fileName = /filename="([^"]+)"/.exec(disposition)?.[1] ?? `Untitled spreadsheet.${format}`;
   return { blob: await res.blob(), fileName };
+}
+
+function conversionUrl(scope: WorkbookScope, query = ''): string {
+  return `${API_BASE}/documents/${encodeURIComponent(scope.documentId)}/workbook/conversion${query}`;
+}
+
+/** What a file in `to` cannot hold that the workbook's own could (files-and-print.md "Converting"). */
+export async function apiWorkbookConversion(
+  scope: WorkbookScope,
+  to: WorkbookFormat,
+): Promise<WorkbookConversionResponse> {
+  if (await isOfflineId(scope.documentId))
+    return (await import('../offline/offline-workbook-conversion')).offlineWorkbookConversion(
+      scope.documentId,
+      to,
+    );
+  const res = await apiFetch(conversionUrl(scope, `?to=${to}`), {
+    headers: await apiHeaders(scope.ownerId, { share: scope.shareCode }),
+  });
+  return expectOk<WorkbookConversionResponse>(res, 'workbook conversion');
+}
+
+/** An Editor converts the workbook to `format`, of the other standard; the room sends it to everyone. */
+export async function apiConvertWorkbook(
+  scope: WorkbookScope,
+  format: WorkbookFormat,
+): Promise<WorkbookSettingsResponse> {
+  if (await isOfflineId(scope.documentId))
+    return (await import('../offline/offline-workbook-conversion')).offlineConvertWorkbook(
+      scope.documentId,
+      format,
+    );
+  const body: WorkbookConvertRequest = { format };
+  const res = await apiFetch(conversionUrl(scope), {
+    method: 'POST',
+    headers: await apiHeaders(scope.ownerId, { share: scope.shareCode, body: true }),
+    body: JSON.stringify(body),
+  });
+  return expectOk<WorkbookSettingsResponse>(res, 'convert workbook');
 }

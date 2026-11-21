@@ -10,3 +10,5 @@ export * from './xlsx-write';
 export * from './xlsx-read';
 export * from './read-workbook-file';
 export * from './file-parts';
+export * from './xlsx-bounds';
+export * from './conversion';

@@ -403,6 +403,16 @@ export async function offlineSaveDocumentMeta(
   await writeLive(id, (rec) => applyMeta(rec, patch, now));
 }
 
+// An offline spreadsheet's workbook row, as the api's doors change it (docs/specs/029-sheets/files-and-print.md
+// "Converting"), already checked by the caller.
+export async function offlineSaveWorkbook(
+  id: string,
+  workbook: WorkbookRecord,
+  now: number,
+): Promise<void> {
+  await writeLive(id, (rec) => ({ ...rec, workbook, savedAt: now }));
+}
+
 // An offline document's type catalogue (docs/specs/026-plan/item-types.md "Storage and sync"), already
 // validated by the caller; null goes back to the default types.
 export async function offlineSaveItemTypes(

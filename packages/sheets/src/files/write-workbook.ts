@@ -6,18 +6,14 @@ import type { Sheet } from '../sheet';
 import { SheetLimits } from '../sheet-limits';
 import type { WorkbookFormat, WorkbookRecord } from '../workbook-record';
 import { writeFlatOds, writeOds } from './ods-write';
-import type { FileLoss } from './workbook-file';
+import type { FileLoss, WorkbookFile } from './workbook-file';
 import { workbookFileOf } from './workbook-file';
 import { writeXlsx } from './xlsx-write';
 
 export type WrittenWorkbook = { data: Uint8Array<ArrayBuffer>; losses: FileLoss[] };
 
-export function writeWorkbook(
-  sheets: readonly Sheet[],
-  record: WorkbookRecord,
-  title: string,
-  format: WorkbookFormat,
-): WrittenWorkbook {
+/** The workbook as a file holds it, every value worked out by the engine with the workbook's settings. */
+export function workbookFileFor(sheets: readonly Sheet[], record: WorkbookRecord): WorkbookFile {
   const engine = new Workbook({
     sheets: [...sheets],
     locale: record.settings.locale,
@@ -25,7 +21,16 @@ export function writeWorkbook(
     limits: SheetLimits.spreadsheet,
     iteration: record.settings.iterate,
   });
-  const file = workbookFileOf(engine, sheets);
+  return workbookFileOf(engine, sheets);
+}
+
+export function writeWorkbook(
+  sheets: readonly Sheet[],
+  record: WorkbookRecord,
+  title: string,
+  format: WorkbookFormat,
+): WrittenWorkbook {
+  const file = workbookFileFor(sheets, record);
   if (format === 'ods') return writeOds(file, title);
   if (format === 'xlsx') return writeXlsx(file, title);
   const flat = writeFlatOds(file, title);

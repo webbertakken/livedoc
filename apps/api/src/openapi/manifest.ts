@@ -934,18 +934,46 @@ export const ROUTE_MANIFEST: RouteSpec[] = [
     segment: 'documents',
     tag: 'Spreadsheets',
     summary:
-      "A spreadsheet as a file, written from its sheets with every formula's value cached beside it and named after the document: ods or fods for an ODF workbook, xlsx for an XLSX one. 404 workbook_not_found when the document is no spreadsheet; 400 file_type_unknown; 409 format_not_native for another standard. Read access; never on a tab-scoped link.",
+      "A spreadsheet as a file, written from its sheets with every formula's value cached beside it and named after the document: ods, fods or xlsx; in the other standard than the workbook's, a converted copy (the workbook keeps its format). 404 workbook_not_found when the document is no spreadsheet; 400 file_type_unknown. Read access; never on a tab-scoped link.",
     auth: 'guest-or-session',
     tokenUsable: true,
     query: [
       {
         name: 'format',
         required: false,
-        description:
-          "The workbook's own format (the default), or another form of its standard: ods, fods, xlsx.",
+        description: "The workbook's own format (the default), or another: ods, fods, xlsx.",
       },
     ],
     responseMediaType: 'application/vnd.oasis.opendocument.spreadsheet',
+    statuses: [200, 400, 401, 403, 404, 410],
+  },
+  // A spreadsheet converted to the other standard (docs/specs/029-sheets/files-and-print.md "Converting").
+  {
+    method: 'GET',
+    path: '/documents/{id}/workbook/conversion',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      "What a spreadsheet's file in another format cannot hold that one in its own could, one entry a kind: sheet names cut to Excel's 31 characters, formulas the new format's apps cannot calculate (with the functions they lack), formulas written as values only, text cut to Excel's 32,767 characters, columns past XFD. None within one standard. 400 file_type_unknown; 404 workbook_not_found. Read access; never on a tab-scoped link.",
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    query: [
+      { name: 'to', required: true, description: 'The format converted to: ods, fods, xlsx.' },
+    ],
+    responseSchema: 'WorkbookConversionResponse',
+    statuses: [200, 400, 401, 403, 404, 410],
+  },
+  {
+    method: 'POST',
+    path: '/documents/{id}/workbook/conversion',
+    segment: 'documents',
+    tag: 'Spreadsheets',
+    summary:
+      'Convert a spreadsheet to the other standard: its file format alone changes, its sheets and cells stay as they are. Sent live to everyone on it. 400 file_type_unknown; 404 workbook_not_found; 409 format_same_standard when it is already in that standard. Edit access; never on a tab-scoped link.',
+    auth: 'guest-or-session',
+    tokenUsable: true,
+    requestSchema: 'WorkbookConvertRequest',
+    responseSchema: 'WorkbookSettingsResponse',
     statuses: [200, 400, 401, 403, 404, 409, 410],
   },
   // A spreadsheet's sheets and settings changed (docs/specs/029-sheets/sheet-store.md "Changing the workbook").

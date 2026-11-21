@@ -5,6 +5,7 @@ import { cellKey, emptyLayout, emptySheet } from '../sheet';
 import { WorkbookRecord } from '../workbook-record';
 import { readOds } from './ods-read';
 import { writeWorkbook } from './write-workbook';
+import { readXlsx } from './xlsx-read';
 
 // docs/specs/029-sheets/files-and-print.md "Downloading": a spreadsheet leaves as its own ODF form, as a package or flat.
 let n = 9;
@@ -21,6 +22,12 @@ describe('writeWorkbook', () => {
   it('writes an ODF package that reads back', async () => {
     const written = writeWorkbook([sheet], record, 'Budget', 'ods');
     const read = await readOds(written.data);
+    expect(read.ok && read.file.sheets.map((s) => s.name)).toEqual(['Sheet1']);
+  });
+
+  it('writes Excel’s form as a package', async () => {
+    const written = writeWorkbook([sheet], record, 'Budget', 'xlsx');
+    const read = await readXlsx(written.data);
     expect(read.ok && read.file.sheets.map((s) => s.name)).toEqual(['Sheet1']);
   });
 

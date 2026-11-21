@@ -2,7 +2,8 @@
 // its sheets added, renamed and deleted with their tabs, and its settings saved. The request and response bodies; the
 // shapes come from @livedoc/sheets.
 
-import type { WorkbookRecord, WorkbookSettings } from '@livedoc/sheets';
+import type { WorkbookFormat, WorkbookRecord, WorkbookSettings } from '@livedoc/sheets';
+import type { ConversionLoss } from '@livedoc/sheets/files';
 import type { SheetDto } from './sheets';
 
 export type { WorkbookSettings } from '@livedoc/sheets';
@@ -36,6 +37,18 @@ export type WorkbookSettingsRequest = { settings: WorkbookSettings };
 
 export type WorkbookSettingsResponse = { workbook: WorkbookRecord; rev: number };
 
+// GET /documents/:id/workbook/conversion?to=<format>: what a file in `to` cannot hold that one in the workbook's own
+// format could (files-and-print.md "Converting"), one entry a kind; none within one standard.
+export type WorkbookConversionResponse = {
+  from: WorkbookFormat;
+  to: WorkbookFormat;
+  losses: ConversionLoss[];
+};
+
+// POST /documents/:id/workbook/conversion: the workbook converted to `format`, of the other standard. Answered with
+// the record as it now stands (WorkbookSettingsResponse).
+export type WorkbookConvertRequest = { format: WorkbookFormat };
+
 // POST /documents/:id/workbook/imports with a body: connect the spreadsheets its IMPORTRANGEs read (formulas.md
 // "Connecting two spreadsheets"); without one, allow its web imports (imports.md "Allow access").
 export type WorkbookConnectRequest = { sources: string[] };
@@ -48,9 +61,10 @@ export const WORKBOOK_ERRORS = [
   'settings_invalid',
   // A delete of the only sheet left to show.
   'sheet_last_visible',
-  // A file asked in a format that is none, or in another standard than the workbook's (files-and-print.md).
+  // A file or a conversion asked in a format that is none (files-and-print.md).
   'file_type_unknown',
-  'format_not_native',
+  // A conversion to the standard the workbook is already in (files-and-print.md "Converting").
+  'format_same_standard',
   // An import fetched for a spreadsheet an Editor has not allowed (imports.md "Allow access").
   'imports_not_allowed',
   // An import's query string that is no import.

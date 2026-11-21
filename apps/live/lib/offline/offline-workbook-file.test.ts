@@ -79,19 +79,19 @@ describe('offlineWorkbookFile', () => {
     expect(read.ok && read.file.sheets[0]!.cells).toEqual([
       { r: 0, c: 0, value: { k: 's', v: 'rent' } },
     ]);
-    await expect(offlineWorkbookFile('d1', 'ods')).rejects.toMatchObject({
-      code: 'format_not_native',
-    });
+    // files-and-print.md "Download": the other standard is a converted copy.
+    const copy = await readOds(
+      new Uint8Array(await (await offlineWorkbookFile('d1', 'ods')).blob.arrayBuffer()),
+    );
+    expect(copy.ok && copy.file.sheets[0]!.cells).toEqual([
+      { r: 0, c: 0, value: { k: 's', v: 'rent' } },
+    ]);
   });
 
-  it('refuses a document that is no spreadsheet, and another standard', async () => {
+  it('refuses a document that is no spreadsheet', async () => {
     await offlinePutRecord(testRecord());
     await expect(offlineWorkbookFile('d1', 'ods')).rejects.toMatchObject({
       code: 'workbook_not_found',
-    });
-    await offlinePutRecord(testRecord({ workbook }));
-    await expect(offlineWorkbookFile('d1', 'xlsx')).rejects.toMatchObject({
-      code: 'format_not_native',
     });
   });
 });
