@@ -5,6 +5,7 @@
 // would put it, a spacer (signed) takes the strip there; a paragraph whose lines cross columns is drawn as a box of
 // columns of its own. Pure; the plugin measures the blocks and draws the spacers, columns and boxes.
 import {
+  NOTES_GAP_PX,
   PAGE_GAP_PX,
   type BlockMetrics,
   type Cross,
@@ -46,7 +47,13 @@ const linesOf = (block: BlockMetrics): readonly LineBox[] =>
 const columnsOf = (frame: PageFrame): number => frame.columns?.count ?? 1;
 
 // Where the writing stands in its box: the bottom of what was placed last and its space after.
-type Cursor = { readonly y: number; readonly mb: number; readonly empty: boolean };
+// `notes`: the height the page's notes take so far (page-layout.md "Footnotes"), shared by its columns.
+type Cursor = {
+  readonly y: number;
+  readonly mb: number;
+  readonly empty: boolean;
+  readonly notes: number;
+};
 // Where the drawn strip stands: the bottom of the last block in it and its space after (page coordinates).
 type Strip = { readonly y: number; readonly mb: number };
 
@@ -85,7 +92,14 @@ type State = {
   page: PageRecord;
 };
 
-const PAGE_TOP: Cursor = { y: 0, mb: 0, empty: true };
+const PAGE_TOP: Cursor = { y: 0, mb: 0, empty: true, notes: 0 };
+
+// The room a page's notes take from the foot of its text area: theirs and their rule's, none without a note.
+const notesRoom = (notes: number): number => (notes > 0 ? notes + NOTES_GAP_PX : 0);
+
+// The height of the notes whose marks are on a block's lines `from` up to `to`.
+const notesOn = (block: BlockMetrics, from: number, to: number): number =>
+  (block.notes ?? []).reduce((sum, n) => (n.line >= from && n.line < to ? sum + n.height : sum), 0);
 
 class Engine {
   readonly blocks: readonly BlockMetrics[];
@@ -365,7 +379,7 @@ class Engine {
       region.column += 1;
       state.page.columns.push({ block, line, column: region.column });
       if (line > 0) this.markCross(line);
-      state.cursor = { y: region.top, mb: 0, empty: true };
+      state.cursor = { y: region.top, mb: 0, empty: true, notes: state.cursor.notes };
       state.onBox = [];
       state.i = block;
       state.s = line;
@@ -454,7 +468,7 @@ class Engine {
           state = this.state;
         }
         const bottom = this.closeRegion();
-        state.cursor = { y: bottom, mb: 0, empty: state.cursor.empty };
+        state.cursor = { y: bottom, mb: 0, empty: state.cursor.empty, notes: state.cursor.notes };
       }
       const startsSection = blocks[i - 1]?.startsSection;
       const sectionBreaks = startsSection !== undefined && startsSection !== 'continuous';
@@ -509,9 +523,22 @@ class Engine {
     const blockTop = s === 0 ? state.placed!.top : cursor.y - lines[s]!.top;
     const bottomOf = (k: number) =>
       blockTop + (k === lines.length - 1 ? block.height : lines[k]!.bottom);
+    // A line fits with the notes its marks bring: the page's notes so far and its own take room from the foot.
     const foot = this.foot;
+    const textFoot = state.frame.textHeight;
+    const footWith = (notes: number) => Math.min(foot, textFoot - notesRoom(notes));
     let fit = 0;
-    while (s + fit < lines.length && bottomOf(s + fit) <= foot + FIT_TOLERANCE_PX) fit++;
+    let notes = cursor.notes;
+    while (s + fit < lines.length) {
+      const withLine = notes + notesOn(block, s + fit, s + fit + 1);
+      if (bottomOf(s + fit) > footWith(withLine) + FIT_TOLERANCE_PX) break;
+      notes = withLine;
+      fit++;
+    }
+    // The lines up to `line` are laid in this box: their notes join the page's.
+    const take = (line: number) => {
+      state.cursor = { ...state.cursor, notes: cursor.notes + notesOn(block, s, line) };
+    };
     // A page break inside the paragraph starts the next page at the line after it.
     const forced = block.forced?.find((line) => line > s && line < lines.length);
     if (forced !== undefined && s + fit >= forced) {
@@ -525,6 +552,7 @@ class Engine {
     const columnForced = block.columnForced?.find((line) => line > s && line < lines.length);
     if (columnForced !== undefined && s + fit >= columnForced) {
       const endY = blockTop + lines[columnForced]!.top;
+      take(columnForced);
       if (state.region) return this.nextBox(i, columnForced, endY);
       if (this.trial) {
         this.trial.failed = true;
@@ -533,17 +561,21 @@ class Engine {
       return this.newPage(i, columnForced, endY, 0);
     }
     const remaining = lines.length - s;
-    if (fit === remaining) return this.finish(blockTop);
-    let take = fit;
-    if (block.atom || (block.keepTogether && s === 0)) take = 0;
+    if (fit === remaining) {
+      take(lines.length);
+      return this.finish(blockTop);
+    }
+    let taken = fit;
+    if (block.atom || (block.keepTogether && s === 0)) taken = 0;
     else if (block.widowControl) {
-      if (remaining - take < 2) take = remaining - 2;
-      if (take < 2) take = 0;
+      if (remaining - taken < 2) taken = remaining - 2;
+      if (taken < 2) taken = 0;
     }
     // A rule that would leave the box empty gives way.
-    if (take <= 0 && cursor.empty) take = Math.max(fit, 1);
-    if (take > 0) {
-      const line = s + take;
+    if (taken <= 0 && cursor.empty) taken = Math.max(fit, 1);
+    if (taken > 0) {
+      const line = s + taken;
+      take(Math.min(line, lines.length));
       // The whole block in this box however tall (it fills an empty box).
       if (line >= lines.length) return this.finish(blockTop);
       return this.nextBox(i, line, blockTop + lines[line]!.top);
@@ -570,7 +602,7 @@ class Engine {
     const state = this.state;
     const block = this.blocks[state.i]!;
     const bottom = blockTop + block.height;
-    state.cursor = { y: bottom, mb: block.marginBottom, empty: false };
+    state.cursor = { y: bottom, mb: block.marginBottom, empty: false, notes: state.cursor.notes };
     if (state.cross && state.cross.block === state.i) {
       // The strip stands at the foot of the box of columns, its margins none.
       state.strip = {

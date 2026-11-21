@@ -31,7 +31,8 @@ import {
   type PageGeometry,
 } from './pagination-draw';
 import { paginate } from './pagination-engine';
-import { pageLayout, type StoryHeights } from './pagination-headers';
+import { pageLayout, storyKey, type StoryHeights } from './pagination-headers';
+import { pageNotes, type NoteMark } from './pagination-notes';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
 import { bodySections, SECTIONS_CHANGED } from './pagination-sections';
 import {
@@ -143,7 +144,10 @@ const heightsSaid = (heights: StoryHeights) =>
 
 class Pager {
   // What each block measured, by its node, and where its lines start, by node and line.
-  private measured = new WeakMap<PmNode, { metrics: BlockMetrics; inset: number }>();
+  private measured = new WeakMap<
+    PmNode,
+    { metrics: BlockMetrics; inset: number; marks: NoteMark[] }
+  >();
   private splits = new WeakMap<PmNode, Map<number, number>>();
   private nodes: PmNode[] = [];
   private previous: Pagination | null = null;
@@ -296,6 +300,17 @@ class Pager {
     const elements = blockElements(view, nodes, positions);
     const formatting = this.options.readFormatting();
     let count = 0;
+    const marks: (NoteMark[] | undefined)[] = [];
+    const frames = sections.setups.map(pageFrame);
+    const frameOf = (block: number) => frames[sections.sectionOf[block] ?? 0]!;
+    // A note is drawn at its mark's section's left margin and text width (page-layout.md "Footnotes").
+    const noteIn = (block: number) => {
+      const own = sections.setups[sections.sectionOf[block] ?? 0]!;
+      return {
+        left: own.margins.left * PX_PER_PT,
+        width: (own.width - own.margins.left - own.margins.right) * PX_PER_PT,
+      };
+    };
     const metrics = nodes.map((node, i) => {
       let entry = this.measured.get(node);
       if (!entry) {
@@ -303,11 +318,16 @@ class Pager {
         this.measured.set(node, entry);
         count += 1;
       }
-      return entry.metrics;
+      if (entry.marks.length === 0) return entry.metrics;
+      marks[i] = entry.marks;
+      const { width } = noteIn(i);
+      const notes = entry.marks.map((m) => ({
+        line: m.line,
+        height: heights.get(storyKey(m.story, width)) ?? 0,
+      }));
+      return { ...entry.metrics, notes };
     });
     this.nodes = nodes;
-    const frames = sections.setups.map(pageFrame);
-    const frameOf = (block: number) => frames[sections.sectionOf[block] ?? 0]!;
     const page = pageLayout({ ...sections, heights });
     const pagination =
       unchanged && this.previous
@@ -420,6 +440,7 @@ class Pager {
         frameOf,
         page,
         shown,
+        notes: pageNotes(pagination, marks, noteIn),
         lineBetween: (block) =>
           Boolean(sections.setups[sections.sectionOf[block] ?? 0]?.columns?.separator),
       }),

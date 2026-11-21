@@ -11,6 +11,12 @@ export const PAGES_EDGE_PX = 24;
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;
 
+/**
+ * The room a page's notes take above themselves (page-layout.md "Footnotes"): the space between the writing and the
+ * rule, and the rule's below it to the first note, in CSS pixels (default).
+ */
+export const NOTES_GAP_PX = 16;
+
 /** A line's box, from the top of its block's border box, in CSS pixels. */
 export type LineBox = { readonly top: number; readonly bottom: number };
 
@@ -42,6 +48,8 @@ export type BlockMetrics = {
   readonly columnBreakAfter?: boolean;
   /** A section break: where the section it starts begins. */
   readonly startsSection?: SectionStart;
+  /** The notes whose marks are on its lines, each note's height at the page foot (page-layout.md "Footnotes"). */
+  readonly notes?: readonly { readonly line: number; readonly height: number }[];
 };
 
 /** A page's geometry in CSS pixels: its height, its margins and the text area between them, and its section's columns. */

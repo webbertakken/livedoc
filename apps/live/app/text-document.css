@@ -512,18 +512,14 @@ div.text-document-kept {
   border-color: var(--text-document-mark-ink);
 }
 
-/* A footnote's mark (page-layout.md "Footnotes"): its number, the body's count of marks up to it. */
-.text-document-body {
-  counter-reset: text-document-footnote;
-}
-
-.text-document-footnote {
-  counter-increment: text-document-footnote;
+/* A footnote's mark and a note's number (page-layout.md "Footnotes"): in superscript, the mark's told by its decoration. */
+.text-document-footnote,
+.text-document-note-number {
   vertical-align: super;
   font-size: 0.7em;
   line-height: 0;
 }
 
 .text-document-footnote::after {
-  content: counter(text-document-footnote);
+  content: attr(data-number);
 }

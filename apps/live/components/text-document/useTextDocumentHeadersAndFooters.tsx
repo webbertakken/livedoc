@@ -22,12 +22,15 @@ import { useTextDocumentHeaderEditing } from './useTextDocumentHeaderEditing';
 import { useTextDocumentHeaderOptions } from './useTextDocumentHeaderOptions';
 import { useTextDocumentPageNumbers } from './useTextDocumentPageNumbers';
 import { useTextDocumentStories } from './useTextDocumentStories';
+import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
 
 export function useTextDocumentHeadersAndFooters(input: {
   readonly view: EditorView | null;
   readonly liveDoc: RefObject<Y.Doc | null>;
   readonly format: TextDocumentFormat;
   readonly pages: readonly PageGeometry[] | null;
+  /** The footnotes drawn under the writing where there are no pages. */
+  readonly endNotes?: readonly PageNote[];
   readonly writes: boolean;
   /** Each drawn story's height by its key, read by the layout. */
   readonly heights: RefObject<Map<string, number>>;
@@ -36,7 +39,7 @@ export function useTextDocumentHeadersAndFooters(input: {
   /** The section the body's caret is in: Headers and footers options opens on it. */
   readonly caretSection: number;
 }) {
-  const { view, liveDoc, format, pages, writes, heights, caret, caretSection } = input;
+  const { view, liveDoc, format, pages, writes, heights, caret, caretSection, endNotes } = input;
   const leave = useRef(() => {});
   const toolbar = useRef<HTMLDivElement | null>(null);
   const plugins = useCallback(() => {
@@ -52,7 +55,15 @@ export function useTextDocumentHeadersAndFooters(input: {
       toBar: () => toolbar.current?.querySelector<HTMLElement>('input, button')?.focus(),
     });
   }, [liveDoc, format, caret]);
-  const stories = useTextDocumentStories({ view, liveDoc, format, pages, heights, plugins });
+  const stories = useTextDocumentStories({
+    view,
+    liveDoc,
+    format,
+    pages,
+    heights,
+    plugins,
+    ...(endNotes ? { endNotes } : {}),
+  });
   const editing = useTextDocumentHeaderEditing({ view, liveDoc, format, pages, writes, stories });
   useLayoutEffect(() => {
     leave.current = editing.leave;

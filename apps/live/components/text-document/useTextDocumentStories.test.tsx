@@ -14,6 +14,8 @@ import type { PageGeometry } from '@/lib/text-document/pagination/pagination-dra
 import { textDocumentSchema } from '@/lib/text-document/text-document-schema';
 import { TextDocumentSheets } from './TextDocumentSheets';
 import { storiesWanted, useTextDocumentStories } from './useTextDocumentStories';
+import { TextDocumentEndNotes } from './TextDocumentEndNotes';
+import type { PageNote } from '@/lib/text-document/pagination/pagination-notes';
 
 vi.mock('@/lib/text-document/pagination/pagination-plugin', () => ({ refreshPages: vi.fn() }));
 
@@ -63,14 +65,28 @@ afterEach(() => {
 function Harness({
   pages,
   heights,
+  endNotes = [],
 }: {
   pages: PageGeometry[] | null;
   heights: Map<string, number>;
+  endNotes?: PageNote[];
 }) {
   const liveDoc = useRef<Y.Doc | null>(doc);
   const held = useRef(heights);
-  const stories = useTextDocumentStories({ view, liveDoc, format: 'odf', pages, heights: held });
-  return <TextDocumentSheets pages={pages} shadow storyHost={stories.host} />;
+  const stories = useTextDocumentStories({
+    view,
+    liveDoc,
+    format: 'odf',
+    pages,
+    heights: held,
+    endNotes,
+  });
+  return (
+    <div data-page-format="pages">
+      <TextDocumentSheets pages={pages} shadow storyHost={stories.host} />
+      <TextDocumentEndNotes notes={endNotes} />
+    </div>
+  );
 }
 
 const settle = () => act(() => new Promise((resolve) => setTimeout(resolve, 0)));
@@ -170,5 +186,59 @@ describe('TextDocumentSheets with headers and footers', () => {
     expect(container.querySelector('[data-page-story]')).toBeNull();
     unmount();
     expect(heights.size).toBe(0);
+  });
+});
+
+// page-layout.md "Footnotes": each page's notes at the foot of its text area under a short rule, each led by its
+// number; without pages, under the writing.
+describe('footnotes drawn', () => {
+  const note = (id: string, number: number, width = 300): PageNote => ({
+    story: id,
+    key: `${id}@${width}`,
+    number,
+    left: 40,
+    width,
+  });
+
+  it('names each note at its width among the stories wanted, pages’ and the writing’s', () => {
+    const pages = [{ width: 1, height: 1, notes: [note('n', 1)] }];
+    expect(storiesWanted(pages, [note('m', 2, 500)])).toEqual(
+      new Map([
+        ['n@300', { story: 'n', width: 300, kind: 'footnote' }],
+        ['m@500', { story: 'm', width: 500, kind: 'footnote' }],
+      ]),
+    );
+  });
+
+  it('draws a page’s notes above its bottom margin, under a rule, each led by its number', async () => {
+    const heights = new Map<string, number>();
+    const pages = [{ width: 400, height: 500, bottom: 48, notes: [note('h', 1), note('f', 2)] }];
+    const { container } = render(<Harness pages={pages} heights={heights} />);
+    await settle();
+    const area = container.querySelector<HTMLElement>('[data-page-notes]')!;
+    expect(area.style.bottom).toBe('48px');
+    expect(area.style.left).toBe('40px');
+    expect(area.style.width).toBe('300px');
+    expect(area.querySelector('[data-notes-rule]')).not.toBeNull();
+    const boxes = area.querySelectorAll('[data-note-number]');
+    expect([...boxes].map((b) => b.textContent)).toEqual(['1Header', '2Footer']);
+    expect(boxes[0]!.querySelector('sup.text-document-note-number')!.textContent).toBe('1');
+    // Its height reaches the layout.
+    expect(heights.get('h@300')).toBe(18);
+  });
+
+  it('draws the notes under the writing without pages, as a list', async () => {
+    const { container, getByRole } = render(
+      <Harness pages={null} heights={new Map()} endNotes={[note('h', 1, 500)]} />,
+    );
+    await settle();
+    const list = getByRole('region', { name: 'Footnotes' });
+    expect(list.querySelector('li')!.textContent).toBe('1Header');
+    expect(container.querySelector('[data-page-notes]')).toBeNull();
+  });
+
+  it('draws nothing without notes', () => {
+    const { container } = render(<TextDocumentEndNotes notes={[]} />);
+    expect(container.childNodes).toHaveLength(0);
   });
 });

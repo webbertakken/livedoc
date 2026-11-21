@@ -13,6 +13,7 @@ import {
 import type { TextFormatting } from '../text-document-formatting';
 import type { BlockMetrics } from './pagination';
 import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
+import type { NoteMark } from './pagination-notes';
 
 /** A page spacer's class: between blocks, or inside a paragraph between two of its lines. */
 export const PAGE_GAP_CLASS = 'text-document-page-gap';
@@ -20,6 +21,8 @@ export const PAGE_GAP_CLASS = 'text-document-page-gap';
 // A Word page or column break kept from the file, drawn as a line break (text-document-schema.ts).
 const PAGE_BREAK_MARK = 'br[data-page-break]';
 const COLUMN_BREAK_MARK = 'br[data-column-break]';
+// A footnote's mark (text-document-schema.ts), naming its note's story.
+const NOTE_MARK = 'sup[data-footnote]';
 
 export type BlockRules = Pick<
   BlockMetrics,
@@ -85,7 +88,7 @@ export function measureBlock(
   rules: BlockRules,
   ratio: number,
   left: number,
-): { metrics: BlockMetrics; inset: number } {
+): { metrics: BlockMetrics; inset: number; marks: NoteMark[] } {
   const box = element.getBoundingClientRect();
   const style = getComputedStyle(element);
   const spacers = spacersIn(element, box.top, ratio);
@@ -95,6 +98,7 @@ export function measureBlock(
   const columnForced: number[] = [];
   let breakAfter = false;
   let columnBreakAfter = false;
+  const marks: NoteMark[] = [];
   if (!rules.atom) {
     const range = document.createRange();
     range.selectNodeContents(element);
@@ -109,11 +113,15 @@ export function measureBlock(
     );
     // A Word page or column break starts the page or column at the line after its own, or the next block when it
     // ends the paragraph.
-    const lineAfter = (mark: Element): number | null => {
+    const lineOf = (mark: Element): number | null => {
       const r = mark.getBoundingClientRect();
       const middle = naturalOf(((r.top + r.bottom) / 2 - box.top) / ratio, spacers);
       const own = lines.findIndex((line) => middle >= line.top && middle < line.bottom);
-      return own >= 0 && own + 1 < lines.length ? own + 1 : null;
+      return own >= 0 ? own : null;
+    };
+    const lineAfter = (mark: Element): number | null => {
+      const own = lineOf(mark);
+      return own !== null && own + 1 < lines.length ? own + 1 : null;
     };
     for (const mark of element.querySelectorAll(PAGE_BREAK_MARK)) {
       const line = lineAfter(mark);
@@ -124,6 +132,18 @@ export function measureBlock(
       const line = lineAfter(mark);
       if (line !== null) columnForced.push(line);
       else columnBreakAfter = true;
+    }
+    // Each footnote's mark on its own line (page-layout.md "Footnotes").
+    for (const mark of element.querySelectorAll<HTMLElement>(NOTE_MARK)) {
+      const r = mark.getBoundingClientRect();
+      const middle = naturalOf(((r.top + r.bottom) / 2 - box.top) / ratio, spacers);
+      // Raised above its line, a mark is on the last line starting above its middle.
+      const line = Math.max(
+        0,
+        lines.findLastIndex((l) => l.top <= middle),
+      );
+      const story = mark.dataset.footnote;
+      if (story) marks.push({ line, story });
     }
   }
   return {
@@ -139,6 +159,7 @@ export function measureBlock(
       ...rules,
     },
     inset: (box.left - left) / ratio,
+    marks,
   };
 }
 
