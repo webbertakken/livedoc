@@ -1,0 +1,306 @@
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { PDF } from '@libpdf/core';
+import type { PdfEngine, PdfOpened } from '../engine-contract';
+import { PDF_MAX_PAGE_PIXELS } from '../limits';
+import { PdfLiveChanges } from '../live-changes';
+import { Mark } from '../mark';
+import { PageView } from '../page-view';
+import {
+  FIXTURE_LINE,
+  lockedPdf,
+  noPagesPdf,
+  readerWasm,
+  spoiled,
+  textPdf,
+} from '../testing/fixtures';
+import { bakeAddition } from './bake';
+import { pdfEngineOver } from './engine';
+import { createPdfEngine, pdfDate } from './index';
+import { startReader } from './reader';
+
+let engine: PdfEngine;
+let stored: Uint8Array<ArrayBuffer>;
+
+beforeAll(async () => {
+  engine = await createPdfEngine({ wasm: readerWasm() });
+  stored = await textPdf(2);
+});
+
+const opened = (result: PdfOpened) => {
+  if (!result.ok) throw new Error('the fixture did not open');
+  return result.pages;
+};
+
+/** The live changes holding one highlight over the fixture's line on the page given. */
+async function changesWithHighlight(pageIndex: number, id = 'mark-1'): Promise<Uint8Array> {
+  const pages = opened(await engine.open(stored));
+  const selection = await engine.selectText(pageIndex, { x: 74, y: 724 }, { x: 180, y: 724 });
+  const mark = Mark.highlight({
+    id,
+    page: pages[pageIndex]!.name,
+    quads: selection!.quads,
+    text: selection!.text,
+    colour: '#fdf1a9',
+    opacity: 1,
+    author: 'Ada',
+    createdAt: Date.UTC(2026, 10, 21, 14, 2, 3),
+  })!;
+  const doc = PdfLiveChanges.load();
+  PdfLiveChanges.addMark(doc, mark);
+  return PdfLiveChanges.encode(doc);
+}
+
+// opening.md "What is read"
+describe('opening', () => {
+  it('reads each page with its name and its size as shown', async () => {
+    const pages = opened(await engine.open(stored));
+    expect(pages).toHaveLength(2);
+    expect(pages[0]).toMatchObject({ width: 612, height: 792 });
+    expect(pages[0]!.name).toMatch(/^p:\d+$/);
+    expect(pages[1]!.name).not.toBe(pages[0]!.name);
+  });
+
+  it('refuses bytes that are no PDF as damaged', async () => {
+    expect(await engine.open(new TextEncoder().encode('not a pdf at all'))).toEqual({
+      ok: false,
+      refusal: 'pdf_damaged',
+    });
+    expect(await engine.drawPage(0, 1)).toBeNull();
+    expect(await engine.bake(PdfLiveChanges.merge([]))).toEqual({
+      ok: false,
+      refusal: 'unreadable',
+    });
+  });
+
+  // opening.md "Refusals"
+  it('tells a PDF with no pages from a damaged one', async () => {
+    expect(await engine.open(noPagesPdf())).toEqual({ ok: false, refusal: 'pdf_newer' });
+  });
+
+  it('names a file locked to certificates, and one locked by another handler', async () => {
+    expect(await engine.open(lockedPdf('Adobe.PubSec'))).toEqual({
+      ok: false,
+      refusal: 'pdf_certificate_protected',
+    });
+    expect(await engine.open(lockedPdf('Rights.Service'))).toEqual({
+      ok: false,
+      refusal: 'pdf_rights_protected',
+    });
+  });
+
+  // security.md "Abuse cases": a parser crash ends the reader, never the page.
+  it('answers a trap inside the reader as stopped', async () => {
+    const pdfium = await startReader(readerWasm());
+    const trapping = new Proxy(pdfium, {
+      get: (target, key, receiver) =>
+        key === 'FPDF_LoadMemDocument'
+          ? () => {
+              throw new WebAssembly.RuntimeError('unreachable');
+            }
+          : (Reflect.get(target, key, receiver) as unknown),
+    });
+    expect(await pdfEngineOver(trapping).open(stored)).toEqual({
+      ok: false,
+      refusal: 'pdf_stopped',
+    });
+  });
+
+  it('asks for a password rather than refusing a file that has one', async () => {
+    const pdf = await PDF.load(stored.slice());
+    pdf.setProtection({ userPassword: 'open', ownerPassword: 'owner' });
+    const locked = (await pdf.save()) as Uint8Array<ArrayBuffer>;
+    expect(await engine.open(locked)).toEqual({ ok: false, needsPassword: true });
+  });
+});
+
+// reading-surface.md "The pages"
+describe('drawing', () => {
+  it('draws a page at the scale asked, with the matrix that places marks on it', async () => {
+    await engine.open(stored);
+    const bitmap = (await engine.drawPage(0, 0.5))!;
+    expect([bitmap.width, bitmap.height]).toEqual([306, 396]);
+    expect(bitmap.rgba).toHaveLength(306 * 396 * 4);
+    // Paper is white where nothing is drawn, and the line of text has left ink.
+    expect([...bitmap.rgba.slice(0, 4)]).toEqual([255, 255, 255, 255]);
+    expect(bitmap.rgba.some((value, at) => at % 4 === 0 && value < 128)).toBe(true);
+    // An upright page: page space's y runs up from the bottom edge.
+    expect(PageView.toView(bitmap.toView, { x: 72, y: 720 })).toEqual({ x: 72, y: 72 });
+  });
+
+  it('answers nothing for a page that is not there', async () => {
+    await engine.open(stored);
+    expect(await engine.drawPage(2, 1)).toBeNull();
+    expect(await engine.drawPage(-1, 1)).toBeNull();
+    expect(await engine.drawPage(0.5, 1)).toBeNull();
+  });
+
+  // security.md "Abuse cases": a decompression bomb draws at most PDF_MAX_PAGE_PIXELS.
+  it('never draws past the pixel ceiling, whatever scale is asked', async () => {
+    const tiny = PDF.create();
+    tiny.addPage({ width: 8, height: 8 });
+    await engine.open((await tiny.save()) as Uint8Array<ArrayBuffer>);
+    const bitmap = (await engine.drawPage(0, 1e9))!;
+    expect(bitmap.width * bitmap.height).toBeLessThanOrEqual(PDF_MAX_PAGE_PIXELS);
+    const asked = (await engine.drawPage(0, Number.NaN))!;
+    expect([asked.width, asked.height]).toEqual([8, 8]);
+  });
+});
+
+// marks.md "Kinds": a text mark follows its text
+describe('selecting text', () => {
+  it('answers the text between two points with the quads of its glyphs', async () => {
+    await engine.open(stored);
+    const selection = (await engine.selectText(0, { x: 74, y: 724 }, { x: 122, y: 724 }))!;
+    expect(FIXTURE_LINE.startsWith(selection.text)).toBe(true);
+    expect(selection.text.length).toBeGreaterThan(3);
+    expect(selection.quads).toHaveLength(1);
+    const [left, top, right, , , bottom] = selection.quads[0]!;
+    expect(left).toBeGreaterThan(70);
+    expect(right).toBeLessThan(140);
+    expect(top).toBeGreaterThan(bottom);
+  });
+
+  it('answers the same text whichever point comes first', async () => {
+    await engine.open(stored);
+    const forward = await engine.selectText(0, { x: 74, y: 724 }, { x: 180, y: 724 });
+    const backward = await engine.selectText(0, { x: 180, y: 724 }, { x: 74, y: 724 });
+    expect(backward).toEqual(forward);
+  });
+
+  it('answers nothing where there is no text, or no such page', async () => {
+    await engine.open(stored);
+    expect(await engine.selectText(0, { x: 300, y: 300 }, { x: 320, y: 300 })).toBeNull();
+    expect(await engine.selectText(0, { x: Number.NaN, y: 724 }, { x: 180, y: 724 })).toBeNull();
+    expect(await engine.selectText(9, { x: 74, y: 724 }, { x: 180, y: 724 })).toBeNull();
+  });
+});
+
+// saving.md
+describe('baking', () => {
+  it('hands out the stored file itself when nothing was changed', async () => {
+    await engine.open(stored);
+    const result = await engine.bake(PdfLiveChanges.merge([]));
+    expect(result).toMatchObject({ ok: true, kind: 'unchanged' });
+    expect(result.ok && result.bytes).toBe(stored);
+  });
+
+  it('appends a highlight, keeping the stored file a byte-for-byte prefix', async () => {
+    const changes = await changesWithHighlight(1);
+    const result = await engine.bake(changes);
+    if (!result.ok) throw new Error(result.refusal);
+    expect(result.kind).toBe('addition');
+    expect(result.anchorsLost).toBe(0);
+    expect(result.bytes.length).toBeGreaterThan(stored.length);
+    expect(result.bytes.length - stored.length).toBeLessThan(2_000);
+    expect(Buffer.compare(result.bytes.subarray(0, stored.length), stored)).toBe(0);
+  });
+
+  it('bakes the same stored file and changes to the same bytes', async () => {
+    const changes = await changesWithHighlight(0);
+    const first = await engine.bake(changes);
+    const second = await engine.bake(changes);
+    if (!first.ok || !second.ok) throw new Error('bake refused');
+    expect(Buffer.compare(first.bytes, second.bytes)).toBe(0);
+  });
+
+  it('is read back with the highlight on its page, under its own id, and none on the other', async () => {
+    const changes = await changesWithHighlight(1, 'mark-on-two');
+    const result = await engine.bake(changes);
+    if (!result.ok) throw new Error(result.refusal);
+    const pages = opened(await engine.open(result.bytes));
+    expect(pages).toHaveLength(2);
+    expect(await engine.fileMarks(0)).toEqual([]);
+    const [mark] = await engine.fileMarks(1);
+    expect(mark).toMatchObject({ id: 'mark-on-two', subtype: 'highlight' });
+    expect(mark!.quads).toHaveLength(1);
+    expect(await engine.fileMarks(7)).toEqual([]);
+  });
+
+  it('writes the author, the colour and the times the mark holds', async () => {
+    const result = await engine.bake(await changesWithHighlight(0));
+    if (!result.ok) throw new Error(result.refusal);
+    const [annotation] = (await PDF.load(result.bytes.slice())).getPages()[0]!.getAnnotations();
+    expect(annotation!.name).toBe('mark-1');
+    expect(annotation!.modificationDate).toBe('D:20261121140203Z');
+    expect(annotation!.dict.getString('CreationDate')?.asString()).toBe('D:20261121140203Z');
+    expect(annotation!.dict.getString('T')?.asString()).toBe('Ada');
+  });
+
+  it('counts a mark whose page the stored file does not hold, and writes the rest', async () => {
+    const pages = opened(await engine.open(stored));
+    const doc = PdfLiveChanges.load([await changesWithHighlight(0)]);
+    const [kept] = PdfLiveChanges.marks(doc);
+    PdfLiveChanges.addMark(doc, { ...kept!, id: 'gone', page: 'p:99999' });
+    PdfLiveChanges.addMark(doc, { ...kept!, id: 'inserted', page: 'n:fresh' });
+    const result = await engine.bake(PdfLiveChanges.encode(doc));
+    expect(result).toMatchObject({ ok: true, kind: 'addition', anchorsLost: 2 });
+    expect(pages).toHaveLength(2);
+  });
+
+  // saving.md "Addition or rewrite": the writer is asked first; a silent fall back to a rewrite is a defect.
+  it('refuses to append to a file opened only by rebuilding its cross-reference', async () => {
+    const changes = await changesWithHighlight(0);
+    const broken = spoiled(stored);
+    opened(await engine.open(broken));
+    expect(await engine.bake(changes)).toEqual({ ok: false, refusal: 'cannot-append' });
+    expect(await bakeAddition(new TextEncoder().encode('no pdf'), [])).toMatchObject({ ok: false });
+  });
+
+  // saving.md "The validators' claim": a bake that fails its reopen check is not handed out.
+  it('hands out nothing when the written file does not reopen with its pages', async () => {
+    const pdfium = await startReader(readerWasm());
+    const changes = await changesWithHighlight(0);
+    const onePage = await textPdf(1);
+    const wrongPages = pdfEngineOver(pdfium, async () => ({
+      ok: true,
+      bytes: onePage,
+      anchorsLost: 0,
+    }));
+    await wrongPages.open(stored);
+    expect(await wrongPages.bake(changes)).toEqual({ ok: false, refusal: 'reopen' });
+    const garbage = pdfEngineOver(pdfium, async () => ({
+      ok: true,
+      bytes: new Uint8Array([1, 2, 3]),
+      anchorsLost: 0,
+    }));
+    await garbage.open(stored);
+    expect(await garbage.bake(changes)).toEqual({ ok: false, refusal: 'reopen' });
+  });
+
+  it('refuses changes that are no update, and a bake with no file open', async () => {
+    await engine.open(stored);
+    expect(await engine.bake(new Uint8Array([9, 9, 9, 9]))).toEqual({
+      ok: false,
+      refusal: 'unreadable',
+    });
+    await engine.close();
+    expect(await engine.bake(PdfLiveChanges.merge([]))).toEqual({
+      ok: false,
+      refusal: 'unreadable',
+    });
+  });
+
+  // saving.md "The validators' claim": every baked file passes qpdf --check, where the tool is installed.
+  it('passes qpdf --check', async ({ skip }) => {
+    try {
+      execFileSync('qpdf', ['--version'], { stdio: 'ignore' });
+    } catch {
+      skip("qpdf is not installed here; CI's office job runs it");
+    }
+    const result = await engine.bake(await changesWithHighlight(0));
+    if (!result.ok) throw new Error(result.refusal);
+    const file = join(mkdtempSync(join(tmpdir(), 'pdf-bake-')), 'baked.pdf');
+    writeFileSync(file, result.bytes);
+    expect(() => execFileSync('qpdf', ['--check', file], { stdio: 'pipe' })).not.toThrow();
+  });
+});
+
+describe('pdfDate', () => {
+  it('writes a time as the file holds a date, in UTC', () => {
+    expect(pdfDate(Date.UTC(2026, 0, 2, 3, 4, 5))).toBe('D:20260102030405Z');
+  });
+});

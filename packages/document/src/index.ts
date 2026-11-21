@@ -481,6 +481,7 @@ export {
   type TabKind,
   type TextDocumentFormat,
 } from './tab-kind';
+export { blobKeyOf, isBlobKey, type BlobKey } from './blob-key';
 export { tabMixRefusal, type TabMixRefusal } from './tab-mix';
 export { TAB_SURFACES, hasCanvasTab, surfaceOf, type TabSurface } from './tab-surface';
 export * from './accent-edge';

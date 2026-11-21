@@ -31,6 +31,7 @@ packages/
   sheets/         the Sheet engine: formulas, recalculation, writes, CSV, the workbook record, its ODF files (pure)
   office-packages/ the layer under every office file: zip, XML, the ODF package, the OOXML container, metadata, units (DOM-free)
   text-documents/ the text document: its model, its live state (Yjs), its ODF and OOXML files, conversion (DOM-free)
+  pdf-documents/  the PDF document: its live changes (Yjs), marks and limits, and the engine that reads, draws and bakes a PDF
   edit-operations/ the engine agent changesets run on: edit operations and replace into element ops
   document-views/ read-only text views of a tab (outline, graph, layout, ...) for agents and scripts
   diagram-lint/ checks how a tab is drawn: overlaps, crossings, arrows behind boxes, with a fix each
