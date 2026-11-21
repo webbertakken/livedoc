@@ -502,13 +502,15 @@ export const OTHER_ELEMENTS_ADDED: Metric = {
   category: 'Element',
   action: 'Added',
   // Article inserts (`Article…`) are their own card (Article Inserts, features.ts), and a text document's breaks
-  // theirs (`TextDocumentBreak…`, Text Document Breaks).
+  // theirs (`TextDocumentBreak…`, Text Document Breaks), its page numbers too (`TextDocumentPage…`, Text Document
+  // Page Numbers).
   typeIn: (type) =>
     !PALETTE_KINDS.has(canonicalElementType(type)) &&
     !isTablePart(type) &&
     !DATA_MODEL_ADDED.includes(type ?? '') &&
     !/^Article[A-Z]/.test(type ?? '') &&
-    !(type ?? '').startsWith('TextDocumentBreak'),
+    !(type ?? '').startsWith('TextDocumentBreak') &&
+    !(type ?? '').startsWith('TextDocumentPage'),
   title: 'Other Elements Added',
   blurb:
     'Kinds the palette catalogue does not list, such as pasted images. Table rows and columns are in Tables, entity fields in Data Models.',

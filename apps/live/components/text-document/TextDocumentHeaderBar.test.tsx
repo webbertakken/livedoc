@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 // docs/specs/034-text-documents/page-layout.md "The bar": a named toolbar; Link to previous only after the first
-// section; Options holds Header format, Page numbers (coming), and Remove, dimmed while linked.
+// section; Options holds Header format, Page numbers, and Remove, dimmed while linked.
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { createRef } from 'react';
@@ -12,6 +12,7 @@ const bar = (props: Partial<Parameters<typeof TextDocumentHeaderBar>[0]> = {}) =
     onLink: vi.fn(),
     onRemove: vi.fn(),
     onFormat: vi.fn(),
+    onPageNumbers: vi.fn(),
     onBack: vi.fn(),
   };
   render(
@@ -43,10 +44,10 @@ describe('TextDocumentHeaderBar', () => {
     expect(onRemove).toHaveBeenCalledTimes(1);
   });
 
-  it('names the menu’s entries for the kind, page numbers to come', () => {
+  it('names the menu’s entries for the kind', () => {
     expect(headerOptionsEntries('header')).toMatchObject([
       { id: 'header-format', label: 'Header format', status: 'built' },
-      { id: 'header-page-numbers', label: 'Page numbers', status: 'comingSoon' },
+      { id: 'header-page-numbers', label: 'Page numbers', status: 'built' },
       { kind: 'separator' },
       { id: 'remove-header', label: 'Remove header', status: 'built' },
     ]);
@@ -57,6 +58,13 @@ describe('TextDocumentHeaderBar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
     fireEvent.click(screen.getByRole('menuitem', { name: /Footer format/ }));
     expect(onFormat).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens the Page numbers dialog from Page numbers', () => {
+    const { onPageNumbers } = bar();
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: /Page numbers/ }));
+    expect(onPageNumbers).toHaveBeenCalledTimes(1);
   });
 
   it('dims Remove while linked', () => {

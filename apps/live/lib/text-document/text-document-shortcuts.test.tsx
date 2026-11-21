@@ -24,6 +24,12 @@ import { COLUMN_ITEMS, COLUMNS_MORE_ITEM } from '@/components/text-document/useT
 import { FOOTER_ITEM, HEADER_ITEM } from '@/components/text-document/useTextDocumentHeaderEditing';
 import { HEADER_OPTIONS_ITEM } from '@/components/text-document/useTextDocumentHeaderOptions';
 import {
+  PAGE_COUNT_ITEM,
+  PAGE_NUMBERS_MORE_ITEM,
+  PAGE_NUMBERS_OPTIONS_ITEM,
+} from '@/components/text-document/useTextDocumentPageNumbers';
+import { PAGE_NUMBER_PRESETS } from './text-document-page-numbers';
+import {
   TEXT_DOCUMENT_FORMAT_ITEMS,
   TEXT_DOCUMENT_KEY_ACTIONS,
   textDocumentFormatActions,
@@ -88,6 +94,11 @@ describe('the text document menus', () => {
         FOOTER_ITEM,
         // Format > Headers & footers (useTextDocumentHeaderOptions), bound by the surface.
         HEADER_OPTIONS_ITEM,
+        // Insert > Page numbers and Format > Page numbers (useTextDocumentPageNumbers), bound by the surface.
+        ...PAGE_NUMBER_PRESETS.map((p) => p.item),
+        PAGE_COUNT_ITEM,
+        PAGE_NUMBERS_MORE_ITEM,
+        PAGE_NUMBERS_OPTIONS_ITEM,
         ...DOWNLOADS[format],
         // Format > Text (text-document-format-actions), bound by the surface.
         ...TEXT_DOCUMENT_FORMAT_ITEMS,

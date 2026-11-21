@@ -1200,6 +1200,16 @@ export const TEXT_DOCUMENT_HEADER_FOOTER = chart(
   { types: ['TextDocumentHeaderFooter'] },
 );
 
+// Page numbers put in a text document (docs/specs/034-text-documents/page-layout.md "Page numbers"): from Insert > Page
+// numbers' presets or the Page numbers dialog, and a page count put in at the caret.
+export const TEXT_DOCUMENT_PAGE_NUMBERS = chart(
+  'Element',
+  'Added',
+  'Text Document Page Numbers',
+  'Page numbers put in a text document from Insert > Page numbers or its dialog, and page counts put in at the caret.',
+  { types: ['TextDocumentPageNumbers', 'TextDocumentPageCount'] },
+);
+
 // A page, column or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
 export const TEXT_DOCUMENT_BREAKS = chart(
   'Element',
