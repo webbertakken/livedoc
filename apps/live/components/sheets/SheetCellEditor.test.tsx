@@ -176,3 +176,16 @@ describe('the cell editor', () => {
     expect(outer).not.toHaveBeenCalled();
   });
 });
+
+// formulas.md "Locale": where decimals take a comma, the hint splits arguments by ; and writes its example so.
+describe('the cell editor in a locale whose decimals take a comma', () => {
+  it('writes the hint in the locale’s syntax', async () => {
+    show(await makeSheet({ locale: 'de-DE' }));
+    act(() => actions.startEdit('type', '=ROUND(1,5; '));
+    const note = screen.getByRole('note');
+    expect(note.textContent).toContain('ROUND(value; [places])');
+    const bold = [...note.querySelectorAll('span')].find((s) => s.style.fontWeight === '700');
+    expect(bold?.textContent).toBe('; [places]');
+    expect(note.textContent).toContain('=ROUND(2,675; 2)');
+  });
+});

@@ -50,6 +50,8 @@ function sheetJson(id: string, title: string, rows: number, cols: number): Sheet
 
 export type SheetHarness = {
   store: SheetStore;
+  // How its inputs read and show (formulas.md "Locale"); en-GB unless a test gives another.
+  locale: string;
   writes: SheetWrite[];
   toast: Mock<(m: string) => void>;
   placeChart: Mock<(kind: string, range: unknown, anchor?: unknown) => void>;
@@ -77,8 +79,10 @@ export async function makeSheet(
     cells?: Record<string, string>;
     format?: Record<string, CellFormat>;
     otherTitles?: string[];
+    locale?: string;
   } = {},
 ): Promise<SheetHarness> {
+  const locale = opts.locale ?? 'en-GB';
   const writes: SheetWrite[] = [];
   const toast = vi.fn<(m: string) => void>();
   const notify = vi.fn<(m: string) => void>();
@@ -90,7 +94,7 @@ export async function makeSheet(
   const store = new SheetStore({
     scope: { documentId: 'd1', ownerId: 'o', shareCode: null, tabId: null },
     self: () => by,
-    locale: 'en-GB',
+    locale,
     pushUndo: () => {},
     toast,
     api: {
@@ -125,6 +129,7 @@ export async function makeSheet(
   let current: SheetController | null = null;
   const h: SheetHarness = {
     store,
+    locale,
     writes,
     toast,
     placeChart: vi.fn(),
@@ -191,7 +196,7 @@ function Root({
     canEdit,
     ...(canShape === undefined ? {} : { canShape }),
     maximised,
-    locale: 'en-GB',
+    locale: h.locale,
     announce: h.announce,
     toast: h.toast,
     placeChart: h.placeChart,

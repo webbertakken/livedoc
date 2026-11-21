@@ -5,7 +5,13 @@
 // textarea's own text is transparent, its caret not). Under it, the function list while a name is typed, the
 // argument hint inside a call, and the reason a formula cannot be saved.
 import { useEffect, useRef } from 'react';
-import { FUNCTION_DOCS, formatA1 } from '@livedoc/sheets';
+import {
+  FUNCTION_DOCS,
+  argumentSeparatorOf,
+  formatA1,
+  formulaSyntaxOf,
+  formulaToLocale,
+} from '@livedoc/sheets';
 import { argumentAt, argumentSlot, refSpans } from './formula-assist';
 import { useSheetController } from './sheet-controller';
 import { cellBox, mergeAt } from './sheet-geometry';
@@ -47,7 +53,10 @@ export function FunctionAssist({
   onPick: (name: string) => void;
 }) {
   const c = useSheetController();
-  const arg = argumentAt(draft, input.caret);
+  // The hint is written as the locale writes formulas (formulas.md "Locale").
+  const syntax = formulaSyntaxOf(c.locale);
+  const separator = argumentSeparatorOf(syntax);
+  const arg = argumentAt(draft, input.caret, separator);
   // A dropdown cell's options matching the typing (data-validation.md "Using a dropdown").
   if (input.options)
     return (
@@ -129,7 +138,7 @@ export function FunctionAssist({
           {arg.name}(
           {doc.args.map((a, i) => (
             <span key={i} style={i === slot ? { fontWeight: 700 } : { color: c.palette.muted }}>
-              {i > 0 ? ', ' : ''}
+              {i > 0 ? `${separator} ` : ''}
               {a}
             </span>
           ))}
@@ -139,7 +148,7 @@ export function FunctionAssist({
           {doc.summary}
         </div>
         <div className="mt-1 font-mono text-[11px]" style={{ color: c.palette.muted }}>
-          {doc.example}
+          {formulaToLocale(doc.example, syntax)}
         </div>
       </div>
     );

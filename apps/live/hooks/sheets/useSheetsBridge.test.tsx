@@ -78,6 +78,17 @@ describe('useSheetsBridge', () => {
     expect(b.peers).toEqual([]);
   });
 
+  // formulas.md "Locale": a spreadsheet's own locale and time zone, else this browser's.
+  it('carries a spreadsheet’s locale and time zone', () => {
+    const { result } = renderHook(() =>
+      useSheetsBridge(opts({ locale: 'de-DE', timeZone: 'Asia/Tokyo' })),
+    );
+    expect(result.current.bridge.locale).toBe('de-DE');
+    expect(result.current.bridge.timeZone).toBe('Asia/Tokyo');
+    const plain = renderHook(() => useSheetsBridge(opts())).result.current.bridge;
+    expect(plain.timeZone).toBeUndefined();
+  });
+
   it('keeps its identity across renders with new callbacks, and calls the latest ones', () => {
     const first = opts();
     const { result, rerender } = renderHook((o: Opts) => useSheetsBridge(o), {

@@ -965,6 +965,33 @@ describe('a spreadsheet’s store', () => {
     expect(setIteration).toHaveBeenCalledTimes(1);
   });
 
+  // formulas.md "Locale": the spreadsheet's locale and time zone reach its engine, and a change to either reworks it.
+  it('gives the engine the workbook’s locale and time zone, and starts it afresh when they change', async () => {
+    const { store } = make(true);
+    await store.loadTab('tabA');
+    const deps = {
+      scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
+      oneWorkbook: true,
+      self: () => by,
+      locale: 'en-GB',
+      pushUndo: vi.fn(),
+      toast: vi.fn(),
+    };
+    store.update(deps);
+    const before = store.workbook('tabA');
+    expect(before.timeZone).toBeUndefined();
+    const version = store.getVersion();
+    store.update({ ...deps, locale: 'de-DE', timeZone: 'Asia/Tokyo' });
+    expect(store.getVersion()).toBe(version + 1);
+    const after = store.workbook('tabA');
+    expect(after).not.toBe(before);
+    expect(after.locale).toBe('de-DE');
+    expect(after.timeZone).toBe('Asia/Tokyo');
+    expect(store.status('tabA')).toBe('ready');
+    store.update({ ...deps, locale: 'de-DE', timeZone: 'Asia/Tokyo' });
+    expect(store.workbook('tabA')).toBe(after);
+  });
+
   // formulas.md "Functions", settings.md "Calculation": volatile formulas tick while anyone reads the store, a Plan
   // Sheet every minute, a spreadsheet as its Recalculation says.
   it('ticks volatile formulas as the document’s Recalculation says, only while read', async () => {

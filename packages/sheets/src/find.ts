@@ -38,7 +38,7 @@ export function findMatches(
     const c = ix.colPos.get(colId);
     if (r === undefined || c === undefined) continue;
     const shown = displayValue(wb.value(sheetId, r, c), cell.format, wb.locale).text;
-    const typed = opts.inFormulas ? inputAsText(cell.input, ctx) : '';
+    const typed = opts.inFormulas ? inputAsText(cell.input, ctx, wb.locale) : '';
     if (test(shown) || (opts.inFormulas && test(typed))) out.push({ r, c });
   }
   return out.sort((a, b) => a.r - b.r || a.c - b.c);
@@ -69,7 +69,7 @@ export function replaceAll(
     if (!input) continue;
     const isFormula = 'f' in input;
     if (isFormula && !opts.inFormulas) continue;
-    const typed = inputAsText(input, ctx);
+    const typed = inputAsText(input, ctx, wb.locale);
     if (!test(typed)) continue;
     const next = replaceIn(typed, query, by, opts);
     if (next === typed) continue;

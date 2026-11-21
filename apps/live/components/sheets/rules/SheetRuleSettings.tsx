@@ -8,7 +8,7 @@ import {
   formatRange,
   formatRuleLine,
   posRangeOf,
-  renderFormula,
+  formulaAsTyped,
   ruleLine,
   type FormatRule,
   type IdRange,
@@ -157,7 +157,10 @@ export function SheetFormatRuleList({
   const rules = c.sheet.layout.formatRules ?? [];
   if (!rules.length) return empty(c.canShape ? NO_FORMAT_RULES : NO_FORMAT_RULES_READ);
   const lineOf = (r: FormatRule) =>
-    formatRuleLine(r, r.fx ? renderFormula(r.fx, c.workbook.ctxFor(c.sheet.id)) : undefined);
+    formatRuleLine(
+      r,
+      r.fx ? formulaAsTyped(r.fx, c.workbook.ctxFor(c.sheet.id), c.locale) : undefined,
+    );
   return (
     <RuleRows
       rules={rules}

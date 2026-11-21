@@ -14,12 +14,13 @@ export function boundedText(text: string): Value {
     : text;
 }
 
-export function binaryOperation(op: BinaryOp, a: Scalar, b: Scalar): Value {
+/** `a op b`, text read and numbers written in `locale` (formulas.md "Locale"). */
+export function binaryOperation(op: BinaryOp, a: Scalar, b: Scalar, locale: string): Value {
   if (isError(a)) return a;
   if (isError(b)) return b;
   if (op === '&') {
-    const x = toText(a);
-    const y = toText(b);
+    const x = toText(a, locale);
+    const y = toText(b, locale);
     if (isError(x)) return x;
     if (isError(y)) return y;
     return boundedText(x + y);
@@ -41,8 +42,8 @@ export function binaryOperation(op: BinaryOp, a: Scalar, b: Scalar): Value {
         return c >= 0;
     }
   }
-  const x = toNumber(a);
-  const y = toNumber(b);
+  const x = toNumber(a, locale);
+  const y = toNumber(b, locale);
   if (typeof x !== 'number') return x;
   if (typeof y !== 'number') return y;
   let r: number;
@@ -70,9 +71,9 @@ export function binaryOperation(op: BinaryOp, a: Scalar, b: Scalar): Value {
   return r;
 }
 
-export function unaryOperation(kind: UnaryOperator, x: Scalar): Value {
+export function unaryOperation(kind: UnaryOperator, x: Scalar, locale: string): Value {
   if (kind === 'pos') return x;
-  const n = toNumber(x);
+  const n = toNumber(x, locale);
   if (typeof n !== 'number') return n;
   return kind === 'neg' ? -n : n / 100;
 }

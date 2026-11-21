@@ -7,8 +7,10 @@ import { binaryOperation, unaryOperation, type UnaryOperator } from '../operator
 import { compareScalars, isError, toBool } from '../values';
 import { JOIN_VALUES } from './text';
 
-const binary = (op: BinaryOp): FnDef => scalarFn(2, 2, ([a, b]) => binaryOperation(op, a!, b!));
-const unary = (kind: UnaryOperator): FnDef => scalarFn(1, 1, ([x]) => unaryOperation(kind, x!));
+const binary = (op: BinaryOp): FnDef =>
+  scalarFn(2, 2, ([a, b], f) => binaryOperation(op, a!, b!, f.locale));
+const unary = (kind: UnaryOperator): FnDef =>
+  scalarFn(1, 1, ([x], f) => unaryOperation(kind, x!, f.locale));
 
 export const OPERATOR_FUNCTIONS: Record<string, FnDef> = {
   ADD: binary('+'),

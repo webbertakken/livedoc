@@ -38,7 +38,7 @@ export function criteriaMask(
     const range = arrayArg(rangeArg, f);
     const critValue = scalarArg(critArg, f);
     if (isError(critValue)) return critValue;
-    const crit = makeCriterion(critValue);
+    const crit = makeCriterion(critValue, f.locale);
     if (shape) {
       const a = dims(shape);
       const b = dims(range);

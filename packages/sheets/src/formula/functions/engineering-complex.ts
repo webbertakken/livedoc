@@ -118,9 +118,9 @@ export const ENGINEERING_COMPLEX_FUNCTIONS: Record<string, FnDef> = {
   IMLOG10: complexFn((c) => scaled(complexLn(c), Math.LN10)),
   IMLOG2: complexFn((c) => scaled(complexLn(c), Math.LN2)),
   // A logarithm to any positive base but 1.
-  IMLOG: scalarFn(2, 2, ([x, b]) => {
+  IMLOG: scalarFn(2, 2, ([x, b], f) => {
     const c = readComplex(x!);
-    const base = toNumber(b!);
+    const base = toNumber(b!, f.locale);
     if (isError(c)) return c;
     if (isError(base)) return base;
     if (base <= 0 || base === 1) return err('#NUM!', 'The base is a positive number other than 1');

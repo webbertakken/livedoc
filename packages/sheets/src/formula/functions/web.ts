@@ -26,8 +26,8 @@ export function encodeUrl(text: string): string {
 export const WEB_FUNCTIONS: Record<string, FnDef> = {
   ...IMPORT_FNS,
   ...IMPORT_RANGE_FNS,
-  ENCODEURL: scalarFn(1, 1, ([x]) => {
-    const t = toText(x!);
+  ENCODEURL: scalarFn(1, 1, ([x], f) => {
+    const t = toText(x!, f.locale);
     return isError(t) ? t : encodeUrl(t);
   }),
   ISURL: scalarFn(1, 1, ([x]) => typeof x === 'string' && isUrl(x)),

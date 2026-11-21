@@ -211,6 +211,26 @@ describe('the Worker’s engine at its edges', () => {
     expect(port.copy.sheet('gone')).toBeUndefined();
   });
 
+  // formulas.md "Locale": the spreadsheet's time zone reaches the Worker's engine.
+  it('sends the time zone the Worker’s NOW reads', () => {
+    const sent: EngineIn[] = [];
+    const port = new EnginePort({
+      sheets: makeSheets({ S: { A1: '=NOW()' } }),
+      locale: 'en-GB',
+      timeZone: 'Asia/Tokyo',
+      send: (m) => sent.push(m),
+    });
+    port.start();
+    expect(port.copy.timeZone).toBe('Asia/Tokyo');
+    expect(sent[0]).toMatchObject({ t: 'load', timeZone: 'Asia/Tokyo' });
+    const out: EngineOut[] = [];
+    const host = new EngineHost((m) => out.push(m));
+    host.receive(sent[0]!);
+    host.work(Infinity);
+    const values = out.find((m) => m.t === 'values');
+    expect(values && values.t === 'values' && typeof values.cells[0]![2]).toBe('number');
+  });
+
   it('says only a tracking engine can tell what it forgot', () => {
     const wb = new Workbook({ sheets: makeSheets({ S: { A1: '1' } }), locale: 'en-GB' });
     expect(() => wb.takeForgotten()).toThrow('trackForgotten');

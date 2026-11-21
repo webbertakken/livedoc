@@ -540,7 +540,8 @@ view gets the header and **Copy** alone.
   read is not applied ("That
   format code can't be read"). A custom code is drawn the same in every locale, as `TEXT` writes it.
 - Number formats are drawn in the viewer's locale (separators, date order), so two people may see `1,234.50` and
-  `1.234,50` for the same value.
+  `1.234,50` for the same value; a spreadsheet's are drawn in its own locale, alike for everyone
+  ([Formulas](formulas.md#locale)).
 - A number too large or too small to be a date (a phone number in a Date column) is drawn as Automatic would draw
   it under Date, Time and Date Time.
 - **Merge Cells** joins a range into one cell, keeping the top-left input (others are cleared, after asking if

@@ -127,11 +127,11 @@ export function scalarArg(v: EvalValue, f: Frame): Scalar {
 }
 
 export function numArg(v: EvalValue, f: Frame): number | SheetError {
-  return toNumber(valueArg(v, f));
+  return toNumber(valueArg(v, f), f.locale);
 }
 
 export function textArg(v: EvalValue, f: Frame): string | SheetError {
-  return toText(valueArg(v, f));
+  return toText(valueArg(v, f), f.locale);
 }
 
 export function boolArg(v: EvalValue, f: Frame): boolean | SheetError {
@@ -226,10 +226,10 @@ export function scalarFn(min: number, max: number, each: (xs: Scalar[], f: Frame
 
 // A number function: each argument read as a number (an error is returned as it is).
 export function numFn(min: number, max: number, each: (ns: number[]) => Value): FnDef {
-  return scalarFn(min, max, (xs) => {
+  return scalarFn(min, max, (xs, f) => {
     const ns: number[] = [];
     for (const x of xs) {
-      const n = toNumber(x);
+      const n = toNumber(x, f.locale);
       if (typeof n !== 'number') return n;
       ns.push(n);
     }
@@ -270,7 +270,7 @@ export function numbersOf(args: EvalValue[], f: Frame): number[] | SheetError {
       continue;
     }
     if (v === null) continue;
-    const n = toNumber(v);
+    const n = toNumber(v, f.locale);
     if (typeof n !== 'number') return n;
     out.push(n);
   }
@@ -293,7 +293,7 @@ export function numbersOfA(
     for (const x of isArray(v) ? v.rows.flat().map(scalarOf) : [v]) {
       if (isError(x)) return x;
       if (x === null) continue;
-      const n = fromRange && typeof x === 'string' ? 0 : toNumber(x);
+      const n = fromRange && typeof x === 'string' ? 0 : toNumber(x, f.locale);
       if (typeof n === 'number') out.push(n);
       else if (textIsError) return n;
       else out.push(0);

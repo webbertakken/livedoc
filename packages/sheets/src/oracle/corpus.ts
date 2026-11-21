@@ -17,7 +17,7 @@ export type OracleAuthority = 'google' | 'openformula';
 export type OracleCase = {
   // `<NAME>.<n>` for a function's case, `<topic>.<n>` for the language's.
   id: string;
-  // The formula as typed in Google Sheets, `=` first.
+  // The formula as typed in Google Sheets, `=` first, in its category's locale.
   f: string;
   // The block its answer fills: one cell unless it spills.
   rows: number;
@@ -36,6 +36,8 @@ export type OracleCase = {
 
 export type OracleCategory = {
   category: string;
+  // The locale its workbook is in (a BCP 47 tag; formulas.md "Locale"): its formulas typed and its text read as there.
+  locale: string;
   // Rows of values placed on sheet `Data` from A1.
   data: OracleValue[][];
   cases: OracleCase[];
@@ -162,8 +164,19 @@ export const OracleCorpus = {
         authority: (x.authority as OracleAuthority | undefined) ?? 'google',
       });
     });
+    const locale = raw.locale ?? ORACLE_LOCALE;
+    if (typeof locale !== 'string' || !/^[a-z]{2,3}-[A-Z]{2}$/.test(locale))
+      problems.push('locale must be a language and a region, as de-DE');
     if (problems.length > 0) return { ok: false, problems };
-    return { ok: true, category: { category: raw.category, data: data as OracleValue[][], cases } };
+    return {
+      ok: true,
+      category: {
+        category: raw.category,
+        locale: locale as string,
+        data: data as OracleValue[][],
+        cases,
+      },
+    };
   },
 
   /** An answer file's JSON, or null when it is not one. */

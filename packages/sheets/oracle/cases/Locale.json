@@ -1,0 +1,127 @@
+{
+  "category": "Locale",
+  "locale": "de-DE",
+  "data": [["1,5", "20.11.2026", 2.5]],
+  "cases": [
+    {
+      "id": "Locale.1",
+      "f": "=ROUND(1,5;0)",
+      "note": "formulas.md \"Locale\": a decimal comma, arguments split by ;"
+    },
+    {
+      "id": "Locale.2",
+      "f": "={1\\2;3\\4}",
+      "rows": 2,
+      "cols": 2,
+      "note": "formulas.md \"Locale\": columns by \\, rows by ;"
+    },
+    {
+      "id": "Locale.3",
+      "f": "=SUM({1,5\\2,5})"
+    },
+    {
+      "id": "Locale.4",
+      "f": "=IF(TRUE;\"a,b;c\";\"d\")",
+      "note": "Text in quotes is never touched"
+    },
+    {
+      "id": "Locale.5",
+      "f": "=2,5E2+1"
+    },
+    {
+      "id": "Locale.6",
+      "f": "=VALUE(\"1.234,5\")",
+      "note": "formulas.md \"Locale\": text read as a number in the locale"
+    },
+    {
+      "id": "Locale.7",
+      "f": "=\"1,5\"+1"
+    },
+    {
+      "id": "Locale.8",
+      "f": "=Data!A1*2"
+    },
+    {
+      "id": "Locale.9",
+      "f": "=DATEVALUE(\"20.11.2026\")"
+    },
+    {
+      "id": "Locale.10",
+      "f": "=DATEVALUE(Data!B1)"
+    },
+    {
+      "id": "Locale.11",
+      "f": "=DATEVALUE(\"2026-11-20\")"
+    },
+    {
+      "id": "Locale.12",
+      "f": "=VALUE(\"1,5%\")"
+    },
+    {
+      "id": "Locale.13",
+      "f": "=NUMBERVALUE(\"1.234,5\")",
+      "authority": "openformula",
+      "expect": [[1234.5]],
+      "cite": "OpenFormula 1.3 Part 4, NUMBERVALUE: the separators default to those of the current locale (de-DE: \",\" and \".\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text with no separators given as having no decimal separator at all"
+      }
+    },
+    {
+      "id": "Locale.14",
+      "f": "=TIMEVALUE(\"14:30\")"
+    },
+    {
+      "id": "Locale.15",
+      "f": "=FIXED(1234,567;1)",
+      "note": "formulas.md \"Locale\": values written in the locale"
+    },
+    {
+      "id": "Locale.16",
+      "f": "=DOLLAR(1234,5)",
+      "differs": {
+        "libreoffice": "LibreOffice writes a plain space before the euro, Intl a no-break space"
+      },
+      "note": "Awaits Google's answer (formulas.md \"Candidates\")"
+    },
+    {
+      "id": "Locale.17",
+      "f": "=sum(1;2)",
+      "note": "formulas.md \"Locale\": function names in any case"
+    },
+    {
+      "id": "Locale.18",
+      "f": "=FORMULATEXT(B1)",
+      "note": "formulas.md \"Locale\": FORMULATEXT in the locale's syntax"
+    },
+    {
+      "id": "Locale.19",
+      "f": "=Data!C1*2"
+    },
+    {
+      "id": "Locale.20",
+      "f": "=ISNUMBER(\"1,5\"*1)"
+    },
+    {
+      "id": "Locale.21",
+      "f": "=SUM(Data!A1:C1)"
+    },
+    {
+      "id": "Locale.22",
+      "f": "=1,5&\"x\"",
+      "note": "formulas.md \"Locale\": a number written as text with the decimal comma"
+    },
+    {
+      "id": "Locale.23",
+      "f": "=CONCATENATE(2,5)"
+    },
+    {
+      "id": "Locale.25",
+      "f": "=VALUE(\"1.5\")"
+    },
+    {
+      "id": "Locale.26",
+      "f": "=COUNTIF(Data!C1;\">2,4\")"
+    }
+  ]
+}

@@ -17,12 +17,12 @@ import { variance } from './variances';
 const NO_FIELD = (what: string) => err('#VALUE!', `There is no field ${what}`);
 
 // A field by its label (case ignored) or its number, 1 the first column.
-function fieldIndex(labels: Scalar[], field: Scalar): number | SheetError {
+function fieldIndex(labels: Scalar[], field: Scalar, locale: string): number | SheetError {
   if (isError(field)) return field;
   if (typeof field === 'string') {
     const wanted = field.toLowerCase();
     const at = labels.findIndex((l) => {
-      const text = toText(l);
+      const text = toText(l, locale);
       return typeof text === 'string' && text.toLowerCase() === wanted;
     });
     return at >= 0 ? at : NO_FIELD(`"${field}"`);
@@ -38,6 +38,7 @@ function matchingRecords(
   records: Value[][],
   labels: Scalar[],
   criteria: Value[][],
+  locale: string,
 ): Value[][] | SheetError {
   const columns: (number | null)[] = [];
   for (const label of criteria[0]!) {
@@ -46,7 +47,7 @@ function matchingRecords(
       columns.push(null);
       continue;
     }
-    const at = fieldIndex(labels, typeof name === 'string' ? name : toText(name));
+    const at = fieldIndex(labels, typeof name === 'string' ? name : toText(name, locale), locale);
     if (isError(at)) return at;
     columns.push(at);
   }
@@ -56,7 +57,7 @@ function matchingRecords(
       const column = columns[j] as number | null;
       return value === null || value === '' || column === null
         ? []
-        : [[column, makeCriterion(value)] as [number, Criterion]];
+        : [[column, makeCriterion(value, locale)] as [number, Criterion]];
     }),
   );
   if (filters.length === 0) return records;
@@ -73,10 +74,10 @@ function selected(
   const table = arrayArg(args[0]!, f).rows;
   const labels = table[0]!.map((v) => scalarOf(v));
   const criteria = arrayArg(args[2]!, f).rows;
-  const records = matchingRecords(table.slice(1), labels, criteria);
+  const records = matchingRecords(table.slice(1), labels, criteria, f.locale);
   if (isError(records)) return records;
   if (args[1] === null) return { values: null, count: records.length };
-  const field = fieldIndex(labels, scalarOf(arrayArg(args[1]!, f)));
+  const field = fieldIndex(labels, scalarOf(arrayArg(args[1]!, f)), f.locale);
   if (isError(field)) return field;
   return { values: records.map((r) => scalarOf(r[field]!)), count: records.length };
 }

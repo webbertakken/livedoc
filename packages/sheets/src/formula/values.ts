@@ -1,5 +1,5 @@
 // Values and errors (docs/specs/029-sheets/formulas.md "Values", "Errors").
-import { parsePlainNumber } from '../input';
+import { localeSeparators, parsePlainNumber } from '../input';
 
 // Google's errors (formulas.md "Errors"): a blocked spill is #REF!, as Google shows it.
 export type ErrorCode =
@@ -81,18 +81,31 @@ export function numberText(n: number): string {
   return String(r).replace('e-', 'E-').replace('e+', 'E+');
 }
 
-export function toNumber(v: Value): number | SheetError {
+// The decimal mark text in a formula takes in a locale (formulas.md "Locale"): `"1,5"+1` is 2.5 where decimals take a
+// comma, and `=1.5&""` writes "1,5" there.
+function decimalOf(locale: string): '.' | ',' {
+  return localeSeparators(locale).decimal === ',' ? ',' : '.';
+}
+
+/** Text as a plain number in a locale: its decimal mark, no grouping; null when it is none. */
+export function plainNumber(text: string, locale: string): number | null {
+  if (decimalOf(locale) === '.') return parsePlainNumber(text);
+  return /[.]/.test(text) ? null : parsePlainNumber(text.replace(',', '.'));
+}
+
+/** A value as a number, text read in `locale` (formulas.md "Operators", "Locale"). */
+export function toNumber(v: Value, locale: string): number | SheetError {
   const s = scalarOf(v);
   if (s === null) return 0;
   if (typeof s === 'number') return s;
   if (typeof s === 'boolean') return s ? 1 : 0;
   if (typeof s === 'string') {
     if (s.trim() === '') return 0;
-    const n = parsePlainNumber(s);
+    const n = plainNumber(s, locale);
     if (n !== null) return n;
     const pct = /^(.*)%$/.exec(s.trim());
     if (pct) {
-      const p = parsePlainNumber(pct[1]!);
+      const p = plainNumber(pct[1]!, locale);
       if (p !== null) return p / 100;
     }
     return err('#VALUE!', `"${s.length > 20 ? `${s.slice(0, 20)}…` : s}" is not a number`);
@@ -100,11 +113,12 @@ export function toNumber(v: Value): number | SheetError {
   return s;
 }
 
-export function toText(v: Value): string | SheetError {
+/** A value as text, a number written with `locale`'s decimal mark (formulas.md "Locale"). */
+export function toText(v: Value, locale: string): string | SheetError {
   const s = scalarOf(v);
   if (s === null) return '';
   if (typeof s === 'string') return s;
-  if (typeof s === 'number') return numberText(s);
+  if (typeof s === 'number') return numberText(s).replace('.', decimalOf(locale));
   if (typeof s === 'boolean') return s ? 'TRUE' : 'FALSE';
   return s;
 }

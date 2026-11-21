@@ -47,10 +47,10 @@ function writeSigned(n: number, radix: Radix, places: number | null): string | S
 
 // A conversion from a radix (or decimal) to a radix, with optional places.
 function toRadix(from: Radix | 10, to: Radix): FnDef {
-  return scalarFn(1, 2, ([x, p]) => {
-    const n = from === 10 ? toNumber(x!) : readSigned(x!, from);
+  return scalarFn(1, 2, ([x, p], f) => {
+    const n = from === 10 ? toNumber(x!, f.locale) : readSigned(x!, from);
     if (isError(n)) return n;
-    const places = p === undefined || p === null ? null : toNumber(p);
+    const places = p === undefined || p === null ? null : toNumber(p, f.locale);
     if (isError(places)) return places;
     return writeSigned(n, to, places);
   });

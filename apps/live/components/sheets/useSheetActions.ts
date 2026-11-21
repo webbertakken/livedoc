@@ -32,7 +32,9 @@ import {
   parseFormula,
   resizeAxis,
   rowHeight,
+  localMs,
   serialFromMs,
+  zonedMs,
   setFilterCondition,
   single,
   sortFilter,
@@ -95,7 +97,7 @@ export function inputTextAt(c: SheetController, r: number, col: number): string 
     const back = readTypedInput(date, c.locale, ctx);
     if (back.kind === 'value' && 'n' in back.input && back.input.n === input.n) return date;
   }
-  return inputAsText(input, ctx);
+  return inputAsText(input, ctx, c.locale);
 }
 
 // What the first value a Reject rule refuses in a typed write says (the rule's Help Text, else its line), or null.
@@ -408,8 +410,9 @@ export function useSheetActions() {
       },
       // ---- Dates ----
       typeNow: (what: 'date' | 'time') => {
-        const now = new Date();
-        const serial = serialFromMs(now.getTime() - now.getTimezoneOffset() * 60_000);
+        // Today on the spreadsheet's wall clock, or this person's (formulas.md "Locale").
+        const zone = c.workbook.timeZone;
+        const serial = serialFromMs(zone ? zonedMs(Date.now(), zone) : localMs(Date.now()));
         const { r, c: col } = sel().active;
         const rowId = c.sheet.layout.rows[r]!;
         const colId = c.sheet.layout.cols[col]!;

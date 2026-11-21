@@ -13,6 +13,8 @@ import { WorkbookCopy } from './workbook-copy';
 type PortOptions = {
   sheets: readonly Sheet[];
   locale: string;
+  // A spreadsheet's time zone (formulas.md "Locale"); absent, the viewer's.
+  timeZone?: string;
   limits?: SheetLimits;
   iteration?: Iteration;
   // A spreadsheet's imports (imports.md): whether they may fetch, and who fetches what the Worker asks.
@@ -37,6 +39,7 @@ export class EnginePort {
     this.copy = new WorkbookCopy({
       sheets: opts.sheets,
       locale: opts.locale,
+      ...(opts.timeZone ? { timeZone: opts.timeZone } : {}),
       limits,
       iteration,
     });
@@ -52,6 +55,7 @@ export class EnginePort {
       rev,
       sheets: sheets.map(sheetToJson),
       locale: this.copy.locale,
+      ...(this.copy.timeZone ? { timeZone: this.copy.timeZone } : {}),
       limits: this.copy.limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
       iteration: this.copy.iterationSetting(),
       ...(this.imports ? { imports: this.imports.access } : {}),

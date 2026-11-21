@@ -37,7 +37,7 @@ function transposed(rows: Value[][]): Value[][] {
 function picks(args: EvalValue[], count: number, f: Frame, what: string): number[] | SheetError {
   const out: number[] = [];
   for (const s of flatScalars(args.slice(1), f)) {
-    const n = toNumber(s);
+    const n = toNumber(s, f.locale);
     if (isError(n)) return n;
     const i = Math.trunc(n);
     if (i === 0 || Math.abs(i) > count) return err('#VALUE!', `There is no ${what} ${i}`);

@@ -11,7 +11,6 @@ import {
   ORACLE_DATA_COLS_MIN,
   ORACLE_DATA_ROWS_MIN,
   ORACLE_DATA_SHEET,
-  ORACLE_LOCALE,
   ORACLE_NOW,
   OracleLayout,
   type OracleCategory,
@@ -68,7 +67,7 @@ export function engineAnswers(category: OracleCategory): Map<string, EngineAnswe
   if (category.data.some((row) => row.some((v) => typeof v === 'object' && v !== null)))
     throw new Error(`${category.category}: a fixture holds values, never errors`);
   // Formulas compile against both sheets, as a person types them on Cases.
-  const typing = new Workbook({ sheets: [data, cases], locale: ORACLE_LOCALE });
+  const typing = new Workbook({ sheets: [data, cases], locale: category.locale });
   const ctx = typing.ctxFor(cases.id);
   const out = new Map<string, EngineAnswer>();
   const blocks = OracleLayout.blocks(category);
@@ -77,7 +76,7 @@ export function engineAnswers(category: OracleCategory): Map<string, EngineAnswe
     cases.cells.set(cellKey(cases.layout.rows[b.r]!, cases.layout.cols[0]!), {
       input: { s: x.id },
     });
-    const read = readTypedInput(x.f, ORACLE_LOCALE, ctx);
+    const read = readTypedInput(x.f, category.locale, ctx);
     if (read.kind !== 'value') {
       out.set(x.id, { ok: false, why: `parse:${read.kind === 'invalid' ? read.reason : 'empty'}` });
       return;
@@ -87,7 +86,7 @@ export function engineAnswers(category: OracleCategory): Map<string, EngineAnswe
   });
   const engine = new Workbook({
     sheets: [data, cases],
-    locale: ORACLE_LOCALE,
+    locale: category.locale,
     now: () => ORACLE_NOW,
     rand: () => 0.5,
     limits: SheetLimits.spreadsheet,

@@ -6,7 +6,8 @@ is the one people already write in Google Sheets and Excel: the same operators, 
 a formula pasted from either works here when it uses what this page lists.
 
 Values are worked out in the browser (and by the api and MCP for images and agents) by the same pure engine, so
-everyone sees the same values for the same inputs; only number formats differ by the viewer's locale.
+everyone sees the same values for the same inputs. A spreadsheet reads and shows them in its own locale, the same for
+everyone ([Locale](#locale)); a Plan Sheet in the viewer's, so only its number formats differ from person to person.
 
 ## Values
 
@@ -70,8 +71,43 @@ as what it means, never as the text typed, so everyone reads it the same whateve
   cell whose format is Automatic, however the formula arrives (typed, pasted, or written by an agent), so a cell
   someone formatted keeps its format. `=TODAY()` drew as `46314` before this.
 - A cell already formatted as **Plain Text** keeps whatever is typed as text.
-- Separators are read in the typist's locale (`1.234,5` is a number to someone whose locale writes it so).
+- Separators are read in the locale ([Locale](#locale)): `1.234,5` is a number where the locale writes it so.
 - The formula bar shows a stored number unformatted (`0.12`, or the date in the locale's short form).
+
+## Locale
+
+A spreadsheet's **locale** and **time zone** are its own ([Settings](settings.md)), so everyone working on it reads,
+types and sees it alike, wherever they are (verified: Google's "Set a spreadsheet's location & calculation
+settings"). A Plan Sheet has none of its own: it reads as the viewer's browser does (default, D79).
+
+- **Inputs** are read in the locale: its decimal mark and grouping, its day and month order, its currency symbol
+  ([What a typed input becomes](#what-a-typed-input-becomes)); so are text read as a number or a date by a formula
+  (`VALUE`, `DATEVALUE`, `="1,5"+1`, `ISDATE`) and imported values ([Imports](imports.md)).
+- **Values** are drawn in the locale: number formats, dates, `DOLLAR`'s and `FIXED`'s text.
+- **Separators in formulas** follow the locale's decimal mark (verified: Google's "Using arrays in Google Sheets"):
+
+  | The locale writes decimals | Decimal in a formula | Between arguments | Between columns in `{}` | Between rows in `{}` |
+  | -------------------------- | -------------------- | ----------------- | ----------------------- | -------------------- |
+  | with a point (en, ja, ...) | `1.5`                | `,`               | `,`                     | `;`                  |
+  | with a comma (de, fr, ...) | `1,5`                | `;`               | `\`                     | `;`                  |
+
+  So `=ROUND(1.5, 0)` and `={1, 2; 3, 4}` in en-US are `=ROUND(1,5; 0)` and `={1\2; 3\4}` in de-DE. Which group
+  a locale is in is its own decimal mark, as the browser's Intl writes it (default, D78).
+
+- In a decimal-comma locale a comma outside a number, and a point in a number, cannot be read: the formula is
+  refused where they are (default, D78). Text in quotes and quoted sheet names are never touched.
+- **Formulas are stored in one syntax**, English with points and commas, whatever the locale: changing a
+  spreadsheet's locale changes how every formula reads and is typed, never what it means. The formula bar, find and
+  replace in formulas, a rule's custom formula, the function hints and `FORMULATEXT` show the locale's separators.
+- Agents, files and the api read and write the stored syntax (an agent types as `en-GB`, [Sheet store](sheet-store.md)).
+- **Function names** are English in every locale (Display Language is English only, [Settings](settings.md)). A
+  function's name is not case sensitive and is kept in capitals (`=sum(a1)` reads `=SUM(A1)`), as the catalogue
+  and Google's help write them; a name no function has keeps the case it was typed in (default, D80).
+  Named ranges and `LET` and `LAMBDA` names keep theirs too.
+- **The time zone** is the wall clock `NOW` and `TODAY` read, for everyone, and the date Ctrl+; types. A time
+  zone the browser does not know reads as UTC, and a locale it does not know as `en` (default, D81).
+- A change of locale or time zone (an Editor's Save Settings, an agent's) is seen by everyone at once: each open page
+  works every value out again in the new ones.
 
 ## References
 
@@ -697,6 +733,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   | `LENB("ｶﾀｶﾅ")`                                                        | 4: half-width kana 1 byte (D43)             | 8                                   | Text LENB.6                                     |
   | `DSUM(A1:D7, "Qty", {"Qty"; 10})`                                     | the records of 10                           | every record                        | Database DSUM.12                                |
   | `DGET(A1:D7, "Qty", {"Name"; "Banana"})`, its Qty empty               | empty                                       | `#VALUE!`                           | Database DGET.4                                 |
+  | `DOLLAR(1234,5)` in de-DE                                             | `1.234,50 €`, a no-break space (Intl)       | `1.234,50 €`, a plain space         | Locale Locale.16                                |
   | `DSTDEV` of one value, `DVARP` of none                                | `#DIV/0!`, as `STDEV`, `VAR.P`              | `#NUM!`                             | Database DSTDEV.2, DVARP.2                      |
   | `BITLSHIFT(1, 54)`                                                    | `#NUM!`: Google's -53 to 53                 | 18014398509482000                   | Engineering BITLSHIFT.6                         |
   | `IMSUM("4+3i", "1+2j")`, `IMSUB`, `IMPRODUCT`                         | `#VALUE!`: Google's "you can't"             | `5+5i`                              | Engineering IMSUM.4                             |
@@ -1369,6 +1406,8 @@ connect these sheets." with **Allow Access** (verified: Google's help).
 - Numbers agree to one part in a billion (a case may loosen it to one in a million, saying why); text and booleans
   exactly; errors by their code, never their wording.
 - The corpus runs in `en-US`, in UTC, at a fixed now (default, D33); volatile functions are held by their own tests.
+  A category may name another locale (`Locale` runs in `de-DE`): its formulas are typed in that locale's syntax,
+  and LibreOffice answers it with that locale as its own.
 - CI runs the corpus on every change, with no LibreOffice needed; a function reads **built** only while its cases pass,
   and every function the engine knows has at least one case.
 
@@ -1458,4 +1497,9 @@ The code cites each by its id.
   needs none; a missing source reads as one the reader may not open (default).
 - **D77** IMPORTRANGE's freshness: asked again every minute while open; sources read 4 deep, a loop `#REF!`; a
   source's web imports as where no editor fetches (default).
+- **D78** Separators by locale: A locale whose own decimal mark (Intl) is a comma writes `;` and `\`; a comma outside a
+  number, or a point in one, there cannot be read (default).
+- **D79** A Plan Sheet's locale and time zone: The viewer's browser's, formula separators included (default).
+- **D80** Function names' case: A function's in capitals; a name no function has as typed (default).
+- **D81** An unknown time zone or locale: Read as UTC and as `en` (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

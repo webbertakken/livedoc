@@ -1680,7 +1680,7 @@ export const articles: Article[] = [
     title: 'Sheet Functions',
     description: 'Every function a Sheet formula can use, with its arguments and an example.',
     keywords:
-      'sheet functions function list formulas formula reference spreadsheet functions excel functions sum average count countif sumif vlookup xlookup index match if iferror concat text date today now round filter sort unique sequence pmt npv cardcount cardsum cards plan cards errors div/0 n/a name ref value spill',
+      'sheet functions function list formulas formula reference spreadsheet functions excel functions sum average count countif sumif vlookup xlookup index match if iferror concat text date today now round filter sort unique sequence pmt npv cardcount cardsum cards plan cards errors div/0 n/a name ref value spill locale semicolon decimal comma separator time zone',
     category: 'Canvas',
     categorySlug: 'canvas/plan-tabs',
     parentSlug: 'plan-tabs',

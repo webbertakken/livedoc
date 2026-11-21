@@ -116,11 +116,11 @@ export const BYTE_TEXT_FUNCTIONS: Record<string, FnDef> = {
     const from = Math.trunc(start!) - 1;
     return chars.slice(from, windowEnd(chars, from, n!)).join('');
   }),
-  REPLACEB: scalarFn(4, 4, ([t, start, n, by]) => {
-    const text = toText(t!);
-    const from1 = toNumber(start!);
-    const bytes = toNumber(n!);
-    const rep = toText(by!);
+  REPLACEB: scalarFn(4, 4, ([t, start, n, by], f) => {
+    const text = toText(t!, f.locale);
+    const from1 = toNumber(start!, f.locale);
+    const bytes = toNumber(n!, f.locale);
+    const rep = toText(by!, f.locale);
     for (const x of [text, from1, bytes, rep]) if (isError(x)) return x;
     if ((from1 as number) < 1) return err('#VALUE!', 'Positions are counted from 1');
     if ((bytes as number) < 0) return err('#VALUE!', NEGATIVE);

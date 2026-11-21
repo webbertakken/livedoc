@@ -29,6 +29,7 @@ export class EngineHost {
       this.wb = new Workbook({
         sheets: msg.sheets.map(sheetFromJson),
         locale: msg.locale,
+        ...(msg.timeZone ? { timeZone: msg.timeZone } : {}),
         limits: msg.limits === 'spreadsheet' ? SheetLimits.spreadsheet : SheetLimits.plan,
         iteration: msg.iteration,
         trackForgotten: true,

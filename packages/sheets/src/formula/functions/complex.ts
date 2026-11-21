@@ -14,9 +14,9 @@ export const COMPLEX_FUNCTIONS: Record<string, FnDef> = {
     // Written with i whatever the input used, as Google's IMLN("4+2j") example shows.
     return out ? writeComplex({ ...out, unit: 'i' }) : err('#NUM!', NO_RESULT);
   }),
-  IMPOWER: scalarFn(2, 2, ([x, n]) => {
+  IMPOWER: scalarFn(2, 2, ([x, n], f) => {
     const c = readComplex(x!);
-    const power = toNumber(n!);
+    const power = toNumber(n!, f.locale);
     if (isError(c)) return c;
     if (isError(power)) return power;
     const out = complexPower(c, power);

@@ -120,7 +120,7 @@ const PLAIN_NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i;
 function numberValue(xs: Scalar[], f: Frame): Value {
   const texts: string[] = [];
   for (const x of xs) {
-    const t = toText(x);
+    const t = toText(x, f.locale);
     if (isError(t)) return t;
     texts.push(t);
   }

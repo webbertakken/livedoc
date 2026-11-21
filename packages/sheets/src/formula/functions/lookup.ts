@@ -41,8 +41,14 @@ function hasWildcard(v: Scalar): v is string {
 }
 
 // The index of an exact match in `list` (text ignoring case, wildcards when the key has them), or -1.
-function exactIndex(list: Scalar[], key: Scalar, reverse = false, wildcards = true): number {
-  const crit = wildcards && hasWildcard(key) ? makeCriterion(key) : null;
+function exactIndex(
+  list: Scalar[],
+  key: Scalar,
+  locale: string,
+  reverse = false,
+  wildcards = true,
+): number {
+  const crit = wildcards && hasWildcard(key) ? makeCriterion(key, locale) : null;
   const n = list.length;
   for (let k = 0; k < n; k++) {
     const i = reverse ? n - 1 - k : k;
@@ -110,7 +116,7 @@ function vhLookup(vertical: boolean): FnDef {
     const span = vertical ? d.cols : d.rows;
     if (idx < 1 || idx > span) return err('#REF!', `Index ${idx} is outside the range`);
     const keys = vertical ? column(table, 0) : row(table, 0);
-    const i = sortedMode ? sortedIndex(keys, key) : exactIndex(keys, key);
+    const i = sortedMode ? sortedIndex(keys, key) : exactIndex(keys, key, f.locale);
     if (i < 0) return err('#N/A', 'No match was found');
     reportFound(f, args[1], vertical ? i : idx - 1, vertical ? idx - 1 : i);
     const out = vertical ? table.rows[i]![idx - 1] : table.rows[idx - 1]![i];
@@ -118,10 +124,16 @@ function vhLookup(vertical: boolean): FnDef {
   });
 }
 
-function matchIn(list: Scalar[], key: Scalar, mode: number, search: number): number {
+function matchIn(
+  list: Scalar[],
+  key: Scalar,
+  mode: number,
+  search: number,
+  locale: string,
+): number {
   const reverse = search < 0;
-  if (mode === 2) return exactIndex(list, key, reverse, true);
-  const exact = exactIndex(list, key, reverse, false);
+  if (mode === 2) return exactIndex(list, key, locale, reverse, true);
+  const exact = exactIndex(list, key, locale, reverse, false);
   if (exact >= 0 || mode === 0) return exact;
   // Exact or next smaller (-1) / next larger (1), over unsorted data.
   let best = -1;
@@ -185,7 +197,8 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
     if (!line) return err('#N/A', 'MATCH needs one row or one column');
     const type = opt(args, 2, f, intArg, 1);
     if (isError(type)) return type;
-    const i = type === 0 ? exactIndex(line.list, key) : sortedIndex(line.list, key, type < 0);
+    const i =
+      type === 0 ? exactIndex(line.list, key, f.locale) : sortedIndex(line.list, key, type < 0);
     return i < 0 ? err('#N/A', 'No match was found') : i + 1;
   }),
   XMATCH: fn(2, 4, (args, f) => {
@@ -197,7 +210,7 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
     const search = opt(args, 3, f, intArg, 1);
     if (isError(mode)) return mode;
     if (isError(search)) return search;
-    const i = matchIn(line.list, key, mode, search);
+    const i = matchIn(line.list, key, mode, search, f.locale);
     return i < 0 ? err('#N/A', 'No match was found') : i + 1;
   }),
   XLOOKUP: fn(3, 6, (args, f) => {
@@ -211,7 +224,7 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
     const search = opt(args, 5, f, intArg, 1);
     if (isError(mode)) return mode;
     if (isError(search)) return search;
-    const i = matchIn(line.list, key, mode, search);
+    const i = matchIn(line.list, key, mode, search, f.locale);
     if (i < 0) {
       const missing = args[3];
       return missing !== undefined && missing !== null

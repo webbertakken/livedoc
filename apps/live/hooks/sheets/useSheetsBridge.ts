@@ -47,7 +47,10 @@ export type SheetsBridge = {
   // Cells (Editor and Participant), and the Sheet's shape (Editor), docs/specs/013-workspace/share-roles.md.
   canEdit: boolean;
   canShape: boolean;
+  // How numbers, dates and formulas read and show (formulas.md "Locale"): a spreadsheet's own, else this browser's.
   locale: string;
+  // A spreadsheet's time zone (formulas.md "Locale"): the wall clock NOW and TODAY read; absent, this browser's.
+  timeZone?: string;
   peers: readonly SheetPeer[];
   pushUndo: (step: ItemUndoStep) => void;
   // A refusal or failure (error toast), and plain news ("Replaced 3 cells").
@@ -74,6 +77,10 @@ export type SheetsBridge = {
   attach: (handlers: SheetsHandlers) => () => void;
 };
 
+function browserLocale(): string {
+  return typeof navigator === 'undefined' ? 'en-GB' : navigator.language || 'en-GB';
+}
+
 export const SheetsBridgeContext = createContext<SheetsBridge | null>(null);
 
 export function useSheetsBridgeContext(): SheetsBridge | null {
@@ -90,6 +97,9 @@ export function useSheetsBridge(opts: {
   recalc?: WorkbookRecalc;
   importAccess?: ImportAccess;
   rangeSources?: readonly string[];
+  // A spreadsheet's locale and time zone; absent, this browser's.
+  locale?: string;
+  timeZone?: string;
   self: SheetPerson | null;
   canEdit: boolean;
   // Absent: as canEdit.
@@ -132,6 +142,8 @@ export function useSheetsBridge(opts: {
     recalc,
     importAccess,
     rangeSources,
+    locale,
+    timeZone,
     self,
     canEdit,
     peers,
@@ -150,7 +162,8 @@ export function useSheetsBridge(opts: {
       self,
       canEdit,
       canShape,
-      locale: typeof navigator === 'undefined' ? 'en-GB' : navigator.language || 'en-GB',
+      locale: locale ?? browserLocale(),
+      ...(timeZone ? { timeZone } : {}),
       peers,
       pushUndo: (step) => pushUndo.current(step),
       toast: (m) => toast.current(m),
@@ -173,6 +186,8 @@ export function useSheetsBridge(opts: {
       recalc,
       importAccess,
       rangeSources,
+      locale,
+      timeZone,
       activeTabId,
       self,
       canEdit,

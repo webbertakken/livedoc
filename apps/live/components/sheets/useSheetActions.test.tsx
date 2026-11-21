@@ -128,7 +128,9 @@ describe('the sheet actions', () => {
 
 // ---- Every command, over a real store --------------------------------------------------------------------
 
-async function rich(opts: { canEdit?: boolean; rows?: number; cols?: number } = {}) {
+async function rich(
+  opts: { canEdit?: boolean; rows?: number; cols?: number; timeZone?: string } = {},
+) {
   const pending = () => new Promise<never>(() => {});
   const initial = { ...json(), layout: emptyLayout(rand, opts.rows ?? 6, opts.cols ?? 4) };
   const announce = vi.fn();
@@ -136,6 +138,7 @@ async function rich(opts: { canEdit?: boolean; rows?: number; cols?: number } = 
     scope: { documentId: 'd1', ownerId: 'o', shareCode: null, tabId: null },
     self: () => by,
     locale: 'en-GB',
+    ...(opts.timeZone ? { timeZone: opts.timeZone } : {}),
     pushUndo: () => {},
     toast: () => {},
     api: {
@@ -520,5 +523,18 @@ describe('sort, filter, freeze, dates', () => {
     const n = (h.cell(1, 0)?.input as { n: number } | undefined)?.n;
     expect(h.cell(1, 0)?.format?.nf).toBe('time');
     expect(n !== undefined && n >= 0 && n < 1).toBe(true);
+  });
+
+  // formulas.md "Locale": a spreadsheet's today is on its own wall clock.
+  it("types today's date on the spreadsheet's wall clock", async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(Date.UTC(2026, 10, 20, 23, 30));
+      const h = await rich({ timeZone: 'Asia/Tokyo' });
+      h.run((a) => a.typeNow('date'));
+      expect((h.cell(0, 0)?.input as { n: number } | undefined)?.n).toBe(46347);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

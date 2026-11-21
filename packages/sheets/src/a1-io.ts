@@ -53,7 +53,7 @@ export function readRange(wb: Workbook, sheetId: string, rangeText?: string): Ra
       const cell = sheet.cells.get(cellKey(sheet.layout.rows[r]!, sheet.layout.cols[c]!));
       const value = wb.value(sheetId, r, c);
       row.push({
-        input: inputAsText(cell?.input, ctx),
+        input: inputAsText(cell?.input, ctx, wb.locale),
         value: plainValue(value as Scalar),
         display: displayValue(value, cell?.format, wb.locale).text,
       });
