@@ -37,6 +37,7 @@ Three jobs run in parallel, each after its own `pnpm install --frozen-lockfile`,
 - **Tests**: `pnpm turbo run test --concurrency=2` for every workspace without `test:coverage`, then `pnpm turbo run test:coverage --concurrency=2 --filter=!@livedoc/live` for those with it (enforcing the per-file coverage thresholds), and uploads their coverage to Codecov.
 - **Editor unit tests i/3**: the editor's suite (`apps/live`) under coverage, a third of its files per job (`vitest run --shard=i/3`), each uploading its coverage to Codecov ([Coverage report](../003-system-architecture/testing.md#coverage-report)). Each suite runs exactly once; `scripts/ci-test-filters.mjs` derives the exclusions from the manifests, so adding or removing a coverage script needs no CI edit.
 - **Build**: `pnpm build`, then `pnpm deploy:check`.
+- **Downloads in CI**: a tool a workflow fetches from an outside host (gitleaks, mcp-publisher) is fetched with `curl -fsSL --retry 5 --retry-all-errors` into a file, never piped, so a brief outage of that host retries instead of turning `main` red, and a failure stops the step with its HTTP error. `apps/help/lib/ci-downloads.test.ts` fails on any `curl` in `.github/workflows/` that lacks them.
 
 No job needs another's output: only the nine apps have a `build` script, and no workspace depends on an app, so checks and tests build nothing. The `main` ruleset requires all three checks by name.
 
