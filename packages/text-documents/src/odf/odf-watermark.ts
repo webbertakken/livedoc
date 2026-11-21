@@ -15,8 +15,12 @@ import {
 } from '@livedoc/office-packages';
 import type { Block, Inline, KeptInline } from '../model/blocks';
 import type { PageSetup } from '../model/sections';
-import { WATERMARK_DEFAULTS, WATERMARK_NAME_PREFIX, type Watermark } from '../model/watermark';
-import { watermarkBox } from '../ooxml/ooxml-watermark';
+import {
+  WATERMARK_DEFAULTS,
+  WATERMARK_NAME_PREFIX,
+  watermarkBox,
+  type Watermark,
+} from '../model/watermark';
 import { NS } from './odf-names';
 
 /** The styles LiveDoc writes a watermark with, in the styles part's automatic styles. */

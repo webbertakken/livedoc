@@ -208,7 +208,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('page-count', 'Page count', 'edit', BUILT),
         item('page-numbers-more', 'More options', 'edit', BUILT),
       ]),
-      item('watermark', 'Watermark', 'edit'),
+      item('watermark', 'Watermark', 'edit', { checkable: 'checkbox', status: 'built' }),
       submenu('break', 'Break', [
         item('page-break', 'Page break', 'edit', { shortcut: 'insert-page-break', ...BUILT }),
         item('section-break-next-page', 'Section break (next page)', 'edit', BUILT),

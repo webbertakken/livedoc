@@ -29,3 +29,36 @@ describe('TextDocumentSheets', () => {
     expect(sheetsFrame(pages)).toEqual({ width: 816, height: 2 * 1056 + 12 });
   });
 });
+
+// docs/specs/034-text-documents/page-layout.md "Watermark" (drawn): centred on every page, behind the writing, hidden.
+describe('TextDocumentSheets watermark', () => {
+  it('draws the watermark on every page, turned, at its transparency, Auto stretched across its box', () => {
+    const look = {
+      text: 'DRAFT',
+      width: 560,
+      height: 180,
+      fontSize: 180,
+      fit: true,
+      family: 'Arial, sans-serif',
+      bold: true,
+      italic: false,
+      colour: '#c0c0c0',
+      opacity: 0.5,
+      rotate: -45,
+    };
+    const pages = [
+      { width: 816, height: 1056 },
+      { width: 816, height: 1056 },
+    ];
+    const { container } = render(<TextDocumentSheets pages={pages} shadow watermark={look} />);
+    const marks = [...container.querySelectorAll<SVGElement>('[data-watermark]')];
+    expect(marks).toHaveLength(2);
+    expect(marks[0]!.style.transform).toBe('translate(-50%, -50%) rotate(-45deg)');
+    expect(marks[0]!.style.opacity).toBe('0.5');
+    const text = marks[0]!.querySelector('text')!;
+    expect(text.textContent).toBe('DRAFT');
+    expect(text.getAttribute('textLength')).toBe('560');
+    expect(text.getAttribute('font-weight')).toBe('bold');
+    expect(marks[0]!.closest('[aria-hidden="true"]')).not.toBeNull();
+  });
+});

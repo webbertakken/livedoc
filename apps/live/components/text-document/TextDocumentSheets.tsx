@@ -5,12 +5,14 @@
 // a thin line in the writing's ink. Each page's header and footer (page-layout.md "Headers and footers") is drawn in
 // its margins, an empty one not at all; their sources lie hidden behind the first sheet, footnotes' too (drawn over the
 // writing by TextDocumentPageNotes). Each numbered line's number (page-layout.md "Line numbers") stands in its
-// page's left margin. Drawn only: never read, never focused.
+// page's left margin, and the watermark (page-layout.md "Watermark") stands centred behind it all. Drawn only: never
+// read, never focused.
 import type { ReactNode } from 'react';
 import { PAGE_GAP_PX } from '@/lib/text-document/pagination/pagination';
 import type { PageGeometry } from '@/lib/text-document/pagination/pagination-draw';
 import type { HeaderFooterKind } from '@livedoc/text-documents';
 import type { PageStory } from '@/lib/text-document/pagination/pagination-headers';
+import type { WatermarkLook } from '@/lib/text-document/text-document-watermark';
 import { STORY_KEY_ATTRIBUTE } from './useTextDocumentStories';
 
 export type TextDocumentSheetsProps = {
@@ -26,6 +28,8 @@ export type TextDocumentSheetsProps = {
   editingBox?: (element: HTMLDivElement | null) => void;
   /** The bar under the edited header, over the edited footer. */
   editingBar?: ReactNode;
+  /** The watermark each page draws behind its writing (page-layout.md "Watermark"). */
+  watermark?: WatermarkLook | null;
 };
 
 /** The frame the pages need: the widest page across, every page and gap down; null before there are pages. */
@@ -52,6 +56,7 @@ export function TextDocumentSheets({
   editing = null,
   editingBox,
   editingBar = null,
+  watermark = null,
 }: TextDocumentSheetsProps) {
   const className = `text-document-sheet absolute ${shadow ? 'shadow-sm' : ''}`;
   const frame = sheetsFrame(pages);
@@ -101,6 +106,7 @@ export function TextDocumentSheets({
                   height: page.height,
                 }}
               >
+                {watermark ? <PageWatermark look={watermark} /> : null}
                 {(page.rules ?? []).flatMap((rule, r) =>
                   rule.xs.map((x) => (
                     <div
@@ -151,5 +157,36 @@ export function TextDocumentSheets({
         </div>
       ) : null}
     </>
+  );
+}
+
+/** A page's watermark, centred on the sheet and turned about its middle; Auto's words stretched across its box. */
+function PageWatermark({ look }: { look: WatermarkLook }) {
+  return (
+    <svg
+      data-watermark={look.text}
+      className="absolute top-1/2 left-1/2 overflow-visible"
+      width={look.width}
+      height={look.height}
+      style={{
+        transform: `translate(-50%, -50%) rotate(${look.rotate}deg)`,
+        opacity: look.opacity,
+      }}
+    >
+      <text
+        x={look.width / 2}
+        y={look.height / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill={look.colour}
+        fontFamily={look.family}
+        fontSize={look.fontSize}
+        fontWeight={look.bold ? 'bold' : 'normal'}
+        fontStyle={look.italic ? 'italic' : 'normal'}
+        {...(look.fit ? { textLength: look.width, lengthAdjust: 'spacingAndGlyphs' } : {})}
+      >
+        {look.text}
+      </text>
+    </svg>
   );
 }

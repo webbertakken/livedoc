@@ -10,7 +10,12 @@ import {
 } from '@livedoc/office-packages';
 import type { Block, Inline, KeptInline } from '../model/blocks';
 import type { PageSetup } from '../model/sections';
-import { WATERMARK_DEFAULTS, WATERMARK_NAME_PREFIX, type Watermark } from '../model/watermark';
+import {
+  WATERMARK_DEFAULTS,
+  WATERMARK_NAME_PREFIX,
+  watermarkBox,
+  type Watermark,
+} from '../model/watermark';
 import { W_NS } from './ooxml-names';
 
 export const VML_NS = 'urn:schemas-microsoft-com:vml';
@@ -113,28 +118,6 @@ export function readOoxmlWatermark(kept: Block | Inline): Watermark | null {
     };
   }
   return null;
-}
-
-// A character's width as a share of its height, for sizing the shape around the words (assumed).
-const CHARACTER_SHARE = 0.6;
-// Auto fills this share of the text width (default).
-const AUTO_SHARE = 0.9;
-
-/** The shape's size in points: a size's height, or Auto's fitted to the text width; never wider than the text. */
-export function watermarkBox(
-  watermark: Watermark,
-  textWidth: number,
-): { width: number; height: number } {
-  const characters = Math.max(1, [...watermark.text].length);
-  if (watermark.size !== undefined) {
-    const width = watermark.size * CHARACTER_SHARE * characters;
-    return { width: round(width), height: watermark.size };
-  }
-  const width = textWidth * AUTO_SHARE;
-  return {
-    width: round(width),
-    height: round(Math.min(width / (CHARACTER_SHARE * characters), width / 2)),
-  };
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;

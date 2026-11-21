@@ -454,8 +454,16 @@ the writing on every page.
 - **Text**: the words, their font, size, bold and italic, colour through the one colour picker, transparency, and
   **Layout** diagonal or horizontal; **Remove watermark**; **Done**. **Image** waits for pictures
   ([Objects](objects.md#pictures)) and is dimmed until then.
+- **The panel** is a right side panel, an Editor's (as Line numbers): its **Text** tab holds **Text** (a field), **Font**
+  (the font menu's families), **Size** (Auto, 8 to 144 pt), **Bold** and **Italic** (pressed buttons), **Colour**,
+  **Transparency** (a slider, 0 to 100% in steps of 1) and **Layout** (Diagonal, Horizontal). It opens on Text
+  (default) with the watermark's values, or the defaults with no words. A choice applies at once, one step of the
+  body's undo; the words apply once typing pauses for half a second or the field is left, one step for each
+  (default). **Remove watermark** takes it away (one undo step) and empties the field; **Done** closes the panel.
 - The document's own, one for all its pages (Google's); drawn centred on each page laid out, behind the writing and its
-  headers (default); pageless, on a phone and with print layout off none is drawn (Google's).
+  headers, its size as written to the files (Auto fits 90% of the text width) (default); hidden from assistive
+  technology, as the page's sheet is (default). Pageless, on a phone and with print layout off none is drawn
+  (Google's).
 - **A text watermark** holds its words, a font (Arial where LiveDoc makes one), a size in points or **Auto** (fits the
   text width; where LiveDoc makes one), bold, italic, a colour (silver, `#c0c0c0`), a transparency from 0 to 100%
   (50%) and its layout (diagonal) (defaults). One without words draws nothing and is written as none (default).
