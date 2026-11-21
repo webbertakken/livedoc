@@ -1240,6 +1240,26 @@ export const TEXT_DOCUMENT_FOOTNOTES = chart(
   { types: ['TextDocumentFootnote'] },
 );
 
+// A table put in a text document (docs/specs/034-text-documents/tables.md "Telemetry"): Insert > Table's grid, the
+// tool finder's Table, or a template.
+export const TEXT_DOCUMENT_TABLES = chart(
+  'Element',
+  'Added',
+  'Text Document Tables',
+  'A table put in a text document from Insert > Table, the tool finder or a table template.',
+  { types: ['TextDocumentTable', 'TextDocumentTableTemplate'] },
+);
+
+// A text document's table reshaped (docs/specs/034-text-documents/tables.md "Telemetry"): a row added with Tab or a
+// menu, a column, a merge, a sort and the rest, by the change's name.
+export const TEXT_DOCUMENT_TABLE_CHANGES = chart(
+  'Element',
+  'Changed',
+  'Text Document Table Changes',
+  "A text document's table reshaped: rows and columns added or deleted, cells merged, sorted and the rest.",
+  { typeIn: (t) => (t ?? '').startsWith('TextDocumentTable') },
+);
+
 // A page, column or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
 export const TEXT_DOCUMENT_BREAKS = chart(
   'Element',

@@ -54,6 +54,14 @@ kind's component.
 - An **item** has an id, a label, optional keywords for the tool finder, the id of its shortcut in the kind's
   registry, its kind (a command, an on/off check, or one of a set), the least share level that sees it (`view`,
   `participate` or `edit`), and its status: `built` or `comingSoon`.
+- An item may be drawn as a **size grid** (Insert > Table's): a grid of cells inside its menu, one menu item, whose
+  bound `runSized` takes the size chosen (columns and rows), and whose `run` is what the tool finder runs.
+  - It starts 5 × 5 cells `(default)` and grows to one past the size pointed at, up to its most (20 × 20 for a
+    table); the cells up to the size pointed at are filled, and the size reads under the grid as columns x rows
+    ("3 x 2", Google's).
+  - Hovering or pressing a cell sizes it; a press or a tap inserts that size. With the keyboard it opens at 1 x 1;
+    Right and Left change the columns, Down and Up the rows, Enter or Space inserts; Up at one row and Down at the
+    most pass to the menu's own items. Its accessible name says the size ("Table, 3 columns by 2 rows").
 - What an item does is bound by id at run time: `run`, and `checked`, `disabled` and `label` where they apply; a bound
   label names what the item does now (Add space or Remove space before a paragraph) and is what the menu draws.
   A `built` item with nothing bound is a fault the catalogue's test refuses; it is never drawn dead.

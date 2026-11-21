@@ -2,6 +2,7 @@
 // them once; the shell draws them, lists them in the tool finder, and hides what the session's level may not see.
 // What an item does is bound by its id at run time, never drawn by hand.
 import { levelAtLeast, type AccessLevel } from '@livedoc/api-schema';
+import type { GridSize } from './size-grid';
 
 export type OfficeItemStatus = 'built' | 'comingSoon';
 
@@ -28,6 +29,9 @@ export type OfficeItem = {
   note?: string;
   // In a context menu, drawn only while its binding can run (office-shell.md "Context menus", contextual item).
   contextual?: true;
+  // Drawn as a size grid of at most this size (office-shell.md "Menus as data", Insert > Table's); its binding's
+  // `runSized` takes the size chosen.
+  sizeGrid?: GridSize;
 };
 
 export type OfficeSubmenu = {
@@ -61,6 +65,8 @@ export type OfficeAction = {
   checked?: boolean;
   disabled?: boolean;
   label?: string;
+  // A size grid's choice: the size pointed at or keyed.
+  runSized?: (size: GridSize) => void;
 };
 export type OfficeActions = Readonly<Record<string, OfficeAction | undefined>>;
 

@@ -19,7 +19,7 @@ import { BORDERS_ITEM, LINE_SPACING_ENTRIES } from './text-document-paragraph-ac
 import { PAGE_NUMBER_PRESETS } from './text-document-page-numbers';
 
 type ItemOptions = Partial<
-  Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status'>
+  Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status' | 'sizeGrid'>
 >;
 
 const item = (
@@ -173,7 +173,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('image-by-url', 'By URL', 'edit'),
       ]),
       submenu('table', 'Table', [
-        item('table-grid', 'Table', 'edit'),
+        item('table-grid', 'Table', 'edit', { sizeGrid: { columns: 20, rows: 20 }, ...BUILT }),
         item('table-templates', 'Table templates', 'edit'),
       ]),
       SEPARATOR,

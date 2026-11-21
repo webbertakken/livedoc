@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { textDocumentBreakActions } from './text-document-breaks';
+import { textDocumentTableActions } from './text-document-tables';
 import { describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useRef } from 'react';
@@ -87,6 +88,8 @@ describe('the text document menus', () => {
         ...Object.keys(
           textDocumentBreakActions(null, { canEdit: true, liveDoc: { current: null }, format }),
         ),
+        // Insert > Table (text-document-tables), bound by the surface.
+        ...Object.keys(textDocumentTableActions(null, { canEdit: true, sectionWidth: 468 })),
         // Tools > Preferences (useTextDocumentPreferences), bound by the surface.
         PREFERENCES_ITEM,
         // File > Page setup, Format > Page orientation and Switch to pageless (useTextDocumentPageSetup), by the surface.

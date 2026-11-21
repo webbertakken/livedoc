@@ -10,12 +10,25 @@ Tables in a [text document](text-document.md), as Google Docs has them, built on
 
 - Insert > Table opens a grid; hovering sizes it up to 20 × 20, a press inserts it at the caret, columns sharing the
   text width equally.
+  - The grid is the office shell's size grid ([Office shell](../../004-interface-design/office-shell.md#menus-as-data)).
+  - The text width is the caret's section's (its column's in a section of columns; the cell's own width less its
+    padding in a cell, where tables nest).
+  - Inserted as Google's: a new table has no header rows and a 1 pt black line round every cell `(default)`, 5 pt
+    of padding on every side (Google's 0.069 in), its cells in Normal text. The caret's paragraph splits at
+    the caret, leaving no empty half; the table takes an empty paragraph's place; an empty paragraph follows the table
+    when its paragraph has no writing after the caret, so the writing can go on below it.
+  - The caret goes to the first cell. One undo step. An Editor's only (Viewers and Participants do not see it).
+  - The tool finder's Table inserts a 3 × 3 table `(default)`.
 - **Table templates** (Insert > Table > Table templates): Google's set of tables with header rows and column types
   (assumed: those without chips only, under C3; each template's columns listed in the help article).
 
 ## Working in a table
 
 - Tab and Shift+Tab move between cells; Tab in the last cell adds a row.
+  - Tab selects the next cell's writing, Shift+Tab the previous cell's (Word's and Google's); Shift+Tab in the first
+    cell stays. In a cell, Tab never types a tab nor indents a list `(default)`.
+  - The row Tab adds copies the last row's cells (spans, lines, shading), empty; one undo step. A Viewer's Tab moves
+    nothing in the writing.
 - Insert a row above or below, a column left or right; delete a row, column or the table; **Distribute rows**,
   **Distribute columns**.
 - **Merge cells** and **Unmerge cells** over a cell selection.
@@ -135,4 +148,5 @@ Editors change tables; a Participant only as suggestions (D7); a Viewer reads an
 ## Telemetry
 
 `Element · Added · TextDocumentTable`, `TextDocumentTableTemplate`; `Element · Changed · TextDocumentTable<Action>`
-(InsertRow, InsertColumn, Merge, Sort, PinHeader, …). Never content.
+(InsertRow, InsertColumn, Merge, Sort, PinHeader, …). Never content. Tab adding a row is `TextDocumentTableInsertRow`.
+The telemetry dashboard draws them as Text Document Tables (added) and Text Document Table Changes (changed).
