@@ -41,7 +41,7 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 | Print                                   | ⌘P                                    | The same                              | specified |
 | Properties                              | ⌘D                                    | The same                              | specified |
 | Dark pages on and off                   | ⌘⌥D `(default)`                       | None                                  | specified |
-| Show or hide marks                      | ⌘⌥⇧M `(default)`                      | None                                  | specified |
+| Show or hide marks                      | ⌘⇧8                                   | The same                              | specified |
 
 - † A key Acrobat shows in its menus, not on its shortcut page (assumed, from the product as known; checked against
   Webber's captures when the parity is proven).
@@ -77,22 +77,24 @@ Acrobat has a key for a function LiveDoc has, the key is Acrobat's, unless the b
 
 ## Selections, marks and comments
 
-| Action                             | Keys                             | Acrobat's                | Status    |
-| ---------------------------------- | -------------------------------- | ------------------------ | --------- |
-| Move the text caret                | Arrow keys; ⌥ by word; ⌘ by line | Arrow keys               | specified |
-| Extend the text selection          | ⇧ with the caret keys            | The same                 | specified |
-| Copy; select all                   | ⌘C; ⌘A                           | The same                 | specified |
-| Comment on the selection           | ⌘⌥M                              | None (a text document's) | specified |
-| Next, previous mark, link or field | Tab, ⇧Tab                        | The same                 | specified |
-| Open the focused mark's comment    | Enter                            | The same                 | specified |
-| Reply to the comment in focus      | R                                | The same                 | specified |
-| Resolve the thread in focus        | E                                | ⇧K (a tick)              | specified |
-| Leave the thread                   | Escape                           | The same                 | specified |
-| Move the selected mark or object   | Arrow keys; ⇧ by 10              | Arrow keys               | specified |
-| Resize it                          | ⌥ with arrow keys `(default)`    | None                     | specified |
-| Delete it                          | Delete or Backspace              | The same                 | specified |
-| Undo, redo                         | ⌘Z, ⌘⇧Z                          | The same †               | specified |
-| The comments panel                 | ⌘⌥⇧A                             | None (a text document's) | specified |
+| Action                                               | Keys                             | Acrobat's                | Status    |
+| ---------------------------------------------------- | -------------------------------- | ------------------------ | --------- |
+| Move the text caret                                  | Arrow keys; ⌥ by word; ⌘ by line | Arrow keys               | specified |
+| Extend the text selection                            | ⇧ with the caret keys            | The same                 | specified |
+| Copy; select all                                     | ⌘C; ⌘A                           | The same                 | specified |
+| Comment on the selection                             | ⌘⌥M                              | None (a text document's) | specified |
+| Next, previous mark, link or field                   | Tab, ⇧Tab                        | The same                 | specified |
+| Open the focused mark's comment                      | Enter                            | The same                 | specified |
+| Reply to the comment in focus                        | R                                | The same                 | specified |
+| Resolve the thread in focus                          | E                                | None                     | specified |
+| Tick the thread in focus (a person's own check mark) | ⇧K                               | The same                 | specified |
+| Clear the comments panel's filters                   | ⌘8                               | The same                 | specified |
+| Leave the thread                                     | Escape                           | The same                 | specified |
+| Move the selected mark or object                     | Arrow keys; ⇧ by 10              | Arrow keys               | specified |
+| Resize it                                            | ⌥ with arrow keys `(default)`    | None                     | specified |
+| Delete it                                            | Delete or Backspace              | The same                 | specified |
+| Undo, redo                                           | ⌘Z, ⌘⇧Z                          | The same †               | specified |
+| The comments panel                                   | ⌘⌥⇧A                             | None (a text document's) | specified |
 
 ## Fields
 

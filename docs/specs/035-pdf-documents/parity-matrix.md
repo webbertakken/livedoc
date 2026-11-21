@@ -14,13 +14,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                | Means                                                                            | Rows |
 | --------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`           | In, by the spec named                                                            | 162  |
-| `specified, in part`  | In, but for the part its rule names as left out                                  | 26   |
-| `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 161  |
+| `specified`           | In, by the spec named                                                            | 134  |
+| `specified, in part`  | In, but for the part its rule names as left out                                  | 55   |
+| `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`      | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`      | Built, with the test that proves it                                              | 0    |
 
-- Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 102 `left out (F5)`.
+- Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 101 `left out (F5)`.
 - **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
   out, their data in a file kept untouched. A row reading `left out (F5)` is this matrix's reading of the reference,
   topic by topic: Webber may bring any one back in, and the row changes here first.
@@ -39,16 +39,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Get started: learn the basics
 
-| Topic                                                | Rule                                                                                                                             | Mode    | Status             | Spec                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------------- |
-| Acrobat on desktop overview                          | What a PDF document's surface offers, laid out in LiveDoc's office shell                                                         | Viewing | specified          | [Reading surface](reading-surface.md)                      |
-| Workspace basics                                     | Title row, menus, toolbar, left panel, pages, side panel and page bar                                                            | Viewing | specified          | [Reading surface](reading-surface.md#layout-top-to-bottom) |
-| Technical requirements                               | Acrobat's system requirements; LiveDoc's are a current browser                                                                   |         | not a function     |                                                            |
-| Supported file formats                               | A PDF opens as a PDF document; every other file is another kind                                                                  | Files   | specified          | [Files, print and sync](files-print-and-sync.md#opening)   |
-| Navigate through pages                               | Next, previous, first, last, go to page, previous and next view, bookmarks; automatic scrolling and article threads are left out | Viewing | specified, in part | [Reading surface](reading-surface.md#the-pages)            |
-| Identify Acrobat track and version                   | Telling which Acrobat is installed                                                                                               |         | not a function     |                                                            |
-| Asian, European, and Middle Eastern language support | Text in any script draws; new text in a complex script is shaped by the browser and written as glyphs                            | Editing | specified          | [Editing text](editing-text.md#typing)                     |
-| Work smarter with the prompt bar                     | Adobe's assistant prompt bar; LiveDoc's agents work through their own tools                                                      |         | left out (F5)      | [Agents](agents.md)                                        |
+| Topic                                                | Rule                                                                                                                                                                                                                                | Mode    | Status             | Spec                                                         |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------------ |
+| Acrobat on desktop overview                          | What a PDF document's surface offers, laid out in LiveDoc's office shell                                                                                                                                                            | Viewing | specified          | [Reading surface](reading-surface.md)                        |
+| Workspace basics                                     | The Explorer is the home view and the tool finder lists every tool; a PDF's surface is title row, menus, toolbar, left panel, pages, side panel and page bar; the Read panel (the assistant's summaries, reading aloud) is left out | Viewing | specified, in part | [Reading surface](reading-surface.md#layout-top-to-bottom)   |
+| Technical requirements                               | Acrobat's system requirements; LiveDoc's are a current browser                                                                                                                                                                      |         | not a function     |                                                              |
+| Supported file formats                               | A PDF opens as a PDF document and downloads as PDF, pictures or text; every other file is another kind's; playing video and sound placed in a PDF is left out                                                                       | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#downloading) |
+| Navigate through pages                               | Next, previous, first, last, go to page, previous and next view, bookmarks; automatic scrolling and article threads are left out                                                                                                    | Viewing | specified, in part | [Reading surface](reading-surface.md#the-pages)              |
+| Identify Acrobat track and version                   | Telling which Acrobat is installed                                                                                                                                                                                                  |         | not a function     |                                                              |
+| Asian, European, and Middle Eastern language support | Text in any script draws, is found and is copied; new text in a complex script is shaped by the browser; a field's and a Text mark's direction follows what is typed, with no direction or digit setting                            | Editing | specified, in part | [Editing text](editing-text.md#typing)                       |
+| Work smarter with the prompt bar                     | Adobe's assistant prompt bar; LiveDoc's agents work through their own tools                                                                                                                                                         |         | left out (F5)      | [Agents](agents.md)                                          |
 
 ## Get started: access the app
 
@@ -70,16 +70,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Get started: preferences and settings
 
-| Topic                                  | Rule                                                                                        | Mode    | Status             | Spec                                                 |
-| -------------------------------------- | ------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------- |
-| Set Acrobat as the default PDF program | The operating system's default PDF program                                                  |         | not a function     |                                                      |
-| Change display themes                  | The chrome follows the colour scheme; Dark pages is one person's view of the pages          | Viewing | specified          | [Dark pages](dark-pages.md)                          |
-| Change Acrobat language                | The app's language is LiveDoc's own setting                                                 |         | not a function     |                                                      |
-| Customize side panels                  | One left panel at a time, remembered per person; rearranging panels is left out             | Viewing | specified, in part | [Reading surface](reading-surface.md#the-left-panel) |
-| Customize Quick action toolbar         | The toolbar is the editing mode's; a tool's look is remembered, its place is not customised | Viewing | left out (F5)      | [Reading surface](reading-surface.md#the-toolbar)    |
-| Keyboard shortcuts                     | Acrobat's keys where the browser and the shell leave them free                              | Viewing | specified          | [Keyboard shortcuts](keyboard-shortcuts.md)          |
-| Turn the new Acrobat on or off         | Switching between Acrobat's two interfaces                                                  |         | not a function     |                                                      |
-| Set Acrobat update preferences         | Acrobat's updater                                                                           |         | not a function     |                                                      |
+| Topic                                  | Rule                                                                                          | Mode    | Status             | Spec                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------- |
+| Set Acrobat as the default PDF program | The operating system's default PDF program                                                    |         | not a function     |                                                      |
+| Change display themes                  | The chrome follows the colour scheme; Dark pages is one person's view of the pages            | Viewing | specified          | [Dark pages](dark-pages.md)                          |
+| Change Acrobat language                | The app's language is LiveDoc's own setting                                                   |         | not a function     |                                                      |
+| Customize side panels                  | One left panel at a time, remembered per person; choosing which panels are listed is left out | Viewing | specified, in part | [Reading surface](reading-surface.md#the-left-panel) |
+| Customize Quick action toolbar         | The toolbar is the editing mode's; a tool's look is remembered, its place is not customised   | Viewing | left out (F5)      | [Reading surface](reading-surface.md#the-toolbar)    |
+| Keyboard shortcuts                     | Acrobat's keys where the browser and the shell leave them free                                | Viewing | specified          | [Keyboard shortcuts](keyboard-shortcuts.md)          |
+| Turn the new Acrobat on or off         | Switching between Acrobat's two interfaces                                                    |         | not a function     |                                                      |
+| Set Acrobat update preferences         | Acrobat's updater                                                                             |         | not a function     |                                                      |
 
 ## Acrobat AI
 
@@ -117,16 +117,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Create PDFs
 
-| Topic                                              | Rule                                                                                                            | Mode    | Status             | Spec                                                                       |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------------------------------- |
-| Convert files to PDFs                              | Other LiveDoc kinds download as PDF and may be kept as a PDF document; converting files from a disk is left out | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
-| Supported file formats for PDF conversion          | What converts to PDF is what LiveDoc's other kinds write                                                        | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
-| Convert web pages to PDFs                          | Converting a web page by its address                                                                            |         | left out (F5)      |                                                                            |
-| Web page conversion settings                       | Converting a web page by its address                                                                            |         | left out (F5)      |                                                                            |
-| Create PDFs by printing to file                    | Printing to a PDF is the browser's and the operating system's own                                               |         | left out (F5)      |                                                                            |
-| Create a PDF from clipboard content                | A copied picture becomes a page; a copied PDF pasted on the Explorer becomes a PDF document                     | Editing | specified, in part | [Organising pages](organising-pages.md#inserting)                          |
-| Create a PDF from scratch                          | A PDF document is never started from nothing                                                                    | Files   | left out (F12)     | [Starting and finding](starting-and-finding.md#starting-one)               |
-| Enable XPS to PDF conversion in Acrobat on Windows | A Windows conversion setting                                                                                    |         | left out (F5)      |                                                                            |
+| Topic                                              | Rule                                                                                                                                                                                           | Mode    | Status             | Spec                                                                       |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------------------------------- |
+| Convert files to PDFs                              | Other LiveDoc kinds download as PDF and may be kept as a PDF document; converting files from a disk is left out                                                                                | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Supported file formats for PDF conversion          | What converts to PDF is what LiveDoc's other kinds write                                                                                                                                       | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Convert web pages to PDFs                          | Converting a web page by its address                                                                                                                                                           |         | left out (F5)      |                                                                            |
+| Web page conversion settings                       | Converting a web page by its address                                                                                                                                                           |         | left out (F5)      |                                                                            |
+| Create PDFs by printing to file                    | Printing to a PDF is the browser's and the operating system's own                                                                                                                              |         | left out (F5)      |                                                                            |
+| Create a PDF from clipboard content                | A copied picture or copied text becomes pages of an open PDF; a copied PDF file pasted on the Explorer becomes a PDF document; a new PDF from a copied picture or text alone is left out (F12) | Editing | specified, in part | [Organising pages](organising-pages.md#inserting)                          |
+| Create a PDF from scratch                          | A PDF document is never started from nothing                                                                                                                                                   | Files   | left out (F12)     | [Starting and finding](starting-and-finding.md#starting-one)               |
+| Enable XPS to PDF conversion in Acrobat on Windows | A Windows conversion setting                                                                                                                                                                   |         | left out (F5)      |                                                                            |
 
 ## Advanced conversion settings
 
@@ -146,25 +146,25 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Scan documents to PDFs
 
-| Topic                               | Rule                                                                          | Mode      | Status             | Spec                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
-| Scan documents                      | Driving a scanner; a scan arrives as a PDF                                    |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
-| Recognize text in scanned documents | Text recognition in the browser, on demand, by language and page range        | Reviewing | specified          | [Scans](scans.md#recognising)               |
-| Fix text issues in scanned PDFs     | Low-confidence words are stepped through and corrected                        | Reviewing | specified          | [Scans](scans.md#reviewing-recognised-text) |
-| Edit scanned documents              | A scan's words are not edited as the author's; text is added over the picture | Editing   | left out (F10)     | [Scans](scans.md#editing-a-scans-words)     |
-| Enhance images                      | Enhancing a camera picture                                                    |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
-| Enhance scanned documents           | Straightening, cleaning and recompressing a scan                              |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
-| Scanned PDF settings                | Language and pages; output style and compression choices are left out         | Reviewing | specified, in part | [Scans](scans.md#recognising)               |
+| Topic                               | Rule                                                                                                      | Mode      | Status             | Spec                                        |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
+| Scan documents                      | Driving a scanner; a scan arrives as a PDF                                                                |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
+| Recognize text in scanned documents | Text recognition in the browser, on demand, by language and page range; several files at once is left out | Reviewing | specified, in part | [Scans](scans.md#recognising)               |
+| Fix text issues in scanned PDFs     | Low-confidence words are stepped through and corrected                                                    | Reviewing | specified          | [Scans](scans.md#reviewing-recognised-text) |
+| Edit scanned documents              | A scan's words are not edited as the author's; text is added over the picture                             | Editing   | left out (F10)     | [Scans](scans.md#editing-a-scans-words)     |
+| Enhance images                      | Enhancing a camera picture                                                                                |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
+| Enhance scanned documents           | Straightening, cleaning and recompressing a scan                                                          |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
+| Scanned PDF settings                | Language and pages; output style and compression choices are left out                                     | Reviewing | specified, in part | [Scans](scans.md#recognising)               |
 
 ## Optimise PDFs
 
-| Topic                                                 | Rule                                                                         | Mode    | Status    | Spec                                                   |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------- | ------- | --------- | ------------------------------------------------------ |
-| Reduce PDF file size                                  | Three presets, each saying what it costs, the result shown before it is kept | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
-| Reduce PDF file size with advanced options            | Advanced: picture resolution and quality, fonts, what to discard             | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
-| Reduce PDF file size by unembedding fonts             | Unembedding only fonts every reader has                                      | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
-| View storage space used by different elements in PDFs | Properties > Size: what takes the file's bytes                               | Viewing | specified | [Document tools](document-tools.md#properties)         |
-| PDF optimizer settings                                | The optimiser's settings as one Advanced dialog                              | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
+| Topic                                                 | Rule                                                                                                                                                                              | Mode    | Status             | Spec                                                   |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------ |
+| Reduce PDF file size                                  | Three presets, each saying what it costs, the result shown before it is kept; choosing a PDF version to stay compatible with and several files at once are left out               | Editing | specified, in part | [Document tools](document-tools.md#reducing-file-size) |
+| Reduce PDF file size with advanced options            | Advanced: picture resolution and quality, fonts, what to discard; flattening transparency is left out, and comments and fields are discarded by their own tools                   | Editing | specified, in part | [Document tools](document-tools.md#reducing-file-size) |
+| Reduce PDF file size by unembedding fonts             | Unembedding only fonts every reader has                                                                                                                                           | Editing | specified          | [Document tools](document-tools.md#reducing-file-size) |
+| View storage space used by different elements in PDFs | Properties > Size: what takes the file's bytes                                                                                                                                    | Viewing | specified          | [Document tools](document-tools.md#properties)         |
+| PDF optimizer settings                                | Picture resolution and quality by kind, fonts and what to discard, in one Advanced dialog; flattening transparency, merging picture fragments and simplifying curves are left out | Editing | specified, in part | [Document tools](document-tools.md#reducing-file-size) |
 
 ## Edit text
 
@@ -180,13 +180,13 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Edit images or objects
 
-| Topic                                  | Rule                                                           | Mode    | Status        | Spec                           |
-| -------------------------------------- | -------------------------------------------------------------- | ------- | ------------- | ------------------------------ |
-| Add images                             | Add a picture, kept in its own encoding, with alternative text | Editing | specified     | [Objects](objects.md#pictures) |
-| Modify images                          | Replace, move, resize, rotate, flip, crop                      | Editing | specified     | [Objects](objects.md#pictures) |
-| Edit images with external applications | Editing a picture in another program; Replace takes the result |         | left out (F5) | [Objects](objects.md#pictures) |
-| Add objects                            | Shapes drawn into the page; arrange, align, distribute         | Editing | specified     | [Objects](objects.md#shapes)   |
-| Delete images                          | Delete a picture from the page                                 | Editing | specified     | [Objects](objects.md#pictures) |
+| Topic                                  | Rule                                                                                                 | Mode    | Status             | Spec                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------- | ------------------ | ----------------------------------------------------- |
+| Add images                             | Add a picture, kept in its own encoding, with alternative text                                       | Editing | specified          | [Objects](objects.md#pictures)                        |
+| Modify images                          | Replace, move, resize, rotate, flip, crop                                                            | Editing | specified          | [Objects](objects.md#pictures)                        |
+| Edit images with external applications | Editing a picture in another program; Replace takes the result                                       |         | left out (F5)      | [Objects](objects.md#pictures)                        |
+| Add objects                            | A button is a field, for resetting fields or going to a page; adding video, sound and 3D is left out | Editing | specified, in part | [Building fields](building-fields.md#the-field-tools) |
+| Delete images                          | Delete a picture from the page                                                                       | Editing | specified          | [Objects](objects.md#pictures)                        |
 
 ## Adobe Express
 
@@ -207,58 +207,58 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Links and attachments
 
-| Topic                           | Rule                                                                      | Mode    | Status    | Spec                                               |
-| ------------------------------- | ------------------------------------------------------------------------- | ------- | --------- | -------------------------------------------------- |
-| Add links to PDFs               | A link to a page view, a named place, a web address or a LiveDoc document | Editing | specified | [Objects](objects.md#links)                        |
-| Add attachments to PDFs         | Embed a file in the PDF                                                   | Editing | specified | [Document tools](document-tools.md#embedded-files) |
-| Change link formatting in PDFs  | Invisible or a visible rectangle, with its line                           | Editing | specified | [Objects](objects.md#links)                        |
-| Move or resize a link rectangle | Move and resize a link's rectangle                                        | Editing | specified | [Objects](objects.md#links)                        |
-| Open attachments in PDFs        | Saved only by a person; an embedded PDF opens as a new PDF document       | Viewing | specified | [Security](security.md#embedded-files)             |
-| Link to destinations            | A link to a named place                                                   | Editing | specified | [Objects](objects.md#links)                        |
-| Manage link destinations        | Named places listed, added, renamed, deleted                              | Editing | specified | [Objects](objects.md#links)                        |
+| Topic                           | Rule                                                                                                                      | Mode    | Status             | Spec                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------- |
+| Add links to PDFs               | A link to a page view, a named place, a web address or a LiveDoc document; a link that opens a file on a disk is left out | Editing | specified, in part | [Objects](objects.md#links)                        |
+| Add attachments to PDFs         | Embed a file in the PDF                                                                                                   | Editing | specified          | [Document tools](document-tools.md#embedded-files) |
+| Change link formatting in PDFs  | Invisible or a visible rectangle, with its line; locked or not                                                            | Editing | specified          | [Objects](objects.md#links)                        |
+| Move or resize a link rectangle | Move and resize a link's rectangle                                                                                        | Editing | specified          | [Objects](objects.md#links)                        |
+| Open attachments in PDFs        | Listed and saved by a person; an embedded PDF opens as a new PDF document; searching inside embedded files is left out    | Viewing | specified, in part | [Security](security.md#embedded-files)             |
+| Link to destinations            | A link to a named place                                                                                                   | Editing | specified          | [Objects](objects.md#links)                        |
+| Manage link destinations        | Named places listed, added, renamed, deleted                                                                              | Editing | specified          | [Objects](objects.md#links)                        |
 
 ## PDF properties
 
-| Topic                                     | Rule                                                             | Mode    | Status    | Spec                                           |
-| ----------------------------------------- | ---------------------------------------------------------------- | ------- | --------- | ---------------------------------------------- |
-| Document properties and metadata overview | Description, Security, Fonts and Size                            | Viewing | specified | [Document tools](document-tools.md#properties) |
-| Create document properties                | Custom properties by name and value                              | Editing | specified | [Document tools](document-tools.md#properties) |
-| Edit document metadata                    | Title, author, subject, keywords, written to both metadata homes | Editing | specified | [Document tools](document-tools.md#properties) |
-| View document metadata                    | Everyone who reads the document reads its properties             | Viewing | specified | [Document tools](document-tools.md#properties) |
+| Topic                                     | Rule                                                                                                            | Mode    | Status             | Spec                                           |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------- |
+| Document properties and metadata overview | Description, Security, Fonts and Size                                                                           | Viewing | specified          | [Document tools](document-tools.md#properties) |
+| Create document properties                | Custom properties by name and value                                                                             | Editing | specified          | [Document tools](document-tools.md#properties) |
+| Edit document metadata                    | Title, author, subject, keywords, written to both metadata homes; importing and exporting XMP files is left out | Editing | specified, in part | [Document tools](document-tools.md#properties) |
+| View document metadata                    | Properties, and the file's XMP as a read-only tree, for everyone who reads the document                         | Viewing | specified          | [Document tools](document-tools.md#properties) |
 
 ## Organise pages
 
-| Topic                               | Rule                                                           | Mode    | Status    | Spec                                                                      |
-| ----------------------------------- | -------------------------------------------------------------- | ------- | --------- | ------------------------------------------------------------------------- |
-| Delete pages in PDFs                | Delete pages; their marks return on undo                       | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
-| Move or copy pages within PDFs      | Drag, cut and paste, duplicate, reverse                        | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
-| Move or copy pages between two PDFs | Copy and move pages between two PDF documents                  | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
-| Rotate pages in PDFs                | Rotate pages in the file; View rotates one person's view       | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
-| Replace pages in PDFs               | Replace page content, keeping what sits on top                 | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
-| Renumber pages in PDFs              | Page labels by range, style, prefix and start                  | Editing | specified | [Organising pages](organising-pages.md#page-labels)                       |
-| Split PDFs                          | Split by pages, bookmarks, size or chosen places               | Editing | specified | [Organising pages](organising-pages.md#splitting)                         |
-| Extract pages from PDFs             | Extract pages as a new PDF document                            | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
-| Crop pages in PDFs                  | Crop by box or margins; what is cropped is hidden, not removed | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
+| Topic                               | Rule                                                                   | Mode    | Status    | Spec                                                                      |
+| ----------------------------------- | ---------------------------------------------------------------------- | ------- | --------- | ------------------------------------------------------------------------- |
+| Delete pages in PDFs                | Delete pages; their marks return on undo                               | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
+| Move or copy pages within PDFs      | Drag, cut and paste, duplicate, reverse                                | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
+| Move or copy pages between two PDFs | Copy and move pages between two PDF documents                          | Editing | specified | [Organising pages](organising-pages.md#moving-and-duplicating)            |
+| Rotate pages in PDFs                | Rotate pages in the file; View rotates one person's view               | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
+| Replace pages in PDFs               | Replace page content from a PDF or a picture, keeping what sits on top | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
+| Renumber pages in PDFs              | Page labels by range, style, prefix and start                          | Editing | specified | [Organising pages](organising-pages.md#page-labels)                       |
+| Split PDFs                          | Split by pages, bookmarks, size or chosen places                       | Editing | specified | [Organising pages](organising-pages.md#splitting)                         |
+| Extract pages from PDFs             | Extract pages as a new PDF document                                    | Editing | specified | [Organising pages](organising-pages.md#deleting-extracting-and-replacing) |
+| Crop pages in PDFs                  | Crop by box or margins; what is cropped is hidden, not removed         | Editing | specified | [Organising pages](organising-pages.md#rotating-cropping-and-resizing)    |
 
 ## Backgrounds and watermarks
 
-| Topic                       | Rule                                                             | Mode    | Status    | Spec                                            |
-| --------------------------- | ---------------------------------------------------------------- | ------- | --------- | ----------------------------------------------- |
-| Add watermarks to PDFs      | Text or picture, rotation, opacity, behind or in front, by pages | Editing | specified | [Document tools](document-tools.md#watermarks)  |
-| Remove watermarks           | Remove a watermark                                               | Editing | specified | [Document tools](document-tools.md#watermarks)  |
-| Update watermarks           | Update a watermark, another program's included                   | Editing | specified | [Document tools](document-tools.md#watermarks)  |
-| Add backgrounds to PDFs     | A colour or picture behind everything                            | Editing | specified | [Document tools](document-tools.md#backgrounds) |
-| Remove background from PDFs | Remove the background                                            | Editing | specified | [Document tools](document-tools.md#backgrounds) |
-| Update backgrounds in PDFs  | Update the background                                            | Editing | specified | [Document tools](document-tools.md#backgrounds) |
+| Topic                       | Rule                                                                                                | Mode    | Status             | Spec                                            |
+| --------------------------- | --------------------------------------------------------------------------------------------------- | ------- | ------------------ | ----------------------------------------------- |
+| Add watermarks to PDFs      | Text or picture, rotation, opacity, behind or in front, by pages; several files at once is left out | Editing | specified, in part | [Document tools](document-tools.md#watermarks)  |
+| Remove watermarks           | Remove a watermark; several files at once is left out                                               | Editing | specified, in part | [Document tools](document-tools.md#watermarks)  |
+| Update watermarks           | Update a watermark, another program's included                                                      | Editing | specified          | [Document tools](document-tools.md#watermarks)  |
+| Add backgrounds to PDFs     | A colour or picture behind everything; several files at once is left out                            | Editing | specified, in part | [Document tools](document-tools.md#backgrounds) |
+| Remove background from PDFs | Remove the background                                                                               | Editing | specified          | [Document tools](document-tools.md#backgrounds) |
+| Update backgrounds in PDFs  | Update the background                                                                               | Editing | specified          | [Document tools](document-tools.md#backgrounds) |
 
 ## Headers and footers
 
-| Topic                              | Rule                                   | Mode    | Status    | Spec                                                    |
-| ---------------------------------- | -------------------------------------- | ------- | --------- | ------------------------------------------------------- |
-| Add headers and footers to PDFs    | Six boxes of text and tokens, by pages | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
-| Remove headers and footers         | Remove headers and footers             | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
-| Add page numbers to PDFs           | Page numbers in a style and pattern    | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
-| Modify headers and footers in PDFs | Update headers and footers             | Editing | specified | [Document tools](document-tools.md#headers-and-footers) |
+| Topic                              | Rule                                                                                    | Mode    | Status             | Spec                                                    |
+| ---------------------------------- | --------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------- |
+| Add headers and footers to PDFs    | Six boxes of text and tokens, by pages, with presets; several files at once is left out | Editing | specified, in part | [Document tools](document-tools.md#headers-and-footers) |
+| Remove headers and footers         | Remove headers and footers; several files at once is left out                           | Editing | specified, in part | [Document tools](document-tools.md#headers-and-footers) |
+| Add page numbers to PDFs           | Page numbers in a style and pattern                                                     | Editing | specified          | [Document tools](document-tools.md#headers-and-footers) |
+| Modify headers and footers in PDFs | Update headers and footers                                                              | Editing | specified          | [Document tools](document-tools.md#headers-and-footers) |
 
 ## Bates numbering
 
@@ -271,15 +271,15 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Combine files
 
-| Topic                                   | Rule                                                       | Mode    | Status        | Spec                                              |
-| --------------------------------------- | ---------------------------------------------------------- | ------- | ------------- | ------------------------------------------------- |
-| Combine files into one PDF              | Several PDFs and LiveDoc documents into a new PDF document | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Rearrange or resize combined files      | Order and page ranges set before combining                 | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Insert one PDF into another             | Insert a PDF's pages                                       | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Insert a blank page into a PDF          | Insert a blank page                                        | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Insert web pages into a PDF             | Inserting a web page by its address                        |         | left out (F5) | [Organising pages](organising-pages.md#inserting) |
-| Insert a clipboard selection into a PDF | A copied picture becomes a page                            | Editing | specified     | [Organising pages](organising-pages.md#inserting) |
-| Embed PDFs in OLE container documents   | OLE containers are a desktop technology                    |         | left out (F5) |                                                   |
+| Topic                                   | Rule                                                                                              | Mode    | Status             | Spec                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------- |
+| Combine files into one PDF              | Several PDFs and LiveDoc documents into a new PDF document; other files join once open in LiveDoc | Editing | specified, in part | [Organising pages](organising-pages.md#inserting) |
+| Rearrange or resize combined files      | Order and page ranges set before combining                                                        | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Insert one PDF into another             | Insert a PDF's pages                                                                              | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Insert a blank page into a PDF          | Insert a blank page                                                                               | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Insert web pages into a PDF             | Inserting a web page by its address                                                               |         | left out (F5)      | [Organising pages](organising-pages.md#inserting) |
+| Insert a clipboard selection into a PDF | A copied picture or copied text becomes pages                                                     | Editing | specified          | [Organising pages](organising-pages.md#inserting) |
+| Embed PDFs in OLE container documents   | OLE containers are a desktop technology                                                           |         | left out (F5)      |                                                   |
 
 ## PDF layers
 
@@ -344,16 +344,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Fill and sign documents
 
-| Topic                                    | Rule                                                            | Mode      | Status             | Spec                                         |
-| ---------------------------------------- | --------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
-| E-sign agreements                        | Place a drawn signature or initials                             | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
-| Add digital signatures                   | Sign with a certificate file read in the browser                | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
-| Personalize digital signatures           | The visible appearance: name, date, reason, place, a graphic    | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
-| Modify e-signatures                      | Move, resize, delete and manage kept signatures                 | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
-| Add time stamps                          | A trusted time stamp where the host configured an authority     | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
-| Add verification information             | Verification information where the host configured an authority | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
-| Set up roaming ID accounts               | Certificates held by a service                                  |           | left out (C4)      | [Signing](signing.md)                        |
-| Manage certificates on directory servers | Certificate directory servers                                   |           | left out (F5)      | [Signing](signing.md)                        |
+| Topic                                    | Rule                                                                                  | Mode      | Status             | Spec                                         |
+| ---------------------------------------- | ------------------------------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
+| E-sign agreements                        | Place a drawn signature or initials                                                   | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
+| Add digital signatures                   | Sign with a certificate file read in the browser                                      | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
+| Personalize digital signatures           | The visible appearance: name, date, reason, place, a graphic                          | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
+| Modify e-signatures                      | Move, resize, delete and manage kept signatures                                       | Reviewing | specified          | [Signing](signing.md#drawn-signatures)       |
+| Add time stamps                          | A trusted time stamp on a signature, or alone, where the host configured an authority | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Add verification information             | Verification information at signing or after, where the host configured an authority  | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Set up roaming ID accounts               | Certificates held by a service                                                        |           | left out (C4)      | [Signing](signing.md)                        |
+| Manage certificates on directory servers | Certificate directory servers                                                         |           | left out (F5)      | [Signing](signing.md)                        |
 
 ## PDF Spaces
 
@@ -380,16 +380,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Forms: create
 
-| Topic                                                                  | Rule                                                                 | Mode    | Status        | Spec                                                           |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------- | ------- | ------------- | -------------------------------------------------------------- |
-| Convert documents to PDF forms                                         | Detect fields proposes a field for each blank, made only when ticked | Editing | specified     | [Building fields](building-fields.md#detecting-fields)         |
-| Create PDF forms from scratch                                          | Every field type, drawn or placed                                    | Editing | specified     | [Building fields](building-fields.md#the-field-tools)          |
-| Align form fields                                                      | Align, centre, distribute, match size                                | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Copy form fields                                                       | Duplicate, multiple copies, across pages                             | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Move form fields                                                       | Move a field                                                         | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Resize form fields                                                     | Resize a field                                                       | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Select multiple form fields                                            | Select several fields                                                | Editing | specified     | [Building fields](building-fields.md#arranging-fields)         |
-| Enable filling and saving rights in PDF forms for Acrobat Reader users | Needs Adobe's own signing key                                        |         | left out (F5) | [Building fields](building-fields.md#together-and-in-the-file) |
+| Topic                                                                  | Rule                                                                                   | Mode    | Status             | Spec                                                           |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------------------- |
+| Convert documents to PDF forms                                         | Detect fields proposes a field for each blank, made only when ticked                   | Editing | specified          | [Building fields](building-fields.md#detecting-fields)         |
+| Create PDF forms from scratch                                          | Every field type, drawn or placed, on any PDF; starting from a blank page waits on F12 | Editing | specified, in part | [Building fields](building-fields.md#the-field-tools)          |
+| Align form fields                                                      | Align, centre, distribute, match size                                                  | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Copy form fields                                                       | Duplicate, multiple copies, across pages                                               | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Move form fields                                                       | Move a field                                                                           | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Resize form fields                                                     | Resize a field                                                                         | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Select multiple form fields                                            | Select several fields                                                                  | Editing | specified          | [Building fields](building-fields.md#arranging-fields)         |
+| Enable filling and saving rights in PDF forms for Acrobat Reader users | Needs Adobe's own signing key                                                          |         | left out (F5)      | [Building fields](building-fields.md#together-and-in-the-file) |
 
 ## Forms: fill and sign
 
@@ -403,14 +403,14 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Forms: customise fields
 
-| Topic                                  | Rule                                                                                          | Mode    | Status             | Spec                                                                  |
-| -------------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------ | --------------------------------------------------------------------- |
-| Change form field settings             | A field's properties in the side panel                                                        | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Form fields general settings           | General: name, tooltip, visibility, read-only, required                                       | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Field specific properties              | Options by field type                                                                         | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Field formatting options               | Number, percentage, date, time and special formats                                            | Editing | specified          | [Building fields](building-fields.md#properties)                      |
-| Configure form fields for calculations | Sum, product, average, minimum, maximum and simple formulas; custom scripts are never written | Editing | specified, in part | [Building fields](building-fields.md#properties)                      |
-| Set form field navigation              | Tab order by rows, columns, structure or by hand                                              | Editing | specified          | [Building fields](building-fields.md#tab-order-and-calculation-order) |
+| Topic                                  | Rule                                                                                                                       | Mode    | Status             | Spec                                                                  |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | --------------------------------------------------------------------- |
+| Change form field settings             | A field's properties in the side panel                                                                                     | Editing | specified          | [Building fields](building-fields.md#properties)                      |
+| Form fields general settings           | General: name, type, locked, tooltip, visibility, read-only, required; the Actions tab is left out but for reset and go to | Editing | specified, in part | [Building fields](building-fields.md#properties)                      |
+| Field specific properties              | Options by field type                                                                                                      | Editing | specified          | [Building fields](building-fields.md#properties)                      |
+| Field formatting options               | Number, percentage, date, time and special formats                                                                         | Editing | specified          | [Building fields](building-fields.md#properties)                      |
+| Configure form fields for calculations | Sum, product, average, minimum, maximum and simple formulas; custom scripts are never written                              | Editing | specified, in part | [Building fields](building-fields.md#properties)                      |
+| Set form field navigation              | Tab order by rows, columns, structure or by hand                                                                           | Editing | specified          | [Building fields](building-fields.md#tab-order-and-calculation-order) |
 
 ## Forms: barcodes
 
@@ -433,68 +433,68 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Share documents
 
-| Topic                                             | Rule                                                          | Mode  | Status             | Spec                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------- | ----- | ------------------ | ------------------------------------------------------ |
-| Share links to PDFs                               | LiveDoc's share dialog, links and roles                       | Files | specified          | [PDF document](pdf-document.md#share-roles)            |
-| Manage access to the shared file                  | Editor, Participant and Viewer                                | Files | specified          | [PDF document](pdf-document.md#share-roles)            |
-| Share PDFs via email                              | Email this file, where the host has email configured          | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#email) |
-| About reviewing on internal servers               | Review servers; a LiveDoc document is reviewed live           |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
-| Send PDFs for review via internal servers         | Review servers; a LiveDoc document is reviewed live           |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
-| Enable commenting for Reader users in Acrobat Pro | Needs Adobe's own key; anyone with a Participant link reviews |       | left out (F5)      | [PDF document](pdf-document.md#share-roles)            |
+| Topic                                             | Rule                                                                                                                                   | Mode  | Status             | Spec                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------ | ------------------------------------------------------ |
+| Share links to PDFs                               | LiveDoc's share dialog: a link for each role, with a lifetime and a share password; links limited to invited people are left out       | Files | specified, in part | [PDF document](pdf-document.md#share-roles)            |
+| Manage access to the shared file                  | Requests for access, accepted or declined; a share link's role is the access, changed or revoked by the owner                          |       | left out (F5)      | [PDF document](pdf-document.md#share-roles)            |
+| Share PDFs via email                              | Email this file as an attachment, where the host has email configured; a link is copied from the share dialog into a person's own mail | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#email) |
+| About reviewing on internal servers               | Review servers; a LiveDoc document is reviewed live                                                                                    |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
+| Send PDFs for review via internal servers         | Review servers; a LiveDoc document is reviewed live                                                                                    |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
+| Enable commenting for Reader users in Acrobat Pro | Needs Adobe's own key; anyone with a Participant link reviews                                                                          |       | left out (F5)      | [PDF document](pdf-document.md#share-roles)            |
 
 ## Comment preferences
 
-| Topic                             | Rule                                                  | Mode      | Status    | Spec                              |
-| --------------------------------- | ----------------------------------------------------- | --------- | --------- | --------------------------------- |
-| Change author name on comments    | A comment's author is the person's display name       | Reviewing | specified | [Comments](comments.md#authors)   |
-| Set comment properties            | A mark's look, and making it the default for its kind | Reviewing | specified | [Marks](marks.md#changing-a-mark) |
-| Set or change text box properties | A Text mark's font, size, colour and alignment        | Reviewing | specified | [Marks](marks.md#changing-a-mark) |
+| Topic                             | Rule                                                                                     | Mode      | Status             | Spec                              |
+| --------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ------------------ | --------------------------------- |
+| Change author name on comments    | A comment's author is the person's display name; a comment is never given another author | Reviewing | specified, in part | [Comments](comments.md#authors)   |
+| Set comment properties            | A mark's subject, look, a note's glyph, its history, and making its look the default     | Reviewing | specified          | [Marks](marks.md#changing-a-mark) |
+| Set or change text box properties | A Text mark's font, size, colour and alignment                                           | Reviewing | specified          | [Marks](marks.md#changing-a-mark) |
 
 ## Review documents
 
-| Topic                                           | Rule                                                                      | Mode      | Status             | Spec                                        |
-| ----------------------------------------------- | ------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
-| Insert text                                     | An Insert text mark                                                       | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Replace text                                    | A Replace text mark                                                       | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add attachments as comments                     | A Pinned file mark                                                        | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments in callouts                        | A Callout mark                                                            | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments to selected text or images         | Comment on selected text or an area                                       | Reviewing | specified          | [Comments](comments.md#anchors)             |
-| Add markups                                     | Highlight, underline, strikethrough, squiggly underline                   | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Change markup colors                            | Colours from the one colour picker                                        | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
-| Add comments using sticky notes or chat bubbles | A Note mark                                                               | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments in text boxes                      | A Text mark                                                               | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Add comments to videos in Acrobat Pro           | Media a file embeds is not played                                         |           | left out (F5)      | [Marks](marks.md#kinds)                     |
-| Add shapes, lines, and freeform drawings        | Drawing, line, arrow, rectangle, ellipse, polygon, cloud, connected lines | Reviewing | specified          | [Marks](marks.md#kinds)                     |
-| Delete comments                                 | Delete a mark; its thread is kept as on deleted content                   | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
-| Edit comments                                   | Edit one's own comment                                                    | Reviewing | specified          | [Comments](comments.md#threads)             |
-| Group and ungroup comments                      | Group and ungroup marks                                                   | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
-| Join PDF reviews                                | Opening a shared document is joining its review                           | Reviewing | specified, in part | [PDF document](pdf-document.md#share-roles) |
+| Topic                                           | Rule                                                                                     | Mode      | Status             | Spec                                        |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
+| Insert text                                     | An Insert text mark                                                                      | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Replace text                                    | A Replace text mark                                                                      | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add attachments as comments                     | A Pinned file mark                                                                       | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments in callouts                        | A Callout mark                                                                           | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments to selected text or images         | Comment on selected text or an area                                                      | Reviewing | specified          | [Comments](comments.md#anchors)             |
+| Add markups                                     | Highlight, underline, strikethrough, squiggly underline                                  | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Change markup colors                            | Colours from the one colour picker                                                       | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
+| Add comments using sticky notes or chat bubbles | A Note mark                                                                              | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments in text boxes                      | A Text mark                                                                              | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Add comments to videos in Acrobat Pro           | Media a file embeds is not played                                                        |           | left out (F5)      | [Marks](marks.md#kinds)                     |
+| Add shapes, lines, and freeform drawings        | Drawing with an eraser, line, arrow, rectangle, ellipse, polygon, cloud, connected lines | Reviewing | specified          | [Marks](marks.md#kinds)                     |
+| Delete comments                                 | Delete a mark; its thread is kept as on deleted content                                  | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
+| Edit comments                                   | Edit one's own comment                                                                   | Reviewing | specified          | [Comments](comments.md#threads)             |
+| Group and ungroup comments                      | Group and ungroup marks                                                                  | Reviewing | specified          | [Marks](marks.md#changing-a-mark)           |
+| Join PDF reviews                                | Opening a shared document is joining its review                                          | Reviewing | specified, in part | [PDF document](pdf-document.md#share-roles) |
 
 ## Stamps
 
-| Topic                               | Rule                                                | Mode      | Status    | Spec                     |
-| ----------------------------------- | --------------------------------------------------- | --------- | --------- | ------------------------ |
-| Add or modify stamps                | Standard stamps, placed, resized, rotated           | Reviewing | specified | [Marks](marks.md#stamps) |
-| Create custom stamps                | Custom stamps from a picture or a PDF page          | Reviewing | specified | [Marks](marks.md#stamps) |
-| Create custom dynamic stamps        | Dynamic stamps with the stamper's name and the time | Reviewing | specified | [Marks](marks.md#stamps) |
-| Delete custom stamps and categories | Manage stamps: rename, delete, categories           | Reviewing | specified | [Marks](marks.md#stamps) |
-| Update digital stamp identities     | A dynamic stamp's name is the person's display name | Reviewing | specified | [Marks](marks.md#stamps) |
+| Topic                               | Rule                                                                    | Mode      | Status    | Spec                     |
+| ----------------------------------- | ----------------------------------------------------------------------- | --------- | --------- | ------------------------ |
+| Add or modify stamps                | Standard stamps, placed, resized, rotated                               | Reviewing | specified | [Marks](marks.md#stamps) |
+| Create custom stamps                | Custom stamps from a picture or a PDF page                              | Reviewing | specified | [Marks](marks.md#stamps) |
+| Create custom dynamic stamps        | Dynamic stamps with the stamper's name and the time                     | Reviewing | specified | [Marks](marks.md#stamps) |
+| Delete custom stamps and categories | Manage stamps: rename, delete, categories                               | Reviewing | specified | [Marks](marks.md#stamps) |
+| Update digital stamp identities     | Stamp identity: display name, title and organisation for dynamic stamps | Reviewing | specified | [Marks](marks.md#stamps) |
 
 ## Manage reviews
 
-| Topic                                 | Rule                                                       | Mode      | Status             | Spec                                                       |
-| ------------------------------------- | ---------------------------------------------------------- | --------- | ------------------ | ---------------------------------------------------------- |
-| View comments                         | The comments panel, with filters and search                | Viewing   | specified          | [Comments](comments.md#the-comments-panel)                 |
-| Add reactions to comments             | Emoji reactions on a comment                               | Reviewing | specified          | [Comments](comments.md#threads)                            |
-| Reply to comments                     | Replies, written into the file as replies                  | Reviewing | specified          | [Comments](comments.md#threads)                            |
-| Mark comments as unread or resolved   | Unread, resolve and reopen                                 | Reviewing | specified          | [Comments](comments.md#threads)                            |
-| Find comments                         | Search and filter comments                                 | Viewing   | specified          | [Comments](comments.md#the-comments-panel)                 |
-| Check for new comments                | New comments arrive live; there is nothing to check for    | Viewing   | specified, in part | [Comments](comments.md#threads)                            |
-| Unlock comments                       | Lock and unlock a mark                                     | Reviewing | specified          | [Marks](marks.md#changing-a-mark)                          |
-| Spell-check comments                  | The browser's spelling in the composer                     | Reviewing | specified, in part | [Comments](comments.md#threads)                            |
-| Publish comments from other reviewers | Publishing to a review server; comments are live           |           | left out (F5)      | [Comments](comments.md#in-the-file)                        |
-| Manage shared files                   | Shared documents are found in the Explorer                 | Files     | specified          | [Starting and finding](starting-and-finding.md#finding-it) |
-| Track shared PDF reviews              | Review trackers; the Inbox carries threads and assignments |           | left out (F5)      | [Comments](comments.md#notifications)                      |
+| Topic                                 | Rule                                                                                                   | Mode      | Status             | Spec                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------- | ------------------ | ---------------------------------------------------------- |
+| View comments                         | The comments panel: filter, sort, search, expand, summary, export; exporting to Word is left out       | Viewing   | specified, in part | [Comments](comments.md#the-comments-panel)                 |
+| Add reactions to comments             | Emoji reactions on a comment                                                                           | Reviewing | specified          | [Comments](comments.md#threads)                            |
+| Reply to comments                     | Replies, written into the file as replies                                                              | Reviewing | specified          | [Comments](comments.md#threads)                            |
+| Mark comments as unread or resolved   | Unread, resolve and reopen, and a person's own tick                                                    | Reviewing | specified          | [Comments](comments.md#threads)                            |
+| Find comments                         | Search and filter comments                                                                             | Viewing   | specified          | [Comments](comments.md#the-comments-panel)                 |
+| Check for new comments                | New comments arrive live; there is nothing to check for                                                | Viewing   | specified, in part | [Comments](comments.md#threads)                            |
+| Unlock comments                       | Lock and unlock a mark                                                                                 | Reviewing | specified          | [Marks](marks.md#changing-a-mark)                          |
+| Spell-check comments                  | The browser's spelling in the composer                                                                 | Reviewing | specified, in part | [Comments](comments.md#threads)                            |
+| Publish comments from other reviewers | Publishing to a review server; comments are live                                                       |           | left out (F5)      | [Comments](comments.md#in-the-file)                        |
+| Manage shared files                   | Shared documents are found in the Explorer                                                             | Files     | specified          | [Starting and finding](starting-and-finding.md#finding-it) |
+| Track shared PDF reviews              | Shared documents are found in the Explorer and threads in the Inbox; per-reviewer tracking is left out | Files     | specified, in part | [Starting and finding](starting-and-finding.md#finding-it) |
 
 ## Protect with passwords
 
@@ -524,15 +524,15 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Digital IDs
 
-| Topic                          | Rule                                                                 | Mode      | Status             | Spec                                         |
-| ------------------------------ | -------------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
-| Digital ID overview            | A person's own certificate file; stores and tokens are left out      | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
-| Digital ID protection          | The certificate file never leaves the browser and its key is dropped | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
-| Create self-signed digital IDs | LiveDoc issues no certificates; a person brings their own            |           | left out (C4)      | [Signing](signing.md)                        |
-| Set a default digital ID       | No certificate is kept, so none is a default                         |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
-| Register digital IDs           | Certificate stores and tokens                                        |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
-| Delete digital IDs             | No certificate is kept, so none is deleted                           |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
-| Manage digital ID passwords    | A certificate file's password is its own program's to change         |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
+| Topic                          | Rule                                                                                                                       | Mode      | Status             | Spec                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
+| Digital ID overview            | A person's own certificate file; stores and tokens are left out                                                            | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Digital ID protection          | The certificate file never leaves the browser and its key is dropped                                                       | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
+| Create self-signed digital IDs | LiveDoc issues no certificates; a person brings their own                                                                  |           | left out (C4)      | [Signing](signing.md)                        |
+| Set a default digital ID       | No certificate is kept, so none is a default                                                                               |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
+| Register digital IDs           | A certificate file is chosen each time a person signs; keeping one registered, roaming IDs, stores and tokens are left out | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Delete digital IDs             | No certificate is kept, so none is deleted                                                                                 |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
+| Manage digital ID passwords    | A certificate file's password is its own program's to change                                                               |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
 
 ## Redact PDFs
 
@@ -540,14 +540,14 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 | --------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- | --------- | ----------------------------------------------------------------------------------- |
 | About redacting and sanitizing PDFs in Acrobat Pro  | Redaction and removing hidden information, each replacing the stored file with its history | Editing | specified | [Redaction and protection](redaction-and-protection.md)                             |
 | Types of redactable data                            | Text, pictures, shapes, marks, field values and the words they left elsewhere in the file  | Editing | specified | [Redaction and protection](redaction-and-protection.md#applying)                    |
-| Redact sensitive content in Acrobat Pro             | Mark, review, then apply                                                                   | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
+| Redact sensitive content in Acrobat Pro             | Mark, review, then apply: to a redacted copy, or to this PDF with its history purged       | Editing | specified | [Redaction and protection](redaction-and-protection.md#applying)                    |
 | Search and redact text in Acrobat Pro               | Find text to redact: words, lists and patterns                                             | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Text redaction properties in Acrobat Pro            | Fill colour and overlay text                                                               | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Redact images in PDFs                               | A picture's pixels under a mark are replaced in the picture itself                         | Editing | specified | [Redaction and protection](redaction-and-protection.md#applying)                    |
 | Change redaction appearance in Acrobat Pro          | How a redaction mark looks before and after applying                                       | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Sanitize PDFs in Acrobat Pro                        | Remove hidden information, listed with counts                                              | Editing | specified | [Redaction and protection](redaction-and-protection.md#removing-hidden-information) |
 | Apply multiple codes to a redaction in Acrobat Pro  | One or several redaction codes on a mark                                                   | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
-| Create redaction codes and code sets in Acrobat Pro | Make sets of redaction codes                                                               | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
+| Create redaction codes and code sets in Acrobat Pro | Sets of redaction codes; the two U.S. sets ship                                            | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 | Edit redaction codes and code sets in Acrobat Pro   | Edit and delete codes and sets                                                             | Editing | specified | [Redaction and protection](redaction-and-protection.md#marking)                     |
 
 ## Protected view
@@ -599,30 +599,30 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Set up and print
 
-| Topic                                                      | Rule                                                              | Mode    | Status         | Spec                                                         |
-| ---------------------------------------------------------- | ----------------------------------------------------------------- | ------- | -------------- | ------------------------------------------------------------ |
-| Adobe PDF printer settings on Windows                      | Adobe's PDF printer driver                                        |         | not a function |                                                              |
-| Set Adobe PDF printer properties on Windows                | Adobe's PDF printer driver                                        |         | not a function |                                                              |
-| Save documents as PDFs                                     | Download the PDF; other kinds download as PDF                     | Files   | specified      | [Files, print and sync](files-print-and-sync.md#downloading) |
-| Save documents as PostScript files                         | PostScript output                                                 |         | left out (F5)  |                                                              |
-| Print PDFs with mixed page sizes                           | The browser prints the PDF itself, each page at its size          | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print large documents                                      | Tiling a large page over several sheets                           |         | left out (F14) | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print multiple pages per sheet                             | Several pages a sheet, in the browser's dialog                    | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print bookmarked pages                                     | Printing a bookmark's pages; a page range does it                 |         | left out (F5)  | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Adjust page size for printing                              | Scale and fit, in the browser's dialog                            | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Create and use custom page sizes                           | Custom paper sizes are the printer driver's                       |         | left out (F5)  | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print settings                                             | Pages, marks and fields asked by LiveDoc; the rest by the browser | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Make PDFs print-ready with Acrobat Pro                     | Print production                                                  |         | left out (F14) |                                                              |
-| Turn off the Save As dialog box when printing to Adobe PDF | Adobe's PDF printer driver                                        |         | not a function |                                                              |
+| Topic                                                      | Rule                                                                                                                            | Mode    | Status             | Spec                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------------ |
+| Adobe PDF printer settings on Windows                      | Adobe's PDF printer driver                                                                                                      |         | not a function     |                                                              |
+| Set Adobe PDF printer properties on Windows                | Adobe's PDF printer driver                                                                                                      |         | not a function     |                                                              |
+| Save documents as PDFs                                     | Download the PDF; other kinds download as PDF                                                                                   | Files   | specified          | [Files, print and sync](files-print-and-sync.md#downloading) |
+| Save documents as PostScript files                         | PostScript output                                                                                                               |         | left out (F5)      |                                                              |
+| Print PDFs with mixed page sizes                           | The browser prints the PDF itself, each page at its size; choosing a paper tray by page size is left out                        | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print large documents                                      | Tiling a large page over several sheets                                                                                         |         | left out (F14)     | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print multiple pages per sheet                             | Several pages a sheet, in the browser's dialog                                                                                  | Viewing | specified          | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print bookmarked pages                                     | Printing a bookmark's pages; a page range does it                                                                               |         | left out (F5)      | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Adjust page size for printing                              | Scale and fit, in the browser's dialog                                                                                          | Viewing | specified          | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Create and use custom page sizes                           | Custom paper sizes are the printer driver's                                                                                     |         | left out (F5)      | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print settings                                             | Pages, marks and fields asked by LiveDoc, the rest by the browser; stamps alone, fields alone and pages in reverse are left out | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Make PDFs print-ready with Acrobat Pro                     | Print production                                                                                                                |         | left out (F14)     |                                                              |
+| Turn off the Save As dialog box when printing to Adobe PDF | Adobe's PDF printer driver                                                                                                      |         | not a function     |                                                              |
 
 ## Special print modes
 
-| Topic                                  | Rule                                                       | Mode    | Status             | Spec                                                      |
-| -------------------------------------- | ---------------------------------------------------------- | ------- | ------------------ | --------------------------------------------------------- |
-| Print comments                         | Print with marks, without them, or with a comments summary | Viewing | specified          | [Files, print and sync](files-print-and-sync.md#printing) |
-| Print layers                           | PDF layers print as the file sets them                     | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing) |
-| Print PDFs with unembedded Asian fonts | A printer driver's font handling                           |         | left out (F5)      |                                                           |
-| Enable protected print mode on Windows | A Windows print mode                                       |         | not a function     |                                                           |
+| Topic                                  | Rule                                                                                                   | Mode    | Status             | Spec                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------- | ------------------ | --------------------------------------------------------- |
+| Print comments                         | Print with marks, without them, or with a comments summary; stamps alone and fields alone are left out | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing) |
+| Print layers                           | PDF layers print as the file sets them; overriding what a PDF layer prints is left out                 | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing) |
+| Print PDFs with unembedded Asian fonts | A printer driver's font handling                                                                       |         | left out (F5)      |                                                           |
+| Enable protected print mode on Windows | A Windows print mode                                                                                   |         | not a function     |                                                           |
 
 ## Duplex and multi-page printing
 
@@ -654,16 +654,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Convert to other formats
 
-| Topic                                   | Rule                                                        | Mode  | Status             | Spec                                                                       |
-| --------------------------------------- | ----------------------------------------------------------- | ----- | ------------------ | -------------------------------------------------------------------------- |
-| Convert PDFs to image formats           | Pages as PNG or JPEG pictures                               | Files | specified          | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to Word formats            | Open as a text document, a copy, then download as Word      | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
-| Convert PDFs to Microsoft Excel formats | Not written from a PDF document                             |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to PowerPoint format       | Not written from a PDF document                             |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to PostScript files        | PostScript output                                           |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDF to HTML web pages           | Not written from a PDF document                             |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to text formats            | The text by page, as plain text                             | Files | specified          | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to RTFs                    | Open as a text document, a copy, then download as Rich Text | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Topic                                   | Rule                                                           | Mode  | Status             | Spec                                                                       |
+| --------------------------------------- | -------------------------------------------------------------- | ----- | ------------------ | -------------------------------------------------------------------------- |
+| Convert PDFs to image formats           | Pages as PNG or JPEG pictures; TIFF and JPEG 2000 are left out | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to Word formats            | Open as a text document, a copy, then download as Word         | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Convert PDFs to Microsoft Excel formats | Not written from a PDF document                                |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to PowerPoint format       | Not written from a PDF document                                |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to PostScript files        | PostScript output                                              |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDF to HTML web pages           | Not written from a PDF document                                |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to text formats            | The text by page, as plain text; XML output is left out        | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to RTFs                    | Open as a text document, a copy, then download as Rich Text    | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
 
 ## Troubleshoot
 

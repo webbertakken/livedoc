@@ -25,6 +25,8 @@ the toolbar shows the field tools, and the Fields panel lists them in tab order.
 | **Signature field** | An empty place to sign ([Signing](signing.md))                                           |
 
 - A field is drawn by a drag, or placed at a default size by a press; ⇧F cycles the tools.
+- Fields are built on any PDF. A fillable PDF made from a blank page waits on how a PDF is started
+  ([Starting and finding](starting-and-finding.md#starting-one), fork F12).
 - A new field is named by its type and a number ("Text 3") until renamed; a name is unique unless the person means
   two boxes to be one field, asked when a name is reused: "Use the same field in both places?"
 - **Preview** (P) shows the fields as a person filling will meet them, without leaving Editing.
@@ -46,14 +48,14 @@ box, a row of small circles a radio group.
 
 A selected field's properties show in the side panel, in tabs:
 
-| Tab           | Holds                                                                                                                                                                                                                                        |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **General**   | Name; tooltip (the field's accessible name: asked for, and warned about while empty); visible, hidden, visible but not printed, hidden but printed; read-only; required                                                                      |
-| **Look**      | Border colour, width and style (solid, dashed, bevelled, inset, underline); fill colour; font, size (or auto), text colour; rotation in quarter turns                                                                                        |
-| **Options**   | By type: alignment, default value, multi-line, scrolling, comb of n characters, character limit, password; a tick box's glyph and on value, ticked by default; options of a dropdown or list, sorted or not, typing allowed, several allowed |
-| **Format**    | None, Number, Percentage, Date, Time, Special (zip code, phone, an input mask): each with its choices                                                                                                                                        |
-| **Validate**  | None, or a value from n to m                                                                                                                                                                                                                 |
-| **Calculate** | None; the sum, product, average, minimum or maximum of fields chosen; or a simple formula over field names (`+ - * /` and brackets)                                                                                                          |
+| Tab           | Holds                                                                                                                                                                                                                                                                                               |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **General**   | Name; type (changed to another type that can hold its value, asked first); locked (its properties take no change until unlocked); tooltip (the field's accessible name: asked for, and warned about while empty); visible, hidden, visible but not printed, hidden but printed; read-only; required |
+| **Look**      | Border colour, width and style (solid, dashed, bevelled, inset, underline); fill colour; font, size (or auto), text colour; rotation in quarter turns                                                                                                                                               |
+| **Options**   | By type: alignment, default value, multi-line, scrolling, comb of n characters, character limit, password; a tick box's glyph and on value, ticked by default; options of a dropdown or list, sorted or not, typing allowed, several allowed                                                        |
+| **Format**    | None, Number, Percentage, Date, Time, Special (zip code, phone, an input mask): each with its choices                                                                                                                                                                                               |
+| **Validate**  | None, or a value from n to m                                                                                                                                                                                                                                                                        |
+| **Calculate** | None; the sum, product, average, minimum or maximum of fields chosen; or a simple formula over field names (`+ - * /` and brackets)                                                                                                                                                                 |
 
 - Each choice is written into the file as the standard function call Acrobat's own dialogs write, so Acrobat and
   other readers run it as theirs, and LiveDoc recognises it again

@@ -24,6 +24,10 @@ one undo step, live for everyone. [Building fields](building-fields.md) and
   found again here and by other software, and is not read aloud as body text. One another program added is found by
   the same marking and updated or removed the same way; text that only looks like a header is page text.
 
+- Each of these tools acts on the PDF document that is open. Applying a header, a watermark or a background to
+  several files at once, as Acrobat's dialogs offer, is left out: an agent does it, one changeset a document
+  ([Agents](agents.md)) `(default)`.
+
 ## Watermarks
 
 - **Insert > Watermark**: text (font, size, colour) or a picture or a PDF page; rotation (none, 45° either way,
@@ -83,6 +87,8 @@ File > Properties, a dialog with four tabs, readable by everyone who reads the d
 | **Fonts**       | Every font: its name, type, whether embedded and subset, its encoding                                                                                                                  | Nothing                                                                                 |
 | **Size**        | What takes the file's bytes: pictures, fonts, page content, marks, fields, embedded files, structure, and the rest                                                                     | [Reducing file size](#reducing-file-size)                                               |
 
+- **Additional metadata** (under Description): the file's XMP metadata as a read-only tree, for whoever needs to see
+  exactly what the file says. Importing and exporting XMP files is left out.
 - **Initial view** (under Description, an Editor's): the page, zoom and page display a reader opens the file with,
   and whether its bookmarks panel shows; LiveDoc honours a file's initial page and zoom on first open and nothing
   more.

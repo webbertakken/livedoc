@@ -35,6 +35,9 @@ so a PDF's are always its fields. The research is [Fields](../../research/pdf-do
 - **In Reviewing a field is a real control** over its place on the page, with the file's own font, size, colour and
   alignment as far as the browser can match them; leaving it draws the value into the page as the file's appearance
   will have it.
+- **Writing direction** is taken from what is typed: a value whose first strong character is of a right-to-left
+  script is laid out right to left, and digits are written as typed `(default)`; there is no direction or digit
+  setting.
 - **Highlight fields** (on by default in Reviewing) tints every fillable field and outlines required ones; a required
   field left empty is listed in the Fields panel under "Still to fill".
 - **Tab order** is the file's: its declared order, else row order, else column order, as the page says; ⇥ and ⇧⇥ move

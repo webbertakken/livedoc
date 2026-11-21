@@ -37,13 +37,13 @@ Pages > Organise pages (or the Thumbnails panel widened) fills the pages' place 
 | **Blank page**              | A page of the size of the one before it (or A4 or Letter by the person's locale in an empty selection), where chosen: before, after, at the start, at the end |
 | **From a PDF**              | A file chosen or dropped: all its pages or a range, where chosen                                                                                              |
 | **From a LiveDoc document** | Another PDF document's pages; or a text document, a spreadsheet or a canvas tab, written as PDF first                                                         |
-| **From the clipboard**      | A copied picture becomes a page fitted to it                                                                                                                  |
+| **From the clipboard**      | A copied picture becomes a page fitted to it; copied text becomes pages of that text in the default font                                                      |
 
 - Inserted pages bring their own marks, fields (renamed where a name clashes), links, and their bookmarks as a branch
   under a bookmark named for the file, where **Include bookmarks** is ticked.
 - The pages inserted from another file are a blob named in the change: the other file's bytes are held, and the
   bake copies its pages across ([Live editing and storage](live-editing-and-storage.md#storage)).
-- **Combine files** (Pages > Combine files) takes several PDFs and LiveDoc documents, lets their order and page
+- **Combine files** (Pages > Combine files) takes several PDFs and LiveDoc documents (an office file joins once it is open in LiveDoc), lets their order and page
   ranges be set in a list, and makes **a new PDF document** of them all, bookmarked by file; the sources are
   unchanged.
 - Inserting a web page by its address is left out ([Parity matrix](parity-matrix.md#left-out)).
@@ -57,7 +57,8 @@ Pages > Organise pages (or the Thumbnails panel widened) fills the pages' place 
   listed before the delete ("3 bookmarks and 2 links point to these pages") and afterwards go nowhere, marked so.
 - **Extract** makes a new PDF document from the selected pages, as one file or one a page; **Delete pages after
   extracting** removes them here.
-- **Replace** swaps the selected pages for pages of another PDF, one for one from a page chosen: the page content
+- **Replace** swaps the selected pages for pages of another PDF, one for one from a page chosen, or for a picture
+  fitted to the page: the page content
   changes, and the marks, fields and links on top stay where they were.
 
 ## Rotating, cropping and resizing
