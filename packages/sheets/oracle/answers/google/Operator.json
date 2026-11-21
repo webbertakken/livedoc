@@ -1,0 +1,79 @@
+{
+  "source": "google",
+  "category": "Operator",
+  "by": "Google Sheets",
+  "made": "2026-11-21",
+  "answers": {
+    "ADD.1": [[5]],
+    "ADD.2": [[7]],
+    "ADD.3": [[1]],
+    "ADD.4": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ],
+    "ADD.5": [
+      [
+        {
+          "e": "#DIV/0!"
+        }
+      ]
+    ],
+    "MINUS.1": [[-3]],
+    "MINUS.2": [[3]],
+    "MULTIPLY.1": [[10]],
+    "MULTIPLY.2": [[7]],
+    "DIVIDE.1": [[3.5]],
+    "DIVIDE.2": [
+      [
+        {
+          "e": "#DIV/0!"
+        }
+      ]
+    ],
+    "DIVIDE.3": [[0]],
+    "POW.1": [[1024]],
+    "POW.2": [[2]],
+    "CONCAT.1": [["a1"]],
+    "CONCAT.2": [["43"]],
+    "CONCAT.3": [["abc1"]],
+    "CONCAT.4": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "CONCAT.5": [["4x"]],
+    "EQ.1": [[true]],
+    "EQ.2": [[true]],
+    "EQ.3": [[true]],
+    "EQ.4": [[false]],
+    "NE.1": [[true]],
+    "NE.2": [[false]],
+    "GT.1": [[true]],
+    "GT.2": [[false]],
+    "GT.3": [[true]],
+    "GTE.1": [[true]],
+    "GTE.2": [[false]],
+    "LT.1": [[true]],
+    "LT.2": [[false]],
+    "LTE.1": [[true]],
+    "LTE.2": [[false]],
+    "UMINUS.1": [[4]],
+    "UMINUS.2": [[-3]],
+    "UPLUS.1": [[-4]],
+    "UPLUS.2": [[3]],
+    "UNARY_PERCENT.1": [[1]],
+    "UNARY_PERCENT.2": [[0.93]],
+    "ISBETWEEN.1": [[true]],
+    "ISBETWEEN.2": [[true]],
+    "ISBETWEEN.3": [[false]],
+    "ISBETWEEN.4": [[true]],
+    "ISBETWEEN.5": [[false]],
+    "ISBETWEEN.6": [[true]],
+    "ISBETWEEN.7": [[true]]
+  }
+}

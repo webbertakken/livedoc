@@ -86,7 +86,7 @@ function fitted(args: EvalValue[], f: Frame, logs: boolean, interceptAt: number)
     known.x.map((row) => row.map((v, j) => v - xMeans[j]!)),
     y,
   );
-  if (!squares) return err('#NUM!', 'The known x values are collinear: no single fit');
+  if (!squares) return err('#N/A', 'The known x values are collinear: no single fit');
   const slopes = [...squares.coefficients];
   const gram = squares.inverseGram;
   const total = y.reduce((s, v) => s + v * v, 0);
@@ -107,7 +107,7 @@ function fitted(args: EvalValue[], f: Frame, logs: boolean, interceptAt: number)
 
 // LINEST's and LOGEST's statistics under the coefficients (Excel's layout, which Google's help describes): standard
 // errors; R² and the standard error of y; F and the degrees of freedom; the regression and residual sums of squares.
-// An exact fit has no residual: its errors are 0 and its F is #N/A, as LibreOffice gives them.
+// An exact fit has no residual: its errors are 0 and its F is #NUM!, as Google gives it.
 function statistics(fit: Fit, firstRow: Value[]): Value[][] {
   const { slopes, total, residual } = fit;
   const k = slopes.length;
@@ -118,7 +118,7 @@ function statistics(fit: Fit, firstRow: Value[]): Value[][] {
   const errors: Value[] = [...fit.slopeFactors].reverse().map(errorOf);
   errors.push(fit.withIntercept ? errorOf(fit.interceptFactor) : N_A);
   const pad = (row: Value[]) => [...row, ...new Array<Value>(k + 1 - row.length).fill(N_A)];
-  const exact = err('#N/A', 'An exact fit has no F statistic');
+  const exact = err('#NUM!', 'An exact fit has no F statistic');
   return [
     firstRow,
     errors,

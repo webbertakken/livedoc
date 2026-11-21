@@ -6,8 +6,8 @@ import { err, isError, toNumber, toText } from '../values';
 import { textFn } from './text-args';
 import { regex, wildcardSource } from './text-patterns';
 
-// East Asian Wide and Fullwidth characters (Unicode UAX #11): CJK, kana, Hangul and the full-width forms. Half-width
-// katakana stays one byte, as it is in the double-byte character sets (D43).
+// East Asian Wide and Fullwidth characters (Unicode UAX #11): CJK, kana, Hangul and the full-width forms; and
+// half-width katakana, two bytes as Google counts it (D43).
 const WIDE_RANGES: readonly (readonly [number, number])[] = [
   [0x1100, 0x115f],
   [0x2e80, 0x303e],
@@ -19,6 +19,7 @@ const WIDE_RANGES: readonly (readonly [number, number])[] = [
   [0xf900, 0xfaff],
   [0xfe30, 0xfe4f],
   [0xff00, 0xff60],
+  [0xff61, 0xff9f],
   [0xffe0, 0xffe6],
   [0x20000, 0x3fffd],
 ];
@@ -96,6 +97,9 @@ function fullWidth(text: string): string {
   return out;
 }
 
+// The full-width space, half-width a plain space, as Google's ASC writes it.
+const IDEOGRAPHIC_SPACE = '\u3000';
+
 export const BYTE_TEXT_FUNCTIONS: Record<string, FnDef> = {
   LENB: textFn(1, 1, 1, ([t]) => bytesOf([...t!])),
   LEFTB: textFn(1, 2, 1, ([t], [n = 1]) => {
@@ -110,7 +114,7 @@ export const BYTE_TEXT_FUNCTIONS: Record<string, FnDef> = {
   }),
   // starting_at counts characters, extract_length_bytes bytes, as Google's MIDB and REPLACEB do.
   MIDB: textFn(3, 3, 1, ([t], [start, n]) => {
-    if (start! < 1) return err('#VALUE!', 'Positions are counted from 1');
+    if (start! < 1) return err('#NUM!', 'Positions are counted from 1');
     if (n! < 0) return err('#VALUE!', NEGATIVE);
     const chars = [...t!];
     const from = Math.trunc(start!) - 1;
@@ -147,6 +151,8 @@ export const BYTE_TEXT_FUNCTIONS: Record<string, FnDef> = {
   }),
   JIS: textFn(1, 1, 1, ([t]) => fullWidth(t!)),
   ASC: textFn(1, 1, 1, ([t]) =>
-    [...t!.normalize('NFC')].map((ch) => HALF_WIDTH.get(ch) ?? ch).join(''),
+    [...t!.normalize('NFC')]
+      .map((ch) => (ch === IDEOGRAPHIC_SPACE ? ' ' : (HALF_WIDTH.get(ch) ?? ch)))
+      .join(''),
   ),
 };

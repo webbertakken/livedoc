@@ -2,7 +2,7 @@
   "source": "libreoffice",
   "category": "Statistical",
   "by": "LibreOffice 26.8.3.1",
-  "made": "2026-11-20",
+  "made": "2026-11-21",
   "answers": {
     "AVEDEV.1": [[2.5]],
     "AVEDEV.2": [[6.90625]],
@@ -962,13 +962,7 @@
         }
       ]
     ],
-    "HYPGEOM.DIST.6": [
-      [
-        {
-          "e": "Err:511"
-        }
-      ]
-    ],
+    "HYPGEOM.DIST.6": [[0.109243002735772]],
     "HYPGEOMDIST.1": [[0.109243002735772]],
     "HYPGEOMDIST.2": [[0.150422391245528]],
     "HYPGEOMDIST.3": [[0.109243002735772]],

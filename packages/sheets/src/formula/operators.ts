@@ -3,7 +3,16 @@
 // (`ADD`, `EQ`, `UMINUS`, ...) are the same operators by name, so both answer alike.
 import { TEXT_RESULT_MAX } from '../limits';
 import type { BinaryOp } from './ast';
-import { compareScalars, err, isError, toNumber, toText, type Scalar, type Value } from './values';
+import {
+  compareScalars,
+  err,
+  isError,
+  toNumber,
+  toText,
+  type Scalar,
+  type SheetError,
+  type Value,
+} from './values';
 
 export type UnaryOperator = 'neg' | 'pos' | 'pct';
 
@@ -13,6 +22,23 @@ export function boundedText(text: string): Value {
     ? err('#VALUE!', 'The text is longer than a cell holds')
     : text;
 }
+
+/**
+ * x to the power y, as Google works it: 0 to a negative power is #NUM!, and a negative number's odd root is negative
+ * ((-8)^(1/3) is -2); any other fractional power of a negative number is #NUM!.
+ */
+export function power(x: number, y: number): number | SheetError {
+  if (x === 0 && y < 0) return err('#NUM!', 'Zero has no negative power');
+  if (x >= 0 || Number.isInteger(y)) return x ** y;
+  const root = 1 / y;
+  const odd = Math.round(root);
+  if (Math.abs(root - odd) > ODD_ROOT_TOLERANCE || odd % 2 === 0)
+    return err('#NUM!', 'A negative number has no such root');
+  return -((-x) ** y);
+}
+
+// How near 1/y must be to an odd whole number for y to be its root, as 1/3 is only near a third.
+const ODD_ROOT_TOLERANCE = 1e-10;
 
 /** `a op b`, text read and numbers written in `locale` (formulas.md "Locale"). */
 export function binaryOperation(op: BinaryOp, a: Scalar, b: Scalar, locale: string): Value {
@@ -61,9 +87,11 @@ export function binaryOperation(op: BinaryOp, a: Scalar, b: Scalar, locale: stri
       if (y === 0) return err('#DIV/0!');
       r = x / y;
       break;
-    default:
-      if (x === 0 && y < 0) return err('#DIV/0!');
-      r = x ** y;
+    default: {
+      const p = power(x, y);
+      if (isError(p)) return p;
+      r = p;
+    }
   }
   if (!Number.isFinite(r)) return err('#NUM!');
   // Full precision is kept; comparisons and display read 15 significant digits (compareScalars, numberText), so

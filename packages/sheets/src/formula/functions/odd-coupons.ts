@@ -5,10 +5,34 @@
 import { dateFromSerial, serialFromDate } from '../../dates';
 import type { FnDef } from '../fn';
 import { err, isError, type SheetError } from '../values';
-import { couponDays, couponsOf, daysToCoupon, type Coupons } from './coupons';
+import { couponDays, couponsOf, type Coupons } from './coupons';
 import { basisOf, daysInMonth, frequencyOf, isLastOfMonth } from './day-count';
 import { financeFn } from './finance-args';
 import { bisectFalling } from './solve';
+
+// Excel's days between two dates of a coupon schedule, by the convention. 30/360 reads a month's last day as the
+// 30th; US keeps an end on the 31st after a start before the 30th, and counts an end on February's last day as it is;
+// European counts February's last day as it is at either end.
+export function excelCouponDayDiff(a: number, b: number, basis: number): number {
+  const pa = dateFromSerial(a);
+  const pb = dateFromSerial(b);
+  let d1 = isLastOfMonth(pa) ? 30 : Math.min(pa.d, 30);
+  let d2 = isLastOfMonth(pb) ? 30 : Math.min(pb.d, 30);
+  if (basis === 0) {
+    if ((pa.m === 2 || d1 < 30) && pb.d === 31) d2 = 31;
+    else if (pb.m === 2 && isLastOfMonth(pb)) d2 = pb.d;
+  } else {
+    if (pa.m === 2 && d1 === 30) d1 = pa.d;
+    if (pb.m === 2 && d2 === 30) d2 = pb.d;
+  }
+  return Math.max(0, (pb.y - pa.y) * 360 + (pb.m - pa.m) * 30 + d2 - d1);
+}
+
+// Excel's days from settlement to the next coupon; on 30/360, the period's days less those before settlement.
+function excelDaysToCoupon(c: Coupons): number {
+  if (c.basis !== 0 && c.basis !== 4) return c.next - c.settlement;
+  return couponDays(c) - excelCouponDayDiff(c.previous, c.settlement, c.basis);
+}
 
 /** The date `months` on (or back), its day kept or, in a shorter month, that month's last. */
 function addMonths(serial: number, months: number): number {
@@ -104,7 +128,7 @@ function oddFirstPrice(b: OddFirst, yld: number): number {
       daysBetween(Math.max(b.issue, early), Math.min(b.settlement, late), b.basis) / length;
     late = early;
   }
-  const toNext = daysToCoupon(around) / e;
+  const toNext = excelDaysToCoupon(around) / e;
   const whole = wholeQuasiPeriods(b.settlement, b.first, 12 / f);
   let value =
     b.redemption / growth ** (toNext + whole + regular) +

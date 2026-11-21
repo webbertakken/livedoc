@@ -1,4 +1,5 @@
 // How the finance functions read their arguments (docs/specs/029-sheets/formulas.md "Functions": Finance).
+import type { Frame } from '../../engine/frame';
 import { localeDayFirst, parseDateText } from '../../dates';
 import { finite, scalarFn, type FnDef } from '../fn';
 import { toNumber, type Scalar, type Value } from '../values';
@@ -11,7 +12,7 @@ export function financeFn(
   min: number,
   max: number,
   dates: readonly number[],
-  each: (ns: number[]) => Value,
+  each: (ns: number[], f: Frame) => Value,
 ): FnDef {
   return scalarFn(min, max, (xs, f) => {
     const ns: number[] = [];
@@ -20,7 +21,7 @@ export function financeFn(
       if (typeof n !== 'number') return n;
       ns.push(dates.includes(i) ? Math.floor(n) : n);
     }
-    return finite(each(ns));
+    return finite(each(ns, f));
   });
 }
 

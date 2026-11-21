@@ -1,0 +1,157 @@
+{
+  "source": "google",
+  "category": "Filter",
+  "by": "Google Sheets",
+  "made": "2026-11-21",
+  "answers": {
+    "FILTER.1": [
+      ["Alice", 100, 90],
+      ["Carol", 80, 85],
+      ["Devon", 100, 95],
+      ["Eloise", 80, 90]
+    ],
+    "FILTER.2": [["Devon"]],
+    "FILTER.3": [["Alice", 90]],
+    "FILTER.4": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "FILTER.5": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "FILTER.6": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "FILTER.7": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ],
+      [null]
+    ],
+    "FILTER.8": [["Alice"], ["Bob"], ["Devon"]],
+    "FILTER.9": [
+      [
+        {
+          "e": "#N/A"
+        }
+      ]
+    ],
+    "SORT.1": [
+      ["Alice", 100, 90],
+      ["Devon", 100, 95],
+      ["Carol", 80, 85],
+      ["Eloise", 80, 90],
+      ["Bob", 75, 85]
+    ],
+    "SORT.2": [
+      ["Bob", 75, 85],
+      ["Eloise", 80, 90],
+      ["Carol", 80, 85],
+      ["Devon", 100, 95],
+      ["Alice", 100, 90]
+    ],
+    "SORT.3": [["Bob"], ["Carol"], ["Alice"], ["Eloise"], ["Devon"]],
+    "SORT.4": [[75], [80], [80], [100], [100]],
+    "SORT.5": [
+      [
+        {
+          "e": "#REF!"
+        }
+      ]
+    ],
+    "SORT.6": [
+      [
+        {
+          "e": "#N/A"
+        },
+        null,
+        null
+      ],
+      [null, null, null],
+      [null, null, null],
+      [null, null, null],
+      [null, null, null]
+    ],
+    "SORT.7": [
+      [
+        {
+          "e": "#N/A"
+        },
+        null,
+        null
+      ],
+      [null, null, null]
+    ],
+    "SORT.8": [[75], [80], [80], [100], [100]],
+    "UNIQUE.1": [
+      ["Red", "Yellow", "Red"],
+      ["Blue", "Magenta", "Blue"],
+      ["Green", "White", "Green"]
+    ],
+    "UNIQUE.2": [
+      ["Red", "Yellow"],
+      ["Blue", "Magenta"],
+      ["Red", "Yellow"],
+      ["Green", "White"]
+    ],
+    "UNIQUE.3": [
+      ["Blue", "Magenta", "Blue"],
+      ["Green", "White", "Green"]
+    ],
+    "UNIQUE.4": [["a"], ["A"], ["b"]],
+    "UNIQUE.5": [[100], [75], [80]],
+    "SORTN.1": [["Alice", 100, 90]],
+    "SORTN.2": [
+      ["Alice", 100, 90],
+      ["Bob", 75, 85]
+    ],
+    "SORTN.3": [
+      ["Alice", 100, 90],
+      ["Devon", 100, 95],
+      ["Carol", 80, 85]
+    ],
+    "SORTN.4": [
+      ["Alice", 100, 90],
+      ["Devon", 100, 95],
+      ["Carol", 80, 85],
+      ["Eloise", 80, 90]
+    ],
+    "SORTN.5": [
+      ["Alice", 100, 90],
+      ["Carol", 80, 85],
+      ["Bob", 75, 85]
+    ],
+    "SORTN.6": [
+      ["Alice", 100, 90],
+      ["Devon", 100, 95],
+      ["Carol", 80, 85],
+      ["Eloise", 80, 90],
+      ["Bob", 75, 85]
+    ],
+    "SORTN.7": [
+      ["Devon", 100, 95],
+      ["Alice", 100, 90],
+      ["Eloise", 80, 90]
+    ],
+    "SORTN.8": [
+      [
+        {
+          "e": "#VALUE!"
+        }
+      ]
+    ]
+  }
+}

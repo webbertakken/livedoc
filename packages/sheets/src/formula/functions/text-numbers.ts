@@ -2,9 +2,9 @@
 // ROMAN and ARABIC as LibreOffice and Excel write Roman numerals.
 import { localeCurrency } from '../../locale-currency';
 import { localeSeparators } from '../../input';
-import { boolArg, fn, intArg, numArg, opt, scalarFn, textArg, type FnDef } from '../fn';
+import { boolArg, fn, intArg, numArg, opt, scalarArg, scalarFn, textArg, type FnDef } from '../fn';
 import type { Frame } from '../../engine/frame';
-import { err, isError, toText, type Scalar, type Value } from '../values';
+import { err, isError, toNumber, toText, type Scalar, type Value } from '../values';
 import { roundHalfAway } from './math';
 
 // Intl writes at most 100 decimals; past it the zeros are added by hand. Excel's limit on number_of_places is 127.
@@ -42,6 +42,7 @@ const ROMAN_CHARS = ['M', 'D', 'C', 'L', 'X', 'V', 'I'];
 const ROMAN_VALUES = [1000, 500, 100, 50, 10, 5, 1];
 const ROMAN_MAX = 3999;
 const ROMAN_MODES = 4;
+const ROMAN_FORMS = [0, 1, 2, 3, 4];
 
 export function romanNumeral(value: number, mode: number): string {
   let out = '';
@@ -154,7 +155,9 @@ export const NUMBER_TEXT_FUNCTIONS: Record<string, FnDef> = {
     const places = opt(args, 1, f, intArg, 2);
     if (isError(x)) return x;
     if (isError(places)) return places;
-    return fixedText(x, places, f, { style: 'currency', currency: localeCurrency(f.locale) });
+    const text = fixedText(x, places, f, { style: 'currency', currency: localeCurrency(f.locale) });
+    // The no-break space Intl puts beside the symbol is a plain space, as Google writes it (1.234,50 €).
+    return typeof text === 'string' ? text.replace(/\u00a0/g, ' ') : text;
   }),
   FIXED: fn(1, 3, (args, f) => {
     const x = numArg(args[0]!, f);
@@ -165,19 +168,36 @@ export const NUMBER_TEXT_FUNCTIONS: Record<string, FnDef> = {
     if (isError(plain)) return plain;
     return fixedText(x, places, f, { useGrouping: !plain });
   }),
+  // TRUE is the classic form 0 and FALSE the simplest, 4 (Google's, OpenFormula Part 4 §6.19.17). 0 is no numeral,
+  // #VALUE!, as Google gives it; empty text in OpenFormula's meaning (§6.19.17; the file's meaning).
   ROMAN: fn(1, 2, (args, f) => {
     const x = intArg(args[0]!, f);
-    const mode = opt(args, 1, f, intArg, 0);
+    const given = args[1] === undefined || args[1] === null ? 0 : scalarArg(args[1], f);
+    const mode = typeof given === 'boolean' ? (given ? 0 : ROMAN_MODES) : toNumber(given, f.locale);
     if (isError(x)) return x;
     if (isError(mode)) return mode;
-    if (x < 0 || x > ROMAN_MAX) return err('#VALUE!', 'ROMAN writes 0 to 3999');
-    if (mode < 0 || mode > ROMAN_MODES) return err('#VALUE!', 'The relaxation is 0 to 4');
-    return romanNumeral(x, mode);
+    if (x === 0)
+      return f.meaning === 'openformula' ? '' : err('#VALUE!', 'There is no Roman numeral for 0');
+    if (x < 0 || x > ROMAN_MAX) return err('#VALUE!', 'ROMAN writes 1 to 3999');
+    const form = Math.trunc(mode);
+    if (form < 0 || form > ROMAN_MODES) return err('#VALUE!', 'The relaxation is 0 to 4');
+    return romanNumeral(x, form);
   }),
+  // Spaces around and a minus before the numeral are read, as Google reads them. Google takes only a numeral ROMAN
+  // writes in one of its forms (IIII is none); OpenFormula's meaning adds up any numerals (Part 4 §6.19.2; the file's
+  // meaning).
   ARABIC: fn(1, 1, (args, f) => {
     const t = textArg(args[0]!, f);
     if (isError(t)) return t;
-    const value = arabicValue(t);
-    return value ?? err('#VALUE!', `"${t}" is not a Roman numeral`);
+    const trimmed = t.trim();
+    const negative = trimmed.startsWith('-');
+    const numeral = (negative ? trimmed.slice(1) : trimmed).toUpperCase();
+    const value = arabicValue(numeral);
+    const written =
+      f.meaning === 'openformula' ||
+      numeral === '' ||
+      (value !== null && ROMAN_FORMS.some((form) => romanNumeral(value, form) === numeral));
+    if (value === null || !written) return err('#VALUE!', `"${t}" is not a Roman numeral`);
+    return negative ? -value : value;
   }),
 };

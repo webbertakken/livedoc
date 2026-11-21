@@ -29,7 +29,7 @@ function overData(each: (ns: number[], x: number) => Value): FnDef {
   });
 }
 
-// The values seen most often, at least twice, in the order they first appear.
+// The values seen most often, at least twice, in the order they first appear (MODE takes the first).
 function modes(ns: number[]): number[] {
   const counts = new Map<number, number>();
   let most = 1;
@@ -48,14 +48,15 @@ function modeFn(all: boolean): FnDef {
     if (isError(ns)) return ns;
     const found = modes(ns);
     if (found.length === 0) return err('#N/A', 'No value repeats');
-    return all ? { rows: found.map((n) => [n]) } : found[0]!;
+    // MODE.MULT lists them from the least, as Google does (measured).
+    return all ? { rows: ascending(found).map((n) => [n]) } : found[0]!;
   });
 }
 
-// The k-th largest or smallest: k rounds up for LARGE and down for SMALL, as LibreOffice's do.
+// The k-th largest or smallest, k truncated, as Google's (measured; OpenFormula asks for a whole k).
 function nth(largest: boolean): FnDef {
   return overData((ns, x) => {
-    const k = largest ? Math.ceil(x) : Math.floor(x);
+    const k = Math.trunc(x);
     if (k < 1 || k > ns.length) return OUT_OF_RANGE;
     const s = ascending(ns);
     return largest ? s[s.length - k]! : s[k - 1]!;

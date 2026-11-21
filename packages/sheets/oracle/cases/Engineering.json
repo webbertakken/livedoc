@@ -35,11 +35,17 @@
     },
     {
       "id": "BIN2DEC.8",
-      "f": "=BIN2DEC(Data!E1)"
+      "f": "=BIN2DEC(Data!E1)",
+      "differs": {
+        "libreoffice": "LibreOffice reads an empty cell as 0; Google refuses it, #VALUE!"
+      }
     },
     {
       "id": "BIN2DEC.9",
-      "f": "=BIN2DEC(Data!F1)"
+      "f": "=BIN2DEC(Data!F1)",
+      "differs": {
+        "libreoffice": "LibreOffice reads TRUE as 1; Google refuses a truth, #VALUE!"
+      }
     },
     {
       "id": "BIN2DEC.10",
@@ -60,11 +66,7 @@
     {
       "id": "BIN2HEX.4",
       "f": "=BIN2HEX(\"1111111111\", 12)",
-      "expect": [["FFFFFFFFFF"]],
-      "cite": "https://support.google.com/docs/answer/3093133 (significant_digits: \"This value is ignored if the most significant bit of signed_binary_number is 1\")",
-      "differs": {
-        "libreoffice": "LibreOffice refuses places past 10 even for a negative number, whose places are ignored"
-      }
+      "note": "Google refuses places past 10 even for a negative number, whose places are otherwise ignored."
     },
     {
       "id": "BIN2HEX.5",
@@ -224,7 +226,10 @@
     },
     {
       "id": "HEX2DEC.6",
-      "f": "=HEX2DEC(\"0xff\")"
+      "f": "=HEX2DEC(\"0xff\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a 0x before hexadecimal digits; Google reads it"
+      }
     },
     {
       "id": "HEX2DEC.7",
@@ -300,7 +305,10 @@
     },
     {
       "id": "BITAND.6",
-      "f": "=BITAND(1.5, 1)"
+      "f": "=BITAND(1.5, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice drops the fraction of a bitwise value; Google refuses it, #NUM! (OpenFormula leaves the conversion to the application)"
+      }
     },
     {
       "id": "BITAND.7",
@@ -340,15 +348,17 @@
     },
     {
       "id": "BITLSHIFT.5",
-      "f": "=BITLSHIFT(1, 48)"
+      "f": "=BITLSHIFT(1, 48)",
+      "differs": {
+        "libreoffice": "LibreOffice shifts past 2^48; Google refuses a result outside the bitwise range, #NUM!"
+      }
     },
     {
       "id": "BITLSHIFT.6",
       "f": "=BITLSHIFT(1, 54)",
       "differs": {
         "libreoffice": "LibreOffice shifts past 53 places (1.8E16); Google says the shift \"Must be a value between -53 and 53\", so LiveDoc refuses it, #NUM!"
-      },
-      "note": "Awaits Google's answer: which error a shift past 53 places is."
+      }
     },
     {
       "id": "BITLSHIFT.7",
@@ -356,7 +366,10 @@
     },
     {
       "id": "BITLSHIFT.8",
-      "f": "=BITLSHIFT(1.5, 1)"
+      "f": "=BITLSHIFT(1.5, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice drops the fraction of a bitwise value; Google refuses it, #NUM! (OpenFormula leaves the conversion to the application)"
+      }
     },
     {
       "id": "BITRSHIFT.1",
@@ -400,7 +413,10 @@
     },
     {
       "id": "DELTA.7",
-      "f": "=DELTA(2, 2.0000000000000004)"
+      "f": "=DELTA(2, 2.0000000000000004)",
+      "differs": {
+        "libreoffice": "LibreOffice compares every bit (0); Google compares to 15 significant digits (1)"
+      }
     },
     {
       "id": "GESTEP.1",
@@ -610,9 +626,8 @@
       "id": "IMSUM.4",
       "f": "=IMSUM(\"4+3i\", \"1+2j\")",
       "differs": {
-        "libreoffice": "LibreOffice adds an i number to a j number; Google says \"you can't\", so LiveDoc refuses it, #VALUE!"
-      },
-      "note": "Awaits Google's answer: which error mixed suffixes are."
+        "libreoffice": "LibreOffice adds an i number to a j number; Google refuses numbers of mixed suffixes, #NUM!"
+      }
     },
     {
       "id": "IMSUM.5",
@@ -634,9 +649,8 @@
       "id": "IMSUB.3",
       "f": "=IMSUB(\"1+i\", \"1j\")",
       "differs": {
-        "libreoffice": "LibreOffice subtracts a j number from an i number; Google refuses mixed suffixes (IMSUM, IMDIV), so LiveDoc does, #VALUE!"
-      },
-      "note": "Awaits Google's answer: which error mixed suffixes are."
+        "libreoffice": "LibreOffice subtracts a j number from an i number; Google refuses numbers of mixed suffixes, #NUM!"
+      }
     },
     {
       "id": "IMSUB.4",
@@ -654,9 +668,8 @@
       "id": "IMPRODUCT.3",
       "f": "=IMPRODUCT(\"1+i\", \"1+j\")",
       "differs": {
-        "libreoffice": "LibreOffice multiplies an i number by a j number; Google says \"you can't\", so LiveDoc refuses it, #VALUE!"
-      },
-      "note": "Awaits Google's answer: which error mixed suffixes are."
+        "libreoffice": "LibreOffice multiplies an i number by a j number; Google refuses numbers of mixed suffixes, #NUM!"
+      }
     },
     {
       "id": "IMPRODUCT.4",

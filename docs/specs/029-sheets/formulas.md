@@ -219,8 +219,10 @@ In order of precedence, highest first; same as Google Sheets:
   (`=A1:C3`) or a function giving an array (`=SEQUENCE(5)`) spills as it is.
 - In an array context, a function that reads some arguments whole still works cell by cell over a single-value
   argument given many values: `=ARRAYFORMULA(VLOOKUP(A2:A5, D:E, 2, FALSE))` looks up four keys. These lift so: the
-  criterion of `SUMIF`, `COUNTIF` and `AVERAGEIF`, the key of `VLOOKUP`, `HLOOKUP` and `MATCH`, and the k of
-  `LARGE` and `SMALL`. `SUMIFS` and `COUNTIFS` do not: they give one value (default, D67).
+  criterion of `SUMIF` and `COUNTIF`, the criteria of `COUNTIFS`, the key of `VLOOKUP`, `HLOOKUP` and `MATCH`, and
+  the k of `LARGE` and `SMALL`. `SUMIFS`, `AVERAGEIF` and `AVERAGEIFS` do not: they give one value, a criteria
+  range read at the formula's own row or column (none there: an empty criterion), an array criterion by its first
+  value (D67).
 - A Plan Sheet keeps working every formula in an array context (as it did before spreadsheets), so its values do not
   move; the migration wraps each of its spilling formulas in `ARRAYFORMULA` (default, D34).
 - A formula whose value is an array (`=ARRAYFORMULA(A1:A5*2)`, `=FILTER(…)`, `=SORT(…)`, `=SEQUENCE(5)`, `=CARDS(…)`) **spills**:
@@ -286,7 +288,8 @@ as Google Sheets does, and spills its table.
 - **Grouping**: `group by` gives a row for each distinct key, sorted by the keys unless `order by` says otherwise;
   every selected column is grouped or aggregated. `pivot` gives a column for each distinct value (in order) of its
   columns for each aggregate, labelled with the values (joined by `,`), then the aggregate and its column's label when
-  more than one aggregate is selected; without `group by`, one row.
+  more than one aggregate is selected; without `group by`, one row, and none when no row passes `where`, as Google
+  gives it (measured).
 - **Labels**: the first row of the result is the labels when `data` had header rows or an aggregate is selected:
   a column's header text, an aggregate's `sum Price` (its name and its column's label), a scalar function's
   `year(A)`; `label` sets one, and when every label is empty the row is left out.
@@ -352,41 +355,59 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - OpenFormula's `CHISQDIST(x, df, [cumulative])` is cumulative when left out and 0 at or below 0; `CHISQINV` takes a
   probability from 0 to below 1. `BINOM.DIST.RANGE(n, p, s, [s2])` adds the chances of s to s2 successes.
 - The A forms (`AVERAGEA`, `MAXA`, `MINA`, `STDEVA`, `STDEVPA`, `VARA`, `VARPA`) read text in a range as 0 and
-  `TRUE` and `FALSE` as 1 and 0, empty cells left out. Typed in, text that reads as a number is that number, other
-  text 0; `MAXA` refuses it (`#VALUE!`, Google's help).
-- Google's help gives the population forms (`VARP`, `VAR.P`, `STDEVP`, `STDEV.P`, `STDEVPA`) `#DIV/0!` for fewer
-  than two numbers, `VARPA` `#NUM!`; `DEVSQ` of fewer than two is 0.
-- `GEOMEAN` of numbers with a 0 is 0, with a negative `#NUM!`; `HARMEAN` takes only numbers above 0. `TRIMMEAN`
+  `TRUE` and `FALSE` as 1 and 0, empty cells left out. Typed in, text that reads as a number is that number; other
+  text is refused (`#VALUE!`), as Google gives it (measured), and 0 in OpenFormula's meaning (the file's meaning).
+- The population forms (`VARP`, `VAR.P`, `STDEVP`, `STDEV.P`, `STDEVPA`, `VARPA`) of one number are 0, and of none
+  `#DIV/0!`, as Google gives them (measured; its help says otherwise); `DEVSQ` of fewer than two is 0. `AVEDEV` of
+  no numbers is `#DIV/0!`.
+- `GEOMEAN` and `HARMEAN` take only numbers above 0 (else `#NUM!`), as Google gives them; in OpenFormula's meaning
+  `GEOMEAN` of numbers with a 0 is 0 (Part 4 §6.18.34). `TRIMMEAN`
   leaves out ⌊p·n / 2⌋ numbers at each end. `SKEW` needs three numbers, `SKEW.P` two and `KURT` four, else
   `#DIV/0!`, as when every number is the same.
 - `AVERAGE.WEIGHTED(values, weights, …)` takes ranges in pairs of one size (else `#VALUE!`), counting a value where
   it and its weight are numbers; a negative weight is `#NUM!`, no positive one `#DIV/0!` (default, D56).
 - The paired functions (`CORREL`, `PEARSON`, `RSQ`, `COVAR`, `COVARIANCE.P`, `COVARIANCE.S`, `SLOPE`,
   `INTERCEPT`, `STEYX`, `FORECAST`, `FORECAST.LINEAR`) read data_y and data_x pair by pair, keeping the pairs of
-  two numbers: ranges of two sizes are `#N/A`, no pair `#VALUE!`, and x values all alike `#DIV/0!`.
-  `COVARIANCE.S` needs two pairs (`#DIV/0!`), `STEYX` three (`#VALUE!`, as LibreOffice's).
-- `LARGE` rounds its rank up and `SMALL` down, as LibreOffice's; a rank outside the data is `#NUM!`. `MEDIAN`,
+  two numbers: ranges of two sizes are `#N/A`, and x values all alike `#DIV/0!`. No pair is `#DIV/0!` for `CORREL`,
+  `PEARSON` and the covariances, `#N/A` for the line's (`RSQ`, `SLOPE`, `INTERCEPT`, `STEYX`, `FORECAST`), as
+  Google gives them (measured). `COVARIANCE.S` of one pair is `#NUM!`; `STEYX` needs three pairs (`#DIV/0!`).
+- `LARGE` and `SMALL` truncate their rank, as Google (measured); a rank outside the data is `#NUM!`. `MEDIAN`,
   the percentiles and `TRIMMEAN` of no numbers are `#NUM!`.
 - `MODE` and `MODE.SNGL` give the most common number that comes first; `MODE.MULT` every most common number, a
-  column in the order they come. With no number repeated each is `#N/A`.
+  column from the least, as Google gives it (measured). With no number repeated each is `#N/A`.
 - `PERCENTILE.EXC` and `QUARTILE.EXC` place fraction k at k·(n + 1) among the numbers in order, `#NUM!` outside 1
   to n; quartile numbers are truncated (1 to 3 for `QUARTILE.EXC`, 0 to 4 for the others).
 - `PERCENTRANK`, `PERCENTRANK.INC` and `PERCENTRANK.EXC` interpolate between neighbours and round to
   significant_digits (3; fewer than 1 is 3, Google's help); a value outside the data is `#N/A` (default, D57).
-- `PROB`'s probabilities are each from 0 to 1 and add up to 1 (to 1e-7), else `#VALUE!`; limits given high to low
-  are swapped. `PERMUTATIONA(n, k)` is `#NUM!` for n of 0 or k above n, as Google's help says.
+- `PROB`'s probabilities add up to 1 (to 1e-7), else `#VALUE!`; Google checks no single one, nor swaps limits given
+  high to low, which hold no value (measured). `PERMUTATIONA(n, k)` needs n and k from 1, else `#NUM!`, k past n
+  allowed (measured); both standards take n and k from 0 (the file's meaning).
 - The distributions truncate degrees of freedom and counts to whole numbers; degrees of freedom run from 1 to 10^10.
-  A probability an inverse takes lies strictly between 0 and 1, as Google's help asks (`BETA.INV`, `GAMMA.INV` and
-  `BINOM.INV` take 0, `BETA.INV` 1); any other refusal of a parameter is `#NUM!`.
-- Left out, cumulative is FALSE for `BINOM.DIST`, `BINOMDIST`, `F.DIST`, `NEGBINOM.DIST`, `NEGBINOMDIST`,
-  `HYPGEOM.DIST` and `HYPGEOMDIST`, and TRUE for `NORM.S.DIST`, `NORMSDIST`, `LOGNORM.DIST`, `LOGNORMDIST`,
-  `POISSON` and `POISSON.DIST` (Google's help and function list; OpenFormula's where Google is silent).
-- `BETA.DIST` is Excel's, cumulative fourth and x within the bounds; `BETADIST` is OpenFormula's, cumulative last,
-  0 below the bounds and 1 above. `GAMMA` takes only numbers above 0; `GAMMA.DIST` and `CHISQ.DIST` refuse a
-  density at 0 where the shape is at most 1 (Google's help). `EXPON.DIST` and `LOGNORM.DIST` are 0 below their
-  support; `CHIDIST`, `F.DIST`, `T.DIST.2T`, `TDIST` and `WEIBULL` refuse a negative x.
+  An inverse over the whole line (`NORM.INV`, `T.INV`) takes a probability strictly between 0 and 1; one over
+  [0, ∞) also takes the end whose answer is 0 (`CHISQ.INV(0, …)`, `F.INV(0, …)`, `GAMMA.INV(0, …)` and the upper
+  tails' `CHIINV(1, …)`, `CHISQ.INV.RT`, `F.INV.RT`, `FINV`, `T.INV.2T`, `TINV`), as Google gives them
+  (measured). `BETA.INV` takes above 0 to 1, `BINOM.INV` and `CRITBINOM` a probability and alpha strictly
+  between 0 and 1, as Google and Excel; OpenFormula's `BETAINV` and `CRITBINOM` take 0 and 1 (the file's meaning).
+  Any other refusal of a parameter is `#NUM!`.
+- The arities are Excel's, as Google's: `BINOM.DIST`, `BINOMDIST` and `POISSON.DIST` need cumulative,
+  `NEGBINOMDIST` and `NORMSDIST` take none (more is `#N/A`). Left out, cumulative is FALSE for `NEGBINOM.DIST` and
+  `HYPGEOM.DIST`, and TRUE for `NORM.S.DIST` and `LOGNORM.DIST`. OpenFormula's longer forms Google refuses hold
+  (D38): `F.DIST`, `POISSON` and `LOGNORMDIST` cumulative when left out (`FDIST`'s TRUE), `HYPGEOMDIST` and
+  `LOGNORMDIST` with a cumulative, `BETADIST` with its sixth.
+- `HYPGEOMDIST`'s mass is Google's COMBIN(K, k) COMBIN(N - K, n - k) / COMBIN(N, n), each COMBIN truncating its own
+  arguments (`HYPGEOMDIST(4.9, 12, 20, 40)` is 0.0672, measured); Excel truncates every argument first (0.1092, the
+  file's meaning), which `HYPGEOM.DIST` follows in an ODF file too.
+- `BETA.DIST` is Excel's, cumulative fourth and x within the bounds; `BETADIST` is OpenFormula's, cumulative last.
+  Outside the bounds Google refuses x; OpenFormula's `BETADIST` is 0 below and 1 above (the file's meaning).
+  `GAMMA` takes only numbers above 0; `GAMMA.DIST` refuses a density at 0 where the shape is at most 1 (Google's
+  help); `CHISQ.DIST`'s density at 0 is 0, but `#NUM!` for 2 degrees of freedom (measured). `EXPON.DIST`,
+  `EXPONDIST`, `LOGNORM.DIST` and `LOGNORMDIST` refuse x below their support, as Google; OpenFormula's
+  `EXPONDIST` and `LOGNORMDIST` are 0 there (the file's meaning). `CHIDIST`, `F.DIST`, `T.DIST.2T`, `TDIST` and
+  `WEIBULL` refuse a negative x. `POISSON` of a mean of 0 puts everything at 0 (measured).
 - `T.TEST` pairs cells for type 1 (sizes must match, `#N/A`); types 2 and 3 take each range's numbers. `F.TEST`
-  needs two numbers with some spread in each range (`#VALUE!`, as LibreOffice's). `CHISQ.TEST` has
+  needs two numbers with some spread in each range (`#DIV/0!`, as Google's). `Z.TEST` takes a given deviation as
+  it is: 0 leaves the mean infinitely far, 0 or 1, and at the mean itself `#NUM!`; its own needs two numbers
+  (`#DIV/0!`). `CONFIDENCE.T` of a size of 1 is `#NUM!`, and `STANDARDIZE` needs a deviation above 0 (measured). `CHISQ.TEST` has
   (rows - 1)(columns - 1) degrees of freedom, or one fewer than the count for a single row or column.
 - `MARGINOFERROR(range, confidence)` is `CONFIDENCE.T(1 - confidence, STDEV(range), COUNT(range))` (Google's help).
 
@@ -395,9 +416,11 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 
 - The database's first row names its fields, each further row is a record. `field` is a label, case ignored, or a
   column's number, rounded toward zero; any other is `#VALUE!`.
-- The criteria's first row names fields (a name not in the database is `#VALUE!`); each further row is a filter. A
-  filter holds when each of its non-empty cells holds for the record, read as `COUNTIF`'s criteria (a value matches
-  whole text, case ignored); a record passes when any filter holds. No filter, or an empty one, passes every record.
+- The criteria's first row names fields (a name not in the database matches no record, 0); each further row is a
+  filter, and criteria with none are `#VALUE!`. A filter holds when each of its non-empty cells holds for the record,
+  read as `COUNTIF`'s criteria, but text matches every value it begins (`"Apple"` matches `Apple pie`), case
+  ignored, as Google and Excel read it (measured); a record passes when any filter holds. An empty filter passes
+  every record.
 - The aggregates read the numbers of the field (text, booleans and empty cells left out). With none, `DSUM`, `DMAX`,
   `DMIN` and `DPRODUCT` are 0, `DAVERAGE` is `#DIV/0!`; `DSTDEV` and `DVAR` need two numbers, `DSTDEVP` and
   `DVARP` one, else `#DIV/0!`, as their plain namesakes.
@@ -423,9 +446,9 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `CELL(info_type, [reference])` tells of the top-left cell of the reference, or of its own cell when there is none
   (OpenFormula's, D38): Google's `"address"`, `"col"`, `"color"`, `"contents"`, `"prefix"`, `"row"`, `"sheet"`
   (the sheet's name), `"type"` and `"width"`, and OpenFormula's `"format"`, `"parentheses"`, `"filename"` and
-  `"protect"`. Any other is `#VALUE!`; a reference that is no reference is `#REF!`.
+  `"protect"`. Any other is `#VALUE!`; a reference that is no reference is `#N/A`, as Google gives it.
   - `"width"` counts characters as an XLSX file does (ECMA-376 Part 1, 18.3.1.13): the column's pixels past 5 of
-    padding, over a 7-pixel digit, whole characters only (default, D40).
+    padding, over a 7-pixel digit, to the nearest whole character, as Google gives it (D40, measured).
   - `"format"` names a format by OpenFormula's codes (`G`, `F2`, `,2`, `C2`, `P2`, `S2`, `D1` to `D9`, then
     `-` and `()`). LiveDoc's own: Automatic `G` (`F` and its decimals when set), Number `,`, Currency and
     Accounting `C`, Percent `P`, Scientific `S`, Date and Date Time `D4`, Time and Duration `D8`; a Custom
@@ -483,11 +506,15 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   backslash makes the next character plain (`\$1`, `\\`). A `$` naming no group is `#N/A` once the pattern
   matches; a group that took no part is empty text; a backslash ending the replacement stays (default, D70).
 - The byte functions (`LENB`, `LEFTB`, `RIGHTB`, `MIDB`, `REPLACEB`, `FINDB`, `SEARCHB`) count an East Asian wide or
-  full-width character (CJK, kana, Hangul, the full-width forms) as 2 bytes and any other as 1, half-width katakana
-  too (default, D43). As Google's examples have it, a starting position counts characters, and a character a window
+  full-width character (CJK, kana, Hangul, the full-width forms) and half-width katakana as 2 bytes, any other as 1
+  (D43). As Google's examples have it, a starting position counts characters, and a character a window
   of bytes starts or reaches is kept whole (`MIDB("熊本=熊本", 2, 4)` is `本=熊`).
+- `LEN` counts UTF-16 units as Google does (an emoji is 2), and characters in OpenFormula's meaning (the file's
+  meaning). `LEFT`, `MID`, `RIGHT` and `REPLACE` count characters in every meaning and never split one, where
+  Google may cut an emoji in two (default, D102).
 - `ASC` turns full-width ASCII and katakana half-width, a voiced kana into the kana and its mark (`ガ` to `ｶﾞ`).
-- `UNICHAR` of a number with no character (0, a surrogate half, an unassigned code point) is `#VALUE!`.
+- `UNICHAR` of a number with no character (0, a surrogate half, an unassigned code point) is `#VALUE!`: Google gives a
+  lone surrogate half for 55296, which no LiveDoc text holds.
 - `DOLLAR` and `FIXED` write in the spreadsheet's locale, rounded half away from zero, left of the point for a
   negative number of places; `DOLLAR` in the locale's currency, US dollars where the locale names no region LiveDoc
   knows (default, D44). Past 127 places is `#VALUE!`, Excel's limit.
@@ -501,8 +528,8 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `EASTERSUNDAY(year)` is Gregorian Easter as a date; a two-digit year is 2000 to 2029 or 1930 to 1999, and only
   1583 to 9956 are reckoned (else `#NUM!`).
 - `NETWORKDAYS.INTL` and `WORKDAY.INTL` take a weekend as a number (1 Saturday and Sunday ... 7 Friday and Saturday,
-  11 Sunday alone ... 17 Saturday alone) or seven 0s and 1s from Monday, 1 a day off (`"0000011"`); seven 1s is
-  `#VALUE!`.
+  11 Sunday alone ... 17 Saturday alone) or seven 0s and 1s from Monday, 1 a day off (`"0000011"`); seven 1s, or
+  any other text, is `#NUM!`, as Google's.
 - `EPOCHTODATE(timestamp, [unit])` reads a Unix time in UTC, in seconds (1), milliseconds (2) or microseconds (3),
   fractions of a millisecond dropped; a negative timestamp is `#NUM!`.
 
@@ -521,26 +548,28 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   (D38): that value is what it gives when nothing passes, where it would be `#N/A`.
 - An empty cell an array function hands on stays empty in its result, and `TRUE` stays a boolean.
 - `CHOOSECOLS` and `CHOOSEROWS` count a negative number from the end; an array of numbers picks each, text that
-  reads as a number is that number, and 0 or a number past the array is `#VALUE!`.
+  is `#VALUE!` (Google's), and 0 or a number past the array is `#VALUE!`.
 - `HSTACK` and `VSTACK` pad an array shorter than the tallest (or narrower than the widest) with `#N/A`.
 - `TOCOL` and `TOROW` read row by row, or column by column with `scan_by_column`; `ignore` 1 leaves out
-  empty cells, 2 errors, 3 both, any other but 0 is `#VALUE!`; nothing left is `#N/A`; one value is an array of one.
+  empty cells, 2 errors, 3 both, any other but 0 is `#VALUE!`; nothing left is `#REF!`, as Google's; one value is an
+  array of one.
 - `WRAPROWS` and `WRAPCOLS` wrap one row or column (a table is `#VALUE!`) by `wrap_count` rounded down (under 1
   is `#NUM!`), the last line padded with `pad_with`, `#N/A` by default.
 - `FLATTEN` puts every value of its arguments in one column, by argument, then row, then column; empties are kept.
 - `FREQUENCY` counts the numbers of `data` (text and booleans left out) into its classes, in the classes' order:
   each counts the values above the next smaller class up to itself, a repeated class at its first place only, and a
-  last row counts the values above every class. Classes with no number count every value in one row (default, D46).
+  last row counts the values above every class; `TRUE` counts as 1, as Google and LibreOffice count it. Classes with no
+  number count every value in one row (default, D46).
 - `MMULT`, `MDETERM` and `MINVERSE` take only numbers (anything else is `#VALUE!`, an error its own);
   `MDETERM` and `MINVERSE` a square, and a singular matrix has no inverse, `#NUM!`.
-- `SUMX2MY2`, `SUMX2PY2` and `SUMXMY2` take two arrays of as many values (else `#VALUE!`) and leave out a pair
-  that is not two numbers.
+- `SUMX2MY2`, `SUMX2PY2` and `SUMXMY2` take two arrays of as many values (else `#N/A`, as Google's) and leave out
+  a pair that is not two numbers.
 - `LINEST`, `LOGEST`, `TREND` and `GROWTH` fit least squares: y down a column takes each column of x as a
   variable, y along a row each row, a table of y one x of its shape (x is 1, 2, 3, ... by default; any other shape
   is `#REF!`). `LOGEST` and `GROWTH` fit ln y, so a y of 0 or below is `#NUM!`. Collinear x values have no single
-  fit, `#NUM!` (default, D47). `LINEST` and `LOGEST` give the slopes last variable first, then b; verbose adds
-  Excel's four rows of statistics, `#N/A` where there is none. An exact fit's errors are 0 and its F `#N/A`
-  (default, D48). `TREND` and `GROWTH` answer in the shape of the new x values for one variable, a value per row
+  fit, `#N/A` (D47). `LINEST` and `LOGEST` give the slopes last variable first, then b; verbose adds
+  Excel's four rows of statistics, `#N/A` where there is none. An exact fit's errors are 0 and its F `#NUM!`
+  (D48). `TREND` and `GROWTH` answer in the shape of the new x values for one variable, a value per row
   (y down a column) or per column (y along a row) for several.
 
 **Finance**: `PMT`, `FV`, `PV`, `NPV`, `IRR`, `RATE`, `NPER`, `IPMT`, `PPMT`, `CUMIPMT`, `CUMPRINC`, `ISPMT`,
@@ -554,18 +583,37 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   its fraction dropped; a coupon frequency is 1, 2 or 4. Any other, or settlement not before maturity, is `#NUM!`.
 - Coupon dates count back from maturity in steps of 12 / frequency months; a maturity on a month's last day puts
   every coupon on a month's last day. `COUPPCD` and `COUPNCD` give a date (default, D54).
-- `PRICE`, `YIELD`, `DURATION`, `DISC`, `YIELDDISC`, `PRICEMAT` and `YIELDMAT` count years as `YEARFRAC`;
-  `ACCRINT`, `ACCRINTM`, `INTRATE`, `RECEIVED` and `PRICEDISC` count the days by the convention over the first
-  year's length, as LibreOffice does. `ACCRINT` takes OOXML's eighth argument, calc_method (D38), and accrues from
-  issue either way; `ACCRINTM`'s redemption is 1000 when left out.
-- `CUMIPMT` reads fractional periods inward (2.1 to 4.9 is periods 3 and 4), as Google documents; `CUMPRINC` too
-  (default, D52). `AMORLINC` reads a period between 0 and 1 as 1 and drops a larger one's fraction (Google's help).
+- `PRICE`, `YIELD` and `DURATION` count years as `YEARFRAC`. The securities (`ACCRINTM`, `INTRATE`, `RECEIVED`,
+  `PRICEDISC`, `DISC`, `YIELDDISC`, `PRICEMAT`, `YIELDMAT`) count as Google (measured): basis 0 by `DAYS360`'s US
+  method, an end on February's last day also the 30th after a start on one; basis 1 split by calendar year, each
+  year's days over its own length; basis 4 by `DAYS360`'s European method. In OpenFormula's meaning they count as
+  `YEARFRAC` (Part 4 §4.11.7; the file's meaning).
+- `ACCRINT` accrues from issue: up to the first interest date by the securities' count, Actual/Actual over the coupon
+  period that date ends; past it, bases 0 and 4 by `DAYS360`'s European method (measured), the others by the
+  securities' count, as Google's there follows no day count found (default, D103). OpenFormula sums `YEARFRAC` over
+  the periods (Part 4 §6.12.2; the file's meaning). It takes OOXML's eighth argument, calc_method (D38), and accrues
+  from issue either way; `ACCRINTM`'s redemption is 1000 when left out.
+- `COUPDAYBS` counts US 30/360 by `DAYS360` (from 28 February, the 30th, to that day is -2), and `COUPDAYSNC` there
+  is the period's days less those before settlement; European days are counted directly (measured). OpenFormula counts
+  both by its procedure A (Part 4 §4.11.7.3; the file's meaning).
+- `CUMIPMT` reads fractional periods inward (2.1 to 4.9 is periods 3 and 4), as Google documents; `CUMPRINC` counts
+  from the first as it is in steps of one to the last step before last + 1 (2.1, 3.1, 4.1 and 5.1), as Google gives
+  it (measured); OOXML truncates both (the file's meaning). Any type but 0 is payments at the beginning.
+- `DB` takes a salvage above the cost (a negative rate) and refuses a period past the life, as Google; both standards
+  take the part year after it when the first year is short (the file's meaning). `DDB` takes the period a fraction
+  falls in (2.5 is the third) and writes nothing off when the salvage passes the cost; with a rate of 1 or more Google
+  keeps the rate (`DDB(2400, 300, 2, 2, 3)` is -1800), where both standards write the value off in the first period
+  (the file's meaning). From a fraction of a period, `VDB` steps whole periods from it unless told not to switch
+  (measured); OpenFormula takes the fraction off the whole periods around it (the file's meaning).
+- `EFFECT` needs a nominal rate above 0 and `FVSCHEDULE` a number for every rate (`#VALUE!`), as Google and Excel;
+  OpenFormula takes a rate of 0 and skips text (the file's meaning). `ISPMT` and `RRI` of no periods are `#DIV/0!`. `AMORLINC` reads a period between 0 and 1 as 1 and drops a larger one's fraction (Google's help).
 - The treasury bills count Actual/360 days, as Google's help makes `TBILLPRICE` `PRICEDISC` and `TBILLYIELD`
   `YIELDDISC` with those conventions; `TBILLEQ` too (default, D53). A bill maturing past a year is `#NUM!`.
-- `DOLLARDE` and `DOLLARFR` write the fraction in at least two decimal places, as Google's help reads 100.01 in
-  eighths as 100 1/8; in wholes (unit 1) it is the decimal itself (default, D51).
-- `MIRR`, `IRR` and `FVSCHEDULE` skip text and empty cells; `XNPV` and `XIRR` take as many amounts as dates,
-  at least two, every one a number, else `#NUM!` or `#VALUE!` (default, D55).
+- `DOLLARDE` and `DOLLARFR` write the fraction in as many decimal places as the unit has digits (100.01 in eighths is
+  100 1/80), as Google gives it (measured) and OpenFormula says; in wholes (unit 1) it is the decimal itself (default,
+  D51).
+- `MIRR` and `IRR` skip text and empty cells; `XNPV` and `XIRR` take as many amounts as dates, every one a number,
+  else `#NUM!` or `#VALUE!` (default, D55); `XIRR` needs two, `XNPV` gives a single amount as it is.
 - `ODDFPRICE`, `ODDFYIELD`, `ODDLPRICE` and `ODDLYIELD` (OpenFormula's, which leaves their sums open) sum an odd
   period over its quasi-coupon periods as ECMA-376 and Excel do; LibreOffice leaves the first two unbuilt and counts
   an odd last period as one span (default, D59). Rate, price and redemption are positive and yield not negative, the
@@ -592,12 +640,13 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   `BESSELY` and `BESSELK` need x above 0. They are worked out to about 15 digits (LibreOffice's `BESSELK` to 8).
 - `BIN2DEC`, `DEC2HEX` and the other conversions read and write signed numbers of at most ten digits: 10 bits in
   binary, 30 in octal, 40 in hexadecimal, the top bit the sign, so a negative number is ten digits of two's complement
-  (`DEC2BIN(-1)` is `1111111111`). A number given is read by its digits (`BIN2DEC(101)` is 5), TRUE as 1, empty as 0;
-  a decimal's fraction is dropped. More than ten digits, a digit outside the radix, or a number that does not fit is
+  (`DEC2BIN(-1)` is `1111111111`). A number given is read by its digits (`BIN2DEC(101)` is 5); TRUE or an empty
+  value is `#VALUE!`, and `HEX2DEC` reads a leading `0x`, as Google's (measured); a decimal's fraction is dropped. More than ten digits, a digit outside the radix, or a number that does not fit is
   `#NUM!`. `significant_digits` pads with zeros, is rounded toward zero, is `#NUM!` below 0, past 10 or too few for
   the digits, and is ignored for a negative number.
-- `BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT` and `BITRSHIFT` take whole numbers from 0 to 2^48 - 1, a fraction
-  dropped (anything else is `#NUM!`); a shift is at most 53 places either way, a negative one shifting the other way.
+- `BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT` and `BITRSHIFT` take whole numbers from 0 to 2^48 - 1 (a fraction or
+  anything else is `#NUM!`, as Google's), and so is a shifted value; a shift is at most 53 places either way, a
+  negative one shifting the other way.
 - `DELTA` is 1 when two numbers are exactly equal, `GESTEP` when the value is at least the step; each compares with 0
   by default. `ERF` and `ERF.PRECISE` integrate from 0 to one bound, or between two.
 - `COMPLEX(real, imaginary, [suffix])` writes a complex number as `IMLN` does; the suffix is `"i"` (by default) or
@@ -673,6 +722,9 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   refuses but OpenFormula or OOXML defines (more arguments, a range where Google takes one value) follows that
   standard, in every document. So a file's formula keeps its meaning (C1) and nothing Google accepts changes. `CONCAT`
   is the first: Google's joins two values, the standards' any number, ranges whole; LiveDoc's is the standards'.
+  Measured so: `TREND` without known x, `DCOUNT` and `DCOUNTA` without a field, `CEILING` and `FLOOR` with a mode,
+  `SORT`'s by_col, `CELL`'s OpenFormula types, `SHEETS` of a reference, `CONVERT`'s `m/hr`, `F.DIST` and `POISSON`
+  without a cumulative, `HYPGEOMDIST` and `LOGNORMDIST` with one, `BETADIST` with its sixth argument.
 - **The file's meaning** (Webber, 2026-11-21): a formula Google and the file's own standard both accept but answer
   differently keeps the meaning of the standard of the format the spreadsheet arrived in: OOXML's for one opened from
   `.xlsx`, OpenFormula's for one opened from `.ods` or `.fods`. A spreadsheet made in LiveDoc follows Google's (S6).
@@ -692,107 +744,101 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 - **Both accept, answered differently**: the answer in each meaning, each case the oracle's (`oracle/cases/`). "Google's"
   is Google's answer; LibreOffice's answers OpenFormula's where the standard and it agree (measured).
 
-  | Formula                                            | Google                            | `.xlsx` (OOXML)                 | `.ods` (OpenFormula)                  | Case                            |
-  | -------------------------------------------------- | --------------------------------- | ------------------------------- | ------------------------------------- | ------------------------------- |
-  | `CELL("sheet", A1)`                                | the sheet's name                  | Google's (Excel has no "sheet") | its number (§6.13.3)                  | Info CELL.9                     |
-  | `SORT(range, 1, -1)`                               | -1 is TRUE: ascending             | descending (sort_order)         | descending (`COM.MICROSOFT.SORT`)     | Filter SORT.8                   |
-  | `ADDRESS(2, 3, 1, TRUE, "Data")`                   | `Data!$C$2`                       | Google's                        | `Data.$C$2` (§6.14.2)                 | Lookup ADDRESS.7                |
-  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`             | -3, -2: away from and toward zero | Google's                        | -2, -3: toward +∞ and −∞ (§6.17.1)    | Math CEILING.4, FLOOR.4         |
-  | `DOLLARDE(100.01, 8)`                              | 100.125: 100 1/8                  | Google's                        | 100.0125: 100 1/80 (§6.12.16)         | Financial DOLLARDE.1            |
-  | `DOLLARFR(100.125, 8)`                             | 100.01                            | Google's                        | 100.1 (§6.12.17)                      | Financial DOLLARFR.1            |
-  | `CUMIPMT(r, n, pv, 2.1, 4.9, 0)`, `CUMPRINC`       | periods 3 and 4                   | periods 2 to 4: truncated       | Google's (no rounding named)          | Financial CUMIPMT.4, CUMPRINC.4 |
-  | `STDEVP(5)`, `VARP`, `STDEV.P`, `VAR.P`, `STDEVPA` | `#DIV/0!`: fewer than two numbers | 0                               | 0 (§6.18.74: COUNT ≥ 1)               | Statistical STDEVP.3            |
-  | `VARPA(5)`                                         | `#NUM!`                           | 0                               | 0 (§6.18.85)                          | Statistical VARPA.3             |
-  | `DEVSQ(A1:A2)` over text                           | 0                                 | Google's                        | `#DIV/0!`: AVERAGE of none (§6.18.20) | Statistical DEVSQ.4             |
-  | `MAXA(1, "x")`                                     | `#VALUE!`                         | Google's                        | 1: the text as 0 (§6.18.46)           | Statistical MAXA.4              |
-  | `PERCENTRANK(data, 8, 0)`                          | 0.286: 0 digits read as 3         | `#NUM!`: significance < 1       | `#NUM!` (§6.18.58)                    | Statistical PERCENTRANK.8       |
-  | `PERMUTATIONA(0, 2)`, `PERMUTATIONA(3, 4)`         | `#NUM!`                           | 0, 81                           | 0, 81 (§6.18.60)                      | Statistical PERMUTATIONA.3, .4  |
-  | `F.DIST(15.35, 7, 6)`, cumulative left out         | the density: FALSE by default     | Google's (Excel needs it)       | the cumulative: `FDIST`'s TRUE        | Statistical F.DIST.6            |
+  | Formula                                                                  | Google                                          | `.xlsx` (OOXML)                               | `.ods` (OpenFormula)                       | Case                                      |
+  | ------------------------------------------------------------------------ | ----------------------------------------------- | --------------------------------------------- | ------------------------------------------ | ----------------------------------------- |
+  | `CELL("sheet", A1)`                                                      | the sheet's name                                | Google's (Excel has no "sheet")               | its number (§6.13.3)                       | Info CELL.9                               |
+  | `SORT(range, 1, -1)`                                                     | -1 is TRUE: ascending                           | descending (sort_order)                       | descending (`COM.MICROSOFT.SORT`)          | Filter SORT.8                             |
+  | `ADDRESS(2, 3, 1, TRUE, "Data")`                                         | `Data!$C$2`                                     | Google's                                      | `Data.$C$2` (§6.14.2)                      | Lookup ADDRESS.7                          |
+  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`                                   | -3, -2: away from and toward zero               | Google's                                      | -2, -3: toward +∞ and −∞ (§6.17.1)         | Math CEILING.4, FLOOR.4                   |
+  | `DECIMAL("0x1F", 16)`                                                    | `#NUM!`                                         | Google's                                      | 31: a leading `0x` read (§6.19.9)          | Math DECIMAL.7                            |
+  | `2^3^2`                                                                  | 512: from the right                             | 64: from the left                             | 64: from the left (§6.4.2)                 | Syntax precedence.2                       |
+  | `CONCAT(A1:B1, "x")`                                                     | the range's first value                         | every value of the range                      | every value (`COM.MICROSOFT.CONCAT`)       | Operator CONCAT.5                         |
+  | `FILTER(range, test, "none")`                                            | a second condition: `#N/A`                      | if_empty: `"none"` when none passes           | if_empty (`COM.MICROSOFT.FILTER`)          | Filter FILTER.6, .7                       |
+  | `SUMPRODUCT(A10:F10, A1:F1)` over `TRUE`, `"5"`                          | 88: TRUE 1, "5" 5                               | 71: non-numbers 0                             | Google's (§6.16.64 silent)                 | Array SUMPRODUCT.6                        |
+  | `YEARFRAC(DATE(2024,1,1), DATE(2025,6,30), 1)`                           | 1.49315: whole years and the rest               | Google's (the basis named, not its procedure) | 1.49384: procedure E (§4.11.7.7)           | Date YEARFRAC.7                           |
+  | `LEN("😀")`                                                              | 2: UTF-16 units                                 | Google's                                      | 1: characters (§6.20.12)                   | Text LEN.5                                |
+  | `ARABIC("IIII")`                                                         | `#VALUE!`                                       | Google's                                      | 4 (§6.20.2)                                | Text ARABIC.5                             |
+  | `ROMAN(0)`                                                               | `#VALUE!`                                       | Google's                                      | empty text (§6.20.19)                      | Text ROMAN.7                              |
+  | `CONVERT(1, "ly", "m")`                                                  | 9.46073E15: rounded                             | Google's                                      | 9460730472580800: the IAU light year       | Parser CONVERT.34                         |
+  | `CUMIPMT(r, n, pv, 2.1, 4.9, 0)`                                         | periods 3 and 4                                 | periods 2 to 4: truncated                     | Google's (no rounding named)               | Financial CUMIPMT.4                       |
+  | `CUMPRINC(r, n, pv, 2.1, 4.9, 0)`                                        | 2.1, 3.1, 4.1 and 5.1                           | periods 2 to 4: truncated                     | Google's (no rounding named)               | Financial CUMPRINC.4                      |
+  | `ACCRINT(…, DATE(2012,12,31), 0.05, 100, 4)`, basis 0                    | 14.986: 30/360 European past the first interest | Google's                                      | 15: YEARFRAC over the periods (§6.12.2)    | Financial ACCRINT.1, .3                   |
+  | `PRICEMAT`, `INTRATE` and the securities, basis 1 across a new year      | each year's days over its length                | Google's                                      | YEARFRAC's procedure E (§4.11.7.7)         | Financial PRICEMAT.2, INTRATE.6           |
+  | `COUPDAYBS(DATE(2011,2,28), …, 2, 0)`, `COUPDAYSNC`                      | -2, 182: DAYS360 from the 30th                  | Google's                                      | 0, 181: procedure A (§4.11.7.3)            | Financial COUPDAYBS.20, COUPDAYSNC.20     |
+  | `DB(1000000, 100000, 6, 7, 7)`                                           | `#NUM!`: past the life                          | the short first year's rest                   | the rest (§6.12.13)                        | Financial DB.4, .11                       |
+  | `DDB(2400, 300, 2, 2, 3)`                                                | -1800: the rate kept above 1                    | 0: written off in period 1                    | 0 (§6.12.14)                               | Financial DDB.11                          |
+  | `VDB(2400, 300, 10, 1.5, 4.25)`                                          | 787.968: whole steps from 1.5                   | Google's                                      | 794.112: the fraction taken off (§6.12.50) | Financial VDB.9                           |
+  | `EFFECT(0, 4)`                                                           | `#NUM!`                                         | Google's                                      | 0 (§6.12.19: rate ≥ 0)                     | Financial EFFECT.4                        |
+  | `FVSCHEDULE(1000, rates)`, a rate text                                   | `#VALUE!`                                       | Google's                                      | the text skipped (§6.12.21)                | Financial FVSCHEDULE.3                    |
+  | `DEVSQ(A1:A2)` over text                                                 | 0                                               | Google's                                      | `#DIV/0!`: AVERAGE of none (§6.18.20)      | Statistical DEVSQ.4                       |
+  | `MAXA(1, "x")`, `AVERAGEA`, `MINA`, `STDEVA`, `STDEVPA`, `VARA`, `VARPA` | `#VALUE!`                                       | Google's                                      | the text as 0 (§6.18.4, §6.18.46)          | Statistical MAXA.4, AVERAGEA.4            |
+  | `PERCENTRANK(data, 8, 0)`                                                | 0.286: 0 digits read as 3                       | `#NUM!`: significance < 1                     | `#NUM!` (§6.18.58)                         | Statistical PERCENTRANK.8                 |
+  | `PERMUTATIONA(0, 2)`, `PERMUTATIONA(3, 0)`                               | `#NUM!`                                         | 0, 1                                          | 0, 1 (§6.18.60)                            | Statistical PERMUTATIONA.3, .6            |
+  | `GEOMEAN(2, 0)`                                                          | `#NUM!`                                         | Google's                                      | 0 (§6.18.34)                               | Statistical GEOMEAN.3                     |
+  | `BETAINV(0, 3, 2)`, `BETADIST(2, 3, 8)`                                  | `#NUM!`                                         | Google's                                      | 0, 1 (§6.18.8, §6.18.7)                    | Statistical BETAINV.4, BETADIST.6         |
+  | `CRITBINOM(10, 0.5, 0)`, alpha 1, probability 0                          | `#NUM!`                                         | Google's                                      | 0, 10, 0 (§6.18.19)                        | Statistical CRITBINOM.3, .4, .7           |
+  | `EXPONDIST(-1, 0.5, TRUE)`, `LOGNORMDIST(0, 4, 6)`                       | `#NUM!`                                         | Google's                                      | 0 (§6.18.21, §6.18.44)                     | Statistical EXPONDIST.3, LOGNORMDIST.4    |
+  | `HYPGEOMDIST(4.9, 12, 20, 40)`, `HYPGEOM.DIST`                           | 0.0672: each COMBIN truncates                   | 0.1092: every argument truncated              | Google's; `HYPGEOM.DIST` Excel's           | Statistical HYPGEOMDIST.6, HYPGEOM.DIST.6 |
 
   OpenFormula's sections are Part 4 of ODF 1.3; Excel's answers are Microsoft's help pages, each cited in its case.
 
 - **Google's in every meaning**: where LibreOffice answers otherwise but neither standard says so, Google's stands.
 
-  | Formula                               | Google                       | LibreOffice                          | Why Google's stands                      | Case                      |
-  | ------------------------------------- | ---------------------------- | ------------------------------------ | ---------------------------------------- | ------------------------- |
-  | `TIME(1.9, 0, 0)`                     | 1:00, the hour truncated     | 1:54, the fraction kept              | "Evaluators may first perform INT()"     | Date TIME.4               |
-  | `FORMULATEXT(B1)`                     | the formula as Google writes | in LibreOffice's syntax (`$Data.A1`) | the text's syntax is the application's   | Lookup FORMULATEXT.1      |
-  | `CODE("熊")`                          | Unicode: 29066               | an 8-bit code page: 231              | past 127 implementation-defined          | Text CODE.3               |
-  | `MIDB("熊本=熊本", 2, 4)`, `REPLACEB` | start in characters          | start in bytes, half a space         | the bytes' character set is not named    | Text MIDB.2, REPLACEB.2   |
-  | `IMLN("4+2j")`                        | `…i`: i always               | `…j`: the input's unit               | COMPLEX's default unit, i                | Math IMLN.2               |
-  | `IMPOWER("5+2i", 3)`                  | `65+142i`                    | `64.9999999999999+142i`              | rounding, not meaning                    | Math IMPOWER.1            |
-  | `UNICHAR(0)`, `UNICHAR(55296)`        | `#VALUE!`                    | empty text                           | no text holds U+0000 or a lone surrogate | Text UNICHAR.3, .4        |
-  | `AMORLINC(…, 0.5, …)`                 | period 0.5 is period 1       | period 0                             | no rounding named                        | Financial AMORLINC.8      |
-  | `TBILLYIELD(DATE(2008,1,1), …, 99)`   | 0.0404: Actual/360           | 0.03996: 30/360 plus one             | OpenFormula gives no formula             | Financial TBILLYIELD.2    |
-  | `PERCENTRANK(data, 30)`, past data    | `#N/A`                       | `#VALUE!`                            | an error in both; its code not named     | Statistical PERCENTRANK.5 |
-  | `HYPERLINK(url, A1)`, A1 empty        | the url                      | 0                                    | an empty value's type is not named       | Web HYPERLINK.4           |
-  | `LET(x, 1, y, LET(z, 2, x+z), x+y)`   | 4                            | `#NAME?`                             | LibreOffice's own limit                  | Logical LET.1, LET.4      |
+  | Formula                                                                                               | Google                                    | LibreOffice                           | Why Google's stands                                                 | Case                                      |
+  | ----------------------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------- |
+  | `TIME(1.9, 0, 0)`                                                                                     | 1:00, the hour truncated                  | 1:54, the fraction kept               | "Evaluators may first perform INT()"                                | Date TIME.4                               |
+  | `YEAR(-1)`                                                                                            | `#NUM!`                                   | 1899                                  | negative serials an evaluator "may" support                         | Date YEAR.3                               |
+  | `NETWORKDAYS.INTL(a, b, "1111111")`, `WORKDAY.INTL(a, b, "11")`                                       | `#NUM!`                                   | 0, `#VALUE!`                          | no weekend of seven days is named                                   | Date NETWORKDAYS.INTL.4, WORKDAY.INTL.4   |
+  | `FORMULATEXT(B1)`, `CELL("address", B3)`                                                              | as Google writes them                     | in LibreOffice's syntax (`$Data.A1`)  | the text's syntax is the application's                              | Lookup FORMULATEXT.1, Info CELL.2         |
+  | `CODE("熊")`                                                                                          | Unicode: 29066                            | an 8-bit code page: 231               | past 127 implementation-defined                                     | Text CODE.3                               |
+  | `MIDB("熊本=熊本", 2, 4)`, `REPLACEB`, `LEFTB`, `RIGHTB`                                              | start in characters, a cut character kept | start in bytes, half a space          | the bytes' character set is not named                               | Text MIDB.2, LEFTB.6                      |
+  | `IMLN("4+2j")`                                                                                        | `…i`: i always                            | `…j`: the input's unit                | COMPLEX's default unit, i                                           | Math IMLN.2                               |
+  | `IMPOWER("5+2i", 3)`                                                                                  | `65+142i`                                 | `64.9999999999999+142i`               | rounding, not meaning                                               | Math IMPOWER.1                            |
+  | `UNICHAR(0)`                                                                                          | `#VALUE!`                                 | empty text                            | no text holds U+0000                                                | Text UNICHAR.3                            |
+  | `CHAR(0)`, `CODE("")`                                                                                 | `#NUM!`, `#VALUE!`                        | empty text, 0                         | no character 0 or first character                                   | Text CHAR.2, CODE.2                       |
+  | `FIND("", "abc")`, `SEARCH("", "abc")`                                                                | 1                                         | `#VALUE!`                             | an empty search text is not named                                   | Text FIND.5, SEARCH.7                     |
+  | `AND("TRUE", 1)`                                                                                      | TRUE: the text read                       | `#VALUE!`                             | text to a logical is implementation-defined (§6.3.12)               | Logical AND.8                             |
+  | `SUM(1, "2", TRUE)`, `AVERAGE`, `MAX(1, "3")`, `AVERAGEA(1, TRUE, "3")`                               | "2" is 2                                  | `#VALUE!`, or 0                       | text to a number is implementation-defined (§6.3.5)                 | Math SUM.2, Statistical AVERAGE.3         |
+  | `"z" < TRUE`                                                                                          | TRUE: booleans after text                 | FALSE                                 | the order of two types is implementation-defined (§6.4.9)           | Syntax compare.4                          |
+  | `SUM(1:2)` over booleans                                                                              | booleans skipped                          | booleans counted                      | a reference's logicals are the application's                        | Syntax range.3                            |
+  | `IFNA(A4, 1)`, `HYPERLINK(url, A1)`, A4 and A1 empty                                                  | empty, the url                            | 0                                     | an empty value's type is not named                                  | Logical IFNA.4, Web HYPERLINK.4           |
+  | `TRANSPOSE(A1:A3)` over an empty cell, `HSTACK(1, "a", TRUE)`, `ARRAYFORMULA(A1:A2=B1:B2)`            | empty, TRUE                               | 0, 1                                  | an array's empty and logical cells are not named                    | Array TRANSPOSE.2, HSTACK.2               |
+  | `ADDRESS(1, 1, 5)`                                                                                    | `#NUM!`                                   | `$A$1`                                | mode 5 is no mode named                                             | Lookup ADDRESS.9                          |
+  | `UNIQUE({"a"; "A"})`                                                                                  | two values, case kept                     | one, case ignored                     | its sameness is not named                                           | Filter UNIQUE.4                           |
+  | `AMORLINC(…, 0.5, …)`                                                                                 | period 0.5 is period 1                    | period 0                              | no rounding named                                                   | Financial AMORLINC.8                      |
+  | `TBILLYIELD(DATE(2008,1,1), …, 99)`                                                                   | 0.0404: Actual/360                        | 0.03996: 30/360 plus one              | OpenFormula gives no formula                                        | Financial TBILLYIELD.2                    |
+  | `TBILLPRICE(s, m, 9%)`, maturity past a year                                                          | `#NUM!`                                   | 89.45                                 | the standard's constraint refuses it                                | Financial TBILLPRICE.4                    |
+  | `XNPV(9%, amounts, dates)`, a date that is text                                                       | `#VALUE!`                                 | a number                              | the standard's constraint refuses it                                | Financial XNPV.5                          |
+  | `CUMIPMT(r, n, pv, 13, 24, 2)`, `CUMPRINC`                                                            | any type but 0 is 1                       | Err:502                               | the standard's constraint refuses it                                | Financial CUMIPMT.8                       |
+  | `DDB(2400, 300, 10, 2.5)`, `DDB(2400, 3000, 10, 2)`                                                   | 307.2: period 3; 0                        | 343.46; Err:502                       | a fraction a "may"; the constraint refuses salvage past cost        | Financial DDB.10, .9                      |
+  | `ISPMT(0.1, 1, 0, 8000)`, `RRI(0, 10, 11)`                                                            | `#DIV/0!`                                 | `#NUM!`                               | an error in both; its code not named                                | Financial ISPMT.4, RRI.5                  |
+  | `PERCENTRANK(data, 30)`, `.INC`, `.EXC`, past data                                                    | `#N/A`                                    | `#VALUE!`                             | an error in both; its code not named                                | Statistical PERCENTRANK.5                 |
+  | `PERCENTRANK.INC(data, 8, 0)`, `.EXC`                                                                 | 3 digits, as PERCENTRANK                  | Err:502                               | Excel's name; its help names no significance below 1                | Statistical PERCENTRANK.INC.8             |
+  | `LARGE(data, 9)`, `SMALL(data, 0)`, `MEDIAN`, `TRIMMEAN` of none, `MODE(1, 2, 3)`                     | `#NUM!`, `#N/A`                           | `#VALUE!`                             | an error in both; its code not named                                | Statistical LARGE.2, MEDIAN.3, MODE.2     |
+  | `LARGE(data, 2.5)`                                                                                    | the 2nd: truncated                        | the 3rd: rounded up                   | the standard asks for a whole k                                     | Statistical LARGE.5                       |
+  | `MODE.MULT({3, 3, 1, 1, 2, 2})`                                                                       | from the least                            | in the order they come                | its order is not named                                              | Statistical MODE.MULT.5                   |
+  | `PROB({1, 2}, {1.5, -0.5}, 1)`, `PROB(data, p, 3, 2)`                                                 | 1.5, 0                                    | `#VALUE!`, 0.4                        | the standard's constraint refuses it; a high-to-low span holds none | Statistical PROB.6, .7                    |
+  | `AVEDEV`, `CORREL`, `COVAR`, `F.TEST`, `STEYX`, `SLOPE`, `CONFIDENCE.T`, `STANDARDIZE` at their edges | `#DIV/0!`, `#N/A`, `#NUM!`                | `#NUM!`, `#VALUE!`, `#DIV/0!`         | an error in both; its code not named                                | Statistical CORREL.6, SLOPE.6             |
+  | `NORMINV(0, 0, 1)`, `CHIDIST(-1, 2)`, `GAMMADIST(-1, 2, 2, TRUE)`, `GAMMA(-1.5)`                      | `#NUM!`                                   | `#VALUE!`, 1, 0, 2.363                | Google refuses; the standards' constraints too                      | Statistical NORMINV.4, CHIDIST.4, GAMMA.4 |
+  | `GAMMA.DIST(0, 1, 2, FALSE)`, `CHISQ.DIST(0, 2, FALSE)`                                               | `#NUM!`                                   | 0.5, 0                                | Excel's names; their help refuses the density at 0                  | Statistical GAMMA.DIST.3, CHISQ.DIST.6    |
+  | `BETA.INV(0, 3, 2)`, `BINOM.INV(10, 0.5, 0)`, `EXPON.DIST(-1, 0.5, TRUE)`                             | `#NUM!`                                   | 0, 0, 0                               | Excel's names; Microsoft's help refuses them                        | Statistical BETA.INV.4, BINOM.INV.3       |
+  | `POISSON(0, 0, FALSE)`, `Z.TEST(data, 10, 0)`, `F.INV(0, 2, 3)`                                       | 1, 0, 0                                   | Err:502                               | the standards' constraints refuse them                              | Statistical POISSON.3, Z.TEST.5           |
+  | `HYPGEOM.DIST`, `LOGNORM.DIST`, `NEGBINOM.DIST`, without cumulative                                   | Google's shorter form read                | Err:511                               | Excel's names; Excel refuses the form                               | Statistical HYPGEOM.DIST.1                |
+  | `TOCOL` with nothing left, `TOCOL(5)`                                                                 | `#REF!`, a column of one                  | `#N/A`, Err:504                       | Excel's names; its help names neither                               | Array TOCOL.9, .8                         |
+  | `SUMX2MY2(a, b)` of two sizes, `SUMXMY2` over text                                                    | `#N/A`, the pair left out                 | `#VALUE!`                             | an error in both; text in a pair not named                          | Array SUMX2MY2.3, SUMXMY2.4               |
+  | `FREQUENCY(data, classes)`, no class a number; `MMULT` over TRUE                                      | every value counted (D46); `#VALUE!`      | `#VALUE!`; 2                          | not named                                                           | Array FREQUENCY.5, MMULT.4                |
+  | `LINEST(y, x)`, collinear x; an exact fit's F                                                         | `#N/A`; `#NUM!`                           | coefficients past 1e13; `#N/A`        | no fit and its F are not named                                      | Array LINEST.12, .10                      |
+  | `DSUM(A1:D7, "Qty", {"Qty"; 10})`, `DGET` of an empty field                                           | the records of 10; empty                  | every record; `#VALUE!`               | an array's criteria and an empty field are not named                | Database DSUM.12, DGET.4                  |
+  | `DSUM(…, criteria)`: "Apple"; a label the table lacks; no row under the labels                        | values that begin "Apple"; 0; `#VALUE!`   | the whole cell; Err:504; every record | Google's and Excel's criteria                                       | Database DSUM.4, .6, .9                   |
+  | `DSTDEV` of one value, `DVARP` of none                                                                | `#DIV/0!`                                 | `#NUM!`                               | an error in both; its code not named                                | Database DSTDEV.2, DVARP.2                |
+  | `BITLSHIFT(1, 54)`, `BITAND(1.5, 1)`, `IMSUM("4+3i", "1+2j")`                                         | `#NUM!`                                   | a number, 5+5i                        | the conversion to integer and mixed units are not named             | Engineering BITLSHIFT.6, IMSUM.4          |
+  | `BIN2DEC(TRUE)`, `HEX2DEC("0xff")`                                                                    | `#VALUE!`, 255                            | 1, Err:502                            | not named                                                           | Engineering BIN2DEC.7, HEX2DEC.6          |
+  | `CONVERT(1, "lbm", "kg")` and 13 more units; `"MTON"`, `"admkn"`, `"flb"`                             | the exact definition (D50)                | a rounded factor; another size        | rounding, not meaning                                               | Parser CONVERT.4, .59                     |
+  | `ARRAYFORMULA(SUMIFS(B1:B10, A1:A10, A1:A3))`                                                         | one value (D67)                           | three, lifted                         | Google's own function                                               | Google ARRAYFORMULA.30                    |
+  | `LET(x, 1, y, LET(z, 2, x+z), x+y)`                                                                   | 4                                         | `#NAME?`                              | LibreOffice's own limit                                             | Logical LET.1, LET.4                      |
 
-- **Candidates**: both accept and LiveDoc answers otherwise than LibreOffice, but Google's answer is not yet known
-  (the case awaits it). Each moves to the list above, or is fixed to LibreOffice's, when Google's answer arrives.
-
-  | Formula                                                               | LiveDoc today                               | LibreOffice                         | Case                                            |
-  | --------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------- | ----------------------------------------------- |
-  | `DATEDIF(DATE(2025,1,31), DATE(2025,3,1), "MD")`                      | 1, never negative                           | -2                                  | Date DATEDIF.9                                  |
-  | `NETWORKDAYS.INTL(a, b, "1111111")`                                   | `#VALUE!`                                   | 0                                   | Date NETWORKDAYS.INTL.4                         |
-  | `FILTER(range, numbers)`                                              | any number but 0 passes                     | only positive numbers pass          | Filter FILTER.8                                 |
-  | `UNIQUE({"a"; "A"})`                                                  | two values, case kept                       | one, case ignored                   | Filter UNIQUE.4                                 |
-  | `CELL("address", Data!B3)`                                            | `Data!$B$3`                                 | `$Data.$B$3`                        | Info CELL.2                                     |
-  | `CELL("width", A1)`                                                   | ECMA-376 characters (D40)                   | LibreOffice's own measure           | Info CELL.14                                    |
-  | `AND("TRUE", 1)`                                                      | TRUE, text read as a truth                  | `#VALUE!`                           | Logical AND.8                                   |
-  | `IFNA(A4, 1)` over an empty cell                                      | empty                                       | 0                                   | Logical IFNA.4                                  |
-  | `ADDRESS(1, 1, 5)`                                                    | `#VALUE!`                                   | `$A$1`                              | Lookup ADDRESS.9                                |
-  | `1&TRUE`, `CONCATENATE(1, TRUE)`, `LOWER(TRUE)`                       | `1TRUE`, `true`: TRUE as text               | `11`, `1`: TRUE as 1                | Syntax coercion.10, Text CONCATENATE.3, LOWER.3 |
-  | `"z" < TRUE`                                                          | TRUE: booleans after text                   | FALSE                               | Syntax compare.4                                |
-  | `SUM(1:2)` over booleans                                              | booleans skipped                            | booleans counted                    | Syntax range.3                                  |
-  | `0^-1`, `(-8)^(1/3)`                                                  | `#DIV/0!`, `#NUM!`                          | `#NUM!`, -2                         | Syntax errors.4, .8                             |
-  | `CHAR(0)`, `CODE("")`                                                 | `#VALUE!`                                   | empty text, 0                       | Text CHAR.2, CODE.2                             |
-  | `FIND("", "abc")`, `SEARCH("", "abc")`                                | 1, as Excel                                 | `#VALUE!`                           | Text FIND.5, SEARCH.7                           |
-  | `PROPER("it's 2nd")`                                                  | `It's 2nd`                                  | `It'S 2Nd`                          | Text PROPER.3                                   |
-  | `LEFTB("熊本", 1)`, `RIGHTB("熊本", 1)`                               | `熊`, `本`: a cut character kept            | a space                             | Text LEFTB.6, RIGHTB.5                          |
-  | `CEILING(-2.5, -1)`, `FLOOR(-2.5, -1)`                                | -3, -2: Excel's                             | -2, -3: OpenFormula's               | Math CEILING.4, FLOOR.4                         |
-  | `MROUND(10, -3)`                                                      | `#NUM!`, as Excel                           | 9                                   | Math MROUND.3                                   |
-  | `ISEVEN(A1)` over an empty cell                                       | TRUE, as Excel                              | `#VALUE!`                           | Math ISEVEN.6                                   |
-  | `SUM(1, "2", TRUE)`                                                   | 4, as Excel                                 | `#VALUE!`                           | Math SUM.2                                      |
-  | `IMPOWER("2i", 2)`                                                    | `-4`, multiplied out                        | `-4+4.89858719658941e-16i`          | Math IMPOWER.4                                  |
-  | `LENB("ｶﾀｶﾅ")`                                                        | 4: half-width kana 1 byte (D43)             | 8                                   | Text LENB.6                                     |
-  | `DSUM(A1:D7, "Qty", {"Qty"; 10})`                                     | the records of 10                           | every record                        | Database DSUM.12                                |
-  | `DGET(A1:D7, "Qty", {"Name"; "Banana"})`, its Qty empty               | empty                                       | `#VALUE!`                           | Database DGET.4                                 |
-  | `DOLLAR(1234,5)` in de-DE                                             | `1.234,50 €`, a no-break space (Intl)       | `1.234,50 €`, a plain space         | Locale Locale.16                                |
-  | `DSTDEV` of one value, `DVARP` of none                                | `#DIV/0!`, as `STDEV`, `VAR.P`              | `#NUM!`                             | Database DSTDEV.2, DVARP.2                      |
-  | `BITLSHIFT(1, 54)`                                                    | `#NUM!`: Google's -53 to 53                 | 18014398509482000                   | Engineering BITLSHIFT.6                         |
-  | `IMSUM("4+3i", "1+2j")`, `IMSUB`, `IMPRODUCT`                         | `#VALUE!`: Google's "you can't"             | `5+5i`                              | Engineering IMSUM.4                             |
-  | `CONVERT(1, "lbm", "kg")` and 13 more units                           | 0.45359237: the exact definition (D50)      | 0.453592309748811: a rounded factor | Parser CONVERT.4                                |
-  | `CONVERT(1, "MTON", "l")`, `"admkn"`, `"flb"`                         | 1132.67386368: 40 cubic feet                | 0.7079211648                        | Parser CONVERT.59, .61, .31                     |
-  | `TRANSPOSE(A1:A3)` over an empty cell                                 | empty                                       | 0                                   | Array TRANSPOSE.2, TOCOL.1, HSTACK.4            |
-  | `HSTACK(1, "a", TRUE)`                                                | `TRUE`                                      | 1                                   | Array HSTACK.2                                  |
-  | `SUMPRODUCT`, `FREQUENCY`, `SUMX2MY2` over booleans                   | booleans skipped                            | booleans counted                    | Array SUMPRODUCT.6, FREQUENCY.2                 |
-  | `SUMXMY2(a, b)`, a pair with text                                     | the pair left out                           | `#VALUE!`                           | Array SUMXMY2.4                                 |
-  | `CHOOSECOLS(A1:D3, "4")`                                              | the fourth column                           | `#VALUE!`                           | Array CHOOSECOLS.7                              |
-  | `CUMPRINC(r, n, pv, 2.1, 4.9, 0)`                                     | periods 3 and 4, as CUMIPMT (D52)           | periods 2 to 4                      | Financial CUMPRINC.4                            |
-  | `TBILLPRICE(s, m, 9%)`, maturity past a year                          | `#NUM!`                                     | 89.45                               | Financial TBILLPRICE.4                          |
-  | `XNPV(9%, amounts, dates)`, a date that is text                       | `#VALUE!` (D55)                             | a number                            | Financial XNPV.5                                |
-  | `DOLLARDE(1.1, 10)`                                                   | 2: tenths in two places (D51)               | 1.1                                 | Financial DOLLARDE.4                            |
-  | `TOCOL(5)`                                                            | 5, a column of one, as Excel                | `#VALUE!`                           | Array TOCOL.8                                   |
-  | `FREQUENCY(data, classes)`, no class a number                         | every value counted (D46)                   | `#VALUE!`                           | Array FREQUENCY.5                               |
-  | `MMULT(A1:B1, {1; 1})` over 1 and `TRUE`                              | `#VALUE!`                                   | 2                                   | Array MMULT.4                                   |
-  | `AVERAGE(1, "2", TRUE)`, `MAX(1, "3")`, `STDEV`, `VAR` alike          | numbers typed as text read, as Excel        | `#VALUE!`                           | Statistical AVERAGE.3, MAX.4                    |
-  | `AVERAGEA(1, TRUE, "3")`, `STDEVA`, `VARA` alike                      | "3" is 3                                    | "3" is 0                            | Statistical AVERAGEA.2                          |
-  | `LARGE(data, 9)`, `SMALL(data, 0)`, outside the data                  | `#NUM!`, as Excel                           | `#VALUE!`                           | Statistical LARGE.2, SMALL.3                    |
-  | `MEDIAN`, `PERCENTILE`, `TRIMMEAN` of no numbers                      | `#NUM!`, as Excel                           | `#VALUE!`                           | Statistical MEDIAN.3, TRIMMEAN.7                |
-  | `MODE(1, 2, 3)`, `MODE.SNGL`, `MODE.MULT`                             | `#N/A`, as Excel                            | `#VALUE!`                           | Statistical MODE.2, MODE.MULT.3                 |
-  | `PERCENTRANK.INC(data, 30)`, `.EXC`                                   | `#N/A`, as PERCENTRANK (D57)                | `#VALUE!`                           | Statistical PERCENTRANK.INC.5                   |
-  | `PERCENTRANK.INC(data, 8, 0)`, `.EXC`                                 | 3 digits, as PERCENTRANK (D57)              | Err:502                             | Statistical PERCENTRANK.INC.8                   |
-  | `CHIINV(1, 2)`, `CHISQ.INV(0, 2)`, `F.INV.RT(1, …)`, `TINV(1, 1)`     | `#NUM!`: p strictly between 0 and 1         | 0, or a number                      | Statistical CHIINV.5, TINV.4                    |
-  | `NORMINV(0, 0, 1)`, `NORM.INV(1, 0, 1)`                               | `#NUM!`, as NORMSINV's help                 | `#VALUE!`                           | Statistical NORMINV.4                           |
-  | `CHIDIST(-1, 2)`, `GAMMADIST(-1, 2, 2, TRUE)`                         | `#NUM!`: x must be positive                 | 1, 0                                | Statistical CHIDIST.4, GAMMADIST.5              |
-  | `GAMMA(-1.5)`                                                         | `#NUM!`: the number must be positive        | 2.363                               | Statistical GAMMA.4                             |
-  | `GAMMA.DIST(0, 1, 2, FALSE)`, `CHISQ.DIST(0, 2, FALSE)`               | `#NUM!`: no density at 0 for shape ≤ 1      | 0.5, 0                              | Statistical GAMMA.DIST.3, CHISQ.DIST.6          |
-  | `HYPGEOM.DIST`, `LOGNORM.DIST`, `NEGBINOM.DIST`, `POISSON.DIST` short | Google's shorter form read                  | Err:511                             | Statistical HYPGEOM.DIST.1                      |
-  | `LINEST(y, x)`, collinear x                                           | `#NUM!` (D47)                               | coefficients past 1e13              | Array LINEST.12                                 |
-  | `ENCODEURL(TRUE)`                                                     | `TRUE`, as Google's text functions write it | `1`                                 | Web ENCODEURL.6                                 |
-  | `ARRAYFORMULA(A1:A2=B1:B2)`                                           | `TRUE`, booleans kept                       | `1`                                 | Google ARRAYFORMULA.11                          |
-  | `ARRAYFORMULA(SUMIFS(B1:B10, A1:A10, A1:A3))`                         | one value (D67)                             | three, lifted                       | Google ARRAYFORMULA.30                          |
+- Where LibreOffice answers otherwise than both Google and the standard, the case names it and no table lists it:
+  `1&TRUE` is `1TRUE`, as a logical's text is TRUE (§6.3.14), where LibreOffice writes `11`.
 
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
@@ -1423,13 +1469,19 @@ connect these sheets." with **Allow Access** (verified: Google's help).
 - **Answers** are kept per source beside the cases, made by a script from the source itself, never typed by hand:
   LibreOffice's by converting the category's workbook headless with every formula worked out afresh; Google's by
   the same workbook opened in Google Sheets and downloaded again. An answer a source documents (OpenFormula's own
-  test cases, Google's help pages) may be written in its case instead, citing where.
+  test cases, Microsoft's help for an OOXML meaning) may be written in its case instead, citing where. Google's
+  measured answers replace its help pages, which were wrong where cited (`STDEVP(5)` is 0, not `#DIV/0!`).
+- A formula typed into Google Sheets answers as the same formula in its `.xlsx` (measured, arity errors alike), so a
+  probe that types formulas into a fresh Sheet through the Sheets API, at full precision, stands for the corpus while
+  a disagreement is worked out; it deletes its Sheet afterwards.
 - A case holds to the answer of its function's **Authority** above; until Google's answer is in, a Google case holds
   to LibreOffice's and is counted as provisional (default, D31). A case LibreOffice answers otherwise than Google
   documents waits for Google's answer, counted, held to none (default, D32).
-- Where two sources answer differently, the case names the difference and why; an unnamed difference fails.
+- Where two sources answer differently, the case names the difference and why; an unnamed difference fails, and so
+  does a named one that is not there (the source it names answers as the case holds).
 - Numbers agree to one part in a billion (a case may loosen it to one in a million, saying why); text and booleans
-  exactly; errors by their code, never their wording.
+  exactly, but complex numbers written as text by their parts; errors by their code, never their wording. A source
+  that gives one value where the case's block is bigger fills its first cell, the rest empty.
 - The corpus runs in `en-US`, in UTC, at a fixed now (default, D33); volatile functions are held by their own tests.
   A category may name another locale (`Locale` runs in `de-DE`): its formulas are typed in that locale's syntax,
   and LibreOffice answers it with that locale as its own.
@@ -1438,6 +1490,10 @@ connect these sheets." with **Allow Access** (verified: Google's help).
   exports that sheet as `.xlsx` with Google's calculated values, reads the answers from it, and deletes
   the Drive file afterwards, whether the category succeeded or failed. Each upload and delete is logged by its file
   id, never by what the file holds.
+- The workbook Google is given names `FILTER` and `SORT` with `_xlfn.` alone, as Google reads them; Excel's
+  `_xlfn._xlws.` reads as `#NAME?` there ([Excel's grammar](standard-mapping.md#excels-grammar-in-detail)).
+- A case of a function the catalogue gives to OpenFormula says so (`authority: openformula`), and a test holds every
+  such case to it: Google lacks the function, so its `#NAME?` there is no answer and names no difference.
 - Google's `.ods` export is not read: it writes booleans as 1 and 0, and each function ODF lacks (`XOR`, `IFS`,
   `LAMBDA`) as `#NAME?`, where its `.xlsx` holds Google's own answers (measured 2026-11-21, `Logical`).
 - Before exporting, the script sets the sheet's locale and time zone to the category's (`en_US`, `de_DE`) and UTC
@@ -1504,35 +1560,41 @@ The code cites each by its id.
 - **D37** Volatile ticks while the page is hidden: Held, one tick as the page shows again (default).
 - **D38** A function Google defines more narrowly than a standard: The standard's wider definition, everywhere (default).
 - **D39** ISDATE of a number worked out in its formula: No date; only a cell's format makes a number a date (default).
-- **D40** CELL's "width": ECMA-376's characters, a 7-pixel digit and 5 pixels of padding, whole characters (default).
+- **D40** CELL's "width": ECMA-376's characters, a 7-pixel digit and 5 pixels of padding, to the nearest whole
+  character, as Google gives it (measured: 100 pixels are 14, 120 are 16, 64 are 8).
 - **D41** CELL's "format" for LiveDoc's own formats: Number `,`, Currency `C`, Date `D4`, Time `D8`, ... (default).
 - **D42** CELL's "filename" and "protect": Empty text; 1 only under a protected range or sheet (default).
-- **D43** What the byte functions count as two bytes: East Asian wide and full-width characters (UAX #11) (default).
+- **D43** What the byte functions count as two bytes: East Asian wide and full-width characters (UAX #11), and
+  half-width katakana, as Google gives them (measured: `LENB("ｶ")` is 2).
 - **D44** DOLLAR's currency: The locale's region's, US dollars for a region not in LiveDoc's table (default).
 - **D45** COUNTUNIQUE's sameness: A value's type and its text, case kept, as UNIQUE compares (default).
 - **D46** FREQUENCY with no class a number: Every value counted in one row, as Excel documents (default).
-- **D47** LINEST and its kin over collinear x values: `#NUM!`, no single fit (default).
-- **D48** The statistics of an exact fit: Errors 0, F `#N/A`, as LibreOffice gives them (default).
+- **D47** LINEST and its kin over collinear x values: `#N/A`, no single fit, as Google gives it (measured).
+- **D48** The statistics of an exact fit: Errors 0, F `#NUM!`, as Google gives them (measured).
 - **D49** TO_DATE's format: Date, the day without its time (default).
 - **D50** CONVERT's unit sizes: Their exact definitions (NIST SP 811), not LibreOffice's rounded factors (default).
-- **D51** DOLLARDE and DOLLARFR's written fraction: At least two decimal places; unit 1 the decimal itself (default).
-- **D52** CUMPRINC's fractional periods: Read inward, as Google documents for CUMIPMT (default).
+- **D51** DOLLARDE and DOLLARFR's written fraction: As many places as the unit has digits, as Google gives it
+  (measured); unit 1 the decimal itself (default).
+- **D52** CUMPRINC's fractional periods: From the first in steps of one, as Google gives them (measured).
 - **D53** TBILLEQ's days: Actual days, as TBILLPRICE and TBILLYIELD count them (default).
 - **D54** COUPPCD and COUPNCD's format: Date (default).
-- **D55** XNPV and XIRR's amounts and dates: Every one a number, else `#VALUE!`; a count apart `#NUM!` (default).
+- **D55** XNPV and XIRR's amounts and dates: Every one a number, else `#VALUE!`; a count apart `#NUM!`; XNPV of one
+  amount that amount, as Google gives it (default).
 - **D56** AVERAGE.WEIGHTED's errors: Ranges of two sizes `#VALUE!`, a negative weight `#NUM!` (default).
 - **D57** PERCENTRANK.INC and .EXC: As PERCENTRANK's help: outside the data `#N/A`; fewer than 1 digit is 3 (default).
 - **D58** INFO's answers: One document, recalculation Automatic, `LiveDoc` as system and release; else `#N/A` (default).
 - **D59** The odd-period bonds' sums: Excel's over quasi-coupon periods (ECMA-376), not LibreOffice's (default).
 - **D60** MULTIPLE.OPERATIONS's reach: Ranges read the replacement; spills as they stand; 250 formulas deep (default).
-- **D67** The functions that lift over arrays in an array context: those named in "Arrays and spills", as Google's
-  idioms use them; `SUMIFS` and `COUNTIFS` give one value, as Google's forums report (default).
+- **D67** The functions that lift over arrays in an array context: those named in "Arrays and spills", as Google
+  gives them (measured): `SUMIF`, `COUNTIF` and `COUNTIFS` lift; `SUMIFS`, `AVERAGEIF` and `AVERAGEIFS` give one
+  value.
 - **D68** LAMBDA and LET's errors and limits: uncalled, or a name that is not one, `#VALUE!`; at most 100,000
   applications a formula, past them `#NUM!` (default).
 - **D69** QUERY's guessed header and its format: a first row of text over other types is a header; `format` and
   `options` are read and not yet shown (default).
-- **D70** REGEXREPLACE's unnamed edges: a `$` naming no group is `#N/A` only when the pattern matches (Java's
-  replacement runs per match); a group that took no part is empty text; a trailing backslash stays (default).
+- **D70** REGEXREPLACE's unnamed edges: a `$` naming no group, or before no digit, is `#N/A` only when the pattern
+  matches (Java's replacement runs per match, measured); a group that took no part is empty text; a trailing
+  backslash stays (default).
 - **D71** SPARKLINE's unstated choices: empty cells and other values skipped unless set; an unknown chart type
   `#VALUE!`; column colours applied in the order the help lists them; the accent's colours (charts.md "Sparklines").
 - **D75** IMPORTRANGE's addresses and values: a document address or id; anything else, or empty, `#REF!`; values
@@ -1553,4 +1615,8 @@ The code cites each by its id.
 - **D100** Converting between meanings: The formulas that may answer differently are listed among the losses, never
   rewritten (default).
 - **D101** A spreadsheet opened from a file before the file's meaning: Keeps Google's meaning (default).
+- **D102** Where LEFT, MID, RIGHT and REPLACE count: In characters, never splitting one, where Google counts UTF-16
+  units and may cut a character in two (`LEFT("😀a", 1)` is the emoji); `LEN` counts as the meaning does (default).
+- **D103** ACCRINT past the first interest date in bases 1 to 3: The securities' day count, as Google's there follows
+  no day count found (measured: 213.5 days of a 214-day span at Actual/365) (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

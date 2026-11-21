@@ -6,7 +6,7 @@ import { calc } from '../../testing/book';
 describe('working days', () => {
   it.each([
     ['=NETWORKDAYS.INTL(1, 10, 1/0)', '#DIV/0!'],
-    ['=NETWORKDAYS.INTL(1, 10, "x")', '#VALUE!'],
+    ['=NETWORKDAYS.INTL(1, 10, "x")', '#NUM!'],
     ['=NETWORKDAYS.INTL(1, 10, 0)', '#NUM!'],
     ['=NETWORKDAYS.INTL(1, 10, 1, {1, 1/0})', '#DIV/0!'],
     ['=NETWORKDAYS.INTL("x", 10)', '#VALUE!'],

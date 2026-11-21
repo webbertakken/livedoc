@@ -11,7 +11,6 @@ function check(formula: string, value: unknown): void {
 
 describe('Engineering', () => {
   it.each([
-    ['=BIN2DEC(FALSE)', 0],
     ['=OCT2DEC("7")', 7],
     ['=ERF.PRECISE(0, 0)', 0],
     ['=COMPLEX(1, 2, "")', '1+2i'],
@@ -26,6 +25,7 @@ describe('Engineering', () => {
     ['=COMPLEX(NA(), 1)', '#N/A'],
     ['=COMPLEX(1, NA())', '#N/A'],
     ['=COMPLEX(1, 1, NA())', '#N/A'],
+    ['=BIN2DEC(FALSE)', '#VALUE!'],
     ['=IMSUM("1+i", "x")', '#NUM!'],
     ['=IMEXP(1000)', '#NUM!'],
     ['=IMLOG("x", 2)', '#NUM!'],

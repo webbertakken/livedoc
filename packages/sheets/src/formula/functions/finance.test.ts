@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { serialFromDate } from '../../dates';
+import { excelCouponDayDiff } from './odd-coupons';
 import { calc } from '../../testing/book';
 import { bisectFalling, solve } from './solve';
 
@@ -91,5 +93,52 @@ describe('root finding', () => {
     expect(bisectFalling((x) => 2 - x, 0, 1)).toBeCloseTo(2, 12);
     expect(bisectFalling(() => 1, 0, 1)).toBeNull();
     expect(bisectFalling(() => -1, 0, 1)).toBeNull();
+  });
+});
+
+// formulas.md "The file's meaning": Google's answers past the corpus's, each measured in Google Sheets.
+describe("Google's day counts and depreciation", () => {
+  it.each([
+    [
+      '=ACCRINT(DATE(2010,1,1), DATE(2010,2,1), DATE(2010,2,1), 0.05, 360, 4, 1)',
+      1.516304347826087,
+    ],
+    ['=INTRATE(DATE(2008,2,29), DATE(2009,2,28), 1000000, 1014420)', 0.01442],
+    ['=COUPDAYSNC(DATE(2012,2,15), DATE(2020,8,31), 4, 4)', 14],
+    ['=VDB(2400, 300, 10, 0.5, 1)', 216],
+    ['=VDB(2400, 300, 10, 1.25, 1.5)', 91.2],
+    ['=DDB(2400, 300, 10, 0.5)', 480],
+    ['=DDB(2400, 3000, 10, 1)', 0],
+    ['=DB(100, 200, 5, 2)', -17.1201],
+    ['=CUMPRINC(0.0075, 360, 125000, 2.5, 4, 0)', -208.70098088894105],
+    ['=DOLLARFR(1.0625, 16)', 1.01],
+  ])('%s is %d', (formula, value) => {
+    expect(calc(formula) as number).toBeCloseTo(value, 9);
+  });
+
+  it.each([
+    ['=DB(0, 0, 5, 1)', '#NUM!'],
+    ['=DDB(2400, 300, 2, 3, 3)', '#NUM!'],
+    ['=RRI(-1, 10, 11)', '#NUM!'],
+    ['=ISPMT(0.1, 1, 0, 8000)', '#DIV/0!'],
+    ['=CUMIPMT(0.0075, 360, 125000, 5, 4, 0)', '#NUM!'],
+  ])('%s is %s', (formula, code) => {
+    expect(calc(formula)).toMatchObject({ e: code });
+  });
+
+  // Past the first interest date Google's Actual/365 follows no day count found (58.49315 here, 213.5 days); LiveDoc
+  // counts the securities' day count, 214 days (default, D103).
+  it("counts ACCRINT past the first interest date in bases 1 to 3 by the securities' day count", () => {
+    const formula = '=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,10,1), 0.1, 1000, 2, 3)';
+    expect(calc(formula) as number).toBeCloseTo((100 * 214) / 365, 9);
+  });
+
+  it("counts Excel's coupon days for the odd periods, February's last day as it is", () => {
+    const day = (y: number, m: number, d: number) => serialFromDate(y, m, d);
+    expect(excelCouponDayDiff(day(2011, 2, 28), day(2011, 3, 31), 0)).toBe(31);
+    expect(excelCouponDayDiff(day(2011, 1, 31), day(2011, 2, 28), 0)).toBe(28);
+    expect(excelCouponDayDiff(day(2011, 2, 28), day(2011, 3, 10), 4)).toBe(12);
+    expect(excelCouponDayDiff(day(2011, 1, 15), day(2011, 2, 28), 4)).toBe(43);
+    expect(excelCouponDayDiff(day(2011, 3, 10), day(2011, 3, 1), 0)).toBe(0);
   });
 });

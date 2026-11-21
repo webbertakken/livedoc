@@ -36,11 +36,11 @@ describe('SORT', () => {
 
 describe('SORTN', () => {
   it('refuses n below 1 and a ties mode past 3', () => {
-    expect(calc('=SORTN(A1:B3, 0)', T)).toMatchObject({ e: '#NUM!' });
+    expect(calc('=SORTN(A1:B3, 0)', T)).toMatchObject({ e: '#VALUE!' });
     expect(calc('=SORTN(A1:B3, 1, 4)', T)).toMatchObject({ e: '#NUM!' });
     expect(calc('=SORTN(A1:B3, "x")', T)).toMatchObject({ e: '#VALUE!' });
     expect(calc('=SORTN(A1:B3, 1, "x")', T)).toMatchObject({ e: '#VALUE!' });
-    expect(calc('=SORTN(A1:B3, 1, 0, 5, TRUE)', T)).toMatchObject({ e: '#VALUE!' });
+    expect(calc('=SORTN(A1:B3, 1, 0, 5, TRUE)', T)).toMatchObject({ e: '#REF!' });
   });
 
   it('gives what there is when n is past the rows, ties or not', () => {
@@ -57,8 +57,9 @@ describe('SORTN', () => {
 });
 
 describe('FILTER', () => {
-  it('gives OOXML’s if_empty only after one condition longer than one', () => {
-    expect(calc('=FILTER(A1:A3, B1:B3>5, "none")', T)).toBe('none');
+  it('gives OOXML’s if_empty in a file’s meaning only after one condition longer than one', () => {
+    expect(calc('=FILTER(A1:A3, B1:B3>5, "none")', T, { meaning: 'ooxml' })).toBe('none');
+    expect(calc('=FILTER(A1:A3, B1:B3>5, "none")', T)).toMatchObject({ e: '#N/A' });
     // A one-cell condition and a one-cell value are two conditions, as Google reads them.
     expect(calc('=FILTER(A1, B1>5, TRUE)', T)).toMatchObject({ e: '#N/A' });
   });

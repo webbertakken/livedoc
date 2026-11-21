@@ -7,8 +7,8 @@ describe('T, UNICHAR and UNICODE', () => {
   it.each([
     ['=T(A1)', 'x'],
     ['=T(B1)', ''],
-    ['=UNICHAR(1114111)', { e: '#VALUE!' }],
-    ['=UNICHAR(65535)', { e: '#VALUE!' }],
+    ['=UNICHAR(1114112)', { e: '#VALUE!' }],
+    ['=UNICHAR(55296)', { e: '#VALUE!' }],
     ['=UNICHAR(57344)', '\ue000'],
     ['=UNICODE(A1)', 120],
     ['=UNICODE(TRUE)', 84],

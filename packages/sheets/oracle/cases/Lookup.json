@@ -98,27 +98,33 @@
     },
     {
       "id": "XMATCH.1",
-      "f": "=XMATCH(\"Cherry\", Data!A1:A5)"
+      "f": "=XMATCH(\"Cherry\", Data!A1:A5)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.2",
-      "f": "=XMATCH(4, Data!B1:B5, -1)"
+      "f": "=XMATCH(4, Data!B1:B5, -1)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.3",
-      "f": "=XMATCH(4, Data!B1:B5, 1)"
+      "f": "=XMATCH(4, Data!B1:B5, 1)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.4",
-      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2)"
+      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.5",
-      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2, -1)"
+      "f": "=XMATCH(\"*e*\", Data!A1:A5, 2, -1)",
+      "authority": "openformula"
     },
     {
       "id": "XMATCH.6",
-      "f": "=XMATCH(\"Fig\", Data!A1:A5)"
+      "f": "=XMATCH(\"Fig\", Data!A1:A5)",
+      "authority": "openformula"
     },
     {
       "id": "XLOOKUP.1",
@@ -173,7 +179,10 @@
     },
     {
       "id": "INDEX.4",
-      "f": "=INDEX(Data!A1:C5, 6, 1)"
+      "f": "=INDEX(Data!A1:C5, 6, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #REF! past the range; Google #NUM!"
+      }
     },
     {
       "id": "INDEX.5",
@@ -315,9 +324,8 @@
       "id": "ADDRESS.9",
       "f": "=ADDRESS(1, 1, 5)",
       "differs": {
-        "libreoffice": "LibreOffice reads mode 5 as 1; Google's help names only 1 to 4, and LiveDoc refuses others with #VALUE!"
-      },
-      "note": "Awaits Google's answer: an absolute_relative_mode past 4."
+        "libreoffice": "LibreOffice reads mode 5 as 1; Google refuses it, #NUM!"
+      }
     },
     {
       "id": "ADDRESS.10",

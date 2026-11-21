@@ -21,7 +21,7 @@ import {
 } from '../fn';
 import { err, isError, toNumber, type Value } from '../values';
 import { checkSerial, dateArg } from './date-args';
-import { basisOf, days360, yearFrac } from './day-count';
+import { basisOf, daysInMonth, days360, yearFrac } from './day-count';
 import { WORKDAY_FUNCTIONS } from './workdays';
 
 // DATE(y, m, d): months and days past their range roll over (DATE(2026, 13, 1) is January 2027), and years before
@@ -66,6 +66,14 @@ function dateFn(min: number, max: number, each: (ns: number[]) => Value): FnDef 
     }
     return finite(each(ns));
   });
+}
+
+// A date's year, month or day; a serial before 30 December 1899 is no date, #NUM!, as Google gives it (OpenFormula
+// leaves negative serials to the application).
+function datePart(serial: number, part: 'y' | 'm' | 'd'): Value {
+  return serial < 0
+    ? err('#NUM!', 'A date is never before 30 December 1899')
+    : dateFromSerial(serial)[part];
 }
 
 // The week of the year whose weeks start on `startDay` (0 Sunday), the week holding 1 January being week 1.
@@ -141,9 +149,9 @@ export const DATE_FUNCTIONS: Record<string, FnDef> = {
     const d = parseDateText(t, localeDayFirst(f.locale));
     return d ? d.serial - Math.floor(d.serial) : err('#VALUE!', `"${t}" is not a time`);
   }),
-  YEAR: dateFn(1, 1, ([s]) => dateFromSerial(s!).y),
-  MONTH: dateFn(1, 1, ([s]) => dateFromSerial(s!).m),
-  DAY: dateFn(1, 1, ([s]) => dateFromSerial(s!).d),
+  YEAR: dateFn(1, 1, ([s]) => datePart(s!, 'y')),
+  MONTH: dateFn(1, 1, ([s]) => datePart(s!, 'm')),
+  DAY: dateFn(1, 1, ([s]) => datePart(s!, 'd')),
   HOUR: dateFn(1, 1, ([s]) => dateFromSerial(s!).h),
   MINUTE: dateFn(1, 1, ([s]) => dateFromSerial(s!).min),
   SECOND: dateFn(1, 1, ([s]) => dateFromSerial(s!).s),
@@ -184,10 +192,12 @@ export const DATE_FUNCTIONS: Record<string, FnDef> = {
       case 'D':
         return Math.floor(b) - Math.floor(a);
       case 'MD': {
-        // The days left after the whole months, counted from the start moved on by those months (a month end
-        // clamps: 31 January plus a month is 28 February), never negative as Excel's can be.
-        const moved = addMonths(Math.floor(a), months, false);
-        return typeof moved === 'number' ? Math.floor(b) - moved : moved;
+        // The end's day less the start's, as Google and Excel count it: below zero, plus the length of the month
+        // before the end's (31 January to 1 March is 1 - 31 + 28, -2).
+        const gap = pb.d - pa.d;
+        return gap >= 0
+          ? gap
+          : gap + daysInMonth(pb.m === 1 ? pb.y - 1 : pb.y, pb.m === 1 ? 12 : pb.m - 1);
       }
       case 'YM':
         return months % 12;
@@ -228,7 +238,7 @@ export const DATE_FUNCTIONS: Record<string, FnDef> = {
     if (isError(convention)) return convention;
     const basis = basisOf(convention);
     if (isError(basis)) return basis;
-    return yearFrac(Math.floor(a), Math.floor(b), basis);
+    return yearFrac(Math.floor(a), Math.floor(b), basis, f.meaning);
   }),
   DAYS360: fn(2, 3, (args, f) => {
     const a = dateArg(args[0]!, f);

@@ -30,6 +30,27 @@ function operand(node: Node, refs: readonly StoredRef[], f: Frame): Value {
   return deref(implicit(evaluate(node, refs, f), f), f);
 }
 
+// A chain of powers written without brackets, grouped from the right as Google groups it: 2^3^2 is 2^(3^2), 512
+// (formulas.md, the file's meaning; the standards' meanings group from the left, as parsed).
+function powerFromTheRight(node: PowerNode, refs: readonly StoredRef[], f: Frame): Value {
+  const operands: Node[] = [];
+  let link = node;
+  // A chained power's left operand is a power (the parser marks no other).
+  while (link.chained) {
+    operands.push(link.b);
+    link = link.a as PowerNode;
+  }
+  operands.push(link.b, link.a);
+  let power = operand(operands[0]!, refs, f);
+  for (const next of operands.slice(1))
+    power = lift([operand(next, refs, f), power], ([x, y]) =>
+      binaryOperation('^', x!, y!, f.locale),
+    );
+  return power;
+}
+
+type PowerNode = Extract<Node, { k: 'bin' }>;
+
 // `:` between two references: the rectangle spanning both, on one sheet.
 function spanOf(a: RangeRef, b: RangeRef): EvalValue {
   if (a.sheetId !== b.sheetId) return err('#VALUE!', 'A range joins two cells of one sheet');
@@ -126,6 +147,7 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
     case 'pct':
       return unary(node.k, operand(node.a, refs, f), f.locale);
     case 'bin': {
+      if (node.chained && f.meaning === 'google') return powerFromTheRight(node, refs, f);
       const a = operand(node.a, refs, f);
       const b = operand(node.b, refs, f);
       return lift([a, b], ([x, y]) => binaryOperation(node.op, x!, y!, f.locale));

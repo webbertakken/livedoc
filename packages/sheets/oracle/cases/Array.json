@@ -46,10 +46,10 @@
       "id": "CHOOSECOLS.7",
       "f": "=CHOOSECOLS(Data!A1:D3, \"4\")",
       "rows": 3,
+      "note": "Google refuses a column number written as text, #VALUE!.",
       "differs": {
-        "libreoffice": "LibreOffice refuses a column number written as text (Err:504); LiveDoc reads it as a number"
-      },
-      "note": "Awaits Google's answer: a column number as text."
+        "libreoffice": "LibreOffice writes its error in every cell of the block; Google in the first"
+      }
     },
     {
       "id": "CHOOSECOLS.8",
@@ -85,8 +85,7 @@
       "rows": 2,
       "differs": {
         "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
-      },
-      "note": "Awaits Google's answer: an empty cell in an array result."
+      }
     },
     {
       "id": "HSTACK.1",
@@ -100,8 +99,7 @@
       "cols": 3,
       "differs": {
         "libreoffice": "LibreOffice writes TRUE in an array as 1; LiveDoc keeps it TRUE"
-      },
-      "note": "Awaits Google's answer: a boolean in an array result."
+      }
     },
     {
       "id": "HSTACK.3",
@@ -115,8 +113,7 @@
       "cols": 2,
       "differs": {
         "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
-      },
-      "note": "Awaits Google's answer: an empty cell in an array result."
+      }
     },
     {
       "id": "VSTACK.1",
@@ -136,8 +133,7 @@
       "cols": 2,
       "differs": {
         "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
-      },
-      "note": "Awaits Google's answer: an empty cell in an array result."
+      }
     },
     {
       "id": "TOCOL.1",
@@ -145,8 +141,7 @@
       "rows": 12,
       "differs": {
         "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
-      },
-      "note": "Awaits Google's answer: an empty cell in an array result."
+      }
     },
     {
       "id": "TOCOL.2",
@@ -182,12 +177,14 @@
       "f": "=TOCOL(5)",
       "differs": {
         "libreoffice": "LibreOffice refuses a single value (Err:504); LiveDoc gives it as a column of one, as Excel"
-      },
-      "note": "Awaits Google's answer: a single value."
+      }
     },
     {
       "id": "TOCOL.9",
-      "f": "=TOCOL(Data!D3:D3, 1)"
+      "f": "=TOCOL(Data!D3:D3, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #N/A when every value is ignored; Google #REF!"
+      }
     },
     {
       "id": "TOROW.1",
@@ -195,8 +192,7 @@
       "cols": 12,
       "differs": {
         "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
-      },
-      "note": "Awaits Google's answer: an empty cell in an array result."
+      }
     },
     {
       "id": "TOROW.2",
@@ -308,10 +304,7 @@
       "id": "FREQUENCY.2",
       "f": "=FREQUENCY(Data!A10:F10, 5)",
       "rows": 2,
-      "differs": {
-        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
-      },
-      "note": "Awaits Google's answer: a boolean in a range."
+      "note": "Google counts TRUE in the data as 1, as LibreOffice does; text is left out."
     },
     {
       "id": "FREQUENCY.3",
@@ -328,8 +321,7 @@
       "f": "=FREQUENCY(Data!A4:A9, Data!F1:F3)",
       "differs": {
         "libreoffice": "LibreOffice refuses classes with no number (#VALUE!); LiveDoc counts every value, as Excel does with no classes"
-      },
-      "note": "Awaits Google's answer: classes with no number."
+      }
     },
     {
       "id": "MDETERM.1",
@@ -402,8 +394,7 @@
       "f": "=MMULT(Data!A10:B10, {1;1})",
       "differs": {
         "libreoffice": "LibreOffice reads TRUE in a matrix as 1; LiveDoc refuses a matrix with any value but a number, #VALUE!"
-      },
-      "note": "Awaits Google's answer: a boolean in a matrix."
+      }
     },
     {
       "id": "MMULT.5",
@@ -423,15 +414,17 @@
     },
     {
       "id": "SUMX2MY2.3",
-      "f": "=SUMX2MY2(Data!A1:A3, Data!A1:A2)"
+      "f": "=SUMX2MY2(Data!A1:A3, Data!A1:A2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for arrays of different sizes; Google #N/A"
+      }
     },
     {
       "id": "SUMX2MY2.4",
       "f": "=SUMX2MY2(Data!A10:F10, Data!A1:F1)",
       "differs": {
         "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
-      },
-      "note": "Awaits Google's answer: a boolean in a range."
+      }
     },
     {
       "id": "SUMX2PY2.1",
@@ -443,15 +436,17 @@
     },
     {
       "id": "SUMX2PY2.3",
-      "f": "=SUMX2PY2(Data!A1:A3, Data!A1:A2)"
+      "f": "=SUMX2PY2(Data!A1:A3, Data!A1:A2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for arrays of different sizes; Google #N/A"
+      }
     },
     {
       "id": "SUMX2PY2.4",
       "f": "=SUMX2PY2(Data!A10:F10, Data!A1:F1)",
       "differs": {
         "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
-      },
-      "note": "Awaits Google's answer: a boolean in a range."
+      }
     },
     {
       "id": "SUMXMY2.1",
@@ -463,15 +458,17 @@
     },
     {
       "id": "SUMXMY2.3",
-      "f": "=SUMXMY2(Data!A1:A3, Data!A1:A2)"
+      "f": "=SUMXMY2(Data!A1:A3, Data!A1:A2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for arrays of different sizes; Google #N/A"
+      }
     },
     {
       "id": "SUMXMY2.4",
       "f": "=SUMXMY2(Data!A10:F10, Data!A1:F1)",
       "differs": {
         "libreoffice": "LibreOffice answers #VALUE! for a pair with text, where its SUMX2MY2 leaves the pair out; LiveDoc leaves it out, booleans too (9)"
-      },
-      "note": "Awaits Google's answer: a pair with text or a boolean."
+      }
     },
     {
       "id": "LINEST.1",
@@ -518,15 +515,19 @@
     },
     {
       "id": "LINEST.9",
-      "f": "=LINEST({2,4,6}, {1,2,3}, TRUE, TRUE)",
+      "f": "=LINEST({2,4,7}, {1,2,3}, TRUE, TRUE)",
       "rows": 5,
-      "cols": 2
+      "cols": 2,
+      "note": "A fit with a residual: every statistic is a number."
     },
     {
       "id": "LINEST.10",
       "f": "=LINEST({1,3}, {1,2}, TRUE, TRUE)",
       "rows": 5,
-      "cols": 2
+      "cols": 2,
+      "differs": {
+        "libreoffice": "LibreOffice gives an exact fit's F as #N/A; Google #NUM!"
+      }
     },
     {
       "id": "LINEST.11",
@@ -536,9 +537,8 @@
       "id": "LINEST.12",
       "f": "=LINEST(Data!C4:C9, Data!E4:F9)",
       "differs": {
-        "libreoffice": "LibreOffice fits collinear x values anyway, with meaningless coefficients (7.9e13); LiveDoc refuses them, #NUM!"
-      },
-      "note": "Awaits Google's answer: collinear known x values."
+        "libreoffice": "LibreOffice fits collinear x values anyway, with meaningless coefficients (7.9e13); Google refuses them, #N/A"
+      }
     },
     {
       "id": "LINEST.13",
@@ -601,7 +601,11 @@
     {
       "id": "TREND.5",
       "f": "=TREND(Data!C4:C9, , {7;8})",
-      "rows": 2
+      "rows": 2,
+      "authority": "openformula",
+      "differs": {
+        "google": "Google refuses known x left out (#REF!); OpenFormula Part 4 §6.18.79 takes them as 1, 2, 3, ... (D38: the standard holds)"
+      }
     },
     {
       "id": "TREND.6",
@@ -638,22 +642,26 @@
     {
       "id": "SORTBY.1",
       "f": "=SORTBY(Data!F1:F3, Data!A1:A3, -1)",
+      "authority": "openformula",
       "rows": 3
     },
     {
       "id": "SORTBY.2",
       "f": "=SORTBY(Data!A1:A3, {3;1;2})",
+      "authority": "openformula",
       "rows": 3
     },
     {
       "id": "SORTBY.3",
       "f": "=SORTBY(Data!A1:B3, Data!E1:E3, 1)",
+      "authority": "openformula",
       "rows": 3,
       "cols": 2
     },
     {
       "id": "SORTBY.4",
-      "f": "=SORTBY(Data!A1:A3, Data!A1:A2)"
+      "f": "=SORTBY(Data!A1:A3, Data!A1:A2)",
+      "authority": "openformula"
     },
     {
       "id": "SUMPRODUCT.1",
@@ -679,9 +687,12 @@
       "id": "SUMPRODUCT.6",
       "f": "=SUMPRODUCT(Data!A10:F10, Data!A1:F1)",
       "differs": {
-        "libreoffice": "LibreOffice counts TRUE in a range as 1; LiveDoc skips booleans in a range, as SUM does"
+        "libreoffice": "LibreOffice counts TRUE as 1 but a number typed as text as 0 (73); Google reads both (88)"
       },
-      "note": "Awaits Google's answer: a boolean in a range."
+      "meaning": {
+        "ooxml": [[71]],
+        "cite": "https://support.microsoft.com/en-us/office/sumproduct-function-16753e75-9f68-4874-94ac-4d2145a2fd2e: non-numeric array entries are zeros"
+      }
     },
     {
       "id": "TRANSPOSE.1",
@@ -695,8 +706,7 @@
       "cols": 3,
       "differs": {
         "libreoffice": "LibreOffice gives an empty cell in an array result as 0; LiveDoc keeps it empty"
-      },
-      "note": "Awaits Google's answer: an empty cell in an array result."
+      }
     },
     {
       "id": "TRANSPOSE.3",

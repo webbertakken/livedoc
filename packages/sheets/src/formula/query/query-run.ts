@@ -128,7 +128,9 @@ export function runQuery(
     const keyed = (r: QueryValue[], by: QueryExpr[]) => by.map((e) => evaluateQuery(e, ctx([r])));
     const groups = new Map<string, Group>();
     const combos = new Map<string, QueryValue[]>();
-    if (q.groupBy.length === 0) groups.set('[]', { key: [], rows: [], cells: new Map() });
+    // Without group by, the aggregates over every row are one row; over none, no row, as Google gives them.
+    if (q.groupBy.length === 0 && filtered.length > 0)
+      groups.set('[]', { key: [], rows: [], cells: new Map() });
     for (const r of filtered) {
       const key = keyed(r, q.groupBy);
       const combo = keyed(r, q.pivot);

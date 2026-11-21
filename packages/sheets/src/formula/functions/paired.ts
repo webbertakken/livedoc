@@ -9,8 +9,11 @@ import { err, isError, type SheetError, type Value } from '../values';
 type Moments = { n: number; mx: number; my: number; sxx: number; syy: number; sxy: number };
 
 // data_y and data_x read pair by pair: both the same size, an error in either the answer, a pair kept only where both
-// are numbers (text, booleans and empty cells are skipped); no pair at all is #VALUE!, as LibreOffice answers.
-function pairs(yArg: EvalValue, xArg: EvalValue, f: Frame): Moments | SheetError {
+// are numbers (text, booleans and empty cells are skipped). No pair at all is the function's own error, as Google's:
+// #DIV/0! for a correlation or covariance, #N/A for the line (measured).
+type NoPair = '#DIV/0!' | '#N/A';
+
+function pairs(yArg: EvalValue, xArg: EvalValue, f: Frame, none: NoPair): Moments | SheetError {
   const ys = flatValues(arrayArg(yArg, f));
   const xs = flatValues(arrayArg(xArg, f));
   if (ys.length !== xs.length) return err('#N/A', 'The ranges must be the same size');
@@ -22,7 +25,7 @@ function pairs(yArg: EvalValue, xArg: EvalValue, f: Frame): Moments | SheetError
     if (isError(x)) return x;
     if (typeof x === 'number' && typeof y === 'number') kept.push([x, y]);
   }
-  if (kept.length === 0) return err('#VALUE!', 'No pair of numbers');
+  if (kept.length === 0) return err(none, 'No pair of numbers');
   const mx = mean(kept.map(([x]) => x));
   const my = mean(kept.map(([, y]) => y));
   let sxx = 0;
@@ -36,9 +39,9 @@ function pairs(yArg: EvalValue, xArg: EvalValue, f: Frame): Moments | SheetError
   return { n: kept.length, mx, my, sxx, syy, sxy };
 }
 
-function overPairs(each: (m: Moments) => Value): FnDef {
+function overPairs(none: NoPair, each: (m: Moments) => Value): FnDef {
   return fn(2, 2, (args, f) => {
-    const m = pairs(args[0]!, args[1]!, f);
+    const m = pairs(args[0]!, args[1]!, f, none);
     return isError(m) ? m : each(m);
   });
 }
@@ -58,19 +61,19 @@ function intercept(m: Moments): number | SheetError {
   return m.sxx === 0 ? FLAT_X : m.my - (m.sxy / m.sxx) * m.mx;
 }
 
-const correl = overPairs(correlation);
-const covariancePopulation = overPairs((m) => m.sxy / m.n);
+const correl = overPairs('#DIV/0!', correlation);
+const covariancePopulation = overPairs('#DIV/0!', (m) => m.sxy / m.n);
 const forecast = fn(3, 3, (args, f) => {
   const x = numArg(args[0]!, f);
   if (isError(x)) return x;
-  const m = pairs(args[1]!, args[2]!, f);
+  const m = pairs(args[1]!, args[2]!, f, '#N/A');
   if (isError(m)) return m;
   const b = intercept(m);
   return isError(b) ? b : b + (m.sxy / m.sxx) * x;
 });
 
-// The probabilities must each be from 0 to 1 and add up to 1 (to within 1e-7, LibreOffice's tolerance); limits given
-// high to low are swapped.
+// The probabilities must add up to 1 (to within 1e-7, LibreOffice's tolerance), but Google checks no single one; limits
+// given high to low hold no value (measured).
 const PROBABILITY_SUM_TOLERANCE = 1e-7;
 
 function probability(args: EvalValue[], f: Frame): Value {
@@ -81,7 +84,6 @@ function probability(args: EvalValue[], f: Frame): Value {
   if (isError(low)) return low;
   const high = opt(args, 3, f, numArg, low);
   if (isError(high)) return high;
-  const [lo, hi] = low <= high ? [low, high] : [high, low];
   let total = 0;
   let within = 0;
   for (let i = 0; i < values.length; i++) {
@@ -91,9 +93,8 @@ function probability(args: EvalValue[], f: Frame): Value {
     if (isError(p)) return p;
     if (typeof v !== 'number' || typeof p !== 'number')
       return err('#VALUE!', 'Every value and probability must be a number');
-    if (p < 0 || p > 1) return err('#VALUE!', 'Each probability must be from 0 to 1');
     total += p;
-    if (v >= lo && v <= hi) within += p;
+    if (v >= low && v <= high) within += p;
   }
   if (Math.abs(total - 1) > PROBABILITY_SUM_TOLERANCE)
     return err('#VALUE!', 'The probabilities must add up to 1');
@@ -103,20 +104,20 @@ function probability(args: EvalValue[], f: Frame): Value {
 export const PAIRED_FUNCTIONS: Record<string, FnDef> = {
   CORREL: correl,
   PEARSON: correl,
-  RSQ: overPairs((m) => {
+  RSQ: overPairs('#N/A', (m) => {
     const r = correlation(m);
     return isError(r) ? r : r * r;
   }),
   COVAR: covariancePopulation,
   'COVARIANCE.P': covariancePopulation,
-  'COVARIANCE.S': overPairs((m) =>
-    m.n < 2 ? err('#DIV/0!', 'At least two pairs are needed') : m.sxy / (m.n - 1),
+  'COVARIANCE.S': overPairs('#DIV/0!', (m) =>
+    m.n < 2 ? err('#NUM!', 'At least two pairs are needed') : m.sxy / (m.n - 1),
   ),
-  SLOPE: overPairs(slope),
-  INTERCEPT: overPairs(intercept),
-  // Three pairs at least, as LibreOffice asks (#VALUE! below that); y may be flat, x may not.
-  STEYX: overPairs((m) => {
-    if (m.n < 3) return err('#VALUE!', 'At least three pairs are needed');
+  SLOPE: overPairs('#N/A', slope),
+  INTERCEPT: overPairs('#N/A', intercept),
+  // Three pairs at least (#DIV/0! below that, as Google's); y may be flat, x may not.
+  STEYX: overPairs('#N/A', (m) => {
+    if (m.n < 3) return err('#DIV/0!', 'At least three pairs are needed');
     if (m.sxx === 0) return FLAT_X;
     // A perfect fit can leave a residual a rounding below 0.
     return Math.sqrt(Math.max(0, m.syy - (m.sxy * m.sxy) / m.sxx) / (m.n - 2));

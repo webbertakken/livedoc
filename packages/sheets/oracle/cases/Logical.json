@@ -139,18 +139,14 @@
     {
       "id": "AND.7",
       "f": "=AND(Data!B4)",
-      "differs": {
-        "libreoffice": "LibreOffice refuses text where a truth goes; Google takes \"an expression that can be coerced to a logical value\" (https://support.google.com/docs/answer/3093301), and text TRUE may be one"
-      },
-      "note": "Awaits Google's answer: whether text TRUE in a cell reads as a truth."
+      "note": "Text in a referenced cell is left out, as Google reads it; text given as a value is read (AND.8)."
     },
     {
       "id": "AND.8",
       "f": "=AND(\"TRUE\", 1)",
       "differs": {
         "libreoffice": "LibreOffice refuses text where a truth goes; Google takes \"an expression that can be coerced to a logical value\" (https://support.google.com/docs/answer/3093301), and text TRUE may be one"
-      },
-      "note": "Awaits Google's answer: whether the text \"TRUE\" reads as a truth."
+      }
     },
     {
       "id": "OR.4",
@@ -203,7 +199,10 @@
     },
     {
       "id": "SWITCH.5",
-      "f": "=SWITCH(Data!A4, 0, \"zero\", \"other\")"
+      "f": "=SWITCH(Data!A4, 0, \"zero\", \"other\")",
+      "differs": {
+        "libreoffice": "LibreOffice matches an empty cell to no case; Google to 0"
+      }
     },
     {
       "id": "IFERROR.4",
@@ -224,8 +223,7 @@
       "f": "=IFNA(Data!A4, 1)",
       "differs": {
         "libreoffice": "LibreOffice gives a formula that hands on an empty cell 0; Google shows such a formula empty"
-      },
-      "note": "Awaits Google's answer: an empty value handed on by a function."
+      }
     },
     {
       "id": "LAMBDA.1",

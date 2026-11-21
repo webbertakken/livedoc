@@ -61,8 +61,8 @@ describe('reference operators', () => {
 
   it('passes an error given where a reference goes', () => {
     const b = book({ ...grid, E1: '=SUM(A1:INDEX(A1:A3, 9))', E2: '=SUM((A1, INDEX(A1:A3, 9)))' });
-    expect(b.v('E1')).toMatchObject({ e: '#REF!' });
-    expect(b.v('E2')).toMatchObject({ e: '#REF!' });
+    expect(b.v('E1')).toMatchObject({ e: '#NUM!' });
+    expect(b.v('E2')).toMatchObject({ e: '#NUM!' });
   });
 });
 

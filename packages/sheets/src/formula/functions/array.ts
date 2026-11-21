@@ -92,24 +92,27 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
     const range = arrayArg(args[0]!, f);
     const d = dims(range);
     let conds = args.slice(1).map((a) => arrayArg(a, f));
-    // A single value after one condition longer than one cannot be a condition (Google refuses it): it is OOXML's
-    // if_empty, what FILTER gives when nothing passes (D38).
+    // In a file's meaning a single value after one condition longer than one is OOXML's if_empty, what FILTER gives
+    // when nothing passes; Google reads it as a condition, of the wrong size (the file's meaning).
     const one = (a: ValueArray) => dims(a).rows === 1 && dims(a).cols === 1;
-    const ifEmpty = conds.length === 2 && one(conds[1]!) && !one(conds[0]!) ? conds[1]! : null;
+    const ifEmpty =
+      f.meaning !== 'google' && conds.length === 2 && one(conds[1]!) && !one(conds[0]!)
+        ? conds[1]!
+        : null;
     if (ifEmpty) conds = conds.slice(0, 1);
     const nothing = ifEmpty ? scalarOf(ifEmpty.rows[0]![0]!) : NOTHING;
     // Conditions run along the rows (a column of TRUE/FALSE) or along the columns (a row of them).
     const byRows = conds.every((c) => dims(c).rows === d.rows && dims(c).cols === 1);
     const byCols = !byRows && conds.every((c) => dims(c).cols === d.cols && dims(c).rows === 1);
-    if (!byRows && !byCols)
-      return err('#VALUE!', 'FILTER conditions must match the range in length');
+    if (!byRows && !byCols) return err('#N/A', 'FILTER conditions must match the range in length');
     const n = byRows ? d.rows : d.cols;
     const keep: boolean[] = [];
     for (let i = 0; i < n; i++) {
       let ok = true;
       for (const c of conds) {
         const v = scalarOf(byRows ? c.rows[i]![0]! : c.rows[0]![i]!);
-        if (isError(v)) return v;
+        // An error in a condition is #N/A, as Google gives it.
+        if (isError(v)) return err('#N/A', 'A FILTER condition is an error');
         const b = toBool(v);
         if (isError(b)) return b;
         if (!b) ok = false;
@@ -140,7 +143,7 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
     const range = arrayArg(args[0]!, f);
     const n = opt(args, 1, f, intArg, 1);
     if (isError(n)) return n;
-    if (n < 1) return err('#NUM!', 'SORTN needs at least one row to give');
+    if (n < 1) return err('#VALUE!', 'SORTN needs at least one row to give');
     const mode = opt(args, 2, f, intArg, 0);
     if (isError(mode)) return mode;
     if (mode < 0 || mode > 3) return err('#NUM!', 'SORTN shows ties by 0, 1, 2 or 3');
@@ -205,7 +208,7 @@ export const ARRAY_FUNCTIONS: Record<string, FnDef> = {
   MUNIT: fn(1, 1, (args, f) => {
     const n = intArg(args[0]!, f);
     if (isError(n)) return n;
-    if (n < 1) return err('#VALUE!', 'MUNIT needs a size of at least 1');
+    if (n < 1) return err('#NUM!', 'MUNIT needs a size of at least 1');
     if (tooBig(n, n)) return err('#NUM!', 'The result is too large');
     return {
       rows: Array.from({ length: n }, (_, i) =>

@@ -20,7 +20,9 @@ export function keyColumn(
     const col = intArg(arg, f);
     if (isError(col)) return col;
     const width = rows[0]?.length ?? 0;
-    if (col < 1 || col > width) return err('#VALUE!', `There is no column ${col} to sort by`);
+    // A column past the range is #REF!, as Google gives it; one below 1 #VALUE!.
+    if (col > width) return err('#REF!', `There is no column ${col} to sort by`);
+    if (col < 1) return err('#VALUE!', `There is no column ${col} to sort by`);
     return rows.map((r) => scalarOf(r[col - 1]!));
   }
   if (d.cols !== 1 || d.rows !== rows.length)

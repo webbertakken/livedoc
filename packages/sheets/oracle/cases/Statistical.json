@@ -70,7 +70,10 @@
     },
     {
       "id": "AVEDEV.4",
-      "f": "=AVEDEV(Data!Q1:Q2)"
+      "f": "=AVEDEV(Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #NUM! for no numbers"
+      }
     },
     {
       "id": "AVEDEV.5",
@@ -93,8 +96,7 @@
       "f": "=AVERAGE(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "AVERAGE.4",
@@ -140,8 +142,7 @@
       "f": "=AVERAGEA(1, TRUE, \"3\")",
       "differs": {
         "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "AVERAGEA.3",
@@ -149,7 +150,13 @@
     },
     {
       "id": "AVERAGEA.4",
-      "f": "=AVERAGEA(1, \"x\")"
+      "f": "=AVERAGEA(1, \"x\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, as OpenFormula"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "AVERAGEA.5",
@@ -226,7 +233,10 @@
     },
     {
       "id": "BETA.INV.4",
-      "f": "=BETA.INV(0, 3, 2)"
+      "f": "=BETA.INV(0, 3, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice takes a probability of 0, the lower bound; Excel and Google refuse it"
+      }
     },
     {
       "id": "BETA.INV.5",
@@ -264,11 +274,21 @@
     },
     {
       "id": "BETADIST.6",
-      "f": "=BETADIST(2, 3, 8)"
+      "f": "=BETADIST(2, 3, 8)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 1 above the bounds, as OpenFormula (Part 4 §6.18.7)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "BETADIST.7",
-      "f": "=BETADIST(0.42, 3, 8, 0, 1, FALSE)"
+      "f": "=BETADIST(0.42, 3, 8, 0, 1, FALSE)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google refuses the cumulative argument (#N/A); OpenFormula Part 4 §6.18.7 takes it (D38: the standard holds)"
+      }
     },
     {
       "id": "BETAINV.1",
@@ -284,7 +304,13 @@
     },
     {
       "id": "BETAINV.4",
-      "f": "=BETAINV(0, 3, 2)"
+      "f": "=BETAINV(0, 3, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice takes a probability of 0, the lower bound, as OpenFormula (Part 4 §6.18.8)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "BETAINV.5",
@@ -332,12 +358,7 @@
     },
     {
       "id": "BINOM.DIST.9",
-      "f": "=BINOM.DIST(4, 100, 0.005)",
-      "expect": [[0.001514668284222]],
-      "cite": "https://support.google.com/docs/answer/3093987 (cumulative: \"FALSE by default\": BINOMDIST.1's 0.001514668284222)",
-      "differs": {
-        "libreoffice": "LibreOffice requires cumulative (Err:511)"
-      }
+      "f": "=BINOM.DIST(4, 100, 0.005)"
     },
     {
       "id": "BINOM.INV.1",
@@ -349,11 +370,17 @@
     },
     {
       "id": "BINOM.INV.3",
-      "f": "=BINOM.INV(10, 0.5, 0)"
+      "f": "=BINOM.INV(10, 0.5, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice takes alpha of 0; Excel and Google refuse it"
+      }
     },
     {
       "id": "BINOM.INV.4",
-      "f": "=BINOM.INV(10, 0.5, 1)"
+      "f": "=BINOM.INV(10, 0.5, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice takes alpha of 1; Excel and Google refuse it"
+      }
     },
     {
       "id": "BINOM.INV.5",
@@ -365,7 +392,10 @@
     },
     {
       "id": "BINOM.INV.7",
-      "f": "=BINOM.INV(10, 0, 0.5)"
+      "f": "=BINOM.INV(10, 0, 0.5)",
+      "differs": {
+        "libreoffice": "LibreOffice takes a probability of 0; Excel and Google refuse it"
+      }
     },
     {
       "id": "BINOMDIST.1",
@@ -401,12 +431,7 @@
     },
     {
       "id": "BINOMDIST.9",
-      "f": "=BINOMDIST(4, 100, 0.005)",
-      "expect": [[0.001514668284222]],
-      "cite": "https://support.google.com/docs/answer/3093987 (cumulative: \"FALSE by default\": BINOMDIST.1's 0.001514668284222)",
-      "differs": {
-        "libreoffice": "LibreOffice requires cumulative (Err:511)"
-      }
+      "f": "=BINOMDIST(4, 100, 0.005)"
     },
     {
       "id": "CHIDIST.1",
@@ -425,8 +450,7 @@
       "f": "=CHIDIST(-1, 2)",
       "differs": {
         "libreoffice": "LibreOffice gives 1 below 0; LiveDoc #NUM!, as Google's help says x \"Must be a positive number\" and CHIDIST is CHISQ.DIST.RT"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "CHIDIST.5",
@@ -454,11 +478,7 @@
     },
     {
       "id": "CHIINV.5",
-      "f": "=CHIINV(1, 2)",
-      "differs": {
-        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003198) does not say which error."
+      "f": "=CHIINV(1, 2)"
     },
     {
       "id": "CHIINV.6",
@@ -489,16 +509,11 @@
       "f": "=CHISQ.DIST(0, 2, FALSE)",
       "differs": {
         "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "CHISQ.DIST.7",
-      "f": "=CHISQ.DIST(0, 1, FALSE)",
-      "differs": {
-        "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      "f": "=CHISQ.DIST(0, 1, FALSE)"
     },
     {
       "id": "CHISQ.DIST.RT.1",
@@ -538,11 +553,7 @@
     },
     {
       "id": "CHISQ.INV.4",
-      "f": "=CHISQ.INV(0, 2)",
-      "differs": {
-        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7004181) does not say which error."
+      "f": "=CHISQ.INV(0, 2)"
     },
     {
       "id": "CHISQ.INV.5",
@@ -570,11 +581,7 @@
     },
     {
       "id": "CHISQ.INV.RT.5",
-      "f": "=CHISQ.INV.RT(1, 2)",
-      "differs": {
-        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003348) does not say which error."
+      "f": "=CHISQ.INV.RT(1, 2)"
     },
     {
       "id": "CHISQ.INV.RT.6",
@@ -674,7 +681,10 @@
     },
     {
       "id": "CONFIDENCE.T.2",
-      "f": "=CONFIDENCE.T(0.05, 1, 1)"
+      "f": "=CONFIDENCE.T(0.05, 1, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #DIV/0! for a size of 1"
+      }
     },
     {
       "id": "CONFIDENCE.T.3",
@@ -722,7 +732,10 @@
     },
     {
       "id": "CORREL.6",
-      "f": "=CORREL(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=CORREL(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "COUNT.1",
@@ -770,7 +783,10 @@
     },
     {
       "id": "COVAR.6",
-      "f": "=COVAR(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=COVAR(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "COVARIANCE.P.1",
@@ -794,7 +810,10 @@
     },
     {
       "id": "COVARIANCE.P.6",
-      "f": "=COVARIANCE.P(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=COVARIANCE.P(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "COVARIANCE.S.1",
@@ -818,7 +837,10 @@
     },
     {
       "id": "COVARIANCE.S.6",
-      "f": "=COVARIANCE.S(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=COVARIANCE.S(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "CRITBINOM.1",
@@ -830,11 +852,23 @@
     },
     {
       "id": "CRITBINOM.3",
-      "f": "=CRITBINOM(10, 0.5, 0)"
+      "f": "=CRITBINOM(10, 0.5, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice takes alpha of 0, as OpenFormula (Part 4 §6.18.19)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "CRITBINOM.4",
-      "f": "=CRITBINOM(10, 0.5, 1)"
+      "f": "=CRITBINOM(10, 0.5, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice takes alpha of 1, as OpenFormula (Part 4 §6.18.19)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "CRITBINOM.5",
@@ -846,7 +880,13 @@
     },
     {
       "id": "CRITBINOM.7",
-      "f": "=CRITBINOM(10, 0, 0.5)"
+      "f": "=CRITBINOM(10, 0, 0.5)",
+      "differs": {
+        "libreoffice": "LibreOffice takes a probability of 0, as OpenFormula (Part 4 §6.18.19)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "DEVSQ.1",
@@ -886,7 +926,10 @@
     },
     {
       "id": "EXPON.DIST.3",
-      "f": "=EXPON.DIST(-1, 0.5, TRUE)"
+      "f": "=EXPON.DIST(-1, 0.5, TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0 below 0; Excel and Google refuse x"
+      }
     },
     {
       "id": "EXPON.DIST.4",
@@ -906,7 +949,13 @@
     },
     {
       "id": "EXPONDIST.3",
-      "f": "=EXPONDIST(-1, 0.5, TRUE)"
+      "f": "=EXPONDIST(-1, 0.5, TRUE)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0 below 0, as OpenFormula (Part 4 §6.18.21)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "EXPONDIST.4",
@@ -939,13 +988,9 @@
     {
       "id": "F.DIST.6",
       "f": "=F.DIST(15.35, 7, 6)",
-      "expect": [[0.000345105468602558]],
-      "cite": "https://support.google.com/docs/answer/6055706 (cumulative: \"Default value is FALSE\": F.DIST.2's density)",
+      "authority": "openformula",
       "differs": {
-        "libreoffice": "LibreOffice writes F.DIST as ODF FDIST, whose cumulative is TRUE when left out"
-      },
-      "meaning": {
-        "openformula": "libreoffice"
+        "google": "Google refuses F.DIST without its cumulative (#N/A), as Excel; OpenFormula's FDIST, as LibreOffice writes it, takes it as TRUE (D38: the standard holds)"
       }
     },
     {
@@ -978,15 +1023,17 @@
     },
     {
       "id": "F.INV.3",
-      "f": "=F.INV(0, 2, 3)"
+      "f": "=F.INV(0, 2, 3)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a probability of 0 (Err:502)"
+      }
     },
     {
       "id": "F.INV.4",
       "f": "=F.INV(1, 2, 3)",
       "differs": {
         "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7004265) does not say which error."
+      }
     },
     {
       "id": "F.INV.5",
@@ -1006,11 +1053,7 @@
     },
     {
       "id": "F.INV.RT.4",
-      "f": "=F.INV.RT(1, 2, 3)",
-      "differs": {
-        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003960) does not say which error."
+      "f": "=F.INV.RT(1, 2, 3)"
     },
     {
       "id": "F.INV.RT.5",
@@ -1026,11 +1069,17 @@
     },
     {
       "id": "F.TEST.3",
-      "f": "=F.TEST(Data!M1:M3, Data!C1:C3)"
+      "f": "=F.TEST(Data!M1:M3, Data!C1:C3)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a sample of fewer than two numbers"
+      }
     },
     {
       "id": "F.TEST.4",
-      "f": "=F.TEST({1}, {2,3})"
+      "f": "=F.TEST({1}, {2,3})",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a sample of fewer than two numbers"
+      }
     },
     {
       "id": "FDIST.1",
@@ -1066,11 +1115,7 @@
     },
     {
       "id": "FINV.4",
-      "f": "=FINV(1, 2, 3)",
-      "differs": {
-        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/7003960) does not say which error."
+      "f": "=FINV(1, 2, 3)"
     },
     {
       "id": "FINV.5",
@@ -1166,11 +1211,17 @@
     },
     {
       "id": "FTEST.3",
-      "f": "=FTEST(Data!M1:M3, Data!C1:C3)"
+      "f": "=FTEST(Data!M1:M3, Data!C1:C3)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a sample of fewer than two numbers"
+      }
     },
     {
       "id": "FTEST.4",
-      "f": "=FTEST({1}, {2,3})"
+      "f": "=FTEST({1}, {2,3})",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for a sample of fewer than two numbers"
+      }
     },
     {
       "id": "GAMMA.1",
@@ -1189,8 +1240,7 @@
       "f": "=GAMMA(-1.5)",
       "differs": {
         "libreoffice": "LibreOffice extends GAMMA below 0 (2.363); LiveDoc refuses it, as Google's help says \"The number must be positive\""
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "GAMMA.5",
@@ -1217,8 +1267,7 @@
       "f": "=GAMMA.DIST(0, 1, 2, FALSE)",
       "differs": {
         "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "GAMMA.DIST.4",
@@ -1271,8 +1320,7 @@
       "f": "=GAMMADIST(0, 1, 2, FALSE)",
       "differs": {
         "libreoffice": "LibreOffice gives a density at 0; LiveDoc refuses it, as Google's help says \"If alpha is less than or equal to 1 and cumulative is FALSE, then x must be greater than zero\" (CHISQ.DIST is GAMMA.DIST(x, n/2, 2))"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "GAMMADIST.4",
@@ -1283,8 +1331,7 @@
       "f": "=GAMMADIST(-1, 2, 2, TRUE)",
       "differs": {
         "libreoffice": "LibreOffice gives 0 below 0; LiveDoc refuses it, as Google's help says x \"must be greater than or equal to zero\""
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "GAMMADIST.6",
@@ -1348,7 +1395,13 @@
     },
     {
       "id": "GEOMEAN.3",
-      "f": "=GEOMEAN(2, 0)"
+      "f": "=GEOMEAN(2, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, the root of a product of 0, as OpenFormula (Part 4 §6.18.34)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "GEOMEAN.4",
@@ -1391,8 +1444,7 @@
       "f": "=HYPGEOM.DIST(4, 12, 20, 40)",
       "differs": {
         "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's four-argument form as HYPGEOMDIST, the probability mass"
-      },
-      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
+      }
     },
     {
       "id": "HYPGEOM.DIST.2",
@@ -1412,11 +1464,15 @@
     },
     {
       "id": "HYPGEOM.DIST.6",
-      "f": "=HYPGEOM.DIST(4.9, 12, 20, 40)",
-      "differs": {
-        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's four-argument form as HYPGEOMDIST, the probability mass"
+      "f": "=HYPGEOM.DIST(4.9, 12, 20, 40, FALSE)",
+      "meaning": {
+        "ooxml": [[0.109243002735772]],
+        "openformula": [[0.109243002735772]],
+        "cite": "Microsoft's help, HYPGEOM.DIST and HYPGEOMDIST functions (support.microsoft.com): \"All arguments are truncated to integers\""
       },
-      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
+      "differs": {
+        "libreoffice": "LibreOffice truncates every argument first, as Excel"
+      }
     },
     {
       "id": "HYPGEOMDIST.1",
@@ -1424,11 +1480,19 @@
     },
     {
       "id": "HYPGEOMDIST.2",
-      "f": "=HYPGEOMDIST(4, 12, 20, 40, TRUE)"
+      "f": "=HYPGEOMDIST(4, 12, 20, 40, TRUE)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google refuses the cumulative argument (#N/A); OpenFormula Part 4 §6.18.37 takes it (D38: the standard holds)"
+      }
     },
     {
       "id": "HYPGEOMDIST.3",
-      "f": "=HYPGEOMDIST(4, 12, 20, 40, FALSE)"
+      "f": "=HYPGEOMDIST(4, 12, 20, 40, FALSE)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google refuses the cumulative argument (#N/A); OpenFormula Part 4 §6.18.37 takes it (D38: the standard holds)"
+      }
     },
     {
       "id": "HYPGEOMDIST.4",
@@ -1440,7 +1504,14 @@
     },
     {
       "id": "HYPGEOMDIST.6",
-      "f": "=HYPGEOMDIST(4.9, 12, 20, 40)"
+      "f": "=HYPGEOMDIST(4.9, 12, 20, 40)",
+      "differs": {
+        "libreoffice": "LibreOffice truncates every argument first, as Excel"
+      },
+      "meaning": {
+        "ooxml": [[0.109243002735772]],
+        "cite": "Microsoft's help, HYPGEOM.DIST and HYPGEOMDIST functions (support.microsoft.com): \"All arguments are truncated to integers\""
+      }
     },
     {
       "id": "INTERCEPT.1",
@@ -1464,7 +1535,10 @@
     },
     {
       "id": "INTERCEPT.6",
-      "f": "=INTERCEPT(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=INTERCEPT(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "KURT.1",
@@ -1499,16 +1573,14 @@
       "f": "=LARGE(Data!A1:A8, 9)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "LARGE.3",
       "f": "=LARGE(Data!A1:A8, 0)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "LARGE.4",
@@ -1516,11 +1588,16 @@
     },
     {
       "id": "LARGE.5",
-      "f": "=LARGE(Data!A1:A8, 2.5)"
+      "f": "=LARGE(Data!A1:A8, 2.5)",
+      "differs": {
+        "libreoffice": "LibreOffice rounds k up; Google truncates it (OpenFormula asks for a whole k)"
+      }
     },
     {
       "id": "LOGINV.1",
-      "f": "=LOGINV(0.4, 4, 6)"
+      "f": "=LOGINV(0.4, 4, 6)",
+      "tol": 1e-8,
+      "note": "Google's inverse normal is good to about 1e-9 (measured: NORM.S.INV(0.999999) is 4.753424313830874)"
     },
     {
       "id": "LOGINV.2",
@@ -1543,8 +1620,7 @@
       "f": "=LOGNORM.DIST(4, 4, 6)",
       "differs": {
         "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's three-argument form as LOGNORMDIST, the cumulative distribution"
-      },
-      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
+      }
     },
     {
       "id": "LOGNORM.DIST.2",
@@ -1556,11 +1632,7 @@
     },
     {
       "id": "LOGNORM.DIST.4",
-      "f": "=LOGNORM.DIST(0, 4, 6)",
-      "differs": {
-        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's three-argument form as LOGNORMDIST, the cumulative distribution"
-      },
-      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
+      "f": "=LOGNORM.DIST(0, 4, 6)"
     },
     {
       "id": "LOGNORM.DIST.5",
@@ -1568,7 +1640,9 @@
     },
     {
       "id": "LOGNORM.INV.1",
-      "f": "=LOGNORM.INV(0.4, 4, 6)"
+      "f": "=LOGNORM.INV(0.4, 4, 6)",
+      "tol": 1e-8,
+      "note": "Google's inverse normal is good to about 1e-9 (measured: NORM.S.INV(0.999999) is 4.753424313830874)"
     },
     {
       "id": "LOGNORM.INV.2",
@@ -1592,15 +1666,29 @@
     },
     {
       "id": "LOGNORMDIST.2",
-      "f": "=LOGNORMDIST(4, 4, 6, TRUE)"
+      "f": "=LOGNORMDIST(4, 4, 6, TRUE)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google refuses the cumulative argument (#N/A); OpenFormula Part 4 §6.18.44 takes it (D38: the standard holds)"
+      }
     },
     {
       "id": "LOGNORMDIST.3",
-      "f": "=LOGNORMDIST(4, 4, 6, FALSE)"
+      "f": "=LOGNORMDIST(4, 4, 6, FALSE)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google refuses the cumulative argument (#N/A); OpenFormula Part 4 §6.18.44 takes it (D38: the standard holds)"
+      }
     },
     {
       "id": "LOGNORMDIST.4",
-      "f": "=LOGNORMDIST(0, 4, 6)"
+      "f": "=LOGNORMDIST(0, 4, 6)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0 at 0, as OpenFormula (Part 4 §6.18.44)"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "LOGNORMDIST.5",
@@ -1641,8 +1729,7 @@
       "f": "=MAX(1, \"3\")",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "MAX.5",
@@ -1707,8 +1794,7 @@
       "f": "=MEDIAN(Data!Q1:Q2)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say."
+      }
     },
     {
       "id": "MEDIAN.4",
@@ -1735,8 +1821,7 @@
       "f": "=MIN(1, \"3\")",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "MIN.5",
@@ -1756,7 +1841,13 @@
     },
     {
       "id": "MINA.4",
-      "f": "=MINA(1, \"x\")"
+      "f": "=MINA(1, \"x\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, as OpenFormula"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "MINA.5",
@@ -1783,8 +1874,7 @@
       "f": "=MODE(1,2,3)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+      }
     },
     {
       "id": "MODE.3",
@@ -1807,22 +1897,23 @@
       "f": "=MODE.MULT(1,2,3)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+      }
     },
     {
       "id": "MODE.MULT.4",
       "f": "=MODE.MULT(Data!A1:A8)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+      }
     },
     {
       "id": "MODE.MULT.5",
       "f": "=MODE.MULT({3,3,1,1,2,2})",
       "rows": 3,
-      "cols": 1
+      "cols": 1,
+      "differs": {
+        "libreoffice": "LibreOffice lists the modes in the order they first appear; Google from the least"
+      }
     },
     {
       "id": "MODE.SNGL.1",
@@ -1833,8 +1924,7 @@
       "f": "=MODE.SNGL(1,2,3)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! when no value repeats; LiveDoc #N/A, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help for MODE.MULT says \"returns an error if all values occur only once\", not which."
+      }
     },
     {
       "id": "MODE.SNGL.3",
@@ -1845,8 +1935,7 @@
       "f": "=NEGBINOM.DIST(4, 2, 0.1)",
       "differs": {
         "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's three-argument form as NEGBINOMDIST, the probability mass"
-      },
-      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
+      }
     },
     {
       "id": "NEGBINOM.DIST.2",
@@ -1870,21 +1959,11 @@
     },
     {
       "id": "NEGBINOMDIST.2",
-      "f": "=NEGBINOMDIST(4, 2, 0.1, TRUE)",
-      "expect": [[0.114265]],
-      "cite": "https://support.google.com/docs/answer/3094031 (NEGBINOMDIST(num_failures, num_successes, prob_success, cumulative): NEGBINOM.DIST.2 and .3)",
-      "differs": {
-        "libreoffice": "LibreOffice's NEGBINOMDIST takes three arguments (Err:504)"
-      }
+      "f": "=NEGBINOMDIST(4, 2, 0.1, TRUE)"
     },
     {
       "id": "NEGBINOMDIST.3",
-      "f": "=NEGBINOMDIST(4, 2, 0.1, FALSE)",
-      "expect": [[0.032805]],
-      "cite": "https://support.google.com/docs/answer/3094031 (NEGBINOMDIST(num_failures, num_successes, prob_success, cumulative): NEGBINOM.DIST.2 and .3)",
-      "differs": {
-        "libreoffice": "LibreOffice's NEGBINOMDIST takes three arguments (Err:504)"
-      }
+      "f": "=NEGBINOMDIST(4, 2, 0.1, FALSE)"
     },
     {
       "id": "NEGBINOMDIST.4",
@@ -1924,23 +2003,23 @@
     },
     {
       "id": "NORM.INV.3",
-      "f": "=NORM.INV(0.999999, 0, 1)"
+      "f": "=NORM.INV(0.999999, 0, 1)",
+      "tol": 1e-8,
+      "note": "Google's inverse normal is good to about 1e-9 (measured: NORM.S.INV(0.999999) is 4.753424313830874)"
     },
     {
       "id": "NORM.INV.4",
       "f": "=NORM.INV(0, 0, 1)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
-      },
-      "note": "Awaits Google's answer: its help for NORMINV does not say."
+      }
     },
     {
       "id": "NORM.INV.5",
       "f": "=NORM.INV(1, 0, 1)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
-      },
-      "note": "Awaits Google's answer: its help for NORMINV does not say."
+      }
     },
     {
       "id": "NORM.INV.6",
@@ -2044,23 +2123,23 @@
     },
     {
       "id": "NORMINV.3",
-      "f": "=NORMINV(0.999999, 0, 1)"
+      "f": "=NORMINV(0.999999, 0, 1)",
+      "tol": 1e-8,
+      "note": "Google's inverse normal is good to about 1e-9 (measured: NORM.S.INV(0.999999) is 4.753424313830874)"
     },
     {
       "id": "NORMINV.4",
       "f": "=NORMINV(0, 0, 1)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
-      },
-      "note": "Awaits Google's answer: its help for NORMINV does not say."
+      }
     },
     {
       "id": "NORMINV.5",
       "f": "=NORMINV(1, 0, 1)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE!; LiveDoc #NUM!, as Google documents for NORMSINV"
-      },
-      "note": "Awaits Google's answer: its help for NORMINV does not say."
+      }
     },
     {
       "id": "NORMINV.6",
@@ -2072,21 +2151,11 @@
     },
     {
       "id": "NORMSDIST.2",
-      "f": "=NORMSDIST(2.4, TRUE)",
-      "expect": [[0.991802464075404]],
-      "cite": "https://support.google.com/docs/answer/3094089 (NORMSDIST(x, cumulative): NORM.S.DIST.2 and .3)",
-      "differs": {
-        "libreoffice": "LibreOffice's NORMSDIST (ODF LEGACY.NORMSDIST) takes one argument (Err:508)"
-      }
+      "f": "=NORMSDIST(2.4, TRUE)"
     },
     {
       "id": "NORMSDIST.3",
-      "f": "=NORMSDIST(2.4, FALSE)",
-      "expect": [[0.0223945302948429]],
-      "cite": "https://support.google.com/docs/answer/3094089 (NORMSDIST(x, cumulative): NORM.S.DIST.2 and .3)",
-      "differs": {
-        "libreoffice": "LibreOffice's NORMSDIST (ODF LEGACY.NORMSDIST) takes one argument (Err:508)"
-      }
+      "f": "=NORMSDIST(2.4, FALSE)"
     },
     {
       "id": "NORMSDIST.4",
@@ -2156,7 +2225,10 @@
     },
     {
       "id": "PEARSON.6",
-      "f": "=PEARSON(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=PEARSON(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "PERCENTILE.1",
@@ -2179,8 +2251,7 @@
       "f": "=PERCENTILE(Data!Q1:Q2, 0.5)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say."
+      }
     },
     {
       "id": "PERCENTILE.EXC.1",
@@ -2227,8 +2298,7 @@
       "f": "=PERCENTILE.INC(Data!Q1:Q2, 0.5)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say."
+      }
     },
     {
       "id": "PERCENTRANK.1",
@@ -2310,8 +2380,7 @@
       "f": "=PERCENTRANK.EXC(Data!A1:A8, 30)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for a value outside the data; LiveDoc #N/A, as Google documents for PERCENTRANK, the same function"
-      },
-      "note": "Awaits Google's answer: its help for this form says only that a value not in the data is estimated."
+      }
     },
     {
       "id": "PERCENTRANK.EXC.6",
@@ -2326,8 +2395,7 @@
       "f": "=PERCENTRANK.EXC(Data!A1:A8, 8, 0)",
       "differs": {
         "libreoffice": "LibreOffice refuses fewer than one significant digit (Err:502); LiveDoc uses the default 3, as Google documents for PERCENTRANK, the same function"
-      },
-      "note": "Awaits Google's answer: its help for this form does not say."
+      }
     },
     {
       "id": "PERCENTRANK.INC.1",
@@ -2350,8 +2418,7 @@
       "f": "=PERCENTRANK.INC(Data!A1:A8, 30)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for a value outside the data; LiveDoc #N/A, as Google documents for PERCENTRANK, the same function"
-      },
-      "note": "Awaits Google's answer: its help for this form says only that a value not in the data is estimated."
+      }
     },
     {
       "id": "PERCENTRANK.INC.6",
@@ -2366,8 +2433,7 @@
       "f": "=PERCENTRANK.INC(Data!A1:A8, 8, 0)",
       "differs": {
         "libreoffice": "LibreOffice refuses fewer than one significant digit (Err:502); LiveDoc uses the default 3, as Google documents for PERCENTRANK, the same function"
-      },
-      "note": "Awaits Google's answer: its help for this form does not say."
+      }
     },
     {
       "id": "PERMUT.1",
@@ -2423,23 +2489,7 @@
     },
     {
       "id": "PERMUTATIONA.4",
-      "f": "=PERMUTATIONA(3, 4)",
-      "expect": [
-        [
-          {
-            "e": "#NUM!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/9368324 (number_chosen: \"Must be less than or equal to number.\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives 3^4, 81"
-      },
-      "meaning": {
-        "ooxml": [[81]],
-        "openformula": "libreoffice",
-        "cite": "Microsoft's help, PERMUTATIONA function (support.microsoft.com): number raised to number_chosen; only a negative one is #NUM!"
-      }
+      "f": "=PERMUTATIONA(3, 4)"
     },
     {
       "id": "PERMUTATIONA.5",
@@ -2447,7 +2497,15 @@
     },
     {
       "id": "PERMUTATIONA.6",
-      "f": "=PERMUTATIONA(3, 0)"
+      "f": "=PERMUTATIONA(3, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 3^0, 1"
+      },
+      "meaning": {
+        "ooxml": [[1]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, PERMUTATIONA function (support.microsoft.com): number raised to number_chosen; only a negative one is #NUM!"
+      }
     },
     {
       "id": "PHI.1",
@@ -2481,7 +2539,10 @@
     },
     {
       "id": "POISSON.3",
-      "f": "=POISSON(0, 0, FALSE)"
+      "f": "=POISSON(0, 0, FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a mean of 0 (Err:502)"
+      }
     },
     {
       "id": "POISSON.4",
@@ -2497,7 +2558,11 @@
     },
     {
       "id": "POISSON.7",
-      "f": "=POISSON(2, 1)"
+      "f": "=POISSON(2, 1)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google refuses POISSON without its cumulative (#N/A); OpenFormula Part 4 §6.18.62 takes it as TRUE (D38: the standard holds)"
+      }
     },
     {
       "id": "POISSON.DIST.1",
@@ -2509,7 +2574,10 @@
     },
     {
       "id": "POISSON.DIST.3",
-      "f": "=POISSON.DIST(0, 0, FALSE)"
+      "f": "=POISSON.DIST(0, 0, FALSE)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a mean of 0 (Err:502)"
+      }
     },
     {
       "id": "POISSON.DIST.4",
@@ -2525,11 +2593,7 @@
     },
     {
       "id": "POISSON.DIST.7",
-      "f": "=POISSON.DIST(2, 1)",
-      "differs": {
-        "libreoffice": "LibreOffice requires cumulative, as Excel does (Err:511); LiveDoc reads Google's \"[cumulative]\" as POISSON, cumulative when left out"
-      },
-      "note": "Awaits Google's answer: its function list gives the shorter form but no example of its answer."
+      "f": "=POISSON.DIST(2, 1)"
     },
     {
       "id": "PROB.1",
@@ -2553,11 +2617,17 @@
     },
     {
       "id": "PROB.6",
-      "f": "=PROB({1,2}, {1.5,-0.5}, 1)"
+      "f": "=PROB({1,2}, {1.5,-0.5}, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a probability outside 0 to 1, OpenFormula's constraint; Google checks only their sum"
+      }
     },
     {
       "id": "PROB.7",
-      "f": "=PROB(Data!O1:O4, Data!P1:P4, 3, 2)"
+      "f": "=PROB(Data!O1:O4, Data!P1:P4, 3, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice swaps limits given high to low; Google finds no value between them"
+      }
     },
     {
       "id": "QUARTILE.1",
@@ -2713,7 +2783,10 @@
     },
     {
       "id": "RSQ.6",
-      "f": "=RSQ(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=RSQ(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "SKEW.1",
@@ -2773,7 +2846,10 @@
     },
     {
       "id": "SLOPE.6",
-      "f": "=SLOPE(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=SLOPE(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "SMALL.1",
@@ -2784,16 +2860,14 @@
       "f": "=SMALL(Data!A1:A8, 9)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "SMALL.3",
       "f": "=SMALL(Data!A1:A8, 0)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for a rank outside the data; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say which error."
+      }
     },
     {
       "id": "SMALL.4",
@@ -2809,7 +2883,10 @@
     },
     {
       "id": "STANDARDIZE.2",
-      "f": "=STANDARDIZE(1, 2, 0)"
+      "f": "=STANDARDIZE(1, 2, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #DIV/0! for a standard deviation of 0"
+      }
     },
     {
       "id": "STANDARDIZE.3",
@@ -2848,8 +2925,7 @@
       "f": "=STDEV(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "STDEV.P.1",
@@ -2861,23 +2937,7 @@
     },
     {
       "id": "STDEV.P.3",
-      "f": "=STDEV.P(5)",
-      "expect": [
-        [
-          {
-            "e": "#DIV/0!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/3094105 (\"If the total number of values supplied as value arguments is not at least two, STDEVP will return the #DIV/0! error\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
-      },
-      "meaning": {
-        "ooxml": [[0]],
-        "openformula": "libreoffice",
-        "cite": "Microsoft's help, STDEV.P function (support.microsoft.com): the spread of a population of one value is 0"
-      }
+      "f": "=STDEV.P(5)"
     },
     {
       "id": "STDEV.P.4",
@@ -2896,8 +2956,7 @@
       "f": "=STDEV.P(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "STDEV.S.1",
@@ -2928,8 +2987,7 @@
       "f": "=STDEV.S(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "STDEVA.1",
@@ -2940,8 +2998,7 @@
       "f": "=STDEVA(1, TRUE, \"3\")",
       "differs": {
         "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "STDEVA.3",
@@ -2949,7 +3006,13 @@
     },
     {
       "id": "STDEVA.4",
-      "f": "=STDEVA(1, \"x\")"
+      "f": "=STDEVA(1, \"x\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, as OpenFormula"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "STDEVA.5",
@@ -2973,23 +3036,7 @@
     },
     {
       "id": "STDEVP.3",
-      "f": "=STDEVP(5)",
-      "expect": [
-        [
-          {
-            "e": "#DIV/0!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/3094105 (\"If the total number of values supplied as value arguments is not at least two, STDEVP will return the #DIV/0! error\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
-      },
-      "meaning": {
-        "ooxml": [[0]],
-        "openformula": "libreoffice",
-        "cite": "Microsoft's help, STDEVP function (support.microsoft.com): the spread of a population of one value is 0"
-      }
+      "f": "=STDEVP(5)"
     },
     {
       "id": "STDEVP.4",
@@ -3008,8 +3055,7 @@
       "f": "=STDEVP(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "STDEVPA.1",
@@ -3020,32 +3066,21 @@
       "f": "=STDEVPA(1, TRUE, \"3\")",
       "differs": {
         "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
-    },
-    {
-      "id": "STDEVPA.3",
-      "f": "=STDEVPA(5)",
-      "expect": [
-        [
-          {
-            "e": "#DIV/0!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/3094058 (\"If the total number of values supplied as value arguments is not at least two, STDEVPA will return the #DIV/0! error\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
-      },
-      "meaning": {
-        "ooxml": [[0]],
-        "openformula": "libreoffice",
-        "cite": "Microsoft's help, STDEVPA function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {
+      "id": "STDEVPA.3",
+      "f": "=STDEVPA(5)"
+    },
+    {
       "id": "STDEVPA.4",
-      "f": "=STDEVPA(1, \"x\")"
+      "f": "=STDEVPA(1, \"x\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, as OpenFormula"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "STDEVPA.5",
@@ -3077,11 +3112,17 @@
     },
     {
       "id": "STEYX.5",
-      "f": "=STEYX({1,3}, {-1,6})"
+      "f": "=STEYX({1,3}, {-1,6})",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for fewer than three pairs"
+      }
     },
     {
       "id": "STEYX.6",
-      "f": "=STEYX(Data!Q1:Q2, Data!Q1:Q2)"
+      "f": "=STEYX(Data!Q1:Q2, Data!Q1:Q2)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #VALUE! for no pair of numbers"
+      }
     },
     {
       "id": "T.DIST.1",
@@ -3179,11 +3220,7 @@
     },
     {
       "id": "T.INV.2T.4",
-      "f": "=T.INV.2T(1, 1)",
-      "differs": {
-        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/6055811) does not say which error."
+      "f": "=T.INV.2T(1, 1)"
     },
     {
       "id": "T.INV.2T.5",
@@ -3255,11 +3292,7 @@
     },
     {
       "id": "TINV.4",
-      "f": "=TINV(1, 1)",
-      "differs": {
-        "libreoffice": "LibreOffice accepts this end of the probability; LiveDoc refuses it (#NUM!), as Google's help asks for a probability \"greater than 0 and less than 1\""
-      },
-      "note": "Awaits Google's answer: its help (https://support.google.com/docs/answer/6055811) does not say which error."
+      "f": "=TINV(1, 1)"
     },
     {
       "id": "TINV.5",
@@ -3294,8 +3327,7 @@
       "f": "=TRIMMEAN(Data!Q1:Q2, 0)",
       "differs": {
         "libreoffice": "LibreOffice gives #VALUE! for no numbers; LiveDoc #NUM!, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help does not say."
+      }
     },
     {
       "id": "TTEST.1",
@@ -3358,8 +3390,7 @@
       "f": "=VAR(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "VAR.P.1",
@@ -3371,23 +3402,7 @@
     },
     {
       "id": "VAR.P.3",
-      "f": "=VAR.P(5)",
-      "expect": [
-        [
-          {
-            "e": "#DIV/0!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/3094113 (\"If the total number of values supplied as value arguments is not at least two, VARP will return the #DIV/0! error\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
-      },
-      "meaning": {
-        "ooxml": [[0]],
-        "openformula": "libreoffice",
-        "cite": "Microsoft's help, VAR.P function (support.microsoft.com): the spread of a population of one value is 0"
-      }
+      "f": "=VAR.P(5)"
     },
     {
       "id": "VAR.P.4",
@@ -3406,8 +3421,7 @@
       "f": "=VAR.P(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "VAR.S.1",
@@ -3438,8 +3452,7 @@
       "f": "=VAR.S(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "VARA.1",
@@ -3450,8 +3463,7 @@
       "f": "=VARA(1, TRUE, \"3\")",
       "differs": {
         "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "VARA.3",
@@ -3459,7 +3471,13 @@
     },
     {
       "id": "VARA.4",
-      "f": "=VARA(1, \"x\")"
+      "f": "=VARA(1, \"x\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, as OpenFormula"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "VARA.5",
@@ -3483,23 +3501,7 @@
     },
     {
       "id": "VARP.3",
-      "f": "=VARP(5)",
-      "expect": [
-        [
-          {
-            "e": "#DIV/0!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/3094113 (\"If the total number of values supplied as value arguments is not at least two, VARP will return the #DIV/0! error\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
-      },
-      "meaning": {
-        "ooxml": [[0]],
-        "openformula": "libreoffice",
-        "cite": "Microsoft's help, VARP function (support.microsoft.com): the spread of a population of one value is 0"
-      }
+      "f": "=VARP(5)"
     },
     {
       "id": "VARP.4",
@@ -3518,8 +3520,7 @@
       "f": "=VARP(1, \"2\", TRUE)",
       "differs": {
         "libreoffice": "LibreOffice refuses text typed in as an argument; LiveDoc reads text that is a number, and TRUE, as Excel does and as SUM does"
-      },
-      "note": "Awaits Google's answer: its help says text typed in is an error without saying whether text that reads as a number is text."
+      }
     },
     {
       "id": "VARPA.1",
@@ -3530,32 +3531,21 @@
       "f": "=VARPA(1, TRUE, \"3\")",
       "differs": {
         "libreoffice": "LibreOffice reads text typed in as 0, even \"3\"; LiveDoc reads text that is a number as that number, as Excel does"
-      },
-      "note": "Awaits Google's answer: its help says text counts as 0 without saying whether text that reads as a number is text."
-    },
-    {
-      "id": "VARPA.3",
-      "f": "=VARPA(5)",
-      "expect": [
-        [
-          {
-            "e": "#NUM!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/3094065 (\"If the total number of values supplied as value arguments is not at least two, VARPA will return the #NUM! error\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives 0, the spread of a population of one"
-      },
-      "meaning": {
-        "ooxml": [[0]],
-        "openformula": "libreoffice",
-        "cite": "Microsoft's help, VARPA function (support.microsoft.com): the spread of a population of one value is 0"
       }
     },
     {
+      "id": "VARPA.3",
+      "f": "=VARPA(5)"
+    },
+    {
       "id": "VARPA.4",
-      "f": "=VARPA(1, \"x\")"
+      "f": "=VARPA(1, \"x\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads text typed in as 0, as OpenFormula"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "VARPA.5",
@@ -3563,18 +3553,7 @@
     },
     {
       "id": "VARPA.6",
-      "f": "=VARPA(Data!I4)",
-      "expect": [
-        [
-          {
-            "e": "#NUM!"
-          }
-        ]
-      ],
-      "cite": "https://support.google.com/docs/answer/3094065 (\"If the total number of values supplied as value arguments is not at least two, VARPA will return the #NUM! error\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives #DIV/0! for no numbers"
-      }
+      "f": "=VARPA(Data!I4)"
     },
     {
       "id": "VARPA.7",
@@ -3638,7 +3617,10 @@
     },
     {
       "id": "Z.TEST.5",
-      "f": "=Z.TEST(Data!A1:A8, 10, 0)"
+      "f": "=Z.TEST(Data!A1:A8, 10, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a standard deviation of 0 (Err:502)"
+      }
     },
     {
       "id": "ZTEST.1",
@@ -3658,7 +3640,10 @@
     },
     {
       "id": "ZTEST.5",
-      "f": "=ZTEST(Data!A1:A8, 10, 0)"
+      "f": "=ZTEST(Data!A1:A8, 10, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a standard deviation of 0 (Err:502)"
+      }
     }
   ]
 }

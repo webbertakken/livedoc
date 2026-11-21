@@ -1,6 +1,7 @@
 // The units CONVERT knows (docs/specs/029-sheets/formulas.md "Functions": Parser): Excel's and OpenFormula's list,
 // the wider form of Google's (D38), each unit's size in its class's base unit by its exact definition (NIST SP 811),
 // with the metric prefixes the metric units take. A flat catalogue (exempt from the size rule).
+import type { FormulaMeaning } from './meaning';
 
 export type UnitClass =
   | 'mass'
@@ -28,7 +29,10 @@ const YARD = 0.9144;
 const MILE = 1609.344;
 const NAUTICAL_MILE = 1852;
 const SURVEY_MILE = (5280 * 1200) / 3937;
-const LIGHT_YEAR = 9460730472580800;
+// A light-year as Google sizes it, to six figures; OpenFormula's is exact: 299792458 m/s for 365.25 days (Part 4
+// §6.16.18; the file's meaning).
+const LIGHT_YEAR = 9.46073e15;
+const LIGHT_YEAR_EXACT = 9460730472580800;
 // A parsec: 648000 / π astronomical units of 149597870700 m.
 const PARSEC = (648000 / Math.PI) * 149597870700;
 const PICA_POINT = INCH / 72;
@@ -116,8 +120,8 @@ const UNITS: Readonly<Record<string, UnitDef>> = {
   hh: def('energy', HORSEPOWER * 3600),
   Wh: def('energy', 3600, true),
   wh: def('energy', 3600, true),
-  // The foot-poundal, as Excel and LibreOffice size "flb".
-  flb: def('energy', FOOT * (POUND / 1000) * FOOT),
+  // The foot-pound, as OpenFormula (Part 4 §6.16.18) and Google size "flb".
+  flb: def('energy', FOOT * POUND_FORCE),
   BTU: def('energy', 1055.05585262),
   btu: def('energy', 1055.05585262),
   // Power, in watts.
@@ -241,11 +245,11 @@ export type Unit = { cls: UnitClass; size: number; per: number; offset: number }
 const own = (table: object, key: string) => Object.prototype.hasOwnProperty.call(table, key);
 
 // A unit with a prefix: the prefix's factor raised to the unit's power (km² is 10⁶ m²).
-function prefixedUnit(name: string): Unit | null {
+function prefixedUnit(name: string, table: Readonly<Record<string, UnitDef>>): Unit | null {
   for (const len of [2, 1]) {
     const head = name.slice(0, len);
-    const base = UNITS[name.slice(len)];
-    if (!base?.prefixed || !own(UNITS, name.slice(len))) continue;
+    const base = table[name.slice(len)];
+    if (!base?.prefixed || !own(table, name.slice(len))) continue;
     const power =
       base.cls === 'area' && /2$/.test(name) ? 2 : base.cls === 'volume' && /3$/.test(name) ? 3 : 1;
     if (own(METRIC_PREFIXES, head))
@@ -261,12 +265,21 @@ function prefixedUnit(name: string): Unit | null {
   return null;
 }
 
-/** A unit by its name, case kept (`"km"`, `"ft^2"`, `"Gibyte"`); null when CONVERT does not know it. */
-export function findUnit(text: string): Unit | null {
+// The units in OpenFormula's meaning: its exact light-year.
+const OPEN_FORMULA_UNITS: Readonly<Record<string, UnitDef>> = {
+  ...UNITS,
+  ly: def('length', LIGHT_YEAR_EXACT, true),
+  ly2: square(LIGHT_YEAR_EXACT),
+  ly3: cube(LIGHT_YEAR_EXACT),
+};
+
+/** A unit by its name, case kept (`"km"`, `"ft^2"`, `"Gibyte"`), in a meaning; null when CONVERT does not know it. */
+export function findUnit(text: string, meaning: FormulaMeaning = 'google'): Unit | null {
+  const table = meaning === 'openformula' ? OPEN_FORMULA_UNITS : UNITS;
   const name = text.replace('^', '');
-  if (own(UNITS, name)) {
-    const u = UNITS[name]!;
+  if (own(table, name)) {
+    const u = table[name]!;
     return { cls: u.cls, size: u.size, per: u.per ?? 1, offset: u.offset ?? 0 };
   }
-  return prefixedUnit(name);
+  return prefixedUnit(name, table);
 }

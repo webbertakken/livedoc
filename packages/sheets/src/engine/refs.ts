@@ -77,7 +77,12 @@ const NO_INTERSECTION = 'An array value could not be found';
 // A range where one value goes, outside an array context (formulas.md "Arrays and spills"): the one cell of it in the
 // formula's row (a range one column wide) or column (one row high); none is #VALUE!. Anything else is as it was.
 export function implicit(v: EvalValue, f: Frame): EvalValue {
-  if (f.arrays || !isRef(v)) return v;
+  return f.arrays ? v : intersected(v, f);
+}
+
+/** A range met by the formula's own row or column, also in an array context; any other value as it is. */
+export function intersected(v: EvalValue, f: Frame): EvalValue {
+  if (!isRef(v)) return v;
   const r = v.ref;
   if (r.r1 === r.r2 && r.c1 === r.c2) return v;
   if (r.c1 === r.c2 && f.row >= r.r1 && f.row <= r.r2)

@@ -20,8 +20,8 @@ export const PARSER_FUNCTIONS: Record<string, FnDef> = {
     if (isError(value)) return value;
     if (isError(fromName)) return fromName;
     if (isError(toName)) return toName;
-    const a = findUnit(fromName);
-    const b = findUnit(toName);
+    const a = findUnit(fromName, f.meaning);
+    const b = findUnit(toName, f.meaning);
     if (!a) return err('#N/A', `"${fromName}" is not a unit CONVERT knows`);
     if (!b) return err('#N/A', `"${toName}" is not a unit CONVERT knows`);
     if (a.cls !== b.cls) return err('#N/A', `${fromName} and ${toName} measure different things`);
@@ -34,6 +34,8 @@ export const PARSER_FUNCTIONS: Record<string, FnDef> = {
   // A number as text, as its cell shows it (a date as a date, a percentage as a percentage).
   TO_TEXT: fn(1, 1, (args, f) => {
     const v = scalarOf(valueArg(args[0]!, f));
+    // A truth as Google writes it: TRUE, FALSE.
+    if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
     if (typeof v !== 'number') return v;
     const ref = refArg(args[0]);
     const one = ref && ref.r1 === ref.r2 && ref.c1 === ref.c2;

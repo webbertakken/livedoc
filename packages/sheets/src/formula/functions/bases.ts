@@ -25,7 +25,8 @@ export const BASE_FUNCTIONS: Record<string, FnDef> = {
     if (length < 0 || length > BASE_TEXT_MAX) return err('#NUM!', 'The length is 0 to 255');
     return value.toString(base).toUpperCase().padStart(length, '0');
   }),
-  // A hexadecimal text may start 0x, as LibreOffice reads it; empty text is 0.
+  // Empty text is 0. In OpenFormula's meaning a hexadecimal text may start 0x (Part 4 §6.19.10); Google refuses it
+  // (the file's meaning).
   DECIMAL: fn(2, 2, (args, f) => {
     const text = textArg(args[0]!, f);
     const base = intArg(args[1]!, f);
@@ -33,7 +34,9 @@ export const BASE_FUNCTIONS: Record<string, FnDef> = {
     if (isError(base)) return base;
     if (badBase(base)) return err('#NUM!', 'The base is 2 to 36');
     if (text.length > BASE_TEXT_MAX) return err('#NUM!', 'At most 255 characters');
-    const digits = (base === 16 ? text.replace(/^0x/i, '') : text).toUpperCase();
+    const digits = (
+      base === 16 && f.meaning === 'openformula' ? text.replace(/^0?x/i, '') : text
+    ).toUpperCase();
     let out = 0;
     for (const ch of digits) {
       const d = parseInt(ch, BASE_MAX);

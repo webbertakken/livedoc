@@ -33,10 +33,13 @@ function transposed(rows: Value[][]): Value[][] {
   return (rows[0] ?? []).map((_, j) => rows.map((r) => r[j]!));
 }
 
-// CHOOSECOLS' and CHOOSEROWS' numbers: whole, from the end when negative, each array taken value by value.
+// CHOOSECOLS' and CHOOSEROWS' numbers: whole, from the end when negative, each array taken value by value; a number
+// written as text is refused, as Google refuses it.
 function picks(args: EvalValue[], count: number, f: Frame, what: string): number[] | SheetError {
   const out: number[] = [];
   for (const s of flatScalars(args.slice(1), f)) {
+    if (typeof s === 'string')
+      return err('#VALUE!', `The ${what} number must be a number, not text`);
     const n = toNumber(s, f.locale);
     if (isError(n)) return n;
     const i = Math.trunc(n);
@@ -75,7 +78,7 @@ function lineOf(args: EvalValue[], f: Frame): Scalar[] | SheetError {
   const values = flatValues(byColumn ? { rows: transposed(array.rows) } : array);
   const kept = values.filter((v) => !((ignore & 1 && v === null) || (ignore & 2 && isError(v))));
   if (tooBig(kept.length, 1)) return err('#NUM!', 'The result is too large');
-  return kept.length ? kept : err('#N/A', 'Every value was ignored');
+  return kept.length ? kept : err('#REF!', 'Every value was ignored');
 }
 
 // WRAPROWS' and WRAPCOLS' rows of `count` values from one row or column, the last padded.

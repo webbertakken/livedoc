@@ -100,7 +100,10 @@
     },
     {
       "id": "YEAR.3",
-      "f": "=YEAR(-1)"
+      "f": "=YEAR(-1)",
+      "differs": {
+        "libreoffice": "LibreOffice reads a serial before 30 December 1899 as a date (1899); Google refuses it, #NUM!, as OpenFormula leaves negative serials to the application"
+      }
     },
     {
       "id": "MONTH.1",
@@ -240,11 +243,7 @@
     },
     {
       "id": "DATEDIF.9",
-      "f": "=DATEDIF(DATE(2025, 1, 31), DATE(2025, 3, 1), \"MD\")",
-      "differs": {
-        "libreoffice": "LibreOffice gives -2, as Excel does (31 January moved on by a month overruns February); LiveDoc counts from the start clamped to the month's end, never negative"
-      },
-      "note": "Awaits Google's answer: its help says \"the number of days ... after subtracting whole months\" and shows no month end."
+      "f": "=DATEDIF(DATE(2025, 1, 31), DATE(2025, 3, 1), \"MD\")"
     },
     {
       "id": "DAYS.1",
@@ -286,9 +285,8 @@
       "id": "NETWORKDAYS.INTL.4",
       "f": "=NETWORKDAYS.INTL(Data!A1, Data!A3, \"1111111\")",
       "differs": {
-        "libreoffice": "LibreOffice counts no working day, 0; Excel refuses a weekend of every day with #VALUE!, as LiveDoc does"
-      },
-      "note": "Awaits Google's answer: its help does not say what seven 1s give."
+        "libreoffice": "LibreOffice counts no working day, 0; Google refuses a week with none, #NUM!"
+      }
     },
     {
       "id": "NETWORKDAYS.INTL.5",
@@ -328,7 +326,10 @@
     },
     {
       "id": "WORKDAY.INTL.4",
-      "f": "=WORKDAY.INTL(Data!A1, 10, \"11\")"
+      "f": "=WORKDAY.INTL(Data!A1, 10, \"11\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a weekend text that is not seven 0s and 1s with #VALUE!; Google with #NUM!"
+      }
     },
     {
       "id": "WORKDAY.INTL.5",
@@ -360,7 +361,13 @@
     },
     {
       "id": "YEARFRAC.7",
-      "f": "=YEARFRAC(DATE(2024, 1, 1), DATE(2025, 6, 30), 1)"
+      "f": "=YEARFRAC(DATE(2024, 1, 1), DATE(2025, 6, 30), 1)",
+      "differs": {
+        "libreoffice": "LibreOffice divides a span past a year by the average length of the years it touches (OpenFormula's procedure E); Google counts whole years and the rest over its year's length"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "EPOCHTODATE.1",
@@ -403,8 +410,7 @@
       "f": "=EPOCHTODATE(-1)",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.EPOCHTODATE is #NAME? there"
-      },
-      "note": "Awaits Google's answer: its help says \"Negative timestamps aren't accepted\" but not which error."
+      }
     },
     {
       "id": "YEARFRAC.8",

@@ -43,12 +43,28 @@
     },
     {
       "id": "FILTER.6",
-      "f": "=FILTER(Data!A1:A5, Data!B1:B5>200, \"none\")"
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5>200, \"none\")",
+      "differs": {
+        "libreoffice": "LibreOffice reads the third argument as OOXML's if_empty; Google reads it as a condition, of the wrong size (#N/A)"
+      },
+      "meaning": {
+        "ooxml": [["none"]],
+        "openformula": "libreoffice",
+        "cite": "https://support.microsoft.com/en-us/office/filter-function-f4f7cb66-82eb-4767-8f7c-4877ad80c759: FILTER(array, include, [if_empty])"
+      }
     },
     {
       "id": "FILTER.7",
       "f": "=FILTER(Data!A1:A5, Data!B1:B5>90, \"none\")",
-      "rows": 2
+      "rows": 2,
+      "differs": {
+        "libreoffice": "LibreOffice reads the third argument as OOXML's if_empty; Google reads it as a condition, of the wrong size (#N/A)"
+      },
+      "meaning": {
+        "ooxml": [["Alice"], ["Devon"]],
+        "openformula": "libreoffice",
+        "cite": "https://support.microsoft.com/en-us/office/filter-function-f4f7cb66-82eb-4767-8f7c-4877ad80c759: FILTER(array, include, [if_empty])"
+      }
     },
     {
       "id": "FILTER.8",
@@ -56,12 +72,14 @@
       "rows": 3,
       "differs": {
         "libreoffice": "LibreOffice passes only the positive numbers; LiveDoc reads a number as a truth as AND does, any but 0 TRUE"
-      },
-      "note": "Awaits Google's answer: Google's help asks for TRUE or FALSE values and says nothing of numbers."
+      }
     },
     {
       "id": "FILTER.9",
-      "f": "=FILTER(Data!A1:A5, Data!B1:B5/0>0)"
+      "f": "=FILTER(Data!A1:A5, Data!B1:B5/0>0)",
+      "differs": {
+        "libreoffice": "LibreOffice passes on the condition's error (#DIV/0!); Google gives #N/A"
+      }
     },
     {
       "id": "SORT.1",
@@ -120,13 +138,21 @@
       "id": "SORT.6",
       "f": "=SORT(Data!A1:C5, 2, -1, FALSE)",
       "rows": 5,
-      "cols": 3
+      "cols": 3,
+      "authority": "openformula",
+      "differs": {
+        "google": "Google's SORT refuses OOXML's fourth argument, by_col (#N/A); the standards define it (D38: the standard holds)"
+      }
     },
     {
       "id": "SORT.7",
       "f": "=SORT(Data!A1:C2, 1, 1, TRUE)",
       "rows": 2,
-      "cols": 3
+      "cols": 3,
+      "authority": "openformula",
+      "differs": {
+        "google": "Google's SORT refuses OOXML's fourth argument, by_col (#N/A); the standards define it (D38: the standard holds)"
+      }
     },
     {
       "id": "SORT.8",
@@ -135,7 +161,6 @@
       "differs": {
         "libreoffice": "LibreOffice reads -1 as OOXML's descending order; Google's is_ascending is TRUE or FALSE, and -1 coerces to TRUE"
       },
-      "note": "Awaits Google's answer: a formula both accept that answers differently (formulas.md \"Where Google and the standards differ\").",
       "meaning": {
         "ooxml": [[100], [100], [80], [80], [75]],
         "openformula": "libreoffice",
@@ -184,8 +209,7 @@
       "rows": 3,
       "differs": {
         "libreoffice": "LibreOffice compares text ignoring case, so \"a\" and \"A\" are one; LiveDoc keeps them two"
-      },
-      "note": "Awaits Google's answer: whether Google's UNIQUE tells case apart."
+      }
     },
     {
       "id": "UNIQUE.5",
@@ -300,8 +324,7 @@
       "f": "=SORTN(Data!A1:C5, 0)",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.SORTN is #NAME? there"
-      },
-      "note": "Awaits Google's answer: its help page says n \"must be greater than 0\" but not which error 0 gives."
+      }
     }
   ]
 }

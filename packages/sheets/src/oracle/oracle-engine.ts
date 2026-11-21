@@ -99,11 +99,19 @@ export function engineAnswers(
   for (const b of blocks) {
     if (out.has(b.id)) continue;
     const shape = dims(engine.formulaResult(cases.id, b.r, b.c));
-    if (b.rows * b.cols > 1 || shape.rows * shape.cols > 1) {
-      if (shape.rows !== b.rows || shape.cols !== b.cols) {
-        out.set(b.id, { ok: false, why: `shape:${shape.rows}x${shape.cols}` });
-        continue;
-      }
+    // One value over a block fills its first cell, the rest empty, as the sources write it (an error spills nothing).
+    if (shape.rows * shape.cols === 1) {
+      const answer = Array.from({ length: b.rows }, (_, i) =>
+        Array.from({ length: b.cols }, (_, j) =>
+          i === 0 && j === 0 ? oracleValueOf(engine.value(cases.id, b.r, b.c) as Scalar) : null,
+        ),
+      );
+      out.set(b.id, { ok: true, answer });
+      continue;
+    }
+    if (shape.rows !== b.rows || shape.cols !== b.cols) {
+      out.set(b.id, { ok: false, why: `shape:${shape.rows}x${shape.cols}` });
+      continue;
     }
     const answer = Array.from({ length: b.rows }, (_, i) =>
       Array.from({ length: b.cols }, (_, j) => {

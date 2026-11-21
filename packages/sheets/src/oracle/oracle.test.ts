@@ -4,11 +4,11 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { heldAnswer, sameBlock, showBlock, unnamedDifferences } from './compare';
+import { heldAnswer, sameBlock, showBlock, staleDifferences, unnamedDifferences } from './compare';
 import { OracleCorpus, type OracleAnswers, type OracleCategory } from './corpus';
 import { engineAnswers } from './oracle-engine';
 import { FUNCTIONS } from '../formula/registry';
-import { FILE_MEANINGS, MEANING_FUNCTIONS } from '../formula/meaning';
+import { CHAINED_POWER, FILE_MEANINGS, MEANING_FUNCTIONS } from '../formula/meaning';
 
 const ROOT = join(import.meta.dirname, '../../oracle');
 
@@ -135,6 +135,22 @@ describe('the oracle corpus', () => {
       expect([...orphans, ...differences]).toEqual([]);
     },
   );
+
+  // A difference a case names must be there: a source that has come to answer as the case holds leaves it stale.
+  it.each(corpus.map((c) => [c.category, c] as const))(
+    '%s: every difference named is there',
+    (_, category) => {
+      const google = answers('google', category.category);
+      const libre = answers('libreoffice', category.category);
+      const stale = category.cases.flatMap((x) =>
+        staleDifferences(x, {
+          ...(google?.answers[x.id] ? { google: google.answers[x.id] } : {}),
+          ...(libre?.answers[x.id] ? { libreoffice: libre.answers[x.id] } : {}),
+        }),
+      );
+      expect(stale).toEqual([]);
+    },
+  );
 });
 
 // The catalogue's categories whose boxes have landed (plan 0020 Phase 6): every function built in them is measured.
@@ -173,14 +189,41 @@ function builtRows(): { name: string; category: string }[] {
   return out;
 }
 
+// The functions the catalogue gives to OpenFormula's meaning: Google lacks them (formulas.md "Function catalogue").
+function openFormulaFunctions(): Set<string> {
+  const spec = readFileSync(
+    join(import.meta.dirname, '../../../../docs/specs/029-sheets/formulas.md'),
+    'utf8',
+  );
+  const out = new Set<string>();
+  for (const line of spec.split('\n')) {
+    const m = /^\| `([A-Z][A-Z0-9._]*)`\s*\|.*\| OpenFormula\s*\| `[^`]*`\s*\|[^|]*\|$/.exec(line);
+    if (m) out.add(m[1]!);
+  }
+  return out;
+}
+
 describe('the catalogue against the corpus', () => {
   it("measures each function answered otherwise in a file's meaning there", () => {
     const meant = new Set(
       corpus.flatMap((c) =>
-        c.cases.filter((x) => x.meaning).map((x) => x.id.replace(/\.\d+$/, '')),
+        c.cases
+          .filter((x) => x.meaning)
+          // A language case of a power of a power stands for the operator.
+          .map((x) => (/\^.*\^/.test(x.f) ? CHAINED_POWER : x.id.replace(/\.\d+$/, ''))),
       ),
     );
     expect(Object.keys(MEANING_FUNCTIONS).filter((name) => !meant.has(name))).toEqual([]);
+  });
+
+  it("holds the cases of a function Google lacks to OpenFormula's answer", () => {
+    const openFormula = openFormulaFunctions();
+    expect(openFormula.size).toBeGreaterThan(18);
+    const wrong = corpus
+      .flatMap((c) => c.cases)
+      .filter((x) => openFormula.has(x.id.replace(/\.\d+$/, '')) && x.authority !== 'openformula')
+      .map((x) => x.id);
+    expect(wrong).toEqual([]);
   });
 
   it('measures every function built in a measured category', () => {

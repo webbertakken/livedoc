@@ -6,6 +6,7 @@ import { makeCriterion, type Criterion } from '../criteria';
 import {
   err,
   isError,
+  plainNumber,
   scalarOf,
   toText,
   type Scalar,
@@ -32,8 +33,24 @@ function fieldIndex(labels: Scalar[], field: Scalar, locale: string): number | S
   return i >= 1 && i <= labels.length ? i - 1 : NO_FIELD(String(i));
 }
 
+// A criterion cell as Google (and Excel) read it: text with no comparison and no number or truth in it matches every
+// value it begins ("Apple" matches "apple pie"); any other is a criterion as COUNTIF reads it.
+function databaseCriterion(value: Scalar, locale: string): Criterion {
+  const prefix =
+    typeof value === 'string' &&
+    !/^(<|>|=)/.test(value) &&
+    plainNumber(value, locale) === null &&
+    !/^(true|false)$/i.test(value);
+  return makeCriterion(prefix ? `${value}*` : value, locale);
+}
+
+// A label the table lacks: a criterion under it holds for no record, as Google gives none (0).
+const UNKNOWN = -1;
+const NEVER: Criterion = () => false;
+
 // The records that meet the criteria: the criteria's first row names fields, each further row is a filter whose
-// non-empty cells must all hold, and a record passes when any filter holds. No filter, or an empty one, passes all.
+// non-empty cells must all hold, and a record passes when any filter holds. An empty filter passes all; criteria with
+// no row under their labels are refused, #VALUE!, as Google refuses them.
 function matchingRecords(
   records: Value[][],
   labels: Scalar[],
@@ -48,19 +65,23 @@ function matchingRecords(
       continue;
     }
     const at = fieldIndex(labels, typeof name === 'string' ? name : toText(name, locale), locale);
-    if (isError(at)) return at;
-    columns.push(at);
+    columns.push(isError(at) ? UNKNOWN : at);
   }
+  if (criteria.length < 2) return err('#VALUE!', 'The criteria need a row under their labels');
   const filters: [number, Criterion][][] = criteria.slice(1).map((row) =>
     row.flatMap((cell, j) => {
       const value = scalarOf(cell);
       const column = columns[j] as number | null;
       return value === null || value === '' || column === null
         ? []
-        : [[column, makeCriterion(value, locale)] as [number, Criterion]];
+        : [
+            [column, column === UNKNOWN ? NEVER : databaseCriterion(value, locale)] as [
+              number,
+              Criterion,
+            ],
+          ];
     }),
   );
-  if (filters.length === 0) return records;
   return records.filter((record) =>
     filters.some((filter) => filter.every(([j, test]) => test(scalarOf(record[j]!)))),
   );

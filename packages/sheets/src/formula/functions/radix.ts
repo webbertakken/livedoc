@@ -10,18 +10,20 @@ export const RADIX_DIGITS_MAX = 10;
 const BITS: Record<Radix, number> = { 2: 10, 8: 30, 16: 40 };
 const NAMES: Record<Radix, string> = { 2: 'binary', 8: 'octal', 16: 'hexadecimal' };
 
-// A signed number's digits: text as it is, a number by its digits, TRUE 1 and FALSE 0.
+// A signed number's digits: text as it is, a number by its digits. An empty cell and a truth are refused, #VALUE!,
+// as Google refuses them.
 function digitsOf(v: Scalar): string | SheetError {
   if (isError(v)) return v;
-  if (v === null) return '';
-  if (typeof v === 'boolean') return v ? '1' : '0';
+  if (v === null || typeof v === 'boolean')
+    return err('#VALUE!', 'The number is digits, as text or a number');
   return typeof v === 'number' ? numberText(v) : v.trim();
 }
 
-/** Signed digits read in a radix; empty text is 0. */
+/** Signed digits read in a radix; empty text is 0, and hexadecimal may start 0x, as Google reads it. */
 function readSigned(v: Scalar, radix: Radix): number | SheetError {
-  const digits = digitsOf(v);
-  if (isError(digits)) return digits;
+  const read = digitsOf(v);
+  if (isError(read)) return read;
+  const digits = radix === 16 ? read.replace(/^0x/i, '') : read;
   const valid = { 2: /^[01]*$/, 8: /^[0-7]*$/, 16: /^[0-9a-f]*$/i }[radix];
   if (digits.length > RADIX_DIGITS_MAX || !valid.test(digits))
     return err('#NUM!', `"${digits}" is not a signed ${NAMES[radix]} number of up to 10 digits`);
@@ -36,11 +38,13 @@ function writeSigned(n: number, radix: Radix, places: number | null): string | S
   const whole = Math.trunc(n);
   if (whole < -(2 ** (bits - 1)) || whole >= 2 ** (bits - 1))
     return err('#NUM!', `${numberText(whole)} does not fit in 10 ${NAMES[radix]} digits`);
+  const width = places === null ? null : Math.trunc(places);
+  // Places past 10 are refused even for a negative number, whose places are otherwise ignored, as Google refuses them.
+  if (width !== null && (width < 0 || width > RADIX_DIGITS_MAX))
+    return err('#NUM!', 'The places are 0 to 10');
   if (whole < 0) return (whole + 2 ** bits).toString(radix).toUpperCase();
   const text = whole.toString(radix).toUpperCase();
-  if (places === null) return text;
-  const width = Math.trunc(places);
-  if (width < 0 || width > RADIX_DIGITS_MAX) return err('#NUM!', 'The places are 0 to 10');
+  if (width === null) return text;
   if (text.length > width) return err('#NUM!', `${text} needs more than ${width} digits`);
   return text.padStart(width, '0');
 }

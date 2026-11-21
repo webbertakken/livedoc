@@ -84,8 +84,7 @@
       "rows": 2,
       "differs": {
         "libreoffice": "LibreOffice writes the booleans of a matrix formula as 1 and 0"
-      },
-      "note": "Awaits Google's answer: LiveDoc keeps TRUE, as its other array results do (formulas.md \"Candidates\")"
+      }
     },
     {
       "id": "ARRAYFORMULA.12",
@@ -151,7 +150,10 @@
     {
       "id": "ARRAYFORMULA.24",
       "f": "=ARRAYFORMULA(AVERAGEIF(Data!A1:A10, \"<=\"&Data!A2:A3))",
-      "rows": 2
+      "rows": 2,
+      "differs": {
+        "libreoffice": "LibreOffice lifts AVERAGEIF over its criteria in a matrix formula; Google gives one value, the first criterion's (D67)"
+      }
     },
     {
       "id": "ARRAYFORMULA.25",
@@ -183,9 +185,8 @@
       "f": "=ARRAYFORMULA(SUMIFS(Data!B1:B10, Data!A1:A10, Data!A1:A3))",
       "rows": 3,
       "differs": {
-        "libreoffice": "LibreOffice lifts SUMIFS over its criteria in a matrix formula; Google gives one value (D67)"
-      },
-      "note": "Awaits Google's answer (formulas.md \"Candidates\")"
+        "libreoffice": "LibreOffice lifts SUMIFS over its criteria in a matrix formula; Google gives one value, its criteria met by the formula's row (none here: 0) (D67)"
+      }
     },
     {
       "id": "ARRAYFORMULA.31",
@@ -360,7 +361,8 @@
       "expect": [[2005, 2]],
       "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (year; month is zero-based)",
       "differs": {
-        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there",
+        "google": "The fixture's dates reach Google as plain numbers (its file holds no date format) and year() refuses a number (#VALUE!); typed as dates, Google gives 2005 (measured)"
       }
     },
     {
@@ -369,18 +371,18 @@
       "expect": [[7]],
       "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (dayOfWeek: Sunday is 1; 2005-03-19 a Saturday)",
       "differs": {
-        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
+        "libreoffice": "LibreOffice has no QUERY: it is #NAME? there",
+        "google": "The fixture's dates reach Google as plain numbers (its file holds no date format) and dayOfWeek() refuses a number (#VALUE!)"
       }
     },
     {
       "id": "QUERY.16",
       "f": "=QUERY(Data!F1:L7, \"select count(F) where I > 2000\", 1)",
       "rows": 2,
-      "expect": [["count name"], [0]],
-      "cite": "https://developers.google.com/chart/interactive/docs/querylanguage (count: nulls not counted)",
       "differs": {
         "libreoffice": "LibreOffice has no QUERY: it is #NAME? there"
-      }
+      },
+      "note": "An aggregate over no row gives no row, only its label, as Google gives it."
     },
     {
       "id": "QUERY.17",
