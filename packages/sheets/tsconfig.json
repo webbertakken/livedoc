@@ -4,6 +4,8 @@
     "lib": ["ES2023", "DOM"],
     // Explicit, because TypeScript includes no @types package by default: the catalogue test reads formulas.md.
     "types": ["node"],
+    // The oracle's consent script runs under plain Node (`node oracle/google-consent.ts`), its imports named in full.
+    "allowImportingTsExtensions": true,
     "noEmit": true
   },
   "include": ["src/**/*.ts", "oracle/**/*.ts", "*.config.ts"],

@@ -1413,6 +1413,24 @@ connect these sheets." with **Allow Access** (verified: Google's help).
 - The corpus runs in `en-US`, in UTC, at a fixed now (default, D33); volatile functions are held by their own tests.
   A category may name another locale (`Locale` runs in `de-DE`): its formulas are typed in that locale's syntax,
   and LibreOffice answers it with that locale as its own.
+- **Google's answers through Drive** (Webber, 2026-11-21): the script works with a Drive token of its own, so no one
+  downloads by hand. For each category it uploads the category's workbook as an `.xlsx` converted to a Google Sheet,
+  exports that sheet as `.xlsx` and as `.ods` with Google's calculated values, reads the answers from the `.ods`, holds
+  the `.xlsx`'s to them (a case the two exports answer differently is a problem named, never an answer), and deletes
+  the Drive file afterwards, whether the category succeeded or failed. Each upload and delete is logged by its file
+  id, never by what the file holds.
+- Before exporting, the script sets the sheet's locale and time zone to the category's (`en_US`, `de_DE`) and UTC
+  through the Sheets API, as a converted file takes the account's own; it is the only Sheets API call.
+- Drive's answers replace downloads made by hand: there is no folder of downloads to read from.
+- The token is an OAuth client of the operator's (a Desktop app, scope `drive.file` only, published so its refresh
+  token does not lapse after seven days): its client file at `~/.secrets/google-oracle-oauth-client.json`, its refresh
+  token at `~/.secrets/google-oracle-refresh-token`, both mode 600, never printed or logged.
+- **Consent** is a one-time step: the script listens on `127.0.0.1` at a free port, prints Google's consent URL (offline
+  access, `prompt=consent`, PKCE, a random `state`) for the operator to open, takes the redirect's code, refuses a
+  `state` that is not its own, exchanges the code and saves the refresh token, mode 600; it waits at most 10 minutes
+  (default, D95).
+- A Drive or Sheets call that fails with 429 or 5xx is tried again up to three times, a second, then 4, then 16 apart; any other
+  failure stops the category and names the call and status, never the token (default, D96).
 - CI runs the corpus on every change, with no LibreOffice needed; a function reads **built** only while its cases pass,
   and every function the engine knows has at least one case.
 
@@ -1507,4 +1525,8 @@ The code cites each by its id.
 - **D79** A Plan Sheet's locale and time zone: The viewer's browser's, formula separators included (default).
 - **D80** Function names' case: A function's in capitals; a name no function has as typed (default).
 - **D81** An unknown time zone or locale: Read as UTC and as `en` (default).
+- **D95** The oracle's Drive consent: On `127.0.0.1` at a free port, its own `state` and PKCE, at most 10 minutes
+  (default).
+- **D96** The oracle's Drive retries: 429 and 5xx three more times, 1, 4 and 16 seconds apart; any other stops the
+  category (default).
 - The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).
