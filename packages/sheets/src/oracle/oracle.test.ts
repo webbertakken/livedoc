@@ -125,6 +125,7 @@ const MEASURED_CATEGORIES = [
   'Math',
   'Operator',
   'Parser',
+  'Statistical',
   'Text',
 ];
 
