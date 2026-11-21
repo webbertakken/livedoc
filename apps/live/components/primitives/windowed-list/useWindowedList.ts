@@ -15,6 +15,7 @@ import {
   type DragEvent,
   type FocusEvent,
 } from 'react';
+import { layoutTopOf } from './row-shift';
 import { debugLog } from '@/lib/debug-log';
 import {
   placeAt,
@@ -370,7 +371,8 @@ function measureInto(
   }: { segments: readonly WindowSegment[]; leading: number; grid: boolean },
 ): { top: number; bottom: number } {
   const boxTop = box ? box.getBoundingClientRect().top - box.scrollTop : -window.scrollY;
-  const topOf = (el: Element) => el.getBoundingClientRect().top - boxTop;
+  // Where the layout put a row: a row still rising in with the cascade is drawn below its place.
+  const topOf = (el: Element) => layoutTopOf(el) - boxTop;
   if (grid)
     m.lanes = Math.max(
       1,
