@@ -1,7 +1,7 @@
 # Files and print
 
-**Status: partly built.** File › Open and the download in the workbook's own format, for `.ods`, `.fods` and
-`.xlsx`; the rest is specified.
+**Status: partly built.** File › Open, Download in `.ods`, `.fods` and `.xlsx`, and Convert; the rest is
+specified.
 
 How a [spreadsheet](spreadsheet.md) comes in, goes out, is printed, copied, shared and synced: Google Sheets' File
 menu on LiveDoc's own sharing. Both native formats are equals (C1, ruled 2026-11-18): a workbook keeps the file
@@ -46,7 +46,8 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 (.html, zipped), Comma-Separated Values (.csv, the active sheet), Tab-Separated Values (.tsv, the active sheet).
 
 - The workbook's own format downloads as it is; the other format is a **conversion** (below), listing its losses in
-  the dialog before the download runs.
+  the dialog before the download runs (**Download** and **Cancel**); the download is a converted copy, and the
+  workbook keeps its own format.
 - CSV and TSV are injection-safe, as today ([Sheet](sheet.md#csv)).
 
 ## Converting
@@ -54,6 +55,29 @@ format it arrived in ([Standard mapping](standard-mapping.md)).
 - **File › Convert to Excel (.xlsx)** or **Convert to OpenDocument (.ods)**: changes the workbook's file format, one
   undo step, after a dialog listing what the other format cannot hold ("3 filter views will be dropped") with
   **Convert** and **Cancel**. Nothing is lost silently.
+- Converting changes the file format alone: the sheets, their names, cells and formulas stay as they are in LiveDoc,
+  and what the new format cannot hold is what each file written in it leaves out (default, D87). What the old file
+  carried that LiveDoc does not model is left behind ([Standard mapping](standard-mapping.md#unknown-content)).
+- The dialog, **Convert to Excel?** (or **Download as Excel?**, and the same for OpenDocument), lists what the new
+  format's file cannot hold that the old one could, one line a kind, counted, with up to three names
+  (default, D88):
+  - **Sheet names**: "2 sheet names are cut to Excel's 31 characters: “Quarterly results for the northern…” becomes
+    “Quarterly results for the north”".
+  - **Formulas other apps cannot calculate**: "3 formulas keep only their last values in Excel, which has no
+    EUROCONVERT or EASTERSUNDAY"; a formula Excel's grammar cannot hold for another reason says so without names.
+  - **Formulas written as values**: "2 formulas are written as their values only" (a spilled range, an intersection or
+    a union in OpenDocument; a formula past Excel's 8,192 characters).
+  - **Text**: "1 cell's text is cut to Excel's 32,767 characters".
+  - **Columns**: "Columns past XFD are left out of 1 sheet: Wide" (Excel's last column; a workbook reaches ZZZ).
+  - When there is none: "Everything in this spreadsheet fits the Excel format."
+- While it checks, the dialog says **Checking what the .xlsx file can hold…** with **Convert** off; a check that fails
+  says "This spreadsheet could not be checked. Try again." with **Try Again** and **Cancel**, and nothing changes.
+- A conversion the api refuses or cannot reach closes the dialog and says "The spreadsheet could not be converted. Try
+  again." in the title row; the format stays as it was.
+- **Undo** converts back, and **Redo** again, without the dialog: nothing in LiveDoc changed, so the way back loses
+  nothing.
+- Everyone on the spreadsheet sees its new format at once, in the title row's pill.
+- Telemetry: `Spreadsheet · Converted · <Format>` (`Xlsx`, `Ods`), the format it went to.
 
 ## Print
 
@@ -97,4 +121,8 @@ Each default below was applied where this spec is silent or qualitative, and hol
 The code cites each by its id.
 
 - **D86** How a file's sheets are sent: Made at a new sheet's grid with what fits one 4 MB request, the rest in writes
+  (default).
+- **D87** What converting changes: The file format alone; what the new format cannot hold stays in LiveDoc and is left
+  out of each file written in it (default).
+- **D88** How the conversion dialog lists its losses: One line a kind, counted, naming up to three sheets or functions
   (default).

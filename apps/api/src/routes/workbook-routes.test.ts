@@ -228,8 +228,9 @@ describe('downloading a spreadsheet', () => {
     expect(await res.text()).toContain('table:formula="of:=[.A1]*2"');
   });
 
-  // standard-mapping.md "Values in XLSX": an XLSX workbook leaves as XLSX, and never as ODF (fork C1).
-  it('writes an XLSX workbook as XLSX and refuses it as ODF', async () => {
+  // standard-mapping.md "Values in XLSX": an XLSX workbook leaves as XLSX; as ODF it is a converted copy
+  // (files-and-print.md "Download").
+  it('writes an XLSX workbook as XLSX, and as ODF a converted copy', async () => {
     const ods = spreadsheet();
     await call({
       path: '',
@@ -255,17 +256,19 @@ describe('downloading a spreadsheet', () => {
       { r: 1, c: 0, value: { k: 's', v: 'rent' } },
     ]);
     const odf = await call({ method: 'GET', path: '/book2/workbook/file?format=ods' });
-    expect(odf.status).toBe(409);
+    expect(odf.status).toBe(200);
+    const copy = await readOds(new Uint8Array(await odf.arrayBuffer()));
+    expect(copy.ok && copy.file.sheets[0]!.cells[1]!.formula).toBe('=A1*2');
   });
 
-  it.each([
-    ['another standard', '?format=xlsx', 409, 'format_not_native'],
-    ['a format that is none', '?format=pdf', 400, 'file_type_unknown'],
-  ])('refuses %s', async (_, query, status, error) => {
-    const res = await call({ method: 'GET', path: `/book1/workbook/file${query}` });
-    expect(res.status).toBe(status);
-    expect(await res.json()).toEqual({ error });
-  });
+  it.each([['a format that is none', '?format=pdf', 400, 'file_type_unknown']])(
+    'refuses %s',
+    async (_, query, status, error) => {
+      const res = await call({ method: 'GET', path: `/book1/workbook/file${query}` });
+      expect(res.status).toBe(status);
+      expect(await res.json()).toEqual({ error });
+    },
+  );
 
   it('refuses a document that is no spreadsheet', async () => {
     await call({

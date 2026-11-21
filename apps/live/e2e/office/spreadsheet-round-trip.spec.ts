@@ -9,7 +9,8 @@ import { officeMenuItem } from './office-menus';
 // A spreadsheet end to end (plan 0020 Phase 4; docs/specs/029-sheets/spreadsheet.md, sheet-store.md "In a
 // spreadsheet", standard-mapping.md, files-and-print.md): a new spreadsheet, stored in its room, a value and a formula
 // typed together in two browsers, downloaded as ODF, recalculated by LibreOffice to the same values, saved again by
-// it, and opened back here unchanged; then saved by it as XLSX, opened here as an XLSX workbook and downloaded as one.
+// it, and opened back here unchanged; then saved by it as XLSX, opened here as an XLSX workbook and downloaded as one,
+// as ODF a converted copy, and converted to ODF, one undo step.
 
 const READY = '[data-spreadsheet-surface="ready"]';
 const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? '/api';
@@ -80,7 +81,7 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   }
 
   // Downloaded as ODF, in the format it was born in (C5).
-  const downloadItem = await officeMenuItem(page, ['File', 'Download as OpenDocument (.ods)']);
+  const downloadItem = await officeMenuItem(page, ['File', 'Download', 'OpenDocument (.ods)']);
   const [download] = await Promise.all([page.waitForEvent('download'), downloadItem.click()]);
   expect(download.suggestedFilename()).toBe('Untitled spreadsheet.ods');
   const dir = mkdtempSync(join(tmpdir(), 'spreadsheet-'));
@@ -119,12 +120,37 @@ test('a spreadsheet typed together leaves as ODF, recalculates in LibreOffice an
   await expect(page.locator(READY)).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Budget in Excel');
   expect(await inputOf(page, 'B1')).toBe('=A1*2');
-  const xlsxItem = await officeMenuItem(page, ['File', 'Download as Microsoft Excel (.xlsx)']);
+  const xlsxItem = await officeMenuItem(page, ['File', 'Download', 'Microsoft Excel (.xlsx)']);
   const [xlsxDownload] = await Promise.all([page.waitForEvent('download'), xlsxItem.click()]);
   expect(xlsxDownload.suggestedFilename()).toBe('Budget in Excel.xlsx');
   const back = join(dir, 'Budget back.xlsx');
   await xlsxDownload.saveAs(back);
   const xlsxCsv = libreOfficeConvert(back, 'csv', { recalculate: true }).toString('utf8').trim();
   expect(xlsxCsv.split(/\r?\n/)).toEqual(['21,42', 'rent,']);
+
+  // files-and-print.md "Download": the other standard is a converted copy, what it cannot hold listed first.
+  await (await officeMenuItem(page, ['File', 'Download', 'OpenDocument (.ods)'])).click();
+  const copyDialog = page.getByRole('dialog', { name: 'Download as OpenDocument?' });
+  await expect(copyDialog).toContainText(
+    'Everything in this spreadsheet fits the OpenDocument format.',
+  );
+  const [copy] = await Promise.all([
+    page.waitForEvent('download'),
+    copyDialog.getByRole('button', { name: 'Download' }).click(),
+  ]);
+  expect(copy.suggestedFilename()).toBe('Budget in Excel.ods');
+
+  // "Converting": the workbook's format changes after the dialog, and undo changes it back.
+  const pill = page
+    .getByRole('img', { name: 'Excel format', exact: true })
+    .or(page.getByRole('img', { name: 'OpenDocument format', exact: true }));
+  await expect(pill).toHaveText('.XLSX');
+  await (await officeMenuItem(page, ['File', 'Convert to OpenDocument (.ods)'])).click();
+  const convertDialog = page.getByRole('dialog', { name: 'Convert to OpenDocument?' });
+  await convertDialog.getByRole('button', { name: 'Convert' }).click();
+  await expect(convertDialog).toBeHidden();
+  await expect(pill).toHaveText('.ODS');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(pill).toHaveText('.XLSX');
   expectNoPageErrors(pageErrors);
 });

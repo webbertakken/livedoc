@@ -5,7 +5,7 @@
 import { callsOf, childrenOf, refsOf, type Node } from '../formula/ast';
 import { parseFormula } from '../formula/parse';
 import { tokenize, type Token } from '../formula/tokens';
-import { a1Text } from './a1-text';
+import { a1Text, FILE_LAST_COL } from './a1-text';
 import { reopenRanges } from './formula-text-shift';
 import {
   googleNameOfXlsx,
@@ -49,7 +49,8 @@ function nextSolid(tokens: readonly Token[], from: number): Token | undefined {
 /**
  * A formula as typed (`=SEQUENCE(3)`) in Excel's grammar, without its `=` (`_xlfn.SEQUENCE(3)`), its sheet names
  * as `renamed` maps them; null when Excel's grammar cannot hold it (it does not parse, calls a function Excel lacks,
- * or holds an array literal of more than constants): such a formula is written by `dummyFunction` (D83).
+ * holds an array literal of more than constants (D83), or names a column past `XFD` (D89)): such a formula is
+ * written by `dummyFunction`.
  */
 export function toExcelFormula(
   formula: string,
@@ -59,6 +60,7 @@ export function toExcelFormula(
   if (!parsed.ok) return null;
   if ([...callsOf(parsed.ast)].some(xlsxLacks) || holdsNonConstantArray(parsed.ast)) return null;
   const refs = refsOf(parsed.ast);
+  if (refs.some((ref) => Math.max(ref.c1 ?? 0, ref.c2 ?? 0) >= FILE_LAST_COL)) return null;
   const parameters = parametersOf(parsed.ast, new Set());
   const body = formula.startsWith('=') ? 1 : 0;
   const tokens = tokenize(formula.slice(body), body);

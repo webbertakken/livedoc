@@ -6,12 +6,13 @@
 // its own chunk, with the engine, only when a spreadsheet opens.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { planPalette } from '@livedoc/document';
-import type { WorkbookRecord } from '@livedoc/sheets';
+import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
+import { convertedFormat } from '@livedoc/sheets/files';
 import { Button } from '@livedoc/ui';
 import { useCanvasSurface } from '@/components/canvas/CanvasSurfaceContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
-import type { OfficeCatalogue } from '@/lib/office/office-catalogue';
+import type { OfficeActions } from '@/lib/office/office-catalogue';
 import {
   SheetControllerProvider,
   useSheetController,
@@ -37,11 +38,18 @@ import {
   openSpreadsheetFile,
 } from '@/lib/spreadsheet/open-spreadsheet-file';
 import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
+import {
+  CONVERT_ITEM_ID,
+  DOWNLOAD_ITEMS,
+  spreadsheetMenus,
+} from '@/lib/spreadsheet/spreadsheet-menus';
 import { track } from '@/lib/telemetry';
+import { ConversionDialog } from './ConversionDialog';
 import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
 import { RangeAccessBar } from './RangeAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
 import { useSheetBarPeers } from './useSheetBarPeers';
+import { useWorkbookConversion } from './useWorkbookConversion';
 
 export type SpreadsheetSurfaceState = 'loading' | 'ready' | 'failed' | 'gone';
 
@@ -50,11 +58,6 @@ const FORMAT_TITLE = {
   ods: 'OpenDocument format',
   fods: 'OpenDocument format, flat',
   xlsx: 'Excel format',
-} as const;
-const DOWNLOAD_LABEL = {
-  ods: 'Download as OpenDocument (.ods)',
-  fods: 'Download as Flat OpenDocument (.fods)',
-  xlsx: 'Download as Microsoft Excel (.xlsx)',
 } as const;
 const TELEMETRY_FORMAT = { ods: 'Ods', fods: 'Fods', xlsx: 'Xlsx' } as const;
 const OPEN_ACCEPT = [
@@ -65,25 +68,6 @@ const OPEN_ACCEPT = [
   'application/vnd.oasis.opendocument.spreadsheet',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ].join(',');
-
-// The spreadsheet's menus in the office shell (docs/specs/004-interface-design/office-shell.md "Menus as data"): File
-// with Open and the download of the format it is held in, until plan 0020 declares the rest.
-const spreadsheetMenus = (format: keyof typeof DOWNLOAD_LABEL): OfficeCatalogue => [
-  {
-    id: 'file',
-    label: 'File',
-    entries: [
-      { kind: 'item', id: 'open', label: 'Open', level: 'view', status: 'built' },
-      {
-        kind: 'item',
-        id: 'download',
-        label: DOWNLOAD_LABEL[format],
-        level: 'view',
-        status: 'built',
-      },
-    ],
-  },
-];
 
 export function SpreadsheetSurface({
   scope,
@@ -115,16 +99,43 @@ export function SpreadsheetSurface({
   const format = workbook.format;
   const root = useRef<HTMLElement | null>(null);
   const catalogue = useMemo(() => spreadsheetMenus(format), [format]);
-  const download = async () => {
+  const download = async (asked: WorkbookFormat) => {
     setProblem(null);
     try {
-      const { blob, fileName } = await apiDownloadWorkbook(scope, format);
+      const { blob, fileName } = await apiDownloadWorkbook(scope, asked);
       downloadBlob(blob, fileName);
-      track('Spreadsheet', 'Exported', TELEMETRY_FORMAT[format]);
+      track('Spreadsheet', 'Exported', TELEMETRY_FORMAT[asked]);
     } catch (error) {
       setProblem('The file could not be downloaded. Try again.');
-      debugLog('[workbook] download failed', { error: String(error) });
+      debugLog('[workbook] download failed', { format: asked, error: String(error) });
     }
+  };
+  const conversion = useWorkbookConversion({
+    scope,
+    format,
+    onWorkbook,
+    pushUndo: (step) => bridge?.pushUndo(step),
+    download,
+    setProblem,
+  });
+  // Convert is an Editor's (files-and-print.md "Who may do what"): bound only for one, so no one else sees it.
+  const editor = !!bridge && bridge.canEdit && bridge.canShape;
+  const actions: OfficeActions = {
+    ...Object.fromEntries(
+      DOWNLOAD_ITEMS.map((item) => [
+        item.id,
+        {
+          // The other standard is a converted copy, its losses listed first (files-and-print.md "Download").
+          run: () =>
+            WorkbookRecord.sameStandard(item.format, format)
+              ? void download(item.format)
+              : conversion.open('download', item.format),
+        },
+      ]),
+    ),
+    ...(editor
+      ? { [CONVERT_ITEM_ID]: { run: () => conversion.open('convert', convertedFormat(format)) } }
+      : {}),
   };
   const open = async (file: File) => {
     setProblem(null);
@@ -152,8 +163,8 @@ export function SpreadsheetSurface({
         problem={problem}
         notice={opening}
         catalogue={catalogue}
-        level="view"
-        actions={{ download: { run: () => void download() } }}
+        level={editor ? 'edit' : 'view'}
+        actions={actions}
         shortcuts={[]}
         keyScope={root}
         opening={{ accept: OPEN_ACCEPT, onFile: (file) => void open(file) }}
@@ -166,6 +177,12 @@ export function SpreadsheetSurface({
         <Status state="loading" />
       )}
       <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} peers={sheetBarPeers} />
+      <ConversionDialog
+        state={conversion.state}
+        onConfirm={conversion.confirm}
+        onRetry={conversion.retry}
+        onCancel={conversion.cancel}
+      />
     </section>
   );
 }

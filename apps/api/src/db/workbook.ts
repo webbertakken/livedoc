@@ -1,6 +1,6 @@
 // The workbook row of a spreadsheet's room (docs/specs/029-sheets/sheet-store.md "In a spreadsheet"): its file format
 // and settings. Present exactly when the document is a spreadsheet.
-import { WorkbookRecord, type WorkbookSettings } from '@livedoc/sheets';
+import { WorkbookRecord, type WorkbookFormat, type WorkbookSettings } from '@livedoc/sheets';
 import type { DocumentEnv } from '../types';
 
 export type WorkbookRow = {
@@ -176,6 +176,28 @@ export async function connectWorkbookRangeSources(
       RETURNING ${WORKBOOK_COLUMNS}, rev`,
   )
     .bind(JSON.stringify(sources), now, documentId)
+    .first<WorkbookRow & { rev: number }>();
+  const workbook = workbookFromRow(documentId, row ?? undefined);
+  return row && workbook ? { workbook, rev: row.rev } : null;
+}
+
+/**
+ * A spreadsheet converted to `format` (files-and-print.md "Converting"): one statement, landing only while the workbook
+ * is still of the other standard, so two Editors converting at once convert it once. Its record as it now stands and
+ * the row's new rev, or null when it is no spreadsheet or already in that standard.
+ */
+export async function convertWorkbookFormat(
+  env: DocumentEnv,
+  documentId: string,
+  format: WorkbookFormat,
+  now: number,
+): Promise<{ workbook: WorkbookRecord; rev: number } | null> {
+  const row = await env.DOCUMENT_DB.prepare(
+    `UPDATE workbook SET format = ?, rev = rev + 1, updated_at = ?
+      WHERE document_id = ? AND (format = 'xlsx') <> (? = 'xlsx')
+      RETURNING ${WORKBOOK_COLUMNS}, rev`,
+  )
+    .bind(format, now, documentId, format)
     .first<WorkbookRow & { rev: number }>();
   const workbook = workbookFromRow(documentId, row ?? undefined);
   return row && workbook ? { workbook, rev: row.rev } : null;

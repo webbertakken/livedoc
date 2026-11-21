@@ -1242,6 +1242,15 @@ export const SPREADSHEETS_EXPORTED = chart(
   { types: ['Ods', 'Fods', 'Xlsx', 'Csv', 'Tsv', 'Pdf', 'Html'] },
 );
 
+// files-and-print.md "Converting": a spreadsheet converted to the other file format, by the format it went to.
+export const SPREADSHEETS_CONVERTED = chart(
+  'Spreadsheet',
+  'Converted',
+  'Spreadsheets Converted',
+  'An editor converted a spreadsheet to the other file format, by the format it went to.',
+  { types: ['Xlsx', 'Ods'] },
+);
+
 // docs/specs/029-sheets/imports.md "Telemetry": an Editor's Allow Access, once per spreadsheet; and formulas.md
 // "Connecting two spreadsheets": an Editor connecting the spreadsheets its IMPORTRANGEs read.
 export const SPREADSHEETS_IMPORTS_ALLOWED = chart(
@@ -1256,11 +1265,12 @@ export const SPREADSHEETS: MetricStack = {
   stack: true,
   title: 'Spreadsheets',
   blurb:
-    'Spreadsheet documents on the open standards: made, opened from files, downloaded, imports allowed.',
+    'Spreadsheet documents on the open standards: made, opened from files, downloaded, converted, imports allowed.',
   members: [
     SPREADSHEETS_CREATED,
     SPREADSHEETS_IMPORTED,
     SPREADSHEETS_EXPORTED,
+    SPREADSHEETS_CONVERTED,
     SPREADSHEETS_IMPORTS_ALLOWED,
   ],
 };

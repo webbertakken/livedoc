@@ -1,0 +1,127 @@
+// Converting a spreadsheet to the other standard (docs/specs/029-sheets/files-and-print.md "Converting", D87, D88):
+// what the new format's file cannot hold that the old one could, listed before it runs. Converting changes the file
+// format alone, so each loss is what every file written in the new format leaves out; the writers decide each cell
+// through the same functions (xlsx-bounds.ts, open-formula.ts), so the list is what the file does.
+import { callsOf } from '../formula/ast';
+import { parseFormula } from '../formula/parse';
+import type { Sheet } from '../sheet';
+import { WorkbookRecord, type WorkbookFormat } from '../workbook-record';
+import { FILE_LAST_COL } from './a1-text';
+import { GOOGLE_ONLY_FUNCTIONS } from './odf-function-names';
+import { toOpenFormula } from './open-formula';
+import type { FileCell, WorkbookFile } from './workbook-file';
+import { workbookFileFor } from './write-workbook';
+import { XLSX_TEXT_MAX, xlsxFormula } from './xlsx-bounds';
+import { xlsxLacks } from './xlsx-function-names';
+import { excelNames } from './xlsx-write';
+
+/** What a formula becomes in a format's file: calculated there, kept for LiveDoc but not calculated, or a value. */
+export type FormulaFate = 'native' | 'uncalculated' | 'unwritten';
+
+const RANK: Readonly<Record<FormulaFate, number>> = { native: 0, uncalculated: 1, unwritten: 2 };
+
+/** A loss of converting, one a kind, counted (D88). */
+export type ConversionLoss =
+  | { k: 'sheet_renamed'; count: number; names: { from: string; to: string }[] }
+  // `functions`: the functions the new format's apps lack, none when the reason is another (an array literal).
+  | { k: 'formula_uncalculated'; count: number; functions: string[] }
+  | { k: 'formula_unwritten'; count: number }
+  | { k: 'text_cut'; count: number }
+  | { k: 'columns_cut'; count: number; sheets: string[] };
+
+export type ConversionLossKind = ConversionLoss['k'];
+
+/** What a workbook converted to `to` from `from` loses. */
+export type WorkbookConversion = {
+  from: WorkbookFormat;
+  to: WorkbookFormat;
+  losses: ConversionLoss[];
+};
+
+/** The format a conversion goes to: Excel's for an ODF workbook, OpenDocument's package for an XLSX one. */
+export function convertedFormat(format: WorkbookFormat): WorkbookFormat {
+  return format === 'xlsx' ? 'ods' : 'xlsx';
+}
+
+const isXlsx = (format: WorkbookFormat) => format === 'xlsx';
+
+/** The functions a formula calls that a format's apps lack (upper case); none for a formula that does not parse. */
+export function lackingFunctions(formula: string, format: WorkbookFormat): string[] {
+  const parsed = parseFormula(formula);
+  if (!parsed.ok) return [];
+  const lacks = isXlsx(format) ? xlsxLacks : (name: string) => GOOGLE_ONLY_FUNCTIONS.has(name);
+  return [...callsOf(parsed.ast)].filter(lacks);
+}
+
+/** What a formula cell becomes in a format's file. */
+export function formulaFate(
+  cell: FileCell & { formula: string },
+  format: WorkbookFormat,
+): FormulaFate {
+  if (isXlsx(format)) {
+    const plan = xlsxFormula(cell.formula, cell.value).k;
+    return plan === 'excel' ? 'native' : plan === 'wrapped' ? 'uncalculated' : 'unwritten';
+  }
+  if (toOpenFormula(cell.formula) === null) return 'unwritten';
+  return lackingFunctions(cell.formula, format).length > 0 ? 'uncalculated' : 'native';
+}
+
+type Tally = { uncalculated: number; functions: Set<string>; unwritten: number; texts: number };
+
+function tallyCell(cell: FileCell, from: WorkbookFormat, to: WorkbookFormat, tally: Tally): void {
+  if (isXlsx(to) && cell.value?.k === 's' && cell.value.v.length > XLSX_TEXT_MAX) tally.texts++;
+  if (cell.formula === undefined) return;
+  const formula = { ...cell, formula: cell.formula };
+  const fate = formulaFate(formula, to);
+  if (RANK[fate] <= RANK[formulaFate(formula, from)]) return;
+  if (fate === 'unwritten') {
+    tally.unwritten++;
+    return;
+  }
+  tally.uncalculated++;
+  for (const name of lackingFunctions(cell.formula, to)) tally.functions.add(name);
+}
+
+/** What a workbook's file loses going from `from` to `to`: nothing within one standard. */
+export function conversionLosses(
+  file: WorkbookFile,
+  from: WorkbookFormat,
+  to: WorkbookFormat,
+): ConversionLoss[] {
+  if (WorkbookRecord.sameStandard(from, to)) return [];
+  const tally: Tally = { uncalculated: 0, functions: new Set(), unwritten: 0, texts: 0 };
+  const wide: string[] = [];
+  for (const sheet of file.sheets) {
+    let cut = false;
+    for (const cell of sheet.cells) {
+      if (isXlsx(to) && cell.c >= FILE_LAST_COL) cut = true;
+      else tallyCell(cell, from, to, tally);
+    }
+    if (cut) wide.push(sheet.name);
+  }
+  const renamed = isXlsx(to) ? excelNames(file.sheets, []) : new Map<string, string>();
+  const names = [...renamed].map(([was, now]) => ({ from: was, to: now }));
+  const losses: ConversionLoss[] = [];
+  if (names.length > 0) losses.push({ k: 'sheet_renamed', count: names.length, names });
+  if (tally.uncalculated > 0)
+    losses.push({
+      k: 'formula_uncalculated',
+      count: tally.uncalculated,
+      functions: [...tally.functions].sort(),
+    });
+  if (tally.unwritten > 0) losses.push({ k: 'formula_unwritten', count: tally.unwritten });
+  if (tally.texts > 0) losses.push({ k: 'text_cut', count: tally.texts });
+  if (wide.length > 0) losses.push({ k: 'columns_cut', count: wide.length, sheets: wide });
+  return losses;
+}
+
+/** What converting a workbook to `to` loses, its values worked out as a download's are. */
+export function workbookConversion(
+  sheets: readonly Sheet[],
+  record: WorkbookRecord,
+  to: WorkbookFormat,
+): WorkbookConversion {
+  const from = record.format;
+  if (WorkbookRecord.sameStandard(from, to)) return { from, to, losses: [] };
+  return { from, to, losses: conversionLosses(workbookFileFor(sheets, record), from, to) };
+}

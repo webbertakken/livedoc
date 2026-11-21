@@ -15,7 +15,8 @@ import {
   type Relationship,
 } from '@livedoc/office-packages';
 import { SheetName } from '../workbook/sheet-name';
-import { dummyFunction, toExcelFormula, type CachedLiteral } from './excel-formula';
+import { FILE_LAST_COL } from './a1-text';
+import { dummyFunction } from './excel-formula';
 import { ODS_GENERATOR } from './ods-write';
 import {
   cellAddress,
@@ -27,6 +28,7 @@ import {
   XLSX_ERRORS,
   XLSX_SHEET_NAME_MAX,
 } from './xlsx-parts';
+import { cachedLiteral, cutXlsxText, xlsxFormula, type XlsxFormula } from './xlsx-bounds';
 import type {
   FileCell,
   FileLoss,
@@ -61,8 +63,8 @@ class SharedStrings {
   }
 }
 
-// Each sheet's name as Excel holds it: at most 31 characters, unique, case aside (D84).
-function excelNames(sheets: readonly FileSheet[], losses: FileLoss[]): Map<string, string> {
+/** Each sheet's name as Excel holds it: at most 31 characters, unique, case aside (D84); each renamed one a loss. */
+export function excelNames(sheets: readonly FileSheet[], losses: FileLoss[]): Map<string, string> {
   const renamed = new Map<string, string>();
   const taken: string[] = [];
   for (const sheet of sheets) {
@@ -86,15 +88,12 @@ function fitExcel(name: string, taken: readonly string[]): string {
   return `${cut(name, XLSX_SHEET_NAME_MAX - suffix.length)}${suffix}`;
 }
 
-function cachedLiteral(value: FileValue | undefined): CachedLiteral | undefined {
-  if (!value) return undefined;
-  return value.k === 'e' ? { e: value.v } : value.v;
-}
-
 type CellWrite = { type?: string; formula?: string; array?: string; value?: string };
 
-// A value as a cell holds it: a number as is, text shared (a formula's inline), an error Excel knows as one (D82).
-function valueWrite(value: FileValue, inFormula: boolean, strings: SharedStrings): CellWrite {
+// A value as a cell holds it: a number as is, text shared (a formula's inline) and cut to Excel's length (D89), an
+// error Excel knows as one (D82).
+function valueWrite(value: FileValue, inFormula: boolean, ctx: SheetContext): CellWrite {
+  const { strings } = ctx;
   switch (value.k) {
     case 'n':
       return { value: String(value.v) };
@@ -105,36 +104,43 @@ function valueWrite(value: FileValue, inFormula: boolean, strings: SharedStrings
       return inFormula
         ? { type: 'str', value: value.v }
         : { type: 's', value: String(strings.id(value.v)) };
-    case 's':
+    case 's': {
+      const text = cutXlsxText(value.v);
+      if (text !== value.v) ctx.cut++;
       return inFormula
-        ? { type: 'str', value: value.v }
-        : { type: 's', value: String(strings.id(value.v)) };
+        ? { type: 'str', value: text }
+        : { type: 's', value: String(strings.id(text)) };
+    }
   }
 }
 
 type SheetContext = {
   strings: SharedStrings;
-  // Each formula in Excel's grammar, null where S5 wraps it.
-  excel: Map<FileCell, string | null>;
+  // Each formula as Excel holds it (D89).
+  excel: Map<FileCell, XlsxFormula>;
   // The positions a wrapped formula's block caches (`"r,c"`).
   computed: Set<string>;
   dynamic: boolean;
+  // Texts cut to Excel's length.
+  cut: number;
 };
 
 function cellWrite(cell: FileCell, ctx: SheetContext): CellWrite | null {
   if (cell.value && ctx.computed.has(`${cell.r},${cell.c}`))
     return {
-      ...valueWrite(cell.value, true, ctx.strings),
+      ...valueWrite(cell.value, true, ctx),
       formula: dummyFunction(COMPUTED_VALUE, cachedLiteral(cell.value)),
     };
-  const cached = cell.value ? valueWrite(cell.value, cell.formula !== undefined, ctx.strings) : {};
-  if (cell.formula === undefined) return cell.value ? cached : null;
-  const excel = ctx.excel.get(cell);
-  if (!excel) return { ...cached, formula: dummyFunction(cell.formula, cachedLiteral(cell.value)) };
-  if (!cell.spans) return { ...cached, formula: excel };
+  const plan = cell.formula === undefined ? undefined : ctx.excel.get(cell)!;
+  const inFormula = plan !== undefined && plan.k !== 'value';
+  const cached = cell.value ? valueWrite(cell.value, inFormula, ctx) : {};
+  if (!inFormula) return cell.value ? cached : null;
+  if (plan.k === 'wrapped' || !cell.spans) return { ...cached, formula: plan.text };
   ctx.dynamic = true;
-  const last = cellAddress(cell.r + cell.spans.rows - 1, cell.c + cell.spans.cols - 1);
-  return { ...cached, formula: excel, array: `${cellAddress(cell.r, cell.c)}:${last}` };
+  // A block spilling past Excel's last column is written to it (D89).
+  const cols = Math.min(cell.spans.cols, FILE_LAST_COL - cell.c);
+  const last = cellAddress(cell.r + cell.spans.rows - 1, cell.c + cols - 1);
+  return { ...cached, formula: plan.text, array: `${cellAddress(cell.r, cell.c)}:${last}` };
 }
 
 function markComputed(cell: FileCell, computed: Set<string>): void {
@@ -164,15 +170,29 @@ function worksheetXml(
   sheet: FileSheet,
   strings: SharedStrings,
   renamed: ReadonlyMap<string, string>,
+  losses: FileLoss[],
 ): { xml: string; dynamic: boolean } {
-  const ordered = [...sheet.cells].sort((a, b) => a.r - b.r || a.c - b.c);
-  const ctx: SheetContext = { strings, excel: new Map(), computed: new Set(), dynamic: false };
+  // Cells past Excel's last column are left out, and the cut named (D89).
+  const ordered = sheet.cells
+    .filter((cell) => cell.c < FILE_LAST_COL)
+    .sort((a, b) => a.r - b.r || a.c - b.c);
+  if (ordered.length < sheet.cells.length)
+    losses.push({ k: 'sheet_cut', sheet: sheet.name, rows: sheet.rows, cols: FILE_LAST_COL });
+  const ctx: SheetContext = {
+    strings,
+    excel: new Map(),
+    computed: new Set(),
+    dynamic: false,
+    cut: 0,
+  };
   // Every formula first, so each wrapped block's other cells know they cache it, whatever their order.
   for (const cell of ordered) {
     if (cell.formula === undefined) continue;
-    const excel = toExcelFormula(cell.formula, renamed);
-    ctx.excel.set(cell, excel);
-    if (excel === null && cell.spans) markComputed(cell, ctx.computed);
+    const plan = xlsxFormula(cell.formula, cell.value, renamed);
+    ctx.excel.set(cell, plan);
+    if (plan.k === 'value')
+      losses.push({ k: 'formula_unwritten', sheet: sheet.name, r: cell.r, c: cell.c });
+    if (plan.k === 'wrapped' && cell.spans) markComputed(cell, ctx.computed);
   }
   const rows = new Map<number, string[]>();
   for (const cell of ordered) {
@@ -182,6 +202,7 @@ function worksheetXml(
     row.push(cellXml(cell, write));
     rows.set(cell.r, row);
   }
+  if (ctx.cut > 0) losses.push({ k: 'text_cut', sheet: sheet.name, cells: ctx.cut });
   const lines = [...rows].map(([r, cells]) => `<row r="${r + 1}">${cells.join('')}</row>`);
   const last = ordered.at(-1);
   const extent = last
@@ -223,7 +244,7 @@ export function writeXlsx(file: WorkbookFile, title: string): FileWritten<Uint8A
   const strings = new SharedStrings();
   let dynamic = false;
   const sheetParts = file.sheets.map((sheet, i): OoxmlPart => {
-    const written = worksheetXml(sheet, strings, renamed);
+    const written = worksheetXml(sheet, strings, renamed, losses);
     dynamic ||= written.dynamic;
     return {
       name: `xl/worksheets/sheet${i + 1}.xml`,

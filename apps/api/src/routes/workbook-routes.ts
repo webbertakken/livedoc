@@ -1,7 +1,8 @@
 // A spreadsheet's workbook doors (docs/specs/029-sheets/files-and-print.md, standard-mapping.md); its settings and its
 // sheets' changes have their own (workbook-settings-route.ts, workbook-sheet-routes.ts):
 //   GET /api/documents/<id>/workbook/file?format=ods|fods|xlsx  the workbook as a file, written from the room's sheets
-// with every value the engine works out cached beside its formula. A read, gated as the sheets are; a tab-scoped link
+// with every value the engine works out cached beside its formula; in the other standard, a converted copy (the
+// workbook keeps its format, files-and-print.md "Download"). A read, gated as the sheets are; a tab-scoped link
 // is never offered on a sheet tab (spreadsheet.md "The workbook shape"), so one reaches no file. Answered inside the
 // document's room.
 import { WorkbookRecord, type WorkbookFormat } from '@livedoc/sheets';
@@ -14,6 +15,7 @@ import type { DocumentRouteContext } from './context';
 import { openWorkbook } from './sheet-page-routes';
 import { sheetCaller, workbookRefused } from './sheet-route-kit';
 import { saveSettings } from './workbook-settings-route';
+import { conversionLosses, convert } from './workbook-conversion-route';
 import { allowImports, fetchImport } from './sheet-imports-route';
 import { handleWorkbookSheetRoutes } from './workbook-sheet-routes';
 import { loadSpreadsheetSheets } from './workbook-sheets-load';
@@ -41,9 +43,6 @@ async function file(ctx: DocumentRouteContext, documentId: string): Promise<Resp
   if (!record) return workbookRefused('workbook_not_found', 404);
   const asked = ctx.url.searchParams.get('format') ?? record.format;
   if (!WorkbookRecord.isFormat(asked)) return workbookRefused('file_type_unknown', 400);
-  // A workbook leaves in its own standard (fork C1): converting is a person's choice (files-and-print.md "Converting").
-  if (!WorkbookRecord.sameStandard(asked, record.format))
-    return workbookRefused('format_not_native', 409);
   const [meta, sheets] = await Promise.all([
     getDocumentMeta(ctx.env, documentId),
     loadSpreadsheetSheets(ctx.env, documentId),
@@ -77,6 +76,10 @@ export async function handleWorkbookRoutes(ctx: DocumentRouteContext): Promise<R
   if (segments.length === 5 && segments[4] === 'settings')
     return request.method === 'PUT' ? saveSettings(ctx, documentId) : methodNotAllowed();
   // One word for both doors: each new word this deep multiplies the route-parity probe's sweep.
+  if (segments.length === 5 && segments[4] === 'conversion') {
+    if (request.method === 'GET') return conversionLosses(ctx, documentId);
+    return request.method === 'POST' ? convert(ctx, documentId) : methodNotAllowed();
+  }
   if (segments.length === 5 && segments[4] === 'imports') {
     if (request.method === 'GET') return fetchImport(ctx, documentId);
     return request.method === 'POST' ? allowImports(ctx, documentId) : methodNotAllowed();

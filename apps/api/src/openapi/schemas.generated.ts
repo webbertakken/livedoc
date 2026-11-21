@@ -3112,6 +3112,130 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     "minItems": 2,
     "type": "array"
   },
+  "ConversionLoss": {
+    "anyOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
+            "const": "sheet_renamed",
+            "type": "string"
+          },
+          "names": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "from",
+                "to"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "names"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "functions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "k": {
+            "const": "formula_uncalculated",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "functions"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
+            "const": "formula_unwritten",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
+            "const": "text_cut",
+            "type": "string"
+          }
+        },
+        "required": [
+          "k",
+          "count"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "k": {
+            "const": "columns_cut",
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "k",
+          "count",
+          "sheets"
+        ],
+        "type": "object"
+      }
+    ],
+    "description": "A loss of converting, one a kind, counted (D88)."
+  },
   "CreationTabKind": {
     "enum": [
       "diagram",
@@ -18138,6 +18262,41 @@ export const COMPONENT_SCHEMAS: ComponentSchemas = {
     },
     "required": [
       "sources"
+    ],
+    "type": "object"
+  },
+  "WorkbookConversionResponse": {
+    "additionalProperties": false,
+    "properties": {
+      "from": {
+        "$ref": "#/components/schemas/WorkbookFormat"
+      },
+      "losses": {
+        "items": {
+          "$ref": "#/components/schemas/ConversionLoss"
+        },
+        "type": "array"
+      },
+      "to": {
+        "$ref": "#/components/schemas/WorkbookFormat"
+      }
+    },
+    "required": [
+      "from",
+      "to",
+      "losses"
+    ],
+    "type": "object"
+  },
+  "WorkbookConvertRequest": {
+    "additionalProperties": false,
+    "properties": {
+      "format": {
+        "$ref": "#/components/schemas/WorkbookFormat"
+      }
+    },
+    "required": [
+      "format"
     ],
     "type": "object"
   },
