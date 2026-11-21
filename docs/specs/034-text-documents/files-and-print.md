@@ -14,6 +14,9 @@ Both ODF and OOXML are native (fork C1, ruled): a file keeps the format it arriv
 - Other formats are **imported**: `.rtf`, `.txt`, `.html`, `.md` (as a text document; a `.md` dropped where pages are
   made stays a [page](../031-markdown/markdown-tab.md), fork D3) and `.pdf` (text and pictures, reading order guessed);
   an imported document is born in ODF (fork C5).
+- A `.pdf` dropped or uploaded anywhere else in LiveDoc opens as a [PDF document](../035-pdf-documents/pdf-document.md),
+  which stays a PDF. Importing it here is a choice, and a copy: a PDF document's File > Open as a text document, or
+  this dialog's Upload with "Import as a text document" ticked.
 - An import that drops anything shows the **import report** ([below](#import-report)).
 - An opened file rides the new document's create (default): `POST /api/documents` names the text document tab and its
   file (`textDocuments: [{ tabId, file }]`, base64; a copy's `{ tabId, state }` carries a live state instead,
@@ -39,6 +42,9 @@ File > Download, in Google's order:
 | Markdown (.md)            | CommonMark with GitHub's extensions                                                                    |
 
 Each download is named after the document. A Viewer may download unless the owner turned it off for Viewers.
+Download as PDF offers "Keep in LiveDoc as a PDF document", which stores the written PDF beside its source as a
+[PDF document](../035-pdf-documents/files-print-and-sync.md#other-kinds-meeting-a-pdf); every kind's PDF is written by
+the repository's one PDF writer.
 A download is `GET /api/documents/:id/text-documents/:tabId/file?type=odt|fodt|docx`, written from the live state:
 `400 file_type_unknown` for any other type, `409 format_not_native` for the other format until conversion is built.
 

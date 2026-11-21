@@ -3,8 +3,9 @@
 **Status: specified.** Nothing is built.
 
 A **file tab** is a tab of the `file` [tab kind](document.md#domain-language): it holds one file's bytes, exactly, so
-**any file can live in LiveDoc** ([Purpose](../001-project-vision/purpose.md#what-it-is)). An image, a PDF, a shell
-script, a JSON file: each is a document with a single file tab. LiveDoc shows what it can of it and keeps the rest
+**any file can live in LiveDoc** ([Purpose](../001-project-vision/purpose.md#what-it-is)). An image, a shell script, a
+JSON file: each is a document with a single file tab. A PDF is the one file that is more: it becomes a
+[PDF document](../035-pdf-documents/pdf-document.md), a kind of its own, read, reviewed and edited together. LiveDoc shows what it can of it and keeps the rest
 intact, so it syncs back out byte for byte ([Native files](../027-repositories/native-files.md)).
 
 ## Domain language
@@ -23,7 +24,7 @@ re-encoded for the canvas and belongs to the tab it is on. A file tab is a file 
 | Field        | Holds                                                                                                                                               |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `kind`       | `'file'`                                                                                                                                            |
-| `blob`       | The key of the bytes in object storage: their SHA-256, so equal files are stored once                                                               |
+| `blob`       | The key of the bytes in the [blob store](blob-store.md): their SHA-256, so equal files are stored once                                              |
 | `size`       | The byte count                                                                                                                                      |
 | `mediaType`  | Sniffed from the bytes, falling back to the name's extension, then `application/octet-stream`                                                       |
 | `executable` | `true` when the file carried the executable bit, so a script synced out runs as it did                                                              |
@@ -37,7 +38,7 @@ The document's name is the file's name without its extension; the extension is k
 | Media type                           | Shown as                                                                          |
 | ------------------------------------ | --------------------------------------------------------------------------------- |
 | PNG, JPEG, GIF, WebP, AVIF, SVG      | The image, fitted; SVG drawn as an image, never inlined, so its scripts never run |
-| PDF                                  | The browser's own viewer                                                          |
+| PDF                                  | Never a file tab: a PDF is a [PDF document](../035-pdf-documents/pdf-document.md) |
 | Text under `MARKDOWN_TEXT_MAX_BYTES` | Read-only, monospaced, highlighted by extension                                   |
 | Anything else                        | Its name, size and type, with **Download**                                        |
 
@@ -59,13 +60,30 @@ are never merged.
 
 ## Limits
 
-| Constant             | Value               | Why                                                                                                  |
-| -------------------- | ------------------- | ---------------------------------------------------------------------------------------------------- |
-| `FILE_TAB_MAX_BYTES` | 26,214,400 (25 MiB) | Inside a Worker's request body limit with headroom; GitHub warns at 50 MB, so a wiki stays cloneable |
+| Constant               | Value                | Why                                                                                                                                                                                         |
+| ---------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FILE_TAB_MAX_BYTES`   | 100,000,000 (100 MB) | The largest request body a Worker takes on Cloudflare's Free and Pro plans, and under GitHub's limit for one file (100 MiB), so every file LiveDoc holds can be pushed (Webber, 2026-11-21) |
+| `FILE_SYNC_WARN_BYTES` | 50,000,000 (50 MB)   | Where GitHub warns about a file: a sync writes it and reports it once                                                                                                                       |
 
-A larger file is refused with "This file is larger than 25 MB, the most LiveDoc holds for one file." A sync leaves
-it in the repository, untouched, and reports it. Usage counts every distinct blob once per owner
+A larger file is refused with "This file is larger than 100 MB, the most LiveDoc holds for one file." A sync leaves
+it in the repository, untouched, and reports it. A file past `FILE_SYNC_WARN_BYTES` is held and synced as any other;
+the sync's report names it once ("plans.pdf is 62 MB. GitHub warns about files over 50 MB."), so a wiki's owner
+knows what makes a clone heavy. The cap, uploads, range reads and retention are the
+[blob store](blob-store.md)'s. Usage counts every distinct blob once per owner
 ([Open source + distribution](../002-project-scope/open-source-and-business-model.md)).
+
+The cap is one number for every file tab and every [PDF document](../035-pdf-documents/pdf-document.md#limits). What
+LiveDoc's servers do with a file's contents (a thumbnail, search text) has its own, smaller bound, said where it
+applies; holding, showing and syncing a file never depends on it.
+
+## Tests
+
+- A file of exactly `FILE_TAB_MAX_BYTES` is stored; one byte more is refused with `413 file_too_large` and the copy
+  above, before any byte is stored, in the browser and at the api.
+- The copy's number is derived from the constant, never typed beside it.
+- A sync leaves a file past the cap in the repository and reports it; it reports a file past `FILE_SYNC_WARN_BYTES`
+  once and syncs it.
+- Two replaces racing each other leave the later one's bytes and the earlier as a previous version.
 
 ## Share roles
 
@@ -83,5 +101,6 @@ it in the repository, untouched, and reports it. Usage counts every distinct blo
 
 ## Non-goals
 
-- Editing a file's contents in LiveDoc, other than a markdown file's ([Markdown tab](../031-markdown/markdown-tab.md)).
+- Editing a file's contents in LiveDoc, other than a markdown file's ([Markdown tab](../031-markdown/markdown-tab.md))
+  and a PDF's ([PDF document](../035-pdf-documents/pdf-document.md)), each a kind of its own.
 - Previews of office formats, archives or video.

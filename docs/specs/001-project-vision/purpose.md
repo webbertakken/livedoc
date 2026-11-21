@@ -100,6 +100,9 @@ the start:
   wikis are what LiveDoc is for.
 - **"Pages are a mode of the canvas"**: reversed by [Text document](../034-text-documents/text-document.md).
   Writing is a document kind of its own, on ODF and OOXML, worked on as Google Docs is; Pages mode is removed.
+- **"A file is shown, not edited"**: moved by [PDF document](../035-pdf-documents/pdf-document.md). A PDF is a
+  document kind of its own: read, reviewed and really edited together, and always a PDF, its functions measured
+  against Acrobat's. Every other file stays a [file tab](../006-document/file-tab.md), kept exactly.
 - **"Not a paid product, ever"**: narrowed by
   [Open source + distribution](../002-project-scope/open-source-and-business-model.md).
   Hosting stays free; usage beyond it can be bought, to pay for hosting. No

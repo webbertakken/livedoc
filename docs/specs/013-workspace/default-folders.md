@@ -45,6 +45,7 @@ order:
 | Plan boards           | `mode:plan`              |
 | Sessions              | `mode:workshop`          |
 | Event Storming boards | `kind:event-storming`    |
+| PDFs                  | `kind:pdf`               |
 | Retrospectives        | `template:retrospective` |
 | Kanban boards         | `template:kanban`        |
 
@@ -231,6 +232,7 @@ Each key has a label, the plural a sentence uses, and an icon, in list order:
 | `mode:plan`              | Plan boards           | Plan boards           | The Plan's icon                 |
 | `mode:workshop`          | Sessions              | sessions              | The the Workshop control's icon |
 | `kind:event-storming`    | Event Storming boards | Event Storming boards | A sticky note                   |
+| `kind:pdf`               | PDFs                  | PDFs                  | A page with a folded corner     |
 | `template:retrospective` | Retrospectives        | retrospectives        | A clock turning back            |
 | `template:kanban`        | Kanban boards         | Kanban boards         | A board of three columns        |
 

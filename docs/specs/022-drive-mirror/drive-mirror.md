@@ -243,6 +243,10 @@ this spec does not restate it.
 - **Name:** the document name plus `.livedoc`. Names that Drive would
   alter are stored as Drive holds them, and the next inbound rename is
   compared against that stored form, never against the LiveDoc name.
+- **A PDF document is the exception** (specified, not built): it is mirrored as `<name>.pdf`,
+  `application/pdf`, its bytes a valid PDF holding every change, and a PDF put into the
+  mirrored folder becomes a PDF document
+  ([Files, print and sync](../035-pdf-documents/files-print-and-sync.md#the-drive-mirror)).
 - **MIME type:** `application/vnd.livedoc+json`, registered as the app's
   default type for "Open with".
 - **Contents:** a whole-document envelope, the sibling of the per-tab export's

@@ -1,0 +1,177 @@
+# Marks
+
+**Status: specified.** Nothing is built.
+
+A **mark** is something placed on top of a PDF page that leaves the page's own content alone: a highlight, a note, a
+piece of text, a drawing, a shape, a stamp. Marks are Reviewing's ([Editing modes](editing-modes.md)); a mark with
+words or replies carries a [comment](comments.md) thread. Every mark is live for everyone, undoable by its maker, and
+written into the file as a standard annotation, so any reader shows it. The research is
+[Comments](../../research/pdf-documents/comments.md) and [The engine](../../research/pdf-documents/engine.md).
+
+## Kinds
+
+| Kind                             | Made by                                                                                 | In the file                        |
+| -------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------- |
+| **Highlight**                    | Selecting text with the tool in hand, or the tool on a selection                        | `Highlight`                        |
+| **Underline**                    | The same                                                                                | `Underline`                        |
+| **Strikethrough**                | The same                                                                                | `StrikeOut`                        |
+| **Squiggly underline**           | The same                                                                                | `Squiggly`                         |
+| **Insert text**                  | A press between two characters; the words to insert are its comment                     | `Caret`                            |
+| **Replace text**                 | Selecting text; a strikethrough and an insert, grouped as one mark                      | `StrikeOut` grouped with a `Caret` |
+| **Note**                         | A press on the page; a small glyph with a comment                                       | `Text`                             |
+| **Text**                         | A press or a drag; words typed straight onto the page                                   | `FreeText`                         |
+| **Callout**                      | A press on what is meant, then a press for the text; a line joins them                  | `FreeText` with a callout line     |
+| **Drawing**                      | Freehand strokes; strokes made within `PDF_DRAWING_JOIN_MS` are one mark                | `Ink`                              |
+| **Line**, **Arrow**              | A drag                                                                                  | `Line`                             |
+| **Rectangle**, **Ellipse**       | A drag; ⇧ keeps it square or round                                                      | `Square`, `Circle`                 |
+| **Polygon**, **Connected lines** | A press a corner; a double press or Enter ends it                                       | `Polygon`, `PolyLine`              |
+| **Cloud**                        | As a polygon, with a cloudy edge                                                        | `Polygon` with a cloudy border     |
+| **Stamp**                        | Choosing a stamp, then a press                                                          | `Stamp`                            |
+| **Pinned file**                  | Choosing a file, then a press; a paperclip glyph that holds the file                    | `FileAttachment`                   |
+| **Tick**, **Cross**, **Dot**     | A press; fill marks for a PDF with no fields ([Fields](fields.md#a-pdf-with-no-fields)) | `Stamp`                            |
+| **Area highlight**               | The highlight tool dragged where there is no text (a scan, a picture)                   | `Square`, filled                   |
+
+- A [drawn signature](signing.md#drawn-signatures) is placed as a mark and has its own rules. A
+  [redaction mark](redaction-and-protection.md#marking) is Editing's. A link is page furniture, added in Editing
+  ([Objects](objects.md#links)), though the file holds it among its annotations.
+- **A text mark follows its text**: it is stored as the quadrilaterals of the glyphs it covers, in page space, with
+  the text it covered, so it is drawn exactly over lines that are slanted or split across columns.
+- A text mark across a page break is one mark a page, grouped, with one thread.
+- Kinds the file may hold that LiveDoc does not make (sound, movie, screen, 3D, rich media, printer's marks, trap
+  networks, measurements) are drawn as the file's own appearance says, never selected or changed, and written back
+  untouched.
+
+## Making a mark
+
+- **The tool stays in hand** until Escape, V or another tool, so several highlights are made in a row; a toolbar
+  check "Keep tool selected" turned off returns to Select after one mark `(default: on)`.
+- **From a text selection**: a small bar by the selection offers Highlight, Underline, Strikethrough, Comment, Copy
+  and (Editing) Edit text; the context menu offers the same.
+- **The tool's look is remembered** per kind, per person, in this browser: colour, opacity, width, line style, line
+  ends, fill, font and size. A new mark takes it.
+- A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it.
+- **Snapping**: a line or shape snaps to the page's own lines and edges within `PDF_SNAP_PX`; ⌘ held turns snapping
+  off for the drag.
+- A mark may not leave its page: a drag past the edge stops at it.
+- A mark is made on the page as the file has it, whatever the person's rotated view or Dark pages.
+
+## Changing a mark
+
+- **Select** by a press; a drag from empty space selects every mark it touches; ⇧ adds to the selection.
+- **Move** by dragging; **resize** by its handles (⇧ keeps proportions); a line by its ends; a polygon by its
+  corners; a callout by its text box, its knee and its end separately. A text mark (a highlight) is not moved or
+  resized: it is changed by selecting other text.
+- **Restyle** from the toolbar or Format menu: colour and fill from the one
+  [colour picker](../004-interface-design/colour-picker.md) (the `soft` tone for highlights and fills, `strong` for
+  lines and text), opacity 10% to 100%, width 0.5 to 12 points, solid or one of four dashes, line ends (none, arrow,
+  open arrow, circle, square, diamond, bar), and for Text and Callout: font, size, colour, alignment.
+- **Rotate**: stamps, Text and shapes turn by a handle, snapping at 15°.
+- **Arrange**: bring forward, send backward, to front, to back, among the marks of its page.
+- **Group**: several selected marks become one that moves and is answered as one; **Ungroup** undoes it.
+- **Lock**: a locked mark is not moved, changed or deleted until unlocked; anyone who may review may unlock
+  `(default)`.
+- **Copy, cut, paste, duplicate**: within a page, across pages and across PDF documents; a paste lands where the
+  pointer is, or offset from its source.
+- **Delete** removes the mark; a mark with a thread asks nothing and takes its thread to "on deleted content" in the
+  comments panel ([Comments](comments.md#when-the-mark-goes)).
+- **Marks the file arrived with behave the same** as marks made here: selected, moved, restyled, answered, deleted.
+  Changing one is a live change naming it; the stored file is untouched until a bake.
+- **Properties** (the side panel, for one selected mark): its kind, author, when made and changed, its look, its
+  words, Locked, and "Make this look the default" for its kind.
+
+## Stamps
+
+- **Standard stamps**, drawn by LiveDoc in its own style, in the standard's names so other readers know them:
+  Approved, Not approved, Draft, Final, Confidential, For comment, For public release, Not for public release, As is,
+  Expired, Experimental, Departmental, Sold, Top secret; and **Sign here**, **Initial here**, **Witness**,
+  **Accepted**, **Rejected**.
+- **Dynamic stamps** carry the stamper's name and the time, written when placed: "Approved by Ada Lovelace, 21 Nov
+  2026, 14:02", **Received**, **Reviewed**, **Revised**. The name is the person's display name, the time their
+  browser's, said to be.
+- **Custom stamps**: made from a picture (PNG, JPEG, SVG drawn as a picture) or a page of a PDF, named, in a
+  category; kept in this browser, or with the account when signed in; renamed, deleted and moved between categories
+  in **Manage stamps**. A custom stamp's picture is a blob named in the mark.
+- The Stamp control shows the last stamp used; its menu shows categories, each a grid of stamps with names.
+- A stamp is placed at its natural size, at most a third of the page's width, and resized by its handles.
+- No stamp carries another company's artwork.
+
+## In the file
+
+- **Each mark is one annotation** of the kind above, with: its rectangle and geometry in page space; colour, opacity,
+  border and line ends as the standard's own entries; an **appearance stream** drawn by LiveDoc, so every reader
+  shows exactly what was made; `NM` its LiveDoc id; `T` its author's display name; `M` and `CreationDate`; `Contents`
+  its words; the print flag set.
+- **Written as an addition** ([Saving](saving.md#addition-or-rewrite)): a highlight on a 1 MB paper adds about half a
+  kilobyte, and every earlier signature stays valid.
+- A mark changed or deleted in LiveDoc is written as the changed or removed annotation in the same addition; the
+  stored file's bytes still hold the original, as an incremental update does. Removing it from the bytes for good is
+  [removing hidden information](redaction-and-protection.md#removing-hidden-information).
+- **Read back the same**: a mark LiveDoc wrote and another reader changed is read by its `NM`; one without `NM` gets
+  an id from its object number.
+- **What other readers cannot hold** (a mark's group beyond the standard's own, its lock beyond the standard's flag,
+  a custom stamp's category) rides a private entry of LiveDoc's own in the annotation, which other readers ignore and
+  keep.
+- A file that claims PDF/UA has each new mark added to its structure tree
+  ([Accessibility](accessibility.md#what-a-written-file-keeps)).
+- **Flattening** writes marks into the page content and removes them as marks: an Editor's tool, a rewrite
+  ([Document tools](document-tools.md#flattening)).
+
+## Together
+
+- A mark appears for everyone as it is made: a drawing as it is drawn, at the cursor's rate; a Text mark's words as
+  they are typed, merged by character.
+- A mark someone has selected is outlined in their colour with their name; two people may style one mark at once,
+  the later write winning per property.
+- **Who made a mark** is its author: a LiveDoc person for a mark made here (their name, colour and picture), or
+  "From the file" with the file's own name for a mark that arrived ([Comments](comments.md#authors)).
+- View > Marks hides every mark for one person; a filter in the comments panel shows marks by kind, author and page.
+
+## Limits
+
+| Constant                    | Value               | Why                                                                                            |
+| --------------------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
+| `PDF_MAX_MARKS`             | 20,000              | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))                 |
+| `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                      |
+| `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                         |
+| `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000               |
+| `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
+| `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
+| `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES` |
+
+## Share roles
+
+| Role            | Marks                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Editor**      | Makes any; changes and deletes anyone's, the file's own included; flattens                                                |
+| **Participant** | Makes any; changes and deletes their own; answers anyone's; may not delete the file's own or another person's `(default)` |
+| **Viewer**      | Sees them, reads their words, hides them for themselves; makes none                                                       |
+
+Gated on the session's `can` (`pdfReviews`), and checked by the room: a Participant's update that removes or changes
+a mark another person made is refused with `not_your_mark`.
+
+## Keyboard and accessibility
+
+- Every tool has a key ([Keyboard shortcuts](keyboard-shortcuts.md#tools)); text marks act on a selection made with
+  the text caret, so highlighting needs no pointer.
+- Marks are in the page's tab sequence and the accessible tree
+  ([Accessibility](accessibility.md#the-accessible-tree)); a selected mark is moved by arrow keys, resized with ⌥,
+  deleted with Delete.
+- A mark's colour is never its only sign: its kind is named, and the comments panel lists it by kind.
+- Handles are 24 px targets (44 on touch); a drag has a keyboard equal for every change but freehand drawing.
+
+## Telemetry and observability
+
+- `Pdf · Added · Mark.<Kind>`, `Pdf · Changed · Mark.<Moved|Resized|Restyled|Grouped|Locked>`,
+  `Pdf · Deleted · Mark.<Kind>`, `Pdf · Added · Stamp.<Standard|Dynamic|Custom>`,
+  `Pdf · Created · CustomStamp`. Never a mark's words, a stamp's name or a file's name.
+- Fingerprints: `[pdf] mark-refused name=<name>`, `[pdf] marks-read count=<n> unknown=<n>` (per open).
+
+## Errors
+
+| When                                           | A person sees                                                                                    |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| A text tool is used where the page has no text | "This page has no text to mark. Drag to highlight an area, or recognise its text."               |
+| The mark limit is reached                      | "This PDF holds the most marks LiveDoc keeps for one file (20,000)."                             |
+| A Participant changes another person's mark    | The change is undone: "You can change your own marks."                                           |
+| A certified file forbids marks                 | "The person who certified this PDF doesn't allow marks." ([Signing](signing.md#certified-files)) |
+| A custom stamp's picture cannot be read        | "That picture couldn't be read. Choose a PNG, JPEG or SVG."                                      |

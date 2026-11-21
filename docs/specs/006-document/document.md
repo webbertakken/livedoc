@@ -7,7 +7,8 @@ which fixes what that tab is. A general tab is worked on in one of three
 [editor modes](../007-editor/editor-modes.md), Sketch, Structured or Pages.
 
 **Every file is a document.** A markdown file is a document with one
-[markdown tab](../031-markdown/markdown-tab.md); any other file is a document
+[markdown tab](../031-markdown/markdown-tab.md); a PDF is a document with one
+[PDF tab](../035-pdf-documents/pdf-document.md); any other file is a document
 with one [file tab](file-tab.md). A document whose one tab is outside the canvas
 hides its tab strip ([Kinds outside the canvas](kinds-outside-the-canvas.md#the-tab-strip)),
 and the tab still holds the data, so a second tab can join later without
@@ -25,6 +26,7 @@ changing what the document is.
 | **text document**        | The tab kind holding pages of writing in ODF or OOXML ([Text document](../034-text-documents/text-document.md)). |
 | **markdown**             | The tab kind holding one markdown text ([Markdown tab](../031-markdown/markdown-tab.md)).                        |
 | **file**                 | The tab kind holding one file's bytes ([File tab](file-tab.md)).                                                 |
+| **PDF document**         | The tab kind holding one PDF ([PDF document](../035-pdf-documents/pdf-document.md)).                             |
 | **sheet tab**            | The tab kind holding one sheet of a spreadsheet, specified ([Spreadsheet](../029-sheets/spreadsheet.md)).        |
 | **spreadsheet**          | A document whose tabs are all sheet tabs: one workbook.                                                          |
 | **page**                 | A document whose single tab is a markdown tab, as people speak of it.                                            |
@@ -38,7 +40,7 @@ changing what the document is.
 - "Board" on its own is not a term; say event-storming board or whiteboard.
 - A tab kind is reserved for a very specific use; anything a mode can serve stays a general tab.
 - Specs, UI copy and code name the container a document.
-- Markdown and file tabs are not canvases: they have no editor mode, elements or layers.
+- Markdown, file and PDF tabs are not canvases: they have no editor mode, elements or layers.
 
 ## Choosing the word in prose
 

@@ -108,5 +108,5 @@ in Phase 6's tests on all three).
   a file the Worker's 128 MB can hold whole, since a Worker cannot read ranges synchronously: about 32 MiB with the
   engine's own memory beside it (inferred: 128 MB less the 4.6 MB binary, its 16 MB starting memory and working
   room). Above that the browser makes them ([What the servers need](servers.md)).
-- **Recommended for F6: 100 MB** (`FILE_MAX_BYTES` 100,000,000), for every file tab, with the refusal copy "This file
+- **Recommended for F6, and ruled so (Webber, 2026-11-21): 100 MB** (`FILE_TAB_MAX_BYTES` 100,000,000), for every file tab, with the refusal copy "This file
   is larger than 100 MB, the most LiveDoc holds for one file."
