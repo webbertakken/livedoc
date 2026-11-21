@@ -63,6 +63,10 @@ function asNumber(v: Value): number | undefined {
   return undefined;
 }
 
+// An option's value as text: a number or a boolean as written, anything else empty.
+const textOf = (v: Value): string =>
+  typeof v === 'string' ? v : typeof v === 'number' || typeof v === 'boolean' ? String(v) : '';
+
 function asBoolean(v: Value): boolean | undefined {
   if (typeof v === 'boolean') return v;
   if (typeof v === 'number') return v !== 0;
@@ -91,17 +95,13 @@ function readOptions(rows: Rows): ReadOptions | SheetError {
     const v = asBoolean(named.get(name) ?? null);
     if (v !== undefined) options[name] = v;
   }
-  const type = named.get('charttype');
-  const kind = type === undefined || type === null ? 'line' : String(type).trim().toLowerCase();
-  if (!(SPARKLINE_KINDS as readonly string[]).includes(kind))
-    return err(
-      '#VALUE!',
-      `"${String(type)}" is not a sparkline chart type: line, column, winloss or bar`,
-    );
   const word = (name: string) =>
-    String(named.get(name) ?? '')
+    textOf(named.get(name) ?? null)
       .trim()
       .toLowerCase();
+  const kind = word('charttype') || 'line';
+  if (!(SPARKLINE_KINDS as readonly string[]).includes(kind))
+    return err('#VALUE!', `"${kind}" is not a sparkline chart type: line, column, winloss or bar`);
   return { kind: kind as SparklineKind, options, empty: word('empty'), nan: word('nan') };
 }
 

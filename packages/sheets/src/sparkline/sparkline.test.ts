@@ -110,6 +110,8 @@ describe('readSparkline', () => {
     expect(readSparkline([[1]], [['color', { e: '#N/A' }]])).toEqual({ e: '#N/A' });
     expect(readSparkline([[1]], [['charttype', 'pie']])).toMatchObject({ e: '#VALUE!' });
     expect(readSparkline([[1]], [['charttype', null]])).toMatchObject({ kind: 'line' });
+    expect(readSparkline([[1]], [['charttype', 3]])).toMatchObject({ e: '#VALUE!' });
+    expect(readSparkline([[null]], [['empty', true]])).toMatchObject({ values: [] });
   });
 
   it('draws at most SPARKLINE_POINTS_MAX values, the first ones', () => {
