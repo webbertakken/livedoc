@@ -23,8 +23,8 @@ describe('fieldView', () => {
   it('shows its page’s number or the page count, in its own formatting', () => {
     const number = fieldView(field('page-number', { bold: true }), null, null, [shown(4, 9)]);
     expect(number.dom.textContent).toBe('4');
-    expect((number.dom as HTMLElement).dataset.field).toBe('page-number');
-    expect((number.dom as HTMLElement).getAttribute('style')).toContain('font-weight: 700');
+    expect(number.dom.dataset.field).toBe('page-number');
+    expect(number.dom.getAttribute('style')).toContain('font-weight: 700');
     expect(fieldView(field('page-count'), null, null, [shown(4, 9)]).dom.textContent).toBe('9');
   });
 
