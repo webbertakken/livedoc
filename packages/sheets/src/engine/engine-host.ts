@@ -32,6 +32,7 @@ export class EngineHost {
         limits: msg.limits === 'spreadsheet' ? SheetLimits.spreadsheet : SheetLimits.plan,
         iteration: msg.iteration,
         trackForgotten: true,
+        ...(msg.imports ? { imports: { allowed: msg.imports === 'allowed' } } : {}),
       });
     } else {
       const wb = this.wb;
@@ -51,6 +52,9 @@ export class EngineHost {
       } else if (msg.t === 'sheet') wb.updateSheet(sheetFromJson(msg.sheet));
       else if (msg.t === 'remove') wb.removeSheet(msg.sheetId);
       else if (msg.t === 'iteration') wb.setIteration(msg.iteration);
+      else if (msg.t === 'imported') wb.landImport(msg.key, msg.answer);
+      else if (msg.t === 'imports-allowed') wb.allowImports();
+      else if (msg.t === 'imports-refresh') wb.refreshImports();
       else wb.tick();
     }
     this.collect();
@@ -90,9 +94,11 @@ export class EngineHost {
     return false;
   }
 
-  // Queue what the engine forgot, and tell the page those cells wait.
+  // Queue what the engine forgot, and tell the page those cells wait; and ask the page for imports.
   private collect(): void {
     const wb = this.wb!;
+    const asks = wb.takeImportAsks();
+    if (asks.length > 0) this.post({ t: 'imports', rev: this.rev, asks });
     const forgotten = wb.takeForgotten();
     if (forgotten === 'all') {
       this.queue = everyFormula(wb.sheetList());

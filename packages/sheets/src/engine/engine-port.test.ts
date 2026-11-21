@@ -12,13 +12,20 @@ import { Workbook } from './workbook';
 import { ITERATION_OFF } from './loops';
 import { SheetLimits } from '../sheet-limits';
 import { sheetToJson } from '../sheet-json';
+import type { ImportAsk } from '../imports/import-request';
 
+type EnginePortImports = { allowed: boolean; ask: (asks: ImportAsk[]) => void };
 type Wire = { toHost: EngineIn[]; toPage: EngineOut[] };
 
-function joined(sheets: Sheet[]) {
+function joined(sheets: Sheet[], imports?: EnginePortImports) {
   const wire: Wire = { toHost: [], toPage: [] };
   const host = new EngineHost((out) => wire.toPage.push(out));
-  const port = new EnginePort({ sheets, locale: 'en-GB', send: (m) => wire.toHost.push(m) });
+  const port = new EnginePort({
+    sheets,
+    locale: 'en-GB',
+    send: (m) => wire.toHost.push(m),
+    ...(imports ? { imports } : {}),
+  });
   port.start();
   // Deliver what each side sent: the page's messages first, then the Worker's answers part by part.
   const deliver = (parts = Infinity) => {
@@ -227,5 +234,49 @@ describe('Plan cards in the Worker', () => {
     for (const out of wire.toPage.splice(0)) port.receive(out);
     expect(port.copy.value(port.copy.sheetList()[0]!.id, 0, 0)).toBe(2);
     new EngineHost(() => undefined).setCards(null);
+  });
+});
+
+describe('imports in the Worker', () => {
+  const F = '=IMPORTDATA("https://example.com/a.csv")';
+
+  it('asks the page, which fetches and answers; Allow Access and the hour reach the Worker', () => {
+    const asked: ImportAsk[] = [];
+    const { deliver, port, v } = joined(makeSheets({ S: { A1: F } }), {
+      allowed: false,
+      ask: (asks) => asked.push(...asks),
+    });
+    deliver();
+    expect(v(0, 0)).toMatchObject({ e: '#REF!' });
+    port.allowImports();
+    deliver();
+    expect(v(0, 0)).toMatchObject({ why: 'pending' });
+    expect(asked).toHaveLength(1);
+    port.landImport(asked[0]!.key, { rows: [['a', 'b']] });
+    deliver();
+    expect([v(0, 0), v(0, 1)]).toEqual(['a', 'b']);
+    port.refreshImports();
+    deliver();
+    expect(asked).toHaveLength(2);
+    expect(v(0, 0)).toBe('a');
+  });
+
+  it('fetches at once where access was allowed before', () => {
+    const asked: ImportAsk[] = [];
+    const { deliver, v } = joined(makeSheets({ S: { A1: F } }), {
+      allowed: true,
+      ask: (asks) => asked.push(...asks),
+    });
+    deliver();
+    expect(v(0, 0)).toMatchObject({ why: 'pending' });
+    expect(asked).toHaveLength(1);
+  });
+
+  it('fetches nothing for a page that does not', () => {
+    const { deliver, port, v, wire } = joined(makeSheets({ S: { A1: F } }));
+    deliver();
+    expect(v(0, 0)).toMatchObject({ e: '#N/A' });
+    port.receive({ t: 'imports', rev: 1, asks: [] });
+    expect(wire.toHost).toEqual([]);
   });
 });

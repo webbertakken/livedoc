@@ -2,6 +2,8 @@
 // "Workbook
 // and recalculation"). The workbook provides it; functions never reach the workbook itself.
 import type { CardSource } from '../cards';
+import type { ImportRequest } from '../imports/import-request';
+import type { ImportRead } from './import-book';
 import type { SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
 import type { CellFormat } from '../sheet';
@@ -73,7 +75,11 @@ export type Frame = {
   cards: CardSource | null;
   // A formula cell's value worked out afresh with each swapped cell read as its stand-in (engine/what-if.ts).
   workOut(target: CellAt, swaps: readonly Swap[]): Value;
-  // Mark the formula volatile (it recalculates on every change) or a card reader.
-  volatile(): void;
+  // Mark the formula volatile (it recalculates on every change; `name` the function that makes it so) or a card reader.
+  volatile(name: string): void;
   readsCards(): void;
+  // An import's answer as the formula reads it (imports.md); null where no editor fetches for the engine.
+  importOf(request: ImportRequest): ImportRead | null;
+  // What `run` gives, and whether it read NOW, RAND, RANDARRAY or RANDBETWEEN, directly or through cells.
+  watchNow<T>(run: () => T): [T, boolean];
 };

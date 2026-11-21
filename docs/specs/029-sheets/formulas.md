@@ -441,12 +441,13 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
   an odd last period as one span (default, D59). Rate, price and redemption are positive and yield not negative, the
   dates in order (maturity, first coupon, settlement, issue; maturity, settlement, last interest), else `#NUM!`.
 
-**Web**: `HYPERLINK` (above), `ENCODEURL`, `ISURL`.
+**Web**: `HYPERLINK` (above), `ENCODEURL`, `ISURL`, `IMPORTDATA`, `IMPORTFEED`, `IMPORTHTML`, `IMPORTXML`.
 
 - `ENCODEURL(text)` writes each byte of the text's UTF-8 as `%XX` but letters, digits, `-` and `_`, as LibreOffice
   and Excel keep them (`"hello, world!"` is `hello%2C%20world%21`, Google's example).
 - `ISURL(value)` reads an address as a Text Is Valid URL rule does ([Data validation](data-validation.md)); a number
   is none.
+- The four imports fetch through the api Worker, once an Editor allows access: [Imports from the web](imports.md).
 
 **Engineering**: `BIN2OCT`, `BIN2HEX`, `BIN2DEC`, `OCT2BIN`, `OCT2HEX`, `OCT2DEC`, `HEX2BIN`, `HEX2OCT`, `HEX2DEC`,
 `DEC2BIN`, `DEC2OCT`, `DEC2HEX`, `BITAND`, `BITOR`, `BITXOR`, `BITLSHIFT`, `BITRSHIFT`, `DELTA`, `GESTEP`, `ERF`,
@@ -1283,3 +1284,4 @@ The code cites each by its id.
 - **D58** INFO's answers: One document, recalculation Automatic, `LiveDoc` as system and release; else `#N/A` (default).
 - **D59** The odd-period bonds' sums: Excel's over quasi-coupon periods (ECMA-376), not LibreOffice's (default).
 - **D60** MULTIPLE.OPERATIONS's reach: Ranges read the replacement; spills as they stand; 250 formulas deep (default).
+- The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).

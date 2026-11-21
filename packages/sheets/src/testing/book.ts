@@ -64,6 +64,7 @@ export function book(
     arrays?: ArrayDialect;
     iteration?: Iteration;
     locale?: string;
+    imports?: { allowed: boolean };
   } = {},
 ) {
   const full: BookSpec = Object.values(spec).every((v) => typeof v === 'string')
@@ -78,6 +79,7 @@ export function book(
     cards: opts.cards ?? null,
     ...(opts.arrays ? { arrays: opts.arrays } : {}),
     ...(opts.iteration ? { iteration: opts.iteration } : {}),
+    ...(opts.imports ? { imports: opts.imports } : {}),
   });
   const at = (a1: string, title = Object.keys(full)[0]!) => {
     const sheet = sheets.find((s) => s.title === title)!;

@@ -81,6 +81,34 @@
     "HYPERLINK.3": [[null]],
     "HYPERLINK.4": [[0]],
     "HYPERLINK.5": [[5]],
-    "HYPERLINK.6": [["https://docs.nu/a b"]]
+    "HYPERLINK.6": [["https://docs.nu/a b"]],
+    "IMPORTDATA.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "IMPORTFEED.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "IMPORTHTML.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ],
+    "IMPORTXML.1": [
+      [
+        {
+          "e": "#NAME?"
+        }
+      ]
+    ]
   }
 }

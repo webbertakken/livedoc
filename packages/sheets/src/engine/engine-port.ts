@@ -4,6 +4,7 @@
 import type { Sheet } from '../sheet';
 import { cellToJson, sheetToJson } from '../sheet-json';
 import { SheetLimits } from '../sheet-limits';
+import type { ImportAnswer, ImportAsk } from '../imports/import-request';
 import type { EngineIn, EngineOut } from './engine-protocol';
 import { ITERATION_OFF, type Iteration } from './loops';
 import { WorkbookCopy } from './workbook-copy';
@@ -13,6 +14,8 @@ type PortOptions = {
   locale: string;
   limits?: SheetLimits;
   iteration?: Iteration;
+  // A spreadsheet's imports (imports.md): whether access is allowed, and who fetches what the Worker asks.
+  imports?: { allowed: boolean; ask: (asks: ImportAsk[]) => void };
   send: (msg: EngineIn) => void;
 };
 
@@ -23,9 +26,11 @@ export class EnginePort {
   // The rev that last moved each sheet's positions (its load, its rows or columns).
   private readonly placed = new Map<string, number>();
   private readonly send: (msg: EngineIn) => void;
+  private readonly imports: PortOptions['imports'];
 
   constructor(opts: PortOptions) {
     this.send = opts.send;
+    this.imports = opts.imports;
     const limits = opts.limits ?? SheetLimits.plan;
     const iteration = opts.iteration ?? ITERATION_OFF;
     this.copy = new WorkbookCopy({
@@ -48,7 +53,23 @@ export class EnginePort {
       locale: this.copy.locale,
       limits: this.copy.limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
       iteration: this.copy.iterationSetting(),
+      ...(this.imports ? { imports: this.imports.allowed ? 'allowed' : 'blocked' } : {}),
     });
+  }
+
+  /** The page fetched an import the Worker asked for. */
+  landImport(key: string, answer: ImportAnswer): void {
+    this.send({ t: 'imported', rev: ++this.rev, key, answer });
+  }
+
+  /** An Editor allowed the spreadsheet's imports (for good: imports.md "Allow access"). */
+  allowImports(): void {
+    this.send({ t: 'imports-allowed', rev: ++this.rev });
+  }
+
+  /** The hour is up: the Worker asks again for every import still read. */
+  refreshImports(): void {
+    this.send({ t: 'imports-refresh', rev: ++this.rev });
   }
 
   /** A sheet changed: its cells (\`keys\`), or anything else about it when \`keys\` is undefined. */
@@ -83,6 +104,10 @@ export class EnginePort {
   /** An answer from the Worker. */
   receive(out: EngineOut): void {
     if (out.t === 'settled') return;
+    if (out.t === 'imports') {
+      this.imports?.ask(out.asks);
+      return;
+    }
     if (out.t === 'stale-all') {
       this.copy.markAllStale();
       return;

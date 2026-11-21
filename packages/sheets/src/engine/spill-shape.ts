@@ -120,6 +120,10 @@ const SCALAR_RESULT = new Set([
 ]);
 
 const ARRAY_RESULT = new Set([
+  'IMPORTDATA',
+  'IMPORTFEED',
+  'IMPORTHTML',
+  'IMPORTXML',
   'MODE.MULT',
   'FILTER',
   'SORT',

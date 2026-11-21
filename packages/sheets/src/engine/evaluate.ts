@@ -138,7 +138,7 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
               : `at most ${def.max}`;
         return err('#N/A', `Wrong number of arguments to ${node.name}. Expected ${expected}`);
       }
-      if (def.volatile) f.volatile();
+      if (def.volatile) f.volatile(node.name);
       const argFrame = def.arrays ? arrayFrame(f) : f;
       const evalArg = (a: Node | null): EvalValue => (a ? evaluate(a, refs, argFrame) : null);
       if (def.lazy)
