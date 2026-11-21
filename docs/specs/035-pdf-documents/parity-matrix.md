@@ -14,8 +14,8 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 | Status                | Means                                                                            | Rows |
 | --------------------- | -------------------------------------------------------------------------------- | ---- |
-| `specified`           | In, by the spec named                                                            | 148  |
-| `specified, in part`  | In, but for the part its rule names as left out                                  | 41   |
+| `specified`           | In, by the spec named                                                            | 134  |
+| `specified, in part`  | In, but for the part its rule names as left out                                  | 55   |
 | `left out (<ruling>)` | Not built, by the ruling or fork named                                           | 160  |
 | `not a function`      | Not a function of a PDF: installing, updating and troubleshooting Acrobat itself | 54   |
 | `built (<test>)`      | Built, with the test that proves it                                              | 0    |
@@ -39,16 +39,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Get started: learn the basics
 
-| Topic                                                | Rule                                                                                                                             | Mode    | Status             | Spec                                                       |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------------- |
-| Acrobat on desktop overview                          | What a PDF document's surface offers, laid out in LiveDoc's office shell                                                         | Viewing | specified          | [Reading surface](reading-surface.md)                      |
-| Workspace basics                                     | Title row, menus, toolbar, left panel, pages, side panel and page bar                                                            | Viewing | specified          | [Reading surface](reading-surface.md#layout-top-to-bottom) |
-| Technical requirements                               | Acrobat's system requirements; LiveDoc's are a current browser                                                                   |         | not a function     |                                                            |
-| Supported file formats                               | A PDF opens as a PDF document; every other file is another kind                                                                  | Files   | specified          | [Files, print and sync](files-print-and-sync.md#opening)   |
-| Navigate through pages                               | Next, previous, first, last, go to page, previous and next view, bookmarks; automatic scrolling and article threads are left out | Viewing | specified, in part | [Reading surface](reading-surface.md#the-pages)            |
-| Identify Acrobat track and version                   | Telling which Acrobat is installed                                                                                               |         | not a function     |                                                            |
-| Asian, European, and Middle Eastern language support | Text in any script draws; new text in a complex script is shaped by the browser and written as glyphs                            | Editing | specified          | [Editing text](editing-text.md#typing)                     |
-| Work smarter with the prompt bar                     | Adobe's assistant prompt bar; LiveDoc's agents work through their own tools                                                      |         | left out (F5)      | [Agents](agents.md)                                        |
+| Topic                                                | Rule                                                                                                                                                                                                                                | Mode    | Status             | Spec                                                         |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------------ |
+| Acrobat on desktop overview                          | What a PDF document's surface offers, laid out in LiveDoc's office shell                                                                                                                                                            | Viewing | specified          | [Reading surface](reading-surface.md)                        |
+| Workspace basics                                     | The Explorer is the home view and the tool finder lists every tool; a PDF's surface is title row, menus, toolbar, left panel, pages, side panel and page bar; the Read panel (the assistant's summaries, reading aloud) is left out | Viewing | specified, in part | [Reading surface](reading-surface.md#layout-top-to-bottom)   |
+| Technical requirements                               | Acrobat's system requirements; LiveDoc's are a current browser                                                                                                                                                                      |         | not a function     |                                                              |
+| Supported file formats                               | A PDF opens as a PDF document and downloads as PDF, pictures or text; every other file is another kind's; playing video and sound placed in a PDF is left out                                                                       | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#downloading) |
+| Navigate through pages                               | Next, previous, first, last, go to page, previous and next view, bookmarks; automatic scrolling and article threads are left out                                                                                                    | Viewing | specified, in part | [Reading surface](reading-surface.md#the-pages)              |
+| Identify Acrobat track and version                   | Telling which Acrobat is installed                                                                                                                                                                                                  |         | not a function     |                                                              |
+| Asian, European, and Middle Eastern language support | Text in any script draws, is found and is copied; new text in a complex script is shaped by the browser; a field's and a Text mark's direction follows what is typed, with no direction or digit setting                            | Editing | specified, in part | [Editing text](editing-text.md#typing)                       |
+| Work smarter with the prompt bar                     | Adobe's assistant prompt bar; LiveDoc's agents work through their own tools                                                                                                                                                         |         | left out (F5)      | [Agents](agents.md)                                          |
 
 ## Get started: access the app
 
@@ -70,16 +70,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Get started: preferences and settings
 
-| Topic                                  | Rule                                                                                        | Mode    | Status             | Spec                                                 |
-| -------------------------------------- | ------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------- |
-| Set Acrobat as the default PDF program | The operating system's default PDF program                                                  |         | not a function     |                                                      |
-| Change display themes                  | The chrome follows the colour scheme; Dark pages is one person's view of the pages          | Viewing | specified          | [Dark pages](dark-pages.md)                          |
-| Change Acrobat language                | The app's language is LiveDoc's own setting                                                 |         | not a function     |                                                      |
-| Customize side panels                  | One left panel at a time, remembered per person; rearranging panels is left out             | Viewing | specified, in part | [Reading surface](reading-surface.md#the-left-panel) |
-| Customize Quick action toolbar         | The toolbar is the editing mode's; a tool's look is remembered, its place is not customised | Viewing | left out (F5)      | [Reading surface](reading-surface.md#the-toolbar)    |
-| Keyboard shortcuts                     | Acrobat's keys where the browser and the shell leave them free                              | Viewing | specified          | [Keyboard shortcuts](keyboard-shortcuts.md)          |
-| Turn the new Acrobat on or off         | Switching between Acrobat's two interfaces                                                  |         | not a function     |                                                      |
-| Set Acrobat update preferences         | Acrobat's updater                                                                           |         | not a function     |                                                      |
+| Topic                                  | Rule                                                                                          | Mode    | Status             | Spec                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------------- | ------- | ------------------ | ---------------------------------------------------- |
+| Set Acrobat as the default PDF program | The operating system's default PDF program                                                    |         | not a function     |                                                      |
+| Change display themes                  | The chrome follows the colour scheme; Dark pages is one person's view of the pages            | Viewing | specified          | [Dark pages](dark-pages.md)                          |
+| Change Acrobat language                | The app's language is LiveDoc's own setting                                                   |         | not a function     |                                                      |
+| Customize side panels                  | One left panel at a time, remembered per person; choosing which panels are listed is left out | Viewing | specified, in part | [Reading surface](reading-surface.md#the-left-panel) |
+| Customize Quick action toolbar         | The toolbar is the editing mode's; a tool's look is remembered, its place is not customised   | Viewing | left out (F5)      | [Reading surface](reading-surface.md#the-toolbar)    |
+| Keyboard shortcuts                     | Acrobat's keys where the browser and the shell leave them free                                | Viewing | specified          | [Keyboard shortcuts](keyboard-shortcuts.md)          |
+| Turn the new Acrobat on or off         | Switching between Acrobat's two interfaces                                                    |         | not a function     |                                                      |
+| Set Acrobat update preferences         | Acrobat's updater                                                                             |         | not a function     |                                                      |
 
 ## Acrobat AI
 
@@ -117,16 +117,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Create PDFs
 
-| Topic                                              | Rule                                                                                                            | Mode    | Status             | Spec                                                                       |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------------------------------- |
-| Convert files to PDFs                              | Other LiveDoc kinds download as PDF and may be kept as a PDF document; converting files from a disk is left out | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
-| Supported file formats for PDF conversion          | What converts to PDF is what LiveDoc's other kinds write                                                        | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
-| Convert web pages to PDFs                          | Converting a web page by its address                                                                            |         | left out (F5)      |                                                                            |
-| Web page conversion settings                       | Converting a web page by its address                                                                            |         | left out (F5)      |                                                                            |
-| Create PDFs by printing to file                    | Printing to a PDF is the browser's and the operating system's own                                               |         | left out (F5)      |                                                                            |
-| Create a PDF from clipboard content                | A copied picture becomes a page; a copied PDF pasted on the Explorer becomes a PDF document                     | Editing | specified, in part | [Organising pages](organising-pages.md#inserting)                          |
-| Create a PDF from scratch                          | A PDF document is never started from nothing                                                                    | Files   | left out (F12)     | [Starting and finding](starting-and-finding.md#starting-one)               |
-| Enable XPS to PDF conversion in Acrobat on Windows | A Windows conversion setting                                                                                    |         | left out (F5)      |                                                                            |
+| Topic                                              | Rule                                                                                                                                                                                           | Mode    | Status             | Spec                                                                       |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | -------------------------------------------------------------------------- |
+| Convert files to PDFs                              | Other LiveDoc kinds download as PDF and may be kept as a PDF document; converting files from a disk is left out                                                                                | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Supported file formats for PDF conversion          | What converts to PDF is what LiveDoc's other kinds write                                                                                                                                       | Files   | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Convert web pages to PDFs                          | Converting a web page by its address                                                                                                                                                           |         | left out (F5)      |                                                                            |
+| Web page conversion settings                       | Converting a web page by its address                                                                                                                                                           |         | left out (F5)      |                                                                            |
+| Create PDFs by printing to file                    | Printing to a PDF is the browser's and the operating system's own                                                                                                                              |         | left out (F5)      |                                                                            |
+| Create a PDF from clipboard content                | A copied picture or copied text becomes pages of an open PDF; a copied PDF file pasted on the Explorer becomes a PDF document; a new PDF from a copied picture or text alone is left out (F12) | Editing | specified, in part | [Organising pages](organising-pages.md#inserting)                          |
+| Create a PDF from scratch                          | A PDF document is never started from nothing                                                                                                                                                   | Files   | left out (F12)     | [Starting and finding](starting-and-finding.md#starting-one)               |
+| Enable XPS to PDF conversion in Acrobat on Windows | A Windows conversion setting                                                                                                                                                                   |         | left out (F5)      |                                                                            |
 
 ## Advanced conversion settings
 
@@ -146,25 +146,25 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Scan documents to PDFs
 
-| Topic                               | Rule                                                                          | Mode      | Status             | Spec                                        |
-| ----------------------------------- | ----------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
-| Scan documents                      | Driving a scanner; a scan arrives as a PDF                                    |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
-| Recognize text in scanned documents | Text recognition in the browser, on demand, by language and page range        | Reviewing | specified          | [Scans](scans.md#recognising)               |
-| Fix text issues in scanned PDFs     | Low-confidence words are stepped through and corrected                        | Reviewing | specified          | [Scans](scans.md#reviewing-recognised-text) |
-| Edit scanned documents              | A scan's words are not edited as the author's; text is added over the picture | Editing   | left out (F10)     | [Scans](scans.md#editing-a-scans-words)     |
-| Enhance images                      | Enhancing a camera picture                                                    |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
-| Enhance scanned documents           | Straightening, cleaning and recompressing a scan                              |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
-| Scanned PDF settings                | Language and pages; output style and compression choices are left out         | Reviewing | specified, in part | [Scans](scans.md#recognising)               |
+| Topic                               | Rule                                                                                                      | Mode      | Status             | Spec                                        |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------- | --------- | ------------------ | ------------------------------------------- |
+| Scan documents                      | Driving a scanner; a scan arrives as a PDF                                                                |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
+| Recognize text in scanned documents | Text recognition in the browser, on demand, by language and page range; several files at once is left out | Reviewing | specified, in part | [Scans](scans.md#recognising)               |
+| Fix text issues in scanned PDFs     | Low-confidence words are stepped through and corrected                                                    | Reviewing | specified          | [Scans](scans.md#reviewing-recognised-text) |
+| Edit scanned documents              | A scan's words are not edited as the author's; text is added over the picture                             | Editing   | left out (F10)     | [Scans](scans.md#editing-a-scans-words)     |
+| Enhance images                      | Enhancing a camera picture                                                                                |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
+| Enhance scanned documents           | Straightening, cleaning and recompressing a scan                                                          |           | left out (F5)      | [Scans](scans.md#editing-a-scans-words)     |
+| Scanned PDF settings                | Language and pages; output style and compression choices are left out                                     | Reviewing | specified, in part | [Scans](scans.md#recognising)               |
 
 ## Optimise PDFs
 
-| Topic                                                 | Rule                                                                         | Mode    | Status    | Spec                                                   |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------- | ------- | --------- | ------------------------------------------------------ |
-| Reduce PDF file size                                  | Three presets, each saying what it costs, the result shown before it is kept | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
-| Reduce PDF file size with advanced options            | Advanced: picture resolution and quality, fonts, what to discard             | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
-| Reduce PDF file size by unembedding fonts             | Unembedding only fonts every reader has                                      | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
-| View storage space used by different elements in PDFs | Properties > Size: what takes the file's bytes                               | Viewing | specified | [Document tools](document-tools.md#properties)         |
-| PDF optimizer settings                                | The optimiser's settings as one Advanced dialog                              | Editing | specified | [Document tools](document-tools.md#reducing-file-size) |
+| Topic                                                 | Rule                                                                                                                                                                              | Mode    | Status             | Spec                                                   |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------ |
+| Reduce PDF file size                                  | Three presets, each saying what it costs, the result shown before it is kept; choosing a PDF version to stay compatible with and several files at once are left out               | Editing | specified, in part | [Document tools](document-tools.md#reducing-file-size) |
+| Reduce PDF file size with advanced options            | Advanced: picture resolution and quality, fonts, what to discard; flattening transparency is left out, and comments and fields are discarded by their own tools                   | Editing | specified, in part | [Document tools](document-tools.md#reducing-file-size) |
+| Reduce PDF file size by unembedding fonts             | Unembedding only fonts every reader has                                                                                                                                           | Editing | specified          | [Document tools](document-tools.md#reducing-file-size) |
+| View storage space used by different elements in PDFs | Properties > Size: what takes the file's bytes                                                                                                                                    | Viewing | specified          | [Document tools](document-tools.md#properties)         |
+| PDF optimizer settings                                | Picture resolution and quality by kind, fonts and what to discard, in one Advanced dialog; flattening transparency, merging picture fragments and simplifying curves are left out | Editing | specified, in part | [Document tools](document-tools.md#reducing-file-size) |
 
 ## Edit text
 
@@ -433,14 +433,14 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Share documents
 
-| Topic                                             | Rule                                                          | Mode  | Status             | Spec                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------- | ----- | ------------------ | ------------------------------------------------------ |
-| Share links to PDFs                               | LiveDoc's share dialog, links and roles                       | Files | specified          | [PDF document](pdf-document.md#share-roles)            |
-| Manage access to the shared file                  | Editor, Participant and Viewer                                | Files | specified          | [PDF document](pdf-document.md#share-roles)            |
-| Share PDFs via email                              | Email this file, where the host has email configured          | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#email) |
-| About reviewing on internal servers               | Review servers; a LiveDoc document is reviewed live           |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
-| Send PDFs for review via internal servers         | Review servers; a LiveDoc document is reviewed live           |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
-| Enable commenting for Reader users in Acrobat Pro | Needs Adobe's own key; anyone with a Participant link reviews |       | left out (F5)      | [PDF document](pdf-document.md#share-roles)            |
+| Topic                                             | Rule                                                                                                                                   | Mode  | Status             | Spec                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------------ | ------------------------------------------------------ |
+| Share links to PDFs                               | LiveDoc's share dialog: a link for each role, with a lifetime and a share password; links limited to invited people are left out       | Files | specified, in part | [PDF document](pdf-document.md#share-roles)            |
+| Manage access to the shared file                  | Requests for access, accepted or declined; a share link's role is the access, changed or revoked by the owner                          |       | left out (F5)      | [PDF document](pdf-document.md#share-roles)            |
+| Share PDFs via email                              | Email this file as an attachment, where the host has email configured; a link is copied from the share dialog into a person's own mail | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#email) |
+| About reviewing on internal servers               | Review servers; a LiveDoc document is reviewed live                                                                                    |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
+| Send PDFs for review via internal servers         | Review servers; a LiveDoc document is reviewed live                                                                                    |       | left out (F5)      | [Comments](comments.md#in-the-file)                    |
+| Enable commenting for Reader users in Acrobat Pro | Needs Adobe's own key; anyone with a Participant link reviews                                                                          |       | left out (F5)      | [PDF document](pdf-document.md#share-roles)            |
 
 ## Comment preferences
 
@@ -524,15 +524,15 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Digital IDs
 
-| Topic                          | Rule                                                                 | Mode      | Status             | Spec                                         |
-| ------------------------------ | -------------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
-| Digital ID overview            | A person's own certificate file; stores and tokens are left out      | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
-| Digital ID protection          | The certificate file never leaves the browser and its key is dropped | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
-| Create self-signed digital IDs | LiveDoc issues no certificates; a person brings their own            |           | left out (C4)      | [Signing](signing.md)                        |
-| Set a default digital ID       | No certificate is kept, so none is a default                         |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
-| Register digital IDs           | Certificate stores and tokens                                        |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
-| Delete digital IDs             | No certificate is kept, so none is deleted                           |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
-| Manage digital ID passwords    | A certificate file's password is its own program's to change         |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
+| Topic                          | Rule                                                                                                                       | Mode      | Status             | Spec                                         |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | --------- | ------------------ | -------------------------------------------- |
+| Digital ID overview            | A person's own certificate file; stores and tokens are left out                                                            | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Digital ID protection          | The certificate file never leaves the browser and its key is dropped                                                       | Reviewing | specified          | [Signing](signing.md#certificate-signatures) |
+| Create self-signed digital IDs | LiveDoc issues no certificates; a person brings their own                                                                  |           | left out (C4)      | [Signing](signing.md)                        |
+| Set a default digital ID       | No certificate is kept, so none is a default                                                                               |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
+| Register digital IDs           | A certificate file is chosen each time a person signs; keeping one registered, roaming IDs, stores and tokens are left out | Reviewing | specified, in part | [Signing](signing.md#certificate-signatures) |
+| Delete digital IDs             | No certificate is kept, so none is deleted                                                                                 |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
+| Manage digital ID passwords    | A certificate file's password is its own program's to change                                                               |           | left out (F5)      | [Signing](signing.md#certificate-signatures) |
 
 ## Redact PDFs
 
@@ -599,30 +599,30 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Set up and print
 
-| Topic                                                      | Rule                                                              | Mode    | Status         | Spec                                                         |
-| ---------------------------------------------------------- | ----------------------------------------------------------------- | ------- | -------------- | ------------------------------------------------------------ |
-| Adobe PDF printer settings on Windows                      | Adobe's PDF printer driver                                        |         | not a function |                                                              |
-| Set Adobe PDF printer properties on Windows                | Adobe's PDF printer driver                                        |         | not a function |                                                              |
-| Save documents as PDFs                                     | Download the PDF; other kinds download as PDF                     | Files   | specified      | [Files, print and sync](files-print-and-sync.md#downloading) |
-| Save documents as PostScript files                         | PostScript output                                                 |         | left out (F5)  |                                                              |
-| Print PDFs with mixed page sizes                           | The browser prints the PDF itself, each page at its size          | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print large documents                                      | Tiling a large page over several sheets                           |         | left out (F14) | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print multiple pages per sheet                             | Several pages a sheet, in the browser's dialog                    | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print bookmarked pages                                     | Printing a bookmark's pages; a page range does it                 |         | left out (F5)  | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Adjust page size for printing                              | Scale and fit, in the browser's dialog                            | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Create and use custom page sizes                           | Custom paper sizes are the printer driver's                       |         | left out (F5)  | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Print settings                                             | Pages, marks and fields asked by LiveDoc; the rest by the browser | Viewing | specified      | [Files, print and sync](files-print-and-sync.md#printing)    |
-| Make PDFs print-ready with Acrobat Pro                     | Print production                                                  |         | left out (F14) |                                                              |
-| Turn off the Save As dialog box when printing to Adobe PDF | Adobe's PDF printer driver                                        |         | not a function |                                                              |
+| Topic                                                      | Rule                                                                                                                            | Mode    | Status             | Spec                                                         |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------------ | ------------------------------------------------------------ |
+| Adobe PDF printer settings on Windows                      | Adobe's PDF printer driver                                                                                                      |         | not a function     |                                                              |
+| Set Adobe PDF printer properties on Windows                | Adobe's PDF printer driver                                                                                                      |         | not a function     |                                                              |
+| Save documents as PDFs                                     | Download the PDF; other kinds download as PDF                                                                                   | Files   | specified          | [Files, print and sync](files-print-and-sync.md#downloading) |
+| Save documents as PostScript files                         | PostScript output                                                                                                               |         | left out (F5)      |                                                              |
+| Print PDFs with mixed page sizes                           | The browser prints the PDF itself, each page at its size; choosing a paper tray by page size is left out                        | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print large documents                                      | Tiling a large page over several sheets                                                                                         |         | left out (F14)     | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print multiple pages per sheet                             | Several pages a sheet, in the browser's dialog                                                                                  | Viewing | specified          | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print bookmarked pages                                     | Printing a bookmark's pages; a page range does it                                                                               |         | left out (F5)      | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Adjust page size for printing                              | Scale and fit, in the browser's dialog                                                                                          | Viewing | specified          | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Create and use custom page sizes                           | Custom paper sizes are the printer driver's                                                                                     |         | left out (F5)      | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Print settings                                             | Pages, marks and fields asked by LiveDoc, the rest by the browser; stamps alone, fields alone and pages in reverse are left out | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing)    |
+| Make PDFs print-ready with Acrobat Pro                     | Print production                                                                                                                |         | left out (F14)     |                                                              |
+| Turn off the Save As dialog box when printing to Adobe PDF | Adobe's PDF printer driver                                                                                                      |         | not a function     |                                                              |
 
 ## Special print modes
 
-| Topic                                  | Rule                                                       | Mode    | Status             | Spec                                                      |
-| -------------------------------------- | ---------------------------------------------------------- | ------- | ------------------ | --------------------------------------------------------- |
-| Print comments                         | Print with marks, without them, or with a comments summary | Viewing | specified          | [Files, print and sync](files-print-and-sync.md#printing) |
-| Print layers                           | PDF layers print as the file sets them                     | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing) |
-| Print PDFs with unembedded Asian fonts | A printer driver's font handling                           |         | left out (F5)      |                                                           |
-| Enable protected print mode on Windows | A Windows print mode                                       |         | not a function     |                                                           |
+| Topic                                  | Rule                                                                                                   | Mode    | Status             | Spec                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------ | ------- | ------------------ | --------------------------------------------------------- |
+| Print comments                         | Print with marks, without them, or with a comments summary; stamps alone and fields alone are left out | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing) |
+| Print layers                           | PDF layers print as the file sets them; overriding what a PDF layer prints is left out                 | Viewing | specified, in part | [Files, print and sync](files-print-and-sync.md#printing) |
+| Print PDFs with unembedded Asian fonts | A printer driver's font handling                                                                       |         | left out (F5)      |                                                           |
+| Enable protected print mode on Windows | A Windows print mode                                                                                   |         | not a function     |                                                           |
 
 ## Duplex and multi-page printing
 
@@ -654,16 +654,16 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 
 ## Convert to other formats
 
-| Topic                                   | Rule                                                        | Mode  | Status             | Spec                                                                       |
-| --------------------------------------- | ----------------------------------------------------------- | ----- | ------------------ | -------------------------------------------------------------------------- |
-| Convert PDFs to image formats           | Pages as PNG or JPEG pictures                               | Files | specified          | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to Word formats            | Open as a text document, a copy, then download as Word      | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
-| Convert PDFs to Microsoft Excel formats | Not written from a PDF document                             |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to PowerPoint format       | Not written from a PDF document                             |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to PostScript files        | PostScript output                                           |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDF to HTML web pages           | Not written from a PDF document                             |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to text formats            | The text by page, as plain text                             | Files | specified          | [Files, print and sync](files-print-and-sync.md#downloading)               |
-| Convert PDFs to RTFs                    | Open as a text document, a copy, then download as Rich Text | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Topic                                   | Rule                                                           | Mode  | Status             | Spec                                                                       |
+| --------------------------------------- | -------------------------------------------------------------- | ----- | ------------------ | -------------------------------------------------------------------------- |
+| Convert PDFs to image formats           | Pages as PNG or JPEG pictures; TIFF and JPEG 2000 are left out | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to Word formats            | Open as a text document, a copy, then download as Word         | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
+| Convert PDFs to Microsoft Excel formats | Not written from a PDF document                                |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to PowerPoint format       | Not written from a PDF document                                |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to PostScript files        | PostScript output                                              |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDF to HTML web pages           | Not written from a PDF document                                |       | left out (F5)      | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to text formats            | The text by page, as plain text; XML output is left out        | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#downloading)               |
+| Convert PDFs to RTFs                    | Open as a text document, a copy, then download as Rich Text    | Files | specified, in part | [Files, print and sync](files-print-and-sync.md#other-kinds-meeting-a-pdf) |
 
 ## Troubleshoot
 

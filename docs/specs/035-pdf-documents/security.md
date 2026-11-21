@@ -34,14 +34,16 @@ rule is a test with a named rejection. The research is [Security](../../research
 
 ## Links and actions
 
-| In the file                                                                                                       | In LiveDoc                                                                                                     |
-| ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| A link to a place in the document                                                                                 | Followed                                                                                                       |
-| A link to `http`, `https` or `mailto`                                                                             | The address is shown first ("Open example.com/path?"), then opened in a new tab with no opener and no referrer |
-| A link to any other scheme (`javascript:`, `file:`, `data:`, an app's)                                            | Never opened: "This link can't be opened here." with the address as text to copy                               |
-| A link to another file by path (remote go-to)                                                                     | Never followed; the path is shown as text                                                                      |
-| Launch (start a program), submit or import form data, play media, run a script, set a PDF layer's state by action | Never performed; listed in File > Properties > Security as "This file wanted to …"                             |
-| An action on opening the document or a page                                                                       | Never performed, but a go-to that only sets the first view (page, zoom), which is honoured                     |
+| In the file                                                                                                       | In LiveDoc                                                                                                                   |
+| ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| A link to a place in the document                                                                                 | Followed                                                                                                                     |
+| A link to `http`, `https` or `mailto`                                                                             | The address is shown first ("Open example.com/path?"), then opened in a new tab with no opener and no referrer               |
+| A link to any other scheme (`javascript:`, `file:`, `data:`, an app's)                                            | Never opened: "This link can't be opened here." with the address as text to copy                                             |
+| A link to another file by path (remote go-to)                                                                     | Never followed; the path is shown as text                                                                                    |
+| Launch (start a program), submit or import form data, play media, run a script, set a PDF layer's state by action | Never performed; listed in File > Properties > Security as "This file wanted to …"                                           |
+| A button that resets fields                                                                                       | Performed when a person presses it, as one undoable change to the field values ([Fields](fields.md#what-a-files-fields-are)) |
+| Any other action: a reader's menu command (print, close, quit), showing or hiding a field, a 3D or media view     | Never performed; listed the same way                                                                                         |
+| An action on opening the document or a page                                                                       | Never performed, but a go-to that only sets the first view (page, zoom), which is honoured                                   |
 
 - A link's shown address is the address opened: an address whose text and target differ is shown by its target.
 - Addresses are compared after normalising; internationalised names are shown in their punycode form when they mix

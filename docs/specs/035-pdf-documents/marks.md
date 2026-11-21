@@ -49,7 +49,8 @@ written into the file as a standard annotation, so any reader shows it. The rese
   and (Editing) Edit text; the context menu offers the same.
 - **The tool's look is remembered** per kind, per person, in this browser: colour, opacity, width, line style, line
   ends, fill, font and size. A new mark takes it.
-- A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it.
+- A new **Note**, **Text** or **Callout** opens for typing at once; Escape with nothing typed removes it. Its writing
+  direction is taken from what is typed, as a [field](fields.md#filling)'s is `(default)`.
 - **Snapping**: a line or shape snaps to the page's own lines and edges within `PDF_SNAP_PX`; ⌘ held turns snapping
   off for the drag.
 - A mark may not leave its page: a drag past the edge stops at it.
