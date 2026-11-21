@@ -18,6 +18,7 @@ import { TextDocumentSheets } from './TextDocumentSheets';
 import { FOOTER_ITEM, HEADER_ITEM } from './useTextDocumentHeaderEditing';
 import { useTextDocumentHeadersAndFooters } from './useTextDocumentHeadersAndFooters';
 import { HEADER_OPTIONS_ITEM } from './useTextDocumentHeaderOptions';
+import { PAGE_COUNT_ITEM, PAGE_NUMBERS_OPTIONS_ITEM } from './useTextDocumentPageNumbers';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 vi.mock('@/lib/text-document/pagination/pagination-plugin', () => ({
@@ -115,6 +116,7 @@ function Harness({
         editingBar={headers.bar}
       />
       {headers.optionsDialog}
+      {headers.pageNumbersDialog}
     </div>
   );
 }
@@ -258,6 +260,40 @@ describe('useTextDocumentHeadersAndFooters', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(TextDocumentState.section(doc, 'odf').setup.margins.header).toBe(72);
     expect(track).toHaveBeenCalledWith('Tab', 'Changed', 'TextDocumentHeaderFooter');
+  });
+
+  // page-layout.md "Page numbers": a preset numbers the footer every section shows; Page count goes in at the caret.
+  it('puts page numbers in the footer from a preset, and a page count at the caret', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    render(<Harness pages={pagesWith()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.actions['page-numbers-footer-skip-first']!.run());
+    await settle();
+    const own = liveFirstHeaders(doc)!;
+    expect(own.differentFirst).toBe(true);
+    const footer = storyFragment(doc, own.footer!.default!.story).get(0) as Y.XmlElement;
+    expect(footer.toArray().map((n) => (n as Y.XmlElement).nodeName)).toEqual(['field']);
+    expect(track).toHaveBeenCalledWith('Element', 'Added', 'TextDocumentPageNumbers');
+    act(() => seen.current!.actions[PAGE_COUNT_ITEM]!.run());
+    expect(view.state.doc.firstChild!.firstChild?.type.name).toBe('field');
+    expect(track).toHaveBeenCalledWith('Element', 'Added', 'TextDocumentPageCount');
+  });
+
+  it('starts the numbering from the Page numbers dialog', async () => {
+    const seen: { current: Seen | null } = { current: null };
+    render(<Harness pages={pagesWith()} seen={watch(seen)} />);
+    await settle();
+    act(() => seen.current!.actions[PAGE_NUMBERS_OPTIONS_ITEM]!.run());
+    await settle();
+    const dialog = within(screen.getByRole('dialog', { name: 'Page numbers' }));
+    act(() => dialog.getByRole('radio', { name: 'Start at' }).click());
+    fireEvent.change(dialog.getByRole('textbox', { name: 'Start at' }), {
+      target: { value: '4' },
+    });
+    act(() => dialog.getByRole('button', { name: 'Apply' }).click());
+    await settle();
+    expect(TextDocumentState.section(doc, 'odf').numberStart).toBe(4);
+    expect(liveFirstHeaders(doc)!.header!.default).toBeDefined();
   });
 
   it('offers nothing to a person who cannot edit, and dims the items without pages', async () => {

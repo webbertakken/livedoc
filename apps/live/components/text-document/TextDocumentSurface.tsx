@@ -631,6 +631,7 @@ export function TextDocumentSurface({
       {page.dialog}
       {columns.dialog}
       {headers.optionsDialog}
+      {headers.pageNumbersDialog}
       {lists.dialog}
       {limitReached ? (
         <p

@@ -20,6 +20,7 @@ import { storyEditingPlugins } from '@/lib/text-document/text-document-story-edi
 import { TextDocumentHeaderBar } from './TextDocumentHeaderBar';
 import { useTextDocumentHeaderEditing } from './useTextDocumentHeaderEditing';
 import { useTextDocumentHeaderOptions } from './useTextDocumentHeaderOptions';
+import { useTextDocumentPageNumbers } from './useTextDocumentPageNumbers';
 import { useTextDocumentStories } from './useTextDocumentStories';
 
 export function useTextDocumentHeadersAndFooters(input: {
@@ -69,6 +70,18 @@ export function useTextDocumentHeadersAndFooters(input: {
     editing: edited,
     changeAround: editing.changeAround,
   });
+  // Page numbers put in, from Insert, Format and the bar (page-layout.md "Page numbers").
+  const pageNumbers = useTextDocumentPageNumbers({
+    view,
+    activeView: edited?.view ?? view,
+    liveDoc,
+    format,
+    writes,
+    laidOut: (pages?.length ?? 0) > 0,
+    caretSection,
+    editing: edited,
+    changeAround: editing.changeAround,
+  });
   // The bar under the one being edited ("The bar").
   const bar = edited ? (
     <TextDocumentHeaderBar
@@ -80,6 +93,7 @@ export function useTextDocumentHeadersAndFooters(input: {
       onLink={editing.toggleLink}
       onRemove={editing.remove}
       onFormat={options.open}
+      onPageNumbers={pageNumbers.open}
       onBack={() => edited.view.focus()}
       toolbar={toolbar}
     />
@@ -96,8 +110,8 @@ export function useTextDocumentHeadersAndFooters(input: {
     [pages, enter],
   );
   const actions = useMemo(
-    () => ({ ...editing.actions, ...options.actions }),
-    [editing.actions, options.actions],
+    () => ({ ...editing.actions, ...options.actions, ...pageNumbers.actions }),
+    [editing.actions, options.actions, pageNumbers.actions],
   );
   return {
     storyHost: stories.host,
@@ -106,6 +120,7 @@ export function useTextDocumentHeadersAndFooters(input: {
     bar,
     actions,
     optionsDialog: options.dialog,
+    pageNumbersDialog: pageNumbers.dialog,
     /** What the toolbar, the Format menu and Edit act on: the header or footer edited, else the body. */
     activeView: editing.editing?.view ?? view,
   };

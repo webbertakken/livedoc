@@ -53,8 +53,8 @@ const read = (id: string | undefined) =>
             .toArray()
             .map((c) =>
               c instanceof Y.XmlText
-                ? c.toString()
-                : `[${(c as Y.XmlElement).getAttribute('field')}]`,
+                ? String(c.toJSON())
+                : `[${String((c as Y.XmlElement).getAttribute('field'))}]`,
             )
             .join('');
           const align = (el.getAttribute('props') as unknown as { align?: string } | undefined)

@@ -11,7 +11,7 @@ import { OfficePopup } from '@/components/office/OfficePopup';
 
 const NO_SHORTCUTS = () => null;
 
-/** The Options menu's entries; Page numbers comes with page numbers. */
+/** The Options menu's entries. */
 export function headerOptionsEntries(kind: HeaderFooterKind): readonly OfficeEntry[] {
   const name = kind === 'header' ? 'Header' : 'Footer';
   const entry = (id: string, label: string, built: boolean): OfficeEntry => ({
@@ -23,7 +23,7 @@ export function headerOptionsEntries(kind: HeaderFooterKind): readonly OfficeEnt
   });
   return [
     entry(`${kind}-format`, `${name} format`, true),
-    entry(`${kind}-page-numbers`, 'Page numbers', false),
+    entry(`${kind}-page-numbers`, 'Page numbers', true),
     { kind: 'separator' },
     entry(`remove-${kind}`, `Remove ${kind}`, true),
   ];
@@ -40,6 +40,8 @@ export type TextDocumentHeaderBarProps = {
   onRemove: () => void;
   /** Header format (Footer format): Headers and footers options. */
   onFormat: () => void;
+  /** Page numbers: the Page numbers dialog. */
+  onPageNumbers: () => void;
   /** Escape: back into the header or footer. */
   onBack: () => void;
   toolbar: RefObject<HTMLDivElement | null>;
@@ -57,6 +59,7 @@ export function TextDocumentHeaderBar({
   onLink,
   onRemove,
   onFormat,
+  onPageNumbers,
   onBack,
   toolbar,
 }: TextDocumentHeaderBarProps) {
@@ -65,6 +68,7 @@ export function TextDocumentHeaderBar({
   const label = kind === 'header' ? 'Header options' : 'Footer options';
   const actions: OfficeActions = {
     [`${kind}-format`]: { run: onFormat },
+    [`${kind}-page-numbers`]: { run: onPageNumbers },
     [`remove-${kind}`]: { run: onRemove, disabled: linked },
   };
   // Arrows move along the bar; Escape goes back into the writing.

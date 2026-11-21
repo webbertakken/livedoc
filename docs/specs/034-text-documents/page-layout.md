@@ -280,7 +280,7 @@ A section's pages each have a **header** in the top margin and a **footer** in t
     section gets its own copy of the header it showed (Word's); checked again, its own is given away for the previous
     section's, which the caret moves into (default).
   - **Remove header** takes the section's own header in that slot away and leaves for the body; dimmed while the
-    header is linked to the previous section's (default). **Page numbers** is dimmed until page numbers are built.
+    header is linked to the previous section's (default). **Page numbers** opens the Page numbers dialog.
 - Every page drawing that header shows the edit as it is typed. Text and paragraph formatting, the toolbar, undo and
   the clipboard work in it as in the body; Select all selects its writing. Breaks and columns are dimmed while a
   header or footer is edited (Google's); the edited one is read as a text box named "Header" or "Footer" (default).
@@ -384,6 +384,6 @@ Participant and a Viewer see none of Page setup, Page orientation and Columns.
 - `Tab · Changed · TextDocumentPageSetup`, `TextDocumentPageOrientation`, `TextDocumentPageless`,
   `TextDocumentColumns`, `TextDocumentHeaderFooter`.
 - `Element · Added · TextDocumentBreak<Kind>` (`Page`, `Column`, `SectionNextPage`, `SectionContinuous`),
-  `TextDocumentFootnote`, `TextDocumentPageNumbers`.
+  `TextDocumentFootnote`, `TextDocumentPageNumbers`, `TextDocumentPageCount`.
 - Add page break before is a keep rule (`Element · Changed · TextDocumentKeepRule`).
 - `UI · Changed · TextDocumentPageDefault` when Set as default keeps one, before it is kept. Never text.

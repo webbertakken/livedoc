@@ -16,6 +16,7 @@ import {
   STYLE_OPTIONS,
 } from './text-document-paragraph-styles';
 import { BORDERS_ITEM, LINE_SPACING_ENTRIES } from './text-document-paragraph-actions';
+import { PAGE_NUMBER_PRESETS } from './text-document-page-numbers';
 
 type ItemOptions = Partial<
   Pick<OfficeItem, 'shortcut' | 'shortcutArg' | 'keywords' | 'checkable' | 'status'>
@@ -198,7 +199,12 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('header', 'Header', 'edit', { shortcut: 'insert-or-move-to-header', ...BUILT }),
         item('footer', 'Footer', 'edit', { shortcut: 'insert-or-move-to-footer', ...BUILT }),
       ]),
-      item('page-numbers', 'Page numbers', 'edit'),
+      submenu('page-numbers', 'Page numbers', [
+        ...PAGE_NUMBER_PRESETS.map((preset) => item(preset.item, preset.label, 'edit', BUILT)),
+        SEPARATOR,
+        item('page-count', 'Page count', 'edit', BUILT),
+        item('page-numbers-more', 'More options', 'edit', BUILT),
+      ]),
       submenu('break', 'Break', [
         item('page-break', 'Page break', 'edit', { shortcut: 'insert-page-break', ...BUILT }),
         item('section-break-next-page', 'Section break (next page)', 'edit', BUILT),
@@ -301,7 +307,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
       ]),
       SEPARATOR,
       item('headers-and-footers-options', 'Headers & footers', 'edit', BUILT),
-      item('page-numbers-options', 'Page numbers', 'edit'),
+      item('page-numbers-options', 'Page numbers', 'edit', BUILT),
       item('page-orientation', 'Page orientation', 'edit', BUILT),
       item('switch-to-pageless', 'Switch to Pageless format', 'edit', BUILT),
       SEPARATOR,

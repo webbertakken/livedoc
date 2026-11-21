@@ -103,3 +103,51 @@ test('page numbers and the page count are drawn on every page, a section startin
   await page.keyboard.press('Escape');
   expectNoPageErrors(pageErrors);
 });
+
+// Insert > Page numbers' preset Footer, not the first page; Page count at the caret; Format > Page numbers' Start at,
+// taken back with one undo.
+test('page numbers put in from the Insert menu and the Page numbers dialog', async ({
+  page,
+  pageErrors,
+}) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/new?kind=text-document');
+  await page.waitForURL(/\/document\//);
+  await expect(page.locator('[data-text-document-surface="ready"]')).toBeVisible();
+  const body = page.locator('[role="textbox"][aria-label="Document body"]');
+  await body.click();
+  for (let i = 0; i < 30; i++) {
+    if (i > 0) await page.keyboard.press('Enter');
+    await page.keyboard.insertText(`Paragraph ${i + 1}. ${TEXT}`);
+  }
+  await expect(page.locator('[data-page-sheet="2"]')).toBeVisible();
+  const footer = (sheet: number) =>
+    page.locator(`[data-page-sheet="${sheet}"] [data-page-story="footer"]`);
+
+  await (
+    await officeMenuItem(page, ['Insert', 'Page numbers', 'Footer, not the first page'])
+  ).click();
+  await expect(footer(2)).toHaveText('2');
+  await expect(footer(1)).toHaveCount(0);
+
+  await page.keyboard.press('Control+Home');
+  await (await officeMenuItem(page, ['Insert', 'Page numbers', 'Page count'])).click();
+  const count = await page.locator('[data-page-sheet]').count();
+  await expect(body.locator('[data-field="page-count"]')).toHaveText(String(count));
+
+  await (await officeMenuItem(page, ['Format', 'Page numbers'])).click();
+  const dialog = page.getByRole('dialog', { name: 'Page numbers' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('radio', { name: 'Footer' }).check();
+  await dialog.getByRole('checkbox', { name: 'Show on first page' }).uncheck();
+  await dialog.getByRole('radio', { name: 'Start at' }).check();
+  await dialog.getByRole('textbox', { name: 'Start at' }).fill('10');
+  await page.waitForTimeout(400);
+  await page.screenshot({ path: test.info().outputPath('page-numbers-dialog.png') });
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(footer(2)).toHaveText('11');
+  await page.keyboard.press('Control+Z');
+  await expect(footer(2)).toHaveText('2');
+  expectNoPageErrors(pageErrors);
+});

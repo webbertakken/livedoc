@@ -3,6 +3,7 @@
 // in scope shows, and its even page one where it has one; Not the first page switches Different first page on and
 // takes the numbers out of that header. A header changed so is written as a new copy the section names, so the whole
 // change is one step of the body's undo. Page count goes in at the caret.
+import type { EditorState } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import * as Y from 'yjs';
 import type { TextDocumentFormat } from '@livedoc/document';
@@ -12,6 +13,7 @@ import {
   liveFirstHeaders,
   SECTION_BREAK,
   storyFragment,
+  TEXT_PROPERTY_MARK_OF,
   TextDocumentState,
   type FieldKind,
   type HeaderFooterKind,
@@ -112,8 +114,8 @@ export function numberedStory(doc: Y.Doc, id: string | undefined): string {
   if (id !== undefined && hasPageNumber(storyFragment(doc, id).toArray())) return id;
   return copied(doc, id, (fragment) => {
     const only = fragment.length === 1 ? fragment.get(0) : undefined;
-    if (isEmptyParagraph(only as Y.XmlElement | undefined)) {
-      const paragraph = only as Y.XmlElement;
+    if (isEmptyParagraph(only)) {
+      const paragraph = only;
       alignedEnd(paragraph);
       paragraph.insert(paragraph.length, [fieldElement('page-number')]);
       return;
@@ -262,5 +264,38 @@ export function applyPageNumbers(
     start: choice.start,
     scope: choice.scope,
   });
+  return true;
+}
+
+const PROPERTY_OF_MARK = Object.fromEntries(
+  Object.entries(TEXT_PROPERTY_MARK_OF).map(([property, mark]) => [mark, property]),
+);
+
+/** The text formatting the caret's own marks give, as a field holds it. */
+export function caretTextProps(state: EditorState): Record<string, unknown> {
+  const marks = state.storedMarks ?? state.selection.$from.marks();
+  const props: Record<string, unknown> = {};
+  for (const mark of marks) {
+    const property = PROPERTY_OF_MARK[mark.type.name];
+    if (property) props[property] = (mark.attrs as { value: unknown }).value;
+  }
+  return props;
+}
+
+/** Insert > Page numbers > Page count: a page count at the caret, in the caret's formatting; one undo step. */
+export function insertPageCount(view: EditorView): boolean {
+  const { state } = view;
+  const type = state.schema.nodes[FIELD];
+  if (!type || !state.selection.$from.parent.inlineContent) return false;
+  const props = caretTextProps(state);
+  const field = type.create({
+    field: 'page-count',
+    text: PUT_TEXT,
+    props: Object.keys(props).length > 0 ? props : null,
+  });
+  startUndoStep(view);
+  view.dispatch(state.tr.replaceSelectionWith(field, false).scrollIntoView());
+  startUndoStep(view);
+  debugLog('[text-document] page count', { at: state.selection.from });
   return true;
 }
