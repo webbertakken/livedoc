@@ -36,6 +36,7 @@ const SCALAR_RESULT = new Set([
   'VAR.P',
   'CORREL',
   'AREAS',
+  'MULTIPLE.OPERATIONS',
   'AVEDEV',
   'AVERAGE.WEIGHTED',
   'AVERAGEA',

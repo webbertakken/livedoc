@@ -16,6 +16,11 @@ export type RefValue = { ref: RangeRef };
 export type AreasValue = { areas: RangeRef[] };
 export type EvalValue = Value | RefValue | AreasValue;
 
+// One cell, by its sheet and position.
+export type CellAt = { sheetId: string; r: number; c: number };
+// A cell read as another value while a formula is worked out afresh (MULTIPLE.OPERATIONS).
+export type Swap = { cell: CellAt; value: Value };
+
 export function isRef(v: EvalValue): v is RefValue {
   return typeof v === 'object' && v !== null && 'ref' in v;
 }
@@ -66,6 +71,8 @@ export type Frame = {
   now(): number;
   rand(): number;
   cards: CardSource | null;
+  // A formula cell's value worked out afresh with each swapped cell read as its stand-in (engine/what-if.ts).
+  workOut(target: CellAt, swaps: readonly Swap[]): Value;
   // Mark the formula volatile (it recalculates on every change) or a card reader.
   volatile(): void;
   readsCards(): void;

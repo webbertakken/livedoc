@@ -322,10 +322,16 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `SHEETS([reference])` counts the spreadsheet's sheets, hidden ones too, or the sheets a reference spans.
 
 **Lookup**: `VLOOKUP`, `HLOOKUP`, `XLOOKUP`, `LOOKUP`, `INDEX`, `MATCH`, `XMATCH`, `CHOOSE`, `ROW`, `ROWS`, `COLUMN`,
-`COLUMNS`, `OFFSET`, `INDIRECT`, `ADDRESS`, `SHEET`, `FORMULATEXT`.
+`COLUMNS`, `OFFSET`, `INDIRECT`, `ADDRESS`, `SHEET`, `FORMULATEXT`, `MULTIPLE.OPERATIONS`.
 
 - `INDIRECT` reads an A1 text, or an R1C1 text when `is_A1_notation` is FALSE (`R2C3`, `R[-1]C[2]` from its own
   cell, `R2` a row, `C3` a column), on its own sheet or another of the spreadsheet named before `!`.
+- `MULTIPLE.OPERATIONS(formula_cell, row_cell, row_replacement, [column_cell, column_replacement])` (OpenFormula's)
+  works the formula cell out afresh with each cell read as its replacement's value, and every formula between them,
+  those reading the replaced cells however indirectly; the workbook's own values stay. Every argument is one cell, else
+  `#VALUE!`; a column cell without its replacement is `#N/A`. A range holding a replaced cell reads the
+  replacement (LibreOffice refuses it), a spill's other cells read as they stand, and a chain deeper than 250 formulas
+  is `#NUM!` (default, D60). One inside the chain replaces before the one asking.
 - `INDEX` takes OOXML's fourth argument, the area of a union it picks from (`INDEX((A1:B2, D1:E2), 1, 1, 2)`), which
   Google refuses (D38).
 - `SHEET` counts a sheet's place in the order the spreadsheet holds its sheets, the sheet bar's.
@@ -961,7 +967,7 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
 | `MONTH`               | Date        | `MONTH(date)`                                                                                                  | Google      | `MONTH`                          | built                                                         |
 | `MROUND`              | Math        | `MROUND(value, factor)`                                                                                        | Google      | `MROUND`                         | built                                                         |
 | `MULTINOMIAL`         | Math        | `MULTINOMIAL(value1, value2)`                                                                                  | Google      | `MULTINOMIAL`                    | built                                                         |
-| `MULTIPLE.OPERATIONS` | OpenFormula |                                                                                                                | OpenFormula | `MULTIPLE.OPERATIONS`            | planned                                                       |
+| `MULTIPLE.OPERATIONS` | OpenFormula |                                                                                                                | OpenFormula | `MULTIPLE.OPERATIONS`            | built                                                         |
 | `MULTIPLY`            | Operator    | `MULTIPLY(factor1, factor2)`                                                                                   | Google      | S5                               | built                                                         |
 | `MUNIT`               | Math        | `MUNIT(dimension)`                                                                                             | Google      | `MUNIT`                          | built                                                         |
 | `N`                   | Info        | `N(value)`                                                                                                     | Google      | `N`                              | built                                                         |
@@ -1266,3 +1272,4 @@ The code cites each by its id.
 - **D57** PERCENTRANK.INC and .EXC: As PERCENTRANK's help: outside the data `#N/A`; fewer than 1 digit is 3 (default).
 - **D58** INFO's answers: One document, recalculation Automatic, `LiveDoc` as system and release; else `#N/A` (default).
 - **D59** The odd-period bonds' sums: Excel's over quasi-coupon periods (ECMA-376), not LibreOffice's (default).
+- **D60** MULTIPLE.OPERATIONS's reach: Ranges read the replacement; spills as they stand; 250 formulas deep (default).

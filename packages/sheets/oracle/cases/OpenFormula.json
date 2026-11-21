@@ -527,6 +527,48 @@
     {
       "id": "ODDLYIELD.7",
       "f": "=ODDLYIELD(DATE(2008,6,15), DATE(2008,6,15), DATE(2007,12,24), 0.0375, 99.875, 100, 2)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.1",
+      "f": "=Data!A1*10+Data!B1",
+      "note": "The model the cases after it tabulate: this cell, read by MULTIPLE.OPERATIONS.2, both on sheet Cases"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.2",
+      "f": "=Cases!B237*2+Data!A1",
+      "note": "A formula reading the model (MULTIPLE.OPERATIONS.1) and Data!A1: worked out afresh along with it"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.3",
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.4",
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2, Data!B1, Data!B2)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.5",
+      "f": "=MULTIPLE.OPERATIONS(Cases!B237, Data!A3, Data!B3)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.6",
+      "f": "=MULTIPLE.OPERATIONS(Data!A1, Data!A1, Data!B1)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.7",
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, Data!A2, Data!B1)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.8",
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1, 7)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.9",
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!A1:A2, Data!B1)"
+    },
+    {
+      "id": "MULTIPLE.OPERATIONS.10",
+      "f": "=MULTIPLE.OPERATIONS(Cases!B239, Data!B1, Data!B2, Data!A1, Data!A2)"
     }
   ]
 }

@@ -30,6 +30,7 @@ import { Dependencies } from './dependencies';
 import { evaluate } from './evaluate';
 import { deref } from '../formula/fn';
 import { cellFrame, type FrameSource } from './cell-frame';
+import type { CellAt } from './frame';
 import { formulaPrecedents } from './precedents';
 import { sheetsCtxOf } from './sheets-ctx';
 import { SPILL_PAST_EDGE, Spills, spillBlockedBy } from './spills';
@@ -54,8 +55,7 @@ export type WorkbookOptions = {
   trackForgotten?: boolean;
 };
 
-/** A cell by its sheet and position. */
-export type CellAt = { sheetId: string; r: number; c: number };
+export type { CellAt };
 
 /** `google`: implicit intersection outside an array context; `dynamic`: every formula an array context (Plan Sheets). */
 export type ArrayDialect = 'google' | 'dynamic';
@@ -147,6 +147,7 @@ export class Workbook {
       cell: (s, r, c, reader) => this.cellValue(s, r, c, reader),
       noAt: (s, r, c) => this.noAt(s, r, c),
       claimOf: (owner) => this.spills.claimOf(owner),
+      readersOf: (at) => this.readersOf(at),
       noteRange: (reader, range) =>
         this.deps.noteRange(
           reader,
@@ -436,6 +437,15 @@ export class Workbook {
     if (!sheet || r < 0 || c < 0 || r >= sheet.layout.rows.length || c >= sheet.layout.cols.length)
       return NO_CELL;
     return this.nos.intern(this.nos.sheetNo(sheetId), r, c);
+  }
+
+  // The formula cells reading a cell, as the dependency graph has them now.
+  private readersOf(at: CellAt): CellAt[] {
+    const sheetNo = this.nos.sheetNo(at.sheetId);
+    const out = new Set<CellNo>();
+    this.deps.readersOf(this.nos.find(sheetNo, at.r, at.c), sheetNo, at.r, at.c, out);
+    out.delete(NO_CELL);
+    return [...out].map((no) => this.cellAt(no));
   }
 
   private inputAt(sheetId: string, r: number, c: number): CellInput | undefined {

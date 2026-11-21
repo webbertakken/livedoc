@@ -928,6 +928,11 @@ export const FUNCTION_DOCS: Readonly<Record<string, FunctionDoc>> = {
   ),
   SHEET: D('[value]', 'The place of a sheet among the sheets, from 1', '=SHEET(Data!A1)'),
   FORMULATEXT: D('cell', 'A cell’s formula, as text', '=FORMULATEXT(B2)'),
+  'MULTIPLE.OPERATIONS': D(
+    'formula_cell, row_cell, row_replacement, [column_cell, column_replacement]',
+    'A formula cell’s value with one or two cells read as others, for what-if tables',
+    '=MULTIPLE.OPERATIONS($B$5, $B$3, $A6, $B$2, C$5)',
+  ),
   // Text
   CONCATENATE: D('value1, [value2, …]', 'Joins values together', '=CONCATENATE(A2, " ", B2)'),
   TEXTJOIN: D(
