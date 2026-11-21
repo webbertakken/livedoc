@@ -1,11 +1,22 @@
 'use client';
 
 // The text document's right side panel (docs/specs/004-interface-design/office-shell.md "Side panels"): the one open, in
-// the shell's resizable frame; Line numbers (page-layout.md "Line numbers") or Watermark (page-layout.md "Watermark").
+// the shell's resizable frame; Line numbers (page-layout.md "Line numbers"), Watermark (page-layout.md "Watermark") or
+// Table properties (tables.md "Table properties").
 import type { Watermark } from '@livedoc/text-documents';
 import { OfficePanel } from '@/components/office/OfficePanel';
 import type { OfficePanelsState } from '@/lib/office/useOfficePanels';
-import { LINE_NUMBERS_PANEL, WATERMARK_PANEL } from '@/lib/text-document/text-document-panels';
+import {
+  LINE_NUMBERS_PANEL,
+  TABLE_PROPERTIES_PANEL,
+  WATERMARK_PANEL,
+} from '@/lib/text-document/text-document-panels';
+import type {
+  TableProperties,
+  TablePropertyChange,
+} from '@/lib/text-document/text-document-table-properties';
+import type { IndentUnit } from '@/lib/text-document/indent-units';
+import { TextDocumentTablePropertiesPanel } from './TextDocumentTablePropertiesPanel';
 import type { LineNumbersChoice } from '@/lib/text-document/text-document-line-numbers';
 import { TextDocumentLineNumbersPanel } from './TextDocumentLineNumbersPanel';
 import { TextDocumentWatermarkPanel } from './TextDocumentWatermarkPanel';
@@ -15,6 +26,7 @@ export function TextDocumentRightPanel({
   panels,
   lineNumbers,
   watermark,
+  tableProperties,
 }: {
   panels: OfficePanelsState;
   lineNumbers: {
@@ -22,8 +34,15 @@ export function TextDocumentRightPanel({
     choose: (choice: Omit<LineNumbersChoice, 'section'>) => void;
   };
   watermark: { watermark: Watermark | undefined; apply: (next: Watermark | undefined) => void };
+  tableProperties: {
+    properties: TableProperties | null;
+    unit: IndentUnit;
+    apply: (change: TablePropertyChange) => void;
+  };
 }) {
-  const spec = [LINE_NUMBERS_PANEL, WATERMARK_PANEL].find((p) => p.id === panels.open.right);
+  const spec = [LINE_NUMBERS_PANEL, WATERMARK_PANEL, TABLE_PROPERTIES_PANEL].find(
+    (p) => p.id === panels.open.right,
+  );
   if (!spec) return null;
   return (
     <OfficePanel
@@ -34,7 +53,13 @@ export function TextDocumentRightPanel({
       onClose={() => panels.close('right')}
       focusNonce={panels.focusNonce}
     >
-      {spec === LINE_NUMBERS_PANEL ? (
+      {spec === TABLE_PROPERTIES_PANEL ? (
+        <TextDocumentTablePropertiesPanel
+          properties={tableProperties.properties}
+          unit={tableProperties.unit}
+          onChange={tableProperties.apply}
+        />
+      ) : spec === LINE_NUMBERS_PANEL ? (
         <TextDocumentLineNumbersPanel state={lineNumbers.state} onChoose={lineNumbers.choose} />
       ) : (
         <TextDocumentWatermarkPanel

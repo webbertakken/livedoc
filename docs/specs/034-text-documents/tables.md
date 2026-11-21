@@ -80,6 +80,30 @@ A side panel (Google's) with sections: **Rows** (minimum height, pin header rows
 **Alignment** (cell vertical alignment, table alignment left, centre, right, left indent), **Colour** (border colour
 and width, cell background, by the one colour picker), **Cell** (padding).
 
+- Opened by Format > Table > Table properties or the cell's context menu, in the right side panel
+  ([Office shell](../004-interface-design/office-shell.md#side-panels)); an Editor's only, as every side panel that
+  changes the writing. The item is dimmed (and left out of the context menu) outside a table.
+- Its sections are collapsible, each open when the panel opens `(default)`; it reads the caret's table again as the
+  caret moves, and outside a table says "Put the cursor in a table to see its properties." with no fields.
+- **What it changes**: the selected cells, or the caret's cell with none selected; Minimum row height the rows they
+  are in; Column width the columns they are in; Table alignment and Left indent the whole table.
+- **What it shows**: each field the value the cells it changes share, blank where they differ.
+- **Fields** (lengths in the person's unit, as indents are, from 0 to 22 in):
+  - Rows: **Minimum row height** (a row grows past it with its writing; 0 or blank is none).
+  - Columns: **Column width**, at least 0.1 in; the table grows or shrinks by the change.
+  - Alignment: **Cell vertical alignment** (Top, Middle, Bottom); **Table alignment** (Left, Center, Right); **Left
+    indent** (Left only, dimmed otherwise).
+  - Colour: **Table border** colour (the one colour picker) and width (0 pt, 0.5 pt, 1 pt, 1.5 pt, 2.25 pt, 3 pt,
+    4.5 pt, 6 pt, Google's), setting every side of the cells it changes, drawn solid; 0 pt takes the lines away.
+    **Cell background colour** (the one colour picker, with None).
+  - Cell: **Cell padding**, every side alike.
+- A choice from a list or a colour applies at once; a typed length applies on Enter or when the field is left, and an
+  invalid one says so under the field and changes nothing. Each change is one undo step, its focus kept in the panel.
+- Pin header rows and Allow row to overflow across pages join Rows when pinned header rows and rows that do not break
+  are built (ahead).
+- Telemetry: `Element · Changed · TextDocumentTableProperties` per change. Logged
+  `[text-document] table-properties` with the field.
+
 ## Format > Table
 
 `(default)`, until Webber's capture: **Table properties**; Insert row above, Insert row below, Insert column left,

@@ -45,6 +45,11 @@ import { paragraphBoxesPlugin } from '@/lib/text-document/text-document-paragrap
 import { listKeysPlugin } from '@/lib/text-document/text-document-list-actions';
 import { tableKeysPlugin } from '@/lib/text-document/text-document-tables';
 import { useTextDocumentTables } from '@/lib/text-document/useTextDocumentTables';
+import { indentUnit } from '@/lib/text-document/indent-units';
+import {
+  TABLE_PROPERTIES_ITEM,
+  useTextDocumentTableProperties,
+} from './useTextDocumentTableProperties';
 import { listMarkersPlugin } from '@/lib/text-document/text-document-list-markers';
 import { writingKeysPlugin } from '@/lib/text-document/text-document-writing-keys';
 import { tabStopsPlugin } from '@/lib/text-document/text-document-tab-layout';
@@ -464,6 +469,14 @@ export function TextDocumentSurface({
     first: page.section,
     subscribe: changes.subscribeCaret,
   });
+  // Format > Table > Table properties (tables.md "Table properties").
+  const tableProperties = useTextDocumentTableProperties({
+    view: editorView,
+    writes,
+    subscribe: changes.subscribeCaret,
+    toggle: panels.actions[TABLE_PROPERTIES_ITEM],
+  });
+  const lengthUnit = useMemo(() => indentUnit(), []);
   // Insert > Watermark's panel, and the watermark every page draws (page-layout.md "Watermark").
   const watermark = useTextDocumentWatermark({
     view: editorView,
@@ -609,11 +622,13 @@ export function TextDocumentSurface({
       ...columns.actions,
       ...breakActions,
       ...tableActions,
+      ...tableProperties.actions,
       ...headers.actions,
     }),
     [
       breakActions,
       tableActions,
+      tableProperties.actions,
       columns.actions,
       headers.actions,
       page.actions,
@@ -728,7 +743,12 @@ export function TextDocumentSurface({
           ) : null
         }
         right={
-          <TextDocumentRightPanel panels={panels} lineNumbers={lineNumbers} watermark={watermark} />
+          <TextDocumentRightPanel
+            panels={panels}
+            lineNumbers={lineNumbers}
+            watermark={watermark}
+            tableProperties={{ ...tableProperties, unit: lengthUnit }}
+          />
         }
       >
         <div

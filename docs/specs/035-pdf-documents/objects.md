@@ -82,6 +82,7 @@ page furniture: followed in every mode, changed in Editing.
 | **A web address**            | Typing it; only `http`, `https` and `mailto` are accepted ([Security](security.md#links-and-actions)) |
 | **Another LiveDoc document** | Choosing it; written as its document address                                                          |
 
+- **Locked**: a locked link is not moved, resized or retargeted until unlocked.
 - **Look**: invisible (default) or a visible rectangle, with line colour, width (thin, medium, thick) and style
   (solid, dashed, underline); the highlight shown when pressed (none, invert, outline, inset) is kept as the file has
   it.
