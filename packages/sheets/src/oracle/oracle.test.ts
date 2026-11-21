@@ -4,7 +4,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { heldAnswer, sameBlock, showBlock, unnamedDifferences } from './compare';
+import { heldAnswer, sameBlock, showBlock, staleDifferences, unnamedDifferences } from './compare';
 import { OracleCorpus, type OracleAnswers, type OracleCategory } from './corpus';
 import { engineAnswers } from './oracle-engine';
 import { FUNCTIONS } from '../formula/registry';
@@ -133,6 +133,22 @@ describe('the oracle corpus', () => {
         }),
       );
       expect([...orphans, ...differences]).toEqual([]);
+    },
+  );
+
+  // A difference a case names must be there: a source that has come to answer as the case holds leaves it stale.
+  it.each(corpus.map((c) => [c.category, c] as const))(
+    '%s: every difference named is there',
+    (_, category) => {
+      const google = answers('google', category.category);
+      const libre = answers('libreoffice', category.category);
+      const stale = category.cases.flatMap((x) =>
+        staleDifferences(x, {
+          ...(google?.answers[x.id] ? { google: google.answers[x.id] } : {}),
+          ...(libre?.answers[x.id] ? { libreoffice: libre.answers[x.id] } : {}),
+        }),
+      );
+      expect(stale).toEqual([]);
     },
   );
 });

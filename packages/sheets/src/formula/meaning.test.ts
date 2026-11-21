@@ -150,36 +150,152 @@ describe('a spreadsheet’s meaning', () => {
     expect(calc('=CEILING(2.5, -1)', {}, { meaning: 'openformula' })).toEqual(error('#NUM!'));
   });
 
-  it('DOLLARDE and DOLLARFR: OpenFormula’s places as the unit’s digits (Financial DOLLARDE.1, DOLLARFR.1)', () => {
-    const de = inEach('=DOLLARDE(100.01, 8)');
-    expect(de.google).toBeCloseTo(100.125, 10);
-    expect(de.ooxml).toBeCloseTo(100.125, 10);
-    expect(de.openformula).toBeCloseTo(100.0125, 10);
-    const fr = inEach('=DOLLARFR(100.125, 8)');
-    expect(fr.google).toBeCloseTo(100.01, 10);
-    expect(fr.ooxml).toBeCloseTo(100.01, 10);
-    expect(fr.openformula).toBeCloseTo(100.1, 10);
-  });
-
   it('CUMIPMT and CUMPRINC: OOXML truncates the periods (Financial CUMIPMT.4, CUMPRINC.4)', () => {
-    for (const name of ['CUMIPMT', 'CUMPRINC']) {
-      const args = '0.0075, 360, 125000';
-      const google = calc(`=${name}(${args}, 3, 4, 0)`);
-      const truncated = calc(`=${name}(${args}, 2, 4, 0)`);
-      expect(inEach(`=${name}(${args}, 2.1, 4.9, 0)`)).toEqual({
-        google,
-        ooxml: truncated,
-        openformula: google,
-      });
-    }
+    const args = '0.0075, 360, 125000';
+    const interest = calc(`=CUMIPMT(${args}, 3, 4, 0)`);
+    expect(inEach(`=CUMIPMT(${args}, 2.1, 4.9, 0)`)).toEqual({
+      google: interest,
+      ooxml: calc(`=CUMIPMT(${args}, 2, 4, 0)`),
+      openformula: interest,
+    });
+    const principal = expect.closeTo(-278.4805091603324, 9) as unknown;
+    expect(inEach(`=CUMPRINC(${args}, 2.1, 4.9, 0)`)).toEqual({
+      google: principal,
+      ooxml: calc(`=CUMPRINC(${args}, 2, 4, 0)`),
+      openformula: principal,
+    });
   });
 
-  it('the population forms: one number’s spread is 0 in both standards (Statistical STDEVP.3, VARPA.3)', () => {
-    for (const name of ['STDEVP', 'VARP', 'STDEV.P', 'VAR.P', 'STDEVPA'])
-      expect(inEach(`=${name}(5)`)).toEqual({ google: error('#DIV/0!'), ooxml: 0, openformula: 0 });
-    expect(inEach('=VARPA(5)')).toEqual({ google: error('#NUM!'), ooxml: 0, openformula: 0 });
-    expect(calc('=VARP(A1)', {}, { meaning: 'ooxml' })).toEqual(error('#DIV/0!'));
-    expect(calc('=STDEVP(1, 3)', {}, { meaning: 'openformula' })).toBe(1);
+  it('day counts: Google’s against OpenFormula’s procedures (Financial ACCRINT.1, COUPDAYBS.20, PRICEMAT.2)', () => {
+    const close = (v: number): unknown => expect.closeTo(v, 9);
+    expect(
+      inEach('=ACCRINT(DATE(2010,1,1), DATE(2010,2,1), DATE(2012,12,31), 0.05, 100, 4)'),
+    ).toEqual({
+      google: close(14.98611111111111),
+      ooxml: close(14.98611111111111),
+      openformula: close(15),
+    });
+    expect(
+      inEach('=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 1)'),
+    ).toEqual({
+      google: close(16.57608695652174),
+      ooxml: close(16.57608695652174),
+      openformula: close(1000 * 0.1 * (61 / 366)),
+    });
+    expect(inEach('=COUPDAYBS(DATE(2011,2,28), DATE(2015,8,31), 2, 0)')).toEqual({
+      google: -2,
+      ooxml: -2,
+      openformula: 0,
+    });
+    expect(inEach('=COUPDAYSNC(DATE(2011,2,28), DATE(2015,8,31), 2, 0)')).toEqual({
+      google: 182,
+      ooxml: 182,
+      openformula: 181,
+    });
+    expect(
+      calc('=COUPDAYSNC(DATE(2011,3,10), DATE(2015,8,31), 2, 4)', {}, { meaning: 'openformula' }),
+    ).toBe(170);
+    const pricemat = inEach(
+      '=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), 0.061, 0.061, 1)',
+    );
+    expect(pricemat).toEqual({
+      google: close(99.984659117119),
+      ooxml: close(99.984659117119),
+      openformula: close(99.9802978513638),
+    });
+    expect(calc('=INTRATE(DATE(2008,2,29), DATE(2009,2,28), 1000000, 1014420)')).toBeCloseTo(
+      0.01442,
+      12,
+    );
+    expect(
+      calc('=DISC(DATE(2007,2,16), DATE(2009,3,1), 97, 100, 1)', {}, { meaning: 'openformula' }),
+    ).not.toBe(calc('=DISC(DATE(2007,2,16), DATE(2009,3,1), 97, 100, 1)'));
+  });
+
+  it('depreciation: the standards’ periods and rates (Financial DB.4, DDB.11, VDB.9)', () => {
+    expect(inEach('=DB(1000000, 100000, 6, 7, 7)')).toEqual({
+      google: error('#NUM!'),
+      ooxml: expect.closeTo(15845.0984738481, 6) as unknown,
+      openformula: expect.closeTo(15845.0984738481, 6) as unknown,
+    });
+    expect(inEach('=DDB(2400, 300, 2, 2, 3)')).toEqual({ google: -1800, ooxml: 0, openformula: 0 });
+    const vdb = inEach('=VDB(2400, 300, 10, 1.5, 4.25)');
+    expect(vdb.google).toBeCloseTo(787.968, 9);
+    expect(vdb.ooxml).toBeCloseTo(787.968, 9);
+    expect(vdb.openformula).toBeCloseTo(794.112, 9);
+  });
+
+  it('EFFECT of 0 and FVSCHEDULE over text: OpenFormula takes them (Financial EFFECT.4, FVSCHEDULE.3)', () => {
+    expect(inEach('=EFFECT(0, 4)')).toEqual({
+      google: error('#NUM!'),
+      ooxml: error('#NUM!'),
+      openformula: 0,
+    });
+    const cells = { A1: '0.1', A2: 'x', A3: '' };
+    expect(inEach('=FVSCHEDULE(100, A1:A3)', cells)).toEqual({
+      google: error('#VALUE!'),
+      ooxml: error('#VALUE!'),
+      openformula: expect.closeTo(110, 9) as unknown,
+    });
+  });
+
+  it('the A forms with typed text: OpenFormula reads it as 0 (Statistical AVERAGEA.4, MINA.4, VARPA.4)', () => {
+    for (const [name, value] of [
+      ['AVERAGEA', 0.5],
+      ['MINA', 0],
+      ['STDEVA', Math.SQRT1_2],
+      ['STDEVPA', 0.5],
+      ['VARA', 0.5],
+      ['VARPA', 0.25],
+    ] as const)
+      expect(inEach(`=${name}(1, "x")`)).toEqual({
+        google: error('#VALUE!'),
+        ooxml: error('#VALUE!'),
+        openformula: expect.closeTo(value, 12) as unknown,
+      });
+  });
+
+  it('OpenFormula’s ends Google refuses (Statistical BETAINV.4, CRITBINOM.3, EXPONDIST.3, GEOMEAN.3)', () => {
+    for (const [formula, value] of [
+      ['=BETAINV(0, 3, 2)', 0],
+      ['=BETADIST(2, 3, 8)', 1],
+      ['=BETADIST(-1, 3, 8)', 0],
+      ['=BETADIST(2, 3, 8, 0, 1, FALSE)', 0],
+      ['=CRITBINOM(10, 0.5, 0)', 0],
+      ['=CRITBINOM(10, 0.5, 1)', 10],
+      ['=CRITBINOM(10, 0, 0.5)', 0],
+      ['=EXPONDIST(-1, 0.5, TRUE)', 0],
+      ['=GEOMEAN(2, 0)', 0],
+      ['=LOGNORMDIST(0, 4, 6)', 0],
+    ] as const)
+      expect(inEach(formula)).toEqual({
+        google: error('#NUM!'),
+        ooxml: error('#NUM!'),
+        openformula: value,
+      });
+    // Excel's names answer as Excel's in an ODF file too.
+    for (const formula of [
+      '=BETA.INV(0, 3, 2)',
+      '=BINOM.INV(10, 0.5, 0)',
+      '=EXPON.DIST(-1, 0.5, TRUE)',
+    ])
+      expect(calc(formula, {}, { meaning: 'openformula' })).toEqual(error('#NUM!'));
+  });
+
+  it('HYPGEOMDIST of a fraction: Excel truncates every count first (Statistical HYPGEOMDIST.6, HYPGEOM.DIST.6)', () => {
+    const google = 0.06722646322201385;
+    const truncated = 0.109243002735772;
+    const close = (v: number): unknown => expect.closeTo(v, 12);
+    expect(inEach('=HYPGEOMDIST(4.9, 12, 20, 40)')).toEqual({
+      google: close(google),
+      ooxml: close(truncated),
+      openformula: close(google),
+    });
+    expect(inEach('=HYPGEOM.DIST(4.9, 12, 20, 40, FALSE)')).toEqual({
+      google: close(google),
+      ooxml: close(truncated),
+      openformula: close(truncated),
+    });
   });
 
   it('DEVSQ of no number: OpenFormula’s #DIV/0! (Statistical DEVSQ.4)', () => {
@@ -210,30 +326,19 @@ describe('a spreadsheet’s meaning', () => {
     expect(calc('=PERCENTRANK.INC(A1:A4, 2, 0)', cells, { meaning: 'ooxml' })).toBe(0.333);
   });
 
-  it('PERMUTATIONA: n^k for any n and k from 0 in both standards (Statistical PERMUTATIONA.3, .4)', () => {
+  it('PERMUTATIONA: n^k for any n and k from 0 in both standards (Statistical PERMUTATIONA.3, .6)', () => {
     expect(inEach('=PERMUTATIONA(0, 2)')).toEqual({
       google: error('#NUM!'),
       ooxml: 0,
       openformula: 0,
     });
-    expect(inEach('=PERMUTATIONA(3, 4)')).toEqual({
+    expect(inEach('=PERMUTATIONA(3, 0)')).toEqual({
       google: error('#NUM!'),
-      ooxml: 81,
-      openformula: 81,
+      ooxml: 1,
+      openformula: 1,
     });
+    expect(inEach('=PERMUTATIONA(3, 4)')).toEqual({ google: 81, ooxml: 81, openformula: 81 });
     expect(calc('=PERMUTATIONA(0, 0)', {}, { meaning: 'ooxml' })).toBe(1);
     expect(calc('=PERMUTATIONA(-1, 2)', {}, { meaning: 'ooxml' })).toEqual(error('#NUM!'));
-  });
-
-  it('F.DIST, cumulative left out: OpenFormula’s cumulative (Statistical F.DIST.6)', () => {
-    const density = calc('=F.DIST(15.35, 7, 6, FALSE)');
-    const cumulative = calc('=F.DIST(15.35, 7, 6, TRUE)');
-    expect(inEach('=F.DIST(15.35, 7, 6)')).toEqual({
-      google: density,
-      ooxml: density,
-      openformula: cumulative,
-    });
-    const meaning: FormulaMeaning = 'openformula';
-    expect(calc('=F.DIST(15.35, 7, 6, FALSE)', {}, { meaning })).toBe(density);
   });
 });

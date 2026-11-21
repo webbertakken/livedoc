@@ -50,16 +50,16 @@ function chiTest(args: EvalValue[], f: Frame): Value {
 }
 
 // Two-tailed: twice the smaller tail of the ratio of the sample variances; each sample needs two numbers and some
-// spread (#VALUE! else, as LibreOffice answers).
+// spread (#DIV/0! else, as Google's).
 function fTest(args: EvalValue[], f: Frame): Value {
   const a = numbersOf([args[0]!], f);
   if (isError(a)) return a;
   const b = numbersOf([args[1]!], f);
   if (isError(b)) return b;
-  if (a.length < 2 || b.length < 2) return err('#VALUE!', 'Each sample needs two numbers');
+  if (a.length < 2 || b.length < 2) return err('#DIV/0!', 'Each sample needs two numbers');
   const va = sampleVariance(a);
   const vb = sampleVariance(b);
-  if (va === 0 || vb === 0) return err('#VALUE!', 'A sample has no spread');
+  if (va === 0 || vb === 0) return err('#DIV/0!', 'A sample has no spread');
   const upper = fisherUpper(va / vb, a.length - 1, b.length - 1);
   return 2 * Math.min(upper, 1 - upper);
 }
@@ -114,7 +114,8 @@ function tTest(args: EvalValue[], f: Frame): Value {
 }
 
 // One-tailed: the chance a sample's mean lies above the data's, given value as the mean and the data's own standard
-// deviation unless one is given.
+// deviation unless one is given. As Google's (measured): a given deviation is taken as it is, 0 leaving the mean
+// infinitely far (0 or 1) or, at the mean itself, no answer (#NUM!); the data's own needs two numbers.
 function zTest(args: EvalValue[], f: Frame): Value {
   const ns = numbersOf([args[0]!], f);
   if (isError(ns)) return ns;
@@ -122,11 +123,12 @@ function zTest(args: EvalValue[], f: Frame): Value {
   if (isError(mu)) return mu;
   const given = opt<number | null>(args, 2, f, numArg, null);
   if (isError(given)) return given;
-  if (given !== null && given <= 0) return OUT_OF_DOMAIN('The standard deviation must be above 0');
   if (ns.length === 0) return err('#N/A', 'No numbers to test');
-  const sd = given ?? (ns.length < 2 ? 0 : Math.sqrt(sampleVariance(ns)));
-  if (sd === 0) return err('#DIV/0!', 'The data has no spread');
-  return 1 - normalCdf((mean(ns) - mu) / (sd / Math.sqrt(ns.length)));
+  if (given === null && ns.length < 2) return err('#DIV/0!', 'At least two numbers are needed');
+  const sd = given ?? Math.sqrt(sampleVariance(ns));
+  const z = (mean(ns) - mu) / (sd / Math.sqrt(ns.length));
+  if (Number.isNaN(z)) return OUT_OF_DOMAIN('The data sits at the mean with no spread');
+  return Number.isFinite(z) ? 1 - normalCdf(z) : z > 0 ? 0 : 1;
 }
 
 // Half the width of a confidence interval: the two-sided critical value times σ / √n, n truncated.
@@ -142,9 +144,9 @@ const normalInterval = numFn(3, 3, ([a, s, n]) =>
   interval(a!, s!, n!, () => -normalInverse(a! / 2)),
 );
 
-// Student's t needs two values: one leaves no degree of freedom.
+// Student's t needs two values: one leaves no degree of freedom (#NUM!, as Google's).
 function tInterval(alpha: number, sd: number, size: number): Value {
-  if (Math.trunc(size) === 1) return err('#DIV/0!', 'At least two values are needed');
+  if (Math.trunc(size) === 1) return OUT_OF_DOMAIN('At least two values are needed');
   return interval(alpha, sd, size, (n) =>
     invert((t) => studentUpper(t, n - 1), alpha / 2, false, 0, Infinity),
   );

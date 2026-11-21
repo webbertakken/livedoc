@@ -4,106 +4,26 @@
   "by": "Google Sheets",
   "made": "2026-11-21",
   "answers": {
-    "ISBLANK.1": [
-      [
-        true
-      ]
-    ],
-    "ISBLANK.2": [
-      [
-        false
-      ]
-    ],
-    "ISBLANK.3": [
-      [
-        false
-      ]
-    ],
-    "ISNUMBER.1": [
-      [
-        true
-      ]
-    ],
-    "ISNUMBER.2": [
-      [
-        false
-      ]
-    ],
-    "ISTEXT.1": [
-      [
-        true
-      ]
-    ],
-    "ISTEXT.2": [
-      [
-        false
-      ]
-    ],
-    "ISLOGICAL.1": [
-      [
-        true
-      ]
-    ],
-    "ISLOGICAL.2": [
-      [
-        false
-      ]
-    ],
-    "ISERROR.1": [
-      [
-        true
-      ]
-    ],
-    "ISERROR.2": [
-      [
-        true
-      ]
-    ],
-    "ISERROR.3": [
-      [
-        false
-      ]
-    ],
-    "ISNA.1": [
-      [
-        true
-      ]
-    ],
-    "ISNA.2": [
-      [
-        false
-      ]
-    ],
-    "ISFORMULA.1": [
-      [
-        true
-      ]
-    ],
-    "ISFORMULA.2": [
-      [
-        false
-      ]
-    ],
-    "ERROR.TYPE.1": [
-      [
-        2
-      ]
-    ],
-    "ERROR.TYPE.2": [
-      [
-        7
-      ]
-    ],
-    "ERROR.TYPE.3": [
-      [
-        3
-      ]
-    ],
-    "ERROR.TYPE.4": [
-      [
-        6
-      ]
-    ],
+    "ISBLANK.1": [[true]],
+    "ISBLANK.2": [[false]],
+    "ISBLANK.3": [[false]],
+    "ISNUMBER.1": [[true]],
+    "ISNUMBER.2": [[false]],
+    "ISTEXT.1": [[true]],
+    "ISTEXT.2": [[false]],
+    "ISLOGICAL.1": [[true]],
+    "ISLOGICAL.2": [[false]],
+    "ISERROR.1": [[true]],
+    "ISERROR.2": [[true]],
+    "ISERROR.3": [[false]],
+    "ISNA.1": [[true]],
+    "ISNA.2": [[false]],
+    "ISFORMULA.1": [[true]],
+    "ISFORMULA.2": [[false]],
+    "ERROR.TYPE.1": [[2]],
+    "ERROR.TYPE.2": [[7]],
+    "ERROR.TYPE.3": [[3]],
+    "ERROR.TYPE.4": [[6]],
     "ERROR.TYPE.5": [
       [
         {
@@ -118,236 +38,52 @@
         }
       ]
     ],
-    "N.1": [
-      [
-        3.5
-      ]
-    ],
-    "N.2": [
-      [
-        0
-      ]
-    ],
-    "N.3": [
-      [
-        1
-      ]
-    ],
-    "TYPE.1": [
-      [
-        1
-      ]
-    ],
-    "TYPE.2": [
-      [
-        2
-      ]
-    ],
-    "TYPE.3": [
-      [
-        4
-      ]
-    ],
-    "TYPE.4": [
-      [
-        16
-      ]
-    ],
-    "TYPE.5": [
-      [
-        64
-      ]
-    ],
-    "ISERR.1": [
-      [
-        true
-      ]
-    ],
-    "ISERR.2": [
-      [
-        false
-      ]
-    ],
-    "ISERR.3": [
-      [
-        false
-      ]
-    ],
-    "ISERR.4": [
-      [
-        false
-      ]
-    ],
-    "ISNONTEXT.1": [
-      [
-        true
-      ]
-    ],
-    "ISNONTEXT.2": [
-      [
-        false
-      ]
-    ],
-    "ISNONTEXT.3": [
-      [
-        false
-      ]
-    ],
-    "ISNONTEXT.4": [
-      [
-        true
-      ]
-    ],
-    "ISNONTEXT.5": [
-      [
-        true
-      ]
-    ],
-    "ISREF.1": [
-      [
-        true
-      ]
-    ],
-    "ISREF.2": [
-      [
-        false
-      ]
-    ],
-    "ISREF.3": [
-      [
-        true
-      ]
-    ],
-    "ISREF.4": [
-      [
-        true
-      ]
-    ],
-    "ISREF.5": [
-      [
-        false
-      ]
-    ],
-    "ISREF.6": [
-      [
-        true
-      ]
-    ],
-    "ISDATE.1": [
-      [
-        true
-      ]
-    ],
-    "ISDATE.2": [
-      [
-        false
-      ]
-    ],
-    "ISDATE.3": [
-      [
-        false
-      ]
-    ],
-    "ISDATE.4": [
-      [
-        false
-      ]
-    ],
-    "ISDATE.5": [
-      [
-        true
-      ]
-    ],
-    "ISDATE.6": [
-      [
-        false
-      ]
-    ],
-    "ISDATE.7": [
-      [
-        true
-      ]
-    ],
-    "ISDATE.8": [
-      [
-        false
-      ]
-    ],
-    "ISEMAIL.1": [
-      [
-        true
-      ]
-    ],
-    "ISEMAIL.2": [
-      [
-        true
-      ]
-    ],
-    "ISEMAIL.3": [
-      [
-        true
-      ]
-    ],
-    "ISEMAIL.4": [
-      [
-        false
-      ]
-    ],
-    "ISEMAIL.5": [
-      [
-        false
-      ]
-    ],
-    "CELL.1": [
-      [
-        "$B$3"
-      ]
-    ],
-    "CELL.2": [
-      [
-        "Data!$B$3"
-      ]
-    ],
-    "CELL.3": [
-      [
-        3
-      ]
-    ],
-    "CELL.4": [
-      [
-        2
-      ]
-    ],
-    "CELL.5": [
-      [
-        "text"
-      ]
-    ],
-    "CELL.6": [
-      [
-        "b"
-      ]
-    ],
-    "CELL.7": [
-      [
-        "l"
-      ]
-    ],
-    "CELL.8": [
-      [
-        "v"
-      ]
-    ],
-    "CELL.9": [
-      [
-        "Data"
-      ]
-    ],
-    "CELL.10": [
-      [
-        0
-      ]
-    ],
+    "N.1": [[3.5]],
+    "N.2": [[0]],
+    "N.3": [[1]],
+    "TYPE.1": [[1]],
+    "TYPE.2": [[2]],
+    "TYPE.3": [[4]],
+    "TYPE.4": [[16]],
+    "TYPE.5": [[64]],
+    "ISERR.1": [[true]],
+    "ISERR.2": [[false]],
+    "ISERR.3": [[false]],
+    "ISERR.4": [[false]],
+    "ISNONTEXT.1": [[true]],
+    "ISNONTEXT.2": [[false]],
+    "ISNONTEXT.3": [[false]],
+    "ISNONTEXT.4": [[true]],
+    "ISNONTEXT.5": [[true]],
+    "ISREF.1": [[true]],
+    "ISREF.2": [[false]],
+    "ISREF.3": [[true]],
+    "ISREF.4": [[true]],
+    "ISREF.5": [[false]],
+    "ISREF.6": [[true]],
+    "ISDATE.1": [[true]],
+    "ISDATE.2": [[false]],
+    "ISDATE.3": [[false]],
+    "ISDATE.4": [[false]],
+    "ISDATE.5": [[true]],
+    "ISDATE.6": [[false]],
+    "ISDATE.7": [[true]],
+    "ISDATE.8": [[false]],
+    "ISEMAIL.1": [[true]],
+    "ISEMAIL.2": [[true]],
+    "ISEMAIL.3": [[true]],
+    "ISEMAIL.4": [[false]],
+    "ISEMAIL.5": [[false]],
+    "CELL.1": [["$B$3"]],
+    "CELL.2": [["Data!$B$3"]],
+    "CELL.3": [[3]],
+    "CELL.4": [[2]],
+    "CELL.5": [["text"]],
+    "CELL.6": [["b"]],
+    "CELL.7": [["l"]],
+    "CELL.8": [["v"]],
+    "CELL.9": [["Data"]],
+    "CELL.10": [[0]],
     "CELL.11": [
       [
         {
@@ -362,16 +98,8 @@
         }
       ]
     ],
-    "CELL.13": [
-      [
-        null
-      ]
-    ],
-    "CELL.14": [
-      [
-        14
-      ]
-    ],
+    "CELL.13": [[null]],
+    "CELL.14": [[true]],
     "CELL.15": [
       [
         {
@@ -400,11 +128,7 @@
         }
       ]
     ],
-    "CELL.19": [
-      [
-        2
-      ]
-    ],
+    "CELL.19": [[2]],
     "CELL.20": [
       [
         {
@@ -412,11 +136,7 @@
         }
       ]
     ],
-    "SHEETS.1": [
-      [
-        2
-      ]
-    ],
+    "SHEETS.1": [[2]],
     "SHEETS.2": [
       [
         {

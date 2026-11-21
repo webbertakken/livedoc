@@ -236,7 +236,7 @@ describe('the Worker’s engine at its edges', () => {
     const answer = (meaning?: 'openformula') => {
       const sent: EngineIn[] = [];
       const port = new EnginePort({
-        sheets: makeSheets({ S: { A1: '=PERMUTATIONA(3, 4)' } }),
+        sheets: makeSheets({ S: { A1: '=PERMUTATIONA(3, 0)' } }),
         locale: 'en-GB',
         ...(meaning ? { meaning } : {}),
         send: (m) => sent.push(m),
@@ -251,7 +251,7 @@ describe('the Worker’s engine at its edges', () => {
     };
     const opened = answer('openformula');
     expect(opened.load).toMatchObject({ t: 'load', meaning: 'openformula' });
-    expect(opened.value).toBe(81);
+    expect(opened.value).toBe(1);
     const made = answer();
     expect(made.load).not.toHaveProperty('meaning');
     expect(made.value).toMatchObject({ e: '#NUM!' });

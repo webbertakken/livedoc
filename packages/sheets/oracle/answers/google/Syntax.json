@@ -4,46 +4,14 @@
   "by": "Google Sheets",
   "made": "2026-11-21",
   "answers": {
-    "precedence.1": [
-      [
-        4
-      ]
-    ],
-    "precedence.2": [
-      [
-        512
-      ]
-    ],
-    "precedence.3": [
-      [
-        5
-      ]
-    ],
-    "precedence.4": [
-      [
-        "15"
-      ]
-    ],
-    "precedence.5": [
-      [
-        true
-      ]
-    ],
-    "precedence.6": [
-      [
-        0.25
-      ]
-    ],
-    "precedence.7": [
-      [
-        -0.5
-      ]
-    ],
-    "coercion.1": [
-      [
-        4
-      ]
-    ],
+    "precedence.1": [[4]],
+    "precedence.2": [[512]],
+    "precedence.3": [[5]],
+    "precedence.4": [["15"]],
+    "precedence.5": [[true]],
+    "precedence.6": [[0.25]],
+    "precedence.7": [[-0.5]],
+    "coercion.1": [[4]],
     "coercion.2": [
       [
         {
@@ -51,86 +19,22 @@
         }
       ]
     ],
-    "coercion.3": [
-      [
-        2
-      ]
-    ],
-    "coercion.4": [
-      [
-        1
-      ]
-    ],
-    "coercion.5": [
-      [
-        "x"
-      ]
-    ],
-    "coercion.6": [
-      [
-        4
-      ]
-    ],
-    "coercion.7": [
-      [
-        1000
-      ]
-    ],
-    "coercion.8": [
-      [
-        0.5
-      ]
-    ],
-    "coercion.10": [
-      [
-        "1TRUE"
-      ]
-    ],
-    "coercion.11": [
-      [
-        true
-      ]
-    ],
-    "compare.1": [
-      [
-        true
-      ]
-    ],
-    "compare.2": [
-      [
-        true
-      ]
-    ],
-    "compare.3": [
-      [
-        true
-      ]
-    ],
-    "compare.4": [
-      [
-        true
-      ]
-    ],
-    "compare.5": [
-      [
-        true
-      ]
-    ],
-    "compare.6": [
-      [
-        true
-      ]
-    ],
-    "compare.7": [
-      [
-        true
-      ]
-    ],
-    "compare.8": [
-      [
-        true
-      ]
-    ],
+    "coercion.3": [[2]],
+    "coercion.4": [[1]],
+    "coercion.5": [["x"]],
+    "coercion.6": [[4]],
+    "coercion.7": [[1000]],
+    "coercion.8": [[0.5]],
+    "coercion.10": [["1TRUE"]],
+    "coercion.11": [[true]],
+    "compare.1": [[true]],
+    "compare.2": [[true]],
+    "compare.3": [[true]],
+    "compare.4": [[true]],
+    "compare.5": [[true]],
+    "compare.6": [[true]],
+    "compare.7": [[true]],
+    "compare.8": [[true]],
     "errors.1": [
       [
         {
@@ -173,136 +77,40 @@
         }
       ]
     ],
-    "errors.7": [
-      [
-        true
-      ]
-    ],
-    "errors.8": [
-      [
-        -2
-      ]
-    ],
-    "range.1": [
-      [
-        10
-      ]
-    ],
-    "range.2": [
-      [
-        10
-      ]
-    ],
-    "range.3": [
-      [
-        33
-      ]
-    ],
-    "range.4": [
-      [
-        10
-      ]
-    ],
-    "range.5": [
-      [
-        6
-      ]
-    ],
-    "range.6": [
-      [
-        2
-      ]
-    ],
+    "errors.7": [[true]],
+    "errors.8": [[-2]],
+    "range.1": [[10]],
+    "range.2": [[10]],
+    "range.3": [[33]],
+    "range.4": [[10]],
+    "range.5": [[6]],
+    "range.6": [[2]],
     "literal.1": [
-      [
-        1,
-        2
-      ],
-      [
-        3,
-        4
-      ]
+      [1, 2],
+      [3, 4]
     ],
-    "literal.2": [
-      [
-        10
-      ]
-    ],
-    "literal.3": [
-      [
-        1,
-        "a",
-        true
-      ]
-    ],
-    "literal.4": [
-      [
-        -1,
-        2.5
-      ]
-    ],
-    "spill.1": [
-      [
-        2
-      ],
-      [
-        4
-      ]
-    ],
-    "array.1": [
-      [
-        300
-      ]
-    ],
-    "array.2": [
-      [
-        70
-      ]
-    ],
-    "array.3": [
-      [
-        20
-      ]
-    ],
-    "array.4": [
-      [
-        10
-      ],
-      [
-        40
-      ]
-    ],
+    "literal.2": [[10]],
+    "literal.3": [[1, "a", true]],
+    "literal.4": [[-1, 2.5]],
+    "spill.1": [[2], [4]],
+    "array.1": [[300]],
+    "array.2": [[70]],
+    "array.3": [[20]],
+    "array.4": [[10], [40]],
     "array.5": [
-      [
-        11,
-        21
-      ],
-      [
-        12,
-        22
-      ]
+      [11, 21],
+      [12, 22]
     ],
     "array.6": [
-      [
-        11
-      ],
-      [
-        22
-      ],
+      [11],
+      [22],
       [
         {
           "e": "#N/A"
         }
       ]
     ],
-    "array.7": [
-      [
-        1
-      ],
-      [
-        1
-      ]
-    ],
+    "array.7": [[1], [1]],
     "intersect.1": [
       [
         {
@@ -317,11 +125,7 @@
         }
       ]
     ],
-    "intersect.3": [
-      [
-        11
-      ]
-    ],
+    "intersect.3": [[11]],
     "intersect.4": [
       [
         {

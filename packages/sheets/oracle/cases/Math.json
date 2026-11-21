@@ -67,10 +67,7 @@
     {
       "id": "CEILING.8",
       "f": "=CEILING(-2.5, 1, 1)",
-      "authority": "openformula",
-      "differs": {
-        "google": "Google's CEILING takes two arguments (#N/A); OpenFormula Part 4 §6.17.1 defines its mode (D38: the standard holds)"
-      }
+      "authority": "openformula"
     },
     {
       "id": "CEILING.9",
@@ -188,10 +185,7 @@
     {
       "id": "FLOOR.8",
       "f": "=FLOOR(-2.5, 1, 1)",
-      "authority": "openformula",
-      "differs": {
-        "google": "Google's FLOOR takes two arguments (#N/A); OpenFormula Part 4 §6.17.3 defines its mode (D38: the standard holds)"
-      }
+      "authority": "openformula"
     },
     {
       "id": "FLOOR.9",

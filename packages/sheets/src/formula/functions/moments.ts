@@ -7,10 +7,10 @@ import { err, isError, type Value } from '../values';
 
 const NONE = 'No numbers to work on';
 
-function overNumbers(each: (ns: number[]) => Value): FnDef {
+function overNumbers(each: (ns: number[], f: Frame) => Value): FnDef {
   return fn(1, MANY, (args, f) => {
     const ns = numbersOf(args, f);
-    return isError(ns) ? ns : each(ns);
+    return isError(ns) ? ns : each(ns, f);
   });
 }
 
@@ -79,11 +79,14 @@ function trimmedMean(data: number[], proportion: number): Value {
 }
 
 export const MOMENT_FUNCTIONS: Record<string, FnDef> = {
-  // A zero makes the product 0; a negative number has no real root of every order.
-  GEOMEAN: overNumbers((ns) => {
+  // A negative number has no real root of every order.
+  GEOMEAN: overNumbers((ns, f) => {
     if (ns.length === 0) return err('#NUM!', NONE);
     if (ns.some((n) => n < 0)) return err('#NUM!', 'GEOMEAN takes no negative numbers');
-    if (ns.includes(0)) return 0;
+    // Google and Excel take only numbers above 0; OpenFormula's product of a 0 is 0 (Part 4 §6.18.34; the file's
+    // meaning).
+    if (ns.includes(0))
+      return f.meaning === 'openformula' ? 0 : err('#NUM!', 'GEOMEAN takes only numbers above 0');
     let logs = 0;
     for (const n of ns) logs += Math.log(n);
     return Math.exp(logs / ns.length);
@@ -107,8 +110,7 @@ export const MOMENT_FUNCTIONS: Record<string, FnDef> = {
   'AVERAGE.WEIGHTED': fn(2, MANY, weightedAverage),
   // A spread of 0 divides by zero; a negative one is no spread (LibreOffice's answers).
   STANDARDIZE: numFn(3, 3, ([x, m, sd]) => {
-    if (sd! < 0) return err('#NUM!', 'The standard deviation cannot be negative');
-    if (sd === 0) return err('#DIV/0!');
+    if (sd! <= 0) return err('#NUM!', 'The standard deviation must be above 0');
     return (x! - m!) / sd!;
   }),
   FISHER: numFn(1, 1, ([x]) =>

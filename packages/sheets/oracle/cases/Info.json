@@ -443,10 +443,7 @@
     {
       "id": "SHEETS.3",
       "f": "=SHEETS(1)",
-      "authority": "openformula",
-      "differs": {
-        "google": "Google's SHEETS takes no argument (#N/A); OpenFormula's counts the sheets of a reference (D38: the standard holds)"
-      }
+      "authority": "openformula"
     }
   ]
 }

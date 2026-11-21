@@ -3,30 +3,31 @@
 import { dateFromSerial, serialFromDate } from '../../dates';
 import type { FnDef } from '../fn';
 import { err, isError, type SheetError } from '../values';
-import { accrualYears, basisOf, yearFrac } from './day-count';
+import type { FormulaMeaning } from '../meaning';
+import { basisOf, securityYears } from './day-count';
 import { financeFn } from './finance-args';
 
 // A span from settlement to maturity as a fraction of a year, by the convention, once both are checked.
+type Years = (a: number, b: number, basis: number, meaning: FormulaMeaning) => number;
+
 function span(
   settlement: number,
   maturity: number,
   b: number,
-  years: (a: number, b: number, basis: number) => number,
+  years: Years,
+  meaning: FormulaMeaning,
 ): number | SheetError {
   const basis = basisOf(b);
   if (isError(basis)) return basis;
   if (settlement >= maturity) return err('#NUM!', 'Settlement is before maturity');
-  return years(settlement, maturity, basis);
+  return years(settlement, maturity, basis, meaning);
 }
 
 // A function of settlement, maturity, two positive amounts and a day count convention.
-function discountFn(
-  years: (a: number, b: number, basis: number) => number,
-  each: (a: number, b: number, t: number) => number,
-): FnDef {
-  return financeFn(4, 5, [0, 1], ([settlement, maturity, a, b, basis = 0]) => {
+function discountFn(years: Years, each: (a: number, b: number, t: number) => number): FnDef {
+  return financeFn(4, 5, [0, 1], ([settlement, maturity, a, b, basis = 0], f) => {
     if (a! <= 0 || b! <= 0) return err('#NUM!', 'Both amounts are positive');
-    const t = span(settlement!, maturity!, basis, years);
+    const t = span(settlement!, maturity!, basis, years, f.meaning);
     return isError(t) ? t : each(a!, b!, t);
   });
 }
@@ -49,14 +50,17 @@ function billFn(each: (amount: number, days: number) => number): FnDef {
 }
 
 export const DISCOUNT_SECURITY_FUNCTIONS: Record<string, FnDef> = {
-  DISC: discountFn(yearFrac, (pr, redemption, t) => (1 - pr / redemption) / t),
-  PRICEDISC: discountFn(accrualYears, (discount, redemption, t) => redemption * (1 - discount * t)),
-  YIELDDISC: discountFn(yearFrac, (pr, redemption, t) => (redemption / pr - 1) / t),
+  DISC: discountFn(securityYears, (pr, redemption, t) => (1 - pr / redemption) / t),
+  PRICEDISC: discountFn(
+    securityYears,
+    (discount, redemption, t) => redemption * (1 - discount * t),
+  ),
+  YIELDDISC: discountFn(securityYears, (pr, redemption, t) => (redemption / pr - 1) / t),
   INTRATE: discountFn(
-    accrualYears,
+    securityYears,
     (investment, redemption, t) => (redemption / investment - 1) / t,
   ),
-  RECEIVED: discountFn(accrualYears, (investment, discount, t) => investment / (1 - discount * t)),
+  RECEIVED: discountFn(securityYears, (investment, discount, t) => investment / (1 - discount * t)),
   TBILLPRICE: billFn((discount, days) => 100 * (1 - (discount * days) / 360)),
   TBILLYIELD: billFn((pr, days) => ((100 - pr) / pr) * (360 / days)),
   TBILLEQ: billFn((discount, days) => (365 * discount) / (360 - discount * days)),

@@ -38,16 +38,18 @@ function allNumbers(v: EvalValue, f: Frame): number[] | SheetError {
 const bothSigns = (values: number[]) => values.some((v) => v > 0) && values.some((v) => v < 0);
 
 // The amounts and their dates, paired: the same count, at least two, the dates whole days.
+// XIRR needs two flows to have a rate; XNPV takes one, its value as it is (Google's, measured; OpenFormula's sum).
 function datedFlows(
   args: EvalValue[],
   f: Frame,
+  least = 2,
 ): { values: number[]; years: number[] } | SheetError {
   const values = allNumbers(args[0]!, f);
   if (isError(values)) return values;
   const dates = allNumbers(args[1]!, f);
   if (isError(dates)) return dates;
-  if (values.length !== dates.length || values.length < 2)
-    return err('#NUM!', 'Each amount has one date, and there are at least two');
+  if (values.length !== dates.length || values.length < least)
+    return err('#NUM!', 'Each amount has one date, and there are enough of them');
   const first = Math.floor(dates[0]!);
   return { values, years: dates.map((d) => (Math.floor(d) - first) / 365) };
 }
@@ -112,7 +114,7 @@ export const CASH_FLOW_FUNCTIONS: Record<string, FnDef> = {
   XNPV: fn(3, 3, (args, f) => {
     const rate = numArg(args[0]!, f);
     if (isError(rate)) return rate;
-    const flow = datedFlows(args.slice(1), f);
+    const flow = datedFlows(args.slice(1), f, 1);
     if (isError(flow)) return flow;
     const r = xnpv(rate, flow.values, flow.years);
     return Number.isFinite(r) ? r : err('#NUM!');
@@ -126,6 +128,8 @@ export const CASH_FLOW_FUNCTIONS: Record<string, FnDef> = {
     const r = xirr(flow.values, flow.years, guess);
     return r === null ? err('#NUM!', 'XIRR did not settle; try another guess') : r;
   }),
+  // Google and Excel refuse text among the rates (#VALUE!); OpenFormula's number sequence skips it (Part 4 §6.12.21;
+  // the file's meaning). Empty cells are skipped in every meaning.
   FVSCHEDULE: fn(2, 2, (args, f) => {
     const principal = numArg(args[0]!, f);
     if (isError(principal)) return principal;
@@ -133,6 +137,8 @@ export const CASH_FLOW_FUNCTIONS: Record<string, FnDef> = {
     for (const x of flatValues(arrayArg(args[1]!, f))) {
       if (isError(x)) return x;
       if (typeof x === 'number') value *= 1 + x;
+      else if (x !== null && f.meaning !== 'openformula')
+        return err('#VALUE!', 'Every rate in the schedule is a number');
     }
     return Number.isFinite(value) ? value : err('#NUM!');
   }),

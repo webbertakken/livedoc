@@ -137,3 +137,23 @@ export function unnamedDifferences(
     }
   return out;
 }
+
+/**
+ * Every difference a case names that is not there: the source it names answers as the case holds (a newer source, or
+ * an engine fix that moved the held answer to it), so the name explains nothing.
+ */
+export function staleDifferences(
+  x: OracleCase,
+  answers: Partial<Record<'google' | 'libreoffice', OracleValue[][]>>,
+): string[] {
+  const held = heldAnswer(x, answers);
+  if (!held) return [];
+  const given: Partial<Record<OracleSource, OracleValue[][]>> = { ...answers, cited: x.expect };
+  return (['cited', 'google', 'libreoffice'] as const)
+    .filter((s) => x.differs?.[s] !== undefined)
+    .filter((s) => {
+      const answer = given[s];
+      return answer !== undefined && sameBlock(answer, held.answer, x.tol);
+    })
+    .map((s) => `${x.id}: ${s} answers as the case holds (${held.source}); drop its differs`);
+}

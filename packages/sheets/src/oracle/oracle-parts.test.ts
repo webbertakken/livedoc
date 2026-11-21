@@ -8,6 +8,7 @@ import {
   sameBlock,
   sameValue,
   showBlock,
+  staleDifferences,
   unnamedDifferences,
 } from './compare';
 import { OracleCorpus, OracleLayout, type OracleCase, type OracleCategory } from './corpus';
@@ -298,12 +299,31 @@ describe('comparing', () => {
     expect(
       unnamedDifferences(one({ expect: [[1]], cite: 'x' }), { google: [[1]], libreoffice: [[2]] }),
     ).toEqual(['X.1: cited=1 libreoffice=2', 'X.1: google=1 libreoffice=2']);
+    expect(unnamedDifferences(one({}), { google: [[1]] })).toEqual([]);
     expect(
       unnamedDifferences(one({ differs: { libreoffice: 'why' } }), {
         google: [[1]],
         libreoffice: [[2]],
       }),
     ).toEqual([]);
+  });
+
+  // formulas.md "The oracle": a difference a case names is there.
+  it('finds a named difference that is no longer there', () => {
+    const named = one({ differs: { libreoffice: 'why', google: 'why' } });
+    expect(staleDifferences(named, { google: [[1]], libreoffice: [[2]] })).toEqual([
+      'X.1: google answers as the case holds (google); drop its differs',
+    ]);
+    const cited = one({ expect: [[1]], cite: 'x', differs: { libreoffice: 'why', cited: 'why' } });
+    expect(staleDifferences(cited, { libreoffice: [[1]] })).toEqual([
+      'X.1: cited answers as the case holds (cited); drop its differs',
+      'X.1: libreoffice answers as the case holds (cited); drop its differs',
+    ]);
+    expect(staleDifferences(one({ differs: { google: 'why' } }), {})).toEqual([]);
+    expect(staleDifferences(one({ differs: { libreoffice: 'why' } }), { google: [[1]] })).toEqual(
+      [],
+    );
+    expect(staleDifferences(one({}), { google: [[1]], libreoffice: [[1]] })).toEqual([]);
   });
 
   it('names no difference where Google lacks an OpenFormula function, and only there', () => {

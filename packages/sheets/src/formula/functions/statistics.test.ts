@@ -24,7 +24,14 @@ const DATA = {
 describe('the statistics functions', () => {
   it.each([
     // Spread: the A forms, the population forms, DEVSQ.
-    ['=VARA(1, TRUE, "x")', 1 / 3],
+    ['=VARA(1, TRUE, D1)', 1 / 3],
+    ['=STDEVP(5)', 0],
+    ['=VARPA(5)', 0],
+    ['=PERMUTATIONA(3, 4)', 81],
+    ['=PERMUTATIONA(2.5, 1.5)', 2],
+    ['=PROB({1, 2}, {1.5, -0.5}, 1)', 1.5],
+    ['=PROB({1, 2}, {0.5, 0.5}, 2, 1)', 0],
+    ['=STANDARDIZE(1, 2, 0.5)', -2],
     ['=MAXA(D1:D2)', 0],
     ['=MINA(D1:D2, 4)', 0],
     ['=MINA(A1:A4)', 1],
@@ -52,7 +59,8 @@ describe('the statistics functions', () => {
     ['=PERCENTRANK.EXC({1, 2, 2, 5}, 2)', 0.4],
     ['=QUARTILE.EXC(A1:A4, 2)', 2.5],
     ['=RANK.AVG(5, E1:E3)', 2],
-    ['=LARGE(A1:A4, 1.2)', 3],
+    ['=LARGE(A1:A4, 1.9)', 4],
+    ['=LARGE(A1:A4, 2.5)', 3],
     ['=SMALL(A1:A4, 1.8)', 1],
     // Paired data.
     ['=SLOPE(B1:B4, A1:A4)', 2],
@@ -105,7 +113,19 @@ describe('the statistics functions', () => {
     ['=STEYX(A1:A3, E1:E3)', '#DIV/0!'],
     ['=FORECAST(1, A1:A3, E1:E3)', '#DIV/0!'],
     ['=FORECAST(1, A1:A3, C1:C3)', '#N/A'],
-    ['=COVARIANCE.S(1, 2)', '#DIV/0!'],
+    ['=COVARIANCE.S(1, 2)', '#NUM!'],
+    ['=COVARIANCE.S(D1:D2, D1:D2)', '#DIV/0!'],
+    ['=CORREL(D1:D2, D1:D2)', '#DIV/0!'],
+    ['=SLOPE(D1:D2, D1:D2)', '#N/A'],
+    ['=FORECAST(1, D1:D2, D1:D2)', '#N/A'],
+    ['=STEYX({1, 3}, {-1, 6})', '#DIV/0!'],
+    ['=AVEDEV(D1:D2)', '#DIV/0!'],
+    ['=VARPA(A9)', '#DIV/0!'],
+    ['=AVERAGEA(1, "x")', '#VALUE!'],
+    ['=GEOMEAN(2, 0)', '#NUM!'],
+    ['=STANDARDIZE(1, 2, 0)', '#NUM!'],
+    ['=LARGE(A1:A4, 0.5)', '#NUM!'],
+    ['=PROB({1, 2}, {0.6, 0.6}, 1)', '#VALUE!'],
     ['=PROB(A1:A4, B1:B3, 1)', '#N/A'],
     ['=PROB(A1:A2, {0.5, 0.5}, "x")', '#VALUE!'],
     ['=PROB(A1:A2, {0.5, 0.5}, 1, "x")', '#VALUE!'],
@@ -121,8 +141,8 @@ describe('the statistics functions', () => {
     expect(calc(formula, DATA)).toMatchObject({ e: code });
   });
 
-  it('spills every mode of MODE.MULT down a column, in the order they come', () => {
-    const b = book({ A1: '=MODE.MULT({3, 3, 1, 1, 2})' });
-    expect([b.v('A1'), b.v('A2'), b.v('A3')]).toEqual([3, 1, null]);
+  it('spills every mode of MODE.MULT down a column, from the least; MODE takes the first to come', () => {
+    const b = book({ A1: '=MODE.MULT({3, 3, 1, 1, 2})', B1: '=MODE({3, 3, 1, 1, 2})' });
+    expect([b.v('A1'), b.v('A2'), b.v('A3'), b.v('B1')]).toEqual([1, 3, null, 3]);
   });
 });

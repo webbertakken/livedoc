@@ -3,8 +3,17 @@
 // every coupon on a month's last day; any other keeps its day, or the month's last when the month is shorter.
 import { dateFromSerial, serialFromDate } from '../../dates';
 import type { FnDef } from '../fn';
+import type { FormulaMeaning } from '../meaning';
 import { err, isError, type SheetError } from '../values';
-import { basisOf, couponDayDiff, daysInMonth, frequencyOf, isLastOfMonth } from './day-count';
+import {
+  basisOf,
+  couponDayDiff,
+  days360,
+  daysInMonth,
+  frequencyOf,
+  isLastOfMonth,
+  usDays360,
+} from './day-count';
 import { financeFn } from './finance-args';
 
 /** A security's coupon schedule around its settlement date. */
@@ -62,19 +71,30 @@ export function couponDays(c: Coupons): number {
   return (c.basis === 3 ? 365 : 360) / c.frequency;
 }
 
-/** The days from the period's start to settlement. */
-export const daysFromCoupon = (c: Coupons) => couponDayDiff(c.previous, c.settlement, c.basis);
+// Google counts US 30/360 days by DAYS360 (a period from 28 February to settlement that day is -2 days), and the days
+// to the next coupon as the period's less those before settlement; European ones directly (measured). OpenFormula
+// counts both by its procedure A (Part 4 §4.11.7.3; the file's meaning).
 
-/** The days from settlement to the next coupon; on 30/360, the period's days less those before settlement. */
-export function daysToCoupon(c: Coupons): number {
-  if (c.basis === 0 || c.basis === 4) return couponDays(c) - daysFromCoupon(c);
+/** The days from the period's start to settlement. */
+export function daysFromCoupon(c: Coupons, meaning: FormulaMeaning = 'google'): number {
+  if (meaning === 'openformula' && c.basis === 0) return usDays360(c.previous, c.settlement);
+  return couponDayDiff(c.previous, c.settlement, c.basis);
+}
+
+/** The days from settlement to the next coupon. */
+export function daysToCoupon(c: Coupons, meaning: FormulaMeaning = 'google'): number {
+  if (c.basis === 0)
+    return meaning === 'openformula'
+      ? usDays360(c.settlement, c.next)
+      : couponDays(c) - daysFromCoupon(c);
+  if (c.basis === 4) return days360(c.settlement, c.next, true);
   return c.next - c.settlement;
 }
 
-function couponFn(read: (c: Coupons) => number): FnDef {
-  return financeFn(3, 4, [0, 1], ([settlement, maturity, frequency, basis = 0]) => {
+function couponFn(read: (c: Coupons, meaning: FormulaMeaning) => number): FnDef {
+  return financeFn(3, 4, [0, 1], ([settlement, maturity, frequency, basis = 0], f) => {
     const c = couponsOf(settlement!, maturity!, frequency!, basis);
-    return isError(c) ? c : read(c);
+    return isError(c) ? c : read(c, f.meaning);
   });
 }
 

@@ -99,9 +99,8 @@ export const PERMUTATION_FUNCTIONS: Record<string, FnDef> = {
     for (let i = n - k + 1; i <= n; i++) out *= i;
     return finite(out);
   }),
-  // With repetition: n^k. Google's help: n of 0 is #NUM!, and k may not pass n.
-  // Google's needs 0 < n and k ≤ n; both standards take any n and k from 0, n^k (OpenFormula Part 4 §6.18.60,
-  // Microsoft's help; the file's meaning): PERMUTATIONA(0, 2) is 0, PERMUTATIONA(3, 4) 81.
+  // With repetition: n^k. Google needs n and k from 1 (measured); both standards take any n and k from 0
+  // (OpenFormula Part 4 §6.18.60, Microsoft's help; the file's meaning): PERMUTATIONA(0, 2) is 0, (3, 0) 1.
   PERMUTATIONA: numFn(2, 2, ([a, b], f) => {
     const n = Math.trunc(a!);
     const k = Math.trunc(b!);
@@ -109,7 +108,7 @@ export const PERMUTATION_FUNCTIONS: Record<string, FnDef> = {
       if (n < 0 || k < 0) return err('#NUM!', 'PERMUTATIONA needs n and k from 0');
       return finite(n ** k);
     }
-    if (n <= 0 || k < 0 || k > n) return err('#NUM!', 'PERMUTATIONA needs 0 < n and 0 ≤ k ≤ n');
+    if (n < 1 || k < 1) return err('#NUM!', 'PERMUTATIONA needs n and k from 1');
     return finite(n ** k);
   }),
 };

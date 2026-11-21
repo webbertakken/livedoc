@@ -1,6 +1,7 @@
 // Finance functions (docs/specs/029-sheets/formulas.md "Functions": Finance), with Sheets' sign conventions:
 // money paid out is negative. This file holds the annuities and rates and gathers the family; cash flows, depreciation,
 // coupons and securities live beside it.
+import type { Frame } from '../../engine/frame';
 import { numFn, type FnDef } from '../fn';
 import { err } from '../values';
 import { CASH_FLOW_FUNCTIONS } from './cash-flows';
@@ -38,43 +39,55 @@ function ipmt(
   return fv(rate, per - 1, payment, pv, 0) * rate;
 }
 
-// CUMIPMT and CUMPRINC: the periods from first to last (a fraction moves each inward: 2.1 to 3, 4.9 to 4), summed.
-// In OOXML's meaning both are truncated, as Microsoft's help says (2.1 to 2; the file's meaning).
+// CUMIPMT and CUMPRINC: the periods from first to last, summed; any type but 0 is payments at the beginning
+// (Google's, measured). Google's CUMIPMT moves a fraction inward (2.1 to 3, 4.9 to 4), as its help says; its CUMPRINC
+// counts from the first as it is, in steps of one, to the last step before last + 1 (2.1, 3.1, 4.1, 5.1 for 2.1 to
+// 4.9; measured). In OOXML's meaning both are truncated, as Microsoft's help says (2.1 to 2; the file's meaning).
+function periodsOf(
+  part: 'interest' | 'principal',
+  first: number,
+  last: number,
+  f: Frame,
+): number[] {
+  if (f.meaning === 'ooxml' || part === 'interest') {
+    const from = f.meaning === 'ooxml' ? Math.trunc(first) : Math.ceil(first);
+    const to = Math.floor(last);
+    return Array.from({ length: Math.max(0, to - from + 1) }, (_, k) => from + k);
+  }
+  const out: number[] = [];
+  for (let per = first; per < last + 1; per++) out.push(per);
+  return out;
+}
+
 function cumulative(part: 'interest' | 'principal') {
   return numFn(6, 6, ([rate, nper, pv, first, last, type], f) => {
-    const from = f.meaning === 'ooxml' ? Math.trunc(first!) : Math.ceil(first!);
-    const to = Math.floor(last!);
     if (rate! <= 0 || nper! <= 0 || pv! <= 0)
       return err('#NUM!', 'The rate, periods and value are positive');
-    if (from < 1 || to < from || to > nper!)
+    const periods = periodsOf(part, first!, last!, f);
+    if (first! < 1 || periods.length === 0 || last! > nper!)
       return err('#NUM!', 'The periods run from 1 to the number of periods');
-    if (type !== 0 && type !== 1)
-      return err('#NUM!', 'Payments are at the end (0) or beginning (1)');
-    const payment = pmt(rate!, nper!, pv!, 0, type);
+    const t = type ? 1 : 0;
+    const payment = pmt(rate!, nper!, pv!, 0, t);
     let sum = 0;
-    for (let per = from; per <= to; per++) {
-      const interest = ipmt(rate!, per, nper!, pv!, 0, type);
+    for (const per of periods) {
+      const interest = ipmt(rate!, per, nper!, pv!, 0, t);
       sum += part === 'interest' ? interest : payment - interest;
     }
     return sum;
   });
 }
 
-// The integer and fraction parts of a price, as written (100.01) and as meant (100 1/8): DOLLARDE and DOLLARFR. The
-// written fraction has at least two decimal places, as Google's help reads 100.01 in eighths; in wholes (unit 1) it
-// is the decimal itself (D51). In OpenFormula's meaning it has as many places as the unit has digits, no fewer
-// (Part 4 §6.12.16, §6.12.17: 100.01 in eighths is 100 1/80; the file's meaning).
-const FRACTION_DIGITS_MIN = 2;
-
+// The integer and fraction parts of a price, as written (100.01) and as meant (100 1/80): DOLLARDE and DOLLARFR. The
+// written fraction has as many decimal places as the unit has digits, as Google answers (measured) and OpenFormula
+// says (Part 4 §6.12.16, §6.12.17); in wholes (unit 1) it is the decimal itself (D51).
 function fractionalPrice(toDecimal: boolean) {
-  return numFn(2, 2, ([price, unit], f) => {
+  return numFn(2, 2, ([price, unit]) => {
     const u = Math.trunc(unit!);
     if (u < 0) return err('#NUM!', 'The unit is positive');
     if (u === 0) return err('#DIV/0!', 'The unit is at least 1');
     const whole = Math.trunc(price!);
     const digits = Math.ceil(Math.log10(u));
-    const least = f.meaning === 'openformula' ? 0 : FRACTION_DIGITS_MIN;
-    const scale = u === 1 ? 1 : 10 ** Math.max(least, digits);
+    const scale = u === 1 ? 1 : 10 ** digits;
     return whole + (toDecimal ? ((price! - whole) * scale) / u : ((price! - whole) * u) / scale);
   });
 }
@@ -122,22 +135,27 @@ const ANNUITY_FUNCTIONS: Record<string, FnDef> = {
   CUMIPMT: cumulative('interest'),
   CUMPRINC: cumulative('principal'),
   ISPMT: numFn(4, 4, ([rate, per, nper, pv]) =>
-    nper === 0 ? err('#NUM!', 'The number of periods is not 0') : pv! * rate! * (per! / nper! - 1),
+    nper === 0
+      ? err('#DIV/0!', 'The number of periods is not 0')
+      : pv! * rate! * (per! / nper! - 1),
   ),
   PDURATION: numFn(3, 3, ([rate, pv, f]) =>
     rate! <= 0 || pv! <= 0 || f! <= 0
       ? err('#NUM!', 'The rate and both values are positive')
       : Math.log(f! / pv!) / Math.log1p(rate!),
   ),
-  RRI: numFn(3, 3, ([nper, pv, f]) =>
-    nper! <= 0 || pv === 0
+  // No periods divide by 0 (#DIV/0!, as Google's).
+  RRI: numFn(3, 3, ([nper, pv, f]) => {
+    if (nper === 0) return err('#DIV/0!', 'The number of periods is not 0');
+    return nper! < 0 || pv === 0
       ? err('#NUM!', 'The periods are positive and the present value is not 0')
-      : (f! / pv!) ** (1 / nper!) - 1,
-  ),
-  EFFECT: numFn(2, 2, ([nominal, periods]) => {
+      : (f! / pv!) ** (1 / nper!) - 1;
+  }),
+  // Google and Excel take a nominal rate above 0; OpenFormula from 0 (Part 4 §6.12.19; the file's meaning).
+  EFFECT: numFn(2, 2, ([nominal, periods], f) => {
     const n = Math.trunc(periods!);
-    if (nominal! < 0 || n < 1)
-      return err('#NUM!', 'The rate is not negative and the periods at least 1');
+    const refused = nominal! < 0 || (nominal === 0 && f.meaning !== 'openformula');
+    if (refused || n < 1) return err('#NUM!', 'The rate is above 0 and the periods at least 1');
     return (1 + nominal! / n) ** n - 1;
   }),
   NOMINAL: numFn(2, 2, ([effective, periods]) => {

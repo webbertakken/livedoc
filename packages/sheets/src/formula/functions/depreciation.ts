@@ -1,21 +1,64 @@
 // Depreciation functions (docs/specs/029-sheets/formulas.md "Functions": Finance): how much of an asset's cost one
 // period writes off, straight-line (SLN, AMORLINC), by the sum of the years' digits (SYD) or on a declining balance
 // (DB, DDB, VDB).
+import type { FormulaMeaning } from '../meaning';
 import { numFn, type FnDef } from '../fn';
 import { err, isError } from '../values';
 import { basisOf, yearFrac } from './day-count';
 import { financeFn } from './finance-args';
 
-// The double (or `factor`) declining balance write-off of period `period`, never taking the value below salvage.
-function ddb(cost: number, salvage: number, life: number, period: number, factor: number): number {
+// The double (or `factor`) declining balance write-off of period `period`, never taking the value below salvage. A
+// rate of 1 or more writes the whole value off in the first period, as both standards' MIN does (OpenFormula Part 4
+// §6.12.14, Microsoft's help; the file's meaning); Google keeps the rate, so a later period's value turns negative
+// and its write-off with it (DDB(2400, 300, 2, 2, 3) is -1800; measured).
+function ddb(
+  cost: number,
+  salvage: number,
+  life: number,
+  period: number,
+  factor: number,
+  meaning: FormulaMeaning = 'google',
+): number {
   let rate = factor / life;
   let before: number;
-  if (rate >= 1) {
+  if (rate >= 1 && meaning !== 'google') {
     rate = 1;
     before = period === 1 ? cost : 0;
   } else before = cost * (1 - rate) ** (period - 1);
   const after = cost * (1 - rate) ** period;
-  return Math.max(0, after < salvage ? before - salvage : before - after);
+  if (after < salvage) return Math.max(0, before - salvage);
+  return meaning === 'google' ? before - after : Math.max(0, before - after);
+}
+
+// Google's VDB from a fraction of a period (measured): the value at the start (whole periods, then the fraction at
+// the declining rate), then steps of a whole period from there, the last a fraction. VDB(2400, 300, 10, 1.5, 4.25)
+// steps 1.5 to 2.5, 2.5 to 3.5 and 3.5 to 4.25. Each step switches to straight-line over the life left once that
+// writes off more, and never takes the value below salvage.
+function vdbStepping(
+  cost: number,
+  salvage: number,
+  life: number,
+  start: number,
+  end: number,
+  factor: number,
+): number {
+  const rate = Math.min(1, factor / life);
+  const walk = (from: number, to: number, value: number): number => {
+    let t = from;
+    let left = value;
+    let sum = 0;
+    while (t < to) {
+      const step = Math.min(1, to - t);
+      const declining = left * rate * step;
+      const straight = ((left - salvage) / (life - t)) * step;
+      const term = Math.min(Math.max(declining, straight), Math.max(0, left - salvage));
+      sum += term;
+      left -= term;
+      t += step;
+    }
+    return sum;
+  };
+  return walk(start, end, cost - walk(0, start, cost));
 }
 
 // The declining balance write-offs of the first `periods` periods (the last one a fraction when `periods` is),
@@ -116,24 +159,41 @@ export const DEPRECIATION_FUNCTIONS: Record<string, FnDef> = {
     ([cost, salvage, life, period]) =>
       ((cost! - salvage!) * (life! - period! + 1) * 2) / (life! * (life! + 1)),
   ),
-  DDB: numFn(4, 5, ([cost, salvage, life, period, factor = 2]) =>
-    cost! < 0 || salvage! < 0 || factor <= 0 || salvage! > cost! || period! < 1 || period! > life!
-      ? err('#NUM!', 'The period is from 1 to the life, and the salvage from 0 to the cost')
-      : ddb(cost!, salvage!, life!, period!, factor),
+  // A fractional period is the period it falls in (2.5 is the third) and a salvage above the cost writes nothing off,
+  // as Google's (measured; OpenFormula's constraints refuse both).
+  DDB: numFn(4, 5, ([cost, salvage, life, period, factor = 2], f) =>
+    cost! < 0 || salvage! < 0 || factor <= 0 || period! <= 0 || period! > life!
+      ? err('#NUM!', 'The period is within the life, and the cost and salvage are not negative')
+      : ddb(cost!, salvage!, life!, Math.ceil(period!), factor, f.meaning),
   ),
-  DB: numFn(4, 5, ([cost, salvage, life, period, month = 12]) => {
+  // A salvage above the cost gives a negative rate, as OpenFormula's formula and Google do. Google refuses a period
+  // past the life; both standards take the part year after it when the first year is short (OpenFormula Part 4
+  // §6.12.13, Microsoft's help; the file's meaning).
+  DB: numFn(4, 5, ([cost, salvage, life, period, month = 12], f) => {
     const months = Math.floor(month);
     if (months < 1 || months > 12) return err('#NUM!', 'The first year has 1 to 12 months');
-    if (cost! <= 0 || salvage! < 0 || salvage! > cost! || life! <= 0 || life! > 1200)
-      return err('#NUM!', 'The salvage is from 0 to the cost, and the life from 1 to 1200');
-    if (period! <= 0 || period! > life! + 1) return err('#NUM!', 'The period is within the life');
+    if (cost! <= 0 || salvage! < 0 || life! <= 0 || life! > 1200)
+      return err(
+        '#NUM!',
+        'The cost is positive, the salvage not negative, the life from 1 to 1200',
+      );
+    const last = f.meaning === 'google' ? life! : life! + 1;
+    if (period! <= 0 || period! > last) return err('#NUM!', 'The period is within the life');
     return db(cost!, salvage!, life!, period!, months);
   }),
-  VDB: numFn(5, 7, ([cost, salvage, life, start, end, factor = 2, noSwitch = 0]) =>
-    start! < 0 || end! < start! || end! > life! || cost! < 0 || salvage! > cost! || factor <= 0
-      ? err('#NUM!', 'The periods run from 0 to the life, and the salvage is at most the cost')
-      : vdb(cost!, salvage!, life!, start!, end!, factor, noSwitch !== 0),
-  ),
+  // From a fraction of a period Google steps whole periods from it, unless told not to switch to straight-line
+  // (measured); OpenFormula takes the fraction off the whole periods around it (Part 4 §6.12.50; the file's meaning).
+  VDB: numFn(5, 7, ([cost, salvage, life, start, end, factor = 2, noSwitch = 0], f) => {
+    if (start! < 0 || end! < start! || end! > life! || cost! < 0 || salvage! > cost! || factor <= 0)
+      return err(
+        '#NUM!',
+        'The periods run from 0 to the life, and the salvage is at most the cost',
+      );
+    const stepping = f.meaning !== 'openformula' && noSwitch === 0 && !Number.isInteger(start!);
+    return stepping
+      ? vdbStepping(cost!, salvage!, life!, start!, end!, factor)
+      : vdb(cost!, salvage!, life!, start!, end!, factor, noSwitch !== 0);
+  }),
   // AMORLINC: a first part period from purchase to its end, then whole periods at the rate until the cost less
   // salvage is written off. A period between 0 and 1 counts as 1, a larger fraction is dropped (Google's help).
   AMORLINC: financeFn(6, 7, [1, 2], ([cost, bought, firstEnd, salvage, period, rate, b = 0]) => {

@@ -11,7 +11,13 @@
   "cases": [
     {
       "id": "ACCRINT.1",
-      "f": "=ACCRINT(DATE(2010,1,1), DATE(2010,2,1), DATE(2012,12,31), 0.05, 100, 4)"
+      "f": "=ACCRINT(DATE(2010,1,1), DATE(2010,2,1), DATE(2012,12,31), 0.05, 100, 4)",
+      "differs": {
+        "libreoffice": "LibreOffice sums YEARFRAC from issue, as OpenFormula (Part 4 §6.12.2); Google counts 30/360 past the first interest date by DAYS360's European method"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "ACCRINT.2",
@@ -19,7 +25,13 @@
     },
     {
       "id": "ACCRINT.3",
-      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 1)"
+      "f": "=ACCRINT(DATE(2008,3,1), DATE(2008,8,31), DATE(2008,5,1), 0.1, 1000, 2, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts Actual/Actual over the year, as OpenFormula's YEARFRAC (Part 4 §6.12.2); Google over the coupon period the first interest date ends"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "ACCRINT.4",
@@ -87,11 +99,17 @@
     },
     {
       "id": "ACCRINTM.8",
-      "f": "=ACCRINTM(DATE(2008,2,15), DATE(2008,4,1), 0.1, 1000, 0)"
+      "f": "=ACCRINTM(DATE(2008,2,15), DATE(2008,4,1), 0.1, 1000, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice counts a 30/360 span from February a day or two short; Google counts it as DAYS360 and procedure A do (OpenFormula Part 4 §4.11.7.3)"
+      }
     },
     {
       "id": "ACCRINTM.9",
-      "f": "=ACCRINTM(DATE(2009,2,15), DATE(2009,4,1), 0.1, 1000, 0)"
+      "f": "=ACCRINTM(DATE(2009,2,15), DATE(2009,4,1), 0.1, 1000, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice counts a 30/360 span from February a day or two short; Google counts it as DAYS360 and procedure A do (OpenFormula Part 4 §4.11.7.3)"
+      }
     },
     {
       "id": "ACCRINTM.10",
@@ -100,6 +118,16 @@
     {
       "id": "ACCRINTM.11",
       "f": "=ACCRINTM(DATE(2009,1,31), DATE(2009,3,31), 0.1, 1000, 4)"
+    },
+    {
+      "id": "ACCRINTM.12",
+      "f": "=ACCRINTM(DATE(2007,11,11), DATE(2008,2,15), 0.1, 1000, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts Actual/Actual over one year's length, as OpenFormula (Part 4 §4.11.7.7); Google splits the span by calendar year"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "AMORLINC.1",
@@ -226,7 +254,13 @@
     },
     {
       "id": "COUPDAYBS.20",
-      "f": "=COUPDAYBS(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+      "f": "=COUPDAYBS(DATE(2011,2,28), DATE(2015,8,31), 2, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice gives 0, as procedure A (OpenFormula Part 4 §4.11.7.3); Google counts DAYS360 from 28 February, the 30th, to that day, -2"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "COUPDAYS.1",
@@ -342,7 +376,10 @@
     },
     {
       "id": "COUPDAYSNC.9",
-      "f": "=COUPDAYSNC(DATE(2012,3,15), DATE(2020,8,31), 4, 4)"
+      "f": "=COUPDAYSNC(DATE(2012,3,15), DATE(2020,8,31), 4, 4)",
+      "differs": {
+        "libreoffice": "LibreOffice counts European days to the next coupon as the period's less those before settlement; Google and procedure C count them directly (OpenFormula Part 4 §4.11.7.5)"
+      }
     },
     {
       "id": "COUPDAYSNC.10",
@@ -378,7 +415,10 @@
     },
     {
       "id": "COUPDAYSNC.18",
-      "f": "=COUPDAYSNC(DATE(2011,3,10), DATE(2015,8,31), 2, 4)"
+      "f": "=COUPDAYSNC(DATE(2011,3,10), DATE(2015,8,31), 2, 4)",
+      "differs": {
+        "libreoffice": "LibreOffice counts European days to the next coupon as the period's less those before settlement; Google and procedure C count them directly (OpenFormula Part 4 §4.11.7.5)"
+      }
     },
     {
       "id": "COUPDAYSNC.19",
@@ -386,7 +426,14 @@
     },
     {
       "id": "COUPDAYSNC.20",
-      "f": "=COUPDAYSNC(DATE(2011,2,28), DATE(2015,8,31), 2, 0)"
+      "f": "=COUPDAYSNC(DATE(2011,2,28), DATE(2015,8,31), 2, 0)",
+      "differs": {
+        "libreoffice": "LibreOffice counts 180 days, neither procedure A nor Google"
+      },
+      "meaning": {
+        "openformula": [[181]],
+        "cite": "OpenFormula Part 4 §4.11.7.3, procedure A: 28 February 2011, the last of February, counts as the 30th; 31 August stays the 31st"
+      }
     },
     {
       "id": "COUPNCD.1",
@@ -667,7 +714,10 @@
     },
     {
       "id": "CUMIPMT.8",
-      "f": "=CUMIPMT(0.09/12, 360, 125000, 13, 24, 2)"
+      "f": "=CUMIPMT(0.09/12, 360, 125000, 13, 24, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a type other than 0 or 1 (Err:502), OpenFormula's constraint; Google reads any but 0 as 1"
+      }
     },
     {
       "id": "CUMIPMT.9",
@@ -697,7 +747,7 @@
       "id": "CUMPRINC.4",
       "f": "=CUMPRINC(0.09/12, 360, 125000, 2.1, 4.9, 0)",
       "differs": {
-        "libreoffice": "LibreOffice drops both fractions (periods 2 to 4); LiveDoc moves each inward as Google documents for CUMIPMT (periods 3 and 4)"
+        "libreoffice": "LibreOffice drops both fractions (periods 2 to 4); Google counts from 2.1 in steps of one to past 4.9 (2.1, 3.1, 4.1, 5.1)"
       },
       "meaning": {
         "ooxml": [[-207.922727161991]],
@@ -714,7 +764,10 @@
     },
     {
       "id": "CUMPRINC.7",
-      "f": "=CUMPRINC(0.09/12, 360, 125000, 13, 24, 2)"
+      "f": "=CUMPRINC(0.09/12, 360, 125000, 13, 24, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a type other than 0 or 1 (Err:502), OpenFormula's constraint; Google reads any but 0 as 1"
+      }
     },
     {
       "id": "DB.1",
@@ -730,7 +783,15 @@
     },
     {
       "id": "DB.4",
-      "f": "=DB(1000000, 100000, 6, 7, 7)"
+      "f": "=DB(1000000, 100000, 6, 7, 7)",
+      "differs": {
+        "libreoffice": "LibreOffice takes the period after the life when the first year is short, as both standards; Google refuses it"
+      },
+      "meaning": {
+        "ooxml": [[15845.0984738481]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, DB function (support.microsoft.com): with month given, a period after the life holds the first year's missing months"
+      }
     },
     {
       "id": "DB.5",
@@ -750,7 +811,10 @@
     },
     {
       "id": "DB.9",
-      "f": "=DB(100, 200, 5, 1)"
+      "f": "=DB(100, 200, 5, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a salvage above the cost (Err:502); OpenFormula's formula and Google give a negative rate"
+      }
     },
     {
       "id": "DB.10",
@@ -758,7 +822,15 @@
     },
     {
       "id": "DB.11",
-      "f": "=DB(1000, 0, 5, 6, 3)"
+      "f": "=DB(1000, 0, 5, 6, 3)",
+      "differs": {
+        "libreoffice": "LibreOffice takes the period after the life when the first year is short, as both standards; Google refuses it"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, DB function (support.microsoft.com): with month given, a period after the life holds the first year's missing months"
+      }
     },
     {
       "id": "DDB.1",
@@ -794,15 +866,29 @@
     },
     {
       "id": "DDB.9",
-      "f": "=DDB(2400, 3000, 10, 2)"
+      "f": "=DDB(2400, 3000, 10, 2)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a salvage above the cost, OpenFormula's constraint; Google writes nothing off"
+      }
     },
     {
       "id": "DDB.10",
-      "f": "=DDB(2400, 300, 10, 2.5)"
+      "f": "=DDB(2400, 300, 10, 2.5)",
+      "differs": {
+        "libreoffice": "LibreOffice takes a fraction of a period as a power, OpenFormula's optional algorithm; Google takes the period it falls in"
+      }
     },
     {
       "id": "DDB.11",
-      "f": "=DDB(2400, 300, 2, 2, 3)"
+      "f": "=DDB(2400, 300, 2, 2, 3)",
+      "differs": {
+        "libreoffice": "LibreOffice writes the value off in the first period, as both standards; Google keeps the rate above 1"
+      },
+      "meaning": {
+        "ooxml": [[0]],
+        "openformula": "libreoffice",
+        "cite": "Microsoft's help, DDB function (support.microsoft.com): Min((cost - total depreciation from prior periods) * (factor/life), (cost - salvage - total depreciation from prior periods))"
+      }
     },
     {
       "id": "DISC.1",
@@ -829,16 +915,18 @@
       "f": "=DISC(DATE(2007,1,25), DATE(2007,6,15), 0, 100)"
     },
     {
-      "id": "DOLLARDE.1",
-      "f": "=DOLLARDE(100.01, 8)",
-      "expect": [[100.125]],
-      "cite": "https://support.google.com/docs/answer/3093167 (\"DOLLARDE(100.01,8) results in 100.125\")",
+      "id": "DISC.7",
+      "f": "=DISC(DATE(2007,11,11), DATE(2008,2,15), 97, 100, 1)",
       "differs": {
-        "libreoffice": "LibreOffice reads the fraction in as many decimal places as the unit has digits: 100.01 in eighths is 100 1/80 (100.0125)"
+        "libreoffice": "LibreOffice counts Actual/Actual over one year's length, as OpenFormula (Part 4 §4.11.7.7); Google splits the span by calendar year"
       },
       "meaning": {
         "openformula": "libreoffice"
       }
+    },
+    {
+      "id": "DOLLARDE.1",
+      "f": "=DOLLARDE(100.01, 8)"
     },
     {
       "id": "DOLLARDE.2",
@@ -852,10 +940,7 @@
     },
     {
       "id": "DOLLARDE.4",
-      "f": "=DOLLARDE(1.1, 10)",
-      "differs": {
-        "libreoffice": "LibreOffice reads tenths in one decimal place (1.1 is 1 1/10); LiveDoc in two, as Google reads eighths (1.10 is 1 10/10, 2)"
-      }
+      "f": "=DOLLARDE(1.1, 10)"
     },
     {
       "id": "DOLLARDE.5",
@@ -879,15 +964,7 @@
     },
     {
       "id": "DOLLARFR.1",
-      "f": "=DOLLARFR(100.125, 8)",
-      "expect": [[100.01]],
-      "cite": "https://support.google.com/docs/answer/3093217 (\"DOLLARFR(100.125,8) results in 100.01\")",
-      "differs": {
-        "libreoffice": "LibreOffice writes eighths in one decimal place: 100 1/8 is 100.1"
-      },
-      "meaning": {
-        "openformula": "libreoffice"
-      }
+      "f": "=DOLLARFR(100.125, 8)"
     },
     {
       "id": "DOLLARFR.2",
@@ -915,7 +992,10 @@
     },
     {
       "id": "DURATION.1",
-      "f": "=DURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 2, 1)"
+      "f": "=DURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 2, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts the coupons' times by another Actual/Actual reading"
+      }
     },
     {
       "id": "DURATION.2",
@@ -955,7 +1035,13 @@
     },
     {
       "id": "EFFECT.4",
-      "f": "=EFFECT(0, 4)"
+      "f": "=EFFECT(0, 4)",
+      "differs": {
+        "libreoffice": "LibreOffice takes a nominal rate of 0, as OpenFormula (Part 4 §6.12.19); Google and Excel refuse it"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "EFFECT.5",
@@ -987,11 +1073,23 @@
     },
     {
       "id": "FVSCHEDULE.3",
-      "f": "=FVSCHEDULE(1000, Data!C1:C4)"
+      "f": "=FVSCHEDULE(1000, Data!C1:C4)",
+      "differs": {
+        "libreoffice": "LibreOffice skips text among the rates, as OpenFormula (Part 4 §6.12.21); Google and Excel refuse it"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "FVSCHEDULE.4",
-      "f": "=FVSCHEDULE(1000, Data!D1:D3)"
+      "f": "=FVSCHEDULE(1000, Data!D1:D3)",
+      "differs": {
+        "libreoffice": "LibreOffice skips text among the rates, as OpenFormula (Part 4 §6.12.21); Google and Excel refuse it"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "FVSCHEDULE.5",
@@ -1003,7 +1101,10 @@
     },
     {
       "id": "INTRATE.2",
-      "f": "=INTRATE(DATE(2008,2,15), DATE(2008,5,15), 1000000, 1014420)"
+      "f": "=INTRATE(DATE(2008,2,15), DATE(2008,5,15), 1000000, 1014420)",
+      "differs": {
+        "libreoffice": "LibreOffice counts a 30/360 span from February a day or two short; Google counts it as DAYS360 and procedure A do (OpenFormula Part 4 §4.11.7.3)"
+      }
     },
     {
       "id": "INTRATE.3",
@@ -1016,6 +1117,17 @@
     {
       "id": "INTRATE.5",
       "f": "=INTRATE(DATE(2008,2,15), DATE(2008,5,15), 0, 1014420)"
+    },
+    {
+      "id": "INTRATE.6",
+      "f": "=INTRATE(DATE(2007,11,11), DATE(2008,4,13), 1000000, 1014420, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts the year as 365 days though a 29 February falls between the dates; Google splits the span by calendar year"
+      },
+      "meaning": {
+        "openformula": [[0.0342709090909093]],
+        "cite": "OpenFormula Part 4 §6.12.22 (YEARFRAC) and §4.11.7.7, procedure E: a 29 February between the dates makes the year 366 days"
+      }
     },
     {
       "id": "IPMT.1",
@@ -1079,11 +1191,17 @@
     },
     {
       "id": "ISPMT.4",
-      "f": "=ISPMT(0.1, 1, 0, 8000)"
+      "f": "=ISPMT(0.1, 1, 0, 8000)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #NUM! for no periods"
+      }
     },
     {
       "id": "MDURATION.1",
-      "f": "=MDURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 2, 1)"
+      "f": "=MDURATION(DATE(2008,1,1), DATE(2016,1,1), 0.08, 0.09, 2, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts the coupons' times by another Actual/Actual reading"
+      }
     },
     {
       "id": "MDURATION.2",
@@ -1247,7 +1365,10 @@
     },
     {
       "id": "PRICEDISC.2",
-      "f": "=PRICEDISC(DATE(2008,2,16), DATE(2008,3,1), 0.0525, 100)"
+      "f": "=PRICEDISC(DATE(2008,2,16), DATE(2008,3,1), 0.0525, 100)",
+      "differs": {
+        "libreoffice": "LibreOffice counts a 30/360 span from February a day or two short; Google counts it as DAYS360 and procedure A do (OpenFormula Part 4 §4.11.7.3)"
+      }
     },
     {
       "id": "PRICEDISC.3",
@@ -1262,12 +1383,28 @@
       "f": "=PRICEDISC(DATE(2008,2,16), DATE(2008,3,1), 0, 100)"
     },
     {
+      "id": "PRICEDISC.6",
+      "f": "=PRICEDISC(DATE(2007,11,11), DATE(2008,2,15), 0.0525, 100, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts Actual/Actual over one year's length, as OpenFormula (Part 4 §4.11.7.7); Google splits the span by calendar year"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
+    },
+    {
       "id": "PRICEMAT.1",
       "f": "=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), 0.061, 0.061, 0)"
     },
     {
       "id": "PRICEMAT.2",
-      "f": "=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), 0.061, 0.061, 1)"
+      "f": "=PRICEMAT(DATE(2008,2,15), DATE(2008,4,13), DATE(2007,11,11), 0.061, 0.061, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts Actual/Actual over one year's length, as OpenFormula (Part 4 §4.11.7.7); Google splits the span by calendar year"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "PRICEMAT.3",
@@ -1299,7 +1436,9 @@
     },
     {
       "id": "RATE.2",
-      "f": "=RATE(4*12, -200, 8000, 0, 1)"
+      "f": "=RATE(4*12, -200, 8000, 0, 1)",
+      "tol": 1e-8,
+      "note": "Google's RATE settles to about 1e-9 (measured: 0.008052981909877608)"
     },
     {
       "id": "RATE.3",
@@ -1311,7 +1450,10 @@
     },
     {
       "id": "RECEIVED.2",
-      "f": "=RECEIVED(DATE(2008,2,15), DATE(2008,5,15), 1000000, 0.0575)"
+      "f": "=RECEIVED(DATE(2008,2,15), DATE(2008,5,15), 1000000, 0.0575)",
+      "differs": {
+        "libreoffice": "LibreOffice counts a 30/360 span from February a day or two short; Google counts it as DAYS360 and procedure A do (OpenFormula Part 4 §4.11.7.3)"
+      }
     },
     {
       "id": "RECEIVED.3",
@@ -1324,6 +1466,16 @@
     {
       "id": "RECEIVED.5",
       "f": "=RECEIVED(DATE(2008,2,15), DATE(2008,5,15), 1000000, 0)"
+    },
+    {
+      "id": "RECEIVED.6",
+      "f": "=RECEIVED(DATE(2007,11,11), DATE(2008,2,15), 1000000, 0.0575, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts Actual/Actual over one year's length, as OpenFormula (Part 4 §4.11.7.7); Google splits the span by calendar year"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "RRI.1",
@@ -1485,7 +1637,13 @@
     },
     {
       "id": "VDB.9",
-      "f": "=VDB(2400, 300, 10, 1.5, 4.25)"
+      "f": "=VDB(2400, 300, 10, 1.5, 4.25)",
+      "differs": {
+        "libreoffice": "LibreOffice takes the fraction off the whole periods around it, as OpenFormula (Part 4 §6.12.50); Google steps whole periods from the fraction"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "VDB.10",
@@ -1557,7 +1715,10 @@
     },
     {
       "id": "XNPV.4",
-      "f": "=XNPV(0.09, Data!A1:A1, Data!B1:B1)"
+      "f": "=XNPV(0.09, Data!A1:A1, Data!B1:B1)",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a single flow (Err:502); Google and OpenFormula give its value"
+      }
     },
     {
       "id": "XNPV.5",
@@ -1619,6 +1780,16 @@
       "f": "=YIELDDISC(DATE(2008,3,31), DATE(2009,6,1), 91, 100, 2)"
     },
     {
+      "id": "YIELDDISC.8",
+      "f": "=YIELDDISC(DATE(2007,11,11), DATE(2008,2,15), 97, 100, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts Actual/Actual over one year's length, as OpenFormula (Part 4 §4.11.7.7); Google splits the span by calendar year"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
+    },
+    {
       "id": "YIELDMAT.1",
       "f": "=YIELDMAT(DATE(2010,1,2), DATE(2010,12,31), DATE(2008,1,1), 0.02, 90, 2)"
     },
@@ -1628,7 +1799,13 @@
     },
     {
       "id": "YIELDMAT.3",
-      "f": "=YIELDMAT(DATE(2008,3,15), DATE(2008,11,3), DATE(2007,11,8), 0.0625, 100.0123, 1)"
+      "f": "=YIELDMAT(DATE(2008,3,15), DATE(2008,11,3), DATE(2007,11,8), 0.0625, 100.0123, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice counts Actual/Actual over one year's length, as OpenFormula (Part 4 §4.11.7.7); Google splits the span by calendar year"
+      },
+      "meaning": {
+        "openformula": "libreoffice"
+      }
     },
     {
       "id": "YIELDMAT.4",

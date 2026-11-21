@@ -57,10 +57,7 @@
           }
         ]
       ],
-      "cite": "https://support.google.com/docs/answer/3093590 (\"Equivalent to the `+` operator\"); an error flows through",
-      "differs": {
-        "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ADD is #NAME? there"
-      }
+      "cite": "https://support.google.com/docs/answer/3093590 (\"Equivalent to the `+` operator\"); an error flows through"
     },
     {
       "id": "MINUS.1",
