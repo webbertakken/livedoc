@@ -316,13 +316,16 @@ LibreOffice's.
   unless a section **starts at** a number: its first page then has that number and the pages after it count on.
 - **Pageless**, on a phone and with print layout off, where no pages are laid out, a page number in the body shows 1
   and a page count 1 (default); headers and footers are not drawn there.
-- **Insert > Page numbers** opens a submenu, Google's: four presets drawn as small pages, **Page count** and **More
-  options**.
+- **Insert > Page numbers** opens a submenu, Google's: four presets, **Page count** and **More options**; the presets
+  are rows of the menu where Google draws tiles (default: the shell's menus hold rows).
   - The presets are named **Header, every page**, **Header, not the first page**, **Footer, every page** and **Footer,
     not the first page** (default names, Google's tiles): each puts a page number, aligned right, in the default
-    header (footer) every section shows, for the whole document (Google's).
+    header (footer) every section shows, and in a section's even page one where it has one, for the whole document
+    (Google's; the even page one, default).
   - A header already holding a page number keeps it; an empty one takes it in its paragraph; one with writing takes
-    it in a new paragraph at its end, aligned right (default).
+    it in a new paragraph at its end, aligned right; a section showing none gets one of its own (default).
+  - A header changed so is written as a new copy the section names instead, so the change is one step of the body's
+    undo (default).
   - **Not the first page** switches Different first page on in the first section and takes page numbers out of its
     first page header; **every page** puts one in that header too when the section has one (default).
   - **Page count** puts a page count at the caret, in the body or in the header or footer edited.
@@ -332,6 +335,10 @@ LibreOffice's.
   **This section** or **Whole document** (with more than one section); **Cancel** and **Apply**. It opens at the
   section of the edited header, else of the body's caret, with Header, Show on first page and that section's
   numbering (default); Apply puts page numbers in that position as a preset does, for the scope chosen.
+  - Show on first page unchecked is Not the first page for the section (the first, for the whole document), as a
+    preset; checked, every page (default).
+  - Start at sets the section's start; for the whole document the first section's, the others continuing; Continue
+    takes the start away from every section in scope (default).
 - Every change is one undo step. Share roles as page setup's ([Share roles](#share-roles)).
 - In the file:
   - ODF: `text:page-number` (`text:select-page="current"`) and `text:page-count`, holding the number last drawn; a
