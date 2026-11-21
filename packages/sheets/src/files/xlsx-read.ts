@@ -16,7 +16,7 @@ import {
   type OoxmlPackage,
   type XmlElement,
 } from '@livedoc/office-packages';
-import { DOCUMENT_CELLS_MAX, DOCUMENT_SHEETS_MAX, SHEET_COLS_MAX, SHEET_ROWS_MAX } from '../limits';
+import { SheetLimits } from '../sheet-limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
 import { fromExcelFormula } from './excel-formula';
 import { shiftFormulaText } from './formula-text-shift';
@@ -31,6 +31,14 @@ import {
   readCellAddress,
   SPREADSHEETML_NS,
 } from './xlsx-parts';
+
+// A file is read up to a workbook's limits (files-and-print.md "A file sent in parts"): past them it is cut, and said.
+const {
+  rows: ROWS_MAX,
+  cols: COLS_MAX,
+  gridCells: CELLS_MAX,
+  sheets: SHEETS_MAX,
+} = SheetLimits.spreadsheet;
 
 const STRICT_NS = 'http://purl.oclc.org/ooxml/spreadsheetml/main';
 const STRICT_RELATIONSHIPS_NS = 'http://purl.oclc.org/ooxml/officeDocument/relationships';
@@ -175,11 +183,7 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
       const at = address === undefined ? { r, c: nextCol } : readCellAddress(address);
       if (!at || !Number.isInteger(at.r) || at.r < 0) continue;
       nextCol = at.c + 1;
-      if (
-        at.r >= SHEET_ROWS_MAX ||
-        at.c >= SHEET_COLS_MAX ||
-        book.budget.cells >= DOCUMENT_CELLS_MAX
-      ) {
+      if (at.r >= ROWS_MAX || at.c >= COLS_MAX || book.budget.cells >= CELLS_MAX) {
         cut = true;
         continue;
       }
@@ -196,8 +200,7 @@ function readSheet(name: string, root: XmlElement, book: Book): FileSheet {
     }
   }
   wrappedBlocks(cells, cache);
-  if (cut)
-    book.losses.push({ k: 'sheet_cut', sheet: name, rows: SHEET_ROWS_MAX, cols: SHEET_COLS_MAX });
+  if (cut) book.losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), 0);
   return { name, rows, cols, cells };
@@ -245,8 +248,8 @@ export async function readXlsx(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead
     if (xml === undefined) return refuse('package_damaged', { entry: part ?? pkg.mainPart });
     const worksheet = parseXml(xml, part);
     if (!worksheet.ok) return worksheet;
-    if (sheets.length === DOCUMENT_SHEETS_MAX) {
-      book.losses.push({ k: 'sheets_cut', kept: DOCUMENT_SHEETS_MAX, had: listed.length });
+    if (sheets.length === SHEETS_MAX) {
+      book.losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: listed.length });
       break;
     }
     sheets.push(readSheet(name, worksheet.root, book));

@@ -390,9 +390,11 @@ describe('readXlsx from other makers', () => {
 
   it('cuts cells past the grid and sheets past the workbook', async () => {
     const read = await cellsOf(
-      xlsx(['<row r="1"><c r="A1"><v>1</v></c><c r="ZZ1"><v>2</v></c></row>']),
+      xlsx([
+        '<row r="1"><c r="A1"><v>1</v></c></row><row r="1000001"><c r="A1000001"><v>2</v></c></row>',
+      ]),
     );
-    expect(read.losses).toEqual([{ k: 'sheet_cut', sheet: 'S1', rows: 10_000, cols: 200 }]);
+    expect(read.losses).toEqual([{ k: 'sheet_cut', sheet: 'S1', rows: 1_000_000, cols: 18_278 }]);
     expect(read.file.sheets[0]!.cells).toHaveLength(1);
     const many = await cellsOf(xlsx(Array.from({ length: 201 }, () => '')));
     expect(many.file.sheets).toHaveLength(200);

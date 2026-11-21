@@ -290,3 +290,25 @@ describe('OfficeTitleRow, the save status', () => {
     expect(document.querySelector('[data-save-status]')).toBeNull();
   });
 });
+
+// docs/specs/029-sheets/files-and-print.md "A file sent in parts": what is under way is said as a status.
+describe('OfficeTitleRow, the notice', () => {
+  it('says a notice as a status, and nothing without one', () => {
+    const root = { current: null };
+    const props = {
+      name: 'Budget',
+      format: '.XLSX',
+      formatTitle: 'Excel format',
+      problem: null,
+      catalogue: CATALOGUE,
+      level: 'view' as const,
+      actions: {},
+      shortcuts: TEXT_DOCUMENT_SHORTCUTS,
+      keyScope: root,
+    };
+    const { rerender } = render(<OfficeTitleRow {...props} notice="Opening “Q3”… 40%" />);
+    expect(screen.getByRole('status').textContent).toBe('Opening “Q3”… 40%');
+    rerender(<OfficeTitleRow {...props} />);
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+});

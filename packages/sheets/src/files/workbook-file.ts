@@ -9,7 +9,7 @@ import { makeSheetId, type Rand } from '../ids';
 import { compileFormula, renderFormula, type SheetHandle, type SheetsCtx } from '../formula/stored';
 import { isArray, scalarOf, type ErrorCode, type Scalar } from '../formula/values';
 import type { Workbook } from '../engine/workbook';
-import { SHEET_COLS_MAX, SHEET_ROWS_MAX } from '../limits';
+import { SheetLimits } from '../sheet-limits';
 import { SheetName } from '../workbook/sheet-name';
 import { WORKBOOK_COLS_NEW, WORKBOOK_ROWS_NEW } from '../workbook-record';
 
@@ -173,24 +173,44 @@ function literalInput(value: FileValue): CellInput | null {
   }
 }
 
-/**
- * The sheets a file makes (a spreadsheet opened from it): each its grid (at least a new sheet's, at most the
- * grid's ceiling) and its cells, formulas compiled against the file's own sheets. A cell past the ceiling, a sheet
- * name taken or too long, and a formula LiveDoc cannot read are each named in `losses`; the last keeps its value.
- */
-export function sheetsFromFile(file: WorkbookFile, rand: Rand = Math.random): SheetsFromFile {
-  const losses: FileLoss[] = [];
+type Made = { file: FileSheet; id: string; title: string; layout: SheetLayout };
+
+// Each sheet's grid: at least a new sheet's, within a sheet's limits and the room every earlier sheet left in the
+// workbook (its rows and grid cells, files-and-print.md "A file sent in parts"). A sheet with no row left, and every
+// sheet after it, is cut.
+function madeSheets(file: WorkbookFile, rand: Rand, losses: FileLoss[]): Made[] {
+  const limits = SheetLimits.spreadsheet;
   const taken: string[] = [];
-  const made = file.sheets.map((sheet) => {
+  const made: Made[] = [];
+  let used = { rows: 0, gridCells: 0 };
+  for (const sheet of file.sheets) {
+    const cols = Math.min(Math.max(sheet.cols, WORKBOOK_COLS_NEW), limits.cols);
+    const room = SheetLimits.room(limits, { rows: 0, cols }, used).rows;
+    if (room === 0) {
+      losses.push({ k: 'sheets_cut', kept: made.length, had: file.sheets.length });
+      break;
+    }
+    const rows = Math.min(Math.max(sheet.rows, WORKBOOK_ROWS_NEW), room);
+    used = { rows: used.rows + rows, gridCells: used.gridCells + rows * cols };
     const title = SheetName.fit(sheet.name, taken);
     taken.push(title);
     if (title !== sheet.name) losses.push({ k: 'sheet_renamed', from: sheet.name, to: title });
-    const rows = Math.min(Math.max(sheet.rows, WORKBOOK_ROWS_NEW), SHEET_ROWS_MAX);
-    const cols = Math.min(Math.max(sheet.cols, WORKBOOK_COLS_NEW), SHEET_COLS_MAX);
     if (sheet.rows > rows || sheet.cols > cols)
       losses.push({ k: 'sheet_cut', sheet: title, rows, cols });
-    return { file: sheet, id: makeSheetId(rand), title, layout: emptyLayout(rand, rows, cols) };
-  });
+    made.push({ file: sheet, id: makeSheetId(rand), title, layout: emptyLayout(rand, rows, cols) });
+  }
+  return made;
+}
+
+/**
+ * The sheets a file makes (a spreadsheet opened from it): each its grid (at least a new sheet's, at most what the
+ * workbook's limits leave) and its cells, formulas compiled against the file's own sheets. A cell or a sheet past the
+ * limits, a sheet name taken or too long, and a formula LiveDoc cannot read are each named in `losses`; the last
+ * keeps its value.
+ */
+export function sheetsFromFile(file: WorkbookFile, rand: Rand = Math.random): SheetsFromFile {
+  const losses: FileLoss[] = [];
+  const made = madeSheets(file, rand, losses);
   const handles: SheetHandle[] = made.map((m) => ({
     id: m.id,
     title: m.title,
