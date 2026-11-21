@@ -1,9 +1,16 @@
 // Text functions (docs/specs/029-sheets/formulas.md "Functions": Text). Results are bounded by TEXT_RESULT_MAX;
 // REGEX functions by a work estimate, since a regular expression cannot be interrupted.
+import type { EvalValue, Frame } from '../../engine/frame';
 import { TEXT_RESULT_MAX } from '../../limits';
 import { textFormat } from '../../number-format';
 import { parseLocaleNumber } from '../../input';
-import { localeDayFirst, parseDateText, parseTimeText } from '../../dates';
+import {
+  dateFromSerial,
+  localeDayFirst,
+  parseDateText,
+  parseDayMonthText,
+  parseTimeText,
+} from '../../dates';
 import {
   MANY,
   arrayArg,
@@ -16,7 +23,7 @@ import {
   textArg,
   type FnDef,
 } from '../fn';
-import { err, isError, toNumber, toText, type Scalar } from '../values';
+import { err, isError, toNumber, toText, type Scalar, type Value } from '../values';
 import { boundedText } from '../operators';
 import { textFn, texts } from './text-args';
 import { BYTE_TEXT_FUNCTIONS } from './text-bytes';
@@ -25,10 +32,12 @@ import { REGEX_TEXT_FUNCTIONS } from './text-regex';
 import { regex, wildcardSource } from './text-patterns';
 
 /** Every value of every argument, ranges read whole, joined in order: CONCATENATE, and CONCAT as the standards have it. */
-export const JOIN_VALUES: FnDef = fn(1, MANY, (args, f) => {
+export function joinValues(args: EvalValue[], f: Frame): Value {
   const ts = texts(flatScalars(args, f), f.locale);
   return Array.isArray(ts) ? boundedText(ts.join('')) : ts;
-});
+}
+
+export const JOIN_VALUES: FnDef = fn(1, MANY, joinValues);
 
 export const TEXT_FUNCTIONS: Record<string, FnDef> = {
   CONCATENATE: JOIN_VALUES,
@@ -141,7 +150,12 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     const time = parseTimeText(t);
     if (time !== null) return time;
     const date = parseDateText(t, localeDayFirst(f.locale));
-    return date ? date.serial : err('#VALUE!', `"${t}" is not a number`);
+    if (date) return date.serial;
+    const thisYear = dateFromSerial(Math.floor(f.now())).y;
+    return (
+      parseDayMonthText(t, localeDayFirst(f.locale), thisYear) ??
+      err('#VALUE!', `"${t}" is not a number`)
+    );
   }),
   CHAR: textFn(1, 1, 0, (_t, [n]) => {
     const code = Math.trunc(n!);

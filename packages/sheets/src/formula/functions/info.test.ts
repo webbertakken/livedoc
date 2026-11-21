@@ -115,7 +115,8 @@ describe('CELL', () => {
   it('refuses what it cannot tell', () => {
     expect(at('=CELL(1, A1)')).toMatchObject({ e: '#VALUE!' });
     expect(at('=CELL("coord", A1)')).toMatchObject({ e: '#VALUE!' });
-    expect(at('=CELL("row", 5)')).toMatchObject({ e: '#REF!' });
+    expect(at('=CELL("row", 5)')).toMatchObject({ e: '#N/A' });
+    expect(at('=CELL("row", Gone!A1)')).toMatchObject({ e: '#REF!' });
   });
 
   it('hears when its cell’s format changes', () => {

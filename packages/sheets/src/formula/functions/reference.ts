@@ -27,7 +27,7 @@ export const REFERENCE_FUNCTIONS: Record<string, FnDef> = {
     if (isError(a1)) return a1;
     if (isError(sheet)) return sheet;
     const abs = MODES[mode];
-    if (!abs) return err('#VALUE!', 'The mode is 1, 2, 3 or 4');
+    if (!abs) return err('#NUM!', 'The mode is 1, 2, 3 or 4');
     if (row < 1 || col < 1) return err('#VALUE!', 'Rows and columns are counted from 1');
     const at = a1
       ? formatA1(row - 1, col - 1, abs)
@@ -45,7 +45,7 @@ export const REFERENCE_FUNCTIONS: Record<string, FnDef> = {
     const name = scalarArg(x, f);
     if (isError(name)) return name;
     const handle = typeof name === 'string' ? f.ctx.byTitle(name) : undefined;
-    return handle ? f.sheetNumber(handle.id) : err('#N/A', `There is no sheet "${String(name)}"`);
+    return handle ? f.sheetNumber(handle.id) : err('#REF!', `There is no sheet "${String(name)}"`);
   }),
   FORMULATEXT: fn(1, 1, ([x], f) => {
     const r = refArg(x);

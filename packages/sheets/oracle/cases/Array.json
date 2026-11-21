@@ -45,7 +45,11 @@
     {
       "id": "CHOOSECOLS.7",
       "f": "=CHOOSECOLS(Data!A1:D3, \"4\")",
-      "note": "Google refuses a column number written as text, #VALUE!."
+      "rows": 3,
+      "note": "Google refuses a column number written as text, #VALUE!.",
+      "differs": {
+        "libreoffice": "LibreOffice writes its error in every cell of the block; Google in the first"
+      }
     },
     {
       "id": "CHOOSECOLS.8",

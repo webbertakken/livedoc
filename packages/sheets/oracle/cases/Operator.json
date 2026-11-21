@@ -166,12 +166,20 @@
       "f": "=CONCAT(\"a\", \"b\", \"c\")",
       "differs": {
         "google": "Google's CONCAT takes two values (#N/A for three); LiveDoc keeps the standards' wider CONCAT (formulas.md D38)"
-      }
+      },
+      "authority": "openformula"
     },
     {
       "id": "CONCAT.5",
       "f": "=CONCAT(Data!A1:B1, \"x\")",
-      "note": "a range read whole, as OpenFormula and Excel read it (formulas.md D38); Google's answer awaited"
+      "differs": {
+        "libreoffice": "LibreOffice reads the range whole, as both standards do (34x); Google's CONCAT takes one value of it, as & does (4x)"
+      },
+      "meaning": {
+        "ooxml": [["34x"]],
+        "openformula": "libreoffice",
+        "cite": "https://support.microsoft.com/en-us/office/concat-function-9b1a9a3f-94ff-41af-9736-694cbd6b4ca2: CONCAT(text1, [text2], ...), a text item may be a range of cells"
+      }
     },
     {
       "id": "EQ.1",

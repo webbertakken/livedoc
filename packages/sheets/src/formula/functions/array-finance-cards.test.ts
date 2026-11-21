@@ -57,10 +57,10 @@ describe('arrays', () => {
   it.each([
     ['=FILTER(A1:A4, B1:B4>9)', '#N/A'],
     ['=FILTER(A1:B1, {FALSE,FALSE})', '#N/A'],
-    ['=FILTER(A1:A4, B1:B2>1)', '#VALUE!'],
-    ['=FILTER(A1:A4, F1:F4)', '#DIV/0!'],
+    ['=FILTER(A1:A4, B1:B2>1)', '#N/A'],
+    ['=FILTER(A1:A4, F1:F4)', '#N/A'],
     ['=FILTER(A1:A4, A1:A4)', '#VALUE!'],
-    ['=SORT(A1:B4, 9)', '#VALUE!'],
+    ['=SORT(A1:B4, 9)', '#REF!'],
     ['=SORT(A1:B4, "x")', '#VALUE!'],
     ['=SORT(A1:B4, 1, "x")', '#VALUE!'],
     ['=SORTBY(A1:A4, B1:B2)', '#VALUE!'],

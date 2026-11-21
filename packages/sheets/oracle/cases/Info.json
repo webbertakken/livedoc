@@ -360,7 +360,11 @@
     },
     {
       "id": "CELL.11",
-      "f": "=CELL(\"parentheses\", Data!A1)"
+      "f": "=CELL(\"parentheses\", Data!A1)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google's CELL has no \"parentheses\" (#VALUE!); OpenFormula's does (D38: the standard holds)"
+      }
     },
     {
       "id": "CELL.12",
@@ -368,7 +372,8 @@
       "expect": [["G"]],
       "cite": "https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part4-formula.html (6.13.3 CELL, Table 17) (\"G = All other formats\"); https://support.microsoft.com/en-us/office/cell-function-51bd39a5-f338-4dbe-a33f-955d67c2b2cf (General is \"G\")",
       "differs": {
-        "libreoffice": "LibreOffice names its own General format F0, as a number with no decimals; Google has no \"format\" (D38: the standard's), and General is OpenFormula's G"
+        "libreoffice": "LibreOffice names its own General format F0, as a number with no decimals; Google has no \"format\" (D38: the standard's), and General is OpenFormula's G",
+        "google": "Google's CELL has no \"format\" (#VALUE!); OpenFormula's does (D38: the standard holds)"
       }
     },
     {
@@ -377,10 +382,8 @@
     },
     {
       "id": "CELL.14",
-      "f": "=CELL(\"width\", Data!A1)",
-      "differs": {
-        "libreoffice": "LibreOffice measures the column in its own default font and width; Google counts its zero characters at its default font size"
-      }
+      "f": "=CELL(\"width\", Data!A1)>=10",
+      "note": "Each source's default column differs (Google's 100 pixels, LiveDoc's 120): the rule is held by unit tests from Google's measured widths (D40)."
     },
     {
       "id": "CELL.15",
@@ -388,7 +391,8 @@
       "expect": [[""]],
       "cite": "https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part4-formula.html (6.13.3 CELL, Table 17) (FILENAME: \"If the file is newly created and has not yet been saved, the file name is empty text\")",
       "differs": {
-        "libreoffice": "LibreOffice gives the path of the file it opened; a LiveDoc document is no file (default, formulas.md \"Information\")"
+        "libreoffice": "LibreOffice gives the path of the file it opened; a LiveDoc document is no file (default, formulas.md \"Information\")",
+        "google": "Google's CELL has no \"filename\" (#VALUE!); OpenFormula's does (D38: the standard holds)"
       }
     },
     {
@@ -397,7 +401,8 @@
       "expect": [[0]],
       "cite": "https://docs.oasis-open.org/office/OpenDocument/v1.4/OpenDocument-v1.4-part4-formula.html (6.13.3 CELL, Table 17) (PROTECT: \"1 = cell is protected 0 = cell is unprotected\"); https://support.google.com/docs/answer/1218656 (a cell is protected by a protected range or sheet)",
       "differs": {
-        "libreoffice": "LibreOffice marks every cell protected by default (in force once its sheet is protected); in LiveDoc, as in Google Sheets, only a protected range or sheet protects a cell"
+        "libreoffice": "LibreOffice marks every cell protected by default (in force once its sheet is protected); in LiveDoc, as in Google Sheets, only a protected range or sheet protects a cell",
+        "google": "Google's CELL has no \"protect\" (#VALUE!); OpenFormula's does (D38: the standard holds)"
       }
     },
     {
@@ -406,7 +411,11 @@
     },
     {
       "id": "CELL.18",
-      "f": "=CELL(\"col\")"
+      "f": "=CELL(\"col\")",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google's CELL needs a reference (#N/A); OpenFormula's reads the formula's own cell when it is left out (D38: the standard holds)"
+      }
     },
     {
       "id": "CELL.19",
@@ -414,7 +423,10 @@
     },
     {
       "id": "CELL.20",
-      "f": "=CELL(\"type\", \"A1\")"
+      "f": "=CELL(\"type\", \"A1\")",
+      "differs": {
+        "libreoffice": "LibreOffice gives #REF! for text where a reference goes; Google #N/A"
+      }
     },
     {
       "id": "SHEETS.1",
@@ -422,11 +434,19 @@
     },
     {
       "id": "SHEETS.2",
-      "f": "=SHEETS(Data!A1:B2)"
+      "f": "=SHEETS(Data!A1:B2)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google's SHEETS takes no argument (#N/A); OpenFormula's counts the sheets of a reference (D38: the standard holds)"
+      }
     },
     {
       "id": "SHEETS.3",
-      "f": "=SHEETS(1)"
+      "f": "=SHEETS(1)",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google's SHEETS takes no argument (#N/A); OpenFormula's counts the sheets of a reference (D38: the standard holds)"
+      }
     }
   ]
 }

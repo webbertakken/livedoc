@@ -7,10 +7,10 @@ import { formatShape } from '../../format-shape';
 import { quoteSheet } from '../stored';
 import { isAreas } from '../../engine/frame';
 import { fn, refArg, scalarArg, type FnDef } from '../fn';
-import { err, scalarOf, type Value } from '../values';
+import { err, isError, scalarOf, type Value } from '../values';
 
 // A column's width in characters (ECMA-376 Part 1, 18.3.1.13 "col"): the pixels past a 5-pixel padding over the width
-// of the widest digit, 7 pixels in the default font, whole characters only.
+// of the widest digit, 7 pixels in the default font, to the nearest whole character, as Google gives it (measured).
 export const CELL_WIDTH_PADDING_PX = 5;
 export const CELL_DIGIT_WIDTH_PX = 7;
 
@@ -63,7 +63,7 @@ function cellInfo(type: string, r: RangeRef, own: boolean, f: Frame): Value {
     }
     case 'width': {
       const px = f.colWidth(r.sheetId, r.c1);
-      return Math.max(0, Math.trunc((px - CELL_WIDTH_PADDING_PX) / CELL_DIGIT_WIDTH_PX));
+      return Math.max(0, Math.round((px - CELL_WIDTH_PADDING_PX) / CELL_DIGIT_WIDTH_PX));
     }
     // A LiveDoc document is no file: OpenFormula's answer for a file never saved (default).
     case 'filename':
@@ -82,7 +82,8 @@ export const CELL: FnDef = fn(1, 2, ([type, ref], f) => {
   let r: RangeRef | null;
   if (ref === undefined) r = { sheetId: f.sheetId, r1: f.row, c1: f.col, r2: f.row, c2: f.col };
   else r = refArg(ref) ?? (isAreas(ref) ? (ref.areas[0] ?? null) : null);
-  if (!r) return err('#REF!', 'CELL needs a cell reference');
+  if (!r)
+    return ref !== undefined && isError(ref) ? ref : err('#N/A', 'CELL needs a cell reference');
   const own = r.sheetId === f.sheetId && r.r1 === f.row && r.c1 === f.col;
   return cellInfo(t.toLowerCase(), r, own, f);
 });

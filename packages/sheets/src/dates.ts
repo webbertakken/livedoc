@@ -156,6 +156,19 @@ function withTime(serial: number, rest: string | undefined): ParsedDate | null {
 
 // A typed date, with an optional time after it, as a serial; null when it is not one. Numeric day and month
 // order follows `dayFirst` (the typist's locale), unless the first number is a four-digit year.
+const DAY_MONTH_RE = /^(\d{1,2})[/.-](\d{1,2})$/;
+
+/**
+ * A day and a month with no year (`1.5` in de-DE, `5/1` in en-US), as a date of `year`, as Google's VALUE reads it;
+ * null when it is none.
+ */
+export function parseDayMonthText(text: string, dayFirst: boolean, year: number): number | null {
+  const m = DAY_MONTH_RE.exec(text.trim());
+  if (!m) return null;
+  const [d, mo] = dayFirst ? [Number(m[1]), Number(m[2])] : [Number(m[2]), Number(m[1])];
+  return validDate(year, mo, d) ? serialFromDate(year, mo, d) : null;
+}
+
 export function parseDateText(text: string, dayFirst: boolean): ParsedDate | null {
   const t = text.trim();
   let m = ISO_RE.exec(t);

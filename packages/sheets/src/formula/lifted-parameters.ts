@@ -1,13 +1,17 @@
 // The single-value parameters a function works cell by cell over, in an array context, though it reads its other
 // arguments whole (formulas.md "Arrays and spills"): `=ARRAYFORMULA(VLOOKUP(A2:A5, D:E, 2, FALSE))` looks up four
-// keys. Functions of single values only lift through `lift` already; SUMIFS and COUNTIFS do not lift (D67).
+// keys. Functions of single values only lift through `lift` already; SUMIFS, AVERAGEIF and AVERAGEIFS do not lift
+// (D67, measured in Google Sheets).
 import { isAreas, isRef, type EvalValue, type Frame } from '../engine/frame';
 import { deref, lift } from './fn';
 import { isArray, scalarOf, type Value } from './values';
 
+// COUNTIFS' criteria: every second argument from the second, as many as a call takes.
+const COUNTIFS_CRITERIA = Array.from({ length: 127 }, (_, i) => 2 * i + 1);
+
 export const LIFTED_PARAMETERS: Readonly<Record<string, readonly number[]>> = {
-  AVERAGEIF: [1],
   COUNTIF: [1],
+  COUNTIFS: COUNTIFS_CRITERIA,
   HLOOKUP: [0],
   LARGE: [1],
   MATCH: [0],
@@ -32,7 +36,7 @@ export function liftedCall(
   f: Frame,
   call: (args: EvalValue[]) => EvalValue,
 ): Value | null {
-  const at = LIFTED_PARAMETERS[name];
+  const at = LIFTED_PARAMETERS[name]?.filter((i) => i < args.length);
   if (!f.arrays || !at || !at.some((i) => many(args[i]!))) return null;
   const values = at.map((i) => deref(args[i]!, f));
   return lift(values, (xs) => {

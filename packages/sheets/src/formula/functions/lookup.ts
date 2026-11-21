@@ -233,11 +233,11 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
     }
     const d = dims(results);
     if (line.vertical) {
-      if (d.rows !== line.list.length) return err('#VALUE!', 'The ranges must be the same length');
+      if (d.rows !== line.list.length) return err('#N/A', 'The ranges must be the same length');
       if (d.cols === 1) reportFound(f, args[2], i, 0);
       return d.cols === 1 ? scalarOf(results.rows[i]![0]!) : { rows: [results.rows[i]!] };
     }
-    if (d.cols !== line.list.length) return err('#VALUE!', 'The ranges must be the same length');
+    if (d.cols !== line.list.length) return err('#N/A', 'The ranges must be the same length');
     if (d.rows === 1) reportFound(f, args[2], 0, i);
     return d.rows === 1
       ? scalarOf(results.rows[0]![i]!)
@@ -260,8 +260,9 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
       const cols = ref.c2 - ref.c1 + 1;
       // A one-row range takes its single index as a column.
       const [ri, ci] = rows === 1 && args.length === 2 ? [1, r] : [r, c];
+      // Past a range is #NUM!, past an array #REF!, as Google gives them.
       if (ri < 0 || ci < 0 || ri > rows || ci > cols)
-        return err('#REF!', 'The index is outside the range');
+        return err('#NUM!', 'The index is outside the range');
       return {
         ref: {
           sheetId: ref.sheetId,
@@ -285,7 +286,7 @@ export const LOOKUP_FUNCTIONS: Record<string, FnDef> = {
   CHOOSE: lazyFn(2, MANY, (args, f) => {
     const i = intArg(args[0]!(), f);
     if (isError(i)) return i;
-    if (i < 1 || i >= args.length) return err('#VALUE!', `CHOOSE has no value ${i}`);
+    if (i < 1 || i >= args.length) return err('#NUM!', `CHOOSE has no value ${i}`);
     return args[i]!();
   }),
   ROW: fn(0, 1, (args, f) => {

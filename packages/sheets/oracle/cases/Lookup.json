@@ -179,7 +179,10 @@
     },
     {
       "id": "INDEX.4",
-      "f": "=INDEX(Data!A1:C5, 6, 1)"
+      "f": "=INDEX(Data!A1:C5, 6, 1)",
+      "differs": {
+        "libreoffice": "LibreOffice gives #REF! past the range; Google #NUM!"
+      }
     },
     {
       "id": "INDEX.5",
@@ -321,7 +324,7 @@
       "id": "ADDRESS.9",
       "f": "=ADDRESS(1, 1, 5)",
       "differs": {
-        "libreoffice": "LibreOffice reads mode 5 as 1; Google's help names only 1 to 4, and LiveDoc refuses others with #VALUE!"
+        "libreoffice": "LibreOffice reads mode 5 as 1; Google refuses it, #NUM!"
       }
     },
     {

@@ -1,6 +1,6 @@
 // Logic functions (docs/specs/029-sheets/formulas.md "Functions": Logic). IF, IFS, SWITCH, IFERROR and IFNA are
 // lazy: the branch not taken is never worked out.
-import type { EvalValue, Frame } from '../../engine/frame';
+import { isAreas, isRef, type EvalValue, type Frame } from '../../engine/frame';
 import {
   MANY,
   deref,
@@ -14,15 +14,20 @@ import {
 } from '../fn';
 import { compareScalars, err, isArray, isError, scalarOf, toBool, type Value } from '../values';
 
+// The truths of AND, OR and XOR's arguments: numbers and booleans; text TRUE or FALSE given as a value, but text in a
+// range or an array is left out, as Google reads them.
 function boolsOf(args: EvalValue[], f: Frame): boolean[] | Value {
   const out: boolean[] = [];
-  for (const x of flatScalars(args, f)) {
-    if (isError(x)) return x;
-    if (typeof x === 'boolean') out.push(x);
-    else if (typeof x === 'number') out.push(x !== 0);
-    else if (typeof x === 'string') {
-      const l = x.toLowerCase();
-      if (l === 'true' || l === 'false') out.push(l === 'true');
+  for (const arg of args) {
+    const asValue = !isRef(arg) && !isAreas(arg) && !isArray(arg);
+    for (const x of flatScalars([arg], f)) {
+      if (isError(x)) return x;
+      if (typeof x === 'boolean') out.push(x);
+      else if (typeof x === 'number') out.push(x !== 0);
+      else if (typeof x === 'string' && asValue) {
+        const l = x.toLowerCase();
+        if (l === 'true' || l === 'false') out.push(l === 'true');
+      }
     }
   }
   if (out.length === 0) return err('#VALUE!', 'There are no TRUE or FALSE values');
@@ -75,7 +80,12 @@ export const LOGIC_FUNCTIONS: Record<string, FnDef> = {
     for (; i + 1 < args.length; i += 2) {
       const c = scalarOf(deref(args[i]!(), f));
       if (isError(c)) return c;
-      if (typeof c === typeof subject && compareScalars(c, subject) === 0) return args[i + 1]!();
+      // An empty subject is 0 and "" alike, as Google matches it.
+      const same =
+        subject === null
+          ? c === 0 || c === '' || c === null
+          : typeof c === typeof subject && compareScalars(c, subject) === 0;
+      if (same) return args[i + 1]!();
     }
     return i < args.length ? args[i]!() : err('#N/A', 'No case matched');
   }),

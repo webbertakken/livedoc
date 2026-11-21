@@ -161,7 +161,8 @@ describe('running a query', () => {
     expect(run('select count(B), avg(C), min(A), max(A), sum(C)').rows).toEqual([
       [3, 675, 'Ben', 'Mike', 2700],
     ]);
-    expect(run('select max(C), sum(C), avg(C) where C > 5000').rows).toEqual([[null, null, null]]);
+    // Over no row, no row, as Google gives it.
+    expect(run('select max(C), sum(C), avg(C) where C > 5000').rows).toEqual([]);
   });
 
   it('orders with nulls first, by what select reads', () => {
@@ -302,8 +303,8 @@ describe('the rest of the language', () => {
     ]);
   });
 
-  it('reads a column as null in a group of no rows', () => {
-    expect(run('select count(A) where C > 5000 order by A').rows).toEqual([[0]]);
+  it('gives no row for aggregates over no row', () => {
+    expect(run('select count(A) where C > 5000 order by A').rows).toEqual([]);
   });
 
   it('sorts values of two types by type', () => {

@@ -131,7 +131,11 @@
     },
     {
       "id": "CONVERT.29",
-      "f": "=CONVERT(1, \"kn\", \"m/hr\")"
+      "f": "=CONVERT(1, \"kn\", \"m/hr\")",
+      "authority": "openformula",
+      "differs": {
+        "google": "Google lacks the unit \"m/hr\" (#N/A, it has \"m/h\"); OpenFormula Part 4 §6.16.18 lists it (D38: the standard holds)"
+      }
     },
     {
       "id": "CONVERT.30",
@@ -141,7 +145,7 @@
       "id": "CONVERT.31",
       "f": "=CONVERT(1, \"flb\", \"J\")",
       "differs": {
-        "libreoffice": "LibreOffice sizes the foot-poundal as 0.04214000 J; its definition (0.3048 m × 0.138254954376 N) is 0.0421401100938048 J"
+        "libreoffice": "LibreOffice sizes \"flb\" as the foot-poundal (0.0421 J); OpenFormula Part 4 §6.16.18 and Google as the foot-pound (1.3558 J)"
       }
     },
     {
@@ -159,7 +163,11 @@
       "id": "CONVERT.34",
       "f": "=CONVERT(1, \"ly\", \"m\")",
       "differs": {
-        "libreoffice": "LibreOffice sizes ly by a rounded factor; LiveDoc by its exact definition (NIST SP 811)"
+        "libreoffice": "LibreOffice sizes ly by its own rounded factor (9.460528e15)"
+      },
+      "meaning": {
+        "openformula": [[9460730472580800]],
+        "cite": "OpenFormula Part 4 §6.16.18: a light-year is (299792458 m/s) (3600 s/hr) (24 hr/day) (365.25 day)"
       }
     },
     {
@@ -428,11 +436,10 @@
     {
       "id": "TO_TEXT.3",
       "f": "=TO_TEXT(Data!C1)",
-      "expect": [[true]],
-      "cite": "https://support.google.com/docs/answer/3094285 (\"If value is not a number ..., TO_TEXT returns value without modification\")",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.TO_TEXT is #NAME? there"
-      }
+      },
+      "note": "Google writes a truth as text, TRUE."
     }
   ]
 }

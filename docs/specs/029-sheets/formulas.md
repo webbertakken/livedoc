@@ -286,7 +286,8 @@ as Google Sheets does, and spills its table.
 - **Grouping**: `group by` gives a row for each distinct key, sorted by the keys unless `order by` says otherwise;
   every selected column is grouped or aggregated. `pivot` gives a column for each distinct value (in order) of its
   columns for each aggregate, labelled with the values (joined by `,`), then the aggregate and its column's label when
-  more than one aggregate is selected; without `group by`, one row.
+  more than one aggregate is selected; without `group by`, one row, and none when no row passes `where`, as Google
+  gives it (measured).
 - **Labels**: the first row of the result is the labels when `data` had header rows or an aggregate is selected:
   a column's header text, an aggregate's `sum Price` (its name and its column's label), a scalar function's
   `year(A)`; `label` sets one, and when every label is empty the row is left out.
@@ -423,9 +424,9 @@ out (`IMPOWER("5+2i", 3)` is exactly `65+142i`), any other in polar form; `IMSQR
 - `CELL(info_type, [reference])` tells of the top-left cell of the reference, or of its own cell when there is none
   (OpenFormula's, D38): Google's `"address"`, `"col"`, `"color"`, `"contents"`, `"prefix"`, `"row"`, `"sheet"`
   (the sheet's name), `"type"` and `"width"`, and OpenFormula's `"format"`, `"parentheses"`, `"filename"` and
-  `"protect"`. Any other is `#VALUE!`; a reference that is no reference is `#REF!`.
+  `"protect"`. Any other is `#VALUE!`; a reference that is no reference is `#N/A`, as Google gives it.
   - `"width"` counts characters as an XLSX file does (ECMA-376 Part 1, 18.3.1.13): the column's pixels past 5 of
-    padding, over a 7-pixel digit, whole characters only (default, D40).
+    padding, over a 7-pixel digit, to the nearest whole character, as Google gives it (D40, measured).
   - `"format"` names a format by OpenFormula's codes (`G`, `F2`, `,2`, `C2`, `P2`, `S2`, `D1` to `D9`, then
     `-` and `()`). LiveDoc's own: Automatic `G` (`F` and its decimals when set), Number `,`, Currency and
     Accounting `C`, Percent `P`, Scientific `S`, Date and Date Time `D4`, Time and Duration `D8`; a Custom
@@ -1508,7 +1509,8 @@ The code cites each by its id.
 - **D37** Volatile ticks while the page is hidden: Held, one tick as the page shows again (default).
 - **D38** A function Google defines more narrowly than a standard: The standard's wider definition, everywhere (default).
 - **D39** ISDATE of a number worked out in its formula: No date; only a cell's format makes a number a date (default).
-- **D40** CELL's "width": ECMA-376's characters, a 7-pixel digit and 5 pixels of padding, whole characters (default).
+- **D40** CELL's "width": ECMA-376's characters, a 7-pixel digit and 5 pixels of padding, to the nearest whole
+  character, as Google gives it (measured: 100 pixels are 14, 120 are 16, 64 are 8).
 - **D41** CELL's "format" for LiveDoc's own formats: Number `,`, Currency `C`, Date `D4`, Time `D8`, ... (default).
 - **D42** CELL's "filename" and "protect": Empty text; 1 only under a protected range or sheet (default).
 - **D43** What the byte functions count as two bytes: East Asian wide and full-width characters (UAX #11) (default).

@@ -8,9 +8,9 @@ import { SPARKLINE_FUNCTIONS } from './sparkline';
 import { scalarFn, type FnDef } from '../fn';
 import { isError, toText } from '../values';
 
-// Letters, digits, - and _ stand, as LibreOffice and Excel keep them; every other byte of the text's UTF-8 is
-// written %XX, so "hello, world!" is hello%2C%20world%21 as Google's help shows.
-const UNRESERVED = /[A-Za-z0-9\-_]/;
+// Letters, digits, -, _ and . stand, as Google keeps them; every other byte of the text's UTF-8 is written %XX, so
+// "hello, world!" is hello%2C%20world%21 as Google's help shows, and ~ is %7E.
+const UNRESERVED = /[A-Za-z0-9\-_.]/;
 
 export function encodeUrl(text: string): string {
   let out = '';
@@ -30,7 +30,8 @@ export const WEB_FUNCTIONS: Record<string, FnDef> = {
     const t = toText(x!, f.locale);
     return isError(t) ? t : encodeUrl(t);
   }),
-  ISURL: scalarFn(1, 1, ([x]) => typeof x === 'string' && isUrl(x)),
+  // A mailto: address is no URL to Google's ISURL, though a link may hold one.
+  ISURL: scalarFn(1, 1, ([x]) => typeof x === 'string' && isUrl(x) && !/^\s*mailto:/i.test(x)),
   // The value is the label; where it goes is Workbook.hyperlinkOf's, read from the formula (safeHyperlink). A label
   // read from an empty cell shows the address; an empty text label shows nothing.
   HYPERLINK: scalarFn(1, 2, ([url, label]) =>

@@ -78,10 +78,7 @@
     },
     {
       "id": "Locale.16",
-      "f": "=DOLLAR(1234,5)",
-      "differs": {
-        "libreoffice": "LibreOffice writes a plain space before the euro, Intl a no-break space"
-      }
+      "f": "=DOLLAR(1234,5)"
     },
     {
       "id": "Locale.17",
@@ -116,7 +113,10 @@
     },
     {
       "id": "Locale.25",
-      "f": "=VALUE(\"1.5\")"
+      "f": "=VALUE(\"1.5\")",
+      "differs": {
+        "libreoffice": "LibreOffice refuses a day and a month with no year; Google reads 1.5 in de-DE as 1 May of this year"
+      }
     },
     {
       "id": "Locale.26",

@@ -9,9 +9,9 @@ describe('DOLLAR and FIXED in a locale', () => {
   it.each([
     ['en-GB', '=DOLLAR(-1234.5)', '-£1,234.50'],
     ['en-US', '=DOLLAR(1234.5)', '$1,234.50'],
-    ['de-DE', '=DOLLAR(1234,5)', '1.234,50\u00a0€'],
+    ['de-DE', '=DOLLAR(1234,5)', '1.234,50 €'],
     ['ja-JP', '=DOLLAR(1234.5, 0)', '￥1,235'],
-    ['nl', '=DOLLAR(2,5)', '€\u00a02,50'],
+    ['nl', '=DOLLAR(2,5)', '€ 2,50'],
     ['xx', '=DOLLAR(2.5)', '$2.50'],
     ['de-DE', '=FIXED(1234,567; 1)', '1.234,6'],
     ['de-DE', '=FIXED(1234,567; 1; TRUE)', '1234,6'],

@@ -1,6 +1,7 @@
 // The criteria-range functions' shared part (SUMIF(S), COUNTIF(S), AVERAGEIF(S), MINIFS, MAXIFS): which cells of
 // equal-sized ranges pass every criterion.
 import { isRef, type EvalValue, type Frame } from '../../engine/frame';
+import { intersected } from '../../engine/refs';
 import { arrayArg, flatValues, scalarArg } from '../fn';
 import { makeCriterion } from '../criteria';
 import { dims, err, isError, type SheetError, type ValueArray } from '../values';
@@ -36,7 +37,10 @@ export function criteriaMask(
   let mask: boolean[] | null = null;
   for (const [rangeArg, critArg] of pairs) {
     const range = arrayArg(rangeArg, f);
-    const critValue = scalarArg(critArg, f);
+    // A criterion range is met by the formula's row or column even in an array context, none met an empty
+    // criterion, as Google reads the criteria of the functions that do not lift (D67).
+    const met = isRef(critArg) ? intersected(critArg, f) : critArg;
+    const critValue = isRef(critArg) && isError(met) ? '' : scalarArg(met, f);
     if (isError(critValue)) return critValue;
     const crit = makeCriterion(critValue, f.locale);
     if (shape) {

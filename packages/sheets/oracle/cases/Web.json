@@ -17,7 +17,10 @@
     },
     {
       "id": "ENCODEURL.3",
-      "f": "=ENCODEURL(\"a-b_c.d~e\")"
+      "f": "=ENCODEURL(\"a-b_c.d~e\")",
+      "differs": {
+        "libreoffice": "LibreOffice writes . as %2E; Google keeps it"
+      }
     },
     {
       "id": "ENCODEURL.4",
@@ -25,7 +28,10 @@
     },
     {
       "id": "ENCODEURL.5",
-      "f": "=ENCODEURL(1.5)"
+      "f": "=ENCODEURL(1.5)",
+      "differs": {
+        "libreoffice": "LibreOffice writes . as %2E; Google keeps it"
+      }
     },
     {
       "id": "ENCODEURL.6",
@@ -36,7 +42,10 @@
     },
     {
       "id": "ENCODEURL.7",
-      "f": "=ENCODEURL(Data!A1)"
+      "f": "=ENCODEURL(Data!A1)",
+      "differs": {
+        "libreoffice": "LibreOffice writes . as %2E; Google keeps it"
+      }
     },
     {
       "id": "ENCODEURL.8",
@@ -94,8 +103,6 @@
     {
       "id": "ISURL.6",
       "f": "=ISURL(\"mailto:a@b.c\")",
-      "expect": [[true]],
-      "cite": "https://support.google.com/docs/answer/3256501 (\"valid protocols include ftp, http, https, gopher, mailto, news, telnet, and aim\")",
       "differs": {
         "libreoffice": "LibreOffice has no such function: ORG.LIVEDOC.ISURL is #NAME? there"
       }

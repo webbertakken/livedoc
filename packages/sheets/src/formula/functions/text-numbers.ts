@@ -155,7 +155,9 @@ export const NUMBER_TEXT_FUNCTIONS: Record<string, FnDef> = {
     const places = opt(args, 1, f, intArg, 2);
     if (isError(x)) return x;
     if (isError(places)) return places;
-    return fixedText(x, places, f, { style: 'currency', currency: localeCurrency(f.locale) });
+    const text = fixedText(x, places, f, { style: 'currency', currency: localeCurrency(f.locale) });
+    // The no-break space Intl puts beside the symbol is a plain space, as Google writes it (1.234,50 €).
+    return typeof text === 'string' ? text.replace(/\u00a0/g, ' ') : text;
   }),
   FIXED: fn(1, 3, (args, f) => {
     const x = numArg(args[0]!, f);
