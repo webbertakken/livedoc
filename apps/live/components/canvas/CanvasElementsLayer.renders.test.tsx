@@ -374,6 +374,16 @@ describe('drawing a drag preview', () => {
     expect((drawnAs.get(a.id) as { y: number } | undefined)?.y).toBe(30);
   });
 
+  // canvas-performance.md "An arrow's drawing takes no size from the board".
+  it('sizes an arrow\u2019s drawing by itself, never by the board around it', () => {
+    const { container } = mount();
+    const svg = container.querySelector('[data-arrow-svg]')!;
+    const classes = svg.getAttribute('class')!.split(' ');
+    expect(classes).toEqual(expect.arrayContaining(['left-0', 'top-0', 'h-px', 'w-px']));
+    expect(classes).not.toEqual(expect.arrayContaining(['inset-0']));
+    expect(classes.some((c) => c === 'h-full' || c === 'w-full')).toBe(false);
+  });
+
   it('lists an element the preview adds, after its neighbour, and drops one it removes', () => {
     const { container } = mount();
     const copy = { ...c, id: 'copy-of-c', x: 80 };

@@ -152,7 +152,10 @@ export const CanvasElementList = memo(function CanvasElementList({
         return (
           <Fragment key={element.id}>
             <svg
-              className="absolute inset-0 h-full w-full"
+              // One pixel at the board's origin, drawing past its edge: an SVG sized by the board is laid out
+              // again, paths and all, whenever the board is, which every selection and press does
+              // (canvas-performance.md "An arrow's drawing takes no size from the board").
+              className="absolute left-0 top-0 h-px w-px"
               // Tagged so isometric mode can lift arrows just off the base
               // plane (globals.css [data-iso] rule): an arrow's surface is
               // coplanar with the boxes it crosses under preserve-3d, and
