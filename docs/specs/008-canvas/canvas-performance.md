@@ -45,6 +45,11 @@ A gesture's cost scales with what it changes and what is on screen, never with t
 - **A pan or zoom moves the canvas, not its elements.** The viewport is one transform on the
   element layer. No element view takes the pan offset as a prop or reads it from a context; zoom
   reaches only what is counter-scaled to stay a constant screen size (grips, handles, badges).
+- **An arrow's drawing takes no size from the board.** Each arrow draws in an SVG of its own,
+  one pixel at the board's origin, drawing past its edge. Sized by the board (the full plane), every
+  arrow's SVG was laid out again, paths and all, whenever the board was: at a press, a release and
+  in a resize's frames, on the reference board 301 SVGs each time. It looks, paints and takes the
+  pointer exactly as before.
 - **A pan or zoom repaints no filter.** A look every element of a kind wears by default (a soft
   shadow) is drawn as a picture made once, never as a live CSS or SVG filter: Safari runs every
   filter on screen again on every frame of a pan, a zoom or a page glide, and fifty sticky notes'

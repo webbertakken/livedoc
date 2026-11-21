@@ -498,6 +498,24 @@ Measured 2026-11-21: the probe on the hosted runner, and locally at 3.5x, interl
   placement (`requestAnimationFrame`) with the layout of everything the selection mounted: 49-70 ms
   of one task with script in it. The work only moved.
 
+## Arrows laid out with the board
+
+Measured 2026-11-21 on the reference board, locally at 3.5x, against main, with layout invalidation
+tracking.
+
+- **Every arrow's SVG was laid out again with the board.** The arrows' SVGs were `absolute inset-0
+h-full w-full` in the element plane, so each layout of the plane (a press, a release, a resize's
+  frames) marked all of them "Size changed" and laid out their paths: 593 such marks in a
+  marquee's release, 1,806 over a whiteboard drag at fit. Sized one pixel at the origin and drawing
+  past it, the release had 1 and the drag 6-8; the drag's layout over the gesture went from 248-435
+  ms to 147-208 ms, and the marquee release's from 8.2-8.9 ms to 6.0-6.5 ms. The board's pixels at
+  fit and at 100% are identical (0 of 1,296,000 differ) and an arrow's stroke still takes the
+  pointer.
+- **A marquee's containment test is not the cost.** Timed on its own in Node, testing the reference
+  board's 1,000 elements against the box takes 0.26 ms (about 1 ms at 3.5x); in a profile it read
+  5-8 ms because the listener also tells every element view the selection changed. An element grid
+  would not move the row.
+
 ## Not tried
 
 - A raster snapshot of still elements during a gesture, and fewer SVG roots. Each is weighed in the spec.
