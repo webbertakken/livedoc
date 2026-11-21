@@ -110,7 +110,7 @@ export default defineConfig({
         /\/e2e\/perf\//,
         /\/e2e\/office\//,
         /optical-audit-sites\.spec\.ts/,
-        /workbench-(embed|workspace)\.spec\.ts/,
+        /workbench-(embed|workspace)(-[a-z-]+)?\.spec\.ts/,
         GUEST_TIMING_BUDGETS,
       ],
     },
@@ -162,7 +162,7 @@ export default defineConfig({
           {
             name: 'workbench',
             use: { ...devices['Desktop Chrome'], colorScheme: 'dark' as const },
-            testMatch: /workbench-(embed|workspace)\.spec\.ts/,
+            testMatch: /workbench-(embed|workspace)(-[a-z-]+)?\.spec\.ts/,
           },
         ]
       : []),

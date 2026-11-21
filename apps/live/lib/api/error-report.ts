@@ -23,6 +23,9 @@
 //   - any other autosave failure (reportSaveFailure): `SaveFailed.<Kind>`.
 //     Without it, a throw outside the api client showed "Couldn't save your
 //     changes" and left no trace at all.
+//   - a request a workbench frame refused unsent: `Confined.<Method>.<Route>`.
+//   - any other failure of a load that only says "Couldn't load" (reportLoadFailure):
+//     `LoadFailed.<Surface>.<Kind>`.
 //
 // Each type reports at most ERROR_EMIT_CAP_PER_TYPE times per page load, the
 // same budget the uncaught-error path has (docs/specs/017-telemetry/telemetry.md). A request that fails in
@@ -103,6 +106,19 @@ export function reportNoSessionToken(): void {
 export function reportSaveFailure(err: unknown): void {
   if (typeof err === 'object' && err !== null && reported.has(err)) return;
   report(errorTypeToken('SaveFailed', errorNameToken(err)));
+}
+
+// A load's catch-all, for a surface that only says "Couldn't load" (a Sheet): `LoadFailed.<Surface>.<Kind>`,
+// unless the api client reported the failure already (WB70).
+export function reportLoadFailure(surface: string, err: unknown): void {
+  if (typeof err === 'object' && err !== null && reported.has(err)) return;
+  report(errorTypeToken('LoadFailed', surface, errorNameToken(err)));
+}
+
+// A request a workbench frame refused unsent (workbench-confinement.ts): `Confined.<Method>.<Route>`, so a tab that
+// cannot load in a frame names the route it was refused (docs/specs/013-workspace/workbench-embeds.md WB70).
+export function reportConfinedRequest(method: string, url: string): void {
+  report(errorTypeToken('Confined', apiRouteLabel(method, url)));
 }
 
 export function networkErrorType(method: string, url: string): string {

@@ -3,6 +3,7 @@
 // they see), one workbook per tab, writes sent one at a time per sheet in order, undo steps, and the room's ops
 // merged by rev. Writes land on ids, so pending writes rebase cleanly over anyone else's.
 import { subscribeOfflineIds } from '@/lib/offline/offline-store';
+import { errorNameToken } from '@livedoc/api-schema';
 import type {
   SheetCellDto,
   SheetCreateRequest,
@@ -55,6 +56,7 @@ import { fetchSheetImport } from '@/lib/api/sheet-imports';
 import { debugLog } from '@/lib/debug-log';
 import type { SheetsBridge } from '@/hooks/sheets/useSheetsBridge';
 import { ApiError } from '@/lib/api/core';
+import { reportLoadFailure } from '@/lib/api/error-report';
 import { errorStatus, isTransientWriteError, sheetWriteRetryMs } from './sheet-write-retry';
 import {
   createSheet,
@@ -488,7 +490,12 @@ export class SheetStore {
         for (const json of await this.api.fetchSheets(this.deps.scope, { tabId })) this.adopt(json);
       this.tabStatus.set(scope, 'ready');
     } catch (e) {
-      debugLog('[sheets] sheets.load.failed', { status: e instanceof ApiError ? e.status : 0 });
+      // The Sheet shows only "Couldn't load this sheet": the cause is logged and reaches a bug report (WB70).
+      console.warn('[sheets] sheets.load.failed', {
+        status: e instanceof ApiError ? e.status : 0,
+        name: errorNameToken(e),
+      });
+      reportLoadFailure('Sheets', e);
       this.tabStatus.set(scope, 'error');
     }
     this.notify();

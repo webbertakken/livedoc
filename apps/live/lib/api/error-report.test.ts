@@ -5,9 +5,11 @@ import {
   apiErrorType,
   networkErrorType,
   reportApiError,
+  reportLoadFailure,
   reportSaveFailure,
   setApiErrorReporter,
 } from './error-report';
+import { setWorkbenchConfinement } from './workbench-confinement';
 import { apiFetch, apiHeaders, ApiError, expectOkVoid, setTokenProvider } from './core';
 
 // Attribution for api failures (docs/specs/017-telemetry/telemetry.md). Reporting the bare status made a
@@ -217,5 +219,36 @@ describe('reportSaveFailure', () => {
     reportSaveFailure(new TypeError('room.send is not a function'));
     reportSaveFailure('a string');
     expect(seen).toEqual(['SaveFailed.TypeError', 'SaveFailed.NonError']);
+  });
+});
+
+// A load that fails on a surface that only says "Couldn't load" (docs/specs/013-workspace/workbench-embeds.md WB70):
+// what the api client reported stays reported once, anything else is named by its surface and kind.
+describe('reportLoadFailure', () => {
+  afterEach(() => {
+    setApiErrorReporter(null);
+    setWorkbenchConfinement(null);
+  });
+
+  it('adds nothing for a failure the api client already reported, a confined request among them', async () => {
+    const seen: string[] = [];
+    setApiErrorReporter((t) => seen.push(t));
+    const apiErr = await expectOkVoid(new Response('{}', { status: 500 }), 'load sheets').catch(
+      (e: unknown) => e,
+    );
+    setWorkbenchConfinement({ scope: 'document', documentId: 'd', ownerId: 'u' });
+    const confined = await apiFetch('/api/folders', {
+      headers: { Authorization: `Bearer lvw_${'s'.repeat(43)}` },
+    }).catch((e: unknown) => e);
+    seen.length = 0;
+    for (const e of [apiErr, confined]) reportLoadFailure('Sheets', e);
+    expect(seen).toEqual([]);
+  });
+
+  it('names a failure that never reached the api client, by its surface and kind', () => {
+    const seen: string[] = [];
+    setApiErrorReporter((t) => seen.push(t));
+    reportLoadFailure('Sheets', new TypeError('json.cells is not iterable'));
+    expect(seen).toEqual(['LoadFailed.Sheets.TypeError']);
   });
 });
