@@ -16,7 +16,7 @@ import {
 } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { TextFormatting } from '../text-document-formatting';
-import { touchedParagraphs } from '../text-document-tab-layout';
+import { firstChanges } from '../text-document-tab-layout';
 import {
   PAGE_GAP_PX,
   pageCount,
@@ -229,18 +229,28 @@ class Pager {
     this.options.onPages(pages);
   }
 
-  // Draws the decorations, unless the ones drawn (mapped through the edits since) are these already: a keystroke that
-  // moves no page start, column or field changes nothing, and building a set walks the whole body.
+  // Draws what the decorations change of the ones drawn (mapped through the edits since): those no longer laid out go,
+  // new ones come, the rest stay as drawn. A keystroke that moves no page start, column or field changes nothing; one in
+  // a paragraph across a page draws that paragraph's spacer again, never the whole body's (performance.md).
   private apply(decorations: readonly Decoration[]): void {
     const current = key.getState(this.view.state) ?? DecorationSet.empty;
     const said = (d: Decoration) => `${d.from}:${(d.spec as GapSpec).key}`;
-    const was = current.find().map(said).sort();
-    const now = decorations.map(said).sort();
-    if (was.length === now.length && was.every((w, i) => w === now[i])) return;
-    const set =
-      decorations.length > 0
-        ? DecorationSet.create(this.view.state.doc, [...decorations])
-        : DecorationSet.empty;
+    const wanted = new Map<string, number>();
+    for (const d of decorations) wanted.set(said(d), (wanted.get(said(d)) ?? 0) + 1);
+    const gone: Decoration[] = [];
+    for (const d of current.find()) {
+      const left = wanted.get(said(d)) ?? 0;
+      if (left > 0) wanted.set(said(d), left - 1);
+      else gone.push(d);
+    }
+    const added = decorations.filter((d) => {
+      const left = wanted.get(said(d)) ?? 0;
+      if (left === 0) return false;
+      wanted.set(said(d), left - 1);
+      return true;
+    });
+    if (gone.length === 0 && added.length === 0) return;
+    const set = current.remove(gone).add(this.view.state.doc, added);
     this.view.dispatch(this.view.state.tr.setMeta(key, set).setMeta('addToHistory', false));
   }
 
@@ -641,19 +651,21 @@ export function paginationPlugin(options: PaginationOptions): Plugin<DecorationS
         const laid = tr.getMeta(key) as DecorationSet | undefined;
         if (laid) return laid;
         if (!tr.docChanged) return set;
-        let mapped = set.map(tr.mapping, tr.doc);
-        // A changed paragraph measures unbroken: its spacers and box of columns go until it is laid out again.
-        for (const pos of touchedParagraphs(tr)) {
+        const mapped = set.map(tr.mapping, tr.doc);
+        // A changed paragraph measures unbroken: its box of columns goes, and each spacer inside it that the change
+        // came before (its lines before the page edge may break anew), until it is laid out again. A spacer before
+        // the change stays: the lines before it are as they were (performance.md "A keystroke's frame").
+        const changed = firstChanges(tr);
+        const gone: Decoration[] = [];
+        for (const [pos, from] of changed) {
           const node = tr.doc.nodeAt(pos)!;
-          mapped = mapped.remove(
-            mapped.find(
-              pos,
-              pos + node.nodeSize,
-              (spec) => (spec as GapSpec).inside || (spec as GapSpec).cross === true,
-            ),
-          );
+          for (const d of mapped.find(pos, pos + node.nodeSize, (spec) => {
+            const gap = spec as GapSpec;
+            return gap.inside || gap.cross === true;
+          }))
+            if ((d.spec as GapSpec).cross === true || d.from > from) gone.push(d);
         }
-        return mapped;
+        return gone.length > 0 ? mapped.remove(gone) : mapped;
       },
     },
     props: {
