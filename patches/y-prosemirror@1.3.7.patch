@@ -1,0 +1,58 @@
+diff --git a/src/plugins/sync-plugin.js b/src/plugins/sync-plugin.js
+index dccfb76918c8c70fe5a5b12372cdabcc9d8c58dd..9c0f13a41ef50fc0f762bdaaecea22c57723e4bf 100644
+--- a/src/plugins/sync-plugin.js
++++ b/src/plugins/sync-plugin.js
+@@ -224,10 +224,16 @@ export const ySyncPlugin = (yXmlFragment, {
+                 }
+               }
+               binding.mux(() => {
+-                /** @type {Y.Doc} */ (pluginState.doc).transact((tr) => {
+-                  tr.meta.set('addToHistory', pluginState.addToHistory)
+-                  binding._prosemirrorChanged(view.state.doc)
+-                }, ySyncPluginKey)
++                const ydoc = /** @type {Y.Doc} */ (pluginState.doc)
++                binding._writingLocalChange = ydoc._transaction === null
++                try {
++                  ydoc.transact((tr) => {
++                    tr.meta.set('addToHistory', pluginState.addToHistory)
++                    binding._prosemirrorChanged(view.state.doc)
++                  }, ySyncPluginKey)
++                } finally {
++                  binding._writingLocalChange = false
++                }
+               })
+             }
+           }
+@@ -332,8 +338,14 @@ export class ProsemirrorBinding {
+      * current selection as relative positions in the Yjs model
+      */
+     this.beforeTransactionSelection = null
++    /**
++     * Writing a local change to Yjs in a transaction of its own: the selection, read only when a remote change arrives
++     * and reset after every outermost transaction, is left unread, so it is not worked out (each time walks the
++     * document up to the selection)
++     */
++    this._writingLocalChange = false
+     this.beforeAllTransactions = () => {
+-      if (this.beforeTransactionSelection === null && this.prosemirrorView != null) {
++      if (this.beforeTransactionSelection === null && this.prosemirrorView != null && !this._writingLocalChange) {
+         this.beforeTransactionSelection = getRelativeSelection(
+           this,
+           this.prosemirrorView.state
+@@ -648,10 +660,12 @@ export class ProsemirrorBinding {
+   _prosemirrorChanged (doc) {
+     this.doc.transact(() => {
+       updateYFragment(this.doc, this.type, doc, this)
+-      this.beforeTransactionSelection = getRelativeSelection(
+-        this,
+-        this.prosemirrorView.state
+-      )
++      if (!this._writingLocalChange) {
++        this.beforeTransactionSelection = getRelativeSelection(
++          this,
++          this.prosemirrorView.state
++        )
++      }
+     }, ySyncPluginKey)
+   }
+ 

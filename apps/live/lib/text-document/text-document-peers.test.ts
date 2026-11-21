@@ -16,6 +16,8 @@ import {
 } from './text-document-peers';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+// The next frame painted, and what waits for its paint run.
+const painted = () => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 
 async function editorOn(doc: Y.Doc, publish = vi.fn()) {
   const view = new EditorView(document.createElement('div'), {
@@ -70,6 +72,7 @@ describe('textDocumentPeersPlugin', () => {
     const ana = await editorOn(a, publish);
     const ben = await editorOn(b);
     ana.dispatch(ana.state.tr.setSelection(TextSelection.create(ana.state.doc, 1, 6)));
+    await painted();
     expect(publish).toHaveBeenLastCalledWith(null);
     setTextDocumentPeers(ben, [
       { id: 'ana', name: 'Ana', color: '#1a73e8', ...selectionOf(ana.state)!, fresh: false },
@@ -77,6 +80,22 @@ describe('textDocumentPeersPlugin', () => {
     expect(ben.dom.querySelector('.text-document-peer-selection')?.textContent).toBe('Hello');
     ana.destroy();
     expect(publish).toHaveBeenLastCalledWith(null);
+  });
+
+  // performance.md "A keystroke's frame": the caret is told to peers after the frame that paints it, once.
+  it('publishes ours once after the frame that paints a run of changes, at the latest selection', async () => {
+    const { a } = twoReplicas();
+    const publish = vi.fn();
+    const ana = await editorOn(a, publish);
+    ana.hasFocus = () => true;
+    publish.mockClear();
+    ana.dispatch(ana.state.tr.insertText('x', 1));
+    ana.dispatch(ana.state.tr.setSelection(TextSelection.create(ana.state.doc, 3)));
+    expect(publish).not.toHaveBeenCalled();
+    await painted();
+    expect(publish).toHaveBeenCalledOnce();
+    expect(publish).toHaveBeenCalledWith(selectionOf(ana.state));
+    ana.destroy();
   });
 });
 

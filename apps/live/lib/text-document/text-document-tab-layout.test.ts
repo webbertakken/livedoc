@@ -7,12 +7,14 @@ import { EditorView } from 'prosemirror-view';
 import { Styles, type ParagraphProps, type TabStop } from '@livedoc/text-documents';
 import { textDocumentSchema as schema } from './text-document-schema';
 import {
+  firstChanges,
   layTabs,
   relayTextDocumentTabs,
   TAB_CLASS,
   tabDecorations,
   tabRulesOf,
   tabStopsPlugin,
+  touchedParagraphs,
   type TabMeasure,
 } from './text-document-tab-layout';
 
@@ -172,5 +174,29 @@ describe('the layout pass', () => {
     });
     view.dispatch(view.state.tr.insertText('\t', 1));
     expect(view.dom.querySelector<HTMLElement>(`.${TAB_CLASS}`)!.style.width).toBe('');
+  });
+});
+
+// performance.md "A keystroke's frame": where an edit began in each paragraph it touched.
+describe('firstChanges', () => {
+  const para = (text: string) => schema.nodes.paragraph!.create(null, schema.text(text));
+  const state = () =>
+    EditorState.create({ doc: schema.node('doc', null, [para('abcdef'), para('ghij')]) });
+
+  it('names each paragraph touched with the first place in it that changed', () => {
+    const second = state().doc.child(0).nodeSize;
+    const tr = state()
+      .tr.insertText('x', 5)
+      .insertText('y', second + 4);
+    expect([...firstChanges(tr)]).toEqual([
+      [0, 5],
+      [second + 1, second + 4],
+    ]);
+  });
+
+  it('starts a paragraph the change began before at its start', () => {
+    const tr = state().tr.delete(3, state().doc.child(0).nodeSize + 3);
+    expect([...firstChanges(tr)]).toEqual([[0, 3]]);
+    expect(touchedParagraphs(tr)).toEqual([0]);
   });
 });

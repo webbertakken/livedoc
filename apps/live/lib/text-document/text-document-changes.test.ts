@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 // docs/specs/004-interface-design/office-shell.md "Toolbar": pressed states and the font size are read again as the
-// selection or the formatting at the caret changes; the outline only as the body does.
+// selection or the formatting at the caret changes; the outline only as the body does. performance.md "A keystroke's
+// frame": both are told after the frame that paints the change, once however many changes came in it.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -10,9 +11,16 @@ import { paintFormatPlugin, pressRoller } from './text-document-paint-format';
 import { listMarkersPlugin } from './text-document-list-markers';
 
 let view: EditorView;
+// The frame drawn and painted, and what waits for its paint run.
+const painted = () => {
+  vi.advanceTimersToNextFrame();
+  vi.runOnlyPendingTimers();
+};
 let changes: ReturnType<typeof createTextDocumentChanges>;
 beforeEach(() => {
-  vi.useFakeTimers({ toFake: ['requestAnimationFrame', 'cancelAnimationFrame'] });
+  vi.useFakeTimers({
+    toFake: ['requestAnimationFrame', 'cancelAnimationFrame', 'setTimeout', 'clearTimeout'],
+  });
   changes = createTextDocumentChanges();
   const doc = schema.node('doc', null, [schema.nodes.paragraph!.create(null, schema.text('abc'))]);
   view = new EditorView(document.createElement('div'), {
@@ -25,16 +33,18 @@ afterEach(() => {
 });
 
 describe('createTextDocumentChanges', () => {
-  it('tells the body listeners of an edit, and the caret listeners once a frame', () => {
+  it('tells the body and caret listeners of edits once, after the frame that paints them', () => {
     const body = vi.fn();
     const caret = vi.fn();
     changes.subscribe(body);
     changes.subscribeCaret(caret);
     view.dispatch(view.state.tr.insertText('x', 1));
     view.dispatch(view.state.tr.insertText('y', 1));
-    expect(body).toHaveBeenCalledTimes(2);
-    expect(caret).not.toHaveBeenCalled();
     vi.advanceTimersToNextFrame();
+    expect(body).not.toHaveBeenCalled();
+    expect(caret).not.toHaveBeenCalled();
+    vi.runOnlyPendingTimers();
+    expect(body).toHaveBeenCalledOnce();
     expect(caret).toHaveBeenCalledOnce();
   });
 
@@ -44,14 +54,14 @@ describe('createTextDocumentChanges', () => {
     changes.subscribe(body);
     const stop = changes.subscribeCaret(caret);
     view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 2)));
-    vi.advanceTimersToNextFrame();
+    painted();
     view.dispatch(view.state.tr.addStoredMark(schema.marks.bold!.create({ value: true })));
-    vi.advanceTimersToNextFrame();
+    painted();
     expect(caret).toHaveBeenCalledTimes(2);
     expect(body).not.toHaveBeenCalled();
     stop();
     view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 1)));
-    vi.advanceTimersToNextFrame();
+    painted();
     expect(caret).toHaveBeenCalledTimes(2);
   });
 
@@ -67,7 +77,7 @@ describe('createTextDocumentChanges', () => {
     const caret = vi.fn();
     changes.subscribeCaret(caret);
     pressRoller(view.state, view.dispatch);
-    vi.advanceTimersToNextFrame();
+    painted();
     expect(caret).toHaveBeenCalledOnce();
   });
 
@@ -95,16 +105,18 @@ describe('createTextDocumentChanges', () => {
     const caret = vi.fn();
     changes.subscribeCaret(caret);
     notify();
-    vi.advanceTimersToNextFrame();
+    painted();
     expect(caret).toHaveBeenCalledOnce();
   });
 
   it('tells no one after the editor is gone', () => {
+    const body = vi.fn();
     const caret = vi.fn();
+    changes.subscribe(body);
     changes.subscribeCaret(caret);
     view.dispatch(view.state.tr.setSelection(TextSelection.create(view.state.doc, 2)));
     view.destroy();
-    vi.advanceTimersToNextFrame();
+    painted();
     expect(caret).not.toHaveBeenCalled();
     view = new EditorView(document.createElement('div'), { state: view.state });
   });

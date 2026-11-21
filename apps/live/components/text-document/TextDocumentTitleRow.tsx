@@ -9,7 +9,7 @@ import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import type { TextDocumentFileType } from '@livedoc/text-documents';
 import type { OfficeChrome } from '@/components/office/office-chrome';
-import type { OfficeSaveStatus } from '@/components/office/office-save-status';
+import type { OfficeSaveStatusSource } from '@/components/office/office-save-status';
 import { OfficeTitleRow } from '@/components/office/OfficeTitleRow';
 import type { TextDocumentScope } from '@/lib/api/text-documents';
 import { apiDownloadTextDocument } from '@/lib/api/text-documents';
@@ -96,7 +96,7 @@ export function TextDocumentTitleRow({
   chrome?: OfficeChrome | null;
   // Brings a collaborator's caret into view; false when they have none here.
   onFollow?: (personId: string) => boolean;
-  saveStatus?: OfficeSaveStatus | null;
+  saveStatus?: OfficeSaveStatusSource | null;
   zoom?: OfficeZoom | null;
   // The toolbar's font size, and when what the toolbar shows may have changed (text-and-paragraphs.md).
   fontSize?: OfficeFontSize | null;

@@ -1,8 +1,10 @@
 // Signals from the writing, for parts of the surface that read it without the surface itself drawing again on every
 // keystroke: `subscribe` when the body changed (anyone's edit, a catch-up, an undo; the outline), and `subscribeCaret`
 // when the body, the selection, the formatting at the caret, the paint roller or the lists drawn changed (the toolbar's
-// pressed states and font size), at most once a frame.
+// pressed states and font size). Both are told after the frame that paints the change, once however many changes came
+// in it (performance.md "A keystroke's frame").
 import { Plugin } from 'prosemirror-state';
+import { afterNextPaint } from '@/lib/after-next-paint';
 import { paintFormatKey } from './text-document-paint-format';
 import { listMarkersKey } from './text-document-list-markers';
 
@@ -12,11 +14,20 @@ export type TextDocumentChanges = {
   subscribeCaret: (listener: () => void) => () => void;
 };
 
+// Listeners told once after the next paint, however often they are notified before it.
 function listenerSet() {
   const listeners = new Set<() => void>();
+  let waiting: (() => void) | null = null;
   return {
     notify: () => {
-      for (const listener of listeners) listener();
+      waiting ??= afterNextPaint(() => {
+        waiting = null;
+        for (const listener of listeners) listener();
+      });
+    },
+    cancel: () => {
+      waiting?.();
+      waiting = null;
     },
     subscribe: (listener: () => void) => {
       listeners.add(listener);
@@ -30,14 +41,6 @@ function listenerSet() {
 export function createTextDocumentChanges(): TextDocumentChanges {
   const body = listenerSet();
   const caret = listenerSet();
-  let frame: number | null = null;
-  const caretChanged = () => {
-    if (frame !== null) return;
-    frame = requestAnimationFrame(() => {
-      frame = null;
-      caret.notify();
-    });
-  };
   return {
     plugin: new Plugin({
       view: () => ({
@@ -51,11 +54,11 @@ export function createTextDocumentChanges(): TextDocumentChanges {
             paintFormatKey.getState(state) !== paintFormatKey.getState(previous) ||
             listMarkersKey.getState(state) !== listMarkersKey.getState(previous)
           )
-            caretChanged();
+            caret.notify();
         },
         destroy: () => {
-          if (frame !== null) cancelAnimationFrame(frame);
-          frame = null;
+          body.cancel();
+          caret.cancel();
         },
       }),
     }),

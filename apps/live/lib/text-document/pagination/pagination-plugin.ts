@@ -16,7 +16,7 @@ import {
 } from '@livedoc/text-documents';
 import { debugLog } from '@/lib/debug-log';
 import type { TextFormatting } from '../text-document-formatting';
-import { touchedParagraphs } from '../text-document-tab-layout';
+import { firstChanges } from '../text-document-tab-layout';
 import {
   PAGE_GAP_PX,
   pageCount,
@@ -90,6 +90,10 @@ export const canWrapColumns = (): boolean =>
   CSS.supports('column-wrap', 'wrap');
 
 const key = new PluginKey<DecorationSet>('textDocumentPagination');
+
+// How many blocks a layout asks the editor for one by one (each ask walks the body's blocks to its place) before it reads
+// the body's children once instead (a copy of every child): a keystroke measures one to three (performance.md).
+const BLOCK_LOOKUPS_ASKED = 16;
 
 // The spacer inside a paragraph: drawn as the page's foot, the ground and the next page's head over the paragraph's
 // own background and borders, across the whole page.
@@ -225,12 +229,29 @@ class Pager {
     this.options.onPages(pages);
   }
 
-  private apply(decorations: DecorationSet): void {
+  // Draws what the decorations change of the ones drawn (mapped through the edits since): those no longer laid out go,
+  // new ones come, the rest stay as drawn. A keystroke that moves no page start, column or field changes nothing; one in
+  // a paragraph across a page draws that paragraph's spacer again, never the whole body's (performance.md).
+  private apply(decorations: readonly Decoration[]): void {
     const current = key.getState(this.view.state) ?? DecorationSet.empty;
-    const was = current.find().map((d) => `${d.from}:${(d.spec as GapSpec).key}`);
-    const now = decorations.find().map((d) => `${d.from}:${(d.spec as GapSpec).key}`);
-    if (was.length === now.length && was.every((w, i) => w === now[i])) return;
-    this.view.dispatch(this.view.state.tr.setMeta(key, decorations).setMeta('addToHistory', false));
+    const said = (d: Decoration) => `${d.from}:${(d.spec as GapSpec).key}`;
+    const wanted = new Map<string, number>();
+    for (const d of decorations) wanted.set(said(d), (wanted.get(said(d)) ?? 0) + 1);
+    const gone: Decoration[] = [];
+    for (const d of current.find()) {
+      const left = wanted.get(said(d)) ?? 0;
+      if (left > 0) wanted.set(said(d), left - 1);
+      else gone.push(d);
+    }
+    const added = decorations.filter((d) => {
+      const left = wanted.get(said(d)) ?? 0;
+      if (left === 0) return false;
+      wanted.set(said(d), left - 1);
+      return true;
+    });
+    if (gone.length === 0 && added.length === 0) return;
+    const set = current.remove(gone).add(this.view.state.doc, added);
+    this.view.dispatch(this.view.state.tr.setMeta(key, set).setMeta('addToHistory', false));
   }
 
   // Takes away the boxes of columns drawn for the paragraphs `which` picks, so they are read as one column.
@@ -258,7 +279,7 @@ class Pager {
     if (!pages) {
       this.previous = null;
       this.nodes = [];
-      this.apply(DecorationSet.empty);
+      this.apply([]);
       this.tellPages([]);
       return;
     }
@@ -461,7 +482,7 @@ class Pager {
     decorations.push(
       ...fieldDecorations(nodes, positions, (block) => shown[startOf[block]!]!, pagesLaid),
     );
-    this.apply(DecorationSet.create(doc, decorations));
+    this.apply(decorations);
     const geometries = pageGeometries(pagination, {
       frameOf,
       page,
@@ -493,11 +514,17 @@ class Pager {
         ms: Math.round((performance.now() - started) * 10) / 10,
       });
 
+    // A block's element: asked of the editor for the first few, as a keystroke measures one or two; past those, read
+    // from the body's children (its blocks and the spacers between them, in order), once.
     function blockElements(v: EditorView, all: PmNode[], at: number[]) {
-      // The body's children are its blocks and the spacers between them, in order.
-      const children = [...v.dom.children].filter((c) => !c.classList.contains(PAGE_GAP_CLASS));
-      const direct = children.length === all.length;
-      return (i: number): HTMLElement => (direct ? children[i] : v.nodeDOM(at[i]!)) as HTMLElement;
+      let asked = 0;
+      let children: Element[] | null = null;
+      return (i: number): HTMLElement => {
+        asked += 1;
+        if (asked <= BLOCK_LOOKUPS_ASKED) return v.nodeDOM(at[i]!) as HTMLElement;
+        children ??= [...v.dom.children].filter((c) => !c.classList.contains(PAGE_GAP_CLASS));
+        return (children.length === all.length ? children[i] : v.nodeDOM(at[i]!)) as HTMLElement;
+      };
     }
   }
 
@@ -624,19 +651,21 @@ export function paginationPlugin(options: PaginationOptions): Plugin<DecorationS
         const laid = tr.getMeta(key) as DecorationSet | undefined;
         if (laid) return laid;
         if (!tr.docChanged) return set;
-        let mapped = set.map(tr.mapping, tr.doc);
-        // A changed paragraph measures unbroken: its spacers and box of columns go until it is laid out again.
-        for (const pos of touchedParagraphs(tr)) {
+        const mapped = set.map(tr.mapping, tr.doc);
+        // A changed paragraph measures unbroken: its box of columns goes, and each spacer inside it that the change
+        // came before (its lines before the page edge may break anew), until it is laid out again. A spacer before
+        // the change stays: the lines before it are as they were (performance.md "A keystroke's frame").
+        const changed = firstChanges(tr);
+        const gone: Decoration[] = [];
+        for (const [pos, from] of changed) {
           const node = tr.doc.nodeAt(pos)!;
-          mapped = mapped.remove(
-            mapped.find(
-              pos,
-              pos + node.nodeSize,
-              (spec) => (spec as GapSpec).inside || (spec as GapSpec).cross === true,
-            ),
-          );
+          for (const d of mapped.find(pos, pos + node.nodeSize, (spec) => {
+            const gap = spec as GapSpec;
+            return gap.inside || gap.cross === true;
+          }))
+            if ((d.spec as GapSpec).cross === true || d.from > from) gone.push(d);
         }
-        return mapped;
+        return gone.length > 0 ? mapped.remove(gone) : mapped;
       },
     },
     props: {

@@ -13,6 +13,7 @@ import {
   type LiveHeaders,
   type PageSetup,
 } from '@livedoc/text-documents';
+import { changesTextOnly } from '../text-document-text-edits';
 
 // Points to CSS pixels.
 const PX_PER_PT = 96 / 72;
@@ -154,10 +155,13 @@ export function sectionWidthsPlugin(
     key,
     state: {
       init: (_config, state) => sectionWidths(state.doc, readFirst(), readColumns()),
-      apply: (tr, set) =>
-        tr.docChanged || tr.getMeta(SECTIONS_CHANGED)
-          ? sectionWidths(tr.doc, readFirst(), readColumns())
-          : set,
+      // An edit of text keeps every section (performance.md "A keystroke's frame").
+      apply: (tr, set) => {
+        if (tr.getMeta(SECTIONS_CHANGED)) return sectionWidths(tr.doc, readFirst(), readColumns());
+        if (!tr.docChanged) return set;
+        if (changesTextOnly(tr)) return set.map(tr.mapping, tr.doc);
+        return sectionWidths(tr.doc, readFirst(), readColumns());
+      },
     },
     props: { decorations: (state) => key.getState(state) },
   });

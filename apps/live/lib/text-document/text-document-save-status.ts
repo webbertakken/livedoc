@@ -1,6 +1,9 @@
 // Which save status a text document shows (docs/specs/034-text-documents/editing-surface.md "The title row"): from
 // where it lives, whether its room is open, and what its binding reports.
-import type { OfficeSaveStatus } from '@/components/office/office-save-status';
+import type {
+  OfficeSaveStatus,
+  OfficeSaveStatusSource,
+} from '@/components/office/office-save-status';
 
 /** What a binding knows of its saving: an edit not yet safe, and whether saving has failed. */
 export type SaveFacts = { readonly pending: boolean; readonly failed: boolean };
@@ -44,6 +47,45 @@ export function saveFactsStore(
       facts = merged;
       log('[text-document] save-facts', { tabId, ...facts });
       for (const listener of listeners) listener();
+    },
+  };
+}
+
+/** Whether the room is open, read and watched. */
+export type ConnectionSource = {
+  get: () => boolean;
+  subscribe: (listener: () => void) => () => void;
+};
+
+/**
+ * The status the title row shows, read and watched where it is drawn: the surface never draws again for it, so a
+ * keystroke's Saving and Saved redraw the status alone (performance.md "Budgets"). Each status it changes to is logged.
+ */
+export function textDocumentSaveStatusSource(
+  facts: SaveFactsSource,
+  local: boolean,
+  connection: ConnectionSource,
+  log: (message: string, data: object) => void,
+): OfficeSaveStatusSource {
+  const get = () => textDocumentSaveStatus({ ...facts.get(), local, connected: connection.get() });
+  let said = get();
+  return {
+    get,
+    subscribe: (listener) => {
+      const changed = () => {
+        const status = get();
+        if (status !== said) {
+          said = status;
+          log('[text-document] save-status', { status });
+        }
+        listener();
+      };
+      const stopFacts = facts.subscribe(changed);
+      const stopConnection = connection.subscribe(changed);
+      return () => {
+        stopFacts();
+        stopConnection();
+      };
     },
   };
 }

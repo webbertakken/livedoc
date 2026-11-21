@@ -67,6 +67,8 @@ The document's canvas chrome (palette, mode switch, minimap, zoom controls) is n
   A press opens the details: the words again and one sentence of what it means (the copy is in the code).
   A text document in This Browser retries a failed write every `TEXT_DOCUMENT_SAVE_RETRY_MS` (5 s) `(default)`;
   one in a room is retried by its catch-up when the room opens again.
+  A change of status is drawn after the frame it happens in, the status alone, so a keystroke's frame never waits on
+  it ([Performance](performance.md)).
 
 - **Last edit**: none in the title row (Google moved it into File > Version history); once version history is built,
   the save status's details show "Last edit was <time> by <name>", which opens it.

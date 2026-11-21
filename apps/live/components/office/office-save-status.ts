@@ -24,3 +24,12 @@ export const OFFICE_SAVE_STATUS: Record<OfficeSaveStatus, { words: string; meani
 // The words show beside the glyph only while something is not yet safe (default): saved states are the glyph alone.
 export const isUnsettled = (status: OfficeSaveStatus): boolean =>
   status === 'saving' || status === 'offline' || status === 'failed';
+
+/**
+ * A kind's save status, read and watched by the shell where it draws it (none: nothing shown), so a change redraws the
+ * status alone and never the surface around it.
+ */
+export type OfficeSaveStatusSource = {
+  get: () => OfficeSaveStatus | null;
+  subscribe: (listener: () => void) => () => void;
+};

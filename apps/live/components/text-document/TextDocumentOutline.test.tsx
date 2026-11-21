@@ -52,11 +52,13 @@ describe('TextDocumentOutline', () => {
     expect(screen.getByText(OUTLINE_EMPTY)).toBeDefined();
   });
 
-  it('follows the writing as it changes', () => {
+  // performance.md "A keystroke's frame": after the frame that paints the change.
+  it('follows the writing as it changes', async () => {
     const view = outlineOf(p('Words'));
     act(() => {
       view.dispatch(view.state.tr.insert(view.state.doc.content.size, p('Later', 'Heading_20_1')));
     });
-    expect(screen.getByRole('button', { name: 'Later' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: 'Later' })).toBeNull();
+    expect(await screen.findByRole('button', { name: 'Later' })).toBeDefined();
   });
 });
