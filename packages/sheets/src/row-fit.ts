@@ -17,7 +17,7 @@ import { wrapLines } from './text/wrap-lines';
 export const CELL_PAD_PX = 4;
 export const DROPDOWN_ROOM_PX = 22;
 export const FILTER_ROOM_PX = 20;
-// The room an automatic row keeps round its text (D90): one line needs only its own height, so a single line of up
+// The room an automatic row keeps round its text (D97): one line needs only its own height, so a single line of up
 // to 16 points still fits a 28 px row; two or more lines keep 4 px clear above and below.
 const ROW_FIT_PAD_PX = 1;
 const ROW_FIT_LINES_PAD_PX = 8;

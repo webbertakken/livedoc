@@ -1,8 +1,7 @@
 // Writes packages/sheets/src/text/font-advances.ts (docs/specs/029-sheets/sheet.md "Row height"): each editor font's
 // character widths, as Chromium draws the faces Google Fonts serves, so a sheet's lines break the same in every
-// browser, in the api and in an export, with no DOM to measure; and the system face, for text with no font of its
-// own. The numbers are facts about the fonts (all free to use and to study); no font file is kept. Needs the
-// network. Run: pnpm --filter live fonts:advances
+// browser, in the api and in an export, with no DOM to measure. The numbers are facts about the fonts (all under the
+// SIL Open Font Licence); no font file is kept. Needs the network. Run: pnpm --filter live fonts:advances
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from '@playwright/test';
@@ -17,71 +16,34 @@ const WEIGHTS = { regular: 400, bold: 700 } as const;
 
 const families = FONTS.map((f) => ({ id: f.id, family: /'([^']+)'/.exec(f.stack)![1]! }));
 
-// The system face (D92): a text with no font is drawn in whatever font the device's system names, which no table
-// can hold, so it is measured as the widest of the fonts a system names today, character by character: Inter (GNOME
-// as Adwaita Sans, and near to macOS's), Selawik (the widths of Windows's Segoe UI), Roboto (Android, ChromeOS),
-// Ubuntu, Noto Sans (KDE and many Linux desktops), Cantarell (GNOME before Adwaita Sans), Arimo (the widths of
-// Arial, Helvetica and Liberation Sans, the plain sans-serif) and DejaVu Sans (a Linux that names no font).
-const SYSTEM_GOOGLE = ['Roboto', 'Ubuntu', 'Noto Sans', 'Cantarell', 'Arimo'];
-const JSDELIVR = 'https://cdn.jsdelivr.net/npm';
-const SYSTEM_FILES = [
-  { family: 'Selawik', weight: 400, url: `${JSDELIVR}/winstrap@0.5.12/dist/fonts/selawk.ttf` },
-  { family: 'Selawik', weight: 700, url: `${JSDELIVR}/winstrap@0.5.12/dist/fonts/selawkb.ttf` },
-  {
-    family: 'DejaVu Sans',
-    weight: 400,
-    url: `${JSDELIVR}/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf`,
-  },
-  {
-    family: 'DejaVu Sans',
-    weight: 700,
-    url: `${JSDELIVR}/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans-Bold.ttf`,
-  },
-];
-const SYSTEM_FAMILIES = ['Inter', 'Selawik', ...SYSTEM_GOOGLE, 'DejaVu Sans'];
-const systemHref = `https://fonts.googleapis.com/css2?${SYSTEM_GOOGLE.map(
-  (family) => `family=${family.replace(/ /g, '+')}:wght@400;700`,
-).join('&')}&display=swap`;
-const systemFaces = SYSTEM_FILES.map(
-  (f) => `@font-face{font-family:"${f.family}";font-weight:${f.weight};src:url("${f.url}")}`,
-).join('');
-
 const browser = await chromium.launch({ args: ['--mute-audio'] });
 const page = await browser.newPage();
-const sheetOf = (href: string) => `<link rel="stylesheet" href="${href.replace(/&/g, '&amp;')}">`;
 await page.setContent(
-  `<!doctype html>${sheetOf(googleFontsHref())}${sheetOf(systemHref)}<style>${systemFaces}</style>`,
+  `<!doctype html><link rel="stylesheet" href="${googleFontsHref().replace(/&/g, '&amp;')}">`,
   { waitUntil: 'networkidle' },
 );
 const advances = await page.evaluate(
-  async ({ families, system, weights, first, last, px }) => {
+  async ({ families, weights, first, last, px }) => {
     const ctx = document.createElement('canvas').getContext('2d')!;
-    const measure = async (family: string, weight: number) => {
-      const font = `${weight} ${px}px "${family}"`;
-      // The faces the page declares, never a font of the same name installed on this machine.
-      if ((await document.fonts.load(font)).length === 0)
-        throw new Error(`${family} ${weight} did not load`);
-      ctx.font = font;
-      const row: number[] = [];
-      for (let code = first; code <= last; code++)
-        // Rounded up, so a line is never measured narrower than it draws.
-        row.push(Math.ceil((ctx.measureText(String.fromCharCode(code)).width * 1000) / px));
-      return row;
-    };
-    const out: Record<string, Record<string, number[]>> = { system: {} };
+    const out: Record<string, Record<string, number[]>> = {};
     for (const { id, family } of families) {
       out[id] = {};
-      for (const [name, weight] of Object.entries(weights))
-        out[id][name] = await measure(family, weight);
-    }
-    for (const [name, weight] of Object.entries(weights)) {
-      const rows: number[][] = [];
-      for (const family of system) rows.push(await measure(family, weight));
-      out.system![name] = rows[0]!.map((_, i) => Math.max(...rows.map((row) => row[i]!)));
+      for (const [name, weight] of Object.entries(weights)) {
+        const font = `${weight} ${px}px "${family}"`;
+        // The face the stylesheet declares, never a font of the same name installed on this machine.
+        if ((await document.fonts.load(font)).length === 0)
+          throw new Error(`${family} ${weight} did not load`);
+        ctx.font = font;
+        const row: number[] = [];
+        for (let code = first; code <= last; code++)
+          // Rounded up, so a line is never measured narrower than it draws.
+          row.push(Math.ceil((ctx.measureText(String.fromCharCode(code)).width * 1000) / px));
+        out[id][name] = row;
+      }
     }
     return out;
   },
-  { families, system: SYSTEM_FAMILIES, weights: WEIGHTS, first: FIRST, last: LAST, px: MEASURE_PX },
+  { families, weights: WEIGHTS, first: FIRST, last: LAST, px: MEASURE_PX },
 );
 await browser.close();
 
@@ -100,13 +62,6 @@ export type FontAdvances = { readonly regular: readonly number[]; readonly bold:
 
 export const FONT_ADVANCES: Readonly<Record<string, FontAdvances>> = {
 ${rows}
-};
-
-// The system face, for text with no font of its own, which the device's own font draws: each character as wide as
-// the widest of these draws it. ${SYSTEM_FAMILIES.join(', ')}.
-export const SYSTEM_ADVANCES: FontAdvances = {
-  regular: [${advances.system!.regular!.join(', ')}],
-  bold: [${advances.system!.bold!.join(', ')}],
 };
 `;
 const target = fileURLToPath(

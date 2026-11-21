@@ -114,7 +114,7 @@ describe('rowHeights', () => {
     expect([heightOf(b, 1), heightOf(b, 2), heightOf(b, 3)]).toEqual([28, 28, 28]);
   });
 
-  it('gives one tall line its line height and 1 px: 16 points still fit 28 px, 18 do not (D90)', () => {
+  it('gives one tall line its line height and 1 px: 16 points still fit 28 px, 18 do not (D97)', () => {
     const b = book({ A1: 'Title', A2: 'Title', A3: '12' });
     format(b, 'A1', { fs: 16 });
     format(b, 'A2', { fs: 18 });

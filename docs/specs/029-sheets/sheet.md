@@ -482,7 +482,7 @@ A row is **automatic** until it is given a size of its own; then it is **sized**
 - It follows its cells' text, wrap, font, font size and bold, and their columns' widths, with no one asking.
 - The height is worked out from the cells and never stored: no write, no undo step, the same for everyone.
 - A cell's text needs its lines at their line height (1.3 times the font size, to a whole px).
-- One line needs 1 px more; two or more lines keep 8 px, 4 px clear above and below (default, **D90**).
+- One line needs 1 px more; two or more lines keep 8 px, 4 px clear above and below (default, **D97**).
 - A cell that wraps breaks its text in the room its column gives: its width less 4 px each side, and less the room
   kept at its right for a dropdown's arrow (22 px) or a filter button (20 px).
 - Every column a card table lists keeps the dropdown's room, whether its field takes a set value or not.
@@ -500,17 +500,16 @@ A row is **automatic** until it is given a size of its own; then it is **sized**
 - A sheet made before rows fitted needs nothing: its sized rows stay as set, and the rest fit when next drawn.
 - Lines are broken without a browser, from a table of each font's own character widths, bold a little wider.
 - So every browser, the api, agents, images and exports break the same lines and agree on every height.
-- A character outside the table is measured by its kind (default, **D91**): an accented letter as its letter, a
+- A character outside the table is measured by its kind (default, **D98**): an accented letter as its letter, a
   CJK character a full em, an emoji 1.25 em, anything else the font's average letter.
 - A cell with no font of its own is measured in its tab's font.
 - A tab with no font draws its cells in the device's own font, which differs by device and which no table holds.
-- Such text is measured in the **system face** (default, **D92**): each character as wide as the widest of the
-  fonts a device names draws it.
-- So on such a tab a line breaks a little early, and fits its cell in every one of those fonts.
+- Such text is measured as Inter (default, **D99**), which is as wide as the fonts most devices name, or wider.
+- So a line on such a tab fits its cell on those devices, and breaks where it would in Inter on every device.
 - The grid, images and exports draw exactly the lines that were measured, so an automatic row cuts no line off.
 - They place a measured line by its font's own widths, never snapped to whole px, so it is as wide as measured.
 - Where a browser draws a font wider than was measured (a fallback while the font loads, or a device's font wider
-  than the system face), a line may reach its cell's edge.
+  than Inter), a line may reach past its cell's edge.
 - An Editor sizes a row and returns it to automatic.
 - A Participant's typing and an agent's cells grow an automatic row all the same: that is no change of shape.
 - A Viewer sees the same heights.
@@ -1050,9 +1049,8 @@ The code cites each by its id.
   (default).
 - **D29** A cell comment marker's size and its preview: An 8 px triangle; the preview after 400 ms, the first 140
   characters (default).
-- **D90** The room an automatic row keeps round its text: 1 px for one line, 8 px for two or more (default).
-- **D91** How a character outside a font's width table is measured: an accented letter as its letter, a CJK
+- **D97** The room an automatic row keeps round its text: 1 px for one line, 8 px for two or more (default).
+- **D98** How a character outside a font's width table is measured: an accented letter as its letter, a CJK
   character 1 em, an emoji 1.25 em, anything else the font's average letter (default).
-- **D92** What text with no font is measured in: the system face, each character at the widest of Inter (as
-  Adwaita Sans, and near macOS's), Selawik (Segoe UI's widths), Roboto, Ubuntu, Noto Sans, Cantarell, Arimo (Arial's
-  and Helvetica's widths) and DejaVu Sans; about 8% wider than Inter for prose, 17% in bold (default).
+- **D99** What text with no font is measured in: Inter, whose prose is as wide as Noto Sans's and 4% to 7% wider
+  than Ubuntu's, Segoe UI's, Arial's and Roboto's; DejaVu Sans, 7% wider than Inter, runs past its cell (default).

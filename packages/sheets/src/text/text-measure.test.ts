@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ADVANCE_FIRST, FONT_ADVANCES, SYSTEM_ADVANCES } from './font-advances';
+import { ADVANCE_FIRST, FONT_ADVANCES } from './font-advances';
 import { fontPx, lineHeightPx, textWidth, TEXT_BASE_PX, type TextFace } from './text-measure';
 
 const INTER: TextFace = { font: 'inter' };
@@ -37,49 +37,34 @@ describe('textWidth', () => {
     );
   });
 
-  // A text with no font is drawn in the device's own font, which no table holds (D92).
-  it('measures a text with no font in the system face: each character at its widest', () => {
-    const text = 'Budget review, 12 March';
-    let units = 0;
-    for (const ch of text) units += SYSTEM_ADVANCES.regular[ch.charCodeAt(0) - ADVANCE_FIRST]!;
-    expect(textWidth(text, 13)).toBeCloseTo((units * 13) / 1000, 6);
-    expect(textWidth(text, 13, { bold: true })).toBeGreaterThan(textWidth(text, 13));
-  });
-
-  it('holds no character of the system face narrower than Inter draws it', () => {
-    for (const weight of ['regular', 'bold'] as const)
-      SYSTEM_ADVANCES[weight].forEach((units, i) =>
-        expect(units).toBeGreaterThanOrEqual(FONT_ADVANCES.inter![weight][i]!),
-      );
-  });
-
-  it('measures a font it does not know in the system face', () => {
-    expect(textWidth('Budget', 13, { font: 'gone' })).toBe(textWidth('Budget', 13));
-    expect(textWidth('Budget', 13, { font: 'constructor' })).toBe(textWidth('Budget', 13));
-    expect(textWidth('Budget', 13, { font: 'gone' })).toBeGreaterThan(
-      textWidth('Budget', 13, INTER),
+  // A text with no font is drawn in the device's own font, which no table holds (D99).
+  it('measures a text with no font, or a font it has no table for, as Inter', () => {
+    expect(textWidth('Budget review', 13)).toBe(textWidth('Budget review', 13, INTER));
+    expect(textWidth('Budget', 13, { bold: true })).toBe(
+      textWidth('Budget', 13, { ...INTER, bold: true }),
     );
+    expect(textWidth('Budget', 13, { font: 'gone' })).toBe(textWidth('Budget', 13, INTER));
+    expect(textWidth('Budget', 13, { font: 'constructor' })).toBe(textWidth('Budget', 13, INTER));
   });
 
-  it('measures an accented letter as its letter and a mark on its own as nothing (D91)', () => {
+  it('measures an accented letter as its letter and a mark on its own as nothing (D98)', () => {
     expect(textWidth('é', 13, INTER)).toBeCloseTo(em('e') * 13, 6);
     expect(textWidth('Å', 13, INTER)).toBeCloseTo(em('A') * 13, 6);
     expect(textWidth('e\u0301', 13, INTER)).toBeCloseTo(em('e') * 13, 6);
   });
 
-  it('measures a CJK character a full em and an emoji 1.25 em (D91)', () => {
+  it('measures a CJK character a full em and an emoji 1.25 em (D98)', () => {
     expect(textWidth('漢字', 10)).toBe(20);
     expect(textWidth('한', 10)).toBe(10);
     expect(textWidth('😀', 10)).toBe(12.5);
     expect(textWidth('★', 10)).toBe(12.5);
   });
 
-  it("measures any other letter as the font's average letter, by its case (D91)", () => {
+  it("measures any other letter as the font's average letter, by its case (D98)", () => {
     const lower = textWidth('abcdefghijklmnopqrstuvwxyz', 13, INTER) / 26;
     const upper = textWidth('ABCDEFGHIJKLMNOPQRSTUVWXYZ', 13, INTER) / 26;
     expect(textWidth('д', 13, INTER)).toBeCloseTo(lower, 6);
     expect(textWidth('Д', 13, INTER)).toBeCloseTo(upper, 6);
-    expect(textWidth('д', 13)).toBeCloseTo(textWidth('abcdefghijklmnopqrstuvwxyz', 13) / 26, 6);
   });
 
   it('measures common punctuation outside the table by a stand-in', () => {

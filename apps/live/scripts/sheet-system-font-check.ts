@@ -1,15 +1,14 @@
-// Checks the system face against the fonts installed on this machine (docs/specs/029-sheets/sheet.md "Row height",
-// D92): a tab with no font draws its cells in the device's own font, and its lines are broken in the system face
-// (packages/sheets/src/text/font-advances.ts SYSTEM_ADVANCES). For the page's own font stack and each system font
-// found here, it wraps the corpus below as the engine does, draws every line as the grid does, and reports the lines
-// drawn wider than their room. Exits 1 when the device's own font draws one. Run: pnpm --filter live fonts:system
+// Reports how the fonts installed on this machine draw text that was measured with no font (docs/specs/029-sheets/
+// sheet.md "Row height", D99): a tab with no font draws its cells in the device's own font, and its lines are broken
+// as Inter's. For the page's own font stack and each system font found here, it wraps the corpus below as the engine
+// does, draws every line as the grid does, and counts the lines drawn past their room, and past their cell (cut off).
+// A report, never a test: it depends on the machine. Run: pnpm --filter live fonts:system
 import { chromium } from '@playwright/test';
 import { wrapLines } from '../../../packages/sheets/src/text/wrap-lines.ts';
 
 // The stack a cell with no font draws in: Tailwind's preflight on <html>, which nothing in the app overrides.
 const DEVICE = 'ui-sans-serif, system-ui, sans-serif';
-// Fonts a device's system may name, checked where they are installed. Verdana is no system's own font: it is here
-// as one known to be wider than the face, to show what a miss looks like.
+// Fonts a device's system may name, reported where they are installed.
 const FAMILIES = [
   DEVICE,
   'Segoe UI',
@@ -23,13 +22,15 @@ const FAMILIES = [
   'Liberation Sans',
   'Arial',
   'DejaVu Sans',
-  'Verdana',
 ];
 const WEIGHTS = [400, 700];
 // A cell's text with no size of its own, then 12 and 16 points (fontPx).
 const SIZES = [13, 16, 21];
 // Text rooms from a narrow column to a wide one, in px.
 const ROOMS = [52, 72, 92, 112, 132, 152, 192, 232, 292, 392];
+// What a cell keeps clear at its text's right (packages/sheets/src/row-fit.ts CELL_PAD_PX): a line reaching further
+// is cut off.
+const CELL_PAD_PX = 4;
 
 // What people put in a wrapping cell: prose, notes, headings, labels in capitals, numbers in a sentence, a link.
 const CORPUS = [
@@ -70,7 +71,7 @@ await page.setContent(
   '<!doctype html><span id="probe" style="position:absolute;white-space:pre;text-rendering:geometricPrecision"></span>',
 );
 const report = await page.evaluate(
-  ({ families, weights, lines, device }) => {
+  ({ families, weights, lines, device, pad }) => {
     const probe = document.getElementById('probe')!;
     const widthOf = (text: string) => {
       probe.textContent = text;
@@ -83,7 +84,14 @@ const report = await page.evaluate(
     };
     const mono = generic('monospace');
     const serif = generic('serif');
-    const out: { family: string; weight: number; over: number; of: number; worst: string }[] = [];
+    const out: {
+      family: string;
+      weight: number;
+      past: number;
+      cut: number;
+      of: number;
+      worst: string;
+    }[] = [];
     for (const family of families) {
       const named = family === device ? family : `"${family}"`;
       // Installed when it draws unlike both generic fallbacks.
@@ -95,29 +103,32 @@ const report = await page.evaluate(
         continue;
       for (const weight of weights) {
         const mine = lines.filter((line) => line.bold === (weight === 700));
-        let over = 0;
+        let past = 0;
+        let cut = 0;
         let furthest = 0;
         let worst = 'none';
         for (const line of mine) {
           probe.style.font = `${weight} ${line.px}px ${named}`;
-          const past = widthOf(line.text) - line.room;
-          if (past <= 0) continue;
-          over++;
-          if (past > furthest) {
-            furthest = past;
-            worst = `${past.toFixed(1)} px past ${line.room} px at ${line.px} px: "${line.text}"`;
+          const over = widthOf(line.text) - line.room;
+          if (over <= 0) continue;
+          past++;
+          if (over > pad) cut++;
+          if (over > furthest) {
+            furthest = over;
+            worst = `${over.toFixed(1)} px past ${line.room} px at ${line.px} px: "${line.text}"`;
           }
         }
-        out.push({ family, weight, over, of: mine.length, worst });
+        out.push({ family, weight, past, cut, of: mine.length, worst });
       }
     }
     return out;
   },
-  { families: FAMILIES, weights: WEIGHTS, lines, device: DEVICE },
+  { families: FAMILIES, weights: WEIGHTS, lines, device: DEVICE, pad: CELL_PAD_PX },
 );
 await browser.close();
 
-console.log('font | weight | lines past their room | furthest');
+console.log('font | weight | lines past their room | of those cut off | lines | furthest');
 for (const row of report)
-  console.log(`${row.family} | ${row.weight} | ${row.over} of ${row.of} | ${row.worst}`);
-if (report.some((row) => row.family === DEVICE && row.over > 0)) process.exitCode = 1;
+  console.log(
+    `${row.family} | ${row.weight} | ${row.past} | ${row.cut} | ${row.of} | ${row.worst}`,
+  );
