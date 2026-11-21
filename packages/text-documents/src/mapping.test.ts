@@ -111,7 +111,7 @@ describe('WordprocessingML properties as files write them', () => {
       indentFirst: 18,
       keepWithNext: false,
     });
-    expect(a!.inlines.map((i) => (i.type === 'kept' ? i.name : i.text))).toEqual([
+    expect(a!.inlines.map((i) => (i.type === 'kept' ? i.name : i.type === 'note' ? '' : i.text))).toEqual([
       'a\n\u2011\u00ad',
       'br',
     ]);

@@ -22,7 +22,8 @@ describe('conversion', () => {
     const features = await corpus('libreoffice/features.odt');
     const losses = conversionLosses(features, 'ooxml');
     expect(losses).toContainEqual({ kind: 'kept', name: 'table', count: 1 });
-    expect(losses).toContainEqual({ kind: 'kept', name: 'note', count: 1 });
+    // A footnote is the model's (page-layout.md "Footnotes"): no loss.
+    expect(losses.map((l) => l.name)).not.toContain('note');
     expect(losses).toContainEqual({ kind: 'section-name', name: 'section-name', count: 1 });
     expect(losses).toContainEqual({ kind: 'list-header', name: 'list-header', count: 1 });
     const lists = CONSTRUCTS.lists!('odf');
@@ -93,6 +94,7 @@ describe('conversion', () => {
       'lists',
       'sections',
       'fields',
+      'footnotes',
       'links',
       'metadata',
     ])

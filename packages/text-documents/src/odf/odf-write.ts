@@ -14,7 +14,7 @@ import {
   XML_DECLARATION,
   type KeptXml,
 } from '@livedoc/office-packages';
-import type { Block, Inline, Paragraph, SectionBreak } from '../model/blocks';
+import type { Block, Inline, Note, Paragraph, SectionBreak } from '../model/blocks';
 import { Paragraph as Paragraphs } from '../model/blocks';
 import type { ListDefinition } from '../model/lists';
 import { canonical, compact, isEmpty, keptStillHolds, type TextProps } from '../model/props';
@@ -32,6 +32,8 @@ import { headerLayout, masterStoriesXml, shownKinds, withStories } from './odf-h
 import { HeadersAndFooters, type ResolvedHeaders } from '../model/headers';
 import { paragraphContentXml, type Segment } from './odf-text-content';
 import { odfFieldXml } from './odf-fields';
+import { odfFootnoteXml } from './odf-notes';
+import { Notes } from '../model/notes';
 
 export type OdfWriteOptions = { flat: boolean; generator: string };
 
@@ -78,6 +80,8 @@ class OdfWriter {
   readonly resolved = new Map<Section, ResolvedHeaders>();
   /** Writes a header's or footer's blocks (set by the body's writer). */
   storyXml: (blocks: readonly Block[]) => string = () => '';
+  /** Each of the body's notes with its number, its citation (page-layout.md "Footnotes"). */
+  readonly noteNumbers: Map<Note, number>;
   readonly #masterClaims = new Map<string, string>();
   readonly listNames = new Map<string, string>();
   #sections = 0;
@@ -90,6 +94,7 @@ class OdfWriter {
 
   constructor(document: TextDocument) {
     this.document = document;
+    this.noteNumbers = Notes.numbers(document.body);
     const source = document.source?.format === 'odf' ? document.source : undefined;
     this.source = source;
     this.tabsFromIndent = source !== undefined && source.tabsFromIndent !== false;
@@ -365,7 +370,15 @@ function contentXml(w: OdfWriter, blocks: readonly Block[], story: boolean): str
       const span = w.textStyle(i);
       if (i.type === 'run')
         return { kind: 'text', text: i.text, ...compact({ span, link: i.link }) };
-      const xml = i.type === 'field' ? odfFieldXml(i) : w.kept(i.xml);
+      const xml =
+        i.type === 'field'
+          ? odfFieldXml(i)
+          : i.type === 'note'
+            ? odfFootnoteXml(
+                w.noteNumbers.get(i) ?? w.noteNumbers.size + 1,
+                contentXml(w, i.blocks, true),
+              )
+            : w.kept(i.xml);
       return { kind: 'kept', xml, ...compact({ span, link: i.link }) };
     });
     const tag = outline !== undefined && outline >= 1 ? 'text:h' : 'text:p';

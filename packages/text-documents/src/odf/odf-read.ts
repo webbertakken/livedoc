@@ -15,6 +15,7 @@ import {
 import type {
   Block,
   Field,
+  Note,
   Inline,
   KeptInline,
   Paragraph,
@@ -53,6 +54,7 @@ import {
 } from '../model/headers';
 import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
 import { odfFieldKind, odfFieldText } from './odf-fields';
+import { odfFootnoteBody } from './odf-notes';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -622,7 +624,8 @@ class BodyReader {
     const kept: KeptProperties | undefined = auto
       ? { xml: auto.kept, read: canonical(values), residue: [], name: styleName }
       : undefined;
-    const inlines = new InlineReader(this.r).read(e);
+    // A header's, a footer's or a note's notes stay kept content (page-layout.md "Footnotes").
+    const inlines = new InlineReader(this.r, !this.story).read(e);
     const paragraph: Paragraph = {
       type: 'paragraph',
       style,
@@ -639,9 +642,12 @@ class InlineReader {
   #afterSpace = true;
 
   readonly r: OdfReader;
+  /** Whether a footnote is read as the model's: in the body, never in a header, footer or note. */
+  readonly notes: boolean;
 
-  constructor(r: OdfReader) {
+  constructor(r: OdfReader, notes: boolean) {
     this.r = r;
+    this.notes = notes;
   }
 
   read(paragraph: XmlElement): Inline[] {
@@ -715,6 +721,17 @@ class InlineReader {
     if (isDde(node)) {
       this.r.report.drop('field', node.local);
       for (const child of node.children) this.node(child, ctx);
+      return;
+    }
+    const noteBody = this.notes ? odfFootnoteBody(node) : undefined;
+    if (noteBody) {
+      this.out.push({
+        type: 'note',
+        blocks: this.r.readStory(noteBody),
+        props: ctx.props,
+        ...compact({ style: ctx.style, link: ctx.link, kept: ctx.kept }),
+      } satisfies Note);
+      this.#afterSpace = false;
       return;
     }
     const field = odfFieldKind(node);

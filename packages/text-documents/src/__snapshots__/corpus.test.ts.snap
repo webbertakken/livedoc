@@ -25,10 +25,6 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
       },
       {
         "count": 1,
-        "name": "footnoteReference",
-      },
-      {
-        "count": 1,
         "name": "commentRangeStart",
       },
       {
@@ -71,7 +67,7 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
         "Normal",
         "",
         "A footnote and a comment here.",
-        "footnoteReference,commentRangeStart,commentRangeEnd,commentReference",
+        "note: The note.,commentRangeStart,commentRangeEnd,commentReference",
       ],
       [
         "Normal",
@@ -190,10 +186,6 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
       },
       {
         "count": 1,
-        "name": "note",
-      },
-      {
-        "count": 1,
         "name": "annotation",
       },
       {
@@ -241,7 +233,7 @@ exports[`the corpus > reads libreoffice/features.fodt and writes it back the sam
         "Standard",
         "",
         "A footnote and a comment here.",
-        "note,annotation,annotation-end",
+        "note: The note.,annotation,annotation-end",
       ],
       [
         "Standard",
@@ -353,10 +345,6 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
       },
       {
         "count": 1,
-        "name": "note",
-      },
-      {
-        "count": 1,
         "name": "annotation",
       },
       {
@@ -404,7 +392,7 @@ exports[`the corpus > reads libreoffice/features.odt and writes it back the same
         "Standard",
         "",
         "A footnote and a comment here.",
-        "note,annotation,annotation-end",
+        "note: The note.,annotation,annotation-end",
       ],
       [
         "Standard",

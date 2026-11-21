@@ -1,6 +1,6 @@
 // What the room knows of a text document without reading its state again
 // (docs/specs/034-text-documents/live-editing-and-storage.md "The digest"): counts, whether it has content, and the
-// text content search reads: the body's, then its headers' and footers'. Pure; built from a loaded state when the
+// text content search reads: the body's, then its headers', footers' and notes'. Pure; built from a loaded state when the
 // outbox drains the tab.
 import type * as Y from 'yjs';
 import { TEXT_DOCUMENT_WORDS_PER_PAGE } from './limits';
@@ -13,7 +13,7 @@ export type TextDocumentDigest = {
   /** Estimated without layout; never fewer than one, as an empty text document is one page. */
   readonly pages: number;
   readonly hasContent: boolean;
-  /** The body's plain text, then each header's and footer's, one line a paragraph. */
+  /** The body's plain text, then each header's and footer's, then each note's, one line a paragraph. */
   readonly searchText: string;
 };
 
