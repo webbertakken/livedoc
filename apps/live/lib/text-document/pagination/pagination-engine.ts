@@ -7,16 +7,21 @@
 import {
   PAGE_GAP_PX,
   type BlockMetrics,
-  type ColumnStart,
   type Cross,
   type LayoutChange,
   type LineBox,
   type PageFrame,
   type PageStart,
   type Pagination,
-  type RegionRule,
-  type Spacer,
 } from './pagination';
+import {
+  copyPage,
+  frozen,
+  restartPage,
+  shifted,
+  thawed,
+  type PageRecord,
+} from './pagination-records';
 
 // A line within half a pixel of the foot still fits: measured rectangles round.
 const FIT_TOLERANCE_PX = 0.5;
@@ -37,18 +42,6 @@ const columnsOf = (frame: PageFrame): number => frame.columns?.count ?? 1;
 type Cursor = { readonly y: number; readonly mb: number; readonly empty: boolean };
 // Where the drawn strip stands: the bottom of the last block in it and its space after (page coordinates).
 type Strip = { readonly y: number; readonly mb: number };
-
-type PageRecord = {
-  block: number;
-  line: number;
-  gap: number;
-  blank: number;
-  carried?: true;
-  columns: ColumnStart[];
-  spacers: Spacer[];
-  crosses: Cross[];
-  rules: RegionRule[];
-};
 
 type Region = {
   readonly frame: PageFrame;
@@ -86,61 +79,6 @@ type State = {
 };
 
 const PAGE_TOP: Cursor = { y: 0, mb: 0, empty: true };
-
-const copyPage = (page: PageRecord): PageRecord => ({
-  ...page,
-  columns: [...page.columns],
-  spacers: [...page.spacers],
-  crosses: page.crosses.map((c) => ({ ...c, splits: [...c.splits] })),
-  rules: [...page.rules],
-});
-
-/** The page to lay out again from: the one before the page holding block `target`'s start, never one a box carries. */
-function restartPage(starts: readonly PageStart[], target: number): number {
-  let holding = 0;
-  for (let q = 0; q < starts.length; q++) {
-    const start = starts[q]!;
-    if (start.block < target || (start.block === target && start.line === 0)) holding = q;
-    else break;
-  }
-  // A page's start may have moved back for a block after it (keep with next): lay out the page before it too.
-  let restart = Math.max(0, holding - 1);
-  while (restart > 0 && starts[restart]!.carried) restart -= 1;
-  return restart;
-}
-
-const shifted = (start: PageStart, delta: number): PageStart => ({
-  ...start,
-  block: start.block + delta,
-  ...(start.columns && { columns: start.columns.map((c) => ({ ...c, block: c.block + delta })) }),
-  ...(start.spacers && { spacers: start.spacers.map((c) => ({ ...c, block: c.block + delta })) }),
-  ...(start.crosses && { crosses: start.crosses.map((c) => ({ ...c, block: c.block + delta })) }),
-  ...(start.rules && { rules: start.rules.map((c) => ({ ...c, block: c.block + delta })) }),
-});
-
-function frozen(page: PageRecord): PageStart {
-  const { columns, spacers, crosses, rules, carried, ...start } = page;
-  return {
-    ...start,
-    ...(carried ? { carried } : {}),
-    ...(columns.length > 0 ? { columns } : {}),
-    ...(spacers.length > 0 ? { spacers } : {}),
-    ...(crosses.length > 0 ? { crosses } : {}),
-    ...(rules.length > 0 ? { rules } : {}),
-  };
-}
-
-const thawed = (start: PageStart): PageRecord => ({
-  block: start.block,
-  line: start.line,
-  gap: start.gap,
-  blank: start.blank,
-  ...(start.carried ? { carried: true as const } : {}),
-  columns: [...(start.columns ?? [])],
-  spacers: [...(start.spacers ?? [])],
-  crosses: (start.crosses ?? []).map((c) => ({ ...c, splits: [...c.splits] })),
-  rules: [...(start.rules ?? [])],
-});
 
 class Engine {
   readonly blocks: readonly BlockMetrics[];
@@ -521,6 +459,15 @@ class Engine {
           frame,
           state.cursor.empty ? state.cursor.y : state.cursor.y + state.cursor.mb,
         );
+      // A column break starts the next column, past the last the next page; in one column, the next page.
+      if (!state.cursor.empty && (block.columnBreakBefore || blocks[i - 1]?.columnBreakAfter)) {
+        if (state.region) return this.nextBox(i, 0, state.cursor.y + state.cursor.mb);
+        if (this.trial) {
+          this.trial.failed = true;
+          return false;
+        }
+        return this.newPage(i, 0, state.strip.y + state.strip.mb, 0);
+      }
       state.onBox.push({ block: i, before: state.cursor, strip: state.strip });
       const { cursor, strip } = state;
       const top = cursor.empty
@@ -559,6 +506,17 @@ class Engine {
         return false;
       }
       return this.newPage(i, forced, blockTop + lines[forced]!.top, 0);
+    }
+    // A column break inside the paragraph starts the next column (or page) at the line after it.
+    const columnForced = block.columnForced?.find((line) => line > s && line < lines.length);
+    if (columnForced !== undefined && s + fit >= columnForced) {
+      const endY = blockTop + lines[columnForced]!.top;
+      if (state.region) return this.nextBox(i, columnForced, endY);
+      if (this.trial) {
+        this.trial.failed = true;
+        return false;
+      }
+      return this.newPage(i, columnForced, endY, 0);
     }
     const remaining = lines.length - s;
     if (fit === remaining) return this.finish(blockTop);

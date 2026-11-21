@@ -26,7 +26,13 @@ import {
 } from '@livedoc/office-packages';
 import type { Block, Inline, Paragraph, Run } from '../model/blocks';
 import { LIST_LEVELS, type ListDefinition, type ListPlace } from '../model/lists';
-import { canonical, compact, type KeptProperties, type TextProps } from '../model/props';
+import {
+  canonical,
+  compact,
+  type KeptProperties,
+  type ParagraphProps,
+  type TextProps,
+} from '../model/props';
 import type { Section } from '../model/sections';
 import { roleOfStyleName, Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TabStops, type TabStop } from '../model/tab-stops';
@@ -510,11 +516,15 @@ class OoxmlReader {
           })
         : undefined;
     const style = wVal(childElement(pPr ?? p, W_NS, 'pStyle')) ?? this.normalId();
-    const props = readParagraphProps(
+    const read = readParagraphProps(
       pPr,
       Styles.paragraphPropsOf(this.tabs.styles, this.tabs.defaults, style).tabStops ?? [],
       this.dropTabs,
     );
+    // A column break at the paragraph's start is its column break before (page-layout.md "Breaks").
+    const runs = new RunReader(this, p);
+    const inlines = runs.read();
+    const props: ParagraphProps = runs.columnBreak ? { ...read, columnBreakBefore: true } : read;
     const values = {
       style,
       props,
@@ -528,7 +538,7 @@ class OoxmlReader {
       style,
       props,
       ...compact({ list, kept }),
-      inlines: new RunReader(this, p).read(),
+      inlines,
     };
   }
 
@@ -570,6 +580,8 @@ type RunContext = { link?: string };
 
 class RunReader {
   readonly out: Inline[] = [];
+  /** A column break opened the paragraph: its column break before (page-layout.md "Breaks"). */
+  columnBreak = false;
   readonly r: OoxmlReader;
   readonly p: XmlElement;
   readonly skipped = new Set<XmlElement>();
@@ -718,7 +730,9 @@ class RunReader {
           break;
         case 'br': {
           const type = wVal(c, 'type');
-          if (type === undefined || type === 'textWrapping')
+          if (type === 'column' && this.out.length === 0 && !this.columnBreak)
+            this.columnBreak = true;
+          else if (type === undefined || type === 'textWrapping')
             this.push('\n', style, props, ctx.link, kept);
           else this.keepWhole(r, rPr, c, ctx, props, style);
           break;

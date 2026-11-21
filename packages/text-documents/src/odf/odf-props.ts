@@ -196,6 +196,7 @@ export function readParagraphProps(
     keepTogether: keep(fo(e, 'keep-together')),
     widowControl: widowControl(e),
     pageBreakBefore: breakBefore === 'page' ? true : breakBefore === 'auto' ? false : undefined,
+    columnBreakBefore: breakBefore === 'column' ? true : undefined,
     borders: readBorders(e),
     shading: odfColour(fo(e, 'background-color')),
     tabStops: readTabStops(e, dropped),
@@ -295,10 +296,7 @@ export function paragraphPropsXml(p: ParagraphProps, extra = ''): string {
     attr('fo:keep-together', always(p.keepTogether)),
     attr('fo:widows', p.widowControl === undefined ? undefined : p.widowControl ? '2' : '0'),
     attr('fo:orphans', p.widowControl === undefined ? undefined : p.widowControl ? '2' : '0'),
-    attr(
-      'fo:break-before',
-      p.pageBreakBefore === undefined ? undefined : p.pageBreakBefore ? 'page' : 'auto',
-    ),
+    attr('fo:break-before', breakBeforeOf(p)),
     bordersXml(p.borders),
     attr('fo:background-color', p.shading),
     attr('style:tab-stop-distance', length(p.tabInterval)),
@@ -340,6 +338,16 @@ export function textPropsXml(t: TextProps): string {
   ].join('');
   return attrs ? `<style:text-properties${attrs}/>` : '';
 }
+
+// One `fo:break-before` holds both breaks: a page break wins, then a column break; "auto" where either is set off.
+const breakBeforeOf = (p: ParagraphProps): string | undefined =>
+  p.pageBreakBefore
+    ? 'page'
+    : p.columnBreakBefore
+      ? 'column'
+      : p.pageBreakBefore === false || p.columnBreakBefore === false
+        ? 'auto'
+        : undefined;
 
 /** A page layout's setup from its `style:page-layout-properties`. */
 export function readPageSetup(layout: XmlElement, onUnequal?: () => void): PageSetup | undefined {

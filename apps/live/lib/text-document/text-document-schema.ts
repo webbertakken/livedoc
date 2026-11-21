@@ -93,10 +93,17 @@ function keptPlaceholder(tag: string, raw: unknown, xml?: unknown): DOMOutputSpe
     case 'hidden':
       return [tag, { ...attributes, class: 'text-document-kept-hidden' }];
     case 'break': {
-      // A Word page break starts a new page where pages are laid out (page-layout.md "Breaks").
+      // A Word page or column break starts a new page or column where pages are laid out (page-layout.md "Breaks").
       const source = (xml as { xml?: unknown } | null)?.xml;
-      const page = typeof source === 'string' && keptBreakOf(name, source) === 'page';
-      return ['br', page ? { ...attributes, 'data-page-break': '' } : attributes];
+      const kind = typeof source === 'string' ? keptBreakOf(name, source) : null;
+      return [
+        'br',
+        kind === 'page'
+          ? { ...attributes, 'data-page-break': '' }
+          : kind === 'column'
+            ? { ...attributes, 'data-column-break': '' }
+            : attributes,
+      ];
     }
     case 'placeholder':
       return [

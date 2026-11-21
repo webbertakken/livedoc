@@ -1190,15 +1190,16 @@ export const TEXT_DOCUMENT_COLUMNS = chart(
   { types: ['TextDocumentColumns'] },
 );
 
-// A page or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
+// A page, column or section break inserted in a text document (docs/specs/034-text-documents/page-layout.md "Breaks").
 export const TEXT_DOCUMENT_BREAKS = chart(
   'Element',
   'Added',
   'Text Document Breaks',
-  'A page break or a section break, on the next page or continuous, inserted from Insert > Break or with Ctrl+Enter.',
+  'A page, column or section break (on the next page or continuous), inserted from Insert > Break or with Ctrl+Enter.',
   {
     types: [
       'TextDocumentBreakPage',
+      'TextDocumentBreakColumn',
       'TextDocumentBreakSectionNextPage',
       'TextDocumentBreakSectionContinuous',
     ],

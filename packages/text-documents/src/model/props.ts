@@ -55,6 +55,8 @@ export type ParagraphProps = {
   /** Prevent single lines: widows and orphans of two. */
   readonly widowControl?: boolean;
   readonly pageBreakBefore?: boolean;
+  /** Starts the next column, or the next page in a section of one column (page-layout.md "Breaks"). */
+  readonly columnBreakBefore?: boolean;
   /** A heading's outline level, 1 to 10 (Heading 1 is 1). */
   readonly outlineLevel?: number;
   /** Its borders, replacing its style's whole (standard-mapping.md "The model"). */

@@ -203,7 +203,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('page-break', 'Page break', 'edit', { shortcut: 'insert-page-break', ...BUILT }),
         item('section-break-next-page', 'Section break (next page)', 'edit', BUILT),
         item('section-break-continuous', 'Section break (continuous)', 'edit', BUILT),
-        item('column-break', 'Column break', 'edit'),
+        item('column-break', 'Column break', 'edit', BUILT),
       ]),
       item('bookmark', 'Bookmark', 'edit'),
       submenu('table-of-contents', 'Table of contents', [

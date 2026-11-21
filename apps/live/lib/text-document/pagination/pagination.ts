@@ -34,6 +34,12 @@ export type BlockMetrics = {
   readonly breakAfter?: boolean;
   /** Lines that start a new page whatever the rules (a page break inside the paragraph before them). */
   readonly forced?: readonly number[];
+  /** A column break before: it starts the next column, or the next page in a section of one column. */
+  readonly columnBreakBefore?: boolean;
+  /** Lines that start the next column (a Word column break inside the paragraph before them). */
+  readonly columnForced?: readonly number[];
+  /** A column break after it: the next block starts the next column. */
+  readonly columnBreakAfter?: boolean;
   /** A section break: where the section it starts begins. */
   readonly startsSection?: SectionStart;
 };
