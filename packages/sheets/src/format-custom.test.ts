@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { formatCodeReads } from './format-codes';
 import { displayValue } from './number-format';
 import { validFormat, validFormatPatch } from './format';
+import { FORMAT_CODE_MAX } from './limits';
 
 describe('a custom format code', () => {
   it('reads codes people use, and refuses ones that cannot be read', () => {
@@ -18,7 +19,7 @@ describe('a custom format code', () => {
       '0;(0);"zero";@',
     ])
       expect(formatCodeReads(code), code).toBe(true);
-    for (const code of ['', '   ', '"open', '[h:mm', 'h]', '[[h]]', '0;0;0;0;0', 'x'.repeat(65)])
+    for (const code of ['', '   ', '"open', '[h:mm', 'h]', '[[h]]', '0;0;0;0;0', 'x'.repeat(FORMAT_CODE_MAX + 1)])
       expect(formatCodeReads(code), code).toBe(false);
   });
   it('draws a number and text the same in every locale', () => {
