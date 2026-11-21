@@ -3,7 +3,7 @@
 **Status: specified.** Nothing is built. Every row reads `specified` until it is built; a built row names the test
 that proves it.
 
-What "all functionality" is measured against (fork F5 `(default)`): **every topic of Adobe's own help for Acrobat on
+What "all functionality" is measured against (F5, ruled by Webber on 2026-11-21): **every topic of Adobe's own help for Acrobat on
 desktop**, 403 topics in its contents as read on 2026-11-21
 ([The Acrobat inventory](../../research/pdf-documents/acrobat-inventory.md)). One row a topic, under Adobe's own
 sections and topic titles. Each row states its rule in one line, the [editing mode](editing-modes.md) it lands in
@@ -21,8 +21,10 @@ A row is done when it reads **built** (with its test) or **left out** (with Webb
 | `built (<test>)`      | Built, with the test that proves it                                              | 0    |
 
 - Left out, by ruling: 7 `left out (C4)`, 1 `left out (F10)`, 1 `left out (F12)`, 50 `left out (F14)`, 102 `left out (F5)`.
-- **C4 is ruled.** F5 (the reference), F10 (scans), F12 (starting from nothing) and F14 (the inventory's edge) are
-  open: until Webber rules them their rows stand as defaults, and a ruling changes rows here first.
+- **C4, F5 and F14 are ruled** (Webber, 2026-11-21): the reference is this inventory, and Acrobat's far tools are left
+  out, their data in a file kept untouched. A row reading `left out (F5)` is this matrix's reading of the reference,
+  topic by topic: Webber may bring any one back in, and the row changes here first.
+- **F10 (scans) and F12 (starting from nothing) are open**: their two rows stand as defaults until ruled.
 - `not a function` rows are left out under F5's ruling with the rest; they are told apart so the count of functions
   is honest.
 - What is left out and why, by group: [Left out](#left-out). What LiveDoc has that the inventory lacks:

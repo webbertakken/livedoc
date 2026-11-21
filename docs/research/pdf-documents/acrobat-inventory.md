@@ -21,7 +21,8 @@ of functions, laid out in LiveDoc's own office shell.
 ## Where each section lands
 
 "Lands in" is the editing mode a function belongs to (C2), or Files for what Download, sync and sharing own.
-"Proposed standing" is this research's reading, a default until Webber rules it with F5 and F14.
+"Proposed standing" is this research's reading. Webber ruled F5 and F14 as proposed on 2026-11-21; the
+[parity matrix](../../specs/035-pdf-documents/parity-matrix.md) holds each topic's standing from then on.
 
 | Adobe's help section                                    | Topics | Lands in  | Proposed standing                                                                      |
 | ------------------------------------------------------- | ------ | --------- | -------------------------------------------------------------------------------------- |
@@ -85,8 +86,8 @@ troubleshooting and release notes (30), installing and signing in (13), Distille
 
 ## Forks the inventory raises
 
-- **F5** stands as the plan has it: Acrobat's function inventory is the reference, at this page's 403 topics.
-- **F14, the inventory's edge** (new): tools Acrobat has that sit far from reading, reviewing and editing. Proposed:
+- **F5**, ruled as proposed (Webber, 2026-11-21): Acrobat's function inventory is the reference, at this page's 403 topics.
+- **F14, the inventory's edge**, ruled as proposed (Webber, 2026-11-21): tools Acrobat has that sit far from reading, reviewing and editing are
   left out, with the file's own data for each kept untouched. They are Bates numbering (4 topics), barcode fields (4),
   encrypting to certificates (8; such a file is refused by name, since it cannot be opened without the person's
   certificate store), the Action Wizard (3), geospatial measuring (7), authoring layers (part of 7), imposition and

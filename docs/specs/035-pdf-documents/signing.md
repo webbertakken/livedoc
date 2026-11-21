@@ -129,7 +129,7 @@ those and marks.
 
 ## Share roles
 
-Fork F7 `(default)`.
+F7, ruled: a Participant signs, with drawn and with certificate signatures.
 
 | Role            | Signing                                                                                                                |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------- |

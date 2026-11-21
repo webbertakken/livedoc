@@ -60,14 +60,30 @@ are never merged.
 
 ## Limits
 
-| Constant             | Value               | Why                                                                                                  |
-| -------------------- | ------------------- | ---------------------------------------------------------------------------------------------------- |
-| `FILE_TAB_MAX_BYTES` | 26,214,400 (25 MiB) | Inside a Worker's request body limit with headroom; GitHub warns at 50 MB, so a wiki stays cloneable |
+| Constant               | Value                | Why                                                                                                                                                                                         |
+| ---------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FILE_TAB_MAX_BYTES`   | 100,000,000 (100 MB) | The largest request body a Worker takes on Cloudflare's Free and Pro plans, and under GitHub's limit for one file (100 MiB), so every file LiveDoc holds can be pushed (Webber, 2026-11-21) |
+| `FILE_SYNC_WARN_BYTES` | 50,000,000 (50 MB)   | Where GitHub warns about a file: a sync writes it and reports it once                                                                                                                       |
 
-A larger file is refused with "This file is larger than 25 MB, the most LiveDoc holds for one file." A sync leaves
-it in the repository, untouched, and reports it. The cap, uploads, range reads and retention are the
+A larger file is refused with "This file is larger than 100 MB, the most LiveDoc holds for one file." A sync leaves
+it in the repository, untouched, and reports it. A file past `FILE_SYNC_WARN_BYTES` is held and synced as any other;
+the sync's report names it once ("plans.pdf is 62 MB. GitHub warns about files over 50 MB."), so a wiki's owner
+knows what makes a clone heavy. The cap, uploads, range reads and retention are the
 [blob store](blob-store.md)'s. Usage counts every distinct blob once per owner
 ([Open source + distribution](../002-project-scope/open-source-and-business-model.md)).
+
+The cap is one number for every file tab and every [PDF document](../035-pdf-documents/pdf-document.md#limits). What
+LiveDoc's servers do with a file's contents (a thumbnail, search text) has its own, smaller bound, said where it
+applies; holding, showing and syncing a file never depends on it.
+
+## Tests
+
+- A file of exactly `FILE_TAB_MAX_BYTES` is stored; one byte more is refused with `413 file_too_large` and the copy
+  above, before any byte is stored, in the browser and at the api.
+- The copy's number is derived from the constant, never typed beside it.
+- A sync leaves a file past the cap in the repository and reports it; it reports a file past `FILE_SYNC_WARN_BYTES`
+  once and syncs it.
+- Two replaces racing each other leave the later one's bytes and the earlier as a previous version.
 
 ## Share roles
 

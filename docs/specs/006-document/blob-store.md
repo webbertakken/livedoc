@@ -88,18 +88,27 @@ A self-host without the `FILES` bucket has no blob store. Everything else works:
 
 ## Limits
 
-| Constant                       | Value                 | Why                                                                                                        |
-| ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `FILE_TAB_MAX_BYTES`           | 26,214,400 (25 MiB)   | The [file tab](file-tab.md#limits)'s cap, for every blob `(default)`; fork F6 of plan 0022 proposes 100 MB |
-| `FILE_SINGLE_UPLOAD_MAX_BYTES` | 33,554,432 (32 MiB)   | `(default)` Under it one request is simplest; above it a dropped connection must not cost the whole file   |
-| `FILE_PART_BYTES`              | 8,388,608 (8 MiB)     | `(default)` Above object storage's 5 MiB least part; 13 parts for 100 MB                                   |
-| `FILE_UPLOAD_ABANDON_HOURS`    | 24                    | `(default)` A day to resume                                                                                |
-| `FILE_PREVIOUS_VERSION_DAYS`   | 30                    | As the Trash keeps a deleted document                                                                      |
-| `FILE_UNHELD_GRACE_HOURS`      | 24                    | `(default)` Longer than any upload                                                                         |
-| `FILE_LOCAL_CACHE_MAX_BYTES`   | 536,870,912 (512 MiB) | `(default)` A browser's own quota bites first on a phone                                                   |
+| Constant                       | Value                 | Why                                                                                                      |
+| ------------------------------ | --------------------- | -------------------------------------------------------------------------------------------------------- |
+| `FILE_TAB_MAX_BYTES`           | 100,000,000 (100 MB)  | The [file tab](file-tab.md#limits)'s cap, for every blob (Webber, 2026-11-21)                            |
+| `FILE_SINGLE_UPLOAD_MAX_BYTES` | 33,554,432 (32 MiB)   | `(default)` Under it one request is simplest; above it a dropped connection must not cost the whole file |
+| `FILE_PART_BYTES`              | 8,388,608 (8 MiB)     | `(default)` Above object storage's 5 MiB least part; 12 parts for 100 MB                                 |
+| `FILE_UPLOAD_ABANDON_HOURS`    | 24                    | `(default)` A day to resume                                                                              |
+| `FILE_PREVIOUS_VERSION_DAYS`   | 30                    | As the Trash keeps a deleted document                                                                    |
+| `FILE_UNHELD_GRACE_HOURS`      | 24                    | `(default)` Longer than any upload                                                                       |
+| `FILE_LOCAL_CACHE_MAX_BYTES`   | 536,870,912 (512 MiB) | `(default)` A browser's own quota bites first on a phone                                                 |
 
-While `FILE_TAB_MAX_BYTES` is under `FILE_SINGLE_UPLOAD_MAX_BYTES`, every upload is one request and the parts path is
-unused.
+A file at the cap travels as 12 parts, each streamed through the api and never held whole, so the api's memory is
+untouched by a file's size.
+
+## Tests
+
+- A file of `FILE_SINGLE_UPLOAD_MAX_BYTES` goes in one request; one byte more goes in parts; a file of exactly
+  `FILE_TAB_MAX_BYTES` is stored and one byte more is refused before any byte travels.
+- An upload dropped after a part resumes from the next part and stores the same key.
+- Bytes that do not hash to their key are refused and nothing is kept.
+- A range read returns exactly the bytes asked for; a key the document does not hold answers `404 blob_not_held`.
+- Without the bucket every route answers `503 files_unavailable`.
 
 ## Refusals
 

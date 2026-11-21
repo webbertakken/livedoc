@@ -122,7 +122,7 @@ Fork F9 `(default)`. A PDF's protection is its **open password** and its **permi
   file unprotected and replaces the stored file.
 - **Change** opens the dialog with the current settings.
 - Certificates as recipients (encrypting to people's certificates), security policies and rights servers are left
-  out; a file encrypted that way is refused by name ([Opening](opening.md#refusals), fork F14).
+  out; a file encrypted that way is refused by name ([Opening](opening.md#refusals); F14, ruled).
 - Sharing in LiveDoc is not protection: who may open a document here is its share roles
   ([PDF document](pdf-document.md#share-roles)).
 

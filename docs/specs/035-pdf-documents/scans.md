@@ -86,11 +86,11 @@ they were the author's.
 
 ## Share roles
 
-| Role            | Scans                                                                             |
-| --------------- | --------------------------------------------------------------------------------- |
-| **Editor**      | Recognises, reviews, corrects, includes recognised text in the file               |
-| **Participant** | Recognises, reviews and corrects (F7 `(default)`): it changes nothing of the page |
-| **Viewer**      | Selects, finds and copies text others recognised; recognises nothing              |
+| Role            | Scans                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------- |
+| **Editor**      | Recognises, reviews, corrects, includes recognised text in the file                                |
+| **Participant** | Recognises, reviews and corrects, as part of Reviewing (F7, ruled): it changes nothing of the page |
+| **Viewer**      | Selects, finds and copies text others recognised; recognises nothing                               |
 
 ## Keyboard and accessibility
 

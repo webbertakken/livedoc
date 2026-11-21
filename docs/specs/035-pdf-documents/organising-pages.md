@@ -153,10 +153,10 @@ pages=<n> bytes=<n>`.
 
 ## Errors
 
-| When                           | A person sees                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------------- |
-| Deleting every page            | "A PDF needs at least one page."                                                |
-| A range that names no page     | "There are no pages 40-50. This PDF has 14 pages."                              |
-| The inserted file is protected | Its password is asked, as on opening                                            |
-| The inserted file is not a PDF | "Choose a PDF file, or a LiveDoc document."                                     |
-| The result would be too large  | "These pages would make a file of 41 MB, more than LiveDoc holds for one file." |
+| When                           | A person sees                                                                    |
+| ------------------------------ | -------------------------------------------------------------------------------- |
+| Deleting every page            | "A PDF needs at least one page."                                                 |
+| A range that names no page     | "There are no pages 40-50. This PDF has 14 pages."                               |
+| The inserted file is protected | Its password is asked, as on opening                                             |
+| The inserted file is not a PDF | "Choose a PDF file, or a LiveDoc document."                                      |
+| The result would be too large  | "These pages would make a file of 141 MB, more than LiveDoc holds for one file." |

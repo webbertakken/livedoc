@@ -137,11 +137,11 @@ everyone on the document; every client reloads the pages it shows, keeping its p
 
 ## Share roles
 
-| Role            | May                                                                                                                   |
-| --------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Editor**      | Everything that replaces the stored file; restore a version or a previous version; **Replace**                        |
-| **Participant** | Changes written as additions; a certificate signature, which replaces the stored file by an addition (F7 `(default)`) |
-| **Viewer**      | Nothing that changes what is stored; downloads a bake                                                                 |
+| Role            | May                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Editor**      | Everything that replaces the stored file; restore a version or a previous version; **Replace**                   |
+| **Participant** | Changes written as additions; a certificate signature, which replaces the stored file by an addition (F7, ruled) |
+| **Viewer**      | Nothing that changes what is stored; downloads a bake                                                            |
 
 Every role downloads the same bake: the file holds every live change, whoever made it.
 

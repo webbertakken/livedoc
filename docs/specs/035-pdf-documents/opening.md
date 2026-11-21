@@ -94,10 +94,10 @@ as for any document.
 | --------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
 | `pdf_damaged`               | The engine cannot read the file, repaired or not                                           | "This PDF is damaged and can't be opened. You can still download the file."                      |
 | `pdf_newer`                 | The file opens with no pages, or names a feature or filter the engine does not know        | "This PDF uses a newer kind of PDF than LiveDoc reads yet. You can still download the file."     |
-| `pdf_certificate_protected` | The file is encrypted to certificates (fork F14 `(default)`)                               | "This PDF is locked to specific people's certificates, which LiveDoc doesn't open."              |
+| `pdf_certificate_protected` | The file is encrypted to certificates (F14, ruled: refused by name)                        | "This PDF is locked to specific people's certificates, which LiveDoc doesn't open."              |
 | `pdf_rights_protected`      | The file names a rights service or another security handler                                | "This PDF is protected by a rights service, which LiveDoc doesn't open."                         |
 | `pdf_stopped`               | Reading passed `PDF_OPEN_TIMEOUT_MS` or the worker's memory ceiling, or the engine trapped | "LiveDoc stopped reading this PDF, because it asked for too much time or memory." **Try again**  |
-| `file_too_large`            | The bytes pass `FILE_TAB_MAX_BYTES`; nothing is stored                                     | "This file is larger than 25 MB, the most LiveDoc holds for one file."                           |
+| `file_too_large`            | The bytes pass `FILE_TAB_MAX_BYTES`; nothing is stored                                     | "This file is larger than 100 MB, the most LiveDoc holds for one file."                          |
 | `files_unavailable`         | The server has no file storage; nothing is stored                                          | "This server has no file storage."                                                               |
 | `blob_missing`              | The stored file's bytes are gone from the store                                            | "This PDF's file is missing from storage." with **Restore a previous version** where one is kept |
 
@@ -114,15 +114,15 @@ as for any document.
 
 ## Limits
 
-| Constant                    | Value               | Why                                                                                                       |
-| --------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------- |
-| `FILE_TAB_MAX_BYTES`        | 26,214,400 (25 MiB) | `(default)` Fork F6; the research measured for 100 MB ([Bytes](../../research/pdf-documents/bytes.md))    |
-| `FILE_WHOLE_READ_MAX_BYTES` | 8,388,608 (8 MiB)   | `(default)` Under it one request is the simplest path; above it page one must not wait for the file       |
-| `PDF_RANGE_BLOCK_BYTES`     | 65,536              | `(default)` The block the engine's reader is fed; a paper's first page is 4 blocks of 16                  |
-| `PDF_OPEN_TIMEOUT_MS`       | 30,000              | `(default)` Reading the structure of the slowest corpus file takes under a second; safe range 10 to 120 s |
-| `PDF_OPEN_NOTICE_MS`        | 800                 | `(default)` Past it a person wonders; before it a notice would flash                                      |
-| `PDF_MAX_PAGE_PIXELS`       | 268,435,456         | `(default)` One draw of one page; a decompression bomb draws at most this                                 |
-| `PDF_WORKER_MAX_BYTES`      | 1,073,741,824       | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Set by measurement        |
+| Constant                    | Value                | Why                                                                                                                                          |
+| --------------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FILE_TAB_MAX_BYTES`        | 100,000,000 (100 MB) | The file tab's cap (F6, ruled): a phone holds such a file by range without loading it whole ([Bytes](../../research/pdf-documents/bytes.md)) |
+| `FILE_WHOLE_READ_MAX_BYTES` | 8,388,608 (8 MiB)    | `(default)` Under it one request is the simplest path; above it page one must not wait for the file                                          |
+| `PDF_RANGE_BLOCK_BYTES`     | 65,536               | `(default)` The block the engine's reader is fed; a paper's first page is 4 blocks of 16                                                     |
+| `PDF_OPEN_TIMEOUT_MS`       | 30,000               | `(default)` Reading the structure of the slowest corpus file takes under a second; safe range 10 to 120 s                                    |
+| `PDF_OPEN_NOTICE_MS`        | 800                  | `(default)` Past it a person wonders; before it a notice would flash                                                                         |
+| `PDF_MAX_PAGE_PIXELS`       | 268,435,456          | `(default)` One draw of one page; a decompression bomb draws at most this                                                                    |
+| `PDF_WORKER_MAX_BYTES`      | 1,073,741,824        | `(default)` The engine's memory ceiling in a browser; a phone's is 268,435,456. Set by measurement                                           |
 
 ## Share roles
 

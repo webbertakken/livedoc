@@ -87,7 +87,7 @@ text, fill forms, place comments and sign, but also a mode for real editing"; ru
 
 ## Share roles
 
-Fork F7 `(default)`: the modes line up with the access levels.
+The modes line up with the access levels (F7, ruled: a Participant does all of Reviewing).
 
 | Role            | Modes listed                | Starts in |
 | --------------- | --------------------------- | --------- |

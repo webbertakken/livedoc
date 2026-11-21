@@ -231,11 +231,11 @@ someone who can edit it to open it." for a Participant on a file only an Editor'
 
 ## Share roles
 
-| Role            | Live changes                                                    | Stored file                                                  | Versions                 |
-| --------------- | --------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------ |
-| **Editor**      | All                                                             | Replaces it by any trigger                                   | See, name, restore, copy |
-| **Participant** | Marks, threads, field values, drawn signatures, recognised text | Replaces it only by a certificate signature (F7 `(default)`) | See                      |
-| **Viewer**      | None; their presence is their page                              | Reads it                                                     | None                     |
+| Role            | Live changes                                                    | Stored file                                             | Versions                 |
+| --------------- | --------------------------------------------------------------- | ------------------------------------------------------- | ------------------------ |
+| **Editor**      | All                                                             | Replaces it by any trigger                              | See, name, restore, copy |
+| **Participant** | Marks, threads, field values, drawn signatures, recognised text | Replaces it only by a certificate signature (F7, ruled) | See                      |
+| **Viewer**      | None; their presence is their page                              | Reads it                                                | None                     |
 
 ## Telemetry and observability
 

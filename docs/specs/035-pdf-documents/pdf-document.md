@@ -140,20 +140,21 @@ diagram:
 
 ## Limits
 
-| Constant             | Value               | Why                                                                                                                                     |
-| -------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `FILE_TAB_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` The file tab's own cap, shared; fork F6 proposes 100 MB ([Bytes](../../research/pdf-documents/bytes.md#the-numbers-for-f6)) |
-| `PDF_SNIFF_BYTES`    | 1,024               | Where readers look for `%PDF-`: a file with leading junk still opens                                                                    |
-| `PDF_MAX_MARKS`      | 20,000              | `(default)` Marks in one PDF document: far past use, and a bound on what one open replays                                               |
-| `PDF_MAX_PAGES`      | 100,000             | `(default)` A ceiling on inserted pages; a file arriving with more opens and takes no insert                                            |
+| Constant             | Value                | Why                                                                                                           |
+| -------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `FILE_TAB_MAX_BYTES` | 100,000,000 (100 MB) | The file tab's own cap, shared (F6, ruled; [Bytes](../../research/pdf-documents/bytes.md#the-numbers-for-f6)) |
+| `PDF_SNIFF_BYTES`    | 1,024                | Where readers look for `%PDF-`: a file with leading junk still opens                                          |
+| `PDF_MAX_MARKS`      | 20,000               | `(default)` Marks in one PDF document: far past use, and a bound on what one open replays                     |
+| `PDF_MAX_PAGES`      | 100,000              | `(default)` A ceiling on inserted pages; a file arriving with more opens and takes no insert                  |
 
 A change that would pass a limit is refused as a whole, with the limit named
 ([Live editing and storage](live-editing-and-storage.md#limits)).
 
 ## Share roles
 
-Fork F7 `(default)`: what Reviewing does sits on top of a page, so a Participant may do it; what Editing does changes
-the pages, so it is an Editor's.
+A Participant does **all of Reviewing**: marks, comments, fills fields, and signs with drawn and certificate
+signatures (F7, ruled). What Reviewing does sits on top of a page; what Editing does changes the pages, so it is an
+Editor's.
 
 | Role            | With a PDF document                                                                                            |
 | --------------- | -------------------------------------------------------------------------------------------------------------- |

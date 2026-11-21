@@ -128,23 +128,23 @@ written into the file as a standard annotation, so any reader shows it. The rese
 
 ## Limits
 
-| Constant                    | Value      | Why                                                                              |
-| --------------------------- | ---------- | -------------------------------------------------------------------------------- |
-| `PDF_MAX_MARKS`             | 20,000     | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))   |
-| `PDF_MARK_TEXT_MAX_CHARS`   | 10,000     | `(default)` A Text mark's or a note's words; longer belongs in a document        |
-| `PDF_DRAWING_MAX_POINTS`    | 20,000     | `(default)` One Drawing; more strokes start a new mark                           |
-| `PDF_DRAWING_JOIN_MS`       | 1,000      | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000 |
-| `PDF_SNAP_PX`               | 6          | `(default)` Screen pixels within which a shape snaps to the page's lines         |
-| `PDF_STAMP_MAX_BYTES`       | 2,097,152  | `(default)` A custom stamp's picture; larger is scaled down before it is kept    |
-| `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 | `(default)` A pinned file is a blob, under the blob store's own cap              |
+| Constant                    | Value               | Why                                                                                            |
+| --------------------------- | ------------------- | ---------------------------------------------------------------------------------------------- |
+| `PDF_MAX_MARKS`             | 20,000              | `(default)` Marks in one PDF document ([PDF document](pdf-document.md#limits))                 |
+| `PDF_MARK_TEXT_MAX_CHARS`   | 10,000              | `(default)` A Text mark's or a note's words; longer belongs in a document                      |
+| `PDF_DRAWING_MAX_POINTS`    | 20,000              | `(default)` One Drawing; more strokes start a new mark                                         |
+| `PDF_DRAWING_JOIN_MS`       | 1,000               | `(default)` Strokes made closer in time are one Drawing; safe range 300 to 3,000               |
+| `PDF_SNAP_PX`               | 6                   | `(default)` Screen pixels within which a shape snaps to the page's lines                       |
+| `PDF_STAMP_MAX_BYTES`       | 2,097,152           | `(default)` A custom stamp's picture; larger is scaled down before it is kept                  |
+| `PDF_PINNED_FILE_MAX_BYTES` | 26,214,400 (25 MiB) | `(default)` A pinned file is written into the bake, which must itself fit `FILE_TAB_MAX_BYTES` |
 
 ## Share roles
 
-| Role            | Marks                                                                                                                          |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| **Editor**      | Makes any; changes and deletes anyone's, the file's own included; flattens                                                     |
-| **Participant** | Makes any; changes and deletes their own; answers anyone's; may not delete the file's own or another person's (F7 `(default)`) |
-| **Viewer**      | Sees them, reads their words, hides them for themselves; makes none                                                            |
+| Role            | Marks                                                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Editor**      | Makes any; changes and deletes anyone's, the file's own included; flattens                                                |
+| **Participant** | Makes any; changes and deletes their own; answers anyone's; may not delete the file's own or another person's `(default)` |
+| **Viewer**      | Sees them, reads their words, hides them for themselves; makes none                                                       |
 
 Gated on the session's `can` (`pdfReviews`), and checked by the room: a Participant's update that removes or changes
 a mark another person made is refused with `not_your_mark`.

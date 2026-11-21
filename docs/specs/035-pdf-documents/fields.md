@@ -147,7 +147,7 @@ A scanned or flat form has nothing to fill. Reviewing offers the **fill marks** 
 | Role            | Fields                                                                          |
 | --------------- | ------------------------------------------------------------------------------- |
 | **Editor**      | Fills, clears, imports and exports field data; builds and flattens fields       |
-| **Participant** | Fills, clears their own values, imports and exports field data (F7 `(default)`) |
+| **Participant** | Fills, clears their own values, imports and exports field data (F7, ruled)      |
 | **Viewer**      | Sees values; fills nothing; exports field data unless downloading is turned off |
 
 ## Keyboard and accessibility
