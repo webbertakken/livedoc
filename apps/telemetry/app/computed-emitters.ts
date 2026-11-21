@@ -479,7 +479,9 @@ export const COMPUTED_EMITTERS: Record<string, ComputedValues> = {
     ],
   },
   // A side panel of an office kind opened (docs/specs/004-interface-design/office-shell.md "Side panels"), by its title.
-  'apps/live/lib/office/useOfficePanels.ts UI·Opened': { values: ['TextDocumentPanelOutline'] },
+  'apps/live/lib/office/useOfficePanels.ts UI·Opened': {
+    values: ['TextDocumentPanelOutline', 'TextDocumentPanelLineNumbers'],
+  },
   // A text document's writing formatted (docs/specs/034-text-documents/text-and-paragraphs.md "Telemetry"), by the
   // names in TEXT_DOCUMENT_FORMAT_TELEMETRY.
   'apps/live/lib/text-document/text-document-format-actions.ts Element·Changed': {

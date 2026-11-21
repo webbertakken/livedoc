@@ -9,6 +9,8 @@ export type OfficePanelSpec = {
   side: OfficePanelSide;
   // The menu item that opens and closes it (an on/off check).
   item: string;
+  // Offered only to a session that writes (an Editor): for the others its item is not bound and it is not drawn.
+  editorsOnly?: true;
 };
 
 export const OFFICE_PANEL_WIDTH = { initial: 360, min: 280, max: 560, step: 16 } as const;

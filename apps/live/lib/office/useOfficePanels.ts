@@ -30,16 +30,29 @@ export function useOfficePanels({
   kind,
   panels,
   onFocusDocument,
+  writes = true,
 }: {
   // `TextDocument`: `UI · Opened · TextDocumentPanel<Title>`, and where its open panels are kept.
   kind: 'TextDocument';
   panels: readonly OfficePanelSpec[];
   // Gives the keyboard back to the document once a panel closes.
   onFocusDocument: () => void;
+  // The session writes: an Editor's panels are offered (office-shell.md "Side panels").
+  writes?: boolean;
 }): OfficePanelsState {
-  const [open, setOpen] = useState<OpenPanels>(() => readOpenPanels(kind, panels));
+  const [stored, setOpen] = useState<OpenPanels>(() => readOpenPanels(kind, panels));
   const [focusNonce, setFocusNonce] = useState(0);
   const [width, setWidth] = useState(readOfficePanelWidth);
+  // A panel the session is not offered is shown closed, still remembered open for when it is.
+  const offered = useCallback(
+    (id: string | null) =>
+      id !== null && (writes || !panels.find((p) => p.id === id)?.editorsOnly) ? id : null,
+    [panels, writes],
+  );
+  const open = useMemo(
+    (): OpenPanels => ({ left: offered(stored.left), right: offered(stored.right) }),
+    [offered, stored],
+  );
 
   const change = useCallback(
     (next: OpenPanels) => {
@@ -52,15 +65,16 @@ export function useOfficePanels({
   const close = useCallback(
     (side: OfficePanelSide) => {
       debugLog('[office] panel closed', { side });
-      change(OpenPanels.close(open, side));
+      change(OpenPanels.close(stored, side));
       onFocusDocument();
     },
-    [change, open, onFocusDocument],
+    [change, stored, onFocusDocument],
   );
 
   const actions = useMemo(() => {
     const out: Record<string, OfficeActions[string]> = {};
     for (const panel of panels) {
+      if (panel.editorsOnly && !writes) continue;
       const isOpen = open[panel.side] === panel.id;
       out[panel.item] = {
         checked: isOpen,
@@ -71,13 +85,13 @@ export function useOfficePanels({
           }
           track('UI', 'Opened', `${kind}Panel${panel.title.replace(/\s+/g, '')}`);
           debugLog('[office] panel open', { id: panel.id });
-          change(OpenPanels.toggle(open, panel));
+          change(OpenPanels.toggle(stored, panel));
           setFocusNonce((n) => n + 1);
         },
       };
     }
     return out;
-  }, [panels, open, kind, change, close]);
+  }, [panels, open, stored, kind, change, close, writes]);
 
   return {
     open,

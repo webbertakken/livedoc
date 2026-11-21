@@ -10,12 +10,20 @@ vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
 
 const PANELS: OfficePanelSpec[] = [
   { id: 'outline', title: 'Outline', side: 'left', item: 'show-outline' },
+  { id: 'numbers', title: 'Line numbers', side: 'right', item: 'line-numbers', editorsOnly: true },
 ];
 
-function panels() {
+function panels(writes = true) {
   const onFocusDocument = vi.fn();
-  const hook = renderHook(() =>
-    useOfficePanels({ kind: 'TextDocument', panels: PANELS, onFocusDocument }),
+  const hook = renderHook(
+    (props: { writes: boolean }) =>
+      useOfficePanels({
+        kind: 'TextDocument',
+        panels: PANELS,
+        onFocusDocument,
+        writes: props.writes,
+      }),
+    { initialProps: { writes } },
   );
   return { hook, onFocusDocument };
 }
@@ -51,6 +59,18 @@ describe('useOfficePanels', () => {
     const { hook } = panels();
     expect(hook.result.current.open.left).toBe('outline');
     expect(hook.result.current.focusNonce).toBe(0);
+  });
+
+  it("offers an Editor's panel only to a session that writes, hidden where it was left open", () => {
+    const { hook } = panels();
+    act(() => hook.result.current.actions['line-numbers']!.run());
+    expect(hook.result.current.open.right).toBe('numbers');
+    hook.rerender({ writes: false });
+    expect(hook.result.current.actions['line-numbers']).toBeUndefined();
+    expect(hook.result.current.actions['show-outline']).toBeDefined();
+    expect(hook.result.current.open.right).toBeNull();
+    hook.rerender({ writes: true });
+    expect(hook.result.current.open.right).toBe('numbers');
   });
 
   it('keeps the width once a resize is done', () => {

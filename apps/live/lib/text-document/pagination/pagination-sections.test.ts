@@ -46,6 +46,23 @@ describe('bodySections', () => {
     expect(bodySections(headed, letter).headers).toEqual([undefined, own]);
   });
 
+  it('reads each section’s line numbers, the first section’s given (page-layout.md "Line numbers")', () => {
+    const own = { restart: 'section' };
+    const numbered = schema.nodes.doc!.create(null, [
+      p('a'),
+      schema.nodes.section_break!.create({ start: 'next-page', setup: null, lineNumbers: own }),
+      p('b'),
+      section(null),
+      p('c'),
+    ]);
+    const first = { restart: 'page' as const };
+    expect(bodySections(numbered, letter, undefined, undefined, first).lineNumbers).toEqual([
+      first,
+      own,
+      undefined,
+    ]);
+  });
+
   it('reads the section a place is in', () => {
     expect(sectionAt(doc, 1)).toBe(0);
     const b = 3 + doc.child(1).nodeSize + 1;
