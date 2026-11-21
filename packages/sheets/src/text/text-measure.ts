@@ -1,16 +1,22 @@
 // How wide a cell's text is, with no DOM to ask (docs/specs/029-sheets/sheet.md "Row height"): each character's
 // advance from a table of its font's own (font-advances.ts), so every browser, the api, an agent's write and an
-// export measure the same line. A character outside the table is measured by its kind (D91). Pure.
-import { ADVANCE_FIRST, FONT_ADVANCES } from './font-advances';
+// export measure the same line. A character outside the table is measured by its kind (D91). Text with no font of
+// its own is drawn in the device's own font, which no table holds: it is measured in the system face, each character
+// as wide as the widest of the fonts a system names (D92), so a line breaks early rather than run past its cell. Pure.
+import { ADVANCE_FIRST, FONT_ADVANCES, SYSTEM_ADVANCES, type FontAdvances } from './font-advances';
 
 // A cell's text with no font size of its own, in px (sheet.md "The grid"), and a line's height in font sizes.
 export const TEXT_BASE_PX = 13;
 const LINE_HEIGHT_EM = 1.3;
-// The font a cell is measured in when neither it nor its tab names one.
-const DEFAULT_FONT = 'inter';
 const ADVANCE_LAST = 0x7e;
+// The key the system face's tables are kept under: no font's id.
+const SYSTEM_FACE = '';
 
-// What a text is measured in: a font by its id (the editor's fonts) and whether it is bold.
+// The fonts with a table of their own, by id: the editor's fonts, kept in step with its catalogue by a test.
+export const MEASURED_FONTS: readonly string[] = Object.keys(FONT_ADVANCES);
+
+// What a text is measured in: a font by its id (the editor's fonts) and whether it is bold. No font, or one the
+// editor no longer offers, is the system face.
 export type TextFace = { font?: string | undefined; bold?: boolean | undefined };
 
 export function fontPx(fontSize: number | undefined): number {
@@ -33,11 +39,14 @@ function mean(units: readonly number[], from: string, to: string): number {
 }
 
 function tableOf(face: TextFace): Table {
-  const font = face.font && FONT_ADVANCES[face.font] ? face.font : DEFAULT_FONT;
+  const known: FontAdvances | undefined =
+    face.font && Object.hasOwn(FONT_ADVANCES, face.font) ? FONT_ADVANCES[face.font] : undefined;
+  const font = known ? face.font! : SYSTEM_FACE;
   const key = face.bold ? `${font}*` : font;
   let table = TABLES.get(key);
   if (!table) {
-    const units = face.bold ? FONT_ADVANCES[font]!.bold : FONT_ADVANCES[font]!.regular;
+    const advances = known ?? SYSTEM_ADVANCES;
+    const units = face.bold ? advances.bold : advances.regular;
     table = { units, lower: mean(units, 'a', 'z'), upper: mean(units, 'A', 'Z') };
     TABLES.set(key, table);
   }
