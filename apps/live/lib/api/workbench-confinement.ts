@@ -10,6 +10,7 @@ import {
   workbenchRouteVerdict,
   type WorkbenchConfinementSession,
 } from '@livedoc/api-schema';
+import { markReported, reportConfinedRequest } from './error-report';
 
 type WorkbenchConfinement = WorkbenchConfinementSession;
 
@@ -60,8 +61,12 @@ export function confinementRefusal(
   if (!logged.has(route)) {
     logged.add(route);
     console.warn('[workbench] request-confined', { method, route });
+    reportConfinedRequest(method, url);
   }
-  return new WorkbenchConfinedError(route);
+  const refusal = new WorkbenchConfinedError(route);
+  // Reported above, once per route: a caller's catch-all never counts it again.
+  markReported(refusal);
+  return refusal;
 }
 
 // The api refused the session itself (`401 invalid_session`: revoked, unpaired, purged, expired): the

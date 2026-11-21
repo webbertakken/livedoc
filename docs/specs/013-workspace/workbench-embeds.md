@@ -109,11 +109,15 @@ second, explicit approval, never an existing pairing widened in silence.
 - **Never more than the token.** The session's level is the minting token's level on the document, capped by the
   owner's own access now: a view token gives a read-only frame.
 - **Only what the editor of one document needs.** The document, its tabs, comments, changesets, items and room;
-  uploading images into it (always with the bytes: the hash-only dedupe shortcut is not theirs, so the session
-  cannot probe the owner's gallery, [Images](../009-elements/images.md) "Size cap") and reading its images; reading the person's display identity, preferences, custom
-  themes and shape libraries; the catalogues; sending a [bug report](../016-platform/bug-reports.md#entries) as the
+  every tab kind's own content and actions, as the editor works them in the app: a Sheet's sheets, a spreadsheet's
+  workbook (its file, settings, conversion and sheets), a text document's state, file and updates, a Form tab's link
+  (read, publish, open, close, delete), its responses seen and its Preview, and an Event Storming board's domain
+  export; uploading images into it (always with the bytes: the hash-only dedupe shortcut is not theirs, so the session
+  cannot probe the owner's gallery, [Images](../009-elements/images.md) "Size cap") and reading its images;
+  reading the person's display identity, preferences, custom themes and shape libraries; the catalogues; sending a [bug report](../016-platform/bug-reports.md#entries) as the
   person, which a view session may do too. Everything else is refused `403 workbench_confined`: ownership powers
-  (share links, password, move, delete, publish, copy), other documents, the person's library and folders,
+  (share links, password, move, delete, publish into a team, copy), other documents (a spreadsheet's imports among
+  them, WB68), the person's library and folders,
   writing preferences or the profile, the guest migration, tokens, teams, the account and the AI assistant. The
   editor offers none of them in a workbench embed: the person's agent sits beside it.
 - **Revocable.** Revoking the minting token ends its sessions; the page learns it on its next request or the room's
@@ -329,7 +333,7 @@ The code cites each by its id.
 - **WB15** Which scheme shows before the first `livedoc:theme`: The system's; the frame's stored Appearance setting is
   ignored in a workbench (default).
 - **WB16** How the editor treats a request the allow-list refuses: Refused locally (`WorkbenchConfinedError`), nothing
-  sent, logged once per route, not a network error (default).
+  sent, logged once per route and kept as a recent error (WB70), not a network error (default).
 - **WB17** Whether an unchanged selection is sent again: No: a settled selection is sent only when its text differs from
   the last sent (default).
 - **WB18** How `reveal` brings elements into view and outlines them: The changeset toast's Show and outline, in the
@@ -429,3 +433,9 @@ The code cites each by its id.
   that tool.
   You can unpair it any time …" (default).
 - **WB67** How Settings names a pairing's scope: "One document at a time" or "Whole workspace" (default).
+- **WB68** Whether a document session fetches a spreadsheet's imports: No, `403 workbench_confined`: an IMPORTRANGE
+  reads another document, so its imports show as not fetched in the frame (default).
+- **WB69** How the document scope's allow-list stays whole: every `/documents/{id}` route of the api's manifest is
+  decided, allowed or confined, in a table its test reads; a new route left undecided fails it (default).
+- **WB70** Whether a refused request reaches a bug report: Yes: its route label, once per route, is a recent error of
+  source `api` (`Confined.<Method>.<Route>`), beside the `[workbench] request-confined` warning (default).

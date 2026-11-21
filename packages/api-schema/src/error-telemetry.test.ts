@@ -106,6 +106,19 @@ describe('apiRouteLabel', () => {
     expect(apiRouteLabel('POST', '/api/trash/0b7c5f9e-1111/restore')).toBe('Post.Trash.Restore');
     // Explorer Home (docs/specs/013-workspace/explorer-home.md): one read.
     expect(apiRouteLabel('GET', '/api/home?tz=Europe%2FAmsterdam')).toBe('Get.Home');
+    // A tab kind's own routes say which content failed: a Sheet, a spreadsheet, a text document, a Form tab.
+    expect(apiRouteLabel('GET', '/api/documents/d/sheets/s/cells')).toBe(
+      'Get.Documents.Sheets.Cells',
+    );
+    expect(apiRouteLabel('GET', '/api/documents/d/workbook/imports')).toBe(
+      'Get.Documents.Workbook.Imports',
+    );
+    expect(apiRouteLabel('GET', '/api/documents/d/text-documents/t/state')).toBe(
+      'Get.Documents.TextDocuments.State',
+    );
+    expect(apiRouteLabel('GET', '/api/documents/d/tabs/t/form-link')).toBe(
+      'Get.Documents.Tabs.FormLink',
+    );
   });
 
   it('never echoes a share code or an unknown resource', () => {
