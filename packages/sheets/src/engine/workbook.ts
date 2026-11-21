@@ -531,6 +531,11 @@ export class Workbook {
     return claim.r1 === r && claim.c1 === c ? null : { r: claim.r1, c: claim.c1 };
   }
 
+  // Whether a formula on the sheet may spill, so a cell with no input may still show a value.
+  maySpill(sheetId: string): boolean {
+    return (this.spills.spillersIn(sheetId)?.size ?? 0) > 0;
+  }
+
   // How far a sheet is filled (positions + 1).
   extent(sheetId: string): { rows: number; cols: number } {
     let e = this.extents.get(sheetId);

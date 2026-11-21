@@ -53,6 +53,16 @@ export * from './chart-data';
 export * from './sheet-metrics';
 export * from './search-inputs';
 export * from './fit-widths';
+export * from './row-fit';
+export {
+  fontPx,
+  lineHeightPx,
+  MEASURED_FONTS,
+  textWidth,
+  TEXT_BASE_PX,
+  type TextFace,
+} from './text/text-measure';
+export { wrapLines } from './text/wrap-lines';
 export * from './sheet-starters';
 export * from './hyperlink';
 export * from './sparkline/sparkline-shapes';

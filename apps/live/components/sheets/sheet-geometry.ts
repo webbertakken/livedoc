@@ -7,8 +7,9 @@ import {
   indexAtOffset,
   layoutIndex,
   posRangeOf,
-  rowHeight,
+  baseRowHeight,
   type GridRange,
+  type RowHeights,
   type SheetLayout,
 } from '@livedoc/sheets';
 
@@ -38,13 +39,16 @@ export type Geometry = {
   headH: number;
 };
 
+// `heightOf` says how tall each row is drawn (rowHeights: an automatic row fits its text, sheet.md "Row height");
+// without it, a layout's own sizes.
 export function geometryOf(
   layout: SheetLayout,
   filteredOut: ReadonlySet<string> = new Set(),
+  heightOf: RowHeights = (id) => baseRowHeight(layout, id),
 ): Geometry {
   const ix = layoutIndex(layout);
   const hiddenRows = new Set([...ix.hiddenRows, ...filteredOut]);
-  const rows = axisOffsets(layout.rows, (id) => rowHeight(layout, id), hiddenRows);
+  const rows = axisOffsets(layout.rows, heightOf, hiddenRows);
   const cols = axisOffsets(layout.cols, (id) => colWidth(layout, id), ix.hiddenCols);
   const frozenRows = Math.min(layout.frozenRows ?? 0, layout.rows.length);
   const frozenCols = Math.min(layout.frozenCols ?? 0, layout.cols.length);

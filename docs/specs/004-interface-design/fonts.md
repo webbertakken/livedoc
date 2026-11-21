@@ -149,6 +149,18 @@ font, so they take the tab default).
 - Telemetry ([Telemetry + public transparency dashboard](../017-telemetry/telemetry.md)): `Element / Changed / Font` and `Tab / Changed /
 Font`.
 
+## In a Sheet
+
+- A Sheet breaks a cell's lines by each font's own character widths, with no browser to ask
+  ([Row height](../029-sheets/sheet.md#row-height)).
+- The widths of the eleven are a generated table: `pnpm --filter @livedoc/live fonts:advances` writes
+  `packages/sheets/src/text/font-advances.ts`.
+- A font added to or dropped from the eleven regenerates it; a test fails while the table and the eleven differ.
+- Text with no font is drawn in the device's own font and measured as Inter
+  ([Row height](../029-sheets/sheet.md#row-height), D99).
+- `pnpm --filter @livedoc/live fonts:system` reports how the fonts installed on a machine draw such text: the lines
+  that run past their cell.
+
 ## Loading
 
 A single Google Fonts stylesheet (`googleFontsHref()`) is linked in the

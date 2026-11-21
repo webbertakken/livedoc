@@ -16,7 +16,13 @@ import {
   type Tab,
 } from '@livedoc/document';
 import { statusPhasesOf, type Item, type ItemTypeDef } from '@livedoc/items';
-import { sheetContentSize, sheetFromJson, sheetFramesOf, type SheetJson } from '@livedoc/sheets';
+import {
+  sheetContentSize,
+  sheetFromJson,
+  sheetFramesOf,
+  Workbook,
+  type SheetJson,
+} from '@livedoc/sheets';
 import { planImageOf, planTabKindOf, planViewArt, type PlanArtData } from '@livedoc/plan-art';
 import { apiJson } from './api';
 import type { Env } from './env';
@@ -93,16 +99,18 @@ export async function planPreviewFor(
   const sheets =
     kind === 'sheet' && auth && documentId ? await sheetsOfTab(tab, { ...auth, documentId }) : null;
   const byId = new Map((sheets ?? []).map((s) => [s.id, s]));
+  // One workbook over the tab's sheets: a row is as tall as its text needs (sheet.md "Row height"), so the grid a
+  // Sheet's cells fill is measured from its values, in the agents' locale and the tab's font.
+  const wb = sheets?.length
+    ? new Workbook({ sheets: sheets.map(sheetFromJson), locale: 'en-GB' })
+    : null;
   const now = new Date();
   const image = planImageOf(tab, {
     tabs,
     now,
     renderDiagram: render,
     sheetHeads: (id) => byId.get(id)?.layout.showHeaders !== false,
-    sheetContent: (id) => {
-      const json = byId.get(id);
-      return json ? sheetContentSize(sheetFromJson(json)) : null;
-    },
+    sheetContent: (id) => (wb ? sheetContentSize(wb, id, tab.font) : null),
   });
   if (!image) return null;
   const boards = tabs.flatMap((t) =>

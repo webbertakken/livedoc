@@ -332,10 +332,21 @@ describe('a header menu', () => {
     fireEvent.click(btn('Fit to Data'));
     const col = layout(h).cols[1]!;
     expect(layout(h).colSize?.[col]).toBeGreaterThan(before);
-    act(() => h.select('A2'));
-    act(() => h.ctl().setMenu({ kind: 'header', axis: 'r', index: 1, x: 5, y: 5 }));
+  });
+
+  // docs/specs/029-sheets/sheet.md "Row height": Fit to Data returns a sized row to automatic.
+  it('fits a row to its data by taking its own size away', () => {
+    show(h, { kind: 'header', axis: 'r', index: 1, x: 5, y: 5 }, { at: 'A2' });
+    const row = layout(h).rows[1]!;
+    act(() => {
+      h.ctl().write(
+        { kind: 'layout', changes: [{ k: 'size', axis: 'r', ids: [row], px: 60 }] },
+        'Rows',
+      );
+    });
+    expect(layout(h).rowSize?.[row]).toBe(60);
     fireEvent.click(btn('Fit to Data'));
-    expect(layout(h).rowSize?.[layout(h).rows[1]!]).toBeGreaterThan(0);
+    expect(layout(h).rowSize?.[row]).toBeUndefined();
   });
 
   it('resizes to the pixels typed, at least the line’s minimum', () => {

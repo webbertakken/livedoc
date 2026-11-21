@@ -38,24 +38,26 @@ const chart = (
 
 describe('a chart kept with its cell', () => {
   it('reads the cell under its anchor and its offset in it, past hidden lines, the last line past the end', () => {
-    expect(anchorCell(layout, { x: 250, y: 30 })).toEqual({
+    expect(anchorCell({ layout }, { x: 250, y: 30 })).toEqual({
       row: rows[1],
       col: cols[2],
       dx: 10,
       dy: 2,
     });
     const hidden = { ...layout, hiddenCols: [cols[0]!] };
-    expect(anchorCell(hidden, { x: 10, y: 0 })).toMatchObject({ col: cols[1], dx: 10 });
-    expect(anchorCell(layout, { x: 99999, y: 0 })).toMatchObject({
+    expect(anchorCell({ layout: hidden }, { x: 10, y: 0 })).toMatchObject({ col: cols[1], dx: 10 });
+    expect(anchorCell({ layout }, { x: 99999, y: 0 })).toMatchObject({
       col: cols[9],
       dx: 99999 - 9 * 120,
     });
-    expect(anchorCell({ ...layout, cols: [] }, { x: 0, y: 0 })).toBeNull();
+    expect(anchorCell({ layout: { ...layout, cols: [] } }, { x: 0, y: 0 })).toBeNull();
   });
 
   it('puts it back on its cell after columns are inserted or widened before it, and leaves one whose cell went', () => {
-    const before = layout;
-    const after: SheetLayout = { ...layout, cols: ['new', ...cols], colSize: { [cols[0]!]: 200 } };
+    const before = { layout };
+    const after = {
+      layout: { ...layout, cols: ['new', ...cols], colSize: { [cols[0]!]: 200 } } as SheetLayout,
+    };
     const charts = [chart('a', 250, 30), chart('b', 0, 0), chart('gone', 1100, 0), { id: 'free' }];
     const moved = chartsFollowing(charts, 'sh', before, after);
     expect(moved).toEqual([
@@ -67,17 +69,25 @@ describe('a chart kept with its cell', () => {
     expect(chartsFollowing(charts, 'other', before, after)).toEqual([]);
     expect(
       anchorOnCell(
-        { ...layout, cols: cols.slice(1) },
+        { layout: { ...layout, cols: cols.slice(1) } },
         { row: rows[0]!, col: cols[0]!, dx: 0, dy: 0 },
       ),
     ).toBeNull();
     // Unmoved cells keep a chart where it is.
     expect(
       chartsFollowing([chart('c', 10, 10)], 'sh', before, {
-        ...layout,
-        colSize: { [cols[5]!]: 300 },
+        layout: { ...layout, colSize: { [cols[5]!]: 300 } },
       }),
     ).toEqual([]);
+  });
+
+  // sheet-store.md "Shaping a sheet": a row before a chart that grew with its text moves the cells under it.
+  it('puts it back on its cell after a row above it grew with its text, the layout untouched', () => {
+    const grown = { layout, heights: (id: string) => (id === rows[0] ? 62 : 28) };
+    expect(chartsFollowing([chart('a', 250, 30)], 'sh', { layout }, grown)).toEqual([
+      { id: 'a', sheetAnchor: { x: 250, y: 62 + 2 } },
+    ]);
+    expect(chartsFollowing([chart('a', 250, 30)], 'sh', grown, grown)).toEqual([]);
   });
 });
 

@@ -8,6 +8,7 @@ import { memo, type CSSProperties } from 'react';
 import { cellColours, isLightColor, resolveFontStack } from '@livedoc/document';
 import {
   cellKey,
+  cellLines,
   displayValue,
   formatRuleStyle,
   isPending,
@@ -82,6 +83,8 @@ type CellsProps = {
   palette: PlanPalette;
   locale: string;
   fontFamily?: string;
+  // The tab's font, by id: what a cell with no font of its own is measured in (sheet.md "Row height").
+  font?: string | undefined;
   // Columns whose cells keep room at their right for a dropdown arrow (a card table's set-value columns).
   padEnd?: ReadonlySet<string>;
   // The filter's header row and the columns whose header cell carries a filter button (SheetSelectionLayer): those
@@ -193,6 +196,13 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
         text = fitNumber(text, value, f, box.w - padEnd, px);
       const align = f?.ha ?? (pending.pending ? 'l' : shown.align);
       const wrap = f?.wr ?? 'o';
+      // Text of more than one line is drawn on the lines the engine broke it into, the very lines its row was sized
+      // by (sheet.md "Row height"): the browser never wraps it again, so an automatic row cuts no line off.
+      const lined =
+        shown.kind === 'text' && !pending.pending && (wrap === 'w' || text.includes('\n'));
+      const lines = lined ? cellLines(workbook, sheet.id, r, c, text, p.font) : null;
+      if (lines) text = lines.join('\n');
+      const lineH = Math.round(px * 1.3);
       // Overflow: left-aligned text with empty cells to its right runs into them (not past the window).
       let width = box.w;
       if (text && wrap === 'o' && align === 'l' && !m && shown.kind === 'text') {
@@ -286,7 +296,7 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
           key={`${key}t`}
           data-sheet-text
           {...(waiting ? { 'data-sheet-waiting': '' } : {})}
-          className={`pointer-events-none absolute flex px-1 ${wrap === 'w' ? 'whitespace-pre-wrap break-words' : 'whitespace-pre'} ${
+          className={`pointer-events-none absolute flex whitespace-pre px-1 ${
             wrap === 'c' || width === box.w ? 'overflow-hidden' : ''
           }`}
           style={{
@@ -296,7 +306,10 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             height: box.h,
             zIndex: 1,
             ...(padEnd ? { paddingRight: padEnd } : {}),
-            lineHeight: `${Math.round(px * 1.3)}px`,
+            lineHeight: `${lineH}px`,
+            // Measured lines are placed by the font's own widths, as they were measured: a browser that snaps each
+            // character to whole px (Chromium on Linux) draws a line wider than its room otherwise.
+            ...(lines ? { textRendering: 'geometricPrecision' } : {}),
             // The cell's own font; unset (or one no longer offered), the sheet's.
             ...textStyle,
             // A value still waiting on the cards reads quietly, never as an error.
@@ -308,7 +321,9 @@ function RegionCells({ region, ...p }: CellsProps & { region: Region }) {
             justifyContent: align === 'r' ? 'flex-end' : align === 'c' ? 'center' : 'flex-start',
             // Middle unless the cell says otherwise.
             alignItems: f?.va === 't' ? 'flex-start' : f?.va === 'b' ? 'flex-end' : 'center',
-            paddingBottom: f?.va === 'b' ? 3 : 0,
+            // Bottom-aligned text sits 3 px up, where its row has that to spare.
+            paddingBottom:
+              f?.va === 'b' ? Math.max(0, Math.min(3, box.h - (lines?.length ?? 1) * lineH)) : 0,
             textAlign: align === 'r' ? 'right' : align === 'c' ? 'center' : 'left',
             // Faded only once the wait outlasts 120 ms, so a quick answer never flickers; a step, not
             // a motion.

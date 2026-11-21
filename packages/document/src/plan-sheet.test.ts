@@ -108,6 +108,53 @@ describe('the static render', () => {
     expect(/<text[^>]*>North</.exec(arrow)?.[0]).toContain('text-anchor="end"');
   });
 
+  // docs/specs/029-sheets/sheet.md "Row height": images and exports draw the lines that were measured.
+  it('draws a cell of several lines a tspan each, 1.3 font sizes apart, placed as the cell is aligned', () => {
+    const lined = (valign: 't' | 'm' | 'b') => {
+      const svg = svgPlanSheet(
+        sheet,
+        {
+          ...MODEL,
+          rowHeights: [80, 24],
+          cells: [{ r: 0, c: 0, text: 'a b c', lines: ['a <', 'b', 'c'], align: 'l', valign }],
+        },
+        'light',
+      );
+      return [...svg.matchAll(/<tspan x="[\d.]+" y="([\d.]+)">([^<]*)<\/tspan>/g)].map((m) => ({
+        y: Number(m[1]),
+        text: m[2],
+      }));
+    };
+    const top = lined('t');
+    expect(top.map((l) => l.text)).toEqual(['a &lt;', 'b', 'c']);
+    expect(top[1]!.y - top[0]!.y).toBe(17);
+    expect(top[2]!.y - top[1]!.y).toBe(17);
+    const middle = lined('m');
+    const bottom = lined('b');
+    // The block sits at the top, in the middle, and at the bottom of its 80 px row.
+    expect(top[0]!.y).toBeLessThan(middle[0]!.y);
+    expect(middle[0]!.y).toBeLessThan(bottom[0]!.y);
+    expect(middle[1]!.y).toBeCloseTo((top[1]!.y + bottom[1]!.y) / 2, 0);
+    // One line is drawn as before: no tspan.
+    expect(svgPlanSheet(sheet, MODEL, 'light')).not.toContain('<tspan');
+  });
+
+  // A browser that snaps each character to whole px draws a line wider than it was measured (sheet.md "Row height").
+  it("places measured text by its font's own widths: several lines, and a cell that wraps", () => {
+    const textOf = (cell: Partial<SheetRenderModel['cells'][number]> & { text: string }) => {
+      const svg = svgPlanSheet(
+        sheet,
+        { ...MODEL, cells: [{ r: 0, c: 0, align: 'l', valign: 'm', ...cell }] },
+        'light',
+      );
+      return new RegExp(`<text[^>]*>(?:<tspan[^>]*>)?${cell.text.split(' ')[0]}`).exec(svg)![0];
+    };
+    const precise = 'text-rendering="geometricPrecision"';
+    expect(textOf({ text: 'one two', lines: ['one', 'two'] })).toContain(precise);
+    expect(textOf({ text: 'fits', wrap: 'w' })).toContain(precise);
+    expect(textOf({ text: 'plain' })).not.toContain(precise);
+  });
+
   it('leaves out the gridlines and the headers when the sheet hides them', () => {
     const shown = svgPlanSheet(sheet, MODEL, 'light');
     const hidden = svgPlanSheet(sheet, { ...MODEL, hideGrid: true, hideHeaders: true }, 'light');

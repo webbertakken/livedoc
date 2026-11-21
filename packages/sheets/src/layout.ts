@@ -32,7 +32,9 @@ export function layoutIndex(layout: SheetLayout): LayoutIndex {
   return index;
 }
 
-export function rowHeight(layout: SheetLayout, rowId: string): number {
+// A row's own size, or the sheet's row height: what a sized row is, and the least an automatic row is. How tall a row
+// is drawn is row-fit.ts's to say (docs/specs/029-sheets/sheet.md "Row height").
+export function baseRowHeight(layout: SheetLayout, rowId: string): number {
   return layout.rowSize?.[rowId] ?? layout.rowHeight ?? ROW_HEIGHT_NEW;
 }
 

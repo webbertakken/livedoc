@@ -7,7 +7,7 @@ import { applySheetWrite } from '../store';
 import { validateWrite } from '../validate';
 import { cellKey } from '../sheet';
 import { isError } from '../formula/values';
-import { colWidth, posRangeOf, rowHeight } from '../layout';
+import { colWidth, posRangeOf, baseRowHeight } from '../layout';
 import { SHEET_LOOKS, type SheetLook } from '../sheet-starters';
 import { designWrite, designExtent, type TemplateSetup } from './compile';
 import {
@@ -102,7 +102,7 @@ describe.each(SHEET_TEMPLATE_IDS)('%s', (id) => {
     expect(next.layout.merges).toHaveLength(2);
     expect(next.layout.frozenRows).toBe(design.freeze || undefined);
     expect(next.layout.setupPending).toBeUndefined();
-    expect(rowHeight(next.layout, next.layout.rows[0]!)).toBe(46);
+    expect(baseRowHeight(next.layout, next.layout.rows[0]!)).toBe(46);
     expect(colWidth(next.layout, next.layout.cols[0]!)).toBe(design.widths[0]);
     expect(designExtent(design).cols).toBeLessThanOrEqual(26);
   });

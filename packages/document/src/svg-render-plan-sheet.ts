@@ -27,6 +27,9 @@ export type SheetRenderModel = {
     r: number;
     c: number;
     text: string;
+    // The text as drawn when it takes more than one line: wrapped, or broken at its line breaks, by the engine that
+    // sized its row (docs/specs/029-sheets/sheet.md "Row height").
+    lines?: readonly string[];
     align: 'l' | 'c' | 'r';
     valign: 't' | 'm' | 'b';
     error?: true;
@@ -79,6 +82,8 @@ const CHIP_TEXT_ROOM = 24;
 const CHIP_ARROW = 16;
 // An average glyph's advance, as a share of the font size, to size a chip to its text without measuring.
 const GLYPH_EM = 0.56;
+// A line's height in font sizes, as the editor draws a cell's text and the engine measures it.
+const LINE_HEIGHT_EM = 1.3;
 
 // A dropdown's chevron, pointing down, centred at (cx, cy).
 function chevron(cx: number, cy: number, ink: string): string {
@@ -211,9 +216,25 @@ export function svgPlanSheet(
       const face = stack ? ` font-family="${xmlEscape(stack)}"` : '';
       const clip = `${id}-${cell.r}-${cell.c}`;
       out += `<clipPath id="${clip}"><rect x="${r2(cx)}" y="${r2(cy)}" width="${r2(cell.wrap === 'o' || !cell.wrap ? Math.max(cw, right - cx) : cw)}" height="${r2(ch)}"/></clipPath>`;
+      // Several lines: each a tspan, the block placed as one line is (top, middle or bottom of the cell).
+      const lines = textX === null && cell.lines && cell.lines.length > 1 ? cell.lines : null;
+      const lineH = Math.round(size * LINE_HEIGHT_EM);
+      const rise = lines ? (lines.length - 1) * lineH : 0;
+      const firstY = cell.valign === 't' ? ty : cell.valign === 'm' ? ty - rise / 2 : ty - rise;
+      const body = lines
+        ? lines
+            .map(
+              (line, i) =>
+                `<tspan x="${r2(tx)}" y="${r2(firstY + i * lineH)}">${xmlEscape(line)}</tspan>`,
+            )
+            .join('')
+        : xmlEscape(cell.text.split('\n')[0]!);
+      // Measured text is placed by its font's own widths: a browser that snaps each character to whole px draws a
+      // line wider than the room it was broken for.
+      const precise = lines || cell.wrap === 'w' ? ' text-rendering="geometricPrecision"' : '';
       const text = `<text clip-path="url(#${clip})" x="${r2(tx)}" y="${r2(ty)}" font-size="${size}"${face}${cell.bold ? ' font-weight="700"' : ''}${
         cell.italic ? ' font-style="italic"' : ''
-      }${deco ? ` text-decoration="${deco}"` : ''} fill="${ink}"${anchor}>${xmlEscape(cell.text.split('\n')[0]!)}</text>`;
+      }${deco ? ` text-decoration="${deco}"` : ''} fill="${ink}"${anchor}${precise}>${body}</text>`;
       // A link stays one in an SVG export: its target was allow-listed (safeHyperlink), and is escaped like all text.
       out += cell.link
         ? `<a href="${xmlEscape(cell.link)}" target="_blank" rel="noopener noreferrer">${text}</a>`

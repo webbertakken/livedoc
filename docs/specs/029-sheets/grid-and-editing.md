@@ -83,6 +83,7 @@ selection without losing it.
 - Move rows up or down and columns left or right (Edit › Move, or dragging headers).
 - Resize by dragging a header edge (a double-click fits to the data), or **Resize Row** / **Resize Column** (a size
   in px, or Fit to Data).
+- A row not sized by hand fits its text, as the Plan Sheet's does ([Row height](sheet.md#row-height)).
 - Hide and show rows and columns (arrows mark hidden ones); **Group** (Alt+Shift+→) and **Ungroup** (Alt+Shift+←)
   rows or columns, with +/− in the outline bar to collapse and expand.
 - Deleting rows or columns makes references to them `#REF!` and shrinks ranges, as today ([Sheet store](sheet-store.md)).

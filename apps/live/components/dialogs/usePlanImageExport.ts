@@ -144,9 +144,9 @@ export function usePlanImageExport(
             .map((id) => store.loadTab(id)),
         );
         const next = {
-          models: sheets.sheetModelsFor(imageRef.current.elements, store),
+          models: sheets.sheetModelsFor(imageRef.current.elements, store, tab.font),
           metrics: sheets.sheetMetricsFor(tab.dashboard, tabs, store, bridge.locale),
-          contents: sheets.sheetContentsFor(imageRef.current.elements, store),
+          contents: sheets.sheetContentsFor(imageRef.current.elements, store, tab.font),
           key,
         };
         debugLog('[export] sheets read', { models: next.models.size, metrics: next.metrics.size });

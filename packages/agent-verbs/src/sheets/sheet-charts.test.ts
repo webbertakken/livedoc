@@ -87,6 +87,9 @@ describe('a chart over cells', () => {
 
   it('anchors at A1 with nothing before it, and passes hidden columns by', () => {
     expect(anchorAt(book().sheet.layout, [0, 0])).toEqual({ x: 0, y: 0 });
+    // Rows before it at their own sizes, or at the heights they are drawn at (sheet.md "Row height"); row 2 is hidden.
+    expect(anchorAt(book().sheet.layout, [1, 0]).y).toBeGreaterThan(0);
+    expect(anchorAt(book().sheet.layout, [3, 0], () => 40).y).toBe(80);
     // A at 200, B to F at 120 each, G hidden.
     expect(anchorAt(book().sheet.layout, [0, 7]).x).toBe(200 + 5 * 120);
   });

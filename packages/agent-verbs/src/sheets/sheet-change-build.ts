@@ -93,7 +93,8 @@ type BuiltChange =
   | SheetRefusal;
 
 // What a change needs of where its sheet is drawn: whether its tab's canvas is dark (a design's tints follow it).
-export type SheetChangeContext = { dark?: boolean };
+// What a change is built for: its tab's canvas (a design's tints) and its tab's font (what rows are measured in).
+export type SheetChangeContext = { dark?: boolean; font?: string | undefined };
 
 const refuse = (code: string, message: string): SheetRefusal => ({ ok: false, code, message });
 
@@ -350,9 +351,15 @@ export function buildSheetChange(
     case 'filter':
       return buildShapeChange(wb, sheetId, change);
     case 'design':
-      return buildDesign(wb, sheetId, change.design, { dark: !!context.dark }, rand);
+      return buildDesign(
+        wb,
+        sheetId,
+        change.design,
+        { dark: !!context.dark, font: context.font },
+        rand,
+      );
     case 'chart':
-      return buildChartChange(wb, sheetId, change);
+      return buildChartChange(wb, sheetId, change, context.font);
     case 'clear_charts': {
       if (change.range === undefined)
         return { ok: true, writes: [], line: 'cleared the sheet’s charts', clearCharts: null };

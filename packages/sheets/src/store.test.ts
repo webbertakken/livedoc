@@ -14,7 +14,7 @@ import { makeSheets } from './testing/book';
 import { renderFormula } from './formula/stored';
 import { Workbook } from './engine/workbook';
 import { reorderSlots } from './store-layout';
-import { colWidth, rowHeight } from './layout';
+import { colWidth, baseRowHeight } from './layout';
 
 const ctx = { now: 1, by: { id: 'p', name: 'P', color: '#000000' } };
 
@@ -123,7 +123,7 @@ describe('applySheetWrite', () => {
       colWidth: 150,
       rowHeight: 32,
     });
-    expect(rowHeight(r.sheet.layout, R(0))).toBe(32);
+    expect(baseRowHeight(r.sheet.layout, R(0))).toBe(32);
     expect(colWidth(r.sheet.layout, C(0))).toBe(150);
     // Back to the defaults: shown again, sizes cleared.
     const back = applySheetWrite(

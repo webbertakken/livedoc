@@ -68,12 +68,14 @@ const formatArg = z
       .enum(['top', 'middle', 'bottom'])
       .nullable()
       .optional()
-      .describe('Vertical alignment; null for the default (bottom).'),
+      .describe('Vertical alignment; null for the default (middle).'),
     wrap: z
       .enum(['overflow', 'wrap', 'clip'])
       .nullable()
       .optional()
-      .describe('Long text runs over empty neighbours, wraps, or is clipped; null for overflow.'),
+      .describe(
+        'Long text runs over empty neighbours, wraps, or is clipped; null for overflow. A cell that wraps makes its row as tall as its lines need, unless the row was given a height (resize).',
+      ),
     numberFormat: z
       .string()
       .nullable()
@@ -487,7 +489,9 @@ const sheetChange = z.discriminatedUnion('op', [
   z.object({
     op: z
       .literal('resize')
-      .describe('Size columns (px, or fit to what their cells show) or rows (px).'),
+      .describe(
+        'Size columns (px, or fit to what their cells show) or rows (px). A row needs no size: it fits its text by itself, so a wrapped cell makes it taller. A row given px keeps that height whatever its cells hold.',
+      ),
     cols: z.string().optional().describe('Columns, "C" or "A:F".'),
     rows: z.string().optional().describe('Rows, "3" or "4:20".'),
     px: z

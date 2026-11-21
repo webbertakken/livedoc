@@ -6,9 +6,10 @@
 import {
   colWidth,
   posRangeOf,
-  rowHeight,
+  baseRowHeight,
   type GridRange,
   type IdRange,
+  type RowHeights,
   type SheetLayout,
 } from '@livedoc/sheets';
 import { anchorAt } from './sheet-charts';
@@ -42,34 +43,32 @@ function lineAt(
   return last;
 }
 
-export function anchorCell(
-  layout: SheetLayout,
-  anchor: { x: number; y: number },
-): AnchorCell | null {
+// A sheet's shape as a chart sits on it: its layout, and how tall each row is drawn (rowHeights: a row fits its
+// text, so a change to cells alone can move the cells under a chart). Without heights, a layout's own sizes.
+export type SheetShape = { layout: SheetLayout; heights?: RowHeights };
+
+const heightsOf = ({ layout, heights }: SheetShape): RowHeights =>
+  heights ?? ((id) => baseRowHeight(layout, id));
+
+export function anchorCell(shape: SheetShape, anchor: { x: number; y: number }): AnchorCell | null {
+  const { layout } = shape;
   const col = lineAt(
     layout.cols,
     new Set(layout.hiddenCols ?? []),
     (id) => colWidth(layout, id),
     anchor.x,
   );
-  const row = lineAt(
-    layout.rows,
-    new Set(layout.hiddenRows ?? []),
-    (id) => rowHeight(layout, id),
-    anchor.y,
-  );
+  const row = lineAt(layout.rows, new Set(layout.hiddenRows ?? []), heightsOf(shape), anchor.y);
   return col && row ? { row: row.id, col: col.id, dx: col.into, dy: row.into } : null;
 }
 
 // Where a chart on `cell` sits in `layout`, or null when its row or column is gone.
-export function anchorOnCell(
-  layout: SheetLayout,
-  cell: AnchorCell,
-): { x: number; y: number } | null {
+export function anchorOnCell(shape: SheetShape, cell: AnchorCell): { x: number; y: number } | null {
+  const { layout } = shape;
   const r = layout.rows.indexOf(cell.row);
   const c = layout.cols.indexOf(cell.col);
   if (r < 0 || c < 0) return null;
-  const at = anchorAt(layout, [r, c]);
+  const at = anchorAt(layout, [r, c], heightsOf(shape));
   return { x: Math.round(at.x + cell.dx), y: Math.round(at.y + cell.dy) };
 }
 
@@ -81,10 +80,10 @@ const chartsOf = (elements: readonly SheetChartEl[], sheetId: string) =>
 export function chartsFollowing(
   elements: readonly SheetChartEl[],
   sheetId: string,
-  before: SheetLayout,
-  after: SheetLayout,
+  before: SheetShape,
+  after: SheetShape,
 ): { id: string; sheetAnchor: { x: number; y: number } }[] {
-  if (before === after) return [];
+  if (before.layout === after.layout && before.heights === after.heights) return [];
   const out: { id: string; sheetAnchor: { x: number; y: number } }[] = [];
   for (const el of chartsOf(elements, sheetId)) {
     // A sheet keeps a row and a column, so an anchor is always over a cell.

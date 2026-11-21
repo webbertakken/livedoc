@@ -232,7 +232,7 @@ rule under it, gridlines off), **Plain** (no fills, colours or borders; bold and
 | Conditional Formatting | Each format rule in list order with its swatch and range, **Edit**, **Go To** and **Remove** ([Conditional formatting](conditional-formatting.md#making-and-changing-rules))                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |     |
 
 - Sheet Setup opens first. The same sections are rows of the element menu itself (right-click the Sheet), each a flyout under Style and a separator, as a board's are, with no **Sheet** parent row; they act on the same sheet. Numbers apply on Enter or leaving the field, kept within the limits (a column
-  20 to 2,000 px, a row 16 to 2,000 px, frozen lines as Freeze's); Escape closes the popover without saving.
+  24 to 2,000 px, a row 18 to 2,000 px, frozen lines as Freeze's); Escape closes the popover without saving.
 - Everything but the totals is the sheet's own: saved, seen by everyone, and one undo step each. A sheet without
   headers starts its cells at the frame's edge; without gridlines only fills and set borders show. Exports and
   images draw the same.
@@ -368,6 +368,8 @@ A finger has no hover and no right button, and its drag pans the cells, so selec
   Enter goes back to the column the run started in, one row down. **Escape** throws the edit away. A click
   elsewhere saves.
 - **Alt+Enter** (⌥ Enter) adds a line break inside the cell.
+- The editor grows wider as a line is typed, as far as the grid's edge, and taller with each line break.
+- Editing a cell that wraps, it keeps the cell's width and grows down as the text wraps ([Row height](#row-height)).
 - A character the keyboard composes with Alt types like any other: a Mac's Option (⌥3 is `£` on a UK layout, ⌥⇧2
   is `€`) and AltGr on Windows and Linux (`€` is AltGr+E on a German layout, reported as Ctrl+Alt) start typing over
   the cell, never a shortcut. A bare Alt+letter still types nothing (`apps/live/lib/composed-key.ts`).
@@ -456,10 +458,12 @@ A finger has no hover and no right button, and its drag pans the cells, so selec
 
 ### Rows and columns
 
-- A header's edge is dragged to resize (a column at least 24 px, a row at least 18 px); double-clicking it fits
-  the widest (or tallest) value. Several selected headers resize together.
+- A header's edge is dragged to resize (a column at least 24 px, a row at least 18 px).
+- Double-clicking a column's edge fits it to its widest value; a row's edge returns the row to automatic
+  ([Row height](#row-height)).
+- Several selected headers resize, and fit, together.
 - A header's menu (right-click, a long press on a touch screen, or the menu key): **Insert 1 Above / Below** (rows) or **Left / Right**
-  (columns), as many as selected; **Delete**; **Clear**; **Hide**; **Resize…**; and on a column **Sort A to Z**,
+  (columns), as many as selected; **Delete**; **Clear**; **Hide**; **Fit to Data**; **Resize…**; and on a column **Sort A to Z**,
   **Sort Z to A**. Hidden rows and columns show a small double arrow on the headers either side (**Show Column C**,
   **Show Rows 2 to 3**, with the shared tooltip), which unhides them; a sheet without headers draws the arrows at the
   grid's own edge, so hidden lines can always come back. Rows a filter leaves out are not hidden lines and draw no
@@ -467,6 +471,50 @@ A finger has no hover and no right button, and its drag pans the cells, so selec
 - Rows and columns can be dragged by their selected headers to a new place. A drag that would split a merge (moving part of one, or dropping into the middle of one) is refused with "Unmerge the cells first: moving these rows would split merged cells." (columns likewise).
 - Inserting, deleting and moving keep every formula right: references move with their cells, a reference to a
   deleted cell becomes `#REF!`, and a range shrinks or grows with what is inside it.
+
+### Row height
+
+A row is **automatic** until it is given a size of its own; then it is **sized**.
+
+- An automatic row is as tall as the tallest text in its cells needs, and never shorter than the sheet's Row Height
+  ([Sheet Settings](#sheet-settings)).
+- So a cell set to wrap grows its row, and a row shrinks back when its text does.
+- It follows its cells' text, wrap, font, font size and bold, and their columns' widths, with no one asking.
+- The height is worked out from the cells and never stored: no write, no undo step, the same for everyone.
+- A cell's text needs its lines at their line height (1.3 times the font size, to a whole px).
+- One line needs 1 px more; two or more lines keep 8 px, 4 px clear above and below (default, **D97**).
+- A cell that wraps breaks its text in the room its column gives: its width less 4 px each side, and less the room
+  kept at its right for a dropdown's arrow (22 px) or a filter button (20 px).
+- Every column a card table lists keeps the dropdown's room, whether its field takes a set value or not.
+- A line break typed into a cell (Alt+Enter) starts a line whether the cell wraps or not.
+- A line break a formula makes starts a line only where the cell wraps; elsewhere it is drawn as a space.
+- Only text wraps: a number, a date, a true/false, an error, a dropdown chip and a checkbox are one line.
+- A merged cell never makes a row taller, across columns or down rows; its text has the room its rows give.
+- A row is at most 2,000 px tall; text past that is cut off there.
+- A hidden row, and a row a filter leaves out, has no height.
+- **Sized**: dragging a row header's edge, **Resize…** and an agent's `resize` give a row a size of its own.
+- A sized row keeps that height whatever its cells hold; text that does not fit is cut off.
+- **Back to automatic**: **Fit to Data** in the row header's menu, or a double-click on the row header's edge.
+- Both take every selected row when the row is among them: one change, one undo step.
+- Cell Size and Row Height (Sheet Settings) set the least an automatic row is; sized rows keep their size.
+- A sheet made before rows fitted needs nothing: its sized rows stay as set, and the rest fit when next drawn.
+- Lines are broken without a browser, from a table of each font's own character widths, bold a little wider.
+- So every browser, the api, agents, images and exports break the same lines and agree on every height.
+- A character outside the table is measured by its kind (default, **D98**): an accented letter as its letter, a
+  CJK character a full em, an emoji 1.25 em, anything else the font's average letter.
+- A cell with no font of its own is measured in its tab's font.
+- A tab with no font draws its cells in the device's own font, which differs by device and which no table holds.
+- Such text is measured as Inter (default, **D99**), which is as wide as the fonts most devices name, or wider.
+- So a line on such a tab fits its cell on those devices, and breaks where it would in Inter on every device.
+- The grid, images and exports draw exactly the lines that were measured, so an automatic row cuts no line off.
+- They place a measured line by its font's own widths, never snapped to whole px, so it is as wide as measured.
+- Where a browser draws a font wider than was measured (a fallback while the font loads, or a device's font wider
+  than Inter), a line may reach past its cell's edge.
+- An Editor sizes a row and returns it to automatic.
+- A Participant's typing and an agent's cells grow an automatic row all the same: that is no change of shape.
+- A Viewer sees the same heights.
+- A chart keeps its place when rows above it grow with their text, as when a row is dragged taller.
+- An agent's change keeps each chart on its cell ([Sheet store](sheet-store.md#agents)).
 
 ### Cell menu
 
@@ -939,6 +987,7 @@ changeset onto one is refused. Its grid takes no input outside Plan, and a doubl
 - Images, thumbnails, PDFs, slides and api or MCP renders draw the Sheet element as in other modes: header, column
   and row headers, and the cells that fit its frame from the top left (after frozen rows and columns), with values
   worked out from the sheet store.
+- Rows are as tall there as in the editor, and text is drawn on the same lines ([Row height](#row-height)).
 - Card functions ([Formulas](formulas.md#plan-cards)) in an export read the document's items, as boards do. An image
   of one named tab (the picture a link confined to that tab gets) reads only the items that tab shows
   ([Items](../026-plan/items.md) "Who may do what"), so it never tells a tab-scoped visitor more than their editor
@@ -954,6 +1003,8 @@ changeset onto one is refused. Its grid takes no input outside Plan, and a doubl
 - A chart in a Sheet reads its range only when the sheet store moves on, or its source or the viewer's locale
   changes; a scroll frame, a canvas drag or a resize of the chart reads nothing again (a 500 by 13 range cost about
   1.6 ms a frame when it did).
+- Row heights are worked out again only when the sheet store moves on, and only for cells whose text, room or type
+  changed; a scroll frame or a move of the selection measures nothing ([Row height](#row-height)).
 
 ## Telemetry
 
@@ -998,3 +1049,8 @@ The code cites each by its id.
   (default).
 - **D29** A cell comment marker's size and its preview: An 8 px triangle; the preview after 400 ms, the first 140
   characters (default).
+- **D97** The room an automatic row keeps round its text: 1 px for one line, 8 px for two or more (default).
+- **D98** How a character outside a font's width table is measured: an accented letter as its letter, a CJK
+  character 1 em, an emoji 1.25 em, anything else the font's average letter (default).
+- **D99** What text with no font is measured in: Inter, whose prose is as wide as Noto Sans's and 4% to 7% wider
+  than Ubuntu's, Segoe UI's, Arial's and Roboto's; DejaVu Sans, 7% wider than Inter, runs past its cell (default).
