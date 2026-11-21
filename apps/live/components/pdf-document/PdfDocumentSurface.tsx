@@ -20,7 +20,10 @@ import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { BAKE_FAILED_COPY, bakeForDownload } from '@/lib/pdf-document/download-pdf';
 import { UNTITLED_PDF } from '@/lib/pdf-document/open-pdf-file';
 import { addHighlight } from '@/lib/pdf-document/pdf-highlight';
-import type { BindPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
+import {
+  unboundPdfLiveChanges,
+  type BindPdfLiveChanges,
+} from '@/lib/pdf-document/pdf-live-binding';
 import { pdfMarksStore } from '@/lib/pdf-document/pdf-marks-store';
 import { DOWNLOAD_PDF, PDF_MENUS, TOOL_HIGHLIGHT, TOOL_SELECT } from '@/lib/pdf-document/pdf-menus';
 import { PDF_MODES } from '@/lib/pdf-document/pdf-modes';
@@ -56,7 +59,7 @@ export function PdfDocumentSurface({
   canReview,
   author,
   chrome,
-  bind,
+  bind = unboundPdfLiveChanges,
 }: {
   scope: PdfDocumentScope;
   documentName: string;
@@ -68,7 +71,8 @@ export function PdfDocumentSurface({
   author: string;
   // The document's own parts in the title row; null where another pane shows them.
   chrome: OfficeChrome | null;
-  bind: BindPdfLiveChanges;
+  // Where the live changes are kept and sent; the surface's own unless a test hands another.
+  bind?: BindPdfLiveChanges;
 }) {
   const root = useRef<HTMLDivElement | null>(null);
   const scroller = useRef<HTMLDivElement | null>(null);

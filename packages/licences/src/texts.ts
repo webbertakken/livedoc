@@ -144,6 +144,77 @@ export const TEXT_SOURCES: readonly TextSource[] = [
     sources: ['https://raw.githubusercontent.com/feathericons/feather/v4.29.2/LICENSE'],
     sha256: '308028e93fcf84972523cdf6e616f73168546b4953895f516d01287f16fe7bee',
   },
+  // What is compiled into the PDF engine's reader (embedded-works.ts): each text from the revision its build pins.
+  {
+    file: 'agg-2.3-copying.txt',
+    sources: [
+      'https://raw.githubusercontent.com/embedpdf/pdfium/73a041a5c1aaffa09ebb64f1981ff501cb91a41c/third_party/agg23/copying',
+    ],
+    sha256: '0e16f9c2285583269242e94c6f502de0c9910dfcbbc7b386e236cdf29ecd4333',
+  },
+  {
+    file: 'lcms-2.15-LICENSE.txt',
+    sources: [
+      'https://raw.githubusercontent.com/embedpdf/pdfium/73a041a5c1aaffa09ebb64f1981ff501cb91a41c/third_party/lcms/LICENSE',
+    ],
+    sha256: '6dbd60437f8ef91d8de1f08ad75882547fd4931bfcc3566a0735f28db1484d31',
+  },
+  {
+    file: 'openjpeg-2.5.4-LICENSE.txt',
+    sources: [
+      'https://raw.githubusercontent.com/embedpdf/pdfium/73a041a5c1aaffa09ebb64f1981ff501cb91a41c/third_party/libopenjpeg/LICENSE',
+    ],
+    sha256: 'a6af136f3e15038a666b61f376612a07d9a4e48cb7c01adbf3e33b3f14ab49b6',
+  },
+  {
+    file: 'freetype-b91f75b-FTL.txt',
+    sources: [
+      'https://chromium.googlesource.com/chromium/src/third_party/freetype2/+/b91f75bd02db43b06d634591eb286d3eb0ce3b65/docs/FTL.TXT',
+    ],
+    sha256: '5a5ee54c5001bbad1cdc1a57cc3dd4c42199b2da09d39c7ee41fab002d02967f',
+  },
+  {
+    file: 'libpng-1.6.43-LICENSE.txt',
+    sources: [
+      'https://chromium.googlesource.com/chromium/src/third_party/libpng/+/172f83835c98264e6eefdbe8ae82dc08be337ad0/LICENSE',
+    ],
+    sha256: 'bf5e22b9dce8464064ae17a48ea1133c3369ac9e1d80ef9e320e5219aa14ea9b',
+  },
+  {
+    file: 'zlib-980253c-LICENSE.txt',
+    sources: [
+      'https://chromium.googlesource.com/chromium/src/third_party/zlib/+/980253c1cc835c893c57b5cfc10c5b942e10bc46/LICENSE',
+    ],
+    sha256: 'e1cfcc55c325b3f78cf55df9664abaa066e2271dffe8213347d9fccdfbac8f2c',
+  },
+  {
+    file: 'libjpeg-turbo-3.1.0-LICENSE.txt',
+    sources: [
+      'https://chromium.googlesource.com/chromium/deps/libjpeg_turbo/+/6bb85251a8382b5e07f635a981ac685cc5ab5053/LICENSE.md',
+    ],
+    sha256: '96f5b328adbb78eeaaec6980d73fd558cb1e4d62560ed615646bc3cf5e532430',
+  },
+  {
+    file: 'icu-77-1-LICENSE.txt',
+    sources: [
+      'https://chromium.googlesource.com/chromium/deps/icu/+/a86a32e67b8d1384b33f8fa48c83a6079b86f8cd/LICENSE',
+    ],
+    sha256: '451167c55c0fa447cc2d5632714f5e3c567fe4f1e1badefab2c1333852198aca',
+  },
+  {
+    file: 'abseil-675d3d3-LICENSE.txt',
+    sources: [
+      'https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp/+/675d3d37ecbec78fd51378c6774c45715b1e4382/LICENSE',
+    ],
+    sha256: 'aac73b3148f6d1d7111dbca32099f68d26c644c6813ae1e4f05f6579aa2663fe',
+  },
+  {
+    file: 'fast-float-7.0.0-LICENSE-MIT.txt',
+    sources: [
+      'https://chromium.googlesource.com/external/github.com/fastfloat/fast_float/+/cb1d42aaa1e14b09e1452cfdef373d051b8c02a4/LICENSE-MIT',
+    ],
+    sha256: 'e562f3f974ced7e69dd1db77b820b36bcf8f30377f1aa105723fba449c53c4e6',
+  },
   // The served document fonts (document-font-works.ts).
   ...DOCUMENT_FONT_TEXT_SOURCES,
 ];

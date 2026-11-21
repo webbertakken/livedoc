@@ -8,7 +8,6 @@ import dynamic from 'next/dynamic';
 import type { Tab } from '@livedoc/document';
 import { useEditorContext } from '@/app/document/[id]/EditorContext';
 import { useEditorLines } from '@/components/chrome/lines/editor-lines-context';
-import { unboundPdfLiveChanges } from '@/lib/pdf-document/pdf-live-binding';
 
 const PdfDocumentSurface = dynamic(
   () => import('./PdfDocumentSurface').then((m) => m.PdfDocumentSurface),
@@ -37,7 +36,6 @@ export function PdfDocumentHost({ tab, readOnly = false }: { tab: Tab; readOnly?
       canReview={canReview}
       author={selfParticipant.name}
       chrome={readOnly ? null : office}
-      bind={unboundPdfLiveChanges}
     />
   );
 }

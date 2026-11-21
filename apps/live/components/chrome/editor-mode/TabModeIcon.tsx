@@ -1,6 +1,7 @@
 import { EDITOR_MODE_ICONS, lucideGlyph } from '@livedoc/ui';
 import {
   lucideClipboardList,
+  lucideFile,
   lucideFileText,
   lucideGrid3x3,
   lucideLayoutGrid,
@@ -26,14 +27,18 @@ export const PLAN_KIND_ICONS: Record<PlanTabKind, ReturnType<typeof lucideGlyph>
 // A text document tab, worked in no mode, shows its kind's glyph too
 // (docs/specs/006-document/kinds-outside-the-canvas.md "The tab strip").
 const TEXT_DOCUMENT_ICON = lucideGlyph(lucideFileText, 12);
+// A PDF tab's: a page with a folded corner (docs/specs/035-pdf-documents/starting-and-finding.md gives it its letters).
+const PDF_ICON = lucideGlyph(lucideFile, 12);
 
 export function TabModeIcon({ tab, style }: { tab: EditorModeTab; style?: CSSProperties }) {
   const kind = isPlanTabKind(tab.kind) ? tab.kind : null;
   const Icon =
     tab.kind === 'text-document'
       ? TEXT_DOCUMENT_ICON
-      : kind
-        ? PLAN_KIND_ICONS[kind]
-        : EDITOR_MODE_ICONS[opensInOf(tab)];
+      : tab.kind === 'pdf'
+        ? PDF_ICON
+        : kind
+          ? PLAN_KIND_ICONS[kind]
+          : EDITOR_MODE_ICONS[opensInOf(tab)];
   return <Icon aria-hidden size={12} className="shrink-0" style={style} />;
 }
