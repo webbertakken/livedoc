@@ -173,6 +173,10 @@ In order of precedence, highest first; same as Google Sheets:
   a function reads as an array (`SUMPRODUCT`'s, `FILTER`'s, `INDEX`'s range, ...). There, operators and single-value
   functions work cell by cell: `=ARRAYFORMULA(A1:A5*2)` spills five values. A formula that is only a range
   (`=A1:C3`) or a function giving an array (`=SEQUENCE(5)`) spills as it is.
+- In an array context, a function that reads some arguments whole still works cell by cell over a single-value
+  argument given many values: `=ARRAYFORMULA(VLOOKUP(A2:A5, D:E, 2, FALSE))` looks up four keys. These lift so: the
+  criterion of `SUMIF`, `COUNTIF` and `AVERAGEIF`, the key of `VLOOKUP`, `HLOOKUP` and `MATCH`, and the k of
+  `LARGE` and `SMALL`. `SUMIFS` and `COUNTIFS` do not: they give one value (default, D67).
 - A Plan Sheet keeps working every formula in an array context (as it did before spreadsheets), so its values do not
   move; the migration wraps each of its spilling formulas in `ARRAYFORMULA` (default, D34).
 - A formula whose value is an array (`=ARRAYFORMULA(A1:A5*2)`, `=FILTER(…)`, `=SORT(…)`, `=SEQUENCE(5)`, `=CARDS(…)`) **spills**:
@@ -634,6 +638,8 @@ OpenFormula functions Google lacks, and LiveDoc's four card functions (sources a
   | `HYPGEOM.DIST`, `LOGNORM.DIST`, `NEGBINOM.DIST`, `POISSON.DIST` short | Google's shorter form read                  | Err:511                             | Statistical HYPGEOM.DIST.1                      |
   | `LINEST(y, x)`, collinear x                                           | `#NUM!` (D47)                               | coefficients past 1e13              | Array LINEST.12                                 |
   | `ENCODEURL(TRUE)`                                                     | `TRUE`, as Google's text functions write it | `1`                                 | Web ENCODEURL.6                                 |
+  | `ARRAYFORMULA(A1:A2=B1:B2)`                                           | `TRUE`, booleans kept                       | `1`                                 | Google ARRAYFORMULA.11                          |
+  | `ARRAYFORMULA(SUMIFS(B1:B10, A1:A10, A1:A3))`                         | one value (D67)                             | three, lifted                       | Google ARRAYFORMULA.30                          |
 
 - **ODF name**: how an ODF file writes it ([Standard mapping](standard-mapping.md#formulas-in-the-files-own-syntax));
   **S5** marks the Google-only names written by S5's convention. An XLSX file writes Excel's name, with `_xlfn.` where
@@ -1284,4 +1290,6 @@ The code cites each by its id.
 - **D58** INFO's answers: One document, recalculation Automatic, `LiveDoc` as system and release; else `#N/A` (default).
 - **D59** The odd-period bonds' sums: Excel's over quasi-coupon periods (ECMA-376), not LibreOffice's (default).
 - **D60** MULTIPLE.OPERATIONS's reach: Ranges read the replacement; spills as they stand; 250 formulas deep (default).
+- **D67** The functions that lift over arrays in an array context: those named in "Arrays and spills", as Google's
+  idioms use them; `SUMIFS` and `COUNTIFS` give one value, as Google's forums report (default).
 - The imports' defaults, D61 to D66, are kept in [Imports from the web](imports.md#defaults).
