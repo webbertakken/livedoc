@@ -21,7 +21,15 @@ const GENERAL: readonly [TypingAidSwitch, string][] = [
   ['smartQuotes', 'Use smart quotes'],
   ['links', 'Automatically detect links'],
   ['lists', 'Automatically detect lists'],
-  ['markdown', 'Automatically detect Markdown'],
+  ['markdown', 'Enable Markdown'],
+];
+
+// Google's other General options, in its order after the typing aids, each built with its feature (tools.md
+// "Preferences"); Show Smart Reply suggestions is an assistant's, left out (C3).
+const COMING_SOON: readonly string[] = [
+  'Automatically correct spelling',
+  'Show link details',
+  'Insert emoji using the colon character',
 ];
 
 type Tab = 'general' | 'substitutions';
@@ -96,6 +104,22 @@ export function TextDocumentPreferencesDialog({
               />
               {label}
             </label>
+          ))}
+          {COMING_SOON.map((label, i) => (
+            <div key={label} className="flex flex-col gap-0.5">
+              <label className="flex items-center gap-3 text-sm opacity-60">
+                <input
+                  type="checkbox"
+                  className={CHECKBOX}
+                  disabled
+                  aria-describedby={`${id}-soon-${i}`}
+                />
+                {label}
+              </label>
+              <span id={`${id}-soon-${i}`} className="ps-7 text-xs text-(--office-muted)">
+                Coming soon
+              </span>
+            </div>
           ))}
         </div>
       ) : (

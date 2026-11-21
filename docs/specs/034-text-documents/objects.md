@@ -61,6 +61,10 @@ and **draw to find** a character; a press inserts it.
 
 Insert > Emoji: LiveDoc's emoji picker, search and categories, skin tones; inserts the character.
 
+**Insert emoji using the colon character** (Preferences, on by default): `:` typed at a word's start and then letters
+opens a list of emoji whose names begin so; Enter, Tab or a press inserts the one chosen in place of what was typed,
+Escape leaves the text as typed.
+
 ## Horizontal line
 
 Insert > Horizontal line: a paragraph whose bottom border runs across the text width.

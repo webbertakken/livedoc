@@ -30,35 +30,35 @@ export const TYPING_AID_SWITCHES = [
 ] as const;
 export type TypingAidSwitch = (typeof TYPING_AID_SWITCHES)[number];
 
-/** Google's substitutions (default, until a capture confirms the list). */
+/** Google's substitutions in Google's order (text-and-paragraphs.md "Typing aids", from Webber's captures). */
 export const DEFAULT_SUBSTITUTIONS: readonly (readonly [string, string])[] = [
   ['(c)', '©'],
   ['(r)', '®'],
-  ['(tm)', '™'],
-  ['--', '–'],
-  ['---', '—'],
-  ['-->', '→'],
-  ['<--', '←'],
-  ['<->', '↔'],
-  ['=>', '⇒'],
-  ['<=', '≤'],
-  ['>=', '≥'],
-  ['!=', '≠'],
+  ['tm', '™'],
+  ['c/o', '℅'],
+  ['...', '…'],
   ['1/2', '½'],
   ['1/3', '⅓'],
-  ['2/3', '⅔'],
   ['1/4', '¼'],
-  ['3/4', '¾'],
   ['1/5', '⅕'],
+  ['1/6', '⅙'],
+  ['1/8', '⅛'],
+  ['2/3', '⅔'],
+  ['3/4', '¾'],
   ['2/5', '⅖'],
   ['3/5', '⅗'],
   ['4/5', '⅘'],
-  ['1/6', '⅙'],
   ['5/6', '⅚'],
-  ['1/8', '⅛'],
   ['3/8', '⅜'],
   ['5/8', '⅝'],
   ['7/8', '⅞'],
+  ['<--', '←'],
+  ['<==', '⇐'],
+  ['<=>', '⇔'],
+  ['==>', '⇒'],
+  ['-->', '→'],
+  ['--', '–'],
+  ['---', '—'],
 ];
 
 /**

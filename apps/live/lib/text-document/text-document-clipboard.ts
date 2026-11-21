@@ -47,7 +47,7 @@ export type ClipboardOptions = {
   lists: ListsAccess;
   /** Content kept from another file was left out of a paste: how many items. */
   onLeftOut: (count: number) => void;
-  /** Whether Markdown text pasted is read as Markdown (Preferences > Automatically detect Markdown). */
+  /** Whether Markdown text pasted is read as Markdown (Preferences > Enable Markdown). */
   markdown?: () => boolean;
   /** Footnotes' writing copied with their marks, and a note of its own for each mark pasted (page-layout.md "Footnotes"). */
   notes?: ClipboardNotes;
