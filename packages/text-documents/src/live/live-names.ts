@@ -13,7 +13,7 @@ export const KEPT_INLINE = 'kept_inline';
 
 /** The attributes each element holds, each a whole value. */
 export const PARAGRAPH_ATTRIBUTES = ['style', 'props', 'list', 'text', 'kept'] as const;
-export const SECTION_BREAK_ATTRIBUTES = ['start', 'setup', 'kept', 'region'] as const;
+export const SECTION_BREAK_ATTRIBUTES = ['start', 'setup', 'headers', 'kept', 'region'] as const;
 export const KEPT_BLOCK_ATTRIBUTES = ['name', 'xml'] as const;
 export const KEPT_INLINE_ATTRIBUTES = ['name', 'xml', 'props', 'style', 'link', 'kept'] as const;
 

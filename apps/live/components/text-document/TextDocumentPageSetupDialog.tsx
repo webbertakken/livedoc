@@ -10,7 +10,6 @@ import {
   PAPER,
   PAPER_ORDER,
   PageSetup,
-  type Margins,
   type Orientation,
   type PaperName,
 } from '@livedoc/text-documents';
@@ -46,7 +45,10 @@ const TABS: readonly (readonly [Tab, string])[] = [
   ['pageless', 'Pageless'],
 ];
 const CUSTOM = 'custom';
-const SIDES: readonly { side: keyof Margins; label: string }[] = [
+// The four margins Page setup sets; the header's and footer's are Headers and footers options' (page-layout.md).
+type PageSide = 'top' | 'bottom' | 'left' | 'right';
+
+const SIDES: readonly { side: PageSide; label: string }[] = [
   { side: 'top', label: 'Top' },
   { side: 'bottom', label: 'Bottom' },
   { side: 'left', label: 'Left' },
@@ -71,7 +73,7 @@ type Draft = {
   // The page's sides, portrait (shorter across): a paper's, or the size a file brought.
   short: number;
   long: number;
-  margins: Record<keyof Margins, string>;
+  margins: Record<PageSide, string>;
   colour: string;
 };
 
@@ -124,14 +126,14 @@ export function TextDocumentPageSetupDialog({
   const custom = useMemo(() => PageSetup.paperOf(setup) === null, [setup]);
 
   // A margin left as shown keeps its exact length (a file's 0.984 in shows as 0.98); a typed one is read in the unit.
-  const marginPt = (side: keyof Margins): number | null => {
+  const marginPt = (side: PageSide): number | null => {
     const text = draft.margins[side];
     if (text === initial.margins[side]) return setup.margins[side];
     const value = readIndentField(text, unit);
     return typeof value === 'number' ? ptOf(value, unit) : null;
   };
   const margins = Object.fromEntries(SIDES.map(({ side }) => [side, marginPt(side)])) as Record<
-    keyof Margins,
+    PageSide,
     number | null
   >;
   const read = Object.values(margins).every((m) => m !== null);
@@ -139,7 +141,7 @@ export function TextDocumentPageSetupDialog({
   const down = draft.orientation === 'landscape' ? draft.short : draft.long;
   const noRoomAcross = read && across - margins.left! - margins.right! < MIN_TEXT_SIDE_PT;
   const noRoomDown = read && down - margins.top! - margins.bottom! < MIN_TEXT_SIDE_PT;
-  const problemOf = (side: keyof Margins) =>
+  const problemOf = (side: PageSide) =>
     (side === 'left' || side === 'right' ? noRoomAcross : noRoomDown) ? NO_ROOM_FOR_TEXT : null;
   const valid = read && !noRoomAcross && !noRoomDown;
 
@@ -149,7 +151,7 @@ export function TextDocumentPageSetupDialog({
         { ...setup, width: draft.short, height: draft.long },
         draft.orientation,
       ),
-      margins: margins as unknown as Margins,
+      margins: { ...setup.margins, ...(margins as Record<PageSide, number>) },
     });
   };
   // The Pageless tab changes only the colour (and the format): the rest as the document has it.

@@ -22,6 +22,7 @@ import {
   TEXT_STYLE_MARK,
 } from './live-names';
 import { writeSource } from './live-source';
+import { StoryWriter, type LiveHeaders } from './live-stories';
 import { BODY_FRAGMENT } from './live-root';
 
 /** A value as the state holds it: plain JSON, undefined fields left out. */
@@ -89,14 +90,14 @@ function paragraphNode(paragraph: Paragraph): Y.XmlElement {
   return element;
 }
 
-function blockNode(block: Block): Y.XmlElement {
+function blockNode(block: Block, stories: StoryWriter): Y.XmlElement {
   switch (block.type) {
     case 'paragraph':
       return paragraphNode(block);
     case 'section': {
       const element = new Y.XmlElement(SECTION_BREAK);
-      const { type: _type, ...section } = block;
-      setAttributes(element, section);
+      const { type: _type, headers, ...section } = block;
+      setAttributes(element, { ...section, headers: stories.headers(headers) });
       return element;
     }
     case 'kept': {
@@ -115,11 +116,16 @@ export function writeLiveDocument(doc: Y.Doc, document: TextDocument): void {
   const lists = doc.getMap<unknown>(LISTS_MAP);
   const source = doc.getMap<unknown>(SOURCE_MAP);
   doc.transact(() => {
+    const stories: StoryWriter = new StoryWriter(doc, (block) => blockNode(block, stories));
     body.delete(0, body.length);
-    body.insert(0, document.body.map(blockNode));
+    body.insert(
+      0,
+      document.body.map((block) => blockNode(block, stories)),
+    );
     meta.set('metadata', plain(document.metadata));
     meta.set('defaults', plain(document.defaults));
-    meta.set('section', plain(document.section));
+    const { headers, ...section } = document.section;
+    meta.set('section', plain({ ...section, headers: stories.headers(headers) }));
     if (document.pageless) meta.set('pageless', true);
     else meta.delete('pageless');
     styles.clear();
@@ -166,12 +172,18 @@ export function setLiveStyles(
   }, origin);
 }
 
-/** A list's definition set by id, as one transaction with `origin` (lists.md "Making a list"). */
-/** Sets the first section, as one transaction with `origin` (page-layout.md "Page setup"). */
+/**
+ * Sets the first section's start and setup, as one transaction with `origin` (page-layout.md "Page setup"); its
+ * headers and footers stay as the state holds them.
+ */
 export function setLiveSection(doc: Y.Doc, section: Section, origin?: unknown): void {
   const meta = doc.getMap<unknown>(DOCUMENT_MAP);
-  doc.transact(() => meta.set('section', plain(section)), origin);
+  const held = (meta.get('section') as { headers?: LiveHeaders } | undefined)?.headers;
+  const { headers: _, ...rest } = section;
+  doc.transact(() => meta.set('section', plain({ ...rest, headers: held })), origin);
 }
+
+/** A list's definition set by id, as one transaction with `origin` (lists.md "Making a list"). */
 
 export function setLiveList(doc: Y.Doc, id: string, list: ListDefinition, origin?: unknown): void {
   const lists = doc.getMap<unknown>(LISTS_MAP);

@@ -12,6 +12,14 @@ exports[`the corpus > reads libreoffice/features.docx and writes it back the sam
     ],
     "kept": [
       {
+        "count": 3,
+        "name": "fldChar",
+      },
+      {
+        "count": 1,
+        "name": "instrText",
+      },
+      {
         "count": 2,
         "name": "br",
       },

@@ -114,4 +114,25 @@ describe('conversion', () => {
     const written = writeTextDocumentFile(document, 'docx');
     expect(written.ok && (await readTextDocumentFile(written.bytes)).ok).toBe(true);
   });
+
+  // page-layout.md "Headers and footers": converted as the body is; an OpenDocument file does not hold them yet.
+  it('converts headers and footers as the body, listing each as a loss going to ODF', () => {
+    const word = CONSTRUCTS.headers!('ooxml');
+    expect(conversionLosses(word, 'odf')).toEqual([
+      { kind: 'header-footer', name: 'header-footer', count: 5 },
+    ]);
+    const odf = CONSTRUCTS.headers!('odf');
+    const { document } = convertTextDocument(odf, 'ooxml');
+    const header = document.section.headers!.header!.default!.blocks[0]!;
+    expect(header.type === 'paragraph' && header.style).toBe(
+      Styles.idOfRole(Styles.builtIn('ooxml'), 'normal'),
+    );
+    expect(document.section.setup.margins).toMatchObject({ header: 24, footer: 30 });
+    expect(document.section.headers).toMatchObject({
+      differentFirst: true,
+      differentOddEven: true,
+    });
+    const later = document.body.find((b) => b.type === 'section');
+    expect(later?.type === 'section' && later.headers?.header?.default).toBeTruthy();
+  });
 });

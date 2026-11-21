@@ -13,7 +13,8 @@ export type DroppedReason =
   | 'kept-limit'
   | 'layout-hint'
   | 'tab-stop'
-  | 'column-width';
+  | 'column-width'
+  | 'header-footer';
 
 export type ReportItem = { readonly name: string; readonly count: number };
 

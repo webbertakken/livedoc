@@ -18,9 +18,11 @@ import {
 import type { Block, Inline, Paragraph, SectionBreak } from '../model/blocks';
 import { keptStillHolds, type TextProps } from '../model/props';
 import type { Section } from '../model/sections';
+import { HeaderPartsWriter } from './ooxml-headers';
+import { RelationshipList, relativeTarget } from './ooxml-relationships';
 import { Styles, type Style } from '../model/styles';
 import type { TabStop } from '../model/tab-stops';
-import { settingsWithPageless, settingsXml } from './ooxml-settings';
+import { settingsWith, settingsXml } from './ooxml-settings';
 import { TextDocument, type OoxmlSource } from '../model/text-document';
 import { byId } from './ooxml-read';
 import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD } from './ooxml-names';
@@ -51,38 +53,6 @@ function mergeNamespaces(
   return { ...WRITTEN_W_NS, ...Object.fromEntries(extra) };
 }
 
-/** Relationships of one source part: kept ones first with their ids, new ones numbered after the highest kept id. */
-class RelationshipList {
-  readonly list: Relationship[];
-  #next: number;
-
-  constructor(kept: readonly Relationship[]) {
-    this.list = [...kept];
-    const numbers = kept.map((r) => Number(r.id.match(/^rId(\d+)$/)?.[1] ?? 0));
-    this.#next = Math.max(0, ...numbers) + 1;
-  }
-
-  /** The id of a relationship of this type and target: an existing one, or a new one. */
-  id(type: string, target: string, external = false): string {
-    const found = this.list.find(
-      (r) => r.type === type && r.target === target && !!r.external === external,
-    );
-    if (found) return found.id;
-    let id = `rId${this.#next++}`;
-    while (this.list.some((r) => r.id === id)) id = `rId${this.#next++}`;
-    this.list.push({ id, type, target, ...(external ? { external } : {}) });
-    return id;
-  }
-}
-
-const relativeTarget = (from: string, to: string) => {
-  const dir = from.split('/').slice(0, -1);
-  const parts = to.split('/');
-  let i = 0;
-  while (i < dir.length && dir[i] === parts[i]) i += 1;
-  return [...dir.slice(i).map(() => '..'), ...parts.slice(i)].join('/');
-};
-
 class OoxmlWriter {
   readonly doc: TextDocument;
   readonly source: OoxmlSource | undefined;
@@ -96,6 +66,12 @@ class OoxmlWriter {
   readonly paragraphNumIds = new Map<Paragraph, string>();
   readonly restartNums: { numId: string; list: string; level: number; start: number }[] = [];
   readonly defaultStyle: string | undefined;
+  /** The relationships links are written to: the main part's, or a header's while it is written. */
+  partRels: RelationshipList;
+  /** The header and footer parts the sections name. */
+  readonly headerParts: HeaderPartsWriter;
+  /** Each section's place among the sections, by the section itself. */
+  readonly #sectionAt = new Map<Section, number>();
 
   constructor(doc: TextDocument) {
     this.doc = doc;
@@ -105,6 +81,7 @@ class OoxmlWriter {
     this.mainPart = source?.mainPart ?? 'word/document.xml';
     this.stylesPart = source?.stylesPart ?? 'word/styles.xml';
     this.numberingPart = source?.numberingPart ?? 'word/numbering.xml';
+    // Header and footer relationships stay listed so a part written back keeps its id; unused ones are taken away.
     const keptRels = (source?.relationships.get(this.mainPart) ?? []).filter(
       (r) => r.type !== RELATIONSHIP_TYPES.styles && r.type !== RELATIONSHIP_TYPES.numbering,
     );
@@ -116,7 +93,14 @@ class OoxmlWriter {
         (r) => r.type === RELATIONSHIP_TYPES.styles || r.type === RELATIONSHIP_TYPES.numbering,
       ),
     ]);
+    this.partRels = this.rels;
     this.defaultStyle = doc.styles.find((s) => s.role === 'normal' && s.family === 'paragraph')?.id;
+    const sections = [
+      doc.section,
+      ...doc.body.filter((b): b is SectionBreak => b.type === 'section'),
+    ];
+    sections.forEach((s, i) => this.#sectionAt.set(s, i));
+    this.headerParts = new HeaderPartsWriter(this, sections);
     this.assignNumIds();
   }
 
@@ -155,13 +139,26 @@ class OoxmlWriter {
   }
 
   sectPr(section: Section): string {
-    const values = { start: section.start, setup: section.setup };
-    if (section.kept && keptStillHolds(section.kept, values)) return this.kept(section.kept.xml);
+    const at = this.#sectionAt.get(section) ?? 0;
+    const values = {
+      start: section.start,
+      setup: section.setup,
+      references: this.headerParts.signature(section),
+    };
+    if (section.kept && keptStillHolds(section.kept, values)) {
+      // Its references name the parts by the ids they had: each part is written again under its name.
+      this.headerParts.referencesXml(section, at);
+      return this.kept(section.kept.xml);
+    }
     return sectionXml(
       section.start,
       section.setup,
       (section.kept?.residue ?? []).map((r) => this.kept(r)),
       section.kept?.xml.xml,
+      {
+        references: this.headerParts.referencesXml(section, at),
+        titlePage: section.headers?.differentFirst === true,
+      },
     );
   }
 
@@ -174,9 +171,16 @@ class OoxmlWriter {
       style: p.style,
       props: p.props,
       list,
-      section: ends && { start: ends.start, setup: ends.setup },
+      section: ends && {
+        start: ends.start,
+        setup: ends.setup,
+        references: this.headerParts.signature(ends),
+      },
     };
-    if (p.kept && keptStillHolds(p.kept, values)) return this.kept(p.kept.xml);
+    if (p.kept && keptStillHolds(p.kept, values)) {
+      if (ends) this.headerParts.referencesXml(ends, this.#sectionAt.get(ends) ?? 0);
+      return this.kept(p.kept.xml);
+    }
     const numbered = list;
     // The default paragraph style is what a paragraph without `w:pStyle` has: it is not named.
     const style = p.style === this.defaultStyle ? undefined : p.style;
@@ -234,7 +238,7 @@ class OoxmlWriter {
       else if (link.startsWith('#'))
         content += `<w:hyperlink w:anchor="${escapeXmlAttribute(link.slice(1))}">${xml}</w:hyperlink>`;
       else
-        content += `<w:hyperlink r:id="${this.rels.id(RELATIONSHIP_TYPES.hyperlink, link, true)}">${xml}</w:hyperlink>`;
+        content += `<w:hyperlink r:id="${this.partRels.id(RELATIONSHIP_TYPES.hyperlink, link, true)}">${xml}</w:hyperlink>`;
       i = j;
     }
     const checked = p.list?.checked ? ' livedoc:checked="true"' : '';
@@ -408,22 +412,50 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     });
     w.rels.id(RELATIONSHIP_TYPES.numbering, relativeTarget(w.mainPart, w.numberingPart));
   }
+  // Header and footer relationships no section names any more are taken away.
+  const named = w.headerParts.ids();
+  w.rels.list.splice(
+    0,
+    w.rels.list.length,
+    ...w.rels.list.filter(
+      (r) =>
+        (r.type !== RELATIONSHIP_TYPES.header && r.type !== RELATIONSHIP_TYPES.footer) ||
+        named.has(r.id),
+    ),
+  );
+  // Each header and footer a section names, its part's relationships the ones it came with and its links.
+  const storyRels = new Map<string, readonly Relationship[]>();
+  for (const { story, name, kind } of w.headerParts.parts()) {
+    const rels = new RelationshipList(
+      (source?.relationships.get(name) ?? []).filter(
+        (r) => r.type !== RELATIONSHIP_TYPES.hyperlink,
+      ),
+    );
+    parts.push({
+      name,
+      contentType: OOXML_CONTENT_TYPES[kind],
+      data: encode(w.headerParts.partXml(kind, story, rels)),
+    });
+    if (rels.list.length > 0) storyRels.set(name, byId(rels.list));
+  }
   // A new file's settings, or an arriving file's that held none, written whole; an arriving file's own kept as they
   // came unless pageless changed (standard-mapping.md "Extensions").
   const sourceSettings = source?.parts.find((p) => p.mediaType === OOXML_CONTENT_TYPES.settings);
   const pageless = document.pageless === true;
-  if (!sourceSettings && (!source || pageless)) {
+  const evenAndOdd = w.headerParts.evenAndOdd;
+  if (!sourceSettings && (!source || pageless || evenAndOdd)) {
     parts.push({
       name: 'word/settings.xml',
       contentType: OOXML_CONTENT_TYPES.settings,
       data: encode(
-        `${XML_HEAD}${settingsXml(document.defaults.paragraph.tabInterval, pageless)}\n`,
+        `${XML_HEAD}${settingsXml(document.defaults.paragraph.tabInterval, { pageless, evenAndOdd })}\n`,
       ),
     });
     w.rels.id(RELATIONSHIP_TYPES.settings, relativeTarget(w.mainPart, 'word/settings.xml'));
   }
   const rewritten =
-    sourceSettings && settingsWithPageless(new TextDecoder().decode(sourceSettings.data), pageless);
+    sourceSettings &&
+    settingsWith(new TextDecoder().decode(sourceSettings.data), { pageless, evenAndOdd });
   if (sourceSettings && rewritten)
     parts.push({
       name: sourceSettings.name,
@@ -431,9 +463,13 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
       data: encode(rewritten),
     });
   const written = new Set(parts.map((p) => p.name));
+  // A header or footer part no section names any more is not written.
+  const isStory = (mediaType: string) =>
+    mediaType === OOXML_CONTENT_TYPES.header || mediaType === OOXML_CONTENT_TYPES.footer;
   for (const part of source?.parts ?? [])
-    if (!written.has(part.name))
+    if (!written.has(part.name) && !isStory(part.mediaType))
       parts.push({ name: part.name, contentType: part.mediaType, data: part.data });
+  const output = new Set(parts.map((p) => p.name));
   const generated = new Set<string>([
     RELATIONSHIP_TYPES.officeDocument,
     RELATIONSHIP_TYPES.coreProperties,
@@ -471,8 +507,9 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     [w.mainPart, byId(w.rels.list)],
   ]);
   for (const [from, rels] of source?.relationships ?? [])
-    if (from !== '' && from !== w.mainPart && written.has(from) === false)
+    if (from !== '' && from !== w.mainPart && !written.has(from) && output.has(from))
       relationships.set(from, rels);
+  for (const [from, rels] of storyRels) relationships.set(from, rels);
   const defaults = new Map(
     [...(source?.defaults ?? [])].filter(([ext]) => ext !== 'rels' && ext !== 'xml'),
   );

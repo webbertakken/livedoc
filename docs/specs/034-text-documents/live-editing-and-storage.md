@@ -35,6 +35,10 @@ api, agents) reads and writes one shape (default):
   a `false` that overrides a style's `true` is kept; then `link` (`href`), `text_style` (`id`) and `run_kept`
   (`kept`). Two people formatting one stretch differently each win on their own property.
 - **A kept inline** is a `kept_inline` atom inside its paragraph: its name, XML, formatting and link.
+- **Headers and footers** are root XML fragments named `story:<id>`, each in the body's layout; a section (the first in
+  `document`, a later one in its `section_break`) holds `headers` as a whole value, its slots naming the fragments
+  by id. Two people typing in one header merge by character, as in the body. A pasted section break naming a fragment
+  shares it until one of them is made its own (default).
 - **Beside the body**: the root map `document` holds `metadata`, `defaults` and the first `section` as whole values;
   `styles` and `lists` are root maps by id, so two people changing two styles never collide; `source` holds what a
   file brought around the model (`json`) and its package entries by name (`entries`, as bytes), written once when the
