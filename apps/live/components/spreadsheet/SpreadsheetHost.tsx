@@ -20,6 +20,8 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
     tabs,
     setActiveId,
     documentWorkbook,
+    syncToCloud,
+    receiveWorkbookRecord,
   } = useEditorContext();
   if (!documentId || !documentWorkbook) return null;
   return (
@@ -30,6 +32,9 @@ export function SpreadsheetHost({ tabId }: { tabId: string }) {
       documentName={documentName ?? ''}
       workbook={documentWorkbook}
       onSelectTab={setActiveId}
+      // Imports in This Browser wait for the document's own Sync Document, never as the 'self' placeholder.
+      sync={{ run: syncToCloud, ready: selfParticipant.id !== 'self' }}
+      onWorkbook={receiveWorkbookRecord}
     />
   );
 }

@@ -6,7 +6,7 @@ import { book, calc } from '../../testing/book';
 import { IMPORT_WORDS, importKey, type ImportRequest } from '../../imports/import-request';
 import { importedValue } from './imports';
 
-const allowed = { imports: { allowed: true } };
+const allowed = { imports: { access: 'allowed' as const } };
 const DATA: ImportRequest = { kind: 'data', url: 'https://example.com/a.csv' };
 
 describe('the requests the import functions make', () => {
@@ -159,7 +159,7 @@ describe('Allow Access', () => {
   it('is #REF! asking nothing until access is allowed, then fetches', () => {
     const b = book(
       { A1: '=IMPORTDATA("https://example.com/a.csv")' },
-      { imports: { allowed: false } },
+      { imports: { access: 'blocked' as const } },
     );
     expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });
     expect(b.wb.takeImportAsks()).toEqual([]);

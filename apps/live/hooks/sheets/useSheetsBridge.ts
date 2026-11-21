@@ -7,7 +7,7 @@
 // fetches what it needs when it loads.
 import { createContext, useCallback, useContext, useMemo, useRef } from 'react';
 import type { RoomOp, SheetPresenceOp, SheetsRoomOp } from '@livedoc/api-schema';
-import type { Iteration, SheetPerson, WorkbookRecalc } from '@livedoc/sheets';
+import type { ImportAccess, Iteration, SheetPerson, WorkbookRecalc } from '@livedoc/sheets';
 import type { BoxedElement, Element } from '@livedoc/document';
 import type { SheetsScope } from '@/lib/api/sheets';
 import type { ItemUndoStep } from '@/hooks/plan/item-undo-journal';
@@ -36,8 +36,9 @@ export type SheetsBridge = {
   iteration?: Iteration;
   // A spreadsheet's Recalculation (settings.md "Calculation"); absent, on change.
   recalc?: WorkbookRecalc;
-  // A spreadsheet's imports allowed by an Editor (imports.md "Allow access"); absent for a Plan document.
-  importsAllowed?: boolean;
+  // Whether a spreadsheet's imports may fetch (imports.md "Allow access", "A spreadsheet in This Browser"); absent
+  // for a Plan document.
+  importAccess?: ImportAccess;
   // The tab open now: where a placed Sheet's sheet is made.
   activeTabId: string;
   self: SheetPerson | null;
@@ -85,7 +86,7 @@ export function useSheetsBridge(opts: {
   oneWorkbook: boolean;
   iteration?: Iteration;
   recalc?: WorkbookRecalc;
-  importsAllowed?: boolean;
+  importAccess?: ImportAccess;
   self: SheetPerson | null;
   canEdit: boolean;
   // Absent: as canEdit.
@@ -126,7 +127,7 @@ export function useSheetsBridge(opts: {
     oneWorkbook,
     iteration,
     recalc,
-    importsAllowed,
+    importAccess,
     self,
     canEdit,
     peers,
@@ -139,7 +140,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       ...(iteration ? { iteration } : {}),
       ...(recalc ? { recalc } : {}),
-      ...(importsAllowed !== undefined ? { importsAllowed } : {}),
+      ...(importAccess !== undefined ? { importAccess } : {}),
       activeTabId,
       self,
       canEdit,
@@ -165,7 +166,7 @@ export function useSheetsBridge(opts: {
       oneWorkbook,
       iteration,
       recalc,
-      importsAllowed,
+      importAccess,
       activeTabId,
       self,
       canEdit,

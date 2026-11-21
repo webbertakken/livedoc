@@ -43,6 +43,8 @@ import {
   type SheetRejection,
   type SheetWrite,
   type WriteCheck,
+  type ImportAccess,
+  type ImportAsk,
 } from '@livedoc/sheets';
 import { engineLink, type EngineLink } from './sheet-engine-link';
 import type { CardData } from './sheet-engine-hosts';
@@ -110,9 +112,9 @@ type SheetStoreDeps = {
   later?: (go: () => void) => void;
   // Where formulas are worked out (sheet-engine-link.ts): a Web Worker, or in place without one; injected in tests.
   engine?: () => EngineLink;
-  // A spreadsheet's imports (docs/specs/029-sheets/imports.md): whether an Editor allowed them; absent, they read
-  // their refusal (a Plan document). How one is fetched is injected in tests.
-  importsAllowed?: boolean;
+  // A spreadsheet's imports (docs/specs/029-sheets/imports.md): whether they may fetch (allowed, not yet, or not while
+  // the document is in This Browser); absent, they read their refusal (a Plan document). Fetching is injected in tests.
+  importAccess?: ImportAccess;
   fetchImport?: typeof fetchSheetImport;
 };
 
@@ -266,8 +268,14 @@ export class SheetStore {
     const rescoped = (deps.oneWorkbook ?? false) !== (this.deps.oneWorkbook ?? false);
     const iteration = deps.iteration ?? ITERATION_OFF;
     const reiterated = !sameIteration(iteration, this.deps.iteration ?? ITERATION_OFF);
+    // The document was synced to LiveDoc: its imports wait for Allow Access (imports.md "A spreadsheet in This
+    // Browser"), or fetch when it was allowed before it was taken offline.
+    const before = this.deps.importAccess;
+    const after = deps.importAccess;
+    if (before === 'offline' && (after === 'allowed' || after === 'blocked'))
+      for (const port of this.ports.values()) port.onlineImports(after === 'allowed');
     // An Editor allowed the imports (theirs or a peer's Allow Access): every engine fetches them now.
-    if (deps.importsAllowed && this.deps.importsAllowed === false)
+    if (before === 'blocked' && after === 'allowed')
       for (const port of this.ports.values()) port.allowImports();
     this.deps = { ...deps, api: this.api, wait: this.wait };
     // Saved settings arrived (any peer's Save Settings): every engine works its values out afresh.
@@ -294,7 +302,12 @@ export class SheetStore {
   }
 
   private importsOn(): boolean {
-    return (this.deps.oneWorkbook ?? false) && this.deps.importsAllowed !== undefined;
+    return this.importAccessHere() !== null;
+  }
+
+  // Whether the imports may fetch, where the store fetches them (a spreadsheet); null for a Plan document.
+  private importAccessHere(): ImportAccess | null {
+    return (this.deps.oneWorkbook ?? false) ? (this.deps.importAccess ?? null) : null;
   }
 
   private tickMs(): number | null {
@@ -351,19 +364,15 @@ export class SheetStore {
     let port = this.ports.get(scope);
     if (!port) {
       const link = this.engineLink();
+      const access = this.importAccessHere();
       port = new EnginePort({
         sheets: [...this.entries.values()].map((e) => e.view).filter((s) => this.inScope(s, scope)),
         locale: this.deps.locale,
         limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
         iteration: this.deps.iteration ?? ITERATION_OFF,
         send: (msg) => link.send({ scope, msg }),
-        ...(this.importsOn()
-          ? {
-              imports: {
-                allowed: this.deps.importsAllowed === true,
-                ask: (asks) => this.imports.take(scope, asks),
-              },
-            }
+        ...(access
+          ? { imports: { access, ask: (asks: ImportAsk[]) => this.imports.take(scope, asks) } }
           : {}),
       });
       this.ports.set(scope, port);
@@ -932,7 +941,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
     oneWorkbook: bridge.oneWorkbook,
     ...(bridge.iteration ? { iteration: bridge.iteration } : {}),
     ...(bridge.recalc ? { recalc: bridge.recalc } : {}),
-    ...(bridge.importsAllowed !== undefined ? { importsAllowed: bridge.importsAllowed } : {}),
+    ...(bridge.importAccess !== undefined ? { importAccess: bridge.importAccess } : {}),
     self: () => bridge.self,
     locale: bridge.locale,
     pushUndo: bridge.pushUndo,

@@ -215,6 +215,7 @@ import {
 } from './editor-page-helpers';
 import { useSyncInPlace } from './useSyncInPlace';
 import { useTakeOfflineInPlace } from './useTakeOfflineInPlace';
+import { useIsOfflineDocument } from '@/hooks/persistence/useIsOfflineDocument';
 import { useAutosave } from './useAutosave';
 import { useAttachPendingEditor, usePendingCreate } from './usePendingCreate';
 import { useDocumentTrashed } from './useDocumentTrashed';
@@ -1299,6 +1300,8 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
   // the lazily loaded sheet chunk through it, once a Sheet is drawn.
   const sheetsCommitRef = useRef<((map: (els: Element[]) => Element[]) => void) | null>(null);
   const sheetsPlaceRef = useRef<SheetsBridge['placeElement'] | null>(null);
+  // A spreadsheet in This Browser fetches nothing until it is synced (docs/specs/029-sheets/imports.md).
+  const documentOffline = useIsOfflineDocument(documentId ?? null);
   const sheets = useSheetsBridge({
     documentId: documentId ?? '',
     ownerId: selfParticipant.id,
@@ -1309,7 +1312,11 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
       ? {
           iteration: persistence.documentWorkbook.settings.iterate,
           recalc: persistence.documentWorkbook.settings.recalc,
-          importsAllowed: persistence.documentWorkbook.importsAllowed === true,
+          importAccess: documentOffline
+            ? 'offline'
+            : persistence.documentWorkbook.importsAllowed === true
+              ? 'allowed'
+              : 'blocked',
         }
       : {}),
     self: planItems.self,
@@ -4157,6 +4164,9 @@ export function useEditorState(opts: { surface?: EditorSurface } = {}) {
     // (docs/specs/016-platform/new-version-prompt.md).
     hasUnsavedChanges,
     syncToCloud,
+    // A workbook record this page saved (Allow Access), shown at once: the room's echo misses a connection still
+    // joining, as after Sync Document in place (docs/specs/029-sheets/imports.md "Allow access").
+    receiveWorkbookRecord: setDocumentWorkbook,
     takeOfflineInPlace,
     // Tab-scoped share session (docs/specs/013-workspace/tab-scoped-share-links.md).
     sessionTabScope,

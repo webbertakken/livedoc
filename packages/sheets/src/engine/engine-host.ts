@@ -32,7 +32,7 @@ export class EngineHost {
         limits: msg.limits === 'spreadsheet' ? SheetLimits.spreadsheet : SheetLimits.plan,
         iteration: msg.iteration,
         trackForgotten: true,
-        ...(msg.imports ? { imports: { allowed: msg.imports === 'allowed' } } : {}),
+        ...(msg.imports ? { imports: { access: msg.imports } } : {}),
       });
     } else {
       const wb = this.wb;
@@ -54,6 +54,7 @@ export class EngineHost {
       else if (msg.t === 'iteration') wb.setIteration(msg.iteration);
       else if (msg.t === 'imported') wb.landImport(msg.key, msg.answer);
       else if (msg.t === 'imports-allowed') wb.allowImports();
+      else if (msg.t === 'imports-online') wb.onlineImports(msg.allowed);
       else if (msg.t === 'imports-refresh') wb.refreshImports();
       else wb.tick();
     }

@@ -5,6 +5,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { track } from '@/lib/telemetry';
+import type { allowSheetImports } from '@/lib/api/sheet-imports';
 import { IMPORT_ACCESS_WORDS, ImportAccessBar } from './ImportAccessBar';
 
 vi.mock('@/lib/telemetry', () => ({ track: vi.fn() }));
@@ -17,18 +18,23 @@ afterEach(() => {
 const scope = { documentId: 'd', ownerId: 'o', shareCode: null, tabId: null };
 
 describe('ImportAccessBar', () => {
-  it('lets an Editor allow access, telling telemetry first', async () => {
+  it('lets an Editor allow access, telling telemetry first, and shows the workbook at once', async () => {
     const order: string[] = [];
     vi.mocked(track).mockImplementation(() => void order.push('track'));
     let done!: () => void;
+    const answer = {
+      workbook: { format: 'ods', importsAllowed: true },
+      rev: 2,
+    } as unknown as Awaited<ReturnType<typeof allowSheetImports>>;
     const allow = vi.fn(
       () =>
-        new Promise<never>((resolve) => {
+        new Promise<typeof answer>((resolve) => {
           order.push('allow');
-          done = () => resolve(undefined as never);
+          done = () => resolve(answer);
         }),
     );
-    render(<ImportAccessBar scope={scope} canAllow allow={allow} />);
+    const onAllowed = vi.fn();
+    render(<ImportAccessBar scope={scope} canAllow allow={allow} onAllowed={onAllowed} />);
     expect(screen.getByRole('status').textContent).toContain(IMPORT_ACCESS_WORDS.warning);
     fireEvent.click(screen.getByRole('button', { name: IMPORT_ACCESS_WORDS.allow }));
     expect(track).toHaveBeenCalledWith('Spreadsheet', 'Unlocked', 'ImportAccess');
@@ -41,6 +47,7 @@ describe('ImportAccessBar', () => {
       ).toBe(true),
     );
     done();
+    await waitFor(() => expect(onAllowed).toHaveBeenCalledWith(answer.workbook));
   });
 
   it('says so when allowing fails', async () => {
@@ -57,5 +64,50 @@ describe('ImportAccessBar', () => {
     render(<ImportAccessBar scope={scope} canAllow={false} />);
     expect(screen.queryByRole('button')).toBeNull();
     expect(screen.getByRole('status').textContent).toContain(IMPORT_ACCESS_WORDS.editorsOnly);
+  });
+});
+
+describe('ImportAccessBar in This Browser', () => {
+  it('offers Sync Document, never Allow Access, and runs the document’s own sync', async () => {
+    let done!: () => void;
+    const run = vi.fn(() => new Promise<void>((resolve) => (done = resolve)));
+    render(<ImportAccessBar scope={scope} canAllow offline sync={{ run, ready: true }} />);
+    expect(screen.getByText(IMPORT_ACCESS_WORDS.offline)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: IMPORT_ACCESS_WORDS.allow })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: IMPORT_ACCESS_WORDS.sync }));
+    const busy = screen.getByRole('button', { name: IMPORT_ACCESS_WORDS.syncing });
+    expect(busy.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(busy);
+    expect(run).toHaveBeenCalledTimes(1);
+    done();
+    await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    expect(track).not.toHaveBeenCalled();
+  });
+
+  it('waits for the reader to be known, and says why a sync failed, leaving it to try again', async () => {
+    const run = vi.fn(async () => {
+      throw new Error('offline');
+    });
+    const { rerender } = render(
+      <ImportAccessBar scope={scope} canAllow={false} offline sync={{ run, ready: false }} />,
+    );
+    const button = screen.getByRole('button', { name: IMPORT_ACCESS_WORDS.sync });
+    expect(button.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(button);
+    expect(run).not.toHaveBeenCalled();
+    rerender(
+      <ImportAccessBar scope={scope} canAllow={false} offline sync={{ run, ready: true }} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: IMPORT_ACCESS_WORDS.sync }));
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'Could not sync this document. Check your connection and try again.',
+    );
+    expect(screen.getByRole('button', { name: IMPORT_ACCESS_WORDS.sync })).toBeTruthy();
+  });
+
+  it('reads the bar alone where no sync is offered', () => {
+    render(<ImportAccessBar scope={scope} canAllow offline />);
+    expect(screen.getByText(IMPORT_ACCESS_WORDS.offline)).toBeTruthy();
+    expect(screen.queryByRole('button')).toBeNull();
   });
 });

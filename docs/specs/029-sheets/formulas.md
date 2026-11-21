@@ -1387,4 +1387,4 @@ The code cites each by its id.
   replacement runs per match); a group that took no part is empty text; a trailing backslash stays (default).
 - **D71** SPARKLINE's unstated choices: empty cells and other values skipped unless set; an unknown chart type
   `#VALUE!`; column colours applied in the order the help lists them; the accent's colours (charts.md "Sparklines").
-- The imports' defaults, D61 to D66, D72 and D73, are kept in [Imports from the web](imports.md#defaults).
+- The imports' defaults, D61 to D66 and D72 to D74, are kept in [Imports from the web](imports.md#defaults).

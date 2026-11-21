@@ -13,6 +13,7 @@ import { cellKey, type Sheet } from '../sheet';
 import { CARD_FUNCTION_NAMES } from '../formula/registry';
 import {
   FETCHING_FUNCTION_NAMES,
+  type ImportAccess,
   type ImportAnswer,
   type ImportAsk,
 } from '../imports/import-request';
@@ -64,7 +65,7 @@ export type WorkbookOptions = {
   // Note each formula value forgotten, for takeForgotten (the Worker's engine, sending what changed).
   trackForgotten?: boolean;
   // An editor's engine fetches imports (imports.md), access allowed or not; absent, imports read their refusal.
-  imports?: { allowed: boolean };
+  imports?: { access: ImportAccess };
 };
 
 export type { CellAt };
@@ -146,7 +147,7 @@ export class Workbook {
     this.limits = opts.limits ?? SheetLimits.plan;
     this.arrays = opts.arrays ?? (this.limits === SheetLimits.spreadsheet ? 'google' : 'dynamic');
     this.cards = opts.cards ?? null;
-    this.importBook = opts.imports ? new ImportBook(opts.imports.allowed) : null;
+    this.importBook = opts.imports ? new ImportBook(opts.imports.access) : null;
     this.nowFn = opts.now ?? localNow;
     this.randFn = opts.rand ?? Math.random;
     this.iteration = opts.iteration ?? ITERATION_OFF;
@@ -183,7 +184,7 @@ export class Workbook {
       },
       readsCards: (reader) => this.cardReaders.add(reader),
       importOf: (reader, request) => this.importBook?.read(request, reader) ?? null,
-      importAccess: (reader) => this.importBook?.access(reader) ?? null,
+      importAccess: (reader) => this.importBook?.accessFor(reader) ?? null,
       watchNow: (run) => {
         const outer = this.nowSeen;
         this.nowSeen = false;
@@ -278,6 +279,11 @@ export class Workbook {
   /** Access to the web allowed for the spreadsheet: every import is read again. */
   allowImports(): void {
     this.forgetImportReaders(this.importBook?.allow() ?? []);
+  }
+
+  /** The spreadsheet was synced to LiveDoc: its imports wait for Allow Access (or fetch, already allowed). */
+  onlineImports(allowed: boolean): void {
+    this.forgetImportReaders(this.importBook?.online(allowed) ?? []);
   }
 
   /** The hour is up: every import still read is asked of the page again. */

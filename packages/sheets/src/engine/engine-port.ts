@@ -4,7 +4,7 @@
 import type { Sheet } from '../sheet';
 import { cellToJson, sheetToJson } from '../sheet-json';
 import { SheetLimits } from '../sheet-limits';
-import type { ImportAnswer, ImportAsk } from '../imports/import-request';
+import type { ImportAccess, ImportAnswer, ImportAsk } from '../imports/import-request';
 import type { EngineIn, EngineOut } from './engine-protocol';
 import { ITERATION_OFF, type Iteration } from './loops';
 import { WorkbookCopy } from './workbook-copy';
@@ -14,8 +14,8 @@ type PortOptions = {
   locale: string;
   limits?: SheetLimits;
   iteration?: Iteration;
-  // A spreadsheet's imports (imports.md): whether access is allowed, and who fetches what the Worker asks.
-  imports?: { allowed: boolean; ask: (asks: ImportAsk[]) => void };
+  // A spreadsheet's imports (imports.md): whether they may fetch, and who fetches what the Worker asks.
+  imports?: { access: ImportAccess; ask: (asks: ImportAsk[]) => void };
   send: (msg: EngineIn) => void;
 };
 
@@ -53,7 +53,7 @@ export class EnginePort {
       locale: this.copy.locale,
       limits: this.copy.limits === SheetLimits.spreadsheet ? 'spreadsheet' : 'plan',
       iteration: this.copy.iterationSetting(),
-      ...(this.imports ? { imports: this.imports.allowed ? 'allowed' : 'blocked' } : {}),
+      ...(this.imports ? { imports: this.imports.access } : {}),
     });
   }
 
@@ -65,6 +65,11 @@ export class EnginePort {
   /** An Editor allowed the spreadsheet's imports (for good: imports.md "Allow access"). */
   allowImports(): void {
     this.send({ t: 'imports-allowed', rev: ++this.rev });
+  }
+
+  /** The spreadsheet was synced to LiveDoc (imports.md "A spreadsheet in This Browser"). */
+  onlineImports(allowed: boolean): void {
+    this.send({ t: 'imports-online', rev: ++this.rev, allowed });
   }
 
   /** The hour is up: the Worker asks again for every import still read. */

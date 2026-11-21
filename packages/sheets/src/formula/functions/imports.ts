@@ -53,7 +53,7 @@ function importFn(min: number, max: number, build: Build, localeAt?: number): Fn
     if (isError(request)) return request;
     const read = f.importOf(request);
     if (read === null) return err('#N/A', IMPORT_WORDS.noFetcher);
-    if (read === 'blocked') return err('#REF!', IMPORT_WORDS.blocked);
+    if (read === 'blocked' || read === 'offline') return err('#REF!', IMPORT_WORDS[read]);
     if (read === 'pending') return PENDING;
     if ('error' in read) return err(read.error, read.why);
     return { rows: read.rows.map((row) => row.map((t) => importedValue(t, locale))) };

@@ -3,7 +3,7 @@
 // then their new values, in parts. Every message the page sends carries a rising \`rev\`; an answer names the last rev
 // it has taken in, so values worked out before a sheet's rows or columns moved are dropped.
 import type { Value } from '../formula/values';
-import type { ImportAnswer, ImportAsk } from '../imports/import-request';
+import type { ImportAccess, ImportAnswer, ImportAsk } from '../imports/import-request';
 import type { SheetCellJson, SheetJson } from '../sheet-json';
 import type { Iteration } from './loops';
 
@@ -17,8 +17,9 @@ export type EngineIn =
       locale: string;
       limits: EngineLimits;
       iteration: Iteration;
-      // A spreadsheet's imports (imports.md): fetched by the page, access allowed or not; absent, none are fetched.
-      imports?: 'allowed' | 'blocked';
+      // A spreadsheet's imports (imports.md): fetched by the page, access allowed, not yet, or not while it is saved
+      // only in this browser; absent, none are fetched.
+      imports?: ImportAccess;
     }
   // A sheet's cells changed: each named cell as it is now (no input and no format: emptied).
   | { t: 'cells'; rev: number; sheetId: string; cells: SheetCellJson[] }
@@ -30,6 +31,8 @@ export type EngineIn =
   // An import's answer, for the ask of that key.
   | { t: 'imported'; rev: number; key: string; answer: ImportAnswer }
   | { t: 'imports-allowed'; rev: number }
+  // The spreadsheet was synced to LiveDoc: its imports wait for Allow Access, or fetch when already allowed.
+  | { t: 'imports-online'; rev: number; allowed: boolean }
   // The hour is up: every import still read is asked again.
   | { t: 'imports-refresh'; rev: number };
 
