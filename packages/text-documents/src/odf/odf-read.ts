@@ -55,6 +55,14 @@ import {
 import { stopsRead, stylesStopsRead, tabsFromIndentIn } from './odf-tabs';
 import { odfFieldKind, odfFieldText } from './odf-fields';
 import { odfFootnoteBody } from './odf-notes';
+import {
+  isLineNumbering,
+  paragraphLinesOf,
+  readLineNumbering,
+  sectionLines,
+  type LineNumbering,
+  type ParagraphLines,
+} from './odf-lines';
 
 export type OdfParts = {
   content: XmlParsed;
@@ -74,6 +82,8 @@ type AutoStyle = {
   master?: string;
   /** The page number its paragraph's page starts at (`style:page-number`), an integer; `auto` is none. */
   pageNumber?: number;
+  /** What its paragraph says of its line (page-layout.md "Line numbers"). */
+  lines?: ParagraphLines;
   paragraph: ParagraphProps;
   text: TextProps;
   kept: KeptXml;
@@ -105,6 +115,8 @@ class OdfReader {
   readonly masterElements = new Map<string, { element: XmlElement; parsed: XmlParsed }>();
   /** styles.xml's automatic paragraph and text styles: a header's paragraphs name them. */
   readonly stylesAuto = new Map<string, AutoStyle>();
+  /** The document's line numbering, as its configuration has it (page-layout.md "Line numbers"). */
+  lineNumbering: LineNumbering = { on: false, restartOnPage: false, increment: 1 };
   /** The part being read and the automatic styles its paragraphs name: the body's, or a header's. */
   part!: { parsed: XmlParsed; auto: Map<string, AutoStyle> };
   /** Reads a header's or footer's element as blocks (set once the styles are read). */
@@ -175,6 +187,7 @@ class OdfReader {
             parent: attributeOf(style, NS.style, 'parent-style-name'),
             master: master || undefined,
             pageNumber: pageNumberOf(style),
+            lines: paragraphLinesOf(style),
           }),
           paragraph: readParagraphProps(style, this.dropTabs),
           text: readTextProps(style, this.faces),
@@ -245,6 +258,7 @@ class OdfReader {
             attributeOf(e, NS.style, 'name') ?? '',
             Object.assign(e, { parsed: styles! }),
           );
+        if (isLineNumbering(e)) this.lineNumbering = readLineNumbering(e);
         kept.push(this.kept(styles!, e));
       }
     }
@@ -442,6 +456,8 @@ class BodyReader {
   section: Section | undefined;
   /** The first section's start at (page-layout.md "Page numbers"), from the body's first paragraph. */
   firstStart: number | undefined;
+  /** What each paragraph said of its line, the document's numbering on (page-layout.md "Line numbers"). */
+  readonly linesOf = new WeakMap<Paragraph, ParagraphLines>();
   #setup = PageSetup.of('letter');
 
   readonly r: OdfReader;
@@ -473,7 +489,33 @@ class BodyReader {
         start: 'next-page',
         setup: this.#setup,
       };
-    return this.linked({ ...first, ...compact({ numberStart: this.firstStart }) });
+    return this.linked(this.numbered({ ...first, ...compact({ numberStart: this.firstStart }) }));
+  }
+
+  /** Each section's line numbers, from what its first paragraph says (page-layout.md "Line numbers"). */
+  numbered(first: Section): Section {
+    const numbering = this.r.lineNumbering;
+    if (!numbering.on) return first;
+    const withLines = <T extends Section>(section: T, said: ParagraphLines | undefined): T => {
+      const lineNumbers = sectionLines(numbering, said);
+      return lineNumbers ? { ...section, lineNumbers } : section;
+    };
+    let owner: number | 'first' | null = 'first';
+    let section = first;
+    const close = (said: ParagraphLines | undefined) => {
+      if (owner === 'first') section = withLines(section, said);
+      else if (owner !== null)
+        this.blocks[owner] = withLines(this.blocks[owner] as SectionBreak, said);
+      owner = null;
+    };
+    this.blocks.forEach((block, at) => {
+      if (block.type === 'section') {
+        close(undefined);
+        owner = at;
+      } else if (block.type === 'paragraph' && owner !== null) close(this.linesOf.get(block));
+    });
+    close(undefined);
+    return section;
   }
 
   /** The sections' headers as their own, those the previous section has the same of linked (page-layout.md). */
@@ -620,7 +662,9 @@ class BodyReader {
         } satisfies SectionBreak);
       }
     }
-    const values = { style, props, text, master: isFirst ? undefined : master, start };
+    // What it says of its line, the document's numbering on (page-layout.md "Line numbers").
+    const lines = !this.story && this.r.lineNumbering.on ? auto?.lines : undefined;
+    const values = { style, props, text, master: isFirst ? undefined : master, start, lines };
     const kept: KeptProperties | undefined = auto
       ? { xml: auto.kept, read: canonical(values), residue: [], name: styleName }
       : undefined;
@@ -634,6 +678,7 @@ class BodyReader {
       inlines,
     };
     this.blocks.push(paragraph);
+    if (lines) this.linesOf.set(paragraph, lines);
   }
 }
 

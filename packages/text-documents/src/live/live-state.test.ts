@@ -222,6 +222,12 @@ describe('the live layout', () => {
     expect(textDocumentDigest(doc).searchText).toContain('A second paragraph.');
   });
 
+  // page-layout.md "Line numbers": each section's, the first's in the document map, the others' on their breaks.
+  it.each(['odf', 'ooxml'] as const)('reads line numbers back as written (%s)', (format) => {
+    const document = CONSTRUCTS.lineNumbers!(format);
+    expect(wholeOf(live(document))).toBe(wholeOf(document));
+  });
+
   it('still digests a formatted state by its characters', () => {
     const document = TextDocument.fromTexts(['One two', 'three']);
     const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);

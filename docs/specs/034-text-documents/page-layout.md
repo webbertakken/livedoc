@@ -418,10 +418,18 @@ for referring to a line.
 - **Drawn** in the left margin beside every line of the body, headings and empty paragraphs included, in the muted
   ink of the ruler's numbers, right-aligned 0.25 in before the text (default); never in headers, footers or notes.
   Pageless, on a phone and with print layout off none is drawn (Google's).
-- In the file: OOXML `w:lnNumType` in a section's `w:sectPr` (`w:countBy="1"`, `w:restart` `newPage`, `newSection`
-  or `continuous`); ODF `text:linenumbering-configuration` in the styles, the whole document's, a section without
-  them writing its paragraphs with `text:number-lines="false"` (default). Another count-by than 1 is kept and drawn
-  as every line (default).
+- In the file:
+  - OOXML: `w:lnNumType` in a section's `w:sectPr` (`w:countBy="1"`, `w:restart` `newPage`, `newSection` or
+    `continuous`); one without a `w:countBy` of 1 or more numbers nothing, as Word reads it, and one without
+    `w:restart` restarts on each page (the schema's default). Its `w:start` and `w:distance` are carried as the file had
+    them (default).
+  - ODF: `text:linenumbering-configuration` in the styles, the whole document's (`text:number-lines="true"`,
+    `text:increment="1"`, `text:restart-on-page` for Restart on each page), which a section without line numbers
+    turns off by writing its paragraphs with `text:number-lines="false"`; a section restarting on its own starts its
+    first paragraph at 1 (`text:line-number="1"`) (default). Restart on each page is the whole document's in ODF:
+    one section's choice of it, where others differ, is a conversion loss (default). Read back, a section's first
+    paragraph says whether it is numbered and restarts.
+  - Another count-by than 1 is kept and drawn as every line (default).
 - Share roles as page setup's ([Share roles](#share-roles)). Telemetry `Tab · Changed · TextDocumentLineNumbers`.
 
 ## Watermark

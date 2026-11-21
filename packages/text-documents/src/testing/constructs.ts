@@ -366,6 +366,27 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     );
   },
+  // Line numbers (page-layout.md "Line numbers"): restarting on each page, a section without, one restarting on its own.
+  lineNumbers: (format) => {
+    const setup = PageSetup.of('a4', format);
+    return base(
+      format,
+      [
+        paragraph(format, 'normal', [run('Numbered, restarting on each page')]),
+        paragraph(format, 'normal', [run('A second numbered line')]),
+        { type: 'section', start: 'next-page', setup },
+        paragraph(format, 'normal', [run('Not numbered')]),
+        {
+          type: 'section',
+          start: 'next-page',
+          setup,
+          lineNumbers: { restart: 'section' },
+        },
+        paragraph(format, 'normal', [run('Numbered from 1 again')]),
+      ],
+      { section: { start: 'next-page', setup, lineNumbers: { restart: 'page' } } },
+    );
+  },
   footnotes: (format) =>
     base(format, [
       paragraph(format, 'normal', [

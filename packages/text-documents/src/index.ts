@@ -111,6 +111,8 @@ export {
   type Margins,
   type Orientation,
   type PaperName,
+  type LineNumberRestart,
+  type LineNumbers,
   type Section,
   type SectionStart,
 } from './model/sections';

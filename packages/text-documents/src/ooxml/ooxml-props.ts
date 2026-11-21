@@ -19,7 +19,7 @@ import {
 } from '@livedoc/office-packages';
 import { CHECK_MARKS, LIST_LEVELS, type ListLevel, type NumberFormat } from '../model/lists';
 import { compact, type ParagraphProps, type TextProps } from '../model/props';
-import type { PageSetup, SectionStart } from '../model/sections';
+import type { LineNumberRestart, LineNumbers, PageSetup, SectionStart } from '../model/sections';
 import { HEADER_FOOTER_MARGIN_PT } from '../model/headers';
 import { LIVEDOC_NS } from '../odf/odf-names';
 import { SECTPR_ORDER, W_NS } from './ooxml-names';
@@ -327,7 +327,12 @@ export function readSection(
   sectPr: XmlElement,
   pageColor: string | undefined,
   onUnequal: () => void = () => {},
-): { start: SectionStart; setup: PageSetup; numberStart?: number } {
+): {
+  start: SectionStart;
+  setup: PageSetup;
+  numberStart?: number;
+  lineNumbers?: LineNumbers;
+} {
   const size = child(sectPr, 'pgSz');
   const margin = child(sectPr, 'pgMar');
   const cols = child(sectPr, 'cols');
@@ -335,8 +340,10 @@ export function readSection(
   // Columns of their own widths read as equal (page-layout.md "Columns").
   if (count > 1 && !onOffOf(wAttr(cols, 'equalWidth'), true)) onUnequal();
   const numberStart = Number(wAttr(child(sectPr, 'pgNumType'), 'start') ?? NaN);
+  const lineNumbers = readLineNumbers(child(sectPr, 'lnNumType'));
   return {
     ...(Number.isInteger(numberStart) && numberStart >= 0 ? { numberStart } : {}),
+    ...(lineNumbers ? { lineNumbers } : {}),
     start: START_IN[val(child(sectPr, 'type')) ?? 'nextPage'] ?? 'next-page',
     setup: compact({
       width: twipsToPt(wAttr(size, 'w')) ?? 612,
@@ -367,6 +374,30 @@ export function readSection(
   };
 }
 
+const RESTART_IN: Record<string, LineNumberRestart> = {
+  newPage: 'page',
+  newSection: 'section',
+  continuous: 'continuous',
+};
+const RESTART_OUT: Record<LineNumberRestart, string> = {
+  page: 'newPage',
+  section: 'newSection',
+  continuous: 'continuous',
+};
+
+/**
+ * A section's line numbers from its `w:lnNumType` (page-layout.md "Line numbers"): none without a count-by of 1 or more,
+ * as Word reads it; restarting on each page where it names no restart (the schema's default).
+ */
+function readLineNumbers(lnNumType: XmlElement | undefined): LineNumbers | undefined {
+  const countBy = Number(wAttr(lnNumType, 'countBy') ?? NaN);
+  if (!lnNumType || !Number.isInteger(countBy) || countBy < 1) return undefined;
+  return {
+    restart: RESTART_IN[wAttr(lnNumType, 'restart') ?? 'newPage'] ?? 'page',
+    ...(countBy === 1 ? {} : { countBy }),
+  };
+}
+
 export const MAPPED_SECTPR = new Set([
   'type',
   'pgSz',
@@ -376,6 +407,7 @@ export const MAPPED_SECTPR = new Set([
   'footerReference',
   'titlePg',
   'pgNumType',
+  'lnNumType',
 ]);
 
 /**
@@ -391,7 +423,13 @@ export function sectionXml(
     references = '',
     titlePage = false,
     numberStart,
-  }: { references?: string; titlePage?: boolean; numberStart?: number } = {},
+    lineNumbers,
+  }: {
+    references?: string;
+    titlePage?: boolean;
+    numberStart?: number;
+    lineNumbers?: LineNumbers;
+  } = {},
 ): string {
   // An attribute of an element the file's sectPr held, carried into the one written.
   const carriedOf = (element: string, name: string) =>
@@ -425,6 +463,15 @@ export function sectionXml(
         'w:footer': ptToTwips(m.footer ?? HEADER_FOOTER_MARGIN_PT),
         'w:gutter': carried('gutter') ?? '0',
       }),
+      // Line numbers (page-layout.md "Line numbers"): their start and distance as the file had them.
+      lnNumType: lineNumbers
+        ? tag('lnNumType', {
+            'w:countBy': String(lineNumbers.countBy ?? 1),
+            'w:start': carriedOf('lnNumType', 'start'),
+            'w:distance': carriedOf('lnNumType', 'distance'),
+            'w:restart': RESTART_OUT[lineNumbers.restart],
+          })
+        : undefined,
       pgNumType: Object.values(numbering).some((v) => v !== undefined)
         ? tag('pgNumType', numbering)
         : undefined,

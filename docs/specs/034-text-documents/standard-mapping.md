@@ -171,28 +171,29 @@ shapes and text boxes, and constructs of newer versions of either standard.
 
 Each loss by direction; each is listed in the import, conversion or download report, never silent.
 
-| From                     | Loss                                                                                                             |
-| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Either format, edited    | A kept construct inside an edited paragraph keeps its XML but loses any automatic style the edit reshaped        |
-| Either format            | Heading levels past 6 show as Heading 6 (the level is kept and written back)                                     |
-| ODF to OOXML             | Kept content (by name and count); lowercase and capitalised text transforms (only uppercase has a Word property) |
-| ODF to OOXML             | Continuous sections' own names and their protection                                                              |
-| ODF to OOXML             | A border's padding past 31 pt is written as 31 pt, Word's most                                                   |
-| OOXML to ODF             | The line between paragraphs (`w:pBdr/w:between`): an OpenDocument file has none                                  |
-| Word files               | Bar and list tab stops (`w:val` `bar`, `num`) read as no stop; a heavy leader reads as an underline              |
-| Either format            | Tab stops past 64 in a paragraph or past 22 in either way                                                        |
-| ODF files, relative tabs | LibreOffice counts default tab stops from the indent; LiveDoc from the margin, as Word and Google do             |
-| Either format            | Border styles the model has no dash for (double, wave, 3-D) read as solid; padding on a side with no border      |
-| OOXML to ODF             | Kept content (by name and count), content controls other than checkboxes, OMML equations become MathML           |
-| Either format, converted | Unmapped formatting inside kept properties (theme colours and fonts, revision ids): the model's values stay      |
-| Word files               | Proofing marks (`w:proofErr`) and last-rendered page breaks: Word recomputes them on open                        |
-| ODF files                | Soft page breaks (`text:soft-page-break`): layout hints every suite recomputes                                   |
-| ODF files                | Nested sections are written back one after another, each with its own columns                                    |
-| Either format            | Columns of unequal widths read as equal, as Google has them; reported as `column-width`                          |
-| OOXML to ODF             | A continuous section's own headers and footers (no master page of its own), each a `header-footer` loss          |
-| OOXML to ODF             | A continuous section's start at (no page of its own to number), a `page-number-start` loss                       |
-| Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`      |
-| LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                         |
+| From                     | Loss                                                                                                                    |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Either format, edited    | A kept construct inside an edited paragraph keeps its XML but loses any automatic style the edit reshaped               |
+| Either format            | Heading levels past 6 show as Heading 6 (the level is kept and written back)                                            |
+| ODF to OOXML             | Kept content (by name and count); lowercase and capitalised text transforms (only uppercase has a Word property)        |
+| ODF to OOXML             | Continuous sections' own names and their protection                                                                     |
+| ODF to OOXML             | A border's padding past 31 pt is written as 31 pt, Word's most                                                          |
+| OOXML to ODF             | The line between paragraphs (`w:pBdr/w:between`): an OpenDocument file has none                                         |
+| Word files               | Bar and list tab stops (`w:val` `bar`, `num`) read as no stop; a heavy leader reads as an underline                     |
+| Either format            | Tab stops past 64 in a paragraph or past 22 in either way                                                               |
+| ODF files, relative tabs | LibreOffice counts default tab stops from the indent; LiveDoc from the margin, as Word and Google do                    |
+| Either format            | Border styles the model has no dash for (double, wave, 3-D) read as solid; padding on a side with no border             |
+| OOXML to ODF             | Kept content (by name and count), content controls other than checkboxes, OMML equations become MathML                  |
+| Either format, converted | Unmapped formatting inside kept properties (theme colours and fonts, revision ids): the model's values stay             |
+| Word files               | Proofing marks (`w:proofErr`) and last-rendered page breaks: Word recomputes them on open                               |
+| ODF files                | Soft page breaks (`text:soft-page-break`): layout hints every suite recomputes                                          |
+| ODF files                | Nested sections are written back one after another, each with its own columns                                           |
+| Either format            | Columns of unequal widths read as equal, as Google has them; reported as `column-width`                                 |
+| OOXML to ODF             | A continuous section's own headers and footers (no master page of its own), each a `header-footer` loss                 |
+| OOXML to ODF             | A continuous section's start at (no page of its own to number), a `page-number-start` loss                              |
+| Either format to ODF     | Restart on each page is the whole document's: a section differing from the first numbered, a `line-number-restart` loss |
+| Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`             |
+| LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                                |
 
 ## Limits
 
