@@ -70,6 +70,10 @@ The table is the contract the readers and writers are tested against, one test p
 - A function Excel added after 2007 carries Excel's prefix: `_xlfn.` for each name of MS-XLSX §2.2.2's future
   function list and of Excel's dynamic arrays, `_xlfn._xlws.` for `FILTER` and `SORT`; the list is XlsxWriter's
   record of both ([Working with formulas](https://xlsxwriter.readthedocs.io/working_with_formulas.html)).
+- Google Sheets reads `_xlfn._xlws.FILTER` and `_xlfn._xlws.SORT` as `_xlws.FILTER` and `_xlws.SORT` and shows
+  `#NAME?`, where it reads `_xlfn.FILTER` and a bare `FILTER` (measured 2026-11-21); LibreOffice 26.8 reads only
+  `_xlfn._xlws.`, as Excel does. The file follows Excel and LibreOffice: in Google Sheets, a `FILTER` or `SORT` from
+  LiveDoc's `.xlsx` shows `#NAME?` until it is typed again.
 - `LAMBDA` and `LET` parameters carry `_xlpm.`, wherever the formula uses them.
 - A spilled range (`B2#`) is `_xlfn.ANCHORARRAY(B2)`.
 - A formula Excel's grammar cannot hold is written whole by S5's convention: one calling a Google-only function or a

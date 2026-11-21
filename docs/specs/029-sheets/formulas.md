@@ -1438,6 +1438,10 @@ connect these sheets." with **Allow Access** (verified: Google's help).
   exports that sheet as `.xlsx` with Google's calculated values, reads the answers from it, and deletes
   the Drive file afterwards, whether the category succeeded or failed. Each upload and delete is logged by its file
   id, never by what the file holds.
+- The workbook Google is given names `FILTER` and `SORT` with `_xlfn.` alone, as Google reads them; Excel's
+  `_xlfn._xlws.` reads as `#NAME?` there ([Excel's grammar](standard-mapping.md#excels-grammar-in-detail)).
+- A case of a function the catalogue gives to OpenFormula says so (`authority: openformula`), and a test holds every
+  such case to it: Google lacks the function, so its `#NAME?` there is no answer and names no difference.
 - Google's `.ods` export is not read: it writes booleans as 1 and 0, and each function ODF lacks (`XOR`, `IFS`,
   `LAMBDA`) as `#NAME?`, where its `.xlsx` holds Google's own answers (measured 2026-11-21, `Logical`).
 - Before exporting, the script sets the sheet's locale and time zone to the category's (`en_US`, `de_DE`) and UTC

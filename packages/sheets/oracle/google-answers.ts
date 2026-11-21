@@ -7,6 +7,7 @@ import { writeXlsx } from '../src/files/xlsx-write';
 import type { OracleCategory } from '../src/oracle/corpus';
 import { answersOf, oracleFile, type FileAnswers } from '../src/oracle/oracle-file';
 import { XLSX_MIME, type OracleDrive } from './google-drive.ts';
+import { asGoogleReadsIt } from './google-names.ts';
 
 // UTC as the Sheets API names it (CLDR's), no daylight saving.
 export const ORACLE_TIME_ZONE = 'Etc/GMT';
@@ -34,7 +35,7 @@ export async function googleAnswers(
   const written = writeXlsx(oracleFile(category), name);
   if (written.losses.length > 0)
     return { answers: {}, problems: [`unwritten ${JSON.stringify(written.losses)}`] };
-  const id = await drive.uploadAsSheet(name, written.data, XLSX_MIME);
+  const id = await drive.uploadAsSheet(name, await asGoogleReadsIt(written.data), XLSX_MIME);
   let answered: FileAnswers;
   try {
     await drive.setLocale(id, sheetsLocale(category.locale), ORACLE_TIME_ZONE);

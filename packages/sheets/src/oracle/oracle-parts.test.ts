@@ -1,7 +1,14 @@
 // The oracle's parts (docs/specs/029-sheets/formulas.md "The oracle"): reading cases and answers, laying the workbook
 // out, reading a source's copy back, comparing, and the engine's own answers.
 import { describe, expect, it } from 'vitest';
-import { heldAnswer, sameBlock, sameValue, showBlock, unnamedDifferences } from './compare';
+import {
+  googleLacks,
+  heldAnswer,
+  sameBlock,
+  sameValue,
+  showBlock,
+  unnamedDifferences,
+} from './compare';
 import { OracleCorpus, OracleLayout, type OracleCase, type OracleCategory } from './corpus';
 import { engineAnswers } from './oracle-engine';
 import { answersOf, oracleFile } from './oracle-file';
@@ -274,6 +281,21 @@ describe('comparing', () => {
         libreoffice: [[2]],
       }),
     ).toEqual([]);
+  });
+
+  it('names no difference where Google lacks an OpenFormula function, and only there', () => {
+    const name = { e: '#NAME?' };
+    const openFormula = one({ authority: 'openformula' });
+    expect(googleLacks(openFormula, [[name], [null]])).toBe(true);
+    expect(googleLacks(openFormula, [[name], [2]])).toBe(false);
+    expect(googleLacks(openFormula, [[{ e: '#N/A' }]])).toBe(false);
+    expect(googleLacks(openFormula, [[1]])).toBe(false);
+    expect(googleLacks(openFormula, [])).toBe(false);
+    expect(googleLacks(one({}), [[name]])).toBe(false);
+    expect(unnamedDifferences(openFormula, { google: [[name]], libreoffice: [[2]] })).toEqual([]);
+    expect(unnamedDifferences(one({}), { google: [[name]], libreoffice: [[2]] })).toEqual([
+      'X.1: google={"e":"#NAME?"} libreoffice=2',
+    ]);
   });
 });
 
