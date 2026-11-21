@@ -57,7 +57,10 @@ export type FileLoss =
   | { k: 'sheet_unread'; sheet: string }
   | { k: 'sheet_renamed'; from: string; to: string }
   | { k: 'text_cut'; sheet: string; cells: number }
-  | { k: 'format_unread'; sheet: string; r: number; c: number };
+  | { k: 'format_unread'; sheet: string; r: number; c: number }
+  | { k: 'format_unwritten'; sheet: string; r: number; c: number }
+  | { k: 'format_approximated'; sheet: string; code: string }
+  | { k: 'formats_cut'; sheet: string };
 
 function fileValueOf(value: Scalar): FileValue | undefined {
   if (value === null) return undefined;

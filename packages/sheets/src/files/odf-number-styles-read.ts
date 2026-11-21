@@ -11,7 +11,10 @@ const { number: NUMBER, style: STYLE, fo: FO } = ODF_NS;
 export type DataStyleRead = { code: string; approximate: boolean };
 
 const NAMED_COLOURS = new Map(
-  Object.entries(CODE_COLOURS).map(([name, hex]) => [hex, `[${name[0]!.toUpperCase()}${name.slice(1)}]`]),
+  Object.entries(CODE_COLOURS).map(([name, hex]) => [
+    hex,
+    `[${name[0]!.toUpperCase()}${name.slice(1)}]`,
+  ]),
 );
 
 // Characters a code shows as they are, unquoted, in a number section and in a date or time one.
@@ -27,11 +30,17 @@ function quoted(text: string, bare: RegExp): string {
 function digits(element: XmlElement): string {
   const attr = (local: string) => Number(attributeOf(element, NUMBER, local) ?? 0);
   const places = attr('decimal-places');
-  const min = Math.min(attributeOf(element, NUMBER, 'min-decimal-places') === undefined ? places : attr('min-decimal-places'), places);
+  const min = Math.min(
+    attributeOf(element, NUMBER, 'min-decimal-places') === undefined
+      ? places
+      : attr('min-decimal-places'),
+    places,
+  );
   const integer = attr('min-integer-digits');
   const grouped = attributeOf(element, NUMBER, 'grouping') === 'true';
   let whole = '0'.repeat(integer) || '#';
-  if (grouped) whole = `${'#'.repeat(Math.max(0, 4 - whole.length))}${whole}`.replace(/(.)(...)$/, '$1,$2');
+  if (grouped)
+    whole = `${'#'.repeat(Math.max(0, 4 - whole.length))}${whole}`.replace(/(.)(...)$/, '$1,$2');
   const decimals = places > 0 ? `.${'0'.repeat(min)}${'#'.repeat(places - min)}` : '';
   return `${whole}${decimals}`;
 }
@@ -39,7 +48,8 @@ function digits(element: XmlElement): string {
 // One data style's own section, without its maps; `approximate` set when a part has no code.
 function sectionCode(style: XmlElement, flags: { approximate: boolean }): string {
   const elapsed = attributeOf(style, NUMBER, 'truncate-on-overflow') === 'false';
-  const bare = style.local === 'date-style' || style.local === 'time-style' ? BARE_IN_DATE : BARE_IN_NUMBER;
+  const bare =
+    style.local === 'date-style' || style.local === 'time-style' ? BARE_IN_DATE : BARE_IN_NUMBER;
   let out = '';
   for (const child of childElements(style)) {
     const long = attributeOf(child, NUMBER, 'style') === 'long';
@@ -112,12 +122,7 @@ function sectionCode(style: XmlElement, flags: { approximate: boolean }): string
 const CONDITION = /^value\(\)\s*(<=|>=|!=|<|>|=)\s*(-?\d+(?:\.\d+)?)$/;
 
 // The conditions a code's sections mean without saying them, by how many sections there are.
-const IMPLIED: readonly string[][] = [
-  [],
-  ['>=0'],
-  ['>0', '<0'],
-  ['>0', '<0', '=0'],
-];
+const IMPLIED: readonly string[][] = [[], ['>=0'], ['>0', '<0'], ['>0', '<0', '=0']];
 
 /** A data style as a code, its sections found through `styles` (every data style by name); null when none. */
 export function readDataStyle(
@@ -144,14 +149,20 @@ export function readDataStyle(
     ...sections.map((section, i) => (implied ? section : `[${conditions[i]}]${section}`)),
     main,
   ].join(';');
-  if (code === '') return null;
+  // A style of nothing a code says (a boolean, a quarter alone) is none, approximate when it held something.
+  if (code === '') return flags.approximate ? { code, approximate: true } : null;
   // A code LiveDoc wrote rides as the title; it holds when it writes this very structure.
   const title = attributeOf(style, NUMBER, 'title');
   if (title && !flags.approximate) {
     const name = 'N';
     const fromTitle = dataStyleXml(name, title);
     const fromCode = dataStyleXml(name, code);
-    if (fromTitle && fromCode && fromTitle.join('').replace(/ number:title="[^"]*"/, '') === fromCode.join('').replace(/ number:title="[^"]*"/, ''))
+    if (
+      fromTitle &&
+      fromCode &&
+      fromTitle.join('').replace(/ number:title="[^"]*"/, '') ===
+        fromCode.join('').replace(/ number:title="[^"]*"/, '')
+    )
       return { code: title, approximate: false };
   }
   return { code, approximate: flags.approximate };

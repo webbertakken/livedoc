@@ -17,19 +17,20 @@ const { office: OFFICE, style: STYLE, number: NUMBER } = ODF_NS;
 export class OdsStyles {
   private readonly cells = new Map<string, string | null>();
   private readonly xml: string[] = [];
+  private written = 0;
 
   /** The cell style for a code, or null when ODF cannot say the code (the caller names the loss). */
   cellStyle(code: string): string | null {
     const known = this.cells.get(code);
     if (known !== undefined) return known;
-    const n = this.xml.length / 2 + 1;
+    const n = this.written + 1;
     const data = dataStyleXml(`N${n}`, code);
     const name = data ? `ce${n}` : null;
     if (data) {
-      this.xml.push(...data.slice(0, -1).map((s) => s), data.at(-1)!);
-      this.xml.splice(this.xml.length - data.length, data.length, data.join(''));
+      this.written = n;
       this.xml.push(
-        `<style:style style:name="${name}" style:family="table-cell" style:data-style-name="N${n}"/>`,
+        ...data,
+        `<style:style style:name="ce${n}" style:family="table-cell" style:data-style-name="N${n}"/>`,
       );
     }
     this.cells.set(code, name);

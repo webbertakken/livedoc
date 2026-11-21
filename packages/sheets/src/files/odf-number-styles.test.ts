@@ -1,6 +1,12 @@
 // docs/specs/029-sheets/standard-mapping.md "Number formats in the file" (D93): a code as ODF data styles, sections as
 // maps, colours as text properties, and back; a file LiveDoc wrote reads back to its own code.
-import { parseXml, ODF_NS, childElements, attributeOf, type XmlElement } from '@livedoc/office-packages';
+import {
+  parseXml,
+  ODF_NS,
+  childElements,
+  attributeOf,
+  type XmlElement,
+} from '@livedoc/office-packages';
 import { describe, expect, it } from 'vitest';
 import { dataStyleXml } from './odf-number-styles';
 import { readDataStyle } from './odf-number-styles-read';
@@ -31,7 +37,9 @@ describe('dataStyleXml', () => {
   it('writes sections as maps, as LibreOffice does, with their colours', () => {
     const xml = dataStyleXml('N2', '0.0;[Red]-0.0;"zero"')!;
     expect(xml).toHaveLength(3);
-    expect(xml[1]).toContain('<style:text-properties fo:color="#ff0000"/><number:text>-</number:text>');
+    expect(xml[1]).toContain(
+      '<style:text-properties fo:color="#ff0000"/><number:text>-</number:text>',
+    );
     expect(xml[2]).toContain(
       '<style:map style:condition="value()&gt;0" style:apply-style-name="N2P0"/><style:map style:condition="value()&lt;0" style:apply-style-name="N2P1"/>',
     );
@@ -46,13 +54,49 @@ describe('dataStyleXml', () => {
       '<number:day number:style="long"/><number:text>/</number:text><number:month number:style="long"/><number:text>/</number:text><number:year number:style="long"/><number:text> </number:text><number:hours number:style="long"/><number:text>:</number:text><number:minutes number:style="long"/>',
     );
     expect(dataStyleXml('N', '[h]:mm:ss.00')![0]).toContain('number:truncate-on-overflow="false"');
-    expect(dataStyleXml('N', '[h]:mm:ss.00')![0]).toContain('<number:seconds number:style="long" number:decimal-places="2"/>');
+    expect(dataStyleXml('N', '[h]:mm:ss.00')![0]).toContain(
+      '<number:seconds number:style="long" number:decimal-places="2"/>',
+    );
     expect(dataStyleXml('N', '"Total: "@')![0]).toContain('<number:text-style');
   });
 
   it('says nothing for what ODF cannot hold here', () => {
-    for (const code of ['# ?/?', '0,', '[Color12]0', '[h]:mm dd', 'mmmmm', '0"x"0', '@*-', '@0', 'ss.0.0', '[>1]0;0;0'])
+    for (const code of [
+      '# ?/?',
+      '0,',
+      '[Color12]0',
+      '[h]:mm dd',
+      'mmmmm',
+      '0"x"0',
+      '@*-',
+      '@0',
+      'ss.0.0',
+      '[>1]0;0;0',
+    ])
       expect(dataStyleXml('N', code)).toBeNull();
+  });
+});
+
+describe('the codes ODF holds, each part both ways', () => {
+  it.each([
+    ['[<>0]0;0', '[<>0]0;0'],
+    ['[>=10][Blue]0', '[Blue]0'],
+    ['[$£-809]#,##0.00', '"£"#,##0.00'],
+    ['%0', '%0'],
+    ['[hh]:mm', '[hh]:mm'],
+    ['d-mmm-yy', 'd-mmm-yy'],
+    ['ddd m mmmm', 'ddd m mmmm'],
+    ['h:m:s', 'h:m:s'],
+    ['mm:ss.00', 'mm:ss.00'],
+    ['0\\', '0'],
+    ['0*', '0* '],
+    ['0"abc', '0"abc"'],
+  ])('writes %s and reads it back as %s', (code, back) => {
+    expect(roundTrip(code)?.code).toBe(back);
+  });
+
+  it('says nothing for a colour it does not know', () => {
+    expect(dataStyleXml('N', '[Purple]0')).toBeNull();
   });
 });
 
@@ -81,8 +125,10 @@ describe('readDataStyle', () => {
   it('keeps the title where it writes the same structure, and reads structure where it does not', () => {
     const accounting = '_("£"* #,##0.00_);_("£"* \\(#,##0.00\\);_("£"* "-"??_);_(@_)';
     expect(roundTrip(accounting, true)).toEqual({ code: accounting, approximate: false });
-    expect(roundTrip(accounting).code).toBe('" £"* #,##0.00 ;" £"* (#,##0.00);" £"* -# ; @ ');
-    const xml = dataStyleXml('N1', '0.00')!.map((s) => s.replace('number:title="0.00"', 'number:title="0.0"'));
+    expect(roundTrip(accounting)?.code).toBe('" £"* #,##0.00 ;" £"* (#,##0.00);" £"* -# ; @ ');
+    const xml = dataStyleXml('N1', '0.00')!.map((s) =>
+      s.replace('number:title="0.00"', 'number:title="0.0"'),
+    );
     const styles = stylesOf(xml);
     expect(readDataStyle(styles.get('N1')!, styles)).toEqual({ code: '0.00', approximate: false });
   });
@@ -97,14 +143,18 @@ describe('readDataStyle', () => {
       '<number:time-style style:name="F" number:truncate-on-overflow="false"><number:hours number:style="long"/><number:seconds/><number:am-pm/></number:time-style>',
       '<number:number-style style:name="G"><number:currency-symbol>€</number:currency-symbol><number:fill-character/><number:number number:min-integer-digits="5" number:grouping="true" number:decimal-places="3" number:min-decimal-places="1"/></number:number-style>',
       '<number:text-style style:name="H"><number:text>"q"</number:text><number:text-content/></number:text-style>',
+      '<number:number-style style:name="I"><style:text-properties/><style:other/><number:scientific-number number:decimal-places="1"/><style:map/></number:number-style>',
+      '<number:number-style style:name="J"/>',
     ]);
     const read = (name: string) => readDataStyle(styles.get(name)!, styles);
     expect(read('B')).toEqual({ code: '[<=10]#;#', approximate: true });
     expect(read('C')).toEqual({ code: 'yy', approximate: true });
     expect(read('D')).toEqual({ code: '#.00', approximate: true });
-    expect(read('E')).toBeNull();
+    expect(read('E')).toEqual({ code: '', approximate: true });
     expect(read('F')).toEqual({ code: '[hh]sAM/PM', approximate: false });
     expect(read('G')).toEqual({ code: '"€"* 00,000.0##', approximate: false });
     expect(read('H')).toEqual({ code: '\\"\\q\\"@', approximate: false });
+    expect(read('I')).toEqual({ code: '#.0E+00', approximate: true });
+    expect(read('J')).toBeNull();
   });
 });

@@ -18,6 +18,7 @@ import {
 import { serialFromParts } from '../dates';
 import { SheetLimits } from '../sheet-limits';
 import { ERROR_CODES, type ErrorCode } from '../formula/values';
+import { odsCellFormats, type OdsCellFormats } from './ods-styles';
 import { fromOpenFormula } from './open-formula';
 import type { FileCell, FileLoss, FileRead, FileSheet, FileValue } from './workbook-file';
 
@@ -140,13 +141,64 @@ function matrixSpans(cell: XmlElement): FileCell['spans'] {
 
 type Budget = { cells: number };
 
-function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileSheet {
+/** The most cells an empty styled cell may repeat over and keep its format (D94): past it, a whole line's format. */
+export const ODS_FORMAT_REPEAT_MAX = 1_000;
+
+// What reading a sheet carries along: its name, the losses so far, and the file's cell styles' formats.
+type Sheet = {
+  name: string;
+  losses: FileLoss[];
+  formats: OdsCellFormats;
+  approximated: Set<string>;
+  cut: { formats: boolean };
+};
+
+// A style's number format as a code; a format read only approximately is named once a sheet.
+function formatOf(styleName: string | undefined, sheet: Sheet): string | undefined {
+  const read = styleName === undefined ? null : sheet.formats(styleName);
+  if (!read) return undefined;
+  if (read.approximate && !sheet.approximated.has(read.code)) {
+    sheet.approximated.add(read.code);
+    sheet.losses.push({ k: 'format_approximated', sheet: sheet.name, code: read.code });
+  }
+  return read.code === '' ? undefined : read.code;
+}
+
+// Each column's default cell style, by index, up to the grid's ceiling.
+function columnStyles(table: XmlElement): (string | undefined)[] {
+  const out: (string | undefined)[] = [];
+  const walk = (element: XmlElement) => {
+    for (const child of childElements(element)) {
+      if (child.uri !== TABLE) continue;
+      if (child.local === 'table-column') {
+        const style = attributeOf(child, TABLE, 'default-cell-style-name');
+        const n = Math.min(repeatOf(child, 'columns'), COLS_MAX - out.length);
+        for (let k = 0; k < n; k++) out.push(style);
+      } else if (
+        ['table-columns', 'table-header-columns', 'table-column-group'].includes(child.local)
+      )
+        walk(child);
+    }
+  };
+  walk(table);
+  return out;
+}
+
+function readTable(
+  table: XmlElement,
+  losses: FileLoss[],
+  budget: Budget,
+  formats: OdsCellFormats,
+): FileSheet {
   const name = attributeOf(table, TABLE, 'name') ?? '';
+  const sheet: Sheet = { name, losses, formats, approximated: new Set(), cut: { formats: false } };
+  const columns = columnStyles(table);
   const cells: FileCell[] = [];
   let cut = false;
   let r = 0;
   for (const row of rowsOf(table)) {
     const rowRepeat = repeatOf(row, 'rows');
+    const rowStyle = attributeOf(row, TABLE, 'default-cell-style-name');
     let c = 0;
     const rowCells: FileCell[] = [];
     for (const cell of childElements(row)) {
@@ -155,7 +207,16 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
       const colRepeat = repeatOf(cell, 'columns');
       const formulaText = attributeOf(cell, TABLE, 'formula');
       const value = cellValue(cell);
-      if (formulaText !== undefined || value) {
+      const own = attributeOf(cell, TABLE, 'style-name');
+      const content = formulaText !== undefined || value !== undefined;
+      // An empty cell keeps its own style's format over a few cells; a whole line's is past what the grid holds (D94).
+      const ownFormat = content ? undefined : formatOf(own, sheet);
+      if (ownFormat !== undefined && rowRepeat * colRepeat > ODS_FORMAT_REPEAT_MAX)
+        sheet.cut.formats = true;
+      else if (ownFormat !== undefined)
+        for (let k = 0; k < colRepeat && c + k < COLS_MAX; k++)
+          rowCells.push({ r: 0, c: c + k, format: ownFormat });
+      if (content) {
         const formula = formulaText === undefined ? undefined : fromOpenFormula(formulaText);
         const spans = formula ? matrixSpans(cell) : undefined;
         for (let k = 0; k < colRepeat; k++) {
@@ -169,6 +230,8 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
             losses.push({ k: 'formula_unread', sheet: name, r, c: c + k });
           if (spans) out.spans = spans;
           if (value) out.value = value;
+          const format = formatOf(own ?? rowStyle ?? columns[c + k], sheet);
+          if (format !== undefined) out.format = format;
           rowCells.push(out);
         }
       }
@@ -190,10 +253,13 @@ function readTable(table: XmlElement, losses: FileLoss[], budget: Budget): FileS
   const rows = cells.reduce((n, cell) => Math.max(n, cell.r + 1), 0);
   const cols = cells.reduce((n, cell) => Math.max(n, cell.c + 1), 0);
   if (cut) losses.push({ k: 'sheet_cut', sheet: name, rows: ROWS_MAX, cols: COLS_MAX });
+  if (sheet.cut.formats || columns.some((style) => formatOf(style, sheet) !== undefined))
+    losses.push({ k: 'formats_cut', sheet: name });
   return { name, rows, cols, cells };
 }
 
-function readBody(root: XmlElement): FileRead {
+function readBody(root: XmlElement, styleRoots: readonly XmlElement[]): FileRead {
+  const formats = odsCellFormats([root, ...styleRoots]);
   const spreadsheet = childElement(
     childElement(root, OFFICE, 'body') ?? root,
     OFFICE,
@@ -203,7 +269,7 @@ function readBody(root: XmlElement): FileRead {
   const tables = childElements(spreadsheet).filter((e) => is(e, TABLE, 'table'));
   const losses: FileLoss[] = [];
   const budget: Budget = { cells: 0 };
-  const sheets = tables.slice(0, SHEETS_MAX).map((t) => readTable(t, losses, budget));
+  const sheets = tables.slice(0, SHEETS_MAX).map((t) => readTable(t, losses, budget, formats));
   if (tables.length > SHEETS_MAX)
     losses.push({ k: 'sheets_cut', kept: SHEETS_MAX, had: tables.length });
   return { ok: true, file: { sheets }, losses };
@@ -217,7 +283,7 @@ export async function readOds(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead>
     const mediaType = attributeOf(parsed.root, OFFICE, 'mimetype');
     if (!is(parsed.root, OFFICE, 'document') || mediaType !== ODF_MEDIA_TYPES.spreadsheet)
       return refuse('package_wrong_type');
-    return readBody(parsed.root);
+    return readBody(parsed.root, []);
   }
   const read = await readOdfPackage(bytes);
   if (!read.ok) return read;
@@ -226,5 +292,8 @@ export async function readOds(bytes: Uint8Array<ArrayBuffer>): Promise<FileRead>
   if (!content) return refuse('package_damaged', { entry: 'content.xml' });
   const parsed = parseXml(new TextDecoder().decode(content), 'content.xml');
   if (!parsed.ok) return parsed;
-  return readBody(parsed.root);
+  // Common styles (a named cell style and its data style) live in styles.xml; an unreadable one gives none.
+  const stylesEntry = read.package.entries.get('styles.xml');
+  const styles = stylesEntry && parseXml(new TextDecoder().decode(stylesEntry), 'styles.xml');
+  return readBody(parsed.root, styles && styles.ok ? [styles.root] : []);
 }
