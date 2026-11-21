@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import type { OfficePanelSpec } from '@/lib/office/office-panels';
-import { OfficePanel } from './OfficePanel';
+import { OFFICE_PANEL_START, OfficePanel } from './OfficePanel';
 
 const COMMENTS: OfficePanelSpec = {
   id: 'comments',
@@ -59,6 +59,31 @@ describe('OfficePanel', () => {
   it('takes focus on its first control when opened from a menu item or shortcut', () => {
     right({ focusNonce: 1 });
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Inside' }));
+  });
+
+  it('starts at the control the body marks, or the first one not dimmed', () => {
+    render(
+      <OfficePanel spec={OUTLINE} onClose={() => {}} focusNonce={1}>
+        <button type="button" aria-disabled="true">
+          Dimmed
+        </button>
+        <button type="button">Usable</button>
+        <input aria-label="Start" {...{ [OFFICE_PANEL_START]: '' }} />
+      </OfficePanel>,
+    );
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Start' }));
+  });
+
+  it('passes over a dimmed control', () => {
+    render(
+      <OfficePanel spec={OUTLINE} onClose={() => {}} focusNonce={1}>
+        <button type="button" aria-disabled="true">
+          Dimmed
+        </button>
+        <button type="button">Usable</button>
+      </OfficePanel>,
+    );
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Usable' }));
   });
 
   it('resizes from its edge with the arrow keys, Home and End', () => {

@@ -81,15 +81,13 @@ import { useTextDocumentZoom } from '@/lib/text-document/useTextDocumentZoom';
 import { levelInMode } from '@/lib/office/office-mode';
 import { useOfficeMode } from '@/lib/office/useOfficeMode';
 import { OfficePanel, OfficePanelLayout } from '@/components/office/OfficePanel';
-import { TextDocumentLineNumbersPanel } from './TextDocumentLineNumbersPanel';
+import { TextDocumentRightPanel } from './TextDocumentRightPanel';
+import { useTextDocumentWatermark } from './useTextDocumentWatermark';
+import { watermarkLook } from '@/lib/text-document/text-document-watermark';
 import { useTextDocumentLineNumbers } from './useTextDocumentLineNumbers';
 import { useOfficePanels } from '@/lib/office/useOfficePanels';
 import { createTextDocumentChanges } from '@/lib/text-document/text-document-changes';
-import {
-  LINE_NUMBERS_PANEL,
-  OUTLINE_PANEL,
-  TEXT_DOCUMENT_PANELS,
-} from '@/lib/text-document/text-document-panels';
+import { OUTLINE_PANEL, TEXT_DOCUMENT_PANELS } from '@/lib/text-document/text-document-panels';
 import { TextDocumentOutline } from './TextDocumentOutline';
 import { useTextDocumentParagraphs } from './useTextDocumentParagraphs';
 import {
@@ -458,6 +456,13 @@ export function TextDocumentSurface({
     first: page.section,
     subscribe: changes.subscribeCaret,
   });
+  // Insert > Watermark's panel, and the watermark every page draws (page-layout.md "Watermark").
+  const watermark = useTextDocumentWatermark({
+    view: editorView,
+    liveDoc,
+    ready: state === 'ready',
+    writes,
+  });
   // Pageless, the page is drawn as a column at the text width (page-layout.md "Pageless").
   // View > Text width, a person's own (page-layout.md "Pageless").
   const textWidth = useTextDocumentTextWidth(page.pageless);
@@ -707,21 +712,7 @@ export function TextDocumentSurface({
           ) : null
         }
         right={
-          panels.open.right === LINE_NUMBERS_PANEL.id ? (
-            <OfficePanel
-              spec={LINE_NUMBERS_PANEL}
-              width={panels.width}
-              onWidth={panels.setWidth}
-              onWidthDone={panels.saveWidth}
-              onClose={() => panels.close('right')}
-              focusNonce={panels.focusNonce}
-            >
-              <TextDocumentLineNumbersPanel
-                state={lineNumbers.state}
-                onChoose={lineNumbers.choose}
-              />
-            </OfficePanel>
-          ) : null
+          <TextDocumentRightPanel panels={panels} lineNumbers={lineNumbers} watermark={watermark} />
         }
       >
         <div
@@ -787,6 +778,7 @@ export function TextDocumentSurface({
               editing={headers.editing}
               editingBox={headers.box}
               editingBar={headers.bar}
+              watermark={watermarkLook(watermark.watermark, page.section.setup)}
             />
             {state === 'loading' ? (
               <p className="text-(--office-muted)" aria-live="polite">

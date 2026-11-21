@@ -8,9 +8,9 @@ import { convertTextDocument } from './convert';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import type { TextDocumentFileType } from './file-types';
 import type { Block, SectionBreak } from './model/blocks';
-import { Watermarks, type Watermark } from './model/watermark';
+import { watermarkBox, Watermarks, type Watermark } from './model/watermark';
 import type { TextDocument } from './model/text-document';
-import { readOoxmlWatermark, vmlColour, vmlFraction, watermarkBox } from './ooxml/ooxml-watermark';
+import { readOoxmlWatermark, vmlColour, vmlFraction } from './ooxml/ooxml-watermark';
 import { CONSTRUCTS } from './testing/constructs';
 import { docx, W_P, W_R } from './testing/packages';
 

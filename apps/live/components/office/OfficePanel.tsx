@@ -12,6 +12,9 @@ import {
   type OfficePanelSpec,
 } from '@/lib/office/office-panels';
 
+/** Marks the control a panel's body starts at when the panel opens (a field before a row of tabs). */
+export const OFFICE_PANEL_START = 'data-panel-start';
+
 const FOCUSABLE =
   'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex="0"]';
 
@@ -42,7 +45,13 @@ export function OfficePanel({
 
   useEffect(() => {
     if (focusNonce === 0) return;
-    (body.current?.querySelector<HTMLElement>(FOCUSABLE) ?? close.current)?.focus();
+    // The control the kind marks to start at, else the first one that can be used.
+    const start =
+      body.current?.querySelector<HTMLElement>(`[${OFFICE_PANEL_START}]`) ??
+      [...(body.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? [])].find(
+        (e) => e.getAttribute('aria-disabled') !== 'true',
+      );
+    (start ?? close.current)?.focus();
   }, [focusNonce]);
 
   return (

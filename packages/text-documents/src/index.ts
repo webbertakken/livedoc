@@ -51,6 +51,7 @@ export {
 export { Notes } from './model/notes';
 export {
   WATERMARK_DEFAULTS,
+  watermarkBox,
   Watermarks,
   type TextWatermark,
   type Watermark,

@@ -176,3 +176,27 @@ function withHeaders<S extends Section | SectionBreak>(
   const { headers: _, ...rest } = s;
   return (headers ? { ...rest, headers } : rest) as S;
 }
+
+// A character's width as a share of its height, for sizing the shape around the words (assumed).
+const CHARACTER_SHARE = 0.6;
+// Auto fills this share of the text width (default).
+const AUTO_SHARE = 0.9;
+
+/** The shape's size in points, in the files and on the page: a size's height, or Auto's across 90% of the text width. */
+export function watermarkBox(
+  watermark: Watermark,
+  textWidth: number,
+): { width: number; height: number } {
+  const characters = Math.max(1, [...watermark.text].length);
+  if (watermark.size !== undefined) {
+    const width = watermark.size * CHARACTER_SHARE * characters;
+    return { width: roundPt(width), height: watermark.size };
+  }
+  const width = textWidth * AUTO_SHARE;
+  return {
+    width: roundPt(width),
+    height: roundPt(Math.min(width / (CHARACTER_SHARE * characters), width / 2)),
+  };
+}
+
+const roundPt = (n: number) => Math.round(n * 100) / 100;
