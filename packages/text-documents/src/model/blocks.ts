@@ -17,7 +17,7 @@ export type Run = {
   readonly kept?: KeptProperties;
 };
 
-/** Something inside a paragraph the model does not map (a bookmark, field, note, picture), kept as the file has it. */
+/** Something inside a paragraph the model does not map (a bookmark, another field, a note, a picture), kept as the file has it. */
 export type KeptInline = {
   readonly type: 'kept';
   /** What it is, for the placeholder and the reports: the element's local name. */
@@ -30,7 +30,23 @@ export type KeptInline = {
   readonly kept?: KeptProperties;
 };
 
-export type Inline = Run | KeptInline;
+/** What a field shows (page-layout.md "Page numbers"): the page it is drawn on, or how many pages there are. */
+export type FieldKind = 'page-number' | 'page-count';
+export const FIELD_KINDS: readonly FieldKind[] = ['page-number', 'page-count'];
+
+/** A field: characters the document works out, with the formatting of a run and the text last drawn. */
+export type Field = {
+  readonly type: 'field';
+  readonly field: FieldKind;
+  /** The text it showed when it was written (a file's cached result). */
+  readonly text: string;
+  readonly props: TextProps;
+  readonly style?: string;
+  readonly link?: string;
+  readonly kept?: KeptProperties;
+};
+
+export type Inline = Run | Field | KeptInline;
 
 export type Paragraph = {
   readonly type: 'paragraph';
@@ -63,7 +79,7 @@ export const Paragraph = {
     props: {},
     inlines: text ? [{ type: 'run', text, props: {} }] : [],
   }),
-  /** The paragraph's own characters; kept inlines read as nothing. */
+  /** The paragraph's own characters, a field's as it last showed; kept inlines read as nothing. */
   text: (paragraph: Paragraph): string =>
-    paragraph.inlines.map((i) => (i.type === 'run' ? i.text : '')).join(''),
+    paragraph.inlines.map((i) => (i.type === 'kept' ? '' : i.text)).join(''),
 } as const;

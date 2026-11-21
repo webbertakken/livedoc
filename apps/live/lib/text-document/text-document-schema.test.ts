@@ -11,6 +11,8 @@ import { ySyncPlugin } from 'y-prosemirror';
 import * as Y from 'yjs';
 import {
   BODY_BLOCKS,
+  FIELD,
+  FIELD_ATTRIBUTES,
   KEPT_BLOCK,
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,
@@ -33,8 +35,9 @@ describe('textDocumentSchema', () => {
       [SECTION_BREAK]: SECTION_BREAK_ATTRIBUTES,
       [KEPT_BLOCK]: KEPT_BLOCK_ATTRIBUTES,
       [KEPT_INLINE]: KEPT_INLINE_ATTRIBUTES,
+      [FIELD]: FIELD_ATTRIBUTES,
     };
-    for (const name of [...BODY_BLOCKS, KEPT_INLINE]) {
+    for (const name of [...BODY_BLOCKS, KEPT_INLINE, FIELD]) {
       const node = textDocumentSchema.nodes[name];
       expect(node, name).toBeDefined();
       expect(Object.keys(node!.spec.attrs ?? {}).sort()).toEqual([...attributes[name]!].sort());
@@ -62,6 +65,30 @@ describe('textDocumentSchema', () => {
       tag: 'span',
       text: 'footnoteReference, kept from the file',
     });
+  });
+
+  // page-layout.md "Page numbers": a field is one character, drawn in its formatting with the text it last showed.
+  it('draws a field as its text in its own formatting, read as that text', () => {
+    const field = textDocumentSchema.nodes.field!.create({
+      field: 'page-number',
+      text: '12',
+      props: { bold: true },
+    });
+    const spec = field.type.spec.toDOM!(field) as unknown as [
+      string,
+      Record<string, string>,
+      string,
+    ];
+    expect(spec[0]).toBe('span');
+    expect(spec[1]).toMatchObject({ contenteditable: 'false', 'data-field': 'page-number' });
+    expect(spec[1].style).toContain('font-weight: 700');
+    expect(spec[2]).toBe('12');
+    const p = textDocumentSchema.nodes.paragraph!.create(null, [
+      textDocumentSchema.text('Page '),
+      field,
+    ]);
+    expect(p.textContent).toBe('Page 12');
+    expect(field.isAtom && field.nodeSize).toBe(1);
   });
 
   // page-layout.md "Breaks": a Word page or column break marked for the layout.

@@ -10,12 +10,22 @@ export const BODY_BLOCKS = [PARAGRAPH, SECTION_BREAK, KEPT_BLOCK] as const;
 
 /** A kept inline: an atom inside its paragraph. */
 export const KEPT_INLINE = 'kept_inline';
+/** A field (page-layout.md "Page numbers"): an atom inside its paragraph. */
+export const FIELD = 'field';
 
 /** The attributes each element holds, each a whole value. */
 export const PARAGRAPH_ATTRIBUTES = ['style', 'props', 'list', 'text', 'kept'] as const;
-export const SECTION_BREAK_ATTRIBUTES = ['start', 'setup', 'headers', 'kept', 'region'] as const;
+export const SECTION_BREAK_ATTRIBUTES = [
+  'start',
+  'setup',
+  'headers',
+  'numberStart',
+  'kept',
+  'region',
+] as const;
 export const KEPT_BLOCK_ATTRIBUTES = ['name', 'xml'] as const;
 export const KEPT_INLINE_ATTRIBUTES = ['name', 'xml', 'props', 'style', 'link', 'kept'] as const;
+export const FIELD_ATTRIBUTES = ['field', 'text', 'props', 'style', 'link', 'kept'] as const;
 
 /** One text formatting attribute per text property, each holding `{ value }`. */
 export const TEXT_PROPERTY_MARK_OF = {

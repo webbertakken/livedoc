@@ -4,6 +4,7 @@
 import * as Y from 'yjs';
 import type {
   Block,
+  Field,
   Inline,
   KeptBlock,
   KeptInline,
@@ -19,6 +20,7 @@ import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
+  FIELD,
   KEPT_INLINE,
   LINK_MARK,
   LISTS_MAP,
@@ -66,6 +68,21 @@ function inlinesOf(paragraph: Y.XmlElement): Inline[] {
     if (child instanceof Y.XmlText) {
       for (const op of child.toDelta() as { insert: unknown; attributes?: Attributes }[])
         if (typeof op.insert === 'string') inlines.push(runOf(op.insert, op.attributes ?? {}));
+      continue;
+    }
+    if (child instanceof Y.XmlElement && child.nodeName === FIELD) {
+      const a = child.getAttributes() as Attributes;
+      inlines.push(
+        defined<Field>({
+          type: 'field',
+          field: a.field as Field['field'],
+          text: (a.text as string | undefined) ?? '',
+          props: a.props ?? {},
+          style: a.style as string | undefined,
+          link: a.link as string | undefined,
+          kept: a.kept as Field['kept'],
+        }),
+      );
       continue;
     }
     if (child instanceof Y.XmlElement && child.nodeName === KEPT_INLINE) {

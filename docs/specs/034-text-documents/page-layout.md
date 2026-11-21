@@ -301,9 +301,46 @@ A section's pages each have a **header** in the top margin and a **footer** in t
 
 ## Page numbers
 
-Insert > Page numbers: four presets (top or bottom, with or without the first page); **More options**: position
-(header or footer), show on first page, start at (continue from the previous section or a number). Page count as a
-field too.
+A **page number** and a **page count** are fields: characters the document works out, as Google's, Word's and
+LibreOffice's.
+
+- **What they show**: a page number shows the number of the page it is drawn on, a page count how many pages the
+  document has. Each takes the formatting at the caret where it is put, and is one character to the caret: deleted,
+  copied, pasted and undone whole; copied into another app it is its text (default).
+- **Where**: a page number belongs in a header or footer, where every page draws its own; one in the body shows the
+  number of the page its line is laid on (default). A page count may stand anywhere.
+- **Numbering**: pages count from the document's first, blank ones too ([Headers and footers](#headers-and-footers)),
+  unless a section **starts at** a number: its first page then has that number and the pages after it count on.
+- **Pageless**, on a phone and with print layout off, where no pages are laid out, a page number in the body shows 1
+  and a page count 1 (default); headers and footers are not drawn there.
+- **Insert > Page numbers** opens a submenu, Google's: four presets drawn as small pages, **Page count** and **More
+  options**.
+  - The presets are named **Header, every page**, **Header, not the first page**, **Footer, every page** and **Footer,
+    not the first page** (default names, Google's tiles): each puts a page number, aligned right, in the default
+    header (footer) every section shows, for the whole document (Google's).
+  - A header already holding a page number keeps it; an empty one takes it in its paragraph; one with writing takes
+    it in a new paragraph at its end, aligned right (default).
+  - **Not the first page** switches Different first page on in the first section and takes page numbers out of its
+    first page header; **every page** puts one in that header too when the section has one (default).
+  - **Page count** puts a page count at the caret, in the body or in the header or footer edited.
+- **More options**, the bar's **Page numbers** and Format > **Page numbers** open the **Page numbers** dialog:
+  **Position**, **Header** or **Footer**; **Show on first page** (a checkbox); **Numbering**, **Continue from previous
+  section** or **Start at** a number from 0 to 9999 (else "Enter a number from 0 to 9999.", default); **Apply to**,
+  **This section** or **Whole document** (with more than one section); **Cancel** and **Apply**. It opens at the
+  section of the edited header, else of the body's caret, with Header, Show on first page and that section's
+  numbering (default); Apply puts page numbers in that position as a preset does, for the scope chosen.
+- Every change is one undo step. Share roles as page setup's ([Share roles](#share-roles)).
+- In the file:
+  - ODF: `text:page-number` (`text:select-page="current"`) and `text:page-count`, holding the number last drawn; a
+    section's start as `style:page-number` on its first paragraph's paragraph properties (`auto` to continue).
+  - OOXML: `w:fldSimple` with the instruction `PAGE` or `NUMPAGES` and its result run; a complex field (`w:fldChar`)
+    whose instruction is `PAGE` or `NUMPAGES`, with no switch but `\* MERGEFORMAT` or `\* Arabic`, reads as the same
+    field; written as `w:fldSimple`. A section's start as `w:pgNumType`'s `w:start` in its `w:sectPr`.
+  - A field in another form (letters or Roman numerals, another page's number, other switches) stays kept content,
+    written back as it came and drawn as the text it holds (default).
+- Telemetry `Element · Added · TextDocumentPageNumbers` from a preset and the dialog, `Element · Added ·
+TextDocumentPageCount` from Page count; logs `[text-document] page numbers` with the position, first page, start
+  and scope.
 
 ## Footnotes
 

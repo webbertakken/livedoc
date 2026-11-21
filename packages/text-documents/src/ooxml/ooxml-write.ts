@@ -26,6 +26,7 @@ import { settingsWith, settingsXml } from './ooxml-settings';
 import { TextDocument, type OoxmlSource } from '../model/text-document';
 import { byId } from './ooxml-read';
 import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD } from './ooxml-names';
+import { ooxmlFieldXml } from './ooxml-fields';
 import {
   abstractNumXml,
   ordered,
@@ -144,6 +145,7 @@ class OoxmlWriter {
       start: section.start,
       setup: section.setup,
       references: this.headerParts.signature(section),
+      numberStart: section.numberStart,
     };
     if (section.kept && keptStillHolds(section.kept, values)) {
       // Its references name the parts by the ids they had: each part is written again under its name.
@@ -158,6 +160,7 @@ class OoxmlWriter {
       {
         references: this.headerParts.referencesXml(section, at),
         titlePage: section.headers?.differentFirst === true,
+        numberStart: section.numberStart,
       },
     );
   }
@@ -226,7 +229,12 @@ class OoxmlWriter {
   paragraphXml(p: Paragraph, ends: Section | undefined): string {
     const pieces = p.inlines.map((i) => ({
       link: i.link,
-      xml: i.type === 'run' ? this.runXml(i) : this.kept(i.xml),
+      xml:
+        i.type === 'run'
+          ? this.runXml(i)
+          : i.type === 'field'
+            ? ooxmlFieldXml(i.field, this.runXml({ ...i, type: 'run' }))
+            : this.kept(i.xml),
     }));
     let content = '';
     for (let i = 0; i < pieces.length;) {

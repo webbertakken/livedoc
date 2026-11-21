@@ -24,7 +24,7 @@ import {
   type XmlNode,
   type XmlParsed,
 } from '@livedoc/office-packages';
-import type { Block, Inline, Paragraph, Run } from '../model/blocks';
+import type { Block, Field, FieldKind, Inline, Paragraph, Run } from '../model/blocks';
 import { LIST_LEVELS, type ListDefinition, type ListPlace } from '../model/lists';
 import {
   canonical,
@@ -44,6 +44,7 @@ import { isSafeLink, type ReportBuilder } from '../report';
 import { sortedBindings } from '../odf/odf-read';
 import { LIVEDOC_NS } from '../odf/odf-names';
 import { MC_NS, R_NS, W_NS, W_STRICT_NS, WRITTEN_W_NS } from './ooxml-names';
+import { ooxmlFieldKind } from './ooxml-fields';
 import {
   MAPPED_PPR,
   MAPPED_RPR,
@@ -611,6 +612,8 @@ class RunReader {
   readonly r: OoxmlReader;
   readonly p: XmlElement;
   readonly skipped = new Set<XmlElement>();
+  /** Complex fields the model holds (page-layout.md "Page numbers"), by their begin run: what each is, and its result runs. */
+  readonly fields = new Map<XmlElement, { kind: FieldKind; results: XmlElement[] }>();
 
   constructor(r: OoxmlReader, p: XmlElement) {
     this.r = r;
@@ -628,11 +631,13 @@ class RunReader {
       }
     };
     collect(this.p);
-    const stack: { runs: XmlElement[]; instr: string; result: boolean }[] = [];
+    const stack: { runs: XmlElement[]; instr: string; result: boolean; results: XmlElement[] }[] =
+      [];
     for (const run of runs) {
       const char = wVal(childElement(run, W_NS, 'fldChar'), 'fldCharType');
       const instr = childElement(run, W_NS, 'instrText');
-      if (char === 'begin') stack.push({ runs: [run], instr: '', result: false });
+      for (const open of stack) if (open.result && char !== 'end') open.results.push(run);
+      if (char === 'begin') stack.push({ runs: [run], instr: '', result: false, results: [] });
       else if (stack.length > 0) {
         const top = stack.at(-1)!;
         if (instr && !top.result) {
@@ -644,9 +649,14 @@ class RunReader {
         } else if (char === 'end') {
           top.runs.push(run);
           stack.pop();
+          const kind = ooxmlFieldKind(top.instr);
           if (UNSAFE_FIELD.test(top.instr)) {
             this.r.report.drop('field', top.instr.trim().split(/\s+/)[0]!.toUpperCase());
             for (const skip of top.runs) this.skipped.add(skip);
+          } else if (kind) {
+            // One field from its begin run; every other run of it is read there.
+            this.fields.set(top.runs[0]!, { kind, results: top.results });
+            for (const skip of [...top.runs, ...top.results]) this.skipped.add(skip);
           }
         }
       }
@@ -713,6 +723,11 @@ class RunReader {
         for (const c of childElements(e)) this.node(c, safe ? { link: href } : {});
         return;
       }
+      const simple = e.local === 'fldSimple' ? ooxmlFieldKind(wVal(e, 'instr') ?? '') : undefined;
+      if (simple) {
+        const results = childElements(e).filter((c) => isW(c, 'r'));
+        return this.field(simple, results, e, ctx);
+      }
       if (e.local === 'fldSimple' && UNSAFE_FIELD.test(wVal(e, 'instr') ?? '')) {
         this.r.report.drop('field', (wVal(e, 'instr') ?? '').trim().split(/\s+/)[0]!.toUpperCase());
         for (const c of childElements(e)) this.node(c, ctx);
@@ -723,6 +738,8 @@ class RunReader {
   }
 
   run(r: XmlElement, ctx: RunContext): void {
+    const field = this.fields.get(r);
+    if (field) return this.field(field.kind, field.results, r, ctx);
     if (this.skipped.has(r)) return;
     const doc = this.r.part.parsed;
     const rPr = childElement(r, W_NS, 'rPr');
@@ -767,6 +784,25 @@ class RunReader {
           this.keepWhole(r, rPr, c, ctx, props, style);
       }
     }
+  }
+
+  /** A field: its result runs' text, the formatting of the first (else of the run it begins at). */
+  field(kind: FieldKind, results: readonly XmlElement[], at: XmlElement, ctx: RunContext): void {
+    const doc = this.r.part.parsed;
+    const rPr = childElement(results[0] ?? at, W_NS, 'rPr');
+    const { style, props } = readRunProps(rPr);
+    const kept = this.r.propsKept(doc, rPr, { style, props }, MAPPED_RPR);
+    const text = results
+      .flatMap((r) => childElements(r).filter((c) => isW(c, 't')))
+      .map((t) => textContent(t))
+      .join('');
+    this.out.push({
+      type: 'field',
+      field: kind,
+      text,
+      props,
+      ...compact({ style, link: ctx.link, kept }),
+    } satisfies Field);
   }
 
   /** A run's unmapped child kept as a run of its own, with the run's formatting inside it. */

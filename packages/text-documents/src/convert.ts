@@ -24,7 +24,8 @@ export type ConversionLoss = ReportItem & {
     | 'list-header'
     | 'between'
     | 'border-padding'
-    | 'header-footer';
+    | 'header-footer'
+    | 'page-number-start';
 };
 
 function count(map: Map<string, number>, name: string): void {
@@ -52,11 +53,14 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
   const kept = new Map<string, number>();
   const other = new Map<string, number>();
   const stories = sectionsOf(document).flatMap((s) => storiesOf(s.headers));
-  // A continuous section has no master page in an OpenDocument file: its own headers and footers are a loss.
+  // A continuous section has no master page in an OpenDocument file: its own headers and footers, and the number its
+  // pages start at, are a loss.
   if (to === 'odf')
     for (const block of document.body)
-      if (block.type === 'section' && block.start === 'continuous')
+      if (block.type === 'section' && block.start === 'continuous') {
         for (let i = 0; i < storiesOf(block.headers).length; i += 1) count(other, 'header-footer');
+        if (block.numberStart !== undefined) count(other, 'page-number-start');
+      }
   for (const block of [...document.body, ...stories.flat()]) {
     if (block.type === 'kept') count(kept, block.name);
     if (block.type === 'section' && block.region) count(other, 'section-name');
@@ -191,7 +195,7 @@ export function convertTextDocument(
       to === 'ooxml' && paragraphText ? { ...paragraphText, ...i.props } : i.props,
     );
     const { style: _, ...rest } = withoutKept(i);
-    return [{ ...rest, props, ...(style ? { style } : {}) }];
+    return [{ ...rest, props, ...(style ? { style } : {}) } as Inline];
   };
   // A section's headers and footers: their blocks converted as the body's, the part they came from left behind.
   const headersOf = (headers: SectionHeaders | undefined): SectionHeaders | undefined => {
