@@ -3,7 +3,7 @@
 // the column each block of a region is in, a paragraph drawn as a box of columns across them, and each page's size
 // with its lines between columns, its header and its footer. Spacers are never text and never read.
 import type { HeaderFooterSlot } from '@livedoc/text-documents';
-import type { Cross, PageFrame, Pagination } from './pagination';
+import { PAGE_GAP_PX, type Cross, type PageFrame, type Pagination } from './pagination';
 import type { PageLayout, PageStory, StoryPlace } from './pagination-headers';
 import type { PageNote } from './pagination-notes';
 import type { LineNumberMark } from './pagination-line-numbers';
@@ -62,6 +62,67 @@ export function blockSpacer(height: number): () => HTMLElement {
       gap.style.height = '1px';
       gap.style.marginTop = `${height - 1}px`;
     }
+    return gap;
+  };
+}
+
+/** The heights of a page edge's bands: the page's foot and the next page's head; the ground between is fixed. */
+export type GapBands = { readonly foot: number; readonly head: number };
+/** Where a page edge is drawn across: from the block's left edge back to the page's, and the page's width. */
+export type GapAcross = { readonly left: number; readonly width: number };
+
+// The page's foot, the ground and the next page's head, over the block's own background and borders, across the page.
+function appendBands(gap: HTMLElement, bands: GapBands, across: GapAcross): void {
+  for (const [band, size] of [
+    ['paper', bands.foot],
+    ['ground', PAGE_GAP_PX],
+    ['paper', bands.head],
+  ] as const) {
+    const part = document.createElement('span');
+    part.className = `${PAGE_GAP_CLASS}-${band}`;
+    part.style.height = `${Math.max(0, size)}px`;
+    part.style.marginLeft = `${-across.left}px`;
+    part.style.width = `${across.width}px`;
+    gap.append(part);
+  }
+}
+
+/** The spacer inside a paragraph, `height` high: the page edge between two of its lines. */
+export function lineGap(height: number, bands: GapBands, across: GapAcross): () => HTMLElement {
+  return () => {
+    const gap = document.createElement('span');
+    gap.className = `${PAGE_GAP_CLASS} ${PAGE_GAP_CLASS}-inside`;
+    gap.setAttribute('aria-hidden', 'true');
+    gap.contentEditable = 'false';
+    gap.style.height = `${height}px`;
+    appendBands(gap, bands, across);
+    return gap;
+  };
+}
+
+/**
+ * The spacer inside a table, `height` high: the page edge between two of its rows, a row of one cell across its
+ * `columns` (tables.md "Laying out across pages").
+ */
+export function rowGap(
+  height: number,
+  bands: GapBands,
+  across: GapAcross,
+  columns: number,
+): () => HTMLElement {
+  return () => {
+    const gap = document.createElement('tr');
+    gap.className = `${PAGE_GAP_CLASS} ${PAGE_GAP_CLASS}-row`;
+    gap.setAttribute('aria-hidden', 'true');
+    gap.contentEditable = 'false';
+    const cell = document.createElement('td');
+    cell.colSpan = Math.max(1, columns);
+    const inside = document.createElement('div');
+    inside.className = `${PAGE_GAP_CLASS}-inside`;
+    inside.style.height = `${height}px`;
+    appendBands(inside, bands, across);
+    cell.append(inside);
+    gap.append(cell);
     return gap;
   };
 }
