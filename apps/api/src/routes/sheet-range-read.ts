@@ -111,6 +111,7 @@ export async function answerRangeRead(
   const wb = new Workbook({
     sheets,
     locale: record.settings.locale,
+    timeZone: record.settings.timeZone,
     limits: SheetLimits.of(true),
     iteration: record.settings.iterate,
     imports: { access: 'allowed', web: false },

@@ -43,7 +43,7 @@ function weekendArg(args: EvalValue[], i: number, f: Frame): Weekend | Value {
     // Monday first in the text; Sunday first by weekday.
     return [x[6] === '1', ...[...x.slice(0, 6)].map((c) => c === '1')];
   }
-  const n = toNumber(x);
+  const n = toNumber(x, f.locale);
   if (isError(n)) return n;
   return weekendOfNumber(n) ?? err('#NUM!', `${n} is not a weekend`);
 }

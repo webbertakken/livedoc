@@ -21,7 +21,7 @@ function filtersFrom(
     const field = textArg(rest[i]!, f);
     if (isError(field)) return field;
     if (!cards.knowsField(field)) return err('#NAME?', `There is no card field "${field}"`);
-    out.push({ field, test: makeCriterion(scalarArg(rest[i + 1]!, f)) });
+    out.push({ field, test: makeCriterion(scalarArg(rest[i + 1]!, f), f.locale) });
   }
   return out;
 }

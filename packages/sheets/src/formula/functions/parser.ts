@@ -13,10 +13,10 @@ const passThrough: FnDef = scalarFn(1, 1, ([x]) => x!);
 export const PARSER_FUNCTIONS: Record<string, FnDef> = {
   ...EURO_FUNCTIONS,
   // A value in one unit as another of the same class: unknown units, or two classes, are #N/A.
-  CONVERT: scalarFn(3, 3, ([x, from, to]) => {
-    const value = toNumber(x!);
-    const fromName = toText(from!);
-    const toName = toText(to!);
+  CONVERT: scalarFn(3, 3, ([x, from, to], f) => {
+    const value = toNumber(x!, f.locale);
+    const fromName = toText(from!, f.locale);
+    const toName = toText(to!, f.locale);
     if (isError(value)) return value;
     if (isError(fromName)) return fromName;
     if (isError(toName)) return toName;

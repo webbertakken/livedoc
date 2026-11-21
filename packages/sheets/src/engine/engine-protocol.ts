@@ -16,6 +16,8 @@ export type EngineIn =
       rev: number;
       sheets: SheetJson[];
       locale: string;
+      // A spreadsheet's time zone (formulas.md "Locale"); absent, the viewer's.
+      timeZone?: string;
       limits: EngineLimits;
       iteration: Iteration;
       // A spreadsheet's imports (imports.md): fetched by the page, access allowed, not yet, or not while it is saved

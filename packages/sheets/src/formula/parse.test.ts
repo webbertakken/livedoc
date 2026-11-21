@@ -83,6 +83,18 @@ describe('tokenize', () => {
   });
 });
 
+// A backslash starts a name but continues none: it once held the tokenizer in place for good (a frozen tab).
+describe('tokenize a backslash', () => {
+  it('moves past it', () => {
+    expect(tokenize('\\').map((t) => [t.k, t.v])).toEqual([['ident', '\\']]);
+    expect(tokenize('1\\2').map((t) => [t.k, t.v])).toEqual([
+      ['num', '1'],
+      ['ident', '\\2'],
+    ]);
+    expect(parseFormula('={1\\2}').ok).toBe(false);
+  });
+});
+
 describe('parseFormula', () => {
   it.each([
     ['=1+2*3', '(1 + (2 * 3))'],

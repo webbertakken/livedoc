@@ -16,5 +16,5 @@ export function dateArg(v: EvalValue, f: Frame): number | Value {
     const d = parseDateText(x, localeDayFirst(f.locale));
     if (d) return d.serial;
   }
-  return toNumber(x);
+  return toNumber(x, f.locale);
 }

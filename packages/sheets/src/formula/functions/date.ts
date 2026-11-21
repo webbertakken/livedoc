@@ -60,7 +60,7 @@ function dateFn(min: number, max: number, each: (ns: number[]) => Value): FnDef 
           continue;
         }
       }
-      const n = toNumber(x);
+      const n = toNumber(x, f.locale);
       if (typeof n !== 'number') return n;
       ns.push(n);
     }

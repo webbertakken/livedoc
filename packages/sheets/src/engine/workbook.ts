@@ -5,7 +5,7 @@
 // dependencies in typed columns (cell-values.ts, dependencies.ts).
 import type { CardSource } from '../cards';
 import { SheetLimits, type GridSize } from '../sheet-limits';
-import { localMs, serialFromMs } from '../dates';
+import { localMs, serialFromMs, zonedMs } from '../dates';
 import { formatA1 } from '../address';
 import { layoutIndex } from '../layout';
 import { RECALC_READS_MAX } from '../limits';
@@ -58,7 +58,9 @@ import { LoopRounds, type LoopCells } from './loop-rounds';
 export type WorkbookOptions = {
   sheets: readonly Sheet[];
   locale: string;
-  // Today and now in the viewer's local time, as a serial.
+  // A spreadsheet's time zone (formulas.md "Locale"): the wall clock NOW and TODAY read; absent, the viewer's.
+  timeZone?: string;
+  // Today and now, as a serial; absent, from the time zone's wall clock.
   now?: () => number;
   rand?: () => number;
   cards?: CardSource | null;
@@ -99,10 +101,15 @@ function localNow(): number {
   return serialFromMs(localMs(Date.now()));
 }
 
+function zonedNow(timeZone: string): () => number {
+  return () => serialFromMs(zonedMs(Date.now(), timeZone));
+}
+
 const RANGE_IMPORT_NAMES: ReadonlySet<string> = new Set(['IMPORTRANGE']);
 
 export class Workbook {
   readonly locale: string;
+  readonly timeZone: string | undefined;
   readonly limits: SheetLimits;
   readonly arrays: ArrayDialect;
   protected readonly sheets = new Map<string, Sheet>();
@@ -153,13 +160,14 @@ export class Workbook {
 
   constructor(opts: WorkbookOptions) {
     this.locale = opts.locale;
+    this.timeZone = opts.timeZone;
     this.limits = opts.limits ?? SheetLimits.plan;
     this.arrays = opts.arrays ?? (this.limits === SheetLimits.spreadsheet ? 'google' : 'dynamic');
     this.cards = opts.cards ?? null;
     this.importBook = opts.imports
       ? new ImportBook(opts.imports.access, opts.imports.web ?? true)
       : null;
-    this.nowFn = opts.now ?? localNow;
+    this.nowFn = opts.now ?? (opts.timeZone ? zonedNow(opts.timeZone) : localNow);
     this.randFn = opts.rand ?? Math.random;
     this.iteration = opts.iteration ?? ITERATION_OFF;
     this.frameSource = {

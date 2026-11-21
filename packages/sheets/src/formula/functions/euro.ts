@@ -53,16 +53,16 @@ function euroConvert(
 }
 
 export const EURO_FUNCTIONS: Record<string, FnDef> = {
-  EUROCONVERT: scalarFn(3, 5, ([v, from, to, full = false, places = null]) => {
-    const value = toNumber(v!);
+  EUROCONVERT: scalarFn(3, 5, ([v, from, to, full = false, places = null], f) => {
+    const value = toNumber(v!, f.locale);
     if (isError(value)) return value;
-    const source = toText(from!);
+    const source = toText(from!, f.locale);
     if (isError(source)) return source;
-    const target = toText(to!);
+    const target = toText(to!, f.locale);
     if (isError(target)) return target;
     const precise = toBool(full);
     if (isError(precise)) return precise;
-    const digits = places === null ? null : toNumber(places);
+    const digits = places === null ? null : toNumber(places, f.locale);
     if (isError(digits)) return digits;
     return euroConvert(value, source, target, precise, digits === null ? null : Math.floor(digits));
   }),

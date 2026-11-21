@@ -11,6 +11,8 @@ How to add a function: [Measure a function against the oracle](../../../docs/ins
 
 - A category's workbook: sheet `Data` holds the fixture from A1; sheet `Cases` holds each case's id in column A and its
   formula in column B, blocks a blank row apart; an array case is written as an array formula over its block.
+- A category may name its `locale` (`"locale": "de-DE"`; `en-US` otherwise): its formulas are typed in that locale's
+  syntax, the engine works them out in it, and LibreOffice answers with it as its own locale (`Locale` is one).
 - `oracle:libreoffice` writes each category as a flat ODF file, has LibreOffice work every formula out afresh
   (`@livedoc/office-packages/libreoffice`), and reads the values back. `SOFFICE` names another LibreOffice.
 - Answers need LibreOffice 24.8 or later (its `FILTER`, `SORT`, `UNIQUE`, `XLOOKUP`, `LET`); each file records its

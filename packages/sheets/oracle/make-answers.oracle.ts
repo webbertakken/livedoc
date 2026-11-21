@@ -51,7 +51,12 @@ async function answered(category: OracleCategory, by: string): Promise<OracleAns
     if (written.losses.length > 0)
       throw new Error(`${category.category}: unwritten ${JSON.stringify(written.losses)}`);
     writeFileSync(source, written.data);
-    bytes = new Uint8Array(libreOfficeConvert(source, 'ods', { recalculate: true }));
+    bytes = new Uint8Array(
+      libreOfficeConvert(source, 'ods', {
+        recalculate: true,
+        locale: category.locale,
+      }),
+    );
   }
   const read = await readOds(bytes);
   if (!read.ok) throw new Error(`${category.category}: ${read.rejection}`);

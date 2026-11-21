@@ -21,8 +21,8 @@ import {
   type Scope,
 } from './frame';
 
-function unary(kind: UnaryOperator, v: Value): Value {
-  return lift([v], ([x]) => unaryOperation(kind, x!));
+function unary(kind: UnaryOperator, v: Value, locale: string): Value {
+  return lift([v], ([x]) => unaryOperation(kind, x!, locale));
 }
 
 // An operator's operand: a range intersected where one value goes, then read as a value.
@@ -124,11 +124,11 @@ export function evaluate(node: Node, refs: readonly StoredRef[], f: Frame): Eval
     case 'neg':
     case 'pos':
     case 'pct':
-      return unary(node.k, operand(node.a, refs, f));
+      return unary(node.k, operand(node.a, refs, f), f.locale);
     case 'bin': {
       const a = operand(node.a, refs, f);
       const b = operand(node.b, refs, f);
-      return lift([a, b], ([x, y]) => binaryOperation(node.op, x!, y!));
+      return lift([a, b], ([x, y]) => binaryOperation(node.op, x!, y!, f.locale));
     }
     case 'arr':
       return joinLiteral(node.rows, refs, arrayFrame(f));

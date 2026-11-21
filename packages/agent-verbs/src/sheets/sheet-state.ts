@@ -94,7 +94,10 @@ export async function workbookFor(
     sheets: sheets.map(sheetFromJson),
     locale: AGENT_LOCALE,
     limits: SheetLimits.of(spreadsheet),
-    ...(state.workbook ? { iteration: state.workbook.settings.iterate } : {}),
+    // A spreadsheet's NOW and TODAY on its own wall clock (formulas.md "Locale"); agents type as AGENT_LOCALE.
+    ...(state.workbook
+      ? { iteration: state.workbook.settings.iterate, timeZone: state.workbook.settings.timeZone }
+      : {}),
   });
   if (wb.usesCards()) {
     const [{ items }, { document }] = await Promise.all([

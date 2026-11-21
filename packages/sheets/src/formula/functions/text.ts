@@ -26,7 +26,7 @@ import { regex, wildcardSource } from './text-patterns';
 
 /** Every value of every argument, ranges read whole, joined in order: CONCATENATE, and CONCAT as the standards have it. */
 export const JOIN_VALUES: FnDef = fn(1, MANY, (args, f) => {
-  const ts = texts(flatScalars(args, f));
+  const ts = texts(flatScalars(args, f), f.locale);
   return Array.isArray(ts) ? boundedText(ts.join('')) : ts;
 });
 
@@ -37,7 +37,7 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     if (isError(delim)) return delim;
     const skip = boolArg(args[1]!, f);
     if (isError(skip)) return skip;
-    const ts = texts(flatScalars(args.slice(2), f));
+    const ts = texts(flatScalars(args.slice(2), f), f.locale);
     if (!Array.isArray(ts)) return ts;
     return boundedText((skip ? ts.filter((t) => t !== '') : ts).join(delim));
   }),
@@ -52,7 +52,7 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
         return err('#VALUE!', 'JOIN takes one row or one column at a time');
       values.push(...flatValues(arr));
     }
-    const ts = texts(values);
+    const ts = texts(values, f.locale);
     return Array.isArray(ts) ? boundedText(ts.join(delim)) : ts;
   }),
   LEFT: textFn(1, 2, 1, ([t], [n = 1]) => (n < 0 ? err('#VALUE!') : [...t!].slice(0, n).join(''))),
@@ -87,11 +87,11 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     }
     return t!.slice(0, at) + to! + t!.slice(at + from!.length);
   }),
-  REPLACE: scalarFn(4, 4, ([t, start, n, by]) => {
-    const text = toText(t!);
-    const s = toNumber(start!);
-    const len = toNumber(n!);
-    const rep = toText(by!);
+  REPLACE: scalarFn(4, 4, ([t, start, n, by], f) => {
+    const text = toText(t!, f.locale);
+    const s = toNumber(start!, f.locale);
+    const len = toNumber(n!, f.locale);
+    const rep = toText(by!, f.locale);
     for (const x of [text, s, len, rep]) if (isError(x)) return x;
     if ((s as number) < 1 || (len as number) < 0) return err('#VALUE!');
     const chars = [...(text as string)];
@@ -116,8 +116,8 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     return t!.repeat(Math.floor(n!));
   }),
   EXACT: textFn(2, 2, 2, ([a, b]) => a === b),
-  TEXT: scalarFn(2, 2, ([v, code]) => {
-    const c = toText(code!);
+  TEXT: scalarFn(2, 2, ([v, code], f) => {
+    const c = toText(code!, f.locale);
     if (isError(c)) return c;
     if (typeof v === 'number') return boundedText(textFormat(v, c));
     if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
@@ -181,7 +181,7 @@ export const TEXT_FUNCTIONS: Record<string, FnDef> = {
     if (dropEmpty) parts = parts.filter((p) => p !== '');
     if (parts.length === 0) return '';
     // A part that reads as a number is one, as in Google Sheets: SPLIT("3,4", ",") sums to 7, not 0.
-    return { rows: [parts.map(splitPart)] };
+    return { rows: [parts.map((part) => splitPart(part, f.locale))] };
   }),
   ...REGEX_TEXT_FUNCTIONS,
   ...BYTE_TEXT_FUNCTIONS,
@@ -194,12 +194,12 @@ const ISO_DATE_PART = /^\d{4}-\d{2}-\d{2}(?:[ T]|$)/;
 
 // One part of a SPLIT: a number (or a percentage) when it reads as one, a date when written as an ISO date, else the
 // text. A blank part stays text.
-function splitPart(part: string): Scalar {
+function splitPart(part: string, locale: string): Scalar {
   if (part.trim() === '') return part;
   if (ISO_DATE_PART.test(part.trim())) {
     const date = parseDateText(part, false);
     if (date) return date.serial;
   }
-  const n = toNumber(part);
+  const n = toNumber(part, locale);
   return typeof n === 'number' ? n : part;
 }

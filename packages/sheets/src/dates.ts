@@ -208,6 +208,52 @@ export function localMs(ms: number): number {
   return ms - new Date(ms).getTimezoneOffset() * 60_000;
 }
 
+// Wall clocks by time zone; null for a zone this runtime does not know.
+const ZONE_CLOCKS = new Map<string, Intl.DateTimeFormat | null>();
+
+function zoneClock(timeZone: string): Intl.DateTimeFormat | null {
+  let clock = ZONE_CLOCKS.get(timeZone);
+  if (clock === undefined) {
+    try {
+      clock = new Intl.DateTimeFormat('en-US', {
+        timeZone,
+        hourCycle: 'h23',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+      });
+    } catch {
+      clock = null;
+    }
+    ZONE_CLOCKS.set(timeZone, clock);
+  }
+  return clock;
+}
+
+/**
+ * The instant `ms` moved to the wall clock of `timeZone` (an IANA name), as localMs moves it to this person's: what
+ * a spreadsheet's NOW and TODAY read (formulas.md "Locale"). A zone the runtime does not know reads as UTC (D81).
+ */
+export function zonedMs(ms: number, timeZone: string): number {
+  const clock = zoneClock(timeZone);
+  if (!clock) return ms;
+  const parts = clock.formatToParts(ms);
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((p) => p.type === type)!.value);
+  const wall = Date.UTC(
+    part('year'),
+    part('month') - 1,
+    part('day'),
+    part('hour'),
+    part('minute'),
+    part('second'),
+  );
+  return wall + (((ms % 1000) + 1000) % 1000);
+}
+
 // A serial's date as YYYY-MM-DD (a Plan card's date field): its whole day, the time of day dropped.
 export function isoFromSerial(serial: number): string {
   return new Date(EPOCH_MS + Math.floor(serial) * MS_PER_DAY).toISOString().slice(0, 10);

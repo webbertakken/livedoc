@@ -2,6 +2,7 @@
 // `Data`, each case's id and formula on `Cases`, an array case written as an array formula over its block. And back:
 // the answers a source's copy of that workbook holds, block by block.
 import type { FileCell, FileValue, WorkbookFile } from '../files/workbook-file';
+import { formulaFromLocale, formulaSyntaxOf } from '../formula/locale-syntax';
 import { parseFormula } from '../formula/parse';
 import { ERROR_CODES } from '../formula/values';
 import {
@@ -42,16 +43,21 @@ export function oracleFile(category: OracleCategory): WorkbookFile {
   );
   const cases: FileCell[] = [];
   const blocks = OracleLayout.blocks(category);
+  const syntax = formulaSyntaxOf(category.locale);
   category.cases.forEach((x, i) => {
     const b = blocks[i]!;
     cases.push({ r: b.r, c: 0, value: { k: 's', v: x.id } });
+    // Files hold the stored syntax, whatever the locale (formulas.md "Locale"); one the locale cannot read stays
+    // as typed, so the source answers it as it reads it.
+    const typed = formulaFromLocale(x.f, syntax);
+    const f = typed.ok ? typed.text : x.f;
     // A formula that is an ARRAYFORMULA is written as the array formula of what it wraps, the form both suites read
     // as the same array context; any other array case as an array formula over its block.
-    const inner = arrayFormulaInner(x.f);
+    const inner = arrayFormulaInner(f);
     cases.push({
       r: b.r,
       c: b.c,
-      formula: inner ?? x.f,
+      formula: inner ?? f,
       ...(inner !== null || b.rows * b.cols > 1 ? { spans: { rows: b.rows, cols: b.cols } } : {}),
     });
   });

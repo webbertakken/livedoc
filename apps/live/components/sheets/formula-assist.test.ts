@@ -79,11 +79,14 @@ describe('formula assist', () => {
     expect(acceptFunction('=sum', s2, 4, 'SUM')).toEqual({ draft: '=SUM(', caret: 5 });
   });
   it('knows the argument the caret is in', () => {
-    expect(argumentAt('=IF(A1>2, SUM(1,', 16)).toEqual({ name: 'SUM', index: 1 });
-    expect(argumentAt('=IF(A1>2, SUM(1,2), ', 20)).toEqual({ name: 'IF', index: 2 });
-    expect(argumentAt('=IF(",", ', 9)).toEqual({ name: 'IF', index: 1 });
-    expect(argumentAt('=(1, ', 5)).toBeNull();
-    expect(argumentAt('x', 1)).toBeNull();
+    expect(argumentAt('=IF(A1>2, SUM(1,', 16, ',')).toEqual({ name: 'SUM', index: 1 });
+    expect(argumentAt('=IF(A1>2, SUM(1,2), ', 20, ',')).toEqual({ name: 'IF', index: 2 });
+    expect(argumentAt('=IF(",", ', 9, ',')).toEqual({ name: 'IF', index: 1 });
+    expect(argumentAt('=(1, ', 5, ',')).toBeNull();
+    expect(argumentAt('x', 1, ',')).toBeNull();
+    // formulas.md "Locale": the locale's separator, never one inside braces.
+    expect(argumentAt('=ROUND(1,5; ', 11, ';')).toEqual({ name: 'ROUND', index: 1 });
+    expect(argumentAt('=SUM({1,2}, ', 11, ',')).toEqual({ name: 'SUM', index: 1 });
     expect(argumentSlot('SUM', 5)).toBe(1);
     expect(argumentSlot('IF', 1)).toBe(1);
     expect(argumentSlot('ABS', 3)).toBe(0);

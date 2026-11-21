@@ -66,6 +66,7 @@ export * from './formula/ast';
 export * from './formula/tokens';
 export * from './formula/parse';
 export * from './formula/stored';
+export * from './formula/locale-syntax';
 export * from './formula/registry';
 export * from './formula/function-docs';
 export { Workbook, type CellAt } from './engine/workbook';

@@ -1,7 +1,8 @@
 # Settings
 
 **Status: specified.** The settings are stored with the workbook and saved through the api
-([Sheet store](sheet-store.md#changing-the-workbook)); the dialog, Tools and View are not built.
+([Sheet store](sheet-store.md#changing-the-workbook)); the locale and time zone are applied as
+[Formulas](formulas.md#locale) says; the dialog, Tools and View are not built.
 
 A [spreadsheet](spreadsheet.md)'s own settings and the Tools and View items around them.
 

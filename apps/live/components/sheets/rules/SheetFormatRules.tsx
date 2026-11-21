@@ -9,13 +9,13 @@ import { Button, Select, TextInput, Tooltip } from '@livedoc/ui';
 import {
   CONDITION_OPS,
   FORMAT_CONDITION_LABELS,
-  compileFormula,
+  compileTypedFormula,
   conditionValues,
   formatRange,
   formatRuleLine,
   parseRangeText,
   posRangeOf,
-  renderFormula,
+  formulaAsTyped,
   type ConditionOp,
   type FormatRule,
   type FormatStyle,
@@ -109,7 +109,7 @@ function draftOf(c: SheetController, rule: FormatRule | null, id: string): Draft
     op: rule?.op ?? 'notEmpty',
     a: rule?.a ?? '',
     b: rule?.b ?? '',
-    fx: rule?.fx ? renderFormula(rule.fx, c.workbook.ctxFor(c.sheet.id)) : '=',
+    fx: rule?.fx ? formulaAsTyped(rule.fx, c.workbook.ctxFor(c.sheet.id), c.locale) : '=',
     style: rule?.style ?? NEW_RULE_STYLE,
     min: pointDraft(rule?.min, { c: SCALE_ENDS.white, at: 'min', v: '' }),
     mid: rule?.mid ? pointDraft(rule.mid, { c: '#ffd666', at: 'pctile', v: '50' }) : null,
@@ -155,8 +155,9 @@ function ruleOf(
   if (!Object.keys(d.style).length) return { ok: false, why: 'Choose a style' };
   if (d.op === 'formula') {
     // Written for the range's top-left cell, as the person reads it there.
-    const made = compileFormula(
+    const made = compileTypedFormula(
       d.fx.startsWith('=') ? d.fx : `=${d.fx}`,
+      c.locale,
       c.workbook.ctxFor(c.sheet.id),
     );
     if (!made.ok || d.fx.trim() === '=' || !d.fx.trim())
@@ -346,7 +347,9 @@ export function SheetFormatRules({
                   const p = posRangeOf(c.sheet.layout, rule);
                   const line = formatRuleLine(
                     rule,
-                    rule.fx ? renderFormula(rule.fx, c.workbook.ctxFor(c.sheet.id)) : undefined,
+                    rule.fx
+                      ? formulaAsTyped(rule.fx, c.workbook.ctxFor(c.sheet.id), c.locale)
+                      : undefined,
                   );
                   return (
                     <li

@@ -8,6 +8,7 @@ import { answersOf, oracleFile } from './oracle-file';
 
 const category: OracleCategory = {
   category: 'Test',
+  locale: 'en-US',
   data: [[1, 'a', true, null]],
   cases: [
     { id: 'SUM.1', f: '=SUM(Data!A1, 2)', rows: 1, cols: 1, authority: 'google' },
@@ -34,6 +35,7 @@ describe('OracleCorpus.readCategory', () => {
       ok: true,
       category: {
         category: 'C',
+        locale: 'en-US',
         data: [],
         cases: [{ id: 'ABS.1', f: '=ABS(-1)', rows: 1, cols: 1, authority: 'google' }],
       },
@@ -47,6 +49,7 @@ describe('OracleCorpus.readCategory', () => {
     });
     const read = OracleCorpus.readCategory({
       category: 'C',
+      locale: 'german',
       data: [[{ e: '#WHAT' }]],
       cases: [
         { id: 'bad id', f: 'SUM(1)', rows: 0, authority: 'excel', tol: 0.1 },
@@ -70,6 +73,7 @@ describe('OracleCorpus.readCategory', () => {
       'A.1: id used twice',
       'case 4: id must read NAME.n',
       'case 4: f must be a formula',
+      'locale must be a language and a region, as de-DE',
     ]);
   });
 });
@@ -136,6 +140,22 @@ describe('oracleFile and answersOf', () => {
       { r: 3, c: 1, formula: '=SUM(A1:A2*2)', spans: { rows: 1, cols: 1 } },
       { r: 5, c: 1, formula: '=ARRAYFORMULA(1, 2)' },
       { r: 7, c: 1, formula: '=SUM(' },
+    ]);
+  });
+
+  // Files hold the stored syntax (formulas.md "Locale"); a formula the locale cannot read stays as typed.
+  it('writes a category typed in another locale in the stored syntax', () => {
+    const file = oracleFile({
+      ...category,
+      locale: 'de-DE',
+      cases: [
+        { id: 'A.1', f: '=ROUND(1,5;0)', rows: 1, cols: 1, authority: 'google' },
+        { id: 'A.2', f: '=SUM(1,2,3)', rows: 1, cols: 1, authority: 'google' },
+      ],
+    });
+    expect(file.sheets[1]!.cells.filter((c) => c.formula)).toEqual([
+      { r: 0, c: 1, formula: '=ROUND(1.5,0)' },
+      { r: 2, c: 1, formula: '=SUM(1,2,3)' },
     ]);
   });
 

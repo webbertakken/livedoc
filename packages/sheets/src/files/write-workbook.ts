@@ -23,6 +23,7 @@ export function writeWorkbook(
   const engine = new Workbook({
     sheets: [...sheets],
     locale: record.settings.locale,
+    timeZone: record.settings.timeZone,
     limits: SheetLimits.spreadsheet,
     iteration: record.settings.iterate,
   });

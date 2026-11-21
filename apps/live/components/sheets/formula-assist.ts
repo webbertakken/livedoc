@@ -170,8 +170,13 @@ export function acceptFunction(
   return { draft: next, caret: match.start + name.length + open.length };
 }
 
-// The function call the caret is inside and which argument (0-based), for the hint card.
-export function argumentAt(draft: string, caret: number): { name: string; index: number } | null {
+// The function call the caret is inside and which argument (0-based), for the hint card: arguments split by the
+// locale's separator (`,`, or `;` where decimals take a comma: formulas.md "Locale"), never inside braces.
+export function argumentAt(
+  draft: string,
+  caret: number,
+  separator: ',' | ';',
+): { name: string; index: number } | null {
   if (!draft.startsWith('=')) return null;
   const stack: { name: string | null; commas: number }[] = [];
   let inString = false;
@@ -182,8 +187,9 @@ export function argumentAt(draft: string, caret: number): { name: string; index:
     if (ch === '(') {
       const m = /([A-Za-z][A-Za-z0-9.]*)$/.exec(draft.slice(0, i));
       stack.push({ name: m ? m[1]!.toUpperCase() : null, commas: 0 });
-    } else if (ch === ')') stack.pop();
-    else if (ch === ',' && stack.length) stack[stack.length - 1]!.commas++;
+    } else if (ch === '{') stack.push({ name: null, commas: 0 });
+    else if (ch === ')' || ch === '}') stack.pop();
+    else if (ch === separator && stack.length) stack[stack.length - 1]!.commas++;
   }
   for (let k = stack.length - 1; k >= 0; k--) {
     const s = stack[k]!;

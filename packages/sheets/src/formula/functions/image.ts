@@ -17,7 +17,7 @@ export const IMAGE_FUNCTIONS: Record<string, FnDef> = {
     );
     if (readsNow) return err('#ERROR!', IMPORT_WORDS.volatile);
     return lift(args, (xs, at) => {
-      const image = readImageArgs(xs);
+      const image = readImageArgs(xs, f.locale);
       if (isError(image)) return image;
       const access = f.importAccess();
       if (access === 'blocked' || access === 'offline') return err('#REF!', IMPORT_WORDS[access]);

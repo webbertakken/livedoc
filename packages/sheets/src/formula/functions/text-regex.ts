@@ -13,7 +13,7 @@ function regexFn(n: number, each: (ts: string[]) => Value): FnDef {
       (xs) =>
         typeof xs[0] === 'number'
           ? err('#VALUE!', 'A regular expression reads text, not a number')
-          : textEach(xs, [], n, n, (ts) => each(ts)),
+          : textEach(xs, { skipped: [], min: n, nText: n, locale: f.locale }, (ts) => each(ts)),
     ),
   );
 }

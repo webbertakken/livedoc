@@ -69,6 +69,7 @@ describe('copy and paste', () => {
         b.sheets[0]!.cells.get(cellKey(b.sheets[0]!.layout.rows[4]!, b.sheets[0]!.layout.cols[1]!))!
           .input,
         b.wb.ctxFor(id),
+        'en-GB',
       ),
     ).toBe('=A5*2');
     const vals = pasteClip(b.wb, id, { r1: 8, c1: 0, r2: 8, c2: 0 }, clip, 'values')!;
@@ -126,6 +127,7 @@ describe('copy and paste', () => {
     const text = inputAsText(
       other.cells.get(cellKey(other.layout.rows[0]!, other.layout.cols[0]!))!.input,
       b.wb.ctxFor(other.id),
+      'en-GB',
     );
     expect(text).toBe("='Sheet 1'!B5");
     // Cut to another sheet.
@@ -469,10 +471,10 @@ describe('find, filter and render', () => {
       reason: 'too_long',
     });
     expect(readTypedInput('=1', 'en', ctxOf, true)).toEqual({ kind: 'value', input: { s: '=1' } });
-    expect(inputAsText(undefined, ctxOf)).toBe('');
-    expect(inputAsText({ b: true }, ctxOf)).toBe('TRUE');
-    expect(inputAsText({ n: 0.1 + 0.2 }, ctxOf)).toBe('0.3');
-    expect(inputAsText({ s: 'x' }, ctxOf)).toBe('x');
+    expect(inputAsText(undefined, ctxOf, 'en')).toBe('');
+    expect(inputAsText({ b: true }, ctxOf, 'en')).toBe('TRUE');
+    expect(inputAsText({ n: 0.1 + 0.2 }, ctxOf, 'en')).toBe('0.3');
+    expect(inputAsText({ s: 'x' }, ctxOf, 'en')).toBe('x');
   });
 });
 

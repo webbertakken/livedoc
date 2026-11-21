@@ -1,8 +1,7 @@
 // Criteria (docs/specs/029-sheets/formulas.md "Functions": COUNTIF, SUMIFS, ... and the card functions): a value
 // to equal, or text starting with a comparison (">=10", "<>Done"), with * and ? wildcards and ~ to escape them.
 // Text matches ignore case.
-import { parsePlainNumber } from '../input';
-import { compareScalars, isError, type Scalar } from './values';
+import { compareScalars, isError, plainNumber, type Scalar } from './values';
 
 export type Criterion = (v: Scalar) => boolean;
 
@@ -58,7 +57,8 @@ function unescape(text: string): string {
   return text.replace(/~([*?~])/g, '$1');
 }
 
-export function makeCriterion(criterion: Scalar): Criterion {
+/** A criterion (`">2,5"`, `"a*"`, 3) as a test, its number read in `locale` (formulas.md "Locale"). */
+export function makeCriterion(criterion: Scalar, locale: string): Criterion {
   if (criterion === null) return (v) => v === null || v === '';
   if (typeof criterion === 'number' || typeof criterion === 'boolean')
     return (v) =>
@@ -70,7 +70,7 @@ export function makeCriterion(criterion: Scalar): Criterion {
   const m = /^(<=|>=|<>|<|>|=)?([\s\S]*)$/.exec(criterion)!;
   const op = m[1] ?? '=';
   const rest = m[2]!;
-  const num = parsePlainNumber(rest);
+  const num = plainNumber(rest, locale);
   const bool = /^(true|false)$/i.test(rest) ? rest.toLowerCase() === 'true' : null;
   const operand: Scalar = num !== null ? num : bool !== null ? bool : rest;
   if (op === '=' || op === '<>') {

@@ -17,7 +17,12 @@ export function gridLayout(tag: string, rows = 30, cols = 12): SheetLayout {
 
 type BookSpec = Record<string, Record<string, string>>;
 
-export function makeSheets(spec: BookSpec, opts: { rows?: number; cols?: number } = {}): Sheet[] {
+// Inputs typed as a person in `locale` (en-GB by default) types them.
+export function makeSheets(
+  spec: BookSpec,
+  opts: { rows?: number; cols?: number; locale?: string } = {},
+): Sheet[] {
+  const locale = opts.locale ?? 'en-GB';
   const sheets: Sheet[] = Object.keys(spec).map((title, i) => ({
     id: `sheet${i}xx`,
     tabId: 'tab',
@@ -30,12 +35,12 @@ export function makeSheets(spec: BookSpec, opts: { rows?: number; cols?: number 
     updatedBy: { id: '', name: '', color: '#000000' },
   }));
   // Compile once every sheet exists, so cross-sheet references resolve.
-  const wb = new Workbook({ sheets, locale: 'en-GB' });
+  const wb = new Workbook({ sheets, locale });
   sheets.forEach((sheet, i) => {
     const cells = spec[Object.keys(spec)[i]!]!;
     for (const [a1, text] of Object.entries(cells)) {
       const pos = parseA1(a1)!;
-      const read = readTypedInput(text, 'en-GB', wb.ctxFor(sheet.id));
+      const read = readTypedInput(text, locale, wb.ctxFor(sheet.id));
       if (read.kind === 'invalid') throw new Error(`${a1}: ${text} → ${read.reason}`);
       if (read.kind === 'clear') continue;
       sheet.cells.set(cellKey(sheet.layout.rows[pos.r]!, sheet.layout.cols[pos.c]!), {
@@ -95,7 +100,7 @@ export function book(
     set(a1: string, text: string, title = Object.keys(full)[0]!) {
       const { sheet, pos } = at(a1, title);
       const key = cellKey(sheet.layout.rows[pos.r]!, sheet.layout.cols[pos.c]!);
-      const read = readTypedInput(text, 'en-GB', wb.ctxFor(sheet.id));
+      const read = readTypedInput(text, opts.locale ?? 'en-GB', wb.ctxFor(sheet.id));
       const cells = sheet.cells.copy();
       if (read.kind === 'value') cells.set(key, { input: read.input });
       else cells.delete(key);

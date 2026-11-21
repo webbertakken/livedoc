@@ -5,6 +5,7 @@ import type { ImportAccess, ImportRequest } from '../imports/import-request';
 import type { ImportRead } from './import-book';
 import { childrenOf, type Node } from '../formula/ast';
 import { renderFormula, storedAst, type SheetsCtx } from '../formula/stored';
+import { formulaSyntaxOf, formulaToLocale } from '../formula/locale-syntax';
 import { filterTest, type FilterTest } from '../filter';
 import type { Value } from '../formula/values';
 import { colWidth } from '../layout';
@@ -110,7 +111,10 @@ export function cellFrame(
     },
     formulaText: (s, r, c) => {
       const input = src.input(s, r, c);
-      return input && 'f' in input ? renderFormula(input.f, src.ctx(s)) : null;
+      // As the formula bar shows it, in the locale's syntax (formulas.md "Locale").
+      return input && 'f' in input
+        ? formulaToLocale(renderFormula(input.f, src.ctx(s)), formulaSyntaxOf(src.locale))
+        : null;
     },
     grid: (s) => {
       const sh = src.sheet(s);

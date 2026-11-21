@@ -16,7 +16,7 @@ export function financeFn(
   return scalarFn(min, max, (xs, f) => {
     const ns: number[] = [];
     for (const [i, x] of xs.entries()) {
-      const n = dates.includes(i) ? dateNumber(x, localeDayFirst(f.locale)) : toNumber(x);
+      const n = dates.includes(i) ? dateNumber(x, f.locale) : toNumber(x, f.locale);
       if (typeof n !== 'number') return n;
       ns.push(dates.includes(i) ? Math.floor(n) : n);
     }
@@ -24,10 +24,10 @@ export function financeFn(
   });
 }
 
-function dateNumber(x: Scalar, dayFirst: boolean): Value {
+function dateNumber(x: Scalar, locale: string): Value {
   if (typeof x === 'string') {
-    const d = parseDateText(x, dayFirst);
+    const d = parseDateText(x, localeDayFirst(locale));
     if (d) return d.serial;
   }
-  return toNumber(x);
+  return toNumber(x, locale);
 }

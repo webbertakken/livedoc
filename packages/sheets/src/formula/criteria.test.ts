@@ -48,11 +48,11 @@ describe('criteria', () => {
     ['<>*x*', 'abc', true],
     ['İ*', 'İstanbul', true],
   ])('%j matches %j: %s', (crit, v, ok) => {
-    expect(makeCriterion(crit as never)(v as never)).toBe(ok);
+    expect(makeCriterion(crit as never, 'en-US')(v as never)).toBe(ok);
   });
 
   it('matches a pattern of many wildcards in time proportional to the text', () => {
-    const many = makeCriterion('*a*a*a*a*a*a*a*b');
+    const many = makeCriterion('*a*a*a*a*a*a*a*b', 'en-US');
     const text = 'a'.repeat(2_000);
     const t0 = cpuNowMs();
     for (let i = 0; i < 50; i++) expect(many(text)).toBe(false);

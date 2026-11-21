@@ -95,6 +95,8 @@ type SheetStoreDeps = {
   recalc?: WorkbookRecalc;
   self: () => SheetPerson | null;
   locale: string;
+  // A spreadsheet's time zone (formulas.md "Locale"); absent, this browser's.
+  timeZone?: string;
   pushUndo: (step: ItemUndoStep) => void;
   toast: (message: string) => void;
   // Injected in tests.
@@ -267,24 +269,35 @@ export class SheetStore {
     const rescoped = (deps.oneWorkbook ?? false) !== (this.deps.oneWorkbook ?? false);
     const iteration = deps.iteration ?? ITERATION_OFF;
     const reiterated = !sameIteration(iteration, this.deps.iteration ?? ITERATION_OFF);
+    // A new locale or time zone (any peer's Save Settings, an agent's): every value is worked out again in it.
+    const relocated = deps.locale !== this.deps.locale || deps.timeZone !== this.deps.timeZone;
     this.deps = { ...deps, api: this.api, wait: this.wait };
     this.imports.update(this.importAccessHere(), deps.rangeSources ?? []);
     // Saved settings arrived (any peer's Save Settings): every engine works its values out afresh.
-    if (reiterated && !rescoped) {
+    if (reiterated && !rescoped && !relocated) {
       for (const port of this.ports.values()) port.setIteration(iteration);
       this.notify();
     }
     // The document turned out a spreadsheet (its workbook row arrived): the engines and loads were scoped by tab.
     if (rescoped) {
-      for (const scope of this.ports.keys()) this.link?.send({ scope, msg: { t: 'drop' } });
-      this.ports.clear();
+      this.dropEngines();
       this.tabStatus.clear();
+      this.notify();
+    } else if (relocated) {
+      debugLog('[sheets] relocated', { locale: deps.locale, timeZone: deps.timeZone ?? null });
+      this.dropEngines();
       this.notify();
     }
     if (this.listeners.size > 0) {
       this.ticker.every(this.tickMs());
       this.imports.run(true);
     }
+  }
+
+  // Every engine dropped: the next read starts each afresh, from the sheets as they stand.
+  private dropEngines(): void {
+    for (const scope of this.ports.keys()) this.link?.send({ scope, msg: { t: 'drop' } });
+    this.ports.clear();
   }
 
   // Whether the imports may fetch, where the store fetches them (a spreadsheet); null for a Plan document.
@@ -350,6 +363,7 @@ export class SheetStore {
       port = new EnginePort({
         sheets: [...this.entries.values()].map((e) => e.view).filter((s) => this.inScope(s, scope)),
         locale: this.deps.locale,
+        ...(this.deps.timeZone ? { timeZone: this.deps.timeZone } : {}),
         limits: SheetLimits.of(this.deps.oneWorkbook ?? false),
         iteration: this.deps.iteration ?? ITERATION_OFF,
         send: (msg) => link.send({ scope, msg }),
@@ -938,6 +952,7 @@ export function sheetStoreOf(bridge: SheetsBridge): SheetStore {
     ...(bridge.rangeSources ? { rangeSources: bridge.rangeSources } : {}),
     self: () => bridge.self,
     locale: bridge.locale,
+    ...(bridge.timeZone ? { timeZone: bridge.timeZone } : {}),
     pushUndo: bridge.pushUndo,
     toast: bridge.toast,
   });

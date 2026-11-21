@@ -21,19 +21,19 @@ import type { SheetWrite } from './store';
 
 describe('values', () => {
   it('coerces as Sheets does', () => {
-    expect(toNumber(null)).toBe(0);
-    expect(toNumber(true)).toBe(1);
-    expect(toNumber(' ')).toBe(0);
-    expect(toNumber('50%')).toBe(0.5);
-    expect(toNumber('a'.repeat(30))).toMatchObject({
+    expect(toNumber(null, 'en-US')).toBe(0);
+    expect(toNumber(true, 'en-US')).toBe(1);
+    expect(toNumber(' ', 'en-US')).toBe(0);
+    expect(toNumber('50%', 'en-US')).toBe(0.5);
+    expect(toNumber('a'.repeat(30), 'en-US')).toMatchObject({
       e: '#VALUE!',
       why: expect.stringContaining('…'),
     });
-    expect(toNumber({ e: '#N/A' })).toEqual({ e: '#N/A' });
-    expect(toNumber({ rows: [[3]] })).toBe(3);
-    expect(toText(null)).toBe('');
-    expect(toText(false)).toBe('FALSE');
-    expect(toText({ e: '#N/A' })).toEqual({ e: '#N/A' });
+    expect(toNumber({ e: '#N/A' }, 'en-US')).toEqual({ e: '#N/A' });
+    expect(toNumber({ rows: [[3]] }, 'en-US')).toBe(3);
+    expect(toText(null, 'en-US')).toBe('');
+    expect(toText(false, 'en-US')).toBe('FALSE');
+    expect(toText({ e: '#N/A' }, 'en-US')).toEqual({ e: '#N/A' });
     expect(toBool(null)).toBe(false);
     expect(toBool(2)).toBe(true);
     expect(toBool(' TRUE ')).toBe(true);
