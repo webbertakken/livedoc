@@ -15,7 +15,9 @@ research is [The live model](../../research/pdf-documents/live-model.md),
   to write a file.
 - **The live changes are a sequence CRDT**, Yjs, as a [text document](../034-text-documents/live-editing-and-storage.md)
   is: maps by id, an array for the page order, text types for words people type. The room stores, chunks, compacts
-  and catches up such a state already; a PDF document uses that storage, generalised to hold any kind's state.
+  and catches up such a state for every **live tab kind**
+  ([Live state](../006-document/kinds-outside-the-canvas.md#live-state)); a PDF document is one, declaring only what
+  is its own.
 
 ### The layout
 
@@ -97,13 +99,18 @@ writes one shape `(default)`:
   sync), appends each update to the tab's log before it relays it, and compacts the log into chunks under the row
   cap, as it does for a text document, never through the editor's whole-tab save
   ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-room)).
+- **What the kind declares** to the room's shared live state: its tab kind `pdf`, its frame's op kind `pdf` (its
+  refusal `pdf-refused`), its log tag `[pdf]`, its tables (`pdf_updates`, `pdf_chunks`, `pdf_digest`, made by the
+  shared schema step and appended to the room's schema), how its updates merge and decode, its sizes and limits, and
+  its digest. Nothing of that storage is forked.
 - The whole-tab save writes only the tab row: its name, kind, `blob` and `size`.
 - **Reading it**: `GET /api/documents/:id/pdf-documents/:tabId/state` answers the whole state as one Yjs update, with
   the tab's `blob` in `X-Stored-File`; with `since` (a state vector) only what lies beyond it. `404 pdf_not_found`
   when the tab is absent or another kind; `400 state_vector_invalid`.
 - **Sending**: a change goes to the room as one `pdf` op while the room is open and it fits a frame; a larger one (a
   pasted picture's reference, a catch-up after a long time offline) goes by
-  `POST /api/documents/:id/pdf-documents/:tabId/updates`. `400 update_invalid`, `413 update_too_large`,
+  `POST /api/documents/:id/pdf-documents/:tabId/updates`, which reaches the room through the shared door for a live
+  tab's posted update. `400 update_invalid`, `413 update_too_large`,
   `409 stored_file_changed` when the update names another stored file than the room holds.
 - **Reconnecting** is a text document's: the surface reads what the state holds beyond its own, merges it, and sends
   what it holds that the state lacks.
