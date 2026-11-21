@@ -366,6 +366,27 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       },
     );
   },
+  footnotes: (format) =>
+    base(format, [
+      paragraph(format, 'normal', [
+        run('A claim'),
+        { type: 'note', blocks: [paragraph(format, 'normal', [run('The source.')])], props: {} },
+        run(' and another', { italic: true }),
+        {
+          type: 'note',
+          blocks: [
+            paragraph(format, 'normal', [
+              run('Bold', { bold: true }),
+              run(', and a '),
+              run('link', {}, { link: 'https://example.com/note' }),
+            ]),
+            paragraph(format, 'normal', [run('A second paragraph.')]),
+          ],
+          props: { italic: true },
+        },
+        run('.'),
+      ]),
+    ]),
   links: (format) =>
     base(format, [
       paragraph(format, 'normal', [

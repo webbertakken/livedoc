@@ -15,7 +15,8 @@ import {
   type OoxmlPart,
   type Relationship,
 } from '@livedoc/office-packages';
-import type { Block, Inline, Paragraph, SectionBreak } from '../model/blocks';
+import type { Block, Inline, Note, Paragraph, SectionBreak } from '../model/blocks';
+import { Notes } from '../model/notes';
 import { keptStillHolds, type TextProps } from '../model/props';
 import type { Section } from '../model/sections';
 import { HeaderPartsWriter } from './ooxml-headers';
@@ -27,6 +28,7 @@ import { TextDocument, type OoxmlSource } from '../model/text-document';
 import { byId } from './ooxml-read';
 import { PPR_ORDER, RPR_ORDER, WRITTEN_W_NS, XML_HEAD } from './ooxml-names';
 import { ooxmlFieldXml } from './ooxml-fields';
+import { footnoteIds, footnotesPartXml } from './ooxml-notes';
 import {
   abstractNumXml,
   ordered,
@@ -71,6 +73,8 @@ class OoxmlWriter {
   partRels: RelationshipList;
   /** The header and footer parts the sections name. */
   readonly headerParts: HeaderPartsWriter;
+  /** Each of the body's notes with its footnote's id (page-layout.md "Footnotes"). */
+  readonly noteIds: Map<Note, string>;
   /** Each section's place among the sections, by the section itself. */
   readonly #sectionAt = new Map<Section, number>();
 
@@ -102,6 +106,7 @@ class OoxmlWriter {
     ];
     sections.forEach((s, i) => this.#sectionAt.set(s, i));
     this.headerParts = new HeaderPartsWriter(this, sections);
+    this.noteIds = footnoteIds(Notes.all(doc.body), source?.footnotes);
     this.assignNumIds();
   }
 
@@ -226,7 +231,8 @@ class OoxmlWriter {
     return `<w:r>${rPr}${content}</w:r>`;
   }
 
-  paragraphXml(p: Paragraph, ends: Section | undefined): string {
+  /** A paragraph; `lead`, a run before its content (a note's number). */
+  paragraphXml(p: Paragraph, ends: Section | undefined, lead = ''): string {
     const pieces = p.inlines.map((i) => ({
       link: i.link,
       xml:
@@ -234,7 +240,9 @@ class OoxmlWriter {
           ? this.runXml(i)
           : i.type === 'field'
             ? ooxmlFieldXml(i.field, this.runXml({ ...i, type: 'run' }))
-            : this.kept(i.xml),
+            : i.type === 'note'
+              ? this.markXml(i)
+              : this.kept(i.xml),
     }));
     let content = '';
     for (let i = 0; i < pieces.length;) {
@@ -252,7 +260,18 @@ class OoxmlWriter {
     const checked = p.list?.checked ? ' livedoc:checked="true"' : '';
     // Word has no column break before: a column break at the paragraph's start holds it.
     const columnBreak = p.props.columnBreakBefore ? '<w:r><w:br w:type="column"/></w:r>' : '';
-    return `<w:p${checked}>${this.pPr(p, ends)}${columnBreak}${content}</w:p>`;
+    return `<w:p${checked}>${this.pPr(p, ends)}${lead}${columnBreak}${content}</w:p>`;
+  }
+
+  /** A note's mark: a run naming its footnote, superscript unless its own style or kept formatting says how. */
+  markXml(note: Note): string {
+    const id = this.noteIds.get(note);
+    if (id === undefined) return '';
+    const holds = note.kept && keptStillHolds(note.kept, { style: note.style, props: note.props });
+    const rPr = this.rPr(
+      holds || note.style ? note : { ...note, props: { vertical: 'super', ...note.props } },
+    );
+    return `<w:r>${rPr}<w:footnoteReference w:id="${id}"/></w:r>`;
   }
 
   bodyXml(): string {
@@ -446,6 +465,28 @@ export function writeOoxml(document: TextDocument, generator: string): Uint8Arra
     });
     if (rels.list.length > 0) storyRels.set(name, byId(rels.list));
   }
+  // The footnotes part, when there are notes or kept footnotes; its relationship taken away when there are neither.
+  const keptFootnotes = source?.footnotes;
+  if (w.noteIds.size > 0 || (keptFootnotes?.kept.length ?? 0) > 0) {
+    const name = keptFootnotes?.part ?? 'word/footnotes.xml';
+    const rels = new RelationshipList(
+      (source?.relationships.get(name) ?? []).filter(
+        (r) => r.type !== RELATIONSHIP_TYPES.hyperlink,
+      ),
+    );
+    parts.push({
+      name,
+      contentType: OOXML_CONTENT_TYPES.footnotes,
+      data: encode(footnotesPartXml(w, w.noteIds, keptFootnotes, rels)),
+    });
+    w.rels.id(RELATIONSHIP_TYPES.footnotes, relativeTarget(w.mainPart, name));
+    if (rels.list.length > 0) storyRels.set(name, byId(rels.list));
+  } else
+    w.rels.list.splice(
+      0,
+      w.rels.list.length,
+      ...w.rels.list.filter((r) => r.type !== RELATIONSHIP_TYPES.footnotes),
+    );
   // A new file's settings, or an arriving file's that held none, written whole; an arriving file's own kept as they
   // came unless pageless changed (standard-mapping.md "Extensions").
   const sourceSettings = source?.parts.find((p) => p.mediaType === OOXML_CONTENT_TYPES.settings);

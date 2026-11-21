@@ -10,8 +10,15 @@ import { TextDocument } from '../model/text-document';
 import { wholeOf } from '../testing/compare';
 import { TextDocumentState } from '../text-document-state';
 import { textDocumentDigest } from '../digest';
-import { BODY_BLOCKS, DOCUMENT_MAP, FIELD, KEPT_INLINE, TEXT_PROPERTY_MARKS } from './live-names';
-import { liveStoryIds, storyFragment } from './live-stories';
+import {
+  BODY_BLOCKS,
+  DOCUMENT_MAP,
+  FIELD,
+  FOOTNOTE,
+  KEPT_INLINE,
+  TEXT_PROPERTY_MARKS,
+} from './live-names';
+import { liveNoteIds, liveStoryIds, storyFragment } from './live-stories';
 import { CONSTRUCTS } from '../testing/constructs';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
@@ -176,7 +183,7 @@ describe('the live layout', () => {
       for (const child of node.toArray()) walk(child as Y.XmlElement);
     };
     walk(TextDocumentState.body(doc));
-    for (const name of names) expect([...BODY_BLOCKS, KEPT_INLINE]).toContain(name);
+    for (const name of names) expect([...BODY_BLOCKS, KEPT_INLINE, FOOTNOTE]).toContain(name);
     expect(names).toContain('paragraph');
     expect([...marks].some((m) => (TEXT_PROPERTY_MARKS as readonly string[]).includes(m))).toBe(
       true,
@@ -196,6 +203,24 @@ describe('the live layout', () => {
       );
     },
   );
+
+  // page-layout.md "Footnotes": a mark an atom of its own naming its note's fragment; the note's text is searched.
+  it.each(['odf', 'ooxml'] as const)('reads footnotes back as written (%s)', (format) => {
+    const document = CONSTRUCTS.footnotes!(format);
+    expect(wholeOf(live(document))).toBe(wholeOf(document));
+    const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
+    const first = TextDocumentState.body(doc).get(0) as Y.XmlElement;
+    const marks = first
+      .toArray()
+      .filter((n): n is Y.XmlElement => n instanceof Y.XmlElement && n.nodeName === FOOTNOTE);
+    expect(marks.map((m) => m.getAttribute('story'))).toEqual(liveNoteIds(doc));
+    expect(liveStoryIds(doc)).toEqual(liveNoteIds(doc));
+    const texts = liveNoteIds(doc).map((id) =>
+      TextDocumentState.storyParagraphs(doc, id).map((p) => p.text),
+    );
+    expect(texts).toEqual([['The source.'], ['Bold, and a link', 'A second paragraph.']]);
+    expect(textDocumentDigest(doc).searchText).toContain('A second paragraph.');
+  });
 
   it('still digests a formatted state by its characters', () => {
     const document = TextDocument.fromTexts(['One two', 'three']);

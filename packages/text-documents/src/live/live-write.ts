@@ -11,6 +11,7 @@ import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
   FIELD,
+  FOOTNOTE,
   KEPT_INLINE,
   LINK_MARK,
   LISTS_MAP,
@@ -46,7 +47,10 @@ export function runAttributes(inline: Run | KeptInline): Record<string, unknown>
   return attributes;
 }
 
-function inlineNodes(inlines: readonly Inline[]): (Y.XmlText | Y.XmlElement)[] {
+function inlineNodes(
+  inlines: readonly Inline[],
+  stories: StoryWriter,
+): (Y.XmlText | Y.XmlElement)[] {
   const nodes: (Y.XmlText | Y.XmlElement)[] = [];
   let text: Y.XmlText | null = null;
   let at = 0;
@@ -63,11 +67,15 @@ function inlineNodes(inlines: readonly Inline[]): (Y.XmlText | Y.XmlElement)[] {
       continue;
     }
     text = null;
-    const element = new Y.XmlElement(inline.type === 'field' ? FIELD : KEPT_INLINE);
+    const element = new Y.XmlElement(
+      inline.type === 'field' ? FIELD : inline.type === 'note' ? FOOTNOTE : KEPT_INLINE,
+    );
     setAttributes(element, {
       ...(inline.type === 'field'
         ? { field: inline.field, text: inline.text }
-        : { name: inline.name, xml: inline.xml }),
+        : inline.type === 'note'
+          ? { story: stories.note(inline) }
+          : { name: inline.name, xml: inline.xml }),
       props: isEmpty(inline.props) ? undefined : inline.props,
       style: inline.style,
       link: inline.link,
@@ -78,7 +86,7 @@ function inlineNodes(inlines: readonly Inline[]): (Y.XmlText | Y.XmlElement)[] {
   return nodes;
 }
 
-function paragraphNode(paragraph: Paragraph): Y.XmlElement {
+function paragraphNode(paragraph: Paragraph, stories: StoryWriter): Y.XmlElement {
   const element = new Y.XmlElement(PARAGRAPH);
   setAttributes(element, {
     style: paragraph.style,
@@ -87,7 +95,7 @@ function paragraphNode(paragraph: Paragraph): Y.XmlElement {
     text: paragraph.text,
     kept: paragraph.kept,
   });
-  const children = inlineNodes(paragraph.inlines);
+  const children = inlineNodes(paragraph.inlines, stories);
   if (children.length > 0) element.insert(0, children);
   return element;
 }
@@ -95,7 +103,7 @@ function paragraphNode(paragraph: Paragraph): Y.XmlElement {
 function blockNode(block: Block, stories: StoryWriter): Y.XmlElement {
   switch (block.type) {
     case 'paragraph':
-      return paragraphNode(block);
+      return paragraphNode(block, stories);
     case 'section': {
       const element = new Y.XmlElement(SECTION_BREAK);
       const { type: _type, headers, ...section } = block;

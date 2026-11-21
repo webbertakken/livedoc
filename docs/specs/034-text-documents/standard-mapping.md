@@ -54,7 +54,8 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
 - **Body**: blocks in order, each a **paragraph**, a **section break** or a **kept block**.
 - **`Paragraph`**: a paragraph style by id, direct paragraph formatting, a list place (list, level 0 to 8, checked),
   and inlines: **runs** (characters with direct text formatting and an optional link), **fields** (a page number or
-  the page count, with the formatting of a run and the text last drawn) and **kept inlines**.
+  the page count, with the formatting of a run and the text last drawn), **notes** (a footnote's mark with its
+  formatting, holding the note's blocks) and **kept inlines**.
 - **`Style`**: a named paragraph or text style, its parent and next style, its formatting; the built-in styles are
   known by role (Normal text, Title, Subtitle, Heading 1 to 6) in either format's names.
 - **`ListDefinition`**: nine levels, each bullet (with its character), numbered (with its format, its label pattern
@@ -112,11 +113,11 @@ mail-merge fields, indexes other than the table of contents, smart chips, embedd
 shapes and text boxes, and constructs of newer versions of either standard.
 
 - **Four grains of keeping.** A **kept block** is a body-level element the model does not map (a table until tables
-  are built, a table of contents); a **kept inline** is one inside a paragraph (a bookmark, a field, a note, a picture),
+  are built, a table of contents); a **kept inline** is one inside a paragraph (a bookmark, another field, an endnote, a picture),
   with the formatting of the run it sat in; **kept properties** are the file's own formatting element of a paragraph,
   run, style, list or section, written back as it was while the model's values read from it are unchanged, and
   rebuilt from the model, its unmapped children kept, once they change; **kept parts** are the package's other
-  entries (pictures, themes, settings, headers, notes), written back with their relationships and media types.
+  entries (pictures, themes, settings, endnotes), written back with their relationships and media types.
 - **Namespaces travel.** Kept XML carries the namespace bindings it needs; the document's root keeps the arriving
   root's declarations and OOXML's ignorable list, so kept content reads as it did.
 - **Relationship ids stay.** An OOXML relationship keeps its id; a new one (a link) is numbered after the highest kept

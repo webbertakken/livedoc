@@ -40,6 +40,12 @@ export type OdfSource = {
 };
 
 /** What an OOXML file kept beyond the model, to write back around it. */
+/** A footnotes part as kept: its name, and the `w:footnote` elements no note was read from, each with its id. */
+export type OoxmlFootnotesSource = {
+  readonly part: string;
+  readonly kept: readonly { readonly id: string; readonly xml: KeptXml }[];
+};
+
 export type OoxmlSource = {
   readonly format: 'ooxml';
   readonly mainPart: string;
@@ -55,6 +61,8 @@ export type OoxmlSource = {
   readonly numberingNamespaces: XmlBindings;
   /** `w:numbering` children the model does not map (picture bullets). */
   readonly numbering: readonly KeptXml[];
+  /** The footnotes part, when the file had one: its name, and the footnotes the model does not hold. */
+  readonly footnotes?: OoxmlFootnotesSource;
   /** Every part the model does not map, in the package's order. */
   readonly parts: readonly KeptEntry[];
   /** Every relationship as the package had it, by source part. */

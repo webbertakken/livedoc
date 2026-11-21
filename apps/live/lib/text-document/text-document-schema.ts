@@ -11,6 +11,8 @@ import {
 import {
   FIELD,
   FIELD_ATTRIBUTES,
+  FOOTNOTE,
+  FOOTNOTE_ATTRIBUTES,
   KEPT_BLOCK,
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,
@@ -199,6 +201,29 @@ const nodes: Record<string, NodeSpec> = {
           ...(own ? { style: own } : {}),
         },
         fieldText(text),
+      ];
+    },
+  },
+  // A footnote's mark (page-layout.md "Footnotes"): one character to the caret, holding no text, its number drawn by
+  // the body's count of marks before it, in superscript, in the mark's own formatting.
+  [FOOTNOTE]: {
+    group: 'inline',
+    inline: true,
+    atom: true,
+    selectable: true,
+    attrs: nullAttributes(FOOTNOTE_ATTRIBUTES),
+    leafText: () => '',
+    toDOM: (node) => {
+      const { story, props } = node.attrs as { story: unknown; props: unknown };
+      const own = props && typeof props === 'object' ? cssText(textDeclarations(props)) : '';
+      return [
+        'sup',
+        {
+          class: 'text-document-footnote',
+          contenteditable: 'false',
+          'data-footnote': typeof story === 'string' ? story : '',
+          ...(own ? { style: own } : {}),
+        },
       ];
     },
   },

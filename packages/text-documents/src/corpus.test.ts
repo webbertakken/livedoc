@@ -27,8 +27,15 @@ function structure(document: TextDocument) {
             b.list ? `${b.list.level}${b.list.checked ? '☑' : ''}` : '',
             TextDocument.paragraphTexts({ ...document, body: [b] })[0],
             b.inlines
-              .filter((i) => i.type === 'kept')
-              .map((i) => i.name)
+              .flatMap((i) =>
+                i.type === 'kept'
+                  ? [i.name]
+                  : i.type === 'note'
+                    ? [
+                        `note: ${TextDocument.paragraphTexts({ ...document, body: i.blocks }).join(' / ')}`,
+                      ]
+                    : [],
+              )
               .join(','),
           ]
         : b.type === 'kept'

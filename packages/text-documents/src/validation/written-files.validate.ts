@@ -36,6 +36,7 @@ const OOXML_SCHEMAS: [RegExp, string][] = [
   [/^word\/settings\.xml$/, 'ooxml/WordprocessingML_Document_Settings.rnc'],
   [/^word\/header\d+\.xml$/, 'ooxml/WordprocessingML_Header.rnc'],
   [/^word\/footer\d+\.xml$/, 'ooxml/WordprocessingML_Footer.rnc'],
+  [/^word\/footnotes\.xml$/, 'ooxml/WordprocessingML_Footnotes.rnc'],
 ];
 
 const escape = (s: string) =>

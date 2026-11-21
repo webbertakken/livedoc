@@ -2,6 +2,7 @@
 // losses are listed first; converting drops what was kept from the old format and maps the built-in styles' ids.
 import type { Block, Inline, Paragraph } from './model/blocks';
 import type { ListDefinition } from './model/lists';
+import { Notes } from './model/notes';
 import { compact, type BorderLine, type ParagraphProps, type TextProps } from './model/props';
 import { borderSize, borderSpace, OOXML_BORDER_SPACE_MAX_PT } from './ooxml/ooxml-borders';
 import type { PageSetup, Section } from './model/sections';
@@ -61,7 +62,8 @@ export function conversionLosses(document: TextDocument, to: TextDocumentFormat)
         for (let i = 0; i < storiesOf(block.headers).length; i += 1) count(other, 'header-footer');
         if (block.numberStart !== undefined) count(other, 'page-number-start');
       }
-  for (const block of [...document.body, ...stories.flat()]) {
+  const notes = Notes.all(document.body).flatMap((note) => note.blocks);
+  for (const block of [...document.body, ...stories.flat(), ...notes]) {
     if (block.type === 'kept') count(kept, block.name);
     if (block.type === 'section' && block.region) count(other, 'section-name');
     if (block.type !== 'paragraph') continue;
@@ -195,7 +197,9 @@ export function convertTextDocument(
       to === 'ooxml' && paragraphText ? { ...paragraphText, ...i.props } : i.props,
     );
     const { style: _, ...rest } = withoutKept(i);
-    return [{ ...rest, props, ...(style ? { style } : {}) } as Inline];
+    // A note's writing converts as the body's (page-layout.md "Footnotes").
+    const blocks = i.type === 'note' ? { blocks: blocksOf(i.blocks) } : {};
+    return [{ ...rest, ...blocks, props, ...(style ? { style } : {}) } as Inline];
   };
   // A section's headers and footers: their blocks converted as the body's, the part they came from left behind.
   const headersOf = (headers: SectionHeaders | undefined): SectionHeaders | undefined => {

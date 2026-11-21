@@ -8,6 +8,7 @@ import type {
   Inline,
   KeptBlock,
   KeptInline,
+  Note,
   Paragraph,
   Run,
   SectionBreak,
@@ -21,6 +22,7 @@ import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
   FIELD,
+  FOOTNOTE,
   KEPT_INLINE,
   LINK_MARK,
   LISTS_MAP,
@@ -62,7 +64,7 @@ function runOf(text: string, attributes: Attributes): Run {
   });
 }
 
-function inlinesOf(paragraph: Y.XmlElement): Inline[] {
+function inlinesOf(paragraph: Y.XmlElement, stories: StoryReader | undefined): Inline[] {
   const inlines: Inline[] = [];
   for (const child of paragraph.toArray()) {
     if (child instanceof Y.XmlText) {
@@ -81,6 +83,20 @@ function inlinesOf(paragraph: Y.XmlElement): Inline[] {
           style: a.style as string | undefined,
           link: a.link as string | undefined,
           kept: a.kept as Field['kept'],
+        }),
+      );
+      continue;
+    }
+    if (child instanceof Y.XmlElement && child.nodeName === FOOTNOTE) {
+      const a = child.getAttributes() as Attributes;
+      inlines.push(
+        defined<Note>({
+          type: 'note',
+          blocks: typeof a.story === 'string' && stories ? stories.note(a.story) : [],
+          props: a.props ?? {},
+          style: a.style as string | undefined,
+          link: a.link as string | undefined,
+          kept: a.kept as Note['kept'],
         }),
       );
       continue;
@@ -113,7 +129,7 @@ function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Blo
         props: a.props ?? {},
         list: a.list as Paragraph['list'],
         text: a.text as Paragraph['text'],
-        inlines: inlinesOf(node),
+        inlines: inlinesOf(node, stories),
         kept: a.kept as Paragraph['kept'],
       });
     case SECTION_BREAK: {
@@ -181,7 +197,7 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
   const lists = doc.getMap<unknown>(LISTS_MAP);
   const styles = stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? blank.styles;
   const normal = Styles.idOfRole(styles, 'normal') ?? Styles.idOfRole(blank.styles, 'normal')!;
-  const stories: StoryReader = new StoryReader(doc, (node) => blockOf(node, normal));
+  const stories: StoryReader = new StoryReader(doc, (node) => blockOf(node, normal, stories));
   const body = doc
     .getXmlFragment(BODY_FRAGMENT)
     .toArray()

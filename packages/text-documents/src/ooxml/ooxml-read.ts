@@ -24,7 +24,7 @@ import {
   type XmlNode,
   type XmlParsed,
 } from '@livedoc/office-packages';
-import type { Block, Field, FieldKind, Inline, Paragraph, Run } from '../model/blocks';
+import type { Block, Field, FieldKind, Inline, Note, Paragraph, Run } from '../model/blocks';
 import { LIST_LEVELS, type ListDefinition, type ListPlace } from '../model/lists';
 import {
   canonical,
@@ -45,6 +45,7 @@ import { sortedBindings } from '../odf/odf-read';
 import { LIVEDOC_NS } from '../odf/odf-names';
 import { MC_NS, R_NS, W_NS, W_STRICT_NS, WRITTEN_W_NS } from './ooxml-names';
 import { ooxmlFieldKind } from './ooxml-fields';
+import { FootnotesReader, markProps } from './ooxml-notes';
 import {
   MAPPED_PPR,
   MAPPED_RPR,
@@ -203,6 +204,10 @@ class OoxmlReader {
   part: { parsed: XmlParsed; rels: readonly Relationship[] };
   /** The header and footer parts the sections name, each read once. */
   readonly headerParts = new HeaderPartsReader(this);
+  /** The footnotes part, read once (page-layout.md "Footnotes"). */
+  readonly footnotes = new FootnotesReader(this);
+  /** While a note's paragraphs are read. */
+  readingNote = false;
   readonly parsePart: (name: string) => XmlParsed | PackageRefusal | undefined;
   /** The styles and defaults read, for the stops each paragraph inherits. */
   tabs: { styles: readonly Style[]; defaults: StyleDefaults } = {
@@ -468,6 +473,7 @@ class OoxmlReader {
     const ignorable = (attributeOf(doc.root, MC_NS, 'Ignorable') ?? '')
       .split(/\s+/)
       .filter((p) => p && p !== 'livedoc');
+    const footnotes = this.footnotes.kept();
     const source: OoxmlSource = {
       format: 'ooxml',
       mainPart: this.pkg.mainPart,
@@ -479,7 +485,8 @@ class OoxmlReader {
       styles: keptStyles,
       numberingNamespaces: withoutWritten(this.parts.numbering?.root.scope ?? {}),
       numbering: keptNumbering,
-      // Header and footer parts the sections hold are the model's, written from it.
+      ...compact({ footnotes }),
+      // Header and footer parts the sections hold are the model's, written from it; so is the footnotes part.
       parts: [...this.pkg.parts]
         .filter(
           ([name]) =>
@@ -489,6 +496,7 @@ class OoxmlReader {
               names.numberingPart,
               names.coreName,
               names.appName,
+              footnotes?.part,
             ].includes(name) && !this.headerParts.holds(name),
         )
         .map(([name, data]) => ({
@@ -604,6 +612,9 @@ function withoutWritten(scope: Readonly<Record<string, string>>): Record<string,
 }
 
 type RunContext = { link?: string };
+
+/** An on/off attribute's values that mean off. */
+const OFF: ReadonlySet<string> = new Set(['0', 'false', 'off']);
 
 class RunReader {
   readonly out: Inline[] = [];
@@ -771,6 +782,13 @@ class RunReader {
         case 'lastRenderedPageBreak':
           this.r.report.drop('layout-hint', c.local);
           break;
+        case 'footnoteRef':
+          // A note's number, drawn from its place; the model holds no text for it.
+          if (!this.r.readingNote) this.keepWhole(r, rPr, c, ctx, props, style);
+          break;
+        case 'footnoteReference':
+          if (!this.note(c, rPr, ctx)) this.keepWhole(r, rPr, c, ctx, props, style);
+          break;
         case 'br': {
           const type = wVal(c, 'type');
           if (type === 'column' && this.out.length === 0 && !this.columnBreak)
@@ -784,6 +802,34 @@ class RunReader {
           this.keepWhole(r, rPr, c, ctx, props, style);
       }
     }
+  }
+
+  /**
+   * A footnote's mark as the model's note (page-layout.md "Footnotes"): in the body, naming a footnote of the footnotes
+   * part, its own number (no custom mark); its formatting the run's, without the superscript every mark has.
+   */
+  note(reference: XmlElement, rPr: XmlElement | undefined, ctx: RunContext): boolean {
+    const custom = attributeOf(reference, W_NS, 'customMarkFollows');
+    const id = attributeOf(reference, W_NS, 'id');
+    if (this.r.readingNote || this.r.part.parsed !== this.r.parts.document) return false;
+    if ((custom !== undefined && !OFF.has(custom)) || id === undefined) return false;
+    const blocks = this.r.footnotes.blocks(id);
+    if (!blocks) return false;
+    const read = readRunProps(rPr);
+    const props = markProps(read.props);
+    const kept = this.r.propsKept(
+      this.r.part.parsed,
+      rPr,
+      { style: read.style, props },
+      MAPPED_RPR,
+    );
+    this.out.push({
+      type: 'note',
+      blocks,
+      props,
+      ...compact({ style: read.style, link: ctx.link, kept }),
+    } satisfies Note);
+    return true;
   }
 
   /** A field: its result runs' text, the formatting of the first (else of the run it begins at). */

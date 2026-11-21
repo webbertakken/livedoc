@@ -17,7 +17,7 @@ export type Run = {
   readonly kept?: KeptProperties;
 };
 
-/** Something inside a paragraph the model does not map (a bookmark, another field, a note, a picture), kept as the file has it. */
+/** Something inside a paragraph the model does not map (a bookmark, another field, an endnote, a picture), kept as the file has it. */
 export type KeptInline = {
   readonly type: 'kept';
   /** What it is, for the placeholder and the reports: the element's local name. */
@@ -46,7 +46,20 @@ export type Field = {
   readonly kept?: KeptProperties;
 };
 
-export type Inline = Run | Field | KeptInline;
+/**
+ * A footnote (page-layout.md "Footnotes"): its mark, one character in the text with the formatting of the run it sits
+ * in, holding the note's own writing. Its number is its place among the body's notes (`Notes.numbers`), never held.
+ */
+export type Note = {
+  readonly type: 'note';
+  readonly blocks: readonly Block[];
+  readonly props: TextProps;
+  readonly style?: string;
+  readonly link?: string;
+  readonly kept?: KeptProperties;
+};
+
+export type Inline = Run | Field | Note | KeptInline;
 
 export type Paragraph = {
   readonly type: 'paragraph';
@@ -79,7 +92,7 @@ export const Paragraph = {
     props: {},
     inlines: text ? [{ type: 'run', text, props: {} }] : [],
   }),
-  /** The paragraph's own characters, a field's as it last showed; kept inlines read as nothing. */
+  /** The paragraph's own characters, a field's as it last showed; notes' marks and kept inlines read as nothing. */
   text: (paragraph: Paragraph): string =>
-    paragraph.inlines.map((i) => (i.type === 'kept' ? '' : i.text)).join(''),
+    paragraph.inlines.map((i) => (i.type === 'kept' || i.type === 'note' ? '' : i.text)).join(''),
 } as const;

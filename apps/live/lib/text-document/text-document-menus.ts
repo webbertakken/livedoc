@@ -208,6 +208,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         item('page-count', 'Page count', 'edit', BUILT),
         item('page-numbers-more', 'More options', 'edit', BUILT),
       ]),
+      item('watermark', 'Watermark', 'edit'),
       submenu('break', 'Break', [
         item('page-break', 'Page break', 'edit', { shortcut: 'insert-page-break', ...BUILT }),
         item('section-break-next-page', 'Section break (next page)', 'edit', BUILT),
@@ -332,6 +333,7 @@ export function textDocumentMenus(format: TextDocumentFormat): OfficeCatalogue {
         shortcut: 'review-suggested-edits',
       }),
       item('compare-documents', 'Compare documents', 'edit'),
+      item('line-numbers', 'Line numbers', 'edit'),
       SEPARATOR,
       item('notification-settings', 'Notification settings', 'participate'),
       item('preferences', 'Preferences', 'edit', {

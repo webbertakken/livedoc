@@ -1,8 +1,9 @@
 // Headers and footers in the live state (docs/specs/034-text-documents/live-editing-and-storage.md "The layout"): each
 // one a root XML fragment `story:<id>` in the body's layout, a section's `headers` naming them by id as a whole value.
-// A header two sections share (as a file read them) is one fragment both name.
+// A header two sections share (as a file read them) is one fragment both name. A footnote's writing is a fragment too,
+// its mark in the body naming it (page-layout.md "Footnotes").
 import * as Y from 'yjs';
-import type { Block } from '../model/blocks';
+import type { Block, Note } from '../model/blocks';
 import {
   HEADER_FOOTER_KINDS,
   HEADER_FOOTER_SLOTS,
@@ -12,7 +13,7 @@ import {
   type SectionHeadersOf,
 } from '../model/headers';
 import { BODY_FRAGMENT } from './live-root';
-import { DOCUMENT_MAP, SECTION_BREAK } from './live-names';
+import { DOCUMENT_MAP, FOOTNOTE, PARAGRAPH, SECTION_BREAK } from './live-names';
 
 /** A root fragment holding a header's or footer's blocks is named this, then its id. */
 export const STORY_PREFIX = 'story:';
@@ -44,7 +45,28 @@ export function liveSectionHeaders(doc: Y.Doc): (LiveHeaders | undefined)[] {
   return [liveFirstHeaders(doc), ...later];
 }
 
-/** Every story a section names, each once: section by section, headers before footers, default, first, even. */
+/** The notes' fragments the body's marks name, in the marks' order. */
+export function liveNoteIds(doc: Y.Doc): string[] {
+  return doc
+    .getXmlFragment(BODY_FRAGMENT)
+    .toArray()
+    .flatMap((node) =>
+      node instanceof Y.XmlElement && node.nodeName === PARAGRAPH
+        ? node.toArray().flatMap((child) => {
+            const story =
+              child instanceof Y.XmlElement && child.nodeName === FOOTNOTE
+                ? child.getAttribute('story')
+                : undefined;
+            return typeof story === 'string' ? [story] : [];
+          })
+        : [],
+    );
+}
+
+/**
+ * Every story, each once: those a section names, section by section, headers before footers, default, first, even;
+ * then the notes', in their marks' order.
+ */
 export function liveStoryIds(doc: Y.Doc): string[] {
   const ids = new Set<string>();
   for (const headers of liveSectionHeaders(doc))
@@ -53,12 +75,14 @@ export function liveStoryIds(doc: Y.Doc): string[] {
         const story = headers?.[kind]?.[slot]?.story;
         if (typeof story === 'string') ids.add(story);
       }
+  for (const id of liveNoteIds(doc)) ids.add(id);
   return [...ids];
 }
 
 /** Writes stories into their fragments, each once, giving each section's headers as ids. */
 export class StoryWriter {
   readonly #ids = new Map<HeaderFooter, string>();
+  #next = 1;
   readonly #doc: Y.Doc;
   readonly #node: (block: Block) => Y.XmlElement;
 
@@ -86,14 +110,24 @@ export class StoryWriter {
     };
   }
 
+  /** A note's blocks written to a fragment of its own: its id. */
+  note(note: Note): string {
+    return this.#fragment(note.blocks);
+  }
+
   #write(h: HeaderFooter): string {
     const known = this.#ids.get(h);
     if (known) return known;
-    const id = String(this.#ids.size + 1);
+    const id = this.#fragment(h.blocks);
     this.#ids.set(h, id);
+    return id;
+  }
+
+  #fragment(blocks: readonly Block[]): string {
+    const id = String(this.#next++);
     const fragment = storyFragment(this.#doc, id);
     fragment.delete(0, fragment.length);
-    fragment.insert(0, h.blocks.map(this.#node));
+    fragment.insert(0, blocks.map(this.#node));
     return id;
   }
 }
@@ -107,6 +141,16 @@ export class StoryReader {
   constructor(doc: Y.Doc, block: (node: Y.XmlElement) => Block | null) {
     this.#doc = doc;
     this.#block = block;
+  }
+
+  /** A story's blocks from its fragment: a note's, or a header's. */
+  note(story: string): Block[] {
+    return storyFragment(this.#doc, story)
+      .toArray()
+      .flatMap((node) => {
+        const block = node instanceof Y.XmlElement ? this.#block(node) : null;
+        return block ? [block] : [];
+      });
   }
 
   headers(live: LiveHeaders | undefined): SectionHeaders | undefined {
@@ -130,12 +174,7 @@ export class StoryReader {
   #story({ story, part }: LiveStory): HeaderFooter {
     const known = this.#read.get(story);
     if (known) return known;
-    const blocks = storyFragment(this.#doc, story)
-      .toArray()
-      .flatMap((node) => {
-        const block = node instanceof Y.XmlElement ? this.#block(node) : null;
-        return block ? [block] : [];
-      });
+    const blocks = this.note(story);
     const h: HeaderFooter = { blocks, ...(part ? { part } : {}) };
     this.#read.set(story, h);
     return h;

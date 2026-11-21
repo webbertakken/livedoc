@@ -20,6 +20,7 @@ export { textDocumentDigest, type TextDocumentDigest } from './digest';
 export {
   liveFirstHeaders,
   liveSectionHeaders,
+  liveNoteIds,
   liveStoryIds,
   STORY_PREFIX,
   storyFragment,
@@ -43,9 +44,11 @@ export {
   type Inline,
   type KeptBlock,
   type KeptInline,
+  type Note,
   type Run,
   type SectionBreak,
 } from './model/blocks';
+export { Notes } from './model/notes';
 export {
   CHECK_MARKS,
   LIST_LEVELS,
@@ -153,6 +156,8 @@ export {
   BODY_BLOCKS,
   FIELD,
   FIELD_ATTRIBUTES,
+  FOOTNOTE,
+  FOOTNOTE_ATTRIBUTES,
   KEPT_BLOCK,
   KEPT_BLOCK_ATTRIBUTES,
   KEPT_INLINE,

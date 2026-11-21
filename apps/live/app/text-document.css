@@ -511,3 +511,19 @@ div.text-document-kept {
   z-index: 1;
   border-color: var(--text-document-mark-ink);
 }
+
+/* A footnote's mark (page-layout.md "Footnotes"): its number, the body's count of marks up to it. */
+.text-document-body {
+  counter-reset: text-document-footnote;
+}
+
+.text-document-footnote {
+  counter-increment: text-document-footnote;
+  vertical-align: super;
+  font-size: 0.7em;
+  line-height: 0;
+}
+
+.text-document-footnote::after {
+  content: counter(text-document-footnote);
+}
