@@ -12,6 +12,7 @@ import {
   SheetLimits,
 } from '@livedoc/sheets';
 import { ApiError } from '@/lib/api/core';
+import { setApiErrorReporter } from '@/lib/api/error-report';
 import {
   SheetStore,
   sheetRefusalMessage,
@@ -464,6 +465,27 @@ describe('the sheet store client', () => {
     s.resync();
     await flush();
     expect(srv.api.fetchSheets).toHaveBeenCalledTimes(2);
+  });
+  // docs/specs/013-workspace/workbench-embeds.md WB70: a sheet that cannot load logs, and a failure the api client did
+  // not report is a recent error a bug report carries.
+  it('logs a failed tab load and reports what the api client did not', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const seen: string[] = [];
+    setApiErrorReporter((t) => seen.push(t));
+    const broken = store({
+      ...srv.api,
+      fetchSheets: vi.fn(async () => {
+        throw new TypeError('not iterable');
+      }),
+    });
+    await broken.loadTab('t1');
+    expect(warn).toHaveBeenCalledWith('[sheets] sheets.load.failed', {
+      status: 0,
+      name: 'TypeError',
+    });
+    expect(seen).toEqual(['LoadFailed.Sheets.TypeError']);
+    setApiErrorReporter(null);
+    warn.mockRestore();
   });
   it('keeps one store per document and names refusals', () => {
     forgetSheetStores();

@@ -185,6 +185,20 @@ const API_ROUTE_WORDS: ReadonlySet<string> = new Set([
   'sheets',
   'writes',
   'lease',
+  // A tab kind's own routes: a Sheet's cells, a spreadsheet's workbook, a text document, a Form tab, a domain export.
+  'cells',
+  'workbook',
+  'imports',
+  'settings',
+  'conversion',
+  'file',
+  'rename',
+  'text-documents',
+  'updates',
+  'form-link',
+  'form-seen',
+  'form-preview',
+  'storm-export',
 ]);
 
 /**
