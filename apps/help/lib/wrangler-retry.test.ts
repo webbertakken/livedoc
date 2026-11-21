@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import {
   RETRY_WAITS_MS,
@@ -70,5 +72,30 @@ describe('runWithRetry', () => {
 
   it('waits 5, 15 and 45 seconds', () => {
     expect(RETRY_WAITS_MS).toEqual([5000, 15000, 45000]);
+  });
+});
+
+// docs/specs/016-platform/deployment.md "The tools a deploy step runs".
+describe('the deploy workflow', () => {
+  const workflow = readFileSync(
+    fileURLToPath(new URL('../../../.github/workflows/deploy-reusable.yml', import.meta.url)),
+    'utf8',
+  );
+
+  it('runs every deploy through the retry, from the workflow’s own commit', () => {
+    const deploys = workflow
+      .split('\n')
+      .filter((line) => line.includes('pnpm exec wrangler deploy'));
+    expect(deploys).toHaveLength(7);
+    for (const line of deploys) {
+      expect(line).toContain(
+        'node "$GITHUB_WORKSPACE/.workflow-tools/scripts/wrangler-retry.mjs" pnpm exec',
+      );
+    }
+  });
+
+  it('never runs scripts/ from the deployed checkout', () => {
+    expect(workflow).not.toMatch(/node \.\.\/\.\.\/scripts\//);
+    expect(workflow).toMatch(/ref: \$\{\{ github\.workflow_sha \}\}/);
   });
 });
