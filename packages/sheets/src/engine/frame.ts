@@ -2,7 +2,7 @@
 // "Workbook
 // and recalculation"). The workbook provides it; functions never reach the workbook itself.
 import type { CardSource } from '../cards';
-import type { ImportRequest } from '../imports/import-request';
+import type { ImportAccess, ImportRequest } from '../imports/import-request';
 import type { ImportRead } from './import-book';
 import type { SheetsCtx } from '../formula/stored';
 import type { Value } from '../formula/values';
@@ -98,7 +98,7 @@ export type Frame = {
   // An import's answer as the formula reads it (imports.md); null where no editor fetches for the engine.
   importOf(request: ImportRequest): ImportRead | null;
   // Whether the formula may fetch (IMAGE), the read noted; null where no editor fetches for the engine.
-  importAccess(): 'allowed' | 'blocked' | null;
+  importAccess(): ImportAccess | null;
   // What `run` gives, and whether it read NOW, RAND, RANDARRAY or RANDBETWEEN, directly or through cells.
   watchNow<T>(run: () => T): [T, boolean];
   // Set only while a cell's chart is asked for (Workbook.sparklineOf): each SPARKLINE worked out reports its chart.

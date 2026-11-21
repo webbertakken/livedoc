@@ -1,4 +1,5 @@
 // Test helpers: a workbook built from A1-keyed typed inputs, as a person would type them.
+import type { ImportAccess } from '../imports/import-request';
 import { parseA1 } from '../address';
 import type { CardSource } from '../cards';
 import { CellMap } from '../cells/cell-map';
@@ -64,7 +65,7 @@ export function book(
     arrays?: ArrayDialect;
     iteration?: Iteration;
     locale?: string;
-    imports?: { allowed: boolean };
+    imports?: { access: ImportAccess };
   } = {},
 ) {
   const full: BookSpec = Object.values(spec).every((v) => typeof v === 'string')

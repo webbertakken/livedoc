@@ -6,7 +6,7 @@ import { book } from '../../testing/book';
 import { IMPORT_WORDS } from '../../imports/import-request';
 import { IMAGE_FOLLOW_MAX } from '../../engine/image-of';
 
-const allowed = { imports: { allowed: true } };
+const allowed = { imports: { access: 'allowed' as const } };
 const A = 'https://example.com/a.png';
 const B = 'https://example.com/b.png';
 const pic = (url: string, mode = 1) => ({ url, mode, height: null, width: null });
@@ -89,7 +89,7 @@ describe('IMAGE in a sheet', () => {
   });
 
   it('is #REF! until access is allowed, then draws; the bar is asked for', () => {
-    const b = book({ A1: `=IMAGE("${A}")` }, { imports: { allowed: false } });
+    const b = book({ A1: `=IMAGE("${A}")` }, { imports: { access: 'blocked' as const } });
     expect(b.wb.usesImports()).toBe(true);
     expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });
     expect(picAt(b, 'A1')).toBeNull();
@@ -150,5 +150,37 @@ describe('IMAGE at the edges', () => {
     const b = book({ A1: `=IMAGE("${A}")`, B1: "'" }, allowed);
     expect(b.v('B1')).toBe('');
     expect(picAt(b, 'B1')).toBeNull();
+  });
+});
+
+describe('IMAGE in This Browser', () => {
+  it('is #REF! naming the reason until the spreadsheet is synced, then waits for access', () => {
+    const b = book(
+      { A1: `=IMAGE("${A}")`, A2: '=IMPORTDATA("https://example.com/a.csv")' },
+      { imports: { access: 'offline' } },
+    );
+    expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.offline });
+    expect(b.v('A2')).toEqual({ e: '#REF!', why: IMPORT_WORDS.offline });
+    expect(b.wb.takeImportAsks()).toEqual([]);
+    b.wb.refreshImports();
+    expect(b.wb.takeImportAsks()).toEqual([]);
+    b.wb.onlineImports(false);
+    expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });
+    b.wb.onlineImports(true);
+    expect(b.v('A1')).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });
+    b.wb.allowImports();
+    expect(b.v('A1')).toBe('');
+    expect(b.v('A2')).toMatchObject({ why: 'pending' });
+  });
+
+  it('fetches at once when synced already allowed', () => {
+    const b = book(
+      { A2: '=IMPORTDATA("https://example.com/a.csv")' },
+      { imports: { access: 'offline' } },
+    );
+    b.v('A2');
+    b.wb.onlineImports(true);
+    expect(b.v('A2')).toMatchObject({ why: 'pending' });
+    expect(b.wb.takeImportAsks()).toHaveLength(1);
   });
 });

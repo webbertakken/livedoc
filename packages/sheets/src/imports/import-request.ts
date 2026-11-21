@@ -37,6 +37,10 @@ export type ImportRequest =
 export type ImportErrorCode = '#N/A' | '#REF!' | '#VALUE!';
 export type ImportAnswer = { rows: string[][] } | { error: ImportErrorCode; why: string };
 
+/** Whether a spreadsheet's imports may fetch: allowed, not yet allowed, or not possible while it is saved only in this
+ * browser (imports.md "A spreadsheet in This Browser"). */
+export type ImportAccess = 'allowed' | 'blocked' | 'offline';
+
 /** An import asked of the page: its request, its key, and whether it must skip the api's hour of keeping. */
 export type ImportAsk = { key: string; request: ImportRequest; fresh: boolean };
 
@@ -49,6 +53,7 @@ export const IMPORT_WORDS = {
   empty: 'Imported content is empty.',
   tooLarge: 'Result too large',
   blocked: 'Allow access to fetch data from the web',
+  offline: 'This spreadsheet is saved only in this browser: sync it to fetch data from the web',
   serverOff: 'This server does not fetch from the web',
   noFetcher: 'Imports are fetched while the spreadsheet is open',
   volatile:

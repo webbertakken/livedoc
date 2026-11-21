@@ -7,6 +7,8 @@ import {
   cellKey,
   emptyLayout,
   sheetToJson,
+  IMPORT_WORDS,
+  type ImportAccess,
   type ImportAsk,
   type SheetJson,
   type SheetWrite,
@@ -36,7 +38,7 @@ const SHEET: SheetJson = sheetToJson({
   updatedBy: by,
 });
 
-function make(opts: { oneWorkbook: boolean; importsAllowed?: boolean; viaApi?: boolean }) {
+function make(opts: { oneWorkbook: boolean; importAccess?: ImportAccess; viaApi?: boolean }) {
   const asked: ImportAsk[] = [];
   const fetchImport = vi.fn(async (_scope: unknown, ask: ImportAsk) => {
     asked.push(ask);
@@ -45,7 +47,7 @@ function make(opts: { oneWorkbook: boolean; importsAllowed?: boolean; viaApi?: b
   const deps = {
     scope: { documentId: 'book', ownerId: 'o', shareCode: null, tabId: null },
     oneWorkbook: opts.oneWorkbook,
-    ...(opts.importsAllowed !== undefined ? { importsAllowed: opts.importsAllowed } : {}),
+    ...(opts.importAccess !== undefined ? { importAccess: opts.importAccess } : {}),
     engine: inPlaceLink,
     ...(opts.viaApi ? {} : { fetchImport }),
     self: () => by,
@@ -80,7 +82,7 @@ afterEach(() => {
 
 describe('a spreadsheet’s imports in the store', () => {
   it('fetch once allowed, and land in the cells', async () => {
-    const { store, asked } = make({ oneWorkbook: true, importsAllowed: true });
+    const { store, asked } = make({ oneWorkbook: true, importAccess: 'allowed' });
     await store.loadTab('tabA');
     store.workbook('tabA');
     await settle();
@@ -96,7 +98,7 @@ describe('a spreadsheet’s imports in the store', () => {
       vi.fn(async () => new Response(JSON.stringify({ rows: [['via api']] }))),
     );
     try {
-      const { store } = make({ oneWorkbook: true, importsAllowed: true, viaApi: true });
+      const { store } = make({ oneWorkbook: true, importAccess: 'allowed', viaApi: true });
       await store.loadTab('tabA');
       store.workbook('tabA');
       await settle();
@@ -107,20 +109,46 @@ describe('a spreadsheet’s imports in the store', () => {
   });
 
   it('read #REF! until an Editor allows, then fetch', async () => {
-    const { store, deps, asked } = make({ oneWorkbook: true, importsAllowed: false });
+    const { store, deps, asked } = make({ oneWorkbook: true, importAccess: 'blocked' });
     await store.loadTab('tabA');
     store.workbook('tabA');
     await settle();
     expect(a1(store)).toMatchObject({ e: '#REF!' });
     expect(asked).toEqual([]);
-    store.update({ ...deps, importsAllowed: true });
+    store.update({ ...deps, importAccess: 'allowed' });
+    await settle();
+    expect(asked).toHaveLength(1);
+    expect(a1(store)).toBe('a');
+  });
+
+  it('wait in This Browser until the document is synced, then for Allow Access', async () => {
+    const { store, deps, asked } = make({ oneWorkbook: true, importAccess: 'offline' });
+    await store.loadTab('tabA');
+    store.workbook('tabA');
+    await settle();
+    expect(a1(store)).toEqual({ e: '#REF!', why: IMPORT_WORDS.offline });
+    store.update({ ...deps, importAccess: 'blocked' });
+    await settle();
+    expect(a1(store)).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });
+    expect(asked).toEqual([]);
+    store.update({ ...deps, importAccess: 'allowed' });
+    await settle();
+    expect(asked).toHaveLength(1);
+  });
+
+  it('fetch at once when synced already allowed', async () => {
+    const { store, deps, asked } = make({ oneWorkbook: true, importAccess: 'offline' });
+    await store.loadTab('tabA');
+    store.workbook('tabA');
+    await settle();
+    store.update({ ...deps, importAccess: 'allowed' });
     await settle();
     expect(asked).toHaveLength(1);
     expect(a1(store)).toBe('a');
   });
 
   it('are asked again hourly while anyone reads the store', async () => {
-    const { store, asked } = make({ oneWorkbook: true, importsAllowed: true });
+    const { store, asked } = make({ oneWorkbook: true, importAccess: 'allowed' });
     await store.loadTab('tabA');
     store.workbook('tabA');
     await settle();

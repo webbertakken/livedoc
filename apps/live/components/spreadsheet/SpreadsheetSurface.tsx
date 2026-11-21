@@ -34,7 +34,7 @@ import { downloadBlob } from '@/lib/download-blob';
 import { openSpreadsheetFile } from '@/lib/spreadsheet/open-spreadsheet-file';
 import { UNTITLED_SPREADSHEET } from '@/lib/spreadsheet/spreadsheet-name';
 import { track } from '@/lib/telemetry';
-import { ImportAccessBar } from './ImportAccessBar';
+import { ImportAccessBar, type ImportSync } from './ImportAccessBar';
 import { SheetBar, type SheetBarTab } from './SheetBar';
 import { useSheetBarPeers } from './useSheetBarPeers';
 
@@ -80,6 +80,7 @@ export function SpreadsheetSurface({
   documentName,
   workbook,
   onSelectTab,
+  sync,
 }: {
   scope: WorkbookScope;
   tabId: string;
@@ -87,6 +88,8 @@ export function SpreadsheetSurface({
   documentName: string;
   workbook: WorkbookRecord;
   onSelectTab: (tabId: string) => void;
+  // The document's Sync Document, for a spreadsheet in This Browser (imports.md "A spreadsheet in This Browser").
+  sync?: ImportSync;
 }) {
   const bridge = useSheetsBridgeContext();
   const sheetBarPeers = useSheetBarPeers(bridge);
@@ -134,7 +137,11 @@ export function SpreadsheetSurface({
         chrome={office}
         tabId={tabId}
       />
-      {bridge ? <OpenSheet bridge={bridge} tabId={tabId} /> : <Status state="loading" />}
+      {bridge ? (
+        <OpenSheet bridge={bridge} tabId={tabId} sync={sync} />
+      ) : (
+        <Status state="loading" />
+      )}
       <SheetBar tabs={tabs} activeId={tabId} onSelect={onSelectTab} peers={sheetBarPeers} />
     </section>
   );
@@ -168,7 +175,15 @@ function Status({
   );
 }
 
-function OpenSheet({ bridge, tabId }: { bridge: SheetsBridge; tabId: string }) {
+function OpenSheet({
+  bridge,
+  tabId,
+  sync,
+}: {
+  bridge: SheetsBridge;
+  tabId: string;
+  sync: ImportSync | undefined;
+}) {
   const { store, version } = useAttachedSheetStore(bridge);
   useEffect(() => {
     void store.loadTab(tabId);
@@ -194,6 +209,7 @@ function OpenSheet({ bridge, tabId }: { bridge: SheetsBridge; tabId: string }) {
       tabId={tabId}
       version={version}
       bridge={bridge}
+      sync={sync}
     />
   );
 }
@@ -204,16 +220,18 @@ function SheetWorkspace({
   tabId,
   version,
   bridge,
+  sync,
 }: {
   store: SheetStore;
   sheetId: string;
   tabId: string;
   version: number;
   bridge: SheetsBridge;
+  sync: ImportSync | undefined;
 }) {
   const palette = planPalette(useCanvasSurface());
   const [announcement, setAnnouncement] = useState('');
-  const images = useSheetImageLoader(bridge.scope, bridge.importsAllowed === true);
+  const images = useSheetImageLoader(bridge.scope, bridge.importAccess === 'allowed');
   const { sheet, workbook } = useMemo(
     () => ({ sheet: store.sheet(sheetId)!, workbook: store.workbook(tabId) }),
     [store, sheetId, tabId, version], // oxlint-disable-line react/exhaustive-deps
@@ -242,8 +260,13 @@ function SheetWorkspace({
           className="relative isolate flex min-h-0 flex-1 flex-col overflow-hidden"
           style={{ backgroundColor: palette.surface, color: palette.text }}
         >
-          {bridge.importsAllowed === false && store.usesImports() ? (
-            <ImportAccessBar scope={bridge.scope} canAllow={bridge.canEdit && bridge.canShape} />
+          {bridge.importAccess && bridge.importAccess !== 'allowed' && store.usesImports() ? (
+            <ImportAccessBar
+              scope={bridge.scope}
+              canAllow={bridge.canEdit && bridge.canShape}
+              offline={bridge.importAccess === 'offline'}
+              sync={sync}
+            />
           ) : null}
           <SheetParts bridge={bridge} />
           <p aria-live="polite" className="sr-only">

@@ -1,7 +1,7 @@
 // The frame a formula is worked out in: what it reads of its workbook, each read noted against the formula reading
 // (its `reader`; NO_CELL keeps nothing). The workbook gives its parts once, as a FrameSource.
 import type { CardSource } from '../cards';
-import type { ImportRequest } from '../imports/import-request';
+import type { ImportAccess, ImportRequest } from '../imports/import-request';
 import type { ImportRead } from './import-book';
 import { childrenOf, type Node } from '../formula/ast';
 import { renderFormula, storedAst, type SheetsCtx } from '../formula/stored';
@@ -40,7 +40,7 @@ export type FrameSource = {
   volatile(reader: CellNo, name: string): void;
   readsCards(reader: CellNo): void;
   importOf(reader: CellNo, request: ImportRequest): ImportRead | null;
-  importAccess(reader: CellNo): 'allowed' | 'blocked' | null;
+  importAccess(reader: CellNo): ImportAccess | null;
   watchNow<T>(run: () => T): [T, boolean];
 };
 

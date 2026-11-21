@@ -99,6 +99,21 @@ Google asks once per spreadsheet before its imports send and receive data from t
 - An Editor allows with `POST /api/documents/<id>/workbook/imports`, sent to everyone as a `workbook` op.
 - The api refuses to fetch for a spreadsheet not allowed, whatever the page asks.
 
+### A spreadsheet in This Browser
+
+A spreadsheet saved only in this browser has nothing on a server to fetch for, as Share has nothing to share: it is
+offered **Sync Document** first, as [Offline mode](../006-document/offline-mode.md#sharing-a-document-in-this-browser)
+offers it for every server-only feature.
+
+- Its bar reads "This spreadsheet is saved only in this browser. Fetching data from the web needs it on LiveDoc."
+  with **Sync Document**, which runs the document's own Sync Document, in place; never a second way to upload.
+- The button waits for the reader to be known, shows **Syncing…** while it runs, and a failure says why
+  (`syncFailureMessage`) and leaves it to try again, as the Share dialog's does.
+- **Allow Access** appears only once the spreadsheet is on LiveDoc: the bar turns into the bar above.
+- Until then every import and `IMAGE` is `#REF!` "This spreadsheet is saved only in this browser: sync it to fetch
+  data from the web"; nothing is fetched and the api is never asked (default, D74).
+- Taking a spreadsheet offline keeps its Allow Access with the workbook; its imports wait again until it is synced.
+
 ## Fetching
 
 - The editor's engine asks the page for each distinct import (its arguments, as text) once; the page asks the api,
@@ -136,6 +151,7 @@ Google asks once per spreadsheet before its imports send and receive data from t
 
 - Imports are worked out for everyone who opens the spreadsheet: an Editor, a Participant and a Viewer alike see them.
 - Allow Access: Editors only.
+- Sync Document in the bar: whoever has the document in this browser (a This Browser document has no other reader).
 
 ## Telemetry
 
@@ -154,3 +170,4 @@ Google asks once per spreadsheet before its imports send and receive data from t
   followed; every volatile read refused; nothing drawn without the page; 200 kept, not refreshed (default).
 - **D73** The pictures IMAGE shows: PNG, JPEG, GIF, WebP, AVIF, BMP, icons, known by their first bytes; at most 10 MB
   (default).
+- **D74** Imports and IMAGE in a This Browser spreadsheet: `#REF!` naming the reason, until Sync Document (default).

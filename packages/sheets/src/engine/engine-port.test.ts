@@ -12,9 +12,9 @@ import { Workbook } from './workbook';
 import { ITERATION_OFF } from './loops';
 import { SheetLimits } from '../sheet-limits';
 import { sheetToJson } from '../sheet-json';
-import type { ImportAsk } from '../imports/import-request';
+import { IMPORT_WORDS, type ImportAccess, type ImportAsk } from '../imports/import-request';
 
-type EnginePortImports = { allowed: boolean; ask: (asks: ImportAsk[]) => void };
+type EnginePortImports = { access: ImportAccess; ask: (asks: ImportAsk[]) => void };
 type Wire = { toHost: EngineIn[]; toPage: EngineOut[] };
 
 function joined(sheets: Sheet[], imports?: EnginePortImports) {
@@ -243,7 +243,7 @@ describe('imports in the Worker', () => {
   it('asks the page, which fetches and answers; Allow Access and the hour reach the Worker', () => {
     const asked: ImportAsk[] = [];
     const { deliver, port, v } = joined(makeSheets({ S: { A1: F } }), {
-      allowed: false,
+      access: 'blocked',
       ask: (asks) => asked.push(...asks),
     });
     deliver();
@@ -264,12 +264,30 @@ describe('imports in the Worker', () => {
   it('fetches at once where access was allowed before', () => {
     const asked: ImportAsk[] = [];
     const { deliver, v } = joined(makeSheets({ S: { A1: F } }), {
-      allowed: true,
+      access: 'allowed',
       ask: (asks) => asked.push(...asks),
     });
     deliver();
     expect(v(0, 0)).toMatchObject({ why: 'pending' });
     expect(asked).toHaveLength(1);
+  });
+
+  it('waits in This Browser until synced, then for Allow Access, or fetches when already allowed', () => {
+    for (const allowed of [false, true]) {
+      const asked: ImportAsk[] = [];
+      const { deliver, port, v } = joined(makeSheets({ S: { A1: F } }), {
+        access: 'offline',
+        ask: (asks) => asked.push(...asks),
+      });
+      deliver();
+      expect(v(0, 0)).toEqual({ e: '#REF!', why: IMPORT_WORDS.offline });
+      expect(asked).toEqual([]);
+      port.onlineImports(allowed);
+      deliver();
+      if (allowed) expect(v(0, 0)).toMatchObject({ why: 'pending' });
+      else expect(v(0, 0)).toEqual({ e: '#REF!', why: IMPORT_WORDS.blocked });
+      expect(asked).toHaveLength(allowed ? 1 : 0);
+    }
   });
 
   it('fetches nothing for a page that does not', () => {

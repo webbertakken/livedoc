@@ -19,7 +19,8 @@ export const IMAGE_FUNCTIONS: Record<string, FnDef> = {
     return lift(args, (xs, at) => {
       const image = readImageArgs(xs);
       if (isError(image)) return image;
-      if (f.importAccess() === 'blocked') return err('#REF!', IMPORT_WORDS.blocked);
+      const access = f.importAccess();
+      if (access === 'blocked' || access === 'offline') return err('#REF!', IMPORT_WORDS[access]);
       f.drawImage?.(image, at);
       return '';
     });
