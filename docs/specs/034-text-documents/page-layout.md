@@ -208,10 +208,63 @@ Per section. Text fills the first column down the page, then the next.
 
 ## Headers and footers
 
-- Insert > Headers and footers, or a double-click in the top or bottom margin, puts the caret in the header or footer.
-- **Options**: header and footer margins; **Different first page**; **Different odd and even**; per section, linked to
-  the previous section's by default (**Link to previous** in the header's own bar).
-- A header holds any text, pictures, tables and fields. Escape or a press on the body leaves it.
+A section's pages each have a **header** in the top margin and a **footer** in the bottom one, as Google's and Word's.
+
+- **What a header is**: writing of its own, paragraphs as the body's (styles, text and paragraph formatting, lists,
+  tab stops, kept content), and later pictures, tables and fields ([Page numbers](#page-numbers)). A footer is the same.
+- **Which one a page shows**: a section's headers are its **default** header, and, when it has them switched on, a
+  **first page** header (with **Different first page**) and an **even page** header (with **Different odd and even**,
+  then the default is the odd pages'). The first page is the section's first; a page is odd or even by its number. The
+  same for footers.
+- **Linked to previous**: a section's header of one kind (default, first page or even page) that it has not made its
+  own is the previous section's of that kind, as Word's; the first section's is none, an empty margin. **Link to
+  previous** (in the header's bar, [editing](#editing-headers-and-footers)) is on until the section gets its own, and
+  turned back on gives its own away for the previous section's. Different first page and Different odd and even are
+  each section's own; a section without them follows its own setting, never the previous section's (default).
+- **The header margin** is the distance from the paper's top edge to the header's top, and **the footer margin** from
+  the bottom edge to the footer's foot: 0.5 in (36 pt) each, Google's, for a section that has none (assumed: Google's).
+  Each is per section, in its page setup.
+- **Drawn** on every page laid out: the header from the header margin down, at the section's text width and left
+  margin; the footer up from the footer margin. A header taller than the room above the top margin pushes the body's
+  first line down by what it overflows, and a footer taller than its room pushes the body's foot up, as Word's and
+  Google's (default: the room is the margin less the header margin). While the body is edited a header and footer are
+  drawn in the writing's ink at full strength (Google's); an empty one draws nothing.
+- **Pageless**, on a phone and with print layout off no header or footer is drawn; they are kept and come back.
+- In the file:
+  - ODF: a master page's `style:header`, `style:header-first` and `style:header-left` (even pages), and the same for
+    footers, each holding paragraphs as the body does; `style:header-first` present is Different first page and
+    `style:header-left` Different odd and even. A master page has no linking: a section that links writes the previous
+    section's header into its own master page, and reading, a master page whose header is the previous section's
+    (the same XML) reads as linked (default). The page layout's `fo:margin-top` is the header margin when there is a
+    header, the header's `style:header-style` holding `fo:min-height` (the top margin less the header margin) and
+    `style:dynamic-spacing="true"`, so the body starts at the top margin, as LibreOffice reads a Word file; read back,
+    the top margin is the layout's margin plus the header's height and spacing. Footers mirror it at the foot.
+  - OOXML: header and footer parts (`w:hdr`, `w:ftr`) each holding paragraphs, referenced from the section's
+    `w:sectPr` by `w:headerReference` / `w:footerReference` with `w:type` `default`, `first` or `even` and a
+    relationship; `w:titlePg` is Different first page; a missing reference is linked to previous. Different odd and
+    even is the whole document's in Word (`w:evenAndOddHeaders` in settings): written when any section has it, a
+    section without it then writing its default header as its even one too; read, every section has it. The header
+    and footer margins are `w:pgMar`'s `w:header` and `w:footer`.
+- Telemetry `Tab · Changed · TextDocumentHeaderFooter` when a header or footer is made, removed, linked or unlinked,
+  or its options change; logs `[text-document] header footer` with the section, kind and what changed.
+
+### Editing headers and footers
+
+- Insert > **Headers and footers** > **Header** (⌘⌥O ⌘⌥H) and **Footer** (⌘⌥O ⌘⌥F), or a double-click in the top or
+  bottom margin of a page, puts the caret in that page's header or footer at its end, making it when it is none.
+- **While a header or footer is edited** the body is drawn faded (Google's), a thin line under the header (over the
+  footer) marks its edge, and a bar under it holds **Different first page** (a checkbox), **Link to previous** (a
+  checkbox, in a section after the first) and **Options** (a menu: **Header format** or **Footer format**, opening
+  Headers and footers options, **Page numbers**, and **Remove header** or **Remove footer**).
+- Every page drawing that header shows the edit as it is typed. Text and paragraph formatting, the toolbar, undo and
+  the clipboard work in it as in the body; Select all selects its writing.
+- **Escape**, or a press on the body, leaves it with the caret where the body had it; empty, it is removed.
+- **Headers and footers options**, a dialog: **Margins**, **Header** (from the top) and **Footer** (from the bottom),
+  in the person's unit; **Layout**, **Different first page** and **Different odd and even**; **Apply to**, **This
+  section** or **Whole document** (with more than one section); **Cancel** and **Apply**. A margin takes 0 up to the
+  page's height less 1 in, else "Enter a number from 0 to <most>." (default).
+- Every change is one undo step. Share roles as page setup's ([Share roles](#share-roles)): a Participant and a Viewer
+  read headers and footers and cannot enter them.
 
 ## Page numbers
 

@@ -32,6 +32,7 @@ import {
 } from './live-names';
 import { BODY_FRAGMENT } from './live-root';
 import { readSource } from './live-source';
+import { StoryReader, type LiveHeaders } from './live-stories';
 
 const PROPERTY_OF_MARK = new Map<string, keyof TextProps>(
   (Object.entries(TEXT_PROPERTY_MARK_OF) as [keyof TextProps, string][]).map(([p, m]) => [m, p]),
@@ -85,7 +86,7 @@ function inlinesOf(paragraph: Y.XmlElement): Inline[] {
   return inlines;
 }
 
-function blockOf(node: Y.XmlElement, normal: string): Block | null {
+function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Block | null {
   const a = node.getAttributes() as Attributes;
   switch (node.nodeName) {
     case PARAGRAPH:
@@ -98,8 +99,16 @@ function blockOf(node: Y.XmlElement, normal: string): Block | null {
         inlines: inlinesOf(node),
         kept: a.kept as Paragraph['kept'],
       });
-    case SECTION_BREAK:
-      return defined({ type: 'section', ...(a as Omit<SectionBreak, 'type'>) }) as SectionBreak;
+    case SECTION_BREAK: {
+      const { headers, ...rest } = a as Omit<SectionBreak, 'type' | 'headers'> & {
+        headers?: LiveHeaders;
+      };
+      return defined({
+        type: 'section',
+        ...rest,
+        headers: stories?.headers(headers),
+      }) as SectionBreak;
+    }
     case KEPT_BLOCK:
       return { type: 'kept', name: a.name as string, xml: a.xml as KeptBlock['xml'] };
     default:
@@ -125,11 +134,23 @@ export function readLiveDefaults(doc: Y.Doc, format: TextDocumentFormat): StyleD
 
 /** The live state's first section, or a new document's while it holds none (page-layout.md "Page setup"). */
 export function readLiveSection(doc: Y.Doc, format: TextDocumentFormat): Section {
-  return (
-    (doc.getMap<unknown>(DOCUMENT_MAP).get('section') as Section | undefined) ??
-    TextDocument.blank({ format }).section
-  );
+  const held = doc.getMap<unknown>(DOCUMENT_MAP).get('section') as LiveSection | undefined;
+  if (!held) return TextDocument.blank({ format }).section;
+  return sectionOf(held, new StoryReader(doc, (node) => blockOf(node, normalOf(doc, format))));
 }
+
+type LiveSection = Omit<Section, 'headers'> & { headers?: LiveHeaders };
+
+const sectionOf = ({ headers, ...rest }: LiveSection, stories: StoryReader): Section =>
+  defined({ ...rest, headers: stories.headers(headers) });
+
+const normalOf = (doc: Y.Doc, format: TextDocumentFormat): string => {
+  const styles = readLiveStyles(doc, format);
+  return (
+    Styles.idOfRole(styles, 'normal') ??
+    Styles.idOfRole(TextDocument.blank({ format }).styles, 'normal')!
+  );
+};
 
 /** The live state's styles, or the format's own while it holds none. */
 export function readLiveStyles(doc: Y.Doc, format: TextDocumentFormat): Style[] {
@@ -143,13 +164,15 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
   const lists = doc.getMap<unknown>(LISTS_MAP);
   const styles = stylesOf(doc.getMap<unknown>(STYLES_MAP)) ?? blank.styles;
   const normal = Styles.idOfRole(styles, 'normal') ?? Styles.idOfRole(blank.styles, 'normal')!;
+  const stories: StoryReader = new StoryReader(doc, (node) => blockOf(node, normal));
   const body = doc
     .getXmlFragment(BODY_FRAGMENT)
     .toArray()
     .flatMap((node) => {
-      const block = node instanceof Y.XmlElement ? blockOf(node, normal) : null;
+      const block = node instanceof Y.XmlElement ? blockOf(node, normal, stories) : null;
       return block ? [block] : [];
     });
+  const held = meta.get('section') as LiveSection | undefined;
   const source = readSource(doc.getMap<unknown>(SOURCE_MAP));
   return defined({
     format,
@@ -157,7 +180,7 @@ export function readLiveDocument(doc: Y.Doc, format: TextDocumentFormat): TextDo
     defaults: (meta.get('defaults') as TextDocument['defaults'] | undefined) ?? blank.defaults,
     styles,
     lists: Object.fromEntries(lists.entries()) as Record<string, ListDefinition>,
-    section: (meta.get('section') as Section | undefined) ?? blank.section,
+    section: held ? sectionOf(held, stories) : blank.section,
     pageless: meta.get('pageless') === true ? true : undefined,
     body,
     source,

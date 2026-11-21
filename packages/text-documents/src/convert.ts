@@ -5,6 +5,12 @@ import type { ListDefinition } from './model/lists';
 import { compact, type BorderLine, type ParagraphProps, type TextProps } from './model/props';
 import { borderSize, borderSpace, OOXML_BORDER_SPACE_MAX_PT } from './ooxml/ooxml-borders';
 import type { PageSetup, Section } from './model/sections';
+import {
+  HEADER_FOOTER_KINDS,
+  HEADER_FOOTER_SLOTS,
+  type HeaderFooterSet,
+  type SectionHeaders,
+} from './model/headers';
 import { ROLE_IDS, type Style } from './model/styles';
 import type { TextDocument, TextDocumentFormat } from './model/text-document';
 import type { ReportItem } from './report';
@@ -12,19 +18,43 @@ import type { ReportItem } from './report';
 export type ConversionLoss = ReportItem & {
   /** `kept` for kept content, else the construct the other format cannot hold. */
   readonly kind:
-    'kept' | 'text-transform' | 'section-name' | 'list-header' | 'between' | 'border-padding';
+    | 'kept'
+    | 'text-transform'
+    | 'section-name'
+    | 'list-header'
+    | 'between'
+    | 'border-padding'
+    | 'header-footer';
 };
 
 function count(map: Map<string, number>, name: string): void {
   map.set(name, (map.get(name) ?? 0) + 1);
 }
 
+/** Every section of the document: the first, then each section break's. */
+const sectionsOf = (document: TextDocument): Section[] => [
+  document.section,
+  ...document.body.filter((b): b is Extract<Block, { type: 'section' }> => b.type === 'section'),
+];
+
+/** Each header's and footer's blocks a section holds of its own. */
+const storiesOf = (headers: SectionHeaders | undefined): (readonly Block[])[] =>
+  HEADER_FOOTER_KINDS.flatMap((kind) =>
+    HEADER_FOOTER_SLOTS.flatMap((slot) => {
+      const story = headers?.[kind]?.[slot];
+      return story ? [story.blocks] : [];
+    }),
+  );
+
 /** What converting to `to` loses, by name and count; nothing when the document is already in that format. */
 export function conversionLosses(document: TextDocument, to: TextDocumentFormat): ConversionLoss[] {
   if (document.format === to) return [];
   const kept = new Map<string, number>();
   const other = new Map<string, number>();
-  for (const block of document.body) {
+  const stories = sectionsOf(document).flatMap((s) => storiesOf(s.headers));
+  // An OpenDocument file is not written with headers and footers yet: each one a section holds is a loss.
+  if (to === 'odf') for (let i = 0; i < stories.length; i += 1) count(other, 'header-footer');
+  for (const block of [...document.body, ...stories.flat()]) {
     if (block.type === 'kept') count(kept, block.name);
     if (block.type === 'section' && block.region) count(other, 'section-name');
     if (block.type !== 'paragraph') continue;
@@ -109,12 +139,14 @@ function ooxmlSetup(setup: PageSetup): PageSetup {
     ...setup,
     width: twentieth(setup.width),
     height: twentieth(setup.height),
-    margins: {
+    margins: compact({
       top: twentieth(m.top),
       bottom: twentieth(m.bottom),
       left: twentieth(m.left),
       right: twentieth(m.right),
-    },
+      header: opt(m.header, twentieth),
+      footer: opt(m.footer, twentieth),
+    }),
     columns: setup.columns && { ...setup.columns, gap: twentieth(setup.columns.gap) },
   });
 }
@@ -158,31 +190,47 @@ export function convertTextDocument(
     const { style: _, ...rest } = withoutKept(i);
     return [{ ...rest, props, ...(style ? { style } : {}) }];
   };
-  const body: Block[] = document.body.flatMap((block): Block[] => {
-    if (block.type === 'kept') return [];
-    if (block.type === 'section') {
-      const { region: _, ...rest } = withoutKept(block);
-      return [{ ...rest, setup: setupOf(block.setup) }];
-    }
-    const { text, list, ...rest } = withoutKept(block);
-    const place = list && to === 'ooxml' ? (({ unnumbered: _u, ...p }) => p)(list) : list;
-    return [
-      {
-        ...rest,
-        props: paragraphOf(block.props),
-        style: id(block.style)!,
-        ...(place ? { list: place } : {}),
-        ...(text && to === 'odf' ? { text } : {}),
-        inlines: block.inlines.flatMap((i) => inline(i, text)),
-      },
-    ];
-  });
+  // A section's headers and footers: their blocks converted as the body's, the part they came from left behind.
+  const headersOf = (headers: SectionHeaders | undefined): SectionHeaders | undefined => {
+    if (!headers) return undefined;
+    const set = (h: HeaderFooterSet | undefined): HeaderFooterSet | undefined =>
+      h &&
+      Object.fromEntries(
+        Object.entries(h).map(([slot, story]) => [slot, { blocks: blocksOf(story.blocks) }]),
+      );
+    return compact({ ...headers, header: set(headers.header), footer: set(headers.footer) });
+  };
+  const blocksOf = (blocks: readonly Block[]): Block[] =>
+    blocks.flatMap((block): Block[] => {
+      if (block.type === 'kept') return [];
+      if (block.type === 'section') {
+        const { region: _, headers, ...rest } = withoutKept(block);
+        const own = headersOf(headers);
+        return [{ ...rest, setup: setupOf(block.setup), ...(own ? { headers: own } : {}) }];
+      }
+      const { text, list, ...rest } = withoutKept(block);
+      const place = list && to === 'ooxml' ? (({ unnumbered: _u, ...p }) => p)(list) : list;
+      return [
+        {
+          ...rest,
+          props: paragraphOf(block.props),
+          style: id(block.style)!,
+          ...(place ? { list: place } : {}),
+          ...(text && to === 'odf' ? { text } : {}),
+          inlines: block.inlines.flatMap((i) => inline(i, text)),
+        },
+      ];
+    });
+  const body = blocksOf(document.body);
   const lists: Record<string, ListDefinition> = Object.fromEntries(
     Object.entries(document.lists).map(([k, l]) => [k, withoutKept(l)]),
   );
+  const { headers: firstHeaders, ...first } = withoutKept(document.section);
+  const firstOwn = headersOf(firstHeaders);
   const section: Section = {
-    ...withoutKept(document.section),
+    ...first,
     setup: setupOf(document.section.setup),
+    ...(firstOwn ? { headers: firstOwn } : {}),
   };
   const { kept: _, ...metadata } = document.metadata;
   return {

@@ -62,6 +62,10 @@ The model is plain values in `@livedoc/text-documents`, each a namespace of pure
   margins, page colour) and columns (count, spacing, a line between). In ODF a section on a new page is a paragraph
   naming a master page, and a continuous one a `text:section` region to the next break (LiveDoc names the ones it
   makes `LiveDocSection<n>`); a region's end that only leads to another break, or to the end, is read as no section.
+- **Headers and footers**: a section's `headers`, each kind (header, footer) holding up to three, **default**, **first**
+  and **even**, each blocks as the body's; a kind's slot absent is linked to the previous section's; `differentFirst`
+  and `differentOddEven` switch the first and even ones on. The header and footer margins are the page setup's
+  `margins.header` and `margins.footer` ([Headers and footers](page-layout.md#headers-and-footers)).
 - **Paragraph borders**: up to five lines (top, bottom, left, right, between), each a width, a dash (solid, dotted,
   dashed) and a colour, with its padding (the space to the text); and a background colour. ODF: `fo:border-<side>`
   (`0.06pt solid #000000`), `fo:padding-<side>` and `fo:background-color` on the paragraph properties, every side
@@ -183,6 +187,8 @@ Each loss by direction; each is listed in the import, conversion or download rep
 | ODF files                | Soft page breaks (`text:soft-page-break`): layout hints every suite recomputes                                   |
 | ODF files                | Nested sections are written back one after another, each with its own columns                                    |
 | Either format            | Columns of unequal widths read as equal, as Google has them; reported as `column-width`                          |
+| OOXML to ODF             | Headers and footers, each a `header-footer` loss, until OpenDocument files are written with them                 |
+| Word files               | A header or footer reference to a part that is missing or not a header: no header, reported `header-footer`      |
 | LiveDoc to another suite | Reactions, assignees, document tabs and pageless show as their fallbacks                                         |
 
 ## Limits

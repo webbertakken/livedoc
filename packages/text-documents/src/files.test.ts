@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { readTextDocumentFile, writeTextDocumentFile } from './files';
 import { TextDocument, type TextDocumentFormat } from './model/text-document';
-import { CONSTRUCTS } from './testing/constructs';
+import { CONSTRUCT_FORMATS, CONSTRUCTS } from './testing/constructs';
 import { modelOf } from './testing/compare';
 import type { TextDocumentFileType } from './file-types';
 
@@ -23,7 +23,9 @@ async function roundTrip(document: TextDocument, type: TextDocumentFileType) {
 // holds comes back equal, in either format.
 describe('every construct, written and read back', () => {
   for (const [format, type] of TYPES)
-    for (const [name, build] of Object.entries(CONSTRUCTS))
+    for (const [name, build] of Object.entries(CONSTRUCTS).filter(
+      ([name]) => CONSTRUCT_FORMATS[name]?.includes(format) ?? true,
+    ))
       it(`keeps ${name} in .${type}`, async () => {
         const document = build(format);
         const { read } = await roundTrip(document, type);

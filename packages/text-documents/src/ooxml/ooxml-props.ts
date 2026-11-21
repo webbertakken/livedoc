@@ -20,6 +20,7 @@ import {
 import { CHECK_MARKS, LIST_LEVELS, type ListLevel, type NumberFormat } from '../model/lists';
 import { compact, type ParagraphProps, type TextProps } from '../model/props';
 import type { PageSetup, SectionStart } from '../model/sections';
+import { HEADER_FOOTER_MARGIN_PT } from '../model/headers';
 import { LIVEDOC_NS } from '../odf/odf-names';
 import { SECTPR_ORDER, W_NS } from './ooxml-names';
 import { bordersXml, readBorders, readShading, shadingXml } from './ooxml-borders';
@@ -32,6 +33,7 @@ const child = (e: XmlElement | undefined, local: string) =>
 // An ST_OnOff attribute: absent is `absent`; "0", "false" and "off" are off.
 const onOffOf = (value: string | undefined, absent: boolean): boolean =>
   value === undefined ? absent : !['0', 'false', 'off'].includes(value);
+const ownMargin = (pt: number | undefined) => (pt === HEADER_FOOTER_MARGIN_PT ? undefined : pt);
 const wAttr = (e: XmlElement | undefined, local: string) =>
   e ? attributeOf(e, W_NS, local) : undefined;
 
@@ -344,6 +346,11 @@ export function readSection(
         bottom: twipsToPt(wAttr(margin, 'bottom')) ?? 72,
         left: twipsToPt(wAttr(margin, 'left')) ?? 72,
         right: twipsToPt(wAttr(margin, 'right')) ?? 72,
+        // A header or footer margin at the default is none, as a new document has it.
+        ...compact({
+          header: ownMargin(twipsToPt(wAttr(margin, 'header'))),
+          footer: ownMargin(twipsToPt(wAttr(margin, 'footer'))),
+        }),
       },
       pageColor,
       columns:
@@ -358,14 +365,26 @@ export function readSection(
   };
 }
 
-export const MAPPED_SECTPR = new Set(['type', 'pgSz', 'pgMar', 'cols']);
+export const MAPPED_SECTPR = new Set([
+  'type',
+  'pgSz',
+  'pgMar',
+  'cols',
+  'headerReference',
+  'footerReference',
+  'titlePg',
+]);
 
-/** A `w:sectPr` for a section, its kept children merged in; header, footer and gutter margins carried from `keptXml`. */
+/**
+ * A `w:sectPr` for a section, its kept children merged in, its header and footer references (`references`, written
+ * first) and `w:titlePg` when the first page has its own; the gutter carried from `keptXml`.
+ */
 export function sectionXml(
   start: SectionStart,
   setup: PageSetup,
   kept: readonly string[],
   keptXml?: string,
+  { references = '', titlePage = false }: { references?: string; titlePage?: boolean } = {},
 ): string {
   const carried = (name: string) =>
     keptXml?.match(new RegExp(`<(?:\\w+:)?pgMar[^>]*\\s(?:\\w+:)?${name}="(-?\\d+)"`))?.[1];
@@ -373,6 +392,8 @@ export function sectionXml(
   return `<w:sectPr>${ordered(
     SECTPR_ORDER,
     {
+      headerReference: references || undefined,
+      titlePg: titlePage ? '<w:titlePg/>' : undefined,
       type: start === 'next-page' ? undefined : tag('type', { 'w:val': START_OUT[start] }),
       pgSz: tag('pgSz', {
         'w:w': ptToTwips(setup.width),
@@ -384,8 +405,8 @@ export function sectionXml(
         'w:right': ptToTwips(m.right),
         'w:bottom': ptToTwips(m.bottom),
         'w:left': ptToTwips(m.left),
-        'w:header': carried('header') ?? '720',
-        'w:footer': carried('footer') ?? '720',
+        'w:header': ptToTwips(m.header ?? HEADER_FOOTER_MARGIN_PT),
+        'w:footer': ptToTwips(m.footer ?? HEADER_FOOTER_MARGIN_PT),
         'w:gutter': carried('gutter') ?? '0',
       }),
       cols:

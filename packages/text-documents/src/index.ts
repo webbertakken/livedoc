@@ -69,6 +69,18 @@ export {
   type TextProps,
 } from './model/props';
 export {
+  HEADER_FOOTER_KINDS,
+  HEADER_FOOTER_MARGIN_PT,
+  HEADER_FOOTER_SLOTS,
+  HeadersAndFooters,
+  type HeaderFooter,
+  type HeaderFooterKind,
+  type HeaderFooterSet,
+  type HeaderFooterSlot,
+  type ResolvedHeaders,
+  type SectionHeaders,
+} from './model/headers';
+export {
   COLUMN_GAP_PT,
   Columns,
   MAX_COLUMNS,

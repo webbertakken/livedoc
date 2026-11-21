@@ -3,7 +3,8 @@
 import { canonical } from '../model/props';
 import type { TextDocument } from '../model/text-document';
 
-const DROPPED = new Set(['kept', 'source', 'region']);
+// A header's `part` is the package part it was read from, a file-specific name.
+const DROPPED = new Set(['kept', 'source', 'region', 'part']);
 
 /** The document's model values, kept content and file-specific names left out. */
 export function modelOf(document: TextDocument): unknown {

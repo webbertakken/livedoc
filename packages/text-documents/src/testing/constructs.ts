@@ -35,6 +35,11 @@ const base = (
   ...extra,
 });
 
+/** Constructs a format does not write yet, each with the formats that write it. */
+export const CONSTRUCT_FORMATS: Readonly<Record<string, readonly TextDocumentFormat[]>> = {
+  headers: ['ooxml'],
+};
+
 export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocument> = {
   blank: (format) => TextDocument.blank({ format }),
   text: (format) =>
@@ -288,6 +293,41 @@ export const CONSTRUCTS: Record<string, (format: TextDocumentFormat) => TextDocu
       {
         section: { start: 'next-page', setup: { ...portrait, pageColor: '#fff2cc' } },
         pageless: true,
+      },
+    );
+  },
+  headers: (format) => {
+    const setup = PageSetup.of('a4', format);
+    const story = (text: string) => ({ blocks: [paragraph(format, 'normal', [run(text)])] });
+    return base(
+      format,
+      [
+        paragraph(format, 'normal', [run('First section')]),
+        {
+          type: 'section',
+          start: 'next-page',
+          setup,
+          headers: { header: { default: story('Second section header') }, differentOddEven: true },
+        },
+        paragraph(format, 'normal', [run('Second section')]),
+      ],
+      {
+        section: {
+          start: 'next-page',
+          setup: { ...setup, margins: { ...setup.margins, header: 24, footer: 30 } },
+          headers: {
+            header: {
+              default: story('Header'),
+              first: story('First page header'),
+              even: story('Even page header'),
+            },
+            footer: {
+              default: { blocks: [paragraph(format, 'normal', [run('Footer', { bold: true })])] },
+            },
+            differentFirst: true,
+            differentOddEven: true,
+          },
+        },
       },
     );
   },

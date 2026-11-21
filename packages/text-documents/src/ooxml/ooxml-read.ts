@@ -34,6 +34,7 @@ import {
   type TextProps,
 } from '../model/props';
 import type { Section } from '../model/sections';
+import { HeaderPartsReader, readEvenAndOdd, referenceSignature } from './ooxml-headers';
 import { roleOfStyleName, Styles, type Style, type StyleDefaults } from '../model/styles';
 import { TabStops, type TabStop } from '../model/tab-stops';
 import { readTabEntries, readTabInterval } from './ooxml-tabs';
@@ -154,6 +155,7 @@ export async function readOoxmlFile(
     { document, ...compact({ styles, numbering, settings }) },
     pkg,
     report,
+    parse,
   );
   return {
     ok: true,
@@ -196,6 +198,11 @@ class OoxmlReader {
   readonly pkg: OoxmlPackage;
   readonly report: ReportBuilder;
   readonly rels: readonly Relationship[];
+  /** The part being read (the main part, or a header's): where kept XML and links come from. */
+  part: { parsed: XmlParsed; rels: readonly Relationship[] };
+  /** The header and footer parts the sections name, each read once. */
+  readonly headerParts = new HeaderPartsReader(this);
+  readonly parsePart: (name: string) => XmlParsed | PackageRefusal | undefined;
   /** The styles and defaults read, for the stops each paragraph inherits. */
   tabs: { styles: readonly Style[]; defaults: StyleDefaults } = {
     styles: [],
@@ -205,11 +212,18 @@ class OoxmlReader {
   /** Tab stops a read left out or read as less (bar and list stops, heavy leaders), reported. */
   readonly dropTabs = (name: string): void => this.report.drop('tab-stop', name);
 
-  constructor(parts: Parts, pkg: OoxmlPackage, report: ReportBuilder) {
+  constructor(
+    parts: Parts,
+    pkg: OoxmlPackage,
+    report: ReportBuilder,
+    parsePart: (name: string) => XmlParsed | PackageRefusal | undefined = () => undefined,
+  ) {
     this.parts = parts;
     this.pkg = pkg;
     this.report = report;
     this.rels = pkg.relationships.get(pkg.mainPart) ?? [];
+    this.part = { parsed: parts.document, rels: this.rels };
+    this.parsePart = parsePart;
   }
 
   kept(parsed: XmlParsed, e: XmlElement): KeptXml {
@@ -383,12 +397,19 @@ class OoxmlReader {
     const { styles, defaults, kept: keptStyles } = this.readStyles();
     const { lists, kept: keptNumbering } = this.readLists();
     const pageColor = ooxmlColour(wVal(childElement(doc.root, W_NS, 'background'), 'color'));
+    const oddEven = readEvenAndOdd(this.parts.settings?.root);
     // The page colour is the whole document's in OOXML (`w:background`): it is the first section's in the model.
     const sectionOf = (sectPr: XmlElement, at: number): Section => {
       const values = readSection(sectPr, at === 0 ? pageColor : undefined, () =>
         this.report.drop('column-width', 'column-width'),
       );
-      return { ...values, kept: this.propsKept(doc, sectPr, values, MAPPED_SECTPR)! };
+      const headers = this.headerParts.headersOf(sectPr, oddEven);
+      const keptValues = { ...values, references: referenceSignature(headers, false) };
+      return {
+        ...values,
+        ...compact({ headers }),
+        kept: this.propsKept(doc, sectPr, keptValues, MAPPED_SECTPR)!,
+      };
     };
     const elements = childElements(body);
     const finalSectPr = elements.findLast((e) => isW(e, 'sectPr'));
@@ -457,6 +478,7 @@ class OoxmlReader {
       styles: keptStyles,
       numberingNamespaces: withoutWritten(this.parts.numbering?.root.scope ?? {}),
       numbering: keptNumbering,
+      // Header and footer parts the sections hold are the model's, written from it.
       parts: [...this.pkg.parts]
         .filter(
           ([name]) =>
@@ -466,7 +488,7 @@ class OoxmlReader {
               names.numberingPart,
               names.coreName,
               names.appName,
-            ].includes(name),
+            ].includes(name) && !this.headerParts.holds(name),
         )
         .map(([name, data]) => ({
           name,
@@ -495,7 +517,7 @@ class OoxmlReader {
   }
 
   paragraph(p: XmlElement, endsWith: Section | undefined): Paragraph {
-    const doc = this.parts.document;
+    const doc = this.part.parsed;
     const pPr = childElement(p, W_NS, 'pPr');
     const numPr = pPr && childElement(pPr, W_NS, 'numPr');
     const numId = wVal(childElement(numPr ?? p, W_NS, 'numId'));
@@ -530,7 +552,11 @@ class OoxmlReader {
       props,
       // The num as written: a restarting num is its own, so the kept properties hold only while it is written again.
       list: list && { id: numId!, level: list.level },
-      section: endsWith && { start: endsWith.start, setup: endsWith.setup },
+      section: endsWith && {
+        start: endsWith.start,
+        setup: endsWith.setup,
+        references: referenceSignature(endsWith.headers, false),
+      },
     };
     const kept = this.propsKept(doc, pPr, values, MAPPED_PPR);
     return {
@@ -556,7 +582,7 @@ class OoxmlReader {
     const anchor = wVal(e, 'anchor');
     if (anchor !== undefined) return `#${anchor}`;
     const id = attributeOf(e, R_NS, 'id');
-    return this.rels.find((r) => r.id === id)?.target;
+    return this.part.rels.find((r) => r.id === id)?.target;
   }
 }
 
@@ -666,7 +692,7 @@ class RunReader {
     this.out.push({
       type: 'kept',
       name: e.local,
-      xml: xml ?? this.r.kept(this.r.parts.document, e),
+      xml: xml ?? this.r.kept(this.r.part.parsed, e),
       props,
       ...compact({ style, link: ctx.link }),
     });
@@ -698,7 +724,7 @@ class RunReader {
 
   run(r: XmlElement, ctx: RunContext): void {
     if (this.skipped.has(r)) return;
-    const doc = this.r.parts.document;
+    const doc = this.r.part.parsed;
     const rPr = childElement(r, W_NS, 'rPr');
     const { style, props } = readRunProps(rPr);
     const kept = this.r.propsKept(doc, rPr, { style, props }, MAPPED_RPR);
@@ -752,7 +778,7 @@ class RunReader {
     props: TextProps,
     style: string | undefined,
   ): void {
-    const doc = this.r.parts.document;
+    const doc = this.r.part.parsed;
     const inner = this.r.kept(doc, c);
     const pr = rPr ? keptXmlOf(doc, rPr) : undefined;
     const prefix = r.prefix ? `${r.prefix}:` : '';

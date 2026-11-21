@@ -1,5 +1,6 @@
 // Sections and page setup (docs/specs/034-text-documents/page-layout.md): each section has its paper, orientation,
 // margins, page colour and columns, and starts on a new page or continues the page.
+import { HEADER_FOOTER_MARGIN_PT, type SectionHeaders } from './headers';
 import type { KeptProperties } from './props';
 
 export type Margins = {
@@ -7,6 +8,10 @@ export type Margins = {
   readonly bottom: number;
   readonly left: number;
   readonly right: number;
+  /** The header's distance from the top edge (page-layout.md "Headers and footers"); absent is 0.5 in. */
+  readonly header?: number;
+  /** The footer's distance from the bottom edge; absent is 0.5 in. */
+  readonly footer?: number;
 };
 
 /** Lengths in points. */
@@ -34,6 +39,7 @@ export type SectionStart = 'next-page' | 'continuous' | 'even-page' | 'odd-page'
 export type Section = {
   readonly start: SectionStart;
   readonly setup: PageSetup;
+  readonly headers?: SectionHeaders;
   readonly kept?: KeptProperties;
 };
 
@@ -125,7 +131,7 @@ export const PageSetup = {
     across: setup.width - setup.margins.left - setup.margins.right,
     down: setup.height - setup.margins.top - setup.margins.bottom,
   }),
-  /** The same page: sides, orientation, margins and colour (columns are the section's own matter). */
+  /** The same page: sides, orientation, margins (the header's and footer's too) and colour (columns are the section's own matter). */
   equal: (a: PageSetup, b: PageSetup): boolean =>
     a.width === b.width &&
     a.height === b.height &&
@@ -134,6 +140,10 @@ export const PageSetup = {
     a.margins.bottom === b.margins.bottom &&
     a.margins.left === b.margins.left &&
     a.margins.right === b.margins.right &&
+    (a.margins.header ?? HEADER_FOOTER_MARGIN_PT) ===
+      (b.margins.header ?? HEADER_FOOTER_MARGIN_PT) &&
+    (a.margins.footer ?? HEADER_FOOTER_MARGIN_PT) ===
+      (b.margins.footer ?? HEADER_FOOTER_MARGIN_PT) &&
     (a.pageColor ?? null) === (b.pageColor ?? null),
   /** A kept setup read back checked (a person's default): its sides, orientation, margins and colour, else null. */
   parse: (raw: unknown): PageSetup | null => {

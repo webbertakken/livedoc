@@ -93,6 +93,21 @@ describe('TextDocumentPageSetupDialog', () => {
     expect(onApply).toHaveBeenCalledWith({ setup: setup, pageless: false });
   });
 
+  // page-layout.md "Headers and footers": the header's and footer's margins are not Page setup's to change.
+  it("keeps the header's and footer's margins as they are", () => {
+    const setup = {
+      ...PageSetup.of('letter'),
+      margins: { top: 72, bottom: 72, left: 72, right: 72, header: 20, footer: 30 },
+    };
+    const { margin, ok, onApply } = open(setup);
+    fireEvent.change(margin('Top'), { target: { value: '2' } });
+    fireEvent.click(ok);
+    expect(onApply).toHaveBeenCalledWith({
+      setup: { ...setup, margins: { ...setup.margins, top: 144 } },
+      pageless: false,
+    });
+  });
+
   it('refuses margins that leave too little room for text, holding OK and Set as default', () => {
     const { margin, ok } = open(PageSetup.of('letter'));
     fireEvent.change(margin('Left'), { target: { value: '4' } });

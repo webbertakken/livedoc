@@ -10,7 +10,9 @@ import { TextDocument } from '../model/text-document';
 import { wholeOf } from '../testing/compare';
 import { TextDocumentState } from '../text-document-state';
 import { textDocumentDigest } from '../digest';
-import { BODY_BLOCKS, KEPT_INLINE, TEXT_PROPERTY_MARKS } from './live-names';
+import { BODY_BLOCKS, DOCUMENT_MAP, KEPT_INLINE, TEXT_PROPERTY_MARKS } from './live-names';
+import { storyFragment } from './live-stories';
+import { CONSTRUCTS } from '../testing/constructs';
 
 const CORPUS = join(import.meta.dirname, '..', '..', 'corpus');
 const corpus = ['libreoffice', 'word'].flatMap((maker) =>
@@ -185,5 +187,70 @@ describe('the live layout', () => {
     const document = TextDocument.fromTexts(['One two', 'three']);
     const doc = TextDocumentState.load([TextDocumentState.fromDocument(document)]);
     expect(textDocumentDigest(doc)).toMatchObject({ characters: 12, words: 3 });
+  });
+
+  // "The layout": each header and footer a fragment of its own, a section naming it by id.
+  describe('headers and footers', () => {
+    const headed = () => {
+      const document = CONSTRUCTS.headers!('ooxml');
+      const shared = document.section.headers!.header!.default!;
+      // A header two sections share, as a file read it, is one fragment.
+      const body = document.body.map((b) =>
+        b.type === 'section' ? { ...b, headers: { header: { default: shared } } } : b,
+      );
+      return { ...document, body };
+    };
+
+    it('reads back the headers and footers it was written with', () => {
+      const document = headed();
+      expect(wholeOf(live(document))).toBe(wholeOf(document));
+    });
+
+    it('lies each in a story fragment, a shared one once, the sections naming them', () => {
+      const doc = TextDocumentState.load([TextDocumentState.fromDocument(headed())]);
+      const meta = doc.getMap<unknown>(DOCUMENT_MAP).get('section') as {
+        headers: { header: { default: { story: string } } };
+      };
+      const id = meta.headers.header.default.story;
+      expect(storyFragment(doc, id).toJSON()).toContain('Header');
+      const later = doc.getXmlFragment('body').toArray()[1] as Y.XmlElement;
+      expect(later.getAttribute('headers')).toMatchObject({ header: { default: { story: id } } });
+      const read = live(headed());
+      const breakHeaders = read.body.find((b) => b.type === 'section');
+      expect(breakHeaders?.type === 'section' && breakHeaders.headers?.header?.default).toBe(
+        read.section.headers!.header!.default,
+      );
+    });
+
+    it('reads a fragment as its blocks alone, and passes over a slot naming none', () => {
+      const doc = new Y.Doc();
+      const fragment = storyFragment(doc, 'x');
+      const paragraph = new Y.XmlElement('paragraph');
+      paragraph.insert(0, [new Y.XmlText('Kept')]);
+      fragment.insert(0, [new Y.XmlText('stray'), new Y.XmlElement('unknown'), paragraph]);
+      doc.getMap<unknown>(DOCUMENT_MAP).set('section', {
+        start: 'next-page',
+        setup: TextDocument.blank().section.setup,
+        headers: { header: { default: { story: 'x' }, first: { story: 7 } }, differentFirst: true },
+      });
+      const headers = TextDocumentState.section(doc, 'odf').headers!;
+      expect(headers.differentFirst).toBe(true);
+      expect(headers.header?.first).toBeUndefined();
+      expect(
+        headers.header?.default?.blocks.map((b) => b.type === 'paragraph' && Paragraph.text(b)),
+      ).toEqual(['Kept']);
+    });
+
+    it('keeps the first section’s headers when its setup is set', () => {
+      const doc = TextDocumentState.load([TextDocumentState.fromDocument(headed())]);
+      const section = TextDocumentState.section(doc, 'ooxml');
+      TextDocumentState.setSection(doc, {
+        start: section.start,
+        setup: { ...section.setup, pageColor: '#ffeeee' },
+      });
+      const after = TextDocumentState.section(doc, 'ooxml');
+      expect(after.setup.pageColor).toBe('#ffeeee');
+      expect(after.headers?.header?.default?.blocks).toHaveLength(1);
+    });
   });
 });
