@@ -76,6 +76,16 @@ test('a long folder draws its rows as they come into view, finds any, and Back l
 
   // Back from a document opened far down lands on its row again.
   const far = page.getByRole('link', { name: name(COUNT - 2), exact: true }).first();
+  // Where its row settles: a row drawn while the cascade plays rises into place (or the cascade ends, its rise cut).
+  await expect
+    .poll(() =>
+      far.evaluate(
+        (link) =>
+          (link.closest('li') ?? link).getAnimations().filter((a) => a.playState === 'running')
+            .length,
+      ),
+    )
+    .toBe(0);
   const top = (await far.boundingBox())!.y;
   await far.click();
   await page.waitForURL(/\/document\//);
