@@ -1,7 +1,7 @@
 # Tables
 
-**Status: in the model, the files and the editor.** Tables are read, written, converted, drawn and typed in; inserting,
-reshaping, properties and breaking across pages are ahead.
+**Status: in the model, the files and the editor.** Tables are read, written, converted, drawn, typed in and broken
+between rows across pages; inserting, reshaping, properties, repeated header rows and rows breaking inside are ahead.
 
 Tables in a [text document](text-document.md), as Google Docs has them, built on `prosemirror-tables`
 ([Adopt or build](../../research/docs-open-standard/adopt-or-build.md)).
@@ -104,13 +104,24 @@ note ([Standard mapping](standard-mapping.md#the-model)).
 - Header rows are drawn as `th scope="col"` cells `(default)`, read by a screen reader as column headers.
 - A cell side with no line shows a faint dashed guide on screen, never printed `(default)`, so a table without lines
   can be worked in, as Word's gridlines are.
-- Until tables break across pages, a table moves to the next page whole, as kept content does; one taller than a page
-  runs past its foot.
 
 ## Laying out across pages
 
 A table breaks between rows at a page's foot; header rows repeat; a row allowed to overflow breaks between lines of
 its tallest cell; otherwise it moves whole, unless it is taller than a page, when it breaks anyway.
+
+- **Built: between rows.** A table's rows are its lines ([Page layout](page-layout.md#laying-out)): a page that
+  fills inside a table ends after its last row that fits, and the next page's text area starts with the next row.
+- Rows joined by a cell spanning them move together, as one line `(default)`: a page never cuts a merged cell.
+- A row, or rows joined so, taller than a page's text area starts a page and runs past its foot until rows break
+  inside (ahead).
+- The page's foot, the ground between pages and the next page's head are drawn as a row across the table, the full
+  width of the page, aria-hidden and never text; a cell keeps its own lines, so the row before the break draws its
+  bottom line and the row after its top line, as each has them.
+- In a section of columns a table moves to the next column or page whole, as kept content does `(default)`.
+- A table's rows are not line-numbered and do not count ([Line numbers](page-layout.md#line-numbers)), as Word's.
+- A footnote whose mark is in a cell is at the foot of the page its row is on.
+- Ahead: header rows repeating on each page; a row breaking between its lines; a row that may not break (10e).
 
 ## Share roles
 

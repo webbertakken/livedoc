@@ -10,6 +10,7 @@ import { Plugin, PluginKey, TextSelection, type EditorState } from 'prosemirror-
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import {
   Columns,
+  TABLE,
   type LineNumbers,
   type LiveHeaders,
   type PageSetup,
@@ -30,7 +31,9 @@ import {
   crossAttrs,
   crossLead,
   crossSplit,
+  lineGap,
   pageGeometries,
+  rowGap,
   pageNumbers,
   pagesSaid,
   type PageGeometry,
@@ -39,6 +42,8 @@ import { paginate } from './pagination-engine';
 import { pageLayout, storyKey, type StoryHeights } from './pagination-headers';
 import { notePlace, pageNotes, type NoteMark } from './pagination-notes';
 import { measureBlock, PAGE_GAP_CLASS, rulesOf, splitPosition } from './pagination-measure';
+import { tableSplitOffset } from './pagination-tables';
+import { columnWidths } from '../text-document-table-dom';
 import { lineNumberMarks, pageTopsInBody } from './pagination-line-numbers';
 import { readDrawnLines, type CrossColumns } from './pagination-line-reading';
 import {
@@ -94,35 +99,6 @@ const key = new PluginKey<DecorationSet>('textDocumentPagination');
 // How many blocks a layout asks the editor for one by one (each ask walks the body's blocks to its place) before it reads
 // the body's children once instead (a copy of every child): a keystroke measures one to three (performance.md).
 const BLOCK_LOOKUPS_ASKED = 16;
-
-// The spacer inside a paragraph: drawn as the page's foot, the ground and the next page's head over the paragraph's
-// own background and borders, across the whole page.
-function lineGap(
-  height: number,
-  bands: { foot: number; head: number },
-  across: { left: number; width: number },
-): () => HTMLElement {
-  return () => {
-    const gap = document.createElement('span');
-    gap.className = `${PAGE_GAP_CLASS} ${PAGE_GAP_CLASS}-inside`;
-    gap.setAttribute('aria-hidden', 'true');
-    gap.contentEditable = 'false';
-    gap.style.height = `${height}px`;
-    for (const [band, size] of [
-      ['paper', bands.foot],
-      ['ground', PAGE_GAP_PX],
-      ['paper', bands.head],
-    ] as const) {
-      const part = document.createElement('span');
-      part.className = `${PAGE_GAP_CLASS}-${band}`;
-      part.style.height = `${Math.max(0, size)}px`;
-      part.style.marginLeft = `${-across.left}px`;
-      part.style.width = `${across.width}px`;
-      gap.append(part);
-    }
-    return gap;
-  };
-}
 
 const round = (value: number) => Math.round(value * 100) / 100;
 
@@ -362,7 +338,8 @@ class Pager {
     const metrics = nodes.map((node, i) => {
       let entry = this.measured.get(node);
       if (!entry) {
-        entry = measureBlock(elements(i), rulesOf(node, formatting), ratio, box.left);
+        const inColumns = (sections.setups[sections.sectionOf[i] ?? 0]?.columns?.count ?? 1) > 1;
+        entry = measureBlock(elements(i), rulesOf(node, formatting, inColumns), ratio, box.left);
         this.measured.set(node, entry);
         count += 1;
       }
@@ -423,10 +400,15 @@ class Pager {
         };
         const head = round(page.frameOf(start.block, start.line, numbers[q]!).top);
         const bands = { foot: round(height - PAGE_GAP_PX - head), head };
-        widget(at, lineGap(height, bands, across), {
-          key: `line:${height}:${across.left}:${across.width}:${head}`,
-          inside: true,
-        });
+        const columns = node.type.name === TABLE ? columnWidths(node).length : 0;
+        widget(
+          at,
+          columns > 0 ? rowGap(height, bands, across, columns) : lineGap(height, bands, across),
+          {
+            key: `${columns > 0 ? `row:${columns}` : 'line'}:${height}:${across.left}:${across.width}:${head}`,
+            inside: true,
+          },
+        );
       }
       for (const spacer of start.spacers ?? []) {
         const h = round(spacer.height);
@@ -541,6 +523,11 @@ class Pager {
     if (!lines) this.splits.set(node, (lines = new Map<number, number>()));
     const known = lines.get(line);
     if (known !== undefined) return known;
+    if (node.type.name === TABLE) {
+      const at = tableSplitOffset(node, line);
+      lines.set(line, at);
+      return at;
+    }
     // Found on the paragraph as one column: a box of columns it is drawn as goes first.
     this.unbox((boxed) => boxed === node);
     const at =

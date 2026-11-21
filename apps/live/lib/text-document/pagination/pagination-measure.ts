@@ -1,12 +1,13 @@
 // The writing measured for laying out (docs/specs/034-text-documents/page-layout.md "Laying out"): a block's box,
-// margins and lines in CSS pixels as if no page spacer were inside it, its keep rules from its style and its own
-// formatting, and the place in a paragraph where one of its lines starts. Reads the drawn page; writes nothing.
+// margins and lines in CSS pixels as if no page spacer were inside it (a table's lines its rows), its keep rules from
+// its style and its own formatting, and the place in a paragraph where one of its lines starts. Reads the drawn page; writes nothing.
 import type { Node as PmNode } from 'prosemirror-model';
 import type { EditorView } from 'prosemirror-view';
 import {
   KEPT_BLOCK,
   SECTION_BREAK,
   Styles,
+  TABLE,
   type ParagraphProps,
   type SectionStart,
 } from '@livedoc/text-documents';
@@ -15,6 +16,7 @@ import type { BlockMetrics } from './pagination';
 import { groupLines, naturalOf, withoutSpacers, type Span } from './pagination-lines';
 import type { NoteMark } from './pagination-notes';
 import { measuringRange } from './pagination-range';
+import { tableLines } from './pagination-tables';
 
 /** A page spacer's class: between blocks, or inside a paragraph between two of its lines. */
 export const PAGE_GAP_CLASS = 'text-document-page-gap';
@@ -43,8 +45,12 @@ const SECTION_STARTS: readonly SectionStart[] = [
   'odd-page',
 ];
 
-/** How a block moves between pages: a paragraph by its keep rules, a section break and kept content whole. */
-export function rulesOf(node: PmNode, formatting: TextFormatting): BlockRules {
+/**
+ * How a block moves between pages: a paragraph by its keep rules, a section break and kept content whole, a table
+ * between its rows, or whole in a section of columns (`inColumns`; tables.md "Laying out across pages").
+ */
+export function rulesOf(node: PmNode, formatting: TextFormatting, inColumns = false): BlockRules {
+  if (node.type.name === TABLE) return inColumns ? { atom: true } : {};
   if (node.type.name === SECTION_BREAK) {
     const start = (node.attrs as { start: unknown }).start;
     return {
@@ -100,7 +106,10 @@ export function measureBlock(
   let breakAfter = false;
   let columnBreakAfter = false;
   const marks: NoteMark[] = [];
-  if (!rules.atom) {
+  if (!rules.atom && element instanceof HTMLTableElement) {
+    lines = tableLines(element, box.top, ratio, spacers, height, PAGE_GAP_CLASS);
+    marks.push(...noteMarks(element, box.top, ratio, spacers, lines));
+  } else if (!rules.atom) {
     const range = measuringRange(element.ownerDocument);
     range.selectNodeContents(element);
     const rects = [...range.getClientRects()].map((r) => ({
@@ -134,18 +143,7 @@ export function measureBlock(
       if (line !== null) columnForced.push(line);
       else columnBreakAfter = true;
     }
-    // Each footnote's mark on its own line (page-layout.md "Footnotes").
-    for (const mark of element.querySelectorAll<HTMLElement>(NOTE_MARK)) {
-      const r = mark.getBoundingClientRect();
-      const middle = naturalOf(((r.top + r.bottom) / 2 - box.top) / ratio, spacers);
-      // Raised above its line, a mark is on the last line starting above its middle.
-      const line = Math.max(
-        0,
-        lines.findLastIndex((l) => l.top <= middle),
-      );
-      const story = mark.dataset.footnote;
-      if (story) marks.push({ line, story });
-    }
+    marks.push(...noteMarks(element, box.top, ratio, spacers, lines));
   }
   return {
     metrics: {
@@ -162,6 +160,29 @@ export function measureBlock(
     inset: (box.left - left) / ratio,
     marks,
   };
+}
+
+// Each footnote's mark on its own line (page-layout.md "Footnotes").
+function noteMarks(
+  element: HTMLElement,
+  top: number,
+  ratio: number,
+  spacers: readonly Span[],
+  lines: BlockMetrics['lines'],
+): NoteMark[] {
+  const marks: NoteMark[] = [];
+  for (const mark of element.querySelectorAll<HTMLElement>(NOTE_MARK)) {
+    const r = mark.getBoundingClientRect();
+    const middle = naturalOf(((r.top + r.bottom) / 2 - top) / ratio, spacers);
+    // Raised above its line, a mark is on the last line starting above its middle.
+    const line = Math.max(
+      0,
+      lines.findLastIndex((l) => l.top <= middle),
+    );
+    const story = mark.dataset.footnote;
+    if (story) marks.push({ line, story });
+  }
+  return marks;
 }
 
 // A caret's top within this much of a line's top is on that line, in client pixels.

@@ -131,6 +131,7 @@ pages' setup.
   page (a file's), it leaves the page between blank when the next page is the wrong one. A continuous one breaks no
   page.
 - Content kept from a file, drawn as a placeholder, and a section break's line move whole.
+- A **table** breaks between its rows, its rows its lines ([Tables](tables.md#laying-out-across-pages)).
 - Pictures in line move with their line; wrapped and fixed ones keep their position on the page and the text flows
   round them.
 - **No pages** are laid out when the document is pageless or on a phone, where the writing flows to the window
@@ -424,7 +425,7 @@ for referring to a line.
   ink of the ruler's numbers at 9 pt, right-aligned 0.25 in before the text area's left edge and centred on the line
   (default); never in headers, footers or notes. In a section of columns each line's number stands 0.25 in before
   its own column, a paragraph drawn across columns included (Word's, default). A section break's line and content
-  kept from a file are not numbered and do not count (default).
+  kept from a file are not numbered and do not count (default); nor are a table's rows (Word's).
 - **Counted** over the numbered lines only: Continue throughout the document counts on from the last numbered line
   before it, Restart on each page from 1 at each page's first numbered line, Restart on each section from 1 at the
   section's first line (default).

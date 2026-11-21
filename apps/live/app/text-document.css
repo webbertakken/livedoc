@@ -447,6 +447,14 @@ div.text-document-kept {
 .text-document-page-gap-inside > span {
   display: block;
 }
+/* The page edge between two rows of a table (docs/specs/034-text-documents/tables.md "Laying out across pages"). */
+.text-document-table tr.text-document-page-gap {
+  display: table-row;
+}
+.text-document-table tr.text-document-page-gap > td {
+  padding: 0;
+  border: none;
+}
 .text-document-page-gap-ground {
   background: var(--office-ground);
 }
