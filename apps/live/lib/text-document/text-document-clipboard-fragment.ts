@@ -11,6 +11,10 @@ import {
   ListDefinition,
   RUN_KEPT_MARK,
   SECTION_BREAK,
+  TABLE,
+  TABLE_CELL,
+  TABLE_HEADER,
+  TABLE_ROW,
   Styles,
   TEXT_PROPERTY_MARK_OF,
   TEXT_STYLE_MARK,
@@ -22,6 +26,8 @@ import {
   type TextProps,
 } from '@livedoc/text-documents';
 import type { Lists } from './text-document-lists';
+
+const TABLE_NODES: ReadonlySet<string> = new Set([TABLE, TABLE_ROW, TABLE_CELL, TABLE_HEADER]);
 
 /** The HTML attribute the fragment travels in, on the copied HTML's first element. */
 export const FRAGMENT_ATTRIBUTE = 'data-livedoc-fragment';
@@ -293,6 +299,15 @@ export function placeFragment(
       const attrs = attrsOf(node);
       if (node.type === SECTION_BREAK)
         return [{ ...node, attrs: { ...attrs, kept: null, region: null } }];
+      // A table's rows and cells placed whole, what the other file kept left behind; a cell left empty holds a paragraph.
+      if (TABLE_NODES.has(node.type)) {
+        const placed = placeNodes(node.content);
+        const content =
+          placed.length > 0 || (node.type !== TABLE_CELL && node.type !== TABLE_HEADER)
+            ? placed
+            : [{ type: 'paragraph', attrs: { style: null } }];
+        return [{ ...node, attrs: { ...attrs, kept: null, tag: null }, content }];
+      }
       if (node.type !== 'paragraph') return [node];
       const mapped = typeof attrs.style === 'string' ? style(attrs.style) : null;
       const props = { ...mapped?.paragraph, ...((attrs.props as ParagraphProps | null) ?? {}) };

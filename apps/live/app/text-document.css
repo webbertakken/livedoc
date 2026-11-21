@@ -543,3 +543,46 @@ div.text-document-kept {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+/*
+ * Tables (docs/specs/034-text-documents/tables.md "In the editor"): at their columns' widths, cells' lines collapsed
+ * into one; a side with no line shows a faint dashed guide on screen (#c4c7c5 / #5f6368), never printed; a cell's
+ * writing starts at its top unless it says otherwise. Selected cells are tinted as selected text is.
+ */
+.text-document-table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  margin-block: 0;
+}
+.text-document-table td,
+.text-document-table th {
+  vertical-align: top;
+  font-weight: inherit;
+  text-align: inherit;
+  padding: 0;
+  overflow-wrap: anywhere;
+  --text-document-table-guide: 1px dashed light-dark(#c4c7c5, #5f6368);
+}
+.text-document-table [data-guides*='t'] {
+  border-top: var(--text-document-table-guide);
+}
+.text-document-table [data-guides*='b'] {
+  border-bottom: var(--text-document-table-guide);
+}
+.text-document-table [data-guides*='l'] {
+  border-left: var(--text-document-table-guide);
+}
+.text-document-table [data-guides*='r'] {
+  border-right: var(--text-document-table-guide);
+}
+@media print {
+  .text-document-table td,
+  .text-document-table th {
+    --text-document-table-guide: none;
+  }
+}
+.text-document-table .selectedCell {
+  background-image: linear-gradient(
+    light-dark(rgb(26 115 232 / 0.18), rgb(138 180 248 / 0.24)),
+    light-dark(rgb(26 115 232 / 0.18), rgb(138 180 248 / 0.24))
+  );
+}

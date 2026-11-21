@@ -11,6 +11,7 @@ import type * as Y from 'yjs';
 import { keymap } from 'prosemirror-keymap';
 import { baseKeymap } from 'prosemirror-commands';
 import { ySyncPlugin } from 'y-prosemirror';
+import { tableEditing } from 'prosemirror-tables';
 import type { AccessLevel } from '@livedoc/api-schema';
 import type { TextDocumentFormat } from '@livedoc/document';
 import {
@@ -297,6 +298,8 @@ export function TextDocumentSurface({
             schema: textDocumentSchema,
             plugins: [
               ySyncPlugin(TextDocumentState.body(doc)),
+              // Cells selected together, tables kept whole as they are edited (tables.md "In the editor").
+              tableEditing(),
               changes.plugin,
               ...textDocumentUndoPlugins(),
               textDocumentLimitPlugin({ onRefused: () => setLimitReached('characters') }),

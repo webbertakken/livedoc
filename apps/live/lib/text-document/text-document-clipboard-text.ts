@@ -34,7 +34,7 @@ export function selectionMarkers(state: EditorState, lists: Lists): (ListMarker 
 
 /**
  * A slice as plain text: a line per paragraph, a whole list item after its marker, a footnote's mark its number (by
- * its story); kept content and breaks none.
+ * its story); a table's rows a line each, cells by tabs; kept content and breaks none.
  */
 export function plainTextOf(
   slice: Slice,
@@ -46,7 +46,27 @@ export function plainTextOf(
       ? String(noteNumbers.get(String((node.attrs as { story: unknown }).story)) ?? '')
       : (node.type.spec.leafText?.(node) ?? '');
   const lines: string[] = [];
+  const textOf = (node: PmNode) => node.textBetween(0, node.content.size, ' ', leaf);
+  // A table's rows a line each, its cells by tabs (tables.md "In the editor"); a row or cell copied alone the same.
+  const rowText = (row: PmNode) => {
+    const cells: string[] = [];
+    row.forEach((cell) => cells.push(textOf(cell)));
+    return cells.join('\t');
+  };
+  const tableLines = (node: PmNode): string[] => {
+    if (node.type.spec.tableRole === 'table') {
+      const rows: string[] = [];
+      node.forEach((row) => rows.push(...tableLines(row)));
+      return rows;
+    }
+    if (node.type.spec.tableRole === 'row') return [rowText(node)];
+    return [textOf(node)];
+  };
   slice.content.forEach((node, _offset, index) => {
+    if (node.type.spec.tableRole) {
+      lines.push(...tableLines(node));
+      return;
+    }
     if (node.type.name !== 'paragraph') return;
     const marker = markers[index];
     const whole = index > 0 || slice.openStart === 0;

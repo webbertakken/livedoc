@@ -29,7 +29,9 @@ How [the model](standard-mapping.md#the-model) lies in the live state, so every 
 api, agents) reads and writes one shape (default):
 
 - **Blocks** are the body's elements, each attribute a whole value: `paragraph` (`style`, `props`, `list`, `text`,
-  `kept`), `section_break` (the section's setup and its kept region) and `kept_block` (its name and kept XML).
+  `kept`), `section_break` (the section's setup and its kept region), `kept_block` (its name and kept XML) and
+  `table`, holding `table_row`s of `table_cell`s and `table_header`s, each cell holding blocks as the body does
+  ([Tables](tables.md#in-the-editor)).
 - **Runs** are a paragraph's text, formatted by attributes: one per text property (`bold`, `italic`, `underline`,
   `strike`, `vertical`, `font`, `size`, `color`, `highlight`, `small_caps`, `transform`), each holding `{ value }`, so
   a `false` that overrides a style's `true` is kept; then `link` (`href`), `text_style` (`id`) and `run_kept`

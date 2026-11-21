@@ -22,6 +22,7 @@ import { TextDocument, type TextDocumentFormat } from '../model/text-document';
 import {
   DOCUMENT_MAP,
   KEPT_BLOCK,
+  TABLE,
   FIELD,
   FOOTNOTE,
   KEPT_INLINE,
@@ -36,6 +37,7 @@ import {
   TEXT_STYLE_MARK,
 } from './live-names';
 import { BODY_FRAGMENT } from './live-root';
+import { tableOf } from './live-tables';
 import { readSource } from './live-source';
 import { StoryReader, type LiveHeaders } from './live-stories';
 
@@ -143,8 +145,10 @@ function blockOf(node: Y.XmlElement, normal: string, stories?: StoryReader): Blo
         headers: stories?.headers(headers),
       }) as SectionBreak;
     }
+    case TABLE:
+      return tableOf(node, (child) => blockOf(child, normal, stories), normal);
     case KEPT_BLOCK:
-      // A table held whole until the editor draws tables (tables.md "Status").
+      // A table held whole, as documents imported before the editor drew tables hold one.
       if (a.table) return a.table as Table;
       return { type: 'kept', name: a.name as string, xml: a.xml as KeptBlock['xml'] };
     default:

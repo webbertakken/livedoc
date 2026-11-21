@@ -13,7 +13,8 @@ import {
   type SectionHeadersOf,
 } from '../model/headers';
 import { BODY_FRAGMENT } from './live-root';
-import { DOCUMENT_MAP, FOOTNOTE, PARAGRAPH, SECTION_BREAK } from './live-names';
+import { paragraphElementsOf } from './live-tables';
+import { DOCUMENT_MAP, FOOTNOTE, SECTION_BREAK } from './live-names';
 
 /** A root fragment holding a header's or footer's blocks is named this, then its id. */
 export const STORY_PREFIX = 'story:';
@@ -47,20 +48,15 @@ export function liveSectionHeaders(doc: Y.Doc): (LiveHeaders | undefined)[] {
 
 /** The notes' fragments the body's marks name, in the marks' order. */
 export function liveNoteIds(doc: Y.Doc): string[] {
-  return doc
-    .getXmlFragment(BODY_FRAGMENT)
-    .toArray()
-    .flatMap((node) =>
-      node instanceof Y.XmlElement && node.nodeName === PARAGRAPH
-        ? node.toArray().flatMap((child) => {
-            const story =
-              child instanceof Y.XmlElement && child.nodeName === FOOTNOTE
-                ? child.getAttribute('story')
-                : undefined;
-            return typeof story === 'string' ? [story] : [];
-          })
-        : [],
-    );
+  return paragraphElementsOf(doc.getXmlFragment(BODY_FRAGMENT)).flatMap((node) =>
+    node.toArray().flatMap((child) => {
+      const story =
+        child instanceof Y.XmlElement && child.nodeName === FOOTNOTE
+          ? child.getAttribute('story')
+          : undefined;
+      return typeof story === 'string' ? [story] : [];
+    }),
+  );
 }
 
 /**
