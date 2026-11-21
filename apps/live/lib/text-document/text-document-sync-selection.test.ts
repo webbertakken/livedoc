@@ -30,8 +30,8 @@ describe('the writing bound to its live state', () => {
     });
     // The binding takes the editor over once its first render has run.
     await new Promise((resolve) => setTimeout(resolve, 0));
-    const binding = ySyncPluginKey.getState(view.state)!.binding as {
-      beforeTransactionSelection: unknown;
+    const { binding } = ySyncPluginKey.getState(view.state) as {
+      binding: { beforeTransactionSelection: unknown };
     };
     const seen: unknown[] = [];
     here.on('afterTransaction', (transaction: Y.Transaction) => {

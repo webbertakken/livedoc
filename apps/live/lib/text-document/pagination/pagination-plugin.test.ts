@@ -293,7 +293,8 @@ describe('paginationPlugin, drawing again', () => {
     const after = drawn().find();
     expect(after).toHaveLength(count);
     // Kept, not made again: each one's own spec (a nested decoration is read out as a copy of it).
-    for (const decoration of others) expect(after.map((d) => d.spec)).toContain(decoration.spec);
+    for (const decoration of others)
+      expect(after.map((d): unknown => d.spec)).toContain(decoration.spec as unknown);
     view.destroy();
   });
 
@@ -304,24 +305,15 @@ describe('paginationPlugin, drawing again', () => {
       p('c'.repeat(40), { widowControl: true }),
     ]);
     const drawn = () => view.state.plugins[0]!.getState(view.state) as DecorationSet;
-    const specs = drawn()
-      .find()
-      .map((d) => d.spec);
+    const specsOf = (set: DecorationSet): unknown[] => set.find().map((d): unknown => d.spec);
+    const specs = specsOf(drawn());
     const dispatch = vi.spyOn(view, 'dispatch');
     // The page edge is after its thirtieth character: typed at its end, the lines before the edge stay as they were.
     view.dispatch(view.state.tr.insertText('b', view.state.doc.child(0).nodeSize + 1 + 39));
-    expect(
-      drawn()
-        .find()
-        .map((d) => d.spec),
-    ).toEqual(specs);
+    expect(specsOf(drawn())).toEqual(specs);
     await Promise.resolve();
     expect(dispatch).toHaveBeenCalledTimes(1);
-    expect(
-      drawn()
-        .find()
-        .map((d) => d.spec),
-    ).toEqual(specs);
+    expect(specsOf(drawn())).toEqual(specs);
     view.destroy();
   });
 });
