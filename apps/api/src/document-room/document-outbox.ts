@@ -7,14 +7,15 @@
 // Every D1 write is guarded by the document's D1 row (G2), so a drain racing a purge writes nothing. Every unit is a
 // full replace of what it derives, so D1's rows are safe to drop and refill.
 
-import { collabIndexRowsFromElements, tabKindOf, type Element } from '@livedoc/document';
+import { collabIndexRowsFromElements, type Element } from '@livedoc/document';
 import { tabSearchText } from '@livedoc/document-views';
 import { itemsSearchText } from '@livedoc/items';
 import { sheetSearchInputs } from '@livedoc/sheets';
 import { contentSearchStatements, ITEMS_SEARCH_KEY } from '../db/content-search';
 import { listItems } from '../db/items';
 import { listSheets } from '../db/sheets';
-import { refreshTextDocumentDigest } from '../text-documents/text-document-digest';
+import { refreshLiveTabDigest } from '../live-tabs/live-tab-digest';
+import { liveTabKindOfTab } from '../live-tabs/live-tab-kinds';
 import { documentImageIds } from '../db/image-refs';
 import { imageGrantPlacementStatements } from '../db/image-grants';
 import { formLinkShown } from '../forms/form-link-shown';
@@ -317,16 +318,16 @@ async function tabStatements(
   return TAB_UNIT_PARTS.flatMap((part) => part(env, documentId, tabId, tab, body, storedTexts));
 }
 
-// What a tab holds outside its body, as text: a text document's writing, read through its digest
-// (docs/specs/034-text-documents/live-editing-and-storage.md "The digest"), or the inputs of the sheets it references.
+// What a tab holds outside its body, as text: a live tab's (a text document's writing), read through its digest
+// (docs/specs/006-document/kinds-outside-the-canvas.md "Live state"), or the inputs of the sheets it references.
 async function storedTextsOf(
   env: DocumentEnv,
   documentId: string,
   tabId: string,
   body: Record<string, unknown>,
 ): Promise<string[]> {
-  if (tabKindOf(body) === 'text-document')
-    return [(await refreshTextDocumentDigest(env, documentId, tabId)).searchText];
+  const live = liveTabKindOfTab(body);
+  if (live) return [(await refreshLiveTabDigest(env, live, documentId, tabId)).searchText];
   return referencedSheetInputs(env, documentId, tabId);
 }
 

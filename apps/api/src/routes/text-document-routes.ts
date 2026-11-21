@@ -17,11 +17,10 @@ import { TEXT_DOCUMENT_STATE_VECTOR_HEADER } from '@livedoc/api-schema';
 import { getDocumentMeta } from '../db';
 import { downloadFileName } from '@livedoc/office-packages';
 import { CORS_HEADERS, json } from '../responses';
-import { postTextDocumentUpdate } from '../room-client';
-import {
-  readTextDocumentState,
-  storedTextDocumentTab,
-} from '../text-documents/text-document-store';
+import { postLiveTabUpdate } from '../room-client';
+import { readLiveTabState } from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
+import { storedTextDocumentTab } from '../text-documents/text-document-store';
 import {
   deniedOnTab,
   gateEdit,
@@ -71,7 +70,7 @@ export async function handleTextDocumentRoutes(
   const tab = await storedTextDocumentTab(env, documentId, tabId);
   if (!tab) return notTextDocument();
   const started = Date.now();
-  const state = await readTextDocumentState(env, tabId);
+  const state = await readLiveTabState(env, TEXT_DOCUMENT_LIVE_TAB, tabId);
   if (segments[5] === 'state') return stateResponse(ctx, state, started);
   const type = ctx.url.searchParams.get('type') ?? 'odt';
   if (!isTextDocumentFileType(type)) return json({ error: 'file_type_unknown' }, { status: 400 });
@@ -141,7 +140,13 @@ async function postUpdate(ctx: DocumentRouteContext): Promise<Response> {
     );
     return refusedUpdate('update_invalid', 400);
   }
-  const { status, limit } = await postTextDocumentUpdate(env, documentId, tabId, update);
+  const { status, limit } = await postLiveTabUpdate(
+    env,
+    TEXT_DOCUMENT_LIVE_TAB,
+    documentId,
+    tabId,
+    update,
+  );
   if (status === 413) return json({ error: 'document_too_large', limit }, { status: 413 });
   if (status === 204) return new Response(null, { status: 204, headers: CORS_HEADERS });
   if (status === 404) return notTextDocument();

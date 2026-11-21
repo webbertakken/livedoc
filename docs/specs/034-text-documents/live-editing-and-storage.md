@@ -84,7 +84,8 @@ changes ([Text and paragraphs](text-and-paragraphs.md#update-to-match)).
   person's, an agent's changeset, a sync), appends each update to the tab's log as it applies it and before it
   relays it (default), so nothing relayed is unstored and a hibernating room holds no unsaved edit; never through
   the editor's whole-tab save
-  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-room)).
+  ([Kinds outside the canvas](../006-document/kinds-outside-the-canvas.md#the-room)); it is the first live tab kind
+  ([Live state](../006-document/kinds-outside-the-canvas.md#live-state)).
 - **Chunked under the row cap**: the encoded state is split into rows of at most `TEXT_DOCUMENT_CHUNK_BYTES` in a table
   of its own (`text_document_chunks`: tab, revision, index, bytes), with an update log since the last compaction
   (`text_document_updates`: tab, sequence, bytes); both go with their tab. Compaction folds the log into the chunks,

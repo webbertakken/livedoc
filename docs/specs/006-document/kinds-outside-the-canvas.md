@@ -86,6 +86,29 @@ How the editor, the tab strip, split view and the Explorer host a tab kind that 
   `PRESENCE_OP_KINDS`), and its content is stored by the room, never by the editor's whole-tab save
   ([Per-tab storage](per-tab-storage.md)). The whole-tab save writes only the tab row (its name, kind and format).
 
+### Live state
+
+A kind whose content is a live state of merged updates (a text document's Yjs document; a PDF's) is a **live tab
+kind**. The room stores each one the same way, the kind declaring only what is its own
+([Live editing and storage](../034-text-documents/live-editing-and-storage.md#storage) is the text document's).
+
+- **The kind declares**: its tab kind, its frame's op kind (its refusal is `<op kind>-refused`), its log tag, its
+  tables (updates, chunks, digest), how its updates merge and decode and how many characters one inserts, its sizes
+  (a chunk's bytes, the log's bytes and updates before compaction, a frame's characters) and limits (characters,
+  stored bytes), and its digest (characters, words, pages, has content, search text) read from its state.
+- **Its schema step**: its three tables and their outbox triggers, made by one shared step builder and appended to the
+  room's schema as any step is; a shipped step is never edited, so the text document's own steps stay as written.
+- **Storing**: a frame from an Editor is checked (the tab is of the kind, in this document; the update decodes; no
+  limit passed), appended to the updates log on the room's write queue and only then relayed; the door's posted update
+  the same, folded straight into chunks when no log row could hold it. Past the log's bytes or updates, compaction
+  folds the log into chunks under the row cap, in one batch. Each is logged with the kind's tag and a fingerprint:
+  `persisted`, `compacted`, `update-refused reason=`, `edit-refused limit=`.
+- **The digest and summary**: every stored update queues the tab in the outbox; its drain rebuilds the kind's digest
+  from the state, saving the document, and gives the search text to D1. A tab holds content when its digest says so,
+  and its characters and stored bytes join the content summary.
+- **Copies**: a copied document's live tabs carry their state, stored as chunks under the new tab ids.
+- Kinds: the text document (`text-document`, tables `text_document_*`).
+
 ## The Explorer
 
 - A document's **kind** is its first tab's kind ([Explorer filters](../013-workspace/explorer-filters.md)); each kind

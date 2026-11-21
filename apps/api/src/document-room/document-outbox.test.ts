@@ -2,7 +2,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Body, TextDocumentState } from '@livedoc/text-documents';
 import { sqliteD1 } from '../test-sqlite-d1';
-import { appendTextDocumentUpdate } from '../text-documents/text-document-store';
+import { appendLiveTabUpdate } from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
 import { nodeDocumentSql, nodeTransaction } from '../test-document-sql';
 import type { DocumentEnv } from '../types';
 import { DocumentDb } from './document-db';
@@ -302,7 +303,12 @@ describe('the content search rows the drain writes', () => {
       const { env, room, d1 } = harness();
       textDocumentTab(room);
       await drainOutbox(env, D);
-      await appendTextDocumentUpdate(env, 'td', TextDocumentState.fromBody(Body.of('Two words')));
+      await appendLiveTabUpdate(
+        env,
+        TEXT_DOCUMENT_LIVE_TAB,
+        'td',
+        TextDocumentState.fromBody(Body.of('Two words')),
+      );
       expect(outboxKeys(room)).toContain('tab:td');
       await drainOutbox(env, D);
       expect(searchRows(d1)).toEqual([
@@ -318,7 +324,12 @@ describe('the content search rows the drain writes', () => {
       const { env, room } = harness();
       textDocumentTab(room);
       room.prepare('UPDATE document SET saved_at = 1 WHERE id = ?').run(D);
-      await appendTextDocumentUpdate(env, 'td', TextDocumentState.fromBody(Body.of('Later')));
+      await appendLiveTabUpdate(
+        env,
+        TEXT_DOCUMENT_LIVE_TAB,
+        'td',
+        TextDocumentState.fromBody(Body.of('Later')),
+      );
       const before = Date.now();
       await drainOutbox(env, D);
       const row = room.prepare('SELECT saved_at FROM document WHERE id = ?').get(D) as {

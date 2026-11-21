@@ -43,7 +43,8 @@ import { followerIdsOf, followTargetOf } from '../room-follows';
 import { opForScope } from '../room-scope';
 import { recheckAdmittedLink } from '../room-link-recheck';
 import { gateClientOp } from '../room-op-gate';
-import { RoomTextDocuments } from '../text-documents/room-text-documents';
+import { LIVE_TAB_KINDS, liveTabKindOfFrame } from '../live-tabs/live-tab-kinds';
+import { RoomLiveTabs } from '../live-tabs/room-live-tabs';
 import { getTab } from '../db/tabs';
 import { tabShowsEveryCard } from '@livedoc/items';
 import { RoomScopedStructure } from '../room-scoped-structure';
@@ -217,7 +218,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
   // A Participant's content and answers (docs/specs/013-workspace/share-roles.md), see room-participant.ts.
   private participantWrites: RoomParticipantWrites;
   // A text document's edits: stored by the room before they are relayed (room-text-documents.ts).
-  private readonly textDocuments: RoomTextDocuments;
+  // Each live tab kind's edits, by its frame's op kind (kinds-outside-the-canvas.md "Live state").
+  private readonly liveTabs: ReadonlyMap<string, RoomLiveTabs>;
   // The document's content in this room's SQLite (room-content.ts).
   private readonly content: RoomContent;
   // A tab-scoped session's structure check (docs/specs/013-workspace/tab-scoped-share-links.md "Structure").
@@ -241,13 +243,18 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       position: () => ({ epoch: this.epoch, seq: this.seq }),
       readLedger: (tabId) => this.ledger.read(tabId),
     });
-    this.textDocuments = new RoomTextDocuments({
-      env: this.content.env,
-      enqueue: (step) => this.queueTabWrite(step),
-      sequence: (from, op, except) => this.sequenceMutation(from, op, except),
-      sendTo: (ws, payload) => this.sendTo(ws, payload),
-      position: () => ({ epoch: this.epoch }),
-    });
+    this.liveTabs = new Map(
+      LIVE_TAB_KINDS.map((kind) => [
+        kind.frame,
+        new RoomLiveTabs(kind, {
+          env: this.content.env,
+          enqueue: (step) => this.queueTabWrite(step),
+          sequence: (from, op, except) => this.sequenceMutation(from, op, except),
+          sendTo: (ws, payload) => this.sendTo(ws, payload),
+          position: () => ({ epoch: this.epoch }),
+        }),
+      ]),
+    );
     this.poll = new RoomLivePoll(state.storage);
     this.internal = {
       broadcastSystemOp: (op) => this.broadcastSystemOp(op),
@@ -263,8 +270,8 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
       readSelections: (tabId, person) => this.selections.read(tabId, this.liveSessions(), person),
       readLedger: (tabId) => this.ledger.read(tabId),
       epoch: () => this.epoch,
-      acceptPostedTextDocument: (documentId, tabId, update) =>
-        this.textDocuments.acceptPosted(documentId, tabId, update),
+      acceptPostedLiveTab: async (frame, documentId, tabId, update) =>
+        (await this.liveTabs.get(frame)?.acceptPosted(documentId, tabId, update)) ?? 'wrong-kind',
     };
     this.baton = new RoomFacilitator({
       storage: state.storage,
@@ -935,13 +942,15 @@ export class DocumentRoom extends DurableObject<Env | undefined> {
           return;
         }
         this.broadcast({ kind: 'op', from: sender.id, op: clientOp }, ws);
-      } else if (opKind === 'text-document') {
-        // The room is a text document's one writer: stored first, then relayed (room-text-documents.ts).
-        void this.textDocuments.accept(
-          { ws, presenceId: sender.id, documentId: session.documentId ?? null },
-          clientOp,
-          msg.ref,
-        );
+      } else if (liveTabKindOfFrame(opKind)) {
+        // The room is a live tab's one writer: stored first, then relayed (room-live-tabs.ts).
+        void this.liveTabs
+          .get(opKind as string)!
+          .accept(
+            { ws, presenceId: sender.id, documentId: session.documentId ?? null },
+            clientOp,
+            msg.ref,
+          );
       } else {
         // No comment author id leaves the room, whatever a client sent: it is
         // the author's owner id, a guest's credential. And a posted comment

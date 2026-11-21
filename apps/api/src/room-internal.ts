@@ -4,7 +4,7 @@
 // internal and their bodies trusted. Every other request is a WebSocket upgrade, which the room answers itself.
 import { opForTheWire } from '@livedoc/document';
 import { parseAccessCloseMatch, type AccessCloseMatch } from './room-access';
-import type { PostedOutcome } from './text-documents/room-text-documents';
+import type { PostedOutcome } from './live-tabs/room-live-tabs';
 
 /** The room's surface the internal endpoints act on. */
 export type InternalRoom = {
@@ -21,18 +21,19 @@ export type InternalRoom = {
   readSelections: (tabId: string, person: string) => Promise<unknown>;
   readLedger: (tabId: string) => Promise<unknown>;
   epoch: () => string;
-  acceptPostedTextDocument: (
+  acceptPostedLiveTab: (
+    frame: string,
     documentId: string,
     tabId: string,
     update: Uint8Array,
   ) => Promise<PostedOutcome>;
 };
 
-// What the door's route answers for each outcome of a text document update (text-document-routes.ts).
+// What the door's route answers for each outcome of a live tab's update (text-document-routes.ts).
 const POSTED_STATUS: Record<PostedOutcome, number> = {
   stored: 204,
   decode: 400,
-  'not-text-document': 404,
+  'wrong-kind': 404,
   'no-store': 503,
   characters: 413,
   state: 413,
@@ -106,14 +107,16 @@ export async function answerInternal(
   // changeset, a tab rename (tab-meta) and a document rename (document-meta) the api applied
   // (docs/specs/024-agents/agent-changesets.md)
   // take the same path, one seq and one catch-up slot each whatever their size.
-  // Internal: a text document update sent by the door (docs/specs/034-text-documents/live-editing-and-storage.md
-  // "Sending"), already gated by its route, which runs inside this room: stored on the room's write queue, then relayed.
-  if (request.method === 'POST' && url.pathname === '/text-document-update') {
+  // Internal: a live tab's update sent by the door (docs/specs/034-text-documents/live-editing-and-storage.md
+  // "Sending"; kinds-outside-the-canvas.md "Live state"), already gated by its route, which runs inside this room:
+  // stored on the room's write queue, then relayed.
+  if (request.method === 'POST' && url.pathname === '/live-tab-update') {
+    const frame = url.searchParams.get('frame');
     const documentId = url.searchParams.get('document');
     const tabId = url.searchParams.get('tab');
-    if (!documentId || !tabId) return new Response('bad update', { status: 400 });
+    if (!frame || !documentId || !tabId) return new Response('bad update', { status: 400 });
     const update = new Uint8Array(await request.arrayBuffer());
-    const outcome = await room.acceptPostedTextDocument(documentId, tabId, update);
+    const outcome = await room.acceptPostedLiveTab(frame, documentId, tabId, update);
     // A refused edit names its limit ("Refused edits").
     if (outcome === 'characters' || outcome === 'state')
       return Response.json({ limit: outcome }, { status: POSTED_STATUS[outcome] });

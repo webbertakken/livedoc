@@ -4,10 +4,8 @@ import { remapTabDataLinks } from '../document-room/document-content';
 import { copyDocument } from './documents';
 import { upsertTab } from './tabs';
 import { Body, TextDocumentState } from '@livedoc/text-documents';
-import {
-  appendTextDocumentUpdate,
-  readTextDocumentState,
-} from '../text-documents/text-document-store';
+import { appendLiveTabUpdate, readLiveTabState } from '../live-tabs/live-tab-store';
+import { TEXT_DOCUMENT_LIVE_TAB } from '../text-documents/text-document-live-tab';
 
 // copyDocument re-points a copied tab's internal links at the copy's own tabs.
 describe('remapTabDataLinks', () => {
@@ -110,15 +108,16 @@ describe('copyDocument', () => {
       { id: 't3', name: 'Notes', kind: 'text-document', format: 'odf', elements: [] } as never,
       2,
     );
-    await appendTextDocumentUpdate(
+    await appendLiveTabUpdate(
       db.env,
+      TEXT_DOCUMENT_LIVE_TAB,
       't3',
       TextDocumentState.fromBody(Body.of('Kept in the copy')),
     );
     await copyDocument(db.env, 'd1', 'd2', 'me', 'Copy');
     const copied = tabsOf(db, 'd2').find((t) => t.name === 'Notes')!;
     expect(copied.id).not.toBe('t3');
-    const state = await readTextDocumentState(db.env, copied.id);
+    const state = await readLiveTabState(db.env, TEXT_DOCUMENT_LIVE_TAB, copied.id);
     expect(TextDocumentState.paragraphs(TextDocumentState.load([state]))).toEqual(
       Body.of('Kept in the copy'),
     );
